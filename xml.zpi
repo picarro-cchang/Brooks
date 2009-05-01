@@ -80,7 +80,12 @@
     <ReleaseProjectStdErr>On</ReleaseProjectStdErr>
     <ReleaseProjectSaveAll>Off</ReleaseProjectSaveAll>
     <ReleaseProjectReload>Off</ReleaseProjectReload>
-    <Folder name="Header Files" sorted="Yes" />
-    <Folder name="Resource Files" sorted="Yes" />
-    <Folder name="Source Files" sorted="Yes" />
+    <File>xml\dspCbp.py</File>
+    <File>xml\dspHbp.py</File>
+    <File>xml\Interface.dtd</File>
+    <File>xml\Interface.xml</File>
+    <File>xml\intHbp.py</File>
+    <File>xml\intPybp.py</File>
+    <File>xml\ParameterPages.xml</File>
+    <File>xml\xmldom1.py</File>
 </Project>

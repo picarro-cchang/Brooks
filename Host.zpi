@@ -80,7 +80,12 @@
     <ReleaseProjectStdErr>On</ReleaseProjectStdErr>
     <ReleaseProjectSaveAll>Off</ReleaseProjectSaveAll>
     <ReleaseProjectReload>Off</ReleaseProjectReload>
-    <Folder name="Header Files" sorted="Yes" />
-    <Folder name="Resource Files" sorted="Yes" />
-    <Folder name="Source Files" sorted="Yes" />
+    <Folder name="Common" sorted="Yes">
+        <File>Host\Common\analyzerUsbIf.py</File>
+        <File>Host\Common\hexfile.py</File>
+        <File>Host\Common\SharedTypes.py</File>
+        <File>Host\Common\simulatorUsbIf.py</File>
+        <File>Host\Common\usb.py</File>
+    </Folder>
+    <Folder name="Hardware Testing" sorted="Yes" />
 </Project>

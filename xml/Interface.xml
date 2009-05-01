@@ -1,0 +1,1482 @@
+<?xml version="1.0"?>
+<!DOCTYPE Das_Interface SYSTEM "Interface.dtd">
+<Das_Interface>
+    <files>
+        <file ident="usbPy">../host/autogen/usbdefs.py</file>
+        <file ident="usbH">../CypressUSB/autogen/usbdefs.h</file>
+        <file ident="usbA51">../CypressUSB/autogen/usbdefs.inc</file>
+        <file ident="intH">../DSP/autogen/interface.h</file>
+        <file ident="intPy">../host/autogen/interface.py</file>
+        <file ident="dspC">../DSP/autogen/dspAutogen.c</file>
+        <file ident="dspH">../DSP/autogen/dspAutogen.h</file>
+    </files>
+    <interface_version>1</interface_version>
+    <usb_constants>
+        <constant ident="USB_VERSION">1001</constant>
+        <constant ident="INITIAL_VID">0x4B4</constant>
+        <constant ident="INITIAL_PID">0x8613</constant>
+        <constant ident="INSTRUMENT_VID">0x3EF</constant>
+        <constant ident="INSTRUMENT_PID">0x1001</constant>
+        <!--  >Vendor commands</!-->
+        <constant ident="VENDOR_GET_VERSION">0xB0</constant>
+        <constant ident="VENDOR_FPGA_CONFIGURE">0xC0</constant>
+        <constant ident="VENDOR_READ_HPIC">0xC1</constant>
+        <constant ident="VENDOR_WRITE_HPIC">0xC2</constant>
+        <constant ident="VENDOR_READ_HPIA">0xC3</constant>
+        <constant ident="VENDOR_WRITE_HPIA">0xC4</constant>
+        <constant ident="VENDOR_SET_HPID_IN_BYTES">0xC5</constant>
+        <constant ident="VENDOR_RESET_HPID_IN_FIFO">0xC6</constant>
+        <constant ident="VENDOR_GET_STATUS">0xC7</constant>
+        <constant ident="VENDOR_DSP_CONTROL">0xC8</constant>
+        <!--  >Value field for VENDOR_FPGA_CONFIGURE</!-->
+        <constant ident="FPGA_START_PROGRAM">0x01</constant>
+        <constant ident="FPGA_SEND_DATA">0x02</constant>
+        <constant ident="FPGA_GET_STATUS">0x03</constant>
+        <!--  >Value field for VENDOR_READ_STATUS</!-->
+        <constant ident="USB_STATUS_SPEED">0x01</constant>
+        <constant ident="USB_STATUS_GPIFTRIG">0x02</constant>
+        <constant ident="USB_STATUS_GPIFTC">0x03</constant>
+        <!--  >Value field for VENDOR_DSP_CONTROL</!-->
+        <constant ident="VENDOR_DSP_CONTROL_RESET">0x01</constant>
+        <constant ident="VENDOR_DSP_CONTROL_HINT">0x02</constant>
+        <!--  >Bits for PORT E of Cypress USB</!-->
+        <constant ident="IO_FPGA_CONF">IOE</constant>
+        <constant ident="CYP_LED0">0x01</constant>
+        <constant ident="CYP_LED1">0x02</constant>
+        <constant ident="CYP_LED2">0x80</constant>
+        <constant ident="FPGA_SS_CCLK">0x04</constant>
+        <constant ident="FPGA_SS_DIN">0x08</constant>
+        <constant ident="FPGA_SS_PROG">0x10</constant>
+        <constant ident="FPGA_SS_INIT">0x20</constant>
+        <constant ident="FPGA_SS_DONE">0x40</constant>
+        <!--  >Bits for PORT A of Cypress USB</!-->
+        <constant ident="CYP_LED3">0x10</constant>
+    </usb_constants>
+    <status_list>
+        <status ident="STATUS_OK">Status OK</status>
+        <status ident="ERROR_CRC_BAD">CRC error in host command</status>
+        <status ident="ERROR_DSP_UNEXPECTED_SEQUENCE_NUMBER">DSP detected host command out of sequence</status>
+        <status ident="ERROR_HOST_UNEXPECTED_SEQUENCE_NUMBER">Host received acknowledgement out of sequence</status>
+        <status ident="ERROR_BAD_COMMAND">Unrecognized host command</status>
+        <status ident="ERROR_BAD_NUM_PARAMS">Incorrect number of parameters calling a DSP function</status>
+        <status ident="ERROR_OUTSIDE_SHAREDMEM">Attempt to access outside shared memory</status>
+        <status ident="ERROR_UNKNOWN_REGISTER">Invalid register specified</status>
+        <status ident="ERROR_NOT_READABLE">Register is not readable</status>
+        <status ident="ERROR_NOT_WRITABLE">Register is not writable</status>
+        <status ident="ERROR_READ_FAILED">Register read failed</status>
+        <status ident="ERROR_WRITE_FAILED">Register write failed</status>
+        <status ident="ERROR_INVALID_WHEEL_SLOT">Invalid timer wheel slot</status>
+        <status ident="ERROR_OO_WHEEL_ENTRIES">Ran out of timer wheel entries</status>
+        <status ident="ERROR_BAD_FILTER_COEFF">Invalid filter coefficients</status>
+    </status_list>
+    <struct_list>
+        <struct type="DIAG_EventLogStruct">
+            <field type="uint32" ident="time"/>
+            <field type="uint32" ident="cause"/>
+            <field type="uint32" ident="etalonPd1Current"/>
+            <field type="uint32" ident="refPd1Current"/>
+            <field type="uint32" ident="etalonPd2Current"/>
+            <field type="uint32" ident="refPd2Current"/>
+            <field type="uint32" ident="etalonTemp"/>
+            <field type="uint32" ident="cavityTemp"/>
+            <field type="uint32" ident="warmChamberTemp"/>
+            <field type="uint32" ident="hotChamberTecHeatsinkTemp"/>
+            <field type="uint32" ident="warmChamberTecHeatsinkTemp"/>
+            <field type="uint32" ident="laser1Temp"/>
+            <field type="uint32" ident="laser2Temp"/>
+            <field type="uint32" ident="laserCurrent"/>
+            <field type="uint32" ident="cavityPressure"/>
+            <field type="uint32" ident="inletPressure"/>
+            <field type="uint32" ident="outletPressure"/>
+            <field type="uint16" ident="customDataArray" size="16"/>
+        </struct>
+        <struct type="RD_ResultsEntryType">
+            <field ident="lockValue" type="DataType"/>
+            <field ident="ratio1" type="float"/>
+            <field ident="ratio2" type="float"/>
+            <field ident="correctedAbsorbance" type="float"/>
+            <field ident="uncorrectedAbsorbance" type="float"/>
+            <field ident="tunerValue" type="uint16"/>
+            <field ident="pztValue" type="uint16"/>
+            <field ident="etalonAndLaserSelectAndFitStatus" type="uint16"/>
+            <field ident="schemeStatusAndSchemeTableIndex" type="uint16"/>
+            <field ident="msTicks" type="uint32"/>
+            <field ident="count" type="uint16"/>
+            <field ident="subSchemeId" type="uint16"/>
+            <field ident="schemeIndex" type="uint16"/>
+            <field ident="fineLaserCurrent" type="uint16"/>
+            <field ident="lockSetpoint" type="DataType"/>
+        </struct>
+        <struct type="SensorEntryType">
+            <field ident="timestamp" type="long long"/>
+            <field ident="streamNum" type="uint32"/>
+            <field ident="value" type="DataType"/>
+        </struct>
+        <struct type="PidControllerEnvType">
+            <field ident="swpDir" type="int32"/>
+            <field ident="lockCount" type="int32"/>
+            <field ident="unlockCount" type="int32"/>
+            <field ident="firstIteration" type="int32"/>
+            <field ident="a" type="float"/>
+            <field ident="u" type="float"/>
+            <field ident="perr" type="float"/>
+            <field ident="derr1" type="float"/>
+            <field ident="derr2" type="float"/>
+            <field ident="Dincr" type="float"/>
+        </struct>
+        <struct type="CheckEnvType">
+            <field ident="var1" type="int32"/>
+            <field ident="var2" type="int32"/>
+        </struct>
+        <struct type="PulseGenEnvType">
+            <field ident="counter" type="uint32"/>
+        </struct>
+        <struct type="FilterEnvType">
+            <field ident="num" type="float" size="9"/>
+            <field ident="den" type="float" size="9"/>
+            <field ident="state" type="float" size="8"/>
+        </struct>
+    </struct_list>
+    <constant_list>
+        <constant ident="CONTROLLER_WAVEFORM_POINTS" description="Number of points in controller waveforms">1000</constant>
+        <constant ident="SHAREDMEM_ADDRESS" description="Base address for DSP shared memory">0x20000</constant>
+        <constant ident="REG_OFFSET" description="Offset for software registers in DSP shared memory">0x0</constant>
+        <constant ident="SENSOR_OFFSET" description="Offset for sensor stream area in DSP shared memory">0x1B00</constant>
+        <constant ident="MESSAGE_OFFSET" description="Offset for message area in DSP shared memory">0x2B00</constant>
+        <constant ident="GROUP_OFFSET" description="Offset for group table in DSP shared memory">0x2F00</constant>
+        <constant ident="OPERATION_OFFSET" description="Offset for operation table in DSP shared memory">0x2F20</constant>
+        <constant ident="OPERAND_OFFSET" description="Offset for operand table in DSP shared memory">0x3300</constant>
+        <constant ident="ENVIRONMENT_OFFSET" description="Offset for environment table in DSP shared memory">0x3700</constant>
+        <constant ident="HOST_OFFSET" description="Offset for host area in DSP shared memory">0x3F00</constant>
+        <constant ident="SHAREDMEM_SIZE" description="Size (in 32-bit ints) of DSP shared memory">0x4000</constant>
+        <constant ident="REG_REGION_SIZE" description="Number of software registers">(SENSOR_OFFSET - REG_OFFSET)</constant>
+        <constant ident="SENSOR_REGION_SIZE" description="Number of 32-bit ints in sensor area">(MESSAGE_OFFSET - SENSOR_OFFSET)</constant>
+        <constant ident="NUM_SENSOR_ENTRIES" description="Number of sensor steam entries in sensor area">SENSOR_REGION_SIZE>>2</constant>
+        <constant ident="MESSAGE_REGION_SIZE" description="Number of 32-bit ints in message area">(GROUP_OFFSET - MESSAGE_OFFSET)</constant>
+        <constant ident="NUM_MESSAGES" description="Number of messages in message area">MESSAGE_REGION_SIZE>>5</constant>
+        <constant ident="GROUP_TABLE_SIZE" description="Number of 32-bit ints in group table">(OPERATION_OFFSET - GROUP_OFFSET)</constant>
+        <constant ident="OPERATION_TABLE_SIZE" description="Number of 32-bit ints in operation table">(OPERAND_OFFSET - OPERATION_OFFSET)</constant>
+        <constant ident="NUM_OPERATIONS" description="Number of operations in operation table">OPERATION_TABLE_SIZE>>1</constant>
+        <constant ident="OPERAND_TABLE_SIZE" description="Number of 32-bit ints in operand table">(ENVIRONMENT_OFFSET - OPERAND_OFFSET)</constant>
+        <constant ident="ENVIRONMENT_TABLE_SIZE" description="Number of 32-bit ints in environment table">(HOST_OFFSET - ENVIRONMENT_OFFSET)</constant>
+        <constant ident="HOST_REGION_SIZE" description="Number of 32-bit ints in host area">(SHAREDMEM_SIZE - HOST_OFFSET)</constant>
+        <constant ident="EMIF_ADDR_WIDTH" description="Number of bits in EMIF address">17</constant>
+        <constant ident="EMIF_DATA_WIDTH" description="Number of bits in EMIF address">32</constant>
+        <constant ident="FPGA_REG_WIDTH" description="Numer of bits in an FPGA register">16</constant>
+        <constant ident="FPGA_RDMEM_MASK" description="Mask to access ringdown memory">0</constant>
+        <constant ident="FPGA_REG_MASK" description="Mask to access FPGA registers">1</constant>
+        <constant ident="RDMEM_ADDR_WIDTH" description="Numer of bits in ringdown memory address">13</constant>
+        <constant ident="RDMEM_DATA_WIDTH" description="Numer of bits in ringdown memory data">18</constant>
+        <constant ident="TEMP_CNTRL_LOCK_COUNT" description="Number of in-range samples to acquire lock">5</constant>
+        <constant ident="TEMP_CNTRL_UNLOCK_COUNT" description="Number of out-of-range samples to lose lock">5</constant>
+    </constant_list>
+    <union_list>
+        <union type="DataType">
+            <field ident="asFloat" type="float"/>
+            <field ident="asUint" type="uint32"/>
+            <field ident="asInt" type="int32"/>
+        </union>
+    </union_list>
+    <enum_list>
+        <enum type="STREAM_MemberType">
+        <description>Sensor stream members</description>
+            <enum_value ident="STREAM_Laser1Temp" />
+            <enum_value ident="STREAM_Laser2Temp" />
+            <enum_value ident="STREAM_Laser3Temp" />
+            <enum_value ident="STREAM_Laser4Temp" />
+            <enum_value ident="STREAM_EtalonTemp" />
+            <enum_value ident="STREAM_WarmChamberTemp" />
+            <enum_value ident="STREAM_WarmChamberTecTemp" />
+            <enum_value ident="STREAM_CavityTemp" />
+            <enum_value ident="STREAM_HotChamberTecTemp" />
+            <enum_value ident="STREAM_DasTemp" />
+            <enum_value ident="STREAM_Etalon1" />
+            <enum_value ident="STREAM_Reference1" />
+            <enum_value ident="STREAM_Etalon2" />
+            <enum_value ident="STREAM_Reference2" />
+            <enum_value ident="STREAM_Laser1Current" />
+            <enum_value ident="STREAM_Laser2Current" />
+            <enum_value ident="STREAM_Laser3Current" />
+            <enum_value ident="STREAM_Laser4Current" />
+            <enum_value ident="STREAM_CavityPressure" />
+            <enum_value ident="STREAM_AmbientPressure" />
+            <enum_value ident="STREAM_InletPressure" />
+            <enum_value ident="STREAM_OutletPressure" />
+            <enum_value ident="STREAM_Laser1Tec" />
+            <enum_value ident="STREAM_Laser2Tec" />
+            <enum_value ident="STREAM_Laser3Tec" />
+            <enum_value ident="STREAM_Laser4Tec" />
+            <enum_value ident="STREAM_WarmChamberTec" />
+            <enum_value ident="STREAM_HotChamberTec" />
+            <enum_value ident="STREAM_HotChamberHeater" />
+            <enum_value ident="STREAM_InletValve" />
+            <enum_value ident="STREAM_OutletValve" />
+            <enum_value ident="STREAM_ValveMask" />
+        </enum>
+        <enum type="TEMP_CNTRL_StateType">
+            <description>State of temperature controller</description>
+            <enum_value ident="TEMP_CNTRL_DisabledState" value="0" caption="Controller Disabled"  />
+            <enum_value ident="TEMP_CNTRL_EnabledState" value="1" caption="Controller Enabled" />
+            <enum_value ident="TEMP_CNTRL_SuspendedState" value="2" caption="Controller Suspended" />
+            <enum_value ident="TEMP_CNTRL_SweepingState" value="3" caption="Continuous Sweeping" />
+            <enum_value ident="TEMP_CNTRL_SendPrbsState" value="4" caption="Sending PRBS" />
+            <enum_value ident="TEMP_CNTRL_ManualState" value="5" caption="Manual Control" />
+        </enum>
+        <enum type="LASER_CURRENT_CNTRL_StateType">
+            <description>State of laser current controller</description>
+            <enum_value ident="LASER_CURRENT_CNTRL_DisabledState" value="0" caption="Controller Disabled"  />
+            <enum_value ident="LASER_CURRENT_CNTRL_EnabledState" value="1" caption="Controller Enabled" />
+            <enum_value ident="LASER_CURRENT_CNTRL_SweepingState" value="2" caption="Continuous Sweeping" />
+            <enum_value ident="LASER_CURRENT_CNTRL_ManualState" value="3" caption="Manual Control" />
+        </enum>
+        <enum type="HEATER_CNTRL_StateType">
+            <description>State of heater controller</description>
+            <enum_value ident="HEATER_CNTRL_DisabledState" value="0" caption="Controller Disabled"  />
+            <enum_value ident="HEATER_CNTRL_EnabledState" value="1" caption="Controller Enabled" />
+            <enum_value ident="HEATER_CNTRL_ManualState" value="2" caption="Manual Control" />
+        </enum>
+    </enum_list>
+    <bits_list>
+        <bits ident="COMM_STATUS_BITMASK">
+            <mask  ident="COMM_STATUS_CompleteMask">0x1</mask>
+            <mask  ident="COMM_STATUS_BadCrcMask">0x2</mask>
+            <mask  ident="COMM_STATUS_BadSequenceNumberMask">0x4</mask>
+            <mask  ident="COMM_STATUS_BadArgumentsMask">0x8</mask>
+            <mask  ident="COMM_STATUS_SequenceNumberMask">0xFF000000</mask>
+            <shift ident="COMM_STATUS_SequenceNumberShift">24</shift>
+            <mask  ident="COMM_STATUS_ReturnValueMask">0x00FFFF00</mask>
+            <shift ident="COMM_STATUS_ReturnValueShift">8</shift>
+        </bits>
+    </bits_list>
+    <register_list>
+        <register ident="NOOP_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>No operation register, used for testing</description>
+            <initial>0xABCD1234</initial>
+            <display format="%d">No operation register</display>
+        </register>
+        <register ident="COMM_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Communications status register</description>
+        </register>
+        <register ident="TIMESTAMP_LSB_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>LSB of timestamp register</description>
+        </register>
+        <register ident="TIMESTAMP_MSB_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>MSB of timestamp register</description>
+        </register>
+        <register ident="SCHEDULER_CONTROL_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Scheduler control register</description>
+            <initial>0</initial>
+            <display format="%d" units="">Scheduler enable</display>
+        </register>
+        <register ident="LOW_DURATION_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Duration of low level of pulse</description>
+            <initial>90</initial>
+            <display format="%d" units="samples">Pulse low duration</display>
+        </register>
+        <register ident="HIGH_DURATION_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Duration of high level of pulse</description>
+            <initial>10</initial>
+            <display format="%d" units="samples">Pulse high duration</display>
+        </register>
+        <register ident="DAS_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>DAS temperature</description>
+            <initial>20.0</initial>
+        </register>
+        <register ident="CONVERSION_LASER1_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 thermistor constant A</description>
+            <initial>0.00112789997365</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER1_THERM_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 thermistor constant B</description>
+            <initial>0.000234289997024</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER1_THERM_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 thermistor constant C</description>
+            <initial>8.72979981636e-008</initial>
+            <save/>
+        </register>
+        <register ident="LASER1_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser1 thermistor resistance</description>
+        </register>
+        <register ident="LASER1_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser1 temperature</description>
+        </register>
+        <register ident="LASER1_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Laser1 thermistor ADC</description>
+        </register>
+        <register ident="LASER1_TEC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 TEC value</description>
+        </register>
+        <register ident="LASER1_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 manual TEC value</description>
+            <initial>32768.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual TEC Value</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_STATE_REGISTER" type="TEMP_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Laser1 Temperature control app state register</description>
+            <initial>TEMP_CNTRL_DisabledState</initial>
+            <display>Temperature Controller Mode</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_LOCK_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Laser1 Temperature control app lock status register. 1 if locked 0 otherwise.</description>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser1 Temperature Control app setpoint in degC.</description>
+            <initial>25.0</initial>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature Control app user setpoint in degC.</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Setpoint</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature Control app lock tolerance in degC.</description>
+            <initial>0.1</initial>
+            <save/>
+            <display format="%.3f" units="degC">Lock tolerance</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature Control app maximum sweep value in degC.</description>
+            <initial>30.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Max sweep value</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature Control app minimum sweep value in degC.</description>
+            <initial>20.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Min sweep value</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature Control app sweep increment in degC.</description>
+            <initial>0.05</initial>
+            <save/>
+            <display format="%.4f" units="degC/sample">Sweep increment</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature control app interval in seconds.</description>
+            <initial>0.2</initial>
+            <save/>
+            <display format="%.3f" units="s">Sample interval</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_K_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature control app proportional constant.</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f">Loop proportional gain (K)</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_TI_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature control app integrator time constant.</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Integration time (Ti)</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_TD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature control derivative time constant</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Derivative time (Td)</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_B_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature control app proportional setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Proportional setpoint gain (b)</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_C_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature control app derivative setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Derivative setpoint gain (c)</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_N_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature control app derivative regularization</description>
+            <initial>100.0</initial>
+            <save/>
+            <display format="%.2f">Derivative regularization (N)</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_S_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature control app saturation regularization</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.2f">Saturation regularization (S)</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 DAS temperature feed forward coefficient</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">DAS temperature feed forward coefficient</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_AMIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature control app minimum TEC value</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.0f">Minimum TEC value (Amin)</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_AMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature control app maximum TEC value</description>
+            <initial>55000.0</initial>
+            <save/>
+            <display format="%.0f">Maximum TEC value (Amax)</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_IMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Temperature control app maximum TEC change/step</description>
+            <initial>10000.0</initial>
+            <save/>
+            <display format="%.1f">Maximum actuator increment (Imax)</display>
+        </register>
+        <register ident="LASER1_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Laser1 TEC PRBS generator polynomial</description>
+            <initial>0x481</initial>
+            <save/>
+            <display format="$%X">PRBS generator</display>
+        </register>
+        <register ident="LASER1_TEC_PRBS_AMPLITUDE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 TEC PRBS amplitude</description>
+            <initial>5000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS amplitude</display>
+        </register>
+        <register ident="LASER1_TEC_PRBS_MEAN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 TEC PRBS mean</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS mean</display>
+        </register>
+
+        <register ident="LASER1_CURRENT_CNTRL_STATE_REGISTER" type="LASER_CURRENT_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Laser1 current control app state register</description>
+            <initial>LASER_CURRENT_CNTRL_DisabledState</initial>
+            <display>Current Controller Mode</display>
+        </register>
+        <register ident="LASER1_MANUAL_COARSE_CURRENT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Manual Coarse Current Setpoint</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual Coarse Current Setpoint</display>
+        </register>
+        <register ident="LASER1_MANUAL_FINE_CURRENT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Manual Fine Current Setpoint</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual Fine Current Setpoint</display>
+        </register>
+        <register ident="LASER1_CURRENT_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Current Sweep Minimum</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Current Sweep Minimum</display>
+        </register>
+        <register ident="LASER1_CURRENT_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Current Sweep Maximum</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Current Sweep Maximum</display>
+        </register>
+        <register ident="LASER1_CURRENT_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Current Sweep Increment</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.1f" units="digU/sample">Current Sweep Increment</display>
+        </register>
+        <register ident="LASER1_CURRENT_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 Current Monitor</description>
+            <initial>0.0</initial>
+        </register>
+
+        <register ident="CONVERSION_LASER2_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2  thermistor constant A</description>
+            <initial>0.00112789997365</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER2_THERM_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 thermistor constant B</description>
+            <initial>0.000234289997024</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER2_THERM_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 thermistor constant C</description>
+            <initial>8.72979981636e-008</initial>
+            <save/>
+        </register>
+        <register ident="LASER2_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser2 thermistor resistance</description>
+        </register>
+        <register ident="LASER2_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser2 temperature</description>
+        </register>
+        <register ident="LASER2_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Laser2 thermistor ADC</description>
+        </register>
+        <register ident="LASER2_TEC_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser2 TEC value</description>
+        </register>
+        <register ident="LASER2_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 manual TEC value</description>
+            <initial>32768.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual TEC Value</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_STATE_REGISTER" type="TEMP_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Laser2 Temperature control app state register</description>
+            <initial>TEMP_CNTRL_DisabledState</initial>
+            <display>Temperature Controller Mode</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_LOCK_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Laser2 Temperature control app lock status register. 1 if locked 0 otherwise.</description>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser2 Temperature Control app setpoint in degC.</description>
+            <initial>25.0</initial>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature Control app user setpoint in degC.</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Setpoint</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature Control app lock tolerance in degC.</description>
+            <initial>0.1</initial>
+            <save/>
+            <display format="%.3f" units="degC">Lock tolerance</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature Control app maximum sweep value in degC.</description>
+            <initial>30.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Max sweep value</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature Control app minimum sweep value in degC.</description>
+            <initial>20.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Min sweep value</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature Control app sweep increment in degC.</description>
+            <initial>0.05</initial>
+            <save/>
+            <display format="%.4f" units="degC/sample">Sweep increment</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature control app interval in seconds.</description>
+            <initial>0.2</initial>
+            <save/>
+            <display format="%.3f" units="s">Sample interval</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_K_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature control app proportional constant.</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f">Loop proportional gain (K)</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_TI_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature control app integrator time constant.</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Integration time (Ti)</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_TD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature control derivative time constant</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Derivative time (Td)</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_B_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature control app proportional setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Proportional setpoint gain (b)</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_C_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature control app derivative setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Derivative setpoint gain (c)</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_N_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature control app derivative regularization</description>
+            <initial>100.0</initial>
+            <save/>
+            <display format="%.2f">Derivative regularization (N)</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_S_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature control app saturation regularization</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.2f">Saturation regularization (S)</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 DAS temperature feed forward coefficient</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">DAS temperature feed forward coefficient</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_AMIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature control app minimum TEC value</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.0f">Minimum TEC value (Amin)</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_AMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature control app maximum TEC value</description>
+            <initial>55000.0</initial>
+            <save/>
+            <display format="%.0f">Maximum TEC value (Amax)</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_IMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Temperature control app maximum TEC change/step</description>
+            <initial>10000.0</initial>
+            <save/>
+            <display format="%.1f">Maximum actuator increment (Imax)</display>
+        </register>
+        <register ident="LASER2_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Laser2 TEC PRBS generator polynomial</description>
+            <initial>0x481</initial>
+            <save/>
+            <display format="$%X">PRBS generator</display>
+        </register>
+        <register ident="LASER2_TEC_PRBS_AMPLITUDE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 TEC PRBS amplitude</description>
+            <initial>5000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS amplitude</display>
+        </register>
+        <register ident="LASER2_TEC_PRBS_MEAN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 TEC PRBS mean</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS mean</display>
+        </register>
+        <register ident="CONVERSION_LASER3_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 thermistor constant A</description>
+            <initial>0.00112789997365</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER3_THERM_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 thermistor constant B</description>
+            <initial>0.000234289997024</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER3_THERM_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 thermistor constant C</description>
+            <initial>8.72979981636e-008</initial>
+            <save/>
+        </register>
+        <register ident="LASER3_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser3 thermistor resistance</description>
+        </register>
+        <register ident="LASER3_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser3 temperature</description>
+        </register>
+        <register ident="LASER3_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Laser3 thermistor ADC</description>
+        </register>
+        <register ident="LASER3_TEC_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser3 TEC value</description>
+        </register>
+        <register ident="LASER3_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 manual TEC value</description>
+            <initial>32768.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual TEC Value</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_STATE_REGISTER" type="TEMP_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Laser3 Temperature control app state register</description>
+            <initial>TEMP_CNTRL_DisabledState</initial>
+            <display>Temperature Controller Mode</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_LOCK_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Laser3 Temperature control app lock status register. 1 if locked 0 otherwise.</description>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser3 Temperature Control app setpoint in degC.</description>
+            <initial>25.0</initial>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature Control app user setpoint in degC.</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Setpoint</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature Control app lock tolerance in degC.</description>
+            <initial>0.1</initial>
+            <save/>
+            <display format="%.3f" units="degC">Lock tolerance</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature Control app maximum sweep value in degC.</description>
+            <initial>30.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Max sweep value</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature Control app minimum sweep value in degC.</description>
+            <initial>20.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Min sweep value</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature Control app sweep increment in degC.</description>
+            <initial>0.05</initial>
+            <save/>
+            <display format="%.4f" units="degC/sample">Sweep increment</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature control app interval in seconds.</description>
+            <initial>0.2</initial>
+            <save/>
+            <display format="%.3f" units="s">Sample interval</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_K_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature control app proportional constant.</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f">Loop proportional gain (K)</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_TI_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature control app integrator time constant.</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Integration time (Ti)</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_TD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature control derivative time constant</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Derivative time (Td)</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_B_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature control app proportional setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Proportional setpoint gain (b)</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_C_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature control app derivative setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Derivative setpoint gain (c)</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_N_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature control app derivative regularization</description>
+            <initial>100.0</initial>
+            <save/>
+            <display format="%.2f">Derivative regularization (N)</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_S_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature control app saturation regularization</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.2f">Saturation regularization (S)</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 DAS temperature feed forward coefficient</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">DAS temperature feed forward coefficient</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_AMIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature control app minimum TEC value</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.0f">Minimum TEC value (Amin)</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_AMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature control app maximum TEC value</description>
+            <initial>55000.0</initial>
+            <save/>
+            <display format="%.0f">Maximum TEC value (Amax)</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_IMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Temperature control app maximum TEC change/step</description>
+            <initial>10000.0</initial>
+            <save/>
+            <display format="%.1f">Maximum actuator increment (Imax)</display>
+        </register>
+        <register ident="LASER3_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Laser3 TEC PRBS generator polynomial</description>
+            <initial>0x481</initial>
+            <save/>
+            <display format="$%X">PRBS generator</display>
+        </register>
+        <register ident="LASER3_TEC_PRBS_AMPLITUDE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 TEC PRBS amplitude</description>
+            <initial>5000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS amplitude</display>
+        </register>
+        <register ident="LASER3_TEC_PRBS_MEAN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 TEC PRBS mean</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS mean</display>
+        </register>
+        <register ident="CONVERSION_LASER4_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 thermistor constant A</description>
+            <initial>0.00112789997365</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER4_THERM_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 thermistor constant B</description>
+            <initial>0.000234289997024</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER4_THERM_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 thermistor constant C</description>
+            <initial>8.72979981636e-008</initial>
+            <save/>
+        </register>
+        <register ident="LASER4_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser4 thermistor resistance</description>
+        </register>
+        <register ident="LASER4_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser4 temperature</description>
+        </register>
+        <register ident="LASER4_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Laser4 thermistor ADC</description>
+        </register>
+        <register ident="LASER4_TEC_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser4 TEC value</description>
+        </register>
+        <register ident="LASER4_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 manual TEC value</description>
+            <initial>32768.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual TEC Value</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_STATE_REGISTER" type="TEMP_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Laser4 Temperature control app state register</description>
+            <initial>TEMP_CNTRL_DisabledState</initial>
+            <display>Temperature Controller Mode</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_LOCK_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Laser4 Temperature control app lock status register. 1 if locked 0 otherwise.</description>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+            <description>Laser4 Temperature Control app setpoint in degC.</description>
+            <initial>25.0</initial>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature Control app user setpoint in degC.</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Setpoint</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature Control app lock tolerance in degC.</description>
+            <initial>0.1</initial>
+            <save/>
+            <display format="%.3f" units="degC">Lock tolerance</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature Control app maximum sweep value in degC.</description>
+            <initial>30.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Max sweep value</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature Control app minimum sweep value in degC.</description>
+            <initial>20.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Min sweep value</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature Control app sweep increment in degC.</description>
+            <initial>0.05</initial>
+            <save/>
+            <display format="%.4f" units="degC/sample">Sweep increment</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature control app interval in seconds.</description>
+            <initial>0.2</initial>
+            <save/>
+            <display format="%.3f" units="s">Sample interval</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_K_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature control app proportional constant.</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f">Loop proportional gain (K)</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_TI_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature control app integrator time constant.</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Integration time (Ti)</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_TD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature control derivative time constant</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Derivative time (Td)</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_B_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature control app proportional setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Proportional setpoint gain (b)</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_C_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature control app derivative setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Derivative setpoint gain (c)</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_N_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature control app derivative regularization</description>
+            <initial>100.0</initial>
+            <save/>
+            <display format="%.2f">Derivative regularization (N)</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_S_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature control app saturation regularization</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.2f">Saturation regularization (S)</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 DAS temperature feed forward coefficient</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">DAS temperature feed forward coefficient</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_AMIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature control app minimum TEC value</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.0f">Minimum TEC value (Amin)</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_AMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature control app maximum TEC value</description>
+            <initial>55000.0</initial>
+            <save/>
+            <display format="%.0f">Maximum TEC value (Amax)</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_IMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Temperature control app maximum TEC change/step</description>
+            <initial>10000.0</initial>
+            <save/>
+            <display format="%.1f">Maximum actuator increment (Imax)</display>
+        </register>
+        <register ident="LASER4_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Laser4 TEC PRBS generator polynomial</description>
+            <initial>0x481</initial>
+            <save/>
+            <display format="$%X">PRBS generator</display>
+        </register>
+        <register ident="LASER4_TEC_PRBS_AMPLITUDE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 TEC PRBS amplitude</description>
+            <initial>5000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS amplitude</display>
+        </register>
+        <register ident="LASER4_TEC_PRBS_MEAN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 TEC PRBS mean</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS mean</display>
+        </register>
+
+        <register ident="CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Hot box heatsink thermistor constant A</description>
+            <initial>0.000847030023579</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Hot box heatsink thermistor constant B</description>
+            <initial>0.000205610005651</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Hot box heatsink thermistor constant C</description>
+            <initial>9.26699996739e-008</initial>
+            <save/>
+        </register>
+        <register ident="HOT_BOX_HEATSINK_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Hot box heatsink thermistor resistance</description>
+        </register>
+        <register ident="HOT_BOX_HEATSINK_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Hot box heatsink temperature</description>
+        </register>
+        <register ident="HOT_BOX_HEATSINK_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Hot box heatsink thermistor ADC</description>
+        </register>
+        <register ident="CONVERSION_CAVITY_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity thermistor constant A</description>
+            <initial>0.000847030023579</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY_THERM_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity thermistor constant B</description>
+            <initial>0.000205610005651</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY_THERM_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity thermistor constant C</description>
+            <initial>9.26699996739e-008</initial>
+            <save/>
+        </register>
+        <register ident="CAVITY_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity thermistor resistance</description>
+        </register>
+        <register ident="CAVITY_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity temperature</description>
+        </register>
+        <register ident="CAVITY_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Cavity thermistor ADC</description>
+        </register>
+        <register ident="CAVITY_TEC_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity TEC value</description>
+        </register>
+        <register ident="CAVITY_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity manual TEC value</description>
+            <initial>32768.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual TEC Value</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_STATE_REGISTER" type="TEMP_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Cavity Temperature control app state register</description>
+            <initial>TEMP_CNTRL_DisabledState</initial>
+            <display>Temperature Controller Mode</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_LOCK_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Cavity Temperature control app lock status register. 1 if locked 0 otherwise.</description>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity Temperature Control app setpoint in degC.</description>
+            <initial>25.0</initial>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature Control app user setpoint in degC.</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Setpoint</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature Control app lock tolerance in degC.</description>
+            <initial>0.1</initial>
+            <save/>
+            <display format="%.3f" units="degC">Lock tolerance</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature Control app maximum sweep value in degC.</description>
+            <initial>30.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Max sweep value</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature Control app minimum sweep value in degC.</description>
+            <initial>20.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Min sweep value</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature Control app sweep increment in degC.</description>
+            <initial>0.05</initial>
+            <save/>
+            <display format="%.4f" units="degC/sample">Sweep increment</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature control app interval in seconds.</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.3f" units="s">Sample interval</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_K_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature control app proportional constant.</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f">Loop proportional gain (K)</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_TI_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature control app integrator time constant.</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Integration time (Ti)</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_TD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature control derivative time constant</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Derivative time (Td)</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_B_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature control app proportional setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Proportional setpoint gain (b)</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_C_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature control app derivative setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Derivative setpoint gain (c)</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_N_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature control app derivative regularization</description>
+            <initial>100.0</initial>
+            <save/>
+            <display format="%.2f">Derivative regularization (N)</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_S_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature control app saturation regularization</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.2f">Saturation regularization (S)</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity DAS temperature feed forward coefficient</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">DAS temperature feed forward coefficient</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_AMIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature control app minimum TEC value</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.0f">Minimum TEC value (Amin)</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_AMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature control app maximum TEC value</description>
+            <initial>55000.0</initial>
+            <save/>
+            <display format="%.0f">Maximum TEC value (Amax)</display>
+        </register>
+        <register ident="CAVITY_TEMP_CNTRL_IMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity Temperature control app maximum TEC change/step</description>
+            <initial>10000.0</initial>
+            <save/>
+            <display format="%.1f">Maximum actuator increment (Imax)</display>
+        </register>
+        <register ident="CAVITY_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Cavity TEC PRBS generator polynomial</description>
+            <initial>0x481</initial>
+            <save/>
+            <display format="$%X">PRBS generator</display>
+        </register>
+        <register ident="CAVITY_TEC_PRBS_AMPLITUDE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity TEC PRBS amplitude</description>
+            <initial>5000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS amplitude</display>
+        </register>
+        <register ident="CAVITY_TEC_PRBS_MEAN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity TEC PRBS mean</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS mean</display>
+        </register>
+        <register ident="CAVITY_MAX_HEATSINK_TEMP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Maximum temperature of hot box heatsink</description>
+            <initial>70.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Hot Box heatsink maximum temperature</display>
+        </register>
+        <register ident="HEATER_CNTRL_STATE_REGISTER" type="HEATER_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Heater control app state register</description>
+            <initial>HEATER_CNTRL_DisabledState</initial>
+            <display>Heater Controller Mode</display>
+        </register>
+        <register ident="HEATER_CNTRL_GAIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater control gain register</description>
+            <initial>50.0</initial>
+            <save/>
+            <display format="%.0f">Heater control gain</display>
+        </register>
+        <register ident="HEATER_CNTRL_QUANTIZE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater control quantize register</description>
+            <initial>20000.0</initial>
+            <save/>
+            <display format="%.0f">Heater control quantization</display>
+        </register>
+        <register ident="HEATER_CNTRL_UBIAS_SLOPE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater control UBias slope register</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f">Heater control UBias slope</display>
+        </register>
+        <register ident="HEATER_CNTRL_UBIAS_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater control UBias offset register</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.0f">Heater control UBias offset</display>
+        </register>
+        <register ident="HEATER_CNTRL_MARK_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater minimum mark register</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f">Heater minimum mark</display>
+        </register>
+        <register ident="HEATER_CNTRL_MARK_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater maximum mark register</description>
+            <initial>8000.0</initial>
+            <save/>
+            <display format="%.0f">Heater maximum mark</display>
+        </register>
+        <register ident="HEATER_CNTRL_MANUAL_MARK_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater mark in manual mode register</description>
+            <initial>4000.0</initial>
+            <save/>
+            <display format="%.0f">Heater manual mode mark</display>
+        </register>
+        <register ident="HEATER_CNTRL_MARK_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater control mark register</description>
+            <initial>0.0</initial>
+            <display format="%.0f">Heater manual mode mark</display>
+        </register>
+
+    </register_list>
+    <fpga_block_list>
+        <fpga_block ident="PWM" description="Pulse width modulator">
+            <reg ident="CS" description="Control/Status register">
+                <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
+                <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
+                <bitfield ident="PWM_OUT" description="PWM_OUT"  lsb="2" width="1" />
+            </reg>
+            <reg ident="PULSE_WIDTH" description="Pulse width register"/>
+        </fpga_block>
+        <fpga_block ident="RDSIM" description="Ringdown simulator">
+            <reg ident="CS" description="Control/Status register">
+                <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
+                <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
+                <bitfield ident="INIT"    description="NORMAL/INIT"  lsb="2" width="1" />
+                <bitfield ident="ADC_CLK" description="SINGLE mode ADC clock"  lsb="3" width="1" />
+            </reg>
+            <reg ident="VALUE" description="Ringdown value register"/>
+            <reg ident="DECAY" description="Decay rate register"/>
+            <reg ident="AMPLITUDE" description="Ringdown amplitude register"/>
+        </fpga_block>
+        <fpga_block ident="LASERLOCK" description="Laser frequency locker">
+            <reg ident="CS" description="Control/Status register">
+                <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
+                <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
+                <bitfield ident="PRBS"    description="Enables generation of PRBS for loop characterization" lsb="2" width="1" />
+                <bitfield ident="ACC_EN"  description="Resets or enables fine current accumulator" lsb="3" width="1" />
+                <bitfield ident="SAMPLE_DARK"  description="Strobe high to sample dark current" lsb="4" width="1" />
+                <bitfield ident="ADC_STROBE"   description="Strobe high to start new computation cycle" lsb="5" width="1" />
+                <bitfield ident="TUNING_OFFSET_SEL"   description="0 selects register, 1 selects input for tuning offset input" lsb="6" width="1" />
+                <bitfield ident="LOCKED"  description="Flag indicating loop is locked" lsb="14" width="1" />
+                <bitfield ident="DONE"    description="Flag indicating cycle is complete" lsb="15" width="1" />
+            </reg>
+            <reg ident="ETA1" description="Etalon 1 reading"/>
+            <reg ident="REF1" description="Reference 1 reading"/>
+            <reg ident="ETA2" description="Etalon 2 reading"/>
+            <reg ident="REF2" description="Reference 2 reading"/>
+            <reg ident="ETA1_DARK" description="Etalon 1 dark reading (ro)"/>
+            <reg ident="REF1_DARK" description="Reference 1 dark reading (ro)"/>
+            <reg ident="ETA2_DARK" description="Etalon 2 dark reading (ro)"/>
+            <reg ident="REF2_DARK" description="Reference 2 dark reading (ro)"/>
+            <reg ident="ETA1_OFFSET" description="Etalon 1 offset to be subtracted before finding ratio"/>
+            <reg ident="REF1_OFFSET" description="Reference 1 offset to be subtracted before finding ratio"/>
+            <reg ident="ETA2_OFFSET" description="Etalon 2 offset to be subtracted before finding ratio"/>
+            <reg ident="REF2_OFFSET" description="Reference 2 offset to be subtracted before finding ratio"/>
+            <reg ident="RATIO1" description="Ratio 1 (ro)"/>
+            <reg ident="RATIO2" description="Ratio 2 (ro)"/>
+            <reg ident="RATIO1_CENTER" description="Center of ellipse for ratio 1"/>
+            <reg ident="RATIO1_MULTIPLIER" description="Factor for ratio 1 in error linear combination"/>
+            <reg ident="RATIO2_CENTER" description="Center of ellipse for ratio 2"/>
+            <reg ident="RATIO2_MULTIPLIER" description="Factor for ratio 2 in error linear combination"/>
+            <reg ident="TUNING_OFFSET" description="Offset to add to error to shift frequency"/>
+            <reg ident="LOCK_ERROR" description="Frequency loop lock error (ro)"/>
+            <reg ident="WM_LOCK_WINDOW" description="Defines when laser frequency is in lock"/>
+            <reg ident="WM_INT_GAIN" description="Integral gain for wavelength locking"/>
+            <reg ident="WM_PROP_GAIN" description="Proportional gain for wavelength locking"/>
+            <reg ident="WM_DERIV_GAIN" description="Derivative gain for wavelength locking"/>
+            <reg ident="FINE_CURRENT" description="Fine laser current (ro)"/>
+            <reg ident="CYCLE_COUNTER" description="Cycle counter (ro)"/>
+        </fpga_block>
+        <fpga_block ident="RDMETAMAN" description="Ringdown metadata manager">
+            <reg ident="CS" description="Control/Status register">
+                <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
+                <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
+                <bitfield ident="START"   description="Start address counter" lsb="2" width="1" />
+                <bitfield ident="BANK"    description="Bank select" lsb="3" width="1" />
+                <bitfield ident="RD"      description="Ringdown" lsb="4" width="1" />
+                <bitfield ident="LASER_LOCKER_DONE"    description="Laser locker done (metadata strobe)" lsb="5" width="1" />
+                <bitfield ident="LAPPED"  description="Address counter wrapped" lsb="15" width="1" />
+            </reg>
+            <reg ident="METADATA_ADDRCNTR" description="Metadata address counter"/>
+            <reg ident="PARAM_ADDRCNTR" description="Parameter address counter"/>
+            <reg ident="TUNER" description="Tuner value"/>
+            <reg ident="TUNER_AT_RINGDOWN" description="Tuner value at ringdown"/>
+            <reg ident="ADDR_AT_RINGDOWN" description="Metadata address counter value at ringdown"/>
+            <reg ident="PARAM0" description="Ringdown parameter 0"/>
+            <reg ident="PARAM1" description="Ringdown parameter 1"/>
+            <reg ident="PARAM2" description="Ringdown parameter 2"/>
+            <reg ident="PARAM3" description="Ringdown parameter 3"/>
+            <reg ident="PARAM4" description="Ringdown parameter 4"/>
+            <reg ident="PARAM5" description="Ringdown parameter 5"/>
+            <reg ident="PARAM6" description="Ringdown parameter 6"/>
+            <reg ident="PARAM7" description="Ringdown parameter 7"/>
+        </fpga_block>
+        <fpga_block ident="RDDATMAN" description="Ringdown data manager">
+            <reg ident="CS" description="Control/Status register">
+                <bitfield ident="RUN"       description="STOP/RUN" lsb="0" width="1" />
+                <bitfield ident="CONT"      description="SINGLE/CONTINUOUS" lsb="1" width="1" />
+                <bitfield ident="ACK"       description="Acknowledge completion of acquisition" lsb="2" width="1" />
+                <bitfield ident="BANK"      description="Bank select" lsb="3" width="1" />
+                <bitfield ident="GATE"      description="Gate to arm for ringdown acquisition" lsb="4" width="1" />
+                <bitfield ident="RD_CLOCK"  description="Ringdown ADC clock" lsb="14" width="1" />
+                <bitfield ident="ACQ_DONE"  description="Acquisition done" lsb="15" width="1" />
+            </reg>
+            <reg ident="DATA_ADDRCNTR" description="Address counter"/>
+            <reg ident="DATA" description="Ringdown data"/>
+            <reg ident="DIVISOR" description="Divisor for ringdown ADC clock"/>
+            <reg ident="NUM_SAMP" description="Number of samples to collect"/>
+            <reg ident="THRESHOLD" description="Ringdown threshold"/>
+        </fpga_block>
+        <fpga_block ident="RDMAN" description="Ringdown manager">
+            <reg ident="CONTROL" description="Control register">
+                <bitfield ident="RUN"           description="STOP/RUN"                     lsb="0" width="1" />
+                <bitfield ident="CONT"          description="SINGLE/CONTINUOUS"            lsb="1" width="1" />
+                <bitfield ident="START_RD"      description="Start ringdown cycle"         lsb="2" width="1" />
+                <bitfield ident="LOCK_ENABLE"   description="Enable laser locking"         lsb="3" width="1" />
+                <bitfield ident="UP_SLOPE_ENABLE"     description="Enable ringdown on positive slope" lsb="4" width="1" />
+                <bitfield ident="DOWN_SLOPE_ENABLE"   description="Enable ringdown on negative slope" lsb="5" width="1" />
+                <bitfield ident="BANK0_CLEAR"   description="Reset bank 0 in use"          lsb="6" width="1" />
+                <bitfield ident="BANK1_CLEAR"   description="Reset bank 1 in use"          lsb="7" width="1" />
+                <bitfield ident="LASER_LOCKED"  description="Laser wavelength locked"      lsb="8" width="1" />
+                <bitfield ident="LASER_LOCKER_DONE" description="Laser locker done (metadata strobe)" lsb="9" width="1" />
+                <bitfield ident="RD_IRQ_ACK"    description="Acknowledge ringdown irq"     lsb="10" width="1" />
+                <bitfield ident="ACQ_DONE_ACK"  description="Acknowledge acquisition irq"  lsb="11" width="1" />
+            </reg>
+            <reg ident="STATUS" description="Status register">
+                <bitfield ident="SHUTDOWN"      description="Injection shutdown"           lsb="0" width="1" />
+                <bitfield ident="RD_IRQ"        description="Ringdown interrupt"           lsb="1" width="1" />
+                <bitfield ident="ACQ_DONE"      description="Acquisition done interrupt"   lsb="2" width="1" />
+                <bitfield ident="BANK"          description="Bank for writes (ro)"         lsb="3" width="1" />
+                <bitfield ident="BANK0_IN_USE"  description="Bank 0 in use   (ro)"         lsb="4" width="1" />
+                <bitfield ident="BANK1_IN_USE"  description="Bank 1 in use   (ro)"         lsb="5" width="1" />
+                <bitfield ident="LAPPED"        description="Address counter wrapped"      lsb="6" width="1" />
+                <bitfield ident="TIMEOUT"       description="Ringdown timeout occured"     lsb="7" width="1" />        </reg>
+            <reg ident="TUNER" description="Tuner value"/>
+            <reg ident="DATA" description="Ringdown data"/>
+            <reg ident="PARAM0" description="Ringdown parameter 0"/>
+            <reg ident="PARAM1" description="Ringdown parameter 1"/>
+            <reg ident="PARAM2" description="Ringdown parameter 2"/>
+            <reg ident="PARAM3" description="Ringdown parameter 3"/>
+            <reg ident="PARAM4" description="Ringdown parameter 4"/>
+            <reg ident="PARAM5" description="Ringdown parameter 5"/>
+            <reg ident="PARAM6" description="Ringdown parameter 6"/>
+            <reg ident="PARAM7" description="Ringdown parameter 7"/>
+            <reg ident="DATA_ADDRCNTR" description="Address counter"/>
+            <reg ident="METADATA_ADDRCNTR" description="Metadata address counter"/>
+            <reg ident="PARAM_ADDRCNTR" description="Parameter address counter"/>
+            <reg ident="DIVISOR" description="Divisor for ringdown ADC clock"/>
+            <reg ident="NUM_SAMP" description="Number of samples to collect"/>
+            <reg ident="THRESHOLD" description="Ringdown threshold"/>
+            <reg ident="PRECONTROL_TIME" description="Precontrol time"/>
+            <reg ident="RINGDOWN_TIMEOUT" description="Ringdown timeout"/>
+            <reg ident="TUNER_AT_RINGDOWN" description="Tuner value at ringdown"/>
+            <reg ident="METADATA_ADDR_AT_RINGDOWN" description="Metadata address counter value at ringdown"/>
+        </fpga_block>
+        <fpga_block ident="LASER_CURRENT_DAC" description="Laser current DAC">
+            <reg ident="CS" description="Control/Status register">
+                <bitfield ident="RUN"           description="STOP/RUN"                     lsb="0" width="1" />
+                <bitfield ident="CONT"          description="SINGLE/CONTINUOUS"            lsb="1" width="1" />
+            </reg>
+            <reg ident="COARSE_CURRENT" description="Coarse current DAC"/>
+            <reg ident="FINE_CURRENT" description="Fine current DAC"/>
+        </fpga_block>
+    </fpga_block_list>
+    <fpga_map_list>
+        <fpga_map ident="FPGA_VERSION">
+            <description>Version register</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_PWMA" block="PWM">
+            <description>Pulse width modulator A registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_PWMB" block="PWM">
+            <description>Pulse width modulator B registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_RDSIM" block="RDSIM">
+            <description>Ringdown simulator registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_LASERLOCK" block="LASERLOCK">
+            <description>Laser frequency locker registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_RDMETAMAN" block="RDMETAMAN">
+            <description>Ringdown metadata manager registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_RDDATMAN" block="RDDATMAN">
+            <description>Ringdown data manager registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_RDMAN" block="RDMAN">
+            <description>Ringdown manager registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_LASER1_CURRENT_DAC" block="LASER_CURRENT_DAC">
+            <description>Laser1 current DAC registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_LASER2_CURRENT_DAC" block="LASER_CURRENT_DAC">
+            <description>Laser2 current DAC registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_LASER3_CURRENT_DAC" block="LASER_CURRENT_DAC">
+            <description>Laser3 current DAC registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_LASER4_CURRENT_DAC" block="LASER_CURRENT_DAC">
+            <description>Laser4 current DAC registers</description>
+        </fpga_map>
+    </fpga_map_list>
+    <environment_list>
+        <env type="PidControllerEnvType" ident="LASER1_TEMP_CNTRL_ENV" />
+        <env type="PidControllerEnvType" ident="LASER2_TEMP_CNTRL_ENV" />
+        <env type="CheckEnvType" ident="CHECK_ENV" />
+        <env type="PulseGenEnvType" ident="PULSE_GEN_ENV" />
+        <env type="FilterEnvType" ident="FILTER_ENV" />
+        <env type="FilterEnvType" ident="LASER_TEMP_MODEL_ENV" />
+    </environment_list>
+    <action_list>
+        <action ident="ACTION_WRITE_BLOCK">writeBlock</action>
+        <action ident="ACTION_SET_TIMESTAMP">setTimestamp</action>
+        <action ident="ACTION_GET_TIMESTAMP">r_getTimestamp</action>
+        <action ident="ACTION_INIT_RUNQUEUE">initRunqueue</action>
+        <action ident="ACTION_TEST_SCHEDULER">testScheduler</action>
+        <action ident="ACTION_STREAM_REGISTER">streamRegister</action>
+        <action ident="ACTION_RESISTANCE_TO_TEMPERATURE">r_resistanceToTemperature</action>
+        <action ident="ACTION_TEMP_CNTRL_SET_COMMAND">r_tempCntrlSetCommand</action>
+        <action ident="ACTION_APPLY_PID_STEP">r_applyPidStep</action>
+        <action ident="ACTION_TEMP_CNTRL_LASER1_INIT">r_tempCntrlLaser1Init</action>
+        <action ident="ACTION_TEMP_CNTRL_LASER1_STEP">r_tempCntrlLaser1Step</action>
+        <action ident="ACTION_TEMP_CNTRL_LASER2_INIT">r_tempCntrlLaser2Init</action>
+        <action ident="ACTION_TEMP_CNTRL_LASER2_STEP">r_tempCntrlLaser2Step</action>
+        <action ident="ACTION_TEMP_CNTRL_LASER3_INIT">r_tempCntrlLaser3Init</action>
+        <action ident="ACTION_TEMP_CNTRL_LASER3_STEP">r_tempCntrlLaser3Step</action>
+        <action ident="ACTION_TEMP_CNTRL_LASER4_INIT">r_tempCntrlLaser4Init</action>
+        <action ident="ACTION_TEMP_CNTRL_LASER4_STEP">r_tempCntrlLaser4Step</action>
+        <action ident="ACTION_CURRENT_CNTRL_LASER1_INIT">r_currentCntrlLaser1Init</action>
+        <action ident="ACTION_CURRENT_CNTRL_LASER1_STEP">r_currentCntrlLaser1Step</action>
+        <action ident="ACTION_TEMP_CNTRL_CAVITY_INIT">r_tempCntrlCavityInit</action>
+        <action ident="ACTION_TEMP_CNTRL_CAVITY_STEP">r_tempCntrlCavityStep</action>
+        <action ident="ACTION_HEATER_CNTRL_INIT">r_heaterCntrlInit</action>
+        <action ident="ACTION_HEATER_CNTRL_STEP">r_heaterCntrlStep</action>
+        <action ident="ACTION_ENV_CHECKER">r_envChecker</action>
+        <!-- Pulse generator:
+        Inputs:
+            Register (int):   Duration of low level
+            Register (int):   Duration of high level
+        Output:
+            Register (float): Generator output
+        Environment:
+            PulseGenType
+        Comments:
+            The output levels are 0.0 and 1.0 -->
+        <action ident="ACTION_PULSE_GENERATOR">r_pulseGenerator</action>
+        <!-- Discrete time filter:
+        Input:
+            Register (float):   Input sequence
+        Output:
+            Register (float):   Output sequence
+        Environment:
+            FilterEnvType
+        Comments:
+            The filter coefficients and state are in FilterEnvType -->
+        <action ident="ACTION_FILTER">r_filter</action>
+    </action_list>
+</Das_Interface>

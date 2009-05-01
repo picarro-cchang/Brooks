@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ # FILE:
+ #   ParameterPages.py
+ #
+ # DESCRIPTION:
+ #   Defines the parameter editing pages for the controller GUI
+ #
+ # SEE ALSO:
+ #   Specify any related information.
+ #
+ # HISTORY:
+ #   07-Apr-2009  sze  Initial version.
+ #
+ #  Copyright (c) 2009 Picarro, Inc. All rights reserved
+ #
+ -->
+
+<!DOCTYPE Controller_gui [
+     <!ELEMENT Controller_gui (gui_pages)>
+     <!ELEMENT gui_pages (gui_page+)>
+     <!ELEMENT gui_page (title,(register|mask_register)+)>
+     <!ELEMENT register (#PCDATA)>
+     <!ELEMENT mask_register (register,(mask)+)>
+     <!ELEMENT title  (#PCDATA)>
+     <!ELEMENT mask  (#PCDATA)>]>
+
+<Controller_gui>
+    <gui_pages>
+        <gui_page>
+            <title>System Configuration Parameters</title>
+            <register>SCHEDULER_CONTROL_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Laser 1 Parameters</title>
+            <register>LASER1_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_H_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_K_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_TI_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_TD_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_B_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_C_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_N_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_S_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>LASER1_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>LASER1_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>LASER1_TEC_PRBS_MEAN_REGISTER</register>
+            <register>LASER1_MANUAL_TEC_REGISTER</register>
+            <register>LASER1_CURRENT_CNTRL_STATE_REGISTER</register>
+            <register>LASER1_MANUAL_COARSE_CURRENT_REGISTER</register>
+            <register>LASER1_MANUAL_FINE_CURRENT_REGISTER</register>
+            <register>LASER1_CURRENT_SWEEP_MIN_REGISTER</register>
+            <register>LASER1_CURRENT_SWEEP_MAX_REGISTER</register>
+            <register>LASER1_CURRENT_SWEEP_INCR_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Laser 2 Parameters</title>
+            <register>LASER2_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_H_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_K_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_TI_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_TD_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_B_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_C_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_N_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_S_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>LASER2_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>LASER2_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>LASER2_TEC_PRBS_MEAN_REGISTER</register>
+            <register>LASER2_MANUAL_TEC_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Laser 3 Parameters</title>
+            <register>LASER3_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_H_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_K_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_TI_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_TD_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_B_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_C_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_N_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_S_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>LASER3_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>LASER3_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>LASER3_TEC_PRBS_MEAN_REGISTER</register>
+            <register>LASER3_MANUAL_TEC_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Laser 4 Parameters</title>
+            <register>LASER4_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_H_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_K_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_TI_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_TD_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_B_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_C_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_N_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_S_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>LASER4_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>LASER4_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>LASER4_TEC_PRBS_MEAN_REGISTER</register>
+            <register>LASER4_MANUAL_TEC_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Cavity Temperature Parameters</title>
+            <register>CAVITY_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_H_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_K_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_TI_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_TD_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_B_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_C_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_N_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_S_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>CAVITY_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>CAVITY_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>CAVITY_TEC_PRBS_MEAN_REGISTER</register>
+            <register>CAVITY_MANUAL_TEC_REGISTER</register>
+            <register>CAVITY_MAX_HEATSINK_TEMP_REGISTER</register>
+            <register>HEATER_CNTRL_STATE_REGISTER</register>
+            <register>HEATER_CNTRL_GAIN_REGISTER</register>
+            <register>HEATER_CNTRL_QUANTIZE_REGISTER</register>
+            <register>HEATER_CNTRL_UBIAS_SLOPE_REGISTER</register>
+            <register>HEATER_CNTRL_UBIAS_OFFSET_REGISTER</register>
+            <register>HEATER_CNTRL_MARK_MIN_REGISTER</register>
+            <register>HEATER_CNTRL_MARK_MAX_REGISTER</register>
+            <register>HEATER_CNTRL_MANUAL_MARK_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Pulse Generator Parameters</title>
+            <register>LOW_DURATION_REGISTER</register>
+            <register>HIGH_DURATION_REGISTER</register>
+        </gui_page>
+    </gui_pages>
+</Controller_gui>
