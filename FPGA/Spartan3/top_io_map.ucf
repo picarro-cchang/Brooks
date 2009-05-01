@@ -110,16 +110,16 @@ NET "DSP_EMIF_ED<30>" LOC = "d14" ;
 NET "DSP_EMIF_ED<31>" LOC = "a14" ;
 
 # DSP external memory byte enable
-NET "DSP_EMIF_BE<0>" LOC = "f21" ;
-NET "DSP_EMIF_BE<1>" LOC = "f19" ;
-NET "DSP_EMIF_BE<2>" LOC = "a16" ;
-NET "DSP_EMIF_BE<3>" LOC = "a15" ;
+NET "DSP_EMIF_BE_N<0>" LOC = "f21" ;
+NET "DSP_EMIF_BE_N<1>" LOC = "f19" ;
+NET "DSP_EMIF_BE_N<2>" LOC = "a16" ;
+NET "DSP_EMIF_BE_N<3>" LOC = "a15" ;
 
 # DSP external memory chip enable
-NET "DSP_EMIF_CE<0>" LOC = "c4" ;
-NET "DSP_EMIF_CE<1>" LOC = "d1" ;
-NET "DSP_EMIF_CE<2>" LOC = "c2" ;
-NET "DSP_EMIF_CE<3>" LOC = "c3" ;
+NET "DSP_EMIF_CE_N<0>" LOC = "c4" ;
+NET "DSP_EMIF_CE_N<1>" LOC = "d1" ;
+NET "DSP_EMIF_CE_N<2>" LOC = "c2" ;
+NET "DSP_EMIF_CE_N<3>" LOC = "c3" ;
 
 # DSP external memory control lines
 NET "DSP_EMIF_WE_N" LOC = "d2" ;

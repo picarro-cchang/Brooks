@@ -51,9 +51,9 @@ entity top_io_map is
            DSP_EMIF_EA      : in std_logic_vector(21 downto 2);
            DSP_EMIF_ED      : inout std_logic_vector(31 downto 0);
            -- DSP external memory byte enable
-           DSP_EMIF_BE      : in std_logic_vector(3 downto 0);
+           DSP_EMIF_BE_N    : in std_logic_vector(3 downto 0);
            -- DSP external memory chip enable
-           DSP_EMIF_CE      : in std_logic_vector(3 downto 0);
+           DSP_EMIF_CE_N    : in std_logic_vector(3 downto 0);
            -- DSP external memory control lines
            DSP_EMIF_WE_N    : in std_logic;
            DSP_EMIF_RE_N    : in std_logic;
@@ -117,8 +117,8 @@ begin
            DSP_ECLKOUT      => DSP_ECLKOUT,
            DSP_EMIF_EA      => DSP_EMIF_EA,
            DSP_EMIF_ED      => DSP_EMIF_ED,
-           DSP_EMIF_BE      => DSP_EMIF_BE,
-           DSP_EMIF_CE      => DSP_EMIF_CE,
+           DSP_EMIF_BE_N    => DSP_EMIF_BE_N,
+           DSP_EMIF_CE_N    => DSP_EMIF_CE_N,
            DSP_EMIF_WE_N    => DSP_EMIF_WE_N,
            DSP_EMIF_RE_N    => DSP_EMIF_RE_N,
            DSP_EMIF_OE_N    => DSP_EMIF_OE_N,
@@ -162,6 +162,7 @@ begin
            WMM_TRAN2        => BUFF_IN(55),
            WMM_BUSY1        => BUFF_IN(56),
            WMM_BUSY2        => BUFF_IN(57),
+           WMM_RD           => BUFF_OUT(13),
            WMM_CONVST       => BUFF_OUT(14),
            WMM_CLK          => BUFF_OUT(15),
            SW1              => BUFF_OUT(16),
