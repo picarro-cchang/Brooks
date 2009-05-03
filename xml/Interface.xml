@@ -160,7 +160,7 @@
         <constant ident="OPERAND_TABLE_SIZE" description="Number of 32-bit ints in operand table">(ENVIRONMENT_OFFSET - OPERAND_OFFSET)</constant>
         <constant ident="ENVIRONMENT_TABLE_SIZE" description="Number of 32-bit ints in environment table">(HOST_OFFSET - ENVIRONMENT_OFFSET)</constant>
         <constant ident="HOST_REGION_SIZE" description="Number of 32-bit ints in host area">(SHAREDMEM_SIZE - HOST_OFFSET)</constant>
-        <constant ident="EMIF_ADDR_WIDTH" description="Number of bits in EMIF address">17</constant>
+        <constant ident="EMIF_ADDR_WIDTH" description="Number of bits in EMIF address">20</constant>
         <constant ident="EMIF_DATA_WIDTH" description="Number of bits in EMIF address">32</constant>
         <constant ident="FPGA_REG_WIDTH" description="Numer of bits in an FPGA register">16</constant>
         <constant ident="FPGA_RDMEM_MASK" description="Mask to access ringdown memory">0</constant>

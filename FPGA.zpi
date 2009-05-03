@@ -81,6 +81,7 @@
     <ReleaseProjectSaveAll>Off</ReleaseProjectSaveAll>
     <ReleaseProjectReload>Off</ReleaseProjectReload>
     <Folder name="Spartan3" sorted="Yes">
+        <File>FPGA\Spartan3\top_block.vhd</File>
         <File>FPGA\Spartan3\top_io.vhd</File>
         <File>FPGA\Spartan3\top_io_map.ucf</File>
         <File>FPGA\Spartan3\top_io_map.vhd</File>

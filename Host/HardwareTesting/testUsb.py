@@ -1,4 +1,5 @@
 import unittest
+import logging
 import sys
 from Host.autogen import usbdefs
 from Host.Common.analyzerUsbIf import AnalyzerUsb
@@ -27,6 +28,7 @@ def loadUsbIfCode():
     try: # connecting to a blank FX2 chip
         analyzerUsb.connect()
     except: # Assume code has already been loaded
+        logging.info("No blank Cypress FX2 detected, assuming already programmed.")
         return
     logging.info("Downloading USB code to Cypress FX2")
     analyzerUsb.loadHexFile(file(usbFile,"r"))
@@ -39,11 +41,11 @@ def loadUsbIfCode():
             break
         except:
             sleep(1.0)
+    logging.info("After download, USB high-speed mode: %d" % (analyzerUsb.getUsbSpeed(),))
     analyzerUsb.disconnect()
 
 if __name__ == "__main__":
-    print "Loading USB code"
+    logging.basicConfig(level=logging.INFO)
     loadUsbIfCode()
     unittest.main()
-
 

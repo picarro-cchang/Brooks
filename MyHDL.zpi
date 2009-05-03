@@ -80,7 +80,15 @@
     <ReleaseProjectStdErr>On</ReleaseProjectStdErr>
     <ReleaseProjectSaveAll>Off</ReleaseProjectSaveAll>
     <ReleaseProjectReload>Off</ReleaseProjectReload>
-    <Folder name="Header Files" sorted="Yes" />
-    <Folder name="Resource Files" sorted="Yes" />
-    <Folder name="Source Files" sorted="Yes" />
+    <Folder name="Top Level Files" sorted="Yes">
+        <File>MyHDL\main1.py</File>
+    </Folder>
+    <Folder name="VHDL files" sorted="Yes">
+        <File>MyHDL\Spartan3\DCM_example.vhd</File>
+        <File>MyHDL\Spartan3\pck_myhdl_06.vhd</File>
+        <File>MyHDL\Spartan3\top_block.vhd</File>
+        <File>MyHDL\Spartan3\top_io.vhd</File>
+        <File>MyHDL\Spartan3\top_io_map.ucf</File>
+        <File>MyHDL\Spartan3\top_io_map.vhd</File>
+    </Folder>
 </Project>

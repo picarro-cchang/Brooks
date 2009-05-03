@@ -141,18 +141,20 @@ void TD_Init(void) {           // Called once at startup
     // Uncomment the next lines if using the synchronous serial interface
     // Set up PORTE.3 as RXD0OUT
     PORTECFG = 0x08;
-    // Configure the serial interface
-    SCON0 = 0x0;
     // Output enables for PORTE, rest are inputs
     OEE = FPGA_SS_PROG | CYP_LED0 | CYP_LED1 | CYP_LED2;
+    // Write initial value to PORTE
+    // Set PROG high and LEDs low
+    IOE = FPGA_SS_PROG;
 
-    // Set PROG and CCLK line high (DIN line low)
-    IO_FPGA_CONF = FPGA_SS_PROG;
+    // Configure the serial interface
+    SCON0 = 0x0;
 
     // Configure PORTA
     PORTACFG = bmBIT0; // PA0 takes on INT0/ alternate function
     OEA  |= 0xFE;      // initialize PA7, PA4, PA3 PA2 and PA1 port i/o pins as outputs, PA0 as an input
     IOA = bmHPI_RESETz | bmHPI_HINTz;   // Deassert interrupt and reset
+
 }
 
 void TD_Poll(void) {           // Called repeatedly while the device is idle
@@ -355,7 +357,7 @@ BOOL DR_VendorCmnd(void) {
         case FPGA_START_PROGRAM:
             // Pulses PROG line low momentarily (>0.5us) to start programming
             // TODO: Check length of pulse
-            IO_FPGA_CONF &= ~FPGA_SS_PROG;
+            IOE &= ~FPGA_SS_PROG;
             _nop_();
             _nop_();
             _nop_();
@@ -364,7 +366,7 @@ BOOL DR_VendorCmnd(void) {
             _nop_();
             _nop_();
             _nop_();
-            IO_FPGA_CONF |= FPGA_SS_PROG;
+            IOE |= FPGA_SS_PROG;
 
             // Return 1 to host
             EP0BUF[0] = 1;
@@ -391,7 +393,7 @@ BOOL DR_VendorCmnd(void) {
             break;
         case FPGA_GET_STATUS:
             // Returns one byte with INIT in b0 and DONE in b1
-            b = IO_FPGA_CONF;
+            b = IOE;
             EP0BUF[0] = ((b & FPGA_SS_INIT) ? 1:0) | ((b & FPGA_SS_DONE) ? 2:0);
             // Specify length (in bytes) to return
             EP0BCH = 0;
@@ -679,23 +681,15 @@ BYTE xdata portA = 0;
 BYTE xdata portE = 0;
 
 void LED_Off (BYTE LED_Mask) {
-    portA = IOA;
-    portE = IOE;
-    if (LED_Mask & bmBIT0) portE &= ~CYP_LED0;
-    if (LED_Mask & bmBIT1) portE &= ~CYP_LED1;
-    if (LED_Mask & bmBIT2) portE &= ~CYP_LED2;
-    if (LED_Mask & bmBIT3) portA &= ~CYP_LED3;
-    IOA = portA;
-    IOE = portE;
+    if (LED_Mask & bmBIT0) IOE &= ~CYP_LED0;
+    if (LED_Mask & bmBIT1) IOE &= ~CYP_LED1;
+    if (LED_Mask & bmBIT2) IOE &= ~CYP_LED2;
+    if (LED_Mask & bmBIT3) IOA &= ~CYP_LED3;
 }
 
 void LED_On (BYTE LED_Mask) {
-    portA = IOA;
-    portE = IOE;
-    if (LED_Mask & bmBIT0) portE |= ~CYP_LED0;
-    if (LED_Mask & bmBIT1) portE |= ~CYP_LED1;
-    if (LED_Mask & bmBIT2) portE |= ~CYP_LED2;
-    if (LED_Mask & bmBIT3) portA |= ~CYP_LED3;
-    IOA = portA;
-    IOE = portE;
+    if (LED_Mask & bmBIT0) IOE |= CYP_LED0;
+    if (LED_Mask & bmBIT1) IOE |= CYP_LED1;
+    if (LED_Mask & bmBIT2) IOE |= CYP_LED2;
+    if (LED_Mask & bmBIT3) IOA |= CYP_LED3;
 }

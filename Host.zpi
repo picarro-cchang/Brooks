@@ -80,6 +80,10 @@
     <ReleaseProjectStdErr>On</ReleaseProjectStdErr>
     <ReleaseProjectSaveAll>Off</ReleaseProjectSaveAll>
     <ReleaseProjectReload>Off</ReleaseProjectReload>
+    <Folder name="Autogen" sorted="Yes">
+        <File>Host\autogen\interface.py</File>
+        <File>Host\autogen\usbdefs.py</File>
+    </Folder>
     <Folder name="Common" sorted="Yes">
         <File>Host\Common\analyzerUsbIf.py</File>
         <File>Host\Common\hexfile.py</File>
@@ -87,5 +91,8 @@
         <File>Host\Common\simulatorUsbIf.py</File>
         <File>Host\Common\usb.py</File>
     </Folder>
-    <Folder name="Hardware Testing" sorted="Yes" />
+    <Folder name="Hardware Testing" sorted="Yes">
+        <File>Host\HardwareTesting\testFpga.py</File>
+        <File>Host\HardwareTesting\testUsb.py</File>
+    </Folder>
 </Project>

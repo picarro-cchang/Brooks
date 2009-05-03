@@ -84,7 +84,9 @@
         <File>CypressUSB\analyzer\6713_HPI_gpif.c</File>
         <File>CypressUSB\analyzer\analyzerUsb.c</File>
     </Folder>
-    <Folder name="Autogen" sorted="Yes" />
+    <Folder name="Autogen" sorted="Yes">
+        <File>CypressUSB\autogen\usbdefs.h</File>
+    </Folder>
     <Folder name="Framework" sorted="Yes">
         <File>CypressUSB\framework\fw.c</File>
     </Folder>
