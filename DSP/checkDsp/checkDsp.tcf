@@ -1,0 +1,32 @@
+utils.loadPlatform("ti.platforms.dsk6713");
+
+/* The following DSP/BIOS Features are enabled.  */
+bios.enableMemoryHeaps(prog);
+bios.enableRealTimeAnalysis(prog);
+bios.enableRtdx(prog);
+bios.enableTskManager(prog);
+
+bios.PRD.create("schedulerPRD");
+bios.PRD.instance("schedulerPRD").order = 1;
+bios.PRD.instance("schedulerPRD").fxn = prog.extern("schedulerPrdFunc");
+bios.PRD.instance("schedulerPRD").period = 1000;
+bios.PRD.instance("schedulerPRD").comment = "Run scheduler once a second";
+bios.TSK.create("schedulerTSK");
+bios.TSK.instance("schedulerTSK").order = 1;
+bios.TSK.instance("schedulerTSK").comment = "Scheduler Task";
+bios.TSK.instance("schedulerTSK").fxn = prog.extern("scheduler");
+bios.SEM.create("SEM_scheduler");
+bios.SEM.instance("SEM_scheduler").comment = "Scheduler semaphore";
+bios.MEM.instance("SDRAM").len = 0x01000000;
+bios.MEM.instance("SDRAM").comment = "This object defines 16MB for the DSP's off-chip memory";
+bios.MEM.instance("SDRAM").createHeap = 1;
+bios.MEM.BIOSSEG = prog.get("SDRAM");
+bios.MEM.BIOSOBJSEG = prog.get("SDRAM");
+bios.MEM.MALLOCSEG = prog.get("SDRAM");
+bios.HWI.instance("HWI_INT13").interruptSource = prog.get("DSPINT");
+bios.HWI.instance("HWI_INT13").fxn = prog.extern("hwiHpiInterrupt");
+bios.HWI.instance("HWI_INT13").useDispatcher = 1;
+// !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
+
+prog.gen();
+

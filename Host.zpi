@@ -87,11 +87,30 @@
     <Folder name="Common" sorted="Yes">
         <File>Host\Common\analyzerUsbIf.py</File>
         <File>Host\Common\hexfile.py</File>
+        <File>Host\Common\hostDasInterface.py</File>
         <File>Host\Common\SharedTypes.py</File>
         <File>Host\Common\simulatorUsbIf.py</File>
         <File>Host\Common\usb.py</File>
     </Folder>
+    <Folder name="Controller" sorted="Yes">
+        <File>Host\Controller\ControllerFrame.py</File>
+        <File>Host\Controller\ControllerFrameGui.py</File>
+        <File>Host\Controller\ControllerModels.py</File>
+        <File>Host\Controller\ControllerPanels.py</File>
+        <File>Host\Controller\ControllerPanelsGui.py</File>
+    </Folder>
+    <Folder name="Driver" sorted="Yes">
+        <File>Host\Driver\__init__.py</File>
+        <File>Host\Driver\DasConfigure.py</File>
+        <File>Host\Driver\DasConfigureFilterDemo.py</File>
+        <File>Host\Driver\Driver.py</File>
+    </Folder>
+    <Folder name="EventManager" sorted="Yes">
+        <File>Host\EventManager\EventManager.py</File>
+        <File>Host\EventManager\EventManagerGUI.py</File>
+    </Folder>
     <Folder name="Hardware Testing" sorted="Yes">
+        <File>Host\HardwareTesting\testDsp.py</File>
         <File>Host\HardwareTesting\testFpga.py</File>
         <File>Host\HardwareTesting\testUsb.py</File>
     </Folder>

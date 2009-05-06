@@ -166,7 +166,7 @@ begin
         locked_out => clk_locked
     );
 
-    main1_inst : entity work.main1(MyHDL) port map(
+    main_inst : entity work.main(MyHDL) port map(
         clk0 => clk0,
         clk180 => clk180,
         clk3f => clk3f,

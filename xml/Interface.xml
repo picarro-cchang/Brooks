@@ -263,7 +263,7 @@
         <register ident="TIMESTAMP_MSB_REGISTER" type="uint32" minver="1.0" access="r">
             <description>MSB of timestamp register</description>
         </register>
-        <register ident="SCHEDULER_CONTROL_REGISTER" type="uint32" minver="1.0" access="rw">
+        <register ident="SCHEDULER_CONTROL_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Scheduler control register</description>
             <initial>0</initial>
             <display format="%d" units="">Scheduler enable</display>

@@ -82,6 +82,7 @@
     <ReleaseProjectReload>Off</ReleaseProjectReload>
     <Folder name="Top Level Files" sorted="Yes">
         <File>MyHDL\main1.py</File>
+        <File>MyHDL\main2.py</File>
     </Folder>
     <Folder name="VHDL files" sorted="Yes">
         <File>MyHDL\Spartan3\DCM_example.vhd</File>

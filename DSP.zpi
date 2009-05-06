@@ -80,7 +80,16 @@
     <ReleaseProjectStdErr>On</ReleaseProjectStdErr>
     <ReleaseProjectSaveAll>Off</ReleaseProjectSaveAll>
     <ReleaseProjectReload>Off</ReleaseProjectReload>
+    <Folder name="Autogen" sorted="Yes">
+        <File>DSP\autogen\dspAutogen.c</File>
+        <File>DSP\autogen\dspAutogen.h</File>
+        <File>DSP\autogen\interface.h</File>
+    </Folder>
+    <Folder name="Common" sorted="Yes">
+        <File>DSP\common\crc.c</File>
+        <File>DSP\inc\crc.h</File>
+        <File>DSP\common\CuTest.c</File>
+        <File>DSP\inc\CuTest.h</File>
+    </Folder>
     <Folder name="Header Files" sorted="Yes" />
-    <Folder name="Resource Files" sorted="Yes" />
-    <Folder name="Source Files" sorted="Yes" />
 </Project>

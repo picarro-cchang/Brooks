@@ -67,7 +67,7 @@ HighSpeedConfigDscr:
       db   1      ;; Number of interfaces
       db   1      ;; Configuration number
       db   0      ;; Configuration string
-      db   10000000b   ;; Attributes (b7 - buspwr, b6 - selfpwr, b5 - rwu)
+      db   1000000b   ;; Attributes (b7 - buspwr, b6 - selfpwr, b5 - rwu)
       db   50      ;; Power requirement (div 2 ma)
 
 ;; Interface Descriptor
@@ -127,7 +127,7 @@ FullSpeedConfigDscr:
       db   1      ;; Number of interfaces
       db   1      ;; Configuration number
       db   0      ;; Configuration string
-      db   10000000b   ;; Attributes (b7 - buspwr, b6 - selfpwr, b5 - rwu)
+      db   1000000b   ;; Attributes (b7 - buspwr, b6 - selfpwr, b5 - rwu)
       db   50      ;; Power requirement (div 2 ma)
 
 ;; Interface Descriptor

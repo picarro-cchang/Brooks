@@ -1,0 +1,58 @@
+utils.loadPlatform("ti.platforms.dsk6713");
+
+/* The following DSP/BIOS Features are enabled.  */
+bios.enableMemoryHeaps(prog);
+bios.enableRealTimeAnalysis(prog);
+bios.enableRtdx(prog);
+bios.enableTskManager(prog);
+
+bios.GBL.BOARDNAME = "c6713";
+bios.GBL.CLKIN = 50000;
+bios.MEM.USERCOMMANDFILE = 0;
+bios.MEM.USERCOMMANDFILE = 1;
+bios.MEM.instance("SDRAM").len = 0x01000000;
+bios.MEM.instance("SDRAM").createHeap = 1;
+bios.MEM.BIOSOBJSEG = prog.get("SDRAM");
+bios.MEM.MALLOCSEG = prog.get("SDRAM");
+bios.LOG.create("trace");
+bios.MEM.create("DATA");
+bios.MEM.instance("DATA").comment = "Data memory";
+bios.MEM.instance("DATA").base = 0x80800000;
+bios.MEM.instance("DATA").len = 0x00800000;
+bios.MEM.instance("DATA").heapSize = 0x00800000;
+bios.MEM.instance("DATA").enableHeapLabel = 1;
+bios.MEM.instance("DATA").heapLabel = prog.extern("user_data", "asm");
+bios.MEM.instance("DATA").createHeap = 0;
+bios.MEM.instance("SDRAM").len = 0x00800000;
+bios.MEM.instance("IRAM").comment = "Gen purpose L2 memory";
+bios.MEM.create("IINT");
+bios.MEM.instance("IINT").comment = "Interface region in L2 memory";
+bios.MEM.instance("IINT").base = 0x00010000;
+bios.MEM.instance("IINT").len = 0x00020000;
+bios.MEM.instance("IINT").createHeap = 0;
+bios.MEM.instance("IRAM").len = 0x00010000;
+bios.HWI.instance("HWI_INT13").interruptSource = prog.get("DSPINT");
+bios.HWI.instance("HWI_INT13").fxn = prog.extern("hwiHpiInterrupt");
+bios.HWI.instance("HWI_INT13").interruptSelectNumber = 0;
+bios.HWI.instance("HWI_INT13").useDispatcher = 1;
+bios.TSK.CALLSWITCHFXN = 0;
+bios.TSK.instance("TSK_idle").order = 1;
+bios.TSK.create("TSK_scheduler");
+bios.TSK.instance("TSK_scheduler").order = 3;
+bios.TSK.instance("TSK_scheduler").comment = "Schedules operations";
+bios.TSK.instance("TSK_scheduler").fxn = prog.extern("scheduler");
+bios.SEM.create("SEM_scheduler");
+bios.SEM.instance("SEM_scheduler").comment = "Controls periodic running of scheduler";
+bios.PRD.create("PRD_scheduler");
+bios.PRD.instance("PRD_scheduler").order = 3;
+bios.PRD.instance("PRD_scheduler").period = 100;
+bios.PRD.instance("PRD_scheduler").fxn = prog.extern("schedulerPrdFunc");
+bios.PRD.instance("PRD_scheduler").comment = "Scheduler";
+bios.PRD.create("PRD_timestamp");
+bios.PRD.instance("PRD_timestamp").order = 1;
+bios.PRD.instance("PRD_timestamp").period = 1;
+bios.PRD.instance("PRD_timestamp").fxn = prog.extern("timestampPrdFunction");
+bios.PRD.instance("PRD_timestamp").fxn = prog.extern("timestampPrdFunc");
+// !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
+
+prog.gen();

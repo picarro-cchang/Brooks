@@ -7,7 +7,7 @@ from ctypes import c_byte, c_uint, c_int, c_ushort, c_short, sizeof
 from time import sleep, clock
 
 usbFile  = "../../CypressUSB/analyzer/analyzerUsb.hex"
-fpgaFile = "../../FPGA/Spartan3/top_io_map.bit"
+fpgaFile = "../../MyHDL/Spartan3/top_io_map.bit"
 #usbFile  = "C:/work/CostReducedPlatform/Software/CypressUSB/analyzer/analyzerUsb.hex"
 #fpgaFile = "C:/work/CostReducedPlatform/Software/FPGA/SpartanStarter/top_io_map.bit"
 

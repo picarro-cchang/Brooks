@@ -1,0 +1,1 @@
+bcc32 -DSIMULATION -WD  -I../inc -I../autogen registerTest.c registerTestSim.c action_handler.c fpga.c misc.c registers.c scheduler.c pid.c tempCntrl.c laserCurrentCntrl.c heaterCntrl.c ../autogen/dspAutogen.c ../common/crc.c

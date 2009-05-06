@@ -3,11 +3,11 @@ from Host.autogen.interface import *
 
 LOW, HIGH = bool(0), bool(1)
 
-def main1(clk0,clk180,clk3f,clk3f180,clk_locked,
-          reset,intronix,fpga_led,
-          dsp_emif_we,dsp_emif_re,dsp_emif_oe,dsp_emif_ardy,
-          dsp_emif_ea,dsp_emif_din, dsp_emif_dout,
-          dsp_emif_ddir, dsp_emif_be, dsp_emif_ce):
+def main(clk0,clk180,clk3f,clk3f180,clk_locked,
+         reset,intronix,fpga_led,
+         dsp_emif_we,dsp_emif_re,dsp_emif_oe,dsp_emif_ardy,
+         dsp_emif_ea,dsp_emif_din, dsp_emif_dout,
+         dsp_emif_ddir, dsp_emif_be, dsp_emif_ce):
 
     NSTAGES = 28
     counter = Signal(intbv(0)[NSTAGES:])
@@ -26,7 +26,7 @@ def main1(clk0,clk180,clk3f,clk3f180,clk_locked,
         intronix.next[NSTAGES:] = counter
         fpga_led.next = counter[NSTAGES:NSTAGES-4]
         dsp_emif_ardy.next = 1   # Ensure DSP can continue
-        dsp_emif_ddir.next = 1   # DSP writes to dsp_emif_dout
+        dsp_emif_ddir.next = 0   # DSP writes to dsp_emif_dout
         dsp_emif_din.next = 0
 
     return instances()
@@ -50,10 +50,10 @@ dsp_emif_be = Signal(intbv(0)[4:])
 dsp_emif_ce = Signal(intbv(0)[4:])
 
 def makeVHDL():
-    toVHDL(main1,clk0,clk180,clk3f,clk3f180,clk_locked,reset,
-                 intronix,fpga_led,dsp_emif_we,dsp_emif_re,
-                 dsp_emif_oe,dsp_emif_ardy,dsp_emif_ea,dsp_emif_din,
-                 dsp_emif_dout,dsp_emif_ddir, dsp_emif_be, dsp_emif_ce)
+    toVHDL(main,clk0,clk180,clk3f,clk3f180,clk_locked,reset,
+                intronix,fpga_led,dsp_emif_we,dsp_emif_re,
+                dsp_emif_oe,dsp_emif_ardy,dsp_emif_ea,dsp_emif_din,
+                dsp_emif_dout,dsp_emif_ddir, dsp_emif_be, dsp_emif_ce)
 
 if __name__ == "__main__":
     makeVHDL()

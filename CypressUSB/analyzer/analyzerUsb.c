@@ -92,6 +92,18 @@ void GPIF_SingleWordRead( WORD *gdata ) {
 //-----------------------------------------------------------------------------
 
 void TD_Init(void) {           // Called once at startup
+    int i1, i2, sum = 0;
+    // Delay for stabilization
+    for (i1=0; i1<1000; i1++)
+    {
+        for (i2=0; i2<100; i2++)
+        {
+            sum += i1 + i2;
+        }
+    }
+    SYNCDELAY;
+
+
     // Set the clock speed to 48MHz (default is 12MHz)
     CPUCS = ((CPUCS & ~bmCLKSPD) | bmCLKSPD1);
     SYNCDELAY;

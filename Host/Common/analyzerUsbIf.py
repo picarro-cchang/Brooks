@@ -275,15 +275,16 @@ class AnalyzerUsb(Singleton):
                 self.hpicWrite(0x00010001)
                 self.hpiaWrite(addr+start)
                 self.hpidWrite(create_string_buffer("".join(r.data[start:start+block]),block))
-                #rbuff = (c_ubyte*block)()
-                #self.hpidWrite(rbuff)
+
                 # Read back
+                #print "Reading back..."
                 #recvArray = (c_ubyte*block)()
                 #self.hpiaWrite(addr+start)
                 #self.setHpidInBytes(block)
                 #self.hpidRead(recvArray)
                 #for i in range(block):
                 #    print "%s, %s" % (recvArray[i],ord(r.data[start+i]))
+
                 n -= block
                 start += block
             if n>0:
