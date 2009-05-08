@@ -49,8 +49,8 @@ class DasConfigure(object):
         ts = timestamp.getTimestamp()
         sender.doOperation(Operation("ACTION_SET_TIMESTAMP",[ts&0xFFFFFFFF,ts>>32]))
         # Check initial value of NOOP register
-        if 0xABCD1234 != sender.rdRegUint("NOOP_REGISTER"):
-            raise ValueError("NOOP_REGISTER not initialized correctly")
+        if 0x19680511 != sender.rdRegUint("VERIFY_INIT_REGISTER"):
+            raise ValueError("VERIFY_INIT_REGISTER not initialized correctly")
 
         # Define operation groups as a dictionary accessed using
         #  e.g. self.opGroups["FAST"]["SENSOR_READ"]
@@ -100,13 +100,18 @@ class DasConfigure(object):
                  "CONVERSION_LASER3_THERM_CONSTC_REGISTER",
                  "LASER3_TEMPERATURE_REGISTER"]))
 
+        #self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+        #    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+        #        ["LASER4_RESISTANCE_REGISTER",
+        #         "CONVERSION_LASER4_THERM_CONSTA_REGISTER",
+        #         "CONVERSION_LASER4_THERM_CONSTB_REGISTER",
+        #         "CONVERSION_LASER4_THERM_CONSTC_REGISTER",
+        #         "LASER4_TEMPERATURE_REGISTER"]))
+
+        # Read the DAS temperature into LASER4_TEMPERATURE_REGISTER
         self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
-            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                ["LASER4_RESISTANCE_REGISTER",
-                 "CONVERSION_LASER4_THERM_CONSTA_REGISTER",
-                 "CONVERSION_LASER4_THERM_CONSTB_REGISTER",
-                 "CONVERSION_LASER4_THERM_CONSTC_REGISTER",
-                 "LASER4_TEMPERATURE_REGISTER"]))
+            Operation("ACTION_DS1631_READTEMP",
+                ["LASER4_TEMPERATURE_REGISTER"]))
 
         self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
             Operation("ACTION_RESISTANCE_TO_TEMPERATURE",

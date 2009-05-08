@@ -16,7 +16,8 @@
 #ifndef _HEATER_CNTRL_H_
 #define _HEATER_CNTRL_H_
 
-typedef struct HEATER_CNTRL {
+typedef struct HEATER_CNTRL
+{
     // References to registers
     unsigned int *state_;
     float *gain_;

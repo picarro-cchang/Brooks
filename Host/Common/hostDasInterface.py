@@ -232,11 +232,8 @@ class DasInterface(Singleton):
         # Now enable pll path and we are off and running at
         # 225MHz with 90 MHz SDRAM.
         writeMem(PLL_CSR,readMem(PLL_CSR) | CSR_PLLEN)
-    def upload(self):
-        # TODO: Handle errors by returning an error code.
-        #  If this routine fails, it is not possible
-        #  to continue
-        #
+
+    def startUsb(self):
         if self.simulate:
             self.analyzerUsb = SimulatorUsb(
                 usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
@@ -248,6 +245,13 @@ class DasInterface(Singleton):
                 usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
         #
         self.analyzerUsb.connect()
+        return self.analyzerUsb.getUsbSpeed()
+
+    def upload(self):
+        # TODO: Handle errors by returning an error code.
+        #  If this routine fails, it is not possible
+        #  to continue
+        #
         self.analyzerUsb.resetHpidInFifo()
         logging.info("Holding DSP in reset...")
         self.analyzerUsb.setDspControl(usbdefs.VENDOR_DSP_CONTROL_RESET)

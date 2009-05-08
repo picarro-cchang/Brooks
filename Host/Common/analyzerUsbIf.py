@@ -20,6 +20,7 @@ from ctypes import byref, create_string_buffer, c_ubyte, c_ushort, c_short, c_ui
 from hexfile import HexFile
 from Host.autogen import usbdefs
 from Host.Common.SharedTypes import Singleton
+import time
 
 DEFAULT_OUT_ENDPOINT = USB_ENDPOINT_OUT | 2
 DEFAULT_IN_ENDPOINT  = USB_ENDPOINT_IN  | 6
@@ -87,6 +88,13 @@ class AnalyzerUsb(Singleton):
             self.controlInTransaction(version,usbdefs.VENDOR_GET_VERSION)
             return version.value
         return self._claimInterfaceWrapper(_getUsbVersion)
+
+    def reconnectUsb(self):
+        dummy = c_ushort()
+        try:
+            self.controlInTransaction(dummy,usbdefs.VENDOR_RECONNECT)
+        except:
+            pass
 
     def _claimInterfaceWrapper(self,func,*args,**kwargs):
         """Wraps function call between claim interface and release interface."""
@@ -316,9 +324,11 @@ class AnalyzerUsb(Singleton):
                 if n>0:
                     self.controlOutTransaction(create_string_buffer("".join(r.data[start:start+n]),n),0xA0,addr+start)
             # Release the 8051 reset, allowing it to renumerate
+            time.sleep(0.5)
             self.controlOutTransaction(c_ubyte(0x0),0xA0,0xE600)
-        return self._claimInterfaceWrapper(_loadHexFile)
-
+        # Do not wrap function, since it disconnects on completion
+        #return self._claimInterfaceWrapper(_loadHexFile)
+        return _loadHexFile()
 
 bitrevList = \
 [ 0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0, 0x10, 0x90, 0x50, 0xD0, 0x30, 0xB0, 0x70, 0xF0,

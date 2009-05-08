@@ -14,23 +14,21 @@
  *  Copyright (c) 2008 Picarro, Inc. All rights reserved
  */
 
-#define CHIP_6713
-
 #ifdef SIMULATION
-    // Include files for simulation mode
-    #include "registerTestSim.h"
-    #include <stdio.h>
+// Include files for simulation mode
+#include "registerTestSim.h"
+#include <stdio.h>
 #else
-    #include <std.h>
-    #include <csl.h>
-    #include <csl_cache.h>
-    #include <csl_hpi.h>
-    #include <csl_i2c.h>
-    #include <csl_irq.h>
-    #include <log.h>
-    #include <prd.h>
-    #include <sem.h>
-    #include "registerTestcfg.h"
+#include <std.h>
+#include <csl.h>
+#include <csl_cache.h>
+#include <csl_hpi.h>
+#include <csl_i2c.h>
+#include <csl_irq.h>
+#include <log.h>
+#include <prd.h>
+#include <sem.h>
+#include "registerTestcfg.h"
 #endif
 
 #define EXT_MEM 0
@@ -64,7 +62,7 @@ void init_comms()
     // Initialize the COMM_STATUS register
     commStatSeqNum = 0;
     d.asUint = ((commStatSeqNum<<COMM_STATUS_SequenceNumberShift)&
-               COMM_STATUS_SequenceNumberMask)|COMM_STATUS_CompleteMask;
+                COMM_STATUS_SequenceNumberMask)|COMM_STATUS_CompleteMask;
     writeRegister(COMM_STATUS_REGISTER,d);
 }
 
@@ -82,14 +80,14 @@ void message_puts(char *message)
 
 void sensor_put_from(unsigned int streamNum, void *addr)
 {
-  long long ts;
-  SensorEntryType *s = sensorEntries + sensor_pointer;
-  get_timestamp(&ts);
-  s->streamNum = streamNum;
-  s->value.asUint = *(uint32*)addr;
-  s->timestamp = ts;
-  sensor_pointer++;
-  if (sensor_pointer>=NUM_SENSOR_ENTRIES) sensor_pointer = 0;
+    long long ts;
+    SensorEntryType *s = sensorEntries + sensor_pointer;
+    get_timestamp(&ts);
+    s->streamNum = streamNum;
+    s->value.asUint = *(uint32*)addr;
+    s->timestamp = ts;
+    sensor_pointer++;
+    if (sensor_pointer>=NUM_SENSOR_ENTRIES) sensor_pointer = 0;
 }
 
 // DSP writes to a register and writes back the cache, to ensure that the data can subsequently be read
@@ -108,10 +106,10 @@ int writeRegister(unsigned int regNum,DataType data)
 //  by the host
 
 #ifdef SIMULATION
-    #if EXT_MEM
-    #else
-        #pragma argsused
-    #endif
+#if EXT_MEM
+#else
+#pragma argsused
+#endif
 #endif
 
 int writebackRegisters(unsigned int regNums[],unsigned int n)
@@ -119,7 +117,8 @@ int writebackRegisters(unsigned int regNums[],unsigned int n)
     int status = STATUS_OK;
 #if EXT_MEM
     int i;
-    for (i=0; i<n; i++) {
+    for (i=0; i<n; i++)
+    {
         if (regNums[i] >= REG_REGION_SIZE) status = ERROR_UNKNOWN_REGISTER;
         else CACHE_wbL2((void *)(REG_BASE+4*regNums[i]), 4, CACHE_WAIT);
     }
@@ -141,7 +140,7 @@ void *registerAddr(unsigned int regNum)
 }
 
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 void hwiHpiInterrupt(unsigned int funcArg, unsigned int eventId)
 {
@@ -186,24 +185,27 @@ void hwiHpiInterrupt(unsigned int funcArg, unsigned int eventId)
 
     // Compute the CRC32 and compare it with that sent in data[numInt+2]
     crc = calcCrc32(0,(unsigned int *)host->data,numInt+2);
-    if (crc != host->data[numInt+2]) {
+    if (crc != host->data[numInt+2])
+    {
         d.asUint = ((commStatSeqNum<<COMM_STATUS_SequenceNumberShift)&COMM_STATUS_SequenceNumberMask)|
-                    (COMM_STATUS_BadCrcMask)|
-                    (COMM_STATUS_CompleteMask);
+                   (COMM_STATUS_BadCrcMask)|
+                   (COMM_STATUS_CompleteMask);
         // Indicate bad CRC as well as set complete flag
         writeRegister(COMM_STATUS_REGISTER,d);
     }
     // Next check the sequence number sent coincides with the expected sequence number
 
-    else if (seqNum != commStatSeqNum) {
+    else if (seqNum != commStatSeqNum)
+    {
         d.asUint = ((commStatSeqNum<<COMM_STATUS_SequenceNumberShift)&COMM_STATUS_SequenceNumberMask)|
-                    (COMM_STATUS_BadSequenceNumberMask)|
-                    (COMM_STATUS_CompleteMask);
+                   (COMM_STATUS_BadSequenceNumberMask)|
+                   (COMM_STATUS_CompleteMask);
         // Indicate bad sequence number as well as set complete flag
         writeRegister(COMM_STATUS_REGISTER,d);
     }
 
-    else {
+    else
+    {
         // TODO: Check for valid arguments before writing the "in-progress" code
         // Indicate that the command is in-progress by setting the sequence number field, but keeping
         //  the Complete status reset

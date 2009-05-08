@@ -56,6 +56,7 @@ def programFPGA():
     logging.info(
         "USB high-speed mode: %d" % (analyzerUsb.getUsbSpeed(),))
     analyzerUsb.startFpgaProgram()
+    analyzerUsb.setDspControl(0)
     logging.info("Fpga status: %d" % analyzerUsb.getFpgaStatus())
     while 0 == (1 & analyzerUsb.getFpgaStatus()):
         pass

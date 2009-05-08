@@ -33,7 +33,8 @@ int laserCurrentCntrlStep(LaserCurrentCntrl *c)
 {
     float fine;
     // Step the laser current controller
-    switch (state) {
+    switch (state)
+    {
     case LASER_CURRENT_CNTRL_DisabledState:
         coarse = 0;
         fine = 0;
@@ -48,11 +49,13 @@ int laserCurrentCntrlStep(LaserCurrentCntrl *c)
         break;
     case LASER_CURRENT_CNTRL_SweepingState:
         coarse += swpDir * swpInc;
-        if (coarse >= swpMax) {
+        if (coarse >= swpMax)
+        {
             coarse = swpMax;
             swpDir = -1;
         }
-        else if (coarse <= swpMin) {
+        else if (coarse <= swpMin)
+        {
             coarse = swpMin;
             swpDir = 1;
         }

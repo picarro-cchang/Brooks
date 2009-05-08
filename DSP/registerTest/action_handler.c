@@ -15,7 +15,6 @@
  *
  *  Copyright (c) 2009 Picarro, Inc. All rights reserved
  */
-
 #include <stdio.h>
 #include <string.h>
 
@@ -28,6 +27,7 @@
 #include "tempCntrl.h"
 #include "laserCurrentCntrl.h"
 #include "heaterCntrl.h"
+#include "ds1631.h"
 
 #define READ_REG(regNum,type,result) { \
     DataType d; \
@@ -45,7 +45,7 @@
     }
 
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int writeBlock(unsigned int numInt,void *params,void *env)
 // Writes a block to the communication area. The number of integers written is numInt-1, since params[0] is the start index
@@ -64,19 +64,20 @@ int writeBlock(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int initRunqueue(unsigned int numInt,void *params,void *env)
 // Load up the scheduler runqueue based on the operation groups defined.
 //  Required parameter is the number of groups.
 {
-	  unsigned int *paramsAsInt = (unsigned int *) params;
+    unsigned int *paramsAsInt = (unsigned int *) params;
     unsigned int i, nGroups;
     long long now;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
     get_timestamp(&now);
     nGroups = paramsAsInt[0];
-    for (i=0;i<nGroups;i++) {
+    for (i=0;i<nGroups;i++)
+    {
         int period = get_group_period(i);
         long long next_time = ((now + period)/period )*period;
         insert_into_runqueue(i,next_time);
@@ -84,7 +85,7 @@ int initRunqueue(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int testScheduler(unsigned int numInt,void *params,void *env)
 // This action simply sends back its parameters via message_puts in order to help
@@ -94,14 +95,15 @@ int testScheduler(unsigned int numInt,void *params,void *env)
     char message[120];
     unsigned int *paramsAsInt = (unsigned int *) params;
     strcpy(message,"testScheduler");
-    for (i=0;i<numInt;i++) {
+    for (i=0;i<numInt;i++)
+    {
         sprintf(message+strlen(message)," %d",paramsAsInt[i]);
     }
     message_puts(message);
     return STATUS_OK;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int streamRegister(unsigned int numInt,void *params,void *env)
 // This action streams the value of a register. The first parameter
@@ -116,19 +118,19 @@ int streamRegister(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int setTimestamp(unsigned int numInt,void *params,void *env)
 // Writes a 64 bit timestamp to the instrument. params[0] is the
 //  least significant 32 bits and params[1]
 {
-	  unsigned int *paramsAsInt = (unsigned int *) params;
+    unsigned int *paramsAsInt = (unsigned int *) params;
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
     timestamp = paramsAsInt[0] + (((long long)paramsAsInt[1])<<32);
     return STATUS_OK;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_getTimestamp(unsigned int numInt,void *params,void *env)
 // Read the 64 bit timestamp into two registers, the LS 32 bits into
@@ -142,7 +144,7 @@ int r_getTimestamp(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_resistanceToTemperature(unsigned int numInt,void *params,void *env)
 {
@@ -160,21 +162,21 @@ int r_resistanceToTemperature(unsigned int numInt,void *params,void *env)
     return status;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_tempCntrlSetCommand(unsigned int numInt,void *params,void *env)
 {
     return STATUS_OK;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_applyPidStep(unsigned int numInt,void *params,void *env)
 {
     return STATUS_OK;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_tempCntrlLaser1Init(unsigned int numInt,void *params,void *env)
 {
@@ -182,7 +184,7 @@ int r_tempCntrlLaser1Init(unsigned int numInt,void *params,void *env)
     return tempCntrlLaser1Init();
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_tempCntrlLaser1Step(unsigned int numInt,void *params,void *env)
 {
@@ -192,7 +194,7 @@ int r_tempCntrlLaser1Step(unsigned int numInt,void *params,void *env)
     return status;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_tempCntrlLaser2Init(unsigned int numInt,void *params,void *env)
 {
@@ -200,7 +202,7 @@ int r_tempCntrlLaser2Init(unsigned int numInt,void *params,void *env)
     return tempCntrlLaser2Init();
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_tempCntrlLaser2Step(unsigned int numInt,void *params,void *env)
 {
@@ -210,7 +212,7 @@ int r_tempCntrlLaser2Step(unsigned int numInt,void *params,void *env)
     return status;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_tempCntrlLaser3Init(unsigned int numInt,void *params,void *env)
 {
@@ -218,7 +220,7 @@ int r_tempCntrlLaser3Init(unsigned int numInt,void *params,void *env)
     return tempCntrlLaser3Init();
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_tempCntrlLaser3Step(unsigned int numInt,void *params,void *env)
 {
@@ -228,7 +230,7 @@ int r_tempCntrlLaser3Step(unsigned int numInt,void *params,void *env)
     return status;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_tempCntrlLaser4Init(unsigned int numInt,void *params,void *env)
 {
@@ -236,7 +238,7 @@ int r_tempCntrlLaser4Init(unsigned int numInt,void *params,void *env)
     return tempCntrlLaser4Init();
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_tempCntrlLaser4Step(unsigned int numInt,void *params,void *env)
 {
@@ -246,7 +248,7 @@ int r_tempCntrlLaser4Step(unsigned int numInt,void *params,void *env)
     return status;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_currentCntrlLaser1Init(unsigned int numInt,void *params,void *env)
 {
@@ -254,7 +256,7 @@ int r_currentCntrlLaser1Init(unsigned int numInt,void *params,void *env)
     return currentCntrlLaser1Init();
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_currentCntrlLaser1Step(unsigned int numInt,void *params,void *env)
 {
@@ -265,7 +267,7 @@ int r_currentCntrlLaser1Step(unsigned int numInt,void *params,void *env)
 }
 
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_tempCntrlCavityInit(unsigned int numInt,void *params,void *env)
 {
@@ -273,7 +275,7 @@ int r_tempCntrlCavityInit(unsigned int numInt,void *params,void *env)
     return tempCntrlCavityInit();
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_tempCntrlCavityStep(unsigned int numInt,void *params,void *env)
 {
@@ -284,7 +286,7 @@ int r_tempCntrlCavityStep(unsigned int numInt,void *params,void *env)
 }
 
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_heaterCntrlInit(unsigned int numInt,void *params,void *env)
 {
@@ -292,7 +294,7 @@ int r_heaterCntrlInit(unsigned int numInt,void *params,void *env)
     return heaterCntrlInit();
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_heaterCntrlStep(unsigned int numInt,void *params,void *env)
 {
@@ -303,7 +305,7 @@ int r_heaterCntrlStep(unsigned int numInt,void *params,void *env)
 }
 
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_envChecker(unsigned int numInt,void *params,void *env)
 // This action tests the use of the environment pointer
@@ -317,7 +319,7 @@ int r_envChecker(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_pulseGenerator(unsigned int numInt,void *params,void *env)
 /*
@@ -346,7 +348,7 @@ int r_pulseGenerator(unsigned int numInt,void *params,void *env)
     return status;
 }
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 int r_filter(unsigned int numInt,void *params,void *env)
 /*
@@ -370,4 +372,13 @@ int r_filter(unsigned int numInt,void *params,void *env)
     status = filter(x,&y,(FilterEnvType *)env);
     WRITE_REG(reg[1],asFloat,y);
     return status;
+}
+
+int r_ds1631_readTemp(unsigned int numInt,void *params,void *env)
+/* Read DS1631 temprature */
+{
+    unsigned int *reg = (unsigned int *) params;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    WRITE_REG(reg[0],asFloat,ds1631_readTemperatureAsFloat());
+    return STATUS_OK;
 }

@@ -31,30 +31,36 @@ char debug_msg[120];
 void insert_into_runqueue(unsigned short group_num, long long when)
 {
     if (group_num >= MAX_GROUPS) return;
-    if (NO_MORE == runqueue_head) {
+    if (NO_MORE == runqueue_head)
+    {
         runqueue_head = group_num;
         run_table[group_num].when = when;
         run_table[group_num].next_group = NO_MORE;
     }
-    else {
+    else
+    {
         unsigned short *g = &runqueue_head;
         long long w;
         // Note smaller values of the priority correspond to HIGHER priorities. The priority is in the top four bits of the short
         unsigned short p, priority = (0xF000 & group_table[group_num].priority_and_period) >> 12;
-        while (1) {
+        while (1)
+        {
             // Check if group_num to insert needs to be inserted ahead of group *g
             w = run_table[*g].when;
             p = (0xF000 & group_table[*g].priority_and_period) >> 12;
-            if ((when < w) || ((when == w) && (priority<p))) {
+            if ((when < w) || ((when == w) && (priority<p)))
+            {
                 run_table[group_num].when = when;
                 run_table[group_num].next_group = *g;
                 *g = group_num;
                 break;
             }
-            else { // group_num is to be executed after *g, so thread down the queue
+            else   // group_num is to be executed after *g, so thread down the queue
+            {
                 unsigned short next = run_table[*g].next_group;
                 if (NO_MORE != next) g = &run_table[*g].next_group;
-                else {
+                else
+                {
                     run_table[*g].next_group = group_num;
                     run_table[group_num].when = when;
                     run_table[group_num].next_group = NO_MORE;
@@ -68,11 +74,13 @@ void insert_into_runqueue(unsigned short group_num, long long when)
 void dump_runqueue(void)
 {
     if (NO_MORE == runqueue_head) printf("Runqueue is empty\n");
-    else {
+    else
+    {
         unsigned short i = 0;
         unsigned short g = runqueue_head;
         printf("Runqueue:\n");
-        while (1) {
+        while (1)
+        {
             long long when = run_table[g].when;
             unsigned short priority = (0xF000 & group_table[g].priority_and_period) >> 12;
             unsigned short period = 0xFFF & group_table[g].priority_and_period;
@@ -104,8 +112,10 @@ void do_groups(long long now)
     long long next_time;
 
     if (NO_MORE == runqueue_head) return;
-    while (1) {
-        if (NO_MORE == to_do) {
+    while (1)
+    {
+        if (NO_MORE == to_do)
+        {
             // Should never happen
             message_puts("Nothing left to do\n");
             break;
@@ -130,7 +140,8 @@ void dispatch_group(unsigned short operation_address)
     unsigned int *env;
     // sprintf(debug_msg,"Performing group at address %d\n",operation_address);
     // message_puts(debug_msg);
-    while (1) {
+    while (1)
+    {
         op = &operation_table[operation_address];
         if (op->opcode == 0) break;
         // sprintf(debug_msg,"Dispatching opcode %d with %d operands\n",

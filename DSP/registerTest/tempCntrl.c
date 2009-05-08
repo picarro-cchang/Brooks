@@ -20,13 +20,23 @@
 #include "dspAutogen.h"
 #include <math.h>
 
-int resistanceToTemperature(float resistance,float constA,float constB,float constC,float *result)
+int resistanceToTemperature(float resistance,float constA,float constB,
+                            float constC,float *result)
 // Convert thermistor resistance to temperature in degrees Celsius
 {
-    float lnResistance = log(resistance);
-    float temp = 1/(constA + (constB * lnResistance) + (constC * lnResistance * lnResistance * lnResistance));
-    *result = temp - 273.15;
-    return STATUS_OK;
+    float lnResistance;
+    float temp;
+    if (resistance > 1.0 && resistance < 5.0e6) {
+        lnResistance = log(resistance);
+        temp = 1/(constA + (constB * lnResistance) +
+            (constC * lnResistance * lnResistance * lnResistance));
+        *result = temp - 273.15;
+        return STATUS_OK;
+    }
+    else {
+        message_puts("Bad resistance in resistanceToTemperature");
+        return ERROR_BAD_VALUE;
+    }
 }
 
 /*
@@ -78,7 +88,8 @@ int tempCntrlStep(TempCntrl *t)
     float error;
     int inRange;
 
-    switch (state) {
+    switch (state)
+    {
     case TEMP_CNTRL_DisabledState:
         tec = 0x8000;
         prbsReg = 0x1;
@@ -92,20 +103,26 @@ int tempCntrlStep(TempCntrl *t)
         r = userSetpoint;
         error = r - temp;
         inRange = (error>=-tol && error<=tol);
-        if (firstIteration) {
+        if (firstIteration)
+        {
             firstIteration = FALSE;
             pid_bumpless_restart(temp,pidState->a,pidState,pidParams);
         }
-        else {
+        else
+        {
             pid_step(temp,dasTemp,pidState,pidParams);
         }
         // Update locked state
-        if (locked) {
-            if (!inRange) unlockCount++; else unlockCount = 0;
+        if (locked)
+        {
+            if (!inRange) unlockCount++;
+            else unlockCount = 0;
             if (unlockCount > TEMP_CNTRL_UNLOCK_COUNT) locked = FALSE;
         }
-        else {
-            if (inRange) lockCount++; else lockCount = FALSE;
+        else
+        {
+            if (inRange) lockCount++;
+            else lockCount = FALSE;
             if (lockCount > TEMP_CNTRL_LOCK_COUNT) locked = TRUE;
         }
         tec = pidState->a;
@@ -113,11 +130,13 @@ int tempCntrlStep(TempCntrl *t)
         break;
     case TEMP_CNTRL_SweepingState:
         r += swpDir * swpInc;
-        if (r >= swpMax) {
+        if (r >= swpMax)
+        {
             r = swpMax;
             swpDir = -1;
         }
-        else if (r <= swpMin) {
+        else if (r <= swpMin)
+        {
             r = swpMin;
             swpDir = 1;
         }
@@ -125,18 +144,21 @@ int tempCntrlStep(TempCntrl *t)
         tec = pidState->a;
         prbsReg = 0x1;
         break;
-	case TEMP_CNTRL_SendPrbsState:
-        if (prbsReg & 0x1) {
+    case TEMP_CNTRL_SendPrbsState:
+        if (prbsReg & 0x1)
+        {
             tec = prbsMean + prbsAmp;
             prbsReg ^= prbsGen;
         }
-        else {
+        else
+        {
             tec = prbsMean - prbsAmp;
         }
         prbsReg >>= 1;
         break;
     }
-    if (hasExt) {
+    if (hasExt)
+    {
         if (extTemp > extMax) tec = 0x8000;
     }
     return STATUS_OK;
@@ -237,7 +259,8 @@ int tempCntrlLaser1Step(void)
     unsigned int regList[] = {LASER1_TEMP_CNTRL_SETPOINT_REGISTER,
                               LASER1_TEMP_CNTRL_LOCK_STATUS_REGISTER,
                               LASER1_TEMP_CNTRL_STATE_REGISTER,
-                              LASER1_TEC_REGISTER};
+                              LASER1_TEC_REGISTER
+                             };
     int status;
     status = tempCntrlStep(&tempCntrlLaser1);
     writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
@@ -296,7 +319,8 @@ int tempCntrlLaser2Step(void)
     unsigned int regList[] = {LASER2_TEMP_CNTRL_SETPOINT_REGISTER,
                               LASER2_TEMP_CNTRL_LOCK_STATUS_REGISTER,
                               LASER2_TEMP_CNTRL_STATE_REGISTER,
-                              LASER2_TEC_REGISTER};
+                              LASER2_TEC_REGISTER
+                             };
     int status;
     status = tempCntrlStep(&tempCntrlLaser2);
     writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
@@ -355,7 +379,8 @@ int tempCntrlLaser3Step(void)
     unsigned int regList[] = {LASER3_TEMP_CNTRL_SETPOINT_REGISTER,
                               LASER3_TEMP_CNTRL_LOCK_STATUS_REGISTER,
                               LASER3_TEMP_CNTRL_STATE_REGISTER,
-                              LASER3_TEC_REGISTER};
+                              LASER3_TEC_REGISTER
+                             };
     int status;
     status = tempCntrlStep(&tempCntrlLaser3);
     writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
@@ -414,7 +439,8 @@ int tempCntrlLaser4Step(void)
     unsigned int regList[] = {LASER4_TEMP_CNTRL_SETPOINT_REGISTER,
                               LASER4_TEMP_CNTRL_LOCK_STATUS_REGISTER,
                               LASER4_TEMP_CNTRL_STATE_REGISTER,
-                              LASER4_TEC_REGISTER};
+                              LASER4_TEC_REGISTER
+                             };
     int status;
     status = tempCntrlStep(&tempCntrlLaser4);
     writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
@@ -474,7 +500,8 @@ int tempCntrlCavityStep(void)
     unsigned int regList[] = {CAVITY_TEMP_CNTRL_SETPOINT_REGISTER,
                               CAVITY_TEMP_CNTRL_LOCK_STATUS_REGISTER,
                               CAVITY_TEMP_CNTRL_STATE_REGISTER,
-                              CAVITY_TEC_REGISTER};
+                              CAVITY_TEC_REGISTER
+                             };
     int status;
     status = tempCntrlStep(&tempCntrlCavity);
     writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));

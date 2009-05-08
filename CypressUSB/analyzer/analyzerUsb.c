@@ -92,15 +92,6 @@ void GPIF_SingleWordRead( WORD *gdata ) {
 //-----------------------------------------------------------------------------
 
 void TD_Init(void) {           // Called once at startup
-    int i1, i2, sum = 0;
-    // Delay for stabilization
-    for (i1=0; i1<1000; i1++)
-    {
-        for (i2=0; i2<100; i2++)
-        {
-            sum += i1 + i2;
-        }
-    }
     SYNCDELAY;
 
 
@@ -354,6 +345,7 @@ BOOL DR_VendorCmnd(void) {
     WORD *Destination;
     BYTE b;
     int i;
+    int i1, i2, sum = 0;
     switch (SETUPDAT[1]) {
     case VENDOR_GET_VERSION:
         EP0BUF[0] = USB_VERSION & 0xFF;
@@ -551,6 +543,25 @@ BOOL DR_VendorCmnd(void) {
         else IOA |= bmHPI_HINTz;
         // Return value to host
         EP0BUF[0] = value;
+        EP0BCH = 0;
+        EP0BCL = 1;
+        // Acknowledge handshake phase of device request
+        EP0CS |= bmHSNAK;
+        break;
+    case VENDOR_RECONNECT:
+        USBCS |= 0x08;
+        // Delay for stabilization
+        for (i1=0; i1<1000; i1++)
+        {
+            for (i2=0; i2<100; i2++)
+            {
+                sum += i1 + i2;
+            }
+        }
+        SYNCDELAY;
+        USBCS &= 0xF7;
+        // Return value to host
+        EP0BUF[0] = 0;
         EP0BCH = 0;
         EP0BCL = 1;
         // Acknowledge handshake phase of device request

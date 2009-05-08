@@ -28,6 +28,7 @@
         <constant ident="VENDOR_RESET_HPID_IN_FIFO">0xC6</constant>
         <constant ident="VENDOR_GET_STATUS">0xC7</constant>
         <constant ident="VENDOR_DSP_CONTROL">0xC8</constant>
+        <constant ident="VENDOR_RECONNECT">0xC9</constant>
         <!--  >Value field for VENDOR_FPGA_CONFIGURE</!-->
         <constant ident="FPGA_START_PROGRAM">0x01</constant>
         <constant ident="FPGA_SEND_DATA">0x02</constant>
@@ -68,6 +69,7 @@
         <status ident="ERROR_INVALID_WHEEL_SLOT">Invalid timer wheel slot</status>
         <status ident="ERROR_OO_WHEEL_ENTRIES">Ran out of timer wheel entries</status>
         <status ident="ERROR_BAD_FILTER_COEFF">Invalid filter coefficients</status>
+        <status ident="ERROR_BAD_VALUE">Invalid value</status>
     </status_list>
     <struct_list>
         <struct type="DIAG_EventLogStruct">
@@ -253,6 +255,10 @@
             <description>No operation register, used for testing</description>
             <initial>0xABCD1234</initial>
             <display format="%d">No operation register</display>
+        </register>
+        <register ident="VERIFY_INIT_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Magic number used to verify initialization</description>
+            <initial>0x19680511</initial>
         </register>
         <register ident="COMM_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Communications status register</description>
@@ -1478,5 +1484,6 @@
         Comments:
             The filter coefficients and state are in FilterEnvType -->
         <action ident="ACTION_FILTER">r_filter</action>
+        <action ident="ACTION_DS1631_READTEMP">r_ds1631_readTemp</action>
     </action_list>
 </Das_Interface>

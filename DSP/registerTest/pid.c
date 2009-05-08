@@ -44,7 +44,7 @@ void pid_step(float processVar, float extVar, PidState *state,
     Pincr = K*(perr - state->perr);
     Iincr = K*h/Ti * err + (state->a-state->u-change)/S;
     Dincr = Td/(Td+N*h)*(state->Dincr +
-            K*N*(derr-2*state->derr1+state->derr2));
+                         K*N*(derr-2*state->derr1+state->derr2));
     state->u = state->u + Pincr + Iincr + Dincr;
     change += state->u - state->a;
     if (change > Imax) change = Imax;
@@ -91,15 +91,15 @@ void pid_step(float processVar, float extVar, PidState *state,
 #define Amax (*(params->Amax_))
 
 void pid_bumpless_restart(float processVar,float controlVar,
-      PidState *state,PidParamsRef *params)
+                          PidState *state,PidParamsRef *params)
 {
-  float perr, derr;
-  perr = b*r-y;
-  derr = c*r-y;
-  state->perr = perr;
-  state->derr1 = state->derr2 = derr;
-  state->Dincr = 0.0;
-  state->u = state->a = controlVar;
+    float perr, derr;
+    perr = b*r-y;
+    derr = c*r-y;
+    state->perr = perr;
+    state->derr1 = state->derr2 = derr;
+    state->Dincr = 0.0;
+    state->u = state->a = controlVar;
 }
 
 #undef r

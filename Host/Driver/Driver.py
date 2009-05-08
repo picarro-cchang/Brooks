@@ -257,6 +257,13 @@ class Driver(SharedTypes.Singleton):
         self.lastSaveDasState = 0
     def run(self):
         try:
+            # Ensure that we connect in high speed mode
+            for attempts in range(10):
+                usbSpeed = self.dasInterface.startUsb()
+                Log("USB enumerated at %s speed" % (("full","high")[usbSpeed]))
+                if usbSpeed: break
+                self.dasInterface.analyzerUsb.reconnectUsb()
+                time.sleep(2.0)
             self.dasInterface.upload()
             time.sleep(1.0) # For DSP code to initialize
             self.dasInterface.loadDasState() # Restore DAS state

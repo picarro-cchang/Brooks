@@ -16,7 +16,8 @@
 #ifndef _TEMP_CNTRL_H_
 #define _TEMP_CNTRL_H_
 
-typedef struct TEMP_CNTRL {
+typedef struct TEMP_CNTRL
+{
     // References to registers
     unsigned int *state_;    // Controller state
     float *tol_;      // Lock tolerance

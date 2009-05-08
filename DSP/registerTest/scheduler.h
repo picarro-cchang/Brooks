@@ -24,17 +24,20 @@
 #define MAX_OPERANDS (OPERAND_TABLE_SIZE)
 
 /* priority (0-15) and period (0-4095) are encoded as (priority<<12) + period */
-typedef struct groupSched {
+typedef struct groupSched
+{
     unsigned short priority_and_period;
     unsigned short operation_address;
 } GroupSched;
 
-typedef struct runqueue {
+typedef struct runqueue
+{
     long long when;
     unsigned short next_group;
 } RunQueue;
 
-typedef struct operation {
+typedef struct operation
+{
     unsigned short opcode;
     unsigned short num_operands;
     unsigned short operand_address;

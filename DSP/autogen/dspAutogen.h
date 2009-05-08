@@ -41,4 +41,5 @@ int r_heaterCntrlStep(unsigned int numInt,void *params,void *env);
 int r_envChecker(unsigned int numInt,void *params,void *env);
 int r_pulseGenerator(unsigned int numInt,void *params,void *env);
 int r_filter(unsigned int numInt,void *params,void *env);
+int r_ds1631_readTemp(unsigned int numInt,void *params,void *env);
 #endif

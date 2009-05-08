@@ -21,6 +21,8 @@ void initRegisters()
     DataType d;
     d.asUint = 0xABCD1234;
     writeRegister(NOOP_REGISTER,d);
+    d.asUint = 0x19680511;
+    writeRegister(VERIFY_INIT_REGISTER,d);
     d.asUint = 0;
     writeRegister(SCHEDULER_CONTROL_REGISTER,d);
     d.asUint = 90;
@@ -386,6 +388,8 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_pulseGenerator(numInt,params,env);
         case ACTION_FILTER:
             return r_filter(numInt,params,env);
+        case ACTION_DS1631_READTEMP:
+            return r_ds1631_readTemp(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

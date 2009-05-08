@@ -184,6 +184,10 @@ begin
         dsp_emif_dout => dsp_emif_dout,
         dsp_emif_ddir => dsp_emif_ddir,
         dsp_emif_be => dsp_emif_be,
-        dsp_emif_ce => dsp_emif_ce
+        dsp_emif_ce => dsp_emif_ce,
+        i2c_scl0 => i2c_scl0,
+        i2c_sda0 => i2c_sda0,
+        i2c_scl1 => i2c_scl1,
+        i2c_sda1 => i2c_sda1
     );
 end behavioral;

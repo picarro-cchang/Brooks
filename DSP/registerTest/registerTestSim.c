@@ -7,7 +7,7 @@
 unsigned char  SHAREDMEM_BASE[4*SHAREDMEM_SIZE];
 unsigned char  USER_REG[4];
 
-#pragma argsused 
+#pragma argsused
 void IRQ_resetAll(void)
 {
 }
@@ -39,7 +39,7 @@ void CSL_init(void)
 }
 
 #pragma argsused
-void CACHE_reset(void) 
+void CACHE_reset(void)
 {
 }
 

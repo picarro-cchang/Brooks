@@ -31,13 +31,13 @@ Offsets and lengths are in 4-byte integers. Offsets are defined in interface.h
  via the XML file. */
 
 #ifdef SIMULATION
-    #define EXPORT __declspec(dllexport)
-    extern unsigned char  SHAREDMEM_BASE[4*SHAREDMEM_SIZE];
-    extern unsigned char  USER_REG[4];
+#define EXPORT __declspec(dllexport)
+extern unsigned char  SHAREDMEM_BASE[4*SHAREDMEM_SIZE];
+extern unsigned char  USER_REG[4];
 #else
-    #define SHAREDMEM_BASE (SHAREDMEM_ADDRESS)
-    #define USER_REG 0x90080000
-    #define EXPORT /**/
+#define SHAREDMEM_BASE (SHAREDMEM_ADDRESS)
+#define USER_REG 0x90080000
+#define EXPORT /**/
 #endif
 
 #define REG_BASE          (SHAREDMEM_BASE+4*REG_OFFSET)
@@ -50,13 +50,15 @@ Offsets and lengths are in 4-byte integers. Offsets are defined in interface.h
 #define HOST_BASE         (SHAREDMEM_BASE+4*HOST_OFFSET)
 
 extern long long timestamp; // Global timestamp for analyzer
-typedef struct {
+typedef struct
+{
     unsigned int data[256];
 } HostWriteArea;
 
 /* Each message occupies 128 bytes, and consists of a 64 bit timestamp followed by 120
  characters of text.  */
-typedef struct {
+typedef struct
+{
     long long timestamp;
     char message[120];
 } Message;

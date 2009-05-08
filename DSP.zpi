@@ -90,6 +90,35 @@
         <File>DSP\inc\crc.h</File>
         <File>DSP\common\CuTest.c</File>
         <File>DSP\inc\CuTest.h</File>
+        <File>DSP\common\ds1631.c</File>
+        <File>DSP\inc\ds1631.h</File>
+        <File>DSP\common\i2c_dsp.c</File>
+        <File>DSP\inc\i2c_dsp.h</File>
     </Folder>
     <Folder name="Header Files" sorted="Yes" />
+    <Folder name="registerTest" sorted="Yes">
+        <File>DSP\registerTest\action_handler.c</File>
+        <File>DSP\registerTest\checkFilter.c</File>
+        <File>DSP\registerTest\fpga.c</File>
+        <File>DSP\registerTest\fpga.h</File>
+        <File>DSP\registerTest\heaterCntrl.c</File>
+        <File>DSP\registerTest\heaterCntrl.h</File>
+        <File>DSP\registerTest\laserCurrentCntrl.c</File>
+        <File>DSP\registerTest\laserCurrentCntrl.h</File>
+        <File>DSP\registerTest\misc.c</File>
+        <File>DSP\registerTest\misc.h</File>
+        <File>DSP\registerTest\pid.c</File>
+        <File>DSP\registerTest\pid.h</File>
+        <File>DSP\registerTest\registers.c</File>
+        <File>DSP\registerTest\registers.h</File>
+        <File>DSP\registerTest\registerTest.c</File>
+        <File>DSP\registerTest\registerTest.h</File>
+        <File>DSP\registerTest\registerTestSim.c</File>
+        <File>DSP\registerTest\registerTestSim.h</File>
+        <File>DSP\registerTest\scheduler.c</File>
+        <File>DSP\registerTest\scheduler.h</File>
+        <File>DSP\registerTest\tempCntrl.c</File>
+        <File>DSP\registerTest\tempCntrl.h</File>
+        <File>DSP\registerTest\timestamp.c</File>
+    </Folder>
 </Project>

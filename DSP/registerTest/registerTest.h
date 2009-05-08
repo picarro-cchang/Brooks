@@ -2,9 +2,9 @@
 #define _REGISTER_TEST_H_
 
 #ifdef SIMULATION
-    #define EXPORT __declspec(dllexport)
+#define EXPORT __declspec(dllexport)
 #else
-    #define EXPORT /**/
+#define EXPORT /**/
 #endif
 
 EXPORT void hwiHpiInterrupt(unsigned int funcArg, unsigned int eventId);

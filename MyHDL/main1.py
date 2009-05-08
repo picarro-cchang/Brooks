@@ -7,7 +7,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          reset,intronix,fpga_led,
          dsp_emif_we,dsp_emif_re,dsp_emif_oe,dsp_emif_ardy,
          dsp_emif_ea,dsp_emif_din, dsp_emif_dout,
-         dsp_emif_ddir, dsp_emif_be, dsp_emif_ce):
+         dsp_emif_ddir, dsp_emif_be, dsp_emif_ce,
+         i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1
+):
 
     NSTAGES = 28
     counter = Signal(intbv(0)[NSTAGES:])
@@ -28,6 +30,10 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         dsp_emif_ardy.next = 1   # Ensure DSP can continue
         dsp_emif_ddir.next = 0   # DSP writes to dsp_emif_dout
         dsp_emif_din.next = 0
+        intronix.next[28] = i2c_scl0
+        intronix.next[29] = i2c_sda0
+        intronix.next[30] = i2c_scl1
+        intronix.next[31] = i2c_sda1
 
     return instances()
 
@@ -48,12 +54,13 @@ dsp_emif_din = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 dsp_emif_dout = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 dsp_emif_be = Signal(intbv(0)[4:])
 dsp_emif_ce = Signal(intbv(0)[4:])
-
+i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1 = [Signal(LOW) for i in range(4)]
 def makeVHDL():
     toVHDL(main,clk0,clk180,clk3f,clk3f180,clk_locked,reset,
                 intronix,fpga_led,dsp_emif_we,dsp_emif_re,
                 dsp_emif_oe,dsp_emif_ardy,dsp_emif_ea,dsp_emif_din,
-                dsp_emif_dout,dsp_emif_ddir, dsp_emif_be, dsp_emif_ce)
+                dsp_emif_dout,dsp_emif_ddir, dsp_emif_be, dsp_emif_ce,
+                i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1)
 
 if __name__ == "__main__":
     makeVHDL()

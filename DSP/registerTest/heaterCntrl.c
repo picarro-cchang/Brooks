@@ -57,7 +57,8 @@ int heaterCntrlStep(void)
     HeaterCntrl *h = &heaterCntrl;
     float uBias, tecDiff, quantizedDiff, power;
 
-    switch (state) {
+    switch (state)
+    {
     case HEATER_CNTRL_DisabledState:
         mark = 0;
         break;

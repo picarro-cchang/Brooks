@@ -16,7 +16,8 @@
 #ifndef _LASER_CURRENT_CNTRL_H_
 #define _LASER_CURRENT_CNTRL_H_
 
-typedef struct LASER_CURRENT_CNTRL {
+typedef struct LASER_CURRENT_CNTRL
+{
     // References to registers
     unsigned int *state_;    // Controller state
     float *manual_coarse_;   // Manual control of coarse current DAC

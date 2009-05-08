@@ -1,28 +1,26 @@
-#define CHIP_6713
-
 #ifdef SIMULATION
-    #include "registerTestSim.h"
+#include "registerTestSim.h"
 #else
-    #include <std.h>
-    #include <csl.h>
-    #include <csl_i2c.h>
-    #include <csl_cache.h>
-    #include <csl_irq.h>
-    #include <csl_hpi.h>
-    #include <log.h>
-    #include <sem.h>
-    #include <prd.h>
-    #include "registerTestcfg.h"
+#include <std.h>
+#include <csl.h>
+#include <csl_i2c.h>
+#include <csl_cache.h>
+#include <csl_irq.h>
+#include <csl_hpi.h>
+#include <log.h>
+#include <sem.h>
+#include <prd.h>
+#include "registerTestcfg.h"
 #endif
 
+#include "i2c_dsp.h"
+#include "ds1631.h"
 #include "dspAutogen.h"
 #include "interface.h"
 #include "registerTest.h"
 #include "scheduler.h"
 
 extern far LOG_Obj trace;
-static int count = 0;
-
 #ifdef SIMULATION
 void scheduler(void)
 {
@@ -41,7 +39,8 @@ void schedulerPrdFunc(void)
 void scheduler(void)
 {
     DataType d;
-        while (1) {
+    while (1)
+    {
         SEM_pend(&SEM_scheduler,SYS_FOREVER);
         readRegister(SCHEDULER_CONTROL_REGISTER,&d);
         if (d.asInt) do_groups(timestamp);
@@ -50,13 +49,12 @@ void scheduler(void)
 
 void timestampPrdFunc(void)
 {
-    long long ts;
     timestamp = timestamp + 1LL;
 }
 #endif
 
 #ifdef SIMULATION
-    #pragma argsused
+#pragma argsused
 #endif
 
 main(int argc, char *argv[])
@@ -71,6 +69,10 @@ main(int argc, char *argv[])
     clear_scheduler_tables();
     // Initialize all registers
     initRegisters();
+    // Initialize I2C
+    dspI2CInit();
+    // Initialize DS1631 for continuous measurements
+    ds1631_init();
     // Clear DSPINT bit in HPIC
     HPI_setDspint(1);
     IRQ_resetAll();
