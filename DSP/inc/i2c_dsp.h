@@ -24,10 +24,11 @@ int initializeI2C(I2C_Handle hI2c);
 int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes);
 int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes);
 void dspI2CInit();
-void ds1631_reset();
-void ds1631_startConvert();
-void ds1631_writeConfig(unsigned int w);
-unsigned int ds1631_readConfig();
-unsigned int ds1631_readTemperature();
-float ds1631_readTemperatureAsFloat();
+void setI2C0Mux(int channel);
+int fetchI2C0Mux();
+int getI2C0Mux();
+void setI2C1Mux(int channel);
+int fetchI2C1Mux();
+int getI2C1Mux();
+
 #endif

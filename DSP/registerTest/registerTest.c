@@ -13,6 +13,7 @@
 #include "registerTestcfg.h"
 #endif
 
+#include "configDsp.h"
 #include "i2c_dsp.h"
 #include "ds1631.h"
 #include "dspAutogen.h"
@@ -59,10 +60,8 @@ void timestampPrdFunc(void)
 
 main(int argc, char *argv[])
 {
-    CSL_init();
-    CACHE_reset();
-    CACHE_enableCaching(CACHE_CE00);
-    CACHE_setL2Mode(CACHE_64KCACHE);
+    // Set up DSP configuration
+    configDsp();
     // Initialize communtications between DSP and host
     init_comms();
     // Clear scheduler tables

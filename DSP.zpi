@@ -94,6 +94,8 @@
         <File>DSP\inc\ds1631.h</File>
         <File>DSP\common\i2c_dsp.c</File>
         <File>DSP\inc\i2c_dsp.h</File>
+        <File>DSP\common\pcf8563.c</File>
+        <File>DSP\inc\pcf8563.h</File>
     </Folder>
     <Folder name="Header Files" sorted="Yes" />
     <Folder name="registerTest" sorted="Yes">

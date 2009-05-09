@@ -49,7 +49,7 @@ static void ds1631_wrByte(Uint8 byte)
 void ds1631_reset()
 {
     ds1631_wrByte(0x54);
-	// The reset command is NACKed
+    // The reset command is NACKed
     I2C_FSETSH(hI2C0,I2CSTR,NACK,CLR);
 }
 
@@ -89,8 +89,8 @@ void ds1631_init()
 {
     int loop;
     ds1631_reset();
-	for (loop=0;loop<2000;loop++);
+    for (loop=0;loop<2000;loop++);
     ds1631_writeConfig(0x8c);
-	for (loop=0;loop<2000;loop++);
+    for (loop=0;loop<2000;loop++);
     ds1631_startConvert();
 }

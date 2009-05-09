@@ -12,8 +12,10 @@ Config="Debug"
 Config="Release"
 
 [Source Files]
+Source="..\common\configDsp.c"
 Source="..\common\ds1631.c"
 Source="..\common\i2c_dsp.c"
+Source="..\common\pcf8563.c"
 Source="C:\CCStudio_v3.3\C6000\csl\lib\csl6713.lib"
 Source="Configuration1.tcf"
 Source="hello.c"

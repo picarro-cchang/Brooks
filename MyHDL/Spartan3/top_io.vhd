@@ -166,12 +166,13 @@ architecture behavioral of top_io is
     signal FPGA_LED_U  : unsigned(3 downto 0);
     signal I2C_RST0    : std_logic;
     signal I2C_RST1    : std_logic;
-
+    signal reset_counter: unsigned(15 downto 0);
+    signal reset       : std_logic;
 begin
     top_block_inst : entity work.top_block(behavioral)
     port map (
        clk            => CLK50,
-       reset          => '0',       -- Later connect this to a counter
+       reset          => reset,       -- Later connect this to a counter
        rd_adc         => unsigned(RD_ADC),
        rd_adc_clk     => RD_ADC_CLK,
        rd_adc_oe      => RD_ADC_OE,
@@ -354,4 +355,18 @@ begin
                     t  => DSP_EMIF_DDIR_N      -- 3-state enable input
                 );
         end generate;
+
+    -- reset is asserted for 65536 clock cycles at start
+
+    RESET_LOGIC: process (CLK50) is
+    begin
+        if rising_edge(CLK50) then
+            if not(reset_counter = "1111111111111111") then
+                reset_counter <= (reset_counter + 1);
+            end if;
+        end if;
+    end process RESET_LOGIC;
+
+    reset <= '0' when reset_counter = "1111111111111111" else '1';
+
 end behavioral;

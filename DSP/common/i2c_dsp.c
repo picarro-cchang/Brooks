@@ -107,8 +107,8 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
         if (i>=nbytes)
         {
             // Normal return. Do NOT send stop, in case we need
-			//  to follow-up with a read which has a repeat-start
-			//  bit.
+            //  to follow-up with a read which has a repeat-start
+            //  bit.
             loops = 0;
             while (0 == I2C_ardy(hI2c))
             {
@@ -196,3 +196,51 @@ void dspI2CInit()
     hI2C1 = I2C_open(I2C_PORT1,I2C_OPEN_RESET);
     initializeI2C(hI2C1);
 }
+/*----------------------------------------------------------------------------*/
+int I2C0MuxChan = 0;
+int I2C1MuxChan = 0;
+/*----------------------------------------------------------------------------*/
+void setI2C0Mux(int channel)
+{
+    Uint8 bytes[1];
+    bytes[0] =  8 + (channel & 0x7);
+    I2C_write_bytes(hI2C0,0x70,bytes,1);
+    I2C_sendStop(hI2C0);
+    I2C0MuxChan = channel;
+}
+/*----------------------------------------------------------------------------*/
+int fetchI2C0Mux()
+{
+    Uint8 bytes[1];
+    I2C_read_bytes(hI2C0,0x70,bytes,1);
+    I2C0MuxChan = bytes[0] & 0x7;
+    return I2C0MuxChan;
+}
+/*----------------------------------------------------------------------------*/
+int getI2C0Mux()
+{
+    return I2C0MuxChan;
+}
+/*----------------------------------------------------------------------------*/
+void setI2C1Mux(int channel)
+{
+    Uint8 bytes[1];
+    bytes[0] =  8 + (channel & 0x7);
+    I2C_write_bytes(hI2C1,0x71,bytes,1);
+    I2C_sendStop(hI2C1);
+    I2C1MuxChan = channel;
+}
+/*----------------------------------------------------------------------------*/
+int fetchI2C1Mux()
+{
+    Uint8 bytes[1];
+    I2C_read_bytes(hI2C1,0x71,bytes,1);
+    I2C1MuxChan = bytes[0] & 0x7;
+    return I2C1MuxChan;
+}
+/*----------------------------------------------------------------------------*/
+int getI2C1Mux()
+{
+  return I2C1MuxChan;
+}
+/*----------------------------------------------------------------------------*/
