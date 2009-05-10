@@ -1,41 +1,26 @@
 import logging
 import unittest
 import sys
-from Host.autogen import usbdefs
+from Host.autogen import usbdefs, interface
 from Host.Common.analyzerUsbIf import AnalyzerUsb
 from ctypes import c_byte, c_uint, c_int, c_ushort, c_short, sizeof
 from time import sleep, clock
 
 usbFile  = "../../CypressUSB/analyzer/analyzerUsb.hex"
 fpgaFile = "../../MyHDL/Spartan3/top_io_map.bit"
-#usbFile  = "C:/work/CostReducedPlatform/Software/CypressUSB/analyzer/analyzerUsb.hex"
-#fpgaFile = "C:/work/CostReducedPlatform/Software/FPGA/SpartanStarter/top_io_map.bit"
 
-class TestVendorCommands(unittest.TestCase):
-    def setUp(self):
-        self.analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
-        self.analyzerUsb.connect()
-    def testGetVersion(self):
-        ver = self.analyzerUsb.getUsbVersion()
-        self.assertEqual(ver,usbdefs.USB_VERSION)
-    def testClaimInterface(self):
-        self.analyzerUsb.getUsbVersion()
-        self.assertEqual(self.analyzerUsb.interfaceClaimed,not self.analyzerUsb.CLAIM_PER_USE)
-    def tearDown(self):
-        self.analyzerUsb.disconnect()
-        self.assertFalse(self.analyzerUsb.interfaceClaimed)
-        self.assertEqual(self.analyzerUsb.handle,None)
+analyzerUsb = None
 
 def loadUsbIfCode():
+    global analyzerUsb
     analyzerUsb = AnalyzerUsb(usbdefs.INITIAL_VID,usbdefs.INITIAL_PID)
     try: # connecting to a blank FX2 chip
         analyzerUsb.connect()
+        logging.info("Downloading USB code to Cypress FX2")
+        analyzerUsb.loadHexFile(file(usbFile,"r"))
+        analyzerUsb.disconnect()
     except: # Assume code has already been loaded
         logging.info("Cypress FX2 is not blank")
-        return
-    logging.info("Downloading USB code to Cypress FX2")
-    analyzerUsb.loadHexFile(file(usbFile,"r"))
-    analyzerUsb.disconnect()
     # Wait for renumeration
     while True:
         analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
@@ -44,10 +29,8 @@ def loadUsbIfCode():
             break
         except:
             sleep(1.0)
-    analyzerUsb.disconnect()
 
 def programFPGA():
-    analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
     analyzerUsb.connect()
     analyzerUsb.resetHpidInFifo()
     logging.info("Holding DSP in reset...")
@@ -81,6 +64,37 @@ def programFPGA():
             "CRC error during FPGA load, bytes sent: %d" % (lTot,))
     logging.info("Time to load: %.1fs" % (clock() - tStart,))
     sleep(0.2)
+
+RDMEM_BASE = 0xA0000000
+FPGA_REG_BASE = RDMEM_BASE + (1<<(interface.EMIF_ADDR_WIDTH+1))
+FPGA_REG_MULT = 4
+
+def readFPGA(analyzerUsb,offset):
+    analyzerUsb.hpiaWrite(FPGA_REG_BASE+FPGA_REG_MULT*offset)
+    result = c_uint(0)
+    analyzerUsb.hpidRead(result)
+    return result.value
+def writeFPGA(analyzerUsb,offset,value):
+    analyzerUsb.hpiaWrite(FPGA_REG_BASE+FPGA_REG_MULT*offset)
+    analyzerUsb.hpidWrite(c_uint(value))
+def readRdMemArray(analyzerUsb,offset,nwords=1):
+    """Reads multiple words from ringdown memory into a c_uint array"""
+    analyzerUsb.hpiaWrite(RDMEM_BASE+offset)
+    result = (c_uint*nwords)()
+    analyzerUsb.hpidRead(result)
+    return result
+def readRdMem(analyzerUsb,offset):
+    """Reads single uint from ringdown memory"""
+    analyzerUsb.hpiaWrite(RDMEM_BASE+offset)
+    result = c_uint(0)
+    analyzerUsb.hpidRead(result)
+    return result.value
+def writeRdMem(analyzerUsb,offset,value):
+    """Reads single uint value to ringdown memory"""
+    analyzerUsb.hpiaWrite(RDMEM_BASE+offset)
+    result = c_uint(value)
+    analyzerUsb.hpidWrite(result)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

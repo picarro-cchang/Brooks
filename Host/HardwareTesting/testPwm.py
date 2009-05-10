@@ -220,6 +220,36 @@ def rdRegUint(reg):
     analyzerUsb.hpidRead(data)
     return data.value
 
+RDMEM_BASE = 0xA0000000
+FPGA_REG_BASE = RDMEM_BASE + (1<<(interface.EMIF_ADDR_WIDTH+1))
+FPGA_REG_MULT = 4
+
+def readFPGA(offset):
+    analyzerUsb.hpiaWrite(FPGA_REG_BASE+FPGA_REG_MULT*offset)
+    result = c_uint(0)
+    analyzerUsb.hpidRead(result)
+    return result.value
+def writeFPGA(offset,value):
+    analyzerUsb.hpiaWrite(FPGA_REG_BASE+FPGA_REG_MULT*offset)
+    analyzerUsb.hpidWrite(c_uint(value))
+def readRdMemArray(offset,nwords=1):
+    """Reads multiple words from ringdown memory into a c_uint array"""
+    analyzerUsb.hpiaWrite(RDMEM_BASE+offset)
+    result = (c_uint*nwords)()
+    analyzerUsb.hpidRead(result)
+    return result
+def readRdMem(offset):
+    """Reads single uint from ringdown memory"""
+    analyzerUsb.hpiaWrite(RDMEM_BASE+offset)
+    result = c_uint(0)
+    analyzerUsb.hpidRead(result)
+    return result.value
+def writeRdMem(offset,value):
+    """Reads single uint value to ringdown memory"""
+    analyzerUsb.hpiaWrite(RDMEM_BASE+offset)
+    result = c_uint(value)
+    analyzerUsb.hpidWrite(result)
+
 def upload():
     #
     # TODO: Handle errors by returning an error code.
@@ -241,51 +271,18 @@ def upload():
     initPll()
     initEmif()
 
-    # Check internal memory. There is 256KB of memory at this stage, since
-    #  the L2 cache is not set up until the DSP starts running
-    checkRam(0,0x40000,10000)
-
-    # Check SDRAM
-    checkRam(0x80000000,0x81000000,10000)
-
-    raw_input("Press <Enter> to download DSP code")
-    fp = file(dspFile,"rb")
-    analyzerUsb.loadDspFile(fp)
-    fp.close()
-    analyzerUsb.hpicWrite(0x00010001)
-    raw_input("DSP code downloaded. Press <Enter> to send DSPINT")
-    analyzerUsb.hpicWrite(0x00010003)
-    print "hpic after DSPINT: %08x" % analyzerUsb.hpicRead()
-    sleep(0.5)
-    logging.info("Starting DSP code...")
-    raw_input("DSPINT sent. Press <Enter> to continue")
-    analyzerUsb.hpicWrite(0x00010001)
-    # Try accessing some memory via HPI
-    HOST_BASE = interface.SHAREDMEM_ADDRESS + 4096
-    analyzerUsb.hpicWrite(0x00010001)
-    analyzerUsb.hpiaWrite(HOST_BASE)
-    hostMsg = (c_uint*8)()
-    for i in range(len(hostMsg)):
-        hostMsg[i] = 5*i
-    analyzerUsb.hpidWrite(hostMsg)
-    # Read it back
-    reply = (c_uint*8)()
-    analyzerUsb.hpicWrite(0x00010001)
-    analyzerUsb.hpiaWrite(HOST_BASE)
-    analyzerUsb.hpidRead(reply)
-    for i in range(len(reply)):
-        print reply[i]
-    # See if we can receive DSPINTs from the host
-    for i in range(100):
-        print "Interrupt count %d" % rdRegUint(12)
-        analyzerUsb.hpicWrite(0x00010003)
-        sleep(0.5)
-
-    # Read back register 11 which should be updated by a PRD
-    while True:
-        print "PRD count %d" % rdRegUint(11)
-        sleep(0.5)
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     upload()
+    REG_PWMA_WIDTH = interface.FPGA_PWMA + interface.PWM_PULSE_WIDTH
+    REG_PWMA_CNTRL_STAT = interface.FPGA_PWMA + interface.PWM_CS
+    while True:
+        try:
+            duty = eval(raw_input("Pulse width? "))
+            writeFPGA(REG_PWMA_WIDTH,duty)
+            print "PWM width  = 0x%x" % readFPGA(REG_PWMA_WIDTH)
+            writeFPGA(REG_PWMA_CNTRL_STAT,
+                     (1<<interface.PWM_CS_RUN_B) |
+                     (1<<interface.PWM_CS_CONT_B))
+        except:
+            break

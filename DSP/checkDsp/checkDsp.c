@@ -1,4 +1,3 @@
-#define CHIP_6713
 #include <std.h>
 #include <csl.h>
 #include <csl_i2c.h>
@@ -9,11 +8,12 @@
 #include <sem.h>
 #include <prd.h>
 #include "checkDspcfg.h"
+#include "configDsp.h"
 
 #include "dspAutogen.h"
 #include "interface.h"
 
-#define SHAREDMEM_BASE (SHAREDMEM_ADDRESS)
+#define SHAREDMEM_BASE    (SHAREDMEM_ADDRESS)
 #define REG_BASE          (SHAREDMEM_BASE+4*REG_OFFSET)
 #define SENSOR_BASE       (SHAREDMEM_BASE+4*SENSOR_OFFSET)
 #define MESSAGE_BASE      (SHAREDMEM_BASE+4*MESSAGE_OFFSET)
@@ -66,10 +66,8 @@ void hwiHpiInterrupt(unsigned int funcArg, unsigned int eventId)
 
 main(int argc, char *argv[])
 {
-    CSL_init();
-    CACHE_reset();
-    CACHE_enableCaching(CACHE_CE00);
-    CACHE_setL2Mode(CACHE_64KCACHE);
+    // Set up DSP configuration
+    configDsp();
     // Clear DSPINT bit in HPIC
     HPI_setDspint(1);
     IRQ_resetAll();

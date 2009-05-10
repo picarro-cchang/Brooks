@@ -80,9 +80,13 @@
     <ReleaseProjectStdErr>On</ReleaseProjectStdErr>
     <ReleaseProjectSaveAll>Off</ReleaseProjectSaveAll>
     <ReleaseProjectReload>Off</ReleaseProjectReload>
+    <Folder name="Common Files" sorted="Yes">
+        <File>MyHDL\Common\dsp_interface.py</File>
+        <File>MyHDL\Common\Pwm1.py</File>
+    </Folder>
     <Folder name="Top Level Files" sorted="Yes">
-        <File>MyHDL\main1.py</File>
-        <File>MyHDL\main2.py</File>
+        <File>MyHDL\TopLevel\main1.py</File>
+        <File>MyHDL\TopLevel\main2.py</File>
     </Folder>
     <Folder name="VHDL files" sorted="Yes">
         <File>MyHDL\Spartan3\DCM_example.vhd</File>

@@ -85,7 +85,12 @@
         <File>DSP\autogen\dspAutogen.h</File>
         <File>DSP\autogen\interface.h</File>
     </Folder>
+    <Folder name="checkDsp" sorted="Yes">
+        <File>DSP\checkDsp\checkDsp.c</File>
+    </Folder>
     <Folder name="Common" sorted="Yes">
+        <File>DSP\common\configDsp.c</File>
+        <File>DSP\inc\configDsp.h</File>
         <File>DSP\common\crc.c</File>
         <File>DSP\inc\crc.h</File>
         <File>DSP\common\CuTest.c</File>

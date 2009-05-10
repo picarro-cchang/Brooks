@@ -27,7 +27,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     @always_comb
     def  comb():
         intronix.next[16:] = rd_adc
-        rd_adc_clk.next = counter[2]
+        rd_adc_clk.next = counter[0]
         rd_adc_oe.next = 1
         fpga_led.next = counter[NSTAGES:NSTAGES-4]
         dsp_emif_ardy.next = 1   # Ensure DSP can continue
