@@ -69,6 +69,8 @@ error_messages.append("Invalid value")
 CONTROLLER_WAVEFORM_POINTS = 1000
 # Base address for DSP shared memory
 SHAREDMEM_ADDRESS = 0x20000
+# Base address for ringdown memory
+RDMEM_ADDRESS = 0xA0000000
 # Offset for software registers in DSP shared memory
 REG_OFFSET = 0x0
 # Offset for sensor stream area in DSP shared memory
@@ -1116,17 +1118,19 @@ LASER_CURRENT_DAC_FINE_CURRENT = 2 # Fine current DAC
 
 # FPGA map indices
 FPGA_VERSION = 0 # Version register
-FPGA_PWMA = 1 # Pulse width modulator A registers
-FPGA_PWMB = 3 # Pulse width modulator B registers
-FPGA_RDSIM = 5 # Ringdown simulator registers
-FPGA_LASERLOCK = 9 # Laser frequency locker registers
-FPGA_RDMETAMAN = 36 # Ringdown metadata manager registers
-FPGA_RDDATMAN = 50 # Ringdown data manager registers
-FPGA_RDMAN = 56 # Ringdown manager registers
-FPGA_LASER1_CURRENT_DAC = 78 # Laser1 current DAC registers
-FPGA_LASER2_CURRENT_DAC = 81 # Laser2 current DAC registers
-FPGA_LASER3_CURRENT_DAC = 84 # Laser3 current DAC registers
-FPGA_LASER4_CURRENT_DAC = 87 # Laser4 current DAC registers
+FPGA_LASER1_PWM = 1 # Laser 1 TEC pulse width modulator registers
+FPGA_LASER2_PWM = 3 # Laser 2 TEC pulse width modulator registers
+FPGA_LASER3_PWM = 5 # Laser 3 TEC pulse width modulator registers
+FPGA_LASER4_PWM = 7 # Laser 4 TEC pulse width modulator registers
+FPGA_RDSIM = 9 # Ringdown simulator registers
+FPGA_LASERLOCK = 13 # Laser frequency locker registers
+FPGA_RDMETAMAN = 40 # Ringdown metadata manager registers
+FPGA_RDDATMAN = 54 # Ringdown data manager registers
+FPGA_RDMAN = 60 # Ringdown manager registers
+FPGA_LASER1_CURRENT_DAC = 82 # Laser1 current DAC registers
+FPGA_LASER2_CURRENT_DAC = 85 # Laser2 current DAC registers
+FPGA_LASER3_CURRENT_DAC = 88 # Laser3 current DAC registers
+FPGA_LASER4_CURRENT_DAC = 91 # Laser4 current DAC registers
 
 # Environment addresses
 LASER1_TEMP_CNTRL_ENV = 0
@@ -1163,16 +1167,19 @@ ACTION_TEMP_CNTRL_LASER3_INIT = 14
 ACTION_TEMP_CNTRL_LASER3_STEP = 15
 ACTION_TEMP_CNTRL_LASER4_INIT = 16
 ACTION_TEMP_CNTRL_LASER4_STEP = 17
-ACTION_CURRENT_CNTRL_LASER1_INIT = 18
-ACTION_CURRENT_CNTRL_LASER1_STEP = 19
-ACTION_TEMP_CNTRL_CAVITY_INIT = 20
-ACTION_TEMP_CNTRL_CAVITY_STEP = 21
-ACTION_HEATER_CNTRL_INIT = 22
-ACTION_HEATER_CNTRL_STEP = 23
-ACTION_ENV_CHECKER = 24
-ACTION_PULSE_GENERATOR = 25
-ACTION_FILTER = 26
-ACTION_DS1631_READTEMP = 27
+ACTION_FLOAT_REGISTER_TO_FPGA = 18
+ACTION_FPGA_TO_FLOAT_REGISTER = 19
+ACTION_INT_TO_FPGA = 20
+ACTION_CURRENT_CNTRL_LASER1_INIT = 21
+ACTION_CURRENT_CNTRL_LASER1_STEP = 22
+ACTION_TEMP_CNTRL_CAVITY_INIT = 23
+ACTION_TEMP_CNTRL_CAVITY_STEP = 24
+ACTION_HEATER_CNTRL_INIT = 25
+ACTION_HEATER_CNTRL_STEP = 26
+ACTION_ENV_CHECKER = 27
+ACTION_PULSE_GENERATOR = 28
+ACTION_FILTER = 29
+ACTION_DS1631_READTEMP = 30
 
 
 # Parameter form definitions

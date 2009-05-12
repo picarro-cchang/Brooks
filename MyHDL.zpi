@@ -87,6 +87,7 @@
     <Folder name="Top Level Files" sorted="Yes">
         <File>MyHDL\TopLevel\main1.py</File>
         <File>MyHDL\TopLevel\main2.py</File>
+        <File>MyHDL\TopLevel\PwmTop.py</File>
     </Folder>
     <Folder name="VHDL files" sorted="Yes">
         <File>MyHDL\Spartan3\DCM_example.vhd</File>

@@ -31,8 +31,7 @@ void configDsp()
     CACHE_setL2Mode(CACHE_64KCACHE);
     CHIP_configArgs(
        CHIP_DEVCFG_RMK(
-          // EMIF input clock source
-          CHIP_DEVCFG_EKSRC_ECLKIN,      // ECLKIN external pin is the EMIF clock source
+          CHIP_DEVCFG_EKSRC_SYSCLK3,     // SYSCLK3 (90MHz) is the EMIF clock source
           CHIP_DEVCFG_TOUT1SEL_TOUT1PIN, // TOUT1SEL
           CHIP_DEVCFG_TOUT0SEL_TOUT0PIN, // TOUT0SEL
           CHIP_DEVCFG_MCBSP0DIS_1,       // MCBSP0 disabled

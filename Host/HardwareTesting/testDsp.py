@@ -106,7 +106,8 @@ def initEmif():
     writeMem(EMIF_SDRAMCTL,0x57115000) # SDRAM control (16 Mb)
     writeMem(EMIF_SDRAMTIM,0x00000578) # SDRAM timing (refresh)
     writeMem(EMIF_SDRAMEXT,0x000a8529) # SDRAM Extension register
-    writeMem(CHIP_DEVCFG,0x13)         # Chip configuration register
+    # Set up ECLK to 90MHz
+    writeMem(CHIP_DEVCFG,0x03)         # Chip configuration register
 
 def initPll():
     PLL_BASE_ADDR   = 0x01b7c000

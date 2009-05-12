@@ -106,7 +106,8 @@ def initEmif():
     writeMem(EMIF_SDRAMCTL,0x57115000) # SDRAM control (16 Mb)
     writeMem(EMIF_SDRAMTIM,0x00000578) # SDRAM timing (refresh)
     writeMem(EMIF_SDRAMEXT,0x000a8529) # SDRAM Extension register
-    writeMem(CHIP_DEVCFG,0x13)         # Chip configuration register
+    # Set up ECLK to 90MHz
+    writeMem(CHIP_DEVCFG,0x03)         # Chip configuration register
 
 def initPll():
     PLL_BASE_ADDR   = 0x01b7c000
@@ -220,8 +221,7 @@ def rdRegUint(reg):
     analyzerUsb.hpidRead(data)
     return data.value
 
-RDMEM_BASE = 0xA0000000
-FPGA_REG_BASE = RDMEM_BASE + (1<<(interface.EMIF_ADDR_WIDTH+1))
+FPGA_REG_BASE = interface.RDMEM_ADDRESS + (1<<(interface.EMIF_ADDR_WIDTH+1))
 FPGA_REG_MULT = 4
 
 def readFPGA(offset):
@@ -274,15 +274,40 @@ def upload():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     upload()
-    REG_PWMA_WIDTH = interface.FPGA_PWMA + interface.PWM_PULSE_WIDTH
-    REG_PWMA_CNTRL_STAT = interface.FPGA_PWMA + interface.PWM_CS
+    REG_LASER1_PWM_WIDTH = interface.FPGA_LASER1_PWM + interface.PWM_PULSE_WIDTH
+    REG_LASER1_PWM_CNTRL_STAT = interface.FPGA_LASER1_PWM + interface.PWM_CS
+    REG_LASER2_PWM_WIDTH = interface.FPGA_LASER2_PWM + interface.PWM_PULSE_WIDTH
+    REG_LASER2_PWM_CNTRL_STAT = interface.FPGA_LASER2_PWM + interface.PWM_CS
+    REG_LASER3_PWM_WIDTH = interface.FPGA_LASER3_PWM + interface.PWM_PULSE_WIDTH
+    REG_LASER3_PWM_CNTRL_STAT = interface.FPGA_LASER3_PWM + interface.PWM_CS
+    REG_LASER4_PWM_WIDTH = interface.FPGA_LASER4_PWM + interface.PWM_PULSE_WIDTH
+    REG_LASER4_PWM_CNTRL_STAT = interface.FPGA_LASER4_PWM + interface.PWM_CS
     while True:
         try:
-            duty = eval(raw_input("Pulse width? "))
-            writeFPGA(REG_PWMA_WIDTH,duty)
-            print "PWM width  = 0x%x" % readFPGA(REG_PWMA_WIDTH)
-            writeFPGA(REG_PWMA_CNTRL_STAT,
+            duty = eval(raw_input("Laser1 TEC Pulse width? "))
+            writeFPGA(REG_LASER1_PWM_WIDTH,duty)
+            print "Laser1 TEC pulse width  = 0x%x" % readFPGA(REG_LASER1_PWM_WIDTH)
+            writeFPGA(REG_LASER1_PWM_CNTRL_STAT,
                      (1<<interface.PWM_CS_RUN_B) |
                      (1<<interface.PWM_CS_CONT_B))
-        except:
+            duty = eval(raw_input("Laser2 TEC Pulse width? "))
+            writeFPGA(REG_LASER2_PWM_WIDTH,duty)
+            print "Laser2 TEC pulse width  = 0x%x" % readFPGA(REG_LASER2_PWM_WIDTH)
+            writeFPGA(REG_LASER2_PWM_CNTRL_STAT,
+                     (1<<interface.PWM_CS_RUN_B) |
+                     (1<<interface.PWM_CS_CONT_B))
+            duty = eval(raw_input("Laser3 TEC Pulse width? "))
+            writeFPGA(REG_LASER3_PWM_WIDTH,duty)
+            print "Laser3 TEC pulse width  = 0x%x" % readFPGA(REG_LASER3_PWM_WIDTH)
+            writeFPGA(REG_LASER3_PWM_CNTRL_STAT,
+                  (1<<interface.PWM_CS_RUN_B) |
+                  (1<<interface.PWM_CS_CONT_B))
+            duty = eval(raw_input("Laser4 TEC Pulse width? "))
+            writeFPGA(REG_LASER4_PWM_WIDTH,duty)
+            print "Laser4 TEC pulse width  = 0x%x" % readFPGA(REG_LASER4_PWM_WIDTH)
+            writeFPGA(REG_LASER4_PWM_CNTRL_STAT,
+                  (1<<interface.PWM_CS_RUN_B) |
+                  (1<<interface.PWM_CS_CONT_B))
+        except Exception,e:
+            print "Error: %s" % e
             break

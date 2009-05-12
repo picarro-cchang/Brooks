@@ -370,6 +370,12 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_tempCntrlLaser4Init(numInt,params,env);
         case ACTION_TEMP_CNTRL_LASER4_STEP:
             return r_tempCntrlLaser4Step(numInt,params,env);
+        case ACTION_FLOAT_REGISTER_TO_FPGA:
+            return r_floatRegisterToFpga(numInt,params,env);
+        case ACTION_FPGA_TO_FLOAT_REGISTER:
+            return r_fpgaToFloatRegister(numInt,params,env);
+        case ACTION_INT_TO_FPGA:
+            return r_intToFpga(numInt,params,env);
         case ACTION_CURRENT_CNTRL_LASER1_INIT:
             return r_currentCntrlLaser1Init(numInt,params,env);
         case ACTION_CURRENT_CNTRL_LASER1_STEP:

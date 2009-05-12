@@ -142,6 +142,7 @@
     <constant_list>
         <constant ident="CONTROLLER_WAVEFORM_POINTS" description="Number of points in controller waveforms">1000</constant>
         <constant ident="SHAREDMEM_ADDRESS" description="Base address for DSP shared memory">0x20000</constant>
+        <constant ident="RDMEM_ADDRESS" description="Base address for ringdown memory">0xA0000000</constant>
         <constant ident="REG_OFFSET" description="Offset for software registers in DSP shared memory">0x0</constant>
         <constant ident="SENSOR_OFFSET" description="Offset for sensor stream area in DSP shared memory">0x1B00</constant>
         <constant ident="MESSAGE_OFFSET" description="Offset for message area in DSP shared memory">0x2B00</constant>
@@ -171,6 +172,7 @@
         <constant ident="RDMEM_DATA_WIDTH" description="Numer of bits in ringdown memory data">18</constant>
         <constant ident="TEMP_CNTRL_LOCK_COUNT" description="Number of in-range samples to acquire lock">5</constant>
         <constant ident="TEMP_CNTRL_UNLOCK_COUNT" description="Number of out-of-range samples to lose lock">5</constant>
+
     </constant_list>
     <union_list>
         <union type="DataType">
@@ -1396,11 +1398,17 @@
         <fpga_map ident="FPGA_VERSION">
             <description>Version register</description>
         </fpga_map>
-        <fpga_map ident="FPGA_PWMA" block="PWM">
-            <description>Pulse width modulator A registers</description>
+        <fpga_map ident="FPGA_LASER1_PWM" block="PWM">
+            <description>Laser 1 TEC pulse width modulator registers</description>
         </fpga_map>
-        <fpga_map ident="FPGA_PWMB" block="PWM">
-            <description>Pulse width modulator B registers</description>
+        <fpga_map ident="FPGA_LASER2_PWM" block="PWM">
+            <description>Laser 2 TEC pulse width modulator registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_LASER3_PWM" block="PWM">
+            <description>Laser 3 TEC pulse width modulator registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_LASER4_PWM" block="PWM">
+            <description>Laser 4 TEC pulse width modulator registers</description>
         </fpga_map>
         <fpga_map ident="FPGA_RDSIM" block="RDSIM">
             <description>Ringdown simulator registers</description>
@@ -1456,6 +1464,9 @@
         <action ident="ACTION_TEMP_CNTRL_LASER3_STEP">r_tempCntrlLaser3Step</action>
         <action ident="ACTION_TEMP_CNTRL_LASER4_INIT">r_tempCntrlLaser4Init</action>
         <action ident="ACTION_TEMP_CNTRL_LASER4_STEP">r_tempCntrlLaser4Step</action>
+        <action ident="ACTION_FLOAT_REGISTER_TO_FPGA">r_floatRegisterToFpga</action>
+        <action ident="ACTION_FPGA_TO_FLOAT_REGISTER">r_fpgaToFloatRegister</action>
+        <action ident="ACTION_INT_TO_FPGA">r_intToFpga</action>
         <action ident="ACTION_CURRENT_CNTRL_LASER1_INIT">r_currentCntrlLaser1Init</action>
         <action ident="ACTION_CURRENT_CNTRL_LASER1_STEP">r_currentCntrlLaser1Step</action>
         <action ident="ACTION_TEMP_CNTRL_CAVITY_INIT">r_tempCntrlCavityInit</action>

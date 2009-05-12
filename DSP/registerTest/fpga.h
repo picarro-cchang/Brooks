@@ -16,6 +16,7 @@
 #ifndef _FPGA_H_
 #define _FPGA_H_
 
-void writeFPGA(unsigned int regNum, unsigned short value);
+void writeFPGA(unsigned int regNum, unsigned int value);
+unsigned int readFPGA(unsigned int regNum);
 
 #endif /* _FPGA_H_ */

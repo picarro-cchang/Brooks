@@ -108,6 +108,23 @@ class DasConfigure(object):
         #         "CONVERSION_LASER4_THERM_CONSTC_REGISTER",
         #         "LASER4_TEMPERATURE_REGISTER"]))
 
+        REG_LASER1_PWM_WIDTH = interface.FPGA_LASER1_PWM + interface.PWM_PULSE_WIDTH
+        self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+            Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                ["LASER1_TEC_REGISTER",REG_LASER1_PWM_WIDTH]))
+        REG_LASER2_PWM_WIDTH = interface.FPGA_LASER2_PWM + interface.PWM_PULSE_WIDTH
+        self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+            Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                ["LASER2_TEC_REGISTER",REG_LASER2_PWM_WIDTH]))
+        REG_LASER3_PWM_WIDTH = interface.FPGA_LASER3_PWM + interface.PWM_PULSE_WIDTH
+        self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+            Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                ["LASER3_TEC_REGISTER",REG_LASER3_PWM_WIDTH]))
+        REG_LASER4_PWM_WIDTH = interface.FPGA_LASER4_PWM + interface.PWM_PULSE_WIDTH
+        self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+            Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                ["LASER4_TEC_REGISTER",REG_LASER4_PWM_WIDTH]))
+
         # Read the DAS temperature into LASER4_TEMPERATURE_REGISTER
         self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
             Operation("ACTION_DS1631_READTEMP",
@@ -217,6 +234,20 @@ class DasConfigure(object):
         sender.wrRegFloat("LASER4_RESISTANCE_REGISTER",7000.0)
         sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER",100000.0)
         sender.wrRegFloat("CAVITY_RESISTANCE_REGISTER",100000.0)
+
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,REG_LASER1_PWM_WIDTH]))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,REG_LASER2_PWM_WIDTH]))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,REG_LASER3_PWM_WIDTH]))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,REG_LASER4_PWM_WIDTH]))
+        runCont = (1<<interface.PWM_CS_RUN_B) | (1<<interface.PWM_CS_CONT_B)
+        REG_LASER1_PWM_CS = interface.FPGA_LASER1_PWM + interface.PWM_CS
+        REG_LASER2_PWM_CS = interface.FPGA_LASER2_PWM + interface.PWM_CS
+        REG_LASER3_PWM_CS = interface.FPGA_LASER3_PWM + interface.PWM_CS
+        REG_LASER4_PWM_CS = interface.FPGA_LASER4_PWM + interface.PWM_CS
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,REG_LASER1_PWM_CS]))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,REG_LASER2_PWM_CS]))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,REG_LASER3_PWM_CS]))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,REG_LASER4_PWM_CS]))
 
         # Initialize filter coefficients and write environment
         #  of filter

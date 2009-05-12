@@ -28,6 +28,7 @@
 #include "laserCurrentCntrl.h"
 #include "heaterCntrl.h"
 #include "ds1631.h"
+#include "fpga.h"
 
 #define READ_REG(regNum,type,result) { \
     DataType d; \
@@ -247,6 +248,50 @@ int r_tempCntrlLaser4Step(unsigned int numInt,void *params,void *env)
     status = tempCntrlLaser4Step();
     return status;
 }
+
+#ifdef SIMULATION
+#pragma argsused
+#endif
+int r_floatRegisterToFpga(unsigned int numInt,void *params,void *env)
+/* Copy contents of a floating point register to an FPGA register,
+    treating value as an unsigned int */
+{
+    float value;
+    unsigned int *reg = (unsigned int *) params;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[0],asFloat,value);
+    writeFPGA(reg[1],(unsigned int)value);
+    return STATUS_OK;
+}
+
+#ifdef SIMULATION
+#pragma argsused
+#endif
+int r_fpgaToFloatRegister(unsigned int numInt,void *params,void *env)
+/* Copy contents of an FPGA register to a floating point register,
+    treating value as an unsigned short */
+{
+    float value;
+    unsigned int *reg = (unsigned int *) params;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    value = readFPGA(reg[0]);
+    WRITE_REG(reg[1],asFloat,value);
+    return STATUS_OK;
+}
+
+#ifdef SIMULATION
+#pragma argsused
+#endif
+int r_intToFpga(unsigned int numInt,void *params,void *env)
+/* Copy integer (passed as first parameter) to the specified
+    FPGA register */
+{
+    unsigned int *reg = (unsigned int *) params;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    writeFPGA(reg[1],reg[0]);
+    return STATUS_OK;
+}
+
 #ifdef SIMULATION
 #pragma argsused
 #endif

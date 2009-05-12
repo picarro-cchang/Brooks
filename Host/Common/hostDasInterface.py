@@ -34,16 +34,10 @@ from Host.Common.simulatorUsbIf import SimulatorUsb
 from Host.Common.DspSimulator   import DspSimulator
 from Host.Common.analyzerUsbIf  import AnalyzerUsb
 
-# Following variable indicates if we are using A1 on Digilent
-#  board as EMIF addresses
-BIGRAM = True
-
 # The 6713 has 192KB of internal memory from 0 through 0x2FFFF
 #  With the allocation below, the register area contains 16128 4-byte
 #   registers. The host area occupies the top 1KB of internal memory
 
-BASE_ADDRESS = 0x80800000
-QUEUE_SIZE = 64
 SHAREDMEM_BASE   = interface.SHAREDMEM_ADDRESS
 REG_BASE         = interface.SHAREDMEM_ADDRESS
 SENSOR_BASE      = interface.SHAREDMEM_ADDRESS + \
@@ -60,6 +54,8 @@ ENVIRONMENT_BASE = interface.SHAREDMEM_ADDRESS + \
                        4*interface.ENVIRONMENT_OFFSET
 HOST_BASE        = interface.SHAREDMEM_ADDRESS + \
                        4*interface.HOST_OFFSET
+FPGA_REG_BASE    = interface.RDMEM_ADDRESS + \
+                       (1<<(interface.EMIF_ADDR_WIDTH+1))
 
 class Operation(object):
     def __init__(self,opcode,operandList=[],env=0):
@@ -566,6 +562,43 @@ class HostToDspSender(Singleton):
         data = c_uint(0)
         self.usb.hpidRead(data)
         return data.value
+    @usbLockProtect
+    def rdFPGA(self,base,reg):
+        # Performs a host read of a single unsigned integer from
+        #  the FPGA register which may be specified as
+        #  the sum of a block base and the register index
+        self.usb.hpiaWrite(FPGA_REG_BASE+4*(lookup(base)+lookup(reg)))
+        data = c_uint(0)
+        self.usb.hpidRead(data)
+        return data.value
+    @usbLockProtect
+    def wrFPGA(self,base,reg,value):
+        # Performs a host write of a single unsigned integer from
+        #  the FPGA register which may be specified as
+        #  the sum of a block base and the register index
+        self.usb.hpiaWrite(FPGA_REG_BASE+4*(lookup(base)+lookup(reg)))
+        self.usb.hpidWrite(c_uint(value))
+    @usbLockProtect
+    def readRdMemArray(self,offset,nwords=1):
+        """Reads multiple words from ringdown memory into a c_uint array.
+           Note that offset is a BYTE offset into the memory"""
+        self.usb.hpiaWrite(RDMEM_ADDRESS+offset)
+        result = (c_uint*nwords)()
+        self.usb.hpidRead(result)
+        return result
+    @usbLockProtect
+    def readRdMem(self,offset):
+        """Reads single uint from ringdown memory from specified BYTE offset"""
+        self.usb.hpiaWrite(RDMEM_ADDRESS+offset)
+        result = c_uint(0)
+        self.usb.hpidRead(result)
+        return result.value
+    @usbLockProtect
+    def writeRdMem(self,offset,value):
+        """Reads single uint value to ringdown memory at specified BYTE offset"""
+        self.usb.hpiaWrite(RDMEM_ADDRESS+offset)
+        result = c_uint(value)
+        self.usb.hpidWrite(result)
     @usbLockProtect
     def rdSensorData(self,index):
         # Performs a host read of the data in the specified sensor stream

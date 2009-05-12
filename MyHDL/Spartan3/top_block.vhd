@@ -185,6 +185,15 @@ begin
         dsp_emif_ddir => dsp_emif_ddir,
         dsp_emif_be => dsp_emif_be,
         dsp_emif_ce => dsp_emif_ce,
+        dsp_eclk => dsp_eclkout,
+        lsr1_0 => lsr1_0,
+        lsr1_1 => lsr1_1,
+        lsr2_0 => lsr2_0,
+        lsr2_1 => lsr2_1,
+        lsr3_0 => lsr3_0,
+        lsr3_1 => lsr3_1,
+        lsr4_0 => lsr4_0,
+        lsr4_1 => lsr4_1,
         i2c_rst0 => i2c_rst0,
         i2c_rst1 => i2c_rst1,
         i2c_scl0 => i2c_scl0,
@@ -193,6 +202,7 @@ begin
         i2c_sda1 => i2c_sda1,
         rd_adc => rd_adc,
         rd_adc_clk => rd_adc_clk,
-        rd_adc_oe => rd_adc_oe
+        rd_adc_oe => rd_adc_oe,
+        monitor => monitor
     );
 end behavioral;

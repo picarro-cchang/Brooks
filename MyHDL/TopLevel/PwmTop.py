@@ -26,9 +26,12 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          dsp_emif_we,dsp_emif_re,dsp_emif_oe,dsp_emif_ardy,
          dsp_emif_ea,dsp_emif_din, dsp_emif_dout,
          dsp_emif_ddir, dsp_emif_be, dsp_emif_ce,
+         dsp_eclk,
+         lsr1_0, lsr1_1, lsr2_0, lsr2_1, lsr3_0, lsr3_1, lsr4_0, lsr4_1,
          i2c_rst0, i2c_rst1,
          i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1,
-         rd_adc, rd_adc_clk, rd_adc_oe):
+         rd_adc, rd_adc_clk, rd_adc_oe,
+         monitor):
 
     NSTAGES = 28
     counter = Signal(intbv(0)[NSTAGES:])
@@ -36,7 +39,16 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_addr = Signal(intbv(0)[EMIF_ADDR_WIDTH:])
     dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_wr, ce2, pwm_out, pwm_inv_out = [Signal(LOW) for i in range(4)]
+    dsp_data_in_laser1_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_laser2_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_laser3_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_laser4_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+
+    dsp_wr, ce2 = [Signal(LOW) for i in range(2)]
+    laser1_pwm_out, laser1_pwm_inv_out = [Signal(LOW) for i in range(2)]
+    laser2_pwm_out, laser2_pwm_inv_out = [Signal(LOW) for i in range(2)]
+    laser3_pwm_out, laser3_pwm_inv_out = [Signal(LOW) for i in range(2)]
+    laser4_pwm_out, laser4_pwm_inv_out = [Signal(LOW) for i in range(2)]
 
     dsp_interface = Dsp_interface(clk=clk0, reset=reset, addr=dsp_emif_ea,
                                   to_dsp=dsp_emif_din, re=dsp_emif_re,
@@ -50,12 +62,33 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                                   dsp_data_in=dsp_data_in,
                                   dsp_wr=dsp_wr)
 
-    pwm = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
-              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
+    laser1_pwm = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_laser1_pwm,
               dsp_wr=dsp_wr,
-              pwm_out=pwm_out,
-              pwm_inv_out=pwm_inv_out,
-              map_base=FPGA_PWMA)
+              pwm_out=laser1_pwm_out,
+              pwm_inv_out=laser1_pwm_inv_out,
+              map_base=FPGA_LASER1_PWM)
+
+    laser2_pwm = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_laser2_pwm,
+              dsp_wr=dsp_wr,
+              pwm_out=laser2_pwm_out,
+              pwm_inv_out=laser2_pwm_inv_out,
+              map_base=FPGA_LASER2_PWM)
+
+    laser3_pwm = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_laser3_pwm,
+              dsp_wr=dsp_wr,
+              pwm_out=laser3_pwm_out,
+              pwm_inv_out=laser3_pwm_inv_out,
+              map_base=FPGA_LASER3_PWM)
+
+    laser4_pwm = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_laser4_pwm,
+              dsp_wr=dsp_wr,
+              pwm_out=laser4_pwm_out,
+              pwm_inv_out=laser4_pwm_inv_out,
+              map_base=FPGA_LASER4_PWM)
 
     @instance
     def  logic():
@@ -68,9 +101,35 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
     @always_comb
     def  comb():
+        dsp_data_in.next = dsp_data_in_laser1_pwm | \
+                           dsp_data_in_laser2_pwm | \
+                           dsp_data_in_laser3_pwm | \
+                           dsp_data_in_laser4_pwm
+
         ce2.next = dsp_emif_ce[2]
-        intronix.next[16]  = pwm_out
-        intronix.next[17]  = pwm_inv_out
+        intronix.next[16]  = laser1_pwm_out
+        intronix.next[17]  = laser1_pwm_inv_out
+        lsr1_0.next = laser1_pwm_out
+        lsr1_1.next = laser1_pwm_inv_out
+        intronix.next[18]  = laser2_pwm_out
+        intronix.next[19]  = laser2_pwm_inv_out
+        lsr2_0.next = laser2_pwm_out
+        lsr2_1.next = laser2_pwm_inv_out
+        intronix.next[20]  = laser3_pwm_out
+        intronix.next[21]  = laser3_pwm_inv_out
+        lsr3_0.next = laser3_pwm_out
+        lsr3_1.next = laser3_pwm_inv_out
+        intronix.next[22]  = laser4_pwm_out
+        intronix.next[23]  = laser4_pwm_inv_out
+        lsr4_0.next = laser4_pwm_out
+        lsr4_1.next = laser4_pwm_inv_out
+        intronix.next[24] = dsp_emif_we
+        intronix.next[25] = dsp_emif_oe
+        intronix.next[26] = dsp_emif_re
+        intronix.next[27] = dsp_emif_ce[2]
+        intronix.next[32] = dsp_eclk
+        monitor.next = 0
+
         intronix.next[16:] = rd_adc
         rd_adc_clk.next = counter[0]
         rd_adc_oe.next = 1
@@ -81,7 +140,6 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         intronix.next[29] = i2c_sda0
         intronix.next[30] = i2c_scl1
         intronix.next[31] = i2c_sda1
-        intronix.next[32] = reset
         intronix.next[33] = clk0
 
     return instances()
@@ -107,15 +165,21 @@ i2c_rst0, i2c_rst1 = [Signal(LOW) for i in range(2)]
 i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1 = [Signal(LOW) for i in range(4)]
 rd_adc = Signal(intbv(0)[16:])
 rd_adc_clk, rd_adc_oe = [Signal(LOW) for i in range(2)]
+dsp_eclk, monitor = [Signal(LOW) for i in range(2)]
+lsr1_0, lsr1_1, lsr2_0, lsr2_1 = [Signal(LOW) for i in range(4)]
+lsr3_0, lsr3_1, lsr4_0, lsr4_1 = [Signal(LOW) for i in range(4)]
 
 def makeVHDL():
     toVHDL(main,clk0,clk180,clk3f,clk3f180,clk_locked,reset,
                 intronix,fpga_led,dsp_emif_we,dsp_emif_re,
                 dsp_emif_oe,dsp_emif_ardy,dsp_emif_ea,dsp_emif_din,
                 dsp_emif_dout,dsp_emif_ddir, dsp_emif_be, dsp_emif_ce,
+                dsp_eclk,
+                lsr1_0, lsr1_1, lsr2_0, lsr2_1, lsr3_0, lsr3_1, lsr4_0, lsr4_1,
                 i2c_rst0, i2c_rst1,
                 i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1,
-                rd_adc, rd_adc_clk, rd_adc_oe)
+                rd_adc, rd_adc_clk, rd_adc_oe,
+                monitor)
 
 if __name__ == "__main__":
     makeVHDL()
