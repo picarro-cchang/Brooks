@@ -1116,6 +1116,9 @@ LASER_CURRENT_DAC_CS_CONT_W = 1 # SINGLE/CONTINUOUS bit width
 LASER_CURRENT_DAC_COARSE_CURRENT = 1 # Coarse current DAC
 LASER_CURRENT_DAC_FINE_CURRENT = 2 # Fine current DAC
 
+# Block RDCOMPARE Ringdown comparator
+RDCOMPARE_THRESHOLD = 0 # Ringdown threshold
+
 # FPGA map indices
 FPGA_VERSION = 0 # Version register
 FPGA_LASER1_PWM = 1 # Laser 1 TEC pulse width modulator registers
@@ -1131,6 +1134,7 @@ FPGA_LASER1_CURRENT_DAC = 82 # Laser1 current DAC registers
 FPGA_LASER2_CURRENT_DAC = 85 # Laser2 current DAC registers
 FPGA_LASER3_CURRENT_DAC = 88 # Laser3 current DAC registers
 FPGA_LASER4_CURRENT_DAC = 91 # Laser4 current DAC registers
+FPGA_RDCOMPARE = 94 # Ringdown comparator
 
 # Environment addresses
 LASER1_TEMP_CNTRL_ENV = 0

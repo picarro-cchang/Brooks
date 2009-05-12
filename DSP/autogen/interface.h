@@ -660,6 +660,9 @@ typedef enum {
 #define LASER_CURRENT_DAC_COARSE_CURRENT (1) // Coarse current DAC
 #define LASER_CURRENT_DAC_FINE_CURRENT (2) // Fine current DAC
 
+/* Block RDCOMPARE Ringdown comparator */
+#define RDCOMPARE_THRESHOLD (0) // Ringdown threshold
+
 /* FPGA map indices */
 
 #define FPGA_VERSION (0) // Version register
@@ -676,6 +679,7 @@ typedef enum {
 #define FPGA_LASER2_CURRENT_DAC (85) // Laser2 current DAC registers
 #define FPGA_LASER3_CURRENT_DAC (88) // Laser3 current DAC registers
 #define FPGA_LASER4_CURRENT_DAC (91) // Laser4 current DAC registers
+#define FPGA_RDCOMPARE (94) // Ringdown comparator
 
 /* Environment addresses */
 

@@ -284,6 +284,9 @@ if __name__ == "__main__":
     REG_LASER4_PWM_CNTRL_STAT = interface.FPGA_LASER4_PWM + interface.PWM_CS
     while True:
         try:
+            threshold = eval(raw_input("Ringdown threshold? "))
+            writeFPGA(interface.FPGA_RDCOMPARE + interface.RDCOMPARE_THRESHOLD,threshold)
+
             duty = eval(raw_input("Laser1 TEC Pulse width? "))
             writeFPGA(REG_LASER1_PWM_WIDTH,duty)
             print "Laser1 TEC pulse width  = 0x%x" % readFPGA(REG_LASER1_PWM_WIDTH)

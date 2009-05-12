@@ -18,6 +18,7 @@ from myhdl import *
 from Host.autogen.interface import *
 from MyHDL.Common.Pwm1 import Pwm
 from MyHDL.Common.dsp_interface import Dsp_interface
+from MyHDL.Common.Rdcompare import Rdcompare
 
 LOW, HIGH = bool(0), bool(1)
 
@@ -43,12 +44,14 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_data_in_laser2_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_laser3_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_laser4_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_rdcompare  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 
     dsp_wr, ce2 = [Signal(LOW) for i in range(2)]
     laser1_pwm_out, laser1_pwm_inv_out = [Signal(LOW) for i in range(2)]
     laser2_pwm_out, laser2_pwm_inv_out = [Signal(LOW) for i in range(2)]
     laser3_pwm_out, laser3_pwm_inv_out = [Signal(LOW) for i in range(2)]
     laser4_pwm_out, laser4_pwm_inv_out = [Signal(LOW) for i in range(2)]
+    compare_result = Signal(LOW)
 
     dsp_interface = Dsp_interface(clk=clk0, reset=reset, addr=dsp_emif_ea,
                                   to_dsp=dsp_emif_din, re=dsp_emif_re,
@@ -90,6 +93,12 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
               pwm_inv_out=laser4_pwm_inv_out,
               map_base=FPGA_LASER4_PWM)
 
+    rdcompare = Rdcompare(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdcompare,
+                dsp_wr=dsp_wr,
+                value=rd_adc,result=compare_result,
+                map_base=FPGA_RDCOMPARE)
+
     @instance
     def  logic():
         while True:
@@ -104,7 +113,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         dsp_data_in.next = dsp_data_in_laser1_pwm | \
                            dsp_data_in_laser2_pwm | \
                            dsp_data_in_laser3_pwm | \
-                           dsp_data_in_laser4_pwm
+                           dsp_data_in_laser4_pwm | \
+                           dsp_data_in_rdcompare
 
         ce2.next = dsp_emif_ce[2]
         intronix.next[16]  = laser1_pwm_out
@@ -127,8 +137,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         intronix.next[25] = dsp_emif_oe
         intronix.next[26] = dsp_emif_re
         intronix.next[27] = dsp_emif_ce[2]
-        intronix.next[32] = dsp_eclk
-        monitor.next = 0
+        intronix.next[32] = compare_result
+        monitor.next = compare_result
 
         intronix.next[16:] = rd_adc
         rd_adc_clk.next = counter[0]
