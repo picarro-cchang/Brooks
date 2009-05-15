@@ -1,3 +1,19 @@
+#!/usr/bin/python
+#
+# FILE:
+#   Rdcompare.py
+#
+# DESCRIPTION:
+#   MyHDL for simple ringdown threshold comparator
+#
+# SEE ALSO:
+#   Specify any related information.
+#
+# HISTORY:
+#   12-May-2009  sze  Initial version.
+#
+#  Copyright (c) 2009 Picarro, Inc. All rights reserved
+#
 from myhdl import *
 
 from Host.autogen import interface

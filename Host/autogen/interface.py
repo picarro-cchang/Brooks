@@ -115,16 +115,26 @@ HOST_REGION_SIZE = (SHAREDMEM_SIZE - HOST_OFFSET)
 EMIF_ADDR_WIDTH = 20
 # Number of bits in EMIF address
 EMIF_DATA_WIDTH = 32
-# Numer of bits in an FPGA register
+# Number of bits in an FPGA register
 FPGA_REG_WIDTH = 16
 # Mask to access ringdown memory
 FPGA_RDMEM_MASK = 0
 # Mask to access FPGA registers
 FPGA_REG_MASK = 1
-# Numer of bits in ringdown memory address
-RDMEM_ADDR_WIDTH = 13
-# Numer of bits in ringdown memory data
+# Number of bits in ringdown data
 RDMEM_DATA_WIDTH = 18
+# Number of bits in ringdown metadata
+RDMEM_META_WIDTH = 16
+# Number of bits in ringdown parameters
+RDMEM_PARAM_WIDTH = 16
+# Number of address bits reserved for a ringdown region in each bank
+RDMEM_RESERVED_BANK_ADDR_WIDTH = 12
+# Number of address bits for one bank of data
+DATA_BANK_ADDR_WIDTH = 12
+# Number of address bits for one bank of metadata
+META_BANK_ADDR_WIDTH = 12
+# Number of address bits for one bank of parameters
+PARAM_BANK_ADDR_WIDTH = 6
 # Number of in-range samples to acquire lock
 TEMP_CNTRL_LOCK_COUNT = 5
 # Number of out-of-range samples to lose lock

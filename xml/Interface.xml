@@ -165,11 +165,16 @@
         <constant ident="HOST_REGION_SIZE" description="Number of 32-bit ints in host area">(SHAREDMEM_SIZE - HOST_OFFSET)</constant>
         <constant ident="EMIF_ADDR_WIDTH" description="Number of bits in EMIF address">20</constant>
         <constant ident="EMIF_DATA_WIDTH" description="Number of bits in EMIF address">32</constant>
-        <constant ident="FPGA_REG_WIDTH" description="Numer of bits in an FPGA register">16</constant>
+        <constant ident="FPGA_REG_WIDTH" description="Number of bits in an FPGA register">16</constant>
         <constant ident="FPGA_RDMEM_MASK" description="Mask to access ringdown memory">0</constant>
         <constant ident="FPGA_REG_MASK" description="Mask to access FPGA registers">1</constant>
-        <constant ident="RDMEM_ADDR_WIDTH" description="Numer of bits in ringdown memory address">13</constant>
-        <constant ident="RDMEM_DATA_WIDTH" description="Numer of bits in ringdown memory data">18</constant>
+        <constant ident="RDMEM_DATA_WIDTH" description="Number of bits in ringdown data">18</constant>
+        <constant ident="RDMEM_META_WIDTH" description="Number of bits in ringdown metadata">16</constant>
+        <constant ident="RDMEM_PARAM_WIDTH" description="Number of bits in ringdown parameters">16</constant>
+        <constant ident="RDMEM_RESERVED_BANK_ADDR_WIDTH" description="Number of address bits reserved for a ringdown region in each bank">12</constant>
+        <constant ident="DATA_BANK_ADDR_WIDTH" description="Number of address bits for one bank of data">12</constant>
+        <constant ident="META_BANK_ADDR_WIDTH" description="Number of address bits for one bank of metadata">12</constant>
+        <constant ident="PARAM_BANK_ADDR_WIDTH" description="Number of address bits for one bank of parameters">6</constant>
         <constant ident="TEMP_CNTRL_LOCK_COUNT" description="Number of in-range samples to acquire lock">5</constant>
         <constant ident="TEMP_CNTRL_UNLOCK_COUNT" description="Number of out-of-range samples to lose lock">5</constant>
 

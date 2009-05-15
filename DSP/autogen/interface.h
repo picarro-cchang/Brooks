@@ -102,16 +102,26 @@ typedef int bool;
 #define EMIF_ADDR_WIDTH (20)
 // Number of bits in EMIF address
 #define EMIF_DATA_WIDTH (32)
-// Numer of bits in an FPGA register
+// Number of bits in an FPGA register
 #define FPGA_REG_WIDTH (16)
 // Mask to access ringdown memory
 #define FPGA_RDMEM_MASK (0)
 // Mask to access FPGA registers
 #define FPGA_REG_MASK (1)
-// Numer of bits in ringdown memory address
-#define RDMEM_ADDR_WIDTH (13)
-// Numer of bits in ringdown memory data
+// Number of bits in ringdown data
 #define RDMEM_DATA_WIDTH (18)
+// Number of bits in ringdown metadata
+#define RDMEM_META_WIDTH (16)
+// Number of bits in ringdown parameters
+#define RDMEM_PARAM_WIDTH (16)
+// Number of address bits reserved for a ringdown region in each bank
+#define RDMEM_RESERVED_BANK_ADDR_WIDTH (12)
+// Number of address bits for one bank of data
+#define DATA_BANK_ADDR_WIDTH (12)
+// Number of address bits for one bank of metadata
+#define META_BANK_ADDR_WIDTH (12)
+// Number of address bits for one bank of parameters
+#define PARAM_BANK_ADDR_WIDTH (6)
 // Number of in-range samples to acquire lock
 #define TEMP_CNTRL_LOCK_COUNT (5)
 // Number of out-of-range samples to lose lock

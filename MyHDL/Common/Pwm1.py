@@ -1,3 +1,19 @@
+#!/usr/bin/python
+#
+# FILE:
+#   Pwm1.py
+#
+# DESCRIPTION:
+#   MyHDL for pulse width modulator
+#
+# SEE ALSO:
+#   Specify any related information.
+#
+# HISTORY:
+#   12-May-2009  sze  Initial version.
+#
+#  Copyright (c) 2009 Picarro, Inc. All rights reserved
+#
 from myhdl import *
 from Host.autogen import interface
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH, FPGA_REG_WIDTH, FPGA_REG_MASK
