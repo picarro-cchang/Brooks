@@ -1128,6 +1128,7 @@ LASER_CURRENT_DAC_FINE_CURRENT = 2 # Fine current DAC
 
 # Block RDCOMPARE Ringdown comparator
 RDCOMPARE_THRESHOLD = 0 # Ringdown threshold
+RDCOMPARE_RATE_DIVISOR = 1 # Ringdown address counter divisor
 
 # FPGA map indices
 FPGA_VERSION = 0 # Version register

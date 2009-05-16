@@ -113,6 +113,7 @@
         <File>Host\HardwareTesting\testDsp.py</File>
         <File>Host\HardwareTesting\testFpga.py</File>
         <File>Host\HardwareTesting\testPwm.py</File>
+        <File>Host\HardwareTesting\testRdmem.py</File>
         <File>Host\HardwareTesting\testUsb.py</File>
     </Folder>
 </Project>

@@ -672,6 +672,7 @@ typedef enum {
 
 /* Block RDCOMPARE Ringdown comparator */
 #define RDCOMPARE_THRESHOLD (0) // Ringdown threshold
+#define RDCOMPARE_RATE_DIVISOR (1) // Ringdown address counter divisor
 
 /* FPGA map indices */
 

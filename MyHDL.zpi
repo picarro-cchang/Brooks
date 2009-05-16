@@ -85,12 +85,15 @@
         <File>MyHDL\Common\DualPortRamRw.py</File>
         <File>MyHDL\Common\Pwm1.py</File>
         <File>MyHDL\Common\Rdcompare.py</File>
+        <File>MyHDL\Common\RdDataAddrGen.py</File>
         <File>MyHDL\Common\Rdmemory.py</File>
     </Folder>
     <Folder name="Templates" sorted="Yes">
         <File>MyHDL\Templates\makeTemplate.py</File>
     </Folder>
-    <Folder name="Testing" sorted="Yes" />
+    <Folder name="Testing" sorted="Yes">
+        <File>MyHDL\Testing\test_Rdmemory.py</File>
+    </Folder>
     <Folder name="Top Level Files" sorted="Yes">
         <File>MyHDL\TopLevel\main1.py</File>
         <File>MyHDL\TopLevel\main2.py</File>

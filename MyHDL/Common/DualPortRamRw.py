@@ -14,11 +14,12 @@
 #
 from myhdl import *
 
+instance_count = 0
 LOW, HIGH = bool(0), bool(1)
 
 VHDL_CODE = \
 """
-dual_port_ram : entity work.DualPortRamRw_e(Behavioral)
+dual_port_ram_%(instance_count)s : entity work.DualPortRamRw_e(Behavioral)
     generic map(ADDR_WIDTH => %(addr_width)s, DATA_WIDTH => %(data_width)s)
     port map (
     clockA => %(clockA)s, enableA => %(enableA)s, wr_enableA => %(wr_enableA)s,
@@ -31,6 +32,7 @@ dual_port_ram : entity work.DualPortRamRw_e(Behavioral)
 def DualPortRamRw(clockA, enableA, wr_enableA, addressA, rd_dataA, wr_dataA,
                   clockB, enableB, wr_enableB, addressB, rd_dataB, wr_dataB,
                   addr_width, data_width):
+
     """Dual ported RAM
     clockA          -- clock for port A
     enableA         -- enable for port A
@@ -50,11 +52,12 @@ def DualPortRamRw(clockA, enableA, wr_enableA, addressA, rd_dataA, wr_dataA,
     The Python code is a behavioral simulation which is replaced by VHDL code
     during implementation.
     """
+    global instance_count
+    instance_count += 1
 
     __vhdl__ = VHDL_CODE
     rd_dataA.driven = "wire"
     rd_dataB.driven = "wire"
-
     RAM = {}
     maxAddress = 2**addr_width
     maxData = 2**data_width

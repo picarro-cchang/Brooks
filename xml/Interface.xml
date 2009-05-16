@@ -1400,6 +1400,7 @@
         </fpga_block>
         <fpga_block ident="RDCOMPARE" description="Ringdown comparator">
             <reg ident="THRESHOLD" description="Ringdown threshold"/>
+            <reg ident="RATE_DIVISOR" description="Ringdown address counter divisor"/>
         </fpga_block>
     </fpga_block_list>
     <fpga_map_list>

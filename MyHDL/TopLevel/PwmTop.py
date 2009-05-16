@@ -19,8 +19,12 @@ from Host.autogen.interface import *
 from MyHDL.Common.Pwm1 import Pwm
 from MyHDL.Common.dsp_interface import Dsp_interface
 from MyHDL.Common.Rdcompare import Rdcompare
+from MyHDL.Common.Rdmemory  import Rdmemory
+from MyHDL.Common.RdDataAddrGen import RdDataAddrGen
 
 LOW, HIGH = bool(0), bool(1)
+
+t_State = enum("IDLE","RESETTING","COLLECTING","DONE")
 
 def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          reset,intronix,fpga_led,
@@ -44,7 +48,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_data_in_laser2_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_laser3_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_laser4_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_rdcompare  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_rdcompare   = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_rdmemory    = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 
     dsp_wr, ce2 = [Signal(LOW) for i in range(2)]
     laser1_pwm_out, laser1_pwm_inv_out = [Signal(LOW) for i in range(2)]
@@ -52,6 +57,30 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     laser3_pwm_out, laser3_pwm_inv_out = [Signal(LOW) for i in range(2)]
     laser4_pwm_out, laser4_pwm_inv_out = [Signal(LOW) for i in range(2)]
     compare_result = Signal(LOW)
+
+    # The divisor signal is actually a 16 bit word from the DSP. We use
+    #  the low order 5 bits for the ringdown memory address divisor
+    #  and the high-order 8 bits for controlling a state machine
+    divisor = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    arm = Signal(LOW)
+    addr_div = Signal(intbv(0)[5:])
+    addr_reset,enable,data_we,adc_clk = [Signal(LOW) for i in range(4)]
+
+    bank = Signal(LOW)
+    data_addr = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH:])
+    data = Signal(intbv(0)[RDMEM_DATA_WIDTH:])
+    wr_data = Signal(intbv(0)[RDMEM_DATA_WIDTH:])
+    data_we = Signal(LOW)
+    meta_addr = Signal(intbv(0)[META_BANK_ADDR_WIDTH:])
+    meta = Signal(intbv(0)[RDMEM_META_WIDTH:])
+    wr_meta = Signal(intbv(0)[RDMEM_META_WIDTH:])
+    meta_we = Signal(LOW)
+    param_addr = Signal(intbv(0)[PARAM_BANK_ADDR_WIDTH:])
+    param = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
+    wr_param = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
+    param_we = Signal(LOW)
+
+    rdmem_max_data_addr = (1<<DATA_BANK_ADDR_WIDTH)-1
 
     dsp_interface = Dsp_interface(clk=clk0, reset=reset, addr=dsp_emif_ea,
                                   to_dsp=dsp_emif_din, re=dsp_emif_re,
@@ -95,18 +124,53 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
     rdcompare = Rdcompare(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                 dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdcompare,
-                dsp_wr=dsp_wr,
+                dsp_wr=dsp_wr, divisor=divisor,
                 value=rd_adc,result=compare_result,
                 map_base=FPGA_RDCOMPARE)
 
+    rdmemory = Rdmemory(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdmemory,
+                dsp_wr=dsp_wr, bank=bank, data_addr=data_addr,
+                data=data, wr_data=wr_data, data_we=data_we,
+                meta_addr=meta_addr, meta=meta, wr_meta=wr_meta,
+                meta_we=meta_we, param_addr=param_addr,
+                param=param, wr_param=wr_param, param_we=param_we)
+
+    rdDataAddrGen = RdDataAddrGen(clk=clk0,addr_reset=addr_reset,
+                enable=enable,addr_div=addr_div,
+                data_addr=data_addr,data_we=data_we,
+                adc_clk=adc_clk)
+
     @instance
     def  logic():
+        state = t_State.IDLE
         while True:
             yield clk0.posedge, reset.posedge
             if reset:
                 counter.next = 0
             else:
                 counter.next = counter + 1
+                # Simple state machine to acquire a buffer of data
+                #  into rindown data memory
+                if state == t_State.IDLE:
+                    enable.next = 0
+                    addr_reset.next = 0
+                    if arm:
+                        state = t_State.RESETTING
+                elif state == t_State.RESETTING:
+                    enable.next = 0
+                    addr_reset.next = 1
+                    state = t_State.COLLECTING
+                elif state == t_State.COLLECTING:
+                    enable.next = 1
+                    addr_reset.next = 0
+                    if data_addr == rdmem_max_data_addr:
+                        state = t_State.DONE
+                elif state == t_State.DONE:
+                    enable.next = 0
+                    addr_reset.next = 0
+                    if not arm:
+                        state = t_State.IDLE
 
     @always_comb
     def  comb():
@@ -114,7 +178,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                            dsp_data_in_laser2_pwm | \
                            dsp_data_in_laser3_pwm | \
                            dsp_data_in_laser4_pwm | \
-                           dsp_data_in_rdcompare
+                           dsp_data_in_rdcompare  | \
+                           dsp_data_in_rdmemory
 
         ce2.next = dsp_emif_ce[2]
         intronix.next[16]  = laser1_pwm_out
@@ -141,7 +206,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         monitor.next = compare_result
 
         intronix.next[16:] = rd_adc
-        rd_adc_clk.next = counter[0]
+        rd_adc_clk.next = adc_clk
         rd_adc_oe.next = 1
         fpga_led.next = counter[NSTAGES:NSTAGES-4]
         i2c_rst0.next = reset
@@ -151,6 +216,18 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         intronix.next[30] = i2c_scl1
         intronix.next[31] = i2c_sda1
         intronix.next[33] = clk0
+
+        bank.next = 0
+        meta_addr.next = 0
+        wr_meta.next = 0
+        meta_we.next = 0
+        param_addr.next = 0
+        wr_param.next = 0
+        param_we.next = 0
+
+        wr_data.next = rd_adc
+        addr_div.next = divisor[5:]
+        arm.next = divisor[8]
 
     return instances()
 
