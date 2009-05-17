@@ -26,6 +26,8 @@ bios.MEM.MALLOCSEG = prog.get("SDRAM");
 bios.HWI.instance("HWI_INT13").interruptSource = prog.get("DSPINT");
 bios.HWI.instance("HWI_INT13").fxn = prog.extern("hwiHpiInterrupt");
 bios.HWI.instance("HWI_INT13").useDispatcher = 1;
+bios.HWI.instance("HWI_INT4").fxn = prog.extern("hwiExt4Interrupt");
+bios.HWI.instance("HWI_INT4").useDispatcher = 1;
 // !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
 
 prog.gen();

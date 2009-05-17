@@ -278,12 +278,14 @@ def upload():
         print reply[i]
     # See if we can receive DSPINTs from the host
     for i in range(100):
-        print "Interrupt count %d" % rdRegUint(12)
+        print "EXT4 Interrupt count %d" % rdRegUint(13)
+        print "HPI Interrupt count %d" % rdRegUint(12)
         analyzerUsb.hpicWrite(0x00010003)
         sleep(0.5)
 
     # Read back register 11 which should be updated by a PRD
     while True:
+        print "EXT4 Interrupt count %d" % rdRegUint(13)
         print "PRD count %d" % rdRegUint(11)
         sleep(0.5)
 

@@ -36,7 +36,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          i2c_rst0, i2c_rst1,
          i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1,
          rd_adc, rd_adc_clk, rd_adc_oe,
-         monitor):
+         monitor,
+         dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7):
 
     NSTAGES = 28
     counter = Signal(intbv(0)[NSTAGES:])
@@ -229,6 +230,11 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         addr_div.next = divisor[5:]
         arm.next = divisor[8]
 
+        dsp_ext_int4.next = counter[NSTAGES-4]
+        dsp_ext_int5.next = 0
+        dsp_ext_int6.next = 0
+        dsp_ext_int7.next = 0
+
     return instances()
 
 # Clock generator
@@ -255,6 +261,7 @@ rd_adc_clk, rd_adc_oe = [Signal(LOW) for i in range(2)]
 dsp_eclk, monitor = [Signal(LOW) for i in range(2)]
 lsr1_0, lsr1_1, lsr2_0, lsr2_1 = [Signal(LOW) for i in range(4)]
 lsr3_0, lsr3_1, lsr4_0, lsr4_1 = [Signal(LOW) for i in range(4)]
+dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7 = [Signal(LOW) for i in range(4)]
 
 def makeVHDL():
     toVHDL(main,clk0,clk180,clk3f,clk3f180,clk_locked,reset,
@@ -266,7 +273,8 @@ def makeVHDL():
                 i2c_rst0, i2c_rst1,
                 i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1,
                 rd_adc, rd_adc_clk, rd_adc_oe,
-                monitor)
+                monitor,
+                dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7)
 
 if __name__ == "__main__":
     makeVHDL()

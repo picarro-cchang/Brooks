@@ -26,6 +26,7 @@
 extern far LOG_Obj trace;
 static int prd_count = 0;
 static int hpi_count = 0;
+static int ext4_count = 0;
 
 // DSP writes to a register
 
@@ -64,6 +65,19 @@ void hwiHpiInterrupt(unsigned int funcArg, unsigned int eventId)
     IRQ_globalRestore(gie);
 }
 
+void hwiExt4Interrupt(unsigned int funcArg, unsigned int eventId)
+{
+    // Responds to the EXT4 interrupt
+    unsigned int gie;
+    gie = IRQ_globalDisable();
+    writeRegister(13,ext4_count);
+    ext4_count += 1;
+    // Clear interrupt source
+    IRQ_clear(IRQ_EVT_EXTINT4);
+    // Restore interrupts
+    IRQ_globalRestore(gie);
+}
+
 main(int argc, char *argv[])
 {
     // Set up DSP configuration
@@ -73,5 +87,7 @@ main(int argc, char *argv[])
     IRQ_resetAll();
     // Enable the interrupt
     IRQ_enable(IRQ_EVT_DSPINT);
+    IRQ_enable(IRQ_EVT_EXTINT4);
+
     return 0;
 }

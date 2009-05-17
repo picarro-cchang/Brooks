@@ -203,6 +203,10 @@ begin
         rd_adc => rd_adc,
         rd_adc_clk => rd_adc_clk,
         rd_adc_oe => rd_adc_oe,
-        monitor => monitor
+        monitor => monitor,
+        dsp_ext_int4 => dsp_ext_int4,
+        dsp_ext_int5 => dsp_ext_int5,
+        dsp_ext_int6 => dsp_ext_int6,
+        dsp_ext_int7 => dsp_ext_int7
     );
 end behavioral;
