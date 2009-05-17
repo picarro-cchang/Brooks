@@ -25,11 +25,15 @@ def  RdDataAddrGen(clk,addr_reset,enable,addr_div,
     #  ringdown ADC data. The 50 MHz clock is divided by two to give
     #  adc_clk, and this is further divided by (addr_div+1) to give
     #  the rate at which the data_addr is incremented.
-    # The value of data_addr is reset to zero in response to addr_reset
-    #  and increments while enable is high. The data_we signal goes high
-    #  for one cycle whenever the data address is incremented.
+    # The value of data_addr is reset in response to addr_reset
+    #  and increments while enable is high. The reset value is actually
+    #  one less than zero, so that the first clock pulse that occrus
+    #  when enable goes high writes data to location zero.
+    # The data_we signal goes high for one cycle whenever the data
+    #  address is incremented.
 
     mod_data_addr = 1<<DATA_BANK_ADDR_WIDTH
+    max_data_addr = mod_data_addr-1
     DIVIDER_WIDTH = 5
     mod_divider = 1<<DIVIDER_WIDTH
     divider = Signal(intbv(0)[DIVIDER_WIDTH:])  # ADC does not work below 1MHz, so
@@ -42,8 +46,8 @@ def  RdDataAddrGen(clk,addr_reset,enable,addr_div,
         data_we.next = 0
         adc_clk_i.next = not adc_clk_i
         if addr_reset:
-            divider.next = 0
-            data_addr_i.next = 0
+            divider.next = addr_div
+            data_addr_i.next = max_data_addr
         elif enable and adc_clk_i:
             if divider == addr_div:
                 divider.next = 0

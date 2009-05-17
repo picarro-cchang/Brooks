@@ -53,12 +53,14 @@ def  bench():
                 addr_reset.next = False
                 enable.next = True
                 yield clk.posedge
+                yield adc_clk.negedge
                 assert data_addr==0
-                ndelay = randrange(1,32)
-                yield delay(ndelay*2*(div+1)*PERIOD)
+                ndelay = 5 # randrange(1,32)
+                yield delay((ndelay*2*(div+1)+1)*PERIOD)
                 assert data_addr==ndelay
                 enable.next = False
                 yield delay(randrange(10)*PERIOD)
+                yield clk.posedge
         raise StopSimulation
 
     return instances()

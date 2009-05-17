@@ -80,6 +80,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     wr_param = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
     param_we = Signal(LOW)
 
+    state = Signal(t_State.IDLE)
     rdmem_max_data_addr = (1<<DATA_BANK_ADDR_WIDTH)-1
 
     dsp_interface = Dsp_interface(clk=clk0, reset=reset, addr=dsp_emif_ea,
@@ -143,7 +144,6 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
     @instance
     def  logic():
-        state = t_State.IDLE
         while True:
             yield clk0.posedge, reset.posedge
             if reset:
@@ -156,21 +156,21 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     enable.next = 0
                     addr_reset.next = 0
                     if arm:
-                        state = t_State.RESETTING
+                        state.next = t_State.RESETTING
                 elif state == t_State.RESETTING:
                     enable.next = 0
                     addr_reset.next = 1
-                    state = t_State.COLLECTING
+                    state.next = t_State.COLLECTING
                 elif state == t_State.COLLECTING:
                     enable.next = 1
                     addr_reset.next = 0
-                    if data_addr == rdmem_max_data_addr:
-                        state = t_State.DONE
+                    if (data_addr == rdmem_max_data_addr) and data_we:
+                        state.next = t_State.DONE
                 elif state == t_State.DONE:
                     enable.next = 0
                     addr_reset.next = 0
                     if not arm:
-                        state = t_State.IDLE
+                        state.next = t_State.IDLE
 
     @always_comb
     def  comb():

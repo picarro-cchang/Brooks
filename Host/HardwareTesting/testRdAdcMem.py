@@ -282,17 +282,19 @@ def  test_RdAdcMem():
     assert analyzerUsb.getUsbSpeed()==1
     #
     RD_ADDR_DIVISOR = interface.FPGA_RDCOMPARE + interface.RDCOMPARE_RATE_DIVISOR
+    div = 1
     while True:
-        writeFPGA(RD_ADDR_DIVISOR,0x1)    # 12.5MHz sampling
-        sleep(0.1)
-        writeFPGA(RD_ADDR_DIVISOR,0x101)  # Start acquisition
-        sleep(0.1)
+        writeFPGA(RD_ADDR_DIVISOR,div)    # 12.5MHz sampling
+        sleep(0.01)
+        writeFPGA(RD_ADDR_DIVISOR,0x100+div)  # Start acquisition
+        sleep(0.01)
         result = []
         for k in range(16):
             result += [x for x in readRdMemArray(256*k,256)]
         plot(array(result))
         show()
-        raw_input("Enter for next acquisition")
+        newDiv = raw_input("Enter divisor code for next acquisition: ")
+        if newDiv.strip(): div = int(newDiv)
 
 if __name__ == "__main__":
     test_RdAdcMem()
