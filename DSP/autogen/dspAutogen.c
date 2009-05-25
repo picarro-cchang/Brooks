@@ -31,6 +31,8 @@ void initRegisters()
     writeRegister(HIGH_DURATION_REGISTER,d);
     d.asFloat = 20.0;
     writeRegister(DAS_TEMPERATURE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER_TEC_MONITOR_TEMPERATURE_REGISTER,d);
     d.asFloat = 0.00112789997365;
     writeRegister(CONVERSION_LASER1_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000234289997024;
@@ -83,6 +85,8 @@ void initRegisters()
     writeRegister(LASER1_TEC_PRBS_AMPLITUDE_REGISTER,d);
     d.asFloat = 40000.0;
     writeRegister(LASER1_TEC_PRBS_MEAN_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER1_TEC_MONITOR_REGISTER,d);
     d.asUint = LASER_CURRENT_CNTRL_DisabledState;
     writeRegister(LASER1_CURRENT_CNTRL_STATE_REGISTER,d);
     d.asFloat = 0.0;
@@ -149,6 +153,8 @@ void initRegisters()
     writeRegister(LASER2_TEC_PRBS_AMPLITUDE_REGISTER,d);
     d.asFloat = 40000.0;
     writeRegister(LASER2_TEC_PRBS_MEAN_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER2_TEC_MONITOR_REGISTER,d);
     d.asFloat = 0.00112789997365;
     writeRegister(CONVERSION_LASER3_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000234289997024;
@@ -201,6 +207,8 @@ void initRegisters()
     writeRegister(LASER3_TEC_PRBS_AMPLITUDE_REGISTER,d);
     d.asFloat = 40000.0;
     writeRegister(LASER3_TEC_PRBS_MEAN_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER3_TEC_MONITOR_REGISTER,d);
     d.asFloat = 0.00112789997365;
     writeRegister(CONVERSION_LASER4_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000234289997024;
@@ -253,6 +261,8 @@ void initRegisters()
     writeRegister(LASER4_TEC_PRBS_AMPLITUDE_REGISTER,d);
     d.asFloat = 40000.0;
     writeRegister(LASER4_TEC_PRBS_MEAN_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER4_TEC_MONITOR_REGISTER,d);
     d.asFloat = 0.000847030023579;
     writeRegister(CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000205610005651;
@@ -396,6 +406,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_filter(numInt,params,env);
         case ACTION_DS1631_READTEMP:
             return r_ds1631_readTemp(numInt,params,env);
+        case ACTION_LASER_TEC_IMON:
+            return r_laser_tec_imon(numInt,params,env);
+        case ACTION_READ_LASER_TEC_MONITORS:
+            return r_read_laser_tec_monitors(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

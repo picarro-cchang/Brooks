@@ -45,4 +45,6 @@ int r_envChecker(unsigned int numInt,void *params,void *env);
 int r_pulseGenerator(unsigned int numInt,void *params,void *env);
 int r_filter(unsigned int numInt,void *params,void *env);
 int r_ds1631_readTemp(unsigned int numInt,void *params,void *env);
+int r_laser_tec_imon(unsigned int numInt,void *params,void *env);
+int r_read_laser_tec_monitors(unsigned int numInt,void *params,void *env);
 #endif

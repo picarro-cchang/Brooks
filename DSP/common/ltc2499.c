@@ -34,7 +34,8 @@ static unsigned int ltc2499_rdBytes(int n)
 static void ltc2499_wrBytes(Uint8 bytes[],int n)
 {
     I2C_write_bytes(hI2C1,0x14,bytes,n);
-    I2C_sendStop(hI2C1);
+    // Do not send stop signal, since this would start a conversion
+    // I2C_sendStop(hI2C1);
 }
 
 void ltc2499_configure(int single,int channel,int selectTemp,int rejectCode,int speed)
@@ -55,7 +56,7 @@ void ltc2499_configure(int single,int channel,int selectTemp,int rejectCode,int 
     ltc2499_wrBytes(bytes,2);
 }
 
-unsigned int ltc2499_getData(int *flags)
+int ltc2499_getData(int *flags)
 /* *flags = 0 => underflow, 3 => overflow, 1 or 2 => ok */
 {
     unsigned int result = ltc2499_rdBytes(4);

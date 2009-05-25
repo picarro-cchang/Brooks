@@ -17,5 +17,5 @@
 #define  _LTC2499_H_
 
 void ltc2499_configure(int single,int channel,int selectTemp,int rejectCode,int speed);
-unsigned int ltc2499_getData(int *flags);
+int ltc2499_getData(int *flags);
 #endif

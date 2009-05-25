@@ -61,6 +61,9 @@ class DasConfigure(object):
                     priority=schedulerPriorities[opType],
                     period=schedulerPeriods[rate])
 
+        self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+            Operation("ACTION_READ_LASER_TEC_MONITORS"))
+
 #         self.opGroups["FAST"]["SENSOR_READ"].addOperation(
 #             Operation("ACTION_PULSE_GENERATOR",
 #                 ["LOW_DURATION_REGISTER","HIGH_DURATION_REGISTER",

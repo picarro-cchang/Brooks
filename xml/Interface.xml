@@ -55,6 +55,7 @@
     </usb_constants>
     <status_list>
         <status ident="STATUS_OK">Status OK</status>
+        <status ident="ERROR_UNAVAILABLE">Data not available</status>
         <status ident="ERROR_CRC_BAD">CRC error in host command</status>
         <status ident="ERROR_DSP_UNEXPECTED_SEQUENCE_NUMBER">DSP detected host command out of sequence</status>
         <status ident="ERROR_HOST_UNEXPECTED_SEQUENCE_NUMBER">Host received acknowledgement out of sequence</status>
@@ -66,8 +67,6 @@
         <status ident="ERROR_NOT_WRITABLE">Register is not writable</status>
         <status ident="ERROR_READ_FAILED">Register read failed</status>
         <status ident="ERROR_WRITE_FAILED">Register write failed</status>
-        <status ident="ERROR_INVALID_WHEEL_SLOT">Invalid timer wheel slot</status>
-        <status ident="ERROR_OO_WHEEL_ENTRIES">Ran out of timer wheel entries</status>
         <status ident="ERROR_BAD_FILTER_COEFF">Invalid filter coefficients</status>
         <status ident="ERROR_BAD_VALUE">Invalid value</status>
     </status_list>
@@ -295,6 +294,10 @@
             <description>DAS temperature</description>
             <initial>20.0</initial>
         </register>
+        <register ident="LASER_TEC_MONITOR_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Temperature of laser TEC current monitor</description>
+            <initial>0.0</initial>
+        </register>
         <register ident="CONVERSION_LASER1_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser1 thermistor constant A</description>
             <initial>0.00112789997365</initial>
@@ -459,6 +462,10 @@
             <initial>40000.0</initial>
             <save/>
             <display format="%.1f">PRBS mean</display>
+        </register>
+        <register ident="LASER1_TEC_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 TEC Current Monitor</description>
+            <initial>0.0</initial>
         </register>
 
         <register ident="LASER1_CURRENT_CNTRL_STATE_REGISTER" type="LASER_CURRENT_CNTRL_StateType" minver="1.0" access="rw">
@@ -666,6 +673,10 @@
             <save/>
             <display format="%.1f">PRBS mean</display>
         </register>
+        <register ident="LASER2_TEC_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 TEC Current Monitor</description>
+            <initial>0.0</initial>
+        </register>
         <register ident="CONVERSION_LASER3_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser3 thermistor constant A</description>
             <initial>0.00112789997365</initial>
@@ -831,6 +842,10 @@
             <save/>
             <display format="%.1f">PRBS mean</display>
         </register>
+        <register ident="LASER3_TEC_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 TEC Current Monitor</description>
+            <initial>0.0</initial>
+        </register>
         <register ident="CONVERSION_LASER4_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser4 thermistor constant A</description>
             <initial>0.00112789997365</initial>
@@ -995,6 +1010,10 @@
             <initial>40000.0</initial>
             <save/>
             <display format="%.1f">PRBS mean</display>
+        </register>
+        <register ident="LASER4_TEC_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 TEC Current Monitor</description>
+            <initial>0.0</initial>
         </register>
 
         <register ident="CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
@@ -1508,5 +1527,7 @@
             The filter coefficients and state are in FilterEnvType -->
         <action ident="ACTION_FILTER">r_filter</action>
         <action ident="ACTION_DS1631_READTEMP">r_ds1631_readTemp</action>
+        <action ident="ACTION_LASER_TEC_IMON">r_laser_tec_imon</action>
+        <action ident="ACTION_READ_LASER_TEC_MONITORS">r_read_laser_tec_monitors</action>
     </action_list>
 </Das_Interface>

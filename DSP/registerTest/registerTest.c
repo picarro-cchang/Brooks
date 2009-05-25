@@ -72,6 +72,7 @@ main(int argc, char *argv[])
     dspI2CInit();
     // Initialize DS1631 for continuous measurements
     ds1631_init();
+
     // Clear DSPINT bit in HPIC
     HPI_setDspint(1);
     IRQ_resetAll();

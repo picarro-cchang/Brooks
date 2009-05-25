@@ -84,3 +84,8 @@ void configDsp()
     IRQ_resetAll();
     IRQ_globalRestore(gie);
 }
+
+// Reset strategy
+// Cypress PE4 = 1 resets FPGA
+// Cypress PA7 = 1 resets DSP
+// FPGA cyp_reset = 1 resets Cypress by removing power

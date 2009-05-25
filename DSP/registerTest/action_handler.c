@@ -28,6 +28,7 @@
 #include "laserCurrentCntrl.h"
 #include "heaterCntrl.h"
 #include "ds1631.h"
+#include "ltc2499.h"
 #include "fpga.h"
 
 #define READ_REG(regNum,type,result) { \
@@ -425,5 +426,34 @@ int r_ds1631_readTemp(unsigned int numInt,void *params,void *env)
     unsigned int *reg = (unsigned int *) params;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
     WRITE_REG(reg[0],asFloat,ds1631_readTemperatureAsFloat());
+    return STATUS_OK;
+}
+
+int r_laser_tec_imon(unsigned int numInt,void *params,void *env)
+/*
+    Reads and sets up next read of the laser TEC current monitor
+    Input:
+        Code (int):  256*next channel + desired channel
+    Output:
+        Register (float):  Register to receive value. Unchanged
+         if the desired channel is unavailable
+*/
+{
+    unsigned int *reg = (unsigned int *) params;
+    int desired, next, status;
+    float result;
+
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    desired = reg[0] & 0xFF;
+    next = (reg[0]>>8) & 0xFF;
+    status = read_laser_tec_imon(desired,next,&result);
+    if (STATUS_OK == status) WRITE_REG(reg[1],asFloat,result);
+    return status;
+}
+
+int r_read_laser_tec_monitors(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    read_laser_tec_monitors();
     return STATUS_OK;
 }

@@ -58,5 +58,7 @@ int tempCntrlLaser4Init(void);
 int tempCntrlLaser4Step(void);
 int tempCntrlCavityInit(void);
 int tempCntrlCavityStep(void);
+int read_laser_tec_imon(int desired, int next, float *result);
+int read_laser_tec_monitors(void);
 
 #endif /* _TEMP_CNTRL_H_ */

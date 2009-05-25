@@ -18,6 +18,7 @@
 #include "pid.h"
 #include "tempCntrl.h"
 #include "dspAutogen.h"
+#include "ltc2499.h"
 #include <math.h>
 
 int resistanceToTemperature(float resistance,float constA,float constB,
@@ -447,6 +448,89 @@ int tempCntrlLaser4Step(void)
     return status;
 }
 
+int read_laser_tec_imon(int desired, int next, float *result)
+/*
+    Read laser TEC current monitor
+    Inputs:
+      Codes for desired monitor channel and for next monitor channel.
+        0 => temperature
+        1 => laser 1
+        2 => laser 2
+        3 => laser 3
+        4 => laser 4
+    Output:
+      *result is value of desired channel read from ADC. It is changed
+        only if the desired channel was the one specified as "next" on
+        the previous call to this function
+    Return:
+      STATUS_OK if desired channel is returned
+      ERROR_UNAVAILABLE if channel data is not available since
+       a different "next channel" was set up previously
+*/
+{
+    int code[5] = {-1, 0, 1, 2, 3};
+    static int prevChan = -1;
+    int flags;
+
+    if (next < 0 || next > 4) return ERROR_BAD_VALUE;
+    //  Set up for next conversion
+    if (next == 0) ltc2499_configure(0,0,1,0,0);
+    else ltc2499_configure(0,code[next],0,0,0);
+    if (prevChan == desired)
+    {
+        *result = (float) ltc2499_getData(&flags);
+        if (flags == 0) *result = -16777216.0;
+        else if (flags == 3) *result = 16777215.0;
+        prevChan = next;
+        return STATUS_OK;
+    }
+    else {
+        ltc2499_getData(&flags);
+        prevChan = next;
+        return ERROR_UNAVAILABLE;
+    }
+}
+
+int read_laser_tec_monitors()
+// Cycle around the laser TEC current monitors placing results into registers
+{
+    unsigned int regList[] = {
+                              LASER_TEC_MONITOR_TEMPERATURE_REGISTER,
+                              LASER1_TEC_MONITOR_REGISTER,
+                              LASER2_TEC_MONITOR_REGISTER,
+                              LASER3_TEC_MONITOR_REGISTER,
+                              LASER4_TEC_MONITOR_REGISTER,
+                             };
+    static int chan = 0;
+    switch (chan)
+    {
+      case 0:
+          read_laser_tec_imon(0,1,(float *)registerAddr(LASER_TEC_MONITOR_TEMPERATURE_REGISTER));
+          chan = 1;
+          break;
+      case 1:
+          read_laser_tec_imon(1,2,(float *)registerAddr(LASER1_TEC_MONITOR_REGISTER));
+          chan = 2;
+          break;
+      case 2:
+          read_laser_tec_imon(2,3,(float *)registerAddr(LASER2_TEC_MONITOR_REGISTER));
+          chan = 3;
+          break;
+      case 3:
+          read_laser_tec_imon(3,4,(float *)registerAddr(LASER3_TEC_MONITOR_REGISTER));
+          chan = 4;
+          break;
+      case 4:
+          read_laser_tec_imon(4,0,(float *)registerAddr(LASER4_TEC_MONITOR_REGISTER));
+          chan = 0;
+          break;
+      default:
+          break;
+    }
+    writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
+    return STATUS_OK;
+}
+
 int tempCntrlCavityInit(void)
 {
     TempCntrl *t = &tempCntrlCavity;
@@ -507,3 +591,5 @@ int tempCntrlCavityStep(void)
     writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
     return status;
 }
+
+
