@@ -13,8 +13,8 @@
     <interface_version>1</interface_version>
     <usb_constants>
         <constant ident="USB_VERSION">1001</constant>
-        <constant ident="INITIAL_VID">0x4B4</constant>
-        <constant ident="INITIAL_PID">0x8613</constant>
+        <constant ident="INITIAL_VID">0x3EF</constant>
+        <constant ident="INITIAL_PID">0x1000</constant>
         <constant ident="INSTRUMENT_VID">0x3EF</constant>
         <constant ident="INSTRUMENT_PID">0x1001</constant>
         <!--  >Vendor commands</!-->
@@ -176,7 +176,7 @@
         <constant ident="PARAM_BANK_ADDR_WIDTH" description="Number of address bits for one bank of parameters">6</constant>
         <constant ident="TEMP_CNTRL_LOCK_COUNT" description="Number of in-range samples to acquire lock">5</constant>
         <constant ident="TEMP_CNTRL_UNLOCK_COUNT" description="Number of out-of-range samples to lose lock">5</constant>
-
+        <constant ident="FPGA_MAGIC_CODE" description="Code to confirm FPGA is programmed">0xC0DE0001</constant>
     </constant_list>
     <union_list>
         <union type="DataType">
@@ -1266,6 +1266,10 @@
 
     </register_list>
     <fpga_block_list>
+        <fpga_block ident="KERNEL" description="Kernel">
+            <reg ident="MAGIC_CODE" description="Code indicating FPGA is programmed"/>
+            <reg ident="RESET" description="Used to reset Cypress FX2"/>
+        </fpga_block>
         <fpga_block ident="PWM" description="Pulse width modulator">
             <reg ident="CS" description="Control/Status register">
                 <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
@@ -1423,8 +1427,8 @@
         </fpga_block>
     </fpga_block_list>
     <fpga_map_list>
-        <fpga_map ident="FPGA_VERSION">
-            <description>Version register</description>
+        <fpga_map ident="FPGA_KERNEL" block="KERNEL">
+            <description>Kernel registers</description>
         </fpga_map>
         <fpga_map ident="FPGA_LASER1_PWM" block="PWM">
             <description>Laser 1 TEC pulse width modulator registers</description>

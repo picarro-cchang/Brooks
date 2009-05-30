@@ -509,15 +509,15 @@ int read_laser_tec_monitors()
           chan = 1;
           break;
       case 1:
-          read_laser_tec_imon(1,2,(float *)registerAddr(LASER1_TEC_MONITOR_REGISTER));
+          read_laser_tec_imon(1,2,(float *)registerAddr(LASER3_TEC_MONITOR_REGISTER));
           chan = 2;
           break;
       case 2:
-          read_laser_tec_imon(2,3,(float *)registerAddr(LASER2_TEC_MONITOR_REGISTER));
+          read_laser_tec_imon(2,3,(float *)registerAddr(LASER1_TEC_MONITOR_REGISTER));
           chan = 3;
           break;
       case 3:
-          read_laser_tec_imon(3,4,(float *)registerAddr(LASER3_TEC_MONITOR_REGISTER));
+          read_laser_tec_imon(3,4,(float *)registerAddr(LASER2_TEC_MONITOR_REGISTER));
           chan = 4;
           break;
       case 4:
@@ -591,5 +591,4 @@ int tempCntrlCavityStep(void)
     writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
     return status;
 }
-
 

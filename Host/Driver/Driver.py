@@ -109,6 +109,14 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def rdDasRegList(self,regList):
         return [self.rdDasReg(reg) for reg in regList]
 
+    def rdFPGA(self,base,reg):
+        return self.dasInterface.hostToDspSender.rdFPGA(base,reg)
+
+    def wrFPGA(self,base,reg,value,convert=True):
+        if convert:
+            value = self._value(value)
+        return self.dasInterface.hostToDspSender.wrFPGA(base,reg,value)
+
     def _value(self,valueOrName):
         """Convert valueOrName into an value, raising an exception if the name is not found"""
         if isinstance(valueOrName,types.StringType):
@@ -257,38 +265,52 @@ class Driver(SharedTypes.Singleton):
         self.lastSaveDasState = 0
     def run(self):
         try:
-            # Ensure that we connect in high speed mode
-            for attempts in range(10):
-                usbSpeed = self.dasInterface.startUsb()
-                Log("USB enumerated at %s speed" % (("full","high")[usbSpeed]))
-                if usbSpeed: break
-                self.dasInterface.analyzerUsb.reconnectUsb()
-                time.sleep(2.0)
-            self.dasInterface.upload()
-            time.sleep(1.0) # For DSP code to initialize
-            self.dasInterface.loadDasState() # Restore DAS state
-            DasConfigure(self.dasInterface).run()
-            daemon = self.rpcHandler.server.daemon
-            Log("DAS firmware uploaded",Level=1)
-            while not daemon.mustShutdown:
-                daemon.handleRequests(0.2)
-                for data in self.dasInterface.getSensorData():
-                    self.streamCast.send(StringPickler.ObjAsString(data))
-                    self.streamSaver._writeData(data)
-                for ts,msg in self.dasInterface.getMessages():
-                    Log("%s %s" % (ts,msg))
-                now = time.time()
-                # Periodically save the state of the DAS
-                if now > self.lastSaveDasState + 30.0:
-                    self.dasInterface.saveDasState()
-                    self.lastSaveDasState = now
-            Log("Driver RPC handler shut down")
-        except:
-            type,value,trace = sys.exc_info()
-            Log("Unhandled Exception: %s: %s" % (str(type),str(value)),
-                Verbose=traceback.format_exc(),Level=3)
+            while True:
+                try:
+                    # Ensure that we connect in high speed mode
+                    for attempts in range(10):
+                        usbSpeed = self.dasInterface.startUsb()
+                        Log("USB enumerated at %s speed" % (("full","high")[usbSpeed]))
+                        if usbSpeed: break
+                        self.dasInterface.analyzerUsb.reconnectUsb()
+                        time.sleep(5.0)
+                    self.dasInterface.upload()
+                    time.sleep(1.0) # For DSP code to initialize
+                    self.dasInterface.loadDasState() # Restore DAS state
+                    DasConfigure(self.dasInterface).run()
+                    daemon = self.rpcHandler.server.daemon
+                    Log("DAS firmware uploaded",Level=1)
+                except:
+                    Log("Cannot connect to instrument - please check hardware",Level=3)
+                    break
+                # Here follows the main loop. If an exception occurs
+                #  in this loop, we try reloading the firmware
+                try:
+                    while not daemon.mustShutdown:
+                        daemon.handleRequests(0.2)
+                        for data in self.dasInterface.getSensorData():
+                            self.streamCast.send(StringPickler.ObjAsString(data))
+                            self.streamSaver._writeData(data)
+                        for ts,msg in self.dasInterface.getMessages():
+                            Log("%s %s" % (ts,msg))
+                        now = time.time()
+                        # Periodically save the state of the DAS
+                        if now > self.lastSaveDasState + 30.0:
+                            self.dasInterface.saveDasState()
+                            self.lastSaveDasState = now
+                    Log("Driver RPC handler shut down")
+                    break
+                except:
+                    type,value,trace = sys.exc_info()
+                    Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
+                        Verbose=traceback.format_exc(),Level=3)
+                    time.sleep(5.0)
+                    Log("Trying to reload system...")
         finally:
-            self.dasInterface.saveDasState()
+            try:
+                self.dasInterface.saveDasState()
+            except:
+                pass
 
 class InstrumentConfig(SharedTypes.Singleton):
     """Configuration of instrument. Note that the DAS state is NOT loaded

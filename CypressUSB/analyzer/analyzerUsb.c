@@ -93,8 +93,6 @@ void GPIF_SingleWordRead( WORD *gdata ) {
 
 void TD_Init(void) {           // Called once at startup
     SYNCDELAY;
-
-
     // Set the clock speed to 48MHz (default is 12MHz)
     CPUCS = ((CPUCS & ~bmCLKSPD) | bmCLKSPD1);
     SYNCDELAY;
@@ -147,15 +145,15 @@ void TD_Init(void) {           // Called once at startup
     // Output enables for PORTE, rest are inputs
     OEE = FPGA_SS_PROG | CYP_LED0 | CYP_LED1 | CYP_LED2;
     // Write initial value to PORTE
-    // Set PROG high and LEDs low
-    IOE = FPGA_SS_PROG;
+    // Set LEDs low and PROG low to reset the FPGA configuration
+    IOE = 0x0;
 
     // Configure the serial interface
     SCON0 = 0x0;
 
     // Configure PORTA
     PORTACFG = bmBIT0; // PA0 takes on INT0/ alternate function
-    OEA  |= 0xFE;      // initialize PA7, PA4, PA3 PA2 and PA1 port i/o pins as outputs, PA0 as an input
+    OEA  |= 0xBE;      // initialize PA7,c PA4, PA3 PA2 and PA1 port i/o pins as outputs, PA6, PA0 as inputs
     IOA = bmHPI_RESETz | bmHPI_HINTz;   // Deassert interrupt and reset
 
 }
@@ -359,6 +357,16 @@ BOOL DR_VendorCmnd(void) {
     case VENDOR_FPGA_CONFIGURE:
         switch (value) {
         case FPGA_START_PROGRAM:
+            OEE = FPGA_SS_PROG | CYP_LED0 | CYP_LED1 | CYP_LED2;
+            IOE = FPGA_SS_PROG;
+            _nop_();
+            _nop_();
+            _nop_();
+            _nop_();
+            _nop_();
+            _nop_();
+            _nop_();
+            _nop_();
             // Pulses PROG line low momentarily (>0.5us) to start programming
             // TODO: Check length of pulse
             IOE &= ~FPGA_SS_PROG;
@@ -371,6 +379,7 @@ BOOL DR_VendorCmnd(void) {
             _nop_();
             _nop_();
             IOE |= FPGA_SS_PROG;
+            OEE = CYP_LED0 | CYP_LED1 | CYP_LED2;
 
             // Return 1 to host
             EP0BUF[0] = 1;

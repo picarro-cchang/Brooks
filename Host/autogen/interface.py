@@ -137,6 +137,8 @@ PARAM_BANK_ADDR_WIDTH = 6
 TEMP_CNTRL_LOCK_COUNT = 5
 # Number of out-of-range samples to lose lock
 TEMP_CNTRL_UNLOCK_COUNT = 5
+# Code to confirm FPGA is programmed
+FPGA_MAGIC_CODE = 0xC0DE0001
 
 class DataType(Union):
     _fields_ = [
@@ -935,6 +937,10 @@ registerInfo.append(RegInfo("HEATER_CNTRL_MARK_REGISTER",c_float,0,1.0,"rw"))
 
 # FPGA block definitions
 
+# Block KERNEL Kernel
+KERNEL_MAGIC_CODE = 0 # Code indicating FPGA is programmed
+KERNEL_RESET = 1 # Used to reset Cypress FX2
+
 # Block PWM Pulse width modulator
 PWM_CS = 0 # Control/Status register
 PWM_CS_RUN_B = 0 # STOP/RUN bit position
@@ -1144,21 +1150,21 @@ RDCOMPARE_THRESHOLD = 0 # Ringdown threshold
 RDCOMPARE_RATE_DIVISOR = 1 # Ringdown address counter divisor
 
 # FPGA map indices
-FPGA_VERSION = 0 # Version register
-FPGA_LASER1_PWM = 1 # Laser 1 TEC pulse width modulator registers
-FPGA_LASER2_PWM = 3 # Laser 2 TEC pulse width modulator registers
-FPGA_LASER3_PWM = 5 # Laser 3 TEC pulse width modulator registers
-FPGA_LASER4_PWM = 7 # Laser 4 TEC pulse width modulator registers
-FPGA_RDSIM = 9 # Ringdown simulator registers
-FPGA_LASERLOCK = 13 # Laser frequency locker registers
-FPGA_RDMETAMAN = 40 # Ringdown metadata manager registers
-FPGA_RDDATMAN = 54 # Ringdown data manager registers
-FPGA_RDMAN = 60 # Ringdown manager registers
-FPGA_LASER1_CURRENT_DAC = 82 # Laser1 current DAC registers
-FPGA_LASER2_CURRENT_DAC = 85 # Laser2 current DAC registers
-FPGA_LASER3_CURRENT_DAC = 88 # Laser3 current DAC registers
-FPGA_LASER4_CURRENT_DAC = 91 # Laser4 current DAC registers
-FPGA_RDCOMPARE = 94 # Ringdown comparator
+FPGA_KERNEL = 0 # Kernel registers
+FPGA_LASER1_PWM = 2 # Laser 1 TEC pulse width modulator registers
+FPGA_LASER2_PWM = 4 # Laser 2 TEC pulse width modulator registers
+FPGA_LASER3_PWM = 6 # Laser 3 TEC pulse width modulator registers
+FPGA_LASER4_PWM = 8 # Laser 4 TEC pulse width modulator registers
+FPGA_RDSIM = 10 # Ringdown simulator registers
+FPGA_LASERLOCK = 14 # Laser frequency locker registers
+FPGA_RDMETAMAN = 41 # Ringdown metadata manager registers
+FPGA_RDDATMAN = 55 # Ringdown data manager registers
+FPGA_RDMAN = 61 # Ringdown manager registers
+FPGA_LASER1_CURRENT_DAC = 83 # Laser1 current DAC registers
+FPGA_LASER2_CURRENT_DAC = 86 # Laser2 current DAC registers
+FPGA_LASER3_CURRENT_DAC = 89 # Laser3 current DAC registers
+FPGA_LASER4_CURRENT_DAC = 92 # Laser4 current DAC registers
+FPGA_RDCOMPARE = 95 # Ringdown comparator
 
 # Environment addresses
 LASER1_TEMP_CNTRL_ENV = 0

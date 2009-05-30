@@ -207,6 +207,8 @@ begin
         dsp_ext_int4 => dsp_ext_int4,
         dsp_ext_int5 => dsp_ext_int5,
         dsp_ext_int6 => dsp_ext_int6,
-        dsp_ext_int7 => dsp_ext_int7
+        dsp_ext_int7 => dsp_ext_int7,
+        usb_connected => usb_connected,
+        cyp_reset => cyp_reset
     );
 end behavioral;

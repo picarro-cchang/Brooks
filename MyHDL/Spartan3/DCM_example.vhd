@@ -7,7 +7,7 @@
 -- \   \   \/     Version : 10.1.03
 --  \   \         Application : xaw2vhdl
 --  /   /         Filename : DCM_example.vhd
--- /___/   /\     Timestamp : 05/16/2009 20:38:14
+-- /___/   /\     Timestamp : 05/28/2009 14:11:14
 -- \   \  /  \ 
 --  \___\/\___\ 
 --

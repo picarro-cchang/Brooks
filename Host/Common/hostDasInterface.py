@@ -108,10 +108,8 @@ class DasInterface(Singleton):
         try: # connecting to a blank FX2 chip
             analyzerUsb.connect()
         except: # Assume code has already been loaded
-            logging.info("Blank Cypress FX2 not found, " + \
-                "connecting to a programmed device.")
             return
-        logging.info("Downloading USB code to Cypress FX2")
+        logging.info("Downloading USB code to Picarro USB device")
         analyzerUsb.loadHexFile(file(usbCodeFilename,"r"))
         analyzerUsb.disconnect()
         # Wait for renumeration

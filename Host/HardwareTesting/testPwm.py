@@ -30,24 +30,6 @@ HOST_BASE        = interface.SHAREDMEM_ADDRESS + \
 
 analyzerUsb = None
 
-def loadUsbIfCode():
-    global analyzerUsb
-    analyzerUsb = AnalyzerUsb(usbdefs.INITIAL_VID,usbdefs.INITIAL_PID)
-    try: # connecting to a blank FX2 chip
-        analyzerUsb.connect()
-        logging.info("Downloading USB code to Cypress FX2")
-        analyzerUsb.loadHexFile(file(usbFile,"r"))
-        analyzerUsb.disconnect()
-    except: # Assume code has already been loaded
-        logging.info("Cypress FX2 is not blank")
-    # Wait for renumeration
-    while True:
-        analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
-        try:
-            analyzerUsb.connect()
-            break
-        except:
-            sleep(1.0)
 
 def programFPGA():
     analyzerUsb.resetHpidInFifo()
@@ -250,13 +232,40 @@ def writeRdMem(offset,value):
     result = c_uint(value)
     analyzerUsb.hpidWrite(result)
 
+def loadUsbIfCode():
+    global analyzerUsb
+    analyzerUsb = AnalyzerUsb(usbdefs.INITIAL_VID,usbdefs.INITIAL_PID)
+    try: # connecting to an uninitialized Picarro chip
+        analyzerUsb.connect()
+        logging.info("Downloading USB code to Picarro device")
+        analyzerUsb.loadHexFile(file(usbFile,"r"))
+        analyzerUsb.disconnect()
+    except:
+        pass
+    # Wait for renumeration
+    sleep(5.0)
+    for attempts in range(10):
+        analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
+        try:
+            analyzerUsb.connect()
+            if not analyzerUsb.getUsbSpeed():
+                print "Connected at reduced speed, retrying..."
+                analyzerUsb.reconnectUsb()
+                sleep(5.0)
+                continue
+            else:
+                logging.info("Connected to Picarro USB interface at high speed")
+                return
+        except:
+            logging.info("Cannot connect to Picarro USB interface, retrying...")
+            sleep(1.0)
+    raise RuntimeError,"USB connection failed"
+
 def upload():
     #
     # TODO: Handle errors by returning an error code.
     #  If this routine fails, it is not possible
     #  to continue
-    #
-    logging.info("Loading USB code")
     loadUsbIfCode()
     #
     analyzerUsb.connect()
@@ -270,6 +279,11 @@ def upload():
     logging.info("Removed DSP reset, downloading code...")
     initPll()
     initEmif()
+    # Check that the FPGA was programmed correctly
+    if readFPGA(interface.FPGA_KERNEL + interface.KERNEL_MAGIC_CODE)!=interface.FPGA_MAGIC_CODE:
+        raise ValueError("FPGA magic code incorrect")
+    else:
+        logging.info("FPGA code confirmed")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
@@ -311,6 +325,10 @@ if __name__ == "__main__":
             writeFPGA(REG_LASER4_PWM_CNTRL_STAT,
                   (1<<interface.PWM_CS_RUN_B) |
                   (1<<interface.PWM_CS_CONT_B))
+            reply = raw_input("Reset Cypress? ")
+            if reply.strip()[:1] in ['y','Y']:
+                writeFPGA(interface.FPGA_KERNEL + interface.KERNEL_RESET,1)
+                break
         except Exception,e:
             print "Error: %s" % e
             break

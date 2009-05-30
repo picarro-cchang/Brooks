@@ -21,6 +21,7 @@ from MyHDL.Common.dsp_interface import Dsp_interface
 from MyHDL.Common.Rdcompare import Rdcompare
 from MyHDL.Common.Rdmemory  import Rdmemory
 from MyHDL.Common.RdDataAddrGen import RdDataAddrGen
+from MyHDL.Common.Kernel import Kernel
 
 LOW, HIGH = bool(0), bool(1)
 
@@ -37,7 +38,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1,
          rd_adc, rd_adc_clk, rd_adc_oe,
          monitor,
-         dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7):
+         dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7,
+         usb_connected, cyp_reset):
 
     NSTAGES = 28
     counter = Signal(intbv(0)[NSTAGES:])
@@ -51,6 +53,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_data_in_laser4_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_rdcompare   = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_rdmemory    = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_kernel    = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 
     dsp_wr, ce2 = [Signal(LOW) for i in range(2)]
     laser1_pwm_out, laser1_pwm_inv_out = [Signal(LOW) for i in range(2)]
@@ -143,6 +146,14 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                 data_addr=data_addr,data_we=data_we,
                 adc_clk=adc_clk)
 
+    kernel = Kernel(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                  dsp_data_out=dsp_data_out,
+                  dsp_data_in=dsp_data_in_kernel,
+                  dsp_wr=dsp_wr,
+                  usb_connected=usb_connected,
+                  cyp_reset=cyp_reset,
+                  map_base=FPGA_KERNEL)
+
     @instance
     def  logic():
         while True:
@@ -180,7 +191,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                            dsp_data_in_laser3_pwm | \
                            dsp_data_in_laser4_pwm | \
                            dsp_data_in_rdcompare  | \
-                           dsp_data_in_rdmemory
+                           dsp_data_in_rdmemory   | \
+                           dsp_data_in_kernel
 
         ce2.next = dsp_emif_ce[2]
         intronix.next[16]  = laser1_pwm_out
@@ -262,6 +274,7 @@ dsp_eclk, monitor = [Signal(LOW) for i in range(2)]
 lsr1_0, lsr1_1, lsr2_0, lsr2_1 = [Signal(LOW) for i in range(4)]
 lsr3_0, lsr3_1, lsr4_0, lsr4_1 = [Signal(LOW) for i in range(4)]
 dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7 = [Signal(LOW) for i in range(4)]
+usb_connected, cyp_reset = [Signal(LOW) for i in range(2)]
 
 def makeVHDL():
     toVHDL(main,clk0,clk180,clk3f,clk3f180,clk_locked,reset,
@@ -274,7 +287,8 @@ def makeVHDL():
                 i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1,
                 rd_adc, rd_adc_clk, rd_adc_oe,
                 monitor,
-                dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7)
+                dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7,
+                usb_connected, cyp_reset)
 
 if __name__ == "__main__":
     makeVHDL()
