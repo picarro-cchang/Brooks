@@ -1149,6 +1149,49 @@ LASER_CURRENT_DAC_FINE_CURRENT = 2 # Fine current DAC
 RDCOMPARE_THRESHOLD = 0 # Ringdown threshold
 RDCOMPARE_RATE_DIVISOR = 1 # Ringdown address counter divisor
 
+# Block TWGEN Tuner waveform generator
+TWGEN_ACC = 0 # Accumulator
+TWGEN_CS = 1 # Control/Status Register
+TWGEN_CS_RUN_B = 0 # STOP/RUN bit position
+TWGEN_CS_RUN_W = 1 # STOP/RUN bit width
+TWGEN_CS_CONT_B = 1 # SINGLE/CONTINUOUS bit position
+TWGEN_CS_CONT_W = 1 # SINGLE/CONTINUOUS bit width
+TWGEN_CS_RESET_B = 2 # Reset generator bit position
+TWGEN_CS_RESET_W = 1 # Reset generator bit width
+
+TWGEN_SLOPE_DOWN = 2 # Slope in downward direction
+TWGEN_SLOPE_UP = 3 # Slope in upward direction
+TWGEN_SWEEP_LOW = 4 # Lower limit of sweep
+TWGEN_SWEEP_HIGH = 5 # Higher limit of sweep
+TWGEN_WINDOW_LOW = 6 # Lower limit of window
+TWGEN_WINDOW_HIGH = 7 # Higher limit of window
+
+# Block INJECT Optical injection subsystem
+INJECT_CONTROL = 0 # Control register
+INJECT_CONTROL_MODE_B = 0 # Manual/Automatic mode bit position
+INJECT_CONTROL_MODE_W = 1 # Manual/Automatic mode bit width
+INJECT_CONTROL_LASER_SELECT_B = 1 # Select laser bit position
+INJECT_CONTROL_LASER_SELECT_W = 2 # Select laser bit width
+INJECT_CONTROL_LASER_CURRENT_ENABLE_B = 3 # Laser current enable bit position
+INJECT_CONTROL_LASER_CURRENT_ENABLE_W = 4 # Laser current enable bit width
+INJECT_CONTROL_MANUAL_LASER_ENABLE_B = 7 # Deasserts short across laser in manual mode bit position
+INJECT_CONTROL_MANUAL_LASER_ENABLE_W = 4 # Deasserts short across laser in manual mode bit width
+INJECT_CONTROL_MANUAL_SOA_ENABLE_B = 11 # Deasserts short across SOA in manual mode bit position
+INJECT_CONTROL_MANUAL_SOA_ENABLE_W = 1 # Deasserts short across SOA in manual mode bit width
+INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B = 12 # Enables laser shutdown bit position
+INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W = 1 # Enables laser shutdown bit width
+INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B = 13 # Enables SOA shutdown bit position
+INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W = 1 # Enables SOA shutdown bit width
+
+INJECT_LASER1_COARSE_CURRENT = 1 # Sets coarse current for laser 1
+INJECT_LASER2_COARSE_CURRENT = 2 # Sets coarse current for laser 2
+INJECT_LASER3_COARSE_CURRENT = 3 # Sets coarse current for laser 3
+INJECT_LASER4_COARSE_CURRENT = 4 # Sets coarse current for laser 4
+INJECT_LASER1_FINE_CURRENT = 5 # Sets fine current for laser 1
+INJECT_LASER2_FINE_CURRENT = 6 # Sets fine current for laser 2
+INJECT_LASER3_FINE_CURRENT = 7 # Sets fine current for laser 3
+INJECT_LASER4_FINE_CURRENT = 8 # Sets fine current for laser 4
+
 # FPGA map indices
 FPGA_KERNEL = 0 # Kernel registers
 FPGA_LASER1_PWM = 2 # Laser 1 TEC pulse width modulator registers
@@ -1165,6 +1208,8 @@ FPGA_LASER2_CURRENT_DAC = 86 # Laser2 current DAC registers
 FPGA_LASER3_CURRENT_DAC = 89 # Laser3 current DAC registers
 FPGA_LASER4_CURRENT_DAC = 92 # Laser4 current DAC registers
 FPGA_RDCOMPARE = 95 # Ringdown comparator
+FPGA_TWGEN = 97 # Tuner waveform generator
+FPGA_INJECT = 105 # Optical Injection Subsystem
 
 # Environment addresses
 LASER1_TEMP_CNTRL_ENV = 0

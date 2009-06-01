@@ -1425,6 +1425,39 @@
             <reg ident="THRESHOLD" description="Ringdown threshold"/>
             <reg ident="RATE_DIVISOR" description="Ringdown address counter divisor"/>
         </fpga_block>
+        <fpga_block ident="TWGEN" description="Tuner waveform generator">
+            <reg ident="ACC" description="Accumulator"/>
+            <reg ident="CS" description="Control/Status Register">
+                <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
+                <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
+                <bitfield ident="RESET"   description="Reset generator"  lsb="2" width="1" />
+            </reg>
+            <reg ident="SLOPE_DOWN" description="Slope in downward direction"/>
+            <reg ident="SLOPE_UP" description="Slope in upward direction"/>
+            <reg ident="SWEEP_LOW" description="Lower limit of sweep"/>
+            <reg ident="SWEEP_HIGH" description="Higher limit of sweep"/>
+            <reg ident="WINDOW_LOW" description="Lower limit of window"/>
+            <reg ident="WINDOW_HIGH" description="Higher limit of window"/>
+        </fpga_block>
+        <fpga_block ident="INJECT" description="Optical injection subsystem">
+            <reg ident="CONTROL" description="Control register">
+                <bitfield ident="MODE"   description="Manual/Automatic mode"  lsb="0" width="1" />
+                <bitfield ident="LASER_SELECT"   description="Select laser" lsb="1" width="2" />
+                <bitfield ident="LASER_CURRENT_ENABLE"  description="Laser current enable" lsb="3" width="4" />
+                <bitfield ident="MANUAL_LASER_ENABLE"   description="Deasserts short across laser in manual mode"  lsb="7" width="4" />
+                <bitfield ident="MANUAL_SOA_ENABLE"   description="Deasserts short across SOA in manual mode"  lsb="11" width="1" />
+                <bitfield ident="LASER_SHUTDOWN_ENABLE"   description="Enables laser shutdown"  lsb="12" width="1" />
+                <bitfield ident="SOA_SHUTDOWN_ENABLE"   description="Enables SOA shutdown"  lsb="13" width="1" />
+            </reg>
+            <reg ident="LASER1_COARSE_CURRENT" description="Sets coarse current for laser 1"/>
+            <reg ident="LASER2_COARSE_CURRENT" description="Sets coarse current for laser 2"/>
+            <reg ident="LASER3_COARSE_CURRENT" description="Sets coarse current for laser 3"/>
+            <reg ident="LASER4_COARSE_CURRENT" description="Sets coarse current for laser 4"/>
+            <reg ident="LASER1_FINE_CURRENT" description="Sets fine current for laser 1"/>
+            <reg ident="LASER2_FINE_CURRENT" description="Sets fine current for laser 2"/>
+            <reg ident="LASER3_FINE_CURRENT" description="Sets fine current for laser 3"/>
+            <reg ident="LASER4_FINE_CURRENT" description="Sets fine current for laser 4"/>
+        </fpga_block>
     </fpga_block_list>
     <fpga_map_list>
         <fpga_map ident="FPGA_KERNEL" block="KERNEL">
@@ -1471,6 +1504,12 @@
         </fpga_map>
         <fpga_map ident="FPGA_RDCOMPARE" block="RDCOMPARE">
             <description>Ringdown comparator</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_TWGEN" block="TWGEN">
+            <description>Tuner waveform generator</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_INJECT" block="INJECT">
+            <description>Optical Injection Subsystem</description>
         </fpga_map>
     </fpga_map_list>
     <environment_list>

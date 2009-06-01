@@ -16,7 +16,16 @@ param_addrcntr
 divisor
 num_samp
 threshold
-precontrol_time
+lock_duration
+lock_fail_duration
+precontrol_duration
+ringdown_duration
+recovery_duration
+tuner_sweep_high
+tuner_sweep_low
+tuner_window_high
+tuner_window_low
+tuner_offset
 ringdown_timeout
 tuner_at_ringdown
 metadata_addr_at_ringdown
