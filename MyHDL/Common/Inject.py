@@ -14,206 +14,243 @@
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
-
-Each DAC has two outputs (a coarse current and a fine current) which are updated on a 100kHz schedule. It takes 24 clock cycles to download each channel. By running the serial clock at  , it is possible to update both outputs every , interleaving the updates.
-
-5.9.1 Inputs
-
-MM laser_dac_clk  clock for driving DAC8522 at 50 times (needs to be at least 24 times per channel) 100kHz update rate
-
-MM laser_fine_current_in Laser fine current setting.
-
-MM laser_shutdown_in Turns off laser using shorting switch
-
-MM soa_shutdown_in Turns off SOA, using shorting switch
-
-5.9.2 Outputs
-
-MM laser_dac_sclk Serial clock for laser current DACs
-
-MM laser_sync_z Start of frame for laser current DACs
-
-MM laser1_dac_din Laser 1 DAC data (coarse and fine current multiplexed)
-
-MM laser2_dac_din Laser 2 DAC data (coarse and fine current multiplexed)
-
-MM laser3_dac_din Laser 3 DAC data (coarse and fine current multiplexed)
-
-MM laser4_dac_din Laser 4 DAC data (coarse and fine current multiplexed)
-
-MM laser1_enable Laser 1 current source enable
-
-MM laser2_enable Laser 2 current source enable
-
-MM laser3_enable Laser 3 current source enable
-
-MM laser4_enable Laser 4 current source enable
-
-MM laser1_shutdown Activate laser 1 shorting switch
-
-MM laser2_shutdown Activate laser 2 shorting switch
-
-MM laser3_shutdown Activate laser 3 shorting switch
-
-MM laser4_shutdown Activate laser 4 shorting switch
-
-MM soa_shutdown Activate SOA shorting switch
-
-5.9.3 Registers
-
-
 from myhdl import *
 from Host.autogen import interface
-from Host.autogen.interface import FPGA_TWGEN
+from Host.autogen.interface import FPGA_INJECT
 
-from Host.autogen.interface import TWGEN_ACC
-from Host.autogen.interface import TWGEN_CS
-from Host.autogen.interface import TWGEN_SLOPE_DOWN
-from Host.autogen.interface import TWGEN_SLOPE_UP
-from Host.autogen.interface import TWGEN_SWEEP_LOW
-from Host.autogen.interface import TWGEN_SWEEP_HIGH
-from Host.autogen.interface import TWGEN_WINDOW_LOW
-from Host.autogen.interface import TWGEN_WINDOW_HIGH
+from Host.autogen.interface import INJECT_CONTROL
+from Host.autogen.interface import INJECT_LASER1_COARSE_CURRENT
+from Host.autogen.interface import INJECT_LASER2_COARSE_CURRENT
+from Host.autogen.interface import INJECT_LASER3_COARSE_CURRENT
+from Host.autogen.interface import INJECT_LASER4_COARSE_CURRENT
+from Host.autogen.interface import INJECT_LASER1_FINE_CURRENT
+from Host.autogen.interface import INJECT_LASER2_FINE_CURRENT
+from Host.autogen.interface import INJECT_LASER3_FINE_CURRENT
+from Host.autogen.interface import INJECT_LASER4_FINE_CURRENT
 
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH, FPGA_REG_WIDTH, FPGA_REG_MASK
-from Host.autogen.interface import TWGEN_CS_RUN_B, TWGEN_CS_CONT_B, TWGEN_CS_RESET_B
+from Host.autogen.interface import INJECT_CONTROL_MODE_B, INJECT_CONTROL_MODE_W
+from Host.autogen.interface import INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W
+from Host.autogen.interface import INJECT_CONTROL_LASER_CURRENT_ENABLE_B, INJECT_CONTROL_LASER_CURRENT_ENABLE_W
+from Host.autogen.interface import INJECT_CONTROL_MANUAL_LASER_ENABLE_B, INJECT_CONTROL_MANUAL_LASER_ENABLE_W
+from Host.autogen.interface import INJECT_CONTROL_MANUAL_SOA_ENABLE_B, INJECT_CONTROL_MANUAL_SOA_ENABLE_W
+from Host.autogen.interface import INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W
+from Host.autogen.interface import INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B, INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W
+from MyHDL.Common.LaserDac import LaserDac
 
 LOW, HIGH = bool(0), bool(1)
 
-def TWGen(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,synth_step_in,
-            value_out,slope_out,in_window_out,map_base,extra=9):
-    """Tuner waveform generator
+def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
+            laser_dac_clk_in, strobe_in, laser_fine_current_in,
+            laser_shutdown_in, soa_shutdown_in,
+            laser1_dac_sync_out, laser2_dac_sync_out,
+            laser3_dac_sync_out, laser4_dac_sync_out,
+            laser1_dac_din_out, laser2_dac_din_out,
+            laser3_dac_din_out, laser4_dac_din_out,
+            laser1_disable_out, laser2_disable_out,
+            laser3_disable_out, laser4_disable_out,
+            laser1_shutdown_out, laser2_shutdown_out,
+            laser3_shutdown_out, laser4_shutdown_out,
+            soa_shutdown_out, map_base):
+
+    """Optical Injection Subsystem
     clk                 -- Clock input
     reset               -- Reset input
     dsp_addr            -- address from dsp_interface block
     dsp_data_out        -- write data from dsp_interface block
     dsp_data_in         -- read data to dsp_interface_block
     dsp_wr              -- single-cycle write command from dsp_interface block
-    synth_step_in       -- pulse to step waveform synthesizer
-    value_out           -- waveform generator output
-    slope_out           -- 1 on up slope, 0 on down slope
-    in_window_out       -- 1 when value is within the window
-    extra               -- Number of extra bits for high-resolution accumulator
+    laser_dac_clk_in    -- 5MHz clock to drive laser current DAC
+    strobe_in           -- 100kHz strobe for DACs
+    laser_fine_current_in -- Sets fine current for selected laser in automatic mode
+    laser_shutdown_in   -- Shuts down selected laser in automatic mode
+    soa_shutdown_in     -- Shuts down SOA in automatic mode
+    laser1_dac_sync_out  -- Synchronization signal for laser 1 current DAC
+    laser2_dac_sync_out  -- Synchronization signal for laser 2 current DAC
+    laser3_dac_sync_out  -- Synchronization signal for laser 3 current DAC
+    laser4_dac_sync_out  -- Synchronization signal for laser 4 current DAC
+    laser1_dac_din_out  -- Serial data in for laser 1 current DAC
+    laser2_dac_din_out  -- Serial data in for laser 2 current DAC
+    laser3_dac_din_out  -- Serial data in for laser 3 current DAC
+    laser4_dac_din_out  -- Serial data in for laser 4 current DAC
+    laser1_disable_out  -- Disable laser 1 current source
+    laser2_disable_out  -- Disable laser 2 current source
+    laser3_disable_out  -- Disable laser 3 current source
+    laser4_disable_out  -- Disable laser 4 current source
+    laser1_shutdown_out  -- Short across laser 1
+    laser2_shutdown_out  -- Short across laser 2
+    laser3_shutdown_out  -- Short across laser 3
+    laser4_shutdown_out  -- Short across laser 4
+    soa_shutdown_out     -- Short across SOA
 
-    This block appears as several registers to the DSP, starting at map_base. The registers are:
-    TWGEN_ACC           -- High-resolution accumulator
-    TWGEN_CS            -- Control/status register
-    TWGEN_SLOPE_DOWN    -- (unsigned) down slope value, subtracted from
-                            hi-res accumulator on each step while on
-                            down slope
-    TWGEN_SLOPE_UP      -- (unsigned) up slope value, added to hi-res
-                            accumulator on each step while on up slope
-    TWGEN_SWEEP_HIGH    -- value above which down slope starts
-    TWGEN_SWEEP_LOW     -- value below which up slope starts
-    TWGEN_WINDOW_HIGH   -- value above which ringdowns are inhibited
-    TWGEN_WINDOW_LOW    -- value below which ringdowns are inhibited
+    map_base            -- Base of FPGA map for this block
 
-    Bits within the TWGEN_CS register are:
-    TWGEN_CS_RUN        -- 0 stops the TWGEN from running, 1 allows running
-    TWGEN_CS_CONT       -- 0 places TWGEN in single-shot mode. i.e., machine runs for one
-                            clock cycle each time TWGEN_CS_RUN goes high. The RUN bit is reset
-                            at end of cycle.
-                           1 places TWGEN in continuous mode, which is started by writing 1 to TWGEN_CS_RUN.
-    TWGEN_CS_RESET      -- resets the accumulator to mid-range and slope to 1 while asserted
+    This block appears as several registers to the DSP, starting at map_base.
+    The registers are:
+    INJECT_CONTROL        -- Control register
+    LASER1_COARSE_CURRENT -- Laser 1 coarse current DAC setting
+    LASER2_COARSE_CURRENT -- Laser 2 coarse current DAC setting
+    LASER3_COARSE_CURRENT -- Laser 3 coarse current DAC setting
+    LASER4_COARSE_CURRENT -- Laser 4 coarse current DAC setting
+    LASER1_FINE_CURRENT   -- Laser 1 manual fine current DAC setting
+    LASER2_FINE_CURRENT   -- Laser 2 manual fine current DAC setting
+    LASER3_FINE_CURRENT   -- Laser 3 manual fine current DAC setting
+    LASER4_FINE_CURRENT   -- Laser 4 manual fine current DAC setting
+
+    Fields within the INJECT_CONTROL register are:
+
+    INJECT_CONTROL_MODE         -- Selects manual (0) or automatic (1) mode
+    INJECT_CONTROL_LASER_SELECT -- Selects laser for automatic control 00 -> 11
+    INJECT_CONTROL_LASER_CURRENT_ENABLE -- 4 bits controlling laser current regulators
+    INJECT_CONTROL_MANUAL_LASER_ENABLE  -- 4 bits controlling laser shorting transistors in manual mode
+    INJECT_CONTROL_MANUAL_SOA_ENABLE    -- controls SOA shorting transistor in manual mode
+    INJECT_CONTROL_LASER_SHUTDOWN_ENABLE -- enables laser shutdown in automatic mode
+    INJECT_CONTROL_SOA_SHUTDOWN_ENABLE   -- enables SOA shutdown in automatic mode.
+
+    Note: If MODE is automatic, only the SOA and the selected laser are in automatic mode,
+           the other lasers remain in manual mode.
     """
-
-    TWGen_acc_addr = map_base + TWGEN_ACC
-    TWGen_cs_addr = map_base + TWGEN_CS
-    TWGen_slope_down_addr = map_base + TWGEN_SLOPE_DOWN
-    TWGen_slope_up_addr = map_base + TWGEN_SLOPE_UP
-    TWGen_sweep_low_addr = map_base + TWGEN_SWEEP_LOW
-    TWGen_sweep_high_addr = map_base + TWGEN_SWEEP_HIGH
-    TWGen_window_low_addr = map_base + TWGEN_WINDOW_LOW
-    TWGen_window_high_addr = map_base + TWGEN_WINDOW_HIGH
-
+    Inject_control_addr = map_base + INJECT_CONTROL
+    Inject_laser1_coarse_current_addr = map_base + INJECT_LASER1_COARSE_CURRENT
+    Inject_laser2_coarse_current_addr = map_base + INJECT_LASER2_COARSE_CURRENT
+    Inject_laser3_coarse_current_addr = map_base + INJECT_LASER3_COARSE_CURRENT
+    Inject_laser4_coarse_current_addr = map_base + INJECT_LASER4_COARSE_CURRENT
+    Inject_laser1_fine_current_addr = map_base + INJECT_LASER1_FINE_CURRENT
+    Inject_laser2_fine_current_addr = map_base + INJECT_LASER2_FINE_CURRENT
+    Inject_laser3_fine_current_addr = map_base + INJECT_LASER3_FINE_CURRENT
+    Inject_laser4_fine_current_addr = map_base + INJECT_LASER4_FINE_CURRENT
     dsp_data_from_regs = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    acc = Signal(intbv(0)[FPGA_REG_WIDTH+extra:])
-    cs = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    slope_down = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    slope_up = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    sweep_low = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    sweep_high = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    window_low = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    window_high = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    control = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser1_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser2_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser3_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser4_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser1_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser2_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser3_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser4_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
-    slope = Signal(LOW)
-    value = Signal(intbv(0)[FPGA_REG_WIDTH:])
-
-    @always_comb
-    def comb1():
-        value.next = acc[FPGA_REG_WIDTH+extra:extra]
-
-    @always_comb
-    def comb2():
-        dsp_data_in.next = dsp_data_from_regs
-        value_out.next = value
-        in_window_out.next = (value >= window_low) and (value <= window_high)
-        slope_out.next = slope
+    mode = Signal(LOW)
+    sel  = Signal(intbv(0)[2:])
+    laser_current_en = Signal(intbv(0)[4:])
+    manual_laser_en = Signal(intbv(0)[4:])
+    manual_soa_en = Signal(LOW)
+    laser_shutdown_en = Signal(LOW)
+    soa_shutdown_en = Signal(LOW)
+    laser1_fine = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser2_fine = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser3_fine = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser4_fine = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     @instance
     def logic():
         while True:
             yield clk.posedge, reset.posedge
             if reset:
-                acc.next[FPGA_REG_WIDTH+extra-1] = 1
-                acc.next[FPGA_REG_WIDTH+extra-1:] = 0
-                cs.next = 0
-                slope_down.next = 0
-                slope_up.next = 0
-                sweep_low.next = 0
-                sweep_high.next = 0
-                window_low.next = 0
-                window_high.next = 0
-                slope.next = 1
+                control.next = 0
+                laser1_coarse_current.next = 0
+                laser2_coarse_current.next = 0
+                laser3_coarse_current.next = 0
+                laser4_coarse_current.next = 0
+                laser1_fine_current.next = 0x8000
+                laser2_fine_current.next = 0x8000
+                laser3_fine_current.next = 0x8000
+                laser4_fine_current.next = 0x8000
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_acc_addr:
-                        if dsp_wr: acc.next = dsp_data_out
-                        dsp_data_from_regs.next = acc
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_cs_addr:
-                        if dsp_wr: cs.next = dsp_data_out
-                        dsp_data_from_regs.next = cs
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_slope_down_addr:
-                        if dsp_wr: slope_down.next = dsp_data_out
-                        dsp_data_from_regs.next = slope_down
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_slope_up_addr:
-                        if dsp_wr: slope_up.next = dsp_data_out
-                        dsp_data_from_regs.next = slope_up
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_sweep_low_addr:
-                        if dsp_wr: sweep_low.next = dsp_data_out
-                        dsp_data_from_regs.next = sweep_low
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_sweep_high_addr:
-                        if dsp_wr: sweep_high.next = dsp_data_out
-                        dsp_data_from_regs.next = sweep_high
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_window_low_addr:
-                        if dsp_wr: window_low.next = dsp_data_out
-                        dsp_data_from_regs.next = window_low
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_window_high_addr:
-                        if dsp_wr: window_high.next = dsp_data_out
-                        dsp_data_from_regs.next = window_high
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_control_addr:
+                        if dsp_wr: control.next = dsp_data_out
+                        dsp_data_from_regs.next = control
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser1_coarse_current_addr:
+                        if dsp_wr: laser1_coarse_current.next = dsp_data_out
+                        dsp_data_from_regs.next = laser1_coarse_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser2_coarse_current_addr:
+                        if dsp_wr: laser2_coarse_current.next = dsp_data_out
+                        dsp_data_from_regs.next = laser2_coarse_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser3_coarse_current_addr:
+                        if dsp_wr: laser3_coarse_current.next = dsp_data_out
+                        dsp_data_from_regs.next = laser3_coarse_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser4_coarse_current_addr:
+                        if dsp_wr: laser4_coarse_current.next = dsp_data_out
+                        dsp_data_from_regs.next = laser4_coarse_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser1_fine_current_addr:
+                        if dsp_wr: laser1_fine_current.next = dsp_data_out
+                        dsp_data_from_regs.next = laser1_fine_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser2_fine_current_addr:
+                        if dsp_wr: laser2_fine_current.next = dsp_data_out
+                        dsp_data_from_regs.next = laser2_fine_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser3_fine_current_addr:
+                        if dsp_wr: laser3_fine_current.next = dsp_data_out
+                        dsp_data_from_regs.next = laser3_fine_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser4_fine_current_addr:
+                        if dsp_wr: laser4_fine_current.next = dsp_data_out
+                        dsp_data_from_regs.next = laser4_fine_current
                     else:
                         dsp_data_from_regs.next = 0
                 else:
                     dsp_data_from_regs.next = 0
 
-                if cs[TWGEN_CS_RUN_B]:
-                    if not cs[TWGEN_CS_CONT_B]:
-                        cs.next[TWGEN_CS_RUN_B] = 0
-                    if cs[TWGEN_CS_RESET_B]:
-                        acc.next[FPGA_REG_WIDTH+extra-1] = 1
-                        acc.next[FPGA_REG_WIDTH+extra-1:] = 0
-                        slope.next = 1
-                    else:
-                        if value >= sweep_high:
-                            slope.next = 0
-                        elif value <= sweep_low:
-                            slope.next = 1
-                        if synth_step_in:
-                            if slope:
-                                acc.next = acc + slope_up
-                            else:
-                                acc.next = acc - slope_down
+    @always_comb
+    def  comb1():
+        mode.next = control[INJECT_CONTROL_MODE_B]
+        sel.next  = control[INJECT_CONTROL_LASER_SELECT_B+INJECT_CONTROL_LASER_SELECT_W:INJECT_CONTROL_LASER_SELECT_B]
+        laser_current_en.next = control[INJECT_CONTROL_LASER_CURRENT_ENABLE_B+INJECT_CONTROL_LASER_CURRENT_ENABLE_W:INJECT_CONTROL_LASER_CURRENT_ENABLE_B]
+        manual_laser_en.next  = control[INJECT_CONTROL_MANUAL_LASER_ENABLE_B+INJECT_CONTROL_MANUAL_LASER_ENABLE_W:INJECT_CONTROL_MANUAL_LASER_ENABLE_B]
+        manual_soa_en.next = control[INJECT_CONTROL_MANUAL_SOA_ENABLE_B]
+        laser_shutdown_en.next = control[INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B]
+        soa_shutdown_en.next = control[INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B]
+
+    @always_comb
+    def  comb2():
+        laser1_fine.next = laser1_fine_current
+        laser2_fine.next = laser2_fine_current
+        laser3_fine.next = laser3_fine_current
+        laser4_fine.next = laser4_fine_current
+        laser1_disable_out.next = not laser_current_en[0]
+        laser2_disable_out.next = not laser_current_en[1]
+        laser3_disable_out.next = not laser_current_en[2]
+        laser4_disable_out.next = not laser_current_en[3]
+        laser1_shutdown_out.next = not manual_laser_en[0]
+        laser2_shutdown_out.next = not manual_laser_en[1]
+        laser3_shutdown_out.next = not manual_laser_en[2]
+        laser4_shutdown_out.next = not manual_laser_en[3]
+        soa_shutdown_out.next = not manual_soa_en
+
+        if mode:
+            soa_shutdown_out.next = soa_shutdown_in
+            if sel==0:
+                laser1_fine.next = laser_fine_current_in
+                laser1_shutdown_out.next = laser_shutdown_in
+            elif sel==1:
+                laser2_fine.next = laser_fine_current_in
+                laser2_shutdown_out.next = laser_shutdown_in
+            elif sel==2:
+                laser3_fine.next = laser_fine_current_in
+                laser3_shutdown_out.next = laser_shutdown_in
+            else:
+                laser4_fine.next = laser_fine_current_in
+                laser4_shutdown_out.next = laser_shutdown_in
+
+    laser1_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
+        chanA_data_in=laser1_coarse_current,chanB_data_in=laser1_fine,
+        strobe_in=strobe_in,dac_sync_out=laser1_dac_sync_out,
+        dac_din_out=laser1_dac_din_out)
+
+    laser2_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
+        chanA_data_in=laser2_coarse_current,chanB_data_in=laser2_fine,
+        strobe_in=strobe_in,dac_sync_out=laser2_dac_sync_out,
+        dac_din_out=laser2_dac_din_out)
+
+    laser3_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
+        chanA_data_in=laser3_coarse_current,chanB_data_in=laser3_fine,
+        strobe_in=strobe_in,dac_sync_out=laser3_dac_sync_out,
+        dac_din_out=laser3_dac_din_out)
+
+    laser4_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
+        chanA_data_in=laser4_coarse_current,chanB_data_in=laser4_fine,
+        strobe_in=strobe_in,dac_sync_out=laser4_dac_sync_out,
+        dac_din_out=laser4_dac_din_out)
 
     return instances()
 
@@ -221,12 +258,46 @@ if __name__ == "__main__":
     dsp_addr = Signal(intbv(0)[EMIF_ADDR_WIDTH:])
     dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    value_out  = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    dsp_wr, clk, reset, synth_step_in, slope_out, in_window_out = [Signal(LOW) for i in range(6)]
-    map_base = FPGA_TWGEN
+    dsp_wr, clk, reset = [Signal(LOW) for i in range(3)]
+    laser_dac_clk_in, strobe_in, laser_shutdown_in, soa_shutdown_in =\
+        [Signal(LOW) for i in range(4)]
+    laser_fine_current_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser1_dac_sync_out, laser2_dac_sync_out, \
+        laser3_dac_sync_out, laser4_dac_sync_out = \
+        [Signal(LOW) for i in range(4)]
+    laser1_dac_din_out = Signal(LOW)
+    laser2_dac_din_out = Signal(LOW)
+    laser3_dac_din_out = Signal(LOW)
+    laser4_dac_din_out = Signal(LOW)
+    laser1_disable_out,laser2_disable_out,laser3_disable_out,laser4_disable_out=\
+        [Signal(LOW) for i in range(4)]
+    laser1_shutdown_out,laser2_shutdown_out,laser3_shutdown_out,laser4_shutdown_out=\
+        [Signal(LOW) for i in range(4)]
+    soa_shutdown_out = Signal(LOW)
+    map_base = FPGA_INJECT
 
-    toVHDL(TWGen, clk=clk, reset=reset, dsp_addr=dsp_addr,
-                  dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
-                  dsp_wr=dsp_wr, synth_step_in=synth_step_in,
-                  value_out=value_out, slope_out=slope_out,
-                  in_window_out=in_window_out,map_base=map_base)
+    toVHDL(Inject, clk=clk, reset=reset, dsp_addr=dsp_addr,
+                   dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
+                   dsp_wr=dsp_wr, laser_dac_clk_in=laser_dac_clk_in,
+                   strobe_in=strobe_in,
+                   laser_fine_current_in=laser_fine_current_in,
+                   laser_shutdown_in=laser_shutdown_in,
+                   soa_shutdown_in=soa_shutdown_in,
+                   laser1_dac_sync_out=laser1_dac_sync_out,
+                   laser2_dac_sync_out=laser2_dac_sync_out,
+                   laser3_dac_sync_out=laser3_dac_sync_out,
+                   laser4_dac_sync_out=laser4_dac_sync_out,
+                   laser1_dac_din_out=laser1_dac_din_out,
+                   laser2_dac_din_out=laser2_dac_din_out,
+                   laser3_dac_din_out=laser3_dac_din_out,
+                   laser4_dac_din_out=laser4_dac_din_out,
+                   laser1_disable_out=laser1_disable_out,
+                   laser2_disable_out=laser2_disable_out,
+                   laser3_disable_out=laser3_disable_out,
+                   laser4_disable_out=laser4_disable_out,
+                   laser1_shutdown_out=laser1_shutdown_out,
+                   laser2_shutdown_out=laser2_shutdown_out,
+                   laser3_shutdown_out=laser3_shutdown_out,
+                   laser4_shutdown_out=laser4_shutdown_out,
+                   soa_shutdown_out=soa_shutdown_out,
+                   map_base=map_base)

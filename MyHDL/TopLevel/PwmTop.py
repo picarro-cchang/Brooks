@@ -16,12 +16,15 @@
 #
 from myhdl import *
 from Host.autogen.interface import *
-from MyHDL.Common.Pwm1 import Pwm
+from MyHDL.Common.ClkGen import ClkGen
 from MyHDL.Common.dsp_interface import Dsp_interface
-from MyHDL.Common.Rdcompare import Rdcompare
-from MyHDL.Common.Rdmemory  import Rdmemory
-from MyHDL.Common.RdDataAddrGen import RdDataAddrGen
 from MyHDL.Common.Kernel import Kernel
+from MyHDL.Common.Inject import Inject
+from MyHDL.Common.Pwm1 import Pwm
+from MyHDL.Common.Rdcompare import Rdcompare
+from MyHDL.Common.RdDataAddrGen import RdDataAddrGen
+from MyHDL.Common.Rdmemory  import Rdmemory
+from MyHDL.Common.TWGen import TWGen
 
 LOW, HIGH = bool(0), bool(1)
 
@@ -34,6 +37,11 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          dsp_emif_ddir, dsp_emif_be, dsp_emif_ce,
          dsp_eclk,
          lsr1_0, lsr1_1, lsr2_0, lsr2_1, lsr3_0, lsr3_1, lsr4_0, lsr4_1,
+         lsr1_sck,lsr1_ss,lsr1_rd,lsr1_mosi,lsr1_disable,
+         lsr2_sck,lsr2_ss,lsr2_rd,lsr2_mosi,lsr2_disable,
+         lsr3_sck,lsr3_ss,lsr3_rd,lsr3_mosi,lsr3_disable,
+         lsr4_sck,lsr4_ss,lsr4_rd,lsr4_mosi,lsr4_disable,
+         sw1, sw2, sw3, sw4,
          i2c_rst0, i2c_rst1,
          i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1,
          rd_adc, rd_adc_clk, rd_adc_oe,
@@ -53,7 +61,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_data_in_laser4_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_rdcompare   = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_rdmemory    = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_kernel    = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_kernel      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_inject      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_twGen       = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 
     dsp_wr, ce2 = [Signal(LOW) for i in range(2)]
     laser1_pwm_out, laser1_pwm_inv_out = [Signal(LOW) for i in range(2)]
@@ -83,7 +93,16 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     param = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
     wr_param = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
     param_we = Signal(LOW)
+    clk_5M, clk_2M5, pulse_100k = [Signal(LOW) for i in range(3)]
 
+    gpreg_1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    tuner_value = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    tuner_slope = Signal(LOW)
+    tuner_in_window = Signal(LOW)
+
+    laser_fine_current_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser_shutdown_in = Signal(LOW)
+    soa_shutdown_in = Signal(LOW)
     state = Signal(t_State.IDLE)
     rdmem_max_data_addr = (1<<DATA_BANK_ADDR_WIDTH)-1
 
@@ -152,7 +171,43 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                   dsp_wr=dsp_wr,
                   usb_connected=usb_connected,
                   cyp_reset=cyp_reset,
+                  gpreg_1_out=gpreg_1,
                   map_base=FPGA_KERNEL)
+
+    clkgen = ClkGen(clk=clk0, reset=reset, clk_5M=clk_5M,
+                    clk_2M5=clk_2M5, pulse_100k=pulse_100k)
+
+    twGen = TWGen(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                  dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_twGen,
+                  dsp_wr=dsp_wr, synth_step_in=pulse_100k,
+                  value_out=tuner_value, slope_out=tuner_slope,
+                  in_window_out=tuner_in_window,map_base=FPGA_TWGEN)
+
+    inject = Inject(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                    dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_inject,
+                    dsp_wr=dsp_wr, laser_dac_clk_in=clk_5M,
+                    strobe_in=pulse_100k,
+                    laser_fine_current_in=laser_fine_current_in,
+                    laser_shutdown_in=laser_shutdown_in,
+                    soa_shutdown_in=soa_shutdown_in,
+                    laser1_dac_sync_out=lsr1_ss,
+                    laser2_dac_sync_out=lsr2_ss,
+                    laser3_dac_sync_out=lsr3_ss,
+                    laser4_dac_sync_out=lsr4_ss,
+                    laser1_dac_din_out=lsr1_mosi,
+                    laser2_dac_din_out=lsr2_mosi,
+                    laser3_dac_din_out=lsr3_mosi,
+                    laser4_dac_din_out=lsr4_mosi,
+                    laser1_disable_out=lsr1_disable,
+                    laser2_disable_out=lsr2_disable,
+                    laser3_disable_out=lsr3_disable,
+                    laser4_disable_out=lsr4_disable,
+                    laser1_shutdown_out=lsr1_rd,
+                    laser2_shutdown_out=lsr2_rd,
+                    laser3_shutdown_out=lsr3_rd,
+                    laser4_shutdown_out=lsr4_rd,
+                    soa_shutdown_out=sw3,
+                    map_base=FPGA_INJECT)
 
     @instance
     def  logic():
@@ -192,7 +247,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                            dsp_data_in_laser4_pwm | \
                            dsp_data_in_rdcompare  | \
                            dsp_data_in_rdmemory   | \
-                           dsp_data_in_kernel
+                           dsp_data_in_kernel     | \
+                           dsp_data_in_inject     | \
+                           dsp_data_in_twGen
 
         ce2.next = dsp_emif_ce[2]
         intronix.next[16]  = laser1_pwm_out
@@ -218,7 +275,6 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         intronix.next[32] = compare_result
         monitor.next = compare_result
 
-        intronix.next[16:] = rd_adc
         rd_adc_clk.next = adc_clk
         rd_adc_oe.next = 1
         fpga_led.next = counter[NSTAGES:NSTAGES-4]
@@ -228,7 +284,19 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         intronix.next[29] = i2c_sda0
         intronix.next[30] = i2c_scl1
         intronix.next[31] = i2c_sda1
-        intronix.next[33] = clk0
+
+        # Use gpreg_1 to control the Intronix display
+        if gpreg_1[5:] == 0:
+            intronix.next[33] = clk0
+        elif gpreg_1[5:] <= NSTAGES:
+            intronix.next[33] = counter[int(gpreg_1[5:]-1)]
+        else:
+            intronix.next[33] = 0
+
+        if gpreg_1[6]:
+            intronix.next[16:] = tuner_value
+        else:
+            intronix.next[16:] = rd_adc
 
         bank.next = 0
         meta_addr.next = 0
@@ -246,6 +314,15 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         dsp_ext_int5.next = 0
         dsp_ext_int6.next = 0
         dsp_ext_int7.next = 0
+
+        lsr1_sck.next = clk_5M
+        lsr2_sck.next = clk_5M
+        lsr3_sck.next = clk_5M
+        lsr4_sck.next = clk_5M
+
+        sw1.next = 0
+        sw2.next = 0
+        sw4.next = 0
 
     return instances()
 
@@ -273,6 +350,11 @@ rd_adc_clk, rd_adc_oe = [Signal(LOW) for i in range(2)]
 dsp_eclk, monitor = [Signal(LOW) for i in range(2)]
 lsr1_0, lsr1_1, lsr2_0, lsr2_1 = [Signal(LOW) for i in range(4)]
 lsr3_0, lsr3_1, lsr4_0, lsr4_1 = [Signal(LOW) for i in range(4)]
+lsr1_sck,lsr1_ss,lsr1_rd,lsr1_mosi,lsr1_disable = [Signal(LOW) for i in range(5)]
+lsr2_sck,lsr2_ss,lsr2_rd,lsr2_mosi,lsr2_disable = [Signal(LOW) for i in range(5)]
+lsr3_sck,lsr3_ss,lsr3_rd,lsr3_mosi,lsr3_disable = [Signal(LOW) for i in range(5)]
+lsr4_sck,lsr4_ss,lsr4_rd,lsr4_mosi,lsr4_disable = [Signal(LOW) for i in range(5)]
+sw1, sw2, sw3, sw4 = [Signal(LOW) for i in range(4)]
 dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7 = [Signal(LOW) for i in range(4)]
 usb_connected, cyp_reset = [Signal(LOW) for i in range(2)]
 
@@ -283,6 +365,11 @@ def makeVHDL():
                 dsp_emif_dout,dsp_emif_ddir, dsp_emif_be, dsp_emif_ce,
                 dsp_eclk,
                 lsr1_0, lsr1_1, lsr2_0, lsr2_1, lsr3_0, lsr3_1, lsr4_0, lsr4_1,
+                lsr1_sck,lsr1_ss,lsr1_rd,lsr1_mosi,lsr1_disable,
+                lsr2_sck,lsr2_ss,lsr2_rd,lsr2_mosi,lsr2_disable,
+                lsr3_sck,lsr3_ss,lsr3_rd,lsr3_mosi,lsr3_disable,
+                lsr4_sck,lsr4_ss,lsr4_rd,lsr4_mosi,lsr4_disable,
+                sw1, sw2, sw3, sw4,
                 i2c_rst0, i2c_rst1,
                 i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1,
                 rd_adc, rd_adc_clk, rd_adc_oe,

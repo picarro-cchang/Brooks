@@ -84,6 +84,8 @@
         <File>MyHDL\Common\ClkGen.py</File>
         <File>MyHDL\Common\dsp_interface.py</File>
         <File>MyHDL\Common\DualPortRamRw.py</File>
+        <File>MyHDL\Common\Inject.py</File>
+        <File>MyHDL\Common\Kernel.py</File>
         <File>MyHDL\Common\LaserDac.py</File>
         <File>MyHDL\Common\Pwm1.py</File>
         <File>MyHDL\Common\Rdcompare.py</File>

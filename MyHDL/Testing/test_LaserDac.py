@@ -23,7 +23,7 @@ from Host.autogen import interface
 LOW, HIGH = bool(0), bool(1)
 
 clk, reset, dac_clock, strobe = [Signal(LOW) for i in range(4)]
-dac_sclk_out, dac_sync_z_out, dac_din_out = [Signal(LOW) for i in range(3)]
+dac_sync_out, dac_din_out = [Signal(LOW) for i in range(2)]
 chanA_data_in = Signal(intbv(0)[16:])
 chanB_data_in = Signal(intbv(0)[16:])
 clk_2M5 = Signal(LOW)
@@ -43,8 +43,7 @@ def  bench():
                      chanA_data_in=chanA_data_in,
                      chanB_data_in=chanB_data_in,
                      strobe_in=strobe,
-                     dac_sclk_out=dac_sclk_out,
-                     dac_sync_z_out=dac_sync_z_out,
+                     dac_sync_out=dac_sync_out,
                      dac_din_out=dac_din_out)
 
     clkGen = ClkGen(clk=clk, reset=reset, clk_5M=dac_clock,
@@ -60,10 +59,10 @@ def  bench():
     @instance
     def  acquire():
         while True:
-            yield dac_sync_z_out.negedge
+            yield dac_sync_out.posedge
             data.next = 0
             for i in range(24):
-                yield dac_sclk_out.negedge
+                yield dac_clock.negedge
                 data.next[23-i] = dac_din_out
 
     return instances()

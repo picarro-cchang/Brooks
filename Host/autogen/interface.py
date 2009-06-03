@@ -940,6 +940,7 @@ registerInfo.append(RegInfo("HEATER_CNTRL_MARK_REGISTER",c_float,0,1.0,"rw"))
 # Block KERNEL Kernel
 KERNEL_MAGIC_CODE = 0 # Code indicating FPGA is programmed
 KERNEL_RESET = 1 # Used to reset Cypress FX2
+KERNEL_GPREG_1 = 2 # General purpose register
 
 # Block PWM Pulse width modulator
 PWM_CS = 0 # Control/Status register
@@ -1194,22 +1195,22 @@ INJECT_LASER4_FINE_CURRENT = 8 # Sets fine current for laser 4
 
 # FPGA map indices
 FPGA_KERNEL = 0 # Kernel registers
-FPGA_LASER1_PWM = 2 # Laser 1 TEC pulse width modulator registers
-FPGA_LASER2_PWM = 4 # Laser 2 TEC pulse width modulator registers
-FPGA_LASER3_PWM = 6 # Laser 3 TEC pulse width modulator registers
-FPGA_LASER4_PWM = 8 # Laser 4 TEC pulse width modulator registers
-FPGA_RDSIM = 10 # Ringdown simulator registers
-FPGA_LASERLOCK = 14 # Laser frequency locker registers
-FPGA_RDMETAMAN = 41 # Ringdown metadata manager registers
-FPGA_RDDATMAN = 55 # Ringdown data manager registers
-FPGA_RDMAN = 61 # Ringdown manager registers
-FPGA_LASER1_CURRENT_DAC = 83 # Laser1 current DAC registers
-FPGA_LASER2_CURRENT_DAC = 86 # Laser2 current DAC registers
-FPGA_LASER3_CURRENT_DAC = 89 # Laser3 current DAC registers
-FPGA_LASER4_CURRENT_DAC = 92 # Laser4 current DAC registers
-FPGA_RDCOMPARE = 95 # Ringdown comparator
-FPGA_TWGEN = 97 # Tuner waveform generator
-FPGA_INJECT = 105 # Optical Injection Subsystem
+FPGA_LASER1_PWM = 3 # Laser 1 TEC pulse width modulator registers
+FPGA_LASER2_PWM = 5 # Laser 2 TEC pulse width modulator registers
+FPGA_LASER3_PWM = 7 # Laser 3 TEC pulse width modulator registers
+FPGA_LASER4_PWM = 9 # Laser 4 TEC pulse width modulator registers
+FPGA_RDSIM = 11 # Ringdown simulator registers
+FPGA_LASERLOCK = 15 # Laser frequency locker registers
+FPGA_RDMETAMAN = 42 # Ringdown metadata manager registers
+FPGA_RDDATMAN = 56 # Ringdown data manager registers
+FPGA_RDMAN = 62 # Ringdown manager registers
+FPGA_LASER1_CURRENT_DAC = 84 # Laser1 current DAC registers
+FPGA_LASER2_CURRENT_DAC = 87 # Laser2 current DAC registers
+FPGA_LASER3_CURRENT_DAC = 90 # Laser3 current DAC registers
+FPGA_LASER4_CURRENT_DAC = 93 # Laser4 current DAC registers
+FPGA_RDCOMPARE = 96 # Ringdown comparator
+FPGA_TWGEN = 98 # Tuner waveform generator
+FPGA_INJECT = 106 # Optical Injection Subsystem
 
 # Environment addresses
 LASER1_TEMP_CNTRL_ENV = 0

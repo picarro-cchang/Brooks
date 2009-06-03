@@ -1269,6 +1269,7 @@
         <fpga_block ident="KERNEL" description="Kernel">
             <reg ident="MAGIC_CODE" description="Code indicating FPGA is programmed"/>
             <reg ident="RESET" description="Used to reset Cypress FX2"/>
+            <reg ident="GPREG_1" description="General purpose register"/>
         </fpga_block>
         <fpga_block ident="PWM" description="Pulse width modulator">
             <reg ident="CS" description="Control/Status register">

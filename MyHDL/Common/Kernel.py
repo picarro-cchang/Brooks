@@ -21,14 +21,14 @@ from Host.autogen import interface
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK
 from Host.autogen.interface import KERNEL_MAGIC_CODE, FPGA_MAGIC_CODE
-from Host.autogen.interface import FPGA_KERNEL, KERNEL_RESET
+from Host.autogen.interface import FPGA_KERNEL, KERNEL_RESET, KERNEL_GPREG_1
 
 LOW, HIGH = bool(0), bool(1)
 
 t_State = enum("NORMAL","DISCONNECTED","RESETTING")
 
-def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,map_base,
-        usb_connected,cyp_reset):
+def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
+        usb_connected,cyp_reset,gpreg_1_out,map_base):
     """
     clk                 -- Clock input
     reset               -- Reset input
@@ -55,15 +55,24 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,map_base,
 
     kernel_magic_code_addr = map_base + KERNEL_MAGIC_CODE
     kernel_reset_addr = map_base + KERNEL_RESET
+    kernel_gpreg_1_addr = map_base + KERNEL_GPREG_1
 
     kernel_reset = Signal(intbv(0)[1:])
+    gpreg_1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+
     state = Signal(t_State.NORMAL)
+
+    @always_comb
+    def  comb():
+        gpreg_1_out.next = gpreg_1
 
     @instance
     def logic():
         while True:
             yield clk.posedge, reset.posedge
             if reset:
+                kernel_reset.next = 0
+                gpreg_1.next = 0
                 cyp_reset.next = LOW
                 counter.next = 0
             else:
@@ -74,6 +83,9 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,map_base,
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_reset_addr:
                         if dsp_wr: kernel_reset.next = dsp_data_out
                         dsp_data_in.next = kernel_reset
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_gpreg_1_addr:
+                        if dsp_wr: gpreg_1.next = dsp_data_out
+                        dsp_data_in.next = gpreg_1
                     else:
                         dsp_data_in.next = 0
                 else:
@@ -118,6 +130,7 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,map_base,
                     cyp_reset.next = LOW
                     state.next = t_State.NORMAL
 
+
     return instances()
 
 if __name__ == "__main__":
@@ -126,8 +139,10 @@ if __name__ == "__main__":
     dsp_data_in  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_wr, clk, reset = [Signal(LOW) for i in range(3)]
     usb_connected, cyp_reset = [Signal(LOW) for i in range(2)]
+    gpreg_1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     map_base = FPGA_KERNEL
 
     toVHDL(Kernel, clk=clk, reset=reset, dsp_addr=dsp_addr, dsp_data_out=dsp_data_out,
-                   dsp_data_in=dsp_data_in, dsp_wr=dsp_wr, map_base=map_base,
-                   usb_connected=usb_connected, cyp_reset=cyp_reset)
+                   dsp_data_in=dsp_data_in, dsp_wr=dsp_wr,
+                   usb_connected=usb_connected, cyp_reset=cyp_reset,
+                   gpreg_1_out=gpreg_1_out, map_base=map_base)
