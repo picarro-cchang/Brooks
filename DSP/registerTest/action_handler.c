@@ -27,6 +27,7 @@
 #include "tempCntrl.h"
 #include "laserCurrentCntrl.h"
 #include "heaterCntrl.h"
+#include "tunerCntrl.h"
 #include "ds1631.h"
 #include "ltc2499.h"
 #include "fpga.h"
@@ -347,6 +348,25 @@ int r_heaterCntrlStep(unsigned int numInt,void *params,void *env)
     int status;
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     status = heaterCntrlStep();
+    return status;
+}
+
+#ifdef SIMULATION
+#pragma argsused
+#endif
+int r_tunerCntrlInit(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return tunerCntrlInit();
+}
+#ifdef SIMULATION
+#pragma argsused
+#endif
+int r_tunerCntrlStep(unsigned int numInt,void *params,void *env)
+{
+    int status;
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    status = tunerCntrlStep();
     return status;
 }
 

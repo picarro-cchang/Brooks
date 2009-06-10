@@ -221,6 +221,42 @@
             <enum_value ident="STREAM_OutletValve" />
             <enum_value ident="STREAM_ValveMask" />
         </enum>
+        <enum type="LOGICPORT_CLOCK_PERIOD_Type">
+            <description>Logicport clock period</description>
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_20ns" value="0" caption="20 ns"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_40ns" value="1" caption="40 ns"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_80ns" value="2" caption="80 ns"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_160ns" value="3" caption="160 ns"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_320ns" value="4" caption="320 ns"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_640ns" value="5" caption="640 ns"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_1280ns" value="6" caption="1.28 us"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_2560ns" value="7" caption="2.56 us"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_5120ns" value="8" caption="5.12 us"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_10240ns" value="9" caption="10.24 us"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_20480ns" value="10" caption="20.48 us"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_40960ns" value="11" caption="40.96 us"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_81920ns" value="12" caption="81.92 us"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_163840ns" value="13" caption="163.8 us"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_327680ns" value="14" caption="327.7 us"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_655360ns" value="15" caption="655.4 us"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_1310720ns" value="16" caption="1.311 ms"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_2621440ns" value="17" caption="2.621 ms"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_5242880ns" value="18" caption="5.243 ms"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_10485760ns" value="19" caption="10.49 ms"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_20971520ns" value="20" caption="20.97 ms"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_41943040ns" value="21" caption="41.94 ms"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_83886080ns" value="22" caption="83.39 ms"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_167772160ns" value="23" caption="167.8 ms"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_335544320ns" value="24" caption="335.5 ms"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_671088640ns" value="25" caption="671.1 ms"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_1342177280ns" value="26" caption="1.342 s"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_2684354560ns" value="27" caption="2.684 s"  />
+            <enum_value ident="LOGICPORT_CLOCK_PERIOD_5368709120ns" value="28" caption="5.368 s"  />
+        </enum>
+        <enum type="LOGICPORT_SOURCE_Type">
+            <enum_value ident="LOGICPORT_SOURCE_RD_ADC" value="0" caption="Ringdown ADC"  />
+            <enum_value ident="LOGICPORT_SOURCE_TUNER"  value="1" caption="Tuner Value"  />
+        </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>
             <enum_value ident="TEMP_CNTRL_DisabledState" value="0" caption="Controller Disabled"  />
@@ -279,6 +315,16 @@
             <description>Scheduler control register</description>
             <initial>0</initial>
             <display format="%d" units="">Scheduler enable</display>
+        </register>
+        <register ident="LOGICPORT_CLOCK_PERIOD_REGISTER" type="LOGICPORT_CLOCK_PERIOD_Type" minver="1.0" access="rw">
+            <description>Logic port clock period</description>
+            <initial>LOGICPORT_CLOCK_PERIOD_20ns</initial>
+            <display>Logic port clock period</display>
+        </register>
+        <register ident="LOGICPORT_SOURCE_REGISTER" type="LOGICPORT_SOURCE_Type" minver="1.0" access="rw">
+            <description>Logic port source</description>
+            <initial>LOGICPORT_SOURCE_RD_ADC</initial>
+            <display>Logic port source</display>
         </register>
         <register ident="LOW_DURATION_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Duration of low level of pulse</description>
@@ -1264,6 +1310,43 @@
             <display format="%.0f">Heater manual mode mark</display>
         </register>
 
+        <register ident="TUNER_SWEEP_RAMP_HIGH_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Higher limit of tuner sweep in ramp mode.</description>
+            <initial>50000.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Ramp mode upper sweep limit</display>
+        </register>
+        <register ident="TUNER_SWEEP_RAMP_LOW_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Lower limit of tuner sweep in ramp mode.</description>
+            <initial>10000.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Ramp mode lower sweep limit</display>
+        </register>
+        <register ident="TUNER_WINDOW_RAMP_HIGH_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Higher limit of tuner window in ramp mode.</description>
+            <initial>48000.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Ramp mode upper window limit</display>
+        </register>
+        <register ident="TUNER_WINDOW_RAMP_LOW_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Lower limit of tuner window in ramp mode.</description>
+            <initial>12000.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Ramp mode lower window limit</display>
+        </register>
+        <register ident="TUNER_UP_SLOPE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Positive-going slope of tuner waveform.</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Tuner up slope</display>
+        </register>
+        <register ident="TUNER_DOWN_SLOPE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Negative-going slope of tuner waveform.</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Tuner down slope</display>
+        </register>
+
     </register_list>
     <fpga_block_list>
         <fpga_block ident="KERNEL" description="Kernel">
@@ -1369,51 +1452,54 @@
             <reg ident="NUM_SAMP" description="Number of samples to collect"/>
             <reg ident="THRESHOLD" description="Ringdown threshold"/>
         </fpga_block>
-        <fpga_block ident="RDMAN" description="Ringdown manager">
-            <reg ident="CONTROL" description="Control register">
-                <bitfield ident="RUN"           description="STOP/RUN"                     lsb="0" width="1" />
-                <bitfield ident="CONT"          description="SINGLE/CONTINUOUS"            lsb="1" width="1" />
-                <bitfield ident="START_RD"      description="Start ringdown cycle"         lsb="2" width="1" />
-                <bitfield ident="LOCK_ENABLE"   description="Enable laser locking"         lsb="3" width="1" />
-                <bitfield ident="UP_SLOPE_ENABLE"     description="Enable ringdown on positive slope" lsb="4" width="1" />
-                <bitfield ident="DOWN_SLOPE_ENABLE"   description="Enable ringdown on negative slope" lsb="5" width="1" />
-                <bitfield ident="BANK0_CLEAR"   description="Reset bank 0 in use"          lsb="6" width="1" />
-                <bitfield ident="BANK1_CLEAR"   description="Reset bank 1 in use"          lsb="7" width="1" />
-                <bitfield ident="LASER_LOCKED"  description="Laser wavelength locked"      lsb="8" width="1" />
-                <bitfield ident="LASER_LOCKER_DONE" description="Laser locker done (metadata strobe)" lsb="9" width="1" />
-                <bitfield ident="RD_IRQ_ACK"    description="Acknowledge ringdown irq"     lsb="10" width="1" />
-                <bitfield ident="ACQ_DONE_ACK"  description="Acknowledge acquisition irq"  lsb="11" width="1" />
+        <fpga_block ident="RDMAN" description="">
+            <reg ident="CONTROL" description="">
+                <bitfield ident="RUN" description="" lsb="0" width="1" />
+                <bitfield ident="CONT" description="" lsb="1" width="1" />
+                <bitfield ident="START_RD" description="" lsb="2" width="1" />
+                <bitfield ident="ABORT_RD" description="" lsb="3" width="1" />
+                <bitfield ident="LOCK_ENABLE" description="" lsb="4" width="1" />
+                <bitfield ident="UP_SLOPE_ENABLE" description="" lsb="5" width="1" />
+                <bitfield ident="DOWN_SLOPE_ENABLE" description="" lsb="6" width="1" />
+                <bitfield ident="BANK0_CLEAR" description="" lsb="7" width="1" />
+                <bitfield ident="BANK1_CLEAR" description="" lsb="8" width="1" />
+                <bitfield ident="LASER_LOCKED" description="" lsb="9" width="1" />
+                <bitfield ident="LASER_LOCKER_DONE" description="" lsb="10" width="1" />
+                <bitfield ident="RD_IRQ_ACK" description="" lsb="11" width="1" />
+                <bitfield ident="ACQ_DONE_ACK" description="" lsb="12" width="1" />
             </reg>
-            <reg ident="STATUS" description="Status register">
-                <bitfield ident="SHUTDOWN"      description="Injection shutdown"           lsb="0" width="1" />
-                <bitfield ident="RD_IRQ"        description="Ringdown interrupt"           lsb="1" width="1" />
-                <bitfield ident="ACQ_DONE"      description="Acquisition done interrupt"   lsb="2" width="1" />
-                <bitfield ident="BANK"          description="Bank for writes (ro)"         lsb="3" width="1" />
-                <bitfield ident="BANK0_IN_USE"  description="Bank 0 in use   (ro)"         lsb="4" width="1" />
-                <bitfield ident="BANK1_IN_USE"  description="Bank 1 in use   (ro)"         lsb="5" width="1" />
-                <bitfield ident="LAPPED"        description="Address counter wrapped"      lsb="6" width="1" />
-                <bitfield ident="TIMEOUT"       description="Ringdown timeout occured"     lsb="7" width="1" />        </reg>
-            <reg ident="TUNER" description="Tuner value"/>
-            <reg ident="DATA" description="Ringdown data"/>
-            <reg ident="PARAM0" description="Ringdown parameter 0"/>
-            <reg ident="PARAM1" description="Ringdown parameter 1"/>
-            <reg ident="PARAM2" description="Ringdown parameter 2"/>
-            <reg ident="PARAM3" description="Ringdown parameter 3"/>
-            <reg ident="PARAM4" description="Ringdown parameter 4"/>
-            <reg ident="PARAM5" description="Ringdown parameter 5"/>
-            <reg ident="PARAM6" description="Ringdown parameter 6"/>
-            <reg ident="PARAM7" description="Ringdown parameter 7"/>
-            <reg ident="DATA_ADDRCNTR" description="Address counter"/>
-            <reg ident="METADATA_ADDRCNTR" description="Metadata address counter"/>
-            <reg ident="PARAM_ADDRCNTR" description="Parameter address counter"/>
-            <reg ident="DIVISOR" description="Divisor for ringdown ADC clock"/>
-            <reg ident="NUM_SAMP" description="Number of samples to collect"/>
-            <reg ident="THRESHOLD" description="Ringdown threshold"/>
-            <reg ident="PRECONTROL_TIME" description="Precontrol time"/>
-            <reg ident="RINGDOWN_TIMEOUT" description="Ringdown timeout"/>
-            <reg ident="TUNER_AT_RINGDOWN" description="Tuner value at ringdown"/>
-            <reg ident="METADATA_ADDR_AT_RINGDOWN" description="Metadata address counter value at ringdown"/>
+            <reg ident="STATUS" description="">
+                <bitfield ident="SHUTDOWN" description="" lsb="0" width="1" />
+                <bitfield ident="RD_IRQ" description="" lsb="1" width="1" />
+                <bitfield ident="ACQ_DONE" description="" lsb="2" width="1" />
+                <bitfield ident="BANK" description="" lsb="3" width="1" />
+                <bitfield ident="BANK0_IN_USE" description="" lsb="4" width="1" />
+                <bitfield ident="BANK1_IN_USE" description="" lsb="5" width="1" />
+                <bitfield ident="LAPPED" description="" lsb="6" width="1" />
+                <bitfield ident="WL_LOCKED" description="" lsb="7" width="1" />
+                <bitfield ident="TIMEOUT" description="" lsb="8" width="1" />
+            </reg>
+            <reg ident="PARAM0" description="" />
+            <reg ident="PARAM1" description="" />
+            <reg ident="PARAM2" description="" />
+            <reg ident="PARAM3" description="" />
+            <reg ident="PARAM4" description="" />
+            <reg ident="PARAM5" description="" />
+            <reg ident="PARAM6" description="" />
+            <reg ident="PARAM7" description="" />
+            <reg ident="DATA_ADDRCNTR" description="" />
+            <reg ident="METADATA_ADDRCNTR" description="" />
+            <reg ident="PARAM_ADDRCNTR" description="" />
+            <reg ident="DIVISOR" description="" />
+            <reg ident="NUM_SAMP" description="" />
+            <reg ident="THRESHOLD" description="" />
+            <reg ident="LOCK_DURATION" description="" />
+            <reg ident="PRECONTROL_DURATION" description="" />
+            <reg ident="TIMEOUT_DURATION" description="" />
+            <reg ident="TUNER_AT_RINGDOWN" description="" />
+            <reg ident="METADATA_ADDR_AT_RINGDOWN" description="" />
         </fpga_block>
+
         <fpga_block ident="LASER_CURRENT_DAC" description="Laser current DAC">
             <reg ident="CS" description="Control/Status register">
                 <bitfield ident="RUN"           description="STOP/RUN"                     lsb="0" width="1" />
@@ -1548,6 +1634,8 @@
         <action ident="ACTION_TEMP_CNTRL_CAVITY_STEP">r_tempCntrlCavityStep</action>
         <action ident="ACTION_HEATER_CNTRL_INIT">r_heaterCntrlInit</action>
         <action ident="ACTION_HEATER_CNTRL_STEP">r_heaterCntrlStep</action>
+        <action ident="ACTION_TUNER_CNTRL_INIT">r_tunerCntrlInit</action>
+        <action ident="ACTION_TUNER_CNTRL_STEP">r_tunerCntrlStep</action>
         <action ident="ACTION_ENV_CHECKER">r_envChecker</action>
         <!-- Pulse generator:
         Inputs:

@@ -129,5 +129,7 @@
         <File>DSP\registerTest\tempCntrl.c</File>
         <File>DSP\registerTest\tempCntrl.h</File>
         <File>DSP\registerTest\timestamp.c</File>
+        <File>DSP\registerTest\tunerCntrl.c</File>
+        <File>DSP\registerTest\tunerCntrl.h</File>
     </Folder>
 </Project>

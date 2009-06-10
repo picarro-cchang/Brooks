@@ -30,6 +30,8 @@
         <gui_page>
             <title>System Configuration Parameters</title>
             <register>SCHEDULER_CONTROL_REGISTER</register>
+            <register>LOGICPORT_CLOCK_PERIOD_REGISTER</register>
+            <register>LOGICPORT_SOURCE_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Laser 1 Parameters</title>
@@ -170,6 +172,15 @@
             <register>HEATER_CNTRL_MARK_MIN_REGISTER</register>
             <register>HEATER_CNTRL_MARK_MAX_REGISTER</register>
             <register>HEATER_CNTRL_MANUAL_MARK_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Tuner Waveform Parameters</title>
+            <register>TUNER_SWEEP_RAMP_HIGH_REGISTER</register>
+            <register>TUNER_SWEEP_RAMP_LOW_REGISTER</register>
+            <register>TUNER_WINDOW_RAMP_HIGH_REGISTER</register>
+            <register>TUNER_WINDOW_RAMP_LOW_REGISTER</register>
+            <register>TUNER_UP_SLOPE_REGISTER</register>
+            <register>TUNER_DOWN_SLOPE_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Pulse Generator Parameters</title>

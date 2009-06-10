@@ -125,12 +125,14 @@ int writebackRegisters(unsigned int regNums[],unsigned int n)
 #endif
     return status;
 }
+
 int readRegister(unsigned int regNum, DataType *data)
 {
     if (regNum >= REG_REGION_SIZE) return ERROR_UNKNOWN_REGISTER;
     else data->asInt = *(int*)(REG_BASE+4*regNum);
     return STATUS_OK;
 }
+
 void *registerAddr(unsigned int regNum)
 /* Returns pointer to the specified register index for direct read-access by DSP.
    Pointer should be non-null, and cast to the appropriate type as required */

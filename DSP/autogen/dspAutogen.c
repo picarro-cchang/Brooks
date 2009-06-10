@@ -25,6 +25,10 @@ void initRegisters()
     writeRegister(VERIFY_INIT_REGISTER,d);
     d.asUint = 0;
     writeRegister(SCHEDULER_CONTROL_REGISTER,d);
+    d.asUint = LOGICPORT_CLOCK_PERIOD_20ns;
+    writeRegister(LOGICPORT_CLOCK_PERIOD_REGISTER,d);
+    d.asUint = LOGICPORT_SOURCE_RD_ADC;
+    writeRegister(LOGICPORT_SOURCE_REGISTER,d);
     d.asUint = 90;
     writeRegister(LOW_DURATION_REGISTER,d);
     d.asUint = 10;
@@ -341,6 +345,18 @@ void initRegisters()
     writeRegister(HEATER_CNTRL_MANUAL_MARK_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(HEATER_CNTRL_MARK_REGISTER,d);
+    d.asFloat = 50000.0;
+    writeRegister(TUNER_SWEEP_RAMP_HIGH_REGISTER,d);
+    d.asFloat = 10000.0;
+    writeRegister(TUNER_SWEEP_RAMP_LOW_REGISTER,d);
+    d.asFloat = 48000.0;
+    writeRegister(TUNER_WINDOW_RAMP_HIGH_REGISTER,d);
+    d.asFloat = 12000.0;
+    writeRegister(TUNER_WINDOW_RAMP_LOW_REGISTER,d);
+    d.asFloat = 40000.0;
+    writeRegister(TUNER_UP_SLOPE_REGISTER,d);
+    d.asFloat = 40000.0;
+    writeRegister(TUNER_DOWN_SLOPE_REGISTER,d);
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
@@ -398,6 +414,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_heaterCntrlInit(numInt,params,env);
         case ACTION_HEATER_CNTRL_STEP:
             return r_heaterCntrlStep(numInt,params,env);
+        case ACTION_TUNER_CNTRL_INIT:
+            return r_tunerCntrlInit(numInt,params,env);
+        case ACTION_TUNER_CNTRL_STEP:
+            return r_tunerCntrlStep(numInt,params,env);
         case ACTION_ENV_CHECKER:
             return r_envChecker(numInt,params,env);
         case ACTION_PULSE_GENERATOR:

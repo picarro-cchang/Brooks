@@ -157,6 +157,8 @@ class DasConfigure(object):
             Operation("ACTION_TEMP_CNTRL_LASER3_STEP"))
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_TEMP_CNTRL_LASER4_STEP"))
+        self.opGroups["FAST"]["CONTROLLER"].addOperation(
+            Operation("ACTION_TUNER_CNTRL_STEP"))
 
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_CURRENT_CNTRL_LASER1_STEP"))
@@ -231,6 +233,7 @@ class DasConfigure(object):
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER3_INIT"))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER4_INIT"))
         sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER1_INIT"))
+        sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
         sender.wrRegFloat("LASER1_RESISTANCE_REGISTER",10000.0)
         sender.wrRegFloat("LASER2_RESISTANCE_REGISTER",9000.0)
         sender.wrRegFloat("LASER3_RESISTANCE_REGISTER",8000.0)
