@@ -723,6 +723,45 @@
             <description>Laser2 TEC Current Monitor</description>
             <initial>0.0</initial>
         </register>
+        <register ident="LASER2_CURRENT_CNTRL_STATE_REGISTER" type="LASER_CURRENT_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Laser2 current control app state register</description>
+            <initial>LASER_CURRENT_CNTRL_DisabledState</initial>
+            <display>Current Controller Mode</display>
+        </register>
+        <register ident="LASER2_MANUAL_COARSE_CURRENT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Manual Coarse Current Setpoint</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual Coarse Current Setpoint</display>
+        </register>
+        <register ident="LASER2_MANUAL_FINE_CURRENT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Manual Fine Current Setpoint</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual Fine Current Setpoint</display>
+        </register>
+        <register ident="LASER2_CURRENT_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Current Sweep Minimum</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Current Sweep Minimum</display>
+        </register>
+        <register ident="LASER_CURRENT_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Current Sweep Maximum</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Current Sweep Maximum</display>
+        </register>
+        <register ident="LASER2_CURRENT_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Current Sweep Increment</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.1f" units="digU/sample">Current Sweep Increment</display>
+        </register>
+        <register ident="LASER2_CURRENT_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 Current Monitor</description>
+            <initial>0.0</initial>
+        </register>
         <register ident="CONVERSION_LASER3_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser3 thermistor constant A</description>
             <initial>0.00112789997365</initial>
@@ -890,6 +929,45 @@
         </register>
         <register ident="LASER3_TEC_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser3 TEC Current Monitor</description>
+            <initial>0.0</initial>
+        </register>
+        <register ident="LASER3_CURRENT_CNTRL_STATE_REGISTER" type="LASER_CURRENT_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Laser3 current control app state register</description>
+            <initial>LASER_CURRENT_CNTRL_DisabledState</initial>
+            <display>Current Controller Mode</display>
+        </register>
+        <register ident="LASER3_MANUAL_COARSE_CURRENT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Manual Coarse Current Setpoint</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual Coarse Current Setpoint</display>
+        </register>
+        <register ident="LASER3_MANUAL_FINE_CURRENT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Manual Fine Current Setpoint</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual Fine Current Setpoint</display>
+        </register>
+        <register ident="LASER3_CURRENT_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Current Sweep Minimum</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Current Sweep Minimum</display>
+        </register>
+        <register ident="LASER3_CURRENT_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Current Sweep Maximum</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Current Sweep Maximum</display>
+        </register>
+        <register ident="LASER3_CURRENT_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Current Sweep Increment</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.1f" units="digU/sample">Current Sweep Increment</display>
+        </register>
+        <register ident="LASER3_CURRENT_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 Current Monitor</description>
             <initial>0.0</initial>
         </register>
         <register ident="CONVERSION_LASER4_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
@@ -1061,7 +1139,45 @@
             <description>Laser4 TEC Current Monitor</description>
             <initial>0.0</initial>
         </register>
-
+        <register ident="LASER4_CURRENT_CNTRL_STATE_REGISTER" type="LASER_CURRENT_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Laser4 current control app state register</description>
+            <initial>LASER_CURRENT_CNTRL_DisabledState</initial>
+            <display>Current Controller Mode</display>
+        </register>
+        <register ident="LASER4_MANUAL_COARSE_CURRENT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Manual Coarse Current Setpoint</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual Coarse Current Setpoint</display>
+        </register>
+        <register ident="LASER4_MANUAL_FINE_CURRENT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Manual Fine Current Setpoint</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual Fine Current Setpoint</display>
+        </register>
+        <register ident="LASER4_CURRENT_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Current Sweep Minimum</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Current Sweep Minimum</display>
+        </register>
+        <register ident="LASER4_CURRENT_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Current Sweep Maximum</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Current Sweep Maximum</display>
+        </register>
+        <register ident="LASER4_CURRENT_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Current Sweep Increment</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.1f" units="digU/sample">Current Sweep Increment</display>
+        </register>
+        <register ident="LASER4_CURRENT_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 Current Monitor</description>
+            <initial>0.0</initial>
+        </register>
         <register ident="CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Hot box heatsink thermistor constant A</description>
             <initial>0.000847030023579</initial>
@@ -1661,5 +1777,7 @@
         <action ident="ACTION_DS1631_READTEMP">r_ds1631_readTemp</action>
         <action ident="ACTION_LASER_TEC_IMON">r_laser_tec_imon</action>
         <action ident="ACTION_READ_LASER_TEC_MONITORS">r_read_laser_tec_monitors</action>
+        <action ident="ACTION_READ_LASER_THERMISTOR_RESISTANCE">r_read_laser_thermistor_resistance</action>
+        <action ident="ACTION_READ_LASER_CURRENT">r_read_laser_current</action>
     </action_list>
 </Das_Interface>

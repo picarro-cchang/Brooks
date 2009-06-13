@@ -48,7 +48,7 @@ GPIO_Handle hGpio;
 void GPIO_init()
 {
     // Reset GPIO to default. Pass through.
- 	  hGpio = GPIO_open(GPIO_DEV0, GPIO_OPEN_RESET);
+    hGpio = GPIO_open(GPIO_DEV0, GPIO_OPEN_RESET);
 
     // Set Pin Direction
     GPIO_pinDirection(hGpio,GPIO_PIN4,GPIO_INPUT);
@@ -73,13 +73,13 @@ void configDsp()
     CACHE_enableCaching(CACHE_CE00);
     CACHE_setL2Mode(CACHE_64KCACHE);
     CHIP_configArgs(
-       CHIP_DEVCFG_RMK(
-          CHIP_DEVCFG_EKSRC_SYSCLK3,     // SYSCLK3 (90MHz) is the EMIF clock source
-          CHIP_DEVCFG_TOUT1SEL_TOUT1PIN, // TOUT1SEL
-          CHIP_DEVCFG_TOUT0SEL_TOUT0PIN, // TOUT0SEL
-          CHIP_DEVCFG_MCBSP0DIS_1,       // MCBSP0 disabled
-          CHIP_DEVCFG_MCBSP1DIS_1        // MCBSP1 disabled
-    ));
+        CHIP_DEVCFG_RMK(
+            CHIP_DEVCFG_EKSRC_SYSCLK3,     // SYSCLK3 (90MHz) is the EMIF clock source
+            CHIP_DEVCFG_TOUT1SEL_TOUT1PIN, // TOUT1SEL
+            CHIP_DEVCFG_TOUT0SEL_TOUT0PIN, // TOUT0SEL
+            CHIP_DEVCFG_MCBSP0DIS_1,       // MCBSP0 disabled
+            CHIP_DEVCFG_MCBSP1DIS_1        // MCBSP1 disabled
+        ));
     GPIO_init();
     IRQ_resetAll();
     IRQ_globalRestore(gie);

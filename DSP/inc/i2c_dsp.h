@@ -30,5 +30,7 @@ int getI2C0Mux();
 void setI2C1Mux(int channel);
 int fetchI2C1Mux();
 int getI2C1Mux();
+int getI2CMode(I2C_Handle hI2c);
+int getI2CStatus(I2C_Handle hI2c);
 
 #endif

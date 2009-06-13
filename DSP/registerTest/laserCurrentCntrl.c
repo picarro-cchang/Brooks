@@ -16,6 +16,8 @@
 #include "interface.h"
 #include "registers.h"
 #include "laserCurrentCntrl.h"
+#include "i2c_dsp.h"
+#include "ltc2451.h"
 #include "dspAutogen.h"
 #include "fpga.h"
 #include <math.h>
@@ -93,8 +95,8 @@ int currentCntrlLaser1Init(void)
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
-    c->fpga_coarse = FPGA_LASER1_CURRENT_DAC + LASER_CURRENT_DAC_COARSE_CURRENT;
-    c->fpga_fine   = FPGA_LASER1_CURRENT_DAC + LASER_CURRENT_DAC_FINE_CURRENT;
+    c->fpga_coarse = FPGA_INJECT + INJECT_LASER1_COARSE_CURRENT;
+    c->fpga_fine   = FPGA_INJECT + INJECT_LASER1_FINE_CURRENT;
     return STATUS_OK;
 }
 
@@ -104,4 +106,16 @@ int currentCntrlLaser1Step(void)
     *(float *)registerAddr(LASER1_CURRENT_MONITOR_REGISTER) =
         currentCntrlLaser1.coarse;
     return status;
+}
+
+int read_laser_current_adc(int laserNum)
+// Read laser current ADC for specified laser. laserNum is in the range 1-4
+{
+    unsigned int chan[5] = {0,0,1,2,3};
+    int result, loops;
+
+    setI2C0Mux(chan[laserNum]);
+    for (loops=0;loops<1000;loops++);
+    result = ltc2451_read();
+    return result;
 }

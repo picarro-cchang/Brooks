@@ -18,7 +18,10 @@
 #include "pid.h"
 #include "tempCntrl.h"
 #include "dspAutogen.h"
+#include "i2c_dsp.h"
 #include "ltc2499.h"
+#include "ltc2485.h"
+#include "pca9547.h"
 #include <math.h>
 
 int resistanceToTemperature(float resistance,float constA,float constB,
@@ -27,16 +30,19 @@ int resistanceToTemperature(float resistance,float constA,float constB,
 {
     float lnResistance;
     float temp;
-    if (resistance > 1.0 && resistance < 5.0e6) {
+    if (resistance > 1.0 && resistance < 5.0e6)
+    {
         lnResistance = log(resistance);
         temp = 1/(constA + (constB * lnResistance) +
-            (constC * lnResistance * lnResistance * lnResistance));
+                  (constC * lnResistance * lnResistance * lnResistance));
         *result = temp - 273.15;
         return STATUS_OK;
     }
-    else {
+    else
+    {
         message_puts("Bad resistance in resistanceToTemperature");
-        return ERROR_BAD_VALUE;
+        *result = 0.0;
+        return STATUS_OK;
     }
 }
 
@@ -484,7 +490,8 @@ int read_laser_tec_imon(int desired, int next, float *result)
         prevChan = next;
         return STATUS_OK;
     }
-    else {
+    else
+    {
         ltc2499_getData(&flags);
         prevChan = next;
         return ERROR_UNAVAILABLE;
@@ -494,41 +501,56 @@ int read_laser_tec_imon(int desired, int next, float *result)
 int read_laser_tec_monitors()
 // Cycle around the laser TEC current monitors placing results into registers
 {
-    unsigned int regList[] = {
-                              LASER_TEC_MONITOR_TEMPERATURE_REGISTER,
-                              LASER1_TEC_MONITOR_REGISTER,
-                              LASER2_TEC_MONITOR_REGISTER,
-                              LASER3_TEC_MONITOR_REGISTER,
-                              LASER4_TEC_MONITOR_REGISTER,
-                             };
+    unsigned int regList[] =
+    {
+        LASER_TEC_MONITOR_TEMPERATURE_REGISTER,
+        LASER1_TEC_MONITOR_REGISTER,
+        LASER2_TEC_MONITOR_REGISTER,
+        LASER3_TEC_MONITOR_REGISTER,
+        LASER4_TEC_MONITOR_REGISTER,
+    };
     static int chan = 0;
     switch (chan)
     {
-      case 0:
-          read_laser_tec_imon(0,1,(float *)registerAddr(LASER_TEC_MONITOR_TEMPERATURE_REGISTER));
-          chan = 1;
-          break;
-      case 1:
-          read_laser_tec_imon(1,2,(float *)registerAddr(LASER3_TEC_MONITOR_REGISTER));
-          chan = 2;
-          break;
-      case 2:
-          read_laser_tec_imon(2,3,(float *)registerAddr(LASER1_TEC_MONITOR_REGISTER));
-          chan = 3;
-          break;
-      case 3:
-          read_laser_tec_imon(3,4,(float *)registerAddr(LASER2_TEC_MONITOR_REGISTER));
-          chan = 4;
-          break;
-      case 4:
-          read_laser_tec_imon(4,0,(float *)registerAddr(LASER4_TEC_MONITOR_REGISTER));
-          chan = 0;
-          break;
-      default:
-          break;
+    case 0:
+        read_laser_tec_imon(0,1,(float *)registerAddr(LASER_TEC_MONITOR_TEMPERATURE_REGISTER));
+        chan = 1;
+        break;
+    case 1:
+        read_laser_tec_imon(1,2,(float *)registerAddr(LASER3_TEC_MONITOR_REGISTER));
+        chan = 2;
+        break;
+    case 2:
+        read_laser_tec_imon(2,3,(float *)registerAddr(LASER1_TEC_MONITOR_REGISTER));
+        chan = 3;
+        break;
+    case 3:
+        read_laser_tec_imon(3,4,(float *)registerAddr(LASER2_TEC_MONITOR_REGISTER));
+        chan = 4;
+        break;
+    case 4:
+        read_laser_tec_imon(4,0,(float *)registerAddr(LASER4_TEC_MONITOR_REGISTER));
+        chan = 0;
+        break;
+    default:
+        break;
     }
     writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
     return STATUS_OK;
+}
+
+int read_laser_thermistor_adc(int laserNum)
+// Read thermistor ADC for specified laser. laserNum is in the range 1-4
+{
+    unsigned int chan[5] = {0,0,1,2,3};
+    int flags, result, loops;
+
+    setI2C0Mux(chan[laserNum]);
+    for (loops=0;loops<1000;loops++);
+    result = ltc2485_getData(&flags);
+    if (flags == 0) result = -16777216;
+    else if (flags == 3) result = 16777215;
+    return result;
 }
 
 int tempCntrlCavityInit(void)
@@ -591,4 +613,3 @@ int tempCntrlCavityStep(void)
     writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
     return status;
 }
-

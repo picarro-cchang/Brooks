@@ -281,7 +281,8 @@ class Driver(SharedTypes.Singleton):
                     daemon = self.rpcHandler.server.daemon
                     Log("DAS firmware uploaded",Level=1)
                 except:
-                    Log("Cannot connect to instrument - please check hardware",Level=3)
+                    # type,value,trace = sys.exc_info()
+                    Log("Cannot connect to instrument - please check hardware",Verbose=traceback.format_exc(),Level=3)
                     break
                 # Here follows the main loop. If an exception occurs
                 #  in this loop, we try reloading the firmware
@@ -292,7 +293,7 @@ class Driver(SharedTypes.Singleton):
                             self.streamCast.send(StringPickler.ObjAsString(data))
                             self.streamSaver._writeData(data)
                         for ts,msg in self.dasInterface.getMessages():
-                            Log("%s %s" % (ts,msg))
+                            Log("%s" % (msg,))
                         now = time.time()
                         # Periodically save the state of the DAS
                         if now > self.lastSaveDasState + 30.0:

@@ -44,10 +44,11 @@ void schedulerPrdFunc(void)
 
 void scheduler(void)
 {
-		while (1) {
+    while (1)
+    {
         writeRegister(11,prd_count);
         prd_count++;
-		    SEM_pend(&SEM_scheduler,SYS_FOREVER);
+        SEM_pend(&SEM_scheduler,SYS_FOREVER);
     }
 }
 

@@ -99,10 +99,14 @@
         <File>DSP\inc\ds1631.h</File>
         <File>DSP\common\i2c_dsp.c</File>
         <File>DSP\inc\i2c_dsp.h</File>
+        <File>DSP\common\ltc2485.c</File>
+        <File>DSP\inc\ltc2485.h</File>
         <File>DSP\common\ltc2499.c</File>
         <File>DSP\inc\ltc2499.h</File>
         <File>DSP\common\pcf8563.c</File>
         <File>DSP\inc\pcf8563.h</File>
+        <File>DSP\common\registers.c</File>
+        <File>DSP\inc\registers.h</File>
     </Folder>
     <Folder name="Header Files" sorted="Yes" />
     <Folder name="registerTest" sorted="Yes">
@@ -118,8 +122,6 @@
         <File>DSP\registerTest\misc.h</File>
         <File>DSP\registerTest\pid.c</File>
         <File>DSP\registerTest\pid.h</File>
-        <File>DSP\registerTest\registers.c</File>
-        <File>DSP\registerTest\registers.h</File>
         <File>DSP\registerTest\registerTest.c</File>
         <File>DSP\registerTest\registerTest.h</File>
         <File>DSP\registerTest\registerTestSim.c</File>

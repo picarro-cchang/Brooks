@@ -42,4 +42,6 @@ int currentCntrlLaser3Step(void);
 int currentCntrlLaser4Init(void);
 int currentCntrlLaser4Step(void);
 
+int read_laser_current_adc(int laserNum);
+
 #endif /* _LASER_CURRENT_CNTRL_H_ */

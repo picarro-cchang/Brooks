@@ -13,16 +13,17 @@
 #include <sts.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-extern far HST_Obj RTA_fromHost;
-extern far HST_Obj RTA_toHost;
-extern far SWI_Obj KNL_swi;
-extern far TSK_Obj TSK_idle;
-extern far LOG_Obj LOG_system;
-extern far LOG_Obj trace;
-extern far STS_Obj IDL_busyObj;
+    extern far HST_Obj RTA_fromHost;
+    extern far HST_Obj RTA_toHost;
+    extern far SWI_Obj KNL_swi;
+    extern far TSK_Obj TSK_idle;
+    extern far LOG_Obj LOG_system;
+    extern far LOG_Obj trace;
+    extern far STS_Obj IDL_busyObj;
 
 
 #ifdef __cplusplus

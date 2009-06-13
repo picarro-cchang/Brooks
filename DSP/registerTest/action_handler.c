@@ -28,7 +28,9 @@
 #include "laserCurrentCntrl.h"
 #include "heaterCntrl.h"
 #include "tunerCntrl.h"
+#include "i2c_dsp.h"
 #include "ds1631.h"
+#include "ltc2451.h"
 #include "ltc2499.h"
 #include "fpga.h"
 
@@ -475,5 +477,28 @@ int r_read_laser_tec_monitors(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     read_laser_tec_monitors();
+    return STATUS_OK;
+}
+
+int r_read_laser_thermistor_resistance(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    float result;
+    float Vfrac, Rseries = 30000.0;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    result = read_laser_thermistor_adc(reg[0]);
+    Vfrac = result/33554432.0;
+    if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
+    WRITE_REG(reg[1],asFloat,(Rseries*Vfrac)/(1.0-Vfrac));
+    return STATUS_OK;
+}
+
+int r_read_laser_current(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    float result;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    result = read_laser_current_adc(reg[0]);
+    WRITE_REG(reg[1],asFloat,result);
     return STATUS_OK;
 }

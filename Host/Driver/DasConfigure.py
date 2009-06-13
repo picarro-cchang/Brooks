@@ -61,8 +61,19 @@ class DasConfigure(object):
                     priority=schedulerPriorities[opType],
                     period=schedulerPeriods[rate])
 
+#        self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+#            Operation("ACTION_READ_LASER_TEC_MONITORS"))
+
+#        self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+#            Operation("ACTION_READ_LASER_THERMISTOR_RESISTANCE",
+#                      [2,"LASER2_RESISTANCE_REGISTER"]))
+
         self.opGroups["FAST"]["SENSOR_READ"].addOperation(
-            Operation("ACTION_READ_LASER_TEC_MONITORS"))
+            Operation("ACTION_READ_LASER_THERMISTOR_RESISTANCE",
+                      [3,"LASER3_RESISTANCE_REGISTER"]))
+        self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+             Operation("ACTION_READ_LASER_CURRENT",
+                 [3,"LASER3_CURRENT_MONITOR_REGISTER"]))
 
 #         self.opGroups["FAST"]["SENSOR_READ"].addOperation(
 #             Operation("ACTION_PULSE_GENERATOR",
@@ -87,22 +98,23 @@ class DasConfigure(object):
 #                 "CONVERSION_LASER1_THERM_CONSTC_REGISTER",
 #                 "LASER1_TEMPERATURE_REGISTER"]))
 
+#         self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+#             Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+#                 ["LASER2_RESISTANCE_REGISTER",
+#                  "CONVERSION_LASER2_THERM_CONSTA_REGISTER",
+#                  "CONVERSION_LASER2_THERM_CONSTB_REGISTER",
+#                  "CONVERSION_LASER2_THERM_CONSTC_REGISTER",
+#                  "LASER2_TEMPERATURE_REGISTER"]))
+#
         self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
-            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                ["LASER2_RESISTANCE_REGISTER",
-                 "CONVERSION_LASER2_THERM_CONSTA_REGISTER",
-                 "CONVERSION_LASER2_THERM_CONSTB_REGISTER",
-                 "CONVERSION_LASER2_THERM_CONSTC_REGISTER",
-                 "LASER2_TEMPERATURE_REGISTER"]))
+             Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                 ["LASER3_RESISTANCE_REGISTER",
+                  "CONVERSION_LASER3_THERM_CONSTA_REGISTER",
+                  "CONVERSION_LASER3_THERM_CONSTB_REGISTER",
+                  "CONVERSION_LASER3_THERM_CONSTC_REGISTER",
+                  "LASER3_TEMPERATURE_REGISTER"]))
 
-        self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
-            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                ["LASER3_RESISTANCE_REGISTER",
-                 "CONVERSION_LASER3_THERM_CONSTA_REGISTER",
-                 "CONVERSION_LASER3_THERM_CONSTB_REGISTER",
-                 "CONVERSION_LASER3_THERM_CONSTC_REGISTER",
-                 "LASER3_TEMPERATURE_REGISTER"]))
-
+          
         #self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
         #    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
         #        ["LASER4_RESISTANCE_REGISTER",
