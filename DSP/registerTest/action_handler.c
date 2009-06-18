@@ -318,6 +318,61 @@ int r_currentCntrlLaser1Step(unsigned int numInt,void *params,void *env)
 #ifdef SIMULATION
 #pragma argsused
 #endif
+int r_currentCntrlLaser2Init(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return currentCntrlLaser2Init();
+}
+#ifdef SIMULATION
+#pragma argsused
+#endif
+int r_currentCntrlLaser2Step(unsigned int numInt,void *params,void *env)
+{
+    int status;
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    status = currentCntrlLaser2Step();
+    return status;
+}
+#ifdef SIMULATION
+#pragma argsused
+#endif
+int r_currentCntrlLaser3Init(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return currentCntrlLaser3Init();
+}
+#ifdef SIMULATION
+#pragma argsused
+#endif
+int r_currentCntrlLaser3Step(unsigned int numInt,void *params,void *env)
+{
+    int status;
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    status = currentCntrlLaser3Step();
+    return status;
+}
+#ifdef SIMULATION
+#pragma argsused
+#endif
+int r_currentCntrlLaser4Init(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return currentCntrlLaser4Init();
+}
+#ifdef SIMULATION
+#pragma argsused
+#endif
+int r_currentCntrlLaser4Step(unsigned int numInt,void *params,void *env)
+{
+    int status;
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    status = currentCntrlLaser4Step();
+    return status;
+}
+
+#ifdef SIMULATION
+#pragma argsused
+#endif
 int r_tempCntrlCavityInit(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;

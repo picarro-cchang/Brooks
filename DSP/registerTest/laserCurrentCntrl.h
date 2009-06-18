@@ -26,12 +26,16 @@ typedef struct LASER_CURRENT_CNTRL
     float *swpMax_;   // Maximum sweep value
     float *swpInc_;   // Sweep increment
     // FPGA register indices
+    unsigned int fpga_control;
     unsigned int fpga_coarse;
     unsigned int fpga_fine;
     // Local variables for controller
+    unsigned int laserNum; // Laser number (1-origin)
     float coarse;
     int swpDir;
 } LaserCurrentCntrl;
+
+int laserCurrentCntrlStep(LaserCurrentCntrl *c);
 
 int currentCntrlLaser1Init(void);
 int currentCntrlLaser1Step(void);

@@ -71,9 +71,9 @@ class DasConfigure(object):
         self.opGroups["FAST"]["SENSOR_READ"].addOperation(
             Operation("ACTION_READ_LASER_THERMISTOR_RESISTANCE",
                       [3,"LASER3_RESISTANCE_REGISTER"]))
-        self.opGroups["FAST"]["SENSOR_READ"].addOperation(
-             Operation("ACTION_READ_LASER_CURRENT",
-                 [3,"LASER3_CURRENT_MONITOR_REGISTER"]))
+#        self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+#             Operation("ACTION_READ_LASER_CURRENT",
+#                 [3,"LAER3_CURRENT_MONITOR_REGISTER"]))
 
 #         self.opGroups["FAST"]["SENSOR_READ"].addOperation(
 #             Operation("ACTION_PULSE_GENERATOR",
@@ -114,7 +114,7 @@ class DasConfigure(object):
                   "CONVERSION_LASER3_THERM_CONSTC_REGISTER",
                   "LASER3_TEMPERATURE_REGISTER"]))
 
-          
+
         #self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
         #    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
         #        ["LASER4_RESISTANCE_REGISTER",
@@ -174,6 +174,12 @@ class DasConfigure(object):
 
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_CURRENT_CNTRL_LASER1_STEP"))
+        self.opGroups["FAST"]["CONTROLLER"].addOperation(
+            Operation("ACTION_CURRENT_CNTRL_LASER2_STEP"))
+        self.opGroups["FAST"]["CONTROLLER"].addOperation(
+            Operation("ACTION_CURRENT_CNTRL_LASER3_STEP"))
+        self.opGroups["FAST"]["CONTROLLER"].addOperation(
+            Operation("ACTION_CURRENT_CNTRL_LASER4_STEP"))
 
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_REGISTER",
@@ -203,16 +209,15 @@ class DasConfigure(object):
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_REGISTER",
                 ["STREAM_Laser1Current","LASER1_CURRENT_MONITOR_REGISTER"]))
-#         self.opGroups["FAST"]["STREAMER"].addOperation(
-#             Operation("ACTION_STREAM_REGISTER",
-#                 ["STREAM_Laser2Current","LASER2_CURRENT_MONITOR_REGISTER"]))
-#         self.opGroups["FAST"]["STREAMER"].addOperation(
-#             Operation("ACTION_STREAM_REGISTER",
-#                 ["STREAM_Laser3Current","LASER3_CURRENT_MONITOR_REGISTER"]))
-#         self.opGroups["FAST"]["STREAMER"].addOperation(
-#             Operation("ACTION_STREAM_REGISTER",
-#                 ["STREAM_Laser4Current","LASER4_CURRENT_MONITOR_REGISTER"]))
-
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER",
+                ["STREAM_Laser2Current","LASER2_CURRENT_MONITOR_REGISTER"]))
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER",
+                ["STREAM_Laser3Current","LASER3_CURRENT_MONITOR_REGISTER"]))
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER",
+                ["STREAM_Laser4Current","LASER4_CURRENT_MONITOR_REGISTER"]))
 
         self.opGroups["SLOW"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_REGISTER",
@@ -245,6 +250,9 @@ class DasConfigure(object):
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER3_INIT"))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER4_INIT"))
         sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER1_INIT"))
+        sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER2_INIT"))
+        sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER3_INIT"))
+        sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER4_INIT"))
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
         sender.wrRegFloat("LASER1_RESISTANCE_REGISTER",10000.0)
         sender.wrRegFloat("LASER2_RESISTANCE_REGISTER",9000.0)

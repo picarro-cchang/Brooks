@@ -269,7 +269,7 @@
         <enum type="LASER_CURRENT_CNTRL_StateType">
             <description>State of laser current controller</description>
             <enum_value ident="LASER_CURRENT_CNTRL_DisabledState" value="0" caption="Controller Disabled"  />
-            <enum_value ident="LASER_CURRENT_CNTRL_EnabledState" value="1" caption="Controller Enabled" />
+            <enum_value ident="LASER_CURRENT_CNTRL_AutomaticState" value="1" caption="Automatic Control" />
             <enum_value ident="LASER_CURRENT_CNTRL_SweepingState" value="2" caption="Continuous Sweeping" />
             <enum_value ident="LASER_CURRENT_CNTRL_ManualState" value="3" caption="Manual Control" />
         </enum>
@@ -513,7 +513,6 @@
             <description>Laser1 TEC Current Monitor</description>
             <initial>0.0</initial>
         </register>
-
         <register ident="LASER1_CURRENT_CNTRL_STATE_REGISTER" type="LASER_CURRENT_CNTRL_StateType" minver="1.0" access="rw">
             <description>Laser1 current control app state register</description>
             <initial>LASER_CURRENT_CNTRL_DisabledState</initial>
@@ -553,7 +552,6 @@
             <description>Laser1 Current Monitor</description>
             <initial>0.0</initial>
         </register>
-
         <register ident="CONVERSION_LASER2_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser2  thermistor constant A</description>
             <initial>0.00112789997365</initial>
@@ -746,7 +744,7 @@
             <save/>
             <display format="%.0f" units="digU">Current Sweep Minimum</display>
         </register>
-        <register ident="LASER_CURRENT_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="LASER2_CURRENT_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser2 Current Sweep Maximum</description>
             <initial>0.0</initial>
             <save/>
@@ -1618,8 +1616,8 @@
 
         <fpga_block ident="LASER_CURRENT_DAC" description="Laser current DAC">
             <reg ident="CS" description="Control/Status register">
-                <bitfield ident="RUN"           description="STOP/RUN"                     lsb="0" width="1" />
-                <bitfield ident="CONT"          description="SINGLE/CONTINUOUS"            lsb="1" width="1" />
+                <bitfield ident="RUN" description="STOP/RUN" lsb="0" width="1" />
+                <bitfield ident="CONT" description="SINGLE/CONTINUOUS" lsb="1" width="1" />
             </reg>
             <reg ident="COARSE_CURRENT" description="Coarse current DAC"/>
             <reg ident="FINE_CURRENT" description="Fine current DAC"/>
@@ -1646,11 +1644,11 @@
             <reg ident="CONTROL" description="Control register">
                 <bitfield ident="MODE"   description="Manual/Automatic mode"  lsb="0" width="1" />
                 <bitfield ident="LASER_SELECT"   description="Select laser" lsb="1" width="2" />
-                <bitfield ident="LASER_CURRENT_ENABLE"  description="Laser current enable" lsb="3" width="4" />
-                <bitfield ident="MANUAL_LASER_ENABLE"   description="Deasserts short across laser in manual mode"  lsb="7" width="4" />
-                <bitfield ident="MANUAL_SOA_ENABLE"   description="Deasserts short across SOA in manual mode"  lsb="11" width="1" />
-                <bitfield ident="LASER_SHUTDOWN_ENABLE"   description="Enables laser shutdown"  lsb="12" width="1" />
-                <bitfield ident="SOA_SHUTDOWN_ENABLE"   description="Enables SOA shutdown"  lsb="13" width="1" />
+                <bitfield ident="LASER_CURRENT_ENABLE" description="Laser current enable" lsb="3" width="4" />
+                <bitfield ident="MANUAL_LASER_ENABLE" description="Deasserts short across laser in manual mode"  lsb="7" width="4" />
+                <bitfield ident="MANUAL_SOA_ENABLE" description="Deasserts short across SOA in manual mode"  lsb="11" width="1" />
+                <bitfield ident="LASER_SHUTDOWN_ENABLE" description="Enables laser shutdown"  lsb="12" width="1" />
+                <bitfield ident="SOA_SHUTDOWN_ENABLE" description="Enables SOA shutdown"  lsb="13" width="1" />
             </reg>
             <reg ident="LASER1_COARSE_CURRENT" description="Sets coarse current for laser 1"/>
             <reg ident="LASER2_COARSE_CURRENT" description="Sets coarse current for laser 2"/>
@@ -1746,6 +1744,12 @@
         <action ident="ACTION_INT_TO_FPGA">r_intToFpga</action>
         <action ident="ACTION_CURRENT_CNTRL_LASER1_INIT">r_currentCntrlLaser1Init</action>
         <action ident="ACTION_CURRENT_CNTRL_LASER1_STEP">r_currentCntrlLaser1Step</action>
+        <action ident="ACTION_CURRENT_CNTRL_LASER2_INIT">r_currentCntrlLaser2Init</action>
+        <action ident="ACTION_CURRENT_CNTRL_LASER2_STEP">r_currentCntrlLaser2Step</action>
+        <action ident="ACTION_CURRENT_CNTRL_LASER3_INIT">r_currentCntrlLaser3Init</action>
+        <action ident="ACTION_CURRENT_CNTRL_LASER3_STEP">r_currentCntrlLaser3Step</action>
+        <action ident="ACTION_CURRENT_CNTRL_LASER4_INIT">r_currentCntrlLaser4Init</action>
+        <action ident="ACTION_CURRENT_CNTRL_LASER4_STEP">r_currentCntrlLaser4Step</action>
         <action ident="ACTION_TEMP_CNTRL_CAVITY_INIT">r_tempCntrlCavityInit</action>
         <action ident="ACTION_TEMP_CNTRL_CAVITY_STEP">r_tempCntrlCavityStep</action>
         <action ident="ACTION_HEATER_CNTRL_INIT">r_heaterCntrlInit</action>

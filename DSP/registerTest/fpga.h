@@ -18,5 +18,11 @@
 
 void writeFPGA(unsigned int regNum, unsigned int value);
 unsigned int readFPGA(unsigned int regNum);
+void changeInMaskFPGA(unsigned int regNum, unsigned int mask,
+                      unsigned int value);
+void changeBitsFPGA(unsigned int regNum, unsigned int lsb,
+                    unsigned int width, unsigned int value);
+unsigned int readBitsFPGA(unsigned int regNum, unsigned int lsb,
+                  unsigned int width);
 
 #endif /* _FPGA_H_ */

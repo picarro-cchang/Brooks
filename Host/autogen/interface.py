@@ -392,14 +392,14 @@ TEMP_CNTRL_StateTypeDict[5] = 'TEMP_CNTRL_ManualState' # Manual Control
 # Enumerated definitions for LASER_CURRENT_CNTRL_StateType
 LASER_CURRENT_CNTRL_StateType = c_uint
 LASER_CURRENT_CNTRL_DisabledState = 0 # Controller Disabled
-LASER_CURRENT_CNTRL_EnabledState = 1 # Controller Enabled
+LASER_CURRENT_CNTRL_AutomaticState = 1 # Automatic Control
 LASER_CURRENT_CNTRL_SweepingState = 2 # Continuous Sweeping
 LASER_CURRENT_CNTRL_ManualState = 3 # Manual Control
 
 # Dictionary for enumerated constants in LASER_CURRENT_CNTRL_StateType
 LASER_CURRENT_CNTRL_StateTypeDict = {}
 LASER_CURRENT_CNTRL_StateTypeDict[0] = 'LASER_CURRENT_CNTRL_DisabledState' # Controller Disabled
-LASER_CURRENT_CNTRL_StateTypeDict[1] = 'LASER_CURRENT_CNTRL_EnabledState' # Controller Enabled
+LASER_CURRENT_CNTRL_StateTypeDict[1] = 'LASER_CURRENT_CNTRL_AutomaticState' # Automatic Control
 LASER_CURRENT_CNTRL_StateTypeDict[2] = 'LASER_CURRENT_CNTRL_SweepingState' # Continuous Sweeping
 LASER_CURRENT_CNTRL_StateTypeDict[3] = 'LASER_CURRENT_CNTRL_ManualState' # Manual Control
 
@@ -515,7 +515,7 @@ LASER2_CURRENT_CNTRL_STATE_REGISTER = 83
 LASER2_MANUAL_COARSE_CURRENT_REGISTER = 84
 LASER2_MANUAL_FINE_CURRENT_REGISTER = 85
 LASER2_CURRENT_SWEEP_MIN_REGISTER = 86
-LASER_CURRENT_SWEEP_MAX_REGISTER = 87
+LASER2_CURRENT_SWEEP_MAX_REGISTER = 87
 LASER2_CURRENT_SWEEP_INCR_REGISTER = 88
 LASER2_CURRENT_MONITOR_REGISTER = 89
 CONVERSION_LASER3_THERM_CONSTA_REGISTER = 90
@@ -827,8 +827,8 @@ registerByName["LASER2_MANUAL_FINE_CURRENT_REGISTER"] = LASER2_MANUAL_FINE_CURRE
 registerInfo.append(RegInfo("LASER2_MANUAL_FINE_CURRENT_REGISTER",c_float,1,1.0,"rw"))
 registerByName["LASER2_CURRENT_SWEEP_MIN_REGISTER"] = LASER2_CURRENT_SWEEP_MIN_REGISTER
 registerInfo.append(RegInfo("LASER2_CURRENT_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
-registerByName["LASER_CURRENT_SWEEP_MAX_REGISTER"] = LASER_CURRENT_SWEEP_MAX_REGISTER
-registerInfo.append(RegInfo("LASER_CURRENT_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerByName["LASER2_CURRENT_SWEEP_MAX_REGISTER"] = LASER2_CURRENT_SWEEP_MAX_REGISTER
+registerInfo.append(RegInfo("LASER2_CURRENT_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
 registerByName["LASER2_CURRENT_SWEEP_INCR_REGISTER"] = LASER2_CURRENT_SWEEP_INCR_REGISTER
 registerInfo.append(RegInfo("LASER2_CURRENT_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
 registerByName["LASER2_CURRENT_MONITOR_REGISTER"] = LASER2_CURRENT_MONITOR_REGISTER
@@ -1416,20 +1416,26 @@ ACTION_FPGA_TO_FLOAT_REGISTER = 19
 ACTION_INT_TO_FPGA = 20
 ACTION_CURRENT_CNTRL_LASER1_INIT = 21
 ACTION_CURRENT_CNTRL_LASER1_STEP = 22
-ACTION_TEMP_CNTRL_CAVITY_INIT = 23
-ACTION_TEMP_CNTRL_CAVITY_STEP = 24
-ACTION_HEATER_CNTRL_INIT = 25
-ACTION_HEATER_CNTRL_STEP = 26
-ACTION_TUNER_CNTRL_INIT = 27
-ACTION_TUNER_CNTRL_STEP = 28
-ACTION_ENV_CHECKER = 29
-ACTION_PULSE_GENERATOR = 30
-ACTION_FILTER = 31
-ACTION_DS1631_READTEMP = 32
-ACTION_LASER_TEC_IMON = 33
-ACTION_READ_LASER_TEC_MONITORS = 34
-ACTION_READ_LASER_THERMISTOR_RESISTANCE = 35
-ACTION_READ_LASER_CURRENT = 36
+ACTION_CURRENT_CNTRL_LASER2_INIT = 23
+ACTION_CURRENT_CNTRL_LASER2_STEP = 24
+ACTION_CURRENT_CNTRL_LASER3_INIT = 25
+ACTION_CURRENT_CNTRL_LASER3_STEP = 26
+ACTION_CURRENT_CNTRL_LASER4_INIT = 27
+ACTION_CURRENT_CNTRL_LASER4_STEP = 28
+ACTION_TEMP_CNTRL_CAVITY_INIT = 29
+ACTION_TEMP_CNTRL_CAVITY_STEP = 30
+ACTION_HEATER_CNTRL_INIT = 31
+ACTION_HEATER_CNTRL_STEP = 32
+ACTION_TUNER_CNTRL_INIT = 33
+ACTION_TUNER_CNTRL_STEP = 34
+ACTION_ENV_CHECKER = 35
+ACTION_PULSE_GENERATOR = 36
+ACTION_FILTER = 37
+ACTION_DS1631_READTEMP = 38
+ACTION_LASER_TEC_IMON = 39
+ACTION_READ_LASER_TEC_MONITORS = 40
+ACTION_READ_LASER_THERMISTOR_RESISTANCE = 41
+ACTION_READ_LASER_CURRENT = 42
 
 
 # Parameter form definitions
@@ -1471,7 +1477,7 @@ __p.append(('int',LASER1_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1
 __p.append(('float',LASER1_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1))
 __p.append(('float',LASER1_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1))
 __p.append(('float',LASER1_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1))
-__p.append(('choices',LASER1_CURRENT_CNTRL_STATE_REGISTER,'Current Controller Mode','',[(LASER_CURRENT_CNTRL_DisabledState,"Controller Disabled"),(LASER_CURRENT_CNTRL_EnabledState,"Controller Enabled"),(LASER_CURRENT_CNTRL_SweepingState,"Continuous Sweeping"),(LASER_CURRENT_CNTRL_ManualState,"Manual Control"),],1,1))
+__p.append(('choices',LASER1_CURRENT_CNTRL_STATE_REGISTER,'Current Controller Mode','',[(LASER_CURRENT_CNTRL_DisabledState,"Controller Disabled"),(LASER_CURRENT_CNTRL_AutomaticState,"Automatic Control"),(LASER_CURRENT_CNTRL_SweepingState,"Continuous Sweeping"),(LASER_CURRENT_CNTRL_ManualState,"Manual Control"),],1,1))
 __p.append(('float',LASER1_MANUAL_COARSE_CURRENT_REGISTER,'Manual Coarse Current Setpoint','digU','%.0f',1,1))
 __p.append(('float',LASER1_MANUAL_FINE_CURRENT_REGISTER,'Manual Fine Current Setpoint','digU','%.0f',1,1))
 __p.append(('float',LASER1_CURRENT_SWEEP_MIN_REGISTER,'Current Sweep Minimum','digU','%.0f',1,1))
@@ -1505,6 +1511,12 @@ __p.append(('int',LASER2_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1
 __p.append(('float',LASER2_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1))
 __p.append(('float',LASER2_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1))
 __p.append(('float',LASER2_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1))
+__p.append(('choices',LASER2_CURRENT_CNTRL_STATE_REGISTER,'Current Controller Mode','',[(LASER_CURRENT_CNTRL_DisabledState,"Controller Disabled"),(LASER_CURRENT_CNTRL_AutomaticState,"Automatic Control"),(LASER_CURRENT_CNTRL_SweepingState,"Continuous Sweeping"),(LASER_CURRENT_CNTRL_ManualState,"Manual Control"),],1,1))
+__p.append(('float',LASER2_MANUAL_COARSE_CURRENT_REGISTER,'Manual Coarse Current Setpoint','digU','%.0f',1,1))
+__p.append(('float',LASER2_MANUAL_FINE_CURRENT_REGISTER,'Manual Fine Current Setpoint','digU','%.0f',1,1))
+__p.append(('float',LASER2_CURRENT_SWEEP_MIN_REGISTER,'Current Sweep Minimum','digU','%.0f',1,1))
+__p.append(('float',LASER2_CURRENT_SWEEP_MAX_REGISTER,'Current Sweep Maximum','digU','%.0f',1,1))
+__p.append(('float',LASER2_CURRENT_SWEEP_INCR_REGISTER,'Current Sweep Increment','digU/sample','%.1f',1,1))
 parameter_forms.append(('Laser 2 Parameters',__p))
 
 # Form: Laser 3 Parameters
@@ -1533,6 +1545,12 @@ __p.append(('int',LASER3_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1
 __p.append(('float',LASER3_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1))
 __p.append(('float',LASER3_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1))
 __p.append(('float',LASER3_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1))
+__p.append(('choices',LASER3_CURRENT_CNTRL_STATE_REGISTER,'Current Controller Mode','',[(LASER_CURRENT_CNTRL_DisabledState,"Controller Disabled"),(LASER_CURRENT_CNTRL_AutomaticState,"Automatic Control"),(LASER_CURRENT_CNTRL_SweepingState,"Continuous Sweeping"),(LASER_CURRENT_CNTRL_ManualState,"Manual Control"),],1,1))
+__p.append(('float',LASER3_MANUAL_COARSE_CURRENT_REGISTER,'Manual Coarse Current Setpoint','digU','%.0f',1,1))
+__p.append(('float',LASER3_MANUAL_FINE_CURRENT_REGISTER,'Manual Fine Current Setpoint','digU','%.0f',1,1))
+__p.append(('float',LASER3_CURRENT_SWEEP_MIN_REGISTER,'Current Sweep Minimum','digU','%.0f',1,1))
+__p.append(('float',LASER3_CURRENT_SWEEP_MAX_REGISTER,'Current Sweep Maximum','digU','%.0f',1,1))
+__p.append(('float',LASER3_CURRENT_SWEEP_INCR_REGISTER,'Current Sweep Increment','digU/sample','%.1f',1,1))
 parameter_forms.append(('Laser 3 Parameters',__p))
 
 # Form: Laser 4 Parameters
@@ -1561,6 +1579,12 @@ __p.append(('int',LASER4_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1
 __p.append(('float',LASER4_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1))
 __p.append(('float',LASER4_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1))
 __p.append(('float',LASER4_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1))
+__p.append(('choices',LASER4_CURRENT_CNTRL_STATE_REGISTER,'Current Controller Mode','',[(LASER_CURRENT_CNTRL_DisabledState,"Controller Disabled"),(LASER_CURRENT_CNTRL_AutomaticState,"Automatic Control"),(LASER_CURRENT_CNTRL_SweepingState,"Continuous Sweeping"),(LASER_CURRENT_CNTRL_ManualState,"Manual Control"),],1,1))
+__p.append(('float',LASER4_MANUAL_COARSE_CURRENT_REGISTER,'Manual Coarse Current Setpoint','digU','%.0f',1,1))
+__p.append(('float',LASER4_MANUAL_FINE_CURRENT_REGISTER,'Manual Fine Current Setpoint','digU','%.0f',1,1))
+__p.append(('float',LASER4_CURRENT_SWEEP_MIN_REGISTER,'Current Sweep Minimum','digU','%.0f',1,1))
+__p.append(('float',LASER4_CURRENT_SWEEP_MAX_REGISTER,'Current Sweep Maximum','digU','%.0f',1,1))
+__p.append(('float',LASER4_CURRENT_SWEEP_INCR_REGISTER,'Current Sweep Increment','digU/sample','%.1f',1,1))
 parameter_forms.append(('Laser 4 Parameters',__p))
 
 # Form: Cavity Temperature Parameters
