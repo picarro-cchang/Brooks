@@ -22,7 +22,7 @@ from Host.autogen import interface
 
 LOW, HIGH = bool(0), bool(1)
 
-clk, reset, dac_clock, strobe = [Signal(LOW) for i in range(4)]
+clk, reset, dac_clock, strobe1M, strobe = [Signal(LOW) for i in range(5)]
 dac_sync_out, dac_din_out = [Signal(LOW) for i in range(2)]
 chanA_data_in = Signal(intbv(0)[16:])
 chanB_data_in = Signal(intbv(0)[16:])
@@ -47,7 +47,7 @@ def  bench():
                      dac_din_out=dac_din_out)
 
     clkGen = ClkGen(clk=clk, reset=reset, clk_5M=dac_clock,
-                    clk_2M5=clk_2M5,pulse_100k=strobe)
+                    clk_2M5=clk_2M5, pulse_1M=strobe1M, pulse_100k=strobe)
 
     @instance
     def  stimulus():

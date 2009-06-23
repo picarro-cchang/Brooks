@@ -49,8 +49,8 @@ dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 dsp_data_in  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 dsp_wr, clk, reset = [Signal(LOW) for i in range(3)]
 clk_2M5 = Signal(LOW)
-dac_clock, strobe, laser_shutdown_in, soa_shutdown_in =\
-    [Signal(LOW) for i in range(4)]
+dac_clock, strobe, strobe1M, laser_shutdown_in, soa_shutdown_in =\
+    [Signal(LOW) for i in range(5)]
 laser1_dac_sync_out, laser2_dac_sync_out, \
     laser3_dac_sync_out, laser4_dac_sync_out = \
     [Signal(LOW) for i in range(4)]
@@ -157,7 +157,7 @@ def  bench():
                    map_base=FPGA_INJECT)
 
     clkGen = ClkGen(clk=clk, reset=reset, clk_5M=dac_clock,
-                    clk_2M5=clk_2M5,pulse_100k=strobe)
+                    clk_2M5=clk_2M5, pulse_1M=strobe1M, pulse_100k=strobe)
 
     @instance
     def  acquire():
