@@ -21,7 +21,7 @@ def splitIntoLines(text,lineLen,delim=" "):
                 else:
                     lines.append(text)
                     break
-    return lines        
+    return lines
 
 header = """#!/usr/bin/python
 #
@@ -108,22 +108,25 @@ if __name__ == "__main__":
         print>>op, header%(blockName+".py",strftime("%d-%b-%Y"))
         print>>tp, header%("test_"+blockName+".py",strftime("%d-%b-%Y"))
         importList = ["from myhdl import *","from Host.autogen import interface"]
+        for option in config.get("IMPORTS",[]):
+            s = config["IMPORTS"][option]
+            importList.append(s)
         impString = "from Host.autogen.interface import"
         splitLen = 72-len(impString)
         regs = [" %s_%s" % (blockName.upper(),reg.upper()) for reg in config["REGISTERS"]]
         lines = splitIntoLines(",".join(regs),splitLen,",")
-        
+
         importList.append("%s EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH" % impString)
         importList.append("%s FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_%s" % (impString,blockName.upper()))
         importList.append("")
         for line in lines:
             importList.append("%s%s" % (impString,line.rstrip(",")))
-        
+
         #for reg in config["REGISTERS"]:
         #    importList.append("from intf import %s_%s" % (blockName.upper(),reg.upper()))
         importList.append("")
         for section in config:
-            if section not in ["PORTS","REGISTERS"]:
+            if section not in ["IMPORTS","PORTS","REGISTERS"]:
                 for field in config[section]:
                     name = "%s_%s_%s" % (blockName.upper(),section.upper(),field.upper())
                     importList.append("%s %s_B, %s_W" % (impString,name,name))
@@ -131,10 +134,10 @@ if __name__ == "__main__":
         print>>op, "\n".join(importList)
         print>>tp, "\n".join(importList)
         print>>tp, "from MyHDL.Common.%s import %s" % (blockName,blockName)
-        
+
         print>>op, "\nLOW, HIGH = bool(0), bool(1)"
         print>>tp, "\nLOW, HIGH = bool(0), bool(1)"
-        
+
         portSignalList = []
         for port in config["PORTS"]:
             value = config["PORTS"][port].strip()
@@ -146,7 +149,7 @@ if __name__ == "__main__":
                 portSignalList.append("%s = FPGA_%s" % (port,blockName.upper()))
 
         print>>tp, "\n".join(portSignalList)
-        
+
         decl = "def %s(" % blockName
         leadSpace = len(decl)* " "
         splitLen = 72-len(decl)
@@ -157,7 +160,7 @@ if __name__ == "__main__":
                 print>>op, "%s%s%s" % (decl if i==0 else leadSpace,lines[i],"):" if i==len(lines)-1 else "")
         else:
             print>>op, "%s%s" % (decl,"):")
-        # Write out comments for describing block 
+        # Write out comments for describing block
         print>>op,'    """'
         print>>op,"    Parameters:"
         for p in ports:
@@ -166,7 +169,7 @@ if __name__ == "__main__":
         for r in regs:
             print>>op,"   %s" % r
         for section in config:
-            if section not in ["PORTS","REGISTERS"]:
+            if section not in ["IMPORTS","PORTS","REGISTERS"]:
                 print>>op,"\n    Fields in %s_%s:" % (blockName.upper(),section.upper())
                 for field in config[section]:
                     name = "%s_%s_%s" % (blockName.upper(),section.upper(),field.upper())
@@ -176,7 +179,8 @@ if __name__ == "__main__":
             print>>op,"   %s_addr = map_base +%s" % (r.lower(),r.upper())
 
         for reg in config["REGISTERS"]:
-            print>>op,"    %s = Signal(intbv(0)[%s:])" % (reg,config["REGISTERS"][reg])
+            regSize = config["REGISTERS"][reg][0]
+            print>>op,"    %s = Signal(intbv(0)[%s:])" % (reg,regSize)
 
         print>>op,"    @instance"
         print>>op,"    def logic():"
@@ -189,13 +193,17 @@ if __name__ == "__main__":
         print>>op,"                if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:"
         print>>op,"                    if False: pass"
         for reg in config["REGISTERS"]:
-            print>>op,"                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == %s_%s_addr:" % (blockName.lower(),reg.lower())
-            print>>op,"                        if dsp_wr: %s.next = dsp_data_out" % (reg,)
-            print>>op,"                        dsp_data_in.next = %s" % (reg,)
+            regSize,access = config["REGISTERS"][reg]
+            print>>op,"                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == %s_%s_addr: # %s" % (blockName.lower(),reg.lower(),access)
+            if "w" in access:
+                print>>op,"                        if dsp_wr: %s.next = dsp_data_out" % (reg,)
+            if "r" in access:
+                print>>op,"                        dsp_data_in.next = %s" % (reg,)
         print>>op,"                    else:"
         print>>op,"                        dsp_data_in.next = 0"
         print>>op,"                else:"
         print>>op,"                    dsp_data_in.next = 0"
+
         print>>op,"    return instances()"
 
         print>>op
@@ -226,6 +234,12 @@ if __name__ == "__main__":
                 print>>tp, "%s%s%s" % (leadStr if i==0 else leadSpace,lines[i]," )" if i==len(lines)-1 else "")
         else:
             print>>tp, "%s%s" % (decl," )")
+
+        print>>tp,"    @instance"
+        print>>tp,"    def stimulus():"
+        print>>tp,"        yield delay(10*PERIOD)"
+        print>>tp,"        raise StopSimulation"
+
         print>>tp,"    return instances()"
         print>>tp
         print>>tp,"def test_%s():" % blockName
@@ -245,7 +259,7 @@ if __name__ == "__main__":
                     print>>xp, '        <bitfield ident="%s" description="" lsb="%d" width="%d" />' % (field.upper(),lsb,width)
                     lsb += width
                 print>>xp, '    </reg>'
-            else:    
+            else:
                 print>>xp, '    <reg ident="%s" description="" />' % reg.upper()
         print>>xp, '</fpga_block>'
     finally:

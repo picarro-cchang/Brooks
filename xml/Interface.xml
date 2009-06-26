@@ -1566,61 +1566,51 @@
             <reg ident="NUM_SAMP" description="Number of samples to collect"/>
             <reg ident="THRESHOLD" description="Ringdown threshold"/>
         </fpga_block>
-        <fpga_block ident="RDMAN" description="">
-            <reg ident="CONTROL" description="">
-                <bitfield ident="RUN" description="" lsb="0" width="1" />
-                <bitfield ident="CONT" description="" lsb="1" width="1" />
-                <bitfield ident="START_RD" description="" lsb="2" width="1" />
-                <bitfield ident="ABORT_RD" description="" lsb="3" width="1" />
-                <bitfield ident="LOCK_ENABLE" description="" lsb="4" width="1" />
-                <bitfield ident="UP_SLOPE_ENABLE" description="" lsb="5" width="1" />
-                <bitfield ident="DOWN_SLOPE_ENABLE" description="" lsb="6" width="1" />
-                <bitfield ident="BANK0_CLEAR" description="" lsb="7" width="1" />
-                <bitfield ident="BANK1_CLEAR" description="" lsb="8" width="1" />
-                <bitfield ident="LASER_LOCKED" description="" lsb="9" width="1" />
-                <bitfield ident="LASER_LOCKER_DONE" description="" lsb="10" width="1" />
-                <bitfield ident="RD_IRQ_ACK" description="" lsb="11" width="1" />
-                <bitfield ident="ACQ_DONE_ACK" description="" lsb="12" width="1" />
-            </reg>
-            <reg ident="STATUS" description="">
-                <bitfield ident="SHUTDOWN" description="" lsb="0" width="1" />
-                <bitfield ident="RD_IRQ" description="" lsb="1" width="1" />
-                <bitfield ident="ACQ_DONE" description="" lsb="2" width="1" />
-                <bitfield ident="BANK" description="" lsb="3" width="1" />
-                <bitfield ident="BANK0_IN_USE" description="" lsb="4" width="1" />
-                <bitfield ident="BANK1_IN_USE" description="" lsb="5" width="1" />
-                <bitfield ident="LAPPED" description="" lsb="6" width="1" />
-                <bitfield ident="WL_LOCKED" description="" lsb="7" width="1" />
-                <bitfield ident="TIMEOUT" description="" lsb="8" width="1" />
-            </reg>
-            <reg ident="PARAM0" description="" />
-            <reg ident="PARAM1" description="" />
-            <reg ident="PARAM2" description="" />
-            <reg ident="PARAM3" description="" />
-            <reg ident="PARAM4" description="" />
-            <reg ident="PARAM5" description="" />
-            <reg ident="PARAM6" description="" />
-            <reg ident="PARAM7" description="" />
-            <reg ident="DATA_ADDRCNTR" description="" />
-            <reg ident="METADATA_ADDRCNTR" description="" />
-            <reg ident="PARAM_ADDRCNTR" description="" />
-            <reg ident="DIVISOR" description="" />
-            <reg ident="NUM_SAMP" description="" />
-            <reg ident="THRESHOLD" description="" />
-            <reg ident="LOCK_DURATION" description="" />
-            <reg ident="PRECONTROL_DURATION" description="" />
-            <reg ident="TIMEOUT_DURATION" description="" />
-            <reg ident="TUNER_AT_RINGDOWN" description="" />
-            <reg ident="METADATA_ADDR_AT_RINGDOWN" description="" />
-        </fpga_block>
-
-        <fpga_block ident="LASER_CURRENT_DAC" description="Laser current DAC">
-            <reg ident="CS" description="Control/Status register">
+        <fpga_block ident="RDMAN" description="Ringdown manager">
+            <reg ident="CONTROL" description="Control register">
                 <bitfield ident="RUN" description="STOP/RUN" lsb="0" width="1" />
                 <bitfield ident="CONT" description="SINGLE/CONTINUOUS" lsb="1" width="1" />
+                <bitfield ident="START_RD" description="Start ringdown cycle" lsb="2" width="1" />
+                <bitfield ident="ABORT_RD" description="Abort ringdown" lsb="3" width="1" />
+                <bitfield ident="LOCK_ENABLE" description="Enable frequency locking" lsb="4" width="1" />
+                <bitfield ident="UP_SLOPE_ENABLE" description="Allow ring-down on positive tuner slope" lsb="5" width="1" />
+                <bitfield ident="DOWN_SLOPE_ENABLE" description="Allow ring-down on negative tuner slope" lsb="6" width="1" />
+                <bitfield ident="BANK0_CLEAR" description="Mark bank 0 available for write" lsb="7" width="1" />
+                <bitfield ident="BANK1_CLEAR" description="Mark bank 1 available for write" lsb="8" width="1" />
+                <bitfield ident="RD_IRQ_ACK" description="Acknowledge ring-down interrupt" lsb="9" width="1" />
+                <bitfield ident="ACQ_DONE_ACK" description="Acknowledge data acquired interrupt" lsb="10" width="1" />
             </reg>
-            <reg ident="COARSE_CURRENT" description="Coarse current DAC"/>
-            <reg ident="FINE_CURRENT" description="Fine current DAC"/>
+            <reg ident="STATUS" description="">
+                <bitfield ident="SHUTDOWN" description="Indicates shutdown of optical injection" lsb="0" width="1" />
+                <bitfield ident="RD_IRQ" description="Ring down interrupt occured" lsb="1" width="1" />
+                <bitfield ident="ACQ_DONE" description="Data acquired interrupt occured" lsb="2" width="1" />
+                <bitfield ident="BANK" description="Active bank for data acquisition" lsb="3" width="1" />
+                <bitfield ident="BANK0_IN_USE" description="Bank 0 memory in use" lsb="4" width="1" />
+                <bitfield ident="BANK1_IN_USE" description="Bank 1 memory in use" lsb="5" width="1" />
+                <bitfield ident="LAPPED" description="Metadata counter lapped" lsb="6" width="1" />
+                <bitfield ident="LASER_FREQ_LOCKED" description="Laser frequency locked" lsb="7" width="1" />
+                <bitfield ident="TIMEOUT" description="Timeout without ring-down" lsb="8" width="1" />
+                <bitfield ident="ABORTED" description="Ring-down aborted" lsb="9" width="1" />
+            </reg>
+            <reg ident="PARAM0" description="Parameter 0 register" />
+            <reg ident="PARAM1" description="Parameter 1 register" />
+            <reg ident="PARAM2" description="Parameter 2 register" />
+            <reg ident="PARAM3" description="Parameter 3 register" />
+            <reg ident="PARAM4" description="Parameter 4 register" />
+            <reg ident="PARAM5" description="Parameter 5 register" />
+            <reg ident="PARAM6" description="Parameter 6 register" />
+            <reg ident="PARAM7" description="Parameter 7 register" />
+            <reg ident="DATA_ADDRCNTR" description="Counter for ring-down data" />
+            <reg ident="METADATA_ADDRCNTR" description="Counter for ring-down metadata" />
+            <reg ident="PARAM_ADDRCNTR" description="Counter for parameter data" />
+            <reg ident="DIVISOR" description="Ring-down data counter rate divisor" />
+            <reg ident="NUM_SAMP" description="Number of samples to collect for ring-down waveform" />
+            <reg ident="THRESHOLD" description="Ring-down threshold" />
+            <reg ident="LOCK_DURATION" description="Duration (us) for laser frequency to be locked before ring-down is allowed" />
+            <reg ident="PRECONTROL_DURATION" description="Duration (us) for laser current to be at nominal value before frequency locking is enabled" />
+            <reg ident="TIMEOUT_DURATION" description="Duration (ms) within which ring-down must occur to be valid" />
+            <reg ident="TUNER_AT_RINGDOWN" description="Value of tuner at ring-down" />
+            <reg ident="METADATA_ADDR_AT_RINGDOWN" description="Metadata address at ring-down" />
         </fpga_block>
         <fpga_block ident="RDCOMPARE" description="Ringdown comparator">
             <reg ident="THRESHOLD" description="Ringdown threshold"/>
@@ -1690,18 +1680,6 @@
         </fpga_map>
         <fpga_map ident="FPGA_RDMAN" block="RDMAN">
             <description>Ringdown manager registers</description>
-        </fpga_map>
-        <fpga_map ident="FPGA_LASER1_CURRENT_DAC" block="LASER_CURRENT_DAC">
-            <description>Laser1 current DAC registers</description>
-        </fpga_map>
-        <fpga_map ident="FPGA_LASER2_CURRENT_DAC" block="LASER_CURRENT_DAC">
-            <description>Laser2 current DAC registers</description>
-        </fpga_map>
-        <fpga_map ident="FPGA_LASER3_CURRENT_DAC" block="LASER_CURRENT_DAC">
-            <description>Laser3 current DAC registers</description>
-        </fpga_map>
-        <fpga_map ident="FPGA_LASER4_CURRENT_DAC" block="LASER_CURRENT_DAC">
-            <description>Laser4 current DAC registers</description>
         </fpga_map>
         <fpga_map ident="FPGA_RDCOMPARE" block="RDCOMPARE">
             <description>Ringdown comparator</description>

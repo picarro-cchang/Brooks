@@ -671,84 +671,72 @@ typedef enum {
 #define RDDATMAN_NUM_SAMP (4) // Number of samples to collect
 #define RDDATMAN_THRESHOLD (5) // Ringdown threshold
 
-/* Block RDMAN  */
-#define RDMAN_CONTROL (0) // 
-#define RDMAN_CONTROL_RUN_B (0) //  bit position
-#define RDMAN_CONTROL_RUN_W (1) //  bit width
-#define RDMAN_CONTROL_CONT_B (1) //  bit position
-#define RDMAN_CONTROL_CONT_W (1) //  bit width
-#define RDMAN_CONTROL_START_RD_B (2) //  bit position
-#define RDMAN_CONTROL_START_RD_W (1) //  bit width
-#define RDMAN_CONTROL_ABORT_RD_B (3) //  bit position
-#define RDMAN_CONTROL_ABORT_RD_W (1) //  bit width
-#define RDMAN_CONTROL_LOCK_ENABLE_B (4) //  bit position
-#define RDMAN_CONTROL_LOCK_ENABLE_W (1) //  bit width
-#define RDMAN_CONTROL_UP_SLOPE_ENABLE_B (5) //  bit position
-#define RDMAN_CONTROL_UP_SLOPE_ENABLE_W (1) //  bit width
-#define RDMAN_CONTROL_DOWN_SLOPE_ENABLE_B (6) //  bit position
-#define RDMAN_CONTROL_DOWN_SLOPE_ENABLE_W (1) //  bit width
-#define RDMAN_CONTROL_BANK0_CLEAR_B (7) //  bit position
-#define RDMAN_CONTROL_BANK0_CLEAR_W (1) //  bit width
-#define RDMAN_CONTROL_BANK1_CLEAR_B (8) //  bit position
-#define RDMAN_CONTROL_BANK1_CLEAR_W (1) //  bit width
-#define RDMAN_CONTROL_LASER_LOCKED_B (9) //  bit position
-#define RDMAN_CONTROL_LASER_LOCKED_W (1) //  bit width
-#define RDMAN_CONTROL_LASER_LOCKER_DONE_B (10) //  bit position
-#define RDMAN_CONTROL_LASER_LOCKER_DONE_W (1) //  bit width
-#define RDMAN_CONTROL_RD_IRQ_ACK_B (11) //  bit position
-#define RDMAN_CONTROL_RD_IRQ_ACK_W (1) //  bit width
-#define RDMAN_CONTROL_ACQ_DONE_ACK_B (12) //  bit position
-#define RDMAN_CONTROL_ACQ_DONE_ACK_W (1) //  bit width
+/* Block RDMAN Ringdown manager */
+#define RDMAN_CONTROL (0) // Control register
+#define RDMAN_CONTROL_RUN_B (0) // STOP/RUN bit position
+#define RDMAN_CONTROL_RUN_W (1) // STOP/RUN bit width
+#define RDMAN_CONTROL_CONT_B (1) // SINGLE/CONTINUOUS bit position
+#define RDMAN_CONTROL_CONT_W (1) // SINGLE/CONTINUOUS bit width
+#define RDMAN_CONTROL_START_RD_B (2) // Start ringdown cycle bit position
+#define RDMAN_CONTROL_START_RD_W (1) // Start ringdown cycle bit width
+#define RDMAN_CONTROL_ABORT_RD_B (3) // Abort ringdown bit position
+#define RDMAN_CONTROL_ABORT_RD_W (1) // Abort ringdown bit width
+#define RDMAN_CONTROL_LOCK_ENABLE_B (4) // Enable frequency locking bit position
+#define RDMAN_CONTROL_LOCK_ENABLE_W (1) // Enable frequency locking bit width
+#define RDMAN_CONTROL_UP_SLOPE_ENABLE_B (5) // Allow ring-down on positive tuner slope bit position
+#define RDMAN_CONTROL_UP_SLOPE_ENABLE_W (1) // Allow ring-down on positive tuner slope bit width
+#define RDMAN_CONTROL_DOWN_SLOPE_ENABLE_B (6) // Allow ring-down on negative tuner slope bit position
+#define RDMAN_CONTROL_DOWN_SLOPE_ENABLE_W (1) // Allow ring-down on negative tuner slope bit width
+#define RDMAN_CONTROL_BANK0_CLEAR_B (7) // Mark bank 0 available for write bit position
+#define RDMAN_CONTROL_BANK0_CLEAR_W (1) // Mark bank 0 available for write bit width
+#define RDMAN_CONTROL_BANK1_CLEAR_B (8) // Mark bank 1 available for write bit position
+#define RDMAN_CONTROL_BANK1_CLEAR_W (1) // Mark bank 1 available for write bit width
+#define RDMAN_CONTROL_RD_IRQ_ACK_B (9) // Acknowledge ring-down interrupt bit position
+#define RDMAN_CONTROL_RD_IRQ_ACK_W (1) // Acknowledge ring-down interrupt bit width
+#define RDMAN_CONTROL_ACQ_DONE_ACK_B (10) // Acknowledge data acquired interrupt bit position
+#define RDMAN_CONTROL_ACQ_DONE_ACK_W (1) // Acknowledge data acquired interrupt bit width
 
 #define RDMAN_STATUS (1) // 
-#define RDMAN_STATUS_SHUTDOWN_B (0) //  bit position
-#define RDMAN_STATUS_SHUTDOWN_W (1) //  bit width
-#define RDMAN_STATUS_RD_IRQ_B (1) //  bit position
-#define RDMAN_STATUS_RD_IRQ_W (1) //  bit width
-#define RDMAN_STATUS_ACQ_DONE_B (2) //  bit position
-#define RDMAN_STATUS_ACQ_DONE_W (1) //  bit width
-#define RDMAN_STATUS_BANK_B (3) //  bit position
-#define RDMAN_STATUS_BANK_W (1) //  bit width
-#define RDMAN_STATUS_BANK0_IN_USE_B (4) //  bit position
-#define RDMAN_STATUS_BANK0_IN_USE_W (1) //  bit width
-#define RDMAN_STATUS_BANK1_IN_USE_B (5) //  bit position
-#define RDMAN_STATUS_BANK1_IN_USE_W (1) //  bit width
-#define RDMAN_STATUS_LAPPED_B (6) //  bit position
-#define RDMAN_STATUS_LAPPED_W (1) //  bit width
-#define RDMAN_STATUS_WL_LOCKED_B (7) //  bit position
-#define RDMAN_STATUS_WL_LOCKED_W (1) //  bit width
-#define RDMAN_STATUS_TIMEOUT_B (8) //  bit position
-#define RDMAN_STATUS_TIMEOUT_W (1) //  bit width
+#define RDMAN_STATUS_SHUTDOWN_B (0) // Indicates shutdown of optical injection bit position
+#define RDMAN_STATUS_SHUTDOWN_W (1) // Indicates shutdown of optical injection bit width
+#define RDMAN_STATUS_RD_IRQ_B (1) // Ring down interrupt occured bit position
+#define RDMAN_STATUS_RD_IRQ_W (1) // Ring down interrupt occured bit width
+#define RDMAN_STATUS_ACQ_DONE_B (2) // Data acquired interrupt occured bit position
+#define RDMAN_STATUS_ACQ_DONE_W (1) // Data acquired interrupt occured bit width
+#define RDMAN_STATUS_BANK_B (3) // Active bank for data acquisition bit position
+#define RDMAN_STATUS_BANK_W (1) // Active bank for data acquisition bit width
+#define RDMAN_STATUS_BANK0_IN_USE_B (4) // Bank 0 memory in use bit position
+#define RDMAN_STATUS_BANK0_IN_USE_W (1) // Bank 0 memory in use bit width
+#define RDMAN_STATUS_BANK1_IN_USE_B (5) // Bank 1 memory in use bit position
+#define RDMAN_STATUS_BANK1_IN_USE_W (1) // Bank 1 memory in use bit width
+#define RDMAN_STATUS_LAPPED_B (6) // Metadata counter lapped bit position
+#define RDMAN_STATUS_LAPPED_W (1) // Metadata counter lapped bit width
+#define RDMAN_STATUS_LASER_FREQ_LOCKED_B (7) // Laser frequency locked bit position
+#define RDMAN_STATUS_LASER_FREQ_LOCKED_W (1) // Laser frequency locked bit width
+#define RDMAN_STATUS_TIMEOUT_B (8) // Timeout without ring-down bit position
+#define RDMAN_STATUS_TIMEOUT_W (1) // Timeout without ring-down bit width
+#define RDMAN_STATUS_ABORTED_B (9) // Ring-down aborted bit position
+#define RDMAN_STATUS_ABORTED_W (1) // Ring-down aborted bit width
 
-#define RDMAN_PARAM0 (2) // 
-#define RDMAN_PARAM1 (3) // 
-#define RDMAN_PARAM2 (4) // 
-#define RDMAN_PARAM3 (5) // 
-#define RDMAN_PARAM4 (6) // 
-#define RDMAN_PARAM5 (7) // 
-#define RDMAN_PARAM6 (8) // 
-#define RDMAN_PARAM7 (9) // 
-#define RDMAN_DATA_ADDRCNTR (10) // 
-#define RDMAN_METADATA_ADDRCNTR (11) // 
-#define RDMAN_PARAM_ADDRCNTR (12) // 
-#define RDMAN_DIVISOR (13) // 
-#define RDMAN_NUM_SAMP (14) // 
-#define RDMAN_THRESHOLD (15) // 
-#define RDMAN_LOCK_DURATION (16) // 
-#define RDMAN_PRECONTROL_DURATION (17) // 
-#define RDMAN_TIMEOUT_DURATION (18) // 
-#define RDMAN_TUNER_AT_RINGDOWN (19) // 
-#define RDMAN_METADATA_ADDR_AT_RINGDOWN (20) // 
-
-/* Block LASER_CURRENT_DAC Laser current DAC */
-#define LASER_CURRENT_DAC_CS (0) // Control/Status register
-#define LASER_CURRENT_DAC_CS_RUN_B (0) // STOP/RUN bit position
-#define LASER_CURRENT_DAC_CS_RUN_W (1) // STOP/RUN bit width
-#define LASER_CURRENT_DAC_CS_CONT_B (1) // SINGLE/CONTINUOUS bit position
-#define LASER_CURRENT_DAC_CS_CONT_W (1) // SINGLE/CONTINUOUS bit width
-
-#define LASER_CURRENT_DAC_COARSE_CURRENT (1) // Coarse current DAC
-#define LASER_CURRENT_DAC_FINE_CURRENT (2) // Fine current DAC
+#define RDMAN_PARAM0 (2) // Parameter 0 register
+#define RDMAN_PARAM1 (3) // Parameter 1 register
+#define RDMAN_PARAM2 (4) // Parameter 2 register
+#define RDMAN_PARAM3 (5) // Parameter 3 register
+#define RDMAN_PARAM4 (6) // Parameter 4 register
+#define RDMAN_PARAM5 (7) // Parameter 5 register
+#define RDMAN_PARAM6 (8) // Parameter 6 register
+#define RDMAN_PARAM7 (9) // Parameter 7 register
+#define RDMAN_DATA_ADDRCNTR (10) // Counter for ring-down data
+#define RDMAN_METADATA_ADDRCNTR (11) // Counter for ring-down metadata
+#define RDMAN_PARAM_ADDRCNTR (12) // Counter for parameter data
+#define RDMAN_DIVISOR (13) // Ring-down data counter rate divisor
+#define RDMAN_NUM_SAMP (14) // Number of samples to collect for ring-down waveform
+#define RDMAN_THRESHOLD (15) // Ring-down threshold
+#define RDMAN_LOCK_DURATION (16) // Duration (us) for laser frequency to be locked before ring-down is allowed
+#define RDMAN_PRECONTROL_DURATION (17) // Duration (us) for laser current to be at nominal value before frequency locking is enabled
+#define RDMAN_TIMEOUT_DURATION (18) // Duration (ms) within which ring-down must occur to be valid
+#define RDMAN_TUNER_AT_RINGDOWN (19) // Value of tuner at ring-down
+#define RDMAN_METADATA_ADDR_AT_RINGDOWN (20) // Metadata address at ring-down
 
 /* Block RDCOMPARE Ringdown comparator */
 #define RDCOMPARE_THRESHOLD (0) // Ringdown threshold
@@ -809,13 +797,9 @@ typedef enum {
 #define FPGA_RDMETAMAN (42) // Ringdown metadata manager registers
 #define FPGA_RDDATMAN (56) // Ringdown data manager registers
 #define FPGA_RDMAN (62) // Ringdown manager registers
-#define FPGA_LASER1_CURRENT_DAC (83) // Laser1 current DAC registers
-#define FPGA_LASER2_CURRENT_DAC (86) // Laser2 current DAC registers
-#define FPGA_LASER3_CURRENT_DAC (89) // Laser3 current DAC registers
-#define FPGA_LASER4_CURRENT_DAC (92) // Laser4 current DAC registers
-#define FPGA_RDCOMPARE (95) // Ringdown comparator
-#define FPGA_TWGEN (97) // Tuner waveform generator
-#define FPGA_INJECT (105) // Optical Injection Subsystem
+#define FPGA_RDCOMPARE (83) // Ringdown comparator
+#define FPGA_TWGEN (85) // Tuner waveform generator
+#define FPGA_INJECT (93) // Optical Injection Subsystem
 
 /* Environment addresses */
 

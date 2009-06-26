@@ -90,15 +90,21 @@
         <File>MyHDL\Common\Pwm1.py</File>
         <File>MyHDL\Common\Rdcompare.py</File>
         <File>MyHDL\Common\RdDataAddrGen.py</File>
+        <File>MyHDL\Common\RdMan.py</File>
         <File>MyHDL\Common\Rdmemory.py</File>
         <File>MyHDL\Common\TWGen.py</File>
     </Folder>
     <Folder name="Templates" sorted="Yes">
         <File>MyHDL\Templates\Inject.reg</File>
-        <File>MyHDL\Templates\makeTemplate.py</File>
         <File>MyHDL\Templates\rdcompare.reg</File>
+        <File>MyHDL\Templates\rdman.ini</File>
         <File>MyHDL\Templates\rdman.reg</File>
         <File>MyHDL\Templates\TWGen.reg</File>
+        <Folder name="Generators" sorted="Yes">
+            <File>MyHDL\Templates\makePy.py</File>
+            <File>MyHDL\Templates\makeTemplate.py</File>
+            <File>MyHDL\Templates\makeTemplateWithCs.py</File>
+        </Folder>
     </Folder>
     <Folder name="Testing" sorted="Yes">
         <File>MyHDL\Testing\test_ClkGen.py</File>
