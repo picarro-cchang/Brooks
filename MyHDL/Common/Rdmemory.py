@@ -149,7 +149,7 @@ def  Rdmemory(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
             dsp_data_in.next = rd_paramA[RDMEM_PARAM_WIDTH:]
         else:
             dsp_data_in.next = 0
-
+            
     return instances()
 
 if __name__ == "__main__":

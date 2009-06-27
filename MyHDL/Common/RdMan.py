@@ -58,8 +58,11 @@ from Host.autogen.interface import RDMAN_STATUS_TIMEOUT_B, RDMAN_STATUS_TIMEOUT_
 from Host.autogen.interface import RDMAN_STATUS_ABORTED_B, RDMAN_STATUS_ABORTED_W
 
 SeqState = enum("IDLE","START_INJECT","WAIT_FOR_PRECONTROL",
-                "WAIT_FOR_LOCK","WAIT_FOR_GATING_CONDITIONS")
+                "WAIT_FOR_LOCK","WAIT_FOR_GATING_CONDITIONS",
+                "CHECK_BELOW_THRESHOLD","WAIT_FOR_THRESHOLD",
+                "IN_RINGDOWN","CHECK_PARAMS_DONE","ACQ_DONE")
 MetadataAcqState = enum("IDLE","AWAIT_STROBE","ACQUIRING","DONE")
+ParamState = enum("IDLE","STORING","DONE")
 
 LOW, HIGH = bool(0), bool(1)
 def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
@@ -67,9 +70,10 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
           meta2_in,meta3_in,meta4_in,meta5_in,meta6_in,meta7_in,
           rd_data_in,tuner_slope_in,tuner_window_in,laser_freq_ok_in,
           metadata_strobe_in,rd_trig_out,acc_en_out,rd_irq_out,
-          acq_done_irq_out,rd_adc_clk_out,bank_out,data_addr_out,
-          wr_data_out,data_we_out,meta_addr_out,wr_meta_out,meta_we_out,
-          param_addr_out,wr_param_out,param_we_out,map_base):
+          acq_done_irq_out,rd_adc_clk_out,bank_out,laser_locked_out,
+          data_addr_out,wr_data_out,data_we_out,meta_addr_out,
+          wr_meta_out,meta_we_out,param_addr_out,wr_param_out,
+          param_we_out,map_base):
     """
     Parameters:
     clk                 -- Clock input
@@ -100,6 +104,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     acq_done_irq_out    -- Signals that ringdown data have been placed in FPGA memory
     rd_adc_clk_out      -- 25MHz clock to high-speed ADC
     bank_out            -- Bank select for Rdmemory block
+    laser_locked_out    -- Indicates laser frequency is locked
     data_addr_out       -- Data address for Rdmemory block
     wr_data_out         -- Ringdown data to write
     data_we_out         -- Enable write of ringdown data
@@ -193,8 +198,8 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     data_addrcntr = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH:])
     metadata_addrcntr = Signal(intbv(0)[META_BANK_ADDR_WIDTH:])
     param_addrcntr = Signal(intbv(0)[PARAM_BANK_ADDR_WIDTH:])
-    divisor = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    num_samp = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    divisor = Signal(intbv(0)[5:])
+    num_samp = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH:])
     threshold = Signal(intbv(0)[FPGA_REG_WIDTH:])
     lock_duration = Signal(intbv(0)[FPGA_REG_WIDTH:])
     precontrol_duration = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -203,18 +208,25 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     metadata_addr_at_ringdown = Signal(intbv(0)[META_BANK_ADDR_WIDTH:])
     
     META_SIZE  = (1<<META_BANK_ADDR_WIDTH)/8
-
+    
     abort = Signal(LOW)
     acq_done_irq = Signal(LOW)
     bank = Signal(LOW)
     expiry_time = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    freq_gating_conditions = Signal(LOW)
+    init_flag = Signal(LOW)
     lapped = Signal(LOW)
-    metadataAcqState = Signal(MetadataAcqState.IDLE)
     metadata_acq = Signal(LOW)
+    metadataAcqState = Signal(MetadataAcqState.IDLE)
+    param_acq = Signal(LOW)
+    paramState = Signal(ParamState.IDLE)
+    rd_adc_clk = Signal(LOW)
+    rd_divider = Signal(intbv(0)[5:])
     rd_irq = Signal(LOW)
     rd_trig = Signal(LOW)
     seqState = Signal(SeqState.IDLE)
     timeout = Signal(LOW)
+    tuner_gating_conditions = Signal(LOW)
     us_since_start = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     us_timer_enable = Signal(LOW)
     
@@ -224,6 +236,11 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         rd_irq_out.next = rd_irq
         acq_done_irq_out.next = acq_done_irq
         rd_trig_out.next = rd_trig
+        rd_adc_clk_out.next = rd_adc_clk
+        tuner_gating_conditions.next = tuner_window_in and ((tuner_slope_in and control[RDMAN_CONTROL_UP_SLOPE_ENABLE_B]) or 
+                                                            (not tuner_slope_in and control[RDMAN_CONTROL_DOWN_SLOPE_ENABLE_B]))
+        freq_gating_conditions.next = laser_freq_ok_in or not control[RDMAN_CONTROL_LOCK_ENABLE_B]
+        wr_data_out.next = rd_data_in
         
     @instance
     def logic():
@@ -256,9 +273,14 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 acq_done_irq.next = 0
                 bank.next = LOW
                 expiry_time.next = 0
+                init_flag.next = HIGH
                 lapped.next = LOW
                 metadataAcqState.next = MetadataAcqState.IDLE
                 metadata_acq.next = LOW
+                paramState.next = ParamState.IDLE
+                param_acq.next = LOW
+                rd_adc_clk.next = 0
+                rd_divider.next = 0
                 rd_irq.next = 0
                 rd_trig.next = HIGH
                 seqState.next = SeqState.IDLE
@@ -266,6 +288,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 us_since_start.next = 0
                 us_timer_enable.next = LOW
                 acc_en_out.next = 0
+                laser_locked_out.next = 0
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
@@ -336,11 +359,16 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     if not control[RDMAN_CONTROL_CONT_B]:
                         control.next[RDMAN_CONTROL_RUN_B] = 0
                     
+                    data_we_out.next = LOW
+                    rd_adc_clk.next = not rd_adc_clk
+                    
                     if seqState == SeqState.IDLE:
                         us_since_start.next = 0                        
                         metadata_acq.next = LOW   
+                        param_acq.next = LOW   
                         us_timer_enable.next = LOW
                         acc_en_out.next = LOW
+                        laser_locked_out.next = 0
                         if control[RDMAN_CONTROL_START_RD_B]:
                             seqState.next = SeqState.START_INJECT
                             
@@ -367,47 +395,153 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         acc_en_out.next = HIGH
                         if laser_freq_ok_in:
                             if us_since_start >= expiry_time:
+                                laser_locked_out.next = 1
                                 seqState.next = SeqState.WAIT_FOR_GATING_CONDITIONS                            
                         else:
                             expiry_time.next = us_since_start + lock_duration
                         
+                    elif seqState == SeqState.WAIT_FOR_GATING_CONDITIONS:
+                        # The gating conditions are:
+                        #  Laser wavelength in range (if LOCK_ENABLE is selected)
+                        #  Tuner is within window
+                        #  Tuner slope is correct
+                        if not freq_gating_conditions:
+                            laser_locked_out.next = 0
+                            seqState.next = SeqState.WAIT_FOR_LOCK
+                        elif tuner_gating_conditions:
+                            seqState.next = SeqState.CHECK_BELOW_THRESHOLD
+                            
+                    elif seqState == SeqState.CHECK_BELOW_THRESHOLD:
+                        if rd_data_in < threshold:
+                            seqState.next = SeqState.WAIT_FOR_THRESHOLD
+                        else:
+                            seqState.next = SeqState.WAIT_FOR_GATING_CONDITIONS
+                        
+                    elif seqState == SeqState.WAIT_FOR_THRESHOLD:
+                        if not freq_gating_conditions:
+                            laser_locked_out.next = 0
+                            seqState.next = SeqState.WAIT_FOR_LOCK
+                        elif not tuner_gating_conditions:
+                            seqState.next = SeqState.WAIT_FOR_GATING_CONDITIONS
+                        elif rd_data_in >= threshold:
+                            seqState.next = SeqState.IN_RINGDOWN
+                            rd_trig.next = HIGH          # Turn off the injection to start ringdown
+                            metadata_acq.next = LOW      # Stop metadata collection
+                            data_addrcntr.next = 0
+                            rd_divider.next = 0
+                            # Latch the metadata address counter and tuner value at ringdown
+                            #  Note that the MSB of the metadata address is used to indicate a 
+                            #  lapped condition
+                            metadata_addr_at_ringdown.next = metadata_addrcntr
+                            metadata_addr_at_ringdown.next[FPGA_REG_WIDTH-1] = lapped
+                            tuner_at_ringdown.next = tuner_value_in
+                            rd_irq.next  = 1
+                            # The init_flag is used to allow num_samp = 0 represent 4096 
+                            #  data points
+                            init_flag.next = HIGH   
+
+                    elif seqState == SeqState.IN_RINGDOWN:
+                        param_acq.next = HIGH        # Start parameter storage
+                        if rd_adc_clk:
+                            if data_addrcntr == num_samp and not init_flag:
+                                seqState.next = SeqState.CHECK_PARAMS_DONE
+                                if bank:
+                                    status.next[RDMAN_STATUS_BANK1_IN_USE_B] = 1
+                                else:
+                                    status.next[RDMAN_STATUS_BANK0_IN_USE_B] = 1
+                            if rd_divider == divisor:
+                                rd_divider.next = 0
+                                data_addrcntr.next = (data_addrcntr + 1) % data_addrcntr.max
+                                init_flag.next = LOW
+                                data_we_out.next = HIGH
+                            else:
+                                rd_divider.next = (rd_divider + 1) % divisor.max
+
+                    elif seqState == SeqState.CHECK_PARAMS_DONE:
+                        if paramState == ParamState.DONE:
+                            seqState.next = SeqState.ACQ_DONE
+                            
+                    elif seqState == SeqState.ACQ_DONE:
+                        bank.next = not bank
+                        acq_done_irq.next  = 1
+                        seqState.next = SeqState.IDLE
+
+                    # Parameter storage state machine - writes parameter
+                    #  data together with tuner value and metadata address
+                    #  at ringdown into parameter memory at the current bank
+                    if paramState == ParamState.IDLE:
+                        param_addrcntr.next = 0
+                        param_we_out.next = LOW
+                        if param_acq:
+                            paramState.next = ParamState.STORING
+                    elif paramState == ParamState.STORING:
+                        # Store parameters on the next ten clock cycles
+                        param_we_out.next = HIGH
+                        param_addrcntr.next = param_addrcntr + 1
+                        if param_addrcntr[4:] == 0:
+                            wr_param_out.next = param0
+                        elif param_addrcntr[4:] == 1:
+                            wr_param_out.next = param1
+                        elif param_addrcntr[4:] == 2:
+                            wr_param_out.next = param2
+                        elif param_addrcntr[4:] == 3:
+                            wr_param_out.next = param3
+                        elif param_addrcntr[4:] == 4:
+                            wr_param_out.next = param4
+                        elif param_addrcntr[4:] == 5:
+                            wr_param_out.next = param5
+                        elif param_addrcntr[4:] == 6:
+                            wr_param_out.next = param6
+                        elif param_addrcntr[4:] == 7:
+                            wr_param_out.next = param7
+                        elif param_addrcntr[4:] == 8:
+                            wr_param_out.next = tuner_at_ringdown
+                        else:
+                            wr_param_out.next = metadata_addr_at_ringdown
+                            paramState.next = ParamState.DONE
+                    elif paramState == ParamState.DONE:
+                        param_we_out.next = LOW
                         
                     # Metadata storage state machine - collects metadata
                     #  when metadata_strobe_in goes high into a modified circular
                     #  buffer
                     if metadataAcqState == MetadataAcqState.IDLE:
                         metadata_addrcntr.next = 0  # Reset address counters
-                        param_addrcntr.next = 0
-                        if metadata_acq:    # Start acquisition
-                            metadataAcqState.next = MetadataAcqState.AWAIT_STROBE
+                        meta_we_out.next = LOW
+                        metadataAcqState.next = MetadataAcqState.AWAIT_STROBE
                     elif metadataAcqState == MetadataAcqState.AWAIT_STROBE:
-                        if metadata_strobe_in:
+                        if metadata_acq and metadata_strobe_in:
                             metadataAcqState.next = MetadataAcqState.ACQUIRING
                     elif metadataAcqState == MetadataAcqState.ACQUIRING:
-                        # Store metadata on the next eight clock cycles
-                        meta_we_out.next = HIGH
-                        if metadata_addrcntr < 8*META_SIZE-1:
-                            metadata_addrcntr.next = metadata_addrcntr + 1
-                        else:
-                            metadata_addrcntr.next = 4*META_SIZE
-                            lapped.next = HIGH
-                        if metadata_addrcntr[3:] == 0:
-                            wr_meta_out.next = meta0_in
-                        elif metadata_addrcntr[3:] == 1:
-                            wr_meta_out.next = meta1_in
-                        elif metadata_addrcntr[3:] == 2:
-                            wr_meta_out.next = meta2_in
-                        elif metadata_addrcntr[3:] == 3:
-                            wr_meta_out.next = meta3_in
-                        elif metadata_addrcntr[3:] == 4:
-                            wr_meta_out.next = meta4_in
-                        elif metadata_addrcntr[3:] == 5:
-                            wr_meta_out.next = meta5_in
-                        elif metadata_addrcntr[3:] == 6:
-                            wr_meta_out.next = meta6_in
-                        else:
-                            wr_meta_out.next = meta7_in
+                        # Stop acquisition promptly if metadata_acq goes False
+                        #  (i.e., a ringdown is initiated)
+                        if not metadata_acq:
                             metadataAcqState.next = MetadataAcqState.DONE
+                        else:
+                            # Store metadata on the next eight clock cycles
+                            meta_we_out.next = HIGH
+                            if metadata_addrcntr < 8*META_SIZE-1:
+                                metadata_addrcntr.next = metadata_addrcntr + 1
+                            else:
+                                metadata_addrcntr.next = 4*META_SIZE
+                                lapped.next = HIGH
+                            if metadata_addrcntr[3:] == 0:
+                                wr_meta_out.next = meta0_in
+                            elif metadata_addrcntr[3:] == 1:
+                                wr_meta_out.next = meta1_in
+                            elif metadata_addrcntr[3:] == 2:
+                                wr_meta_out.next = meta2_in
+                            elif metadata_addrcntr[3:] == 3:
+                                wr_meta_out.next = meta3_in
+                            elif metadata_addrcntr[3:] == 4:
+                                wr_meta_out.next = meta4_in
+                            elif metadata_addrcntr[3:] == 5:
+                                wr_meta_out.next = meta5_in
+                            elif metadata_addrcntr[3:] == 6:
+                                wr_meta_out.next = meta6_in
+                            else:
+                                wr_meta_out.next = meta7_in
+                                metadataAcqState.next = MetadataAcqState.DONE
                     elif metadataAcqState == MetadataAcqState.DONE:
                         meta_we_out.next = LOW
                         if not metadata_strobe_in:
@@ -421,9 +555,11 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                             timeout.next = 1
                             rd_irq.next  = 1
                             metadata_acq.next = LOW   
+                            param_acq.next = LOW   
                             us_timer_enable.next = LOW
                             seqState.next = SeqState.IDLE
                             metadataAcqState.next = MetadataAcqState.IDLE
+                            paramState.next = ParamState.IDLE
                             
                     # Abort detection
                     if control[RDMAN_CONTROL_ABORT_RD_B]:
@@ -432,9 +568,11 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         abort.next = 1
                         rd_irq.next  = 1
                         metadata_acq.next = LOW   
+                        param_acq.next = LOW   
                         us_timer_enable.next = LOW
                         seqState.next = SeqState.IDLE
                         metadataAcqState.next = MetadataAcqState.IDLE
+                        paramState.next = ParamState.IDLE
                         
                     # Ringdown IRQ acknowledgement
                     if control[RDMAN_CONTROL_RD_IRQ_ACK_B]:
@@ -488,6 +626,7 @@ if __name__ == "__main__":
     acq_done_irq_out = Signal(LOW)
     rd_adc_clk_out = Signal(LOW)
     bank_out = Signal(LOW)
+    laser_locked_out = Signal(LOW)
     data_addr_out = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH:])
     wr_data_out = Signal(intbv(0)[RDMEM_DATA_WIDTH:])
     data_we_out = Signal(LOW)
@@ -516,6 +655,7 @@ if __name__ == "__main__":
                   rd_irq_out=rd_irq_out,
                   acq_done_irq_out=acq_done_irq_out,
                   rd_adc_clk_out=rd_adc_clk_out, bank_out=bank_out,
+                  laser_locked_out=laser_locked_out,
                   data_addr_out=data_addr_out, wr_data_out=wr_data_out,
                   data_we_out=data_we_out, meta_addr_out=meta_addr_out,
                   wr_meta_out=wr_meta_out, meta_we_out=meta_we_out,

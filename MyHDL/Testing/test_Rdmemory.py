@@ -94,7 +94,7 @@ def  bench():
 
     def assertReset():
         yield clk.negedge
-        yield clk.posedge
+        yield clk.posedge 
         reset.next = 1
         dsp_wr.next = 0
         yield clk.posedge

@@ -224,6 +224,8 @@ if __name__ == "__main__":
         print>>tp
         print>>tp, "def bench():"
         print>>tp, benchUtils
+        print>>tp, "    # N.B. If there are several blocks configured, ensure that dsp_data_in is "
+        print>>tp, "    #  derived as the OR of the data buses from the individual blocks."
         leadStr = "    %s = %s(" % (blockName.lower(),blockName)
         leadSpace = len(leadStr)*" "
         ports = config["PORTS"].keys()
