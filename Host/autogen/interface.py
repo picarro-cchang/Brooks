@@ -139,6 +139,8 @@ TEMP_CNTRL_LOCK_COUNT = 5
 TEMP_CNTRL_UNLOCK_COUNT = 5
 # Code to confirm FPGA is programmed
 FPGA_MAGIC_CODE = 0xC0DE0001
+# Extra bits in accumulator for ringdown simulator
+RDSIM_EXTRA = 4
 
 class DataType(Union):
     _fields_ = [
@@ -1115,19 +1117,11 @@ PWM_CS_PWM_OUT_W = 1 # PWM_OUT bit width
 PWM_PULSE_WIDTH = 1 # Pulse width register
 
 # Block RDSIM Ringdown simulator
-RDSIM_CS = 0 # Control/Status register
-RDSIM_CS_RUN_B = 0 # STOP/RUN bit position
-RDSIM_CS_RUN_W = 1 # STOP/RUN bit width
-RDSIM_CS_CONT_B = 1 # SINGLE/CONTINUOUS bit position
-RDSIM_CS_CONT_W = 1 # SINGLE/CONTINUOUS bit width
-RDSIM_CS_INIT_B = 2 # NORMAL/INIT bit position
-RDSIM_CS_INIT_W = 1 # NORMAL/INIT bit width
-RDSIM_CS_ADC_CLK_B = 3 # SINGLE mode ADC clock bit position
-RDSIM_CS_ADC_CLK_W = 1 # SINGLE mode ADC clock bit width
-
-RDSIM_VALUE = 1 # Ringdown value register
-RDSIM_DECAY = 2 # Decay rate register
-RDSIM_AMPLITUDE = 3 # Ringdown amplitude register
+RDSIM_TUNER_CENTER = 0 # Tuner value around which cavity fills
+RDSIM_TUNER_WINDOW_HALF_WIDTH = 1 # Half-width of tuner window within which cavity fills
+RDSIM_FILLING_RATE = 2 # Rate of increase of accumulator value during filling
+RDSIM_DECAY = 3 # Exponential decay of accumulator when not filling
+RDSIM_ACCUMULATOR = 4 # Simulated ringdown value
 
 # Block LASERLOCK Laser frequency locker
 LASERLOCK_CS = 0 # Control/Status register
@@ -1352,13 +1346,13 @@ FPGA_LASER2_PWM = 5 # Laser 2 TEC pulse width modulator registers
 FPGA_LASER3_PWM = 7 # Laser 3 TEC pulse width modulator registers
 FPGA_LASER4_PWM = 9 # Laser 4 TEC pulse width modulator registers
 FPGA_RDSIM = 11 # Ringdown simulator registers
-FPGA_LASERLOCK = 15 # Laser frequency locker registers
-FPGA_RDMETAMAN = 42 # Ringdown metadata manager registers
-FPGA_RDDATMAN = 56 # Ringdown data manager registers
-FPGA_RDMAN = 62 # Ringdown manager registers
-FPGA_RDCOMPARE = 83 # Ringdown comparator
-FPGA_TWGEN = 85 # Tuner waveform generator
-FPGA_INJECT = 93 # Optical Injection Subsystem
+FPGA_LASERLOCK = 16 # Laser frequency locker registers
+FPGA_RDMETAMAN = 43 # Ringdown metadata manager registers
+FPGA_RDDATMAN = 57 # Ringdown data manager registers
+FPGA_RDMAN = 63 # Ringdown manager registers
+FPGA_RDCOMPARE = 84 # Ringdown comparator
+FPGA_TWGEN = 86 # Tuner waveform generator
+FPGA_INJECT = 94 # Optical Injection Subsystem
 
 # Environment addresses
 LASER1_TEMP_CNTRL_ENV = 0

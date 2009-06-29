@@ -127,6 +127,8 @@ typedef int bool;
 #define TEMP_CNTRL_UNLOCK_COUNT (5)
 // Code to confirm FPGA is programmed
 #define FPGA_MAGIC_CODE (0xC0DE0001)
+// Extra bits in accumulator for ringdown simulator
+#define RDSIM_EXTRA (4)
 
 typedef union {
     float asFloat;
@@ -555,19 +557,11 @@ typedef enum {
 #define PWM_PULSE_WIDTH (1) // Pulse width register
 
 /* Block RDSIM Ringdown simulator */
-#define RDSIM_CS (0) // Control/Status register
-#define RDSIM_CS_RUN_B (0) // STOP/RUN bit position
-#define RDSIM_CS_RUN_W (1) // STOP/RUN bit width
-#define RDSIM_CS_CONT_B (1) // SINGLE/CONTINUOUS bit position
-#define RDSIM_CS_CONT_W (1) // SINGLE/CONTINUOUS bit width
-#define RDSIM_CS_INIT_B (2) // NORMAL/INIT bit position
-#define RDSIM_CS_INIT_W (1) // NORMAL/INIT bit width
-#define RDSIM_CS_ADC_CLK_B (3) // SINGLE mode ADC clock bit position
-#define RDSIM_CS_ADC_CLK_W (1) // SINGLE mode ADC clock bit width
-
-#define RDSIM_VALUE (1) // Ringdown value register
-#define RDSIM_DECAY (2) // Decay rate register
-#define RDSIM_AMPLITUDE (3) // Ringdown amplitude register
+#define RDSIM_TUNER_CENTER (0) // Tuner value around which cavity fills
+#define RDSIM_TUNER_WINDOW_HALF_WIDTH (1) // Half-width of tuner window within which cavity fills
+#define RDSIM_FILLING_RATE (2) // Rate of increase of accumulator value during filling
+#define RDSIM_DECAY (3) // Exponential decay of accumulator when not filling
+#define RDSIM_ACCUMULATOR (4) // Simulated ringdown value
 
 /* Block LASERLOCK Laser frequency locker */
 #define LASERLOCK_CS (0) // Control/Status register
@@ -793,13 +787,13 @@ typedef enum {
 #define FPGA_LASER3_PWM (7) // Laser 3 TEC pulse width modulator registers
 #define FPGA_LASER4_PWM (9) // Laser 4 TEC pulse width modulator registers
 #define FPGA_RDSIM (11) // Ringdown simulator registers
-#define FPGA_LASERLOCK (15) // Laser frequency locker registers
-#define FPGA_RDMETAMAN (42) // Ringdown metadata manager registers
-#define FPGA_RDDATMAN (56) // Ringdown data manager registers
-#define FPGA_RDMAN (62) // Ringdown manager registers
-#define FPGA_RDCOMPARE (83) // Ringdown comparator
-#define FPGA_TWGEN (85) // Tuner waveform generator
-#define FPGA_INJECT (93) // Optical Injection Subsystem
+#define FPGA_LASERLOCK (16) // Laser frequency locker registers
+#define FPGA_RDMETAMAN (43) // Ringdown metadata manager registers
+#define FPGA_RDDATMAN (57) // Ringdown data manager registers
+#define FPGA_RDMAN (63) // Ringdown manager registers
+#define FPGA_RDCOMPARE (84) // Ringdown comparator
+#define FPGA_TWGEN (86) // Tuner waveform generator
+#define FPGA_INJECT (94) // Optical Injection Subsystem
 
 /* Environment addresses */
 

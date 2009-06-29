@@ -177,6 +177,7 @@
         <constant ident="TEMP_CNTRL_LOCK_COUNT" description="Number of in-range samples to acquire lock">5</constant>
         <constant ident="TEMP_CNTRL_UNLOCK_COUNT" description="Number of out-of-range samples to lose lock">5</constant>
         <constant ident="FPGA_MAGIC_CODE" description="Code to confirm FPGA is programmed">0xC0DE0001</constant>
+        <constant ident="RDSIM_EXTRA" description="Extra bits in accumulator for ringdown simulator">4</constant>
     </constant_list>
     <union_list>
         <union type="DataType">
@@ -1477,15 +1478,11 @@
             <reg ident="PULSE_WIDTH" description="Pulse width register"/>
         </fpga_block>
         <fpga_block ident="RDSIM" description="Ringdown simulator">
-            <reg ident="CS" description="Control/Status register">
-                <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
-                <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
-                <bitfield ident="INIT"    description="NORMAL/INIT"  lsb="2" width="1" />
-                <bitfield ident="ADC_CLK" description="SINGLE mode ADC clock"  lsb="3" width="1" />
-            </reg>
-            <reg ident="VALUE" description="Ringdown value register"/>
-            <reg ident="DECAY" description="Decay rate register"/>
-            <reg ident="AMPLITUDE" description="Ringdown amplitude register"/>
+            <reg ident="TUNER_CENTER" description="Tuner value around which cavity fills" />
+            <reg ident="TUNER_WINDOW_HALF_WIDTH" description="Half-width of tuner window within which cavity fills" />
+            <reg ident="FILLING_RATE" description="Rate of increase of accumulator value during filling" />
+            <reg ident="DECAY" description="Exponential decay of accumulator when not filling" />
+            <reg ident="ACCUMULATOR" description="Simulated ringdown value" />
         </fpga_block>
         <fpga_block ident="LASERLOCK" description="Laser frequency locker">
             <reg ident="CS" description="Control/Status register">
