@@ -105,14 +105,14 @@ class ControllerFrame(ControllerFrameGui):
         title,details = parameterForms[id]
         pd = ParameterDialog(None, wx.ID_ANY, "")
         pd.initialize(title,details)
-        pd.getRegisterValues = self.driverRpc.rdDasRegList
-        pd.putRegisterValues = self.driverRpc.wrDasRegList
+        pd.getRegisterValues = self.driverRpc.rdRegList
+        pd.putRegisterValues = self.driverRpc.wrRegList
         self.openParamDialogs[id] = pd
         #print "About to call ReadFromDas"
         pd.readParams()
         #print "About to show dialog"
         pd.Show()
-
+        
     def onClose(self,evt):
         for id in self.openParamDialogs:
             try:

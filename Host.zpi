@@ -88,6 +88,9 @@
         <File>Host\Common\analyzerUsbIf.py</File>
         <File>Host\Common\hexfile.py</File>
         <File>Host\Common\hostDasInterface.py</File>
+        <File>Host\Common\ParameterDialog.py</File>
+        <File>Host\Common\ParameterDialogGui.py</File>
+        <File>Host\Common\ParameterGrid.py</File>
         <File>Host\Common\SharedTypes.py</File>
         <File>Host\Common\simulatorUsbIf.py</File>
         <File>Host\Common\usb.py</File>

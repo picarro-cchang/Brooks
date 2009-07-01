@@ -19,10 +19,12 @@
 <!DOCTYPE Controller_gui [
      <!ELEMENT Controller_gui (gui_pages)>
      <!ELEMENT gui_pages (gui_page+)>
-     <!ELEMENT gui_page (title,(register|mask_register)+)>
+     <!ELEMENT gui_page (title,(register|mask_register|fpga_register)+)>
      <!ELEMENT register (#PCDATA)>
      <!ELEMENT mask_register (register,(mask)+)>
-     <!ELEMENT title  (#PCDATA)>
+     <!ELEMENT fpga_register (#PCDATA)>
+     <!ATTLIST fpga_register offset CDATA #REQUIRED>
+     <!ELEMENT title (#PCDATA)>
      <!ELEMENT mask  (#PCDATA)>]>
 
 <Controller_gui>
@@ -199,6 +201,13 @@
             <register>TUNER_WINDOW_RAMP_LOW_REGISTER</register>
             <register>TUNER_UP_SLOPE_REGISTER</register>
             <register>TUNER_DOWN_SLOPE_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Ringdown Simulator Parameters</title>
+            <fpga_register offset="FPGA_RDSIM">TUNER_CENTER</fpga_register>
+            <fpga_register offset="FPGA_RDSIM">TUNER_WINDOW_HALF_WIDTH</fpga_register>
+            <fpga_register offset="FPGA_RDSIM">FILLING_RATE</fpga_register>
+            <fpga_register offset="FPGA_RDSIM">DECAY</fpga_register>
         </gui_page>
         <gui_page>
             <title>Pulse Generator Parameters</title>

@@ -306,6 +306,7 @@ for i,registerName in enumerate(registerNames):
 printFp(dspCFp,'}')
 
 fpgaBlockLists = docEl.getElementsByTagName('fpga_block_list')
+fpgaRegisterDescriptor = {}
 numRegistersByBlock = {}
 
 declC = ["/* FPGA block definitions */"]
@@ -313,6 +314,7 @@ declPy = ["# FPGA block definitions"]
 for fpgaBlockList in fpgaBlockLists:
     for fpgaBlock in fpgaBlockList.getElementsByTagName('fpga_block'):
         blockName = fpgaBlock.attributes['ident'].value
+        fpgaRegisterDescriptor[blockName] = {}
         try:
             blockDescription = fpgaBlock.attributes['description'].value
         except:
@@ -326,6 +328,26 @@ for fpgaBlockList in fpgaBlockLists:
                 regDescription = reg.attributes['description'].value
             except:
                 regDescription = ""
+
+            try:
+                regType = reg.attributes['type'].value
+            except:
+                regType = ""
+            try:
+                regAccess = reg.attributes['access'].value
+            except:
+                regAccess = u"rw"
+
+            label, format = u"", u""
+            for display in reg.getElementsByTagName('display'):
+                try:
+                    format = display.attributes['format'].value
+                except:
+                    format = u""
+                label = display.firstChild.data
+
+            fpgaRegisterDescriptor[blockName][regName] = (regType,regAccess,format,label)
+                
             name = "_".join([blockName,regName])
             value = numRegisters
             descr = regDescription
@@ -370,12 +392,12 @@ for fpgaBlockList in fpgaBlockLists:
         numRegistersByBlock[blockName] = numRegisters
     printFp(intHFp, "\n%s" % ("\n".join(declC),))
     printFp(intPyFp, "\n%s" % ("\n".join(declPy),))
-
-
+    
 fpgaMapLists = docEl.getElementsByTagName('fpga_map_list')
 fpgaMapNames = []
 fpgaMapIndexByName = {}
 fpgaMapDescriptionsByName = {}
+fpgaBlockByMapName = {}
 
 for fpgaMapList in fpgaMapLists:
     index = -1
@@ -394,6 +416,8 @@ for fpgaMapList in fpgaMapLists:
         else:
             num = 1
 
+        fpgaBlockByMapName[name] = blockName
+        
         for descriptionElement in fpgaMap.getElementsByTagName('description'):
             fpgaMapDescriptionsByName[name] = descriptionElement.firstChild.data
         fpgaMapIndexByName[name] = index
@@ -490,36 +514,52 @@ parameter_forms = []""")
 paramTypes = dict(int32='int',uint32='int',float='float')
 for guiPages in docEl.getElementsByTagName('gui_pages'):
     for guiPage in guiPages.getElementsByTagName('gui_page'):
-        for title in guiPage.getElementsByTagName('title'):
-            titleStr = title.firstChild.data
-            printFp(intPyFp, "\n# Form: %s\n\n__p = []\n" % titleStr)
-        for register in guiPage.getElementsByTagName('register'):
-            registerStr = register.firstChild.data
-            reg_index = definitions[registerStr]
-            label,units,format = registerDisplay[reg_index]
-            t = types[reg_index]
-            if t in paramTypes:
-                printFp(intPyFp, "__p.append(('%s',%s,'%s','%s','%s',%d,%d))" %
-                    (paramTypes[t],
-                     registerNames[reg_index],
-                     label,units,format,
-                     'r' in registerAccess[reg_index],
-                     'w' in registerAccess[reg_index],
-                     )
-                )
-            else:
-                format = "["
-                for ident,value,caption in enumLookup[t]:
-                    format += '(%s,"%s"),' % (ident,caption)
-                format += "]"
-                printFp(intPyFp, "__p.append(('%s',%s,'%s','%s',%s,%d,%d))" %
-                    ("choices",
-                     registerNames[reg_index],
-                     label,units,format,
-                     'r' in registerAccess[reg_index],
-                     'w' in registerAccess[reg_index],
-                     )
-                )
+        for node in guiPage.childNodes:
+            if node.localName == 'title':
+                titleStr = node.firstChild.data
+                printFp(intPyFp, "\n# Form: %s\n\n__p = []\n" % titleStr)
+            elif node.localName == 'fpga_register':
+                offset = node.attributes['offset'].value
+                block = fpgaBlockByMapName[offset]
+                regName = node.firstChild.data
+                t,access,format,label = fpgaRegisterDescriptor[block][regName]
+                if t in paramTypes:
+                    printFp(intPyFp, "__p.append(('fpga','%s',%s+%s_%s,'%s','','%s',%d,%d))" %
+                        (paramTypes[t],
+                         offset, block, regName,
+                         label,format,
+                         'r' in access,
+                         'w' in access,
+                         )
+                    )
+            
+            elif node.localName == 'register':
+                registerStr = node.firstChild.data
+                reg_index = definitions[registerStr]
+                label,units,format = registerDisplay[reg_index]
+                t = types[reg_index]
+                if t in paramTypes:
+                    printFp(intPyFp, "__p.append(('dsp','%s',%s,'%s','%s','%s',%d,%d))" %
+                        (paramTypes[t],
+                         registerNames[reg_index],
+                         label,units,format,
+                         'r' in registerAccess[reg_index],
+                         'w' in registerAccess[reg_index],
+                         )
+                    )
+                else:
+                    format = "["
+                    for ident,value,caption in enumLookup[t]:
+                        format += '(%s,"%s"),' % (ident,caption)
+                    format += "]"
+                    printFp(intPyFp, "__p.append(('dsp','%s',%s,'%s','%s',%s,%d,%d))" %
+                        ("choices",
+                         registerNames[reg_index],
+                         label,units,format,
+                         'r' in registerAccess[reg_index],
+                         'w' in registerAccess[reg_index],
+                         )
+                    )
 
         printFp(intPyFp,"parameter_forms.append(('%s',__p))" % titleStr)
 

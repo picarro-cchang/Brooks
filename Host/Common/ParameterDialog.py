@@ -12,6 +12,8 @@
 #
 # HISTORY:
 #   06-Jan-2009  sze  Initial version.
+#   30-Jun-2009  sze  Modifications to allow access to FPGA registers as 
+#                      well as DSP registers
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -38,11 +40,12 @@ class ParameterDialog(ParameterDialogGui):
 
             The details tuple for a register has differing forms, depending on the type of the register
 
-            ("int",reg,label,units,format,readable,writable)
-            ("float",reg,label,units,format,readable,writable)
+            (regLoc,"int",reg,label,units,format,readable,writable)
+            (regLoc,"float",reg,label,units,format,readable,writable)
 
             These are for registers containing integer or floating point values respectively.
 
+              regLoc is location of register, currently "dsp" or "fpga"
               reg is the index of the register containing the parameter
               label is the string for the parameter name
               units is the string specifying the units of the parameter
@@ -50,7 +53,7 @@ class ParameterDialog(ParameterDialogGui):
               readable indicates if the register may be read
               writable indicates if the register may be written
 
-            ("choices",reg,label,units,choice_list,readable,writable)
+            (regLoc,"choices",reg,label,units,choice_list,readable,writable)
 
             This produces a drop-down combo box of choices which the user may select from if the
             register is writable. If the register is only readable, the choice_list specifies the
@@ -66,7 +69,7 @@ class ParameterDialog(ParameterDialogGui):
             in the combo box. If this option is selected, that register is not written to on
             Apply or Commit.
 
-            ("mask",reg,bitfields,None,None,readable,writable)
+            (regLoc,"mask",reg,bitfields,None,None,readable,writable)
 
             This is used for a register which contains one or more bitfields representing a collection
             of parameters. Several lines in the parameter form are created for such a register, one for
@@ -100,7 +103,7 @@ class ParameterDialog(ParameterDialogGui):
         "Determine number of rows in parameter grid"
         rows = 0
         for param in self.details:
-            regType,reg,label,units,valueFmt,readable,writable = param
+            regLoc,regType,reg,label,units,valueFmt,readable,writable = param
             if regType == 'mask':
                 # For mask type, the bits are stored as a list in the label field
                 # There are thus as many rows for this register as elements in the list
@@ -174,7 +177,7 @@ class ParameterDialog(ParameterDialogGui):
         grid = self.parameterGrid
         row = 0
         for param in self.details:
-            regType,reg,label,units,valueFmt,readable,writable = param
+            regLoc,regType,reg,label,units,valueFmt,readable,writable = param
             if units == None: units = ''
             if valueFmt == None: valueFmt = ''
             if regType == 'mask':
@@ -224,7 +227,7 @@ class ParameterDialog(ParameterDialogGui):
         row = 0     # Row in dialog form
         indx = 0    # Index into list of registers
         for param in self.details:
-            regType,reg,label,units,valueFmt,readable,writable = param
+            regLoc,regType,reg,label,units,valueFmt,readable,writable = param
             val = self.paramValues[indx]
             if regType == 'mask':
                 # For mask regType, the bits to be displayed are stored in the label field
@@ -264,7 +267,7 @@ class ParameterDialog(ParameterDialogGui):
         newValues = []
         row = 0
         for param in self.details:
-            type,reg,label,units,format,readable,writable = param
+            regLoc,type,reg,label,units,format,readable,writable = param
             value = None
             if writable:
                 if type == "mask":
@@ -340,9 +343,13 @@ class ParameterDialog(ParameterDialogGui):
 
     def readParams(self):
         """ Read parameters to fill up form with current values"""
-        # For efficiency, we get lists of register indices to read
-        regList = [param[1] for param in self.details if param[5]] # Check readability
-        badList = [i for i in range(len(self.details)) if not self.details[i][5]]
+        regList = []
+        badList = []
+        for i,(regLoc,regType,reg,label,units,valueFmt,readable,writable) in enumerate(self.details):
+            if readable:
+                regList.append((regLoc,reg))
+            else:
+                badList.append(i)
         valueList = self.getRegisterValues(regList)
         for b in badList: valueList.insert(b,None)
         self.paramValues = valueList
@@ -354,15 +361,15 @@ class ParameterDialog(ParameterDialogGui):
         # Mask registers must be treated specially, since only some of the bits may need to be changed.  We need to read old
         #  values before modifying them.
         maskRegs = []
-        for (regType,reg,label,units,valueFmt,readable,writable),value in zip(self.details,self.paramValues):
+        for (regLoc,regType,reg,label,units,valueFmt,readable,writable),value in zip(self.details,self.paramValues):
             if writable and (value != None) and regType == "mask":
-                maskRegs.append(reg)
+                maskRegs.append((regLoc,reg))
         bitValues = self.getRegisterValues(maskRegs)
-        writeRegs = []
+        writeRegList = []
         writeValues = []
-        for (regType,reg,label,units,valueFmt,readable,writable),value in zip(self.details,self.paramValues):
+        for (regLoc,regType,reg,label,units,valueFmt,readable,writable),value in zip(self.details,self.paramValues):
             if writable and value != None:
-                writeRegs.append(reg)
+                writeRegList.append((regLoc,reg))
                 if regType == "mask":
                     val, mask = value
                     val |= bitValues.pop(0) & (~mask)
@@ -370,7 +377,7 @@ class ParameterDialog(ParameterDialogGui):
                     writeValues.append(val)
                 else:
                     writeValues.append(value)
-        self.putRegisterValues(writeRegs,writeValues)
+        self.putRegisterValues(writeRegList,writeValues)
 
     def onDiscard(self,e):
         """ Just destroy the form, discarding changes """
@@ -411,15 +418,15 @@ if __name__ == "__main__":
                 }
 
     def myGetRegisterValues(regList):
-        return [myRegValues[reg] for reg in regList]
+        return [myRegValues[reg] for (regLoc,reg) in regList]
 
     def myPutRegisterValues(regList,values):
         global myRegValues
         print "Calling myPutRegisterValues"
         print regList
         print values
-        for r,value in zip(regList,values):
-            myRegValues[r] = value
+        for (regLoc,reg),value in zip(regList,values):
+            myRegValues[reg] = value
 
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
@@ -430,17 +437,17 @@ if __name__ == "__main__":
     app.SetTopWindow(parameterDialog)
 
     p = []
-    p.append(('choices',RDCNTRL_CMD_REGISTER,'Set ringdown mode',None,[(RDCNTRL_Disable,'Disable ringdowns'),(RDCNTRL_EnableClt,'Enable ringdowns with laser wavelength locking'),(RDCNTRL_EnableWt,'Enable ringdowns without laser wavelength locking'),(RDCNTRL_EnterOsc,'Enable oscilloscope mode'),(RDCNTRL_EnterManual,'Enter manual mode'),],0,1))
-    p.append(('int',RDCNTRL_ETALON_DARK_READING1_REGISTER,'Etalon PD 1 dark reading','digU',"%d",1,0))
+    p.append(('dsp','choices',RDCNTRL_CMD_REGISTER,'Set ringdown mode',None,[(RDCNTRL_Disable,'Disable ringdowns'),(RDCNTRL_EnableClt,'Enable ringdowns with laser wavelength locking'),(RDCNTRL_EnableWt,'Enable ringdowns without laser wavelength locking'),(RDCNTRL_EnterOsc,'Enable oscilloscope mode'),(RDCNTRL_EnterManual,'Enter manual mode'),],0,1))
+    p.append(('dsp','int',RDCNTRL_ETALON_DARK_READING1_REGISTER,'Etalon PD 1 dark reading','digU',"%d",1,0))
     bitfields = [(RDCNTRL_AutoRdwnEnableMask,"Ringdown sequencer",[(0,"Manual"),(RDCNTRL_AutoRdwnEnableMask,"Automatic")]),
                  (RDCNTRL_CavityLengthTuningMask,"Laser wavelength locking",[(0,"Disabled"),(RDCNTRL_CavityLengthTuningMask,"Enabled")]),
                  (RDCNTRL_WaveLengthTuningMask,"Wait for wavelength locking",[(0,"Enabled"),(RDCNTRL_WaveLengthTuningMask,"Bypass")]),
                  (RDCNTRL_ForceAbortMask,"Abort ringdown cycle",[(0,"Disabled"),(RDCNTRL_ForceAbortMask,"Abort")]),
                  (RDCNTRL_TunerUpSlopeEnableMask,"Allow ringdowns on positive slope",[(0,"No"),(RDCNTRL_TunerUpSlopeEnableMask,"Yes")]),
                  (RDCNTRL_TunerDownSlopeEnableMask,"Allow ringdowns on negative slope",[(0,"No"),(RDCNTRL_TunerDownSlopeEnableMask,"Yes")])]
-    p.append(('mask',RDCNTRL_RINGDOWN_CONTROL_REGISTER,bitfields,None,None,1,1))
-    p.append(('int',RDCNTRL_REF_DARK_READING1_REGISTER,'Ref PD 1 dark reading','digU',"%d",1,0))
-    p.append(('float',LSRICNTRL_DAC_SWEEP_INCR_REGISTER,'Sweep increment','digU/sample',"%.1f",1,1))
+    p.append(('dsp','mask',RDCNTRL_RINGDOWN_CONTROL_REGISTER,bitfields,None,None,1,1))
+    p.append(('dsp','int',RDCNTRL_REF_DARK_READING1_REGISTER,'Ref PD 1 dark reading','digU',"%d",1,0))
+    p.append(('dsp','float',LSRICNTRL_DAC_SWEEP_INCR_REGISTER,'Sweep increment','digU/sample',"%.1f",1,1))
 
     parameterDialog.initialize('Ringdown parameters',p)
     parameterDialog.readParams()

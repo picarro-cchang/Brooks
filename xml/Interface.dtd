@@ -65,11 +65,12 @@
 <!ATTLIST action ident CDATA #REQUIRED>
 <!ELEMENT fpga_block_list (fpga_block+)>
 <!ELEMENT fpga_block (reg+)>
-<!ELEMENT reg (bitfield*)>
-<!ELEMENT bitfield EMPTY>
+<!ELEMENT reg (display*,bitfield*)>
+<!ELEMENT bitfield (display*)>
 <!ATTLIST fpga_block ident CDATA #REQUIRED>
 <!ATTLIST fpga_block description CDATA #IMPLIED>
 <!ATTLIST reg ident CDATA #REQUIRED>
+<!ATTLIST reg type CDATA #REQUIRED>
 <!ATTLIST reg description CDATA #IMPLIED>
 <!ATTLIST bitfield ident CDATA #REQUIRED>
 <!ATTLIST bitfield description CDATA #IMPLIED>

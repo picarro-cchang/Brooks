@@ -47,24 +47,24 @@ def RdSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,rd_trig_in,
           tuner_value_in,rd_adc_clk_in,rdsim_value_out,map_base):
     """
     Parameters:
-    clk
-    reset
-    dsp_addr
-    dsp_data_out
-    dsp_data_in
-    dsp_wr
-    rd_trig_in
-    tuner_value_in
-    rd_adc_clk_in
-    rdsim_value_out
+    clk                 -- Clock input
+    reset               -- Reset input
+    dsp_addr            -- address from dsp_interface block
+    dsp_data_out        -- write data from dsp_interface block
+    dsp_data_in         -- read data to dsp_interface_block
+    dsp_wr              -- single-cycle write command from dsp_interface block
+    rd_trig_in          -- Goes high to turn off injection into cavity
+    tuner_value_in      -- Tuner value
+    rd_adc_clk_in       -- Clock for ring-down ADC. Data loaded on negative transitions
+    rdsim_value_out     -- Simulated ring-down signal value
     map_base
 
     Registers:
-    RDSIM_TUNER_CENTER
-    RDSIM_TUNER_WINDOW_HALF_WIDTH
-    RDSIM_FILLING_RATE
-    RDSIM_DECAY
-    RDSIM_ACCUMULATOR
+    RDSIM_TUNER_CENTER  -- Specifies center of tuner window for cavity filling
+    RDSIM_TUNER_WINDOW_HALF_WIDTH   -- Specifies half-width of tuner window for cavity filling
+    RDSIM_FILLING_RATE  -- Specifies amount added to accumulator on each adc_clk when cavity is filling
+    RDSIM_DECAY         -- Specifies decay rate as a binary fraction. Accumulator is multiplied by (1-decay/16) every adc_clk
+    RDSIM_ACCUMULATOR   -- High resolution accumulator. Simulator value discards low order four bits of accumulator.
     """
     rdsim_tuner_center_addr = map_base + RDSIM_TUNER_CENTER
     rdsim_tuner_window_half_width_addr = map_base + RDSIM_TUNER_WINDOW_HALF_WIDTH

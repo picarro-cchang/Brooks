@@ -262,7 +262,8 @@ if __name__ == "__main__":
                     lsb += width
                 print>>xp, '    </reg>'
             else:
-                print>>xp, '    <reg ident="%s" description="" />' % reg.upper()
+                regSize,access = config["REGISTERS"][reg]
+                print>>xp, '    <reg type="uint32" ident="%s" description="" access="%s"></reg>' % (reg.upper(),access)
         print>>xp, '</fpga_block>'
     finally:
         op.close()

@@ -92,6 +92,7 @@
         <File>MyHDL\Common\RdDataAddrGen.py</File>
         <File>MyHDL\Common\RdMan.py</File>
         <File>MyHDL\Common\Rdmemory.py</File>
+        <File>MyHDL\Common\RdSim.py</File>
         <File>MyHDL\Common\TWGen.py</File>
     </Folder>
     <Folder name="Templates" sorted="Yes">
@@ -99,6 +100,7 @@
         <File>MyHDL\Templates\rdcompare.reg</File>
         <File>MyHDL\Templates\rdman.ini</File>
         <File>MyHDL\Templates\rdman.reg</File>
+        <File>MyHDL\Templates\RdSim.ini</File>
         <File>MyHDL\Templates\TWGen.reg</File>
         <Folder name="Generators" sorted="Yes">
             <File>MyHDL\Templates\makePy.py</File>

@@ -112,6 +112,14 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def rdFPGA(self,base,reg):
         return self.dasInterface.hostToDspSender.rdFPGA(base,reg)
 
+    def rdRegList(self,regList):
+        result = []
+        for regLoc,reg in regList:
+            if regLoc == "dsp": result.append(self.rdDasReg(reg))
+            elif regLoc == "fpga": result.append(self.rdFPGA(0,reg))
+            else: result.append(None)
+        return result
+        
     def wrFPGA(self,base,reg,value,convert=True):
         if convert:
             value = self._value(value)
@@ -130,6 +138,11 @@ class DriverRpcHandler(SharedTypes.Singleton):
         for r,value in zip(regList,values):
             self.wrDasReg(r,value)
 
+    def wrRegList(self,regList,values):
+        for (regLoc,reg),value in zip(regList,values):
+            if regLoc == "dsp": self.wrDasReg(reg,value)
+            elif regLoc == "fpga": self.wrFPGA(0,reg,value)
+            
     def wrDasReg(self,regIndexOrName,value,convert=True):
         """Writes to a DAS register, using either its index or symbolic name. If convert is True,
             value is a symbolic string that is looked up in the interface definition file. """
