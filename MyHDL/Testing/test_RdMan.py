@@ -101,9 +101,9 @@ wr_param_out = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
 param_we_out = Signal(LOW)
 map_base = FPGA_RDMAN
 
-data = Signal(intbv(0)[RDMEM_DATA_WIDTH:]) 
-meta = Signal(intbv(0)[RDMEM_META_WIDTH:]) 
-param = Signal(intbv(0)[RDMEM_PARAM_WIDTH:]) 
+data = Signal(intbv(0)[RDMEM_DATA_WIDTH:])
+meta = Signal(intbv(0)[RDMEM_META_WIDTH:])
+param = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
 clk_5M = Signal(LOW)
 clk_2M5 = Signal(LOW)
 # N.B. It is important to OR together the dsp_data_in buses
@@ -123,7 +123,7 @@ def bench():
     @always_comb
     def comb():
         dsp_data_in.next = dsp_data_in_rdman | dsp_data_in_rdmemory
-    
+
     def writeFPGA(regNum,data):
         yield clk.negedge
         yield clk.posedge
@@ -175,7 +175,7 @@ def bench():
         reset.next = 0
         yield clk.negedge
 
-    # N.B. If there are several blocks configured, ensure that dsp_data_in is 
+    # N.B. If there are several blocks configured, ensure that dsp_data_in is
     #  derived as the OR of the data buses from the individual blocks.
     rdman = RdMan( clk=clk, reset=reset, dsp_addr=dsp_addr,
                    dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdman,
@@ -211,7 +211,7 @@ def bench():
 
     clkGen = ClkGen( clk=clk, reset=reset, clk_5M=clk_5M, clk_2M5=clk_2M5,
                      pulse_1M=pulse_1M_in, pulse_100k=pulse_100k_in)
-    
+
     @instance
     def stimulus():
         global filling
@@ -234,24 +234,24 @@ def bench():
         yield readFPGA(FPGA_RDMAN+RDMAN_STATUS,result)
         assert result[RDMAN_STATUS_SHUTDOWN_B] == 1
         print "Passed check that injection is off"
-        # Write timeout duration in microseconds and check that 
+        # Write timeout duration in microseconds and check that
         #  a 32 bit number can be stored
-        yield writeFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,0xAAAA5555)        
+        yield writeFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,0xAAAA5555)
         yield readFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,result)
         assert result == 0xAAAA5555
         print "Verified that timeout is 32 bits long"
-        yield writeFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,50)                
+        yield writeFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,50)
         # Write a precontrol duration of 30us
-        yield writeFPGA(FPGA_RDMAN+RDMAN_PRECONTROL_DURATION,30)        
+        yield writeFPGA(FPGA_RDMAN+RDMAN_PRECONTROL_DURATION,30)
         # Write a lock duration of 40us
-        yield writeFPGA(FPGA_RDMAN+RDMAN_LOCK_DURATION,40)        
+        yield writeFPGA(FPGA_RDMAN+RDMAN_LOCK_DURATION,40)
         # Write a ringdown threshold of 20000
-        yield writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,20000)        
+        yield writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,20000)
         # Write a ringdown rate divisor of 2
-        yield writeFPGA(FPGA_RDMAN+RDMAN_DIVISOR,1)        
+        yield writeFPGA(FPGA_RDMAN+RDMAN_DIVISOR,1)
         # Write number of samples
-        yield writeFPGA(FPGA_RDMAN+RDMAN_NUM_SAMP,500)        
-        
+        yield writeFPGA(FPGA_RDMAN+RDMAN_NUM_SAMP,2048)
+
         for iter in range(2):
             yield readFPGA(FPGA_RDMAN+RDMAN_CONTROL,result)
             # Assert the CONT START_RD bit in the control register
@@ -259,7 +259,7 @@ def bench():
                               (1 << RDMAN_CONTROL_CONT_B) | \
                               (1 << RDMAN_CONTROL_START_RD_B)
             yield writeFPGA(FPGA_RDMAN+RDMAN_CONTROL,control)
-            
+
             startTime = now()
             yield negedge(clk)
             # Check injection is now on
@@ -279,7 +279,7 @@ def bench():
             yield posedge(rd_irq_out)
             duration = now()-startTime
             yield readFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,result)
-            assert abs(duration-1000*int(result)) < 2000        
+            assert abs(duration-1000*int(result)) < 2000
             print "Correct timeout duration"
             yield negedge(clk)
             yield readFPGA(FPGA_RDMAN+RDMAN_STATUS,result)
@@ -291,7 +291,7 @@ def bench():
             yield readFPGA(FPGA_RDMAN+RDMAN_STATUS,result)
             assert result[RDMAN_STATUS_RD_IRQ_B] == 0
             assert result[RDMAN_STATUS_TIMEOUT_B] == 1
-            
+
         yield writeFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,1000)
         yield readFPGA(FPGA_RDMAN+RDMAN_CONTROL,result)
         # Assert the CONT START_RD bit in the control register
@@ -306,7 +306,7 @@ def bench():
         yield posedge(acc_en_out)
         duration = now()-startTime
         yield readFPGA(FPGA_RDMAN+RDMAN_PRECONTROL_DURATION,result)
-        assert abs(duration-1000*int(result)) < 2000        
+        assert abs(duration-1000*int(result)) < 2000
         print "Correct precontrol duration"
         # We now enter the mode for laser locking
         yield readFPGA(FPGA_RDMAN+RDMAN_LOCK_DURATION,result)
@@ -319,7 +319,7 @@ def bench():
         yield posedge(laser_locked_out)
         duration = now()-startTime
         yield readFPGA(FPGA_RDMAN+RDMAN_LOCK_DURATION,result)
-        assert abs(duration-1000*int(result)) < 2000        
+        assert abs(duration-1000*int(result)) < 2000
         print "Correct laser locked duration"
         # We now wait for the gating conditions to be satisfied
         tuner_slope_in.next = HIGH
@@ -338,7 +338,7 @@ def bench():
             for addr in range(start,start+8):
                 yield readRdmem((0x5000 if bank_out else 0x1000)+addr,result)
                 assert (addr & 7) == (result & 7)
-    
+
     @instance
     def rdSim():
         while True:
@@ -347,8 +347,8 @@ def bench():
                 rd_data_in.next = rd_data_in + 100
             else:
                 rd_data_in.next = int(0.9995*rd_data_in)
-                
-                
+
+
     @instance
     def stopSimulation():
         yield delay(20000*PERIOD)
@@ -374,7 +374,7 @@ def bench():
             yield posedge(clk)
             metadata_strobe_in.next = LOW
 
-            
+
     return instances()
 
 def test_RdMan():

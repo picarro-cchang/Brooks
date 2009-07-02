@@ -113,6 +113,7 @@
         <File>MyHDL\Testing\test_Inject.py</File>
         <File>MyHDL\Testing\test_LaserDac.py</File>
         <File>MyHDL\Testing\test_RdDataAddrGen.py</File>
+        <File>MyHDL\Testing\test_RdMan.py</File>
         <File>MyHDL\Testing\test_Rdmemory.py</File>
         <File>MyHDL\Testing\test_TWGen.py</File>
     </Folder>
@@ -120,6 +121,7 @@
         <File>MyHDL\TopLevel\main1.py</File>
         <File>MyHDL\TopLevel\main2.py</File>
         <File>MyHDL\TopLevel\PwmTop.py</File>
+        <File>MyHDL\TopLevel\RdSimTop.py</File>
     </Folder>
     <Folder name="VHDL files" sorted="Yes">
         <File>MyHDL\Spartan3\DCM_example.vhd</File>

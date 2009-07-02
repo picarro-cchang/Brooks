@@ -66,12 +66,15 @@
 <!ELEMENT fpga_block_list (fpga_block+)>
 <!ELEMENT fpga_block (reg+)>
 <!ELEMENT reg (display*,bitfield*)>
-<!ELEMENT bitfield (display*)>
+<!ELEMENT bitfield (fielddef*)>
+<!ELEMENT fielddef (#PCDATA)>
+<!ATTLIST fielddef value CDATA #REQUIRED>
 <!ATTLIST fpga_block ident CDATA #REQUIRED>
 <!ATTLIST fpga_block description CDATA #IMPLIED>
 <!ATTLIST reg ident CDATA #REQUIRED>
 <!ATTLIST reg type CDATA #REQUIRED>
 <!ATTLIST reg description CDATA #IMPLIED>
+<!ATTLIST reg access CDATA #IMPLIED>
 <!ATTLIST bitfield ident CDATA #REQUIRED>
 <!ATTLIST bitfield description CDATA #IMPLIED>
 <!ATTLIST bitfield lsb CDATA #REQUIRED>

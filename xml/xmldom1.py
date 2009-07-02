@@ -346,7 +346,6 @@ for fpgaBlockList in fpgaBlockLists:
                     format = u""
                 label = display.firstChild.data
 
-            fpgaRegisterDescriptor[blockName][regName] = (regType,regAccess,format,label)
                 
             name = "_".join([blockName,regName])
             value = numRegisters
@@ -357,6 +356,7 @@ for fpgaBlockList in fpgaBlockLists:
                 raise ValueError, "Redefinition of %s: Old value %s, New value %s" % (name,definitions[name],value)
             definitions[name] = value
             nBitfields = 0
+            bitfields = []
             for bitfield in reg.getElementsByTagName('bitfield'):
                 bitfieldName = bitfield.attributes['ident'].value
                 try:
@@ -385,10 +385,19 @@ for fpgaBlockList in fpgaBlockLists:
                     raise ValueError, "Redefinition of %s: Old value %s, New value %s" % (name,definitions[name],value)
                 definitions[name] = value
                 nBitfields += 1
+                # Generate the field_list from the fielddef elements
+                field_list = []
+                for field in bitfield.getElementsByTagName('fielddef'):
+                    value = int(field.attributes['value'].value)<<bitfieldLsb
+                    descr = field.firstChild.data
+                    field_list.append((value,descr))
+                mask = ((1<<bitfieldWidth)-1)<<bitfieldLsb
+                bitfields.append((mask,bitfieldDescription,field_list))
             if nBitfields > 0:
                 declC.append("")
                 declPy.append("")
             numRegisters += 1
+            fpgaRegisterDescriptor[blockName][regName] = (regType,regAccess,format,label,bitfields)
         numRegistersByBlock[blockName] = numRegisters
     printFp(intHFp, "\n%s" % ("\n".join(declC),))
     printFp(intPyFp, "\n%s" % ("\n".join(declPy),))
@@ -522,7 +531,7 @@ for guiPages in docEl.getElementsByTagName('gui_pages'):
                 offset = node.attributes['offset'].value
                 block = fpgaBlockByMapName[offset]
                 regName = node.firstChild.data
-                t,access,format,label = fpgaRegisterDescriptor[block][regName]
+                t,access,format,label,bitfields = fpgaRegisterDescriptor[block][regName]
                 if t in paramTypes:
                     printFp(intPyFp, "__p.append(('fpga','%s',%s+%s_%s,'%s','','%s',%d,%d))" %
                         (paramTypes[t],
@@ -532,7 +541,15 @@ for guiPages in docEl.getElementsByTagName('gui_pages'):
                          'w' in access,
                          )
                     )
-            
+                elif t == 'mask':
+                    printFp(intPyFp, "__p.append(('fpga','mask',%s+%s_%s,%r,None,None,%d,%d))" %
+                        (offset, block, regName,
+                         bitfields,
+                         'r' in access,
+                         'w' in access,
+                         )
+                    )
+                
             elif node.localName == 'register':
                 registerStr = node.firstChild.data
                 reg_index = definitions[registerStr]

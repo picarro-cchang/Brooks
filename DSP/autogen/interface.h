@@ -667,10 +667,10 @@ typedef enum {
 
 /* Block RDMAN Ringdown manager */
 #define RDMAN_CONTROL (0) // Control register
-#define RDMAN_CONTROL_RUN_B (0) // STOP/RUN bit position
-#define RDMAN_CONTROL_RUN_W (1) // STOP/RUN bit width
-#define RDMAN_CONTROL_CONT_B (1) // SINGLE/CONTINUOUS bit position
-#define RDMAN_CONTROL_CONT_W (1) // SINGLE/CONTINUOUS bit width
+#define RDMAN_CONTROL_RUN_B (0) // Stop/Run bit position
+#define RDMAN_CONTROL_RUN_W (1) // Stop/Run bit width
+#define RDMAN_CONTROL_CONT_B (1) // Single/Continuous bit position
+#define RDMAN_CONTROL_CONT_W (1) // Single/Continuous bit width
 #define RDMAN_CONTROL_START_RD_B (2) // Start ringdown cycle bit position
 #define RDMAN_CONTROL_START_RD_W (1) // Start ringdown cycle bit width
 #define RDMAN_CONTROL_ABORT_RD_B (3) // Abort ringdown bit position
@@ -690,7 +690,7 @@ typedef enum {
 #define RDMAN_CONTROL_ACQ_DONE_ACK_B (10) // Acknowledge data acquired interrupt bit position
 #define RDMAN_CONTROL_ACQ_DONE_ACK_W (1) // Acknowledge data acquired interrupt bit width
 
-#define RDMAN_STATUS (1) // 
+#define RDMAN_STATUS (1) // Status register
 #define RDMAN_STATUS_SHUTDOWN_B (0) // Indicates shutdown of optical injection bit position
 #define RDMAN_STATUS_SHUTDOWN_W (1) // Indicates shutdown of optical injection bit width
 #define RDMAN_STATUS_RD_IRQ_B (1) // Ring down interrupt occured bit position

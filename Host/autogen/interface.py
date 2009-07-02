@@ -1227,10 +1227,10 @@ RDDATMAN_THRESHOLD = 5 # Ringdown threshold
 
 # Block RDMAN Ringdown manager
 RDMAN_CONTROL = 0 # Control register
-RDMAN_CONTROL_RUN_B = 0 # STOP/RUN bit position
-RDMAN_CONTROL_RUN_W = 1 # STOP/RUN bit width
-RDMAN_CONTROL_CONT_B = 1 # SINGLE/CONTINUOUS bit position
-RDMAN_CONTROL_CONT_W = 1 # SINGLE/CONTINUOUS bit width
+RDMAN_CONTROL_RUN_B = 0 # Stop/Run bit position
+RDMAN_CONTROL_RUN_W = 1 # Stop/Run bit width
+RDMAN_CONTROL_CONT_B = 1 # Single/Continuous bit position
+RDMAN_CONTROL_CONT_W = 1 # Single/Continuous bit width
 RDMAN_CONTROL_START_RD_B = 2 # Start ringdown cycle bit position
 RDMAN_CONTROL_START_RD_W = 1 # Start ringdown cycle bit width
 RDMAN_CONTROL_ABORT_RD_B = 3 # Abort ringdown bit position
@@ -1250,7 +1250,7 @@ RDMAN_CONTROL_RD_IRQ_ACK_W = 1 # Acknowledge ring-down interrupt bit width
 RDMAN_CONTROL_ACQ_DONE_ACK_B = 10 # Acknowledge data acquired interrupt bit position
 RDMAN_CONTROL_ACQ_DONE_ACK_W = 1 # Acknowledge data acquired interrupt bit width
 
-RDMAN_STATUS = 1 # 
+RDMAN_STATUS = 1 # Status register
 RDMAN_STATUS_SHUTDOWN_B = 0 # Indicates shutdown of optical injection bit position
 RDMAN_STATUS_SHUTDOWN_W = 1 # Indicates shutdown of optical injection bit width
 RDMAN_STATUS_RD_IRQ_B = 1 # Ring down interrupt occured bit position
@@ -1623,6 +1623,25 @@ __p.append(('fpga','int',FPGA_RDSIM+RDSIM_TUNER_WINDOW_HALF_WIDTH,'Half-width of
 __p.append(('fpga','int',FPGA_RDSIM+RDSIM_FILLING_RATE,'Rate of increase of accumulator value during filling','','%d',1,1))
 __p.append(('fpga','int',FPGA_RDSIM+RDSIM_DECAY,'Exponential decay of accumulator when not filling','','%d',1,1))
 parameter_forms.append(('Ringdown Simulator Parameters',__p))
+
+# Form: Ringdown Manager Parameters
+
+__p = []
+
+__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Enable frequency locking', [(0, u'Disable'), (16, u'Enable')]), (32, u'Allow ring-down on positive tuner slope', [(0, u'No'), (32, u'Yes')]), (64, u'Allow ring-down on negative tuner slope', [(0, u'No'), (64, u'Yes')]), (128, u'Mark bank 0 available for write', [(0, u'Idle'), (128, u'Mark available')]), (256, u'Mark bank 1 available for write', [(0, u'Idle'), (256, u'Mark available')]), (512, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (512, u'Acknowledge')]), (1024, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (1024, u'Acknowledge')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')])],None,None,1,0))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_DATA_ADDRCNTR,'Ringdown data address','','%d',1,0))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_METADATA_ADDRCNTR,'Ringdown metadata address','','%d',1,0))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_PARAM_ADDRCNTR,'Ringdown parameter address','','%d',1,0))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_DIVISOR,'Ringdown ADC divisor','','%d',1,1))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_NUM_SAMP,'Ringdown samples to collect','','%d',1,1))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_THRESHOLD,'Ringdown threshold','','%d',1,1))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_LOCK_DURATION,'Laser lock duration (us)','','%d',1,1))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_PRECONTROL_DURATION,'Precontrol duration (us)','','%d',1,1))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,'Ringdown timeout duration (us)','','%d',1,1))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN,'Tuner value at ringdown','','%d',1,0))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_METADATA_ADDR_AT_RINGDOWN,'Metadata address at ringdown','','%d',1,0))
+parameter_forms.append(('Ringdown Manager Parameters',__p))
 
 # Form: Pulse Generator Parameters
 

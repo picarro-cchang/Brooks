@@ -1573,50 +1573,153 @@
             <reg type="uint32" ident="THRESHOLD" description="Ringdown threshold"/>
         </fpga_block>
         <fpga_block ident="RDMAN" description="Ringdown manager">
-            <reg type="uint32" ident="CONTROL" description="Control register">
-                <bitfield ident="RUN" description="STOP/RUN" lsb="0" width="1" />
-                <bitfield ident="CONT" description="SINGLE/CONTINUOUS" lsb="1" width="1" />
-                <bitfield ident="START_RD" description="Start ringdown cycle" lsb="2" width="1" />
-                <bitfield ident="ABORT_RD" description="Abort ringdown" lsb="3" width="1" />
-                <bitfield ident="LOCK_ENABLE" description="Enable frequency locking" lsb="4" width="1" />
-                <bitfield ident="UP_SLOPE_ENABLE" description="Allow ring-down on positive tuner slope" lsb="5" width="1" />
-                <bitfield ident="DOWN_SLOPE_ENABLE" description="Allow ring-down on negative tuner slope" lsb="6" width="1" />
-                <bitfield ident="BANK0_CLEAR" description="Mark bank 0 available for write" lsb="7" width="1" />
-                <bitfield ident="BANK1_CLEAR" description="Mark bank 1 available for write" lsb="8" width="1" />
-                <bitfield ident="RD_IRQ_ACK" description="Acknowledge ring-down interrupt" lsb="9" width="1" />
-                <bitfield ident="ACQ_DONE_ACK" description="Acknowledge data acquired interrupt" lsb="10" width="1" />
+            <reg type="mask" ident="CONTROL" description="Control register" access="rw">
+                <display format="$%X">Control</display>
+                <bitfield ident="RUN" description="Stop/Run" lsb="0" width="1">
+                    <fielddef value="0">Stop</fielddef>
+                    <fielddef value="1">Run</fielddef>
+                </bitfield>
+                <bitfield ident="CONT" description="Single/Continuous" lsb="1" width="1">
+                    <fielddef value="0">Single</fielddef>
+                    <fielddef value="1">Continuous</fielddef>
+                </bitfield>
+                <bitfield ident="START_RD" description="Start ringdown cycle" lsb="2" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Start</fielddef>
+                </bitfield>
+                <bitfield ident="ABORT_RD" description="Abort ringdown" lsb="3" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Abort</fielddef>
+                </bitfield>
+                <bitfield ident="LOCK_ENABLE" description="Enable frequency locking" lsb="4" width="1">
+                    <fielddef value="0">Disable</fielddef>
+                    <fielddef value="1">Enable</fielddef>
+                </bitfield>
+                <bitfield ident="UP_SLOPE_ENABLE" description="Allow ring-down on positive tuner slope" lsb="5" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>
+                </bitfield>
+                <bitfield ident="DOWN_SLOPE_ENABLE" description="Allow ring-down on negative tuner slope" lsb="6" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>
+                </bitfield>
+                <bitfield ident="BANK0_CLEAR" description="Mark bank 0 available for write" lsb="7" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Mark available</fielddef>
+                </bitfield>
+                <bitfield ident="BANK1_CLEAR" description="Mark bank 1 available for write" lsb="8" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Mark available</fielddef>
+                </bitfield>
+                <bitfield ident="RD_IRQ_ACK" description="Acknowledge ring-down interrupt" lsb="9" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Acknowledge</fielddef>
+                </bitfield>
+                <bitfield ident="ACQ_DONE_ACK" description="Acknowledge data acquired interrupt" lsb="10" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Acknowledge</fielddef>
+                </bitfield>
             </reg>
-            <reg type="uint32" ident="STATUS" description="">
-                <bitfield ident="SHUTDOWN" description="Indicates shutdown of optical injection" lsb="0" width="1" />
-                <bitfield ident="RD_IRQ" description="Ring down interrupt occured" lsb="1" width="1" />
-                <bitfield ident="ACQ_DONE" description="Data acquired interrupt occured" lsb="2" width="1" />
-                <bitfield ident="BANK" description="Active bank for data acquisition" lsb="3" width="1" />
-                <bitfield ident="BANK0_IN_USE" description="Bank 0 memory in use" lsb="4" width="1" />
-                <bitfield ident="BANK1_IN_USE" description="Bank 1 memory in use" lsb="5" width="1" />
-                <bitfield ident="LAPPED" description="Metadata counter lapped" lsb="6" width="1" />
-                <bitfield ident="LASER_FREQ_LOCKED" description="Laser frequency locked" lsb="7" width="1" />
-                <bitfield ident="TIMEOUT" description="Timeout without ring-down" lsb="8" width="1" />
-                <bitfield ident="ABORTED" description="Ring-down aborted" lsb="9" width="1" />
+            <reg type="mask" ident="STATUS" description="Status register" access="r">
+                <display format="$%X">Status</display>
+                <bitfield ident="SHUTDOWN" description="Indicates shutdown of optical injection" lsb="0" width="1">
+                    <fielddef value="0">Injecting</fielddef>
+                    <fielddef value="1">Shut down</fielddef>
+                </bitfield>
+                <bitfield ident="RD_IRQ" description="Ring down interrupt occured" lsb="1" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Interrupt Active</fielddef>
+                </bitfield>
+                <bitfield ident="ACQ_DONE" description="Data acquired interrupt occured" lsb="2" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Interrupt Active</fielddef>
+                </bitfield>
+                <bitfield ident="BANK" description="Active bank for data acquisition" lsb="3" width="1">
+                    <fielddef value="0">Bank 0</fielddef>
+                    <fielddef value="1">Bank 1</fielddef>
+                </bitfield>
+                <bitfield ident="BANK0_IN_USE" description="Bank 0 memory in use" lsb="4" width="1">
+                    <fielddef value="0">Available</fielddef>
+                    <fielddef value="1">In Use</fielddef>
+                </bitfield>
+                <bitfield ident="BANK1_IN_USE" description="Bank 1 memory in use" lsb="5" width="1">
+                    <fielddef value="0">Available</fielddef>
+                    <fielddef value="1">In Use</fielddef>
+                </bitfield>
+                <bitfield ident="LAPPED" description="Metadata counter lapped" lsb="6" width="1">
+                    <fielddef value="0">Not lapped</fielddef>
+                    <fielddef value="1">Lapped</fielddef>
+                </bitfield>
+                <bitfield ident="LASER_FREQ_LOCKED" description="Laser frequency locked" lsb="7" width="1">
+                    <fielddef value="0">Unlocked</fielddef>
+                    <fielddef value="1">Locked</fielddef>
+                </bitfield>
+                <bitfield ident="TIMEOUT" description="Timeout without ring-down" lsb="8" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Timed Out</fielddef>
+                </bitfield>
+                <bitfield ident="ABORTED" description="Ring-down aborted" lsb="9" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Aborted</fielddef>
+                </bitfield>
             </reg>
-            <reg type="uint32" ident="PARAM0" description="Parameter 0 register" />
-            <reg type="uint32" ident="PARAM1" description="Parameter 1 register" />
-            <reg type="uint32" ident="PARAM2" description="Parameter 2 register" />
-            <reg type="uint32" ident="PARAM3" description="Parameter 3 register" />
-            <reg type="uint32" ident="PARAM4" description="Parameter 4 register" />
-            <reg type="uint32" ident="PARAM5" description="Parameter 5 register" />
-            <reg type="uint32" ident="PARAM6" description="Parameter 6 register" />
-            <reg type="uint32" ident="PARAM7" description="Parameter 7 register" />
-            <reg type="uint32" ident="DATA_ADDRCNTR" description="Counter for ring-down data" />
-            <reg type="uint32" ident="METADATA_ADDRCNTR" description="Counter for ring-down metadata" />
-            <reg type="uint32" ident="PARAM_ADDRCNTR" description="Counter for parameter data" />
-            <reg type="uint32" ident="DIVISOR" description="Ring-down data counter rate divisor" />
-            <reg type="uint32" ident="NUM_SAMP" description="Number of samples to collect for ring-down waveform" />
-            <reg type="uint32" ident="THRESHOLD" description="Ring-down threshold" />
-            <reg type="uint32" ident="LOCK_DURATION" description="Duration (us) for laser frequency to be locked before ring-down is allowed" />
-            <reg type="uint32" ident="PRECONTROL_DURATION" description="Duration (us) for laser current to be at nominal value before frequency locking is enabled" />
-            <reg type="uint32" ident="TIMEOUT_DURATION" description="Duration (ms) within which ring-down must occur to be valid" />
-            <reg type="uint32" ident="TUNER_AT_RINGDOWN" description="Value of tuner at ring-down" />
-            <reg type="uint32" ident="METADATA_ADDR_AT_RINGDOWN" description="Metadata address at ring-down" />
+            <reg type="uint32" ident="PARAM0" description="Parameter 0 register" access="rw">
+                <display format="%d">Parameter 0</display>
+            </reg>
+            <reg type="uint32" ident="PARAM1" description="Parameter 1 register" access="rw">
+                <display format="%d">Parameter 1</display>
+            </reg>
+            <reg type="uint32" ident="PARAM2" description="Parameter 2 register" access="rw">
+                <display format="%d">Parameter 2</display>
+            </reg>
+            <reg type="uint32" ident="PARAM3" description="Parameter 3 register" access="rw">
+                <display format="%d">Parameter 3</display>
+            </reg>
+            <reg type="uint32" ident="PARAM4" description="Parameter 4 register" access="rw">
+                <display format="%d">Parameter 4</display>
+            </reg>
+            <reg type="uint32" ident="PARAM5" description="Parameter 5 register" access="rw">
+                <display format="%d">Parameter 5</display>
+            </reg>
+            <reg type="uint32" ident="PARAM6" description="Parameter 6 register" access="rw">
+                <display format="%d">Parameter 6</display>
+            </reg>
+            <reg type="uint32" ident="PARAM7" description="Parameter 7 register" access="rw">
+                <display format="%d">Parameter 7</display>
+            </reg>
+            <reg type="uint32" ident="DATA_ADDRCNTR" description="Counter for ring-down data" access="r">
+                <display format="%d">Ringdown data address</display>
+            </reg>
+            <reg type="uint32" ident="METADATA_ADDRCNTR" description="Counter for ring-down metadata" access="r">
+                <display format="%d">Ringdown metadata address</display>
+            </reg>
+            <reg type="uint32" ident="PARAM_ADDRCNTR" description="Counter for parameter data" access="r">
+                <display format="%d">Ringdown parameter address</display>
+            </reg>
+            <reg type="uint32" ident="DIVISOR" description="Ring-down data counter rate divisor" access="rw">
+                <display format="%d">Ringdown ADC divisor</display>
+            </reg>
+            <reg type="uint32" ident="NUM_SAMP" description="Number of samples to collect for ring-down waveform" access="rw">
+                <display format="%d">Ringdown samples to collect</display>
+            </reg>
+            <reg type="uint32" ident="THRESHOLD" description="Ring-down threshold" access="rw">
+                <display format="%d">Ringdown threshold</display>
+            </reg>
+            <reg type="uint32" ident="LOCK_DURATION" description="Duration (us) for laser frequency to be locked before ring-down is allowed" access="rw">
+                <display format="%d">Laser lock duration (us)</display>
+            </reg>
+            <reg type="uint32" ident="PRECONTROL_DURATION" description="Duration (us) for laser current to be at nominal value before frequency locking is enabled" access="rw">
+                <display format="%d">Precontrol duration (us)</display>
+            </reg>
+            <reg type="uint32" ident="TIMEOUT_DURATION" description="Duration (ms) within which ring-down must occur to be valid" access="rw">
+                <display format="%d">Ringdown timeout duration (us)</display>
+            </reg>
+            <reg type="uint32" ident="TUNER_AT_RINGDOWN" description="Value of tuner at ring-down" access="r">
+                <display format="%d">Tuner value at ringdown</display>
+            </reg>
+            <reg type="uint32" ident="METADATA_ADDR_AT_RINGDOWN" description="Metadata address at ring-down" access="r">
+                <display format="%d">Metadata address at ringdown</display>
+            </reg>
         </fpga_block>
         <fpga_block ident="RDCOMPARE" description="Ringdown comparator">
             <reg type="uint32" ident="THRESHOLD" description="Ringdown threshold"/>

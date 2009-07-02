@@ -254,7 +254,7 @@ if __name__ == "__main__":
         print>>xp, '<fpga_block ident="%s" description="">' % blockName.upper()
         for reg in config["REGISTERS"]:
             if reg in config:
-                print>>xp, '    <reg ident="%s" description="">' % reg.upper()
+                print>>xp, '    <reg type="uint32" ident="%s" description="" access="%s">' % (reg.upper(),access)
                 lsb = 0
                 for field in config[reg]:
                     width = int(config[reg][field])

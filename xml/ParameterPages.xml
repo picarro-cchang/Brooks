@@ -210,6 +210,22 @@
             <fpga_register offset="FPGA_RDSIM">DECAY</fpga_register>
         </gui_page>
         <gui_page>
+            <title>Ringdown Manager Parameters</title>
+            <fpga_register offset="FPGA_RDMAN">CONTROL</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">STATUS</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">DATA_ADDRCNTR</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">METADATA_ADDRCNTR</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">PARAM_ADDRCNTR</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">DIVISOR</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">NUM_SAMP</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">THRESHOLD</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">LOCK_DURATION</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">PRECONTROL_DURATION</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">TIMEOUT_DURATION</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">TUNER_AT_RINGDOWN</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">METADATA_ADDR_AT_RINGDOWN</fpga_register>
+        </gui_page>
+        <gui_page>
             <title>Pulse Generator Parameters</title>
             <register>LOW_DURATION_REGISTER</register>
             <register>HIGH_DURATION_REGISTER</register>
