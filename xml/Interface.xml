@@ -1532,46 +1532,6 @@
             <reg type="uint32" ident="FINE_CURRENT" description="Fine laser current (ro)"/>
             <reg type="uint32" ident="CYCLE_COUNTER" description="Cycle counter (ro)"/>
         </fpga_block>
-        <fpga_block ident="RDMETAMAN" description="Ringdown metadata manager">
-            <reg type="uint32" ident="CS" description="Control/Status register">
-                <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
-                <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
-                <bitfield ident="START"   description="Start address counter" lsb="2" width="1" />
-                <bitfield ident="BANK"    description="Bank select" lsb="3" width="1" />
-                <bitfield ident="RD"      description="Ringdown" lsb="4" width="1" />
-                <bitfield ident="LASER_LOCKER_DONE"    description="Laser locker done (metadata strobe)" lsb="5" width="1" />
-                <bitfield ident="LAPPED"  description="Address counter wrapped" lsb="15" width="1" />
-            </reg>
-            <reg type="uint32" ident="METADATA_ADDRCNTR" description="Metadata address counter"/>
-            <reg type="uint32" ident="PARAM_ADDRCNTR" description="Parameter address counter"/>
-            <reg type="uint32" ident="TUNER" description="Tuner value"/>
-            <reg type="uint32" ident="TUNER_AT_RINGDOWN" description="Tuner value at ringdown"/>
-            <reg type="uint32" ident="ADDR_AT_RINGDOWN" description="Metadata address counter value at ringdown"/>
-            <reg type="uint32" ident="PARAM0" description="Ringdown parameter 0"/>
-            <reg type="uint32" ident="PARAM1" description="Ringdown parameter 1"/>
-            <reg type="uint32" ident="PARAM2" description="Ringdown parameter 2"/>
-            <reg type="uint32" ident="PARAM3" description="Ringdown parameter 3"/>
-            <reg type="uint32" ident="PARAM4" description="Ringdown parameter 4"/>
-            <reg type="uint32" ident="PARAM5" description="Ringdown parameter 5"/>
-            <reg type="uint32" ident="PARAM6" description="Ringdown parameter 6"/>
-            <reg type="uint32" ident="PARAM7" description="Ringdown parameter 7"/>
-        </fpga_block>
-        <fpga_block ident="RDDATMAN" description="Ringdown data manager">
-            <reg type="uint32" ident="CS" description="Control/Status register">
-                <bitfield ident="RUN"       description="STOP/RUN" lsb="0" width="1" />
-                <bitfield ident="CONT"      description="SINGLE/CONTINUOUS" lsb="1" width="1" />
-                <bitfield ident="ACK"       description="Acknowledge completion of acquisition" lsb="2" width="1" />
-                <bitfield ident="BANK"      description="Bank select" lsb="3" width="1" />
-                <bitfield ident="GATE"      description="Gate to arm for ringdown acquisition" lsb="4" width="1" />
-                <bitfield ident="RD_CLOCK"  description="Ringdown ADC clock" lsb="14" width="1" />
-                <bitfield ident="ACQ_DONE"  description="Acquisition done" lsb="15" width="1" />
-            </reg>
-            <reg type="uint32" ident="DATA_ADDRCNTR" description="Address counter"/>
-            <reg type="uint32" ident="DATA" description="Ringdown data"/>
-            <reg type="uint32" ident="DIVISOR" description="Divisor for ringdown ADC clock"/>
-            <reg type="uint32" ident="NUM_SAMP" description="Number of samples to collect"/>
-            <reg type="uint32" ident="THRESHOLD" description="Ringdown threshold"/>
-        </fpga_block>
         <fpga_block ident="RDMAN" description="Ringdown manager">
             <reg type="mask" ident="CONTROL" description="Control register" access="rw">
                 <display format="$%X">Control</display>
@@ -1721,10 +1681,6 @@
                 <display format="%d">Metadata address at ringdown</display>
             </reg>
         </fpga_block>
-        <fpga_block ident="RDCOMPARE" description="Ringdown comparator">
-            <reg type="uint32" ident="THRESHOLD" description="Ringdown threshold"/>
-            <reg type="uint32" ident="RATE_DIVISOR" description="Ringdown address counter divisor"/>
-        </fpga_block>
         <fpga_block ident="TWGEN" description="Tuner waveform generator">
             <reg type="uint32" ident="ACC" description="Accumulator"/>
             <reg type="uint32" ident="CS" description="Control/Status Register">
@@ -1781,17 +1737,8 @@
         <fpga_map ident="FPGA_LASERLOCK" block="LASERLOCK">
             <description>Laser frequency locker registers</description>
         </fpga_map>
-        <fpga_map ident="FPGA_RDMETAMAN" block="RDMETAMAN">
-            <description>Ringdown metadata manager registers</description>
-        </fpga_map>
-        <fpga_map ident="FPGA_RDDATMAN" block="RDDATMAN">
-            <description>Ringdown data manager registers</description>
-        </fpga_map>
         <fpga_map ident="FPGA_RDMAN" block="RDMAN">
             <description>Ringdown manager registers</description>
-        </fpga_map>
-        <fpga_map ident="FPGA_RDCOMPARE" block="RDCOMPARE">
-            <description>Ringdown comparator</description>
         </fpga_map>
         <fpga_map ident="FPGA_TWGEN" block="TWGEN">
             <description>Tuner waveform generator</description>

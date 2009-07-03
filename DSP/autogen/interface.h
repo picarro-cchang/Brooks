@@ -611,60 +611,6 @@ typedef enum {
 #define LASERLOCK_FINE_CURRENT (25) // Fine laser current (ro)
 #define LASERLOCK_CYCLE_COUNTER (26) // Cycle counter (ro)
 
-/* Block RDMETAMAN Ringdown metadata manager */
-#define RDMETAMAN_CS (0) // Control/Status register
-#define RDMETAMAN_CS_RUN_B (0) // STOP/RUN bit position
-#define RDMETAMAN_CS_RUN_W (1) // STOP/RUN bit width
-#define RDMETAMAN_CS_CONT_B (1) // SINGLE/CONTINUOUS bit position
-#define RDMETAMAN_CS_CONT_W (1) // SINGLE/CONTINUOUS bit width
-#define RDMETAMAN_CS_START_B (2) // Start address counter bit position
-#define RDMETAMAN_CS_START_W (1) // Start address counter bit width
-#define RDMETAMAN_CS_BANK_B (3) // Bank select bit position
-#define RDMETAMAN_CS_BANK_W (1) // Bank select bit width
-#define RDMETAMAN_CS_RD_B (4) // Ringdown bit position
-#define RDMETAMAN_CS_RD_W (1) // Ringdown bit width
-#define RDMETAMAN_CS_LASER_LOCKER_DONE_B (5) // Laser locker done (metadata strobe) bit position
-#define RDMETAMAN_CS_LASER_LOCKER_DONE_W (1) // Laser locker done (metadata strobe) bit width
-#define RDMETAMAN_CS_LAPPED_B (15) // Address counter wrapped bit position
-#define RDMETAMAN_CS_LAPPED_W (1) // Address counter wrapped bit width
-
-#define RDMETAMAN_METADATA_ADDRCNTR (1) // Metadata address counter
-#define RDMETAMAN_PARAM_ADDRCNTR (2) // Parameter address counter
-#define RDMETAMAN_TUNER (3) // Tuner value
-#define RDMETAMAN_TUNER_AT_RINGDOWN (4) // Tuner value at ringdown
-#define RDMETAMAN_ADDR_AT_RINGDOWN (5) // Metadata address counter value at ringdown
-#define RDMETAMAN_PARAM0 (6) // Ringdown parameter 0
-#define RDMETAMAN_PARAM1 (7) // Ringdown parameter 1
-#define RDMETAMAN_PARAM2 (8) // Ringdown parameter 2
-#define RDMETAMAN_PARAM3 (9) // Ringdown parameter 3
-#define RDMETAMAN_PARAM4 (10) // Ringdown parameter 4
-#define RDMETAMAN_PARAM5 (11) // Ringdown parameter 5
-#define RDMETAMAN_PARAM6 (12) // Ringdown parameter 6
-#define RDMETAMAN_PARAM7 (13) // Ringdown parameter 7
-
-/* Block RDDATMAN Ringdown data manager */
-#define RDDATMAN_CS (0) // Control/Status register
-#define RDDATMAN_CS_RUN_B (0) // STOP/RUN bit position
-#define RDDATMAN_CS_RUN_W (1) // STOP/RUN bit width
-#define RDDATMAN_CS_CONT_B (1) // SINGLE/CONTINUOUS bit position
-#define RDDATMAN_CS_CONT_W (1) // SINGLE/CONTINUOUS bit width
-#define RDDATMAN_CS_ACK_B (2) // Acknowledge completion of acquisition bit position
-#define RDDATMAN_CS_ACK_W (1) // Acknowledge completion of acquisition bit width
-#define RDDATMAN_CS_BANK_B (3) // Bank select bit position
-#define RDDATMAN_CS_BANK_W (1) // Bank select bit width
-#define RDDATMAN_CS_GATE_B (4) // Gate to arm for ringdown acquisition bit position
-#define RDDATMAN_CS_GATE_W (1) // Gate to arm for ringdown acquisition bit width
-#define RDDATMAN_CS_RD_CLOCK_B (14) // Ringdown ADC clock bit position
-#define RDDATMAN_CS_RD_CLOCK_W (1) // Ringdown ADC clock bit width
-#define RDDATMAN_CS_ACQ_DONE_B (15) // Acquisition done bit position
-#define RDDATMAN_CS_ACQ_DONE_W (1) // Acquisition done bit width
-
-#define RDDATMAN_DATA_ADDRCNTR (1) // Address counter
-#define RDDATMAN_DATA (2) // Ringdown data
-#define RDDATMAN_DIVISOR (3) // Divisor for ringdown ADC clock
-#define RDDATMAN_NUM_SAMP (4) // Number of samples to collect
-#define RDDATMAN_THRESHOLD (5) // Ringdown threshold
-
 /* Block RDMAN Ringdown manager */
 #define RDMAN_CONTROL (0) // Control register
 #define RDMAN_CONTROL_RUN_B (0) // Stop/Run bit position
@@ -732,10 +678,6 @@ typedef enum {
 #define RDMAN_TUNER_AT_RINGDOWN (19) // Value of tuner at ring-down
 #define RDMAN_METADATA_ADDR_AT_RINGDOWN (20) // Metadata address at ring-down
 
-/* Block RDCOMPARE Ringdown comparator */
-#define RDCOMPARE_THRESHOLD (0) // Ringdown threshold
-#define RDCOMPARE_RATE_DIVISOR (1) // Ringdown address counter divisor
-
 /* Block TWGEN Tuner waveform generator */
 #define TWGEN_ACC (0) // Accumulator
 #define TWGEN_CS (1) // Control/Status Register
@@ -788,12 +730,9 @@ typedef enum {
 #define FPGA_LASER4_PWM (9) // Laser 4 TEC pulse width modulator registers
 #define FPGA_RDSIM (11) // Ringdown simulator registers
 #define FPGA_LASERLOCK (16) // Laser frequency locker registers
-#define FPGA_RDMETAMAN (43) // Ringdown metadata manager registers
-#define FPGA_RDDATMAN (57) // Ringdown data manager registers
-#define FPGA_RDMAN (63) // Ringdown manager registers
-#define FPGA_RDCOMPARE (84) // Ringdown comparator
-#define FPGA_TWGEN (86) // Tuner waveform generator
-#define FPGA_INJECT (94) // Optical Injection Subsystem
+#define FPGA_RDMAN (43) // Ringdown manager registers
+#define FPGA_TWGEN (64) // Tuner waveform generator
+#define FPGA_INJECT (72) // Optical Injection Subsystem
 
 /* Environment addresses */
 

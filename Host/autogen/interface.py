@@ -1171,60 +1171,6 @@ LASERLOCK_WM_DERIV_GAIN = 24 # Derivative gain for wavelength locking
 LASERLOCK_FINE_CURRENT = 25 # Fine laser current (ro)
 LASERLOCK_CYCLE_COUNTER = 26 # Cycle counter (ro)
 
-# Block RDMETAMAN Ringdown metadata manager
-RDMETAMAN_CS = 0 # Control/Status register
-RDMETAMAN_CS_RUN_B = 0 # STOP/RUN bit position
-RDMETAMAN_CS_RUN_W = 1 # STOP/RUN bit width
-RDMETAMAN_CS_CONT_B = 1 # SINGLE/CONTINUOUS bit position
-RDMETAMAN_CS_CONT_W = 1 # SINGLE/CONTINUOUS bit width
-RDMETAMAN_CS_START_B = 2 # Start address counter bit position
-RDMETAMAN_CS_START_W = 1 # Start address counter bit width
-RDMETAMAN_CS_BANK_B = 3 # Bank select bit position
-RDMETAMAN_CS_BANK_W = 1 # Bank select bit width
-RDMETAMAN_CS_RD_B = 4 # Ringdown bit position
-RDMETAMAN_CS_RD_W = 1 # Ringdown bit width
-RDMETAMAN_CS_LASER_LOCKER_DONE_B = 5 # Laser locker done (metadata strobe) bit position
-RDMETAMAN_CS_LASER_LOCKER_DONE_W = 1 # Laser locker done (metadata strobe) bit width
-RDMETAMAN_CS_LAPPED_B = 15 # Address counter wrapped bit position
-RDMETAMAN_CS_LAPPED_W = 1 # Address counter wrapped bit width
-
-RDMETAMAN_METADATA_ADDRCNTR = 1 # Metadata address counter
-RDMETAMAN_PARAM_ADDRCNTR = 2 # Parameter address counter
-RDMETAMAN_TUNER = 3 # Tuner value
-RDMETAMAN_TUNER_AT_RINGDOWN = 4 # Tuner value at ringdown
-RDMETAMAN_ADDR_AT_RINGDOWN = 5 # Metadata address counter value at ringdown
-RDMETAMAN_PARAM0 = 6 # Ringdown parameter 0
-RDMETAMAN_PARAM1 = 7 # Ringdown parameter 1
-RDMETAMAN_PARAM2 = 8 # Ringdown parameter 2
-RDMETAMAN_PARAM3 = 9 # Ringdown parameter 3
-RDMETAMAN_PARAM4 = 10 # Ringdown parameter 4
-RDMETAMAN_PARAM5 = 11 # Ringdown parameter 5
-RDMETAMAN_PARAM6 = 12 # Ringdown parameter 6
-RDMETAMAN_PARAM7 = 13 # Ringdown parameter 7
-
-# Block RDDATMAN Ringdown data manager
-RDDATMAN_CS = 0 # Control/Status register
-RDDATMAN_CS_RUN_B = 0 # STOP/RUN bit position
-RDDATMAN_CS_RUN_W = 1 # STOP/RUN bit width
-RDDATMAN_CS_CONT_B = 1 # SINGLE/CONTINUOUS bit position
-RDDATMAN_CS_CONT_W = 1 # SINGLE/CONTINUOUS bit width
-RDDATMAN_CS_ACK_B = 2 # Acknowledge completion of acquisition bit position
-RDDATMAN_CS_ACK_W = 1 # Acknowledge completion of acquisition bit width
-RDDATMAN_CS_BANK_B = 3 # Bank select bit position
-RDDATMAN_CS_BANK_W = 1 # Bank select bit width
-RDDATMAN_CS_GATE_B = 4 # Gate to arm for ringdown acquisition bit position
-RDDATMAN_CS_GATE_W = 1 # Gate to arm for ringdown acquisition bit width
-RDDATMAN_CS_RD_CLOCK_B = 14 # Ringdown ADC clock bit position
-RDDATMAN_CS_RD_CLOCK_W = 1 # Ringdown ADC clock bit width
-RDDATMAN_CS_ACQ_DONE_B = 15 # Acquisition done bit position
-RDDATMAN_CS_ACQ_DONE_W = 1 # Acquisition done bit width
-
-RDDATMAN_DATA_ADDRCNTR = 1 # Address counter
-RDDATMAN_DATA = 2 # Ringdown data
-RDDATMAN_DIVISOR = 3 # Divisor for ringdown ADC clock
-RDDATMAN_NUM_SAMP = 4 # Number of samples to collect
-RDDATMAN_THRESHOLD = 5 # Ringdown threshold
-
 # Block RDMAN Ringdown manager
 RDMAN_CONTROL = 0 # Control register
 RDMAN_CONTROL_RUN_B = 0 # Stop/Run bit position
@@ -1292,10 +1238,6 @@ RDMAN_TIMEOUT_DURATION = 18 # Duration (ms) within which ring-down must occur to
 RDMAN_TUNER_AT_RINGDOWN = 19 # Value of tuner at ring-down
 RDMAN_METADATA_ADDR_AT_RINGDOWN = 20 # Metadata address at ring-down
 
-# Block RDCOMPARE Ringdown comparator
-RDCOMPARE_THRESHOLD = 0 # Ringdown threshold
-RDCOMPARE_RATE_DIVISOR = 1 # Ringdown address counter divisor
-
 # Block TWGEN Tuner waveform generator
 TWGEN_ACC = 0 # Accumulator
 TWGEN_CS = 1 # Control/Status Register
@@ -1347,12 +1289,9 @@ FPGA_LASER3_PWM = 7 # Laser 3 TEC pulse width modulator registers
 FPGA_LASER4_PWM = 9 # Laser 4 TEC pulse width modulator registers
 FPGA_RDSIM = 11 # Ringdown simulator registers
 FPGA_LASERLOCK = 16 # Laser frequency locker registers
-FPGA_RDMETAMAN = 43 # Ringdown metadata manager registers
-FPGA_RDDATMAN = 57 # Ringdown data manager registers
-FPGA_RDMAN = 63 # Ringdown manager registers
-FPGA_RDCOMPARE = 84 # Ringdown comparator
-FPGA_TWGEN = 86 # Tuner waveform generator
-FPGA_INJECT = 94 # Optical Injection Subsystem
+FPGA_RDMAN = 43 # Ringdown manager registers
+FPGA_TWGEN = 64 # Tuner waveform generator
+FPGA_INJECT = 72 # Optical Injection Subsystem
 
 # Environment addresses
 LASER1_TEMP_CNTRL_ENV = 0

@@ -22,7 +22,6 @@ from MyHDL.Common.dsp_interface import Dsp_interface
 from MyHDL.Common.Kernel import Kernel
 from MyHDL.Common.Inject import Inject
 from MyHDL.Common.Pwm1 import Pwm
-from MyHDL.Common.Rdcompare import Rdcompare
 from MyHDL.Common.Rdmemory  import Rdmemory
 from MyHDL.Common.TWGen import TWGen
 from MyHDL.Common.RdSim import RdSim

@@ -593,6 +593,16 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         control.next[RDMAN_CONTROL_ACQ_DONE_ACK_B] = 0
                         acq_done_irq.next = LOW
 
+                    # Mark bank0 available
+                    if control[RDMAN_CONTROL_BANK0_CLEAR_B]:
+                        control.next[RDMAN_CONTROL_BANK0_CLEAR_B] = 0
+                        status.next[RDMAN_STATUS_BANK0_IN_USE_B] = 0
+
+                    # Mark bank1 available
+                    if control[RDMAN_CONTROL_BANK1_CLEAR_B]:
+                        control.next[RDMAN_CONTROL_BANK1_CLEAR_B] = 0
+                        status.next[RDMAN_STATUS_BANK1_IN_USE_B] = 0
+                    
                     data_addr_out.next = data_addrcntr
                     meta_addr_out.next = metadata_addrcntr
                     param_addr_out.next = param_addrcntr
