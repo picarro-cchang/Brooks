@@ -88,6 +88,7 @@
         <File>Host\Common\analyzerUsbIf.py</File>
         <File>Host\Common\hexfile.py</File>
         <File>Host\Common\hostDasInterface.py</File>
+        <File>MyHDL\Common\LaserLocker.py</File>
         <File>Host\Common\ParameterDialog.py</File>
         <File>Host\Common\ParameterDialogGui.py</File>
         <File>Host\Common\ParameterGrid.py</File>

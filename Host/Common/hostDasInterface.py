@@ -253,6 +253,7 @@ class DasInterface(Singleton):
         self.analyzerUsb.resetHpidInFifo()
         logging.info("Holding DSP in reset...")
         self.analyzerUsb.setDspControl(usbdefs.VENDOR_DSP_CONTROL_RESET)
+        #raw_input("Press <Enter> to program FPGA")
         if not self.simulate:
             logging.info("Starting to program FPGA...")
             self.programFPGA(self.fpgaFile)

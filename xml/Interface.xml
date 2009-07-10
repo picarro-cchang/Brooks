@@ -178,6 +178,7 @@
         <constant ident="TEMP_CNTRL_UNLOCK_COUNT" description="Number of out-of-range samples to lose lock">5</constant>
         <constant ident="FPGA_MAGIC_CODE" description="Code to confirm FPGA is programmed">0xC0DE0001</constant>
         <constant ident="RDSIM_EXTRA" description="Extra bits in accumulator for ringdown simulator">4</constant>
+        <constant ident="WLM_ADC_WIDTH" description="Number of bits for wavelength monitor ADCs">16</constant>
     </constant_list>
     <union_list>
         <union type="DataType">
@@ -1493,44 +1494,45 @@
             <reg type="uint32" ident="ACCUMULATOR" description="Simulated ringdown value" access="r">
             </reg>
         </fpga_block>
-        <fpga_block ident="LASERLOCK" description="Laser frequency locker">
-            <reg type="uint32" ident="CS" description="Control/Status register">
-                <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
-                <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
-                <bitfield ident="PRBS"    description="Enables generation of PRBS for loop characterization" lsb="2" width="1" />
-                <bitfield ident="ACC_EN"  description="Resets or enables fine current accumulator" lsb="3" width="1" />
-                <bitfield ident="SAMPLE_DARK"  description="Strobe high to sample dark current" lsb="4" width="1" />
-                <bitfield ident="ADC_STROBE"   description="Strobe high to start new computation cycle" lsb="5" width="1" />
-                <bitfield ident="TUNING_OFFSET_SEL"   description="0 selects register, 1 selects input for tuning offset input" lsb="6" width="1" />
-                <bitfield ident="LOCKED"  description="Flag indicating loop is locked" lsb="14" width="1" />
-                <bitfield ident="DONE"    description="Flag indicating cycle is complete" lsb="15" width="1" />
+        <fpga_block ident="LASERLOCKER" description="Laser frequency locker">
+            <reg type="uint32" ident="CS" description="Control/Status register" access="r">
+                <bitfield ident="RUN" description="Stop/Run" lsb="0" width="1" />
+                <bitfield ident="CONT" description="Single/Continuous" lsb="1" width="1" />
+                <bitfield ident="PRBS" description="Generate PRBS" lsb="2" width="1" />
+                <bitfield ident="ACC_EN" description="Enable fine current acc" lsb="3" width="1" />
+                <bitfield ident="SAMPLE_DARK" description="Sample dark currents" lsb="4" width="1" />
+                <bitfield ident="ADC_STROBE" description="Load WLM ADC values" lsb="5" width="1" />
+                <bitfield ident="TUNING_OFFSET_SEL" description="Tuner offset from register/port" lsb="6" width="1" />
+                <bitfield ident="LASER_FREQ_OK" description="Laser frequency in window" lsb="7" width="1" />
+                <bitfield ident="CURRENT_OK" description="Current calculation complete" lsb="8" width="1" />
+
             </reg>
-            <reg type="uint32" ident="ETA1" description="Etalon 1 reading"/>
-            <reg type="uint32" ident="REF1" description="Reference 1 reading"/>
-            <reg type="uint32" ident="ETA2" description="Etalon 2 reading"/>
-            <reg type="uint32" ident="REF2" description="Reference 2 reading"/>
-            <reg type="uint32" ident="ETA1_DARK" description="Etalon 1 dark reading (ro)"/>
-            <reg type="uint32" ident="REF1_DARK" description="Reference 1 dark reading (ro)"/>
-            <reg type="uint32" ident="ETA2_DARK" description="Etalon 2 dark reading (ro)"/>
-            <reg type="uint32" ident="REF2_DARK" description="Reference 2 dark reading (ro)"/>
-            <reg type="uint32" ident="ETA1_OFFSET" description="Etalon 1 offset to be subtracted before finding ratio"/>
-            <reg type="uint32" ident="REF1_OFFSET" description="Reference 1 offset to be subtracted before finding ratio"/>
-            <reg type="uint32" ident="ETA2_OFFSET" description="Etalon 2 offset to be subtracted before finding ratio"/>
-            <reg type="uint32" ident="REF2_OFFSET" description="Reference 2 offset to be subtracted before finding ratio"/>
-            <reg type="uint32" ident="RATIO1" description="Ratio 1 (ro)"/>
-            <reg type="uint32" ident="RATIO2" description="Ratio 2 (ro)"/>
-            <reg type="uint32" ident="RATIO1_CENTER" description="Center of ellipse for ratio 1"/>
-            <reg type="uint32" ident="RATIO1_MULTIPLIER" description="Factor for ratio 1 in error linear combination"/>
-            <reg type="uint32" ident="RATIO2_CENTER" description="Center of ellipse for ratio 2"/>
-            <reg type="uint32" ident="RATIO2_MULTIPLIER" description="Factor for ratio 2 in error linear combination"/>
-            <reg type="uint32" ident="TUNING_OFFSET" description="Offset to add to error to shift frequency"/>
-            <reg type="uint32" ident="LOCK_ERROR" description="Frequency loop lock error (ro)"/>
-            <reg type="uint32" ident="WM_LOCK_WINDOW" description="Defines when laser frequency is in lock"/>
-            <reg type="uint32" ident="WM_INT_GAIN" description="Integral gain for wavelength locking"/>
-            <reg type="uint32" ident="WM_PROP_GAIN" description="Proportional gain for wavelength locking"/>
-            <reg type="uint32" ident="WM_DERIV_GAIN" description="Derivative gain for wavelength locking"/>
-            <reg type="uint32" ident="FINE_CURRENT" description="Fine laser current (ro)"/>
-            <reg type="uint32" ident="CYCLE_COUNTER" description="Cycle counter (ro)"/>
+            <reg type="uint32" ident="ETA1" description="Etalon 1 reading" access="rw"></reg>
+            <reg type="uint32" ident="REF1" description="Reference 1 reading" access="rw"></reg>
+            <reg type="uint32" ident="ETA2" description="Etalon 2 reading" access="rw"></reg>
+            <reg type="uint32" ident="REF2" description="Reference 2 reading" access="rw"></reg>
+            <reg type="uint32" ident="ETA1_DARK" description="Etalon 1 dark reading" access="r"></reg>
+            <reg type="uint32" ident="REF1_DARK" description="Reference 1 dark reading" access="r"></reg>
+            <reg type="uint32" ident="ETA2_DARK" description="Etalon 2 dark reading" access="r"></reg>
+            <reg type="uint32" ident="REF2_DARK" description="Reference 2 dark reading" access="r"></reg>
+            <reg type="uint32" ident="ETA1_OFFSET" description="Etalon 1 offset" access="rw"></reg>
+            <reg type="uint32" ident="REF1_OFFSET" description="Reference 1 offset" access="rw"></reg>
+            <reg type="uint32" ident="ETA2_OFFSET" description="Etalon 2 offset" access="rw"></reg>
+            <reg type="uint32" ident="REF2_OFFSET" description="Reference 2 offset" access="rw"></reg>
+            <reg type="uint32" ident="RATIO1" description="Ratio 1" access="r"></reg>
+            <reg type="uint32" ident="RATIO2" description="Ratio 2" access="r"></reg>
+            <reg type="uint32" ident="RATIO1_CENTER" description="Ratio 1 ellipse center" access="rw"></reg>
+            <reg type="uint32" ident="RATIO1_MULTIPLIER" description="Ratio 1 multiplier" access="rw"></reg>
+            <reg type="uint32" ident="RATIO2_CENTER" description="Ratio 2 ellipse center" access="rw"></reg>
+            <reg type="uint32" ident="RATIO2_MULTIPLIER" description="Ratio 2 multiplier" access="rw"></reg>
+            <reg type="uint32" ident="TUNING_OFFSET" description="Error offset to shift frequency" access="rw"></reg>
+            <reg type="uint32" ident="LOCK_ERROR" description="Locker loop error" access="r"></reg>
+            <reg type="uint32" ident="WM_LOCK_WINDOW" description="Lock window" access="rw"></reg>
+            <reg type="uint32" ident="WM_INT_GAIN" description="Locker integral gain" access="rw"></reg>
+            <reg type="uint32" ident="WM_PROP_GAIN" description="Locker proportional gain" access="rw"></reg>
+            <reg type="uint32" ident="WM_DERIV_GAIN" description="Locker derivative gain" access="rw"></reg>
+            <reg type="uint32" ident="FINE_CURRENT" description="Fine laser current" access="r"></reg>
+            <reg type="uint32" ident="CYCLE_COUNTER" description="Cycle counter" access="r"></reg>
         </fpga_block>
         <fpga_block ident="RDMAN" description="Ringdown manager">
             <reg type="mask" ident="CONTROL" description="Control register" access="rw">
@@ -1734,7 +1736,7 @@
         <fpga_map ident="FPGA_RDSIM" block="RDSIM">
             <description>Ringdown simulator registers</description>
         </fpga_map>
-        <fpga_map ident="FPGA_LASERLOCK" block="LASERLOCK">
+        <fpga_map ident="FPGA_LASERLOCKER" block="LASERLOCKER">
             <description>Laser frequency locker registers</description>
         </fpga_map>
         <fpga_map ident="FPGA_RDMAN" block="RDMAN">

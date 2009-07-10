@@ -129,6 +129,8 @@ typedef int bool;
 #define FPGA_MAGIC_CODE (0xC0DE0001)
 // Extra bits in accumulator for ringdown simulator
 #define RDSIM_EXTRA (4)
+// Number of bits for wavelength monitor ADCs
+#define WLM_ADC_WIDTH (16)
 
 typedef union {
     float asFloat;
@@ -563,53 +565,53 @@ typedef enum {
 #define RDSIM_DECAY (3) // Exponential decay of accumulator when not filling
 #define RDSIM_ACCUMULATOR (4) // Simulated ringdown value
 
-/* Block LASERLOCK Laser frequency locker */
-#define LASERLOCK_CS (0) // Control/Status register
-#define LASERLOCK_CS_RUN_B (0) // STOP/RUN bit position
-#define LASERLOCK_CS_RUN_W (1) // STOP/RUN bit width
-#define LASERLOCK_CS_CONT_B (1) // SINGLE/CONTINUOUS bit position
-#define LASERLOCK_CS_CONT_W (1) // SINGLE/CONTINUOUS bit width
-#define LASERLOCK_CS_PRBS_B (2) // Enables generation of PRBS for loop characterization bit position
-#define LASERLOCK_CS_PRBS_W (1) // Enables generation of PRBS for loop characterization bit width
-#define LASERLOCK_CS_ACC_EN_B (3) // Resets or enables fine current accumulator bit position
-#define LASERLOCK_CS_ACC_EN_W (1) // Resets or enables fine current accumulator bit width
-#define LASERLOCK_CS_SAMPLE_DARK_B (4) // Strobe high to sample dark current bit position
-#define LASERLOCK_CS_SAMPLE_DARK_W (1) // Strobe high to sample dark current bit width
-#define LASERLOCK_CS_ADC_STROBE_B (5) // Strobe high to start new computation cycle bit position
-#define LASERLOCK_CS_ADC_STROBE_W (1) // Strobe high to start new computation cycle bit width
-#define LASERLOCK_CS_TUNING_OFFSET_SEL_B (6) // 0 selects register, 1 selects input for tuning offset input bit position
-#define LASERLOCK_CS_TUNING_OFFSET_SEL_W (1) // 0 selects register, 1 selects input for tuning offset input bit width
-#define LASERLOCK_CS_LOCKED_B (14) // Flag indicating loop is locked bit position
-#define LASERLOCK_CS_LOCKED_W (1) // Flag indicating loop is locked bit width
-#define LASERLOCK_CS_DONE_B (15) // Flag indicating cycle is complete bit position
-#define LASERLOCK_CS_DONE_W (1) // Flag indicating cycle is complete bit width
+/* Block LASERLOCKER Laser frequency locker */
+#define LASERLOCKER_CS (0) // Control/Status register
+#define LASERLOCKER_CS_RUN_B (0) // Stop/Run bit position
+#define LASERLOCKER_CS_RUN_W (1) // Stop/Run bit width
+#define LASERLOCKER_CS_CONT_B (1) // Single/Continuous bit position
+#define LASERLOCKER_CS_CONT_W (1) // Single/Continuous bit width
+#define LASERLOCKER_CS_PRBS_B (2) // Generate PRBS bit position
+#define LASERLOCKER_CS_PRBS_W (1) // Generate PRBS bit width
+#define LASERLOCKER_CS_ACC_EN_B (3) // Enable fine current acc bit position
+#define LASERLOCKER_CS_ACC_EN_W (1) // Enable fine current acc bit width
+#define LASERLOCKER_CS_SAMPLE_DARK_B (4) // Sample dark currents bit position
+#define LASERLOCKER_CS_SAMPLE_DARK_W (1) // Sample dark currents bit width
+#define LASERLOCKER_CS_ADC_STROBE_B (5) // Load WLM ADC values bit position
+#define LASERLOCKER_CS_ADC_STROBE_W (1) // Load WLM ADC values bit width
+#define LASERLOCKER_CS_TUNING_OFFSET_SEL_B (6) // Tuner offset from register/port bit position
+#define LASERLOCKER_CS_TUNING_OFFSET_SEL_W (1) // Tuner offset from register/port bit width
+#define LASERLOCKER_CS_LASER_FREQ_OK_B (7) // Laser frequency in window bit position
+#define LASERLOCKER_CS_LASER_FREQ_OK_W (1) // Laser frequency in window bit width
+#define LASERLOCKER_CS_CURRENT_OK_B (8) // Current calculation complete bit position
+#define LASERLOCKER_CS_CURRENT_OK_W (1) // Current calculation complete bit width
 
-#define LASERLOCK_ETA1 (1) // Etalon 1 reading
-#define LASERLOCK_REF1 (2) // Reference 1 reading
-#define LASERLOCK_ETA2 (3) // Etalon 2 reading
-#define LASERLOCK_REF2 (4) // Reference 2 reading
-#define LASERLOCK_ETA1_DARK (5) // Etalon 1 dark reading (ro)
-#define LASERLOCK_REF1_DARK (6) // Reference 1 dark reading (ro)
-#define LASERLOCK_ETA2_DARK (7) // Etalon 2 dark reading (ro)
-#define LASERLOCK_REF2_DARK (8) // Reference 2 dark reading (ro)
-#define LASERLOCK_ETA1_OFFSET (9) // Etalon 1 offset to be subtracted before finding ratio
-#define LASERLOCK_REF1_OFFSET (10) // Reference 1 offset to be subtracted before finding ratio
-#define LASERLOCK_ETA2_OFFSET (11) // Etalon 2 offset to be subtracted before finding ratio
-#define LASERLOCK_REF2_OFFSET (12) // Reference 2 offset to be subtracted before finding ratio
-#define LASERLOCK_RATIO1 (13) // Ratio 1 (ro)
-#define LASERLOCK_RATIO2 (14) // Ratio 2 (ro)
-#define LASERLOCK_RATIO1_CENTER (15) // Center of ellipse for ratio 1
-#define LASERLOCK_RATIO1_MULTIPLIER (16) // Factor for ratio 1 in error linear combination
-#define LASERLOCK_RATIO2_CENTER (17) // Center of ellipse for ratio 2
-#define LASERLOCK_RATIO2_MULTIPLIER (18) // Factor for ratio 2 in error linear combination
-#define LASERLOCK_TUNING_OFFSET (19) // Offset to add to error to shift frequency
-#define LASERLOCK_LOCK_ERROR (20) // Frequency loop lock error (ro)
-#define LASERLOCK_WM_LOCK_WINDOW (21) // Defines when laser frequency is in lock
-#define LASERLOCK_WM_INT_GAIN (22) // Integral gain for wavelength locking
-#define LASERLOCK_WM_PROP_GAIN (23) // Proportional gain for wavelength locking
-#define LASERLOCK_WM_DERIV_GAIN (24) // Derivative gain for wavelength locking
-#define LASERLOCK_FINE_CURRENT (25) // Fine laser current (ro)
-#define LASERLOCK_CYCLE_COUNTER (26) // Cycle counter (ro)
+#define LASERLOCKER_ETA1 (1) // Etalon 1 reading
+#define LASERLOCKER_REF1 (2) // Reference 1 reading
+#define LASERLOCKER_ETA2 (3) // Etalon 2 reading
+#define LASERLOCKER_REF2 (4) // Reference 2 reading
+#define LASERLOCKER_ETA1_DARK (5) // Etalon 1 dark reading
+#define LASERLOCKER_REF1_DARK (6) // Reference 1 dark reading
+#define LASERLOCKER_ETA2_DARK (7) // Etalon 2 dark reading
+#define LASERLOCKER_REF2_DARK (8) // Reference 2 dark reading
+#define LASERLOCKER_ETA1_OFFSET (9) // Etalon 1 offset
+#define LASERLOCKER_REF1_OFFSET (10) // Reference 1 offset
+#define LASERLOCKER_ETA2_OFFSET (11) // Etalon 2 offset
+#define LASERLOCKER_REF2_OFFSET (12) // Reference 2 offset
+#define LASERLOCKER_RATIO1 (13) // Ratio 1
+#define LASERLOCKER_RATIO2 (14) // Ratio 2
+#define LASERLOCKER_RATIO1_CENTER (15) // Ratio 1 ellipse center
+#define LASERLOCKER_RATIO1_MULTIPLIER (16) // Ratio 1 multiplier
+#define LASERLOCKER_RATIO2_CENTER (17) // Ratio 2 ellipse center
+#define LASERLOCKER_RATIO2_MULTIPLIER (18) // Ratio 2 multiplier
+#define LASERLOCKER_TUNING_OFFSET (19) // Error offset to shift frequency
+#define LASERLOCKER_LOCK_ERROR (20) // Locker loop error
+#define LASERLOCKER_WM_LOCK_WINDOW (21) // Lock window
+#define LASERLOCKER_WM_INT_GAIN (22) // Locker integral gain
+#define LASERLOCKER_WM_PROP_GAIN (23) // Locker proportional gain
+#define LASERLOCKER_WM_DERIV_GAIN (24) // Locker derivative gain
+#define LASERLOCKER_FINE_CURRENT (25) // Fine laser current
+#define LASERLOCKER_CYCLE_COUNTER (26) // Cycle counter
 
 /* Block RDMAN Ringdown manager */
 #define RDMAN_CONTROL (0) // Control register
@@ -729,7 +731,7 @@ typedef enum {
 #define FPGA_LASER3_PWM (7) // Laser 3 TEC pulse width modulator registers
 #define FPGA_LASER4_PWM (9) // Laser 4 TEC pulse width modulator registers
 #define FPGA_RDSIM (11) // Ringdown simulator registers
-#define FPGA_LASERLOCK (16) // Laser frequency locker registers
+#define FPGA_LASERLOCKER (16) // Laser frequency locker registers
 #define FPGA_RDMAN (43) // Ringdown manager registers
 #define FPGA_TWGEN (64) // Tuner waveform generator
 #define FPGA_INJECT (72) // Optical Injection Subsystem

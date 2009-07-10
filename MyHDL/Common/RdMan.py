@@ -450,7 +450,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                                     status.next[RDMAN_STATUS_BANK1_IN_USE_B] = 1
                                 else:
                                     status.next[RDMAN_STATUS_BANK0_IN_USE_B] = 1
-                            if rd_divider == divisor:
+                            elif rd_divider == divisor:
                                 rd_divider.next = 0
                                 data_addrcntr.next = (data_addrcntr + 1) % data_addrcntr.max
                                 init_flag.next = LOW
@@ -472,9 +472,9 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     #  data together with tuner value and metadata address
                     #  at ringdown into parameter memory at the current bank
                     if paramState == ParamState.IDLE:
-                        param_addrcntr.next = 0
                         param_we_out.next = LOW
                         if param_acq:
+                            param_addrcntr.next = 0
                             paramState.next = ParamState.STORING
                     elif paramState == ParamState.STORING:
                         # Store parameters on the next ten clock cycles
@@ -508,11 +508,11 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     #  when metadata_strobe_in goes high into a modified circular
                     #  buffer
                     if metadataAcqState == MetadataAcqState.IDLE:
-                        metadata_addrcntr.next = 0  # Reset address counters
                         meta_we_out.next = LOW
                         metadataAcqState.next = MetadataAcqState.AWAIT_STROBE
                     elif metadataAcqState == MetadataAcqState.AWAIT_STROBE:
                         if metadata_acq and metadata_strobe_in:
+                            metadata_addrcntr.next = 0  # Reset address counters
                             metadataAcqState.next = MetadataAcqState.ACQUIRING
                     elif metadataAcqState == MetadataAcqState.ACQUIRING:
                         # Stop acquisition promptly if metadata_acq goes False
