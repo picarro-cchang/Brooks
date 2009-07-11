@@ -76,8 +76,12 @@ main(int argc, char *argv[])
     // Clear DSPINT bit in HPIC
     HPI_setDspint(1);
     IRQ_resetAll();
-    // Enable the interrupt
+    // Enable the interrupts
     IRQ_enable(IRQ_EVT_DSPINT);
+    // Ringdown occured interrupt
+    IRQ_enable(IRQ_EVT_EXTINT4);
+    // Ringdown acquisition done interrupt
+    IRQ_enable(IRQ_EVT_EXTINT5);
     return 0;
 }
 /* The registerTest.c file may be compiled either for the DSP, or using a host based compiler to run a simulation.

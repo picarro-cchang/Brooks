@@ -94,6 +94,7 @@
         <File>Host\Common\ParameterGrid.py</File>
         <File>Host\Common\SharedTypes.py</File>
         <File>Host\Common\simulatorUsbIf.py</File>
+        <File>Host\HardwareTesting\testRdAdcMem.py</File>
         <File>Host\Common\usb.py</File>
     </Folder>
     <Folder name="Controller" sorted="Yes">
@@ -117,6 +118,7 @@
         <File>Host\HardwareTesting\testDsp.py</File>
         <File>Host\HardwareTesting\testFpga.py</File>
         <File>Host\HardwareTesting\testPwm.py</File>
+        <File>Host\HardwareTesting\testRdAdcMem.py</File>
         <File>Host\HardwareTesting\testRdmem.py</File>
         <File>Host\HardwareTesting\testUsb.py</File>
     </Folder>

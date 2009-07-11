@@ -126,6 +126,7 @@
         <File>MyHDL\TopLevel\main1.py</File>
         <File>MyHDL\TopLevel\main2.py</File>
         <File>MyHDL\TopLevel\PwmTop.py</File>
+        <File>MyHDL\TopLevel\RdManTop.py</File>
         <File>MyHDL\TopLevel\RdSimTop.py</File>
     </Folder>
     <Folder name="VHDL files" sorted="Yes">

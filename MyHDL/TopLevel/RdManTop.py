@@ -311,8 +311,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
         intronix.next[16:8] = rdsim_value[14:6]
 
-        dsp_ext_int4.next = counter[NSTAGES-4]
-        dsp_ext_int5.next = 0
+        dsp_ext_int4.next = rd_irq
+        dsp_ext_int5.next = acq_done_irq
         dsp_ext_int6.next = 0
         dsp_ext_int7.next = 0
 

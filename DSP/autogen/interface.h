@@ -316,7 +316,7 @@ typedef enum {
 #define COMM_STATUS_ReturnValueShift (8)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (221)
+#define INTERFACE_NUMBER_OF_REGISTERS (231)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -326,8 +326,8 @@ typedef enum {
 #define SCHEDULER_CONTROL_REGISTER (5)
 #define LOGICPORT_CLOCK_PERIOD_REGISTER (6)
 #define LOGICPORT_SOURCE_REGISTER (7)
-#define LOW_DURATION_REGISTER (8)
-#define HIGH_DURATION_REGISTER (9)
+#define RD_IRQ_COUNT_REGISTER (8)
+#define ACQ_DONE_COUNT_REGISTER (9)
 #define DAS_TEMPERATURE_REGISTER (10)
 #define LASER_TEC_MONITOR_TEMPERATURE_REGISTER (11)
 #define CONVERSION_LASER1_THERM_CONSTA_REGISTER (12)
@@ -539,6 +539,16 @@ typedef enum {
 #define TUNER_WINDOW_RAMP_LOW_REGISTER (218)
 #define TUNER_UP_SLOPE_REGISTER (219)
 #define TUNER_DOWN_SLOPE_REGISTER (220)
+#define RD_MINLOSS_REGISTER (221)
+#define RD_MAXLOSS_REGISTER (222)
+#define RD_LATEST_LOSS_REGISTER (223)
+#define RD_IMPROVEMENT_STEPS_REGISTER (224)
+#define RD_START_SAMPLE_REGISTER (225)
+#define RD_FRACTIONAL_THRESHOLD_REGISTER (226)
+#define RD_ABSOLUTE_THRESHOLD_REGISTER (227)
+#define RD_NUMBER_OF_SAMPLES_REGISTER (228)
+#define RD_NUMBER_OF_POINTS_REGISTER (229)
+#define RD_MAX_E_FOLDINGS_REGISTER (230)
 
 /* FPGA block definitions */
 
@@ -701,18 +711,34 @@ typedef enum {
 #define INJECT_CONTROL (0) // Control register
 #define INJECT_CONTROL_MODE_B (0) // Manual/Automatic mode bit position
 #define INJECT_CONTROL_MODE_W (1) // Manual/Automatic mode bit width
-#define INJECT_CONTROL_LASER_SELECT_B (1) // Select laser bit position
-#define INJECT_CONTROL_LASER_SELECT_W (2) // Select laser bit width
+#define INJECT_CONTROL_LASER_SELECT_B (1) // Laser under automatic control bit position
+#define INJECT_CONTROL_LASER_SELECT_W (2) // Laser under automatic control bit width
 #define INJECT_CONTROL_LASER_CURRENT_ENABLE_B (3) // Laser current enable bit position
 #define INJECT_CONTROL_LASER_CURRENT_ENABLE_W (4) // Laser current enable bit width
+#define INJECT_CONTROL_LASER1_CURRENT_ENABLE_B (3) // Laser 1 current source bit position
+#define INJECT_CONTROL_LASER1_CURRENT_ENABLE_W (1) // Laser 1 current source bit width
+#define INJECT_CONTROL_LASER2_CURRENT_ENABLE_B (4) // Laser 2 current source bit position
+#define INJECT_CONTROL_LASER2_CURRENT_ENABLE_W (1) // Laser 2 current source bit width
+#define INJECT_CONTROL_LASER3_CURRENT_ENABLE_B (5) // Laser 3 current source bit position
+#define INJECT_CONTROL_LASER3_CURRENT_ENABLE_W (1) // Laser 3 current source bit width
+#define INJECT_CONTROL_LASER4_CURRENT_ENABLE_B (6) // Laser 4 current source bit position
+#define INJECT_CONTROL_LASER4_CURRENT_ENABLE_W (1) // Laser 4 current source bit width
 #define INJECT_CONTROL_MANUAL_LASER_ENABLE_B (7) // Deasserts short across laser in manual mode bit position
 #define INJECT_CONTROL_MANUAL_LASER_ENABLE_W (4) // Deasserts short across laser in manual mode bit width
-#define INJECT_CONTROL_MANUAL_SOA_ENABLE_B (11) // Deasserts short across SOA in manual mode bit position
-#define INJECT_CONTROL_MANUAL_SOA_ENABLE_W (1) // Deasserts short across SOA in manual mode bit width
-#define INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B (12) // Enables laser shutdown bit position
-#define INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W (1) // Enables laser shutdown bit width
-#define INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B (13) // Enables SOA shutdown bit position
-#define INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W (1) // Enables SOA shutdown bit width
+#define INJECT_CONTROL_MANUAL_LASER1_ENABLE_B (7) // Laser 1 current (in manual mode) bit position
+#define INJECT_CONTROL_MANUAL_LASER1_ENABLE_W (1) // Laser 1 current (in manual mode) bit width
+#define INJECT_CONTROL_MANUAL_LASER2_ENABLE_B (8) // Laser 2 current (in manual mode) bit position
+#define INJECT_CONTROL_MANUAL_LASER2_ENABLE_W (1) // Laser 2 current (in manual mode) bit width
+#define INJECT_CONTROL_MANUAL_LASER3_ENABLE_B (9) // Laser 3 current (in manual mode) bit position
+#define INJECT_CONTROL_MANUAL_LASER3_ENABLE_W (1) // Laser 3 current (in manual mode) bit width
+#define INJECT_CONTROL_MANUAL_LASER4_ENABLE_B (10) // Laser 4 current (in manual mode) bit position
+#define INJECT_CONTROL_MANUAL_LASER4_ENABLE_W (1) // Laser 4 current (in manual mode) bit width
+#define INJECT_CONTROL_MANUAL_SOA_ENABLE_B (11) // SOA current (in manual mode) bit position
+#define INJECT_CONTROL_MANUAL_SOA_ENABLE_W (1) // SOA current (in manual mode) bit width
+#define INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B (12) // Enables laser shutdown (in automatic mode) bit position
+#define INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W (1) // Enables laser shutdown (in automatic mode) bit width
+#define INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B (13) // Enables SOA shutdown (in automatic mode) bit position
+#define INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W (1) // Enables SOA shutdown (in automatic mode) bit width
 
 #define INJECT_LASER1_COARSE_CURRENT (1) // Sets coarse current for laser 1
 #define INJECT_LASER2_COARSE_CURRENT (2) // Sets coarse current for laser 2

@@ -105,9 +105,11 @@ class ParameterDialog(ParameterDialogGui):
         for param in self.details:
             regLoc,regType,reg,label,units,valueFmt,readable,writable = param
             if regType == 'mask':
-                # For mask type, the bits are stored as a list in the label field
-                # There are thus as many rows for this register as elements in the list
-                rows += len(label)
+                # For mask type, the bits are stored as a list of tuples in the label field.
+                #  The choices for each field are stored in the last position of the tuple. 
+                #  If this is an empty list, that does not contribute to a row
+                #  There are thus as many rows for this register as elements in the list
+                rows += len([1 for bitmask,label,choices in label if choices])
             else:
                 rows += 1
         return rows
@@ -133,23 +135,24 @@ class ParameterDialog(ParameterDialogGui):
         self.clist[reg] = {}
         for bitfields in label:
             bitmask,label,choices = bitfields
-            self.vlist[reg][bitmask] = [c[0] for c in choices]
-            self.clist[reg][bitmask] = [c[1] for c in choices]
-            grid.SetCellValue(row,0,label)
-            grid.SetReadOnly(row,0)
-            grid.SetReadOnly(row,2)
-            editor = wx.grid.GridCellChoiceEditor(self.clist[reg][bitmask],False)
-            longest = 0
-            lmax = 0
-            # Select the longest string so that the size is adequate for all choices
-            for str in self.clist[reg][bitmask]:
-                if len(str)>lmax :
-                    lmax = len(str)
-                    longest = str
-            grid.SetCellValue(row,1,longest)
-            grid.SetCellEditor(row,1,editor)
-            self.setColor(row,readable,writable)
-            row += 1
+            if choices:
+                self.vlist[reg][bitmask] = [c[0] for c in choices]
+                self.clist[reg][bitmask] = [c[1] for c in choices]
+                grid.SetCellValue(row,0,label)
+                grid.SetReadOnly(row,0)
+                grid.SetReadOnly(row,2)
+                editor = wx.grid.GridCellChoiceEditor(self.clist[reg][bitmask],False)
+                longest = 0
+                lmax = 0
+                # Select the longest string so that the size is adequate for all choices
+                for str in self.clist[reg][bitmask]:
+                    if len(str)>lmax :
+                        lmax = len(str)
+                        longest = str
+                grid.SetCellValue(row,1,longest)
+                grid.SetCellEditor(row,1,editor)
+                self.setColor(row,readable,writable)
+                row += 1
         return row
 
     def handleChoiceRegister(self,row,reg,choices,readable,writable):
@@ -233,13 +236,14 @@ class ParameterDialog(ParameterDialogGui):
                 # For mask regType, the bits to be displayed are stored in the label field
                 for bitfields in label:
                     bitmask,label,choices = bitfields
-                    value = bitmask & val
-                    try:
-                        which = self.vlist[reg][bitmask].index(value)
-                        grid.SetCellValue(row,1,self.clist[reg][bitmask][which])
-                    except:
-                        grid.SetCellValue(row,1,"-- Invalid (%x) --" % int(value))
-                    row += 1
+                    if choices:
+                        value = bitmask & val
+                        try:
+                            which = self.vlist[reg][bitmask].index(value)
+                            grid.SetCellValue(row,1,self.clist[reg][bitmask][which])
+                        except:
+                            grid.SetCellValue(row,1,"-- Invalid (%x) --" % int(value))
+                        row += 1
             else:
                 if regType == 'int':
                     if val == None:
@@ -276,12 +280,13 @@ class ParameterDialog(ParameterDialogGui):
                     for bitfields in label:
                         valueAsText = grid.GetCellValue(row,1).strip()
                         bitmask,label,choices = bitfields
-                        mask |= bitmask
-                        try:
-                            value |= self.vlist[reg][bitmask][self.clist[reg][bitmask].index(valueAsText)]   # Check against list of valid choices in format
-                        except:
-                            return row
-                        row += 1
+                        if choices:
+                            mask |= bitmask
+                            try:
+                                value |= self.vlist[reg][bitmask][self.clist[reg][bitmask].index(valueAsText)]   # Check against list of valid choices in format
+                            except:
+                                return row
+                            row += 1
                     value = (value,mask)
                 else:
                     valueAsText = grid.GetCellValue(row,1).strip()

@@ -579,23 +579,22 @@ class HostToDspSender(Singleton):
         self.usb.hpidWrite(c_uint(value))
     @usbLockProtect
     def readRdMemArray(self,offset,nwords=1):
-        """Reads multiple words from ringdown memory into a c_uint array.
-           Note that offset is a BYTE offset into the memory"""
-        self.usb.hpiaWrite(RDMEM_ADDRESS+offset)
+        """Reads multiple words from ringdown memory into a c_uint array"""
+        self.usb.hpiaWrite(interface.RDMEM_ADDRESS+4*offset)
         result = (c_uint*nwords)()
         self.usb.hpidRead(result)
         return result
     @usbLockProtect
     def readRdMem(self,offset):
-        """Reads single uint from ringdown memory from specified BYTE offset"""
-        self.usb.hpiaWrite(RDMEM_ADDRESS+offset)
+        """Reads single uint from ringdown memory"""
+        self.usb.hpiaWrite(interface.RDMEM_ADDRESS+4*offset)
         result = c_uint(0)
         self.usb.hpidRead(result)
         return result.value
     @usbLockProtect
     def writeRdMem(self,offset,value):
-        """Reads single uint value to ringdown memory at specified BYTE offset"""
-        self.usb.hpiaWrite(RDMEM_ADDRESS+offset)
+        """Reads single uint value to ringdown memory"""
+        self.usb.hpiaWrite(interface.RDMEM_ADDRESS+4*offset)
         result = c_uint(value)
         self.usb.hpidWrite(result)
     @usbLockProtect

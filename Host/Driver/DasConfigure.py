@@ -75,11 +75,6 @@ class DasConfigure(object):
 #             Operation("ACTION_READ_LASER_CURRENT",
 #                 [3,"LAER3_CURRENT_MONITOR_REGISTER"]))
 
-#         self.opGroups["FAST"]["SENSOR_READ"].addOperation(
-#             Operation("ACTION_PULSE_GENERATOR",
-#                 ["LOW_DURATION_REGISTER","HIGH_DURATION_REGISTER",
-#                 "LASER2_TEMPERATURE_REGISTER"],"PULSE_GEN_ENV"))
-#
 #         self.opGroups["FAST"]["CONTROLLER"].addOperation(
 #             Operation("ACTION_FILTER",
 #                 ["LASER2_TEMPERATURE_REGISTER","LASER2_TEC_REGISTER"],

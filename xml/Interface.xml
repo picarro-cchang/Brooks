@@ -329,15 +329,15 @@
             <initial>LOGICPORT_SOURCE_RD_ADC</initial>
             <display>Logic port source</display>
         </register>
-        <register ident="LOW_DURATION_REGISTER" type="uint32" minver="1.0" access="rw">
-            <description>Duration of low level of pulse</description>
-            <initial>90</initial>
-            <display format="%d" units="samples">Pulse low duration</display>
+        <register ident="RD_IRQ_COUNT_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Number of ringdown interrupts</description>
+            <initial>0</initial>
+            <display format="%d">Ringdown interrupt count</display>
         </register>
-        <register ident="HIGH_DURATION_REGISTER" type="uint32" minver="1.0" access="rw">
-            <description>Duration of high level of pulse</description>
-            <initial>10</initial>
-            <display format="%d" units="samples">Pulse high duration</display>
+        <register ident="ACQ_DONE_COUNT_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Number of acquisition done interrupts</description>
+            <initial>0</initial>
+            <display format="%d">Acquisition done interrupt count</display>
         </register>
         <register ident="DAS_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>DAS temperature</description>
@@ -1426,7 +1426,6 @@
             <initial>0.0</initial>
             <display format="%.0f">Heater manual mode mark</display>
         </register>
-
         <register ident="TUNER_SWEEP_RAMP_HIGH_REGISTER" type="float" minver="1.0" access="rw">
             <description>Higher limit of tuner sweep in ramp mode.</description>
             <initial>50000.0</initial>
@@ -1462,6 +1461,64 @@
             <initial>40000.0</initial>
             <save/>
             <display format="%.0f" units="digU">Tuner down slope</display>
+        </register>
+        <register ident="RD_MINLOSS_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Minimum loss for a valid ringdown.</description>
+            <initial>0.2</initial>
+            <save/>
+            <display format="%.4f" units="ppm/cm">Minimum loss</display>
+        </register>
+        <register ident="RD_MAXLOSS_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Maximum loss for a valid ringdown.</description>
+            <initial>50.0</initial>
+            <save/>
+            <display format="%.4f" units="ppm/cm">Minimum loss</display>
+        </register>
+        <register ident="RD_LATEST_LOSS_REGISTER" type="float" minver="1.0" access="r">
+            <description>Most recent loss calculated.</description>
+            <display format="%.3f" units="ppm/cm">Most recent loss</display>
+        </register>
+        <register ident="RD_IMPROVEMENT_STEPS_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Number of iterations of ringdown fit improvement.</description>
+            <initial>1</initial>
+            <save/>
+            <display format="%d">Number of iterations of ringdown fit improvement</display>
+        </register>
+        <register ident="RD_START_SAMPLE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Samples before ringdown determination</description>
+            <initial>10</initial>
+            <save/>
+            <display format="%d">Initial ringdown samples to ignore</display>
+        </register>
+        <register ident="RD_FRACTIONAL_THRESHOLD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Fractional threshold for fit window determination</description>
+            <initial>0.85</initial>
+            <save/>
+            <display format="%.2f">Fractional threshold for fit window determination</display>
+        </register>
+        <register ident="RD_ABSOLUTE_THRESHOLD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Absolute threshold for fit window determination</description>
+            <initial>13000</initial>
+            <save/>
+            <display format="%.0f">Absolute threshold for fit window determination</display>
+        </register>
+        <register ident="RD_NUMBER_OF_SAMPLES_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Number of ringdown samples to collect</description>
+            <initial>4095</initial>
+            <save/>
+            <display format="%d">Number of ringdown samples to collect</display>
+        </register>
+        <register ident="RD_NUMBER_OF_POINTS_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Maximum number of points in fit window</description>
+            <initial>3500</initial>
+            <save/>
+            <display format="%d">Maximum number of points in fit window</display>
+        </register>
+        <register ident="RD_MAX_E_FOLDINGS_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Maximum number of time constants in fit window</description>
+            <initial>8.0</initial>
+            <save/>
+            <display format="%.1f">Maximum number of time constants in fit window</display>
         </register>
     </register_list>
     <fpga_block_list>
@@ -1698,14 +1755,63 @@
             <reg type="uint32" ident="WINDOW_HIGH" description="Higher limit of window"/>
         </fpga_block>
         <fpga_block ident="INJECT" description="Optical injection subsystem">
-            <reg type="uint32" ident="CONTROL" description="Control register">
-                <bitfield ident="MODE"   description="Manual/Automatic mode"  lsb="0" width="1" />
-                <bitfield ident="LASER_SELECT"   description="Select laser" lsb="1" width="2" />
+            <reg type="mask" ident="CONTROL" description="Control register">
+                <bitfield ident="MODE"   description="Manual/Automatic mode"  lsb="0" width="1">
+                    <fielddef value="0">Manual</fielddef>
+                    <fielddef value="1">Automatic</fielddef>
+                </bitfield>
+                <bitfield ident="LASER_SELECT"   description="Laser under automatic control" lsb="1" width="2">
+                    <fielddef value="0">Laser 1</fielddef>
+                    <fielddef value="1">Laser 2</fielddef>
+                    <fielddef value="2">Laser 3</fielddef>
+                    <fielddef value="3">Laser 4</fielddef>
+                </bitfield>
                 <bitfield ident="LASER_CURRENT_ENABLE" description="Laser current enable" lsb="3" width="4" />
+                <bitfield ident="LASER1_CURRENT_ENABLE" description="Laser 1 current source" lsb="3" width="1">
+                    <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef>
+                </bitfield>
+                <bitfield ident="LASER2_CURRENT_ENABLE" description="Laser 2 current source" lsb="4" width="1">
+                    <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef>
+                </bitfield>
+                <bitfield ident="LASER3_CURRENT_ENABLE" description="Laser 3 current source" lsb="5" width="1">
+                    <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef>
+                </bitfield>
+                <bitfield ident="LASER4_CURRENT_ENABLE" description="Laser 4 current source" lsb="6" width="1">
+                    <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef>
+                </bitfield>
                 <bitfield ident="MANUAL_LASER_ENABLE" description="Deasserts short across laser in manual mode"  lsb="7" width="4" />
-                <bitfield ident="MANUAL_SOA_ENABLE" description="Deasserts short across SOA in manual mode"  lsb="11" width="1" />
-                <bitfield ident="LASER_SHUTDOWN_ENABLE" description="Enables laser shutdown"  lsb="12" width="1" />
-                <bitfield ident="SOA_SHUTDOWN_ENABLE" description="Enables SOA shutdown"  lsb="13" width="1" />
+                <bitfield ident="MANUAL_LASER1_ENABLE" description="Laser 1 current (in manual mode)" lsb="7" width="1">
+                    <fielddef value="0">Off</fielddef>
+                    <fielddef value="1">On</fielddef>
+                </bitfield>
+                <bitfield ident="MANUAL_LASER2_ENABLE" description="Laser 2 current (in manual mode)" lsb="8" width="1">
+                    <fielddef value="0">Off</fielddef>
+                    <fielddef value="1">On</fielddef>
+                </bitfield>
+                <bitfield ident="MANUAL_LASER3_ENABLE" description="Laser 3 current (in manual mode)" lsb="9" width="1">
+                    <fielddef value="0">Off</fielddef>
+                    <fielddef value="1">On</fielddef>
+                </bitfield>
+                <bitfield ident="MANUAL_LASER4_ENABLE" description="Laser 4 current (in manual mode)" lsb="10" width="1">
+                    <fielddef value="0">Off</fielddef>
+                    <fielddef value="1">On</fielddef>
+                </bitfield>
+                <bitfield ident="MANUAL_SOA_ENABLE" description="SOA current (in manual mode)"  lsb="11" width="1">
+                    <fielddef value="0">Off</fielddef>
+                    <fielddef value="1">On</fielddef>
+                </bitfield>
+                <bitfield ident="LASER_SHUTDOWN_ENABLE" description="Enables laser shutdown (in automatic mode)"  lsb="12" width="1">
+                    <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef>
+                </bitfield>
+                <bitfield ident="SOA_SHUTDOWN_ENABLE" description="Enables SOA shutdown (in automatic mode)"  lsb="13" width="1">
+                    <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef>
+                </bitfield>
             </reg>
             <reg type="uint32" ident="LASER1_COARSE_CURRENT" description="Sets coarse current for laser 1"/>
             <reg type="uint32" ident="LASER2_COARSE_CURRENT" description="Sets coarse current for laser 2"/>

@@ -122,6 +122,7 @@
         <File>DSP\registerTest\misc.h</File>
         <File>DSP\registerTest\pid.c</File>
         <File>DSP\registerTest\pid.h</File>
+        <File>DSP\registerTest\rdHandlers.c</File>
         <File>DSP\registerTest\registerTest.c</File>
         <File>DSP\registerTest\registerTest.h</File>
         <File>DSP\registerTest\registerTestSim.c</File>

@@ -430,7 +430,7 @@ COMM_STATUS_SequenceNumberShift = 24
 COMM_STATUS_ReturnValueShift = 8
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 221
+INTERFACE_NUMBER_OF_REGISTERS = 231
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -440,8 +440,8 @@ TIMESTAMP_MSB_REGISTER = 4
 SCHEDULER_CONTROL_REGISTER = 5
 LOGICPORT_CLOCK_PERIOD_REGISTER = 6
 LOGICPORT_SOURCE_REGISTER = 7
-LOW_DURATION_REGISTER = 8
-HIGH_DURATION_REGISTER = 9
+RD_IRQ_COUNT_REGISTER = 8
+ACQ_DONE_COUNT_REGISTER = 9
 DAS_TEMPERATURE_REGISTER = 10
 LASER_TEC_MONITOR_TEMPERATURE_REGISTER = 11
 CONVERSION_LASER1_THERM_CONSTA_REGISTER = 12
@@ -653,6 +653,16 @@ TUNER_WINDOW_RAMP_HIGH_REGISTER = 217
 TUNER_WINDOW_RAMP_LOW_REGISTER = 218
 TUNER_UP_SLOPE_REGISTER = 219
 TUNER_DOWN_SLOPE_REGISTER = 220
+RD_MINLOSS_REGISTER = 221
+RD_MAXLOSS_REGISTER = 222
+RD_LATEST_LOSS_REGISTER = 223
+RD_IMPROVEMENT_STEPS_REGISTER = 224
+RD_START_SAMPLE_REGISTER = 225
+RD_FRACTIONAL_THRESHOLD_REGISTER = 226
+RD_ABSOLUTE_THRESHOLD_REGISTER = 227
+RD_NUMBER_OF_SAMPLES_REGISTER = 228
+RD_NUMBER_OF_POINTS_REGISTER = 229
+RD_MAX_E_FOLDINGS_REGISTER = 230
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -673,10 +683,10 @@ registerByName["LOGICPORT_CLOCK_PERIOD_REGISTER"] = LOGICPORT_CLOCK_PERIOD_REGIS
 registerInfo.append(RegInfo("LOGICPORT_CLOCK_PERIOD_REGISTER",LOGICPORT_CLOCK_PERIOD_Type,0,1.0,"rw"))
 registerByName["LOGICPORT_SOURCE_REGISTER"] = LOGICPORT_SOURCE_REGISTER
 registerInfo.append(RegInfo("LOGICPORT_SOURCE_REGISTER",LOGICPORT_SOURCE_Type,0,1.0,"rw"))
-registerByName["LOW_DURATION_REGISTER"] = LOW_DURATION_REGISTER
-registerInfo.append(RegInfo("LOW_DURATION_REGISTER",c_uint,0,1.0,"rw"))
-registerByName["HIGH_DURATION_REGISTER"] = HIGH_DURATION_REGISTER
-registerInfo.append(RegInfo("HIGH_DURATION_REGISTER",c_uint,0,1.0,"rw"))
+registerByName["RD_IRQ_COUNT_REGISTER"] = RD_IRQ_COUNT_REGISTER
+registerInfo.append(RegInfo("RD_IRQ_COUNT_REGISTER",c_uint,0,1.0,"r"))
+registerByName["ACQ_DONE_COUNT_REGISTER"] = ACQ_DONE_COUNT_REGISTER
+registerInfo.append(RegInfo("ACQ_DONE_COUNT_REGISTER",c_uint,0,1.0,"r"))
 registerByName["DAS_TEMPERATURE_REGISTER"] = DAS_TEMPERATURE_REGISTER
 registerInfo.append(RegInfo("DAS_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
 registerByName["LASER_TEC_MONITOR_TEMPERATURE_REGISTER"] = LASER_TEC_MONITOR_TEMPERATURE_REGISTER
@@ -1099,6 +1109,26 @@ registerByName["TUNER_UP_SLOPE_REGISTER"] = TUNER_UP_SLOPE_REGISTER
 registerInfo.append(RegInfo("TUNER_UP_SLOPE_REGISTER",c_float,1,1.0,"rw"))
 registerByName["TUNER_DOWN_SLOPE_REGISTER"] = TUNER_DOWN_SLOPE_REGISTER
 registerInfo.append(RegInfo("TUNER_DOWN_SLOPE_REGISTER",c_float,1,1.0,"rw"))
+registerByName["RD_MINLOSS_REGISTER"] = RD_MINLOSS_REGISTER
+registerInfo.append(RegInfo("RD_MINLOSS_REGISTER",c_float,1,1.0,"rw"))
+registerByName["RD_MAXLOSS_REGISTER"] = RD_MAXLOSS_REGISTER
+registerInfo.append(RegInfo("RD_MAXLOSS_REGISTER",c_float,1,1.0,"rw"))
+registerByName["RD_LATEST_LOSS_REGISTER"] = RD_LATEST_LOSS_REGISTER
+registerInfo.append(RegInfo("RD_LATEST_LOSS_REGISTER",c_float,0,1.0,"r"))
+registerByName["RD_IMPROVEMENT_STEPS_REGISTER"] = RD_IMPROVEMENT_STEPS_REGISTER
+registerInfo.append(RegInfo("RD_IMPROVEMENT_STEPS_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["RD_START_SAMPLE_REGISTER"] = RD_START_SAMPLE_REGISTER
+registerInfo.append(RegInfo("RD_START_SAMPLE_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["RD_FRACTIONAL_THRESHOLD_REGISTER"] = RD_FRACTIONAL_THRESHOLD_REGISTER
+registerInfo.append(RegInfo("RD_FRACTIONAL_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
+registerByName["RD_ABSOLUTE_THRESHOLD_REGISTER"] = RD_ABSOLUTE_THRESHOLD_REGISTER
+registerInfo.append(RegInfo("RD_ABSOLUTE_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
+registerByName["RD_NUMBER_OF_SAMPLES_REGISTER"] = RD_NUMBER_OF_SAMPLES_REGISTER
+registerInfo.append(RegInfo("RD_NUMBER_OF_SAMPLES_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["RD_NUMBER_OF_POINTS_REGISTER"] = RD_NUMBER_OF_POINTS_REGISTER
+registerInfo.append(RegInfo("RD_NUMBER_OF_POINTS_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["RD_MAX_E_FOLDINGS_REGISTER"] = RD_MAX_E_FOLDINGS_REGISTER
+registerInfo.append(RegInfo("RD_MAX_E_FOLDINGS_REGISTER",c_float,1,1.0,"rw"))
 
 # FPGA block definitions
 
@@ -1261,18 +1291,34 @@ TWGEN_WINDOW_HIGH = 7 # Higher limit of window
 INJECT_CONTROL = 0 # Control register
 INJECT_CONTROL_MODE_B = 0 # Manual/Automatic mode bit position
 INJECT_CONTROL_MODE_W = 1 # Manual/Automatic mode bit width
-INJECT_CONTROL_LASER_SELECT_B = 1 # Select laser bit position
-INJECT_CONTROL_LASER_SELECT_W = 2 # Select laser bit width
+INJECT_CONTROL_LASER_SELECT_B = 1 # Laser under automatic control bit position
+INJECT_CONTROL_LASER_SELECT_W = 2 # Laser under automatic control bit width
 INJECT_CONTROL_LASER_CURRENT_ENABLE_B = 3 # Laser current enable bit position
 INJECT_CONTROL_LASER_CURRENT_ENABLE_W = 4 # Laser current enable bit width
+INJECT_CONTROL_LASER1_CURRENT_ENABLE_B = 3 # Laser 1 current source bit position
+INJECT_CONTROL_LASER1_CURRENT_ENABLE_W = 1 # Laser 1 current source bit width
+INJECT_CONTROL_LASER2_CURRENT_ENABLE_B = 4 # Laser 2 current source bit position
+INJECT_CONTROL_LASER2_CURRENT_ENABLE_W = 1 # Laser 2 current source bit width
+INJECT_CONTROL_LASER3_CURRENT_ENABLE_B = 5 # Laser 3 current source bit position
+INJECT_CONTROL_LASER3_CURRENT_ENABLE_W = 1 # Laser 3 current source bit width
+INJECT_CONTROL_LASER4_CURRENT_ENABLE_B = 6 # Laser 4 current source bit position
+INJECT_CONTROL_LASER4_CURRENT_ENABLE_W = 1 # Laser 4 current source bit width
 INJECT_CONTROL_MANUAL_LASER_ENABLE_B = 7 # Deasserts short across laser in manual mode bit position
 INJECT_CONTROL_MANUAL_LASER_ENABLE_W = 4 # Deasserts short across laser in manual mode bit width
-INJECT_CONTROL_MANUAL_SOA_ENABLE_B = 11 # Deasserts short across SOA in manual mode bit position
-INJECT_CONTROL_MANUAL_SOA_ENABLE_W = 1 # Deasserts short across SOA in manual mode bit width
-INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B = 12 # Enables laser shutdown bit position
-INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W = 1 # Enables laser shutdown bit width
-INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B = 13 # Enables SOA shutdown bit position
-INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W = 1 # Enables SOA shutdown bit width
+INJECT_CONTROL_MANUAL_LASER1_ENABLE_B = 7 # Laser 1 current (in manual mode) bit position
+INJECT_CONTROL_MANUAL_LASER1_ENABLE_W = 1 # Laser 1 current (in manual mode) bit width
+INJECT_CONTROL_MANUAL_LASER2_ENABLE_B = 8 # Laser 2 current (in manual mode) bit position
+INJECT_CONTROL_MANUAL_LASER2_ENABLE_W = 1 # Laser 2 current (in manual mode) bit width
+INJECT_CONTROL_MANUAL_LASER3_ENABLE_B = 9 # Laser 3 current (in manual mode) bit position
+INJECT_CONTROL_MANUAL_LASER3_ENABLE_W = 1 # Laser 3 current (in manual mode) bit width
+INJECT_CONTROL_MANUAL_LASER4_ENABLE_B = 10 # Laser 4 current (in manual mode) bit position
+INJECT_CONTROL_MANUAL_LASER4_ENABLE_W = 1 # Laser 4 current (in manual mode) bit width
+INJECT_CONTROL_MANUAL_SOA_ENABLE_B = 11 # SOA current (in manual mode) bit position
+INJECT_CONTROL_MANUAL_SOA_ENABLE_W = 1 # SOA current (in manual mode) bit width
+INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B = 12 # Enables laser shutdown (in automatic mode) bit position
+INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W = 1 # Enables laser shutdown (in automatic mode) bit width
+INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B = 13 # Enables SOA shutdown (in automatic mode) bit position
+INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W = 1 # Enables SOA shutdown (in automatic mode) bit width
 
 INJECT_LASER1_COARSE_CURRENT = 1 # Sets coarse current for laser 1
 INJECT_LASER2_COARSE_CURRENT = 2 # Sets coarse current for laser 2
@@ -1366,6 +1412,8 @@ parameter_forms = []
 __p = []
 
 __p.append(('dsp','int',SCHEDULER_CONTROL_REGISTER,'Scheduler enable','','%d',1,0))
+__p.append(('dsp','int',RD_IRQ_COUNT_REGISTER,'Ringdown interrupt count','','%d',1,0))
+__p.append(('dsp','int',ACQ_DONE_COUNT_REGISTER,'Acquisition done interrupt count','','%d',1,0))
 __p.append(('dsp','choices',LOGICPORT_CLOCK_PERIOD_REGISTER,'Logic port clock period','',[(LOGICPORT_CLOCK_PERIOD_20ns,"20 ns"),(LOGICPORT_CLOCK_PERIOD_40ns,"40 ns"),(LOGICPORT_CLOCK_PERIOD_80ns,"80 ns"),(LOGICPORT_CLOCK_PERIOD_160ns,"160 ns"),(LOGICPORT_CLOCK_PERIOD_320ns,"320 ns"),(LOGICPORT_CLOCK_PERIOD_640ns,"640 ns"),(LOGICPORT_CLOCK_PERIOD_1280ns,"1.28 us"),(LOGICPORT_CLOCK_PERIOD_2560ns,"2.56 us"),(LOGICPORT_CLOCK_PERIOD_5120ns,"5.12 us"),(LOGICPORT_CLOCK_PERIOD_10240ns,"10.24 us"),(LOGICPORT_CLOCK_PERIOD_20480ns,"20.48 us"),(LOGICPORT_CLOCK_PERIOD_40960ns,"40.96 us"),(LOGICPORT_CLOCK_PERIOD_81920ns,"81.92 us"),(LOGICPORT_CLOCK_PERIOD_163840ns,"163.8 us"),(LOGICPORT_CLOCK_PERIOD_327680ns,"327.7 us"),(LOGICPORT_CLOCK_PERIOD_655360ns,"655.4 us"),(LOGICPORT_CLOCK_PERIOD_1310720ns,"1.311 ms"),(LOGICPORT_CLOCK_PERIOD_2621440ns,"2.621 ms"),(LOGICPORT_CLOCK_PERIOD_5242880ns,"5.243 ms"),(LOGICPORT_CLOCK_PERIOD_10485760ns,"10.49 ms"),(LOGICPORT_CLOCK_PERIOD_20971520ns,"20.97 ms"),(LOGICPORT_CLOCK_PERIOD_41943040ns,"41.94 ms"),(LOGICPORT_CLOCK_PERIOD_83886080ns,"83.39 ms"),(LOGICPORT_CLOCK_PERIOD_167772160ns,"167.8 ms"),(LOGICPORT_CLOCK_PERIOD_335544320ns,"335.5 ms"),(LOGICPORT_CLOCK_PERIOD_671088640ns,"671.1 ms"),(LOGICPORT_CLOCK_PERIOD_1342177280ns,"1.342 s"),(LOGICPORT_CLOCK_PERIOD_2684354560ns,"2.684 s"),(LOGICPORT_CLOCK_PERIOD_5368709120ns,"5.368 s"),],1,1))
 __p.append(('dsp','choices',LOGICPORT_SOURCE_REGISTER,'Logic port source','',[(LOGICPORT_SOURCE_RD_ADC,"Ringdown ADC"),(LOGICPORT_SOURCE_TUNER,"Tuner Value"),],1,1))
 parameter_forms.append(('System Configuration Parameters',__p))
@@ -1555,6 +1603,13 @@ __p.append(('dsp','float',TUNER_UP_SLOPE_REGISTER,'Tuner up slope','digU','%.0f'
 __p.append(('dsp','float',TUNER_DOWN_SLOPE_REGISTER,'Tuner down slope','digU','%.0f',1,1))
 parameter_forms.append(('Tuner Waveform Parameters',__p))
 
+# Form: Optical Injection Parameters
+
+__p = []
+
+__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser under automatic control', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', [(0, u'Disabled'), (8, u'Enabled')]), (16, u'Laser 2 current source', [(0, u'Disabled'), (16, u'Enabled')]), (32, u'Laser 3 current source', [(0, u'Disabled'), (32, u'Enabled')]), (64, u'Laser 4 current source', [(0, u'Disabled'), (64, u'Enabled')]), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', [(0, u'Off'), (128, u'On')]), (256, u'Laser 2 current (in manual mode)', [(0, u'Off'), (256, u'On')]), (512, u'Laser 3 current (in manual mode)', [(0, u'Off'), (512, u'On')]), (1024, u'Laser 4 current (in manual mode)', [(0, u'Off'), (1024, u'On')]), (2048, u'SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')])],None,None,1,1))
+parameter_forms.append(('Optical Injection Parameters',__p))
+
 # Form: Ringdown Simulator Parameters
 
 __p = []
@@ -1584,10 +1639,18 @@ __p.append(('fpga','int',FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN,'Tuner value at ring
 __p.append(('fpga','int',FPGA_RDMAN+RDMAN_METADATA_ADDR_AT_RINGDOWN,'Metadata address at ringdown','','%d',1,0))
 parameter_forms.append(('Ringdown Manager Parameters',__p))
 
-# Form: Pulse Generator Parameters
+# Form: Ringdown Data Fitting Parameters
 
 __p = []
 
-__p.append(('dsp','int',LOW_DURATION_REGISTER,'Pulse low duration','samples','%d',1,1))
-__p.append(('dsp','int',HIGH_DURATION_REGISTER,'Pulse high duration','samples','%d',1,1))
-parameter_forms.append(('Pulse Generator Parameters',__p))
+__p.append(('dsp','float',RD_MINLOSS_REGISTER,'Minimum loss','ppm/cm','%.4f',1,1))
+__p.append(('dsp','float',RD_MAXLOSS_REGISTER,'Minimum loss','ppm/cm','%.4f',1,1))
+__p.append(('dsp','float',RD_LATEST_LOSS_REGISTER,'Most recent loss','ppm/cm','%.3f',1,0))
+__p.append(('dsp','int',RD_IMPROVEMENT_STEPS_REGISTER,'Number of iterations of ringdown fit improvement','','%d',1,1))
+__p.append(('dsp','int',RD_START_SAMPLE_REGISTER,'Initial ringdown samples to ignore','','%d',1,1))
+__p.append(('dsp','float',RD_FRACTIONAL_THRESHOLD_REGISTER,'Fractional threshold for fit window determination','','%.2f',1,1))
+__p.append(('dsp','float',RD_ABSOLUTE_THRESHOLD_REGISTER,'Absolute threshold for fit window determination','','%.0f',1,1))
+__p.append(('dsp','int',RD_NUMBER_OF_SAMPLES_REGISTER,'Number of ringdown samples to collect','','%d',1,1))
+__p.append(('dsp','int',RD_NUMBER_OF_POINTS_REGISTER,'Maximum number of points in fit window','','%d',1,1))
+__p.append(('dsp','float',RD_MAX_E_FOLDINGS_REGISTER,'Maximum number of time constants in fit window','','%.1f',1,1))
+parameter_forms.append(('Ringdown Data Fitting Parameters',__p))

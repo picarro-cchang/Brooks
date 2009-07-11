@@ -53,6 +53,10 @@ bios.PRD.instance("PRD_timestamp").order = 1;
 bios.PRD.instance("PRD_timestamp").period = 1;
 bios.PRD.instance("PRD_timestamp").fxn = prog.extern("timestampPrdFunction");
 bios.PRD.instance("PRD_timestamp").fxn = prog.extern("timestampPrdFunc");
+bios.HWI.instance("HWI_INT4").fxn = prog.extern("ringdownInterrupt");
+bios.HWI.instance("HWI_INT4").useDispatcher = 1;
+bios.HWI.instance("HWI_INT5").fxn = prog.extern("acqDoneInterrupt");
+bios.HWI.instance("HWI_INT5").useDispatcher = 1;
 // !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
 
 prog.gen();

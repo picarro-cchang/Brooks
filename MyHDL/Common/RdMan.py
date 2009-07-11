@@ -124,8 +124,8 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     RDMAN_PARAM2        -- Coarse laser current of active laser
     RDMAN_PARAM3        -- Etalon temperature (millidegrees C)
     RDMAN_PARAM4        -- Cavity pressure (50 x pressure in Torr)
-    RDMAN_PARAM5        -- Scheme row (within a scheme)
-    RDMAN_PARAM6        -- Scheme index (which scheme)
+    RDMAN_PARAM5        -- Ambient pressure (50 x pressure in Torr)
+    RDMAN_PARAM6        -- Scheme index (which scheme) and row (within a scheme)
     RDMAN_PARAM7        -- Ringdown threshold
     RDMAN_DATA_ADDRCNTR     -- Address counter for ringdown data memory
     RDMAN_METADATA_ADDRCNTR -- Address counter for ringdown metadata memory

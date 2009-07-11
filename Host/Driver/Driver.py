@@ -119,7 +119,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             elif regLoc == "fpga": result.append(self.rdFPGA(0,reg))
             else: result.append(None)
         return result
-        
+
     def wrFPGA(self,base,reg,value,convert=True):
         if convert:
             value = self._value(value)
@@ -142,7 +142,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         for (regLoc,reg),value in zip(regList,values):
             if regLoc == "dsp": self.wrDasReg(reg,value)
             elif regLoc == "fpga": self.wrFPGA(0,reg,value)
-            
+
     def wrDasReg(self,regIndexOrName,value,convert=True):
         """Writes to a DAS register, using either its index or symbolic name. If convert is True,
             value is a symbolic string that is looked up in the interface definition file. """
@@ -158,6 +158,23 @@ class DriverRpcHandler(SharedTypes.Singleton):
             return self.dasInterface.hostToDspSender.wrRegFloat(index,value)
         else:
             raise SharedTypes.DasException("Type %s of register %s is not known" % (ri.type,regIndexOrName,))
+
+    def rdRingdown(self,bank):
+        """Fetches the contents of ringdown memory from the specified bank"""
+        dataBase = (0x0, 0x4000)
+        metaBase = (0x1000, 0x5000)
+        paramBase = (0x2000, 0x6000)
+        base = dataBase[bank]
+        data = []
+        for k in range(16):
+            data += [x for x in self.dasInterface.hostToDspSender.readRdMemArray(base+256*k,256)]
+        base = metaBase[bank]
+        meta = []
+        for k in range(16):
+            meta += [x for x in self.dasInterface.hostToDspSender.readRdMemArray(base+256*k,256)]
+        base = paramBase[bank]
+        param = [x for x in self.dasInterface.hostToDspSender.readRdMemArray(base,10)]
+        return (data,meta,param)
 
     def loadIniFile(self):
         """Loads state from instrument configuration file"""
