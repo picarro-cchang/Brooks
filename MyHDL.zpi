@@ -82,6 +82,7 @@
     <ReleaseProjectReload>Off</ReleaseProjectReload>
     <Folder name="Common Files" sorted="Yes">
         <File>MyHDL\Common\ClkGen.py</File>
+        <File>MyHDL\Common\ComplexMult.py</File>
         <File>MyHDL\Common\Divider.py</File>
         <File>MyHDL\Common\dsp_interface.py</File>
         <File>MyHDL\Common\DualPortRamRw.py</File>
