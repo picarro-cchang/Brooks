@@ -23,6 +23,9 @@ void changeInMaskFPGA(unsigned int regNum, unsigned int mask,
 void changeBitsFPGA(unsigned int regNum, unsigned int lsb,
                     unsigned int width, unsigned int value);
 unsigned int readBitsFPGA(unsigned int regNum, unsigned int lsb,
-                  unsigned int width);
+                          unsigned int width);
+void *rdDataAddr(int bank);
+void *rdMetaAddr(int bank);
+void *rdParamAddr(int bank);
 
 #endif /* _FPGA_H_ */

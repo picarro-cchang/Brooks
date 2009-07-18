@@ -30,6 +30,7 @@ EventManagerProxy_Init("Controller")
 
 waveforms = {}
 parameterForms = {}
+panels = {}
 
 class DriverProxy(SharedTypes.Singleton):
     """Encapsulates access to the Driver via RPC calls"""
@@ -42,6 +43,18 @@ class DriverProxy(SharedTypes.Singleton):
                 SharedTypes.RPC_PORT_DRIVER)
             self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="Controller")
             self.initialized = True
+
+class RingdownListener(SharedTypes.Singleton):
+    def __init__(self):
+        self.listener = Listener(queue=None,
+                            port = SharedTypes.BROADCAST_PORT_RDRESULTS,
+                            elementType = interface.RingdownEntryType,
+                            streamFilter = self.filter,
+                            retry = True,
+                            name = "Controller ringdown stream listener",
+                            logFunc = Log)
+    def  filter(self,data):
+        panels["Ringdown"].appendData(data)
 
 class SensorListener(SharedTypes.Singleton):
     def __init__(self):

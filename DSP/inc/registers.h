@@ -67,6 +67,8 @@ void get_timestamp(long long *ts);
 void init_comms(void);
 void message_puts(char *message);
 void sensor_put_from(unsigned int streamNum, void *addr);
+volatile RingdownEntryType *get_ringdown_entry_addr();
+void ringdown_put();
 
 /* These are from the point of view of the DSP */
 int  writeRegister(unsigned int regNum,DataType data);

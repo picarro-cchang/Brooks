@@ -69,6 +69,8 @@
         <status ident="ERROR_WRITE_FAILED">Register write failed</status>
         <status ident="ERROR_BAD_FILTER_COEFF">Invalid filter coefficients</status>
         <status ident="ERROR_BAD_VALUE">Invalid value</status>
+        <status ident="ERROR_RD_BAD_RINGDOWN">Bad ringdown</status>
+        <status ident="ERROR_RD_INSUFFICIENT_DATA">Insufficient data for ringdown calculation</status>
     </status_list>
     <struct_list>
         <struct type="DIAG_EventLogStruct">
@@ -91,22 +93,27 @@
             <field type="uint32" ident="outletPressure"/>
             <field type="uint16" ident="customDataArray" size="16"/>
         </struct>
-        <struct type="RD_ResultsEntryType">
-            <field ident="lockValue" type="DataType"/>
-            <field ident="ratio1" type="float"/>
-            <field ident="ratio2" type="float"/>
-            <field ident="correctedAbsorbance" type="float"/>
+        <struct type="RingdownEntryType">
+            <field ident="timestamp" type="long long"/>
+            <field ident="wlmAngle" type="float"/>
             <field ident="uncorrectedAbsorbance" type="float"/>
-            <field ident="tunerValue" type="uint16"/>
+            <field ident="correctedAbsorbance" type="float"/>
+            <field ident="status" type="uint16"/>
             <field ident="pztValue" type="uint16"/>
-            <field ident="etalonAndLaserSelectAndFitStatus" type="uint16"/>
-            <field ident="schemeStatusAndSchemeTableIndex" type="uint16"/>
-            <field ident="msTicks" type="uint32"/>
-            <field ident="count" type="uint16"/>
-            <field ident="subSchemeId" type="uint16"/>
-            <field ident="schemeIndex" type="uint16"/>
+            <field ident="lockerOffset" type="uint16"/>
+            <field ident="laserUsed" type="uint16"/>
+            <field ident="ringdownThreshold" type="uint16"/>
+            <field ident="subschemeId" type="uint16"/>
+            <field ident="schemeRowAndIndex" type="uint16"/>
+            <field ident="ratio1" type="uint16"/>
+            <field ident="ratio2" type="uint16"/>
             <field ident="fineLaserCurrent" type="uint16"/>
-            <field ident="lockSetpoint" type="DataType"/>
+            <field ident="coarseLaserCurrent" type="uint16"/>
+            <field ident="laserTemperature" type="uint16"/>
+            <field ident="etalonTemperature" type="uint16"/>
+            <field ident="cavityPressure" type="uint16"/>
+            <field ident="ambientPressure" type="uint16"/>
+            <field ident="padToCacheLine" type="uint16" size="7"/>
         </struct>
         <struct type="SensorEntryType">
             <field ident="timestamp" type="long long"/>
@@ -140,6 +147,9 @@
     </struct_list>
     <constant_list>
         <constant ident="CONTROLLER_WAVEFORM_POINTS" description="Number of points in controller waveforms">1000</constant>
+        <constant ident="CONTROLLER_RINGDOWN_POINTS" description="Number of points for waveforms on controller rindown pane">10000</constant>
+        <constant ident="DSP_DATA_ADDRESS" description="Base address for DSP data memory">0x80800000</constant>
+        <constant ident="NUM_RINGDOWN_ENTRIES" description="Number of ringdown entries">2048</constant>
         <constant ident="SHAREDMEM_ADDRESS" description="Base address for DSP shared memory">0x20000</constant>
         <constant ident="RDMEM_ADDRESS" description="Base address for ringdown memory">0xA0000000</constant>
         <constant ident="REG_OFFSET" description="Offset for software registers in DSP shared memory">0x0</constant>
@@ -174,6 +184,8 @@
         <constant ident="DATA_BANK_ADDR_WIDTH" description="Number of address bits for one bank of data">12</constant>
         <constant ident="META_BANK_ADDR_WIDTH" description="Number of address bits for one bank of metadata">12</constant>
         <constant ident="PARAM_BANK_ADDR_WIDTH" description="Number of address bits for one bank of parameters">6</constant>
+        <constant ident="PARAM_TUNER_AT_RINGDOWN_INDEX" description="Tuner value at ringdown index in parameter array">10</constant>
+        <constant ident="PARAM_META_ADDR_AT_RINGDOWN_INDEX" description="Metadata address at ringdown index in parameter array">11</constant>
         <constant ident="TEMP_CNTRL_LOCK_COUNT" description="Number of in-range samples to acquire lock">5</constant>
         <constant ident="TEMP_CNTRL_UNLOCK_COUNT" description="Number of out-of-range samples to lose lock">5</constant>
         <constant ident="FPGA_MAGIC_CODE" description="Code to confirm FPGA is programmed">0xC0DE0001</constant>
@@ -1502,12 +1514,6 @@
             <save/>
             <display format="%.0f">Absolute threshold for fit window determination</display>
         </register>
-        <register ident="RD_NUMBER_OF_SAMPLES_REGISTER" type="uint32" minver="1.0" access="rw">
-            <description>Number of ringdown samples to collect</description>
-            <initial>4095</initial>
-            <save/>
-            <display format="%d">Number of ringdown samples to collect</display>
-        </register>
         <register ident="RD_NUMBER_OF_POINTS_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Maximum number of points in fit window</description>
             <initial>3500</initial>
@@ -1705,6 +1711,12 @@
             </reg>
             <reg type="uint32" ident="PARAM7" description="Parameter 7 register" access="rw">
                 <display format="%d">Parameter 7</display>
+            </reg>
+            <reg type="uint32" ident="PARAM8" description="Parameter 8 register" access="rw">
+                <display format="%d">Parameter 8</display>
+            </reg>
+            <reg type="uint32" ident="PARAM9" description="Parameter 9 register" access="rw">
+                <display format="%d">Parameter 9</display>
             </reg>
             <reg type="uint32" ident="DATA_ADDRCNTR" description="Counter for ring-down data" access="r">
                 <display format="%d">Ringdown data address</display>

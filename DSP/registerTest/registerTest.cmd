@@ -8,4 +8,6 @@ SECTIONS {
    .pinit:   {}                      > SDRAM
    .switch:  {}                      > SDRAM
    .interface: {}                    > IINT
+   .dsp_data: {}                     > DSP_DATA
+   .cio:     {}                      > SDRAM
 }

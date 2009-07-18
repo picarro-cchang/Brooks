@@ -18,8 +18,11 @@
 #include "ds1631.h"
 #include "dspAutogen.h"
 #include "interface.h"
+#include "rdFitting.h"
 #include "registerTest.h"
 #include "scheduler.h"
+#include "registers.h"
+#include "dspData.h"
 
 extern far LOG_Obj trace;
 #ifdef SIMULATION
@@ -72,6 +75,8 @@ main(int argc, char *argv[])
     dspI2CInit();
     // Initialize DS1631 for continuous measurements
     ds1631_init();
+    // Initialize DS1631 for continuous measurements
+    rdFittingInit();
 
     // Clear DSPINT bit in HPIC
     HPI_setDspint(1);

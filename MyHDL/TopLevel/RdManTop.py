@@ -109,6 +109,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     meta6 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     meta7 = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
+    pzt_dac = Signal(intbv(0)[FPGA_REG_WIDTH:])
+
     laser_freq_ok = Signal(LOW)
     acc_en = Signal(LOW)
     rd_irq = Signal(LOW)
@@ -220,7 +222,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                    dsp_wr=dsp_wr, pulse_100k_in=pulse_100k,
                    pulse_1M_in=pulse_1M,
                    tuner_value_in=tuner_value, meta0_in=meta0,
-                   meta1_in=meta1, meta2_in=meta2,
+                   meta1_in=meta1, meta2_in=pzt_dac,
                    meta3_in=meta3, meta4_in=meta4,
                    meta5_in=meta5, meta6_in=meta6,
                    meta7_in=meta7, rd_data_in=rdsim_value,
@@ -326,7 +328,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         sw4.next = 0
         laser_freq_ok.next = HIGH
         metadata_strobe.next = pulse_100k
-
+        
+        pzt_dac.next = tuner_value
+        
     return instances()
 
 # Clock generator

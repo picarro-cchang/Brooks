@@ -25,6 +25,7 @@ import time
 import types
 import traceback
 from configobj import ConfigObj
+from numpy import array, transpose
 
 from Host.autogen import interface
 from Host.Common import SharedTypes, version
@@ -173,8 +174,8 @@ class DriverRpcHandler(SharedTypes.Singleton):
         for k in range(16):
             meta += [x for x in self.dasInterface.hostToDspSender.readRdMemArray(base+256*k,256)]
         base = paramBase[bank]
-        param = [x for x in self.dasInterface.hostToDspSender.readRdMemArray(base,10)]
-        return (data,meta,param)
+        param = [x for x in self.dasInterface.hostToDspSender.readRdMemArray(base,12)]
+        return (array(data),array(meta).reshape(512,8).transpose(),array(param))
 
     def loadIniFile(self):
         """Loads state from instrument configuration file"""
@@ -292,6 +293,9 @@ class Driver(SharedTypes.Singleton):
         self.streamCast = Broadcaster(
             port=SharedTypes.BROADCAST_PORT_SENSORSTREAM,
             name="CRDI Stream Broadcaster",logFunc=Log)
+        self.resultsCast = Broadcaster(
+            port=SharedTypes.BROADCAST_PORT_RDRESULTS,
+            name="CRDI RD Results Broadcaster",logFunc=Log)
         self.lastSaveDasState = 0
     def run(self):
         try:
@@ -322,6 +326,9 @@ class Driver(SharedTypes.Singleton):
                         for data in self.dasInterface.getSensorData():
                             self.streamCast.send(StringPickler.ObjAsString(data))
                             self.streamSaver._writeData(data)
+                        for data in self.dasInterface.getRingdownData():
+                            # TODO: Normalize the data format here
+                            self.resultsCast.send(StringPickler.ObjAsString(data))
                         for ts,msg in self.dasInterface.getMessages():
                             Log("%s" % (msg,))
                         now = time.time()

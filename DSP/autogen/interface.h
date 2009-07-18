@@ -49,10 +49,18 @@ typedef int bool;
 #define ERROR_WRITE_FAILED (-12)
 #define ERROR_BAD_FILTER_COEFF (-13)
 #define ERROR_BAD_VALUE (-14)
+#define ERROR_RD_BAD_RINGDOWN (-15)
+#define ERROR_RD_INSUFFICIENT_DATA (-16)
 
 /* Constant definitions */
 // Number of points in controller waveforms
 #define CONTROLLER_WAVEFORM_POINTS (1000)
+// Number of points for waveforms on controller rindown pane
+#define CONTROLLER_RINGDOWN_POINTS (10000)
+// Base address for DSP data memory
+#define DSP_DATA_ADDRESS (0x80800000)
+// Number of ringdown entries
+#define NUM_RINGDOWN_ENTRIES (2048)
 // Base address for DSP shared memory
 #define SHAREDMEM_ADDRESS (0x20000)
 // Base address for ringdown memory
@@ -121,6 +129,10 @@ typedef int bool;
 #define META_BANK_ADDR_WIDTH (12)
 // Number of address bits for one bank of parameters
 #define PARAM_BANK_ADDR_WIDTH (6)
+// Tuner value at ringdown index in parameter array
+#define PARAM_TUNER_AT_RINGDOWN_INDEX (10)
+// Metadata address at ringdown index in parameter array
+#define PARAM_META_ADDR_AT_RINGDOWN_INDEX (11)
 // Number of in-range samples to acquire lock
 #define TEMP_CNTRL_LOCK_COUNT (5)
 // Number of out-of-range samples to lose lock
@@ -160,22 +172,27 @@ typedef struct {
 } DIAG_EventLogStruct;
 
 typedef struct {
-    DataType lockValue;
-    float ratio1;
-    float ratio2;
-    float correctedAbsorbance;
+    long long timestamp;
+    float wlmAngle;
     float uncorrectedAbsorbance;
-    uint16 tunerValue;
+    float correctedAbsorbance;
+    uint16 status;
     uint16 pztValue;
-    uint16 etalonAndLaserSelectAndFitStatus;
-    uint16 schemeStatusAndSchemeTableIndex;
-    uint32 msTicks;
-    uint16 count;
-    uint16 subSchemeId;
-    uint16 schemeIndex;
+    uint16 lockerOffset;
+    uint16 laserUsed;
+    uint16 ringdownThreshold;
+    uint16 subschemeId;
+    uint16 schemeRowAndIndex;
+    uint16 ratio1;
+    uint16 ratio2;
     uint16 fineLaserCurrent;
-    DataType lockSetpoint;
-} RD_ResultsEntryType;
+    uint16 coarseLaserCurrent;
+    uint16 laserTemperature;
+    uint16 etalonTemperature;
+    uint16 cavityPressure;
+    uint16 ambientPressure;
+    uint16 padToCacheLine[7];
+} RingdownEntryType;
 
 typedef struct {
     long long timestamp;
@@ -316,7 +333,7 @@ typedef enum {
 #define COMM_STATUS_ReturnValueShift (8)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (231)
+#define INTERFACE_NUMBER_OF_REGISTERS (230)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -546,9 +563,8 @@ typedef enum {
 #define RD_START_SAMPLE_REGISTER (225)
 #define RD_FRACTIONAL_THRESHOLD_REGISTER (226)
 #define RD_ABSOLUTE_THRESHOLD_REGISTER (227)
-#define RD_NUMBER_OF_SAMPLES_REGISTER (228)
-#define RD_NUMBER_OF_POINTS_REGISTER (229)
-#define RD_MAX_E_FOLDINGS_REGISTER (230)
+#define RD_NUMBER_OF_POINTS_REGISTER (228)
+#define RD_MAX_E_FOLDINGS_REGISTER (229)
 
 /* FPGA block definitions */
 
@@ -678,17 +694,19 @@ typedef enum {
 #define RDMAN_PARAM5 (7) // Parameter 5 register
 #define RDMAN_PARAM6 (8) // Parameter 6 register
 #define RDMAN_PARAM7 (9) // Parameter 7 register
-#define RDMAN_DATA_ADDRCNTR (10) // Counter for ring-down data
-#define RDMAN_METADATA_ADDRCNTR (11) // Counter for ring-down metadata
-#define RDMAN_PARAM_ADDRCNTR (12) // Counter for parameter data
-#define RDMAN_DIVISOR (13) // Ring-down data counter rate divisor
-#define RDMAN_NUM_SAMP (14) // Number of samples to collect for ring-down waveform
-#define RDMAN_THRESHOLD (15) // Ring-down threshold
-#define RDMAN_LOCK_DURATION (16) // Duration (us) for laser frequency to be locked before ring-down is allowed
-#define RDMAN_PRECONTROL_DURATION (17) // Duration (us) for laser current to be at nominal value before frequency locking is enabled
-#define RDMAN_TIMEOUT_DURATION (18) // Duration (ms) within which ring-down must occur to be valid
-#define RDMAN_TUNER_AT_RINGDOWN (19) // Value of tuner at ring-down
-#define RDMAN_METADATA_ADDR_AT_RINGDOWN (20) // Metadata address at ring-down
+#define RDMAN_PARAM8 (10) // Parameter 8 register
+#define RDMAN_PARAM9 (11) // Parameter 9 register
+#define RDMAN_DATA_ADDRCNTR (12) // Counter for ring-down data
+#define RDMAN_METADATA_ADDRCNTR (13) // Counter for ring-down metadata
+#define RDMAN_PARAM_ADDRCNTR (14) // Counter for parameter data
+#define RDMAN_DIVISOR (15) // Ring-down data counter rate divisor
+#define RDMAN_NUM_SAMP (16) // Number of samples to collect for ring-down waveform
+#define RDMAN_THRESHOLD (17) // Ring-down threshold
+#define RDMAN_LOCK_DURATION (18) // Duration (us) for laser frequency to be locked before ring-down is allowed
+#define RDMAN_PRECONTROL_DURATION (19) // Duration (us) for laser current to be at nominal value before frequency locking is enabled
+#define RDMAN_TIMEOUT_DURATION (20) // Duration (ms) within which ring-down must occur to be valid
+#define RDMAN_TUNER_AT_RINGDOWN (21) // Value of tuner at ring-down
+#define RDMAN_METADATA_ADDR_AT_RINGDOWN (22) // Metadata address at ring-down
 
 /* Block TWGEN Tuner waveform generator */
 #define TWGEN_ACC (0) // Accumulator
@@ -759,8 +777,8 @@ typedef enum {
 #define FPGA_RDSIM (11) // Ringdown simulator registers
 #define FPGA_LASERLOCKER (16) // Laser frequency locker registers
 #define FPGA_RDMAN (43) // Ringdown manager registers
-#define FPGA_TWGEN (64) // Tuner waveform generator
-#define FPGA_INJECT (72) // Optical Injection Subsystem
+#define FPGA_TWGEN (66) // Tuner waveform generator
+#define FPGA_INJECT (74) // Optical Injection Subsystem
 
 /* Environment addresses */
 

@@ -69,7 +69,7 @@ GIO_POSTFXN = _FXN_F_nop;
 /* OBJECT ALIASES */
 _SDRAM = SDRAM;
 _IRAM = IRAM;
-_DATA = DATA;
+_DSP_DATA = DSP_DATA;
 _IINT = IINT;
 _PRD_clock = PRD_clock;
 _PRD_timestamp = PRD_timestamp;
@@ -128,7 +128,7 @@ _GBL_CACHE = GBL_CACHE;
 MEMORY {
    SDRAM       : origin = 0x80000000,  len = 0x800000
    IRAM        : origin = 0x0,         len = 0x10000
-   DATA        : origin = 0x80800000,  len = 0x800000
+   DSP_DATA    : origin = 0x80800000,  len = 0x800000
    IINT        : origin = 0x10000,     len = 0x20000
 }
 /* MODULE CLK */

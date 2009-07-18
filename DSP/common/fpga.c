@@ -71,9 +71,27 @@ unsigned int readBitsFPGA(unsigned int regNum, unsigned int lsb,
                           unsigned int width)
 /* Read the values of the bits between lsb and lsb+width-1 */
 {
-  unsigned int current = *(unsigned int*)(FPGA_REG_BASE+4*regNum);
-  unsigned int mask = ((1<<width)-1) << lsb;
-  return (current & mask) >> lsb;
+    unsigned int current = *(unsigned int*)(FPGA_REG_BASE+4*regNum);
+    unsigned int mask = ((1<<width)-1) << lsb;
+    return (current & mask) >> lsb;
+}
+
+void *rdDataAddr(int bank)
+/* Get DSP pointer to ringdown data area */
+{
+    return (void *)(RDMEM_ADDRESS + 4*(bank ? 0x4000:0x0000));
+}
+
+void *rdMetaAddr(int bank)
+/* Get DSP pointer to ringdown metadata area */
+{
+    return (void *)(RDMEM_ADDRESS + 4*(bank ? 0x5000:0x1000));
+}
+
+void *rdParamAddr(int bank)
+/* Get DSP pointer to ringdown parameter area */
+{
+    return (void *)(RDMEM_ADDRESS + 4*(bank ? 0x6000:0x2000));
 }
 
 #endif

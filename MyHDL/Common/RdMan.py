@@ -10,6 +10,7 @@
 #
 # HISTORY:
 #   25-Jun-2009  sze  Initial version.
+#   15-Jul-2009  sze  Number of parameters increased to 10 (+2 built-ins)
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -25,6 +26,7 @@ from Host.autogen.interface import RDMAN_PARAM0, RDMAN_PARAM1
 from Host.autogen.interface import RDMAN_PARAM2, RDMAN_PARAM3
 from Host.autogen.interface import RDMAN_PARAM4, RDMAN_PARAM5
 from Host.autogen.interface import RDMAN_PARAM6, RDMAN_PARAM7
+from Host.autogen.interface import RDMAN_PARAM8, RDMAN_PARAM9
 from Host.autogen.interface import RDMAN_DATA_ADDRCNTR
 from Host.autogen.interface import RDMAN_METADATA_ADDRCNTR
 from Host.autogen.interface import RDMAN_PARAM_ADDRCNTR, RDMAN_DIVISOR
@@ -126,7 +128,9 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     RDMAN_PARAM4        -- Cavity pressure (50 x pressure in Torr)
     RDMAN_PARAM5        -- Ambient pressure (50 x pressure in Torr)
     RDMAN_PARAM6        -- Scheme index (which scheme) and row (within a scheme)
-    RDMAN_PARAM7        -- Ringdown threshold
+    RDMAN_PARAM7        -- Subscheme ID (passthrough)
+    RDMAN_PARAM8        -- Ringdown threshold
+    RDMAN_PARAM9        -- Spare
     RDMAN_DATA_ADDRCNTR     -- Address counter for ringdown data memory
     RDMAN_METADATA_ADDRCNTR -- Address counter for ringdown metadata memory
     RDMAN_PARAM_ADDRCNTR    -- Address counter for ringdown parameter memory
@@ -174,6 +178,8 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     rdman_param5_addr = map_base + RDMAN_PARAM5
     rdman_param6_addr = map_base + RDMAN_PARAM6
     rdman_param7_addr = map_base + RDMAN_PARAM7
+    rdman_param8_addr = map_base + RDMAN_PARAM8
+    rdman_param9_addr = map_base + RDMAN_PARAM9
     rdman_data_addrcntr_addr = map_base + RDMAN_DATA_ADDRCNTR
     rdman_metadata_addrcntr_addr = map_base + RDMAN_METADATA_ADDRCNTR
     rdman_param_addrcntr_addr = map_base + RDMAN_PARAM_ADDRCNTR
@@ -195,6 +201,8 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     param5 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     param6 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     param7 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    param8 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    param9 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     data_addrcntr = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH:])
     metadata_addrcntr = Signal(intbv(0)[META_BANK_ADDR_WIDTH:])
     param_addrcntr = Signal(intbv(0)[PARAM_BANK_ADDR_WIDTH:])
@@ -257,6 +265,8 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 param5.next = 0
                 param6.next = 0
                 param7.next = 0
+                param8.next = 0
+                param9.next = 0
                 data_addrcntr.next = 0
                 metadata_addrcntr.next = 0
                 param_addrcntr.next = 0
@@ -321,6 +331,12 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdman_param7_addr: # rw
                         if dsp_wr: param7.next = dsp_data_out
                         dsp_data_in.next = param7
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdman_param8_addr: # rw
+                        if dsp_wr: param8.next = dsp_data_out
+                        dsp_data_in.next = param8
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdman_param9_addr: # rw
+                        if dsp_wr: param9.next = dsp_data_out
+                        dsp_data_in.next = param9
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdman_data_addrcntr_addr: # r
                         dsp_data_in.next = data_addrcntr
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdman_metadata_addrcntr_addr: # r
@@ -462,6 +478,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         if paramState == ParamState.DONE:
                             us_timer_enable.next = LOW # No more timeouts
                             seqState.next = SeqState.ACQ_DONE
+                            paramState.next = ParamState.IDLE
 
                     elif seqState == SeqState.ACQ_DONE:
                         bank.next = not bank
@@ -477,7 +494,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                             param_addrcntr.next = 0
                             paramState.next = ParamState.STORING
                     elif paramState == ParamState.STORING:
-                        # Store parameters on the next ten clock cycles
+                        # Store parameters on the next twelve clock cycles
                         param_we_out.next = HIGH
                         param_addrcntr.next = param_addrcntr + 1
                         if param_addrcntr[4:] == 0:
@@ -497,11 +514,16 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         elif param_addrcntr[4:] == 7:
                             wr_param_out.next = param7
                         elif param_addrcntr[4:] == 8:
+                            wr_param_out.next = param8
+                        elif param_addrcntr[4:] == 9:
+                            wr_param_out.next = param9
+                        elif param_addrcntr[4:] == 10:
                             wr_param_out.next = tuner_at_ringdown
                         else:
                             wr_param_out.next = metadata_addr_at_ringdown
                             paramState.next = ParamState.DONE
                     elif paramState == ParamState.DONE:
+                        param_acq.next = LOW
                         param_we_out.next = LOW
 
                     # Metadata storage state machine - collects metadata
@@ -509,10 +531,10 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     #  buffer
                     if metadataAcqState == MetadataAcqState.IDLE:
                         meta_we_out.next = LOW
+                        metadata_addrcntr.next = 0  # Reset address counters
                         metadataAcqState.next = MetadataAcqState.AWAIT_STROBE
                     elif metadataAcqState == MetadataAcqState.AWAIT_STROBE:
                         if metadata_acq and metadata_strobe_in:
-                            metadata_addrcntr.next = 0  # Reset address counters
                             metadataAcqState.next = MetadataAcqState.ACQUIRING
                     elif metadataAcqState == MetadataAcqState.ACQUIRING:
                         # Stop acquisition promptly if metadata_acq goes False

@@ -61,10 +61,20 @@ ERROR_BAD_FILTER_COEFF = -13
 error_messages.append("Invalid filter coefficients")
 ERROR_BAD_VALUE = -14
 error_messages.append("Invalid value")
+ERROR_RD_BAD_RINGDOWN = -15
+error_messages.append("Bad ringdown")
+ERROR_RD_INSUFFICIENT_DATA = -16
+error_messages.append("Insufficient data for ringdown calculation")
 
 # Constant definitions
 # Number of points in controller waveforms
 CONTROLLER_WAVEFORM_POINTS = 1000
+# Number of points for waveforms on controller rindown pane
+CONTROLLER_RINGDOWN_POINTS = 10000
+# Base address for DSP data memory
+DSP_DATA_ADDRESS = 0x80800000
+# Number of ringdown entries
+NUM_RINGDOWN_ENTRIES = 2048
 # Base address for DSP shared memory
 SHAREDMEM_ADDRESS = 0x20000
 # Base address for ringdown memory
@@ -133,6 +143,10 @@ DATA_BANK_ADDR_WIDTH = 12
 META_BANK_ADDR_WIDTH = 12
 # Number of address bits for one bank of parameters
 PARAM_BANK_ADDR_WIDTH = 6
+# Tuner value at ringdown index in parameter array
+PARAM_TUNER_AT_RINGDOWN_INDEX = 10
+# Metadata address at ringdown index in parameter array
+PARAM_META_ADDR_AT_RINGDOWN_INDEX = 11
 # Number of in-range samples to acquire lock
 TEMP_CNTRL_LOCK_COUNT = 5
 # Number of out-of-range samples to lose lock
@@ -173,23 +187,28 @@ class DIAG_EventLogStruct(Structure):
     ("customDataArray",c_ushort*16)
     ]
 
-class RD_ResultsEntryType(Structure):
+class RingdownEntryType(Structure):
     _fields_ = [
-    ("lockValue",DataType),
-    ("ratio1",c_float),
-    ("ratio2",c_float),
-    ("correctedAbsorbance",c_float),
+    ("timestamp",c_longlong),
+    ("wlmAngle",c_float),
     ("uncorrectedAbsorbance",c_float),
-    ("tunerValue",c_ushort),
+    ("correctedAbsorbance",c_float),
+    ("status",c_ushort),
     ("pztValue",c_ushort),
-    ("etalonAndLaserSelectAndFitStatus",c_ushort),
-    ("schemeStatusAndSchemeTableIndex",c_ushort),
-    ("msTicks",c_uint),
-    ("count",c_ushort),
-    ("subSchemeId",c_ushort),
-    ("schemeIndex",c_ushort),
+    ("lockerOffset",c_ushort),
+    ("laserUsed",c_ushort),
+    ("ringdownThreshold",c_ushort),
+    ("subschemeId",c_ushort),
+    ("schemeRowAndIndex",c_ushort),
+    ("ratio1",c_ushort),
+    ("ratio2",c_ushort),
     ("fineLaserCurrent",c_ushort),
-    ("lockSetpoint",DataType)
+    ("coarseLaserCurrent",c_ushort),
+    ("laserTemperature",c_ushort),
+    ("etalonTemperature",c_ushort),
+    ("cavityPressure",c_ushort),
+    ("ambientPressure",c_ushort),
+    ("padToCacheLine",c_ushort*7)
     ]
 
 class SensorEntryType(Structure):
@@ -430,7 +449,7 @@ COMM_STATUS_SequenceNumberShift = 24
 COMM_STATUS_ReturnValueShift = 8
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 231
+INTERFACE_NUMBER_OF_REGISTERS = 230
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -660,9 +679,8 @@ RD_IMPROVEMENT_STEPS_REGISTER = 224
 RD_START_SAMPLE_REGISTER = 225
 RD_FRACTIONAL_THRESHOLD_REGISTER = 226
 RD_ABSOLUTE_THRESHOLD_REGISTER = 227
-RD_NUMBER_OF_SAMPLES_REGISTER = 228
-RD_NUMBER_OF_POINTS_REGISTER = 229
-RD_MAX_E_FOLDINGS_REGISTER = 230
+RD_NUMBER_OF_POINTS_REGISTER = 228
+RD_MAX_E_FOLDINGS_REGISTER = 229
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -1123,8 +1141,6 @@ registerByName["RD_FRACTIONAL_THRESHOLD_REGISTER"] = RD_FRACTIONAL_THRESHOLD_REG
 registerInfo.append(RegInfo("RD_FRACTIONAL_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
 registerByName["RD_ABSOLUTE_THRESHOLD_REGISTER"] = RD_ABSOLUTE_THRESHOLD_REGISTER
 registerInfo.append(RegInfo("RD_ABSOLUTE_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
-registerByName["RD_NUMBER_OF_SAMPLES_REGISTER"] = RD_NUMBER_OF_SAMPLES_REGISTER
-registerInfo.append(RegInfo("RD_NUMBER_OF_SAMPLES_REGISTER",c_uint,1,1.0,"rw"))
 registerByName["RD_NUMBER_OF_POINTS_REGISTER"] = RD_NUMBER_OF_POINTS_REGISTER
 registerInfo.append(RegInfo("RD_NUMBER_OF_POINTS_REGISTER",c_uint,1,1.0,"rw"))
 registerByName["RD_MAX_E_FOLDINGS_REGISTER"] = RD_MAX_E_FOLDINGS_REGISTER
@@ -1258,17 +1274,19 @@ RDMAN_PARAM4 = 6 # Parameter 4 register
 RDMAN_PARAM5 = 7 # Parameter 5 register
 RDMAN_PARAM6 = 8 # Parameter 6 register
 RDMAN_PARAM7 = 9 # Parameter 7 register
-RDMAN_DATA_ADDRCNTR = 10 # Counter for ring-down data
-RDMAN_METADATA_ADDRCNTR = 11 # Counter for ring-down metadata
-RDMAN_PARAM_ADDRCNTR = 12 # Counter for parameter data
-RDMAN_DIVISOR = 13 # Ring-down data counter rate divisor
-RDMAN_NUM_SAMP = 14 # Number of samples to collect for ring-down waveform
-RDMAN_THRESHOLD = 15 # Ring-down threshold
-RDMAN_LOCK_DURATION = 16 # Duration (us) for laser frequency to be locked before ring-down is allowed
-RDMAN_PRECONTROL_DURATION = 17 # Duration (us) for laser current to be at nominal value before frequency locking is enabled
-RDMAN_TIMEOUT_DURATION = 18 # Duration (ms) within which ring-down must occur to be valid
-RDMAN_TUNER_AT_RINGDOWN = 19 # Value of tuner at ring-down
-RDMAN_METADATA_ADDR_AT_RINGDOWN = 20 # Metadata address at ring-down
+RDMAN_PARAM8 = 10 # Parameter 8 register
+RDMAN_PARAM9 = 11 # Parameter 9 register
+RDMAN_DATA_ADDRCNTR = 12 # Counter for ring-down data
+RDMAN_METADATA_ADDRCNTR = 13 # Counter for ring-down metadata
+RDMAN_PARAM_ADDRCNTR = 14 # Counter for parameter data
+RDMAN_DIVISOR = 15 # Ring-down data counter rate divisor
+RDMAN_NUM_SAMP = 16 # Number of samples to collect for ring-down waveform
+RDMAN_THRESHOLD = 17 # Ring-down threshold
+RDMAN_LOCK_DURATION = 18 # Duration (us) for laser frequency to be locked before ring-down is allowed
+RDMAN_PRECONTROL_DURATION = 19 # Duration (us) for laser current to be at nominal value before frequency locking is enabled
+RDMAN_TIMEOUT_DURATION = 20 # Duration (ms) within which ring-down must occur to be valid
+RDMAN_TUNER_AT_RINGDOWN = 21 # Value of tuner at ring-down
+RDMAN_METADATA_ADDR_AT_RINGDOWN = 22 # Metadata address at ring-down
 
 # Block TWGEN Tuner waveform generator
 TWGEN_ACC = 0 # Accumulator
@@ -1338,8 +1356,8 @@ FPGA_LASER4_PWM = 9 # Laser 4 TEC pulse width modulator registers
 FPGA_RDSIM = 11 # Ringdown simulator registers
 FPGA_LASERLOCKER = 16 # Laser frequency locker registers
 FPGA_RDMAN = 43 # Ringdown manager registers
-FPGA_TWGEN = 64 # Tuner waveform generator
-FPGA_INJECT = 72 # Optical Injection Subsystem
+FPGA_TWGEN = 66 # Tuner waveform generator
+FPGA_INJECT = 74 # Optical Injection Subsystem
 
 # Environment addresses
 LASER1_TEMP_CNTRL_ENV = 0
@@ -1626,6 +1644,10 @@ __p = []
 
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Enable frequency locking', [(0, u'Disable'), (16, u'Enable')]), (32, u'Allow ring-down on positive tuner slope', [(0, u'No'), (32, u'Yes')]), (64, u'Allow ring-down on negative tuner slope', [(0, u'No'), (64, u'Yes')]), (128, u'Mark bank 0 available for write', [(0, u'Idle'), (128, u'Mark available')]), (256, u'Mark bank 1 available for write', [(0, u'Idle'), (256, u'Mark available')]), (512, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (512, u'Acknowledge')]), (1024, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (1024, u'Acknowledge')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')])],None,None,1,0))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_PARAM0,'Parameter 0','','%d',1,1))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_PARAM1,'Parameter 1','','%d',1,1))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_PARAM8,'Parameter 8','','%d',1,1))
+__p.append(('fpga','int',FPGA_RDMAN+RDMAN_PARAM9,'Parameter 9','','%d',1,1))
 __p.append(('fpga','int',FPGA_RDMAN+RDMAN_DATA_ADDRCNTR,'Ringdown data address','','%d',1,0))
 __p.append(('fpga','int',FPGA_RDMAN+RDMAN_METADATA_ADDRCNTR,'Ringdown metadata address','','%d',1,0))
 __p.append(('fpga','int',FPGA_RDMAN+RDMAN_PARAM_ADDRCNTR,'Ringdown parameter address','','%d',1,0))
@@ -1650,7 +1672,6 @@ __p.append(('dsp','int',RD_IMPROVEMENT_STEPS_REGISTER,'Number of iterations of r
 __p.append(('dsp','int',RD_START_SAMPLE_REGISTER,'Initial ringdown samples to ignore','','%d',1,1))
 __p.append(('dsp','float',RD_FRACTIONAL_THRESHOLD_REGISTER,'Fractional threshold for fit window determination','','%.2f',1,1))
 __p.append(('dsp','float',RD_ABSOLUTE_THRESHOLD_REGISTER,'Absolute threshold for fit window determination','','%.0f',1,1))
-__p.append(('dsp','int',RD_NUMBER_OF_SAMPLES_REGISTER,'Number of ringdown samples to collect','','%d',1,1))
 __p.append(('dsp','int',RD_NUMBER_OF_POINTS_REGISTER,'Maximum number of points in fit window','','%d',1,1))
 __p.append(('dsp','float',RD_MAX_E_FOLDINGS_REGISTER,'Maximum number of time constants in fit window','','%.1f',1,1))
 parameter_forms.append(('Ringdown Data Fitting Parameters',__p))

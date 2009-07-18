@@ -35,6 +35,7 @@
 
 #include "crc.h"
 #include "dspAutogen.h"
+#include "dspData.h"
 #include "scheduler.h"
 #include <string.h>
 
@@ -51,6 +52,7 @@ Message *messages = (Message *)(MESSAGE_BASE);  // This is an array of size NUM_
 static int message_pointer = 0;
 SensorEntryType *sensorEntries = (SensorEntryType *)(SENSOR_BASE);  // This is an array of size NUM_SENSOR_ENTRIES
 static int sensor_pointer = 0;
+static int ringdown_pointer = 0;
 
 void init_comms()
 {
@@ -64,6 +66,8 @@ void init_comms()
     d.asUint = ((commStatSeqNum<<COMM_STATUS_SequenceNumberShift)&
                 COMM_STATUS_SequenceNumberMask)|COMM_STATUS_CompleteMask;
     writeRegister(COMM_STATUS_REGISTER,d);
+    memset((void *)ringdownEntries,0,sizeof(RingdownEntryType)*NUM_RINGDOWN_ENTRIES);
+    CACHE_wbL2((void *)(ringdownEntries), sizeof(RingdownEntryType)*NUM_RINGDOWN_ENTRIES, CACHE_WAIT);    
 }
 
 void message_puts(char *message)
@@ -88,6 +92,31 @@ void sensor_put_from(unsigned int streamNum, void *addr)
     s->timestamp = ts;
     sensor_pointer++;
     if (sensor_pointer>=NUM_SENSOR_ENTRIES) sensor_pointer = 0;
+}
+
+volatile RingdownEntryType *get_ringdown_entry_addr()
+/* Get address of next available ringdown entry which is to be
+    filled with data */
+{
+    return ringdownEntries + ringdown_pointer;
+}
+
+void ringdown_put()
+/* Timestamp the filled ringdown entry and make it available for
+    download by the host. Note that we were careful to initialize
+    the circular buffer with zeros, so that the timestamp for the 
+    next available (as yet uncollected) entry is either zero or 
+    less than the current entry. It is also necessary to flush the
+    L2 cache back to external memory after each write.
+*/
+{
+    long long ts;
+    volatile RingdownEntryType *r = ringdownEntries + ringdown_pointer;
+    get_timestamp(&ts);
+    r->timestamp = ts;
+    CACHE_wbL2((void *)r, 64, CACHE_WAIT);    
+    ringdown_pointer++;
+    if (ringdown_pointer>=NUM_RINGDOWN_ENTRIES) ringdown_pointer = 0;
 }
 
 // DSP writes to a register and writes back the cache, to ensure that the data can subsequently be read

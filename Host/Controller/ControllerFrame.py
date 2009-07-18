@@ -19,8 +19,8 @@ import sys
 import traceback
 
 from ControllerFrameGui import ControllerFrameGui
-from ControllerModels import waveforms, parameterForms, DriverProxy
-from ControllerModels import LogListener, SensorListener, ControllerRpcHandler
+from ControllerModels import waveforms, parameterForms, panels, DriverProxy
+from ControllerModels import LogListener, SensorListener, RingdownListener, ControllerRpcHandler
 from Host.Common.ParameterDialog import ParameterDialog
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
@@ -50,8 +50,15 @@ class ControllerFrame(ControllerFrameGui):
         self.setupWaveforms()
         self.logListener = LogListener()
         self.sensorListener = SensorListener()
+        self.ringdownListener = RingdownListener()
         self.rpcHandler = ControllerRpcHandler()
         self.Bind(wx.EVT_IDLE, self.onIdle)
+        panels["Laser1"]=self.laser1Panel
+        panels["Laser2"]=self.laser2Panel
+        panels["Laser3"]=self.laser3Panel
+        panels["Laser4"]=self.laser4Panel
+        panels["HotBox"]=self.hotBoxPanel
+        panels["Ringdown"]=self.ringdownPanel
 
     def setupWaveforms(self):
         waveforms["Laser1"]=dict(
@@ -75,6 +82,9 @@ class ControllerFrame(ControllerFrameGui):
             heatsinkTemperature=self.hotBoxPanel.heatsinkTemperatureWfm,
             tec=self.hotBoxPanel.tecWfm,
             heater=self.hotBoxPanel.heaterWfm)
+        waveforms["Ringdown"]=dict(
+            corrected=self.ringdownPanel.ringdownWfms[0],
+            uncorrected=self.ringdownPanel.ringdownWfms[1])
 
     def setupParameterDialogs(self):
         idmin = None
@@ -112,7 +122,7 @@ class ControllerFrame(ControllerFrameGui):
         pd.readParams()
         #print "About to show dialog"
         pd.Show()
-        
+
     def onClose(self,evt):
         for id in self.openParamDialogs:
             try:
@@ -135,6 +145,8 @@ class ControllerFrame(ControllerFrameGui):
             self.laser4Panel.update()
         elif pageText == "HotBox":
             self.hotBoxPanel.update()
+        elif pageText == "Ringdowns":
+            self.ringdownPanel.update()
 
     def onIdle(self,evt):
         # Deal with updating the stream file state and filename

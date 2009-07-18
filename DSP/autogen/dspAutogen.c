@@ -411,8 +411,6 @@ void initRegisters()
     writeRegister(RD_FRACTIONAL_THRESHOLD_REGISTER,d);
     d.asFloat = 13000;
     writeRegister(RD_ABSOLUTE_THRESHOLD_REGISTER,d);
-    d.asUint = 4095;
-    writeRegister(RD_NUMBER_OF_SAMPLES_REGISTER,d);
     d.asUint = 3500;
     writeRegister(RD_NUMBER_OF_POINTS_REGISTER,d);
     d.asFloat = 8.0;

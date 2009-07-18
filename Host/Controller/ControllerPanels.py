@@ -1,15 +1,88 @@
 import wx
 import sys
 
-from ControllerModels import DriverProxy, ControllerRpcHandler
+from ControllerModels import DriverProxy, ControllerRpcHandler, waveforms
 from ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui
-from ControllerPanelsGui import HotBoxPanelGui
+from ControllerPanelsGui import HotBoxPanelGui, RingdownPanelGui
 from Host.autogen import interface
 from Host.Common.GraphPanel import Series
-from Host.Common import CmdFIFO, SharedTypes
+from Host.Common import CmdFIFO, SharedTypes, timestamp
 import threading
 
 wfmPoints = interface.CONTROLLER_WAVEFORM_POINTS
+ringdownPoints = interface.CONTROLLER_RINGDOWN_POINTS
+
+class RingdownPanel(RingdownPanelGui):
+    def __init__(self,*a,**k):
+        RingdownPanelGui.__init__(self,*a,**k)
+        self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber - 6000 (1/cm)',
+            timeAxes=(False,False),ylabel='Loss (ppm/cm)',grid=True,
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+        self.ringdownWfms = [Series(ringdownPoints) for i in range(2)]
+        wx.CallAfter(self.onSelectGraphType,None)
+    def  update(self):
+        self.ringdownGraph.Update(delay=0)
+    def  onClear(self,evt):
+        for s,sel,stats,attr in self.ringdownGraph._pointSeries:
+            s.Clear()
+    def  onSelectGraphType(self,evt):
+        def  printData(data):
+            print data.timestamp, data.uncorrectedAbsorbance
+        choice = self.graphTypeRadioBox.GetSelection()
+        y = ""
+        self.appendData = printData
+        if choice == 0:
+            self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber - 6000 (1/cm)',
+            timeAxes=(False,False),ylabel='Loss (ppm/cm)',grid=True,
+            ylabel='Loss (ppm/cm)',grid=True,
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "Loss"
+        elif choice == 1:
+            def  lossVsTime(data):
+                utime = timestamp.unixTime(data.timestamp)
+                loss_u = data.uncorrectedAbsorbance
+                loss_c = data.correctedAbsorbance
+                waveforms["Ringdown"]["uncorrected"].Add(utime, loss_u)
+                waveforms["Ringdown"]["corrected"].Add(utime, loss_c)
+            self.ringdownGraph.SetGraphProperties(xlabel='',
+            timeAxes=(True,False),ylabel='Loss (ppm/cm)',grid=True,
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "Loss"
+            self.appendData = lossVsTime
+
+        self.ringdownGraph.RemoveAllSeries()
+
+        if y == "Loss":
+            if self.uncorrectedCheckBox.IsChecked():
+                self.ringdownGraph.AddSeriesAsPoints(
+                    waveforms["Ringdown"]["uncorrected"],
+                    colour='black',fillcolour='red',marker='square',
+                    size=1,width=1)
+            if self.correctedCheckBox.IsChecked():
+                self.ringdownGraph.AddSeriesAsPoints(
+                    waveforms["Ringdown"]["corrected"],
+                    colour='black',fillcolour='green',marker='square',
+                    size=1,width=1)
+        for w in self.ringdownWfms:
+            w.Clear()
+    def  onSelectLossType(self,evt):
+        choice = self.graphTypeRadioBox.GetSelection()
+        if choice in [0,1,2,3]:
+            self.ringdownGraph.RemoveAllSeries()
+            if self.uncorrectedCheckBox.IsChecked():
+                self.ringdownGraph.AddSeriesAsPoints(
+                    waveforms["Ringdown"]["uncorrected"],
+                    colour='black',fillcolour='red',marker='square',
+                    size=1,width=1)
+            if self.correctedCheckBox.IsChecked():
+                self.ringdownGraph.AddSeriesAsPoints(
+                    waveforms["Ringdown"]["corrected"],
+                    colour='black',fillcolour='green',marker='square',
+                    size=1,width=1)
+
 class LaserPanel(LaserPanelGui):
     def __init__(self,*a,**k):
         LaserPanelGui.__init__(self,*a,**k)

@@ -219,6 +219,10 @@
             <title>Ringdown Manager Parameters</title>
             <fpga_register offset="FPGA_RDMAN">CONTROL</fpga_register>
             <fpga_register offset="FPGA_RDMAN">STATUS</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">PARAM0</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">PARAM1</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">PARAM8</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">PARAM9</fpga_register>
             <fpga_register offset="FPGA_RDMAN">DATA_ADDRCNTR</fpga_register>
             <fpga_register offset="FPGA_RDMAN">METADATA_ADDRCNTR</fpga_register>
             <fpga_register offset="FPGA_RDMAN">PARAM_ADDRCNTR</fpga_register>
@@ -240,7 +244,6 @@
             <register>RD_START_SAMPLE_REGISTER</register>
             <register>RD_FRACTIONAL_THRESHOLD_REGISTER</register>
             <register>RD_ABSOLUTE_THRESHOLD_REGISTER</register>
-            <register>RD_NUMBER_OF_SAMPLES_REGISTER</register>
             <register>RD_NUMBER_OF_POINTS_REGISTER</register>
             <register>RD_MAX_E_FOLDINGS_REGISTER</register>
         </gui_page>

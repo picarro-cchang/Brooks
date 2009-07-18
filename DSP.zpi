@@ -97,6 +97,10 @@
         <File>DSP\inc\CuTest.h</File>
         <File>DSP\common\ds1631.c</File>
         <File>DSP\inc\ds1631.h</File>
+        <File>DSP\common\dspData.c</File>
+        <File>DSP\inc\dspData.h</File>
+        <File>DSP\common\fpga.c</File>
+        <File>DSP\inc\fpga.h</File>
         <File>DSP\common\i2c_dsp.c</File>
         <File>DSP\inc\i2c_dsp.h</File>
         <File>DSP\common\ltc2485.c</File>
@@ -105,6 +109,8 @@
         <File>DSP\inc\ltc2499.h</File>
         <File>DSP\common\pcf8563.c</File>
         <File>DSP\inc\pcf8563.h</File>
+        <File>DSP\common\rdFitting.c</File>
+        <File>DSP\inc\rdFitting.h</File>
         <File>DSP\common\registers.c</File>
         <File>DSP\inc\registers.h</File>
     </Folder>
@@ -112,8 +118,6 @@
     <Folder name="registerTest" sorted="Yes">
         <File>DSP\registerTest\action_handler.c</File>
         <File>DSP\registerTest\checkFilter.c</File>
-        <File>DSP\registerTest\fpga.c</File>
-        <File>DSP\registerTest\fpga.h</File>
         <File>DSP\registerTest\heaterCntrl.c</File>
         <File>DSP\registerTest\heaterCntrl.h</File>
         <File>DSP\registerTest\laserCurrentCntrl.c</File>

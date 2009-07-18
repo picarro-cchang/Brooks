@@ -56,6 +56,7 @@ HOST_BASE        = interface.SHAREDMEM_ADDRESS + \
                        4*interface.HOST_OFFSET
 FPGA_REG_BASE    = interface.RDMEM_ADDRESS + \
                        (1<<(interface.EMIF_ADDR_WIDTH+1))
+RINGDOWN_BASE    = interface.DSP_DATA_ADDRESS
 
 class Operation(object):
     def __init__(self,opcode,operandList=[],env=0):
@@ -96,8 +97,10 @@ class DasInterface(Singleton):
             self.simulate = simulate
             self.lastMessageTime = 0
             self.lastSensorTime = 0
+            self.lastRingdownTime = 0
             self.messageIndex = 0
             self.sensorIndex = 0
+            self.ringdownIndex = 0
             self.initialized = True
         elif stateDbFile is not None:
             raise ValueError("DasInterface has already been initialized")
@@ -301,6 +304,20 @@ class DasInterface(Singleton):
                 if self.sensorIndex >= interface.NUM_SENSOR_ENTRIES:
                     self.sensorIndex = 0
                 self.sensorHistory.record(data)
+                yield data
+            else:
+                break
+    def getRingdownData(self):
+        """Generator which retrieves sensor data from the analyzer"""
+        while True:
+            data = self.hostToDspSender.rdRingdownData(
+                  self.ringdownIndex)
+            print "Ringdown time: %s" % data.timestamp
+            if data.timestamp!=0 and data.timestamp>=self.lastRingdownTime:
+                self.lastRingdownTime = data.timestamp
+                self.ringdownIndex += 1
+                if self.ringdownIndex >= interface.NUM_RINGDOWN_ENTRIES:
+                    self.ringdownIndex = 0
                 yield data
             else:
                 break
@@ -601,10 +618,19 @@ class HostToDspSender(Singleton):
     def rdSensorData(self,index):
         # Performs a host read of the data in the specified sensor stream
         #  entry. Note that the index is the entry number, and each entry
-        #  is of size 128 bits (64 bit timestamp, 32 bit stream index
+        #  is of size 16 bytes (64 bit timestamp, 32 bit stream index
         #  and 32 bit data)
         self.usb.hpiaWrite(SENSOR_BASE + 16*index)
         data = interface.SensorEntryType()
+        self.usb.hpidRead(data)
+        return data
+    @usbLockProtect
+    def rdRingdownData(self,index):
+        # Performs a host read of the data in the specified ringdown
+        #  entry. Note that the index is the entry number, and each entry
+        #  is of size 64 bytes
+        self.usb.hpiaWrite(RINGDOWN_BASE + 64*index)
+        data = interface.RingdownEntryType()
         self.usb.hpidRead(data)
         return data
     @usbLockProtect
