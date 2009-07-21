@@ -47,7 +47,7 @@ extern RdFittingParamsType rdFittingParams;
 //
 // Performs summer algorithm for ringdown fitting
 //
-void rdFittingSummer(volatile int *data,float tSamp,int nSamp,float *a,
+void rdFittingSummer(int *data,float tSamp,int nSamp,float *a,
                      float *b, float *f);
 
 //-----------------------------------------------------------------------------
@@ -57,7 +57,7 @@ void rdFittingSummer(volatile int *data,float tSamp,int nSamp,float *a,
 // Polishes fit using iterations of Newton's algorithm with the normal equations.
 //
 
-void rdFittingImprove(volatile int *data,float tSamp,int nSamp, float *a,
+void rdFittingImprove(int *data,float tSamp,int nSamp, float *a,
                       float *b, float *f, int niter);
 
 //-----------------------------------------------------------------------------
@@ -67,7 +67,7 @@ void rdFittingImprove(volatile int *data,float tSamp,int nSamp, float *a,
 // Performs RD backscatter correction algorithm.
 
 //
-float rdFittingCorrector(volatile int *data,float tSamp,int nSamp,float tau,
+float rdFittingCorrector(int *data,float tSamp,int nSamp,float tau,
                          float a, float b, float f, float delay);
 
 //-----------------------------------------------------------------------------
@@ -86,7 +86,7 @@ void rdFittingInit();
 //  losses (in ppm/cm) are placed in *uncorrectedLoss and
 //  *correctedLoss.
 
-int rdFittingDoFit(volatile int *data, float tSamp, unsigned int nPoints,
+int rdFittingDoFit(int *data, float tSamp, unsigned int nPoints,
                    float toffset, float *uncorrectedLoss,
                    float *correctedLoss);
 
@@ -95,7 +95,7 @@ int rdFittingDoFit(volatile int *data, float tSamp, unsigned int nPoints,
 //-----------------------------------------------------------------------------
 // Find the portion of the buffer which contains the rindown
 //  waveform and send it
-int rdFittingProcessRingdown(volatile int *buffer,
+int rdFittingProcessRingdown(int *buffer,
                              float *uncorrectedLoss, float *correctedLoss,
                              RdFittingDebug *rdFittingDebug);
 

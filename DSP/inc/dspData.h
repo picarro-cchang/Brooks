@@ -19,5 +19,6 @@
 #include "interface.h"
 
 extern volatile RingdownEntryType ringdownEntries[];
+extern int ringdownWaveform[4096];
 
 #endif

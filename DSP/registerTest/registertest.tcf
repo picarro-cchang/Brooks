@@ -55,6 +55,10 @@ bios.HWI.instance("HWI_INT4").fxn = prog.extern("ringdownInterrupt");
 bios.HWI.instance("HWI_INT4").useDispatcher = 1;
 bios.HWI.instance("HWI_INT5").fxn = prog.extern("acqDoneInterrupt");
 bios.HWI.instance("HWI_INT5").useDispatcher = 1;
+bios.MEM.instance("IINT").base = 0x00020000;
+bios.MEM.instance("IINT").len = 0x00010000;
+bios.HWI.instance("HWI_INT8").fxn = prog.extern("EDMA_intDispatcher");
+bios.HWI.instance("HWI_INT8").useDispatcher = 1;
 // !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
 
 prog.gen();

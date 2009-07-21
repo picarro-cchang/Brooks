@@ -312,7 +312,6 @@ class DasInterface(Singleton):
         while True:
             data = self.hostToDspSender.rdRingdownData(
                   self.ringdownIndex)
-            print "Ringdown time: %s" % data.timestamp
             if data.timestamp!=0 and data.timestamp>=self.lastRingdownTime:
                 self.lastRingdownTime = data.timestamp
                 self.ringdownIndex += 1
@@ -474,6 +473,7 @@ class HostToDspSender(Singleton):
         # logging.info("CRC = %x" % hostMsg[numInt+2])
         self.usb.hpiaWrite(HOST_BASE)
         self.usb.hpidWrite(hostMsg)
+        sleep(0.003) # Necessary to ensure hpidWrite completes before signalling interrupt
         # Assert DSPINT
         self.usb.hpicWrite(0x00010003)
         # print "hpic after DSPINT: %08x" % self.usb.hpicRead()

@@ -29,6 +29,8 @@ void initRegisters()
     writeRegister(LOGICPORT_CLOCK_PERIOD_REGISTER,d);
     d.asUint = LOGICPORT_SOURCE_RD_ADC;
     writeRegister(LOGICPORT_SOURCE_REGISTER,d);
+    d.asUint = 10;
+    writeRegister(RDSIM_TRIGGER_DIVIDER_REGISTER,d);
     d.asUint = 0;
     writeRegister(RD_IRQ_COUNT_REGISTER,d);
     d.asUint = 0;

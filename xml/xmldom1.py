@@ -308,6 +308,7 @@ printFp(dspCFp,'}')
 fpgaBlockLists = docEl.getElementsByTagName('fpga_block_list')
 fpgaRegisterDescriptor = {}
 numRegistersByBlock = {}
+fpgaSaveRegByBlock = {}
 
 declC = ["/* FPGA block definitions */"]
 declPy = ["# FPGA block definitions"]
@@ -345,7 +346,10 @@ for fpgaBlockList in fpgaBlockLists:
                 except:
                     format = u""
                 label = display.firstChild.data
-
+            for save in reg.getElementsByTagName('save'):
+                if blockName not in fpgaSaveRegByBlock:
+                    fpgaSaveRegByBlock[blockName] = []
+                fpgaSaveRegByBlock[blockName].append(regName)
                 
             name = "_".join([blockName,regName])
             value = numRegisters
@@ -407,6 +411,7 @@ fpgaMapNames = []
 fpgaMapIndexByName = {}
 fpgaMapDescriptionsByName = {}
 fpgaBlockByMapName = {}
+fpgaSaveRegList = []
 
 for fpgaMapList in fpgaMapLists:
     index = -1
@@ -426,6 +431,8 @@ for fpgaMapList in fpgaMapLists:
             num = 1
 
         fpgaBlockByMapName[name] = blockName
+        if blockName in fpgaSaveRegByBlock:
+            fpgaSaveRegList.append((name,[blockName + "_" + regName for regName in fpgaSaveRegByBlock[blockName]]))
         
         for descriptionElement in fpgaMap.getElementsByTagName('description'):
             fpgaMapDescriptionsByName[name] = descriptionElement.firstChild.data
@@ -445,6 +452,13 @@ for fpgaMapList in fpgaMapLists:
     printFp(intHFp, "\n%s" % ("\n".join(declC),))
     printFp(intPyFp, "\n%s" % ("\n".join(declPy),))
 
+# Figure out which FPGA registers are to be saved
+declPy = ["# FPGA registers to load and save\n"]
+declPy = ["persistent_fpga_registers = []"]
+for f in fpgaSaveRegList:
+    declPy.append("persistent_fpga_registers.append(%r)" % (f,))
+printFp(intPyFp, "\n%s" % ("\n".join(declPy),))
+    
 # Process environment definitions, which are associated with a specific
 #  structure and an index. These are used to store the states of actions
 #  for more complex activities such as controllers, etc.

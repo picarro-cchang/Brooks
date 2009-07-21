@@ -33,6 +33,7 @@
 
 #define EXT_MEM 0
 
+#include <stdio.h>
 #include "crc.h"
 #include "dspAutogen.h"
 #include "dspData.h"
@@ -228,6 +229,9 @@ void hwiHpiInterrupt(unsigned int funcArg, unsigned int eventId)
 
     else if (seqNum != commStatSeqNum)
     {
+        char msg[32];
+        sprintf(msg,"X 0x%x 0x%x",seqNum,commStatSeqNum);
+        message_puts(msg);        
         d.asUint = ((commStatSeqNum<<COMM_STATUS_SequenceNumberShift)&COMM_STATUS_SequenceNumberMask)|
                    (COMM_STATUS_BadSequenceNumberMask)|
                    (COMM_STATUS_CompleteMask);

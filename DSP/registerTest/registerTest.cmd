@@ -3,6 +3,7 @@ SECTIONS {
    .cinit:   {}                      > SDRAM
    .text:    {}                      > SDRAM
    .printf:  {}                      > IRAM
+   .iram:    {}                      > IRAM
    .const:   {}                      > SDRAM
    .far:     {}                      > IRAM
    .pinit:   {}                      > SDRAM

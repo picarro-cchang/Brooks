@@ -192,6 +192,8 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
             SYNCDELAY;
             while ( !( GPIFTRIG & 0x80 ) ); // poll GPIFTRIG.7 GPIF Done bit
             SYNCDELAY;
+            while(!HPI_RDY);             // wait for HPI to complete internal portion of previous transfer
+            SYNCDELAY;
         }
     }
 
@@ -245,6 +247,8 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
 
                 Tcount = 0;                       // set Tcount to zero to cease reading from DSP HPI RAM
                 IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPID_MANUAL; // Turn off address auto-increment
+                while(!HPI_RDY);             // wait for HPI to complete internal portion of previous transfer
+                SYNCDELAY;
             }
         }
     }

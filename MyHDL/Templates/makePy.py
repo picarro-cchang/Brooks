@@ -254,6 +254,7 @@ if __name__ == "__main__":
         print>>xp, '<fpga_block ident="%s" description="">' % blockName.upper()
         for reg in config["REGISTERS"]:
             if reg in config:
+                regSize,access = config["REGISTERS"][reg]
                 print>>xp, '    <reg type="uint32" ident="%s" description="" access="%s">' % (reg.upper(),access)
                 lsb = 0
                 for field in config[reg]:

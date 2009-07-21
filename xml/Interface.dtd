@@ -65,7 +65,7 @@
 <!ATTLIST action ident CDATA #REQUIRED>
 <!ELEMENT fpga_block_list (fpga_block+)>
 <!ELEMENT fpga_block (reg+)>
-<!ELEMENT reg (display*,bitfield*)>
+<!ELEMENT reg (save*,display*,bitfield*)>
 <!ELEMENT bitfield (fielddef*)>
 <!ELEMENT fielddef (#PCDATA)>
 <!ATTLIST fielddef value CDATA #REQUIRED>

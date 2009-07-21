@@ -20,12 +20,12 @@ from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_RDMAN
 
 from Host.autogen.interface import RDMAN_CONTROL, RDMAN_STATUS
-from Host.autogen.interface import RDMAN_PARAM0, RDMAN_PARAM1
-from Host.autogen.interface import RDMAN_PARAM2, RDMAN_PARAM3
-from Host.autogen.interface import RDMAN_PARAM4, RDMAN_PARAM5
-from Host.autogen.interface import RDMAN_PARAM6, RDMAN_PARAM7
-from Host.autogen.interface import RDMAN_PARAM8, RDMAN_PARAM9
-from Host.autogen.interface import RDMAN_DATA_ADDRCNTR
+from Host.autogen.interface import RDMAN_OPTIONS, RDMAN_PARAM0
+from Host.autogen.interface import RDMAN_PARAM1, RDMAN_PARAM2
+from Host.autogen.interface import RDMAN_PARAM3, RDMAN_PARAM4
+from Host.autogen.interface import RDMAN_PARAM5, RDMAN_PARAM6
+from Host.autogen.interface import RDMAN_PARAM7, RDMAN_PARAM8
+from Host.autogen.interface import RDMAN_PARAM9, RDMAN_DATA_ADDRCNTR
 from Host.autogen.interface import RDMAN_METADATA_ADDRCNTR
 from Host.autogen.interface import RDMAN_PARAM_ADDRCNTR, RDMAN_DIVISOR
 from Host.autogen.interface import RDMAN_NUM_SAMP, RDMAN_THRESHOLD
@@ -39,9 +39,6 @@ from Host.autogen.interface import RDMAN_CONTROL_RUN_B, RDMAN_CONTROL_RUN_W
 from Host.autogen.interface import RDMAN_CONTROL_CONT_B, RDMAN_CONTROL_CONT_W
 from Host.autogen.interface import RDMAN_CONTROL_START_RD_B, RDMAN_CONTROL_START_RD_W
 from Host.autogen.interface import RDMAN_CONTROL_ABORT_RD_B, RDMAN_CONTROL_ABORT_RD_W
-from Host.autogen.interface import RDMAN_CONTROL_LOCK_ENABLE_B, RDMAN_CONTROL_LOCK_ENABLE_W
-from Host.autogen.interface import RDMAN_CONTROL_UP_SLOPE_ENABLE_B, RDMAN_CONTROL_UP_SLOPE_ENABLE_W
-from Host.autogen.interface import RDMAN_CONTROL_DOWN_SLOPE_ENABLE_B, RDMAN_CONTROL_DOWN_SLOPE_ENABLE_W
 from Host.autogen.interface import RDMAN_CONTROL_BANK0_CLEAR_B, RDMAN_CONTROL_BANK0_CLEAR_W
 from Host.autogen.interface import RDMAN_CONTROL_BANK1_CLEAR_B, RDMAN_CONTROL_BANK1_CLEAR_W
 from Host.autogen.interface import RDMAN_CONTROL_RD_IRQ_ACK_B, RDMAN_CONTROL_RD_IRQ_ACK_W
@@ -56,6 +53,9 @@ from Host.autogen.interface import RDMAN_STATUS_LAPPED_B, RDMAN_STATUS_LAPPED_W
 from Host.autogen.interface import RDMAN_STATUS_LASER_FREQ_LOCKED_B, RDMAN_STATUS_LASER_FREQ_LOCKED_W
 from Host.autogen.interface import RDMAN_STATUS_TIMEOUT_B, RDMAN_STATUS_TIMEOUT_W
 from Host.autogen.interface import RDMAN_STATUS_ABORTED_B, RDMAN_STATUS_ABORTED_W
+from Host.autogen.interface import RDMAN_OPTIONS_LOCK_ENABLE_B, RDMAN_OPTIONS_LOCK_ENABLE_W
+from Host.autogen.interface import RDMAN_OPTIONS_UP_SLOPE_ENABLE_B, RDMAN_OPTIONS_UP_SLOPE_ENABLE_W
+from Host.autogen.interface import RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B, RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W
 
 from MyHDL.Common.RdMan import *
 from MyHDL.Common.Rdmemory import Rdmemory
@@ -236,13 +236,15 @@ def bench():
         yield writeFPGA(FPGA_RDMAN+RDMAN_DIVISOR,1)
         # Write number of samples
         yield writeFPGA(FPGA_RDMAN+RDMAN_NUM_SAMP,2048)
+        options = (1 << RDMAN_OPTIONS_UP_SLOPE_ENABLE_B) | \
+                  (1 << RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B)
+        yield writeFPGA(FPGA_RDMAN+RDMAN_OPTIONS,options)
+
         yield readFPGA(FPGA_RDMAN+RDMAN_CONTROL,result)
         # Assert the CONT START_RD bit in the control register
         control = result | (1 << RDMAN_CONTROL_RUN_B) | \
                           (1 << RDMAN_CONTROL_CONT_B) | \
-                          (1 << RDMAN_CONTROL_START_RD_B) | \
-                          (1 << RDMAN_CONTROL_UP_SLOPE_ENABLE_B) | \
-                          (1 << RDMAN_CONTROL_DOWN_SLOPE_ENABLE_B)
+                          (1 << RDMAN_CONTROL_START_RD_B)
         yield writeFPGA(FPGA_RDMAN+RDMAN_CONTROL,control)
         yield delay(20000)
         filling = True

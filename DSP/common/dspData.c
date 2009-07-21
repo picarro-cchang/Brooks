@@ -19,3 +19,6 @@
 
 #pragma DATA_SECTION( ringdownEntries , ".dsp_data" );
 volatile RingdownEntryType ringdownEntries[NUM_RINGDOWN_ENTRIES];
+
+#pragma DATA_SECTION( ringdownWaveform , ".iram" );
+int ringdownWaveform[4096];

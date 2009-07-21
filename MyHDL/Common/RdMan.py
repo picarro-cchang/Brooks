@@ -22,12 +22,12 @@ from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_RDMAN
 
 from Host.autogen.interface import RDMAN_CONTROL, RDMAN_STATUS
-from Host.autogen.interface import RDMAN_PARAM0, RDMAN_PARAM1
-from Host.autogen.interface import RDMAN_PARAM2, RDMAN_PARAM3
-from Host.autogen.interface import RDMAN_PARAM4, RDMAN_PARAM5
-from Host.autogen.interface import RDMAN_PARAM6, RDMAN_PARAM7
-from Host.autogen.interface import RDMAN_PARAM8, RDMAN_PARAM9
-from Host.autogen.interface import RDMAN_DATA_ADDRCNTR
+from Host.autogen.interface import RDMAN_OPTIONS, RDMAN_PARAM0
+from Host.autogen.interface import RDMAN_PARAM1, RDMAN_PARAM2
+from Host.autogen.interface import RDMAN_PARAM3, RDMAN_PARAM4
+from Host.autogen.interface import RDMAN_PARAM5, RDMAN_PARAM6
+from Host.autogen.interface import RDMAN_PARAM7, RDMAN_PARAM8
+from Host.autogen.interface import RDMAN_PARAM9, RDMAN_DATA_ADDRCNTR
 from Host.autogen.interface import RDMAN_METADATA_ADDRCNTR
 from Host.autogen.interface import RDMAN_PARAM_ADDRCNTR, RDMAN_DIVISOR
 from Host.autogen.interface import RDMAN_NUM_SAMP, RDMAN_THRESHOLD
@@ -41,9 +41,6 @@ from Host.autogen.interface import RDMAN_CONTROL_RUN_B, RDMAN_CONTROL_RUN_W
 from Host.autogen.interface import RDMAN_CONTROL_CONT_B, RDMAN_CONTROL_CONT_W
 from Host.autogen.interface import RDMAN_CONTROL_START_RD_B, RDMAN_CONTROL_START_RD_W
 from Host.autogen.interface import RDMAN_CONTROL_ABORT_RD_B, RDMAN_CONTROL_ABORT_RD_W
-from Host.autogen.interface import RDMAN_CONTROL_LOCK_ENABLE_B, RDMAN_CONTROL_LOCK_ENABLE_W
-from Host.autogen.interface import RDMAN_CONTROL_UP_SLOPE_ENABLE_B, RDMAN_CONTROL_UP_SLOPE_ENABLE_W
-from Host.autogen.interface import RDMAN_CONTROL_DOWN_SLOPE_ENABLE_B, RDMAN_CONTROL_DOWN_SLOPE_ENABLE_W
 from Host.autogen.interface import RDMAN_CONTROL_BANK0_CLEAR_B, RDMAN_CONTROL_BANK0_CLEAR_W
 from Host.autogen.interface import RDMAN_CONTROL_BANK1_CLEAR_B, RDMAN_CONTROL_BANK1_CLEAR_W
 from Host.autogen.interface import RDMAN_CONTROL_RD_IRQ_ACK_B, RDMAN_CONTROL_RD_IRQ_ACK_W
@@ -58,6 +55,9 @@ from Host.autogen.interface import RDMAN_STATUS_LAPPED_B, RDMAN_STATUS_LAPPED_W
 from Host.autogen.interface import RDMAN_STATUS_LASER_FREQ_LOCKED_B, RDMAN_STATUS_LASER_FREQ_LOCKED_W
 from Host.autogen.interface import RDMAN_STATUS_TIMEOUT_B, RDMAN_STATUS_TIMEOUT_W
 from Host.autogen.interface import RDMAN_STATUS_ABORTED_B, RDMAN_STATUS_ABORTED_W
+from Host.autogen.interface import RDMAN_OPTIONS_LOCK_ENABLE_B, RDMAN_OPTIONS_LOCK_ENABLE_W
+from Host.autogen.interface import RDMAN_OPTIONS_UP_SLOPE_ENABLE_B, RDMAN_OPTIONS_UP_SLOPE_ENABLE_W
+from Host.autogen.interface import RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B, RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W
 
 SeqState = enum("IDLE","START_INJECT","WAIT_FOR_PRECONTROL",
                 "WAIT_FOR_LOCK","WAIT_FOR_GATING_CONDITIONS",
@@ -148,9 +148,6 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     RDMAN_CONTROL_CONT
     RDMAN_CONTROL_START_RD  -- Initiates ringdown cycle after DSP has written parameters
     RDMAN_CONTROL_ABORT_RD  -- Programmatically aborts a ringdown cycle
-    RDMAN_CONTROL_LOCK_ENABLE -- Enables laser frequency locking
-    RDMAN_CONTROL_UP_SLOPE_ENABLE -- Enables ringdowns on positive slope of tuner waveform
-    RDMAN_CONTROL_DOWN_SLOPE_ENABLE -- Enables ringdowns on negative slope of tuner waveform
     RDMAN_CONTROL_BANK0_CLEAR -- Indicates that memory bank 0 is available for use
     RDMAN_CONTROL_BANK1_CLEAR -- Indicates that memory bank 1 is available for use
     RDMAN_CONTROL_RD_IRQ_ACK  -- Used to acknowledge ringdown interrupt
@@ -167,9 +164,15 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     RDMAN_STATUS_LASER_FREQ_LOCKED -- High while laser frequency is locked
     RDMAN_STATUS_TIMEOUT    -- Indicates that a timeout has occured with no ringdown
     RDMAN_STATUS_ABORTED    -- Indicates that an abort command has been sent
+
+    Fields in RDMAN_OPTIONS:
+    RDMAN_OPTIONS_LOCK_ENABLE -- Enables laser frequency locking
+    RDMAN_OPTIONS_UP_SLOPE_ENABLE -- Enables ringdowns on positive slope of tuner waveform
+    RDMAN_OPTIONS_DOWN_SLOPE_ENABLE -- Enables ringdowns on negative slope of tuner waveform
     """
     rdman_control_addr = map_base + RDMAN_CONTROL
     rdman_status_addr = map_base + RDMAN_STATUS
+    rdman_options_addr = map_base + RDMAN_OPTIONS
     rdman_param0_addr = map_base + RDMAN_PARAM0
     rdman_param1_addr = map_base + RDMAN_PARAM1
     rdman_param2_addr = map_base + RDMAN_PARAM2
@@ -193,6 +196,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     rdman_metadata_addr_at_ringdown_addr = map_base + RDMAN_METADATA_ADDR_AT_RINGDOWN
     control = Signal(intbv(0)[FPGA_REG_WIDTH:])
     status = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    options = Signal(intbv(0)[FPGA_REG_WIDTH:])
     param0 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     param1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     param2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -245,9 +249,9 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         acq_done_irq_out.next = acq_done_irq
         rd_trig_out.next = rd_trig
         rd_adc_clk_out.next = rd_adc_clk
-        tuner_gating_conditions.next = tuner_window_in and ((tuner_slope_in and control[RDMAN_CONTROL_UP_SLOPE_ENABLE_B]) or
-                                                            (not tuner_slope_in and control[RDMAN_CONTROL_DOWN_SLOPE_ENABLE_B]))
-        freq_gating_conditions.next = laser_freq_ok_in or not control[RDMAN_CONTROL_LOCK_ENABLE_B]
+        tuner_gating_conditions.next = tuner_window_in and ((tuner_slope_in and options[RDMAN_OPTIONS_UP_SLOPE_ENABLE_B]) or
+                                                            (not tuner_slope_in and options[RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B]))
+        freq_gating_conditions.next = laser_freq_ok_in or not options[RDMAN_OPTIONS_LOCK_ENABLE_B]
         wr_data_out.next = rd_data_in
 
     @instance
@@ -257,6 +261,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
             if reset:
                 control.next = 0
                 status.next = 0
+                options.next = 0
                 param0.next = 0
                 param1.next = 0
                 param2.next = 0
@@ -307,6 +312,9 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         dsp_data_in.next = control
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdman_status_addr: # r
                         dsp_data_in.next = status
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdman_options_addr: # rw
+                        if dsp_wr: options.next = dsp_data_out
+                        dsp_data_in.next = options
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdman_param0_addr: # rw
                         if dsp_wr: param0.next = dsp_data_out
                         dsp_data_in.next = param0
@@ -401,7 +409,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
 
                     elif seqState == SeqState.WAIT_FOR_PRECONTROL:
                         if us_since_start >= expiry_time:
-                            if control[RDMAN_CONTROL_LOCK_ENABLE_B]:
+                            if options[RDMAN_OPTIONS_LOCK_ENABLE_B]:
                                 acc_en_out.next = HIGH
                                 seqState.next = SeqState.WAIT_FOR_LOCK
                             else:
@@ -624,7 +632,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     if control[RDMAN_CONTROL_BANK1_CLEAR_B]:
                         control.next[RDMAN_CONTROL_BANK1_CLEAR_B] = 0
                         status.next[RDMAN_STATUS_BANK1_IN_USE_B] = 0
-                    
+
                     data_addr_out.next = data_addrcntr
                     meta_addr_out.next = metadata_addrcntr
                     param_addr_out.next = param_addrcntr

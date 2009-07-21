@@ -1,0 +1,1694 @@
+#LyX 1.6.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[RO,RE]{Draft final, \today}
+\fancyfoot[c]{\thepage}
+\end_preamble
+\use_default_options false
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize letterpaper
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Cost Reduced Platform FPGA Design Description
+\end_layout
+
+\begin_layout Author
+Sze Tan
+\end_layout
+
+\begin_layout Date
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+today
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Format of Ringdown Waveform Storage
+\end_layout
+
+\begin_layout Standard
+Information for up to two ringdowns is stored in the FPGA, from which it
+ is transferred via EDMA to the DSP for processing.
+ From the point of view of the DSP, each ringdown buffer occupies 
+\begin_inset Formula $16\mathrm{K}$
+\end_inset
+
+ words of memory and the two buffers are contiguous, occupying a total of
+ 
+\begin_inset Formula $32\mathrm{K}$
+\end_inset
+
+ words.
+ Each word is 32 bits wide.
+\end_layout
+
+\begin_layout Standard
+Each ringdown buffer is subdivided into the ringdown waveform buffer of
+ size 
+\begin_inset Formula $4\mathrm{K}$
+\end_inset
+
+ words, a ringdown metadata buffer of size 
+\begin_inset Formula $4\mathrm{K}$
+\end_inset
+
+ words and a ringdown parameter buffer of size 64 words.
+ These are contiguous and occupy the first 
+\begin_inset Formula $8\mathrm{K}+64$
+\end_inset
+
+ words of the ringdown buffer.
+ The remainder of the buffer (up to 
+\begin_inset Formula $16\mathrm{K}$
+\end_inset
+
+ words) is not used.
+\end_layout
+
+\begin_layout Standard
+Once data are available in a buffer, a DSP interrupt is generated which
+ initiates an EDMA transfer to DSP memory.
+\end_layout
+
+\begin_layout Subsection
+The Ringdown Waveform Buffer
+\end_layout
+
+\begin_layout Standard
+The ringdown data buffer stores the acquired ringdown waveforms.
+ It is implemented as dual-ported RAM in the FPGA for convenient access
+ using the DSP and the acquisition hardware.
+ Although the ADC has 14 bit resolution, the ringdown data buffer is 18
+ bits wide, allowing for the possibility of multiple ringdowns to be averaged
+ within the buffer.
+ A single ringdown requires no more than 4096 samples.
+\end_layout
+
+\begin_layout Subsection
+The Ringdown Metadata Buffer
+\end_layout
+
+\begin_layout Standard
+Associated with each ringdown is a collection of metadata.
+ Up to 8 channels of metadata may be associated with a ringdown, each consisting
+ of up to 512 18-bit samples.
+ In the present implementation, the following channels are used:
+\end_layout
+
+\begin_layout Enumerate
+Wavelength monitor ratio 1
+\end_layout
+
+\begin_layout Enumerate
+Wavelength monitor ratio 2
+\end_layout
+
+\begin_layout Enumerate
+PZT waveform DAC value
+\end_layout
+
+\begin_layout Enumerate
+Wavelength locker offset (signed)
+\end_layout
+
+\begin_layout Enumerate
+Fine laser current DAC value
+\end_layout
+
+\begin_layout Enumerate
+Wavelength locker error signal (signed)
+\end_layout
+
+\begin_layout Standard
+This information is collected up to the time that a ringdown occurs.
+ The metadata at the instant of the ringdown are used in the subsequent
+ processing.
+\end_layout
+
+\begin_layout Subsection
+Ringdown Parameter Buffer
+\end_layout
+
+\begin_layout Standard
+This contains data which applies to a particular ringdown.
+ They are packed into 16-bit quantities for convenience:
+\end_layout
+
+\begin_layout Enumerate
+Which laser is active (injection settings)
+\end_layout
+
+\begin_layout Enumerate
+Temperature of active laser (millidegrees Celsius)
+\end_layout
+
+\begin_layout Enumerate
+Coarse laser current DAC value of active laser
+\end_layout
+
+\begin_layout Enumerate
+Etalon temperature (millidegrees Celsius)
+\end_layout
+
+\begin_layout Enumerate
+Cavity pressure (50 
+\begin_inset Formula $\times$
+\end_inset
+
+ pressure in Torr)
+\end_layout
+
+\begin_layout Enumerate
+Ambient pressure (50 
+\begin_inset Formula $\times$
+\end_inset
+
+ pressure in Torr)
+\end_layout
+
+\begin_layout Enumerate
+Scheme row and Scheme index
+\end_layout
+
+\begin_layout Enumerate
+Subscheme Id (passthrough)
+\end_layout
+
+\begin_layout Enumerate
+Ringdown threshold
+\end_layout
+
+\begin_layout Enumerate
+Spare
+\end_layout
+
+\begin_layout Enumerate
+Tuner value at which ringdown occured
+\end_layout
+
+\begin_layout Enumerate
+Address in metadata buffer at which ringdown occured/lapped flag
+\end_layout
+
+\begin_layout Standard
+The DSP is responsible for writing the laser temperatures, etalon temperature,
+ cavity pressure, scheme row and index into the FPGA so that they can be
+ transferred to the ringdown parameter buffer as required.
+\end_layout
+
+\begin_layout Section
+Laser Frequency Locking
+\end_layout
+
+\begin_layout Standard
+The laser frequency is controlled using the laser temperature and current.
+ The laser frequency locking block within the FPGA is responsible for adjusting
+ the fine laser current DAC that defines the laser current.
+\end_layout
+
+\begin_layout Standard
+Signals from the wavelength monitors are measured, and the offsets which
+ represent dark currents are subtracted.
+ The monitor ratios are computed using:
+\end_layout
+
+\begin_layout LyX-Code
+ratio1 = (eta1-eta1_offset)/(ref1-ref1_offset)
+\end_layout
+
+\begin_layout LyX-Code
+ratio2 = (eta2-eta2_offset)/(ref2-ref2_offset)
+\end_layout
+
+\begin_layout Standard
+As the laser frequency varies, these ratios trace out ellipses about a center,
+ defined by 
+\family typewriter
+ratio1_center
+\family default
+ and 
+\family typewriter
+ratio2_center
+\family default
+.
+ In order to lock the laser frequency to a specified value, the quantities
+ 
+\family typewriter
+ratio1_multiplier
+\family default
+ and 
+\family typewriter
+ratio2_multiplier
+\family default
+ are computed.
+ A 
+\family typewriter
+lock_error
+\family default
+ signal is defined by:
+\end_layout
+
+\begin_layout LyX-Code
+lock_error = ratio1_multiplier*(ratio1-ratio1_center) + ratio2_multiplier*(ratio
+2-ratio2_center) + tuning_offset
+\end_layout
+
+\begin_layout Standard
+The control loop adjusts the fine laser current in such a way as to drive
+ the 
+\family typewriter
+lock_error
+\family default
+ to zero.
+ If the 
+\family typewriter
+tuning_offset
+\family default
+ is zero, the error is zero when the vector from the center 
+\begin_inset Formula $\left(\mathtt{ratio1\_center},\mathtt{ratio2\_center}\right)$
+\end_inset
+
+ to the point 
+\begin_inset Formula $\left(\mathtt{ratio1},\mathtt{ratio2}\right)$
+\end_inset
+
+ makes a specified angle with the 
+\family typewriter
+ratio1
+\family default
+ axis.
+ By choosing the multipliers appropriately, it is possible to lock to any
+ angle.
+ The 
+\family typewriter
+tuning_offset
+\family default
+ variable is used to introduce a small perturbation in the locking frequency,
+ which may be used to adjust the laser frequency so as to bring it into
+ resonance with the cavity.
+\end_layout
+
+\begin_layout Standard
+A 
+\family typewriter
+lock_window
+\family default
+ parameter is used to determine when the laser frequency is close to the
+ desired value.
+ The 
+\family typewriter
+locked_out
+\family default
+ signal is asserted once the absolute value of the 
+\family typewriter
+lock_error
+\family default
+ is less than or equal to the 
+\family typewriter
+lock_window
+\family default
+.
+ This signal is used as one of the conditions which must hold, before a
+ ringdown can be initiated.
+\end_layout
+
+\begin_layout Standard
+The lock_error signal is processed via a PID network to generate the fine
+ laser current.
+ An accumulator is used as an integrator, and we compute
+\end_layout
+
+\begin_layout LyX-Code
+accumulator := accumulator + wm_int_gain*lock_error + wm_prop_gain*deriv
+ + wm_deriv_gain*deriv2
+\end_layout
+
+\begin_layout Standard
+where 
+\family typewriter
+deriv
+\family default
+ is 
+\family typewriter
+lock_error-prev_lock_error
+\family default
+ and 
+\family typewriter
+deriv2
+\family default
+ is 
+\family typewriter
+deriv-prev_deriv
+\family default
+.
+ By using this incremental algorithm in computing the fine laser current,
+ the control loop automatically controls around an operating point at which
+ the lock error is zero.When the laser is first turned on, and the frequency
+ is changing rapidly, the accumulator is held in a reset state, driving
+ the fine current to zero.
+ At this stage, the laser current is specified by the coarse current value.
+ The loop is activated by allowing the accumulation to take place only after
+ a specified precontrol duration.
+\end_layout
+
+\begin_layout Subsection
+Block inputs
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+eta1 
+\family default
+is the output of the ADC which monitors the intensity of the reflected beam
+ from etalon 1.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+ref1
+\family default
+ is the output of the ADC which monitors the intensity of the transmitted
+ beam through etalon 1.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+eta2
+\family default
+ is the output of the ADC which monitors the intensity of the reflected
+ beam from etalon 2.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+ref2
+\family default
+ is the output of the ADC which monitors the intensity of the transmitted
+ beam through etalon 2.
+\end_layout
+
+\begin_layout Section
+Tuner Waveform Generation
+\end_layout
+
+\begin_layout Standard
+The following parameters are used to define the tuner waveform, which may
+ be applied either to the PZT or to the locker offset input of the laser
+ current controller.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+SLOPE_DOWN 
+\family default
+is a non-negative integer setting the downwards-going slope of the tuner
+ waveform
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+SLOPE_UP 
+\family default
+is a non-negative integer setting the upwards-going slope of the tuner waveform
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+SWEEP_LOW 
+\family default
+is a non-negative integer setting the lower limit of the tuner waveform
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+SWEEP_HIGH 
+\family default
+is a non-negative integer setting the upper limit of the tuner waveform
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+WINDOW_LOW 
+\family default
+is a non-negative integer setting the lower limit of the tuner window, below
+ which ringdowns are disallowed
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+WINDOW_HIGH 
+\family default
+is a non-negative integer setting the upper limit of the tuner window, above
+ which ringdowns are disallowed
+\end_layout
+
+\begin_layout Standard
+The generator consists of an accumulator of length 
+\begin_inset Formula $16+9$
+\end_inset
+
+ bits.
+ The high-order 
+\begin_inset Formula $16$
+\end_inset
+
+ bits are used as the output of the generator.
+ Every 
+\begin_inset Formula $10\,\mu\mathrm{s}$
+\end_inset
+
+ the accumulator is incremented or decremented by the amount specified by
+ the appropriate slope register.
+ When the generator output is greater or equal to the value in 
+\family typewriter
+SWEEP_HIGH
+\family default
+, the generator switches to the down slope, and when the generator output
+ is less than or equal to the value in 
+\family typewriter
+SWEEP_LOW
+\family default
+, the generator switches to the up slope.
+\end_layout
+
+\begin_layout Standard
+The time for the up slope of the tuner waveform is given by
+\begin_inset Formula \[
+T_{\mathrm{up}}=\frac{\mathtt{SWEEP\_HIGH-SWEEP\_LOW}}{\mathtt{SLOPE\_UP}}\times512\times10^{-5}\mathrm{s}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The time for the down slope of the tuner waveform is given by
+\begin_inset Formula \[
+T_{\mathrm{down}}=\frac{\mathtt{SWEEP\_HIGH-SWEEP\_LOW}}{\mathtt{SLOPE\_DOWN}}\times512\times10^{-5}\mathrm{s}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Ringdown Sequencing
+\end_layout
+
+\begin_layout Standard
+Two DSP interrupts are generated during a ringdown.
+ The first occurs at the start of the ringdown, when the threshold value
+ is reached, and provided all the appropriate ringdown conditions are met.
+ In response to this interrupt, the DSP performs the following actions:
+\end_layout
+
+\begin_layout Enumerate
+Read a status register in the FPGA to see whether this interrupt is due
+ to a successful ringdown, or if there was a timeout.
+ On a timeout, the laser is turned off.
+\end_layout
+
+\begin_layout Enumerate
+If the ringdown was successful, update the tuner waveform generator parameters,
+ based on the tuner value at the instant of the ringdown.
+ The FPGA thus needs to latch this value in the ringdown sequencer.
+ Note that the ringdown timeout register is loaded from either the dither
+ or ramp timeout parameter at this stage.
+\end_layout
+
+\begin_layout Enumerate
+If a timeout occurs in dither mode, switch to ramp mode by loading the waveform
+ generator parameters appropriately.
+ Indicate that we do not want to advance to the next scheme point.
+\end_layout
+
+\begin_layout Enumerate
+If the timeout occurs in ramp mode, we may either advance to the next dwell
+ point, or skip to the next row in the scheme.
+\end_layout
+
+\begin_layout Standard
+At the end of a successful ringdown, when the ringdown buffer in the FPGA
+ is filled, a second interrupt is generated.
+ In response to this interrupt, the DSP performs the following actions:
+\end_layout
+
+\begin_layout Enumerate
+Reads the filled ringdown bank number from the FPGA (zero or one), and acknowled
+ges to the FPGA that this has been read, so that the number can be incremented.
+\end_layout
+
+\begin_layout Enumerate
+Enqueue the bank number onto a QUE object, as 
+\family typewriter
+elem.chan
+\end_layout
+
+\begin_layout Enumerate
+Execute the following code, which checks whether the fit buffer which is
+ used by the fitting task is empty.
+ If so, it initiates an EDMA transfer of the correct ringdown buffer to
+ the fit buffer, by popping off the appropriate channel number from the
+ queue.
+ If there is nothing on the queue (e.g.
+ because the queue has been serviced on another thread), the 
+\family typewriter
+fitBufferEmpty
+\family default
+ semaphore state is restored.
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+if SEM_wait(fitBufferEmpty,0):
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+if (QUE_Handle)(elem=QUE_get(q)!=q):
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+start_EDMA(channel=elem.chan)
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+else:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+SEM_post(fitBufferEmpty)
+\end_layout
+
+\end_deeper
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Posts the 
+\family typewriter
+startCycle
+\family default
+ semaphore to initiate the next ring down.
+\end_layout
+
+\begin_layout Enumerate
+The EDMA done interrupt executes the following code indicating to the fitter
+ that data are now available for fitting, and also writes to the FPGA indicating
+ that the appropriate ringdown buffer is now free.
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+SEM_post(fitBufferFull)
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+The fitter task on the DSP waits for the 
+\family typewriter
+fitBufferFull
+\family default
+ semaphore to be asserted.
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+while True:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+SEM_wait(fitBufferFull)
+\end_layout
+
+\begin_layout LyX-Code
+perform_fitting()
+\end_layout
+
+\begin_layout LyX-Code
+calculate_frequency()
+\end_layout
+
+\begin_layout LyX-Code
+SEM_post(fitBufferEmpty)
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+if SEM_wait(fitBufferEmpty,0):
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+if (QUE_Handle)(elem=QUE_get(q)!=q):
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+start_EDMA(channel=elem.chan)
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+else:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+SEM_post(fitBufferEmpty)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout LyX-Code
+enqueue_results_for_broadcast()
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Once data are available, they are processed and the fit buffer is marked
+ empty again.
+ We check that the buffer is empty before trying to start transferring more
+ ring-down data, since the interrupt routine might initiate another transfer
+ in the meantime.
+ The results are enqueued for sending back to the host.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+A high priority task on the DSP running a continuous loop waits for the
+ 
+\family typewriter
+startCycle
+\family default
+ semaphore to be posted.
+ When this occurs:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Look at the scheme advance flag, and depending on its value, either:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Keep the same parameters as for the current ringdown (e.g.
+ due to dither mode timeout),
+\end_layout
+
+\begin_layout Enumerate
+Proceed to the next dwell within this scheme row, if the dwell count has
+ not been reached, or 
+\end_layout
+
+\begin_layout Enumerate
+step to the next row of the scheme table to determine the laser number,
+ the laser temperature and laser frequency locking parameters for the next
+ ringdown in the scheme.
+\end_layout
+
+\begin_layout Standard
+Write these values to the appropriate FPGA registers.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Write the ringdown parameter data to the FPGA memory at the ringdown buffer
+ indicated.
+\end_layout
+
+\begin_layout Enumerate
+Indicate to the FPGA state machine that a ringdown cycle can begin.
+\end_layout
+
+\end_deeper
+\begin_layout Section
+FPGA Blocks
+\end_layout
+
+\begin_layout Standard
+We need a way of synchronizing the following 
+\begin_inset Formula $100\ \mathrm{kHz}$
+\end_inset
+
+ processes:
+\end_layout
+
+\begin_layout Itemize
+Laser current DAC updates
+\end_layout
+
+\begin_layout Itemize
+Wavelength monitor ADC reads
+\end_layout
+
+\begin_layout Itemize
+Tuner waveform generator updates
+\end_layout
+
+\begin_layout Itemize
+PZT DAC updates
+\end_layout
+
+\begin_layout Subsection
+Clock Generator
+\end_layout
+
+\begin_layout Subsubsection
+Inputs
+\end_layout
+
+\begin_layout Description
+clk FPGA clock (50 MHz)
+\end_layout
+
+\begin_layout Subsubsection
+Outputs
+\end_layout
+
+\begin_layout Description
+tuner_clk Tuner waveform generator clock (100kHz)
+\end_layout
+
+\begin_layout Description
+wlm_acq_clk Wavelength monitor ADC clock (2MHz) 
+\end_layout
+
+\begin_layout Description
+pzt_dac_clk 
+\begin_inset Formula $5\,\mathrm{MHz}$
+\end_inset
+
+ clock for driving DAC8522 at 50 times (needs to be at least 24 times) 100kHz
+ update rate
+\end_layout
+
+\begin_layout Description
+laser_dac_clk 
+\begin_inset Formula $5\,\mathrm{MHz}$
+\end_inset
+
+ clock for driving DAC8522 at 50 times (needs to be at least 24 times) 100kHz
+ update rate
+\end_layout
+
+\begin_layout Subsection
+Ringdown Manager (RDMAN)
+\end_layout
+
+\begin_layout Standard
+A ringdown cycle is initiated in response to the DSP writing the ringdown
+ parameters into FPGA parameter registers, and asserting the 
+\family typewriter
+startRd
+\family default
+ flag.
+\end_layout
+
+\begin_layout Subsubsection
+Inputs
+\end_layout
+
+\begin_layout Description
+tuner_value_in From tuner waveform generator, to be recorded in parameter
+ memory when a ringdown occurs.
+ Connected to 
+\family typewriter
+TWGEN.tuner_value_out
+\end_layout
+
+\begin_layout Description
+wlm_ratio1_in Stored as metadata channel 0.
+ Connected to 
+\family typewriter
+LASERLOCK.wlm_ratio1_out
+\family default
+.
+\end_layout
+
+\begin_layout Description
+wlm_ratio2_in Stored as metadata channel 1.
+ Connected to 
+\family typewriter
+LASERLOCK.wlm_ratio2_out
+\family default
+.
+\end_layout
+
+\begin_layout Description
+pzt_dacval_in Stored as metadata channel 2.
+ Connected to 
+\family typewriter
+PZTDAC.pzt_dacval_out
+\family default
+.
+\end_layout
+
+\begin_layout Description
+tuning_offset_in Stored as metadata channel 3.
+ Connected to 
+\family typewriter
+LASERLOCK.tuning_offset_out
+\family default
+.
+\end_layout
+
+\begin_layout Description
+fine_current_in Stored as metadata channel 4.
+ Connected to 
+\family typewriter
+LASERLOCK.fine_current_out
+\family default
+.
+\end_layout
+
+\begin_layout Description
+lock_error_in Stored as metadata channel 5.
+ Connected to 
+\family typewriter
+LASERLOCK.lock_error_out
+\family default
+.
+\end_layout
+
+\begin_layout Subsubsection
+Outputs
+\end_layout
+
+\begin_layout Description
+rd_out Ringdown output connected to 
+\family typewriter
+INJECT.laser_shutdown_in
+\family default
+ and 
+\family typewriter
+INJECT.soa_shutdown_in
+\family default
+.
+\end_layout
+
+\begin_layout Description
+rd_irq_out Ringdown interrupt, asserted when 
+\end_layout
+
+\begin_layout Subsubsection
+Registers
+\end_layout
+
+\begin_layout Description
+startRd flag indicating to FPGA that parameter registers have been written.
+\end_layout
+
+\begin_layout Description
+bank0_busy flag indicating bank 0 of the ringdown memory buffer has data
+ which have not yet been sent to the DSP via EDMA.
+\end_layout
+
+\begin_layout Description
+bank1_busy flag indicating bank 1 of the ringdown memory buffer has data
+ which have not yet been sent to the DSP via EDMA.
+\end_layout
+
+\begin_layout Description
+active_bank flag indicating which bank is currently in use for saving data,
+ metadata and parameters.
+\end_layout
+
+\begin_layout Description
+param0 Inject settings register, giving details of selected laser, soa/laser
+ settings etc.
+\end_layout
+
+\begin_layout Description
+param1 Temperature of active laser (millidegrees Celsius)
+\end_layout
+
+\begin_layout Description
+param2 Coarse laser current DAC value of active laser
+\end_layout
+
+\begin_layout Description
+param3 Etalon temperature (millidegrees Celsius)
+\end_layout
+
+\begin_layout Description
+param4 Cavity pressure (50
+\begin_inset Formula $\times$
+\end_inset
+
+ pressure in Torr)
+\end_layout
+
+\begin_layout Description
+param5 Ambient pressure (50
+\begin_inset Formula $\times$
+\end_inset
+
+ pressure in Torr)
+\end_layout
+
+\begin_layout Description
+param6 Scheme index (which scheme) and row within scheme
+\end_layout
+
+\begin_layout Description
+param7 Ringdown threshold
+\end_layout
+
+\begin_layout Description
+data_addrcntr Ringdown data address counter
+\end_layout
+
+\begin_layout Description
+metadata_addrcntr Ringdown metadata address counter
+\end_layout
+
+\begin_layout Description
+param_addrcntr Parameter address counter
+\end_layout
+
+\begin_layout Description
+data Data from high speed ADC in continuous mode, and used to inject data
+ in single-step mode
+\end_layout
+
+\begin_layout Description
+divisor Sets the rate of the high speed ADC clock
+\end_layout
+
+\begin_layout Description
+num_samp Number of ringdown samples to collect for each ringdown
+\end_layout
+
+\begin_layout Description
+threshold Ringdown threshold
+\end_layout
+
+\begin_layout Description
+precontrol_time Time after laser turn-on, before starting wavelength locking
+\end_layout
+
+\begin_layout Description
+ringdown_timeout Time following laser turn on, during which a valid ringdown
+ is expected to occur.
+ Raises timeout error if no ringdown takes place.
+\end_layout
+
+\begin_layout Description
+valid_slopes Tuner slopes on which ringdowns are allowed to occur
+\end_layout
+
+\begin_layout Description
+enable_locking Enables wavelength locking, and requires lock as a precondition
+ for a ringdown
+\end_layout
+
+\begin_layout Subsection
+Ringdown Simulator
+\end_layout
+
+\begin_layout Standard
+An accumulator of length 
+\begin_inset Formula $16+4$
+\end_inset
+
+ bits is used, which is updated every 
+\begin_inset Formula $40\,\mathrm{ns}$
+\end_inset
+
+.
+ The high-order 16 bits are used as the simulator output.
+ At any time, the simulated cavity is either in filling mode or ringdown
+ mode, depending whether the tuner input lies inside or outside a window
+ of specified width and center.
+ When in filling mode, the accumulator value increments linearly with time
+ and when in ringdown mode, the accumulator is multiplies by a quantity
+ less than one on each update, which results in an exponential waveform.
+ The effective loss in is given by
+\begin_inset Formula \[
+L=-\frac{\log_{e}\left(1-\frac{\mathrm{decay}}{65536\times16}\right)}{0.00119991698}\,\mathrm{ppm}\,\mathrm{c}\mathrm{m}^{-1}\]
+
+\end_inset
+
+where decay is interpreted as an integer
+\end_layout
+
+\begin_layout Subsubsection
+Registers
+\end_layout
+
+\begin_layout Description
+tuner_center Value about which the the cavity fills linearly with time
+\end_layout
+
+\begin_layout Description
+tuner_window_half_width Defines window around tuner_center within which
+ the cavity fills linearly with time
+\end_layout
+
+\begin_layout Description
+filling_rate When the cavity is filling, this specifies the amount by which
+ the accumulator increases
+\end_layout
+
+\begin_layout Description
+decay When the cavity is ringing down, this specifies the factor which multiplie
+s the accumulator every 
+\begin_inset Formula $40\,\mathrm{ns}$
+\end_inset
+
+.
+ The factor is
+\begin_inset Formula \[
+\left(1-\frac{\mathtt{decay}}{65536\times16}\right)\]
+
+\end_inset
+
+where 
+\family typewriter
+decay
+\family default
+ is interpreted as an integer (so that 
+\family typewriter
+decay
+\family default
+
+\begin_inset Formula $/65536$
+\end_inset
+
+ is a 
+\family typewriter
+decay
+\family default
+ interpreted as a binary fraction with the point before the most significant
+ bit).
+\end_layout
+
+\begin_layout Subsection
+Wavelength Monitor ADC Interface (WMADC)
+\end_layout
+
+\begin_layout Subsubsection
+Inputs
+\end_layout
+
+\begin_layout Description
+wm_acq_clk 2MHz clock to drive SPI serial ADCs
+\end_layout
+
+\begin_layout Subsubsection
+Outputs
+\end_layout
+
+\begin_layout Description
+eta1_out ADC output of etalon 1 signal.
+ Connected to 
+\family typewriter
+LASERLOCK.eta1_in.
+\end_layout
+
+\begin_layout Description
+ref1_out ADC output of reference 1 signal.
+ Connected to 
+\family typewriter
+LASERLOCK.ref1_in.
+\end_layout
+
+\begin_layout Description
+eta2_out ADC output of etalon 2 signal.
+ Connected to 
+\family typewriter
+LASERLOCK.eta2_in.
+\end_layout
+
+\begin_layout Description
+ref2_out ADC output of reference 2 signal.
+ Connected to 
+\family typewriter
+LASERLOCK.ref2_in.
+\end_layout
+
+\begin_layout Description
+adc_strobe_out Strobe indicating when ADC outputs are valid.
+ Connected to 
+\family typewriter
+LASERLOCK.adc_strobe_in.
+\end_layout
+
+\begin_layout Subsubsection
+Registers
+\end_layout
+
+\begin_layout Subsection
+Tuner Waveform Generator (TWGEN)
+\end_layout
+
+\begin_layout Subsubsection
+Inputs
+\end_layout
+
+\begin_layout Subsubsection
+Outputs
+\end_layout
+
+\begin_layout Description
+tuner_value_out Output of waveform generator.
+ Connected to 
+\family typewriter
+RDMAN.tuner_value_in 
+\family default
+and 
+\family typewriter
+LASERLOCK.tuner_value_in
+\family default
+.
+\end_layout
+
+\begin_layout Subsubsection
+Registers
+\end_layout
+
+\begin_layout Description
+sweep_low Lower limit of waveform sweep
+\end_layout
+
+\begin_layout Description
+sweep_high Upper limit of waveform sweep
+\end_layout
+
+\begin_layout Description
+window_low Lower limit of window, defining range for a valid ringdown
+\end_layout
+
+\begin_layout Description
+window_high Upper limit of window, defining range for a valid ringdown
+\end_layout
+
+\begin_layout Description
+slope_down Slope of down-going waveform
+\end_layout
+
+\begin_layout Description
+slope_up Slope of up-going waveform
+\end_layout
+
+\begin_layout Subsection
+PZT DAC Interface (PZTDAC)
+\end_layout
+
+\begin_layout Standard
+The PZT high voltage amplfier is driven from a digital to analog converter.
+ In cavity tuning mode, the digital to analog converter is driven by the
+ tuner waveform generator through the 
+\family typewriter
+pzt_input
+\family default
+ port, whereas in laser tuning mode, the PZT positions are determined by
+ the DSP writing to the 
+\family typewriter
+pzt_input_reg
+\family default
+ register.
+ A laser-dependent offset is added to the pzt input value in order to give
+ the actual value sent to the digital-to-analog converter.
+ These offsets allow the PZT to be recentered as different lasers are selected,
+ reducing the time for the cavity to come onto resonance with the laser.
+\end_layout
+
+\begin_layout Subsubsection
+Inputs
+\end_layout
+
+\begin_layout Description
+pzt_input Input specifying PZT value
+\end_layout
+
+\begin_layout Description
+pzt_dac_clk 
+\begin_inset Formula $5\,\mathrm{MHz}$
+\end_inset
+
+ clock for driving DAC8522 at 50 times (needs to be at least 24 times) 100kHz
+ update rate
+\end_layout
+
+\begin_layout Subsubsection
+Outputs
+\end_layout
+
+\begin_layout Description
+pzt_dacval_out DAC value sent to PZT, used for ringdown metadata.
+ Connected to 
+\family typewriter
+RDMAN.pzt_dacval_in
+\family default
+.
+\end_layout
+
+\begin_layout Subsubsection
+Registers
+\end_layout
+
+\begin_layout Description
+pzt_input_reg PZT value register.
+ Either the pzt_input port or the pzt_input_reg may be used to specify the
+ value, depending on the state of a bit in a control register.
+ When the input port is used, the pzt_input_reg may be used to read the
+ current value at the port.
+\end_layout
+
+\begin_layout Description
+laser1_offset Offset to add to PZT input value when laser 1 is selected
+\end_layout
+
+\begin_layout Description
+laser2_offset Offset to add to PZT input value when laser 2 is selected
+\end_layout
+
+\begin_layout Description
+laser3_offset Offset to add to PZT input value when laser 3 is selected
+\end_layout
+
+\begin_layout Description
+laser4_offset Offset to add to PZT input value when laser 4 is selected
+\end_layout
+
+\begin_layout Subsection
+Pulse Width Modulation Waveform Generator
+\end_layout
+
+\begin_layout Subsubsection
+Inputslock_error_in Stored as metadata channel 3.
+ Connected to 
+\family typewriter
+LASERLOCK.lock_error_out
+\family default
+.
+\end_layout
+
+\begin_layout Subsubsection
+Outputs
+\end_layout
+
+\begin_layout Description
+pwm_out Pulse width modulated waveform output.
+\end_layout
+
+\begin_layout Description
+pwm_inv_out Inverted version of 
+\family typewriter
+pwm_out
+\family default
+ when in continuous mode, same as 
+\family typewriter
+pwm_out
+\family default
+ in single-step mode.
+\end_layout
+
+\begin_layout Subsubsection
+Registers
+\end_layout
+
+\begin_layout Description
+PWM_CS Control/status register.
+\end_layout
+
+\begin_layout Description
+PWM_PULSE_WIDTH Desired average pulse width of output waveform.
+\end_layout
+
+\begin_layout Subsection
+Laser Current Locking (LASERLOCK)
+\end_layout
+
+\begin_layout Subsubsection
+Inputs
+\end_layout
+
+\begin_layout Description
+eta1_in Etalon 1 photodiode signal.
+ Connected to 
+\family typewriter
+WMADC.eta1_out
+\family default
+.
+\end_layout
+
+\begin_layout Description
+ref1_in Reference 1 photodiode signal.
+ Connected to 
+\family typewriter
+WMADC.ref1_out
+\family default
+.
+\end_layout
+
+\begin_layout Description
+eta2_in Etalon 2 photodiode signal.
+ Connected to 
+\family typewriter
+WMADC.eta2_out
+\family default
+.
+\end_layout
+
+\begin_layout Description
+ref2_in Reference 2 photodiode signal.
+ Connected to 
+\family typewriter
+WMADC.ref2_out
+\family default
+.
+\end_layout
+
+\begin_layout Description
+sample_dark_in Sample etalon dark currents.
+\end_layout
+
+\begin_layout Description
+adc_strobe_in Signal indicating ADC readings are valid.
+ Connected to 
+\family typewriter
+WMADC.adc_strobe_out
+\family default
+.
+\end_layout
+
+\begin_layout Description
+tuner_value_in Tuner value, used to offset laser current locking setpoint.
+ Connected to 
+\family typewriter
+TWGEN.tuner_value_out
+\family default
+.
+\end_layout
+
+\begin_layout Description
+wlm_acq_clk_out 2MHz clock to drive SPI serial ADCs.
+\end_layout
+
+\begin_layout Subsubsection
+Outputs
+\end_layout
+
+\begin_layout Description
+wlm_ratio1_out Ratio 1 output, including offset correction.
+ Connected to 
+\family typewriter
+RDMAN.wlm_ratio1_in
+\family default
+.
+\end_layout
+
+\begin_layout Description
+wlm_ratio2_out Ratio 2 output, including offset correction.
+ Connected to 
+\family typewriter
+RDMAN.wlm_ratio2_in
+\family default
+.
+\end_layout
+
+\begin_layout Description
+tuning_offset_out Laser locker tuning offset, driven from tuner_value_in.
+ Connected to 
+\family typewriter
+RDMAN.tuning_offset_in
+\family default
+.
+\end_layout
+
+\begin_layout Description
+lock_error_out Lock error output.
+ Connected to 
+\family typewriter
+RDMAN.lock_error_in
+\family default
+.
+\end_layout
+
+\begin_layout Description
+fine_current_out Laser fine current output.
+ Connected to 
+\family typewriter
+RDMAN.fine_current_in
+\family default
+ and to 
+\family typewriter
+INJECT.fine_current_in
+\family default
+.
+\end_layout
+
+\begin_layout Subsubsection
+Registers
+\end_layout
+
+\begin_layout Subsection
+Optical Injection Interface (INJECT)
+\end_layout
+
+\begin_layout Standard
+Each DAC has two outputs (a coarse current and a fine current) which are
+ updated on a 100kHz schedule.
+ It takes 24 clock cycles to download each channel.
+ By running the serial clock at 
+\begin_inset Formula $5\,\mathrm{MHz}$
+\end_inset
+
+ , it is possible to update both outputs every 
+\begin_inset Formula $10\,\mu\mathrm{s}$
+\end_inset
+
+, interleaving the updates.
+\end_layout
+
+\begin_layout Subsubsection
+Inputs
+\end_layout
+
+\begin_layout Description
+laser_dac_clk 
+\begin_inset Formula $5\,\mathrm{MHz}$
+\end_inset
+
+ clock for driving DAC8522 at 50 times (needs to be at least 24 times per
+ channel) 100kHz update rate
+\end_layout
+
+\begin_layout Description
+laser_fine_current_in Laser fine current setting.
+\end_layout
+
+\begin_layout Description
+laser_shutdown_in Turns off laser using shorting switch
+\end_layout
+
+\begin_layout Description
+soa_shutdown_in Turns off SOA, using shorting switch
+\end_layout
+
+\begin_layout Subsubsection
+Outputs
+\end_layout
+
+\begin_layout Description
+laser_dac_sclk Serial clock for laser current DACs
+\end_layout
+
+\begin_layout Description
+laser_sync_z Start of frame for laser current DACs
+\end_layout
+
+\begin_layout Description
+laser1_dac_din Laser 1 DAC data (coarse and fine current multiplexed)
+\end_layout
+
+\begin_layout Description
+laser2_dac_din Laser 2 DAC data (coarse and fine current multiplexed)
+\end_layout
+
+\begin_layout Description
+laser3_dac_din Laser 3 DAC data (coarse and fine current multiplexed)
+\end_layout
+
+\begin_layout Description
+laser4_dac_din Laser 4 DAC data (coarse and fine current multiplexed)
+\end_layout
+
+\begin_layout Description
+laser1_enable Laser 1 current source enable
+\end_layout
+
+\begin_layout Description
+laser2_enable Laser 2 current source enable
+\end_layout
+
+\begin_layout Description
+laser3_enable Laser 3 current source enable
+\end_layout
+
+\begin_layout Description
+laser4_enable Laser 4 current source enable
+\end_layout
+
+\begin_layout Description
+laser1_shutdown Activate laser 1 shorting switch
+\end_layout
+
+\begin_layout Description
+laser2_shutdown Activate laser 2 shorting switch
+\end_layout
+
+\begin_layout Description
+laser3_shutdown Activate laser 3 shorting switch
+\end_layout
+
+\begin_layout Description
+laser4_shutdown Activate laser 4 shorting switch
+\end_layout
+
+\begin_layout Description
+soa_shutdown Activate SOA shorting switch
+\end_layout
+
+\begin_layout Subsubsection
+Registers
+\end_layout
+
+\begin_layout Description
+laser1_coarse_current Coarse laser current setting for laser 1 DAC
+\end_layout
+
+\begin_layout Description
+laser2_coarse_current Coarse laser current setting for laser 2 DAC
+\end_layout
+
+\begin_layout Description
+laser3_coarse_current Coarse laser current setting for laser 3 DAC
+\end_layout
+
+\begin_layout Description
+laser4_coarse_current Coarse laser current setting for laser 4 DAC
+\end_layout
+
+\begin_layout Description
+laser1_fine_current Fine laser current setting for laser 1 DAC, when in
+ single-step mode
+\end_layout
+
+\begin_layout Description
+laser2_fine_current Fine laser current setting for laser 2 DAC, when in
+ single-step mode
+\end_layout
+
+\begin_layout Description
+laser3_fine_current Fine laser current setting for laser 3 DAC, when in
+ single-step mode
+\end_layout
+
+\begin_layout Description
+laser4_fine_current Fine laser current setting for laser 4 DAC, when in
+ single-step mode
+\end_layout
+
+\begin_layout Description
+laser_select Specifies which laser is to be used, part of 
+\family typewriter
+inject_settings
+\family default
+ register
+\end_layout
+
+\begin_layout Description
+soa_shutdown_enable Enables shutting down of SOA to initiate a ringdown,
+ part of 
+\family typewriter
+inject_settings
+\family default
+ register
+\end_layout
+
+\begin_layout Description
+laser_shutdown_enable Enables shutting down of laser to initiate a ringdown,
+ part of 
+\family typewriter
+inject_settings
+\family default
+ register
+\end_layout
+
+\end_body
+\end_document

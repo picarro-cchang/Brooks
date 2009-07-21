@@ -93,13 +93,13 @@ class DasConfigure(object):
 #                 "CONVERSION_LASER1_THERM_CONSTC_REGISTER",
 #                 "LASER1_TEMPERATURE_REGISTER"]))
 
-#         self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
-#             Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-#                 ["LASER2_RESISTANCE_REGISTER",
-#                  "CONVERSION_LASER2_THERM_CONSTA_REGISTER",
-#                  "CONVERSION_LASER2_THERM_CONSTB_REGISTER",
-#                  "CONVERSION_LASER2_THERM_CONSTC_REGISTER",
-#                  "LASER2_TEMPERATURE_REGISTER"]))
+        self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                ["LASER2_RESISTANCE_REGISTER",
+                 "CONVERSION_LASER2_THERM_CONSTA_REGISTER",
+                 "CONVERSION_LASER2_THERM_CONSTB_REGISTER",
+                 "CONVERSION_LASER2_THERM_CONSTC_REGISTER",
+                 "LASER2_TEMPERATURE_REGISTER"]))
 #
         self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
              Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
@@ -166,6 +166,8 @@ class DasConfigure(object):
             Operation("ACTION_TEMP_CNTRL_LASER4_STEP"))
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_TUNER_CNTRL_STEP"))
+        self.opGroups["SLOW"]["CONTROLLER"].addOperation(
+            Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
 
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_CURRENT_CNTRL_LASER1_STEP"))
@@ -244,6 +246,7 @@ class DasConfigure(object):
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER2_INIT"))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER3_INIT"))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER4_INIT"))
+        sender.doOperation(Operation("ACTION_TEMP_CNTRL_CAVITY_INIT"))
         sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER1_INIT"))
         sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER2_INIT"))
         sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER3_INIT"))

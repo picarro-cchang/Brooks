@@ -14,15 +14,17 @@
 #endif
 
 #include "configDsp.h"
-#include "i2c_dsp.h"
 #include "ds1631.h"
 #include "dspAutogen.h"
+#include "dspData.h"
+#include "fpga.h"
+#include "i2c_dsp.h"
 #include "interface.h"
 #include "rdFitting.h"
+#include "rdHandlers.h"
+#include "registers.h"
 #include "registerTest.h"
 #include "scheduler.h"
-#include "registers.h"
-#include "dspData.h"
 
 extern far LOG_Obj trace;
 #ifdef SIMULATION
@@ -53,7 +55,14 @@ void scheduler(void)
 
 void timestampPrdFunc(void)
 {
+    DataType d;
     timestamp = timestamp + 1LL;
+    readRegister(RDSIM_TRIGGER_DIVIDER_REGISTER,&d);
+    if (0 == d.asInt) d.asInt = 1;
+    if (0 == timestamp % d.asInt) 
+        changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_START_RD_B,
+                        RDMAN_CONTROL_START_RD_W,1);
+
 }
 #endif
 
@@ -77,7 +86,9 @@ main(int argc, char *argv[])
     ds1631_init();
     // Initialize DS1631 for continuous measurements
     rdFittingInit();
-
+    // Initialize EDMA handling
+    edmaInit();
+    
     // Clear DSPINT bit in HPIC
     HPI_setDspint(1);
     IRQ_resetAll();
@@ -87,6 +98,8 @@ main(int argc, char *argv[])
     IRQ_enable(IRQ_EVT_EXTINT4);
     // Ringdown acquisition done interrupt
     IRQ_enable(IRQ_EVT_EXTINT5);
+    // EDMA interrupt
+    IRQ_enable(IRQ_EVT_EDMAINT);
     return 0;
 }
 /* The registerTest.c file may be compiled either for the DSP, or using a host based compiler to run a simulation.

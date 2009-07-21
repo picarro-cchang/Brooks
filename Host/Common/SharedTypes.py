@@ -12,9 +12,10 @@
 #
 # HISTORY:
 #   07-Jan-2009  sze  Initial version.
-#
+#   21-Jul-2009  sze  Added GenHandler.
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
+import time
 
 # Constants...
 ACCESS_PUBLIC = 0
@@ -91,6 +92,62 @@ class Singleton(object):
             cls._instance=super(Singleton,cls).__new__(cls,*a,**k)
         return cls._instance
 
+class GenHandler(object):
+    """This class is used to call a generator repeatedly and to perform some specified
+    action on the output of that generator, either for a duration which is as close as 
+    possible to a specified value, or until the generator is exhausted. In __init__,
+    a function is passed to produce a new generator, if an active one does not currently
+    exist. A function accepting the output of the generator is also required.
+    
+    It is useful when handling a number of queues within a single threaded environment
+    so that we do not spend too much time trying to empty out a queue while others 
+    remain unserviced. The generator function in such a case would give a generator
+    that yields elements popped off the queue and raise StopIteration once the queue 
+    is empty."""
+    
+    def __init__(self,genFunc,processFunc):
+        self.genFunc = genFunc
+        self.processFunc = processFunc
+        self.generator = None
+        self.totTime = 0
+        self.num = 0
+        self.avgTime = None
+        
+    def process(self,timeLimit):
+        if not self.generator:
+            self.generator = self.genFunc()
+        start = time.clock()
+
+        n = 0
+        if self.avgTime: 
+            nTimes = timeLimit/self.avgTime
+            while n<nTimes:
+                try:
+                    d = self.generator.next()
+                    self.processFunc(d)
+                    n += 1
+                except StopIteration:
+                    self.generator = None
+                    break
+        else:
+            while time.clock()-start < timeLimit:
+                try:
+                    d = self.generator.next()
+                    self.processFunc(d)
+                    n += 1
+                except StopIteration:
+                    self.generator = None
+                    break
+
+        duration = time.clock()-start
+        self.totTime += duration
+        self.num += n
+        if self.totTime > 10.0:
+            self.num *= (10.0/self.totTime)
+            self.totTime = 10.0
+            self.avgTime = self.totTime/self.num
+        return duration
+    
 ##Misc stuff...
 
 if __debug__:

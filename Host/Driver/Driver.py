@@ -298,6 +298,18 @@ class Driver(SharedTypes.Singleton):
             name="CRDI RD Results Broadcaster",logFunc=Log)
         self.lastSaveDasState = 0
     def run(self):
+        def messageProcessor(data):
+            ts, msg = data
+            Log("%s" % (msg,))
+        def sensorProcessor(data):
+            self.streamCast.send(StringPickler.ObjAsString(data))
+            self.streamSaver._writeData(data)
+        def ringdownProcessor(data):
+            # TODO: Normalize the data format here
+            self.resultsCast.send(StringPickler.ObjAsString(data))
+        messageHandler  = SharedTypes.GenHandler(self.dasInterface.getMessages,    messageProcessor)
+        sensorHandler   = SharedTypes.GenHandler(self.dasInterface.getSensorData,  sensorProcessor)
+        ringdownHandler = SharedTypes.GenHandler(self.dasInterface.getRingdownData,ringdownProcessor)
         try:
             while True:
                 try:
@@ -318,21 +330,18 @@ class Driver(SharedTypes.Singleton):
                     # type,value,trace = sys.exc_info()
                     Log("Cannot connect to instrument - please check hardware",Verbose=traceback.format_exc(),Level=3)
                     break
+                #
                 # Here follows the main loop. If an exception occurs
                 #  in this loop, we try reloading the firmware
                 try:
                     while not daemon.mustShutdown:
-                        daemon.handleRequests(0.2)
-                        for data in self.dasInterface.getSensorData():
-                            self.streamCast.send(StringPickler.ObjAsString(data))
-                            self.streamSaver._writeData(data)
-                        for data in self.dasInterface.getRingdownData():
-                            # TODO: Normalize the data format here
-                            self.resultsCast.send(StringPickler.ObjAsString(data))
-                        for ts,msg in self.dasInterface.getMessages():
-                            Log("%s" % (msg,))
-                        now = time.time()
+                        timeSoFar = 0
+                        timeSoFar += messageHandler.process(0.05)
+                        timeSoFar += sensorHandler.process(max(0.05,0.2-timeSoFar))
+                        timeSoFar += ringdownHandler.process(max(0.05,0.5-timeSoFar))
+                        daemon.handleRequests(max(0.005,0.5-timeSoFar))
                         # Periodically save the state of the DAS
+                        now = time.time()
                         if now > self.lastSaveDasState + 30.0:
                             self.dasInterface.saveDasState()
                             self.lastSaveDasState = now
@@ -373,7 +382,14 @@ class InstrumentConfig(SharedTypes.Singleton):
                 else:
                     self.config["DASregisters"][ri.name]= \
                         ri.type(s.rdRegUint(ri.name)).value
-
+        for fpgaMap,regList in interface.persistent_fpga_registers:
+            self.config[fpgaMap] = {}
+            for r in regList:
+                try:
+                    self.config[fpgaMap][r] = s.rdFPGA(fpgaMap,r)
+                except:
+                    Log("Error reading FPGA register %s in %s" % (r,fpgaMap),Level=2)
+                
     def loadPersistentRegistersFromConfig(self):
         s = HostToDspSender()
         if "DASregisters" not in self.config:
@@ -394,6 +410,14 @@ class InstrumentConfig(SharedTypes.Singleton):
                         s.wrRegUint(ri.name,value)
                 else:
                     Log("Unwritable register %s ignored during config file load" % name,Level=2)
+        for fpgaMap in self.config:
+            if fpgaMap.startswith("FPGA"):
+                for name in self.config[fpgaMap]:
+                    value = int(self.config[fpgaMap][name])
+                    try:
+                        s.wrFPGA(fpgaMap,name,value)
+                    except:
+                        Log("Error writing FPGA register %s in %s" % (name,fpgaMap),Level=2)
 
     def writeConfig(self,filename=None):
         if filename is None:
@@ -404,7 +428,6 @@ class InstrumentConfig(SharedTypes.Singleton):
             self.config.write(fp)
             fp.close
         return filename
-
 
 HELP_STRING = """Driver.py [-s|--simulation] [-c<FILENAME>] [-h|--help]
 

@@ -34,6 +34,7 @@
             <register>SCHEDULER_CONTROL_REGISTER</register>
             <register>RD_IRQ_COUNT_REGISTER</register>
             <register>ACQ_DONE_COUNT_REGISTER</register>
+            <register>RDSIM_TRIGGER_DIVIDER_REGISTER</register>
             <register>LOGICPORT_CLOCK_PERIOD_REGISTER</register>
             <register>LOGICPORT_SOURCE_REGISTER</register>
         </gui_page>
@@ -219,10 +220,7 @@
             <title>Ringdown Manager Parameters</title>
             <fpga_register offset="FPGA_RDMAN">CONTROL</fpga_register>
             <fpga_register offset="FPGA_RDMAN">STATUS</fpga_register>
-            <fpga_register offset="FPGA_RDMAN">PARAM0</fpga_register>
-            <fpga_register offset="FPGA_RDMAN">PARAM1</fpga_register>
-            <fpga_register offset="FPGA_RDMAN">PARAM8</fpga_register>
-            <fpga_register offset="FPGA_RDMAN">PARAM9</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">OPTIONS</fpga_register>
             <fpga_register offset="FPGA_RDMAN">DATA_ADDRCNTR</fpga_register>
             <fpga_register offset="FPGA_RDMAN">METADATA_ADDRCNTR</fpga_register>
             <fpga_register offset="FPGA_RDMAN">PARAM_ADDRCNTR</fpga_register>

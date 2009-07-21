@@ -341,6 +341,11 @@
             <initial>LOGICPORT_SOURCE_RD_ADC</initial>
             <display>Logic port source</display>
         </register>
+        <register ident="RDSIM_TRIGGER_DIVIDER_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Time between simulated ringdowns</description>
+            <initial>10</initial>
+            <display format="%d" units="ms">Time between simulated ringdowns</display>
+        </register>		
         <register ident="RD_IRQ_COUNT_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Number of ringdown interrupts</description>
             <initial>0</initial>
@@ -1543,15 +1548,19 @@
         </fpga_block>
         <fpga_block ident="RDSIM" description="Ringdown simulator">
             <reg type="uint32" ident="TUNER_CENTER" description="Tuner value around which cavity fills" access="rw">
+				<save/>
                 <display format="%d">Tuner value around which cavity fills</display>
             </reg>
             <reg type="uint32" ident="TUNER_WINDOW_HALF_WIDTH" description="Half-width of tuner window within which cavity fills" access="rw">
+				<save/>
                 <display format="%d">Half-width of tuner window within which cavity fills</display>
             </reg>
             <reg type="uint32" ident="FILLING_RATE" description="Rate of increase of accumulator value during filling" access="rw">
+				<save/>
                 <display format="%d">Rate of increase of accumulator value during filling</display>
             </reg>
             <reg type="uint32" ident="DECAY" description="Exponential decay of accumulator when not filling" access="rw">
+				<save/>
                 <display format="%d">Exponential decay of accumulator when not filling</display>
             </reg>
             <reg type="uint32" ident="ACCUMULATOR" description="Simulated ringdown value" access="r">
@@ -1578,22 +1587,22 @@
             <reg type="uint32" ident="REF1_DARK" description="Reference 1 dark reading" access="r"></reg>
             <reg type="uint32" ident="ETA2_DARK" description="Etalon 2 dark reading" access="r"></reg>
             <reg type="uint32" ident="REF2_DARK" description="Reference 2 dark reading" access="r"></reg>
-            <reg type="uint32" ident="ETA1_OFFSET" description="Etalon 1 offset" access="rw"></reg>
-            <reg type="uint32" ident="REF1_OFFSET" description="Reference 1 offset" access="rw"></reg>
-            <reg type="uint32" ident="ETA2_OFFSET" description="Etalon 2 offset" access="rw"></reg>
-            <reg type="uint32" ident="REF2_OFFSET" description="Reference 2 offset" access="rw"></reg>
+            <reg type="uint32" ident="ETA1_OFFSET" description="Etalon 1 offset" access="rw"><save/></reg>
+            <reg type="uint32" ident="REF1_OFFSET" description="Reference 1 offset" access="rw"><save/></reg>
+            <reg type="uint32" ident="ETA2_OFFSET" description="Etalon 2 offset" access="rw"><save/></reg>
+            <reg type="uint32" ident="REF2_OFFSET" description="Reference 2 offset" access="rw"><save/></reg>
             <reg type="uint32" ident="RATIO1" description="Ratio 1" access="r"></reg>
             <reg type="uint32" ident="RATIO2" description="Ratio 2" access="r"></reg>
-            <reg type="uint32" ident="RATIO1_CENTER" description="Ratio 1 ellipse center" access="rw"></reg>
-            <reg type="uint32" ident="RATIO1_MULTIPLIER" description="Ratio 1 multiplier" access="rw"></reg>
-            <reg type="uint32" ident="RATIO2_CENTER" description="Ratio 2 ellipse center" access="rw"></reg>
-            <reg type="uint32" ident="RATIO2_MULTIPLIER" description="Ratio 2 multiplier" access="rw"></reg>
-            <reg type="uint32" ident="TUNING_OFFSET" description="Error offset to shift frequency" access="rw"></reg>
+            <reg type="uint32" ident="RATIO1_CENTER" description="Ratio 1 ellipse center" access="rw"><save/></reg>
+            <reg type="uint32" ident="RATIO1_MULTIPLIER" description="Ratio 1 multiplier" access="rw"><save/></reg>
+            <reg type="uint32" ident="RATIO2_CENTER" description="Ratio 2 ellipse center" access="rw"><save/></reg>
+            <reg type="uint32" ident="RATIO2_MULTIPLIER" description="Ratio 2 multiplier" access="rw"><save/></reg>
+            <reg type="uint32" ident="TUNING_OFFSET" description="Error offset to shift frequency" access="rw"><save/></reg>
             <reg type="uint32" ident="LOCK_ERROR" description="Locker loop error" access="r"></reg>
-            <reg type="uint32" ident="WM_LOCK_WINDOW" description="Lock window" access="rw"></reg>
-            <reg type="uint32" ident="WM_INT_GAIN" description="Locker integral gain" access="rw"></reg>
-            <reg type="uint32" ident="WM_PROP_GAIN" description="Locker proportional gain" access="rw"></reg>
-            <reg type="uint32" ident="WM_DERIV_GAIN" description="Locker derivative gain" access="rw"></reg>
+            <reg type="uint32" ident="WM_LOCK_WINDOW" description="Lock window" access="rw"><save/></reg>
+            <reg type="uint32" ident="WM_INT_GAIN" description="Locker integral gain" access="rw"><save/></reg>
+            <reg type="uint32" ident="WM_PROP_GAIN" description="Locker proportional gain" access="rw"><save/></reg>
+            <reg type="uint32" ident="WM_DERIV_GAIN" description="Locker derivative gain" access="rw"><save/></reg>
             <reg type="uint32" ident="FINE_CURRENT" description="Fine laser current" access="r"></reg>
             <reg type="uint32" ident="CYCLE_COUNTER" description="Cycle counter" access="r"></reg>
         </fpga_block>
@@ -1616,31 +1625,19 @@
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Abort</fielddef>
                 </bitfield>
-                <bitfield ident="LOCK_ENABLE" description="Enable frequency locking" lsb="4" width="1">
-                    <fielddef value="0">Disable</fielddef>
-                    <fielddef value="1">Enable</fielddef>
-                </bitfield>
-                <bitfield ident="UP_SLOPE_ENABLE" description="Allow ring-down on positive tuner slope" lsb="5" width="1">
-                    <fielddef value="0">No</fielddef>
-                    <fielddef value="1">Yes</fielddef>
-                </bitfield>
-                <bitfield ident="DOWN_SLOPE_ENABLE" description="Allow ring-down on negative tuner slope" lsb="6" width="1">
-                    <fielddef value="0">No</fielddef>
-                    <fielddef value="1">Yes</fielddef>
-                </bitfield>
-                <bitfield ident="BANK0_CLEAR" description="Mark bank 0 available for write" lsb="7" width="1">
+                <bitfield ident="BANK0_CLEAR" description="Mark bank 0 available for write" lsb="4" width="1">
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Mark available</fielddef>
                 </bitfield>
-                <bitfield ident="BANK1_CLEAR" description="Mark bank 1 available for write" lsb="8" width="1">
+                <bitfield ident="BANK1_CLEAR" description="Mark bank 1 available for write" lsb="5" width="1">
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Mark available</fielddef>
                 </bitfield>
-                <bitfield ident="RD_IRQ_ACK" description="Acknowledge ring-down interrupt" lsb="9" width="1">
+                <bitfield ident="RD_IRQ_ACK" description="Acknowledge ring-down interrupt" lsb="6" width="1">
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Acknowledge</fielddef>
                 </bitfield>
-                <bitfield ident="ACQ_DONE_ACK" description="Acknowledge data acquired interrupt" lsb="10" width="1">
+                <bitfield ident="ACQ_DONE_ACK" description="Acknowledge data acquired interrupt" lsb="7" width="1">
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Acknowledge</fielddef>
                 </bitfield>
@@ -1688,6 +1685,21 @@
                     <fielddef value="1">Aborted</fielddef>
                 </bitfield>
             </reg>
+            <reg type="mask" ident="OPTIONS" description="Options register" access="rw">
+                <save/>
+                <bitfield ident="LOCK_ENABLE" description="Enable frequency locking" lsb="0" width="1">
+                    <fielddef value="0">Disable</fielddef>
+                    <fielddef value="1">Enable</fielddef>
+                </bitfield>
+                <bitfield ident="UP_SLOPE_ENABLE" description="Allow ring-down on positive tuner slope" lsb="1" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>
+                </bitfield>
+                <bitfield ident="DOWN_SLOPE_ENABLE" description="Allow ring-down on negative tuner slope" lsb="2" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>
+                </bitfield>
+            </reg>
             <reg type="uint32" ident="PARAM0" description="Parameter 0 register" access="rw">
                 <display format="%d">Parameter 0</display>
             </reg>
@@ -1728,21 +1740,27 @@
                 <display format="%d">Ringdown parameter address</display>
             </reg>
             <reg type="uint32" ident="DIVISOR" description="Ring-down data counter rate divisor" access="rw">
+                <save/>
                 <display format="%d">Ringdown ADC divisor</display>
             </reg>
             <reg type="uint32" ident="NUM_SAMP" description="Number of samples to collect for ring-down waveform" access="rw">
+                <save/>
                 <display format="%d">Ringdown samples to collect</display>
             </reg>
             <reg type="uint32" ident="THRESHOLD" description="Ring-down threshold" access="rw">
+                <save/>
                 <display format="%d">Ringdown threshold</display>
             </reg>
             <reg type="uint32" ident="LOCK_DURATION" description="Duration (us) for laser frequency to be locked before ring-down is allowed" access="rw">
+                <save/>
                 <display format="%d">Laser lock duration (us)</display>
             </reg>
             <reg type="uint32" ident="PRECONTROL_DURATION" description="Duration (us) for laser current to be at nominal value before frequency locking is enabled" access="rw">
+                <save/>
                 <display format="%d">Precontrol duration (us)</display>
             </reg>
             <reg type="uint32" ident="TIMEOUT_DURATION" description="Duration (ms) within which ring-down must occur to be valid" access="rw">
+                <save/>
                 <display format="%d">Ringdown timeout duration (us)</display>
             </reg>
             <reg type="uint32" ident="TUNER_AT_RINGDOWN" description="Value of tuner at ring-down" access="r">
@@ -1759,12 +1777,12 @@
                 <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
                 <bitfield ident="RESET"   description="Reset generator"  lsb="2" width="1" />
             </reg>
-            <reg type="uint32" ident="SLOPE_DOWN" description="Slope in downward direction"/>
-            <reg type="uint32" ident="SLOPE_UP" description="Slope in upward direction"/>
-            <reg type="uint32" ident="SWEEP_LOW" description="Lower limit of sweep"/>
-            <reg type="uint32" ident="SWEEP_HIGH" description="Higher limit of sweep"/>
-            <reg type="uint32" ident="WINDOW_LOW" description="Lower limit of window"/>
-            <reg type="uint32" ident="WINDOW_HIGH" description="Higher limit of window"/>
+            <reg type="uint32" ident="SLOPE_DOWN" description="Slope in downward direction"><save/></reg>
+            <reg type="uint32" ident="SLOPE_UP" description="Slope in upward direction"><save/></reg>
+            <reg type="uint32" ident="SWEEP_LOW" description="Lower limit of sweep"><save/></reg>
+            <reg type="uint32" ident="SWEEP_HIGH" description="Higher limit of sweep"><save/></reg>
+            <reg type="uint32" ident="WINDOW_LOW" description="Lower limit of window"><save/></reg>
+            <reg type="uint32" ident="WINDOW_HIGH" description="Higher limit of window"><save/></reg>
         </fpga_block>
         <fpga_block ident="INJECT" description="Optical injection subsystem">
             <reg type="mask" ident="CONTROL" description="Control register">

@@ -36,7 +36,7 @@ RdFittingParamsType rdFittingParams;
 //
 // Performs summer algorithm for ringdown fitting
 //
-void rdFittingSummer(volatile int *data,float tSamp,int nSamp,float *a, float *b, float *f)
+void rdFittingSummer(int *data,float tSamp,int nSamp,float *a, float *b, float *f)
 {
     float y = 0.0, x;
     float sy = 0.0, sty = 0.0;
@@ -85,7 +85,7 @@ void rdFittingSummer(volatile int *data,float tSamp,int nSamp,float *a, float *b
 // Polishes fit using iterations of Newton's algorithm with the normal equations.
 //
 
-void rdFittingImprove(volatile int *data,float tSamp,int nSamp,
+void rdFittingImprove(int *data,float tSamp,int nSamp,
                       float *a, float *b, float *f, int niter)
 {
     double A, B, C, D, E, F, G, H, I;
@@ -141,7 +141,7 @@ void rdFittingImprove(volatile int *data,float tSamp,int nSamp,
 //
 // Performs RD backscatter correction algorithm.
 //
-float rdFittingCorrector(volatile int *data,float tSamp,int nSamp,float tau,
+float rdFittingCorrector(int *data,float tSamp,int nSamp,float tau,
                          float a, float b, float f, float delay)
 {
     // Calculate quantities for backscatter correction
@@ -265,7 +265,7 @@ void rdFittingInit()
 //  losses (in ppm/cm) are placed in *uncorrectedLoss and
 //  *correctedLoss.
 
-int rdFittingDoFit(volatile int *data, float tSamp, unsigned int nPoints, float toffset,
+int rdFittingDoFit(int *data, float tSamp, unsigned int nPoints, float toffset,
                    float *uncorrectedLoss, float *correctedLoss)
 {
     float a, b, f, a0, b0, f0, tau1, tau2;
@@ -312,7 +312,7 @@ int rdFittingDoFit(volatile int *data, float tSamp, unsigned int nPoints, float 
 //-----------------------------------------------------------------------------
 // Find the portion of the buffer which contains the rindown
 //  waveform and send it
-int rdFittingProcessRingdown(volatile int *buffer,
+int rdFittingProcessRingdown(int *buffer,
                              float *uncorrectedLoss, float *correctedLoss,
                              RdFittingDebug *rdFittingDebug)
 {

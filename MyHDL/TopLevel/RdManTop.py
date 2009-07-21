@@ -266,21 +266,23 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
         ce2.next = dsp_emif_ce[2]
         intronix.next[16]  = laser1_pwm_out
-        intronix.next[17]  = laser1_pwm_inv_out
         lsr1_0.next = laser1_pwm_out
         lsr1_1.next = laser1_pwm_inv_out
-        intronix.next[18]  = laser2_pwm_out
-        intronix.next[19]  = laser2_pwm_inv_out
+        intronix.next[17]  = laser2_pwm_out
         lsr2_0.next = laser2_pwm_out
         lsr2_1.next = laser2_pwm_inv_out
-        intronix.next[20]  = laser3_pwm_out
-        intronix.next[21]  = laser3_pwm_inv_out
+        intronix.next[18]  = laser3_pwm_out
         lsr3_0.next = laser3_pwm_out
         lsr3_1.next = laser3_pwm_inv_out
-        intronix.next[22]  = laser4_pwm_out
-        intronix.next[23]  = laser4_pwm_inv_out
+        intronix.next[19]  = laser4_pwm_out
         lsr4_0.next = laser4_pwm_out
         lsr4_1.next = laser4_pwm_inv_out
+
+        intronix.next[20] = gpreg_1[8]
+        intronix.next[21] = gpreg_1[9]
+        intronix.next[22] = gpreg_1[10]
+        intronix.next[23] = gpreg_1[11]
+
         intronix.next[24] = adc_clk
         intronix.next[25] = acc_en
         intronix.next[26] = laser_locked
