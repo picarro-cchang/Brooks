@@ -14,7 +14,9 @@
  *
  * HISTORY:
  *   22-Feb-2008  sze  Added iterative improvement of ringdown parameters using Newton's method.
- *   13-Jul-2008  sze  Ported to new platform
+ *   13-Jul-2009  sze  Ported to new platform
+ *   22-Jul-2009  sze  Use only LSW of data by ANDing with 0xFFFF to accomodate transferring both
+ *                      ringdown data and metadata as the LSW and MSW of 32-bit quantities
  *
  */
 #include <stdlib.h>
@@ -50,7 +52,7 @@ void rdFittingSummer(int *data,float tSamp,int nSamp,float *a, float *b, float *
 #pragma MUST_ITERATE(8,,4)
     for (i=0; i<nSamp; i++)
     {
-        x = (float)data[i];
+        x = (float)(0xFFFF & data[i]);
         y += x;
         sx += x;
         stx += i*x;
@@ -108,7 +110,7 @@ void rdFittingImprove(int *data,float tSamp,int nSamp,
 #pragma MUST_ITERATE(64,,4)
         for (i=0; i<nSamp; i++)
         {
-            r = data[i]-((*a)*x+(*b));
+            r = (0xFFFF & data[i])-((*a)*x+(*b));
             G += r;
             H += x*r;
             I += i*x*r;
@@ -218,7 +220,7 @@ float rdFittingCorrector(int *data,float tSamp,int nSamp,float tau,
     for (i=0; i<nSamp; i++)
     {
         t = i*dt+t0;
-        r = (float)data[i]-(a*x+b);
+        r = (float)(0xFFFF & data[i])-(a*x+b);
         J += r;
         K += (xr = x*r);
         L += (txr = t*xr);
@@ -343,10 +345,10 @@ int rdFittingProcessRingdown(int *buffer,
     // Get the maximum number of points allowed in the fit window
     nPoints = *(rdFittingParams.numberOfPoints);
     // Find the amplitude of the ringdown, starting from startSample
-    maxValue = minValue = buffer[startSample];
+    maxValue = minValue = 0xFFFF & buffer[startSample];
     for (sample=startSample; sample<nSamp; sample++)
     {
-        unsigned int bufferValue = buffer[sample];
+        unsigned int bufferValue = 0xFFFF & buffer[sample];
         if (maxValue <= bufferValue)
         {
             peakSample = sample;
@@ -366,7 +368,7 @@ int rdFittingProcessRingdown(int *buffer,
 
     // Find first sample which is below the threshold
     for (sample=peakSample; sample<nSamp; sample++)
-        if ((float)buffer[sample] < thresh) break;
+        if ((float)(0xFFFF & buffer[sample]) < thresh) break;
 
     // Fit the next nPoints points, or to the end of the available
     //  data (whichever comes first)

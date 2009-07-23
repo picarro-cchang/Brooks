@@ -77,19 +77,19 @@ def readFPGA(analyzerUsb,offset):
 def writeFPGA(analyzerUsb,offset,value):
     analyzerUsb.hpiaWrite(FPGA_REG_BASE+FPGA_REG_MULT*offset)
     analyzerUsb.hpidWrite(c_uint(value))
-def readRdMemArray(analyzerUsb,offset,nwords=1):
+def rdRingdownMemArray(analyzerUsb,offset,nwords=1):
     """Reads multiple words from ringdown memory into a c_uint array"""
     analyzerUsb.hpiaWrite(RDMEM_BASE+offset)
     result = (c_uint*nwords)()
     analyzerUsb.hpidRead(result)
     return result
-def readRdMem(analyzerUsb,offset):
+def rdRingdownMem(analyzerUsb,offset):
     """Reads single uint from ringdown memory"""
     analyzerUsb.hpiaWrite(RDMEM_BASE+offset)
     result = c_uint(0)
     analyzerUsb.hpidRead(result)
     return result.value
-def writeRdMem(analyzerUsb,offset,value):
+def wrRingdownMem(analyzerUsb,offset,value):
     """Reads single uint value to ringdown memory"""
     analyzerUsb.hpiaWrite(RDMEM_BASE+offset)
     result = c_uint(value)

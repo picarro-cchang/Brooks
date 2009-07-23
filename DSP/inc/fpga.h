@@ -26,6 +26,7 @@ unsigned int readBitsFPGA(unsigned int regNum, unsigned int lsb,
                           unsigned int width);
 void *rdDataAddr(int bank);
 void *rdMetaAddr(int bank);
+void *rdDataAndMetaAddr(int bank);
 void *rdParamAddr(int bank);
 
 #endif /* _FPGA_H_ */

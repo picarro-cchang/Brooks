@@ -11,6 +11,10 @@
 #
 # HISTORY:
 #   12-May-2009  sze  Initial version.
+#   22-Jul-2009  sze  Moved parameter addresses to 0x3000 and 0x7000.
+#                     Allow DSP read-only access to both metadata and data memory as 32-bit words 
+#                      (MSW = metadata, LSW = data) in blocks starting at addresses 0x2000 and 0x6000. 
+#                      This speeds up DMA but only low order 16 bits of the data are accessible in this way. 
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -34,10 +38,12 @@ def  Rdmemory(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     #  give byte offsets) relative to the base address
     # 0x0       Data area, bank 0
     # 0x1000    Metadata area, bank 0
-    # 0x2000    Parameter area, bank 0
+    # 0x2000    Read-only access of bank 0 of both data (MSW) and metadata (LSW)
+    # 0x3000    Parameter area, bank 0
     # 0x4000    Data area, bank 1
     # 0x5000    Metadata area, bank 1
-    # 0x6000    Parameter area, bank 1
+    # 0x6000    Read-only access of bank 1 of both data (MSW) and metadata (LSW)
+    # 0x7000    Parameter area, bank 1
 
     # From the FPGA side, the memory is write-only and organized as
     #  words of width RDMEM_DATA_WIDTH, RDMEM_META_WIDTH and
@@ -54,13 +60,15 @@ def  Rdmemory(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
 
     enA_data = Signal(LOW)
     enB_data = Signal(HIGH)
+    wr_enable = Signal(LOW)
+    
     data_addrA = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH+1:])
     data_addrB = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH+1:])
     wr_dataA = Signal(intbv(0)[RDMEM_DATA_WIDTH:])
     rd_dataA = Signal(intbv(0)[RDMEM_DATA_WIDTH:])
     sel_data = LOW
 
-    data_mem = DualPortRamRw(clockA=clk, enableA=enA_data, wr_enableA=dsp_wr,
+    data_mem = DualPortRamRw(clockA=clk, enableA=enA_data, wr_enableA=wr_enable,
                             addressA=data_addrA, rd_dataA=rd_dataA,
                             wr_dataA=wr_dataA,
                             clockB=clk, enableB=enB_data, wr_enableB=data_we,
@@ -77,7 +85,7 @@ def  Rdmemory(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     rd_metaA = Signal(intbv(0)[RDMEM_META_WIDTH:])
     sel_meta = LOW
 
-    meta_mem = DualPortRamRw(clockA=clk, enableA=enA_meta, wr_enableA=dsp_wr,
+    meta_mem = DualPortRamRw(clockA=clk, enableA=enA_meta, wr_enableA=wr_enable,
                             addressA=meta_addrA, rd_dataA=rd_metaA,
                             wr_dataA=wr_metaA,
                             clockB=clk, enableB=enB_meta, wr_enableB=meta_we,
@@ -94,7 +102,7 @@ def  Rdmemory(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     rd_paramA = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
     sel_param = LOW
 
-    param_mem = DualPortRamRw(clockA=clk, enableA=enA_param, wr_enableA=dsp_wr,
+    param_mem = DualPortRamRw(clockA=clk, enableA=enA_param, wr_enableA=wr_enable,
                             addressA=param_addrA, rd_dataA=rd_paramA,
                             wr_dataA=wr_paramA,
                             clockB=clk, enableB=enB_param, wr_enableB=param_we,
@@ -105,8 +113,12 @@ def  Rdmemory(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
 
     @always_comb
     def  comb():
+        # Selects both data and metadata for read-only access
+        sel_data_and_metadata = dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 6 or dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 2
+        wr_enable.next = dsp_wr and not sel_data_and_metadata
+        
         enB_data.next = 1
-        sel_data = dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 4 or dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 0
+        sel_data = dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 4 or dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 0 or sel_data_and_metadata
         data_addrA.next[DATA_BANK_ADDR_WIDTH:] = dsp_addr[DATA_BANK_ADDR_WIDTH:]
         # The bank is selected (on the DSP side) using dsp_addr[14]
         data_addrA.next[DATA_BANK_ADDR_WIDTH] = dsp_addr[RDMEM_RESERVED_BANK_ADDR_WIDTH+2]
@@ -118,7 +130,7 @@ def  Rdmemory(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         wr_dataA.next = dsp_data_out[RDMEM_DATA_WIDTH:]
 
         enB_meta.next = 1
-        sel_meta = dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 5 or dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 1
+        sel_meta = dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 5 or dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 1 or sel_data_and_metadata
         meta_addrA.next[META_BANK_ADDR_WIDTH:] = dsp_addr[META_BANK_ADDR_WIDTH:]
         # The bank is selected (on the DSP side) using dsp_addr[14]
         meta_addrA.next[META_BANK_ADDR_WIDTH] = dsp_addr[RDMEM_RESERVED_BANK_ADDR_WIDTH+2]
@@ -130,7 +142,7 @@ def  Rdmemory(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         wr_metaA.next = dsp_data_out[RDMEM_META_WIDTH:]
 
         enB_param.next = 1
-        sel_param = dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 6 or dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 2
+        sel_param = dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 7 or dsp_addr[:RDMEM_RESERVED_BANK_ADDR_WIDTH] == 3
         param_addrA.next[PARAM_BANK_ADDR_WIDTH:] = dsp_addr[PARAM_BANK_ADDR_WIDTH:]
         # The bank is selected (on the DSP side) using dsp_addr[14]
         param_addrA.next[PARAM_BANK_ADDR_WIDTH] = dsp_addr[RDMEM_RESERVED_BANK_ADDR_WIDTH+2]
@@ -141,7 +153,10 @@ def  Rdmemory(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         # Handle data write from DSP
         wr_paramA.next = dsp_data_out[RDMEM_PARAM_WIDTH:]
 
-        if sel_data:
+        if sel_data_and_metadata:
+            dsp_data_in.next[FPGA_REG_WIDTH:] = rd_dataA[FPGA_REG_WIDTH:]
+            dsp_data_in.next[EMIF_DATA_WIDTH:FPGA_REG_WIDTH] = rd_metaA[FPGA_REG_WIDTH:]
+        elif sel_data:
             dsp_data_in.next = rd_dataA[RDMEM_DATA_WIDTH:]
         elif sel_meta:
             dsp_data_in.next = rd_metaA[RDMEM_META_WIDTH:]

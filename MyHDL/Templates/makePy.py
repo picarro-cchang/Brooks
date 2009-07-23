@@ -64,7 +64,7 @@ benchUtils = """    PERIOD = 20  # 50MHz clock
         result.next = dsp_data_in
         yield clk.negedge
 
-    def writeRdmem(wordAddr,data):
+    def wrRingdownMem(wordAddr,data):
         yield clk.negedge
         yield clk.posedge
         dsp_addr.next = wordAddr
@@ -75,7 +75,7 @@ benchUtils = """    PERIOD = 20  # 50MHz clock
         yield clk.posedge
         yield clk.negedge
 
-    def readRdmem(wordAddr,result):
+    def rdRingdownMem(wordAddr,result):
         yield clk.negedge
         yield clk.posedge
         dsp_addr.next = wordAddr

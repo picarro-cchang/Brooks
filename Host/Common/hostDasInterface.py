@@ -595,21 +595,28 @@ class HostToDspSender(Singleton):
         self.usb.hpiaWrite(FPGA_REG_BASE+4*(lookup(base)+lookup(reg)))
         self.usb.hpidWrite(c_uint(value))
     @usbLockProtect
-    def readRdMemArray(self,offset,nwords=1):
+    def rdDspMemArray(self,wordAddr,nwords=1):
+        """Reads multiple words from DSP memory into a c_uint array"""
+        self.usb.hpiaWrite(4*wordAddr)
+        result = (c_uint*nwords)()
+        self.usb.hpidRead(result)
+        return result
+    @usbLockProtect
+    def rdRingdownMemArray(self,offset,nwords=1):
         """Reads multiple words from ringdown memory into a c_uint array"""
         self.usb.hpiaWrite(interface.RDMEM_ADDRESS+4*offset)
         result = (c_uint*nwords)()
         self.usb.hpidRead(result)
         return result
     @usbLockProtect
-    def readRdMem(self,offset):
+    def rdRingdownMem(self,offset):
         """Reads single uint from ringdown memory"""
         self.usb.hpiaWrite(interface.RDMEM_ADDRESS+4*offset)
         result = c_uint(0)
         self.usb.hpidRead(result)
         return result.value
     @usbLockProtect
-    def writeRdMem(self,offset,value):
+    def wrRingdownMem(self,offset,value):
         """Reads single uint value to ringdown memory"""
         self.usb.hpiaWrite(interface.RDMEM_ADDRESS+4*offset)
         result = c_uint(value)

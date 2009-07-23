@@ -235,19 +235,19 @@ def readFPGA(offset):
 def writeFPGA(offset,value):
     analyzerUsb.hpiaWrite(FPGA_REG_BASE+FPGA_REG_MULT*offset)
     analyzerUsb.hpidWrite(c_uint(value))
-def readRdMemArray(offset,nwords=1):
+def rdRingdownMemArray(offset,nwords=1):
     """Reads multiple words from ringdown memory into a c_uint array"""
     analyzerUsb.hpiaWrite(interface.RDMEM_ADDRESS+FPGA_MEM_MULT*offset)
     result = (c_uint*nwords)()
     analyzerUsb.hpidRead(result)
     return result
-def readRdMem(offset):
+def rdRingdownMem(offset):
     """Reads single uint from ringdown memory"""
     analyzerUsb.hpiaWrite(interface.RDMEM_ADDRESS+FPGA_MEM_MULT*offset)
     result = c_uint(0)
     analyzerUsb.hpidRead(result)
     return result.value
-def writeRdMem(offset,value):
+def wrRingdownMem(offset,value):
     """Reads single uint value to ringdown memory"""
     analyzerUsb.hpiaWrite(interface.RDMEM_ADDRESS+FPGA_MEM_MULT*offset)
     result = c_uint(value)
@@ -290,7 +290,7 @@ def  test_RdAdcMem():
         sleep(0.01)
         result = []
         for k in range(16):
-            result += [x for x in readRdMemArray(256*k,256)]
+            result += [x for x in rdRingdownMemArray(256*k,256)]
         plot(array(result))
         show()
         newDiv = raw_input("Enter divisor code for next acquisition: ")

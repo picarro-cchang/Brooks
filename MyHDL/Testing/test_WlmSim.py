@@ -68,7 +68,7 @@ def bench():
         result.next = dsp_data_in
         yield clk.negedge
 
-    def writeRdmem(wordAddr,data):
+    def wrRingdownMem(wordAddr,data):
         yield clk.negedge
         yield clk.posedge
         dsp_addr.next = wordAddr
@@ -79,7 +79,7 @@ def bench():
         yield clk.posedge
         yield clk.negedge
 
-    def readRdmem(wordAddr,result):
+    def rdRingdownMem(wordAddr,result):
         yield clk.negedge
         yield clk.posedge
         dsp_addr.next = wordAddr

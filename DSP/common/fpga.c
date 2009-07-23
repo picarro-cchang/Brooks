@@ -88,10 +88,16 @@ void *rdMetaAddr(int bank)
     return (void *)(RDMEM_ADDRESS + 4*(bank ? 0x5000:0x1000));
 }
 
+void *rdDataAndMetaAddr(int bank)
+/* Get DSP pointer to area with both data and metadata as LSW and MSW of 32-bit ints*/
+{
+    return (void *)(RDMEM_ADDRESS + 4*(bank ? 0x6000:0x2000));
+}
+
 void *rdParamAddr(int bank)
 /* Get DSP pointer to ringdown parameter area */
 {
-    return (void *)(RDMEM_ADDRESS + 4*(bank ? 0x6000:0x2000));
+    return (void *)(RDMEM_ADDRESS + 4*(bank ? 0x7000:0x3000));
 }
 
 #endif

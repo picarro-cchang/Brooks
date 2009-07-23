@@ -164,19 +164,27 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Fetches the contents of ringdown memory from the specified bank"""
         dataBase = (0x0, 0x4000)
         metaBase = (0x1000, 0x5000)
-        paramBase = (0x2000, 0x6000)
+        paramBase = (0x3000, 0x7000)
         base = dataBase[bank]
         data = []
         for k in range(16):
-            data += [x for x in self.dasInterface.hostToDspSender.readRdMemArray(base+256*k,256)]
+            data += [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(base+256*k,256)]
         base = metaBase[bank]
         meta = []
         for k in range(16):
-            meta += [x for x in self.dasInterface.hostToDspSender.readRdMemArray(base+256*k,256)]
+            meta += [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(base+256*k,256)]
         base = paramBase[bank]
-        param = [x for x in self.dasInterface.hostToDspSender.readRdMemArray(base,12)]
+        param = [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(base,12)]
         return (array(data),array(meta).reshape(512,8).transpose(),array(param))
 
+    #def rdComposite(self):
+    #    """Fetches the contents of DSP ringdown memory in compact (composite) format"""
+    #    base = 0x4c80 >> 2
+    #    composite = []
+    #    for k in range(16):
+    #        composite += [x for x in self.dasInterface.hostToDspSender.rdDspMemArray(base+256*k,256)]
+    #    return array(composite)
+    
     def loadIniFile(self):
         """Loads state from instrument configuration file"""
         config = InstrumentConfig()

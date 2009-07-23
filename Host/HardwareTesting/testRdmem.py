@@ -233,19 +233,19 @@ def readFPGA(offset):
 def writeFPGA(offset,value):
     analyzerUsb.hpiaWrite(FPGA_REG_BASE+FPGA_REG_MULT*offset)
     analyzerUsb.hpidWrite(c_uint(value))
-def readRdMemArray(offset,nwords=1):
+def rdRingdownMemArray(offset,nwords=1):
     """Reads multiple words from ringdown memory into a c_uint array"""
     analyzerUsb.hpiaWrite(interface.RDMEM_ADDRESS+FPGA_MEM_MULT*offset)
     result = (c_uint*nwords)()
     analyzerUsb.hpidRead(result)
     return result
-def readRdMem(offset):
+def rdRingdownMem(offset):
     """Reads single uint from ringdown memory"""
     analyzerUsb.hpiaWrite(interface.RDMEM_ADDRESS+FPGA_MEM_MULT*offset)
     result = c_uint(0)
     analyzerUsb.hpidRead(result)
     return result.value
-def writeRdMem(offset,value):
+def wrRingdownMem(offset,value):
     """Reads single uint value to ringdown memory"""
     analyzerUsb.hpiaWrite(interface.RDMEM_ADDRESS+FPGA_MEM_MULT*offset)
     result = c_uint(value)
@@ -287,8 +287,8 @@ def  test_Rdmem():
         addr = dspBank + randrange(1<<interface.DATA_BANK_ADDR_WIDTH)
         d = randrange(1<<interface.RDMEM_DATA_WIDTH)
         memDict[addr] = d
-        writeRdMem(addr,d)
-        x = readRdMem(addr)
+        wrRingdownMem(addr,d)
+        x = rdRingdownMem(addr)
         if x != memDict[addr]:
             print "Dsp Address %x should contain %x, but we read %x" % (addr,memDict[addr],x)
             assert False
@@ -296,24 +296,24 @@ def  test_Rdmem():
         addr = dspBank + randrange(1<<interface.META_BANK_ADDR_WIDTH)
         d = randrange(1<<interface.RDMEM_META_WIDTH)
         memDict[addr] = d
-        writeRdMem(addr,d)
-        x = readRdMem(addr)
+        wrRingdownMem(addr,d)
+        x = rdRingdownMem(addr)
         if x != memDict[addr]:
             print "Dsp Address %x should contain %x, but we read %x" % (addr,memDict[addr],x)
             assert False
-        dspBank = 0x6000 if randrange(2) else 0x2000
+        dspBank = 0x7000 if randrange(2) else 0x3000
         addr = dspBank + randrange(1<<interface.PARAM_BANK_ADDR_WIDTH)
         d = randrange(1<<interface.RDMEM_PARAM_WIDTH)
         memDict[addr] = d
-        writeRdMem(addr,d)
-        x = readRdMem(addr)
+        wrRingdownMem(addr,d)
+        x = rdRingdownMem(addr)
         if x != memDict[addr]:
             print "Dsp Address %x should contain %x, but we read %x" % (addr,memDict[addr],x)
             assert False
     print "Finished writing to data, metadata and parameter memory via DSP"
     # Read these data back via the DSP interface
     for a in memDict:
-        x = readRdMem(a)
+        x = rdRingdownMem(a)
         if x != memDict[a]:
             print "Dsp Address %x should contain %x, but we read %x" % (a,memDict[a],x)
             assert False

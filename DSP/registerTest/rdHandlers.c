@@ -15,6 +15,7 @@
  */
 
 #include <std.h>
+#include <string.h>
 #include <csl.h>
 #include <csl_irq.h>
 #include <csl_edma.h>
@@ -72,11 +73,17 @@ void edmaDoneInterrupt(int tccNum)
     ringdown_put();
     
     // Indicate bank is no longer in use
-    if (!bank) changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK0_CLEAR_B,
+    if (!bank) {
+        // memset(rdMetaAddr(0),0,16384);
+        changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK0_CLEAR_B,
                                  RDMAN_CONTROL_BANK0_CLEAR_B,1);
-    else changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK1_CLEAR_B,
+    }
+    else {
+        // memset(rdMetaAddr(1),0,16384);
+        changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK1_CLEAR_B,
                             RDMAN_CONTROL_BANK1_CLEAR_B,1);
-                            
+    }
+    
     // Reset bit 10 of GPREG_1 after fitting
     changeBitsFPGA(FPGA_KERNEL+KERNEL_GPREG_1, 10, 1, 0);
 
@@ -144,11 +151,11 @@ void acqDoneInterrupt(unsigned int funcArg, unsigned int eventId)
     // Transfer the OTHER bank via QDMA
     if (bank) {
         // Transfer bank 0
-        EDMA_qdmaConfigArgs(BANK0_OPTIONS,(Uint32)rdDataAddr(0),4096,(Uint32)ringdownWaveform,0);
+        EDMA_qdmaConfigArgs(BANK0_OPTIONS,(Uint32)rdDataAndMetaAddr(0),4096,(Uint32)ringdownWaveform,0);
     }
     else {
         // Transfer bank 1
-        EDMA_qdmaConfigArgs(BANK1_OPTIONS,(Uint32)rdDataAddr(0),4096,(Uint32)ringdownWaveform,0);
+        EDMA_qdmaConfigArgs(BANK1_OPTIONS,(Uint32)rdDataAndMetaAddr(1),4096,(Uint32)ringdownWaveform,0);
     }
     // Restore interrupts
     IRQ_globalRestore(gie);

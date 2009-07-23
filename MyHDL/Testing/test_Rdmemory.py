@@ -71,7 +71,7 @@ def  bench():
         result.next = dsp_data_in
         yield clk.negedge
 
-    def writeRdmem(wordAddr,data):
+    def wrRingdownMem(wordAddr,data):
         yield clk.negedge
         yield clk.posedge
         dsp_addr.next = wordAddr
@@ -82,7 +82,7 @@ def  bench():
         yield clk.posedge
         yield clk.negedge
 
-    def readRdmem(wordAddr,result):
+    def rdRingdownMem(wordAddr,result):
         yield clk.negedge
         yield clk.posedge
         dsp_addr.next = wordAddr
@@ -121,23 +121,23 @@ def  bench():
             addr = dspBank + randrange(1<<DATA_BANK_ADDR_WIDTH)
             d = randrange(1<<RDMEM_DATA_WIDTH)
             memDict[addr] = d
-            yield writeRdmem(addr,d)
+            yield wrRingdownMem(addr,d)
             
             dspBank = 0x5000 if randrange(2) else 0x1000
             addr = dspBank + randrange(1<<META_BANK_ADDR_WIDTH)
             d = randrange(1<<RDMEM_META_WIDTH)
             memDict[addr] = d
-            yield writeRdmem(addr,d)
+            yield wrRingdownMem(addr,d)
             
-            dspBank = 0x6000 if randrange(2) else 0x2000
+            dspBank = 0x7000 if randrange(2) else 0x3000
             addr = dspBank + randrange(1<<PARAM_BANK_ADDR_WIDTH)
             d = randrange(1<<RDMEM_PARAM_WIDTH)
             memDict[addr] = d
-            yield writeRdmem(addr,d)
+            yield wrRingdownMem(addr,d)
         print "Finished writing to data, metadata and parameter memory via DSP"
         # Read these data back via the DSP interface    
         for a in memDict:
-            yield readRdmem(a,result)
+            yield rdRingdownMem(a,result)
             assert result == memDict[a]
         print "Finished reading back data, metadata and parameter memory via DSP"
         
@@ -151,6 +151,11 @@ def  bench():
                 if data != memDict[a]:
                     print "Bank %d Data Address %x (Dsp Address %x) should contain %x, but we read %x" % (bank,data_addr,a,memDict[a],data)
                     assert False
+                yield rdRingdownMem(a+0x2000,result)
+                if result & 0xFFFF != memDict[a] & 0xFFFF:
+                    print "Bank %d Data Address %x contains %x, but we read %x from DSP address %x" % (bank,data_addr,memDict[a],result,a+0x2000)
+                    assert False
+                
             elif 0x1000 == (a & 0x3000): # This is metadata memory
                 meta_addr.next = a & 0xFFF
                 yield clk.negedge
@@ -158,7 +163,12 @@ def  bench():
                 if meta != memDict[a]:
                     print "Bank %d Meta Address %x (Dsp Address %x) should contain %x, but we read %x" % (bank,meta_addr,a,memDict[a],data)
                     assert False
-            elif 0x2000 == (a & 0x3000): # This is parameter memory
+                yield rdRingdownMem(a+0x1000,result)
+                if (result >> 16) != memDict[a]:
+                    print "Bank %d Meta Address %x contains %x, but we read %x from DSP address %x" % (bank,meta_addr,memDict[a],result,a+0x1000)
+                    assert False
+
+            elif 0x3000 == (a & 0x3000): # This is parameter memory
                 param_addr.next = a & 0x3F
                 yield clk.negedge
                 yield clk.negedge
@@ -198,7 +208,7 @@ def  bench():
             yield clk.negedge
             
             b = randrange(2)
-            dspBank = 0x6000 if b else 0x2000
+            dspBank = 0x7000 if b else 0x3000
             a = randrange(1<<PARAM_BANK_ADDR_WIDTH)
             addr = dspBank + a
             d = randrange(1<<RDMEM_PARAM_WIDTH)
@@ -214,7 +224,7 @@ def  bench():
         print "Finished writing to data, metadata and parameter memory via FPGA"
         # Read these data back via the DSP interface    
         for a in memDict:
-            yield readRdmem(a,result)
+            yield rdRingdownMem(a,result)
             assert result == memDict[a]
         print "Finished reading back data, metadata and parameter memory via DSP"
         raise StopSimulation

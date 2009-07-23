@@ -146,7 +146,7 @@ def bench():
         result.next = dsp_data_in
         yield clk.negedge
 
-    def writeRdmem(wordAddr,data):
+    def wrRingdownMem(wordAddr,data):
         yield clk.negedge
         yield clk.posedge
         dsp_addr.next = wordAddr
@@ -157,7 +157,7 @@ def bench():
         yield clk.posedge
         yield clk.negedge
 
-    def readRdmem(wordAddr,result):
+    def rdRingdownMem(wordAddr,result):
         yield clk.negedge
         yield clk.posedge
         dsp_addr.next = wordAddr
@@ -339,7 +339,7 @@ def bench():
             yield negedge(meta_we_out)
             # There should be metadata stored in ringdown memory
             for addr in range(start,start+8):
-                yield readRdmem((0x5000 if bank_out else 0x1000)+addr,result)
+                yield rdRingdownMem((0x5000 if bank_out else 0x1000)+addr,result)
                 assert (addr & 7) == (result & 7)
 
     @instance

@@ -486,6 +486,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         if paramState == ParamState.DONE:
                             us_timer_enable.next = LOW # No more timeouts
                             seqState.next = SeqState.ACQ_DONE
+                            metadataAcqState.next = MetadataAcqState.IDLE
                             paramState.next = ParamState.IDLE
 
                     elif seqState == SeqState.ACQ_DONE:
