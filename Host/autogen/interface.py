@@ -1352,6 +1352,18 @@ INJECT_LASER2_FINE_CURRENT = 6 # Sets fine current for laser 2
 INJECT_LASER3_FINE_CURRENT = 7 # Sets fine current for laser 3
 INJECT_LASER4_FINE_CURRENT = 8 # Sets fine current for laser 4
 
+# Block WLMSIM Wavelength monitor simulator
+WLMSIM_OPTIONS = 0 # Options
+WLMSIM_OPTIONS_INPUT_SEL_B = 0 # Input select bit position
+WLMSIM_OPTIONS_INPUT_SEL_W = 1 # Input select bit width
+
+WLMSIM_Z0 = 1 # Phase angle
+WLMSIM_RFAC = 2 # Reflectivity factor
+WLMSIM_ETA1 = 3 # Etalon 1
+WLMSIM_REF1 = 4 # 
+WLMSIM_ETA2 = 5 # 
+WLMSIM_REF2 = 6 # 
+
 # FPGA map indices
 FPGA_KERNEL = 0 # Kernel registers
 FPGA_LASER1_PWM = 3 # Laser 1 TEC pulse width modulator registers
@@ -1363,12 +1375,14 @@ FPGA_LASERLOCKER = 16 # Laser frequency locker registers
 FPGA_RDMAN = 43 # Ringdown manager registers
 FPGA_TWGEN = 67 # Tuner waveform generator
 FPGA_INJECT = 75 # Optical Injection Subsystem
+FPGA_WLMSIM = 84 # WLM Simulator
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_TUNER_CENTER', u'RDSIM_TUNER_WINDOW_HALF_WIDTH', u'RDSIM_FILLING_RATE', u'RDSIM_DECAY']))
 persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_ETA1_OFFSET', u'LASERLOCKER_REF1_OFFSET', u'LASERLOCKER_ETA2_OFFSET', u'LASERLOCKER_REF2_OFFSET', u'LASERLOCKER_RATIO1_CENTER', u'LASERLOCKER_RATIO1_MULTIPLIER', u'LASERLOCKER_RATIO2_CENTER', u'LASERLOCKER_RATIO2_MULTIPLIER', u'LASERLOCKER_TUNING_OFFSET', u'LASERLOCKER_WM_LOCK_WINDOW', u'LASERLOCKER_WM_INT_GAIN', u'LASERLOCKER_WM_PROP_GAIN', u'LASERLOCKER_WM_DERIV_GAIN']))
 persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION', u'RDMAN_TIMEOUT_DURATION']))
 persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP', u'TWGEN_SWEEP_LOW', u'TWGEN_SWEEP_HIGH', u'TWGEN_WINDOW_LOW', u'TWGEN_WINDOW_HIGH']))
+persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_RFAC']))
 
 # Environment addresses
 LASER1_TEMP_CNTRL_ENV = 0
@@ -1684,3 +1698,16 @@ __p.append(('dsp','float',RD_ABSOLUTE_THRESHOLD_REGISTER,'Absolute threshold for
 __p.append(('dsp','int',RD_NUMBER_OF_POINTS_REGISTER,'Maximum number of points in fit window','','%d',1,1))
 __p.append(('dsp','float',RD_MAX_E_FOLDINGS_REGISTER,'Maximum number of time constants in fit window','','%.1f',1,1))
 parameter_forms.append(('Ringdown Data Fitting Parameters',__p))
+
+# Form: Wavelength Monitor Simulator Parameters
+
+__p = []
+
+__p.append(('fpga','mask',FPGA_WLMSIM+WLMSIM_OPTIONS,[(1, u'Input select', [(0, u'Register'), (1, u'Input port')])],None,None,1,1))
+__p.append(('fpga','int',FPGA_WLMSIM+WLMSIM_RFAC,'Reflectivity factor','','%d',1,1))
+__p.append(('fpga','int',FPGA_WLMSIM+WLMSIM_Z0,'Phase angle','','%d',1,1))
+__p.append(('fpga','int',FPGA_WLMSIM+WLMSIM_ETA1,'Etalon 1 photocurrent','','%d',1,0))
+__p.append(('fpga','int',FPGA_WLMSIM+WLMSIM_REF1,'Reference 1 photocurrent','','%d',1,0))
+__p.append(('fpga','int',FPGA_WLMSIM+WLMSIM_ETA2,'Etalon 2 photocurrent','','%d',1,0))
+__p.append(('fpga','int',FPGA_WLMSIM+WLMSIM_REF2,'Reference 2 photocurrent','','%d',1,0))
+parameter_forms.append(('Wavelength Monitor Simulator Parameters',__p))

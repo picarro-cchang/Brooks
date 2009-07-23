@@ -25,9 +25,14 @@ def Multiplier(p,a,b):
         p.next = int(a)*int(b)
     return instances()
 
-def WlmSimulator(clock,reset,start_in,z0_in,eta1_out,ref1_out,eta2_out,ref2_out,done_out):
+def WlmSimulator(clock,reset,start_in,rfac_in,z0_in,eta1_out,ref1_out,eta2_out,ref2_out,done_out):
     """ Simulation of wavelength monitor response using a model for the Fabry-Perot
-         interferometer """
+         interferometer.
+         
+        rfac_in is a binary number less than unity which is related to the mirror reflectivity R 
+           and finesse F by:
+            rfac_in = 2*R/(1 + R**2) = F/(2 + F)
+    """
 
     # angle input bit width
     W = len(z0_in)
@@ -59,15 +64,16 @@ def WlmSimulator(clock,reset,start_in,z0_in,eta1_out,ref1_out,eta2_out,ref2_out,
     # tuple with elementary angles
     angles = tuple([int(round(M2*atan(2**(-i))/pi)) for i in range(N)])
 
-    F = 100.0         # Finesse of etalon
+    F = 1.2         # Finesse of etalon
     b = F/(F+2.0)     # Desired transmission is T = b/(1-b*cos(delta))
     num = int((1-b)*M)
     # calculate gain and initial radius to feed into resolver
     An = 1.0
     for i in range(N):
         An *= (sqrt(1.0 + 2**(-2*i)))
+    scale = int(M2/An)    
     r0 = int(M2*b/An)
-        
+    
     divider = Divider(clk=clock, reset=reset, N_in=div_num, D_in=div_den, Q_out=div_quot,
                       rfd_out=div_rfd, ce_in=div_ce, width=W)
     
@@ -78,7 +84,9 @@ def WlmSimulator(clock,reset,start_in,z0_in,eta1_out,ref1_out,eta2_out,ref2_out,
         while True:
             yield clock.posedge, reset.posedge
             div_ce.next = LOW
-            div_num.next = num
+            div_num.next = M - rfac_in
+            mult_a.next[18:2] = scale
+            mult_b.next[18:2] = rfac_in - 1
             if reset:
                 state = t_seqState.IDLE
                 done_out.next = HIGH
@@ -134,7 +142,7 @@ def WlmSimulator(clock,reset,start_in,z0_in,eta1_out,ref1_out,eta2_out,ref2_out,
             else:
                 if state == t_procState.WAITING:
                     if start_in:
-                        x[:] = r0
+                        x[:] = mult_p[36:20]
                         y[:] = 0
                         z[:] = z0_in[W-1:].signed()
                         i[:] = 0

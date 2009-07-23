@@ -42,13 +42,14 @@ def bench(nrTests=500):
     ref1 = Signal(intbv(0, min=0, max=M))
     eta2 = Signal(intbv(0, min=0, max=M))
     ref2 = Signal(intbv(0, min=0, max=M))
+    rfac = Signal(intbv(0, min=0, max=M))
     start = Signal(LOW)
     done  = Signal(LOW)
     clock = Signal(LOW)
     reset = Signal(LOW)
 
     # design under test
-    dut = WlmSimulator(clock,reset,start,z0,eta1,ref1,eta2,ref2,done)
+    dut = WlmSimulator(clock,reset,start,rfac,z0,eta1,ref1,eta2,ref2,done)
 
     # clock generator
     @always(delay(10))
@@ -60,6 +61,8 @@ def bench(nrTests=500):
     # actual test
     @instance
     def check():
+        #rfac.next = 0x6000
+        rfac.next = 0x8000
         yield clock.negedge
         reset.next = True
         yield clock.negedge

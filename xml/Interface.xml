@@ -1852,7 +1852,34 @@
             <reg type="uint32" ident="LASER3_FINE_CURRENT" description="Sets fine current for laser 3"/>
             <reg type="uint32" ident="LASER4_FINE_CURRENT" description="Sets fine current for laser 4"/>
         </fpga_block>
-    </fpga_block_list>
+		<fpga_block ident="WLMSIM" description="Wavelength monitor simulator">
+			<reg type="mask" ident="OPTIONS" description="Options" access="rw">
+				<bitfield ident="INPUT_SEL" description="Input select" lsb="0" width="1">
+                    <fielddef value="0">Register</fielddef>
+                    <fielddef value="1">Input port</fielddef>
+				</bitfield>
+			</reg>
+			<reg type="uint32" ident="Z0" description="Phase angle" access="rw">
+                <display format="%d">Phase angle</display>
+			</reg>
+			<reg type="uint32" ident="RFAC" description="Reflectivity factor" access="rw">
+                <save/>
+				<display format="%d">Reflectivity factor</display>
+			</reg>
+			<reg type="uint32" ident="ETA1" description="Etalon 1" access="r">
+				<display format="%d" units="digU">Etalon 1 photocurrent</display>
+			</reg>
+			<reg type="uint32" ident="REF1" description="" access="r">
+				<display format="%d" units="digU">Reference 1 photocurrent</display>
+			</reg>
+			<reg type="uint32" ident="ETA2" description="" access="r">
+				<display format="%d" units="digU">Etalon 2 photocurrent</display>
+			</reg>
+			<reg type="uint32" ident="REF2" description="" access="r">
+				<display format="%d" units="digU">Reference 2 photocurrent</display>
+			</reg>
+		</fpga_block>
+	</fpga_block_list>
     <fpga_map_list>
         <fpga_map ident="FPGA_KERNEL" block="KERNEL">
             <description>Kernel registers</description>
@@ -1883,6 +1910,9 @@
         </fpga_map>
         <fpga_map ident="FPGA_INJECT" block="INJECT">
             <description>Optical Injection Subsystem</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_WLMSIM" block="WLMSIM">
+            <description>WLM Simulator</description>
         </fpga_map>
     </fpga_map_list>
     <environment_list>

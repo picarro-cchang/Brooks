@@ -18,7 +18,6 @@ LOW, HIGH = bool(0), bool(1)
 
 def Divider(clk,reset,N_in,D_in,Q_out,rfd_out,ce_in,width):
     """ divider divides N by D to give Q.
-
     N_in  -- numerator (dividend)
     D_in  -- denominator (divisor). D must be strictly greater than N/2.
     Q_out -- quotient. Binary point in the quotient appears after the MSB of Q,

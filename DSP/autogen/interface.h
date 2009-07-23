@@ -770,6 +770,18 @@ typedef enum {
 #define INJECT_LASER3_FINE_CURRENT (7) // Sets fine current for laser 3
 #define INJECT_LASER4_FINE_CURRENT (8) // Sets fine current for laser 4
 
+/* Block WLMSIM Wavelength monitor simulator */
+#define WLMSIM_OPTIONS (0) // Options
+#define WLMSIM_OPTIONS_INPUT_SEL_B (0) // Input select bit position
+#define WLMSIM_OPTIONS_INPUT_SEL_W (1) // Input select bit width
+
+#define WLMSIM_Z0 (1) // Phase angle
+#define WLMSIM_RFAC (2) // Reflectivity factor
+#define WLMSIM_ETA1 (3) // Etalon 1
+#define WLMSIM_REF1 (4) // 
+#define WLMSIM_ETA2 (5) // 
+#define WLMSIM_REF2 (6) // 
+
 /* FPGA map indices */
 
 #define FPGA_KERNEL (0) // Kernel registers
@@ -782,6 +794,7 @@ typedef enum {
 #define FPGA_RDMAN (43) // Ringdown manager registers
 #define FPGA_TWGEN (67) // Tuner waveform generator
 #define FPGA_INJECT (75) // Optical Injection Subsystem
+#define FPGA_WLMSIM (84) // WLM Simulator
 
 /* Environment addresses */
 

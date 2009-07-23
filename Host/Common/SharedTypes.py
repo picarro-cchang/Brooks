@@ -119,7 +119,7 @@ class GenHandler(object):
         start = time.clock()
 
         n = 0
-        if self.avgTime: 
+        if (self.avgTime is not None) and self.avgTime != 0.0: 
             nTimes = timeLimit/self.avgTime
             while n<nTimes:
                 try:

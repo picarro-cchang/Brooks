@@ -23,25 +23,10 @@ from Host.autogen.interface import RDSIM_TUNER_WINDOW_HALF_WIDTH
 from Host.autogen.interface import RDSIM_FILLING_RATE, RDSIM_DECAY
 from Host.autogen.interface import RDSIM_ACCUMULATOR
 
+from MyHDL.Common.UnsignedMultiplier import UnsignedMultiplier
+
 LOW, HIGH = bool(0), bool(1)
 t_State = enum("INIT","GENVALUE")
-
-VHDL_CODE = \
-"""
-unsigned_mult18x18 : entity work.UnsignedMult18x18_e(Behavioral) 
-    port map (
-    A => %(a)s, B => %(b)s, P => %(p)s 
-    );
-"""
-def multiplier(p,a,b):
-    # Multiplies a and b to yield p
-    __vhdl__ = VHDL_CODE
-    p.driven = "wire"
-
-    @always_comb
-    def logic():
-        p.next = int(a)*int(b)
-    return instances()
 
 def RdSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,rd_trig_in,
           tuner_value_in,rd_adc_clk_in,rdsim_value_out,map_base):
@@ -77,12 +62,12 @@ def RdSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,rd_trig_in,
     decay = Signal(intbv(0)[FPGA_REG_WIDTH:])
     accumulator = Signal(intbv(0)[FPGA_REG_WIDTH+RDSIM_EXTRA:])
 
-    a = Signal(intbv(0)[18:])
-    b = Signal(intbv(0)[18:])
-    p = Signal(intbv(0)[36:])
+    a = Signal(intbv(0)[17:])
+    b = Signal(intbv(0)[17:])
+    p = Signal(intbv(0)[34:])
     state = Signal(t_State.INIT)
     
-    mult18x18_inst = multiplier(p=p,a=a,b=b)
+    mult = UnsignedMultiplier(p=p,a=a,b=b)
 
     @instance
     def logic():
@@ -134,8 +119,8 @@ def RdSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,rd_trig_in,
                     state.next = t_State.INIT    
                 
                 rdsim_value_out.next = accumulator[FPGA_REG_WIDTH+RDSIM_EXTRA:RDSIM_EXTRA]
-                a.next = concat(intbv(0)[1:],accumulator[FPGA_REG_WIDTH+RDSIM_EXTRA:FPGA_REG_WIDTH+RDSIM_EXTRA-17])
-                b.next = concat(intbv(0)[1:],decay,intbv(0)[1:])
+                a.next = accumulator[FPGA_REG_WIDTH+RDSIM_EXTRA:FPGA_REG_WIDTH+RDSIM_EXTRA-17]
+                b.next = concat(decay,intbv(0)[1:])
                     
     return instances()
 

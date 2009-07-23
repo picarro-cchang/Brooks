@@ -245,5 +245,15 @@
             <register>RD_NUMBER_OF_POINTS_REGISTER</register>
             <register>RD_MAX_E_FOLDINGS_REGISTER</register>
         </gui_page>
+        <gui_page>
+            <title>Wavelength Monitor Simulator Parameters</title>
+            <fpga_register offset="FPGA_WLMSIM">OPTIONS</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">RFAC</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">Z0</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">ETA1</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">REF1</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">ETA2</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">REF2</fpga_register>
+        </gui_page>
     </gui_pages>
 </Controller_gui>
