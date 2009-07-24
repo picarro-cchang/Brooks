@@ -19,6 +19,7 @@
 #
 
 import wx
+import ctypes
 
 from ParameterDialogGui import ParameterDialogGui
 
@@ -40,7 +41,10 @@ class ParameterDialog(ParameterDialogGui):
 
             The details tuple for a register has differing forms, depending on the type of the register
 
-            (regLoc,"int",reg,label,units,format,readable,writable)
+            (regLoc,"uint16",reg,label,units,format,readable,writable)
+            (regLoc,"int16",reg,label,units,format,readable,writable)
+            (regLoc,"uint32",reg,label,units,format,readable,writable)
+            (regLoc,"int32",reg,label,units,format,readable,writable)
             (regLoc,"float",reg,label,units,format,readable,writable)
 
             These are for registers containing integer or floating point values respectively.
@@ -245,11 +249,26 @@ class ParameterDialog(ParameterDialogGui):
                             grid.SetCellValue(row,1,"-- Invalid (%x) --" % int(value))
                         row += 1
             else:
-                if regType == 'int':
+                if regType == 'uint32':
                     if val == None:
                         grid.SetCellValue(row,1,"")
                     else:
-                        grid.SetCellValue(row,1,valueFmt % val)
+                        grid.SetCellValue(row,1,valueFmt % (ctypes.c_uint32(val).value))
+                if regType == 'uint16':
+                    if val == None:
+                        grid.SetCellValue(row,1,"")
+                    else:
+                        grid.SetCellValue(row,1,valueFmt % (ctypes.c_uint16(val).value))
+                if regType == 'int32':
+                    if val == None:
+                        grid.SetCellValue(row,1,"")
+                    else:
+                        grid.SetCellValue(row,1,valueFmt % (ctypes.c_int32(val).value))
+                if regType == 'int16':
+                    if val == None:
+                        grid.SetCellValue(row,1,"")
+                    else:
+                        grid.SetCellValue(row,1,valueFmt % (ctypes.c_int16(val).value))
                 elif regType == 'float':
                     if val == None:
                         grid.SetCellValue(row,1,"")
@@ -292,7 +311,7 @@ class ParameterDialog(ParameterDialogGui):
                     valueAsText = grid.GetCellValue(row,1).strip()
                     if valueAsText == None or (valueAsText == '' and type != 'choices'):
                         pass
-                    elif type == 'int':
+                    elif type in ['int32', 'uint32', 'int16', 'uint16']:
                         try:
                             if valueAsText[0] == '$':   # hexadecimal
                                 value = int(valueAsText[1:],16)

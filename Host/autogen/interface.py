@@ -1188,12 +1188,12 @@ LASERLOCKER_CS_SAMPLE_DARK_B = 4 # Sample dark currents bit position
 LASERLOCKER_CS_SAMPLE_DARK_W = 1 # Sample dark currents bit width
 LASERLOCKER_CS_ADC_STROBE_B = 5 # Load WLM ADC values bit position
 LASERLOCKER_CS_ADC_STROBE_W = 1 # Load WLM ADC values bit width
-LASERLOCKER_CS_TUNING_OFFSET_SEL_B = 6 # Tuner offset from register/port bit position
-LASERLOCKER_CS_TUNING_OFFSET_SEL_W = 1 # Tuner offset from register/port bit width
+LASERLOCKER_CS_TUNING_OFFSET_SEL_B = 6 # Tuner offset source bit position
+LASERLOCKER_CS_TUNING_OFFSET_SEL_W = 1 # Tuner offset source bit width
 LASERLOCKER_CS_LASER_FREQ_OK_B = 7 # Laser frequency in window bit position
 LASERLOCKER_CS_LASER_FREQ_OK_W = 1 # Laser frequency in window bit width
-LASERLOCKER_CS_CURRENT_OK_B = 8 # Current calculation complete bit position
-LASERLOCKER_CS_CURRENT_OK_W = 1 # Current calculation complete bit width
+LASERLOCKER_CS_CURRENT_OK_B = 8 # Fine current calculation bit position
+LASERLOCKER_CS_CURRENT_OK_W = 1 # Fine current calculation bit width
 
 LASERLOCKER_ETA1 = 1 # Etalon 1 reading
 LASERLOCKER_REF1 = 2 # Reference 1 reading
@@ -1360,16 +1360,16 @@ WLMSIM_OPTIONS_INPUT_SEL_W = 1 # Input select bit width
 WLMSIM_Z0 = 1 # Phase angle
 WLMSIM_RFAC = 2 # Reflectivity factor
 WLMSIM_ETA1 = 3 # Etalon 1
-WLMSIM_REF1 = 4 # 
-WLMSIM_ETA2 = 5 # 
-WLMSIM_REF2 = 6 # 
+WLMSIM_REF1 = 4 # Reference 1
+WLMSIM_ETA2 = 5 # Etalon 2
+WLMSIM_REF2 = 6 # Reference 2
 
 # FPGA map indices
 FPGA_KERNEL = 0 # Kernel registers
-FPGA_LASER1_PWM = 3 # Laser 1 TEC pulse width modulator registers
-FPGA_LASER2_PWM = 5 # Laser 2 TEC pulse width modulator registers
-FPGA_LASER3_PWM = 7 # Laser 3 TEC pulse width modulator registers
-FPGA_LASER4_PWM = 9 # Laser 4 TEC pulse width modulator registers
+FPGA_PWM_LASER1 = 3 # Laser 1 TEC pulse width modulator registers
+FPGA_PWM_LASER2 = 5 # Laser 2 TEC pulse width modulator registers
+FPGA_PWM_LASER3 = 7 # Laser 3 TEC pulse width modulator registers
+FPGA_PWM_LASER4 = 9 # Laser 4 TEC pulse width modulator registers
 FPGA_RDSIM = 11 # Ringdown simulator registers
 FPGA_LASERLOCKER = 16 # Laser frequency locker registers
 FPGA_RDMAN = 43 # Ringdown manager registers
@@ -1454,10 +1454,10 @@ parameter_forms = []
 
 __p = []
 
-__p.append(('dsp','int',SCHEDULER_CONTROL_REGISTER,'Scheduler enable','','%d',1,0))
-__p.append(('dsp','int',RD_IRQ_COUNT_REGISTER,'Ringdown interrupt count','','%d',1,0))
-__p.append(('dsp','int',ACQ_DONE_COUNT_REGISTER,'Acquisition done interrupt count','','%d',1,0))
-__p.append(('dsp','int',RDSIM_TRIGGER_DIVIDER_REGISTER,'Time between simulated ringdowns','ms','%d',1,1))
+__p.append(('dsp','uint32',SCHEDULER_CONTROL_REGISTER,'Scheduler enable','','%d',1,0))
+__p.append(('dsp','uint32',RD_IRQ_COUNT_REGISTER,'Ringdown interrupt count','','%d',1,0))
+__p.append(('dsp','uint32',ACQ_DONE_COUNT_REGISTER,'Acquisition done interrupt count','','%d',1,0))
+__p.append(('dsp','uint32',RDSIM_TRIGGER_DIVIDER_REGISTER,'Time between simulated ringdowns','ms','%d',1,1))
 __p.append(('dsp','choices',LOGICPORT_CLOCK_PERIOD_REGISTER,'Logic port clock period','',[(LOGICPORT_CLOCK_PERIOD_20ns,"20 ns"),(LOGICPORT_CLOCK_PERIOD_40ns,"40 ns"),(LOGICPORT_CLOCK_PERIOD_80ns,"80 ns"),(LOGICPORT_CLOCK_PERIOD_160ns,"160 ns"),(LOGICPORT_CLOCK_PERIOD_320ns,"320 ns"),(LOGICPORT_CLOCK_PERIOD_640ns,"640 ns"),(LOGICPORT_CLOCK_PERIOD_1280ns,"1.28 us"),(LOGICPORT_CLOCK_PERIOD_2560ns,"2.56 us"),(LOGICPORT_CLOCK_PERIOD_5120ns,"5.12 us"),(LOGICPORT_CLOCK_PERIOD_10240ns,"10.24 us"),(LOGICPORT_CLOCK_PERIOD_20480ns,"20.48 us"),(LOGICPORT_CLOCK_PERIOD_40960ns,"40.96 us"),(LOGICPORT_CLOCK_PERIOD_81920ns,"81.92 us"),(LOGICPORT_CLOCK_PERIOD_163840ns,"163.8 us"),(LOGICPORT_CLOCK_PERIOD_327680ns,"327.7 us"),(LOGICPORT_CLOCK_PERIOD_655360ns,"655.4 us"),(LOGICPORT_CLOCK_PERIOD_1310720ns,"1.311 ms"),(LOGICPORT_CLOCK_PERIOD_2621440ns,"2.621 ms"),(LOGICPORT_CLOCK_PERIOD_5242880ns,"5.243 ms"),(LOGICPORT_CLOCK_PERIOD_10485760ns,"10.49 ms"),(LOGICPORT_CLOCK_PERIOD_20971520ns,"20.97 ms"),(LOGICPORT_CLOCK_PERIOD_41943040ns,"41.94 ms"),(LOGICPORT_CLOCK_PERIOD_83886080ns,"83.39 ms"),(LOGICPORT_CLOCK_PERIOD_167772160ns,"167.8 ms"),(LOGICPORT_CLOCK_PERIOD_335544320ns,"335.5 ms"),(LOGICPORT_CLOCK_PERIOD_671088640ns,"671.1 ms"),(LOGICPORT_CLOCK_PERIOD_1342177280ns,"1.342 s"),(LOGICPORT_CLOCK_PERIOD_2684354560ns,"2.684 s"),(LOGICPORT_CLOCK_PERIOD_5368709120ns,"5.368 s"),],1,1))
 __p.append(('dsp','choices',LOGICPORT_SOURCE_REGISTER,'Logic port source','',[(LOGICPORT_SOURCE_RD_ADC,"Ringdown ADC"),(LOGICPORT_SOURCE_TUNER,"Tuner Value"),],1,1))
 parameter_forms.append(('System Configuration Parameters',__p))
@@ -1484,7 +1484,7 @@ __p.append(('dsp','float',LASER1_TEMP_CNTRL_AMIN_REGISTER,'Minimum TEC value (Am
 __p.append(('dsp','float',LASER1_TEMP_CNTRL_AMAX_REGISTER,'Maximum TEC value (Amax)','','%.0f',1,1))
 __p.append(('dsp','float',LASER1_TEMP_CNTRL_IMAX_REGISTER,'Maximum actuator increment (Imax)','','%.1f',1,1))
 __p.append(('dsp','float',LASER1_TEMP_CNTRL_FFWD_REGISTER,'DAS temperature feed forward coefficient','','%.3f',1,1))
-__p.append(('dsp','int',LASER1_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1))
+__p.append(('dsp','uint32',LASER1_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1))
 __p.append(('dsp','float',LASER1_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1))
 __p.append(('dsp','float',LASER1_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1))
 __p.append(('dsp','float',LASER1_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1))
@@ -1518,7 +1518,7 @@ __p.append(('dsp','float',LASER2_TEMP_CNTRL_AMIN_REGISTER,'Minimum TEC value (Am
 __p.append(('dsp','float',LASER2_TEMP_CNTRL_AMAX_REGISTER,'Maximum TEC value (Amax)','','%.0f',1,1))
 __p.append(('dsp','float',LASER2_TEMP_CNTRL_IMAX_REGISTER,'Maximum actuator increment (Imax)','','%.1f',1,1))
 __p.append(('dsp','float',LASER2_TEMP_CNTRL_FFWD_REGISTER,'DAS temperature feed forward coefficient','','%.3f',1,1))
-__p.append(('dsp','int',LASER2_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1))
+__p.append(('dsp','uint32',LASER2_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1))
 __p.append(('dsp','float',LASER2_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1))
 __p.append(('dsp','float',LASER2_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1))
 __p.append(('dsp','float',LASER2_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1))
@@ -1552,7 +1552,7 @@ __p.append(('dsp','float',LASER3_TEMP_CNTRL_AMIN_REGISTER,'Minimum TEC value (Am
 __p.append(('dsp','float',LASER3_TEMP_CNTRL_AMAX_REGISTER,'Maximum TEC value (Amax)','','%.0f',1,1))
 __p.append(('dsp','float',LASER3_TEMP_CNTRL_IMAX_REGISTER,'Maximum actuator increment (Imax)','','%.1f',1,1))
 __p.append(('dsp','float',LASER3_TEMP_CNTRL_FFWD_REGISTER,'DAS temperature feed forward coefficient','','%.3f',1,1))
-__p.append(('dsp','int',LASER3_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1))
+__p.append(('dsp','uint32',LASER3_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1))
 __p.append(('dsp','float',LASER3_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1))
 __p.append(('dsp','float',LASER3_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1))
 __p.append(('dsp','float',LASER3_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1))
@@ -1586,7 +1586,7 @@ __p.append(('dsp','float',LASER4_TEMP_CNTRL_AMIN_REGISTER,'Minimum TEC value (Am
 __p.append(('dsp','float',LASER4_TEMP_CNTRL_AMAX_REGISTER,'Maximum TEC value (Amax)','','%.0f',1,1))
 __p.append(('dsp','float',LASER4_TEMP_CNTRL_IMAX_REGISTER,'Maximum actuator increment (Imax)','','%.1f',1,1))
 __p.append(('dsp','float',LASER4_TEMP_CNTRL_FFWD_REGISTER,'DAS temperature feed forward coefficient','','%.3f',1,1))
-__p.append(('dsp','int',LASER4_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1))
+__p.append(('dsp','uint32',LASER4_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1))
 __p.append(('dsp','float',LASER4_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1))
 __p.append(('dsp','float',LASER4_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1))
 __p.append(('dsp','float',LASER4_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1))
@@ -1620,7 +1620,7 @@ __p.append(('dsp','float',CAVITY_TEMP_CNTRL_AMIN_REGISTER,'Minimum TEC value (Am
 __p.append(('dsp','float',CAVITY_TEMP_CNTRL_AMAX_REGISTER,'Maximum TEC value (Amax)','','%.0f',1,1))
 __p.append(('dsp','float',CAVITY_TEMP_CNTRL_IMAX_REGISTER,'Maximum actuator increment (Imax)','','%.1f',1,1))
 __p.append(('dsp','float',CAVITY_TEMP_CNTRL_FFWD_REGISTER,'DAS temperature feed forward coefficient','','%.3f',1,1))
-__p.append(('dsp','int',CAVITY_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1))
+__p.append(('dsp','uint32',CAVITY_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1))
 __p.append(('dsp','float',CAVITY_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1))
 __p.append(('dsp','float',CAVITY_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1))
 __p.append(('dsp','float',CAVITY_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1))
@@ -1658,10 +1658,10 @@ parameter_forms.append(('Optical Injection Parameters',__p))
 
 __p = []
 
-__p.append(('fpga','int',FPGA_RDSIM+RDSIM_TUNER_CENTER,'Tuner value around which cavity fills','','%d',1,1))
-__p.append(('fpga','int',FPGA_RDSIM+RDSIM_TUNER_WINDOW_HALF_WIDTH,'Half-width of tuner window within which cavity fills','','%d',1,1))
-__p.append(('fpga','int',FPGA_RDSIM+RDSIM_FILLING_RATE,'Rate of increase of accumulator value during filling','','%d',1,1))
-__p.append(('fpga','int',FPGA_RDSIM+RDSIM_DECAY,'Exponential decay of accumulator when not filling','','%d',1,1))
+__p.append(('fpga','uint32',FPGA_RDSIM+RDSIM_TUNER_CENTER,'Tuner value around which cavity fills','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_TUNER_WINDOW_HALF_WIDTH,'Half-width of tuner window within which cavity fills','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_FILLING_RATE,'Rate of increase of accumulator value during filling','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_DECAY,'Exponential decay of accumulator when not filling','','%d',1,1))
 parameter_forms.append(('Ringdown Simulator Parameters',__p))
 
 # Form: Ringdown Manager Parameters
@@ -1671,17 +1671,17 @@ __p = []
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Mark bank 0 available for write', [(0, u'Idle'), (16, u'Mark available')]), (32, u'Mark bank 1 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (64, u'Acknowledge')]), (128, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (128, u'Acknowledge')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')])],None,None,1,0))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')])],None,None,1,1))
-__p.append(('fpga','int',FPGA_RDMAN+RDMAN_DATA_ADDRCNTR,'Ringdown data address','','%d',1,0))
-__p.append(('fpga','int',FPGA_RDMAN+RDMAN_METADATA_ADDRCNTR,'Ringdown metadata address','','%d',1,0))
-__p.append(('fpga','int',FPGA_RDMAN+RDMAN_PARAM_ADDRCNTR,'Ringdown parameter address','','%d',1,0))
-__p.append(('fpga','int',FPGA_RDMAN+RDMAN_DIVISOR,'Ringdown ADC divisor','','%d',1,1))
-__p.append(('fpga','int',FPGA_RDMAN+RDMAN_NUM_SAMP,'Ringdown samples to collect','','%d',1,1))
-__p.append(('fpga','int',FPGA_RDMAN+RDMAN_THRESHOLD,'Ringdown threshold','','%d',1,1))
-__p.append(('fpga','int',FPGA_RDMAN+RDMAN_LOCK_DURATION,'Laser lock duration (us)','','%d',1,1))
-__p.append(('fpga','int',FPGA_RDMAN+RDMAN_PRECONTROL_DURATION,'Precontrol duration (us)','','%d',1,1))
-__p.append(('fpga','int',FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,'Ringdown timeout duration (us)','','%d',1,1))
-__p.append(('fpga','int',FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN,'Tuner value at ringdown','','%d',1,0))
-__p.append(('fpga','int',FPGA_RDMAN+RDMAN_METADATA_ADDR_AT_RINGDOWN,'Metadata address at ringdown','','%d',1,0))
+__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DATA_ADDRCNTR,'Ringdown data address','','%d',1,0))
+__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_METADATA_ADDRCNTR,'Ringdown metadata address','','%d',1,0))
+__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_PARAM_ADDRCNTR,'Ringdown parameter address','','%d',1,0))
+__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DIVISOR,'Ringdown ADC divisor','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_NUM_SAMP,'Ringdown samples to collect','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_THRESHOLD,'Ringdown threshold','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_LOCK_DURATION,'Laser lock duration (us)','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_PRECONTROL_DURATION,'Precontrol duration (us)','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,'Ringdown timeout duration (us)','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN,'Tuner value at ringdown','','%d',1,0))
+__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_METADATA_ADDR_AT_RINGDOWN,'Metadata address at ringdown','','%d',1,0))
 parameter_forms.append(('Ringdown Manager Parameters',__p))
 
 # Form: Ringdown Data Fitting Parameters
@@ -1691,11 +1691,11 @@ __p = []
 __p.append(('dsp','float',RD_MINLOSS_REGISTER,'Minimum loss','ppm/cm','%.4f',1,1))
 __p.append(('dsp','float',RD_MAXLOSS_REGISTER,'Minimum loss','ppm/cm','%.4f',1,1))
 __p.append(('dsp','float',RD_LATEST_LOSS_REGISTER,'Most recent loss','ppm/cm','%.3f',1,0))
-__p.append(('dsp','int',RD_IMPROVEMENT_STEPS_REGISTER,'Number of iterations of ringdown fit improvement','','%d',1,1))
-__p.append(('dsp','int',RD_START_SAMPLE_REGISTER,'Initial ringdown samples to ignore','','%d',1,1))
+__p.append(('dsp','uint32',RD_IMPROVEMENT_STEPS_REGISTER,'Number of iterations of ringdown fit improvement','','%d',1,1))
+__p.append(('dsp','uint32',RD_START_SAMPLE_REGISTER,'Initial ringdown samples to ignore','','%d',1,1))
 __p.append(('dsp','float',RD_FRACTIONAL_THRESHOLD_REGISTER,'Fractional threshold for fit window determination','','%.2f',1,1))
 __p.append(('dsp','float',RD_ABSOLUTE_THRESHOLD_REGISTER,'Absolute threshold for fit window determination','','%.0f',1,1))
-__p.append(('dsp','int',RD_NUMBER_OF_POINTS_REGISTER,'Maximum number of points in fit window','','%d',1,1))
+__p.append(('dsp','uint32',RD_NUMBER_OF_POINTS_REGISTER,'Maximum number of points in fit window','','%d',1,1))
 __p.append(('dsp','float',RD_MAX_E_FOLDINGS_REGISTER,'Maximum number of time constants in fit window','','%.1f',1,1))
 parameter_forms.append(('Ringdown Data Fitting Parameters',__p))
 
@@ -1704,10 +1704,39 @@ parameter_forms.append(('Ringdown Data Fitting Parameters',__p))
 __p = []
 
 __p.append(('fpga','mask',FPGA_WLMSIM+WLMSIM_OPTIONS,[(1, u'Input select', [(0, u'Register'), (1, u'Input port')])],None,None,1,1))
-__p.append(('fpga','int',FPGA_WLMSIM+WLMSIM_RFAC,'Reflectivity factor','','%d',1,1))
-__p.append(('fpga','int',FPGA_WLMSIM+WLMSIM_Z0,'Phase angle','','%d',1,1))
-__p.append(('fpga','int',FPGA_WLMSIM+WLMSIM_ETA1,'Etalon 1 photocurrent','','%d',1,0))
-__p.append(('fpga','int',FPGA_WLMSIM+WLMSIM_REF1,'Reference 1 photocurrent','','%d',1,0))
-__p.append(('fpga','int',FPGA_WLMSIM+WLMSIM_ETA2,'Etalon 2 photocurrent','','%d',1,0))
-__p.append(('fpga','int',FPGA_WLMSIM+WLMSIM_REF2,'Reference 2 photocurrent','','%d',1,0))
+__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_RFAC,'Reflectivity factor','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_Z0,'Phase angle','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_ETA1,'Etalon 1 photocurrent','digU','%d',1,0))
+__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_REF1,'Reference 1 photocurrent','digU','%d',1,0))
+__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_ETA2,'Etalon 2 photocurrent','digU','%d',1,0))
+__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_REF2,'Reference 2 photocurrent','digU','%d',1,0))
 parameter_forms.append(('Wavelength Monitor Simulator Parameters',__p))
+
+# Form: Laser Locker Parameters
+
+__p = []
+
+__p.append(('fpga','mask',FPGA_LASERLOCKER+LASERLOCKER_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Generate PRBS', [(0, u'Idle'), (4, u'Send PRBS')]), (8, u'Enable fine current acc', [(0, u'Reset'), (8, u'Accumulate')]), (16, u'Sample dark currents', [(0, u'Idle'), (16, u'Sample')]), (32, u'Load WLM ADC values', [(0, u'Idle'), (32, u'Load')]), (64, u'Tuner offset source', [(0, u'Register'), (64, u'Input port')]), (128, u'Laser frequency in window', [(0, u'Out of range'), (128, u'In Window')]), (256, u'Fine current calculation', [(0, u'In progress'), (256, u'Complete')])],None,None,1,1))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_ETA1,'Etalon 1 reading','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_REF1,'Reference 1 reading','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_ETA2,'Etalon 2 reading','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_REF2,'Reference 2 reading','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_ETA1_OFFSET,'Etalon 1 offset','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_REF1_OFFSET,'Reference 1 offset','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_ETA2_OFFSET,'Etalon 2 offset','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_REF2_OFFSET,'Reference 2 offset','digU','%d',1,1))
+__p.append(('fpga','int16',FPGA_LASERLOCKER+LASERLOCKER_RATIO1_CENTER,'Ratio 1 ellipse center','digU','%d',1,1))
+__p.append(('fpga','int16',FPGA_LASERLOCKER+LASERLOCKER_RATIO1_MULTIPLIER,'Ratio 1 multiplier','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_RATIO2_CENTER,'Ratio 2 ellipse center','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_RATIO2_MULTIPLIER,'Ratio 2 multiplier','digU','%d',1,1))
+__p.append(('fpga','int16',FPGA_LASERLOCKER+LASERLOCKER_TUNING_OFFSET,'Tuning offset for frequency shift','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_WM_LOCK_WINDOW,'Lock window','digU','%d',1,1))
+__p.append(('fpga','int16',FPGA_LASERLOCKER+LASERLOCKER_WM_INT_GAIN,'Locker integral gain','digU','%d',1,1))
+__p.append(('fpga','int16',FPGA_LASERLOCKER+LASERLOCKER_WM_PROP_GAIN,'Locker proportional gain','digU','%d',1,1))
+__p.append(('fpga','int16',FPGA_LASERLOCKER+LASERLOCKER_WM_DERIV_GAIN,'Locker derivative gain','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_RATIO1,'Wavelength monitor ratio 1','digU','%d',1,0))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_RATIO2,'Wavelength monitor ratio 2','digU','%d',1,0))
+__p.append(('fpga','int16',FPGA_LASERLOCKER+LASERLOCKER_LOCK_ERROR,'Locker loop error','digU','%d',1,0))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_FINE_CURRENT,'Fine laser current','digU','%d',1,0))
+__p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_CYCLE_COUNTER,'Cycle count','','%d',1,0))
+parameter_forms.append(('Laser Locker Parameters',__p))

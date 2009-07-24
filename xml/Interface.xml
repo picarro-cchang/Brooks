@@ -1534,77 +1534,168 @@
     </register_list>
     <fpga_block_list>
         <fpga_block ident="KERNEL" description="Kernel">
-            <reg type="uint32" ident="MAGIC_CODE" description="Code indicating FPGA is programmed"/>
-            <reg type="uint32" ident="RESET" description="Used to reset Cypress FX2"/>
-            <reg type="uint32" ident="GPREG_1" description="General purpose register"/>
+            <reg type="uint16" ident="MAGIC_CODE" description="Code indicating FPGA is programmed"/>
+            <reg type="uint16" ident="RESET" description="Used to reset Cypress FX2"/>
+            <reg type="uint16" ident="GPREG_1" description="General purpose register"/>
         </fpga_block>
         <fpga_block ident="PWM" description="Pulse width modulator">
-            <reg type="uint32" ident="CS" description="Control/Status register">
+            <reg type="uint16" ident="CS" description="Control/Status register">
                 <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
                 <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
                 <bitfield ident="PWM_OUT" description="PWM_OUT"  lsb="2" width="1" />
             </reg>
-            <reg type="uint32" ident="PULSE_WIDTH" description="Pulse width register"/>
+            <reg type="uint16" ident="PULSE_WIDTH" description="Pulse width register"/>
         </fpga_block>
         <fpga_block ident="RDSIM" description="Ringdown simulator">
             <reg type="uint32" ident="TUNER_CENTER" description="Tuner value around which cavity fills" access="rw">
 				<save/>
                 <display format="%d">Tuner value around which cavity fills</display>
             </reg>
-            <reg type="uint32" ident="TUNER_WINDOW_HALF_WIDTH" description="Half-width of tuner window within which cavity fills" access="rw">
+            <reg type="uint16" ident="TUNER_WINDOW_HALF_WIDTH" description="Half-width of tuner window within which cavity fills" access="rw">
 				<save/>
                 <display format="%d">Half-width of tuner window within which cavity fills</display>
             </reg>
-            <reg type="uint32" ident="FILLING_RATE" description="Rate of increase of accumulator value during filling" access="rw">
+            <reg type="uint16" ident="FILLING_RATE" description="Rate of increase of accumulator value during filling" access="rw">
 				<save/>
                 <display format="%d">Rate of increase of accumulator value during filling</display>
             </reg>
-            <reg type="uint32" ident="DECAY" description="Exponential decay of accumulator when not filling" access="rw">
+            <reg type="uint16" ident="DECAY" description="Exponential decay of accumulator when not filling" access="rw">
 				<save/>
                 <display format="%d">Exponential decay of accumulator when not filling</display>
             </reg>
-            <reg type="uint32" ident="ACCUMULATOR" description="Simulated ringdown value" access="r">
+            <reg type="uint16" ident="ACCUMULATOR" description="Simulated ringdown value" access="r">
             </reg>
         </fpga_block>
         <fpga_block ident="LASERLOCKER" description="Laser frequency locker">
-            <reg type="uint32" ident="CS" description="Control/Status register" access="r">
-                <bitfield ident="RUN" description="Stop/Run" lsb="0" width="1" />
-                <bitfield ident="CONT" description="Single/Continuous" lsb="1" width="1" />
-                <bitfield ident="PRBS" description="Generate PRBS" lsb="2" width="1" />
-                <bitfield ident="ACC_EN" description="Enable fine current acc" lsb="3" width="1" />
-                <bitfield ident="SAMPLE_DARK" description="Sample dark currents" lsb="4" width="1" />
-                <bitfield ident="ADC_STROBE" description="Load WLM ADC values" lsb="5" width="1" />
-                <bitfield ident="TUNING_OFFSET_SEL" description="Tuner offset from register/port" lsb="6" width="1" />
-                <bitfield ident="LASER_FREQ_OK" description="Laser frequency in window" lsb="7" width="1" />
-                <bitfield ident="CURRENT_OK" description="Current calculation complete" lsb="8" width="1" />
-
+            <reg type="mask" ident="CS" description="Control/Status register" access="rw">
+                <bitfield ident="RUN" description="Stop/Run" lsb="0" width="1">
+                    <fielddef value="0">Stop</fielddef>
+                    <fielddef value="1">Run</fielddef>
+                </bitfield>
+                <bitfield ident="CONT" description="Single/Continuous" lsb="1" width="1">
+                    <fielddef value="0">Single</fielddef>
+                    <fielddef value="1">Continuous</fielddef>
+                </bitfield>
+                <bitfield ident="PRBS" description="Generate PRBS" lsb="2" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Send PRBS</fielddef>
+                </bitfield>
+                <bitfield ident="ACC_EN" description="Enable fine current acc" lsb="3" width="1">
+                    <fielddef value="0">Reset</fielddef>
+                    <fielddef value="1">Accumulate</fielddef>
+                </bitfield>
+                <bitfield ident="SAMPLE_DARK" description="Sample dark currents" lsb="4" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Sample</fielddef>
+                </bitfield>
+                <bitfield ident="ADC_STROBE" description="Load WLM ADC values" lsb="5" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Load</fielddef>
+                </bitfield>
+                <bitfield ident="TUNING_OFFSET_SEL" description="Tuner offset source" lsb="6" width="1">
+                    <fielddef value="0">Register</fielddef>
+                    <fielddef value="1">Input port</fielddef>
+                </bitfield>
+                <bitfield ident="LASER_FREQ_OK" description="Laser frequency in window" lsb="7" width="1">
+                    <fielddef value="0">Out of range</fielddef>
+                    <fielddef value="1">In Window</fielddef>
+                </bitfield>
+                <bitfield ident="CURRENT_OK" description="Fine current calculation" lsb="8" width="1">
+                    <fielddef value="0">In progress</fielddef>
+                    <fielddef value="1">Complete</fielddef>
+                </bitfield>
             </reg>
-            <reg type="uint32" ident="ETA1" description="Etalon 1 reading" access="rw"></reg>
-            <reg type="uint32" ident="REF1" description="Reference 1 reading" access="rw"></reg>
-            <reg type="uint32" ident="ETA2" description="Etalon 2 reading" access="rw"></reg>
-            <reg type="uint32" ident="REF2" description="Reference 2 reading" access="rw"></reg>
-            <reg type="uint32" ident="ETA1_DARK" description="Etalon 1 dark reading" access="r"></reg>
-            <reg type="uint32" ident="REF1_DARK" description="Reference 1 dark reading" access="r"></reg>
-            <reg type="uint32" ident="ETA2_DARK" description="Etalon 2 dark reading" access="r"></reg>
-            <reg type="uint32" ident="REF2_DARK" description="Reference 2 dark reading" access="r"></reg>
-            <reg type="uint32" ident="ETA1_OFFSET" description="Etalon 1 offset" access="rw"><save/></reg>
-            <reg type="uint32" ident="REF1_OFFSET" description="Reference 1 offset" access="rw"><save/></reg>
-            <reg type="uint32" ident="ETA2_OFFSET" description="Etalon 2 offset" access="rw"><save/></reg>
-            <reg type="uint32" ident="REF2_OFFSET" description="Reference 2 offset" access="rw"><save/></reg>
-            <reg type="uint32" ident="RATIO1" description="Ratio 1" access="r"></reg>
-            <reg type="uint32" ident="RATIO2" description="Ratio 2" access="r"></reg>
-            <reg type="uint32" ident="RATIO1_CENTER" description="Ratio 1 ellipse center" access="rw"><save/></reg>
-            <reg type="uint32" ident="RATIO1_MULTIPLIER" description="Ratio 1 multiplier" access="rw"><save/></reg>
-            <reg type="uint32" ident="RATIO2_CENTER" description="Ratio 2 ellipse center" access="rw"><save/></reg>
-            <reg type="uint32" ident="RATIO2_MULTIPLIER" description="Ratio 2 multiplier" access="rw"><save/></reg>
-            <reg type="uint32" ident="TUNING_OFFSET" description="Error offset to shift frequency" access="rw"><save/></reg>
-            <reg type="uint32" ident="LOCK_ERROR" description="Locker loop error" access="r"></reg>
-            <reg type="uint32" ident="WM_LOCK_WINDOW" description="Lock window" access="rw"><save/></reg>
-            <reg type="uint32" ident="WM_INT_GAIN" description="Locker integral gain" access="rw"><save/></reg>
-            <reg type="uint32" ident="WM_PROP_GAIN" description="Locker proportional gain" access="rw"><save/></reg>
-            <reg type="uint32" ident="WM_DERIV_GAIN" description="Locker derivative gain" access="rw"><save/></reg>
-            <reg type="uint32" ident="FINE_CURRENT" description="Fine laser current" access="r"></reg>
-            <reg type="uint32" ident="CYCLE_COUNTER" description="Cycle counter" access="r"></reg>
+            <reg type="uint16" ident="ETA1" description="Etalon 1 reading" access="rw">
+                <display format="%d" units="digU">Etalon 1 reading</display>
+			</reg>
+            <reg type="uint16" ident="REF1" description="Reference 1 reading" access="rw">
+                <display format="%d" units="digU">Reference 1 reading</display>
+			</reg>
+            <reg type="uint16" ident="ETA2" description="Etalon 2 reading" access="rw">
+                <display format="%d" units="digU">Etalon 2 reading</display>
+			</reg>
+            <reg type="uint16" ident="REF2" description="Reference 2 reading" access="rw">
+                <display format="%d" units="digU">Reference 2 reading</display>
+			</reg>
+            <reg type="uint16" ident="ETA1_DARK" description="Etalon 1 dark reading" access="r">
+                <display format="%d" units="digU">Etalon 1 dark current reading</display>
+			</reg>
+            <reg type="uint16" ident="REF1_DARK" description="Reference 1 dark reading" access="r">
+                <display format="%d" units="digU">Reference 1 dark current reading</display>
+			</reg>
+            <reg type="uint16" ident="ETA2_DARK" description="Etalon 2 dark reading" access="r">
+                <display format="%d" units="digU">Etalon 2 dark current reading</display>
+			</reg>
+            <reg type="uint16" ident="REF2_DARK" description="Reference 2 dark reading" access="r">
+                <display format="%d" units="digU">Reference 2 dark current reading</display>
+			</reg>
+            <reg type="uint16" ident="ETA1_OFFSET" description="Etalon 1 offset" access="rw">
+				<save/>
+                <display format="%d" units="digU">Etalon 1 offset</display>
+			</reg>
+            <reg type="uint16" ident="REF1_OFFSET" description="Reference 1 offset" access="rw">
+				<save/>
+                <display format="%d" units="digU">Reference 1 offset</display>
+			</reg>
+            <reg type="uint16" ident="ETA2_OFFSET" description="Etalon 2 offset" access="rw">
+				<save/>
+                <display format="%d" units="digU">Etalon 2 offset</display>
+			</reg>
+            <reg type="uint16" ident="REF2_OFFSET" description="Reference 2 offset" access="rw">
+				<save/>
+                <display format="%d" units="digU">Reference 2 offset</display>
+			</reg>
+            <reg type="uint16" ident="RATIO1" description="Ratio 1" access="r">
+                <display format="%d" units="digU">Wavelength monitor ratio 1</display>
+			</reg>
+            <reg type="uint16" ident="RATIO2" description="Ratio 2" access="r">
+                <display format="%d" units="digU">Wavelength monitor ratio 2</display>
+			</reg>
+            <reg type="int16" ident="RATIO1_CENTER" description="Ratio 1 ellipse center" access="rw">
+				<save/>
+                <display format="%d" units="digU">Ratio 1 ellipse center</display>
+			</reg>
+            <reg type="int16" ident="RATIO1_MULTIPLIER" description="Ratio 1 multiplier" access="rw">
+				<save/>
+                <display format="%d" units="digU">Ratio 1 multiplier</display>
+			</reg>
+            <reg type="uint16" ident="RATIO2_CENTER" description="Ratio 2 ellipse center" access="rw">
+				<save/>
+                <display format="%d" units="digU">Ratio 2 ellipse center</display>
+			</reg>
+            <reg type="uint16" ident="RATIO2_MULTIPLIER" description="Ratio 2 multiplier" access="rw">
+				<save/>
+                <display format="%d" units="digU">Ratio 2 multiplier</display>
+			</reg>
+            <reg type="int16" ident="TUNING_OFFSET" description="Error offset to shift frequency" access="rw">
+				<save/>
+                <display format="%d" units="digU">Tuning offset for frequency shift</display>
+			</reg>
+            <reg type="int16" ident="LOCK_ERROR" description="Locker loop error" access="r">
+                <display format="%d" units="digU">Locker loop error</display>
+			</reg>
+            <reg type="uint16" ident="WM_LOCK_WINDOW" description="Lock window" access="rw">
+				<save/>
+                <display format="%d" units="digU">Lock window</display>
+			</reg>
+            <reg type="int16" ident="WM_INT_GAIN" description="Locker integral gain" access="rw">
+				<save/>
+                <display format="%d" units="digU">Locker integral gain</display>
+			</reg>
+            <reg type="int16" ident="WM_PROP_GAIN" description="Locker proportional gain" access="rw">
+				<save/>
+                <display format="%d" units="digU">Locker proportional gain</display>
+			</reg>
+            <reg type="int16" ident="WM_DERIV_GAIN" description="Locker derivative gain" access="rw">
+				<save/>
+                <display format="%d" units="digU">Locker derivative gain</display>
+			</reg>
+            <reg type="uint16" ident="FINE_CURRENT" description="Fine laser current" access="r">
+                <display format="%d" units="digU">Fine laser current</display>
+			</reg>
+            <reg type="uint16" ident="CYCLE_COUNTER" description="Cycle counter" access="r">
+                <display format="%d">Cycle count</display>
+            </reg>
         </fpga_block>
         <fpga_block ident="RDMAN" description="Ringdown manager">
             <reg type="mask" ident="CONTROL" description="Control register" access="rw">
@@ -1700,89 +1791,89 @@
                     <fielddef value="1">Yes</fielddef>
                 </bitfield>
             </reg>
-            <reg type="uint32" ident="PARAM0" description="Parameter 0 register" access="rw">
+            <reg type="uint16" ident="PARAM0" description="Parameter 0 register" access="rw">
                 <display format="%d">Parameter 0</display>
             </reg>
-            <reg type="uint32" ident="PARAM1" description="Parameter 1 register" access="rw">
+            <reg type="uint16" ident="PARAM1" description="Parameter 1 register" access="rw">
                 <display format="%d">Parameter 1</display>
             </reg>
-            <reg type="uint32" ident="PARAM2" description="Parameter 2 register" access="rw">
+            <reg type="uint16" ident="PARAM2" description="Parameter 2 register" access="rw">
                 <display format="%d">Parameter 2</display>
             </reg>
-            <reg type="uint32" ident="PARAM3" description="Parameter 3 register" access="rw">
+            <reg type="uint16" ident="PARAM3" description="Parameter 3 register" access="rw">
                 <display format="%d">Parameter 3</display>
             </reg>
-            <reg type="uint32" ident="PARAM4" description="Parameter 4 register" access="rw">
+            <reg type="uint16" ident="PARAM4" description="Parameter 4 register" access="rw">
                 <display format="%d">Parameter 4</display>
             </reg>
-            <reg type="uint32" ident="PARAM5" description="Parameter 5 register" access="rw">
+            <reg type="uint16" ident="PARAM5" description="Parameter 5 register" access="rw">
                 <display format="%d">Parameter 5</display>
             </reg>
-            <reg type="uint32" ident="PARAM6" description="Parameter 6 register" access="rw">
+            <reg type="uint16" ident="PARAM6" description="Parameter 6 register" access="rw">
                 <display format="%d">Parameter 6</display>
             </reg>
-            <reg type="uint32" ident="PARAM7" description="Parameter 7 register" access="rw">
+            <reg type="uint16" ident="PARAM7" description="Parameter 7 register" access="rw">
                 <display format="%d">Parameter 7</display>
             </reg>
-            <reg type="uint32" ident="PARAM8" description="Parameter 8 register" access="rw">
+            <reg type="uint16" ident="PARAM8" description="Parameter 8 register" access="rw">
                 <display format="%d">Parameter 8</display>
             </reg>
-            <reg type="uint32" ident="PARAM9" description="Parameter 9 register" access="rw">
+            <reg type="uint16" ident="PARAM9" description="Parameter 9 register" access="rw">
                 <display format="%d">Parameter 9</display>
             </reg>
-            <reg type="uint32" ident="DATA_ADDRCNTR" description="Counter for ring-down data" access="r">
+            <reg type="uint16" ident="DATA_ADDRCNTR" description="Counter for ring-down data" access="r">
                 <display format="%d">Ringdown data address</display>
             </reg>
-            <reg type="uint32" ident="METADATA_ADDRCNTR" description="Counter for ring-down metadata" access="r">
+            <reg type="uint16" ident="METADATA_ADDRCNTR" description="Counter for ring-down metadata" access="r">
                 <display format="%d">Ringdown metadata address</display>
             </reg>
-            <reg type="uint32" ident="PARAM_ADDRCNTR" description="Counter for parameter data" access="r">
+            <reg type="uint16" ident="PARAM_ADDRCNTR" description="Counter for parameter data" access="r">
                 <display format="%d">Ringdown parameter address</display>
             </reg>
-            <reg type="uint32" ident="DIVISOR" description="Ring-down data counter rate divisor" access="rw">
+            <reg type="uint16" ident="DIVISOR" description="Ring-down data counter rate divisor" access="rw">
                 <save/>
                 <display format="%d">Ringdown ADC divisor</display>
             </reg>
-            <reg type="uint32" ident="NUM_SAMP" description="Number of samples to collect for ring-down waveform" access="rw">
+            <reg type="uint16" ident="NUM_SAMP" description="Number of samples to collect for ring-down waveform" access="rw">
                 <save/>
                 <display format="%d">Ringdown samples to collect</display>
             </reg>
-            <reg type="uint32" ident="THRESHOLD" description="Ring-down threshold" access="rw">
+            <reg type="uint16" ident="THRESHOLD" description="Ring-down threshold" access="rw">
                 <save/>
                 <display format="%d">Ringdown threshold</display>
             </reg>
-            <reg type="uint32" ident="LOCK_DURATION" description="Duration (us) for laser frequency to be locked before ring-down is allowed" access="rw">
+            <reg type="uint16" ident="LOCK_DURATION" description="Duration (us) for laser frequency to be locked before ring-down is allowed" access="rw">
                 <save/>
                 <display format="%d">Laser lock duration (us)</display>
             </reg>
-            <reg type="uint32" ident="PRECONTROL_DURATION" description="Duration (us) for laser current to be at nominal value before frequency locking is enabled" access="rw">
+            <reg type="uint16" ident="PRECONTROL_DURATION" description="Duration (us) for laser current to be at nominal value before frequency locking is enabled" access="rw">
                 <save/>
                 <display format="%d">Precontrol duration (us)</display>
             </reg>
-            <reg type="uint32" ident="TIMEOUT_DURATION" description="Duration (ms) within which ring-down must occur to be valid" access="rw">
+            <reg type="uint16" ident="TIMEOUT_DURATION" description="Duration (ms) within which ring-down must occur to be valid" access="rw">
                 <save/>
                 <display format="%d">Ringdown timeout duration (us)</display>
             </reg>
-            <reg type="uint32" ident="TUNER_AT_RINGDOWN" description="Value of tuner at ring-down" access="r">
+            <reg type="uint16" ident="TUNER_AT_RINGDOWN" description="Value of tuner at ring-down" access="r">
                 <display format="%d">Tuner value at ringdown</display>
             </reg>
-            <reg type="uint32" ident="METADATA_ADDR_AT_RINGDOWN" description="Metadata address at ring-down" access="r">
+            <reg type="uint16" ident="METADATA_ADDR_AT_RINGDOWN" description="Metadata address at ring-down" access="r">
                 <display format="%d">Metadata address at ringdown</display>
             </reg>
         </fpga_block>
         <fpga_block ident="TWGEN" description="Tuner waveform generator">
             <reg type="uint32" ident="ACC" description="Accumulator"/>
-            <reg type="uint32" ident="CS" description="Control/Status Register">
+            <reg type="uint16" ident="CS" description="Control/Status Register">
                 <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
                 <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
                 <bitfield ident="RESET"   description="Reset generator"  lsb="2" width="1" />
             </reg>
-            <reg type="uint32" ident="SLOPE_DOWN" description="Slope in downward direction"><save/></reg>
-            <reg type="uint32" ident="SLOPE_UP" description="Slope in upward direction"><save/></reg>
-            <reg type="uint32" ident="SWEEP_LOW" description="Lower limit of sweep"><save/></reg>
-            <reg type="uint32" ident="SWEEP_HIGH" description="Higher limit of sweep"><save/></reg>
-            <reg type="uint32" ident="WINDOW_LOW" description="Lower limit of window"><save/></reg>
-            <reg type="uint32" ident="WINDOW_HIGH" description="Higher limit of window"><save/></reg>
+            <reg type="uint16" ident="SLOPE_DOWN" description="Slope in downward direction"><save/></reg>
+            <reg type="uint16" ident="SLOPE_UP" description="Slope in upward direction"><save/></reg>
+            <reg type="uint16" ident="SWEEP_LOW" description="Lower limit of sweep"><save/></reg>
+            <reg type="uint16" ident="SWEEP_HIGH" description="Higher limit of sweep"><save/></reg>
+            <reg type="uint16" ident="WINDOW_LOW" description="Lower limit of window"><save/></reg>
+            <reg type="uint16" ident="WINDOW_HIGH" description="Higher limit of window"><save/></reg>
         </fpga_block>
         <fpga_block ident="INJECT" description="Optical injection subsystem">
             <reg type="mask" ident="CONTROL" description="Control register">
@@ -1843,14 +1934,14 @@
                     <fielddef value="1">Enabled</fielddef>
                 </bitfield>
             </reg>
-            <reg type="uint32" ident="LASER1_COARSE_CURRENT" description="Sets coarse current for laser 1"/>
-            <reg type="uint32" ident="LASER2_COARSE_CURRENT" description="Sets coarse current for laser 2"/>
-            <reg type="uint32" ident="LASER3_COARSE_CURRENT" description="Sets coarse current for laser 3"/>
-            <reg type="uint32" ident="LASER4_COARSE_CURRENT" description="Sets coarse current for laser 4"/>
-            <reg type="uint32" ident="LASER1_FINE_CURRENT" description="Sets fine current for laser 1"/>
-            <reg type="uint32" ident="LASER2_FINE_CURRENT" description="Sets fine current for laser 2"/>
-            <reg type="uint32" ident="LASER3_FINE_CURRENT" description="Sets fine current for laser 3"/>
-            <reg type="uint32" ident="LASER4_FINE_CURRENT" description="Sets fine current for laser 4"/>
+            <reg type="uint16" ident="LASER1_COARSE_CURRENT" description="Sets coarse current for laser 1"/>
+            <reg type="uint16" ident="LASER2_COARSE_CURRENT" description="Sets coarse current for laser 2"/>
+            <reg type="uint16" ident="LASER3_COARSE_CURRENT" description="Sets coarse current for laser 3"/>
+            <reg type="uint16" ident="LASER4_COARSE_CURRENT" description="Sets coarse current for laser 4"/>
+            <reg type="uint16" ident="LASER1_FINE_CURRENT" description="Sets fine current for laser 1"/>
+            <reg type="uint16" ident="LASER2_FINE_CURRENT" description="Sets fine current for laser 2"/>
+            <reg type="uint16" ident="LASER3_FINE_CURRENT" description="Sets fine current for laser 3"/>
+            <reg type="uint16" ident="LASER4_FINE_CURRENT" description="Sets fine current for laser 4"/>
         </fpga_block>
 		<fpga_block ident="WLMSIM" description="Wavelength monitor simulator">
 			<reg type="mask" ident="OPTIONS" description="Options" access="rw">
@@ -1859,23 +1950,23 @@
                     <fielddef value="1">Input port</fielddef>
 				</bitfield>
 			</reg>
-			<reg type="uint32" ident="Z0" description="Phase angle" access="rw">
+			<reg type="uint16" ident="Z0" description="Phase angle" access="rw">
                 <display format="%d">Phase angle</display>
 			</reg>
-			<reg type="uint32" ident="RFAC" description="Reflectivity factor" access="rw">
+			<reg type="uint16" ident="RFAC" description="Reflectivity factor" access="rw">
                 <save/>
 				<display format="%d">Reflectivity factor</display>
 			</reg>
-			<reg type="uint32" ident="ETA1" description="Etalon 1" access="r">
+			<reg type="uint16" ident="ETA1" description="Etalon 1" access="r">
 				<display format="%d" units="digU">Etalon 1 photocurrent</display>
 			</reg>
-			<reg type="uint32" ident="REF1" description="" access="r">
+			<reg type="uint16" ident="REF1" description="Reference 1" access="r">
 				<display format="%d" units="digU">Reference 1 photocurrent</display>
 			</reg>
-			<reg type="uint32" ident="ETA2" description="" access="r">
+			<reg type="uint16" ident="ETA2" description="Etalon 2" access="r">
 				<display format="%d" units="digU">Etalon 2 photocurrent</display>
 			</reg>
-			<reg type="uint32" ident="REF2" description="" access="r">
+			<reg type="uint16" ident="REF2" description="Reference 2" access="r">
 				<display format="%d" units="digU">Reference 2 photocurrent</display>
 			</reg>
 		</fpga_block>
@@ -1884,16 +1975,16 @@
         <fpga_map ident="FPGA_KERNEL" block="KERNEL">
             <description>Kernel registers</description>
         </fpga_map>
-        <fpga_map ident="FPGA_LASER1_PWM" block="PWM">
+        <fpga_map ident="FPGA_PWM_LASER1" block="PWM">
             <description>Laser 1 TEC pulse width modulator registers</description>
         </fpga_map>
-        <fpga_map ident="FPGA_LASER2_PWM" block="PWM">
+        <fpga_map ident="FPGA_PWM_LASER2" block="PWM">
             <description>Laser 2 TEC pulse width modulator registers</description>
         </fpga_map>
-        <fpga_map ident="FPGA_LASER3_PWM" block="PWM">
+        <fpga_map ident="FPGA_PWM_LASER3" block="PWM">
             <description>Laser 3 TEC pulse width modulator registers</description>
         </fpga_map>
-        <fpga_map ident="FPGA_LASER4_PWM" block="PWM">
+        <fpga_map ident="FPGA_PWM_LASER4" block="PWM">
             <description>Laser 4 TEC pulse width modulator registers</description>
         </fpga_map>
         <fpga_map ident="FPGA_RDSIM" block="RDSIM">

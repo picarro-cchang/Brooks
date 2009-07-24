@@ -606,12 +606,12 @@ typedef enum {
 #define LASERLOCKER_CS_SAMPLE_DARK_W (1) // Sample dark currents bit width
 #define LASERLOCKER_CS_ADC_STROBE_B (5) // Load WLM ADC values bit position
 #define LASERLOCKER_CS_ADC_STROBE_W (1) // Load WLM ADC values bit width
-#define LASERLOCKER_CS_TUNING_OFFSET_SEL_B (6) // Tuner offset from register/port bit position
-#define LASERLOCKER_CS_TUNING_OFFSET_SEL_W (1) // Tuner offset from register/port bit width
+#define LASERLOCKER_CS_TUNING_OFFSET_SEL_B (6) // Tuner offset source bit position
+#define LASERLOCKER_CS_TUNING_OFFSET_SEL_W (1) // Tuner offset source bit width
 #define LASERLOCKER_CS_LASER_FREQ_OK_B (7) // Laser frequency in window bit position
 #define LASERLOCKER_CS_LASER_FREQ_OK_W (1) // Laser frequency in window bit width
-#define LASERLOCKER_CS_CURRENT_OK_B (8) // Current calculation complete bit position
-#define LASERLOCKER_CS_CURRENT_OK_W (1) // Current calculation complete bit width
+#define LASERLOCKER_CS_CURRENT_OK_B (8) // Fine current calculation bit position
+#define LASERLOCKER_CS_CURRENT_OK_W (1) // Fine current calculation bit width
 
 #define LASERLOCKER_ETA1 (1) // Etalon 1 reading
 #define LASERLOCKER_REF1 (2) // Reference 1 reading
@@ -778,17 +778,17 @@ typedef enum {
 #define WLMSIM_Z0 (1) // Phase angle
 #define WLMSIM_RFAC (2) // Reflectivity factor
 #define WLMSIM_ETA1 (3) // Etalon 1
-#define WLMSIM_REF1 (4) // 
-#define WLMSIM_ETA2 (5) // 
-#define WLMSIM_REF2 (6) // 
+#define WLMSIM_REF1 (4) // Reference 1
+#define WLMSIM_ETA2 (5) // Etalon 2
+#define WLMSIM_REF2 (6) // Reference 2
 
 /* FPGA map indices */
 
 #define FPGA_KERNEL (0) // Kernel registers
-#define FPGA_LASER1_PWM (3) // Laser 1 TEC pulse width modulator registers
-#define FPGA_LASER2_PWM (5) // Laser 2 TEC pulse width modulator registers
-#define FPGA_LASER3_PWM (7) // Laser 3 TEC pulse width modulator registers
-#define FPGA_LASER4_PWM (9) // Laser 4 TEC pulse width modulator registers
+#define FPGA_PWM_LASER1 (3) // Laser 1 TEC pulse width modulator registers
+#define FPGA_PWM_LASER2 (5) // Laser 2 TEC pulse width modulator registers
+#define FPGA_PWM_LASER3 (7) // Laser 3 TEC pulse width modulator registers
+#define FPGA_PWM_LASER4 (9) // Laser 4 TEC pulse width modulator registers
 #define FPGA_RDSIM (11) // Ringdown simulator registers
 #define FPGA_LASERLOCKER (16) // Laser frequency locker registers
 #define FPGA_RDMAN (43) // Ringdown manager registers

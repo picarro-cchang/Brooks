@@ -1,10 +1,10 @@
 #!/usr/bin/python
 #
 # FILE:
-#   RdSimTop.py
+#   WlmSimTop.py
 #
 # DESCRIPTION:
-#   Top level file for synthesizing FPGA with ringdown manager
+#   Top level file for synthesizing FPGA with wavelength monitor simulator
 #  and simulator
 #
 # SEE ALSO:
@@ -19,13 +19,15 @@ from myhdl import *
 from Host.autogen.interface import *
 from MyHDL.Common.ClkGen import ClkGen
 from MyHDL.Common.dsp_interface import Dsp_interface
-from MyHDL.Common.Kernel import Kernel
 from MyHDL.Common.Inject import Inject
+from MyHDL.Common.Kernel import Kernel
+from MyHDL.Common.LaserLocker import LaserLocker
 from MyHDL.Common.Pwm1 import Pwm
-from MyHDL.Common.Rdmemory  import Rdmemory
-from MyHDL.Common.TWGen import TWGen
-from MyHDL.Common.RdSim import RdSim
 from MyHDL.Common.RdMan import RdMan
+from MyHDL.Common.Rdmemory import Rdmemory
+from MyHDL.Common.RdSim import RdSim
+from MyHDL.Common.TWGen import TWGen
+from MyHDL.Common.WlmSim import WlmSim
 
 LOW, HIGH = bool(0), bool(1)
 
@@ -54,22 +56,24 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_addr = Signal(intbv(0)[EMIF_ADDR_WIDTH:])
     dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_laser1_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_laser2_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_laser3_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_laser4_pwm  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_rdmemory    = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_kernel      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_inject      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_twGen       = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_rdsim       = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_kernel      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_laserlocker = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_pwm_laser1  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_pwm_laser2  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_pwm_laser3  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_pwm_laser4  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_rdman       = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_rdmemory    = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_rdsim       = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_twGen       = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_wlmsim      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 
     dsp_wr, ce2 = [Signal(LOW) for i in range(2)]
-    laser1_pwm_out, laser1_pwm_inv_out = [Signal(LOW) for i in range(2)]
-    laser2_pwm_out, laser2_pwm_inv_out = [Signal(LOW) for i in range(2)]
-    laser3_pwm_out, laser3_pwm_inv_out = [Signal(LOW) for i in range(2)]
-    laser4_pwm_out, laser4_pwm_inv_out = [Signal(LOW) for i in range(2)]
+    pwm_laser1_out, pwm_laser1_inv_out = [Signal(LOW) for i in range(2)]
+    pwm_laser2_out, pwm_laser2_inv_out = [Signal(LOW) for i in range(2)]
+    pwm_laser3_out, pwm_laser3_inv_out = [Signal(LOW) for i in range(2)]
+    pwm_laser4_out, pwm_laser4_inv_out = [Signal(LOW) for i in range(2)]
 
     data_we,adc_clk = [Signal(LOW) for i in range(2)]
 
@@ -109,6 +113,14 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     meta6 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     meta7 = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
+    eta1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    eta2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ref1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ref2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    wlmsimDone = Signal(LOW)
+    z0_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    
+    sample_dark_in = Signal(LOW)
     pzt_dac = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     laser_freq_ok = Signal(LOW)
@@ -130,59 +142,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                                   dsp_data_in=dsp_data_in,
                                   dsp_wr=dsp_wr)
 
-    laser1_pwm = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
-              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_laser1_pwm,
-              dsp_wr=dsp_wr,
-              pwm_out=laser1_pwm_out,
-              pwm_inv_out=laser1_pwm_inv_out,
-              map_base=FPGA_PWM_LASER1)
-
-    laser2_pwm = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
-              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_laser2_pwm,
-              dsp_wr=dsp_wr,
-              pwm_out=laser2_pwm_out,
-              pwm_inv_out=laser2_pwm_inv_out,
-              map_base=FPGA_PWM_LASER2)
-
-    laser3_pwm = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
-              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_laser3_pwm,
-              dsp_wr=dsp_wr,
-              pwm_out=laser3_pwm_out,
-              pwm_inv_out=laser3_pwm_inv_out,
-              map_base=FPGA_PWM_LASER3)
-
-    laser4_pwm = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
-              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_laser4_pwm,
-              dsp_wr=dsp_wr,
-              pwm_out=laser4_pwm_out,
-              pwm_inv_out=laser4_pwm_inv_out,
-              map_base=FPGA_PWM_LASER4)
-
-    rdmemory = Rdmemory(clk=clk0, reset=reset, dsp_addr=dsp_addr,
-                dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdmemory,
-                dsp_wr=dsp_wr, bank=bank, data_addr=data_addr,
-                data=data, wr_data=wr_data, data_we=data_we,
-                meta_addr=meta_addr, meta=meta, wr_meta=wr_meta,
-                meta_we=meta_we, param_addr=param_addr,
-                param=param, wr_param=wr_param, param_we=param_we)
-
-    kernel = Kernel(clk=clk0, reset=reset, dsp_addr=dsp_addr,
-                  dsp_data_out=dsp_data_out,
-                  dsp_data_in=dsp_data_in_kernel,
-                  dsp_wr=dsp_wr,
-                  usb_connected=usb_connected,
-                  cyp_reset=cyp_reset,
-                  gpreg_1_out=gpreg_1,
-                  map_base=FPGA_KERNEL)
-
     clkgen = ClkGen(clk=clk0, reset=reset, clk_5M=clk_5M,
                     clk_2M5=clk_2M5, pulse_1M=pulse_1M, pulse_100k=pulse_100k)
-
-    twGen = TWGen(clk=clk0, reset=reset, dsp_addr=dsp_addr,
-                  dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_twGen,
-                  dsp_wr=dsp_wr, synth_step_in=pulse_100k,
-                  value_out=tuner_value, slope_out=tuner_slope,
-                  in_window_out=tuner_in_window,map_base=FPGA_TWGEN)
 
     inject = Inject(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                     dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_inject,
@@ -210,12 +171,60 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     soa_shutdown_out=sw3,
                     map_base=FPGA_INJECT)
 
-    rdsim = RdSim( clk=clk0, reset=reset, dsp_addr=dsp_addr,
-                   dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdsim,
-                   dsp_wr=dsp_wr, rd_trig_in=rd_trig,
-                   tuner_value_in=tuner_value,
-                   rd_adc_clk_in=adc_clk,
-                   rdsim_value_out=rdsim_value, map_base=FPGA_RDSIM )
+    kernel = Kernel(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                  dsp_data_out=dsp_data_out,
+                  dsp_data_in=dsp_data_in_kernel,
+                  dsp_wr=dsp_wr,
+                  usb_connected=usb_connected,
+                  cyp_reset=cyp_reset,
+                  gpreg_1_out=gpreg_1,
+                  map_base=FPGA_KERNEL)
+    
+    laserlocker = LaserLocker( clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                               dsp_data_out=dsp_data_out,
+                               dsp_data_in=dsp_data_in_laserlocker, dsp_wr=dsp_wr,
+                               eta1_in=eta1, ref1_in=ref1,
+                               eta2_in=eta2, ref2_in=ref2,
+                               tuning_offset_in=tuner_value,
+                               acc_en_in=acc_en,
+                               sample_dark_in=sample_dark_in,
+                               adc_strobe_in=wlmsimDone,
+                               ratio1_out=meta0,
+                               ratio2_out=meta1,
+                               lock_error_out=meta5,
+                               fine_current_out=meta4,
+                               tuning_offset_out=meta3,
+                               laser_freq_ok_out=laser_freq_ok,
+                               current_ok_out=metadata_strobe,
+                               map_base=FPGA_LASERLOCKER )
+
+    pwm_laser1 = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_laser1,
+              dsp_wr=dsp_wr,
+              pwm_out=pwm_laser1_out,
+              pwm_inv_out=pwm_laser1_inv_out,
+              map_base=FPGA_PWM_LASER1)
+
+    pwm_laser2 = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_laser2,
+              dsp_wr=dsp_wr,
+              pwm_out=pwm_laser2_out,
+              pwm_inv_out=pwm_laser2_inv_out,
+              map_base=FPGA_PWM_LASER2)
+
+    pwm_laser3 = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_laser3,
+              dsp_wr=dsp_wr,
+              pwm_out=pwm_laser3_out,
+              pwm_inv_out=pwm_laser3_inv_out,
+              map_base=FPGA_PWM_LASER3)
+
+    pwm_laser4 = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+              dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_laser4,
+              dsp_wr=dsp_wr,
+              pwm_out=pwm_laser4_out,
+              pwm_inv_out=pwm_laser4_inv_out,
+              map_base=FPGA_PWM_LASER4)
 
     rdman = RdMan( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                    dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdman,
@@ -242,6 +251,34 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                    wr_param_out=wr_param, param_we_out=param_we,
                    map_base=FPGA_RDMAN )
 
+    rdmemory = Rdmemory(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdmemory,
+                dsp_wr=dsp_wr, bank=bank, data_addr=data_addr,
+                data=data, wr_data=wr_data, data_we=data_we,
+                meta_addr=meta_addr, meta=meta, wr_meta=wr_meta,
+                meta_we=meta_we, param_addr=param_addr,
+                param=param, wr_param=wr_param, param_we=param_we)
+
+    rdsim = RdSim( clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                   dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdsim,
+                   dsp_wr=dsp_wr, rd_trig_in=rd_trig,
+                   tuner_value_in=tuner_value,
+                   rd_adc_clk_in=adc_clk,
+                   rdsim_value_out=rdsim_value, map_base=FPGA_RDSIM )
+
+    twGen = TWGen(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                  dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_twGen,
+                  dsp_wr=dsp_wr, synth_step_in=pulse_100k,
+                  value_out=tuner_value, slope_out=tuner_slope,
+                  in_window_out=tuner_in_window,map_base=FPGA_TWGEN)
+    
+    wlmsim = WlmSim( clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                     dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_wlmsim,
+                     dsp_wr=dsp_wr, start_in=pulse_100k, z0_in=z0_in,
+                     eta1_out=eta1, ref1_out=ref1,
+                     eta2_out=eta2, ref2_out=ref2,
+                     done_out=wlmsimDone, map_base=FPGA_WLMSIM )
+
     @instance
     def  logic():
         while True:
@@ -253,30 +290,33 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
     @always_comb
     def  comb():
-        dsp_data_in.next = dsp_data_in_laser1_pwm | \
-                           dsp_data_in_laser2_pwm | \
-                           dsp_data_in_laser3_pwm | \
-                           dsp_data_in_laser4_pwm | \
-                           dsp_data_in_rdman      | \
-                           dsp_data_in_rdmemory   | \
-                           dsp_data_in_kernel     | \
-                           dsp_data_in_inject     | \
-                           dsp_data_in_twGen      | \
-                           dsp_data_in_rdsim
+        dsp_data_in.next = \
+                           dsp_data_in_inject      | \
+                           dsp_data_in_kernel      | \
+                           dsp_data_in_laserlocker | \
+                           dsp_data_in_pwm_laser1  | \
+                           dsp_data_in_pwm_laser2  | \
+                           dsp_data_in_pwm_laser3  | \
+                           dsp_data_in_pwm_laser4  | \
+                           dsp_data_in_rdman       | \
+                           dsp_data_in_rdmemory    | \
+                           dsp_data_in_rdsim       | \
+                           dsp_data_in_twGen       | \
+                           dsp_data_in_wlmsim
 
         ce2.next = dsp_emif_ce[2]
-        intronix.next[16]  = laser1_pwm_out
-        lsr1_0.next = laser1_pwm_out
-        lsr1_1.next = laser1_pwm_inv_out
-        intronix.next[17]  = laser2_pwm_out
-        lsr2_0.next = laser2_pwm_out
-        lsr2_1.next = laser2_pwm_inv_out
-        intronix.next[18]  = laser3_pwm_out
-        lsr3_0.next = laser3_pwm_out
-        lsr3_1.next = laser3_pwm_inv_out
-        intronix.next[19]  = laser4_pwm_out
-        lsr4_0.next = laser4_pwm_out
-        lsr4_1.next = laser4_pwm_inv_out
+        intronix.next[16]  = pwm_laser1_out
+        lsr1_0.next = pwm_laser1_out
+        lsr1_1.next = pwm_laser1_inv_out
+        intronix.next[17]  = pwm_laser2_out
+        lsr2_0.next = pwm_laser2_out
+        lsr2_1.next = pwm_laser2_inv_out
+        intronix.next[18]  = pwm_laser3_out
+        lsr3_0.next = pwm_laser3_out
+        lsr3_1.next = pwm_laser3_inv_out
+        intronix.next[19]  = pwm_laser4_out
+        lsr4_0.next = pwm_laser4_out
+        lsr4_1.next = pwm_laser4_inv_out
 
         intronix.next[20] = gpreg_1[8]
         intronix.next[21] = gpreg_1[9]
@@ -328,9 +368,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         sw1.next = 0
         sw2.next = 0
         sw4.next = 0
-        laser_freq_ok.next = HIGH
-        metadata_strobe.next = pulse_100k
-        
+
         pzt_dac.next = tuner_value
         
     return instances()

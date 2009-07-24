@@ -17,7 +17,7 @@
 from myhdl import *
 from Host.autogen import interface
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH, FPGA_REG_WIDTH, FPGA_REG_MASK
-from Host.autogen.interface import FPGA_LASER1_PWM, FPGA_LASER2_PWM, FPGA_LASER3_PWM, FPGA_LASER4_PWM
+from Host.autogen.interface import FPGA_PWM_LASER1, FPGA_PWM_LASER2, FPGA_PWM_LASER3, FPGA_PWM_LASER4
 from Host.autogen.interface import PWM_CS
 from Host.autogen.interface import PWM_PULSE_WIDTH
 from Host.autogen.interface import PWM_CS_RUN_B, PWM_CS_CONT_B, PWM_CS_PWM_OUT_B

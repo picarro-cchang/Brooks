@@ -191,14 +191,11 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                             eta2.next = M - div_quot
                             done_out.next = HIGH
                             state = t_seqState.IDLE
-                
-    @always_comb
-    def comb():
-        eta1_out.next = eta1
-        ref1_out.next = ref1
-        eta2_out.next = eta2
-        ref2_out.next = ref2
-                    
+                            eta1_out.next = eta1
+                            ref1_out.next = ref1
+                            eta2_out.next = eta2
+                            ref2_out.next = ref2
+
     # iterative CORDIC processor
     @instance
     def processor():

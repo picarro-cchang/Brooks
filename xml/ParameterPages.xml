@@ -255,5 +255,31 @@
             <fpga_register offset="FPGA_WLMSIM">ETA2</fpga_register>
             <fpga_register offset="FPGA_WLMSIM">REF2</fpga_register>
         </gui_page>
+        <gui_page>
+            <title>Laser Locker Parameters</title>
+            <fpga_register offset="FPGA_LASERLOCKER">CS</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">ETA1</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">REF1</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">ETA2</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">REF2</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">ETA1_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">REF1_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">ETA2_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">REF2_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">RATIO1_CENTER</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">RATIO1_MULTIPLIER</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">RATIO2_CENTER</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">RATIO2_MULTIPLIER</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">TUNING_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">WM_LOCK_WINDOW</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">WM_INT_GAIN</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">WM_PROP_GAIN</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">WM_DERIV_GAIN</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">RATIO1</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">RATIO2</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">LOCK_ERROR</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">FINE_CURRENT</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">CYCLE_COUNTER</fpga_register>
+        </gui_page>
     </gui_pages>
 </Controller_gui>

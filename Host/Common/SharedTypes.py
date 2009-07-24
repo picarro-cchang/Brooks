@@ -109,43 +109,21 @@ class GenHandler(object):
         self.genFunc = genFunc
         self.processFunc = processFunc
         self.generator = None
-        self.totTime = 0
-        self.num = 0
-        self.avgTime = None
         
     def process(self,timeLimit):
         if not self.generator:
             self.generator = self.genFunc()
-        start = time.clock()
 
-        n = 0
-        if (self.avgTime is not None) and self.avgTime != 0.0: 
-            nTimes = timeLimit/self.avgTime
-            while n<nTimes:
-                try:
-                    d = self.generator.next()
-                    self.processFunc(d)
-                    n += 1
-                except StopIteration:
-                    self.generator = None
-                    break
-        else:
-            while time.clock()-start < timeLimit:
-                try:
-                    d = self.generator.next()
-                    self.processFunc(d)
-                    n += 1
-                except StopIteration:
-                    self.generator = None
-                    break
+        start = time.clock()
+        while time.clock()-start < timeLimit:
+            try:
+                d = self.generator.next()
+                self.processFunc(d)
+            except StopIteration:
+                self.generator = None
+                break
 
         duration = time.clock()-start
-        self.totTime += duration
-        self.num += n
-        if self.totTime > 10.0:
-            self.num *= (10.0/self.totTime)
-            self.totTime = 10.0
-            self.avgTime = self.totTime/self.num
         return duration
     
 ##Misc stuff...

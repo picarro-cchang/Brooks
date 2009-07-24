@@ -77,6 +77,7 @@ ratio1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 ratio2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 lock_error_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 fine_current_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
+tuning_offset_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 laser_freq_ok_out = Signal(LOW)
 current_ok_out = Signal(LOW)
 map_base = FPGA_LASERLOCKER
@@ -99,10 +100,8 @@ def signed_mul_sim(x,y):
     if x>mod//2: x -= mod
     y = y % mod
     if y>mod//2: y -= mod
-    maxMag = float(mod//2)
-    p = int(((x/maxMag)*(y/maxMag))*maxMag)
-    if p<0: p += mod
-    return p
+    p = (x * y) % (mod**2/2)
+    return p // (mod//2)
 
 def bench():
     PERIOD = 20  # 50MHz clock
@@ -176,6 +175,7 @@ def bench():
                                ratio2_out=ratio2_out,
                                lock_error_out=lock_error_out,
                                fine_current_out=fine_current_out,
+                               tuning_offset_out=tuning_offset_out,
                                laser_freq_ok_out=laser_freq_ok_out,
                                current_ok_out=current_ok_out,
                                map_base=map_base )
@@ -279,7 +279,7 @@ def bench():
                 prod2 = signed_mul_sim(ratio2_multiplier,ratio2c)
                 print "Product1 = %04x, Product2 = %04x" % (prod1,prod2)
                 print "Tuning offset = %04x" % (tuning_offset,)
-                lock_error = add_sim(add_sim(tuning_offset,prod1),prod2)
+                lock_error = add_sim(add_sim(tuning_offset-32768,prod1),prod2)
                 print "LockError = %04x" % (lock_error,)
                 locked = abs(intbv(lock_error)[16:].signed()) <= wm_lock_window
                 deriv = lock_error - prev_lock_error
@@ -309,19 +309,18 @@ def bench():
                 yield writeFPGA(FPGA_LASERLOCKER + LASERLOCKER_RATIO1_MULTIPLIER,ratio1_multiplier)
                 yield writeFPGA(FPGA_LASERLOCKER + LASERLOCKER_RATIO2_MULTIPLIER,ratio2_multiplier)
 
-                yield clk.posedge
+                yield clk.negedge
                 tuning_offset_in.next = tuning_offset
-                yield clk.posedge
+                yield clk.negedge
 
-                yield clk.posedge
+                yield clk.negedge
                 eta1_in.next = eta1
                 ref1_in.next = ref1
                 eta2_in.next = eta2
                 ref2_in.next = ref2
-                yield clk.posedge
+                yield clk.negedge
                 adc_strobe_in.next = HIGH
-                yield clk.posedge
-                adc_strobe_in.next = LOW
+                yield clk.negedge
                 acc_en_in.next = HIGH
                 yield current_ok_out.posedge
 
@@ -341,6 +340,8 @@ def bench():
                 assert lock_error == lock_error_out
 
                 assert locked == laser_freq_ok_out
+                clk.negedge
+                adc_strobe_in.next = LOW
 
         yield writeFPGA(FPGA_LASERLOCKER + LASERLOCKER_CS,
                         1<<LASERLOCKER_CS_RUN_B | \

@@ -57,12 +57,39 @@ from Divider import Divider
 from SignedMultiplier import SignedMultiplier
 
 LOW, HIGH = bool(0), bool(1)
+
+def SignedFracMultiplier(a_in,b_in,p_out,o_out):
+    # We create a 16*16 bit signed fractional multiplier out of the underlying SignedMultiplier block
+    #  which is based on the MULT18x18 block in the Xilinx FPGA.
+    #
+    # a: Multiplier as signed binary fraction between -1<= a <1, of width 16 bits
+    # b: Multiplicand as signed binary fraction between -1<= a <1, of width 16 bits
+    # p: Product as signed binary fraction between -1<= a <1, of width 16 bits
+    #     (i.e., binary point is immediately after the sign bit)
+    # Note that we cannot multiply -1 x -1, since this causes an overflow (o bit set)
+    
+    # Signals for interfacing with SignedMultiplier block
+    a_s = Signal(intbv(0,min=-0x20000,max=0x20000))
+    b_s = Signal(intbv(0,min=-0x20000,max=0x20000))
+    p_s = Signal(intbv(0,min=-0x800000000,max=0x800000000))
+
+    sm = SignedMultiplier(p_s,a_s,b_s)
+    
+    @always_comb
+    def comb():
+        a_s.next = concat(a_in,LOW,LOW).signed()
+        b_s.next = concat(b_in,LOW,LOW).signed()
+        p_out.next = concat(p_s[35],p_s[34:19]) % 65536
+        o_out.next = p_s[35] != p_s[34]
+        
+    return instances()
+
 def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 eta1_in,ref1_in,eta2_in,ref2_in,tuning_offset_in,
                 acc_en_in,sample_dark_in,adc_strobe_in,ratio1_out,
                 ratio2_out,lock_error_out,fine_current_out,
-                laser_freq_ok_out,current_ok_out,map_base):
-
+                tuning_offset_out,laser_freq_ok_out,current_ok_out,
+                map_base):
     """ Laser frequency locking using wavelength monitor
 
     Parameters:
@@ -81,12 +108,13 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     acc_en_in           -- 0 to reset accumulator, 1 for locking
     sample_dark_in      -- strobe high to write photodiode values to dark
                         --  current registers
-    adc_strobe_in       -- Strobe high to indicate photodiode values are valid
+    adc_strobe_in       -- Strobe high for one cycle to indicate photodiode values are valid
                         --  May only be asserted when current_ok_out is high
     ratio1_out          -- Ratio 1 output
     ratio2_out          -- Ratio 2 output
     lock_error_out      -- Lock error output
     fine_current_out    -- Fine current output
+    tuning_offset_out   -- Tuning offset used, whether from register or input
     laser_freq_ok_out   -- High once absolute value of lock error is within window
     current_ok_out      -- Goes high once fine current has been calculated
     map_base
@@ -112,7 +140,8 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     LASERLOCKER_RATIO2_CENTER   -- Center of ellipse for ratio 2
     LASERLOCKER_RATIO2_MULTIPLIER -- Multiplier for ratio 2 in locker
     LASERLOCKER_TUNING_OFFSET   -- Offset to add to error (used when TUNING_OFFSET_SEL
-                                --  bit in CS register is 0)
+                                --  bit in CS register is 0), specified as offset binary so that
+                                --  32768 represents zero offset
     LASERLOCKER_LOCK_ERROR      -- Loop lock error
     LASERLOCKER_WM_LOCK_WINDOW  -- Defines when laser frequency is in range
     LASERLOCKER_WM_INT_GAIN     -- Integral gain for wavelength locking
@@ -178,7 +207,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     ratio1_multiplier = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ratio2_center = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ratio2_multiplier = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    tuning_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    tuning_offset = Signal(intbv(0x8000)[FPGA_REG_WIDTH:])
     lock_error = Signal(intbv(0)[FPGA_REG_WIDTH:])
     wm_lock_window = Signal(intbv(0)[FPGA_REG_WIDTH:])
     wm_int_gain = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -187,11 +216,14 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     cycle_counter = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
+    FPGA_REG_MAXVAL = 1<<FPGA_REG_WIDTH
+    M2 = FPGA_REG_MAXVAL//2
+    
     # Signals interfacing to divider
     div_num, div_den, div_quot = [Signal(intbv(0)[FPGA_REG_WIDTH:]) for i in range(3)]
     div_rfd, div_ce = [Signal(LOW) for i in range(2)]
 
-    # Signals interfacing to multiplier
+    # Signals to the signed fractional multiplier
     mult_a, mult_b, mult_p = [Signal(intbv(0)[FPGA_REG_WIDTH:]) for i in range(3)]
     mult_o = Signal(LOW)
 
@@ -201,12 +233,16 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     deriv2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     prbs_reg = Signal(intbv(0)[8:]) # Use for ALM sequence
     prbs_augment = Signal(LOW)
+    awaiting_strobe = Signal(HIGH)
 
     DIV_LATENCY  = 19
     MULT_LATENCY = 2
     MAX_CYCLES = 2*DIV_LATENCY + 1 + 4*MULT_LATENCY + 3
-    FPGA_REG_MAXVAL = 1<<FPGA_REG_WIDTH
 
+    @always_comb
+    def comb():
+        tuning_offset_out.next = tuning_offset
+        
     @instance
     def logic():
         while True:
@@ -231,7 +267,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 ratio1_multiplier.next = 0
                 ratio2_center.next = 0
                 ratio2_multiplier.next = 0
-                tuning_offset.next = 0
+                tuning_offset.next = 0x8000
                 lock_error.next = 0
                 wm_lock_window.next = 0
                 wm_int_gain.next = 0
@@ -251,6 +287,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 current_ok_out.next = LOW
                 prbs_reg.next = 1
                 prbs_augment.next = 0
+                awaiting_strobe.next = HIGH
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
@@ -428,17 +465,21 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         cycle_counter.next = cycle_counter + 1
                     else:
                         current_ok_out.next = 1
+                        # Allow a new cycle if cycle_counter is at MAX_CYCLES
+                        if cs[LASERLOCKER_CS_ADC_STROBE_B]:
+                            if awaiting_strobe:
+                                awaiting_strobe.next = LOW
+                                lock_error.next = (tuning_offset - 32768) % FPGA_REG_MAXVAL
+                                lock_error_out.next = lock_error
+                                cycle_counter.next = 0
+                                laser_freq_ok_out.next = 0
+                                current_ok_out.next = 0
+                        else:
+                            awaiting_strobe.next = HIGH
 
                     if not cs[LASERLOCKER_CS_ACC_EN_B]:
                         fine_current.next = 0x8000
                         fine_current_out.next = 0x8000
-
-                    if cs[LASERLOCKER_CS_ADC_STROBE_B]:
-                        lock_error.next = tuning_offset
-                        lock_error_out.next = lock_error
-                        cycle_counter.next = 0
-                        laser_freq_ok_out.next = 0
-                        current_ok_out.next = 0
 
                     # Reset the run bit if continuous mode is not selected
                     # Ensure this is within clause that cs[LASERLOCKER_CS_RUN_B] == 1
@@ -451,8 +492,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     divider = Divider(clk=clk, reset=reset, N_in=div_num, D_in=div_den, Q_out=div_quot,
                       rfd_out=div_rfd, ce_in=div_ce, width=FPGA_REG_WIDTH)
 
-    signedMultiplier = SignedMultiplier(p=mult_p, a=mult_a, b=mult_b, overflow=mult_o)
-
+    signedMultiplier = SignedFracMultiplier(a_in=mult_a, b_in=mult_b, p_out=mult_p, o_out=mult_o)
 
     return instances()
 
@@ -475,6 +515,7 @@ if __name__ == "__main__":
     ratio2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     lock_error_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     fine_current_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    tuning_offset_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser_freq_ok_out = Signal(LOW)
     current_ok_out = Signal(LOW)
     map_base = FPGA_LASERLOCKER
@@ -491,5 +532,6 @@ if __name__ == "__main__":
                         ratio1_out=ratio1_out, ratio2_out=ratio2_out,
                         lock_error_out=lock_error_out,
                         fine_current_out=fine_current_out,
+                        tuning_offset_out=tuning_offset_out,
                         laser_freq_ok_out=laser_freq_ok_out,
                         current_ok_out=current_ok_out, map_base=map_base)

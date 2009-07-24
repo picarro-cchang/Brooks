@@ -123,28 +123,28 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
               dsp_wr=dsp_wr,
               pwm_out=laser1_pwm_out,
               pwm_inv_out=laser1_pwm_inv_out,
-              map_base=FPGA_LASER1_PWM)
+              map_base=FPGA_PWM_LASER1)
 
     laser2_pwm = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
               dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_laser2_pwm,
               dsp_wr=dsp_wr,
               pwm_out=laser2_pwm_out,
               pwm_inv_out=laser2_pwm_inv_out,
-              map_base=FPGA_LASER2_PWM)
+              map_base=FPGA_PWM_LASER2)
 
     laser3_pwm = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
               dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_laser3_pwm,
               dsp_wr=dsp_wr,
               pwm_out=laser3_pwm_out,
               pwm_inv_out=laser3_pwm_inv_out,
-              map_base=FPGA_LASER3_PWM)
+              map_base=FPGA_PWM_LASER3)
 
     laser4_pwm = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
               dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_laser4_pwm,
               dsp_wr=dsp_wr,
               pwm_out=laser4_pwm_out,
               pwm_inv_out=laser4_pwm_inv_out,
-              map_base=FPGA_LASER4_PWM)
+              map_base=FPGA_PWM_LASER4)
 
     rdcompare = Rdcompare(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                 dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdcompare,

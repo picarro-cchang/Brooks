@@ -339,12 +339,16 @@ for fpgaBlockList in fpgaBlockLists:
             except:
                 regAccess = u"rw"
 
-            label, format = u"", u""
+            label, units, format = u"", u"", u""
             for display in reg.getElementsByTagName('display'):
                 try:
                     format = display.attributes['format'].value
                 except:
-                    format = u""
+                    pass
+                try:
+                    units= display.attributes['units'].value
+                except:
+                    pass
                 label = display.firstChild.data
             for save in reg.getElementsByTagName('save'):
                 if blockName not in fpgaSaveRegByBlock:
@@ -401,7 +405,7 @@ for fpgaBlockList in fpgaBlockLists:
                 declC.append("")
                 declPy.append("")
             numRegisters += 1
-            fpgaRegisterDescriptor[blockName][regName] = (regType,regAccess,format,label,bitfields)
+            fpgaRegisterDescriptor[blockName][regName] = (regType,regAccess,format,units,label,bitfields)
         numRegistersByBlock[blockName] = numRegisters
     printFp(intHFp, "\n%s" % ("\n".join(declC),))
     printFp(intPyFp, "\n%s" % ("\n".join(declPy),))
@@ -534,7 +538,7 @@ printFp(intPyFp, """
 
 parameter_forms = []""")
 
-paramTypes = dict(int32='int',uint32='int',float='float')
+paramTypes = dict(int32='int32',uint32='uint32',int16='int16',uint16='uint16',float='float')
 for guiPages in docEl.getElementsByTagName('gui_pages'):
     for guiPage in guiPages.getElementsByTagName('gui_page'):
         for node in guiPage.childNodes:
@@ -545,12 +549,12 @@ for guiPages in docEl.getElementsByTagName('gui_pages'):
                 offset = node.attributes['offset'].value
                 block = fpgaBlockByMapName[offset]
                 regName = node.firstChild.data
-                t,access,format,label,bitfields = fpgaRegisterDescriptor[block][regName]
+                t,access,format,units,label,bitfields = fpgaRegisterDescriptor[block][regName]
                 if t in paramTypes:
-                    printFp(intPyFp, "__p.append(('fpga','%s',%s+%s_%s,'%s','','%s',%d,%d))" %
+                    printFp(intPyFp, "__p.append(('fpga','%s',%s+%s_%s,'%s','%s','%s',%d,%d))" %
                         (paramTypes[t],
                          offset, block, regName,
-                         label,format,
+                         label,units,format,
                          'r' in access,
                          'w' in access,
                          )

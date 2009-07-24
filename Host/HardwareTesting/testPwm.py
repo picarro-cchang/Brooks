@@ -288,14 +288,14 @@ def upload():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     upload()
-    REG_LASER1_PWM_WIDTH = interface.FPGA_LASER1_PWM + interface.PWM_PULSE_WIDTH
-    REG_LASER1_PWM_CNTRL_STAT = interface.FPGA_LASER1_PWM + interface.PWM_CS
-    REG_LASER2_PWM_WIDTH = interface.FPGA_LASER2_PWM + interface.PWM_PULSE_WIDTH
-    REG_LASER2_PWM_CNTRL_STAT = interface.FPGA_LASER2_PWM + interface.PWM_CS
-    REG_LASER3_PWM_WIDTH = interface.FPGA_LASER3_PWM + interface.PWM_PULSE_WIDTH
-    REG_LASER3_PWM_CNTRL_STAT = interface.FPGA_LASER3_PWM + interface.PWM_CS
-    REG_LASER4_PWM_WIDTH = interface.FPGA_LASER4_PWM + interface.PWM_PULSE_WIDTH
-    REG_LASER4_PWM_CNTRL_STAT = interface.FPGA_LASER4_PWM + interface.PWM_CS
+    REG_LASER1_PWM_WIDTH = interface.FPGA_PWM_LASER1 + interface.PWM_PULSE_WIDTH
+    REG_LASER1_PWM_CNTRL_STAT = interface.FPGA_PWM_LASER1 + interface.PWM_CS
+    REG_LASER2_PWM_WIDTH = interface.FPGA_PWM_LASER2 + interface.PWM_PULSE_WIDTH
+    REG_LASER2_PWM_CNTRL_STAT = interface.FPGA_PWM_LASER2 + interface.PWM_CS
+    REG_LASER3_PWM_WIDTH = interface.FPGA_PWM_LASER3 + interface.PWM_PULSE_WIDTH
+    REG_LASER3_PWM_CNTRL_STAT = interface.FPGA_PWM_LASER3 + interface.PWM_CS
+    REG_LASER4_PWM_WIDTH = interface.FPGA_PWM_LASER4 + interface.PWM_PULSE_WIDTH
+    REG_LASER4_PWM_CNTRL_STAT = interface.FPGA_PWM_LASER4 + interface.PWM_CS
     while True:
         try:
             threshold = eval(raw_input("Ringdown threshold? "))
