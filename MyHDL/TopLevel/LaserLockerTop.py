@@ -93,25 +93,34 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     clk_5M, clk_2M5, pulse_1M, pulse_100k = [Signal(LOW) for i in range(4)]
 
     gpreg_1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    tuner_value = Signal(intbv(0)[FPGA_REG_WIDTH:])
+
     tuner_slope = Signal(LOW)
     tuner_in_window = Signal(LOW)
 
-    laser_fine_current_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ratio1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ratio2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    tuner_value = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser_tuning_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    lock_error = Signal(intbv(0)[FPGA_REG_WIDTH:])
+
+    meta0 = ratio1
+    meta1 = ratio2
+    meta2 = tuner_value           # Should be PZT DAC
+    meta3 = laser_tuning_offset
+    meta4 = laser_fine_current
+    meta5 = lock_error
+    meta6 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    meta7 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    
     laser_shutdown_in = Signal(LOW)
     soa_shutdown_in = Signal(LOW)
+    sel_laser = Signal(intbv(0)[2:])
+    sel_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    sel_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     rdsim_value = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rd_trig = Signal(LOW)
-
-    meta0 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    meta1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    meta2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    meta3 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    meta4 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    meta5 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    meta6 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    meta7 = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     eta1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     eta2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -149,7 +158,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_inject,
                     dsp_wr=dsp_wr, laser_dac_clk_in=clk_5M,
                     strobe_in=pulse_100k,
-                    laser_fine_current_in=laser_fine_current_in,
+                    laser_fine_current_in=laser_fine_current,
                     laser_shutdown_in=laser_shutdown_in,
                     soa_shutdown_in=soa_shutdown_in,
                     laser1_dac_sync_out=lsr1_ss,
@@ -169,6 +178,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     laser3_shutdown_out=lsr3_rd,
                     laser4_shutdown_out=lsr4_rd,
                     soa_shutdown_out=sw3,
+                    sel_laser_out=sel_laser,
+                    sel_coarse_current_out=sel_coarse_current,
+                    sel_fine_current_out=sel_fine_current,
                     map_base=FPGA_INJECT)
 
     kernel = Kernel(clk=clk0, reset=reset, dsp_addr=dsp_addr,
@@ -189,11 +201,11 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                                acc_en_in=acc_en,
                                sample_dark_in=sample_dark_in,
                                adc_strobe_in=wlmsimDone,
-                               ratio1_out=meta0,
-                               ratio2_out=meta1,
-                               lock_error_out=meta5,
-                               fine_current_out=meta4,
-                               tuning_offset_out=meta3,
+                               ratio1_out=ratio1,
+                               ratio2_out=ratio2,
+                               lock_error_out=lock_error,
+                               fine_current_out=laser_fine_current,
+                               tuning_offset_out=laser_tuning_offset,
                                laser_freq_ok_out=laser_freq_ok,
                                current_ok_out=metadata_strobe,
                                map_base=FPGA_LASERLOCKER )
@@ -231,7 +243,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                    dsp_wr=dsp_wr, pulse_100k_in=pulse_100k,
                    pulse_1M_in=pulse_1M,
                    tuner_value_in=tuner_value, meta0_in=meta0,
-                   meta1_in=meta1, meta2_in=pzt_dac,
+                   meta1_in=meta1, meta2_in=meta2,
                    meta3_in=meta3, meta4_in=meta4,
                    meta5_in=meta5, meta6_in=meta6,
                    meta7_in=meta7, rd_data_in=rdsim_value,
@@ -274,7 +286,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     
     wlmsim = WlmSim( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_wlmsim,
-                     dsp_wr=dsp_wr, start_in=pulse_100k, z0_in=z0_in,
+                     dsp_wr=dsp_wr, start_in=pulse_100k,
+                     coarse_current_in=sel_coarse_current,
+                     fine_current_in=sel_fine_current,
                      eta1_out=eta1, ref1_out=ref1,
                      eta2_out=eta2, ref2_out=ref2,
                      done_out=wlmsimDone, map_base=FPGA_WLMSIM )
@@ -317,7 +331,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         intronix.next[19]  = pwm_laser4_out
         lsr4_0.next = pwm_laser4_out
         lsr4_1.next = pwm_laser4_inv_out
-
+        
         intronix.next[20] = gpreg_1[8]
         intronix.next[21] = gpreg_1[9]
         intronix.next[22] = gpreg_1[10]
@@ -368,8 +382,6 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         sw1.next = 0
         sw2.next = 0
         sw4.next = 0
-
-        pzt_dac.next = tuner_value
         
     return instances()
 

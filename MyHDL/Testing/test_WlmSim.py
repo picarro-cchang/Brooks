@@ -33,7 +33,8 @@ dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 dsp_data_in = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 dsp_wr = Signal(LOW)
 start_in = Signal(LOW)
-z0_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+coarse_current_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+fine_current_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 eta1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 ref1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 eta2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -102,10 +103,12 @@ def bench():
     #  derived as the OR of the data buses from the individual blocks.
     wlmsim = WlmSim( clk=clk, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
-                     dsp_wr=dsp_wr, start_in=start_in, z0_in=z0_in,
-                     eta1_out=eta1_out, ref1_out=ref1_out,
-                     eta2_out=eta2_out, ref2_out=ref2_out,
-                     done_out=done_out, map_base=FPGA_WLMSIM )
+                     dsp_wr=dsp_wr, start_in=start_in,
+                     coarse_current_in=coarse_current_in,
+                     fine_current_in=fine_current_in, eta1_out=eta1_out,
+                     ref1_out=ref1_out, eta2_out=eta2_out,
+                     ref2_out=ref2_out, done_out=done_out,
+                     map_base=map_base )
     @instance
     def stimulus():
         yield assertReset()

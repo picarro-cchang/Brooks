@@ -11,12 +11,14 @@
 #
 # HISTORY:
 #   31-May-2009  sze  Initial version.
+#   24-Jul-2009  sze  Add selected laser outputs for use with WLM simulator.
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
 from myhdl import *
 from Host.autogen import interface
-from Host.autogen.interface import FPGA_INJECT
+from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
+from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_INJECT
 
 from Host.autogen.interface import INJECT_CONTROL
 from Host.autogen.interface import INJECT_LASER1_COARSE_CURRENT
@@ -28,7 +30,6 @@ from Host.autogen.interface import INJECT_LASER2_FINE_CURRENT
 from Host.autogen.interface import INJECT_LASER3_FINE_CURRENT
 from Host.autogen.interface import INJECT_LASER4_FINE_CURRENT
 
-from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH, FPGA_REG_WIDTH, FPGA_REG_MASK
 from Host.autogen.interface import INJECT_CONTROL_MODE_B, INJECT_CONTROL_MODE_W
 from Host.autogen.interface import INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W
 from Host.autogen.interface import INJECT_CONTROL_LASER_CURRENT_ENABLE_B, INJECT_CONTROL_LASER_CURRENT_ENABLE_W
@@ -38,22 +39,21 @@ from Host.autogen.interface import INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, INJEC
 from Host.autogen.interface import INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B, INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W
 from MyHDL.Common.LaserDac import LaserDac
 
+
 LOW, HIGH = bool(0), bool(1)
-
 def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
-            laser_dac_clk_in, strobe_in, laser_fine_current_in,
-            laser_shutdown_in, soa_shutdown_in,
-            laser1_dac_sync_out, laser2_dac_sync_out,
-            laser3_dac_sync_out, laser4_dac_sync_out,
-            laser1_dac_din_out, laser2_dac_din_out,
-            laser3_dac_din_out, laser4_dac_din_out,
-            laser1_disable_out, laser2_disable_out,
-            laser3_disable_out, laser4_disable_out,
-            laser1_shutdown_out, laser2_shutdown_out,
-            laser3_shutdown_out, laser4_shutdown_out,
-            soa_shutdown_out, map_base):
+           laser_dac_clk_in,strobe_in,laser_fine_current_in,
+           laser_shutdown_in,soa_shutdown_in,laser1_dac_sync_out,
+           laser2_dac_sync_out,laser3_dac_sync_out,laser4_dac_sync_out,
+           laser1_dac_din_out,laser2_dac_din_out,laser3_dac_din_out,
+           laser4_dac_din_out,laser1_disable_out,laser2_disable_out,
+           laser3_disable_out,laser4_disable_out,laser1_shutdown_out,
+           laser2_shutdown_out,laser3_shutdown_out,laser4_shutdown_out,
+           soa_shutdown_out,sel_laser_out,sel_coarse_current_out,
+           sel_fine_current_out,map_base):
 
-    """Optical Injection Subsystem
+    """
+    Parameters:
     clk                 -- Clock input
     reset               -- Reset input
     dsp_addr            -- address from dsp_interface block
@@ -82,11 +82,12 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     laser3_shutdown_out  -- Short across laser 3
     laser4_shutdown_out  -- Short across laser 4
     soa_shutdown_out     -- Short across SOA
-
+    sel_laser_out
+    sel_coarse_current_out
+    sel_fine_current_out
     map_base            -- Base of FPGA map for this block
 
-    This block appears as several registers to the DSP, starting at map_base.
-    The registers are:
+    Registers:
     INJECT_CONTROL        -- Control register
     LASER1_COARSE_CURRENT -- Laser 1 coarse current DAC setting
     LASER2_COARSE_CURRENT -- Laser 2 coarse current DAC setting
@@ -97,8 +98,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     LASER3_FINE_CURRENT   -- Laser 3 manual fine current DAC setting
     LASER4_FINE_CURRENT   -- Laser 4 manual fine current DAC setting
 
-    Fields within the INJECT_CONTROL register are:
-
+    Fields in INJECT_CONTROL:
     INJECT_CONTROL_MODE         -- Selects manual (0) or automatic (1) mode
     INJECT_CONTROL_LASER_SELECT -- Selects laser for automatic control 00 -> 11
     INJECT_CONTROL_LASER_CURRENT_ENABLE -- 4 bits controlling laser current regulators
@@ -110,16 +110,15 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     Note: If MODE is automatic, only the SOA and the selected laser are in automatic mode,
            the other lasers remain in manual mode.
     """
-    Inject_control_addr = map_base + INJECT_CONTROL
-    Inject_laser1_coarse_current_addr = map_base + INJECT_LASER1_COARSE_CURRENT
-    Inject_laser2_coarse_current_addr = map_base + INJECT_LASER2_COARSE_CURRENT
-    Inject_laser3_coarse_current_addr = map_base + INJECT_LASER3_COARSE_CURRENT
-    Inject_laser4_coarse_current_addr = map_base + INJECT_LASER4_COARSE_CURRENT
-    Inject_laser1_fine_current_addr = map_base + INJECT_LASER1_FINE_CURRENT
-    Inject_laser2_fine_current_addr = map_base + INJECT_LASER2_FINE_CURRENT
-    Inject_laser3_fine_current_addr = map_base + INJECT_LASER3_FINE_CURRENT
-    Inject_laser4_fine_current_addr = map_base + INJECT_LASER4_FINE_CURRENT
-    dsp_data_from_regs = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    inject_control_addr = map_base + INJECT_CONTROL
+    inject_laser1_coarse_current_addr = map_base + INJECT_LASER1_COARSE_CURRENT
+    inject_laser2_coarse_current_addr = map_base + INJECT_LASER2_COARSE_CURRENT
+    inject_laser3_coarse_current_addr = map_base + INJECT_LASER3_COARSE_CURRENT
+    inject_laser4_coarse_current_addr = map_base + INJECT_LASER4_COARSE_CURRENT
+    inject_laser1_fine_current_addr = map_base + INJECT_LASER1_FINE_CURRENT
+    inject_laser2_fine_current_addr = map_base + INJECT_LASER2_FINE_CURRENT
+    inject_laser3_fine_current_addr = map_base + INJECT_LASER3_FINE_CURRENT
+    inject_laser4_fine_current_addr = map_base + INJECT_LASER4_FINE_CURRENT
     control = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser1_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser2_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -159,49 +158,65 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_control_addr:
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_control_addr: # rw
                         if dsp_wr: control.next = dsp_data_out
-                        dsp_data_from_regs.next = control
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser1_coarse_current_addr:
+                        dsp_data_in.next = control
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser1_coarse_current_addr: # rw
                         if dsp_wr: laser1_coarse_current.next = dsp_data_out
-                        dsp_data_from_regs.next = laser1_coarse_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser2_coarse_current_addr:
+                        dsp_data_in.next = laser1_coarse_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser2_coarse_current_addr: # rw
                         if dsp_wr: laser2_coarse_current.next = dsp_data_out
-                        dsp_data_from_regs.next = laser2_coarse_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser3_coarse_current_addr:
+                        dsp_data_in.next = laser2_coarse_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser3_coarse_current_addr: # rw
                         if dsp_wr: laser3_coarse_current.next = dsp_data_out
-                        dsp_data_from_regs.next = laser3_coarse_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser4_coarse_current_addr:
+                        dsp_data_in.next = laser3_coarse_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser4_coarse_current_addr: # rw
                         if dsp_wr: laser4_coarse_current.next = dsp_data_out
-                        dsp_data_from_regs.next = laser4_coarse_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser1_fine_current_addr:
+                        dsp_data_in.next = laser4_coarse_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser1_fine_current_addr: # rw
                         if dsp_wr: laser1_fine_current.next = dsp_data_out
-                        dsp_data_from_regs.next = laser1_fine_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser2_fine_current_addr:
+                        dsp_data_in.next = laser1_fine_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser2_fine_current_addr: # rw
                         if dsp_wr: laser2_fine_current.next = dsp_data_out
-                        dsp_data_from_regs.next = laser2_fine_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser3_fine_current_addr:
+                        dsp_data_in.next = laser2_fine_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser3_fine_current_addr: # rw
                         if dsp_wr: laser3_fine_current.next = dsp_data_out
-                        dsp_data_from_regs.next = laser3_fine_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == Inject_laser4_fine_current_addr:
+                        dsp_data_in.next = laser3_fine_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser4_fine_current_addr: # rw
                         if dsp_wr: laser4_fine_current.next = dsp_data_out
-                        dsp_data_from_regs.next = laser4_fine_current
+                        dsp_data_in.next = laser4_fine_current
                     else:
-                        dsp_data_from_regs.next = 0
+                        dsp_data_in.next = 0
                 else:
-                    dsp_data_from_regs.next = 0
+                    dsp_data_in.next = 0
 
     @always_comb
     def  comb1():
-        dsp_data_in.next = dsp_data_from_regs
-        mode.next = control[INJECT_CONTROL_MODE_B]
-        sel.next  = control[INJECT_CONTROL_LASER_SELECT_B+INJECT_CONTROL_LASER_SELECT_W:INJECT_CONTROL_LASER_SELECT_B]
+        s = control[INJECT_CONTROL_LASER_SELECT_B+INJECT_CONTROL_LASER_SELECT_W:INJECT_CONTROL_LASER_SELECT_B]
+        m = control[INJECT_CONTROL_MODE_B]
+        mode.next = m
+        sel.next  = s
         laser_current_en.next = control[INJECT_CONTROL_LASER_CURRENT_ENABLE_B+INJECT_CONTROL_LASER_CURRENT_ENABLE_W:INJECT_CONTROL_LASER_CURRENT_ENABLE_B]
         manual_laser_en.next  = control[INJECT_CONTROL_MANUAL_LASER_ENABLE_B+INJECT_CONTROL_MANUAL_LASER_ENABLE_W:INJECT_CONTROL_MANUAL_LASER_ENABLE_B]
         manual_soa_en.next = control[INJECT_CONTROL_MANUAL_SOA_ENABLE_B]
         laser_shutdown_en.next = control[INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B]
         soa_shutdown_en.next = control[INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B]
-
+        sel_laser_out.next = s
+        if s == 0:
+            sel_coarse_current_out.next = laser1_coarse_current
+            sel_fine_current_out.next = laser1_fine_current
+        elif s == 1:
+            sel_coarse_current_out.next = laser2_coarse_current
+            sel_fine_current_out.next = laser2_fine_current
+        elif s == 2:
+            sel_coarse_current_out.next = laser3_coarse_current
+            sel_fine_current_out.next = laser3_fine_current
+        elif s == 3:
+            sel_coarse_current_out.next = laser4_coarse_current
+            sel_fine_current_out.next = laser4_fine_current
+        if m:
+            sel_fine_current_out.next = laser_fine_current_in
+        
     @always_comb
     def  comb2():
         laser1_fine.next = laser1_fine_current
@@ -256,25 +271,37 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     return instances()
 
 if __name__ == "__main__":
+    clk = Signal(LOW)
+    reset = Signal(LOW)
     dsp_addr = Signal(intbv(0)[EMIF_ADDR_WIDTH:])
     dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_wr, clk, reset = [Signal(LOW) for i in range(3)]
-    laser_dac_clk_in, strobe_in, laser_shutdown_in, soa_shutdown_in =\
-        [Signal(LOW) for i in range(4)]
+    dsp_data_in = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_wr = Signal(LOW)
+    laser_dac_clk_in = Signal(LOW)
+    strobe_in = Signal(LOW)
     laser_fine_current_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    laser1_dac_sync_out, laser2_dac_sync_out, \
-        laser3_dac_sync_out, laser4_dac_sync_out = \
-        [Signal(LOW) for i in range(4)]
+    laser_shutdown_in = Signal(LOW)
+    soa_shutdown_in = Signal(LOW)
+    laser1_dac_sync_out = Signal(LOW)
+    laser2_dac_sync_out = Signal(LOW)
+    laser3_dac_sync_out = Signal(LOW)
+    laser4_dac_sync_out = Signal(LOW)
     laser1_dac_din_out = Signal(LOW)
     laser2_dac_din_out = Signal(LOW)
     laser3_dac_din_out = Signal(LOW)
     laser4_dac_din_out = Signal(LOW)
-    laser1_disable_out,laser2_disable_out,laser3_disable_out,laser4_disable_out=\
-        [Signal(LOW) for i in range(4)]
-    laser1_shutdown_out,laser2_shutdown_out,laser3_shutdown_out,laser4_shutdown_out=\
-        [Signal(LOW) for i in range(4)]
+    laser1_disable_out = Signal(LOW)
+    laser2_disable_out = Signal(LOW)
+    laser3_disable_out = Signal(LOW)
+    laser4_disable_out = Signal(LOW)
+    laser1_shutdown_out = Signal(LOW)
+    laser2_shutdown_out = Signal(LOW)
+    laser3_shutdown_out = Signal(LOW)
+    laser4_shutdown_out = Signal(LOW)
     soa_shutdown_out = Signal(LOW)
+    sel_laser_out = Signal(intbv(0)[2:])
+    sel_coarse_current_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    sel_fine_current_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     map_base = FPGA_INJECT
 
     toVHDL(Inject, clk=clk, reset=reset, dsp_addr=dsp_addr,
@@ -301,4 +328,7 @@ if __name__ == "__main__":
                    laser3_shutdown_out=laser3_shutdown_out,
                    laser4_shutdown_out=laser4_shutdown_out,
                    soa_shutdown_out=soa_shutdown_out,
+                   sel_laser_out=sel_laser_out,
+                   sel_coarse_current_out=sel_coarse_current_out,
+                   sel_fine_current_out=sel_fine_current_out,
                    map_base=map_base)

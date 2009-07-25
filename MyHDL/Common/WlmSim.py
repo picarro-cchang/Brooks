@@ -36,8 +36,14 @@ t_seqState  = enum("IDLE", "WAIT_PROC", "WAIT_DIV1", "WAIT_DIV2")
 
 
 def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
-           z0_in,eta1_out,ref1_out,eta2_out,ref2_out,done_out,map_base):
+           coarse_current_in,fine_current_in,eta1_out,ref1_out,eta2_out,
+           ref2_out,done_out,map_base):
     """
+    Simulate the output of the wavelength monitor when the specified coarse and fine currents are
+    applied to the laser. The  WLM angle coordinate is related to the currents by:
+
+        angle = (2*pi/65536) * (5*coarse current + fine current/2)
+    
     Parameters:
     clk                 -- Clock input
     reset               -- Reset input
@@ -46,7 +52,8 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     dsp_data_in         -- read data to dsp_interface_block
     dsp_wr              -- single-cycle write command from dsp_interface block
     start_in            -- raise to start calculation
-    z0_in               -- angle (0 -> 65535) in units of 2*pi/65536 radians
+    coarse_current_in   -- coarse laser current
+    fine_current_in     -- fine laser current
     eta1_out            -- etalon 1 (reflected) photocurrent
     ref1_out            -- reference 1 (transmitted) photocurrent
     eta2_out            -- etalon 2 (reflected) photocurrent
@@ -159,7 +166,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                 else:
                     dsp_data_in.next = 0
                 if options[WLMSIM_OPTIONS_INPUT_SEL_B]:
-                    z0.next = z0_in
+                    z0.next = ((coarse_current_in << 2) + coarse_current_in + (fine_current_in >> 1)) % M
                     
                 div_ce.next = LOW
                 div_num.next = M - rfac
@@ -265,7 +272,8 @@ if __name__ == "__main__":
     dsp_data_in = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_wr = Signal(LOW)
     start_in = Signal(LOW)
-    z0_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    coarse_current_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    fine_current_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     eta1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ref1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     eta2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -275,7 +283,9 @@ if __name__ == "__main__":
 
     toVHDL(WlmSim, clk=clk, reset=reset, dsp_addr=dsp_addr,
                    dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
-                   dsp_wr=dsp_wr, start_in=start_in, z0_in=z0_in,
-                   eta1_out=eta1_out, ref1_out=ref1_out,
-                   eta2_out=eta2_out, ref2_out=ref2_out,
-                   done_out=done_out, map_base=map_base)
+                   dsp_wr=dsp_wr, start_in=start_in,
+                   coarse_current_in=coarse_current_in,
+                   fine_current_in=fine_current_in, eta1_out=eta1_out,
+                   ref1_out=ref1_out, eta2_out=eta2_out,
+                   ref2_out=ref2_out, done_out=done_out,
+                   map_base=map_base)
