@@ -65,6 +65,8 @@ class SensorListener(SharedTypes.Singleton):
                             retry = True,
                             name = "Controller sensor stream listener",
                             logFunc = Log)
+        self.tempBuffer = dict(etalon1={},reference1={},etalon2={},reference2={})
+        
     def  filter(self,data):
         utime = timestamp.unixTime(data.timestamp)
         value = data.value.asFloat
@@ -92,6 +94,38 @@ class SensorListener(SharedTypes.Singleton):
             waveforms["Laser3"]["current"].Add(utime,value)
         elif data.streamNum == interface.STREAM_Laser4Current:
             waveforms["Laser4"]["current"].Add(utime,value)
+        elif data.streamNum == interface.STREAM_Etalon1:
+            waveforms["Wlm"]["etalon1"].Add(utime,value)
+            if utime in self.tempBuffer["reference1"]:
+                waveforms["Wlm"]["ratio1"].Add(utime,value/self.tempBuffer["reference1"][utime])
+                del self.tempBuffer["reference1"][utime]
+            else:
+                self.tempBuffer["etalon1"][utime] = value
+        elif data.streamNum == interface.STREAM_Reference1:
+            waveforms["Wlm"]["reference1"].Add(utime,value)
+            if utime in self.tempBuffer["etalon1"]:
+                waveforms["Wlm"]["ratio1"].Add(utime,self.tempBuffer["etalon1"][utime]/value)
+                del self.tempBuffer["etalon1"][utime]
+            else:
+                self.tempBuffer["reference1"][utime] = value
+        elif data.streamNum == interface.STREAM_Etalon2:
+            waveforms["Wlm"]["etalon2"].Add(utime,value)
+            if utime in self.tempBuffer["reference2"]:
+                waveforms["Wlm"]["ratio2"].Add(utime,value/self.tempBuffer["reference2"][utime])
+                del self.tempBuffer["reference2"][utime]
+            else:
+                self.tempBuffer["etalon2"][utime] = value
+        elif data.streamNum == interface.STREAM_Reference2:
+            waveforms["Wlm"]["reference2"].Add(utime,value)
+            if utime in self.tempBuffer["etalon2"]:
+                waveforms["Wlm"]["ratio2"].Add(utime,self.tempBuffer["etalon2"][utime]/value)
+                del self.tempBuffer["etalon2"][utime]
+            else:
+                self.tempBuffer["reference2"][utime] = value
+        elif data.streamNum == interface.STREAM_Etalon2:
+            waveforms["Wlm"]["etalon2"].Add(utime,value)
+        elif data.streamNum == interface.STREAM_Reference2:
+            waveforms["Wlm"]["reference2"].Add(utime,value)
         elif data.streamNum == interface.STREAM_CavityTemp:
             waveforms["HotBox"]["cavityTemperature"].Add(utime,value)
         elif data.streamNum == interface.STREAM_HotChamberTecTemp:

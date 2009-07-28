@@ -53,8 +53,8 @@ void edmaDoneInterrupt(int tccNum)
     unsigned int gie;
     gie = IRQ_globalDisable();
 
-    // Reset bit 9 of GPREG_1 after QDMA and set bit 10
-    changeBitsFPGA(FPGA_KERNEL+KERNEL_GPREG_1, 9, 2, 2);
+    // Reset bit 1 of DIAG_1 after QDMA and set bit 2
+    changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 1, 2, 2);
 
     bank = (tccNum == EDMA_CHA_TCC10) ? 0 : 1;
     
@@ -84,8 +84,8 @@ void edmaDoneInterrupt(int tccNum)
                             RDMAN_CONTROL_BANK1_CLEAR_B,1);
     }
     
-    // Reset bit 10 of GPREG_1 after fitting
-    changeBitsFPGA(FPGA_KERNEL+KERNEL_GPREG_1, 10, 1, 0);
+    // Reset bit 2 of DIAG_1 after fitting
+    changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 2, 1, 0);
 
     EDMA_intClear(tccNum);        
     // Restore interrupts
@@ -112,16 +112,16 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
 
     gie = IRQ_globalDisable();
     (*counter)++;
-    // Set bit 8 of GPREG_1 at start of ringdownInterrupt
-    changeBitsFPGA(FPGA_KERNEL+KERNEL_GPREG_1, 8, 1, 1);
+    // Set bit 0 of DIAG_1 at start of ringdownInterrupt
+    changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 0, 1, 1);
 
     // Acknowledge the interrupt
     changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RD_IRQ_ACK_B,
                    RDMAN_CONTROL_RD_IRQ_ACK_W,1);
     // Clear interrupt source
     IRQ_clear(IRQ_EVT_EXTINT4);
-    // Reset bit 8 of GPREG_1 at start of ringdownInterrupt
-    changeBitsFPGA(FPGA_KERNEL+KERNEL_GPREG_1, 8, 1, 0);
+    // Reset bit 0 of DIAG_1 at start of ringdownInterrupt
+    changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 0, 1, 0);
     // Restore interrupts
     IRQ_globalRestore(gie);
 }
@@ -137,8 +137,8 @@ void acqDoneInterrupt(unsigned int funcArg, unsigned int eventId)
     gie = IRQ_globalDisable();
     (*counter)++;
 
-    // Set bit 9 of GPREG_1 at start of acqDoneInterrupt
-    changeBitsFPGA(FPGA_KERNEL+KERNEL_GPREG_1, 9, 1, 1);
+    // Set bit 1 of DIAG_1 at start of acqDoneInterrupt
+    changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 1, 1, 1);
 
     // Acknowledge the interrupt
     changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_ACQ_DONE_ACK_B,

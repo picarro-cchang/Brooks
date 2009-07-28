@@ -182,14 +182,14 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                             done_out.next = LOW
                     elif state == t_seqState.WAIT_PROC:
                         if done:
-                            div_den.next = xu
+                            div_den.next = yu
                             div_ce.next = HIGH
                             state = t_seqState.WAIT_DIV1
                     elif state == t_seqState.WAIT_DIV1:
                         if div_rfd and not div_ce:
                             ref1.next = div_quot
                             eta1.next = M - div_quot
-                            div_den.next = yu
+                            div_den.next = xu
                             div_ce.next = HIGH
                             state = t_seqState.WAIT_DIV2
                     elif state == t_seqState.WAIT_DIV2:

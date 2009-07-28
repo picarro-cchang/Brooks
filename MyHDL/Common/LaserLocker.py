@@ -472,7 +472,6 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                                 lock_error.next = (tuning_offset - 32768) % FPGA_REG_MAXVAL
                                 lock_error_out.next = lock_error
                                 cycle_counter.next = 0
-                                laser_freq_ok_out.next = 0
                                 current_ok_out.next = 0
                         else:
                             awaiting_strobe.next = HIGH

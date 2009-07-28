@@ -35,8 +35,11 @@
             <register>RD_IRQ_COUNT_REGISTER</register>
             <register>ACQ_DONE_COUNT_REGISTER</register>
             <register>RDSIM_TRIGGER_DIVIDER_REGISTER</register>
-            <register>LOGICPORT_CLOCK_PERIOD_REGISTER</register>
-            <register>LOGICPORT_SOURCE_REGISTER</register>
+            <fpga_register offset="FPGA_KERNEL">FPGA_RESET</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">INTRONIX_CLKSEL</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">INTRONIX_1</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">INTRONIX_2</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">INTRONIX_3</fpga_register>
         </gui_page>
         <gui_page>
             <title>Laser 1 Parameters</title>

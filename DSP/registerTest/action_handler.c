@@ -122,6 +122,27 @@ int streamRegister(unsigned int numInt,void *params,void *env)
     sensor_put_from(streamNum,&value);
     return STATUS_OK;
 }
+
+#ifdef SIMULATION
+#pragma argsused
+#endif
+int streamFpgaRegister(unsigned int numInt,void *params,void *env)
+// This action streams the value of an FPGA register. The first parameter
+//  is the stream number, the second is the location in the FPGA map
+//  and the third is the register number
+{
+    unsigned int *paramsAsInt = (unsigned int *) params;
+    unsigned int fpgaBase, regNum, streamNum;
+    float value;
+    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
+    streamNum = paramsAsInt[0];
+    fpgaBase = paramsAsInt[1]; 
+    regNum = paramsAsInt[2]; 
+    value = readFPGA(fpgaBase + regNum);
+    sensor_put_from(streamNum,&value);
+    return STATUS_OK;
+}
+
 #ifdef SIMULATION
 #pragma argsused
 #endif

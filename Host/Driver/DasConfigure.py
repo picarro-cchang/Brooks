@@ -216,6 +216,19 @@ class DasConfigure(object):
             Operation("ACTION_STREAM_REGISTER",
                 ["STREAM_Laser4Current","LASER4_CURRENT_MONITOR_REGISTER"]))
 
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_FPGA_REGISTER",
+                ["STREAM_Etalon1","FPGA_WLMSIM","WLMSIM_ETA1"]))
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_FPGA_REGISTER",
+                ["STREAM_Reference1","FPGA_WLMSIM","WLMSIM_REF1"]))
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_FPGA_REGISTER",
+                ["STREAM_Etalon2","FPGA_WLMSIM","WLMSIM_ETA2"]))
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_FPGA_REGISTER",
+                ["STREAM_Reference2","FPGA_WLMSIM","WLMSIM_REF2"]))
+        
         self.opGroups["SLOW"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_REGISTER",
                 ["STREAM_CavityTemp","CAVITY_TEMPERATURE_REGISTER"]))

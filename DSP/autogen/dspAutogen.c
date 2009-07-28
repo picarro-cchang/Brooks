@@ -25,10 +25,6 @@ void initRegisters()
     writeRegister(VERIFY_INIT_REGISTER,d);
     d.asUint = 0;
     writeRegister(SCHEDULER_CONTROL_REGISTER,d);
-    d.asUint = LOGICPORT_CLOCK_PERIOD_20ns;
-    writeRegister(LOGICPORT_CLOCK_PERIOD_REGISTER,d);
-    d.asUint = LOGICPORT_SOURCE_RD_ADC;
-    writeRegister(LOGICPORT_SOURCE_REGISTER,d);
     d.asUint = 10;
     writeRegister(RDSIM_TRIGGER_DIVIDER_REGISTER,d);
     d.asUint = 0;
@@ -434,6 +430,8 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return testScheduler(numInt,params,env);
         case ACTION_STREAM_REGISTER:
             return streamRegister(numInt,params,env);
+        case ACTION_STREAM_FPGA_REGISTER:
+            return streamFpgaRegister(numInt,params,env);
         case ACTION_RESISTANCE_TO_TEMPERATURE:
             return r_resistanceToTemperature(numInt,params,env);
         case ACTION_TEMP_CNTRL_SET_COMMAND:

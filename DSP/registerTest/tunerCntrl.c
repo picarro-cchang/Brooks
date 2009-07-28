@@ -24,11 +24,6 @@
 
 int tunerCntrlStep(void)
 {
-    int logicport = (*(int*)registerAddr(LOGICPORT_SOURCE_REGISTER)<<6)+\
-                    (*(int*)registerAddr(LOGICPORT_CLOCK_PERIOD_REGISTER));
-
-    changeBitsFPGA(FPGA_KERNEL+KERNEL_GPREG_1, 0, 6, logicport);
-    writeFPGA(FPGA_KERNEL+KERNEL_GPREG_1, logicport );
     writeFPGA(FPGA_TWGEN+TWGEN_SLOPE_DOWN, *(float*)registerAddr(TUNER_DOWN_SLOPE_REGISTER));
     writeFPGA(FPGA_TWGEN+TWGEN_SLOPE_UP,   *(float*)registerAddr(TUNER_UP_SLOPE_REGISTER));
     writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_LOW,  *(float*)registerAddr(TUNER_SWEEP_RAMP_LOW_REGISTER));

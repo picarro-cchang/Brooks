@@ -4,6 +4,7 @@ import sys
 from ControllerModels import DriverProxy, ControllerRpcHandler, waveforms
 from ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui
 from ControllerPanelsGui import HotBoxPanelGui, RingdownPanelGui
+from ControllerPanelsGui import WlmPanelGui
 from Host.autogen import interface
 from Host.Common.GraphPanel import Series
 from Host.Common import CmdFIFO, SharedTypes, timestamp
@@ -76,13 +77,51 @@ class RingdownPanel(RingdownPanelGui):
                 self.ringdownGraph.AddSeriesAsPoints(
                     waveforms["Ringdown"]["uncorrected"],
                     colour='black',fillcolour='red',marker='square',
-                    size=1,width=1)
+                    size=1,width=2)
             if self.correctedCheckBox.IsChecked():
                 self.ringdownGraph.AddSeriesAsPoints(
                     waveforms["Ringdown"]["corrected"],
                     colour='black',fillcolour='green',marker='square',
-                    size=1,width=1)
+                    size=1,width=2)
 
+class WlmPanel(WlmPanelGui):
+    def __init__(self,*a,**k):
+        WlmPanelGui.__init__(self,*a,**k)
+        self.photocurrentGraph.SetGraphProperties(
+            ylabel='Wavelength Monitor Photocurrents',
+            timeAxes=(True,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            grid=True,backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.ratioGraph.SetGraphProperties(
+            ylabel='Wavelength Monitor Ratios',grid=True,
+            timeAxes=(True,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.etalon1Wfm = Series(wfmPoints)
+        self.reference1Wfm = Series(wfmPoints)
+        self.etalon2Wfm = Series(wfmPoints)
+        self.reference2Wfm = Series(wfmPoints)
+        self.photocurrentGraph.AddSeriesAsLine(self.etalon1Wfm,colour='yellow',width=2)
+        self.photocurrentGraph.AddSeriesAsLine(self.reference1Wfm,colour='magenta',width=2)
+        self.photocurrentGraph.AddSeriesAsLine(self.etalon2Wfm,colour='green',width=2)
+        self.photocurrentGraph.AddSeriesAsLine(self.reference2Wfm,colour='blue',width=2)
+        self.ratio1Wfm = Series(wfmPoints)
+        self.ratio2Wfm = Series(wfmPoints)
+        self.ratioGraph.AddSeriesAsLine(self.ratio1Wfm,colour='red',width=2)
+        self.ratioGraph.AddSeriesAsLine(self.ratio2Wfm,colour='cyan',width=2)
+
+    def update(self):
+        self.photocurrentGraph.Update(delay=0)
+        self.ratioGraph.Update(delay=0)
+
+    def onClear(self,evt):
+        for s,sel,stats,attr in self.photocurrentGraph._lineSeries:
+            s.Clear()
+        for s,sel,stats,attr in self.ratioGraph._lineSeries:
+            s.Clear()
+                
 class LaserPanel(LaserPanelGui):
     def __init__(self,*a,**k):
         LaserPanelGui.__init__(self,*a,**k)
@@ -106,13 +145,13 @@ class LaserPanel(LaserPanelGui):
                 wx.SYS_COLOUR_3DFACE))
         self.temperatureWfm = Series(wfmPoints)
         self.temperatureGraph.AddSeriesAsLine(self.temperatureWfm,
-            colour='red',width=1)
+            colour='red',width=2)
         self.tecWfm = Series(wfmPoints)
         self.tecGraph.AddSeriesAsLine(self.tecWfm,
-            colour='red',width=1)
+            colour='red',width=2)
         self.currentWfm = Series(wfmPoints)
         self.currentGraph.AddSeriesAsLine(self.currentWfm,
-            colour='red',width=1)
+            colour='red',width=2)
 
     def update(self):
         self.temperatureGraph.Update(delay=0)
@@ -150,16 +189,16 @@ class HotBoxPanel(HotBoxPanelGui):
                 wx.SYS_COLOUR_3DFACE))
         self.cavityTemperatureWfm = Series(wfmPoints)
         self.temperatureGraph.AddSeriesAsLine(self.cavityTemperatureWfm,
-            colour='red',width=1)
+            colour='red',width=2)
         self.heatsinkTemperatureWfm = Series(wfmPoints)
         self.temperatureGraph.AddSeriesAsLine(self.heatsinkTemperatureWfm,
-            colour='blue',width=1)
+            colour='blue',width=2)
         self.tecWfm = Series(wfmPoints)
         self.tecGraph.AddSeriesAsLine(self.tecWfm,
-            colour='red',width=1)
+            colour='red',width=2)
         self.heaterWfm = Series(wfmPoints)
         self.heaterGraph.AddSeriesAsLine(self.heaterWfm,
-            colour='red',width=1)
+            colour='red',width=2)
 
     def update(self):
         self.temperatureGraph.Update(delay=0)
@@ -178,10 +217,10 @@ class HotBoxPanel(HotBoxPanelGui):
         self.temperatureGraph.RemoveAllSeries()
         if self.cavityTemperatureCheckbox.IsChecked():
             self.temperatureGraph.AddSeriesAsLine(self.cavityTemperatureWfm,
-                colour='red',width=1)
+                colour='red',width=2)
         if self.heatsinkTemperatureCheckbox.IsChecked():
             self.temperatureGraph.AddSeriesAsLine(self.heatsinkTemperatureWfm,
-                colour='blue',width=1)
+                colour='blue',width=2)
 
 class CommandLogPanel(CommandLogPanelGui):
     def __init__(self,*a,**k):

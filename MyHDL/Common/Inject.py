@@ -140,7 +140,9 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     laser2_fine = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser3_fine = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser4_fine = Signal(intbv(0)[FPGA_REG_WIDTH:])
-
+    strobe_prev = Signal(LOW)
+    dac_strobe = Signal(LOW)
+    
     @instance
     def logic():
         while True:
@@ -155,6 +157,8 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 laser2_fine_current.next = 0x8000
                 laser3_fine_current.next = 0x8000
                 laser4_fine_current.next = 0x8000
+                strobe_prev.next = strobe_in
+                dac_strobe.next = LOW
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
@@ -189,7 +193,10 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         dsp_data_in.next = 0
                 else:
                     dsp_data_in.next = 0
-
+                # Produce a single clock width pulse for dac_strobe whenever strobe_in goes high
+                dac_strobe.next = strobe_in and not strobe_prev
+                strobe_prev.next = strobe_in
+                    
     @always_comb
     def  comb1():
         s = control[INJECT_CONTROL_LASER_SELECT_B+INJECT_CONTROL_LASER_SELECT_W:INJECT_CONTROL_LASER_SELECT_B]
@@ -250,22 +257,22 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
 
     laser1_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
         chanA_data_in=laser1_coarse_current,chanB_data_in=laser1_fine,
-        strobe_in=strobe_in,dac_sync_out=laser1_dac_sync_out,
+        strobe_in=dac_strobe,dac_sync_out=laser1_dac_sync_out,
         dac_din_out=laser1_dac_din_out)
 
     laser2_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
         chanA_data_in=laser2_coarse_current,chanB_data_in=laser2_fine,
-        strobe_in=strobe_in,dac_sync_out=laser2_dac_sync_out,
+        strobe_in=dac_strobe,dac_sync_out=laser2_dac_sync_out,
         dac_din_out=laser2_dac_din_out)
 
     laser3_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
         chanA_data_in=laser3_coarse_current,chanB_data_in=laser3_fine,
-        strobe_in=strobe_in,dac_sync_out=laser3_dac_sync_out,
+        strobe_in=dac_strobe,dac_sync_out=laser3_dac_sync_out,
         dac_din_out=laser3_dac_din_out)
 
     laser4_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
         chanA_data_in=laser4_coarse_current,chanB_data_in=laser4_fine,
-        strobe_in=strobe_in,dac_sync_out=laser4_dac_sync_out,
+        strobe_in=dac_strobe,dac_sync_out=laser4_dac_sync_out,
         dac_din_out=laser4_dac_din_out)
 
     return instances()

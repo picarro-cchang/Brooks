@@ -58,6 +58,7 @@ class ControllerFrame(ControllerFrameGui):
         panels["Laser3"]=self.laser3Panel
         panels["Laser4"]=self.laser4Panel
         panels["HotBox"]=self.hotBoxPanel
+        panels["Wlm"]=self.wlmPanel
         panels["Ringdown"]=self.ringdownPanel
 
     def setupWaveforms(self):
@@ -82,6 +83,14 @@ class ControllerFrame(ControllerFrameGui):
             heatsinkTemperature=self.hotBoxPanel.heatsinkTemperatureWfm,
             tec=self.hotBoxPanel.tecWfm,
             heater=self.hotBoxPanel.heaterWfm)
+        waveforms["Wlm"]=dict(
+            etalon1=self.wlmPanel.etalon1Wfm,
+            reference1=self.wlmPanel.reference1Wfm,
+            etalon2=self.wlmPanel.etalon2Wfm,
+            reference2=self.wlmPanel.reference2Wfm,
+            ratio1=self.wlmPanel.ratio1Wfm,
+            ratio2=self.wlmPanel.ratio2Wfm,
+            )
         waveforms["Ringdown"]=dict(
             corrected=self.ringdownPanel.ringdownWfms[0],
             uncorrected=self.ringdownPanel.ringdownWfms[1])
@@ -145,6 +154,8 @@ class ControllerFrame(ControllerFrameGui):
             self.laser4Panel.update()
         elif pageText == "HotBox":
             self.hotBoxPanel.update()
+        elif pageText == "WavelengthMonitor":
+            self.wlmPanel.update()
         elif pageText == "Ringdowns":
             self.ringdownPanel.update()
 

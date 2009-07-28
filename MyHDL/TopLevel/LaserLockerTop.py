@@ -92,7 +92,15 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     param_we = Signal(LOW)
     clk_5M, clk_2M5, pulse_1M, pulse_100k = [Signal(LOW) for i in range(4)]
 
-    gpreg_1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    diag_1 = Signal(intbv(0)[8:])
+    intronix_clksel = Signal(intbv(0)[5:])
+    intronix_1 = Signal(intbv(0)[8:])
+    intronix_2 = Signal(intbv(0)[8:])
+    intronix_3 = Signal(intbv(0)[8:])
+    channel_1 = Signal(intbv(0)[8:])
+    channel_2 = Signal(intbv(0)[8:])
+    channel_3 = Signal(intbv(0)[8:])
+    channel_4 = Signal(intbv(0)[9:])
 
     tuner_slope = Signal(LOW)
     tuner_in_window = Signal(LOW)
@@ -157,7 +165,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     inject = Inject(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                     dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_inject,
                     dsp_wr=dsp_wr, laser_dac_clk_in=clk_5M,
-                    strobe_in=pulse_100k,
+                    strobe_in=metadata_strobe,
                     laser_fine_current_in=laser_fine_current,
                     laser_shutdown_in=laser_shutdown_in,
                     soa_shutdown_in=soa_shutdown_in,
@@ -183,14 +191,14 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     sel_fine_current_out=sel_fine_current,
                     map_base=FPGA_INJECT)
 
-    kernel = Kernel(clk=clk0, reset=reset, dsp_addr=dsp_addr,
-                  dsp_data_out=dsp_data_out,
-                  dsp_data_in=dsp_data_in_kernel,
-                  dsp_wr=dsp_wr,
-                  usb_connected=usb_connected,
-                  cyp_reset=cyp_reset,
-                  gpreg_1_out=gpreg_1,
-                  map_base=FPGA_KERNEL)
+    kernel = Kernel( clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                     dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_kernel,
+                     dsp_wr=dsp_wr, usb_connected=usb_connected,
+                     cyp_reset=cyp_reset, diag_1_out=diag_1,
+                     intronix_clksel_out=intronix_clksel,
+                     intronix_1_out=intronix_1,
+                     intronix_2_out=intronix_2,
+                     intronix_3_out=intronix_3, map_base=FPGA_KERNEL )
     
     laserlocker = LaserLocker( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                                dsp_data_out=dsp_data_out,
@@ -299,8 +307,102 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
             yield clk0.posedge, reset.posedge
             if reset:
                 counter.next = 0
+                channel_1.next = 0
+                channel_2.next = 0
+                channel_3.next = 0
             else:
                 counter.next = counter + 1
+
+                # Latch data for the intronix port
+                if intronix_1 == 0:
+                    channel_1.next = tuner_value[8:]
+                elif intronix_1 == 1:
+                    channel_1.next = tuner_value[16:8]
+                elif intronix_1 == 2:
+                    channel_1.next = concat(rd_adc[6:0],LOW,LOW)
+                elif intronix_1 == 3:
+                    channel_1.next = rd_adc[14:6]
+                elif intronix_1 == 4:
+                    channel_1.next = concat(rdsim_value[6:0],LOW,LOW)
+                elif intronix_1 == 5:
+                    channel_1.next = rdsim_value[14:6]
+                elif intronix_1 == 6:
+                    channel_1.next = laser_fine_current[8:]
+                elif intronix_1 == 7:
+                    channel_1.next = laser_fine_current[16:8]
+                elif intronix_1 == 8:
+                    channel_1.next = lock_error[8:]
+                elif intronix_1 == 9:
+                    channel_1.next = lock_error[16:8]
+                elif intronix_1 == 10:
+                    channel_1.next = ratio1[8:]
+                elif intronix_1 == 11:
+                    channel_1.next = ratio1[16:8]
+                elif intronix_1 == 12:
+                    channel_1.next = ratio2[8:]
+                else:
+                    channel_1.next = ratio2[16:8]
+                    
+                if intronix_2 == 0:
+                    channel_2.next = tuner_value[8:]
+                elif intronix_2 == 1:
+                    channel_2.next = tuner_value[16:8]
+                elif intronix_2 == 2:
+                    channel_2.next = concat(rd_adc[6:0],LOW,LOW)
+                elif intronix_2 == 3:
+                    channel_2.next = rd_adc[14:6]
+                elif intronix_2 == 4:
+                    channel_2.next = concat(rdsim_value[6:0],LOW,LOW)
+                elif intronix_2 == 5:
+                    channel_2.next = rdsim_value[14:6]
+                elif intronix_2 == 6:
+                    channel_2.next = laser_fine_current[8:]
+                elif intronix_2 == 7:
+                    channel_2.next = laser_fine_current[16:8]
+                elif intronix_2 == 8:
+                    channel_2.next = lock_error[8:]
+                elif intronix_2 == 9:
+                    channel_2.next = lock_error[16:8]
+                elif intronix_2 == 10:
+                    channel_2.next = ratio1[8:]
+                elif intronix_2 == 11:
+                    channel_2.next = ratio1[16:8]
+                elif intronix_2 == 12:
+                    channel_2.next = ratio2[8:]
+                else:
+                    channel_2.next = ratio2[16:8]
+                    
+                if intronix_3 == 0:
+                    channel_3.next = tuner_value[8:]
+                elif intronix_3 == 1:
+                    channel_3.next = tuner_value[16:8]
+                elif intronix_3 == 2:
+                    channel_3.next = concat(rd_adc[6:0],LOW,LOW)
+                elif intronix_3 == 3:
+                    channel_3.next = rd_adc[14:6]
+                elif intronix_3 == 4:
+                    channel_3.next = concat(rdsim_value[6:0],LOW,LOW)
+                elif intronix_3 == 5:
+                    channel_3.next = rdsim_value[14:6]
+                elif intronix_3 == 6:
+                    channel_3.next = laser_fine_current[8:]
+                elif intronix_3 == 7:
+                    channel_3.next = laser_fine_current[16:8]
+                elif intronix_3 == 8:
+                    channel_3.next = lock_error[8:]
+                elif intronix_3 == 9:
+                    channel_3.next = lock_error[16:8]
+                elif intronix_3 == 10:
+                    channel_3.next = ratio1[8:]
+                elif intronix_3 == 11:
+                    channel_3.next = ratio1[16:8]
+                elif intronix_3 == 12:
+                    channel_3.next = ratio2[8:]
+                else:
+                    channel_3.next = ratio2[16:8]
+        
+                channel_4.next = concat(rd_trig,diag_1[4:],bank,laser_locked,acc_en,tuner_in_window)
+        
 
     @always_comb
     def  comb():
@@ -318,57 +420,38 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                            dsp_data_in_twGen       | \
                            dsp_data_in_wlmsim
 
+        intronix.next[8:] = channel_1
+        intronix.next[16:8] = channel_2
+        intronix.next[24:16] = channel_3
+        intronix.next[33:24] = channel_4
+        
+        # Use intronix_clksel to control clocking of Intronix display
+        if intronix_clksel == 0:
+            intronix.next[33] = clk0
+        elif intronix_clksel <= NSTAGES:
+            intronix.next[33] = counter[int(intronix_clksel-1)]
+        else:
+            intronix.next[33] = 0
+
+        monitor.next = rd_trig
+        
         ce2.next = dsp_emif_ce[2]
-        intronix.next[16]  = pwm_laser1_out
         lsr1_0.next = pwm_laser1_out
         lsr1_1.next = pwm_laser1_inv_out
-        intronix.next[17]  = pwm_laser2_out
         lsr2_0.next = pwm_laser2_out
         lsr2_1.next = pwm_laser2_inv_out
-        intronix.next[18]  = pwm_laser3_out
         lsr3_0.next = pwm_laser3_out
         lsr3_1.next = pwm_laser3_inv_out
-        intronix.next[19]  = pwm_laser4_out
         lsr4_0.next = pwm_laser4_out
         lsr4_1.next = pwm_laser4_inv_out
         
-        intronix.next[20] = gpreg_1[8]
-        intronix.next[21] = gpreg_1[9]
-        intronix.next[22] = gpreg_1[10]
-        intronix.next[23] = gpreg_1[11]
-
-        intronix.next[24] = adc_clk
-        intronix.next[25] = acc_en
-        intronix.next[26] = laser_locked
-        intronix.next[27] = bank
-        intronix.next[32] = rd_trig
-        monitor.next = rd_trig
 
         rd_adc_clk.next = adc_clk
         rd_adc_oe.next = 1
         fpga_led.next = counter[NSTAGES:NSTAGES-4]
         i2c_rst0.next = reset
         i2c_rst1.next = reset
-        intronix.next[28] = i2c_scl0
-        intronix.next[29] = i2c_sda0
-        intronix.next[30] = i2c_scl1
-        intronix.next[31] = i2c_sda1
-
-        # Use gpreg_1 to control the Intronix display
-        if gpreg_1[5:] == 0:
-            intronix.next[33] = clk0
-        elif gpreg_1[5:] <= NSTAGES:
-            intronix.next[33] = counter[int(gpreg_1[5:]-1)]
-        else:
-            intronix.next[33] = 0
-
-        if gpreg_1[6]:
-            intronix.next[8:] = tuner_value[16:8]
-        else:
-            intronix.next[8:] = rd_adc[14:6]
-
-        intronix.next[16:8] = rdsim_value[14:6]
-
+        
         dsp_ext_int4.next = rd_irq
         dsp_ext_int5.next = acq_done_irq
         dsp_ext_int6.next = 0
