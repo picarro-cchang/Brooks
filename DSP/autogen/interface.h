@@ -566,11 +566,17 @@ typedef enum {
 #define PWM_PULSE_WIDTH (1) // Pulse width register
 
 /* Block RDSIM Ringdown simulator */
-#define RDSIM_TUNER_CENTER (0) // Tuner value around which cavity fills
-#define RDSIM_TUNER_WINDOW_HALF_WIDTH (1) // Half-width of tuner window within which cavity fills
-#define RDSIM_FILLING_RATE (2) // Rate of increase of accumulator value during filling
-#define RDSIM_DECAY (3) // Exponential decay of accumulator when not filling
-#define RDSIM_ACCUMULATOR (4) // Simulated ringdown value
+#define RDSIM_OPTIONS (0) // Options
+#define RDSIM_OPTIONS_INPUT_SEL_B (0) // Source of decay and tuner center parameters bit position
+#define RDSIM_OPTIONS_INPUT_SEL_W (1) // Source of decay and tuner center parameters bit width
+
+#define RDSIM_TUNER_CENTER (1) // Tuner value around which cavity fills
+#define RDSIM_TUNER_WINDOW_HALF_WIDTH (2) // Half-width of tuner window within which cavity fills
+#define RDSIM_FILLING_RATE (3) // Rate of increase of accumulator value during filling
+#define RDSIM_DECAY (4) // Exponential decay of accumulator when not filling
+#define RDSIM_DECAY_IN_SHIFT (5) // Bits to  right shift decay input
+#define RDSIM_DECAY_IN_OFFSET (6) // 
+#define RDSIM_ACCUMULATOR (7) // Simulated ringdown value
 
 /* Block LASERLOCKER Laser frequency locker */
 #define LASERLOCKER_CS (0) // Control/Status register
@@ -757,10 +763,11 @@ typedef enum {
 
 #define WLMSIM_Z0 (1) // Phase angle
 #define WLMSIM_RFAC (2) // Reflectivity factor
-#define WLMSIM_ETA1 (3) // Etalon 1
-#define WLMSIM_REF1 (4) // Reference 1
-#define WLMSIM_ETA2 (5) // Etalon 2
-#define WLMSIM_REF2 (6) // Reference 2
+#define WLMSIM_WFAC (3) // Width factor of simulated spectrum
+#define WLMSIM_ETA1 (4) // Etalon 1
+#define WLMSIM_REF1 (5) // Reference 1
+#define WLMSIM_ETA2 (6) // Etalon 2
+#define WLMSIM_REF2 (7) // Reference 2
 
 /* FPGA map indices */
 
@@ -770,11 +777,11 @@ typedef enum {
 #define FPGA_PWM_LASER3 (11) // Laser 3 TEC pulse width modulator registers
 #define FPGA_PWM_LASER4 (13) // Laser 4 TEC pulse width modulator registers
 #define FPGA_RDSIM (15) // Ringdown simulator registers
-#define FPGA_LASERLOCKER (20) // Laser frequency locker registers
-#define FPGA_RDMAN (47) // Ringdown manager registers
-#define FPGA_TWGEN (71) // Tuner waveform generator
-#define FPGA_INJECT (79) // Optical Injection Subsystem
-#define FPGA_WLMSIM (88) // WLM Simulator
+#define FPGA_LASERLOCKER (23) // Laser frequency locker registers
+#define FPGA_RDMAN (50) // Ringdown manager registers
+#define FPGA_TWGEN (74) // Tuner waveform generator
+#define FPGA_INJECT (82) // Optical Injection Subsystem
+#define FPGA_WLMSIM (91) // WLM Simulator
 
 /* Environment addresses */
 

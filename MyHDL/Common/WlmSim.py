@@ -12,6 +12,7 @@
 #
 # HISTORY:
 #   21-Jul-2009  sze  Initial version.
+#   28-Jul-2009  sze  Modification to compute ringdown loss as well
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -21,8 +22,9 @@ from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_WLMSIM
 
 from Host.autogen.interface import WLMSIM_OPTIONS, WLMSIM_Z0
-from Host.autogen.interface import WLMSIM_RFAC, WLMSIM_ETA1
-from Host.autogen.interface import WLMSIM_REF1, WLMSIM_ETA2, WLMSIM_REF2
+from Host.autogen.interface import WLMSIM_RFAC, WLMSIM_WFAC
+from Host.autogen.interface import WLMSIM_ETA1, WLMSIM_REF1
+from Host.autogen.interface import WLMSIM_ETA2, WLMSIM_REF2
 
 from Host.autogen.interface import WLMSIM_OPTIONS_INPUT_SEL_B, WLMSIM_OPTIONS_INPUT_SEL_W
 
@@ -32,12 +34,12 @@ from math import atan, sqrt, ceil, floor, pi, sqrt
 
 LOW, HIGH = bool(0), bool(1)
 t_procState = enum("WAITING", "CALCULATING")
-t_seqState  = enum("IDLE", "WAIT_PROC", "WAIT_DIV1", "WAIT_DIV2")
+t_seqState  = enum("IDLE", "WAIT_PROC1", "WAIT_PROC2", "WAIT_PROC3", "WAIT_PROC4", "WAIT_DIV1", "WAIT_DIV2", "WAIT_DIV3")
 
 
 def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
            coarse_current_in,fine_current_in,eta1_out,ref1_out,eta2_out,
-           ref2_out,done_out,map_base):
+           ref2_out,loss_out,pzt_cen_out,done_out,map_base):
     """
     Simulate the output of the wavelength monitor when the specified coarse and fine currents are
     applied to the laser. The  WLM angle coordinate is related to the currents by:
@@ -58,6 +60,8 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     ref1_out            -- reference 1 (transmitted) photocurrent
     eta2_out            -- etalon 2 (reflected) photocurrent
     ref2_out            -- reference 2 (transmitted) photocurrent
+    loss_out            -- loss at this frequency for ringdown simulator
+    pzt_cen_out         -- pzt value at which ringdown occurs
     done_out            -- goes high once photocurrents are valid
     map_base
 
@@ -65,6 +69,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     WLMSIM_OPTIONS      -- options
     WLMSIM_Z0           -- angle input
     WLMSIM_RFAC         -- factor related to mirror reflectivity = 2*R/(1+R**2)
+    WLMSIM_WFAC         -- factor specifying width of spectral feature
     WLMSIM_ETA1         -- etalon 1 (reflected) photocurrent
     WLMSIM_REF1         -- reference 1 (transmitted) photocurrent
     WLMSIM_ETA2         -- etalon 2 (reflected) photocurrent
@@ -76,6 +81,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     wlmsim_options_addr = map_base + WLMSIM_OPTIONS
     wlmsim_z0_addr = map_base + WLMSIM_Z0
     wlmsim_rfac_addr = map_base + WLMSIM_RFAC
+    wlmsim_wfac_addr = map_base + WLMSIM_WFAC
     wlmsim_eta1_addr = map_base + WLMSIM_ETA1
     wlmsim_ref1_addr = map_base + WLMSIM_REF1
     wlmsim_eta2_addr = map_base + WLMSIM_ETA2
@@ -83,6 +89,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     options = Signal(intbv(0)[1:])
     z0 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rfac = Signal(intbv(0x8000)[FPGA_REG_WIDTH:])
+    wfac = Signal(intbv(0xF800)[FPGA_REG_WIDTH:])
     eta1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ref1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     eta2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -109,7 +116,9 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     div_rfd = Signal(LOW)
     div_ce = Signal(LOW)
     done = Signal(LOW)
-
+    start_cordic = Signal(LOW)
+    zval = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    
     mult_a = Signal(intbv(0)[17:])
     mult_b = Signal(intbv(0)[17:])
     mult_p = Signal(intbv(0)[34:])
@@ -137,10 +146,12 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                 options.next = 0
                 z0.next = 0
                 rfac.next = 0x8000
+                wfac.next = 0xF800
                 eta1.next = 0
                 ref1.next = 0
                 eta2.next = 0
                 ref2.next = 0
+                zval.next = 0
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
@@ -153,6 +164,9 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_rfac_addr: # rw
                         if dsp_wr: rfac.next = dsp_data_out
                         dsp_data_in.next = rfac
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_wfac_addr: # rw
+                        if dsp_wr: wfac.next = dsp_data_out
+                        dsp_data_in.next = wfac
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_eta1_addr: # r
                         dsp_data_in.next = eta1
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_ref1_addr: # r
@@ -165,22 +179,28 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                         dsp_data_in.next = 0
                 else:
                     dsp_data_in.next = 0
-                if options[WLMSIM_OPTIONS_INPUT_SEL_B]:
-                    z0.next = ((coarse_current_in << 2) + coarse_current_in + (fine_current_in >> 1)) % M
                     
                 div_ce.next = LOW
-                div_num.next = M - rfac
                 mult_a.next[17:1] = scale
-                mult_b.next[17:1] = rfac - 1
+                if options[WLMSIM_OPTIONS_INPUT_SEL_B]:
+                    z0.next = ((coarse_current_in << 2) + coarse_current_in + (fine_current_in >> 1)) % M
+
                 if reset:
                     state = t_seqState.IDLE
                     done_out.next = HIGH
                 else:
                     if state == t_seqState.IDLE:
+                        div_num.next = M - rfac
+                        mult_b.next[17:1] = rfac - 1
                         if start_in:
-                            state = t_seqState.WAIT_PROC
+                            zval.next = z0
+                            start_cordic.next = HIGH
+                            state = t_seqState.WAIT_PROC1
                             done_out.next = LOW
-                    elif state == t_seqState.WAIT_PROC:
+                    elif state == t_seqState.WAIT_PROC1:
+                        start_cordic.next = LOW
+                        state = t_seqState.WAIT_PROC2
+                    elif state == t_seqState.WAIT_PROC2:                        
                         if done:
                             div_den.next = yu
                             div_ce.next = HIGH
@@ -196,12 +216,29 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                         if div_rfd and not div_ce:
                             ref2.next = div_quot
                             eta2.next = M - div_quot
-                            done_out.next = HIGH
-                            state = t_seqState.IDLE
+                            div_num.next = M - wfac
+                            mult_b.next[17:1] = wfac - 1
+                            zval.next = (zval << 2) % M
+                            start_cordic.next = HIGH
+                            state = t_seqState.WAIT_PROC3
+                    elif state == t_seqState.WAIT_PROC3:
+                        start_cordic.next = LOW
+                        state = t_seqState.WAIT_PROC4
+                    elif state == t_seqState.WAIT_PROC4:
+                        if done:
+                            div_den.next = xu
+                            div_ce.next = HIGH
+                            state = t_seqState.WAIT_DIV3
+                    elif state == t_seqState.WAIT_DIV3:
+                        if div_rfd and not div_ce:
+                            loss_out.next = div_quot
                             eta1_out.next = eta1
                             ref1_out.next = ref1
                             eta2_out.next = eta2
                             ref2_out.next = ref2
+                            pzt_cen_out.next = (zval << 2) % M
+                            done_out.next = HIGH
+                            state = t_seqState.IDLE
 
     # iterative CORDIC processor
     @instance
@@ -230,10 +267,10 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
 
             else:
                 if state == t_procState.WAITING:
-                    if start_in:
+                    if start_cordic:
                         x[:] = mult_p[34:18]
                         y[:] = 0
-                        z[:] = z0[W-1:].signed()
+                        z[:] = zval[W-1:].signed()
                         i[:] = 0
                         done.next = False
                         state = t_procState.CALCULATING
@@ -251,7 +288,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                         y -= dy
                         z += dz
                     if i == N-1:
-                        if z0[W-1] != z0[W-2]:
+                        if zval[W-1] != zval[W-2]:
                             xu.next = M2 + x
                             yu.next = M2 + y
                         else:
@@ -278,6 +315,8 @@ if __name__ == "__main__":
     ref1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     eta2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ref2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    loss_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    pzt_cen_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     done_out = Signal(LOW)
     map_base = FPGA_WLMSIM
 
@@ -287,5 +326,6 @@ if __name__ == "__main__":
                    coarse_current_in=coarse_current_in,
                    fine_current_in=fine_current_in, eta1_out=eta1_out,
                    ref1_out=ref1_out, eta2_out=eta2_out,
-                   ref2_out=ref2_out, done_out=done_out,
+                   ref2_out=ref2_out, loss_out=loss_out,
+                   pzt_cen_out=pzt_cen_out, done_out=done_out,
                    map_base=map_base)

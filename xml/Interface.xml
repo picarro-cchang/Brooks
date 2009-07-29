@@ -1597,7 +1597,14 @@
             <reg type="uint16" ident="PULSE_WIDTH" description="Pulse width register"/>
         </fpga_block>
         <fpga_block ident="RDSIM" description="Ringdown simulator">
-            <reg type="uint32" ident="TUNER_CENTER" description="Tuner value around which cavity fills" access="rw">
+			<reg type="mask" ident="OPTIONS" description="Options" access="rw">
+		        <save/>
+				<bitfield ident="INPUT_SEL" description="Source of decay and tuner center parameters" lsb="0" width="1">
+		            <fielddef value="0">Registers</fielddef>
+					<fielddef value="1">Input ports</fielddef>
+				</bitfield>
+			</reg>
+            <reg type="uint16" ident="TUNER_CENTER" description="Tuner value around which cavity fills" access="rw">
 				<save/>
                 <display format="%d">Tuner value around which cavity fills</display>
             </reg>
@@ -1613,9 +1620,18 @@
 				<save/>
                 <display format="%d">Exponential decay of accumulator when not filling</display>
             </reg>
+		    <reg type="uint16" ident="DECAY_IN_SHIFT" description="Bits to  right shift decay input" access="rw">
+		        <save/>
+                <display format="%d">Bits to  right shift decay input</display>
+			</reg>
+		    <reg type="uint16" ident="DECAY_IN_OFFSET" description="" access="rw">
+		        <save/>
+                <display format="%d">Offset to add to shifted decay input</display>
+			</reg>
             <reg type="uint16" ident="ACCUMULATOR" description="Simulated ringdown value" access="r">
             </reg>
         </fpga_block>
+
         <fpga_block ident="LASERLOCKER" description="Laser frequency locker">
             <reg type="mask" ident="CS" description="Control/Status register" access="rw">
                 <bitfield ident="RUN" description="Stop/Run" lsb="0" width="1">
@@ -2007,6 +2023,10 @@
 			<reg type="uint16" ident="RFAC" description="Reflectivity factor" access="rw">
                 <save/>
 				<display format="%d">Reflectivity factor</display>
+			</reg>
+		    <reg type="uint16" ident="WFAC" description="Width factor of simulated spectrum" access="rw">
+                <save/>
+				<display format="%d">Width factor of simulated spectrum</display>
 			</reg>
 			<reg type="uint16" ident="ETA1" description="Etalon 1" access="r">
 				<display format="%d" units="digU">Etalon 1 photocurrent</display>

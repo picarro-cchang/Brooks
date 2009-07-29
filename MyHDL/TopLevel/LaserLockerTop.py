@@ -136,6 +136,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     ref2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     wlmsimDone = Signal(LOW)
     z0_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+
+    sim_loss = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    sim_pzt = Signal(intbv(0)[FPGA_REG_WIDTH:])
     
     sample_dark_in = Signal(LOW)
     pzt_dac = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -284,6 +287,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                    dsp_wr=dsp_wr, rd_trig_in=rd_trig,
                    tuner_value_in=tuner_value,
                    rd_adc_clk_in=adc_clk,
+                   pzt_center_in=sim_pzt, decay_in=sim_loss,
                    rdsim_value_out=rdsim_value, map_base=FPGA_RDSIM )
 
     twGen = TWGen(clk=clk0, reset=reset, dsp_addr=dsp_addr,
@@ -299,6 +303,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      fine_current_in=sel_fine_current,
                      eta1_out=eta1, ref1_out=ref1,
                      eta2_out=eta2, ref2_out=ref2,
+                     loss_out=sim_loss, pzt_cen_out=sim_pzt,
                      done_out=wlmsimDone, map_base=FPGA_WLMSIM )
 
     @instance

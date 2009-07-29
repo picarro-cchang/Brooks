@@ -1107,11 +1107,17 @@ PWM_CS_PWM_OUT_W = 1 # PWM_OUT bit width
 PWM_PULSE_WIDTH = 1 # Pulse width register
 
 # Block RDSIM Ringdown simulator
-RDSIM_TUNER_CENTER = 0 # Tuner value around which cavity fills
-RDSIM_TUNER_WINDOW_HALF_WIDTH = 1 # Half-width of tuner window within which cavity fills
-RDSIM_FILLING_RATE = 2 # Rate of increase of accumulator value during filling
-RDSIM_DECAY = 3 # Exponential decay of accumulator when not filling
-RDSIM_ACCUMULATOR = 4 # Simulated ringdown value
+RDSIM_OPTIONS = 0 # Options
+RDSIM_OPTIONS_INPUT_SEL_B = 0 # Source of decay and tuner center parameters bit position
+RDSIM_OPTIONS_INPUT_SEL_W = 1 # Source of decay and tuner center parameters bit width
+
+RDSIM_TUNER_CENTER = 1 # Tuner value around which cavity fills
+RDSIM_TUNER_WINDOW_HALF_WIDTH = 2 # Half-width of tuner window within which cavity fills
+RDSIM_FILLING_RATE = 3 # Rate of increase of accumulator value during filling
+RDSIM_DECAY = 4 # Exponential decay of accumulator when not filling
+RDSIM_DECAY_IN_SHIFT = 5 # Bits to  right shift decay input
+RDSIM_DECAY_IN_OFFSET = 6 # 
+RDSIM_ACCUMULATOR = 7 # Simulated ringdown value
 
 # Block LASERLOCKER Laser frequency locker
 LASERLOCKER_CS = 0 # Control/Status register
@@ -1298,10 +1304,11 @@ WLMSIM_OPTIONS_INPUT_SEL_W = 1 # Input select bit width
 
 WLMSIM_Z0 = 1 # Phase angle
 WLMSIM_RFAC = 2 # Reflectivity factor
-WLMSIM_ETA1 = 3 # Etalon 1
-WLMSIM_REF1 = 4 # Reference 1
-WLMSIM_ETA2 = 5 # Etalon 2
-WLMSIM_REF2 = 6 # Reference 2
+WLMSIM_WFAC = 3 # Width factor of simulated spectrum
+WLMSIM_ETA1 = 4 # Etalon 1
+WLMSIM_REF1 = 5 # Reference 1
+WLMSIM_ETA2 = 6 # Etalon 2
+WLMSIM_REF2 = 7 # Reference 2
 
 # FPGA map indices
 FPGA_KERNEL = 0 # Kernel registers
@@ -1310,20 +1317,20 @@ FPGA_PWM_LASER2 = 9 # Laser 2 TEC pulse width modulator registers
 FPGA_PWM_LASER3 = 11 # Laser 3 TEC pulse width modulator registers
 FPGA_PWM_LASER4 = 13 # Laser 4 TEC pulse width modulator registers
 FPGA_RDSIM = 15 # Ringdown simulator registers
-FPGA_LASERLOCKER = 20 # Laser frequency locker registers
-FPGA_RDMAN = 47 # Ringdown manager registers
-FPGA_TWGEN = 71 # Tuner waveform generator
-FPGA_INJECT = 79 # Optical Injection Subsystem
-FPGA_WLMSIM = 88 # WLM Simulator
+FPGA_LASERLOCKER = 23 # Laser frequency locker registers
+FPGA_RDMAN = 50 # Ringdown manager registers
+FPGA_TWGEN = 74 # Tuner waveform generator
+FPGA_INJECT = 82 # Optical Injection Subsystem
+FPGA_WLMSIM = 91 # WLM Simulator
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
-persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_TUNER_CENTER', u'RDSIM_TUNER_WINDOW_HALF_WIDTH', u'RDSIM_FILLING_RATE', u'RDSIM_DECAY']))
+persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_OPTIONS', u'RDSIM_TUNER_CENTER', u'RDSIM_TUNER_WINDOW_HALF_WIDTH', u'RDSIM_FILLING_RATE', u'RDSIM_DECAY', u'RDSIM_DECAY_IN_SHIFT', u'RDSIM_DECAY_IN_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_ETA1_OFFSET', u'LASERLOCKER_REF1_OFFSET', u'LASERLOCKER_ETA2_OFFSET', u'LASERLOCKER_REF2_OFFSET', u'LASERLOCKER_RATIO1_CENTER', u'LASERLOCKER_RATIO1_MULTIPLIER', u'LASERLOCKER_RATIO2_CENTER', u'LASERLOCKER_RATIO2_MULTIPLIER', u'LASERLOCKER_TUNING_OFFSET', u'LASERLOCKER_WM_LOCK_WINDOW', u'LASERLOCKER_WM_INT_GAIN', u'LASERLOCKER_WM_PROP_GAIN', u'LASERLOCKER_WM_DERIV_GAIN']))
 persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION', u'RDMAN_TIMEOUT_DURATION']))
 persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP', u'TWGEN_SWEEP_LOW', u'TWGEN_SWEEP_HIGH', u'TWGEN_WINDOW_LOW', u'TWGEN_WINDOW_HIGH']))
 persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL']))
-persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_RFAC']))
+persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_RFAC', u'WLMSIM_WFAC']))
 
 # Environment addresses
 LASER1_TEMP_CNTRL_ENV = 0
@@ -1603,10 +1610,13 @@ parameter_forms.append(('Optical Injection Parameters',__p))
 
 __p = []
 
-__p.append(('fpga','uint32',FPGA_RDSIM+RDSIM_TUNER_CENTER,'Tuner value around which cavity fills','','%d',1,1))
+__p.append(('fpga','mask',FPGA_RDSIM+RDSIM_OPTIONS,[(1, u'Source of decay and tuner center parameters', [(0, u'Registers'), (1, u'Input ports')])],None,None,1,1))
+__p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_TUNER_CENTER,'Tuner value around which cavity fills','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_TUNER_WINDOW_HALF_WIDTH,'Half-width of tuner window within which cavity fills','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_FILLING_RATE,'Rate of increase of accumulator value during filling','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_DECAY,'Exponential decay of accumulator when not filling','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_DECAY_IN_SHIFT,'Bits to  right shift decay input','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_DECAY_IN_OFFSET,'Offset to add to shifted decay input','','%d',1,1))
 parameter_forms.append(('Ringdown Simulator Parameters',__p))
 
 # Form: Ringdown Manager Parameters
@@ -1650,6 +1660,7 @@ __p = []
 
 __p.append(('fpga','mask',FPGA_WLMSIM+WLMSIM_OPTIONS,[(1, u'Input select', [(0, u'Register'), (1, u'Input port')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_RFAC,'Reflectivity factor','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_WFAC,'Width factor of simulated spectrum','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_Z0,'Phase angle','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_ETA1,'Etalon 1 photocurrent','digU','%d',1,0))
 __p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_REF1,'Reference 1 photocurrent','digU','%d',1,0))

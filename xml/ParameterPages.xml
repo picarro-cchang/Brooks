@@ -214,10 +214,13 @@
         </gui_page>
         <gui_page>
             <title>Ringdown Simulator Parameters</title>
+            <fpga_register offset="FPGA_RDSIM">OPTIONS</fpga_register>
             <fpga_register offset="FPGA_RDSIM">TUNER_CENTER</fpga_register>
             <fpga_register offset="FPGA_RDSIM">TUNER_WINDOW_HALF_WIDTH</fpga_register>
             <fpga_register offset="FPGA_RDSIM">FILLING_RATE</fpga_register>
             <fpga_register offset="FPGA_RDSIM">DECAY</fpga_register>
+            <fpga_register offset="FPGA_RDSIM">DECAY_IN_SHIFT</fpga_register>
+            <fpga_register offset="FPGA_RDSIM">DECAY_IN_OFFSET</fpga_register>
         </gui_page>
         <gui_page>
             <title>Ringdown Manager Parameters</title>
@@ -252,6 +255,7 @@
             <title>Wavelength Monitor Simulator Parameters</title>
             <fpga_register offset="FPGA_WLMSIM">OPTIONS</fpga_register>
             <fpga_register offset="FPGA_WLMSIM">RFAC</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">WFAC</fpga_register>
             <fpga_register offset="FPGA_WLMSIM">Z0</fpga_register>
             <fpga_register offset="FPGA_WLMSIM">ETA1</fpga_register>
             <fpga_register offset="FPGA_WLMSIM">REF1</fpga_register>

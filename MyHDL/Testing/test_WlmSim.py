@@ -18,8 +18,9 @@ from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_WLMSIM
 
 from Host.autogen.interface import WLMSIM_OPTIONS, WLMSIM_Z0
-from Host.autogen.interface import WLMSIM_RFAC, WLMSIM_ETA1
-from Host.autogen.interface import WLMSIM_REF1, WLMSIM_ETA2, WLMSIM_REF2
+from Host.autogen.interface import WLMSIM_RFAC, WLMSIM_WFAC
+from Host.autogen.interface import WLMSIM_ETA1, WLMSIM_REF1
+from Host.autogen.interface import WLMSIM_ETA2, WLMSIM_REF2
 
 from Host.autogen.interface import WLMSIM_OPTIONS_INPUT_SEL_B, WLMSIM_OPTIONS_INPUT_SEL_W
 
@@ -39,6 +40,8 @@ eta1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 ref1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 eta2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 ref2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
+loss_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
+pzt_cen_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 done_out = Signal(LOW)
 map_base = FPGA_WLMSIM
 
@@ -107,15 +110,20 @@ def bench():
                      coarse_current_in=coarse_current_in,
                      fine_current_in=fine_current_in, eta1_out=eta1_out,
                      ref1_out=ref1_out, eta2_out=eta2_out,
-                     ref2_out=ref2_out, done_out=done_out,
+                     ref2_out=ref2_out, loss_out=loss_out,
+                     pzt_cen_out=pzt_cen_out, done_out=done_out,
                      map_base=map_base )
     @instance
     def stimulus():
         yield assertReset()
         # Write to the parameter area
-        yield writeFPGA(FPGA_WLMSIM+WLMSIM_RFAC,0xF800)
-        for th in range(0,0x10000,0x100):
-            yield writeFPGA(FPGA_WLMSIM+WLMSIM_Z0,th)
+        yield writeFPGA(FPGA_WLMSIM+WLMSIM_OPTIONS,1<<WLMSIM_OPTIONS_INPUT_SEL_B)
+        yield writeFPGA(FPGA_WLMSIM+WLMSIM_RFAC,0x6000)
+        yield writeFPGA(FPGA_WLMSIM+WLMSIM_WFAC,0xF000)
+        for th in range(0,0x10000,0x40):
+            # yield writeFPGA(FPGA_WLMSIM+WLMSIM_Z0,th)
+            coarse_current_in.next = th
+            fine_current_in.next = 0
             #
             yield clk.negedge
             start_in.next = True

@@ -18,10 +18,14 @@ from Host.autogen.interface import RDSIM_EXTRA
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_RDSIM
 
-from Host.autogen.interface import RDSIM_TUNER_CENTER
+from Host.autogen.interface import RDSIM_OPTIONS, RDSIM_TUNER_CENTER
 from Host.autogen.interface import RDSIM_TUNER_WINDOW_HALF_WIDTH
 from Host.autogen.interface import RDSIM_FILLING_RATE, RDSIM_DECAY
+from Host.autogen.interface import RDSIM_DECAY_IN_SHIFT
+from Host.autogen.interface import RDSIM_DECAY_IN_OFFSET
 from Host.autogen.interface import RDSIM_ACCUMULATOR
+
+from Host.autogen.interface import RDSIM_OPTIONS_INPUT_SEL_B, RDSIM_OPTIONS_INPUT_SEL_W
 
 from MyHDL.Common.RdSim import RdSim
 
@@ -35,6 +39,8 @@ dsp_wr = Signal(LOW)
 rd_trig_in = Signal(LOW)
 tuner_value_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 rd_adc_clk_in = Signal(LOW)
+pzt_center_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+decay_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 rdsim_value_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 map_base = FPGA_RDSIM
 
@@ -104,6 +110,7 @@ def bench():
                    dsp_wr=dsp_wr, rd_trig_in=rd_trig_in,
                    tuner_value_in=tuner_value_in,
                    rd_adc_clk_in=rd_adc_clk_in,
+                   pzt_center_in=pzt_center_in, decay_in=decay_in,
                    rdsim_value_out=rdsim_value_out, map_base=map_base )
     @instance
     def stimulus():
