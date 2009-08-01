@@ -38,7 +38,7 @@ RdFittingParamsType rdFittingParams;
 //
 // Performs summer algorithm for ringdown fitting
 //
-void rdFittingSummer(int *data,float tSamp,int nSamp,float *a, float *b, float *f)
+void rdFittingSummer(uint32 *data,float tSamp,int nSamp,float *a, float *b, float *f)
 {
     float y = 0.0, x;
     float sy = 0.0, sty = 0.0;
@@ -87,7 +87,7 @@ void rdFittingSummer(int *data,float tSamp,int nSamp,float *a, float *b, float *
 // Polishes fit using iterations of Newton's algorithm with the normal equations.
 //
 
-void rdFittingImprove(int *data,float tSamp,int nSamp,
+void rdFittingImprove(uint32 *data,float tSamp,int nSamp,
                       float *a, float *b, float *f, int niter)
 {
     double A, B, C, D, E, F, G, H, I;
@@ -143,7 +143,7 @@ void rdFittingImprove(int *data,float tSamp,int nSamp,
 //
 // Performs RD backscatter correction algorithm.
 //
-float rdFittingCorrector(int *data,float tSamp,int nSamp,float tau,
+float rdFittingCorrector(uint32 *data,float tSamp,int nSamp,float tau,
                          float a, float b, float f, float delay)
 {
     // Calculate quantities for backscatter correction
@@ -245,15 +245,15 @@ float rdFittingCorrector(int *data,float tSamp,int nSamp,float tau,
 //
 void rdFittingInit()
 {
-    rdFittingParams.minLoss = registerAddr(RD_MINLOSS_REGISTER);
-    rdFittingParams.maxLoss = registerAddr(RD_MAXLOSS_REGISTER);
-    rdFittingParams.latestLoss = registerAddr(RD_LATEST_LOSS_REGISTER);
-    rdFittingParams.improvementSteps = registerAddr(RD_IMPROVEMENT_STEPS_REGISTER);
-    rdFittingParams.startSample = registerAddr(RD_START_SAMPLE_REGISTER);
-    rdFittingParams.fractionalThreshold = registerAddr(RD_FRACTIONAL_THRESHOLD_REGISTER);
-    rdFittingParams.absoluteThreshold = registerAddr(RD_ABSOLUTE_THRESHOLD_REGISTER);
-    rdFittingParams.numberOfPoints = registerAddr(RD_NUMBER_OF_POINTS_REGISTER);
-    rdFittingParams.maxEFoldings = registerAddr(RD_MAX_E_FOLDINGS_REGISTER);
+    rdFittingParams.minLoss = registerAddr(RDFITTER_MINLOSS_REGISTER);
+    rdFittingParams.maxLoss = registerAddr(RDFITTER_MAXLOSS_REGISTER);
+    rdFittingParams.latestLoss = registerAddr(RDFITTER_LATEST_LOSS_REGISTER);
+    rdFittingParams.improvementSteps = registerAddr(RDFITTER_IMPROVEMENT_STEPS_REGISTER);
+    rdFittingParams.startSample = registerAddr(RDFITTER_START_SAMPLE_REGISTER);
+    rdFittingParams.fractionalThreshold = registerAddr(RDFITTER_FRACTIONAL_THRESHOLD_REGISTER);
+    rdFittingParams.absoluteThreshold = registerAddr(RDFITTER_ABSOLUTE_THRESHOLD_REGISTER);
+    rdFittingParams.numberOfPoints = registerAddr(RDFITTER_NUMBER_OF_POINTS_REGISTER);
+    rdFittingParams.maxEFoldings = registerAddr(RDFITTER_MAX_E_FOLDINGS_REGISTER);
 }
 
 #define IDLE 0
@@ -267,7 +267,7 @@ void rdFittingInit()
 //  losses (in ppm/cm) are placed in *uncorrectedLoss and
 //  *correctedLoss.
 
-int rdFittingDoFit(int *data, float tSamp, unsigned int nPoints, float toffset,
+int rdFittingDoFit(uint32 *data, float tSamp, unsigned int nPoints, float toffset,
                    float *uncorrectedLoss, float *correctedLoss)
 {
     float a, b, f, a0, b0, f0, tau1, tau2;
@@ -314,7 +314,7 @@ int rdFittingDoFit(int *data, float tSamp, unsigned int nPoints, float toffset,
 //-----------------------------------------------------------------------------
 // Find the portion of the buffer which contains the rindown
 //  waveform and send it
-int rdFittingProcessRingdown(int *buffer,
+int rdFittingProcessRingdown(uint32 *buffer,
                              float *uncorrectedLoss, float *correctedLoss,
                              RdFittingDebug *rdFittingDebug)
 {

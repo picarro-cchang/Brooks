@@ -55,9 +55,12 @@ from Host.autogen.interface import RDMAN_STATUS_LAPPED_B, RDMAN_STATUS_LAPPED_W
 from Host.autogen.interface import RDMAN_STATUS_LASER_FREQ_LOCKED_B, RDMAN_STATUS_LASER_FREQ_LOCKED_W
 from Host.autogen.interface import RDMAN_STATUS_TIMEOUT_B, RDMAN_STATUS_TIMEOUT_W
 from Host.autogen.interface import RDMAN_STATUS_ABORTED_B, RDMAN_STATUS_ABORTED_W
+from Host.autogen.interface import RDMAN_STATUS_RAMP_DITHER_B, RDMAN_STATUS_RAMP_DITHER_W
+from Host.autogen.interface import RDMAN_STATUS_BUSY_B, RDMAN_STATUS_BUSY_W
 from Host.autogen.interface import RDMAN_OPTIONS_LOCK_ENABLE_B, RDMAN_OPTIONS_LOCK_ENABLE_W
 from Host.autogen.interface import RDMAN_OPTIONS_UP_SLOPE_ENABLE_B, RDMAN_OPTIONS_UP_SLOPE_ENABLE_W
 from Host.autogen.interface import RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B, RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W
+from Host.autogen.interface import RDMAN_OPTIONS_DITHER_ENABLE_B, RDMAN_OPTIONS_DITHER_ENABLE_W
 
 SeqState = enum("IDLE","START_INJECT","WAIT_FOR_PRECONTROL",
                 "WAIT_FOR_LOCK","WAIT_FOR_GATING_CONDITIONS",
@@ -121,6 +124,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     Registers:
     RDMAN_CONTROL
     RDMAN_STATUS
+    RDMAN_OPTIONS
     RDMAN_PARAM0        -- Injection settings
     RDMAN_PARAM1        -- Temperature of active laser (millidegrees C)
     RDMAN_PARAM2        -- Coarse laser current of active laser
@@ -164,11 +168,14 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     RDMAN_STATUS_LASER_FREQ_LOCKED -- High while laser frequency is locked
     RDMAN_STATUS_TIMEOUT    -- Indicates that a timeout has occured with no ringdown
     RDMAN_STATUS_ABORTED    -- Indicates that an abort command has been sent
+    RDMAN_STATUS_RAMP_DITHER -- Indicates ramp mode (0) or dither mode (1). Set by DSP.
+    RDMAN_STATUS_BUSY
 
     Fields in RDMAN_OPTIONS:
     RDMAN_OPTIONS_LOCK_ENABLE -- Enables laser frequency locking
     RDMAN_OPTIONS_UP_SLOPE_ENABLE -- Enables ringdowns on positive slope of tuner waveform
     RDMAN_OPTIONS_DOWN_SLOPE_ENABLE -- Enables ringdowns on negative slope of tuner waveform
+    RDMAN_OPTIONS_DITHER_ENABLE -- Allows transition to dither mode. Used by DSP.
     """
     rdman_control_addr = map_base + RDMAN_CONTROL
     rdman_status_addr = map_base + RDMAN_STATUS
@@ -386,7 +393,12 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     data_we_out.next = LOW
                     rd_adc_clk.next = not rd_adc_clk
 
+                    # Ignore requests to start if the state machine is busy
+                    if status[RDMAN_STATUS_BUSY_B]:
+                        control.next[RDMAN_CONTROL_START_RD_B] = 0
+
                     if seqState == SeqState.IDLE:
+                        status.next[RDMAN_STATUS_BUSY_B] = 0
                         us_since_start.next = 0
                         metadata_acq.next = LOW
                         param_acq.next = LOW
@@ -395,6 +407,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         laser_locked_out.next = 0
                         if control[RDMAN_CONTROL_START_RD_B]:
                             seqState.next = SeqState.START_INJECT
+                            status.next[RDMAN_STATUS_BUSY_B] = 1
 
                     elif seqState == SeqState.START_INJECT:
                         abort.next = 0
@@ -404,7 +417,6 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         us_timer_enable.next = HIGH # Start microsecond counter
                         acc_en_out.next = LOW
                         expiry_time.next = precontrol_duration
-                        control.next[RDMAN_CONTROL_START_RD_B] = 0
                         seqState.next = SeqState.WAIT_FOR_PRECONTROL
 
                     elif seqState == SeqState.WAIT_FOR_PRECONTROL:

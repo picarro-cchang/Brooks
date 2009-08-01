@@ -201,12 +201,21 @@
         </gui_page>
         <gui_page>
             <title>Tuner Waveform Parameters</title>
+            <fpga_register offset="FPGA_TWGEN">CS</fpga_register>
+            <fpga_register offset="FPGA_TWGEN">SWEEP_HIGH</fpga_register>
+            <fpga_register offset="FPGA_TWGEN">SWEEP_LOW</fpga_register>
+            <fpga_register offset="FPGA_TWGEN">WINDOW_HIGH</fpga_register>
+            <fpga_register offset="FPGA_TWGEN">WINDOW_LOW</fpga_register>
+            <fpga_register offset="FPGA_TWGEN">SLOPE_UP</fpga_register>
+            <fpga_register offset="FPGA_TWGEN">SLOPE_DOWN</fpga_register>
             <register>TUNER_SWEEP_RAMP_HIGH_REGISTER</register>
             <register>TUNER_SWEEP_RAMP_LOW_REGISTER</register>
             <register>TUNER_WINDOW_RAMP_HIGH_REGISTER</register>
             <register>TUNER_WINDOW_RAMP_LOW_REGISTER</register>
-            <register>TUNER_UP_SLOPE_REGISTER</register>
-            <register>TUNER_DOWN_SLOPE_REGISTER</register>
+            <register>TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER</register>
+            <register>TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER</register>
+            <register>TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER</register>
+            <register>TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Optical Injection Parameters</title>
@@ -221,6 +230,7 @@
             <fpga_register offset="FPGA_RDSIM">DECAY</fpga_register>
             <fpga_register offset="FPGA_RDSIM">DECAY_IN_SHIFT</fpga_register>
             <fpga_register offset="FPGA_RDSIM">DECAY_IN_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">WFAC</fpga_register>
         </gui_page>
         <gui_page>
             <title>Ringdown Manager Parameters</title>
@@ -241,21 +251,20 @@
         </gui_page>
         <gui_page>
             <title>Ringdown Data Fitting Parameters</title>
-            <register>RD_MINLOSS_REGISTER</register>
-            <register>RD_MAXLOSS_REGISTER</register>
-            <register>RD_LATEST_LOSS_REGISTER</register>
-            <register>RD_IMPROVEMENT_STEPS_REGISTER</register>
-            <register>RD_START_SAMPLE_REGISTER</register>
-            <register>RD_FRACTIONAL_THRESHOLD_REGISTER</register>
-            <register>RD_ABSOLUTE_THRESHOLD_REGISTER</register>
-            <register>RD_NUMBER_OF_POINTS_REGISTER</register>
-            <register>RD_MAX_E_FOLDINGS_REGISTER</register>
+            <register>RDFITTER_MINLOSS_REGISTER</register>
+            <register>RDFITTER_MAXLOSS_REGISTER</register>
+            <register>RDFITTER_LATEST_LOSS_REGISTER</register>
+            <register>RDFITTER_IMPROVEMENT_STEPS_REGISTER</register>
+            <register>RDFITTER_START_SAMPLE_REGISTER</register>
+            <register>RDFITTER_FRACTIONAL_THRESHOLD_REGISTER</register>
+            <register>RDFITTER_ABSOLUTE_THRESHOLD_REGISTER</register>
+            <register>RDFITTER_NUMBER_OF_POINTS_REGISTER</register>
+            <register>RDFITTER_MAX_E_FOLDINGS_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Wavelength Monitor Simulator Parameters</title>
             <fpga_register offset="FPGA_WLMSIM">OPTIONS</fpga_register>
             <fpga_register offset="FPGA_WLMSIM">RFAC</fpga_register>
-            <fpga_register offset="FPGA_WLMSIM">WFAC</fpga_register>
             <fpga_register offset="FPGA_WLMSIM">Z0</fpga_register>
             <fpga_register offset="FPGA_WLMSIM">ETA1</fpga_register>
             <fpga_register offset="FPGA_WLMSIM">REF1</fpga_register>

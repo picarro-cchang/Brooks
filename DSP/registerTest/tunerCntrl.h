@@ -20,6 +20,8 @@
 #define _TUNER_CNTRL_H_
 
 int tunerCntrlStep(void);
+void switchToRampMode(void);
+void setupDither(unsigned int center);
 int tunerCntrlInit(void);
 
 #endif /* _TUNER_CNTRL_H_ */

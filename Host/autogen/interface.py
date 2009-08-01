@@ -157,6 +157,8 @@ FPGA_MAGIC_CODE = 0xC0DE0001
 RDSIM_EXTRA = 4
 # Number of bits for wavelength monitor ADCs
 WLM_ADC_WIDTH = 16
+# Maximum number of virtual lasers
+MAX_VLASERS = 8
 
 class DataType(Union):
     _fields_ = [
@@ -187,6 +189,33 @@ class DIAG_EventLogStruct(Structure):
     ("customDataArray",c_ushort*16)
     ]
 
+class RingdownMetadataType(Structure):
+    _fields_ = [
+    ("ratio1",c_uint),
+    ("ratio2",c_uint),
+    ("pztValue",c_uint),
+    ("lockerOffset",c_uint),
+    ("fineLaserCurrent",c_uint),
+    ("lockerError",c_uint)
+    ]
+
+class RingdownBufferType(Structure):
+    _fields_ = [
+    ("ringdownWaveform",c_uint*4096),
+    ("injectionSettings",c_uint),
+    ("laserTemperature",c_uint),
+    ("coarseLaserCurrent",c_uint),
+    ("etalonTemperature",c_uint),
+    ("cavityPressure",c_uint),
+    ("ambientPressure",c_uint),
+    ("schemeRowAndIndex",c_uint),
+    ("subschemeId",c_uint),
+    ("ringdownThreshold",c_uint),
+    ("spare",c_uint),
+    ("tunerAtRingdown",c_uint),
+    ("addressAtRingdown",c_uint)
+    ]
+
 class RingdownEntryType(Structure):
     _fields_ = [
     ("timestamp",c_longlong),
@@ -194,6 +223,7 @@ class RingdownEntryType(Structure):
     ("uncorrectedAbsorbance",c_float),
     ("correctedAbsorbance",c_float),
     ("status",c_ushort),
+    ("tunerValue",c_ushort),
     ("pztValue",c_ushort),
     ("lockerOffset",c_ushort),
     ("laserUsed",c_ushort),
@@ -208,7 +238,8 @@ class RingdownEntryType(Structure):
     ("etalonTemperature",c_ushort),
     ("cavityPressure",c_ushort),
     ("ambientPressure",c_ushort),
-    ("padToCacheLine",c_ushort*7)
+    ("lockerError",c_ushort),
+    ("padToCacheLine",c_ushort*5)
     ]
 
 class SensorEntryType(Structure):
@@ -375,7 +406,7 @@ COMM_STATUS_SequenceNumberShift = 24
 COMM_STATUS_ReturnValueShift = 8
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 229
+INTERFACE_NUMBER_OF_REGISTERS = 231
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -595,17 +626,19 @@ TUNER_SWEEP_RAMP_HIGH_REGISTER = 214
 TUNER_SWEEP_RAMP_LOW_REGISTER = 215
 TUNER_WINDOW_RAMP_HIGH_REGISTER = 216
 TUNER_WINDOW_RAMP_LOW_REGISTER = 217
-TUNER_UP_SLOPE_REGISTER = 218
-TUNER_DOWN_SLOPE_REGISTER = 219
-RD_MINLOSS_REGISTER = 220
-RD_MAXLOSS_REGISTER = 221
-RD_LATEST_LOSS_REGISTER = 222
-RD_IMPROVEMENT_STEPS_REGISTER = 223
-RD_START_SAMPLE_REGISTER = 224
-RD_FRACTIONAL_THRESHOLD_REGISTER = 225
-RD_ABSOLUTE_THRESHOLD_REGISTER = 226
-RD_NUMBER_OF_POINTS_REGISTER = 227
-RD_MAX_E_FOLDINGS_REGISTER = 228
+TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER = 218
+TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER = 219
+TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER = 220
+TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER = 221
+RDFITTER_MINLOSS_REGISTER = 222
+RDFITTER_MAXLOSS_REGISTER = 223
+RDFITTER_LATEST_LOSS_REGISTER = 224
+RDFITTER_IMPROVEMENT_STEPS_REGISTER = 225
+RDFITTER_START_SAMPLE_REGISTER = 226
+RDFITTER_FRACTIONAL_THRESHOLD_REGISTER = 227
+RDFITTER_ABSOLUTE_THRESHOLD_REGISTER = 228
+RDFITTER_NUMBER_OF_POINTS_REGISTER = 229
+RDFITTER_MAX_E_FOLDINGS_REGISTER = 230
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -1046,28 +1079,32 @@ registerByName["TUNER_WINDOW_RAMP_HIGH_REGISTER"] = TUNER_WINDOW_RAMP_HIGH_REGIS
 registerInfo.append(RegInfo("TUNER_WINDOW_RAMP_HIGH_REGISTER",c_float,1,1.0,"rw"))
 registerByName["TUNER_WINDOW_RAMP_LOW_REGISTER"] = TUNER_WINDOW_RAMP_LOW_REGISTER
 registerInfo.append(RegInfo("TUNER_WINDOW_RAMP_LOW_REGISTER",c_float,1,1.0,"rw"))
-registerByName["TUNER_UP_SLOPE_REGISTER"] = TUNER_UP_SLOPE_REGISTER
-registerInfo.append(RegInfo("TUNER_UP_SLOPE_REGISTER",c_float,1,1.0,"rw"))
-registerByName["TUNER_DOWN_SLOPE_REGISTER"] = TUNER_DOWN_SLOPE_REGISTER
-registerInfo.append(RegInfo("TUNER_DOWN_SLOPE_REGISTER",c_float,1,1.0,"rw"))
-registerByName["RD_MINLOSS_REGISTER"] = RD_MINLOSS_REGISTER
-registerInfo.append(RegInfo("RD_MINLOSS_REGISTER",c_float,1,1.0,"rw"))
-registerByName["RD_MAXLOSS_REGISTER"] = RD_MAXLOSS_REGISTER
-registerInfo.append(RegInfo("RD_MAXLOSS_REGISTER",c_float,1,1.0,"rw"))
-registerByName["RD_LATEST_LOSS_REGISTER"] = RD_LATEST_LOSS_REGISTER
-registerInfo.append(RegInfo("RD_LATEST_LOSS_REGISTER",c_float,0,1.0,"r"))
-registerByName["RD_IMPROVEMENT_STEPS_REGISTER"] = RD_IMPROVEMENT_STEPS_REGISTER
-registerInfo.append(RegInfo("RD_IMPROVEMENT_STEPS_REGISTER",c_uint,1,1.0,"rw"))
-registerByName["RD_START_SAMPLE_REGISTER"] = RD_START_SAMPLE_REGISTER
-registerInfo.append(RegInfo("RD_START_SAMPLE_REGISTER",c_uint,1,1.0,"rw"))
-registerByName["RD_FRACTIONAL_THRESHOLD_REGISTER"] = RD_FRACTIONAL_THRESHOLD_REGISTER
-registerInfo.append(RegInfo("RD_FRACTIONAL_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
-registerByName["RD_ABSOLUTE_THRESHOLD_REGISTER"] = RD_ABSOLUTE_THRESHOLD_REGISTER
-registerInfo.append(RegInfo("RD_ABSOLUTE_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
-registerByName["RD_NUMBER_OF_POINTS_REGISTER"] = RD_NUMBER_OF_POINTS_REGISTER
-registerInfo.append(RegInfo("RD_NUMBER_OF_POINTS_REGISTER",c_uint,1,1.0,"rw"))
-registerByName["RD_MAX_E_FOLDINGS_REGISTER"] = RD_MAX_E_FOLDINGS_REGISTER
-registerInfo.append(RegInfo("RD_MAX_E_FOLDINGS_REGISTER",c_float,1,1.0,"rw"))
+registerByName["TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER"] = TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER
+registerInfo.append(RegInfo("TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerByName["TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER"] = TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER
+registerInfo.append(RegInfo("TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerByName["TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER"] = TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER
+registerInfo.append(RegInfo("TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerByName["TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER"] = TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER
+registerInfo.append(RegInfo("TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerByName["RDFITTER_MINLOSS_REGISTER"] = RDFITTER_MINLOSS_REGISTER
+registerInfo.append(RegInfo("RDFITTER_MINLOSS_REGISTER",c_float,1,1.0,"rw"))
+registerByName["RDFITTER_MAXLOSS_REGISTER"] = RDFITTER_MAXLOSS_REGISTER
+registerInfo.append(RegInfo("RDFITTER_MAXLOSS_REGISTER",c_float,1,1.0,"rw"))
+registerByName["RDFITTER_LATEST_LOSS_REGISTER"] = RDFITTER_LATEST_LOSS_REGISTER
+registerInfo.append(RegInfo("RDFITTER_LATEST_LOSS_REGISTER",c_float,0,1.0,"r"))
+registerByName["RDFITTER_IMPROVEMENT_STEPS_REGISTER"] = RDFITTER_IMPROVEMENT_STEPS_REGISTER
+registerInfo.append(RegInfo("RDFITTER_IMPROVEMENT_STEPS_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["RDFITTER_START_SAMPLE_REGISTER"] = RDFITTER_START_SAMPLE_REGISTER
+registerInfo.append(RegInfo("RDFITTER_START_SAMPLE_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["RDFITTER_FRACTIONAL_THRESHOLD_REGISTER"] = RDFITTER_FRACTIONAL_THRESHOLD_REGISTER
+registerInfo.append(RegInfo("RDFITTER_FRACTIONAL_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
+registerByName["RDFITTER_ABSOLUTE_THRESHOLD_REGISTER"] = RDFITTER_ABSOLUTE_THRESHOLD_REGISTER
+registerInfo.append(RegInfo("RDFITTER_ABSOLUTE_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
+registerByName["RDFITTER_NUMBER_OF_POINTS_REGISTER"] = RDFITTER_NUMBER_OF_POINTS_REGISTER
+registerInfo.append(RegInfo("RDFITTER_NUMBER_OF_POINTS_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["RDFITTER_MAX_E_FOLDINGS_REGISTER"] = RDFITTER_MAX_E_FOLDINGS_REGISTER
+registerInfo.append(RegInfo("RDFITTER_MAX_E_FOLDINGS_REGISTER",c_float,1,1.0,"rw"))
 
 # FPGA block definitions
 
@@ -1207,6 +1244,10 @@ RDMAN_STATUS_TIMEOUT_B = 8 # Timeout without ring-down bit position
 RDMAN_STATUS_TIMEOUT_W = 1 # Timeout without ring-down bit width
 RDMAN_STATUS_ABORTED_B = 9 # Ring-down aborted bit position
 RDMAN_STATUS_ABORTED_W = 1 # Ring-down aborted bit width
+RDMAN_STATUS_RAMP_DITHER_B = 10 # Tuner waveform mode bit position
+RDMAN_STATUS_RAMP_DITHER_W = 1 # Tuner waveform mode bit width
+RDMAN_STATUS_BUSY_B = 11 # Ringdown Cycle State bit position
+RDMAN_STATUS_BUSY_W = 1 # Ringdown Cycle State bit width
 
 RDMAN_OPTIONS = 2 # Options register
 RDMAN_OPTIONS_LOCK_ENABLE_B = 0 # Enable frequency locking bit position
@@ -1215,6 +1256,8 @@ RDMAN_OPTIONS_UP_SLOPE_ENABLE_B = 1 # Allow ring-down on positive tuner slope bi
 RDMAN_OPTIONS_UP_SLOPE_ENABLE_W = 1 # Allow ring-down on positive tuner slope bit width
 RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B = 2 # Allow ring-down on negative tuner slope bit position
 RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W = 1 # Allow ring-down on negative tuner slope bit width
+RDMAN_OPTIONS_DITHER_ENABLE_B = 3 # Allow transition to dither mode bit position
+RDMAN_OPTIONS_DITHER_ENABLE_W = 1 # Allow transition to dither mode bit width
 
 RDMAN_PARAM0 = 3 # Parameter 0 register
 RDMAN_PARAM1 = 4 # Parameter 1 register
@@ -1241,10 +1284,10 @@ RDMAN_METADATA_ADDR_AT_RINGDOWN = 23 # Metadata address at ring-down
 # Block TWGEN Tuner waveform generator
 TWGEN_ACC = 0 # Accumulator
 TWGEN_CS = 1 # Control/Status Register
-TWGEN_CS_RUN_B = 0 # STOP/RUN bit position
-TWGEN_CS_RUN_W = 1 # STOP/RUN bit width
-TWGEN_CS_CONT_B = 1 # SINGLE/CONTINUOUS bit position
-TWGEN_CS_CONT_W = 1 # SINGLE/CONTINUOUS bit width
+TWGEN_CS_RUN_B = 0 # Stop/Run bit position
+TWGEN_CS_RUN_W = 1 # Stop/Run bit width
+TWGEN_CS_CONT_B = 1 # Single/Continuous bit position
+TWGEN_CS_CONT_W = 1 # Single/Continuous bit width
 TWGEN_CS_RESET_B = 2 # Reset generator bit position
 TWGEN_CS_RESET_W = 1 # Reset generator bit width
 
@@ -1330,7 +1373,7 @@ persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_ETA1_OFFSE
 persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION', u'RDMAN_TIMEOUT_DURATION']))
 persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP', u'TWGEN_SWEEP_LOW', u'TWGEN_SWEEP_HIGH', u'TWGEN_WINDOW_LOW', u'TWGEN_WINDOW_HIGH']))
 persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL']))
-persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_RFAC', u'WLMSIM_WFAC']))
+persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_OPTIONS', u'WLMSIM_RFAC', u'WLMSIM_WFAC']))
 
 # Environment addresses
 LASER1_TEMP_CNTRL_ENV = 0
@@ -1591,12 +1634,21 @@ parameter_forms.append(('Cavity Temperature Parameters',__p))
 
 __p = []
 
+__p.append(('fpga','mask',FPGA_TWGEN+TWGEN_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Reset generator', [(0, u'Idle'), (4, u'Reset')])],None,None,1,1))
+__p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SWEEP_HIGH,'Tuner sweep higher limit','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SWEEP_LOW,'Tuner sweep lower limit','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_WINDOW_HIGH,'Tuner window higher limit','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_WINDOW_LOW,'Tuner window lower limit','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SLOPE_UP,'Tuner up slope','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SLOPE_DOWN,'Tuner down slope','digU','%d',1,1))
 __p.append(('dsp','float',TUNER_SWEEP_RAMP_HIGH_REGISTER,'Ramp mode upper sweep limit','digU','%.0f',1,1))
 __p.append(('dsp','float',TUNER_SWEEP_RAMP_LOW_REGISTER,'Ramp mode lower sweep limit','digU','%.0f',1,1))
 __p.append(('dsp','float',TUNER_WINDOW_RAMP_HIGH_REGISTER,'Ramp mode upper window limit','digU','%.0f',1,1))
 __p.append(('dsp','float',TUNER_WINDOW_RAMP_LOW_REGISTER,'Ramp mode lower window limit','digU','%.0f',1,1))
-__p.append(('dsp','float',TUNER_UP_SLOPE_REGISTER,'Tuner up slope','digU','%.0f',1,1))
-__p.append(('dsp','float',TUNER_DOWN_SLOPE_REGISTER,'Tuner down slope','digU','%.0f',1,1))
+__p.append(('dsp','float',TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER,'Dither mode upper sweep offset','digU','%.0f',1,1))
+__p.append(('dsp','float',TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER,'Dither mode lower sweep offset','digU','%.0f',1,1))
+__p.append(('dsp','float',TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER,'Dither mode upper window offset','digU','%.0f',1,1))
+__p.append(('dsp','float',TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER,'Dither mode lower window offset','digU','%.0f',1,1))
 parameter_forms.append(('Tuner Waveform Parameters',__p))
 
 # Form: Optical Injection Parameters
@@ -1617,6 +1669,7 @@ __p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_FILLING_RATE,'Rate of increase of a
 __p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_DECAY,'Exponential decay of accumulator when not filling','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_DECAY_IN_SHIFT,'Bits to  right shift decay input','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_DECAY_IN_OFFSET,'Offset to add to shifted decay input','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_WFAC,'Width factor of simulated spectrum','','%d',1,1))
 parameter_forms.append(('Ringdown Simulator Parameters',__p))
 
 # Form: Ringdown Manager Parameters
@@ -1624,8 +1677,8 @@ parameter_forms.append(('Ringdown Simulator Parameters',__p))
 __p = []
 
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Mark bank 0 available for write', [(0, u'Idle'), (16, u'Mark available')]), (32, u'Mark bank 1 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (64, u'Acknowledge')]), (128, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (128, u'Acknowledge')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')])],None,None,1,0))
-__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')]), (1024, u'Tuner waveform mode', [(0, u'Ramp'), (1024, u'Dither')]), (2048, u'Ringdown Cycle State', [(0, u'Idle'), (2048, u'Busy')])],None,None,1,0))
+__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DATA_ADDRCNTR,'Ringdown data address','','%d',1,0))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_METADATA_ADDRCNTR,'Ringdown metadata address','','%d',1,0))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_PARAM_ADDRCNTR,'Ringdown parameter address','','%d',1,0))
@@ -1634,7 +1687,7 @@ __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_NUM_SAMP,'Ringdown samples to colle
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_THRESHOLD,'Ringdown threshold','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_LOCK_DURATION,'Laser lock duration (us)','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_PRECONTROL_DURATION,'Precontrol duration (us)','','%d',1,1))
-__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,'Ringdown timeout duration (us)','','%d',1,1))
+__p.append(('fpga','uint32',FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,'Ringdown timeout duration (us)','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN,'Tuner value at ringdown','','%d',1,0))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_METADATA_ADDR_AT_RINGDOWN,'Metadata address at ringdown','','%d',1,0))
 parameter_forms.append(('Ringdown Manager Parameters',__p))
@@ -1643,15 +1696,15 @@ parameter_forms.append(('Ringdown Manager Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','float',RD_MINLOSS_REGISTER,'Minimum loss','ppm/cm','%.4f',1,1))
-__p.append(('dsp','float',RD_MAXLOSS_REGISTER,'Minimum loss','ppm/cm','%.4f',1,1))
-__p.append(('dsp','float',RD_LATEST_LOSS_REGISTER,'Most recent loss','ppm/cm','%.3f',1,0))
-__p.append(('dsp','uint32',RD_IMPROVEMENT_STEPS_REGISTER,'Number of iterations of ringdown fit improvement','','%d',1,1))
-__p.append(('dsp','uint32',RD_START_SAMPLE_REGISTER,'Initial ringdown samples to ignore','','%d',1,1))
-__p.append(('dsp','float',RD_FRACTIONAL_THRESHOLD_REGISTER,'Fractional threshold for fit window determination','','%.2f',1,1))
-__p.append(('dsp','float',RD_ABSOLUTE_THRESHOLD_REGISTER,'Absolute threshold for fit window determination','','%.0f',1,1))
-__p.append(('dsp','uint32',RD_NUMBER_OF_POINTS_REGISTER,'Maximum number of points in fit window','','%d',1,1))
-__p.append(('dsp','float',RD_MAX_E_FOLDINGS_REGISTER,'Maximum number of time constants in fit window','','%.1f',1,1))
+__p.append(('dsp','float',RDFITTER_MINLOSS_REGISTER,'Minimum loss','ppm/cm','%.4f',1,1))
+__p.append(('dsp','float',RDFITTER_MAXLOSS_REGISTER,'Minimum loss','ppm/cm','%.4f',1,1))
+__p.append(('dsp','float',RDFITTER_LATEST_LOSS_REGISTER,'Most recent loss','ppm/cm','%.3f',1,0))
+__p.append(('dsp','uint32',RDFITTER_IMPROVEMENT_STEPS_REGISTER,'Number of iterations of ringdown fit improvement','','%d',1,1))
+__p.append(('dsp','uint32',RDFITTER_START_SAMPLE_REGISTER,'Initial ringdown samples to ignore','','%d',1,1))
+__p.append(('dsp','float',RDFITTER_FRACTIONAL_THRESHOLD_REGISTER,'Fractional threshold for fit window determination','','%.2f',1,1))
+__p.append(('dsp','float',RDFITTER_ABSOLUTE_THRESHOLD_REGISTER,'Absolute threshold for fit window determination','','%.0f',1,1))
+__p.append(('dsp','uint32',RDFITTER_NUMBER_OF_POINTS_REGISTER,'Maximum number of points in fit window','','%d',1,1))
+__p.append(('dsp','float',RDFITTER_MAX_E_FOLDINGS_REGISTER,'Maximum number of time constants in fit window','','%.1f',1,1))
 parameter_forms.append(('Ringdown Data Fitting Parameters',__p))
 
 # Form: Wavelength Monitor Simulator Parameters
@@ -1660,7 +1713,6 @@ __p = []
 
 __p.append(('fpga','mask',FPGA_WLMSIM+WLMSIM_OPTIONS,[(1, u'Input select', [(0, u'Register'), (1, u'Input port')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_RFAC,'Reflectivity factor','','%d',1,1))
-__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_WFAC,'Width factor of simulated spectrum','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_Z0,'Phase angle','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_ETA1,'Etalon 1 photocurrent','digU','%d',1,0))
 __p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_REF1,'Reference 1 photocurrent','digU','%d',1,0))

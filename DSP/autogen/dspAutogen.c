@@ -393,26 +393,30 @@ void initRegisters()
     writeRegister(TUNER_WINDOW_RAMP_HIGH_REGISTER,d);
     d.asFloat = 12000.0;
     writeRegister(TUNER_WINDOW_RAMP_LOW_REGISTER,d);
-    d.asFloat = 40000.0;
-    writeRegister(TUNER_UP_SLOPE_REGISTER,d);
-    d.asFloat = 40000.0;
-    writeRegister(TUNER_DOWN_SLOPE_REGISTER,d);
+    d.asFloat = 1500.0;
+    writeRegister(TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER,d);
+    d.asFloat = 1500.0;
+    writeRegister(TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER,d);
+    d.asFloat = 1250.0;
+    writeRegister(TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER,d);
+    d.asFloat = 1250.0;
+    writeRegister(TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER,d);
     d.asFloat = 0.2;
-    writeRegister(RD_MINLOSS_REGISTER,d);
+    writeRegister(RDFITTER_MINLOSS_REGISTER,d);
     d.asFloat = 50.0;
-    writeRegister(RD_MAXLOSS_REGISTER,d);
+    writeRegister(RDFITTER_MAXLOSS_REGISTER,d);
     d.asUint = 1;
-    writeRegister(RD_IMPROVEMENT_STEPS_REGISTER,d);
+    writeRegister(RDFITTER_IMPROVEMENT_STEPS_REGISTER,d);
     d.asUint = 10;
-    writeRegister(RD_START_SAMPLE_REGISTER,d);
+    writeRegister(RDFITTER_START_SAMPLE_REGISTER,d);
     d.asFloat = 0.85;
-    writeRegister(RD_FRACTIONAL_THRESHOLD_REGISTER,d);
+    writeRegister(RDFITTER_FRACTIONAL_THRESHOLD_REGISTER,d);
     d.asFloat = 13000;
-    writeRegister(RD_ABSOLUTE_THRESHOLD_REGISTER,d);
+    writeRegister(RDFITTER_ABSOLUTE_THRESHOLD_REGISTER,d);
     d.asUint = 3500;
-    writeRegister(RD_NUMBER_OF_POINTS_REGISTER,d);
+    writeRegister(RDFITTER_NUMBER_OF_POINTS_REGISTER,d);
     d.asFloat = 8.0;
-    writeRegister(RD_MAX_E_FOLDINGS_REGISTER,d);
+    writeRegister(RDFITTER_MAX_E_FOLDINGS_REGISTER,d);
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)

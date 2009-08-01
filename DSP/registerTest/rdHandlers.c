@@ -26,6 +26,7 @@
 #include "rdFitting.h"
 #include "rdHandlers.h"
 #include "registers.h"
+#include "tunerCntrl.h"
 
 // Initialize EDMA 
 
@@ -44,34 +45,55 @@
 
 void edmaDoneInterrupt(int tccNum)
 {
-    int bank;
-    volatile int *meta;
-    volatile int *param;
+    int i, bank;
     float uncorrectedLoss, correctedLoss;
     DataType data;
     volatile RingdownEntryType *ringdownEntry;
+    RingdownMetadataType meta;
+    int *metaPtr = (int*) &meta;
+
     unsigned int gie;
+    unsigned int base;
     gie = IRQ_globalDisable();
 
     // Reset bit 1 of DIAG_1 after QDMA and set bit 2
     changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 1, 2, 2);
 
     bank = (tccNum == EDMA_CHA_TCC10) ? 0 : 1;
-    
-    rdFittingProcessRingdown(ringdownWaveform,&uncorrectedLoss,&correctedLoss,0);
+        
+    rdFittingProcessRingdown(ringdownBuffer.ringdownWaveform,&uncorrectedLoss,&correctedLoss,0);
     data.asFloat = uncorrectedLoss;
-    writeRegister(RD_LATEST_LOSS_REGISTER,data);
+    writeRegister(RDFITTER_LATEST_LOSS_REGISTER,data);
+    // We need to find position of metadata just before ringdown. We have a modified circular
+    //  buffer which wraps back to the midpoint, and the MSB indicates if this buffer has wrapped.
+    base = ringdownBuffer.addressAtRingdown & ~0x7;
+    if (base == 32768 + 2048) base = 4096;
+    else base = base & 0xFFF;
+    base = base - 8;
+    // The metadata are in the MS 16 bits of the ringdown waveform
+    for (i=0;i<8;i++) metaPtr[i] = ringdownBuffer.ringdownWaveform[base+i] >> 16;
 
-    meta = rdMetaAddr(bank);
-    param = rdParamAddr(bank);
-    
-    // Process metadata and params, and write results to ringdown queue
+    // Get metadata and params, and write results to ringdown queue    
     ringdownEntry = get_ringdown_entry_addr();
     ringdownEntry->uncorrectedAbsorbance = uncorrectedLoss;
     ringdownEntry->correctedAbsorbance = correctedLoss;
-    ringdownEntry->pztValue = param[PARAM_TUNER_AT_RINGDOWN_INDEX];
+    ringdownEntry->tunerValue = ringdownBuffer.tunerAtRingdown;
+    ringdownEntry->ratio1 = meta.ratio1;
+    ringdownEntry->ratio2 = meta.ratio2;
+    ringdownEntry->pztValue = meta.pztValue;
+    ringdownEntry->lockerOffset = meta.lockerOffset;
+    ringdownEntry->fineLaserCurrent = meta.fineLaserCurrent;
+    ringdownEntry->lockerError = meta.lockerError;
+    ringdownEntry->ringdownThreshold = ringdownBuffer.ringdownThreshold;
+    ringdownEntry->subschemeId = ringdownBuffer.subschemeId;
+    ringdownEntry->schemeRowAndIndex = ringdownBuffer.schemeRowAndIndex;
+    ringdownEntry->coarseLaserCurrent = ringdownBuffer.coarseLaserCurrent;
+    ringdownEntry->laserTemperature = ringdownBuffer.laserTemperature;
+    ringdownEntry->etalonTemperature = ringdownBuffer.etalonTemperature;
+    ringdownEntry->cavityPressure = ringdownBuffer.cavityPressure;
+    ringdownEntry->ambientPressure = ringdownBuffer.ambientPressure;
     ringdown_put();
-    
+
     // Indicate bank is no longer in use
     if (!bank) {
         // memset(rdMetaAddr(0),0,16384);
@@ -107,7 +129,8 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
 {
     // Responds to the EXT4 interrupt, indicating that a ringdown
     //  (or a timeout) has occured
-    unsigned int gie;
+    unsigned int gie, status;
+    int allowDither, badRingdown;
     int *counter = (int*)(REG_BASE+4*RD_IRQ_COUNT_REGISTER);
 
     gie = IRQ_globalDisable();
@@ -122,6 +145,19 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
     IRQ_clear(IRQ_EVT_EXTINT4);
     // Reset bit 0 of DIAG_1 at start of ringdownInterrupt
     changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 0, 1, 0);
+    
+    // Check if this was a timeout or abort, which should cause a switch to ramp mode
+    status = readFPGA(FPGA_RDMAN+RDMAN_STATUS);
+    
+    allowDither = (0 != (readFPGA(FPGA_RDMAN+RDMAN_OPTIONS) & (1<<RDMAN_OPTIONS_DITHER_ENABLE_B)));
+    badRingdown = (0 != (status & (1<<RDMAN_STATUS_TIMEOUT_B | 1<<RDMAN_STATUS_ABORTED_B)));
+    if (!allowDither || badRingdown) {
+        switchToRampMode();    
+    }
+    else {
+        setupDither(readFPGA(FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN));
+    }
+    
     // Restore interrupts
     IRQ_globalRestore(gie);
 }
@@ -151,11 +187,11 @@ void acqDoneInterrupt(unsigned int funcArg, unsigned int eventId)
     // Transfer the OTHER bank via QDMA
     if (bank) {
         // Transfer bank 0
-        EDMA_qdmaConfigArgs(BANK0_OPTIONS,(Uint32)rdDataAndMetaAddr(0),4096,(Uint32)ringdownWaveform,0);
+        EDMA_qdmaConfigArgs(BANK0_OPTIONS,(Uint32)rdDataAndMetaAddr(0),sizeof(RingdownBufferType)/sizeof(int),(Uint32)&ringdownBuffer,0);
     }
     else {
         // Transfer bank 1
-        EDMA_qdmaConfigArgs(BANK1_OPTIONS,(Uint32)rdDataAndMetaAddr(1),4096,(Uint32)ringdownWaveform,0);
+        EDMA_qdmaConfigArgs(BANK1_OPTIONS,(Uint32)rdDataAndMetaAddr(1),sizeof(RingdownBufferType)/sizeof(int),(Uint32)&ringdownBuffer,0);
     }
     // Restore interrupts
     IRQ_globalRestore(gie);

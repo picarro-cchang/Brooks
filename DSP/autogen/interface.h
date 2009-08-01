@@ -143,6 +143,8 @@ typedef int bool;
 #define RDSIM_EXTRA (4)
 // Number of bits for wavelength monitor ADCs
 #define WLM_ADC_WIDTH (16)
+// Maximum number of virtual lasers
+#define MAX_VLASERS (8)
 
 typedef union {
     float asFloat;
@@ -172,11 +174,37 @@ typedef struct {
 } DIAG_EventLogStruct;
 
 typedef struct {
+    uint32 ratio1;
+    uint32 ratio2;
+    uint32 pztValue;
+    uint32 lockerOffset;
+    uint32 fineLaserCurrent;
+    uint32 lockerError;
+} RingdownMetadataType;
+
+typedef struct {
+    uint32 ringdownWaveform[4096];
+    uint32 injectionSettings;
+    uint32 laserTemperature;
+    uint32 coarseLaserCurrent;
+    uint32 etalonTemperature;
+    uint32 cavityPressure;
+    uint32 ambientPressure;
+    uint32 schemeRowAndIndex;
+    uint32 subschemeId;
+    uint32 ringdownThreshold;
+    uint32 spare;
+    uint32 tunerAtRingdown;
+    uint32 addressAtRingdown;
+} RingdownBufferType;
+
+typedef struct {
     long long timestamp;
     float wlmAngle;
     float uncorrectedAbsorbance;
     float correctedAbsorbance;
     uint16 status;
+    uint16 tunerValue;
     uint16 pztValue;
     uint16 lockerOffset;
     uint16 laserUsed;
@@ -191,7 +219,8 @@ typedef struct {
     uint16 etalonTemperature;
     uint16 cavityPressure;
     uint16 ambientPressure;
-    uint16 padToCacheLine[7];
+    uint16 lockerError;
+    uint16 padToCacheLine[5];
 } RingdownEntryType;
 
 typedef struct {
@@ -296,7 +325,7 @@ typedef enum {
 #define COMM_STATUS_ReturnValueShift (8)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (229)
+#define INTERFACE_NUMBER_OF_REGISTERS (231)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -516,17 +545,19 @@ typedef enum {
 #define TUNER_SWEEP_RAMP_LOW_REGISTER (215)
 #define TUNER_WINDOW_RAMP_HIGH_REGISTER (216)
 #define TUNER_WINDOW_RAMP_LOW_REGISTER (217)
-#define TUNER_UP_SLOPE_REGISTER (218)
-#define TUNER_DOWN_SLOPE_REGISTER (219)
-#define RD_MINLOSS_REGISTER (220)
-#define RD_MAXLOSS_REGISTER (221)
-#define RD_LATEST_LOSS_REGISTER (222)
-#define RD_IMPROVEMENT_STEPS_REGISTER (223)
-#define RD_START_SAMPLE_REGISTER (224)
-#define RD_FRACTIONAL_THRESHOLD_REGISTER (225)
-#define RD_ABSOLUTE_THRESHOLD_REGISTER (226)
-#define RD_NUMBER_OF_POINTS_REGISTER (227)
-#define RD_MAX_E_FOLDINGS_REGISTER (228)
+#define TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER (218)
+#define TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER (219)
+#define TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER (220)
+#define TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER (221)
+#define RDFITTER_MINLOSS_REGISTER (222)
+#define RDFITTER_MAXLOSS_REGISTER (223)
+#define RDFITTER_LATEST_LOSS_REGISTER (224)
+#define RDFITTER_IMPROVEMENT_STEPS_REGISTER (225)
+#define RDFITTER_START_SAMPLE_REGISTER (226)
+#define RDFITTER_FRACTIONAL_THRESHOLD_REGISTER (227)
+#define RDFITTER_ABSOLUTE_THRESHOLD_REGISTER (228)
+#define RDFITTER_NUMBER_OF_POINTS_REGISTER (229)
+#define RDFITTER_MAX_E_FOLDINGS_REGISTER (230)
 
 /* FPGA block definitions */
 
@@ -666,6 +697,10 @@ typedef enum {
 #define RDMAN_STATUS_TIMEOUT_W (1) // Timeout without ring-down bit width
 #define RDMAN_STATUS_ABORTED_B (9) // Ring-down aborted bit position
 #define RDMAN_STATUS_ABORTED_W (1) // Ring-down aborted bit width
+#define RDMAN_STATUS_RAMP_DITHER_B (10) // Tuner waveform mode bit position
+#define RDMAN_STATUS_RAMP_DITHER_W (1) // Tuner waveform mode bit width
+#define RDMAN_STATUS_BUSY_B (11) // Ringdown Cycle State bit position
+#define RDMAN_STATUS_BUSY_W (1) // Ringdown Cycle State bit width
 
 #define RDMAN_OPTIONS (2) // Options register
 #define RDMAN_OPTIONS_LOCK_ENABLE_B (0) // Enable frequency locking bit position
@@ -674,6 +709,8 @@ typedef enum {
 #define RDMAN_OPTIONS_UP_SLOPE_ENABLE_W (1) // Allow ring-down on positive tuner slope bit width
 #define RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B (2) // Allow ring-down on negative tuner slope bit position
 #define RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W (1) // Allow ring-down on negative tuner slope bit width
+#define RDMAN_OPTIONS_DITHER_ENABLE_B (3) // Allow transition to dither mode bit position
+#define RDMAN_OPTIONS_DITHER_ENABLE_W (1) // Allow transition to dither mode bit width
 
 #define RDMAN_PARAM0 (3) // Parameter 0 register
 #define RDMAN_PARAM1 (4) // Parameter 1 register
@@ -700,10 +737,10 @@ typedef enum {
 /* Block TWGEN Tuner waveform generator */
 #define TWGEN_ACC (0) // Accumulator
 #define TWGEN_CS (1) // Control/Status Register
-#define TWGEN_CS_RUN_B (0) // STOP/RUN bit position
-#define TWGEN_CS_RUN_W (1) // STOP/RUN bit width
-#define TWGEN_CS_CONT_B (1) // SINGLE/CONTINUOUS bit position
-#define TWGEN_CS_CONT_W (1) // SINGLE/CONTINUOUS bit width
+#define TWGEN_CS_RUN_B (0) // Stop/Run bit position
+#define TWGEN_CS_RUN_W (1) // Stop/Run bit width
+#define TWGEN_CS_CONT_B (1) // Single/Continuous bit position
+#define TWGEN_CS_CONT_W (1) // Single/Continuous bit width
 #define TWGEN_CS_RESET_B (2) // Reset generator bit position
 #define TWGEN_CS_RESET_W (1) // Reset generator bit width
 

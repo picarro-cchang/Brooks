@@ -552,13 +552,26 @@ def _normalize(tm):
     """
     # Handle months separately, since the usual time functions give errors
     temp = list(tm)
+    if temp[sec] >= 60:
+        temp[sec] -= 60
+        temp[min] += 1
+    if temp[min] >= 60:
+        temp[min] -= 60
+        temp[hour] += 1
+    if temp[hour] >= 24:
+        temp[hour] -= 24
+        temp[day] += 1
     if temp[month] > 12:
         temp[month] -= 12
         temp[year] += 1
-    tm1 = list(time.gmtime(calendar.timegm(tuple(temp))))
-    tm1[8] = temp[8] # Preserve daylight time flag
-    return tuple(tm1)
-
+        
+    try:
+        tm1 = list(time.gmtime(calendar.timegm(tuple(temp))))
+        tm1[8] = temp[8] # Preserve daylight time flag
+        return tuple(tm1)
+    except:
+        return(tuple(temp))
+    
 def _fieldBase(field):
     if field == month or field == day: return 1
     return 0

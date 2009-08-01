@@ -1,4 +1,4 @@
-#LyX 1.6.2 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.0 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -554,6 +554,50 @@ T_{\mathrm{down}}=\frac{\mathtt{SWEEP\_HIGH-SWEEP\_LOW}}{\mathtt{SLOPE\_DOWN}}\t
 \end_inset
 
 
+\end_layout
+
+\begin_layout Subsection
+Conditions for Good Dither to Ramp Transitions
+\end_layout
+
+\begin_layout Standard
+The tuner waveform generator switches to ramp mode if the tuner value at
+ the last successful ringdown is greater than
+\end_layout
+
+\begin_layout LyX-Code
+TUNER_SWEEP_RAMP_HIGH_REGISTER-TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER
+\end_layout
+
+\begin_layout Standard
+or less than
+\end_layout
+
+\begin_layout LyX-Code
+TUNER_SWEEP_RAMP_LOW_REGISTER+TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER
+\end_layout
+
+\begin_layout Standard
+In order for a ringdown to occur once ramp mode has been selected, the differenc
+e between these two values should be greater than the cavity free spectral
+ range.
+ This means that the peak-to-peak amplitude of the sweep in ramp mode must
+ be no less than
+\end_layout
+
+\begin_layout LyX-Code
+FSR+TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER+TUNER_SWEEP_DITHER_LOW_OFFSET_REGIST
+ER
+\end_layout
+
+\begin_layout Standard
+Additionally, the peak-to-peak amplitude of the window in ramp mode must
+ be no less than the cavity free spectral range.
+\end_layout
+
+\begin_layout Standard
+It is of course necessary for the dither amplitude to be large enough that
+ it can track a changing input frequency.
 \end_layout
 
 \begin_layout Section

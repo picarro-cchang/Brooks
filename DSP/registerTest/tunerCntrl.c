@@ -24,18 +24,45 @@
 
 int tunerCntrlStep(void)
 {
-    writeFPGA(FPGA_TWGEN+TWGEN_SLOPE_DOWN, *(float*)registerAddr(TUNER_DOWN_SLOPE_REGISTER));
-    writeFPGA(FPGA_TWGEN+TWGEN_SLOPE_UP,   *(float*)registerAddr(TUNER_UP_SLOPE_REGISTER));
-    writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_LOW,  *(float*)registerAddr(TUNER_SWEEP_RAMP_LOW_REGISTER));
-    writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_HIGH, *(float*)registerAddr(TUNER_SWEEP_RAMP_HIGH_REGISTER));
-    writeFPGA(FPGA_TWGEN+TWGEN_WINDOW_LOW, *(float*)registerAddr(TUNER_WINDOW_RAMP_LOW_REGISTER));
-    writeFPGA(FPGA_TWGEN+TWGEN_WINDOW_HIGH,*(float*)registerAddr(TUNER_WINDOW_RAMP_HIGH_REGISTER));
     return STATUS_OK;
+}
+
+void switchToRampMode(void)
+{
+    writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_LOW,(unsigned int)*(float*)registerAddr(TUNER_SWEEP_RAMP_LOW_REGISTER));
+    writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_HIGH,(unsigned int)*(float*)registerAddr(TUNER_SWEEP_RAMP_HIGH_REGISTER));
+    writeFPGA(FPGA_TWGEN+TWGEN_WINDOW_LOW,(unsigned int)*(float*)registerAddr(TUNER_WINDOW_RAMP_LOW_REGISTER));
+    writeFPGA(FPGA_TWGEN+TWGEN_WINDOW_HIGH,(unsigned int)*(float*)registerAddr(TUNER_WINDOW_RAMP_HIGH_REGISTER));
+    changeBitsFPGA(FPGA_RDMAN+RDMAN_STATUS, RDMAN_STATUS_RAMP_DITHER_B, RDMAN_STATUS_RAMP_DITHER_W, 0);
+}
+
+void setupDither(unsigned int center)
+{
+    // Switch to dither mode centered about the given value, if this is possible. Otherwise
+    //  go to ramp mode in the hope that a ringdown will then occur.
+    unsigned int sweepLow  = center - (unsigned int)*(float*)registerAddr(TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER);
+    unsigned int sweepHigh = center + (unsigned int)*(float*)registerAddr(TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER);
+    unsigned int windowLow  = center - (unsigned int)*(float*)registerAddr(TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER);
+    unsigned int windowHigh = center + (unsigned int)*(float*)registerAddr(TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER);
+    if (windowHigh > sweepHigh) windowHigh = sweepHigh;
+    if (windowLow  < sweepLow)  windowLow  = sweepLow;
+    if (sweepHigh > *(float*)registerAddr(TUNER_SWEEP_RAMP_HIGH_REGISTER) ||
+        sweepLow  < *(float*)registerAddr(TUNER_SWEEP_RAMP_LOW_REGISTER)) {
+        switchToRampMode();
+    }
+    else {
+        writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_LOW,sweepLow);
+        writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_HIGH,sweepHigh);
+        writeFPGA(FPGA_TWGEN+TWGEN_WINDOW_LOW,windowLow);
+        writeFPGA(FPGA_TWGEN+TWGEN_WINDOW_HIGH,windowHigh);
+        changeBitsFPGA(FPGA_RDMAN+RDMAN_STATUS, RDMAN_STATUS_RAMP_DITHER_B, RDMAN_STATUS_RAMP_DITHER_W, 1);        
+    }
 }
 
 int tunerCntrlInit(void)
 {
-    tunerCntrlStep();
     writeFPGA(FPGA_TWGEN+TWGEN_CS, (1<<TWGEN_CS_RUN_B)|(1<<TWGEN_CS_CONT_B));
+    // Start up in ramp mode
+    switchToRampMode();
     return STATUS_OK;
 }

@@ -94,6 +94,8 @@ class ControllerFrame(ControllerFrameGui):
         waveforms["Ringdown"]=dict(
             corrected=self.ringdownPanel.ringdownWfms[0],
             uncorrected=self.ringdownPanel.ringdownWfms[1])
+        for vLaser in range(interface.MAX_VLASERS):
+            waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)] = self.ringdownPanel.ringdownWfms[vLaser]
 
     def setupParameterDialogs(self):
         idmin = None
@@ -192,7 +194,7 @@ def excepthook(type,value,trace):
     sys.__excepthook__(type,value,trace)
 
 if __name__ == "__main__":
-    sys.excepthook = excepthook
+    # sys.excepthook = excepthook
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
     controllerFrame = ControllerFrame(None, wx.ID_ANY, "")

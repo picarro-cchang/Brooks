@@ -164,8 +164,6 @@ class DasConfigure(object):
             Operation("ACTION_TEMP_CNTRL_LASER3_STEP"))
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_TEMP_CNTRL_LASER4_STEP"))
-        self.opGroups["FAST"]["CONTROLLER"].addOperation(
-            Operation("ACTION_TUNER_CNTRL_STEP"))
         self.opGroups["SLOW"]["CONTROLLER"].addOperation(
             Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
 
@@ -285,7 +283,16 @@ class DasConfigure(object):
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,REG_LASER2_PWM_CS]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,REG_LASER3_PWM_CS]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,REG_LASER4_PWM_CS]))
-
+        
+        # Start the ringdown manager
+        REG_RDMAN_CONTROL = interface.FPGA_RDMAN + interface.RDMAN_CONTROL
+        runCont = (1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B)
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,REG_RDMAN_CONTROL]))
+        #  Start the laser locker
+        REG_LASERLOCKER_CONTROL = interface.FPGA_LASERLOCKER + interface.LASERLOCKER_CS
+        runCont = (1<<interface.LASERLOCKER_CS_RUN_B) | (1<<interface.LASERLOCKER_CS_CONT_B)
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,REG_LASERLOCKER_CONTROL]))
+        
         # Initialize filter coefficients and write environment
         #  of filter
         damp = 0.95

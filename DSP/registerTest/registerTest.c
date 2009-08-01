@@ -84,7 +84,7 @@ main(int argc, char *argv[])
     dspI2CInit();
     // Initialize DS1631 for continuous measurements
     ds1631_init();
-    // Initialize DS1631 for continuous measurements
+    // Initialize ringdown fitting module
     rdFittingInit();
     // Initialize EDMA handling
     edmaInit();

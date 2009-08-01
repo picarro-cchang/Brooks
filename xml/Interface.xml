@@ -93,12 +93,36 @@
             <field type="uint32" ident="outletPressure"/>
             <field type="uint16" ident="customDataArray" size="16"/>
         </struct>
+        <struct type="RingdownMetadataType">
+            <field ident="ratio1" type="uint32"/>
+            <field ident="ratio2" type="uint32"/>
+            <field ident="pztValue" type="uint32"/>
+            <field ident="lockerOffset" type="uint32"/>
+            <field ident="fineLaserCurrent" type="uint32"/>
+            <field ident="lockerError" type="uint32"/>
+        </struct>		
+        <struct type="RingdownBufferType">
+            <field ident="ringdownWaveform" type="uint32" size="4096"/>
+            <field ident="injectionSettings" type="uint32"/>
+            <field ident="laserTemperature" type="uint32"/>
+            <field ident="coarseLaserCurrent" type="uint32"/>
+            <field ident="etalonTemperature" type="uint32"/>
+            <field ident="cavityPressure" type="uint32"/>
+            <field ident="ambientPressure" type="uint32"/>
+            <field ident="schemeRowAndIndex" type="uint32"/>
+            <field ident="subschemeId" type="uint32"/>
+            <field ident="ringdownThreshold" type="uint32"/>
+            <field ident="spare" type="uint32"/>
+            <field ident="tunerAtRingdown" type="uint32"/>
+            <field ident="addressAtRingdown" type="uint32"/>
+        </struct>		
         <struct type="RingdownEntryType">
             <field ident="timestamp" type="long long"/>
             <field ident="wlmAngle" type="float"/>
             <field ident="uncorrectedAbsorbance" type="float"/>
             <field ident="correctedAbsorbance" type="float"/>
             <field ident="status" type="uint16"/>
+            <field ident="tunerValue" type="uint16"/>
             <field ident="pztValue" type="uint16"/>
             <field ident="lockerOffset" type="uint16"/>
             <field ident="laserUsed" type="uint16"/>
@@ -113,7 +137,8 @@
             <field ident="etalonTemperature" type="uint16"/>
             <field ident="cavityPressure" type="uint16"/>
             <field ident="ambientPressure" type="uint16"/>
-            <field ident="padToCacheLine" type="uint16" size="7"/>
+            <field ident="lockerError" type="uint16"/>
+            <field ident="padToCacheLine" type="uint16" size="5"/>
         </struct>
         <struct type="SensorEntryType">
             <field ident="timestamp" type="long long"/>
@@ -191,6 +216,7 @@
         <constant ident="FPGA_MAGIC_CODE" description="Code to confirm FPGA is programmed">0xC0DE0001</constant>
         <constant ident="RDSIM_EXTRA" description="Extra bits in accumulator for ringdown simulator">4</constant>
         <constant ident="WLM_ADC_WIDTH" description="Number of bits for wavelength monitor ADCs">16</constant>
+        <constant ident="MAX_VLASERS" description="Maximum number of virtual lasers">8</constant>
     </constant_list>
     <union_list>
         <union type="DataType">
@@ -1420,65 +1446,77 @@
             <save/>
             <display format="%.0f" units="digU">Ramp mode lower window limit</display>
         </register>
-        <register ident="TUNER_UP_SLOPE_REGISTER" type="float" minver="1.0" access="rw">
-            <description>Positive-going slope of tuner waveform.</description>
-            <initial>40000.0</initial>
+        <register ident="TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Higher limit of tuner sweep in dither mode relative to previous ringdown</description>
+            <initial>1500.0</initial>
             <save/>
-            <display format="%.0f" units="digU">Tuner up slope</display>
+            <display format="%.0f" units="digU">Dither mode upper sweep offset</display>
         </register>
-        <register ident="TUNER_DOWN_SLOPE_REGISTER" type="float" minver="1.0" access="rw">
-            <description>Negative-going slope of tuner waveform.</description>
-            <initial>40000.0</initial>
+        <register ident="TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Lower limit of tuner sweep in dither mode relative to previous ringdown</description>
+            <initial>1500.0</initial>
             <save/>
-            <display format="%.0f" units="digU">Tuner down slope</display>
+            <display format="%.0f" units="digU">Dither mode lower sweep offset</display>
         </register>
-        <register ident="RD_MINLOSS_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Higher limit of tuner window in dither mode relative to previous ringdown</description>
+            <initial>1250.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Dither mode upper window offset</display>
+        </register>
+        <register ident="TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Lower limit of tuner window in ramp mode.</description>
+            <initial>1250.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Dither mode lower window offset</display>
+        </register>
+        <register ident="RDFITTER_MINLOSS_REGISTER" type="float" minver="1.0" access="rw">
             <description>Minimum loss for a valid ringdown.</description>
             <initial>0.2</initial>
             <save/>
             <display format="%.4f" units="ppm/cm">Minimum loss</display>
         </register>
-        <register ident="RD_MAXLOSS_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="RDFITTER_MAXLOSS_REGISTER" type="float" minver="1.0" access="rw">
             <description>Maximum loss for a valid ringdown.</description>
             <initial>50.0</initial>
             <save/>
             <display format="%.4f" units="ppm/cm">Minimum loss</display>
         </register>
-        <register ident="RD_LATEST_LOSS_REGISTER" type="float" minver="1.0" access="r">
+        <register ident="RDFITTER_LATEST_LOSS_REGISTER" type="float" minver="1.0" access="r">
             <description>Most recent loss calculated.</description>
             <display format="%.3f" units="ppm/cm">Most recent loss</display>
         </register>
-        <register ident="RD_IMPROVEMENT_STEPS_REGISTER" type="uint32" minver="1.0" access="rw">
+        <register ident="RDFITTER_IMPROVEMENT_STEPS_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Number of iterations of ringdown fit improvement.</description>
             <initial>1</initial>
             <save/>
             <display format="%d">Number of iterations of ringdown fit improvement</display>
         </register>
-        <register ident="RD_START_SAMPLE_REGISTER" type="uint32" minver="1.0" access="rw">
+        <register ident="RDFITTER_START_SAMPLE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Samples before ringdown determination</description>
             <initial>10</initial>
             <save/>
             <display format="%d">Initial ringdown samples to ignore</display>
         </register>
-        <register ident="RD_FRACTIONAL_THRESHOLD_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="RDFITTER_FRACTIONAL_THRESHOLD_REGISTER" type="float" minver="1.0" access="rw">
             <description>Fractional threshold for fit window determination</description>
             <initial>0.85</initial>
             <save/>
             <display format="%.2f">Fractional threshold for fit window determination</display>
         </register>
-        <register ident="RD_ABSOLUTE_THRESHOLD_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="RDFITTER_ABSOLUTE_THRESHOLD_REGISTER" type="float" minver="1.0" access="rw">
             <description>Absolute threshold for fit window determination</description>
             <initial>13000</initial>
             <save/>
             <display format="%.0f">Absolute threshold for fit window determination</display>
         </register>
-        <register ident="RD_NUMBER_OF_POINTS_REGISTER" type="uint32" minver="1.0" access="rw">
+        <register ident="RDFITTER_NUMBER_OF_POINTS_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Maximum number of points in fit window</description>
             <initial>3500</initial>
             <save/>
             <display format="%d">Maximum number of points in fit window</display>
         </register>
-        <register ident="RD_MAX_E_FOLDINGS_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="RDFITTER_MAX_E_FOLDINGS_REGISTER" type="float" minver="1.0" access="rw">
             <description>Maximum number of time constants in fit window</description>
             <initial>8.0</initial>
             <save/>
@@ -1587,7 +1625,6 @@
 				</bitfield>
 			</reg>
 		</fpga_block>
-		
 		<fpga_block ident="PWM" description="Pulse width modulator">
             <reg type="uint16" ident="CS" description="Control/Status register">
                 <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
@@ -1631,7 +1668,6 @@
             <reg type="uint16" ident="ACCUMULATOR" description="Simulated ringdown value" access="r">
             </reg>
         </fpga_block>
-
         <fpga_block ident="LASERLOCKER" description="Laser frequency locker">
             <reg type="mask" ident="CS" description="Control/Status register" access="rw">
                 <bitfield ident="RUN" description="Stop/Run" lsb="0" width="1">
@@ -1841,6 +1877,14 @@
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Aborted</fielddef>
                 </bitfield>
+		        <bitfield ident="RAMP_DITHER" description="Tuner waveform mode" lsb="10" width="1"> 
+                    <fielddef value="0">Ramp</fielddef>
+                    <fielddef value="1">Dither</fielddef>
+				</bitfield>
+		        <bitfield ident="BUSY" description="Ringdown Cycle State" lsb="11" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Busy</fielddef>
+				</bitfield>
             </reg>
             <reg type="mask" ident="OPTIONS" description="Options register" access="rw">
                 <save/>
@@ -1856,6 +1900,10 @@
                     <fielddef value="0">No</fielddef>
                     <fielddef value="1">Yes</fielddef>
                 </bitfield>
+		        <bitfield ident="DITHER_ENABLE" description="Allow transition to dither mode" lsb="3" width="1"> 
+                    <fielddef value="0">Disallow</fielddef>
+                    <fielddef value="1">Allow</fielddef>
+				</bitfield>
             </reg>
             <reg type="uint16" ident="PARAM0" description="Parameter 0 register" access="rw">
                 <display format="%d">Parameter 0</display>
@@ -1916,7 +1964,7 @@
                 <save/>
                 <display format="%d">Precontrol duration (us)</display>
             </reg>
-            <reg type="uint16" ident="TIMEOUT_DURATION" description="Duration (ms) within which ring-down must occur to be valid" access="rw">
+            <reg type="uint32" ident="TIMEOUT_DURATION" description="Duration (ms) within which ring-down must occur to be valid" access="rw">
                 <save/>
                 <display format="%d">Ringdown timeout duration (us)</display>
             </reg>
@@ -1929,17 +1977,44 @@
         </fpga_block>
         <fpga_block ident="TWGEN" description="Tuner waveform generator">
             <reg type="uint32" ident="ACC" description="Accumulator"/>
-            <reg type="uint16" ident="CS" description="Control/Status Register">
-                <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
-                <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
-                <bitfield ident="RESET"   description="Reset generator"  lsb="2" width="1" />
+            <reg type="mask" ident="CS" description="Control/Status Register">
+                <bitfield ident="RUN" description="Stop/Run" lsb="0" width="1">
+                    <fielddef value="0">Stop</fielddef>
+                    <fielddef value="1">Run</fielddef>
+                </bitfield>
+                <bitfield ident="CONT" description="Single/Continuous" lsb="1" width="1">
+                    <fielddef value="0">Single</fielddef>
+                    <fielddef value="1">Continuous</fielddef>
+                </bitfield>
+                <bitfield ident="RESET" description="Reset generator"  lsb="2" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Reset</fielddef>
+				</bitfield>
             </reg>
-            <reg type="uint16" ident="SLOPE_DOWN" description="Slope in downward direction"><save/></reg>
-            <reg type="uint16" ident="SLOPE_UP" description="Slope in upward direction"><save/></reg>
-            <reg type="uint16" ident="SWEEP_LOW" description="Lower limit of sweep"><save/></reg>
-            <reg type="uint16" ident="SWEEP_HIGH" description="Higher limit of sweep"><save/></reg>
-            <reg type="uint16" ident="WINDOW_LOW" description="Lower limit of window"><save/></reg>
-            <reg type="uint16" ident="WINDOW_HIGH" description="Higher limit of window"><save/></reg>
+            <reg type="uint16" ident="SLOPE_DOWN" description="Slope in downward direction">
+				<save/>
+                <display format="%d" units="digU">Tuner down slope</display>
+			</reg>
+            <reg type="uint16" ident="SLOPE_UP" description="Slope in upward direction">
+				<save/>
+                <display format="%d" units="digU">Tuner up slope</display>
+			</reg>
+            <reg type="uint16" ident="SWEEP_LOW" description="Lower limit of sweep">
+				<save/>
+                <display format="%d" units="digU">Tuner sweep lower limit</display>
+			</reg>
+            <reg type="uint16" ident="SWEEP_HIGH" description="Higher limit of sweep">
+				<save/>
+                <display format="%d" units="digU">Tuner sweep higher limit</display>
+			</reg>
+            <reg type="uint16" ident="WINDOW_LOW" description="Lower limit of window">
+				<save/>
+                <display format="%d" units="digU">Tuner window lower limit</display>
+			</reg>
+            <reg type="uint16" ident="WINDOW_HIGH" description="Higher limit of window">
+				<save/>
+                <display format="%d" units="digU">Tuner window higher limit</display>
+			</reg>
         </fpga_block>
         <fpga_block ident="INJECT" description="Optical injection subsystem">
             <reg type="mask" ident="CONTROL" description="Control register">
@@ -2012,6 +2087,7 @@
         </fpga_block>
 		<fpga_block ident="WLMSIM" description="Wavelength monitor simulator">
 			<reg type="mask" ident="OPTIONS" description="Options" access="rw">
+				<save/>
 				<bitfield ident="INPUT_SEL" description="Input select" lsb="0" width="1">
                     <fielddef value="0">Register</fielddef>
                     <fielddef value="1">Input port</fielddef>
