@@ -129,7 +129,7 @@ MEMORY {
    SDRAM       : origin = 0x80000000,  len = 0x800000
    IRAM        : origin = 0x0,         len = 0x10000
    DSP_DATA    : origin = 0x80800000,  len = 0x800000
-   IINT        : origin = 0x20000,     len = 0x10000
+   IINT        : origin = 0x10000,     len = 0x20000
 }
 /* MODULE CLK */
 SECTIONS {

@@ -11,11 +11,15 @@
 #   Specify any related information.
 #
 # HISTORY:
-#   07-Jan-2009  sze  Initial version.
-#   21-Jul-2009  sze  Added GenHandler.
+#   07-Jan-2009  sze  Initial version
+#   21-Jul-2009  sze  Added GenHandler
+#   03-Aug-2009  sze  Added getSchemeTableClass
+
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
+import ctypes
 import time
+from Host.autogen import interface
 
 # Constants...
 ACCESS_PUBLIC = 0
@@ -98,18 +102,18 @@ class GenHandler(object):
     possible to a specified value, or until the generator is exhausted. In __init__,
     a function is passed to produce a new generator, if an active one does not currently
     exist. A function accepting the output of the generator is also required.
-    
+
     It is useful when handling a number of queues within a single threaded environment
     so that we do not spend too much time trying to empty out a queue while others 
     remain unserviced. The generator function in such a case would give a generator
     that yields elements popped off the queue and raise StopIteration once the queue 
     is empty."""
-    
+
     def __init__(self,genFunc,processFunc):
         self.genFunc = genFunc
         self.processFunc = processFunc
         self.generator = None
-        
+
     def process(self,timeLimit):
         if not self.generator:
             self.generator = self.genFunc()
@@ -125,7 +129,25 @@ class GenHandler(object):
 
         duration = time.clock()-start
         return duration
+
+schemeTableClassMemo = {}
+def getSchemeTableClass(numRows):
+    # Generate a scheme table dynamically with numRows rows. These are memoized to avoid
+    #  wasting memory for duplicate classes
+
+    if numRows > interface.NUM_SCHEME_ROWS:
+        raise ValueError, "Maximum number of scheme rows is %d" % interface.NUM_SCHEME_ROWS
     
+    if numRows not in schemeTableClassMemo:
+        SchemeRowArray = interface.SchemeRowType * numRows
+        
+        class SchemeTableType(ctypes.Structure):
+            _fields_ = [("numRepeats",ctypes.c_uint),
+                        ("numRows",ctypes.c_uint),
+                        ("rows",SchemeRowArray)]
+        schemeTableClassMemo[numRows] = SchemeTableType
+    return schemeTableClassMemo[numRows]
+
 ##Misc stuff...
 
 if __debug__:

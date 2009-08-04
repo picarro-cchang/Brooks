@@ -16,7 +16,7 @@
 #
 from sys import platform
 from usb import LibUSB, usb_bus, usb_device, USB_ENDPOINT_OUT, USB_ENDPOINT_IN
-from ctypes import byref, create_string_buffer, c_ubyte, c_ushort, c_short, c_uint, sizeof
+from ctypes import byref, create_string_buffer, c_ubyte, c_ushort, c_short, c_uint, sizeof, addressof
 from hexfile import HexFile
 from Host.autogen import usbdefs
 from Host.Common.SharedTypes import Singleton
@@ -219,6 +219,25 @@ class AnalyzerUsb(Singleton):
             raise UsbPacketLengthError("Invalid data length %d in hpidWrite" % (dataLength,))
         self._claimInterfaceWrapper(_hpidWrite)
 
+    def hpiWrite(self,address,data):
+        """Write an arbitrarily sized (but must be a multiple of 4) block of data to address,
+            splitting the block up if necessary"""
+        dataLength = sizeof(data)
+        chunkSize = 1024
+        a = addressof(data)
+        while dataLength > chunkSize:
+            dataBuffer = (c_ubyte*chunkSize).from_address(a)
+            self.hpiaWrite(address)
+            self.hpidWrite(dataBuffer)
+            address += chunkSize
+            a += chunkSize
+            dataLength -= chunkSize
+            time.sleep(0) # to yield processor when transferring a large block
+        if dataLength > 0:    
+            dataBuffer = (c_ubyte*dataLength).from_address(a)
+            self.hpiaWrite(address)
+            self.hpidWrite(dataBuffer)
+        
     def hpidRead(self,result):
         """Use bulk read to acquire block of 32 bit words from HPID"""
         nBytes = sizeof(result)
@@ -229,6 +248,25 @@ class AnalyzerUsb(Singleton):
             self.controlOutTransaction(data,usbdefs.VENDOR_SET_HPID_IN_BYTES)
             self.usb.usbBulkRead(self.handle,DEFAULT_IN_ENDPOINT,byref(result),nBytes,5000)
         self._claimInterfaceWrapper(_hpidRead)
+
+    def hpiRead(self,address,data):
+        """Read an arbitrarily sized (but must be a multiple of 4) block of data to address,
+            splitting the block up if necessary"""
+        dataLength = sizeof(data)
+        chunkSize = 1024
+        a = addressof(data)
+        while dataLength > chunkSize:
+            dataBuffer = (c_ubyte*chunkSize).from_address(a)
+            self.hpiaWrite(address)
+            self.hpidRead(dataBuffer)
+            address += chunkSize
+            a += chunkSize
+            dataLength -= chunkSize
+            time.sleep(0) # to yield processor when transferring a large block
+        if dataLength > 0:    
+            dataBuffer = (c_ubyte*dataLength).from_address(a)
+            self.hpiaWrite(address)
+            self.hpidRead(dataBuffer)
 
     def setHpidInBytes(self,nBytes):
         """Use vendor command to set GPIF transaction count to transfer abs(nBytes) bytes.

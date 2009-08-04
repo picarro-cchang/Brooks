@@ -177,6 +177,14 @@ class DriverRpcHandler(SharedTypes.Singleton):
         param = [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(base,12)]
         return (array(data),array(meta).reshape(512,8).transpose(),array(param))
 
+    def rdScheme(self,schemeNum):
+        """Reads a scheme from table number schemeNum"""
+        return self.dasInterface.hostToDspSender.rdScheme(schemeNum)
+
+    def wrScheme(self,schemeNum,numRepeats,schemeRows):
+        """Writes a scheme to table number schemeNum consisting of numRepeats repeats of the list schemeRows"""
+        self.dasInterface.hostToDspSender.wrScheme(schemeNum,numRepeats,schemeRows)
+
     #def rdComposite(self):
     #    """Fetches the contents of DSP ringdown memory in compact (composite) format"""
     #    base = 0x4c80 >> 2

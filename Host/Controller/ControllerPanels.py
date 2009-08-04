@@ -20,7 +20,7 @@ class RingdownPanel(RingdownPanelGui):
             timeAxes=(False,False),ylabel='Loss (ppm/cm)',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.ringdownWfms = [Series(ringdownPoints) for i in range(interface.MAX_VLASERS)] # Need one for each virtual laser
+        self.ringdownWfms = [Series(ringdownPoints) for i in range(interface.NUM_VIRTUAL_LASERS)] # Need one for each virtual laser
         wx.CallAfter(self.onSelectGraphType,None)
     def  update(self):
         self.ringdownGraph.Update(delay=0)
@@ -128,7 +128,7 @@ class RingdownPanel(RingdownPanelGui):
                     colour='black',fillcolour='green',marker='square',
                     size=1,width=1)
         elif y == "Tuner":
-            for vLaser in range(interface.MAX_VLASERS):
+            for vLaser in range(interface.NUM_VIRTUAL_LASERS):
                 self.ringdownGraph.AddSeriesAsPoints(
                     waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)],
                     colour='black',fillcolour=fillColours[vLaser],marker='square',

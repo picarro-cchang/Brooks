@@ -15,8 +15,11 @@
  *
  *  Copyright (c) 2009 Picarro, Inc. All rights reserved
  */
+#include <std.h>
 #include <stdio.h>
 #include <string.h>
+#include <csl.h>
+#include <csl_cache.h>
 
 #include "dspAutogen.h"
 #include "interface.h"
@@ -48,7 +51,7 @@
     status = writeRegister(regNum,d);\
     if (STATUS_OK != status) return status; \
     }
-
+    
 #ifdef SIMULATION
 #pragma argsused
 #endif
@@ -169,6 +172,31 @@ int r_getTimestamp(unsigned int numInt,void *params,void *env)
     WRITE_REG(reg[1],asUint,(uint32)(ts >> 32));
     return STATUS_OK;
 }
+
+int r_wbCache(unsigned int numInt,void *params,void *env)
+/* Write back cache for a region of memory
+   Input:
+        addr(int):      address to region
+        length(int):    length of region in bytes
+*/
+{
+    unsigned int *reg = (unsigned int *) params;
+    CACHE_wbL2((void *)reg[0], reg[1], CACHE_WAIT);
+    return STATUS_OK;
+}
+
+int r_wbInvCache(unsigned int numInt,void *params,void *env)
+/* Write back and invalidate cache fors a region of memory
+   Input:
+        addr(int):      address to region
+        length(int):    length of region in bytes
+*/
+{
+    unsigned int *reg = (unsigned int *) params;
+    CACHE_wbInvL2((void *)reg[0], reg[1], CACHE_WAIT);
+    return STATUS_OK;
+}
+
 #ifdef SIMULATION
 #pragma argsused
 #endif

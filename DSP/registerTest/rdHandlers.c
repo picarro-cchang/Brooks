@@ -51,6 +51,7 @@ void edmaDoneInterrupt(int tccNum)
     volatile RingdownEntryType *ringdownEntry;
     RingdownMetadataType meta;
     int *metaPtr = (int*) &meta;
+    RingdownBufferType *ringdownBuffer = &ringdownBuffers[0];
 
     unsigned int gie;
     unsigned int base;
@@ -61,37 +62,37 @@ void edmaDoneInterrupt(int tccNum)
 
     bank = (tccNum == EDMA_CHA_TCC10) ? 0 : 1;
         
-    rdFittingProcessRingdown(ringdownBuffer.ringdownWaveform,&uncorrectedLoss,&correctedLoss,0);
+    rdFittingProcessRingdown(ringdownBuffer->ringdownWaveform,&uncorrectedLoss,&correctedLoss,0);
     data.asFloat = uncorrectedLoss;
     writeRegister(RDFITTER_LATEST_LOSS_REGISTER,data);
     // We need to find position of metadata just before ringdown. We have a modified circular
     //  buffer which wraps back to the midpoint, and the MSB indicates if this buffer has wrapped.
-    base = ringdownBuffer.addressAtRingdown & ~0x7;
+    base = ringdownBuffer->addressAtRingdown & ~0x7;
     if (base == 32768 + 2048) base = 4096;
     else base = base & 0xFFF;
     base = base - 8;
     // The metadata are in the MS 16 bits of the ringdown waveform
-    for (i=0;i<8;i++) metaPtr[i] = ringdownBuffer.ringdownWaveform[base+i] >> 16;
+    for (i=0;i<8;i++) metaPtr[i] = ringdownBuffer->ringdownWaveform[base+i] >> 16;
 
     // Get metadata and params, and write results to ringdown queue    
     ringdownEntry = get_ringdown_entry_addr();
     ringdownEntry->uncorrectedAbsorbance = uncorrectedLoss;
     ringdownEntry->correctedAbsorbance = correctedLoss;
-    ringdownEntry->tunerValue = ringdownBuffer.tunerAtRingdown;
+    ringdownEntry->tunerValue = ringdownBuffer->tunerAtRingdown;
     ringdownEntry->ratio1 = meta.ratio1;
     ringdownEntry->ratio2 = meta.ratio2;
     ringdownEntry->pztValue = meta.pztValue;
     ringdownEntry->lockerOffset = meta.lockerOffset;
     ringdownEntry->fineLaserCurrent = meta.fineLaserCurrent;
     ringdownEntry->lockerError = meta.lockerError;
-    ringdownEntry->ringdownThreshold = ringdownBuffer.ringdownThreshold;
-    ringdownEntry->subschemeId = ringdownBuffer.subschemeId;
-    ringdownEntry->schemeRowAndIndex = ringdownBuffer.schemeRowAndIndex;
-    ringdownEntry->coarseLaserCurrent = ringdownBuffer.coarseLaserCurrent;
-    ringdownEntry->laserTemperature = ringdownBuffer.laserTemperature;
-    ringdownEntry->etalonTemperature = ringdownBuffer.etalonTemperature;
-    ringdownEntry->cavityPressure = ringdownBuffer.cavityPressure;
-    ringdownEntry->ambientPressure = ringdownBuffer.ambientPressure;
+    ringdownEntry->ringdownThreshold = ringdownBuffer->ringdownThreshold;
+    ringdownEntry->subschemeId = ringdownBuffer->subschemeId;
+    ringdownEntry->schemeRowAndIndex = ringdownBuffer->schemeRowAndIndex;
+    ringdownEntry->coarseLaserCurrent = ringdownBuffer->coarseLaserCurrent;
+    ringdownEntry->laserTemperature = ringdownBuffer->laserTemperature;
+    ringdownEntry->etalonTemperature = ringdownBuffer->etalonTemperature;
+    ringdownEntry->cavityPressure = ringdownBuffer->cavityPressure;
+    ringdownEntry->ambientPressure = ringdownBuffer->ambientPressure;
     ringdown_put();
 
     // Indicate bank is no longer in use
@@ -169,6 +170,7 @@ void acqDoneInterrupt(unsigned int funcArg, unsigned int eventId)
     unsigned int gie;
     int bank;
     int *counter = (int*)(REG_BASE+4*ACQ_DONE_COUNT_REGISTER);
+    RingdownBufferType *ringdownBuffer = &ringdownBuffers[0];
 
     gie = IRQ_globalDisable();
     (*counter)++;
@@ -187,11 +189,11 @@ void acqDoneInterrupt(unsigned int funcArg, unsigned int eventId)
     // Transfer the OTHER bank via QDMA
     if (bank) {
         // Transfer bank 0
-        EDMA_qdmaConfigArgs(BANK0_OPTIONS,(Uint32)rdDataAndMetaAddr(0),sizeof(RingdownBufferType)/sizeof(int),(Uint32)&ringdownBuffer,0);
+        EDMA_qdmaConfigArgs(BANK0_OPTIONS,(Uint32)rdDataAndMetaAddr(0),sizeof(RingdownBufferType)/sizeof(int),(Uint32)ringdownBuffer,0);
     }
     else {
         // Transfer bank 1
-        EDMA_qdmaConfigArgs(BANK1_OPTIONS,(Uint32)rdDataAndMetaAddr(1),sizeof(RingdownBufferType)/sizeof(int),(Uint32)&ringdownBuffer,0);
+        EDMA_qdmaConfigArgs(BANK1_OPTIONS,(Uint32)rdDataAndMetaAddr(1),sizeof(RingdownBufferType)/sizeof(int),(Uint32)ringdownBuffer,0);
     }
     // Restore interrupts
     IRQ_globalRestore(gie);

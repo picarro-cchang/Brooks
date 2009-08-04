@@ -29,7 +29,7 @@ import sqlite3
 
 from Host.autogen import usbdefs, interface
 from Host.Common.crc import calcCrc32
-from Host.Common.SharedTypes    import Singleton
+from Host.Common.SharedTypes    import Singleton, getSchemeTableClass
 from Host.Common.simulatorUsbIf import SimulatorUsb
 from Host.Common.DspSimulator   import DspSimulator
 from Host.Common.analyzerUsbIf  import AnalyzerUsb
@@ -296,8 +296,7 @@ class DasInterface(Singleton):
     def getSensorData(self):
         """Generator which retrieves sensor data from the analyzer"""
         while True:
-            data = self.hostToDspSender.rdSensorData(
-                  self.sensorIndex)
+            data = self.hostToDspSender.rdSensorData(self.sensorIndex)
             if data.timestamp!=0 and data.timestamp>=self.lastSensorTime:
                 self.lastSensorTime = data.timestamp
                 self.sensorIndex += 1
@@ -422,6 +421,7 @@ def usbLockProtect(f):
         finally:
             self.usbLock.release()
     return wrapper
+
 class HostToDspSender(Singleton):
     initialized = False
     # Object that keeps track of sequence numbers, and packages
@@ -501,9 +501,9 @@ class HostToDspSender(Singleton):
             now = clock()
         seqNum = self.seqNum
         self.seqNum = None
-        raise RuntimeError,("Timeout getting status after %d tries." +
+        raise RuntimeError,("Timeout getting status after %s tries." +
             "Initial status: 0x%x, Final status: 0x%x," +
-            "Expected sequence number: 0x%x") % \
+            "Expected sequence number: %s") % \
             (ntries,self.initStatus,self.status,seqNum)
     @usbLockProtect
     def getStatusWhenDone(self):
@@ -635,8 +635,8 @@ class HostToDspSender(Singleton):
     def rdRingdownData(self,index):
         # Performs a host read of the data in the specified ringdown
         #  entry. Note that the index is the entry number, and each entry
-        #  is of size 64 bytes
-        self.usb.hpiaWrite(RINGDOWN_BASE + 64*index)
+        #  is of size 4*RINGDOWN_ENTRY_SIZE bytes
+        self.usb.hpiaWrite(RINGDOWN_BASE + 4*RINGDOWN_ENTRY_SIZE*index)
         data = interface.RingdownEntryType()
         self.usb.hpidRead(data)
         return data
@@ -660,7 +660,72 @@ class HostToDspSender(Singleton):
         status = self.send(op.opcode,op.operandList,op.env)
         if interface.STATUS_OK != status:
             raise RuntimeError(interface.error_messages[-status])
+    @usbLockProtect
+    def wrScheme(self,schemeNum,numRepeats,schemeRows):
+        # Write schemeRows into scheme table schemeNum. For speed, this is done
+        #  directly via the HPI interface into DSP memory rather than through
+        #  the host area. We need to declare the scheme areas as volatile in the 
+        #  DSP code so that they are always read from memory.
+        SCHEME_BASE = interface.DSP_DATA_ADDRESS + interface.SCHEME_OFFSET
+        if schemeNum > interface.NUM_SCHEME_TABLES:
+            raise ValueError("Maximum number of schemes available is %d" % interface.NUM_SCHEME_TABLES)
+        
+        schemeTableAddr = SCHEME_BASE + 4*schemeNum*interface.SCHEME_TABLE_SIZE
+        self.doOperation(Operation("ACTION_WB_INV_CACHE",[schemeTableAddr,4*interface.SCHEME_TABLE_SIZE]))
+        schemeTable = getSchemeTableClass(len(schemeRows))()
+        schemeTable.numRepeats = numRepeats
+        schemeTable.numRows = len(schemeRows)
+        for i,row in enumerate(schemeRows):
+            schemeTable.rows[i].setpoint = float(row[0])
+            schemeTable.rows[i].dwellCount = int(row[1])
+            schemeTable.rows[i].subSchemeId = int(row[2])    if len(row)>=3 else 0
+            schemeTable.rows[i].laserUsed = int(row[3])      if len(row)>=4 else 0
+            schemeTable.rows[i].threshold = int(row[4])      if len(row)>=5 else 0
+            schemeTable.rows[i].pztSetpoint = int(row[5])    if len(row)>=6 else 0
+            schemeTable.rows[i].laserTemp = int(1000*row[6]) if len(row)>=7 else 0
+        self.usb.hpiWrite(schemeTableAddr,schemeTable)
 
+    @usbLockProtect
+    def rdScheme(self,schemeNum):
+        # Read from scheme table schemeNum
+        SCHEME_BASE = interface.DSP_DATA_ADDRESS + interface.SCHEME_OFFSET
+        if schemeNum > interface.NUM_SCHEME_TABLES:
+            raise ValueError("Maximum number of schemes available is %d" % interface.NUM_SCHEME_TABLES)
+        
+        schemeTableAddr = SCHEME_BASE + 4*schemeNum*interface.SCHEME_TABLE_SIZE
+        self.doOperation(Operation("ACTION_WB_CACHE",[schemeTableAddr,4*interface.SCHEME_TABLE_SIZE]))
+        schemeHeader = interface.SchemeTableHeaderType()
+        self.usb.hpiRead(schemeTableAddr,schemeHeader)
+        schemeTable = getSchemeTableClass(schemeHeader.numRows)()
+        self.usb.hpiRead(schemeTableAddr,schemeTable)
+        return {"numRepeats":schemeTable.numRepeats,
+                "schemeRows":[(row.setpoint,row.dwellCount,row.subSchemeId,row.laserUsed, \
+                               row.threshold,row.pztSetpoint,0.001*row.laserTemp) for row in schemeTable.rows]}
+
+    @usbLockProtect
+    def wrVirtualLaserParams(self,vLaserNum,vLaserParams):
+        # Write virtual laser parameters for vLaserNum (zero-based index)
+        VIRTUAL_LASER_PARAMS_BASE = interface.DSP_DATA_ADDRESS + interface.VIRTUAL_LASER_PARAMS_OFFSET
+        if vLaserNum > interface.NUM_VIRTUAL_LASERS:
+            raise ValueError("Maximum number of virtual lasers available is %d" % interface.NUM_VIRTUAL_LASERS)
+        if not isinstance(vLaserParams,interface.VirtualLaserParamsType):
+            raise ValueError("Invalid object to write in wrVirtualLaserParams")
+        virtualLaserParamsAddr = VIRTUAL_LASER_PARAMS_BASE + 4*vLaserNum*interface.VIRTUAL_LASER_PARAMS_SIZE
+        self.doOperation(Operation("ACTION_WB_INV_CACHE",[virtualLaserParamsAddr,4*interface.VIRTUAL_LASER_PARAMS_SIZE]))
+        self.usb.hpiWrite(virtualLaserParamsAddr,vLaserParams)
+
+    @usbLockProtect
+    def rdVirtualLaserParams(self,vLaserNum):
+        # Read virtual laser parameters for vLaserNum (zero-based index)
+        VIRTUAL_LASER_PARAMS_BASE = interface.DSP_DATA_ADDRESS + interface.VIRTUAL_LASER_PARAMS_OFFSET
+        if vLaserNum > interface.NUM_VIRTUAL_LASERS:
+            raise ValueError("Maximum number of virtual lasers available is %d" % interface.NUM_VIRTUAL_LASERS)
+        vLaserParams = interface.VirtualLaserParamsType()
+        virtualLaserParamsAddr = VIRTUAL_LASER_PARAMS_BASE + 4*vLaserNum*interface.VIRTUAL_LASER_PARAMS_SIZE
+        self.doOperation(Operation("ACTION_WB_CACHE",[virtualLaserParamsAddr,4*interface.VIRTUAL_LASER_PARAMS_SIZE]))
+        self.usb.hpiRead(virtualLaserParamsAddr,vLaserParams)
+        return vLaserParams
+    
 class SensorHistory(Singleton):
     """Stores latest values of all sensor streams in a dictionary
     so that snapshots of these quantities may be written to the state

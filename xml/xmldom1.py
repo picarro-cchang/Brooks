@@ -109,25 +109,6 @@ for index,ident in enumerate(statusIdentList):
         raise ValueError, "Redefinition of %s: Old value %s, New value %s" % (ident,definitions[ident],-index)
     definitions[ident] = -index
 
-printFp(intPyFp,'\n# Constant definitions')
-printFp(intHFp,'\n/* Constant definitions */')
-constantLists = docEl.getElementsByTagName('constant_list')
-for constantList in constantLists:
-    for constant in constantList.getElementsByTagName('constant'):
-        ident = constant.attributes['ident'].value
-        value = constant.firstChild.data
-        try:
-            description = constant.attributes['description'].value
-            printFp(intPyFp,'# %s' % (description))
-            printFp(intPyFp,'%s = %s' % (ident,value))
-            printFp(intHFp,'// %s' % (description))
-            printFp(intHFp, "#define %s (%s)" % (ident,value))
-        except:
-            printFp(intPyFp,'%s = %s' % (ident,value))
-            printFp(intHFp, "#define %s (%s)" % (ident,value))
-        if ident in definitions:
-            raise ValueError, "Redefinition of %s: Old value %s, New value %s" % (ident,definitions[ident],value)
-        definitions[ident] = value
 
 unionLists = docEl.getElementsByTagName('union_list')
 for unionList in unionLists:
@@ -172,6 +153,26 @@ for structList in structLists:
         printFp(intPyFp, "\nclass %s(Structure):\n    _fields_ = [\n%s\n    ]" % (structName,",\n".join(declPy)))
         definitions[structName] = type(str(structName),(ctypes.Structure,),
                                         dict(_fields_=fieldList))
+
+printFp(intPyFp,'\n# Constant definitions')
+printFp(intHFp,'\n/* Constant definitions */')
+constantLists = docEl.getElementsByTagName('constant_list')
+for constantList in constantLists:
+    for constant in constantList.getElementsByTagName('constant'):
+        ident = constant.attributes['ident'].value
+        value = constant.firstChild.data
+        try:
+            description = constant.attributes['description'].value
+            printFp(intPyFp,'# %s' % (description))
+            printFp(intPyFp,'%s = %s' % (ident,value))
+            printFp(intHFp,'// %s' % (description))
+            printFp(intHFp, "#define %s (%s)" % (ident,value))
+        except:
+            printFp(intPyFp,'%s = %s' % (ident,value))
+            printFp(intHFp, "#define %s (%s)" % (ident,value))
+        if ident in definitions:
+            raise ValueError, "Redefinition of %s: Old value %s, New value %s" % (ident,definitions[ident],value)
+        definitions[ident] = value
 
 enumLists = docEl.getElementsByTagName('enum_list')
 enumLookup = {}
@@ -231,7 +232,6 @@ for bitsList in bitsLists:
 
         printFp(intHFp, "\n%s" % ("\n".join(declC),))
         printFp(intPyFp, "\n%s" % ("\n".join(declPy),))
-
 
 registerLists = docEl.getElementsByTagName('register_list')
 registerNames = []

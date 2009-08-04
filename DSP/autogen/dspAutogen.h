@@ -51,6 +51,8 @@ int r_heaterCntrlStep(unsigned int numInt,void *params,void *env);
 int r_tunerCntrlInit(unsigned int numInt,void *params,void *env);
 int r_tunerCntrlStep(unsigned int numInt,void *params,void *env);
 int r_envChecker(unsigned int numInt,void *params,void *env);
+int r_wbInvCache(unsigned int numInt,void *params,void *env);
+int r_wbCache(unsigned int numInt,void *params,void *env);
 int r_pulseGenerator(unsigned int numInt,void *params,void *env);
 int r_filter(unsigned int numInt,void *params,void *env);
 int r_ds1631_readTemp(unsigned int numInt,void *params,void *env);

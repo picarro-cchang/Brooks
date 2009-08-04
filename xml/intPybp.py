@@ -16,7 +16,7 @@ header = """#!/usr/bin/python
 #
 
 from ctypes import c_byte, c_uint, c_int, c_ushort, c_short
-from ctypes import c_longlong, c_float, Structure, Union
+from ctypes import c_longlong, c_float, Structure, Union, sizeof
 
 class RegInfo(object):
     "Class to store register access information"

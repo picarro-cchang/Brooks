@@ -14,7 +14,7 @@
 #
 
 from ctypes import c_byte, c_uint, c_int, c_ushort, c_short
-from ctypes import c_longlong, c_float, Structure, Union
+from ctypes import c_longlong, c_float, Structure, Union, sizeof
 
 class RegInfo(object):
     "Class to store register access information"
@@ -65,100 +65,6 @@ ERROR_RD_BAD_RINGDOWN = -15
 error_messages.append("Bad ringdown")
 ERROR_RD_INSUFFICIENT_DATA = -16
 error_messages.append("Insufficient data for ringdown calculation")
-
-# Constant definitions
-# Number of points in controller waveforms
-CONTROLLER_WAVEFORM_POINTS = 1000
-# Number of points for waveforms on controller rindown pane
-CONTROLLER_RINGDOWN_POINTS = 10000
-# Base address for DSP data memory
-DSP_DATA_ADDRESS = 0x80800000
-# Number of ringdown entries
-NUM_RINGDOWN_ENTRIES = 2048
-# Base address for DSP shared memory
-SHAREDMEM_ADDRESS = 0x20000
-# Base address for ringdown memory
-RDMEM_ADDRESS = 0xA0000000
-# Offset for software registers in DSP shared memory
-REG_OFFSET = 0x0
-# Offset for sensor stream area in DSP shared memory
-SENSOR_OFFSET = 0x1B00
-# Offset for message area in DSP shared memory
-MESSAGE_OFFSET = 0x2B00
-# Offset for group table in DSP shared memory
-GROUP_OFFSET = 0x2F00
-# Offset for operation table in DSP shared memory
-OPERATION_OFFSET = 0x2F20
-# Offset for operand table in DSP shared memory
-OPERAND_OFFSET = 0x3300
-# Offset for environment table in DSP shared memory
-ENVIRONMENT_OFFSET = 0x3700
-# Offset for host area in DSP shared memory
-HOST_OFFSET = 0x3F00
-# Size (in 32-bit ints) of DSP shared memory
-SHAREDMEM_SIZE = 0x4000
-# Number of software registers
-REG_REGION_SIZE = (SENSOR_OFFSET - REG_OFFSET)
-# Number of 32-bit ints in sensor area
-SENSOR_REGION_SIZE = (MESSAGE_OFFSET - SENSOR_OFFSET)
-# Number of sensor steam entries in sensor area
-NUM_SENSOR_ENTRIES = SENSOR_REGION_SIZE>>2
-# Number of 32-bit ints in message area
-MESSAGE_REGION_SIZE = (GROUP_OFFSET - MESSAGE_OFFSET)
-# Number of messages in message area
-NUM_MESSAGES = MESSAGE_REGION_SIZE>>5
-# Number of 32-bit ints in group table
-GROUP_TABLE_SIZE = (OPERATION_OFFSET - GROUP_OFFSET)
-# Number of 32-bit ints in operation table
-OPERATION_TABLE_SIZE = (OPERAND_OFFSET - OPERATION_OFFSET)
-# Number of operations in operation table
-NUM_OPERATIONS = OPERATION_TABLE_SIZE>>1
-# Number of 32-bit ints in operand table
-OPERAND_TABLE_SIZE = (ENVIRONMENT_OFFSET - OPERAND_OFFSET)
-# Number of 32-bit ints in environment table
-ENVIRONMENT_TABLE_SIZE = (HOST_OFFSET - ENVIRONMENT_OFFSET)
-# Number of 32-bit ints in host area
-HOST_REGION_SIZE = (SHAREDMEM_SIZE - HOST_OFFSET)
-# Number of bits in EMIF address
-EMIF_ADDR_WIDTH = 20
-# Number of bits in EMIF address
-EMIF_DATA_WIDTH = 32
-# Number of bits in an FPGA register
-FPGA_REG_WIDTH = 16
-# Mask to access ringdown memory
-FPGA_RDMEM_MASK = 0
-# Mask to access FPGA registers
-FPGA_REG_MASK = 1
-# Number of bits in ringdown data
-RDMEM_DATA_WIDTH = 18
-# Number of bits in ringdown metadata
-RDMEM_META_WIDTH = 16
-# Number of bits in ringdown parameters
-RDMEM_PARAM_WIDTH = 16
-# Number of address bits reserved for a ringdown region in each bank
-RDMEM_RESERVED_BANK_ADDR_WIDTH = 12
-# Number of address bits for one bank of data
-DATA_BANK_ADDR_WIDTH = 12
-# Number of address bits for one bank of metadata
-META_BANK_ADDR_WIDTH = 12
-# Number of address bits for one bank of parameters
-PARAM_BANK_ADDR_WIDTH = 6
-# Tuner value at ringdown index in parameter array
-PARAM_TUNER_AT_RINGDOWN_INDEX = 10
-# Metadata address at ringdown index in parameter array
-PARAM_META_ADDR_AT_RINGDOWN_INDEX = 11
-# Number of in-range samples to acquire lock
-TEMP_CNTRL_LOCK_COUNT = 5
-# Number of out-of-range samples to lose lock
-TEMP_CNTRL_UNLOCK_COUNT = 5
-# Code to confirm FPGA is programmed
-FPGA_MAGIC_CODE = 0xC0DE0001
-# Extra bits in accumulator for ringdown simulator
-RDSIM_EXTRA = 4
-# Number of bits for wavelength monitor ADCs
-WLM_ADC_WIDTH = 16
-# Maximum number of virtual lasers
-MAX_VLASERS = 8
 
 class DataType(Union):
     _fields_ = [
@@ -280,6 +186,176 @@ class FilterEnvType(Structure):
     ("den",c_float*9),
     ("state",c_float*8)
     ]
+
+class SchemeRowType(Structure):
+    _fields_ = [
+    ("setpoint",c_float),
+    ("dwellCount",c_ushort),
+    ("subSchemeId",c_ushort),
+    ("laserUsed",c_ushort),
+    ("threshold",c_ushort),
+    ("pztSetpoint",c_ushort),
+    ("laserTemp",c_ushort)
+    ]
+
+class SchemeTableHeaderType(Structure):
+    _fields_ = [
+    ("numRepeats",c_uint),
+    ("numRows",c_uint)
+    ]
+
+class SchemeTableType(Structure):
+    _fields_ = [
+    ("numRepeats",c_uint),
+    ("numRows",c_uint),
+    ("rows",SchemeRowType*8192)
+    ]
+
+class SchemeSequenceType(Structure):
+    _fields_ = [
+    ("currentTableIndex",c_uint),
+    ("restartFlag",c_ushort),
+    ("loopFlag",c_ushort),
+    ("schemeTableIndices",c_ushort)
+    ]
+
+class VirtualLaserParamsType(Structure):
+    _fields_ = [
+    ("actualLaser",c_uint),
+    ("tempSensitivity",c_float),
+    ("ratio1Center",c_float),
+    ("ratio2Center",c_float),
+    ("ratio1Scale",c_float),
+    ("ratio2Scale",c_float),
+    ("calTemp",c_float),
+    ("calPressure",c_float),
+    ("pressureC0",c_float),
+    ("pressureC1",c_float),
+    ("pressureC2",c_float),
+    ("pressureC3",c_float)
+    ]
+
+# Constant definitions
+# Number of points in controller waveforms
+CONTROLLER_WAVEFORM_POINTS = 1000
+# Number of points for waveforms on controller rindown pane
+CONTROLLER_RINGDOWN_POINTS = 10000
+# Base address for DSP data memory
+DSP_DATA_ADDRESS = 0x80800000
+# Offset for ringdown results in DSP data memory
+RDRESULTS_OFFSET = 0x0
+# Number of ringdown entries
+NUM_RINGDOWN_ENTRIES = 2048
+# Size of a ringdown entry in 32 bit ints
+RINGDOWN_ENTRY_SIZE = (sizeof(RingdownEntryType)/4)
+# Offset for scheme table in DSP shared memory
+SCHEME_OFFSET = (RDRESULTS_OFFSET+NUM_RINGDOWN_ENTRIES*RINGDOWN_ENTRY_SIZE)
+# Number of scheme tables
+NUM_SCHEME_TABLES = 16
+# Maximum rows in a scheme table
+NUM_SCHEME_ROWS = 8192
+# Size of a scheme row in 32 bit ints
+SCHEME_ROW_SIZE = (sizeof(SchemeRowType)/4)
+# Size of a scheme table in 32 bit ints
+SCHEME_TABLE_SIZE = (sizeof(SchemeTableType)/4)
+# Offset for virtual laser parameters in DSP shared memory
+VIRTUAL_LASER_PARAMS_OFFSET = (SCHEME_OFFSET+NUM_SCHEME_TABLES*SCHEME_TABLE_SIZE)
+# Maximum number of virtual lasers
+NUM_VIRTUAL_LASERS = 8
+# Size of a virtual laser parameter table in 32 bit ints
+VIRTUAL_LASER_PARAMS_SIZE = (sizeof(VirtualLaserParamsType)/4)
+# Base address for DSP shared memory
+SHAREDMEM_ADDRESS = 0x10000
+# Base address for ringdown memory
+RDMEM_ADDRESS = 0xA0000000
+# Offset for software registers in DSP shared memory
+REG_OFFSET = 0x0
+# Offset for sensor stream area in DSP shared memory
+SENSOR_OFFSET = 0x1B00
+# Offset for message area in DSP shared memory
+MESSAGE_OFFSET = 0x2B00
+# Offset for group table in DSP shared memory
+GROUP_OFFSET = 0x2F00
+# Offset for operation table in DSP shared memory
+OPERATION_OFFSET = 0x2F20
+# Offset for operand table in DSP shared memory
+OPERAND_OFFSET = 0x3300
+# Offset for environment table in DSP shared memory
+ENVIRONMENT_OFFSET = 0x3700
+# Offset for host area in DSP shared memory
+HOST_OFFSET = 0x3F00
+# Offset for ringdown buffer area in DSP shared memory
+RINGDOWN_BUFFER_OFFSET = 0x4000
+# Number of ringdown buffer areas in DSP shared memory
+NUM_RINGDOWN_BUFFERS = 3
+# Size of a ringdown buffer area in 32 bit ints
+RINGDOWN_BUFFER_SIZE = (sizeof(RingdownBufferType)/4)
+# Offset for scheme sequence area in DSP shared memory
+SCHEME_SEQUENCE_OFFSET = 0x7800
+# Size of a scheme sequence in 32 bit ints
+SCHEME_SEQUENCE_SIZE = (sizeof(SchemeSequenceType)/4)
+# Size (in 32-bit ints) of DSP shared memory
+SHAREDMEM_SIZE = 0x8000
+# Number of software registers
+REG_REGION_SIZE = (SENSOR_OFFSET - REG_OFFSET)
+# Number of 32-bit ints in sensor area
+SENSOR_REGION_SIZE = (MESSAGE_OFFSET - SENSOR_OFFSET)
+# Number of sensor steam entries in sensor area
+NUM_SENSOR_ENTRIES = SENSOR_REGION_SIZE>>2
+# Number of 32-bit ints in message area
+MESSAGE_REGION_SIZE = (GROUP_OFFSET - MESSAGE_OFFSET)
+# Number of messages in message area
+NUM_MESSAGES = MESSAGE_REGION_SIZE>>5
+# Number of 32-bit ints in group table
+GROUP_TABLE_SIZE = (OPERATION_OFFSET - GROUP_OFFSET)
+# Number of 32-bit ints in operation table
+OPERATION_TABLE_SIZE = (OPERAND_OFFSET - OPERATION_OFFSET)
+# Number of operations in operation table
+NUM_OPERATIONS = OPERATION_TABLE_SIZE>>1
+# Number of 32-bit ints in operand table
+OPERAND_TABLE_SIZE = (ENVIRONMENT_OFFSET - OPERAND_OFFSET)
+# Number of 32-bit ints in environment table
+ENVIRONMENT_TABLE_SIZE = (HOST_OFFSET - ENVIRONMENT_OFFSET)
+# Number of 32-bit ints in host area
+HOST_REGION_SIZE = (RINGDOWN_BUFFER_OFFSET - HOST_OFFSET)
+# Number of bits in EMIF address
+EMIF_ADDR_WIDTH = 20
+# Number of bits in EMIF address
+EMIF_DATA_WIDTH = 32
+# Number of bits in an FPGA register
+FPGA_REG_WIDTH = 16
+# Mask to access ringdown memory
+FPGA_RDMEM_MASK = 0
+# Mask to access FPGA registers
+FPGA_REG_MASK = 1
+# Number of bits in ringdown data
+RDMEM_DATA_WIDTH = 18
+# Number of bits in ringdown metadata
+RDMEM_META_WIDTH = 16
+# Number of bits in ringdown parameters
+RDMEM_PARAM_WIDTH = 16
+# Number of address bits reserved for a ringdown region in each bank
+RDMEM_RESERVED_BANK_ADDR_WIDTH = 12
+# Number of address bits for one bank of data
+DATA_BANK_ADDR_WIDTH = 12
+# Number of address bits for one bank of metadata
+META_BANK_ADDR_WIDTH = 12
+# Number of address bits for one bank of parameters
+PARAM_BANK_ADDR_WIDTH = 6
+# Tuner value at ringdown index in parameter array
+PARAM_TUNER_AT_RINGDOWN_INDEX = 10
+# Metadata address at ringdown index in parameter array
+PARAM_META_ADDR_AT_RINGDOWN_INDEX = 11
+# Number of in-range samples to acquire lock
+TEMP_CNTRL_LOCK_COUNT = 5
+# Number of out-of-range samples to lose lock
+TEMP_CNTRL_UNLOCK_COUNT = 5
+# Code to confirm FPGA is programmed
+FPGA_MAGIC_CODE = 0xC0DE0001
+# Extra bits in accumulator for ringdown simulator
+RDSIM_EXTRA = 4
+# Number of bits for wavelength monitor ADCs
+WLM_ADC_WIDTH = 16
 
 # Enumerated definitions for STREAM_MemberType
 STREAM_MemberType = c_uint
@@ -1429,13 +1505,15 @@ ACTION_HEATER_CNTRL_STEP = 33
 ACTION_TUNER_CNTRL_INIT = 34
 ACTION_TUNER_CNTRL_STEP = 35
 ACTION_ENV_CHECKER = 36
-ACTION_PULSE_GENERATOR = 37
-ACTION_FILTER = 38
-ACTION_DS1631_READTEMP = 39
-ACTION_LASER_TEC_IMON = 40
-ACTION_READ_LASER_TEC_MONITORS = 41
-ACTION_READ_LASER_THERMISTOR_RESISTANCE = 42
-ACTION_READ_LASER_CURRENT = 43
+ACTION_WB_INV_CACHE = 37
+ACTION_WB_CACHE = 38
+ACTION_PULSE_GENERATOR = 39
+ACTION_FILTER = 40
+ACTION_DS1631_READTEMP = 41
+ACTION_LASER_TEC_IMON = 42
+ACTION_READ_LASER_TEC_MONITORS = 43
+ACTION_READ_LASER_THERMISTOR_RESISTANCE = 44
+ACTION_READ_LASER_CURRENT = 45
 
 
 # Parameter form definitions

@@ -494,6 +494,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_tunerCntrlStep(numInt,params,env);
         case ACTION_ENV_CHECKER:
             return r_envChecker(numInt,params,env);
+        case ACTION_WB_INV_CACHE:
+            return r_wbInvCache(numInt,params,env);
+        case ACTION_WB_CACHE:
+            return r_wbCache(numInt,params,env);
         case ACTION_PULSE_GENERATOR:
             return r_pulseGenerator(numInt,params,env);
         case ACTION_FILTER:

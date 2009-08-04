@@ -52,100 +52,6 @@ typedef int bool;
 #define ERROR_RD_BAD_RINGDOWN (-15)
 #define ERROR_RD_INSUFFICIENT_DATA (-16)
 
-/* Constant definitions */
-// Number of points in controller waveforms
-#define CONTROLLER_WAVEFORM_POINTS (1000)
-// Number of points for waveforms on controller rindown pane
-#define CONTROLLER_RINGDOWN_POINTS (10000)
-// Base address for DSP data memory
-#define DSP_DATA_ADDRESS (0x80800000)
-// Number of ringdown entries
-#define NUM_RINGDOWN_ENTRIES (2048)
-// Base address for DSP shared memory
-#define SHAREDMEM_ADDRESS (0x20000)
-// Base address for ringdown memory
-#define RDMEM_ADDRESS (0xA0000000)
-// Offset for software registers in DSP shared memory
-#define REG_OFFSET (0x0)
-// Offset for sensor stream area in DSP shared memory
-#define SENSOR_OFFSET (0x1B00)
-// Offset for message area in DSP shared memory
-#define MESSAGE_OFFSET (0x2B00)
-// Offset for group table in DSP shared memory
-#define GROUP_OFFSET (0x2F00)
-// Offset for operation table in DSP shared memory
-#define OPERATION_OFFSET (0x2F20)
-// Offset for operand table in DSP shared memory
-#define OPERAND_OFFSET (0x3300)
-// Offset for environment table in DSP shared memory
-#define ENVIRONMENT_OFFSET (0x3700)
-// Offset for host area in DSP shared memory
-#define HOST_OFFSET (0x3F00)
-// Size (in 32-bit ints) of DSP shared memory
-#define SHAREDMEM_SIZE (0x4000)
-// Number of software registers
-#define REG_REGION_SIZE ((SENSOR_OFFSET - REG_OFFSET))
-// Number of 32-bit ints in sensor area
-#define SENSOR_REGION_SIZE ((MESSAGE_OFFSET - SENSOR_OFFSET))
-// Number of sensor steam entries in sensor area
-#define NUM_SENSOR_ENTRIES (SENSOR_REGION_SIZE>>2)
-// Number of 32-bit ints in message area
-#define MESSAGE_REGION_SIZE ((GROUP_OFFSET - MESSAGE_OFFSET))
-// Number of messages in message area
-#define NUM_MESSAGES (MESSAGE_REGION_SIZE>>5)
-// Number of 32-bit ints in group table
-#define GROUP_TABLE_SIZE ((OPERATION_OFFSET - GROUP_OFFSET))
-// Number of 32-bit ints in operation table
-#define OPERATION_TABLE_SIZE ((OPERAND_OFFSET - OPERATION_OFFSET))
-// Number of operations in operation table
-#define NUM_OPERATIONS (OPERATION_TABLE_SIZE>>1)
-// Number of 32-bit ints in operand table
-#define OPERAND_TABLE_SIZE ((ENVIRONMENT_OFFSET - OPERAND_OFFSET))
-// Number of 32-bit ints in environment table
-#define ENVIRONMENT_TABLE_SIZE ((HOST_OFFSET - ENVIRONMENT_OFFSET))
-// Number of 32-bit ints in host area
-#define HOST_REGION_SIZE ((SHAREDMEM_SIZE - HOST_OFFSET))
-// Number of bits in EMIF address
-#define EMIF_ADDR_WIDTH (20)
-// Number of bits in EMIF address
-#define EMIF_DATA_WIDTH (32)
-// Number of bits in an FPGA register
-#define FPGA_REG_WIDTH (16)
-// Mask to access ringdown memory
-#define FPGA_RDMEM_MASK (0)
-// Mask to access FPGA registers
-#define FPGA_REG_MASK (1)
-// Number of bits in ringdown data
-#define RDMEM_DATA_WIDTH (18)
-// Number of bits in ringdown metadata
-#define RDMEM_META_WIDTH (16)
-// Number of bits in ringdown parameters
-#define RDMEM_PARAM_WIDTH (16)
-// Number of address bits reserved for a ringdown region in each bank
-#define RDMEM_RESERVED_BANK_ADDR_WIDTH (12)
-// Number of address bits for one bank of data
-#define DATA_BANK_ADDR_WIDTH (12)
-// Number of address bits for one bank of metadata
-#define META_BANK_ADDR_WIDTH (12)
-// Number of address bits for one bank of parameters
-#define PARAM_BANK_ADDR_WIDTH (6)
-// Tuner value at ringdown index in parameter array
-#define PARAM_TUNER_AT_RINGDOWN_INDEX (10)
-// Metadata address at ringdown index in parameter array
-#define PARAM_META_ADDR_AT_RINGDOWN_INDEX (11)
-// Number of in-range samples to acquire lock
-#define TEMP_CNTRL_LOCK_COUNT (5)
-// Number of out-of-range samples to lose lock
-#define TEMP_CNTRL_UNLOCK_COUNT (5)
-// Code to confirm FPGA is programmed
-#define FPGA_MAGIC_CODE (0xC0DE0001)
-// Extra bits in accumulator for ringdown simulator
-#define RDSIM_EXTRA (4)
-// Number of bits for wavelength monitor ADCs
-#define WLM_ADC_WIDTH (16)
-// Maximum number of virtual lasers
-#define MAX_VLASERS (8)
-
 typedef union {
     float asFloat;
     uint32 asUint;
@@ -256,6 +162,171 @@ typedef struct {
     float den[9];
     float state[8];
 } FilterEnvType;
+
+typedef struct {
+    float setpoint;
+    uint16 dwellCount;
+    uint16 subSchemeId;
+    uint16 laserUsed;
+    uint16 threshold;
+    uint16 pztSetpoint;
+    uint16 laserTemp;
+} SchemeRowType;
+
+typedef struct {
+    uint32 numRepeats;
+    uint32 numRows;
+} SchemeTableHeaderType;
+
+typedef struct {
+    uint32 numRepeats;
+    uint32 numRows;
+    SchemeRowType rows[8192];
+} SchemeTableType;
+
+typedef struct {
+    uint32 currentTableIndex;
+    uint16 restartFlag;
+    uint16 loopFlag;
+    uint16 schemeTableIndices;
+} SchemeSequenceType;
+
+typedef struct {
+    uint32 actualLaser;
+    float tempSensitivity;
+    float ratio1Center;
+    float ratio2Center;
+    float ratio1Scale;
+    float ratio2Scale;
+    float calTemp;
+    float calPressure;
+    float pressureC0;
+    float pressureC1;
+    float pressureC2;
+    float pressureC3;
+} VirtualLaserParamsType;
+
+/* Constant definitions */
+// Number of points in controller waveforms
+#define CONTROLLER_WAVEFORM_POINTS (1000)
+// Number of points for waveforms on controller rindown pane
+#define CONTROLLER_RINGDOWN_POINTS (10000)
+// Base address for DSP data memory
+#define DSP_DATA_ADDRESS (0x80800000)
+// Offset for ringdown results in DSP data memory
+#define RDRESULTS_OFFSET (0x0)
+// Number of ringdown entries
+#define NUM_RINGDOWN_ENTRIES (2048)
+// Size of a ringdown entry in 32 bit ints
+#define RINGDOWN_ENTRY_SIZE ((sizeof(RingdownEntryType)/4))
+// Offset for scheme table in DSP shared memory
+#define SCHEME_OFFSET ((RDRESULTS_OFFSET+NUM_RINGDOWN_ENTRIES*RINGDOWN_ENTRY_SIZE))
+// Number of scheme tables
+#define NUM_SCHEME_TABLES (16)
+// Maximum rows in a scheme table
+#define NUM_SCHEME_ROWS (8192)
+// Size of a scheme row in 32 bit ints
+#define SCHEME_ROW_SIZE ((sizeof(SchemeRowType)/4))
+// Size of a scheme table in 32 bit ints
+#define SCHEME_TABLE_SIZE ((sizeof(SchemeTableType)/4))
+// Offset for virtual laser parameters in DSP shared memory
+#define VIRTUAL_LASER_PARAMS_OFFSET ((SCHEME_OFFSET+NUM_SCHEME_TABLES*SCHEME_TABLE_SIZE))
+// Maximum number of virtual lasers
+#define NUM_VIRTUAL_LASERS (8)
+// Size of a virtual laser parameter table in 32 bit ints
+#define VIRTUAL_LASER_PARAMS_SIZE ((sizeof(VirtualLaserParamsType)/4))
+// Base address for DSP shared memory
+#define SHAREDMEM_ADDRESS (0x10000)
+// Base address for ringdown memory
+#define RDMEM_ADDRESS (0xA0000000)
+// Offset for software registers in DSP shared memory
+#define REG_OFFSET (0x0)
+// Offset for sensor stream area in DSP shared memory
+#define SENSOR_OFFSET (0x1B00)
+// Offset for message area in DSP shared memory
+#define MESSAGE_OFFSET (0x2B00)
+// Offset for group table in DSP shared memory
+#define GROUP_OFFSET (0x2F00)
+// Offset for operation table in DSP shared memory
+#define OPERATION_OFFSET (0x2F20)
+// Offset for operand table in DSP shared memory
+#define OPERAND_OFFSET (0x3300)
+// Offset for environment table in DSP shared memory
+#define ENVIRONMENT_OFFSET (0x3700)
+// Offset for host area in DSP shared memory
+#define HOST_OFFSET (0x3F00)
+// Offset for ringdown buffer area in DSP shared memory
+#define RINGDOWN_BUFFER_OFFSET (0x4000)
+// Number of ringdown buffer areas in DSP shared memory
+#define NUM_RINGDOWN_BUFFERS (3)
+// Size of a ringdown buffer area in 32 bit ints
+#define RINGDOWN_BUFFER_SIZE ((sizeof(RingdownBufferType)/4))
+// Offset for scheme sequence area in DSP shared memory
+#define SCHEME_SEQUENCE_OFFSET (0x7800)
+// Size of a scheme sequence in 32 bit ints
+#define SCHEME_SEQUENCE_SIZE ((sizeof(SchemeSequenceType)/4))
+// Size (in 32-bit ints) of DSP shared memory
+#define SHAREDMEM_SIZE (0x8000)
+// Number of software registers
+#define REG_REGION_SIZE ((SENSOR_OFFSET - REG_OFFSET))
+// Number of 32-bit ints in sensor area
+#define SENSOR_REGION_SIZE ((MESSAGE_OFFSET - SENSOR_OFFSET))
+// Number of sensor steam entries in sensor area
+#define NUM_SENSOR_ENTRIES (SENSOR_REGION_SIZE>>2)
+// Number of 32-bit ints in message area
+#define MESSAGE_REGION_SIZE ((GROUP_OFFSET - MESSAGE_OFFSET))
+// Number of messages in message area
+#define NUM_MESSAGES (MESSAGE_REGION_SIZE>>5)
+// Number of 32-bit ints in group table
+#define GROUP_TABLE_SIZE ((OPERATION_OFFSET - GROUP_OFFSET))
+// Number of 32-bit ints in operation table
+#define OPERATION_TABLE_SIZE ((OPERAND_OFFSET - OPERATION_OFFSET))
+// Number of operations in operation table
+#define NUM_OPERATIONS (OPERATION_TABLE_SIZE>>1)
+// Number of 32-bit ints in operand table
+#define OPERAND_TABLE_SIZE ((ENVIRONMENT_OFFSET - OPERAND_OFFSET))
+// Number of 32-bit ints in environment table
+#define ENVIRONMENT_TABLE_SIZE ((HOST_OFFSET - ENVIRONMENT_OFFSET))
+// Number of 32-bit ints in host area
+#define HOST_REGION_SIZE ((RINGDOWN_BUFFER_OFFSET - HOST_OFFSET))
+// Number of bits in EMIF address
+#define EMIF_ADDR_WIDTH (20)
+// Number of bits in EMIF address
+#define EMIF_DATA_WIDTH (32)
+// Number of bits in an FPGA register
+#define FPGA_REG_WIDTH (16)
+// Mask to access ringdown memory
+#define FPGA_RDMEM_MASK (0)
+// Mask to access FPGA registers
+#define FPGA_REG_MASK (1)
+// Number of bits in ringdown data
+#define RDMEM_DATA_WIDTH (18)
+// Number of bits in ringdown metadata
+#define RDMEM_META_WIDTH (16)
+// Number of bits in ringdown parameters
+#define RDMEM_PARAM_WIDTH (16)
+// Number of address bits reserved for a ringdown region in each bank
+#define RDMEM_RESERVED_BANK_ADDR_WIDTH (12)
+// Number of address bits for one bank of data
+#define DATA_BANK_ADDR_WIDTH (12)
+// Number of address bits for one bank of metadata
+#define META_BANK_ADDR_WIDTH (12)
+// Number of address bits for one bank of parameters
+#define PARAM_BANK_ADDR_WIDTH (6)
+// Tuner value at ringdown index in parameter array
+#define PARAM_TUNER_AT_RINGDOWN_INDEX (10)
+// Metadata address at ringdown index in parameter array
+#define PARAM_META_ADDR_AT_RINGDOWN_INDEX (11)
+// Number of in-range samples to acquire lock
+#define TEMP_CNTRL_LOCK_COUNT (5)
+// Number of out-of-range samples to lose lock
+#define TEMP_CNTRL_UNLOCK_COUNT (5)
+// Code to confirm FPGA is programmed
+#define FPGA_MAGIC_CODE (0xC0DE0001)
+// Extra bits in accumulator for ringdown simulator
+#define RDSIM_EXTRA (4)
+// Number of bits for wavelength monitor ADCs
+#define WLM_ADC_WIDTH (16)
 
 typedef enum {
     STREAM_Laser1Temp = 0, // 
@@ -866,11 +937,13 @@ typedef enum {
 #define ACTION_TUNER_CNTRL_INIT (34)
 #define ACTION_TUNER_CNTRL_STEP (35)
 #define ACTION_ENV_CHECKER (36)
-#define ACTION_PULSE_GENERATOR (37)
-#define ACTION_FILTER (38)
-#define ACTION_DS1631_READTEMP (39)
-#define ACTION_LASER_TEC_IMON (40)
-#define ACTION_READ_LASER_TEC_MONITORS (41)
-#define ACTION_READ_LASER_THERMISTOR_RESISTANCE (42)
-#define ACTION_READ_LASER_CURRENT (43)
+#define ACTION_WB_INV_CACHE (37)
+#define ACTION_WB_CACHE (38)
+#define ACTION_PULSE_GENERATOR (39)
+#define ACTION_FILTER (40)
+#define ACTION_DS1631_READTEMP (41)
+#define ACTION_LASER_TEC_IMON (42)
+#define ACTION_READ_LASER_TEC_MONITORS (43)
+#define ACTION_READ_LASER_THERMISTOR_RESISTANCE (44)
+#define ACTION_READ_LASER_CURRENT (45)
 #endif
