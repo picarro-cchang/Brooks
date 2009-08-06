@@ -1,6 +1,3 @@
-#ifdef SIMULATION
-#include "registerTestSim.h"
-#else
 #include <std.h>
 #include <csl.h>
 #include <csl_i2c.h>
@@ -11,7 +8,6 @@
 #include <sem.h>
 #include <prd.h>
 #include "registerTestcfg.h"
-#endif
 
 #include "configDsp.h"
 #include "ds1631.h"
@@ -25,6 +21,7 @@
 #include "registers.h"
 #include "registerTest.h"
 #include "scheduler.h"
+#include "spectrumCntrl.h"
 
 extern far LOG_Obj trace;
 #ifdef SIMULATION
@@ -57,12 +54,15 @@ void timestampPrdFunc(void)
 {
     DataType d;
     timestamp = timestamp + 1LL;
+    SEM_postBinary(&SEM_waitForRdMan);
+
+    /*
     readRegister(RDSIM_TRIGGER_DIVIDER_REGISTER,&d);
     if (0 == d.asInt) d.asInt = 1;
     if (0 == timestamp % d.asInt) 
         changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_START_RD_B,
                         RDMAN_CONTROL_START_RD_W,1);
-
+    */
 }
 #endif
 
@@ -76,6 +76,8 @@ main(int argc, char *argv[])
     configDsp();
     // Initialize communtications between DSP and host
     init_comms();
+    // Initialize ringdown buffers, scheme tables, scheme sequencer, virtual laser parameters
+    dspDataInit();
     // Clear scheduler tables
     clear_scheduler_tables();
     // Initialize all registers
@@ -86,6 +88,8 @@ main(int argc, char *argv[])
     ds1631_init();
     // Initialize ringdown fitting module
     rdFittingInit();
+    // Initialize spectrum controller module
+    spectCntrlInit();
     // Initialize EDMA handling
     edmaInit();
     

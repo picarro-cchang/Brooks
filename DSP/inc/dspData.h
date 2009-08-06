@@ -24,4 +24,5 @@ extern volatile VirtualLaserParamsType   *virtualLaserParams;
 extern volatile SchemeSequenceType *schemeSequence;
 extern RingdownBufferType *ringdownBuffers;
 
+void dspDataInit(void);
 #endif

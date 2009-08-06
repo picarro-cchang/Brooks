@@ -222,6 +222,15 @@
             <fpga_register offset="FPGA_INJECT">CONTROL</fpga_register>
         </gui_page>
         <gui_page>
+            <title>Spectrum Controller Parameters</title>
+            <register>SPECT_CNTRL_STATE_REGISTER</register>
+            <register>SPECT_CNTRL_ACTIVE_SCHEME_REGISTER</register>
+            <register>SPECT_CNTRL_NEXT_SCHEME_REGISTER</register>
+            <register>SPECT_CNTRL_SCHEME_ITER_REGISTER</register>
+            <register>SPECT_CNTRL_SCHEME_ROW_REGISTER</register>
+            <register>SPECT_CNTRL_DWELL_COUNT_REGISTER</register>
+        </gui_page>
+        <gui_page>
             <title>Ringdown Simulator Parameters</title>
             <fpga_register offset="FPGA_RDSIM">OPTIONS</fpga_register>
             <fpga_register offset="FPGA_RDSIM">TUNER_CENTER</fpga_register>

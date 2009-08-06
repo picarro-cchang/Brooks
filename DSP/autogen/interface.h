@@ -258,7 +258,7 @@ typedef struct {
 // Offset for ringdown buffer area in DSP shared memory
 #define RINGDOWN_BUFFER_OFFSET (0x4000)
 // Number of ringdown buffer areas in DSP shared memory
-#define NUM_RINGDOWN_BUFFERS (3)
+#define NUM_RINGDOWN_BUFFERS (2)
 // Size of a ringdown buffer area in 32 bit ints
 #define RINGDOWN_BUFFER_SIZE ((sizeof(RingdownBufferType)/4))
 // Offset for scheme sequence area in DSP shared memory
@@ -385,6 +385,15 @@ typedef enum {
     HEATER_CNTRL_ManualState = 2 // Manual Control
 } HEATER_CNTRL_StateType;
 
+typedef enum {
+    SPECT_CNTRL_IdleState = 0, // No acquisition
+    SPECT_CNTRL_ContinuousState = 1, // Continuous mode
+    SPECT_CNTRL_SchemingSingleState = 2, // Single scheme mode
+    SPECT_CNTRL_SchemingMultipleState = 3, // Multiple scheme mode
+    SPECT_CNTRL_SequencingState = 4, // Sequence mode
+    SPECT_CNTRL_PausedState = 5 // Acquisition paused
+} SPECT_CNTRL_StateType;
+
 /* Definitions for COMM_STATUS_BITMASK */
 #define COMM_STATUS_CompleteMask (0x1)
 #define COMM_STATUS_BadCrcMask (0x2)
@@ -395,8 +404,17 @@ typedef enum {
 #define COMM_STATUS_SequenceNumberShift (24)
 #define COMM_STATUS_ReturnValueShift (8)
 
+/* Definitions for RINGDOWN_STATUS_BITMASK */
+#define RINGDOWN_STATUS_SchemeActiveMask (0x1)
+#define RINGDOWN_STATUS_SchemeIterationCompleteMask (0x2)
+#define RINGDOWN_STATUS_SchemeCompleteInSingleModeMask (0x4)
+#define RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask (0x8)
+#define RINGDOWN_STATUS_ContinuousModeMask (0x10)
+#define RINGDOWN_STATUS_SchemeIterationToggleMask (0x20)
+#define RINGDOWN_STATUS_SchemeToggleMask (0x20)
+
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (231)
+#define INTERFACE_NUMBER_OF_REGISTERS (237)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -629,6 +647,12 @@ typedef enum {
 #define RDFITTER_ABSOLUTE_THRESHOLD_REGISTER (228)
 #define RDFITTER_NUMBER_OF_POINTS_REGISTER (229)
 #define RDFITTER_MAX_E_FOLDINGS_REGISTER (230)
+#define SPECT_CNTRL_STATE_REGISTER (231)
+#define SPECT_CNTRL_ACTIVE_SCHEME_REGISTER (232)
+#define SPECT_CNTRL_NEXT_SCHEME_REGISTER (233)
+#define SPECT_CNTRL_SCHEME_ITER_REGISTER (234)
+#define SPECT_CNTRL_SCHEME_ROW_REGISTER (235)
+#define SPECT_CNTRL_DWELL_COUNT_REGISTER (236)
 
 /* FPGA block definitions */
 

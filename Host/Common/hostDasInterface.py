@@ -636,7 +636,7 @@ class HostToDspSender(Singleton):
         # Performs a host read of the data in the specified ringdown
         #  entry. Note that the index is the entry number, and each entry
         #  is of size 4*RINGDOWN_ENTRY_SIZE bytes
-        self.usb.hpiaWrite(RINGDOWN_BASE + 4*RINGDOWN_ENTRY_SIZE*index)
+        self.usb.hpiaWrite(RINGDOWN_BASE + 4*interface.RINGDOWN_ENTRY_SIZE*index)
         data = interface.RingdownEntryType()
         self.usb.hpidRead(data)
         return data

@@ -99,5 +99,12 @@ int rdFittingProcessRingdown(uint32 *buffer,
                              float *uncorrectedLoss, float *correctedLoss,
                              RdFittingDebug *rdFittingDebug);
 
+//-----------------------------------------------------------------------------
+// rdFitting
+//-----------------------------------------------------------------------------
+// Task function that takes waveforms off the queue of ringdown buffers and
+//  calls the fitting routine
+
+void rdFitting(void);
 
 #endif

@@ -73,7 +73,7 @@ class CommandLogPanelGui(wx.Panel):
         self.__set_properties()
         self.__do_layout()
 
-        self.Bind(wx.EVT_CHECKBOX, self.onSteamFileCheck, self.streamFileCheckbox)
+        self.Bind(wx.EVT_CHECKBOX, self.onStreamFileCheck, self.streamFileCheckbox)
         # end wxGlade
 
     def __set_properties(self):
@@ -104,8 +104,8 @@ class CommandLogPanelGui(wx.Panel):
         sizer_1.Fit(self)
         # end wxGlade
 
-    def onSteamFileCheck(self, event): # wxGlade: CommandLogPanelGui.<event_handler>
-        print "Event handler `onSteamFileCheck' not implemented!"
+    def onStreamFileCheck(self, event): # wxGlade: CommandLogPanelGui.<event_handler>
+        print "Event handler `onStreamFileCheck' not implemented!"
         event.Skip()
 
 # end of class CommandLogPanelGui

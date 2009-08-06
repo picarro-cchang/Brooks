@@ -417,6 +417,18 @@ void initRegisters()
     writeRegister(RDFITTER_NUMBER_OF_POINTS_REGISTER,d);
     d.asFloat = 8.0;
     writeRegister(RDFITTER_MAX_E_FOLDINGS_REGISTER,d);
+    d.asUint = SPECT_CNTRL_IdleState;
+    writeRegister(SPECT_CNTRL_STATE_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(SPECT_CNTRL_ACTIVE_SCHEME_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(SPECT_CNTRL_NEXT_SCHEME_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(SPECT_CNTRL_SCHEME_ITER_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(SPECT_CNTRL_SCHEME_ROW_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(SPECT_CNTRL_DWELL_COUNT_REGISTER,d);
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)

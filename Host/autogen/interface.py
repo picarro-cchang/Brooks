@@ -287,7 +287,7 @@ HOST_OFFSET = 0x3F00
 # Offset for ringdown buffer area in DSP shared memory
 RINGDOWN_BUFFER_OFFSET = 0x4000
 # Number of ringdown buffer areas in DSP shared memory
-NUM_RINGDOWN_BUFFERS = 3
+NUM_RINGDOWN_BUFFERS = 2
 # Size of a ringdown buffer area in 32 bit ints
 RINGDOWN_BUFFER_SIZE = (sizeof(RingdownBufferType)/4)
 # Offset for scheme sequence area in DSP shared memory
@@ -471,6 +471,24 @@ HEATER_CNTRL_StateTypeDict[0] = 'HEATER_CNTRL_DisabledState' # Controller Disabl
 HEATER_CNTRL_StateTypeDict[1] = 'HEATER_CNTRL_EnabledState' # Controller Enabled
 HEATER_CNTRL_StateTypeDict[2] = 'HEATER_CNTRL_ManualState' # Manual Control
 
+# Enumerated definitions for SPECT_CNTRL_StateType
+SPECT_CNTRL_StateType = c_uint
+SPECT_CNTRL_IdleState = 0 # No acquisition
+SPECT_CNTRL_ContinuousState = 1 # Continuous mode
+SPECT_CNTRL_SchemingSingleState = 2 # Single scheme mode
+SPECT_CNTRL_SchemingMultipleState = 3 # Multiple scheme mode
+SPECT_CNTRL_SequencingState = 4 # Sequence mode
+SPECT_CNTRL_PausedState = 5 # Acquisition paused
+
+# Dictionary for enumerated constants in SPECT_CNTRL_StateType
+SPECT_CNTRL_StateTypeDict = {}
+SPECT_CNTRL_StateTypeDict[0] = 'SPECT_CNTRL_IdleState' # No acquisition
+SPECT_CNTRL_StateTypeDict[1] = 'SPECT_CNTRL_ContinuousState' # Continuous mode
+SPECT_CNTRL_StateTypeDict[2] = 'SPECT_CNTRL_SchemingSingleState' # Single scheme mode
+SPECT_CNTRL_StateTypeDict[3] = 'SPECT_CNTRL_SchemingMultipleState' # Multiple scheme mode
+SPECT_CNTRL_StateTypeDict[4] = 'SPECT_CNTRL_SequencingState' # Sequence mode
+SPECT_CNTRL_StateTypeDict[5] = 'SPECT_CNTRL_PausedState' # Acquisition paused
+
 # Definitions for COMM_STATUS_BITMASK
 COMM_STATUS_CompleteMask = 0x1
 COMM_STATUS_BadCrcMask = 0x2
@@ -481,8 +499,17 @@ COMM_STATUS_ReturnValueMask = 0x00FFFF00
 COMM_STATUS_SequenceNumberShift = 24
 COMM_STATUS_ReturnValueShift = 8
 
+# Definitions for RINGDOWN_STATUS_BITMASK
+RINGDOWN_STATUS_SchemeActiveMask = 0x1
+RINGDOWN_STATUS_SchemeIterationCompleteMask = 0x2
+RINGDOWN_STATUS_SchemeCompleteInSingleModeMask = 0x4
+RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask = 0x8
+RINGDOWN_STATUS_ContinuousModeMask = 0x10
+RINGDOWN_STATUS_SchemeIterationToggleMask = 0x20
+RINGDOWN_STATUS_SchemeToggleMask = 0x20
+
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 231
+INTERFACE_NUMBER_OF_REGISTERS = 237
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -715,6 +742,12 @@ RDFITTER_FRACTIONAL_THRESHOLD_REGISTER = 227
 RDFITTER_ABSOLUTE_THRESHOLD_REGISTER = 228
 RDFITTER_NUMBER_OF_POINTS_REGISTER = 229
 RDFITTER_MAX_E_FOLDINGS_REGISTER = 230
+SPECT_CNTRL_STATE_REGISTER = 231
+SPECT_CNTRL_ACTIVE_SCHEME_REGISTER = 232
+SPECT_CNTRL_NEXT_SCHEME_REGISTER = 233
+SPECT_CNTRL_SCHEME_ITER_REGISTER = 234
+SPECT_CNTRL_SCHEME_ROW_REGISTER = 235
+SPECT_CNTRL_DWELL_COUNT_REGISTER = 236
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -1181,6 +1214,18 @@ registerByName["RDFITTER_NUMBER_OF_POINTS_REGISTER"] = RDFITTER_NUMBER_OF_POINTS
 registerInfo.append(RegInfo("RDFITTER_NUMBER_OF_POINTS_REGISTER",c_uint,1,1.0,"rw"))
 registerByName["RDFITTER_MAX_E_FOLDINGS_REGISTER"] = RDFITTER_MAX_E_FOLDINGS_REGISTER
 registerInfo.append(RegInfo("RDFITTER_MAX_E_FOLDINGS_REGISTER",c_float,1,1.0,"rw"))
+registerByName["SPECT_CNTRL_STATE_REGISTER"] = SPECT_CNTRL_STATE_REGISTER
+registerInfo.append(RegInfo("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_StateType,0,1.0,"rw"))
+registerByName["SPECT_CNTRL_ACTIVE_SCHEME_REGISTER"] = SPECT_CNTRL_ACTIVE_SCHEME_REGISTER
+registerInfo.append(RegInfo("SPECT_CNTRL_ACTIVE_SCHEME_REGISTER",c_uint,0,1.0,"rw"))
+registerByName["SPECT_CNTRL_NEXT_SCHEME_REGISTER"] = SPECT_CNTRL_NEXT_SCHEME_REGISTER
+registerInfo.append(RegInfo("SPECT_CNTRL_NEXT_SCHEME_REGISTER",c_uint,0,1.0,"rw"))
+registerByName["SPECT_CNTRL_SCHEME_ITER_REGISTER"] = SPECT_CNTRL_SCHEME_ITER_REGISTER
+registerInfo.append(RegInfo("SPECT_CNTRL_SCHEME_ITER_REGISTER",c_uint,0,1.0,"rw"))
+registerByName["SPECT_CNTRL_SCHEME_ROW_REGISTER"] = SPECT_CNTRL_SCHEME_ROW_REGISTER
+registerInfo.append(RegInfo("SPECT_CNTRL_SCHEME_ROW_REGISTER",c_uint,0,1.0,"rw"))
+registerByName["SPECT_CNTRL_DWELL_COUNT_REGISTER"] = SPECT_CNTRL_DWELL_COUNT_REGISTER
+registerInfo.append(RegInfo("SPECT_CNTRL_DWELL_COUNT_REGISTER",c_uint,0,1.0,"rw"))
 
 # FPGA block definitions
 
@@ -1735,6 +1780,18 @@ __p = []
 
 __p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser under automatic control', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', [(0, u'Disabled'), (8, u'Enabled')]), (16, u'Laser 2 current source', [(0, u'Disabled'), (16, u'Enabled')]), (32, u'Laser 3 current source', [(0, u'Disabled'), (32, u'Enabled')]), (64, u'Laser 4 current source', [(0, u'Disabled'), (64, u'Enabled')]), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', [(0, u'Off'), (128, u'On')]), (256, u'Laser 2 current (in manual mode)', [(0, u'Off'), (256, u'On')]), (512, u'Laser 3 current (in manual mode)', [(0, u'Off'), (512, u'On')]), (1024, u'Laser 4 current (in manual mode)', [(0, u'Off'), (1024, u'On')]), (2048, u'SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')])],None,None,1,1))
 parameter_forms.append(('Optical Injection Parameters',__p))
+
+# Form: Spectrum Controller Parameters
+
+__p = []
+
+__p.append(('dsp','choices',SPECT_CNTRL_STATE_REGISTER,'Spectrum Controller State','',[(SPECT_CNTRL_IdleState,"No acquisition"),(SPECT_CNTRL_ContinuousState,"Continuous mode"),(SPECT_CNTRL_SchemingSingleState,"Single scheme mode"),(SPECT_CNTRL_SchemingMultipleState,"Multiple scheme mode"),(SPECT_CNTRL_SequencingState,"Sequence mode"),(SPECT_CNTRL_PausedState,"Acquisition paused"),],1,1))
+__p.append(('dsp','uint32',SPECT_CNTRL_ACTIVE_SCHEME_REGISTER,'Active scheme table index','','%d',1,1))
+__p.append(('dsp','uint32',SPECT_CNTRL_NEXT_SCHEME_REGISTER,'Next scheme table index','','%d',1,1))
+__p.append(('dsp','uint32',SPECT_CNTRL_SCHEME_ITER_REGISTER,'Iteration counter for current scheme','','%d',1,1))
+__p.append(('dsp','uint32',SPECT_CNTRL_SCHEME_ROW_REGISTER,'Row number within active scheme','','%d',1,1))
+__p.append(('dsp','uint32',SPECT_CNTRL_DWELL_COUNT_REGISTER,'Dwell counter for current scheme row','','%d',1,1))
+parameter_forms.append(('Spectrum Controller Parameters',__p))
 
 # Form: Ringdown Simulator Parameters
 

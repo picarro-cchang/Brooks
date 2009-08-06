@@ -19,12 +19,17 @@
  *                      ringdown data and metadata as the LSW and MSW of 32-bit quantities
  *
  */
+#include <std.h>
 #include <stdlib.h>
 #include <math.h>
+#include <sem.h>
+#include "dspData.h"
 #include "interface.h"
 #include "rdFitting.h"
+#include "rdHandlers.h"
 #include "fpga.h"
 #include "registers.h"
+#include "registerTestcfg.h"
 
 RdFittingParamsType rdFittingParams;
 
@@ -387,4 +392,64 @@ int rdFittingProcessRingdown(uint32 *buffer,
 
     return rdFittingDoFit(&buffer[sample], tSamp, nPoints, 0.0,
                           uncorrectedLoss, correctedLoss);
+}
+
+// This is a task function associated with TSK_rdFitting which does the ringdown fitting
+void rdFitting(void)
+{
+    int i, bufferNum;
+    unsigned int base;
+    float uncorrectedLoss, correctedLoss;
+    DataType data;
+    volatile RingdownEntryType *ringdownEntry;
+    RingdownMetadataType meta;
+    int *metaPtr = (int*) &meta;
+    RingdownBufferType *ringdownBuffer; 
+
+    while (1) {
+        SEM_pend(&SEM_rdFitting,SYS_FOREVER);
+        if (!get_queue(&rdBufferQueue,&bufferNum)) {
+            message_puts("rdBuffer queue empty in rdFitting");
+        }
+        ringdownBuffer = &ringdownBuffers[bufferNum];
+        rdFittingProcessRingdown(ringdownBuffer->ringdownWaveform,&uncorrectedLoss,&correctedLoss,0);
+        data.asFloat = uncorrectedLoss;
+        writeRegister(RDFITTER_LATEST_LOSS_REGISTER,data);
+        // We need to find position of metadata just before ringdown. We have a modified circular
+        //  buffer which wraps back to the midpoint, and the MSB indicates if this buffer has wrapped.
+        base = ringdownBuffer->addressAtRingdown & ~0x7;
+        if (base == 32768 + 2048) base = 4096;
+        else base = base & 0xFFF;
+        base = base - 8;
+        // The metadata are in the MS 16 bits of the ringdown waveform
+        for (i=0;i<8;i++) metaPtr[i] = ringdownBuffer->ringdownWaveform[base+i] >> 16;
+    
+        // Get metadata and params, and write results to ringdown queue    
+        ringdownEntry = get_ringdown_entry_addr();
+        ringdownEntry->uncorrectedAbsorbance = uncorrectedLoss;
+        ringdownEntry->correctedAbsorbance = correctedLoss;
+        ringdownEntry->tunerValue = ringdownBuffer->tunerAtRingdown;
+        ringdownEntry->ratio1 = meta.ratio1;
+        ringdownEntry->ratio2 = meta.ratio2;
+        ringdownEntry->pztValue = meta.pztValue;
+        ringdownEntry->lockerOffset = meta.lockerOffset;
+        ringdownEntry->fineLaserCurrent = meta.fineLaserCurrent;
+        ringdownEntry->lockerError = meta.lockerError;
+        ringdownEntry->ringdownThreshold = ringdownBuffer->ringdownThreshold;
+        ringdownEntry->subschemeId = ringdownBuffer->subschemeId;
+        ringdownEntry->schemeRowAndIndex = ringdownBuffer->schemeRowAndIndex;
+        ringdownEntry->coarseLaserCurrent = ringdownBuffer->coarseLaserCurrent;
+        ringdownEntry->laserTemperature = ringdownBuffer->laserTemperature;
+        ringdownEntry->etalonTemperature = ringdownBuffer->etalonTemperature;
+        ringdownEntry->cavityPressure = ringdownBuffer->cavityPressure;
+        ringdownEntry->ambientPressure = ringdownBuffer->ambientPressure;
+        // After fitting, the buffer is available again
+        if (bufferNum == 0)
+            SEM_postBinary(&SEM_rdBuffer0Available);
+        else
+            SEM_postBinary(&SEM_rdBuffer1Available);
+        ringdown_put();
+        // Reset bit 2 of DIAG_1 after fitting
+        changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 2, 1, 0);
+    }
 }

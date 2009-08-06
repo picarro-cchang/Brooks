@@ -135,7 +135,6 @@ void do_groups(long long now)
 void dispatch_group(unsigned short operation_address)
 {
     Operation *op;
-    unsigned short opcode, num_operands;
     unsigned int *operands;
     unsigned int *env;
     // sprintf(debug_msg,"Performing group at address %d\n",operation_address);

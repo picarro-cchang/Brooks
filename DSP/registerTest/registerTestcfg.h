@@ -26,9 +26,18 @@ extern far SWI_Obj PRD_swi;
 extern far SWI_Obj KNL_swi;
 extern far TSK_Obj TSK_idle;
 extern far TSK_Obj TSK_scheduler;
+extern far TSK_Obj TSK_rdFitting;
+extern far TSK_Obj TSK_rdDataMoving;
+extern far TSK_Obj TSK_spectCntrl;
 extern far LOG_Obj LOG_system;
 extern far LOG_Obj trace;
 extern far SEM_Obj SEM_scheduler;
+extern far SEM_Obj SEM_rdFitting;
+extern far SEM_Obj SEM_rdDataMoving;
+extern far SEM_Obj SEM_rdBuffer0Available;
+extern far SEM_Obj SEM_rdBuffer1Available;
+extern far SEM_Obj SEM_startRdCycle;
+extern far SEM_Obj SEM_waitForRdMan;
 extern far STS_Obj IDL_busyObj;
 
 

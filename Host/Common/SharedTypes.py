@@ -14,6 +14,8 @@
 #   07-Jan-2009  sze  Initial version
 #   21-Jul-2009  sze  Added GenHandler
 #   03-Aug-2009  sze  Added getSchemeTableClass
+#   04-Aug-2009  sze  Added ctypesToDict and dictToCtypes
+
 
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -147,6 +149,43 @@ def getSchemeTableClass(numRows):
                         ("rows",SchemeRowArray)]
         schemeTableClassMemo[numRows] = SchemeTableType
     return schemeTableClassMemo[numRows]
+
+# Utilities for converting between ctypes objects and dictionaries
+
+def ctypesToDict(s):
+    """Create a dictionary from a ctypes structure where the keys are the field names"""
+    if isinstance(s,(float,int,long,str)):
+        return s
+    else:
+        r = {}
+        for f in s._fields_:
+            a = getattr(s,f[0])
+            if hasattr(a,'_length_'):
+                l = []
+                for e in a:
+                    l.append(ctypesToDict(e))
+                r[f[0]] = l
+            else:
+                r[f[0]] = ctypesToDict(a)
+        return r
+
+def dictToCtypes(d,c):
+    """Fill the ctypes object c with data from the dictionary d"""
+    if not isinstance(d,dict):
+        c = d
+        return
+    else:
+        for k in d:
+            if isinstance(d[k],dict):
+                dictToCtypes(d[k],getattr(c,k))
+            elif isinstance(d[k],list):
+                for i,e in enumerate(d[k]):
+                    dictToCtypes(e,getattr(c,k)[i])
+            else:
+                if hasattr(c,k):
+                    setattr(c,k,d[k])
+                else:
+                    raise ValueError,"Unknown field name %s in dictToCtypes" % k
 
 ##Misc stuff...
 

@@ -308,7 +308,7 @@ class CommandLogPanel(CommandLogPanelGui):
         self.driverRpc.registerStreamStatusObserver(
             SharedTypes.RPC_PORT_CONTROLLER,token)
 
-    def onSteamFileCheck(self, event):
+    def onStreamFileCheck(self, event):
         """Start or stop collecting sensor stream to an hdf5 file"""
         cb = event.GetEventObject()
         # N.B. The openStreamFile and closeStreamFile functions MUST be
@@ -336,3 +336,4 @@ class CommandLogPanel(CommandLogPanelGui):
         self.logListCtrl.SetStringItem(index,3,level)
         self.logListCtrl.SetStringItem(index,4,code)
         self.logListCtrl.SetStringItem(index,5,txt.strip()[1:-1])
+        self.logListCtrl.EnsureVisible(index)

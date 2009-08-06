@@ -115,7 +115,7 @@
                                             <object class="wxCheckBox" name="streamFileCheckbox" base="EditCheckBox">
                                                 <label>Stream File</label>
                                                 <events>
-                                                    <handler event="EVT_CHECKBOX">onSteamFileCheck</handler>
+                                                    <handler event="EVT_CHECKBOX">onStreamFileCheck</handler>
                                                 </events>
                                             </object>
                                         </object>

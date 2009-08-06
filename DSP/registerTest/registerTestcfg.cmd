@@ -96,12 +96,21 @@ _KNL_swi = KNL_swi;
 _PRD_swi = PRD_swi;
 _TSK_idle = TSK_idle;
 _TSK_scheduler = TSK_scheduler;
+_TSK_rdFitting = TSK_rdFitting;
+_TSK_rdDataMoving = TSK_rdDataMoving;
+_TSK_spectCntrl = TSK_spectCntrl;
 _IDL_cpuLoad = IDL_cpuLoad;
 _LNK_dataPump = LNK_dataPump;
 _RTA_dispatcher = RTA_dispatcher;
 _LOG_system = LOG_system;
 _trace = trace;
 _SEM_scheduler = SEM_scheduler;
+_SEM_rdFitting = SEM_rdFitting;
+_SEM_rdDataMoving = SEM_rdDataMoving;
+_SEM_rdBuffer0Available = SEM_rdBuffer0Available;
+_SEM_rdBuffer1Available = SEM_rdBuffer1Available;
+_SEM_startRdCycle = SEM_startRdCycle;
+_SEM_waitForRdMan = SEM_waitForRdMan;
 _IDL_busyObj = IDL_busyObj;
 
 /* MODULE GBL */
@@ -250,6 +259,18 @@ SECTIONS {
 
         .TSK_scheduler$stk: {
             *(.TSK_scheduler$stk)
+        } > IRAM
+
+        .TSK_rdFitting$stk: {
+            *(.TSK_rdFitting$stk)
+        } > IRAM
+
+        .TSK_rdDataMoving$stk: {
+            *(.TSK_rdDataMoving$stk)
+        } > IRAM
+
+        .TSK_spectCntrl$stk: {
+            *(.TSK_spectCntrl$stk)
         } > IRAM
 
         /* LOG_system buffer */

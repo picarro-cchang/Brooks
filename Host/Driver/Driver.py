@@ -185,6 +185,16 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Writes a scheme to table number schemeNum consisting of numRepeats repeats of the list schemeRows"""
         self.dasInterface.hostToDspSender.wrScheme(schemeNum,numRepeats,schemeRows)
 
+    def rdVirtualLaserParams(self,vLaserNum):
+        """Returns the virtual laser parameters associated with virtual laser vLaserNum as a dictionary"""
+        return SharedTypes.ctypesToDict(self.dasInterface.hostToDspSender.rdVirtualLaserParams(vLaserNum))
+    
+    def wrVirtualLaserParams(self,vLaserNum,laserParams):
+        """Returns the virtual laser parameters associated with virtual laser vLaserNum as a dictionary"""
+        p = interface.VirtualLaserParamsType()
+        SharedTypes.dictToCtypes(laserParams,p)
+        self.dasInterface.hostToDspSender.wrVirtualLaserParams(vLaserNum,p)
+
     #def rdComposite(self):
     #    """Fetches the contents of DSP ringdown memory in compact (composite) format"""
     #    base = 0x4c80 >> 2
@@ -313,6 +323,7 @@ class Driver(SharedTypes.Singleton):
             port=SharedTypes.BROADCAST_PORT_RDRESULTS,
             name="CRDI RD Results Broadcaster",logFunc=Log)
         self.lastSaveDasState = 0
+
     def run(self):
         def messageProcessor(data):
             ts, msg = data
@@ -333,7 +344,8 @@ class Driver(SharedTypes.Singleton):
                     for attempts in range(10):
                         usbSpeed = self.dasInterface.startUsb()
                         Log("USB enumerated at %s speed" % (("full","high")[usbSpeed]))
-                        if usbSpeed: break
+                        if usbSpeed:
+                            break
                         self.dasInterface.analyzerUsb.reconnectUsb()
                         time.sleep(5.0)
                     self.dasInterface.upload()
