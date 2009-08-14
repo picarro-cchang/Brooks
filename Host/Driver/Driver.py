@@ -166,13 +166,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
         metaBase = (0x1000, 0x5000)
         paramBase = (0x3000, 0x7000)
         base = dataBase[bank]
-        data = []
-        for k in range(16):
-            data += [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(base+256*k,256)]
+        data = [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(base,4096)]
         base = metaBase[bank]
-        meta = []
-        for k in range(16):
-            meta += [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(base+256*k,256)]
+        meta = [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(base,4096)]
         base = paramBase[bank]
         param = [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(base,12)]
         return (array(data),array(meta).reshape(512,8).transpose(),array(param))

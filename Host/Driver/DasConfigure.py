@@ -168,6 +168,9 @@ class DasConfigure(object):
             Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
 
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
+            Operation("ACTION_SPECTRUM_CNTRL_STEP"))
+
+        self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_CURRENT_CNTRL_LASER1_STEP"))
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_CURRENT_CNTRL_LASER2_STEP"))
@@ -258,6 +261,7 @@ class DasConfigure(object):
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER3_INIT"))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER4_INIT"))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_CAVITY_INIT"))
+        sender.doOperation(Operation("ACTION_SPECTRUM_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER1_INIT"))
         sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER2_INIT"))
         sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER3_INIT"))

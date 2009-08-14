@@ -117,7 +117,7 @@ class RingdownBufferType(Structure):
     ("schemeRowAndIndex",c_uint),
     ("subschemeId",c_uint),
     ("ringdownThreshold",c_uint),
-    ("spare",c_uint),
+    ("status",c_uint),
     ("tunerAtRingdown",c_uint),
     ("addressAtRingdown",c_uint)
     ]
@@ -129,6 +129,7 @@ class RingdownEntryType(Structure):
     ("uncorrectedAbsorbance",c_float),
     ("correctedAbsorbance",c_float),
     ("status",c_ushort),
+    ("count",c_ushort),
     ("tunerValue",c_ushort),
     ("pztValue",c_ushort),
     ("lockerOffset",c_ushort),
@@ -333,7 +334,7 @@ RDMEM_DATA_WIDTH = 18
 # Number of bits in ringdown metadata
 RDMEM_META_WIDTH = 16
 # Number of bits in ringdown parameters
-RDMEM_PARAM_WIDTH = 16
+RDMEM_PARAM_WIDTH = 32
 # Number of address bits reserved for a ringdown region in each bank
 RDMEM_RESERVED_BANK_ADDR_WIDTH = 12
 # Number of address bits for one bank of data
@@ -474,20 +475,30 @@ HEATER_CNTRL_StateTypeDict[2] = 'HEATER_CNTRL_ManualState' # Manual Control
 # Enumerated definitions for SPECT_CNTRL_StateType
 SPECT_CNTRL_StateType = c_uint
 SPECT_CNTRL_IdleState = 0 # No acquisition
-SPECT_CNTRL_ContinuousState = 1 # Continuous mode
-SPECT_CNTRL_SchemingSingleState = 2 # Single scheme mode
-SPECT_CNTRL_SchemingMultipleState = 3 # Multiple scheme mode
-SPECT_CNTRL_SequencingState = 4 # Sequence mode
-SPECT_CNTRL_PausedState = 5 # Acquisition paused
+SPECT_CNTRL_StartingState = 1 # Start acquisition
+SPECT_CNTRL_RunningState = 2 # Acquisition in progress mode
+SPECT_CNTRL_PausedState = 3 # Acquisition paused
 
 # Dictionary for enumerated constants in SPECT_CNTRL_StateType
 SPECT_CNTRL_StateTypeDict = {}
 SPECT_CNTRL_StateTypeDict[0] = 'SPECT_CNTRL_IdleState' # No acquisition
-SPECT_CNTRL_StateTypeDict[1] = 'SPECT_CNTRL_ContinuousState' # Continuous mode
-SPECT_CNTRL_StateTypeDict[2] = 'SPECT_CNTRL_SchemingSingleState' # Single scheme mode
-SPECT_CNTRL_StateTypeDict[3] = 'SPECT_CNTRL_SchemingMultipleState' # Multiple scheme mode
-SPECT_CNTRL_StateTypeDict[4] = 'SPECT_CNTRL_SequencingState' # Sequence mode
-SPECT_CNTRL_StateTypeDict[5] = 'SPECT_CNTRL_PausedState' # Acquisition paused
+SPECT_CNTRL_StateTypeDict[1] = 'SPECT_CNTRL_StartingState' # Start acquisition
+SPECT_CNTRL_StateTypeDict[2] = 'SPECT_CNTRL_RunningState' # Acquisition in progress mode
+SPECT_CNTRL_StateTypeDict[3] = 'SPECT_CNTRL_PausedState' # Acquisition paused
+
+# Enumerated definitions for SPECT_CNTRL_ModeType
+SPECT_CNTRL_ModeType = c_uint
+SPECT_CNTRL_SchemeSingleMode = 0 # Perform single scheme
+SPECT_CNTRL_SchemeMultipleMode = 1 # Perform multiple schemes
+SPECT_CNTRL_SchemeSequenceMode = 2 # Perform scheme sequence
+SPECT_CNTRL_ContinuousMode = 3 # Continuous acquisition
+
+# Dictionary for enumerated constants in SPECT_CNTRL_ModeType
+SPECT_CNTRL_ModeTypeDict = {}
+SPECT_CNTRL_ModeTypeDict[0] = 'SPECT_CNTRL_SchemeSingleMode' # Perform single scheme
+SPECT_CNTRL_ModeTypeDict[1] = 'SPECT_CNTRL_SchemeMultipleMode' # Perform multiple schemes
+SPECT_CNTRL_ModeTypeDict[2] = 'SPECT_CNTRL_SchemeSequenceMode' # Perform scheme sequence
+SPECT_CNTRL_ModeTypeDict[3] = 'SPECT_CNTRL_ContinuousMode' # Continuous acquisition
 
 # Definitions for COMM_STATUS_BITMASK
 COMM_STATUS_CompleteMask = 0x1
@@ -500,16 +511,13 @@ COMM_STATUS_SequenceNumberShift = 24
 COMM_STATUS_ReturnValueShift = 8
 
 # Definitions for RINGDOWN_STATUS_BITMASK
-RINGDOWN_STATUS_SchemeActiveMask = 0x1
-RINGDOWN_STATUS_SchemeIterationCompleteMask = 0x2
-RINGDOWN_STATUS_SchemeCompleteInSingleModeMask = 0x4
-RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask = 0x8
-RINGDOWN_STATUS_ContinuousModeMask = 0x10
-RINGDOWN_STATUS_SchemeIterationToggleMask = 0x20
-RINGDOWN_STATUS_SchemeToggleMask = 0x20
+RINGDOWN_STATUS_SchemeIncrMask = 0x0F
+RINGDOWN_STATUS_SchemeActiveMask = 0x10
+RINGDOWN_STATUS_SchemeCompleteInSingleModeMask = 0x20
+RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask = 0x40
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 237
+INTERFACE_NUMBER_OF_REGISTERS = 238
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -743,11 +751,12 @@ RDFITTER_ABSOLUTE_THRESHOLD_REGISTER = 228
 RDFITTER_NUMBER_OF_POINTS_REGISTER = 229
 RDFITTER_MAX_E_FOLDINGS_REGISTER = 230
 SPECT_CNTRL_STATE_REGISTER = 231
-SPECT_CNTRL_ACTIVE_SCHEME_REGISTER = 232
-SPECT_CNTRL_NEXT_SCHEME_REGISTER = 233
-SPECT_CNTRL_SCHEME_ITER_REGISTER = 234
-SPECT_CNTRL_SCHEME_ROW_REGISTER = 235
-SPECT_CNTRL_DWELL_COUNT_REGISTER = 236
+SPECT_CNTRL_MODE_REGISTER = 232
+SPECT_CNTRL_ACTIVE_SCHEME_REGISTER = 233
+SPECT_CNTRL_NEXT_SCHEME_REGISTER = 234
+SPECT_CNTRL_SCHEME_ITER_REGISTER = 235
+SPECT_CNTRL_SCHEME_ROW_REGISTER = 236
+SPECT_CNTRL_DWELL_COUNT_REGISTER = 237
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -1216,6 +1225,8 @@ registerByName["RDFITTER_MAX_E_FOLDINGS_REGISTER"] = RDFITTER_MAX_E_FOLDINGS_REG
 registerInfo.append(RegInfo("RDFITTER_MAX_E_FOLDINGS_REGISTER",c_float,1,1.0,"rw"))
 registerByName["SPECT_CNTRL_STATE_REGISTER"] = SPECT_CNTRL_STATE_REGISTER
 registerInfo.append(RegInfo("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_StateType,0,1.0,"rw"))
+registerByName["SPECT_CNTRL_MODE_REGISTER"] = SPECT_CNTRL_MODE_REGISTER
+registerInfo.append(RegInfo("SPECT_CNTRL_MODE_REGISTER",SPECT_CNTRL_ModeType,1,1.0,"rw"))
 registerByName["SPECT_CNTRL_ACTIVE_SCHEME_REGISTER"] = SPECT_CNTRL_ACTIVE_SCHEME_REGISTER
 registerInfo.append(RegInfo("SPECT_CNTRL_ACTIVE_SCHEME_REGISTER",c_uint,0,1.0,"rw"))
 registerByName["SPECT_CNTRL_NEXT_SCHEME_REGISTER"] = SPECT_CNTRL_NEXT_SCHEME_REGISTER
@@ -1549,16 +1560,18 @@ ACTION_HEATER_CNTRL_INIT = 32
 ACTION_HEATER_CNTRL_STEP = 33
 ACTION_TUNER_CNTRL_INIT = 34
 ACTION_TUNER_CNTRL_STEP = 35
-ACTION_ENV_CHECKER = 36
-ACTION_WB_INV_CACHE = 37
-ACTION_WB_CACHE = 38
-ACTION_PULSE_GENERATOR = 39
-ACTION_FILTER = 40
-ACTION_DS1631_READTEMP = 41
-ACTION_LASER_TEC_IMON = 42
-ACTION_READ_LASER_TEC_MONITORS = 43
-ACTION_READ_LASER_THERMISTOR_RESISTANCE = 44
-ACTION_READ_LASER_CURRENT = 45
+ACTION_SPECTRUM_CNTRL_INIT = 36
+ACTION_SPECTRUM_CNTRL_STEP = 37
+ACTION_ENV_CHECKER = 38
+ACTION_WB_INV_CACHE = 39
+ACTION_WB_CACHE = 40
+ACTION_PULSE_GENERATOR = 41
+ACTION_FILTER = 42
+ACTION_DS1631_READTEMP = 43
+ACTION_LASER_TEC_IMON = 44
+ACTION_READ_LASER_TEC_MONITORS = 45
+ACTION_READ_LASER_THERMISTOR_RESISTANCE = 46
+ACTION_READ_LASER_CURRENT = 47
 
 
 # Parameter form definitions
@@ -1785,7 +1798,8 @@ parameter_forms.append(('Optical Injection Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','choices',SPECT_CNTRL_STATE_REGISTER,'Spectrum Controller State','',[(SPECT_CNTRL_IdleState,"No acquisition"),(SPECT_CNTRL_ContinuousState,"Continuous mode"),(SPECT_CNTRL_SchemingSingleState,"Single scheme mode"),(SPECT_CNTRL_SchemingMultipleState,"Multiple scheme mode"),(SPECT_CNTRL_SequencingState,"Sequence mode"),(SPECT_CNTRL_PausedState,"Acquisition paused"),],1,1))
+__p.append(('dsp','choices',SPECT_CNTRL_STATE_REGISTER,'Spectrum Controller State','',[(SPECT_CNTRL_IdleState,"No acquisition"),(SPECT_CNTRL_StartingState,"Start acquisition"),(SPECT_CNTRL_RunningState,"Acquisition in progress mode"),(SPECT_CNTRL_PausedState,"Acquisition paused"),],1,1))
+__p.append(('dsp','choices',SPECT_CNTRL_MODE_REGISTER,'Spectrum Controller Mode','',[(SPECT_CNTRL_SchemeSingleMode,"Perform single scheme"),(SPECT_CNTRL_SchemeMultipleMode,"Perform multiple schemes"),(SPECT_CNTRL_SchemeSequenceMode,"Perform scheme sequence"),(SPECT_CNTRL_ContinuousMode,"Continuous acquisition"),],1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_ACTIVE_SCHEME_REGISTER,'Active scheme table index','','%d',1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_NEXT_SCHEME_REGISTER,'Next scheme table index','','%d',1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_SCHEME_ITER_REGISTER,'Iteration counter for current scheme','','%d',1,1))

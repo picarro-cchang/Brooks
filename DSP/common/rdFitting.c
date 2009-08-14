@@ -428,6 +428,8 @@ void rdFitting(void)
         ringdownEntry = get_ringdown_entry_addr();
         ringdownEntry->uncorrectedAbsorbance = uncorrectedLoss;
         ringdownEntry->correctedAbsorbance = correctedLoss;
+        // TODO: Modify the status as necessary if there are any fitter issues
+        ringdownEntry->status = ringdownBuffer->status;
         ringdownEntry->tunerValue = ringdownBuffer->tunerAtRingdown;
         ringdownEntry->ratio1 = meta.ratio1;
         ringdownEntry->ratio2 = meta.ratio2;

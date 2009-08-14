@@ -27,6 +27,7 @@
 #include "pid.h"
 #include "registers.h"
 #include "scheduler.h"
+#include "spectrumCntrl.h"
 #include "tempCntrl.h"
 #include "laserCurrentCntrl.h"
 #include "heaterCntrl.h"
@@ -52,9 +53,6 @@
     if (STATUS_OK != status) return status; \
     }
     
-#ifdef SIMULATION
-#pragma argsused
-#endif
 int writeBlock(unsigned int numInt,void *params,void *env)
 // Writes a block to the communication area. The number of integers written is numInt-1, since params[0] is the start index
 // The indices lie in various "areas", defined by the OFFSET
@@ -71,9 +69,7 @@ int writeBlock(unsigned int numInt,void *params,void *env)
 #endif
     return STATUS_OK;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int initRunqueue(unsigned int numInt,void *params,void *env)
 // Load up the scheduler runqueue based on the operation groups defined.
 //  Required parameter is the number of groups.
@@ -92,9 +88,7 @@ int initRunqueue(unsigned int numInt,void *params,void *env)
     }
     return STATUS_OK;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int testScheduler(unsigned int numInt,void *params,void *env)
 // This action simply sends back its parameters via message_puts in order to help
 //  test the operation of the scheduler.
@@ -110,9 +104,7 @@ int testScheduler(unsigned int numInt,void *params,void *env)
     message_puts(message);
     return STATUS_OK;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int streamRegister(unsigned int numInt,void *params,void *env)
 // This action streams the value of a register. The first parameter
 //  is the stream number and the second is the register number.
@@ -126,9 +118,6 @@ int streamRegister(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
 int streamFpgaRegister(unsigned int numInt,void *params,void *env)
 // This action streams the value of an FPGA register. The first parameter
 //  is the stream number, the second is the location in the FPGA map
@@ -146,9 +135,6 @@ int streamFpgaRegister(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
 int setTimestamp(unsigned int numInt,void *params,void *env)
 // Writes a 64 bit timestamp to the instrument. params[0] is the
 //  least significant 32 bits and params[1]
@@ -158,9 +144,7 @@ int setTimestamp(unsigned int numInt,void *params,void *env)
     timestamp = paramsAsInt[0] + (((long long)paramsAsInt[1])<<32);
     return STATUS_OK;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_getTimestamp(unsigned int numInt,void *params,void *env)
 // Read the 64 bit timestamp into two registers, the LS 32 bits into
 //  the first and the MS 32 bits into the second
@@ -197,9 +181,6 @@ int r_wbInvCache(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
 int r_resistanceToTemperature(unsigned int numInt,void *params,void *env)
 {
     float resistance, constA, constB, constC, result;
@@ -215,31 +196,23 @@ int r_resistanceToTemperature(unsigned int numInt,void *params,void *env)
     WRITE_REG(reg[4],asFloat,result);
     return status;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_tempCntrlSetCommand(unsigned int numInt,void *params,void *env)
 {
     return STATUS_OK;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_applyPidStep(unsigned int numInt,void *params,void *env)
 {
     return STATUS_OK;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_tempCntrlLaser1Init(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     return tempCntrlLaser1Init();
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_tempCntrlLaser1Step(unsigned int numInt,void *params,void *env)
 {
     int status;
@@ -247,17 +220,13 @@ int r_tempCntrlLaser1Step(unsigned int numInt,void *params,void *env)
     status = tempCntrlLaser1Step();
     return status;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_tempCntrlLaser2Init(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     return tempCntrlLaser2Init();
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_tempCntrlLaser2Step(unsigned int numInt,void *params,void *env)
 {
     int status;
@@ -265,17 +234,13 @@ int r_tempCntrlLaser2Step(unsigned int numInt,void *params,void *env)
     status = tempCntrlLaser2Step();
     return status;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_tempCntrlLaser3Init(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     return tempCntrlLaser3Init();
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_tempCntrlLaser3Step(unsigned int numInt,void *params,void *env)
 {
     int status;
@@ -283,17 +248,13 @@ int r_tempCntrlLaser3Step(unsigned int numInt,void *params,void *env)
     status = tempCntrlLaser3Step();
     return status;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_tempCntrlLaser4Init(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     return tempCntrlLaser4Init();
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_tempCntrlLaser4Step(unsigned int numInt,void *params,void *env)
 {
     int status;
@@ -302,9 +263,6 @@ int r_tempCntrlLaser4Step(unsigned int numInt,void *params,void *env)
     return status;
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
 int r_floatRegisterToFpga(unsigned int numInt,void *params,void *env)
 /* Copy contents of a floating point register to an FPGA register,
     treating value as an unsigned int */
@@ -317,9 +275,6 @@ int r_floatRegisterToFpga(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
 int r_fpgaToFloatRegister(unsigned int numInt,void *params,void *env)
 /* Copy contents of an FPGA register to a floating point register,
     treating value as an unsigned short */
@@ -332,9 +287,6 @@ int r_fpgaToFloatRegister(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
 int r_intToFpga(unsigned int numInt,void *params,void *env)
 /* Copy integer (passed as first parameter) to the specified
     FPGA register */
@@ -345,17 +297,12 @@ int r_intToFpga(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
 int r_currentCntrlLaser1Init(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     return currentCntrlLaser1Init();
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_currentCntrlLaser1Step(unsigned int numInt,void *params,void *env)
 {
     int status;
@@ -364,17 +311,12 @@ int r_currentCntrlLaser1Step(unsigned int numInt,void *params,void *env)
     return status;
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
 int r_currentCntrlLaser2Init(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     return currentCntrlLaser2Init();
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_currentCntrlLaser2Step(unsigned int numInt,void *params,void *env)
 {
     int status;
@@ -382,17 +324,13 @@ int r_currentCntrlLaser2Step(unsigned int numInt,void *params,void *env)
     status = currentCntrlLaser2Step();
     return status;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_currentCntrlLaser3Init(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     return currentCntrlLaser3Init();
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_currentCntrlLaser3Step(unsigned int numInt,void *params,void *env)
 {
     int status;
@@ -400,17 +338,13 @@ int r_currentCntrlLaser3Step(unsigned int numInt,void *params,void *env)
     status = currentCntrlLaser3Step();
     return status;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_currentCntrlLaser4Init(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     return currentCntrlLaser4Init();
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_currentCntrlLaser4Step(unsigned int numInt,void *params,void *env)
 {
     int status;
@@ -419,17 +353,12 @@ int r_currentCntrlLaser4Step(unsigned int numInt,void *params,void *env)
     return status;
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
 int r_tempCntrlCavityInit(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     return tempCntrlCavityInit();
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_tempCntrlCavityStep(unsigned int numInt,void *params,void *env)
 {
     int status;
@@ -438,17 +367,12 @@ int r_tempCntrlCavityStep(unsigned int numInt,void *params,void *env)
     return status;
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
 int r_heaterCntrlInit(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     return heaterCntrlInit();
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_heaterCntrlStep(unsigned int numInt,void *params,void *env)
 {
     int status;
@@ -457,17 +381,12 @@ int r_heaterCntrlStep(unsigned int numInt,void *params,void *env)
     return status;
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
 int r_tunerCntrlInit(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     return tunerCntrlInit();
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_tunerCntrlStep(unsigned int numInt,void *params,void *env)
 {
     int status;
@@ -476,9 +395,20 @@ int r_tunerCntrlStep(unsigned int numInt,void *params,void *env)
     return status;
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
+int r_spectCntrlInit(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return spectCntrlInit();
+}
+
+int r_spectCntrlStep(unsigned int numInt,void *params,void *env)
+{
+    int status;
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    status = spectCntrlStep();
+    return status;
+}
+
 int r_envChecker(unsigned int numInt,void *params,void *env)
 // This action tests the use of the environment pointer
 {
@@ -490,9 +420,7 @@ int r_envChecker(unsigned int numInt,void *params,void *env)
     message_puts(message);
     return STATUS_OK;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_pulseGenerator(unsigned int numInt,void *params,void *env)
 /*
     Pulse generator:
@@ -519,9 +447,7 @@ int r_pulseGenerator(unsigned int numInt,void *params,void *env)
     WRITE_REG(reg[2],asFloat,result);
     return status;
 }
-#ifdef SIMULATION
-#pragma argsused
-#endif
+
 int r_filter(unsigned int numInt,void *params,void *env)
 /*
     Discrete time filter:

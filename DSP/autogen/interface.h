@@ -99,7 +99,7 @@ typedef struct {
     uint32 schemeRowAndIndex;
     uint32 subschemeId;
     uint32 ringdownThreshold;
-    uint32 spare;
+    uint32 status;
     uint32 tunerAtRingdown;
     uint32 addressAtRingdown;
 } RingdownBufferType;
@@ -110,6 +110,7 @@ typedef struct {
     float uncorrectedAbsorbance;
     float correctedAbsorbance;
     uint16 status;
+    uint16 count;
     uint16 tunerValue;
     uint16 pztValue;
     uint16 lockerOffset;
@@ -304,7 +305,7 @@ typedef struct {
 // Number of bits in ringdown metadata
 #define RDMEM_META_WIDTH (16)
 // Number of bits in ringdown parameters
-#define RDMEM_PARAM_WIDTH (16)
+#define RDMEM_PARAM_WIDTH (32)
 // Number of address bits reserved for a ringdown region in each bank
 #define RDMEM_RESERVED_BANK_ADDR_WIDTH (12)
 // Number of address bits for one bank of data
@@ -387,12 +388,17 @@ typedef enum {
 
 typedef enum {
     SPECT_CNTRL_IdleState = 0, // No acquisition
-    SPECT_CNTRL_ContinuousState = 1, // Continuous mode
-    SPECT_CNTRL_SchemingSingleState = 2, // Single scheme mode
-    SPECT_CNTRL_SchemingMultipleState = 3, // Multiple scheme mode
-    SPECT_CNTRL_SequencingState = 4, // Sequence mode
-    SPECT_CNTRL_PausedState = 5 // Acquisition paused
+    SPECT_CNTRL_StartingState = 1, // Start acquisition
+    SPECT_CNTRL_RunningState = 2, // Acquisition in progress mode
+    SPECT_CNTRL_PausedState = 3 // Acquisition paused
 } SPECT_CNTRL_StateType;
+
+typedef enum {
+    SPECT_CNTRL_SchemeSingleMode = 0, // Perform single scheme
+    SPECT_CNTRL_SchemeMultipleMode = 1, // Perform multiple schemes
+    SPECT_CNTRL_SchemeSequenceMode = 2, // Perform scheme sequence
+    SPECT_CNTRL_ContinuousMode = 3 // Continuous acquisition
+} SPECT_CNTRL_ModeType;
 
 /* Definitions for COMM_STATUS_BITMASK */
 #define COMM_STATUS_CompleteMask (0x1)
@@ -405,16 +411,13 @@ typedef enum {
 #define COMM_STATUS_ReturnValueShift (8)
 
 /* Definitions for RINGDOWN_STATUS_BITMASK */
-#define RINGDOWN_STATUS_SchemeActiveMask (0x1)
-#define RINGDOWN_STATUS_SchemeIterationCompleteMask (0x2)
-#define RINGDOWN_STATUS_SchemeCompleteInSingleModeMask (0x4)
-#define RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask (0x8)
-#define RINGDOWN_STATUS_ContinuousModeMask (0x10)
-#define RINGDOWN_STATUS_SchemeIterationToggleMask (0x20)
-#define RINGDOWN_STATUS_SchemeToggleMask (0x20)
+#define RINGDOWN_STATUS_SchemeIncrMask (0x0F)
+#define RINGDOWN_STATUS_SchemeActiveMask (0x10)
+#define RINGDOWN_STATUS_SchemeCompleteInSingleModeMask (0x20)
+#define RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask (0x40)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (237)
+#define INTERFACE_NUMBER_OF_REGISTERS (238)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -648,11 +651,12 @@ typedef enum {
 #define RDFITTER_NUMBER_OF_POINTS_REGISTER (229)
 #define RDFITTER_MAX_E_FOLDINGS_REGISTER (230)
 #define SPECT_CNTRL_STATE_REGISTER (231)
-#define SPECT_CNTRL_ACTIVE_SCHEME_REGISTER (232)
-#define SPECT_CNTRL_NEXT_SCHEME_REGISTER (233)
-#define SPECT_CNTRL_SCHEME_ITER_REGISTER (234)
-#define SPECT_CNTRL_SCHEME_ROW_REGISTER (235)
-#define SPECT_CNTRL_DWELL_COUNT_REGISTER (236)
+#define SPECT_CNTRL_MODE_REGISTER (232)
+#define SPECT_CNTRL_ACTIVE_SCHEME_REGISTER (233)
+#define SPECT_CNTRL_NEXT_SCHEME_REGISTER (234)
+#define SPECT_CNTRL_SCHEME_ITER_REGISTER (235)
+#define SPECT_CNTRL_SCHEME_ROW_REGISTER (236)
+#define SPECT_CNTRL_DWELL_COUNT_REGISTER (237)
 
 /* FPGA block definitions */
 
@@ -960,14 +964,16 @@ typedef enum {
 #define ACTION_HEATER_CNTRL_STEP (33)
 #define ACTION_TUNER_CNTRL_INIT (34)
 #define ACTION_TUNER_CNTRL_STEP (35)
-#define ACTION_ENV_CHECKER (36)
-#define ACTION_WB_INV_CACHE (37)
-#define ACTION_WB_CACHE (38)
-#define ACTION_PULSE_GENERATOR (39)
-#define ACTION_FILTER (40)
-#define ACTION_DS1631_READTEMP (41)
-#define ACTION_LASER_TEC_IMON (42)
-#define ACTION_READ_LASER_TEC_MONITORS (43)
-#define ACTION_READ_LASER_THERMISTOR_RESISTANCE (44)
-#define ACTION_READ_LASER_CURRENT (45)
+#define ACTION_SPECTRUM_CNTRL_INIT (36)
+#define ACTION_SPECTRUM_CNTRL_STEP (37)
+#define ACTION_ENV_CHECKER (38)
+#define ACTION_WB_INV_CACHE (39)
+#define ACTION_WB_CACHE (40)
+#define ACTION_PULSE_GENERATOR (41)
+#define ACTION_FILTER (42)
+#define ACTION_DS1631_READTEMP (43)
+#define ACTION_LASER_TEC_IMON (44)
+#define ACTION_READ_LASER_TEC_MONITORS (45)
+#define ACTION_READ_LASER_THERMISTOR_RESISTANCE (46)
+#define ACTION_READ_LASER_CURRENT (47)
 #endif

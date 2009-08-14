@@ -419,6 +419,8 @@ void initRegisters()
     writeRegister(RDFITTER_MAX_E_FOLDINGS_REGISTER,d);
     d.asUint = SPECT_CNTRL_IdleState;
     writeRegister(SPECT_CNTRL_STATE_REGISTER,d);
+    d.asUint = SPECT_CNTRL_SchemeSingleMode;
+    writeRegister(SPECT_CNTRL_MODE_REGISTER,d);
     d.asUint = 0;
     writeRegister(SPECT_CNTRL_ACTIVE_SCHEME_REGISTER,d);
     d.asUint = 0;
@@ -504,6 +506,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_tunerCntrlInit(numInt,params,env);
         case ACTION_TUNER_CNTRL_STEP:
             return r_tunerCntrlStep(numInt,params,env);
+        case ACTION_SPECTRUM_CNTRL_INIT:
+            return r_spectCntrlInit(numInt,params,env);
+        case ACTION_SPECTRUM_CNTRL_STEP:
+            return r_spectCntrlStep(numInt,params,env);
         case ACTION_ENV_CHECKER:
             return r_envChecker(numInt,params,env);
         case ACTION_WB_INV_CACHE:

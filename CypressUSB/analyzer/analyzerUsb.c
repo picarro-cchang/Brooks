@@ -292,7 +292,7 @@ BOOL DR_SetConfiguration(void) { // Called when a Set Configuration command is r
         EP6AUTOINLENL = 0x00;
         SYNCDELAY;
         enum_high_speed = TRUE;
-        autoinLength = 0x200;
+        autoinLength = 0x400;
     } else { // FX2 enumerated at full speed
         SYNCDELAY;
         EP6AUTOINLENH = 0x00;       // set AUTOIN commit length to 64 bytes

@@ -21,8 +21,8 @@
 extern volatile RingdownEntryType        *ringdownEntries;
 extern volatile SchemeTableType          *schemeTables;
 extern volatile VirtualLaserParamsType   *virtualLaserParams;
-extern volatile SchemeSequenceType *schemeSequence;
-extern RingdownBufferType *ringdownBuffers;
+extern volatile SchemeSequenceType       *schemeSequence;
+extern RingdownBufferType                *ringdownBuffers;
 
 void dspDataInit(void);
 #endif

@@ -179,7 +179,7 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
         setupDither(readFPGA(FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN));
     }
     //  For now, allow next ringdown to start if we got a bad one
-    if (badRingdown) {
+    if (badRingdown && SPECT_CNTRL_RunningState == *(int*)(REG_BASE+4*SPECT_CNTRL_STATE_REGISTER)) {
         SEM_postBinary(&SEM_startRdCycle);
     }
     // Restore interrupts
@@ -222,7 +222,7 @@ void acqDoneInterrupt(unsigned int funcArg, unsigned int eventId)
     IRQ_globalRestore(gie);
     
     // Indicate next ringdown can start
-    SEM_postBinary(&SEM_startRdCycle);
+    if (SPECT_CNTRL_RunningState == *(int*)(REG_BASE+4*SPECT_CNTRL_STATE_REGISTER)) SEM_postBinary(&SEM_startRdCycle);
 }
     
 void rdDataMoving(void)

@@ -597,16 +597,14 @@ class HostToDspSender(Singleton):
     @usbLockProtect
     def rdDspMemArray(self,wordAddr,nwords=1):
         """Reads multiple words from DSP memory into a c_uint array"""
-        self.usb.hpiaWrite(4*wordAddr)
         result = (c_uint*nwords)()
-        self.usb.hpidRead(result)
+        self.usb.hpiRead(4*wordAddr,result)
         return result
     @usbLockProtect
     def rdRingdownMemArray(self,offset,nwords=1):
         """Reads multiple words from ringdown memory into a c_uint array"""
-        self.usb.hpiaWrite(interface.RDMEM_ADDRESS+4*offset)
         result = (c_uint*nwords)()
-        self.usb.hpidRead(result)
+        self.usb.hpiRead(interface.RDMEM_ADDRESS+4*offset,result)
         return result
     @usbLockProtect
     def rdRingdownMem(self,offset):
@@ -666,8 +664,8 @@ class HostToDspSender(Singleton):
         #  directly via the HPI interface into DSP memory rather than through
         #  the host area. We need to declare the scheme areas as volatile in the 
         #  DSP code so that they are always read from memory.
-        SCHEME_BASE = interface.DSP_DATA_ADDRESS + interface.SCHEME_OFFSET
-        if schemeNum > interface.NUM_SCHEME_TABLES:
+        SCHEME_BASE = interface.DSP_DATA_ADDRESS + 4*interface.SCHEME_OFFSET
+        if schemeNum >= interface.NUM_SCHEME_TABLES:
             raise ValueError("Maximum number of schemes available is %d" % interface.NUM_SCHEME_TABLES)
         
         schemeTableAddr = SCHEME_BASE + 4*schemeNum*interface.SCHEME_TABLE_SIZE
@@ -688,8 +686,8 @@ class HostToDspSender(Singleton):
     @usbLockProtect
     def rdScheme(self,schemeNum):
         # Read from scheme table schemeNum
-        SCHEME_BASE = interface.DSP_DATA_ADDRESS + interface.SCHEME_OFFSET
-        if schemeNum > interface.NUM_SCHEME_TABLES:
+        SCHEME_BASE = interface.DSP_DATA_ADDRESS + 4*interface.SCHEME_OFFSET
+        if schemeNum >= interface.NUM_SCHEME_TABLES:
             raise ValueError("Maximum number of schemes available is %d" % interface.NUM_SCHEME_TABLES)
         
         schemeTableAddr = SCHEME_BASE + 4*schemeNum*interface.SCHEME_TABLE_SIZE
@@ -705,7 +703,7 @@ class HostToDspSender(Singleton):
     @usbLockProtect
     def wrVirtualLaserParams(self,vLaserNum,vLaserParams):
         # Write virtual laser parameters for vLaserNum (zero-based index)
-        VIRTUAL_LASER_PARAMS_BASE = interface.DSP_DATA_ADDRESS + interface.VIRTUAL_LASER_PARAMS_OFFSET
+        VIRTUAL_LASER_PARAMS_BASE = interface.DSP_DATA_ADDRESS + 4*interface.VIRTUAL_LASER_PARAMS_OFFSET
         if vLaserNum > interface.NUM_VIRTUAL_LASERS:
             raise ValueError("Maximum number of virtual lasers available is %d" % interface.NUM_VIRTUAL_LASERS)
         if not isinstance(vLaserParams,interface.VirtualLaserParamsType):
@@ -717,7 +715,7 @@ class HostToDspSender(Singleton):
     @usbLockProtect
     def rdVirtualLaserParams(self,vLaserNum):
         # Read virtual laser parameters for vLaserNum (zero-based index)
-        VIRTUAL_LASER_PARAMS_BASE = interface.DSP_DATA_ADDRESS + interface.VIRTUAL_LASER_PARAMS_OFFSET
+        VIRTUAL_LASER_PARAMS_BASE = interface.DSP_DATA_ADDRESS + 4*interface.VIRTUAL_LASER_PARAMS_OFFSET
         if vLaserNum > interface.NUM_VIRTUAL_LASERS:
             raise ValueError("Maximum number of virtual lasers available is %d" % interface.NUM_VIRTUAL_LASERS)
         vLaserParams = interface.VirtualLaserParamsType()

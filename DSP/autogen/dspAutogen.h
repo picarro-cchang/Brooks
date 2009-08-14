@@ -50,6 +50,8 @@ int r_heaterCntrlInit(unsigned int numInt,void *params,void *env);
 int r_heaterCntrlStep(unsigned int numInt,void *params,void *env);
 int r_tunerCntrlInit(unsigned int numInt,void *params,void *env);
 int r_tunerCntrlStep(unsigned int numInt,void *params,void *env);
+int r_spectCntrlInit(unsigned int numInt,void *params,void *env);
+int r_spectCntrlStep(unsigned int numInt,void *params,void *env);
 int r_envChecker(unsigned int numInt,void *params,void *env);
 int r_wbInvCache(unsigned int numInt,void *params,void *env);
 int r_wbCache(unsigned int numInt,void *params,void *env);

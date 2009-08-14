@@ -52,7 +52,7 @@ void scheduler(void)
 
 void timestampPrdFunc(void)
 {
-    DataType d;
+    //DataType d;
     timestamp = timestamp + 1LL;
     SEM_postBinary(&SEM_waitForRdMan);
 
@@ -88,8 +88,6 @@ main(int argc, char *argv[])
     ds1631_init();
     // Initialize ringdown fitting module
     rdFittingInit();
-    // Initialize spectrum controller module
-    spectCntrlInit();
     // Initialize EDMA handling
     edmaInit();
     

@@ -19,7 +19,8 @@
 typedef struct SPECT_CNTRL_PARAMS
 {
     // References to registers
-    unsigned int *state_;    // Controller state
+    SPECT_CNTRL_StateType *state_;    // Controller state
+    unsigned int *mode_;     // Controller mode
     unsigned int *active_;   // Active scheme index
     unsigned int *next_;     // Next scheme index
     unsigned int *iter_;     // Scheme iteration
@@ -30,5 +31,12 @@ typedef struct SPECT_CNTRL_PARAMS
 
 int spectCntrlInit(void);
 void spectCntrl(void);
+int spectCntrlStep(void);
+void setAutoInject(void);
+void validateSchemePosition(void);
+void advanceDwellCounter(void);
+void advanceSchemeRow(void);
+void advanceSchemeIteration(void);
+void advanceScheme(void);
 
 #endif /* _SPECT_CNTRL_H_ */

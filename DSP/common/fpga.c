@@ -13,25 +13,27 @@
  *
  *  Copyright (c) 2009 Picarro, Inc. All rights reserved
  */
-#include <std.h>
-#include <csl.h>
-#include <csl_cache.h>
+#ifdef TESTING
+#else
+    #include <std.h>
+    #include <csl.h>
+    #include <csl_cache.h>
+#endif
 #include "interface.h"
 #include "fpga.h"
 
 #define FPGA_REG_BASE (RDMEM_ADDRESS + (1<<(EMIF_ADDR_WIDTH+1)))
 
-#ifdef SIMULATION
+#ifdef TESTING
 void writeFPGA(unsigned int regNum, unsigned int value)
 {
-    // printf("Writing %d to FPGA register %d\n",value,regNum);
+    printf("Writing %d to FPGA register %d\n",value,regNum);
 }
 
 unsigned int readFPGA(unsigned int regNum)
 {
     return 0;
 }
-
 #else
 void writeFPGA(unsigned int regNum, unsigned int value)
 {

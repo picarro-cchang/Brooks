@@ -215,7 +215,7 @@ class AnalyzerUsb(Singleton):
         dataLength = sizeof(data)
         def _hpidWrite():
             self.usb.usbBulkWrite(self.handle,DEFAULT_OUT_ENDPOINT,byref(data),dataLength,5000)
-        if 0 != dataLength & 0x3 or 0 == dataLength or 1024 < dataLength:
+        if 0 != dataLength & 0x3 or 0 == dataLength or 512 < dataLength:
             raise UsbPacketLengthError("Invalid data length %d in hpidWrite" % (dataLength,))
         self._claimInterfaceWrapper(_hpidWrite)
 
@@ -223,7 +223,7 @@ class AnalyzerUsb(Singleton):
         """Write an arbitrarily sized (but must be a multiple of 4) block of data to address,
             splitting the block up if necessary"""
         dataLength = sizeof(data)
-        chunkSize = 1024
+        chunkSize = 512
         a = addressof(data)
         while dataLength > chunkSize:
             dataBuffer = (c_ubyte*chunkSize).from_address(a)
@@ -241,7 +241,7 @@ class AnalyzerUsb(Singleton):
     def hpidRead(self,result):
         """Use bulk read to acquire block of 32 bit words from HPID"""
         nBytes = sizeof(result)
-        if 0 != nBytes & 0x3 or 0 >= nBytes or 1024 < nBytes:
+        if 0 != nBytes & 0x3 or 0 >= nBytes or 512 < nBytes:
             raise UsbPacketLengthError("Invalid data length %d in hpidRead" % (nBytes,))
         def _hpidRead():
             data = c_short(nBytes)
@@ -250,10 +250,10 @@ class AnalyzerUsb(Singleton):
         self._claimInterfaceWrapper(_hpidRead)
 
     def hpiRead(self,address,data):
-        """Read an arbitrarily sized (but must be a multiple of 4) block of data to address,
+        """Read an arbitrarily sized (but must be a multiple of 4) block of data from address,
             splitting the block up if necessary"""
         dataLength = sizeof(data)
-        chunkSize = 1024
+        chunkSize = 512
         a = addressof(data)
         while dataLength > chunkSize:
             dataBuffer = (c_ubyte*chunkSize).from_address(a)

@@ -112,7 +112,7 @@
             <field ident="schemeRowAndIndex" type="uint32"/>
             <field ident="subschemeId" type="uint32"/>
             <field ident="ringdownThreshold" type="uint32"/>
-            <field ident="spare" type="uint32"/>
+            <field ident="status" type="uint32"/>
             <field ident="tunerAtRingdown" type="uint32"/>
             <field ident="addressAtRingdown" type="uint32"/>
         </struct>		
@@ -122,6 +122,7 @@
             <field ident="uncorrectedAbsorbance" type="float"/>
             <field ident="correctedAbsorbance" type="float"/>
             <field ident="status" type="uint16"/>
+            <field ident="count" type="uint16"/>
             <field ident="tunerValue" type="uint16"/>
             <field ident="pztValue" type="uint16"/>
             <field ident="lockerOffset" type="uint16"/>
@@ -258,7 +259,7 @@
         <constant ident="FPGA_REG_MASK" description="Mask to access FPGA registers">1</constant>
         <constant ident="RDMEM_DATA_WIDTH" description="Number of bits in ringdown data">18</constant>
         <constant ident="RDMEM_META_WIDTH" description="Number of bits in ringdown metadata">16</constant>
-        <constant ident="RDMEM_PARAM_WIDTH" description="Number of bits in ringdown parameters">16</constant>
+        <constant ident="RDMEM_PARAM_WIDTH" description="Number of bits in ringdown parameters">32</constant>
         <constant ident="RDMEM_RESERVED_BANK_ADDR_WIDTH" description="Number of address bits reserved for a ringdown region in each bank">12</constant>
         <constant ident="DATA_BANK_ADDR_WIDTH" description="Number of address bits for one bank of data">12</constant>
         <constant ident="META_BANK_ADDR_WIDTH" description="Number of address bits for one bank of metadata">12</constant>
@@ -339,11 +340,16 @@
         <enum type="SPECT_CNTRL_StateType">
             <description>State of spectrum controller</description>
             <enum_value ident="SPECT_CNTRL_IdleState" value="0" caption="No acquisition"  />
-            <enum_value ident="SPECT_CNTRL_ContinuousState" value="1" caption="Continuous mode" />
-            <enum_value ident="SPECT_CNTRL_SchemingSingleState" value="2" caption="Single scheme mode" />
-            <enum_value ident="SPECT_CNTRL_SchemingMultipleState" value="3" caption="Multiple scheme mode" />
-            <enum_value ident="SPECT_CNTRL_SequencingState" value="4" caption="Sequence mode" />
-            <enum_value ident="SPECT_CNTRL_PausedState" value="5" caption="Acquisition paused" />
+            <enum_value ident="SPECT_CNTRL_StartingState" value="1" caption="Start acquisition"  />
+            <enum_value ident="SPECT_CNTRL_RunningState" value="2" caption="Acquisition in progress mode" />
+            <enum_value ident="SPECT_CNTRL_PausedState" value="3" caption="Acquisition paused" />
+        </enum>
+        <enum type="SPECT_CNTRL_ModeType">
+            <description>Spectrum controller modes</description>
+            <enum_value ident="SPECT_CNTRL_SchemeSingleMode" value="0" caption="Perform single scheme" />
+            <enum_value ident="SPECT_CNTRL_SchemeMultipleMode" value="1" caption="Perform multiple schemes" />
+            <enum_value ident="SPECT_CNTRL_SchemeSequenceMode" value="2" caption="Perform scheme sequence" />
+            <enum_value ident="SPECT_CNTRL_ContinuousMode" value="3" caption="Continuous acquisition" />
         </enum>
     </enum_list>
     <bits_list>
@@ -358,15 +364,11 @@
             <shift ident="COMM_STATUS_ReturnValueShift">8</shift>
         </bits>
         <bits ident="RINGDOWN_STATUS_BITMASK">
-            <mask  ident="RINGDOWN_STATUS_SchemeActiveMask">0x1</mask>
-            <mask  ident="RINGDOWN_STATUS_SchemeIterationCompleteMask">0x2</mask>
-            <mask  ident="RINGDOWN_STATUS_SchemeCompleteInSingleModeMask">0x4</mask>
-            <mask  ident="RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask">0x8</mask>
-            <mask  ident="RINGDOWN_STATUS_ContinuousModeMask">0x10</mask>
-            <mask  ident="RINGDOWN_STATUS_SchemeIterationToggleMask">0x20</mask>
-            <mask  ident="RINGDOWN_STATUS_SchemeToggleMask">0x20</mask>
+            <mask  ident="RINGDOWN_STATUS_SchemeIncrMask">0x0F</mask>
+            <mask  ident="RINGDOWN_STATUS_SchemeActiveMask">0x10</mask>
+            <mask  ident="RINGDOWN_STATUS_SchemeCompleteInSingleModeMask">0x20</mask>
+            <mask  ident="RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask">0x40</mask>
         </bits>        
-
     </bits_list>
     <register_list>
         <register ident="NOOP_REGISTER" type="uint32" minver="1.0" access="rw">
@@ -1599,6 +1601,12 @@
             <initial>SPECT_CNTRL_IdleState</initial>
             <display>Spectrum Controller State</display>
         </register>
+        <register ident="SPECT_CNTRL_MODE_REGISTER" type="SPECT_CNTRL_ModeType" minver="1.0" access="rw">
+            <description>Mode of spectrum controller</description>
+            <initial>SPECT_CNTRL_SchemeSingleMode</initial>
+            <save/>
+            <display>Spectrum Controller Mode</display>
+        </register>
         <register ident="SPECT_CNTRL_ACTIVE_SCHEME_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Active scheme table index</description>
             <initial>0</initial>
@@ -2299,6 +2307,8 @@
         <action ident="ACTION_HEATER_CNTRL_STEP">r_heaterCntrlStep</action>
         <action ident="ACTION_TUNER_CNTRL_INIT">r_tunerCntrlInit</action>
         <action ident="ACTION_TUNER_CNTRL_STEP">r_tunerCntrlStep</action>
+        <action ident="ACTION_SPECTRUM_CNTRL_INIT">r_spectCntrlInit</action>
+        <action ident="ACTION_SPECTRUM_CNTRL_STEP">r_spectCntrlStep</action>
         <action ident="ACTION_ENV_CHECKER">r_envChecker</action>
         <action ident="ACTION_WB_INV_CACHE">r_wbInvCache</action>
         <action ident="ACTION_WB_CACHE">r_wbCache</action>

@@ -234,7 +234,8 @@ Ringdown threshold
 \end_layout
 
 \begin_layout Enumerate
-Spare
+Status (position in scheme, inserted by task that sets up the next ringdown
+ cycle)
 \end_layout
 
 \begin_layout Enumerate
