@@ -676,7 +676,7 @@ class HostToDspSender(Singleton):
         for i,row in enumerate(schemeRows):
             schemeTable.rows[i].setpoint = float(row[0])
             schemeTable.rows[i].dwellCount = int(row[1])
-            schemeTable.rows[i].subSchemeId = int(row[2])    if len(row)>=3 else 0
+            schemeTable.rows[i].subschemeId = int(row[2])    if len(row)>=3 else 0
             schemeTable.rows[i].laserUsed = int(row[3])      if len(row)>=4 else 0
             schemeTable.rows[i].threshold = int(row[4])      if len(row)>=5 else 0
             schemeTable.rows[i].pztSetpoint = int(row[5])    if len(row)>=6 else 0
@@ -697,7 +697,7 @@ class HostToDspSender(Singleton):
         schemeTable = getSchemeTableClass(schemeHeader.numRows)()
         self.usb.hpiRead(schemeTableAddr,schemeTable)
         return {"numRepeats":schemeTable.numRepeats,
-                "schemeRows":[(row.setpoint,row.dwellCount,row.subSchemeId,row.laserUsed, \
+                "schemeRows":[(row.setpoint,row.dwellCount,row.subschemeId,row.laserUsed, \
                                row.threshold,row.pztSetpoint,0.001*row.laserTemp) for row in schemeTable.rows]}
 
     @usbLockProtect

@@ -307,6 +307,12 @@ void initRegisters()
     writeRegister(LASER4_CURRENT_SWEEP_INCR_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(LASER4_CURRENT_MONITOR_REGISTER,d);
+    d.asFloat = 0.00112789997365;
+    writeRegister(CONVERSION_ETALON_THERM_CONSTA_REGISTER,d);
+    d.asFloat = 0.000234289997024;
+    writeRegister(CONVERSION_ETALON_THERM_CONSTB_REGISTER,d);
+    d.asFloat = 8.72979981636e-008;
+    writeRegister(CONVERSION_ETALON_THERM_CONSTC_REGISTER,d);
     d.asFloat = 0.000847030023579;
     writeRegister(CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000205610005651;
@@ -385,6 +391,14 @@ void initRegisters()
     writeRegister(HEATER_CNTRL_MANUAL_MARK_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(HEATER_CNTRL_MARK_REGISTER,d);
+    d.asFloat = 1.0;
+    writeRegister(CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER,d);
+    d.asFloat = 1.0;
+    writeRegister(CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER,d);
     d.asFloat = 50000.0;
     writeRegister(TUNER_SWEEP_RAMP_HIGH_REGISTER,d);
     d.asFloat = 10000.0;
@@ -431,6 +445,8 @@ void initRegisters()
     writeRegister(SPECT_CNTRL_SCHEME_ROW_REGISTER,d);
     d.asUint = 0;
     writeRegister(SPECT_CNTRL_DWELL_COUNT_REGISTER,d);
+    d.asUint = 15000;
+    writeRegister(SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER,d);
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)

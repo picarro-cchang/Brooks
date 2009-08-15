@@ -105,6 +105,7 @@ bios.TSK.instance("TSK_spectCntrl").order = 6;
 bios.TSK.instance("TSK_spectCntrl").comment = "Spectrum controller";
 bios.TSK.instance("TSK_spectCntrl").fxn = prog.extern("spectCntrl");
 bios.SEM.instance("SEM_startRdCycle").count = 0;
+bios.GBL.SPECIFYRTSLIB = 0;
 // !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
 
 prog.gen();

@@ -417,34 +417,40 @@ void rdFitting(void)
         writeRegister(RDFITTER_LATEST_LOSS_REGISTER,data);
         // We need to find position of metadata just before ringdown. We have a modified circular
         //  buffer which wraps back to the midpoint, and the MSB indicates if this buffer has wrapped.
-        base = ringdownBuffer->addressAtRingdown & ~0x7;
+        base = ringdownBuffer->parameters.addressAtRingdown & ~0x7;
         if (base == 32768 + 2048) base = 4096;
         else base = base & 0xFFF;
         base = base - 8;
         // The metadata are in the MS 16 bits of the ringdown waveform
         for (i=0;i<8;i++) metaPtr[i] = ringdownBuffer->ringdownWaveform[base+i] >> 16;
-    
+            
         // Get metadata and params, and write results to ringdown queue    
         ringdownEntry = get_ringdown_entry_addr();
+
+        // ringdownEntry->wlmAngle = ;
         ringdownEntry->uncorrectedAbsorbance = uncorrectedLoss;
         ringdownEntry->correctedAbsorbance = correctedLoss;
         // TODO: Modify the status as necessary if there are any fitter issues
-        ringdownEntry->status = ringdownBuffer->status;
-        ringdownEntry->tunerValue = ringdownBuffer->tunerAtRingdown;
-        ringdownEntry->ratio1 = meta.ratio1;
-        ringdownEntry->ratio2 = meta.ratio2;
+        ringdownEntry->status = ringdownBuffer->parameters.status;
+        ringdownEntry->count = ringdownBuffer->parameters.countAndSubschemeId >> 16;
+        ringdownEntry->tunerValue = ringdownBuffer->parameters.tunerAtRingdown;
         ringdownEntry->pztValue = meta.pztValue;
         ringdownEntry->lockerOffset = meta.lockerOffset;
+        // ringdownEntry->laserUsed = ;
+        ringdownEntry->ringdownThreshold = ringdownBuffer->parameters.ringdownThreshold;
+        ringdownEntry->subschemeId = ringdownBuffer->parameters.countAndSubschemeId & 0xFFFF;
+        ringdownEntry->schemeTable = ringdownBuffer->parameters.schemeTableAndRow >> 16;
+        ringdownEntry->schemeRow   = ringdownBuffer->parameters.schemeTableAndRow & 0xFFFF;
+        ringdownEntry->ratio1 = meta.ratio1;
+        ringdownEntry->ratio2 = meta.ratio2;
         ringdownEntry->fineLaserCurrent = meta.fineLaserCurrent;
+        ringdownEntry->coarseLaserCurrent = ringdownBuffer->parameters.coarseLaserCurrent;
+        ringdownEntry->laserTemperature = ringdownBuffer->parameters.laserTemperature;
+        ringdownEntry->etalonTemperature = ringdownBuffer->parameters.etalonTemperature;
+        ringdownEntry->cavityPressure = (unsigned int)(50.0 * ringdownBuffer->parameters.cavityPressure);
+        ringdownEntry->ambientPressure = (unsigned int)(50.0 * ringdownBuffer->parameters.ambientPressure);
         ringdownEntry->lockerError = meta.lockerError;
-        ringdownEntry->ringdownThreshold = ringdownBuffer->ringdownThreshold;
-        ringdownEntry->subschemeId = ringdownBuffer->subschemeId;
-        ringdownEntry->schemeRowAndIndex = ringdownBuffer->schemeRowAndIndex;
-        ringdownEntry->coarseLaserCurrent = ringdownBuffer->coarseLaserCurrent;
-        ringdownEntry->laserTemperature = ringdownBuffer->laserTemperature;
-        ringdownEntry->etalonTemperature = ringdownBuffer->etalonTemperature;
-        ringdownEntry->cavityPressure = ringdownBuffer->cavityPressure;
-        ringdownEntry->ambientPressure = ringdownBuffer->ambientPressure;
+
         // After fitting, the buffer is available again
         if (bufferNum == 0)
             SEM_postBinary(&SEM_rdBuffer0Available);

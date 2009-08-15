@@ -34,6 +34,7 @@ from Host.Common.Broadcaster import Broadcaster
 from Host.Common.hostDasInterface import DasInterface, HostToDspSender
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.Common.ctypesConvert import ctypesToDict
 from DasConfigure import DasConfigure
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -170,8 +171,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
         base = metaBase[bank]
         meta = [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(base,4096)]
         base = paramBase[bank]
-        param = [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(base,12)]
-        return (array(data),array(meta).reshape(512,8).transpose(),array(param))
+        paramsAsUint = self.dasInterface.hostToDspSender.rdRingdownMemArray(base,12)
+        param = interface.RingdownParamsType.from_address(ctypes.addressof(paramsAsUint))
+        return (array(data),array(meta).reshape(512,8).transpose(),ctypesToDict(param))
 
     def rdScheme(self,schemeNum):
         """Reads a scheme from table number schemeNum"""

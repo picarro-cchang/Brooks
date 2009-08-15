@@ -101,20 +101,23 @@
             <field ident="fineLaserCurrent" type="uint32"/>
             <field ident="lockerError" type="uint32"/>
         </struct>		
+        <struct type="RingdownParamsType">
+            <field ident="injectionSettings"      type="uint32"/>
+            <field ident="laserTemperature"       type="float"/>
+            <field ident="coarseLaserCurrent"     type="uint32"/>
+            <field ident="etalonTemperature"      type="float"/>
+            <field ident="cavityPressure"         type="float"/>
+            <field ident="ambientPressure"        type="float"/>
+            <field ident="schemeTableAndRow"      type="uint32"/>
+            <field ident="countAndSubschemeId"    type="uint32"/>
+            <field ident="ringdownThreshold"      type="uint32"/>
+            <field ident="status"                 type="uint32"/>
+            <field ident="tunerAtRingdown"        type="uint32"/>
+            <field ident="addressAtRingdown"      type="uint32"/>            
+        </struct>        
         <struct type="RingdownBufferType">
             <field ident="ringdownWaveform" type="uint32" size="4096"/>
-            <field ident="injectionSettings" type="uint32"/>
-            <field ident="laserTemperature" type="uint32"/>
-            <field ident="coarseLaserCurrent" type="uint32"/>
-            <field ident="etalonTemperature" type="uint32"/>
-            <field ident="cavityPressure" type="uint32"/>
-            <field ident="ambientPressure" type="uint32"/>
-            <field ident="schemeRowAndIndex" type="uint32"/>
-            <field ident="subschemeId" type="uint32"/>
-            <field ident="ringdownThreshold" type="uint32"/>
-            <field ident="status" type="uint32"/>
-            <field ident="tunerAtRingdown" type="uint32"/>
-            <field ident="addressAtRingdown" type="uint32"/>
+            <field ident="parameters" type="RingdownParamsType"/>
         </struct>		
         <struct type="RingdownEntryType">
             <field ident="timestamp" type="long long"/>
@@ -129,17 +132,18 @@
             <field ident="laserUsed" type="uint16"/>
             <field ident="ringdownThreshold" type="uint16"/>
             <field ident="subschemeId" type="uint16"/>
-            <field ident="schemeRowAndIndex" type="uint16"/>
+            <field ident="schemeTable" type="uint16"/>
+            <field ident="schemeRow" type="uint16"/>
             <field ident="ratio1" type="uint16"/>
             <field ident="ratio2" type="uint16"/>
             <field ident="fineLaserCurrent" type="uint16"/>
             <field ident="coarseLaserCurrent" type="uint16"/>
-            <field ident="laserTemperature" type="uint16"/>
-            <field ident="etalonTemperature" type="uint16"/>
+            <field ident="laserTemperature" type="float"/>
+            <field ident="etalonTemperature" type="float"/>
             <field ident="cavityPressure" type="uint16"/>
             <field ident="ambientPressure" type="uint16"/>
             <field ident="lockerError" type="uint16"/>
-            <field ident="padToCacheLine" type="uint16" size="5"/>
+            <field ident="padToCacheLine" type="uint16" size="1"/>
         </struct>
         <struct type="SensorEntryType">
             <field ident="timestamp" type="long long"/>
@@ -173,7 +177,7 @@
         <struct type="SchemeRowType">
             <field ident="setpoint" type="float"/>
             <field ident="dwellCount" type="uint16"/>
-            <field ident="subSchemeId" type="uint16"/>
+            <field ident="subschemeId" type="uint16"/>
             <field ident="laserUsed" type="uint16"/>
             <field ident="threshold" type="uint16"/>
             <field ident="pztSetpoint" type="uint16"/>
@@ -201,12 +205,25 @@
             <field ident="ratio2Center" type="float"/>
             <field ident="ratio1Scale" type="float"/>
             <field ident="ratio2Scale" type="float"/>
+            <field ident="phase" type="float"/>
             <field ident="calTemp" type="float"/>
             <field ident="calPressure" type="float"/>
             <field ident="pressureC0" type="float"/>
             <field ident="pressureC1" type="float"/>
             <field ident="pressureC2" type="float"/>
             <field ident="pressureC3" type="float"/>
+            <field ident="angleCenter" type="float"/>
+            <field ident="angleScale" type="float"/>
+            <field ident="angleToTempC0" type="float"/>
+            <field ident="angleToTempC1" type="float"/>
+            <field ident="angleToTempC2" type="float"/>
+            <field ident="angleToTempC3" type="float"/>
+            <field ident="tempCenter" type="float"/>
+            <field ident="tempScale" type="float"/>
+            <field ident="tempToAngleC0" type="float"/>
+            <field ident="tempToAngleC1" type="float"/>
+            <field ident="tempToAngleC2" type="float"/>
+            <field ident="tempToAngleC3" type="float"/>
         </struct>        
     </struct_list>
     <constant_list>
@@ -1249,6 +1266,30 @@
             <description>Laser4 Current Monitor</description>
             <initial>0.0</initial>
         </register>
+        <register ident="CONVERSION_ETALON_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Etalon thermistor constant A</description>
+            <initial>0.00112789997365</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_ETALON_THERM_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Etalon thermistor constant B</description>
+            <initial>0.000234289997024</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_ETALON_THERM_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Etalon thermistor constant C</description>
+            <initial>8.72979981636e-008</initial>
+            <save/>
+        </register>
+        <register ident="ETALON_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Etalon thermistor resistance</description>
+        </register>
+        <register ident="ETALON_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Etalon temperature</description>
+        </register>
+        <register ident="ETALON_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Etalon thermistor ADC</description>
+        </register>
         <register ident="CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Hot box heatsink thermistor constant A</description>
             <initial>0.000847030023579</initial>
@@ -1496,6 +1537,32 @@
             <initial>0.0</initial>
             <display format="%.0f">Heater manual mode mark</display>
         </register>
+        <register ident="CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity pressure scaling</description>
+            <initial>1.0</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity pressure offset</description>
+            <initial>0.0</initial>
+            <save/>
+        </register>
+        <register ident="CAVITY_PRESSURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity pressure</description>
+        </register>
+        <register ident="CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Ambient pressure scaling</description>
+            <initial>1.0</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Ambient pressure offset</description>
+            <initial>0.0</initial>
+            <save/>
+        </register>
+        <register ident="AMBIENT_PRESSURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Ambient pressure</description>
+        </register>
         <register ident="TUNER_SWEEP_RAMP_HIGH_REGISTER" type="float" minver="1.0" access="rw">
             <description>Higher limit of tuner sweep in ramp mode.</description>
             <initial>50000.0</initial>
@@ -1617,20 +1684,26 @@
             <initial>0</initial>
             <display format="%d">Next scheme table index</display>
         </register>
-        <register ident="SPECT_CNTRL_SCHEME_ITER_REGISTER" type="uint32" minver="1.0" access="rw">
+        <register ident="SPECT_CNTRL_SCHEME_ITER_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Scheme Iteration Register</description>
             <initial>0</initial>
             <display format="%d">Iteration counter for current scheme</display>
         </register>
-        <register ident="SPECT_CNTRL_SCHEME_ROW_REGISTER" type="uint32" minver="1.0" access="rw">
+        <register ident="SPECT_CNTRL_SCHEME_ROW_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Scheme Row Register</description>
             <initial>0</initial>
             <display format="%d">Row number within active scheme</display>
         </register>
-        <register ident="SPECT_CNTRL_DWELL_COUNT_REGISTER" type="uint32" minver="1.0" access="rw">
+        <register ident="SPECT_CNTRL_DWELL_COUNT_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Scheme Dwell Count Register</description>
             <initial>0</initial>
             <display format="%d">Dwell counter for current scheme row</display>
+        </register>
+        <register ident="SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Default ringdown threshold</description>
+            <initial>15000</initial>
+            <save/>
+            <display format="%d">Default ringdown threshold</display>
         </register>
     </register_list>
     <fpga_block_list>

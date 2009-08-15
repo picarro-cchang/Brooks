@@ -230,6 +230,7 @@
             <register>SPECT_CNTRL_SCHEME_ITER_REGISTER</register>
             <register>SPECT_CNTRL_SCHEME_ROW_REGISTER</register>
             <register>SPECT_CNTRL_DWELL_COUNT_REGISTER</register>
+            <register>SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Ringdown Simulator Parameters</title>

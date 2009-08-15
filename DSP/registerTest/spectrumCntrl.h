@@ -26,13 +26,20 @@ typedef struct SPECT_CNTRL_PARAMS
     unsigned int *iter_;     // Scheme iteration
     unsigned int *row_;      // Scheme row
     unsigned int *dwell_;    // Dwell counter
+    float *laserTemp_[4];    // Laser temperature registers
+    float *coarseLaserCurrent_[4];    // Coarse laser current registers
+	float *etalonTemperature_; // Etalon temperature
+	float *cavityPressure_;    // Cavity pressure
+	float *ambientPressure_;   // Ambient pressure
+	unsigned int *defaultThreshold_;  // Default ringdown threshold
     // Local variables for controller
 } SpectCntrlParams;
 
-int spectCntrlInit(void);
+int  spectCntrlInit(void);
 void spectCntrl(void);
-int spectCntrlStep(void);
+int  spectCntrlStep(void);
 void setAutoInject(void);
+void setupRingdown(void);
 void validateSchemePosition(void);
 void advanceDwellCounter(void);
 void advanceSchemeRow(void);

@@ -22,6 +22,8 @@
 
 #include <math.h>
 #include <stdio.h>
+#include "fastrts67x.h"
+
 #ifdef TESTING
 	#include "testHarness.h"
 #else
@@ -38,7 +40,6 @@ SpectCntrlParams spectCntrlParams;
 #define row                (*(s->row_))
 #define dwell              (*(s->dwell_))
 
-
 int spectCntrlInit(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
@@ -49,7 +50,19 @@ int spectCntrlInit(void)
     s->iter_  = (unsigned int *)registerAddr(SPECT_CNTRL_SCHEME_ITER_REGISTER);
     s->row_   = (unsigned int *)registerAddr(SPECT_CNTRL_SCHEME_ROW_REGISTER); 
     s->dwell_ = (unsigned int *)registerAddr(SPECT_CNTRL_DWELL_COUNT_REGISTER);
-    return STATUS_OK;
+	s->laserTemp_[0] = (float *)registerAddr(LASER1_TEMPERATURE_REGISTER);
+	s->laserTemp_[1] = (float *)registerAddr(LASER2_TEMPERATURE_REGISTER);
+	s->laserTemp_[2] = (float *)registerAddr(LASER3_TEMPERATURE_REGISTER);
+	s->laserTemp_[3] = (float *)registerAddr(LASER4_TEMPERATURE_REGISTER);
+    s->coarseLaserCurrent_[0] = (float *)registerAddr(LASER1_MANUAL_COARSE_CURRENT_REGISTER);
+    s->coarseLaserCurrent_[1] = (float *)registerAddr(LASER2_MANUAL_COARSE_CURRENT_REGISTER);
+    s->coarseLaserCurrent_[2] = (float *)registerAddr(LASER3_MANUAL_COARSE_CURRENT_REGISTER);
+    s->coarseLaserCurrent_[3] = (float *)registerAddr(LASER4_MANUAL_COARSE_CURRENT_REGISTER);
+	s->etalonTemperature_ = (float *)registerAddr(ETALON_TEMPERATURE_REGISTER);
+	s->cavityPressure_ = (float *)registerAddr(CAVITY_PRESSURE_REGISTER);
+	s->ambientPressure_ = (float *)registerAddr(AMBIENT_PRESSURE_REGISTER);
+	s->defaultThreshold_ = (unsigned int *)registerAddr(SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER);
+	return STATUS_OK;
 }
 
 int spectCntrlStep(void)
@@ -63,10 +76,22 @@ int spectCntrlStep(void)
 	if (SPECT_CNTRL_StartingState == state) {
 		setAutoInject();
 		state = SPECT_CNTRL_RunningState;
+		if (SPECT_CNTRL_SchemeSingleMode == mode || 
+			SPECT_CNTRL_SchemeMultipleMode == mode || 
+			SPECT_CNTRL_SchemeSequenceMode == mode) {
+			iter = 0;
+			row = 0;
+			dwell = 0;
+		}	
 	}
 	else if (SPECT_CNTRL_RunningState == state) {
 		if (SPECT_CNTRL_StartingState == prevState || 
 			SPECT_CNTRL_PausedState   == prevState) {
+				// Enable laser shutdown 
+				// TODO: Handle SOA shutdown
+				changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W, 1);
+				changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B, INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W, 1);
+				
 				SEM_pendBinary(&SEM_startRdCycle,100);	// Eat up anything pending				
 				SEM_postBinary(&SEM_startRdCycle);
 		}
@@ -80,6 +105,7 @@ int spectCntrlStep(void)
 void spectCntrl(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
+	
     int bank, status;
 	float theta, dtheta;
 	theta = 0.0;	
@@ -111,9 +137,12 @@ void spectCntrl(void)
         }
         // We shall load the parameters of the ringdown here...
 		if (SPECT_CNTRL_ContinuousMode == mode) {
-		}	
-		// prepareForRingdown()
-		
+		}
+		else {
+			advanceDwellCounter();	
+		}
+
+		setupRingdown();
 		theta += dtheta;
 		if (theta > PI/4.0) {
 			dtheta = -fabs(dtheta);
@@ -130,6 +159,69 @@ void spectCntrl(void)
         changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_START_RD_B,
                        RDMAN_CONTROL_START_RD_W,1);
     }
+}
+
+void setupRingdown(void)
+{
+    SpectCntrlParams *s=&spectCntrlParams;
+	RingdownParamsType rdParams;
+	unsigned int virtLaserNum, laserNum;
+	volatile SchemeTableType *schemeTable = &schemeTables[active];
+	volatile VirtualLaserParamsType *vLaserParams;
+	float setpoint, dp, theta, ratio1Multiplier, ratio2Multiplier;
+	
+	virtLaserNum = schemeTable->rows[row].laserUsed;
+	vLaserParams = &virtualLaserParams[virtLaserNum];
+	setpoint = schemeTable->rows[row].setpoint;
+
+	laserNum = vLaserParams->actualLaser & 0x3;		
+	rdParams.injectionSettings = (virtLaserNum << 2) | laserNum;
+	rdParams.laserTemperature = *(s->laserTemp_[laserNum]);
+	rdParams.coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
+	rdParams.etalonTemperature = *(s->etalonTemperature_);
+	rdParams.cavityPressure = *(s->cavityPressure_);
+	rdParams.ambientPressure = *(s->ambientPressure_);
+	rdParams.schemeTableAndRow = (active << 16) | (row & 0xFFFF);
+	
+	// TODO: Handle count!		
+	rdParams.countAndSubschemeId = (schemeTable->rows[row].subschemeId & 0xFFFF);
+	rdParams.ringdownThreshold   = schemeTable->rows[row].threshold;
+	if (rdParams.ringdownThreshold == 0) rdParams.ringdownThreshold = *(s->defaultThreshold_);
+	// TODO: Compute rdParams.status
+	rdParams.status = 0;
+	
+	// Correct the setpoint angle using the etalon temperature and ambient pressure
+	dp = rdParams.ambientPressure - vLaserParams->calPressure;
+	theta = setpoint - vLaserParams->tempSensitivity*(rdParams.etalonTemperature-vLaserParams->calTemp) -
+			(vLaserParams->pressureC0 + dp*(vLaserParams->pressureC1 + dp*(vLaserParams->pressureC2 + dp*vLaserParams->pressureC3)));
+	
+	// Compute the ratio multipliers corresponding to this setpoint
+	ratio1Multiplier = ((-sinsp(theta + vLaserParams->phase))/(vLaserParams->ratio1Scale * cossp(vLaserParams->phase)));
+	ratio2Multiplier = ((cossp(theta))/(vLaserParams->ratio2Scale * cossp(vLaserParams->phase)));
+
+	// Set up the FPGA registers for this ringdown
+	changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W, laserNum);
+
+	writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO1_MULTIPLIER, (int)(ratio1Multiplier*32767.0));
+	writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO2_MULTIPLIER, (int)(ratio2Multiplier*32767.0));
+
+	writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO1_CENTER, (int)(vLaserParams->ratio1Center*32768.0));
+	writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO2_CENTER, (int)(vLaserParams->ratio2Center*32768.0));
+	
+	writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,rdParams.ringdownThreshold);
+
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM0,*(uint32*)&rdParams.injectionSettings);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM1,*(uint32*)&rdParams.laserTemperature);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM2,*(uint32*)&rdParams.coarseLaserCurrent);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM3,*(uint32*)&rdParams.etalonTemperature);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM4,*(uint32*)&rdParams.cavityPressure);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM5,*(uint32*)&rdParams.ambientPressure);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM6,*(uint32*)&rdParams.schemeTableAndRow);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM7,*(uint32*)&rdParams.countAndSubschemeId);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM8,*(uint32*)&rdParams.ringdownThreshold);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM9,*(uint32*)&rdParams.status);
+	
+	// TODO: Change the temperature of the selected laser
 }
 
 void setAutoInject(void)
@@ -177,7 +269,6 @@ void validateSchemePosition(void)
 		dwell = 0;
 	}
 }
-
 
 void advanceDwellCounter(void)
 {
