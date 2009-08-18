@@ -138,23 +138,23 @@ if sys.platform == "win32":
     _STILL_ACTIVE = 259 #hopefully correct - determined by doing, not by documentation
 
     _PRIORITY_LOOKUP = {
-      "1" : win32process.IDLE_PRIORITY_CLASS,
-      "2" : win32process.BELOW_NORMAL_PRIORITY_CLASS,
-      "3" : win32process.NORMAL_PRIORITY_CLASS,
-      "4" : win32process.ABOVE_NORMAL_PRIORITY_CLASS,
-      "5" : win32process.HIGH_PRIORITY_CLASS,
-      "6" : win32process.REALTIME_PRIORITY_CLASS
-      }
+        "1" : win32process.IDLE_PRIORITY_CLASS,
+        "2" : win32process.BELOW_NORMAL_PRIORITY_CLASS,
+        "3" : win32process.NORMAL_PRIORITY_CLASS,
+        "4" : win32process.ABOVE_NORMAL_PRIORITY_CLASS,
+        "5" : win32process.HIGH_PRIORITY_CLASS,
+        "6" : win32process.REALTIME_PRIORITY_CLASS
+    }
 
 if sys.platform == "linux2":
     _PRIORITY_LOOKUP = {
-      "1" : 10,
-      "2" : 5,
-      "3" : 0,
-      "4" : -5,
-      "5" : -10,
-      "6" : -15
-      }
+        "1" : 10,
+        "2" : 5,
+        "3" : 0,
+        "4" : -5,
+        "5" : -10,
+        "6" : -15
+    }
 def Log(Desc, Data = None, Level = 1, Code = -1, AccessLevel = ACCESS_PICARRO_ONLY, Verbose = "", SourceTime = 0):
     """Short global log function that sends a log to the EventLogger
     """
@@ -179,10 +179,10 @@ class AppLaunchFailure(AppErr):
 
 class AppOptionErr(AppErr):
     "There is a problem with one (more more) of the configured App options."
-    
+
 class IniVerifyErr(CrdsException):
     "There was a problem when iniCoordinator tried to verify .ini configuration files for all applications."
-    
+
 def Print(s, SuppressLineFeed = False):
     """Prints s to stdout, but only if in debug mode.
     """
@@ -208,9 +208,9 @@ def PrepareBackupAndWaitForAction(WDTWaitTime_s):
     rpcPort = RPC_SERVER_PORT_BACKUP
     #Set up the RPC Server for the backup mode...
     rpcServer = BackupSupervisorRPCServer(
-                                 addr       = ("",rpcPort),
-                                 ServerName = "Backup_Supervisor",
-                                 ServerDescription = "The rpc server for a Supervisor running in backup mode.")
+        addr       = ("",rpcPort),
+        ServerName = "Backup_Supervisor",
+        ServerDescription = "The rpc server for a Supervisor running in backup mode.")
     rpcServer.BackupWDTWaitTime = WDTWaitTime_s
     rpcServer.serve_forever()
 
@@ -288,16 +288,16 @@ if sys.platform == "win32":
         lpCurrentDirectory = None
         lpStartupInfo = win32process.STARTUPINFO()
         hProcess, hThread, dwProcessId, dwThreadId =  win32process.CreateProcess(
-                                  lpApplicationName,
-                                  lpCommandLine,
-                                  lpProcessAttributes,
-                                  lpThreadAttributes,
-                                  bInheritHandles,
-                                  dwCreationFlags,
-                                  lpEnvironment,
-                                  lpCurrentDirectory,
-                                  lpStartupInfo
-                                  )
+            lpApplicationName,
+            lpCommandLine,
+            lpProcessAttributes,
+            lpThreadAttributes,
+            bInheritHandles,
+            dwCreationFlags,
+            lpEnvironment,
+            lpCurrentDirectory,
+            lpStartupInfo
+        )
         processId = dwProcessId
         processHandle = win32api_OpenProcess(win32_PROCESS_ALL_ACCESS, int(False), dwProcessId)
         pAffinity,sAffinity = win32process.GetProcessAffinityMask(hProcess)
@@ -421,7 +421,6 @@ class TcpRequestHandler(SocketServer.BaseRequestHandler):
     implementation.
     """
     def handle(self):
-        print repr(self), id(self)
         rxBuf = ""
         terminatorLoc = -1
         response = ""
@@ -597,10 +596,10 @@ class App(object):
         if self.Port > 0:
             proxyURL = "http://localhost:%s" % (self.Port,)
             self._ServerProxy = CmdFIFO.CmdFIFOServerProxy( \
-                                               uri = proxyURL, \
-                                               ClientName = APP_NAME, \
-                                               CallbackURI = "", \
-                                               Timeout_s = self.MaxWait_ms/100)
+                uri = proxyURL, \
+                ClientName = APP_NAME, \
+                CallbackURI = "", \
+                Timeout_s = self.MaxWait_ms/100)
         if self.Mode in [0,1]:
             self._HasCmdFIFO = True
         return loadedOptions
@@ -936,7 +935,7 @@ class Supervisor(object):
         self._TcpServerThread = None
         self.powerDownAfterTermination = False
         self.appList = None
-        
+
         # start to use CustomConfigObj
         try:
             self.PingDispatcherTimeout_ms = co.getint("GlobalDefaults", "DispatcherTimeout_ms")
@@ -1070,7 +1069,7 @@ class Supervisor(object):
                     sortedList.append(app)
             AppList = sortedList
         Log("Launch list: %s" % AppList) 
-        
+
         failedAppDependents = []
 
         appsToLaunch = [a for a in AppList if a not in ExclusionList]
@@ -1093,8 +1092,8 @@ class Supervisor(object):
                         break
                     except AppLaunchFailure, E:
                         Log("Failed to launch application",
-                           dict(AppName = appName, AttemptNum = self.AppDict[appName]._LaunchFailureCount),
-                           Level = 2)
+                            dict(AppName = appName, AttemptNum = self.AppDict[appName]._LaunchFailureCount),
+                            Level = 2)
                         #Sleep a short time before trying again...
                         #time_sleep(1)
 
@@ -1217,9 +1216,9 @@ class Supervisor(object):
         #the background while we do the monitoring in the main thread/loop...
         try:
             self.RPCServer = CmdFIFO.CmdFIFOServer(
-                                           addr       = ("", RPC_SERVER_PORT_MASTER),
-                                           ServerName = "Supervisor",
-                                           ServerDescription = "The rpc server for the master Supervisor application.")
+                addr       = ("", RPC_SERVER_PORT_MASTER),
+                ServerName = "Supervisor",
+                ServerDescription = "The rpc server for the master Supervisor application.")
 
             #register any RPC calls here...
             self.RPCServer.register_function(self.RPC_TerminateApplications, NameSlice = 4)
@@ -1378,9 +1377,9 @@ class Supervisor(object):
     def GetAppStats(self, PrintStats = False):
         """Prints the supervisory stats for each application.
         """
-		#    Print("---")
-		#    Print("Application Stats:")
-		#    Print("---")
+                #    Print("---")
+                #    Print("Application Stats:")
+                #    Print("---")
         s = ""
         s += 50 * "-" + "\n"
         s += "%s%s%s%s" % ("App Name".ljust(20), "PID".ljust(8), "Uptime".ljust(11), "# Restarts".ljust(10)) + "\n"
@@ -1486,34 +1485,34 @@ class BackupSupervisor(object):
     pass
 def PrintUsage():
     print """\
-    Usage:
-    %s.py [-i|-f|-k] [-c<FILENAME>] [-o<APPNAME>:<ARGS>]
-    %s.py [--ke] [--nl] [--nm] [--inilog] [-c<FILENAME>] [-o<APPNAME>:<ARGS>]
+          Usage:
+          %s.py [-i|-f|-k] [-c<FILENAME>] [-o<APPNAME>:<ARGS>]
+          %s.py [--ke] [--nl] [--nm] [--inilog] [-c<FILENAME>] [-o<APPNAME>:<ARGS>]
 
-    With no switches, this application does the following:
-      1.  Determines what applications are to be supervised by reading the config
+          With no switches, this application does the following:
+          1.  Determines what applications are to be supervised by reading the config
           file: '%s'
-      2.  Identifies whether any of the applications are already running
-      3.  Launches any applications that are missing
-      4.  Enters an eternal supervisory loop that monitors all apps.
+          2.  Identifies whether any of the applications are already running
+          3.  Launches any applications that are missing
+          4.  Enters an eternal supervisory loop that monitors all apps.
 
-    The command line options are as follows:
-     -c         Specify a different config file.  Usage is -c<FILENAME>
-     -i         Identify existing apps only.  ie: stop after step 2.  This is equivalent
-                to using both --nl and --nm
-     -f         Do a fresh start.  This is equivalent to only using the --ke switch.
-     -k         Kill any existing apps only.  Equivalent to using '--ke --nl --nm'
-    --ke        Kill Existing.  Kills existing apps at the start (between steps 2 & 3)
-    --nl        No Launch. Suppress all apps from being launched (suppresses step 3)
-    --nm        No Monitoring. Don't enter the monitoring loop (suppresses step 4)
-    --inilog    Create a log of the INI Coordinator verification results
-     -o         Add command-line args to a particular app.  Use quotes if using spaces.
-                    eg:  -oDriver:"--nokeepalive --otherarg"
+          The command line options are as follows:
+          -c         Specify a different config file.  Usage is -c<FILENAME>
+          -i         Identify existing apps only.  ie: stop after step 2.  This is equivalent
+          to using both --nl and --nm
+          -f         Do a fresh start.  This is equivalent to only using the --ke switch.
+          -k         Kill any existing apps only.  Equivalent to using '--ke --nl --nm'
+          --ke        Kill Existing.  Kills existing apps at the start (between steps 2 & 3)
+          --nl        No Launch. Suppress all apps from being launched (suppresses step 3)
+          --nm        No Monitoring. Don't enter the monitoring loop (suppresses step 4)
+          --inilog    Create a log of the INI Coordinator verification results
+          -o         Add command-line args to a particular app.  Use quotes if using spaces.
+          eg:  -oDriver:"--nokeepalive --otherarg"
 
-    To exit the Supervisor when it is in monitoring mode:
-      - Ctrl-q (or Ctrl-x) cleanly exits and leave the applications running.
-      - Ctrl-t terminates all monitored applications and then shuts down.
-    """ % (APP_NAME, APP_NAME, _DEFAULT_CONFIG_NAME)
+          To exit the Supervisor when it is in monitoring mode:
+          - Ctrl-q (or Ctrl-x) cleanly exits and leave the applications running.
+          - Ctrl-t terminates all monitored applications and then shuts down.
+          """ % (APP_NAME, APP_NAME, _DEFAULT_CONFIG_NAME)
 
 def HandleCommandSwitches():
     shortOpts = 'hc:ifkt:o:'
@@ -1645,7 +1644,7 @@ def GetConfigFileAndIniLog():
     else:
         printIniLog = False        
     return (configFile, printIniLog)
-    
+
 def main():
     try:
         #Get and handle the command line options...
@@ -1670,8 +1669,8 @@ def main():
                 supe = Supervisor(FileName = configFile) #loads all the app info
                 supe.AddExtraArgs(extraAppArgs)
                 supe.Execute(KillExistingApps = killExisting,
-                          LaunchNonExistent = (not suppressLaunch),
-                          DoMonitoring = (not suppressMonitoring))
+                             LaunchNonExistent = (not suppressLaunch),
+                             DoMonitoring = (not suppressMonitoring))
             except AppErr, E:
                 print "Exception trapped outside Supervisor execution: %s %r" % (E, E)
                 Log("Exception trapped outside Supervisor execution", Level = 3, Verbose = "Exception = %s %r" % (E, E))
@@ -1691,7 +1690,7 @@ if __name__ == "__main__":
         # iniCdr.verifyConfig()
     # except Exception, E:    
         # raise IniVerifyErr("%s %r" % (E, E))
-        
+
     print "PID = %s" % os.getpid()
     try:
         main()

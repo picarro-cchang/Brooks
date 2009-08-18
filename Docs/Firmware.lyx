@@ -186,7 +186,6 @@ Ringdown Parameter Buffer
 
 \begin_layout Standard
 This contains data which applies to a particular ringdown.
- They are packed into 16-bit quantities for convenience:
 \end_layout
 
 \begin_layout Enumerate
@@ -194,7 +193,7 @@ Which laser is active (injection settings)
 \end_layout
 
 \begin_layout Enumerate
-Temperature of active laser (millidegrees Celsius)
+Temperature of active laser (floating point)
 \end_layout
 
 \begin_layout Enumerate
@@ -202,35 +201,27 @@ Coarse laser current DAC value of active laser
 \end_layout
 
 \begin_layout Enumerate
-Etalon temperature (millidegrees Celsius)
+Etalon temperature (floating point)
 \end_layout
 
 \begin_layout Enumerate
-Cavity pressure (50 
-\begin_inset Formula $\times$
-\end_inset
-
- pressure in Torr)
+Cavity pressure (floating point)
 \end_layout
 
 \begin_layout Enumerate
-Ambient pressure (50 
-\begin_inset Formula $\times$
-\end_inset
-
- pressure in Torr)
+Ambient pressure (floating point)
 \end_layout
 
 \begin_layout Enumerate
-Scheme row and Scheme index
+Scheme table and row (16 bits each, 32 bits total)
 \end_layout
 
 \begin_layout Enumerate
-Subscheme Id (passthrough)
+Count and subscheme Id (16 bits each, 32 bits total)
 \end_layout
 
 \begin_layout Enumerate
-Ringdown threshold
+Ringdown threshold (16 bits)
 \end_layout
 
 \begin_layout Enumerate

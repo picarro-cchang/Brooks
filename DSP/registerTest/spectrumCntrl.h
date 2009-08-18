@@ -33,6 +33,7 @@ typedef struct SPECT_CNTRL_PARAMS
 	float *ambientPressure_;   // Ambient pressure
 	unsigned int *defaultThreshold_;  // Default ringdown threshold
     // Local variables for controller
+	unsigned int schemeCounter_; // Increments at last ringdown of a scheme
 } SpectCntrlParams;
 
 int  spectCntrlInit(void);

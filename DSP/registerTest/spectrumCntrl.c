@@ -62,6 +62,7 @@ int spectCntrlInit(void)
 	s->cavityPressure_ = (float *)registerAddr(CAVITY_PRESSURE_REGISTER);
 	s->ambientPressure_ = (float *)registerAddr(AMBIENT_PRESSURE_REGISTER);
 	s->defaultThreshold_ = (unsigned int *)registerAddr(SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER);
+	s->schemeCounter_ =  0;
 	return STATUS_OK;
 }
 
@@ -139,10 +140,15 @@ void spectCntrl(void)
 		if (SPECT_CNTRL_ContinuousMode == mode) {
 		}
 		else {
+			//  Need to determine if we should repeat this ringdown, advance dwell count
+			//   or advance row count. In the last two cases, we may need to ensure the status
+			//   bits are set correctly
+			
 			advanceDwellCounter();	
 		}
 
 		setupRingdown();
+		/*
 		theta += dtheta;
 		if (theta > PI/4.0) {
 			dtheta = -fabs(dtheta);
@@ -154,7 +160,7 @@ void spectCntrl(void)
 		}
 		writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO1_MULTIPLIER,(int)(32000.0*cos(theta)));
 		writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO2_MULTIPLIER,(int)(32000.0*sin(theta)));
-			
+		*/	
         // Then initiate the ringdown...
         changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_START_RD_B,
                        RDMAN_CONTROL_START_RD_W,1);
@@ -188,7 +194,17 @@ void setupRingdown(void)
 	rdParams.ringdownThreshold   = schemeTable->rows[row].threshold;
 	if (rdParams.ringdownThreshold == 0) rdParams.ringdownThreshold = *(s->defaultThreshold_);
 	// TODO: Compute rdParams.status
-	rdParams.status = 0;
+	rdParams.status = (s->schemeCounter_ & RINGDOWN_STATUS_SchemeIncrMask);
+	if (SPECT_CNTRL_SchemeSingleMode == mode ||
+		SPECT_CNTRL_SchemeMultipleMode == mode ||
+		SPECT_CNTRL_SchemeSequenceMode == mode) rdParams.status |= RINGDOWN_STATUS_SchemeActiveMask;
+	// Determine if we are on the last ringdown of the scheme
+	if (iter == schemeTables[active].numRepeats-1 &&
+		row  == schemeTables[active].numRows-1 &&
+		dwell == schemeTables[active].rows[row].dwellCount-1) {
+		if (SPECT_CNTRL_SchemeSingleMode == mode) rdParams.status |= RINGDOWN_STATUS_SchemeCompleteInSingleModeMask;
+		else if (SPECT_CNTRL_SchemeMultipleMode == mode ||
+			     SPECT_CNTRL_SchemeSequenceMode == mode) rdParams.status |= RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask;
 	
 	// Correct the setpoint angle using the etalon temperature and ambient pressure
 	dp = rdParams.ambientPressure - vLaserParams->calPressure;
