@@ -278,6 +278,8 @@ typedef struct {
 #define RINGDOWN_BUFFER_OFFSET (0x4000)
 // Number of ringdown buffer areas in DSP shared memory
 #define NUM_RINGDOWN_BUFFERS (2)
+// Code to indicate that we abandoned this scheme row due to a timeout
+#define MISSING_RINGDOWN (NUM_RINGDOWN_BUFFERS)
 // Size of a ringdown buffer area in 32 bit ints
 #define RINGDOWN_BUFFER_SIZE ((sizeof(RingdownBufferType)/4))
 // Offset for scheme sequence area in DSP shared memory
@@ -418,6 +420,11 @@ typedef enum {
     SPECT_CNTRL_ContinuousMode = 3 // Continuous acquisition
 } SPECT_CNTRL_ModeType;
 
+typedef enum {
+    TUNER_RampMode = 0, // Ramp mode
+    TUNER_DitherMode = 1 // Dither mode
+} TUNER_ModeType;
+
 /* Definitions for COMM_STATUS_BITMASK */
 #define COMM_STATUS_CompleteMask (0x1)
 #define COMM_STATUS_BadCrcMask (0x2)
@@ -433,9 +440,10 @@ typedef enum {
 #define RINGDOWN_STATUS_SchemeActiveMask (0x10)
 #define RINGDOWN_STATUS_SchemeCompleteInSingleModeMask (0x20)
 #define RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask (0x40)
+#define RINGDOWN_STATUS_RingdownTimeout (0x80)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (251)
+#define INTERFACE_NUMBER_OF_REGISTERS (253)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -688,6 +696,8 @@ typedef enum {
 #define SPECT_CNTRL_SCHEME_ROW_REGISTER (248)
 #define SPECT_CNTRL_DWELL_COUNT_REGISTER (249)
 #define SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER (250)
+#define SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER (251)
+#define SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER (252)
 
 /* FPGA block definitions */
 
@@ -805,6 +815,8 @@ typedef enum {
 #define RDMAN_CONTROL_RD_IRQ_ACK_W (1) // Acknowledge ring-down interrupt bit width
 #define RDMAN_CONTROL_ACQ_DONE_ACK_B (7) // Acknowledge data acquired interrupt bit position
 #define RDMAN_CONTROL_ACQ_DONE_ACK_W (1) // Acknowledge data acquired interrupt bit width
+#define RDMAN_CONTROL_RAMP_DITHER_B (8) // Tuner waveform mode bit position
+#define RDMAN_CONTROL_RAMP_DITHER_W (1) // Tuner waveform mode bit width
 
 #define RDMAN_STATUS (1) // Status register
 #define RDMAN_STATUS_SHUTDOWN_B (0) // Indicates shutdown of optical injection bit position
@@ -827,9 +839,7 @@ typedef enum {
 #define RDMAN_STATUS_TIMEOUT_W (1) // Timeout without ring-down bit width
 #define RDMAN_STATUS_ABORTED_B (9) // Ring-down aborted bit position
 #define RDMAN_STATUS_ABORTED_W (1) // Ring-down aborted bit width
-#define RDMAN_STATUS_RAMP_DITHER_B (10) // Tuner waveform mode bit position
-#define RDMAN_STATUS_RAMP_DITHER_W (1) // Tuner waveform mode bit width
-#define RDMAN_STATUS_BUSY_B (11) // Ringdown Cycle State bit position
+#define RDMAN_STATUS_BUSY_B (10) // Ringdown Cycle State bit position
 #define RDMAN_STATUS_BUSY_W (1) // Ringdown Cycle State bit width
 
 #define RDMAN_OPTIONS (2) // Options register

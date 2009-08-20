@@ -254,6 +254,7 @@
         <constant ident="HOST_OFFSET" description="Offset for host area in DSP shared memory">0x3F00</constant>
         <constant ident="RINGDOWN_BUFFER_OFFSET" description="Offset for ringdown buffer area in DSP shared memory">0x4000</constant>
         <constant ident="NUM_RINGDOWN_BUFFERS" description="Number of ringdown buffer areas in DSP shared memory">2</constant>
+        <constant ident="MISSING_RINGDOWN" description="Code to indicate that we abandoned this scheme row due to a timeout">NUM_RINGDOWN_BUFFERS</constant>
         <constant ident="RINGDOWN_BUFFER_SIZE" description="Size of a ringdown buffer area in 32 bit ints">(sizeof(RingdownBufferType)/4)</constant>
         <constant ident="SCHEME_SEQUENCE_OFFSET" description="Offset for scheme sequence area in DSP shared memory">0x7800</constant>
         <constant ident="SCHEME_SEQUENCE_SIZE" description="Size of a scheme sequence in 32 bit ints">(sizeof(SchemeSequenceType)/4)</constant>
@@ -361,12 +362,17 @@
             <enum_value ident="SPECT_CNTRL_RunningState" value="2" caption="Acquisition in progress mode" />
             <enum_value ident="SPECT_CNTRL_PausedState" value="3" caption="Acquisition paused" />
         </enum>
-        <enum type="SPECT_CNTRL_ModeType">
-            <description>Spectrum controller modes</description>
-            <enum_value ident="SPECT_CNTRL_SchemeSingleMode" value="0" caption="Perform single scheme" />
-            <enum_value ident="SPECT_CNTRL_SchemeMultipleMode" value="1" caption="Perform multiple schemes" />
-            <enum_value ident="SPECT_CNTRL_SchemeSequenceMode" value="2" caption="Perform scheme sequence" />
-            <enum_value ident="SPECT_CNTRL_ContinuousMode" value="3" caption="Continuous acquisition" />
+        <enum type="SPECT_CNTRL_ModeType"> 
+            <description>Spectrum controller modes</description> 
+            <enum_value ident="SPECT_CNTRL_SchemeSingleMode" value="0" caption="Perform single scheme" /> 
+            <enum_value ident="SPECT_CNTRL_SchemeMultipleMode" value="1" caption="Perform multiple schemes" /> 
+            <enum_value ident="SPECT_CNTRL_SchemeSequenceMode" value="2" caption="Perform scheme sequence" /> 
+            <enum_value ident="SPECT_CNTRL_ContinuousMode" value="3" caption="Continuous acquisition" /> 
+        </enum>         
+        <enum type="TUNER_ModeType">
+            <description>Tuner modes</description>
+            <enum_value ident="TUNER_RampMode" value="0" caption="Ramp mode" />
+            <enum_value ident="TUNER_DitherMode" value="1" caption="Dither mode" />
         </enum>
     </enum_list>
     <bits_list>
@@ -385,6 +391,7 @@
             <mask  ident="RINGDOWN_STATUS_SchemeActiveMask">0x10</mask>
             <mask  ident="RINGDOWN_STATUS_SchemeCompleteInSingleModeMask">0x20</mask>
             <mask  ident="RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask">0x40</mask>
+            <mask  ident="RINGDOWN_STATUS_RingdownTimeout">0x80</mask>
         </bits>        
     </bits_list>
     <register_list>
@@ -1705,6 +1712,18 @@
             <save/>
             <display format="%d">Default ringdown threshold</display>
         </register>
+        <register ident="SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Ringdown timeout in dither mode</description>
+            <initial>100000</initial>
+            <save/>
+            <display format="%d" units="us">Dither mode ringdown timeout</display>
+        </register>
+        <register ident="SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Ringdown timeout in ramp mode</description>
+            <initial>1000000</initial>
+            <save/>
+            <display format="%d" units="us">Ramp mode ringdown timeout</display>
+        </register>
     </register_list>
     <fpga_block_list>
         <fpga_block ident="KERNEL" description="Kernel">
@@ -2017,6 +2036,10 @@
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Acknowledge</fielddef>
                 </bitfield>
+                <bitfield ident="RAMP_DITHER" description="Tuner waveform mode" lsb="8" width="1"> 
+                    <fielddef value="0">Ramp</fielddef>
+                    <fielddef value="1">Dither</fielddef>
+                </bitfield>
             </reg>
             <reg type="mask" ident="STATUS" description="Status register" access="r">
                 <display format="$%X">Status</display>
@@ -2060,11 +2083,7 @@
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Aborted</fielddef>
                 </bitfield>
-                <bitfield ident="RAMP_DITHER" description="Tuner waveform mode" lsb="10" width="1"> 
-                    <fielddef value="0">Ramp</fielddef>
-                    <fielddef value="1">Dither</fielddef>
-                </bitfield>
-                <bitfield ident="BUSY" description="Ringdown Cycle State" lsb="11" width="1">
+                <bitfield ident="BUSY" description="Ringdown Cycle State" lsb="10" width="1">
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Busy</fielddef>
                 </bitfield>

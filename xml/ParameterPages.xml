@@ -231,6 +231,8 @@
             <register>SPECT_CNTRL_SCHEME_ROW_REGISTER</register>
             <register>SPECT_CNTRL_DWELL_COUNT_REGISTER</register>
             <register>SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER</register>
+            <register>SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER</register>
+            <register>SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Ringdown Simulator Parameters</title>

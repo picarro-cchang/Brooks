@@ -8,6 +8,7 @@ from ControllerPanelsGui import WlmPanelGui
 from Host.autogen import interface
 from Host.Common.GraphPanel import Series
 from Host.Common import CmdFIFO, SharedTypes, timestamp
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 import threading
 
 wfmPoints = interface.CONTROLLER_WAVEFORM_POINTS
@@ -34,6 +35,7 @@ class RingdownPanel(RingdownPanelGui):
         choice = self.graphTypeRadioBox.GetSelection()
         y = ""
         self.appendData = printData
+        
         if choice == 0:
             def  lossVsWavenumber(data):
                 wavenumber = data.wlmAngle
@@ -222,6 +224,7 @@ class RingdownPanel(RingdownPanelGui):
                 size=1,width=1)
         for w in self.ringdownWfms:
             w.Clear()
+
     def  onSelectLossType(self,evt):
         choice = self.graphTypeRadioBox.GetSelection()
         if choice in [0,1,2,3]:

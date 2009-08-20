@@ -36,15 +36,19 @@ typedef struct SPECT_CNTRL_PARAMS
 	unsigned int schemeCounter_; // Increments at last ringdown of a scheme
 } SpectCntrlParams;
 
+extern RingdownParamsType nextRdParams;
+
 int  spectCntrlInit(void);
 void spectCntrl(void);
 int  spectCntrlStep(void);
 void setAutoInject(void);
-void setupRingdown(void);
+void setupNextRdParams(void);
 void validateSchemePosition(void);
 void advanceDwellCounter(void);
 void advanceSchemeRow(void);
 void advanceSchemeIteration(void);
 void advanceScheme(void);
+void modifyParamsOnTimeout(unsigned int scheme);
+unsigned int getSpectCntrlSchemeCount(void);
 
 #endif /* _SPECT_CNTRL_H_ */

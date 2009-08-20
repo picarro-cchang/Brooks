@@ -29,6 +29,7 @@
 #include "rdFitting.h"
 #include "rdHandlers.h"
 #include "registers.h"
+#include "spectrumCntrl.h"
 #include "tunerCntrl.h"
 
 /* Implement a queue of integers */
@@ -153,7 +154,8 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
     unsigned int gie, status;
     int allowDither, badRingdown;
     int *counter = (int*)(REG_BASE+4*RD_IRQ_COUNT_REGISTER);
-
+    TUNER_ModeType mode;
+    
     gie = IRQ_globalDisable();
     (*counter)++;
     // Set bit 0 of DIAG_1 at start of ringdownInterrupt
@@ -172,17 +174,31 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
     
     allowDither = (0 != (readFPGA(FPGA_RDMAN+RDMAN_OPTIONS) & (1<<RDMAN_OPTIONS_DITHER_ENABLE_B)));
     badRingdown = (0 != (status & (1<<RDMAN_STATUS_TIMEOUT_B | 1<<RDMAN_STATUS_ABORTED_B)));
-    if (!allowDither || badRingdown) {
-        switchToRampMode();    
+    mode = (TUNER_ModeType)readBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL, RDMAN_CONTROL_RAMP_DITHER_B, RDMAN_CONTROL_RAMP_DITHER_W);
+    
+    if (!badRingdown && allowDither) setupDither(readFPGA(FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN));
+    else switchToRampMode();
+				
+    if (!badRingdown) advanceDwellCounter();
+	else {
+		if (mode == TUNER_RampMode) {
+			unsigned int schemeCount = getSpectCntrlSchemeCount();
+			advanceSchemeRow();
+			// Enqueue a special code on the ringdown buffer queue to indicate that we are skipping to the next row.
+			modifyParamsOnTimeout(schemeCount);
+			if (!put_queue(&rdBufferQueue,MISSING_RINGDOWN)) {
+				message_puts("rdBuffer queue full in ringdownInterrupt");
+			}
+			else { // post the bad news to SEM_rdFitting. 
+				   // The rdFitting task will initiate the next ringdown after noting the timeout.
+				SEM_post(&SEM_rdFitting);
+			}
+		}
+		else { // We have a timeout in dither mode. Do not advance scheme row but allow next ringdown to happen
+			if (SPECT_CNTRL_RunningState == *(int*)registerAddr(SPECT_CNTRL_STATE_REGISTER)) SEM_postBinary(&SEM_startRdCycle);
+		}
     }
-    else {
-        setupDither(readFPGA(FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN));
-    }
-    //  For now, allow next ringdown to start if we got a bad one
-    if (badRingdown && SPECT_CNTRL_RunningState == *(int*)(REG_BASE+4*SPECT_CNTRL_STATE_REGISTER)) {
-        SEM_postBinary(&SEM_startRdCycle);
-    }
-    // Restore interrupts
+	// Restore interrupts
     IRQ_globalRestore(gie);
 }
 
@@ -222,7 +238,7 @@ void acqDoneInterrupt(unsigned int funcArg, unsigned int eventId)
     IRQ_globalRestore(gie);
     
     // Indicate next ringdown can start
-    if (SPECT_CNTRL_RunningState == *(int*)(REG_BASE+4*SPECT_CNTRL_STATE_REGISTER)) SEM_postBinary(&SEM_startRdCycle);
+	if (SPECT_CNTRL_RunningState == *(int*)registerAddr(SPECT_CNTRL_STATE_REGISTER)) SEM_postBinary(&SEM_startRdCycle);
 }
     
 void rdDataMoving(void)

@@ -54,6 +54,12 @@ class RingdownListener(SharedTypes.Singleton):
                             name = "Controller ringdown stream listener",
                             logFunc = Log)
     def  filter(self,data):
+        if data.status & interface.RINGDOWN_STATUS_SchemeCompleteInSingleModeMask:
+            Log("Scheme complete in single mode at %s" % data.timestamp)
+        if data.status & interface.RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask:
+            Log("Scheme complete in multiple mode at %s" % data.timestamp)
+        if data.status & interface.RINGDOWN_STATUS_RingdownTimeout:
+            Log("Ringdown timeout at %s" % data.timestamp)
         panels["Ringdown"].appendData(data)
 
 class SensorListener(SharedTypes.Singleton):

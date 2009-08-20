@@ -308,6 +308,8 @@ HOST_OFFSET = 0x3F00
 RINGDOWN_BUFFER_OFFSET = 0x4000
 # Number of ringdown buffer areas in DSP shared memory
 NUM_RINGDOWN_BUFFERS = 2
+# Code to indicate that we abandoned this scheme row due to a timeout
+MISSING_RINGDOWN = NUM_RINGDOWN_BUFFERS
 # Size of a ringdown buffer area in 32 bit ints
 RINGDOWN_BUFFER_SIZE = (sizeof(RingdownBufferType)/4)
 # Offset for scheme sequence area in DSP shared memory
@@ -519,6 +521,16 @@ SPECT_CNTRL_ModeTypeDict[1] = 'SPECT_CNTRL_SchemeMultipleMode' # Perform multipl
 SPECT_CNTRL_ModeTypeDict[2] = 'SPECT_CNTRL_SchemeSequenceMode' # Perform scheme sequence
 SPECT_CNTRL_ModeTypeDict[3] = 'SPECT_CNTRL_ContinuousMode' # Continuous acquisition
 
+# Enumerated definitions for TUNER_ModeType
+TUNER_ModeType = c_uint
+TUNER_RampMode = 0 # Ramp mode
+TUNER_DitherMode = 1 # Dither mode
+
+# Dictionary for enumerated constants in TUNER_ModeType
+TUNER_ModeTypeDict = {}
+TUNER_ModeTypeDict[0] = 'TUNER_RampMode' # Ramp mode
+TUNER_ModeTypeDict[1] = 'TUNER_DitherMode' # Dither mode
+
 # Definitions for COMM_STATUS_BITMASK
 COMM_STATUS_CompleteMask = 0x1
 COMM_STATUS_BadCrcMask = 0x2
@@ -534,9 +546,10 @@ RINGDOWN_STATUS_SchemeIncrMask = 0x0F
 RINGDOWN_STATUS_SchemeActiveMask = 0x10
 RINGDOWN_STATUS_SchemeCompleteInSingleModeMask = 0x20
 RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask = 0x40
+RINGDOWN_STATUS_RingdownTimeout = 0x80
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 251
+INTERFACE_NUMBER_OF_REGISTERS = 253
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -789,6 +802,8 @@ SPECT_CNTRL_SCHEME_ITER_REGISTER = 247
 SPECT_CNTRL_SCHEME_ROW_REGISTER = 248
 SPECT_CNTRL_DWELL_COUNT_REGISTER = 249
 SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER = 250
+SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER = 251
+SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER = 252
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -1295,6 +1310,10 @@ registerByName["SPECT_CNTRL_DWELL_COUNT_REGISTER"] = SPECT_CNTRL_DWELL_COUNT_REG
 registerInfo.append(RegInfo("SPECT_CNTRL_DWELL_COUNT_REGISTER",c_uint,0,1.0,"r"))
 registerByName["SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER"] = SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER
 registerInfo.append(RegInfo("SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER"] = SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER
+registerInfo.append(RegInfo("SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER"] = SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER
+registerInfo.append(RegInfo("SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER",c_uint,1,1.0,"rw"))
 
 # FPGA block definitions
 
@@ -1412,6 +1431,8 @@ RDMAN_CONTROL_RD_IRQ_ACK_B = 6 # Acknowledge ring-down interrupt bit position
 RDMAN_CONTROL_RD_IRQ_ACK_W = 1 # Acknowledge ring-down interrupt bit width
 RDMAN_CONTROL_ACQ_DONE_ACK_B = 7 # Acknowledge data acquired interrupt bit position
 RDMAN_CONTROL_ACQ_DONE_ACK_W = 1 # Acknowledge data acquired interrupt bit width
+RDMAN_CONTROL_RAMP_DITHER_B = 8 # Tuner waveform mode bit position
+RDMAN_CONTROL_RAMP_DITHER_W = 1 # Tuner waveform mode bit width
 
 RDMAN_STATUS = 1 # Status register
 RDMAN_STATUS_SHUTDOWN_B = 0 # Indicates shutdown of optical injection bit position
@@ -1434,9 +1455,7 @@ RDMAN_STATUS_TIMEOUT_B = 8 # Timeout without ring-down bit position
 RDMAN_STATUS_TIMEOUT_W = 1 # Timeout without ring-down bit width
 RDMAN_STATUS_ABORTED_B = 9 # Ring-down aborted bit position
 RDMAN_STATUS_ABORTED_W = 1 # Ring-down aborted bit width
-RDMAN_STATUS_RAMP_DITHER_B = 10 # Tuner waveform mode bit position
-RDMAN_STATUS_RAMP_DITHER_W = 1 # Tuner waveform mode bit width
-RDMAN_STATUS_BUSY_B = 11 # Ringdown Cycle State bit position
+RDMAN_STATUS_BUSY_B = 10 # Ringdown Cycle State bit position
 RDMAN_STATUS_BUSY_W = 1 # Ringdown Cycle State bit width
 
 RDMAN_OPTIONS = 2 # Options register
@@ -1864,6 +1883,8 @@ __p.append(('dsp','uint32',SPECT_CNTRL_SCHEME_ITER_REGISTER,'Iteration counter f
 __p.append(('dsp','uint32',SPECT_CNTRL_SCHEME_ROW_REGISTER,'Row number within active scheme','','%d',1,0))
 __p.append(('dsp','uint32',SPECT_CNTRL_DWELL_COUNT_REGISTER,'Dwell counter for current scheme row','','%d',1,0))
 __p.append(('dsp','uint32',SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER,'Default ringdown threshold','','%d',1,1))
+__p.append(('dsp','uint32',SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER,'Dither mode ringdown timeout','us','%d',1,1))
+__p.append(('dsp','uint32',SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER,'Ramp mode ringdown timeout','us','%d',1,1))
 parameter_forms.append(('Spectrum Controller Parameters',__p))
 
 # Form: Ringdown Simulator Parameters
@@ -1884,8 +1905,8 @@ parameter_forms.append(('Ringdown Simulator Parameters',__p))
 
 __p = []
 
-__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Mark bank 0 available for write', [(0, u'Idle'), (16, u'Mark available')]), (32, u'Mark bank 1 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (64, u'Acknowledge')]), (128, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (128, u'Acknowledge')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')]), (1024, u'Tuner waveform mode', [(0, u'Ramp'), (1024, u'Dither')]), (2048, u'Ringdown Cycle State', [(0, u'Idle'), (2048, u'Busy')])],None,None,1,0))
+__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Mark bank 0 available for write', [(0, u'Idle'), (16, u'Mark available')]), (32, u'Mark bank 1 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (64, u'Acknowledge')]), (128, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (128, u'Acknowledge')]), (256, u'Tuner waveform mode', [(0, u'Ramp'), (256, u'Dither')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')]), (1024, u'Ringdown Cycle State', [(0, u'Idle'), (1024, u'Busy')])],None,None,1,0))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DATA_ADDRCNTR,'Ringdown data address','','%d',1,0))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_METADATA_ADDRCNTR,'Ringdown metadata address','','%d',1,0))

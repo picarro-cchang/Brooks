@@ -16,6 +16,7 @@
 #include "interface.h"
 #include "registers.h"
 #include "spectrumCntrl.h"
+#include "tunerCntrl.h"
 #include "dspAutogen.h"
 #include "dspData.h"
 #include "fpga.h"
@@ -30,15 +31,8 @@
 	#include "registerTestcfg.h"
 #endif
 
+RingdownParamsType nextRdParams;
 SpectCntrlParams spectCntrlParams;
-
-#define state              (*(s->state_))
-#define mode               (*(s->mode_))
-#define active             (*(s->active_))
-#define next               (*(s->next_))
-#define iter               (*(s->iter_))
-#define row                (*(s->row_))
-#define dwell              (*(s->dwell_))
 
 int spectCntrlInit(void)
 {
@@ -63,6 +57,7 @@ int spectCntrlInit(void)
 	s->ambientPressure_ = (float *)registerAddr(AMBIENT_PRESSURE_REGISTER);
 	s->defaultThreshold_ = (unsigned int *)registerAddr(SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER);
 	s->schemeCounter_ =  0;
+	switchToRampMode();
 	return STATUS_OK;
 }
 
@@ -73,21 +68,22 @@ int spectCntrlStep(void)
 	static SPECT_CNTRL_StateType prevState = SPECT_CNTRL_IdleState;
 	SPECT_CNTRL_StateType stateAtStart;
 	
-	stateAtStart = state;	
-	if (SPECT_CNTRL_StartingState == state) {
+	stateAtStart = *(s->state_);	
+	if (SPECT_CNTRL_StartingState == *(s->state_)) {
 		setAutoInject();
-		state = SPECT_CNTRL_RunningState;
-		if (SPECT_CNTRL_SchemeSingleMode == mode || 
-			SPECT_CNTRL_SchemeMultipleMode == mode || 
-			SPECT_CNTRL_SchemeSequenceMode == mode) {
-			iter = 0;
-			row = 0;
-			dwell = 0;
+		*(s->state_) = SPECT_CNTRL_RunningState;
+		if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) || 
+			SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) || 
+			SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) {
+			*(s->iter_) = 0;
+			*(s->row_) = 0;
+			*(s->dwell_) = 0;
 		}	
 	}
-	else if (SPECT_CNTRL_RunningState == state) {
+	else if (SPECT_CNTRL_RunningState == *(s->state_)) {
 		if (SPECT_CNTRL_StartingState == prevState || 
 			SPECT_CNTRL_PausedState   == prevState) {
+				switchToRampMode();
 				// Enable laser shutdown 
 				// TODO: Handle SOA shutdown
 				changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W, 1);
@@ -136,18 +132,7 @@ void spectCntrl(void)
             // Wait around for another ms and recheck
             SEM_pendBinary(&SEM_waitForRdMan,SYS_FOREVER);
         }
-        // We shall load the parameters of the ringdown here...
-		if (SPECT_CNTRL_ContinuousMode == mode) {
-		}
-		else {
-			//  Need to determine if we should repeat this ringdown, advance dwell count
-			//   or advance row count. In the last two cases, we may need to ensure the status
-			//   bits are set correctly
-			
-			advanceDwellCounter();	
-		}
-
-		setupRingdown();
+		setupNextRdParams();
 		/*
 		theta += dtheta;
 		if (theta > PI/4.0) {
@@ -167,48 +152,50 @@ void spectCntrl(void)
     }
 }
 
-void setupRingdown(void)
+
+void setupNextRdParams(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
-	RingdownParamsType rdParams;
+	RingdownParamsType *r=&nextRdParams;
+
 	unsigned int virtLaserNum, laserNum;
-	volatile SchemeTableType *schemeTable = &schemeTables[active];
+	volatile SchemeTableType *schemeTable = &schemeTables[*(s->active_)];
 	volatile VirtualLaserParamsType *vLaserParams;
 	float setpoint, dp, theta, ratio1Multiplier, ratio2Multiplier;
 	
-	virtLaserNum = schemeTable->rows[row].laserUsed;
+	virtLaserNum = schemeTable->rows[*(s->row_)].laserUsed;
 	vLaserParams = &virtualLaserParams[virtLaserNum];
-	setpoint = schemeTable->rows[row].setpoint;
+	setpoint = schemeTable->rows[*(s->row_)].setpoint;
 
 	laserNum = vLaserParams->actualLaser & 0x3;		
-	rdParams.injectionSettings = (virtLaserNum << 2) | laserNum;
-	rdParams.laserTemperature = *(s->laserTemp_[laserNum]);
-	rdParams.coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
-	rdParams.etalonTemperature = *(s->etalonTemperature_);
-	rdParams.cavityPressure = *(s->cavityPressure_);
-	rdParams.ambientPressure = *(s->ambientPressure_);
-	rdParams.schemeTableAndRow = (active << 16) | (row & 0xFFFF);
+	r->injectionSettings = (virtLaserNum << 2) | laserNum;
+	r->laserTemperature = *(s->laserTemp_[laserNum]);
+	r->coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
+	r->etalonTemperature = *(s->etalonTemperature_);
+	r->cavityPressure = *(s->cavityPressure_);
+	r->ambientPressure = *(s->ambientPressure_);
+	r->schemeTableAndRow = (*(s->active_) << 16) | (*(s->row_) & 0xFFFF);
 	
 	// TODO: Handle count!		
-	rdParams.countAndSubschemeId = (schemeTable->rows[row].subschemeId & 0xFFFF);
-	rdParams.ringdownThreshold   = schemeTable->rows[row].threshold;
-	if (rdParams.ringdownThreshold == 0) rdParams.ringdownThreshold = *(s->defaultThreshold_);
-	// TODO: Compute rdParams.status
-	rdParams.status = (s->schemeCounter_ & RINGDOWN_STATUS_SchemeIncrMask);
-	if (SPECT_CNTRL_SchemeSingleMode == mode ||
-		SPECT_CNTRL_SchemeMultipleMode == mode ||
-		SPECT_CNTRL_SchemeSequenceMode == mode) rdParams.status |= RINGDOWN_STATUS_SchemeActiveMask;
+	r->countAndSubschemeId = (schemeTable->rows[*(s->row_)].subschemeId & 0xFFFF);
+	r->ringdownThreshold   = schemeTable->rows[*(s->row_)].threshold;
+	if (r->ringdownThreshold == 0) r->ringdownThreshold = *(s->defaultThreshold_);
+	r->status = (s->schemeCounter_ & RINGDOWN_STATUS_SchemeIncrMask);
+	if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
+		SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
+		SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeActiveMask;
 	// Determine if we are on the last ringdown of the scheme
-	if (iter == schemeTables[active].numRepeats-1 &&
-		row  == schemeTables[active].numRows-1 &&
-		dwell == schemeTables[active].rows[row].dwellCount-1) {
-		if (SPECT_CNTRL_SchemeSingleMode == mode) rdParams.status |= RINGDOWN_STATUS_SchemeCompleteInSingleModeMask;
-		else if (SPECT_CNTRL_SchemeMultipleMode == mode ||
-			     SPECT_CNTRL_SchemeSequenceMode == mode) rdParams.status |= RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask;
-	
+	if (*(s->iter_) == schemeTables[*(s->active_)].numRepeats-1 &&
+		*(s->row_)  == schemeTables[*(s->active_)].numRows-1 &&
+		*(s->dwell_) == schemeTables[*(s->active_)].rows[*(s->row_)].dwellCount-1) {
+		if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteInSingleModeMask;
+		else if (SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
+			     SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask;
+	}
+		
 	// Correct the setpoint angle using the etalon temperature and ambient pressure
-	dp = rdParams.ambientPressure - vLaserParams->calPressure;
-	theta = setpoint - vLaserParams->tempSensitivity*(rdParams.etalonTemperature-vLaserParams->calTemp) -
+	dp = r->ambientPressure - vLaserParams->calPressure;
+	theta = setpoint - vLaserParams->tempSensitivity*(r->etalonTemperature-vLaserParams->calTemp) -
 			(vLaserParams->pressureC0 + dp*(vLaserParams->pressureC1 + dp*(vLaserParams->pressureC2 + dp*vLaserParams->pressureC3)));
 	
 	// Compute the ratio multipliers corresponding to this setpoint
@@ -224,20 +211,46 @@ void setupRingdown(void)
 	writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO1_CENTER, (int)(vLaserParams->ratio1Center*32768.0));
 	writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO2_CENTER, (int)(vLaserParams->ratio2Center*32768.0));
 	
-	writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,rdParams.ringdownThreshold);
+	writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,r->ringdownThreshold);
 
-	writeFPGA(FPGA_RDMAN+RDMAN_PARAM0,*(uint32*)&rdParams.injectionSettings);
-	writeFPGA(FPGA_RDMAN+RDMAN_PARAM1,*(uint32*)&rdParams.laserTemperature);
-	writeFPGA(FPGA_RDMAN+RDMAN_PARAM2,*(uint32*)&rdParams.coarseLaserCurrent);
-	writeFPGA(FPGA_RDMAN+RDMAN_PARAM3,*(uint32*)&rdParams.etalonTemperature);
-	writeFPGA(FPGA_RDMAN+RDMAN_PARAM4,*(uint32*)&rdParams.cavityPressure);
-	writeFPGA(FPGA_RDMAN+RDMAN_PARAM5,*(uint32*)&rdParams.ambientPressure);
-	writeFPGA(FPGA_RDMAN+RDMAN_PARAM6,*(uint32*)&rdParams.schemeTableAndRow);
-	writeFPGA(FPGA_RDMAN+RDMAN_PARAM7,*(uint32*)&rdParams.countAndSubschemeId);
-	writeFPGA(FPGA_RDMAN+RDMAN_PARAM8,*(uint32*)&rdParams.ringdownThreshold);
-	writeFPGA(FPGA_RDMAN+RDMAN_PARAM9,*(uint32*)&rdParams.status);
-	
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM0,*(uint32*)&r->injectionSettings);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM1,*(uint32*)&r->laserTemperature);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM2,*(uint32*)&r->coarseLaserCurrent);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM3,*(uint32*)&r->etalonTemperature);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM4,*(uint32*)&r->cavityPressure);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM5,*(uint32*)&r->ambientPressure);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM6,*(uint32*)&r->schemeTableAndRow);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM7,*(uint32*)&r->countAndSubschemeId);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM8,*(uint32*)&r->ringdownThreshold);
+	writeFPGA(FPGA_RDMAN+RDMAN_PARAM9,*(uint32*)&r->status);
+
 	// TODO: Change the temperature of the selected laser
+	
+}
+
+void modifyParamsOnTimeout(unsigned int schemeCount)
+// If a ringdown timeout occurs, i.e., if there is no ringdown within the allotted interval, we
+//  proceed to the next scheme row, short-circuiting the dwell count requested. An entry is
+//  placed on the ringdown buffer queue with a special status when this occurs. It may be necessary
+//  to modify the bits which indicate if we are at the end of a scheme as a result of this 
+//  short-circuiting.
+{
+    SpectCntrlParams *s=&spectCntrlParams;
+	RingdownParamsType *r=&nextRdParams;
+	r->status |= RINGDOWN_STATUS_RingdownTimeout;
+	if (s->schemeCounter_ != schemeCount) {
+		// We have advanced to another scheme, so set the end-of-scheme status bits appropriately
+		r->status &= ~(RINGDOWN_STATUS_SchemeCompleteInSingleModeMask | RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask);
+		if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteInSingleModeMask;
+		else if (SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
+			     SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask;
+	}
+}
+
+unsigned int getSpectCntrlSchemeCount(void)
+{
+    SpectCntrlParams *s=&spectCntrlParams;
+	return s->schemeCounter_;
 }
 
 void setAutoInject(void)
@@ -264,33 +277,33 @@ void validateSchemePosition(void)
 // Ensure that the dwell count, scheme row and scheme iteration values are valid and reset 
 //  them to zero if not
 
-// TODO: Set up scheme status bits which indicate if we are at the end of scheme iteration or of a scheme
+// TODO: Set up scheme status bits which indicate if we are at the end of a scheme
 
 {
     SpectCntrlParams *s=&spectCntrlParams;
-	if (active >= NUM_SCHEME_TABLES) {
+	if (*(s->active_) >= NUM_SCHEME_TABLES) {
 		message_puts("Active scheme index is out of range, resetting to zero");
-		active = 0;
+		*(s->active_) = 0;
 	}
-	if (iter >= schemeTables[active].numRepeats) {
+	if (*(s->iter_) >= schemeTables[*(s->active_)].numRepeats) {
 		message_puts("Scheme iteration is out of range, resetting to zero");
-		iter = 0;
+		*(s->iter_) = 0;
 	}	
-	if (row >= schemeTables[active].numRows) {
+	if (*(s->row_) >= schemeTables[*(s->active_)].numRows) {
 		message_puts("Scheme row is out of range, resetting to zero");
-		row = 0;
+		*(s->row_) = 0;
 	}	
-	if (dwell >= schemeTables[active].rows[row].dwellCount) {
+	if (*(s->dwell_) >= schemeTables[*(s->active_)].rows[*(s->row_)].dwellCount) {
 		message_puts("Dwell count is out of range, resetting to zero");
-		dwell = 0;
+		*(s->dwell_) = 0;
 	}
 }
 
 void advanceDwellCounter(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
-	dwell = dwell + 1;
-	if (dwell >= schemeTables[active].rows[row].dwellCount) {
+	*(s->dwell_) = *(s->dwell_) + 1;
+	if (*(s->dwell_) >= schemeTables[*(s->active_)].rows[*(s->row_)].dwellCount) {
 		advanceSchemeRow();
 	}
 }
@@ -298,33 +311,36 @@ void advanceDwellCounter(void)
 void advanceSchemeRow(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
-	row = row + 1;
-	if (row >= schemeTables[active].numRows) {
+	*(s->row_) = *(s->row_) + 1;
+	if (*(s->row_) >= schemeTables[*(s->active_)].numRows) {
 		advanceSchemeIteration();
 	}
 	else {
-		dwell = 0;
+		*(s->dwell_) = 0;
 	}
 }
 
 void advanceSchemeIteration(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
-	iter = iter + 1;
-	if (iter >= schemeTables[active].numRepeats) {
+	*(s->iter_) = *(s->iter_) + 1;
+	if (*(s->iter_) >= schemeTables[*(s->active_)].numRepeats) {
 		advanceScheme();
 	}
 	else {
-		row = 0;
-		dwell = 0;
+		*(s->row_) = 0;
+		*(s->dwell_) = 0;
 	}
 }
 
 void advanceScheme(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
-	active = next;
-	iter = 0;
-	row = 0;
-	dwell = 0;
+	s->schemeCounter_++;
+	*(s->active_) = *(s->next_);
+	*(s->iter_) = 0;
+	*(s->row_) = 0;
+	*(s->dwell_) = 0;
+	if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_)) 
+		*(s->state_) = SPECT_CNTRL_IdleState;
 }
