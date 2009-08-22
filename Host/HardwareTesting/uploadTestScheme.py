@@ -15,13 +15,13 @@ if __name__ == "__main__":
                    'angleToTempC1': -0.0921171449063, 'angleToTempC2': -12.178321532, 'angleToTempC3': 29.0929396524, 
                    'tempSensitivity': 0.0, 'calTemp': 45.0,
                    'calPressure': 760.0, 'pressureC0': 0.0, 'pressureC1': 0.0, 'pressureC2': 0.0, 'pressureC3': 0.0}
-    driver.wrVirtualLaserParams(2,laserParams)
+    driver.wrVirtualLaserParams(4,laserParams)
     thList = linspace(-3*pi/4,-pi/4,321)
     dwell = 2*ones(thList.shape)
     subschemeId = zeros(thList.shape)
-    laserUsed = 2*ones(thList.shape)
+    laserUsed = 4*ones(thList.shape)
     threshold = zeros(thList.shape)
     pztSetpoint = zeros(thList.shape)
-    laserTemp = zeros(thList.shape)
+    laserTemp = 24.0*ones(thList.shape)
     repeats = 2
     driver.wrScheme(0,repeats,zip(thList,dwell,subschemeId,laserUsed,threshold,pztSetpoint,laserTemp))

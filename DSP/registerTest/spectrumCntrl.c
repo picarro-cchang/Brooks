@@ -52,10 +52,15 @@ int spectCntrlInit(void)
     s->coarseLaserCurrent_[1] = (float *)registerAddr(LASER2_MANUAL_COARSE_CURRENT_REGISTER);
     s->coarseLaserCurrent_[2] = (float *)registerAddr(LASER3_MANUAL_COARSE_CURRENT_REGISTER);
     s->coarseLaserCurrent_[3] = (float *)registerAddr(LASER4_MANUAL_COARSE_CURRENT_REGISTER);
+    s->laserTempSetpoint_[0] = (float *)registerAddr(LASER1_TEMP_CNTRL_SETPOINT_REGISTER);
+    s->laserTempSetpoint_[1] = (float *)registerAddr(LASER2_TEMP_CNTRL_SETPOINT_REGISTER);
+    s->laserTempSetpoint_[2] = (float *)registerAddr(LASER3_TEMP_CNTRL_SETPOINT_REGISTER);
+    s->laserTempSetpoint_[3] = (float *)registerAddr(LASER4_TEMP_CNTRL_SETPOINT_REGISTER);
 	s->etalonTemperature_ = (float *)registerAddr(ETALON_TEMPERATURE_REGISTER);
 	s->cavityPressure_ = (float *)registerAddr(CAVITY_PRESSURE_REGISTER);
 	s->ambientPressure_ = (float *)registerAddr(AMBIENT_PRESSURE_REGISTER);
 	s->defaultThreshold_ = (unsigned int *)registerAddr(SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER);
+	s->virtLaser_ = (VIRTUAL_LASER_Type *)registerAddr(VIRTUAL_LASER_REGISTER);
 	s->schemeCounter_ =  0;
 	switchToRampMode();
 	return STATUS_OK;
@@ -70,11 +75,13 @@ int spectCntrlStep(void)
 	
 	stateAtStart = *(s->state_);	
 	if (SPECT_CNTRL_StartingState == *(s->state_)) {
-		setAutoInject();
+		setAutomaticControl();
 		*(s->state_) = SPECT_CNTRL_RunningState;
 		if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) || 
 			SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) || 
 			SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) {
+			// Enable frequency locking for schemes
+			changeBitsFPGA(FPGA_RDMAN+RDMAN_OPTIONS, RDMAN_OPTIONS_LOCK_ENABLE_B, RDMAN_OPTIONS_LOCK_ENABLE_W, 1);
 			*(s->iter_) = 0;
 			*(s->row_) = 0;
 			*(s->dwell_) = 0;
@@ -152,67 +159,104 @@ void spectCntrl(void)
     }
 }
 
+void setupLaserTemperature(void)
+{
+    SpectCntrlParams *s=&spectCntrlParams;
+	unsigned int laserNum;
+	volatile SchemeTableType *schemeTable = &schemeTables[*(s->active_)];
+	volatile VirtualLaserParamsType *vLaserParams;
+	float laserTemp;
+	
+	*(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].laserUsed;
+	vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
+	laserTemp = 0.001 * schemeTable->rows[*(s->row_)].laserTemp; // Scheme temperatures are in milli-degrees C
+	laserNum = vLaserParams->actualLaser & 0x3;
+
+	if (laserTemp != 0.0) {
+		*(s->laserTempSetpoint_[laserNum]) = laserTemp;
+	}
+}
 
 void setupNextRdParams(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
 	RingdownParamsType *r=&nextRdParams;
 
-	unsigned int virtLaserNum, laserNum;
-	volatile SchemeTableType *schemeTable = &schemeTables[*(s->active_)];
+	unsigned int laserNum;
+	volatile SchemeTableType *schemeTable;
 	volatile VirtualLaserParamsType *vLaserParams;
 	float setpoint, dp, theta, ratio1Multiplier, ratio2Multiplier;
 	
-	virtLaserNum = schemeTable->rows[*(s->row_)].laserUsed;
-	vLaserParams = &virtualLaserParams[virtLaserNum];
-	setpoint = schemeTable->rows[*(s->row_)].setpoint;
-
-	laserNum = vLaserParams->actualLaser & 0x3;		
-	r->injectionSettings = (virtLaserNum << 2) | laserNum;
-	r->laserTemperature = *(s->laserTemp_[laserNum]);
-	r->coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
-	r->etalonTemperature = *(s->etalonTemperature_);
-	r->cavityPressure = *(s->cavityPressure_);
-	r->ambientPressure = *(s->ambientPressure_);
-	r->schemeTableAndRow = (*(s->active_) << 16) | (*(s->row_) & 0xFFFF);
-	
-	// TODO: Handle count!		
-	r->countAndSubschemeId = (schemeTable->rows[*(s->row_)].subschemeId & 0xFFFF);
-	r->ringdownThreshold   = schemeTable->rows[*(s->row_)].threshold;
-	if (r->ringdownThreshold == 0) r->ringdownThreshold = *(s->defaultThreshold_);
-	r->status = (s->schemeCounter_ & RINGDOWN_STATUS_SchemeIncrMask);
-	if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
-		SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
-		SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeActiveMask;
-	// Determine if we are on the last ringdown of the scheme
-	if (*(s->iter_) == schemeTables[*(s->active_)].numRepeats-1 &&
-		*(s->row_)  == schemeTables[*(s->active_)].numRows-1 &&
-		*(s->dwell_) == schemeTables[*(s->active_)].rows[*(s->row_)].dwellCount-1) {
-		if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteInSingleModeMask;
-		else if (SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
-			     SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask;
+	if (SPECT_CNTRL_ContinuousMode == *(s->mode_)) { 
+		// In continuous mode, we run with the parameter values currently in the registers
+		vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
+		laserNum = vLaserParams->actualLaser & 0x3;		
+		r->injectionSettings = (*(s->virtLaser_) << 2) | laserNum;
+		r->laserTemperature = *(s->laserTemp_[laserNum]);
+		r->coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
+		r->etalonTemperature = *(s->etalonTemperature_);
+		r->cavityPressure = *(s->cavityPressure_);
+		r->ambientPressure = *(s->ambientPressure_);
+		r->schemeTableAndRow = 0;
+		r->countAndSubschemeId = 0;
+		r->ringdownThreshold = *(s->defaultThreshold_);
+		r->status = 0;
+		// Set up the FPGA registers for this ringdown
+		changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W, laserNum);
+		writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,r->ringdownThreshold);
 	}
+	else {	// We are running a scheme		
+		schemeTable = &schemeTables[*(s->active_)];
+		*(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].laserUsed;
+		vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
+		setpoint = schemeTable->rows[*(s->row_)].setpoint;
+	
+		laserNum = vLaserParams->actualLaser & 0x3;		
+		r->injectionSettings = (*(s->virtLaser_) << 2) | laserNum;
+		r->laserTemperature = *(s->laserTemp_[laserNum]);
+		r->coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
+		r->etalonTemperature = *(s->etalonTemperature_);
+		r->cavityPressure = *(s->cavityPressure_);
+		r->ambientPressure = *(s->ambientPressure_);
+		r->schemeTableAndRow = (*(s->active_) << 16) | (*(s->row_) & 0xFFFF);
 		
-	// Correct the setpoint angle using the etalon temperature and ambient pressure
-	dp = r->ambientPressure - vLaserParams->calPressure;
-	theta = setpoint - vLaserParams->tempSensitivity*(r->etalonTemperature-vLaserParams->calTemp) -
-			(vLaserParams->pressureC0 + dp*(vLaserParams->pressureC1 + dp*(vLaserParams->pressureC2 + dp*vLaserParams->pressureC3)));
+		// TODO: Handle count!		
+		r->countAndSubschemeId = (schemeTable->rows[*(s->row_)].subschemeId & 0xFFFF);
+		r->ringdownThreshold   = schemeTable->rows[*(s->row_)].threshold;
+		if (r->ringdownThreshold == 0) r->ringdownThreshold = *(s->defaultThreshold_);
+		r->status = (s->schemeCounter_ & RINGDOWN_STATUS_SchemeIncrMask);
+		if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
+			SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
+			SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeActiveMask;
+		// Determine if we are on the last ringdown of the scheme
+		if (*(s->iter_) == schemeTables[*(s->active_)].numRepeats-1 &&
+			*(s->row_)  == schemeTables[*(s->active_)].numRows-1 &&
+			*(s->dwell_) == schemeTables[*(s->active_)].rows[*(s->row_)].dwellCount-1) {
+			if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteInSingleModeMask;
+			else if (SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
+					 SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask;
+		}
+			
+		// Correct the setpoint angle using the etalon temperature and ambient pressure
+		dp = r->ambientPressure - vLaserParams->calPressure;
+		theta = setpoint - vLaserParams->tempSensitivity*(r->etalonTemperature-vLaserParams->calTemp) -
+				(vLaserParams->pressureC0 + dp*(vLaserParams->pressureC1 + dp*(vLaserParams->pressureC2 + dp*vLaserParams->pressureC3)));
+		
+		// Compute the ratio multipliers corresponding to this setpoint
+		ratio1Multiplier = ((-sinsp(theta + vLaserParams->phase))/(vLaserParams->ratio1Scale * cossp(vLaserParams->phase)));
+		ratio2Multiplier = ((cossp(theta))/(vLaserParams->ratio2Scale * cossp(vLaserParams->phase)));
 	
-	// Compute the ratio multipliers corresponding to this setpoint
-	ratio1Multiplier = ((-sinsp(theta + vLaserParams->phase))/(vLaserParams->ratio1Scale * cossp(vLaserParams->phase)));
-	ratio2Multiplier = ((cossp(theta))/(vLaserParams->ratio2Scale * cossp(vLaserParams->phase)));
-
-	// Set up the FPGA registers for this ringdown
-	changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W, laserNum);
-
-	writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO1_MULTIPLIER, (int)(ratio1Multiplier*32767.0));
-	writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO2_MULTIPLIER, (int)(ratio2Multiplier*32767.0));
-
-	writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO1_CENTER, (int)(vLaserParams->ratio1Center*32768.0));
-	writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO2_CENTER, (int)(vLaserParams->ratio2Center*32768.0));
+		// Set up the FPGA registers for this ringdown
+		changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W, laserNum);
 	
-	writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,r->ringdownThreshold);
-
+		writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO1_MULTIPLIER, (int)(ratio1Multiplier*32767.0));
+		writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO2_MULTIPLIER, (int)(ratio2Multiplier*32767.0));
+	
+		writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO1_CENTER, (int)(vLaserParams->ratio1Center*32768.0));
+		writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO2_CENTER, (int)(vLaserParams->ratio2Center*32768.0));
+		
+		writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,r->ringdownThreshold);
+	}
 	writeFPGA(FPGA_RDMAN+RDMAN_PARAM0,*(uint32*)&r->injectionSettings);
 	writeFPGA(FPGA_RDMAN+RDMAN_PARAM1,*(uint32*)&r->laserTemperature);
 	writeFPGA(FPGA_RDMAN+RDMAN_PARAM2,*(uint32*)&r->coarseLaserCurrent);
@@ -223,10 +267,9 @@ void setupNextRdParams(void)
 	writeFPGA(FPGA_RDMAN+RDMAN_PARAM7,*(uint32*)&r->countAndSubschemeId);
 	writeFPGA(FPGA_RDMAN+RDMAN_PARAM8,*(uint32*)&r->ringdownThreshold);
 	writeFPGA(FPGA_RDMAN+RDMAN_PARAM9,*(uint32*)&r->status);
-
-	// TODO: Change the temperature of the selected laser
-	
 }
+
+
 
 void modifyParamsOnTimeout(unsigned int schemeCount)
 // If a ringdown timeout occurs, i.e., if there is no ringdown within the allotted interval, we
@@ -253,8 +296,8 @@ unsigned int getSpectCntrlSchemeCount(void)
 	return s->schemeCounter_;
 }
 
-void setAutoInject(void)
-// Set optical injection and laser current controllers to automatic mode. This should be called by the
+void setAutomaticControl(void)
+// Set optical injection, laser current and laser temperature controllers to automatic mode. This should be called by the
 //  scheduler thread in response to a request to start a scheme, otherwise a race condition could occur
 //  leading to the wrong value for INJECT_CONTROL_MODE.
 {
@@ -266,6 +309,12 @@ void setAutoInject(void)
 	writeRegister(LASER3_CURRENT_CNTRL_STATE_REGISTER,data);
 	writeRegister(LASER4_CURRENT_CNTRL_STATE_REGISTER,data);
 
+	data.asInt = TEMP_CNTRL_AutomaticState;
+	writeRegister(LASER1_TEMP_CNTRL_STATE_REGISTER,data);
+	writeRegister(LASER2_TEMP_CNTRL_STATE_REGISTER,data);
+	writeRegister(LASER3_TEMP_CNTRL_STATE_REGISTER,data);
+	writeRegister(LASER4_TEMP_CNTRL_STATE_REGISTER,data);
+	
 	// Setting the FPGA optical injection block to automatic mode has to be done independently
 	//  of setting the individual current controllers. Care is needed since the current controllers
 	//  periodically write to the INJECT_CONTROL register.

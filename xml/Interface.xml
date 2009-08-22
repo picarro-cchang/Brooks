@@ -341,6 +341,7 @@
             <enum_value ident="TEMP_CNTRL_SweepingState" value="3" caption="Continuous Sweeping" />
             <enum_value ident="TEMP_CNTRL_SendPrbsState" value="4" caption="Sending PRBS" />
             <enum_value ident="TEMP_CNTRL_ManualState" value="5" caption="Manual Control" />
+            <enum_value ident="TEMP_CNTRL_AutomaticState" value="6" caption="Automatic Control" />
         </enum>
         <enum type="LASER_CURRENT_CNTRL_StateType">
             <description>State of laser current controller</description>
@@ -374,6 +375,17 @@
             <enum_value ident="TUNER_RampMode" value="0" caption="Ramp mode" />
             <enum_value ident="TUNER_DitherMode" value="1" caption="Dither mode" />
         </enum>
+        <enum type="VIRTUAL_LASER_Type">
+            <description>Virtual laser selection</description> 
+            <enum_value ident="VIRTUAL_LASER_1" value="0" caption="Virtual laser 1" /> 
+            <enum_value ident="VIRTUAL_LASER_2" value="1" caption="Virtual laser 2" /> 
+            <enum_value ident="VIRTUAL_LASER_3" value="2" caption="Virtual laser 3" /> 
+            <enum_value ident="VIRTUAL_LASER_4" value="3" caption="Virtual laser 4" /> 
+            <enum_value ident="VIRTUAL_LASER_5" value="4" caption="Virtual laser 5" /> 
+            <enum_value ident="VIRTUAL_LASER_6" value="5" caption="Virtual laser 6" /> 
+            <enum_value ident="VIRTUAL_LASER_7" value="6" caption="Virtual laser 7" /> 
+            <enum_value ident="VIRTUAL_LASER_8" value="7" caption="Virtual laser 8" /> 
+        </enum>         
     </enum_list>
     <bits_list>
         <bits ident="COMM_STATUS_BITMASK">
@@ -1723,6 +1735,11 @@
             <initial>1000000</initial>
             <save/>
             <display format="%d" units="us">Ramp mode ringdown timeout</display>
+        </register>
+        <register ident="VIRTUAL_LASER_REGISTER" type="VIRTUAL_LASER_Type" minver="1.0" access="rw">
+            <description>Virtual laser</description>
+            <initial>VIRTUAL_LASER_3</initial>
+            <display>Virtual laser</display>
         </register>
     </register_list>
     <fpga_block_list>

@@ -457,6 +457,7 @@ TEMP_CNTRL_SuspendedState = 2 # Controller Suspended
 TEMP_CNTRL_SweepingState = 3 # Continuous Sweeping
 TEMP_CNTRL_SendPrbsState = 4 # Sending PRBS
 TEMP_CNTRL_ManualState = 5 # Manual Control
+TEMP_CNTRL_AutomaticState = 6 # Automatic Control
 
 # Dictionary for enumerated constants in TEMP_CNTRL_StateType
 TEMP_CNTRL_StateTypeDict = {}
@@ -466,6 +467,7 @@ TEMP_CNTRL_StateTypeDict[2] = 'TEMP_CNTRL_SuspendedState' # Controller Suspended
 TEMP_CNTRL_StateTypeDict[3] = 'TEMP_CNTRL_SweepingState' # Continuous Sweeping
 TEMP_CNTRL_StateTypeDict[4] = 'TEMP_CNTRL_SendPrbsState' # Sending PRBS
 TEMP_CNTRL_StateTypeDict[5] = 'TEMP_CNTRL_ManualState' # Manual Control
+TEMP_CNTRL_StateTypeDict[6] = 'TEMP_CNTRL_AutomaticState' # Automatic Control
 
 # Enumerated definitions for LASER_CURRENT_CNTRL_StateType
 LASER_CURRENT_CNTRL_StateType = c_uint
@@ -531,6 +533,28 @@ TUNER_ModeTypeDict = {}
 TUNER_ModeTypeDict[0] = 'TUNER_RampMode' # Ramp mode
 TUNER_ModeTypeDict[1] = 'TUNER_DitherMode' # Dither mode
 
+# Enumerated definitions for VIRTUAL_LASER_Type
+VIRTUAL_LASER_Type = c_uint
+VIRTUAL_LASER_1 = 0 # Virtual laser 1
+VIRTUAL_LASER_2 = 1 # Virtual laser 2
+VIRTUAL_LASER_3 = 2 # Virtual laser 3
+VIRTUAL_LASER_4 = 3 # Virtual laser 4
+VIRTUAL_LASER_5 = 4 # Virtual laser 5
+VIRTUAL_LASER_6 = 5 # Virtual laser 6
+VIRTUAL_LASER_7 = 6 # Virtual laser 7
+VIRTUAL_LASER_8 = 7 # Virtual laser 8
+
+# Dictionary for enumerated constants in VIRTUAL_LASER_Type
+VIRTUAL_LASER_TypeDict = {}
+VIRTUAL_LASER_TypeDict[0] = 'VIRTUAL_LASER_1' # Virtual laser 1
+VIRTUAL_LASER_TypeDict[1] = 'VIRTUAL_LASER_2' # Virtual laser 2
+VIRTUAL_LASER_TypeDict[2] = 'VIRTUAL_LASER_3' # Virtual laser 3
+VIRTUAL_LASER_TypeDict[3] = 'VIRTUAL_LASER_4' # Virtual laser 4
+VIRTUAL_LASER_TypeDict[4] = 'VIRTUAL_LASER_5' # Virtual laser 5
+VIRTUAL_LASER_TypeDict[5] = 'VIRTUAL_LASER_6' # Virtual laser 6
+VIRTUAL_LASER_TypeDict[6] = 'VIRTUAL_LASER_7' # Virtual laser 7
+VIRTUAL_LASER_TypeDict[7] = 'VIRTUAL_LASER_8' # Virtual laser 8
+
 # Definitions for COMM_STATUS_BITMASK
 COMM_STATUS_CompleteMask = 0x1
 COMM_STATUS_BadCrcMask = 0x2
@@ -549,7 +573,7 @@ RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask = 0x40
 RINGDOWN_STATUS_RingdownTimeout = 0x80
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 253
+INTERFACE_NUMBER_OF_REGISTERS = 254
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -804,6 +828,7 @@ SPECT_CNTRL_DWELL_COUNT_REGISTER = 249
 SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER = 250
 SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER = 251
 SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER = 252
+VIRTUAL_LASER_REGISTER = 253
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -1314,6 +1339,8 @@ registerByName["SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER"] = SPECT_CNTRL_DITHER_
 registerInfo.append(RegInfo("SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER",c_uint,1,1.0,"rw"))
 registerByName["SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER"] = SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER
 registerInfo.append(RegInfo("SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["VIRTUAL_LASER_REGISTER"] = VIRTUAL_LASER_REGISTER
+registerInfo.append(RegInfo("VIRTUAL_LASER_REGISTER",VIRTUAL_LASER_Type,0,1.0,"rw"))
 
 # FPGA block definitions
 
@@ -1674,7 +1701,7 @@ parameter_forms.append(('System Configuration Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','choices',LASER1_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),],1,1))
+__p.append(('dsp','choices',LASER1_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),(TEMP_CNTRL_AutomaticState,"Automatic Control"),],1,1))
 __p.append(('dsp','float',LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER,'Setpoint','degC','%.3f',1,1))
 __p.append(('dsp','float',LASER1_TEMP_CNTRL_TOLERANCE_REGISTER,'Lock tolerance','degC','%.3f',1,1))
 __p.append(('dsp','float',LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER,'Max sweep value','degC','%.3f',1,1))
@@ -1708,7 +1735,7 @@ parameter_forms.append(('Laser 1 Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','choices',LASER2_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),],1,1))
+__p.append(('dsp','choices',LASER2_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),(TEMP_CNTRL_AutomaticState,"Automatic Control"),],1,1))
 __p.append(('dsp','float',LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER,'Setpoint','degC','%.3f',1,1))
 __p.append(('dsp','float',LASER2_TEMP_CNTRL_TOLERANCE_REGISTER,'Lock tolerance','degC','%.3f',1,1))
 __p.append(('dsp','float',LASER2_TEMP_CNTRL_SWEEP_MAX_REGISTER,'Max sweep value','degC','%.3f',1,1))
@@ -1742,7 +1769,7 @@ parameter_forms.append(('Laser 2 Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','choices',LASER3_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),],1,1))
+__p.append(('dsp','choices',LASER3_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),(TEMP_CNTRL_AutomaticState,"Automatic Control"),],1,1))
 __p.append(('dsp','float',LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER,'Setpoint','degC','%.3f',1,1))
 __p.append(('dsp','float',LASER3_TEMP_CNTRL_TOLERANCE_REGISTER,'Lock tolerance','degC','%.3f',1,1))
 __p.append(('dsp','float',LASER3_TEMP_CNTRL_SWEEP_MAX_REGISTER,'Max sweep value','degC','%.3f',1,1))
@@ -1776,7 +1803,7 @@ parameter_forms.append(('Laser 3 Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','choices',LASER4_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),],1,1))
+__p.append(('dsp','choices',LASER4_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),(TEMP_CNTRL_AutomaticState,"Automatic Control"),],1,1))
 __p.append(('dsp','float',LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER,'Setpoint','degC','%.3f',1,1))
 __p.append(('dsp','float',LASER4_TEMP_CNTRL_TOLERANCE_REGISTER,'Lock tolerance','degC','%.3f',1,1))
 __p.append(('dsp','float',LASER4_TEMP_CNTRL_SWEEP_MAX_REGISTER,'Max sweep value','degC','%.3f',1,1))
@@ -1810,7 +1837,7 @@ parameter_forms.append(('Laser 4 Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','choices',CAVITY_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),],1,1))
+__p.append(('dsp','choices',CAVITY_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),(TEMP_CNTRL_AutomaticState,"Automatic Control"),],1,1))
 __p.append(('dsp','float',CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER,'Setpoint','degC','%.3f',1,1))
 __p.append(('dsp','float',CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER,'Lock tolerance','degC','%.3f',1,1))
 __p.append(('dsp','float',CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER,'Max sweep value','degC','%.3f',1,1))
@@ -1868,6 +1895,7 @@ parameter_forms.append(('Tuner Waveform Parameters',__p))
 
 __p = []
 
+__p.append(('dsp','choices',VIRTUAL_LASER_REGISTER,'Virtual laser','',[(VIRTUAL_LASER_1,"Virtual laser 1"),(VIRTUAL_LASER_2,"Virtual laser 2"),(VIRTUAL_LASER_3,"Virtual laser 3"),(VIRTUAL_LASER_4,"Virtual laser 4"),(VIRTUAL_LASER_5,"Virtual laser 5"),(VIRTUAL_LASER_6,"Virtual laser 6"),(VIRTUAL_LASER_7,"Virtual laser 7"),(VIRTUAL_LASER_8,"Virtual laser 8"),],1,1))
 __p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser under automatic control', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', [(0, u'Disabled'), (8, u'Enabled')]), (16, u'Laser 2 current source', [(0, u'Disabled'), (16, u'Enabled')]), (32, u'Laser 3 current source', [(0, u'Disabled'), (32, u'Enabled')]), (64, u'Laser 4 current source', [(0, u'Disabled'), (64, u'Enabled')]), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', [(0, u'Off'), (128, u'On')]), (256, u'Laser 2 current (in manual mode)', [(0, u'Off'), (256, u'On')]), (512, u'Laser 3 current (in manual mode)', [(0, u'Off'), (512, u'On')]), (1024, u'Laser 4 current (in manual mode)', [(0, u'Off'), (1024, u'On')]), (2048, u'SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')])],None,None,1,1))
 parameter_forms.append(('Optical Injection Parameters',__p))
 

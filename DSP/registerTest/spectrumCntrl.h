@@ -26,7 +26,9 @@ typedef struct SPECT_CNTRL_PARAMS
     unsigned int *iter_;     // Scheme iteration
     unsigned int *row_;      // Scheme row
     unsigned int *dwell_;    // Dwell counter
+	VIRTUAL_LASER_Type *virtLaser_;   // Virtual laser register
     float *laserTemp_[4];    // Laser temperature registers
+	float *laserTempSetpoint_[4];     // Laser temperature setpoint registers
     float *coarseLaserCurrent_[4];    // Coarse laser current registers
 	float *etalonTemperature_; // Etalon temperature
 	float *cavityPressure_;    // Cavity pressure
@@ -41,8 +43,9 @@ extern RingdownParamsType nextRdParams;
 int  spectCntrlInit(void);
 void spectCntrl(void);
 int  spectCntrlStep(void);
-void setAutoInject(void);
+void setAutomaticControl(void);
 void setupNextRdParams(void);
+void setupLaserTemperature(void);
 void validateSchemePosition(void);
 void advanceDwellCounter(void);
 void advanceSchemeRow(void);

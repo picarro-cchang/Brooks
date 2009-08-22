@@ -198,6 +198,10 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
 			if (SPECT_CNTRL_RunningState == *(int*)registerAddr(SPECT_CNTRL_STATE_REGISTER)) SEM_postBinary(&SEM_startRdCycle);
 		}
     }
+
+	// Change the temperature of the selected laser
+	setupLaserTemperature();	
+	
 	// Restore interrupts
     IRQ_globalRestore(gie);
 }

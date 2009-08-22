@@ -451,6 +451,8 @@ void initRegisters()
     writeRegister(SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER,d);
     d.asUint = 1000000;
     writeRegister(SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER,d);
+    d.asUint = VIRTUAL_LASER_3;
+    writeRegister(VIRTUAL_LASER_REGISTER,d);
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)

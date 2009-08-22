@@ -390,7 +390,8 @@ typedef enum {
     TEMP_CNTRL_SuspendedState = 2, // Controller Suspended
     TEMP_CNTRL_SweepingState = 3, // Continuous Sweeping
     TEMP_CNTRL_SendPrbsState = 4, // Sending PRBS
-    TEMP_CNTRL_ManualState = 5 // Manual Control
+    TEMP_CNTRL_ManualState = 5, // Manual Control
+    TEMP_CNTRL_AutomaticState = 6 // Automatic Control
 } TEMP_CNTRL_StateType;
 
 typedef enum {
@@ -425,6 +426,17 @@ typedef enum {
     TUNER_DitherMode = 1 // Dither mode
 } TUNER_ModeType;
 
+typedef enum {
+    VIRTUAL_LASER_1 = 0, // Virtual laser 1
+    VIRTUAL_LASER_2 = 1, // Virtual laser 2
+    VIRTUAL_LASER_3 = 2, // Virtual laser 3
+    VIRTUAL_LASER_4 = 3, // Virtual laser 4
+    VIRTUAL_LASER_5 = 4, // Virtual laser 5
+    VIRTUAL_LASER_6 = 5, // Virtual laser 6
+    VIRTUAL_LASER_7 = 6, // Virtual laser 7
+    VIRTUAL_LASER_8 = 7 // Virtual laser 8
+} VIRTUAL_LASER_Type;
+
 /* Definitions for COMM_STATUS_BITMASK */
 #define COMM_STATUS_CompleteMask (0x1)
 #define COMM_STATUS_BadCrcMask (0x2)
@@ -443,7 +455,7 @@ typedef enum {
 #define RINGDOWN_STATUS_RingdownTimeout (0x80)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (253)
+#define INTERFACE_NUMBER_OF_REGISTERS (254)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -698,6 +710,7 @@ typedef enum {
 #define SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER (250)
 #define SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER (251)
 #define SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER (252)
+#define VIRTUAL_LASER_REGISTER (253)
 
 /* FPGA block definitions */
 

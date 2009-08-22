@@ -260,7 +260,7 @@ class Viewer(HasTraits):
         self.findResponse()
     
 if __name__ == "__main__":
-    fname = "../Host/Driver/Sensors_20090707_174353.h5"
+    fname = "../Host/Driver/Sensors_20090821_153336.h5"
     inputStream = STREAM_Laser3Tec
     outputStream = STREAM_Laser3Temp
     viewer = Viewer()
@@ -269,8 +269,8 @@ if __name__ == "__main__":
     myView = View(Item("systemResp",style="custom",show_label=False),
                   Item("disturbanceResp",style="custom",show_label=False),
                   Item("setpointResp",style="custom",show_label=False),
-                  Item("K",editor=RangeEditor(low=1.0,high=100000.0,auto_set=False,enter_set=True,mode='xslider')),
-                  Item("Ti",editor=RangeEditor(low=1.0,high=1000.0,auto_set=False,enter_set=True,mode='xslider')),
+                  Item("K",editor=RangeEditor(low=1.0,high=10000.0,auto_set=False,enter_set=True,mode='xslider')),
+                  Item("Ti",editor=RangeEditor(low=0.1,high=10.0,auto_set=False,enter_set=True,mode='xslider')),
                   Item("Td",editor=RangeEditor(low=0.0,high=10.0,auto_set=False,enter_set=True,mode='xslider')),
                   Item("N",editor=RangeEditor(low=1.0,high=1000.0,auto_set=False,enter_set=True,mode='xslider')),
                   Item("b",editor=RangeEditor(low=0.0,high=1.0,auto_set=False,enter_set=True,mode='xslider')),

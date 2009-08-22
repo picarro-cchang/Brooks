@@ -219,6 +219,7 @@
         </gui_page>
         <gui_page>
             <title>Optical Injection Parameters</title>
+            <register>VIRTUAL_LASER_REGISTER</register>
             <fpga_register offset="FPGA_INJECT">CONTROL</fpga_register>
         </gui_page>
         <gui_page>

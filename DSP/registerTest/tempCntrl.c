@@ -108,6 +108,7 @@ int tempCntrlStep(TempCntrl *t)
     case TEMP_CNTRL_EnabledState:
         // Start or step the controller
         r = userSetpoint;
+    case TEMP_CNTRL_AutomaticState:
         error = r - temp;
         inRange = (error>=-tol && error<=tol);
         if (firstIteration)
@@ -259,6 +260,7 @@ int tempCntrlLaser1Init(void)
     s->derr1 = 0.0;
     s->derr2 = 0.0;
     s->Dincr = 0.0;
+    *(p->r_) = *(t->userSetpoint_);
     return STATUS_OK;
 }
 int tempCntrlLaser1Step(void)
