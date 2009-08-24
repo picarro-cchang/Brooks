@@ -25,6 +25,7 @@ typedef struct LASER_CURRENT_CNTRL
     float *swpMin_;   // Minimum sweep value
     float *swpMax_;   // Maximum sweep value
     float *swpInc_;   // Sweep increment
+    float *monitor_;  // Current monitor
     // FPGA register indices
     unsigned int fpga_control;
     unsigned int fpga_coarse;

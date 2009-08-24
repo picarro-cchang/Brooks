@@ -497,17 +497,19 @@ HEATER_CNTRL_StateTypeDict[2] = 'HEATER_CNTRL_ManualState' # Manual Control
 
 # Enumerated definitions for SPECT_CNTRL_StateType
 SPECT_CNTRL_StateType = c_uint
-SPECT_CNTRL_IdleState = 0 # No acquisition
+SPECT_CNTRL_IdleState = 0 # Not acquiring
 SPECT_CNTRL_StartingState = 1 # Start acquisition
-SPECT_CNTRL_RunningState = 2 # Acquisition in progress mode
+SPECT_CNTRL_RunningState = 2 # Acquisition in progress
 SPECT_CNTRL_PausedState = 3 # Acquisition paused
+SPECT_CNTRL_ErrorState = 4 # Error state
 
 # Dictionary for enumerated constants in SPECT_CNTRL_StateType
 SPECT_CNTRL_StateTypeDict = {}
-SPECT_CNTRL_StateTypeDict[0] = 'SPECT_CNTRL_IdleState' # No acquisition
+SPECT_CNTRL_StateTypeDict[0] = 'SPECT_CNTRL_IdleState' # Not acquiring
 SPECT_CNTRL_StateTypeDict[1] = 'SPECT_CNTRL_StartingState' # Start acquisition
-SPECT_CNTRL_StateTypeDict[2] = 'SPECT_CNTRL_RunningState' # Acquisition in progress mode
+SPECT_CNTRL_StateTypeDict[2] = 'SPECT_CNTRL_RunningState' # Acquisition in progress
 SPECT_CNTRL_StateTypeDict[3] = 'SPECT_CNTRL_PausedState' # Acquisition paused
+SPECT_CNTRL_StateTypeDict[4] = 'SPECT_CNTRL_ErrorState' # Error state
 
 # Enumerated definitions for SPECT_CNTRL_ModeType
 SPECT_CNTRL_ModeType = c_uint
@@ -566,11 +568,14 @@ COMM_STATUS_SequenceNumberShift = 24
 COMM_STATUS_ReturnValueShift = 8
 
 # Definitions for RINGDOWN_STATUS_BITMASK
-RINGDOWN_STATUS_SchemeIncrMask = 0x0F
+RINGDOWN_STATUS_SequenceMask = 0x0F
 RINGDOWN_STATUS_SchemeActiveMask = 0x10
 RINGDOWN_STATUS_SchemeCompleteInSingleModeMask = 0x20
 RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask = 0x40
 RINGDOWN_STATUS_RingdownTimeout = 0x80
+
+# Definitions for SUBSCHEME_ID_BITMASK
+SUBSCHEME_ID_IncrMask = 0x8000
 
 # Register definitions
 INTERFACE_NUMBER_OF_REGISTERS = 254
@@ -1450,15 +1455,17 @@ RDMAN_CONTROL_START_RD_B = 2 # Start ringdown cycle bit position
 RDMAN_CONTROL_START_RD_W = 1 # Start ringdown cycle bit width
 RDMAN_CONTROL_ABORT_RD_B = 3 # Abort ringdown bit position
 RDMAN_CONTROL_ABORT_RD_W = 1 # Abort ringdown bit width
-RDMAN_CONTROL_BANK0_CLEAR_B = 4 # Mark bank 0 available for write bit position
+RDMAN_CONTROL_RESET_RDMAN_B = 4 #  bit position
+RDMAN_CONTROL_RESET_RDMAN_W = 1 #  bit width
+RDMAN_CONTROL_BANK0_CLEAR_B = 5 # Mark bank 0 available for write bit position
 RDMAN_CONTROL_BANK0_CLEAR_W = 1 # Mark bank 0 available for write bit width
-RDMAN_CONTROL_BANK1_CLEAR_B = 5 # Mark bank 1 available for write bit position
+RDMAN_CONTROL_BANK1_CLEAR_B = 6 # Mark bank 1 available for write bit position
 RDMAN_CONTROL_BANK1_CLEAR_W = 1 # Mark bank 1 available for write bit width
-RDMAN_CONTROL_RD_IRQ_ACK_B = 6 # Acknowledge ring-down interrupt bit position
+RDMAN_CONTROL_RD_IRQ_ACK_B = 7 # Acknowledge ring-down interrupt bit position
 RDMAN_CONTROL_RD_IRQ_ACK_W = 1 # Acknowledge ring-down interrupt bit width
-RDMAN_CONTROL_ACQ_DONE_ACK_B = 7 # Acknowledge data acquired interrupt bit position
+RDMAN_CONTROL_ACQ_DONE_ACK_B = 8 # Acknowledge data acquired interrupt bit position
 RDMAN_CONTROL_ACQ_DONE_ACK_W = 1 # Acknowledge data acquired interrupt bit width
-RDMAN_CONTROL_RAMP_DITHER_B = 8 # Tuner waveform mode bit position
+RDMAN_CONTROL_RAMP_DITHER_B = 9 # Tuner waveform mode bit position
 RDMAN_CONTROL_RAMP_DITHER_W = 1 # Tuner waveform mode bit width
 
 RDMAN_STATUS = 1 # Status register
@@ -1903,7 +1910,7 @@ parameter_forms.append(('Optical Injection Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','choices',SPECT_CNTRL_STATE_REGISTER,'Spectrum Controller State','',[(SPECT_CNTRL_IdleState,"No acquisition"),(SPECT_CNTRL_StartingState,"Start acquisition"),(SPECT_CNTRL_RunningState,"Acquisition in progress mode"),(SPECT_CNTRL_PausedState,"Acquisition paused"),],1,1))
+__p.append(('dsp','choices',SPECT_CNTRL_STATE_REGISTER,'Spectrum Controller State','',[(SPECT_CNTRL_IdleState,"Not acquiring"),(SPECT_CNTRL_StartingState,"Start acquisition"),(SPECT_CNTRL_RunningState,"Acquisition in progress"),(SPECT_CNTRL_PausedState,"Acquisition paused"),(SPECT_CNTRL_ErrorState,"Error state"),],1,1))
 __p.append(('dsp','choices',SPECT_CNTRL_MODE_REGISTER,'Spectrum Controller Mode','',[(SPECT_CNTRL_SchemeSingleMode,"Perform single scheme"),(SPECT_CNTRL_SchemeMultipleMode,"Perform multiple schemes"),(SPECT_CNTRL_SchemeSequenceMode,"Perform scheme sequence"),(SPECT_CNTRL_ContinuousMode,"Continuous acquisition"),],1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_ACTIVE_SCHEME_REGISTER,'Active scheme table index','','%d',1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_NEXT_SCHEME_REGISTER,'Next scheme table index','','%d',1,1))
@@ -1933,7 +1940,7 @@ parameter_forms.append(('Ringdown Simulator Parameters',__p))
 
 __p = []
 
-__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Mark bank 0 available for write', [(0, u'Idle'), (16, u'Mark available')]), (32, u'Mark bank 1 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (64, u'Acknowledge')]), (128, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (128, u'Acknowledge')]), (256, u'Tuner waveform mode', [(0, u'Ramp'), (256, u'Dither')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'', [(0, u'Idle'), (16, u'Reset')]), (32, u'Mark bank 0 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Mark bank 1 available for write', [(0, u'Idle'), (64, u'Mark available')]), (128, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (128, u'Acknowledge')]), (256, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (256, u'Acknowledge')]), (512, u'Tuner waveform mode', [(0, u'Ramp'), (512, u'Dither')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')]), (1024, u'Ringdown Cycle State', [(0, u'Idle'), (1024, u'Busy')])],None,None,1,0))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DATA_ADDRCNTR,'Ringdown data address','','%d',1,0))

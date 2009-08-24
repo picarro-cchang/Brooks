@@ -11,6 +11,7 @@
 # HISTORY:
 #   25-Jun-2009  sze  Initial version.
 #   15-Jul-2009  sze  Number of parameters increased to 10 (+2 built-ins)
+#   23-Aug-2009  sze  Added RESET_RDMAN bit to control register
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -41,6 +42,7 @@ from Host.autogen.interface import RDMAN_CONTROL_RUN_B, RDMAN_CONTROL_RUN_W
 from Host.autogen.interface import RDMAN_CONTROL_CONT_B, RDMAN_CONTROL_CONT_W
 from Host.autogen.interface import RDMAN_CONTROL_START_RD_B, RDMAN_CONTROL_START_RD_W
 from Host.autogen.interface import RDMAN_CONTROL_ABORT_RD_B, RDMAN_CONTROL_ABORT_RD_W
+from Host.autogen.interface import RDMAN_CONTROL_RESET_RDMAN_B, RDMAN_CONTROL_RESET_RDMAN_W
 from Host.autogen.interface import RDMAN_CONTROL_BANK0_CLEAR_B, RDMAN_CONTROL_BANK0_CLEAR_W
 from Host.autogen.interface import RDMAN_CONTROL_BANK1_CLEAR_B, RDMAN_CONTROL_BANK1_CLEAR_W
 from Host.autogen.interface import RDMAN_CONTROL_RD_IRQ_ACK_B, RDMAN_CONTROL_RD_IRQ_ACK_W
@@ -152,6 +154,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     RDMAN_CONTROL_CONT
     RDMAN_CONTROL_START_RD  -- Initiates ringdown cycle after DSP has written parameters
     RDMAN_CONTROL_ABORT_RD  -- Programmatically aborts a ringdown cycle
+    RDMAN_CONTROL_RESET_RDMAN -- Resets ringdown manager to a sane state
     RDMAN_CONTROL_BANK0_CLEAR -- Indicates that memory bank 0 is available for use
     RDMAN_CONTROL_BANK1_CLEAR -- Indicates that memory bank 1 is available for use
     RDMAN_CONTROL_RD_IRQ_ACK  -- Used to acknowledge ringdown interrupt
@@ -619,6 +622,21 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         rd_trig.next = HIGH     # Turn off the injection
                         abort.next = 1
                         rd_irq.next  = 1
+                        acq_done_irq.next = LOW
+                        metadata_acq.next = LOW
+                        param_acq.next = LOW
+                        us_timer_enable.next = LOW
+                        seqState.next = SeqState.IDLE
+                        metadataAcqState.next = MetadataAcqState.IDLE
+                        paramState.next = ParamState.IDLE
+
+                    # Reset manager to a known state
+                    if control[RDMAN_CONTROL_RESET_RDMAN_B]:
+                        control.next[RDMAN_CONTROL_RESET_RDMAN_B] = 0
+                        rd_trig.next = HIGH     # Turn off the injection
+                        abort.next = 0
+                        rd_irq.next  = LOW
+                        acq_done_irq.next = LOW
                         metadata_acq.next = LOW
                         param_acq.next = LOW
                         us_timer_enable.next = LOW
@@ -655,6 +673,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 status.next[RDMAN_STATUS_LAPPED_B] = lapped
                 status.next[RDMAN_STATUS_RD_IRQ_B] = rd_irq
                 status.next[RDMAN_STATUS_SHUTDOWN_B] = rd_trig
+                status.next[RDMAN_STATUS_ABORTED_B] = abort
                 status.next[RDMAN_STATUS_TIMEOUT_B] = timeout
     return instances()
 

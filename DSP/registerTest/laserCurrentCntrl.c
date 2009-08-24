@@ -25,6 +25,7 @@
 #define state             (*(c->state_))
 #define manualCoarse      (*(c->manual_coarse_))
 #define manualFine        (*(c->manual_fine_))
+#define monitor           (*(c->monitor_))
 #define swpMin            (*(c->swpMin_))
 #define swpMax            (*(c->swpMax_))
 #define swpInc            (*(c->swpInc_))
@@ -102,6 +103,7 @@ int laserCurrentCntrlStep(LaserCurrentCntrl *c)
     }
     writeFPGA(c->fpga_coarse,(unsigned short)coarse);
     writeFPGA(c->fpga_fine,  (unsigned short)fine);
+    monitor = read_laser_current_adc(c->laserNum);
     return STATUS_OK;
 }
 
@@ -128,6 +130,7 @@ int currentCntrlLaser1Init(void)
     c->swpMin_ = (float *)registerAddr(LASER1_CURRENT_SWEEP_MIN_REGISTER);
     c->swpMax_ = (float *)registerAddr(LASER1_CURRENT_SWEEP_MAX_REGISTER);
     c->swpInc_ = (float *)registerAddr(LASER1_CURRENT_SWEEP_INCR_REGISTER);
+    c->monitor_ = (float *)registerAddr(LASER1_CURRENT_MONITOR_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
@@ -140,10 +143,7 @@ int currentCntrlLaser1Init(void)
 
 int currentCntrlLaser1Step(void)
 {
-    int status = laserCurrentCntrlStep(&currentCntrlLaser1);
-    *(float *)registerAddr(LASER1_CURRENT_MONITOR_REGISTER) =
-        currentCntrlLaser1.coarse;
-    return status;
+    return laserCurrentCntrlStep(&currentCntrlLaser1);
 }
 
 int currentCntrlLaser2Init(void)
@@ -155,6 +155,7 @@ int currentCntrlLaser2Init(void)
     c->swpMin_ = (float *)registerAddr(LASER2_CURRENT_SWEEP_MIN_REGISTER);
     c->swpMax_ = (float *)registerAddr(LASER2_CURRENT_SWEEP_MAX_REGISTER);
     c->swpInc_ = (float *)registerAddr(LASER2_CURRENT_SWEEP_INCR_REGISTER);
+    c->monitor_ = (float *)registerAddr(LASER2_CURRENT_MONITOR_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
@@ -167,10 +168,7 @@ int currentCntrlLaser2Init(void)
 
 int currentCntrlLaser2Step(void)
 {
-    int status = laserCurrentCntrlStep(&currentCntrlLaser2);
-    *(float *)registerAddr(LASER2_CURRENT_MONITOR_REGISTER) =
-        currentCntrlLaser2.coarse;
-    return status;
+    return laserCurrentCntrlStep(&currentCntrlLaser2);
 }
 
 int currentCntrlLaser3Init(void)
@@ -182,6 +180,7 @@ int currentCntrlLaser3Init(void)
     c->swpMin_ = (float *)registerAddr(LASER3_CURRENT_SWEEP_MIN_REGISTER);
     c->swpMax_ = (float *)registerAddr(LASER3_CURRENT_SWEEP_MAX_REGISTER);
     c->swpInc_ = (float *)registerAddr(LASER3_CURRENT_SWEEP_INCR_REGISTER);
+    c->monitor_ = (float *)registerAddr(LASER3_CURRENT_MONITOR_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
@@ -194,10 +193,7 @@ int currentCntrlLaser3Init(void)
 
 int currentCntrlLaser3Step(void)
 {
-    int status = laserCurrentCntrlStep(&currentCntrlLaser3);
-    *(float *)registerAddr(LASER3_CURRENT_MONITOR_REGISTER) =
-        read_laser_current_adc(3);
-    return status;
+    return laserCurrentCntrlStep(&currentCntrlLaser3);
 }
 
 int currentCntrlLaser4Init(void)
@@ -209,6 +205,7 @@ int currentCntrlLaser4Init(void)
     c->swpMin_ = (float *)registerAddr(LASER4_CURRENT_SWEEP_MIN_REGISTER);
     c->swpMax_ = (float *)registerAddr(LASER4_CURRENT_SWEEP_MAX_REGISTER);
     c->swpInc_ = (float *)registerAddr(LASER4_CURRENT_SWEEP_INCR_REGISTER);
+    c->monitor_ = (float *)registerAddr(LASER4_CURRENT_MONITOR_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
@@ -221,10 +218,7 @@ int currentCntrlLaser4Init(void)
 
 int currentCntrlLaser4Step(void)
 {
-    int status = laserCurrentCntrlStep(&currentCntrlLaser4);
-    *(float *)registerAddr(LASER4_CURRENT_MONITOR_REGISTER) =
-        currentCntrlLaser4.coarse;
-    return status;
+    return laserCurrentCntrlStep(&currentCntrlLaser4);
 }
 
 int read_laser_current_adc(int laserNum)

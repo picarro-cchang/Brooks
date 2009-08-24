@@ -349,9 +349,10 @@ class Driver(SharedTypes.Singleton):
                     self.dasInterface.upload()
                     time.sleep(1.0) # For DSP code to initialize
                     # Restore state from INI file
-                    InstrumentConfig().loadPersistentRegistersFromConfig()
+                    ic = InstrumentConfig()
+                    ic.loadPersistentRegistersFromConfig()
                     # self.dasInterface.loadDasState() # Restore DAS state
-                    DasConfigure(self.dasInterface).run()
+                    DasConfigure(self.dasInterface,ic.config).run()
                     daemon = self.rpcHandler.server.daemon
                     Log("DAS firmware uploaded",Level=1)
                 except:

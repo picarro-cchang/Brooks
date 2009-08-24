@@ -358,10 +358,11 @@
         </enum>
         <enum type="SPECT_CNTRL_StateType">
             <description>State of spectrum controller</description>
-            <enum_value ident="SPECT_CNTRL_IdleState" value="0" caption="No acquisition"  />
+            <enum_value ident="SPECT_CNTRL_IdleState" value="0" caption="Not acquiring"  />
             <enum_value ident="SPECT_CNTRL_StartingState" value="1" caption="Start acquisition"  />
-            <enum_value ident="SPECT_CNTRL_RunningState" value="2" caption="Acquisition in progress mode" />
+            <enum_value ident="SPECT_CNTRL_RunningState" value="2" caption="Acquisition in progress" />
             <enum_value ident="SPECT_CNTRL_PausedState" value="3" caption="Acquisition paused" />
+            <enum_value ident="SPECT_CNTRL_ErrorState" value="4" caption="Error state"  />
         </enum>
         <enum type="SPECT_CNTRL_ModeType"> 
             <description>Spectrum controller modes</description> 
@@ -399,12 +400,15 @@
             <shift ident="COMM_STATUS_ReturnValueShift">8</shift>
         </bits>
         <bits ident="RINGDOWN_STATUS_BITMASK">
-            <mask  ident="RINGDOWN_STATUS_SchemeIncrMask">0x0F</mask>
+            <mask  ident="RINGDOWN_STATUS_SequenceMask">0x0F</mask>
             <mask  ident="RINGDOWN_STATUS_SchemeActiveMask">0x10</mask>
             <mask  ident="RINGDOWN_STATUS_SchemeCompleteInSingleModeMask">0x20</mask>
             <mask  ident="RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask">0x40</mask>
             <mask  ident="RINGDOWN_STATUS_RingdownTimeout">0x80</mask>
-        </bits>        
+        </bits> 
+        <bits ident="SUBSCHEME_ID_BITMASK">
+            <mask  ident="SUBSCHEME_ID_IncrMask">0x8000</mask>
+        </bits>
     </bits_list>
     <register_list>
         <register ident="NOOP_REGISTER" type="uint32" minver="1.0" access="rw">
@@ -2037,23 +2041,27 @@
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Abort</fielddef>
                 </bitfield>
-                <bitfield ident="BANK0_CLEAR" description="Mark bank 0 available for write" lsb="4" width="1">
+                <bitfield ident="RESET_RDMAN" description="" lsb="4" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Reset</fielddef>
+                </bitfield>
+                <bitfield ident="BANK0_CLEAR" description="Mark bank 0 available for write" lsb="5" width="1">
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Mark available</fielddef>
                 </bitfield>
-                <bitfield ident="BANK1_CLEAR" description="Mark bank 1 available for write" lsb="5" width="1">
+                <bitfield ident="BANK1_CLEAR" description="Mark bank 1 available for write" lsb="6" width="1">
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Mark available</fielddef>
                 </bitfield>
-                <bitfield ident="RD_IRQ_ACK" description="Acknowledge ring-down interrupt" lsb="6" width="1">
+                <bitfield ident="RD_IRQ_ACK" description="Acknowledge ring-down interrupt" lsb="7" width="1">
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Acknowledge</fielddef>
                 </bitfield>
-                <bitfield ident="ACQ_DONE_ACK" description="Acknowledge data acquired interrupt" lsb="7" width="1">
+                <bitfield ident="ACQ_DONE_ACK" description="Acknowledge data acquired interrupt" lsb="8" width="1">
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Acknowledge</fielddef>
                 </bitfield>
-                <bitfield ident="RAMP_DITHER" description="Tuner waveform mode" lsb="8" width="1"> 
+                <bitfield ident="RAMP_DITHER" description="Tuner waveform mode" lsb="9" width="1"> 
                     <fielddef value="0">Ramp</fielddef>
                     <fielddef value="1">Dither</fielddef>
                 </bitfield>

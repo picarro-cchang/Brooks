@@ -36,6 +36,8 @@ typedef struct SPECT_CNTRL_PARAMS
 	unsigned int *defaultThreshold_;  // Default ringdown threshold
     // Local variables for controller
 	unsigned int schemeCounter_; // Increments at last ringdown of a scheme
+	unsigned int incrCounter_;   // Increments on first ringdown of a scheme row with MSB of subscheme ID set
+	unsigned int schemeCountOnPrevIncr_; // Records schemeCounter_ on last increment of incrCounter_
 } SpectCntrlParams;
 
 extern RingdownParamsType nextRdParams;
@@ -53,5 +55,6 @@ void advanceSchemeIteration(void);
 void advanceScheme(void);
 void modifyParamsOnTimeout(unsigned int scheme);
 unsigned int getSpectCntrlSchemeCount(void);
+void spectCntrlError(void);
 
 #endif /* _SPECT_CNTRL_H_ */

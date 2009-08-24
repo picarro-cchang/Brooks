@@ -62,6 +62,8 @@ int spectCntrlInit(void)
 	s->defaultThreshold_ = (unsigned int *)registerAddr(SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER);
 	s->virtLaser_ = (VIRTUAL_LASER_Type *)registerAddr(VIRTUAL_LASER_REGISTER);
 	s->schemeCounter_ =  0;
+	s->incrCounter_ = 0;
+	s->schemeCountOnPrevIncr_ = ~0;
 	switchToRampMode();
 	return STATUS_OK;
 }
@@ -107,9 +109,7 @@ int spectCntrlStep(void)
 
 #define PI 3.141592654
 void spectCntrl(void)
-{
-    SpectCntrlParams *s=&spectCntrlParams;
-	
+{	
     int bank, status;
 	float theta, dtheta;
 	theta = 0.0;	
@@ -219,16 +219,22 @@ void setupNextRdParams(void)
 		r->cavityPressure = *(s->cavityPressure_);
 		r->ambientPressure = *(s->ambientPressure_);
 		r->schemeTableAndRow = (*(s->active_) << 16) | (*(s->row_) & 0xFFFF);
-		
-		// TODO: Handle count!		
-		r->countAndSubschemeId = (schemeTable->rows[*(s->row_)].subschemeId & 0xFFFF);
+		// If SUBSCHEME_ID_IncrMask is set, and we are on the first ringdown of this row
+		//  increment s->incrCounter_ unless this has already been done for this scheme
+		if (schemeTable->rows[*(s->row_)].subschemeId & SUBSCHEME_ID_IncrMask) {
+			if (*(s->dwell_) == 0 && s->schemeCountOnPrevIncr_ != s->schemeCounter_) {
+				s->incrCounter_++;
+				s->schemeCountOnPrevIncr_ = s->schemeCounter_;
+			}
+		}
+		r->countAndSubschemeId = (s->incrCounter_ << 16) | (schemeTable->rows[*(s->row_)].subschemeId & 0xFFFF);
 		r->ringdownThreshold   = schemeTable->rows[*(s->row_)].threshold;
 		if (r->ringdownThreshold == 0) r->ringdownThreshold = *(s->defaultThreshold_);
-		r->status = (s->schemeCounter_ & RINGDOWN_STATUS_SchemeIncrMask);
+		r->status = (s->schemeCounter_ & RINGDOWN_STATUS_SequenceMask);
 		if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
 			SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
 			SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeActiveMask;
-		// Determine if we are on the last ringdown of the scheme
+		// Determine if we are on the last ringdown of the scheme and set status bits appropriately
 		if (*(s->iter_) == schemeTables[*(s->active_)].numRepeats-1 &&
 			*(s->row_)  == schemeTables[*(s->active_)].numRows-1 &&
 			*(s->dwell_) == schemeTables[*(s->active_)].rows[*(s->row_)].dwellCount-1) {
@@ -268,8 +274,6 @@ void setupNextRdParams(void)
 	writeFPGA(FPGA_RDMAN+RDMAN_PARAM8,*(uint32*)&r->ringdownThreshold);
 	writeFPGA(FPGA_RDMAN+RDMAN_PARAM9,*(uint32*)&r->status);
 }
-
-
 
 void modifyParamsOnTimeout(unsigned int schemeCount)
 // If a ringdown timeout occurs, i.e., if there is no ringdown within the allotted interval, we
@@ -325,9 +329,6 @@ void setAutomaticControl(void)
 void validateSchemePosition(void)
 // Ensure that the dwell count, scheme row and scheme iteration values are valid and reset 
 //  them to zero if not
-
-// TODO: Set up scheme status bits which indicate if we are at the end of a scheme
-
 {
     SpectCntrlParams *s=&spectCntrlParams;
 	if (*(s->active_) >= NUM_SCHEME_TABLES) {
@@ -392,4 +393,35 @@ void advanceScheme(void)
 	*(s->dwell_) = 0;
 	if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_)) 
 		*(s->state_) = SPECT_CNTRL_IdleState;
+}
+
+void spectCntrlError(void)
+// This is called to place the spectrum controller subsystem in a sane state
+//  in response to an error or abort condition
+{
+    SpectCntrlParams *s=&spectCntrlParams;
+
+	*(s->state_) = SPECT_CNTRL_ErrorState;
+	// Eat up posted semaphores
+	SEM_pend(&SEM_rdFitting,0);
+	SEM_pend(&SEM_rdDataMoving,0);
+	SEM_pendBinary(&SEM_startRdCycle,0);
+	
+	// Reset the RDMAN block, clear bank in use bits, acknowledge all interrupts
+    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RESET_RDMAN_B,
+                             RDMAN_CONTROL_RESET_RDMAN_W,1);
+    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK0_CLEAR_B,
+                             RDMAN_CONTROL_BANK0_CLEAR_W,1);
+    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK1_CLEAR_B,
+                             RDMAN_CONTROL_BANK1_CLEAR_W,1);
+    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RD_IRQ_ACK_B,
+                   RDMAN_CONTROL_RD_IRQ_ACK_W,1);
+    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_ACQ_DONE_ACK_B,
+                   RDMAN_CONTROL_ACQ_DONE_ACK_W,1);
+							 
+	// Indicate both ringdown buffers are available
+	SEM_postBinary(&SEM_rdBuffer0Available);
+	SEM_postBinary(&SEM_rdBuffer1Available);
+	switchToRampMode();
+	message_puts("Spectrum controller enters error state.");
 }

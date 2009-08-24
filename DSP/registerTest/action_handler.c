@@ -265,35 +265,40 @@ int r_tempCntrlLaser4Step(unsigned int numInt,void *params,void *env)
 
 int r_floatRegisterToFpga(unsigned int numInt,void *params,void *env)
 /* Copy contents of a floating point register to an FPGA register,
-    treating value as an unsigned int */
+    treating value as an unsigned int. The FPGA register is the sum
+    of two arguments so that we can pass a block base and an offset within
+    the block. */
 {
     float value;
     unsigned int *reg = (unsigned int *) params;
-    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
     READ_REG(reg[0],asFloat,value);
-    writeFPGA(reg[1],(unsigned int)value);
+    writeFPGA(reg[1]+reg[2],(unsigned int)value);
     return STATUS_OK;
 }
 
 int r_fpgaToFloatRegister(unsigned int numInt,void *params,void *env)
 /* Copy contents of an FPGA register to a floating point register,
-    treating value as an unsigned short */
+    treating value as an unsigned short. The FPGA register is the sum
+    of two arguments so that we can pass a block base and an offset within
+    the block. */
 {
     float value;
     unsigned int *reg = (unsigned int *) params;
-    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    value = readFPGA(reg[0]);
-    WRITE_REG(reg[1],asFloat,value);
+    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
+    value = readFPGA(reg[0]+reg[1]);
+    WRITE_REG(reg[2],asFloat,value);
     return STATUS_OK;
 }
 
 int r_intToFpga(unsigned int numInt,void *params,void *env)
-/* Copy integer (passed as first parameter) to the specified
-    FPGA register */
+/* Copy integer (passed as first parameter) to the specified FPGA register.  
+    The FPGA register is the sum of two arguments so that we can pass a 
+    block base and an offset within the block. */
 {
     unsigned int *reg = (unsigned int *) params;
-    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    writeFPGA(reg[1],reg[0]);
+    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
+    writeFPGA(reg[1]+reg[2],reg[0]);
     return STATUS_OK;
 }
 

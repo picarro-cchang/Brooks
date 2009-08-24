@@ -416,6 +416,7 @@ void rdFitting(void)
         SEM_pend(&SEM_rdFitting,SYS_FOREVER);
         if (!get_queue(&rdBufferQueue,&bufferNum)) {
             message_puts("rdBuffer queue empty in rdFitting");
+			spectCntrlError();
         }
 		if (bufferNum == MISSING_RINGDOWN) {
 			//  Get the information from nextRdParams, since no ringdown actually took place

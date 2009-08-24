@@ -408,10 +408,11 @@ typedef enum {
 } HEATER_CNTRL_StateType;
 
 typedef enum {
-    SPECT_CNTRL_IdleState = 0, // No acquisition
+    SPECT_CNTRL_IdleState = 0, // Not acquiring
     SPECT_CNTRL_StartingState = 1, // Start acquisition
-    SPECT_CNTRL_RunningState = 2, // Acquisition in progress mode
-    SPECT_CNTRL_PausedState = 3 // Acquisition paused
+    SPECT_CNTRL_RunningState = 2, // Acquisition in progress
+    SPECT_CNTRL_PausedState = 3, // Acquisition paused
+    SPECT_CNTRL_ErrorState = 4 // Error state
 } SPECT_CNTRL_StateType;
 
 typedef enum {
@@ -448,11 +449,14 @@ typedef enum {
 #define COMM_STATUS_ReturnValueShift (8)
 
 /* Definitions for RINGDOWN_STATUS_BITMASK */
-#define RINGDOWN_STATUS_SchemeIncrMask (0x0F)
+#define RINGDOWN_STATUS_SequenceMask (0x0F)
 #define RINGDOWN_STATUS_SchemeActiveMask (0x10)
 #define RINGDOWN_STATUS_SchemeCompleteInSingleModeMask (0x20)
 #define RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask (0x40)
 #define RINGDOWN_STATUS_RingdownTimeout (0x80)
+
+/* Definitions for SUBSCHEME_ID_BITMASK */
+#define SUBSCHEME_ID_IncrMask (0x8000)
 
 /* Register definitions */
 #define INTERFACE_NUMBER_OF_REGISTERS (254)
@@ -820,15 +824,17 @@ typedef enum {
 #define RDMAN_CONTROL_START_RD_W (1) // Start ringdown cycle bit width
 #define RDMAN_CONTROL_ABORT_RD_B (3) // Abort ringdown bit position
 #define RDMAN_CONTROL_ABORT_RD_W (1) // Abort ringdown bit width
-#define RDMAN_CONTROL_BANK0_CLEAR_B (4) // Mark bank 0 available for write bit position
+#define RDMAN_CONTROL_RESET_RDMAN_B (4) //  bit position
+#define RDMAN_CONTROL_RESET_RDMAN_W (1) //  bit width
+#define RDMAN_CONTROL_BANK0_CLEAR_B (5) // Mark bank 0 available for write bit position
 #define RDMAN_CONTROL_BANK0_CLEAR_W (1) // Mark bank 0 available for write bit width
-#define RDMAN_CONTROL_BANK1_CLEAR_B (5) // Mark bank 1 available for write bit position
+#define RDMAN_CONTROL_BANK1_CLEAR_B (6) // Mark bank 1 available for write bit position
 #define RDMAN_CONTROL_BANK1_CLEAR_W (1) // Mark bank 1 available for write bit width
-#define RDMAN_CONTROL_RD_IRQ_ACK_B (6) // Acknowledge ring-down interrupt bit position
+#define RDMAN_CONTROL_RD_IRQ_ACK_B (7) // Acknowledge ring-down interrupt bit position
 #define RDMAN_CONTROL_RD_IRQ_ACK_W (1) // Acknowledge ring-down interrupt bit width
-#define RDMAN_CONTROL_ACQ_DONE_ACK_B (7) // Acknowledge data acquired interrupt bit position
+#define RDMAN_CONTROL_ACQ_DONE_ACK_B (8) // Acknowledge data acquired interrupt bit position
 #define RDMAN_CONTROL_ACQ_DONE_ACK_W (1) // Acknowledge data acquired interrupt bit width
-#define RDMAN_CONTROL_RAMP_DITHER_B (8) // Tuner waveform mode bit position
+#define RDMAN_CONTROL_RAMP_DITHER_B (9) // Tuner waveform mode bit position
 #define RDMAN_CONTROL_RAMP_DITHER_W (1) // Tuner waveform mode bit width
 
 #define RDMAN_STATUS (1) // Status register

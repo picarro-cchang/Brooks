@@ -7,7 +7,7 @@ if __name__ == "__main__":
     serverURI = "http://localhost:%d" % (SharedTypes.RPC_PORT_DRIVER,)
     driver = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="uploadTestScheme")
 
-    laserParams = {'actualLaser': 2L, 
+    laserParams = {'actualLaser': 1L, 
                    'ratio1Center': 0.6, 'ratio1Scale': 1.2, 'ratio2Center': 0.6, 'ratio2Scale': 1.2, 'phase': 0.0,
                    'tempCenter': 29.0, 'tempScale': 12.14, 'tempToAngleC0': -0.0408069075214, 
                    'tempToAngleC1': -0.168487230259, 'tempToAngleC2': -21.9584615861, 'tempToAngleC3': -37.7690972829, 

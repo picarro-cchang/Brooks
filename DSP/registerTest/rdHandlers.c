@@ -113,6 +113,7 @@ void edmaDoneInterrupt(int tccNum)
     
     if (!put_queue(&rdBufferQueue,bank)) {
         message_puts("rdBuffer queue full in edmaDoneInterrupt");
+		spectCntrlError();
     }
     else { // put succeeded, post the good news to SEM_rdFitting
         SEM_post(&SEM_rdFitting);
@@ -121,11 +122,11 @@ void edmaDoneInterrupt(int tccNum)
     // Indicate bank in FPGA is no longer in use
     if (!bank) {
         changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK0_CLEAR_B,
-                                 RDMAN_CONTROL_BANK0_CLEAR_B,1);
+							RDMAN_CONTROL_BANK0_CLEAR_W,1);
     }
     else {
         changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK1_CLEAR_B,
-                            RDMAN_CONTROL_BANK1_CLEAR_B,1);
+                            RDMAN_CONTROL_BANK1_CLEAR_W,1);
     }
     
     EDMA_intClear(tccNum);        
@@ -152,7 +153,7 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
     // Responds to the EXT4 interrupt, indicating that a ringdown
     //  (or a timeout) has occured
     unsigned int gie, status;
-    int allowDither, badRingdown;
+    int allowDither, abortedRingdown, timedOut;
     int *counter = (int*)(REG_BASE+4*RD_IRQ_COUNT_REGISTER);
     TUNER_ModeType mode;
     
@@ -173,13 +174,20 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
     status = readFPGA(FPGA_RDMAN+RDMAN_STATUS);
     
     allowDither = (0 != (readFPGA(FPGA_RDMAN+RDMAN_OPTIONS) & (1<<RDMAN_OPTIONS_DITHER_ENABLE_B)));
-    badRingdown = (0 != (status & (1<<RDMAN_STATUS_TIMEOUT_B | 1<<RDMAN_STATUS_ABORTED_B)));
+	timedOut = (0 != (status & (1<<RDMAN_STATUS_TIMEOUT_B)));
+    abortedRingdown = (0 != (status & (1<<RDMAN_STATUS_ABORTED_B)));
+	if (abortedRingdown) {
+		message_puts("Ringdown aborted");
+		spectCntrlError();
+	    IRQ_globalRestore(gie);
+		return;
+	}
+	
     mode = (TUNER_ModeType)readBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL, RDMAN_CONTROL_RAMP_DITHER_B, RDMAN_CONTROL_RAMP_DITHER_W);
-    
-    if (!badRingdown && allowDither) setupDither(readFPGA(FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN));
+    if (!timedOut && allowDither) setupDither(readFPGA(FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN));
     else switchToRampMode();
 				
-    if (!badRingdown) advanceDwellCounter();
+    if (!timedOut) advanceDwellCounter();
 	else {
 		if (mode == TUNER_RampMode) {
 			unsigned int schemeCount = getSpectCntrlSchemeCount();
@@ -188,6 +196,9 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
 			modifyParamsOnTimeout(schemeCount);
 			if (!put_queue(&rdBufferQueue,MISSING_RINGDOWN)) {
 				message_puts("rdBuffer queue full in ringdownInterrupt");
+				spectCntrlError();
+			    IRQ_globalRestore(gie);
+				return;
 			}
 			else { // post the bad news to SEM_rdFitting. 
 				   // The rdFitting task will initiate the next ringdown after noting the timeout.
@@ -234,6 +245,9 @@ void acqDoneInterrupt(unsigned int funcArg, unsigned int eventId)
     
     if (!put_queue(&bankQueue,!bank)) {
         message_puts("bankQueue is full in acqDoneInterrupt.");
+		spectCntrlError();
+	    IRQ_globalRestore(gie);
+		return;
     }
     else { // Inform TSK_rdDataMoving that there are data to be moved
         SEM_post(&SEM_rdDataMoving);
@@ -253,6 +267,8 @@ void rdDataMoving(void)
         SEM_pend(&SEM_rdDataMoving,SYS_FOREVER);
         if (!get_queue(&bankQueue,&bank)) {
             message_puts("bankQueue empty in rdDataMoving");
+			spectCntrlError();
+		    continue;
         }
         if (bank == 0) {
             // Transfer bank 0
