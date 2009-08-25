@@ -46,7 +46,8 @@ class RD_ResultsEntryType(Structure):
         ("schemeIndex",c_ushort),
         ("fineLaserCurrent",c_ushort),
         ("name",c_char*10),
-        ("lockSetpoint",DataType*3)
+        ("lockSetpoint",DataType*3),
+        ("values",c_uint*16)
     ]
 
 class PidControllerEnvType(Structure):
@@ -82,21 +83,20 @@ def ctypesToDict(s):
 
 def dictToCtypes(d,c):
     """Fill the ctypes object c with data from the dictionary d"""
-    if not isinstance(d,dict):
-        c = d
-        return
-    else:
-        for k in d:
-            if isinstance(d[k],dict):
-                dictToCtypes(d[k],getattr(c,k))
-            elif isinstance(d[k],list):
-                for i,e in enumerate(d[k]):
-                    dictToCtypes(e,getattr(c,k)[i])
-            else:
-                if hasattr(c,k):
-                    setattr(c,k,d[k])
+    for k in d:
+        if isinstance(d[k],dict):
+            dictToCtypes(d[k],getattr(c,k))
+        elif isinstance(d[k],list):
+            for i,e in enumerate(d[k]):
+                if not isinstance(e,dict):
+                    getattr(c,k)[i] = e
                 else:
-                    raise ValueError,"Unknown structure field name %s" % k
+                    dictToCtypes(e,getattr(c,k)[i])
+        else:
+            if hasattr(c,k):
+                setattr(c,k,d[k])
+            else:
+                raise ValueError,"Unknown structure field name %s" % k
     
 if __name__ == "__main__":
     p = RD_ResultsEntryType()
@@ -106,10 +106,14 @@ if __name__ == "__main__":
     p.lockSetpoint[1].asInt = 2
     p.lockSetpoint[2].asInt = 3
     p.lockValue.asFloat = 1.234
+    p.values[0] = 10
+    p.values[1] = 20
+    p.values[2] = 30
+    
     r = ctypesToDict(p)
     print r
     q = RD_ResultsEntryType()
-    r.update(dict(foo='bar'))
+    # r.update(dict(foo='bar'))
     dictToCtypes(r,q)
     print ctypesToDict(q)
 

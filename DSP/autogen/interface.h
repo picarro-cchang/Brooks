@@ -191,10 +191,11 @@ typedef struct {
 } SchemeTableType;
 
 typedef struct {
-    uint32 currentTableIndex;
+    uint16 numberOfIndices;
+    uint16 currentIndex;
     uint16 restartFlag;
     uint16 loopFlag;
-    uint16 schemeTableIndices;
+    uint16 schemeIndices[16];
 } SchemeSequenceType;
 
 typedef struct {
@@ -451,8 +452,8 @@ typedef enum {
 /* Definitions for RINGDOWN_STATUS_BITMASK */
 #define RINGDOWN_STATUS_SequenceMask (0x0F)
 #define RINGDOWN_STATUS_SchemeActiveMask (0x10)
-#define RINGDOWN_STATUS_SchemeCompleteInSingleModeMask (0x20)
-#define RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask (0x40)
+#define RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask (0x20)
+#define RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask (0x40)
 #define RINGDOWN_STATUS_RingdownTimeout (0x80)
 
 /* Definitions for SUBSCHEME_ID_BITMASK */
@@ -824,8 +825,8 @@ typedef enum {
 #define RDMAN_CONTROL_START_RD_W (1) // Start ringdown cycle bit width
 #define RDMAN_CONTROL_ABORT_RD_B (3) // Abort ringdown bit position
 #define RDMAN_CONTROL_ABORT_RD_W (1) // Abort ringdown bit width
-#define RDMAN_CONTROL_RESET_RDMAN_B (4) //  bit position
-#define RDMAN_CONTROL_RESET_RDMAN_W (1) //  bit width
+#define RDMAN_CONTROL_RESET_RDMAN_B (4) // Reset ringdown manager bit position
+#define RDMAN_CONTROL_RESET_RDMAN_W (1) // Reset ringdown manager bit width
 #define RDMAN_CONTROL_BANK0_CLEAR_B (5) // Mark bank 0 available for write bit position
 #define RDMAN_CONTROL_BANK0_CLEAR_W (1) // Mark bank 0 available for write bit width
 #define RDMAN_CONTROL_BANK1_CLEAR_B (6) // Mark bank 1 available for write bit position

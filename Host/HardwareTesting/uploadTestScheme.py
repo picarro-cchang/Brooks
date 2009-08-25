@@ -25,3 +25,15 @@ if __name__ == "__main__":
     laserTemp = 24.0*ones(thList.shape)
     repeats = 2
     driver.wrScheme(0,repeats,zip(thList,dwell,subschemeId,laserUsed,threshold,pztSetpoint,laserTemp))
+
+    thList = linspace(-3*pi/4,-pi/4,81)
+    dwell = 10*ones(thList.shape)
+    subschemeId = zeros(thList.shape)
+    laserUsed = 4*ones(thList.shape)
+    threshold = zeros(thList.shape)
+    pztSetpoint = zeros(thList.shape)
+    laserTemp = 24.0*ones(thList.shape)
+    repeats = 1
+    driver.wrScheme(3,repeats,zip(thList,dwell,subschemeId,laserUsed,threshold,pztSetpoint,laserTemp))
+
+    driver.wrSchemeSequence([0,3,0,3],0)

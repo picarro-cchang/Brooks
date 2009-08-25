@@ -171,21 +171,20 @@ def ctypesToDict(s):
 
 def dictToCtypes(d,c):
     """Fill the ctypes object c with data from the dictionary d"""
-    if not isinstance(d,dict):
-        c = d
-        return
-    else:
-        for k in d:
-            if isinstance(d[k],dict):
-                dictToCtypes(d[k],getattr(c,k))
-            elif isinstance(d[k],list):
-                for i,e in enumerate(d[k]):
-                    dictToCtypes(e,getattr(c,k)[i])
-            else:
-                if hasattr(c,k):
-                    setattr(c,k,d[k])
+    for k in d:
+        if isinstance(d[k],dict):
+            dictToCtypes(d[k],getattr(c,k))
+        elif isinstance(d[k],list):
+            for i,e in enumerate(d[k]):
+                if not isinstance(e,dict):
+                    getattr(c,k)[i] = e
                 else:
-                    raise ValueError,"Unknown field name %s in dictToCtypes" % k
+                    dictToCtypes(e,getattr(c,k)[i])
+        else:
+            if hasattr(c,k):
+                setattr(c,k,d[k])
+            else:
+                raise ValueError,"Unknown structure field name %s" % k
 
 ##Misc stuff...
 

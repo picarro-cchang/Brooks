@@ -183,12 +183,20 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Writes a scheme to table number schemeNum consisting of numRepeats repeats of the list schemeRows"""
         self.dasInterface.hostToDspSender.wrScheme(schemeNum,numRepeats,schemeRows)
 
+    def rdSchemeSequence(self):
+        """Reads a scheme sequence"""
+        return self.dasInterface.hostToDspSender.rdSchemeSequence()
+    
+    def wrSchemeSequence(self,schemeIndices,loopFlag=1,restartFlag=1):
+        """Writes a scheme sequence"""
+        self.dasInterface.hostToDspSender.wrSchemeSequence(schemeIndices,loopFlag,restartFlag)
+        
     def rdVirtualLaserParams(self,vLaserNum):
         """Returns the virtual laser parameters associated with virtual laser vLaserNum as a dictionary"""
         return SharedTypes.ctypesToDict(self.dasInterface.hostToDspSender.rdVirtualLaserParams(vLaserNum))
     
     def wrVirtualLaserParams(self,vLaserNum,laserParams):
-        """Returns the virtual laser parameters associated with virtual laser vLaserNum as a dictionary"""
+        """Wites the virtual laser parameters (specified as a dictionary) associated with virtual laser vLaserNum"""
         p = interface.VirtualLaserParamsType()
         SharedTypes.dictToCtypes(laserParams,p)
         self.dasInterface.hostToDspSender.wrVirtualLaserParams(vLaserNum,p)

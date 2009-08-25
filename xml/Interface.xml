@@ -193,10 +193,11 @@
             <field ident="rows"  type="SchemeRowType" size="8192"/>
         </struct>
         <struct type="SchemeSequenceType">
-            <field ident="currentTableIndex" type="uint32"/>
+            <field ident="numberOfIndices" type="uint16"/>
+            <field ident="currentIndex" type="uint16"/>
             <field ident="restartFlag" type="uint16"/>
             <field ident="loopFlag" type="uint16"/>
-            <field ident="schemeTableIndices"  type="uint16" size="NUM_SCHEMES_IN_SEQUENCE"/>
+            <field ident="schemeIndices"  type="uint16" size="16"/>
         </struct>
         <struct type="VirtualLaserParamsType">
             <field ident="actualLaser" type="uint32"/>
@@ -402,8 +403,8 @@
         <bits ident="RINGDOWN_STATUS_BITMASK">
             <mask  ident="RINGDOWN_STATUS_SequenceMask">0x0F</mask>
             <mask  ident="RINGDOWN_STATUS_SchemeActiveMask">0x10</mask>
-            <mask  ident="RINGDOWN_STATUS_SchemeCompleteInSingleModeMask">0x20</mask>
-            <mask  ident="RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask">0x40</mask>
+            <mask  ident="RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask">0x20</mask>
+            <mask  ident="RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask">0x40</mask>
             <mask  ident="RINGDOWN_STATUS_RingdownTimeout">0x80</mask>
         </bits> 
         <bits ident="SUBSCHEME_ID_BITMASK">
@@ -2041,7 +2042,7 @@
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Abort</fielddef>
                 </bitfield>
-                <bitfield ident="RESET_RDMAN" description="" lsb="4" width="1">
+                <bitfield ident="RESET_RDMAN" description="Reset ringdown manager" lsb="4" width="1">
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Reset</fielddef>
                 </bitfield>

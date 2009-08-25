@@ -220,10 +220,11 @@ class SchemeTableType(Structure):
 
 class SchemeSequenceType(Structure):
     _fields_ = [
-    ("currentTableIndex",c_uint),
+    ("numberOfIndices",c_ushort),
+    ("currentIndex",c_ushort),
     ("restartFlag",c_ushort),
     ("loopFlag",c_ushort),
-    ("schemeTableIndices",c_ushort)
+    ("schemeIndices",c_ushort*16)
     ]
 
 class VirtualLaserParamsType(Structure):
@@ -570,8 +571,8 @@ COMM_STATUS_ReturnValueShift = 8
 # Definitions for RINGDOWN_STATUS_BITMASK
 RINGDOWN_STATUS_SequenceMask = 0x0F
 RINGDOWN_STATUS_SchemeActiveMask = 0x10
-RINGDOWN_STATUS_SchemeCompleteInSingleModeMask = 0x20
-RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask = 0x40
+RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask = 0x20
+RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask = 0x40
 RINGDOWN_STATUS_RingdownTimeout = 0x80
 
 # Definitions for SUBSCHEME_ID_BITMASK
@@ -1455,8 +1456,8 @@ RDMAN_CONTROL_START_RD_B = 2 # Start ringdown cycle bit position
 RDMAN_CONTROL_START_RD_W = 1 # Start ringdown cycle bit width
 RDMAN_CONTROL_ABORT_RD_B = 3 # Abort ringdown bit position
 RDMAN_CONTROL_ABORT_RD_W = 1 # Abort ringdown bit width
-RDMAN_CONTROL_RESET_RDMAN_B = 4 #  bit position
-RDMAN_CONTROL_RESET_RDMAN_W = 1 #  bit width
+RDMAN_CONTROL_RESET_RDMAN_B = 4 # Reset ringdown manager bit position
+RDMAN_CONTROL_RESET_RDMAN_W = 1 # Reset ringdown manager bit width
 RDMAN_CONTROL_BANK0_CLEAR_B = 5 # Mark bank 0 available for write bit position
 RDMAN_CONTROL_BANK0_CLEAR_W = 1 # Mark bank 0 available for write bit width
 RDMAN_CONTROL_BANK1_CLEAR_B = 6 # Mark bank 1 available for write bit position
@@ -1940,7 +1941,7 @@ parameter_forms.append(('Ringdown Simulator Parameters',__p))
 
 __p = []
 
-__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'', [(0, u'Idle'), (16, u'Reset')]), (32, u'Mark bank 0 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Mark bank 1 available for write', [(0, u'Idle'), (64, u'Mark available')]), (128, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (128, u'Acknowledge')]), (256, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (256, u'Acknowledge')]), (512, u'Tuner waveform mode', [(0, u'Ramp'), (512, u'Dither')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Reset ringdown manager', [(0, u'Idle'), (16, u'Reset')]), (32, u'Mark bank 0 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Mark bank 1 available for write', [(0, u'Idle'), (64, u'Mark available')]), (128, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (128, u'Acknowledge')]), (256, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (256, u'Acknowledge')]), (512, u'Tuner waveform mode', [(0, u'Ramp'), (512, u'Dither')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')]), (1024, u'Ringdown Cycle State', [(0, u'Idle'), (1024, u'Busy')])],None,None,1,0))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DATA_ADDRCNTR,'Ringdown data address','','%d',1,0))

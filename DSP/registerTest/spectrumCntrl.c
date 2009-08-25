@@ -87,6 +87,11 @@ int spectCntrlStep(void)
 			*(s->iter_) = 0;
 			*(s->row_) = 0;
 			*(s->dwell_) = 0;
+			// If we start in sequence mode, automatically start at the beginning
+			if (SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) {
+				schemeSequence->currentIndex =  0;
+				*(s->active_) = schemeSequence->schemeIndices[schemeSequence->currentIndex];
+			}
 		}	
 	}
 	else if (SPECT_CNTRL_RunningState == *(s->state_)) {
@@ -111,9 +116,6 @@ int spectCntrlStep(void)
 void spectCntrl(void)
 {	
     int bank, status;
-	float theta, dtheta;
-	theta = 0.0;	
-	dtheta = 0.001;
 	
     while (1) {
         SEM_pendBinary(&SEM_startRdCycle,SYS_FOREVER);
@@ -140,19 +142,6 @@ void spectCntrl(void)
             SEM_pendBinary(&SEM_waitForRdMan,SYS_FOREVER);
         }
 		setupNextRdParams();
-		/*
-		theta += dtheta;
-		if (theta > PI/4.0) {
-			dtheta = -fabs(dtheta);
-			theta = PI/4.0;
-		}
-		else if (theta < -PI/4.0) {
-			dtheta = fabs(dtheta);
-			theta = -PI/4.0;
-		}
-		writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO1_MULTIPLIER,(int)(32000.0*cos(theta)));
-		writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO2_MULTIPLIER,(int)(32000.0*sin(theta)));
-		*/	
         // Then initiate the ringdown...
         changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_START_RD_B,
                        RDMAN_CONTROL_START_RD_W,1);
@@ -205,7 +194,11 @@ void setupNextRdParams(void)
 		changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W, laserNum);
 		writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,r->ringdownThreshold);
 	}
-	else {	// We are running a scheme		
+	else {	// We are running a scheme
+		if (SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) {
+			if (schemeSequence->currentIndex >= schemeSequence->numberOfIndices) schemeSequence->currentIndex = 0;
+			*(s->active_) = schemeSequence->schemeIndices[schemeSequence->currentIndex];
+		}
 		schemeTable = &schemeTables[*(s->active_)];
 		*(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].laserUsed;
 		vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
@@ -238,9 +231,12 @@ void setupNextRdParams(void)
 		if (*(s->iter_) == schemeTables[*(s->active_)].numRepeats-1 &&
 			*(s->row_)  == schemeTables[*(s->active_)].numRows-1 &&
 			*(s->dwell_) == schemeTables[*(s->active_)].rows[*(s->row_)].dwellCount-1) {
-			if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteInSingleModeMask;
+			if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
+				(SPECT_CNTRL_SchemeSequenceMode == *(s->mode_) 
+					&& schemeSequence->currentIndex == schemeSequence->numberOfIndices-1
+					&& !schemeSequence->loopFlag)) r->status |= RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask;
 			else if (SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
-					 SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask;
+					 SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask;
 		}
 			
 		// Correct the setpoint angle using the etalon temperature and ambient pressure
@@ -287,10 +283,13 @@ void modifyParamsOnTimeout(unsigned int schemeCount)
 	r->status |= RINGDOWN_STATUS_RingdownTimeout;
 	if (s->schemeCounter_ != schemeCount) {
 		// We have advanced to another scheme, so set the end-of-scheme status bits appropriately
-		r->status &= ~(RINGDOWN_STATUS_SchemeCompleteInSingleModeMask | RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask);
-		if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteInSingleModeMask;
+		r->status &= ~(RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask | RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask);
+		if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
+			(SPECT_CNTRL_SchemeSequenceMode == *(s->mode_) 
+				&& schemeSequence->currentIndex == schemeSequence->numberOfIndices-1
+				&& !schemeSequence->loopFlag)) r->status |= RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask;
 		else if (SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
-			     SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteInMultipleModeMask;
+				 SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask;
 	}
 }
 
@@ -387,7 +386,15 @@ void advanceScheme(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
 	s->schemeCounter_++;
-	*(s->active_) = *(s->next_);
+	if (SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) {
+		schemeSequence->currentIndex += 1;
+		if (schemeSequence->currentIndex >= schemeSequence->numberOfIndices) {
+			if (schemeSequence->loopFlag) schemeSequence->currentIndex = 0;
+			else *(s->state_) = SPECT_CNTRL_IdleState;
+		}
+		*(s->active_) = schemeSequence->schemeIndices[schemeSequence->currentIndex];
+	}
+	else *(s->active_) = *(s->next_);
 	*(s->iter_) = 0;
 	*(s->row_) = 0;
 	*(s->dwell_) = 0;

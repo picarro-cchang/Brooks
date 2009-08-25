@@ -701,6 +701,38 @@ class HostToDspSender(Singleton):
                                row.threshold,row.pztSetpoint,0.001*row.laserTemp) for row in schemeTable.rows]}
 
     @usbLockProtect
+    def wrSchemeSequence(self,schemeIndices,loopFlag=1,restartFlag=1):
+        # Write scheme sequence
+        SCHEME_SEQUENCE_BASE = interface.SHAREDMEM_ADDRESS + 4*interface.SCHEME_SEQUENCE_OFFSET
+        schemeSequence = interface.SchemeSequenceType()
+        maxIndex = sizeof(schemeSequence.schemeIndices)/sizeof(c_ushort)
+        # Get the current scheme sequence information
+        self.usb.hpiRead(SCHEME_SEQUENCE_BASE,schemeSequence)
+        # Modify the structure using the input arguments
+        if len(schemeIndices) > maxIndex:
+            raise ValueError,"Scheme sequence is too long"
+        schemeSequence.loopFlag = loopFlag
+        schemeSequence.restartFlag = restartFlag
+        # Restart by setting current index to zero, otherwise retain current value
+        if restartFlag: schemeSequence.currentIndex = 0
+        schemeSequence.numberOfIndices = len(schemeIndices)
+        for i,s in enumerate(schemeIndices):
+            schemeSequence.schemeIndices[i] = s
+        i += 1
+        while i < maxIndex:
+            schemeSequence.schemeIndices[i] = 0
+            i += 1
+        self.usb.hpiWrite(SCHEME_SEQUENCE_BASE,schemeSequence)
+    
+    @usbLockProtect
+    def rdSchemeSequence(self):
+        SCHEME_SEQUENCE_BASE = interface.SHAREDMEM_ADDRESS + 4*interface.SCHEME_SEQUENCE_OFFSET
+        schemeSequence = interface.SchemeSequenceType()
+        self.usb.hpiRead(SCHEME_SEQUENCE_BASE,schemeSequence)
+        return {"schemeIndices":schemeSequence.schemeIndices[:schemeSequence.numberOfIndices],
+                "loopFlag":schemeSequence.loopFlag,"currentIndex":schemeSequence.currentIndex}
+                
+    @usbLockProtect
     def wrVirtualLaserParams(self,vLaserNum,vLaserParams):
         # Write virtual laser parameters for vLaserNum (zero-based index)
         VIRTUAL_LASER_PARAMS_BASE = interface.DSP_DATA_ADDRESS + 4*interface.VIRTUAL_LASER_PARAMS_OFFSET
