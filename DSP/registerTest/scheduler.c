@@ -14,7 +14,11 @@
  *  Copyright (c) 2009 Picarro, Inc. All rights reserved
  */
 #include <stdio.h>
+#include <std.h>
 #include <string.h>
+#include <sem.h>
+#include <prd.h>
+#include "registerTestcfg.h"
 
 #include "scheduler.h"
 // The following contains the prototype of the dispatcher for actions
@@ -161,6 +165,18 @@ void clear_scheduler_tables()
     memset(operation_table,0,4*OPERATION_TABLE_SIZE);
     memset(operand_table,0,4*OPERAND_TABLE_SIZE);
     memset(env_table,0,4*ENVIRONMENT_TABLE_SIZE);
+}
+
+// Task function for scheduler
+void scheduler(void)
+{
+    DataType d;
+    while (1)
+    {
+        SEM_pend(&SEM_scheduler,SYS_FOREVER);
+        readRegister(SCHEDULER_CONTROL_REGISTER,&d);
+        if (d.asInt) do_groups(timestamp);
+    }
 }
 
 /* We need to be able to load the group table, operation table and operand

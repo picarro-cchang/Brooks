@@ -134,11 +134,11 @@ class SensorListener(SharedTypes.Singleton):
             waveforms["Wlm"]["reference2"].Add(utime,value)
         elif data.streamNum == interface.STREAM_CavityTemp:
             waveforms["HotBox"]["cavityTemperature"].Add(utime,value)
-        elif data.streamNum == interface.STREAM_HotChamberTecTemp:
+        elif data.streamNum == interface.STREAM_HotBoxTecTemp:
             waveforms["HotBox"]["heatsinkTemperature"].Add(utime,value)
-        elif data.streamNum == interface.STREAM_HotChamberTec:
+        elif data.streamNum == interface.STREAM_HotBoxTec:
             waveforms["HotBox"]["tec"].Add(utime,value)
-        elif data.streamNum == interface.STREAM_HotChamberHeater:
+        elif data.streamNum == interface.STREAM_HotBoxHeater:
             waveforms["HotBox"]["heater"].Add(utime,value)
 
 class LogListener(SharedTypes.Singleton):

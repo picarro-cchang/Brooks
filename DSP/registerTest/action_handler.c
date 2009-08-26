@@ -27,6 +27,7 @@
 #include "pid.h"
 #include "registers.h"
 #include "scheduler.h"
+#include "sentryHandler.h"
 #include "spectrumCntrl.h"
 #include "tempCntrl.h"
 #include "laserCurrentCntrl.h"
@@ -535,5 +536,19 @@ int r_read_laser_current(unsigned int numInt,void *params,void *env)
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
     result = read_laser_current_adc(reg[0]);
     WRITE_REG(reg[1],asFloat,result);
+    return STATUS_OK;
+}
+
+int r_schedulerHeartbeat(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    schedulerAlive++;
+    return STATUS_OK;
+}
+
+int r_sentryInit(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    initSentryChecks();
     return STATUS_OK;
 }

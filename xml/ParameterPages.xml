@@ -34,7 +34,6 @@
             <register>SCHEDULER_CONTROL_REGISTER</register>
             <register>RD_IRQ_COUNT_REGISTER</register>
             <register>ACQ_DONE_COUNT_REGISTER</register>
-            <register>RDSIM_TRIGGER_DIVIDER_REGISTER</register>
             <fpga_register offset="FPGA_KERNEL">FPGA_RESET</fpga_register>
             <fpga_register offset="FPGA_KERNEL">INTRONIX_CLKSEL</fpga_register>
             <fpga_register offset="FPGA_KERNEL">INTRONIX_1</fpga_register>
@@ -310,6 +309,43 @@
             <fpga_register offset="FPGA_LASERLOCKER">LOCK_ERROR</fpga_register>
             <fpga_register offset="FPGA_LASERLOCKER">FINE_CURRENT</fpga_register>
             <fpga_register offset="FPGA_LASERLOCKER">CYCLE_COUNTER</fpga_register>
+        </gui_page>
+        <gui_page>
+            <title>Sentry Parameters</title>
+            <register>SENTRY_LOWER_LIMIT_TRIPPED_REGISTER</register>
+            <register>SENTRY_UPPER_LIMIT_TRIPPED_REGISTER</register>
+            <register>SENTRY_LASER1_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_LASER1_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_LASER2_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_LASER2_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_LASER3_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_LASER3_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_LASER4_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_LASER4_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_ETALON_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_ETALON_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_DAS_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_DAS_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_LASER1_CURRENT_MIN_REGISTER</register>
+            <register>SENTRY_LASER1_CURRENT_MAX_REGISTER</register>
+            <register>SENTRY_LASER2_CURRENT_MIN_REGISTER</register>
+            <register>SENTRY_LASER2_CURRENT_MAX_REGISTER</register>
+            <register>SENTRY_LASER3_CURRENT_MIN_REGISTER</register>
+            <register>SENTRY_LASER3_CURRENT_MAX_REGISTER</register>
+            <register>SENTRY_LASER4_CURRENT_MIN_REGISTER</register>
+            <register>SENTRY_LASER4_CURRENT_MAX_REGISTER</register>
+            <register>SENTRY_CAVITY_PRESSURE_MIN_REGISTER</register>
+            <register>SENTRY_CAVITY_PRESSURE_MAX_REGISTER</register>
+            <register>SENTRY_AMBIENT_PRESSURE_MIN_REGISTER</register>
+            <register>SENTRY_AMBIENT_PRESSURE_MAX_REGISTER</register>
         </gui_page>
     </gui_pages>
 </Controller_gui>

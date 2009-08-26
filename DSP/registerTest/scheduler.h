@@ -85,4 +85,7 @@ void dispatch_group(unsigned short operation_address);
 // Clear all scheduler tables
 void clear_scheduler_tables(void);
 
+// Scheduler task
+void scheduler(void);
+
 #endif

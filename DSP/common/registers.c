@@ -14,11 +14,6 @@
  *  Copyright (c) 2008 Picarro, Inc. All rights reserved
  */
 
-#ifdef SIMULATION
-// Include files for simulation mode
-#include "registerTestSim.h"
-#include <stdio.h>
-#else
 #include <std.h>
 #include <csl.h>
 #include <csl_cache.h>
@@ -29,7 +24,6 @@
 #include <prd.h>
 #include <sem.h>
 #include "registerTestcfg.h"
-#endif
 
 #define EXT_MEM 0
 
@@ -134,14 +128,6 @@ int writeRegister(unsigned int regNum,DataType data)
 
 // DSP writes back a block of registers to the cache, so that the data can subsequently be read
 //  by the host
-
-#ifdef SIMULATION
-#if EXT_MEM
-#else
-#pragma argsused
-#endif
-#endif
-
 int writebackRegisters(unsigned int regNums[],unsigned int n)
 {
     int status = STATUS_OK;
@@ -171,9 +157,6 @@ void *registerAddr(unsigned int regNum)
     return (void*)(REG_BASE+4*regNum);
 }
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
 void hwiHpiInterrupt(unsigned int funcArg, unsigned int eventId)
 {
     // Responds to the DSPINT interrupt, which is a signal that the host wants

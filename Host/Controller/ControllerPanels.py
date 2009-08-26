@@ -288,13 +288,13 @@ class LaserPanel(LaserPanelGui):
             grid=True,backgroundColour=wx.SystemSettings_GetColour(
                 wx.SYS_COLOUR_3DFACE))
         self.tecGraph.SetGraphProperties(
-            ylabel='TEC Current',grid=True,
+            ylabel='TEC PWM (digU)',grid=True,
             timeAxes=(True,False),
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(
                 wx.SYS_COLOUR_3DFACE))
         self.currentGraph.SetGraphProperties(
-            ylabel='Laser Current',grid=True,
+            ylabel='Laser Current (mA)',grid=True,
             timeAxes=(True,False),
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(

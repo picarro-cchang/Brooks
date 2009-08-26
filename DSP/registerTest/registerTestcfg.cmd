@@ -72,8 +72,9 @@ _IRAM = IRAM;
 _DSP_DATA = DSP_DATA;
 _IINT = IINT;
 _PRD_clock = PRD_clock;
-_PRD_timestamp = PRD_timestamp;
 _PRD_scheduler = PRD_scheduler;
+_PRD_sentryHandler = PRD_sentryHandler;
+_PRD_timeStamp = PRD_timeStamp;
 _RTA_fromHost = RTA_fromHost;
 _RTA_toHost = RTA_toHost;
 _HWI_RESET = HWI_RESET;
@@ -99,6 +100,7 @@ _TSK_scheduler = TSK_scheduler;
 _TSK_rdFitting = TSK_rdFitting;
 _TSK_rdDataMoving = TSK_rdDataMoving;
 _TSK_spectCntrl = TSK_spectCntrl;
+_TSK_sentryHandler = TSK_sentryHandler;
 _IDL_cpuLoad = IDL_cpuLoad;
 _LNK_dataPump = LNK_dataPump;
 _RTA_dispatcher = RTA_dispatcher;
@@ -111,6 +113,7 @@ _SEM_rdBuffer0Available = SEM_rdBuffer0Available;
 _SEM_rdBuffer1Available = SEM_rdBuffer1Available;
 _SEM_startRdCycle = SEM_startRdCycle;
 _SEM_waitForRdMan = SEM_waitForRdMan;
+_SEM_sentryHandler = SEM_sentryHandler;
 _IDL_busyObj = IDL_busyObj;
 
 /* MODULE GBL */
@@ -271,6 +274,10 @@ SECTIONS {
 
         .TSK_spectCntrl$stk: {
             *(.TSK_spectCntrl$stk)
+        } > IRAM
+
+        .TSK_sentryHandler$stk: {
+            *(.TSK_sentryHandler$stk)
         } > IRAM
 
         /* LOG_system buffer */

@@ -25,8 +25,6 @@ void initRegisters()
     writeRegister(VERIFY_INIT_REGISTER,d);
     d.asUint = 0;
     writeRegister(SCHEDULER_CONTROL_REGISTER,d);
-    d.asUint = 10;
-    writeRegister(RDSIM_TRIGGER_DIVIDER_REGISTER,d);
     d.asUint = 0;
     writeRegister(RD_IRQ_COUNT_REGISTER,d);
     d.asUint = 0;
@@ -41,6 +39,10 @@ void initRegisters()
     writeRegister(CONVERSION_LASER1_THERM_CONSTB_REGISTER,d);
     d.asFloat = 8.72979981636e-008;
     writeRegister(CONVERSION_LASER1_THERM_CONSTC_REGISTER,d);
+    d.asFloat = 7.62939e-3;
+    writeRegister(CONVERSION_LASER1_CURRENT_SLOPE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(CONVERSION_LASER1_CURRENT_OFFSET_REGISTER,d);
     d.asFloat = 32768.0;
     writeRegister(LASER1_MANUAL_TEC_REGISTER,d);
     d.asUint = TEMP_CNTRL_DisabledState;
@@ -109,6 +111,10 @@ void initRegisters()
     writeRegister(CONVERSION_LASER2_THERM_CONSTB_REGISTER,d);
     d.asFloat = 8.72979981636e-008;
     writeRegister(CONVERSION_LASER2_THERM_CONSTC_REGISTER,d);
+    d.asFloat = 7.62939e-3;
+    writeRegister(CONVERSION_LASER2_CURRENT_SLOPE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(CONVERSION_LASER2_CURRENT_OFFSET_REGISTER,d);
     d.asFloat = 32768.0;
     writeRegister(LASER2_MANUAL_TEC_REGISTER,d);
     d.asUint = TEMP_CNTRL_DisabledState;
@@ -177,6 +183,10 @@ void initRegisters()
     writeRegister(CONVERSION_LASER3_THERM_CONSTB_REGISTER,d);
     d.asFloat = 8.72979981636e-008;
     writeRegister(CONVERSION_LASER3_THERM_CONSTC_REGISTER,d);
+    d.asFloat = 7.62939e-3;
+    writeRegister(CONVERSION_LASER3_CURRENT_SLOPE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(CONVERSION_LASER3_CURRENT_OFFSET_REGISTER,d);
     d.asFloat = 32768.0;
     writeRegister(LASER3_MANUAL_TEC_REGISTER,d);
     d.asUint = TEMP_CNTRL_DisabledState;
@@ -245,6 +255,10 @@ void initRegisters()
     writeRegister(CONVERSION_LASER4_THERM_CONSTB_REGISTER,d);
     d.asFloat = 8.72979981636e-008;
     writeRegister(CONVERSION_LASER4_THERM_CONSTC_REGISTER,d);
+    d.asFloat = 7.62939e-3;
+    writeRegister(CONVERSION_LASER4_CURRENT_SLOPE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(CONVERSION_LASER4_CURRENT_OFFSET_REGISTER,d);
     d.asFloat = 32768.0;
     writeRegister(LASER4_MANUAL_TEC_REGISTER,d);
     d.asUint = TEMP_CNTRL_DisabledState;
@@ -313,6 +327,18 @@ void initRegisters()
     writeRegister(CONVERSION_ETALON_THERM_CONSTB_REGISTER,d);
     d.asFloat = 8.72979981636e-008;
     writeRegister(CONVERSION_ETALON_THERM_CONSTC_REGISTER,d);
+    d.asFloat = 0.00112789997365;
+    writeRegister(CONVERSION_WARM_BOX_THERM_CONSTA_REGISTER,d);
+    d.asFloat = 0.000234289997024;
+    writeRegister(CONVERSION_WARM_BOX_THERM_CONSTB_REGISTER,d);
+    d.asFloat = 8.72979981636e-008;
+    writeRegister(CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER,d);
+    d.asFloat = 0.00112789997365;
+    writeRegister(CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER,d);
+    d.asFloat = 0.000234289997024;
+    writeRegister(CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTB_REGISTER,d);
+    d.asFloat = 8.72979981636e-008;
+    writeRegister(CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTC_REGISTER,d);
     d.asFloat = 0.000847030023579;
     writeRegister(CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000205610005651;
@@ -453,6 +479,74 @@ void initRegisters()
     writeRegister(SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER,d);
     d.asUint = VIRTUAL_LASER_3;
     writeRegister(VIRTUAL_LASER_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(SENTRY_UPPER_LIMIT_TRIPPED_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(SENTRY_LOWER_LIMIT_TRIPPED_REGISTER,d);
+    d.asFloat = 3.0;
+    writeRegister(SENTRY_LASER1_TEMPERATURE_MIN_REGISTER,d);
+    d.asFloat = 52.0;
+    writeRegister(SENTRY_LASER1_TEMPERATURE_MAX_REGISTER,d);
+    d.asFloat = 3.0;
+    writeRegister(SENTRY_LASER2_TEMPERATURE_MIN_REGISTER,d);
+    d.asFloat = 52.0;
+    writeRegister(SENTRY_LASER2_TEMPERATURE_MAX_REGISTER,d);
+    d.asFloat = 3.0;
+    writeRegister(SENTRY_LASER3_TEMPERATURE_MIN_REGISTER,d);
+    d.asFloat = 52.0;
+    writeRegister(SENTRY_LASER3_TEMPERATURE_MAX_REGISTER,d);
+    d.asFloat = 3.0;
+    writeRegister(SENTRY_LASER4_TEMPERATURE_MIN_REGISTER,d);
+    d.asFloat = 52.0;
+    writeRegister(SENTRY_LASER4_TEMPERATURE_MAX_REGISTER,d);
+    d.asFloat = 3.0;
+    writeRegister(SENTRY_ETALON_TEMPERATURE_MIN_REGISTER,d);
+    d.asFloat = 52.0;
+    writeRegister(SENTRY_ETALON_TEMPERATURE_MAX_REGISTER,d);
+    d.asFloat = 3.0;
+    writeRegister(SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER,d);
+    d.asFloat = 52.0;
+    writeRegister(SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER,d);
+    d.asFloat = 3.0;
+    writeRegister(SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER,d);
+    d.asFloat = 80.0;
+    writeRegister(SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER,d);
+    d.asFloat = 3.0;
+    writeRegister(SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER,d);
+    d.asFloat = 85.0;
+    writeRegister(SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER,d);
+    d.asFloat = 3.0;
+    writeRegister(SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER,d);
+    d.asFloat = 95.0;
+    writeRegister(SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER,d);
+    d.asFloat = 5.0;
+    writeRegister(SENTRY_DAS_TEMPERATURE_MIN_REGISTER,d);
+    d.asFloat = 55.0;
+    writeRegister(SENTRY_DAS_TEMPERATURE_MAX_REGISTER,d);
+    d.asFloat = -5.0;
+    writeRegister(SENTRY_LASER1_CURRENT_MIN_REGISTER,d);
+    d.asFloat = 180.0;
+    writeRegister(SENTRY_LASER1_CURRENT_MAX_REGISTER,d);
+    d.asFloat = -5.0;
+    writeRegister(SENTRY_LASER2_CURRENT_MIN_REGISTER,d);
+    d.asFloat = 180.0;
+    writeRegister(SENTRY_LASER2_CURRENT_MAX_REGISTER,d);
+    d.asFloat = -5.0;
+    writeRegister(SENTRY_LASER3_CURRENT_MIN_REGISTER,d);
+    d.asFloat = 180.0;
+    writeRegister(SENTRY_LASER3_CURRENT_MAX_REGISTER,d);
+    d.asFloat = -5.0;
+    writeRegister(SENTRY_LASER4_CURRENT_MIN_REGISTER,d);
+    d.asFloat = 180.0;
+    writeRegister(SENTRY_LASER4_CURRENT_MAX_REGISTER,d);
+    d.asFloat = -5.0;
+    writeRegister(SENTRY_CAVITY_PRESSURE_MIN_REGISTER,d);
+    d.asFloat = 900.0;
+    writeRegister(SENTRY_CAVITY_PRESSURE_MAX_REGISTER,d);
+    d.asFloat = 200.0;
+    writeRegister(SENTRY_AMBIENT_PRESSURE_MIN_REGISTER,d);
+    d.asFloat = 900.0;
+    writeRegister(SENTRY_AMBIENT_PRESSURE_MAX_REGISTER,d);
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
@@ -538,6 +632,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_wbInvCache(numInt,params,env);
         case ACTION_WB_CACHE:
             return r_wbCache(numInt,params,env);
+        case ACTION_SCHEDULER_HEARTBEAT:
+            return r_schedulerHeartbeat(numInt,params,env);
+        case ACTION_SENTRY_INIT:
+            return r_sentryInit(numInt,params,env);
         case ACTION_PULSE_GENERATOR:
             return r_pulseGenerator(numInt,params,env);
         case ACTION_FILTER:

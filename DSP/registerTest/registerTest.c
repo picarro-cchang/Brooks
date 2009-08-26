@@ -24,30 +24,10 @@
 #include "spectrumCntrl.h"
 
 extern far LOG_Obj trace;
-#ifdef SIMULATION
-void scheduler(void)
-{
-    DataType d;
-    timestamp = timestamp + 100LL;
-    readRegister(SCHEDULER_CONTROL_REGISTER,&d);
-    if (d.asInt) do_groups(timestamp);
-}
 
-#else
 void schedulerPrdFunc(void)
 {
     SEM_post(&SEM_scheduler);
-}
-
-void scheduler(void)
-{
-    DataType d;
-    while (1)
-    {
-        SEM_pend(&SEM_scheduler,SYS_FOREVER);
-        readRegister(SCHEDULER_CONTROL_REGISTER,&d);
-        if (d.asInt) do_groups(timestamp);
-    }
 }
 
 void timestampPrdFunc(void)
@@ -55,20 +35,12 @@ void timestampPrdFunc(void)
     //DataType d;
     timestamp = timestamp + 1LL;
     SEM_postBinary(&SEM_waitForRdMan);
-
-    /*
-    readRegister(RDSIM_TRIGGER_DIVIDER_REGISTER,&d);
-    if (0 == d.asInt) d.asInt = 1;
-    if (0 == timestamp % d.asInt) 
-        changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_START_RD_B,
-                        RDMAN_CONTROL_START_RD_W,1);
-    */
 }
-#endif
 
-#ifdef SIMULATION
-#pragma argsused
-#endif
+void sentryHandlerPrdFunc(void)
+{
+    SEM_post(&SEM_sentryHandler);
+}
 
 main(int argc, char *argv[])
 {

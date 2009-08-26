@@ -55,6 +55,8 @@ int r_spectCntrlStep(unsigned int numInt,void *params,void *env);
 int r_envChecker(unsigned int numInt,void *params,void *env);
 int r_wbInvCache(unsigned int numInt,void *params,void *env);
 int r_wbCache(unsigned int numInt,void *params,void *env);
+int r_schedulerHeartbeat(unsigned int numInt,void *params,void *env);
+int r_sentryInit(unsigned int numInt,void *params,void *env);
 int r_pulseGenerator(unsigned int numInt,void *params,void *env);
 int r_filter(unsigned int numInt,void *params,void *env);
 int r_ds1631_readTemp(unsigned int numInt,void *params,void *env);

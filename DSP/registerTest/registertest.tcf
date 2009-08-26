@@ -106,6 +106,26 @@ bios.TSK.instance("TSK_spectCntrl").comment = "Spectrum controller";
 bios.TSK.instance("TSK_spectCntrl").fxn = prog.extern("spectCntrl");
 bios.SEM.instance("SEM_startRdCycle").count = 0;
 bios.GBL.SPECIFYRTSLIB = 0;
+bios.PRD.create("PRD_sentryHandler");
+bios.PRD.instance("PRD_sentryHandler").order = 4;
+bios.PRD.instance("PRD_scheduler").order = 1;
+bios.PRD.instance("PRD_sentryHandler").order = 2;
+bios.PRD.instance("PRD_timestamp").destroy();
+bios.PRD.create("PRD_timeStamp");
+bios.PRD.instance("PRD_timeStamp").order = 4;
+bios.PRD.instance("PRD_timeStamp").fxn = prog.extern("timestampPrdFunc");
+bios.PRD.instance("PRD_timeStamp").period = 1;
+bios.PRD.instance("PRD_timeStamp").comment = "Update timestamp and check for ringdown readiness";
+bios.PRD.instance("PRD_sentryHandler").comment = "Sentry handler";
+bios.PRD.instance("PRD_sentryHandler").period = 1000;
+bios.PRD.instance("PRD_sentryHandler").fxn = prog.extern("sentryHandlerPrdFunc");
+bios.SEM.create("SEM_sentryHandler");
+bios.SEM.instance("SEM_sentryHandler").comment = "Posted every second for checking system health";
+bios.TSK.create("TSK_sentryHandler");
+bios.TSK.instance("TSK_sentryHandler").order = 7;
+bios.TSK.instance("TSK_sentryHandler").comment = "Checks for system health";
+bios.TSK.instance("TSK_sentryHandler").priority = 2;
+bios.TSK.instance("TSK_sentryHandler").fxn = prog.extern("sentryHandler");
 // !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
 
 prog.gen();

@@ -937,10 +937,12 @@ class StateDatabase(Singleton):
                              (level,maxIdx[level]-maxRows))
             con.commit()
 
-    def getHistory(self,level,streamNum):
+    def getHistory(self,streamNum):
         con = self.getCon(thread.get_ident())
         values = con.execute(
-            "select time,value,minVal,maxVal from history" +
-            " where level=? and streamNum=?",
-            (level,streamNum)).fetchall()
+            "select time,value,level,minVal,maxVal from history" +
+            " where streamNum=?",
+            (streamNum,)).fetchall()
         return values
+
+    

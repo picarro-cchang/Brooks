@@ -82,9 +82,9 @@
             <field type="uint32" ident="refPd2Current"/>
             <field type="uint32" ident="etalonTemp"/>
             <field type="uint32" ident="cavityTemp"/>
-            <field type="uint32" ident="warmChamberTemp"/>
-            <field type="uint32" ident="hotChamberTecHeatsinkTemp"/>
-            <field type="uint32" ident="warmChamberTecHeatsinkTemp"/>
+            <field type="uint32" ident="warmBoxTemp"/>
+            <field type="uint32" ident="hotBoxTecHeatsinkTemp"/>
+            <field type="uint32" ident="warmBoxTecHeatsinkTemp"/>
             <field type="uint32" ident="laser1Temp"/>
             <field type="uint32" ident="laser2Temp"/>
             <field type="uint32" ident="laserCurrent"/>
@@ -306,10 +306,10 @@
             <enum_value ident="STREAM_Laser3Temp" />
             <enum_value ident="STREAM_Laser4Temp" />
             <enum_value ident="STREAM_EtalonTemp" />
-            <enum_value ident="STREAM_WarmChamberTemp" />
-            <enum_value ident="STREAM_WarmChamberTecTemp" />
+            <enum_value ident="STREAM_WarmBoxTemp" />
+            <enum_value ident="STREAM_WarmBoxTecTemp" />
             <enum_value ident="STREAM_CavityTemp" />
-            <enum_value ident="STREAM_HotChamberTecTemp" />
+            <enum_value ident="STREAM_HotBoxTecTemp" />
             <enum_value ident="STREAM_DasTemp" />
             <enum_value ident="STREAM_Etalon1" />
             <enum_value ident="STREAM_Reference1" />
@@ -327,9 +327,9 @@
             <enum_value ident="STREAM_Laser2Tec" />
             <enum_value ident="STREAM_Laser3Tec" />
             <enum_value ident="STREAM_Laser4Tec" />
-            <enum_value ident="STREAM_WarmChamberTec" />
-            <enum_value ident="STREAM_HotChamberTec" />
-            <enum_value ident="STREAM_HotChamberHeater" />
+            <enum_value ident="STREAM_WarmBoxTec" />
+            <enum_value ident="STREAM_HotBoxTec" />
+            <enum_value ident="STREAM_HotBoxHeater" />
             <enum_value ident="STREAM_InletValve" />
             <enum_value ident="STREAM_OutletValve" />
             <enum_value ident="STREAM_ValveMask" />
@@ -410,6 +410,24 @@
         <bits ident="SUBSCHEME_ID_BITMASK">
             <mask  ident="SUBSCHEME_ID_IncrMask">0x8000</mask>
         </bits>
+        <bits ident="SENTRY_BITMASK">
+            <mask  ident="SENTRY_Laser1TemperatureMask">0x0001</mask>
+            <mask  ident="SENTRY_Laser2TemperatureMask">0x0002</mask>
+            <mask  ident="SENTRY_Laser3TemperatureMask">0x0004</mask>
+            <mask  ident="SENTRY_Laser4TemperatureMask">0x0008</mask>
+            <mask  ident="SENTRY_EtalonTemperatureMask">0x0010</mask>
+            <mask  ident="SENTRY_WarmBoxTemperatureMask">0x0020</mask>
+            <mask  ident="SENTRY_WarmBoxHeatsinkTemperatureMask">0x0040</mask>
+            <mask  ident="SENTRY_CavityTemperatureMask">0x0080</mask>
+            <mask  ident="SENTRY_HotBoxHeatsinkTemperatureMask">0x0100</mask>
+            <mask  ident="SENTRY_DasTemperatureMask">0x0200</mask>
+            <mask  ident="SENTRY_Laser1CurrentMask">0x0400</mask>
+            <mask  ident="SENTRY_Laser2CurrentMask">0x0800</mask>
+            <mask  ident="SENTRY_Laser3CurrentMask">0x1000</mask>
+            <mask  ident="SENTRY_Laser4CurrentMask">0x2000</mask>
+            <mask  ident="SENTRY_CavityPressureMask">0x4000</mask>
+            <mask  ident="SENTRY_AmbientPressureMask">0x8000</mask>
+        </bits>
     </bits_list>
     <register_list>
         <register ident="NOOP_REGISTER" type="uint32" minver="1.0" access="rw">
@@ -430,16 +448,11 @@
         <register ident="TIMESTAMP_MSB_REGISTER" type="uint32" minver="1.0" access="r">
             <description>MSB of timestamp register</description>
         </register>
-        <register ident="SCHEDULER_CONTROL_REGISTER" type="uint32" minver="1.0" access="r">
+        <register ident="SCHEDULER_CONTROL_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Scheduler control register</description>
             <initial>0</initial>
             <display format="%d" units="">Scheduler enable</display>
         </register>
-        <register ident="RDSIM_TRIGGER_DIVIDER_REGISTER" type="uint32" minver="1.0" access="rw">
-            <description>Time between simulated ringdowns</description>
-            <initial>10</initial>
-            <display format="%d" units="ms">Time between simulated ringdowns</display>
-        </register>		
         <register ident="RD_IRQ_COUNT_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Number of ringdown interrupts</description>
             <initial>0</initial>
@@ -471,6 +484,16 @@
         <register ident="CONVERSION_LASER1_THERM_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser1 thermistor constant C</description>
             <initial>8.72979981636e-008</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER1_CURRENT_SLOPE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 current slope constant</description>
+            <initial>7.62939e-3</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER1_CURRENT_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 current offset constant</description>
+            <initial>0.0</initial>
             <save/>
         </register>
         <register ident="LASER1_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
@@ -681,6 +704,16 @@
             <initial>8.72979981636e-008</initial>
             <save/>
         </register>
+        <register ident="CONVERSION_LASER2_CURRENT_SLOPE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 current slope constant</description>
+            <initial>7.62939e-3</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER2_CURRENT_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 current offset constant</description>
+            <initial>0.0</initial>
+            <save/>
+        </register>
         <register ident="LASER2_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser2 thermistor resistance</description>
         </register>
@@ -889,6 +922,16 @@
             <initial>8.72979981636e-008</initial>
             <save/>
         </register>
+        <register ident="CONVERSION_LASER3_CURRENT_SLOPE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 current slope constant</description>
+            <initial>7.62939e-3</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER3_CURRENT_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 current offset constant</description>
+            <initial>0.0</initial>
+            <save/>
+        </register>
         <register ident="LASER3_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser3 thermistor resistance</description>
         </register>
@@ -1095,6 +1138,16 @@
         <register ident="CONVERSION_LASER4_THERM_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser4 thermistor constant C</description>
             <initial>8.72979981636e-008</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER4_CURRENT_SLOPE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 current slope constant</description>
+            <initial>7.62939e-3</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_LASER4_CURRENT_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 current offset constant</description>
+            <initial>0.0</initial>
             <save/>
         </register>
         <register ident="LASER4_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
@@ -1313,6 +1366,54 @@
         </register>
         <register ident="ETALON_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Etalon thermistor ADC</description>
+        </register>
+        <register ident="CONVERSION_WARM_BOX_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box thermistor constant A</description>
+            <initial>0.00112789997365</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_WARM_BOX_THERM_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box thermistor constant B</description>
+            <initial>0.000234289997024</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box thermistor constant C</description>
+            <initial>8.72979981636e-008</initial>
+            <save/>
+        </register>
+        <register ident="WARM_BOX_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Warm box thermistor resistance</description>
+        </register>
+        <register ident="WARM_BOX_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Warm box temperature</description>
+        </register>
+        <register ident="WARM_BOX_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Warm box thermistor ADC</description>
+        </register>
+        <register ident="CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box heatsink thermistor constant A</description>
+            <initial>0.00112789997365</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box heatsink thermistor constant B</description>
+            <initial>0.000234289997024</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box heatsink thermistor constant C</description>
+            <initial>8.72979981636e-008</initial>
+            <save/>
+        </register>
+        <register ident="WARM_BOX_HEATSINK_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Warm box heatsink thermistor resistance</description>
+        </register>
+        <register ident="WARM_BOX_HEATSINK_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Warm box heatsink temperature</description>
+        </register>
+        <register ident="WARM_BOX_HEATSINK_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Warm box heatsink thermistor ADC</description>
         </register>
         <register ident="CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Hot box heatsink thermistor constant A</description>
@@ -1745,6 +1846,176 @@
             <description>Virtual laser</description>
             <initial>VIRTUAL_LASER_3</initial>
             <display>Virtual laser</display>
+        </register>
+        <register ident="SENTRY_UPPER_LIMIT_TRIPPED_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Bitmask of sentries which have exceeded upper limit</description>
+            <initial>0</initial>
+            <display format="$%X">Upper limit sentries tripped</display>
+        </register>
+        <register ident="SENTRY_LOWER_LIMIT_TRIPPED_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Bitmask of sentries which have exceeded lower limit</description>
+            <initial>0</initial>
+            <display format="$%X">Lower limit sentries tripped</display>
+        </register>
+        <register ident="SENTRY_LASER1_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 1 minimum temperature sentry</description>
+            <initial>3.0</initial>
+            <display format="%.1f" units="degC">Laser 1 minimum temperature</display>
+        </register>
+        <register ident="SENTRY_LASER1_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 1 maximum temperature sentry</description>
+            <initial>52.0</initial>
+            <display format="%.1f" units="degC">Laser 1 maximum temperature</display>
+        </register>
+        <register ident="SENTRY_LASER2_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 2 minimum temperature sentry</description>
+            <initial>3.0</initial>
+            <display format="%.1f" units="degC">Laser 2 minimum temperature</display>
+        </register>
+        <register ident="SENTRY_LASER2_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 2 maximum temperature sentry</description>
+            <initial>52.0</initial>
+            <display format="%.1f" units="degC">Laser 2 maximum temperature</display>
+        </register>
+        <register ident="SENTRY_LASER3_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 3 minimum temperature sentry</description>
+            <initial>3.0</initial>
+            <display format="%.1f" units="degC">Laser 3 minimum temperature</display>
+        </register>
+        <register ident="SENTRY_LASER3_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 3 maximum temperature sentry</description>
+            <initial>52.0</initial>
+            <display format="%.1f" units="degC">Laser 3 maximum temperature</display>
+        </register>
+        <register ident="SENTRY_LASER4_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 4 minimum temperature sentry</description>
+            <initial>3.0</initial>
+            <display format="%.1f" units="degC">Laser 4 minimum temperature</display>
+        </register>
+        <register ident="SENTRY_LASER4_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 4 maximum temperature sentry</description>
+            <initial>52.0</initial>
+            <display format="%.1f" units="degC">Laser 4 maximum temperature</display>
+        </register>
+        <register ident="SENTRY_ETALON_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Etalon minimum temperature sentry</description>
+            <initial>3.0</initial>
+            <display format="%.1f" units="degC">Etalon minimum temperature</display>
+        </register>
+        <register ident="SENTRY_ETALON_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Etalon maximum temperature sentry</description>
+            <initial>52.0</initial>
+            <display format="%.1f" units="degC">Etalon maximum temperature</display>
+        </register>
+        <register ident="SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box minimum temperature sentry</description>
+            <initial>3.0</initial>
+            <display format="%.1f" units="degC">Warm box minimum temperature</display>
+        </register>
+        <register ident="SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box maximum temperature sentry</description>
+            <initial>52.0</initial>
+            <display format="%.1f" units="degC">Warm box maximum temperature</display>
+        </register>
+        <register ident="SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box heatsink minimum temperature sentry</description>
+            <initial>3.0</initial>
+            <display format="%.1f" units="degC">Warm box heatsink minimum temperature</display>
+        </register>
+        <register ident="SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box heatsink maximum temperature sentry</description>
+            <initial>80.0</initial>
+            <display format="%.1f" units="degC">Warm box heatsink maximum temperature</display>
+        </register>
+        <register ident="SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity minimum temperature sentry</description>
+            <initial>3.0</initial>
+            <display format="%.1f" units="degC">Cavity minimum temperature</display>
+        </register>
+        <register ident="SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity maximum temperature sentry</description>
+            <initial>85.0</initial>
+            <display format="%.1f" units="degC">Cavity maximum temperature</display>
+        </register>
+        <register ident="SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Hot box heatsink minimum temperature sentry</description>
+            <initial>3.0</initial>
+            <display format="%.1f" units="degC">Hot box heatsink minimum temperature</display>
+        </register>
+        <register ident="SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Hot box heatsink maximum temperature sentry</description>
+            <initial>95.0</initial>
+            <display format="%.1f" units="degC">Hot box heatsink maximum temperature</display>
+        </register>
+        <register ident="SENTRY_DAS_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>DAS minimum temperature sentry</description>
+            <initial>5.0</initial>
+            <display format="%.1f" units="degC">DAS minimum temperature</display>
+        </register>
+        <register ident="SENTRY_DAS_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>DAS maximum temperature sentry</description>
+            <initial>55.0</initial>
+            <display format="%.1f" units="degC">DAS maximum temperature</display>
+        </register>
+        <register ident="SENTRY_LASER1_CURRENT_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 1 minimum current sentry</description>
+            <initial>-5.0</initial>
+            <display format="%.1f" units="mA">Laser 1 minimum current</display>
+        </register>
+        <register ident="SENTRY_LASER1_CURRENT_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 1 maximum current sentry</description>
+            <initial>180.0</initial>
+            <display format="%.1f" units="mA">Laser 1 maximum current</display>
+        </register>
+        <register ident="SENTRY_LASER2_CURRENT_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 2 minimum current sentry</description>
+            <initial>-5.0</initial>
+            <display format="%.1f" units="mA">Laser 2 minimum current</display>
+        </register>
+        <register ident="SENTRY_LASER2_CURRENT_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 2 maximum current sentry</description>
+            <initial>180.0</initial>
+            <display format="%.1f" units="mA">Laser 2 maximum current</display>
+        </register>
+        <register ident="SENTRY_LASER3_CURRENT_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 3 minimum current sentry</description>
+            <initial>-5.0</initial>
+            <display format="%.1f" units="mA">Laser 3 minimum current</display>
+        </register>
+        <register ident="SENTRY_LASER3_CURRENT_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 3 maximum current sentry</description>
+            <initial>180.0</initial>
+            <display format="%.1f" units="mA">Laser 3 maximum current</display>
+        </register>
+        <register ident="SENTRY_LASER4_CURRENT_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 4 minimum current sentry</description>
+            <initial>-5.0</initial>
+            <display format="%.1f" units="mA">Laser 4 minimum current</display>
+        </register>
+        <register ident="SENTRY_LASER4_CURRENT_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser 4 maximum current sentry</description>
+            <initial>180.0</initial>
+            <display format="%.1f" units="mA">Laser 4 maximum current</display>
+        </register>
+        <register ident="SENTRY_CAVITY_PRESSURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity minimum pressure sentry</description>
+            <initial>-5.0</initial>
+            <display format="%.1f" units="torr">Cavity minimum pressure</display>
+        </register>
+        <register ident="SENTRY_CAVITY_PRESSURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity maximum pressure sentry</description>
+            <initial>900.0</initial>
+            <display format="%.1f" units="torr">Cavity maximum pressure</display>
+        </register>
+        <register ident="SENTRY_AMBIENT_PRESSURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Ambient minimum pressure sentry</description>
+            <initial>200.0</initial>
+            <display format="%.1f" units="torr">Ambient minimum pressure</display>
+        </register>
+        <register ident="SENTRY_AMBIENT_PRESSURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Ambient maximum pressure sentry</description>
+            <initial>900.0</initial>
+            <display format="%.1f" units="torr">Ambient maximum pressure</display>
         </register>
     </register_list>
     <fpga_block_list>
@@ -2430,6 +2701,8 @@
         <action ident="ACTION_ENV_CHECKER">r_envChecker</action>
         <action ident="ACTION_WB_INV_CACHE">r_wbInvCache</action>
         <action ident="ACTION_WB_CACHE">r_wbCache</action>
+        <action ident="ACTION_SCHEDULER_HEARTBEAT">r_schedulerHeartbeat</action>
+        <action ident="ACTION_SENTRY_INIT">r_sentryInit</action>
         <!-- Pulse generator:
         Inputs:
             Register (int):   Duration of low level

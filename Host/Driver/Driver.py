@@ -31,7 +31,7 @@ from Host.autogen import interface
 from Host.Common import SharedTypes, version
 from Host.Common import CmdFIFO, StringPickler, timestamp
 from Host.Common.Broadcaster import Broadcaster
-from Host.Common.hostDasInterface import DasInterface, HostToDspSender
+from Host.Common.hostDasInterface import DasInterface, HostToDspSender, StateDatabase
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.ctypesConvert import ctypesToDict
@@ -226,6 +226,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
         name = config.writeConfig(filename)
         Log("Saved instrument configuration to file %s" % (name,),Level=1)
 
+    def getHistory(self,streamNum):
+        """Get historical data associated with streamNum from the database"""
+        return StateDatabase().getHistory(streamNum)
 
 class StreamTableType(tables.IsDescription):
     time = tables.Int64Col()

@@ -62,6 +62,9 @@ class DasConfigure(object):
                     priority=schedulerPriorities[opType],
                     period=schedulerPeriods[rate])
 
+        # Start heartbeat to let sentry handler know that the scheduler is alive
+        self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SCHEDULER_HEARTBEAT"))
+
         for laserNum in range(1,5):
             if int(self.instrConfig["Configuration"].get("LASER%d_PRESENT" % laserNum,0)):
                 # Temperature reading
@@ -94,10 +97,11 @@ class DasConfigure(object):
                     Operation("ACTION_STREAM_REGISTER",
                         ["STREAM_Laser%dCurrent" % laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
                 
-        # Read the DAS temperature into LASER4_TEMPERATURE_REGISTER
-        self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
-            Operation("ACTION_DS1631_READTEMP",
-                ["LASER4_TEMPERATURE_REGISTER"]))
+        # Read the DAS temperature into DAS_TEMPERATURE_REGISTER and stream it
+        self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(Operation("ACTION_DS1631_READTEMP",
+                                                                       ["DAS_TEMPERATURE_REGISTER"]))
+        self.opGroups["FAST"]["STREAMER"].addOperation(Operation("ACTION_STREAM_REGISTER",
+                                                                 ["STREAM_DasTemp","DAS_TEMPERATURE_REGISTER"]))
 
         self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
             Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
@@ -137,15 +141,15 @@ class DasConfigure(object):
 
         self.opGroups["SLOW"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_REGISTER",
-                ["STREAM_HotChamberTecTemp","HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
+                ["STREAM_HotBoxTecTemp","HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
 
         self.opGroups["SLOW"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_REGISTER",
-                ["STREAM_HotChamberTec","CAVITY_TEC_REGISTER"]))
+                ["STREAM_HotBoxTec","CAVITY_TEC_REGISTER"]))
 
         self.opGroups["SLOW"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_REGISTER",
-                ["STREAM_HotChamberHeater","HEATER_CNTRL_MARK_REGISTER"]))
+                ["STREAM_HotBoxHeater","HEATER_CNTRL_MARK_REGISTER"]))
 
         # Stop the scheduler before loading new schedule
         sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",0);
@@ -157,6 +161,7 @@ class DasConfigure(object):
         # Perform one-time initializations
 
         sender.doOperation(Operation("ACTION_INIT_RUNQUEUE",[len(groups)]))
+        sender.doOperation(Operation("ACTION_SENTRY_INIT"))
 
         runCont = (1<<interface.PWM_CS_RUN_B) | (1<<interface.PWM_CS_CONT_B)
         for laserNum in range(1,5):
@@ -164,6 +169,7 @@ class DasConfigure(object):
                 sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER%d_INIT" % laserNum))
                 sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER%d_INIT" % laserNum))
                 sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_LASER%d" % laserNum,"PWM_PULSE_WIDTH"]))
+                # Enable the PWM state machines in the FPGA
                 sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_LASER%d" % laserNum,"PWM_CS"]))
 
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_CAVITY_INIT"))

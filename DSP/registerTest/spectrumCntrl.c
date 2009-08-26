@@ -231,6 +231,8 @@ void setupNextRdParams(void)
 		if (*(s->iter_) == schemeTables[*(s->active_)].numRepeats-1 &&
 			*(s->row_)  == schemeTables[*(s->active_)].numRows-1 &&
 			*(s->dwell_) == schemeTables[*(s->active_)].rows[*(s->row_)].dwellCount-1) {
+			// We need to decide if acquisition is continuing or not. Acquisition stops if the scheme is run in Single mode, or
+			//  if we are running a non-looping sequence and have reached the last scheme in the sequence
 			if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
 				(SPECT_CNTRL_SchemeSequenceMode == *(s->mode_) 
 					&& schemeSequence->currentIndex == schemeSequence->numberOfIndices-1
@@ -284,6 +286,8 @@ void modifyParamsOnTimeout(unsigned int schemeCount)
 	if (s->schemeCounter_ != schemeCount) {
 		// We have advanced to another scheme, so set the end-of-scheme status bits appropriately
 		r->status &= ~(RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask | RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask);
+		// We need to decide if acquisition is continuing or not. Acquisition stops if the scheme is run in Single mode, or
+		//  if we are running a non-looping sequence and have reached the last scheme in the sequence
 		if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
 			(SPECT_CNTRL_SchemeSequenceMode == *(s->mode_) 
 				&& schemeSequence->currentIndex == schemeSequence->numberOfIndices-1
