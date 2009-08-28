@@ -1860,161 +1860,193 @@
         <register ident="SENTRY_LASER1_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 1 minimum temperature sentry</description>
             <initial>3.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Laser 1 minimum temperature</display>
         </register>
         <register ident="SENTRY_LASER1_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 1 maximum temperature sentry</description>
             <initial>52.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Laser 1 maximum temperature</display>
         </register>
         <register ident="SENTRY_LASER2_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 2 minimum temperature sentry</description>
             <initial>3.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Laser 2 minimum temperature</display>
         </register>
         <register ident="SENTRY_LASER2_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 2 maximum temperature sentry</description>
             <initial>52.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Laser 2 maximum temperature</display>
         </register>
         <register ident="SENTRY_LASER3_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 3 minimum temperature sentry</description>
             <initial>3.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Laser 3 minimum temperature</display>
         </register>
         <register ident="SENTRY_LASER3_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 3 maximum temperature sentry</description>
             <initial>52.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Laser 3 maximum temperature</display>
         </register>
         <register ident="SENTRY_LASER4_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 4 minimum temperature sentry</description>
             <initial>3.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Laser 4 minimum temperature</display>
         </register>
         <register ident="SENTRY_LASER4_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 4 maximum temperature sentry</description>
             <initial>52.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Laser 4 maximum temperature</display>
         </register>
         <register ident="SENTRY_ETALON_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Etalon minimum temperature sentry</description>
             <initial>3.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Etalon minimum temperature</display>
         </register>
         <register ident="SENTRY_ETALON_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Etalon maximum temperature sentry</description>
             <initial>52.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Etalon maximum temperature</display>
         </register>
         <register ident="SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Warm box minimum temperature sentry</description>
             <initial>3.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Warm box minimum temperature</display>
         </register>
         <register ident="SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Warm box maximum temperature sentry</description>
             <initial>52.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Warm box maximum temperature</display>
         </register>
         <register ident="SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Warm box heatsink minimum temperature sentry</description>
             <initial>3.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Warm box heatsink minimum temperature</display>
         </register>
         <register ident="SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Warm box heatsink maximum temperature sentry</description>
             <initial>80.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Warm box heatsink maximum temperature</display>
         </register>
         <register ident="SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Cavity minimum temperature sentry</description>
             <initial>3.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Cavity minimum temperature</display>
         </register>
         <register ident="SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Cavity maximum temperature sentry</description>
             <initial>85.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Cavity maximum temperature</display>
         </register>
         <register ident="SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Hot box heatsink minimum temperature sentry</description>
             <initial>3.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Hot box heatsink minimum temperature</display>
         </register>
         <register ident="SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Hot box heatsink maximum temperature sentry</description>
             <initial>95.0</initial>
+            <save/>
             <display format="%.1f" units="degC">Hot box heatsink maximum temperature</display>
         </register>
         <register ident="SENTRY_DAS_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>DAS minimum temperature sentry</description>
             <initial>5.0</initial>
+            <save/>
             <display format="%.1f" units="degC">DAS minimum temperature</display>
         </register>
         <register ident="SENTRY_DAS_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>DAS maximum temperature sentry</description>
             <initial>55.0</initial>
+            <save/>
             <display format="%.1f" units="degC">DAS maximum temperature</display>
         </register>
         <register ident="SENTRY_LASER1_CURRENT_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 1 minimum current sentry</description>
             <initial>-5.0</initial>
+            <save/>
             <display format="%.1f" units="mA">Laser 1 minimum current</display>
         </register>
         <register ident="SENTRY_LASER1_CURRENT_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 1 maximum current sentry</description>
             <initial>180.0</initial>
+            <save/>
             <display format="%.1f" units="mA">Laser 1 maximum current</display>
         </register>
         <register ident="SENTRY_LASER2_CURRENT_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 2 minimum current sentry</description>
             <initial>-5.0</initial>
+            <save/>
             <display format="%.1f" units="mA">Laser 2 minimum current</display>
         </register>
         <register ident="SENTRY_LASER2_CURRENT_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 2 maximum current sentry</description>
             <initial>180.0</initial>
+            <save/>
             <display format="%.1f" units="mA">Laser 2 maximum current</display>
         </register>
         <register ident="SENTRY_LASER3_CURRENT_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 3 minimum current sentry</description>
             <initial>-5.0</initial>
+            <save/>
             <display format="%.1f" units="mA">Laser 3 minimum current</display>
         </register>
         <register ident="SENTRY_LASER3_CURRENT_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 3 maximum current sentry</description>
             <initial>180.0</initial>
+            <save/>
             <display format="%.1f" units="mA">Laser 3 maximum current</display>
         </register>
         <register ident="SENTRY_LASER4_CURRENT_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 4 minimum current sentry</description>
             <initial>-5.0</initial>
+            <save/>
             <display format="%.1f" units="mA">Laser 4 minimum current</display>
         </register>
         <register ident="SENTRY_LASER4_CURRENT_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser 4 maximum current sentry</description>
             <initial>180.0</initial>
+            <save/>
             <display format="%.1f" units="mA">Laser 4 maximum current</display>
         </register>
         <register ident="SENTRY_CAVITY_PRESSURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Cavity minimum pressure sentry</description>
             <initial>-5.0</initial>
+            <save/>
             <display format="%.1f" units="torr">Cavity minimum pressure</display>
         </register>
         <register ident="SENTRY_CAVITY_PRESSURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Cavity maximum pressure sentry</description>
             <initial>900.0</initial>
+            <save/>
             <display format="%.1f" units="torr">Cavity maximum pressure</display>
         </register>
         <register ident="SENTRY_AMBIENT_PRESSURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
             <description>Ambient minimum pressure sentry</description>
             <initial>200.0</initial>
+            <save/>
             <display format="%.1f" units="torr">Ambient minimum pressure</display>
         </register>
         <register ident="SENTRY_AMBIENT_PRESSURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Ambient maximum pressure sentry</description>
             <initial>900.0</initial>
+            <save/>
             <display format="%.1f" units="torr">Ambient maximum pressure</display>
         </register>
     </register_list>
@@ -2616,6 +2648,26 @@
                 <display format="%d" units="digU">Reference 2 photocurrent</display>
             </reg>
         </fpga_block>
+        <fpga_block ident="DYNAMICPWM" description="Dynamic PWM for proportional valves">
+            <reg type="mask" ident="CS" description="Control/Status" access="rw">
+                <bitfield ident="RUN" description="Stop/Run" lsb="0" width="1">
+                    <fielddef value="0">Stop</fielddef>
+                    <fielddef value="1">Run</fielddef>
+                </bitfield>
+                <bitfield ident="CONT" description="Single/Continuous" lsb="1" width="1">
+                    <fielddef value="0">Single</fielddef>
+                    <fielddef value="1">Continuous</fielddef>
+                </bitfield>
+                <bitfield ident="PWM_OUT" description="PWM output" lsb="2" width="1">
+                    <fielddef value="0">Low</fielddef>
+                    <fielddef value="1">High</fielddef>
+                </bitfield>
+            </reg>
+            <reg type="int16" ident="DELTA" description="Pulse width change per update" access="rw">
+                <save/>
+                <display format="%d" units="digU">Pulse width change per update</display>
+            </reg>
+        </fpga_block>
     </fpga_block_list>
     <fpga_map_list>
         <fpga_map ident="FPGA_KERNEL" block="KERNEL">
@@ -2650,6 +2702,12 @@
         </fpga_map>
         <fpga_map ident="FPGA_WLMSIM" block="WLMSIM">
             <description>WLM Simulator</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_DYNAMICPWM_INLET" block="DYNAMICPWM">
+            <description>Inlet proportional valve dynamic PWM</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_DYNAMICPWM_OUTLET" block="DYNAMICPWM">
+            <description>Outlet proportional valve dynamic PWM</description>
         </fpga_map>
     </fpga_map_list>
     <environment_list>

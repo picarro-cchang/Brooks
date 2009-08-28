@@ -1037,6 +1037,17 @@ typedef enum {
 #define WLMSIM_ETA2 (6) // Etalon 2
 #define WLMSIM_REF2 (7) // Reference 2
 
+/* Block DYNAMICPWM Dynamic PWM for proportional valves */
+#define DYNAMICPWM_CS (0) // Control/Status
+#define DYNAMICPWM_CS_RUN_B (0) // Stop/Run bit position
+#define DYNAMICPWM_CS_RUN_W (1) // Stop/Run bit width
+#define DYNAMICPWM_CS_CONT_B (1) // Single/Continuous bit position
+#define DYNAMICPWM_CS_CONT_W (1) // Single/Continuous bit width
+#define DYNAMICPWM_CS_PWM_OUT_B (2) // PWM output bit position
+#define DYNAMICPWM_CS_PWM_OUT_W (1) // PWM output bit width
+
+#define DYNAMICPWM_DELTA (1) // Pulse width change per update
+
 /* FPGA map indices */
 
 #define FPGA_KERNEL (0) // Kernel registers
@@ -1050,6 +1061,8 @@ typedef enum {
 #define FPGA_TWGEN (74) // Tuner waveform generator
 #define FPGA_INJECT (82) // Optical Injection Subsystem
 #define FPGA_WLMSIM (91) // WLM Simulator
+#define FPGA_DYNAMICPWM_INLET (99) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (101) // Outlet proportional valve dynamic PWM
 
 /* Environment addresses */
 
