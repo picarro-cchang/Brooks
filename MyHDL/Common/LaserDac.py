@@ -46,6 +46,9 @@ def  LaserDac(clk,reset,dac_clock_in,chanA_data_in,chanB_data_in,strobe_in,
     CHANB_DATA_START = CHANB_CONTROL_END
     CHANB_DATA_END = CHANB_DATA_START+DATA_LENGTH
 
+    chanA_data = Signal(intbv(0)[DATA_LENGTH:])
+    chanB_data = Signal(intbv(0)[DATA_LENGTH:])
+
     @instance
     def  logic():
         while True:
@@ -57,6 +60,8 @@ def  LaserDac(clk,reset,dac_clock_in,chanA_data_in,chanB_data_in,strobe_in,
                 if state == t_State.IDLE:
                     dac_sync_out.next = 0
                     if strobe_in:
+                        chanA_data.next = chanA_data_in
+                        chanB_data.next = chanB_data_in
                         counter.next = 0
                         dac_sync_out.next = 1
                         state.next = t_State.WAIT_1
@@ -82,11 +87,11 @@ def  LaserDac(clk,reset,dac_clock_in,chanA_data_in,chanB_data_in,strobe_in,
         if CHANA_CONTROL_START<=counter and counter<CHANA_CONTROL_END:
             dac_din_out.next = chanA_control[CHANA_CONTROL_END-1-int(counter)]
         elif CHANA_DATA_START<=counter and counter<CHANA_DATA_END:
-            dac_din_out.next = chanA_data_in[CHANA_DATA_END-1-int(counter)]
+            dac_din_out.next = chanA_data[CHANA_DATA_END-1-int(counter)]
         elif CHANB_CONTROL_START<=counter and counter<CHANB_CONTROL_END:
             dac_din_out.next = chanB_control[CHANB_CONTROL_END-1-int(counter)]
         elif CHANB_DATA_START<=counter and counter<CHANB_DATA_END:
-            dac_din_out.next = chanB_data_in[CHANB_DATA_END-1-int(counter)]
+            dac_din_out.next = chanB_data[CHANB_DATA_END-1-int(counter)]
         else:
             dac_din_out.next = 0
 

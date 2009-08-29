@@ -80,6 +80,7 @@ data2 = Signal(intbv(0)[24:])
 data3 = Signal(intbv(0)[24:])
 data4 = Signal(intbv(0)[24:])
 acq_done = Signal(LOW)
+clk_10M = Signal(LOW)
 clk_2M5 = Signal(LOW)
 strobe1M = Signal(LOW)
 
@@ -173,7 +174,7 @@ def bench():
                      sel_fine_current_out=sel_fine_current_out,
                      map_base=map_base )
 
-    clkGen = ClkGen(clk=clk, reset=reset, clk_5M=laser_dac_clk_in,
+    clkGen = ClkGen(clk=clk, reset=reset, clk_10M=clk_10M, clk_5M=laser_dac_clk_in,
                     clk_2M5=clk_2M5, pulse_1M=strobe1M, pulse_100k=strobe_in)
 
     @instance

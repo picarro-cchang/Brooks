@@ -26,7 +26,9 @@ clk, reset, dac_clock, strobe1M, strobe = [Signal(LOW) for i in range(5)]
 dac_sync_out, dac_din_out = [Signal(LOW) for i in range(2)]
 chanA_data_in = Signal(intbv(0)[16:])
 chanB_data_in = Signal(intbv(0)[16:])
+clk_10M = Signal(LOW)
 clk_2M5 = Signal(LOW)
+data_avail = Signal(LOW)
 
 PERIOD = 20
 
@@ -46,25 +48,30 @@ def  bench():
                      dac_sync_out=dac_sync_out,
                      dac_din_out=dac_din_out)
 
-    clkGen = ClkGen(clk=clk, reset=reset, clk_5M=dac_clock,
+    clkGen = ClkGen(clk=clk, reset=reset, clk_10M=clk_10M, clk_5M=dac_clock,
                     clk_2M5=clk_2M5, pulse_1M=strobe1M, pulse_100k=strobe)
 
     @instance
     def  stimulus():
         chanA_data_in.next = 0x1234
         chanB_data_in.next = 0x5678
-        yield(delay(50000))
+        yield data_avail.posedge
+        print "%x" % data
+        yield data_avail.posedge
+        print "%x" % data
         raise StopSimulation
 
     @instance
     def  acquire():
         while True:
             yield dac_sync_out.posedge
+            data_avail.next = 0
             data.next = 0
             for i in range(24):
                 yield dac_clock.negedge
                 data.next[23-i] = dac_din_out
-
+            data_avail.next = 1
+            
     return instances()
 
 def test_LaserDac():

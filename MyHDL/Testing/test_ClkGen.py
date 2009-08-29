@@ -20,8 +20,8 @@ from Host.autogen import interface
 
 LOW, HIGH = bool(0), bool(1)
 PERIOD = 20
-clk, reset, clk_5M, clk_2M5, pulse_1M, pulse_100k = \
-    [Signal(LOW) for i in range(6)]
+clk, reset, clk_10M, clk_5M, clk_2M5, pulse_1M, pulse_100k = \
+    [Signal(LOW) for i in range(7)]
 
 def  bench():
     """ Unit test for clock generator """
@@ -29,7 +29,7 @@ def  bench():
     def clockGen():
         clk.next = not clk
 
-    clkGen = ClkGen(clk=clk, reset=reset, clk_5M=clk_5M, clk_2M5=clk_2M5,
+    clkGen = ClkGen(clk=clk, reset=reset, clk_10M=clk_10M, clk_5M=clk_5M, clk_2M5=clk_2M5,
         pulse_1M=pulse_1M, pulse_100k=pulse_100k)
 
     @instance

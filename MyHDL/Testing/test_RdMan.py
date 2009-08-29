@@ -109,6 +109,7 @@ map_base = FPGA_RDMAN
 data = Signal(intbv(0)[RDMEM_DATA_WIDTH:])
 meta = Signal(intbv(0)[RDMEM_META_WIDTH:])
 param = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
+clk_10M = Signal(LOW)
 clk_5M = Signal(LOW)
 clk_2M5 = Signal(LOW)
 # N.B. It is important to OR together the dsp_data_in buses
@@ -214,7 +215,7 @@ def bench():
                          meta_addr=meta_addr_out, meta=meta, wr_meta=wr_meta_out, meta_we=meta_we_out,
                          param_addr=param_addr_out, param=param, wr_param=wr_param_out, param_we=param_we_out )
 
-    clkGen = ClkGen( clk=clk, reset=reset, clk_5M=clk_5M, clk_2M5=clk_2M5,
+    clkGen = ClkGen( clk=clk, reset=reset, clk_10M=clk_10M, clk_5M=clk_5M, clk_2M5=clk_2M5,
                      pulse_1M=pulse_1M_in, pulse_100k=pulse_100k_in)
 
     @instance

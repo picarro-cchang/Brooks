@@ -18,8 +18,8 @@ from myhdl import *
 from Host.autogen import interface
 LOW, HIGH = bool(0), bool(1)
 
-def  ClkGen(clk,reset,clk_5M,clk_2M5,pulse_1M,pulse_100k):
-    # Generates 5MHz, 2.5MHz, 1MHz and 100kHz clocks from 50MHz input
+def  ClkGen(clk,reset,clk_10M,clk_5M,clk_2M5,pulse_1M,pulse_100k):
+    # Generates 10MHz, 5MHz, 2.5MHz, 1MHz and 100kHz clocks from 50MHz input
     # 5MHz and 2.5MHz clocks have 1:1 MS ratio, 1MHz and 100kHz clock
     # are high for 20ns every 1us and 10us respectively
     div5 = Signal(intbv(0)[3:])  # Counts up to 5
@@ -33,6 +33,7 @@ def  ClkGen(clk,reset,clk_5M,clk_2M5,pulse_1M,pulse_100k):
         while True:
             yield clk.posedge, reset.posedge
             if reset:
+                clk_10M.next = 0
                 div5.next = 0
                 div25.next = 0
                 ff1.next = 0
@@ -58,6 +59,7 @@ def  ClkGen(clk,reset,clk_5M,clk_2M5,pulse_1M,pulse_100k):
                                 div25.next = div25 + 1
                 else:
                     div5.next = div5 + 1
+                clk_10M.next = (div5 == 2) or (div5 == 3)
 
     @always_comb
     def  comb():
@@ -68,7 +70,7 @@ def  ClkGen(clk,reset,clk_5M,clk_2M5,pulse_1M,pulse_100k):
 
 if __name__ == "__main__":
     # Define the pinouts for VHDL synthesis
-    clk, reset, clk_5M, clk_2M5, pulse_1M, pulse_100k = [Signal(LOW) for i in range(6)]
-    toVHDL(ClkGen, clk=clk, reset=reset, clk_5M=clk_5M,
+    clk, reset, clk_10M, clk_5M, clk_2M5, pulse_1M, pulse_100k = [Signal(LOW) for i in range(7)]
+    toVHDL(ClkGen, clk=clk, reset=reset, clk_10M=clk_10M, clk_5M=clk_5M,
                    clk_2M5=clk_2M5, pulse_1M=pulse_1M,
                    pulse_100k=pulse_100k)

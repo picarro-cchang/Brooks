@@ -86,7 +86,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     param = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
     wr_param = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
     param_we = Signal(LOW)
-    clk_5M, clk_2M5, pulse_1M, pulse_100k = [Signal(LOW) for i in range(4)]
+    clk_10M, clk_5M, clk_2M5, pulse_1M, pulse_100k = [Signal(LOW) for i in range(5)]
 
     gpreg_1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     tuner_value = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -175,7 +175,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                   gpreg_1_out=gpreg_1,
                   map_base=FPGA_KERNEL)
 
-    clkgen = ClkGen(clk=clk0, reset=reset, clk_5M=clk_5M,
+    clkgen = ClkGen(clk=clk0, reset=reset, clk_10M=clk_10M, clk_5M=clk_5M,
                     clk_2M5=clk_2M5, pulse_1M=pulse_1M, pulse_100k=pulse_100k)
 
     twGen = TWGen(clk=clk0, reset=reset, dsp_addr=dsp_addr,

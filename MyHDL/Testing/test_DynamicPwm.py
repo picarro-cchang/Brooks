@@ -38,6 +38,7 @@ update_in = Signal(LOW)
 pwm_out = Signal(LOW)
 map_base = FPGA_DYNAMICPWM_INLET
 
+clk_10M = Signal(LOW)
 clk_5M = Signal(LOW)
 clk_2M5 = Signal(LOW)
 strobe_1M = Signal(LOW)
@@ -108,7 +109,7 @@ def bench():
                              update_in=update_in, pwm_out=pwm_out,
                              map_base=map_base,MIN_WIDTH=500,MAX_WIDTH=65000 )
 
-    clkGen = ClkGen(clk=clk, reset=reset, clk_5M=clk_5M,
+    clkGen = ClkGen(clk=clk, reset=reset, clk_10M=clk_10M, clk_5M=clk_5M,
                     clk_2M5=clk_2M5, pulse_1M=strobe_1M, pulse_100k=update_in)
     
     @instance
