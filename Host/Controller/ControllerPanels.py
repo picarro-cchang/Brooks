@@ -2,15 +2,16 @@ import wx
 import sys
 
 from ControllerModels import DriverProxy, ControllerRpcHandler, waveforms
-from ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui
-from ControllerPanelsGui import HotBoxPanelGui, RingdownPanelGui
-from ControllerPanelsGui import WlmPanelGui
+from ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui, PressurePanelGui
+from ControllerPanelsGui import WarmBoxPanelGui, HotBoxPanelGui, RingdownPanelGui
+from ControllerPanelsGui import WlmPanelGui, StatsPanelGui
 from Host.autogen import interface
 from Host.Common.GraphPanel import Series
 from Host.Common import CmdFIFO, SharedTypes, timestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 import threading
 
+statsPoints = interface.CONTROLLER_STATS_POINTS
 wfmPoints = interface.CONTROLLER_WAVEFORM_POINTS
 ringdownPoints = interface.CONTROLLER_RINGDOWN_POINTS
 
@@ -321,6 +322,112 @@ class LaserPanel(LaserPanelGui):
             s.Clear()
         for s,sel,stats,attr in self.currentGraph._lineSeries:
             s.Clear()
+            
+class PressurePanel(PressurePanelGui):
+    def __init__(self,*a,**k):
+        PressurePanelGui.__init__(self,*a,**k)
+        self.pressureGraph.SetGraphProperties(
+            ylabel='Pressure (torr)',
+            timeAxes=(True,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            grid=True,backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.propValveGraph.SetGraphProperties(
+            ylabel='Proportional Valve (digU)',grid=True,
+            timeAxes=(True,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.ambientPressureWfm = Series(wfmPoints)
+        self.pressureGraph.AddSeriesAsLine(self.ambientPressureWfm,
+            colour='red',width=2)
+        self.cavityPressureWfm = Series(wfmPoints)
+        self.pressureGraph.AddSeriesAsLine(self.cavityPressureWfm,
+            colour='green',width=2)
+        self.inletValveWfm = Series(wfmPoints)
+        self.propValveGraph.AddSeriesAsLine(self.inletValveWfm,
+            colour='red',width=2)
+        self.outletValveWfm = Series(wfmPoints)
+        self.propValveGraph.AddSeriesAsLine(self.outletValveWfm,
+            colour='green',width=2)
+
+    def update(self):
+        self.pressureGraph.Update(delay=0)
+        self.propValveGraph.Update(delay=0)
+
+    def onClear(self,evt):
+        for s,sel,stats,attr in self.pressureGraph._lineSeries:
+            s.Clear()
+        for s,sel,stats,attr in self.propValveGraph._lineSeries:
+            s.Clear()
+
+    def onPressureWaveformSelectChanged(self, event):
+        self.pressureGraph.RemoveAllSeries()
+        if self.ambientPressureCheckbox.IsChecked():
+            self.pressureGraph.AddSeriesAsLine(self.ambientPressureWfm,
+                colour='red',width=2)
+        if self.cavityPressureCheckbox.IsChecked():
+            self.pressureGraph.AddSeriesAsLine(self.cavityPressureWfm,
+                colour='green',width=2)
+
+    def onValveWaveformSelectChanged(self, event):
+        self.propValveGraph.RemoveAllSeries()
+        if self.inletValveCheckbox.IsChecked():
+            self.propValveGraph.AddSeriesAsLine(self.inletValveWfm,
+                colour='red',width=2)
+        if self.outletValveCheckbox.IsChecked():
+            self.propValveGraph.AddSeriesAsLine(self.outletValveWfm,
+                colour='green',width=2)
+
+class WarmBoxPanel(WarmBoxPanelGui):
+    def __init__(self,*a,**k):
+        WarmBoxPanelGui.__init__(self,*a,**k)
+        self.temperatureGraph.SetGraphProperties(
+            ylabel='Temperature (degC)',
+            timeAxes=(True,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            grid=True,backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.tecGraph.SetGraphProperties(
+            ylabel='TEC Current',grid=True,
+            timeAxes=(True,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.etalonTemperatureWfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.etalonTemperatureWfm,
+            colour='red',width=2)
+        self.warmBoxTemperatureWfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.warmBoxTemperatureWfm,
+            colour='green',width=2)
+        self.heatsinkTemperatureWfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.heatsinkTemperatureWfm,
+            colour='blue',width=2)
+        self.tecWfm = Series(wfmPoints)
+        self.tecGraph.AddSeriesAsLine(self.tecWfm,
+            colour='red',width=2)
+
+    def update(self):
+        self.temperatureGraph.Update(delay=0)
+        self.tecGraph.Update(delay=0)
+
+    def onClear(self,evt):
+        for s,sel,stats,attr in self.temperatureGraph._lineSeries:
+            s.Clear()
+        for s,sel,stats,attr in self.tecGraph._lineSeries:
+            s.Clear()
+
+    def onWaveformSelectChanged(self, event):
+        self.temperatureGraph.RemoveAllSeries()
+        if self.etalonTemperatureCheckbox.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.etalonTemperatureWfm,
+                colour='red',width=2)
+        if self.warmBoxTemperatureCheckbox.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.warmBoxTemperatureWfm,
+                colour='green',width=2)
+        if self.heatsinkTemperatureCheckbox.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.heatsinkTemperatureWfm,
+                colour='blue',width=2)            
 
 class HotBoxPanel(HotBoxPanelGui):
     def __init__(self,*a,**k):
@@ -426,3 +533,64 @@ class CommandLogPanel(CommandLogPanelGui):
         self.logListCtrl.SetStringItem(index,4,code)
         self.logListCtrl.SetStringItem(index,5,txt.strip()[1:-1])
         self.logListCtrl.EnsureVisible(index)
+
+class StatsPanel(StatsPanelGui):
+    def __init__(self,*a,**k):
+        StatsPanelGui.__init__(self,*a,**k)
+        self.lossGraph.SetGraphProperties(
+            xlabel='log10[Number of ringdowns]',
+            ylabel='log10[Allan std dev(Loss)]',
+            grid=True,
+            timeAxes=(False,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            grid=True,backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.waveNumberGraph.SetGraphProperties(
+            xlabel='log10[Number of ringdowns]',
+            ylabel='log10[Allan std dev(Wavenumber)]',
+            grid=True,
+            timeAxes=(False,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.ratio1Graph.SetGraphProperties(
+            xlabel='log10[Number of ringdowns]',
+            ylabel='log10[Allan std dev(Ratio1)]',
+            grid=True,
+            timeAxes=(False,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.ratio2Graph.SetGraphProperties(
+            xlabel='log10[Number of ringdowns]',
+            ylabel='log10[Allan std dev(Ratio2)]',
+            grid=True,
+            timeAxes=(False,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.lossStats = Series(statsPoints)
+        self.lossGraph.AddSeriesAsPoints(self.lossStats,
+                colour='red',fillcolour='red',marker='square',
+                size=1,width=1)
+        self.waveNumberStats = Series(statsPoints)
+        self.waveNumberGraph.AddSeriesAsPoints(self.waveNumberStats,
+                colour='red',fillcolour='red',marker='square',
+                size=1,width=1)
+        self.ratio1Stats = Series(statsPoints)
+        self.ratio1Graph.AddSeriesAsPoints(self.ratio1Stats,
+                colour='red',fillcolour='red',marker='square',
+                size=1,width=1)
+        self.ratio2Stats = Series(statsPoints)
+        self.ratio2Graph.AddSeriesAsPoints(self.ratio2Stats,
+                colour='red',fillcolour='red',marker='square',
+                size=1,width=1)
+
+    def update(self):
+        self.lossGraph.Update(delay=0)
+        self.waveNumberGraph.Update(delay=0)
+        self.ratio1Graph.Update(delay=0)
+        self.ratio2Graph.Update(delay=0)
+
+    def onStart(self,evt):
+        pass

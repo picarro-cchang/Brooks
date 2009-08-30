@@ -60,9 +60,12 @@ class ControllerFrame(ControllerFrameGui):
         panels["Laser2"]=self.laser2Panel
         panels["Laser3"]=self.laser3Panel
         panels["Laser4"]=self.laser4Panel
+        panels["WarmBox"]=self.warmBoxPanel
         panels["HotBox"]=self.hotBoxPanel
+        panels["Pressure"]=self.pressurePanel
         panels["Wlm"]=self.wlmPanel
         panels["Ringdown"]=self.ringdownPanel
+        panels["Stats"]=self.statsPanel
 
     def setupWaveforms(self):
         waveforms["Laser1"]=dict(
@@ -81,11 +84,21 @@ class ControllerFrame(ControllerFrameGui):
             temperature=self.laser4Panel.temperatureWfm,
             tec=self.laser4Panel.tecWfm,
             current=self.laser4Panel.currentWfm)
+        waveforms["WarmBox"]=dict(
+            etalonTemperature=self.warmBoxPanel.etalonTemperatureWfm,
+            warmBoxTemperature=self.warmBoxPanel.warmBoxTemperatureWfm,
+            heatsinkTemperature=self.warmBoxPanel.heatsinkTemperatureWfm,
+            tec=self.warmBoxPanel.tecWfm)
         waveforms["HotBox"]=dict(
             cavityTemperature=self.hotBoxPanel.cavityTemperatureWfm,
             heatsinkTemperature=self.hotBoxPanel.heatsinkTemperatureWfm,
             tec=self.hotBoxPanel.tecWfm,
             heater=self.hotBoxPanel.heaterWfm)
+        waveforms["Pressure"]=dict(
+            ambientPressure=self.pressurePanel.ambientPressureWfm,
+            cavityPressure=self.pressurePanel.cavityPressureWfm,
+            inletValve=self.pressurePanel.inletValveWfm,
+            outletValve=self.pressurePanel.outletValveWfm)
         waveforms["Wlm"]=dict(
             etalon1=self.wlmPanel.etalon1Wfm,
             reference1=self.wlmPanel.reference1Wfm,
@@ -93,6 +106,12 @@ class ControllerFrame(ControllerFrameGui):
             reference2=self.wlmPanel.reference2Wfm,
             ratio1=self.wlmPanel.ratio1Wfm,
             ratio2=self.wlmPanel.ratio2Wfm,
+            )
+        waveforms["Stats"]=dict(
+            loss=self.statsPanel.lossStats,
+            waveNumber=self.statsPanel.waveNumberStats,
+            ratio1=self.statsPanel.ratio1Stats,
+            ratio2=self.statsPanel.ratio2Stats,
             )
         waveforms["Ringdown"]=dict(
             corrected=self.ringdownPanel.ringdownWfms[0],
@@ -103,6 +122,7 @@ class ControllerFrame(ControllerFrameGui):
             waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)] = self.ringdownPanel.ringdownWfms[vLaser]
             waveforms["Ringdown"]["wavenumber_%d" % (vLaser+1,)] = self.ringdownPanel.ringdownWfms[vLaser]
             waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)] = self.ringdownPanel.ringdownWfms[vLaser]
+
 
     def setupParameterDialogs(self):
         idmin = None
@@ -161,12 +181,18 @@ class ControllerFrame(ControllerFrameGui):
             self.laser3Panel.update()
         elif pageText == "Laser4":
             self.laser4Panel.update()
+        elif pageText == "WarmBox":
+            self.warmBoxPanel.update()
         elif pageText == "HotBox":
             self.hotBoxPanel.update()
+        elif pageText == "Pressure":
+            self.pressurePanel.update()
         elif pageText == "WavelengthMonitor":
             self.wlmPanel.update()
         elif pageText == "Ringdowns":
             self.ringdownPanel.update()
+        elif pageText == "Statistics":
+            self.statsPanel.update()
 
     def onIdle(self,evt):
         # Deal with updating the stream file state and filename

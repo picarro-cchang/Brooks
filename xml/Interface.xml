@@ -231,6 +231,7 @@
         <!-- N.B. All SIZE and OFFSET variables are in 32 bit integers, all ADDRESS variables are in bytes -->
         <constant ident="CONTROLLER_WAVEFORM_POINTS" description="Number of points in controller waveforms">1000</constant>
         <constant ident="CONTROLLER_RINGDOWN_POINTS" description="Number of points for waveforms on controller rindown pane">10000</constant>
+        <constant ident="CONTROLLER_STATS_POINTS" description="Number of points for Allan statistics plots in controller">32</constant>
         <constant ident="DSP_DATA_ADDRESS" description="Base address for DSP data memory">0x80800000</constant>
         <constant ident="RDRESULTS_OFFSET" description="Offset for ringdown results in DSP data memory">0x0</constant>
         <constant ident="NUM_RINGDOWN_ENTRIES" description="Number of ringdown entries">2048</constant>

@@ -261,6 +261,8 @@ class VirtualLaserParamsType(Structure):
 CONTROLLER_WAVEFORM_POINTS = 1000
 # Number of points for waveforms on controller rindown pane
 CONTROLLER_RINGDOWN_POINTS = 10000
+# Number of points for Allan statistics plots in controller
+CONTROLLER_STATS_POINTS = 32
 # Base address for DSP data memory
 DSP_DATA_ADDRESS = 0x80800000
 # Offset for ringdown results in DSP data memory
