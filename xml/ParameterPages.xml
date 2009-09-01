@@ -165,6 +165,32 @@
             <register>LASER4_CURRENT_SWEEP_INCR_REGISTER</register>
         </gui_page>
         <gui_page>
+            <title>Warm Box Temperature Parameters</title>
+            <register>WARM_BOX_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_H_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_K_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_TI_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_TD_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_B_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_C_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_N_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_S_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>WARM_BOX_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>WARM_BOX_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>WARM_BOX_TEC_PRBS_MEAN_REGISTER</register>
+            <register>WARM_BOX_MANUAL_TEC_REGISTER</register>
+            <register>WARM_BOX_MAX_HEATSINK_TEMP_REGISTER</register>
+        </gui_page>
+        <gui_page>
             <title>Cavity Temperature Parameters</title>
             <register>CAVITY_TEMP_CNTRL_STATE_REGISTER</register>
             <register>CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
@@ -197,6 +223,32 @@
             <register>HEATER_CNTRL_MARK_MIN_REGISTER</register>
             <register>HEATER_CNTRL_MARK_MAX_REGISTER</register>
             <register>HEATER_CNTRL_MANUAL_MARK_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Sample Handling Parameters</title>
+            <register>VALVE_CNTRL_STATE_REGISTER</register>
+            <register>VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_REGISTER</register>
+            <register>VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_MIN_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_MAX_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER</register>
+            <register>VALVE_CNTRL_THRESHOLD_STATE_REGISTER</register>
+            <register>VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER</register>
+            <register>VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER</register>
+            <register>VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER</register>
+            <register>VALVE_CNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER</register>
+            <register>VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER</register>
+            <register>VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER</register>
+            <register>VALVE_CNTRL_SEQUENCE_STEP_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Tuner Waveform Parameters</title>

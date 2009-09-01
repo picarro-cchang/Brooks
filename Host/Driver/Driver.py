@@ -48,9 +48,9 @@ EventManagerProxy_Init("Driver")
 class DriverRpcHandler(SharedTypes.Singleton):
     def __init__(self,config,dasInterface):
         self.server = CmdFIFO.CmdFIFOServer(("", SharedTypes.RPC_PORT_DRIVER),
-                                             ServerName = "Driver",
-                                             ServerDescription = "Driver for CRDS hardware",
-                                             threaded = True)
+                                            ServerName = "Driver",
+                                            ServerDescription = "Driver for CRDS hardware",
+                                            threaded = True)
         self.config = config
         self.dasInterface = dasInterface
         self._register_rpc_functions()
@@ -105,8 +105,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
             raise SharedTypes.DasAccessException("Register %s is not readable" % (regIndexOrName,))
         if ri.type == ctypes.c_float:
             return self.dasInterface.hostToDspSender.rdRegFloat(index)
-        else:
+        elif ri.type == ctypes.c_uint:
             return self.dasInterface.hostToDspSender.rdRegUint(index)
+        else:
+            return ctypes.c_int32(self.dasInterface.hostToDspSender.rdRegUint(index)).value
 
     def rdDasRegList(self,regList):
         return [self.rdDasReg(reg) for reg in regList]
@@ -154,7 +156,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         ri = interface.registerInfo[index]
         if not ri.writable:
             raise SharedTypes.DasAccessException("Register %s is not writable" % (regIndexOrName,))
-        if ri.type == ctypes.c_uint:
+        if ri.type in [ctypes.c_uint,ctypes.c_int,ctypes.c_long]:
             return self.dasInterface.hostToDspSender.wrRegUint(index,value)
         elif ri.type == ctypes.c_float:
             return self.dasInterface.hostToDspSender.wrRegFloat(index,value)
@@ -186,15 +188,23 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def rdSchemeSequence(self):
         """Reads a scheme sequence"""
         return self.dasInterface.hostToDspSender.rdSchemeSequence()
-    
+
     def wrSchemeSequence(self,schemeIndices,loopFlag=1,restartFlag=1):
         """Writes a scheme sequence"""
         self.dasInterface.hostToDspSender.wrSchemeSequence(schemeIndices,loopFlag,restartFlag)
-        
+
+    def rdValveSequence(self):
+        """Reads the valve sequence"""
+        return self.dasInterface.hostToDspSender.rdValveSequence()
+
+    def wrValveSequence(self,sequenceRows):
+        """Writes a vakve sequence"""
+        self.dasInterface.hostToDspSender.wrValveSequence(sequenceRows)
+
     def rdVirtualLaserParams(self,vLaserNum):
         """Returns the virtual laser parameters associated with virtual laser vLaserNum as a dictionary"""
         return SharedTypes.ctypesToDict(self.dasInterface.hostToDspSender.rdVirtualLaserParams(vLaserNum))
-    
+
     def wrVirtualLaserParams(self,vLaserNum,laserParams):
         """Wites the virtual laser parameters (specified as a dictionary) associated with virtual laser vLaserNum"""
         p = interface.VirtualLaserParamsType()
@@ -208,7 +218,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
     #    for k in range(16):
     #        composite += [x for x in self.dasInterface.hostToDspSender.rdDspMemArray(base+256*k,256)]
     #    return array(composite)
-    
+
     def loadIniFile(self):
         """Loads state from instrument configuration file"""
         config = InstrumentConfig()
@@ -250,7 +260,7 @@ class StreamSaver(SharedTypes.Singleton):
         if not(observerRpcPort in self.observerAccess):
             serverURI = "http://%s:%d" % ("localhost",observerRpcPort)
             proxy = CmdFIFO.CmdFIFOServerProxy(serverURI,
-                        ClientName="StreamStatusNotifier")
+                                               ClientName="StreamStatusNotifier")
         else:
             proxy = self.observerAccess[observerRpcPort][0]
         self.observerAccess[observerRpcPort] = (proxy,observerToken)
@@ -313,14 +323,14 @@ class Driver(SharedTypes.Singleton):
         self.config = ConfigObj(configFile)
         self.appDir = os.path.dirname(AppPath)
         self.stateDbFile = os.path.join(self.appDir,
-            self.config["Files"]["instrStateFileName"])
+                                        self.config["Files"]["instrStateFileName"])
         self.instrConfigFile = os.path.join(self.appDir,
-            self.config["Files"]["instrConfigFileName"])
+                                            self.config["Files"]["instrConfigFileName"])
         self.usbFile  = "../../CypressUSB/analyzer/analyzerUsb.hex"
         self.dspFile  = "../../DSP/registerTest/Debug/registerTest.hex"
         self.fpgaFile = "../../MyHDL/Spartan3/top_io_map.bit"
         self.dasInterface = DasInterface(self.stateDbFile,self.usbFile,
-                                self.dspFile,self.fpgaFile,sim)
+                                         self.dspFile,self.fpgaFile,sim)
         self.rpcHandler = DriverRpcHandler(self.config,self.dasInterface)
         InstrumentConfig(self.instrConfigFile)
         self.streamSaver = StreamSaver(self.config)
@@ -428,7 +438,7 @@ class InstrumentConfig(SharedTypes.Singleton):
                     self.config[fpgaMap][r] = s.rdFPGA(fpgaMap,r)
                 except:
                     Log("Error reading FPGA register %s in %s" % (r,fpgaMap),Level=2)
-                
+
     def loadPersistentRegistersFromConfig(self):
         s = HostToDspSender()
         if "DASregisters" not in self.config:

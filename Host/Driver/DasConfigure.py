@@ -103,6 +103,52 @@ class DasConfigure(object):
         self.opGroups["FAST"]["STREAMER"].addOperation(Operation("ACTION_STREAM_REGISTER",
                                                                  ["STREAM_DasTemp","DAS_TEMPERATURE_REGISTER"]))
 
+        # Etalon temperature
+        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                ["ETALON_RESISTANCE_REGISTER",
+                 "CONVERSION_ETALON_THERM_CONSTA_REGISTER",
+                 "CONVERSION_ETALON_THERM_CONSTB_REGISTER",
+                 "CONVERSION_ETALON_THERM_CONSTC_REGISTER",
+                 "ETALON_TEMPERATURE_REGISTER"]))
+        
+        self.opGroups["SLOW"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER",
+                ["STREAM_EtalonTemp","ETALON_TEMPERATURE_REGISTER"]))
+
+        # Warm Box
+        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                ["WARM_BOX_RESISTANCE_REGISTER",
+                 "CONVERSION_WARM_BOX_THERM_CONSTA_REGISTER",
+                 "CONVERSION_WARM_BOX_THERM_CONSTB_REGISTER",
+                 "CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER",
+                 "WARM_BOX_TEMPERATURE_REGISTER"]))
+
+        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                ["WARM_BOX_HEATSINK_RESISTANCE_REGISTER",
+                 "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER",
+                 "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTB_REGISTER",
+                 "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTC_REGISTER",
+                 "WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
+        
+        self.opGroups["SLOW"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER",
+                ["STREAM_WarmBoxTemp","WARM_BOX_TEMPERATURE_REGISTER"]))
+
+        self.opGroups["SLOW"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER",
+                ["STREAM_WarmBoxHeatsinkTemp","WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
+
+        self.opGroups["SLOW"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER",
+                ["STREAM_WarmBoxTec","WARM_BOX_TEC_REGISTER"]))
+
+        self.opGroups["SLOW"]["CONTROLLER"].addOperation(
+            Operation("ACTION_TEMP_CNTRL_WARM_BOX_STEP"))
+
+        # Hot Box
         self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
             Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                 ["CAVITY_RESISTANCE_REGISTER",
@@ -119,6 +165,28 @@ class DasConfigure(object):
                  "CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTC_REGISTER",
                  "HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
 
+        self.opGroups["SLOW"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER",
+                ["STREAM_CavityTemp","CAVITY_TEMPERATURE_REGISTER"]))
+
+        self.opGroups["SLOW"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER",
+                ["STREAM_HotBoxHeatsinkTemp","HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
+
+        self.opGroups["SLOW"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER",
+                ["STREAM_HotBoxTec","CAVITY_TEC_REGISTER"]))
+
+        self.opGroups["SLOW"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER",
+                ["STREAM_HotBoxHeater","HEATER_CNTRL_MARK_REGISTER"]))
+        
+        self.opGroups["SLOW"]["CONTROLLER"].addOperation(
+            Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
+
+        self.opGroups["FAST"]["CONTROLLER"].addOperation(
+            Operation("ACTION_VALVE_CNTRL_STEP"))
+
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_SPECTRUM_CNTRL_STEP"))
 
@@ -134,22 +202,8 @@ class DasConfigure(object):
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_FPGA_REGISTER",
                 ["STREAM_Reference2","FPGA_WLMSIM","WLMSIM_REF2"]))
-        
-        self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
-                ["STREAM_CavityTemp","CAVITY_TEMPERATURE_REGISTER"]))
 
-        self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
-                ["STREAM_HotBoxTecTemp","HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
 
-        self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
-                ["STREAM_HotBoxTec","CAVITY_TEC_REGISTER"]))
-
-        self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
-                ["STREAM_HotBoxHeater","HEATER_CNTRL_MARK_REGISTER"]))
 
         # Stop the scheduler before loading new schedule
         sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",0);
@@ -172,7 +226,10 @@ class DasConfigure(object):
                 # Enable the PWM state machines in the FPGA
                 sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_LASER%d" % laserNum,"PWM_CS"]))
 
+        sender.doOperation(Operation("ACTION_TEMP_CNTRL_WARM_BOX_INIT"))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_CAVITY_INIT"))
+        sender.doOperation(Operation("ACTION_HEATER_CNTRL_INIT"))
+        sender.doOperation(Operation("ACTION_VALVE_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_SPECTRUM_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
 
@@ -181,8 +238,11 @@ class DasConfigure(object):
         #sender.wrRegFloat("LASER3_RESISTANCE_REGISTER",8000.0)
         #sender.wrRegFloat("LASER4_RESISTANCE_REGISTER",7000.0)
 
-        sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER",100000.0)
-        sender.wrRegFloat("CAVITY_RESISTANCE_REGISTER",100000.0)
+        sender.wrRegFloat("ETALON_RESISTANCE_REGISTER",6000.0)
+        sender.wrRegFloat("WARM_BOX_RESISTANCE_REGISTER",5900.0)
+        sender.wrRegFloat("WARM_BOX_HEATSINK_RESISTANCE_REGISTER",5800.0)
+        sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER",60000.0)
+        sender.wrRegFloat("CAVITY_RESISTANCE_REGISTER",59000.0)
         
         # Start the ringdown manager
         runCont = (1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B)

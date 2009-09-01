@@ -213,6 +213,7 @@ TempCntrl tempCntrlLaser1;
 TempCntrl tempCntrlLaser2;
 TempCntrl tempCntrlLaser3;
 TempCntrl tempCntrlLaser4;
+TempCntrl tempCntrlWarmBox;
 TempCntrl tempCntrlCavity;
 
 int tempCntrlLaser1Init(void)
@@ -519,15 +520,15 @@ int read_laser_tec_monitors()
         chan = 1;
         break;
     case 1:
-        read_laser_tec_imon(1,2,(float *)registerAddr(LASER3_TEC_MONITOR_REGISTER));
+        read_laser_tec_imon(1,2,(float *)registerAddr(LASER1_TEC_MONITOR_REGISTER));
         chan = 2;
         break;
     case 2:
-        read_laser_tec_imon(2,3,(float *)registerAddr(LASER1_TEC_MONITOR_REGISTER));
+        read_laser_tec_imon(2,3,(float *)registerAddr(LASER2_TEC_MONITOR_REGISTER));
         chan = 3;
         break;
     case 3:
-        read_laser_tec_imon(3,4,(float *)registerAddr(LASER2_TEC_MONITOR_REGISTER));
+        read_laser_tec_imon(3,4,(float *)registerAddr(LASER3_TEC_MONITOR_REGISTER));
         chan = 4;
         break;
     case 4:
@@ -553,6 +554,67 @@ int read_laser_thermistor_adc(int laserNum)
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
+}
+
+int tempCntrlWarmBoxInit(void)
+{
+    TempCntrl *t = &tempCntrlWarmBox;
+    PidParamsRef *p = &(t->pidParamsRef);
+    PidState *s  = &(t->pidState);
+    p->r_        = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER);
+    p->b_        = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_B_REGISTER);
+    p->c_        = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_C_REGISTER);
+    p->h_        = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_H_REGISTER);
+    p->K_        = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_K_REGISTER);
+    p->Ti_       = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_TI_REGISTER);
+    p->Td_       = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_TD_REGISTER);
+    p->N_        = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_N_REGISTER);
+    p->S_        = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_S_REGISTER);
+    p->Imax_     = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_IMAX_REGISTER);
+    p->Amin_     = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_AMIN_REGISTER);
+    p->Amax_     = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_AMAX_REGISTER);
+    p->ffwd_     = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_FFWD_REGISTER);
+    t->userSetpoint_ = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER);
+    t->state_    = (unsigned int *)registerAddr(WARM_BOX_TEMP_CNTRL_STATE_REGISTER);
+    t->tol_      = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER);
+    t->locked_   = (unsigned int *)registerAddr(WARM_BOX_TEMP_CNTRL_LOCK_STATUS_REGISTER);
+    t->swpMin_   = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_SWEEP_MIN_REGISTER);
+    t->swpMax_   = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_SWEEP_MAX_REGISTER);
+    t->swpInc_   = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_SWEEP_INCR_REGISTER);
+    t->extMax_   = (float *)registerAddr(WARM_BOX_MAX_HEATSINK_TEMP_REGISTER);
+    t->prbsAmp_  = (float *)registerAddr(WARM_BOX_TEC_PRBS_AMPLITUDE_REGISTER);
+    t->prbsMean_ = (float *)registerAddr(WARM_BOX_TEC_PRBS_MEAN_REGISTER);
+    t->prbsGen_  = (unsigned int *)registerAddr(WARM_BOX_TEC_PRBS_GENPOLY_REGISTER);
+    t->temp_     = (float *)registerAddr(WARM_BOX_TEMPERATURE_REGISTER);
+    t->extTemp_  = (float *)registerAddr(WARM_BOX_HEATSINK_TEMPERATURE_REGISTER);
+    t->dasTemp_  = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
+    t->tec_      = (float *)registerAddr(WARM_BOX_TEC_REGISTER);
+    t->manualTec_ = (float *)registerAddr(WARM_BOX_MANUAL_TEC_REGISTER);
+    t->swpDir    = 1;
+    *(t->state_)  = TEMP_CNTRL_DisabledState;
+    *(t->locked_) = FALSE;
+    t->lockCount = 0;
+    t->unlockCount = 0;
+    t->firstIteration = TRUE;
+    *(t->tec_) = s->a = s->u = 0x8000;
+    s->perr = 0.0;
+    s->derr1 = 0.0;
+    s->derr2 = 0.0;
+    s->Dincr = 0.0;
+    return STATUS_OK;
+}
+
+int tempCntrlWarmBoxStep(void)
+{
+    unsigned int regList[] = {WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER,
+                              WARM_BOX_TEMP_CNTRL_LOCK_STATUS_REGISTER,
+                              WARM_BOX_TEMP_CNTRL_STATE_REGISTER,
+                              WARM_BOX_TEC_REGISTER
+                             };
+    int status;
+    status = tempCntrlStep(&tempCntrlWarmBox);
+    writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
+    return status;
 }
 
 int tempCntrlCavityInit(void)

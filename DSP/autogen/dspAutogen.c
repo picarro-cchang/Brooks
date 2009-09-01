@@ -333,6 +333,54 @@ void initRegisters()
     writeRegister(CONVERSION_WARM_BOX_THERM_CONSTB_REGISTER,d);
     d.asFloat = 8.72979981636e-008;
     writeRegister(CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER,d);
+    d.asFloat = 32768.0;
+    writeRegister(WARM_BOX_MANUAL_TEC_REGISTER,d);
+    d.asUint = TEMP_CNTRL_DisabledState;
+    writeRegister(WARM_BOX_TEMP_CNTRL_STATE_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER,d);
+    d.asFloat = 0.1;
+    writeRegister(WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER,d);
+    d.asFloat = 30.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_SWEEP_MAX_REGISTER,d);
+    d.asFloat = 20.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_SWEEP_MIN_REGISTER,d);
+    d.asFloat = 0.05;
+    writeRegister(WARM_BOX_TEMP_CNTRL_SWEEP_INCR_REGISTER,d);
+    d.asFloat = 0.2;
+    writeRegister(WARM_BOX_TEMP_CNTRL_H_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_K_REGISTER,d);
+    d.asFloat = 1000.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_TI_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_TD_REGISTER,d);
+    d.asFloat = 1.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_B_REGISTER,d);
+    d.asFloat = 1.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_C_REGISTER,d);
+    d.asFloat = 100.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_N_REGISTER,d);
+    d.asFloat = 5.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_S_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_FFWD_REGISTER,d);
+    d.asFloat = 5.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_AMIN_REGISTER,d);
+    d.asFloat = 55000.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_AMAX_REGISTER,d);
+    d.asFloat = 10000.0;
+    writeRegister(WARM_BOX_TEMP_CNTRL_IMAX_REGISTER,d);
+    d.asUint = 0x481;
+    writeRegister(WARM_BOX_TEC_PRBS_GENPOLY_REGISTER,d);
+    d.asFloat = 5000.0;
+    writeRegister(WARM_BOX_TEC_PRBS_AMPLITUDE_REGISTER,d);
+    d.asFloat = 40000.0;
+    writeRegister(WARM_BOX_TEC_PRBS_MEAN_REGISTER,d);
+    d.asFloat = 70.0;
+    writeRegister(WARM_BOX_MAX_HEATSINK_TEMP_REGISTER,d);
     d.asFloat = 0.00112789997365;
     writeRegister(CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000234289997024;
@@ -479,6 +527,52 @@ void initRegisters()
     writeRegister(SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER,d);
     d.asUint = VIRTUAL_LASER_3;
     writeRegister(VIRTUAL_LASER_REGISTER,d);
+    d.asUint = VALVE_CNTRL_DisabledState;
+    writeRegister(VALVE_CNTRL_STATE_REGISTER,d);
+    d.asFloat = 140.0;
+    writeRegister(VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(VALVE_CNTRL_INLET_VALVE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(VALVE_CNTRL_OUTLET_VALVE_REGISTER,d);
+    d.asFloat = 5.0;
+    writeRegister(VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER,d);
+    d.asFloat = 50.0;
+    writeRegister(VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER,d);
+    d.asFloat = 0.5;
+    writeRegister(VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER,d);
+    d.asFloat = 20000.0;
+    writeRegister(VALVE_CNTRL_INLET_VALVE_MIN_REGISTER,d);
+    d.asFloat = 65000.0;
+    writeRegister(VALVE_CNTRL_INLET_VALVE_MAX_REGISTER,d);
+    d.asFloat = 1000.0;
+    writeRegister(VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER,d);
+    d.asFloat = 50.0;
+    writeRegister(VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER,d);
+    d.asFloat = 0.5;
+    writeRegister(VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER,d);
+    d.asFloat = 20000.0;
+    writeRegister(VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER,d);
+    d.asFloat = 65000.0;
+    writeRegister(VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER,d);
+    d.asFloat = 1000.0;
+    writeRegister(VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER,d);
+    d.asUint = VALVE_CNTRL_THRESHOLD_DisabledState;
+    writeRegister(VALVE_CNTRL_THRESHOLD_STATE_REGISTER,d);
+    d.asFloat = 2000.0;
+    writeRegister(VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(VALVE_CNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER,d);
+    d.asUint = 0x3F;
+    writeRegister(VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER,d);
+    d.asUint = 0x0;
+    writeRegister(VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER,d);
+    d.asInt = -1;
+    writeRegister(VALVE_CNTRL_SEQUENCE_STEP_REGISTER,d);
     d.asUint = 0;
     writeRegister(SENTRY_UPPER_LIMIT_TRIPPED_REGISTER,d);
     d.asUint = 0;
@@ -610,6 +704,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_currentCntrlLaser4Init(numInt,params,env);
         case ACTION_CURRENT_CNTRL_LASER4_STEP:
             return r_currentCntrlLaser4Step(numInt,params,env);
+        case ACTION_TEMP_CNTRL_WARM_BOX_INIT:
+            return r_tempCntrlWarmBoxInit(numInt,params,env);
+        case ACTION_TEMP_CNTRL_WARM_BOX_STEP:
+            return r_tempCntrlWarmBoxStep(numInt,params,env);
         case ACTION_TEMP_CNTRL_CAVITY_INIT:
             return r_tempCntrlCavityInit(numInt,params,env);
         case ACTION_TEMP_CNTRL_CAVITY_STEP:
@@ -636,6 +734,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_schedulerHeartbeat(numInt,params,env);
         case ACTION_SENTRY_INIT:
             return r_sentryInit(numInt,params,env);
+        case ACTION_VALVE_CNTRL_INIT:
+            return r_valveCntrlInit(numInt,params,env);
+        case ACTION_VALVE_CNTRL_STEP:
+            return r_valveCntrlStep(numInt,params,env);
         case ACTION_PULSE_GENERATOR:
             return r_pulseGenerator(numInt,params,env);
         case ACTION_FILTER:

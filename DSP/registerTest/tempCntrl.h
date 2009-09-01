@@ -58,6 +58,8 @@ int tempCntrlLaser4Init(void);
 int tempCntrlLaser4Step(void);
 int tempCntrlCavityInit(void);
 int tempCntrlCavityStep(void);
+int tempCntrlWarmBoxInit(void);
+int tempCntrlWarmBoxStep(void);
 int read_laser_tec_imon(int desired, int next, float *result);
 int read_laser_tec_monitors(void);
 int read_laser_thermistor_adc(int laserNum);

@@ -58,6 +58,8 @@ FPGA_REG_BASE    = interface.RDMEM_ADDRESS + \
                        (1<<(interface.EMIF_ADDR_WIDTH+1))
 RINGDOWN_BASE    = interface.DSP_DATA_ADDRESS
 
+ValveSequenceType = (interface.ValveSequenceEntryType * interface.NUM_VALVE_SEQUENCE_ENTRIES)
+
 class Operation(object):
     def __init__(self,opcode,operandList=[],env=0):
         self.opcode = lookup(opcode)
@@ -731,7 +733,38 @@ class HostToDspSender(Singleton):
         self.usb.hpiRead(SCHEME_SEQUENCE_BASE,schemeSequence)
         return {"schemeIndices":schemeSequence.schemeIndices[:schemeSequence.numberOfIndices],
                 "loopFlag":schemeSequence.loopFlag,"currentIndex":schemeSequence.currentIndex}
-                
+
+    @usbLockProtect
+    def wrValveSequence(self,sequenceRows):
+        # Write the valve sequence - sequenceRows is a list of triples (mask,value,duration)
+        #  where mask and value are each 8 bits wide and duration is 16 bits wide
+        VALVE_SEQUENCE_BASE = interface.SHAREDMEM_ADDRESS + 4*interface.VALVE_SEQUENCE_OFFSET
+        valveSequence = (ValveSequenceType)()
+        if len(sequenceRows) > interface.NUM_VALVE_SEQUENCE_ENTRIES:
+            raise ValueError,"Maximum number of rows in a valve sequence is %d" % interface.NUM_VALVE_SEQUENCE_ENTRIES
+        for i,(mask,value,dwell) in enumerate(sequenceRows):
+            if mask<0 or mask>0xFF:
+                raise ValueError,"Mask in valve sequence is eight bits wide"
+            if value<0 or value>0xFF:
+                raise ValueError,"Value in valve sequence is eight bits wide"
+            if dwell<0 or dwell>0xFFFF:
+                raise ValueError,"Dwell in valve sequence is sixteen bits wide"
+            valveSequence[i].maskAndValue = (mask << 8) | (value & 0xFF)
+            valveSequence[i].dwell = dwell
+        self.usb.hpiWrite(VALVE_SEQUENCE_BASE,valveSequence)
+    
+    @usbLockProtect
+    def rdValveSequence(self):
+        # Reads the valve sequence as a list of triples (mask,value,duration)
+        VALVE_SEQUENCE_BASE = interface.SHAREDMEM_ADDRESS + 4*interface.VALVE_SEQUENCE_OFFSET
+        valveSequence = (ValveSequenceType)()
+        self.usb.hpiRead(VALVE_SEQUENCE_BASE,valveSequence)
+        sequenceRows = []
+        for i in range(interface.NUM_VALVE_SEQUENCE_ENTRIES):
+            entry = valveSequence[i]
+            sequenceRows.append(((entry.maskAndValue >> 8)&0xFF,entry.maskAndValue & 0xFF,entry.dwell))
+        return sequenceRows
+    
     @usbLockProtect
     def wrVirtualLaserParams(self,vLaserNum,vLaserParams):
         # Write virtual laser parameters for vLaserNum (zero-based index)

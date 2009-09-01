@@ -33,6 +33,7 @@
 #include "laserCurrentCntrl.h"
 #include "heaterCntrl.h"
 #include "tunerCntrl.h"
+#include "valveCntrl.h"
 #include "i2c_dsp.h"
 #include "ds1631.h"
 #include "ltc2451.h"
@@ -359,6 +360,20 @@ int r_currentCntrlLaser4Step(unsigned int numInt,void *params,void *env)
     return status;
 }
 
+int r_tempCntrlWarmBoxInit(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return tempCntrlWarmBoxInit();
+}
+
+int r_tempCntrlWarmBoxStep(unsigned int numInt,void *params,void *env)
+{
+    int status;
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    status = tempCntrlWarmBoxStep();
+    return status;
+}
+
 int r_tempCntrlCavityInit(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
@@ -414,6 +429,21 @@ int r_spectCntrlStep(unsigned int numInt,void *params,void *env)
     status = spectCntrlStep();
     return status;
 }
+
+int r_valveCntrlInit(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return valveCntrlInit();
+}
+
+int r_valveCntrlStep(unsigned int numInt,void *params,void *env)
+{
+    int status;
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    status = valveCntrlStep();
+    return status;
+}
+
 
 int r_envChecker(unsigned int numInt,void *params,void *env)
 // This action tests the use of the environment pointer

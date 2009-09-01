@@ -150,6 +150,10 @@
             <field ident="streamNum" type="uint32"/>
             <field ident="value" type="DataType"/>
         </struct>
+        <struct type="ValveSequenceEntryType">
+            <field ident="maskAndValue" type="uint16"/>
+            <field ident="dwell" type="uint16"/>
+        </struct>
         <struct type="PidControllerEnvType">
             <field ident="swpDir" type="int32"/>
             <field ident="lockCount" type="int32"/>
@@ -259,7 +263,11 @@
         <constant ident="MISSING_RINGDOWN" description="Code to indicate that we abandoned this scheme row due to a timeout">NUM_RINGDOWN_BUFFERS</constant>
         <constant ident="RINGDOWN_BUFFER_SIZE" description="Size of a ringdown buffer area in 32 bit ints">(sizeof(RingdownBufferType)/4)</constant>
         <constant ident="SCHEME_SEQUENCE_OFFSET" description="Offset for scheme sequence area in DSP shared memory">0x7800</constant>
-        <constant ident="SCHEME_SEQUENCE_SIZE" description="Size of a scheme sequence in 32 bit ints">(sizeof(SchemeSequenceType)/4)</constant>
+        <constant ident="SCHEME_SEQUENCE_SIZE" description="Size of scheme sequence in 32 bit ints">(sizeof(SchemeSequenceType)/4)</constant>
+        <constant ident="VALVE_SEQUENCE_OFFSET" description="Offset for valve sequence area in DSP shared memory">(SCHEME_SEQUENCE_OFFSET+SCHEME_SEQUENCE_SIZE)</constant>
+        <constant ident="NUM_VALVE_SEQUENCE_ENTRIES" description="Number of valve sequence entries">256</constant>
+        <constant ident="VALVE_SEQUENCE_ENTRY_SIZE" description="Size of a valve sequence in 32 bit ints">(sizeof(ValveSequenceEntryType)/4)</constant>
+        <constant ident="NEXT_AVAILABLE_OFFSET" description="Offset following used of shared memory">(VALVE_SEQUENCE_OFFSET+NUM_VALVE_SEQUENCE_ENTRIES*VALVE_SEQUENCE_ENTRY_SIZE)</constant>
         <constant ident="SHAREDMEM_SIZE" description="Size (in 32-bit ints) of DSP shared memory">0x8000</constant>
         <constant ident="REG_REGION_SIZE" description="Number of software registers">(SENSOR_OFFSET - REG_OFFSET)</constant>
         <constant ident="SENSOR_REGION_SIZE" description="Number of 32-bit ints in sensor area">(MESSAGE_OFFSET - SENSOR_OFFSET)</constant>
@@ -308,9 +316,9 @@
             <enum_value ident="STREAM_Laser4Temp" />
             <enum_value ident="STREAM_EtalonTemp" />
             <enum_value ident="STREAM_WarmBoxTemp" />
-            <enum_value ident="STREAM_WarmBoxTecTemp" />
+            <enum_value ident="STREAM_WarmBoxHeatsinkTemp" />
             <enum_value ident="STREAM_CavityTemp" />
-            <enum_value ident="STREAM_HotBoxTecTemp" />
+            <enum_value ident="STREAM_HotBoxHeatsinkTemp" />
             <enum_value ident="STREAM_DasTemp" />
             <enum_value ident="STREAM_Etalon1" />
             <enum_value ident="STREAM_Reference1" />
@@ -377,6 +385,19 @@
             <description>Tuner modes</description>
             <enum_value ident="TUNER_RampMode" value="0" caption="Ramp mode" />
             <enum_value ident="TUNER_DitherMode" value="1" caption="Dither mode" />
+        </enum>
+        <enum type="VALVE_CNTRL_StateType">
+            <description>Valve control states</description>
+            <enum_value ident="VALVE_CNTRL_DisabledState" value="0" caption="Disabled" />
+            <enum_value ident="VALVE_CNTRL_OutletControlState" value="1" caption="Outlet control" />
+            <enum_value ident="VALVE_CNTRL_InletControlState" value="2" caption="Inlet control" />
+            <enum_value ident="VALVE_CNTRL_ManualControlState" value="3" caption="Manual control" />
+        </enum>
+        <enum type="VALVE_CNTRL_THRESHOLD_StateType">
+            <description>Loss-based triggering states</description>
+            <enum_value ident="VALVE_CNTRL_THRESHOLD_DisabledState" value="0" caption="Disabled" />
+            <enum_value ident="VALVE_CNTRL_THRESHOLD_ArmedState" value="1" caption="Armed" />
+            <enum_value ident="VALVE_CNTRL_THRESHOLD_TriggeredState" value="2" caption="Triggered" />
         </enum>
         <enum type="VIRTUAL_LASER_Type">
             <description>Virtual laser selection</description> 
@@ -1392,6 +1413,153 @@
         <register ident="WARM_BOX_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Warm box thermistor ADC</description>
         </register>
+        <register ident="WARM_BOX_TEC_REGISTER" type="float" minver="1.0" access="r">
+            <description>Warm box TEC value</description>
+        </register>
+        <register ident="WARM_BOX_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box manual TEC value</description>
+            <initial>32768.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual TEC Value</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_STATE_REGISTER" type="TEMP_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Warm box Temperature control app state register</description>
+            <initial>TEMP_CNTRL_DisabledState</initial>
+            <display>Temperature Controller Mode</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_LOCK_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Warm box Temperature control app lock status register. 1 if locked 0 otherwise.</description>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+            <description>Warm box Temperature Control app setpoint in degC.</description>
+            <initial>25.0</initial>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature Control app user setpoint in degC.</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Setpoint</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature Control app lock tolerance in degC.</description>
+            <initial>0.1</initial>
+            <save/>
+            <display format="%.3f" units="degC">Lock tolerance</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature Control app maximum sweep value in degC.</description>
+            <initial>30.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Max sweep value</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature Control app minimum sweep value in degC.</description>
+            <initial>20.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Min sweep value</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature Control app sweep increment in degC.</description>
+            <initial>0.05</initial>
+            <save/>
+            <display format="%.4f" units="degC/sample">Sweep increment</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature control app interval in seconds.</description>
+            <initial>0.2</initial>
+            <save/>
+            <display format="%.3f" units="s">Sample interval</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_K_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature control app proportional constant.</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f">Loop proportional gain (K)</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_TI_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature control app integrator time constant.</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Integration time (Ti)</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_TD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature control derivative time constant</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Derivative time (Td)</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_B_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature control app proportional setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Proportional setpoint gain (b)</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_C_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature control app derivative setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Derivative setpoint gain (c)</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_N_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature control app derivative regularization</description>
+            <initial>100.0</initial>
+            <save/>
+            <display format="%.2f">Derivative regularization (N)</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_S_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature control app saturation regularization</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.2f">Saturation regularization (S)</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box DAS temperature feed forward coefficient</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">DAS temperature feed forward coefficient</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_AMIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature control app minimum TEC value</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.0f">Minimum TEC value (Amin)</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_AMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature control app maximum TEC value</description>
+            <initial>55000.0</initial>
+            <save/>
+            <display format="%.0f">Maximum TEC value (Amax)</display>
+        </register>
+        <register ident="WARM_BOX_TEMP_CNTRL_IMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box Temperature control app maximum TEC change/step</description>
+            <initial>10000.0</initial>
+            <save/>
+            <display format="%.1f">Maximum actuator increment (Imax)</display>
+        </register>
+        <register ident="WARM_BOX_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Warm box TEC PRBS generator polynomial</description>
+            <initial>0x481</initial>
+            <save/>
+            <display format="$%X">PRBS generator</display>
+        </register>
+        <register ident="WARM_BOX_TEC_PRBS_AMPLITUDE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box TEC PRBS amplitude</description>
+            <initial>5000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS amplitude</display>
+        </register>
+        <register ident="WARM_BOX_TEC_PRBS_MEAN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box TEC PRBS mean</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS mean</display>
+        </register>
+        <register ident="WARM_BOX_MAX_HEATSINK_TEMP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Maximum temperature of warm box heatsink</description>
+            <initial>70.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Warm Box heatsink maximum temperature</display>
+        </register>
         <register ident="CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Warm box heatsink thermistor constant A</description>
             <initial>0.00112789997365</initial>
@@ -1847,6 +2015,139 @@
             <description>Virtual laser</description>
             <initial>VIRTUAL_LASER_3</initial>
             <display>Virtual laser</display>
+        </register>
+        <register ident="VALVE_CNTRL_STATE_REGISTER" type="VALVE_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Valve control app state register</description>
+            <initial>VALVE_CNTRL_DisabledState</initial>
+            <display>Valve Controller Mode</display>
+        </register>
+        <register ident="VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity pressure setpoint</description>
+            <initial>140.0</initial>
+            <save/>
+            <display format="%.2f" units="torr">Cavity pressure setpoint</display>
+        </register>
+        <register ident="VALVE_CNTRL_INLET_VALVE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Inlet valve value</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Inlet valve value</display>
+        </register>
+        <register ident="VALVE_CNTRL_OUTLET_VALVE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Outlet valve value</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Outlet valve value</display>
+        </register>
+        <register ident="VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity pressure maximum change rate</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.3f" units="torr/s">Cavity pressure maximum rate of change</display>
+        </register>
+        <register ident="VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Gain 1 for inlet valve</description>
+            <initial>50.0</initial>
+            <save/>
+            <display format="%.2f">Inlet valve gain 1</display>
+        </register>
+        <register ident="VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Gain 2 for inlet valve</description>
+            <initial>0.5</initial>
+            <save/>
+            <display format="%.2f">Inlet valve gain 2</display>
+        </register>
+        <register ident="VALVE_CNTRL_INLET_VALVE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Minimum value for inlet valve</description>
+            <initial>20000.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Inlet valve minimum value</display>
+        </register>
+        <register ident="VALVE_CNTRL_INLET_VALVE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Maximum value for inlet valve</description>
+            <initial>65000.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Inlet valve maximum value</display>
+        </register>
+        <register ident="VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Maximum change between samples for inlet valve</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.1f" units="digU">Inlet valve maximum change between samples</display>
+        </register>
+        <register ident="VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Gain 1 for outlet valve</description>
+            <initial>50.0</initial>
+            <save/>
+            <display format="%.2f">Outlet valve gain 1</display>
+        </register>
+        <register ident="VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Gain 2 for outlet valve</description>
+            <initial>0.5</initial>
+            <save/>
+            <display format="%.2f">Outlet valve gain 2</display>
+        </register>
+        <register ident="VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Minimum value for outlet valve</description>
+            <initial>20000.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Inlet valve minimum value</display>
+        </register>
+        <register ident="VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Maximum value for outlet valve</description>
+            <initial>65000.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Outlet valve maximum value</display>
+        </register>
+        <register ident="VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Maximum change between samples for outlet valve</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.1f" units="digU">Outlet valve maximum change between samples</display>
+        </register>
+        <register ident="VALVE_CNTRL_THRESHOLD_STATE_REGISTER" type="VALVE_CNTRL_THRESHOLD_StateType" minver="1.0" access="rw">
+            <description>Loss-based triggering states</description>
+            <initial>VALVE_CNTRL_THRESHOLD_DisabledState</initial>
+            <display>Loss-based Triggering</display>
+        </register>
+        <register ident="VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Trigger when loss rises above specified value</description>
+            <initial>2000.0</initial>
+            <save/>
+            <display format="%.0f" units="ppb/cm">Loss threshold for trigger</display>
+        </register>
+        <register ident="VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Trigger when change of loss between samples is below this value</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.0f" units="ppb/cm/sample">Rate of change of loss for trigger</display>
+        </register>
+        <register ident="VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Value to set inlet valve to when triggered</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Inlet valve when triggered</display>
+        </register>
+        <register ident="VALVE_CNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Value to set outlet valve to when triggered</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Outlet valve when triggered</display>
+        </register>
+        <register ident="VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Bit mask to select solenoid valves affected by trigger</description>
+            <initial>0x3F</initial>
+            <save/>
+            <display format="$%X">Bit mask to select solenoid valves affected by trigger</display>
+        </register>
+        <register ident="VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description></description>
+            <initial>0x0</initial>
+            <save/>
+            <display format="$%X">Solenoid valve states when triggered</display>
+        </register>
+        <register ident="VALVE_CNTRL_SEQUENCE_STEP_REGISTER" type="int32" minver="1.0" access="rw">
+            <description>Valve sequence step</description>
+            <initial>-1</initial>
+            <display format="%d">Valve sequence step (-1 to disable)</display>
         </register>
         <register ident="SENTRY_UPPER_LIMIT_TRIPPED_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Bitmask of sentries which have exceeded upper limit</description>
@@ -2749,6 +3050,8 @@
         <action ident="ACTION_CURRENT_CNTRL_LASER3_STEP">r_currentCntrlLaser3Step</action>
         <action ident="ACTION_CURRENT_CNTRL_LASER4_INIT">r_currentCntrlLaser4Init</action>
         <action ident="ACTION_CURRENT_CNTRL_LASER4_STEP">r_currentCntrlLaser4Step</action>
+        <action ident="ACTION_TEMP_CNTRL_WARM_BOX_INIT">r_tempCntrlWarmBoxInit</action>
+        <action ident="ACTION_TEMP_CNTRL_WARM_BOX_STEP">r_tempCntrlWarmBoxStep</action>
         <action ident="ACTION_TEMP_CNTRL_CAVITY_INIT">r_tempCntrlCavityInit</action>
         <action ident="ACTION_TEMP_CNTRL_CAVITY_STEP">r_tempCntrlCavityStep</action>
         <action ident="ACTION_HEATER_CNTRL_INIT">r_heaterCntrlInit</action>
@@ -2762,6 +3065,8 @@
         <action ident="ACTION_WB_CACHE">r_wbCache</action>
         <action ident="ACTION_SCHEDULER_HEARTBEAT">r_schedulerHeartbeat</action>
         <action ident="ACTION_SENTRY_INIT">r_sentryInit</action>
+        <action ident="ACTION_VALVE_CNTRL_INIT">r_valveCntrlInit</action>
+        <action ident="ACTION_VALVE_CNTRL_STEP">r_valveCntrlStep</action>
         <!-- Pulse generator:
         Inputs:
             Register (int):   Duration of low level
