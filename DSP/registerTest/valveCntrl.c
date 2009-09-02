@@ -25,34 +25,10 @@
 #include "dspData.h"
 #include <math.h>
 #include <stdio.h>
-
-    VALVE_CNTRL_StateType *state_;      // Valve controller state
-    float *setpoint_;                   // Cavity pressure setpoint
-    float *inlet_;                      // Inlet valve value
-    float *outlet_;                     // Outlet valve value
-    float *dpdtMax_;                    // Maximum rate of change of pressure
-    float *inletGain1_;                 // Gain 1 for inlet valve
-    float *inletGain2_;                 // Gain 2 for inlet valve
-    float *inletMin_;                   // Minimum for inlet valve
-    float *inletMax_;                   // Maximum for inlet valve
-    float *inletMaxChange_;             // Maximum change for inlet valve
-    float *outletGain1_;                // Gain 1 for outlet valve
-    float *outletGain2_;                // Gain 2 for outlet valve
-    float *outletMin_;                  // Minimum for outlet valve
-    float *outletMax_;                  // Maximum for outlet valve
-    float *outletMaxChange_;            // Maximum change for outlet valve
-
-    VALVE_CNTRL_THRESHOLD_StateType *threshState;   // Threshold state
-    float *lossThreshold_;              // Loss threshold for triggering
-    float *rateThreshold_;              // Rate threshold for triggering
-    float *inletTriggeredValue_;        // Value for inlet valve when triggered
-    float *outletTriggeredValue_;       // Value for outlet valve when triggered
-    unsigned int *solenoidMask_;        // Mask to apply to solenoid valves when triggered
-    unsigned int *solenoidState_;       // Solenoid valve states when triggered
-    int *sequenceStep_;                 // Sequence step
-
+#define INVALID_PRESSURE_VALUE (-100.0)
 
 #define state           (*(v->state_))
+#define cavityPressure  (*(v->cavityPressure_))
 #define setpoint        (*(v->setpoint_))
 #define inlet           (*(v->inlet_))
 #define outlet          (*(v->outlet_))
@@ -65,9 +41,11 @@
 #define outletGain1     (*(v->outletGain1_))
 #define outletGain2     (*(v->outletGain2_))
 #define outletMin       (*(v->outletMin_))
-#define outletMax       (*(v->outetMax_))
+#define outletMax       (*(v->outletMax_))
 #define outletMaxChange (*(v->outletMaxChange_))
+#define solenoidValves  (*(v->solenoidValves_))
 #define threshState     (*(v->threshState_))
+#define latestLoss      (*(v->latestLoss_))
 #define lossThreshold   (*(v->lossThreshold_))
 #define rateThreshold   (*(v->rateThreshold_))
 #define inletTriggeredValue     (*(v->inletTriggeredValue_))
@@ -78,12 +56,107 @@
 
 ValveCntrl valveCntrl;
 
-int valveCntrlStep()
+void proportionalValveStep()
 {
     ValveCntrl *v = &valveCntrl;
-    char msg[120];
-    // Step the valve controller
+    float delta, dError, dpdt, dpdtSet, error, valveValue;
+    
+    if (v->lastPressure > INVALID_PRESSURE_VALUE) 
+        dpdt = (cavityPressure-v->lastPressure)/v->deltaT;
+    else
+        dpdt = 0;
+    error = setpoint - cavityPressure;
+    v->lastPressure = cavityPressure;
 
+    switch (state) {
+        case VALVE_CNTRL_DisabledState:
+            inlet = 0;
+            outlet = 0;
+            break;
+        case VALVE_CNTRL_ManualControlState:
+            break;
+        case VALVE_CNTRL_OutletControlState:
+            // Gain2 sets how the pressure rate setpoint depends on the pressure error
+            dpdtSet = outletGain2 * error;
+            // Limit rate setpoint to maximum allowed rate of change
+            if (dpdtSet < -dpdtMax) dpdtSet = -dpdtMax;
+            else if (dpdtSet > dpdtMax) dpdtSet = dpdtMax;
+            // Following implements an integral controller for the rate of change of pressure
+            // Gain1 sets the integral gain
+            dError = dpdtSet - dpdt;
+            delta = -outletGain1 * dError;  // -ve because opening outlet decreases pressure
+            // Limit change of valve value
+            if (delta < -outletMaxChange) delta = -outletMaxChange;
+            else if (delta > outletMaxChange) delta = outletMaxChange;
+            valveValue = outlet + delta;
+            // Limit absolute valve value
+            if (valveValue < outletMin) valveValue = outletMin;
+            else if (valveValue > outletMax) valveValue = outletMax;
+            outlet = valveValue;
+            break;
+        case VALVE_CNTRL_InletControlState:
+            // Gain2 sets how the pressure rate setpoint depends on the pressure error
+            dpdtSet = inletGain2 * error;
+            // Limit rate setpoint to maximum allowed rate of change
+            if (dpdtSet < -dpdtMax) dpdtSet = -dpdtMax;
+            else if (dpdtSet > dpdtMax) dpdtSet = dpdtMax;
+            // Following implements an integral controller for the rate of change of pressure
+            // Gain1 sets the integral gain
+            dError = dpdtSet - dpdt;
+            delta = inletGain1 * dError;   // +ve because opening inlet increases pressure
+            // Limit change of valve value
+            if (delta < -inletMaxChange) delta = -inletMaxChange;
+            if (delta > inletMaxChange) delta = inletMaxChange;
+            valveValue = inlet + delta;
+            // Limit absolute valve value
+            if (valveValue < inletMin) valveValue = inletMin;
+            if (valveValue > inletMax) valveValue = inletMax;
+            inlet = valveValue;
+            break;
+    }
+}
+
+#define SWAP(a,b) { float temp=(a); (a)=(b); (b)=temp; }
+#define SORT(a,b) { if ((a)>(b)) SWAP((a),(b)); }
+
+void thresholdTriggerStep()
+{
+    ValveCntrl *v = &valveCntrl;
+    // Variables for median filter of last five losses
+    static float last5[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+    float t0, t1, t2, t3, t4, lossPpb, lossRate;
+    
+    lossPpb = 1000.0*latestLoss;
+    // Calculate rolling median of last five loss points
+    t0 = last5[0]; t1 = last5[1]; t2 = last5[2]; t3 = last5[3]; t4 = last5[4];
+    SORT(t0,t1); SORT(t3,t4); SORT(t0,t3);
+    SORT(t1,t4); SORT(t1,t2); SORT(t2,t3);
+    SORT(t1,t2);
+    lossPpb = t2;
+    
+    // Calculate rate of change of loss
+    lossRate = (lossPpb - v->lastLossPpb)/v->deltaT;
+    v->lastLossPpb = lossPpb;
+    
+    if (threshState == VALVE_CNTRL_THRESHOLD_ArmedState) {
+        // When armed, check if loss is above rising loss threshold and if 
+        //  rate is below rising loss rate threshold. If both hold, the system
+        //  enters the triggered state.
+        if (lossPpb >= lossThreshold && lossRate <= rateThreshold) {
+            state = VALVE_CNTRL_ManualControlState;
+            if (outletTriggeredValue >= 0) outlet = outletTriggeredValue;
+            if (inletTriggeredValue >= 0)  inlet = inletTriggeredValue;
+            // Set up the solenoid valve state based on solenoidMask
+            //  and solenoidState
+            solenoidValves = (solenoidValves & ~solenoidMask) | (solenoidState & solenoidMask);
+            threshState = VALVE_CNTRL_THRESHOLD_TriggeredState;
+        }
+    }
+}
+
+void valveSequencerStep()
+{
+    ValveCntrl *v = &valveCntrl;
     if (sequenceStep >= 0) { // Valve sequencing is enabled
         if (sequenceStep < NUM_VALVE_SEQUENCE_ENTRIES) {
             unsigned short maskAndValue = valveSequence[sequenceStep].maskAndValue;
@@ -93,9 +166,7 @@ int valveCntrlStep()
                 unsigned int value = maskAndValue & 0xFF;
                 maskAndValue >>= 8;
                 if (v->dwellCount == 0) {     // Update the solenoid valves
-                    // TO DO: Read current valve settings from FPGA, apply mask and value        
-                    sprintf(msg,"Valve mask: %2x, value: %2x",maskAndValue,value);
-                    message_puts(msg);
+                    solenoidValves = (solenoidValves & ~maskAndValue) | value;
                 }
                 if (v->dwellCount >= dwell) { // Move to the next step in the sequence
                     sequenceStep += 1;
@@ -106,6 +177,14 @@ int valveCntrlStep()
         }
         else sequenceStep = -1;
     }
+}
+
+int valveCntrlStep()
+{
+    // Step the valve controller
+    proportionalValveStep();
+    thresholdTriggerStep();
+    valveSequencerStep();
     return STATUS_OK;   
 }
 
@@ -114,6 +193,7 @@ int valveCntrlInit(void)
     ValveCntrl *v = &valveCntrl;
 
     v->state_               = (VALVE_CNTRL_StateType *)registerAddr(VALVE_CNTRL_STATE_REGISTER);
+    v->cavityPressure_      = (float*)registerAddr(CAVITY_PRESSURE_REGISTER);
     v->setpoint_            = (float*)registerAddr(VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER);
     v->inlet_               = (float*)registerAddr(VALVE_CNTRL_INLET_VALVE_REGISTER);
     v->outlet_              = (float*)registerAddr(VALVE_CNTRL_OUTLET_VALVE_REGISTER);
@@ -128,7 +208,9 @@ int valveCntrlInit(void)
     v->outletMin_           = (float*)registerAddr(VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER);
     v->outletMax_           = (float*)registerAddr(VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER);
     v->outletMaxChange_     = (float*)registerAddr(VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER);
+    v->solenoidValves_      = (unsigned int*)registerAddr(VALVE_CNTRL_SOLENOID_VALVES_REGISTER);
     v->threshState_         = (VALVE_CNTRL_THRESHOLD_StateType *)registerAddr(VALVE_CNTRL_THRESHOLD_STATE_REGISTER);
+    v->latestLoss_          = (float*)registerAddr(RDFITTER_LATEST_LOSS_REGISTER);
     v->lossThreshold_       = (float*)registerAddr(VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER);
     v->rateThreshold_       = (float*)registerAddr(VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER);
     v->inletTriggeredValue_ = (float*)registerAddr(VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER);
@@ -141,9 +223,11 @@ int valveCntrlInit(void)
     threshState = VALVE_CNTRL_THRESHOLD_DisabledState;
     inlet = 0;
     outlet = 0;
+    solenoidValves = 0;
     sequenceStep = -1;
     v->deltaT = 0.2;
-    v->lastLoss = 0;
+    v->lastLossPpb = 0;
+    v->lastPressure = INVALID_PRESSURE_VALUE;
     v->dwellCount = 0;
     return STATUS_OK;
 }

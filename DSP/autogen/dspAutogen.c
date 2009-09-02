@@ -573,6 +573,8 @@ void initRegisters()
     writeRegister(VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER,d);
     d.asInt = -1;
     writeRegister(VALVE_CNTRL_SEQUENCE_STEP_REGISTER,d);
+    d.asUint = 0x0;
+    writeRegister(VALVE_CNTRL_SOLENOID_VALVES_REGISTER,d);
     d.asUint = 0;
     writeRegister(SENTRY_UPPER_LIMIT_TRIPPED_REGISTER,d);
     d.asUint = 0;

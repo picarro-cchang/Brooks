@@ -324,6 +324,8 @@
             <enum_value ident="STREAM_Reference1" />
             <enum_value ident="STREAM_Etalon2" />
             <enum_value ident="STREAM_Reference2" />
+            <enum_value ident="STREAM_Ratio1" />
+            <enum_value ident="STREAM_Ratio2" />
             <enum_value ident="STREAM_Laser1Current" />
             <enum_value ident="STREAM_Laser2Current" />
             <enum_value ident="STREAM_Laser3Current" />
@@ -2118,7 +2120,7 @@
             <description>Trigger when change of loss between samples is below this value</description>
             <initial>0</initial>
             <save/>
-            <display format="%.0f" units="ppb/cm/sample">Rate of change of loss for trigger</display>
+            <display format="%.0f" units="ppb/cm/s">Rate of change of loss for trigger</display>
         </register>
         <register ident="VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER" type="float" minver="1.0" access="rw">
             <description>Value to set inlet valve to when triggered</description>
@@ -2149,6 +2151,12 @@
             <initial>-1</initial>
             <display format="%d">Valve sequence step (-1 to disable)</display>
         </register>
+        <register ident="VALVE_CNTRL_SOLENOID_VALVES_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>States of solenoid valves</description>
+            <initial>0x0</initial>
+            <display format="$%X">Solenoid valve states</display>
+        </register>
+        
         <register ident="SENTRY_UPPER_LIMIT_TRIPPED_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Bitmask of sentries which have exceeded upper limit</description>
             <initial>0</initial>

@@ -184,12 +184,18 @@ class DasConfigure(object):
         self.opGroups["SLOW"]["CONTROLLER"].addOperation(
             Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
 
+        # Valve control
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER",
+                ["STREAM_ValveMask","VALVE_CNTRL_SOLENOID_VALVES_REGISTER"]))
+        
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_VALVE_CNTRL_STEP"))
 
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_SPECTRUM_CNTRL_STEP"))
 
+        # Streaming outputs of wavelength monitor
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_FPGA_REGISTER",
                 ["STREAM_Etalon1","FPGA_WLMSIM","WLMSIM_ETA1"]))
@@ -203,7 +209,12 @@ class DasConfigure(object):
             Operation("ACTION_STREAM_FPGA_REGISTER",
                 ["STREAM_Reference2","FPGA_WLMSIM","WLMSIM_REF2"]))
 
-
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_FPGA_REGISTER",
+                ["STREAM_Ratio1","FPGA_LASERLOCKER","LASERLOCKER_RATIO1"]))
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_FPGA_REGISTER",
+                ["STREAM_Ratio2","FPGA_LASERLOCKER","LASERLOCKER_RATIO2"]))
 
         # Stop the scheduler before loading new schedule
         sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",0);

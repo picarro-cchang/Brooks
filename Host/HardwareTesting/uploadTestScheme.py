@@ -17,7 +17,7 @@ if __name__ == "__main__":
                    'calPressure': 760.0, 'pressureC0': 0.0, 'pressureC1': 0.0, 'pressureC2': 0.0, 'pressureC3': 0.0}
     driver.wrVirtualLaserParams(4,laserParams)
     thList = linspace(-3*pi/4,-pi/4,321)
-    dwell = 2*ones(thList.shape)
+    dwell = 3*ones(thList.shape)
     subschemeId = zeros(thList.shape)
     laserUsed = 4*ones(thList.shape)
     threshold = zeros(thList.shape)

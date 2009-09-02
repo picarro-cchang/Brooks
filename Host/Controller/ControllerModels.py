@@ -29,6 +29,7 @@ import socket
 EventManagerProxy_Init("Controller")
 
 waveforms = {}
+dasInfo = {}
 parameterForms = {}
 panels = {}
 
@@ -61,6 +62,7 @@ class RingdownListener(SharedTypes.Singleton):
         if data.status & interface.RINGDOWN_STATUS_RingdownTimeout:
             Log("Ringdown timeout at %s" % data.timestamp)
         panels["Ringdown"].appendData(data)
+        panels["Stats"].appendData(data)
 
 class SensorListener(SharedTypes.Singleton):
     def __init__(self):
@@ -71,83 +73,69 @@ class SensorListener(SharedTypes.Singleton):
                             retry = True,
                             name = "Controller sensor stream listener",
                             logFunc = Log)
-        self.tempBuffer = dict(etalon1={},reference1={},etalon2={},reference2={})
         
     def  filter(self,data):
         utime = timestamp.unixTime(data.timestamp)
-        value = data.value.asFloat
+        valueAsFloat = data.value.asFloat
+        valueAsUInt  = data.value.asUint
         if data.streamNum == interface.STREAM_Laser1Temp:
-            waveforms["Laser1"]["temperature"].Add(utime,value)
+            waveforms["Laser1"]["temperature"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Laser2Temp:
-            waveforms["Laser2"]["temperature"].Add(utime,value)
+            waveforms["Laser2"]["temperature"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Laser3Temp:
-            waveforms["Laser3"]["temperature"].Add(utime,value)
+            waveforms["Laser3"]["temperature"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Laser4Temp:
-            waveforms["Laser4"]["temperature"].Add(utime,value)
+            waveforms["Laser4"]["temperature"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Laser1Tec:
-            waveforms["Laser1"]["tec"].Add(utime,value)
+            waveforms["Laser1"]["tec"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Laser2Tec:
-            waveforms["Laser2"]["tec"].Add(utime,value)
+            waveforms["Laser2"]["tec"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Laser3Tec:
-            waveforms["Laser3"]["tec"].Add(utime,value)
+            waveforms["Laser3"]["tec"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Laser4Tec:
-            waveforms["Laser4"]["tec"].Add(utime,value)
+            waveforms["Laser4"]["tec"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Laser1Current:
-            waveforms["Laser1"]["current"].Add(utime,value)
+            waveforms["Laser1"]["current"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Laser2Current:
-            waveforms["Laser2"]["current"].Add(utime,value)
+            waveforms["Laser2"]["current"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Laser3Current:
-            waveforms["Laser3"]["current"].Add(utime,value)
+            waveforms["Laser3"]["current"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Laser4Current:
-            waveforms["Laser4"]["current"].Add(utime,value)
+            waveforms["Laser4"]["current"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Etalon1:
-            waveforms["Wlm"]["etalon1"].Add(utime,value)
-            if utime in self.tempBuffer["reference1"]:
-                waveforms["Wlm"]["ratio1"].Add(utime,value/self.tempBuffer["reference1"][utime])
-                del self.tempBuffer["reference1"][utime]
-            else:
-                self.tempBuffer["etalon1"][utime] = value
+            waveforms["Wlm"]["etalon1"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Reference1:
-            waveforms["Wlm"]["reference1"].Add(utime,value)
-            if utime in self.tempBuffer["etalon1"]:
-                waveforms["Wlm"]["ratio1"].Add(utime,self.tempBuffer["etalon1"][utime]/value)
-                del self.tempBuffer["etalon1"][utime]
-            else:
-                self.tempBuffer["reference1"][utime] = value
+            waveforms["Wlm"]["reference1"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Etalon2:
-            waveforms["Wlm"]["etalon2"].Add(utime,value)
-            if utime in self.tempBuffer["reference2"]:
-                waveforms["Wlm"]["ratio2"].Add(utime,value/self.tempBuffer["reference2"][utime])
-                del self.tempBuffer["reference2"][utime]
-            else:
-                self.tempBuffer["etalon2"][utime] = value
+            waveforms["Wlm"]["etalon2"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Reference2:
-            waveforms["Wlm"]["reference2"].Add(utime,value)
-            if utime in self.tempBuffer["etalon2"]:
-                waveforms["Wlm"]["ratio2"].Add(utime,self.tempBuffer["etalon2"][utime]/value)
-                del self.tempBuffer["etalon2"][utime]
-            else:
-                self.tempBuffer["reference2"][utime] = value
+            waveforms["Wlm"]["reference2"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Etalon2:
-            waveforms["Wlm"]["etalon2"].Add(utime,value)
+            waveforms["Wlm"]["etalon2"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_Reference2:
-            waveforms["Wlm"]["reference2"].Add(utime,value)
+            waveforms["Wlm"]["reference2"].Add(utime,valueAsFloat)
+        elif data.streamNum == interface.STREAM_Ratio1:
+            waveforms["Wlm"]["ratio1"].Add(utime,valueAsFloat/32768.0)
+        elif data.streamNum == interface.STREAM_Ratio2:
+            waveforms["Wlm"]["ratio2"].Add(utime,valueAsFloat/32768.0)
         elif data.streamNum == interface.STREAM_EtalonTemp:
-            waveforms["WarmBox"]["etalonTemperature"].Add(utime,value)
+            waveforms["WarmBox"]["etalonTemperature"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_WarmBoxTemp:
-            waveforms["WarmBox"]["warmBoxTemperature"].Add(utime,value)
+            waveforms["WarmBox"]["warmBoxTemperature"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_WarmBoxHeatsinkTemp:
-            waveforms["WarmBox"]["heatsinkTemperature"].Add(utime,value)
+            waveforms["WarmBox"]["heatsinkTemperature"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_WarmBoxTec:
-            waveforms["WarmBox"]["tec"].Add(utime,value)
+            waveforms["WarmBox"]["tec"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_CavityTemp:
-            waveforms["HotBox"]["cavityTemperature"].Add(utime,value)
+            waveforms["HotBox"]["cavityTemperature"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_HotBoxHeatsinkTemp:
-            waveforms["HotBox"]["heatsinkTemperature"].Add(utime,value)
+            waveforms["HotBox"]["heatsinkTemperature"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_HotBoxTec:
-            waveforms["HotBox"]["tec"].Add(utime,value)
+            waveforms["HotBox"]["tec"].Add(utime,valueAsFloat)
         elif data.streamNum == interface.STREAM_HotBoxHeater:
-            waveforms["HotBox"]["heater"].Add(utime,value)
+            waveforms["HotBox"]["heater"].Add(utime,valueAsFloat)
+        elif data.streamNum == interface.STREAM_ValveMask:
+            dasInfo["solenoidValves"] = valueAsUInt
 
 class LogListener(SharedTypes.Singleton):
     def __init__(self):

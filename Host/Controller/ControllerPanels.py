@@ -1,11 +1,38 @@
+#!/usr/bin/python
+#
+# FILE:
+#   ControllerPanels.py
+#
+# DESCRIPTION:
+#   Code for controller gui panels
+#
+# SEE ALSO:
+#   Specify any related information.
+#
+# HISTORY:
+#   5-May-2009  sze  Initial version with laser, hot box and command log panels
+#  17-Jul-2009  sze  Added ringdown panel
+#  27-Jul-2009  sze  Added wavelength monitor panel
+#   1-Aug-2009  sze  Added more graph types (loss vs ratio, tuner vs time and ratio) to ringdown panel
+#   3-Aug-2009  sze  Renamed MAX_VLASERS to NUM_VIRTUAL_LASERS
+#   5-Aug-2009  sze  Corrected typo, ensure last line in log is made visible
+#  18-Aug-2009  sze  Added more graph types to ringdown panel, removed black borders from point symbols
+#  25-Aug-2009  sze  Changed graph ylabels for two graphs to add units
+#  28-Aug-2009  sze  Added pressure, warm box and statistics panels
+#
+#  Copyright (c) 2009 Picarro, Inc. All rights reserved
+#
 import wx
+from math import log10, sqrt
 import sys
 
-from ControllerModels import DriverProxy, ControllerRpcHandler, waveforms
+from ControllerModels import DriverProxy, ControllerRpcHandler, waveforms, dasInfo
 from ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui, PressurePanelGui
 from ControllerPanelsGui import WarmBoxPanelGui, HotBoxPanelGui, RingdownPanelGui
 from ControllerPanelsGui import WlmPanelGui, StatsPanelGui
 from Host.autogen import interface
+from Host.Common.Allan import AllanVar
+from Host.Common.RdStats import RdStats
 from Host.Common.GraphPanel import Series
 from Host.Common import CmdFIFO, SharedTypes, timestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
@@ -354,6 +381,13 @@ class PressurePanel(PressurePanelGui):
     def update(self):
         self.pressureGraph.Update(delay=0)
         self.propValveGraph.Update(delay=0)
+        solenoidValveStates = dasInfo.get("solenoidValves",0)
+        self.valve1State.SetValue(solenoidValveStates & 0x1)
+        self.valve2State.SetValue(solenoidValveStates & 0x2)
+        self.valve3State.SetValue(solenoidValveStates & 0x4)
+        self.valve4State.SetValue(solenoidValveStates & 0x8)
+        self.valve5State.SetValue(solenoidValveStates & 0x10)
+        self.valve6State.SetValue(solenoidValveStates & 0x20)
 
     def onClear(self,evt):
         for s,sel,stats,attr in self.pressureGraph._lineSeries:
@@ -569,28 +603,94 @@ class StatsPanel(StatsPanelGui):
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(
                 wx.SYS_COLOUR_3DFACE))
+        self.lossAllanVar = AllanVar(statsPoints)
         self.lossStats = Series(statsPoints)
         self.lossGraph.AddSeriesAsPoints(self.lossStats,
                 colour='red',fillcolour='red',marker='square',
                 size=1,width=1)
+        self.waveNumberAllanVar = AllanVar(statsPoints)
         self.waveNumberStats = Series(statsPoints)
         self.waveNumberGraph.AddSeriesAsPoints(self.waveNumberStats,
                 colour='red',fillcolour='red',marker='square',
                 size=1,width=1)
+        self.ratio1AllanVar = AllanVar(statsPoints)
         self.ratio1Stats = Series(statsPoints)
         self.ratio1Graph.AddSeriesAsPoints(self.ratio1Stats,
                 colour='red',fillcolour='red',marker='square',
                 size=1,width=1)
+        self.ratio2AllanVar = AllanVar(statsPoints)
         self.ratio2Stats = Series(statsPoints)
         self.ratio2Graph.AddSeriesAsPoints(self.ratio2Stats,
                 colour='red',fillcolour='red',marker='square',
                 size=1,width=1)
-
+        self.rdStats = RdStats(100)
+        self.active = False
+        
+    def appendData(self,data):
+        if self.active and 0 == (data.status & interface.RINGDOWN_STATUS_RingdownTimeout):
+            self.rdStats.processDatum(data.timestamp/1000.0,data.uncorrectedAbsorbance)
+            self.lossAllanVar.processDatum(data.uncorrectedAbsorbance)
+            # TO DO: Replace angle with wave number
+            self.waveNumberAllanVar.processDatum(data.wlmAngle)
+            self.ratio1AllanVar.processDatum(data.ratio1)
+            self.ratio2AllanVar.processDatum(data.ratio2)
+                
+    def updateSeriesAndStats(self):
+        meanLoss,shot2shot,rate = self.rdStats.getStats()
+        self.meanLossTextCtrl.SetValue("%.4f" % meanLoss)
+        self.rateTextCtrl.SetValue("%.1f" % rate)
+        self.lossStats.Clear()
+        n,v = self.lossAllanVar.getVariances()
+        self.ringdownsTextCtrl.SetValue("%d" % n)
+        for k in range(statsPoints):
+            if v[k]>0: self.lossStats.Add(log10(2**k),0.5*log10(v[k]))
+        if meanLoss != 0.0: self.shotToShotTextCtrl.SetValue("%.3f" % (100.0*sqrt(v[0])/meanLoss))    
+        self.waveNumberStats.Clear()
+        n,v = self.waveNumberAllanVar.getVariances()
+        for k in range(statsPoints):
+            if v[k]>0: self.waveNumberStats.Add(log10(2**k),0.5*log10(v[k]))
+        # TO DO: Replace with proper calculation of frequency standard deviation (MHz) from wavenumber
+        fStdDev = 29979.2458*sqrt(v[0])
+        self.freqStdDevTextCtrl.SetValue("%.3f" % fStdDev)
+        self.ratio1Stats.Clear()
+        n,v = self.ratio1AllanVar.getVariances()
+        for k in range(statsPoints):
+            if v[k]>0: self.ratio1Stats.Add(log10(2**k),0.5*log10(v[k]))
+        self.ratio2Stats.Clear()
+        n,v = self.ratio2AllanVar.getVariances()
+        for k in range(statsPoints):
+            if v[k]>0: self.ratio2Stats.Add(log10(2**k),0.5*log10(v[k]))
+            
     def update(self):
+        self.updateSeriesAndStats()
         self.lossGraph.Update(delay=0)
         self.waveNumberGraph.Update(delay=0)
         self.ratio1Graph.Update(delay=0)
         self.ratio2Graph.Update(delay=0)
 
-    def onStart(self,evt):
-        pass
+    def onStartStop(self,evt):
+        if self.active:
+            self.active = False
+            self.startStopButton.SetLabel("Start")
+            self.ringdownsTextCtrl.Disable()
+            self.meanLossTextCtrl.Disable()
+            self.shotToShotTextCtrl.Disable()
+            self.rateTextCtrl.Disable()
+            self.freqStdDevTextCtrl.Disable()
+        else:
+            self.active = True
+            self.startStopButton.SetLabel("Stop")
+            self.rdStats.reset()
+            self.lossAllanVar.reset()
+            self.lossStats.Clear()
+            self.waveNumberAllanVar.reset()
+            self.waveNumberStats.Clear()
+            self.ratio1AllanVar.reset()
+            self.ratio1Stats.Clear()
+            self.ratio2AllanVar.reset()
+            self.ratio2Stats.Clear()
+            self.ringdownsTextCtrl.Enable()
+            self.meanLossTextCtrl.Enable()
+            self.shotToShotTextCtrl.Enable()
+            self.rateTextCtrl.Enable()
+            self.freqStdDevTextCtrl.Enable()
