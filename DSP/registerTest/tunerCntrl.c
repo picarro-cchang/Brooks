@@ -63,7 +63,7 @@ void setupDither(unsigned int center)
 
 int tunerCntrlInit(void)
 {
-    writeFPGA(FPGA_TWGEN+TWGEN_CS, (1<<TWGEN_CS_RUN_B)|(1<<TWGEN_CS_CONT_B));
+    writeFPGA(FPGA_TWGEN+TWGEN_CS, (1<<TWGEN_CS_RUN_B)|(1<<TWGEN_CS_CONT_B)|(1<<TWGEN_CS_TUNE_PZT_B));
     // Start up in ramp mode
     switchToRampMode();
     return STATUS_OK;

@@ -71,9 +71,19 @@ entity top_io is
            FP_PB            : in std_logic;
            FP_RS_N          : in std_logic;
            FP_LED           : out std_logic_vector(3 downto 0);
-           -- High power board
-           PWR_DIN          : out std_logic_vector(7 downto 0);
-           PWR_DOUT         : in std_logic_vector(7 downto 0);
+           -- High power board signals
+           PZT_VALVE_DAC_LD    : out std_logic;
+           PZT_VALVE_DAC_SCK   : out std_logic;
+           INLET_VALVE_PWM_N   : out std_logic;
+           OUTLET_VALVE_PWM_N  : out std_logic;
+           PZT_VALVE_DAC_SDI   : out std_logic;
+           HEATER_PWM_N        : out std_logic;
+           HOT_BOX_PWM_N       : out std_logic;
+           WARM_BOX_PWM_N      : out std_logic;
+           WARM_BOX_TEC_OVERLOAD_N  : in std_logic;
+           HOT_BOX_TEC_OVERLOAD_N   : in std_logic;
+           INLET_VALVE_COMPARATOR   : in std_logic;
+           OUTLET_VALVE_COMPARATOR  : in std_logic;
            -- Auxiliary board
            AUX_DIN          : out std_logic_vector(3 downto 0);
            AUX_DOUT         : in  std_logic_vector(3 downto 0);
@@ -166,6 +176,14 @@ architecture behavioral of top_io is
     signal FPGA_LED_U  : unsigned(3 downto 0);
     signal I2C_RST0    : std_logic;
     signal I2C_RST1    : std_logic;
+    signal INLET_VALVE_PWM     : std_logic;
+    signal OUTLET_VALVE_PWM    : std_logic;
+    signal HEATER_PWM          : std_logic;
+    signal HOT_BOX_PWM         : std_logic;
+    signal WARM_BOX_PWM        : std_logic;
+    signal HOT_BOX_TEC_OVERLOAD    : std_logic;
+    signal WARM_BOX_TEC_OVERLOAD   : std_logic;
+
     signal reset_counter: unsigned(15 downto 0);
     signal reset       : std_logic;
 begin
@@ -212,9 +230,6 @@ begin
        fp_pb          => FP_PB,
        fp_rs_n        => FP_RS_N,
        fp_led         => FP_LED_U,
-
-       pwr_din        => PWR_DIN_U,
-       pwr_dout       => unsigned(PWR_DOUT),
 
        aux_din        => AUX_DIN_U,
        aux_dout       => unsigned(AUX_DOUT),
@@ -278,7 +293,22 @@ begin
        i2c_scl0       => I2C_SCL0,
        i2c_sda0       => I2C_SDA0,
        i2c_scl1       => I2C_SCL1,
-       i2c_sda1       => I2C_SDA1
+       i2c_sda1       => I2C_SDA1,
+
+       pzt_valve_dac_ld        => PZT_VALVE_DAC_LD,
+       pzt_valve_dac_sck       => PZT_VALVE_DAC_SCK,
+       pzt_valve_dac_sdi       => PZT_VALVE_DAC_SDI,
+
+       inlet_valve_pwm         => INLET_VALVE_PWM,
+       outlet_valve_pwm        => OUTLET_VALVE_PWM,
+       inlet_valve_comparator  => INLET_VALVE_COMPARATOR,
+       outlet_valve_comparator => OUTLET_VALVE_COMPARATOR,
+       
+       heater_pwm              => HEATER_PWM,
+       hot_box_pwm             => HOT_BOX_PWM,
+       hot_box_tec_overload    => HOT_BOX_TEC_OVERLOAD,
+       warm_box_pwm            => WARM_BOX_PWM,
+       warm_box_tec_overload   => WARM_BOX_TEC_OVERLOAD
     );
 
     -- change logic polarity to fit hardware
@@ -292,7 +322,6 @@ begin
     DSP_EMIF_CE         <= not DSP_EMIF_CE_N;
     FP_LCD              <= std_logic_vector(FP_LCD_U);
     FP_LED              <= std_logic_vector(FP_LED_U);
-    PWR_DIN             <= std_logic_vector(PWR_DIN_U);
     AUX_DIN             <= std_logic_vector(AUX_DIN_U);
     LSR1_SS_N           <= not LSR1_SS;
     LSR2_SS_N           <= not LSR2_SS;
@@ -338,6 +367,16 @@ begin
     I2C_RST1_N          <= not I2C_RST1;
     DSP_EMIF_DDIR_N     <= not DSP_EMIF_DDIR;
 
+    -- Signals on high power board
+
+    INLET_VALVE_PWM_N   <= not INLET_VALVE_PWM;
+    OUTLET_VALVE_PWM_N  <= not OUTLET_VALVE_PWM;
+    HEATER_PWM_N        <= not HEATER_PWM;
+    HOT_BOX_PWM_N       <= not HOT_BOX_PWM;
+    WARM_BOX_PWM_N      <= not WARM_BOX_PWM;
+    HOT_BOX_TEC_OVERLOAD    <= not HOT_BOX_TEC_OVERLOAD_N;
+    WARM_BOX_TEC_OVERLOAD   <= not WARM_BOX_TEC_OVERLOAD_N;
+    
     -- instantiate the top level bidirectional io buffers
 
     DSP_EMIF_DBUFF:

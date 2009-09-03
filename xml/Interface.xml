@@ -2831,6 +2831,10 @@
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Reset</fielddef>
                 </bitfield>
+                <bitfield ident="TUNE_PZT" description="Tune PZT"  lsb="3" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>
+                </bitfield>
             </reg>
             <reg type="uint16" ident="SLOPE_DOWN" description="Slope in downward direction">
                 <save/>
@@ -2855,6 +2859,10 @@
             <reg type="uint16" ident="WINDOW_HIGH" description="Higher limit of window">
                 <save/>
                 <display format="%d" units="digU">Tuner window higher limit</display>
+            </reg>
+            <reg type="uint16" ident="PZT_OFFSET" description="PZT offset">
+                <save/>
+                <display format="%d" units="digU">Offset to add to PZT output</display>
             </reg>
         </fpga_block>
         <fpga_block ident="INJECT" description="Optical injection subsystem">

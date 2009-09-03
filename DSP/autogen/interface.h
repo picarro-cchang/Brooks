@@ -1054,6 +1054,8 @@ typedef enum {
 #define TWGEN_CS_CONT_W (1) // Single/Continuous bit width
 #define TWGEN_CS_RESET_B (2) // Reset generator bit position
 #define TWGEN_CS_RESET_W (1) // Reset generator bit width
+#define TWGEN_CS_TUNE_PZT_B (3) // Tune PZT bit position
+#define TWGEN_CS_TUNE_PZT_W (1) // Tune PZT bit width
 
 #define TWGEN_SLOPE_DOWN (2) // Slope in downward direction
 #define TWGEN_SLOPE_UP (3) // Slope in upward direction
@@ -1061,6 +1063,7 @@ typedef enum {
 #define TWGEN_SWEEP_HIGH (5) // Higher limit of sweep
 #define TWGEN_WINDOW_LOW (6) // Lower limit of window
 #define TWGEN_WINDOW_HIGH (7) // Higher limit of window
+#define TWGEN_PZT_OFFSET (8) // PZT offset
 
 /* Block INJECT Optical injection subsystem */
 #define INJECT_CONTROL (0) // Control register
@@ -1139,10 +1142,10 @@ typedef enum {
 #define FPGA_LASERLOCKER (23) // Laser frequency locker registers
 #define FPGA_RDMAN (50) // Ringdown manager registers
 #define FPGA_TWGEN (74) // Tuner waveform generator
-#define FPGA_INJECT (82) // Optical Injection Subsystem
-#define FPGA_WLMSIM (91) // WLM Simulator
-#define FPGA_DYNAMICPWM_INLET (99) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (101) // Outlet proportional valve dynamic PWM
+#define FPGA_INJECT (83) // Optical Injection Subsystem
+#define FPGA_WLMSIM (92) // WLM Simulator
+#define FPGA_DYNAMICPWM_INLET (100) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (102) // Outlet proportional valve dynamic PWM
 
 /* Environment addresses */
 

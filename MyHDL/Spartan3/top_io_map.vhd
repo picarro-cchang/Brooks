@@ -131,8 +131,21 @@ begin
            FP_PB            => FP_PB,
            FP_RS_N          => FP_RS_N,
            FP_LED           => FP_LED,
-           PWR_DIN(7 downto 0)  => BUFF_OUT(7 downto 0),
-           PWR_DOUT(7 downto 0) => BUFF_IN(51 downto 44),
+
+           PZT_VALVE_DAC_LD      => BUFF_OUT(0),
+           PZT_VALVE_DAC_SCK     => BUFF_OUT(1),
+           INLET_VALVE_PWM_N     => BUFF_OUT(2),
+           OUTLET_VALVE_PWM_N    => BUFF_OUT(3),
+           PZT_VALVE_DAC_SDI     => BUFF_OUT(4),
+           HEATER_PWM_N          => BUFF_OUT(5),
+           HOT_BOX_PWM_N         => BUFF_OUT(6),
+           WARM_BOX_PWM_N        => BUFF_OUT(7),
+           
+           WARM_BOX_TEC_OVERLOAD_N  => BUFF_IN(44),
+           HOT_BOX_TEC_OVERLOAD_N   => BUFF_IN(45),
+           INLET_VALVE_COMPARATOR   => BUFF_IN(48),
+           OUTLET_VALVE_COMPARATOR  => BUFF_IN(49),
+
            AUX_DIN(3 downto 0)  => BUFF_OUT(11 downto 8),
            AUX_DOUT(3 downto 0) => BUFF_IN(43 downto 40),
            MONITOR          => BUFF_OUT(12),

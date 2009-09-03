@@ -459,7 +459,8 @@ void rdFitting(void)
 			if (base == 32768 + 2048) base = 4096;
 			else base = base & 0xFFF;
 			base = base - 8;
-			// The metadata are in the MS 16 bits of the ringdown waveform
+			// The metadata are in the MS 16 bits of the ringdown waveform. We currently
+			//  use the values at buffer address "base", without any backoff.
 			for (i=0;i<8;i++) metaPtr[i] = ringdownBuffer->ringdownWaveform[base+i] >> 16;
 	
 			virtLaserNum = (rdParams->injectionSettings >> 2) & 0x7;

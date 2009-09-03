@@ -72,9 +72,6 @@ entity top_block is
            fp_rs_n          : in std_logic;
            fp_led           : out unsigned(3 downto 0);
 
-           pwr_din          : out unsigned(7 downto 0);
-           pwr_dout         : in unsigned(7 downto 0);
-
            aux_din          : out unsigned(3 downto 0);
            aux_dout         : in unsigned(3 downto 0);
 
@@ -137,7 +134,22 @@ entity top_block is
            i2c_scl0         : in std_logic;
            i2c_sda0         : in std_logic;
            i2c_scl1         : in std_logic;
-           i2c_sda1         : in std_logic
+           i2c_sda1         : in std_logic;
+           
+           pzt_valve_dac_ld   : out std_logic;
+           pzt_valve_dac_sck  : out std_logic;
+           pzt_valve_dac_sdi  : out std_logic;
+
+           inlet_valve_pwm    : out std_logic;
+           outlet_valve_pwm   : out std_logic;
+           inlet_valve_comparator  : in std_logic;
+           outlet_valve_comparator : in std_logic;
+       
+           heater_pwm         : out std_logic;
+           hot_box_pwm        : out std_logic;
+           hot_box_tec_overload    : in std_logic;
+           warm_box_pwm       : out std_logic;
+           warm_box_tec_overload   : in std_logic
     );
 end top_block;
 
@@ -233,6 +245,31 @@ begin
         dsp_ext_int6 => dsp_ext_int6,
         dsp_ext_int7 => dsp_ext_int7,
         usb_connected => usb_connected,
-        cyp_reset => cyp_reset
+        cyp_reset => cyp_reset,
+        
+        pzt_valve_dac_ld        => pzt_valve_dac_ld,
+        pzt_valve_dac_sck       => pzt_valve_dac_sck,
+        pzt_valve_dac_sdi       => pzt_valve_dac_sdi,
+
+        inlet_valve_pwm         => inlet_valve_pwm,
+        outlet_valve_pwm        => outlet_valve_pwm,
+        inlet_valve_comparator  => inlet_valve_comparator,
+        outlet_valve_comparator => outlet_valve_comparator,
+       
+        heater_pwm              => heater_pwm,
+        hot_box_pwm             => hot_box_pwm,
+        hot_box_tec_overload    => hot_box_tec_overload,
+        warm_box_pwm            => warm_box_pwm,
+        warm_box_tec_overload   => warm_box_tec_overload,
+       
+        wmm_refl1               => wmm_refl1,
+        wmm_refl2               => wmm_refl2,
+        wmm_tran1               => wmm_tran1,
+        wmm_tran2               => wmm_tran2,
+        wmm_busy1               => wmm_busy1,
+        wmm_busy2               => wmm_busy2,
+        wmm_rd                  => wmm_rd,
+        wmm_convst              => wmm_convst,
+        wmm_clk                 => wmm_clk
     );
 end behavioral;

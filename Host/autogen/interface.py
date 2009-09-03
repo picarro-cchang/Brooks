@@ -1907,6 +1907,8 @@ TWGEN_CS_CONT_B = 1 # Single/Continuous bit position
 TWGEN_CS_CONT_W = 1 # Single/Continuous bit width
 TWGEN_CS_RESET_B = 2 # Reset generator bit position
 TWGEN_CS_RESET_W = 1 # Reset generator bit width
+TWGEN_CS_TUNE_PZT_B = 3 # Tune PZT bit position
+TWGEN_CS_TUNE_PZT_W = 1 # Tune PZT bit width
 
 TWGEN_SLOPE_DOWN = 2 # Slope in downward direction
 TWGEN_SLOPE_UP = 3 # Slope in upward direction
@@ -1914,6 +1916,7 @@ TWGEN_SWEEP_LOW = 4 # Lower limit of sweep
 TWGEN_SWEEP_HIGH = 5 # Higher limit of sweep
 TWGEN_WINDOW_LOW = 6 # Lower limit of window
 TWGEN_WINDOW_HIGH = 7 # Higher limit of window
+TWGEN_PZT_OFFSET = 8 # PZT offset
 
 # Block INJECT Optical injection subsystem
 INJECT_CONTROL = 0 # Control register
@@ -1991,17 +1994,17 @@ FPGA_RDSIM = 15 # Ringdown simulator registers
 FPGA_LASERLOCKER = 23 # Laser frequency locker registers
 FPGA_RDMAN = 50 # Ringdown manager registers
 FPGA_TWGEN = 74 # Tuner waveform generator
-FPGA_INJECT = 82 # Optical Injection Subsystem
-FPGA_WLMSIM = 91 # WLM Simulator
-FPGA_DYNAMICPWM_INLET = 99 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 101 # Outlet proportional valve dynamic PWM
+FPGA_INJECT = 83 # Optical Injection Subsystem
+FPGA_WLMSIM = 92 # WLM Simulator
+FPGA_DYNAMICPWM_INLET = 100 # Inlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 102 # Outlet proportional valve dynamic PWM
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
 persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_OPTIONS', u'RDSIM_TUNER_CENTER', u'RDSIM_TUNER_WINDOW_HALF_WIDTH', u'RDSIM_FILLING_RATE', u'RDSIM_DECAY', u'RDSIM_DECAY_IN_SHIFT', u'RDSIM_DECAY_IN_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_ETA1_OFFSET', u'LASERLOCKER_REF1_OFFSET', u'LASERLOCKER_ETA2_OFFSET', u'LASERLOCKER_REF2_OFFSET', u'LASERLOCKER_RATIO1_CENTER', u'LASERLOCKER_RATIO1_MULTIPLIER', u'LASERLOCKER_RATIO2_CENTER', u'LASERLOCKER_RATIO2_MULTIPLIER', u'LASERLOCKER_TUNING_OFFSET', u'LASERLOCKER_WM_LOCK_WINDOW', u'LASERLOCKER_WM_INT_GAIN', u'LASERLOCKER_WM_PROP_GAIN', u'LASERLOCKER_WM_DERIV_GAIN']))
 persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION', u'RDMAN_TIMEOUT_DURATION']))
-persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP', u'TWGEN_SWEEP_LOW', u'TWGEN_SWEEP_HIGH', u'TWGEN_WINDOW_LOW', u'TWGEN_WINDOW_HIGH']))
+persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP', u'TWGEN_SWEEP_LOW', u'TWGEN_SWEEP_HIGH', u'TWGEN_WINDOW_LOW', u'TWGEN_WINDOW_HIGH', u'TWGEN_PZT_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL']))
 persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_OPTIONS', u'WLMSIM_RFAC', u'WLMSIM_WFAC']))
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_INLET', [u'DYNAMICPWM_DELTA']))
@@ -2334,13 +2337,14 @@ parameter_forms.append(('Sample Handling Parameters',__p))
 
 __p = []
 
-__p.append(('fpga','mask',FPGA_TWGEN+TWGEN_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Reset generator', [(0, u'Idle'), (4, u'Reset')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_TWGEN+TWGEN_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Reset generator', [(0, u'Idle'), (4, u'Reset')]), (8, u'Tune PZT', [(0, u'No'), (8, u'Yes')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SWEEP_HIGH,'Tuner sweep higher limit','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SWEEP_LOW,'Tuner sweep lower limit','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_WINDOW_HIGH,'Tuner window higher limit','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_WINDOW_LOW,'Tuner window lower limit','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SLOPE_UP,'Tuner up slope','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SLOPE_DOWN,'Tuner down slope','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_PZT_OFFSET,'Offset to add to PZT output','digU','%d',1,1))
 __p.append(('dsp','float',TUNER_SWEEP_RAMP_HIGH_REGISTER,'Ramp mode upper sweep limit','digU','%.0f',1,1))
 __p.append(('dsp','float',TUNER_SWEEP_RAMP_LOW_REGISTER,'Ramp mode lower sweep limit','digU','%.0f',1,1))
 __p.append(('dsp','float',TUNER_WINDOW_RAMP_HIGH_REGISTER,'Ramp mode upper window limit','digU','%.0f',1,1))

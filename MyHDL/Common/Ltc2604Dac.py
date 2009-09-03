@@ -88,7 +88,6 @@ def Ltc2604Dac(clk,reset,dac_clock_in,chanA_data_in,chanB_data_in,
                 dac_ld_out.next = 1
             else:
                 if state == t_State.IDLE:
-                    dac_sdi_out.next = 1
                     if strobe_in:
                         chanA_data.next = chanA_data_in
                         chanB_data.next = chanB_data_in
@@ -116,6 +115,7 @@ def Ltc2604Dac(clk,reset,dac_clock_in,chanA_data_in,chanB_data_in,
 
     @always_comb
     def  comb2():
+        dac_sdi_out.next = 1
         if CHANA_CONTROL_START<=counter and counter<CHANA_CONTROL_END:
             dac_sdi_out.next = chanA_control[CHANA_CONTROL_END-1-int(counter)]
         elif CHANA_DATA_START<=counter and counter<CHANA_DATA_END:

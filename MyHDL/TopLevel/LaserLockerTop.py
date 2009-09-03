@@ -22,6 +22,7 @@ from MyHDL.Common.dsp_interface import Dsp_interface
 from MyHDL.Common.Inject import Inject
 from MyHDL.Common.Kernel import Kernel
 from MyHDL.Common.LaserLocker import LaserLocker
+from MyHDL.Common.Ltc2604Dac import Ltc2604Dac
 from MyHDL.Common.Pwm1 import Pwm
 from MyHDL.Common.RdMan import RdMan
 from MyHDL.Common.Rdmemory import Rdmemory
@@ -48,7 +49,16 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          rd_adc, rd_adc_clk, rd_adc_oe,
          monitor,
          dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7,
-         usb_connected, cyp_reset):
+         usb_connected, cyp_reset,
+         pzt_valve_dac_ld, pzt_valve_dac_sck, pzt_valve_dac_sdi,
+         inlet_valve_pwm, outlet_valve_pwm,
+         inlet_valve_comparator, outlet_valve_comparator,
+         heater_pwm, hot_box_pwm, hot_box_tec_overload,
+         warm_box_pwm, warm_box_tec_overload,
+         wmm_refl1, wmm_refl2, wmm_tran1, wmm_tran2,
+         wmm_busy1, wmm_busy2,
+         wmm_rd, wmm_convst, wmm_clk
+        ):
 
     NSTAGES = 28
     counter = Signal(intbv(0)[NSTAGES:])
@@ -111,10 +121,11 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     laser_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser_tuning_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
     lock_error = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    pzt = Signal(intbv(0)[FPGA_REG_WIDTH:])    
 
     meta0 = ratio1
     meta1 = ratio2
-    meta2 = tuner_value           # Should be PZT DAC
+    meta2 = pzt
     meta3 = laser_tuning_offset
     meta4 = laser_fine_current
     meta5 = lock_error
@@ -149,6 +160,10 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     acq_done_irq = Signal(LOW)
     metadata_strobe = Signal(LOW)
     laser_locked = Signal(LOW)
+    
+    chanA_data_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    chanB_data_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    chanD_data_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     dsp_interface = Dsp_interface(clk=clk0, reset=reset, addr=dsp_emif_ea,
                                   to_dsp=dsp_emif_din, re=dsp_emif_re,
@@ -293,7 +308,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     twGen = TWGen(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                   dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_twGen,
                   dsp_wr=dsp_wr, synth_step_in=pulse_100k,
-                  value_out=tuner_value, slope_out=tuner_slope,
+                  value_out=tuner_value, pzt_out=pzt, slope_out=tuner_slope,
                   in_window_out=tuner_in_window,map_base=FPGA_TWGEN)
     
     wlmsim = WlmSim( clk=clk0, reset=reset, dsp_addr=dsp_addr,
@@ -305,6 +320,13 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      eta2_out=eta2, ref2_out=ref2,
                      loss_out=sim_loss, pzt_cen_out=sim_pzt,
                      done_out=wlmsimDone, map_base=FPGA_WLMSIM )
+
+    pztValveDac = Ltc2604Dac(clk=clk0, reset=reset, dac_clock_in=clk_10M,
+                             chanA_data_in=chanA_data_in,
+                             chanB_data_in=chanB_data_in,
+                             chanC_data_in=pzt,
+                             chanD_data_in=chanD_data_in, strobe_in=pulse_100k,
+                             dac_sdi_out=pzt_valve_dac_sdi, dac_ld_out=pzt_valve_dac_ld)
 
     @instance
     def  logic():
@@ -467,9 +489,21 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         lsr3_sck.next = clk_5M
         lsr4_sck.next = clk_5M
 
+        pzt_valve_dac_sck.next = clk_10M
+
         sw1.next = 0
         sw2.next = 0
         sw4.next = 0
+
+        inlet_valve_pwm.next = 0
+        outlet_valve_pwm.next = 0
+        heater_pwm.next = 0
+        hot_box_pwm.next = 0
+        warm_box_pwm.next = 0
+
+        wmm_rd.next = 0
+        wmm_convst.next = 0
+        wmm_clk.next = 0
         
     return instances()
 
@@ -504,6 +538,14 @@ lsr4_sck,lsr4_ss,lsr4_rd,lsr4_mosi,lsr4_disable = [Signal(LOW) for i in range(5)
 sw1, sw2, sw3, sw4 = [Signal(LOW) for i in range(4)]
 dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7 = [Signal(LOW) for i in range(4)]
 usb_connected, cyp_reset = [Signal(LOW) for i in range(2)]
+pzt_valve_dac_ld, pzt_valve_dac_sck, pzt_valve_dac_sdi = [Signal(LOW) for i in range(3)]
+inlet_valve_pwm, outlet_valve_pwm = [Signal(LOW) for i in range(2)]
+inlet_valve_comparator, outlet_valve_comparator = [Signal(LOW) for i in range(2)]
+heater_pwm, hot_box_pwm, hot_box_tec_overload = [Signal(LOW) for i in range(3)]
+warm_box_pwm, warm_box_tec_overload = [Signal(LOW) for i in range(2)]
+wmm_refl1, wmm_refl2, wmm_tran1, wmm_tran2 = [Signal(LOW) for i in range(4)]
+wmm_busy1, wmm_busy2 = [Signal(LOW) for i in range(2)]
+wmm_rd, wmm_convst, wmm_clk = [Signal(LOW) for i in range(3)]
 
 def makeVHDL():
     toVHDL(main,clk0,clk180,clk3f,clk3f180,clk_locked,reset,
@@ -522,7 +564,16 @@ def makeVHDL():
                 rd_adc, rd_adc_clk, rd_adc_oe,
                 monitor,
                 dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7,
-                usb_connected, cyp_reset)
+                usb_connected, cyp_reset,
+                pzt_valve_dac_ld, pzt_valve_dac_sck, pzt_valve_dac_sdi,
+                inlet_valve_pwm, outlet_valve_pwm,
+                inlet_valve_comparator, outlet_valve_comparator,
+                heater_pwm, hot_box_pwm, hot_box_tec_overload,
+                warm_box_pwm, warm_box_tec_overload,
+                wmm_refl1, wmm_refl2, wmm_tran1, wmm_tran2,
+                wmm_busy1, wmm_busy2,
+                wmm_rd, wmm_convst, wmm_clk
+                )
 
 if __name__ == "__main__":
     makeVHDL()
