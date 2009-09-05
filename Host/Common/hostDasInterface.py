@@ -199,13 +199,10 @@ class DasInterface(Singleton):
         CSR_PLLSTABLE   =   0x00000040
         DIV_ENABLE      =   0x00008000
         def writeMem(addr,value):
-            self.analyzerUsb.hpiaWrite(addr)
-            self.analyzerUsb.hpidWrite(c_int(value))
+            self.analyzerUsb.hpiWrite(addr,c_int(value))
         def readMem(addr):
-            self.analyzerUsb.hpiaWrite(addr)
             result = c_int(0)
-            self.analyzerUsb.setHpidInBytes(sizeof(result))
-            self.analyzerUsb.hpidRead(result)
+            self.analyzerUsb.hpiRead(addr,c_int(0))
             return result.value
 
         self.analyzerUsb.hpicWrite(0x00010001)
@@ -552,50 +549,40 @@ class HostToDspSender(Singleton):
         # Performs a host read of numInt unsigned integers from
         #  the communications region starting at offset
         addr = SHAREDMEM_BASE+4*lookup(offset)
-        result = []
-        while numInt>0:
-            self.usb.hpiaWrite(addr)
-            numToRead = min(numInt,128)
-            data = (c_uint*numToRead)(0)
-            self.usb.hpidRead(data)
-            result += [int(x) for x in data]
-            addr += 4*numToRead
-            numInt -= numToRead
-        return result
+        result = (c_uint*numInt)()
+        self.usb.hpiRead(addr,result)
+        return list(result)
+    
     @usbLockProtect
     def rdRegFloat(self,reg):
         # Performs a host read of a single floating point number
         #  from the software register "reg" which may be specified
         #  as an integer or a string (defined in the interface module).
-        self.usb.hpiaWrite(REG_BASE+4*lookup(reg))
         data = c_float(0)
-        self.usb.hpidRead(data)
+        self.usb.hpiRead(REG_BASE+4*lookup(reg),data)
         return data.value
     @usbLockProtect
     def rdRegUint(self,reg):
         # Performs a host read of a single unsigned integer from
         #  the software register "reg" which may be specified as
         #  an integer or a string (defined in the interface module).
-        self.usb.hpiaWrite(REG_BASE+4*lookup(reg))
         data = c_uint(0)
-        self.usb.hpidRead(data)
+        self.usb.hpiRead(REG_BASE+4*lookup(reg),data)
         return data.value
     @usbLockProtect
     def rdFPGA(self,base,reg):
         # Performs a host read of a single unsigned integer from
         #  the FPGA register which may be specified as
         #  the sum of a block base and the register index
-        self.usb.hpiaWrite(FPGA_REG_BASE+4*(lookup(base)+lookup(reg)))
         data = c_uint(0)
-        self.usb.hpidRead(data)
+        self.usb.hpiRead(FPGA_REG_BASE+4*(lookup(base)+lookup(reg)),data)
         return data.value
     @usbLockProtect
     def wrFPGA(self,base,reg,value):
         # Performs a host write of a single unsigned integer from
         #  the FPGA register which may be specified as
         #  the sum of a block base and the register index
-        self.usb.hpiaWrite(FPGA_REG_BASE+4*(lookup(base)+lookup(reg)))
-        self.usb.hpidWrite(c_uint(value))
+        self.usb.hpiWrite(FPGA_REG_BASE+4*(lookup(base)+lookup(reg)),c_uint(value))
     @usbLockProtect
     def rdDspMemArray(self,wordAddr,nwords=1):
         """Reads multiple words from DSP memory into a c_uint array"""
@@ -611,49 +598,43 @@ class HostToDspSender(Singleton):
     @usbLockProtect
     def rdRingdownMem(self,offset):
         """Reads single uint from ringdown memory"""
-        self.usb.hpiaWrite(interface.RDMEM_ADDRESS+4*offset)
         result = c_uint(0)
-        self.usb.hpidRead(result)
+        self.usb.hpiRead(interface.RDMEM_ADDRESS+4*offset,result)
         return result.value
     @usbLockProtect
     def wrRingdownMem(self,offset,value):
         """Reads single uint value to ringdown memory"""
-        self.usb.hpiaWrite(interface.RDMEM_ADDRESS+4*offset)
         result = c_uint(value)
-        self.usb.hpidWrite(result)
+        self.usb.hpiWrite(interface.RDMEM_ADDRESS+4*offset,result)
     @usbLockProtect
     def rdSensorData(self,index):
         # Performs a host read of the data in the specified sensor stream
         #  entry. Note that the index is the entry number, and each entry
         #  is of size 16 bytes (64 bit timestamp, 32 bit stream index
         #  and 32 bit data)
-        self.usb.hpiaWrite(SENSOR_BASE + 16*index)
         data = interface.SensorEntryType()
-        self.usb.hpidRead(data)
+        self.usb.hpiRead(SENSOR_BASE + 16*index,data)
         return data
     @usbLockProtect
     def rdRingdownData(self,index):
         # Performs a host read of the data in the specified ringdown
         #  entry. Note that the index is the entry number, and each entry
         #  is of size 4*RINGDOWN_ENTRY_SIZE bytes
-        self.usb.hpiaWrite(RINGDOWN_BASE + 4*interface.RINGDOWN_ENTRY_SIZE*index)
         data = interface.RingdownEntryType()
-        self.usb.hpidRead(data)
+        self.usb.hpiRead(RINGDOWN_BASE + 4*interface.RINGDOWN_ENTRY_SIZE*index,data)
         return data
     @usbLockProtect
     def rdMessageTimestamp(self,index):
         # Performs a host read of the timestamp associated with
         #  the specified message
-        self.usb.hpiaWrite(MESSAGE_BASE + 128*index)
         data = c_longlong(0)
-        self.usb.hpidRead(data)
+        self.usb.hpiRead(MESSAGE_BASE + 128*index,data)
         return data.value
     @usbLockProtect
     def rdMessage(self,index):
         # Performs a host read of the specified message
-        self.usb.hpiaWrite(MESSAGE_BASE + 128*index + 8)
         data = (c_char*120)()
-        self.usb.hpidRead(data)
+        self.usb.hpiRead(MESSAGE_BASE + 128*index + 8,data)
         return data.value
     @usbLockProtect
     def doOperation(self,op):

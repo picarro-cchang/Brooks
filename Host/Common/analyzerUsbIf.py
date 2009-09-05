@@ -25,6 +25,8 @@ import time
 DEFAULT_OUT_ENDPOINT = USB_ENDPOINT_OUT | 2
 DEFAULT_IN_ENDPOINT  = USB_ENDPOINT_IN  | 6
 
+USB_MAX_PACKET_SIZE = 64
+
 class UsbConnectionError(Exception):
     pass
 
@@ -82,6 +84,23 @@ class AnalyzerUsb(Singleton):
             raise UsbPacketLengthError("Unexpected packet length %d [%d] in controlOut transaction 0x%2x" % (actual,sm,cmd))
         return
 
+    def controlOutBlock(self,cmd,address,data):
+        """Write an arbitrarily sized (but must be a multiple of 4) block of data to the USB control port
+            with command cmd, splitting the block up if necessary"""
+        dataLength = sizeof(data)
+        chunkSize = USB_MAX_PACKET_SIZE
+        a = addressof(data)
+        while dataLength > chunkSize:
+            dataBuffer = (c_ubyte*chunkSize).from_address(a)
+            self.controlOutTransaction(dataBuffer,cmd,address)
+            address += chunkSize
+            a += chunkSize
+            dataLength -= chunkSize
+            time.sleep(0) # to yield processor when transferring a large block
+        if dataLength > 0:    
+            dataBuffer = (c_ubyte*dataLength).from_address(a)
+            self.controlOutTransaction(dataBuffer,cmd,address)
+    
     def getUsbVersion(self):
         def _getUsbVersion():
             version = c_ushort()
@@ -154,10 +173,13 @@ class AnalyzerUsb(Singleton):
         self._claimInterfaceWrapper(_sendToFpga)
 
     def getUsbSpeed(self):
-        """Returns if USB has enumerated in high-speed mode (True) or full-speed mode (False)"""
+        """Returns if USB has enumerated in high-speed mode (True) or full-speed mode (False).
+            Also sets up module variable USB_MAX_PACKET_SIZE."""
+        global USB_MAX_PACKET_SIZE
         def _getUsbSpeed():
             speed = c_ubyte()
             self.controlInTransaction(speed,usbdefs.VENDOR_GET_STATUS,usbdefs.USB_STATUS_SPEED)
+            USB_MAX_PACKET_SIZE = 512 if speed.value else 64
             return speed.value
         return self._claimInterfaceWrapper(_getUsbSpeed)
 
@@ -223,7 +245,7 @@ class AnalyzerUsb(Singleton):
         """Write an arbitrarily sized (but must be a multiple of 4) block of data to address,
             splitting the block up if necessary"""
         dataLength = sizeof(data)
-        chunkSize = 512
+        chunkSize = USB_MAX_PACKET_SIZE
         a = addressof(data)
         while dataLength > chunkSize:
             dataBuffer = (c_ubyte*chunkSize).from_address(a)
@@ -253,7 +275,7 @@ class AnalyzerUsb(Singleton):
         """Read an arbitrarily sized (but must be a multiple of 4) block of data from address,
             splitting the block up if necessary"""
         dataLength = sizeof(data)
-        chunkSize = 512
+        chunkSize = USB_MAX_PACKET_SIZE
         a = addressof(data)
         while dataLength > chunkSize:
             dataBuffer = (c_ubyte*chunkSize).from_address(a)
@@ -311,32 +333,7 @@ class AnalyzerUsb(Singleton):
         block = 128 # Maximum length for download
         for r in regions:
             # r.data contains the data as a list of bytes.
-            n = len(r.data)
-            addr = r.address
-            start = 0
-            # Split into chunks of size at most "block"
-            while n > block:
-                #print "%x %d" % (addr+start,block)
-                #raw_input("Return to load")
-                self.hpicWrite(0x00010001)
-                self.hpiaWrite(addr+start)
-                self.hpidWrite(create_string_buffer("".join(r.data[start:start+block]),block))
-
-                # Read back
-                #print "Reading back..."
-                #recvArray = (c_ubyte*block)()
-                #self.hpiaWrite(addr+start)
-                #self.setHpidInBytes(block)
-                #self.hpidRead(recvArray)
-                #for i in range(block):
-                #    print "%s, %s" % (recvArray[i],ord(r.data[start+i]))
-
-                n -= block
-                start += block
-            if n>0:
-                self.hpicWrite(0x00010001)
-                self.hpiaWrite(addr+start)
-                self.hpidWrite(create_string_buffer("".join(r.data[start:start+n]),n))
+            self.hpiWrite(r.address,create_string_buffer("".join(r.data),len(r.data)))
 
     def loadHexFile(self,fp):
         """Use vendor command 0xA0 to load hex file to device and renumerate"""
@@ -348,24 +345,14 @@ class AnalyzerUsb(Singleton):
             hexFile = HexFile(fp)
             regions = hexFile.process()
 
-            block = 128 # Maximum length for download
             for r in regions:
                 # r.data contains the data as a list of bytes.
-                n = len(r.data)
-                addr = r.address
-                start = 0
-                # Split into chunks of size at most "block" for sending to the FX2
-                while n > block:
-                    self.controlOutTransaction(create_string_buffer("".join(r.data[start:start+block]),block),0xA0,addr+start)
-                    n -= block
-                    start += block
-                if n>0:
-                    self.controlOutTransaction(create_string_buffer("".join(r.data[start:start+n]),n),0xA0,addr+start)
-            # Release the 8051 reset, allowing it to renumerate
-            time.sleep(0.5)
+                self.controlOutBlock(0xA0,r.address,create_string_buffer("".join(r.data),len(r.data)))
+
+            # Release the reset to renumerate
             self.controlOutTransaction(c_ubyte(0x0),0xA0,0xE600)
+            self.disconnect()
         # Do not wrap function, since it disconnects on completion
-        #return self._claimInterfaceWrapper(_loadHexFile)
         return _loadHexFile()
 
 bitrevList = \

@@ -360,13 +360,15 @@ class Driver(SharedTypes.Singleton):
             while True:
                 try:
                     # Ensure that we connect in high speed mode
-                    for attempts in range(10):
+                    for attempts in range(3):
                         usbSpeed = self.dasInterface.startUsb()
                         Log("USB enumerated at %s speed" % (("full","high")[usbSpeed]))
                         if usbSpeed:
                             break
                         self.dasInterface.analyzerUsb.reconnectUsb()
                         time.sleep(5.0)
+                    else:
+                        Log("USB does not enumerate at high speed, falling back to full speed connection")
                     self.dasInterface.upload()
                     time.sleep(1.0) # For DSP code to initialize
                     # Restore state from INI file
