@@ -1,7 +1,6 @@
 from Host.Common import CmdFIFO, SharedTypes
 from Host.autogen import interface
 from numpy import *
-from pylab import *
 
 if __name__ == "__main__":
     serverURI = "http://localhost:%d" % (SharedTypes.RPC_PORT_DRIVER,)

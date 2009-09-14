@@ -252,7 +252,6 @@ class DasInterface(Singleton):
         #  If this routine fails, it is not possible
         #  to continue
         #
-        self.analyzerUsb.resetHpidInFifo()
         logging.info("Holding DSP in reset...")
         self.analyzerUsb.setDspControl(usbdefs.VENDOR_DSP_CONTROL_RESET)
         #raw_input("Press <Enter> to program FPGA")
@@ -470,9 +469,8 @@ class HostToDspSender(Singleton):
             i += 1
         hostMsg[i] = calcCrc32(0,hostMsg,4*(numInt+2))
         # logging.info("CRC = %x" % hostMsg[numInt+2])
-        self.usb.hpiaWrite(HOST_BASE)
-        self.usb.hpidWrite(hostMsg)
-        sleep(0.003) # Necessary to ensure hpidWrite completes before signalling interrupt
+        self.usb.hpiWrite(HOST_BASE,hostMsg)
+        sleep(0.003) # Necessary to ensure hpiWrite completes before signalling interrupt
         # Assert DSPINT
         self.usb.hpicWrite(0x00010003)
         # print "hpic after DSPINT: %08x" % self.usb.hpicRead()
