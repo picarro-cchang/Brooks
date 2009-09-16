@@ -1,0 +1,89 @@
+; Code Composer Project File, Version 2.0 (do not modify or remove this line)
+
+[Project Settings]
+ProjectDir="C:\work\CostReducedPlatform\Alpha\DSP\registerTest\"
+ProjectType=Executable
+CPUFamily=TMS320C67XX
+Tool="Compiler"
+Tool="CustomBuilder"
+Tool="DspBiosBuilder"
+Tool="Linker"
+Config="Debug"
+Config="Release"
+
+[Source Files]
+Source="..\..\..\..\..\CCStudio_v3.3\C6700\mthlib\lib\fastrts67x.lib"
+Source="..\autogen\dspAutogen.c"
+Source="..\common\configDsp.c"
+Source="..\common\crc.c"
+Source="..\common\ds1631.c"
+Source="..\common\dspData.c"
+Source="..\common\fpga.c"
+Source="..\common\i2c_dsp.c"
+Source="..\common\ltc2451.c"
+Source="..\common\ltc2485.c"
+Source="..\common\ltc2499.c"
+Source="..\common\pca9547.c"
+Source="..\common\rdFitting.c"
+Source="..\common\registers.c"
+Source="action_handler.c"
+Source="c:\CCStudio_v3.3\C6000\csl\lib\csl6713.lib"
+Source="heaterCntrl.c"
+Source="laserCurrentCntrl.c"
+Source="misc.c"
+Source="pid.c"
+Source="rdHandlers.c"
+Source="registerTest.c"
+Source="registerTest.tcf"
+Source="scheduler.c"
+Source="sentryHandler.c"
+Source="spectrumCntrl.c"
+Source="tempCntrl.c"
+Source="tunerCntrl.c"
+Source="valveCntrl.c"
+Source="registerTest.cmd"
+Source="registerTestcfg.cmd"
+
+[Generated Files]
+Source="registerTestcfg.s62"
+Source="registerTestcfg_c.c"
+
+["Compiler" Settings: "Debug"]
+Options=-g -pdsw225 -fr"$(Proj_dir)\Debug" -i"../inc" -i"../autogen" -i"../registerTest" -d"CHIP_6713" -d"_DEBUG" -mv6700
+
+["Compiler" Settings: "Release"]
+Options=-pdsw225 -o3 -fr"$(Proj_dir)\Release" -mv6700
+
+["DspBiosBuilder" Settings: "Debug"]
+Options=-Dconfig.importPath="$(Install_dir)/bios_5_31_02/packages;"
+
+["Linker" Settings: "Debug"]
+Options=-c -m".\Debug\registerTest.map" -o".\Debug\registerTest.out" -w -x
+
+["Linker" Settings: "Release"]
+Options=-c -m".\Release\registerTest.map" -o".\Release\registerTest.out" -w -x
+
+["..\common\fpga.c" Settings: "Debug"]
+Options="Compiler" +{-o3} -{-g}
+
+["..\common\rdFitting.c" Settings: "Debug"]
+Options="Compiler" +{-o3} -{-g}
+
+["..\common\registers.c" Settings: "Debug"]
+Options="Compiler" +{-o3} -{-g}
+
+["rdHandlers.c" Settings: "Debug"]
+Options="Compiler" +{-o3} -{-g}
+
+["registerTest.cmd" Settings: "Debug"]
+LinkOrder=1
+
+["registerTest.cmd" Settings: "Release"]
+LinkOrder=1
+
+["registerTestcfg.cmd" Settings: "Debug"]
+LinkOrder=1
+
+["registerTestcfg.cmd" Settings: "Release"]
+LinkOrder=1
+
