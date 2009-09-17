@@ -280,8 +280,8 @@
         <constant ident="OPERAND_TABLE_SIZE" description="Number of 32-bit ints in operand table">(ENVIRONMENT_OFFSET - OPERAND_OFFSET)</constant>
         <constant ident="ENVIRONMENT_TABLE_SIZE" description="Number of 32-bit ints in environment table">(HOST_OFFSET - ENVIRONMENT_OFFSET)</constant>
         <constant ident="HOST_REGION_SIZE" description="Number of 32-bit ints in host area">(RINGDOWN_BUFFER_OFFSET - HOST_OFFSET)</constant>
-        <constant ident="EMIF_ADDR_WIDTH" description="Number of bits in EMIF address">20</constant>
-        <constant ident="EMIF_DATA_WIDTH" description="Number of bits in EMIF address">32</constant>
+        <constant ident="EMIF_ADDR_WIDTH" description="Number of bits in FPGA EMIF address">20</constant>
+        <constant ident="EMIF_DATA_WIDTH" description="Number of bits in EMIF data">32</constant>
         <constant ident="FPGA_REG_WIDTH" description="Number of bits in an FPGA register">16</constant>
         <constant ident="FPGA_RDMEM_MASK" description="Mask to access ringdown memory">0</constant>
         <constant ident="FPGA_REG_MASK" description="Mask to access FPGA registers">1</constant>
@@ -294,6 +294,7 @@
         <constant ident="PARAM_BANK_ADDR_WIDTH" description="Number of address bits for one bank of parameters">6</constant>
         <constant ident="PARAM_TUNER_AT_RINGDOWN_INDEX" description="Tuner value at ringdown index in parameter array">10</constant>
         <constant ident="PARAM_META_ADDR_AT_RINGDOWN_INDEX" description="Metadata address at ringdown index in parameter array">11</constant>
+        <constant ident="FPGA_REG_BASE_ADDRESS" description="FPGA register base address">(RDMEM_ADDRESS + (1 &lt;&lt; (EMIF_ADDR_WIDTH+1)))</constant>
         <constant ident="TEMP_CNTRL_LOCK_COUNT" description="Number of in-range samples to acquire lock">5</constant>
         <constant ident="TEMP_CNTRL_UNLOCK_COUNT" description="Number of out-of-range samples to lose lock">5</constant>
         <constant ident="FPGA_MAGIC_CODE" description="Code to confirm FPGA is programmed">0xC0DE0001</constant>
@@ -2745,6 +2746,10 @@
                     <fielddef value="0">Disallow</fielddef>
                     <fielddef value="1">Allow</fielddef>
                 </bitfield>
+                <bitfield ident="SIM_ACTUAL" description="Ringdown data source" lsb="4" width="1">
+                    <fielddef value="0">Simulator</fielddef>
+                    <fielddef value="1">Actual ADC</fielddef>
+                </bitfield>
             </reg>
             <reg type="uint16" ident="PARAM0" description="Parameter 0 register" access="rw">
                 <display format="%d">Parameter 0</display>
@@ -2985,6 +2990,18 @@
                 <save/>
                 <display format="%d" units="digU">Pulse width change per update</display>
             </reg>
+            <reg type="uint16" ident="HIGH" description="Upper limit of dither waveform" access="rw">
+                <save/>
+                <display format="%d" units="digU">Upper limit of dither waveform</display>
+            </reg>
+            <reg type="uint16" ident="LOW" description="Lower limit of dither waveform" access="rw">
+                <save/>
+                <display format="%d" units="digU">Lower limit of dither waveform</display>
+            </reg>
+            <reg type="uint16" ident="SLOPE" description="Slope of dither waveform" access="rw">
+                <save/>
+                <display format="%d">Slope of dither waveform</display>
+            </reg>            
         </fpga_block>
     </fpga_block_list>
     <fpga_map_list>

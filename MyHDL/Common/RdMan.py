@@ -12,6 +12,7 @@
 #   25-Jun-2009  sze  Initial version.
 #   15-Jul-2009  sze  Number of parameters increased to 10 (+2 built-ins)
 #   23-Aug-2009  sze  Added RESET_RDMAN bit to control register
+#   16-Sep-2009  sze  Added selection between simulated and actual ringdown data
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -63,6 +64,7 @@ from Host.autogen.interface import RDMAN_OPTIONS_LOCK_ENABLE_B, RDMAN_OPTIONS_LO
 from Host.autogen.interface import RDMAN_OPTIONS_UP_SLOPE_ENABLE_B, RDMAN_OPTIONS_UP_SLOPE_ENABLE_W
 from Host.autogen.interface import RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B, RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W
 from Host.autogen.interface import RDMAN_OPTIONS_DITHER_ENABLE_B, RDMAN_OPTIONS_DITHER_ENABLE_W
+from Host.autogen.interface import RDMAN_OPTIONS_SIM_ACTUAL_B, RDMAN_OPTIONS_SIM_ACTUAL_W
 
 SeqState = enum("IDLE","START_INJECT","WAIT_FOR_PRECONTROL",
                 "WAIT_FOR_LOCK","WAIT_FOR_GATING_CONDITIONS",
@@ -75,12 +77,12 @@ LOW, HIGH = bool(0), bool(1)
 def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
           pulse_100k_in,pulse_1M_in,tuner_value_in,meta0_in,meta1_in,
           meta2_in,meta3_in,meta4_in,meta5_in,meta6_in,meta7_in,
-          rd_data_in,tuner_slope_in,tuner_window_in,laser_freq_ok_in,
-          metadata_strobe_in,rd_trig_out,acc_en_out,rd_irq_out,
-          acq_done_irq_out,rd_adc_clk_out,bank_out,laser_locked_out,
-          data_addr_out,wr_data_out,data_we_out,meta_addr_out,
-          wr_meta_out,meta_we_out,param_addr_out,wr_param_out,
-          param_we_out,map_base):
+          rd_sim_in,rd_data_in,tuner_slope_in,tuner_window_in,
+          laser_freq_ok_in,metadata_strobe_in,rd_trig_out,acc_en_out,
+          rd_irq_out,acq_done_irq_out,rd_adc_clk_out,bank_out,
+          laser_locked_out,data_addr_out,wr_data_out,data_we_out,
+          meta_addr_out,wr_meta_out,meta_we_out,param_addr_out,
+          wr_param_out,param_we_out,map_base):
     """
     Parameters:
     clk                 -- Clock input
@@ -100,6 +102,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     meta5_in            -- Lock error from laser locker
     meta6_in
     meta7_in
+    rd_sim_in           -- Ringdown data input from simulator
     rd_data_in          -- Ringdown data input from ADC
     tuner_slope_in      -- Tuner slope (1 on up slope, 0 on down slope)
     tuner_window_in     -- Indicates when tuner waveform is within window
@@ -179,6 +182,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     RDMAN_OPTIONS_UP_SLOPE_ENABLE -- Enables ringdowns on positive slope of tuner waveform
     RDMAN_OPTIONS_DOWN_SLOPE_ENABLE -- Enables ringdowns on negative slope of tuner waveform
     RDMAN_OPTIONS_DITHER_ENABLE -- Allows transition to dither mode. Used by DSP.
+    RDMAN_OPTIONS_SIM_ACTUAL -- Selects simulated (0) or actual (1) data
     """
     rdman_control_addr = map_base + RDMAN_CONTROL
     rdman_status_addr = map_base + RDMAN_STATUS
@@ -251,9 +255,17 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     tuner_gating_conditions = Signal(LOW)
     us_since_start = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     us_timer_enable = Signal(LOW)
-
+    rd_data = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    
     @always_comb
-    def comb():
+    def comb1():
+        if options[RDMAN_OPTIONS_SIM_ACTUAL_B]:
+            rd_data.next = rd_data_in
+        else:
+            rd_data.next = rd_sim_in
+    
+    @always_comb
+    def comb2():
         bank_out.next = bank
         rd_irq_out.next = rd_irq
         acq_done_irq_out.next = acq_done_irq
@@ -262,7 +274,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         tuner_gating_conditions.next = tuner_window_in and ((tuner_slope_in and options[RDMAN_OPTIONS_UP_SLOPE_ENABLE_B]) or
                                                             (not tuner_slope_in and options[RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B]))
         freq_gating_conditions.next = laser_freq_ok_in or not options[RDMAN_OPTIONS_LOCK_ENABLE_B]
-        wr_data_out.next = rd_data_in
+        wr_data_out.next = rd_data
 
     @instance
     def logic():
@@ -451,7 +463,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                             seqState.next = SeqState.CHECK_BELOW_THRESHOLD
 
                     elif seqState == SeqState.CHECK_BELOW_THRESHOLD:
-                        if rd_data_in < threshold:
+                        if rd_data < threshold:
                             seqState.next = SeqState.WAIT_FOR_THRESHOLD
                         else:
                             seqState.next = SeqState.WAIT_FOR_GATING_CONDITIONS
@@ -462,7 +474,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                             seqState.next = SeqState.WAIT_FOR_LOCK
                         elif not tuner_gating_conditions:
                             seqState.next = SeqState.WAIT_FOR_GATING_CONDITIONS
-                        elif rd_data_in >= threshold:
+                        elif rd_data >= threshold:
                             seqState.next = SeqState.IN_RINGDOWN
                             rd_trig.next = HIGH          # Turn off the injection to start ringdown
                             metadata_acq.next = LOW      # Stop metadata collection
@@ -695,6 +707,7 @@ if __name__ == "__main__":
     meta5_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     meta6_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     meta7_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    rd_sim_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rd_data_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     tuner_slope_in = Signal(LOW)
     tuner_window_in = Signal(LOW)
@@ -726,8 +739,8 @@ if __name__ == "__main__":
                   meta1_in=meta1_in, meta2_in=meta2_in,
                   meta3_in=meta3_in, meta4_in=meta4_in,
                   meta5_in=meta5_in, meta6_in=meta6_in,
-                  meta7_in=meta7_in, rd_data_in=rd_data_in,
-                  tuner_slope_in=tuner_slope_in,
+                  meta7_in=meta7_in, rd_sim_in=rd_sim_in,
+                  rd_data_in=rd_data_in, tuner_slope_in=tuner_slope_in,
                   tuner_window_in=tuner_window_in,
                   laser_freq_ok_in=laser_freq_ok_in,
                   metadata_strobe_in=metadata_strobe_in,

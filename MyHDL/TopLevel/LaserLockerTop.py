@@ -132,8 +132,6 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     meta6 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     meta7 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     
-    laser_shutdown_in = Signal(LOW)
-    soa_shutdown_in = Signal(LOW)
     sel_laser = Signal(intbv(0)[2:])
     sel_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     sel_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -185,8 +183,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     dsp_wr=dsp_wr, laser_dac_clk_in=clk_5M,
                     strobe_in=metadata_strobe,
                     laser_fine_current_in=laser_fine_current,
-                    laser_shutdown_in=laser_shutdown_in,
-                    soa_shutdown_in=soa_shutdown_in,
+                    laser_shutdown_in=rd_trig,
+                    soa_shutdown_in=rd_trig,
                     laser1_dac_sync_out=lsr1_ss,
                     laser2_dac_sync_out=lsr2_ss,
                     laser3_dac_sync_out=lsr3_ss,
@@ -272,7 +270,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                    meta1_in=meta1, meta2_in=meta2,
                    meta3_in=meta3, meta4_in=meta4,
                    meta5_in=meta5, meta6_in=meta6,
-                   meta7_in=meta7, rd_data_in=rdsim_value,
+                   meta7_in=meta7, rd_sim_in=rdsim_value, rd_data_in=rd_adc,
                    tuner_slope_in=tuner_slope,
                    tuner_window_in=tuner_in_window,
                    laser_freq_ok_in=laser_freq_ok,

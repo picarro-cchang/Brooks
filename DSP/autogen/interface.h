@@ -326,9 +326,9 @@ typedef struct {
 #define ENVIRONMENT_TABLE_SIZE ((HOST_OFFSET - ENVIRONMENT_OFFSET))
 // Number of 32-bit ints in host area
 #define HOST_REGION_SIZE ((RINGDOWN_BUFFER_OFFSET - HOST_OFFSET))
-// Number of bits in EMIF address
+// Number of bits in FPGA EMIF address
 #define EMIF_ADDR_WIDTH (20)
-// Number of bits in EMIF address
+// Number of bits in EMIF data
 #define EMIF_DATA_WIDTH (32)
 // Number of bits in an FPGA register
 #define FPGA_REG_WIDTH (16)
@@ -354,6 +354,8 @@ typedef struct {
 #define PARAM_TUNER_AT_RINGDOWN_INDEX (10)
 // Metadata address at ringdown index in parameter array
 #define PARAM_META_ADDR_AT_RINGDOWN_INDEX (11)
+// FPGA register base address
+#define FPGA_REG_BASE_ADDRESS ((RDMEM_ADDRESS + (1 << (EMIF_ADDR_WIDTH+1))))
 // Number of in-range samples to acquire lock
 #define TEMP_CNTRL_LOCK_COUNT (5)
 // Number of out-of-range samples to lose lock
@@ -1022,6 +1024,8 @@ typedef enum {
 #define RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W (1) // Allow ring-down on negative tuner slope bit width
 #define RDMAN_OPTIONS_DITHER_ENABLE_B (3) // Allow transition to dither mode bit position
 #define RDMAN_OPTIONS_DITHER_ENABLE_W (1) // Allow transition to dither mode bit width
+#define RDMAN_OPTIONS_SIM_ACTUAL_B (4) // Ringdown data source bit position
+#define RDMAN_OPTIONS_SIM_ACTUAL_W (1) // Ringdown data source bit width
 
 #define RDMAN_PARAM0 (3) // Parameter 0 register
 #define RDMAN_PARAM1 (4) // Parameter 1 register
@@ -1130,6 +1134,9 @@ typedef enum {
 #define DYNAMICPWM_CS_PWM_OUT_W (1) // PWM output bit width
 
 #define DYNAMICPWM_DELTA (1) // Pulse width change per update
+#define DYNAMICPWM_HIGH (2) // Upper limit of dither waveform
+#define DYNAMICPWM_LOW (3) // Lower limit of dither waveform
+#define DYNAMICPWM_SLOPE (4) // Slope of dither waveform
 
 /* FPGA map indices */
 
@@ -1145,7 +1152,7 @@ typedef enum {
 #define FPGA_INJECT (83) // Optical Injection Subsystem
 #define FPGA_WLMSIM (92) // WLM Simulator
 #define FPGA_DYNAMICPWM_INLET (100) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (102) // Outlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (105) // Outlet proportional valve dynamic PWM
 
 /* Environment addresses */
 

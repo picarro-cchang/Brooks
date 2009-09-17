@@ -357,9 +357,9 @@ OPERAND_TABLE_SIZE = (ENVIRONMENT_OFFSET - OPERAND_OFFSET)
 ENVIRONMENT_TABLE_SIZE = (HOST_OFFSET - ENVIRONMENT_OFFSET)
 # Number of 32-bit ints in host area
 HOST_REGION_SIZE = (RINGDOWN_BUFFER_OFFSET - HOST_OFFSET)
-# Number of bits in EMIF address
+# Number of bits in FPGA EMIF address
 EMIF_ADDR_WIDTH = 20
-# Number of bits in EMIF address
+# Number of bits in EMIF data
 EMIF_DATA_WIDTH = 32
 # Number of bits in an FPGA register
 FPGA_REG_WIDTH = 16
@@ -385,6 +385,8 @@ PARAM_BANK_ADDR_WIDTH = 6
 PARAM_TUNER_AT_RINGDOWN_INDEX = 10
 # Metadata address at ringdown index in parameter array
 PARAM_META_ADDR_AT_RINGDOWN_INDEX = 11
+# FPGA register base address
+FPGA_REG_BASE_ADDRESS = (RDMEM_ADDRESS + (1 << (EMIF_ADDR_WIDTH+1)))
 # Number of in-range samples to acquire lock
 TEMP_CNTRL_LOCK_COUNT = 5
 # Number of out-of-range samples to lose lock
@@ -1875,6 +1877,8 @@ RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B = 2 # Allow ring-down on negative tuner slope 
 RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W = 1 # Allow ring-down on negative tuner slope bit width
 RDMAN_OPTIONS_DITHER_ENABLE_B = 3 # Allow transition to dither mode bit position
 RDMAN_OPTIONS_DITHER_ENABLE_W = 1 # Allow transition to dither mode bit width
+RDMAN_OPTIONS_SIM_ACTUAL_B = 4 # Ringdown data source bit position
+RDMAN_OPTIONS_SIM_ACTUAL_W = 1 # Ringdown data source bit width
 
 RDMAN_PARAM0 = 3 # Parameter 0 register
 RDMAN_PARAM1 = 4 # Parameter 1 register
@@ -1983,6 +1987,9 @@ DYNAMICPWM_CS_PWM_OUT_B = 2 # PWM output bit position
 DYNAMICPWM_CS_PWM_OUT_W = 1 # PWM output bit width
 
 DYNAMICPWM_DELTA = 1 # Pulse width change per update
+DYNAMICPWM_HIGH = 2 # Upper limit of dither waveform
+DYNAMICPWM_LOW = 3 # Lower limit of dither waveform
+DYNAMICPWM_SLOPE = 4 # Slope of dither waveform
 
 # FPGA map indices
 FPGA_KERNEL = 0 # Kernel registers
@@ -1997,7 +2004,7 @@ FPGA_TWGEN = 74 # Tuner waveform generator
 FPGA_INJECT = 83 # Optical Injection Subsystem
 FPGA_WLMSIM = 92 # WLM Simulator
 FPGA_DYNAMICPWM_INLET = 100 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 102 # Outlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 105 # Outlet proportional valve dynamic PWM
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
@@ -2007,8 +2014,8 @@ persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVI
 persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP', u'TWGEN_SWEEP_LOW', u'TWGEN_SWEEP_HIGH', u'TWGEN_WINDOW_LOW', u'TWGEN_WINDOW_HIGH', u'TWGEN_PZT_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL']))
 persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_OPTIONS', u'WLMSIM_RFAC', u'WLMSIM_WFAC']))
-persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_INLET', [u'DYNAMICPWM_DELTA']))
-persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_OUTLET', [u'DYNAMICPWM_DELTA']))
+persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_INLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_HIGH', u'DYNAMICPWM_LOW', u'DYNAMICPWM_SLOPE']))
+persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_OUTLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_HIGH', u'DYNAMICPWM_LOW', u'DYNAMICPWM_SLOPE']))
 
 # Environment addresses
 LASER1_TEMP_CNTRL_ENV = 0
@@ -2399,7 +2406,7 @@ __p = []
 
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Reset ringdown manager', [(0, u'Idle'), (16, u'Reset')]), (32, u'Mark bank 0 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Mark bank 1 available for write', [(0, u'Idle'), (64, u'Mark available')]), (128, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (128, u'Acknowledge')]), (256, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (256, u'Acknowledge')]), (512, u'Tuner waveform mode', [(0, u'Ramp'), (512, u'Dither')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')]), (1024, u'Ringdown Cycle State', [(0, u'Idle'), (1024, u'Busy')])],None,None,1,0))
-__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')]), (16, u'Ringdown data source', [(0, u'Simulator'), (16, u'Actual ADC')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DATA_ADDRCNTR,'Ringdown data address','','%d',1,0))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_METADATA_ADDRCNTR,'Ringdown metadata address','','%d',1,0))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_PARAM_ADDRCNTR,'Ringdown parameter address','','%d',1,0))

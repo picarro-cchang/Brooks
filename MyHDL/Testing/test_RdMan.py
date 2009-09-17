@@ -60,6 +60,7 @@ from Host.autogen.interface import RDMAN_OPTIONS_LOCK_ENABLE_B, RDMAN_OPTIONS_LO
 from Host.autogen.interface import RDMAN_OPTIONS_UP_SLOPE_ENABLE_B, RDMAN_OPTIONS_UP_SLOPE_ENABLE_W
 from Host.autogen.interface import RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B, RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W
 from Host.autogen.interface import RDMAN_OPTIONS_DITHER_ENABLE_B, RDMAN_OPTIONS_DITHER_ENABLE_W
+from Host.autogen.interface import RDMAN_OPTIONS_SIM_ACTUAL_B, RDMAN_OPTIONS_SIM_ACTUAL_W
 
 from MyHDL.Common.RdMan import *
 from MyHDL.Common.Rdmemory import Rdmemory
@@ -83,6 +84,7 @@ meta4_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 meta5_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 meta6_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 meta7_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+rd_sim_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 rd_data_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 tuner_slope_in = Signal(LOW)
 tuner_window_in = Signal(LOW)
@@ -191,8 +193,8 @@ def bench():
                    meta1_in=meta1_in, meta2_in=meta2_in,
                    meta3_in=meta3_in, meta4_in=meta4_in,
                    meta5_in=meta5_in, meta6_in=meta6_in,
-                   meta7_in=meta7_in, rd_data_in=rd_data_in,
-                   tuner_slope_in=tuner_slope_in,
+                   meta7_in=meta7_in, rd_sim_in=rd_sim_in,
+                   rd_data_in=rd_data_in, tuner_slope_in=tuner_slope_in,
                    tuner_window_in=tuner_window_in,
                    laser_freq_ok_in=laser_freq_ok_in,
                    metadata_strobe_in=metadata_strobe_in,

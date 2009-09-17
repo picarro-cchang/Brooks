@@ -8,7 +8,8 @@
 # SEE ALSO:
 #
 # HISTORY:
-#   26-Aug-2009  sze  Initial version.
+#   16-Sep-2009  sze  Initial version
+#   29-Sep-2009  sze  Add dither waveform generation
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -18,6 +19,8 @@ from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_DYNAMICPWM_INLET, FPGA_DYNAMICPWM_OUTLET
 
 from Host.autogen.interface import DYNAMICPWM_CS, DYNAMICPWM_DELTA
+from Host.autogen.interface import DYNAMICPWM_HIGH, DYNAMICPWM_LOW
+from Host.autogen.interface import DYNAMICPWM_SLOPE
 
 from Host.autogen.interface import DYNAMICPWM_CS_RUN_B, DYNAMICPWM_CS_RUN_W
 from Host.autogen.interface import DYNAMICPWM_CS_CONT_B, DYNAMICPWM_CS_CONT_W
@@ -36,6 +39,7 @@ dsp_wr = Signal(LOW)
 comparator_in = Signal(LOW)
 update_in = Signal(LOW)
 pwm_out = Signal(LOW)
+value_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 map_base = FPGA_DYNAMICPWM_INLET
 
 clk_10M = Signal(LOW)
@@ -107,7 +111,7 @@ def bench():
                              dsp_data_in=dsp_data_in, dsp_wr=dsp_wr,
                              comparator_in=comparator_in,
                              update_in=update_in, pwm_out=pwm_out,
-                             map_base=map_base,MIN_WIDTH=500,MAX_WIDTH=65000 )
+                             value_out=value_out, map_base=map_base,MIN_WIDTH=500,MAX_WIDTH=65000 )
 
     clkGen = ClkGen(clk=clk, reset=reset, clk_10M=clk_10M, clk_5M=clk_5M,
                     clk_2M5=clk_2M5, pulse_1M=strobe_1M, pulse_100k=update_in)
@@ -122,6 +126,13 @@ def bench():
         # Test a positive value of delta
         delta = 0x800
         yield writeFPGA(FPGA_DYNAMICPWM_INLET+DYNAMICPWM_DELTA,delta)
+        high = 0x1000
+        low = 0x800
+        slope = 0xC000
+        yield writeFPGA(FPGA_DYNAMICPWM_INLET+DYNAMICPWM_HIGH,high)
+        yield writeFPGA(FPGA_DYNAMICPWM_INLET+DYNAMICPWM_LOW,low)
+        yield writeFPGA(FPGA_DYNAMICPWM_INLET+DYNAMICPWM_SLOPE,slope)
+        
         control = (1 << DYNAMICPWM_CS_RUN_B) | \
                   (1 << DYNAMICPWM_CS_CONT_B)
         yield writeFPGA(FPGA_DYNAMICPWM_INLET+DYNAMICPWM_CS,control)

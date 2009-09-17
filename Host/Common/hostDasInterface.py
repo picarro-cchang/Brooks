@@ -54,8 +54,6 @@ ENVIRONMENT_BASE = interface.SHAREDMEM_ADDRESS + \
                        4*interface.ENVIRONMENT_OFFSET
 HOST_BASE        = interface.SHAREDMEM_ADDRESS + \
                        4*interface.HOST_OFFSET
-FPGA_REG_BASE    = interface.RDMEM_ADDRESS + \
-                       (1<<(interface.EMIF_ADDR_WIDTH+1))
 RINGDOWN_BASE    = interface.DSP_DATA_ADDRESS
 
 ValveSequenceType = (interface.ValveSequenceEntryType * interface.NUM_VALVE_SEQUENCE_ENTRIES)
@@ -573,14 +571,14 @@ class HostToDspSender(Singleton):
         #  the FPGA register which may be specified as
         #  the sum of a block base and the register index
         data = c_uint(0)
-        self.usb.hpiRead(FPGA_REG_BASE+4*(lookup(base)+lookup(reg)),data)
+        self.usb.hpiRead(interface.FPGA_REG_BASE_ADDRESS+4*(lookup(base)+lookup(reg)),data)
         return data.value
     @usbLockProtect
     def wrFPGA(self,base,reg,value):
         # Performs a host write of a single unsigned integer from
         #  the FPGA register which may be specified as
         #  the sum of a block base and the register index
-        self.usb.hpiWrite(FPGA_REG_BASE+4*(lookup(base)+lookup(reg)),c_uint(value))
+        self.usb.hpiWrite(interface.FPGA_REG_BASE_ADDRESS+4*(lookup(base)+lookup(reg)),c_uint(value))
     @usbLockProtect
     def rdDspMemArray(self,wordAddr,nwords=1):
         """Reads multiple words from DSP memory into a c_uint array"""

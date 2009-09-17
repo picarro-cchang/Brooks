@@ -12,6 +12,9 @@
 # HISTORY:
 #   31-May-2009  sze  Initial version.
 #   24-Jul-2009  sze  Add selected laser outputs for use with WLM simulator.
+#   16-Sep-2009  sze  Enable laser shutdown and enable SOA shutdown control bits cause the selected laser
+#                      or SOA to be affected by the shutdown inputs in automatic mode. If the enable bit 
+#                      is reset, the selected laser or SOA remains on even when the shutdown input is asserted.
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -241,19 +244,19 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         soa_shutdown_out.next = not manual_soa_en
 
         if mode:
-            soa_shutdown_out.next = soa_shutdown_in
+            soa_shutdown_out.next = soa_shutdown_in and soa_shutdown_en
             if sel==0:
                 laser1_fine.next = laser_fine_current_in
-                laser1_shutdown_out.next = laser_shutdown_in
+                laser1_shutdown_out.next = laser_shutdown_in and laser_shutdown_en
             elif sel==1:
                 laser2_fine.next = laser_fine_current_in
-                laser2_shutdown_out.next = laser_shutdown_in
+                laser2_shutdown_out.next = laser_shutdown_in and laser_shutdown_en
             elif sel==2:
                 laser3_fine.next = laser_fine_current_in
-                laser3_shutdown_out.next = laser_shutdown_in
+                laser3_shutdown_out.next = laser_shutdown_in and laser_shutdown_en
             else:
                 laser4_fine.next = laser_fine_current_in
-                laser4_shutdown_out.next = laser_shutdown_in
+                laser4_shutdown_out.next = laser_shutdown_in and laser_shutdown_en
 
     laser1_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
         chanA_data_in=laser1_coarse_current,chanB_data_in=laser1_fine,

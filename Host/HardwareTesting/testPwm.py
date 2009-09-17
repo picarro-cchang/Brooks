@@ -203,16 +203,15 @@ def rdRegUint(reg):
     analyzerUsb.hpidRead(data)
     return data.value
 
-FPGA_REG_BASE = interface.RDMEM_ADDRESS + (1<<(interface.EMIF_ADDR_WIDTH+1))
 FPGA_REG_MULT = 4
 
 def readFPGA(offset):
-    analyzerUsb.hpiaWrite(FPGA_REG_BASE+FPGA_REG_MULT*offset)
+    analyzerUsb.hpiaWrite(interface.FPGA_REG_BASE_ADDRESS+FPGA_REG_MULT*offset)
     result = c_uint(0)
     analyzerUsb.hpidRead(result)
     return result.value
 def writeFPGA(offset,value):
-    analyzerUsb.hpiaWrite(FPGA_REG_BASE+FPGA_REG_MULT*offset)
+    analyzerUsb.hpiaWrite(interface.FPGA_REG_BASE_ADDRESS+FPGA_REG_MULT*offset)
     analyzerUsb.hpidWrite(c_uint(value))
 def rdRingdownMemArray(offset,nwords=1):
     """Reads multiple words from ringdown memory into a c_uint array"""
