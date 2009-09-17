@@ -28,6 +28,8 @@ from MyHDL.Common.RdMan import RdMan
 from MyHDL.Common.Rdmemory import Rdmemory
 from MyHDL.Common.RdSim import RdSim
 from MyHDL.Common.TWGen import TWGen
+from MyHDL.Common.WlmAdcReader import WlmAdcReader
+from MyHDL.Common.WlmMux import WlmMux
 from MyHDL.Common.WlmSim import WlmSim
 
 LOW, HIGH = bool(0), bool(1)
@@ -139,11 +141,26 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     rdsim_value = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rd_trig = Signal(LOW)
 
+    wlm_sim_actual = Signal(LOW)
+    
+    data_available_actual = Signal(LOW)
+    eta1_actual = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    eta2_actual = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ref1_actual = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ref2_actual = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    
+    data_available_sim = Signal(LOW)
+    eta1_sim = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    eta2_sim = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ref1_sim = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ref2_sim = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    
+    wlm_data_available = Signal(LOW)
     eta1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     eta2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ref1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ref2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    wlmsimDone = Signal(LOW)
+    
     z0_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     sim_loss = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -224,7 +241,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                                tuning_offset_in=tuner_value,
                                acc_en_in=acc_en,
                                sample_dark_in=sample_dark_in,
-                               adc_strobe_in=wlmsimDone,
+                               adc_strobe_in=wlm_data_available,
                                ratio1_out=ratio1,
                                ratio2_out=ratio2,
                                lock_error_out=lock_error,
@@ -232,6 +249,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                                tuning_offset_out=laser_tuning_offset,
                                laser_freq_ok_out=laser_freq_ok,
                                current_ok_out=metadata_strobe,
+                               sim_actual_out=wlm_sim_actual,
                                map_base=FPGA_LASERLOCKER )
 
     pwm_laser1 = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
@@ -309,16 +327,33 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                   value_out=tuner_value, pzt_out=pzt, slope_out=tuner_slope,
                   in_window_out=tuner_in_window,map_base=FPGA_TWGEN)
     
+    wlmadcreader = WlmAdcReader(clk=clk0, reset=reset, adc_clock_in=clk_2M5,
+                                strobe_in=pulse_100k, eta1_in=wmm_refl1,
+                                ref1_in=wmm_tran1, eta2_in=wmm_refl2,
+                                ref2_in=wmm_tran2, adc_rd_out=wmm_rd,
+                                adc_convst_out=wmm_convst, data_available_out=data_available_actual,
+                                eta1_out=eta1_actual, ref1_out=ref1_actual,
+                                eta2_out=eta2_actual, ref2_out=ref2_actual)
+    
     wlmsim = WlmSim( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_wlmsim,
                      dsp_wr=dsp_wr, start_in=pulse_100k,
                      coarse_current_in=sel_coarse_current,
                      fine_current_in=sel_fine_current,
-                     eta1_out=eta1, ref1_out=ref1,
-                     eta2_out=eta2, ref2_out=ref2,
+                     eta1_out=eta1_sim, ref1_out=ref1_sim,
+                     eta2_out=eta2_sim, ref2_out=ref2_sim,
                      loss_out=sim_loss, pzt_cen_out=sim_pzt,
-                     done_out=wlmsimDone, map_base=FPGA_WLMSIM )
+                     done_out=data_available_sim, map_base=FPGA_WLMSIM )
 
+    wlmmux = WlmMux(sim_actual_in=wlm_sim_actual, eta1_sim_in=eta1_sim,
+                    ref1_sim_in=ref1_sim, eta2_sim_in=eta2_sim,
+                    ref2_sim_in=ref2_sim, data_available_sim_in=data_available_sim,
+                    eta1_actual_in=eta1_actual, ref1_actual_in=ref1_actual,
+                    eta2_actual_in=eta2_actual, ref2_actual_in=ref2_actual,
+                    data_available_actual_in=data_available_actual,
+                    eta1_out=eta1, ref1_out=ref1, eta2_out=eta2, ref2_out=ref2,
+                    data_available_out=wlm_data_available)
+    
     pztValveDac = Ltc2604Dac(clk=clk0, reset=reset, dac_clock_in=clk_10M,
                              chanA_data_in=chanA_data_in,
                              chanB_data_in=chanB_data_in,
@@ -499,9 +534,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         hot_box_pwm.next = 0
         warm_box_pwm.next = 0
 
-        wmm_rd.next = 0
-        wmm_convst.next = 0
-        wmm_clk.next = 0
+        wmm_clk.next = clk_2M5
         
     return instances()
 

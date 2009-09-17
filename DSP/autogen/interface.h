@@ -941,32 +941,36 @@ typedef enum {
 #define LASERLOCKER_CS_CURRENT_OK_B (8) // Fine current calculation bit position
 #define LASERLOCKER_CS_CURRENT_OK_W (1) // Fine current calculation bit width
 
-#define LASERLOCKER_ETA1 (1) // Etalon 1 reading
-#define LASERLOCKER_REF1 (2) // Reference 1 reading
-#define LASERLOCKER_ETA2 (3) // Etalon 2 reading
-#define LASERLOCKER_REF2 (4) // Reference 2 reading
-#define LASERLOCKER_ETA1_DARK (5) // Etalon 1 dark reading
-#define LASERLOCKER_REF1_DARK (6) // Reference 1 dark reading
-#define LASERLOCKER_ETA2_DARK (7) // Etalon 2 dark reading
-#define LASERLOCKER_REF2_DARK (8) // Reference 2 dark reading
-#define LASERLOCKER_ETA1_OFFSET (9) // Etalon 1 offset
-#define LASERLOCKER_REF1_OFFSET (10) // Reference 1 offset
-#define LASERLOCKER_ETA2_OFFSET (11) // Etalon 2 offset
-#define LASERLOCKER_REF2_OFFSET (12) // Reference 2 offset
-#define LASERLOCKER_RATIO1 (13) // Ratio 1
-#define LASERLOCKER_RATIO2 (14) // Ratio 2
-#define LASERLOCKER_RATIO1_CENTER (15) // Ratio 1 ellipse center
-#define LASERLOCKER_RATIO1_MULTIPLIER (16) // Ratio 1 multiplier
-#define LASERLOCKER_RATIO2_CENTER (17) // Ratio 2 ellipse center
-#define LASERLOCKER_RATIO2_MULTIPLIER (18) // Ratio 2 multiplier
-#define LASERLOCKER_TUNING_OFFSET (19) // Error offset to shift frequency
-#define LASERLOCKER_LOCK_ERROR (20) // Locker loop error
-#define LASERLOCKER_WM_LOCK_WINDOW (21) // Lock window
-#define LASERLOCKER_WM_INT_GAIN (22) // Locker integral gain
-#define LASERLOCKER_WM_PROP_GAIN (23) // Locker proportional gain
-#define LASERLOCKER_WM_DERIV_GAIN (24) // Locker derivative gain
-#define LASERLOCKER_FINE_CURRENT (25) // Fine laser current
-#define LASERLOCKER_CYCLE_COUNTER (26) // Cycle counter
+#define LASERLOCKER_OPTIONS (1) // Options register
+#define LASERLOCKER_OPTIONS_SIM_ACTUAL_B (0) // Wavelength Monitor Data Source bit position
+#define LASERLOCKER_OPTIONS_SIM_ACTUAL_W (1) // Wavelength Monitor Data Source bit width
+
+#define LASERLOCKER_ETA1 (2) // Etalon 1 reading
+#define LASERLOCKER_REF1 (3) // Reference 1 reading
+#define LASERLOCKER_ETA2 (4) // Etalon 2 reading
+#define LASERLOCKER_REF2 (5) // Reference 2 reading
+#define LASERLOCKER_ETA1_DARK (6) // Etalon 1 dark reading
+#define LASERLOCKER_REF1_DARK (7) // Reference 1 dark reading
+#define LASERLOCKER_ETA2_DARK (8) // Etalon 2 dark reading
+#define LASERLOCKER_REF2_DARK (9) // Reference 2 dark reading
+#define LASERLOCKER_ETA1_OFFSET (10) // Etalon 1 offset
+#define LASERLOCKER_REF1_OFFSET (11) // Reference 1 offset
+#define LASERLOCKER_ETA2_OFFSET (12) // Etalon 2 offset
+#define LASERLOCKER_REF2_OFFSET (13) // Reference 2 offset
+#define LASERLOCKER_RATIO1 (14) // Ratio 1
+#define LASERLOCKER_RATIO2 (15) // Ratio 2
+#define LASERLOCKER_RATIO1_CENTER (16) // Ratio 1 ellipse center
+#define LASERLOCKER_RATIO1_MULTIPLIER (17) // Ratio 1 multiplier
+#define LASERLOCKER_RATIO2_CENTER (18) // Ratio 2 ellipse center
+#define LASERLOCKER_RATIO2_MULTIPLIER (19) // Ratio 2 multiplier
+#define LASERLOCKER_TUNING_OFFSET (20) // Error offset to shift frequency
+#define LASERLOCKER_LOCK_ERROR (21) // Locker loop error
+#define LASERLOCKER_WM_LOCK_WINDOW (22) // Lock window
+#define LASERLOCKER_WM_INT_GAIN (23) // Locker integral gain
+#define LASERLOCKER_WM_PROP_GAIN (24) // Locker proportional gain
+#define LASERLOCKER_WM_DERIV_GAIN (25) // Locker derivative gain
+#define LASERLOCKER_FINE_CURRENT (26) // Fine laser current
+#define LASERLOCKER_CYCLE_COUNTER (27) // Cycle counter
 
 /* Block RDMAN Ringdown manager */
 #define RDMAN_CONTROL (0) // Control register
@@ -1147,12 +1151,12 @@ typedef enum {
 #define FPGA_PWM_LASER4 (13) // Laser 4 TEC pulse width modulator registers
 #define FPGA_RDSIM (15) // Ringdown simulator registers
 #define FPGA_LASERLOCKER (23) // Laser frequency locker registers
-#define FPGA_RDMAN (50) // Ringdown manager registers
-#define FPGA_TWGEN (74) // Tuner waveform generator
-#define FPGA_INJECT (83) // Optical Injection Subsystem
-#define FPGA_WLMSIM (92) // WLM Simulator
-#define FPGA_DYNAMICPWM_INLET (100) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (105) // Outlet proportional valve dynamic PWM
+#define FPGA_RDMAN (51) // Ringdown manager registers
+#define FPGA_TWGEN (75) // Tuner waveform generator
+#define FPGA_INJECT (84) // Optical Injection Subsystem
+#define FPGA_WLMSIM (93) // WLM Simulator
+#define FPGA_DYNAMICPWM_INLET (101) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (106) // Outlet proportional valve dynamic PWM
 
 /* Environment addresses */
 

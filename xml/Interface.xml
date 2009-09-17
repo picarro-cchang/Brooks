@@ -2545,6 +2545,13 @@
                     <fielddef value="1">Complete</fielddef>
                 </bitfield>
             </reg>
+            <reg type="mask" ident="OPTIONS" description="Options register" access="rw">
+                <save/>
+                <bitfield ident="SIM_ACTUAL" description="Wavelength Monitor Data Source" lsb="0" width="1">
+                    <fielddef value="0">Simulator</fielddef>
+                    <fielddef value="1">Actual WLM</fielddef>
+                </bitfield>
+            </reg>
             <reg type="uint16" ident="ETA1" description="Etalon 1 reading" access="rw">
                 <display format="%d" units="digU">Etalon 1 reading</display>
             </reg>

@@ -198,16 +198,16 @@ class DasConfigure(object):
         # Streaming outputs of wavelength monitor
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_FPGA_REGISTER",
-                ["STREAM_Etalon1","FPGA_WLMSIM","WLMSIM_ETA1"]))
+                ["STREAM_Etalon1","FPGA_LASERLOCKER","LASERLOCKER_ETA1"]))
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_FPGA_REGISTER",
-                ["STREAM_Reference1","FPGA_WLMSIM","WLMSIM_REF1"]))
+                ["STREAM_Reference1","FPGA_LASERLOCKER","LASERLOCKER_REF1"]))
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_FPGA_REGISTER",
-                ["STREAM_Etalon2","FPGA_WLMSIM","WLMSIM_ETA2"]))
+                ["STREAM_Etalon2","FPGA_LASERLOCKER","LASERLOCKER_ETA2"]))
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_FPGA_REGISTER",
-                ["STREAM_Reference2","FPGA_WLMSIM","WLMSIM_REF2"]))
+                ["STREAM_Reference2","FPGA_LASERLOCKER","LASERLOCKER_REF2"]))
 
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_FPGA_REGISTER",

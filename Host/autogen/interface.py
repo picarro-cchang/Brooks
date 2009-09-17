@@ -1794,32 +1794,36 @@ LASERLOCKER_CS_LASER_FREQ_OK_W = 1 # Laser frequency in window bit width
 LASERLOCKER_CS_CURRENT_OK_B = 8 # Fine current calculation bit position
 LASERLOCKER_CS_CURRENT_OK_W = 1 # Fine current calculation bit width
 
-LASERLOCKER_ETA1 = 1 # Etalon 1 reading
-LASERLOCKER_REF1 = 2 # Reference 1 reading
-LASERLOCKER_ETA2 = 3 # Etalon 2 reading
-LASERLOCKER_REF2 = 4 # Reference 2 reading
-LASERLOCKER_ETA1_DARK = 5 # Etalon 1 dark reading
-LASERLOCKER_REF1_DARK = 6 # Reference 1 dark reading
-LASERLOCKER_ETA2_DARK = 7 # Etalon 2 dark reading
-LASERLOCKER_REF2_DARK = 8 # Reference 2 dark reading
-LASERLOCKER_ETA1_OFFSET = 9 # Etalon 1 offset
-LASERLOCKER_REF1_OFFSET = 10 # Reference 1 offset
-LASERLOCKER_ETA2_OFFSET = 11 # Etalon 2 offset
-LASERLOCKER_REF2_OFFSET = 12 # Reference 2 offset
-LASERLOCKER_RATIO1 = 13 # Ratio 1
-LASERLOCKER_RATIO2 = 14 # Ratio 2
-LASERLOCKER_RATIO1_CENTER = 15 # Ratio 1 ellipse center
-LASERLOCKER_RATIO1_MULTIPLIER = 16 # Ratio 1 multiplier
-LASERLOCKER_RATIO2_CENTER = 17 # Ratio 2 ellipse center
-LASERLOCKER_RATIO2_MULTIPLIER = 18 # Ratio 2 multiplier
-LASERLOCKER_TUNING_OFFSET = 19 # Error offset to shift frequency
-LASERLOCKER_LOCK_ERROR = 20 # Locker loop error
-LASERLOCKER_WM_LOCK_WINDOW = 21 # Lock window
-LASERLOCKER_WM_INT_GAIN = 22 # Locker integral gain
-LASERLOCKER_WM_PROP_GAIN = 23 # Locker proportional gain
-LASERLOCKER_WM_DERIV_GAIN = 24 # Locker derivative gain
-LASERLOCKER_FINE_CURRENT = 25 # Fine laser current
-LASERLOCKER_CYCLE_COUNTER = 26 # Cycle counter
+LASERLOCKER_OPTIONS = 1 # Options register
+LASERLOCKER_OPTIONS_SIM_ACTUAL_B = 0 # Wavelength Monitor Data Source bit position
+LASERLOCKER_OPTIONS_SIM_ACTUAL_W = 1 # Wavelength Monitor Data Source bit width
+
+LASERLOCKER_ETA1 = 2 # Etalon 1 reading
+LASERLOCKER_REF1 = 3 # Reference 1 reading
+LASERLOCKER_ETA2 = 4 # Etalon 2 reading
+LASERLOCKER_REF2 = 5 # Reference 2 reading
+LASERLOCKER_ETA1_DARK = 6 # Etalon 1 dark reading
+LASERLOCKER_REF1_DARK = 7 # Reference 1 dark reading
+LASERLOCKER_ETA2_DARK = 8 # Etalon 2 dark reading
+LASERLOCKER_REF2_DARK = 9 # Reference 2 dark reading
+LASERLOCKER_ETA1_OFFSET = 10 # Etalon 1 offset
+LASERLOCKER_REF1_OFFSET = 11 # Reference 1 offset
+LASERLOCKER_ETA2_OFFSET = 12 # Etalon 2 offset
+LASERLOCKER_REF2_OFFSET = 13 # Reference 2 offset
+LASERLOCKER_RATIO1 = 14 # Ratio 1
+LASERLOCKER_RATIO2 = 15 # Ratio 2
+LASERLOCKER_RATIO1_CENTER = 16 # Ratio 1 ellipse center
+LASERLOCKER_RATIO1_MULTIPLIER = 17 # Ratio 1 multiplier
+LASERLOCKER_RATIO2_CENTER = 18 # Ratio 2 ellipse center
+LASERLOCKER_RATIO2_MULTIPLIER = 19 # Ratio 2 multiplier
+LASERLOCKER_TUNING_OFFSET = 20 # Error offset to shift frequency
+LASERLOCKER_LOCK_ERROR = 21 # Locker loop error
+LASERLOCKER_WM_LOCK_WINDOW = 22 # Lock window
+LASERLOCKER_WM_INT_GAIN = 23 # Locker integral gain
+LASERLOCKER_WM_PROP_GAIN = 24 # Locker proportional gain
+LASERLOCKER_WM_DERIV_GAIN = 25 # Locker derivative gain
+LASERLOCKER_FINE_CURRENT = 26 # Fine laser current
+LASERLOCKER_CYCLE_COUNTER = 27 # Cycle counter
 
 # Block RDMAN Ringdown manager
 RDMAN_CONTROL = 0 # Control register
@@ -1999,17 +2003,17 @@ FPGA_PWM_LASER3 = 11 # Laser 3 TEC pulse width modulator registers
 FPGA_PWM_LASER4 = 13 # Laser 4 TEC pulse width modulator registers
 FPGA_RDSIM = 15 # Ringdown simulator registers
 FPGA_LASERLOCKER = 23 # Laser frequency locker registers
-FPGA_RDMAN = 50 # Ringdown manager registers
-FPGA_TWGEN = 74 # Tuner waveform generator
-FPGA_INJECT = 83 # Optical Injection Subsystem
-FPGA_WLMSIM = 92 # WLM Simulator
-FPGA_DYNAMICPWM_INLET = 100 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 105 # Outlet proportional valve dynamic PWM
+FPGA_RDMAN = 51 # Ringdown manager registers
+FPGA_TWGEN = 75 # Tuner waveform generator
+FPGA_INJECT = 84 # Optical Injection Subsystem
+FPGA_WLMSIM = 93 # WLM Simulator
+FPGA_DYNAMICPWM_INLET = 101 # Inlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 106 # Outlet proportional valve dynamic PWM
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
 persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_OPTIONS', u'RDSIM_TUNER_CENTER', u'RDSIM_TUNER_WINDOW_HALF_WIDTH', u'RDSIM_FILLING_RATE', u'RDSIM_DECAY', u'RDSIM_DECAY_IN_SHIFT', u'RDSIM_DECAY_IN_OFFSET']))
-persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_ETA1_OFFSET', u'LASERLOCKER_REF1_OFFSET', u'LASERLOCKER_ETA2_OFFSET', u'LASERLOCKER_REF2_OFFSET', u'LASERLOCKER_RATIO1_CENTER', u'LASERLOCKER_RATIO1_MULTIPLIER', u'LASERLOCKER_RATIO2_CENTER', u'LASERLOCKER_RATIO2_MULTIPLIER', u'LASERLOCKER_TUNING_OFFSET', u'LASERLOCKER_WM_LOCK_WINDOW', u'LASERLOCKER_WM_INT_GAIN', u'LASERLOCKER_WM_PROP_GAIN', u'LASERLOCKER_WM_DERIV_GAIN']))
+persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_OPTIONS', u'LASERLOCKER_ETA1_OFFSET', u'LASERLOCKER_REF1_OFFSET', u'LASERLOCKER_ETA2_OFFSET', u'LASERLOCKER_REF2_OFFSET', u'LASERLOCKER_RATIO1_CENTER', u'LASERLOCKER_RATIO1_MULTIPLIER', u'LASERLOCKER_RATIO2_CENTER', u'LASERLOCKER_RATIO2_MULTIPLIER', u'LASERLOCKER_TUNING_OFFSET', u'LASERLOCKER_WM_LOCK_WINDOW', u'LASERLOCKER_WM_INT_GAIN', u'LASERLOCKER_WM_PROP_GAIN', u'LASERLOCKER_WM_DERIV_GAIN']))
 persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION', u'RDMAN_TIMEOUT_DURATION']))
 persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP', u'TWGEN_SWEEP_LOW', u'TWGEN_SWEEP_HIGH', u'TWGEN_WINDOW_LOW', u'TWGEN_WINDOW_HIGH', u'TWGEN_PZT_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL']))
@@ -2453,6 +2457,7 @@ parameter_forms.append(('Wavelength Monitor Simulator Parameters',__p))
 __p = []
 
 __p.append(('fpga','mask',FPGA_LASERLOCKER+LASERLOCKER_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Generate PRBS', [(0, u'Idle'), (4, u'Send PRBS')]), (8, u'Enable fine current acc', [(0, u'Reset'), (8, u'Accumulate')]), (16, u'Sample dark currents', [(0, u'Idle'), (16, u'Sample')]), (32, u'Load WLM ADC values', [(0, u'Idle'), (32, u'Load')]), (64, u'Tuner offset source', [(0, u'Register'), (64, u'Input port')]), (128, u'Laser frequency in window', [(0, u'Out of range'), (128, u'In Window')]), (256, u'Fine current calculation', [(0, u'In progress'), (256, u'Complete')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_LASERLOCKER+LASERLOCKER_OPTIONS,[(1, u'Wavelength Monitor Data Source', [(0, u'Simulator'), (1, u'Actual WLM')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_ETA1,'Etalon 1 reading','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_REF1,'Reference 1 reading','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_ETA2,'Etalon 2 reading','digU','%d',1,1))

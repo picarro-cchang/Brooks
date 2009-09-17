@@ -9,6 +9,9 @@
 #
 # HISTORY:
 #   02-Jul-2009  sze  Initial version.
+#   23-Jul-2009  sze  Use offset binary for tuning offset and a signed fractional
+#                      multiplier for applying "ratio multipliers"
+#   17-Sep-2009  sze  Added control register to select between simulator and actual WLM
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -18,9 +21,9 @@ from Host.autogen.interface import WLM_ADC_WIDTH
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_LASERLOCKER
 
-from Host.autogen.interface import LASERLOCKER_CS, LASERLOCKER_ETA1
-from Host.autogen.interface import LASERLOCKER_REF1, LASERLOCKER_ETA2
-from Host.autogen.interface import LASERLOCKER_REF2
+from Host.autogen.interface import LASERLOCKER_CS, LASERLOCKER_OPTIONS
+from Host.autogen.interface import LASERLOCKER_ETA1, LASERLOCKER_REF1
+from Host.autogen.interface import LASERLOCKER_ETA2, LASERLOCKER_REF2
 from Host.autogen.interface import LASERLOCKER_ETA1_DARK
 from Host.autogen.interface import LASERLOCKER_REF1_DARK
 from Host.autogen.interface import LASERLOCKER_ETA2_DARK
@@ -53,6 +56,8 @@ from Host.autogen.interface import LASERLOCKER_CS_ADC_STROBE_B, LASERLOCKER_CS_A
 from Host.autogen.interface import LASERLOCKER_CS_TUNING_OFFSET_SEL_B, LASERLOCKER_CS_TUNING_OFFSET_SEL_W
 from Host.autogen.interface import LASERLOCKER_CS_LASER_FREQ_OK_B, LASERLOCKER_CS_LASER_FREQ_OK_W
 from Host.autogen.interface import LASERLOCKER_CS_CURRENT_OK_B, LASERLOCKER_CS_CURRENT_OK_W
+from Host.autogen.interface import LASERLOCKER_OPTIONS_SIM_ACTUAL_B, LASERLOCKER_OPTIONS_SIM_ACTUAL_W
+
 from Divider import Divider
 from SignedMultiplier import SignedMultiplier
 
@@ -89,7 +94,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 acc_en_in,sample_dark_in,adc_strobe_in,ratio1_out,
                 ratio2_out,lock_error_out,fine_current_out,
                 tuning_offset_out,laser_freq_ok_out,current_ok_out,
-                map_base):
+                sim_actual_out,map_base):
     """ Laser frequency locking using wavelength monitor
 
     Parameters:
@@ -117,10 +122,12 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     tuning_offset_out   -- Tuning offset used, whether from register or input
     laser_freq_ok_out   -- High once absolute value of lock error is within window
     current_ok_out      -- Goes high once fine current has been calculated
+    sim_actual_out      -- Low for simulator, high to select actual WLM
     map_base
 
     Registers:
     LASERLOCKER_CS      -- Control/status register
+    LASERLOCKER_OPTIONS -- Options register
     LASERLOCKER_ETA1    -- Etalon 1 reading. Used instead of input when in single step mode.
     LASERLOCKER_REF1    -- Reference 1 reading. Used instead of input when in single step mode.
     LASERLOCKER_ETA2    -- Etalon 2 reading. Used instead of input when in single step mode.
@@ -160,8 +167,12 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     LASERLOCKER_CS_TUNING_OFFSET_SEL -- Selects register if 0, input if 1
     LASERLOCKER_CS_LASER_FREQ_OK -- Set high to indicate laser frequency is in range
     LASERLOCKER_CS_CURRENT_OK    -- Indicates that laser current has been computed
+
+    Fields in LASERLOCKER_OPTIONS:
+    LASERLOCKER_OPTIONS_SIM_ACTUAL
     """
     laserlocker_cs_addr = map_base + LASERLOCKER_CS
+    laserlocker_options_addr = map_base + LASERLOCKER_OPTIONS
     laserlocker_eta1_addr = map_base + LASERLOCKER_ETA1
     laserlocker_ref1_addr = map_base + LASERLOCKER_REF1
     laserlocker_eta2_addr = map_base + LASERLOCKER_ETA2
@@ -189,6 +200,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     laserlocker_fine_current_addr = map_base + LASERLOCKER_FINE_CURRENT
     laserlocker_cycle_counter_addr = map_base + LASERLOCKER_CYCLE_COUNTER
     cs = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    options = Signal(intbv(0)[1:])
     eta1 = Signal(intbv(0)[WLM_ADC_WIDTH:])
     ref1 = Signal(intbv(0)[WLM_ADC_WIDTH:])
     eta2 = Signal(intbv(0)[WLM_ADC_WIDTH:])
@@ -242,6 +254,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     @always_comb
     def comb():
         tuning_offset_out.next = tuning_offset
+        sim_actual_out.next = options[LASERLOCKER_OPTIONS_SIM_ACTUAL_B]
         
     @instance
     def logic():
@@ -249,6 +262,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
             yield clk.posedge, reset.posedge
             if reset:
                 cs.next = 0
+                options.next = 0
                 eta1.next = 0
                 ref1.next = 0
                 eta2.next = 0
@@ -294,6 +308,9 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_cs_addr: # rw
                         if dsp_wr: cs.next = dsp_data_out
                         dsp_data_in.next = cs
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_options_addr: # rw
+                        if dsp_wr: options.next = dsp_data_out
+                        dsp_data_in.next = options
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta1_addr: # rw
                         if dsp_wr: eta1.next = dsp_data_out
                         dsp_data_in.next = eta1
@@ -517,6 +534,7 @@ if __name__ == "__main__":
     tuning_offset_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser_freq_ok_out = Signal(LOW)
     current_ok_out = Signal(LOW)
+    sim_actual_out = Signal(LOW)
     map_base = FPGA_LASERLOCKER
 
     toVHDL(LaserLocker, clk=clk, reset=reset, dsp_addr=dsp_addr,
@@ -533,4 +551,5 @@ if __name__ == "__main__":
                         fine_current_out=fine_current_out,
                         tuning_offset_out=tuning_offset_out,
                         laser_freq_ok_out=laser_freq_ok_out,
-                        current_ok_out=current_ok_out, map_base=map_base)
+                        current_ok_out=current_ok_out,
+                        sim_actual_out=sim_actual_out, map_base=map_base)

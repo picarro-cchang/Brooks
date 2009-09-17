@@ -20,9 +20,9 @@ from Host.autogen.interface import WLM_ADC_WIDTH
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_LASERLOCKER
 
-from Host.autogen.interface import LASERLOCKER_CS, LASERLOCKER_ETA1
-from Host.autogen.interface import LASERLOCKER_REF1, LASERLOCKER_ETA2
-from Host.autogen.interface import LASERLOCKER_REF2
+from Host.autogen.interface import LASERLOCKER_CS, LASERLOCKER_OPTIONS
+from Host.autogen.interface import LASERLOCKER_ETA1, LASERLOCKER_REF1
+from Host.autogen.interface import LASERLOCKER_ETA2, LASERLOCKER_REF2
 from Host.autogen.interface import LASERLOCKER_ETA1_DARK
 from Host.autogen.interface import LASERLOCKER_REF1_DARK
 from Host.autogen.interface import LASERLOCKER_ETA2_DARK
@@ -55,6 +55,7 @@ from Host.autogen.interface import LASERLOCKER_CS_ADC_STROBE_B, LASERLOCKER_CS_A
 from Host.autogen.interface import LASERLOCKER_CS_TUNING_OFFSET_SEL_B, LASERLOCKER_CS_TUNING_OFFSET_SEL_W
 from Host.autogen.interface import LASERLOCKER_CS_LASER_FREQ_OK_B, LASERLOCKER_CS_LASER_FREQ_OK_W
 from Host.autogen.interface import LASERLOCKER_CS_CURRENT_OK_B, LASERLOCKER_CS_CURRENT_OK_W
+from Host.autogen.interface import LASERLOCKER_OPTIONS_SIM_ACTUAL_B, LASERLOCKER_OPTIONS_SIM_ACTUAL_W
 
 from MyHDL.Common.LaserLocker import LaserLocker
 
@@ -80,6 +81,7 @@ fine_current_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 tuning_offset_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 laser_freq_ok_out = Signal(LOW)
 current_ok_out = Signal(LOW)
+sim_actual_out = Signal(LOW)
 map_base = FPGA_LASERLOCKER
 
 mod = (1<<FPGA_REG_WIDTH)
@@ -178,6 +180,7 @@ def bench():
                                tuning_offset_out=tuning_offset_out,
                                laser_freq_ok_out=laser_freq_ok_out,
                                current_ok_out=current_ok_out,
+                               sim_actual_out=sim_actual_out,
                                map_base=map_base )
     @instance
     def stimulus():
