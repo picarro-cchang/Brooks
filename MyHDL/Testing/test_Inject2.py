@@ -84,6 +84,7 @@ data4 = Signal(intbv(0)[24:])
 acq_done = Signal(LOW)
 clk_10M = Signal(LOW)
 clk_2M5 = Signal(LOW)
+pulse_100k = Signal(LOW)
 pulse_1M = Signal(LOW)
 
 map_base = FPGA_INJECT
@@ -180,7 +181,7 @@ def bench():
                      map_base=map_base )
 
     clkGen = ClkGen(clk=clk, reset=reset, clk_10M=clk_10M, clk_5M=laser_dac_clk_in,
-                    clk_2M5=clk_2M5, pulse_1M=pulse_1M, pulse_100k=strobe_in)
+                    clk_2M5=clk_2M5, pulse_1M=strobe_in, pulse_100k=pulse_100k)
 
     @instance
     def  acquire():
@@ -202,117 +203,13 @@ def bench():
     @instance
     def  stimulus():
         yield assertReset()
-        assert laser1_disable_out == 1
-        assert laser2_disable_out == 1
-        assert laser3_disable_out == 1
-        assert laser4_disable_out == 1
-        assert laser1_shutdown_out == 1
-        assert laser2_shutdown_out == 1
-        assert laser3_shutdown_out == 1
-        assert laser4_shutdown_out == 1
-        assert soa_shutdown_out == 1
-        # Test manual mode for laser and SOA switching
-        for trials in range(100):
-            laser_current_enable = randrange(1<<4)
-            manual_laser_enable = randrange(1<<4)
-            manual_soa_enable = randrange(1<<1)
-            control = (laser_current_enable << INJECT_CONTROL_LASER_CURRENT_ENABLE_B) | \
-                      (manual_laser_enable  << INJECT_CONTROL_MANUAL_LASER_ENABLE_B) | \
-                      (manual_soa_enable << INJECT_CONTROL_MANUAL_SOA_ENABLE_B)
-            yield writeFPGA(FPGA_INJECT+INJECT_CONTROL,control)
-            assert laser1_disable_out == (not (laser_current_enable & 1))
-            assert laser2_disable_out == (not ((laser_current_enable>>1) & 1))
-            assert laser3_disable_out == (not ((laser_current_enable>>2) & 1))
-            assert laser4_disable_out == (not ((laser_current_enable>>3) & 1))
-            assert laser1_shutdown_out == (not (manual_laser_enable & 1))
-            assert laser2_shutdown_out == (not ((manual_laser_enable>>1) & 1))
-            assert laser3_shutdown_out == (not ((manual_laser_enable>>2) & 1))
-            assert laser4_shutdown_out == (not ((manual_laser_enable>>3) & 1))
-            assert soa_shutdown_out == (not((manual_soa_enable) & 1))
-        # Check laser selection
-        for trials in range(100):
-            mode = randrange(2)
+        # Test optical switch operation
+        yield delay(MS/5)
+        for trials in range(10):
             laser_sel = randrange(4)
-            control = (laser_sel << INJECT_CONTROL_LASER_SELECT_B) | \
-                      (mode << INJECT_CONTROL_MODE_B)
+            control = (laser_sel << INJECT_CONTROL_LASER_SELECT_B)
             yield writeFPGA(FPGA_INJECT+INJECT_CONTROL,control)
-            laser1_coarse = randrange(1<<16)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER1_COARSE_CURRENT,laser1_coarse)
-            laser2_coarse = randrange(1<<16)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER2_COARSE_CURRENT,laser2_coarse)
-            laser3_coarse = randrange(1<<16)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER3_COARSE_CURRENT,laser3_coarse)
-            laser4_coarse = randrange(1<<16)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER4_COARSE_CURRENT,laser4_coarse)
-            laser1_fine = randrange(1<<16)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER1_FINE_CURRENT,laser1_fine)
-            laser2_fine = randrange(1<<16)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER2_FINE_CURRENT,laser2_fine)
-            laser3_fine = randrange(1<<16)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER3_FINE_CURRENT,laser3_fine)
-            laser4_fine = randrange(1<<16)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER4_FINE_CURRENT,laser4_fine)
-            laser_sel_fine = randrange(1<<16)
-            laser_fine_current_in.next = laser_sel_fine
-            
-            assert sel_laser_out == laser_sel
-            if laser_sel == 0:
-                assert sel_coarse_current_out == laser1_coarse
-                if mode:
-                    assert sel_fine_current_out == laser_fine_current_in
-                else:
-                    assert sel_fine_current_out == laser1_fine
-            if laser_sel == 1:
-                assert sel_coarse_current_out == laser2_coarse
-                if mode:
-                    assert sel_fine_current_out == laser_fine_current_in
-                else:
-                    assert sel_fine_current_out == laser2_fine
-            if laser_sel == 2:
-                assert sel_coarse_current_out == laser3_coarse
-                if mode:
-                    assert sel_fine_current_out == laser_fine_current_in
-                else:
-                    assert sel_fine_current_out == laser3_fine
-            if laser_sel == 3:
-                assert sel_coarse_current_out == laser4_coarse
-                if mode:
-                    assert sel_fine_current_out == laser_fine_current_in
-                else:
-                    assert sel_fine_current_out == laser4_fine
-        
-        # Check writing to serial DACs
-        yield writeFPGA(FPGA_INJECT+INJECT_CONTROL,0)
-        for trials in range(5):
-            laser1_coarse = randrange(1<<16)
-            laser2_coarse = randrange(1<<16)
-            laser3_coarse = randrange(1<<16)
-            laser4_coarse = randrange(1<<16)
-            laser1_fine = randrange(1<<16)
-            laser2_fine = randrange(1<<16)
-            laser3_fine = randrange(1<<16)
-            laser4_fine = randrange(1<<16)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER1_COARSE_CURRENT,laser1_coarse)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER2_COARSE_CURRENT,laser2_coarse)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER3_COARSE_CURRENT,laser3_coarse)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER4_COARSE_CURRENT,laser4_coarse)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER1_FINE_CURRENT,laser1_fine)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER2_FINE_CURRENT,laser2_fine)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER3_FINE_CURRENT,laser3_fine)
-            yield writeFPGA(FPGA_INJECT+INJECT_LASER4_FINE_CURRENT,laser4_fine)
-            yield strobe_in.posedge
-            yield delay(10*PERIOD)
-            yield acq_done.posedge
-            assert (data1 & 0xFFFF) == laser1_coarse
-            assert (data2 & 0xFFFF) == laser2_coarse
-            assert (data3 & 0xFFFF) == laser3_coarse
-            assert (data4 & 0xFFFF) == laser4_coarse
-            yield acq_done.posedge
-            assert (data1 & 0xFFFF) == laser1_fine
-            assert (data2 & 0xFFFF) == laser2_fine
-            assert (data3 & 0xFFFF) == laser3_fine
-            assert (data4 & 0xFFFF) == laser4_fine
-        yield delay(10*PERIOD)
+            yield delay(MS/5)
         raise StopSimulation
     return instances()
 

@@ -40,6 +40,8 @@
 #include "ltc2499.h"
 #include "fpga.h"
 
+char message[120];
+
 #define READ_REG(regNum,type,result) { \
     DataType d; \
     int status = readRegister(regNum,&d);\
@@ -96,7 +98,6 @@ int testScheduler(unsigned int numInt,void *params,void *env)
 //  test the operation of the scheduler.
 {
     unsigned int i;
-    char message[120];
     unsigned int *paramsAsInt = (unsigned int *) params;
     strcpy(message,"testScheduler");
     for (i=0;i<numInt;i++)
@@ -580,5 +581,16 @@ int r_sentryInit(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     initSentryChecks();
+    return STATUS_OK;
+}
+
+int r_intToValvePumpTec(unsigned int numInt,void *params,void *env)
+/* Copy integer (passed as first parameter) to the PCA8574 I2C to parallel
+    port device which controls the pump, solenoid valves and TEC PWM. */ 
+{
+    unsigned int *reg = (unsigned int *) params;
+    
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    write_valve_pump_tec(reg[0]);
     return STATUS_OK;
 }

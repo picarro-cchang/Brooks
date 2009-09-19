@@ -72,7 +72,6 @@ eta2_in = Signal(intbv(0)[WLM_ADC_WIDTH:])
 ref2_in = Signal(intbv(0)[WLM_ADC_WIDTH:])
 tuning_offset_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 acc_en_in = Signal(LOW)
-sample_dark_in = Signal(LOW)
 adc_strobe_in = Signal(LOW)
 ratio1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 ratio2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -171,7 +170,6 @@ def bench():
                                eta2_in=eta2_in, ref2_in=ref2_in,
                                tuning_offset_in=tuning_offset_in,
                                acc_en_in=acc_en_in,
-                               sample_dark_in=sample_dark_in,
                                adc_strobe_in=adc_strobe_in,
                                ratio1_out=ratio1_out,
                                ratio2_out=ratio2_out,
@@ -214,9 +212,11 @@ def bench():
         assert result == tuning_offset_in
         print "Reading tuning offset input OK"
         # Test transfer of dark readings
-        sample_dark_in.next = HIGH
-        yield clk.posedge
-        sample_dark_in.next = LOW
+        yield writeFPGA(FPGA_LASERLOCKER + LASERLOCKER_CS,
+                        1<<LASERLOCKER_CS_RUN_B | \
+                        1<<LASERLOCKER_CS_CONT_B | \
+                        1<<LASERLOCKER_CS_SAMPLE_DARK_B | \
+                        1<<LASERLOCKER_CS_TUNING_OFFSET_SEL_B)        
         yield readFPGA(FPGA_LASERLOCKER + LASERLOCKER_ETA1_DARK,result)
         assert result == eta1_in
         yield readFPGA(FPGA_LASERLOCKER + LASERLOCKER_REF1_DARK,result)

@@ -15,6 +15,7 @@
 #   16-Sep-2009  sze  Enable laser shutdown and enable SOA shutdown control bits cause the selected laser
 #                      or SOA to be affected by the shutdown inputs in automatic mode. If the enable bit 
 #                      is reset, the selected laser or SOA remains on even when the shutdown input is asserted.
+#   18-Sep-2009  sze  Handle 2 input CrystaLatch optical switch
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -42,6 +43,7 @@ from Host.autogen.interface import INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, INJEC
 from Host.autogen.interface import INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B, INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W
 from MyHDL.Common.LaserDac import LaserDac
 
+OptSwitchState = enum("IDLE","PULSING_1","SELECTED_1","PULSING_2","SELECTED_2")
 
 LOW, HIGH = bool(0), bool(1)
 def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
@@ -53,8 +55,8 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
            laser3_disable_out,laser4_disable_out,laser1_shutdown_out,
            laser2_shutdown_out,laser3_shutdown_out,laser4_shutdown_out,
            soa_shutdown_out,sel_laser_out,sel_coarse_current_out,
-           sel_fine_current_out,map_base):
-
+           sel_fine_current_out,optical_switch1_out,optical_switch2_out,
+           map_base):
     """
     Parameters:
     clk                 -- Clock input
@@ -88,7 +90,9 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     sel_laser_out
     sel_coarse_current_out
     sel_fine_current_out
-    map_base            -- Base of FPGA map for this block
+    optical_switch1_out  -- Goes high for 1ms when laser 1 or 3 selected
+    optical_switch2_out  -- Goes high for 1ms when laser 2 or 4 selected
+    map_base             -- Base of FPGA map for this block
 
     Registers:
     INJECT_CONTROL        -- Control register
@@ -146,6 +150,10 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     strobe_prev = Signal(LOW)
     dac_strobe = Signal(LOW)
     
+    OPTICAL_SWITCH_WIDTH = 100 # Units of 10us
+    optical_switch_counter = Signal(intbv(0,min=0,max=OPTICAL_SWITCH_WIDTH))
+    optSwitchState = Signal(OptSwitchState.IDLE)
+
     @instance
     def logic():
         while True:
@@ -162,6 +170,10 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 laser4_fine_current.next = 0x8000
                 strobe_prev.next = strobe_in
                 dac_strobe.next = LOW
+                optical_switch_counter.next = 0
+                optSwitchState.next = OptSwitchState.IDLE
+                optical_switch1_out.next = 0
+                optical_switch2_out.next = 0
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
@@ -199,6 +211,46 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 # Produce a single clock width pulse for dac_strobe whenever strobe_in goes high
                 dac_strobe.next = strobe_in and not strobe_prev
                 strobe_prev.next = strobe_in
+                # State machine for generating optical switch signals                
+                if optSwitchState == OptSwitchState.IDLE:
+                    optical_switch1_out.next = 0
+                    optical_switch2_out.next = 0
+                    if sel[0] == 0:
+                        optSwitchState.next = OptSwitchState.PULSING_1
+                        optical_switch_counter.next = 0
+                    else:
+                        optSwitchState.next = OptSwitchState.PULSING_2
+                        optical_switch_counter.next = 0
+                elif optSwitchState == OptSwitchState.PULSING_1:
+                    optical_switch1_out.next = 1
+                    optical_switch2_out.next = 0
+                    if strobe_in:
+                        if optical_switch_counter >= OPTICAL_SWITCH_WIDTH-1:
+                            optSwitchState.next = OptSwitchState.SELECTED_1
+                            optical_switch_counter.next = 0
+                        else:
+                            optical_switch_counter.next = optical_switch_counter + 1
+                elif optSwitchState == OptSwitchState.SELECTED_1:
+                    optical_switch1_out.next = 0
+                    optical_switch2_out.next = 0
+                    if sel[0] == 1:
+                        optSwitchState.next = OptSwitchState.PULSING_2
+                        optical_switch_counter.next = 0
+                elif optSwitchState == OptSwitchState.PULSING_2:
+                    optical_switch1_out.next = 0
+                    optical_switch2_out.next = 1
+                    if strobe_in:
+                        if optical_switch_counter >= OPTICAL_SWITCH_WIDTH-1:
+                            optSwitchState.next = OptSwitchState.SELECTED_2
+                            optical_switch_counter.next = 0
+                        else:
+                            optical_switch_counter.next = optical_switch_counter + 1
+                elif optSwitchState == OptSwitchState.SELECTED_2:
+                    optical_switch1_out.next = 0
+                    optical_switch2_out.next = 0
+                    if sel[0] == 0:
+                        optSwitchState.next = OptSwitchState.PULSING_1
+                        optical_switch_counter.next = 0
                     
     @always_comb
     def  comb1():
@@ -312,6 +364,8 @@ if __name__ == "__main__":
     sel_laser_out = Signal(intbv(0)[2:])
     sel_coarse_current_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     sel_fine_current_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    optical_switch1_out = Signal(LOW)
+    optical_switch2_out = Signal(LOW)
     map_base = FPGA_INJECT
 
     toVHDL(Inject, clk=clk, reset=reset, dsp_addr=dsp_addr,
@@ -341,4 +395,6 @@ if __name__ == "__main__":
                    sel_laser_out=sel_laser_out,
                    sel_coarse_current_out=sel_coarse_current_out,
                    sel_fine_current_out=sel_fine_current_out,
+                   optical_switch1_out=optical_switch1_out,
+                   optical_switch2_out=optical_switch2_out,
                    map_base=map_base)

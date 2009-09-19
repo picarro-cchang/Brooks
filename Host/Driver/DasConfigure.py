@@ -194,7 +194,7 @@ class DasConfigure(object):
 
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_SPECTRUM_CNTRL_STEP"))
-
+        
         # Streaming outputs of wavelength monitor
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_FPGA_REGISTER",

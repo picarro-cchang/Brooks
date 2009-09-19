@@ -169,16 +169,6 @@ class SimulatorUsb(Singleton):
         numInt = nBytes/4
         self.dspSimulator.readMem(self.hpiaReg,(c_uint*numInt).from_address(addressof(result)))
         self.hpiaReg += nBytes
-    def setHpidInBytes(self,nBytes):
-        """Use vendor command to set GPIF transaction count to transfer abs(nBytes) bytes.
-           If nBytes>0, the data are fetched with address autoincrement
-           if nBytes<0, the data are fetched without address autoincrement
-           """
-        pass
-    #        def _hpidInBytes():
-    #            data = c_short(nBytes)
-    #            self.controlOutTransaction(data,usbdefs.VENDOR_SET_HPID_IN_BYTES)
-    #        self._claimInterfaceWrapper(_hpidInBytes)
 
     def resetHpidInFifo(self):
         """Use vendor command to reset input FIFO from HPID"""
@@ -214,7 +204,6 @@ class SimulatorUsb(Singleton):
                 # Read back
                 #recvArray = (c_ubyte*block)()
                 #self.hpiaWrite(addr+start)
-                #self.setHpidInBytes(block)
                 #self.hpidRead(recvArray)
                 #for i in range(block):
                 #    print "%s, %s" % (recvArray[i],ord(r.data[start+i]))

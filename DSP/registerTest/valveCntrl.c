@@ -23,6 +23,8 @@
 #include "valveCntrl.h"
 #include "dspAutogen.h"
 #include "dspData.h"
+#include "i2c_dsp.h"
+#include "pca8574.h"
 #include <math.h>
 #include <stdio.h>
 #define INVALID_PRESSURE_VALUE (-100.0)
@@ -181,10 +183,12 @@ void valveSequencerStep()
 
 int valveCntrlStep()
 {
+    ValveCntrl *v = &valveCntrl;
     // Step the valve controller
     proportionalValveStep();
     thresholdTriggerStep();
     valveSequencerStep();
+    write_valve_pump_tec(solenoidValves);
     return STATUS_OK;   
 }
 
@@ -229,5 +233,16 @@ int valveCntrlInit(void)
     v->lastLossPpb = 0;
     v->lastPressure = INVALID_PRESSURE_VALUE;
     v->dwellCount = 0;
+    return STATUS_OK;
+}
+
+int write_valve_pump_tec(unsigned int code)
+// Writes to PCA8574 I2C to parallel port which controls states of solenoid valves, pump and TEC PWM.
+//  Note the inversion, which is needed since the I2C port starts up with its outputs high.
+{
+    unsigned int loops;
+    setI2C1Mux(4);  // Select SC15 and SD15
+    for (loops=0;loops<1000;loops++);
+    pca8574_wrByte(~code);
     return STATUS_OK;
 }

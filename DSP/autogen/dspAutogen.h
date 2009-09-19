@@ -61,6 +61,7 @@ int r_schedulerHeartbeat(unsigned int numInt,void *params,void *env);
 int r_sentryInit(unsigned int numInt,void *params,void *env);
 int r_valveCntrlInit(unsigned int numInt,void *params,void *env);
 int r_valveCntrlStep(unsigned int numInt,void *params,void *env);
+int r_intToValvePumpTec(unsigned int numInt,void *params,void *env);
 int r_pulseGenerator(unsigned int numInt,void *params,void *env);
 int r_filter(unsigned int numInt,void *params,void *env);
 int r_ds1631_readTemp(unsigned int numInt,void *params,void *env);

@@ -290,17 +290,6 @@ class AnalyzerUsb(Singleton):
             self.hpiaWrite(address)
             self.hpidRead(dataBuffer)
 
-    def setHpidInBytes(self,nBytes):
-        """Use vendor command to set GPIF transaction count to transfer abs(nBytes) bytes.
-           If nBytes>0, the data are fetched with address autoincrement
-           if nBytes<0, the data are fetched without address autoincrement
-           """
-        pass
-    #        def _hpidInBytes():
-    #            data = c_short(nBytes)
-    #            self.controlOutTransaction(data,usbdefs.VENDOR_SET_HPID_IN_BYTES)
-    #        self._claimInterfaceWrapper(_hpidInBytes)
-
     def resetHpidInFifo(self):
         """Use vendor command to reset input FIFO from HPID"""
         def _resetHpidInFifo():

@@ -12,6 +12,7 @@
 #   23-Jul-2009  sze  Use offset binary for tuning offset and a signed fractional
 #                      multiplier for applying "ratio multipliers"
 #   17-Sep-2009  sze  Added control register to select between simulator and actual WLM
+#   18-Sep-2009  sze  Removed sample dark current input (must now use register)
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -91,7 +92,7 @@ def SignedFracMultiplier(a_in,b_in,p_out,o_out):
 
 def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 eta1_in,ref1_in,eta2_in,ref2_in,tuning_offset_in,
-                acc_en_in,sample_dark_in,adc_strobe_in,ratio1_out,
+                acc_en_in,adc_strobe_in,ratio1_out,
                 ratio2_out,lock_error_out,fine_current_out,
                 tuning_offset_out,laser_freq_ok_out,current_ok_out,
                 sim_actual_out,map_base):
@@ -111,8 +112,6 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     tuning_offset_in    -- Tuning offset input. Used if TUNING_OFFSET_SEL
                         --  bit in CS register is 1
     acc_en_in           -- 0 to reset accumulator, 1 for locking
-    sample_dark_in      -- strobe high to write photodiode values to dark
-                        --  current registers
     adc_strobe_in       -- Strobe high for one cycle to indicate photodiode values are valid
                         --  May only be asserted when current_ok_out is high
     ratio1_out          -- Ratio 1 output
@@ -394,7 +393,6 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         eta2.next = eta2_in
                         ref2.next = ref2_in
                         cs.next[LASERLOCKER_CS_ACC_EN_B] = acc_en_in
-                        cs.next[LASERLOCKER_CS_SAMPLE_DARK_B] = sample_dark_in
                         cs.next[LASERLOCKER_CS_ADC_STROBE_B] = adc_strobe_in
 
                     # If the tuning offset select bit is 1, use the input
@@ -525,7 +523,6 @@ if __name__ == "__main__":
     ref2_in = Signal(intbv(0)[WLM_ADC_WIDTH:])
     tuning_offset_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     acc_en_in = Signal(LOW)
-    sample_dark_in = Signal(LOW)
     adc_strobe_in = Signal(LOW)
     ratio1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ratio2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -544,7 +541,6 @@ if __name__ == "__main__":
                         eta2_in=eta2_in, ref2_in=ref2_in,
                         tuning_offset_in=tuning_offset_in,
                         acc_en_in=acc_en_in,
-                        sample_dark_in=sample_dark_in,
                         adc_strobe_in=adc_strobe_in,
                         ratio1_out=ratio1_out, ratio2_out=ratio2_out,
                         lock_error_out=lock_error_out,

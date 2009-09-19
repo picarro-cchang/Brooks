@@ -131,7 +131,6 @@ def initPll():
     def readMem(addr):
         analyzerUsb.hpiaWrite(addr)
         result = c_int(0)
-        analyzerUsb.setHpidInBytes(sizeof(result))
         analyzerUsb.hpidRead(result)
         return result.value
 
@@ -171,7 +170,6 @@ def checkRam(startAddr,endAddr,nTrials):
     def readMem(addr):
         analyzerUsb.hpiaWrite(addr)
         result = c_int(0)
-        analyzerUsb.setHpidInBytes(sizeof(result))                                  ,
         analyzerUsb.hpidRead(result)
         return result.value
     logging.info("Memory test of region %x to %x" % (startAddr,endAddr))
@@ -203,7 +201,6 @@ def writeRead(addr,value):
     def readMem(addr):
         analyzerUsb.hpiaWrite(addr)
         result = c_int(0)
-        analyzerUsb.setHpidInBytes(sizeof(result))                                  ,
         analyzerUsb.hpidRead(result)
         return result.value
     raw_input("Writing %x to address %x" % (value,addr))

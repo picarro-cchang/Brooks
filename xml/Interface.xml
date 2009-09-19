@@ -3107,6 +3107,7 @@
         <action ident="ACTION_SENTRY_INIT">r_sentryInit</action>
         <action ident="ACTION_VALVE_CNTRL_INIT">r_valveCntrlInit</action>
         <action ident="ACTION_VALVE_CNTRL_STEP">r_valveCntrlStep</action>
+        <action ident="ACTION_INT_TO_VALVE_PUMP_TEC">r_intToValvePumpTec</action>
         <!-- Pulse generator:
         Inputs:
             Register (int):   Duration of low level

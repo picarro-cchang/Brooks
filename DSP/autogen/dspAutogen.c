@@ -740,6 +740,8 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_valveCntrlInit(numInt,params,env);
         case ACTION_VALVE_CNTRL_STEP:
             return r_valveCntrlStep(numInt,params,env);
+        case ACTION_INT_TO_VALVE_PUMP_TEC:
+            return r_intToValvePumpTec(numInt,params,env);
         case ACTION_PULSE_GENERATOR:
             return r_pulseGenerator(numInt,params,env);
         case ACTION_FILTER:

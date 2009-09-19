@@ -30,6 +30,7 @@
 #include "registerTestcfg.h"
 #include "sentryHandler.h"
 #include "interface.h"
+#include "valveCntrl.h"
 
 typedef struct {
     unsigned int bitMask;
@@ -167,9 +168,10 @@ void safeMode(void)
     writeFPGA(FPGA_PWM_LASER2 + PWM_CS, 0);
     writeFPGA(FPGA_PWM_LASER3 + PWM_CS, 0);
     writeFPGA(FPGA_PWM_LASER4 + PWM_CS, 0);
-
     // TO DO: Disable warm box, hot box and heater controllers
     // TO DO: Close all valves
+
+    write_valve_pump_tec(0);
 }
 
 // Task function for sentry handler

@@ -166,7 +166,6 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     sim_loss = Signal(intbv(0)[FPGA_REG_WIDTH:])
     sim_pzt = Signal(intbv(0)[FPGA_REG_WIDTH:])
     
-    sample_dark_in = Signal(LOW)
     pzt_dac = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     laser_freq_ok = Signal(LOW)
@@ -222,6 +221,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     sel_laser_out=sel_laser,
                     sel_coarse_current_out=sel_coarse_current,
                     sel_fine_current_out=sel_fine_current,
+                    optical_switch1_out=sw1,
+                    optical_switch2_out=sw2,
                     map_base=FPGA_INJECT)
 
     kernel = Kernel( clk=clk0, reset=reset, dsp_addr=dsp_addr,
@@ -240,7 +241,6 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                                eta2_in=eta2, ref2_in=ref2,
                                tuning_offset_in=tuner_value,
                                acc_en_in=acc_en,
-                               sample_dark_in=sample_dark_in,
                                adc_strobe_in=wlm_data_available,
                                ratio1_out=ratio1,
                                ratio2_out=ratio2,
@@ -524,8 +524,6 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
         pzt_valve_dac_sck.next = clk_10M
 
-        sw1.next = 0
-        sw2.next = 0
         sw4.next = 0
 
         inlet_valve_pwm.next = 0
