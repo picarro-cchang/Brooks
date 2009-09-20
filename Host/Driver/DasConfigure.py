@@ -148,6 +148,10 @@ class DasConfigure(object):
         self.opGroups["SLOW"]["CONTROLLER"].addOperation(
             Operation("ACTION_TEMP_CNTRL_WARM_BOX_STEP"))
 
+        self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
+            Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                ["WARM_BOX_TEC_REGISTER","FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"]))
+
         # Hot Box
         self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
             Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
@@ -183,6 +187,14 @@ class DasConfigure(object):
         
         self.opGroups["SLOW"]["CONTROLLER"].addOperation(
             Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
+
+        self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
+            Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                ["CAVITY_TEC_REGISTER","FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))
+        
+        self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
+            Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                ["HEATER_CNTRL_MARK_REGISTER","FPGA_PWM_HEATER","PWM_PULSE_WIDTH"]))
 
         # Valve control
         self.opGroups["FAST"]["STREAMER"].addOperation(

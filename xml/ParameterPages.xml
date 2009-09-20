@@ -366,6 +366,22 @@
             <fpga_register offset="FPGA_LASERLOCKER">CYCLE_COUNTER</fpga_register>
         </gui_page>
         <gui_page>
+            <title>Inlet Dynamic Pwm Parameters</title>
+            <fpga_register offset="FPGA_DYNAMICPWM_INLET">CS</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_INLET">DELTA</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_INLET">HIGH</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_INLET">LOW</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_INLET">SLOPE</fpga_register>
+        </gui_page>
+        <gui_page>
+            <title>Outlet Dynamic Pwm Parameters</title>
+            <fpga_register offset="FPGA_DYNAMICPWM_OUTLET">CS</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_OUTLET">DELTA</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_OUTLET">HIGH</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_OUTLET">LOW</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_OUTLET">SLOPE</fpga_register>
+        </gui_page>
+        <gui_page>
             <title>Sentry Parameters</title>
             <register>SENTRY_LOWER_LIMIT_TRIPPED_REGISTER</register>
             <register>SENTRY_UPPER_LIMIT_TRIPPED_REGISTER</register>

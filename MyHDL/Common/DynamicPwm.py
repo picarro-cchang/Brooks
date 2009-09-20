@@ -125,7 +125,7 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         dsp_data_in.next = cs
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == dynamicpwm_delta_addr: # rw
                         if dsp_wr: delta.next = dsp_data_out.signed()
-                        dsp_data_in.next = delta % mod_emif_data
+                        dsp_data_in.next = delta
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == dynamicpwm_high_addr: # rw
                         if dsp_wr: high.next = dsp_data_out
                         dsp_data_in.next = high

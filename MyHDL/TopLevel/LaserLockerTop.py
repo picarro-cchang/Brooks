@@ -19,6 +19,7 @@ from myhdl import *
 from Host.autogen.interface import *
 from MyHDL.Common.ClkGen import ClkGen
 from MyHDL.Common.dsp_interface import Dsp_interface
+from MyHDL.Common.DynamicPwm import DynamicPwm
 from MyHDL.Common.Inject import Inject
 from MyHDL.Common.Kernel import Kernel
 from MyHDL.Common.LaserLocker import LaserLocker
@@ -68,9 +69,14 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_addr = Signal(intbv(0)[EMIF_ADDR_WIDTH:])
     dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+
+    dsp_data_in_dynamicpwm_inlet  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_dynamicpwm_outlet = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_inject      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_kernel      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_laserlocker = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_pwm_heater  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_pwm_hotbox  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_laser1  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_laser2  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_laser3  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
@@ -79,13 +85,18 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_data_in_rdmemory    = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_rdsim       = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_twGen       = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_pwm_warmbox = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_wlmsim      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-
+    
     dsp_wr, ce2 = [Signal(LOW) for i in range(2)]
     pwm_laser1_out, pwm_laser1_inv_out = [Signal(LOW) for i in range(2)]
     pwm_laser2_out, pwm_laser2_inv_out = [Signal(LOW) for i in range(2)]
     pwm_laser3_out, pwm_laser3_inv_out = [Signal(LOW) for i in range(2)]
     pwm_laser4_out, pwm_laser4_inv_out = [Signal(LOW) for i in range(2)]
+
+    heater_pwm_inv = Signal(LOW)
+    hot_box_pwm_inv = Signal(LOW)
+    warm_box_pwm_inv = Signal(LOW)
 
     data_we,adc_clk = [Signal(LOW) for i in range(2)]
 
@@ -175,9 +186,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     metadata_strobe = Signal(LOW)
     laser_locked = Signal(LOW)
     
-    chanA_data_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    chanB_data_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    chanD_data_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    inlet_valve_dac = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    outlet_valve_dac = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    chanC_data_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     dsp_interface = Dsp_interface(clk=clk0, reset=reset, addr=dsp_emif_ea,
                                   to_dsp=dsp_emif_din, re=dsp_emif_re,
@@ -280,6 +291,28 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
               pwm_inv_out=pwm_laser4_inv_out,
               map_base=FPGA_PWM_LASER4)
 
+    pwm_warmbox = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_warmbox,
+                      dsp_wr=dsp_wr,
+                      pwm_out=warm_box_pwm,
+                      pwm_inv_out=warm_box_pwm_inv,
+                      map_base=FPGA_PWM_WARMBOX)
+    
+    pwm_hotbox = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                     dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_hotbox,
+                     dsp_wr=dsp_wr,
+                     pwm_out=hot_box_pwm,
+                     pwm_inv_out=hot_box_pwm_inv,
+                     map_base=FPGA_PWM_HOTBOX)
+
+    pwm_heater = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                     dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_heater,
+                     dsp_wr=dsp_wr,
+                     pwm_out=heater_pwm,
+                     pwm_inv_out=heater_pwm_inv,
+                     map_base=FPGA_PWM_HEATER)
+
+    
     rdman = RdMan( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                    dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdman,
                    dsp_wr=dsp_wr, pulse_100k_in=pulse_100k,
@@ -355,11 +388,25 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     data_available_out=wlm_data_available)
     
     pztValveDac = Ltc2604Dac(clk=clk0, reset=reset, dac_clock_in=clk_10M,
-                             chanA_data_in=chanA_data_in,
-                             chanB_data_in=chanB_data_in,
-                             chanC_data_in=pzt,
-                             chanD_data_in=chanD_data_in, strobe_in=pulse_100k,
+                             chanA_data_in=inlet_valve_dac,
+                             chanB_data_in=outlet_valve_dac,
+                             chanC_data_in=chanC_data_in,
+                             chanD_data_in=pzt, strobe_in=pulse_100k,
                              dac_sdi_out=pzt_valve_dac_sdi, dac_ld_out=pzt_valve_dac_ld)
+
+    dynamicPwmInlet = DynamicPwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                                 dsp_data_out=dsp_data_out,
+                                 dsp_data_in=dsp_data_in_dynamicpwm_inlet, dsp_wr=dsp_wr,
+                                 comparator_in=inlet_valve_comparator,
+                                 update_in=pulse_100k, pwm_out=inlet_valve_pwm,
+                                 value_out=inlet_valve_dac, map_base=FPGA_DYNAMICPWM_INLET, MIN_WIDTH=1000,MAX_WIDTH=64535)
+    
+    dynamicPwmOutlet = DynamicPwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                                 dsp_data_out=dsp_data_out,
+                                 dsp_data_in=dsp_data_in_dynamicpwm_outlet, dsp_wr=dsp_wr,
+                                 comparator_in=outlet_valve_comparator,
+                                 update_in=pulse_100k, pwm_out=outlet_valve_pwm,
+                                 value_out=outlet_valve_dac, map_base=FPGA_DYNAMICPWM_OUTLET, MIN_WIDTH=1000,MAX_WIDTH=64535)
 
     @instance
     def  logic():
@@ -467,18 +514,23 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     @always_comb
     def  comb():
         dsp_data_in.next = \
-                           dsp_data_in_inject      | \
-                           dsp_data_in_kernel      | \
-                           dsp_data_in_laserlocker | \
-                           dsp_data_in_pwm_laser1  | \
-                           dsp_data_in_pwm_laser2  | \
-                           dsp_data_in_pwm_laser3  | \
-                           dsp_data_in_pwm_laser4  | \
-                           dsp_data_in_rdman       | \
-                           dsp_data_in_rdmemory    | \
-                           dsp_data_in_rdsim       | \
-                           dsp_data_in_twGen       | \
-                           dsp_data_in_wlmsim
+                   dsp_data_in_dynamicpwm_inlet  | \
+                   dsp_data_in_dynamicpwm_outlet | \
+                   dsp_data_in_inject            | \
+                   dsp_data_in_kernel            | \
+                   dsp_data_in_laserlocker       | \
+                   dsp_data_in_pwm_heater        | \
+                   dsp_data_in_pwm_hotbox        | \
+                   dsp_data_in_pwm_laser1        | \
+                   dsp_data_in_pwm_laser2        | \
+                   dsp_data_in_pwm_laser3        | \
+                   dsp_data_in_pwm_laser4        | \
+                   dsp_data_in_rdman             | \
+                   dsp_data_in_rdmemory          | \
+                   dsp_data_in_rdsim             | \
+                   dsp_data_in_twGen             | \
+                   dsp_data_in_pwm_warmbox       | \
+                   dsp_data_in_wlmsim
 
         intronix.next[8:] = channel_1
         intronix.next[16:8] = channel_2
@@ -526,13 +578,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
         sw4.next = 0
 
-        inlet_valve_pwm.next = 0
-        outlet_valve_pwm.next = 0
-        heater_pwm.next = 0
-        hot_box_pwm.next = 0
-        warm_box_pwm.next = 0
-
         wmm_clk.next = clk_2M5
+        chanC_data_in.next  = 0
         
     return instances()
 

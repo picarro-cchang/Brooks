@@ -1149,14 +1149,17 @@ typedef enum {
 #define FPGA_PWM_LASER2 (9) // Laser 2 TEC pulse width modulator registers
 #define FPGA_PWM_LASER3 (11) // Laser 3 TEC pulse width modulator registers
 #define FPGA_PWM_LASER4 (13) // Laser 4 TEC pulse width modulator registers
-#define FPGA_RDSIM (15) // Ringdown simulator registers
-#define FPGA_LASERLOCKER (23) // Laser frequency locker registers
-#define FPGA_RDMAN (51) // Ringdown manager registers
-#define FPGA_TWGEN (75) // Tuner waveform generator
-#define FPGA_INJECT (84) // Optical Injection Subsystem
-#define FPGA_WLMSIM (93) // WLM Simulator
-#define FPGA_DYNAMICPWM_INLET (101) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (106) // Outlet proportional valve dynamic PWM
+#define FPGA_PWM_WARMBOX (15) // Warm box TEC pulse width modulator registers
+#define FPGA_PWM_HOTBOX (17) // Hot box TEC pulse width modulator registers
+#define FPGA_PWM_HEATER (19) // Heater pulse width modulator registers
+#define FPGA_RDSIM (21) // Ringdown simulator registers
+#define FPGA_LASERLOCKER (29) // Laser frequency locker registers
+#define FPGA_RDMAN (57) // Ringdown manager registers
+#define FPGA_TWGEN (81) // Tuner waveform generator
+#define FPGA_INJECT (90) // Optical Injection Subsystem
+#define FPGA_WLMSIM (99) // WLM Simulator
+#define FPGA_DYNAMICPWM_INLET (107) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (112) // Outlet proportional valve dynamic PWM
 
 /* Environment addresses */
 

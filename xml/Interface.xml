@@ -3027,6 +3027,15 @@
         <fpga_map ident="FPGA_PWM_LASER4" block="PWM">
             <description>Laser 4 TEC pulse width modulator registers</description>
         </fpga_map>
+        <fpga_map ident="FPGA_PWM_WARMBOX" block="PWM">
+            <description>Warm box TEC pulse width modulator registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_PWM_HOTBOX" block="PWM">
+            <description>Hot box TEC pulse width modulator registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_PWM_HEATER" block="PWM">
+            <description>Heater pulse width modulator registers</description>
+        </fpga_map>
         <fpga_map ident="FPGA_RDSIM" block="RDSIM">
             <description>Ringdown simulator registers</description>
         </fpga_map>

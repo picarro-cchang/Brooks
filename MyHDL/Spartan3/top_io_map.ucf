@@ -268,8 +268,8 @@ NET "MICTOR<38>" LOC = "t6" ;
 
 NET "FPGA_LED<0>" LOC = "y2" ;
 NET "FPGA_LED<1>" LOC = "y1" ;
-NET "FPGA_LED<2>" LOC = "w1" ;
-NET "FPGA_LED<3>" LOC = "w2" ;
+NET "FPGA_LED<2>" LOC = "w2" ;
+NET "FPGA_LED<3>" LOC = "w1" ;
 
 # I2C
 

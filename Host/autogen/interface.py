@@ -2001,14 +2001,17 @@ FPGA_PWM_LASER1 = 7 # Laser 1 TEC pulse width modulator registers
 FPGA_PWM_LASER2 = 9 # Laser 2 TEC pulse width modulator registers
 FPGA_PWM_LASER3 = 11 # Laser 3 TEC pulse width modulator registers
 FPGA_PWM_LASER4 = 13 # Laser 4 TEC pulse width modulator registers
-FPGA_RDSIM = 15 # Ringdown simulator registers
-FPGA_LASERLOCKER = 23 # Laser frequency locker registers
-FPGA_RDMAN = 51 # Ringdown manager registers
-FPGA_TWGEN = 75 # Tuner waveform generator
-FPGA_INJECT = 84 # Optical Injection Subsystem
-FPGA_WLMSIM = 93 # WLM Simulator
-FPGA_DYNAMICPWM_INLET = 101 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 106 # Outlet proportional valve dynamic PWM
+FPGA_PWM_WARMBOX = 15 # Warm box TEC pulse width modulator registers
+FPGA_PWM_HOTBOX = 17 # Hot box TEC pulse width modulator registers
+FPGA_PWM_HEATER = 19 # Heater pulse width modulator registers
+FPGA_RDSIM = 21 # Ringdown simulator registers
+FPGA_LASERLOCKER = 29 # Laser frequency locker registers
+FPGA_RDMAN = 57 # Ringdown manager registers
+FPGA_TWGEN = 81 # Tuner waveform generator
+FPGA_INJECT = 90 # Optical Injection Subsystem
+FPGA_WLMSIM = 99 # WLM Simulator
+FPGA_DYNAMICPWM_INLET = 107 # Inlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 112 # Outlet proportional valve dynamic PWM
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
@@ -2482,6 +2485,28 @@ __p.append(('fpga','int16',FPGA_LASERLOCKER+LASERLOCKER_LOCK_ERROR,'Locker loop 
 __p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_FINE_CURRENT,'Fine laser current','digU','%d',1,0))
 __p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_CYCLE_COUNTER,'Cycle count','','%d',1,0))
 parameter_forms.append(('Laser Locker Parameters',__p))
+
+# Form: Inlet Dynamic Pwm Parameters
+
+__p = []
+
+__p.append(('fpga','mask',FPGA_DYNAMICPWM_INLET+DYNAMICPWM_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'PWM output', [(0, u'Low'), (4, u'High')])],None,None,1,1))
+__p.append(('fpga','int16',FPGA_DYNAMICPWM_INLET+DYNAMICPWM_DELTA,'Pulse width change per update','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_DYNAMICPWM_INLET+DYNAMICPWM_HIGH,'Upper limit of dither waveform','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_DYNAMICPWM_INLET+DYNAMICPWM_LOW,'Lower limit of dither waveform','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_DYNAMICPWM_INLET+DYNAMICPWM_SLOPE,'Slope of dither waveform','','%d',1,1))
+parameter_forms.append(('Inlet Dynamic Pwm Parameters',__p))
+
+# Form: Outlet Dynamic Pwm Parameters
+
+__p = []
+
+__p.append(('fpga','mask',FPGA_DYNAMICPWM_OUTLET+DYNAMICPWM_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'PWM output', [(0, u'Low'), (4, u'High')])],None,None,1,1))
+__p.append(('fpga','int16',FPGA_DYNAMICPWM_OUTLET+DYNAMICPWM_DELTA,'Pulse width change per update','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_DYNAMICPWM_OUTLET+DYNAMICPWM_HIGH,'Upper limit of dither waveform','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_DYNAMICPWM_OUTLET+DYNAMICPWM_LOW,'Lower limit of dither waveform','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_DYNAMICPWM_OUTLET+DYNAMICPWM_SLOPE,'Slope of dither waveform','','%d',1,1))
+parameter_forms.append(('Outlet Dynamic Pwm Parameters',__p))
 
 # Form: Sentry Parameters
 
