@@ -13,6 +13,11 @@
 #
 # HISTORY:
 #   27-May-2009  sze  Initial version.
+#   03-Jun-2009  sze  Introduced general purpose output register gpreg_1 for selecting
+#                      signals that are monitored by the Intronix Logic Probe
+#   27-Jul-2009  sze  Support resetting Cypress FX2 and FPGA. Allow Intronix to monitor
+#                      three waveform channels
+#   25-Sep-2009  sze  Added register and I/O for overload conditions
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -22,13 +27,14 @@ from Host.autogen.interface import FPGA_MAGIC_CODE
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_KERNEL
 
-from Host.autogen.interface import KERNEL_MAGIC_CODE, KERNEL_FPGA_RESET
+from Host.autogen.interface import KERNEL_MAGIC_CODE, KERNEL_CONTROL
 from Host.autogen.interface import KERNEL_DIAG_1
 from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL
 from Host.autogen.interface import KERNEL_INTRONIX_1, KERNEL_INTRONIX_2
-from Host.autogen.interface import KERNEL_INTRONIX_3
+from Host.autogen.interface import KERNEL_INTRONIX_3, KERNEL_OVERLOAD
 
-from Host.autogen.interface import KERNEL_FPGA_RESET_RESET_B, KERNEL_FPGA_RESET_RESET_W
+from Host.autogen.interface import KERNEL_CONTROL_CYPRESS_RESET_B, KERNEL_CONTROL_CYPRESS_RESET_W
+from Host.autogen.interface import KERNEL_CONTROL_OVERLOAD_RESET_B, KERNEL_CONTROL_OVERLOAD_RESET_W
 from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL_DIVISOR_B, KERNEL_INTRONIX_CLKSEL_DIVISOR_W
 from Host.autogen.interface import KERNEL_INTRONIX_1_CHANNEL_B, KERNEL_INTRONIX_1_CHANNEL_W
 from Host.autogen.interface import KERNEL_INTRONIX_2_CHANNEL_B, KERNEL_INTRONIX_2_CHANNEL_W
@@ -40,7 +46,8 @@ t_State = enum("NORMAL","DISCONNECTED","RESETTING")
 LOW, HIGH = bool(0), bool(1)
 def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
            usb_connected,cyp_reset,diag_1_out,intronix_clksel_out,
-           intronix_1_out,intronix_2_out,intronix_3_out,map_base):
+           intronix_1_out,intronix_2_out,intronix_3_out,overload_in,
+           overload_out,map_base):
     """
     Parameters:
     clk                 -- Clock input
@@ -49,26 +56,31 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     dsp_data_out        -- write data from dsp_interface block
     dsp_data_in         -- read data to dsp_interface_block
     dsp_wr              -- single-cycle write command from dsp_interface block
-    usb_connected
-    cyp_reset
-    diag_1_out
-    intronix_clksel_out
-    intronix_1_out
-    intronix_2_out
-    intronix_3_out
+    usb_connected       -- input which is high if power is detected on the USB connector
+    cyp_reset           -- output which interrupts power to the FX2 chip
+    diag_1_out          -- DSP accessible register which may be monitored by the LogicPort
+    intronix_clksel_out -- selects speed of clock signal for LogicPort
+    intronix_1_out      -- used to select quantity to display in channel 1 of LogicPort
+    intronix_2_out      -- used to select quantity to display in channel 2 of LogicPort
+    intronix_3_out      -- used to select quantity to display in channel 3 of LogicPort
+    overload_in         -- Inputs from overload detection circuitry, readable via a register
+    overload_out        -- Goes high if any bit in latched overload_in is high
     map_base            -- Base of FPGA map for this block
 
     Registers:
     KERNEL_MAGIC_CODE   -- Magic code register. Read to check if FPGA is programmed.
-    KERNEL_FPGA_RESET   -- Writing "one" resets Cypress USB and FPGA
+    KERNEL_CONTROL      -- Control register for resetting FPGA and overload state
     KERNEL_DIAG_1
     KERNEL_INTRONIX_CLKSEL
     KERNEL_INTRONIX_1
     KERNEL_INTRONIX_2
     KERNEL_INTRONIX_3
+    KERNEL_OVERLOAD     -- Latches any high overload inputs so they may be read by the DSP
+                            The contents are reset when OVERLOAD_RESET bit in the kernel register is asserted
 
-    Fields in KERNEL_FPGA_RESET:
-    KERNEL_FPGA_RESET_RESET
+    Fields in KERNEL_CONTROL:
+    KERNEL_CONTROL_CYPRESS_RESET
+    KERNEL_CONTROL_OVERLOAD_RESET
 
     Fields in KERNEL_INTRONIX_CLKSEL:
     KERNEL_INTRONIX_CLKSEL_DIVISOR
@@ -94,19 +106,21 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     top_count = (1<<NSTAGES)-1
 
     kernel_magic_code_addr = map_base + KERNEL_MAGIC_CODE
-    kernel_fpga_reset_addr = map_base + KERNEL_FPGA_RESET
+    kernel_control_addr = map_base + KERNEL_CONTROL
     kernel_diag_1_addr = map_base + KERNEL_DIAG_1
     kernel_intronix_clksel_addr = map_base + KERNEL_INTRONIX_CLKSEL
     kernel_intronix_1_addr = map_base + KERNEL_INTRONIX_1
     kernel_intronix_2_addr = map_base + KERNEL_INTRONIX_2
     kernel_intronix_3_addr = map_base + KERNEL_INTRONIX_3
+    kernel_overload_addr = map_base + KERNEL_OVERLOAD
     magic_code = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    fpga_reset = Signal(intbv(0)[1:])
+    control = Signal(intbv(0)[FPGA_REG_WIDTH:])
     diag_1 = Signal(intbv(0)[8:])
     intronix_clksel = Signal(intbv(0)[5:])
     intronix_1 = Signal(intbv(0)[8:])
     intronix_2 = Signal(intbv(0)[8:])
     intronix_3 = Signal(intbv(0)[8:])
+    overload = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     state = Signal(t_State.NORMAL)
 
@@ -123,20 +137,21 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         while True:
             yield clk.posedge, reset.posedge
             if reset:
-                fpga_reset.next = 0
+                control.next = 0
                 diag_1.next = 0
                 intronix_clksel.next = 0
                 intronix_1.next = 0
                 intronix_2.next = 0
                 intronix_3.next = 0
+                overload.next = 0
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_magic_code_addr: # r
                         dsp_data_in.next = FPGA_MAGIC_CODE
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_fpga_reset_addr: # rw
-                        if dsp_wr: fpga_reset.next = dsp_data_out
-                        dsp_data_in.next = fpga_reset
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_control_addr: # rw
+                        if dsp_wr: control.next = dsp_data_out
+                        dsp_data_in.next = control
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_diag_1_addr: # rw
                         if dsp_wr: diag_1.next = dsp_data_out
                         dsp_data_in.next = diag_1
@@ -152,17 +167,32 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_intronix_3_addr: # rw
                         if dsp_wr: intronix_3.next = dsp_data_out
                         dsp_data_in.next = intronix_3
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_overload_addr: # r
+                        dsp_data_in.next = overload
                     else:
                         dsp_data_in.next = 0
                 else:
                     dsp_data_in.next = 0
+                
+                # Allow DSP to read state of overload inputs and assert overload_out if any
+                #  input is high
+                if control[KERNEL_CONTROL_OVERLOAD_RESET_B]:
+                    control.next[KERNEL_CONTROL_OVERLOAD_RESET_B] = 0
+                    overload.next = overload_in
+                else: # Latch set bits in overload_in
+                    overload.next = overload | overload_in
 
+                if overload != 0:
+                    overload_out.next = 1
+                else:
+                    overload_out.next = 0
+                    
                 # State machine for handling resetting of Cypress FX2 and FPGA
                 if state == t_State.NORMAL:
                     cyp_reset.next = LOW
-                    if fpga_reset:
+                    if control[KERNEL_CONTROL_CYPRESS_RESET_B]:
                         counter.next = 0
-                        fpga_reset.next = 0
+                        control.next[KERNEL_CONTROL_CYPRESS_RESET_B] = 0
                         state.next = t_State.RESETTING
                     elif not usb_connected:
                         counter.next = 0
@@ -173,9 +203,9 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     cyp_reset.next = LOW
                     if usb_connected:
                         state.next = t_State.NORMAL
-                    elif fpga_reset:
+                    elif control[KERNEL_CONTROL_CYPRESS_RESET_B]:
                         counter.next = 0
-                        fpga_reset.next = 0
+                        control.next[KERNEL_CONTROL_CYPRESS_RESET_B] = 0
                         state.next = t_State.RESETTING
                     else:
                         counter.next = counter + 1
@@ -188,7 +218,7 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     cyp_reset.next = HIGH
                     counter.next = counter + 1
                     if counter == top_count:
-                        fpga_reset.next = 0
+                        control.next[KERNEL_CONTROL_CYPRESS_RESET_B] = 0
                         state.next = t_State.NORMAL
                     else:
                         state.next = t_State.RESETTING
@@ -213,6 +243,8 @@ if __name__ == "__main__":
     intronix_1_out = Signal(intbv(0)[8:])
     intronix_2_out = Signal(intbv(0)[8:])
     intronix_3_out = Signal(intbv(0)[8:])
+    overload_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    overload_out = Signal(LOW)
     map_base = FPGA_KERNEL
 
     toVHDL(Kernel, clk=clk, reset=reset, dsp_addr=dsp_addr,
@@ -222,4 +254,6 @@ if __name__ == "__main__":
                    intronix_clksel_out=intronix_clksel_out,
                    intronix_1_out=intronix_1_out,
                    intronix_2_out=intronix_2_out,
-                   intronix_3_out=intronix_3_out, map_base=map_base)
+                   intronix_3_out=intronix_3_out,
+                   overload_in=overload_in, overload_out=overload_out,
+                   map_base=map_base)

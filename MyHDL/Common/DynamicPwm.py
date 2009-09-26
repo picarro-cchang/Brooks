@@ -16,7 +16,8 @@
 #
 # HISTORY:
 #   16-Sep-2009  sze  Initial version
-#   29-Sep-2009  sze  Add dither waveform generation
+#   19-Sep-2009  sze  Add dither waveform generation
+#   20-Sep-2009  sze  Added pwm_enable bit in CS register
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -31,6 +32,7 @@ from Host.autogen.interface import DYNAMICPWM_SLOPE
 
 from Host.autogen.interface import DYNAMICPWM_CS_RUN_B, DYNAMICPWM_CS_RUN_W
 from Host.autogen.interface import DYNAMICPWM_CS_CONT_B, DYNAMICPWM_CS_CONT_W
+from Host.autogen.interface import DYNAMICPWM_CS_PWM_ENABLE_B, DYNAMICPWM_CS_PWM_ENABLE_W
 from Host.autogen.interface import DYNAMICPWM_CS_PWM_OUT_B, DYNAMICPWM_CS_PWM_OUT_W
 
 
@@ -70,6 +72,7 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                             clock cycle each time CS_RUN goes high. The RUN bit is reset
                             at end of cycle.
                            1 places system in continuous mode, which is started by writing 1 to CS_RUN.
+    DYNAMICPWM_CS_PWM_ENABLE -- 1 to enable generation of PWM signal
     DYNAMICPWM_CS_PWM_OUT -- A (read-only) copy of the output of the PWM.
     """
     dynamicpwm_cs_addr = map_base + DYNAMICPWM_CS
@@ -83,7 +86,6 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     low = Signal(intbv(0)[FPGA_REG_WIDTH:])
     slope = Signal(intbv(0)[FPGA_REG_WIDTH:])
     pulse_width = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    
     dither_width = width-main_width
     mod_dither = 1 << dither_width
     mod_main = 1 << main_width
@@ -99,7 +101,10 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
 
     @always_comb
     def comb():
-        pwm_out.next = pwm
+        if cs[DYNAMICPWM_CS_PWM_ENABLE_B]:
+            pwm_out.next = pwm
+        else:
+            pwm_out.next = 0
         temp.next = dither_cntr + pulse_width[dither_width:0]
     
     @instance
@@ -125,7 +130,7 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         dsp_data_in.next = cs
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == dynamicpwm_delta_addr: # rw
                         if dsp_wr: delta.next = dsp_data_out.signed()
-                        dsp_data_in.next = delta
+                        dsp_data_in.next = delta[FPGA_REG_WIDTH:]
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == dynamicpwm_high_addr: # rw
                         if dsp_wr: high.next = dsp_data_out
                         dsp_data_in.next = high
@@ -161,23 +166,23 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                             acc.next = acc - slope
                         if delta > 0:
                             if comparator_in:
-                                if pulse_width < MAX_WIDTH - delta:
+                                if pulse_width + delta < MAX_WIDTH:
                                     pulse_width.next = pulse_width + delta
                                 else:
                                     pulse_width.next = MAX_WIDTH
                             else:
-                                if pulse_width > MIN_WIDTH + delta:
+                                if pulse_width - delta > MIN_WIDTH:
                                     pulse_width.next = pulse_width - delta
                                 else:
                                     pulse_width.next = MIN_WIDTH
                         else:
                             if comparator_in:
-                                if pulse_width > MIN_WIDTH - delta:
+                                if pulse_width + delta > MIN_WIDTH:
                                     pulse_width.next = pulse_width + delta
                                 else:
                                     pulse_width.next = MIN_WIDTH
                             else:
-                                if pulse_width < MAX_WIDTH + delta:
+                                if pulse_width - delta < MAX_WIDTH:
                                     pulse_width.next = pulse_width - delta
                                 else:
                                     pulse_width.next = MAX_WIDTH

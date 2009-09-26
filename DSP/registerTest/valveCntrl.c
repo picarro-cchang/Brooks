@@ -188,7 +188,7 @@ int valveCntrlStep()
     proportionalValveStep();
     thresholdTriggerStep();
     valveSequencerStep();
-    write_valve_pump_tec(solenoidValves);
+    modify_valve_pump_tec(0x3F,solenoidValves);
     return STATUS_OK;   
 }
 
@@ -228,6 +228,7 @@ int valveCntrlInit(void)
     inlet = 0;
     outlet = 0;
     solenoidValves = 0;
+    modify_valve_pump_tec(0x7F,0);    // Close all valves, turn off pump
     sequenceStep = -1;
     v->deltaT = 0.2;
     v->lastLossPpb = 0;
@@ -236,13 +237,26 @@ int valveCntrlInit(void)
     return STATUS_OK;
 }
 
+int modify_valve_pump_tec(unsigned int mask, unsigned int code)
+// Writes to PCA8574 I2C to parallel port which controls states of solenoid valves, pump and TEC PWM.
+//  Note the inversion, which is needed since the I2C port starts up with its outputs high.
+{
+    static unsigned int shadow = 0;
+    unsigned int loops, newValue;
+    
+    newValue = (shadow & (~mask)) | (code & mask);
+    if (newValue != shadow) {
+        setI2C1Mux(4);  // Select SC15 and SD15
+        for (loops=0;loops<1000;loops++);
+        pca8574_wrByte(~newValue);
+        shadow = newValue;
+    }
+    return STATUS_OK;
+}
+
 int write_valve_pump_tec(unsigned int code)
 // Writes to PCA8574 I2C to parallel port which controls states of solenoid valves, pump and TEC PWM.
 //  Note the inversion, which is needed since the I2C port starts up with its outputs high.
 {
-    unsigned int loops;
-    setI2C1Mux(4);  // Select SC15 and SD15
-    for (loops=0;loops<1000;loops++);
-    pca8574_wrByte(~code);
-    return STATUS_OK;
+    return modify_valve_pump_tec(0xFF,code);
 }

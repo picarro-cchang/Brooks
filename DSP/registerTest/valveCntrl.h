@@ -58,6 +58,7 @@ int valveCntrlStep(void);
 void valveSequencerStep(void);
 void proportionalValveStep(void);
 void thresholdTriggerStep(void);
+int modify_valve_pump_tec(unsigned int mask, unsigned int code);
 int write_valve_pump_tec(unsigned int code);
 
 #endif /* _VALVE_CNTRL_H_ */

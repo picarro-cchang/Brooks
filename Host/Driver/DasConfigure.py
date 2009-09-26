@@ -191,6 +191,9 @@ class DasConfigure(object):
         self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
             Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
                 ["CAVITY_TEC_REGISTER","FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))
+
+        self.opGroups["SLOW"]["CONTROLLER"].addOperation(
+            Operation("ACTION_HEATER_CNTRL_STEP"))
         
         self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
             Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
@@ -250,12 +253,16 @@ class DasConfigure(object):
                 sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_LASER%d" % laserNum,"PWM_CS"]))
 
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_WARM_BOX_INIT"))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_WARMBOX","PWM_CS"]))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_CAVITY_INIT"))
         sender.doOperation(Operation("ACTION_HEATER_CNTRL_INIT"))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_HOTBOX","PWM_CS"]))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_HEATER","PWM_CS"]))
         sender.doOperation(Operation("ACTION_VALVE_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_SPECTRUM_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
 
+        sender.doOperation(Operation("ACTION_MODIFY_VALVE_PUMP_TEC",[0x80,0x80])) # Turn on warm box and hot box TEC
         #sender.wrRegFloat("LASER1_RESISTANCE_REGISTER",10000.0)
         #sender.wrRegFloat("LASER2_RESISTANCE_REGISTER",9000.0)
         #sender.wrRegFloat("LASER3_RESISTANCE_REGISTER",8000.0)
@@ -274,5 +281,10 @@ class DasConfigure(object):
         runCont = (1<<interface.LASERLOCKER_CS_RUN_B) | (1<<interface.LASERLOCKER_CS_CONT_B)
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_LASERLOCKER","LASERLOCKER_CS"]))
 
+        # Start the dynamic PWM blocks running
+        runCont = (1<<interface.DYNAMICPWM_CS_RUN_B) | (1<<interface.DYNAMICPWM_CS_CONT_B) | (1<<interface.DYNAMICPWM_CS_PWM_ENABLE_B)
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_DYNAMICPWM_INLET","DYNAMICPWM_CS"]))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_DYNAMICPWM_OUTLET","DYNAMICPWM_CS"]))
+        
         # Set the scheduler running
         sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",1);

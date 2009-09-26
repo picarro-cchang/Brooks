@@ -119,9 +119,9 @@ void ringdown_put()
 int writeRegister(unsigned int regNum,DataType data)
 {
     if (regNum >= REG_REGION_SIZE) return ERROR_UNKNOWN_REGISTER;
-    else *(int*)(REG_BASE+4*regNum) = data.asInt;
+    else *(int*)(registerAddr(regNum)) = data.asInt;
 #if EXT_MEM
-    CACHE_wbL2((void *)(REG_BASE+4*regNum), 4, CACHE_WAIT);
+    CACHE_wbL2((void *)(registerAddr(regNum)), 4, CACHE_WAIT);
 #endif
     return STATUS_OK;
 }
@@ -136,7 +136,7 @@ int writebackRegisters(unsigned int regNums[],unsigned int n)
     for (i=0; i<n; i++)
     {
         if (regNums[i] >= REG_REGION_SIZE) status = ERROR_UNKNOWN_REGISTER;
-        else CACHE_wbL2((void *)(REG_BASE+4*regNums[i]), 4, CACHE_WAIT);
+        else CACHE_wbL2((void *)(registerAddr(regNums[i])), 4, CACHE_WAIT);
     }
 #endif
     return status;
@@ -145,7 +145,7 @@ int writebackRegisters(unsigned int regNums[],unsigned int n)
 int readRegister(unsigned int regNum, DataType *data)
 {
     if (regNum >= REG_REGION_SIZE) return ERROR_UNKNOWN_REGISTER;
-    else data->asInt = *(int*)(REG_BASE+4*regNum);
+    else data->asInt = *(int*)(registerAddr(regNum));
     return STATUS_OK;
 }
 
@@ -155,6 +155,30 @@ void *registerAddr(unsigned int regNum)
 {
     if (regNum >= REG_REGION_SIZE) return 0;
     return (void*)(REG_BASE+4*regNum);
+}
+
+unsigned int getDasStatusBit(unsigned int bitNum)
+/* Gets a single bit in the DAS_STATUS_REGISTER  */
+{
+    unsigned int dasStatus = *(unsigned int*)(registerAddr(DAS_STATUS_REGISTER));
+    unsigned int mask = 1<<bitNum;
+    return (0 != dasStatus&mask);
+}
+
+void setDasStatusBit(unsigned int bitNum)
+/* Sets a single bit in the DAS_STATUS_REGISTER  */
+{
+    unsigned int *dasStatus = (unsigned int*)(registerAddr(DAS_STATUS_REGISTER));
+    unsigned int mask = 1<<bitNum;
+    (*dasStatus) = (*dasStatus) | mask;
+}
+
+void resetDasStatusBit(unsigned int bitNum)
+/* Resets a single bit in the DAS_STATUS_REGISTER  */
+{
+    unsigned int *dasStatus = (unsigned int*)(registerAddr(DAS_STATUS_REGISTER));
+    unsigned int mask = 1<<bitNum;
+    (*dasStatus) = (*dasStatus) & (~mask);
 }
 
 void hwiHpiInterrupt(unsigned int funcArg, unsigned int eventId)
