@@ -262,7 +262,7 @@ class DasConfigure(object):
         sender.doOperation(Operation("ACTION_SPECTRUM_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
 
-        sender.doOperation(Operation("ACTION_MODIFY_VALVE_PUMP_TEC",[0x80,0x80])) # Turn on warm box and hot box TEC
+        #sender.doOperation(Operation("ACTION_MODIFY_VALVE_PUMP_TEC",[0x80,0x80])) # Turn on warm box and hot box TEC
         #sender.wrRegFloat("LASER1_RESISTANCE_REGISTER",10000.0)
         #sender.wrRegFloat("LASER2_RESISTANCE_REGISTER",9000.0)
         #sender.wrRegFloat("LASER3_RESISTANCE_REGISTER",8000.0)

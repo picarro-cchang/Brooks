@@ -2192,6 +2192,7 @@
         <register ident="TEC_CNTRL_REGISTER" type="TEC_CNTRL_Type" minver="1.0" access="rw">
             <description>Controls warm box and hot box TEC enable</description>
             <initial>TEC_CNTRL_Disabled</initial>
+            <save/>
             <display>Warm and hot box TEC</display>
         </register>
         <register ident="SENTRY_UPPER_LIMIT_TRIPPED_REGISTER" type="uint32" minver="1.0" access="r">

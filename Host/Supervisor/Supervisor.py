@@ -97,6 +97,7 @@ import Host.Common.CmdFIFO as CmdFIFO
 from Host.Common.SharedTypes import ACCESS_PICARRO_ONLY, RPC_PORT_LOGGER
 from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_SUPERVISOR_BACKUP
 from Host.Common.SharedTypes import CrdsException
+import traceback
 import Host.Common.BetterTraceback as BetterTraceback
 from Host.Common.SingleInstance import SingleInstance
 # from IniCoordinator import IniCoordinator
@@ -180,6 +181,9 @@ class AppLaunchFailure(AppErr):
 class AppOptionErr(AppErr):
     "There is a problem with one (more more) of the configured App options."
 
+class TerminationRequest(CrdsException):
+    "Terminate all applications requested"
+    
 class IniVerifyErr(CrdsException):
     "There was a problem when iniCoordinator tried to verify .ini configuration files for all applications."
 
@@ -604,13 +608,14 @@ class App(object):
             self._HasCmdFIFO = True
         return loadedOptions
 
-    def Launch(self, IsRestart = False):
+    def Launch(self, supervisor, IsRestart = False):
         """Launches the app and does other setup.
 
         If self.VerifyTimeout_ms is > 0 the routine will wait for the application
         to be up and running (serving rpc requests) before exiting.
         """
-
+        assert(isinstance(supervisor,Supervisor))
+        
         exeArgs = []
         root, ext = splitext(self.Executable)
 
@@ -646,6 +651,9 @@ class App(object):
 
         appStarted = False
 
+        if supervisor.CheckForStopRequests():
+            raise TerminationRequest
+        
         r = launchProcess(self._AppName,exeName,exeArgs,self.Priority,self.ConsoleMode,self.AffinityMask)
         self._ProcessId, self._ProcessHandle, pAffinity = r
 
@@ -658,6 +666,7 @@ class App(object):
                                                Affinity = pAffinity))
         self._Stat_LaunchCount += 1 #we're tracking launch attempts, not successful launches
 
+        
         if self.VerifyTimeout_ms > 0 and self.Port > 0: # and self.Mode in [0,1]:
             #mode 1 = normal apps to be monitored
             #mode 0 = a unique mode for the backup supervisor app
@@ -665,6 +674,8 @@ class App(object):
             startTime = TimeStamp()
             appStarted = False
             while (TimeStamp() - startTime) < (self.VerifyTimeout_ms/1000.):
+                if supervisor.CheckForStopRequests():
+                    raise TerminationRequest
                 try:
                     self.CheckFIFO() #should be quick since the Rx timeout is only when the dispatcher has responded, and if it has the Ping should work fine.
                     #only gets here if the FIFO responded
@@ -1083,11 +1094,11 @@ class Supervisor(object):
                     break
 
             if not failedAppDependent:
-
+                Log("Attempting to launch application",dict(AppName = appName))
                 appStarted = False
                 for i in range(MAX_LAUNCH_COUNT):
                     try:
-                        self.AppDict[appName].Launch(IsRestart)
+                        self.AppDict[appName].Launch(self, IsRestart)
                         appStarted = True
                         break
                     except AppLaunchFailure, E:
@@ -1096,6 +1107,10 @@ class Supervisor(object):
                             Level = 2)
                         #Sleep a short time before trying again...
                         #time_sleep(1)
+                    except TerminationRequest:
+                        Log("Terminate requested during application launch process",dict(AppName = appName),Level=2)
+                        self.ShutDownAll()
+                        raise
 
                 if not appStarted:
                     failedAppDependents = failedAppDependents + self.GetDependents(appName)
@@ -1227,6 +1242,7 @@ class Supervisor(object):
             threading.Thread(target = self.RPCServer.serve_forever).start()
         except Exception, E:
             Log("Exception trapped when configuring and launching the Master RPC server", Verbose = "Exception = %s %r" % (E, E))
+
     def CheckForStopRequests(self):
         try:
             start_rawkb()
@@ -1246,7 +1262,7 @@ class Supervisor(object):
         if self._ShutdownRequested or self._TerminateAllRequested:
             #In addition to being set above, these could also have been set somewhere else (eg: RPC server)...
             return True
-        if not self.RPCServerProblem:
+        if self.RPCServer is not None and not self.RPCServerProblem:
             try:
                 if self.RPCServer.ServerStopRequested:
                     self._ShutdownRequested = True
@@ -1674,7 +1690,9 @@ def main():
             except AppErr, E:
                 print "Exception trapped outside Supervisor execution: %s %r" % (E, E)
                 Log("Exception trapped outside Supervisor execution", Level = 3, Verbose = "Exception = %s %r" % (E, E))
-        #PUT NO MORE CODE HERE - code above relies on falling through.
+            except TerminationRequest:
+                pass
+            #PUT NO MORE CODE HERE - code above relies on falling through.
 
     finally:
         #Print("'FINALLY' catch in module Supervisor.py reached!")
@@ -1695,7 +1713,8 @@ if __name__ == "__main__":
     try:
         main()
     except:
-        tbMsg = BetterTraceback.get_advanced_traceback()
+        # tbMsg = BetterTraceback.get_advanced_traceback()
+        tbMsg = traceback.format_exc()
         Log("Unhandled exception trapped by last chance handler",
             Data = dict(Note = "<See verbose for debug info>"),
             Level = 3,
