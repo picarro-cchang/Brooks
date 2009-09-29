@@ -25,7 +25,7 @@ if __name__ == "__main__":
     repeats = 2
     driver.wrScheme(0,repeats,zip(thList,dwell,subschemeId,laserUsed,threshold,pztSetpoint,laserTemp))
 
-    thList = linspace(-3*pi/4,-pi/4,81)
+    thList = linspace(-pi/2,-pi/2,81)
     dwell = 10*ones(thList.shape)
     subschemeId = zeros(thList.shape)
     laserUsed = 4*ones(thList.shape)

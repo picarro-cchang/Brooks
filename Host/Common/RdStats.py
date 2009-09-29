@@ -51,7 +51,7 @@ class RdStats(object):
         rate = 0
         if self.n > 0:
             mean = self.sumLoss / self.n
-            var = self.sumSquareLoss / self.n - mean*mean
+            var = max(0.0,self.sumSquareLoss / self.n - mean*mean)
             if mean != 0: shot2shot = math.sqrt(var) / mean
         if self.meanTime != 0: rate = 1/self.meanTime
         return (mean,shot2shot,rate)
