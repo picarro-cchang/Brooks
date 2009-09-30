@@ -155,6 +155,34 @@ class RingdownEntryType(Structure):
     ("padToCacheLine",c_ushort*1)
     ]
 
+class ProcessedRingdownEntryType(Structure):
+    _fields_ = [
+    ("timestamp",c_longlong),
+    ("frequency",c_uint),
+    ("uncorrectedAbsorbance",c_float),
+    ("correctedAbsorbance",c_float),
+    ("status",c_ushort),
+    ("count",c_ushort),
+    ("tunerValue",c_ushort),
+    ("pztValue",c_ushort),
+    ("lockerOffset",c_ushort),
+    ("laserUsed",c_ushort),
+    ("ringdownThreshold",c_ushort),
+    ("subschemeId",c_ushort),
+    ("schemeTable",c_ushort),
+    ("schemeRow",c_ushort),
+    ("ratio1",c_ushort),
+    ("ratio2",c_ushort),
+    ("fineLaserCurrent",c_ushort),
+    ("coarseLaserCurrent",c_ushort),
+    ("laserTemperature",c_float),
+    ("etalonTemperature",c_float),
+    ("cavityPressure",c_ushort),
+    ("ambientPressure",c_ushort),
+    ("lockerError",c_ushort),
+    ("padToCacheLine",c_ushort*1)
+    ]
+
 class SensorEntryType(Structure):
     _fields_ = [
     ("timestamp",c_longlong),

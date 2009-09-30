@@ -137,6 +137,33 @@ typedef struct {
 
 typedef struct {
     long long timestamp;
+    uint32 frequency;
+    float uncorrectedAbsorbance;
+    float correctedAbsorbance;
+    uint16 status;
+    uint16 count;
+    uint16 tunerValue;
+    uint16 pztValue;
+    uint16 lockerOffset;
+    uint16 laserUsed;
+    uint16 ringdownThreshold;
+    uint16 subschemeId;
+    uint16 schemeTable;
+    uint16 schemeRow;
+    uint16 ratio1;
+    uint16 ratio2;
+    uint16 fineLaserCurrent;
+    uint16 coarseLaserCurrent;
+    float laserTemperature;
+    float etalonTemperature;
+    uint16 cavityPressure;
+    uint16 ambientPressure;
+    uint16 lockerError;
+    uint16 padToCacheLine[1];
+} ProcessedRingdownEntryType;
+
+typedef struct {
+    long long timestamp;
     uint32 streamNum;
     DataType value;
 } SensorEntryType;

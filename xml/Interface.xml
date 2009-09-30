@@ -145,6 +145,32 @@
             <field ident="lockerError" type="uint16"/>
             <field ident="padToCacheLine" type="uint16" size="1"/>
         </struct>
+        <struct type="ProcessedRingdownEntryType">
+            <field ident="timestamp" type="long long"/>
+            <field ident="frequency" type="uint32"/>
+            <field ident="uncorrectedAbsorbance" type="float"/>
+            <field ident="correctedAbsorbance" type="float"/>
+            <field ident="status" type="uint16"/>
+            <field ident="count" type="uint16"/>
+            <field ident="tunerValue" type="uint16"/>
+            <field ident="pztValue" type="uint16"/>
+            <field ident="lockerOffset" type="uint16"/>
+            <field ident="laserUsed" type="uint16"/>
+            <field ident="ringdownThreshold" type="uint16"/>
+            <field ident="subschemeId" type="uint16"/>
+            <field ident="schemeTable" type="uint16"/>
+            <field ident="schemeRow" type="uint16"/>
+            <field ident="ratio1" type="uint16"/>
+            <field ident="ratio2" type="uint16"/>
+            <field ident="fineLaserCurrent" type="uint16"/>
+            <field ident="coarseLaserCurrent" type="uint16"/>
+            <field ident="laserTemperature" type="float"/>
+            <field ident="etalonTemperature" type="float"/>
+            <field ident="cavityPressure" type="uint16"/>
+            <field ident="ambientPressure" type="uint16"/>
+            <field ident="lockerError" type="uint16"/>
+            <field ident="padToCacheLine" type="uint16" size="1"/>
+        </struct>
         <struct type="SensorEntryType">
             <field ident="timestamp" type="long long"/>
             <field ident="streamNum" type="uint32"/>
