@@ -42,6 +42,8 @@ statsPoints = interface.CONTROLLER_STATS_POINTS
 wfmPoints = interface.CONTROLLER_WAVEFORM_POINTS
 ringdownPoints = interface.CONTROLLER_RINGDOWN_POINTS
 
+Driver = DriverProxy().rpc
+
 class RingdownPanel(RingdownPanelGui):
     def __init__(self,*a,**k):
         RingdownPanelGui.__init__(self,*a,**k)
@@ -520,6 +522,8 @@ class HotBoxPanel(HotBoxPanelGui):
                 colour='blue',width=2)
 
 class CommandLogPanel(CommandLogPanelGui):
+    acqLabels = dict(start="Start Acquisition",resume="Resume Acquisition",
+                     stop="Stop Acquisition",clear="Clear Error")
     def __init__(self,*a,**k):
         CommandLogPanelGui.__init__(self,*a,**k)
         self.logListCtrl.InsertColumn(0,"Seq",width=70)
@@ -534,8 +538,7 @@ class CommandLogPanel(CommandLogPanelGui):
         #  updated
         token = ControllerRpcHandler()._registerNotification(
             self.updateStreamFileState.release)
-        self.driverRpc = DriverProxy().rpc
-        self.driverRpc.registerStreamStatusObserver(
+        Driver.registerStreamStatusObserver(
             SharedTypes.RPC_PORT_CONTROLLER,token)
 
     def onStreamFileCheck(self, event):
@@ -553,7 +556,7 @@ class CommandLogPanel(CommandLogPanelGui):
     def setStreamFileState(self):
         """Call this within idle task to update stream file state widgets"""
         if self.updateStreamFileState.acquire(False):
-            response = DriverProxy().rpc.getStreamFileStatus()
+            response = Driver.getStreamFileStatus()
             self.streamFileCheckbox.SetValue(response["status"]=="open")
             self.streamFileTextCtrl.SetValue(response["filename"])
             self.streamFileTextCtrl.SetInsertionPointEnd()
@@ -567,7 +570,30 @@ class CommandLogPanel(CommandLogPanelGui):
         self.logListCtrl.SetStringItem(index,4,code)
         self.logListCtrl.SetStringItem(index,5,txt.strip()[1:-1])
         self.logListCtrl.EnsureVisible(index)
-
+    def onStartAcquisition(self,event):
+        currentLabel = self.startAcquisitionButton.GetLabel()
+        if currentLabel == CommandLogPanel.acqLabels["start"]:
+            Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
+        elif currentLabel == CommandLogPanel.acqLabels["resume"]:
+            Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_RunningState)
+        elif currentLabel in [CommandLogPanel.acqLabels["clear"],CommandLogPanel.acqLabels["stop"]]:
+            Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
+    def updateLoopStatus(self):
+        # Update the controller loop status check indicators
+        pass
+    def updateAcquisitionState(self):
+        # Update the acquisition button label and the associated text control
+        state = Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER)
+        if state == interface.SPECT_CNTRL_IdleState:
+            self.startAcquisitionButton.SetLabel(CommandLogPanel.acqLabels["start"])
+        elif state == interface.SPECT_CNTRL_PausedState:
+            self.startAcquisitionButton.SetLabel(CommandLogPanel.acqLabels["resume"])
+        elif state == interface.SPECT_CNTRL_ErrorState:
+            self.startAcquisitionButton.SetLabel(CommandLogPanel.acqLabels["clear"])
+        else:
+            self.startAcquisitionButton.SetLabel(CommandLogPanel.acqLabels["stop"])
+        pass
+    
 class StatsPanel(StatsPanelGui):
     def __init__(self,*a,**k):
         StatsPanelGui.__init__(self,*a,**k)

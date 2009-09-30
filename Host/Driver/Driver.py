@@ -240,6 +240,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Get historical data associated with streamNum from the database"""
         return StateDatabase().getHistory(streamNum)
 
+    def getConfig(self):
+        config = InstrumentConfig().config
+        return config.keys()
+    
 class StreamTableType(tables.IsDescription):
     time = tables.Int64Col()
     streamNum = tables.Int32Col()
@@ -425,15 +429,15 @@ class InstrumentConfig(SharedTypes.Singleton):
 
     def savePersistentRegistersToConfig(self):
         s = HostToDspSender()
-        if "DASregisters" not in self.config:
-            self.config["DASregisters"] = {}
+        if "DAS_REGISTERS" not in self.config:
+            self.config["DAS_REGISTERS"] = {}
         for ri in interface.registerInfo:
             if ri.persistence:
                 if ri.type == ctypes.c_float:
-                    self.config["DASregisters"][ri.name]= \
+                    self.config["DAS_REGISTERS"][ri.name]= \
                         s.rdRegFloat(ri.name)
                 else:
-                    self.config["DASregisters"][ri.name]= \
+                    self.config["DAS_REGISTERS"][ri.name]= \
                         ri.type(s.rdRegUint(ri.name)).value
         for fpgaMap,regList in interface.persistent_fpga_registers:
             self.config[fpgaMap] = {}
@@ -445,9 +449,9 @@ class InstrumentConfig(SharedTypes.Singleton):
 
     def loadPersistentRegistersFromConfig(self):
         s = HostToDspSender()
-        if "DASregisters" not in self.config:
-            self.config["DASregisters"] = {}
-        for name in self.config["DASregisters"]:
+        if "DAS_REGISTERS" not in self.config:
+            self.config["DAS_REGISTERS"] = {}
+        for name in self.config["DAS_REGISTERS"]:
             if name not in interface.registerByName:
                 Log("Unknown register %s ignored during config file load" % name,Level=2)
             else:
@@ -455,11 +459,11 @@ class InstrumentConfig(SharedTypes.Singleton):
                 ri = interface.registerInfo[index]
                 if ri.writable:
                     if ri.type == ctypes.c_float:
-                        value = float(self.config["DASregisters"][ri.name])
+                        value = float(self.config["DAS_REGISTERS"][ri.name])
                         s.wrRegFloat(ri.name,value)
                     else:
                         value = ctypes.c_uint(
-                            int(self.config["DASregisters"][ri.name])).value
+                            int(self.config["DAS_REGISTERS"][ri.name])).value
                         s.wrRegUint(ri.name,value)
                 else:
                     Log("Unwritable register %s ignored during config file load" % name,Level=2)

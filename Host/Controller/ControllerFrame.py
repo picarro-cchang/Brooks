@@ -25,6 +25,7 @@ from Host.Common.ParameterDialog import ParameterDialog
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes
+from configobj import ConfigObj
 
 # For convenience in calling driver functions
 Driver = DriverProxy().rpc
@@ -37,9 +38,8 @@ EventManagerProxy_Init("Controller")
 
 class ControllerFrame(ControllerFrameGui):
     def __init__(self,*a,**k):
-        self.driverRpc = DriverProxy().rpc
         try:
-            self.versions = self.driverRpc.allVersions()
+            self.versions = Driver.allVersions()
         except:
             wx.MessageDialog(None,"Driver not accessible, cannot continue.",
                 "Controller Startup Error",wx.OK|wx.ICON_ERROR).ShowModal()
@@ -153,8 +153,8 @@ class ControllerFrame(ControllerFrameGui):
         title,details = parameterForms[id]
         pd = ParameterDialog(None, wx.ID_ANY, "")
         pd.initialize(title,details)
-        pd.getRegisterValues = self.driverRpc.rdRegList
-        pd.putRegisterValues = self.driverRpc.wrRegList
+        pd.getRegisterValues = Driver.rdRegList
+        pd.putRegisterValues = Driver.wrRegList
         self.openParamDialogs[id] = pd
         #print "About to call ReadFromDas"
         pd.readParams()
@@ -195,8 +195,10 @@ class ControllerFrame(ControllerFrameGui):
             self.statsPanel.update()
 
     def onIdle(self,evt):
-        # Deal with updating the stream file state and filename
+        # Deal with updating the command log panel
         self.commandLogPanel.setStreamFileState()
+        self.commandLogPanel.updateLoopStatus()
+        self.commandLogPanel.updateAcquisitionState()
         # Deal with event manager log messages
         while True:
             msg = self.logListener.getLogMessage()
@@ -214,10 +216,46 @@ class ControllerFrame(ControllerFrameGui):
             self.onClose(evt)
 
     def onLoadIni(self, event):
-        self.driverRpc.loadIniFile()
+        Driver.loadIniFile()
 
     def onWriteIni(self, event):
-        self.driverRpc.writeIniFile()
+        Driver.writeIniFile()
+
+
+class Sequencer(object):
+    "Supervises running of a sequence of schemes, using a block of four scheme table entries"
+    IDLE = 0
+    STARTUP = 1
+    SEND_SCHEME = 2
+    WAIT_UNTIL_ACTIVE = 3
+    WAIT_FOR_SCHEME_DONE = 4
+    def __init__(self,config):
+        self.state = Sequencer.IDLE
+        self.sequence = 1
+        self.scheme = 1
+        self.repeat = 1
+        self.sequences = []
+        self.getSequences(config)
+        print self.sequences
+
+    def getSequences(self,config):
+        index = 1
+        section = "SEQUENCE%02d" % (index,)
+        try:
+            while section in config:
+                cs = config[section]
+                nSchemes = int(cs["NSCHEMES"])
+                schemes = []
+                for i in range(nSchemes):
+                    schemeFileName = cs["SCHEME%02d" % (i+1,)]
+                    repetitions = int(cs["REPEAT%02d" % (i+1,)])
+                    schemes.append((Scheme(schemeFileName),repetitions))
+                self.sequences.append(schemes)
+                index += 1
+                section = "SEQUENCE%02d" % (index,)
+            Log("Sequences read: %d" % len(self.sequences))
+        except Exception,e:
+            LogExc("Error in sequencer ini file")
 
 # Report GUI exceptions in EventManager
 def excepthook(type,value,trace):
@@ -236,5 +274,5 @@ if __name__ == "__main__":
         controllerFrame.Show()
         app.MainLoop()
     finally:
-        DriverProxy().rpc.unregisterStreamStatusObserver(
+        Driver.unregisterStreamStatusObserver(
             SharedTypes.RPC_PORT_CONTROLLER)

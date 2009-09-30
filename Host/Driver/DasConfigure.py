@@ -66,7 +66,7 @@ class DasConfigure(object):
         self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SCHEDULER_HEARTBEAT"))
 
         for laserNum in range(1,5):
-            if int(self.instrConfig["Configuration"].get("LASER%d_PRESENT" % laserNum,0)):
+            if int(self.instrConfig["CONFIGURATION"].get("LASER%d_PRESENT" % laserNum,0)):
                 # Temperature reading
                 self.opGroups["FAST"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_LASER_THERMISTOR_RESISTANCE",
@@ -245,7 +245,7 @@ class DasConfigure(object):
 
         runCont = (1<<interface.PWM_CS_RUN_B) | (1<<interface.PWM_CS_CONT_B)
         for laserNum in range(1,5):
-            if int(self.instrConfig["Configuration"].get("LASER%d_PRESENT" % laserNum,0)):
+            if int(self.instrConfig["CONFIGURATION"].get("LASER%d_PRESENT" % laserNum,0)):
                 sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER%d_INIT" % laserNum))
                 sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER%d_INIT" % laserNum))
                 sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_LASER%d" % laserNum,"PWM_PULSE_WIDTH"]))

@@ -15,11 +15,12 @@
 #   21-Jul-2009  sze  Added GenHandler
 #   03-Aug-2009  sze  Added getSchemeTableClass
 #   04-Aug-2009  sze  Added ctypesToDict and dictToCtypes
-
+#   30-Sep-2009  sze  Added Scheme class
 
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
 import ctypes
+import os
 import time
 from Host.autogen import interface
 
@@ -185,6 +186,46 @@ def dictToCtypes(d,c):
                 setattr(c,k,d[k])
             else:
                 raise ValueError,"Unknown structure field name %s" % k
+
+# Routines for reading scheme files
+
+def getNextNonNullLine(sp):
+    """ Return next line in a stream which is not blank and which does not
+    start with a # character"""
+    while True:
+        line = sp.readline().strip()
+        if not line or line[0] == "#":
+            continue
+        else:
+            return line
+
+class Scheme(object):
+    """Class containing a scheme."""
+    def __init__(self,fileName):
+        self.fileName = os.path.abspath(fileName)
+        # Read the scheme file
+        sp = file(self.fileName,"r")
+        self.nrepeat = int(getNextNonNullLine(sp).split()[0])
+        self.numEntries = int(getNextNonNullLine(sp).split()[0])
+        self.waveNumber = []
+        self.dwell = []
+        self.id = []
+        self.laserSelect = []
+        self.threshold = []
+        self.pztSetpoint = []
+        self.laserTemp = []
+        for i in range(self.numEntries):
+            toks = getNextNonNullLine(sp).split()
+            toks += (7-len(toks)) * ["0"]
+            self.setpoint.append(float(toks[0]))
+            self.dwell.append(int(toks[1]))
+            self.subschemeId.append(int(toks[2]))
+            self.laserUsed.append(int(toks[3]))
+            self.threshold.append(int(toks[4]))
+            self.pztSetpoint.append(int(toks[5]))
+            self.laserTemp.append(int(toks[6]))
+            if (i & 0xF) == 0: time.sleep(0) # Processor yield
+        sp.close()
 
 ##Misc stuff...
 
