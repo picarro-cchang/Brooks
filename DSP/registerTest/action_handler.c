@@ -584,13 +584,13 @@ int r_sentryInit(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
-int r_intToValvePumpTec(unsigned int numInt,void *params,void *env)
-/* Copy integer (passed as first parameter) to the PCA8574 I2C to parallel
-    port device which controls the pump, solenoid valves and TEC PWM. */ 
+int r_modifyValvePumpTec(unsigned int numInt,void *params,void *env)
+/* Modify the valve, pump and TEC states by using the first parameter as a mask
+    and the second value as the bits to set within the mask */
 {
     unsigned int *reg = (unsigned int *) params;
     
-    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
-    write_valve_pump_tec(reg[0]);
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    modify_valve_pump_tec(reg[0],reg[1]);
     return STATUS_OK;
 }

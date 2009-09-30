@@ -61,7 +61,7 @@ void HPI_setDspint(unsigned int value)
 void simReadRegMem(unsigned int regNum, unsigned int numInt, unsigned int *data)
 {
     // if (regNum >= MESSAGE_OFFSET && regNum < GROUP_OFFSET) printf("Accessing register %x\n",regNum);
-    memcpy(data,REG_BASE+4*regNum,4*numInt);
+    memcpy(data,registerAddr(regNum),4*numInt);
 }
 
 void simWriteHostMem(unsigned int regNum, unsigned int numInt, unsigned int *data)

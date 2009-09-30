@@ -30,11 +30,13 @@
 <Controller_gui>
     <gui_pages>
         <gui_page>
-            <title>System Configuration Parameters</title>
+            <title>System Parameters</title>
+            <register>DAS_STATUS_REGISTER</register>
             <register>SCHEDULER_CONTROL_REGISTER</register>
             <register>RD_IRQ_COUNT_REGISTER</register>
             <register>ACQ_DONE_COUNT_REGISTER</register>
-            <fpga_register offset="FPGA_KERNEL">FPGA_RESET</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">OVERLOAD</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">CONTROL</fpga_register>
             <fpga_register offset="FPGA_KERNEL">INTRONIX_CLKSEL</fpga_register>
             <fpga_register offset="FPGA_KERNEL">INTRONIX_1</fpga_register>
             <fpga_register offset="FPGA_KERNEL">INTRONIX_2</fpga_register>
@@ -167,6 +169,7 @@
         <gui_page>
             <title>Warm Box Temperature Parameters</title>
             <register>WARM_BOX_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>TEC_CNTRL_REGISTER</register>
             <register>WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
             <register>WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER</register>
             <register>WARM_BOX_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
@@ -193,6 +196,7 @@
         <gui_page>
             <title>Cavity Temperature Parameters</title>
             <register>CAVITY_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>TEC_CNTRL_REGISTER</register>
             <register>CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
             <register>CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER</register>
             <register>CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>

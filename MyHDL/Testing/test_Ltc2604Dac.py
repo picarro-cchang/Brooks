@@ -9,6 +9,7 @@
 #
 # HISTORY:
 #   28-Aug-2009  sze  Initial version.
+#   20-Sep-2009  sze  Register DAC lines to deglitch them
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -30,6 +31,7 @@ chanB_data_in = Signal(intbv(0)[16:])
 chanC_data_in = Signal(intbv(0)[16:])
 chanD_data_in = Signal(intbv(0)[16:])
 strobe_in = Signal(LOW)
+dac_sck_out = Signal(LOW)
 dac_sdi_out = Signal(LOW)
 dac_ld_out = Signal(LOW)
 data = Signal(intbv(0)[24:])
@@ -104,6 +106,7 @@ def bench():
                              chanC_data_in=chanC_data_in,
                              chanD_data_in=chanD_data_in,
                              strobe_in=strobe_in,
+                             dac_sck_out=dac_sck_out,
                              dac_sdi_out=dac_sdi_out,
                              dac_ld_out=dac_ld_out )
 
@@ -113,7 +116,7 @@ def bench():
     @instance
     def stimulus():
         yield assertReset()
-        for trials in range(100):
+        for trials in range(10):
             chanA_data = randrange(1<<16)
             chanB_data = randrange(1<<16)
             chanC_data = randrange(1<<16)
@@ -147,7 +150,7 @@ def bench():
             data_avail.next = 0
             data.next = 0
             for i in range(24):
-                yield dac_clock_in.posedge
+                yield dac_sck_out.posedge
                 data.next[23-i] = dac_sdi_out
             data_avail.next = 1
     

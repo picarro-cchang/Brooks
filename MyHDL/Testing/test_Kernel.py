@@ -18,13 +18,14 @@ from Host.autogen.interface import FPGA_MAGIC_CODE
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_KERNEL
 
-from Host.autogen.interface import KERNEL_MAGIC_CODE, KERNEL_FPGA_RESET
+from Host.autogen.interface import KERNEL_MAGIC_CODE, KERNEL_CONTROL
 from Host.autogen.interface import KERNEL_DIAG_1
 from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL
 from Host.autogen.interface import KERNEL_INTRONIX_1, KERNEL_INTRONIX_2
-from Host.autogen.interface import KERNEL_INTRONIX_3
+from Host.autogen.interface import KERNEL_INTRONIX_3, KERNEL_OVERLOAD
 
-from Host.autogen.interface import KERNEL_FPGA_RESET_RESET_B, KERNEL_FPGA_RESET_RESET_W
+from Host.autogen.interface import KERNEL_CONTROL_CYPRESS_RESET_B, KERNEL_CONTROL_CYPRESS_RESET_W
+from Host.autogen.interface import KERNEL_CONTROL_OVERLOAD_RESET_B, KERNEL_CONTROL_OVERLOAD_RESET_W
 from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL_DIVISOR_B, KERNEL_INTRONIX_CLKSEL_DIVISOR_W
 from Host.autogen.interface import KERNEL_INTRONIX_1_CHANNEL_B, KERNEL_INTRONIX_1_CHANNEL_W
 from Host.autogen.interface import KERNEL_INTRONIX_2_CHANNEL_B, KERNEL_INTRONIX_2_CHANNEL_W
@@ -46,7 +47,10 @@ intronix_clksel_out = Signal(intbv(0)[5:])
 intronix_1_out = Signal(intbv(0)[8:])
 intronix_2_out = Signal(intbv(0)[8:])
 intronix_3_out = Signal(intbv(0)[8:])
+overload_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+overload_out = Signal(LOW)
 map_base = FPGA_KERNEL
+result = Signal(intbv(0))
 
 def bench():
     PERIOD = 20  # 50MHz clock
@@ -114,10 +118,30 @@ def bench():
                      intronix_clksel_out=intronix_clksel_out,
                      intronix_1_out=intronix_1_out,
                      intronix_2_out=intronix_2_out,
-                     intronix_3_out=intronix_3_out, map_base=map_base )
+                     intronix_3_out=intronix_3_out,
+                     overload_in=overload_in, overload_out=overload_out,
+                     map_base=map_base )
     @instance
     def stimulus():
         yield delay(10*PERIOD)
+        yield assertReset()
+        overload_in.next = 0x42
+        yield readFPGA(FPGA_KERNEL+KERNEL_OVERLOAD,result)
+        assert int(result) == 0x42
+        yield writeFPGA(FPGA_KERNEL+KERNEL_CONTROL,1<<KERNEL_CONTROL_OVERLOAD_RESET_B)
+        yield readFPGA(FPGA_KERNEL+KERNEL_OVERLOAD,result)
+        assert int(result) == 0x42
+        overload_in.next = 0x7
+        yield readFPGA(FPGA_KERNEL+KERNEL_OVERLOAD,result)
+        assert int(result) == 0x47
+        yield writeFPGA(FPGA_KERNEL+KERNEL_CONTROL,1<<KERNEL_CONTROL_OVERLOAD_RESET_B)
+        yield readFPGA(FPGA_KERNEL+KERNEL_OVERLOAD,result)
+        assert int(result) == 0x7
+        overload_in.next = 0x0
+        yield writeFPGA(FPGA_KERNEL+KERNEL_CONTROL,1<<KERNEL_CONTROL_OVERLOAD_RESET_B)
+        yield readFPGA(FPGA_KERNEL+KERNEL_OVERLOAD,result)
+        assert int(result) == 0x0
+        yield delay(20*PERIOD)
         raise StopSimulation
     return instances()
 

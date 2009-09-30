@@ -29,6 +29,8 @@ void initRegisters()
     writeRegister(RD_IRQ_COUNT_REGISTER,d);
     d.asUint = 0;
     writeRegister(ACQ_DONE_COUNT_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(DAS_STATUS_REGISTER,d);
     d.asFloat = 20.0;
     writeRegister(DAS_TEMPERATURE_REGISTER,d);
     d.asFloat = 0.0;
@@ -575,6 +577,8 @@ void initRegisters()
     writeRegister(VALVE_CNTRL_SEQUENCE_STEP_REGISTER,d);
     d.asUint = 0x0;
     writeRegister(VALVE_CNTRL_SOLENOID_VALVES_REGISTER,d);
+    d.asUint = TEC_CNTRL_Disabled;
+    writeRegister(TEC_CNTRL_REGISTER,d);
     d.asUint = 0;
     writeRegister(SENTRY_UPPER_LIMIT_TRIPPED_REGISTER,d);
     d.asUint = 0;
@@ -740,8 +744,8 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_valveCntrlInit(numInt,params,env);
         case ACTION_VALVE_CNTRL_STEP:
             return r_valveCntrlStep(numInt,params,env);
-        case ACTION_INT_TO_VALVE_PUMP_TEC:
-            return r_intToValvePumpTec(numInt,params,env);
+        case ACTION_MODIFY_VALVE_PUMP_TEC:
+            return r_modifyValvePumpTec(numInt,params,env);
         case ACTION_PULSE_GENERATOR:
             return r_pulseGenerator(numInt,params,env);
         case ACTION_FILTER:

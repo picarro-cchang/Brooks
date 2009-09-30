@@ -438,7 +438,26 @@
             <enum_value ident="VIRTUAL_LASER_6" value="5" caption="Virtual laser 6" /> 
             <enum_value ident="VIRTUAL_LASER_7" value="6" caption="Virtual laser 7" /> 
             <enum_value ident="VIRTUAL_LASER_8" value="7" caption="Virtual laser 8" /> 
-        </enum>         
+        </enum>
+        <enum type="DAS_STATUS_BitType">
+            <description>DAS status bit position</description> 
+            <enum_value ident="DAS_STATUS_Laser1TemperatureLockedBit" value="0" caption="Laser 1 Temperature Locked" /> 
+            <enum_value ident="DAS_STATUS_Laser2TemperatureLockedBit" value="1" caption="Laser 2 Temperature Locked" /> 
+            <enum_value ident="DAS_STATUS_Laser3TemperatureLockedBit" value="2" caption="Laser 3 Temperature Locked" /> 
+            <enum_value ident="DAS_STATUS_Laser4TemperatureLockedBit" value="3" caption="Laser 4 Temperature Locked" /> 
+            <enum_value ident="DAS_STATUS_WarmBoxTemperatureLockedBit" value="4" caption="Warm Box Temperature Locked" /> 
+            <enum_value ident="DAS_STATUS_CavityTemperatureLockedBit" value="5" caption="Cavity Temperature Locked" /> 
+        </enum>
+        <enum type="TEC_CNTRL_Type">
+            <description>Warm box and hot box TEC control</description> 
+            <enum_value ident="TEC_CNTRL_Disabled" value="0" caption="Disabled" /> 
+            <enum_value ident="TEC_CNTRL_Enabled" value="1" caption="Enabled" /> 
+        </enum>
+        <enum type="OVERLOAD_BitType">
+            <description>Bit positions in FPGA overload register</description> 
+            <enum_value ident="OVERLOAD_WarmBoxTecBit" value="0" caption="Warm box TEC overload" /> 
+            <enum_value ident="OVERLOAD_HotBoxTecBit"  value="1" caption="Hot box TEC overload" /> 
+        </enum>
     </enum_list>
     <bits_list>
         <bits ident="COMM_STATUS_BITMASK">
@@ -479,6 +498,14 @@
             <mask  ident="SENTRY_CavityPressureMask">0x4000</mask>
             <mask  ident="SENTRY_AmbientPressureMask">0x8000</mask>
         </bits>
+        <bits ident="DAS_STATUS_BITMASK">
+            <mask  ident="DAS_STATUS_Laser1TemperatureLockedMask">(1 &lt;&lt; DAS_STATUS_Laser1TemperatureLockedBit)</mask>
+            <mask  ident="DAS_STATUS_Laser2TemperatureLockedMask">(1 &lt;&lt; DAS_STATUS_Laser2TemperatureLockedBit)</mask>
+            <mask  ident="DAS_STATUS_Laser3TemperatureLockedMask">(1 &lt;&lt; DAS_STATUS_Laser3TemperatureLockedBit)</mask>
+            <mask  ident="DAS_STATUS_Laser4TemperatureLockedMask">(1 &lt;&lt; DAS_STATUS_Laser4TemperatureLockedBit)</mask>
+            <mask  ident="DAS_STATUS_WarmBoxTemperatureLockedMask">(1 &lt;&lt; DAS_STATUS_WarmBoxTemperatureLockedBit)</mask>
+            <mask  ident="DAS_STATUS_CavityTemperatureLockedMask">(1 &lt;&lt; DAS_STATUS_CavityTemperatureLockedBit)</mask>
+        </bits>
     </bits_list>
     <register_list>
         <register ident="NOOP_REGISTER" type="uint32" minver="1.0" access="rw">
@@ -513,6 +540,11 @@
             <description>Number of acquisition done interrupts</description>
             <initial>0</initial>
             <display format="%d">Acquisition done interrupt count</display>
+        </register>
+        <register ident="DAS_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>DAS status</description>
+            <initial>0</initial>
+            <display format="$%X">DAS Status</display>
         </register>
         <register ident="DAS_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>DAS temperature</description>
@@ -2183,7 +2215,12 @@
             <initial>0x0</initial>
             <display format="$%X">Solenoid valve states</display>
         </register>
-        
+        <register ident="TEC_CNTRL_REGISTER" type="TEC_CNTRL_Type" minver="1.0" access="rw">
+            <description>Controls warm box and hot box TEC enable</description>
+            <initial>TEC_CNTRL_Disabled</initial>
+            <save/>
+            <display>Warm and hot box TEC</display>
+        </register>
         <register ident="SENTRY_UPPER_LIMIT_TRIPPED_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Bitmask of sentries which have exceeded upper limit</description>
             <initial>0</initial>
@@ -2389,14 +2426,20 @@
     </register_list>
     <fpga_block_list>
         <fpga_block ident="KERNEL" description="Kernel">
-            <reg type="uint16" ident="MAGIC_CODE" description="Code indicating FPGA is programmed" access="r"></reg>
-            <reg type="mask" ident="FPGA_RESET" description="Used to reset Cypress FX2" access="rw">
-                <bitfield ident="RESET" description="Reset Cypress FX2 and FPGA" lsb="0" width="1" >
+            <reg type="uint16" ident="MAGIC_CODE" description="Code indicating FPGA is programmed" access="r">
+            </reg>
+            <reg type="mask" ident="CONTROL" description="Kernel control register" access="rw">
+                <bitfield ident="CYPRESS_RESET" description="Reset Cypress FX2 and FPGA" lsb="0" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Reset</fielddef>
+                </bitfield>
+                <bitfield ident="OVERLOAD_RESET" description="Reset overload register" lsb="1" width="1">
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Reset</fielddef>
                 </bitfield>
             </reg>
-            <reg type="uint16" ident="DIAG_1" description="DSP accessible register for diagnostics" access="rw"></reg>
+            <reg type="uint16" ident="DIAG_1" description="DSP accessible register for diagnostics" access="rw">
+            </reg>
             <reg type="mask" ident="INTRONIX_CLKSEL" description="" access="rw">
                 <save />
                 <bitfield ident="DIVISOR" description="Intronix sampling rate" lsb="0" width="5">
@@ -2487,6 +2530,9 @@
                     <fielddef value="12">Ratio 2 (LS)</fielddef>
                     <fielddef value="13">Ratio 2 (MS)</fielddef>
                 </bitfield>
+            </reg>
+            <reg type="uint16" ident="OVERLOAD" description="Overload register" access="r">
+                <display format="$%X">Overload status</display>
             </reg>
         </fpga_block>
         <fpga_block ident="PWM" description="Pulse width modulator">
@@ -3014,7 +3060,11 @@
                     <fielddef value="0">Single</fielddef>
                     <fielddef value="1">Continuous</fielddef>
                 </bitfield>
-                <bitfield ident="PWM_OUT" description="PWM output" lsb="2" width="1">
+                <bitfield ident="PWM_ENABLE" description="PWM enable" lsb="2" width="1">
+                    <fielddef value="0">Disable</fielddef>
+                    <fielddef value="1">Enable</fielddef>
+                </bitfield>
+                <bitfield ident="PWM_OUT" description="PWM output" lsb="3" width="1">
                     <fielddef value="0">Low</fielddef>
                     <fielddef value="1">High</fielddef>
                 </bitfield>
@@ -3142,7 +3192,7 @@
         <action ident="ACTION_SENTRY_INIT">r_sentryInit</action>
         <action ident="ACTION_VALVE_CNTRL_INIT">r_valveCntrlInit</action>
         <action ident="ACTION_VALVE_CNTRL_STEP">r_valveCntrlStep</action>
-        <action ident="ACTION_INT_TO_VALVE_PUMP_TEC">r_intToValvePumpTec</action>
+        <action ident="ACTION_MODIFY_VALVE_PUMP_TEC">r_modifyValvePumpTec</action>
         <!-- Pulse generator:
         Inputs:
             Register (int):   Duration of low level

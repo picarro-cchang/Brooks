@@ -190,6 +190,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     outlet_valve_dac = Signal(intbv(0)[FPGA_REG_WIDTH:])
     chanC_data_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
+    overload_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    overload_out = Signal(LOW)
+
     dsp_interface = Dsp_interface(clk=clk0, reset=reset, addr=dsp_emif_ea,
                                   to_dsp=dsp_emif_din, re=dsp_emif_re,
                                   we=dsp_emif_we, oe=dsp_emif_oe,
@@ -243,7 +246,10 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      intronix_clksel_out=intronix_clksel,
                      intronix_1_out=intronix_1,
                      intronix_2_out=intronix_2,
-                     intronix_3_out=intronix_3, map_base=FPGA_KERNEL )
+                     intronix_3_out=intronix_3, 
+                     overload_in=overload_in,
+                     overload_out=overload_out,
+                     map_base=FPGA_KERNEL )
     
     laserlocker = LaserLocker( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                                dsp_data_out=dsp_data_out,
@@ -392,6 +398,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                              chanB_data_in=outlet_valve_dac,
                              chanC_data_in=chanC_data_in,
                              chanD_data_in=pzt, strobe_in=pulse_100k,
+                             dac_sck_out=pzt_valve_dac_sck,
                              dac_sdi_out=pzt_valve_dac_sdi, dac_ld_out=pzt_valve_dac_ld)
 
     dynamicPwmInlet = DynamicPwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
@@ -532,6 +539,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                    dsp_data_in_pwm_warmbox       | \
                    dsp_data_in_wlmsim
 
+        overload_in.next[OVERLOAD_WarmBoxTecBit] = warm_box_tec_overload
+        overload_in.next[OVERLOAD_HotBoxTecBit]  = hot_box_tec_overload
+        
         intronix.next[8:] = channel_1
         intronix.next[16:8] = channel_2
         intronix.next[24:16] = channel_3
@@ -573,8 +583,6 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         lsr2_sck.next = clk_5M
         lsr3_sck.next = clk_5M
         lsr4_sck.next = clk_5M
-
-        pzt_valve_dac_sck.next = clk_10M
 
         sw4.next = 0
 

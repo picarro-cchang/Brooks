@@ -22,6 +22,7 @@
 #include "registerTest.h"
 #include "scheduler.h"
 #include "spectrumCntrl.h"
+#include "valveCntrl.h"
 
 extern far LOG_Obj trace;
 
@@ -56,13 +57,14 @@ main(int argc, char *argv[])
     initRegisters();
     // Initialize I2C
     dspI2CInit();
+    // Turn off high power TECs, pump and close all valves
+    write_valve_pump_tec(0);
     // Initialize DS1631 for continuous measurements
     ds1631_init();
     // Initialize ringdown fitting module
     rdFittingInit();
     // Initialize EDMA handling
-    edmaInit();
-    
+    edmaInit();    
     // Clear DSPINT bit in HPIC
     HPI_setDspint(1);
     IRQ_resetAll();

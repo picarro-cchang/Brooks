@@ -160,6 +160,9 @@ void safeMode(void)
     *(TEMP_CNTRL_StateType *)registerAddr(LASER2_TEMP_CNTRL_STATE_REGISTER) = TEMP_CNTRL_DisabledState;
     *(TEMP_CNTRL_StateType *)registerAddr(LASER3_TEMP_CNTRL_STATE_REGISTER) = TEMP_CNTRL_DisabledState;
     *(TEMP_CNTRL_StateType *)registerAddr(LASER4_TEMP_CNTRL_STATE_REGISTER) = TEMP_CNTRL_DisabledState;
+    *(TEMP_CNTRL_StateType *)registerAddr(WARM_BOX_TEMP_CNTRL_STATE_REGISTER) = TEMP_CNTRL_DisabledState;
+    *(TEMP_CNTRL_StateType *)registerAddr(CAVITY_TEMP_CNTRL_STATE_REGISTER)   = TEMP_CNTRL_DisabledState;
+    *(HEATER_CNTRL_StateType *)registerAddr(HEATER_CNTRL_STATE_REGISTER)        = HEATER_CNTRL_DisabledState;
     
     // Turn off laser currents in FPGA
     writeFPGA(FPGA_INJECT + INJECT_CONTROL, 0);
@@ -168,9 +171,8 @@ void safeMode(void)
     writeFPGA(FPGA_PWM_LASER2 + PWM_CS, 0);
     writeFPGA(FPGA_PWM_LASER3 + PWM_CS, 0);
     writeFPGA(FPGA_PWM_LASER4 + PWM_CS, 0);
-    // TO DO: Disable warm box, hot box and heater controllers
-    // TO DO: Close all valves
 
+    *(TEC_CNTRL_Type*)registerAddr(TEC_CNTRL_REGISTER) = TEC_CNTRL_Disabled;
     write_valve_pump_tec(0);
 }
 
