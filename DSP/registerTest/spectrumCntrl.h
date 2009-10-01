@@ -26,18 +26,18 @@ typedef struct SPECT_CNTRL_PARAMS
     unsigned int *iter_;     // Scheme iteration
     unsigned int *row_;      // Scheme row
     unsigned int *dwell_;    // Dwell counter
-	VIRTUAL_LASER_Type *virtLaser_;   // Virtual laser register
+    VIRTUAL_LASER_Type *virtLaser_;   // Virtual laser register
     float *laserTemp_[4];    // Laser temperature registers
-	float *laserTempSetpoint_[4];     // Laser temperature setpoint registers
+    float *laserTempSetpoint_[4];     // Laser temperature setpoint registers
     float *coarseLaserCurrent_[4];    // Coarse laser current registers
-	float *etalonTemperature_; // Etalon temperature
-	float *cavityPressure_;    // Cavity pressure
-	float *ambientPressure_;   // Ambient pressure
-	unsigned int *defaultThreshold_;  // Default ringdown threshold
+    float *etalonTemperature_; // Etalon temperature
+    float *cavityPressure_;    // Cavity pressure
+    float *ambientPressure_;   // Ambient pressure
+    unsigned int *defaultThreshold_;  // Default ringdown threshold
     // Local variables for controller
-	unsigned int schemeCounter_; // Increments at last ringdown of a scheme
-	unsigned int incrCounter_;   // Increments on first ringdown of a scheme row with MSB of subscheme ID set
-	unsigned int schemeCountOnPrevIncr_; // Records schemeCounter_ on last increment of incrCounter_
+    unsigned int schemeCounter_; // Increments at last ringdown of a scheme
+    unsigned int incrCounter_;   // Increments on first ringdown of a scheme row with MSB of subscheme ID set
+    unsigned int schemeCountOnPrevIncr_; // Records schemeCounter_ on last increment of incrCounter_
 } SpectCntrlParams;
 
 extern RingdownParamsType nextRdParams;

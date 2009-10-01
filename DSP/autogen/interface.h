@@ -499,12 +499,18 @@ typedef enum {
 } VIRTUAL_LASER_Type;
 
 typedef enum {
-    DAS_STATUS_Laser1TemperatureLockedBit = 0, // Laser 1 Temperature Locked
-    DAS_STATUS_Laser2TemperatureLockedBit = 1, // Laser 2 Temperature Locked
-    DAS_STATUS_Laser3TemperatureLockedBit = 2, // Laser 3 Temperature Locked
-    DAS_STATUS_Laser4TemperatureLockedBit = 3, // Laser 4 Temperature Locked
-    DAS_STATUS_WarmBoxTemperatureLockedBit = 4, // Warm Box Temperature Locked
-    DAS_STATUS_CavityTemperatureLockedBit = 5 // Cavity Temperature Locked
+    DAS_STATUS_Laser1TempCntrlLockedBit = 0, // Laser 1 Temperature Locked
+    DAS_STATUS_Laser1TempCntrlActiveBit = 1, // Laser 1 Temperature Controller On
+    DAS_STATUS_Laser2TempCntrlLockedBit = 2, // Laser 2 Temperature Locked
+    DAS_STATUS_Laser2TempCntrlActiveBit = 3, // Laser 2 Temperature Controller On
+    DAS_STATUS_Laser3TempCntrlLockedBit = 4, // Laser 3 Temperature Locked
+    DAS_STATUS_Laser3TempCntrlActiveBit = 5, // Laser 3 Temperature Controller On
+    DAS_STATUS_Laser4TempCntrlLockedBit = 6, // Laser 4 Temperature Locked
+    DAS_STATUS_Laser4TempCntrlActiveBit = 7, // Laser 4 Temperature Controller On
+    DAS_STATUS_WarmBoxTempCntrlLockedBit = 8, // Warm Box Temperature Locked
+    DAS_STATUS_WarmBoxTempCntrlActiveBit = 9, // Warm Box Temperature Controller On
+    DAS_STATUS_CavityTempCntrlLockedBit = 10, // Cavity Temperature Locked
+    DAS_STATUS_CavityTempCntrlActiveBit = 11 // Cavity Temperature Controller On
 } DAS_STATUS_BitType;
 
 typedef enum {
@@ -554,14 +560,6 @@ typedef enum {
 #define SENTRY_Laser4CurrentMask (0x2000)
 #define SENTRY_CavityPressureMask (0x4000)
 #define SENTRY_AmbientPressureMask (0x8000)
-
-/* Definitions for DAS_STATUS_BITMASK */
-#define DAS_STATUS_Laser1TemperatureLockedMask ((1 << DAS_STATUS_Laser1TemperatureLockedBit))
-#define DAS_STATUS_Laser2TemperatureLockedMask ((1 << DAS_STATUS_Laser2TemperatureLockedBit))
-#define DAS_STATUS_Laser3TemperatureLockedMask ((1 << DAS_STATUS_Laser3TemperatureLockedBit))
-#define DAS_STATUS_Laser4TemperatureLockedMask ((1 << DAS_STATUS_Laser4TemperatureLockedBit))
-#define DAS_STATUS_WarmBoxTemperatureLockedMask ((1 << DAS_STATUS_WarmBoxTemperatureLockedBit))
-#define DAS_STATUS_CavityTemperatureLockedMask ((1 << DAS_STATUS_CavityTemperatureLockedBit))
 
 /* Register definitions */
 #define INTERFACE_NUMBER_OF_REGISTERS (359)

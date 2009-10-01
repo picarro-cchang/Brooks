@@ -15,9 +15,9 @@
  */
 #ifdef TESTING
 #else
-    #include <std.h>
-    #include <csl.h>
-    #include <csl_cache.h>
+#include <std.h>
+#include <csl.h>
+#include <csl_cache.h>
 #endif
 #include "interface.h"
 #include "fpga.h"

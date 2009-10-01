@@ -64,7 +64,7 @@ main(int argc, char *argv[])
     // Initialize ringdown fitting module
     rdFittingInit();
     // Initialize EDMA handling
-    edmaInit();    
+    edmaInit();
     // Clear DSPINT bit in HPIC
     HPI_setDspint(1);
     IRQ_resetAll();

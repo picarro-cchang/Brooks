@@ -636,21 +636,33 @@ VIRTUAL_LASER_TypeDict[7] = 'VIRTUAL_LASER_8' # Virtual laser 8
 
 # Enumerated definitions for DAS_STATUS_BitType
 DAS_STATUS_BitType = c_uint
-DAS_STATUS_Laser1TemperatureLockedBit = 0 # Laser 1 Temperature Locked
-DAS_STATUS_Laser2TemperatureLockedBit = 1 # Laser 2 Temperature Locked
-DAS_STATUS_Laser3TemperatureLockedBit = 2 # Laser 3 Temperature Locked
-DAS_STATUS_Laser4TemperatureLockedBit = 3 # Laser 4 Temperature Locked
-DAS_STATUS_WarmBoxTemperatureLockedBit = 4 # Warm Box Temperature Locked
-DAS_STATUS_CavityTemperatureLockedBit = 5 # Cavity Temperature Locked
+DAS_STATUS_Laser1TempCntrlLockedBit = 0 # Laser 1 Temperature Locked
+DAS_STATUS_Laser1TempCntrlActiveBit = 1 # Laser 1 Temperature Controller On
+DAS_STATUS_Laser2TempCntrlLockedBit = 2 # Laser 2 Temperature Locked
+DAS_STATUS_Laser2TempCntrlActiveBit = 3 # Laser 2 Temperature Controller On
+DAS_STATUS_Laser3TempCntrlLockedBit = 4 # Laser 3 Temperature Locked
+DAS_STATUS_Laser3TempCntrlActiveBit = 5 # Laser 3 Temperature Controller On
+DAS_STATUS_Laser4TempCntrlLockedBit = 6 # Laser 4 Temperature Locked
+DAS_STATUS_Laser4TempCntrlActiveBit = 7 # Laser 4 Temperature Controller On
+DAS_STATUS_WarmBoxTempCntrlLockedBit = 8 # Warm Box Temperature Locked
+DAS_STATUS_WarmBoxTempCntrlActiveBit = 9 # Warm Box Temperature Controller On
+DAS_STATUS_CavityTempCntrlLockedBit = 10 # Cavity Temperature Locked
+DAS_STATUS_CavityTempCntrlActiveBit = 11 # Cavity Temperature Controller On
 
 # Dictionary for enumerated constants in DAS_STATUS_BitType
 DAS_STATUS_BitTypeDict = {}
-DAS_STATUS_BitTypeDict[0] = 'DAS_STATUS_Laser1TemperatureLockedBit' # Laser 1 Temperature Locked
-DAS_STATUS_BitTypeDict[1] = 'DAS_STATUS_Laser2TemperatureLockedBit' # Laser 2 Temperature Locked
-DAS_STATUS_BitTypeDict[2] = 'DAS_STATUS_Laser3TemperatureLockedBit' # Laser 3 Temperature Locked
-DAS_STATUS_BitTypeDict[3] = 'DAS_STATUS_Laser4TemperatureLockedBit' # Laser 4 Temperature Locked
-DAS_STATUS_BitTypeDict[4] = 'DAS_STATUS_WarmBoxTemperatureLockedBit' # Warm Box Temperature Locked
-DAS_STATUS_BitTypeDict[5] = 'DAS_STATUS_CavityTemperatureLockedBit' # Cavity Temperature Locked
+DAS_STATUS_BitTypeDict[0] = 'DAS_STATUS_Laser1TempCntrlLockedBit' # Laser 1 Temperature Locked
+DAS_STATUS_BitTypeDict[1] = 'DAS_STATUS_Laser1TempCntrlActiveBit' # Laser 1 Temperature Controller On
+DAS_STATUS_BitTypeDict[2] = 'DAS_STATUS_Laser2TempCntrlLockedBit' # Laser 2 Temperature Locked
+DAS_STATUS_BitTypeDict[3] = 'DAS_STATUS_Laser2TempCntrlActiveBit' # Laser 2 Temperature Controller On
+DAS_STATUS_BitTypeDict[4] = 'DAS_STATUS_Laser3TempCntrlLockedBit' # Laser 3 Temperature Locked
+DAS_STATUS_BitTypeDict[5] = 'DAS_STATUS_Laser3TempCntrlActiveBit' # Laser 3 Temperature Controller On
+DAS_STATUS_BitTypeDict[6] = 'DAS_STATUS_Laser4TempCntrlLockedBit' # Laser 4 Temperature Locked
+DAS_STATUS_BitTypeDict[7] = 'DAS_STATUS_Laser4TempCntrlActiveBit' # Laser 4 Temperature Controller On
+DAS_STATUS_BitTypeDict[8] = 'DAS_STATUS_WarmBoxTempCntrlLockedBit' # Warm Box Temperature Locked
+DAS_STATUS_BitTypeDict[9] = 'DAS_STATUS_WarmBoxTempCntrlActiveBit' # Warm Box Temperature Controller On
+DAS_STATUS_BitTypeDict[10] = 'DAS_STATUS_CavityTempCntrlLockedBit' # Cavity Temperature Locked
+DAS_STATUS_BitTypeDict[11] = 'DAS_STATUS_CavityTempCntrlActiveBit' # Cavity Temperature Controller On
 
 # Enumerated definitions for TEC_CNTRL_Type
 TEC_CNTRL_Type = c_uint
@@ -709,14 +721,6 @@ SENTRY_Laser3CurrentMask = 0x1000
 SENTRY_Laser4CurrentMask = 0x2000
 SENTRY_CavityPressureMask = 0x4000
 SENTRY_AmbientPressureMask = 0x8000
-
-# Definitions for DAS_STATUS_BITMASK
-DAS_STATUS_Laser1TemperatureLockedMask = (1 << DAS_STATUS_Laser1TemperatureLockedBit)
-DAS_STATUS_Laser2TemperatureLockedMask = (1 << DAS_STATUS_Laser2TemperatureLockedBit)
-DAS_STATUS_Laser3TemperatureLockedMask = (1 << DAS_STATUS_Laser3TemperatureLockedBit)
-DAS_STATUS_Laser4TemperatureLockedMask = (1 << DAS_STATUS_Laser4TemperatureLockedBit)
-DAS_STATUS_WarmBoxTemperatureLockedMask = (1 << DAS_STATUS_WarmBoxTemperatureLockedBit)
-DAS_STATUS_CavityTemperatureLockedMask = (1 << DAS_STATUS_CavityTemperatureLockedBit)
 
 # Register definitions
 INTERFACE_NUMBER_OF_REGISTERS = 359

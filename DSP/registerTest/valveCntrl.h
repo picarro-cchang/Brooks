@@ -34,7 +34,7 @@ typedef struct VALVE_CNTRL
     float *outletMin_;                  // Minimum for outlet valve
     float *outletMax_;                  // Maximum for outlet valve
     float *outletMaxChange_;            // Maximum change for outlet valve
-    
+
     unsigned int *solenoidValves_;      // States of solenoid valves
 
     VALVE_CNTRL_THRESHOLD_StateType *threshState_;   // Threshold state
@@ -46,11 +46,11 @@ typedef struct VALVE_CNTRL
     unsigned int *solenoidMask_;        // Mask to apply to solenoid valves when triggered
     unsigned int *solenoidState_;       // Solenoid valve states when triggered
     int *sequenceStep_;                 // Sequence step
-    
+
     float deltaT;                       // Time between runs of valve controller
     float lastPressure;                 // Last cavity pressure
     float lastLossPpb;                  // Previous loss
-    unsigned int dwellCount;            // Count samples to time valve sequence    
+    unsigned int dwellCount;            // Count samples to time valve sequence
 } ValveCntrl;
 
 int valveCntrlInit(void);

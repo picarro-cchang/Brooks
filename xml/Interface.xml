@@ -443,12 +443,18 @@
         </enum>
         <enum type="DAS_STATUS_BitType">
             <description>DAS status bit position</description> 
-            <enum_value ident="DAS_STATUS_Laser1TemperatureLockedBit" value="0" caption="Laser 1 Temperature Locked" /> 
-            <enum_value ident="DAS_STATUS_Laser2TemperatureLockedBit" value="1" caption="Laser 2 Temperature Locked" /> 
-            <enum_value ident="DAS_STATUS_Laser3TemperatureLockedBit" value="2" caption="Laser 3 Temperature Locked" /> 
-            <enum_value ident="DAS_STATUS_Laser4TemperatureLockedBit" value="3" caption="Laser 4 Temperature Locked" /> 
-            <enum_value ident="DAS_STATUS_WarmBoxTemperatureLockedBit" value="4" caption="Warm Box Temperature Locked" /> 
-            <enum_value ident="DAS_STATUS_CavityTemperatureLockedBit" value="5" caption="Cavity Temperature Locked" /> 
+            <enum_value ident="DAS_STATUS_Laser1TempCntrlLockedBit" value="0" caption="Laser 1 Temperature Locked" /> 
+            <enum_value ident="DAS_STATUS_Laser1TempCntrlActiveBit" value="1" caption="Laser 1 Temperature Controller On" /> 
+            <enum_value ident="DAS_STATUS_Laser2TempCntrlLockedBit" value="2" caption="Laser 2 Temperature Locked" /> 
+            <enum_value ident="DAS_STATUS_Laser2TempCntrlActiveBit" value="3" caption="Laser 2 Temperature Controller On" /> 
+            <enum_value ident="DAS_STATUS_Laser3TempCntrlLockedBit" value="4" caption="Laser 3 Temperature Locked" /> 
+            <enum_value ident="DAS_STATUS_Laser3TempCntrlActiveBit" value="5" caption="Laser 3 Temperature Controller On" /> 
+            <enum_value ident="DAS_STATUS_Laser4TempCntrlLockedBit" value="6" caption="Laser 4 Temperature Locked" /> 
+            <enum_value ident="DAS_STATUS_Laser4TempCntrlActiveBit" value="7" caption="Laser 4 Temperature Controller On" /> 
+            <enum_value ident="DAS_STATUS_WarmBoxTempCntrlLockedBit" value="8" caption="Warm Box Temperature Locked" /> 
+            <enum_value ident="DAS_STATUS_WarmBoxTempCntrlActiveBit" value="9" caption="Warm Box Temperature Controller On" /> 
+            <enum_value ident="DAS_STATUS_CavityTempCntrlLockedBit" value="10" caption="Cavity Temperature Locked" /> 
+            <enum_value ident="DAS_STATUS_CavityTempCntrlActiveBit" value="11" caption="Cavity Temperature Controller On" /> 
         </enum>
         <enum type="TEC_CNTRL_Type">
             <description>Warm box and hot box TEC control</description> 
@@ -499,14 +505,6 @@
             <mask  ident="SENTRY_Laser4CurrentMask">0x2000</mask>
             <mask  ident="SENTRY_CavityPressureMask">0x4000</mask>
             <mask  ident="SENTRY_AmbientPressureMask">0x8000</mask>
-        </bits>
-        <bits ident="DAS_STATUS_BITMASK">
-            <mask  ident="DAS_STATUS_Laser1TemperatureLockedMask">(1 &lt;&lt; DAS_STATUS_Laser1TemperatureLockedBit)</mask>
-            <mask  ident="DAS_STATUS_Laser2TemperatureLockedMask">(1 &lt;&lt; DAS_STATUS_Laser2TemperatureLockedBit)</mask>
-            <mask  ident="DAS_STATUS_Laser3TemperatureLockedMask">(1 &lt;&lt; DAS_STATUS_Laser3TemperatureLockedBit)</mask>
-            <mask  ident="DAS_STATUS_Laser4TemperatureLockedMask">(1 &lt;&lt; DAS_STATUS_Laser4TemperatureLockedBit)</mask>
-            <mask  ident="DAS_STATUS_WarmBoxTemperatureLockedMask">(1 &lt;&lt; DAS_STATUS_WarmBoxTemperatureLockedBit)</mask>
-            <mask  ident="DAS_STATUS_CavityTemperatureLockedMask">(1 &lt;&lt; DAS_STATUS_CavityTemperatureLockedBit)</mask>
         </bits>
     </bits_list>
     <register_list>
