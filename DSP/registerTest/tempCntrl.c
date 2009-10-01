@@ -144,7 +144,7 @@ int tempCntrlStep(TempCntrl *t)
         else
         {
             if (inRange) lockCount++;
-            else lockCount = FALSE;
+            else lockCount = 0;
             if (lockCount > TEMP_CNTRL_LOCK_COUNT) setDasStatusBit(lockBit);
         }
         tec = pidState->a;

@@ -162,7 +162,7 @@ unsigned int getDasStatusBit(unsigned int bitNum)
 {
     unsigned int dasStatus = *(unsigned int*)(registerAddr(DAS_STATUS_REGISTER));
     unsigned int mask = 1<<bitNum;
-    return (0 != dasStatus&mask);
+    return (0 != (dasStatus&mask));
 }
 
 void setDasStatusBit(unsigned int bitNum)

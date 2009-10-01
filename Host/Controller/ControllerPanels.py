@@ -596,9 +596,24 @@ class CommandLogPanel(CommandLogPanelGui):
             Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_RunningState)
         elif currentLabel in [CommandLogPanel.acqLabels["clear"],CommandLogPanel.acqLabels["stop"]]:
             Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
+
     def updateLoopStatus(self):
         # Update the controller loop status check indicators
-        pass
+        def make3State(status,activeBit,lockedBit):
+            result = wx.CHK_UNCHECKED
+            if status & (1<<activeBit):
+                if status & (1<<lockedBit):
+                    result = wx.CHK_CHECKED
+                else:
+                    result = wx.CHK_UNDETERMINED
+            return result
+        status = Driver.rdDasReg(interface.DAS_STATUS_REGISTER)
+        self.laser1State.Set3StateValue(make3State(status,interface.DAS_STATUS_Laser1TempCntrlActiveBit,interface.DAS_STATUS_Laser1TempCntrlLockedBit))
+        self.laser2State.Set3StateValue(make3State(status,interface.DAS_STATUS_Laser2TempCntrlActiveBit,interface.DAS_STATUS_Laser2TempCntrlLockedBit))
+        self.laser3State.Set3StateValue(make3State(status,interface.DAS_STATUS_Laser3TempCntrlActiveBit,interface.DAS_STATUS_Laser3TempCntrlLockedBit))
+        self.laser4State.Set3StateValue(make3State(status,interface.DAS_STATUS_Laser4TempCntrlActiveBit,interface.DAS_STATUS_Laser4TempCntrlLockedBit))
+        self.warmBoxState.Set3StateValue(make3State(status,interface.DAS_STATUS_WarmBoxTempCntrlActiveBit,interface.DAS_STATUS_WarmBoxTempCntrlLockedBit))
+        self.hotBoxState.Set3StateValue(make3State(status,interface.DAS_STATUS_CavityTempCntrlActiveBit,interface.DAS_STATUS_CavityTempCntrlLockedBit))
     def updateAcquisitionState(self):
         # Update the acquisition button label and the associated text control
         state = Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER)
