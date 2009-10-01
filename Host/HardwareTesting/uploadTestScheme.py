@@ -1,6 +1,7 @@
 from Host.Common import CmdFIFO, SharedTypes
 from Host.autogen import interface
 from numpy import *
+import itertools
 
 if __name__ == "__main__":
     serverURI = "http://localhost:%d" % (SharedTypes.RPC_PORT_DRIVER,)
@@ -18,21 +19,21 @@ if __name__ == "__main__":
     thList = linspace(-3*pi/4,-pi/4,321)
     dwell = 3*ones(thList.shape)
     subschemeId = zeros(thList.shape)
-    laserUsed = 4*ones(thList.shape)
+    virtualLaser = 4*ones(thList.shape)
     threshold = zeros(thList.shape)
     pztSetpoint = zeros(thList.shape)
     laserTemp = 24.0*ones(thList.shape)
     repeats = 2
-    driver.wrScheme(0,repeats,zip(thList,dwell,subschemeId,laserUsed,threshold,pztSetpoint,laserTemp))
+    driver.wrScheme(0,repeats,zip(thList,dwell,subschemeId,virtualLaser,threshold,pztSetpoint,laserTemp))
 
     thList = linspace(-pi/2,-pi/2,81)
     dwell = 10*ones(thList.shape)
     subschemeId = zeros(thList.shape)
-    laserUsed = 4*ones(thList.shape)
+    virtualLaser = 4*ones(thList.shape)
     threshold = zeros(thList.shape)
     pztSetpoint = zeros(thList.shape)
     laserTemp = 24.0*ones(thList.shape)
     repeats = 1
-    driver.wrScheme(3,repeats,zip(thList,dwell,subschemeId,laserUsed,threshold,pztSetpoint,laserTemp))
+    driver.wrScheme(3,repeats,zip(thList,dwell,subschemeId,virtualLaser,threshold,pztSetpoint,laserTemp))
 
     driver.wrSchemeSequence([0,3,0,3],0)

@@ -92,6 +92,8 @@ int spectCntrlStep(void)
 				schemeSequence->currentIndex =  0;
 				*(s->active_) = schemeSequence->schemeIndices[schemeSequence->currentIndex];
 			}
+			// Starting acquisition always goes to the scheme specified by "next"
+			else *(s->active_) = *(s->next_);
 		}	
 	}
 	else if (SPECT_CNTRL_RunningState == *(s->state_)) {
@@ -107,6 +109,8 @@ int spectCntrlStep(void)
 				SEM_postBinary(&SEM_startRdCycle);
 		}
 	}
+	else switchToRampMode();
+		
 	prevState = stateAtStart;
 	
 	return STATUS_OK;

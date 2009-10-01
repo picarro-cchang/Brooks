@@ -31,6 +31,7 @@ ACCESS_PICARRO_ONLY = 100
 #RPC_PORT... are the port numbers used by CmdFIFO XML-RPC servers
 RPC_PORT_LOGGER             = 50000
 RPC_PORT_DRIVER             = 50010
+RPC_PORT_FREQ_CONVERTER     = 50015
 RPC_PORT_FILER              = 50020
 RPC_PORT_SUPERVISOR         = 50030
 RPC_PORT_SUPERVISOR_BACKUP  = 50031
@@ -207,10 +208,10 @@ class Scheme(object):
         sp = file(self.fileName,"r")
         self.nrepeat = int(getNextNonNullLine(sp).split()[0])
         self.numEntries = int(getNextNonNullLine(sp).split()[0])
-        self.waveNumber = []
+        self.setpoint = []
         self.dwell = []
-        self.id = []
-        self.laserSelect = []
+        self.subschemeId = []
+        self.virtualLaser = []
         self.threshold = []
         self.pztSetpoint = []
         self.laserTemp = []
@@ -220,13 +221,19 @@ class Scheme(object):
             self.setpoint.append(float(toks[0]))
             self.dwell.append(int(toks[1]))
             self.subschemeId.append(int(toks[2]))
-            self.laserUsed.append(int(toks[3]))
-            self.threshold.append(int(toks[4]))
-            self.pztSetpoint.append(int(toks[5]))
-            self.laserTemp.append(int(toks[6]))
+            self.virtualLaser.append(int(toks[3]))
+            self.threshold.append(float(toks[4]))
+            self.pztSetpoint.append(float(toks[5]))
+            self.laserTemp.append(float(toks[6]))
             if (i & 0xF) == 0: time.sleep(0) # Processor yield
         sp.close()
-
+        
+    def repack(self):
+        # Generate a tuple (repeats,zip(setpoint,dwell,subschemeId,virtualLaser,threshold,pztSetpoint,laserTemp))
+        #  from the scheme, which is appropriate for sending it to the DAS
+        return (self.nrepeat,zip(self.setpoint,self.dwell,self.subschemeId,self.virtualLaser,self.threshold,
+                                 self.pztSetpoint,self.laserTemp))
+        
 ##Misc stuff...
 
 if __debug__:

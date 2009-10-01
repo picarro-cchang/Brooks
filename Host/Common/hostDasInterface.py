@@ -107,11 +107,21 @@ class DasInterface(Singleton):
     def loadUsbIfCode(self,usbCodeFilename):
         """Downloads file to USB Cypress FX2 chip,
         if not already downloaded"""
-        analyzerUsb = AnalyzerUsb(usbdefs.INITIAL_VID,usbdefs.INITIAL_PID)
-        try: # connecting to a blank FX2 chip
+        analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
+        try: # connecting to a programmed Picarro instrument
             analyzerUsb.connect()
-        except: # Assume code has already been loaded
+            analyzerUsb.disconnect()
             return
+        except:
+            try: # connecting to an unprogrammed Picarro instrument
+                analyzerUsb = AnalyzerUsb(usbdefs.INITIAL_VID,usbdefs.INITIAL_PID)
+                analyzerUsb.connect()
+            except:
+                try: # connecting to a blank Cypress FX2
+                    analyzerUsb = AnalyzerUsb(usbdefs.CYPRESS_FX2_VID,usbdefs.CYPRESS_FX2_PID)
+                    analyzerUsb.connect()
+                except:
+                    raise "Cannot connect to USB"
         logging.info("Downloading USB code to Picarro USB device")
         analyzerUsb.loadHexFile(file(usbCodeFilename,"r"))
         analyzerUsb.disconnect()

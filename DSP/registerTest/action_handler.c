@@ -561,12 +561,23 @@ int r_read_laser_thermistor_resistance(unsigned int numInt,void *params,void *en
 }
 
 int r_read_laser_current(unsigned int numInt,void *params,void *env)
+/*
+    Reads laser current monitor of specified laser
+    Input:
+        laserNum (int)  :  Laser number to read (1-origin)
+        Register (float): Register containing conversion slope
+        Register (float): Register containing conversion offset
+    Output:
+        Register (float):  Register to receive current reading
+*/
 {
     unsigned int *reg = (unsigned int *) params;
-    float result;
-    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    result = read_laser_current_adc(reg[0]);
-    WRITE_REG(reg[1],asFloat,result);
+    float slope, offset, result;
+    if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[1],asFloat,slope);
+    READ_REG(reg[2],asFloat,offset);
+    result = read_laser_current_adc(reg[0])*slope + offset;
+    WRITE_REG(reg[3],asFloat,result);
     return STATUS_OK;
 }
 

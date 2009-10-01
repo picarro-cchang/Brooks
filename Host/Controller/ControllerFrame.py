@@ -26,6 +26,7 @@ from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes
 from configobj import ConfigObj
+from Sequencer import Sequencer
 
 # For convenience in calling driver functions
 Driver = DriverProxy().rpc
@@ -55,6 +56,7 @@ class ControllerFrame(ControllerFrameGui):
         self.sensorListener = SensorListener()
         self.ringdownListener = RingdownListener()
         self.rpcHandler = ControllerRpcHandler()
+        Sequencer(ConfigObj(Driver.getConfigFile()))
         self.Bind(wx.EVT_IDLE, self.onIdle)
         panels["Laser1"]=self.laser1Panel
         panels["Laser2"]=self.laser2Panel
@@ -206,6 +208,8 @@ class ControllerFrame(ControllerFrameGui):
                 self.commandLogPanel.addMessage(msg)
             else:
                 break
+        # Run the sequencer FSM
+        Sequencer().runFsm()
         # Deal with Controller RPC calls within GUI idle loop
         try:
             daemon = self.rpcHandler.server.daemon
@@ -220,43 +224,7 @@ class ControllerFrame(ControllerFrameGui):
 
     def onWriteIni(self, event):
         Driver.writeIniFile()
-
-
-class Sequencer(object):
-    "Supervises running of a sequence of schemes, using a block of four scheme table entries"
-    IDLE = 0
-    STARTUP = 1
-    SEND_SCHEME = 2
-    WAIT_UNTIL_ACTIVE = 3
-    WAIT_FOR_SCHEME_DONE = 4
-    def __init__(self,config):
-        self.state = Sequencer.IDLE
-        self.sequence = 1
-        self.scheme = 1
-        self.repeat = 1
-        self.sequences = []
-        self.getSequences(config)
-        print self.sequences
-
-    def getSequences(self,config):
-        index = 1
-        section = "SEQUENCE%02d" % (index,)
-        try:
-            while section in config:
-                cs = config[section]
-                nSchemes = int(cs["NSCHEMES"])
-                schemes = []
-                for i in range(nSchemes):
-                    schemeFileName = cs["SCHEME%02d" % (i+1,)]
-                    repetitions = int(cs["REPEAT%02d" % (i+1,)])
-                    schemes.append((Scheme(schemeFileName),repetitions))
-                self.sequences.append(schemes)
-                index += 1
-                section = "SEQUENCE%02d" % (index,)
-            Log("Sequences read: %d" % len(self.sequences))
-        except Exception,e:
-            LogExc("Error in sequencer ini file")
-
+            
 # Report GUI exceptions in EventManager
 def excepthook(type,value,trace):
     exc = traceback.format_exception(type,value,trace)

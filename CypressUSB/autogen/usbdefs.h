@@ -1,4 +1,6 @@
 #define USB_VERSION (1001)
+#define CYPRESS_FX2_VID (0x4B4)
+#define CYPRESS_FX2_PID (0x8613)
 #define INITIAL_VID (0x3EF)
 #define INITIAL_PID (0x1000)
 #define INSTRUMENT_VID (0x3EF)

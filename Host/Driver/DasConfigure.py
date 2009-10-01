@@ -66,11 +66,14 @@ class DasConfigure(object):
         self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SCHEDULER_HEARTBEAT"))
 
         for laserNum in range(1,5):
-            if int(self.instrConfig["CONFIGURATION"].get("LASER%d_PRESENT" % laserNum,0)):
-                # Temperature reading
-                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
-                    Operation("ACTION_READ_LASER_THERMISTOR_RESISTANCE",
-                              [laserNum,"LASER%d_RESISTANCE_REGISTER" % laserNum]))
+            present = int(self.instrConfig["CONFIGURATION"].get("LASER%d_PRESENT" % laserNum,0))
+            if present:
+                # Set present to a negative number to disable I2C reads
+                if present > 0:
+                    # Temperature reading
+                    self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_READ_LASER_THERMISTOR_RESISTANCE",
+                                  [laserNum,"LASER%d_RESISTANCE_REGISTER" % laserNum]))
                 self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
                     Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                         ["LASER%d_RESISTANCE_REGISTER" % laserNum,
@@ -93,6 +96,13 @@ class DasConfigure(object):
                 # Laser current
                 self.opGroups["FAST"]["CONTROLLER"].addOperation(
                     Operation("ACTION_CURRENT_CNTRL_LASER%d_STEP" % laserNum))
+                if present > 0:
+                    self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_READ_LASER_CURRENT",
+                                  [laserNum,
+                                   "CONVERSION_LASER%d_CURRENT_SLOPE_REGISTER" % laserNum,
+                                   "CONVERSION_LASER%d_CURRENT_OFFSET_REGISTER" % laserNum,
+                                   "LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
                 self.opGroups["FAST"]["STREAMER"].addOperation(
                     Operation("ACTION_STREAM_REGISTER",
                         ["STREAM_Laser%dCurrent" % laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
@@ -263,10 +273,14 @@ class DasConfigure(object):
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
 
         #sender.doOperation(Operation("ACTION_MODIFY_VALVE_PUMP_TEC",[0x80,0x80])) # Turn on warm box and hot box TEC
-        #sender.wrRegFloat("LASER1_RESISTANCE_REGISTER",10000.0)
-        #sender.wrRegFloat("LASER2_RESISTANCE_REGISTER",9000.0)
-        #sender.wrRegFloat("LASER3_RESISTANCE_REGISTER",8000.0)
-        #sender.wrRegFloat("LASER4_RESISTANCE_REGISTER",7000.0)
+        sender.wrRegFloat("LASER1_RESISTANCE_REGISTER",10000.0)
+        sender.wrRegFloat("LASER2_RESISTANCE_REGISTER",9000.0)
+        sender.wrRegFloat("LASER3_RESISTANCE_REGISTER",8000.0)
+        sender.wrRegFloat("LASER4_RESISTANCE_REGISTER",7000.0)
+        sender.wrRegFloat("LASER1_CURRENT_MONITOR_REGISTER",110.0)
+        sender.wrRegFloat("LASER2_CURRENT_MONITOR_REGISTER",120.0)
+        sender.wrRegFloat("LASER3_CURRENT_MONITOR_REGISTER",130.0)
+        sender.wrRegFloat("LASER4_CURRENT_MONITOR_REGISTER",140.0)
 
         sender.wrRegFloat("ETALON_RESISTANCE_REGISTER",6000.0)
         sender.wrRegFloat("WARM_BOX_RESISTANCE_REGISTER",5900.0)

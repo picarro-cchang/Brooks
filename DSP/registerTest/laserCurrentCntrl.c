@@ -25,9 +25,6 @@
 #define state             (*(c->state_))
 #define manualCoarse      (*(c->manual_coarse_))
 #define manualFine        (*(c->manual_fine_))
-#define monitor           (*(c->monitor_))
-#define monSlope          (*(c->monSlope_))
-#define monOffset         (*(c->monOffset_))
 #define swpMin            (*(c->swpMin_))
 #define swpMax            (*(c->swpMax_))
 #define swpInc            (*(c->swpInc_))
@@ -105,7 +102,6 @@ int laserCurrentCntrlStep(LaserCurrentCntrl *c)
     }
     writeFPGA(c->fpga_coarse,(unsigned short)coarse);
     writeFPGA(c->fpga_fine,  (unsigned short)fine);
-    monitor = monSlope*read_laser_current_adc(c->laserNum) + monOffset;
     return STATUS_OK;
 }
 
@@ -132,9 +128,6 @@ int currentCntrlLaser1Init(void)
     c->swpMin_ = (float *)registerAddr(LASER1_CURRENT_SWEEP_MIN_REGISTER);
     c->swpMax_ = (float *)registerAddr(LASER1_CURRENT_SWEEP_MAX_REGISTER);
     c->swpInc_ = (float *)registerAddr(LASER1_CURRENT_SWEEP_INCR_REGISTER);
-    c->monitor_ = (float *)registerAddr(LASER1_CURRENT_MONITOR_REGISTER);
-    c->monSlope_ = (float *)registerAddr(CONVERSION_LASER1_CURRENT_SLOPE_REGISTER);
-    c->monOffset_ = (float *)registerAddr(CONVERSION_LASER1_CURRENT_SLOPE_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
@@ -159,9 +152,6 @@ int currentCntrlLaser2Init(void)
     c->swpMin_ = (float *)registerAddr(LASER2_CURRENT_SWEEP_MIN_REGISTER);
     c->swpMax_ = (float *)registerAddr(LASER2_CURRENT_SWEEP_MAX_REGISTER);
     c->swpInc_ = (float *)registerAddr(LASER2_CURRENT_SWEEP_INCR_REGISTER);
-    c->monitor_ = (float *)registerAddr(LASER2_CURRENT_MONITOR_REGISTER);
-    c->monSlope_ = (float *)registerAddr(CONVERSION_LASER2_CURRENT_SLOPE_REGISTER);
-    c->monOffset_ = (float *)registerAddr(CONVERSION_LASER2_CURRENT_SLOPE_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
@@ -186,9 +176,6 @@ int currentCntrlLaser3Init(void)
     c->swpMin_ = (float *)registerAddr(LASER3_CURRENT_SWEEP_MIN_REGISTER);
     c->swpMax_ = (float *)registerAddr(LASER3_CURRENT_SWEEP_MAX_REGISTER);
     c->swpInc_ = (float *)registerAddr(LASER3_CURRENT_SWEEP_INCR_REGISTER);
-    c->monitor_ = (float *)registerAddr(LASER3_CURRENT_MONITOR_REGISTER);
-    c->monSlope_ = (float *)registerAddr(CONVERSION_LASER3_CURRENT_SLOPE_REGISTER);
-    c->monOffset_ = (float *)registerAddr(CONVERSION_LASER3_CURRENT_SLOPE_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
@@ -213,9 +200,6 @@ int currentCntrlLaser4Init(void)
     c->swpMin_ = (float *)registerAddr(LASER4_CURRENT_SWEEP_MIN_REGISTER);
     c->swpMax_ = (float *)registerAddr(LASER4_CURRENT_SWEEP_MAX_REGISTER);
     c->swpInc_ = (float *)registerAddr(LASER4_CURRENT_SWEEP_INCR_REGISTER);
-    c->monitor_ = (float *)registerAddr(LASER4_CURRENT_MONITOR_REGISTER);
-    c->monSlope_ = (float *)registerAddr(CONVERSION_LASER4_CURRENT_SLOPE_REGISTER);
-    c->monOffset_ = (float *)registerAddr(CONVERSION_LASER4_CURRENT_SLOPE_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;

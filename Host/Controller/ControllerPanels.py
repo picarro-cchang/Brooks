@@ -30,6 +30,8 @@ from ControllerModels import DriverProxy, ControllerRpcHandler, waveforms, dasIn
 from ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui, PressurePanelGui
 from ControllerPanelsGui import WarmBoxPanelGui, HotBoxPanelGui, RingdownPanelGui
 from ControllerPanelsGui import WlmPanelGui, StatsPanelGui
+from Sequencer import Sequencer
+
 from Host.autogen import interface
 from Host.Common.Allan import AllanVar
 from Host.Common.RdStats import RdStats
@@ -573,7 +575,23 @@ class CommandLogPanel(CommandLogPanelGui):
     def onStartAcquisition(self,event):
         currentLabel = self.startAcquisitionButton.GetLabel()
         if currentLabel == CommandLogPanel.acqLabels["start"]:
-            Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
+            seqNum = self.seqTextCtrl.GetLabel().strip()
+            if seqNum:
+                sequencer = Sequencer()
+                try:
+                    seqNum = int(seqNum)
+                except:
+                    Log("Unrecognized sequence number",Level=2)
+                    return
+                numSequences = sequencer.numSequences()
+                if seqNum>0 and seqNum<=numSequences:
+                    sequencer.sequence = seqNum
+                    sequencer.state = Sequencer.STARTUP
+                else:
+                    Log("Invalid sequence number (not in range 1 to %d)" % numSequences,Level=2)
+                    return
+            else:
+                Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
         elif currentLabel == CommandLogPanel.acqLabels["resume"]:
             Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_RunningState)
         elif currentLabel in [CommandLogPanel.acqLabels["clear"],CommandLogPanel.acqLabels["stop"]]:

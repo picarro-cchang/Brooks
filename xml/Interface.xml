@@ -13,6 +13,8 @@
     <interface_version>1</interface_version>
     <usb_constants>
         <constant ident="USB_VERSION">1001</constant>
+        <constant ident="CYPRESS_FX2_VID">0x4B4</constant>
+        <constant ident="CYPRESS_FX2_PID">0x8613</constant>
         <constant ident="INITIAL_VID">0x3EF</constant>
         <constant ident="INITIAL_PID">0x1000</constant>
         <constant ident="INSTRUMENT_VID">0x3EF</constant>
@@ -122,6 +124,32 @@
         <struct type="RingdownEntryType">
             <field ident="timestamp" type="long long"/>
             <field ident="wlmAngle" type="float"/>
+            <field ident="uncorrectedAbsorbance" type="float"/>
+            <field ident="correctedAbsorbance" type="float"/>
+            <field ident="status" type="uint16"/>
+            <field ident="count" type="uint16"/>
+            <field ident="tunerValue" type="uint16"/>
+            <field ident="pztValue" type="uint16"/>
+            <field ident="lockerOffset" type="uint16"/>
+            <field ident="laserUsed" type="uint16"/>
+            <field ident="ringdownThreshold" type="uint16"/>
+            <field ident="subschemeId" type="uint16"/>
+            <field ident="schemeTable" type="uint16"/>
+            <field ident="schemeRow" type="uint16"/>
+            <field ident="ratio1" type="uint16"/>
+            <field ident="ratio2" type="uint16"/>
+            <field ident="fineLaserCurrent" type="uint16"/>
+            <field ident="coarseLaserCurrent" type="uint16"/>
+            <field ident="laserTemperature" type="float"/>
+            <field ident="etalonTemperature" type="float"/>
+            <field ident="cavityPressure" type="uint16"/>
+            <field ident="ambientPressure" type="uint16"/>
+            <field ident="lockerError" type="uint16"/>
+            <field ident="padToCacheLine" type="uint16" size="1"/>
+        </struct>
+        <struct type="ProcessedRingdownEntryType">
+            <field ident="timestamp" type="long long"/>
+            <field ident="frequency" type="uint32"/>
             <field ident="uncorrectedAbsorbance" type="float"/>
             <field ident="correctedAbsorbance" type="float"/>
             <field ident="status" type="uint16"/>
