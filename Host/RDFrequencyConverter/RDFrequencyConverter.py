@@ -26,8 +26,7 @@ from Host.autogen import interface
 from Host.Common import Autocal1
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Host.Common import SharedTypes
-from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS, RPC_PORT_DRIVER
+from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS, RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER
 from Host.Common.SharedTypes import Scheme
 from Host.Common import Listener, Broadcaster
 from Host.Common import CmdFIFO, StringPickler
@@ -63,7 +62,7 @@ class RDFrequencyConverter(object):
         self.rdProcessedCache = []
         self.rpcThread = None
         self._shutdownRequested = False
-        self.rpcServer = CmdFIFO.CmdFIFOServer(("", SharedTypes.RPC_PORT_FREQ_CONVERTER),
+        self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_FREQ_CONVERTER),
                                                 ServerName = "FrequencyConverter",
                                                 ServerDescription = "Frequency Converter for CRDS hardware",
                                                 threaded = True)
