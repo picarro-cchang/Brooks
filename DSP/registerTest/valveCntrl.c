@@ -62,59 +62,60 @@ void proportionalValveStep()
 {
     ValveCntrl *v = &valveCntrl;
     float delta, dError, dpdt, dpdtSet, error, valveValue;
-    
-    if (v->lastPressure > INVALID_PRESSURE_VALUE) 
+
+    if (v->lastPressure > INVALID_PRESSURE_VALUE)
         dpdt = (cavityPressure-v->lastPressure)/v->deltaT;
     else
         dpdt = 0;
     error = setpoint - cavityPressure;
     v->lastPressure = cavityPressure;
 
-    switch (state) {
-        case VALVE_CNTRL_DisabledState:
-            inlet = 0;
-            outlet = 0;
-            break;
-        case VALVE_CNTRL_ManualControlState:
-            break;
-        case VALVE_CNTRL_OutletControlState:
-            // Gain2 sets how the pressure rate setpoint depends on the pressure error
-            dpdtSet = outletGain2 * error;
-            // Limit rate setpoint to maximum allowed rate of change
-            if (dpdtSet < -dpdtMax) dpdtSet = -dpdtMax;
-            else if (dpdtSet > dpdtMax) dpdtSet = dpdtMax;
-            // Following implements an integral controller for the rate of change of pressure
-            // Gain1 sets the integral gain
-            dError = dpdtSet - dpdt;
-            delta = -outletGain1 * dError;  // -ve because opening outlet decreases pressure
-            // Limit change of valve value
-            if (delta < -outletMaxChange) delta = -outletMaxChange;
-            else if (delta > outletMaxChange) delta = outletMaxChange;
-            valveValue = outlet + delta;
-            // Limit absolute valve value
-            if (valveValue < outletMin) valveValue = outletMin;
-            else if (valveValue > outletMax) valveValue = outletMax;
-            outlet = valveValue;
-            break;
-        case VALVE_CNTRL_InletControlState:
-            // Gain2 sets how the pressure rate setpoint depends on the pressure error
-            dpdtSet = inletGain2 * error;
-            // Limit rate setpoint to maximum allowed rate of change
-            if (dpdtSet < -dpdtMax) dpdtSet = -dpdtMax;
-            else if (dpdtSet > dpdtMax) dpdtSet = dpdtMax;
-            // Following implements an integral controller for the rate of change of pressure
-            // Gain1 sets the integral gain
-            dError = dpdtSet - dpdt;
-            delta = inletGain1 * dError;   // +ve because opening inlet increases pressure
-            // Limit change of valve value
-            if (delta < -inletMaxChange) delta = -inletMaxChange;
-            if (delta > inletMaxChange) delta = inletMaxChange;
-            valveValue = inlet + delta;
-            // Limit absolute valve value
-            if (valveValue < inletMin) valveValue = inletMin;
-            if (valveValue > inletMax) valveValue = inletMax;
-            inlet = valveValue;
-            break;
+    switch (state)
+    {
+    case VALVE_CNTRL_DisabledState:
+        inlet = 0;
+        outlet = 0;
+        break;
+    case VALVE_CNTRL_ManualControlState:
+        break;
+    case VALVE_CNTRL_OutletControlState:
+        // Gain2 sets how the pressure rate setpoint depends on the pressure error
+        dpdtSet = outletGain2 * error;
+        // Limit rate setpoint to maximum allowed rate of change
+        if (dpdtSet < -dpdtMax) dpdtSet = -dpdtMax;
+        else if (dpdtSet > dpdtMax) dpdtSet = dpdtMax;
+        // Following implements an integral controller for the rate of change of pressure
+        // Gain1 sets the integral gain
+        dError = dpdtSet - dpdt;
+        delta = -outletGain1 * dError;  // -ve because opening outlet decreases pressure
+        // Limit change of valve value
+        if (delta < -outletMaxChange) delta = -outletMaxChange;
+        else if (delta > outletMaxChange) delta = outletMaxChange;
+        valveValue = outlet + delta;
+        // Limit absolute valve value
+        if (valveValue < outletMin) valveValue = outletMin;
+        else if (valveValue > outletMax) valveValue = outletMax;
+        outlet = valveValue;
+        break;
+    case VALVE_CNTRL_InletControlState:
+        // Gain2 sets how the pressure rate setpoint depends on the pressure error
+        dpdtSet = inletGain2 * error;
+        // Limit rate setpoint to maximum allowed rate of change
+        if (dpdtSet < -dpdtMax) dpdtSet = -dpdtMax;
+        else if (dpdtSet > dpdtMax) dpdtSet = dpdtMax;
+        // Following implements an integral controller for the rate of change of pressure
+        // Gain1 sets the integral gain
+        dError = dpdtSet - dpdt;
+        delta = inletGain1 * dError;   // +ve because opening inlet increases pressure
+        // Limit change of valve value
+        if (delta < -inletMaxChange) delta = -inletMaxChange;
+        if (delta > inletMaxChange) delta = inletMaxChange;
+        valveValue = inlet + delta;
+        // Limit absolute valve value
+        if (valveValue < inletMin) valveValue = inletMin;
+        if (valveValue > inletMax) valveValue = inletMax;
+        inlet = valveValue;
+        break;
     }
 }
 
@@ -127,24 +128,34 @@ void thresholdTriggerStep()
     // Variables for median filter of last five losses
     static float last5[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
     float t0, t1, t2, t3, t4, lossPpb, lossRate;
-    
+
     lossPpb = 1000.0*latestLoss;
     // Calculate rolling median of last five loss points
-    t0 = last5[0]; t1 = last5[1]; t2 = last5[2]; t3 = last5[3]; t4 = last5[4];
-    SORT(t0,t1); SORT(t3,t4); SORT(t0,t3);
-    SORT(t1,t4); SORT(t1,t2); SORT(t2,t3);
+    t0 = last5[0];
+    t1 = last5[1];
+    t2 = last5[2];
+    t3 = last5[3];
+    t4 = last5[4];
+    SORT(t0,t1);
+    SORT(t3,t4);
+    SORT(t0,t3);
+    SORT(t1,t4);
+    SORT(t1,t2);
+    SORT(t2,t3);
     SORT(t1,t2);
     lossPpb = t2;
-    
+
     // Calculate rate of change of loss
     lossRate = (lossPpb - v->lastLossPpb)/v->deltaT;
     v->lastLossPpb = lossPpb;
-    
-    if (threshState == VALVE_CNTRL_THRESHOLD_ArmedState) {
-        // When armed, check if loss is above rising loss threshold and if 
+
+    if (threshState == VALVE_CNTRL_THRESHOLD_ArmedState)
+    {
+        // When armed, check if loss is above rising loss threshold and if
         //  rate is below rising loss rate threshold. If both hold, the system
         //  enters the triggered state.
-        if (lossPpb >= lossThreshold && lossRate <= rateThreshold) {
+        if (lossPpb >= lossThreshold && lossRate <= rateThreshold)
+        {
             state = VALVE_CNTRL_ManualControlState;
             if (outletTriggeredValue >= 0) outlet = outletTriggeredValue;
             if (inletTriggeredValue >= 0)  inlet = inletTriggeredValue;
@@ -159,18 +170,23 @@ void thresholdTriggerStep()
 void valveSequencerStep()
 {
     ValveCntrl *v = &valveCntrl;
-    if (sequenceStep >= 0) { // Valve sequencing is enabled
-        if (sequenceStep < NUM_VALVE_SEQUENCE_ENTRIES) {
+    if (sequenceStep >= 0)   // Valve sequencing is enabled
+    {
+        if (sequenceStep < NUM_VALVE_SEQUENCE_ENTRIES)
+        {
             unsigned short maskAndValue = valveSequence[sequenceStep].maskAndValue;
             unsigned short dwell = valveSequence[sequenceStep].dwell;
-            // Zero maskAndValue means that we should stay at the present step      
-            if (maskAndValue != 0) {
+            // Zero maskAndValue means that we should stay at the present step
+            if (maskAndValue != 0)
+            {
                 unsigned int value = maskAndValue & 0xFF;
                 maskAndValue >>= 8;
-                if (v->dwellCount == 0) {     // Update the solenoid valves
+                if (v->dwellCount == 0)       // Update the solenoid valves
+                {
                     solenoidValves = (solenoidValves & ~maskAndValue) | value;
                 }
-                if (v->dwellCount >= dwell) { // Move to the next step in the sequence
+                if (v->dwellCount >= dwell)   // Move to the next step in the sequence
+                {
                     sequenceStep += 1;
                     v->dwellCount = 0;
                 }
@@ -189,7 +205,7 @@ int valveCntrlStep()
     thresholdTriggerStep();
     valveSequencerStep();
     modify_valve_pump_tec(0x3F,solenoidValves);
-    return STATUS_OK;   
+    return STATUS_OK;
 }
 
 int valveCntrlInit(void)
@@ -243,9 +259,10 @@ int modify_valve_pump_tec(unsigned int mask, unsigned int code)
 {
     static unsigned int shadow = 0;
     unsigned int loops, newValue;
-    
+
     newValue = (shadow & (~mask)) | (code & mask);
-    if (newValue != shadow) {
+    if (newValue != shadow)
+    {
         setI2C1Mux(4);  // Select SC15 and SD15
         for (loops=0;loops<1000;loops++);
         pca8574_wrByte(~newValue);

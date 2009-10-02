@@ -10,6 +10,13 @@
  *
  * HISTORY:
  *   16-Dec-2008  sze  Initial version.
+ *    7-May-2009  sze  Added error checking in resistanceToTemperature
+ *   29-May-2009  sze  Added handling of temp sensor in laser TEC current monitor
+ *   13-Jun-2009  sze  Added code to read I2C laser thermistor ADCs
+ *   21-Aug-2009  sze  Added TEMP_CNTRL_AutomaticState
+ *   31-Aug-2009  sze  Added warm box temperature control
+ *   26-Sep-2009  sze  Moved locked register to a single bit in DAS status register
+ *    1-Oct-2009  sze  Added active bit in DAS status register
  *
  *  Copyright (c) 2008 Picarro, Inc. All rights reserved
  */
@@ -55,6 +62,7 @@ int tempCntrlWrite(TempCntrl *t)
 */
 #define state     (*(t->state_))
 #define tol       (*(t->tol_))
+#define activeBit (t->activeBit_)
 #define lockBit   (t->lockBit_)
 #define swpMin    (*(t->swpMin_))
 #define swpMax    (*(t->swpMax_))
@@ -99,10 +107,14 @@ int tempCntrlStep(TempCntrl *t)
     switch (state)
     {
     case TEMP_CNTRL_DisabledState:
+        resetDasStatusBit(activeBit);
+        resetDasStatusBit(lockBit);
         tec = 0x8000;
         prbsReg = 0x1;
         break;
     case TEMP_CNTRL_ManualState:
+        setDasStatusBit(activeBit);
+        resetDasStatusBit(lockBit);
         tec = manualTec;
         prbsReg = 0x1;
         break;
@@ -110,6 +122,7 @@ int tempCntrlStep(TempCntrl *t)
         // Start or step the controller
         r = userSetpoint;
     case TEMP_CNTRL_AutomaticState:
+        setDasStatusBit(activeBit);
         error = r - temp;
         inRange = (error>=-tol && error<=tol);
         if (firstIteration)
@@ -131,13 +144,15 @@ int tempCntrlStep(TempCntrl *t)
         else
         {
             if (inRange) lockCount++;
-            else lockCount = FALSE;
+            else lockCount = 0;
             if (lockCount > TEMP_CNTRL_LOCK_COUNT) setDasStatusBit(lockBit);
         }
         tec = pidState->a;
         prbsReg = 0x1;
         break;
     case TEMP_CNTRL_SweepingState:
+        setDasStatusBit(activeBit);
+        resetDasStatusBit(lockBit);
         r += swpDir * swpInc;
         if (r >= swpMax)
         {
@@ -154,6 +169,8 @@ int tempCntrlStep(TempCntrl *t)
         prbsReg = 0x1;
         break;
     case TEMP_CNTRL_SendPrbsState:
+        setDasStatusBit(activeBit);
+        resetDasStatusBit(lockBit);
         if (prbsReg & 0x1)
         {
             tec = prbsMean + prbsAmp;
@@ -205,6 +222,7 @@ int tempCntrlStep(TempCntrl *t)
 #undef userSetpoint
 #undef swpDir
 #undef lockBit
+#undef activeBit
 #undef lockCount
 #undef unlockCount
 #undef firstIteration
@@ -238,7 +256,8 @@ int tempCntrlLaser1Init(void)
     t->userSetpoint_ = (float *)registerAddr(LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     t->state_    = (unsigned int *)registerAddr(LASER1_TEMP_CNTRL_STATE_REGISTER);
     t->tol_      = (float *)registerAddr(LASER1_TEMP_CNTRL_TOLERANCE_REGISTER);
-    t->lockBit_  = DAS_STATUS_Laser1TemperatureLockedBit;
+    t->activeBit_  = DAS_STATUS_Laser1TempCntrlActiveBit;
+    t->lockBit_    = DAS_STATUS_Laser1TempCntrlLockedBit;
     t->swpMin_   = (float *)registerAddr(LASER1_TEMP_CNTRL_SWEEP_MIN_REGISTER);
     t->swpMax_   = (float *)registerAddr(LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER);
     t->swpInc_   = (float *)registerAddr(LASER1_TEMP_CNTRL_SWEEP_INCR_REGISTER);
@@ -253,7 +272,7 @@ int tempCntrlLaser1Init(void)
     t->manualTec_ = (float *)registerAddr(LASER1_MANUAL_TEC_REGISTER);
     t->swpDir    = 1;
     *(t->state_)  = TEMP_CNTRL_DisabledState;
-    resetDasStatusBit(t->lockBit_);    
+    resetDasStatusBit(t->lockBit_);
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;
@@ -299,7 +318,8 @@ int tempCntrlLaser2Init(void)
     t->userSetpoint_ = (float *)registerAddr(LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     t->state_    = (unsigned int *)registerAddr(LASER2_TEMP_CNTRL_STATE_REGISTER);
     t->tol_      = (float *)registerAddr(LASER2_TEMP_CNTRL_TOLERANCE_REGISTER);
-    t->lockBit_  = DAS_STATUS_Laser2TemperatureLockedBit;
+    t->activeBit_  = DAS_STATUS_Laser2TempCntrlActiveBit;
+    t->lockBit_    = DAS_STATUS_Laser2TempCntrlLockedBit;
     t->swpMin_   = (float *)registerAddr(LASER2_TEMP_CNTRL_SWEEP_MIN_REGISTER);
     t->swpMax_   = (float *)registerAddr(LASER2_TEMP_CNTRL_SWEEP_MAX_REGISTER);
     t->swpInc_   = (float *)registerAddr(LASER2_TEMP_CNTRL_SWEEP_INCR_REGISTER);
@@ -314,7 +334,7 @@ int tempCntrlLaser2Init(void)
     t->manualTec_ = (float *)registerAddr(LASER2_MANUAL_TEC_REGISTER);
     t->swpDir    = 1;
     *(t->state_)  = TEMP_CNTRL_DisabledState;
-    resetDasStatusBit(t->lockBit_);    
+    resetDasStatusBit(t->lockBit_);
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;
@@ -359,7 +379,8 @@ int tempCntrlLaser3Init(void)
     t->userSetpoint_ = (float *)registerAddr(LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     t->state_    = (unsigned int *)registerAddr(LASER3_TEMP_CNTRL_STATE_REGISTER);
     t->tol_      = (float *)registerAddr(LASER3_TEMP_CNTRL_TOLERANCE_REGISTER);
-    t->lockBit_  = DAS_STATUS_Laser3TemperatureLockedBit;
+    t->activeBit_  = DAS_STATUS_Laser3TempCntrlActiveBit;
+    t->lockBit_    = DAS_STATUS_Laser3TempCntrlLockedBit;
     t->swpMin_   = (float *)registerAddr(LASER3_TEMP_CNTRL_SWEEP_MIN_REGISTER);
     t->swpMax_   = (float *)registerAddr(LASER3_TEMP_CNTRL_SWEEP_MAX_REGISTER);
     t->swpInc_   = (float *)registerAddr(LASER3_TEMP_CNTRL_SWEEP_INCR_REGISTER);
@@ -374,7 +395,7 @@ int tempCntrlLaser3Init(void)
     t->manualTec_ = (float *)registerAddr(LASER3_MANUAL_TEC_REGISTER);
     t->swpDir    = 1;
     *(t->state_)  = TEMP_CNTRL_DisabledState;
-    resetDasStatusBit(t->lockBit_);    
+    resetDasStatusBit(t->lockBit_);
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;
@@ -419,7 +440,8 @@ int tempCntrlLaser4Init(void)
     t->userSetpoint_ = (float *)registerAddr(LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     t->state_    = (unsigned int *)registerAddr(LASER4_TEMP_CNTRL_STATE_REGISTER);
     t->tol_      = (float *)registerAddr(LASER4_TEMP_CNTRL_TOLERANCE_REGISTER);
-    t->lockBit_  = DAS_STATUS_Laser4TemperatureLockedBit;
+    t->activeBit_  = DAS_STATUS_Laser4TempCntrlActiveBit;
+    t->lockBit_    = DAS_STATUS_Laser4TempCntrlLockedBit;
     t->swpMin_   = (float *)registerAddr(LASER4_TEMP_CNTRL_SWEEP_MIN_REGISTER);
     t->swpMax_   = (float *)registerAddr(LASER4_TEMP_CNTRL_SWEEP_MAX_REGISTER);
     t->swpInc_   = (float *)registerAddr(LASER4_TEMP_CNTRL_SWEEP_INCR_REGISTER);
@@ -434,7 +456,7 @@ int tempCntrlLaser4Init(void)
     t->manualTec_ = (float *)registerAddr(LASER4_MANUAL_TEC_REGISTER);
     t->swpDir    = 1;
     *(t->state_)  = TEMP_CNTRL_DisabledState;
-    resetDasStatusBit(t->lockBit_);    
+    resetDasStatusBit(t->lockBit_);
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;
@@ -578,7 +600,8 @@ int tempCntrlWarmBoxInit(void)
     t->userSetpoint_ = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     t->state_    = (unsigned int *)registerAddr(WARM_BOX_TEMP_CNTRL_STATE_REGISTER);
     t->tol_      = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER);
-    t->lockBit_  = DAS_STATUS_WarmBoxTemperatureLockedBit;
+    t->activeBit_  = DAS_STATUS_WarmBoxTempCntrlActiveBit;
+    t->lockBit_    = DAS_STATUS_WarmBoxTempCntrlLockedBit;
     t->swpMin_   = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_SWEEP_MIN_REGISTER);
     t->swpMax_   = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_SWEEP_MAX_REGISTER);
     t->swpInc_   = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_SWEEP_INCR_REGISTER);
@@ -593,7 +616,7 @@ int tempCntrlWarmBoxInit(void)
     t->manualTec_ = (float *)registerAddr(WARM_BOX_MANUAL_TEC_REGISTER);
     t->swpDir    = 1;
     *(t->state_)  = TEMP_CNTRL_DisabledState;
-    resetDasStatusBit(t->lockBit_);    
+    resetDasStatusBit(t->lockBit_);
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;
@@ -641,7 +664,8 @@ int tempCntrlCavityInit(void)
     t->userSetpoint_ = (float *)registerAddr(CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     t->state_    = (unsigned int *)registerAddr(CAVITY_TEMP_CNTRL_STATE_REGISTER);
     t->tol_      = (float *)registerAddr(CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER);
-    t->lockBit_  = DAS_STATUS_CavityTemperatureLockedBit;
+    t->activeBit_  = DAS_STATUS_CavityTempCntrlActiveBit;
+    t->lockBit_    = DAS_STATUS_CavityTempCntrlLockedBit;
     t->swpMin_   = (float *)registerAddr(CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER);
     t->swpMax_   = (float *)registerAddr(CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER);
     t->swpInc_   = (float *)registerAddr(CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER);
@@ -656,7 +680,7 @@ int tempCntrlCavityInit(void)
     t->manualTec_ = (float *)registerAddr(CAVITY_MANUAL_TEC_REGISTER);
     t->swpDir    = 1;
     *(t->state_)  = TEMP_CNTRL_DisabledState;
-    resetDasStatusBit(t->lockBit_);    
+    resetDasStatusBit(t->lockBit_);
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;

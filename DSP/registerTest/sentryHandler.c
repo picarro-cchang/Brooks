@@ -6,7 +6,7 @@
  *   Routines to manage sentries and place the instrument in a safe state under
  *    various error conditions. This is a high priority task executed periodically
  *    under the control of a semaphore posted by a PRD.
- * 
+ *
  *   We detect problems with the scheduler thread being unable to run as well as
  *    sentry breaches. Since the scheduler thread is responsible for updating the
  *    sensor values, its failure to run correctly is more serious than a sentry
@@ -32,7 +32,8 @@
 #include "interface.h"
 #include "valveCntrl.h"
 
-typedef struct {
+typedef struct
+{
     unsigned int bitMask;
     float *value;
     float *minSentry;
@@ -51,7 +52,7 @@ void initSentryChecks(void)
     unsigned int i = 0, j;
     maxTripped = (unsigned int *)registerAddr(SENTRY_UPPER_LIMIT_TRIPPED_REGISTER);
     minTripped = (unsigned int *)registerAddr(SENTRY_LOWER_LIMIT_TRIPPED_REGISTER);
-    
+
     numSentries = 0;
     sentryChecks[i].bitMask   = SENTRY_Laser1TemperatureMask;
     sentryChecks[i].value     = (float *)registerAddr(LASER1_TEMPERATURE_REGISTER);
@@ -133,8 +134,9 @@ void initSentryChecks(void)
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_AMBIENT_PRESSURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_AMBIENT_PRESSURE_MAX_REGISTER);
     i++;
-    //  Initialize all values to mid-range so that the sentries do not trip if sensors are absent 
-    for (j=0; j<i; j++) {
+    //  Initialize all values to mid-range so that the sentries do not trip if sensors are absent
+    for (j=0; j<i; j++)
+    {
         *(sentryChecks[j].value) = 0.5 * (*(sentryChecks[j].minSentry) + *(sentryChecks[j].maxSentry));
     }
     *maxTripped = 0;
@@ -148,7 +150,7 @@ void safeMode(void)
 {
     // Disable the spectrum controller
     *(SPECT_CNTRL_StateType *)registerAddr(SPECT_CNTRL_STATE_REGISTER) = SPECT_CNTRL_IdleState;
-    
+
     // Disable all laser current drivers
     *(LASER_CURRENT_CNTRL_StateType *)registerAddr(LASER1_CURRENT_CNTRL_STATE_REGISTER) = LASER_CURRENT_CNTRL_DisabledState;
     *(LASER_CURRENT_CNTRL_StateType *)registerAddr(LASER2_CURRENT_CNTRL_STATE_REGISTER) = LASER_CURRENT_CNTRL_DisabledState;
@@ -163,7 +165,7 @@ void safeMode(void)
     *(TEMP_CNTRL_StateType *)registerAddr(WARM_BOX_TEMP_CNTRL_STATE_REGISTER) = TEMP_CNTRL_DisabledState;
     *(TEMP_CNTRL_StateType *)registerAddr(CAVITY_TEMP_CNTRL_STATE_REGISTER)   = TEMP_CNTRL_DisabledState;
     *(HEATER_CNTRL_StateType *)registerAddr(HEATER_CNTRL_STATE_REGISTER)        = HEATER_CNTRL_DisabledState;
-    
+
     // Turn off laser currents in FPGA
     writeFPGA(FPGA_INJECT + INJECT_CONTROL, 0);
     // Turn off laser TEC PWM in FPGA
@@ -184,22 +186,30 @@ void sentryHandler(void)
     {
         SEM_pend(&SEM_sentryHandler,SYS_FOREVER);
         secSinceStartup++;
-        if (secSinceStartup >= 10) {
-            if (schedulerAlive < 4) {   // Should be 5, since heartbeat occurs every 200ms
+        if (secSinceStartup >= 10)
+        {
+            if (schedulerAlive < 4)     // Should be 5, since heartbeat occurs every 200ms
+            {
                 message_puts("Scheduler is not running. Placing instrument in safe mode.");
                 safeMode();
             }
-            else {
-                if (numSentries > 0) {
-                    for (i=0; i<numSentries; i++) {
-                        if (*(sentryChecks[i].value) > *(sentryChecks[i].maxSentry)) {
+            else
+            {
+                if (numSentries > 0)
+                {
+                    for (i=0; i<numSentries; i++)
+                    {
+                        if (*(sentryChecks[i].value) > *(sentryChecks[i].maxSentry))
+                        {
                             *maxTripped |= sentryChecks[i].bitMask;
                         }
-                        if (*(sentryChecks[i].value) < *(sentryChecks[i].minSentry)) {
+                        if (*(sentryChecks[i].value) < *(sentryChecks[i].minSentry))
+                        {
                             *minTripped |= sentryChecks[i].bitMask;
                         }
                     }
-                    if (*maxTripped != 0 || *minTripped != 0) {
+                    if (*maxTripped != 0 || *minTripped != 0)
+                    {
                         message_puts("One or more sentries have been tripped. Placing instrument in safe mode.");
                         safeMode();
                     }

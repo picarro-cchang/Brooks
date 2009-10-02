@@ -3,7 +3,7 @@
  *   interface.h
  *
  * DESCRIPTION:
- *   Automatically generated interface H file for Picarro gas analyzer. 
+ *   Automatically generated interface H file for Picarro gas analyzer.
  *    DO NOT EDIT.
  *
  * SEE ALSO:
@@ -23,10 +23,10 @@ typedef char int8;
 typedef int bool;
 
 #ifndef FALSE
-    #define FALSE (0)
+#define FALSE (0)
 #endif
 #ifndef TRUE
-    #define TRUE  (1)
+#define TRUE  (1)
 #endif
 
 
@@ -52,13 +52,15 @@ typedef int bool;
 #define ERROR_RD_BAD_RINGDOWN (-15)
 #define ERROR_RD_INSUFFICIENT_DATA (-16)
 
-typedef union {
+typedef union
+{
     float asFloat;
     uint32 asUint;
     int32 asInt;
 } DataType;
 
-typedef struct {
+typedef struct
+{
     uint32 time;
     uint32 cause;
     uint32 etalonPd1Current;
@@ -79,7 +81,8 @@ typedef struct {
     uint16 customDataArray[16];
 } DIAG_EventLogStruct;
 
-typedef struct {
+typedef struct
+{
     uint32 ratio1;
     uint32 ratio2;
     uint32 pztValue;
@@ -88,7 +91,8 @@ typedef struct {
     uint32 lockerError;
 } RingdownMetadataType;
 
-typedef struct {
+typedef struct
+{
     uint32 injectionSettings;
     float laserTemperature;
     uint32 coarseLaserCurrent;
@@ -103,12 +107,14 @@ typedef struct {
     uint32 addressAtRingdown;
 } RingdownParamsType;
 
-typedef struct {
+typedef struct
+{
     uint32 ringdownWaveform[4096];
     RingdownParamsType parameters;
 } RingdownBufferType;
 
-typedef struct {
+typedef struct
+{
     long long timestamp;
     float wlmAngle;
     float uncorrectedAbsorbance;
@@ -135,7 +141,8 @@ typedef struct {
     uint16 padToCacheLine[1];
 } RingdownEntryType;
 
-typedef struct {
+typedef struct
+{
     long long timestamp;
     uint32 frequency;
     float uncorrectedAbsorbance;
@@ -162,18 +169,21 @@ typedef struct {
     uint16 padToCacheLine[1];
 } ProcessedRingdownEntryType;
 
-typedef struct {
+typedef struct
+{
     long long timestamp;
     uint32 streamNum;
     DataType value;
 } SensorEntryType;
 
-typedef struct {
+typedef struct
+{
     uint16 maskAndValue;
     uint16 dwell;
 } ValveSequenceEntryType;
 
-typedef struct {
+typedef struct
+{
     int32 swpDir;
     int32 lockCount;
     int32 unlockCount;
@@ -186,22 +196,26 @@ typedef struct {
     float Dincr;
 } PidControllerEnvType;
 
-typedef struct {
+typedef struct
+{
     int32 var1;
     int32 var2;
 } CheckEnvType;
 
-typedef struct {
+typedef struct
+{
     uint32 counter;
 } PulseGenEnvType;
 
-typedef struct {
+typedef struct
+{
     float num[9];
     float den[9];
     float state[8];
 } FilterEnvType;
 
-typedef struct {
+typedef struct
+{
     float setpoint;
     uint16 dwellCount;
     uint16 subschemeId;
@@ -211,18 +225,21 @@ typedef struct {
     uint16 laserTemp;
 } SchemeRowType;
 
-typedef struct {
+typedef struct
+{
     uint32 numRepeats;
     uint32 numRows;
 } SchemeTableHeaderType;
 
-typedef struct {
+typedef struct
+{
     uint32 numRepeats;
     uint32 numRows;
     SchemeRowType rows[8192];
 } SchemeTableType;
 
-typedef struct {
+typedef struct
+{
     uint16 numberOfIndices;
     uint16 currentIndex;
     uint16 restartFlag;
@@ -230,7 +247,8 @@ typedef struct {
     uint16 schemeIndices[16];
 } SchemeSequenceType;
 
-typedef struct {
+typedef struct
+{
     uint32 actualLaser;
     float tempSensitivity;
     float ratio1Center;
@@ -394,44 +412,46 @@ typedef struct {
 // Number of bits for wavelength monitor ADCs
 #define WLM_ADC_WIDTH (16)
 
-typedef enum {
-    STREAM_Laser1Temp = 0, // 
-    STREAM_Laser2Temp = 1, // 
-    STREAM_Laser3Temp = 2, // 
-    STREAM_Laser4Temp = 3, // 
-    STREAM_EtalonTemp = 4, // 
-    STREAM_WarmBoxTemp = 5, // 
-    STREAM_WarmBoxHeatsinkTemp = 6, // 
-    STREAM_CavityTemp = 7, // 
-    STREAM_HotBoxHeatsinkTemp = 8, // 
-    STREAM_DasTemp = 9, // 
-    STREAM_Etalon1 = 10, // 
-    STREAM_Reference1 = 11, // 
-    STREAM_Etalon2 = 12, // 
-    STREAM_Reference2 = 13, // 
-    STREAM_Ratio1 = 14, // 
-    STREAM_Ratio2 = 15, // 
-    STREAM_Laser1Current = 16, // 
-    STREAM_Laser2Current = 17, // 
-    STREAM_Laser3Current = 18, // 
-    STREAM_Laser4Current = 19, // 
-    STREAM_CavityPressure = 20, // 
-    STREAM_AmbientPressure = 21, // 
-    STREAM_InletPressure = 22, // 
-    STREAM_OutletPressure = 23, // 
-    STREAM_Laser1Tec = 24, // 
-    STREAM_Laser2Tec = 25, // 
-    STREAM_Laser3Tec = 26, // 
-    STREAM_Laser4Tec = 27, // 
-    STREAM_WarmBoxTec = 28, // 
-    STREAM_HotBoxTec = 29, // 
-    STREAM_HotBoxHeater = 30, // 
-    STREAM_InletValve = 31, // 
-    STREAM_OutletValve = 32, // 
-    STREAM_ValveMask = 33 // 
+typedef enum
+{
+    STREAM_Laser1Temp = 0, //
+    STREAM_Laser2Temp = 1, //
+    STREAM_Laser3Temp = 2, //
+    STREAM_Laser4Temp = 3, //
+    STREAM_EtalonTemp = 4, //
+    STREAM_WarmBoxTemp = 5, //
+    STREAM_WarmBoxHeatsinkTemp = 6, //
+    STREAM_CavityTemp = 7, //
+    STREAM_HotBoxHeatsinkTemp = 8, //
+    STREAM_DasTemp = 9, //
+    STREAM_Etalon1 = 10, //
+    STREAM_Reference1 = 11, //
+    STREAM_Etalon2 = 12, //
+    STREAM_Reference2 = 13, //
+    STREAM_Ratio1 = 14, //
+    STREAM_Ratio2 = 15, //
+    STREAM_Laser1Current = 16, //
+    STREAM_Laser2Current = 17, //
+    STREAM_Laser3Current = 18, //
+    STREAM_Laser4Current = 19, //
+    STREAM_CavityPressure = 20, //
+    STREAM_AmbientPressure = 21, //
+    STREAM_InletPressure = 22, //
+    STREAM_OutletPressure = 23, //
+    STREAM_Laser1Tec = 24, //
+    STREAM_Laser2Tec = 25, //
+    STREAM_Laser3Tec = 26, //
+    STREAM_Laser4Tec = 27, //
+    STREAM_WarmBoxTec = 28, //
+    STREAM_HotBoxTec = 29, //
+    STREAM_HotBoxHeater = 30, //
+    STREAM_InletValve = 31, //
+    STREAM_OutletValve = 32, //
+    STREAM_ValveMask = 33 //
 } STREAM_MemberType;
 
-typedef enum {
+typedef enum
+{
     TEMP_CNTRL_DisabledState = 0, // Controller Disabled
     TEMP_CNTRL_EnabledState = 1, // Controller Enabled
     TEMP_CNTRL_SuspendedState = 2, // Controller Suspended
@@ -441,20 +461,23 @@ typedef enum {
     TEMP_CNTRL_AutomaticState = 6 // Automatic Control
 } TEMP_CNTRL_StateType;
 
-typedef enum {
+typedef enum
+{
     LASER_CURRENT_CNTRL_DisabledState = 0, // Controller Disabled
     LASER_CURRENT_CNTRL_AutomaticState = 1, // Automatic Control
     LASER_CURRENT_CNTRL_SweepingState = 2, // Continuous Sweeping
     LASER_CURRENT_CNTRL_ManualState = 3 // Manual Control
 } LASER_CURRENT_CNTRL_StateType;
 
-typedef enum {
+typedef enum
+{
     HEATER_CNTRL_DisabledState = 0, // Controller Disabled
     HEATER_CNTRL_EnabledState = 1, // Controller Enabled
     HEATER_CNTRL_ManualState = 2 // Manual Control
 } HEATER_CNTRL_StateType;
 
-typedef enum {
+typedef enum
+{
     SPECT_CNTRL_IdleState = 0, // Not acquiring
     SPECT_CNTRL_StartingState = 1, // Start acquisition
     SPECT_CNTRL_RunningState = 2, // Acquisition in progress
@@ -462,32 +485,37 @@ typedef enum {
     SPECT_CNTRL_ErrorState = 4 // Error state
 } SPECT_CNTRL_StateType;
 
-typedef enum {
+typedef enum
+{
     SPECT_CNTRL_SchemeSingleMode = 0, // Perform single scheme
     SPECT_CNTRL_SchemeMultipleMode = 1, // Perform multiple schemes
     SPECT_CNTRL_SchemeSequenceMode = 2, // Perform scheme sequence
     SPECT_CNTRL_ContinuousMode = 3 // Continuous acquisition
 } SPECT_CNTRL_ModeType;
 
-typedef enum {
+typedef enum
+{
     TUNER_RampMode = 0, // Ramp mode
     TUNER_DitherMode = 1 // Dither mode
 } TUNER_ModeType;
 
-typedef enum {
+typedef enum
+{
     VALVE_CNTRL_DisabledState = 0, // Disabled
     VALVE_CNTRL_OutletControlState = 1, // Outlet control
     VALVE_CNTRL_InletControlState = 2, // Inlet control
     VALVE_CNTRL_ManualControlState = 3 // Manual control
 } VALVE_CNTRL_StateType;
 
-typedef enum {
+typedef enum
+{
     VALVE_CNTRL_THRESHOLD_DisabledState = 0, // Disabled
     VALVE_CNTRL_THRESHOLD_ArmedState = 1, // Armed
     VALVE_CNTRL_THRESHOLD_TriggeredState = 2 // Triggered
 } VALVE_CNTRL_THRESHOLD_StateType;
 
-typedef enum {
+typedef enum
+{
     VIRTUAL_LASER_1 = 0, // Virtual laser 1
     VIRTUAL_LASER_2 = 1, // Virtual laser 2
     VIRTUAL_LASER_3 = 2, // Virtual laser 3
@@ -498,21 +526,30 @@ typedef enum {
     VIRTUAL_LASER_8 = 7 // Virtual laser 8
 } VIRTUAL_LASER_Type;
 
-typedef enum {
-    DAS_STATUS_Laser1TemperatureLockedBit = 0, // Laser 1 Temperature Locked
-    DAS_STATUS_Laser2TemperatureLockedBit = 1, // Laser 2 Temperature Locked
-    DAS_STATUS_Laser3TemperatureLockedBit = 2, // Laser 3 Temperature Locked
-    DAS_STATUS_Laser4TemperatureLockedBit = 3, // Laser 4 Temperature Locked
-    DAS_STATUS_WarmBoxTemperatureLockedBit = 4, // Warm Box Temperature Locked
-    DAS_STATUS_CavityTemperatureLockedBit = 5 // Cavity Temperature Locked
+typedef enum
+{
+    DAS_STATUS_Laser1TempCntrlLockedBit = 0, // Laser 1 Temperature Locked
+    DAS_STATUS_Laser1TempCntrlActiveBit = 1, // Laser 1 Temperature Controller On
+    DAS_STATUS_Laser2TempCntrlLockedBit = 2, // Laser 2 Temperature Locked
+    DAS_STATUS_Laser2TempCntrlActiveBit = 3, // Laser 2 Temperature Controller On
+    DAS_STATUS_Laser3TempCntrlLockedBit = 4, // Laser 3 Temperature Locked
+    DAS_STATUS_Laser3TempCntrlActiveBit = 5, // Laser 3 Temperature Controller On
+    DAS_STATUS_Laser4TempCntrlLockedBit = 6, // Laser 4 Temperature Locked
+    DAS_STATUS_Laser4TempCntrlActiveBit = 7, // Laser 4 Temperature Controller On
+    DAS_STATUS_WarmBoxTempCntrlLockedBit = 8, // Warm Box Temperature Locked
+    DAS_STATUS_WarmBoxTempCntrlActiveBit = 9, // Warm Box Temperature Controller On
+    DAS_STATUS_CavityTempCntrlLockedBit = 10, // Cavity Temperature Locked
+    DAS_STATUS_CavityTempCntrlActiveBit = 11 // Cavity Temperature Controller On
 } DAS_STATUS_BitType;
 
-typedef enum {
+typedef enum
+{
     TEC_CNTRL_Disabled = 0, // Disabled
     TEC_CNTRL_Enabled = 1 // Enabled
 } TEC_CNTRL_Type;
 
-typedef enum {
+typedef enum
+{
     OVERLOAD_WarmBoxTecBit = 0, // Warm box TEC overload
     OVERLOAD_HotBoxTecBit = 1 // Hot box TEC overload
 } OVERLOAD_BitType;
@@ -554,14 +591,6 @@ typedef enum {
 #define SENTRY_Laser4CurrentMask (0x2000)
 #define SENTRY_CavityPressureMask (0x4000)
 #define SENTRY_AmbientPressureMask (0x8000)
-
-/* Definitions for DAS_STATUS_BITMASK */
-#define DAS_STATUS_Laser1TemperatureLockedMask ((1 << DAS_STATUS_Laser1TemperatureLockedBit))
-#define DAS_STATUS_Laser2TemperatureLockedMask ((1 << DAS_STATUS_Laser2TemperatureLockedBit))
-#define DAS_STATUS_Laser3TemperatureLockedMask ((1 << DAS_STATUS_Laser3TemperatureLockedBit))
-#define DAS_STATUS_Laser4TemperatureLockedMask ((1 << DAS_STATUS_Laser4TemperatureLockedBit))
-#define DAS_STATUS_WarmBoxTemperatureLockedMask ((1 << DAS_STATUS_WarmBoxTemperatureLockedBit))
-#define DAS_STATUS_CavityTemperatureLockedMask ((1 << DAS_STATUS_CavityTemperatureLockedBit))
 
 /* Register definitions */
 #define INTERFACE_NUMBER_OF_REGISTERS (359)

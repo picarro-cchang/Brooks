@@ -6,7 +6,7 @@
  *   Routines to manage sentries and place the instrument in a safe state under
  *    various error conditions. This is a high priority task executed periodically
  *    under the control of a semaphore posted by a PRD.
- * 
+ *
  *   We detect problems with the scheduler thread being unable to run as well as
  *    sentry breaches. Since the scheduler thread is responsible for updating the
  *    sensor values, its failure to run correctly is more serious than a sentry

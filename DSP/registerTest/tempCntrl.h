@@ -22,6 +22,7 @@ typedef struct TEMP_CNTRL
     unsigned int *state_;    // Controller state
     float *tol_;      // Lock tolerance
     unsigned int lockBit_;   // Locked bit position in DAS status
+    unsigned int activeBit_;   // Active bit position in DAS status
     float *swpMin_;   // Minimum sweep value
     float *swpMax_;   // Maximum sweep value
     float *swpInc_;   // Sweep increment

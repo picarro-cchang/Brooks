@@ -401,116 +401,120 @@ void rdFitting(void)
 {
     int i, bufferNum;
     unsigned int base;
-	unsigned int virtLaserNum;
-	float arctanvar1, arctanvar2, dp;
-	float uncorrectedLoss, correctedLoss, thetaC;
+    unsigned int virtLaserNum;
+    float arctanvar1, arctanvar2, dp;
+    float uncorrectedLoss, correctedLoss, thetaC;
     DataType data;
-    RingdownBufferType *ringdownBuffer; 
+    RingdownBufferType *ringdownBuffer;
     RingdownMetadataType meta;
-	RingdownParamsType *rdParams;
+    RingdownParamsType *rdParams;
     volatile RingdownEntryType *ringdownEntry;
-	volatile VirtualLaserParamsType *vLaserParams;
+    volatile VirtualLaserParamsType *vLaserParams;
     int *metaPtr = (int*) &meta;
 
-    while (1) {
+    while (1)
+    {
         SEM_pend(&SEM_rdFitting,SYS_FOREVER);
-        if (!get_queue(&rdBufferQueue,&bufferNum)) {
+        if (!get_queue(&rdBufferQueue,&bufferNum))
+        {
             message_puts("rdBuffer queue empty in rdFitting");
-			spectCntrlError();
+            spectCntrlError();
         }
-		if (bufferNum == MISSING_RINGDOWN) {
-			//  Get the information from nextRdParams, since no ringdown actually took place
-			rdParams = &nextRdParams;
-			ringdownEntry = get_ringdown_entry_addr();
-			ringdownEntry->wlmAngle = 0.0;
-			ringdownEntry->uncorrectedAbsorbance = 0.0;
-			ringdownEntry->correctedAbsorbance = 0.0;
-			ringdownEntry->status = rdParams->status;
-			ringdownEntry->count = rdParams->countAndSubschemeId >> 16;
-			ringdownEntry->tunerValue = 0;
-			ringdownEntry->pztValue = 0;
-			ringdownEntry->lockerOffset = 0;
-			ringdownEntry->laserUsed = rdParams->injectionSettings;
-			ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
-			ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
-			ringdownEntry->schemeTable = rdParams->schemeTableAndRow >> 16;
-			ringdownEntry->schemeRow   = rdParams->schemeTableAndRow & 0xFFFF;
-			ringdownEntry->ratio1 = 0;
-			ringdownEntry->ratio2 = 0;
-			ringdownEntry->fineLaserCurrent = 0;
-			ringdownEntry->coarseLaserCurrent = rdParams->coarseLaserCurrent;
-			ringdownEntry->laserTemperature = rdParams->laserTemperature;
-			ringdownEntry->etalonTemperature = rdParams->etalonTemperature;
-			ringdownEntry->cavityPressure  = (unsigned int)(50.0 * rdParams->cavityPressure);
-			ringdownEntry->ambientPressure = (unsigned int)(50.0 * rdParams->ambientPressure);
-			ringdownEntry->lockerError = 0;
-			ringdown_put();
-			if (SPECT_CNTRL_RunningState == *(int*)registerAddr(SPECT_CNTRL_STATE_REGISTER)) SEM_postBinary(&SEM_startRdCycle);
-		}
-		else {
-			ringdownBuffer = &ringdownBuffers[bufferNum];
-			rdFittingProcessRingdown(ringdownBuffer->ringdownWaveform,&uncorrectedLoss,&correctedLoss,0);
-			data.asFloat = uncorrectedLoss;
-			writeRegister(RDFITTER_LATEST_LOSS_REGISTER,data);
-			// We need to find position of metadata just before ringdown. We have a modified circular
-			//  buffer which wraps back to the midpoint, and the MSB indicates if this buffer has wrapped.
-			rdParams = &(ringdownBuffer->parameters);
-			base = rdParams->addressAtRingdown & ~0x7;
-			if (base == 32768 + 2048) base = 4096;
-			else base = base & 0xFFF;
-			base = base - 8;
-			// The metadata are in the MS 16 bits of the ringdown waveform. We currently
-			//  use the values at buffer address "base", without any backoff.
-			for (i=0;i<8;i++) metaPtr[i] = ringdownBuffer->ringdownWaveform[base+i] >> 16;
-	
-			virtLaserNum = (rdParams->injectionSettings >> 2) & 0x7;
-			// laserNum = rdParams->injectionSettings & 0x3;
-			vLaserParams = &virtualLaserParams[virtLaserNum];
-	
-			// Get metadata and params, and write results to ringdown queue    
-			ringdownEntry = get_ringdown_entry_addr();
-	
-			// Calculate the angle in the WLM plane, corrected by the ambient pressure and etalon temperature
-			arctanvar1 = vLaserParams->ratio1Scale*((meta.ratio2/32768.0)-vLaserParams->ratio2Center) -
-						 vLaserParams->ratio2Scale*((meta.ratio1/32768.0)-vLaserParams->ratio1Center)*sinsp(vLaserParams->phase);
-			arctanvar2 = vLaserParams->ratio2Scale*((meta.ratio1/32768.0)-vLaserParams->ratio1Center)*cossp(vLaserParams->phase);
-			dp = rdParams->ambientPressure - vLaserParams->calPressure;
-			
-			thetaC = (vLaserParams->pressureC0 + dp*(vLaserParams->pressureC1 + dp*(vLaserParams->pressureC2 + dp*vLaserParams->pressureC3))) + 
-					 (vLaserParams->tempSensitivity * (rdParams->etalonTemperature-vLaserParams->calTemp)) + atan2sp(arctanvar1,arctanvar2);
-	
-			ringdownEntry->wlmAngle = thetaC;
-			ringdownEntry->uncorrectedAbsorbance = uncorrectedLoss;
-			ringdownEntry->correctedAbsorbance = correctedLoss;
-			// TODO: Modify the status as necessary if there are any fitter issues
-			ringdownEntry->status = rdParams->status;
-			ringdownEntry->count = rdParams->countAndSubschemeId >> 16;
-			ringdownEntry->tunerValue = rdParams->tunerAtRingdown;
-			ringdownEntry->pztValue = meta.pztValue;
-			ringdownEntry->lockerOffset = meta.lockerOffset;
-			ringdownEntry->laserUsed = rdParams->injectionSettings;
-			ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
-			ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
-			ringdownEntry->schemeTable = rdParams->schemeTableAndRow >> 16;
-			ringdownEntry->schemeRow   = rdParams->schemeTableAndRow & 0xFFFF;
-			ringdownEntry->ratio1 = meta.ratio1;
-			ringdownEntry->ratio2 = meta.ratio2;
-			ringdownEntry->fineLaserCurrent = meta.fineLaserCurrent;
-			ringdownEntry->coarseLaserCurrent = rdParams->coarseLaserCurrent;
-			ringdownEntry->laserTemperature = rdParams->laserTemperature;
-			ringdownEntry->etalonTemperature = rdParams->etalonTemperature;
-			ringdownEntry->cavityPressure  = (unsigned int)(50.0 * rdParams->cavityPressure);
-			ringdownEntry->ambientPressure = (unsigned int)(50.0 * rdParams->ambientPressure);
-			ringdownEntry->lockerError = meta.lockerError;
-	
-			// After fitting, the buffer is available again
-			if (bufferNum == 0)
-				SEM_postBinary(&SEM_rdBuffer0Available);
-			else
-				SEM_postBinary(&SEM_rdBuffer1Available);
-			ringdown_put();
-			// Reset bit 2 of DIAG_1 after fitting
-			changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 2, 1, 0);
-		}
-	}
+        if (bufferNum == MISSING_RINGDOWN)
+        {
+            //  Get the information from nextRdParams, since no ringdown actually took place
+            rdParams = &nextRdParams;
+            ringdownEntry = get_ringdown_entry_addr();
+            ringdownEntry->wlmAngle = 0.0;
+            ringdownEntry->uncorrectedAbsorbance = 0.0;
+            ringdownEntry->correctedAbsorbance = 0.0;
+            ringdownEntry->status = rdParams->status;
+            ringdownEntry->count = rdParams->countAndSubschemeId >> 16;
+            ringdownEntry->tunerValue = 0;
+            ringdownEntry->pztValue = 0;
+            ringdownEntry->lockerOffset = 0;
+            ringdownEntry->laserUsed = rdParams->injectionSettings;
+            ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
+            ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
+            ringdownEntry->schemeTable = rdParams->schemeTableAndRow >> 16;
+            ringdownEntry->schemeRow   = rdParams->schemeTableAndRow & 0xFFFF;
+            ringdownEntry->ratio1 = 0;
+            ringdownEntry->ratio2 = 0;
+            ringdownEntry->fineLaserCurrent = 0;
+            ringdownEntry->coarseLaserCurrent = rdParams->coarseLaserCurrent;
+            ringdownEntry->laserTemperature = rdParams->laserTemperature;
+            ringdownEntry->etalonTemperature = rdParams->etalonTemperature;
+            ringdownEntry->cavityPressure  = (unsigned int)(50.0 * rdParams->cavityPressure);
+            ringdownEntry->ambientPressure = (unsigned int)(50.0 * rdParams->ambientPressure);
+            ringdownEntry->lockerError = 0;
+            ringdown_put();
+            if (SPECT_CNTRL_RunningState == *(int*)registerAddr(SPECT_CNTRL_STATE_REGISTER)) SEM_postBinary(&SEM_startRdCycle);
+        }
+        else
+        {
+            ringdownBuffer = &ringdownBuffers[bufferNum];
+            rdFittingProcessRingdown(ringdownBuffer->ringdownWaveform,&uncorrectedLoss,&correctedLoss,0);
+            data.asFloat = uncorrectedLoss;
+            writeRegister(RDFITTER_LATEST_LOSS_REGISTER,data);
+            // We need to find position of metadata just before ringdown. We have a modified circular
+            //  buffer which wraps back to the midpoint, and the MSB indicates if this buffer has wrapped.
+            rdParams = &(ringdownBuffer->parameters);
+            base = rdParams->addressAtRingdown & ~0x7;
+            if (base == 32768 + 2048) base = 4096;
+            else base = base & 0xFFF;
+            base = base - 8;
+            // The metadata are in the MS 16 bits of the ringdown waveform. We currently
+            //  use the values at buffer address "base", without any backoff.
+            for (i=0;i<8;i++) metaPtr[i] = ringdownBuffer->ringdownWaveform[base+i] >> 16;
+
+            virtLaserNum = (rdParams->injectionSettings >> 2) & 0x7;
+            // laserNum = rdParams->injectionSettings & 0x3;
+            vLaserParams = &virtualLaserParams[virtLaserNum];
+
+            // Get metadata and params, and write results to ringdown queue
+            ringdownEntry = get_ringdown_entry_addr();
+
+            // Calculate the angle in the WLM plane, corrected by the ambient pressure and etalon temperature
+            arctanvar1 = vLaserParams->ratio1Scale*((meta.ratio2/32768.0)-vLaserParams->ratio2Center) -
+                         vLaserParams->ratio2Scale*((meta.ratio1/32768.0)-vLaserParams->ratio1Center)*sinsp(vLaserParams->phase);
+            arctanvar2 = vLaserParams->ratio2Scale*((meta.ratio1/32768.0)-vLaserParams->ratio1Center)*cossp(vLaserParams->phase);
+            dp = rdParams->ambientPressure - vLaserParams->calPressure;
+
+            thetaC = (vLaserParams->pressureC0 + dp*(vLaserParams->pressureC1 + dp*(vLaserParams->pressureC2 + dp*vLaserParams->pressureC3))) +
+                     (vLaserParams->tempSensitivity * (rdParams->etalonTemperature-vLaserParams->calTemp)) + atan2sp(arctanvar1,arctanvar2);
+
+            ringdownEntry->wlmAngle = thetaC;
+            ringdownEntry->uncorrectedAbsorbance = uncorrectedLoss;
+            ringdownEntry->correctedAbsorbance = correctedLoss;
+            // TODO: Modify the status as necessary if there are any fitter issues
+            ringdownEntry->status = rdParams->status;
+            ringdownEntry->count = rdParams->countAndSubschemeId >> 16;
+            ringdownEntry->tunerValue = rdParams->tunerAtRingdown;
+            ringdownEntry->pztValue = meta.pztValue;
+            ringdownEntry->lockerOffset = meta.lockerOffset;
+            ringdownEntry->laserUsed = rdParams->injectionSettings;
+            ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
+            ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
+            ringdownEntry->schemeTable = rdParams->schemeTableAndRow >> 16;
+            ringdownEntry->schemeRow   = rdParams->schemeTableAndRow & 0xFFFF;
+            ringdownEntry->ratio1 = meta.ratio1;
+            ringdownEntry->ratio2 = meta.ratio2;
+            ringdownEntry->fineLaserCurrent = meta.fineLaserCurrent;
+            ringdownEntry->coarseLaserCurrent = rdParams->coarseLaserCurrent;
+            ringdownEntry->laserTemperature = rdParams->laserTemperature;
+            ringdownEntry->etalonTemperature = rdParams->etalonTemperature;
+            ringdownEntry->cavityPressure  = (unsigned int)(50.0 * rdParams->cavityPressure);
+            ringdownEntry->ambientPressure = (unsigned int)(50.0 * rdParams->ambientPressure);
+            ringdownEntry->lockerError = meta.lockerError;
+
+            // After fitting, the buffer is available again
+            if (bufferNum == 0)
+                SEM_postBinary(&SEM_rdBuffer0Available);
+            else
+                SEM_postBinary(&SEM_rdBuffer1Available);
+            ringdown_put();
+            // Reset bit 2 of DIAG_1 after fitting
+            changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 2, 1, 0);
+        }
+    }
 }

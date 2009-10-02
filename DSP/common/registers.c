@@ -62,7 +62,7 @@ void init_comms()
                 COMM_STATUS_SequenceNumberMask)|COMM_STATUS_CompleteMask;
     writeRegister(COMM_STATUS_REGISTER,d);
     memset((void *)ringdownEntries,0,sizeof(RingdownEntryType)*NUM_RINGDOWN_ENTRIES);
-    CACHE_wbL2((void *)(ringdownEntries), sizeof(RingdownEntryType)*NUM_RINGDOWN_ENTRIES, CACHE_WAIT);    
+    CACHE_wbL2((void *)(ringdownEntries), sizeof(RingdownEntryType)*NUM_RINGDOWN_ENTRIES, CACHE_WAIT);
 }
 
 void message_puts(char *message)
@@ -99,8 +99,8 @@ volatile RingdownEntryType *get_ringdown_entry_addr()
 void ringdown_put()
 /* Timestamp the filled ringdown entry and make it available for
     download by the host. Note that we were careful to initialize
-    the circular buffer with zeros, so that the timestamp for the 
-    next available (as yet uncollected) entry is either zero or 
+    the circular buffer with zeros, so that the timestamp for the
+    next available (as yet uncollected) entry is either zero or
     less than the current entry. It is also necessary to flush the
     L2 cache back to external memory after each write.
 */
@@ -109,7 +109,7 @@ void ringdown_put()
     volatile RingdownEntryType *r = ringdownEntries + ringdown_pointer;
     get_timestamp(&ts);
     r->timestamp = ts;
-    CACHE_wbL2((void *)r, 64, CACHE_WAIT);    
+    CACHE_wbL2((void *)r, 64, CACHE_WAIT);
     ringdown_pointer++;
     if (ringdown_pointer>=NUM_RINGDOWN_ENTRIES) ringdown_pointer = 0;
 }
@@ -162,7 +162,7 @@ unsigned int getDasStatusBit(unsigned int bitNum)
 {
     unsigned int dasStatus = *(unsigned int*)(registerAddr(DAS_STATUS_REGISTER));
     unsigned int mask = 1<<bitNum;
-    return (0 != dasStatus&mask);
+    return (0 != (dasStatus&mask));
 }
 
 void setDasStatusBit(unsigned int bitNum)
@@ -238,7 +238,7 @@ void hwiHpiInterrupt(unsigned int funcArg, unsigned int eventId)
     {
         char msg[32];
         sprintf(msg,"X 0x%x 0x%x",seqNum,commStatSeqNum);
-        message_puts(msg);        
+        message_puts(msg);
         d.asUint = ((commStatSeqNum<<COMM_STATUS_SequenceNumberShift)&COMM_STATUS_SequenceNumberMask)|
                    (COMM_STATUS_BadSequenceNumberMask)|
                    (COMM_STATUS_CompleteMask);

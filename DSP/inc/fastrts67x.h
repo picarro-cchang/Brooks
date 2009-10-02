@@ -39,8 +39,8 @@ extern float  recipf  ( float  x ) ;    /* not defined in rts6701 */
 extern double recipdp ( double x ) ;
 extern float  recipsp ( float  x ) ;
 
-extern double rsqrtdp ( double x ) ; 
-extern float  rsqrtsp ( float  x ) ; 
+extern double rsqrtdp ( double x ) ;
+extern float  rsqrtsp ( float  x ) ;
 
 extern double sindp   ( double x ) ;
 extern float  sinsp   ( float  x ) ;

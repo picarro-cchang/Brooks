@@ -56,7 +56,7 @@ char message[120];
     status = writeRegister(regNum,d);\
     if (STATUS_OK != status) return status; \
     }
-    
+
 int writeBlock(unsigned int numInt,void *params,void *env)
 // Writes a block to the communication area. The number of integers written is numInt-1, since params[0] is the start index
 // The indices lie in various "areas", defined by the OFFSET
@@ -131,8 +131,8 @@ int streamFpgaRegister(unsigned int numInt,void *params,void *env)
     float value;
     if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
     streamNum = paramsAsInt[0];
-    fpgaBase = paramsAsInt[1]; 
-    regNum = paramsAsInt[2]; 
+    fpgaBase = paramsAsInt[1];
+    regNum = paramsAsInt[2];
     value = readFPGA(fpgaBase + regNum);
     sensor_put_from(streamNum,&value);
     return STATUS_OK;
@@ -295,8 +295,8 @@ int r_fpgaToFloatRegister(unsigned int numInt,void *params,void *env)
 }
 
 int r_intToFpga(unsigned int numInt,void *params,void *env)
-/* Copy integer (passed as first parameter) to the specified FPGA register.  
-    The FPGA register is the sum of two arguments so that we can pass a 
+/* Copy integer (passed as first parameter) to the specified FPGA register.
+    The FPGA register is the sum of two arguments so that we can pass a
     block base and an offset within the block. */
 {
     unsigned int *reg = (unsigned int *) params;
@@ -600,7 +600,7 @@ int r_modifyValvePumpTec(unsigned int numInt,void *params,void *env)
     and the second value as the bits to set within the mask */
 {
     unsigned int *reg = (unsigned int *) params;
-    
+
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
     modify_valve_pump_tec(reg[0],reg[1]);
     return STATUS_OK;

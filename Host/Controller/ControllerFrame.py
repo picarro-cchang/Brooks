@@ -173,6 +173,7 @@ class ControllerFrame(ControllerFrameGui):
         self.Close()
 
     def onUpdateTimer(self,evt):
+        self.commandLogPanel.updateLoopStatus()
         pageNum = self.topNotebook.GetSelection()
         pageText = self.topNotebook.GetPageText(pageNum)
         if pageText == "Laser1":
@@ -199,7 +200,6 @@ class ControllerFrame(ControllerFrameGui):
     def onIdle(self,evt):
         # Deal with updating the command log panel
         self.commandLogPanel.setStreamFileState()
-        self.commandLogPanel.updateLoopStatus()
         self.commandLogPanel.updateAcquisitionState()
         # Deal with event manager log messages
         while True:

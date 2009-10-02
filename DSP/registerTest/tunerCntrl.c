@@ -45,19 +45,21 @@ void setupDither(unsigned int center)
     unsigned int sweepHigh = center + (unsigned int)*(float*)registerAddr(TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER);
     unsigned int windowLow  = center - (unsigned int)*(float*)registerAddr(TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER);
     unsigned int windowHigh = center + (unsigned int)*(float*)registerAddr(TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER);
-    writeFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,(unsigned int)*(unsigned int*)registerAddr(SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER));    
+    writeFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,(unsigned int)*(unsigned int*)registerAddr(SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER));
     if (windowHigh > sweepHigh) windowHigh = sweepHigh;
     if (windowLow  < sweepLow)  windowLow  = sweepLow;
     if (sweepHigh > *(float*)registerAddr(TUNER_SWEEP_RAMP_HIGH_REGISTER) ||
-        sweepLow  < *(float*)registerAddr(TUNER_SWEEP_RAMP_LOW_REGISTER)) {
+            sweepLow  < *(float*)registerAddr(TUNER_SWEEP_RAMP_LOW_REGISTER))
+    {
         switchToRampMode();
     }
-    else {
+    else
+    {
         writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_LOW,sweepLow);
         writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_HIGH,sweepHigh);
         writeFPGA(FPGA_TWGEN+TWGEN_WINDOW_LOW,windowLow);
         writeFPGA(FPGA_TWGEN+TWGEN_WINDOW_HIGH,windowHigh);
-        changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL, RDMAN_CONTROL_RAMP_DITHER_B, RDMAN_CONTROL_RAMP_DITHER_W, 1);        
+        changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL, RDMAN_CONTROL_RAMP_DITHER_B, RDMAN_CONTROL_RAMP_DITHER_W, 1);
     }
 }
 
