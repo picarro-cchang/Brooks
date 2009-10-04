@@ -217,7 +217,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     rdsim = RdSim( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                    dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdsim,
                    dsp_wr=dsp_wr, rd_trig_in=rd_trig,
-                   tuner_value_in=tuner_value,
+                   pzt_value_in=tuner_value,
                    rd_adc_clk_in=adc_clk,
                    rdsim_value_out=rdsim_value, map_base=FPGA_RDSIM )
 

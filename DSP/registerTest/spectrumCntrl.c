@@ -171,7 +171,7 @@ void setupLaserTemperature(void)
     volatile VirtualLaserParamsType *vLaserParams;
     float laserTemp;
 
-    *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].laserUsed;
+    *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
     vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
     laserTemp = 0.001 * schemeTable->rows[*(s->row_)].laserTemp; // Scheme temperatures are in milli-degrees C
     laserNum = vLaserParams->actualLaser & 0x3;
@@ -219,7 +219,7 @@ void setupNextRdParams(void)
             *(s->active_) = schemeSequence->schemeIndices[schemeSequence->currentIndex];
         }
         schemeTable = &schemeTables[*(s->active_)];
-        *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].laserUsed;
+        *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
         vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
         setpoint = schemeTable->rows[*(s->row_)].setpoint;
 

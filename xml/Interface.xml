@@ -210,7 +210,7 @@
             <field ident="setpoint" type="float"/>
             <field ident="dwellCount" type="uint16"/>
             <field ident="subschemeId" type="uint16"/>
-            <field ident="laserUsed" type="uint16"/>
+            <field ident="virtualLaser" type="uint16"/>
             <field ident="threshold" type="uint16"/>
             <field ident="pztSetpoint" type="uint16"/>
             <field ident="laserTemp" type="uint16"/>
@@ -2551,13 +2551,13 @@
                     <fielddef value="1">Input ports</fielddef>
                 </bitfield>
             </reg>
-            <reg type="uint16" ident="TUNER_CENTER" description="Tuner value around which cavity fills" access="rw">
+            <reg type="uint16" ident="PZT_CENTER" description="PZT value (mod 16384) around which cavity fills" access="rw">
                 <save/>
-                <display format="%d">Tuner value around which cavity fills</display>
+                <display format="%d">PZT value (mod 16384) around which cavity fills</display>
             </reg>
-            <reg type="uint16" ident="TUNER_WINDOW_HALF_WIDTH" description="Half-width of tuner window within which cavity fills" access="rw">
+            <reg type="uint16" ident="PZT_WINDOW_HALF_WIDTH" description="Half-width of PZT window within which cavity fills" access="rw">
                 <save/>
-                <display format="%d">Half-width of tuner window within which cavity fills</display>
+                <display format="%d">Half-width of PZT window within which cavity fills</display>
             </reg>
             <reg type="uint16" ident="FILLING_RATE" description="Rate of increase of accumulator value during filling" access="rw">
                 <save/>

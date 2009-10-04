@@ -18,8 +18,8 @@ from Host.autogen.interface import RDSIM_EXTRA
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_RDSIM
 
-from Host.autogen.interface import RDSIM_OPTIONS, RDSIM_TUNER_CENTER
-from Host.autogen.interface import RDSIM_TUNER_WINDOW_HALF_WIDTH
+from Host.autogen.interface import RDSIM_OPTIONS, RDSIM_PZT_CENTER
+from Host.autogen.interface import RDSIM_PZT_WINDOW_HALF_WIDTH
 from Host.autogen.interface import RDSIM_FILLING_RATE, RDSIM_DECAY
 from Host.autogen.interface import RDSIM_DECAY_IN_SHIFT
 from Host.autogen.interface import RDSIM_DECAY_IN_OFFSET
@@ -37,7 +37,7 @@ dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 dsp_data_in = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 dsp_wr = Signal(LOW)
 rd_trig_in = Signal(LOW)
-tuner_value_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+pzt_value_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 rd_adc_clk_in = Signal(LOW)
 pzt_center_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 decay_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -108,7 +108,7 @@ def bench():
     rdsim = RdSim( clk=clk, reset=reset, dsp_addr=dsp_addr,
                    dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
                    dsp_wr=dsp_wr, rd_trig_in=rd_trig_in,
-                   tuner_value_in=tuner_value_in,
+                   pzt_value_in=pzt_value_in,
                    rd_adc_clk_in=rd_adc_clk_in,
                    pzt_center_in=pzt_center_in, decay_in=decay_in,
                    rdsim_value_out=rdsim_value_out, map_base=map_base )
@@ -116,8 +116,8 @@ def bench():
     def stimulus():
         yield assertReset()
         # Write parameters
-        yield writeFPGA(FPGA_RDSIM+RDSIM_TUNER_CENTER,0xC000)
-        yield writeFPGA(FPGA_RDSIM+RDSIM_TUNER_WINDOW_HALF_WIDTH,1100)
+        yield writeFPGA(FPGA_RDSIM+RDSIM_PZT_CENTER,0xC000)
+        yield writeFPGA(FPGA_RDSIM+RDSIM_PZT_WINDOW_HALF_WIDTH,1100)
         yield writeFPGA(FPGA_RDSIM+RDSIM_FILLING_RATE,1000)
         yield writeFPGA(FPGA_RDSIM+RDSIM_DECAY,0x0575)
         yield delay(1000000)
@@ -136,7 +136,7 @@ def bench():
             elif tuner <= minVal:
                 tuner = minVal
                 incr = abs(incr)
-            tuner_value_in.next = tuner
+            pzt_value_in.next = tuner
             tuner += incr
             yield delay(10000)  # Updated every 10us
         

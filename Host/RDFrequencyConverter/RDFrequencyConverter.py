@@ -11,20 +11,23 @@
 #
 # HISTORY:
 #   30-Sep-2009  alex/sze  Initial version.
+#   02-Oct-2009  alex  Add RPC functions.
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
 import sys
 import traceback
-from Host.autogen import interface
-import Queue
-from Host.Common import Autocal1
 import numpy
 import time
-
+import threading
+import Queue
+import inspect
+from Host.autogen import interface
+from Host.Common import Autocal1
+from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Host.Common import SharedTypes
-from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
+from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS, RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER
+from Host.Common.SharedTypes import Scheme
 from Host.Common import Listener, Broadcaster
 from Host.Common import CmdFIFO, StringPickler
 
@@ -34,43 +37,41 @@ else:
     AppPath = sys.argv[0]
 EventManagerProxy_Init("RDFrequencyConverter")
 
-class RDFrequencyConverterRpcHandler(object):
-    def __init__(self):
-        self.server = CmdFIFO.CmdFIFOServer(("", SharedTypes.RPC_PORT_FREQ_CONVERTER),
-                                            ServerName = "FrequencyConverter",
-                                            ServerDescription = "Frequency Converter for CRDS hardware",
-                                            threaded = True)
-        self._register_rpc_functions()
-
-    def _register_rpc_functions_for_object(self, obj):
-        """ Registers the functions in DriverRpcHandler class which are accessible by XML-RPC
-
-        NOTE - this automatically registers ALL member functions that don't start with '_'.
-
-        i.e.:
-          - if adding new rpc calls, just define them (with no _) and you're done
-          - if putting helper calls in the class for some reason, use a _ prefix
-        """
-        classDir = dir(obj)
-        for s in classDir:
-            attr = obj.__getattribute__(s)
-            if callable(attr) and (not s.startswith("_")) and (not inspect.isclass(attr)):
-                #if __debug__: print "registering", s
-                self.server.register_function(attr,DefaultMode=CmdFIFO.CMD_TYPE_Blocking)
-
-    def _register_rpc_functions(self):
-        """ Registers the functions accessible by XML-RPC """
-        #register the functions contained in this file...
-        self._register_rpc_functions_for_object( self )
-        #register some priority functions that can be used even while the Driver
-        #is performing a lengthy upload...
-        # server._register_priority_function(self.rdDasReg, "HP_rdDasReg")
-        # server._register_priority_function(self._getLockStatus, NameSlice = 1)
-        Log("Registered RPC functions")
-
+MIN_SIZE = 30
+Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                         ClientName="RDFrequencyConverter")
+                                         
+class RpcServerThread(threading.Thread):
+    def __init__(self, rpcServer, exitFunction):
+        threading.Thread.__init__(self)
+        self.setDaemon(1) #THIS MUST BE HERE
+        self.rpcServer = rpcServer
+        self.exitFunction = exitFunction
+    def run(self):
+        self.rpcServer.serve_forever()
+        try: #it might be a threading.Event
+            self.exitFunction()
+            Log("RpcServer exited and no longer serving.")
+        except:
+            LogExc("Exception raised when calling exit function at exit of RPC server.")
+            
 class RDFrequencyConverter(object):
     def __init__(self):
+        self.numLasers = interface.NUM_VIRTUAL_LASERS
         self.rdQueue = Queue.Queue()
+        self.rdProcessedCache = []
+        self.rpcThread = None
+        self._shutdownRequested = False
+        self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_FREQ_CONVERTER),
+                                                ServerName = "FrequencyConverter",
+                                                ServerDescription = "Frequency Converter for CRDS hardware",
+                                                threaded = True)
+        #Register the rpc functions...
+        for s in dir(self):
+            attr = self.__getattribute__(s)
+            if callable(attr) and s.startswith("RPC_") and (not inspect.isclass(attr)):
+                self.rpcServer.register_function(attr, NameSlice = 4)
+                
         self.rdListener = Listener.Listener(self.rdQueue,
                                     BROADCAST_PORT_RDRESULTS,
                                     interface.RingdownEntryType,
@@ -79,26 +80,27 @@ class RDFrequencyConverter(object):
         self.processedRdBroadcaster = Broadcaster.Broadcaster(
                                     port=BROADCAST_PORT_RD_RECALC,
                                     name="Ringdown frequency converter broadcaster",logFunc = Log)
-        self.rpcHandler = RDFrequencyConverterRpcHandler()
-
+        
+        self._freqScheme = {}
+        self._angleScheme = {}
+        self._isAngleSchemeConverted = {}
+        self._freqConverter = {}
 
     def run(self):
-        rdProcessedData = interface.ProcessedRingdownEntryType()
-        daemon = self.rpcHandler.server.daemon
+        #start the rpc server on another thread...
+        self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
+        self.rpcThread.start()
+        
         try:
-            while not daemon.mustShutdown:
-                while not self.rdQueue.empty():
+            while not self._shutdownRequested:
+                if self.rdQueue.qsize() > MIN_SIZE:
+                    self._batchConvert()
+                while self.rdProcessedCache:
                     try:
-                        rdData = self.rdQueue.get(False)
-                        for name,ctype in rdData._fields_:
-                            if name != "wlmAngle":
-                                setattr(rdProcessedData, name, getattr(rdData,name))
-                            else:
-                                rdProcessedData.frequency = int(100000*abs(rdData.wlmAngle))
+                        rdProcessedData = self.rdProcessedCache.pop(0)
                         self.processedRdBroadcaster.send(StringPickler.ObjAsString(rdProcessedData))   
-                    except Queue.Empty:
+                    except:
                         break
-                daemon.handleRequests(0.1)
             Log("RD Frequency Converter RPC handler shut down")
 
         except:
@@ -106,89 +108,102 @@ class RDFrequencyConverter(object):
             Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
                 Verbose=traceback.format_exc(),Level=3)
 
+    def _batchConvert(self):
+        """Convert WLM angles and laser temperatures to wavenumbers in a vectorized way, using
+        wlmAngleAndlaserTemperature2WaveNumber"""
+
+        if self.rdProcessedCache:
+            raise RuntimeError("_batchConvert called while cache is not empty")
+        wlmAngle = []
+        laserTemperature = []
+        cacheIndex = []
+        for laserIndex in range(self.numLasers):
+            wlmAngle.append([])
+            laserTemperature.append([])
+            cacheIndex.append([])
+        # Get data from the queue into the cache
+        index = 0
+        while not self.rdQueue.empty():
+            try:
+                rdProcessedData = interface.ProcessedRingdownEntryType()
+                rdData = self.rdQueue.get(False)
+                for name,ctype in rdData._fields_:
+                    if name != "wlmAngle":
+                        setattr(rdProcessedData, name, getattr(rdData,name))
+                self.rdProcessedCache.append(rdProcessedData)
+                laserIndex = (rdData.laserUsed >> 2) & 0x7 # 0-based
+                wlmAngle[laserIndex].append(rdData.wlmAngle)
+                laserTemperature[laserIndex].append(rdData.laserTemperature)
+                cacheIndex[laserIndex].append(index)
+                index += 1
+            except Queue.Empty:
+                break
+        # Do the angle to wavenumber conversions for each available laser
+        for laserIndex in range(self.numLasers):
+            if cacheIndex[laserIndex]: # There are angles to convert for this laser
+                fc = self._freqConverter[laserIndex]
+                waveNo = fc.thetaCalAndLaserTemp2WaveNumber(numpy.array(wlmAngle[laserIndex]), numpy.array(laserTemperature[laserIndex]))
+                for i,w in enumerate(waveNo):
+                    index = cacheIndex[laserIndex][i]
+                    rdProcessedData = self.rdProcessedCache[index]
+                    rdProcessedData.frequency = int(100000.0 * w)
+        
+    def RPC_wrFreqScheme(self, schemeNum, schFilePath):
+        self._freqScheme[schemeNum] = Scheme(schFilePath)
+        self._angleScheme[schemeNum] = Scheme(schFilePath)
+        self._isAngleSchemeConverted[schemeNum] = False
+
+    def RPC_convertScheme(self, schemeNum):
+        # Convert scheme from frequency (wave number) to angle
+        scheme = self._freqScheme[schemeNum]
+        angleScheme = self._angleScheme[schemeNum]
+        numEntries = scheme.numEntries
+        dataByLaser = {}
+        for i in xrange(numEntries):
+            laserNum = scheme.virtualLaser[i]
+            waveNum = float(scheme.setpoint[i])
+            if laserNum not in dataByLaser:
+                dataByLaser[laserNum] = ([],[])
+            dataByLaser[laserNum][0].append(i)
+            dataByLaser[laserNum][1].append(waveNum)
+        for laserNum in dataByLaser:
+            fc = self._freqConverter[laserNum]
+            waveNum = numpy.array(dataByLaser[laserNum][1])
+            wlmAngle = fc.waveNumber2ThetaCal(waveNum)
+            laserTemp = fc.thetaCal2LaserTemp(wlmAngle)
+            for j,i in enumerate(dataByLaser[laserNum][0]):
+                angleScheme.setpoint[i] = wlmAngle[j]
+                angleScheme.laserTemp[i]= laserTemp[j]
+        self._isAngleSchemeConverted[schemeNum] = True
+
+    def RPC_uploadSchemeToDAS(self, schemeNum):
+        # Upload angle scheme to DAS
+        if not self._isAngleSchemeConverted[schemeNum]:
+            raise Exception("Scheme not converted to angle yet.")
+        angleScheme = self._angleScheme[schemeNum]
+        Driver.wrScheme(schemeNum, *(angleScheme.repack()))
+        
+    def RPC_loadCal(self, calFilePath):
+        ##Load up the frequency converters for each laser in the DAS...
+        cp = CustomConfigObj(calFilePath)
+        for i in range(1, self.numLasers + 1): # N.B. In Autocal1, laser indices are 1 based
+            ac = Autocal1.AutoCal()
+            try:
+                ac.getFromIni(cp, i)
+                self._freqConverter[i-1] = ac
+            except KeyError:
+                #No such laser
+                pass
+                
+    def RPC_shutdown(self):
+        self._shutdownRequested = True
+        
 if __name__ == "__main__":
-    rdFrequencyConverterApp = RDFrequencyConverter()
+    rdFreqConvertApp = RDFrequencyConverter()
+    rdFreqConvertApp.RPC_loadCal("Warmbox_Factory.ini")
+    rdFreqConvertApp.RPC_wrFreqScheme(0, "sample1.sch")
+    rdFreqConvertApp.RPC_convertScheme(0)
+    rdFreqConvertApp.RPC_uploadSchemeToDAS(0)
     Log("RDFrequencyConverter starting")
-    rdFrequencyConverterApp.run()
+    rdFreqConvertApp.run()
     Log("RDFrequencyConverter exiting")
-    
-if 0:            
-    class RDFrequencyConverter(object):
-        def __init__(self, WarmboxCalFilePath):
-            ##Load up the frequency converters for each laser in the DAS...
-            cp = CustomConfigObj(WarmboxCalFilePath)  
-            for i in range(1, MAX_LASERS + 1): # N.B. In Autocal1, laser indices are 1 based
-                ac = Autocal1.AutoCal()
-                try:
-                    ac.getFromIni(cp, i)
-                    self._FreqConverter[i-1] = ac
-                except KeyError:
-                    #No such laser
-                    pass
-            self.RdQueue = Queue.Queue()
-            rdElementType = HostRdResultsType
-            self.RdListener = Listener.Listener(self.RdQueue,
-                                        BROADCAST_PORT_RDRESULTS,
-                                        rdElementType,
-                                        retry = True,
-                                        name = "Ringdown frequency converter listener",logFunc = Log)
-            self.rdCache = []
-            
-        def _batchConvert(self):
-            """Convert WLM angles and laser temperatures to wavenumbers in a vectorized way, using
-            thetaCalAndLaserTemp2WaveNumber"""
-
-            if self.rdCache:
-                raise RuntimeError("_batchConvert called while cache is not empty")
-            thetaCal = []
-            laserTemp = []
-            cacheIndex = []
-            for laserIndex in range(MAX_LASERS):
-                thetaCal.append([])
-                laserTemp.append([])
-                cacheIndex.append([])
-            # Get data from the queue into the cache
-            index = 0
-            while not self.RdQueue.empty():
-                try:
-                    rdData = self.RdQueue.get(False)
-                    self.rdCache.append(rdData)
-                    laserIndex = rdData.laserSelect
-                    thetaCal[laserIndex].append(rdData.thetaCal)
-                    laserTemp[laserIndex].append(rdData.laserTemp)
-                    cacheIndex[laserIndex].append(index)
-                    index += 1
-                except Queue.Empty:
-                    break
-            # Do the angle to wavenumber conversions for each laser
-            for laserIndex in range(MAX_LASERS):
-                if cacheIndex[laserIndex]: # There are angles to convert for this laser
-                    fc = self._FreqConverter[laserIndex]
-                    waveNo = fc.thetaCalAndLaserTemp2WaveNumber(numpy.array(thetaCal[laserIndex]), numpy.array(laserTemp[laserIndex]))
-                    for i,w in enumerate(waveNo):
-                        index = cacheIndex[laserIndex][i]
-                        rdData = self.rdCache[index][0]
-                        dasScheme = self.rdCache[index][2]
-                        rdData.wavenum = int(100000.0 * w)
-                        try:
-                            rdData.wavenumSetpoint = dasScheme._OriginalScheme.schemeEntry[rdData.schemeRow].setpoint.asUint32
-                        except Exception, e:
-                            rdData.wavenumSetpoint = 0
-                            print "ERROR: Scheme number: %d, row: %d, exception: %s" % (rdData.schemeTableIndex,rdData.schemeRow,e)
-
-        def _GetRingdownData(self,timeout):
-            """Calls batchConvert to get ringdown data from self.RdQueue, having converted WLM angles to
-            wavenumbers if necessary. For efficiency, the conversions are batched, vectorized and cached
-            in the FIFO self.rdCache. If the cache is non-empty, immediately return data from it. Otherwise,
-            check RdQueue to see if there are already enough data to make it worth doing a batch conversion.
-            If the amount of data are insufficient, wait for the timeout duration (for more data to accumulate)
-            and then do the conversion. Raises Queue.Empty if no data are available."""
-
-            MIN_SIZE = 50
-            if not self.rdCache: # i.e. cache is Empty
-                if self.RdQueue.qsize() < MIN_SIZE:
-                    time.sleep(timeout)
-                self._batchConvert()
-                if not self.rdCache:
-                    raise Queue.Empty
-            return self.rdCache.pop(0)

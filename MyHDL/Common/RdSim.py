@@ -20,8 +20,8 @@ from Host.autogen.interface import RDSIM_EXTRA
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_RDSIM
 
-from Host.autogen.interface import RDSIM_OPTIONS, RDSIM_TUNER_CENTER
-from Host.autogen.interface import RDSIM_TUNER_WINDOW_HALF_WIDTH
+from Host.autogen.interface import RDSIM_OPTIONS, RDSIM_PZT_CENTER
+from Host.autogen.interface import RDSIM_PZT_WINDOW_HALF_WIDTH
 from Host.autogen.interface import RDSIM_FILLING_RATE, RDSIM_DECAY
 from Host.autogen.interface import RDSIM_DECAY_IN_SHIFT
 from Host.autogen.interface import RDSIM_DECAY_IN_OFFSET
@@ -35,9 +35,15 @@ LOW, HIGH = bool(0), bool(1)
 t_State = enum("INIT","GENVALUE")
 
 def RdSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,rd_trig_in,
-          tuner_value_in,rd_adc_clk_in,pzt_center_in,decay_in,
+          pzt_value_in,rd_adc_clk_in,pzt_center_in,decay_in,
           rdsim_value_out,map_base):
     """
+    The ringdown simulator synthesizes a ringdown waveform for testing the operation of the analyzer. A 25MHz clock
+    signal is used for the ADC, and at each negative edge of the clock a new sample is placed on rdsim_value_out.
+    At any time, the simulator is either in the filling mode or the decaying mode, depending on the value of
+    (pzt_value_in-pzt_center_in). The simulator is in filling mode iff this difference modulo 16384 is in the range 
+    -RDSIM_PZT_WINDOW_HALF_WIDTH through +RDSIM_PZT_WINDOW_HALF_WIDTH.
+    
     Parameters:
     clk                 -- Clock input
     reset               -- Reset input
@@ -46,17 +52,18 @@ def RdSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,rd_trig_in,
     dsp_data_in         -- read data to dsp_interface_block
     dsp_wr              -- single-cycle write command from dsp_interface block
     rd_trig_in          -- Goes high to turn off injection into cavity
-    tuner_value_in      -- Tuner value
+    pzt_value_in        -- PZT value
     rd_adc_clk_in       -- Clock for ring-down ADC. Data loaded on negative transitions
-    pzt_center_in       -- Input for tuner value at ringdown (selected using input_sel)
+    pzt_center_in       -- Input for tuner value at ringdown (selected using input_sel). The cavity resonance point is
+                            when 0 == (pzt_value - pzt_center_in) % 16384
     decay_in            -- Input for decay rate (selected using input_sel)
     rdsim_value_out     -- Simulated ring-down signal value
     map_base
 
     Registers:
     RDSIM_OPTIONS       -- Options register
-    RDSIM_TUNER_CENTER  -- Specifies center of tuner window for cavity filling
-    RDSIM_TUNER_WINDOW_HALF_WIDTH   -- Specifies half-width of tuner window for cavity filling
+    RDSIM_PZT_CENTER    -- Specifies center of PZT window for cavity filling
+    RDSIM_PZT_WINDOW_HALF_WIDTH   -- Specifies half-width of tuner window for cavity filling
     RDSIM_FILLING_RATE  -- Specifies amount added to accumulator on each adc_clk when cavity is filling
     RDSIM_DECAY         -- Specifies decay rate as a binary fraction. Accumulator is multiplied by (1-decay/16) every adc_clk
     RDSIM_DECAY_IN_SHIFT -- Decay input is shifted by this number of bits
@@ -67,16 +74,16 @@ def RdSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,rd_trig_in,
     RDSIM_OPTIONS_INPUT_SEL -- 0 for register, 1 for input ports
     """
     rdsim_options_addr = map_base + RDSIM_OPTIONS
-    rdsim_tuner_center_addr = map_base + RDSIM_TUNER_CENTER
-    rdsim_tuner_window_half_width_addr = map_base + RDSIM_TUNER_WINDOW_HALF_WIDTH
+    rdsim_pzt_center_addr = map_base + RDSIM_PZT_CENTER
+    rdsim_pzt_window_half_width_addr = map_base + RDSIM_PZT_WINDOW_HALF_WIDTH
     rdsim_filling_rate_addr = map_base + RDSIM_FILLING_RATE
     rdsim_decay_addr = map_base + RDSIM_DECAY
     rdsim_decay_in_shift_addr = map_base + RDSIM_DECAY_IN_SHIFT
     rdsim_decay_in_offset_addr = map_base + RDSIM_DECAY_IN_OFFSET
     rdsim_accumulator_addr = map_base + RDSIM_ACCUMULATOR
     options = Signal(intbv(0)[1:])
-    tuner_center = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    tuner_window_half_width = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    pzt_center = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    pzt_window_half_width = Signal(intbv(0)[FPGA_REG_WIDTH:])
     filling_rate = Signal(intbv(0)[FPGA_REG_WIDTH:])
     decay = Signal(intbv(0)[FPGA_REG_WIDTH:])
     decay_in_shift = Signal(intbv(0)[4:])
@@ -98,8 +105,8 @@ def RdSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,rd_trig_in,
             yield clk.posedge, reset.posedge
             if reset:
                 options.next = 0
-                tuner_center.next = 0
-                tuner_window_half_width.next = 0
+                pzt_center.next = 0
+                pzt_window_half_width.next = 0
                 filling_rate.next = 0
                 decay.next = 0
                 decay_in_shift.next = 0
@@ -112,12 +119,12 @@ def RdSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,rd_trig_in,
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdsim_options_addr: # rw
                         if dsp_wr: options.next = dsp_data_out
                         dsp_data_in.next = options
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdsim_tuner_center_addr: # rw
-                        if dsp_wr: tuner_center.next = dsp_data_out
-                        dsp_data_in.next = tuner_center
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdsim_tuner_window_half_width_addr: # rw
-                        if dsp_wr: tuner_window_half_width.next = dsp_data_out
-                        dsp_data_in.next = tuner_window_half_width
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdsim_pzt_center_addr: # rw
+                        if dsp_wr: pzt_center.next = dsp_data_out
+                        dsp_data_in.next = pzt_center
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdsim_pzt_window_half_width_addr: # rw
+                        if dsp_wr: pzt_window_half_width.next = dsp_data_out
+                        dsp_data_in.next = pzt_window_half_width
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdsim_filling_rate_addr: # rw
                         if dsp_wr: filling_rate.next = dsp_data_out
                         dsp_data_in.next = filling_rate
@@ -139,13 +146,13 @@ def RdSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,rd_trig_in,
                     
                 if options[RDSIM_OPTIONS_INPUT_SEL_B]:
                     decay.next = decay_in_offset + (decay_in >> decay_in_shift)
-                    tuner_center.next = pzt_center_in
+                    pzt_center.next = pzt_center_in
                     
-                residual.next = (tuner_value_in - tuner_center) & rmask
+                residual.next = (pzt_value_in - pzt_center) & rmask
                 if state == t_State.INIT:
                     if rd_adc_clk_in:
-                        if (residual.signed() < tuner_window_half_width) and \
-                           (residual.signed() > -tuner_window_half_width) and not rd_trig_in:
+                        if (residual.signed() < pzt_window_half_width) and \
+                           (residual.signed() > -pzt_window_half_width) and not rd_trig_in:
                             # Cavity filling
                             accumulator.next = accumulator + filling_rate
                         else:
@@ -172,7 +179,7 @@ if __name__ == "__main__":
     dsp_data_in = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_wr = Signal(LOW)
     rd_trig_in = Signal(LOW)
-    tuner_value_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    pzt_value_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rd_adc_clk_in = Signal(LOW)
     pzt_center_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     decay_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -182,7 +189,7 @@ if __name__ == "__main__":
     toVHDL(RdSim, clk=clk, reset=reset, dsp_addr=dsp_addr,
                   dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
                   dsp_wr=dsp_wr, rd_trig_in=rd_trig_in,
-                  tuner_value_in=tuner_value_in,
+                  pzt_value_in=pzt_value_in,
                   rd_adc_clk_in=rd_adc_clk_in,
                   pzt_center_in=pzt_center_in, decay_in=decay_in,
                   rdsim_value_out=rdsim_value_out, map_base=map_base)

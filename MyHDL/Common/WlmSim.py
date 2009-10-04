@@ -42,9 +42,26 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
            ref2_out,loss_out,pzt_cen_out,done_out,map_base):
     """
     Simulate the output of the wavelength monitor when the specified coarse and fine currents are
-    applied to the laser. The  WLM angle coordinate is related to the currents by:
+    applied to the laser. The  WLM "phase" is related to the currents by:
 
-        angle = (2*pi/65536) * (5*coarse current + fine current/2)
+        phase = (2*pi/65536) * (5*coarse current + fine current/2)
+        
+    The phase is stored in the variable z0 multiplied by 65536 to convert it to an integer. The CORDIC
+    algorithm (in the function process) takes an angle in zval and computes the cosine in x and the 
+    sine in y. These are used to find xu = 1-rho*cos(phase) and 1-rho*sin(phase). The quantity rho is
+    related to the reflectivity of the etalon. The register rfac contains 65536*rho.
+    
+    Etalon1 = rho*(1-sin(phase)) / (1-rho*sin(phase))
+    Reference1 = (1-rho) / (1-rho*sin(phase))
+    
+    Etalon2 = rho*(1-cos(phase)) / (1-rho*cos(phase))
+    Reference2 = (1-rho) / (1-rho*cos(phase))
+    
+    This block also calculates a loss using
+    Loss = (1-w) / (1-w*cos(4*phase))
+    where 65536*w is placed in the register wfac.
+    
+    The value of pzt_cen_out is set to 4*phase
     
     Parameters:
     clk                 -- Clock input
@@ -132,7 +149,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     An = 1.0
     for i in range(N):
         An *= (sqrt(1.0 + 2**(-2*i)))
-    scale = int(M2/An)    
+    scale = int(M2/An)    # This is the CORDIC factor which gives unit amplitude sine and cosine
     
     divider = Divider(clk=clk, reset=reset, N_in=div_num, D_in=div_den, Q_out=div_quot,
                       rfd_out=div_rfd, ce_in=div_ce, width=W)
@@ -184,7 +201,8 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                 mult_a.next[17:1] = scale
                 if options[WLMSIM_OPTIONS_INPUT_SEL_B]:
                     z0.next = ((coarse_current_in << 2) + coarse_current_in + (fine_current_in >> 1)) % M
-
+                # z0 now contains the angle, where 0 to 2*pi is represented by 0 to 65536
+                    
                 if reset:
                     state = t_seqState.IDLE
                     done_out.next = HIGH
@@ -239,8 +257,10 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                             pzt_cen_out.next = (zval << 2) % M
                             done_out.next = HIGH
                             state = t_seqState.IDLE
-
-    # iterative CORDIC processor
+                            
+    # Iterative CORDIC processor for calculating 1-rho*cos(phi) and 1-rho*sin(phi) in xu and yu.
+    #  The amplitude of the trigonometric term is multiplied by the CORDIC normalization term
+    #  and is initially placed in mult_p
     @instance
     def processor():
         x = intbv(0, min=-M2, max=M2)

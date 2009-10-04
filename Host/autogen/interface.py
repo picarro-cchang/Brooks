@@ -1852,8 +1852,8 @@ RDSIM_OPTIONS = 0 # Options
 RDSIM_OPTIONS_INPUT_SEL_B = 0 # Source of decay and tuner center parameters bit position
 RDSIM_OPTIONS_INPUT_SEL_W = 1 # Source of decay and tuner center parameters bit width
 
-RDSIM_TUNER_CENTER = 1 # Tuner value around which cavity fills
-RDSIM_TUNER_WINDOW_HALF_WIDTH = 2 # Half-width of tuner window within which cavity fills
+RDSIM_PZT_CENTER = 1 # PZT value (mod 16384) around which cavity fills
+RDSIM_PZT_WINDOW_HALF_WIDTH = 2 # Half-width of PZT window within which cavity fills
 RDSIM_FILLING_RATE = 3 # Rate of increase of accumulator value during filling
 RDSIM_DECAY = 4 # Exponential decay of accumulator when not filling
 RDSIM_DECAY_IN_SHIFT = 5 # Bits to  right shift decay input
@@ -2104,7 +2104,7 @@ FPGA_DYNAMICPWM_OUTLET = 113 # Outlet proportional valve dynamic PWM
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
-persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_OPTIONS', u'RDSIM_TUNER_CENTER', u'RDSIM_TUNER_WINDOW_HALF_WIDTH', u'RDSIM_FILLING_RATE', u'RDSIM_DECAY', u'RDSIM_DECAY_IN_SHIFT', u'RDSIM_DECAY_IN_OFFSET']))
+persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_OPTIONS', u'RDSIM_PZT_CENTER', u'RDSIM_PZT_WINDOW_HALF_WIDTH', u'RDSIM_FILLING_RATE', u'RDSIM_DECAY', u'RDSIM_DECAY_IN_SHIFT', u'RDSIM_DECAY_IN_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_OPTIONS', u'LASERLOCKER_ETA1_OFFSET', u'LASERLOCKER_REF1_OFFSET', u'LASERLOCKER_ETA2_OFFSET', u'LASERLOCKER_REF2_OFFSET', u'LASERLOCKER_RATIO1_CENTER', u'LASERLOCKER_RATIO1_MULTIPLIER', u'LASERLOCKER_RATIO2_CENTER', u'LASERLOCKER_RATIO2_MULTIPLIER', u'LASERLOCKER_TUNING_OFFSET', u'LASERLOCKER_WM_LOCK_WINDOW', u'LASERLOCKER_WM_INT_GAIN', u'LASERLOCKER_WM_PROP_GAIN', u'LASERLOCKER_WM_DERIV_GAIN']))
 persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION', u'RDMAN_TIMEOUT_DURATION']))
 persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP', u'TWGEN_SWEEP_LOW', u'TWGEN_SWEEP_HIGH', u'TWGEN_WINDOW_LOW', u'TWGEN_WINDOW_HIGH', u'TWGEN_PZT_OFFSET']))
@@ -2492,8 +2492,8 @@ parameter_forms.append(('Spectrum Controller Parameters',__p))
 __p = []
 
 __p.append(('fpga','mask',FPGA_RDSIM+RDSIM_OPTIONS,[(1, u'Source of decay and tuner center parameters', [(0, u'Registers'), (1, u'Input ports')])],None,None,1,1))
-__p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_TUNER_CENTER,'Tuner value around which cavity fills','','%d',1,1))
-__p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_TUNER_WINDOW_HALF_WIDTH,'Half-width of tuner window within which cavity fills','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_PZT_CENTER,'PZT value (mod 16384) around which cavity fills','','%d',1,1))
+__p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_PZT_WINDOW_HALF_WIDTH,'Half-width of PZT window within which cavity fills','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_FILLING_RATE,'Rate of increase of accumulator value during filling','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_DECAY,'Exponential decay of accumulator when not filling','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDSIM+RDSIM_DECAY_IN_SHIFT,'Bits to  right shift decay input','','%d',1,1))

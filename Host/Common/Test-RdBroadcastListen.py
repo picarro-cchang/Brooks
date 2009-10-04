@@ -5,7 +5,7 @@ import sys
 from Host.autogen.interface import ProcessedRingdownEntryType
 
 def MyFilter(Obj):
-    print "Freq = %s, Loss = %s" % (Obj.frequency,Obj.
+    print "Freq = %s, Loss = %s" % (Obj.frequency,Obj.uncorrectedAbsorbance)
 
 try:
     listenPort = int(sys.argv[1])
