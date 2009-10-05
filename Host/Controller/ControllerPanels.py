@@ -551,9 +551,9 @@ class CommandLogPanel(CommandLogPanelGui):
         #  execution, which attempts to enqueue another request on the
         #  CmdFIFO before this function is finished.
         if cb.IsChecked():
-            self.driverRpc.openStreamFile()
+            Driver.openStreamFile()
         else:
-            self.driverRpc.closeStreamFile()
+            Driver.closeStreamFile()
 
     def setStreamFileState(self):
         """Call this within idle task to update stream file state widgets"""

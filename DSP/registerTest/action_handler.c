@@ -613,3 +613,34 @@ int r_update_wlmsim_laser_temp(unsigned int numInt,void *params,void *env)
     update_wlmsim_laser_temp();
     return STATUS_OK;
 }
+
+int r_simulate_laser_current_reading(unsigned int numInt,void *params,void *env)
+/* For the specified laser number (1-origin), place the simulated laser current reading (obtained
+    by combining coarse and fine laser contributions) into the specified register.  The scaling is
+    360nA/fine_current unit, and 10 fine_current units = 1 coarse_current unit. */
+{
+    unsigned int *reg = (unsigned int *) params;
+    unsigned int dac = 0;
+    float current;
+
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+
+    switch (reg[0])
+    {
+    case 1:
+        dac = 10*readFPGA(FPGA_INJECT+INJECT_LASER1_COARSE_CURRENT) + readFPGA(FPGA_INJECT+INJECT_LASER1_FINE_CURRENT);
+        break;
+    case 2:
+        dac = 10*readFPGA(FPGA_INJECT+INJECT_LASER2_COARSE_CURRENT) + readFPGA(FPGA_INJECT+INJECT_LASER2_FINE_CURRENT);
+        break;
+    case 3:
+        dac = 10*readFPGA(FPGA_INJECT+INJECT_LASER3_COARSE_CURRENT) + readFPGA(FPGA_INJECT+INJECT_LASER3_FINE_CURRENT);
+        break;
+    case 4:
+        dac = 10*readFPGA(FPGA_INJECT+INJECT_LASER4_COARSE_CURRENT) + readFPGA(FPGA_INJECT+INJECT_LASER4_FINE_CURRENT);
+        break;
+    }
+    current = 0.00036*dac;
+    WRITE_REG(reg[1],asFloat,current);
+    return STATUS_OK;
+}

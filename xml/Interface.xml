@@ -202,6 +202,7 @@
             <field ident="counter" type="uint32"/>
         </struct>
         <struct type="FilterEnvType">
+            <field ident="offset" type="float"/>
             <field ident="num" type="float" size="9"/>
             <field ident="den" type="float" size="9"/>
             <field ident="state" type="float" size="8"/>
@@ -3149,12 +3150,10 @@
         </fpga_map>
     </fpga_map_list>
     <environment_list>
-        <env type="PidControllerEnvType" ident="LASER1_TEMP_CNTRL_ENV" />
-        <env type="PidControllerEnvType" ident="LASER2_TEMP_CNTRL_ENV" />
-        <env type="CheckEnvType" ident="CHECK_ENV" />
-        <env type="PulseGenEnvType" ident="PULSE_GEN_ENV" />
-        <env type="FilterEnvType" ident="FILTER_ENV" />
-        <env type="FilterEnvType" ident="LASER_TEMP_MODEL_ENV" />
+        <env type="FilterEnvType" ident="LASER1_TEMP_MODEL_ENV" />
+        <env type="FilterEnvType" ident="LASER2_TEMP_MODEL_ENV" />
+        <env type="FilterEnvType" ident="LASER3_TEMP_MODEL_ENV" />
+        <env type="FilterEnvType" ident="LASER4_TEMP_MODEL_ENV" />
     </environment_list>
     <action_list>
         <action ident="ACTION_WRITE_BLOCK">writeBlock</action>
@@ -3231,5 +3230,6 @@
         <action ident="ACTION_READ_LASER_THERMISTOR_RESISTANCE">r_read_laser_thermistor_resistance</action>
         <action ident="ACTION_READ_LASER_CURRENT">r_read_laser_current</action>
         <action ident="ACTION_UPDATE_WLMSIM_LASER_TEMP">r_update_wlmsim_laser_temp</action>
+        <action ident="ACTION_SIMULATE_LASER_CURRENT_READING">r_simulate_laser_current_reading</action>
     </action_list>
 </Das_Interface>

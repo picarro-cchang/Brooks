@@ -40,11 +40,11 @@ int filter(float x, float *y,FilterEnvType *env)
         *y = 0.0;
         return ERROR_BAD_FILTER_COEFF;
     }
-    *y = env->state[0] + (env->num[0]/div)*x;
+    *y = env->state[0] + (env->num[0]/div)*(x + env->offset);
     for (i=0;i<MAX_ORDER-1;i++)
     {
-        env->state[i] = env->state[i+1] + (env->num[i+1]*x - env->den[i+1]*(*y))/div;
+        env->state[i] = env->state[i+1] + (env->num[i+1]*(x + env->offset) - env->den[i+1]*(*y))/div;
     }
-    env->state[MAX_ORDER-1] = (env->num[MAX_ORDER]*x - env->den[MAX_ORDER]*(*y))/div;
+    env->state[MAX_ORDER-1] = (env->num[MAX_ORDER]*(x + env->offset) - env->den[MAX_ORDER]*(*y))/div;
     return STATUS_OK;
 }

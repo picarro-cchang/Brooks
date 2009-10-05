@@ -74,13 +74,38 @@ class DasConfigure(object):
                     self.opGroups["FAST"]["SENSOR_READ"].addOperation(
                         Operation("ACTION_READ_LASER_THERMISTOR_RESISTANCE",
                                   [laserNum,"LASER%d_RESISTANCE_REGISTER" % laserNum]))
-                self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
-                    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                        ["LASER%d_RESISTANCE_REGISTER" % laserNum,
-                         "CONVERSION_LASER%d_THERM_CONSTA_REGISTER" % laserNum,
-                         "CONVERSION_LASER%d_THERM_CONSTB_REGISTER" % laserNum,
-                         "CONVERSION_LASER%d_THERM_CONSTC_REGISTER" % laserNum,
-                         "LASER%d_TEMPERATURE_REGISTER" % laserNum]))
+                    self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                            ["LASER%d_RESISTANCE_REGISTER" % laserNum,
+                             "CONVERSION_LASER%d_THERM_CONSTA_REGISTER" % laserNum,
+                             "CONVERSION_LASER%d_THERM_CONSTB_REGISTER" % laserNum,
+                             "CONVERSION_LASER%d_THERM_CONSTC_REGISTER" % laserNum,
+                             "LASER%d_TEMPERATURE_REGISTER" % laserNum]))
+                else:
+                    # Use a filter with similar characteristics to a real laser to simulate the thermal dynamics
+                    self.opGroups["FAST"]["MODEL"].addOperation(
+                        Operation("ACTION_FILTER",
+                            ["LASER%d_TEC_REGISTER" % laserNum,
+                             "LASER%d_TEMPERATURE_REGISTER" % laserNum],
+                            "LASER%d_TEMP_MODEL_ENV" % laserNum))
+                    env = interface.FilterEnvType()
+                    env.offset = -40000.0
+                    degree = 7
+                    env.num[0:degree+1] = [   0.00000000e+00,  -2.98418514e-05,  -1.01071361e-04,   6.39149028e-05,
+                                       5.23341031e-05,   2.66718772e-05,  -1.01386506e-05,  -9.73607948e-06]
+                    env.den[0:degree+1] = [   1.00000000e+00,  -1.37628382e+00,   2.19598434e-02,   1.01673929e-01,
+                                       2.99996581e-01,   2.93872141e-02,  -7.45088401e-02,  -1.42310788e-04]
+                    ss_in = 32768
+                    ss_out = (ss_in+env.offset)*sum(env.num[0:degree+1])/sum(env.den[0:degree+1])
+                    print ss_out
+                    for i in range(degree)[::-1]:
+                        env.state[i] = (ss_in+env.offset)*env.num[i+1]-ss_out*env.den[i+1]
+                        if i<degree-1:
+                            env.state[i] += env.state[i+1]
+                    print env.state[0:degree]
+                    env.ptr = 0
+                    sender.wrEnv("LASER%d_TEMP_MODEL_ENV" % laserNum,env)
+                    
                 self.opGroups["FAST"]["STREAMER"].addOperation(
                     Operation("ACTION_STREAM_REGISTER",
                         ["STREAM_Laser%dTemp" % laserNum,"LASER%d_TEMPERATURE_REGISTER" % laserNum]))
@@ -103,6 +128,10 @@ class DasConfigure(object):
                                    "CONVERSION_LASER%d_CURRENT_SLOPE_REGISTER" % laserNum,
                                    "CONVERSION_LASER%d_CURRENT_OFFSET_REGISTER" % laserNum,
                                    "LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
+                else:
+                    self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_SIMULATE_LASER_CURRENT_READING",
+                                  [laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
                 self.opGroups["FAST"]["STREAMER"].addOperation(
                     Operation("ACTION_STREAM_REGISTER",
                         ["STREAM_Laser%dCurrent" % laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))

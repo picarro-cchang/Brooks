@@ -204,7 +204,10 @@ class Viewer(HasTraits):
         #fp.close()
         
         num,den,res,rank,sv,mock = find_ARMA(x,y,range(1,16),range(1,16),1)
+        #num,den,res,rank,sv,mock = find_ARMA(x,y,range(1,8),range(1,8),1)
         # Transfer functions as ratios of polynomials in z^-1
+        print num
+        print den
         step = ones(self.Nsamp,dtype=float)
         self.sysG = Ltid.fromNumDen(num,den)
         self.sysGinv = Ltid.fromNumDen(den,num)
@@ -260,9 +263,9 @@ class Viewer(HasTraits):
         self.findResponse()
     
 if __name__ == "__main__":
-    fname = "../Host/Driver/Sensors_20090821_153336.h5"
-    inputStream = STREAM_Laser3Tec
-    outputStream = STREAM_Laser3Temp
+    fname = "../Host/Driver/Sensors_20091005_001334.h5"
+    inputStream  = STREAM_Laser2Tec
+    outputStream = STREAM_Laser2Temp
     viewer = Viewer()
     viewer.process(fname,inputStream,outputStream)
     

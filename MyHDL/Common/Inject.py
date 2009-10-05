@@ -16,6 +16,7 @@
 #                      or SOA to be affected by the shutdown inputs in automatic mode. If the enable bit 
 #                      is reset, the selected laser or SOA remains on even when the shutdown input is asserted.
 #   18-Sep-2009  sze  Handle 2 input CrystaLatch optical switch
+#   05-Oct-2009  sze  In automatic mode, the selected fine current register is updated with laser_fine_current_in
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -211,6 +212,17 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 # Produce a single clock width pulse for dac_strobe whenever strobe_in goes high
                 dac_strobe.next = strobe_in and not strobe_prev
                 strobe_prev.next = strobe_in
+                # Store laser_fine_current input to register of selected laser in automatic mode
+                if mode:
+                    if sel==0:
+                        laser1_fine_current.next = laser_fine_current_in
+                    elif sel==1:
+                        laser2_fine_current.next = laser_fine_current_in
+                    elif sel==2:
+                        laser3_fine_current.next = laser_fine_current_in
+                    else:
+                        laser4_fine_current.next = laser_fine_current_in
+                
                 # State machine for generating optical switch signals                
                 if optSwitchState == OptSwitchState.IDLE:
                     optical_switch1_out.next = 0

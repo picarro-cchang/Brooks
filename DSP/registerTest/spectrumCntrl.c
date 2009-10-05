@@ -484,7 +484,8 @@ void update_wlmsim_laser_temp(void)
 //  in the starting or running states.
 {
     SpectCntrlParams *s=&spectCntrlParams;
-    if (*(s->state_) != SPECT_CNTRL_StartingState && *(s->state_) != SPECT_CNTRL_RunningState) {
+    if (*(s->state_) != SPECT_CNTRL_StartingState && *(s->state_) != SPECT_CNTRL_RunningState)
+    {
         unsigned int laserNum = readBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W);
         unsigned int laserTempAsInt = *(s->laserTemp_[laserNum]) * 1000;
         writeFPGA(FPGA_WLMSIM+WLMSIM_LASER_TEMP,laserTempAsInt);

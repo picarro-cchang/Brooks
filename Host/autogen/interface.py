@@ -223,6 +223,7 @@ class PulseGenEnvType(Structure):
 
 class FilterEnvType(Structure):
     _fields_ = [
+    ("offset",c_float),
     ("num",c_float*9),
     ("den",c_float*9),
     ("state",c_float*8)
@@ -2129,21 +2130,17 @@ persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_INLET', [u'DYNAMICPWM_DELTA'
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_OUTLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_HIGH', u'DYNAMICPWM_LOW', u'DYNAMICPWM_SLOPE']))
 
 # Environment addresses
-LASER1_TEMP_CNTRL_ENV = 0
-LASER2_TEMP_CNTRL_ENV = 10
-CHECK_ENV = 20
-PULSE_GEN_ENV = 22
-FILTER_ENV = 23
-LASER_TEMP_MODEL_ENV = 49
+LASER1_TEMP_MODEL_ENV = 0
+LASER2_TEMP_MODEL_ENV = 27
+LASER3_TEMP_MODEL_ENV = 54
+LASER4_TEMP_MODEL_ENV = 81
 
 # Dictionary for accessing environments by name
 envByName = {}
-envByName['LASER1_TEMP_CNTRL_ENV'] = (LASER1_TEMP_CNTRL_ENV,PidControllerEnvType)
-envByName['LASER2_TEMP_CNTRL_ENV'] = (LASER2_TEMP_CNTRL_ENV,PidControllerEnvType)
-envByName['CHECK_ENV'] = (CHECK_ENV,CheckEnvType)
-envByName['PULSE_GEN_ENV'] = (PULSE_GEN_ENV,PulseGenEnvType)
-envByName['FILTER_ENV'] = (FILTER_ENV,FilterEnvType)
-envByName['LASER_TEMP_MODEL_ENV'] = (LASER_TEMP_MODEL_ENV,FilterEnvType)
+envByName['LASER1_TEMP_MODEL_ENV'] = (LASER1_TEMP_MODEL_ENV,FilterEnvType)
+envByName['LASER2_TEMP_MODEL_ENV'] = (LASER2_TEMP_MODEL_ENV,FilterEnvType)
+envByName['LASER3_TEMP_MODEL_ENV'] = (LASER3_TEMP_MODEL_ENV,FilterEnvType)
+envByName['LASER4_TEMP_MODEL_ENV'] = (LASER4_TEMP_MODEL_ENV,FilterEnvType)
 
 # Action codes
 ACTION_WRITE_BLOCK = 1
@@ -2201,6 +2198,7 @@ ACTION_READ_LASER_TEC_MONITORS = 52
 ACTION_READ_LASER_THERMISTOR_RESISTANCE = 53
 ACTION_READ_LASER_CURRENT = 54
 ACTION_UPDATE_WLMSIM_LASER_TEMP = 55
+ACTION_SIMULATE_LASER_CURRENT_READING = 56
 
 
 # Parameter form definitions
