@@ -11,8 +11,11 @@
 # SEE ALSO:
 #
 # HISTORY:
-#   21-Jul-2009  sze  Initial version.
+#   21-Jul-2009  sze  Initial version
+#   24-Jul-2009  sze  Made WLM phase depend on laser current inputs
+#   27-Jul-2009  sze  Swapped etalon channels so cosine is for etalon/ref 2 and sine is for etalon/ref1
 #   28-Jul-2009  sze  Modification to compute ringdown loss as well
+#   04-Oct-2009  sze  Add laser temperature register for simulator
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -22,7 +25,7 @@ from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_WLMSIM
 
 from Host.autogen.interface import WLMSIM_OPTIONS, WLMSIM_Z0
-from Host.autogen.interface import WLMSIM_RFAC, WLMSIM_WFAC
+from Host.autogen.interface import WLMSIM_RFAC, WLMSIM_WFAC, WLMSIM_LASER_TEMP
 from Host.autogen.interface import WLMSIM_ETA1, WLMSIM_REF1
 from Host.autogen.interface import WLMSIM_ETA2, WLMSIM_REF2
 
@@ -41,14 +44,19 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
            coarse_current_in,fine_current_in,eta1_out,ref1_out,eta2_out,
            ref2_out,loss_out,pzt_cen_out,done_out,map_base):
     """
-    Simulate the output of the wavelength monitor when the specified coarse and fine currents are
-    applied to the laser. The  WLM "phase" is related to the currents by:
+    When OPTIONS_INPUT_SEL==1, simulate the output of the wavelength monitor when the specified coarse 
+    and fine currents are applied to the laser and the laser temperature is specified. The WLM "phase" 
+    is related to the currents and laser temp (in milli-C) by:
 
-        phase = (2*pi/65536) * (5*coarse current + fine current/2)
+        phase = (2*pi/65536) * (5*coarse current + fine current/2 + 18*laser_temp)
         
-    The phase is stored in the variable z0 multiplied by 65536 to convert it to an integer. The CORDIC
-    algorithm (in the function process) takes an angle in zval and computes the cosine in x and the 
-    sine in y. These are used to find xu = 1-rho*cos(phase) and 1-rho*sin(phase). The quantity rho is
+    The phase is stored in the variable z0 multiplied by 65536 to convert it to an integer. The phase may
+    be read back from the WLMSIM_Z0 register. If OPTIONS_INPUT_SEL==0, the WLMSIM_Z0 register is used to
+    specify the phase. In the latter case, the coarse and fine current inputs and the contents of the
+    WLMSIM_LASER_TEMP register are ignored.
+    
+    The CORDIC algorithm (in the function process) takes the phase and computes its cosine in x and its
+    sine in y. These are used to find xu = 1-rho*cos(phase) and yu=1-rho*sin(phase). The quantity rho is
     related to the reflectivity of the etalon. The register rfac contains 65536*rho.
     
     Etalon1 = rho*(1-sin(phase)) / (1-rho*sin(phase))
@@ -87,6 +95,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     WLMSIM_Z0           -- angle input
     WLMSIM_RFAC         -- factor related to mirror reflectivity = 2*R/(1+R**2)
     WLMSIM_WFAC         -- factor specifying width of spectral feature
+    WLMSIM_LASER_TEMP   -- simulator laser temperature in millidegrees Celsius
     WLMSIM_ETA1         -- etalon 1 (reflected) photocurrent
     WLMSIM_REF1         -- reference 1 (transmitted) photocurrent
     WLMSIM_ETA2         -- etalon 2 (reflected) photocurrent
@@ -99,6 +108,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     wlmsim_z0_addr = map_base + WLMSIM_Z0
     wlmsim_rfac_addr = map_base + WLMSIM_RFAC
     wlmsim_wfac_addr = map_base + WLMSIM_WFAC
+    wlmsim_laser_temp_addr = map_base + WLMSIM_LASER_TEMP
     wlmsim_eta1_addr = map_base + WLMSIM_ETA1
     wlmsim_ref1_addr = map_base + WLMSIM_REF1
     wlmsim_eta2_addr = map_base + WLMSIM_ETA2
@@ -107,6 +117,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     z0 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rfac = Signal(intbv(0x8000)[FPGA_REG_WIDTH:])
     wfac = Signal(intbv(0xF800)[FPGA_REG_WIDTH:])
+    laser_temp = Signal(intbv(0)[FPGA_REG_WIDTH:])
     eta1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ref1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     eta2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -164,6 +175,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                 z0.next = 0
                 rfac.next = 0x8000
                 wfac.next = 0xF800
+                laser_temp.next = 0
                 eta1.next = 0
                 ref1.next = 0
                 eta2.next = 0
@@ -184,6 +196,9 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_wfac_addr: # rw
                         if dsp_wr: wfac.next = dsp_data_out
                         dsp_data_in.next = wfac
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_laser_temp_addr: # rw
+                        if dsp_wr: laser_temp.next = dsp_data_out
+                        dsp_data_in.next = laser_temp
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_eta1_addr: # r
                         dsp_data_in.next = eta1
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_ref1_addr: # r
@@ -200,7 +215,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                 div_ce.next = LOW
                 mult_a.next[17:1] = scale
                 if options[WLMSIM_OPTIONS_INPUT_SEL_B]:
-                    z0.next = ((coarse_current_in << 2) + coarse_current_in + (fine_current_in >> 1)) % M
+                    z0.next = ((laser_temp << 4) + (laser_temp << 1) + (coarse_current_in << 2) + coarse_current_in + (fine_current_in >> 1)) % M
                 # z0 now contains the angle, where 0 to 2*pi is represented by 0 to 65536
                     
                 if reset:

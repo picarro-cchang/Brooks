@@ -56,5 +56,6 @@ void advanceScheme(void);
 void modifyParamsOnTimeout(unsigned int scheme);
 unsigned int getSpectCntrlSchemeCount(void);
 void spectCntrlError(void);
+void update_wlmsim_laser_temp(void);
 
 #endif /* _SPECT_CNTRL_H_ */

@@ -205,7 +205,7 @@ typedef struct {
     float setpoint;
     uint16 dwellCount;
     uint16 subschemeId;
-    uint16 laserUsed;
+    uint16 virtualLaser;
     uint16 threshold;
     uint16 pztSetpoint;
     uint16 laserTemp;
@@ -497,6 +497,13 @@ typedef enum {
     VIRTUAL_LASER_7 = 6, // Virtual laser 7
     VIRTUAL_LASER_8 = 7 // Virtual laser 8
 } VIRTUAL_LASER_Type;
+
+typedef enum {
+    ACTUAL_LASER_1 = 0, // Actual laser 1
+    ACTUAL_LASER_2 = 1, // Actual laser 2
+    ACTUAL_LASER_3 = 2, // Actual laser 3
+    ACTUAL_LASER_4 = 3 // Actual laser 4
+} ACTUAL_LASER_Type;
 
 typedef enum {
     DAS_STATUS_Laser1TempCntrlLockedBit = 0, // Laser 1 Temperature Locked
@@ -1180,10 +1187,11 @@ typedef enum {
 #define WLMSIM_Z0 (1) // Phase angle
 #define WLMSIM_RFAC (2) // Reflectivity factor
 #define WLMSIM_WFAC (3) // Width factor of simulated spectrum
-#define WLMSIM_ETA1 (4) // Etalon 1
-#define WLMSIM_REF1 (5) // Reference 1
-#define WLMSIM_ETA2 (6) // Etalon 2
-#define WLMSIM_REF2 (7) // Reference 2
+#define WLMSIM_LASER_TEMP (4) // 
+#define WLMSIM_ETA1 (5) // Etalon 1
+#define WLMSIM_REF1 (6) // Reference 1
+#define WLMSIM_ETA2 (7) // Etalon 2
+#define WLMSIM_REF2 (8) // Reference 2
 
 /* Block DYNAMICPWM Dynamic PWM for proportional valves */
 #define DYNAMICPWM_CS (0) // Control/Status
@@ -1217,8 +1225,8 @@ typedef enum {
 #define FPGA_TWGEN (82) // Tuner waveform generator
 #define FPGA_INJECT (91) // Optical Injection Subsystem
 #define FPGA_WLMSIM (100) // WLM Simulator
-#define FPGA_DYNAMICPWM_INLET (108) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (113) // Outlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_INLET (109) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (114) // Outlet proportional valve dynamic PWM
 
 /* Environment addresses */
 
@@ -1284,4 +1292,5 @@ typedef enum {
 #define ACTION_READ_LASER_TEC_MONITORS (52)
 #define ACTION_READ_LASER_THERMISTOR_RESISTANCE (53)
 #define ACTION_READ_LASER_CURRENT (54)
+#define ACTION_UPDATE_WLMSIM_LASER_TEMP (55)
 #endif

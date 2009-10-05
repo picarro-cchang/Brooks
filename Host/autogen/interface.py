@@ -233,7 +233,7 @@ class SchemeRowType(Structure):
     ("setpoint",c_float),
     ("dwellCount",c_ushort),
     ("subschemeId",c_ushort),
-    ("laserUsed",c_ushort),
+    ("virtualLaser",c_ushort),
     ("threshold",c_ushort),
     ("pztSetpoint",c_ushort),
     ("laserTemp",c_ushort)
@@ -633,6 +633,20 @@ VIRTUAL_LASER_TypeDict[4] = 'VIRTUAL_LASER_5' # Virtual laser 5
 VIRTUAL_LASER_TypeDict[5] = 'VIRTUAL_LASER_6' # Virtual laser 6
 VIRTUAL_LASER_TypeDict[6] = 'VIRTUAL_LASER_7' # Virtual laser 7
 VIRTUAL_LASER_TypeDict[7] = 'VIRTUAL_LASER_8' # Virtual laser 8
+
+# Enumerated definitions for ACTUAL_LASER_Type
+ACTUAL_LASER_Type = c_uint
+ACTUAL_LASER_1 = 0 # Actual laser 1
+ACTUAL_LASER_2 = 1 # Actual laser 2
+ACTUAL_LASER_3 = 2 # Actual laser 3
+ACTUAL_LASER_4 = 3 # Actual laser 4
+
+# Dictionary for enumerated constants in ACTUAL_LASER_Type
+ACTUAL_LASER_TypeDict = {}
+ACTUAL_LASER_TypeDict[0] = 'ACTUAL_LASER_1' # Actual laser 1
+ACTUAL_LASER_TypeDict[1] = 'ACTUAL_LASER_2' # Actual laser 2
+ACTUAL_LASER_TypeDict[2] = 'ACTUAL_LASER_3' # Actual laser 3
+ACTUAL_LASER_TypeDict[3] = 'ACTUAL_LASER_4' # Actual laser 4
 
 # Enumerated definitions for DAS_STATUS_BitType
 DAS_STATUS_BitType = c_uint
@@ -2063,10 +2077,11 @@ WLMSIM_OPTIONS_INPUT_SEL_W = 1 # Input select bit width
 WLMSIM_Z0 = 1 # Phase angle
 WLMSIM_RFAC = 2 # Reflectivity factor
 WLMSIM_WFAC = 3 # Width factor of simulated spectrum
-WLMSIM_ETA1 = 4 # Etalon 1
-WLMSIM_REF1 = 5 # Reference 1
-WLMSIM_ETA2 = 6 # Etalon 2
-WLMSIM_REF2 = 7 # Reference 2
+WLMSIM_LASER_TEMP = 4 # 
+WLMSIM_ETA1 = 5 # Etalon 1
+WLMSIM_REF1 = 6 # Reference 1
+WLMSIM_ETA2 = 7 # Etalon 2
+WLMSIM_REF2 = 8 # Reference 2
 
 # Block DYNAMICPWM Dynamic PWM for proportional valves
 DYNAMICPWM_CS = 0 # Control/Status
@@ -2099,8 +2114,8 @@ FPGA_RDMAN = 58 # Ringdown manager registers
 FPGA_TWGEN = 82 # Tuner waveform generator
 FPGA_INJECT = 91 # Optical Injection Subsystem
 FPGA_WLMSIM = 100 # WLM Simulator
-FPGA_DYNAMICPWM_INLET = 108 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 113 # Outlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_INLET = 109 # Inlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 114 # Outlet proportional valve dynamic PWM
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
@@ -2109,7 +2124,7 @@ persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_OPTIONS', 
 persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION', u'RDMAN_TIMEOUT_DURATION']))
 persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP', u'TWGEN_SWEEP_LOW', u'TWGEN_SWEEP_HIGH', u'TWGEN_WINDOW_LOW', u'TWGEN_WINDOW_HIGH', u'TWGEN_PZT_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL']))
-persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_OPTIONS', u'WLMSIM_RFAC', u'WLMSIM_WFAC']))
+persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_OPTIONS', u'WLMSIM_RFAC', u'WLMSIM_WFAC', u'WLMSIM_LASER_TEMP']))
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_INLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_HIGH', u'DYNAMICPWM_LOW', u'DYNAMICPWM_SLOPE']))
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_OUTLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_HIGH', u'DYNAMICPWM_LOW', u'DYNAMICPWM_SLOPE']))
 
@@ -2185,6 +2200,7 @@ ACTION_LASER_TEC_IMON = 51
 ACTION_READ_LASER_TEC_MONITORS = 52
 ACTION_READ_LASER_THERMISTOR_RESISTANCE = 53
 ACTION_READ_LASER_CURRENT = 54
+ACTION_UPDATE_WLMSIM_LASER_TEMP = 55
 
 
 # Parameter form definitions

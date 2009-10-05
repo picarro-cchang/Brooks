@@ -441,6 +441,13 @@
             <enum_value ident="VIRTUAL_LASER_7" value="6" caption="Virtual laser 7" /> 
             <enum_value ident="VIRTUAL_LASER_8" value="7" caption="Virtual laser 8" /> 
         </enum>
+        <enum type="ACTUAL_LASER_Type">
+            <description>Actual laser selection</description> 
+            <enum_value ident="ACTUAL_LASER_1" value="0" caption="Actual laser 1" /> 
+            <enum_value ident="ACTUAL_LASER_2" value="1" caption="Actual laser 2" /> 
+            <enum_value ident="ACTUAL_LASER_3" value="2" caption="Actual laser 3" /> 
+            <enum_value ident="ACTUAL_LASER_4" value="3" caption="Actual laser 4" /> 
+        </enum>
         <enum type="DAS_STATUS_BitType">
             <description>DAS status bit position</description> 
             <enum_value ident="DAS_STATUS_Laser1TempCntrlLockedBit" value="0" caption="Laser 1 Temperature Locked" /> 
@@ -3037,6 +3044,10 @@
                 <save/>
                 <display format="%d">Width factor of simulated spectrum</display>
             </reg>
+            <reg type="uint32" ident="LASER_TEMP" description="" access="rw">
+                <save/>
+                <display format="%d">WLM simulator laser temperature (milli-degrees C)</display>
+            </reg>
             <reg type="uint16" ident="ETA1" description="Etalon 1" access="r">
                 <display format="%d" units="digU">Etalon 1 photocurrent</display>
             </reg>
@@ -3219,5 +3230,6 @@
         <action ident="ACTION_READ_LASER_TEC_MONITORS">r_read_laser_tec_monitors</action>
         <action ident="ACTION_READ_LASER_THERMISTOR_RESISTANCE">r_read_laser_thermistor_resistance</action>
         <action ident="ACTION_READ_LASER_CURRENT">r_read_laser_current</action>
+        <action ident="ACTION_UPDATE_WLMSIM_LASER_TEMP">r_update_wlmsim_laser_temp</action>
     </action_list>
 </Das_Interface>

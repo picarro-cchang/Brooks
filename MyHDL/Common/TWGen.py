@@ -99,6 +99,7 @@ def TWGen(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,synth_step_in,
 
     slope = Signal(LOW)
     value = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    extra0 = Signal(intbv(0)[extra:])
 
     MASK = (1<<FPGA_REG_WIDTH)-1
     
@@ -133,6 +134,7 @@ def TWGen(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,synth_step_in,
                 window_high.next = 0
                 pzt_offset.next = 0
                 slope.next = 1
+                extra0.next = 0
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
@@ -176,15 +178,23 @@ def TWGen(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,synth_step_in,
                         acc.next[FPGA_REG_WIDTH+extra-1:] = 0
                         slope.next = 1
                     else:
-                        if value >= sweep_high:
-                            slope.next = 0
-                        elif value <= sweep_low:
-                            slope.next = 1
                         if synth_step_in:
                             if slope:
-                                acc.next = acc + slope_up
+                                if acc + slope_up > concat(sweep_high,extra0):
+                                    acc.next = concat(sweep_high,extra0)
+                                    slope.next = 0
+                                else:
+                                    acc.next = acc + slope_up
                             else:
-                                acc.next = acc - slope_down
+                                if acc - slope_down < concat(sweep_low,extra0):
+                                    acc.next = concat(sweep_low,extra0)
+                                    slope.next = 1
+                                else:
+                                    acc.next = acc - slope_down
+                        if acc > concat(sweep_high,extra0):
+                            acc.next = concat(sweep_high,extra0)
+                        elif acc < concat(sweep_low,extra0):
+                            acc.next = concat(sweep_low,extra0)
 
     return instances()
 

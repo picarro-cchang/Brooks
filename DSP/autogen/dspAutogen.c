@@ -760,6 +760,8 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_read_laser_thermistor_resistance(numInt,params,env);
         case ACTION_READ_LASER_CURRENT:
             return r_read_laser_current(numInt,params,env);
+        case ACTION_UPDATE_WLMSIM_LASER_TEMP:
+            return r_update_wlmsim_laser_temp(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

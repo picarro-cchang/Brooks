@@ -69,4 +69,5 @@ int r_laser_tec_imon(unsigned int numInt,void *params,void *env);
 int r_read_laser_tec_monitors(unsigned int numInt,void *params,void *env);
 int r_read_laser_thermistor_resistance(unsigned int numInt,void *params,void *env);
 int r_read_laser_current(unsigned int numInt,void *params,void *env);
+int r_update_wlmsim_laser_temp(unsigned int numInt,void *params,void *env);
 #endif

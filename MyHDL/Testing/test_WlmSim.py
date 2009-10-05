@@ -19,8 +19,8 @@ from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_WLMSIM
 
 from Host.autogen.interface import WLMSIM_OPTIONS, WLMSIM_Z0
 from Host.autogen.interface import WLMSIM_RFAC, WLMSIM_WFAC
-from Host.autogen.interface import WLMSIM_ETA1, WLMSIM_REF1
-from Host.autogen.interface import WLMSIM_ETA2, WLMSIM_REF2
+from Host.autogen.interface import WLMSIM_LASER_TEMP, WLMSIM_ETA1
+from Host.autogen.interface import WLMSIM_REF1, WLMSIM_ETA2, WLMSIM_REF2
 
 from Host.autogen.interface import WLMSIM_OPTIONS_INPUT_SEL_B, WLMSIM_OPTIONS_INPUT_SEL_W
 

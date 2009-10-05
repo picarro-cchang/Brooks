@@ -175,7 +175,6 @@ void setupLaserTemperature(void)
     vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
     laserTemp = 0.001 * schemeTable->rows[*(s->row_)].laserTemp; // Scheme temperatures are in milli-degrees C
     laserNum = vLaserParams->actualLaser & 0x3;
-
     if (laserTemp != 0.0)
     {
         *(s->laserTempSetpoint_[laserNum]) = laserTemp;
@@ -187,7 +186,7 @@ void setupNextRdParams(void)
     SpectCntrlParams *s=&spectCntrlParams;
     RingdownParamsType *r=&nextRdParams;
 
-    unsigned int laserNum;
+    unsigned int laserNum, laserTempAsInt;
     volatile SchemeTableType *schemeTable;
     volatile VirtualLaserParamsType *vLaserParams;
     float setpoint, dp, theta, ratio1Multiplier, ratio2Multiplier;
@@ -207,6 +206,7 @@ void setupNextRdParams(void)
         r->countAndSubschemeId = 0;
         r->ringdownThreshold = *(s->defaultThreshold_);
         r->status = 0;
+        laserTempAsInt = 1000.0*r->laserTemperature;
         // Set up the FPGA registers for this ringdown
         changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W, laserNum);
         writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,r->ringdownThreshold);
@@ -222,7 +222,6 @@ void setupNextRdParams(void)
         *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
         vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
         setpoint = schemeTable->rows[*(s->row_)].setpoint;
-
         laserNum = vLaserParams->actualLaser & 0x3;
         r->injectionSettings = (*(s->virtLaser_) << 2) | laserNum;
         r->laserTemperature = *(s->laserTemp_[laserNum]);
@@ -231,6 +230,10 @@ void setupNextRdParams(void)
         r->cavityPressure = *(s->cavityPressure_);
         r->ambientPressure = *(s->ambientPressure_);
         r->schemeTableAndRow = (*(s->active_) << 16) | (*(s->row_) & 0xFFFF);
+
+        //laserTempAsInt = schemeTable->rows[*(s->row_)].laserTemp;
+        laserTempAsInt = 1000.0*r->laserTemperature;
+
         // If SUBSCHEME_ID_IncrMask is set, and we are on the first ringdown of this row
         //  increment s->incrCounter_ unless this has already been done for this scheme
         if (schemeTable->rows[*(s->row_)].subschemeId & SUBSCHEME_ID_IncrMask)
@@ -282,6 +285,10 @@ void setupNextRdParams(void)
         writeFPGA(FPGA_LASERLOCKER+LASERLOCKER_RATIO2_CENTER, (int)(vLaserParams->ratio2Center*32768.0));
 
         writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,r->ringdownThreshold);
+        // Also write the laser temperature to the wavelength monitor simulator, solely to allow
+        //  the simulator to calculate an angle that depends on laser temperature as well as current
+        writeFPGA(FPGA_WLMSIM+WLMSIM_LASER_TEMP,laserTempAsInt);
+
     }
     writeFPGA(FPGA_RDMAN+RDMAN_PARAM0,*(uint32*)&r->injectionSettings);
     writeFPGA(FPGA_RDMAN+RDMAN_PARAM1,*(uint32*)&r->laserTemperature);
@@ -469,4 +476,17 @@ void spectCntrlError(void)
     SEM_postBinary(&SEM_rdBuffer1Available);
     switchToRampMode();
     message_puts("Spectrum controller enters error state.");
+}
+
+void update_wlmsim_laser_temp(void)
+// This is called periodically by the scheduler to update the laser temperature register of the WLM simulator
+//  with the temperature of the selected laser. This should only be done if the spectrum controller is not
+//  in the starting or running states.
+{
+    SpectCntrlParams *s=&spectCntrlParams;
+    if (*(s->state_) != SPECT_CNTRL_StartingState && *(s->state_) != SPECT_CNTRL_RunningState) {
+        unsigned int laserNum = readBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W);
+        unsigned int laserTempAsInt = *(s->laserTemp_[laserNum]) * 1000;
+        writeFPGA(FPGA_WLMSIM+WLMSIM_LASER_TEMP,laserTempAsInt);
+    }
 }

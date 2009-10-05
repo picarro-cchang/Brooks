@@ -221,6 +221,7 @@ class ControllerFrame(ControllerFrameGui):
 
     def onLoadIni(self, event):
         Driver.loadIniFile()
+        Sequencer().getSequences(ConfigObj(Driver.getConfigFile()))
 
     def onWriteIni(self, event):
         Driver.writeIniFile()

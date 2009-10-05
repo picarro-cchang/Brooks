@@ -605,3 +605,11 @@ int r_modifyValvePumpTec(unsigned int numInt,void *params,void *env)
     modify_valve_pump_tec(reg[0],reg[1]);
     return STATUS_OK;
 }
+
+int r_update_wlmsim_laser_temp(unsigned int numInt,void *params,void *env)
+/* Write the temperature of the currently selected laser to the WLM simulator register */
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    update_wlmsim_laser_temp();
+    return STATUS_OK;
+}

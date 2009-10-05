@@ -11,6 +11,10 @@
 #  incremented or decremented by +/- a specified (signed) amount "delta" depending
 #  on the comparator value. The comparator signal is sampled and the pulse width 
 #  register is updated on each occurrence of the "update" pulse.
+#   The block also generates a triangular waveform for the DAC in order to support
+#  dithering of the valve current. The registers DYNAMICPWM_HIGH, DYNAMICPWM_LOW and
+#  DYNAMICPWM_SLOPE specify the limits of the dither waveform and the slope 
+#  respectively.
 #
 # SEE ALSO:
 #
@@ -18,6 +22,7 @@
 #   16-Sep-2009  sze  Initial version
 #   19-Sep-2009  sze  Add dither waveform generation
 #   20-Sep-2009  sze  Added pwm_enable bit in CS register
+#    4-Oct-2009  sze  Add saturation to the dither waveform generator
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -96,6 +101,7 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     temp = Signal(intbv(0)[dither_width+1:])
     pwm = Signal(LOW)
     up = Signal(LOW) # Current sign of slope
+    extra0 = Signal(intbv(0)[extra:])
     
     mod_emif_data = 1 << EMIF_DATA_WIDTH
 
@@ -122,6 +128,7 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 dither_cntr.next = 0
                 acc.next[FPGA_REG_WIDTH+extra:] = 0
                 up.next = 0
+                extra0.next = 0
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
@@ -150,10 +157,6 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         cs.next[DYNAMICPWM_CS_RUN_B] = 0
                     # Increment the accumulator as needed
                     value = acc[FPGA_REG_WIDTH+extra:extra]
-                    if value >= high:
-                        up.next = 0
-                    elif value <= low:
-                        up.next = 1
                     # Handle update of accumulator by adding or subtracting the slope, depending
                     #  on the state of "up". Handle update of width by adding or subtracting delta, 
                     #  depending on the value of comparator_in. We want the width to saturate at 
@@ -161,9 +164,17 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     #  depending on the sense of the comparator. 
                     if update_in:
                         if up:
-                            acc.next = acc + slope
+                            if acc + slope > concat(high,extra0):
+                                acc.next = concat(high,extra0)
+                                up.next = 0
+                            else:
+                                acc.next = acc + slope
                         else:
-                            acc.next = acc - slope
+                            if acc - slope < concat(low,extra0):
+                                acc.next = concat(low,extra0)
+                                up.next = 1
+                            else:
+                                acc.next = acc - slope
                         if delta > 0:
                             if comparator_in:
                                 if pulse_width + delta < MAX_WIDTH:
@@ -186,7 +197,17 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                                     pulse_width.next = pulse_width - delta
                                 else:
                                     pulse_width.next = MAX_WIDTH
-
+                                    
+                    # Ensure that accumulator and pulse width values are within bounds
+                    if acc > concat(high,extra0):
+                        acc.next = concat(high,extra0)
+                    if acc < concat(low,extra0):
+                        acc.next = concat(low,extra0)
+                    if pulse_width > MAX_WIDTH:
+                        pulse_width.next = MAX_WIDTH
+                    if pulse_width < MIN_WIDTH:
+                        pulse_width.next = MIN_WIDTH
+                            
                     # The pwm_out is high unconditionally if the main_cntr is less
                     #  than the width.
                     pwm.next = 0

@@ -42,7 +42,13 @@ def RdSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,rd_trig_in,
     signal is used for the ADC, and at each negative edge of the clock a new sample is placed on rdsim_value_out.
     At any time, the simulator is either in the filling mode or the decaying mode, depending on the value of
     (pzt_value_in-pzt_center_in). The simulator is in filling mode iff this difference modulo 16384 is in the range 
-    -RDSIM_PZT_WINDOW_HALF_WIDTH through +RDSIM_PZT_WINDOW_HALF_WIDTH.
+    -RDSIM_PZT_WINDOW_HALF_WIDTH through +RDSIM_PZT_WINDOW_HALF_WIDTH. When in filling mode, the output increases linearly
+    at the rate specified by RDSIM_FILLING_RATE. When in decaying mode, the output is multiplied by (1-rate/(65536*16)) every
+    clock period where 
+    rate = (decay_in >> RDSIM_DECAY_IN_SHIFT) + (RDSIM_DECAY_IN_OFFSET).
+    
+    The effective loss is -ln(1-rate/(65536*16))/0.0012 ppm/cm.
+
     
     Parameters:
     clk                 -- Clock input
