@@ -13,15 +13,18 @@
 #ifndef _DSP_AUTOGEN_H
 #define _DSP_AUTOGEN_H
 
+#include "interface.h"
+
 void initRegisters(void);
+extern RegTypes regTypes[359];
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env);
 int writeBlock(unsigned int numInt,void *params,void *env);
 int setTimestamp(unsigned int numInt,void *params,void *env);
 int r_getTimestamp(unsigned int numInt,void *params,void *env);
 int initRunqueue(unsigned int numInt,void *params,void *env);
 int testScheduler(unsigned int numInt,void *params,void *env);
-int streamRegister(unsigned int numInt,void *params,void *env);
-int streamFpgaRegister(unsigned int numInt,void *params,void *env);
+int streamRegisterAsFloat(unsigned int numInt,void *params,void *env);
+int streamFpgaRegisterAsFloat(unsigned int numInt,void *params,void *env);
 int r_resistanceToTemperature(unsigned int numInt,void *params,void *env);
 int r_tempCntrlSetCommand(unsigned int numInt,void *params,void *env);
 int r_applyPidStep(unsigned int numInt,void *params,void *env);

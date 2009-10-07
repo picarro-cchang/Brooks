@@ -77,13 +77,13 @@ void message_puts(char *message)
     if (message_pointer>=NUM_MESSAGES) message_pointer = 0;
 }
 
-void sensor_put_from(unsigned int streamNum, void *addr)
+void sensor_put_from(unsigned int streamNum, float value)
 {
     long long ts;
     SensorEntryType *s = sensorEntries + sensor_pointer;
     get_timestamp(&ts);
     s->streamNum = streamNum;
-    s->value.asUint = *(uint32*)addr;
+    s->value = value;
     s->timestamp = ts;
     sensor_pointer++;
     if (sensor_pointer>=NUM_SENSOR_ENTRIES) sensor_pointer = 0;
@@ -140,6 +140,11 @@ int writebackRegisters(unsigned int regNums[],unsigned int n)
     }
 #endif
     return status;
+}
+
+RegTypes getRegisterType(unsigned int regNum)
+{
+    return regTypes[regNum];
 }
 
 int readRegister(unsigned int regNum, DataType *data)

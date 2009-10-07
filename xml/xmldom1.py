@@ -17,6 +17,8 @@ def closeFp(fp):
     if fp != None:
         fp.close()
 
+regTypesLookUp = {"uint32":"uint_type","float":"float_type","int32":"int_type"}
+        
 typeToCtypeLookUp = {"long long":"c_longlong",
                      "uint32":"c_uint","int32":"c_int",
                      "uint16":"c_ushort","int16":"c_short",
@@ -285,8 +287,11 @@ printFp(intPyFp, "\n# Dictionary for accessing registers by name and list of reg
 printFp(intPyFp, "registerByName = {}\nregisterInfo = []" )
 
 printFp(dspCFp,'extern int writeRegister(unsigned int regNum,DataType data);')
+
+printFp(dspCFp,'RegTypes regTypes[%d];' % (len(registerNames)))
 printFp(dspCFp,'void initRegisters() \n{\n    DataType d;')
 printFp(dspHFp,'void initRegisters(void);')
+printFp(dspHFp,'extern RegTypes regTypes[%d];' % (len(registerNames)))
 
 for i,registerName in enumerate(registerNames):
     printFp(intPyFp, 'registerByName["%s"] = %s' % (registerName,registerName))
@@ -303,7 +308,12 @@ for i,registerName in enumerate(registerNames):
         else:
             # Unknown types are assumed to be enumerations
             printFp(dspCFp,'    d.asUint = %s;\n    writeRegister(%s,d);' % (iv,registerName))
+
+
+for i,registerName in enumerate(registerNames):
+    printFp(dspCFp,'    regTypes[%s] = %s;' % (registerName,regTypesLookUp.get(types[i],"uint_type")))
 printFp(dspCFp,'}')
+
 
 fpgaBlockLists = docEl.getElementsByTagName('fpga_block_list')
 fpgaRegisterDescriptor = {}

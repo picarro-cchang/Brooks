@@ -86,6 +86,34 @@ class DriverRpcHandler(SharedTypes.Singleton):
         versionDict["interface"] = interface.interface_version
         versionDict["host"] = version.versionString()
         return versionDict
+    
+    def saveRegValues(self,regList):
+        # Save the values of the registers specified in regList into a "vault" which can later
+        #  be used to restore them with restoreRegValues. The elements of regList can be integers
+        #  representing DSP registers or tuples of integers representing FPGA registers in 
+        #  (block,offset) pairs. These integers may be referred to symbolically by passing strings
+        #  which are looked up in the interface file.
+        vault = []
+        for reg in regList:
+            if isinstance(reg,(tuple,list)):
+                if len(reg) != 2:
+                    raise ValueError("An FPGA register description tuple must have two elements")
+                else:
+                    vault.append((reg,self.rdFPGA(*reg)))
+            else:
+                vault.append((reg,self.rdDasReg(reg)))
+        return vault
+    
+    def restoreRegValues(self,vault):
+        # Restore register values stored in the vault (produced by saveRegValues)
+        for reg,value in vault:
+            if isinstance(reg,(tuple,list)):
+                if len(reg) != 2:
+                    raise ValueError("An FPGA register description tuple must have two elements")
+                else:
+                    self.wrFPGA(reg[0],reg[1],value)
+            else:
+                self.wrDasReg(reg,value)
 
     def _reg_index(self,indexOrName):
         """Convert a name or index into an integer index, raising an exception if the name is not found"""
@@ -198,7 +226,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         return self.dasInterface.hostToDspSender.rdValveSequence()
 
     def wrValveSequence(self,sequenceRows):
-        """Writes a vakve sequence"""
+        """Writes a valve sequence"""
         self.dasInterface.hostToDspSender.wrValveSequence(sequenceRows)
 
     def rdVirtualLaserParams(self,vLaserNum):
@@ -243,11 +271,56 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def getConfigFile(self):
         configFile = os.path.abspath(InstrumentConfig().filename)
         return configFile
+
+    #def disableLaserCurrent(self,laserNum):
+    #    # Turn off laser current for laserNum (0-index)
+    #    if laserNum<0 or laserNum>=interface.MAX_LASERS:
+    #        raise ValueError("Invalid laser number in enableLaserCurrent")
+    #    enableSource = 1 << (interface.INJECT_CONTROL_LASER_CURRENT_ENABLE_B + laserNum)
+    #    removeShort  = 1 << (interface.INJECT_CONTROL_MANUAL_LASER_ENABLE_B + laserNum)
+    #    injControl = self.rdFPGA("FPGA_INJECT","INJECT_CONTROL")
+    #    injControl &= ~(enableSource |removeShort)
+    #    self.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injControl)
     
+    #def enableLaserCurrent(self,laserNum):
+    #    # Turn on laser current for laserNum (0-index)
+    #    if laserNum<0 or laserNum>=interface.MAX_LASERS:
+    #        raise ValueError("Invalid laser number in enableLaserCurrent")
+    #    enableSource = 1 << (interface.INJECT_CONTROL_LASER_CURRENT_ENABLE_B + laserNum)
+    #    removeShort  = 1 << (interface.INJECT_CONTROL_MANUAL_LASER_ENABLE_B + laserNum)
+    #    injControl = self.rdFPGA("FPGA_INJECT","INJECT_CONTROL")
+    #    injControl |= enableSource | removeShort
+    #    self.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injControl)
+    
+    def startEngine(self):
+        # Turn on lasers, warm box and cavity thermal control followed by
+        #  laser current sources
+        for laserNum in range(1,interface.MAX_LASERS+1):
+            if DasConfigure().installCheck("LASER%d_PRESENT" % laserNum):
+                self.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % laserNum,interface.TEMP_CNTRL_EnabledState)
+        # self.wrDasReg("WARM_BOX_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
+        # self.wrDasReg("CAVITY_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
+        # self.wrDasReg("HEATER_CNTRL_STATE_REGISTER",interface.HEATER_CNTRL_EnabledState)
+        for laserNum in range(1,interface.MAX_LASERS+1):
+            if DasConfigure().installCheck("LASER%d_PRESENT" % laserNum):
+                self.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum,interface.LASER_CURRENT_CNTRL_ManualState)
+                
+    def selectActualLaser(self,laserNum):
+        # Select laserNum, placing it under automatic control and activating the optical switch. The value
+        #  of laserNum is ZERO-based
+        injControl = self.rdFPGA("FPGA_INJECT","INJECT_CONTROL")
+        if laserNum < 0 or laserNum >= interface.MAX_LASERS:
+            raise ValueError("laserNum must be in range 0..3 for selectActualLaser")
+        laserSel = laserNum << interface.INJECT_CONTROL_LASER_SELECT_B
+        laserMask = (interface.MAX_LASERS-1) << interface.INJECT_CONTROL_LASER_SELECT_B
+        injControl = (injControl & laserMask) | laserSel
+        self.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injControl)
+        
 class StreamTableType(tables.IsDescription):
     time = tables.Int64Col()
     streamNum = tables.Int32Col()
     value = tables.Float32Col()
+    
 class StreamSaver(SharedTypes.Singleton):
     initialized = False
     def __init__(self,config=None):
@@ -316,7 +389,7 @@ class StreamSaver(SharedTypes.Singleton):
             row = self.table.row
             row["time"] = data.timestamp
             row["streamNum"] = data.streamNum
-            row["value"] = data.value.asFloat
+            row["value"] = data.value
             row.append()
             if data.timestamp-self.lastWrite > 5000:
                 self.table.flush()

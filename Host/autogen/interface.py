@@ -187,7 +187,7 @@ class SensorEntryType(Structure):
     _fields_ = [
     ("timestamp",c_longlong),
     ("streamNum",c_uint),
-    ("value",DataType)
+    ("value",c_float)
     ]
 
 class ValveSequenceEntryType(Structure):
@@ -292,6 +292,8 @@ class VirtualLaserParamsType(Structure):
     ]
 
 # Constant definitions
+# Maximum number of lasers
+MAX_LASERS = 4
 # Number of points in controller waveforms
 CONTROLLER_WAVEFORM_POINTS = 1000
 # Number of points for waveforms on controller rindown pane
@@ -426,6 +428,18 @@ FPGA_MAGIC_CODE = 0xC0DE0001
 RDSIM_EXTRA = 4
 # Number of bits for wavelength monitor ADCs
 WLM_ADC_WIDTH = 16
+
+# Enumerated definitions for RegTypes
+RegTypes = c_uint
+float_type = 0 # 
+uint_type = 1 # 
+int_type = 2 # 
+
+# Dictionary for enumerated constants in RegTypes
+RegTypesDict = {}
+RegTypesDict[0] = 'float_type' # 
+RegTypesDict[1] = 'uint_type' # 
+RegTypesDict[2] = 'int_type' # 
 
 # Enumerated definitions for STREAM_MemberType
 STREAM_MemberType = c_uint
@@ -2148,8 +2162,8 @@ ACTION_SET_TIMESTAMP = 2
 ACTION_GET_TIMESTAMP = 3
 ACTION_INIT_RUNQUEUE = 4
 ACTION_TEST_SCHEDULER = 5
-ACTION_STREAM_REGISTER = 6
-ACTION_STREAM_FPGA_REGISTER = 7
+ACTION_STREAM_REGISTER_ASFLOAT = 6
+ACTION_STREAM_FPGA_REGISTER_ASFLOAT = 7
 ACTION_RESISTANCE_TO_TEMPERATURE = 8
 ACTION_TEMP_CNTRL_SET_COMMAND = 9
 ACTION_APPLY_PID_STEP = 10

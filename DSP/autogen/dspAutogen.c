@@ -16,7 +16,8 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-void initRegisters()
+RegTypes regTypes[359];
+void initRegisters() 
 {
     DataType d;
     d.asUint = 0xABCD1234;
@@ -647,126 +648,484 @@ void initRegisters()
     writeRegister(SENTRY_AMBIENT_PRESSURE_MIN_REGISTER,d);
     d.asFloat = 900.0;
     writeRegister(SENTRY_AMBIENT_PRESSURE_MAX_REGISTER,d);
+    regTypes[NOOP_REGISTER] = uint_type;
+    regTypes[VERIFY_INIT_REGISTER] = uint_type;
+    regTypes[COMM_STATUS_REGISTER] = uint_type;
+    regTypes[TIMESTAMP_LSB_REGISTER] = uint_type;
+    regTypes[TIMESTAMP_MSB_REGISTER] = uint_type;
+    regTypes[SCHEDULER_CONTROL_REGISTER] = uint_type;
+    regTypes[RD_IRQ_COUNT_REGISTER] = uint_type;
+    regTypes[ACQ_DONE_COUNT_REGISTER] = uint_type;
+    regTypes[DAS_STATUS_REGISTER] = uint_type;
+    regTypes[DAS_TEMPERATURE_REGISTER] = float_type;
+    regTypes[LASER_TEC_MONITOR_TEMPERATURE_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER1_THERM_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER1_THERM_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER1_THERM_CONSTC_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER1_CURRENT_SLOPE_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER1_CURRENT_OFFSET_REGISTER] = float_type;
+    regTypes[LASER1_RESISTANCE_REGISTER] = float_type;
+    regTypes[LASER1_TEMPERATURE_REGISTER] = float_type;
+    regTypes[LASER1_THERMISTOR_ADC_REGISTER] = uint_type;
+    regTypes[LASER1_TEC_REGISTER] = float_type;
+    regTypes[LASER1_MANUAL_TEC_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[LASER1_TEMP_CNTRL_LOCK_STATUS_REGISTER] = uint_type;
+    regTypes[LASER1_TEMP_CNTRL_SETPOINT_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_TOLERANCE_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_SWEEP_MIN_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_SWEEP_INCR_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_H_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_K_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_TI_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_TD_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_B_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_C_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_N_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_S_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_FFWD_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_AMIN_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_AMAX_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_IMAX_REGISTER] = float_type;
+    regTypes[LASER1_TEC_PRBS_GENPOLY_REGISTER] = uint_type;
+    regTypes[LASER1_TEC_PRBS_AMPLITUDE_REGISTER] = float_type;
+    regTypes[LASER1_TEC_PRBS_MEAN_REGISTER] = float_type;
+    regTypes[LASER1_TEC_MONITOR_REGISTER] = float_type;
+    regTypes[LASER1_CURRENT_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[LASER1_MANUAL_COARSE_CURRENT_REGISTER] = float_type;
+    regTypes[LASER1_MANUAL_FINE_CURRENT_REGISTER] = float_type;
+    regTypes[LASER1_CURRENT_SWEEP_MIN_REGISTER] = float_type;
+    regTypes[LASER1_CURRENT_SWEEP_MAX_REGISTER] = float_type;
+    regTypes[LASER1_CURRENT_SWEEP_INCR_REGISTER] = float_type;
+    regTypes[LASER1_CURRENT_MONITOR_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER2_THERM_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER2_THERM_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER2_THERM_CONSTC_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER2_CURRENT_SLOPE_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER2_CURRENT_OFFSET_REGISTER] = float_type;
+    regTypes[LASER2_RESISTANCE_REGISTER] = float_type;
+    regTypes[LASER2_TEMPERATURE_REGISTER] = float_type;
+    regTypes[LASER2_THERMISTOR_ADC_REGISTER] = uint_type;
+    regTypes[LASER2_TEC_REGISTER] = float_type;
+    regTypes[LASER2_MANUAL_TEC_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[LASER2_TEMP_CNTRL_LOCK_STATUS_REGISTER] = uint_type;
+    regTypes[LASER2_TEMP_CNTRL_SETPOINT_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_TOLERANCE_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_SWEEP_MAX_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_SWEEP_MIN_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_SWEEP_INCR_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_H_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_K_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_TI_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_TD_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_B_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_C_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_N_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_S_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_FFWD_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_AMIN_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_AMAX_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_IMAX_REGISTER] = float_type;
+    regTypes[LASER2_TEC_PRBS_GENPOLY_REGISTER] = uint_type;
+    regTypes[LASER2_TEC_PRBS_AMPLITUDE_REGISTER] = float_type;
+    regTypes[LASER2_TEC_PRBS_MEAN_REGISTER] = float_type;
+    regTypes[LASER2_TEC_MONITOR_REGISTER] = float_type;
+    regTypes[LASER2_CURRENT_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[LASER2_MANUAL_COARSE_CURRENT_REGISTER] = float_type;
+    regTypes[LASER2_MANUAL_FINE_CURRENT_REGISTER] = float_type;
+    regTypes[LASER2_CURRENT_SWEEP_MIN_REGISTER] = float_type;
+    regTypes[LASER2_CURRENT_SWEEP_MAX_REGISTER] = float_type;
+    regTypes[LASER2_CURRENT_SWEEP_INCR_REGISTER] = float_type;
+    regTypes[LASER2_CURRENT_MONITOR_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER3_THERM_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER3_THERM_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER3_THERM_CONSTC_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER3_CURRENT_SLOPE_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER3_CURRENT_OFFSET_REGISTER] = float_type;
+    regTypes[LASER3_RESISTANCE_REGISTER] = float_type;
+    regTypes[LASER3_TEMPERATURE_REGISTER] = float_type;
+    regTypes[LASER3_THERMISTOR_ADC_REGISTER] = uint_type;
+    regTypes[LASER3_TEC_REGISTER] = float_type;
+    regTypes[LASER3_MANUAL_TEC_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[LASER3_TEMP_CNTRL_LOCK_STATUS_REGISTER] = uint_type;
+    regTypes[LASER3_TEMP_CNTRL_SETPOINT_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_TOLERANCE_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_SWEEP_MAX_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_SWEEP_MIN_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_SWEEP_INCR_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_H_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_K_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_TI_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_TD_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_B_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_C_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_N_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_S_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_FFWD_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_AMIN_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_AMAX_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_IMAX_REGISTER] = float_type;
+    regTypes[LASER3_TEC_PRBS_GENPOLY_REGISTER] = uint_type;
+    regTypes[LASER3_TEC_PRBS_AMPLITUDE_REGISTER] = float_type;
+    regTypes[LASER3_TEC_PRBS_MEAN_REGISTER] = float_type;
+    regTypes[LASER3_TEC_MONITOR_REGISTER] = float_type;
+    regTypes[LASER3_CURRENT_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[LASER3_MANUAL_COARSE_CURRENT_REGISTER] = float_type;
+    regTypes[LASER3_MANUAL_FINE_CURRENT_REGISTER] = float_type;
+    regTypes[LASER3_CURRENT_SWEEP_MIN_REGISTER] = float_type;
+    regTypes[LASER3_CURRENT_SWEEP_MAX_REGISTER] = float_type;
+    regTypes[LASER3_CURRENT_SWEEP_INCR_REGISTER] = float_type;
+    regTypes[LASER3_CURRENT_MONITOR_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER4_THERM_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER4_THERM_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER4_THERM_CONSTC_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER4_CURRENT_SLOPE_REGISTER] = float_type;
+    regTypes[CONVERSION_LASER4_CURRENT_OFFSET_REGISTER] = float_type;
+    regTypes[LASER4_RESISTANCE_REGISTER] = float_type;
+    regTypes[LASER4_TEMPERATURE_REGISTER] = float_type;
+    regTypes[LASER4_THERMISTOR_ADC_REGISTER] = uint_type;
+    regTypes[LASER4_TEC_REGISTER] = float_type;
+    regTypes[LASER4_MANUAL_TEC_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[LASER4_TEMP_CNTRL_LOCK_STATUS_REGISTER] = uint_type;
+    regTypes[LASER4_TEMP_CNTRL_SETPOINT_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_TOLERANCE_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_SWEEP_MAX_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_SWEEP_MIN_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_SWEEP_INCR_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_H_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_K_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_TI_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_TD_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_B_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_C_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_N_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_S_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_FFWD_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_AMIN_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_AMAX_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_IMAX_REGISTER] = float_type;
+    regTypes[LASER4_TEC_PRBS_GENPOLY_REGISTER] = uint_type;
+    regTypes[LASER4_TEC_PRBS_AMPLITUDE_REGISTER] = float_type;
+    regTypes[LASER4_TEC_PRBS_MEAN_REGISTER] = float_type;
+    regTypes[LASER4_TEC_MONITOR_REGISTER] = float_type;
+    regTypes[LASER4_CURRENT_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[LASER4_MANUAL_COARSE_CURRENT_REGISTER] = float_type;
+    regTypes[LASER4_MANUAL_FINE_CURRENT_REGISTER] = float_type;
+    regTypes[LASER4_CURRENT_SWEEP_MIN_REGISTER] = float_type;
+    regTypes[LASER4_CURRENT_SWEEP_MAX_REGISTER] = float_type;
+    regTypes[LASER4_CURRENT_SWEEP_INCR_REGISTER] = float_type;
+    regTypes[LASER4_CURRENT_MONITOR_REGISTER] = float_type;
+    regTypes[CONVERSION_ETALON_THERM_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_ETALON_THERM_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_ETALON_THERM_CONSTC_REGISTER] = float_type;
+    regTypes[ETALON_RESISTANCE_REGISTER] = float_type;
+    regTypes[ETALON_TEMPERATURE_REGISTER] = float_type;
+    regTypes[ETALON_THERMISTOR_ADC_REGISTER] = uint_type;
+    regTypes[CONVERSION_WARM_BOX_THERM_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_WARM_BOX_THERM_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER] = float_type;
+    regTypes[WARM_BOX_RESISTANCE_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMPERATURE_REGISTER] = float_type;
+    regTypes[WARM_BOX_THERMISTOR_ADC_REGISTER] = uint_type;
+    regTypes[WARM_BOX_TEC_REGISTER] = float_type;
+    regTypes[WARM_BOX_MANUAL_TEC_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_LOCK_STATUS_REGISTER] = uint_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_SWEEP_MAX_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_SWEEP_MIN_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_SWEEP_INCR_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_H_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_K_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_TI_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_TD_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_B_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_C_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_N_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_S_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_FFWD_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_AMIN_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_AMAX_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEMP_CNTRL_IMAX_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEC_PRBS_GENPOLY_REGISTER] = uint_type;
+    regTypes[WARM_BOX_TEC_PRBS_AMPLITUDE_REGISTER] = float_type;
+    regTypes[WARM_BOX_TEC_PRBS_MEAN_REGISTER] = float_type;
+    regTypes[WARM_BOX_MAX_HEATSINK_TEMP_REGISTER] = float_type;
+    regTypes[CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTC_REGISTER] = float_type;
+    regTypes[WARM_BOX_HEATSINK_RESISTANCE_REGISTER] = float_type;
+    regTypes[WARM_BOX_HEATSINK_TEMPERATURE_REGISTER] = float_type;
+    regTypes[WARM_BOX_HEATSINK_THERMISTOR_ADC_REGISTER] = uint_type;
+    regTypes[CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTC_REGISTER] = float_type;
+    regTypes[HOT_BOX_HEATSINK_RESISTANCE_REGISTER] = float_type;
+    regTypes[HOT_BOX_HEATSINK_TEMPERATURE_REGISTER] = float_type;
+    regTypes[HOT_BOX_HEATSINK_ADC_REGISTER] = uint_type;
+    regTypes[CONVERSION_CAVITY_THERM_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM_CONSTC_REGISTER] = float_type;
+    regTypes[CAVITY_RESISTANCE_REGISTER] = float_type;
+    regTypes[CAVITY_TEMPERATURE_REGISTER] = float_type;
+    regTypes[CAVITY_THERMISTOR_ADC_REGISTER] = uint_type;
+    regTypes[CAVITY_TEC_REGISTER] = float_type;
+    regTypes[CAVITY_MANUAL_TEC_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[CAVITY_TEMP_CNTRL_LOCK_STATUS_REGISTER] = uint_type;
+    regTypes[CAVITY_TEMP_CNTRL_SETPOINT_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_H_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_K_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_TI_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_TD_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_B_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_C_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_N_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_S_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_FFWD_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_AMIN_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_AMAX_REGISTER] = float_type;
+    regTypes[CAVITY_TEMP_CNTRL_IMAX_REGISTER] = float_type;
+    regTypes[CAVITY_TEC_PRBS_GENPOLY_REGISTER] = uint_type;
+    regTypes[CAVITY_TEC_PRBS_AMPLITUDE_REGISTER] = float_type;
+    regTypes[CAVITY_TEC_PRBS_MEAN_REGISTER] = float_type;
+    regTypes[CAVITY_MAX_HEATSINK_TEMP_REGISTER] = float_type;
+    regTypes[HEATER_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[HEATER_CNTRL_GAIN_REGISTER] = float_type;
+    regTypes[HEATER_CNTRL_QUANTIZE_REGISTER] = float_type;
+    regTypes[HEATER_CNTRL_UBIAS_SLOPE_REGISTER] = float_type;
+    regTypes[HEATER_CNTRL_UBIAS_OFFSET_REGISTER] = float_type;
+    regTypes[HEATER_CNTRL_MARK_MIN_REGISTER] = float_type;
+    regTypes[HEATER_CNTRL_MARK_MAX_REGISTER] = float_type;
+    regTypes[HEATER_CNTRL_MANUAL_MARK_REGISTER] = float_type;
+    regTypes[HEATER_CNTRL_MARK_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER] = float_type;
+    regTypes[CAVITY_PRESSURE_REGISTER] = float_type;
+    regTypes[CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER] = float_type;
+    regTypes[CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER] = float_type;
+    regTypes[AMBIENT_PRESSURE_REGISTER] = float_type;
+    regTypes[TUNER_SWEEP_RAMP_HIGH_REGISTER] = float_type;
+    regTypes[TUNER_SWEEP_RAMP_LOW_REGISTER] = float_type;
+    regTypes[TUNER_WINDOW_RAMP_HIGH_REGISTER] = float_type;
+    regTypes[TUNER_WINDOW_RAMP_LOW_REGISTER] = float_type;
+    regTypes[TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER] = float_type;
+    regTypes[TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER] = float_type;
+    regTypes[TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER] = float_type;
+    regTypes[TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER] = float_type;
+    regTypes[RDFITTER_MINLOSS_REGISTER] = float_type;
+    regTypes[RDFITTER_MAXLOSS_REGISTER] = float_type;
+    regTypes[RDFITTER_LATEST_LOSS_REGISTER] = float_type;
+    regTypes[RDFITTER_IMPROVEMENT_STEPS_REGISTER] = uint_type;
+    regTypes[RDFITTER_START_SAMPLE_REGISTER] = uint_type;
+    regTypes[RDFITTER_FRACTIONAL_THRESHOLD_REGISTER] = float_type;
+    regTypes[RDFITTER_ABSOLUTE_THRESHOLD_REGISTER] = float_type;
+    regTypes[RDFITTER_NUMBER_OF_POINTS_REGISTER] = uint_type;
+    regTypes[RDFITTER_MAX_E_FOLDINGS_REGISTER] = float_type;
+    regTypes[SPECT_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[SPECT_CNTRL_MODE_REGISTER] = uint_type;
+    regTypes[SPECT_CNTRL_ACTIVE_SCHEME_REGISTER] = uint_type;
+    regTypes[SPECT_CNTRL_NEXT_SCHEME_REGISTER] = uint_type;
+    regTypes[SPECT_CNTRL_SCHEME_ITER_REGISTER] = uint_type;
+    regTypes[SPECT_CNTRL_SCHEME_ROW_REGISTER] = uint_type;
+    regTypes[SPECT_CNTRL_DWELL_COUNT_REGISTER] = uint_type;
+    regTypes[SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER] = uint_type;
+    regTypes[SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER] = uint_type;
+    regTypes[SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER] = uint_type;
+    regTypes[VIRTUAL_LASER_REGISTER] = uint_type;
+    regTypes[VALVE_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_INLET_VALVE_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_OUTLET_VALVE_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_INLET_VALVE_MIN_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_INLET_VALVE_MAX_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_THRESHOLD_STATE_REGISTER] = uint_type;
+    regTypes[VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER] = uint_type;
+    regTypes[VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER] = uint_type;
+    regTypes[VALVE_CNTRL_SEQUENCE_STEP_REGISTER] = int_type;
+    regTypes[VALVE_CNTRL_SOLENOID_VALVES_REGISTER] = uint_type;
+    regTypes[TEC_CNTRL_REGISTER] = uint_type;
+    regTypes[SENTRY_UPPER_LIMIT_TRIPPED_REGISTER] = uint_type;
+    regTypes[SENTRY_LOWER_LIMIT_TRIPPED_REGISTER] = uint_type;
+    regTypes[SENTRY_LASER1_TEMPERATURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_LASER1_TEMPERATURE_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_LASER2_TEMPERATURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_LASER2_TEMPERATURE_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_LASER3_TEMPERATURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_LASER3_TEMPERATURE_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_LASER4_TEMPERATURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_LASER4_TEMPERATURE_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_ETALON_TEMPERATURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_ETALON_TEMPERATURE_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_DAS_TEMPERATURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_DAS_TEMPERATURE_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_LASER1_CURRENT_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_LASER1_CURRENT_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_LASER2_CURRENT_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_LASER2_CURRENT_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_LASER3_CURRENT_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_LASER3_CURRENT_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_LASER4_CURRENT_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_LASER4_CURRENT_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_CAVITY_PRESSURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_CAVITY_PRESSURE_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_AMBIENT_PRESSURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_AMBIENT_PRESSURE_MAX_REGISTER] = float_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
 {
-    switch (command)
-    {
-    case ACTION_WRITE_BLOCK:
-        return writeBlock(numInt,params,env);
-    case ACTION_SET_TIMESTAMP:
-        return setTimestamp(numInt,params,env);
-    case ACTION_GET_TIMESTAMP:
-        return r_getTimestamp(numInt,params,env);
-    case ACTION_INIT_RUNQUEUE:
-        return initRunqueue(numInt,params,env);
-    case ACTION_TEST_SCHEDULER:
-        return testScheduler(numInt,params,env);
-    case ACTION_STREAM_REGISTER:
-        return streamRegister(numInt,params,env);
-    case ACTION_STREAM_FPGA_REGISTER:
-        return streamFpgaRegister(numInt,params,env);
-    case ACTION_RESISTANCE_TO_TEMPERATURE:
-        return r_resistanceToTemperature(numInt,params,env);
-    case ACTION_TEMP_CNTRL_SET_COMMAND:
-        return r_tempCntrlSetCommand(numInt,params,env);
-    case ACTION_APPLY_PID_STEP:
-        return r_applyPidStep(numInt,params,env);
-    case ACTION_TEMP_CNTRL_LASER1_INIT:
-        return r_tempCntrlLaser1Init(numInt,params,env);
-    case ACTION_TEMP_CNTRL_LASER1_STEP:
-        return r_tempCntrlLaser1Step(numInt,params,env);
-    case ACTION_TEMP_CNTRL_LASER2_INIT:
-        return r_tempCntrlLaser2Init(numInt,params,env);
-    case ACTION_TEMP_CNTRL_LASER2_STEP:
-        return r_tempCntrlLaser2Step(numInt,params,env);
-    case ACTION_TEMP_CNTRL_LASER3_INIT:
-        return r_tempCntrlLaser3Init(numInt,params,env);
-    case ACTION_TEMP_CNTRL_LASER3_STEP:
-        return r_tempCntrlLaser3Step(numInt,params,env);
-    case ACTION_TEMP_CNTRL_LASER4_INIT:
-        return r_tempCntrlLaser4Init(numInt,params,env);
-    case ACTION_TEMP_CNTRL_LASER4_STEP:
-        return r_tempCntrlLaser4Step(numInt,params,env);
-    case ACTION_FLOAT_REGISTER_TO_FPGA:
-        return r_floatRegisterToFpga(numInt,params,env);
-    case ACTION_FPGA_TO_FLOAT_REGISTER:
-        return r_fpgaToFloatRegister(numInt,params,env);
-    case ACTION_INT_TO_FPGA:
-        return r_intToFpga(numInt,params,env);
-    case ACTION_CURRENT_CNTRL_LASER1_INIT:
-        return r_currentCntrlLaser1Init(numInt,params,env);
-    case ACTION_CURRENT_CNTRL_LASER1_STEP:
-        return r_currentCntrlLaser1Step(numInt,params,env);
-    case ACTION_CURRENT_CNTRL_LASER2_INIT:
-        return r_currentCntrlLaser2Init(numInt,params,env);
-    case ACTION_CURRENT_CNTRL_LASER2_STEP:
-        return r_currentCntrlLaser2Step(numInt,params,env);
-    case ACTION_CURRENT_CNTRL_LASER3_INIT:
-        return r_currentCntrlLaser3Init(numInt,params,env);
-    case ACTION_CURRENT_CNTRL_LASER3_STEP:
-        return r_currentCntrlLaser3Step(numInt,params,env);
-    case ACTION_CURRENT_CNTRL_LASER4_INIT:
-        return r_currentCntrlLaser4Init(numInt,params,env);
-    case ACTION_CURRENT_CNTRL_LASER4_STEP:
-        return r_currentCntrlLaser4Step(numInt,params,env);
-    case ACTION_TEMP_CNTRL_WARM_BOX_INIT:
-        return r_tempCntrlWarmBoxInit(numInt,params,env);
-    case ACTION_TEMP_CNTRL_WARM_BOX_STEP:
-        return r_tempCntrlWarmBoxStep(numInt,params,env);
-    case ACTION_TEMP_CNTRL_CAVITY_INIT:
-        return r_tempCntrlCavityInit(numInt,params,env);
-    case ACTION_TEMP_CNTRL_CAVITY_STEP:
-        return r_tempCntrlCavityStep(numInt,params,env);
-    case ACTION_HEATER_CNTRL_INIT:
-        return r_heaterCntrlInit(numInt,params,env);
-    case ACTION_HEATER_CNTRL_STEP:
-        return r_heaterCntrlStep(numInt,params,env);
-    case ACTION_TUNER_CNTRL_INIT:
-        return r_tunerCntrlInit(numInt,params,env);
-    case ACTION_TUNER_CNTRL_STEP:
-        return r_tunerCntrlStep(numInt,params,env);
-    case ACTION_SPECTRUM_CNTRL_INIT:
-        return r_spectCntrlInit(numInt,params,env);
-    case ACTION_SPECTRUM_CNTRL_STEP:
-        return r_spectCntrlStep(numInt,params,env);
-    case ACTION_ENV_CHECKER:
-        return r_envChecker(numInt,params,env);
-    case ACTION_WB_INV_CACHE:
-        return r_wbInvCache(numInt,params,env);
-    case ACTION_WB_CACHE:
-        return r_wbCache(numInt,params,env);
-    case ACTION_SCHEDULER_HEARTBEAT:
-        return r_schedulerHeartbeat(numInt,params,env);
-    case ACTION_SENTRY_INIT:
-        return r_sentryInit(numInt,params,env);
-    case ACTION_VALVE_CNTRL_INIT:
-        return r_valveCntrlInit(numInt,params,env);
-    case ACTION_VALVE_CNTRL_STEP:
-        return r_valveCntrlStep(numInt,params,env);
-    case ACTION_MODIFY_VALVE_PUMP_TEC:
-        return r_modifyValvePumpTec(numInt,params,env);
-    case ACTION_PULSE_GENERATOR:
-        return r_pulseGenerator(numInt,params,env);
-    case ACTION_FILTER:
-        return r_filter(numInt,params,env);
-    case ACTION_DS1631_READTEMP:
-        return r_ds1631_readTemp(numInt,params,env);
-    case ACTION_LASER_TEC_IMON:
-        return r_laser_tec_imon(numInt,params,env);
-    case ACTION_READ_LASER_TEC_MONITORS:
-        return r_read_laser_tec_monitors(numInt,params,env);
-    case ACTION_READ_LASER_THERMISTOR_RESISTANCE:
-        return r_read_laser_thermistor_resistance(numInt,params,env);
-    case ACTION_READ_LASER_CURRENT:
-        return r_read_laser_current(numInt,params,env);
-    case ACTION_UPDATE_WLMSIM_LASER_TEMP:
-        return r_update_wlmsim_laser_temp(numInt,params,env);
-    case ACTION_SIMULATE_LASER_CURRENT_READING:
-        return r_simulate_laser_current_reading(numInt,params,env);
-    default:
-        return ERROR_BAD_COMMAND;
+    switch (command) {
+        case ACTION_WRITE_BLOCK:
+            return writeBlock(numInt,params,env);
+        case ACTION_SET_TIMESTAMP:
+            return setTimestamp(numInt,params,env);
+        case ACTION_GET_TIMESTAMP:
+            return r_getTimestamp(numInt,params,env);
+        case ACTION_INIT_RUNQUEUE:
+            return initRunqueue(numInt,params,env);
+        case ACTION_TEST_SCHEDULER:
+            return testScheduler(numInt,params,env);
+        case ACTION_STREAM_REGISTER_ASFLOAT:
+            return streamRegisterAsFloat(numInt,params,env);
+        case ACTION_STREAM_FPGA_REGISTER_ASFLOAT:
+            return streamFpgaRegisterAsFloat(numInt,params,env);
+        case ACTION_RESISTANCE_TO_TEMPERATURE:
+            return r_resistanceToTemperature(numInt,params,env);
+        case ACTION_TEMP_CNTRL_SET_COMMAND:
+            return r_tempCntrlSetCommand(numInt,params,env);
+        case ACTION_APPLY_PID_STEP:
+            return r_applyPidStep(numInt,params,env);
+        case ACTION_TEMP_CNTRL_LASER1_INIT:
+            return r_tempCntrlLaser1Init(numInt,params,env);
+        case ACTION_TEMP_CNTRL_LASER1_STEP:
+            return r_tempCntrlLaser1Step(numInt,params,env);
+        case ACTION_TEMP_CNTRL_LASER2_INIT:
+            return r_tempCntrlLaser2Init(numInt,params,env);
+        case ACTION_TEMP_CNTRL_LASER2_STEP:
+            return r_tempCntrlLaser2Step(numInt,params,env);
+        case ACTION_TEMP_CNTRL_LASER3_INIT:
+            return r_tempCntrlLaser3Init(numInt,params,env);
+        case ACTION_TEMP_CNTRL_LASER3_STEP:
+            return r_tempCntrlLaser3Step(numInt,params,env);
+        case ACTION_TEMP_CNTRL_LASER4_INIT:
+            return r_tempCntrlLaser4Init(numInt,params,env);
+        case ACTION_TEMP_CNTRL_LASER4_STEP:
+            return r_tempCntrlLaser4Step(numInt,params,env);
+        case ACTION_FLOAT_REGISTER_TO_FPGA:
+            return r_floatRegisterToFpga(numInt,params,env);
+        case ACTION_FPGA_TO_FLOAT_REGISTER:
+            return r_fpgaToFloatRegister(numInt,params,env);
+        case ACTION_INT_TO_FPGA:
+            return r_intToFpga(numInt,params,env);
+        case ACTION_CURRENT_CNTRL_LASER1_INIT:
+            return r_currentCntrlLaser1Init(numInt,params,env);
+        case ACTION_CURRENT_CNTRL_LASER1_STEP:
+            return r_currentCntrlLaser1Step(numInt,params,env);
+        case ACTION_CURRENT_CNTRL_LASER2_INIT:
+            return r_currentCntrlLaser2Init(numInt,params,env);
+        case ACTION_CURRENT_CNTRL_LASER2_STEP:
+            return r_currentCntrlLaser2Step(numInt,params,env);
+        case ACTION_CURRENT_CNTRL_LASER3_INIT:
+            return r_currentCntrlLaser3Init(numInt,params,env);
+        case ACTION_CURRENT_CNTRL_LASER3_STEP:
+            return r_currentCntrlLaser3Step(numInt,params,env);
+        case ACTION_CURRENT_CNTRL_LASER4_INIT:
+            return r_currentCntrlLaser4Init(numInt,params,env);
+        case ACTION_CURRENT_CNTRL_LASER4_STEP:
+            return r_currentCntrlLaser4Step(numInt,params,env);
+        case ACTION_TEMP_CNTRL_WARM_BOX_INIT:
+            return r_tempCntrlWarmBoxInit(numInt,params,env);
+        case ACTION_TEMP_CNTRL_WARM_BOX_STEP:
+            return r_tempCntrlWarmBoxStep(numInt,params,env);
+        case ACTION_TEMP_CNTRL_CAVITY_INIT:
+            return r_tempCntrlCavityInit(numInt,params,env);
+        case ACTION_TEMP_CNTRL_CAVITY_STEP:
+            return r_tempCntrlCavityStep(numInt,params,env);
+        case ACTION_HEATER_CNTRL_INIT:
+            return r_heaterCntrlInit(numInt,params,env);
+        case ACTION_HEATER_CNTRL_STEP:
+            return r_heaterCntrlStep(numInt,params,env);
+        case ACTION_TUNER_CNTRL_INIT:
+            return r_tunerCntrlInit(numInt,params,env);
+        case ACTION_TUNER_CNTRL_STEP:
+            return r_tunerCntrlStep(numInt,params,env);
+        case ACTION_SPECTRUM_CNTRL_INIT:
+            return r_spectCntrlInit(numInt,params,env);
+        case ACTION_SPECTRUM_CNTRL_STEP:
+            return r_spectCntrlStep(numInt,params,env);
+        case ACTION_ENV_CHECKER:
+            return r_envChecker(numInt,params,env);
+        case ACTION_WB_INV_CACHE:
+            return r_wbInvCache(numInt,params,env);
+        case ACTION_WB_CACHE:
+            return r_wbCache(numInt,params,env);
+        case ACTION_SCHEDULER_HEARTBEAT:
+            return r_schedulerHeartbeat(numInt,params,env);
+        case ACTION_SENTRY_INIT:
+            return r_sentryInit(numInt,params,env);
+        case ACTION_VALVE_CNTRL_INIT:
+            return r_valveCntrlInit(numInt,params,env);
+        case ACTION_VALVE_CNTRL_STEP:
+            return r_valveCntrlStep(numInt,params,env);
+        case ACTION_MODIFY_VALVE_PUMP_TEC:
+            return r_modifyValvePumpTec(numInt,params,env);
+        case ACTION_PULSE_GENERATOR:
+            return r_pulseGenerator(numInt,params,env);
+        case ACTION_FILTER:
+            return r_filter(numInt,params,env);
+        case ACTION_DS1631_READTEMP:
+            return r_ds1631_readTemp(numInt,params,env);
+        case ACTION_LASER_TEC_IMON:
+            return r_laser_tec_imon(numInt,params,env);
+        case ACTION_READ_LASER_TEC_MONITORS:
+            return r_read_laser_tec_monitors(numInt,params,env);
+        case ACTION_READ_LASER_THERMISTOR_RESISTANCE:
+            return r_read_laser_thermistor_resistance(numInt,params,env);
+        case ACTION_READ_LASER_CURRENT:
+            return r_read_laser_current(numInt,params,env);
+        case ACTION_UPDATE_WLMSIM_LASER_TEMP:
+            return r_update_wlmsim_laser_temp(numInt,params,env);
+        case ACTION_SIMULATE_LASER_CURRENT_READING:
+            return r_simulate_laser_current_reading(numInt,params,env);
+        default:
+            return ERROR_BAD_COMMAND;
     }
 }
 

@@ -176,7 +176,7 @@
         <struct type="SensorEntryType">
             <field ident="timestamp" type="long long"/>
             <field ident="streamNum" type="uint32"/>
-            <field ident="value" type="DataType"/>
+            <field ident="value" type="float"/>
         </struct>
         <struct type="ValveSequenceEntryType">
             <field ident="maskAndValue" type="uint16"/>
@@ -262,6 +262,7 @@
     </struct_list>
     <constant_list>
         <!-- N.B. All SIZE and OFFSET variables are in 32 bit integers, all ADDRESS variables are in bytes -->
+        <constant ident="MAX_LASERS" description="Maximum number of lasers">4</constant>
         <constant ident="CONTROLLER_WAVEFORM_POINTS" description="Number of points in controller waveforms">1000</constant>
         <constant ident="CONTROLLER_RINGDOWN_POINTS" description="Number of points for waveforms on controller rindown pane">10000</constant>
         <constant ident="CONTROLLER_STATS_POINTS" description="Number of points for Allan statistics plots in controller">32</constant>
@@ -338,6 +339,12 @@
         </union>
     </union_list>
     <enum_list>
+        <enum type="RegTypes">
+        <description>DSP register types</description>
+            <enum_value ident="float_type" />
+            <enum_value ident="uint_type" />
+            <enum_value ident="int_type" />
+        </enum>
         <enum type="STREAM_MemberType">
         <description>Sensor stream members</description>
             <enum_value ident="STREAM_Laser1Temp" />
@@ -3161,8 +3168,8 @@
         <action ident="ACTION_GET_TIMESTAMP">r_getTimestamp</action>
         <action ident="ACTION_INIT_RUNQUEUE">initRunqueue</action>
         <action ident="ACTION_TEST_SCHEDULER">testScheduler</action>
-        <action ident="ACTION_STREAM_REGISTER">streamRegister</action>
-        <action ident="ACTION_STREAM_FPGA_REGISTER">streamFpgaRegister</action>
+        <action ident="ACTION_STREAM_REGISTER_ASFLOAT">streamRegisterAsFloat</action>
+        <action ident="ACTION_STREAM_FPGA_REGISTER_ASFLOAT">streamFpgaRegisterAsFloat</action>
         <action ident="ACTION_RESISTANCE_TO_TEMPERATURE">r_resistanceToTemperature</action>
         <action ident="ACTION_TEMP_CNTRL_SET_COMMAND">r_tempCntrlSetCommand</action>
         <action ident="ACTION_APPLY_PID_STEP">r_applyPidStep</action>

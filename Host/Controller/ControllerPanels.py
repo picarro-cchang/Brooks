@@ -385,7 +385,7 @@ class PressurePanel(PressurePanelGui):
     def update(self):
         self.pressureGraph.Update(delay=0)
         self.propValveGraph.Update(delay=0)
-        solenoidValveStates = dasInfo.get("solenoidValves",0)
+        solenoidValveStates = int(dasInfo.get("solenoidValves",0))
         self.valve1State.SetValue(solenoidValveStates & 0x1)
         self.valve2State.SetValue(solenoidValveStates & 0x2)
         self.valve3State.SetValue(solenoidValveStates & 0x4)
@@ -572,6 +572,10 @@ class CommandLogPanel(CommandLogPanelGui):
         self.logListCtrl.SetStringItem(index,4,code)
         self.logListCtrl.SetStringItem(index,5,txt.strip()[1:-1])
         self.logListCtrl.EnsureVisible(index)
+    
+    def onStartEngine(self,event):
+        Driver.startEngine()
+        
     def onStartAcquisition(self,event):
         currentLabel = self.startAcquisitionButton.GetLabel()
         if currentLabel == CommandLogPanel.acqLabels["start"]:

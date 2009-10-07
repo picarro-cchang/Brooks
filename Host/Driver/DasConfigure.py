@@ -39,12 +39,23 @@ schedulerPriorities = dict(SENSOR_READ=1,SENSOR_CONVERT=2,
 # Periods are expressed in tenths of a second
 schedulerPeriods = dict(FAST=2, MEDIUM=10, SLOW=50)
 
-class DasConfigure(object):
-    def __init__(self,dasInterface,instrConfig):
-        self.dasInterface = dasInterface
-        self.opGroups = {}
-        self.instrConfig = instrConfig
-
+class DasConfigure(SharedTypes.Singleton):
+    initialized = False
+    def __init__(self,dasInterface=None,instrConfig=None):
+        if not self.initialized:
+            if dasInterface is None or instrConfig is None:
+                raise ValueError("DasConfigure has not been initialized correctly")
+            self.dasInterface = dasInterface
+            self.opGroups = {}
+            self.instrConfig = instrConfig
+            self.installed = {}
+            for key in instrConfig["CONFIGURATION"]:
+                self.installed[key] = int(instrConfig["CONFIGURATION"][key])
+            self.initialized = True
+            
+    def installCheck(self,key):
+        return self.installed.get(key,0)
+    
     def run(self):
         sender = self.dasInterface.hostToDspSender
         ts = timestamp.getTimestamp()
@@ -66,7 +77,7 @@ class DasConfigure(object):
         self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SCHEDULER_HEARTBEAT"))
 
         for laserNum in range(1,5):
-            present = int(self.instrConfig["CONFIGURATION"].get("LASER%d_PRESENT" % laserNum,0))
+            present = self.installCheck("LASER%d_PRESENT" % laserNum)
             if present:
                 # Set present to a negative number to disable I2C reads
                 if present > 0:
@@ -92,29 +103,26 @@ class DasConfigure(object):
                     env.offset = -40000.0
                     degree = 7
                     env.num[0:degree+1] = [   0.00000000e+00,  -2.98418514e-05,  -1.01071361e-04,   6.39149028e-05,
-                                       5.23341031e-05,   2.66718772e-05,  -1.01386506e-05,  -9.73607948e-06]
+                                              5.23341031e-05,   2.66718772e-05,  -1.01386506e-05,  -9.73607948e-06]
                     env.den[0:degree+1] = [   1.00000000e+00,  -1.37628382e+00,   2.19598434e-02,   1.01673929e-01,
-                                       2.99996581e-01,   2.93872141e-02,  -7.45088401e-02,  -1.42310788e-04]
+                                              2.99996581e-01,   2.93872141e-02,  -7.45088401e-02,  -1.42310788e-04]
                     ss_in = 32768
                     ss_out = (ss_in+env.offset)*sum(env.num[0:degree+1])/sum(env.den[0:degree+1])
-                    print ss_out
                     for i in range(degree)[::-1]:
                         env.state[i] = (ss_in+env.offset)*env.num[i+1]-ss_out*env.den[i+1]
                         if i<degree-1:
                             env.state[i] += env.state[i+1]
-                    print env.state[0:degree]
-                    env.ptr = 0
                     sender.wrEnv("LASER%d_TEMP_MODEL_ENV" % laserNum,env)
                     
                 self.opGroups["FAST"]["STREAMER"].addOperation(
-                    Operation("ACTION_STREAM_REGISTER",
+                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                         ["STREAM_Laser%dTemp" % laserNum,"LASER%d_TEMPERATURE_REGISTER" % laserNum]))
                 # TEC current
                 self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
                     Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
                         ["LASER%d_TEC_REGISTER" % laserNum,"FPGA_PWM_LASER%d" % laserNum,"PWM_PULSE_WIDTH"]))
                 self.opGroups["FAST"]["STREAMER"].addOperation(
-                    Operation("ACTION_STREAM_REGISTER",
+                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                         ["STREAM_Laser%dTec" % laserNum,"LASER%d_TEC_REGISTER" % laserNum]))
                 self.opGroups["FAST"]["CONTROLLER"].addOperation(
                     Operation("ACTION_TEMP_CNTRL_LASER%d_STEP" % laserNum))
@@ -133,13 +141,13 @@ class DasConfigure(object):
                         Operation("ACTION_SIMULATE_LASER_CURRENT_READING",
                                   [laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
                 self.opGroups["FAST"]["STREAMER"].addOperation(
-                    Operation("ACTION_STREAM_REGISTER",
+                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                         ["STREAM_Laser%dCurrent" % laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
                 
         # Read the DAS temperature into DAS_TEMPERATURE_REGISTER and stream it
         self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(Operation("ACTION_DS1631_READTEMP",
                                                                        ["DAS_TEMPERATURE_REGISTER"]))
-        self.opGroups["FAST"]["STREAMER"].addOperation(Operation("ACTION_STREAM_REGISTER",
+        self.opGroups["FAST"]["STREAMER"].addOperation(Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                                                                  ["STREAM_DasTemp","DAS_TEMPERATURE_REGISTER"]))
 
         # Etalon temperature
@@ -152,7 +160,7 @@ class DasConfigure(object):
                  "ETALON_TEMPERATURE_REGISTER"]))
         
         self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                 ["STREAM_EtalonTemp","ETALON_TEMPERATURE_REGISTER"]))
 
         # Warm Box
@@ -173,15 +181,15 @@ class DasConfigure(object):
                  "WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
         
         self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                 ["STREAM_WarmBoxTemp","WARM_BOX_TEMPERATURE_REGISTER"]))
 
         self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                 ["STREAM_WarmBoxHeatsinkTemp","WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
 
         self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                 ["STREAM_WarmBoxTec","WARM_BOX_TEC_REGISTER"]))
 
         self.opGroups["SLOW"]["CONTROLLER"].addOperation(
@@ -209,19 +217,19 @@ class DasConfigure(object):
                  "HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
 
         self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                 ["STREAM_CavityTemp","CAVITY_TEMPERATURE_REGISTER"]))
 
         self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                 ["STREAM_HotBoxHeatsinkTemp","HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
 
         self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                 ["STREAM_HotBoxTec","CAVITY_TEC_REGISTER"]))
 
         self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                 ["STREAM_HotBoxHeater","HEATER_CNTRL_MARK_REGISTER"]))
         
         self.opGroups["SLOW"]["CONTROLLER"].addOperation(
@@ -240,7 +248,7 @@ class DasConfigure(object):
 
         # Valve control
         self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER",
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                 ["STREAM_ValveMask","VALVE_CNTRL_SOLENOID_VALVES_REGISTER"]))
         
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
@@ -255,23 +263,23 @@ class DasConfigure(object):
         
         # Streaming outputs of wavelength monitor
         self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_FPGA_REGISTER",
+            Operation("ACTION_STREAM_FPGA_REGISTER_ASFLOAT",
                 ["STREAM_Etalon1","FPGA_LASERLOCKER","LASERLOCKER_ETA1"]))
         self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_FPGA_REGISTER",
+            Operation("ACTION_STREAM_FPGA_REGISTER_ASFLOAT",
                 ["STREAM_Reference1","FPGA_LASERLOCKER","LASERLOCKER_REF1"]))
         self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_FPGA_REGISTER",
+            Operation("ACTION_STREAM_FPGA_REGISTER_ASFLOAT",
                 ["STREAM_Etalon2","FPGA_LASERLOCKER","LASERLOCKER_ETA2"]))
         self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_FPGA_REGISTER",
+            Operation("ACTION_STREAM_FPGA_REGISTER_ASFLOAT",
                 ["STREAM_Reference2","FPGA_LASERLOCKER","LASERLOCKER_REF2"]))
 
         self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_FPGA_REGISTER",
+            Operation("ACTION_STREAM_FPGA_REGISTER_ASFLOAT",
                 ["STREAM_Ratio1","FPGA_LASERLOCKER","LASERLOCKER_RATIO1"]))
         self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_FPGA_REGISTER",
+            Operation("ACTION_STREAM_FPGA_REGISTER_ASFLOAT",
                 ["STREAM_Ratio2","FPGA_LASERLOCKER","LASERLOCKER_RATIO2"]))
 
         # Stop the scheduler before loading new schedule
@@ -288,7 +296,7 @@ class DasConfigure(object):
 
         runCont = (1<<interface.PWM_CS_RUN_B) | (1<<interface.PWM_CS_CONT_B)
         for laserNum in range(1,5):
-            if int(self.instrConfig["CONFIGURATION"].get("LASER%d_PRESENT" % laserNum,0)):
+            if self.installCheck("LASER%d_PRESENT" % laserNum):
                 sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER%d_INIT" % laserNum))
                 sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER%d_INIT" % laserNum))
                 sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_LASER%d" % laserNum,"PWM_PULSE_WIDTH"]))

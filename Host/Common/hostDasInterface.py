@@ -817,21 +817,21 @@ class SensorHistory(Singleton):
                     self.minSensors[i] = {}
                     self.maxSensors[i] = {}
             self.mostRecent = data.timestamp
-        self.latestSensors[data.streamNum]=(data.timestamp,data.value.asFloat)
+        self.latestSensors[data.streamNum]=(data.timestamp,data.value)
         # Update minimum and maximum values of sensors
         for i,p in enumerate(self.periods):
             minSensors = self.minSensors[i]
             maxSensors = self.maxSensors[i]
             if data.streamNum in minSensors:
                 minSensors[data.streamNum] = min(
-                    minSensors[data.streamNum],data.value.asFloat)
+                    minSensors[data.streamNum],data.value)
             else:
-                minSensors[data.streamNum] = data.value.asFloat
+                minSensors[data.streamNum] = data.value
             if data.streamNum in maxSensors:
                 maxSensors[data.streamNum] = max(
-                    maxSensors[data.streamNum],data.value.asFloat)
+                    maxSensors[data.streamNum],data.value)
             else:
-                maxSensors[data.streamNum] = data.value.asFloat
+                maxSensors[data.streamNum] = data.value
 
 
 class StateDatabase(Singleton):

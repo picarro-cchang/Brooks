@@ -14,6 +14,8 @@ header = """/*
  */
 #ifndef _DSP_AUTOGEN_H
 #define _DSP_AUTOGEN_H
+
+#include "interface.h"
 """
 
 trailer = "#endif"

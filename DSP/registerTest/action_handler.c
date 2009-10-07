@@ -42,20 +42,40 @@
 
 char message[120];
 
-#define READ_REG(regNum,type,result) { \
-    DataType d; \
-    int status = readRegister(regNum,&d);\
+#define READ_REG(regNum,result) { \
+	DataType d; \
+    int status = readRegister((regNum),&d);\
     if (STATUS_OK != status) return status; \
-    result = d.type; \
-    }
+    switch (getRegisterType(regNum)) { \
+        case float_type: \
+            (result) = d.asFloat; \
+            break; \
+        case uint_type: \
+            (result) = d.asUint; \
+            break; \
+        case int_type: \
+            (result) = d.asInt; \
+            break; \
+    } \
+}
 
-#define WRITE_REG(regNum,type,result) { \
-    DataType d; \
-    int status; \
-    d.type = result; \
-    status = writeRegister(regNum,d);\
+#define WRITE_REG(regNum,result) { \
+	DataType d; \
+	int status; \
+    switch (getRegisterType(regNum)) { \
+		case float_type: \
+			d.asFloat = (result); \
+			break; \
+		case uint_type: \
+			d.asUint = (result); \
+			break; \
+		case int_type: \
+			d.asInt = (result); \
+			break; \
+	} \
+    status = writeRegister((regNum),d); \
     if (STATUS_OK != status) return status; \
-    }
+}
 
 int writeBlock(unsigned int numInt,void *params,void *env)
 // Writes a block to the communication area. The number of integers written is numInt-1, since params[0] is the start index
@@ -108,20 +128,23 @@ int testScheduler(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
-int streamRegister(unsigned int numInt,void *params,void *env)
+int streamRegisterAsFloat(unsigned int numInt,void *params,void *env)
 // This action streams the value of a register. The first parameter
-//  is the stream number and the second is the register number.
+//  is the stream number and the second is the register number. Note
+//  that the type of data on the stream is the same as the type of the
+//  register
 {
     unsigned int *paramsAsInt = (unsigned int *) params;
-    unsigned int streamNum, value;
+    unsigned int streamNum;
+    float value;
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
     streamNum = paramsAsInt[0];
-    READ_REG(paramsAsInt[1],asUint,value);
-    sensor_put_from(streamNum,&value);
+    READ_REG(paramsAsInt[1],value);
+    sensor_put_from(streamNum,value);
     return STATUS_OK;
 }
 
-int streamFpgaRegister(unsigned int numInt,void *params,void *env)
+int streamFpgaRegisterAsFloat(unsigned int numInt,void *params,void *env)
 // This action streams the value of an FPGA register. The first parameter
 //  is the stream number, the second is the location in the FPGA map
 //  and the third is the register number
@@ -134,7 +157,7 @@ int streamFpgaRegister(unsigned int numInt,void *params,void *env)
     fpgaBase = paramsAsInt[1];
     regNum = paramsAsInt[2];
     value = readFPGA(fpgaBase + regNum);
-    sensor_put_from(streamNum,&value);
+    sensor_put_from(streamNum,value);
     return STATUS_OK;
 }
 
@@ -155,8 +178,8 @@ int r_getTimestamp(unsigned int numInt,void *params,void *env)
     unsigned int *reg = (unsigned int *) params;
     long long ts = timestamp;
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    WRITE_REG(reg[0],asUint,(uint32)(ts & 0xFFFFFFFF));
-    WRITE_REG(reg[1],asUint,(uint32)(ts >> 32));
+    WRITE_REG(reg[0],(uint32)(ts & 0xFFFFFFFF));
+    WRITE_REG(reg[1],(uint32)(ts >> 32));
     return STATUS_OK;
 }
 
@@ -191,12 +214,12 @@ int r_resistanceToTemperature(unsigned int numInt,void *params,void *env)
 
     unsigned int *reg = (unsigned int *) params;
     if (5 != numInt) return ERROR_BAD_NUM_PARAMS;
-    READ_REG(reg[0],asFloat,resistance);
-    READ_REG(reg[1],asFloat,constA);
-    READ_REG(reg[2],asFloat,constB);
-    READ_REG(reg[3],asFloat,constC);
+    READ_REG(reg[0],resistance);
+    READ_REG(reg[1],constA);
+    READ_REG(reg[2],constB);
+    READ_REG(reg[3],constC);
     status = resistanceToTemperature(resistance,constA,constB,constC,&result);
-    WRITE_REG(reg[4],asFloat,result);
+    WRITE_REG(reg[4],result);
     return status;
 }
 
@@ -275,7 +298,7 @@ int r_floatRegisterToFpga(unsigned int numInt,void *params,void *env)
     float value;
     unsigned int *reg = (unsigned int *) params;
     if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
-    READ_REG(reg[0],asFloat,value);
+    READ_REG(reg[0],value);
     writeFPGA(reg[1]+reg[2],(unsigned int)value);
     return STATUS_OK;
 }
@@ -290,7 +313,7 @@ int r_fpgaToFloatRegister(unsigned int numInt,void *params,void *env)
     unsigned int *reg = (unsigned int *) params;
     if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
     value = readFPGA(reg[0]+reg[1]);
-    WRITE_REG(reg[2],asFloat,value);
+    WRITE_REG(reg[2],value);
     return STATUS_OK;
 }
 
@@ -477,11 +500,11 @@ int r_pulseGenerator(unsigned int numInt,void *params,void *env)
     float result;
     unsigned int *reg = (unsigned int *) params;
     if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
-    READ_REG(reg[0],asUint,lowDuration);
-    READ_REG(reg[1],asUint,highDuration);
+    READ_REG(reg[0],lowDuration);
+    READ_REG(reg[1],highDuration);
     status = pulseGenerator(lowDuration,highDuration,&result,
                             (PulseGenEnvType *)env);
-    WRITE_REG(reg[2],asFloat,result);
+    WRITE_REG(reg[2],result);
     return status;
 }
 
@@ -503,9 +526,9 @@ int r_filter(unsigned int numInt,void *params,void *env)
 
     unsigned int *reg = (unsigned int *) params;
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    READ_REG(reg[0],asFloat,x);
+    READ_REG(reg[0],x);
     status = filter(x,&y,(FilterEnvType *)env);
-    WRITE_REG(reg[1],asFloat,y);
+    WRITE_REG(reg[1],y);
     return status;
 }
 
@@ -514,7 +537,7 @@ int r_ds1631_readTemp(unsigned int numInt,void *params,void *env)
 {
     unsigned int *reg = (unsigned int *) params;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
-    WRITE_REG(reg[0],asFloat,ds1631_readTemperatureAsFloat());
+    WRITE_REG(reg[0],ds1631_readTemperatureAsFloat());
     return STATUS_OK;
 }
 
@@ -536,7 +559,7 @@ int r_laser_tec_imon(unsigned int numInt,void *params,void *env)
     desired = reg[0] & 0xFF;
     next = (reg[0]>>8) & 0xFF;
     status = read_laser_tec_imon(desired,next,&result);
-    if (STATUS_OK == status) WRITE_REG(reg[1],asFloat,result);
+    if (STATUS_OK == status) WRITE_REG(reg[1],result);
     return status;
 }
 
@@ -556,7 +579,7 @@ int r_read_laser_thermistor_resistance(unsigned int numInt,void *params,void *en
     result = read_laser_thermistor_adc(reg[0]);
     Vfrac = result/33554432.0;
     if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
-    WRITE_REG(reg[1],asFloat,(Rseries*Vfrac)/(1.0-Vfrac));
+    WRITE_REG(reg[1],(Rseries*Vfrac)/(1.0-Vfrac));
     return STATUS_OK;
 }
 
@@ -574,10 +597,10 @@ int r_read_laser_current(unsigned int numInt,void *params,void *env)
     unsigned int *reg = (unsigned int *) params;
     float slope, offset, result;
     if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
-    READ_REG(reg[1],asFloat,slope);
-    READ_REG(reg[2],asFloat,offset);
+    READ_REG(reg[1],slope);
+    READ_REG(reg[2],offset);
     result = read_laser_current_adc(reg[0])*slope + offset;
-    WRITE_REG(reg[3],asFloat,result);
+    WRITE_REG(reg[3],result);
     return STATUS_OK;
 }
 
@@ -641,6 +664,6 @@ int r_simulate_laser_current_reading(unsigned int numInt,void *params,void *env)
         break;
     }
     current = 0.00036*dac;
-    WRITE_REG(reg[1],asFloat,current);
+    WRITE_REG(reg[1],current);
     return STATUS_OK;
 }

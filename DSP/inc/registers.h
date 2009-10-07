@@ -59,7 +59,7 @@ typedef struct
 void get_timestamp(long long *ts);
 void init_comms(void);
 void message_puts(char *message);
-void sensor_put_from(unsigned int streamNum, void *addr);
+void sensor_put_from(unsigned int streamNum, float value);
 volatile RingdownEntryType *get_ringdown_entry_addr();
 void ringdown_put();
 unsigned int getDasStatusBit(unsigned int bitNum);
@@ -71,6 +71,7 @@ int  writeRegister(unsigned int regNum,DataType data);
 int  writebackRegisters(unsigned int regNums[],unsigned int n);
 int  readRegister(unsigned int regNum, DataType *data);
 void *registerAddr(unsigned int regNum);
+RegTypes getRegisterType(unsigned int regNum);
 
 void hwiHpiInterrupt(unsigned int funcArg, unsigned int eventId);
 

@@ -57,9 +57,9 @@ class DasConfigure(object):
             "FILTER_ENV"))
 
         streamer = OperationGroup(priority=11,period=100)
-        streamer.addOperation(Operation("ACTION_STREAM_REGISTER",
+        streamer.addOperation(Operation("ACTION_STREAM_REGISTER_ASFLOAT",
             ["STREAM_Laser2Temp","LASER2_TEMPERATURE_REGISTER"]))
-        streamer.addOperation(Operation("ACTION_STREAM_REGISTER",
+        streamer.addOperation(Operation("ACTION_STREAM_REGISTER_ASFLOAT",
             ["STREAM_Laser2Tec","LASER2_TEC_PWM_REGISTER"]))
 
         groups = [ticker,outputs,processors,streamer]
