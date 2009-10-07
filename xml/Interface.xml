@@ -3056,17 +3056,17 @@
                 <save/>
                 <display format="%d">WLM simulator laser temperature (milli-degrees C)</display>
             </reg>
-            <reg type="uint16" ident="ETA1" description="Etalon 1" access="r">
-                <display format="%d" units="digU">Etalon 1 photocurrent</display>
+            <reg type="uint16" ident="ETA1_OFFSET" description="Etalon 1 offset" access="rw">
+                <display format="%d" units="digU">Etalon 1 offset</display>
             </reg>
-            <reg type="uint16" ident="REF1" description="Reference 1" access="r">
-                <display format="%d" units="digU">Reference 1 photocurrent</display>
+            <reg type="uint16" ident="REF1_OFFSET" description="Reference 1 offset" access="rw">
+                <display format="%d" units="digU">Reference 1 offset</display>
             </reg>
-            <reg type="uint16" ident="ETA2" description="Etalon 2" access="r">
-                <display format="%d" units="digU">Etalon 2 photocurrent</display>
+            <reg type="uint16" ident="ETA2_OFFSET" description="Etalon 2 offset" access="rw">
+                <display format="%d" units="digU">Etalon 2 offset</display>
             </reg>
-            <reg type="uint16" ident="REF2" description="Reference 2" access="r">
-                <display format="%d" units="digU">Reference 2 photocurrent</display>
+            <reg type="uint16" ident="REF2_OFFSET" description="Reference 2 offset" access="rw">
+                <display format="%d" units="digU">Reference 2 offset</display>
             </reg>
         </fpga_block>
         <fpga_block ident="DYNAMICPWM" description="Dynamic PWM for proportional valves">

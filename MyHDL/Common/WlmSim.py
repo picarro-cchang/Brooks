@@ -15,7 +15,8 @@
 #   24-Jul-2009  sze  Made WLM phase depend on laser current inputs
 #   27-Jul-2009  sze  Swapped etalon channels so cosine is for etalon/ref 2 and sine is for etalon/ref1
 #   28-Jul-2009  sze  Modification to compute ringdown loss as well
-#   04-Oct-2009  sze  Add laser temperature register for simulator
+#   04-Oct-2009  sze  Added laser temperature register for simulator
+#   06-Oct-2009  sze  Added intensity dependence on laser current and photocurrent offsets
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -25,9 +26,12 @@ from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_WLMSIM
 
 from Host.autogen.interface import WLMSIM_OPTIONS, WLMSIM_Z0
-from Host.autogen.interface import WLMSIM_RFAC, WLMSIM_WFAC, WLMSIM_LASER_TEMP
-from Host.autogen.interface import WLMSIM_ETA1, WLMSIM_REF1
-from Host.autogen.interface import WLMSIM_ETA2, WLMSIM_REF2
+from Host.autogen.interface import WLMSIM_RFAC, WLMSIM_WFAC
+from Host.autogen.interface import WLMSIM_LASER_TEMP
+from Host.autogen.interface import WLMSIM_ETA1_OFFSET
+from Host.autogen.interface import WLMSIM_REF1_OFFSET
+from Host.autogen.interface import WLMSIM_ETA2_OFFSET
+from Host.autogen.interface import WLMSIM_REF2_OFFSET
 
 from Host.autogen.interface import WLMSIM_OPTIONS_INPUT_SEL_B, WLMSIM_OPTIONS_INPUT_SEL_W
 
@@ -37,7 +41,8 @@ from math import atan, sqrt, ceil, floor, pi, sqrt
 
 LOW, HIGH = bool(0), bool(1)
 t_procState = enum("WAITING", "CALCULATING")
-t_seqState  = enum("IDLE", "WAIT_PROC1", "WAIT_PROC2", "WAIT_PROC3", "WAIT_PROC4", "WAIT_DIV1", "WAIT_DIV2", "WAIT_DIV3")
+t_seqState  = enum("IDLE", "WAIT_PROC1", "WAIT_PROC2", "WAIT_PROC3", "WAIT_PROC4", "WAIT_DIV1", "WAIT_DIV2", "WAIT_DIV3",
+                   "WAIT_SCALE1", "WAIT_SCALE2", "WAIT_SCALE3", "WAIT_SCALE4")
 
 
 def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
@@ -96,10 +101,10 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     WLMSIM_RFAC         -- factor related to mirror reflectivity = 2*R/(1+R**2)
     WLMSIM_WFAC         -- factor specifying width of spectral feature
     WLMSIM_LASER_TEMP   -- simulator laser temperature in millidegrees Celsius
-    WLMSIM_ETA1         -- etalon 1 (reflected) photocurrent
-    WLMSIM_REF1         -- reference 1 (transmitted) photocurrent
-    WLMSIM_ETA2         -- etalon 2 (reflected) photocurrent
-    WLMSIM_REF2         -- reference 2 (transmitted) photocurrent
+    WLMSIM_ETA1_OFFSET  -- etalon 1 (reflected) photocurrent offset
+    WLMSIM_REF1_OFFSET  -- reference 1 (transmitted) photocurrent offset
+    WLMSIM_ETA2_OFFSET  -- etalon 2 (reflected) photocurrent offset
+    WLMSIM_REF2_OFFSET  -- reference 2 (transmitted) photocurrent offset
 
     Fields in WLMSIM_OPTIONS:
     WLMSIM_OPTIONS_INPUT_SEL -- selects angle input from register (0) or input port (1)
@@ -109,19 +114,19 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     wlmsim_rfac_addr = map_base + WLMSIM_RFAC
     wlmsim_wfac_addr = map_base + WLMSIM_WFAC
     wlmsim_laser_temp_addr = map_base + WLMSIM_LASER_TEMP
-    wlmsim_eta1_addr = map_base + WLMSIM_ETA1
-    wlmsim_ref1_addr = map_base + WLMSIM_REF1
-    wlmsim_eta2_addr = map_base + WLMSIM_ETA2
-    wlmsim_ref2_addr = map_base + WLMSIM_REF2
+    wlmsim_eta1_offset_addr = map_base + WLMSIM_ETA1_OFFSET
+    wlmsim_ref1_offset_addr = map_base + WLMSIM_REF1_OFFSET
+    wlmsim_eta2_offset_addr = map_base + WLMSIM_ETA2_OFFSET
+    wlmsim_ref2_offset_addr = map_base + WLMSIM_REF2_OFFSET
     options = Signal(intbv(0)[1:])
     z0 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rfac = Signal(intbv(0x8000)[FPGA_REG_WIDTH:])
     wfac = Signal(intbv(0xF800)[FPGA_REG_WIDTH:])
     laser_temp = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    eta1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ref1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    eta2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ref2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    eta1_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ref1_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    eta2_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ref2_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     # angle input bit width
     W = FPGA_REG_WIDTH
@@ -147,6 +152,11 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     start_cordic = Signal(LOW)
     zval = Signal(intbv(0)[FPGA_REG_WIDTH:])
     
+    eta1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ref1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    eta2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ref2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+
     mult_a = Signal(intbv(0)[17:])
     mult_b = Signal(intbv(0)[17:])
     mult_p = Signal(intbv(0)[34:])
@@ -176,10 +186,10 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                 rfac.next = 0x8000
                 wfac.next = 0xF800
                 laser_temp.next = 0
-                eta1.next = 0
-                ref1.next = 0
-                eta2.next = 0
-                ref2.next = 0
+                eta1_offset.next = 0
+                ref1_offset.next = 0
+                eta2_offset.next = 0
+                ref2_offset.next = 0
                 zval.next = 0
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
@@ -199,21 +209,24 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_laser_temp_addr: # rw
                         if dsp_wr: laser_temp.next = dsp_data_out
                         dsp_data_in.next = laser_temp
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_eta1_addr: # r
-                        dsp_data_in.next = eta1
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_ref1_addr: # r
-                        dsp_data_in.next = ref1
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_eta2_addr: # r
-                        dsp_data_in.next = eta2
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_ref2_addr: # r
-                        dsp_data_in.next = ref2
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_eta1_offset_addr: # rw
+                        if dsp_wr: eta1_offset.next = dsp_data_out
+                        dsp_data_in.next = eta1_offset
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_ref1_offset_addr: # rw
+                        if dsp_wr: ref1_offset.next = dsp_data_out
+                        dsp_data_in.next = ref1_offset
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_eta2_offset_addr: # rw
+                        if dsp_wr: eta2_offset.next = dsp_data_out
+                        dsp_data_in.next = eta2_offset
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == wlmsim_ref2_offset_addr: # rw
+                        if dsp_wr: ref2_offset.next = dsp_data_out
+                        dsp_data_in.next = ref2_offset
                     else:
                         dsp_data_in.next = 0
                 else:
                     dsp_data_in.next = 0
                     
                 div_ce.next = LOW
-                mult_a.next[17:1] = scale
                 if options[WLMSIM_OPTIONS_INPUT_SEL_B]:
                     z0.next = ((laser_temp << 4) + (laser_temp << 1) + (coarse_current_in << 2) + coarse_current_in + (fine_current_in >> 1)) % M
                 # z0 now contains the angle, where 0 to 2*pi is represented by 0 to 65536
@@ -223,6 +236,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                     done_out.next = HIGH
                 else:
                     if state == t_seqState.IDLE:
+                        mult_a.next[17:1] = scale
                         div_num.next = M - rfac
                         mult_b.next[17:1] = rfac - 1
                         if start_in:
@@ -233,22 +247,22 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                     elif state == t_seqState.WAIT_PROC1:
                         start_cordic.next = LOW
                         state = t_seqState.WAIT_PROC2
-                    elif state == t_seqState.WAIT_PROC2:                        
+                    elif state == t_seqState.WAIT_PROC2: # Wait for first CORDIC computation of sin & cos for WLM                        
                         if done:
                             div_den.next = yu
                             div_ce.next = HIGH
                             state = t_seqState.WAIT_DIV1
-                    elif state == t_seqState.WAIT_DIV1:
+                    elif state == t_seqState.WAIT_DIV1:  # Division for ref1 computation
                         if div_rfd and not div_ce:
                             ref1.next = div_quot
-                            eta1.next = M - div_quot
+                            eta1.next = M - div_quot     # eta1 and ref1 sum to unity
                             div_den.next = xu
                             div_ce.next = HIGH
                             state = t_seqState.WAIT_DIV2
-                    elif state == t_seqState.WAIT_DIV2:
+                    elif state == t_seqState.WAIT_DIV2:  # Division for ref2 computation
                         if div_rfd and not div_ce:
                             ref2.next = div_quot
-                            eta2.next = M - div_quot
+                            eta2.next = M - div_quot     # eta2 and ref2 sum to unity
                             div_num.next = M - wfac
                             mult_b.next[17:1] = wfac - 1
                             zval.next = (zval << 2) % M
@@ -257,21 +271,35 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                     elif state == t_seqState.WAIT_PROC3:
                         start_cordic.next = LOW
                         state = t_seqState.WAIT_PROC4
-                    elif state == t_seqState.WAIT_PROC4:
+                    elif state == t_seqState.WAIT_PROC4: # Wait for second CORDIC computation of sin & cos for loss
                         if done:
                             div_den.next = xu
                             div_ce.next = HIGH
+                            # Set up a factor depending on the laser current to scale the photodiode outputs
+                            mult_a.next[17:1] = ((coarse_current_in >> 1) + (coarse_current_in >> 3) + (fine_current_in >> 4)) % M
                             state = t_seqState.WAIT_DIV3
-                    elif state == t_seqState.WAIT_DIV3:
+                    elif state == t_seqState.WAIT_DIV3:  # Division for loss computation
                         if div_rfd and not div_ce:
                             loss_out.next = div_quot
-                            eta1_out.next = eta1
-                            ref1_out.next = ref1
-                            eta2_out.next = eta2
-                            ref2_out.next = ref2
-                            pzt_cen_out.next = (zval << 2) % M
-                            done_out.next = HIGH
-                            state = t_seqState.IDLE
+                            mult_b.next[17:1] = eta1
+                            state = t_seqState.WAIT_SCALE1
+                    elif state == t_seqState.WAIT_SCALE1:
+                        eta1_out.next = mult_p[34:18] + eta1_offset
+                        mult_b.next[17:1] = ref1
+                        state = t_seqState.WAIT_SCALE2
+                    elif state == t_seqState.WAIT_SCALE2:
+                        ref1_out.next = mult_p[34:18] + ref1_offset
+                        mult_b.next[17:1] = eta2
+                        state = t_seqState.WAIT_SCALE3
+                    elif state == t_seqState.WAIT_SCALE3:
+                        eta2_out.next = mult_p[34:18] + eta2_offset
+                        mult_b.next[17:1] = ref2
+                        state = t_seqState.WAIT_SCALE4
+                    elif state == t_seqState.WAIT_SCALE4:
+                        ref2_out.next = mult_p[34:18] + ref2_offset
+                        pzt_cen_out.next = (zval << 2) % M
+                        done_out.next = HIGH
+                        state = t_seqState.IDLE
                             
     # Iterative CORDIC processor for calculating 1-rho*cos(phi) and 1-rho*sin(phi) in xu and yu.
     #  The amplitude of the trigonometric term is multiplied by the CORDIC normalization term

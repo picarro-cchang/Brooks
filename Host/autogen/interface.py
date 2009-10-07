@@ -2093,10 +2093,10 @@ WLMSIM_Z0 = 1 # Phase angle
 WLMSIM_RFAC = 2 # Reflectivity factor
 WLMSIM_WFAC = 3 # Width factor of simulated spectrum
 WLMSIM_LASER_TEMP = 4 # 
-WLMSIM_ETA1 = 5 # Etalon 1
-WLMSIM_REF1 = 6 # Reference 1
-WLMSIM_ETA2 = 7 # Etalon 2
-WLMSIM_REF2 = 8 # Reference 2
+WLMSIM_ETA1_OFFSET = 5 # Etalon 1 offset
+WLMSIM_REF1_OFFSET = 6 # Reference 1 offset
+WLMSIM_ETA2_OFFSET = 7 # Etalon 2 offset
+WLMSIM_REF2_OFFSET = 8 # Reference 2 offset
 
 # Block DYNAMICPWM Dynamic PWM for proportional valves
 DYNAMICPWM_CS = 0 # Control/Status
@@ -2571,10 +2571,10 @@ __p = []
 __p.append(('fpga','mask',FPGA_WLMSIM+WLMSIM_OPTIONS,[(1, u'Input select', [(0, u'Register'), (1, u'Input port')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_RFAC,'Reflectivity factor','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_Z0,'Phase angle','','%d',1,1))
-__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_ETA1,'Etalon 1 photocurrent','digU','%d',1,0))
-__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_REF1,'Reference 1 photocurrent','digU','%d',1,0))
-__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_ETA2,'Etalon 2 photocurrent','digU','%d',1,0))
-__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_REF2,'Reference 2 photocurrent','digU','%d',1,0))
+__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_ETA1_OFFSET,'Etalon 1 offset','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_REF1_OFFSET,'Reference 1 offset','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_ETA2_OFFSET,'Etalon 2 offset','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_WLMSIM+WLMSIM_REF2_OFFSET,'Reference 2 offset','digU','%d',1,1))
 parameter_forms.append(('Wavelength Monitor Simulator Parameters',__p))
 
 # Form: Laser Locker Parameters

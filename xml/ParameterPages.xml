@@ -337,10 +337,10 @@
             <fpga_register offset="FPGA_WLMSIM">OPTIONS</fpga_register>
             <fpga_register offset="FPGA_WLMSIM">RFAC</fpga_register>
             <fpga_register offset="FPGA_WLMSIM">Z0</fpga_register>
-            <fpga_register offset="FPGA_WLMSIM">ETA1</fpga_register>
-            <fpga_register offset="FPGA_WLMSIM">REF1</fpga_register>
-            <fpga_register offset="FPGA_WLMSIM">ETA2</fpga_register>
-            <fpga_register offset="FPGA_WLMSIM">REF2</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">ETA1_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">REF1_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">ETA2_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">REF2_OFFSET</fpga_register>
         </gui_page>
         <gui_page>
             <title>Laser Locker Parameters</title>
