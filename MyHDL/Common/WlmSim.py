@@ -64,11 +64,16 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     sine in y. These are used to find xu = 1-rho*cos(phase) and yu=1-rho*sin(phase). The quantity rho is
     related to the reflectivity of the etalon. The register rfac contains 65536*rho.
     
-    Etalon1 = rho*(1-sin(phase)) / (1-rho*sin(phase))
-    Reference1 = (1-rho) / (1-rho*sin(phase))
+    Etalon1 = rho*(1-sin(phase)) / (1-rho*sin(phase)) * Intensity + Etalon1_offset
+    Reference1 = (1-rho) / (1-rho*sin(phase)) * Intensity + Reference1_offset
     
-    Etalon2 = rho*(1-cos(phase)) / (1-rho*cos(phase))
-    Reference2 = (1-rho) / (1-rho*cos(phase))
+    Etalon2 = rho*(1-cos(phase)) / (1-rho*cos(phase)) * Intensity + Etalon2_offset
+    Reference2 = (1-rho) / (1-rho*cos(phase)) * Intensity + Reference2_offset
+    
+    The offset values are taken from the registers and the intensity is a linear function of the
+     total laser current
+     
+    Intensity = ((5/8)*(coarse current) + (1/16)*(fine current)) / 65536
     
     This block also calculates a loss using
     Loss = (1-w) / (1-w*cos(4*phase))
@@ -275,7 +280,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                         if done:
                             div_den.next = xu
                             div_ce.next = HIGH
-                            # Set up a factor depending on the laser current to scale the photodiode outputs
+                            # Set up an "intensity" factor depending on the laser current to scale the photodiode outputs
                             mult_a.next[17:1] = ((coarse_current_in >> 1) + (coarse_current_in >> 3) + (fine_current_in >> 4)) % M
                             state = t_seqState.WAIT_DIV3
                     elif state == t_seqState.WAIT_DIV3:  # Division for loss computation

@@ -265,15 +265,10 @@ class WlmFileMaker(object):
                 t,d,last = self.queue.get()
             print
 
-            #etalon1_offset = etalon1Avg.getAverage()
-            #reference1_offset = reference1Avg.getAverage()
-            #etalon2_offset = etalon2Avg.getAverage()
-            #reference2_offset = reference2Avg.getAverage()
-
-            etalon1_offset = 0
-            reference1_offset = 0
-            etalon2_offset = 0
-            reference2_offset = 0
+            etalon1_offset = etalon1Avg.getAverage()
+            reference1_offset = reference1Avg.getAverage()
+            etalon2_offset = etalon2Avg.getAverage()
+            reference2_offset = reference2Avg.getAverage()
             
             # Write out offset information to file
             self.fp.write("laser_current=%.2f\n" % self.coarseCurrent)
@@ -373,10 +368,10 @@ class WlmFileMaker(object):
                         laserTemp = laserTempAvg.getAverage()
                         etalonTemp = etalonTempAvg.getAverage()
                         nRatios = min(nRatios1,nRatios2)
-                        etalon1 = etalon1Avg.getAverage()
-                        reference1 = reference1Avg.getAverage()
-                        etalon2 = etalon2Avg.getAverage()
-                        reference2 = reference2Avg.getAverage()
+                        etalon1 = etalon1Avg.getAverage()-etalon1_offset
+                        reference1 = reference1Avg.getAverage()-reference1_offset
+                        etalon2 = etalon2Avg.getAverage()-etalon2_offset
+                        reference2 = reference2Avg.getAverage()-reference2_offset
                         
                         msg = "%9.3f %12.5f %9.5f %9.5f %9.3f %9.2f %9.2f %9.2f %9.2f %3d" % \
                           (laserTemp,waveno,ratio1,ratio2,etalonTemp,etalon1,reference1,etalon2,reference2,nRatios)

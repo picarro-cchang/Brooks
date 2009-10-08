@@ -3057,15 +3057,19 @@
                 <display format="%d">WLM simulator laser temperature (milli-degrees C)</display>
             </reg>
             <reg type="uint16" ident="ETA1_OFFSET" description="Etalon 1 offset" access="rw">
+                <save/>
                 <display format="%d" units="digU">Etalon 1 offset</display>
             </reg>
             <reg type="uint16" ident="REF1_OFFSET" description="Reference 1 offset" access="rw">
+                <save/>
                 <display format="%d" units="digU">Reference 1 offset</display>
             </reg>
             <reg type="uint16" ident="ETA2_OFFSET" description="Etalon 2 offset" access="rw">
+                <save/>
                 <display format="%d" units="digU">Etalon 2 offset</display>
             </reg>
             <reg type="uint16" ident="REF2_OFFSET" description="Reference 2 offset" access="rw">
+                <save/>
                 <display format="%d" units="digU">Reference 2 offset</display>
             </reg>
         </fpga_block>

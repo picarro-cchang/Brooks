@@ -36,6 +36,7 @@ from Host.Common.SingleInstance import SingleInstance
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.ctypesConvert import ctypesToDict
 from DasConfigure import DasConfigure
+from Host.Common.hostDasInterface import Operation
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -217,9 +218,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Reads a scheme sequence"""
         return self.dasInterface.hostToDspSender.rdSchemeSequence()
 
-    def wrSchemeSequence(self,schemeIndices,loopFlag=1,restartFlag=1):
-        """Writes a scheme sequence"""
-        self.dasInterface.hostToDspSender.wrSchemeSequence(schemeIndices,loopFlag,restartFlag)
+    def wrSchemeSequence(self,schemeIndices,restartFlag=0,loopFlag=1):
+        """Writes a scheme sequence and sets the spectrum cntroller to running in sequence mode"""
+        self.dasInterface.hostToDspSender.wrSchemeSequence(schemeIndices,restartFlag,loopFlag)
+        self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeSequenceMode)
 
     def rdValveSequence(self):
         """Reads the valve sequence"""
@@ -315,7 +317,32 @@ class DriverRpcHandler(SharedTypes.Singleton):
         laserMask = (interface.MAX_LASERS-1) << interface.INJECT_CONTROL_LASER_SELECT_B
         injControl = (injControl & laserMask) | laserSel
         self.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injControl)
+    
+    def dasGetTicks(self):
+        sender = self.dasInterface.hostToDspSender
+        sender.doOperation(Operation("ACTION_GET_TIMESTAMP",["TIMESTAMP_LSB_REGISTER","TIMESTAMP_MSB_REGISTER"]))
+        return self.rdDasReg("TIMESTAMP_MSB_REGISTER")<<32L | self.rdDasReg("TIMESTAMP_LSB_REGISTER")
         
+    def hostGetTicks(self):
+        return timestamp.getTimestamp()
+
+    def resyncDas(self):
+        sender = self.dasInterface.hostToDspSender
+        ts = timestamp.getTimestamp()
+        sender.doOperation(Operation("ACTION_SET_TIMESTAMP",[ts&0xFFFFFFFF,ts>>32]))
+    
+    def setSingleScan(self):
+        self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeSingleMode)
+
+    def setRepeatingScan(self):
+        self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeMultipleMode)
+
+    def startScan(self):
+        self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
+
+    def stopScan(self):
+        self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
+    
 class StreamTableType(tables.IsDescription):
     time = tables.Int64Col()
     streamNum = tables.Int32Col()
@@ -460,9 +487,7 @@ class Driver(SharedTypes.Singleton):
                 # type,value,trace = sys.exc_info()
                 Log("Cannot connect to instrument - please check hardware",Verbose=traceback.format_exc(),Level=3)
                 raise
-            #
-            # Here follows the main loop. If an exception occurs
-            #  in this loop, we try reloading the firmware
+            # Here follows the main loop.
             try:
                 while not daemon.mustShutdown:
                     timeSoFar = 0

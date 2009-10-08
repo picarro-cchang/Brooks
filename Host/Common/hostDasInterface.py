@@ -690,7 +690,7 @@ class HostToDspSender(Singleton):
                                row.threshold,row.pztSetpoint,0.001*row.laserTemp) for row in schemeTable.rows]}
 
     @usbLockProtect
-    def wrSchemeSequence(self,schemeIndices,loopFlag=1,restartFlag=1):
+    def wrSchemeSequence(self,schemeIndices,restartFlag=0,loopFlag=1):
         # Write scheme sequence
         SCHEME_SEQUENCE_BASE = interface.SHAREDMEM_ADDRESS + 4*interface.SCHEME_SEQUENCE_OFFSET
         schemeSequence = interface.SchemeSequenceType()

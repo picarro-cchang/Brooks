@@ -41,8 +41,8 @@ if __name__ == "__main__":
     virtualLaser = 4*ones(thList.shape)
     threshold = zeros(thList.shape)
     pztSetpoint = zeros(thList.shape)
-    laserTemp = 21.845*ones(thList.shape)
+    laserTemp = 18.204*ones(thList.shape)
     repeats = 1
     driver.wrScheme(3,repeats,zip(thList,dwell,subschemeId,virtualLaser,threshold,pztSetpoint,laserTemp))
 
-    driver.wrSchemeSequence([0,3,0,3],0)
+    # driver.wrSchemeSequence([0,3,0,3],0)
