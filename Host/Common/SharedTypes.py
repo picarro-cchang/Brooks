@@ -199,6 +199,15 @@ def getNextNonNullLine(sp):
             continue
         else:
             return line
+        
+class Bunch(object):
+    """ This class is used to group together a collection as a single object, so that 
+         they may be accessed as attributes of that object"""
+    def __init__(self,**kwds):
+        """ The namespace of the object may be initialized using keyword arguments """
+        self.__dict__.update(kwds)
+    def __call__(self,*args,**kwargs):
+        return self.call(self,*args,**kwargs)
 
 class Scheme(object):
     """Class containing a scheme."""

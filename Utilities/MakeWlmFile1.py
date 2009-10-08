@@ -422,7 +422,7 @@ def handleCommandSwitches():
     if "/?" in args or "/h" in args:
         options.setdefault('-h',"")
     #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/MakeWlmFile1.ini"
+    configFile = os.path.splitext(AppPath) + ".ini"
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
