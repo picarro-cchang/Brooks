@@ -1,0 +1,4 @@
+1. Check over-current flag in DSP and place instrument in safe mode.
+2. Print out reason for sentry breach in log.
+3. Support laser tuning mode.
+4. In DAS, allow a way of detecting which schemes are valid and which virtual lasers have been defined.

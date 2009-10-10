@@ -754,24 +754,24 @@ class HostToDspSender(Singleton):
     
     @usbLockProtect
     def wrVirtualLaserParams(self,vLaserNum,vLaserParams):
-        # Write virtual laser parameters for vLaserNum (zero-based index)
+        # Write virtual laser parameters for vLaserNum (ONE-based index)
         VIRTUAL_LASER_PARAMS_BASE = interface.DSP_DATA_ADDRESS + 4*interface.VIRTUAL_LASER_PARAMS_OFFSET
         if vLaserNum > interface.NUM_VIRTUAL_LASERS:
             raise ValueError("Maximum number of virtual lasers available is %d" % interface.NUM_VIRTUAL_LASERS)
         if not isinstance(vLaserParams,interface.VirtualLaserParamsType):
             raise ValueError("Invalid object to write in wrVirtualLaserParams")
-        virtualLaserParamsAddr = VIRTUAL_LASER_PARAMS_BASE + 4*vLaserNum*interface.VIRTUAL_LASER_PARAMS_SIZE
+        virtualLaserParamsAddr = VIRTUAL_LASER_PARAMS_BASE + 4*(vLaserNum-1)*interface.VIRTUAL_LASER_PARAMS_SIZE
         self.doOperation(Operation("ACTION_WB_INV_CACHE",[virtualLaserParamsAddr,4*interface.VIRTUAL_LASER_PARAMS_SIZE]))
         self.usb.hpiWrite(virtualLaserParamsAddr,vLaserParams)
 
     @usbLockProtect
     def rdVirtualLaserParams(self,vLaserNum):
-        # Read virtual laser parameters for vLaserNum (zero-based index)
+        # Read virtual laser parameters for vLaserNum (ONE-based index)
         VIRTUAL_LASER_PARAMS_BASE = interface.DSP_DATA_ADDRESS + 4*interface.VIRTUAL_LASER_PARAMS_OFFSET
         if vLaserNum > interface.NUM_VIRTUAL_LASERS:
             raise ValueError("Maximum number of virtual lasers available is %d" % interface.NUM_VIRTUAL_LASERS)
         vLaserParams = interface.VirtualLaserParamsType()
-        virtualLaserParamsAddr = VIRTUAL_LASER_PARAMS_BASE + 4*vLaserNum*interface.VIRTUAL_LASER_PARAMS_SIZE
+        virtualLaserParamsAddr = VIRTUAL_LASER_PARAMS_BASE + 4*(vLaserNum-1)*interface.VIRTUAL_LASER_PARAMS_SIZE
         self.doOperation(Operation("ACTION_WB_CACHE",[virtualLaserParamsAddr,4*interface.VIRTUAL_LASER_PARAMS_SIZE]))
         self.usb.hpiRead(virtualLaserParamsAddr,vLaserParams)
         return vLaserParams

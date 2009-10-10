@@ -246,18 +246,6 @@
             <field ident="pressureC1" type="float"/>
             <field ident="pressureC2" type="float"/>
             <field ident="pressureC3" type="float"/>
-            <field ident="angleCenter" type="float"/>
-            <field ident="angleScale" type="float"/>
-            <field ident="angleToTempC0" type="float"/>
-            <field ident="angleToTempC1" type="float"/>
-            <field ident="angleToTempC2" type="float"/>
-            <field ident="angleToTempC3" type="float"/>
-            <field ident="tempCenter" type="float"/>
-            <field ident="tempScale" type="float"/>
-            <field ident="tempToAngleC0" type="float"/>
-            <field ident="tempToAngleC1" type="float"/>
-            <field ident="tempToAngleC2" type="float"/>
-            <field ident="tempToAngleC3" type="float"/>
         </struct>        
     </struct_list>
     <constant_list>
@@ -3239,6 +3227,9 @@
         <action ident="ACTION_LASER_TEC_IMON">r_laser_tec_imon</action>
         <action ident="ACTION_READ_LASER_TEC_MONITORS">r_read_laser_tec_monitors</action>
         <action ident="ACTION_READ_LASER_THERMISTOR_RESISTANCE">r_read_laser_thermistor_resistance</action>
+        <action ident="ACTION_READ_ETALON_THERMISTOR_RESISTANCE">r_read_etalon_thermistor_resistance</action>
+        <action ident="ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE">r_read_warm_box_thermistor_resistance</action>
+        <action ident="ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE">r_read_warm_box_heatsink_thermistor_resistance</action>
         <action ident="ACTION_READ_LASER_CURRENT">r_read_laser_current</action>
         <action ident="ACTION_UPDATE_WLMSIM_LASER_TEMP">r_update_wlmsim_laser_temp</action>
         <action ident="ACTION_SIMULATE_LASER_CURRENT_READING">r_simulate_laser_current_reading</action>

@@ -565,6 +565,45 @@ int read_laser_tec_monitors()
     return STATUS_OK;
 }
 
+int read_etalon_thermistor_adc()
+// Read etalon thermistor ADC
+{
+    int flags, result, loops;
+
+    setI2C1Mux(0);  // I2C bus 8
+    for (loops=0;loops<1000;loops++);
+    result = ltc2485_getData(&etalon_thermistor_I2C, &flags);
+    if (flags == 0) result = -16777216;
+    else if (flags == 3) result = 16777215;
+    return result;
+}
+
+int read_warm_box_thermistor_adc()
+// Read warm box thermistor ADC
+{
+    int flags, result, loops;
+
+    setI2C1Mux(0);  // I2C bus 8
+    for (loops=0;loops<1000;loops++);
+    result = ltc2485_getData(&warm_box_thermistor_I2C, &flags);
+    if (flags == 0) result = -16777216;
+    else if (flags == 3) result = 16777215;
+    return result;
+}
+
+int read_warm_box_heatsink_thermistor_adc()
+// Read warm box heatsink thermistor ADC
+{
+    int flags, result, loops;
+
+    setI2C1Mux(0);  // I2C bus 8
+    for (loops=0;loops<1000;loops++);
+    result = ltc2485_getData(&warm_box_heatsink_thermistor_I2C, &flags);
+    if (flags == 0) result = -16777216;
+    else if (flags == 3) result = 16777215;
+    return result;
+}
+
 int read_laser_thermistor_adc(int laserNum)
 // Read thermistor ADC for specified laser. laserNum is in the range 1-4
 {
@@ -573,7 +612,7 @@ int read_laser_thermistor_adc(int laserNum)
 
     setI2C0Mux(chan[laserNum]);
     for (loops=0;loops<1000;loops++);
-    result = ltc2485_getData(&flags);
+    result = ltc2485_getData(&laser_thermistor_I2C, &flags);
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;

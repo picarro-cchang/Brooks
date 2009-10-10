@@ -32,6 +32,14 @@
 #define IDEF  static inline
 
 I2C_Handle hI2C0=0, hI2C1=0;
+
+I2C_devAddr laser_thermistor_I2C = {&hI2C0,0x26};
+I2C_devAddr etalon_thermistor_I2C = {&hI2C1,0x27};
+I2C_devAddr warm_box_heatsink_thermistor_I2C = {&hI2C1,0x26};
+I2C_devAddr warm_box_thermistor_I2C = {&hI2C1,0x15};
+I2C_devAddr hot_box_heatsink_thermistor_I2C;
+I2C_devAddr cavity_thermistor_I2C;
+
 /*----------------------------------------------------------------------------*/
 // Returns 1 if NACK is received, 0 if ACK is received
 IDEF Uint32 I2C_nack(I2C_Handle hI2c)

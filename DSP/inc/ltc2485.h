@@ -16,6 +16,6 @@
 #ifndef  _LTC2485_H_
 #define  _LTC2485_H_
 
-void ltc2485_configure(int selectTemp,int rejectCode,int speed);
-int ltc2485_getData(int *flags);
+void ltc2485_configure(I2C_devAddr *i2c,int selectTemp,int rejectCode,int speed);
+int ltc2485_getData(I2C_devAddr *i2c,int *flags);
 #endif

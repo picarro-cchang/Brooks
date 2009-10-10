@@ -1118,6 +1118,12 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_read_laser_tec_monitors(numInt,params,env);
         case ACTION_READ_LASER_THERMISTOR_RESISTANCE:
             return r_read_laser_thermistor_resistance(numInt,params,env);
+        case ACTION_READ_ETALON_THERMISTOR_RESISTANCE:
+            return r_read_etalon_thermistor_resistance(numInt,params,env);
+        case ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE:
+            return r_read_warm_box_thermistor_resistance(numInt,params,env);
+        case ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE:
+            return r_read_warm_box_heatsink_thermistor_resistance(numInt,params,env);
         case ACTION_READ_LASER_CURRENT:
             return r_read_laser_current(numInt,params,env);
         case ACTION_UPDATE_WLMSIM_LASER_TEMP:

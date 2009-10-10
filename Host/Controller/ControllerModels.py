@@ -45,11 +45,25 @@ class DriverProxy(SharedTypes.Singleton):
             self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="Controller")
             self.initialized = True
 
+class RDFreqConvProxy(SharedTypes.Singleton):
+    """Encapsulates access to the Driver via RPC calls"""
+    initialized = False
+    def __init__(self):
+        if not self.initialized:
+            self.hostaddr = "localhost"
+            self.myaddr = socket.gethostbyname(socket.gethostname())
+            serverURI = "http://%s:%d" % (self.hostaddr,
+                SharedTypes.RPC_PORT_FREQ_CONVERTER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="Controller")
+            self.initialized = True
+
 class RingdownListener(SharedTypes.Singleton):
     def __init__(self):
         self.listener = Listener(queue=None,
-                            port = SharedTypes.BROADCAST_PORT_RDRESULTS,
-                            elementType = interface.RingdownEntryType,
+                            # port = SharedTypes.BROADCAST_PORT_RDRESULTS,
+                            port = SharedTypes.BROADCAST_PORT_RD_RECALC,
+                            # elementType = interface.RingdownEntryType,
+                            elementType = interface.ProcessedRingdownEntryType,
                             streamFilter = self.filter,
                             retry = True,
                             name = "Controller ringdown stream listener",

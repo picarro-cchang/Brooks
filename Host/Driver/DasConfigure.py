@@ -150,54 +150,73 @@ class DasConfigure(SharedTypes.Singleton):
         self.opGroups["FAST"]["STREAMER"].addOperation(Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                                                                  ["STREAM_DasTemp","DAS_TEMPERATURE_REGISTER"]))
 
-        # Etalon temperature
-        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                ["ETALON_RESISTANCE_REGISTER",
-                 "CONVERSION_ETALON_THERM_CONSTA_REGISTER",
-                 "CONVERSION_ETALON_THERM_CONSTB_REGISTER",
-                 "CONVERSION_ETALON_THERM_CONSTC_REGISTER",
-                 "ETALON_TEMPERATURE_REGISTER"]))
+        present = self.installCheck("WARM_BOX_PRESENT")
+
         
-        self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_EtalonTemp","ETALON_TEMPERATURE_REGISTER"]))
+        if present:
+            # Etalon temperature
+            
+            if present > 0:
+                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                    Operation("ACTION_READ_ETALON_THERMISTOR_RESISTANCE",
+                        ["ETALON_RESISTANCE_REGISTER"]))
+    
+            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+                Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                    ["ETALON_RESISTANCE_REGISTER",
+                     "CONVERSION_ETALON_THERM_CONSTA_REGISTER",
+                     "CONVERSION_ETALON_THERM_CONSTB_REGISTER",
+                     "CONVERSION_ETALON_THERM_CONSTC_REGISTER",
+                     "ETALON_TEMPERATURE_REGISTER"]))
+            
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_EtalonTemp","ETALON_TEMPERATURE_REGISTER"]))
 
-        # Warm Box
-        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                ["WARM_BOX_RESISTANCE_REGISTER",
-                 "CONVERSION_WARM_BOX_THERM_CONSTA_REGISTER",
-                 "CONVERSION_WARM_BOX_THERM_CONSTB_REGISTER",
-                 "CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER",
-                 "WARM_BOX_TEMPERATURE_REGISTER"]))
-
-        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                ["WARM_BOX_HEATSINK_RESISTANCE_REGISTER",
-                 "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER",
-                 "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTB_REGISTER",
-                 "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTC_REGISTER",
-                 "WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
+            # Warm Box
+            if present > 0:
+                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                    Operation("ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE",
+                        ["WARM_BOX_RESISTANCE_REGISTER"]))
         
-        self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_WarmBoxTemp","WARM_BOX_TEMPERATURE_REGISTER"]))
-
-        self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_WarmBoxHeatsinkTemp","WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
-
-        self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_WarmBoxTec","WARM_BOX_TEC_REGISTER"]))
-
-        self.opGroups["SLOW"]["CONTROLLER"].addOperation(
-            Operation("ACTION_TEMP_CNTRL_WARM_BOX_STEP"))
-
-        self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
-            Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
-                ["WARM_BOX_TEC_REGISTER","FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"]))
+                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                    Operation("ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE",
+                        ["WARM_BOX_HEATSINK_RESISTANCE_REGISTER"]))
+    
+            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+                Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                    ["WARM_BOX_RESISTANCE_REGISTER",
+                     "CONVERSION_WARM_BOX_THERM_CONSTA_REGISTER",
+                     "CONVERSION_WARM_BOX_THERM_CONSTB_REGISTER",
+                     "CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER",
+                     "WARM_BOX_TEMPERATURE_REGISTER"]))
+    
+            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+                Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                    ["WARM_BOX_HEATSINK_RESISTANCE_REGISTER",
+                     "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER",
+                     "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTB_REGISTER",
+                     "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTC_REGISTER",
+                     "WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
+            
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_WarmBoxTemp","WARM_BOX_TEMPERATURE_REGISTER"]))
+    
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_WarmBoxHeatsinkTemp","WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
+    
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_WarmBoxTec","WARM_BOX_TEC_REGISTER"]))
+    
+            self.opGroups["FAST"]["CONTROLLER"].addOperation(
+                Operation("ACTION_TEMP_CNTRL_WARM_BOX_STEP"))
+    
+            self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+                Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                    ["WARM_BOX_TEC_REGISTER","FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"]))
 
         # Hot Box
         self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(

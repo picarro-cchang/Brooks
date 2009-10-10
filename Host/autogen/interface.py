@@ -276,19 +276,7 @@ class VirtualLaserParamsType(Structure):
     ("pressureC0",c_float),
     ("pressureC1",c_float),
     ("pressureC2",c_float),
-    ("pressureC3",c_float),
-    ("angleCenter",c_float),
-    ("angleScale",c_float),
-    ("angleToTempC0",c_float),
-    ("angleToTempC1",c_float),
-    ("angleToTempC2",c_float),
-    ("angleToTempC3",c_float),
-    ("tempCenter",c_float),
-    ("tempScale",c_float),
-    ("tempToAngleC0",c_float),
-    ("tempToAngleC1",c_float),
-    ("tempToAngleC2",c_float),
-    ("tempToAngleC3",c_float)
+    ("pressureC3",c_float)
     ]
 
 # Constant definitions
@@ -2210,9 +2198,12 @@ ACTION_DS1631_READTEMP = 50
 ACTION_LASER_TEC_IMON = 51
 ACTION_READ_LASER_TEC_MONITORS = 52
 ACTION_READ_LASER_THERMISTOR_RESISTANCE = 53
-ACTION_READ_LASER_CURRENT = 54
-ACTION_UPDATE_WLMSIM_LASER_TEMP = 55
-ACTION_SIMULATE_LASER_CURRENT_READING = 56
+ACTION_READ_ETALON_THERMISTOR_RESISTANCE = 54
+ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE = 55
+ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE = 56
+ACTION_READ_LASER_CURRENT = 57
+ACTION_UPDATE_WLMSIM_LASER_TEMP = 58
+ACTION_SIMULATE_LASER_CURRENT_READING = 59
 
 
 # Parameter form definitions

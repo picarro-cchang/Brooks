@@ -232,11 +232,19 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.dasInterface.hostToDspSender.wrValveSequence(sequenceRows)
 
     def rdVirtualLaserParams(self,vLaserNum):
-        """Returns the virtual laser parameters associated with virtual laser vLaserNum as a dictionary"""
+        """Returns the virtual laser parameters associated with virtual laser vLaserNum (ONE-based)as 
+           a dictionary.
+           N.B. The "actualLaser" field within the VirtualLaserParams structure is ZERO-based
+           for compatibility with the DAS software
+           """
         return SharedTypes.ctypesToDict(self.dasInterface.hostToDspSender.rdVirtualLaserParams(vLaserNum))
 
     def wrVirtualLaserParams(self,vLaserNum,laserParams):
-        """Wites the virtual laser parameters (specified as a dictionary) associated with virtual laser vLaserNum"""
+        """Wites the virtual laser parameters (specified as a dictionary) associated with 
+           virtual laser vLaserNum (ONE-based).
+           N.B. The "actualLaser" field within the VirtualLaserParams structure is ZERO-based
+           for compatibility with the DAS software
+           """
         p = interface.VirtualLaserParamsType()
         SharedTypes.dictToCtypes(laserParams,p)
         self.dasInterface.hostToDspSender.wrVirtualLaserParams(vLaserNum,p)
@@ -307,13 +315,13 @@ class DriverRpcHandler(SharedTypes.Singleton):
             if DasConfigure().installCheck("LASER%d_PRESENT" % laserNum):
                 self.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum,interface.LASER_CURRENT_CNTRL_ManualState)
                 
-    def selectActualLaser(self,laserNum):
+    def selectActualLaser(self,aLaserNum):
         # Select laserNum, placing it under automatic control and activating the optical switch. The value
-        #  of laserNum is ZERO-based
+        #  of aLaserNum is ONE-based
         injControl = self.rdFPGA("FPGA_INJECT","INJECT_CONTROL")
-        if laserNum < 0 or laserNum >= interface.MAX_LASERS:
-            raise ValueError("laserNum must be in range 0..3 for selectActualLaser")
-        laserSel = laserNum << interface.INJECT_CONTROL_LASER_SELECT_B
+        if aLaserNum <= 0 or aLaserNum > interface.MAX_LASERS:
+            raise ValueError("aLaserNum must be in range 1..4 for selectActualLaser")
+        laserSel = (aLaserNum-1) << interface.INJECT_CONTROL_LASER_SELECT_B
         laserMask = (interface.MAX_LASERS-1) << interface.INJECT_CONTROL_LASER_SELECT_B
         injControl = (injControl & laserMask) | laserSel
         self.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injControl)

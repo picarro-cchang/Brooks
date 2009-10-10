@@ -233,7 +233,7 @@ class WlmFileMaker(object):
             # Set up laser current and select the laser
             Driver.wrDasReg("LASER%d_MANUAL_COARSE_CURRENT_REGISTER" % self.laserNum, self.coarseCurrent)
             Driver.wrDasReg("LASER%d_MANUAL_FINE_CURRENT_REGISTER" % self.laserNum, 32768)
-            Driver.selectActualLaser(self.laserNum - 1)
+            Driver.selectActualLaser(self.laserNum)
             Driver.wrDasReg("LASER%d_TEMP_CNTRL_USER_SETPOINT_REGISTER" % self.laserNum,self.tempMin)
             
             print "Turning off laser, and ensuring no spectrum acquisition is active"
@@ -422,7 +422,7 @@ def handleCommandSwitches():
     if "/?" in args or "/h" in args:
         options.setdefault('-h',"")
     #Start with option defaults...
-    configFile = os.path.splitext(AppPath) + ".ini"
+    configFile = os.path.splitext(AppPath)[0] + ".ini"
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()

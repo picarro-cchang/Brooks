@@ -331,7 +331,9 @@ class AutoCal(object):
         using the specified "vLaserNum" to indicate which virtual laser (1-origin) is involved.
         The INI file must have valid ACTUAL_LASER and LASER_MAP sections as well as the 
         VIRTUAL_PARAMS, VIRTUAL_CURRENT and VIRTUAL_ORIGINAL sections for the specified
-        vLaserNum."""
+        vLaserNum. If the VIRTUAL_* sections are all missing, this returns None indicating
+        that the specified virtual laser is absent. Otherwise, an exception is raised."""
+        
         def fetchCoeffs(sec,prefix):
             # Fetches coefficients from a section of an INI file into a list
             coeffs = []
@@ -349,6 +351,9 @@ class AutoCal(object):
             paramSec = "VIRTUAL_PARAMS_%d" % vLaserNum
             currentSec = "VIRTUAL_CURRENT_%d" % vLaserNum
             originalSec = "VIRTUAL_ORIGINAL_%d" % vLaserNum
+
+            if (paramSec not in ini) and (currentSec not in ini) and (originalSec not in ini):
+                return None # i.e., vLaserNum is not specified
             if paramSec not in ini:
                 raise ValueError("loadFromIni failed due to missing section %s" % paramSec)
             if currentSec not in ini:
@@ -362,7 +367,7 @@ class AutoCal(object):
             aLaserNum = int(ini[mapSec]["ACTUAL_FOR_VIRTUAL_%d" % vLaserNum])
             aLaserSec = "ACTUAL_LASER_%d" % aLaserNum
             if aLaserSec not in ini:
-                raise ValueError("loadFromIni failed due to missing section %s" % mapSec)
+                raise ValueError("loadFromIni failed due to missing section %s (required by virtual laser %d)" % (aLaserSec,vLaserNum))
             cen = float(ini[aLaserSec]["WAVENUM_CEN"])
             scale = float(ini[aLaserSec]["WAVENUM_SCALE"])
             coeffs = array(fetchCoeffs(ini[aLaserSec],"W2T_"))

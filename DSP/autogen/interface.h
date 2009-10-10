@@ -245,18 +245,6 @@ typedef struct {
     float pressureC1;
     float pressureC2;
     float pressureC3;
-    float angleCenter;
-    float angleScale;
-    float angleToTempC0;
-    float angleToTempC1;
-    float angleToTempC2;
-    float angleToTempC3;
-    float tempCenter;
-    float tempScale;
-    float tempToAngleC0;
-    float tempToAngleC1;
-    float tempToAngleC2;
-    float tempToAngleC3;
 } VirtualLaserParamsType;
 
 /* Constant definitions */
@@ -1298,7 +1286,10 @@ typedef enum {
 #define ACTION_LASER_TEC_IMON (51)
 #define ACTION_READ_LASER_TEC_MONITORS (52)
 #define ACTION_READ_LASER_THERMISTOR_RESISTANCE (53)
-#define ACTION_READ_LASER_CURRENT (54)
-#define ACTION_UPDATE_WLMSIM_LASER_TEMP (55)
-#define ACTION_SIMULATE_LASER_CURRENT_READING (56)
+#define ACTION_READ_ETALON_THERMISTOR_RESISTANCE (54)
+#define ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE (55)
+#define ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE (56)
+#define ACTION_READ_LASER_CURRENT (57)
+#define ACTION_UPDATE_WLMSIM_LASER_TEMP (58)
+#define ACTION_SIMULATE_LASER_CURRENT_READING (59)
 #endif

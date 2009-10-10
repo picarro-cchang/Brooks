@@ -19,7 +19,7 @@ import sys
 import traceback
 
 from ControllerFrameGui import ControllerFrameGui
-from ControllerModels import waveforms, parameterForms, panels, DriverProxy
+from ControllerModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy
 from ControllerModels import LogListener, SensorListener, RingdownListener, ControllerRpcHandler
 from Host.Common.ParameterDialog import ParameterDialog
 from Host.autogen import interface
@@ -28,8 +28,9 @@ from Host.Common import SharedTypes
 from configobj import ConfigObj
 from Sequencer import Sequencer
 
-# For convenience in calling driver functions
+# For convenience in calling driver and frequency converter functions
 Driver = DriverProxy().rpc
+RDFreqConv = RDFreqConvProxy().rpc
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable

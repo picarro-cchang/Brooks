@@ -15,6 +15,7 @@
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
 import wx
+import os
 import sys
 import traceback
 
@@ -22,10 +23,11 @@ from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes
 from configobj import ConfigObj
-from ControllerModels import DriverProxy
+from ControllerModels import DriverProxy, RDFreqConvProxy
 
-# For convenience in calling driver functions
+# For convenience in calling driver and frequency converter functions
 Driver = DriverProxy().rpc
+RDFreqConv = RDFreqConvProxy().rpc
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -68,7 +70,8 @@ class Sequencer(SharedTypes.Singleton):
                 for i in range(nSchemes):
                     schemeFileName = cs["SCHEME%02d" % (i+1,)]
                     repetitions = int(cs["REPEAT%02d" % (i+1,)])
-                    schemes.append((SharedTypes.Scheme(schemeFileName),repetitions))
+                    name, ext = os.path.splitext(schemeFileName)
+                    schemes.append((SharedTypes.Scheme(schemeFileName),repetitions,ext.lower() == ".sch"))
                 self.sequences.append(schemes)
                 index += 1
                 section = "SEQUENCE%02d" % (index,)
@@ -93,15 +96,19 @@ class Sequencer(SharedTypes.Singleton):
                 % (self.sequence,self.scheme,self.repeat))
             self.useIndex = (self.activeIndex + 1) % 4
             schemes = self.sequences[self.sequence-1]
-            scheme,rep = schemes[self.scheme-1]
+            scheme,rep,freqBased = schemes[self.scheme-1]
             self.repeat += 1
             if self.repeat > rep:
                 self.repeat = 1
                 self.scheme += 1
                 if self.scheme > len(schemes): 
                     self.scheme = 1
-            # We would compile a frequency based scheme at this point
-            Driver.wrScheme(self.useIndex,*(scheme.repack()))
+            if freqBased:
+                RDFreqConv.wrFreqScheme(self.useIndex,scheme)
+                RDFreqConv.convertScheme(self.useIndex)
+                RDFreqConv.uploadSchemeToDAS(self.useIndex)
+            else:
+                Driver.wrScheme(self.useIndex,*(scheme.repack()))
             Driver.wrDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER,self.useIndex)
             if Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
                 Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)

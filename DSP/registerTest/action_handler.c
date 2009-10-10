@@ -583,6 +583,45 @@ int r_read_laser_thermistor_resistance(unsigned int numInt,void *params,void *en
     return STATUS_OK;
 }
 
+int r_read_etalon_thermistor_resistance(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    float result;
+    float Vfrac, Rseries = 30000.0;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    result = read_etalon_thermistor_adc();
+    Vfrac = result/33554432.0;
+    if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
+    WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    return STATUS_OK;
+}
+
+int r_read_warm_box_thermistor_resistance(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    float result;
+    float Vfrac, Rseries = 30000.0;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    result = read_warm_box_thermistor_adc();
+    Vfrac = result/33554432.0;
+    if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
+    WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    return STATUS_OK;
+}
+
+int r_read_warm_box_heatsink_thermistor_resistance(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    float result;
+    float Vfrac, Rseries = 30000.0;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    result = read_warm_box_heatsink_thermistor_adc();
+    Vfrac = result/33554432.0;
+    if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
+    WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    return STATUS_OK;
+}
+
 int r_read_laser_current(unsigned int numInt,void *params,void *env)
 /*
     Reads laser current monitor of specified laser
