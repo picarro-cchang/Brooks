@@ -391,15 +391,18 @@ class PressurePanel(PressurePanelGui):
             colour='green',width=2)
 
     def update(self):
+        def updateState(indicator,newState):
+            if indicator.GetValue() != newState:
+                indicator.SetValue(newState)
         self.pressureGraph.Update(delay=0)
         self.propValveGraph.Update(delay=0)
         solenoidValveStates = int(dasInfo.get("solenoidValves",0))
-        self.valve1State.SetValue(solenoidValveStates & 0x1)
-        self.valve2State.SetValue(solenoidValveStates & 0x2)
-        self.valve3State.SetValue(solenoidValveStates & 0x4)
-        self.valve4State.SetValue(solenoidValveStates & 0x8)
-        self.valve5State.SetValue(solenoidValveStates & 0x10)
-        self.valve6State.SetValue(solenoidValveStates & 0x20)
+        updateState(self.valve1State,wx.CHK_CHECKED if (solenoidValveStates & 0x1) else wx.CHK_UNCHECKED)
+        updateState(self.valve2State,wx.CHK_CHECKED if (solenoidValveStates & 0x2) else wx.CHK_UNCHECKED)
+        updateState(self.valve3State,wx.CHK_CHECKED if (solenoidValveStates & 0x4) else wx.CHK_UNCHECKED)
+        updateState(self.valve4State,wx.CHK_CHECKED if (solenoidValveStates & 0x8) else wx.CHK_UNCHECKED)
+        updateState(self.valve5State,wx.CHK_CHECKED if (solenoidValveStates & 0x10) else wx.CHK_UNCHECKED)
+        updateState(self.valve6State,wx.CHK_CHECKED if (solenoidValveStates & 0x20) else wx.CHK_UNCHECKED)
 
     def onClear(self,evt):
         for s,sel,stats,attr in self.pressureGraph._lineSeries:
@@ -659,13 +662,16 @@ class CommandLogPanel(CommandLogPanelGui):
                 else:
                     result = wx.CHK_UNDETERMINED
             return result
+        def update3State(indicator,newState):
+            if indicator.Get3StateValue() != newState:
+                indicator.Set3StateValue(newState)
         status = Driver.rdDasReg(interface.DAS_STATUS_REGISTER)
-        self.laser1State.Set3StateValue(make3State(status,interface.DAS_STATUS_Laser1TempCntrlActiveBit,interface.DAS_STATUS_Laser1TempCntrlLockedBit))
-        self.laser2State.Set3StateValue(make3State(status,interface.DAS_STATUS_Laser2TempCntrlActiveBit,interface.DAS_STATUS_Laser2TempCntrlLockedBit))
-        self.laser3State.Set3StateValue(make3State(status,interface.DAS_STATUS_Laser3TempCntrlActiveBit,interface.DAS_STATUS_Laser3TempCntrlLockedBit))
-        self.laser4State.Set3StateValue(make3State(status,interface.DAS_STATUS_Laser4TempCntrlActiveBit,interface.DAS_STATUS_Laser4TempCntrlLockedBit))
-        self.warmBoxState.Set3StateValue(make3State(status,interface.DAS_STATUS_WarmBoxTempCntrlActiveBit,interface.DAS_STATUS_WarmBoxTempCntrlLockedBit))
-        self.hotBoxState.Set3StateValue(make3State(status,interface.DAS_STATUS_CavityTempCntrlActiveBit,interface.DAS_STATUS_CavityTempCntrlLockedBit))
+        update3State(self.laser1State,make3State(status,interface.DAS_STATUS_Laser1TempCntrlActiveBit,interface.DAS_STATUS_Laser1TempCntrlLockedBit))
+        update3State(self.laser2State,make3State(status,interface.DAS_STATUS_Laser2TempCntrlActiveBit,interface.DAS_STATUS_Laser2TempCntrlLockedBit))
+        update3State(self.laser3State,make3State(status,interface.DAS_STATUS_Laser3TempCntrlActiveBit,interface.DAS_STATUS_Laser3TempCntrlLockedBit))
+        update3State(self.laser4State,make3State(status,interface.DAS_STATUS_Laser4TempCntrlActiveBit,interface.DAS_STATUS_Laser4TempCntrlLockedBit))
+        update3State(self.warmBoxState,make3State(status,interface.DAS_STATUS_WarmBoxTempCntrlActiveBit,interface.DAS_STATUS_WarmBoxTempCntrlLockedBit))
+        update3State(self.hotBoxState,make3State(status,interface.DAS_STATUS_CavityTempCntrlActiveBit,interface.DAS_STATUS_CavityTempCntrlLockedBit))
     def updateAcquisitionState(self):
         # Update the acquisition button label and the associated text control
         state = Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER)
