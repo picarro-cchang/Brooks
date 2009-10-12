@@ -10,6 +10,7 @@
 #
 # HISTORY:
 #   28-Aug-2009  sze  Initial version.
+#   11-Oct-2009  sze  Modification for offset binary output of ADC.
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -94,10 +95,15 @@ def WlmAdcReader(clk,reset,adc_clock_in,strobe_in,eta1_in,ref1_in,
                     if adc_clock_in:
                         # Get here on rising edge of ADC clock
                         if counter == ADC_CYCLE-2:
-                            eta1_out.next = eta1
-                            ref1_out.next = ref1
-                            eta2_out.next = eta2
-                            ref2_out.next = ref2
+                            # Handle offset-binary format
+                            eta1_out.next[ADC_DATA_WIDTH-1] = not eta1[ADC_DATA_WIDTH-1]
+                            ref1_out.next[ADC_DATA_WIDTH-1] = not ref1[ADC_DATA_WIDTH-1]
+                            eta2_out.next[ADC_DATA_WIDTH-1] = not eta2[ADC_DATA_WIDTH-1]
+                            ref2_out.next[ADC_DATA_WIDTH-1] = not ref2[ADC_DATA_WIDTH-1]
+                            eta1_out.next[ADC_DATA_WIDTH-1:] = eta1[ADC_DATA_WIDTH-1:]
+                            ref1_out.next[ADC_DATA_WIDTH-1:] = ref1[ADC_DATA_WIDTH-1:]
+                            eta2_out.next[ADC_DATA_WIDTH-1:] = eta2[ADC_DATA_WIDTH-1:]
+                            ref2_out.next[ADC_DATA_WIDTH-1:] = ref2[ADC_DATA_WIDTH-1:]
                         if counter < ADC_CYCLE:
                             counter.next = counter + 1
                             state.next = t_State.WAIT_0
