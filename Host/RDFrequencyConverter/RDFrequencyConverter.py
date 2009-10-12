@@ -13,6 +13,7 @@
 #   30-Sep-2009  alex/sze  Initial version.
 #   02-Oct-2009  alex      Add RPC functions.
 #   09-Oct-2009  sze       Supporting new warm box calibration files and uploading of virtual laser parameters to DAS
+#   11-Oct-2009  sze       Added routines to support CalibrateSystem
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -90,8 +91,9 @@ class RDFrequencyConverter(object):
         self.angleScheme = {}
         self.isAngleSchemeConverted = {}
         self.freqConverter = {}
-        self.calFilePath = ""
-
+        self.warmBoxCalFilePath = ""
+        self.hotBoxCalFilePath = ""
+        self.hotBoxCal = None
 
     def run(self):
         #start the rpc server on another thread...
@@ -195,13 +197,60 @@ class RDFrequencyConverter(object):
         angleScheme = self.angleScheme[schemeNum]
         Driver.wrScheme(schemeNum, *(angleScheme.repack()))
         
-    def RPC_getCalFilePath(self):
-        return self.calFilePath
+    def RPC_restoreOriginalWlmCal(self,vLaserNum):
+        # Replace current spline coefficients with original spline coefficients
+        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
+            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        self.freqConverter[vLaserNum-1].replaceCurrent()
+        
+    def RPC_replaceOriginalWlmCal(self,vLaserNum):
+        # Copy current spline coefficients to original coefficients
+        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
+            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        self.freqConverter[vLaserNum-1].replaceOriginal()
+
+    def RPC_waveNumberToAngle(self,vLaserNum,waveNumbers):
+        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
+            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        return self.freqConverter[vLaserNum-1].waveNumber2ThetaCal(waveNumbers)
+
+    def RPC_angleToWaveNumber(self,vLaserNum,angles):
+        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
+            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        return self.freqConverter[vLaserNum-1].thetaCal2WaveNumber(angles)
     
-    def RPC_loadCal(self, calFilePath):
+    def RPC_angleToLaserTemperature(self,vLaserNum,angles):
+        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
+            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        return self.freqConverter[vLaserNum-1].thetaCal2LaserTemp(angles)
+    
+    def RPC_updateWlmCal(self,vLaserNum,thetaCal,waveNumbers,weights,relax=5e-3,relative=True,relaxDefault=5e-3,relaxZero=5e-5):
+        """Updates the wavelength monitor calibration using the information that angles specified as "thetaCal"
+           map to the specified list of waveNumbers. Also relax the calibration towards the default using
+           Laplacian regularization and the specified value of relaxDefault."""
+        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
+            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        self.freqConverter[vLaserNum-1].updateWlmCal(thetaCal,waveNumbers,weights,relax,relative,relaxDefault,relaxZero)
+        
+    def RPC_getHotBoxCalFilePath(self):
+        return self.hotBoxCalFilePath
+
+    def RPC_getWarmBoxCalFilePath(self):
+        return self.warmBoxCalFilePath
+    
+    def RPC_loadHotBoxCal(self, hotBoxCalFilePath):
+        self.hotBoxCalFilePath = os.path.abspath(hotBoxCalFilePath)
+        self.hotBoxCal = CustomConfigObj(self.hotBoxCalFilePath)
+        if "AUTOCAL" not in self.hotBoxCal:
+            raise ValueError("No AUTOCAL section in hot box calibration.")
+        if ("CAVITY_LENGTH_TUNING" not in self.hotBoxCal) and \
+           ("LASER_CURRENT_TUNING" not in self.hotBoxCal):
+            raise ValueError("Hot box calibration must contain at least one of CAVITY_LENGTH_TUNING or LASER_CURRENT_TUNING sections.")
+    
+    def RPC_loadWarmBoxCal(self, warmBoxCalFilePath):
         # Load up the frequency converters for each laser in the DAS...
-        self.calFilePath = os.path.abspath(calFilePath)
-        ini = CustomConfigObj(self.calFilePath)
+        self.warmBoxCalFilePath = os.path.abspath(warmBoxCalFilePath)
+        ini = CustomConfigObj(self.warmBoxCalFilePath)
         for vLaserNum in range(1, self.numLasers + 1): # N.B. In AutoCal, laser indices are 1 based
             ac = AutoCal()
             self.freqConverter[vLaserNum-1] = ac.loadFromIni(ini, vLaserNum)
@@ -224,12 +273,42 @@ class RDFrequencyConverter(object):
                                 'pressureC2':      float(p['PRESSURE_C2']),
                                 'pressureC3':      float(p['PRESSURE_C3'])}
                 Driver.wrVirtualLaserParams(vLaserNum,laserParams)
+
+    def RPC_getHotBoxCalParam(self,secName,optName):
+        return self.hotBoxCal[secName][optName]
+    
+    def RPC_setHotBoxCalParam(self,secName,optName,optValue):
+        self.hotBoxCal[secName][optName] = optValue
         
-    def RPC_updateCal(self):
+    def RPC_updateHotBoxCal(self,fileName=None):
         """
         Write calibration back to the file with a new checksum.
         """
-        cp = CustomConfigObj(self.calFilePath)
+        fp = None
+        if self.hotBoxCal is None:
+            raise ValueError("Hot box calibration has not been loaded")
+        try:
+            calStrIO = StringIO()
+            self.hotBoxCal.write(calStrIO)
+            calStr = calStrIO.getvalue()
+            calStr = calStr[:calStr.find("#checksum=")]
+            checksum = crc32(calStr, 0)
+            calStr += "#checksum=%d" % checksum
+            if fileName is not None:
+                fp = file(fileName, "wb")
+            else:
+                fp = file(self.hotBoxCalFilePath, "wb")
+            fp.write(calStr)
+        finally:
+            calStrIO.close()
+            if fp is not None: fp.close()
+    
+    def RPC_updateWarmBoxCal(self,fileName=None):
+        """
+        Write calibration back to the file with a new checksum.
+        """
+        fp = None
+        cp = CustomConfigObj(self.warmBoxCalFilePath)
         for i in self.freqConverter.keys():
             ac = self.freqConverter[i]
             if ac is not None:
@@ -241,11 +320,14 @@ class RDFrequencyConverter(object):
             calStr = calStr[:calStr.find("#checksum=")]
             checksum = crc32(calStr, 0)
             calStr += "#checksum=%d" % checksum
-            fp = file(self.calFilePath, "wb")
+            if fileName is not None:
+                fp = file(fileName, "wb")
+            else:
+                fp = file(self.warmBoxCalFilePath, "wb")
             fp.write(calStr)
         finally:
             calStrIO.close()
-            fp.close()
+            if fp is not None: fp.close()
                 
     def RPC_shutdown(self):
         self._shutdownRequested = True

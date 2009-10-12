@@ -560,12 +560,12 @@ class AutoCal(object):
         return (diff(ygrid)>=0).all()
 
     def replaceCurrent(self):
-        """Replace current values with copy of originals"""
-        self.coeffs = self.coeffsOrig.copy()
+        """Replace current values with original values"""
+        self.coeffs[:] = self.coeffsOrig
 
     def replaceOriginal(self):
-        """Replace original values with copy of current values"""
-        self.coeffsOrig = self.coeffs.copy()
+        """Replace original values with current values"""
+        self.coeffsOrig[:] = self.coeffs
 
     def setOffset(self,offset):
         """Apply a spectroscopically determined wavelength monitor offset."""

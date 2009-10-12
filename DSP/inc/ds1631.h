@@ -16,12 +16,12 @@
 #ifndef  _DS1631_H_
 #define  _DS1631_H_
 
-void ds1631_reset();
-void ds1631_startConvert();
-void ds1631_writeConfig(unsigned int w);
-unsigned int ds1631_readConfig();
-unsigned int ds1631_readTemperature();
-float ds1631_readTemperatureAsFloat();
+void ds1631_reset(I2C_devAddr *i2c);
+void ds1631_startConvert(I2C_devAddr *i2c);
+void ds1631_writeConfig(I2C_devAddr *i2c,unsigned int w);
+unsigned int ds1631_readConfig(I2C_devAddr *i2c);
+unsigned int ds1631_readTemperature(I2C_devAddr *i2c);
+float ds1631_readTemperatureAsFloat(I2C_devAddr *i2c);
 
-void ds1631_init();
+void ds1631_init(I2C_devAddr *i2c);
 #endif

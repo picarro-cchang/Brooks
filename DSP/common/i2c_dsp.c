@@ -39,6 +39,9 @@ I2C_devAddr warm_box_heatsink_thermistor_I2C = {&hI2C1,0x26};
 I2C_devAddr warm_box_thermistor_I2C = {&hI2C1,0x15};
 I2C_devAddr hot_box_heatsink_thermistor_I2C;
 I2C_devAddr cavity_thermistor_I2C;
+I2C_devAddr das_temp_sensor_I2C = {&hI2C0,0x4E};
+I2C_devAddr laser_current_monitor_I2C = {&hI2C1,0x14};
+I2C_devAddr valve_pump_tec_I2C = {&hI2C1,0x20};
 
 /*----------------------------------------------------------------------------*/
 // Returns 1 if NACK is received, 0 if ACK is received

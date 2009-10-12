@@ -265,7 +265,7 @@ int modify_valve_pump_tec(unsigned int mask, unsigned int code)
     {
         setI2C1Mux(4);  // Select SC15 and SD15
         for (loops=0;loops<1000;loops++);
-        pca8574_wrByte(~newValue);
+        pca8574_wrByte(&valve_pump_tec_I2C,~newValue);
         shadow = newValue;
     }
     return STATUS_OK;

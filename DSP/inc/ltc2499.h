@@ -16,6 +16,6 @@
 #ifndef  _LTC2499_H_
 #define  _LTC2499_H_
 
-void ltc2499_configure(int single,int channel,int selectTemp,int rejectCode,int speed);
-int ltc2499_getData(int *flags);
+void ltc2499_configure(I2C_devAddr *i2c,int single,int channel,int selectTemp,int rejectCode,int speed);
+int ltc2499_getData(I2C_devAddr *i2c,int *flags);
 #endif

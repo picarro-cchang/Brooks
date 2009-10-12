@@ -18,7 +18,7 @@
 #include "i2c_dsp.h"
 #include "ds1631.h"
 
-static unsigned int ds1631_rdBytes(Uint8 command,int n)
+static unsigned int ds1631_rdBytes(I2C_devAddr *i2c,Uint8 command,int n)
 /* Read up to 4 bytes in high-endian order in response to command,
     returning an unsigned */
 {
@@ -26,71 +26,71 @@ static unsigned int ds1631_rdBytes(Uint8 command,int n)
     unsigned int i, result=0;
     if (n>0 && n<=4)
     {
-        I2C_write_bytes(hI2C0,0x4E,&command,1);
-        I2C_read_bytes(hI2C0,0x4E,reply,n);
+        I2C_write_bytes(*(i2c->hI2C),i2c->addr,&command,1);
+        I2C_read_bytes(*(i2c->hI2C),i2c->addr,reply,n);
         for (i=0; i<n; i++) result = (result << 8) | (unsigned int)reply[i];
     }
     return result;
 }
 
-static void ds1631_wrBytes(Uint8 bytes[],int n)
+static void ds1631_wrBytes(I2C_devAddr *i2c,Uint8 bytes[],int n)
 {
-    I2C_write_bytes(hI2C0,0x4E,bytes,n);
-    I2C_sendStop(hI2C0);
+    I2C_write_bytes(*(i2c->hI2C),i2c->addr,bytes,n);
+    I2C_sendStop(*(i2c->hI2C));
 }
 
-static void ds1631_wrByte(Uint8 byte)
+static void ds1631_wrByte(I2C_devAddr *i2c,Uint8 byte)
 {
     Uint8 bytes[1];
     bytes[0] = byte;
-    ds1631_wrBytes(bytes,1);
+    ds1631_wrBytes(i2c,bytes,1);
 }
 
-void ds1631_reset()
+void ds1631_reset(I2C_devAddr *i2c)
 {
-    ds1631_wrByte(0x54);
+    ds1631_wrByte(i2c,0x54);
     // The reset command is NACKed
-    I2C_FSETSH(hI2C0,I2CSTR,NACK,CLR);
+    I2C_FSETSH(*(i2c->hI2C),I2CSTR,NACK,CLR);
 }
 
-void ds1631_startConvert()
+void ds1631_startConvert(I2C_devAddr *i2c)
 {
-    ds1631_wrByte(0x51);
+    ds1631_wrByte(i2c,0x51);
 }
 
-void ds1631_writeConfig(unsigned int w)
+void ds1631_writeConfig(I2C_devAddr *i2c,unsigned int w)
 {
     Uint8 bytes[2];
     bytes[0] = 0xAC;
     bytes[1] = (Uint8)(w&0xFF);
-    ds1631_wrBytes(bytes,2);
+    ds1631_wrBytes(i2c,bytes,2);
 }
 
-unsigned int ds1631_readConfig()
+unsigned int ds1631_readConfig(I2C_devAddr *i2c)
 {
-    return ds1631_rdBytes(0xAC,1);
+    return ds1631_rdBytes(i2c,0xAC,1);
 }
 
-unsigned int ds1631_readTemperature()
+unsigned int ds1631_readTemperature(I2C_devAddr *i2c)
 {
-    return ds1631_rdBytes(0xAA,2);
+    return ds1631_rdBytes(i2c,0xAA,2);
 }
 
-float ds1631_readTemperatureAsFloat()
+float ds1631_readTemperatureAsFloat(I2C_devAddr *i2c)
 {
-    unsigned int temp = ds1631_readTemperature();
+    unsigned int temp = ds1631_readTemperature(i2c);
     if (temp < 0x8000) return (float)temp/256.0;
     else return ((float)temp/256.0) - 256.0;
 }
 
-void ds1631_init()
+void ds1631_init(I2C_devAddr *i2c)
 /* Initialize the DS1631 sensor by resetting it, and setting
     up continuous measurements with 12 bit resolution */
 {
     int loop;
-    ds1631_reset();
+    ds1631_reset(i2c);
     for (loop=0;loop<2000;loop++);
-    ds1631_writeConfig(0x8c);
+    ds1631_writeConfig(i2c,0x8c);
     for (loop=0;loop<2000;loop++);
-    ds1631_startConvert();
+    ds1631_startConvert(i2c);
 }

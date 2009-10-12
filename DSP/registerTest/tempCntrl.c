@@ -506,11 +506,11 @@ int read_laser_tec_imon(int desired, int next, float *result)
 
     if (next < 0 || next > 4) return ERROR_BAD_VALUE;
     //  Set up for next conversion
-    if (next == 0) ltc2499_configure(0,0,1,0,0);
-    else ltc2499_configure(0,code[next],0,0,0);
+    if (next == 0) ltc2499_configure(&laser_current_monitor_I2C,0,0,1,0,0);
+    else ltc2499_configure(&laser_current_monitor_I2C,0,code[next],0,0,0);
     if (prevChan == desired)
     {
-        *result = (float) ltc2499_getData(&flags);
+        *result = (float) ltc2499_getData(&laser_current_monitor_I2C,&flags);
         if (flags == 0) *result = -16777216.0;
         else if (flags == 3) *result = 16777215.0;
         prevChan = next;
@@ -518,7 +518,7 @@ int read_laser_tec_imon(int desired, int next, float *result)
     }
     else
     {
-        ltc2499_getData(&flags);
+        ltc2499_getData(&laser_current_monitor_I2C,&flags);
         prevChan = next;
         return ERROR_UNAVAILABLE;
     }

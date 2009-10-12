@@ -16,6 +16,6 @@
 #ifndef  _PCA8574_H_
 #define  _PCA8574_H_
 
-unsigned char pca8574_rdByte();
-void pca8574_wrByte(unsigned char byte);
+unsigned char pca8574_rdByte(I2C_devAddr *i2c);
+void pca8574_wrByte(I2C_devAddr *i2c,unsigned char byte);
 #endif

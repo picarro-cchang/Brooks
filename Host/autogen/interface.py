@@ -719,6 +719,7 @@ RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask = 0x40
 RINGDOWN_STATUS_RingdownTimeout = 0x80
 
 # Definitions for SUBSCHEME_ID_BITMASK
+SUBSCHEME_ID_IdMask = 0x7FFF
 SUBSCHEME_ID_IncrMask = 0x8000
 
 # Definitions for SENTRY_BITMASK

@@ -17,19 +17,23 @@
 #
 
 import sys
+import getopt
+from numpy import *
+import os
+import Queue
+import socket
+import time
 from configobj import ConfigObj
 from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
 from Host.Common.Listener import Listener
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-import Queue
-import getopt
-import numpy
-import os
-import socket
-import time
 from scipy.optimize import fmin
-APPROX_FSR = 0.077
+from Host.Common.WlmCalUtilities import bestFit
+
+#APPROX_FSR = 0.077
+APPROX_FSR = 0.1
+
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -50,8 +54,21 @@ class DriverProxy(SharedTypes.Singleton):
             self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="CalibrateSystem")
             self.initialized = True
 
-# For convenience in calling driver functions
+class RDFreqConvProxy(SharedTypes.Singleton):
+    """Encapsulates access to the Driver via RPC calls"""
+    initialized = False
+    def __init__(self):
+        if not self.initialized:
+            self.hostaddr = "localhost"
+            self.myaddr = socket.gethostbyname(socket.gethostname())
+            serverURI = "http://%s:%d" % (self.hostaddr,
+                SharedTypes.RPC_PORT_FREQ_CONVERTER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="Controller")
+            self.initialized = True
+
+# For convenience in calling driver and frequency converter functions
 Driver = DriverProxy().rpc
+RDFreqConv = RDFreqConvProxy().rpc
 
 def getNextNonNullLine(sp):
     """ Return next line in a stream which is not blank and which does not
@@ -80,7 +97,7 @@ def linearInterp(x,y,xf):
     xf[sat] = x[0]
 
     # Find locations of xf values within array x
-    pos = numpy.digitize(x=xf,bins=x)
+    pos = digitize(x=xf,bins=x)
     h = x[pos]-x[pos-1]
     yf = y[pos-1] + (y[pos]-y[pos-1])*(xf-x[pos-1])/h
 
@@ -109,9 +126,9 @@ def coalascePoints(x,y):
     while i<len(x):
         s = nsame(x[i:])
         xu.append(x[i])
-        yu.append(numpy.median(y[i:i+s]))
+        yu.append(median(y[i:i+s]))
         i += s
-    return (numpy.array(xu,dtype=x.dtype),numpy.array(yu,dtype=y.dtype))
+    return (array(xu,dtype=x.dtype),array(yu,dtype=y.dtype))
 
 class CalibrateSystem(object):
     def __init__(self,configFile,options):
@@ -133,6 +150,7 @@ class CalibrateSystem(object):
             self.waveNumberCen = float(options["-w"])
         else:
             self.waveNumberCen = float(self.config["SETTINGS"]["CENTER_WAVENUMBER"])
+        self.angleRelax = float(self.config["SETTINGS"]["ANGLE_RELAX"])
         
         self.seq = 0
         self.processResults = False
@@ -141,7 +159,7 @@ class CalibrateSystem(object):
         self.listener = Listener(None,SharedTypes.BROADCAST_PORT_RDRESULTS,RingdownEntryType,self.rdFilter)
 
     def clearLists(self):
-        self.pztList = []
+        self.tunerList = []
         self.angleList = []
         self.schemeRowList = []
 
@@ -168,97 +186,79 @@ class CalibrateSystem(object):
         Driver.wrDasReg("TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER",int(0.45*ditherPeakToPeak))
         Driver.wrDasReg("TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER", int(0.45*ditherPeakToPeak))
 
+    def makeAndUploadScheme(self,wlmAngles,laserTemps,vLaserNum,repeat,dwell):
+        # Generate an angle-based scheme with subschemeId given by the value of self.seq.
+        # Use scheme number 14, unless it is the current scheme, in which case use scheme 15.
+        # Make the scheme the next scheme to be run.
+        self.seq += 1
+        schemeNum = 14
+        numEntries = len(wlmAngles)
+        dwells = dwell*ones(wlmAngles.shape)
+        subschemeIds = self.seq*ones(wlmAngles.shape)
+        virtualLasers = (vLaserNum-1)*ones(wlmAngles.shape)
+        thresholds = zeros(wlmAngles.shape)
+        pztSetpoints = zeros(wlmAngles.shape)
+        if schemeNum == Driver.rdDasReg("SPECT_CNTRL_ACTIVE_SCHEME_REGISTER"): 
+            schemeNum = 15
+        Driver.wrScheme(schemeNum,repeat,zip(wlmAngles,dwells,subschemeIds,virtualLasers,thresholds,pztSetpoints,laserTemps))
+        Driver.wrDasReg("SPECT_CNTRL_NEXT_SCHEME_REGISTER",schemeNum)
+        
     def rdFilter(self,entry):
-        print entry
-        
-        
-    if 0:
-        def resultsFilter(self,entry):
-            if self.processResults:
-                fitStatus = c_int8(entry.etalonAndLaserSelectAndFitStatus & 0xFF).value
-                if (entry.subSchemeId & 0x7FFF) == self.seq and \
-                  fitStatus not in [ss_autogen.ERROR_RD_WRONG_SCHEME_INDEX]:
-                    # We need to process these data
-                    schemeRow = entry.schemeIndex
-                    self.pztSum[schemeRow] += entry.tunerValue
-                    self.pztList.append(entry.tunerValue)
-                    self.angleList.append(entry.lockValue.asFloat)
-                    self.schemeRowList.append(schemeRow)
-                    self.count[schemeRow] += 1
-                if self.version <4:
-                    schemeStatus = entry.schemeStatus
-                else:
-                    schemeStatus = (entry.schemeStatusAndSchemeTableIndex >> 8) & 0xFF
-                if (schemeStatus & ss_autogen.SchemeCompleteSingleModeBitMask) or \
-                   (schemeStatus & ss_autogen.SchemeCompleteRepeatModeMask)or \
-                   ((schemeStatus & ss_autogen.SchemeActiveBitMask) == 0 and (time.time()-self.startCollect)>30):
-                    self.processResults = False
-    
-        def update(self,angles,laserIndex,FSR=None,nRefine=4):
-            theta = numpy.array(angles,dtype='d')
-            dtheta = numpy.diff(theta)
-            m = numpy.mean(abs(dtheta))
-            while True:
-                r = numpy.round_(dtheta/m)
-                good = numpy.nonzero(r)
-                m1 = numpy.mean(dtheta[good]/r[good])
-                if m == m1: break
-                m = m1
-            cr = numpy.zeros(len(theta),dtype='l')
-            cr[1:] = numpy.cumsum(r)
-            # cr contains FSR indices associated with WLM angles in theta
-            # Sort these into ascending order and coalasce points with same index
-            p = cr.argsort()
-            cr = cr[p]
-            theta = theta[p]
-            cr,theta = coalascePoints(cr,theta)
-            # Use interpolation to fill in calibration points so they are closer together than the spline knots
-            waveNumbers = numpy.linspace(cr[0],cr[-1],nRefine*(cr[-1]-cr[0])+1)
-            theta = linearInterp(cr,theta,waveNumbers)
-            # Determine the cavity FSR if necessary
-            if FSR == None:
-                w = self.FilerRpc.AngleToWavenumber([float(th) for th in angles],laserIndex)["waveNumber"]
-                p = calUtilities.bestFit(numpy.cumsum(r),w[1:],1)
-                FSR = p.coeffs[0]
-            waveNumbers *= FSR
-            msg = "Free spectral range = %f" % (FSR,)
-            print msg
-            print>>self.op, msg
-            msg = "Laser index (1-origin) = %d" % (laserIndex+1,)
-            print msg
-            print>>self.op, msg
-            for i in range(50):
-                self.FilerRpc.UpdateWlmCal([float(th) for th in theta],[float(w) for w in waveNumbers],1.0,laserIndex,0.1,True)
-            self.FilerRpc.ReplaceOriginalWlmCal(laserIndex)
-            return FSR
-    
-        def makeAndUploadScheme(self,thetaList,tempList,laserIndex,repeat,dwell):
-            self.seq += 1
-            fullFilename = os.path.join(self.tempDir,"calScheme%d.abs" % (self.seq,))
-            baseScheme = 14
-            lp = file(fullFilename,"w")
-            msg = "Preparing scheme file: %s" % fullFilename
-            print msg
-            print>>self.op, msg
-            print >>lp, repeat
-            numEntries = len(thetaList)
-            print >>lp, numEntries
-            toks = 6 * ["0"]
-            for i in range(numEntries):
-                toks[0] = "%.4f" % (float(thetaList[i]),)
-                toks[1] = "%d" % (dwell,)
-                toks[2] = "%d" % (self.seq,)
-                toks[3] = "%d" % (laserIndex,)
-                toks[5] = "%.4f" % (float(tempList[i]),)
-                print >>lp, " ".join(toks)
-            lp.close()
-            activeIndex = self.DriverRpc.rdDasReg("RD_ACTIVE_SCHEME_TABLE_INDEX_REGISTER")
-            schemeIndex = baseScheme
-            if schemeIndex == activeIndex:
-                schemeIndex += 1
-            self.DriverRpc.wrDasReg("RD_LOAD_SCHEME_TABLE_INDEX_REGISTER",schemeIndex)
-            self.FilerRpc.UploadSchemeFile(fullFilename,1)
-    
+        assert isinstance(entry,RingdownEntryType)
+        if self.processResults:
+            if not(entry.status & RINGDOWN_STATUS_RingdownTimeout) and self.seq == (entry.subschemeId & SUBSCHEME_ID_IdMask):
+                schemeRow = entry.schemeRow
+                self.tunerSum[schemeRow] += entry.tunerValue
+                self.tunerList.append(entry.tunerValue)
+                self.angleList.append(entry.wlmAngle)
+                self.schemeRowList.append(schemeRow)
+                self.count[schemeRow] += 1
+            # Check when we get to the end of the scheme
+            if (entry.status & RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask) or \
+               (entry.status & RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask):
+                self.processResults = False
+
+    def update(self,wlmAngles,vLaserNum,FSR=None,nRefine=4):
+        # We now have a list of wlmAngles that correspond to frequencies separated by
+        #  multiples of the cavity FSR. We use them to update the B-spline coefficients
+        #  in the wavelength monitor calibration.
+        theta = array(wlmAngles,dtype='d')
+        dtheta = diff(theta)
+        # Try to find an average angle change corresponding to an FSR. The values of 
+        #  abs(dtheta) are integer multiples of the desired quantity.
+        m = mean(abs(dtheta))
+        while True:
+            r = round_(dtheta/m)
+            good = nonzero(r)
+            m1 = mean(dtheta[good]/r[good])
+            if m == m1: break
+            m = m1
+        cr = zeros(len(theta),dtype='l')
+        cr[1:] = cumsum(r)
+        # cr now counts the number of FSR associated with WLM angles in theta
+        # Sort these into ascending order and coalasce points with same index
+        p = cr.argsort()
+        cr = cr[p]
+        theta = theta[p]
+        cr,theta = coalascePoints(cr,theta)
+        # Use interpolation to fill in calibration points so they are closer together than the spline knots
+        waveNumbers = linspace(cr[0],cr[-1],nRefine*(cr[-1]-cr[0])+1)
+        theta = linearInterp(cr,theta,waveNumbers)
+        # Determine the cavity FSR if necessary
+        if FSR == None:
+            w = RDFreqConv.angleToWaveNumber(vLaserNum,wlmAngles)
+            FSR = bestFit(cumsum(r),w[1:],1).coeffs[0]
+        waveNumbers *= FSR
+        msg = "Cavity free spectral range = %f wavenumbers" % (FSR,)
+        print msg
+        print>>self.op, msg
+        msg = "Virtual laser number = %d" % (vLaserNum,)
+        print msg
+        print>>self.op, msg
+        for i in range(50):
+            RDFreqConv.updateWlmCal(vLaserNum,theta,waveNumbers,1.0,0.1,True)
+        RDFreqConv.replaceOriginalWlmCal(vLaserNum)
+        return FSR
 
     def run(self):
         # Check that the driver can communicate
@@ -277,147 +277,137 @@ class CalibrateSystem(object):
                                              "TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER",
                                              "TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER"
                                              ])
+            Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_IdleState)
             self.op = file(time.strftime("CalibrateSystem_%Y%m%d_%H%M%S.txt",time.localtime()),"w")
-            currentMean = 32768 # Center position
-            rampAmpl = 17000    # Set to greater than an FSP
+            print>>self.op, "Virtual laser Index: %d"   % self.vLaserNum
+            print>>self.op, "Center wavenumber:   %.3f" % self.waveNumberCen
+            print>>self.op, "Number of steps:     %d"   % self.nSteps
+            
+            tunerCenter = 32768 # Center position
+            rampAmpl = 17000    # Set to sweep over more than an FSR
             ditherPeakToPeak = 3200
-            self.setupRampMode(ditherPeakToPeak,currentMean,rampAmpl)
-            print "Listening for 10s"
-            time.sleep(10)
+            self.setupRampMode(ditherPeakToPeak,tunerCenter,rampAmpl)
+            # Ensure that we start with original calibration information
+            RDFreqConv.restoreOriginalWlmCal(self.vLaserNum)
+            theta0 = RDFreqConv.waveNumberToAngle(self.vLaserNum,[self.waveNumberCen])[0]
+            # Make a fine angle-based scheme covering +/- 3FSR for determining PZT sensitivity
+            #fwd = arange(-600.0,601.0)
+            fwd = arange(-200.0,201.0)
+            steps = concatenate((fwd,fwd[::-1]))
+            wlmAngles = theta0 + steps*(APPROX_FSR/50.0)
+            laserTemps = RDFreqConv.angleToLaserTemperature(self.vLaserNum,wlmAngles)
+            # nRepeat = 3
+            nRepeat = 2
+            dwell = 2
+            self.makeAndUploadScheme(wlmAngles,laserTemps,self.vLaserNum,nRepeat,dwell)
+            Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER",SPECT_CNTRL_SchemeSingleMode)
+            # Start collecting data in the rdFilter
+            self.clearLists()
+            self.tunerSum = zeros(laserTemps.shape,dtype='d')
+            self.count = zeros(laserTemps.shape)
+            self.processResults = True
+            msg = "Collecting data for PZT sensitivity measurement"
+            print msg
+            print>>self.op, msg
+            Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_StartingState)
+            while self.processResults:
+                time.sleep(1.0)
+                sys.stdout.write(".")
+            print "\nCompleted data collection for PZT sensitivity measurement"
+            # Discard the first repetition, and turn the rest into arrays
+            L = min(len(self.angleList),len(self.tunerList),len(self.schemeRowList))
+            self.angleList = array(self.angleList[L//nRepeat:L+1],'d')
+            self.tunerList = array(self.tunerList[L//nRepeat:L+1],'d')
+            self.schemeRowList = array(self.schemeRowList[L//nRepeat:L+1],'d')
+            # To find the PZT sensitivity, we carry out an optimization. The following cost
+            #  function wraps the angle and tuner information around a torus, using p[0] and
+            #  p[1] as the trial periods.
+            def cost(p,angle,tuner):
+                x = angle/p[0] - tuner/p[1]
+                c1 = std(x - floor(x))
+                return c1
+                #c2 = std(x+0.5 - floor(x+0.5))
+                #return min(c1,c2)
+            
+            fBest = 1e38
+            for trialSens in [7000,8000,9000,10000,11000,12000,13000,14000,15000,16000,17000,18000,19000,20000,21000,22000]:
+                popt = fmin(cost,array([APPROX_FSR,trialSens]),args=(self.angleList,self.tunerList),maxiter=10000,maxfun=50000)
+                fopt = cost(popt,self.angleList,self.tunerList)
+                if fopt < fBest:
+                    fBest = fopt
+                    pBest = popt
+            popt = pBest
+            fopt = fBest
+            msg = "Residual: %.3f" % (fopt,)
+            print msg
+            print>>self.op, msg
+            msg = "Cavity FSR  (WLM radians):    %.5f" % (popt[0],)
+            print msg
+            print>>self.op, msg
+            msg = "Sensitivity (digU/FSR): %.0f" % (popt[1],)
+            print msg
+            print>>self.op, msg
+            RDFreqConv.setHotBoxCalParam("CAVITY_LENGTH_TUNING","FREE_SPECTRAL_RANGE",popt[1])
+            RDFreqConv.setHotBoxCalParam("AUTOCAL","APPROX_WLM_ANGLE_PER_FSR",popt[0])
+            # Next generate a scheme consisting of nominal FSR steps
+            angleFSR = float(popt[0])
+            tunerFSR = float(popt[1])
+            theta0 = RDFreqConv.waveNumberToAngle(self.vLaserNum,[self.waveNumberCen])[0]
+            fwd = arange(-self.nSteps,self.nSteps+1)
+            steps = concatenate((fwd,fwd[::-1]))
+            wlmAngles = theta0 + steps*angleFSR
+            laserTemps = RDFreqConv.angleToLaserTemperature(self.vLaserNum,wlmAngles)
+            nRepeat = 1
+            dwell = 20
+            
+            for iter in range(10):
+                self.tunerSum = zeros(wlmAngles.shape,dtype='d')
+                self.count = zeros(wlmAngles.shape)
+                self.makeAndUploadScheme(wlmAngles,laserTemps,self.vLaserNum,nRepeat,dwell)
+                Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER",SPECT_CNTRL_SchemeSingleMode)
+                # Start collecting data in the rdFilter
+                self.clearLists()
+                self.processResults = True
+                msg = "Starting spectrum acquisition"
+                print msg
+                print>>self.op, msg
+                Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_StartingState)
+                while self.processResults:
+                    time.sleep(1.0)
+                    sys.stdout.write(".")
+                print
+                # Find mean and standard deviation of tuner values
+                good = self.count.nonzero()
+                self.tunerSum[good] = self.tunerSum[good]/self.count[good]
+                tunerMean = mean(self.tunerSum[good])
+                sDev = std(self.tunerSum[good]-tunerMean)
+                msg = "Standard deviation: %.1f" % (sDev,)
+                print msg
+                print>>self.op, msg
+                # Calculate by how much to change the angles in the scheme to flatten the
+                #  tuner values
+                tunerMedian = median(self.tunerSum[good])
+                tunerDev = self.tunerSum[good] - tunerMedian
+                wlmAngles[good] = wlmAngles[good] - self.angleRelax*tunerDev
+                # Recenter the tuner if necessary
+                if abs(tunerCenter-tunerMedian) > 0.5*tunerFSR:
+                    tunerCenter = tunerMedian
+                rampAmpl = 0.65*tunerFSR
+                ditherPeakToPeak = 2500
+                self.setupRampMode(ditherPeakToPeak,tunerCenter,rampAmpl)
+
+            # Use the list of wlmAngles to update the current spline coefficients
+            cavityFSR = self.update(wlmAngles,self.vLaserNum)
+            RDFreqConv.setHotBoxCalParam("AUTOCAL","CAVITY_FSR",cavityFSR)
+               
         finally:
+            RDFreqConv.updateWarmBoxCal()
+            RDFreqConv.updateHotBoxCal()
             Driver.restoreRegValues(regVault)
             
             
-    if 0:
-        def run(self):
-            # Get here after the specified measurement time
+        if 0:
             try:
-                # Open output file for results
-                self.op = file(time.strftime("CalibrateSystem_%Y%m%d_%H%M%S.txt",time.localtime()),"w")
-                currentMean = 51000
-                self.setupRampMode(2500,currentMean,11500) # Start with a wide ramp
-                self.RdResultClass = getRdResultClass(self.version)
-                self.listener = Listener.Listener(None,BROADCAST_PORT_RDRESULTS,self.RdResultClass,self.resultsFilter)
-                if len(sys.argv) > 1:
-                    laserIndex = int(sys.argv[1]) - 1
-                else:
-                    laserIndex = int(raw_input("Laser index (1-origin)? ")) - 1
-                self.seq = 0
-                if len(sys.argv) > 2:
-                    wcen = float(sys.argv[2])
-                else:
-                    wcen = float(raw_input("Center value of wavenumber? "))
-                if len(sys.argv) > 3:
-                    nsteps = int(sys.argv[3])
-                else:
-                    nsteps = int(raw_input("Number of steps on each side of center? "))
-                # Ensure that we start with original calibration information
-                self.FilerRpc.RestoreOriginalWlmCal(laserIndex)
-                theta0 = self.FilerRpc.WavenumberToAngle(wcen,laserIndex)["angle"]
-                # First make a fine scheme for determining the PZT sensitivity
-                steps = range(-600,601)
-                steps += range(600,-601,-1)
-                dtheta = APPROX_FSR/50
-                nRepeat = 3
-                dwell = 2
-                self.DriverRpc.wrDasReg("SPECTCNTRL_SCAN_MODE_REGISTER",ss_autogen.SPECTCNTRL_SingleScheme)
-                thetaList = theta0 + numpy.array(steps,dtype='d')*dtheta
-                tempList = self.FilerRpc.AngleToLaserTemperature([float(t) for t in thetaList],laserIndex)["laserTemperature"]
-                self.clearLists()
-    
-                self.pztSum = numpy.zeros(len(tempList),dtype='d')
-                self.count = numpy.zeros(len(tempList))
-                self.makeAndUploadScheme(thetaList,tempList,laserIndex,nRepeat,dwell)
-                self.processResults = True
-                self.startCollect = time.time()
-    
-                print>>self.op, "Laser Index:       %d" % (laserIndex + 1,)
-                print>>self.op, "Center wavenumber: %.3f" % (wcen,)
-                print>>self.op, "Number of steps:   %d" % (nsteps,)
-    
-                msg = "Collecting data for PZT sensitivity measurement"
-                print msg
-                print>>self.op, msg
-                self.FilerRpc.AcquireSpectrum()
-    
-                while self.processResults:
-                    time.sleep(1.0)
-                L = min(len(self.angleList),len(self.pztList),len(self.schemeRowList))
-                self.angleList = numpy.array(self.angleList[L//nRepeat:L+1],'d')
-                self.pztList = numpy.array(self.pztList[L//nRepeat:L+1],'d')
-                self.schemeRowList = numpy.array(self.schemeRowList[L//nRepeat:L+1],'d')
-    
-                def pztcost(p,angle,pzt):
-                    x = angle/p[0] - pzt/p[1]
-                    c1 = numpy.std(x - numpy.floor(x))
-                    c2 = numpy.std(x + 0.5 - numpy.floor(x+0.5))
-                    return min(c1,c2)
-    
-                foptBest = 1e38
-                for trialSens in [7000,8000,9000,10000,11000,12000,13000,14000,15000,16000,17000,18000,19000,20000,21000,22000]:
-                    popt = fmin(pztcost,numpy.array([0.077,trialSens]),args=(self.angleList,self.pztList),maxiter=10000,maxfun=50000)
-                    fopt = pztcost(popt,self.angleList,self.pztList)
-                    if fopt < foptBest:
-                        foptBest = fopt
-                        poptBest = popt
-    
-                popt = poptBest
-                fopt = foptBest
-                msg = "Residual: %.3f" % (fopt,)
-                print msg
-                print>>self.op, msg
-                msg = "Cavity FSR  (WLM radians):    %.5f" % (popt[0],)
-                print msg
-                print>>self.op, msg
-                msg = "Sensitivity (digU/FSR): %.0f" % (popt[1],)
-                print msg
-                print>>self.op, msg
-                self.FilerRpc.UpdatePztParameters(float(popt[1]))
-                self.FilerRpc.UpdateAutocalParameters(-1,float(popt[0]))
-                angleFSR = float(popt[0])
-                pztSens = float(popt[1])
-                steps = range(-nsteps,nsteps+1)
-                steps += range(nsteps-1,-nsteps,-1)
-                dtheta = angleFSR
-                baseScheme = 14
-                dwell = 10
-                nRepeat = 1
-                theta0 = self.FilerRpc.WavenumberToAngle(wcen,laserIndex)["angle"]
-                seq = 0
-                self.DriverRpc.wrDasReg("SPECTCNTRL_SCAN_MODE_REGISTER",ss_autogen.SPECTCNTRL_SingleScheme)
-                thetaList = theta0 + numpy.array(steps,dtype='d')*dtheta
-                tempList = self.FilerRpc.AngleToLaserTemperature([float(t) for t in thetaList],laserIndex)["laserTemperature"]
-    
-                repeat = 1
-                dwell = 10
-    
-                for iter in range(10):
-                    self.pztSum = numpy.zeros(len(tempList),dtype='d')
-                    self.count = numpy.zeros(len(tempList))
-                    self.makeAndUploadScheme(thetaList,tempList,laserIndex,repeat,dwell)
-                    self.clearLists()
-                    self.processResults = True
-                    self.startCollect = time.time()
-                    msg = "Starting spectrum acquisition"
-                    print msg
-                    print>>self.op, msg
-                    self.FilerRpc.AcquireSpectrum()
-                    while self.processResults:
-                        time.sleep(1.0)
-                    # Find mean of pzt values
-                    good = self.count.nonzero()
-                    self.pztSum[good] = self.pztSum[good]/self.count[good]
-                    pztMean = float(numpy.mean(self.pztSum[good]))
-                    sDev = numpy.std(self.pztSum[good]-pztMean)
-                    msg = "Standard deviation: %.1f" % (sDev,)
-                    print msg
-                    print>>self.op, msg
-                    pztMean = numpy.median(self.pztSum[good])
-                    pztDev = self.pztSum[good] - pztMean
-                    thetaList[good] = thetaList[good] - 5e-6*pztDev
-                    if abs(currentMean-pztMean) > 0.5*pztSens:
-                        currentMean = pztMean
-                    self.setupRampMode(2500,currentMean,0.65*pztSens)
     
                 fullPath = os.path.join(self.tempDir,"calScheme%d.abs" % (self.seq,))
                 sp = file(fullPath,"r")

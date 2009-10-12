@@ -79,7 +79,8 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     Loss = (1-w) / (1-w*cos(4*phase))
     where 65536*w is placed in the register wfac.
     
-    The value of pzt_cen_out is set to 4*phase
+    The value of pzt_cen_out is set to -4*phase, where the negative sign is necessary for compatibility 
+    with existing hardware.
     
     Parameters:
     clk                 -- Clock input
@@ -302,7 +303,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                         state = t_seqState.WAIT_SCALE4
                     elif state == t_seqState.WAIT_SCALE4:
                         ref2_out.next = mult_p[34:18] + ref2_offset
-                        pzt_cen_out.next = (zval << 2) % M
+                        pzt_cen_out.next = (M - (zval << 2)) % M
                         done_out.next = HIGH
                         state = t_seqState.IDLE
                             

@@ -10,11 +10,11 @@
 #include "registerTestcfg.h"
 
 #include "configDsp.h"
+#include "i2c_dsp.h"
 #include "ds1631.h"
 #include "dspAutogen.h"
 #include "dspData.h"
 #include "fpga.h"
-#include "i2c_dsp.h"
 #include "interface.h"
 #include "rdFitting.h"
 #include "rdHandlers.h"
@@ -60,7 +60,7 @@ main(int argc, char *argv[])
     // Turn off high power TECs, pump and close all valves
     write_valve_pump_tec(0);
     // Initialize DS1631 for continuous measurements
-    ds1631_init();
+    ds1631_init(&das_temp_sensor_I2C);
     // Initialize ringdown fitting module
     rdFittingInit();
     // Initialize EDMA handling

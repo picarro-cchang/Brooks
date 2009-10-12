@@ -585,7 +585,7 @@ class CommandLogPanel(CommandLogPanelGui):
         Driver.startEngine()
 
     def onLoadCalibration(self,event):
-        fname = RDFreqConv.getCalFilePath()
+        fname = RDFreqConv.getWarmBoxCalFilePath()
         if fname:
             defaultDir, defaultFile = os.path.split(fname)
         else:
@@ -598,9 +598,29 @@ class CommandLogPanel(CommandLogPanelGui):
                )
             if dlg.ShowModal() == wx.ID_OK:
                 fname = dlg.GetPath()
-                RDFreqConv.loadCal(fname)
-                Log("Uploading warm box calibration file %s" % fname)
-                self.calFileTextCtrl.SetLabel(os.path.split(fname)[1])
+                if fname:
+                    RDFreqConv.loadWarmBoxCal(fname)
+                    Log("Uploading warm box calibration file %s" % fname)
+                    self.warmBoxCalFileTextCtrl.SetLabel(os.path.split(fname)[1])
+        finally:
+            dlg.Destroy()
+
+        fname = RDFreqConv.getHotBoxCalFilePath()
+        if fname:
+            defaultDir, defaultFile = os.path.split(fname)
+        else:
+            defaultDir, defaultFile = os.getcwd(),""            
+        try:
+            dlg = wx.FileDialog(
+                None, message="Select hot box calibration file", defaultDir=defaultDir,
+                defaultFile=defaultFile, wildcard="Initialization file (*.ini)|*.ini",
+                style=wx.OPEN
+               )
+            if dlg.ShowModal() == wx.ID_OK:
+                fname = dlg.GetPath()
+                RDFreqConv.loadHotBoxCal(fname)
+                Log("Uploading hot box calibration file %s" % fname)
+                self.hotBoxCalFileTextCtrl.SetLabel(os.path.split(fname)[1])
         finally:
             dlg.Destroy()
                 

@@ -489,6 +489,7 @@
             <mask  ident="RINGDOWN_STATUS_RingdownTimeout">0x80</mask>
         </bits> 
         <bits ident="SUBSCHEME_ID_BITMASK">
+            <mask  ident="SUBSCHEME_ID_IdMask">0x7FFF</mask>
             <mask  ident="SUBSCHEME_ID_IncrMask">0x8000</mask>
         </bits>
         <bits ident="SENTRY_BITMASK">

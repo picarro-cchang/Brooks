@@ -18,15 +18,15 @@
 #include "i2c_dsp.h"
 #include "pca8574.h"
 
-unsigned char pca8574_rdByte()
+unsigned char pca8574_rdByte(I2C_devAddr *i2c)
 {
     unsigned char reply;
-    I2C_read_bytes(hI2C1,0x20,&reply,1);
+    I2C_read_bytes(*(i2c->hI2C),i2c->addr,&reply,1);
     return reply;
 }
 
-void pca8574_wrByte(unsigned char byte)
+void pca8574_wrByte(I2C_devAddr *i2c,unsigned char byte)
 {
-    I2C_write_bytes(hI2C1,0x20,&byte,1);
-    I2C_sendStop(hI2C1);
+    I2C_write_bytes(*(i2c->hI2C),i2c->addr,&byte,1);
+    I2C_sendStop(*(i2c->hI2C));
 }

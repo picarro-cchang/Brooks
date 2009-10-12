@@ -2,3 +2,7 @@
 2. Print out reason for sentry breach in log.
 3. Support laser tuning mode.
 4. In DAS, allow a way of detecting which schemes are valid and which virtual lasers have been defined.
+5. Set up WLM dark currents as offsets
+6. Return laser current and temperature controllers to manual mode when scheming stops.
+7. Look at implementing averaging of metadata at ringdown, rather than just taking the last value.
+

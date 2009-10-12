@@ -537,7 +537,7 @@ int r_ds1631_readTemp(unsigned int numInt,void *params,void *env)
 {
     unsigned int *reg = (unsigned int *) params;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
-    WRITE_REG(reg[0],ds1631_readTemperatureAsFloat());
+    WRITE_REG(reg[0],ds1631_readTemperatureAsFloat(&das_temp_sensor_I2C));
     return STATUS_OK;
 }
 

@@ -545,6 +545,7 @@ typedef enum {
 #define RINGDOWN_STATUS_RingdownTimeout (0x80)
 
 /* Definitions for SUBSCHEME_ID_BITMASK */
+#define SUBSCHEME_ID_IdMask (0x7FFF)
 #define SUBSCHEME_ID_IncrMask (0x8000)
 
 /* Definitions for SENTRY_BITMASK */
