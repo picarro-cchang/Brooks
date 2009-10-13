@@ -152,7 +152,7 @@ class RingdownEntryType(Structure):
     ("cavityPressure",c_ushort),
     ("ambientPressure",c_ushort),
     ("lockerError",c_ushort),
-    ("padToCacheLine",c_ushort*1)
+    ("padToCacheLine",c_ushort)
     ]
 
 class ProcessedRingdownEntryType(Structure):
@@ -180,7 +180,7 @@ class ProcessedRingdownEntryType(Structure):
     ("cavityPressure",c_ushort),
     ("ambientPressure",c_ushort),
     ("lockerError",c_ushort),
-    ("padToCacheLine",c_ushort*1)
+    ("padToCacheLine",c_ushort)
     ]
 
 class SensorEntryType(Structure):

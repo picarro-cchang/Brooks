@@ -5,4 +5,10 @@
 5. Set up WLM dark currents as offsets
 6. Return laser current and temperature controllers to manual mode when scheming stops.
 7. Look at implementing averaging of metadata at ringdown, rather than just taking the last value.
+8.  Check that we implement the increment flag for the subscheme Id as follows:
+    a) If the flag is set, increment the count after the last ringdown of that row, whether or not the ringdown is successful
+        and whether or not a timeout has caused us to short-circuit the row
+    b) If the flag is not set but the scheme ends, increment the count.
+    c) If stop spectrum is sent and there have been some ringdowns since the last "stop spectrum", increment the count.
+9. Tell Alex the units of pressure on the RingdownEntry queue (50*torr)
 

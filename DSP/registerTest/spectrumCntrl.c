@@ -10,6 +10,7 @@
  *
  * HISTORY:
  *   4-Aug-2009  sze  Initial version.
+ *  12-Oct-2009  sze  Modified behavior of increment bit in subSchemeId so that it increments count after last ringdown of a scheme row
  *
  *  Copyright (c) 2009 Picarro, Inc. All rights reserved
  */
@@ -62,8 +63,9 @@ int spectCntrlInit(void)
     s->defaultThreshold_ = (unsigned int *)registerAddr(SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER);
     s->virtLaser_ = (VIRTUAL_LASER_Type *)registerAddr(VIRTUAL_LASER_REGISTER);
     s->schemeCounter_ =  0;
+    s->incrFlag_ = 0;
     s->incrCounter_ = 0;
-    s->schemeCountOnPrevIncr_ = ~0;
+    s->incrCounterNext_ = 1;
     switchToRampMode();
     return STATUS_OK;
 }
@@ -78,6 +80,8 @@ int spectCntrlStep(void)
     stateAtStart = *(s->state_);
     if (SPECT_CNTRL_StartingState == *(s->state_))
     {
+        s->incrCounterNext_ = s->incrCounter_ + 1;
+        s->schemeCounter_++;
         setAutomaticControl();
         *(s->state_) = SPECT_CNTRL_RunningState;
         if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
@@ -191,6 +195,7 @@ void setupNextRdParams(void)
     volatile VirtualLaserParamsType *vLaserParams;
     float setpoint, dp, theta, ratio1Multiplier, ratio2Multiplier;
 
+    s->incrCounter_ = s->incrCounterNext_;
     if (SPECT_CNTRL_ContinuousMode == *(s->mode_))
     {
         // In continuous mode, we run with the parameter values currently in the registers
@@ -203,7 +208,7 @@ void setupNextRdParams(void)
         r->cavityPressure = *(s->cavityPressure_);
         r->ambientPressure = *(s->ambientPressure_);
         r->schemeTableAndRow = 0;
-        r->countAndSubschemeId = 0;
+        r->countAndSubschemeId = (s->incrCounter_ << 16);
         r->ringdownThreshold = *(s->defaultThreshold_);
         r->status = 0;
         laserTempAsInt = 1000.0*r->laserTemperature;
@@ -234,16 +239,9 @@ void setupNextRdParams(void)
         //laserTempAsInt = schemeTable->rows[*(s->row_)].laserTemp;
         laserTempAsInt = 1000.0*r->laserTemperature;
 
-        // If SUBSCHEME_ID_IncrMask is set, and we are on the first ringdown of this row
-        //  increment s->incrCounter_ unless this has already been done for this scheme
-        if (schemeTable->rows[*(s->row_)].subschemeId & SUBSCHEME_ID_IncrMask)
-        {
-            if (*(s->dwell_) == 0 && s->schemeCountOnPrevIncr_ != s->schemeCounter_)
-            {
-                s->incrCounter_++;
-                s->schemeCountOnPrevIncr_ = s->schemeCounter_;
-            }
-        }
+        // If SUBSCHEME_ID_IncrMask is set, this means that we should increment
+        //  s->incrCounter_ the next time that we advance to the next scheme row
+        s->incrFlag_ = schemeTable->rows[*(s->row_)].subschemeId & SUBSCHEME_ID_IncrMask;
         r->countAndSubschemeId = (s->incrCounter_ << 16) | (schemeTable->rows[*(s->row_)].subschemeId & 0xFFFF);
         r->ringdownThreshold   = schemeTable->rows[*(s->row_)].threshold;
         if (r->ringdownThreshold == 0) r->ringdownThreshold = *(s->defaultThreshold_);
@@ -400,6 +398,10 @@ void advanceSchemeRow(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
     *(s->row_) = *(s->row_) + 1;
+    if (s->incrFlag_) {
+        s->incrCounterNext_ = s->incrCounter_ + 1;
+        s->incrFlag_ = 0;
+    }
     if (*(s->row_) >= schemeTables[*(s->active_)].numRows)
     {
         advanceSchemeIteration();
@@ -429,6 +431,7 @@ void advanceScheme(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
     s->schemeCounter_++;
+    s->incrCounterNext_ = s->incrCounter_ + 1;
     if (SPECT_CNTRL_SchemeSequenceMode == *(s->mode_))
     {
         schemeSequence->currentIndex += 1;

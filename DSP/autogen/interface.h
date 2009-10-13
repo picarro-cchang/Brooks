@@ -132,7 +132,7 @@ typedef struct {
     uint16 cavityPressure;
     uint16 ambientPressure;
     uint16 lockerError;
-    uint16 padToCacheLine[1];
+    uint16 padToCacheLine;
 } RingdownEntryType;
 
 typedef struct {
@@ -159,7 +159,7 @@ typedef struct {
     uint16 cavityPressure;
     uint16 ambientPressure;
     uint16 lockerError;
-    uint16 padToCacheLine[1];
+    uint16 padToCacheLine;
 } ProcessedRingdownEntryType;
 
 typedef struct {

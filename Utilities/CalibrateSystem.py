@@ -404,37 +404,6 @@ class CalibrateSystem(object):
             RDFreqConv.updateWarmBoxCal()
             RDFreqConv.updateHotBoxCal()
             Driver.restoreRegValues(regVault)
-            
-            
-        if 0:
-            try:
-    
-                fullPath = os.path.join(self.tempDir,"calScheme%d.abs" % (self.seq,))
-                sp = file(fullPath,"r")
-                nrepeat = int(getNextNonNullLine(sp).split()[0])
-                numEntries = int(getNextNonNullLine(sp).split()[0])
-                angleList = []
-                for i in range(numEntries):
-                    toks = getNextNonNullLine(sp).split()
-                    angleList.append(float(toks[0]))
-                sp.close()
-                cavityFSR = float(self.update(angleList,laserIndex))
-                msg = "Cavity FSR = %.6f" % (cavityFSR,)
-                print msg
-                print>>self.op, msg
-                fname = time.strftime("WlmCalibration_%Y%m%d_%H%M%S.ini",time.localtime())
-                newCalFile = os.path.join(os.getcwd(),fname)
-                self.FilerRpc.SaveCalFile(newCalFile)
-                msg = "New calibration file is: %s" % (newCalFile,)
-                print msg
-                print>>self.op, msg
-                self.FilerRpc.UpdateAutocalParameters(-1,-1,-1,cavityFSR)
-                fname = time.strftime("Master_%Y%m%d_%H%M%S.ini",time.localtime())
-                newMasterFile = os.path.join(os.getcwd(),fname)
-                self.FilerRpc.WriteIniFile(newMasterFile)
-    
-            finally:
-                self.DriverRpc.restoreRegValues(regVault)
 
 HELP_STRING = """CalibrateSystem.py [-c<FILENAME>] [-h|--help]
 

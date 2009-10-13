@@ -145,7 +145,7 @@
             <field ident="cavityPressure" type="uint16"/>
             <field ident="ambientPressure" type="uint16"/>
             <field ident="lockerError" type="uint16"/>
-            <field ident="padToCacheLine" type="uint16" size="1"/>
+            <field ident="padToCacheLine" type="uint16"/>
         </struct>
         <struct type="ProcessedRingdownEntryType">
             <field ident="timestamp" type="long long"/>
@@ -171,7 +171,7 @@
             <field ident="cavityPressure" type="uint16"/>
             <field ident="ambientPressure" type="uint16"/>
             <field ident="lockerError" type="uint16"/>
-            <field ident="padToCacheLine" type="uint16" size="1"/>
+            <field ident="padToCacheLine" type="uint16"/>
         </struct>
         <struct type="SensorEntryType">
             <field ident="timestamp" type="long long"/>
