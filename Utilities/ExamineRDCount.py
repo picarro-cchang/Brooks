@@ -43,11 +43,11 @@ EventManagerProxy_Init("ExamineRD")
 class ExamineRD(object):
     def __init__(self):
         # Define a listener for the ringdown data
-        self.listener = Listener(None,SharedTypes.BROADCAST_PORT_RD_RECALC,ProcessedRingdownEntryType,self.rdFilter)
+        self.listener = Listener(None,SharedTypes.BROADCAST_PORT_RD_RECALC,ProcessedRingdownEntryType,self.rdFilter,retry=True)
 
     def rdFilter(self,entry):
         assert isinstance(entry,ProcessedRingdownEntryType)
-        print entry.status, entry.count, entry.schemeTable, entry.schemeRow
+        print entry.status, entry.count, entry.schemeTable, entry.schemeRow, entry.waveNumber, entry.waveNumberSetpoint
         
     def run(self):
         while True:

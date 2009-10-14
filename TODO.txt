@@ -11,4 +11,6 @@
     b) If the flag is not set but the scheme ends, increment the count.
     c) If stop spectrum is sent and there have been some ringdowns since the last "stop spectrum", increment the count.
 9. Tell Alex the units of pressure on the RingdownEntry queue (50*torr)
-
+10. Deal with SPECTRUM_IGNORE_MASK
+11. Note that max targetting error in hot box calibration is now in RADIANS. 1 cm^-1 is approx 4 radians
+12. Support four-way switch with XC9536XL CPLD.

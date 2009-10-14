@@ -23,7 +23,8 @@ typeToCtypeLookUp = {"long long":"c_longlong",
                      "uint32":"c_uint","int32":"c_int",
                      "uint16":"c_ushort","int16":"c_short",
                      "uint8":"c_ubyte","int8":"c_byte",
-                     "float":"c_float","bool":"c_int"}
+                     "float":"c_float","bool":"c_int",
+                     "double":"c_double"}
 
 def typeToCtype(t):
     if t in typeToCtypeLookUp:

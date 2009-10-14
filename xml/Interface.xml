@@ -149,7 +149,8 @@
         </struct>
         <struct type="ProcessedRingdownEntryType">
             <field ident="timestamp" type="long long"/>
-            <field ident="frequency" type="uint32"/>
+            <field ident="waveNumber" type="double"/>
+            <field ident="waveNumberSetpoint" type="double"/>
             <field ident="uncorrectedAbsorbance" type="float"/>
             <field ident="correctedAbsorbance" type="float"/>
             <field ident="status" type="uint16"/>
@@ -469,6 +470,11 @@
             <enum_value ident="OVERLOAD_WarmBoxTecBit" value="0" caption="Warm box TEC overload" /> 
             <enum_value ident="OVERLOAD_HotBoxTecBit"  value="1" caption="Hot box TEC overload" /> 
         </enum>
+        <enum type="ANALYZER_TUNING_ModeType"> 
+            <description>Analyzer tuning modes</description> 
+            <enum_value ident="ANALYZER_TUNING_CavityLengthTuningMode" value="0" caption="Cavity Length Tuning" /> 
+            <enum_value ident="ANALYZER_TUNING_LaserCurrentTuningMode" value="1" caption="Laser Current Tuning" /> 
+        </enum>         
     </enum_list>
     <bits_list>
         <bits ident="COMM_STATUS_BITMASK">
@@ -491,6 +497,8 @@
         <bits ident="SUBSCHEME_ID_BITMASK">
             <mask  ident="SUBSCHEME_ID_IdMask">0x7FFF</mask>
             <mask  ident="SUBSCHEME_ID_IncrMask">0x8000</mask>
+            <mask  ident="SUBSCHEME_ID_IgnoreMask">0x4000</mask>
+            <mask  ident="SUBSCHEME_ID_IsCalMask">0x1000</mask>
         </bits>
         <bits ident="SENTRY_BITMASK">
             <mask  ident="SENTRY_Laser1TemperatureMask">0x0001</mask>
@@ -1922,6 +1930,12 @@
         <register ident="AMBIENT_PRESSURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Ambient pressure</description>
         </register>
+        <register ident="ANALYZER_TUNING_MODE_REGISTER" type="ANALYZER_TUNING_ModeType" minver="1.0" access="rw">
+            <description>Analyzer tuning mode register</description>
+            <initial>ANALYZER_TUNING_CavityLengthTuningMode</initial>
+            <save/>
+            <display>Analyzer tuning mode</display>
+        </register>        
         <register ident="TUNER_SWEEP_RAMP_HIGH_REGISTER" type="float" minver="1.0" access="rw">
             <description>Higher limit of tuner sweep in ramp mode.</description>
             <initial>50000.0</initial>

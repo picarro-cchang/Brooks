@@ -276,6 +276,9 @@ class DasConfigure(SharedTypes.Singleton):
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_SPECTRUM_CNTRL_STEP"))
         
+        self.opGroups["FAST"]["CONTROLLER"].addOperation(
+            Operation("ACTION_TUNER_CNTRL_STEP"))
+        
         # Update the laser temperature register of the WLM simulator
         self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
             Operation("ACTION_UPDATE_WLMSIM_LASER_TEMP"))

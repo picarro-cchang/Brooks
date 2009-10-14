@@ -73,7 +73,7 @@ class RingdownPanel(RingdownPanelGui):
         if choice == 0:
             def  lossVsWavenumber(data):
                 #wavenumber = data.wlmAngle
-                wavenumber = 0.00001*data.frequency
+                wavenumber = data.waveNumber
                 loss_u = data.uncorrectedAbsorbance
                 loss_c = data.correctedAbsorbance
                 waveforms["Ringdown"]["uncorrected"].Add(wavenumber, loss_u)
@@ -127,7 +127,7 @@ class RingdownPanel(RingdownPanelGui):
         elif choice == 4:
             def  ratioVsWavenumber(data):
                 #wavenumber = data.wlmAngle
-                wavenumber = 0.00001*data.frequency
+                wavenumber = data.waveNumber
                 ratio1 = data.ratio1
                 ratio2 = data.ratio2
                 waveforms["Ringdown"]["ratio1"].Add(wavenumber, ratio1/32768.0)
@@ -141,7 +141,7 @@ class RingdownPanel(RingdownPanelGui):
         elif choice == 5:
             def  tunerVsWavenumber(data):
                 #wavenumber = data.wlmAngle
-                wavenumber = 0.00001*data.frequency
+                wavenumber = data.waveNumber
                 vLaser = (data.laserUsed >> 2) & 7
                 waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(wavenumber, data.tunerValue)
             self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
@@ -187,7 +187,7 @@ class RingdownPanel(RingdownPanelGui):
             def  wavenumberVsTime(data):
                 utime = timestamp.unixTime(data.timestamp)
                 #wavenumber = data.wlmAngle
-                wavenumber = 0.00001*data.frequency
+                wavenumber = data.waveNumber
                 vLaser = (data.laserUsed >> 2) & 7
                 waveforms["Ringdown"]["wavenumber_%d" % (vLaser+1,)].Add(utime, wavenumber)
             self.ringdownGraph.SetGraphProperties(xlabel='', 
@@ -199,7 +199,7 @@ class RingdownPanel(RingdownPanelGui):
         elif choice == 10:
             def  fineCurrentVsWavenumber(data):
                 #wavenumber = data.wlmAngle
-                wavenumber = 0.00001*data.frequency
+                wavenumber = data.waveNumber
                 vLaser = (data.laserUsed >> 2) & 7
                 waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)].Add(wavenumber, data.fineLaserCurrent)
             self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
@@ -212,7 +212,7 @@ class RingdownPanel(RingdownPanelGui):
             def  fineCurrentVsTime(data):
                 utime = timestamp.unixTime(data.timestamp)
                 #wavenumber = data.wlmAngle
-                wavenumber = 0.00001*data.frequency
+                wavenumber = data.waveNumber
                 vLaser = (data.laserUsed >> 2) & 7
                 waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)].Add(utime, data.fineLaserCurrent)
             self.ringdownGraph.SetGraphProperties(xlabel='',
@@ -607,12 +607,15 @@ class CommandLogPanel(CommandLogPanelGui):
                     self.warmBoxCalFileTextCtrl.SetLabel(os.path.split(fname)[1])
         finally:
             dlg.Destroy()
+            
+        if fname:
+            defaultDir, defaultFile = os.path.split(fname)[0],""
+        else:
+            defaultDir, defaultFile = os.getcwd(),""            
 
         fname = RDFreqConv.getHotBoxCalFilePath()
         if fname:
             defaultDir, defaultFile = os.path.split(fname)
-        else:
-            defaultDir, defaultFile = os.getcwd(),""            
         try:
             dlg = wx.FileDialog(
                 None, message="Select hot box calibration file", defaultDir=defaultDir,
@@ -749,7 +752,7 @@ class StatsPanel(StatsPanelGui):
             self.lossAllanVar.processDatum(data.uncorrectedAbsorbance)
             # TO DO: Replace angle with wave number
             #self.waveNumberAllanVar.processDatum(data.wlmAngle)
-            self.waveNumberAllanVar.processDatum(0.00001*data.frequency)
+            self.waveNumberAllanVar.processDatum(data.waveNumber)
             self.ratio1AllanVar.processDatum(data.ratio1)
             self.ratio2AllanVar.processDatum(data.ratio2)
                 

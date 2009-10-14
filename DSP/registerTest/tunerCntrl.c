@@ -24,6 +24,18 @@
 
 int tunerCntrlStep(void)
 {
+    if ((unsigned int)*(unsigned int *)registerAddr(ANALYZER_TUNING_MODE_REGISTER) == ANALYZER_TUNING_CavityLengthTuningMode) {
+        // Use register for laser locker tuning offset
+        changeBitsFPGA(FPGA_LASERLOCKER+LASERLOCKER_CS, LASERLOCKER_CS_TUNING_OFFSET_SEL_B, LASERLOCKER_CS_TUNING_OFFSET_SEL_W, 0);
+        // Enable PZT tuning
+        changeBitsFPGA(FPGA_TWGEN+TWGEN_CS, TWGEN_CS_TUNE_PZT_B, TWGEN_CS_TUNE_PZT_W, 1);
+    }
+    else if ((unsigned int)*(unsigned int *)registerAddr(ANALYZER_TUNING_MODE_REGISTER) == ANALYZER_TUNING_LaserCurrentTuningMode) {
+        // Use input from tuner for laser locker tuning offset
+        changeBitsFPGA(FPGA_LASERLOCKER+LASERLOCKER_CS, LASERLOCKER_CS_TUNING_OFFSET_SEL_B, LASERLOCKER_CS_TUNING_OFFSET_SEL_W, 1);
+        // Disable PZT tuning
+        changeBitsFPGA(FPGA_TWGEN+TWGEN_CS, TWGEN_CS_TUNE_PZT_B, TWGEN_CS_TUNE_PZT_W, 0);
+    }
     return STATUS_OK;
 }
 

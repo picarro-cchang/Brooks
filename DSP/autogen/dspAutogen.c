@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[359];
+RegTypes regTypes[360];
 void initRegisters() 
 {
     DataType d;
@@ -476,6 +476,8 @@ void initRegisters()
     writeRegister(CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER,d);
+    d.asUint = ANALYZER_TUNING_CavityLengthTuningMode;
+    writeRegister(ANALYZER_TUNING_MODE_REGISTER,d);
     d.asFloat = 50000.0;
     writeRegister(TUNER_SWEEP_RAMP_HIGH_REGISTER,d);
     d.asFloat = 10000.0;
@@ -920,6 +922,7 @@ void initRegisters()
     regTypes[CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER] = float_type;
     regTypes[CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER] = float_type;
     regTypes[AMBIENT_PRESSURE_REGISTER] = float_type;
+    regTypes[ANALYZER_TUNING_MODE_REGISTER] = uint_type;
     regTypes[TUNER_SWEEP_RAMP_HIGH_REGISTER] = float_type;
     regTypes[TUNER_SWEEP_RAMP_LOW_REGISTER] = float_type;
     regTypes[TUNER_WINDOW_RAMP_HIGH_REGISTER] = float_type;

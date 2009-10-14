@@ -256,12 +256,15 @@
             <register>VALVE_CNTRL_SEQUENCE_STEP_REGISTER</register>
         </gui_page>
         <gui_page>
-            <title>Tuner Waveform Parameters</title>
+            <title>Tuner Parameters</title>
+            <register>ANALYZER_TUNING_MODE_REGISTER</register>
             <fpga_register offset="FPGA_TWGEN">CS</fpga_register>
+            <!--
             <fpga_register offset="FPGA_TWGEN">SWEEP_HIGH</fpga_register>
             <fpga_register offset="FPGA_TWGEN">SWEEP_LOW</fpga_register>
             <fpga_register offset="FPGA_TWGEN">WINDOW_HIGH</fpga_register>
             <fpga_register offset="FPGA_TWGEN">WINDOW_LOW</fpga_register>
+            -->
             <fpga_register offset="FPGA_TWGEN">SLOPE_UP</fpga_register>
             <fpga_register offset="FPGA_TWGEN">SLOPE_DOWN</fpga_register>
             <fpga_register offset="FPGA_TWGEN">PZT_OFFSET</fpga_register>
