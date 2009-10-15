@@ -211,6 +211,7 @@ class ControllerFrame(ControllerFrameGui):
                 break
         # Run the sequencer FSM
         Sequencer().runFsm()
+            
         # Deal with Controller RPC calls within GUI idle loop
         try:
             daemon = self.rpcHandler.server.daemon

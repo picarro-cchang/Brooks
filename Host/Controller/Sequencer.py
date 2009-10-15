@@ -83,39 +83,43 @@ class Sequencer(SharedTypes.Singleton):
         return len(self.sequences)
     
     def runFsm(self):
-        if self.state == Sequencer.STARTUP:
-            Log("Sequencer enters STARTUP state")
-            Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
-            self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
-            Driver.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeMultipleMode)            
-            self.scheme = 1
-            self.repeat = 1
-            self.state = Sequencer.SEND_SCHEME
-        elif self.state == Sequencer.SEND_SCHEME:
-            Log("Sequencer enters SEND_SCHEME state. Sequence = %d, Scheme = %d, Repeat = %d" \
-                % (self.sequence,self.scheme,self.repeat))
-            self.useIndex = (self.activeIndex + 1) % 4
-            schemes = self.sequences[self.sequence-1]
-            scheme,rep,freqBased = schemes[self.scheme-1]
-            self.repeat += 1
-            if self.repeat > rep:
+        try:
+            if self.state == Sequencer.STARTUP:
+                Log("Sequencer enters STARTUP state")
+                Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
+                self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
+                Driver.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeMultipleMode)            
+                self.scheme = 1
                 self.repeat = 1
-                self.scheme += 1
-                if self.scheme > len(schemes): 
-                    self.scheme = 1
-            if freqBased:
-                RDFreqConv.wrFreqScheme(self.useIndex,scheme)
-                RDFreqConv.convertScheme(self.useIndex)
-                RDFreqConv.uploadSchemeToDAS(self.useIndex)
-            else:
-                Driver.wrScheme(self.useIndex,*(scheme.repack()))
-            Driver.wrDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER,self.useIndex)
-            if Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
-                Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
-            self.state = Sequencer.WAIT_UNTIL_ACTIVE
-        elif self.state == Sequencer.WAIT_UNTIL_ACTIVE:
-            self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
-            if self.activeIndex == self.useIndex:
                 self.state = Sequencer.SEND_SCHEME
-            elif Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
-                self.state = Sequencer.IDLE
+            elif self.state == Sequencer.SEND_SCHEME:
+                Log("Sequencer enters SEND_SCHEME state. Sequence = %d, Scheme = %d, Repeat = %d" \
+                    % (self.sequence,self.scheme,self.repeat))
+                self.useIndex = (self.activeIndex + 1) % 4
+                schemes = self.sequences[self.sequence-1]
+                scheme,rep,freqBased = schemes[self.scheme-1]
+                self.repeat += 1
+                if self.repeat > rep:
+                    self.repeat = 1
+                    self.scheme += 1
+                    if self.scheme > len(schemes): 
+                        self.scheme = 1
+                if freqBased:
+                    RDFreqConv.wrFreqScheme(self.useIndex,scheme)
+                    RDFreqConv.convertScheme(self.useIndex)
+                    RDFreqConv.uploadSchemeToDAS(self.useIndex)
+                else:
+                    Driver.wrScheme(self.useIndex,*(scheme.repack()))
+                Driver.wrDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER,self.useIndex)
+                if Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
+                    Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
+                self.state = Sequencer.WAIT_UNTIL_ACTIVE
+            elif self.state == Sequencer.WAIT_UNTIL_ACTIVE:
+                self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
+                if self.activeIndex == self.useIndex:
+                    self.state = Sequencer.SEND_SCHEME
+                elif Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
+                    self.state = Sequencer.IDLE
+        except Exception,e:
+            self.state = Sequencer.IDLE
+            Log("%s" % e, Level=2)

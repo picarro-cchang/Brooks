@@ -218,11 +218,6 @@ void setupNextRdParams(void)
     }
     else  	// We are running a scheme
     {
-        if (SPECT_CNTRL_SchemeSequenceMode == *(s->mode_))
-        {
-            if (schemeSequence->currentIndex >= schemeSequence->numberOfIndices) schemeSequence->currentIndex = 0;
-            *(s->active_) = schemeSequence->schemeIndices[schemeSequence->currentIndex];
-        }
         schemeTable = &schemeTables[*(s->active_)];
         *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
         vLaserParams = &virtualLaserParams[*(s->virtLaser_)];

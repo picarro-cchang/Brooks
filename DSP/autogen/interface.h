@@ -85,7 +85,7 @@ typedef struct {
     uint32 pztValue;
     uint32 lockerOffset;
     uint32 fineLaserCurrent;
-    uint32 lockerError;
+    int32 lockerError;
 } RingdownMetadataType;
 
 typedef struct {
@@ -140,7 +140,7 @@ typedef struct {
     float etalonTemperature;
     uint16 cavityPressure;
     uint16 ambientPressure;
-    uint16 lockerError;
+    int16 lockerError;
     uint16 padToCacheLine;
 } RingdownEntryType;
 
@@ -168,7 +168,7 @@ typedef struct {
     float etalonTemperature;
     uint16 cavityPressure;
     uint16 ambientPressure;
-    uint16 lockerError;
+    int16 lockerError;
     uint16 padToCacheLine;
 } ProcessedRingdownEntryType;
 

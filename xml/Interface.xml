@@ -101,7 +101,7 @@
             <field ident="pztValue" type="uint32"/>
             <field ident="lockerOffset" type="uint32"/>
             <field ident="fineLaserCurrent" type="uint32"/>
-            <field ident="lockerError" type="uint32"/>
+            <field ident="lockerError" type="int32"/>
         </struct>		
         <struct type="RingdownMetadataDoubleType">
             <field ident="ratio1" type="double"/>
@@ -152,7 +152,7 @@
             <field ident="etalonTemperature" type="float"/>
             <field ident="cavityPressure" type="uint16"/>
             <field ident="ambientPressure" type="uint16"/>
-            <field ident="lockerError" type="uint16"/>
+            <field ident="lockerError" type="int16"/>
             <field ident="padToCacheLine" type="uint16"/>
         </struct>
         <struct type="ProcessedRingdownEntryType">
@@ -179,7 +179,7 @@
             <field ident="etalonTemperature" type="float"/>
             <field ident="cavityPressure" type="uint16"/>
             <field ident="ambientPressure" type="uint16"/>
-            <field ident="lockerError" type="uint16"/>
+            <field ident="lockerError" type="int16"/>
             <field ident="padToCacheLine" type="uint16"/>
         </struct>
         <struct type="SensorEntryType">

@@ -102,7 +102,7 @@ class RingdownMetadataType(Structure):
     ("pztValue",c_uint),
     ("lockerOffset",c_uint),
     ("fineLaserCurrent",c_uint),
-    ("lockerError",c_uint)
+    ("lockerError",c_int)
     ]
 
 class RingdownMetadataDoubleType(Structure):
@@ -161,7 +161,7 @@ class RingdownEntryType(Structure):
     ("etalonTemperature",c_float),
     ("cavityPressure",c_ushort),
     ("ambientPressure",c_ushort),
-    ("lockerError",c_ushort),
+    ("lockerError",c_short),
     ("padToCacheLine",c_ushort)
     ]
 
@@ -190,7 +190,7 @@ class ProcessedRingdownEntryType(Structure):
     ("etalonTemperature",c_float),
     ("cavityPressure",c_ushort),
     ("ambientPressure",c_ushort),
-    ("lockerError",c_ushort),
+    ("lockerError",c_short),
     ("padToCacheLine",c_ushort)
     ]
 
