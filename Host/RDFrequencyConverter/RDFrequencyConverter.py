@@ -46,6 +46,100 @@ EventManagerProxy_Init("RDFrequencyConverter")
 
 MIN_SIZE = 30
 
+Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                         ClientName="RDFrequencyConverter")
+                                         
+class DasScheme(object):
+    """DAS scheme management class that handles alternates.
+    Note that all scheme checking rules are ignored.
+    """
+    def __init__(self, DasIndex_A, DasIndex_B):
+        self.rdFreqConv = RDFrequencyConverter()
+        self.dasIndex_A = DasIndex_A
+        self.dasIndex_B = DasIndex_B
+        self.currentIndex = -1
+        self.currentAlternateIndex = -1
+        self.schemeFileName = ""
+        
+    def initialSetup(self, InitialSchemePath):
+        """Loads the specified scheme and uploads it to the DAS.
+        """
+        self.currentIndex = self.dasIndex_A
+        self.currentAlternateIndex = self.dasIndex_B
+        Log("Initializing DAS scheme", dict(SchemePath = InitialSchemePath,
+                                            Index_A = self.dasIndex_A,
+                                            Index_B = self.dasIndex_B))
+        self.schemeFileName = os.path.split(InitialSchemePath)[1]
+        scheme = Scheme(InitialSchemePath)
+        
+        # Upload the scheme to RDFrequencyConverter to both current and alternate positions
+        self.rdFreqConv.RPC_wrFreqScheme(self.currentIndex, scheme)
+        self.rdFreqConv.RPC_wrFreqScheme(self.currentAlternateIndex, scheme)
+
+        # Convert the scheme to angle scheme at both positions
+        self.rdFreqConv.RPC_convertScheme(self.currentIndex)
+        self.rdFreqConv.RPC_convertScheme(self.currentAlternateIndex)
+        Log("Initial freq conversion completed", dict(SchemeFile = self.schemeFileName))
+
+        # Upload the angle scheme to DAS(current scheme position only)
+        Log("Starting scheme upload", dict(TargetIndex = self.currentIndex, Scheme = self.schemeFileName))
+        self.rdFreqConv.RPC_uploadSchemeToDAS(self.currentIndex)
+        Log("Scheme upload completed", dict(TargetIndex = self.currentIndex, Scheme = self.schemeFileName))
+        
+    def updateAndSwapScheme(self):
+        """Updates the DAS scheme in the "alternate" location and switches
+        the DAS to run it instead.
+        """
+        # Upload the angle scheme to the "other" spot and swap them
+        self.rdFreqConv.RPC_uploadSchemeToDAS(self.currentAlternateIndex)
+        # Get the accurate representation of what the DAS is currently running
+        seq = Driver.rdSchemeSequence()["schemeIndices"]
+        # Replace current scheme index with the alternate in the sequence and write 
+        # the new sequence to DAS
+        for i in range(len(seq)):
+            if seq[i] == self.currentIndex:
+                seq[i] = self.currentAlternateIndex
+        Driver.wrSchemeSequence(seq, restartFlag = False, loopFlag = True)
+        #Update our local scheme index records
+        self.currentIndex, self.currentAlternateIndex = self.currentAlternateIndex, self.currentIndex
+
+class SchemeManager(object):
+    """
+    Run DAS scheme management
+    """
+    def __init__(self, warmboxCalFilePath, hotboxCalFilePath, schemeDict, schemeSeq):
+        """schemeDict = {schemeName: (schemePath, indexA, indexB)}
+        """
+        self.rdFreqConv = RDFrequencyConverter()
+        self.warmboxCalFilePath = warmboxCalFilePath
+        self.hotboxCalFilePath = hotboxCalFilePath
+        self.schemeDict = schemeDict
+        self.schemeSeq = schemeSeq
+        self.schemes = {} # key = scheme name; value = DasScheme instance
+            
+    def startup(self):
+        Driver.stopScan()
+        Log("Scheme Manager starts up")
+        Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
+        self.rdFreqConv.RPC_loadWarmBoxCal(self.warmboxCalFilePath)
+        self.rdFreqConv.RPC_loadHotBoxCal(self.hotboxCalFilePath)
+        # Load up the DAS with schemes in the managed positions...
+        Log("Starting upload of all required DAS schemes")
+        for k in self.schemeDict.keys():
+            (schemePath, indexA, indexB) = self.schemeDict[k]
+            self.schemes[k] = DasScheme(indexA, indexB)
+            self.schemes[k].initialSetup(InitialSchemePath = schemePath)
+        Log("Completed upload of all required DAS schemes")
+        Driver.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeSequenceMode)
+        schemeDASIndexSeq = [self.schemes[s].currentIndex for s in self.schemeSeq]
+        Driver.wrSchemeSequence(schemeDASIndexSeq, restartFlag = True, loopFlag = True)
+        Driver.startScan()
+            
+    def update(self):
+        Log("Sscheme Manager updates and swaps schemes")
+        for scheme in self.schemes.values():
+            scheme.updateAndSwapScheme()
+            
 class CalibrationPoint(object):
     """Structure for collecting interspersed ringdowns in a scheme which are marked as calibration points."""
     def __init__(self):
@@ -173,6 +267,7 @@ class SchemeBasedCalibrator(object):
                                                      float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_DEFAULT")),      
                                                      float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_ZERO"))) 
                     self.calibrationDone[vLaserNum-1] = True
+                    Log("WLM Calibration for virtual laser done", dict(vLaserNum = vLaserNum))
     
     def centerTuner(self,tunerCenter):
         self.rdFreqConv.RPC_centerTuner(tunerCenter)
@@ -208,10 +303,6 @@ class SchemeBasedCalibrator(object):
         else:
             mid = (csum[-1]-1)/2
             return values[perm[sum(mid >= csum)]]
-
-
-Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                         ClientName="RDFrequencyConverter")
                                          
 class RpcServerThread(threading.Thread):
     def __init__(self, rpcServer, exitFunction):
@@ -271,14 +362,15 @@ class RDFrequencyConverter(Singleton):
             self.dthetaMax = None 
             self.dtempMax = None
             self.tuningMode = None
+            self.schemeMgr = None
             
     def rdFilter(self,entry):
         # Figure if we finished a scheme and whether we should process cal points in the last scheme
-        if 0 != (entry.status & interface.RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask) or \
-           0 != (entry.status & interface.RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask) or \
-           (entry.status & interface.RINGDOWN_STATUS_SequenceMask) != self.lastSchemeCount:
+        if (entry.status & interface.RINGDOWN_STATUS_SequenceMask) != self.lastSchemeCount:
             if self.sbc.currentCalSpectrum:
                 self.sbc.processCalSpectrum()
+                if self.schemeMgr:
+                    self.schemeMgr.update()
             self.sbc.clear()
             self.lastSchemeCount = (entry.status & interface.RINGDOWN_STATUS_SequenceMask)
         # Check if this is a calibration row and process it accordingly
@@ -359,6 +451,10 @@ class RDFrequencyConverter(Singleton):
                     rdProcessedData.waveNumber = w
                     rdProcessedData.waveNumberSetpoint = self.freqScheme[rdProcessedData.schemeTable].setpoint[rdProcessedData.schemeRow]
 
+    def RPC_configSchemeManager(self, warmboxCalFilePath, hotboxCalFilePath, schemeDict, schemeSeq):
+        self.schemeMgr = SchemeManager(warmboxCalFilePath, hotboxCalFilePath, schemeDict, schemeSeq)
+        self.schemeMgr.startup()
+        
     def RPC_angleToLaserTemperature(self,vLaserNum,angles):
         if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
             raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)

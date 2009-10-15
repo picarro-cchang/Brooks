@@ -581,7 +581,7 @@ class CommandLogPanel(CommandLogPanelGui):
         self.logListCtrl.SetStringItem(index,2,source)
         self.logListCtrl.SetStringItem(index,3,level)
         self.logListCtrl.SetStringItem(index,4,code)
-        self.logListCtrl.SetStringItem(index,5,txt.strip()[1:-1])
+        self.logListCtrl.SetStringItem(index,5,txt.strip()[1:])
         self.logListCtrl.EnsureVisible(index)
     
     def onStartEngine(self,event):

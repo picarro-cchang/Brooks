@@ -59,7 +59,7 @@ class Sequencer(SharedTypes.Singleton):
     def getSequences(self,config):
         self.sequences = []
         self.state = Sequencer.IDLE
-        Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
+        # Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
         index = 1
         section = "SEQUENCE%02d" % (index,)
         try:
