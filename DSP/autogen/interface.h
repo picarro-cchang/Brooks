@@ -89,6 +89,15 @@ typedef struct {
 } RingdownMetadataType;
 
 typedef struct {
+    double ratio1;
+    double ratio2;
+    double pztValue;
+    double lockerOffset;
+    double fineLaserCurrent;
+    double lockerError;
+} RingdownMetadataDoubleType;
+
+typedef struct {
     uint32 injectionSettings;
     float laserTemperature;
     uint32 coarseLaserCurrent;

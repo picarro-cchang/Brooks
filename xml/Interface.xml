@@ -103,6 +103,14 @@
             <field ident="fineLaserCurrent" type="uint32"/>
             <field ident="lockerError" type="uint32"/>
         </struct>		
+        <struct type="RingdownMetadataDoubleType">
+            <field ident="ratio1" type="double"/>
+            <field ident="ratio2" type="double"/>
+            <field ident="pztValue" type="double"/>
+            <field ident="lockerOffset" type="double"/>
+            <field ident="fineLaserCurrent" type="double"/>
+            <field ident="lockerError" type="double"/>
+        </struct>		
         <struct type="RingdownParamsType">
             <field ident="injectionSettings"      type="uint32"/>
             <field ident="laserTemperature"       type="float"/>

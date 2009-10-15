@@ -323,7 +323,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             raise ValueError("aLaserNum must be in range 1..4 for selectActualLaser")
         laserSel = (aLaserNum-1) << interface.INJECT_CONTROL_LASER_SELECT_B
         laserMask = (interface.MAX_LASERS-1) << interface.INJECT_CONTROL_LASER_SELECT_B
-        injControl = (injControl & laserMask) | laserSel
+        injControl = (injControl & (~laserMask)) | laserSel
         self.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injControl)
     
     def dasGetTicks(self):

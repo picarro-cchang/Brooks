@@ -53,7 +53,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     and fine currents are applied to the laser and the laser temperature is specified. The WLM "phase" 
     is related to the currents and laser temp (in milli-C) by:
 
-        phase = (2*pi/65536) * (5*coarse current + fine current/2 + 18*laser_temp)
+        phase = (2*pi/65536) * (5*coarse current + fine current + 18*laser_temp)
         
     The phase is stored in the variable z0 multiplied by 65536 to convert it to an integer. The phase may
     be read back from the WLMSIM_Z0 register. If OPTIONS_INPUT_SEL==0, the WLMSIM_Z0 register is used to
@@ -73,7 +73,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     The offset values are taken from the registers and the intensity is a linear function of the
      total laser current
      
-    Intensity = ((5/8)*(coarse current) + (1/16)*(fine current)) / 65536
+    Intensity = ((5/8)*(coarse current) + (1/8)*(fine current)) / 65536
     
     This block also calculates a loss using
     Loss = (1-w) / (1-w*cos(4*phase))
@@ -234,7 +234,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                     
                 div_ce.next = LOW
                 if options[WLMSIM_OPTIONS_INPUT_SEL_B]:
-                    z0.next = ((laser_temp << 4) + (laser_temp << 1) + (coarse_current_in << 2) + coarse_current_in + (fine_current_in >> 1)) % M
+                    z0.next = ((laser_temp << 4) + (laser_temp << 1) + (coarse_current_in << 2) + coarse_current_in + (fine_current_in)) % M
                 # z0 now contains the angle, where 0 to 2*pi is represented by 0 to 65536
                     
                 if reset:
@@ -282,7 +282,7 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
                             div_den.next = xu
                             div_ce.next = HIGH
                             # Set up an "intensity" factor depending on the laser current to scale the photodiode outputs
-                            mult_a.next[17:1] = ((coarse_current_in >> 1) + (coarse_current_in >> 3) + (fine_current_in >> 4)) % M
+                            mult_a.next[17:1] = ((coarse_current_in >> 1) + (coarse_current_in >> 3) + (fine_current_in >> 3)) % M
                             state = t_seqState.WAIT_DIV3
                     elif state == t_seqState.WAIT_DIV3:  # Division for loss computation
                         if div_rfd and not div_ce:

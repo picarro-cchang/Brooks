@@ -105,6 +105,16 @@ class RingdownMetadataType(Structure):
     ("lockerError",c_uint)
     ]
 
+class RingdownMetadataDoubleType(Structure):
+    _fields_ = [
+    ("ratio1",c_double),
+    ("ratio2",c_double),
+    ("pztValue",c_double),
+    ("lockerOffset",c_double),
+    ("fineLaserCurrent",c_double),
+    ("lockerError",c_double)
+    ]
+
 class RingdownParamsType(Structure):
     _fields_ = [
     ("injectionSettings",c_uint),

@@ -505,7 +505,7 @@ class AutoCal(object):
         self.lock.acquire()
         try: 
             result, monotonic = bspInverse(self.sLinear,self.coeffs,waveNumbers)
-            if not monotonic: self.autocalStatus |= AutocalStatus_NonMonotonic
+            if not monotonic: self.autocalStatus |= 1
             return self.thetaBase + self.dTheta * result
         finally:
             self.lock.release()

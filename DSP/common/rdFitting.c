@@ -399,18 +399,21 @@ int rdFittingProcessRingdown(uint32 *buffer,
 // This is a task function associated with TSK_rdFitting which does the ringdown fitting
 void rdFitting(void)
 {
-    int i, bufferNum;
+    int i, j, bufferNum;
     unsigned int base;
     unsigned int virtLaserNum;
     float arctanvar1, arctanvar2, dp;
     float uncorrectedLoss, correctedLoss, thetaC;
     DataType data;
     RingdownBufferType *ringdownBuffer;
-    RingdownMetadataType meta;
+    RingdownMetadataDoubleType metaDouble;
     RingdownParamsType *rdParams;
     volatile RingdownEntryType *ringdownEntry;
     volatile VirtualLaserParamsType *vLaserParams;
-    int *metaPtr = (int*) &meta;
+    double *metaDoublePtr = (double*) &metaDouble;
+    int s1, si, si2, sx, six, x;
+    int wrapped;
+    int m = 2, N = 6;
 
     while (1)
     {
@@ -460,12 +463,27 @@ void rdFitting(void)
             //  buffer which wraps back to the midpoint, and the MSB indicates if this buffer has wrapped.
             rdParams = &(ringdownBuffer->parameters);
             base = rdParams->addressAtRingdown & ~0x7;
+            wrapped = base >= 32768;
             if (base == 32768 + 2048) base = 4096;
             else base = base & 0xFFF;
-            base = base - 8;
-            // The metadata are in the MS 16 bits of the ringdown waveform. We currently
-            //  use the values at buffer address "base", without any backoff.
-            for (i=0;i<8;i++) metaPtr[i] = ringdownBuffer->ringdownWaveform[base+i] >> 16;
+            // Use linear extrapolation to find the metadata values at the time of ringdown
+            s1 = N;
+            si = (-2*m-N+1)*N/2;
+            si2 = N*(6*m*(m+N-1)+2*N*N-3*N+1)/6;
+            for (j=0; j<sizeof(RingdownMetadataType)/sizeof(uint32); j++) {
+                sx = 0;
+                six = 0;
+                for (i=-m-N+1; i<=-m; i++) {
+                    unsigned int index = base + 8*i;
+                    if (index < 2048 && wrapped) index += 2048;
+                    // The metadata are in the MS 16 bits of the ringdown waveform.
+                    x = ringdownBuffer->ringdownWaveform[index+j] >> 16;
+                    sx += x;
+                    six += i*x;
+                }
+                metaDoublePtr[j] = ((double)(si2*sx - si*six))/(s1*si2 - si*si);
+            }
+            // The extrapolated metadata are in the metaDouble structure 
 
             virtLaserNum = (rdParams->injectionSettings >> 2) & 0x7;
             // laserNum = rdParams->injectionSettings & 0x3;
@@ -475,9 +493,9 @@ void rdFitting(void)
             ringdownEntry = get_ringdown_entry_addr();
 
             // Calculate the angle in the WLM plane, corrected by the ambient pressure and etalon temperature
-            arctanvar1 = vLaserParams->ratio1Scale*((meta.ratio2/32768.0)-vLaserParams->ratio2Center) -
-                         vLaserParams->ratio2Scale*((meta.ratio1/32768.0)-vLaserParams->ratio1Center)*sinsp(vLaserParams->phase);
-            arctanvar2 = vLaserParams->ratio2Scale*((meta.ratio1/32768.0)-vLaserParams->ratio1Center)*cossp(vLaserParams->phase);
+            arctanvar1 = vLaserParams->ratio1Scale*((metaDouble.ratio2/32768.0)-vLaserParams->ratio2Center) -
+                         vLaserParams->ratio2Scale*((metaDouble.ratio1/32768.0)-vLaserParams->ratio1Center)*sinsp(vLaserParams->phase);
+            arctanvar2 = vLaserParams->ratio2Scale*((metaDouble.ratio1/32768.0)-vLaserParams->ratio1Center)*cossp(vLaserParams->phase);
             dp = rdParams->ambientPressure - vLaserParams->calPressure;
 
             thetaC = (vLaserParams->pressureC0 + dp*(vLaserParams->pressureC1 + dp*(vLaserParams->pressureC2 + dp*vLaserParams->pressureC3))) +
@@ -490,22 +508,22 @@ void rdFitting(void)
             ringdownEntry->status = rdParams->status;
             ringdownEntry->count = rdParams->countAndSubschemeId >> 16;
             ringdownEntry->tunerValue = rdParams->tunerAtRingdown;
-            ringdownEntry->pztValue = meta.pztValue;
-            ringdownEntry->lockerOffset = meta.lockerOffset;
+            ringdownEntry->pztValue = metaDouble.pztValue;
+            ringdownEntry->lockerOffset = metaDouble.lockerOffset;
             ringdownEntry->laserUsed = rdParams->injectionSettings;
             ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
             ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
             ringdownEntry->schemeTable = rdParams->schemeTableAndRow >> 16;
             ringdownEntry->schemeRow   = rdParams->schemeTableAndRow & 0xFFFF;
-            ringdownEntry->ratio1 = meta.ratio1;
-            ringdownEntry->ratio2 = meta.ratio2;
-            ringdownEntry->fineLaserCurrent = meta.fineLaserCurrent;
+            ringdownEntry->ratio1 = metaDouble.ratio1;
+            ringdownEntry->ratio2 = metaDouble.ratio2;
+            ringdownEntry->fineLaserCurrent = metaDouble.fineLaserCurrent;
             ringdownEntry->coarseLaserCurrent = rdParams->coarseLaserCurrent;
             ringdownEntry->laserTemperature = rdParams->laserTemperature;
             ringdownEntry->etalonTemperature = rdParams->etalonTemperature;
             ringdownEntry->cavityPressure  = (unsigned int)(50.0 * rdParams->cavityPressure);
             ringdownEntry->ambientPressure = (unsigned int)(50.0 * rdParams->ambientPressure);
-            ringdownEntry->lockerError = meta.lockerError;
+            ringdownEntry->lockerError = metaDouble.lockerError;
 
             // After fitting, the buffer is available again
             if (bufferNum == 0)

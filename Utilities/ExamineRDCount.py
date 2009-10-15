@@ -47,7 +47,7 @@ class ExamineRD(object):
 
     def rdFilter(self,entry):
         assert isinstance(entry,ProcessedRingdownEntryType)
-        print entry.status, entry.count, entry.schemeTable, entry.schemeRow, entry.waveNumber, entry.waveNumberSetpoint
+        print entry.status, entry.count, entry.schemeTable, entry.schemeRow, entry.waveNumber, entry.waveNumberSetpoint, entry.laserUsed
         
     def run(self):
         while True:
