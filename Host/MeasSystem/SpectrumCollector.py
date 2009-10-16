@@ -23,6 +23,7 @@ import cPickle
 import os.path
 from tables import *
 from Host.Common import CmdFIFO
+from Host.Common.timestamp import unixTime
 from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RD_RECALC
 from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER
 from Host.Common.SharedTypes import CrdsException
@@ -172,7 +173,7 @@ class SpectrumCollector(object):
                 self.closeSpectrumWhenDone = True
                 self.RPC_shutdown()
 
-            localRdTime = Driver.hostGetTicks()
+            localRdTime = unixTime(Driver.hostGetTicks())
             
             self.schemeTable = rdData.schemeTable
             thisSubSchemeID = rdData.subschemeId
