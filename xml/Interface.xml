@@ -2044,6 +2044,18 @@
             <save/>
             <display format="%.1f">Maximum number of time constants in fit window</display>
         </register>
+        <register ident="RDFITTER_META_BACKOFF_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Last sample backoff for metadata calculation</description>
+            <initial>2</initial>
+            <save/>
+            <display format="%d">Last sample backoff for metadata calculation</display>
+        </register>
+        <register ident="RDFITTER_META_SAMPLES_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Samples to use for metadata calculation</description>
+            <initial>6</initial>
+            <save/>
+            <display format="%d">Samples to use for metadata calculation</display>
+        </register>
         <register ident="SPECT_CNTRL_STATE_REGISTER" type="SPECT_CNTRL_StateType" minver="1.0" access="rw">
             <description>State of spectrum controller</description>
             <initial>SPECT_CNTRL_IdleState</initial>

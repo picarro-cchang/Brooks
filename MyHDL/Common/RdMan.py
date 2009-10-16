@@ -438,6 +438,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         if us_since_start >= expiry_time:
                             if options[RDMAN_OPTIONS_LOCK_ENABLE_B]:
                                 acc_en_out.next = HIGH
+                                expiry_time.next = us_since_start + lock_duration
                                 seqState.next = SeqState.WAIT_FOR_LOCK
                             else:
                                 seqState.next = SeqState.WAIT_FOR_GATING_CONDITIONS

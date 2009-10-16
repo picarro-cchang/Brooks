@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[360];
+RegTypes regTypes[362];
 void initRegisters() 
 {
     DataType d;
@@ -510,6 +510,10 @@ void initRegisters()
     writeRegister(RDFITTER_NUMBER_OF_POINTS_REGISTER,d);
     d.asFloat = 8.0;
     writeRegister(RDFITTER_MAX_E_FOLDINGS_REGISTER,d);
+    d.asUint = 2;
+    writeRegister(RDFITTER_META_BACKOFF_REGISTER,d);
+    d.asUint = 6;
+    writeRegister(RDFITTER_META_SAMPLES_REGISTER,d);
     d.asUint = SPECT_CNTRL_IdleState;
     writeRegister(SPECT_CNTRL_STATE_REGISTER,d);
     d.asUint = SPECT_CNTRL_SchemeSingleMode;
@@ -940,6 +944,8 @@ void initRegisters()
     regTypes[RDFITTER_ABSOLUTE_THRESHOLD_REGISTER] = float_type;
     regTypes[RDFITTER_NUMBER_OF_POINTS_REGISTER] = uint_type;
     regTypes[RDFITTER_MAX_E_FOLDINGS_REGISTER] = float_type;
+    regTypes[RDFITTER_META_BACKOFF_REGISTER] = uint_type;
+    regTypes[RDFITTER_META_SAMPLES_REGISTER] = uint_type;
     regTypes[SPECT_CNTRL_STATE_REGISTER] = uint_type;
     regTypes[SPECT_CNTRL_MODE_REGISTER] = uint_type;
     regTypes[SPECT_CNTRL_ACTIVE_SCHEME_REGISTER] = uint_type;

@@ -411,9 +411,10 @@ void rdFitting(void)
     volatile RingdownEntryType *ringdownEntry;
     volatile VirtualLaserParamsType *vLaserParams;
     double *metaDoublePtr = (double*) &metaDouble;
-    int s1, si, si2, sx, six, x;
+    int metaSigned[8] = {0,0,0,0,0,1};
+    int x, m, N;
+    int s1, si, si2, sx, six;
     int wrapped;
-    int m = 2, N = 6;
 
     while (1)
     {
@@ -467,23 +468,30 @@ void rdFitting(void)
             if (base == 32768 + 2048) base = 4096;
             else base = base & 0xFFF;
             // Use linear extrapolation to find the metadata values at the time of ringdown
+            m = *(unsigned int *)registerAddr(RDFITTER_META_BACKOFF_REGISTER);
+            N = *(unsigned int *)registerAddr(RDFITTER_META_SAMPLES_REGISTER);
             s1 = N;
             si = (-2*m-N+1)*N/2;
             si2 = N*(6*m*(m+N-1)+2*N*N-3*N+1)/6;
-            for (j=0; j<sizeof(RingdownMetadataType)/sizeof(uint32); j++) {
+            for (j=0; j<sizeof(RingdownMetadataType)/sizeof(uint32); j++)
+            {
                 sx = 0;
                 six = 0;
-                for (i=-m-N+1; i<=-m; i++) {
+                for (i=-m-N+1; i<=-m; i++)
+                {
                     unsigned int index = base + 8*i;
                     if (index < 2048 && wrapped) index += 2048;
                     // The metadata are in the MS 16 bits of the ringdown waveform.
-                    x = ringdownBuffer->ringdownWaveform[index+j] >> 16;
+                    x = (ringdownBuffer->ringdownWaveform[index+j] >> 16) & 0xFFFF;
+                    // Treat as signed, if necessary
+                    if (metaSigned[j] && x>=0x8000) x = x - 0x10000;
                     sx += x;
                     six += i*x;
                 }
-                metaDoublePtr[j] = ((double)(si2*sx - si*six))/(s1*si2 - si*si);
+                if (N > 1) metaDoublePtr[j] = ((double)(si2*sx - si*six))/(s1*si2 - si*si);
+                else metaDoublePtr[j] = sx;
             }
-            // The extrapolated metadata are in the metaDouble structure 
+            // The extrapolated metadata are in the metaDouble structure
 
             virtLaserNum = (rdParams->injectionSettings >> 2) & 0x7;
             // laserNum = rdParams->injectionSettings & 0x3;

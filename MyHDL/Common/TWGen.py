@@ -98,25 +98,10 @@ def TWGen(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,synth_step_in,
     pzt_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     slope = Signal(LOW)
-    value = Signal(intbv(0)[FPGA_REG_WIDTH:])
     extra0 = Signal(intbv(0)[extra:])
 
     MASK = (1<<FPGA_REG_WIDTH)-1
     
-    @always_comb
-    def comb1():
-        value.next = acc[FPGA_REG_WIDTH+extra:extra]
-
-    @always_comb
-    def comb2():
-        dsp_data_in.next = dsp_data_from_regs
-        value_out.next = value
-        in_window_out.next = (value >= window_low) and (value <= window_high)
-        slope_out.next = slope
-        if cs[TWGEN_CS_TUNE_PZT_B]:
-            pzt_out.next = (value + pzt_offset) & MASK
-        else:
-            pzt_out.next = pzt_offset
 
     @instance
     def logic():
@@ -135,40 +120,42 @@ def TWGen(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,synth_step_in,
                 pzt_offset.next = 0
                 slope.next = 1
                 extra0.next = 0
+                slope_out.next = 1
+                value_out.next = 0x8000
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_acc_addr:
                         if dsp_wr: acc.next = dsp_data_out
-                        dsp_data_from_regs.next = acc
+                        dsp_data_in.next = acc
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_cs_addr:
                         if dsp_wr: cs.next = dsp_data_out
-                        dsp_data_from_regs.next = cs
+                        dsp_data_in.next = cs
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_slope_down_addr:
                         if dsp_wr: slope_down.next = dsp_data_out
-                        dsp_data_from_regs.next = slope_down
+                        dsp_data_in.next = slope_down
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_slope_up_addr:
                         if dsp_wr: slope_up.next = dsp_data_out
-                        dsp_data_from_regs.next = slope_up
+                        dsp_data_in.next = slope_up
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_sweep_low_addr:
                         if dsp_wr: sweep_low.next = dsp_data_out
-                        dsp_data_from_regs.next = sweep_low
+                        dsp_data_in.next = sweep_low
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_sweep_high_addr:
                         if dsp_wr: sweep_high.next = dsp_data_out
-                        dsp_data_from_regs.next = sweep_high
+                        dsp_data_in.next = sweep_high
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_window_low_addr:
                         if dsp_wr: window_low.next = dsp_data_out
-                        dsp_data_from_regs.next = window_low
+                        dsp_data_in.next = window_low
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_window_high_addr:
                         if dsp_wr: window_high.next = dsp_data_out
-                        dsp_data_from_regs.next = window_high
+                        dsp_data_in.next = window_high
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == TWGen_pzt_offset_addr:
                         if dsp_wr: pzt_offset.next = dsp_data_out
-                        dsp_data_from_regs.next = pzt_offset
+                        dsp_data_in.next = pzt_offset
                     else:
-                        dsp_data_from_regs.next = 0
+                        dsp_data_in.next = 0
                 else:
-                    dsp_data_from_regs.next = 0
+                    dsp_data_in.next = 0
 
                 if cs[TWGEN_CS_RUN_B]:
                     if not cs[TWGEN_CS_CONT_B]:
@@ -178,6 +165,15 @@ def TWGen(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,synth_step_in,
                         acc.next[FPGA_REG_WIDTH+extra-1:] = 0
                         slope.next = 1
                     else:
+                        value = acc[FPGA_REG_WIDTH+extra:extra]
+                        value_out.next = value
+                        in_window_out.next = (value >= window_low) and (value <= window_high)
+                        slope_out.next = slope
+                        if cs[TWGEN_CS_TUNE_PZT_B]:
+                            pzt_out.next = (value + pzt_offset) & MASK
+                        else:
+                            pzt_out.next = pzt_offset
+                            
                         if synth_step_in:
                             if slope:
                                 if acc + slope_up > concat(sweep_high,extra0):

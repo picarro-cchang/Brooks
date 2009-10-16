@@ -393,7 +393,8 @@ void advanceSchemeRow(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
     *(s->row_) = *(s->row_) + 1;
-    if (s->incrFlag_) {
+    if (s->incrFlag_)
+    {
         s->incrCounterNext_ = s->incrCounter_ + 1;
         s->incrFlag_ = 0;
     }

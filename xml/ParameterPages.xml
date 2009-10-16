@@ -334,6 +334,8 @@
             <register>RDFITTER_ABSOLUTE_THRESHOLD_REGISTER</register>
             <register>RDFITTER_NUMBER_OF_POINTS_REGISTER</register>
             <register>RDFITTER_MAX_E_FOLDINGS_REGISTER</register>
+            <register>RDFITTER_META_BACKOFF_REGISTER</register>
+            <register>RDFITTER_META_SAMPLES_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Wavelength Monitor Simulator Parameters</title>
