@@ -1,7 +1,7 @@
 # SpectrumCollector.py
 #
 # DESCRIPTION:
-#   Collects spectrum and related information.
+#   Collects spectrum and related information to save in HDF5 files. Spectrum will be stored in a queue if specified.
 #
 # SEE ALSO:
 #   Specify any related information.
@@ -83,8 +83,8 @@ class SpectrumCollector(object):
     """A class for collecting spectrum and related information and 
     writing them to files.
 
-    FirstRdTime_s is the actual clock time of the first RD (in seconds since
-    epoch). All subsequent RDs added to the spectrum will be recorded as
+    firstRdTime is the clock time of the first RD read from DAS. 
+    All subsequent RDs added to the spectrum will be recorded as
     relative times from this value.
 
     streamDir is specified to store the output file.
@@ -118,7 +118,7 @@ class SpectrumCollector(object):
                                                 retry = True,
                                                 name = "Spectrum collector listener",logFunc = Log)
         self.latestSensors = {}
-        self.latestSensors["SensorTime"] = 0.0
+        self.latestSensors["timestamp"] = 0.0
         for key in interface.STREAM_MemberTypeDict:
             self.latestSensors[interface.STREAM_MemberTypeDict[key][7:]] = 0.0
         self.sensorsUpdated = True
@@ -173,8 +173,7 @@ class SpectrumCollector(object):
                 self.closeSpectrumWhenDone = True
                 self.RPC_shutdown()
 
-            localRdTime = unixTime(Driver.hostGetTicks())
-            
+            localRdTime = Driver.hostGetTicks()
             self.schemeTable = rdData.schemeTable
             thisSubSchemeID = rdData.subschemeId
             self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
@@ -249,7 +248,7 @@ class SpectrumCollector(object):
         This is executed for every sensor value picked up from the sensor stream
         broadcast.
         """
-        self.latestSensors["SensorTime"] = entry.timestamp
+        self.latestSensors["timestamp"] = entry.timestamp
         self.latestSensors[interface.STREAM_MemberTypeDict[entry.streamNum][7:]] = entry.value
         self.sensorsUpdated = True
     
@@ -289,7 +288,7 @@ class SpectrumCollector(object):
         sensorData = self.getLatestSensors()
         #Sneak in the local ringdown time for sensor averaging...
         # Replace "entry.timestamp" with "relativeRdTime"
-        sensorData["SensorTime"] = relativeRdTime
+        sensorData["timestamp"] = relativeRdTime
         self.doSensorAveraging(sensorData)
 
     def finish(self):
@@ -305,12 +304,15 @@ class SpectrumCollector(object):
         self.rdfDict["rdData"]["tunerValue"] = self.rdfDict["rdData"]["tunerValue"] + 0.0
 
         # Append averaged sensor data
-        self.avgSensors["SensorTime"] += self.firstRdTime
+        # "timestamp" is the averaged absolute DAS time
+        self.avgSensors["timestamp"] += self.firstRdTime
         self.rdfDict["sensorData"] = self.avgSensors.copy()
 
+        # Add more sensor data
         self.rdfDict["sensorData"]["SchemeID"] = self.schemeTable
         self.rdfDict["sensorData"]["SpectrumID"] = self.spectrumID
-        self.rdfDict["sensorData"]["SpectrumStartTime"] = self.firstRdTime
+        self.rdfDict["sensorData"]["SensorTime"] = unixTime(self.rdfDict["sensorData"]["timestamp"])
+        self.rdfDict["sensorData"]["SpectrumStartTime"] = unixTime(self.firstRdTime)
 
         #Write the tagalong data values...
         self.rdfDict["tagalongData"] = self.tagalongData
