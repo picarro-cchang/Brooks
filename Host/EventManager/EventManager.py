@@ -428,7 +428,7 @@ class EventLogger(object):
         #Broadcast it to those who care...
         if self.Config.BroadcastEvents:
             try:
-                self.EventBroadcaster.send("%s\r\n" % str(TheEvent))
+                self.EventBroadcaster.send("%s\n" % str(TheEvent))
             except Exception, E:
                 if __debug__: print "Exception occurred on Broadcast: %s %e" % (E, E)
                 #eat it (want to avoid the logger itself posting messages to avoid a message flood)...

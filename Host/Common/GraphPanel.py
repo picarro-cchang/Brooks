@@ -15,8 +15,11 @@
 # 07-09-27 sze   Added setMaxPoints method for Sequences that limit number of displayed points.
 #                 Note that additional points are not deleted, so maxPoints can be changed on-the-fly.
 # 07-09-27 sze   Added Text methods to GraphPanel to allow strings within graphs
-# 08-03-07 sze   Add GetPointers and SetPointers to Sequences
-# 09-02-12 alex  Always update statistics window when running Update() on timer, even witout re-drawing
+# 08-03-07 sze   Add GetPointers and SerPointers to Sequences
+# 09-02-12 alex  Always update statistics window when running Update() on timer, even witout re-drawing 
+# 09-07-10 alex Support time-axis locking function from QuickGui
+# 09-08-04 alex Define a flag to detect if x-axis has been changed since last update. Support forced re-draw even when new data hasn't come in yet.
+
 import wx
 import plot
 import numpy.oldnumeric as _Numeric
@@ -85,37 +88,22 @@ class Series(object):
             self.x = Sequence(args[0])
             self.y = Sequence(args[0])
         self.maxPoints = None
-        self.lock = threading.RLock()
     def GetLatestUpdate(self):
         return max(self.x.GetLatestUpdate(),self.y.GetLatestUpdate())
     def Add(self,t,v):
-        self.lock.acquire()
-        try:
-            self.x.Add(t)
-            self.y.Add(v)
-        finally:
-            self.lock.release()
+        self.x.Add(t)
+        self.y.Add(v)
     def Clear(self):
-        self.lock.acquire()
-        try:
-            self.x.Clear()
-            self.y.Clear()
-        finally:
-            self.lock.release()
-    def GetXY(self):
-        self.lock.acquire()
-        try:
-            return self.GetX(),self.GetY()
-        finally:
-            self.lock.release()
+        self.x.Clear()
+        self.y.Clear()
     def GetX(self):
         if self.maxPoints == None:
-            return self.x.GetValues()[:]
+            return self.x.GetValues()
         else:
             return self.x.GetValues()[-self.maxPoints:]
     def GetY(self):
         if self.maxPoints == None:
-            return self.y.GetValues()[:]
+            return self.y.GetValues()
         else:
             return self.y.GetValues()[-self.maxPoints:]
     def setMaxPoints(self,maxPoints):
@@ -131,6 +119,9 @@ class GraphPanel(wx.Panel):
         self._lineSeries = []
         self._pointSeries = []
         self._text = {}
+        self.forcedXAxis = None
+        self.lastXAxis = None
+        self.isNewXAxis = False
         self.stats = []
         self.nextHandle = 1
         self.xlabel = ''
@@ -144,6 +135,18 @@ class GraphPanel(wx.Panel):
         self.canvas.SetEnableZoom(True)
         self.latestUpdate = None
 
+    def GetUnzoomed(self):
+        return self.canvas.GetUnzoomed()
+    def SetUnzoomed(self, unzoomedFalg):
+        self.canvas.unzoomed = unzoomedFalg
+    def GetLastDraw(self):
+        return self.canvas.last_draw
+    def SetForcedXAxis(self, xAxisTuple):
+        self.forcedXAxis = xAxisTuple
+    def GetForcedXAxis(self):
+        return self.forcedXAxis        
+    def ClearForcedXAxis(self):
+        self.forcedXAxis = None
     def AddSeriesAsLine(self,series,select=None,statsFlag=False,**attr):
         self._lineSeries.append((series,select,statsFlag,attr))
         self.latestUpdate = None
@@ -201,21 +204,23 @@ class GraphPanel(wx.Panel):
         slope = 0
         x = data[:,0]
         y = data[:,1]
-        if not canvas.GetUnzoomed():
-            (graphics, xAxis, yAxis) = canvas.last_draw
-            xAxis = tuple(xAxis)
-            yAxis = tuple(yAxis)
-            # Restrict data to those within window
-            filt = (xAxis[0]<=x) & (x<=xAxis[1]) & (yAxis[0]<=y) & (y<=yAxis[1])
-            x = x[filt]
-            y = y[filt]
+        (graphics, xAxis, yAxis) = canvas.last_draw
+        xAxis = tuple(xAxis)
+        yAxis = tuple(yAxis)
+        # Restrict data to those within window
+        filt = (xAxis[0]<=x) & (x<=xAxis[1]) & (yAxis[0]<=y) & (y<=yAxis[1])
+        x = x[filt]
+        y = y[filt]
         if len(x)>0:
             mu = _Numeric.mean(y)
             sigma = _Numeric.std(y)
             if len(x)>=2: slope = _Numeric.polyfit(x,y,1)[0]
         return (mu, sigma, slope)
 
-    def Update(self,delay=0.0):
+    def GetIsNewXAxis(self):
+        return self.isNewXAxis
+        
+    def Update(self,delay=0.0,forcedRedraw=False):
         # Check to see if we do not need to update after all, since nothing has changed since the last one
         self.stats = []
         mostRecentChange = 0
@@ -224,40 +229,43 @@ class GraphPanel(wx.Panel):
             mostRecentChange = max(mostRecentChange,series.GetLatestUpdate())
         for series,select,statsFlag,attr in self._pointSeries:
             mostRecentChange = max(mostRecentChange,series.GetLatestUpdate())
-        if self.latestUpdate is not None and self.latestUpdate >= mostRecentChange-delay:
+        if (self.latestUpdate is not None) and (self.latestUpdate >= mostRecentChange-delay) \
+           and (not forcedRedraw) and (not isinstance(self.forcedXAxis,tuple)):
             skipDrawing = True
+   
         self.latestUpdate = mostRecentChange
         canvas = self.canvas
         plot_objects = []
         for series,select,statsFlag,attr in self._lineSeries:
-            data = _Numeric.column_stack(series.GetXY())
+            data = _Numeric.column_stack((series.GetX(),series.GetY()))
             if len(data) > 0:
                 if select != None:
                     selSequence,selValue = select
                     data = data[selSequence.GetValues() == selValue]
-                if len(data)>0:
+                if len(data)>0: 
                     plot_objects.append(plot.PolyLine(data,**attr))
                 if statsFlag:
                     self.stats.append(self.calcStats(data,canvas))
             del data
         for series,select,statsFlag,attr in self._pointSeries:
-            data = _Numeric.column_stack(series.GetXY())
-            if len(data) > 0:
+            data = _Numeric.column_stack((series.GetX(),series.GetY()))
+            if len(data) > 0:            
                 if select != None:
                     selSequence,selValue = select
                     data = data[selSequence.GetValues() == selValue]
-                if len(data)>0:
+                if len(data)>0: 
                     plot_objects.append(plot.PolyMarker(data,**attr))
                 if statsFlag:
                     self.stats.append(self.calcStats(data,canvas))
             del data
         for h in self._text:
             plot_objects.append(self._text[h])
-
+        
         if skipDrawing:
             del plot_objects
+            self.isNewXAxis = False
             return
-
+            
         if len(plot_objects) > 0:
             if not isinstance(canvas.GetXSpec(),tuple):
                 canvas.SetXSpec('min')
@@ -267,8 +275,17 @@ class GraphPanel(wx.Panel):
                 (graphics, xAxis, yAxis) = canvas.last_draw
                 xAxis = tuple(xAxis)
                 yAxis = tuple(yAxis)
+            if isinstance(self.forcedXAxis,tuple):
+                xAxis = self.forcedXAxis
+
+            if xAxis != self.lastXAxis:
+                self.isNewXAxis = True
+            else:
+                self.isNewXAxis = False
+
             canvas.Draw(plot.PlotGraphics(plot_objects,self.title,self.xlabel,self.ylabel),
                         xAxis = xAxis, yAxis = yAxis)
+            self.lastXAxis = xAxis
         else:
             dummy = [plot.PolyMarker([(0,0),(1,1)])]
             canvas.Draw(plot.PlotGraphics(dummy,self.title,self.xlabel,self.ylabel))
