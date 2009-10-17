@@ -12,6 +12,7 @@
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 
 import sys
+import getopt
 import inspect
 import numpy
 import os
@@ -23,9 +24,10 @@ import cPickle
 import os.path
 from tables import *
 from Host.Common import CmdFIFO
+from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import unixTime
 from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RD_RECALC
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER 
 from Host.Common.SharedTypes import CrdsException
 from Host.autogen.interface import ProcessedRingdownEntryType
 from Host.Common import Listener
@@ -36,7 +38,12 @@ if sys.platform == 'win32':
     from time import clock as TimeStamp
 else:
     from time import time as TimeStamp
-
+    
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
+    
 # Some masks for interpreting the "subSchemeID" info (subSchemeID is basically
 # a pass through, with the exception of the special increment bit 15)...
 # !!! NOTE: Bit 15 is reserved for increment flag in firmware, so never use it for other purposes!!!
@@ -59,9 +66,11 @@ APP_NAME = "Spectrum Collector"
                 
 Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                      APP_NAME, IsDontCareConnection = False)
-FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
-                                     APP_NAME, IsDontCareConnection = False)
-                                         
+
+Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
+                                    APP_NAME,
+                                    IsDontCareConnection = True)
+                                    
 class RingdownTimeout(CrdsException):
     """Timed out while waiting for a ringdown to arrive."""
     
@@ -91,11 +100,17 @@ class SpectrumCollector(object):
     On creation of an instance, a file header is written.
     """
 
-    def __init__(self, ringdownTimeout_s, streamDir, useHDF5):
-        self.ringdownTimeout_s = ringdownTimeout_s
-        self.streamDir = streamDir
-        self.useHDF5 = useHDF5
-        
+    def __init__(self, configPath):
+        # Read from .ini file
+        cp = CustomConfigObj(configPath)
+        self.useHDF5 = cp.getboolean("MainConfig", "useHDF5", "True")
+        self.archiveGroup = cp.get("MainConfig", "archiveGroup", "RDF")
+        self.streamDir = os.path.abspath(cp.get("MainConfig", "streamDir", "../../Log/RDF"))
+        # Make directory if not exist
+        if not os.path.isdir(self.streamDir):
+            os.makedirs(self.streamDir)
+        Log("Created streamDir in %s" % self.streamDir)
+            
         # RPC server
         self.rpcThread = None
         self._shutdownRequested = False
@@ -208,8 +223,6 @@ class SpectrumCollector(object):
 
     def getSpectralDataPoint(self, timeToRetry):
         """Pops rdData out of the local ringdown queue and returns it.
-
-        Raises RingdownTimeout if no data after self.ringdownTimeout_s.
         """
         if self.tempRdDataBuffer:
             #The last time a spectrum was read it read one too many points, and this is it.
@@ -221,9 +234,6 @@ class SpectrumCollector(object):
             while not rdData:
                 if not self.rdQueue.empty():
                     rdData = self.rdQueue.get(False)
-                elif (self.ringdownTimeout_s != 0) and ((TimeStamp() - startTime_s) > self.ringdownTimeout_s):
-                    #RingdownTimeout_s = 0 means no time-out requirement is given
-                    raise RingdownTimeout("Timeout elapsed with no data in RD queue")
                 else:
                     time.sleep(timeToRetry)
         return rdData
@@ -328,7 +338,6 @@ class SpectrumCollector(object):
             # Create HDF5 table file
             filename = "%03d_%013d.h5" % (self.spectrumID, int(time.time()*1000))
             streamPath = os.path.join(self.streamDir, filename)
-            self.rdfDict["controlData"]["StreamPath"] = streamPath
             streamFP = openFile(streamPath, "w")
             for dataKey in self.rdfDict.keys():
                 subDataDict = self.rdfDict[dataKey]
@@ -351,12 +360,14 @@ class SpectrumCollector(object):
             # Pickle the rdfDict 
             filename = "%03d_%013d.rdf" % (self.spectrumID, int(time.time()*1000))
             streamPath = os.path.join(self.streamDir, filename)
-            self.rdfDict["controlData"]["StreamPath"] = streamPath
             streamFP = file(streamPath, "wb")
             streamFP.write(cPickle.dumps(self.rdfDict,cPickle.HIGHEST_PROTOCOL)) 
         streamFP.close()
         if self.spectrumQueue:
             self.addToSpectrumQueue(self.rdfDict.copy())
+        # Archive spectrum files
+        Archiver.ArchiveFile(self.archiveGroup, streamPath, True)
+        
         self.reset()
 
     def RPC_setMaxSpectrumQueueSize(self, maxSize):
@@ -409,12 +420,52 @@ class SpectrumCollector(object):
         return list(self.tagalongData.pop(Name, []))
     
     def RPC_getSensorData(self):
-        return self.getLatestSensors()
+        sensorData = self.getLatestSensors()
+        return sensorData.copy()
         
     def RPC_shutdown(self):
         self._shutdownRequested = True
-        
+
+HELP_STRING = """SpectrumCollector.py [-c<FILENAME>] [-h|--help]
+
+Where the options can be a combination of the following. Note that options override
+settings in the configuration file:
+
+-h, --help           print this help
+-c                   specify a config file:  default = "./SpectrumCollector.ini"
+"""
+
+def printUsage():
+    print HELP_STRING
+
+def handleCommandSwitches():
+    shortOpts = 'hc:'
+    longOpts = ["help"]
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
+    except getopt.GetoptError, E:
+        print "%s %r" % (E, E)
+        sys.exit(1)
+    #assemble a dictionary where the keys are the switches and values are switch args...
+    options = {}
+    for o,a in switches:
+        options.setdefault(o,a)
+    if "/?" in args or "/h" in args:
+        options.setdefault('-h',"")
+    #Start with option defaults...
+    configFile = os.path.splitext(AppPath)[0] + ".ini"
+    if "-h" in options or "--help" in options:
+        printUsage()
+        sys.exit()
+    if "-c" in options:
+        configFile = options["-c"]
+    return configFile, options
+
 if __name__ == "__main__":
+    # Temporary
+    from Host.Common.SharedTypes import RPC_PORT_FREQ_CONVERTER
+    FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
+                                     APP_NAME, IsDontCareConnection = False)
     schemeDict = {}
     schemeDict["sch1"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr1.sch", 0, 7)
     schemeDict["sch2"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr2.sch", 1, 8)
@@ -423,8 +474,9 @@ if __name__ == "__main__":
                                     r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\HotBoxCal.ini",
                                     schemeDict,
                                     schemeSeq)
-                                                
-    spCollectorApp = SpectrumCollector(300, "../../Log/", True)
+                                    
+    configFile, options = handleCommandSwitches()
+    spCollectorApp = SpectrumCollector(configFile)
     Log("SpectrumCollector starting")
     spCollectorApp.run()
     Log("SpectrumCollector exiting")

@@ -441,8 +441,7 @@ class RDFrequencyConverter(Singleton):
         # Do the angle to wavenumber conversions for each available laser
         for vLaserNum in range(1,self.numLasers+1):
             if cacheIndex[vLaserNum-1]: # There are angles to convert for this laser
-                if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
-                    raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+                self._assertVLaserNum(vLaserNum)
                 fc = self.freqConverter[vLaserNum-1]
                 waveNo = fc.thetaCalAndLaserTemp2WaveNumber(array(wlmAngle[vLaserNum-1]), array(laserTemperature[vLaserNum-1]))
                 for i,w in enumerate(waveNo):
@@ -451,18 +450,20 @@ class RDFrequencyConverter(Singleton):
                     rdProcessedData.waveNumber = w
                     rdProcessedData.waveNumberSetpoint = self.freqScheme[rdProcessedData.schemeTable].setpoint[rdProcessedData.schemeRow]
 
+    def _assertVLaserNum(self, vLaserNum):
+        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
+            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+            
     def RPC_configSchemeManager(self, warmboxCalFilePath, hotboxCalFilePath, schemeDict, schemeSeq):
         self.schemeMgr = SchemeManager(warmboxCalFilePath, hotboxCalFilePath, schemeDict, schemeSeq)
         self.schemeMgr.startup()
         
     def RPC_angleToLaserTemperature(self,vLaserNum,angles):
-        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
-            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        self._assertVLaserNum(vLaserNum)
         return self.freqConverter[vLaserNum-1].thetaCal2LaserTemp(angles)
 
     def RPC_angleToWaveNumber(self,vLaserNum,angles):
-        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
-            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        self._assertVLaserNum(vLaserNum)
         return self.freqConverter[vLaserNum-1].thetaCal2WaveNumber(angles)
     
     def RPC_centerTuner(self,tunerCenter):
@@ -489,8 +490,7 @@ class RDFrequencyConverter(Singleton):
             dataByLaser[vLaserNum][0].append(i)
             dataByLaser[vLaserNum][1].append(waveNum)
         for vLaserNum in dataByLaser:
-            if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
-                raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+            self._assertVLaserNum(vLaserNum)
             fc = self.freqConverter[vLaserNum-1]
             waveNum = array(dataByLaser[vLaserNum][1])
             wlmAngle = fc.waveNumber2ThetaCal(waveNum)
@@ -514,8 +514,7 @@ class RDFrequencyConverter(Singleton):
         return self.sbc.isCalibrationDone(vLaserNumList)
     
     def RPC_laserTemperatureToAngle(self,vLaserNum,laserTemperatures):
-        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
-            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        self._assertVLaserNum(vLaserNum)
         return self.freqConverter[vLaserNum-1].laserTemp2ThetaCal(laserTemperatures)
     
     def RPC_loadHotBoxCal(self, hotBoxCalFilePath):
@@ -566,18 +565,30 @@ class RDFrequencyConverter(Singleton):
 
     def RPC_replaceOriginalWlmCal(self,vLaserNum):
         # Copy current spline coefficients to original coefficients
-        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
-            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        self._assertVLaserNum(vLaserNum)
         self.freqConverter[vLaserNum-1].replaceOriginal()
 
     def RPC_restoreOriginalWlmCal(self,vLaserNum):
         # Replace current spline coefficients with original spline coefficients
-        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
-            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        self._assertVLaserNum(vLaserNum)
         self.freqConverter[vLaserNum-1].replaceCurrent()
         
     def RPC_setHotBoxCalParam(self,secName,optName,optValue):
         self.hotBoxCal[secName][optName] = optValue
+        
+    def RPC_getWlmOffset(self, vLaserNum):
+        """Fetches the offset in the WLM calibration. vLaserNum is 1-based.
+        Returns offset in wavenumbers.
+        """
+        self._assertVLaserNum(vLaserNum)
+        return self.freqConverter[vLaserNum-1].getOffset()
+
+    def RPC_setWlmOffset(self, vLaserNum, offset):
+        """Updates the offset in the WLM calibration by the specified value.
+        vLaserNum is 1-based. offset is in wavenumbers.
+        """
+        self._assertVLaserNum(vLaserNum)
+        self.freqConverter[vLaserNum-1].setOffset(offset)
         
     def RPC_shutdown(self):
         self._shutdownRequested = True
@@ -635,8 +646,7 @@ class RDFrequencyConverter(Singleton):
         """Updates the wavelength monitor calibration using the information that angles specified as "thetaCal"
            map to the specified list of waveNumbers. Also relax the calibration towards the default using
            Laplacian regularization and the specified value of relaxDefault."""
-        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
-            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        self._assertVLaserNum(vLaserNum)
         self.freqConverter[vLaserNum-1].updateWlmCal(thetaCal,waveNumbers,weights,relax,relative,relaxDefault,relaxZero)
         
     def RPC_uploadSchemeToDAS(self, schemeNum):
@@ -647,8 +657,7 @@ class RDFrequencyConverter(Singleton):
         Driver.wrScheme(schemeNum, *(angleScheme.repack()))
         
     def RPC_waveNumberToAngle(self,vLaserNum,waveNumbers):
-        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
-            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        self._assertVLaserNum(vLaserNum)
         return self.freqConverter[vLaserNum-1].waveNumber2ThetaCal(waveNumbers)
 
     def RPC_wrFreqScheme(self, schemeNum, freqScheme):

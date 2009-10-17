@@ -909,8 +909,6 @@ class DataManager(object):
                 #InstMgr is dead...
                 errReportThread = threading.Thread(target = self._ReportInstError, args = (INST_ERROR_DATA_MANAGER, ))
                 errReportThread.start()
-            else:
-                pass
         elif NewState == STATE_INIT:
             eventLevel = 2
         else:
