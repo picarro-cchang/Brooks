@@ -26,6 +26,7 @@
 #                           Data Manager needs to be modified so that when the script reports "time" in the output dictionary, the reported time will be use for broadcasting. 
 #                           If the script output doesn't contain "time" information, the script running time will be used (same as before). This modification affects both broadcasting and serial output.
 # 09-08-08 alex  Allowed RPC_PulseAnalyzer_SetParam() to update the parameter values in DataManager.ini file
+# 09-10-16 alex  Added an option to run DataManager without InstMgr
 
 import sys
 if "../Common" not in sys.path: sys.path.append("../Common")
@@ -87,7 +88,7 @@ from os.path import abspath
 ####
 ##Now import from Picarro generated libraries...
 ####
-import ss_autogen as ss
+from Host.autogen import interface
 import ModeDef
 import CmdFIFO
 import BetterTraceback
@@ -160,10 +161,6 @@ CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER
 CRDS_MeasSys = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
                                          APP_NAME,
                                          IsDontCareConnection = False)
-CRDS_InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
-                                          APP_NAME,
-                                          IsDontCareConnection = False) #MUST NOW BE FALSE (need to read status)
-
 ####
 ## Custom exceptions...
 ####
@@ -308,7 +305,7 @@ class DataManager(object):
         
     #endclass (ConfigurationOptions for DataManager)
 
-    def __init__(self, ConfigPath):
+    def __init__(self, ConfigPath, noInstMgr=False):
         # # # IMPORTANT # # #
         # THIS SHOULD ONLY CONTAIN VARIABLE/PROPERTY INITS... any actual code that
         # can fail (like talking to another CRDS app or reading the HDD) should be
@@ -374,7 +371,12 @@ class DataManager(object):
 
         self.pulseDict = {}
         self.calEnabled = True
-        
+        self.noInstMgr = noInstMgr
+        if not self.noInstMgr:
+            self.rdInstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
+                                                        APP_NAME,
+                                                        IsDontCareConnection = False)
+                                          
     def _AssertValidCallingState(self, StateList):
         if self.__State not in StateList:
             raise CommandError("Command invalid in present state ('%s')." % StateName[self.__State])
@@ -900,12 +902,13 @@ class DataManager(object):
         self.__State = NewState
         if NewState == STATE_ERROR:
             eventLevel = 3
-            #report the error - ideally this is a don't care connection, but it
-            #can't be because we need to make InstMgr calls elsewhere where we need
-            #return values, so call it on a thread to avoid any hangup if the
-            #InstMgr is dead...
-            errReportThread = threading.Thread(target = self._ReportInstError, args = (INST_ERROR_DATA_MANAGER, ))
-            errReportThread.start()
+            if not self.noInstMgr:
+                #report the error - ideally this is a don't care connection, but it
+                #can't be because we need to make InstMgr calls elsewhere where we need
+                #return values, so call it on a thread to avoid any hangup if the
+                #InstMgr is dead...
+                errReportThread = threading.Thread(target = self._ReportInstError, args = (INST_ERROR_DATA_MANAGER, ))
+                errReportThread.start()
         elif NewState == STATE_INIT:
             eventLevel = 2
         else:
@@ -918,7 +921,7 @@ class DataManager(object):
     def _ReportInstError(self, ErrorCode):
         """Small function enabling the InstMgr error reporting call to be called on
         a thread (to get dontcare-like functionality)"""
-        CRDS_InstMgr.INSTMGR_ReportErrorRpc(ErrorCode)
+        self.rdInstMgr.INSTMGR_ReportErrorRpc(ErrorCode)
     def _MeasDataFilter(self, Obj):
         measData = MeasData()
         measData.ImportPickleDict(Obj)
@@ -930,11 +933,11 @@ class DataManager(object):
         broadcast.
 
         """
-        if 0: assert isinstance(obj, ss.STREAM_ElementType) #for Wing
+        if 0: assert isinstance(obj, interface.SensorEntryType) #for Wing
 
-        streamTime  = obj.ticks/1000.
-        sensorName = ss.STREAM_MemberTypeDict[obj.streamType][len("STREAM_"):]
-        sensorValue = obj.value.asFloat
+        streamTime  = obj.timestamp
+        sensorName = interface.STREAM_MemberTypeDict[obj.streamNum][len("STREAM_"):]
+        sensorValue = obj.value
 
         self.LatestSensorData[sensorName] = sensorValue
         #TODO: May want to fix the streamTime in the next addition, but relative *should* be fine...
@@ -1042,7 +1045,7 @@ class DataManager(object):
             #And our listener to collect sensor data broadcasts...
             self.SensorListener = Listener(None,
                                          BROADCAST_PORT_SENSORSTREAM,
-                                         ss.STREAM_ElementType,
+                                         interface.SensorEntryType,
                                          self._SensorFilter,
                                          retry = True,
                                          name = "Data manager sensor stream listener",logFunc = Log)
@@ -1233,18 +1236,8 @@ class DataManager(object):
         ##First, run the script!!
         self._Status.UpdateStatusBit(STATUS_MASK_Analyzing, True)
         self.AnalyzerLock.acquire()
-        # Commented out the following as it caused an error during warming
-        #if self.LatestInstMgrStatus < 0:
-        #    #never picked up a status yet?!  Weird, but just in case we'll initialize it...
-        #    Log("Instrument Manager status not known yet at time of script execution.", Level = 2)
-        #    if not self.Config.DebugMode:
-        #        self.LatestInstMgrStatus = CRDS_InstMgr.INSTMGR_GetStatusRpc()
-        #    else:
-        #        if self.Config.Debug_InstMgrStatus < 0:
-        #            self.LatestInstMgrStatus = self.LatestInstMgrStatus = CRDS_InstMgr.INSTMGR_GetStatusRpc()
-        #        else:
-        #            self.LatestInstMgrStatus = self.Config.Debug_InstMgrStatus
-        #endif (no instmgr status yet)
+        
+        # self.LatestInstMgrStatus is updated by self.InstMgrStatusListener
         currentInstMgrStatus = self.LatestInstMgrStatus
         
         # Initialize pulse analyzer
@@ -1323,16 +1316,19 @@ class DataManager(object):
             #Now figure out if the measurement is a "good" one...
             # - this is the AND of what the script already decided, and what the instrument
             #   conditions are indicating.  All have to indicate good or it isn't.
-            pressureLocked =    currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_PRESSURE_LOCKED
-            cavityTempLocked =  currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_CAVITY_TEMP_LOCKED
-            warmboxTempLocked = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
-            warmingUp =         currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_WARMING_UP
-            systemError =       currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_SYSTEM_ERROR
-            measGood = measGood and pressureLocked \
-                                and cavityTempLocked \
-                                and warmboxTempLocked \
-                                and (not warmingUp) \
-                                and (not systemError)
+            if not self.noInstMgr:
+                pressureLocked =    currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_PRESSURE_LOCKED
+                cavityTempLocked =  currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_CAVITY_TEMP_LOCKED
+                warmboxTempLocked = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
+                warmingUp =         currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_WARMING_UP
+                systemError =       currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_SYSTEM_ERROR
+                measGood = measGood and pressureLocked \
+                                    and cavityTempLocked \
+                                    and warmboxTempLocked \
+                                    and (not warmingUp) \
+                                    and (not systemError)
+            else:
+                measGood = 1
             #Broadcast the result data...
             measData = MeasData(reportSource_out, rptSourceTime_s, reportDict, measGood, self.RPC_Mode_Get())
             self.DataBroadcaster.send(measData.dumps())
@@ -1388,7 +1384,7 @@ def HandleCommandSwitches():
     import getopt
 
     shortOpts = 'hc:'
-    longOpts = ["help", "test", "no-fitter"]
+    longOpts = ["help", "test", "no_inst_mgr"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -1419,16 +1415,21 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
         Log("Config file specified at command line", configFile)
 
-    return (configFile, executeTest)
+    if "--no_inst_mgr" in options:
+        noInstMgr = True
+    else:
+        noInstMgr = False
+        
+    return (configFile, noInstMgr, executeTest)
 def ExecuteTest(DM):
     """A self test executed via the --test command-line switch."""
     print "No self test implemented yet!"
 def main():
     #Get and handle the command line options...
-    configFile, test = HandleCommandSwitches()
+    configFile, noInstMgr, test = HandleCommandSwitches()
     Log("%s application started." % APP_NAME, dict(ConfigFile = configFile), Level = 2)
     try:
-        app = DataManager(configFile)
+        app = DataManager(configFile, noInstMgr)
         if test:
             threading.Timer(2, ExecuteTest(app)).start()
         app.Start()
