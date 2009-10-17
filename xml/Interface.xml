@@ -483,6 +483,25 @@
             <enum_value ident="ANALYZER_TUNING_CavityLengthTuningMode" value="0" caption="Cavity Length Tuning" /> 
             <enum_value ident="ANALYZER_TUNING_LaserCurrentTuningMode" value="1" caption="Laser Current Tuning" /> 
         </enum>         
+        <enum type="SENTRY_BitType">
+            <description>Sentry bit position</description> 
+            <enum_value ident="SENTRY_Laser1TemperatureBit" value="0" caption="Laser 1 Temperature" /> 
+            <enum_value ident="SENTRY_Laser2TemperatureBit" value="1" caption="Laser 2 Temperature" /> 
+            <enum_value ident="SENTRY_Laser3TemperatureBit" value="2" caption="Laser 3 Temperature" /> 
+            <enum_value ident="SENTRY_Laser4TemperatureBit" value="3" caption="Laser 4 Temperature" /> 
+            <enum_value ident="SENTRY_EtalonTemperatureBit" value="4" caption="Etalon Temperature" /> 
+            <enum_value ident="SENTRY_WarmBoxTemperatureBit" value="5" caption="Warm Box Temperature" /> 
+            <enum_value ident="SENTRY_WarmBoxHeatsinkTemperatureBit" value="6" caption="Warm Box Heatsink Temperature" /> 
+            <enum_value ident="SENTRY_CavityTemperatureBit" value="7" caption="Cavity Temperature" /> 
+            <enum_value ident="SENTRY_HotBoxHeatsinkTemperatureBit" value="8" caption="Hot Box Heatsink Temperature" /> 
+            <enum_value ident="SENTRY_DasTemperatureBit" value="9" caption="DAS (ambient) Temperature" /> 
+            <enum_value ident="SENTRY_Laser1CurrentBit" value="10" caption="Laser 1 Current" /> 
+            <enum_value ident="SENTRY_Laser2CurrentBit" value="11" caption="Laser 2 Current" /> 
+            <enum_value ident="SENTRY_Laser3CurrentBit" value="12" caption="Laser 3 Current" /> 
+            <enum_value ident="SENTRY_Laser4CurrentBit" value="13" caption="Laser 4 Current" /> 
+            <enum_value ident="SENTRY_CavityPressureBit" value="14" caption="Cavity Pressure" /> 
+            <enum_value ident="SENTRY_AmbientPressureBit" value="15" caption="Ambient Pressure" /> 
+        </enum>
     </enum_list>
     <bits_list>
         <bits ident="COMM_STATUS_BITMASK">
@@ -507,24 +526,6 @@
             <mask  ident="SUBSCHEME_ID_IncrMask">0x8000</mask>
             <mask  ident="SUBSCHEME_ID_IgnoreMask">0x4000</mask>
             <mask  ident="SUBSCHEME_ID_IsCalMask">0x1000</mask>
-        </bits>
-        <bits ident="SENTRY_BITMASK">
-            <mask  ident="SENTRY_Laser1TemperatureMask">0x0001</mask>
-            <mask  ident="SENTRY_Laser2TemperatureMask">0x0002</mask>
-            <mask  ident="SENTRY_Laser3TemperatureMask">0x0004</mask>
-            <mask  ident="SENTRY_Laser4TemperatureMask">0x0008</mask>
-            <mask  ident="SENTRY_EtalonTemperatureMask">0x0010</mask>
-            <mask  ident="SENTRY_WarmBoxTemperatureMask">0x0020</mask>
-            <mask  ident="SENTRY_WarmBoxHeatsinkTemperatureMask">0x0040</mask>
-            <mask  ident="SENTRY_CavityTemperatureMask">0x0080</mask>
-            <mask  ident="SENTRY_HotBoxHeatsinkTemperatureMask">0x0100</mask>
-            <mask  ident="SENTRY_DasTemperatureMask">0x0200</mask>
-            <mask  ident="SENTRY_Laser1CurrentMask">0x0400</mask>
-            <mask  ident="SENTRY_Laser2CurrentMask">0x0800</mask>
-            <mask  ident="SENTRY_Laser3CurrentMask">0x1000</mask>
-            <mask  ident="SENTRY_Laser4CurrentMask">0x2000</mask>
-            <mask  ident="SENTRY_CavityPressureMask">0x4000</mask>
-            <mask  ident="SENTRY_AmbientPressureMask">0x8000</mask>
         </bits>
     </bits_list>
     <register_list>
@@ -2115,6 +2116,54 @@
             <initial>VIRTUAL_LASER_3</initial>
             <display>Virtual laser</display>
         </register>
+        <register ident="PZT_OFFSET_VIRTUAL_LASER1" type="float" minver="1.0" access="rw">
+            <description>PZT offset for virtual laser 1</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.0f">Virtual laser 1 PZT offset</display>
+        </register>
+        <register ident="PZT_OFFSET_VIRTUAL_LASER2" type="float" minver="1.0" access="rw">
+            <description>PZT offset for virtual laser 2</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.0f">Virtual laser 2 PZT offset</display>
+        </register>
+        <register ident="PZT_OFFSET_VIRTUAL_LASER3" type="float" minver="1.0" access="rw">
+            <description>PZT offset for virtual laser 3</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.0f">Virtual laser 3 PZT offset</display>
+        </register>
+        <register ident="PZT_OFFSET_VIRTUAL_LASER4" type="float" minver="1.0" access="rw">
+            <description>PZT offset for virtual laser 4</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.0f">Virtual laser 4 PZT offset</display>
+        </register>
+        <register ident="PZT_OFFSET_VIRTUAL_LASER5" type="float" minver="1.0" access="rw">
+            <description>PZT offset for virtual laser 5</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.0f">Virtual laser 5 PZT offset</display>
+        </register>
+        <register ident="PZT_OFFSET_VIRTUAL_LASER6" type="float" minver="1.0" access="rw">
+            <description>PZT offset for virtual laser 6</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.0f">Virtual laser 6 PZT offset</display>
+        </register>
+        <register ident="PZT_OFFSET_VIRTUAL_LASER7" type="float" minver="1.0" access="rw">
+            <description>PZT offset for virtual laser 7</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.0f">Virtual laser 7 PZT offset</display>
+        </register>
+        <register ident="PZT_OFFSET_VIRTUAL_LASER8" type="float" minver="1.0" access="rw">
+            <description>PZT offset for virtual laser 8</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.0f">Virtual laser 8 PZT offset</display>
+        </register>
         <register ident="VALVE_CNTRL_STATE_REGISTER" type="VALVE_CNTRL_StateType" minver="1.0" access="rw">
             <description>Valve control app state register</description>
             <initial>VALVE_CNTRL_DisabledState</initial>
@@ -2529,6 +2578,8 @@
                     <fielddef value="11">Ratio 1 (MS)</fielddef>
                     <fielddef value="12">Ratio 2 (LS)</fielddef>
                     <fielddef value="13">Ratio 2 (MS)</fielddef>
+                    <fielddef value="14">PZT (LS)</fielddef>
+                    <fielddef value="15">PZT (MS)</fielddef>
                 </bitfield>
             </reg>
             <reg type="mask" ident="INTRONIX_2" description="" access="rw">
@@ -2548,6 +2599,8 @@
                     <fielddef value="11">Ratio 1 (MS)</fielddef>
                     <fielddef value="12">Ratio 2 (LS)</fielddef>
                     <fielddef value="13">Ratio 2 (MS)</fielddef>
+                    <fielddef value="14">PZT (LS)</fielddef>
+                    <fielddef value="15">PZT (MS)</fielddef>                    
                 </bitfield>
             </reg>
             <reg type="mask" ident="INTRONIX_3" description="" access="rw">
@@ -2567,6 +2620,8 @@
                     <fielddef value="11">Ratio 1 (MS)</fielddef>
                     <fielddef value="12">Ratio 2 (LS)</fielddef>
                     <fielddef value="13">Ratio 2 (MS)</fielddef>
+                    <fielddef value="14">PZT (LS)</fielddef>
+                    <fielddef value="15">PZT (MS)</fielddef>
                 </bitfield>
             </reg>
             <reg type="uint16" ident="OVERLOAD" description="Overload register" access="r">
@@ -3002,37 +3057,37 @@
                 </bitfield>
                 <bitfield ident="LASER_CURRENT_ENABLE" description="Laser current enable" lsb="3" width="4" />
                 <bitfield ident="LASER1_CURRENT_ENABLE" description="Laser 1 current source" lsb="3" width="1">
-                    <fielddef value="0">Disabled</fielddef>
-                    <fielddef value="1">Enabled</fielddef>
+                    <!-- <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef> -->
                 </bitfield>
                 <bitfield ident="LASER2_CURRENT_ENABLE" description="Laser 2 current source" lsb="4" width="1">
-                    <fielddef value="0">Disabled</fielddef>
-                    <fielddef value="1">Enabled</fielddef>
+                    <!-- <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef> -->
                 </bitfield>
                 <bitfield ident="LASER3_CURRENT_ENABLE" description="Laser 3 current source" lsb="5" width="1">
-                    <fielddef value="0">Disabled</fielddef>
-                    <fielddef value="1">Enabled</fielddef>
+                    <!-- <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef> -->
                 </bitfield>
                 <bitfield ident="LASER4_CURRENT_ENABLE" description="Laser 4 current source" lsb="6" width="1">
-                    <fielddef value="0">Disabled</fielddef>
-                    <fielddef value="1">Enabled</fielddef>
+                    <!-- <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef> -->
                 </bitfield>
                 <bitfield ident="MANUAL_LASER_ENABLE" description="Deasserts short across laser in manual mode"  lsb="7" width="4" />
                 <bitfield ident="MANUAL_LASER1_ENABLE" description="Laser 1 current (in manual mode)" lsb="7" width="1">
-                    <fielddef value="0">Off</fielddef>
-                    <fielddef value="1">On</fielddef>
+                    <!-- <fielddef value="0">Off</fielddef>
+                    <fielddef value="1">On</fielddef> -->
                 </bitfield>
                 <bitfield ident="MANUAL_LASER2_ENABLE" description="Laser 2 current (in manual mode)" lsb="8" width="1">
-                    <fielddef value="0">Off</fielddef>
-                    <fielddef value="1">On</fielddef>
+                    <!-- <fielddef value="0">Off</fielddef>
+                    <fielddef value="1">On</fielddef> -->
                 </bitfield>
                 <bitfield ident="MANUAL_LASER3_ENABLE" description="Laser 3 current (in manual mode)" lsb="9" width="1">
-                    <fielddef value="0">Off</fielddef>
-                    <fielddef value="1">On</fielddef>
+                    <!-- <fielddef value="0">Off</fielddef>
+                    <fielddef value="1">On</fielddef> -->
                 </bitfield>
                 <bitfield ident="MANUAL_LASER4_ENABLE" description="Laser 4 current (in manual mode)" lsb="10" width="1">
-                    <fielddef value="0">Off</fielddef>
-                    <fielddef value="1">On</fielddef>
+                    <!-- <fielddef value="0">Off</fielddef>
+                    <fielddef value="1">On</fielddef> -->
                 </bitfield>
                 <bitfield ident="MANUAL_SOA_ENABLE" description="SOA current (in manual mode)"  lsb="11" width="1">
                     <fielddef value="0">Off</fielddef>

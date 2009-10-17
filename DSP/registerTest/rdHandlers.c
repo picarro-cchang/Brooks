@@ -163,16 +163,18 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
     int *counter = (int*)(REG_BASE+4*RD_IRQ_COUNT_REGISTER);
     TUNER_ModeType mode;
     static long long ts1, ts2 = -10;
-    
+
     get_timestamp(&ts1);
-    if (ts1 - ts2 <= 2) {
+    if (ts1 - ts2 <= 2)
+    {
         // Ringdown interrupts within 2ms, set bit 3 of KERNEL_DIAG_1
         changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 3, 1, 1);
     }
-    else {
+    else
+    {
         changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 3, 1, 0);
     }
-    ts2 = ts1;    
+    ts2 = ts1;
 
     gie = IRQ_globalDisable();
     (*counter)++;
@@ -233,8 +235,8 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
         }
     }
 
-    // Change the temperature of the selected laser
-    setupLaserTemperature();
+    // Change the temperature amd apply PZT offset for the selected laser
+    setupLaserTemperatureAndPztOffset();
 
     // Restore interrupts
     IRQ_globalRestore(gie);

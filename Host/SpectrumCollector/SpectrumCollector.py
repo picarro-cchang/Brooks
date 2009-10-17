@@ -413,16 +413,16 @@ class SpectrumCollector(object):
         self._shutdownRequested = True
         
 if __name__ == "__main__":
-    schemeDict = {}
-    schemeDict["sch1"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr1.sch", 0, 7)
-    schemeDict["sch2"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr2.sch", 1, 8)
-    schemeSeq = ["sch1", "sch2"]
-    FreqConverter.configSchemeManager(r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\WarmBoxCal.ini",
-                                    r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\HotBoxCal.ini",
-                                    schemeDict,
-                                    schemeSeq)
-                                                
-    spCollectorApp = SpectrumCollector(300, "../../Log/", True)
+    #schemeDict = {}
+    #schemeDict["sch1"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr1.sch", 0, 7)
+    #schemeDict["sch2"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr2.sch", 1, 8)
+    #schemeSeq = ["sch1", "sch2"]
+    #FreqConverter.configSchemeManager(r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\WarmBoxCal.ini",
+    #                                r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\HotBoxCal.ini",
+    #                                schemeDict,
+    #                                schemeSeq)
+    #                                            
+    spCollectorApp = SpectrumCollector(0, "../../Log", True)
     Log("SpectrumCollector starting")
     spCollectorApp.run()
     Log("SpectrumCollector exiting")

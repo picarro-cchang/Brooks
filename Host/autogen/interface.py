@@ -722,6 +722,44 @@ ANALYZER_TUNING_ModeTypeDict = {}
 ANALYZER_TUNING_ModeTypeDict[0] = 'ANALYZER_TUNING_CavityLengthTuningMode' # Cavity Length Tuning
 ANALYZER_TUNING_ModeTypeDict[1] = 'ANALYZER_TUNING_LaserCurrentTuningMode' # Laser Current Tuning
 
+# Enumerated definitions for SENTRY_BitType
+SENTRY_BitType = c_uint
+SENTRY_Laser1TemperatureBit = 0 # Laser 1 Temperature
+SENTRY_Laser2TemperatureBit = 1 # Laser 2 Temperature
+SENTRY_Laser3TemperatureBit = 2 # Laser 3 Temperature
+SENTRY_Laser4TemperatureBit = 3 # Laser 4 Temperature
+SENTRY_EtalonTemperatureBit = 4 # Etalon Temperature
+SENTRY_WarmBoxTemperatureBit = 5 # Warm Box Temperature
+SENTRY_WarmBoxHeatsinkTemperatureBit = 6 # Warm Box Heatsink Temperature
+SENTRY_CavityTemperatureBit = 7 # Cavity Temperature
+SENTRY_HotBoxHeatsinkTemperatureBit = 8 # Hot Box Heatsink Temperature
+SENTRY_DasTemperatureBit = 9 # DAS (ambient) Temperature
+SENTRY_Laser1CurrentBit = 10 # Laser 1 Current
+SENTRY_Laser2CurrentBit = 11 # Laser 2 Current
+SENTRY_Laser3CurrentBit = 12 # Laser 3 Current
+SENTRY_Laser4CurrentBit = 13 # Laser 4 Current
+SENTRY_CavityPressureBit = 14 # Cavity Pressure
+SENTRY_AmbientPressureBit = 15 # Ambient Pressure
+
+# Dictionary for enumerated constants in SENTRY_BitType
+SENTRY_BitTypeDict = {}
+SENTRY_BitTypeDict[0] = 'SENTRY_Laser1TemperatureBit' # Laser 1 Temperature
+SENTRY_BitTypeDict[1] = 'SENTRY_Laser2TemperatureBit' # Laser 2 Temperature
+SENTRY_BitTypeDict[2] = 'SENTRY_Laser3TemperatureBit' # Laser 3 Temperature
+SENTRY_BitTypeDict[3] = 'SENTRY_Laser4TemperatureBit' # Laser 4 Temperature
+SENTRY_BitTypeDict[4] = 'SENTRY_EtalonTemperatureBit' # Etalon Temperature
+SENTRY_BitTypeDict[5] = 'SENTRY_WarmBoxTemperatureBit' # Warm Box Temperature
+SENTRY_BitTypeDict[6] = 'SENTRY_WarmBoxHeatsinkTemperatureBit' # Warm Box Heatsink Temperature
+SENTRY_BitTypeDict[7] = 'SENTRY_CavityTemperatureBit' # Cavity Temperature
+SENTRY_BitTypeDict[8] = 'SENTRY_HotBoxHeatsinkTemperatureBit' # Hot Box Heatsink Temperature
+SENTRY_BitTypeDict[9] = 'SENTRY_DasTemperatureBit' # DAS (ambient) Temperature
+SENTRY_BitTypeDict[10] = 'SENTRY_Laser1CurrentBit' # Laser 1 Current
+SENTRY_BitTypeDict[11] = 'SENTRY_Laser2CurrentBit' # Laser 2 Current
+SENTRY_BitTypeDict[12] = 'SENTRY_Laser3CurrentBit' # Laser 3 Current
+SENTRY_BitTypeDict[13] = 'SENTRY_Laser4CurrentBit' # Laser 4 Current
+SENTRY_BitTypeDict[14] = 'SENTRY_CavityPressureBit' # Cavity Pressure
+SENTRY_BitTypeDict[15] = 'SENTRY_AmbientPressureBit' # Ambient Pressure
+
 # Definitions for COMM_STATUS_BITMASK
 COMM_STATUS_CompleteMask = 0x1
 COMM_STATUS_BadCrcMask = 0x2
@@ -745,26 +783,8 @@ SUBSCHEME_ID_IncrMask = 0x8000
 SUBSCHEME_ID_IgnoreMask = 0x4000
 SUBSCHEME_ID_IsCalMask = 0x1000
 
-# Definitions for SENTRY_BITMASK
-SENTRY_Laser1TemperatureMask = 0x0001
-SENTRY_Laser2TemperatureMask = 0x0002
-SENTRY_Laser3TemperatureMask = 0x0004
-SENTRY_Laser4TemperatureMask = 0x0008
-SENTRY_EtalonTemperatureMask = 0x0010
-SENTRY_WarmBoxTemperatureMask = 0x0020
-SENTRY_WarmBoxHeatsinkTemperatureMask = 0x0040
-SENTRY_CavityTemperatureMask = 0x0080
-SENTRY_HotBoxHeatsinkTemperatureMask = 0x0100
-SENTRY_DasTemperatureMask = 0x0200
-SENTRY_Laser1CurrentMask = 0x0400
-SENTRY_Laser2CurrentMask = 0x0800
-SENTRY_Laser3CurrentMask = 0x1000
-SENTRY_Laser4CurrentMask = 0x2000
-SENTRY_CavityPressureMask = 0x4000
-SENTRY_AmbientPressureMask = 0x8000
-
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 362
+INTERFACE_NUMBER_OF_REGISTERS = 370
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1069,65 +1089,73 @@ SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER = 299
 SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER = 300
 SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER = 301
 VIRTUAL_LASER_REGISTER = 302
-VALVE_CNTRL_STATE_REGISTER = 303
-VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER = 304
-VALVE_CNTRL_INLET_VALVE_REGISTER = 305
-VALVE_CNTRL_OUTLET_VALVE_REGISTER = 306
-VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER = 307
-VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER = 308
-VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER = 309
-VALVE_CNTRL_INLET_VALVE_MIN_REGISTER = 310
-VALVE_CNTRL_INLET_VALVE_MAX_REGISTER = 311
-VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER = 312
-VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER = 313
-VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER = 314
-VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER = 315
-VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER = 316
-VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER = 317
-VALVE_CNTRL_THRESHOLD_STATE_REGISTER = 318
-VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER = 319
-VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER = 320
-VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER = 321
-VALVE_CNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER = 322
-VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER = 323
-VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER = 324
-VALVE_CNTRL_SEQUENCE_STEP_REGISTER = 325
-VALVE_CNTRL_SOLENOID_VALVES_REGISTER = 326
-TEC_CNTRL_REGISTER = 327
-SENTRY_UPPER_LIMIT_TRIPPED_REGISTER = 328
-SENTRY_LOWER_LIMIT_TRIPPED_REGISTER = 329
-SENTRY_LASER1_TEMPERATURE_MIN_REGISTER = 330
-SENTRY_LASER1_TEMPERATURE_MAX_REGISTER = 331
-SENTRY_LASER2_TEMPERATURE_MIN_REGISTER = 332
-SENTRY_LASER2_TEMPERATURE_MAX_REGISTER = 333
-SENTRY_LASER3_TEMPERATURE_MIN_REGISTER = 334
-SENTRY_LASER3_TEMPERATURE_MAX_REGISTER = 335
-SENTRY_LASER4_TEMPERATURE_MIN_REGISTER = 336
-SENTRY_LASER4_TEMPERATURE_MAX_REGISTER = 337
-SENTRY_ETALON_TEMPERATURE_MIN_REGISTER = 338
-SENTRY_ETALON_TEMPERATURE_MAX_REGISTER = 339
-SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER = 340
-SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER = 341
-SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER = 342
-SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER = 343
-SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER = 344
-SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER = 345
-SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER = 346
-SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER = 347
-SENTRY_DAS_TEMPERATURE_MIN_REGISTER = 348
-SENTRY_DAS_TEMPERATURE_MAX_REGISTER = 349
-SENTRY_LASER1_CURRENT_MIN_REGISTER = 350
-SENTRY_LASER1_CURRENT_MAX_REGISTER = 351
-SENTRY_LASER2_CURRENT_MIN_REGISTER = 352
-SENTRY_LASER2_CURRENT_MAX_REGISTER = 353
-SENTRY_LASER3_CURRENT_MIN_REGISTER = 354
-SENTRY_LASER3_CURRENT_MAX_REGISTER = 355
-SENTRY_LASER4_CURRENT_MIN_REGISTER = 356
-SENTRY_LASER4_CURRENT_MAX_REGISTER = 357
-SENTRY_CAVITY_PRESSURE_MIN_REGISTER = 358
-SENTRY_CAVITY_PRESSURE_MAX_REGISTER = 359
-SENTRY_AMBIENT_PRESSURE_MIN_REGISTER = 360
-SENTRY_AMBIENT_PRESSURE_MAX_REGISTER = 361
+PZT_OFFSET_VIRTUAL_LASER1 = 303
+PZT_OFFSET_VIRTUAL_LASER2 = 304
+PZT_OFFSET_VIRTUAL_LASER3 = 305
+PZT_OFFSET_VIRTUAL_LASER4 = 306
+PZT_OFFSET_VIRTUAL_LASER5 = 307
+PZT_OFFSET_VIRTUAL_LASER6 = 308
+PZT_OFFSET_VIRTUAL_LASER7 = 309
+PZT_OFFSET_VIRTUAL_LASER8 = 310
+VALVE_CNTRL_STATE_REGISTER = 311
+VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER = 312
+VALVE_CNTRL_INLET_VALVE_REGISTER = 313
+VALVE_CNTRL_OUTLET_VALVE_REGISTER = 314
+VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER = 315
+VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER = 316
+VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER = 317
+VALVE_CNTRL_INLET_VALVE_MIN_REGISTER = 318
+VALVE_CNTRL_INLET_VALVE_MAX_REGISTER = 319
+VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER = 320
+VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER = 321
+VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER = 322
+VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER = 323
+VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER = 324
+VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER = 325
+VALVE_CNTRL_THRESHOLD_STATE_REGISTER = 326
+VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER = 327
+VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER = 328
+VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER = 329
+VALVE_CNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER = 330
+VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER = 331
+VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER = 332
+VALVE_CNTRL_SEQUENCE_STEP_REGISTER = 333
+VALVE_CNTRL_SOLENOID_VALVES_REGISTER = 334
+TEC_CNTRL_REGISTER = 335
+SENTRY_UPPER_LIMIT_TRIPPED_REGISTER = 336
+SENTRY_LOWER_LIMIT_TRIPPED_REGISTER = 337
+SENTRY_LASER1_TEMPERATURE_MIN_REGISTER = 338
+SENTRY_LASER1_TEMPERATURE_MAX_REGISTER = 339
+SENTRY_LASER2_TEMPERATURE_MIN_REGISTER = 340
+SENTRY_LASER2_TEMPERATURE_MAX_REGISTER = 341
+SENTRY_LASER3_TEMPERATURE_MIN_REGISTER = 342
+SENTRY_LASER3_TEMPERATURE_MAX_REGISTER = 343
+SENTRY_LASER4_TEMPERATURE_MIN_REGISTER = 344
+SENTRY_LASER4_TEMPERATURE_MAX_REGISTER = 345
+SENTRY_ETALON_TEMPERATURE_MIN_REGISTER = 346
+SENTRY_ETALON_TEMPERATURE_MAX_REGISTER = 347
+SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER = 348
+SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER = 349
+SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER = 350
+SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER = 351
+SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER = 352
+SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER = 353
+SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER = 354
+SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER = 355
+SENTRY_DAS_TEMPERATURE_MIN_REGISTER = 356
+SENTRY_DAS_TEMPERATURE_MAX_REGISTER = 357
+SENTRY_LASER1_CURRENT_MIN_REGISTER = 358
+SENTRY_LASER1_CURRENT_MAX_REGISTER = 359
+SENTRY_LASER2_CURRENT_MIN_REGISTER = 360
+SENTRY_LASER2_CURRENT_MAX_REGISTER = 361
+SENTRY_LASER3_CURRENT_MIN_REGISTER = 362
+SENTRY_LASER3_CURRENT_MAX_REGISTER = 363
+SENTRY_LASER4_CURRENT_MIN_REGISTER = 364
+SENTRY_LASER4_CURRENT_MAX_REGISTER = 365
+SENTRY_CAVITY_PRESSURE_MIN_REGISTER = 366
+SENTRY_CAVITY_PRESSURE_MAX_REGISTER = 367
+SENTRY_AMBIENT_PRESSURE_MIN_REGISTER = 368
+SENTRY_AMBIENT_PRESSURE_MAX_REGISTER = 369
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -1738,6 +1766,22 @@ registerByName["SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER"] = SPECT_CNTRL_RAMP_MODE
 registerInfo.append(RegInfo("SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER",c_uint,1,1.0,"rw"))
 registerByName["VIRTUAL_LASER_REGISTER"] = VIRTUAL_LASER_REGISTER
 registerInfo.append(RegInfo("VIRTUAL_LASER_REGISTER",VIRTUAL_LASER_Type,0,1.0,"rw"))
+registerByName["PZT_OFFSET_VIRTUAL_LASER1"] = PZT_OFFSET_VIRTUAL_LASER1
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER1",c_float,1,1.0,"rw"))
+registerByName["PZT_OFFSET_VIRTUAL_LASER2"] = PZT_OFFSET_VIRTUAL_LASER2
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER2",c_float,1,1.0,"rw"))
+registerByName["PZT_OFFSET_VIRTUAL_LASER3"] = PZT_OFFSET_VIRTUAL_LASER3
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER3",c_float,1,1.0,"rw"))
+registerByName["PZT_OFFSET_VIRTUAL_LASER4"] = PZT_OFFSET_VIRTUAL_LASER4
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER4",c_float,1,1.0,"rw"))
+registerByName["PZT_OFFSET_VIRTUAL_LASER5"] = PZT_OFFSET_VIRTUAL_LASER5
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER5",c_float,1,1.0,"rw"))
+registerByName["PZT_OFFSET_VIRTUAL_LASER6"] = PZT_OFFSET_VIRTUAL_LASER6
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER6",c_float,1,1.0,"rw"))
+registerByName["PZT_OFFSET_VIRTUAL_LASER7"] = PZT_OFFSET_VIRTUAL_LASER7
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER7",c_float,1,1.0,"rw"))
+registerByName["PZT_OFFSET_VIRTUAL_LASER8"] = PZT_OFFSET_VIRTUAL_LASER8
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER8",c_float,1,1.0,"rw"))
 registerByName["VALVE_CNTRL_STATE_REGISTER"] = VALVE_CNTRL_STATE_REGISTER
 registerInfo.append(RegInfo("VALVE_CNTRL_STATE_REGISTER",VALVE_CNTRL_StateType,0,1.0,"rw"))
 registerByName["VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER"] = VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER
@@ -2254,9 +2298,9 @@ __p.append(('dsp','uint32',ACQ_DONE_COUNT_REGISTER,'Acquisition done interrupt c
 __p.append(('fpga','uint16',FPGA_KERNEL+KERNEL_OVERLOAD,'Overload status','','$%X',1,0))
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_CONTROL,[(1, u'Reset Cypress FX2 and FPGA', [(0, u'Idle'), (1, u'Reset')]), (2, u'Reset overload register', [(0, u'Idle'), (2, u'Reset')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_CLKSEL,[(31, u'Intronix sampling rate', [(0, u'20 ns'), (1, u'40 ns'), (2, u'80 ns'), (3, u'160 ns'), (4, u'320 ns'), (5, u'640 ns'), (6, u'1.28 us'), (7, u'2.56 us'), (8, u'5.12 us'), (9, u'10.24 us'), (10, u'20.48 us'), (11, u'40.96 us'), (12, u'81.92 us'), (13, u'163.8 us'), (14, u'327.7 us'), (15, u'655.4 us'), (16, u'1.311 ms'), (17, u'2.621 ms'), (18, u'5.243 ms'), (19, u'10.49 ms'), (20, u'20.97 ms'), (21, u'41.94 ms'), (22, u'83.39 ms'), (23, u'167.8 ms'), (24, u'335.5 ms'), (25, u'671.1 ms'), (26, u'1.342 s'), (27, u'2.684 s'), (28, u'5.368 s')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_1,[(255, u'Intronix display 1 channel', [(0, u'Tuner waveform (LS)'), (1, u'Tuner waveform (MS)'), (2, u'Ringdown ADC waveform (LS)'), (3, u'Ringdown ADC waveform (MS)'), (4, u'Ringdown simulator waveform (LS)'), (5, u'Ringdown simulator waveform (MS)'), (6, u'Laser fine current (LS)'), (7, u'Laser fine current (MS)'), (8, u'Locker error (LS)'), (9, u'Locker error (MS)'), (10, u'Ratio 1 (LS)'), (11, u'Ratio 1 (MS)'), (12, u'Ratio 2 (LS)'), (13, u'Ratio 2 (MS)')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_2,[(255, u'Intronix display 2 channel', [(0, u'Tuner waveform (LS)'), (1, u'Tuner waveform (MS)'), (2, u'Ringdown ADC waveform (LS)'), (3, u'Ringdown ADC waveform (MS)'), (4, u'Ringdown simulator waveform (LS)'), (5, u'Ringdown simulator waveform (MS)'), (6, u'Laser fine current (LS)'), (7, u'Laser fine current (MS)'), (8, u'Locker error (LS)'), (9, u'Locker error (MS)'), (10, u'Ratio 1 (LS)'), (11, u'Ratio 1 (MS)'), (12, u'Ratio 2 (LS)'), (13, u'Ratio 2 (MS)')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_3,[(255, u'Intronix display 3 channel', [(0, u'Tuner waveform (LS)'), (1, u'Tuner waveform (MS)'), (2, u'Ringdown ADC waveform (LS)'), (3, u'Ringdown ADC waveform (MS)'), (4, u'Ringdown simulator waveform (LS)'), (5, u'Ringdown simulator waveform (MS)'), (6, u'Laser fine current (LS)'), (7, u'Laser fine current (MS)'), (8, u'Locker error (LS)'), (9, u'Locker error (MS)'), (10, u'Ratio 1 (LS)'), (11, u'Ratio 1 (MS)'), (12, u'Ratio 2 (LS)'), (13, u'Ratio 2 (MS)')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_1,[(255, u'Intronix display 1 channel', [(0, u'Tuner waveform (LS)'), (1, u'Tuner waveform (MS)'), (2, u'Ringdown ADC waveform (LS)'), (3, u'Ringdown ADC waveform (MS)'), (4, u'Ringdown simulator waveform (LS)'), (5, u'Ringdown simulator waveform (MS)'), (6, u'Laser fine current (LS)'), (7, u'Laser fine current (MS)'), (8, u'Locker error (LS)'), (9, u'Locker error (MS)'), (10, u'Ratio 1 (LS)'), (11, u'Ratio 1 (MS)'), (12, u'Ratio 2 (LS)'), (13, u'Ratio 2 (MS)'), (14, u'PZT (LS)'), (15, u'PZT (MS)')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_2,[(255, u'Intronix display 2 channel', [(0, u'Tuner waveform (LS)'), (1, u'Tuner waveform (MS)'), (2, u'Ringdown ADC waveform (LS)'), (3, u'Ringdown ADC waveform (MS)'), (4, u'Ringdown simulator waveform (LS)'), (5, u'Ringdown simulator waveform (MS)'), (6, u'Laser fine current (LS)'), (7, u'Laser fine current (MS)'), (8, u'Locker error (LS)'), (9, u'Locker error (MS)'), (10, u'Ratio 1 (LS)'), (11, u'Ratio 1 (MS)'), (12, u'Ratio 2 (LS)'), (13, u'Ratio 2 (MS)'), (14, u'PZT (LS)'), (15, u'PZT (MS)')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_3,[(255, u'Intronix display 3 channel', [(0, u'Tuner waveform (LS)'), (1, u'Tuner waveform (MS)'), (2, u'Ringdown ADC waveform (LS)'), (3, u'Ringdown ADC waveform (MS)'), (4, u'Ringdown simulator waveform (LS)'), (5, u'Ringdown simulator waveform (MS)'), (6, u'Laser fine current (LS)'), (7, u'Laser fine current (MS)'), (8, u'Locker error (LS)'), (9, u'Locker error (MS)'), (10, u'Ratio 1 (LS)'), (11, u'Ratio 1 (MS)'), (12, u'Ratio 2 (LS)'), (13, u'Ratio 2 (MS)'), (14, u'PZT (LS)'), (15, u'PZT (MS)')])],None,None,1,1))
 parameter_forms.append(('System Parameters',__p))
 
 # Form: Laser 1 Parameters
@@ -2510,6 +2554,14 @@ __p.append(('dsp','float',TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER,'Dither mode u
 __p.append(('dsp','float',TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER,'Dither mode lower sweep offset','digU','%.0f',1,1))
 __p.append(('dsp','float',TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER,'Dither mode upper window offset','digU','%.0f',1,1))
 __p.append(('dsp','float',TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER,'Dither mode lower window offset','digU','%.0f',1,1))
+__p.append(('dsp','float',PZT_OFFSET_VIRTUAL_LASER1,'Virtual laser 1 PZT offset','','%.0f',1,1))
+__p.append(('dsp','float',PZT_OFFSET_VIRTUAL_LASER2,'Virtual laser 2 PZT offset','','%.0f',1,1))
+__p.append(('dsp','float',PZT_OFFSET_VIRTUAL_LASER3,'Virtual laser 3 PZT offset','','%.0f',1,1))
+__p.append(('dsp','float',PZT_OFFSET_VIRTUAL_LASER4,'Virtual laser 4 PZT offset','','%.0f',1,1))
+__p.append(('dsp','float',PZT_OFFSET_VIRTUAL_LASER5,'Virtual laser 5 PZT offset','','%.0f',1,1))
+__p.append(('dsp','float',PZT_OFFSET_VIRTUAL_LASER6,'Virtual laser 6 PZT offset','','%.0f',1,1))
+__p.append(('dsp','float',PZT_OFFSET_VIRTUAL_LASER7,'Virtual laser 7 PZT offset','','%.0f',1,1))
+__p.append(('dsp','float',PZT_OFFSET_VIRTUAL_LASER8,'Virtual laser 8 PZT offset','','%.0f',1,1))
 parameter_forms.append(('Tuner Parameters',__p))
 
 # Form: Optical Injection Parameters
@@ -2517,7 +2569,7 @@ parameter_forms.append(('Tuner Parameters',__p))
 __p = []
 
 __p.append(('dsp','choices',VIRTUAL_LASER_REGISTER,'Virtual laser','',[(VIRTUAL_LASER_1,"Virtual laser 1"),(VIRTUAL_LASER_2,"Virtual laser 2"),(VIRTUAL_LASER_3,"Virtual laser 3"),(VIRTUAL_LASER_4,"Virtual laser 4"),(VIRTUAL_LASER_5,"Virtual laser 5"),(VIRTUAL_LASER_6,"Virtual laser 6"),(VIRTUAL_LASER_7,"Virtual laser 7"),(VIRTUAL_LASER_8,"Virtual laser 8"),],1,1))
-__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser under automatic control', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', [(0, u'Disabled'), (8, u'Enabled')]), (16, u'Laser 2 current source', [(0, u'Disabled'), (16, u'Enabled')]), (32, u'Laser 3 current source', [(0, u'Disabled'), (32, u'Enabled')]), (64, u'Laser 4 current source', [(0, u'Disabled'), (64, u'Enabled')]), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', [(0, u'Off'), (128, u'On')]), (256, u'Laser 2 current (in manual mode)', [(0, u'Off'), (256, u'On')]), (512, u'Laser 3 current (in manual mode)', [(0, u'Off'), (512, u'On')]), (1024, u'Laser 4 current (in manual mode)', [(0, u'Off'), (1024, u'On')]), (2048, u'SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser under automatic control', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', []), (16, u'Laser 2 current source', []), (32, u'Laser 3 current source', []), (64, u'Laser 4 current source', []), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', []), (256, u'Laser 2 current (in manual mode)', []), (512, u'Laser 3 current (in manual mode)', []), (1024, u'Laser 4 current (in manual mode)', []), (2048, u'SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')])],None,None,1,1))
 parameter_forms.append(('Optical Injection Parameters',__p))
 
 # Form: Spectrum Controller Parameters

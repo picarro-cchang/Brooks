@@ -1,5 +1,4 @@
 1. Check over-current flag in DSP and place instrument in safe mode.
-2. Print out reason for sentry breach in log.
 3. Support laser tuning mode.
 4. In DAS, allow a way of detecting which schemes are valid and which virtual lasers have been defined.
 5. Set up WLM dark currents as offsets
@@ -8,7 +7,9 @@
 10. Deal with SPECTRUM_IGNORE_MASK
 11. Note that max targetting error in hot box calibration is now in RADIANS. 1 cm^-1 is approx 4 radians
 12. Support four-way switch with XC9536XL CPLD.
-13. Implement PZT offsets per virtual laser.
+15. Add logic to protect cavity if pump is not turned on.
+16. Calculate optimal update factor for WLM calibration.
+
 
 DONE
 7. Look at implementing averaging of metadata at ringdown, rather than just taking the last value.
@@ -19,3 +20,8 @@ DONE
         and whether or not a timeout has caused us to short-circuit the row
     b) If the flag is not set but the scheme ends, increment the count.
     c) If stop spectrum is sent and there have been some ringdowns since the last "stop spectrum", increment the count.
+
+13. Implement PZT offsets per virtual laser.
+2. Print out reason for sentry breach in log.
+14. Modify results viewer to read timestamp column, if it exists.
+    

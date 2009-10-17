@@ -22,6 +22,7 @@
  */
 #include <stdio.h>
 #include <std.h>
+#include <string.h>
 #include <sem.h>
 #include <prd.h>
 
@@ -46,6 +47,8 @@ static unsigned int *minTripped;
 static unsigned int numSentries = 0;
 unsigned int schedulerAlive = 0;
 static unsigned int secSinceStartup = 0;
+static char sentry_msg[32][40];
+static char msg[120];
 
 void initSentryChecks(void)
 {
@@ -54,86 +57,104 @@ void initSentryChecks(void)
     minTripped = (unsigned int *)registerAddr(SENTRY_LOWER_LIMIT_TRIPPED_REGISTER);
 
     numSentries = 0;
-    sentryChecks[i].bitMask   = SENTRY_Laser1TemperatureMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_Laser1TemperatureBit;
     sentryChecks[i].value     = (float *)registerAddr(LASER1_TEMPERATURE_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_LASER1_TEMPERATURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_LASER1_TEMPERATURE_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_Laser2TemperatureMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_Laser2TemperatureBit;
     sentryChecks[i].value     = (float *)registerAddr(LASER2_TEMPERATURE_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_LASER2_TEMPERATURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_LASER2_TEMPERATURE_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_Laser3TemperatureMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_Laser3TemperatureBit;
     sentryChecks[i].value     = (float *)registerAddr(LASER3_TEMPERATURE_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_LASER3_TEMPERATURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_LASER3_TEMPERATURE_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_Laser4TemperatureMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_Laser4TemperatureBit;
     sentryChecks[i].value     = (float *)registerAddr(LASER4_TEMPERATURE_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_LASER4_TEMPERATURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_LASER4_TEMPERATURE_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_EtalonTemperatureMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_EtalonTemperatureBit;
     sentryChecks[i].value     = (float *)registerAddr(ETALON_TEMPERATURE_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_ETALON_TEMPERATURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_ETALON_TEMPERATURE_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_WarmBoxTemperatureMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_WarmBoxTemperatureBit;
     sentryChecks[i].value     = (float *)registerAddr(WARM_BOX_TEMPERATURE_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_WarmBoxHeatsinkTemperatureMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_WarmBoxHeatsinkTemperatureBit;
     sentryChecks[i].value     = (float *)registerAddr(WARM_BOX_HEATSINK_TEMPERATURE_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_CavityTemperatureMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_CavityTemperatureBit;
     sentryChecks[i].value     = (float *)registerAddr(CAVITY_TEMPERATURE_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_HotBoxHeatsinkTemperatureMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_HotBoxHeatsinkTemperatureBit;
     sentryChecks[i].value     = (float *)registerAddr(HOT_BOX_HEATSINK_TEMPERATURE_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_DasTemperatureMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_DasTemperatureBit;
     sentryChecks[i].value     = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_DAS_TEMPERATURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_DAS_TEMPERATURE_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_Laser1CurrentMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_Laser1CurrentBit;
     sentryChecks[i].value     = (float *)registerAddr(LASER1_CURRENT_MONITOR_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_LASER1_CURRENT_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_LASER1_CURRENT_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_Laser2CurrentMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_Laser2CurrentBit;
     sentryChecks[i].value     = (float *)registerAddr(LASER2_CURRENT_MONITOR_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_LASER2_CURRENT_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_LASER2_CURRENT_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_Laser3CurrentMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_Laser3CurrentBit;
     sentryChecks[i].value     = (float *)registerAddr(LASER3_CURRENT_MONITOR_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_LASER3_CURRENT_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_LASER3_CURRENT_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_Laser4CurrentMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_Laser4CurrentBit;
     sentryChecks[i].value     = (float *)registerAddr(LASER4_CURRENT_MONITOR_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_LASER4_CURRENT_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_LASER4_CURRENT_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_CavityPressureMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_CavityPressureBit;
     sentryChecks[i].value     = (float *)registerAddr(CAVITY_PRESSURE_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_CAVITY_PRESSURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_CAVITY_PRESSURE_MAX_REGISTER);
     i++;
-    sentryChecks[i].bitMask   = SENTRY_AmbientPressureMask;
+    sentryChecks[i].bitMask   = 1 << SENTRY_AmbientPressureBit;
     sentryChecks[i].value     = (float *)registerAddr(AMBIENT_PRESSURE_REGISTER);
     sentryChecks[i].minSentry = (float *)registerAddr(SENTRY_AMBIENT_PRESSURE_MIN_REGISTER);
     sentryChecks[i].maxSentry = (float *)registerAddr(SENTRY_AMBIENT_PRESSURE_MAX_REGISTER);
     i++;
+    
+    strcpy(sentry_msg[SENTRY_Laser1TemperatureBit],"Laser 1 Temperature");
+    strcpy(sentry_msg[SENTRY_Laser2TemperatureBit],"Laser 2 Temperature");
+    strcpy(sentry_msg[SENTRY_Laser3TemperatureBit],"Laser 3 Temperature");
+    strcpy(sentry_msg[SENTRY_Laser4TemperatureBit],"Laser 4 Temperature");
+    strcpy(sentry_msg[SENTRY_EtalonTemperatureBit],"Etalon Temperature");
+    strcpy(sentry_msg[SENTRY_WarmBoxTemperatureBit],"Warm Box Temperature");
+    strcpy(sentry_msg[SENTRY_WarmBoxHeatsinkTemperatureBit],"Warm Box Heatsink Temperature");
+    strcpy(sentry_msg[SENTRY_CavityTemperatureBit],"Cavity Temperature");
+    strcpy(sentry_msg[SENTRY_HotBoxHeatsinkTemperatureBit],"Hot Box Heatsink Temperature");
+    strcpy(sentry_msg[SENTRY_DasTemperatureBit],"DAS (ambient) Temperature");
+    strcpy(sentry_msg[SENTRY_Laser1CurrentBit],"Laser 1 Current");
+    strcpy(sentry_msg[SENTRY_Laser2CurrentBit],"Laser 2 Current");
+    strcpy(sentry_msg[SENTRY_Laser3CurrentBit],"Laser 3 Current");
+    strcpy(sentry_msg[SENTRY_Laser4CurrentBit],"Laser 4 Current");
+    strcpy(sentry_msg[SENTRY_CavityPressureBit],"Cavity Pressure");
+    strcpy(sentry_msg[SENTRY_AmbientPressureBit],"Ambient Pressure");
+    
     //  Initialize all values to mid-range so that the sentries do not trip if sensors are absent
     for (j=0; j<i; j++)
     {
@@ -184,14 +205,24 @@ void sentryHandler(void)
     int i;
     while (1)
     {
+        int overload;
         SEM_pend(&SEM_sentryHandler,SYS_FOREVER);
+        //  Check overload register
+        overload = readFPGA(FPGA_KERNEL + KERNEL_OVERLOAD);
+        
+        if (overload != 0)
+        {
+            safeMode();
+            sprintf(msg,"Overload condition 0x%x detected. Placing instrument in safe mode.",overload);            
+            message_puts(msg);
+        }
         secSinceStartup++;
         if (secSinceStartup >= 10)
         {
             if (schedulerAlive < 4)     // Should be 5, since heartbeat occurs every 200ms
             {
-                message_puts("Scheduler is not running. Placing instrument in safe mode.");
                 safeMode();
+                message_puts("Scheduler is not running. Placing instrument in safe mode.");
             }
             else
             {
@@ -210,8 +241,16 @@ void sentryHandler(void)
                     }
                     if (*maxTripped != 0 || *minTripped != 0)
                     {
-                        message_puts("One or more sentries have been tripped. Placing instrument in safe mode.");
+                        unsigned int max = *maxTripped, min = *minTripped;
                         safeMode();
+                        for (i=0; i<32; i++) {
+                            if ((max & 1) && (min & 1)) sprintf(msg,"%s minimum and maximum sentries exceeded.",sentry_msg[i]);
+                            else if (max & 1) sprintf(msg,"%s maximum sentry exceeded.",sentry_msg[i]);
+                            else if (min & 1) sprintf(msg,"%s minimum sentry exceeded.",sentry_msg[i]);
+                            if ((max & 1) || (min & 1)) message_puts(msg);
+                            max >>= 1; min >>= 1;
+                        }
+                        message_puts("Instrument placed in safe mode.");
                     }
                 }
             }

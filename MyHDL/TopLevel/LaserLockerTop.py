@@ -177,8 +177,6 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     sim_loss = Signal(intbv(0)[FPGA_REG_WIDTH:])
     sim_pzt = Signal(intbv(0)[FPGA_REG_WIDTH:])
     
-    pzt_dac = Signal(intbv(0)[FPGA_REG_WIDTH:])
-
     laser_freq_ok = Signal(LOW)
     acc_en = Signal(LOW)
     rd_irq = Signal(LOW)
@@ -454,8 +452,12 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     channel_1.next = ratio1[16:8]
                 elif intronix_1 == 12:
                     channel_1.next = ratio2[8:]
-                else:
+                elif intronix_1 == 13:
                     channel_1.next = ratio2[16:8]
+                elif intronix_1 == 14:
+                    channel_1.next = pzt[8:]
+                else:
+                    channel_1.next = pzt[16:8]
                     
                 if intronix_2 == 0:
                     channel_2.next = tuner_value[8:]
@@ -483,8 +485,12 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     channel_2.next = ratio1[16:8]
                 elif intronix_2 == 12:
                     channel_2.next = ratio2[8:]
-                else:
+                elif intronix_2 == 13:
                     channel_2.next = ratio2[16:8]
+                elif intronix_2 == 14:
+                    channel_2.next = pzt[8:]
+                else:
+                    channel_2.next = pzt[16:8]
                     
                 if intronix_3 == 0:
                     channel_3.next = tuner_value[8:]
@@ -512,8 +518,12 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     channel_3.next = ratio1[16:8]
                 elif intronix_3 == 12:
                     channel_3.next = ratio2[8:]
-                else:
+                elif intronix_3 == 13:
                     channel_3.next = ratio2[16:8]
+                elif intronix_3 == 14:
+                    channel_3.next = pzt[8:]
+                else:
+                    channel_3.next = pzt[16:8]
         
                 channel_4.next = concat(rd_trig,diag_1[4:],bank,laser_locked,acc_en,tuner_in_window)
         

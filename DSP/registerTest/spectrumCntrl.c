@@ -57,6 +57,14 @@ int spectCntrlInit(void)
     s->laserTempSetpoint_[1] = (float *)registerAddr(LASER2_TEMP_CNTRL_SETPOINT_REGISTER);
     s->laserTempSetpoint_[2] = (float *)registerAddr(LASER3_TEMP_CNTRL_SETPOINT_REGISTER);
     s->laserTempSetpoint_[3] = (float *)registerAddr(LASER4_TEMP_CNTRL_SETPOINT_REGISTER);
+    s->pztOffsetByVirtualLaser_[0] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER1);
+    s->pztOffsetByVirtualLaser_[1] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER2);
+    s->pztOffsetByVirtualLaser_[2] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER3);
+    s->pztOffsetByVirtualLaser_[3] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER4);
+    s->pztOffsetByVirtualLaser_[4] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER5);
+    s->pztOffsetByVirtualLaser_[5] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER6);
+    s->pztOffsetByVirtualLaser_[6] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER7);
+    s->pztOffsetByVirtualLaser_[7] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER8);
     s->etalonTemperature_ = (float *)registerAddr(ETALON_TEMPERATURE_REGISTER);
     s->cavityPressure_ = (float *)registerAddr(CAVITY_PRESSURE_REGISTER);
     s->ambientPressure_ = (float *)registerAddr(AMBIENT_PRESSURE_REGISTER);
@@ -167,22 +175,30 @@ void spectCntrl(void)
     }
 }
 
-void setupLaserTemperature(void)
+void setupLaserTemperatureAndPztOffset(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
-    unsigned int laserNum;
+    unsigned int aLaserNum, vLaserNum;
     volatile SchemeTableType *schemeTable = &schemeTables[*(s->active_)];
     volatile VirtualLaserParamsType *vLaserParams;
+    int pztOffset;
     float laserTemp;
 
     *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
-    vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
+    vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
+    vLaserParams = &virtualLaserParams[vLaserNum-1];
     laserTemp = 0.001 * schemeTable->rows[*(s->row_)].laserTemp; // Scheme temperatures are in milli-degrees C
-    laserNum = vLaserParams->actualLaser & 0x3;
+    aLaserNum = 1 + (vLaserParams->actualLaser & 0x3);
     if (laserTemp != 0.0)
     {
-        *(s->laserTempSetpoint_[laserNum]) = laserTemp;
+        *(s->laserTempSetpoint_[aLaserNum - 1]) = laserTemp;
     }
+
+    // The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
+    //  register and any setpoint in the scheme file. Note that all PZT values are interpreted modulo 65536
+
+    pztOffset = *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]) + schemeTable->rows[*(s->row_)].pztSetpoint;
+    writeFPGA(FPGA_TWGEN+TWGEN_PZT_OFFSET,pztOffset % 65536);
 }
 
 void setupNextRdParams(void)
