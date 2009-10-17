@@ -67,7 +67,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     dsp_data_in         -- read data to dsp_interface_block
     dsp_wr              -- single-cycle write command from dsp_interface block
     laser_dac_clk_in    -- 5MHz clock to drive laser current DAC
-    strobe_in           -- 100kHz strobe for DACs
+    strobe_in           -- 100kHz strobe for DACs. N.B. This strobe may remain high for multiple clocks
     laser_fine_current_in -- Sets fine current for selected laser in automatic mode
     laser_shutdown_in   -- Shuts down selected laser in automatic mode
     soa_shutdown_in     -- Shuts down SOA in automatic mode
@@ -236,7 +236,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 elif optSwitchState == OptSwitchState.PULSING_1:
                     optical_switch1_out.next = 1
                     optical_switch2_out.next = 0
-                    if strobe_in:
+                    if dac_strobe: # This goes high for one clock cycle every 10us
                         if optical_switch_counter >= OPTICAL_SWITCH_WIDTH-1:
                             optSwitchState.next = OptSwitchState.SELECTED_1
                             optical_switch_counter.next = 0
@@ -251,7 +251,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 elif optSwitchState == OptSwitchState.PULSING_2:
                     optical_switch1_out.next = 0
                     optical_switch2_out.next = 1
-                    if strobe_in:
+                    if dac_strobe: # This goes high for one clock cycle every 10us
                         if optical_switch_counter >= OPTICAL_SWITCH_WIDTH-1:
                             optSwitchState.next = OptSwitchState.SELECTED_2
                             optical_switch_counter.next = 0

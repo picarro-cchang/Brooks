@@ -276,6 +276,14 @@
             <register>TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER</register>
             <register>TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER</register>
             <register>TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER1</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER2</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER3</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER4</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER5</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER6</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER7</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER8</register>
         </gui_page>
         <gui_page>
             <title>Optical Injection Parameters</title>
@@ -334,6 +342,8 @@
             <register>RDFITTER_ABSOLUTE_THRESHOLD_REGISTER</register>
             <register>RDFITTER_NUMBER_OF_POINTS_REGISTER</register>
             <register>RDFITTER_MAX_E_FOLDINGS_REGISTER</register>
+            <register>RDFITTER_META_BACKOFF_REGISTER</register>
+            <register>RDFITTER_META_SAMPLES_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Wavelength Monitor Simulator Parameters</title>

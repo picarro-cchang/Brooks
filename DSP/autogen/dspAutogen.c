@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[360];
+RegTypes regTypes[370];
 void initRegisters() 
 {
     DataType d;
@@ -510,6 +510,10 @@ void initRegisters()
     writeRegister(RDFITTER_NUMBER_OF_POINTS_REGISTER,d);
     d.asFloat = 8.0;
     writeRegister(RDFITTER_MAX_E_FOLDINGS_REGISTER,d);
+    d.asUint = 2;
+    writeRegister(RDFITTER_META_BACKOFF_REGISTER,d);
+    d.asUint = 6;
+    writeRegister(RDFITTER_META_SAMPLES_REGISTER,d);
     d.asUint = SPECT_CNTRL_IdleState;
     writeRegister(SPECT_CNTRL_STATE_REGISTER,d);
     d.asUint = SPECT_CNTRL_SchemeSingleMode;
@@ -532,6 +536,22 @@ void initRegisters()
     writeRegister(SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER,d);
     d.asUint = VIRTUAL_LASER_3;
     writeRegister(VIRTUAL_LASER_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(PZT_OFFSET_VIRTUAL_LASER1,d);
+    d.asFloat = 0;
+    writeRegister(PZT_OFFSET_VIRTUAL_LASER2,d);
+    d.asFloat = 0;
+    writeRegister(PZT_OFFSET_VIRTUAL_LASER3,d);
+    d.asFloat = 0;
+    writeRegister(PZT_OFFSET_VIRTUAL_LASER4,d);
+    d.asFloat = 0;
+    writeRegister(PZT_OFFSET_VIRTUAL_LASER5,d);
+    d.asFloat = 0;
+    writeRegister(PZT_OFFSET_VIRTUAL_LASER6,d);
+    d.asFloat = 0;
+    writeRegister(PZT_OFFSET_VIRTUAL_LASER7,d);
+    d.asFloat = 0;
+    writeRegister(PZT_OFFSET_VIRTUAL_LASER8,d);
     d.asUint = VALVE_CNTRL_DisabledState;
     writeRegister(VALVE_CNTRL_STATE_REGISTER,d);
     d.asFloat = 140.0;
@@ -940,6 +960,8 @@ void initRegisters()
     regTypes[RDFITTER_ABSOLUTE_THRESHOLD_REGISTER] = float_type;
     regTypes[RDFITTER_NUMBER_OF_POINTS_REGISTER] = uint_type;
     regTypes[RDFITTER_MAX_E_FOLDINGS_REGISTER] = float_type;
+    regTypes[RDFITTER_META_BACKOFF_REGISTER] = uint_type;
+    regTypes[RDFITTER_META_SAMPLES_REGISTER] = uint_type;
     regTypes[SPECT_CNTRL_STATE_REGISTER] = uint_type;
     regTypes[SPECT_CNTRL_MODE_REGISTER] = uint_type;
     regTypes[SPECT_CNTRL_ACTIVE_SCHEME_REGISTER] = uint_type;
@@ -951,6 +973,14 @@ void initRegisters()
     regTypes[SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER] = uint_type;
     regTypes[SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER] = uint_type;
     regTypes[VIRTUAL_LASER_REGISTER] = uint_type;
+    regTypes[PZT_OFFSET_VIRTUAL_LASER1] = float_type;
+    regTypes[PZT_OFFSET_VIRTUAL_LASER2] = float_type;
+    regTypes[PZT_OFFSET_VIRTUAL_LASER3] = float_type;
+    regTypes[PZT_OFFSET_VIRTUAL_LASER4] = float_type;
+    regTypes[PZT_OFFSET_VIRTUAL_LASER5] = float_type;
+    regTypes[PZT_OFFSET_VIRTUAL_LASER6] = float_type;
+    regTypes[PZT_OFFSET_VIRTUAL_LASER7] = float_type;
+    regTypes[PZT_OFFSET_VIRTUAL_LASER8] = float_type;
     regTypes[VALVE_CNTRL_STATE_REGISTER] = uint_type;
     regTypes[VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_INLET_VALVE_REGISTER] = float_type;

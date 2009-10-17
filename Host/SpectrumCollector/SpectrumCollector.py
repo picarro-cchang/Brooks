@@ -463,19 +463,19 @@ def handleCommandSwitches():
 
 if __name__ == "__main__":
     # Temporary
-    from Host.Common.SharedTypes import RPC_PORT_FREQ_CONVERTER
-    FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
-                                     APP_NAME, IsDontCareConnection = False)
-    schemeDict = {}
-    schemeDict["sch1"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr1.sch", 0, 7)
-    schemeDict["sch2"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr2.sch", 1, 8)
-    schemeSeq = ["sch1", "sch2"]
-    FreqConverter.configSchemeManager( (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\WarmBoxCal.ini", 
-                                        r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\WarmBoxCal_Factory.ini"),
-                                       (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\HotBoxCal.ini",
-                                        r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\HotBoxCal_Factory.ini"),
-                                        schemeDict,
-                                        schemeSeq)
+    #from Host.Common.SharedTypes import RPC_PORT_FREQ_CONVERTER
+    #FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
+    #                                 APP_NAME, IsDontCareConnection = False)
+    #schemeDict = {}
+    #schemeDict["sch1"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr1.sch", 0, 7)
+    #schemeDict["sch2"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr2.sch", 1, 8)
+    #schemeSeq = ["sch1", "sch2"]
+    #FreqConverter.configSchemeManager( (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\WarmBoxCal.ini", 
+    #                                    r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\WarmBoxCal_Factory.ini"),
+    #                                   (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\HotBoxCal.ini",
+    #                                    r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\HotBoxCal_Factory.ini"),
+    #                                    schemeDict,
+    #                                    schemeSeq)
                                     
     configFile, options = handleCommandSwitches()
     spCollectorApp = SpectrumCollector(configFile)
