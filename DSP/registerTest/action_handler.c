@@ -706,3 +706,26 @@ int r_simulate_laser_current_reading(unsigned int numInt,void *params,void *env)
     WRITE_REG(reg[1],current);
     return STATUS_OK;
 }
+
+int r_adc_to_pressure(unsigned int numInt,void *params,void *env)
+/*
+    Reads laser current monitor of specified laser
+    Input:
+		Register (uint):  Register containing ADC value
+        Register (float): Register containing conversion slope
+        Register (float): Register containing conversion offset
+    Output:
+        Register (float):  Register to receive output pressure
+*/
+{
+    unsigned int *reg = (unsigned int *) params;
+	unsigned int adcVal;    
+    float slope, offset, result;
+    if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[0],adcVal);
+    READ_REG(reg[1],slope);
+    READ_REG(reg[2],offset);
+    result = adcVal*slope + offset;
+    WRITE_REG(reg[3],result);
+    return STATUS_OK;
+}

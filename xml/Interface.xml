@@ -366,8 +366,8 @@
             <enum_value ident="STREAM_Laser4Current" />
             <enum_value ident="STREAM_CavityPressure" />
             <enum_value ident="STREAM_AmbientPressure" />
-            <enum_value ident="STREAM_InletPressure" />
-            <enum_value ident="STREAM_OutletPressure" />
+            <!-- <enum_value ident="STREAM_InletPressure" />
+            <enum_value ident="STREAM_OutletPressure" /> -->
             <enum_value ident="STREAM_Laser1Tec" />
             <enum_value ident="STREAM_Laser2Tec" />
             <enum_value ident="STREAM_Laser3Tec" />
@@ -1913,9 +1913,13 @@
             <initial>0.0</initial>
             <display format="%.0f">Heater manual mode mark</display>
         </register>
-        <register ident="CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="CAVITY_PRESSURE_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Cavity pressure ADC register</description>
+            <initial>32768</initial>
+        </register>
+       <register ident="CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER" type="float" minver="1.0" access="rw">
             <description>Cavity pressure scaling</description>
-            <initial>1.0</initial>
+            <initial>1.5258789E-2</initial>
             <save/>
         </register>
         <register ident="CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
@@ -1926,9 +1930,13 @@
         <register ident="CAVITY_PRESSURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Cavity pressure</description>
         </register>
+        <register ident="AMBIENT_PRESSURE_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Ambient pressure ADC register</description>
+            <initial>32768</initial>
+        </register>
         <register ident="CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER" type="float" minver="1.0" access="rw">
             <description>Ambient pressure scaling</description>
-            <initial>1.0</initial>
+            <initial>1.5258789E-2</initial>
             <save/>
         </register>
         <register ident="CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
@@ -3323,5 +3331,6 @@
         <action ident="ACTION_READ_LASER_CURRENT">r_read_laser_current</action>
         <action ident="ACTION_UPDATE_WLMSIM_LASER_TEMP">r_update_wlmsim_laser_temp</action>
         <action ident="ACTION_SIMULATE_LASER_CURRENT_READING">r_simulate_laser_current_reading</action>
+        <action ident="ACTION_ADC_TO_PRESSURE">r_adc_to_pressure</action>
     </action_list>
 </Das_Interface>

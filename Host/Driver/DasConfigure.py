@@ -266,6 +266,37 @@ class DasConfigure(SharedTypes.Singleton):
                 ["HEATER_CNTRL_MARK_REGISTER","FPGA_PWM_HEATER","PWM_PULSE_WIDTH"]))
 
         # Valve control
+        
+        self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+            Operation("ACTION_ADC_TO_PRESSURE",
+                ["CAVITY_PRESSURE_ADC_REGISTER",
+                 "CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER",
+                 "CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER",
+                 "CAVITY_PRESSURE_REGISTER"]))
+                
+        self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+            Operation("ACTION_ADC_TO_PRESSURE",
+                ["AMBIENT_PRESSURE_ADC_REGISTER",
+                 "CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER",
+                 "CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER",
+                 "AMBIENT_PRESSURE_REGISTER"]))
+        
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                ["STREAM_CavityPressure","CAVITY_PRESSURE_REGISTER"]))
+
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                ["STREAM_AmbientPressure","AMBIENT_PRESSURE_REGISTER"]))
+
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                ["STREAM_InletValve","VALVE_CNTRL_INLET_VALVE_REGISTER"]))
+
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                ["STREAM_OutletValve","VALVE_CNTRL_OUTLET_VALVE_REGISTER"]))
+
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                 ["STREAM_ValveMask","VALVE_CNTRL_SOLENOID_VALVES_REGISTER"]))
@@ -350,6 +381,9 @@ class DasConfigure(SharedTypes.Singleton):
         sender.wrRegFloat("WARM_BOX_HEATSINK_RESISTANCE_REGISTER",5800.0)
         sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER",60000.0)
         sender.wrRegFloat("CAVITY_RESISTANCE_REGISTER",59000.0)
+
+        sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER",40000)
+        sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER",20000)
         
         # Start the ringdown manager
         runCont = (1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B)

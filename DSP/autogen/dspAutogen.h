@@ -16,7 +16,7 @@
 #include "interface.h"
 
 void initRegisters(void);
-extern RegTypes regTypes[370];
+extern RegTypes regTypes[372];
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env);
 int writeBlock(unsigned int numInt,void *params,void *env);
 int setTimestamp(unsigned int numInt,void *params,void *env);
@@ -77,4 +77,5 @@ int r_read_warm_box_heatsink_thermistor_resistance(unsigned int numInt,void *par
 int r_read_laser_current(unsigned int numInt,void *params,void *env);
 int r_update_wlmsim_laser_temp(unsigned int numInt,void *params,void *env);
 int r_simulate_laser_current_reading(unsigned int numInt,void *params,void *env);
+int r_adc_to_pressure(unsigned int numInt,void *params,void *env);
 #endif

@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[370];
+RegTypes regTypes[372];
 void initRegisters() 
 {
     DataType d;
@@ -468,11 +468,15 @@ void initRegisters()
     writeRegister(HEATER_CNTRL_MANUAL_MARK_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(HEATER_CNTRL_MARK_REGISTER,d);
-    d.asFloat = 1.0;
+    d.asUint = 32768;
+    writeRegister(CAVITY_PRESSURE_ADC_REGISTER,d);
+    d.asFloat = 1.5258789E-2;
     writeRegister(CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER,d);
-    d.asFloat = 1.0;
+    d.asUint = 32768;
+    writeRegister(AMBIENT_PRESSURE_ADC_REGISTER,d);
+    d.asFloat = 1.5258789E-2;
     writeRegister(CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER,d);
@@ -936,9 +940,11 @@ void initRegisters()
     regTypes[HEATER_CNTRL_MARK_MAX_REGISTER] = float_type;
     regTypes[HEATER_CNTRL_MANUAL_MARK_REGISTER] = float_type;
     regTypes[HEATER_CNTRL_MARK_REGISTER] = float_type;
+    regTypes[CAVITY_PRESSURE_ADC_REGISTER] = uint_type;
     regTypes[CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER] = float_type;
     regTypes[CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER] = float_type;
     regTypes[CAVITY_PRESSURE_REGISTER] = float_type;
+    regTypes[AMBIENT_PRESSURE_ADC_REGISTER] = uint_type;
     regTypes[CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER] = float_type;
     regTypes[CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER] = float_type;
     regTypes[AMBIENT_PRESSURE_REGISTER] = float_type;
@@ -1163,6 +1169,8 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_update_wlmsim_laser_temp(numInt,params,env);
         case ACTION_SIMULATE_LASER_CURRENT_READING:
             return r_simulate_laser_current_reading(numInt,params,env);
+        case ACTION_ADC_TO_PRESSURE:
+            return r_adc_to_pressure(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

@@ -182,12 +182,8 @@ class SpectrumCollector(object):
         lastCount = -1
         while not self._shutdownRequested:
             #Pull a spectral point from the RD queue...
-            try:
-                rdData = self.getSpectralDataPoint(timeToRetry=0.5)
-            except RingdownTimeout:
-                self.closeSpectrumWhenDone = True
-                self.RPC_shutdown()
-
+            rdData = self.getSpectralDataPoint(timeToRetry=0.5)
+            if rdData is None: continue
             localRdTime = Driver.hostGetTicks()
             self.schemeTable = rdData.schemeTable
             thisSubSchemeID = rdData.subschemeId
@@ -229,13 +225,10 @@ class SpectrumCollector(object):
             rdData = self.tempRdDataBuffer
             self.tempRdDataBuffer = None
         else:
-            startTime_s = TimeStamp()
-            rdData = None
-            while not rdData:
-                if not self.rdQueue.empty():
-                    rdData = self.rdQueue.get(False)
-                else:
-                    time.sleep(timeToRetry)
+            try:
+                rdData = self.rdQueue.get(True,timeToRetry)
+            except Queue.Empty:
+                rdData = None
         return rdData
 
     def reset(self):

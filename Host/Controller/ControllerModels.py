@@ -146,6 +146,15 @@ class SensorListener(SharedTypes.Singleton):
             waveforms["HotBox"]["tec"].Add(utime,data.value)
         elif data.streamNum == interface.STREAM_HotBoxHeater:
             waveforms["HotBox"]["heater"].Add(utime,data.value)
+        elif data.streamNum == interface.STREAM_AmbientPressure:
+            waveforms["Pressure"]["ambientPressure"].Add(utime,data.value)
+        elif data.streamNum == interface.STREAM_CavityPressure:
+            waveforms["Pressure"]["cavityPressure"].Add(utime,data.value)
+        elif data.streamNum == interface.STREAM_InletValve:
+            waveforms["Pressure"]["inletValve"].Add(utime,data.value)
+        elif data.streamNum == interface.STREAM_OutletValve:
+            waveforms["Pressure"]["outletValve"].Add(utime,data.value)
+
         elif data.streamNum == interface.STREAM_ValveMask:
             dasInfo["solenoidValves"] = data.value
 
