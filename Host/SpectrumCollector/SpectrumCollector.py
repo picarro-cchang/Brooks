@@ -480,10 +480,12 @@ if __name__ == "__main__":
     #schemeDict["sch1"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr1.sch", 0, 7)
     #schemeDict["sch2"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr2.sch", 1, 8)
     #schemeSeq = ["sch1", "sch2"]
-    #FreqConverter.configSchemeManager(r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\WarmBoxCal.ini",
-    #                                r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\HotBoxCal.ini",
-    #                                schemeDict,
-    #                                schemeSeq)
+    #FreqConverter.configSchemeManager( (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\WarmBoxCal.ini", 
+    #                                    r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\WarmBoxCal_Factory.ini"),
+    #                                   (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\HotBoxCal.ini",
+    #                                    r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\HotBoxCal_Factory.ini"),
+    #                                    schemeDict,
+    #                                    schemeSeq)
                                     
     configFile, options = handleCommandSwitches()
     spCollectorApp = SpectrumCollector(configFile)
