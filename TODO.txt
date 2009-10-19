@@ -9,6 +9,7 @@
 15. Add logic to protect cavity if pump is not turned on.
 16. Calculate optimal update factor for WLM calibration.
 17. Tell Carl about labelling of WB Heastsink thermistor on WLM board, Heater/TEC on power board.
+18. Check for end of scheme file in reader
 
 DONE
 7. Look at implementing averaging of metadata at ringdown, rather than just taking the last value.

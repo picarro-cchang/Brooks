@@ -205,7 +205,15 @@ class DriverRpcHandler(SharedTypes.Singleton):
         paramsAsUint = self.dasInterface.hostToDspSender.rdRingdownMemArray(base,12)
         param = interface.RingdownParamsType.from_address(ctypes.addressof(paramsAsUint))
         return (array(data),array(meta).reshape(512,8).transpose(),ctypesToDict(param))
-
+    def rdRingdownBuffer(self,buffNum):
+        """Fetches contents of ringdown buffer which is QDMA transferred from the FPGA to DSP memory"""
+        RINGDOWN_BUFFER_BASE = interface.SHAREDMEM_ADDRESS + 4*interface.RINGDOWN_BUFFER_OFFSET
+        base = RINGDOWN_BUFFER_BASE if buffNum == 0 else RINGDOWN_BUFFER_BASE+4*interface.RINGDOWN_BUFFER_SIZE
+        bufferAsUint = self.dasInterface.hostToDspSender.rdDspMemArray(base,interface.RINGDOWN_BUFFER_SIZE)
+        rdBuffer = interface.RingdownBufferType.from_address(ctypes.addressof(bufferAsUint))
+        data = [(x&0xFFFF) for x in rdBuffer.ringdownWaveform]
+        meta = [(x>>16) for x in rdBuffer.ringdownWaveform]
+        return (array(data),array(meta).reshape(512,8).transpose(),ctypesToDict(rdBuffer.parameters))
     def rdScheme(self,schemeNum):
         """Reads a scheme from table number schemeNum"""
         return self.dasInterface.hostToDspSender.rdScheme(schemeNum)
@@ -248,14 +256,6 @@ class DriverRpcHandler(SharedTypes.Singleton):
         p = interface.VirtualLaserParamsType()
         SharedTypes.dictToCtypes(laserParams,p)
         self.dasInterface.hostToDspSender.wrVirtualLaserParams(vLaserNum,p)
-
-    #def rdComposite(self):
-    #    """Fetches the contents of DSP ringdown memory in compact (composite) format"""
-    #    base = 0x4c80 >> 2
-    #    composite = []
-    #    for k in range(16):
-    #        composite += [x for x in self.dasInterface.hostToDspSender.rdDspMemArray(base+256*k,256)]
-    #    return array(composite)
 
     def loadIniFile(self):
         """Loads state from instrument configuration file"""

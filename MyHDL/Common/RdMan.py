@@ -429,6 +429,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         timeout.next = 0
                         rd_trig.next = LOW          # Turn on the injection
                         metadata_acq.next = HIGH    # Start acquiring metadata
+                        lapped.next = LOW           # Reset lapped flag
                         us_timer_enable.next = HIGH # Start microsecond counter
                         acc_en_out.next = LOW
                         expiry_time.next = precontrol_duration

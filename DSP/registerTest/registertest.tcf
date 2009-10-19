@@ -126,6 +126,8 @@ bios.TSK.instance("TSK_sentryHandler").order = 7;
 bios.TSK.instance("TSK_sentryHandler").comment = "Checks for system health";
 bios.TSK.instance("TSK_sentryHandler").priority = 2;
 bios.TSK.instance("TSK_sentryHandler").fxn = prog.extern("sentryHandler");
+bios.TSK.instance("TSK_spectCntrl").priority = 3;
+bios.TSK.instance("TSK_rdDataMoving").priority = 3;
 // !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
 
 prog.gen();

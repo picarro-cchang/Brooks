@@ -79,8 +79,9 @@ def WlmSim(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,start_in,
     Loss = (1-w) / (1-w*cos(4*phase))
     where 65536*w is placed in the register wfac.
     
-    The value of pzt_cen_out is set to -4*phase, where the negative sign is necessary for compatibility 
-    with existing hardware.
+    The value of pzt_cen_out is set to -16*(5*coarse current + fine current + 18*laser_temp), where the negative sign is 
+    necessary for compatibility with existing hardware. This is computed by shifting the angle for the loss computation by
+    a further two bits.
     
     Parameters:
     clk                 -- Clock input

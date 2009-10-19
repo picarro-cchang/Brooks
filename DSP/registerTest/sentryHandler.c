@@ -207,9 +207,9 @@ void sentryHandler(void)
     {
         int overload;
         SEM_pend(&SEM_sentryHandler,SYS_FOREVER);
-        //  Check overload register
-        overload = readFPGA(FPGA_KERNEL + KERNEL_OVERLOAD);
-        
+        // TO DO: Check overload register
+        // overload = readFPGA(FPGA_KERNEL + KERNEL_OVERLOAD);
+        overload = 0;
         if (overload != 0)
         {
             safeMode();

@@ -173,6 +173,8 @@ class SpectrumCollector(object):
         self.tagalongData = {}
         self.controlData = {}            
         self.numPts = 0
+        self.emptyCount = 0
+        self.startWaitTime = 0
         
     def run(self):
         #start the rpc server on another thread...
@@ -180,35 +182,41 @@ class SpectrumCollector(object):
         self.rpcThread.start()
         
         lastCount = -1
+        thisCount = -1
         while not self._shutdownRequested:
             #Pull a spectral point from the RD queue...
-            rdData = self.getSpectralDataPoint(timeToRetry=0.5)
-            if rdData is None: continue
-            localRdTime = Driver.hostGetTicks()
-            self.schemeTable = rdData.schemeTable
-            thisSubSchemeID = rdData.subschemeId
-            self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
-            thisCount = rdData.count
-            schemeStatus = rdData.status
-            errDataDict = dict(schemeTable = self.schemeTable,
-                               schemeRow = rdData.schemeRow,
-                               ssID = thisSubSchemeID,
-                               spectrumID = self.spectrumID,
-                               count = thisCount,
-                               schemeStatus = schemeStatus)
+            try:
+                rdData = self.getSpectralDataPoint(timeToRetry=0.5)
+                if rdData is None: continue
+                localRdTime = Driver.hostGetTicks()
+                self.schemeTable = rdData.schemeTable
+                thisSubSchemeID = rdData.subschemeId
+                self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
+                thisCount = rdData.count
+                schemeStatus = rdData.status
+                errDataDict = dict(schemeTable = self.schemeTable,
+                                   schemeRow = rdData.schemeRow,
+                                   ssID = thisSubSchemeID,
+                                   spectrumID = self.spectrumID,
+                                   count = thisCount,
+                                   schemeStatus = schemeStatus)
 
-            # When the "count" is different (set by DSP when bit-15 is set in the scheme file), we know a new spectrum is coming and we have to close whatever we currently have.
-            if thisCount != lastCount:
-                Log("New spectrum found on ringdown (new count = %d)" % thisCount, errDataDict, Level = 0)
-                self.firstRdTime = localRdTime
-                #Set aside the point we just read for the next time a spectrum is collected...
-                self.tempRdDataBuffer = rdData
-                # Close what we have collected so far
-                self.closeSpectrumWhenDone = True
-            else: #still collecting the same spectrum
-                relativeRdTime = localRdTime - self.firstRdTime
-                if not (thisSubSchemeID & SPECTRUM_IGNORE_MASK):
-                    self.appendPoint(rdData, relativeRdTime)
+                # When the "count" is different (set by DSP when bit-15 is set in the scheme file), we know a new spectrum is coming and we have to close whatever we currently have.
+                if thisCount != lastCount:
+                    Log("New spectrum found on ringdown (new count = %d)" % thisCount, errDataDict, Level = 0)
+                    self.firstRdTime = localRdTime
+                    #Set aside the point we just read for the next time a spectrum is collected...
+                    self.tempRdDataBuffer = rdData
+                    # Close what we have collected so far
+                    self.closeSpectrumWhenDone = True
+                else: #still collecting the same spectrum
+                    relativeRdTime = localRdTime - self.firstRdTime
+                    if not (thisSubSchemeID & SPECTRUM_IGNORE_MASK):
+                        self.appendPoint(rdData, relativeRdTime)
+            except RingdownTimeout:
+                if self.numPts > 0: 
+                    Log("Closing spectrum due to ringdown timeout (count = %d)" % thisCount, Level = 0)
+                    self.closeSpectrumWhenDone = True
 
             if self.closeSpectrumWhenDone:
                 self.finish()
@@ -217,18 +225,27 @@ class SpectrumCollector(object):
  
         Log("Spectrum Collector RPC handler shut down")
 
-    def getSpectralDataPoint(self, timeToRetry):
-        """Pops rdData out of the local ringdown queue and returns it.
+    def getSpectralDataPoint(self, timeToRetry, timeout = 10):
+        """Pops rdData out of the local ringdown queue and returns it. If there are no ringdowns
+        within the timeToRetry interval, return None. Raise RingdownTimeout
         """
+        if self.emptyCount == 0: 
+            self.startWaitTime = time.time()
         if self.tempRdDataBuffer:
             #The last time a spectrum was read it read one too many points, and this is it.
             rdData = self.tempRdDataBuffer
             self.tempRdDataBuffer = None
+            self.emptyCount = 0
         else:
             try:
                 rdData = self.rdQueue.get(True,timeToRetry)
+                self.emptyCount = 0
             except Queue.Empty:
                 rdData = None
+                self.emptyCount += 1
+                if time.time() - self.startWaitTime > timeout:
+                    self.emptyCount = 0
+                    raise RingdownTimeout("No ringdown in %s seconds" % timeout)
         return rdData
 
     def reset(self):

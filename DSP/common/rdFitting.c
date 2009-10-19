@@ -20,6 +20,7 @@
  *
  */
 #include <std.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <sem.h>
@@ -396,6 +397,7 @@ int rdFittingProcessRingdown(uint32 *buffer,
                           uncorrectedLoss, correctedLoss);
 }
 
+char msg[120];
 // This is a task function associated with TSK_rdFitting which does the ringdown fitting
 void rdFitting(void)
 {
@@ -415,7 +417,8 @@ void rdFitting(void)
     int x, m, N;
     int s1, si, si2, sx, six;
     int wrapped;
-
+    static int toggle = 0;
+    
     while (1)
     {
         SEM_pend(&SEM_rdFitting,SYS_FOREVER);
@@ -533,6 +536,13 @@ void rdFitting(void)
             ringdownEntry->ambientPressure = (unsigned int)(50.0 * rdParams->ambientPressure);
             ringdownEntry->lockerError = metaDouble.lockerError;
 
+            // Test for unexpected combinations of loss and wlmAngle
+            if (!((fabs(uncorrectedLoss - 1.45) < 0.01 && fabs(thetaC - 3.00) < 0.01) ||
+                 (fabs(uncorrectedLoss - 1.11) < 0.01 && fabs(thetaC - 2.91) < 0.01))) {
+                    if (toggle) changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 3, 1, 1);
+                    else changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 3, 1, 0);
+                    toggle = !toggle;
+            }
             // After fitting, the buffer is available again
             if (bufferNum == 0)
                 SEM_postBinary(&SEM_rdBuffer0Available);

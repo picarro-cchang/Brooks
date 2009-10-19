@@ -590,10 +590,10 @@ class HostToDspSender(Singleton):
         #  the sum of a block base and the register index
         self.usb.hpiWrite(interface.FPGA_REG_BASE_ADDRESS+4*(lookup(base)+lookup(reg)),c_uint(value))
     @usbLockProtect
-    def rdDspMemArray(self,wordAddr,nwords=1):
+    def rdDspMemArray(self,byteAddr,nwords=1):
         """Reads multiple words from DSP memory into a c_uint array"""
         result = (c_uint*nwords)()
-        self.usb.hpiRead(4*wordAddr,result)
+        self.usb.hpiRead(byteAddr,result)
         return result
     @usbLockProtect
     def rdRingdownMemArray(self,offset,nwords=1):
