@@ -451,7 +451,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
     DataSource must be the AlarmInterface object which reads the alarm status
     """
     def __init__(self, parent, id, attrib, DataSource=None, pos=wx.DefaultPosition,
-                 size=wx.DefaultSize):
+                 size=wx.DefaultSize, numAlarms=4):
         wx.ListCtrl.__init__(self, parent, id, pos, size,
                              style = wx.LC_REPORT
                              | wx.LC_VIRTUAL
@@ -478,10 +478,11 @@ class AlarmViewListCtrl(wx.ListCtrl):
         self.InsertColumn(0,"Icon",width=40)
         sx,sy = self.GetSize()
         self.InsertColumn(1,"Name",width=sx-40)
-        self.alarmNames = ["Alarm 1","Alarm 2","Alarm 3","Alarm 4"]
-        nAlarms = len(self.alarmNames)
+        self.alarmNames = []
+        for i in range(numAlarms):
+            self.alarmNames.append("Alarm %d" % (i+1))
         self.attrib = attrib
-        self.SetItemCount(nAlarms)
+        self.SetItemCount(numAlarms)
         self.Bind(wx.EVT_LEFT_DOWN,self.OnLeftDown)
         self.Bind(wx.EVT_RIGHT_DOWN,self.OnMouseDown)
         self.Bind(wx.EVT_MOTION,self.OnMouseMotion)
@@ -1124,6 +1125,7 @@ class QuickGui(wx.Frame):
         self.dataLoggerInterface.getDataLoggerInfo()
         self.instMgrInterface = InstMgrInterface(self.config)
         self.numGraphs = max(1, self.config.getint("Graph","NumGraphs",1))
+        self.numAlarms = min(4, self.config.getint("AlarmBox","NumAlarms",4))
         self.showGraphZoomed = self.config.getboolean("Graph","ShowGraphZoomed",False)
         self.lockTime = False
         self.allTimeLocked = False
@@ -1392,7 +1394,7 @@ class QuickGui(wx.Frame):
 
         self.alarmView = AlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
                                            DataSource=self.alarmInterface,
-                                           size=size)
+                                           size=size, numAlarms=self.numAlarms)
         self.alarmView.SetMainForm(self)
         setItemFont(alarmBox,self.getFontFromIni('AlarmBox'))
         setItemFont(self.alarmView,self.getFontFromIni('AlarmBox'))
