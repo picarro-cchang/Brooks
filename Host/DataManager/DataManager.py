@@ -203,12 +203,8 @@ class DataManager(object):
             self.ModeDefinitionPath = ""
             self.InstrDataPaths = []
             self.UserCalibrationPath = ""
-
-            #Debugging settings (all off unless Debug option is set, in which case they get loaded)...
-            self.DebugMode = False
             self.AutoEnable = False
             self.StartingMeasMode = ""
-            self.Debug_InstMgrStatus = -1
 
         def LoadSerialSettings(self,cp):
             # Get the optional settings for the serial port
@@ -285,17 +281,8 @@ class DataManager(object):
                 self.InstrDataPaths.append(os.path.join(basePath, relPath))
 
             self.LoadSerialSettings(cp)
-
-            # Get the optional debug setting(s)...
-            try:
-                self.DebugMode = cp.getboolean(_MAIN_CONFIG_SECTION, "Debug")
-            except KeyError:
-                Log("No debug option found in config file - assuming False")
-                self.DebugMode = False
-            if self.DebugMode:
-                self.AutoEnable = cp.getboolean(_MAIN_CONFIG_SECTION, "Debug_AutoEnable")
-                self.StartingMeasMode = cp.get(_MAIN_CONFIG_SECTION, "Debug_StartingMeasMode")
-                self.Debug_InstMgrStatus = cp.getint(_MAIN_CONFIG_SECTION, "Debug_InstMgrStatus")
+            self.AutoEnable = cp.getboolean(_MAIN_CONFIG_SECTION, "AutoEnable", "False")
+            self.StartingMeasMode = cp.get(_MAIN_CONFIG_SECTION, "StartingMeasMode", "")
                 
             if "PulseAnalyzer" in cp:     
                 self.pulseAnalyzerIni = cp["PulseAnalyzer"]

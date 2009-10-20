@@ -11,11 +11,12 @@
 #
 # HISTORY:
 #   30-Sep-2009  alex/sze  Initial version.
-#   02-Oct-2009  alex      Add RPC functions.
+#   02-Oct-2009  alex      Added RPC functions.
 #   09-Oct-2009  sze       Supporting new warm box calibration files and uploading of virtual laser parameters to DAS
 #   11-Oct-2009  sze       Added routines to support CalibrateSystem
 #   14-Oct-2009  sze       Added support for calibration rows in schemes
-#  16-Oct-2009 alex      Add .ini file and update active warmbox and hotbox calibration files
+#  16-Oct-2009 alex      Added .ini file and update active warmbox and hotbox calibration files
+#  20-Oct-2009 alex    Added functionality to handle scheme switch and update warmbox and hotbox calibration files
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -573,7 +574,7 @@ class RDFrequencyConverter(Singleton):
         self.hotBoxCalFilePathActive = os.path.abspath(hotBoxCalFilePathActive)
         if hotBoxCalFilePathFactory != "":
             self.hotBoxCalFilePathFactory = os.path.abspath(hotBoxCalFilePathFactory)
-            if True:
+            if os.path.isfile(self.hotBoxCalFilePathActive):
                 # Need to run checksum on the active one. If failed, factory version will be used.
                 # Need to be implemented!
                 # Here assume checksum has passed
@@ -605,7 +606,7 @@ class RDFrequencyConverter(Singleton):
         self.warmBoxCalFilePathActive = os.path.abspath(warmBoxCalFilePathActive)
         if warmBoxCalFilePathFactory != "":
             self.warmBoxCalFilePathFactory = os.path.abspath(warmBoxCalFilePathFactory)
-            if True:
+            if os.path.isfile(self.warmBoxCalFilePathActive):
                 # Need to run checksum on the active one. If failed, factory version will be used.
                 # Need to be implemented!
                 # Here assume checksum has passed

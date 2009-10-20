@@ -96,6 +96,6 @@ if species==26 or species==514 or species==0:
         RESULT = {"co2_res":co2_res,
                 "co2_conc":0.7052*r[14,"peak"],"co2_str":r[14,"strength"],"co2_y_raw":co2_y,"co2_y_avg":co2_y_avg,
                 "str89":str89_avg,"co2_shift":co2_shift,"cavity_pressure":P,
-                "cavity_temperature":T,"species":1,"co2_fit_time":fit_time,
+                "cavity_temperature":T,"species":2,"co2_fit_time":fit_time,
                 "co2_interval":interval}
     print "CO2 Fit time: %.3f" % fit_time 

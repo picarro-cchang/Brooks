@@ -34,6 +34,7 @@
 # 08-10-13  alex  Replaced TCP in FitterPool by RPC
 # 08-10-20  alex  Closed all client connection (_HandleState_INIT) before restarting the broadcaster in SpectrumManager
 # 09-06-25  alex  Only "ArchiveFile", no more "ArchiveData" for spectrum data
+# 09-10-16  alex  Work with new structure of cost-reduction platform
 
 if __name__ != "__main__":
     raise Exception("%s is not importable!" % __file__)
@@ -47,17 +48,11 @@ _DEFAULT_CONFIG_NAME = "MeasSystem.ini"
 _MAIN_CONFIG_SECTION = "MainConfig"
 _SCHEME_CONFIG_SECTION = "SCHEME_CONFIG"
 
-
 import sys
 if "../Common" not in sys.path: sys.path.append("../Common")
-####
-##Import from external libraries...
-####
 from CustomConfigObj import CustomConfigObj
 import Queue
-from os import makedirs
 import os.path
-from os.path import abspath
 import profile
 import time
 import threading
@@ -65,35 +60,36 @@ if sys.platform == 'win32':
     threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
 from inspect import isclass
 import sets
-####
-##Now import from Picarro generated libraries...
-####
-from Include import MeasSystemError, RPC_PORT_ARCHIVER, RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM
-from SharedTypes import RPC_PORT_CAL_MANAGER, RPC_PORT_INSTR_MANAGER
+from SharedTypes import CrdsException
+from SharedTypes import RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_FITTER, RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_FREQ_CONVERTER
+from SharedTypes import BROADCAST_PORT_MEAS_SYSTEM
+from SharedTypes import STATUS_PORT_MEAS_SYSTEM
 import ModeDef
-import SpectrumManager
 import CmdFIFO
 import BetterTraceback
 import FitterPool
-from SharedTypes import BROADCAST_PORT_MEAS_SYSTEM, RPC_PORT_FITTER, RPC_PORT_INSTR_MANAGER
-from SharedTypes import STATUS_PORT_MEAS_SYSTEM
-from EventManagerProxy import *
-EventManagerProxy_Init(APP_NAME, PrintEverything = __debug__)
 from SafeFile import SafeFile, FileExists
 from MeasData import MeasData  #For wrapping processor data packets up to send to the Data Manager
 from Broadcaster import Broadcaster
 import AppStatus
 from InstErrors import INST_ERROR_MEAS_SYS
-import MeasSystemStates
-from xmlrpclib import Binary
-STATE__UNDEFINED = MeasSystemStates.MEAS_STATE__UNDEFINED
-STATE_ERROR = MeasSystemStates.MEAS_STATE_ERROR
-STATE_INIT = MeasSystemStates.MEAS_STATE_INIT
-STATE_READY = MeasSystemStates.MEAS_STATE_READY
-STATE_ENABLED = MeasSystemStates.MEAS_STATE_ENABLED
-STATE_SHUTDOWN = MeasSystemStates.MEAS_STATE_SHUTDOWN
+from EventManagerProxy import *
+EventManagerProxy_Init(APP_NAME, PrintEverything = __debug__)
 
-StateName = MeasSystemStates.MeasStateName #dict with keys = state #s; values = string names
+STATE__UNDEFINED = -100
+STATE_ERROR = 0x0F
+STATE_INIT = 0
+STATE_READY = 1
+STATE_ENABLED = 2
+STATE_SHUTDOWN = 3
+
+StateName = {}
+StateName[STATE__UNDEFINED] = "<ERROR - UNDEFINED STATE!>"
+StateName[STATE_ERROR] = "ERROR"
+StateName[STATE_INIT] = "INIT"
+StateName[STATE_READY] = "READY"
+StateName[STATE_ENABLED] = "ENABLED"
+StateName[STATE_SHUTDOWN] = "SHUTDOWN"
 
 STATUS_MASK_WaitingForFitter   = 0x40
 DEFAULT_FITTER_TIMEOUT_s = 300
@@ -133,7 +129,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-AppPath = abspath(AppPath)
+AppPath = os.path.abspath(AppPath)
 
 #Set up a useful TimeStamp function...
 if sys.platform == 'win32':
@@ -141,23 +137,19 @@ if sys.platform == 'win32':
 else:
     TimeStamp = time.time
 
-CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
-                                        APP_NAME,
-                                        IsDontCareConnection = True)
-CRDS_CalMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_CAL_MANAGER, \
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, \
-                                          APP_NAME,
-                                          IsDontCareConnection = True)
+Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                     APP_NAME, IsDontCareConnection = False)
 
+SpectrumCollector = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR, \
+                                    APP_NAME, IsDontCareConnection = False)
+
+FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
+                                     APP_NAME, IsDontCareConnection = False)
+                                     
+class MeasSystemError(CrdsException):
+    """Base class for MeasSystem errors."""
 class SpectrumTimeout(MeasSystemError):
     """Timeout period reached while waiting for a spectrum."""
-class SpectrumManagerInErrorState(MeasSystemError):
-    """Spectrum Manager sub system entered error state while the Measurement System was waiting on it."""
 class MeasurementDisabled(MeasSystemError):
     """The measurement was disabled in the middle of doing something."""
 class InvalidModeSelection(MeasSystemError):
@@ -185,43 +177,32 @@ class MeasSystem(object):
         def __init__(self, SimMode = False):
             self.SimMode = SimMode
             self.SpectrumTimeout_s = 0
-            self.RingdownTimeout_s = 0
             self.CalUpdatePeriod_s = 0
             self.ModeDefinitionFile = ""
-            self.RdfDumpDir = "."
-            self.UseHDF5 = False
-            # ForcePolarLocking was removed from config file and set as a constant here (True)
-            self.ForcePolarLocking = True
-            self.RdfArchiveGroup = ""
-            #Fit and scheme data is no longer directly referenced... the mode will reference it.
-            #self.FitInstructionSubDir = ""
-            #self.SchemeDefinitionSubDir = ""
-
             #Debugging settings (all off unless Debug option is set, in which case they get loaded)...
-            self.DebugMode = False
             self.StartEngine = False
             self.AutoEnableOnCleanStart = False
-            self.AutoEnableAfterBadShutdown = False
             self.StartingMeasMode = ""
-            self.UploadCalFile = False
             self.fitterIpAddressList = []
             self.fitterPortList = []
-            self.UseOldSchemeFile = False
             
         def Load(self, IniPath):
             """Loads the configuration from the specified ini/config file."""
             cp = CustomConfigObj(IniPath) 
             
             basePath = os.path.split(IniPath)[0]
+            
+            self.warmboxCalActive = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "WarmboxCalActive"))
+            self.warmboxCalFactory = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "WarmboxCalFactory"))
+            self.hotboxCalActive = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "HotboxCalActive"))
+            self.hotboxCalFactory = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "HotboxCalFactory"))
+            
             if not self.SimMode:
                 self.SpectrumTimeout_s = cp.getfloat(_MAIN_CONFIG_SECTION, "SpectrumTimeout_s")
-                self.RingdownTimeout_s = cp.getfloat(_MAIN_CONFIG_SECTION, "RingdownTimeout_s")
             else:
                 self.SpectrumTimeout_s = 0.0
-                self.RingdownTimeout_s = 0.0
             self.FitterTimeout_s = cp.getfloat(_MAIN_CONFIG_SECTION, "FitterTimeout_s", DEFAULT_FITTER_TIMEOUT_s)
             self.ModeDefinitionFile = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "ModeDefinitionFile"))
-            self.RdfArchiveGroup = cp.get(_MAIN_CONFIG_SECTION, "RdfArchiveGroup")
             self.CalUpdatePeriod_s = cp.getfloat(_MAIN_CONFIG_SECTION, "CalUpdatePeriod_s")
             # Fetch the IP addresses and ports of the fitters in the pool
             nFitters = 0
@@ -236,35 +217,15 @@ class MeasSystem(object):
                 self.fitterIpAddressList = [ "localhost" ]
                 self.fitterPortList = [ RPC_PORT_FITTER ]
 
-            if cp.has_option(_MAIN_CONFIG_SECTION,"RdfDumpDir"): #  use file transfer if RdfDumpDir exists
-                self.RdfDumpDir = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "RdfDumpDir"))
-            else: # use default path
-                self.RdfDumpDir = os.path.join(basePath, "../../../Log/RDF")
-            self.RdfDumpDir = abspath(self.RdfDumpDir)
-            # Make directory if not exist
-            if not os.path.isdir(self.RdfDumpDir):
-                makedirs(self.RdfDumpDir)
-            Log("Created RdfDumpDir in %s" % self.RdfDumpDir)
-                
-            self.UseOldSchemeFile = cp.getboolean(_MAIN_CONFIG_SECTION, "UseOldSchemeFile")
-            self.UseHDF5 = cp.getboolean(_MAIN_CONFIG_SECTION, "UseHDF5", default = False)
             self.Laser0TunerOffset = cp.getfloat(_MAIN_CONFIG_SECTION, "Laser0TunerOffset", default = 0.0)
             self.Laser1TunerOffset = cp.getfloat(_MAIN_CONFIG_SECTION, "Laser1TunerOffset", default = 0.0)
-            #Load the debugging settings...
-            try:
-                self.DebugMode = cp.getboolean(_MAIN_CONFIG_SECTION, "Debug")
-            except KeyError:
-                Log("No debug option found in config file - assuming False")
-                self.DebugMode = False
-            if self.DebugMode:
-                self.StartEngine = cp.getboolean(_MAIN_CONFIG_SECTION, "Debug_StartEngine")
-                self.AutoEnableOnCleanStart = cp.getboolean(_MAIN_CONFIG_SECTION, "Debug_AutoEnableOnCleanStart")
-                self.AutoEnableAfterBadShutdown = cp.getboolean(_MAIN_CONFIG_SECTION, "Debug_AutoEnableAfterBadShutdown")
-                self.StartingMeasMode = cp.get(_MAIN_CONFIG_SECTION, "Debug_StartingMeasMode")
-                self.UploadCalFile = cp.getboolean(_MAIN_CONFIG_SECTION, "Debug_UploadCalFile")
+
+            self.StartEngine = cp.getboolean(_MAIN_CONFIG_SECTION, "StartEngine", "False")
+            self.AutoEnableOnCleanStart = cp.getboolean(_MAIN_CONFIG_SECTION, "AutoEnableOnCleanStart", "False")
+            self.StartingMeasMode = cp.get(_MAIN_CONFIG_SECTION, "StartingMeasMode", "")
     #endclass (ConfigurationOptions for MeasSystem)
 
-    def __init__(self, ConfigPath, SkipFitting, SimMode = False):
+    def __init__(self, ConfigPath, SkipFitting, noInstMgr = False, SimMode = False):
         # # # IMPORTANT # # #
         # THIS SHOULD ONLY CONTAIN VARIABLE/PROPERTY INITS... any actual code that
         # can fail (like talking to another CRDS app or reading the HDD) should be
@@ -279,7 +240,6 @@ class MeasSystem(object):
         self._FatalError = False  #The main state handling loop will also exit when this is true
         self._UninterruptedSpectrumCount = 0
         self.SkipFitting = SkipFitting
-        self.SpectrumManager = None
 
         #Measurement mode properties...
         # - Modes is a dict of MeasMode info indicating all the config info per mode
@@ -313,6 +273,12 @@ class MeasSystem(object):
             if callable(attr) and s.startswith("RPC_") and (not isclass(attr)):
                 self.RpcServer.register_function(attr, NameSlice = 4)
         
+        self.noInstMgr = noInstMgr
+        if not self.noInstMgr:
+            self.rdInstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
+                                                        APP_NAME,
+                                                        IsDontCareConnection = False)
+                                                        
     def _AssertValidCallingState(self, StateList):
         if self.__State not in StateList:
             raise CommandError("Command invalid in present state ('%s')." % StateName[self.__State])
@@ -347,7 +313,6 @@ class MeasSystem(object):
         """Disables the measurement system and stops the instrument from scanning.
         """
         if __debug__: Log("System DISable request received - RPC_Disable()", Level = 0)
-        self.SpectrumManager.SweepStop()
         self._EnableEvent.clear()
         return "OK"
 
@@ -368,8 +333,8 @@ class MeasSystem(object):
         Mode changes are only valid when the instrument is not measuring.
 
         """
-        self._AssertValidCallingState([STATE_READY,   #Can't set in INIT... no SpectrumManager to load the seq into
-                                       STATE_ENABLED, #No problem switching modes on the fly!
+        self._AssertValidCallingState([STATE_READY,   
+                                       STATE_ENABLED,
                                      ])
         if self.CurrentMeasMode and (ModeName == self.CurrentMeasMode.Name):
             return
@@ -403,105 +368,46 @@ class MeasSystem(object):
         Log("Request received to clear error state")
         self._ClearErrorEvent.set()
 
-    @docstring_set(SpectrumManager.SpectrumManager.SyncToPcClock.__doc__)
     def RPC_SyncToPcClock(self):
-        return self.SpectrumManager.SyncToPcClock()
+        return Driver.resyncDas()
 
-    @docstring_set(SpectrumManager.SpectrumManager.SetTagalongData.__doc__)
     def RPC_Backdoor__SetData(self, Name, Value):
-        "!!Docstring overridden with decorator!!"
-        return self.SpectrumManager.SetTagalongData(Name, Value)
+        return SpectrumCollector.setTagalongData(Name, Value)
 
-    @docstring_set(SpectrumManager.SpectrumManager.GetTagalongData.__doc__)
     def RPC_Backdoor__GetData(self, Name):
-        "!!Docstring overridden with decorator!!"
-        return self.SpectrumManager.GetTagalongData(Name)
+        return SpectrumCollector.getTagalongData(Name)
 
-    @docstring_set(SpectrumManager.SpectrumManager.DeleteTagalongData.__doc__)
     def RPC_Backdoor__DeleteData(self, Name):
-        "!!Docstring overridden with decorator!!"
-        return self.SpectrumManager.DeleteTagalongData(Name)
+        return SpectrumCollector.deleteTagalongData(Name)
 
     def RPC_GetStates_Number(self):
         """Returns a dictionary with a numeric indication of the system states."""
-        if self.SpectrumManager:
-            smState = self.SpectrumManager.GetState()
-        else:
-            #Didn't get created!?  Must have been an early error... call it in an error state...
-            smState = SpectrumManager.STATE_ERROR
-        ret = dict(State_MeasSystem = self.__State, State_SpectrumManager = smState)
+        ret = dict(State_MeasSystem = self.__State)
         return ret
 
     def RPC_GetStates(self):
         """Returns a dictionary with a text indication of the system states."""
-        if self.SpectrumManager:
-            smState = self.SpectrumManager.GetStateName()
-        else:
-            #Didn't get created!?  Must have been an early error... call it in an error state...
-            smState = SpectrumManager.StateName[SpectrumManager.STATE_ERROR]
-        ret = dict(State_MeasSystem = StateName[self.__State], State_SpectrumManager = smState)
+        ret = dict(State_MeasSystem = StateName[self.__State])
         return ret
-
-    def RPC_GetWlmOffset(self, LaserIndex):
-        """Fetches the offset in the WLM calibration. LaserIndex is zero based.
-
-        Returns offset in wavenumbers.
-
-        If a polar<->wavenumber converter was available for the laser, use value from
-        autocal structure
-
-        Reads offset from DAS if no polar converter was found.
-        """
-        try:
-            ret = self.SpectrumManager._FreqConverter[LaserIndex].getOffset()
-        except: # No polar
-            if LaserIndex == 0:
-                CRDS_Driver.rdDasReg("RD_WAVENUMBER_OFFSET_REGISTER")
-            elif LaserIndex == 1:
-                CRDS_Driver.wrDasReg("RD_LASER2_WAVENUMBER_OFFSET_REGISTER")
-        return ret
-
-
-    def RPC_SetWlmOffset(self, LaserIndex, Offset):
-        """Updates the offset in the WLM calibration by the specified value.
-        LaserIndex is zero based. Offset is in wavenumbers.
-
-        If polar<->wavenumber converter is present, its offset is adjusted,
-        otherwise the legacy DAS NVRAM registers are written.
-        """
-        try:
-            self.SpectrumManager._FreqConverter[LaserIndex].setOffset(Offset)
-            ret = ""
-        except:
-            if LaserIndex == 0:
-                CRDS_Driver.wrDasReg("RD_WAVENUMBER_OFFSET_REGISTER", Offset)
-            elif LaserIndex == 1:
-                CRDS_Driver.wrDasReg("RD_LASER2_WAVENUMBER_OFFSET_REGISTER", Offset)
-            ret = ""
-        return ret
-
-    def RPC_RecompileSchemes(self):
-        """Converts all frequency based schemes to angle-based schemes"""
-        updateThread = threading.Thread(target = self.SpectrumManager._RecalculateAndUploadAllSchemes)
-        updateThread.setDaemon(1)
-        updateThread.start()
-        return ""
-
+        
     def RPC_GetSensorData(self):
         """Returns most recent sensor data from the DAS"""
-        return self.SpectrumManager._LatestSensors.copy().__dict__
+        return SpectrumCollector.getSensorData()
+        
     def _ChangeMode(self, ModeName):
         """Changes the measurement mode of the instrument."""
         self._UninterruptedSpectrumCount = 0
         self.CurrentMeasMode = self.MeasModes[ModeName]
         self._SetupMeasMode()
-        self.SpectrumManager.SetSchemeSequence(self.CurrentMeasMode.Schemes, Restart = True)
-
+        
     def _SetupMeasMode(self):
         """Perform any instrument setup required for this mode by calling the instrument manager"""
-        modeDict = self.CurrentMeasMode._GetInstrumentMode()
-        CRDS_InstMgr.INSTMGR_SetInstrumentModeRpc(modeDict)
-        Log("Setting instrument mode: %s" % (modeDict,))
+        if not self.noInstMgr:
+            modeDict = self.CurrentMeasMode._GetInstrumentMode()
+            self.rdInstMgr.INSTMGR_SetInstrumentModeRpc(modeDict)
+            Log("Setting instrument mode: %s" % (modeDict,))
+        else:
+            Log("Running without Instrument Manager - can't set mode in instrument")
 
     def _GetSpectrum(self):
         """Returns a measured spectrum, blocking for a timeout period until available.
@@ -514,10 +420,7 @@ class MeasSystem(object):
         startTime = TimeStamp()
         while not spectrumGrabbed:
             try:
-                if self.SpectrumManager.GetState() == SpectrumManager.STATE_ERROR:
-                    raise SpectrumManagerInErrorState
-                spectrum = self.SpectrumQueue.get(timeout = 0.05)
-                assert isinstance(spectrum, SpectrumManager.CSpectrum)
+                spectrum = SpectrumCollector.getFromSpectrumQueue(timeout = 0.05)
                 spectrumGrabbed = True
             except Queue.Empty, data:
                 if self._ShutdownRequested:
@@ -528,19 +431,17 @@ class MeasSystem(object):
                     
                 if (self.Config.SpectrumTimeout_s != 0) and ((TimeStamp() - startTime) > self.Config.SpectrumTimeout_s):
                     # SpectrumTimeout_s=0 means no time-out requirement is given
-                    raise SpectrumTimeout, data           
+                    raise SpectrumTimeout, data
         return spectrum
         
     def _SendSpectrumToFitter(self, Spectrum):
-        assert isinstance(Spectrum, SpectrumManager.CSpectrum)
         self._Status.UpdateStatusBit(STATUS_MASK_WaitingForFitter, True)
         if self._UninterruptedSpectrumCount == 0:
             ret = self.FitterPool.Init()
-        fitResults = self.FitterPool.FitData(Spectrum._RdfDict.copy())
+        fitResults = self.FitterPool.FitData(Spectrum.copy())
         self._Status.UpdateStatusBit(STATUS_MASK_WaitingForFitter, False)
         return fitResults
     def _SendSpectrumToCalMgr(self, Spectrum):
-        assert isinstance(Spectrum, SpectrumManager.CSpectrum)
         Log("REQUEST RECEIVED TO SEND SPECTRUM TO CAL MANAGER (UNIMPLEMENTED)", Level = 0)
         calResults = {}
         return calResults
@@ -556,10 +457,6 @@ class MeasSystem(object):
             dataPacket = MeasData(resultLabel, MeasTime_s, ResultLabelDict[resultLabel])
             txMsg = dataPacket.dumps()
             self.ProcDataBroadcaster.send(txMsg)
-    def _ArchiveSpectrum(self, Spectrum):
-        assert isinstance(Spectrum, SpectrumManager.CSpectrum)
-        CRDS_Archiver.ArchiveFile(self.Config.RdfArchiveGroup, Spectrum._StreamPath, True)
-
     def _ProcessFitResults(self, FitResults):
         """
         """
@@ -589,7 +486,8 @@ class MeasSystem(object):
         self.__State = NewState
         if NewState == STATE_ERROR:
             eventLevel = 3
-            CRDS_InstMgr.INSTMGR_ReportErrorRpc(INST_ERROR_MEAS_SYS)
+            if not self.noInstMgr:
+                self.rdInstMgr.INSTMGR_ReportErrorRpc(INST_ERROR_MEAS_SYS)
         else:
             eventLevel = 1
         self._Status.UpdateState(self.__State)
@@ -606,7 +504,7 @@ class MeasSystem(object):
             self.MeasModes = ModeDef.LoadModeDefinitions(self.Config.ModeDefinitionFile)
             Log("Mode definitions loaded", dict(ModeNames = self.MeasModes.keys()))
 
-            ##Figure out the unique set of schemes to give to the SpectrumManager...
+            ##Figure out the unique set of schemes to give to the SchemeManager...
             allSchemes = []
             for m in self.MeasModes.values():
                 allSchemes.extend(m.Schemes)
@@ -625,27 +523,19 @@ class MeasSystem(object):
             if len(uniqueSchemes) > 7:
                 raise Exception("Too many unique schemes identified in the modes!  Only 7 supported right now.")
             schemeDict = {}
+            schemeSeq = []
             for i in range(len(uniqueSchemes)):
                 #this will build up the scheme set with keys based on the full path to the initial scheme...
                 schemeDict[uniqueSchemes[i]] = (uniqueSchemes[i], i, i + 7)
-            #After sending this schemeSet to the SpectrumManager, schemes can simply be referred to by their names...
-
-            ##Spark up the SpectrumManager...
-            warmboxCalPath = CRDS_CalMgr.GetWarmboxCalPath()
-            try:
-                self.SpectrumManager._Broadcaster.stop()
-            except:
-                pass
-            self.SpectrumManager = SpectrumManager.SpectrumManager(SpectrumQueue = self.SpectrumQueue,
-                                                                   StreamDir = self.Config.RdfDumpDir,
-                                                                   UseHDF5 = self.Config.UseHDF5,
-                                                                   ForcePolarLocking = self.Config.ForcePolarLocking,
-                                                                   WarmboxCalFilePath = warmboxCalPath,
-                                                                   SchemeDict = schemeDict,
-                                                                   RingdownTimeout_s = self.Config.RingdownTimeout_s,
-                                                                   CalUpdatePeriod_s = self.Config.CalUpdatePeriod_s,
-                                                                   UseOldSchemeFile = self.Config.UseOldSchemeFile)
-            self.SpectrumManager.start()
+                schemeSeq.append(uniqueSchemes[i])
+            #After sending this schemeSet to the SchemeManager in RDFrequencyConverter, schemes can simply be referred to by their names...
+            FreqConverter.configSchemeManager(  (self.Config.warmboxCalActive, self.Config.warmboxCalFactory),
+                                                (self.Config.hotboxCalActive, self.Config.hotboxCalFactory),
+                                                schemeDict,
+                                                schemeSeq
+                                              )
+            ##Set up spectrum queue in Spectrum Collector
+            SpectrumCollector.setMaxSpectrumQueueSize(40)
 
             ##See if the fitter is running (if not the exception will be picked up below)...
             if not self.SkipFitting:
@@ -656,40 +546,24 @@ class MeasSystem(object):
             ##Deal with startup configuration options...
             if self.Config.StartEngine:
                 Log("Engine started (with Driver.startEngine) due to 'StartEngine' startup config setting.")
-                CRDS_Driver.startEngine()
+                Driver.startEngine()
             if self.Config.AutoEnableOnCleanStart:
                 Log("EnableEvent set due to 'AutoEnableOnCleanStart' startup config setting.")
                 #Set it up to automatically start...
                 self._EnableEvent.set()
-            if self.Config.UploadCalFile:
-                Log("Requesting upload of warmbox calibration")
-                CRDS_CalMgr.UploadWarmboxCal()
                 
             # Set laser tuner parameters
             try:
-                CRDS_Driver.wrDasReg("FPGA_TUNER_LASER0_OFFSET_REGISTER", self.Config.Laser0TunerOffset)
-                CRDS_Driver.wrDasReg("FPGA_TUNER_LASER1_OFFSET_REGISTER", self.Config.Laser1TunerOffset)
+                Driver.wrDasReg("FPGA_TUNER_LASER0_OFFSET_REGISTER", self.Config.Laser0TunerOffset)
+                Driver.wrDasReg("FPGA_TUNER_LASER1_OFFSET_REGISTER", self.Config.Laser1TunerOffset)
             except:
                 pass
-            ##Don't leave INIT state until the SpectrumManager is ready...
-            Log("Waiting for SpectrumManager to reach READY state")
-            startTime = TimeStamp()
-            while True:
-                smState = self.SpectrumManager.GetState()
-                if smState == SpectrumManager.STATE_READY:
-                    break
-                elif smState == SpectrumManager.STATE_ERROR:
-                    raise MeasSystemError("SpectrumManager entered error state while waiting for it to be READY")
-                time.sleep(0.05)
-                if (TimeStamp() - startTime) > (15 * 60): #15 mins... don't want a false detection so allow a long while
-                    raise MeasSystemError("Timed out while waiting for SpectrumManager to enter READY state")
 
-            ##Set up the starting measurement mode (if defined... normally we wait to be told in ready state)
+            # Set up the starting measurement mode (if defined... normally we wait to be told in ready state)
             if self.Config.StartingMeasMode:
                 self._ChangeMode(self.Config.StartingMeasMode)
                 Log("Startup measurement mode name initialized", dict(Name = self.Config.StartingMeasMode))
 
-            ##Done - set the next state...
             self.__SetState(STATE_READY)
         except:
             LogExc(Data = dict(State = StateName[self.__State]))
@@ -719,14 +593,12 @@ class MeasSystem(object):
             if (not self._EnableEvent.isSet()) or self._ShutdownRequested:
                 exitState = STATE_READY
             else:
-                if self._UninterruptedSpectrumCount == 0:
-                    self.SpectrumManager.SweepStart()
                 spectrum = None
                 try:
                     #Get the spectrum...
                     spectrum = self._GetSpectrum()
-                    if spectrum.getNumPts() >= 1:
-                        spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrum.SpectrumID]
+                    if spectrum["controlData"]["RDDataSize"] >= 1:
+                        spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrum["sensorData"]["SpectrumID"]]
                         # Run it through the processors that have been set up for the spectrum...
                         # For each processor, processorResults consist of a list of tuples [(time1,ResultDict1),(time2,ResultDict2)...]
                         # The results from all the processors are sorted into time order and broadcast. If times from two processors
@@ -752,7 +624,6 @@ class MeasSystem(object):
                                 else:
                                     allResults[t] = { p.ResultDataLabel:rDict.copy() }
                         #endfor
-                        self._ArchiveSpectrum(spectrum)
                         for t in sorted(allResults.keys()):
                             self._SendProcessorResultsForAnalysis(t, allResults[t])
 
@@ -778,10 +649,6 @@ class MeasSystem(object):
                 except FitterPool.FitterError:
                     LogExc("Error occured during fitting")
                     exitState = STATE_ERROR
-                except SpectrumManagerInErrorState:
-                    LogExc("Spectrum manager entered error state while waiting for spectrum.")
-                    exitState = STATE_ERROR
-                #endtry
         except:
             LogExc(Data = dict(State = StateName[self.__State]))
             exitState = STATE_ERROR
@@ -789,8 +656,7 @@ class MeasSystem(object):
         #endtry
         if exitState == STATE__UNDEFINED:
             raise Exception("HandleState_ENABLED has a code error - the exitState has not been specified!!")
-        if exitState not in [STATE_ENABLED,]:
-            self.SpectrumManager.SweepStop()
+
         self.__SetState(exitState)
     def _HandleState_ERROR(self):
         self._ClearErrorEvent.wait(0.05)
@@ -827,14 +693,6 @@ class MeasSystem(object):
             Log("Timed out while waiting for RpcServerThread to close.  Terminating rudely!",
                 Data = dict(WaitTime_s = wait_s),
                 Level = 2)
-        #Shut the SpectrumManager down...
-        self.SpectrumManager.Close()
-        wait_s = 5
-        self.SpectrumManager.join(wait_s)
-        if self.SpectrumManager.isAlive():
-            Log("Timed out while waiting for SpectrumManager to close.  Terminating rudely!",
-                Data = dict(WaitTime_s = wait_s),
-                Level = 2)
 
         if self._FatalError:
             Log("MeasSystem terminated due to a fatal error.", Level = 3)
@@ -852,8 +710,8 @@ Where the options can be a combination of the following:
 -h  Print this help.
 -c  Specify a different config file.  Default = "./MeasSystem.ini"
 
---no-fitter   will suppress all fitter transactions.
-
+--no_fitter    Will suppress all fitter transactions.
+--no_inst_mgr  Run without Instrument Manager.
 """
 
 def PrintUsage():
@@ -862,7 +720,7 @@ def HandleCommandSwitches():
     import getopt
 
     shortOpts = 'hsc:'
-    longOpts = ["help", "test", "no-fitter", "simulation"]
+    longOpts = ["help", "test", "no_fitter", "no_inst_mgr", "simulation"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -879,6 +737,7 @@ def HandleCommandSwitches():
 
     executeTest = False
     noFitter = False
+    noInstMgr = False
     simMode = False
     if "-h" in options or "--help" in options:
         PrintUsage()
@@ -886,8 +745,10 @@ def HandleCommandSwitches():
     else:
         if "--test" in options:
             executeTest = True
-        if "--no-fitter" in options:
+        if "--no_fitter" in options:
             noFitter = True
+        if "--no_inst_mgr" in options:
+            noInstMgr = True
         if "-s" in options or "--simulation" in options:
             simMode = True
             
@@ -899,7 +760,7 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
         Log("Config file specified at command line", configFile)
         
-    return (configFile, executeTest, noFitter, simMode)
+    return (configFile, executeTest, noFitter, noInstMgr, simMode)
     
 def ExecuteTest(MS):
     """A self test executed via the --test command-line switch."""
@@ -911,10 +772,10 @@ def ExecuteTest(MS):
     
 def main():
     #Get and handle the command line options...
-    configFile, test, noFitter, simMode = HandleCommandSwitches()
+    configFile, test, noFitter, noInstMgr, simMode = HandleCommandSwitches()
     Log("%s application started." % APP_NAME, dict(ConfigFile = configFile), Level = 2)
     try:
-        app = MeasSystem(configFile, noFitter, simMode)
+        app = MeasSystem(configFile, noFitter, noInstMgr, simMode)
         if test:
             threading.Timer(2, ExecuteTest(app)).start()
         app.Start()

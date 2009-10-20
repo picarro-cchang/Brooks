@@ -159,11 +159,13 @@ class SpectrumCollector(object):
         self.rdBuffer = {}
         for fname,ftype in ProcessedRingdownEntryType._fields_:
             self.rdBuffer[fname] = ([],ftype)
-        self.rdBuffer["time"]= ([],ctypes.c_float)
         
         # Compression filter for HDF5
         self.hdf5Filters = Filters(complevel=1,fletcher32=True)
 
+        self.firstRdTime = Driver.hostGetTicks()
+        self.storedFirstRdTime = Driver.hostGetTicks()
+        self.enableSpectrumFiles = True
         self.spectrumQueue = None
         self.maxSpectrumQueueSize = 0
         self.closeSpectrumWhenDone = False
@@ -203,7 +205,8 @@ class SpectrumCollector(object):
 
                 # When the "count" is different (set by DSP when bit-15 is set in the scheme file), we know a new spectrum is coming and we have to close whatever we currently have.
                 if thisCount != lastCount:
-                    Log("New spectrum found on ringdown (new count = %d)" % thisCount, errDataDict, Level = 0)
+                    Log("New spectrum found on ringdown (new count = %d)" % thisCount, errDataDict)
+                    self.storedFirstRdTime = self.firstRdTime # Save first RD time to be used in spectrum collection of the "last" spectrum
                     self.firstRdTime = localRdTime
                     #Set aside the point we just read for the next time a spectrum is collected...
                     self.tempRdDataBuffer = rdData
@@ -260,7 +263,6 @@ class SpectrumCollector(object):
         self.rdBuffer = {}
         for fname,ftype in ProcessedRingdownEntryType._fields_:
             self.rdBuffer[fname] = ([],ftype)
-        self.rdBuffer["time"]= ([],ctypes.c_float)
         
     def _sensorFilter(self, entry):
         """Updates the latest sensor readings.
@@ -302,7 +304,6 @@ class SpectrumCollector(object):
         for fname,ftype in ProcessedRingdownEntryType._fields_:
             if fname in self.rdBuffer:
                 self.rdBuffer[fname][0].append(getattr(rdData,fname))
-        self.rdBuffer["time"][0].append(relativeRdTime)
         self.numPts += 1
 
         sensorData = self.getLatestSensors()
@@ -325,14 +326,14 @@ class SpectrumCollector(object):
 
         # Append averaged sensor data
         # "timestamp" is the averaged absolute DAS time
-        self.avgSensors["timestamp"] += self.firstRdTime
+        self.avgSensors["timestamp"] += self.storedFirstRdTime
         self.rdfDict["sensorData"] = self.avgSensors.copy()
 
         # Add more sensor data
         self.rdfDict["sensorData"]["SchemeID"] = self.schemeTable
         self.rdfDict["sensorData"]["SpectrumID"] = self.spectrumID
         self.rdfDict["sensorData"]["SensorTime"] = unixTime(self.rdfDict["sensorData"]["timestamp"])
-        self.rdfDict["sensorData"]["SpectrumStartTime"] = unixTime(self.firstRdTime)
+        #self.rdfDict["sensorData"]["SpectrumStartTime"] = unixTime(self.firstRdTime)
 
         #Write the tagalong data values...
         self.rdfDict["tagalongData"] = self.tagalongData
@@ -343,41 +344,45 @@ class SpectrumCollector(object):
         else:
             qsize = 0
         self.rdfDict["controlData"] = {"RDDataSize":self.numPts, "SpectrumQueueSize":qsize}
+        
+        # Process spectrum files (HDF5 or RDF)
+        if self.enableSpectrumFiles:
+            if self.useHDF5:
+                # Create HDF5 table file
+                filename = "%03d_%013d.h5" % (self.spectrumID, int(time.time()*1000))
+                streamPath = os.path.join(self.streamDir, filename)
+                streamFP = openFile(streamPath, "w")
+                for dataKey in self.rdfDict.keys():
+                    subDataDict = self.rdfDict[dataKey]
+                    if len(subDataDict) > 0:
+                        sortedKeys = sorted(subDataDict.keys())
+                        if isinstance(subDataDict.values()[0], numpy.ndarray):
+                            # Array
+                            sortedValues = [subDataDict.values()[i] for i in numpy.argsort(subDataDict.keys())]
+                            dataRec = numpy.rec.fromarrays(sortedValues, names=sortedKeys)
+                        elif isinstance(subDataDict.values()[0], list) or isinstance(subDataDict.values()[0], tuple):
+                            # Convert list or tuple to array
+                            sortedValues = [numpy.array(subDataDict.values()[i]) for i in numpy.argsort(subDataDict.keys())]
+                            dataRec = numpy.rec.fromarrays(sortedValues, names=sortedKeys)
+                        else:
+                            # Non-array
+                            sortedValues = [subDataDict.values()[i] for i in numpy.argsort(subDataDict.keys())]
+                            dataRec = numpy.rec.fromrecords([sortedValues], names=sortedKeys)
+                        streamFP.createTable("/", dataKey, dataRec, dataKey, filters=self.hdf5Filters)
+            else:
+                # Pickle the rdfDict 
+                filename = "%03d_%013d.rdf" % (self.spectrumID, int(time.time()*1000))
+                streamPath = os.path.join(self.streamDir, filename)
+                streamFP = file(streamPath, "wb")
+                streamFP.write(cPickle.dumps(self.rdfDict,cPickle.HIGHEST_PROTOCOL)) 
+            streamFP.close()
+            # Archive spectrum files
+            Archiver.ArchiveFile(self.archiveGroup, streamPath, True)
             
-        if self.useHDF5:
-            # Create HDF5 table file
-            filename = "%03d_%013d.h5" % (self.spectrumID, int(time.time()*1000))
-            streamPath = os.path.join(self.streamDir, filename)
-            streamFP = openFile(streamPath, "w")
-            for dataKey in self.rdfDict.keys():
-                subDataDict = self.rdfDict[dataKey]
-                if len(subDataDict) > 0:
-                    sortedKeys = sorted(subDataDict.keys())
-                    if isinstance(subDataDict.values()[0], numpy.ndarray):
-                        # Array
-                        sortedValues = [subDataDict.values()[i] for i in numpy.argsort(subDataDict.keys())]
-                        dataRec = numpy.rec.fromarrays(sortedValues, names=sortedKeys)
-                    elif isinstance(subDataDict.values()[0], list) or isinstance(subDataDict.values()[0], tuple):
-                        # Convert list or tuple to array
-                        sortedValues = [numpy.array(subDataDict.values()[i]) for i in numpy.argsort(subDataDict.keys())]
-                        dataRec = numpy.rec.fromarrays(sortedValues, names=sortedKeys)
-                    else:
-                        # Non-array
-                        sortedValues = [subDataDict.values()[i] for i in numpy.argsort(subDataDict.keys())]
-                        dataRec = numpy.rec.fromrecords([sortedValues], names=sortedKeys)
-                    streamFP.createTable("/", dataKey, dataRec, dataKey, filters=self.hdf5Filters)
-        else:
-            # Pickle the rdfDict 
-            filename = "%03d_%013d.rdf" % (self.spectrumID, int(time.time()*1000))
-            streamPath = os.path.join(self.streamDir, filename)
-            streamFP = file(streamPath, "wb")
-            streamFP.write(cPickle.dumps(self.rdfDict,cPickle.HIGHEST_PROTOCOL)) 
-        streamFP.close()
+        # Store spectrum in a queue if required
         if self.spectrumQueue:
             self.addToSpectrumQueue(self.rdfDict.copy())
-        # Archive spectrum files
-        Archiver.ArchiveFile(self.archiveGroup, streamPath, True)
-        
+
         self.reset()
 
     def RPC_setMaxSpectrumQueueSize(self, maxSize):
@@ -405,6 +410,12 @@ class SpectrumCollector(object):
         
     def RPC_closeSpectrum(self):
         self.closeSpectrumWhenDone = True
+
+    def RPC_disableSpectrumFiles(self):
+        self.enableSpectrumFiles = False
+        
+    def RPC_enableSpectrumFiles(self):
+        self.enableSpectrumFiles = True
         
     def RPC_setTagalongData(self, Name, Value):
         """Sets RDF tagalong data (and timestamp) with the given token Name."""

@@ -12,13 +12,9 @@
 ##       in the mode file override these defaults
 
 [AVAILABLE_MODES]
-ModeCount = 6
-Mode_1 = flux_mode
+ModeCount = 2
+Mode_1 = Alpha_mode
 Mode_2 = warming_mode
-Mode_3 = CO2_mode
-Mode_4 = CH4_mode
-Mode_5 = slow_mode
-Mode_6 = flux_H2O_mode
 
 ############################################################################
 ###
@@ -29,7 +25,7 @@ Mode_6 = flux_H2O_mode
 
 [SPECTRUM_IDS]
 #Specify logical names for referencing each SubSchemeID...
-Both = 26
+Alpha = 26
 
 # Default processing to use for any spectra/label can be supplied below.
 # - If the spectrum name is not referred to in the plan file for the active mode, the processing
