@@ -191,12 +191,7 @@ class MeasSystem(object):
             cp = CustomConfigObj(IniPath) 
             
             basePath = os.path.split(IniPath)[0]
-            
-            self.warmboxCalActive = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "WarmboxCalActive"))
-            self.warmboxCalFactory = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "WarmboxCalFactory"))
-            self.hotboxCalActive = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "HotboxCalActive"))
-            self.hotboxCalFactory = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "HotboxCalFactory"))
-            
+
             if not self.SimMode:
                 self.SpectrumTimeout_s = cp.getfloat(_MAIN_CONFIG_SECTION, "SpectrumTimeout_s")
             else:
@@ -529,11 +524,7 @@ class MeasSystem(object):
                 schemeDict[uniqueSchemes[i]] = (uniqueSchemes[i], i, i + 7)
                 schemeSeq.append(uniqueSchemes[i])
             #After sending this schemeSet to the SchemeManager in RDFrequencyConverter, schemes can simply be referred to by their names...
-            FreqConverter.configSchemeManager(  (self.Config.warmboxCalActive, self.Config.warmboxCalFactory),
-                                                (self.Config.hotboxCalActive, self.Config.hotboxCalFactory),
-                                                schemeDict,
-                                                schemeSeq
-                                              )
+            FreqConverter.configSchemeManager(schemeDict, schemeSeq)
             ##Set up spectrum queue in Spectrum Collector
             SpectrumCollector.setMaxSpectrumQueueSize(40)
 

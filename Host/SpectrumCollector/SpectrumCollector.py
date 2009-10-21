@@ -103,9 +103,10 @@ class SpectrumCollector(object):
     def __init__(self, configPath):
         # Read from .ini file
         cp = CustomConfigObj(configPath)
+        basePath = os.path.split(configPath)[0]
         self.useHDF5 = cp.getboolean("MainConfig", "useHDF5", "True")
         self.archiveGroup = cp.get("MainConfig", "archiveGroup", "RDF")
-        self.streamDir = os.path.abspath(cp.get("MainConfig", "streamDir", "../../Log/RDF"))
+        self.streamDir = os.path.abspath(os.path.join(basePath, cp.get("MainConfig", "streamDir", "../../../Log/RDF")))
         # Make directory if not exist
         if not os.path.isdir(self.streamDir):
             os.makedirs(self.streamDir)

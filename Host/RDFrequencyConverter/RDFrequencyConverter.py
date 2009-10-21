@@ -116,15 +116,12 @@ class SchemeManager(object):
     """
     Run DAS scheme management
     """
-    def __init__(self, warmboxCalFilePathPair, hotboxCalFilePathPair, schemeDict, schemeSeq):
+    def __init__(self, schemeDict, schemeSeq):
         """
-        warmboxCalFilePathPair = (warmboxCalFilePathActive, warmboxCalFilePathFactory)
-        hotboxCalFilePathPair = (hotboxCalFilePathActive, hotboxCalFilePathFactory)
-        schemeDict = {schemeName: (schemePath, indexA, indexB)}
+        Definition of the inputs:
+            schemeDict = {schemeName: (schemePath, indexA, indexB)}
         """
         self.rdFreqConv = RDFrequencyConverter()
-        self.warmboxCalFilePathPair = warmboxCalFilePathPair
-        self.hotboxCalFilePathPair = hotboxCalFilePathPair
         self.schemeDict = schemeDict
         self.schemeSeq = schemeSeq
         self.schemes = {} # key = scheme name; value = DasScheme instance
@@ -133,8 +130,8 @@ class SchemeManager(object):
         Driver.stopScan()
         Log("Scheme Manager starts up")
         Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
-        self.rdFreqConv.RPC_loadWarmBoxCal(self.warmboxCalFilePathPair[0], self.warmboxCalFilePathPair[1])
-        self.rdFreqConv.RPC_loadHotBoxCal(self.hotboxCalFilePathPair[0], self.hotboxCalFilePathPair[1])
+        self.rdFreqConv.RPC_loadWarmBoxCal()
+        self.rdFreqConv.RPC_loadHotBoxCal()
         # Load up the DAS with schemes in the managed positions...
         Log("Starting upload of all required DAS schemes")
         for k in self.schemeDict.keys():
@@ -349,10 +346,15 @@ class RDFrequencyConverter(Singleton):
             if configPath != None:
                 # Read from .ini file
                 cp = CustomConfigObj(configPath)
+                basePath = os.path.split(configPath)[0]
                 self.wbCalUpdatePeriod_s = cp.getfloat("MainConfig", "wbCalUpdatePeriod_s", "1800")
                 self.hbCalUpdatePeriod_s = cp.getfloat("MainConfig", "hbCalUpdatePeriod_s", "1800")
                 self.wbArchiveGroup = cp.get("MainConfig", "wbArchiveGroup", "WBCAL")
                 self.hbArchiveGroup = cp.get("MainConfig", "hbArchiveGroup", "HBCAL")
+                self.warmBoxCalFilePathActive = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "warmboxCalActive", "")))
+                self.warmBoxCalFilePathFactory = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "warmboxCalFactory", "")))
+                self.hotBoxCalFilePathActive = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "hotboxCalActive", "")))
+                self.hotBoxCalFilePathFactory = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "hotboxCalFactory", "")))
             else:
                 raise ValueError("Configuration file must be specified to initialize RDFrequencyConverter")
         
@@ -398,11 +400,7 @@ class RDFrequencyConverter(Singleton):
             self.tuningMode = None
             self.schemeMgr = None
             self.warmBoxCalUpdateTime = 0
-            self.warmBoxCalFilePathActive = ""
-            self.warmBoxCalFilePathFactory = ""
             self.hotBoxCalUpdateTime = 0
-            self.hotBoxCalFilePathActive = "" 
-            self.hotBoxCalFilePathFactory = ""
             
     def rdFilter(self,entry):
         # Figure if we finished a scheme and whether we should process cal points in the last scheme
@@ -506,8 +504,8 @@ class RDFrequencyConverter(Singleton):
     def timeToUpdateHotBoxCal(self):
         return (Driver.hostGetTicks() - self.hotBoxCalUpdateTime) > (self.hbCalUpdatePeriod_s*1000)
         
-    def RPC_configSchemeManager(self, warmboxCalFilePath, hotboxCalFilePath, schemeDict, schemeSeq):
-        self.schemeMgr = SchemeManager(warmboxCalFilePath, hotboxCalFilePath, schemeDict, schemeSeq)
+    def RPC_configSchemeManager(self, schemeDict, schemeSeq):
+        self.schemeMgr = SchemeManager(schemeDict, schemeSeq)
         self.schemeMgr.startup()
         
     def RPC_angleToLaserTemperature(self,vLaserNum,angles):
@@ -569,20 +567,17 @@ class RDFrequencyConverter(Singleton):
         self._assertVLaserNum(vLaserNum)
         return self.freqConverter[vLaserNum-1].laserTemp2ThetaCal(laserTemperatures)
     
-    def RPC_loadHotBoxCal(self, hotBoxCalFilePathActive, hotBoxCalFilePathFactory=""):
+    def RPC_loadHotBoxCal(self, hotBoxCalFilePath=""):
         self.hotBoxCalUpdateTime = Driver.hostGetTicks()
-        self.hotBoxCalFilePathActive = os.path.abspath(hotBoxCalFilePathActive)
-        if hotBoxCalFilePathFactory != "":
-            self.hotBoxCalFilePathFactory = os.path.abspath(hotBoxCalFilePathFactory)
-            if os.path.isfile(self.hotBoxCalFilePathActive):
-                # Need to run checksum on the active one. If failed, factory version will be used.
-                # Need to be implemented!
-                # Here assume checksum has passed
-                self.hotBoxCalFilePath = self.hotBoxCalFilePathActive
-            else:
-                self.hotBoxCalFilePath = self.hotBoxCalFilePathFactory
-        else:
+        if hotBoxCalFilePath != "":
+            self.hotBoxCalFilePathActive = os.path.abspath(hotBoxCalFilePath)
+        if os.path.isfile(self.hotBoxCalFilePathActive):
+            # Need to run checksum on the active one. If failed, factory version will be used.
+            # Need to be implemented!
+            # Here assume checksum has passed
             self.hotBoxCalFilePath = self.hotBoxCalFilePathActive
+        else:
+            self.hotBoxCalFilePath = self.hotBoxCalFilePathFactory
             
         self.hotBoxCal = CustomConfigObj(self.hotBoxCalFilePath)
         if "AUTOCAL" not in self.hotBoxCal:
@@ -601,20 +596,17 @@ class RDFrequencyConverter(Singleton):
         self.dthetaMax = self.hotBoxCal["AUTOCAL"]["MAX_ANGLE_TARGETTING_ERROR"]
         self.dtempMax  = self.hotBoxCal["AUTOCAL"]["MAX_TEMP_TARGETTING_ERROR"]
         
-    def RPC_loadWarmBoxCal(self, warmBoxCalFilePathActive, warmBoxCalFilePathFactory=""):
+    def RPC_loadWarmBoxCal(self, warmBoxCalFilePath=""):
         self.warmBoxCalUpdateTime = Driver.hostGetTicks()
-        self.warmBoxCalFilePathActive = os.path.abspath(warmBoxCalFilePathActive)
-        if warmBoxCalFilePathFactory != "":
-            self.warmBoxCalFilePathFactory = os.path.abspath(warmBoxCalFilePathFactory)
-            if os.path.isfile(self.warmBoxCalFilePathActive):
-                # Need to run checksum on the active one. If failed, factory version will be used.
-                # Need to be implemented!
-                # Here assume checksum has passed
-                self.warmBoxCalFilePath = self.warmBoxCalFilePathActive
-            else:
-                self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
-        else:
+        if warmBoxCalFilePath != "":
+            self.warmBoxCalFilePathActive = os.path.abspath(warmBoxCalFilePath)
+        if os.path.isfile(self.warmBoxCalFilePathActive):
+            # Need to run checksum on the active one. If failed, factory version will be used.
+            # Need to be implemented!
+            # Here assume checksum has passed
             self.warmBoxCalFilePath = self.warmBoxCalFilePathActive
+        else:
+            self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
             
         # Load up the frequency converters for each laser in the DAS...
         ini = CustomConfigObj(self.warmBoxCalFilePath)
