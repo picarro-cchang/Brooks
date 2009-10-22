@@ -277,7 +277,6 @@ class EventLogger(object):
             basePath = os.path.split(IniPath)[0]
             self.LogFileDir = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "LogFileDir"))
             self.LogToFile = cp.getboolean(_MAIN_CONFIG_SECTION, "LogToFile")
-            self.LogFileDir = cp.get(_MAIN_CONFIG_SECTION, "LogFileDir")
             self.LogFileLength = cp.getint(_MAIN_CONFIG_SECTION, "LogFileLength")
             self.ArchiveGroupName = cp.get(_MAIN_CONFIG_SECTION, "ArchiveGroupName")
             self.MaxResidentEvents = cp.getint(_MAIN_CONFIG_SECTION, "MaxResidentEvents")

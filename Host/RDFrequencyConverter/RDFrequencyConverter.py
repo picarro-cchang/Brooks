@@ -347,15 +347,15 @@ class RDFrequencyConverter(Singleton):
             if configPath != None:
                 # Read from .ini file
                 cp = CustomConfigObj(configPath)
-                configBasePath = os.path.split(configPath)[0]
+                basePath = os.path.split(configPath)[0]
                 self.wbCalUpdatePeriod_s = cp.getfloat("MainConfig", "wbCalUpdatePeriod_s", "1800")
                 self.hbCalUpdatePeriod_s = cp.getfloat("MainConfig", "hbCalUpdatePeriod_s", "1800")
                 self.wbArchiveGroup = cp.get("MainConfig", "wbArchiveGroup", "WBCAL")
                 self.hbArchiveGroup = cp.get("MainConfig", "hbArchiveGroup", "HBCAL")
-                self.warmBoxCalFilePathActive = os.path.abspath(os.path.join(configBasePath, cp.get("CalibrationPath", "warmboxCalActive", "")))
-                self.warmBoxCalFilePathFactory = os.path.abspath(os.path.join(configBasePath, cp.get("CalibrationPath", "warmboxCalFactory", "")))
-                self.hotBoxCalFilePathActive = os.path.abspath(os.path.join(configBasePath, cp.get("CalibrationPath", "hotboxCalActive", "")))
-                self.hotBoxCalFilePathFactory = os.path.abspath(os.path.join(configBasePath, cp.get("CalibrationPath", "hotboxCalFactory", "")))
+                self.warmBoxCalFilePathActive = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "warmboxCalActive", "")))
+                self.warmBoxCalFilePathFactory = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "warmboxCalFactory", "")))
+                self.hotBoxCalFilePathActive = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "hotboxCalActive", "")))
+                self.hotBoxCalFilePathFactory = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "hotboxCalFactory", "")))
             else:
                 raise ValueError("Configuration file must be specified to initialize RDFrequencyConverter")
         

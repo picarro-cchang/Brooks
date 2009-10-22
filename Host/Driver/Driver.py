@@ -401,13 +401,13 @@ class StreamTableType(tables.IsDescription):
     
 class StreamSaver(SharedTypes.Singleton):
     initialized = False
-    def __init__(self,config=None, configBasePath=""):
+    def __init__(self,config=None, basePath=""):
         if not self.initialized:
             self.fileName = ""
             self.table = None
             self.h5 = None
             self.config = config
-            self.configBasePath = configBasePath
+            self.basePath = basePath
             self.lastWrite = 0
             self.initialized = True
             self.observerAccess = {}
@@ -438,7 +438,7 @@ class StreamSaver(SharedTypes.Singleton):
         except:
             Log("Config option streamFileName not found in [Files] section. Using default.",Level=2)
             f = time.strftime("Sensors_%Y%m%d_%H%M%S.h5")
-        self.fileName = os.path.join(self.configBasePath,f)
+        self.fileName = os.path.join(self.basePath,f)
         Log("Opening stream file %s" % self.fileName)
         self.lastWrite = 0
         handle = tables.openFile(self.fileName,mode="w",title="CRDS Sensor Stream File")
@@ -477,9 +477,9 @@ class StreamSaver(SharedTypes.Singleton):
 class Driver(SharedTypes.Singleton):
     def __init__(self,sim,configFile):
         self.config = ConfigObj(configFile)
-        configBasePath = os.path.split(configFile)[0]
-        self.stateDbFile = os.path.join(configBasePath, self.config["Files"]["instrStateFileName"])
-        self.instrConfigFile = os.path.join(configBasePath, self.config["Files"]["instrConfigFileName"])
+        basePath = os.path.split(configFile)[0]
+        self.stateDbFile = os.path.join(basePath, self.config["Files"]["instrStateFileName"])
+        self.instrConfigFile = os.path.join(basePath, self.config["Files"]["instrConfigFileName"])
         self.usbFile  = "../../CypressUSB/analyzer/analyzerUsb.hex"
         self.dspFile  = "../../DSP/registerTest/Debug/registerTest.hex"
         self.fpgaFile = "../../MyHDL/Spartan3/top_io_map.bit"
@@ -487,7 +487,7 @@ class Driver(SharedTypes.Singleton):
                                          self.dspFile,self.fpgaFile,sim)
         self.rpcHandler = DriverRpcHandler(self.config,self.dasInterface)
         InstrumentConfig(self.instrConfigFile)
-        self.streamSaver = StreamSaver(self.config, configBasePath)
+        self.streamSaver = StreamSaver(self.config, basePath)
         self.rpcHandler._register_rpc_functions_for_object(self.streamSaver)
         self.streamCast = Broadcaster(
             port=SharedTypes.BROADCAST_PORT_SENSORSTREAM,
