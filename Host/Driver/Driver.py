@@ -37,6 +37,7 @@ from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.ctypesConvert import ctypesToDict
 from DasConfigure import DasConfigure
 from Host.Common.hostDasInterface import Operation
+from Host.Common.InstErrors import *
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -82,6 +83,48 @@ class DriverRpcHandler(SharedTypes.Singleton):
         # server._register_priority_function(self._getLockStatus, NameSlice = 1)
         Log("Registered RPC functions")
 
+    #
+    # These functions need to be implemented to support Instrument Manager
+    #
+    # These should be added to interface???
+    # Enumerated definitions for DASCNTRL_StateType
+    #DASCNTRL_StateType = c_ushort
+    #DASCNTRL_Reset = 0 # DASCNTRL Reset state.
+    #DASCNTRL_Ready = 1 # DASCNTRL Ready state.
+    #DASCNTRL_Startup = 2 # DASCNTRL Startup state.
+    #DASCNTRL_Diagnostic = 3 # DASCNTRL Diagnostic state.
+    #DASCNTRL_Error = 4 # DASCNTRL Error state.
+    #DASCNTRL_DspNotBooted = 5 # DASCNTRL Dsp Not Booted.
+
+    def DAS_GetState(self, stateMachineIndex):
+        """Need to be implemented"""
+        return 1
+    
+    def getLockStatus(self):
+        """Need to be implemented"""
+        result = dict(laser1TempLockStatus="Locked", warmChamberTempLockStatus="Locked", cavityTempLockStatus = "Locked")
+        return result
+        
+    def startTempControl(self):
+        """Need to be implemented"""
+        return INST_ERROR_OKAY
+
+    def startLaserControl(self):
+        """Need to be implemented"""
+        return INST_ERROR_OKAY
+        
+    def hostReady(self, ready):
+        """Set or clear HOST_READY register"""
+        pass
+
+    def getPressureReading(self):
+        """Fetches the current cavity pressure.
+        """
+        return self.rdDasReg("CAVITY_PRESSURE_REGISTER")
+    #
+    #
+    #
+    
     def allVersions(self):
         versionDict = {}
         versionDict["interface"] = interface.interface_version
@@ -358,12 +401,13 @@ class StreamTableType(tables.IsDescription):
     
 class StreamSaver(SharedTypes.Singleton):
     initialized = False
-    def __init__(self,config=None):
+    def __init__(self,config=None, configBasePath=""):
         if not self.initialized:
             self.fileName = ""
             self.table = None
             self.h5 = None
             self.config = config
+            self.configBasePath = configBasePath
             self.lastWrite = 0
             self.initialized = True
             self.observerAccess = {}
@@ -394,7 +438,7 @@ class StreamSaver(SharedTypes.Singleton):
         except:
             Log("Config option streamFileName not found in [Files] section. Using default.",Level=2)
             f = time.strftime("Sensors_%Y%m%d_%H%M%S.h5")
-        self.fileName = os.path.join(os.path.dirname(AppPath),f)
+        self.fileName = os.path.join(self.configBasePath,f)
         Log("Opening stream file %s" % self.fileName)
         self.lastWrite = 0
         handle = tables.openFile(self.fileName,mode="w",title="CRDS Sensor Stream File")
@@ -433,11 +477,9 @@ class StreamSaver(SharedTypes.Singleton):
 class Driver(SharedTypes.Singleton):
     def __init__(self,sim,configFile):
         self.config = ConfigObj(configFile)
-        self.appDir = os.path.dirname(AppPath)
-        self.stateDbFile = os.path.join(self.appDir,
-                                        self.config["Files"]["instrStateFileName"])
-        self.instrConfigFile = os.path.join(self.appDir,
-                                            self.config["Files"]["instrConfigFileName"])
+        configBasePath = os.path.split(configFile)[0]
+        self.stateDbFile = os.path.join(configBasePath, self.config["Files"]["instrStateFileName"])
+        self.instrConfigFile = os.path.join(configBasePath, self.config["Files"]["instrConfigFileName"])
         self.usbFile  = "../../CypressUSB/analyzer/analyzerUsb.hex"
         self.dspFile  = "../../DSP/registerTest/Debug/registerTest.hex"
         self.fpgaFile = "../../MyHDL/Spartan3/top_io_map.bit"
@@ -445,7 +487,7 @@ class Driver(SharedTypes.Singleton):
                                          self.dspFile,self.fpgaFile,sim)
         self.rpcHandler = DriverRpcHandler(self.config,self.dasInterface)
         InstrumentConfig(self.instrConfigFile)
-        self.streamSaver = StreamSaver(self.config)
+        self.streamSaver = StreamSaver(self.config, configBasePath)
         self.rpcHandler._register_rpc_functions_for_object(self.streamSaver)
         self.streamCast = Broadcaster(
             port=SharedTypes.BROADCAST_PORT_SENSORSTREAM,

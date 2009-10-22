@@ -1,5 +1,5 @@
 [INSTRUMENT_MODE]
-Tuning = LaserCurrent
+Tuning = CavityLength
 
 [SCHEME_CONFIG]
 # Define what schemes should be loaded and sequenced and in what order

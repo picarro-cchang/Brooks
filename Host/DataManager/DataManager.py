@@ -1357,11 +1357,12 @@ class DataManager(object):
     #endclass (DataManager)
 HELP_STRING = \
 """\
-DataManager.py [-h] [-c<FILENAME>]
+DataManager.py [--no_inst_mgr] [-h] [-c<FILENAME>]
 
 Where the options can be a combination of the following:
--h  Print this help.
--c  Specify a different config file.  Default = "./DataManager.ini"
+-h              Print this help.
+-c              Specify a different config file.  Default = "./DataManager.ini"
+--no_inst_mgr   Run this application without Instrument Manager.
 
 """
 

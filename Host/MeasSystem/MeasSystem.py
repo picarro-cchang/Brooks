@@ -177,7 +177,6 @@ class MeasSystem(object):
         def __init__(self, SimMode = False):
             self.SimMode = SimMode
             self.SpectrumTimeout_s = 0
-            self.CalUpdatePeriod_s = 0
             self.ModeDefinitionFile = ""
             #Debugging settings (all off unless Debug option is set, in which case they get loaded)...
             self.StartEngine = False
@@ -198,7 +197,6 @@ class MeasSystem(object):
                 self.SpectrumTimeout_s = 0.0
             self.FitterTimeout_s = cp.getfloat(_MAIN_CONFIG_SECTION, "FitterTimeout_s", DEFAULT_FITTER_TIMEOUT_s)
             self.ModeDefinitionFile = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "ModeDefinitionFile"))
-            self.CalUpdatePeriod_s = cp.getfloat(_MAIN_CONFIG_SECTION, "CalUpdatePeriod_s")
             # Fetch the IP addresses and ports of the fitters in the pool
             nFitters = 0
             while cp.has_option(_MAIN_CONFIG_SECTION,"FitterAddr%d" % (nFitters,)) or \
@@ -272,7 +270,7 @@ class MeasSystem(object):
         if not self.noInstMgr:
             self.rdInstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
                                                         APP_NAME,
-                                                        IsDontCareConnection = False)
+                                                        IsDontCareConnection = True)
                                                         
     def _AssertValidCallingState(self, StateList):
         if self.__State not in StateList:
@@ -525,16 +523,17 @@ class MeasSystem(object):
                 schemeSeq.append(uniqueSchemes[i])
             #After sending this schemeSet to the SchemeManager in RDFrequencyConverter, schemes can simply be referred to by their names...
             FreqConverter.configSchemeManager(schemeDict, schemeSeq)
-            ##Set up spectrum queue in Spectrum Collector
+            
+            # Set up spectrum queue in Spectrum Collector
             SpectrumCollector.setMaxSpectrumQueueSize(40)
 
-            ##See if the fitter is running (if not the exception will be picked up below)...
+            # See if the fitter is running (if not the exception will be picked up below)...
             if not self.SkipFitting:
                 self.FitterPool.Ping()
-            #Set the fitter proxy up to be interruptable while waiting for a long fit...
+            # Set the fitter proxy up to be interruptable while waiting for a long fit...
             self.FitterPool.SetEnableEvent(self._EnableEvent)
 
-            ##Deal with startup configuration options...
+            # Deal with startup configuration options...
             if self.Config.StartEngine:
                 Log("Engine started (with Driver.startEngine) due to 'StartEngine' startup config setting.")
                 Driver.startEngine()
@@ -695,14 +694,14 @@ class MeasSystem(object):
 
 HELP_STRING = \
 """\
-MeasSystem.py [-h] [-c<FILENAME>]
+MeasSystem.py [-h] [--no_fitter] [--no_inst_mgr] [-c<FILENAME>]
 
 Where the options can be a combination of the following:
 -h  Print this help.
 -c  Specify a different config file.  Default = "./MeasSystem.ini"
 
 --no_fitter    Will suppress all fitter transactions.
---no_inst_mgr  Run without Instrument Manager.
+--no_inst_mgr  Run this application without Instrument Manager.
 """
 
 def PrintUsage():
