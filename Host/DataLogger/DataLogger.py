@@ -422,7 +422,7 @@ class DataLogger(object):
                 logList.append(logName)
 
             self.PortDict[dl.Port]= logList
-
+            
     def _DataListener(self, dataMgrObject):
         try:
             self.md.ImportPickleDict(dataMgrObject)
@@ -485,7 +485,8 @@ class DataLogger(object):
         self._LoadDefaultConfig()
         self._LoadCustomConfig(self.PrivateCp, self.PrivateLogDict)
         self._LoadCustomConfig(self.UserCp, self.UserLogDict)
-
+        Log("Data Logger: source dict=%s; port dict=%s" % (self.SrcDict,self.PortDict))
+                
         for port,value in self.PortDict.iteritems():
             self.Listener = Listener.Listener(None, port, StringPickler.ArbitraryObject, self._DataListener, retry = True,
                                               name = "Data Logger data listener",logFunc = Log)
