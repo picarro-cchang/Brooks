@@ -22,7 +22,7 @@ import traceback
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes
-from configobj import ConfigObj
+from Host.Common.CustomConfigObj import CustomConfigObj
 from ControllerModels import DriverProxy, RDFreqConvProxy
 
 # For convenience in calling driver and frequency converter functions
@@ -44,8 +44,8 @@ class Sequencer(SharedTypes.Singleton):
     WAIT_FOR_SCHEME_DONE = 4
     initialized = False
 
-    def __init__(self,config=None):
-        if not self.initialized and config is not None:
+    def __init__(self,configFile=None):
+        if not self.initialized and configFile is not None:
             self.state = Sequencer.IDLE
             self.sequence = 1
             self.scheme = 1
@@ -53,10 +53,12 @@ class Sequencer(SharedTypes.Singleton):
             self.activeIndex = None
             self.useIndex = None
             self.sequences = None
-            self.getSequences(config)
+            self.getSequences(configFile)
             self.initialized = True
 
-    def getSequences(self,config):
+    def getSequences(self,configFile):
+        basePath = os.path.split(configFile)[0]
+        config = CustomConfigObj(configFile)
         self.sequences = []
         self.state = Sequencer.IDLE
         # Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
@@ -68,7 +70,7 @@ class Sequencer(SharedTypes.Singleton):
                 nSchemes = int(cs["NSCHEMES"])
                 schemes = []
                 for i in range(nSchemes):
-                    schemeFileName = cs["SCHEME%02d" % (i+1,)]
+                    schemeFileName = os.path.join(basePath, cs["SCHEME%02d" % (i+1,)])
                     repetitions = int(cs["REPEAT%02d" % (i+1,)])
                     name, ext = os.path.splitext(schemeFileName)
                     schemes.append((SharedTypes.Scheme(schemeFileName),repetitions,ext.lower() == ".sch"))

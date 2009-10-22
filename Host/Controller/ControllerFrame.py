@@ -25,7 +25,6 @@ from Host.Common.ParameterDialog import ParameterDialog
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes
-from configobj import ConfigObj
 from Sequencer import Sequencer
 
 # For convenience in calling driver and frequency converter functions
@@ -57,7 +56,7 @@ class ControllerFrame(ControllerFrameGui):
         self.sensorListener = SensorListener()
         self.ringdownListener = RingdownListener()
         self.rpcHandler = ControllerRpcHandler()
-        Sequencer(ConfigObj(Driver.getConfigFile()))
+        Sequencer(Driver.getConfigFile())
         self.Bind(wx.EVT_IDLE, self.onIdle)
         panels["Laser1"]=self.laser1Panel
         panels["Laser2"]=self.laser2Panel
@@ -223,7 +222,7 @@ class ControllerFrame(ControllerFrameGui):
 
     def onLoadIni(self, event):
         Driver.loadIniFile()
-        Sequencer().getSequences(ConfigObj(Driver.getConfigFile()))
+        Sequencer().getSequences(Driver.getConfigFile())
 
     def onWriteIni(self, event):
         Driver.writeIniFile()

@@ -24,7 +24,7 @@ import threading
 import time
 import types
 import traceback
-from configobj import ConfigObj
+from Host.Common.CustomConfigObj import CustomConfigObj
 from numpy import array, transpose
 
 from Host.autogen import interface
@@ -476,7 +476,7 @@ class StreamSaver(SharedTypes.Singleton):
 
 class Driver(SharedTypes.Singleton):
     def __init__(self,sim,configFile):
-        self.config = ConfigObj(configFile)
+        self.config = CustomConfigObj(configFile)
         basePath = os.path.split(configFile)[0]
         self.stateDbFile = os.path.join(basePath, self.config["Files"]["instrStateFileName"])
         self.instrConfigFile = os.path.join(basePath, self.config["Files"]["instrConfigFileName"])
@@ -565,11 +565,11 @@ class InstrumentConfig(SharedTypes.Singleton):
     """Configuration of instrument."""
     def __init__(self,filename=None):
         if filename is not None:
-            self.config = ConfigObj(filename)
+            self.config = CustomConfigObj(filename)
             self.filename = filename
 
     def reloadFile(self):
-        self.config = ConfigObj(self.filename)
+        self.config = CustomConfigObj(self.filename)
 
     def savePersistentRegistersToConfig(self):
         s = HostToDspSender()
