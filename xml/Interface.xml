@@ -2588,6 +2588,17 @@
                     <fielddef value="13">Ratio 2 (MS)</fielddef>
                     <fielddef value="14">PZT (LS)</fielddef>
                     <fielddef value="15">PZT (MS)</fielddef>
+                    <fielddef value="16">Etalon 1 ADC (LS)</fielddef>
+                    <fielddef value="17">Etalon 1 ADC (MS)</fielddef>
+                    <fielddef value="18">Reference 1 ADC (LS)</fielddef>
+                    <fielddef value="19">Reference 1 ADC (MS)</fielddef>
+                    <fielddef value="20">Etalon 2 ADC (LS)</fielddef>
+                    <fielddef value="21">Etalon 2 ADC (MS)</fielddef>
+                    <fielddef value="22">Reference 2 ADC (LS)</fielddef>
+                    <fielddef value="23">Reference 2 ADC (MS)</fielddef>
+                    <fielddef value="24">WLM ADC signals</fielddef>
+                    <fielddef value="25">System clocks</fielddef>
+                    <fielddef value="26">PWM signals</fielddef>
                 </bitfield>
             </reg>
             <reg type="mask" ident="INTRONIX_2" description="" access="rw">
@@ -2608,7 +2619,18 @@
                     <fielddef value="12">Ratio 2 (LS)</fielddef>
                     <fielddef value="13">Ratio 2 (MS)</fielddef>
                     <fielddef value="14">PZT (LS)</fielddef>
-                    <fielddef value="15">PZT (MS)</fielddef>                    
+                    <fielddef value="15">PZT (MS)</fielddef>
+                    <fielddef value="16">Etalon 1 ADC (LS)</fielddef>
+                    <fielddef value="17">Etalon 1 ADC (MS)</fielddef>
+                    <fielddef value="18">Reference 1 ADC (LS)</fielddef>
+                    <fielddef value="19">Reference 1 ADC (MS)</fielddef>
+                    <fielddef value="20">Etalon 2 ADC (LS)</fielddef>
+                    <fielddef value="21">Etalon 2 ADC (MS)</fielddef>
+                    <fielddef value="22">Reference 2 ADC (LS)</fielddef>
+                    <fielddef value="23">Reference 2 ADC (MS)</fielddef>
+                    <fielddef value="24">WLM ADC signals</fielddef>
+                    <fielddef value="25">System clocks</fielddef>
+                    <fielddef value="26">PWM signals</fielddef>
                 </bitfield>
             </reg>
             <reg type="mask" ident="INTRONIX_3" description="" access="rw">
@@ -2630,6 +2652,17 @@
                     <fielddef value="13">Ratio 2 (MS)</fielddef>
                     <fielddef value="14">PZT (LS)</fielddef>
                     <fielddef value="15">PZT (MS)</fielddef>
+                    <fielddef value="16">Etalon 1 ADC (LS)</fielddef>
+                    <fielddef value="17">Etalon 1 ADC (MS)</fielddef>
+                    <fielddef value="18">Reference 1 ADC (LS)</fielddef>
+                    <fielddef value="19">Reference 1 ADC (MS)</fielddef>
+                    <fielddef value="20">Etalon 2 ADC (LS)</fielddef>
+                    <fielddef value="21">Etalon 2 ADC (MS)</fielddef>
+                    <fielddef value="22">Reference 2 ADC (LS)</fielddef>
+                    <fielddef value="23">Reference 2 ADC (MS)</fielddef>
+                    <fielddef value="24">WLM ADC signals</fielddef>
+                    <fielddef value="25">System clocks</fielddef>
+                    <fielddef value="26">PWM signals</fielddef>
                 </bitfield>
             </reg>
             <reg type="uint16" ident="OVERLOAD" description="Overload register" access="r">

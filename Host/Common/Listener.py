@@ -198,16 +198,17 @@ if __name__ == "__main__":
         print "Log: %s" % (s,)
 
     def myFilter(m):
-        assert isinstance(m,MyTime)
-        return (m.hour,m.minute,m.second)
+        assert isinstance(m,MyTime*10000)
+        return m
 
     queue = Queue.Queue(0)
     port = 8881
-    listener = Listener(queue,port,MyTime,myFilter,retry=True,notify=myNotify,name="Test Listener",logFunc=myLogger)
+    listener = Listener(queue,port,MyTime*10000,myFilter,retry=True,notify=myNotify,name="Test Listener",logFunc=myLogger)
 
     while listener.isAlive():
         try:
-            h,m,s = queue.get(timeout=0.5)
+            result = queue.get(timeout=0.5)
+            h,m,s = result[0].hour,result[0].minute,result[0].second
             print "Time is %02d:%02d:%02d" % (h,m,s)
         except Queue.Empty:
             continue

@@ -750,7 +750,6 @@ class StatsPanel(StatsPanelGui):
         if self.active and 0 == (data.status & interface.RINGDOWN_STATUS_RingdownTimeout):
             self.rdStats.processDatum(data.timestamp/1000.0,data.uncorrectedAbsorbance)
             self.lossAllanVar.processDatum(data.uncorrectedAbsorbance)
-            # TO DO: Replace angle with wave number
             #self.waveNumberAllanVar.processDatum(data.wlmAngle)
             self.waveNumberAllanVar.processDatum(data.waveNumber)
             self.ratio1AllanVar.processDatum(data.ratio1)

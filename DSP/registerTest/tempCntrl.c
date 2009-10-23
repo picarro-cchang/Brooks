@@ -101,7 +101,7 @@ int tempCntrlWrite(TempCntrl *t)
 int tempCntrlStep(TempCntrl *t)
 {
     // Step the temperature controller, computing the new TEC value
-    float error;
+    float error, tecNext;
     int inRange;
 
     switch (state)
@@ -115,6 +115,8 @@ int tempCntrlStep(TempCntrl *t)
     case TEMP_CNTRL_ManualState:
         setDasStatusBit(activeBit);
         resetDasStatusBit(lockBit);
+        if (manualTec > Amax) manualTec = Amax;
+        if (manualTec < Amin) manualTec = Amin;
         tec = manualTec;
         prbsReg = 0x1;
         break;
@@ -173,13 +175,16 @@ int tempCntrlStep(TempCntrl *t)
         resetDasStatusBit(lockBit);
         if (prbsReg & 0x1)
         {
-            tec = prbsMean + prbsAmp;
+            tecNext = prbsMean + prbsAmp;
             prbsReg ^= prbsGen;
         }
         else
         {
-            tec = prbsMean - prbsAmp;
+            tecNext = prbsMean - prbsAmp;
         }
+        if (tecNext > Amax) tecNext = Amax;
+        if (tecNext < Amin) tecNext = Amin;
+        tec = tecNext;
         prbsReg >>= 1;
         break;
     }

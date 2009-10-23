@@ -94,10 +94,16 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     pwm_laser3_out, pwm_laser3_inv_out = [Signal(LOW) for i in range(2)]
     pwm_laser4_out, pwm_laser4_inv_out = [Signal(LOW) for i in range(2)]
 
+    heater_pwm_out = Signal(LOW)
+    hot_box_pwm_out = Signal(LOW)
+    warm_box_pwm_out = Signal(LOW)
+    
     heater_pwm_inv = Signal(LOW)
     hot_box_pwm_inv = Signal(LOW)
     warm_box_pwm_inv = Signal(LOW)
 
+    wmm_rd_out = Signal(LOW)
+                        
     data_we,adc_clk = [Signal(LOW) for i in range(2)]
 
     bank = Signal(LOW)
@@ -298,21 +304,21 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     pwm_warmbox = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                       dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_warmbox,
                       dsp_wr=dsp_wr,
-                      pwm_out=warm_box_pwm,
+                      pwm_out=warm_box_pwm_out,
                       pwm_inv_out=warm_box_pwm_inv,
                       map_base=FPGA_PWM_WARMBOX)
     
     pwm_hotbox = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_hotbox,
                      dsp_wr=dsp_wr,
-                     pwm_out=hot_box_pwm,
+                     pwm_out=hot_box_pwm_out,
                      pwm_inv_out=hot_box_pwm_inv,
                      map_base=FPGA_PWM_HOTBOX)
 
     pwm_heater = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_heater,
                      dsp_wr=dsp_wr,
-                     pwm_out=heater_pwm,
+                     pwm_out=heater_pwm_out,
                      pwm_inv_out=heater_pwm_inv,
                      map_base=FPGA_PWM_HEATER)
 
@@ -367,7 +373,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     wlmadcreader = WlmAdcReader(clk=clk0, reset=reset, adc_clock_in=clk_2M5,
                                 strobe_in=pulse_100k, eta1_in=wmm_refl1,
                                 ref1_in=wmm_tran1, eta2_in=wmm_refl2,
-                                ref2_in=wmm_tran2, adc_rd_out=wmm_rd,
+                                ref2_in=wmm_tran2, adc_rd_out=wmm_rd_out,
                                 adc_convst_out=wmm_convst, data_available_out=data_available_actual,
                                 eta1_out=eta1_actual, ref1_out=ref1_actual,
                                 eta2_out=eta2_actual, ref2_out=ref2_actual)
@@ -424,106 +430,198 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                 channel_3.next = 0
             else:
                 counter.next = counter + 1
-
+                tuner_low = tuner_value[8:]
+                tuner_high = tuner_value[16:8]
+                rd_adc_low = concat(rd_adc[6:0],LOW,LOW)
+                rd_adc_high = rd_adc[14:6]
+                rd_sim_low = concat(rdsim_value[6:0],LOW,LOW)
+                rd_sim_high = rdsim_value[14:6]
+                laser_fine_current_low = laser_fine_current[8:]
+                laser_fine_current_high = laser_fine_current[16:]
+                lock_error_low = lock_error[8:]
+                lock_error_high = lock_error[16:]
+                ratio1_low = ratio1[8:]
+                ratio1_high = ratio1[16:8]
+                ratio2_low = ratio2[8:]
+                ratio2_high = ratio2[16:8]
+                pzt_low = pzt[8:]
+                pzt_high = pzt[16:8]
+                eta1_adc_low = eta1_actual[8:]
+                eta1_adc_high = eta1_actual[16:8]
+                ref1_adc_low = ref1_actual[8:]
+                ref1_adc_high = ref1_actual[16:8]
+                eta2_adc_low = eta2_actual[8:]
+                eta2_adc_high = eta2_actual[16:8]
+                ref2_adc_low = ref2_actual[8:]
+                ref2_adc_high = ref2_actual[16:8]
+                wlm_adc = concat(wmm_busy2,wmm_busy1,wmm_rd_out,clk_2M5,wmm_tran2,wmm_refl2,wmm_tran1,wmm_refl1)
+                system_clocks = concat(LOW,clk_10M,clk_5M,clk_2M5,pulse_1M,pulse_100k,wlm_data_available,metadata_strobe)
+                pwm_signals = concat(LOW,heater_pwm_out,hot_box_pwm_out,warm_box_pwm_out,pwm_laser4_out,pwm_laser3_out,pwm_laser2_out,pwm_laser1_out)
                 # Latch data for the intronix port
                 if intronix_1 == 0:
-                    channel_1.next = tuner_value[8:]
+                    channel_1.next = tuner_low
                 elif intronix_1 == 1:
-                    channel_1.next = tuner_value[16:8]
+                    channel_1.next = tuner_high
                 elif intronix_1 == 2:
-                    channel_1.next = concat(rd_adc[6:0],LOW,LOW)
+                    channel_1.next = rd_adc_low
                 elif intronix_1 == 3:
-                    channel_1.next = rd_adc[14:6]
+                    channel_1.next = rd_adc_high
                 elif intronix_1 == 4:
-                    channel_1.next = concat(rdsim_value[6:0],LOW,LOW)
+                    channel_1.next = rd_sim_low
                 elif intronix_1 == 5:
-                    channel_1.next = rdsim_value[14:6]
+                    channel_1.next = rd_sim_high
                 elif intronix_1 == 6:
-                    channel_1.next = laser_fine_current[8:]
+                    channel_1.next = laser_fine_current_low
                 elif intronix_1 == 7:
-                    channel_1.next = laser_fine_current[16:8]
+                    channel_1.next = laser_fine_current_high
                 elif intronix_1 == 8:
-                    channel_1.next = lock_error[8:]
+                    channel_1.next = lock_error_low
                 elif intronix_1 == 9:
-                    channel_1.next = lock_error[16:8]
+                    channel_1.next = lock_error_low
                 elif intronix_1 == 10:
-                    channel_1.next = ratio1[8:]
+                    channel_1.next = ratio1_low
                 elif intronix_1 == 11:
-                    channel_1.next = ratio1[16:8]
+                    channel_1.next = ratio1_high
                 elif intronix_1 == 12:
-                    channel_1.next = ratio2[8:]
+                    channel_1.next = ratio2_low
                 elif intronix_1 == 13:
-                    channel_1.next = ratio2[16:8]
+                    channel_1.next = ratio2_high
                 elif intronix_1 == 14:
-                    channel_1.next = pzt[8:]
+                    channel_1.next = pzt_low
+                elif intronix_1 == 15:
+                    channel_1.next = pzt_high
+                elif intronix_1 == 16:
+                    channel_1.next = eta1_adc_low
+                elif intronix_1 == 17:
+                    channel_1.next = eta1_adc_high
+                elif intronix_1 == 18:
+                    channel_1.next = ref1_adc_low
+                elif intronix_1 == 19:
+                    channel_1.next = ref1_adc_high
+                elif intronix_1 == 20:
+                    channel_1.next = eta2_adc_low
+                elif intronix_1 == 21:
+                    channel_1.next = eta2_adc_high
+                elif intronix_1 == 22:
+                    channel_1.next = ref2_adc_low
+                elif intronix_1 == 23:
+                    channel_1.next = ref2_adc_high
+                elif intronix_1 == 24:
+                    channel_1.next = wlm_adc
+                elif intronix_1 == 25:
+                    channel_1.next = system_clocks
                 else:
-                    channel_1.next = pzt[16:8]
+                    channel_1.next = pwm_signals
                     
                 if intronix_2 == 0:
-                    channel_2.next = tuner_value[8:]
+                    channel_2.next = tuner_low
                 elif intronix_2 == 1:
-                    channel_2.next = tuner_value[16:8]
+                    channel_2.next = tuner_high
                 elif intronix_2 == 2:
-                    channel_2.next = concat(rd_adc[6:0],LOW,LOW)
+                    channel_2.next = rd_adc_low
                 elif intronix_2 == 3:
-                    channel_2.next = rd_adc[14:6]
+                    channel_2.next = rd_adc_high
                 elif intronix_2 == 4:
-                    channel_2.next = concat(rdsim_value[6:0],LOW,LOW)
+                    channel_2.next = rd_sim_low
                 elif intronix_2 == 5:
-                    channel_2.next = rdsim_value[14:6]
+                    channel_2.next = rd_sim_high
                 elif intronix_2 == 6:
-                    channel_2.next = laser_fine_current[8:]
+                    channel_2.next = laser_fine_current_low
                 elif intronix_2 == 7:
-                    channel_2.next = laser_fine_current[16:8]
+                    channel_2.next = laser_fine_current_high
                 elif intronix_2 == 8:
-                    channel_2.next = lock_error[8:]
+                    channel_2.next = lock_error_low
                 elif intronix_2 == 9:
-                    channel_2.next = lock_error[16:8]
+                    channel_2.next = lock_error_low
                 elif intronix_2 == 10:
-                    channel_2.next = ratio1[8:]
+                    channel_2.next = ratio1_low
                 elif intronix_2 == 11:
-                    channel_2.next = ratio1[16:8]
+                    channel_2.next = ratio1_high
                 elif intronix_2 == 12:
-                    channel_2.next = ratio2[8:]
+                    channel_2.next = ratio2_low
                 elif intronix_2 == 13:
-                    channel_2.next = ratio2[16:8]
+                    channel_2.next = ratio2_high
                 elif intronix_2 == 14:
-                    channel_2.next = pzt[8:]
+                    channel_2.next = pzt_low
+                elif intronix_2 == 15:
+                    channel_2.next = pzt_high
+                elif intronix_2 == 16:
+                    channel_2.next = eta1_adc_low
+                elif intronix_2 == 17:
+                    channel_2.next = eta1_adc_high
+                elif intronix_2 == 18:
+                    channel_2.next = ref1_adc_low
+                elif intronix_2 == 19:
+                    channel_2.next = ref1_adc_high
+                elif intronix_2 == 20:
+                    channel_2.next = eta2_adc_low
+                elif intronix_2 == 21:
+                    channel_2.next = eta2_adc_high
+                elif intronix_2 == 22:
+                    channel_2.next = ref2_adc_low
+                elif intronix_2 == 23:
+                    channel_2.next = ref2_adc_high
+                elif intronix_2 == 24:
+                    channel_2.next = wlm_adc
+                elif intronix_2 == 25:
+                    channel_2.next = system_clocks
                 else:
-                    channel_2.next = pzt[16:8]
+                    channel_2.next = pwm_signals
                     
                 if intronix_3 == 0:
-                    channel_3.next = tuner_value[8:]
+                    channel_3.next = tuner_low
                 elif intronix_3 == 1:
-                    channel_3.next = tuner_value[16:8]
+                    channel_3.next = tuner_high
                 elif intronix_3 == 2:
-                    channel_3.next = concat(rd_adc[6:0],LOW,LOW)
+                    channel_3.next = rd_adc_low
                 elif intronix_3 == 3:
-                    channel_3.next = rd_adc[14:6]
+                    channel_3.next = rd_adc_high
                 elif intronix_3 == 4:
-                    channel_3.next = concat(rdsim_value[6:0],LOW,LOW)
+                    channel_3.next = rd_sim_low
                 elif intronix_3 == 5:
-                    channel_3.next = rdsim_value[14:6]
+                    channel_3.next = rd_sim_high
                 elif intronix_3 == 6:
-                    channel_3.next = laser_fine_current[8:]
+                    channel_3.next = laser_fine_current_low
                 elif intronix_3 == 7:
-                    channel_3.next = laser_fine_current[16:8]
+                    channel_3.next = laser_fine_current_high
                 elif intronix_3 == 8:
-                    channel_3.next = lock_error[8:]
+                    channel_3.next = lock_error_low
                 elif intronix_3 == 9:
-                    channel_3.next = lock_error[16:8]
+                    channel_3.next = lock_error_low
                 elif intronix_3 == 10:
-                    channel_3.next = ratio1[8:]
+                    channel_3.next = ratio1_low
                 elif intronix_3 == 11:
-                    channel_3.next = ratio1[16:8]
+                    channel_3.next = ratio1_high
                 elif intronix_3 == 12:
-                    channel_3.next = ratio2[8:]
+                    channel_3.next = ratio2_low
                 elif intronix_3 == 13:
-                    channel_3.next = ratio2[16:8]
+                    channel_3.next = ratio2_high
                 elif intronix_3 == 14:
-                    channel_3.next = pzt[8:]
+                    channel_3.next = pzt_low
+                elif intronix_3 == 15:
+                    channel_3.next = pzt_high
+                elif intronix_3 == 16:
+                    channel_3.next = eta1_adc_low
+                elif intronix_3 == 17:
+                    channel_3.next = eta1_adc_high
+                elif intronix_3 == 18:
+                    channel_3.next = ref1_adc_low
+                elif intronix_3 == 19:
+                    channel_3.next = ref1_adc_high
+                elif intronix_3 == 20:
+                    channel_3.next = eta2_adc_low
+                elif intronix_3 == 21:
+                    channel_3.next = eta2_adc_high
+                elif intronix_3 == 22:
+                    channel_3.next = ref2_adc_low
+                elif intronix_3 == 23:
+                    channel_3.next = ref2_adc_high
+                elif intronix_3 == 24:
+                    channel_3.next = wlm_adc
+                elif intronix_3 == 25:
+                    channel_3.next = system_clocks
                 else:
-                    channel_3.next = pzt[16:8]
+                    channel_3.next = pwm_signals
         
                 channel_4.next = concat(rd_trig,diag_1[4:],bank,laser_locked,acc_en,tuner_in_window)
         
@@ -576,8 +674,13 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         lsr3_1.next = pwm_laser3_inv_out
         lsr4_0.next = pwm_laser4_out
         lsr4_1.next = pwm_laser4_inv_out
-        
 
+        warm_box_pwm.next = warm_box_pwm_out
+        hot_box_pwm.next = hot_box_pwm_out
+        heater_pwm.next = heater_pwm_out
+        
+        wmm_rd.next = wmm_rd_out
+        
         rd_adc_clk.next = adc_clk
         rd_adc_oe.next = 1
         fpga_led.next = counter[NSTAGES:NSTAGES-4]

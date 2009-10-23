@@ -49,7 +49,7 @@ class ControllerFrame(ControllerFrameGui):
         ControllerFrameGui.__init__(self,*a,**k)
         self.updateTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER,self.onUpdateTimer,self.updateTimer)
-        self.updateTimer.Start(milliseconds=250)
+        self.updateTimer.Start(milliseconds=1000)
         self.openParamDialogs = {}
         self.setupParameterDialogs()
         self.setupWaveforms()

@@ -126,6 +126,13 @@ class WlmFileMaker(object):
         if self.tempTol < 0.001 or self.tempTol > 0.1:
             raise ValueError("TEMP_TOLERANCE must be in range 0.001 to 0.1")
         
+        if "-m" in options:
+            self.model = float(options["-m"])
+        else:
+            self.model = int(self.config["SETTINGS"]["WAVEMETER"])
+        if self.model not in [7000, 7600]:
+            raise ValueError("Valid Wavemeter model numbers are 7000 and 7600")
+        
         # Define a queue for the sensor stream data
         self.queue = Queue(0)
         self.streamFilterState = "COLLECTING_DATA"
@@ -159,12 +166,13 @@ class WlmFileMaker(object):
     def readWavenumber(self):
         while True:
             self.ser.write("READ:SCAL:FREQ?\n");
-            reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to READ command")
             try:
-            # N.B. Sunnyvale Burleigh reads out frequencies in THz
+                reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to READ command")
+                # N.B. Sunnyvale Burleigh reads out frequencies in THz
                 waveno = float(reply)/0.0299792458
                 return waveno
-            except:
+            except IOError:
+                print "COMMS timeout, trying again"
                 pass # Try again
         
     def flushQueue(self):
@@ -208,10 +216,16 @@ class WlmFileMaker(object):
         except:
             raise ValueError,"Cannot communicate with driver, aborting"
 
+
         print "Asking wavemeter for identification"
-        self.ser.write("\n*IDN?\n");
-        reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
-        print "Wavemeter id: %s" % reply
+        if self.model == 7000:
+            self.ser.write("\n*IDN?\n");
+            reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
+            print "Wavemeter id: %s" % reply
+        else:
+            self.ser.write("*IDN?\n")
+            reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
+            print "Wavemeter id: %s" % reply
 
         try:
             regVault = Driver.saveRegValues(["LASER%d_TEMP_CNTRL_USER_SETPOINT_REGISTER" % self.laserNum,
@@ -397,6 +411,7 @@ settings in the configuration file:
 -f                   name of output file (without extension)
 -i                   coarse laser current (digitizer units)
 -l                   laser number (1-index)
+-m                   model number of wavemeter (7000 or 7600)
 --max                maximum laser temperature
 --min                minimum laser temperature
 --step               laser temperature step
@@ -408,7 +423,7 @@ def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:i:l:f:w:'
+    shortOpts = 'hc:i:l:f:w:m:'
     longOpts = ["help","min=","max=","step=","tol="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
