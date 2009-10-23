@@ -14,19 +14,22 @@
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
+
+APP_NAME = "Controller"
+
 import wx
 import sys
 import traceback
 
+from Sequencer import Sequencer
 from ControllerFrameGui import ControllerFrameGui
 from ControllerModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy
 from ControllerModels import LogListener, SensorListener, RingdownListener, ControllerRpcHandler
-from Host.Common.ParameterDialog import ParameterDialog
 from Host.autogen import interface
-from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes
-from configobj import ConfigObj
-from Sequencer import Sequencer
+from Host.Common.ParameterDialog import ParameterDialog
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+EventManagerProxy_Init(APP_NAME)
 
 # For convenience in calling driver and frequency converter functions
 Driver = DriverProxy().rpc
@@ -36,7 +39,6 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-EventManagerProxy_Init("Controller")
 
 class ControllerFrame(ControllerFrameGui):
     def __init__(self,*a,**k):
@@ -57,7 +59,7 @@ class ControllerFrame(ControllerFrameGui):
         self.sensorListener = SensorListener()
         self.ringdownListener = RingdownListener()
         self.rpcHandler = ControllerRpcHandler()
-        Sequencer(ConfigObj(Driver.getConfigFile()))
+        Sequencer(Driver.getConfigFile())
         self.Bind(wx.EVT_IDLE, self.onIdle)
         panels["Laser1"]=self.laser1Panel
         panels["Laser2"]=self.laser2Panel
@@ -223,7 +225,7 @@ class ControllerFrame(ControllerFrameGui):
 
     def onLoadIni(self, event):
         Driver.loadIniFile()
-        Sequencer().getSequences(ConfigObj(Driver.getConfigFile()))
+        Sequencer().getSequences(Driver.getConfigFile())
 
     def onWriteIni(self, event):
         Driver.writeIniFile()
@@ -243,7 +245,9 @@ if __name__ == "__main__":
     try:
         app.SetTopWindow(controllerFrame)
         controllerFrame.Show()
+        Log("%s started." % APP_NAME, Level = 0)
         app.MainLoop()
+        Log("Exiting program")
     finally:
         Driver.unregisterStreamStatusObserver(
             SharedTypes.RPC_PORT_CONTROLLER)

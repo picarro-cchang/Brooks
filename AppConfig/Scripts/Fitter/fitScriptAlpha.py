@@ -42,6 +42,7 @@ init = InitialValues()
 deps = Dependencies()
 ANALYSIS = []    
 d = DATA
+
 d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.50,maxVal=20.0)
 d.wlmSetpointFilter(maxDev=0.005,sigmaThreshold=3)
 d.sparse(maxPoints=1000,width=0.002,height=100000.0,xColumn="waveNumber",yColumn="uncorrectedAbsorbance",sigmaThreshold=2.5)
@@ -55,7 +56,7 @@ init["base",0] = 800
 
 tstart = time.clock()
 RESULT = {}
-if species==20:
+if species in [20, 26]:
     if True: # base0_avg == None or (avg_count % 5) == 1: 
         init[1,"scaled_strength"] = 10
         init[1,"scaled_y"] = 0.01
@@ -83,7 +84,7 @@ if species==20:
     ignore_count = max(0,ignore_count-1)
     if ignore_count == 0:
         RESULT = {"alpha_res":alpha_res,
-                  "apha_peak":r[1,"peak"],"alpha_str":alpha_str,"alpha_y":alpha_y,
+                  "alpha_peak":r[1,"peak"],"alpha_str":alpha_str,"alpha_y":alpha_y,
                   "alpha_y_avg":alpha_y_avg,
                   "alpha_str_avg":alpha_str_avg,
                   "alpha_cen_avg":alpha_cen_avg,

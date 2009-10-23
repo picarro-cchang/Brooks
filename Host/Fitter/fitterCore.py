@@ -979,10 +979,10 @@ class RdfData(object):
                 object.__setattr__(rdfData, s, rdData[s][low:high])
             # Initialize indexVector to the identity permutation to indicate that
             #  all data are (initially) good
-            rdfData.nrows = len(rdfData.time)
+            rdfData.nrows = controlData["RDDataSize"]
             rdfData.indexVector = arange(rdfData.nrows)
             # Set the average time of the sensor data
-            rdfData.sensorDict["Time_s"] = otherData["SpectrumStartTime"] + mean(rdData["time"][low:high])
+            rdfData.sensorDict["Time_s"] = otherData["SensorTime"]
             return rdfData
 
         def allowYield(id):

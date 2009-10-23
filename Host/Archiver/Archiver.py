@@ -25,28 +25,28 @@ _DEFAULT_CONFIG_NAME = "Archiver.ini"
 _MAIN_CONFIG_SECTION = "MainConfig"
 
 import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
 import os
+import getopt
 import doctest
-from CustomConfigObj import CustomConfigObj
 import threading
 import shutil
 import stat
 import time
-from inspect import isclass
+import Queue
 import zipfile
-import CmdFIFO
-from SharedTypes import RPC_PORT_LOGGER, RPC_PORT_ARCHIVER
+from inspect import isclass
 from cStringIO import StringIO
+
+from Host.Common import CmdFIFO
+from Host.Common import BetterTraceback
+from Host.Common.SharedTypes import RPC_PORT_LOGGER, RPC_PORT_ARCHIVER
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.EventManagerProxy import *
+EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
 if sys.platform == 'win32':
     threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
-import BetterTraceback
-from EventManagerProxy import *
-import Queue
-
-EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
-
+    
 ####
 ## Functions
 ####
@@ -575,8 +575,6 @@ class Archiver(object):
         return "refreshStats command queued for group %s" % (groupName,)
 
 def HandleCommandSwitches():
-    import getopt
-
     shortOpts = 'hc:'
     longOpts = ["help","test"]
     try:
@@ -627,7 +625,7 @@ def main():
     #Get and handle the command line options...
     configFile, test = HandleCommandSwitches()
     ar = Archiver(configFile)
-    Log("Archiver application started.", dict(ConfigFile = configFile))
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     if test:
         fname = "c:/temp/AADS06wlm.dat"
         seqnum = 0

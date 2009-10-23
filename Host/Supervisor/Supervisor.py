@@ -50,9 +50,7 @@
 # 08-10-08  alex  Re-ordered applications to be launched
 
 import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
 import ctypes
-import getopt
 if sys.platform == "win32":
     import msvcrt #for kbhit and getch
     import win32process
@@ -64,54 +62,36 @@ elif sys.platform == "linux2":
     sched_getaffinity = libc.sched_getaffinity
     sched_setaffinity = libc.sched_setaffinity
     setpriority = libc.setpriority
-
-from CustomConfigObj import CustomConfigObj
-
+import os
+import time
+import getopt
 import threading
 import Queue
+import traceback
 import SocketServer #for Mode 3 apps
-
-from socket import timeout as socket_timeout
-from socket import error as socket_error
-from time import sleep as time_sleep
-from time import strftime
-import xmlrpclib #we'll be setting up a new transport for use with CmdFIFO in order to get access to socket timeouts where we want
-
-from os.path import exists as file_exists
-from os.path import splitext
-from os.path import basename
-from os.path import dirname
-from os.path import abspath
 from os import spawnv
 from os import P_NOWAIT
 from os import getpid as os_getpid
-import os
 from subprocess import Popen, call
 
-if sys.platform == 'win32':
-    from time import clock as TimeStamp
-else:
-    from time import time as TimeStamp
-
-import Host.Common.CmdFIFO as CmdFIFO
+from Host.Common import CmdFIFO
+from Host.Common import BetterTraceback
 from Host.Common.SharedTypes import ACCESS_PICARRO_ONLY, RPC_PORT_LOGGER
 from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_SUPERVISOR_BACKUP
 from Host.Common.SharedTypes import CrdsException
-import traceback
-import Host.Common.BetterTraceback as BetterTraceback
+from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SingleInstance import SingleInstance
-# from IniCoordinator import IniCoordinator
-
-#set up the main logger connection...
-CRDS_EventLogger = CmdFIFO.CmdFIFOServerProxy(\
-    uri = "http://localhost:%d" % RPC_PORT_LOGGER,\
-    ClientName = "Supervisor", IsDontCareConnection = True)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-AppPath = abspath(AppPath)
+AppPath = os.path.abspath(AppPath)
+
+if sys.platform == 'win32':
+    from time import clock as TimeStamp
+else:
+    from time import time as TimeStamp
 
 #Global constants...
 APP_NAME = "Supervisor"
@@ -156,6 +136,12 @@ if sys.platform == "linux2":
         "5" : -10,
         "6" : -15
     }
+    
+#set up the main logger connection...
+CRDS_EventLogger = CmdFIFO.CmdFIFOServerProxy(\
+    uri = "http://localhost:%d" % RPC_PORT_LOGGER,\
+    ClientName = APP_NAME, IsDontCareConnection = True)
+    
 def Log(Desc, Data = None, Level = 1, Code = -1, AccessLevel = ACCESS_PICARRO_ONLY, Verbose = "", SourceTime = 0):
     """Short global log function that sends a log to the EventLogger
     """
@@ -163,6 +149,7 @@ def Log(Desc, Data = None, Level = 1, Code = -1, AccessLevel = ACCESS_PICARRO_ON
         if Level >= 2:
             print "*** LOGEVENT (%d) = %s; Data = %r" % (Level, Desc, Data)
     CRDS_EventLogger.LogEvent(Desc, Data, Level, Code, AccessLevel, Verbose, SourceTime)
+    
 class AppErr(CrdsException):
     "Exception raised by App object.  Base of all App errors."
 
@@ -247,7 +234,7 @@ def prompt_wait(msg=""):
         start_rawkb()
         print msg,
         while read_rawkb() == "":
-            time_sleep(0.05)
+            time.sleep(0.05)
     finally:
         stop_rawkb()
 
@@ -617,7 +604,7 @@ class App(object):
         assert(isinstance(supervisor,Supervisor))
         
         exeArgs = []
-        root, ext = splitext(self.Executable)
+        root, ext = os.path.splitext(self.Executable)
 
         launchArgs = self.LaunchArgs
         if self.NotifyOnRestart and IsRestart:
@@ -632,7 +619,7 @@ class App(object):
                 launchPath = "%s" % (self.Executable,)
             else:
                 #The path will be relative to the location of the supervisor app...
-                launchPath = "%s/%s" % (dirname(AppPath), self.Executable)
+                launchPath = "%s/%s" % (os.path.dirname(AppPath), self.Executable)
             exeArgs.append(launchPath)
             exeArgs.append(launchArgs)
         else:
@@ -645,7 +632,7 @@ class App(object):
                 exeName = "%s" % (self.Executable,)
             else:
                 #The path will be relative to the location of the supervisor app...
-                exeName = "%s/%s" % (dirname(AppPath), self.Executable)
+                exeName = "%s/%s" % (os.path.dirname(AppPath), self.Executable)
             exeArgs.append(exeName) #first arg must be the appname as in sys.argv[0]
             exeArgs.append(launchArgs)
 
@@ -658,7 +645,7 @@ class App(object):
         self._ProcessId, self._ProcessHandle, pAffinity = r
 
         #self._ProcessHandle = hProcess.handle
-        print "%s %-20s, port = %5s, pid = %4s, aff = %s" % (strftime("%d-%b-%y %H:%M:%S"),"'%s'" % self._AppName, self.Port, self._ProcessId, pAffinity)
+        print "%s %-20s, port = %5s, pid = %4s, aff = %s" % (time.strftime("%d-%b-%y %H:%M:%S"),"'%s'" % self._AppName, self.Port, self._ProcessId, pAffinity)
 
         Log("Application started", Data = dict(App = self._AppName,
                                                Port = self.Port,
@@ -686,7 +673,7 @@ class App(object):
                     #Just sucking it up since we're waiting for the app to start and we do expect errors.
                     #Log("Trapped Exception","%s %r" % (E,E), 0)
                     pass
-                time_sleep(0.05)
+                time.sleep(0.05)
         else:
             #Not verifying, so assume it did start...
             appStarted = True
@@ -737,7 +724,7 @@ class App(object):
                 self._ServerProxy.CmdFIFO.StopServer()
                 #Wait for it to disappear...
                 while (TimeStamp() - startTime) < StopWaitTime_s:
-                    time_sleep(0.05) #without this we pin the processor while we poll
+                    time.sleep(0.05) #without this we pin the processor while we poll
                     if not self.IsProcessActive():
                         appLives = False
                         break
@@ -926,7 +913,7 @@ class WorkerThread(threading.Thread):
             self._semaphore.release()
 class Supervisor(object):
     def __init__(self, FileName):
-        if not file_exists(FileName):
+        if not os.path.exists(FileName):
             raise "File " + FileName + " not found."
         self.FileName = FileName    
         co = CustomConfigObj(FileName)
@@ -983,7 +970,7 @@ class Supervisor(object):
             A = self.AppDict[appName]
             assert isinstance(A, App) #for Wing
             #Make sure the executable exists!
-            if not file_exists(A.Executable):
+            if not os.path.exists(A.Executable):
                 raise AppErr("File '%s' does not exist for AppName '%s'." % (A.Executable, appName))
 
             #check the dependency list...
@@ -1106,7 +1093,7 @@ class Supervisor(object):
                             dict(AppName = appName, AttemptNum = self.AppDict[appName]._LaunchFailureCount),
                             Level = 2)
                         #Sleep a short time before trying again...
-                        #time_sleep(1)
+                        #time.sleep(1)
                     except TerminationRequest:
                         Log("Terminate requested during application launch process",dict(AppName = appName),Level=2)
                         self.ShutDownAll()
@@ -1295,7 +1282,7 @@ class Supervisor(object):
         while (not self._ShutdownRequested) and (not self._TerminateAllRequested): #we'll monitor until it is time to stop!
             sys.stdout.flush()
             for app in appsToMonitor:
-                time_sleep(0.1)
+                time.sleep(0.1)
                 if self.CheckForStopRequests():
                     break
                 assert isinstance(app, App) #for Wing
@@ -1319,7 +1306,7 @@ class Supervisor(object):
                                 pingArrived = True
                                 app._RemotePingCount = 0
                                 break
-                            time_sleep(0.1)
+                            time.sleep(0.1)
                         if not pingArrived:
                             Log("Ping timeout with mode 3 (TCP pinging) application",
                                 dict(App = app._AppName, Timeout_s = app.MaxWait_ms/1000),
@@ -1565,7 +1552,7 @@ def HandleCommandSwitches():
 
     #Start with option defaults...
     backupMode = False
-    configFile = dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
+    configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
     killExisting = False
     suppressLaunch = False
     suppressMonitoring = False
@@ -1643,7 +1630,7 @@ def HandleCommandSwitches():
 
 def GetConfigFileAndIniLog():
     # default configFile
-    configFile = dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
+    configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
     # Get configFile from command line
     shortOpts = 'hc:ifkt:o:'
     longOpts = ["ke", "nl", "nm", "backup", "inilog" ]

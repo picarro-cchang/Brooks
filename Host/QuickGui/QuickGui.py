@@ -30,35 +30,31 @@ _MAIN_CONFIG_SECTION = "Setup"
 UPDATE_TIMER_INTERVAL = 1000
 
 import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
 import wx
-import wx.lib.mixins.listctrl as listmix
+import Queue
 import numpy
 import os
 from os.path import dirname as os_dirname
-from os.path import abspath
 import re
 import collections
 import string
 import time
 import threading
 from threading import Thread
-from CustomConfigObj import CustomConfigObj
-import Queue
-import plot
-import GraphPanel
-import Listener
+import wx.lib.mixins.listctrl as listmix
 from wx.lib.wordwrap import wordwrap
-import SharedTypes
-import StringPickler
-import TextListener
-import AppStatus
-from SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER
-import CmdFIFO
-import BetterTraceback
+
 from PulseAnalyzerGui import PulseAnalyzerGui
 from UserCalGui import UserCalGui
-from EventManagerProxy import *
+from Host.Common import CmdFIFO, StringPickler, Listener, TextListener
+from Host.Common import plot
+from Host.Common import GraphPanel
+from Host.Common import BetterTraceback
+from Host.Common import AppStatus
+from Host.Common import SharedTypes
+from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
 if sys.platform == 'win32':
@@ -68,7 +64,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-AppPath = abspath(AppPath)
+AppPath = os.path.abspath(AppPath)
 
 #Set up a useful TimeStamp function...
 if sys.platform == 'win32':
@@ -451,7 +447,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
     DataSource must be the AlarmInterface object which reads the alarm status
     """
     def __init__(self, parent, id, attrib, DataSource=None, pos=wx.DefaultPosition,
-                 size=wx.DefaultSize):
+                 size=wx.DefaultSize, numAlarms=4):
         wx.ListCtrl.__init__(self, parent, id, pos, size,
                              style = wx.LC_REPORT
                              | wx.LC_VIRTUAL
@@ -478,10 +474,11 @@ class AlarmViewListCtrl(wx.ListCtrl):
         self.InsertColumn(0,"Icon",width=40)
         sx,sy = self.GetSize()
         self.InsertColumn(1,"Name",width=sx-40)
-        self.alarmNames = ["Alarm 1","Alarm 2","Alarm 3","Alarm 4"]
-        nAlarms = len(self.alarmNames)
+        self.alarmNames = []
+        for i in range(numAlarms):
+            self.alarmNames.append("Alarm %d" % (i+1))
         self.attrib = attrib
-        self.SetItemCount(nAlarms)
+        self.SetItemCount(numAlarms)
         self.Bind(wx.EVT_LEFT_DOWN,self.OnLeftDown)
         self.Bind(wx.EVT_RIGHT_DOWN,self.OnMouseDown)
         self.Bind(wx.EVT_MOTION,self.OnMouseMotion)
@@ -1124,6 +1121,7 @@ class QuickGui(wx.Frame):
         self.dataLoggerInterface.getDataLoggerInfo()
         self.instMgrInterface = InstMgrInterface(self.config)
         self.numGraphs = max(1, self.config.getint("Graph","NumGraphs",1))
+        self.numAlarms = min(4, self.config.getint("AlarmBox","NumAlarms",4))
         self.showGraphZoomed = self.config.getboolean("Graph","ShowGraphZoomed",False)
         self.lockTime = False
         self.allTimeLocked = False
@@ -1392,7 +1390,7 @@ class QuickGui(wx.Frame):
 
         self.alarmView = AlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
                                            DataSource=self.alarmInterface,
-                                           size=size)
+                                           size=size, numAlarms=self.numAlarms)
         self.alarmView.SetMainForm(self)
         setItemFont(alarmBox,self.getFontFromIni('AlarmBox'))
         setItemFont(self.alarmView,self.getFontFromIni('AlarmBox'))
@@ -1825,7 +1823,7 @@ class QuickGui(wx.Frame):
                 userLogEnabled = userLogEnabled or en
                 if len(fname) > 0:
                     #logFiles.append("%s" % (os.path.split(fname)[-1],))
-                    logFiles.append("%s" % abspath(fname))
+                    logFiles.append("%s" % os.path.abspath(fname))
             if len(logFiles) > 0:        
                 logFiles = "\n".join(logFiles)
             else:
@@ -2060,6 +2058,8 @@ def HandleCommandSwitches():
 if __name__ == "__main__":
     app = wx.PySimpleApp()
     configFile, test = HandleCommandSwitches()
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     frame = QuickGui(configFile)
     frame.Show()
     app.MainLoop()
+    Log("Exiting program")

@@ -11,44 +11,48 @@
 #
 # HISTORY:
 #   30-Sep-2009  alex/sze  Initial version.
-#   02-Oct-2009  alex      Add RPC functions.
+#   02-Oct-2009  alex      Added RPC functions.
 #   09-Oct-2009  sze       Supporting new warm box calibration files and uploading of virtual laser parameters to DAS
 #   11-Oct-2009  sze       Added routines to support CalibrateSystem
 #   14-Oct-2009  sze       Added support for calibration rows in schemes
-#  16-Oct-2009 alex      Add .ini file and update active warmbox and hotbox calibration files
+#  16-Oct-2009 alex      Added .ini file and update active warmbox and hotbox calibration files
+#  20-Oct-2009 alex    Added functionality to handle scheme switch and update warmbox and hotbox calibration files
+# 21-Oct-2009  alex    Added calibration file paths to .ini file. Added RPC_setCavityLengthTuning() and RPC_setLaserCurrentTuning().
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
+
+APP_NAME = "RDFrequencyConverter"
+
 import sys
 import getopt
 import inspect
 import shutil
-from numpy import *
 import os
 import Queue
 import threading
 import time
 import datetime
 import traceback
+from numpy import *
 from cStringIO import StringIO
 from binascii import crc32
+
 from Host.autogen import interface
+from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster
+from Host.Common.SharedTypes import Scheme, Singleton
+from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_ARCHIVER
 from Host.Common.WlmCalUtilities import AutoCal
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_ARCHIVER
-from Host.Common.SharedTypes import Scheme, Singleton
-from Host.Common import Listener, Broadcaster
-from Host.Common import CmdFIFO, StringPickler
+EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-EventManagerProxy_Init("RDFrequencyConverter")
 
-APP_NAME = "RDFrequencyConverter"
 MIN_SIZE = 30
 
 Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
@@ -98,7 +102,8 @@ class DasScheme(object):
         """Updates the DAS scheme in the "alternate" location and switches
         the DAS to run it instead.
         """
-        # Upload the angle scheme to the "other" spot and swap them
+        # Convert the angle again using the new WLM calibration table, and then upload the new angle scheme to the "other" spot and swap them
+        self.rdFreqConv.RPC_convertScheme(self.currentAlternateIndex)
         self.rdFreqConv.RPC_uploadSchemeToDAS(self.currentAlternateIndex)
         # Get the accurate representation of what the DAS is currently running
         seq = Driver.rdSchemeSequence()["schemeIndices"]
@@ -115,15 +120,12 @@ class SchemeManager(object):
     """
     Run DAS scheme management
     """
-    def __init__(self, warmboxCalFilePathPair, hotboxCalFilePathPair, schemeDict, schemeSeq):
+    def __init__(self, schemeDict, schemeSeq):
         """
-        warmboxCalFilePathPair = (warmboxCalFilePathActive, warmboxCalFilePathFactory)
-        hotboxCalFilePathPair = (hotboxCalFilePathActive, hotboxCalFilePathFactory)
-        schemeDict = {schemeName: (schemePath, indexA, indexB)}
+        Definition of the inputs:
+            schemeDict = {schemeName: (schemePath, indexA, indexB)}
         """
         self.rdFreqConv = RDFrequencyConverter()
-        self.warmboxCalFilePathPair = warmboxCalFilePathPair
-        self.hotboxCalFilePathPair = hotboxCalFilePathPair
         self.schemeDict = schemeDict
         self.schemeSeq = schemeSeq
         self.schemes = {} # key = scheme name; value = DasScheme instance
@@ -132,8 +134,8 @@ class SchemeManager(object):
         Driver.stopScan()
         Log("Scheme Manager starts up")
         Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
-        self.rdFreqConv.RPC_loadWarmBoxCal(self.warmboxCalFilePathPair[0], self.warmboxCalFilePathPair[1])
-        self.rdFreqConv.RPC_loadHotBoxCal(self.hotboxCalFilePathPair[0], self.hotboxCalFilePathPair[1])
+        self.rdFreqConv.RPC_loadWarmBoxCal()
+        self.rdFreqConv.RPC_loadHotBoxCal()
         # Load up the DAS with schemes in the managed positions...
         Log("Starting upload of all required DAS schemes")
         for k in self.schemeDict.keys():
@@ -348,10 +350,15 @@ class RDFrequencyConverter(Singleton):
             if configPath != None:
                 # Read from .ini file
                 cp = CustomConfigObj(configPath)
+                basePath = os.path.split(configPath)[0]
                 self.wbCalUpdatePeriod_s = cp.getfloat("MainConfig", "wbCalUpdatePeriod_s", "1800")
                 self.hbCalUpdatePeriod_s = cp.getfloat("MainConfig", "hbCalUpdatePeriod_s", "1800")
                 self.wbArchiveGroup = cp.get("MainConfig", "wbArchiveGroup", "WBCAL")
                 self.hbArchiveGroup = cp.get("MainConfig", "hbArchiveGroup", "HBCAL")
+                self.warmBoxCalFilePathActive = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "warmboxCalActive", "")))
+                self.warmBoxCalFilePathFactory = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "warmboxCalFactory", "")))
+                self.hotBoxCalFilePathActive = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "hotboxCalActive", "")))
+                self.hotBoxCalFilePathFactory = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "hotboxCalFactory", "")))
             else:
                 raise ValueError("Configuration file must be specified to initialize RDFrequencyConverter")
         
@@ -397,11 +404,7 @@ class RDFrequencyConverter(Singleton):
             self.tuningMode = None
             self.schemeMgr = None
             self.warmBoxCalUpdateTime = 0
-            self.warmBoxCalFilePathActive = ""
-            self.warmBoxCalFilePathFactory = ""
             self.hotBoxCalUpdateTime = 0
-            self.hotBoxCalFilePathActive = "" 
-            self.hotBoxCalFilePathFactory = ""
             
     def rdFilter(self,entry):
         # Figure if we finished a scheme and whether we should process cal points in the last scheme
@@ -505,8 +508,8 @@ class RDFrequencyConverter(Singleton):
     def timeToUpdateHotBoxCal(self):
         return (Driver.hostGetTicks() - self.hotBoxCalUpdateTime) > (self.hbCalUpdatePeriod_s*1000)
         
-    def RPC_configSchemeManager(self, warmboxCalFilePath, hotboxCalFilePath, schemeDict, schemeSeq):
-        self.schemeMgr = SchemeManager(warmboxCalFilePath, hotboxCalFilePath, schemeDict, schemeSeq)
+    def RPC_configSchemeManager(self, schemeDict, schemeSeq):
+        self.schemeMgr = SchemeManager(schemeDict, schemeSeq)
         self.schemeMgr.startup()
         
     def RPC_angleToLaserTemperature(self,vLaserNum,angles):
@@ -516,7 +519,19 @@ class RDFrequencyConverter(Singleton):
     def RPC_angleToWaveNumber(self,vLaserNum,angles):
         self._assertVLaserNum(vLaserNum)
         return self.freqConverter[vLaserNum-1].thetaCal2WaveNumber(angles)
-    
+
+    def RPC_setCavityLengthTuning(self):
+        """ Set the instrument to use cavity length tuning, and load up DAS registers appropriately """
+        Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER", interface.ANALYZER_TUNING_CavityLengthTuningMode)
+        self.tuningMode = interface.ANALYZER_TUNING_CavityLengthTuningMode
+        self.cavityLengthTunerAdjuster.setTunerRegisters()
+
+    def RPC_setLaserCurrentTuning(self):
+        """ Set the instrument to use laser current tuning, and load up DAS registers appropriately """
+        Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER", interface.ANALYZER_TUNING_LaserCurrentTuningMode)
+        self.tuningMode = interface.ANALYZER_TUNING_LaserCurrentTuningMode
+        self.laserCurrentTunerAdjuster.setTunerRegisters(centerValue=32768)
+        
     def RPC_centerTuner(self,tunerCenter):
         if self.tuningMode == interface.ANALYZER_TUNING_CavityLengthTuningMode:
             self.cavityLengthTunerAdjuster.setTunerRegisters(tunerCenter)
@@ -568,20 +583,17 @@ class RDFrequencyConverter(Singleton):
         self._assertVLaserNum(vLaserNum)
         return self.freqConverter[vLaserNum-1].laserTemp2ThetaCal(laserTemperatures)
     
-    def RPC_loadHotBoxCal(self, hotBoxCalFilePathActive, hotBoxCalFilePathFactory=""):
+    def RPC_loadHotBoxCal(self, hotBoxCalFilePath=""):
         self.hotBoxCalUpdateTime = Driver.hostGetTicks()
-        self.hotBoxCalFilePathActive = os.path.abspath(hotBoxCalFilePathActive)
-        if hotBoxCalFilePathFactory != "":
-            self.hotBoxCalFilePathFactory = os.path.abspath(hotBoxCalFilePathFactory)
-            if True:
-                # Need to run checksum on the active one. If failed, factory version will be used.
-                # Need to be implemented!
-                # Here assume checksum has passed
-                self.hotBoxCalFilePath = self.hotBoxCalFilePathActive
-            else:
-                self.hotBoxCalFilePath = self.hotBoxCalFilePathFactory
-        else:
+        if hotBoxCalFilePath != "":
+            self.hotBoxCalFilePathActive = os.path.abspath(hotBoxCalFilePath)
+        if os.path.isfile(self.hotBoxCalFilePathActive):
+            # Need to run checksum on the active one. If failed, factory version will be used.
+            # Need to be implemented!
+            # Here assume checksum has passed
             self.hotBoxCalFilePath = self.hotBoxCalFilePathActive
+        else:
+            self.hotBoxCalFilePath = self.hotBoxCalFilePathFactory
             
         self.hotBoxCal = CustomConfigObj(self.hotBoxCalFilePath)
         if "AUTOCAL" not in self.hotBoxCal:
@@ -599,21 +611,19 @@ class RDFrequencyConverter(Singleton):
             self.laserCurrentTunerAdjuster = None
         self.dthetaMax = self.hotBoxCal["AUTOCAL"]["MAX_ANGLE_TARGETTING_ERROR"]
         self.dtempMax  = self.hotBoxCal["AUTOCAL"]["MAX_TEMP_TARGETTING_ERROR"]
+        return "OK"
         
-    def RPC_loadWarmBoxCal(self, warmBoxCalFilePathActive, warmBoxCalFilePathFactory=""):
+    def RPC_loadWarmBoxCal(self, warmBoxCalFilePath=""):
         self.warmBoxCalUpdateTime = Driver.hostGetTicks()
-        self.warmBoxCalFilePathActive = os.path.abspath(warmBoxCalFilePathActive)
-        if warmBoxCalFilePathFactory != "":
-            self.warmBoxCalFilePathFactory = os.path.abspath(warmBoxCalFilePathFactory)
-            if True:
-                # Need to run checksum on the active one. If failed, factory version will be used.
-                # Need to be implemented!
-                # Here assume checksum has passed
-                self.warmBoxCalFilePath = self.warmBoxCalFilePathActive
-            else:
-                self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
-        else:
+        if warmBoxCalFilePath != "":
+            self.warmBoxCalFilePathActive = os.path.abspath(warmBoxCalFilePath)
+        if os.path.isfile(self.warmBoxCalFilePathActive):
+            # Need to run checksum on the active one. If failed, factory version will be used.
+            # Need to be implemented!
+            # Here assume checksum has passed
             self.warmBoxCalFilePath = self.warmBoxCalFilePathActive
+        else:
+            self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
             
         # Load up the frequency converters for each laser in the DAS...
         ini = CustomConfigObj(self.warmBoxCalFilePath)
@@ -639,7 +649,8 @@ class RDFrequencyConverter(Singleton):
                                 'pressureC2':      float(p['PRESSURE_C2']),
                                 'pressureC3':      float(p['PRESSURE_C3'])}
                 Driver.wrVirtualLaserParams(vLaserNum,laserParams)
-
+        return "OK"
+        
     def RPC_replaceOriginalWlmCal(self,vLaserNum):
         # Copy current spline coefficients to original coefficients
         self._assertVLaserNum(vLaserNum)
@@ -860,11 +871,6 @@ def handleCommandSwitches():
 if __name__ == "__main__":
     configFile, options = handleCommandSwitches()
     rdFreqConvertApp = RDFrequencyConverter(configFile)
-    #rdFreqConvertApp.RPC_loadCal("WarmBoxCal.ini")
-    #rdFreqConvertApp.RPC_wrFreqScheme(0, Scheme("sample2.sch"))
-    #rdFreqConvertApp.RPC_convertScheme(0)
-    #rdFreqConvertApp.RPC_uploadSchemeToDAS(0)
-    #rdFreqConvertApp.RPC_updateCal()
-    Log("RDFrequencyConverter starting")
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     rdFreqConvertApp.run()
-    Log("RDFrequencyConverter exiting")
+    Log("Exiting program")

@@ -57,29 +57,30 @@ Code notes
 The fundamental creation of all log entries occurs in EventLogger._CreateEventLog
 The fundamental collection of all logs (and display) occurs in EventLogger._AddEventLog
 """
-import sys
-import threading
-import time
-if sys.platform == 'win32':
-    TimeStamp = time.clock
-else:
-    TimeStamp = time.time
-
-from Host.Common import SharedTypes #to get the right TCP port to use
-from Host.Common import CmdFIFO
-from Host.Common import Broadcaster
-from Host.Common.CustomConfigObj import CustomConfigObj
-from glob import glob
-import os.path
 
 APP_NAME = "EventManager"
-
 DEFAULT_EVENT_CODE = 0
 _DEFAULT_CONFIG_NAME = "EventManager.ini"
 _MAIN_CONFIG_SECTION = "MainConfig"
 LOGFILE_PREFIX = "EventLog_"
 LOGFILE_EXTENSION = "txt"
 
+import sys
+import os
+import threading
+import time
+from glob import glob
+
+from Host.Common import SharedTypes #to get the right TCP port to use
+from Host.Common import CmdFIFO
+from Host.Common import Broadcaster
+from Host.Common.CustomConfigObj import CustomConfigObj
+
+if sys.platform == 'win32':
+    TimeStamp = time.clock
+else:
+    TimeStamp = time.time
+    
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
@@ -277,7 +278,6 @@ class EventLogger(object):
             basePath = os.path.split(IniPath)[0]
             self.LogFileDir = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "LogFileDir"))
             self.LogToFile = cp.getboolean(_MAIN_CONFIG_SECTION, "LogToFile")
-            self.LogFileDir = cp.get(_MAIN_CONFIG_SECTION, "LogFileDir")
             self.LogFileLength = cp.getint(_MAIN_CONFIG_SECTION, "LogFileLength")
             self.ArchiveGroupName = cp.get(_MAIN_CONFIG_SECTION, "ArchiveGroupName")
             self.MaxResidentEvents = cp.getint(_MAIN_CONFIG_SECTION, "MaxResidentEvents")
