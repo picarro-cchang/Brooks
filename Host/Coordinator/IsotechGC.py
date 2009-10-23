@@ -5,9 +5,9 @@
 #
 # Notes: Uses TTLIntrf as the core with customized functions for Isotech GC
 # 03-06-09 alex Created file
+
 import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
-from TTLIntrf import TTLIntrf
+from Host.Common.TTLIntrf import TTLIntrf
 
 ASSERT_SIG = 0
 DEASSERT_SIG = 1

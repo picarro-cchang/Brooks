@@ -32,7 +32,7 @@ from Queue import Queue
 
 from CoordinatorFrameGui import CoordinatorFrameGui
 from CoordinatorParamGui import InitialParamDialogGui
-from Coordinator1 import State, StateMachine, OK, EXCEPTION, TIMEOUT
+from CoordinatorStateMachine import State, StateMachine, OK, EXCEPTION, TIMEOUT
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_COORDINATOR
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -556,7 +556,7 @@ Where the options can be a combination of the following:
 --no_sample_descr   Disable and remove "Load Sample Descriptions" button
 --no_sample_num     Disable and remove "Sample Number" display
 --has_close_opt     Provide two options to close Coordinator - immediately close or finish current state and run final state
---has_pause_opt     Add Pause/Start buttons to clear/set internal runningFlag
+--has_pause         Add Pause/Start buttons to clear/set internal runningFlag
 """
 def printUsage():
     print HELP_STRING

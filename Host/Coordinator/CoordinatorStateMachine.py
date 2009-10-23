@@ -15,20 +15,20 @@
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved 
 #
 import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
-from CustomConfigObj import CustomConfigObj
-import CmdFIFO
-from SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER
+import time
 from traceback import format_exc
-from Autosampler import Autosampler
-from IsotechGC import GC
-from SerIntrf import SerIntrf
+from time import sleep, mktime, localtime, strptime, strftime 
+
 from CoordinatorScripts import calcInjectDateTime, formatOutput, Comms
 from CoordinatorScripts import getValveStep, setValveStep, sendValveSequence
 from CoordinatorScripts import dummyGetLog, DummyAutosampler
 import CoordinatorScripts
-from time import sleep, mktime, localtime, strptime, strftime 
-import time
+from Autosampler import Autosampler
+from IsotechGC import GC
+from Host.Common import CmdFIFO
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.SerIntrf import SerIntrf
 
 OK = 1
 EXCEPTION = 2
