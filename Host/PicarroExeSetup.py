@@ -102,51 +102,51 @@ manifest_template = '''
 </assembly>
 '''
 RT_MANIFEST = 24
-controller = Target(description = "Controller", # used for the versioninfo resource
+Controller = Target(description = "Controller", # used for the versioninfo resource
                     script = "Controller/Controller.py", # what to build
                     other_resources = [(RT_MANIFEST,
                                         1,
-                                        manifest_template % dict(prog="controller")
+                                        manifest_template % dict(prog="Controller")
                                         )],
                     ##    icon_resources = [(1, "icon.ico")],
-                    dest_base = "controller"
+                    dest_base = "Controller"
                     )
 
-diaggui = Target(description = "DiagGUI", # used for the versioninfo resource
+DiagGui = Target(description = "DiagGui", # used for the versioninfo resource
                     script = "Utilities/DiagGui/DiagGui.py", # what to build
                     other_resources = [(RT_MANIFEST,
                                         1,
-                                        manifest_template % dict(prog="diaggui")
+                                        manifest_template % dict(prog="DiagGui")
                                         )],
                     ##    icon_resources = [(1, "icon.ico")],
                     dest_base = "DiagGui"
                     )
 
-dasmaintenancegui = Target(description = "DasMaintenanceGUI", # used for the versioninfo resource
+DasMaintenanceGui = Target(description = "DasMaintenanceGui", # used for the versioninfo resource
                     script = "Utilities/DasMaintenanceGui/DasMaintenanceGui.py", # what to build
                     other_resources = [(RT_MANIFEST,
                                         1,
-                                        manifest_template % dict(prog="dasmaintenancegui")
+                                        manifest_template % dict(prog="DasMaintenanceGui")
                                         )],
                     ##    icon_resources = [(1, "icon.ico")],
                     dest_base = "DasMaintenanceGui"
                     )
 
-quickgui = Target(description = "QuickGUI", # used for the versioninfo resource
+QuickGui = Target(description = "QuickGui", # used for the versioninfo resource
                     script = "QuickGui/QuickGui.py", # what to build
                     other_resources = [(RT_MANIFEST,
                                         1,
-                                        manifest_template % dict(prog="quickgui")
+                                        manifest_template % dict(prog="QuickGui")
                                         )],
                     ##    icon_resources = [(1, "icon.ico")],
                     dest_base = "QuickGui"
                     )
 
-fitter = Target(description = "Fitter", # used for the versioninfo resource
+Fitter = Target(description = "Fitter", # used for the versioninfo resource
                     script = "Fitter/Fitter.py", # what to build
                     other_resources = [(RT_MANIFEST,
                                         1,
-                                        manifest_template % dict(prog="fitter")
+                                        manifest_template % dict(prog="Fitter")
                                         )],
                     ##    icon_resources = [(1, "icon.ico")],
                     dest_base = "Fitter"
@@ -184,21 +184,21 @@ setup(version = "1.0",
                  "CommandInterface/CommandInterface.py",
                  "DataLogger/DataLogger.py",
                  "DataManager/DataManager.py",
-                 "Driver/driver.py",
+                 "Driver/Driver.py",
                  "ElectricalInterface/ElectricalInterface.py",
                  "EventManager/EventManager.py",
                  "InstMgr/InstMgr.py",
                  "FileEraser/FileEraser.py",
                  "MeasSystem/MeasSystem.py",
                  "SampleManager/SampleManager.py",
-                 "Supervisor/supervisor.py",
+                 "Supervisor/Supervisor.py",
                  "Utilities/RemoteAccess/RemoteAccess.py",
                  "Utilities/DasMaintenanceGui/usbProgramEEPROM.py",
-                 fitter,
-                 controller, 
-                 diaggui, 
-                 dasmaintenancegui, 
-                 quickgui],
+                 Fitter,
+                 Controller, 
+                 DiagGui, 
+                 DasMaintenanceGui, 
+                 QuickGui],
 
       data_files = [(".", ["EventManager/Warning_16x16_32.ico",
                            "EventManager/Info_16x16_32.ico",
