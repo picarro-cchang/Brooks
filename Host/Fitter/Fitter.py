@@ -1167,12 +1167,14 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return (configFile, useViewer)
+    
 def main():
     app = wx.PySimpleApp()
     configFile, useViewer = HandleCommandSwitches()
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     frame = FitViewer(configFile,useViewer)
     app.MainLoop()
+    Log("Exiting program")
 
 if __name__ == "__main__":
     main()

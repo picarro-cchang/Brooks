@@ -512,6 +512,7 @@ def main():
     try:
         app = AlarmSystem(configFile, noInstMgr)
         app.ALARMSYSTEM_start()
+        Log("Exiting program")
     except Exception, E:
         if __debug__: raise
         msg = "Exception trapped outside execution"

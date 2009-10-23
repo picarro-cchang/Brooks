@@ -278,6 +278,14 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.dasInterface.hostToDspSender.wrSchemeSequence(schemeIndices,restartFlag,loopFlag)
         self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeSequenceMode)
 
+    def getValveMask(self):
+        """Read the valve mask - the lower 6 bits represent the binary code of the solenoid valves.
+        """
+        return self.rdDasReg("VALVE_CNTRL_SOLENOID_VALVES_REGISTER") & 0x3F
+    
+    def setValveMask(self, mask):
+        self.wrDasReg("VALVE_CNTRL_SOLENOID_VALVES_REGISTER", mask & 0x3F)
+    
     def rdValveSequence(self):
         """Reads the valve sequence"""
         return self.dasInterface.hostToDspSender.rdValveSequence()

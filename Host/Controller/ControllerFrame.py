@@ -245,7 +245,9 @@ if __name__ == "__main__":
     try:
         app.SetTopWindow(controllerFrame)
         controllerFrame.Show()
+        Log("%s started." % APP_NAME, Level = 0)
         app.MainLoop()
+        Log("Exiting program")
     finally:
         Driver.unregisterStreamStatusObserver(
             SharedTypes.RPC_PORT_CONTROLLER)

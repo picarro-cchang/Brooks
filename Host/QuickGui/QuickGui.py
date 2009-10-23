@@ -2062,3 +2062,4 @@ if __name__ == "__main__":
     frame = QuickGui(configFile)
     frame.Show()
     app.MainLoop()
+    Log("Exiting program")

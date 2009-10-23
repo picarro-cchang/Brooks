@@ -671,6 +671,7 @@ def Main():
         app.RPC_Start()
         app.runRpcServer()
         app.RPC_Stop()
+        Log("Exiting program")
     except Exception, E:
         if app.debug: raise
         msg = "Exception trapped outside execution"
