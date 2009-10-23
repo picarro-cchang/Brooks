@@ -18,53 +18,51 @@
 # 08-10-13  alex  Replaced TCP by RPC (FITTER_STATE_TCP --> FITTER_STATE_PROC)
 # 09-06-30 alex  Support HDF5 format for spectra data
 
-import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
-import wx
-import wx.grid
-import wx.py
-import os
-import time
-import threading
-
-from wx import stc
-from wx.py import shell
-from wx.py.filling import FillingTree, SIMPLETYPES
-from GraphPanel import GraphPanel, Sequence, Series
-from numpy import array, float_, linspace, log, mean, ndarray, polyfit, shape, std, sum, zeros
-from os.path import dirname as os_dirname
-from os.path import abspath
-from string import maketrans
-
-from Queue import Queue, Empty
-from CmdFIFO import CmdFIFOServerProxy
-from CustomConfigObj import CustomConfigObj
-from EventManagerProxy import EventManagerProxy_Init, Log
-from fitterThread import FITTER_STATE_IDLE, FITTER_STATE_PROC, FITTER_STATE_READY, FITTER_STATE_FITTING, FITTER_STATE_COMPLETE
-from fitterThread import main as fitterMain
-from SharedTypes import RPC_PORT_FITTER
-
 APP_NAME = "Fitter"
 __version__ = 1.0
 _DEFAULT_CONFIG_NAME = "Fitter.ini"
 _MAIN_CONFIG_SECTION = "Setup"
 
+import sys
+import os
+import wx
+import wx.grid
+import wx.py
+import time
+import threading
+from wx import stc
+from wx.py import shell
+from wx.py.filling import FillingTree, SIMPLETYPES
+from numpy import array, float_, linspace, log, mean, ndarray, polyfit, shape, std, sum, zeros
+from os.path import dirname as os_dirname
+from string import maketrans
+from Queue import Queue, Empty
+
+from fitterThread import FITTER_STATE_IDLE, FITTER_STATE_PROC, FITTER_STATE_READY, FITTER_STATE_FITTING, FITTER_STATE_COMPLETE
+from fitterThread import main as fitterMain
+from Host.Common.SharedTypes import RPC_PORT_FITTER
+from Host.Common.GraphPanel import GraphPanel, Sequence, Series
+from Host.Common.CmdFIFO import CmdFIFOServerProxy
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
+EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
+
 if sys.platform == 'win32':
     threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
 
-EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
-    AppPath = os.path.abspath(sys.argv[0])
-AppPath = abspath(AppPath)
+    AppPath = sys.argv[0]
+AppPath = os.path.abspath(AppPath)
 
 #Set up a useful TimeStamp function...
 if sys.platform == 'win32':
     TimeStamp = time.clock
 else:
     TimeStamp = time.time
+    
 class SequenceManager(object):
     """Manage a collection of sequences of equal lengths in a LIFO structure to minimize
     allocation of new objects"""
@@ -1172,6 +1170,7 @@ def HandleCommandSwitches():
 def main():
     app = wx.PySimpleApp()
     configFile, useViewer = HandleCommandSwitches()
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     frame = FitViewer(configFile,useViewer)
     app.MainLoop()
 

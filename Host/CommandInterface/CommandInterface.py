@@ -13,29 +13,31 @@
 
 APP_NAME = "CommandInterface"
 APP_DESCRIPTION = "Command interface (serial or Ethernet)"
+__version__ = 1.0
 
-import os, sys, time, datetime, getopt, re
-if "../Common" not in sys.path: sys.path.append("../Common")
-if "../InstMgr" not in sys.path: sys.path.append("../InstMgr")
-import threading, Queue
-from CustomConfigObj import CustomConfigObj
-import Listener, TextListener
-from SharedTypes import RPC_PORT_COMMAND_HANDLER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
-                        RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_MEAS_SYSTEM,\
-                        RPC_PORT_EIF_HANDLER, \
-                        BROADCAST_PORT_MEAS_SYSTEM, BROADCAST_PORT_DATA_MANAGER 
-import CmdFIFO
-from InstMgr import INSTMGR_SHUTDOWN_PREP_SHIPMENT, INSTMGR_SHUTDOWN_HOST_AND_DAS, MAX_ERROR_LIST_NUM
-from StringPickler import StringAsObject,ObjAsString,ArbitraryObject
-import SerialInterface, SocketInterface
-import MeasData
+import os
+import sys
+import time
+import datetime 
+import getopt
+import re
+import threading
+import Queue
 from inspect import isclass
 from numpy import mean
 
-from EventManagerProxy import *
+import SerialInterface, SocketInterface
+from Host.InstMgr.InstMgr import INSTMGR_SHUTDOWN_PREP_SHIPMENT, INSTMGR_SHUTDOWN_HOST_AND_DAS, MAX_ERROR_LIST_NUM
+from Host.Common import CmdFIFO, Listener, TextListener
+from Host.Common import MeasData
+from Host.Common.SharedTypes import RPC_PORT_COMMAND_HANDLER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
+                                    RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_MEAS_SYSTEM,\
+                                    RPC_PORT_EIF_HANDLER, \
+                                    BROADCAST_PORT_MEAS_SYSTEM, BROADCAST_PORT_DATA_MANAGER 
+from Host.Common.StringPickler import StringAsObject,ObjAsString,ArbitraryObject
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME)
-
-__version__                  = 1.0
 
 HEADER_SECTION               = 'HEADER'
 PULSE_ANALYZER_SECTION       = 'PULSE_ANALYZER'
@@ -653,19 +655,19 @@ def Main():
         Usage()
         sys.exit(2)
 
-    filename = os.path.dirname(AppPath) + "/" + DEFAULT_INI_FILE
+    configFile = os.path.dirname(AppPath) + "/" + DEFAULT_INI_FILE
 
     for o, a in opts:
         if o in ("-h", "--help"):
             Usage()
             sys.exit()
         if o in ("-c", "--config"):
-            filename = a
+            configFile = a
 
     app = CommandInterface()
-    Log("%s application started." % APP_NAME)
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     try:
-        app.LoadConfig( filename )
+        app.LoadConfig( configFile )
         app.RPC_Start()
         app.runRpcServer()
         app.RPC_Stop()

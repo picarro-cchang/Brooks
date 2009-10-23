@@ -14,6 +14,9 @@
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
+
+APP_NAME = "Driver"
+
 import ctypes
 import getopt
 import inspect
@@ -24,32 +27,33 @@ import threading
 import time
 import types
 import traceback
-from Host.Common.CustomConfigObj import CustomConfigObj
 from numpy import array, transpose
 
+from DasConfigure import DasConfigure
 from Host.autogen import interface
 from Host.Common import SharedTypes, version
 from Host.Common import CmdFIFO, StringPickler, timestamp
+from Host.Common.SharedTypes import RPC_PORT_DRIVER
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.hostDasInterface import DasInterface, HostToDspSender, StateDatabase
 from Host.Common.SingleInstance import SingleInstance
-from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.ctypesConvert import ctypesToDict
-from DasConfigure import DasConfigure
 from Host.Common.hostDasInterface import Operation
 from Host.Common.InstErrors import *
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-EventManagerProxy_Init("Driver")
 #
 # The driver provides a serialized RPC interface for accessing the DAS hardware.
 #
 class DriverRpcHandler(SharedTypes.Singleton):
     def __init__(self,config,dasInterface):
-        self.server = CmdFIFO.CmdFIFOServer(("", SharedTypes.RPC_PORT_DRIVER),
+        self.server = CmdFIFO.CmdFIFOServer(("", RPC_PORT_DRIVER),
                                             ServerName = "Driver",
                                             ServerDescription = "Driver for CRDS hardware",
                                             threaded = True)
@@ -673,8 +677,8 @@ if __name__ == "__main__":
         Log("Instance of driver us already running",Level=3)
     else:
         sim, configFile = handleCommandSwitches()
-        Log("Driver starting, sim: %d, configFile: %s" % (sim,configFile))
+        Log("%s started." % APP_NAME, dict(Sim = sim, ConfigFile = configFile), Level = 0)
         d = Driver(sim,configFile)
         d.run()
-    Log("Driver exiting")
+    Log("Exiting program")
     time.sleep(1)

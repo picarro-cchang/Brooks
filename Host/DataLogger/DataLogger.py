@@ -54,39 +54,29 @@ APP_DESCRIPTION = "The data logger"
 _CONFIG_NAME = "DataLogger.ini"
 _PRIVATE_CONFIG_NAME = "PrivateLog.ini"
 _USER_CONFIG_NAME = "UserLog.ini"
+
 import sys
 import os
-if "../Common" not in sys.path: sys.path.append("../Common")
-
-####
-## Imports from external libraries...
-####
-from CustomConfigObj import CustomConfigObj
 import Queue
 import stat
 import time
 import threading
 import socket #for transmitting data to the fitter
 import struct #for converting numbers to byte format
-from inspect import isclass
 import time
 import shutil
-####
-## Imports from Picarro generated libraries...
-####
-import CmdFIFO
-from SharedTypes import RPC_PORT_DATALOGGER, BROADCAST_PORT_DATA_MANAGER, RPC_PORT_INSTR_MANAGER, STATUS_PORT_ALARM_SYSTEM, RPC_PORT_ARCHIVER
 import traceback
-from SafeFile import SafeFile, FileExists
-from EventManagerProxy import *
+from inspect import isclass
+
+from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster
+from Host.Common.SharedTypes import RPC_PORT_DATALOGGER, BROADCAST_PORT_DATA_MANAGER, RPC_PORT_INSTR_MANAGER, STATUS_PORT_ALARM_SYSTEM, RPC_PORT_ARCHIVER
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.SafeFile import SafeFile, FileExists
+from Host.Common.MeasData import MeasData
+from Host.Common.AppStatus import STREAM_Status
+from Host.Common.InstErrors import *
+from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME)
-from InstErrors import *
-import xmlrpclib
-import Broadcaster
-import Listener
-import StringPickler
-from MeasData import MeasData
-from AppStatus import STREAM_Status
 
 DATALOGGER_RPC_SUCCESS = 0
 DATALOGGER_RPC_NOT_READY = -1
@@ -726,11 +716,10 @@ def HandleCommandSwitches():
 def main():
     #Get and handle the command line options...
     configFile, userConfigFile, privateConfigFile = HandleCommandSwitches()
-    Log("%s application started." % APP_NAME)
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     try:
         app = DataLogger(configFile, userConfigFile, privateConfigFile)
         app.DATALOGGER_start()
-
     except Exception, E:
         if DEBUG: raise
         msg = "Exception trapped outside execution"

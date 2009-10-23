@@ -14,46 +14,43 @@
 #                           Again, allow errorvalue and invalidvalue to lie outside the range of available voltages.
 
 APP_NAME = 'EIF'
-
-import os, sys, time, getopt
-import os.path
-
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
-    AppPath = sys.executable
-    IniDir = os.path.dirname(AppPath)
-
-else:
-    AppPath = sys.argv[0]
-    IniDir = os.path.normpath(os.path.join(os.path.dirname(AppPath),".."))
-
-
-if "../Common" not in sys.path: sys.path.append("../Common")
-import CmdFIFO
-from SharedTypes import RPC_PORT_DRIVER, RPC_PORT_EIF_HANDLER, RPC_PORT_ALARM_SYSTEM, RPC_PORT_MEAS_SYSTEM, \
-                        BROADCAST_PORT_DATA_MANAGER, STATUS_PORT_ALARM_SYSTEM, STATUS_PORT_INST_MANAGER
-import threading, Queue
-from math import sqrt
-import time
-import types
-from CustomConfigObj import CustomConfigObj
-import socket
-import select
-import ctypes
-from StringPickler import StringAsObject,ObjAsString,ArbitraryObject
-import Listener
-from inspect import isclass
-import MeasData
-from EventManagerProxy import *
-EventManagerProxy_Init(APP_NAME)
-import AppStatus
-from InstMgrInc import INSTMGR_STATUS_SYSTEM_ERROR
-
 __version__ = 1.0
-
 _CONFIG_NAME = 'ElectricalInterface.ini'
 MAIN_SECTION = 'MAIN'
 SOURCE_DELIMITER = ','
 
+import sys
+import os
+import time
+import getopt
+import time
+import types
+import socket
+import select
+import ctypes
+import threading
+import Queue
+from math import sqrt
+from inspect import isclass
+
+from Host.Common import CmdFIFO, Listener
+from Host.Common import MeasData
+from Host.Common import AppStatus
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_EIF_HANDLER, RPC_PORT_ALARM_SYSTEM, RPC_PORT_MEAS_SYSTEM, \
+                                    BROADCAST_PORT_DATA_MANAGER, STATUS_PORT_ALARM_SYSTEM, STATUS_PORT_INST_MANAGER
+from Host.Common.InstMgrInc import INSTMGR_STATUS_SYSTEM_ERROR
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.StringPickler import StringAsObject,ObjAsString,ArbitraryObject
+from Host.Common.EventManagerProxy import *
+EventManagerProxy_Init(APP_NAME)
+
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+    IniDir = os.path.dirname(AppPath)
+else:
+    AppPath = sys.argv[0]
+    IniDir = os.path.normpath(os.path.join(os.path.dirname(AppPath),".."))
+    
 EIF_OUTPUT_MODE_MANUAL    = 0
 EIF_OUTPUT_MODE_TRACKING  = 1
 
@@ -663,13 +660,12 @@ def HandleCommandSwitches():
 
 if __name__ == "__main__" :
     #Get and handle the command line options...
-    ConfigFile = HandleCommandSwitches()
-    Log("%s application started." % APP_NAME)
+    configFile = HandleCommandSwitches()
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     try:
-        eif = EifMgr(ConfigFile)
+        eif = EifMgr(configFile)
         eif.Run()
-        Log("Application exited")
-
+        Log("Exiting program")
     except Exception, E:
         if __debug__: raise
         msg = "Exception trapped outside execution"

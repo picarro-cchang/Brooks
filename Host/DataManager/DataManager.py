@@ -28,10 +28,6 @@
 # 09-08-08 alex  Allowed RPC_PulseAnalyzer_SetParam() to update the parameter values in DataManager.ini file
 # 09-10-16 alex  Added an option to run DataManager without InstMgr
 
-import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
-if "../CommandInterface" not in sys.path: sys.path.append("../CommandInterface") # To get serial interface
-
 ####
 ## Set constants for this file...
 ####
@@ -70,46 +66,42 @@ USERCAL_OFFSET_INDEX = 1
 
 DEFAULT_SERIAL_OUT_DELAY = 10.0 # the time delay of sending the fitter results to serial output
 SERIAL_CMD_DELAY = 0.02 # the execution time delay between sending a command and actually receiving the command on the serial output
-####
-#Import from external libraries...
-####
-from CustomConfigObj import CustomConfigObj
+
+import sys
+import os
 import Queue
 import threading
-import os
 import serial
 import math
 import time
+import string
 from inspect import isclass
+from collections import deque
+
+import ScriptRunner
+from Host.autogen import interface
+from Host.CommandInterface import SerialInterface
+from Host.Common import CmdFIFO, StringPickler
+from Host.Common import ModeDef
+from Host.Common import BetterTraceback
+from Host.Common import InstMgrInc
+from Host.Common import AppStatus
+from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER, RPC_PORT_INSTR_MANAGER
+from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_MEAS_SYSTEM, BROADCAST_PORT_SENSORSTREAM
+from Host.Common.SharedTypes import STATUS_PORT_DATA_MANAGER, STATUS_PORT_INST_MANAGER
+from Host.Common.SharedTypes import CrdsException
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.SafeFile import SafeFile, FileExists
+from Host.Common.MeasData import MeasData
+from Host.Common.Broadcaster import Broadcaster
+from Host.Common.Listener import Listener
+from Host.Common.InstErrors import INST_ERROR_DATA_MANAGER
+from Host.Common.EventManagerProxy import *
+EventManagerProxy_Init(APP_NAME)
+
 if sys.platform == 'win32':
     threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
-from collections import deque
-from os.path import abspath
-####
-##Now import from Picarro generated libraries...
-####
-from Host.autogen import interface
-import ModeDef
-import CmdFIFO
-import BetterTraceback
-from SharedTypes import RPC_PORT_MEAS_SYSTEM, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER, RPC_PORT_INSTR_MANAGER
-from SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_MEAS_SYSTEM, BROADCAST_PORT_SENSORSTREAM
-from SharedTypes import STATUS_PORT_DATA_MANAGER, STATUS_PORT_INST_MANAGER
-from SharedTypes import CrdsException
-from EventManagerProxy import *
-EventManagerProxy_Init(APP_NAME)
-from SafeFile import SafeFile, FileExists
-from MeasData import MeasData
-from Broadcaster import Broadcaster
-from Listener import Listener
-import StringPickler
-import ScriptRunner
-import AppStatus
-from InstErrors import INST_ERROR_DATA_MANAGER
-import InstMgrInc
-import SerialInterface
-import string
-
+    
 ####
 ## Some debugging/development helpers...
 ####
@@ -144,7 +136,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-AppPath = abspath(AppPath)
+AppPath = os.path.abspath(AppPath)
 
 #Set up a useful TimeStamp function...
 if sys.platform == 'win32':
@@ -1415,13 +1407,12 @@ def ExecuteTest(DM):
 def main():
     #Get and handle the command line options...
     configFile, noInstMgr, test = HandleCommandSwitches()
-    Log("%s application started." % APP_NAME, dict(ConfigFile = configFile), Level = 2)
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     try:
         app = DataManager(configFile, noInstMgr)
         if test:
             threading.Timer(2, ExecuteTest(app)).start()
         app.Start()
-
     except:
         if __debug__: raise
         LogExc("Exception trapped outside DataManager execution")

@@ -37,44 +37,50 @@
 # 08-09-18  alex  Replaced ConfigParser with CustomConfigObj
 # 09-10-21  alex  Replaced CalManager with RDFrequencyConverter. Added an option to run without SampleManager.
 
-INST_APP_NAME = "InstMgr"
+APP_NAME = "InstMgr"
 APP_VERSION = 1.0
 _DEFAULT_CONFIG_NAME = "InstMgr.ini"
 _MAIN_CONFIG_SECTION = "MainConfig"
 
 import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
-if "../SampleManager" not in sys.path: sys.path.append("../SampleManager")
-if "../InstMgr/Calibration" not in sys.path: sys.path.append("../InstMgr/Calibration")
-if "../MeasSystem" not in sys.path: sys.path.append("../MeasSystem")
-from CustomConfigObj import CustomConfigObj
+import os.path
 import Queue
 import time
-import os.path
 import threading
 import socket #for transmitting data to the fitter
 import struct #for converting numbers to byte format
-from inspect import isclass
-from os.path import abspath
 import getopt
-
-import CmdFIFO
-from SharedTypes import RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, RPC_PORT_ARCHIVER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_SAMPLE_MGR, RPC_PORT_ALARM_SYSTEM, RPC_PORT_FREQ_CONVERTER, RPC_PORT_PANEL_HANDLER
-from SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_INSTMGR_DISPLAY
 import traceback
-from SafeFile import SafeFile, FileExists
-from SampleManager import SAMPLEMGR_STATUS_STABLE, SAMPLEMGR_STATUS_PARKED, SAMPLEMGR_STATUS_PURGED, SAMPLEMGR_STATUS_PREPARED
-from EventManagerProxy import *
-EventManagerProxy_Init(INST_APP_NAME)
-from InstErrors import *
-import xmlrpclib
+from inspect import isclass
+
 from Host.autogen import interface
-import Broadcaster
-from AppStatus import AppStatus
-from InstMgrInc import INSTMGR_STATUS_READY, INSTMGR_STATUS_MEAS_ACTIVE, INSTMGR_STATUS_ERROR_IN_BUFFER, INSTMGR_STATUS_GAS_FLOWING, INSTMGR_STATUS_PRESSURE_LOCKED, INSTMGR_STATUS_CLEAR_MASK
-from InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED, INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR
+from Host.SampleManager.SampleManager import SAMPLEMGR_STATUS_STABLE, SAMPLEMGR_STATUS_PARKED, SAMPLEMGR_STATUS_PURGED, SAMPLEMGR_STATUS_PREPARED
+from Host.Common import CmdFIFO, Listener, Broadcaster
+from Host.Common.SharedTypes import RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, RPC_PORT_ARCHIVER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_SAMPLE_MGR, RPC_PORT_ALARM_SYSTEM, RPC_PORT_FREQ_CONVERTER, RPC_PORT_PANEL_HANDLER
+from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_INSTMGR_DISPLAY
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.AppStatus import AppStatus
+from Host.Common.InstMgrInc import INSTMGR_STATUS_READY, INSTMGR_STATUS_MEAS_ACTIVE, INSTMGR_STATUS_ERROR_IN_BUFFER, INSTMGR_STATUS_GAS_FLOWING, INSTMGR_STATUS_PRESSURE_LOCKED, INSTMGR_STATUS_CLEAR_MASK
+from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED, INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR
+from Host.Common.SafeFile import SafeFile, FileExists
+from Host.Common.InstErrors import *
+from Host.Common.EventManagerProxy import *
+EventManagerProxy_Init(APP_NAME)
 
+#Set up a useful AppPath reference...
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
+AppPath = os.path.abspath(AppPath)
 
+#Set up a useful TimeStamp function...
+if sys.platform == 'win32':
+    from time import clock as TimeStamp
+else:
+    from time import time as TimeStamp
+    
+# ---------------------------------------------------------------------------
 # These should be added to interface???
 # Enumerated definitions for DASCNTRL_StateType
 from ctypes import *
@@ -85,7 +91,7 @@ DASCNTRL_Startup = 2 # DASCNTRL Startup state.
 DASCNTRL_Diagnostic = 3 # DASCNTRL Diagnostic state.
 DASCNTRL_Error = 4 # DASCNTRL Error state.
 DASCNTRL_DspNotBooted = 5 # DASCNTRL Dsp Not Booted.
-
+# ---------------------------------------------------------------------------
 
 # INSTRMGR state type
 INSTMGR_STATE = 0
@@ -165,18 +171,6 @@ EVENT_PARK = 12
 
 # Maximum number of entries in error list
 MAX_ERROR_LIST_NUM = 64
-#Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
-    AppPath = sys.executable
-else:
-    AppPath = sys.argv[0]
-AppPath = abspath(AppPath)
-
-#Set up a useful TimeStamp function...
-if sys.platform == 'win32':
-    from time import clock as TimeStamp
-else:
-    from time import time as TimeStamp
 
 # including these error definitions will enable RPC calls to print out correct errors
 class CommandError(Exception):
@@ -240,28 +234,28 @@ class InstMgr(object):
         if __debug__: Log("Setting up RPC connections.")
         #set up a connections to other apps
         self.DriverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                                    INST_APP_NAME,
+                                                    APP_NAME,
                                                     IsDontCareConnection = False)
 
         self.MeasSysRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
-                                                     INST_APP_NAME,
+                                                     APP_NAME,
                                                      IsDontCareConnection = False)
 
         self.DataMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER,
-                                                     INST_APP_NAME,
+                                                     APP_NAME,
                                                      IsDontCareConnection = False)
 
         self.FreqConvRpc  = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
-                                                     INST_APP_NAME,
+                                                     APP_NAME,
                                                      IsDontCareConnection = False)
 
         self.SupervisorRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
-                                                        INST_APP_NAME,
+                                                        APP_NAME,
                                                         IsDontCareConnection = False)
         
         if not self.noSampleMgr:
             self.SampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR,
-                                                            INST_APP_NAME,
+                                                            APP_NAME,
                                                             IsDontCareConnection = False)
         else:
             self.SampleMgrRpc = DummySampleManager()
@@ -276,7 +270,7 @@ class InstMgr(object):
         if __debug__: Log("Setting up RPC server.")
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_INSTR_MANAGER),
-                                                ServerName = INST_APP_NAME,
+                                                ServerName = APP_NAME,
                                                 ServerDescription = "The instrument manager.",
                                                 ServerVersion = APP_VERSION,
                                                 threaded = True)
@@ -303,7 +297,7 @@ class InstMgr(object):
 
         if __debug__: Log("Setting up RPC callback functions.")
         # register callback functions
-        self.AppStatus = AppStatus(0,STATUS_PORT_INST_MANAGER,INST_APP_NAME)
+        self.AppStatus = AppStatus(0,STATUS_PORT_INST_MANAGER,APP_NAME)
         self.DisplayBroadcaster = Broadcaster.Broadcaster(BROADCAST_PORT_INSTMGR_DISPLAY)
     def _SendDisplayMessage(self, msg):
         try:
@@ -1268,11 +1262,10 @@ def HandleCommandSwitches():
 def main():
     #Get and handle the command line options...
     configFile, noSampleMgr = HandleCommandSwitches()
-    Log("%s application started." % INST_APP_NAME, dict(ConfigFile = configFile, NoSampleMgr = noSampleMgr), Level = 2)
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile, NoSampleMgr = noSampleMgr), Level = 0)
     try:
         app = InstMgr(configFile, noSampleMgr)
         app.INSTMGR_Start()
-
     except Exception, E:
         if __debug__: raise
         msg = "Exception trapped outside execution"

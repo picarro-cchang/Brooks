@@ -11,29 +11,31 @@
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 
+APP_NAME = "SpectrumCollector"
+
 import sys
+import os
 import getopt
 import inspect
 import numpy
-import os
 import Queue
 import threading
 import time
 import ctypes
 import cPickle
-import os.path
 from tables import *
-from Host.Common import CmdFIFO
-from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.timestamp import unixTime
+
+from Host.autogen import interface
+from Host.autogen.interface import ProcessedRingdownEntryType
+from Host.Common import CmdFIFO, Listener
 from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RD_RECALC
 from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER 
 from Host.Common.SharedTypes import CrdsException
-from Host.autogen.interface import ProcessedRingdownEntryType
-from Host.Common import Listener
-from Host.autogen import interface
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.timestamp import unixTime
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-EventManagerProxy_Init("SpectrumCollector")
+EventManagerProxy_Init(APP_NAME)
+
 if sys.platform == 'win32':
     from time import clock as TimeStamp
 else:
@@ -62,8 +64,6 @@ ctypes2numpy = {ctypes.c_byte:numpy.byte, ctypes.c_char:numpy.byte, ctypes.c_dou
                 ctypes.c_uint32:numpy.uint32, ctypes.c_uint64:numpy.uint64, ctypes.c_uint8:numpy.uint8,
                 ctypes.c_ulong:numpy.uint, ctypes.c_ulonglong:numpy.ulonglong, ctypes.c_ushort:numpy.ushort}
 
-APP_NAME = "Spectrum Collector"
-                
 Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                      APP_NAME, IsDontCareConnection = False)
 
@@ -483,24 +483,9 @@ def handleCommandSwitches():
         configFile = options["-c"]
     return configFile, options
 
-if __name__ == "__main__":
-    # Temporary
-    #from Host.Common.SharedTypes import RPC_PORT_FREQ_CONVERTER
-    #FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
-    #                                 APP_NAME, IsDontCareConnection = False)
-    #schemeDict = {}
-    #schemeDict["sch1"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr1.sch", 0, 7)
-    #schemeDict["sch2"] = (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\fsr2.sch", 1, 8)
-    #schemeSeq = ["sch1", "sch2"]
-    #FreqConverter.configSchemeManager( (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\WarmBoxCal.ini", 
-    #                                    r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\WarmBoxCal_Factory.ini"),
-    #                                   (r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\HotBoxCal.ini",
-    #                                    r"C:\AlexLee\CostReducedPlatform\Alpha\Host\RDFrequencyConverter\HotBoxCal_Factory.ini"),
-    #                                    schemeDict,
-    #                                    schemeSeq)
-                                    
+if __name__ == "__main__":                          
     configFile, options = handleCommandSwitches()
     spCollectorApp = SpectrumCollector(configFile)
-    Log("SpectrumCollector starting")
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     spCollectorApp.run()
-    Log("SpectrumCollector exiting")
+    Log("Exiting program")

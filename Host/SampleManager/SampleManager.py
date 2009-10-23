@@ -11,29 +11,37 @@
 # 08-12-23 alex  Added RPC call to skip pressure check in _Monitor() (in order to run pulse holder)
 
 APP_NAME = 'SampleManager'
+__version__              = 1.0
 
-import os, sys, time, getopt, ctypes
-if "../Common" not in sys.path: sys.path.append("../Common")
-if "../SampleManager" not in sys.path: sys.path.append("../SampleManager")
-
+import sys
+import os
+import time
+import getopt
+import ctypes
 import socket
+import sets
+import threading
+import Queue
 from inspect import isclass
 from operator import isNumberType
-from CustomConfigObj import CustomConfigObj
-import sets
-import CmdFIFO
-from InstErrors import INST_ERROR_OKAY
-from SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SAMPLE_MGR, BROADCAST_PORT_SENSORSTREAM, STATUS_PORT_SAMPLE_MGR
-import Host.autogen.interface as GlobalDefs
-from Listener import Listener
-import threading, Queue
-from StringPickler import StringAsObject
-import AppStatus
 
-from EventManagerProxy import *
+import Host.autogen.interface as GlobalDefs
+from Host.Common import CmdFIFO
+from Host.Common import AppStatus
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SAMPLE_MGR, BROADCAST_PORT_SENSORSTREAM, STATUS_PORT_SAMPLE_MGR
+from Host.Common.InstErrors import INST_ERROR_OKAY
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.Listener import Listener
+from Host.Common.StringPickler import StringAsObject
+from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME)
 
-__version__              = 1.0
+#Set up a useful AppPath reference...
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
+AppPath = os.path.abspath(AppPath)
 
 MAX_COMMAND_QUEUE_SIZE   = 2
 HEADER_SECTION           = 'MAIN'
@@ -57,13 +65,6 @@ SAMPLEMGR_STATUS_PRESSURE_LOW   = 0x0400
 SAMPLEMGR_STATUS_PRESSURE_HIGH  = 0x0800
 SAMPLEMGR_STATUS_VALVE_DAC_LOW  = 0x1000
 SAMPLEMGR_STATUS_VALVE_DAC_HIGH = 0x2000
-
-#Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
-    AppPath = sys.executable
-else:
-    AppPath = sys.argv[0]
-AppPath = os.path.abspath(AppPath)
 
 ###############################################################################
 class SampleManagerBaseMode(object):
@@ -771,17 +772,19 @@ def Main():
         Usage()
         sys.exit(2)
 
-    filename = os.path.dirname(AppPath) + "/" + DEFAULT_INI_FILE
+    configFile = os.path.dirname(AppPath) + "/" + DEFAULT_INI_FILE
 
     for o, a in opts:
         if o in ("-h", "--help"):
             Usage()
             sys.exit()
         if o in ("-c", "--config"):
-            filename = a
+            configFile = a
 
-    app = SampleManager(filename)
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+    app = SampleManager(configFile)
     app.Run()
+    Log("Exiting program")
 
 if __name__ == "__main__" :
     Main()

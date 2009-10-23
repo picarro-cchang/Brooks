@@ -39,9 +39,6 @@
 if __name__ != "__main__":
     raise Exception("%s is not importable!" % __file__)
 
-####
-## Set constants for this file...
-####
 APP_NAME = "MeasSystem"
 APP_VERSION = 1.0
 _DEFAULT_CONFIG_NAME = "MeasSystem.ini"
@@ -49,33 +46,35 @@ _MAIN_CONFIG_SECTION = "MainConfig"
 _SCHEME_CONFIG_SECTION = "SCHEME_CONFIG"
 
 import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
-from CustomConfigObj import CustomConfigObj
-import Queue
 import os.path
+import getopt
+import Queue
 import profile
 import time
 import threading
-if sys.platform == 'win32':
-    threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
-from inspect import isclass
 import sets
-from SharedTypes import CrdsException
-from SharedTypes import RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_FITTER, RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_FREQ_CONVERTER
-from SharedTypes import BROADCAST_PORT_MEAS_SYSTEM
-from SharedTypes import STATUS_PORT_MEAS_SYSTEM
-import ModeDef
-import CmdFIFO
-import BetterTraceback
+from inspect import isclass
+
 import FitterPool
-from SafeFile import SafeFile, FileExists
-from MeasData import MeasData  #For wrapping processor data packets up to send to the Data Manager
-from Broadcaster import Broadcaster
-import AppStatus
-from InstErrors import INST_ERROR_MEAS_SYS
-from EventManagerProxy import *
+from Host.Common import CmdFIFO
+from Host.Common import ModeDef
+from Host.Common import BetterTraceback
+from Host.Common import AppStatus
+from Host.Common.SharedTypes import CrdsException
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_FITTER, RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_FREQ_CONVERTER
+from Host.Common.SharedTypes import BROADCAST_PORT_MEAS_SYSTEM
+from Host.Common.SharedTypes import STATUS_PORT_MEAS_SYSTEM
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.SafeFile import SafeFile, FileExists
+from Host.Common.MeasData import MeasData  #For wrapping processor data packets up to send to the Data Manager
+from Host.Common.Broadcaster import Broadcaster
+from Host.Common.InstErrors import INST_ERROR_MEAS_SYS
+from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME, PrintEverything = __debug__)
 
+if sys.platform == 'win32':
+    threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
+    
 STATE__UNDEFINED = -100
 STATE_ERROR = 0x0F
 STATE_INIT = 0
@@ -707,8 +706,6 @@ Where the options can be a combination of the following:
 def PrintUsage():
     print HELP_STRING
 def HandleCommandSwitches():
-    import getopt
-
     shortOpts = 'hsc:'
     longOpts = ["help", "test", "no_fitter", "no_inst_mgr", "simulation"]
     try:
@@ -763,13 +760,12 @@ def ExecuteTest(MS):
 def main():
     #Get and handle the command line options...
     configFile, test, noFitter, noInstMgr, simMode = HandleCommandSwitches()
-    Log("%s application started." % APP_NAME, dict(ConfigFile = configFile), Level = 2)
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     try:
         app = MeasSystem(configFile, noFitter, noInstMgr, simMode)
         if test:
             threading.Timer(2, ExecuteTest(app)).start()
         app.Start()
-
     except:
         if __debug__: raise
         LogExc("Exception trapped outside MeasSystem execution")

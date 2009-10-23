@@ -30,35 +30,31 @@ _MAIN_CONFIG_SECTION = "Setup"
 UPDATE_TIMER_INTERVAL = 1000
 
 import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
 import wx
-import wx.lib.mixins.listctrl as listmix
+import Queue
 import numpy
 import os
 from os.path import dirname as os_dirname
-from os.path import abspath
 import re
 import collections
 import string
 import time
 import threading
 from threading import Thread
-from CustomConfigObj import CustomConfigObj
-import Queue
-import plot
-import GraphPanel
-import Listener
+import wx.lib.mixins.listctrl as listmix
 from wx.lib.wordwrap import wordwrap
-import SharedTypes
-import StringPickler
-import TextListener
-import AppStatus
-from SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER
-import CmdFIFO
-import BetterTraceback
+
 from PulseAnalyzerGui import PulseAnalyzerGui
 from UserCalGui import UserCalGui
-from EventManagerProxy import *
+from Host.Common import CmdFIFO, StringPickler, Listener, TextListener
+from Host.Common import plot
+from Host.Common import GraphPanel
+from Host.Common import BetterTraceback
+from Host.Common import AppStatus
+from Host.Common import SharedTypes
+from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
 if sys.platform == 'win32':
@@ -68,7 +64,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-AppPath = abspath(AppPath)
+AppPath = os.path.abspath(AppPath)
 
 #Set up a useful TimeStamp function...
 if sys.platform == 'win32':
@@ -1827,7 +1823,7 @@ class QuickGui(wx.Frame):
                 userLogEnabled = userLogEnabled or en
                 if len(fname) > 0:
                     #logFiles.append("%s" % (os.path.split(fname)[-1],))
-                    logFiles.append("%s" % abspath(fname))
+                    logFiles.append("%s" % os.path.abspath(fname))
             if len(logFiles) > 0:        
                 logFiles = "\n".join(logFiles)
             else:
@@ -2062,6 +2058,7 @@ def HandleCommandSwitches():
 if __name__ == "__main__":
     app = wx.PySimpleApp()
     configFile, test = HandleCommandSwitches()
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     frame = QuickGui(configFile)
     frame.Show()
     app.MainLoop()

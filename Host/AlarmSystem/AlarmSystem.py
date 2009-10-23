@@ -27,9 +27,6 @@
 # 07-04-17 sze Changed alarm display messages to be one origin
 # 08-09-18  alex  Replaced SortedConfigParser with CustomConfigObj
 
-import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
-
 ####
 ## Set constants for this file...
 ####
@@ -42,46 +39,34 @@ ALARM_SYSTEM_RPC_SUCCESS = 0
 ALARM_SYSTEM_RPC_NOT_READY = -1
 ALARM_SYSTEM_RPC_FAILED = -2
 
-####
-##Import from external libraries...
-####
-from CustomConfigObj import CustomConfigObj
+import sys
+import os
+import getopt
 import Queue
 import time
-import os.path
 import threading
 import socket #for transmitting data to the fitter
 import struct #for converting numbers to byte format
-from inspect import isclass
 import time
-import os
-from os.path import abspath
-
-####
-##Now import from Picarro generated libraries...
-####
-import CmdFIFO
-from SharedTypes import RPC_PORT_ALARM_SYSTEM, BROADCAST_PORT_DATA_MANAGER, STATUS_PORT_ALARM_SYSTEM, RPC_PORT_INSTR_MANAGER
 import traceback
-from SafeFile import SafeFile, FileExists
-from EventManagerProxy import *
-EventManagerProxy_Init(APP_NAME)
-from InstErrors import *
-import xmlrpclib
-import Broadcaster
-import Listener
-import StringPickler
-from AppStatus import AppStatus
-from MeasData import MeasData
+from inspect import isclass
 
-# import MeasData
+from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster
+from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, BROADCAST_PORT_DATA_MANAGER, STATUS_PORT_ALARM_SYSTEM, RPC_PORT_INSTR_MANAGER
+from Host.Common.SafeFile import SafeFile, FileExists
+from Host.Common.InstErrors import *
+from Host.Common.AppStatus import AppStatus
+from Host.Common.MeasData import MeasData
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.EventManagerProxy import *
+EventManagerProxy_Init(APP_NAME)
 
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-AppPath = abspath(AppPath)
+AppPath = os.path.abspath(AppPath)
 
 #Set up a useful TimeStamp function...
 if sys.platform == 'win32':
@@ -489,8 +474,6 @@ def PrintUsage():
     print HELP_STRING
 
 def HandleCommandSwitches():
-    import getopt
-
     shortOpts = 'hc:'
     longOpts = ["help", "no_inst_mgr"]
     
@@ -525,11 +508,10 @@ def HandleCommandSwitches():
 def main():
     #Get and handle the command line options...
     configFile, noInstMgr = HandleCommandSwitches()
-    Log("%s application started." % APP_NAME)
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     try:
         app = AlarmSystem(configFile, noInstMgr)
         app.ALARMSYSTEM_start()
-
     except Exception, E:
         if __debug__: raise
         msg = "Exception trapped outside execution"

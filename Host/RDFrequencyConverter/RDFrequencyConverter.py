@@ -21,36 +21,38 @@
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
+
+APP_NAME = "RDFrequencyConverter"
+
 import sys
 import getopt
 import inspect
 import shutil
-from numpy import *
 import os
 import Queue
 import threading
 import time
 import datetime
 import traceback
+from numpy import *
 from cStringIO import StringIO
 from binascii import crc32
+
 from Host.autogen import interface
+from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster
+from Host.Common.SharedTypes import Scheme, Singleton
+from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_ARCHIVER
 from Host.Common.WlmCalUtilities import AutoCal
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_ARCHIVER
-from Host.Common.SharedTypes import Scheme, Singleton
-from Host.Common import Listener, Broadcaster
-from Host.Common import CmdFIFO, StringPickler
+EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-EventManagerProxy_Init("RDFrequencyConverter")
 
-APP_NAME = "RDFrequencyConverter"
 MIN_SIZE = 30
 
 Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
@@ -869,11 +871,6 @@ def handleCommandSwitches():
 if __name__ == "__main__":
     configFile, options = handleCommandSwitches()
     rdFreqConvertApp = RDFrequencyConverter(configFile)
-    #rdFreqConvertApp.RPC_loadCal("WarmBoxCal.ini")
-    #rdFreqConvertApp.RPC_wrFreqScheme(0, Scheme("sample2.sch"))
-    #rdFreqConvertApp.RPC_convertScheme(0)
-    #rdFreqConvertApp.RPC_uploadSchemeToDAS(0)
-    #rdFreqConvertApp.RPC_updateCal()
-    Log("RDFrequencyConverter starting")
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     rdFreqConvertApp.run()
-    Log("RDFrequencyConverter exiting")
+    Log("Exiting program")

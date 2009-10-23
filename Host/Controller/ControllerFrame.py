@@ -14,18 +14,22 @@
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
+
+APP_NAME = "Controller"
+
 import wx
 import sys
 import traceback
 
+from Sequencer import Sequencer
 from ControllerFrameGui import ControllerFrameGui
 from ControllerModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy
 from ControllerModels import LogListener, SensorListener, RingdownListener, ControllerRpcHandler
-from Host.Common.ParameterDialog import ParameterDialog
 from Host.autogen import interface
-from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes
-from Sequencer import Sequencer
+from Host.Common.ParameterDialog import ParameterDialog
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+EventManagerProxy_Init(APP_NAME)
 
 # For convenience in calling driver and frequency converter functions
 Driver = DriverProxy().rpc
@@ -35,7 +39,6 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-EventManagerProxy_Init("Controller")
 
 class ControllerFrame(ControllerFrameGui):
     def __init__(self,*a,**k):
