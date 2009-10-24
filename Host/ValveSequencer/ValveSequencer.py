@@ -66,6 +66,8 @@ class ValveSequencer(ValveSequencerFrame):
         # A flag used to start/stop the sequencer for RPC calls (can't start timer directly from RPC)
         self.runSequencer = False
         self.stepTimer.Start(EXE_INTERVAL)
+        self.Show(True)
+        self.isGuiOn = True
         
     def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onEnableMenu, id = self.idEnableSeq)    
@@ -98,7 +100,9 @@ class ValveSequencer(ValveSequencerFrame):
                                                 ServerDescription = APP_DESCRIPTION,
                                                 ServerVersion = __version__,
                                                 threaded = True)  
-                                                
+        self.rpcServer.register_function(self.showGui)
+        self.rpcServer.register_function(self.hideGui)
+        self.rpcServer.register_function(self.isGuiOn)
         self.rpcServer.register_function(self.shutdown)
         self.rpcServer.register_function(self.setValves)
         self.rpcServer.register_function(self.getValves)
@@ -110,8 +114,20 @@ class ValveSequencer(ValveSequencerFrame):
         self.rpcThread = RpcServerThread(self.rpcServer, self.shutdown)
         self.rpcThread.start()
 
+    def showGui(self):
+        self.Show(True)
+        self.isGuiOn = True
+
+    def hideGui(self):
+        self.Show(False)
+        self.isGuiOn = False
+        
+    def isGuiOn(self):
+        return self.isGuiOn
+        
     def shutdown(self):
-        self.rpcServer.stop_server()
+        #self.rpcServer.stop_server()
+        self.onClose(None, True)
         
     def setValves(self, mask = None):
         # Have to update the current row before setting valve register
@@ -290,7 +306,14 @@ class ValveSequencer(ValveSequencerFrame):
         # Make current valve state checkboxes as READONLY
         self.curCheckboxList[self.curValStateIdList.index(event.GetEventObject().GetId())].SetValue(not event.IsChecked())
         
-    def onClose(self, event):
+    def onClose(self, event, forced=False):
+        if not forced:
+            d = wx.MessageDialog(None,"Terminate Valve Sequencer?", "Exit Confirmation", \
+                                 style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
+            close = (d.ShowModal() == wx.ID_YES)
+            d.Destroy()
+            if not close:
+                return
         self.Destroy()
         event.Skip()
 
@@ -397,6 +420,5 @@ if __name__ == "__main__":
     wx.InitAllImageHandlers()
     frame = ValveSequencer(None, -1, "")
     app.SetTopWindow(frame)
-    frame.Show()
     app.MainLoop()
     Log("Exiting program")
