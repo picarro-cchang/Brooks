@@ -74,8 +74,12 @@ int r_read_laser_thermistor_resistance(unsigned int numInt,void *params,void *en
 int r_read_etalon_thermistor_resistance(unsigned int numInt,void *params,void *env);
 int r_read_warm_box_thermistor_resistance(unsigned int numInt,void *params,void *env);
 int r_read_warm_box_heatsink_thermistor_resistance(unsigned int numInt,void *params,void *env);
+int r_read_cavity_thermistor_resistance(unsigned int numInt,void *params,void *env);
+int r_read_hot_box_heatsink_thermistor_resistance(unsigned int numInt,void *params,void *env);
 int r_read_laser_current(unsigned int numInt,void *params,void *env);
 int r_update_wlmsim_laser_temp(unsigned int numInt,void *params,void *env);
 int r_simulate_laser_current_reading(unsigned int numInt,void *params,void *env);
+int r_read_cavity_pressure_adc(unsigned int numInt,void *params,void *env);
+int r_read_ambient_pressure_adc(unsigned int numInt,void *params,void *env);
 int r_adc_to_pressure(unsigned int numInt,void *params,void *env);
 #endif

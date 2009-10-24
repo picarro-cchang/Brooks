@@ -67,5 +67,7 @@ int read_laser_thermistor_adc(int laserNum);
 int read_etalon_thermistor_adc(void);
 int read_warm_box_thermistor_adc(void);
 int read_warm_box_heatsink_thermistor_adc(void);
+int read_cavity_thermistor_adc(void);
+int read_hot_box_heatsink_thermistor_adc(void);
 
 #endif /* _TEMP_CNTRL_H_ */

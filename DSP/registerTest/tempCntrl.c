@@ -609,6 +609,32 @@ int read_warm_box_heatsink_thermistor_adc()
     return result;
 }
 
+int read_cavity_thermistor_adc()
+// Read cavity thermistor ADC
+{
+    int flags, result, loops;
+
+    setI2C0Mux(7);  // I2C bus 7
+    for (loops=0;loops<1000;loops++);
+    result = ltc2485_getData(&cavity_thermistor_I2C, &flags);
+    if (flags == 0) result = -16777216;
+    else if (flags == 3) result = 16777215;
+    return result;
+}
+
+int read_hot_box_heatsink_thermistor_adc()
+// Read hot box heatsink thermistor ADC
+{
+    int flags, result, loops;
+
+    setI2C0Mux(7);  // I2C bus 7
+    for (loops=0;loops<1000;loops++);
+    result = ltc2485_getData(&hot_box_heatsink_thermistor_I2C, &flags);
+    if (flags == 0) result = -16777216;
+    else if (flags == 3) result = 16777215;
+    return result;
+}
+
 int read_laser_thermistor_adc(int laserNum)
 // Read thermistor ADC for specified laser. laserNum is in the range 1-4
 {

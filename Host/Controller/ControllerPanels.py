@@ -461,11 +461,9 @@ class WarmBoxPanel(WarmBoxPanelGui):
         self.tecGraph.Update(delay=0)
 
     def onClear(self,evt):
-        for s,sel,stats,attr in self.temperatureGraph._lineSeries:
-            s.Clear()
-        for s,sel,stats,attr in self.tecGraph._lineSeries:
-            s.Clear()
-
+        for w in waveforms["WarmBox"].values():
+            w.Clear()
+            
     def onWaveformSelectChanged(self, event):
         self.temperatureGraph.RemoveAllSeries()
         if self.etalonTemperatureCheckbox.IsChecked():

@@ -622,6 +622,52 @@ int r_read_warm_box_heatsink_thermistor_resistance(unsigned int numInt,void *par
     return STATUS_OK;
 }
 
+int r_read_cavity_thermistor_resistance(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    float result;
+    float Vfrac, Rseries = 124000.0;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    result = read_cavity_thermistor_adc();
+    Vfrac = result/33554432.0;
+    if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
+    WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    return STATUS_OK;
+}
+
+int r_read_hot_box_heatsink_thermistor_resistance(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    float result;
+    float Vfrac, Rseries = 124000.0;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    result = read_hot_box_heatsink_thermistor_adc();
+    Vfrac = result/33554432.0;
+    if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
+    WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    return STATUS_OK;
+}
+
+int r_read_cavity_pressure_adc(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    unsigned int result;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    result = read_cavity_pressure_adc();
+    WRITE_REG(reg[0],result);
+    return STATUS_OK;
+}
+
+int r_read_ambient_pressure_adc(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    unsigned int result;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    result = read_ambient_pressure_adc();
+    WRITE_REG(reg[0],result);
+    return STATUS_OK;
+}
+
 int r_read_laser_current(unsigned int numInt,void *params,void *env)
 /*
     Reads laser current monitor of specified laser
@@ -690,16 +736,16 @@ int r_simulate_laser_current_reading(unsigned int numInt,void *params,void *env)
     switch (reg[0])
     {
     case 1:
-        dac = 10*readFPGA(FPGA_INJECT+INJECT_LASER1_COARSE_CURRENT) + readFPGA(FPGA_INJECT+INJECT_LASER1_FINE_CURRENT);
+        dac = 10*readFPGA(FPGA_INJECT+INJECT_LASER1_COARSE_CURRENT) + 2*readFPGA(FPGA_INJECT+INJECT_LASER1_FINE_CURRENT);
         break;
     case 2:
-        dac = 10*readFPGA(FPGA_INJECT+INJECT_LASER2_COARSE_CURRENT) + readFPGA(FPGA_INJECT+INJECT_LASER2_FINE_CURRENT);
+        dac = 10*readFPGA(FPGA_INJECT+INJECT_LASER2_COARSE_CURRENT) + 2*readFPGA(FPGA_INJECT+INJECT_LASER2_FINE_CURRENT);
         break;
     case 3:
-        dac = 10*readFPGA(FPGA_INJECT+INJECT_LASER3_COARSE_CURRENT) + readFPGA(FPGA_INJECT+INJECT_LASER3_FINE_CURRENT);
+        dac = 10*readFPGA(FPGA_INJECT+INJECT_LASER3_COARSE_CURRENT) + 2*readFPGA(FPGA_INJECT+INJECT_LASER3_FINE_CURRENT);
         break;
     case 4:
-        dac = 10*readFPGA(FPGA_INJECT+INJECT_LASER4_COARSE_CURRENT) + readFPGA(FPGA_INJECT+INJECT_LASER4_FINE_CURRENT);
+        dac = 10*readFPGA(FPGA_INJECT+INJECT_LASER4_COARSE_CURRENT) + 2*readFPGA(FPGA_INJECT+INJECT_LASER4_FINE_CURRENT);
         break;
     }
     current = 0.00036*dac;
@@ -711,7 +757,7 @@ int r_adc_to_pressure(unsigned int numInt,void *params,void *env)
 /*
     Reads laser current monitor of specified laser
     Input:
-		Register (uint):  Register containing ADC value
+		Register (int):  Register containing ADC value
         Register (float): Register containing conversion slope
         Register (float): Register containing conversion offset
     Output:
@@ -719,7 +765,7 @@ int r_adc_to_pressure(unsigned int numInt,void *params,void *env)
 */
 {
     unsigned int *reg = (unsigned int *) params;
-	unsigned int adcVal;    
+	int adcVal;    
     float slope, offset, result;
     if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
     READ_REG(reg[0],adcVal);

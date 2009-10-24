@@ -24,6 +24,7 @@
 #include "dspAutogen.h"
 #include "dspData.h"
 #include "i2c_dsp.h"
+#include "ltc2485.h"
 #include "pca8574.h"
 #include <math.h>
 #include <stdio.h>
@@ -276,4 +277,30 @@ int write_valve_pump_tec(unsigned int code)
 //  Note the inversion, which is needed since the I2C port starts up with its outputs high.
 {
     return modify_valve_pump_tec(0xFF,code);
+}
+
+int read_cavity_pressure_adc()
+// Read cavity pressure ADC
+{
+    int flags, result, loops;
+
+    setI2C0Mux(7);  // I2C bus 7
+    for (loops=0;loops<1000;loops++);
+    result = ltc2485_getData(&cavity_pressure_I2C, &flags);
+    if (flags == 0) result = -16777216;
+    else if (flags == 3) result = 16777215;
+    return result;
+}
+
+int read_ambient_pressure_adc()
+// Read ambient pressure ADC
+{
+    int flags, result, loops;
+
+    setI2C0Mux(7);  // I2C bus 7
+    for (loops=0;loops<1000;loops++);
+    result = ltc2485_getData(&ambient_pressure_I2C, &flags);
+    if (flags == 0) result = -16777216;
+    else if (flags == 3) result = 16777215;
+    return result;
 }
