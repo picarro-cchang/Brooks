@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # FILE:
-#   ControllerFrame.py
+#   Sequencer.py
 #
 # DESCRIPTION:
 #   Top level frame for the controller application

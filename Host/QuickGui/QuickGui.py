@@ -52,7 +52,7 @@ from Host.Common import GraphPanel
 from Host.Common import BetterTraceback
 from Host.Common import AppStatus
 from Host.Common import SharedTypes
-from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER
+from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
@@ -1142,9 +1142,14 @@ class QuickGui(wx.Frame):
         for key in self.imageDatabase.dbase:
             self.imageDatabase.setImagePanel(key,self)
 
-        self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "QuickGui")
-        self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = "QuickGui")
-
+        self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
+        self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
+        try:
+            self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
+            valveSeqGuiOn = self.valveSeqRpc.isGuiOn()
+        except:
+            self.valveSeqRpc = None
+            
         self.menuBar = wx.MenuBar()
         self.iSettings = wx.Menu()
         self.iView = wx.Menu()
@@ -1177,6 +1182,16 @@ class QuickGui(wx.Frame):
         except:
             self.pulseSource = None
             
+        if self.valveSeqRpc != None:
+            self.idValveSeq = wx.NewId()
+            if valveSeqGuiOn:
+                label = "Close Valve Sequencer GUI"
+            else:
+                label = "Open Valve Sequencer GUI"
+            self.iValveSeq = wx.MenuItem(self.iTools, self.idValveSeq, label, "", wx.ITEM_NORMAL)
+            self.iTools.AppendItem(self.iValveSeq)  
+            self.Bind(wx.EVT_MENU, self.OnValveSeq, id=self.idValveSeq)
+        
         self.menuBar.Append(self.iHelp,"Help")
         self.idABOUT = wx.NewId()
         self.iAbout = wx.MenuItem(self.iHelp, self.idABOUT, "About", "", wx.ITEM_NORMAL)
@@ -1899,7 +1914,18 @@ class QuickGui(wx.Frame):
                     newCal = (float(dlg.textCtrlList[2*idx].GetValue()), float(dlg.textCtrlList[2*idx+1].GetValue()))
                     self.dataManagerRpc.Cal_SetSlopeAndOffset(concList[idx], newCal[0], newCal[1])
         dlg.Destroy()
-        
+
+    def OnValveSeq(self, evt):
+        try:
+            if not self.valveSeqRpc.isGuiOn():
+                self.valveSeqRpc.showGui()
+                self.iTools.SetLabel(self.idValveSeq,"Close Valve Sequencer GUI")
+            else:
+                self.valveSeqRpc.hideGui()
+                self.iTools.SetLabel(self.idValveSeq,"Open Valve Sequencer GUI")
+        except:
+            pass
+            
     def OnPulseAnalyzerParam(self, evt):
         errorMsg = ""
         if not self.pulseSource:

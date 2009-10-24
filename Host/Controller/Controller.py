@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # FILE:
-#   ControllerFrame.py
+#   Controller.py
 #
 # DESCRIPTION:
 #   Top level frame for the controller application
@@ -40,7 +40,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 
-class ControllerFrame(ControllerFrameGui):
+class Controller(ControllerFrameGui):
     def __init__(self,*a,**k):
         try:
             self.versions = Driver.allVersions()
@@ -241,10 +241,10 @@ if __name__ == "__main__":
     # sys.excepthook = excepthook
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
-    controllerFrame = ControllerFrame(None, wx.ID_ANY, "")
+    controller = Controller(None, wx.ID_ANY, "")
     try:
-        app.SetTopWindow(controllerFrame)
-        controllerFrame.Show()
+        app.SetTopWindow(controller)
+        controller.Show()
         Log("%s started." % APP_NAME, Level = 0)
         app.MainLoop()
         Log("Exiting program")

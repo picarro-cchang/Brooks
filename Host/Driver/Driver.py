@@ -492,9 +492,9 @@ class Driver(SharedTypes.Singleton):
         basePath = os.path.split(configFile)[0]
         self.stateDbFile = os.path.join(basePath, self.config["Files"]["instrStateFileName"])
         self.instrConfigFile = os.path.join(basePath, self.config["Files"]["instrConfigFileName"])
-        self.usbFile  = "../../CypressUSB/analyzer/analyzerUsb.hex"
-        self.dspFile  = "../../DSP/registerTest/Debug/registerTest.hex"
-        self.fpgaFile = "../../MyHDL/Spartan3/top_io_map.bit"
+        self.usbFile  = os.path.join(basePath, self.config["Files"]["usbFileName"])
+        self.dspFile  = os.path.join(basePath, self.config["Files"]["dspFileName"])
+        self.fpgaFile = os.path.join(basePath, self.config["Files"]["fpgaFileName"])
         self.dasInterface = DasInterface(self.stateDbFile,self.usbFile,
                                          self.dspFile,self.fpgaFile,sim)
         self.rpcHandler = DriverRpcHandler(self.config,self.dasInterface)
