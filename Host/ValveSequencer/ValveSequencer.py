@@ -67,7 +67,6 @@ class ValveSequencer(ValveSequencerFrame):
         self.runSequencer = False
         self.stepTimer.Start(EXE_INTERVAL)
         self.Show(True)
-        self.isGuiOn = True
         
     def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onEnableMenu, id = self.idEnableSeq)    
@@ -116,14 +115,12 @@ class ValveSequencer(ValveSequencerFrame):
 
     def showGui(self):
         self.Show(True)
-        self.isGuiOn = True
 
     def hideGui(self):
         self.Show(False)
-        self.isGuiOn = False
         
     def isGuiOn(self):
-        return self.isGuiOn
+        return self.Shown
         
     def shutdown(self):
         #self.rpcServer.stop_server()

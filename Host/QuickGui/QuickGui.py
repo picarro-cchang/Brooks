@@ -1924,8 +1924,10 @@ class QuickGui(wx.Frame):
                 self.valveSeqRpc.hideGui()
                 self.iTools.SetLabel(self.idValveSeq,"Open Valve Sequencer GUI")
         except:
-            pass
-            
+            d = wx.MessageDialog(self, "Valve Sequencer is not currently running.", "Error", wx.OK | wx.ICON_EXCLAMATION)
+            d.ShowModal()
+            d.Destroy()
+
     def OnPulseAnalyzerParam(self, evt):
         errorMsg = ""
         if not self.pulseSource:
