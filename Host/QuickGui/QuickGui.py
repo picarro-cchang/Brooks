@@ -1185,9 +1185,9 @@ class QuickGui(wx.Frame):
         if self.valveSeqRpc != None:
             self.idValveSeq = wx.NewId()
             if valveSeqGuiOn:
-                label = "Close Valve Sequencer GUI"
+                label = "Hide Valve Sequencer GUI"
             else:
-                label = "Open Valve Sequencer GUI"
+                label = "Show Valve Sequencer GUI"
             self.iValveSeq = wx.MenuItem(self.iTools, self.idValveSeq, label, "", wx.ITEM_NORMAL)
             self.iTools.AppendItem(self.iValveSeq)  
             self.Bind(wx.EVT_MENU, self.OnValveSeq, id=self.idValveSeq)
@@ -1919,12 +1919,15 @@ class QuickGui(wx.Frame):
         try:
             if not self.valveSeqRpc.isGuiOn():
                 self.valveSeqRpc.showGui()
-                self.iTools.SetLabel(self.idValveSeq,"Close Valve Sequencer GUI")
+                self.iTools.SetLabel(self.idValveSeq,"Hide Valve Sequencer GUI")
             else:
                 self.valveSeqRpc.hideGui()
-                self.iTools.SetLabel(self.idValveSeq,"Open Valve Sequencer GUI")
-        except:
-            d = wx.MessageDialog(self, "Valve Sequencer is not currently running.", "Error", wx.OK | wx.ICON_EXCLAMATION)
+                self.iTools.SetLabel(self.idValveSeq,"Show Valve Sequencer GUI")
+        except Exception, err:
+            errMsg = "%s" % err
+            if errMsg == "connection failed":
+                errMsg += " (valve sequencer may be terminated already)"
+            d = wx.MessageDialog(self, "Error: %s" % errMsg, "Valve Sequencer Error", wx.OK | wx.ICON_EXCLAMATION)
             d.ShowModal()
             d.Destroy()
 

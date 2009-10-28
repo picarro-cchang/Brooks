@@ -65,6 +65,8 @@ class ValveSequencer(ValveSequencerFrame):
         
         # A flag used to start/stop the sequencer for RPC calls (can't start timer directly from RPC)
         self.runSequencer = False
+        
+        # Start timer and show the frame
         self.stepTimer.Start(EXE_INTERVAL)
         self.Show(True)
         
