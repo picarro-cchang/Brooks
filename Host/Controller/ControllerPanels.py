@@ -60,8 +60,8 @@ class RingdownPanel(RingdownPanelGui):
     def  update(self):
         self.ringdownGraph.Update(delay=0)
     def  onClear(self,evt):
-        for s,sel,stats,attr in self.ringdownGraph._pointSeries:
-            s.Clear()
+        for w in waveforms["Ringdown"].values():
+            w.Clear()
     def  onSelectGraphType(self,evt):
         fillColours = ["red","green","blue","yellow","cyan","magenta","black","white"]
         def  printData(data):
@@ -313,10 +313,8 @@ class WlmPanel(WlmPanelGui):
         self.ratioGraph.Update(delay=0)
 
     def onClear(self,evt):
-        for s,sel,stats,attr in self.photocurrentGraph._lineSeries:
-            s.Clear()
-        for s,sel,stats,attr in self.ratioGraph._lineSeries:
-            s.Clear()
+        for w in waveforms["Wlm"].values():
+            w.Clear()
                 
 class LaserPanel(LaserPanelGui):
     def __init__(self,*a,**k):
@@ -348,6 +346,10 @@ class LaserPanel(LaserPanelGui):
         self.currentWfm = Series(wfmPoints)
         self.currentGraph.AddSeriesAsLine(self.currentWfm,
             colour='red',width=2)
+        self.laserNum = None
+        
+    def setLaserNum(self,laserNum):
+        self.laserNum = laserNum
 
     def update(self):
         self.temperatureGraph.Update(delay=0)
@@ -355,12 +357,8 @@ class LaserPanel(LaserPanelGui):
         self.currentGraph.Update(delay=0)
 
     def onClear(self,evt):
-        for s,sel,stats,attr in self.temperatureGraph._lineSeries:
-            s.Clear()
-        for s,sel,stats,attr in self.tecGraph._lineSeries:
-            s.Clear()
-        for s,sel,stats,attr in self.currentGraph._lineSeries:
-            s.Clear()
+        for w in waveforms["Laser%d" % self.laserNum].values():
+            w.Clear()
             
 class PressurePanel(PressurePanelGui):
     def __init__(self,*a,**k):
@@ -405,10 +403,8 @@ class PressurePanel(PressurePanelGui):
         updateState(self.valve6State,wx.CHK_CHECKED if (solenoidValveStates & 0x20) else wx.CHK_UNCHECKED)
 
     def onClear(self,evt):
-        for s,sel,stats,attr in self.pressureGraph._lineSeries:
-            s.Clear()
-        for s,sel,stats,attr in self.propValveGraph._lineSeries:
-            s.Clear()
+        for w in waveforms["Pressure"].values():
+            w.Clear()
 
     def onPressureWaveformSelectChanged(self, event):
         self.pressureGraph.RemoveAllSeries()
@@ -461,11 +457,9 @@ class WarmBoxPanel(WarmBoxPanelGui):
         self.tecGraph.Update(delay=0)
 
     def onClear(self,evt):
-        for s,sel,stats,attr in self.temperatureGraph._lineSeries:
-            s.Clear()
-        for s,sel,stats,attr in self.tecGraph._lineSeries:
-            s.Clear()
-
+        for w in waveforms["WarmBox"].values():
+            w.Clear()
+            
     def onWaveformSelectChanged(self, event):
         self.temperatureGraph.RemoveAllSeries()
         if self.etalonTemperatureCheckbox.IsChecked():
@@ -518,12 +512,8 @@ class HotBoxPanel(HotBoxPanelGui):
         self.heaterGraph.Update(delay=0)
 
     def onClear(self,evt):
-        for s,sel,stats,attr in self.temperatureGraph._lineSeries:
-            s.Clear()
-        for s,sel,stats,attr in self.tecGraph._lineSeries:
-            s.Clear()
-        for s,sel,stats,attr in self.heaterGraph._lineSeries:
-            s.Clear()
+        for w in waveforms["HotBox"].values():
+            w.Clear()
 
     def onWaveformSelectChanged(self, event):
         self.temperatureGraph.RemoveAllSeries()
@@ -750,7 +740,6 @@ class StatsPanel(StatsPanelGui):
         if self.active and 0 == (data.status & interface.RINGDOWN_STATUS_RingdownTimeout):
             self.rdStats.processDatum(data.timestamp/1000.0,data.uncorrectedAbsorbance)
             self.lossAllanVar.processDatum(data.uncorrectedAbsorbance)
-            # TO DO: Replace angle with wave number
             #self.waveNumberAllanVar.processDatum(data.wlmAngle)
             self.waveNumberAllanVar.processDatum(data.waveNumber)
             self.ratio1AllanVar.processDatum(data.ratio1)

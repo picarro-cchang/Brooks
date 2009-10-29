@@ -101,7 +101,7 @@ int tempCntrlWrite(TempCntrl *t)
 int tempCntrlStep(TempCntrl *t)
 {
     // Step the temperature controller, computing the new TEC value
-    float error;
+    float error, tecNext;
     int inRange;
 
     switch (state)
@@ -115,6 +115,8 @@ int tempCntrlStep(TempCntrl *t)
     case TEMP_CNTRL_ManualState:
         setDasStatusBit(activeBit);
         resetDasStatusBit(lockBit);
+        if (manualTec > Amax) manualTec = Amax;
+        if (manualTec < Amin) manualTec = Amin;
         tec = manualTec;
         prbsReg = 0x1;
         break;
@@ -173,13 +175,16 @@ int tempCntrlStep(TempCntrl *t)
         resetDasStatusBit(lockBit);
         if (prbsReg & 0x1)
         {
-            tec = prbsMean + prbsAmp;
+            tecNext = prbsMean + prbsAmp;
             prbsReg ^= prbsGen;
         }
         else
         {
-            tec = prbsMean - prbsAmp;
+            tecNext = prbsMean - prbsAmp;
         }
+        if (tecNext > Amax) tecNext = Amax;
+        if (tecNext < Amin) tecNext = Amin;
+        tec = tecNext;
         prbsReg >>= 1;
         break;
     }
@@ -599,6 +604,32 @@ int read_warm_box_heatsink_thermistor_adc()
     setI2C1Mux(0);  // I2C bus 8
     for (loops=0;loops<1000;loops++);
     result = ltc2485_getData(&warm_box_heatsink_thermistor_I2C, &flags);
+    if (flags == 0) result = -16777216;
+    else if (flags == 3) result = 16777215;
+    return result;
+}
+
+int read_cavity_thermistor_adc()
+// Read cavity thermistor ADC
+{
+    int flags, result, loops;
+
+    setI2C0Mux(7);  // I2C bus 7
+    for (loops=0;loops<1000;loops++);
+    result = ltc2485_getData(&cavity_thermistor_I2C, &flags);
+    if (flags == 0) result = -16777216;
+    else if (flags == 3) result = 16777215;
+    return result;
+}
+
+int read_hot_box_heatsink_thermistor_adc()
+// Read hot box heatsink thermistor ADC
+{
+    int flags, result, loops;
+
+    setI2C0Mux(7);  // I2C bus 7
+    for (loops=0;loops<1000;loops++);
+    result = ltc2485_getData(&hot_box_heatsink_thermistor_I2C, &flags);
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;

@@ -241,11 +241,13 @@
             <register>VALVE_CNTRL_INLET_VALVE_MIN_REGISTER</register>
             <register>VALVE_CNTRL_INLET_VALVE_MAX_REGISTER</register>
             <register>VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER</register>
             <register>VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER</register>
             <register>VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER</register>
             <register>VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER</register>
             <register>VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER</register>
             <register>VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER</register>
             <register>VALVE_CNTRL_THRESHOLD_STATE_REGISTER</register>
             <register>VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER</register>
             <register>VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER</register>

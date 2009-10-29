@@ -172,10 +172,10 @@ class Viewer(HasTraits):
     setpointResp = Instance(Plot2D,())
     disturbanceResp = Instance(Plot2D,())
     K = CFloat(100.0)
-    Ti = CFloat(1000.0)
+    Ti = CFloat(100.0)
     Td = CFloat(0.1)
     N = CFloat(1000.0)
-    h = CFloat(0.2)
+    h = CFloat(5.0)
     b = CFloat(1.0)
     c = CFloat(1.0)
     Nsamp = CInt(500)
@@ -218,8 +218,10 @@ class Viewer(HasTraits):
         numCp = array([0,1.0,-(1.0+p),p])
         numCi = array([0,1.0,-p,0.0])
         numCd = array([0,1.0,-2.0,1.0])
-        numC = -self.K*(numCp + (self.h/self.Ti)*numCi + self.N*p*numCd)
-        numCw = -self.K*(self.b*numCp + (self.h/self.Ti)*numCi + self.c*self.N*p*numCd)
+        #numC = -self.K*(numCp + (self.h/self.Ti)*numCi + self.N*p*numCd)
+        #numCw = -self.K*(self.b*numCp + (self.h/self.Ti)*numCi + self.c*self.N*p*numCd)
+        numC = self.K*(numCp + (self.h/self.Ti)*numCi + self.N*p*numCd)
+        numCw = self.K*(self.b*numCp + (self.h/self.Ti)*numCi + self.c*self.N*p*numCd)
         #
         sysC = Ltid.fromNumDen(numC,denC)
         self.sysD = self.sysG.feedback(sysC)
@@ -263,9 +265,12 @@ class Viewer(HasTraits):
         self.findResponse()
     
 if __name__ == "__main__":
-    fname = "../Host/Driver/Sensors_20091005_001334.h5"
-    inputStream  = STREAM_Laser2Tec
-    outputStream = STREAM_Laser2Temp
+    #fname = "../Host/Driver/Sensors_20091005_001334.h5"
+    fname = "WarmBoxWithWlmShroud_20091023_210610.h5"
+    #inputStream  = STREAM_Laser2Tec
+    #outputStream = STREAM_Laser2Temp
+    inputStream = STREAM_WarmBoxTec
+    outputStream = STREAM_WarmBoxTemp
     viewer = Viewer()
     viewer.process(fname,inputStream,outputStream)
     
@@ -273,7 +278,7 @@ if __name__ == "__main__":
                   Item("disturbanceResp",style="custom",show_label=False),
                   Item("setpointResp",style="custom",show_label=False),
                   Item("K",editor=RangeEditor(low=1.0,high=10000.0,auto_set=False,enter_set=True,mode='xslider')),
-                  Item("Ti",editor=RangeEditor(low=0.1,high=10.0,auto_set=False,enter_set=True,mode='xslider')),
+                  Item("Ti",editor=RangeEditor(low=0.1,high=100.0,auto_set=False,enter_set=True,mode='xslider')),
                   Item("Td",editor=RangeEditor(low=0.0,high=10.0,auto_set=False,enter_set=True,mode='xslider')),
                   Item("N",editor=RangeEditor(low=1.0,high=1000.0,auto_set=False,enter_set=True,mode='xslider')),
                   Item("b",editor=RangeEditor(low=0.0,high=1.0,auto_set=False,enter_set=True,mode='xslider')),

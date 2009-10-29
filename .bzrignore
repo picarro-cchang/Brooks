@@ -111,5 +111,7 @@ MyHDL/Templates/*.template
 MyHDL/TopLevel/*.vhd
 MyHDL/Testing/*.vhd
 Utilities/Support/*
+Utilities/*.png
+Docs/*
 *.tds
 *.dll

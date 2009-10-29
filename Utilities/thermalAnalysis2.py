@@ -139,11 +139,14 @@ def find_ARMA(u,y,b_lags,a_lags,ntrend=1):
     return num,den,res,rank,sv,dot(M,c)
     
 if __name__ == "__main__":
-    fname = "../Host/Driver/Sensor_PRBS1.h5"
+    #fname = "../Host/Driver/Sensor_PRBS1.h5"
+    fname = "WarmBoxThermal_20091022_190413.h5"
     h5f = openFile(fname,"r")
     table = h5f.root.sensors
-    y = table.readWhere("(streamNum == %d)" % STREAM_Laser1Temp)
-    x = table.readWhere("(streamNum == %d)" % STREAM_Laser1Tec)
+    #y = table.readWhere("(streamNum == %d)" % STREAM_Laser1Temp)
+    #x = table.readWhere("(streamNum == %d)" % STREAM_Laser1Tec)
+    y = table.readWhere("(streamNum == %d)" % STREAM_WarmBoxTemp)
+    x = table.readWhere("(streamNum == %d)" % STREAM_WarmBoxTec)
     h5f.close()
     # Obtain data on a common timebase
     tMin = max(x['time'][0],y['time'][0])

@@ -568,6 +568,7 @@ class Driver(SharedTypes.Singleton):
                 Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
                     Verbose=traceback.format_exc(),Level=3)
         finally:
+            self.rpcHandler.wrDasReg(interface.TEC_CNTRL_REGISTER,interface.TEC_CNTRL_Disabled)
             try:
                 self.dasInterface.saveDasState()
             except:

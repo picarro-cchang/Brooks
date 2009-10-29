@@ -1913,7 +1913,7 @@
             <initial>0.0</initial>
             <display format="%.0f">Heater manual mode mark</display>
         </register>
-        <register ident="CAVITY_PRESSURE_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+        <register ident="CAVITY_PRESSURE_ADC_REGISTER" type="int32" minver="1.0" access="r">
             <description>Cavity pressure ADC register</description>
             <initial>32768</initial>
         </register>
@@ -1930,7 +1930,7 @@
         <register ident="CAVITY_PRESSURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Cavity pressure</description>
         </register>
-        <register ident="AMBIENT_PRESSURE_ADC_REGISTER" type="uint32" minver="1.0" access="r">
+        <register ident="AMBIENT_PRESSURE_ADC_REGISTER" type="int32" minver="1.0" access="r">
             <description>Ambient pressure ADC register</description>
             <initial>32768</initial>
         </register>
@@ -2229,6 +2229,12 @@
             <save/>
             <display format="%.1f" units="digU">Inlet valve maximum change between samples</display>
         </register>
+        <register ident="VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Peak to peak dither for inlet valve</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.1f" units="digU">Inlet valve dither (p-p)</display>
+        </register>
         <register ident="VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER" type="float" minver="1.0" access="rw">
             <description>Gain 1 for outlet valve</description>
             <initial>50.0</initial>
@@ -2245,7 +2251,7 @@
             <description>Minimum value for outlet valve</description>
             <initial>20000.0</initial>
             <save/>
-            <display format="%.0f" units="digU">Inlet valve minimum value</display>
+            <display format="%.0f" units="digU">Outlet valve minimum value</display>
         </register>
         <register ident="VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Maximum value for outlet valve</description>
@@ -2258,6 +2264,12 @@
             <initial>1000.0</initial>
             <save/>
             <display format="%.1f" units="digU">Outlet valve maximum change between samples</display>
+        </register>
+        <register ident="VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Peak to peak dither for outlet valve</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.1f" units="digU">Outlet valve dither (p-p)</display>
         </register>
         <register ident="VALVE_CNTRL_THRESHOLD_STATE_REGISTER" type="VALVE_CNTRL_THRESHOLD_StateType" minver="1.0" access="rw">
             <description>Loss-based triggering states</description>
@@ -2588,6 +2600,17 @@
                     <fielddef value="13">Ratio 2 (MS)</fielddef>
                     <fielddef value="14">PZT (LS)</fielddef>
                     <fielddef value="15">PZT (MS)</fielddef>
+                    <fielddef value="16">Etalon 1 ADC (LS)</fielddef>
+                    <fielddef value="17">Etalon 1 ADC (MS)</fielddef>
+                    <fielddef value="18">Reference 1 ADC (LS)</fielddef>
+                    <fielddef value="19">Reference 1 ADC (MS)</fielddef>
+                    <fielddef value="20">Etalon 2 ADC (LS)</fielddef>
+                    <fielddef value="21">Etalon 2 ADC (MS)</fielddef>
+                    <fielddef value="22">Reference 2 ADC (LS)</fielddef>
+                    <fielddef value="23">Reference 2 ADC (MS)</fielddef>
+                    <fielddef value="24">WLM ADC signals</fielddef>
+                    <fielddef value="25">System clocks</fielddef>
+                    <fielddef value="26">PWM signals</fielddef>
                 </bitfield>
             </reg>
             <reg type="mask" ident="INTRONIX_2" description="" access="rw">
@@ -2608,7 +2631,18 @@
                     <fielddef value="12">Ratio 2 (LS)</fielddef>
                     <fielddef value="13">Ratio 2 (MS)</fielddef>
                     <fielddef value="14">PZT (LS)</fielddef>
-                    <fielddef value="15">PZT (MS)</fielddef>                    
+                    <fielddef value="15">PZT (MS)</fielddef>
+                    <fielddef value="16">Etalon 1 ADC (LS)</fielddef>
+                    <fielddef value="17">Etalon 1 ADC (MS)</fielddef>
+                    <fielddef value="18">Reference 1 ADC (LS)</fielddef>
+                    <fielddef value="19">Reference 1 ADC (MS)</fielddef>
+                    <fielddef value="20">Etalon 2 ADC (LS)</fielddef>
+                    <fielddef value="21">Etalon 2 ADC (MS)</fielddef>
+                    <fielddef value="22">Reference 2 ADC (LS)</fielddef>
+                    <fielddef value="23">Reference 2 ADC (MS)</fielddef>
+                    <fielddef value="24">WLM ADC signals</fielddef>
+                    <fielddef value="25">System clocks</fielddef>
+                    <fielddef value="26">PWM signals</fielddef>
                 </bitfield>
             </reg>
             <reg type="mask" ident="INTRONIX_3" description="" access="rw">
@@ -2630,6 +2664,17 @@
                     <fielddef value="13">Ratio 2 (MS)</fielddef>
                     <fielddef value="14">PZT (LS)</fielddef>
                     <fielddef value="15">PZT (MS)</fielddef>
+                    <fielddef value="16">Etalon 1 ADC (LS)</fielddef>
+                    <fielddef value="17">Etalon 1 ADC (MS)</fielddef>
+                    <fielddef value="18">Reference 1 ADC (LS)</fielddef>
+                    <fielddef value="19">Reference 1 ADC (MS)</fielddef>
+                    <fielddef value="20">Etalon 2 ADC (LS)</fielddef>
+                    <fielddef value="21">Etalon 2 ADC (MS)</fielddef>
+                    <fielddef value="22">Reference 2 ADC (LS)</fielddef>
+                    <fielddef value="23">Reference 2 ADC (MS)</fielddef>
+                    <fielddef value="24">WLM ADC signals</fielddef>
+                    <fielddef value="25">System clocks</fielddef>
+                    <fielddef value="26">PWM signals</fielddef>
                 </bitfield>
             </reg>
             <reg type="uint16" ident="OVERLOAD" description="Overload register" access="r">
@@ -3328,9 +3373,15 @@
         <action ident="ACTION_READ_ETALON_THERMISTOR_RESISTANCE">r_read_etalon_thermistor_resistance</action>
         <action ident="ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE">r_read_warm_box_thermistor_resistance</action>
         <action ident="ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE">r_read_warm_box_heatsink_thermistor_resistance</action>
+        <action ident="ACTION_READ_CAVITY_THERMISTOR_RESISTANCE">r_read_cavity_thermistor_resistance</action>
+        <action ident="ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE">r_read_hot_box_heatsink_thermistor_resistance</action>
         <action ident="ACTION_READ_LASER_CURRENT">r_read_laser_current</action>
         <action ident="ACTION_UPDATE_WLMSIM_LASER_TEMP">r_update_wlmsim_laser_temp</action>
         <action ident="ACTION_SIMULATE_LASER_CURRENT_READING">r_simulate_laser_current_reading</action>
+        <action ident="ACTION_READ_CAVITY_PRESSURE_ADC">r_read_cavity_pressure_adc</action>
+        <action ident="ACTION_READ_AMBIENT_PRESSURE_ADC">r_read_ambient_pressure_adc</action>
         <action ident="ACTION_ADC_TO_PRESSURE">r_adc_to_pressure</action>
+        <action ident="ACTION_SET_INLET_VALVE">r_set_inlet_valve</action>
+        <action ident="ACTION_SET_OUTLET_VALVE">r_set_outlet_valve</action>
     </action_list>
 </Das_Interface>

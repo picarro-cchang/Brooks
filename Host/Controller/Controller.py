@@ -51,7 +51,7 @@ class Controller(ControllerFrameGui):
         ControllerFrameGui.__init__(self,*a,**k)
         self.updateTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER,self.onUpdateTimer,self.updateTimer)
-        self.updateTimer.Start(milliseconds=250)
+        self.updateTimer.Start(milliseconds=1000)
         self.openParamDialogs = {}
         self.setupParameterDialogs()
         self.setupWaveforms()
@@ -62,9 +62,13 @@ class Controller(ControllerFrameGui):
         Sequencer(Driver.getConfigFile())
         self.Bind(wx.EVT_IDLE, self.onIdle)
         panels["Laser1"]=self.laser1Panel
+        self.laser1Panel.setLaserNum(1)
         panels["Laser2"]=self.laser2Panel
+        self.laser2Panel.setLaserNum(2)
         panels["Laser3"]=self.laser3Panel
+        self.laser3Panel.setLaserNum(3)
         panels["Laser4"]=self.laser4Panel
+        self.laser4Panel.setLaserNum(4)
         panels["WarmBox"]=self.warmBoxPanel
         panels["HotBox"]=self.hotBoxPanel
         panels["Pressure"]=self.pressurePanel

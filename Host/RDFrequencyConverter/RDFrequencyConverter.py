@@ -490,8 +490,11 @@ class RDFrequencyConverter(Singleton):
                     index = cacheIndex[vLaserNum-1][i]
                     rdProcessedData = self.rdProcessedCache[index]
                     rdProcessedData.waveNumber = w
-                    rdProcessedData.waveNumberSetpoint = self.freqScheme[rdProcessedData.schemeTable].setpoint[rdProcessedData.schemeRow]
-
+                    if rdProcessedData.schemeTable in self.freqScheme:
+                        rdProcessedData.waveNumberSetpoint = self.freqScheme[rdProcessedData.schemeTable].setpoint[rdProcessedData.schemeRow]
+                    else:
+                        rdProcessedData.waveNumberSetpoint = 0
+                        
     def _assertVLaserNum(self, vLaserNum):
         if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
             raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)

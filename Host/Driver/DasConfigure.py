@@ -157,11 +157,11 @@ class DasConfigure(SharedTypes.Singleton):
             # Etalon temperature
             
             if present > 0:
-                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_ETALON_THERMISTOR_RESISTANCE",
                         ["ETALON_RESISTANCE_REGISTER"]))
     
-            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+            self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                     ["ETALON_RESISTANCE_REGISTER",
                      "CONVERSION_ETALON_THERM_CONSTA_REGISTER",
@@ -169,21 +169,21 @@ class DasConfigure(SharedTypes.Singleton):
                      "CONVERSION_ETALON_THERM_CONSTC_REGISTER",
                      "ETALON_TEMPERATURE_REGISTER"]))
             
-            self.opGroups["FAST"]["STREAMER"].addOperation(
+            self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_EtalonTemp","ETALON_TEMPERATURE_REGISTER"]))
 
             # Warm Box
             if present > 0:
-                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE",
                         ["WARM_BOX_RESISTANCE_REGISTER"]))
         
-                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE",
                         ["WARM_BOX_HEATSINK_RESISTANCE_REGISTER"]))
     
-            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+            self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                     ["WARM_BOX_RESISTANCE_REGISTER",
                      "CONVERSION_WARM_BOX_THERM_CONSTA_REGISTER",
@@ -191,7 +191,7 @@ class DasConfigure(SharedTypes.Singleton):
                      "CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER",
                      "WARM_BOX_TEMPERATURE_REGISTER"]))
     
-            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+            self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                     ["WARM_BOX_HEATSINK_RESISTANCE_REGISTER",
                      "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER",
@@ -199,117 +199,142 @@ class DasConfigure(SharedTypes.Singleton):
                      "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTC_REGISTER",
                      "WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
             
-            self.opGroups["FAST"]["STREAMER"].addOperation(
+            self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_WarmBoxTemp","WARM_BOX_TEMPERATURE_REGISTER"]))
     
-            self.opGroups["FAST"]["STREAMER"].addOperation(
+            self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_WarmBoxHeatsinkTemp","WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
     
-            self.opGroups["FAST"]["STREAMER"].addOperation(
+            self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_WarmBoxTec","WARM_BOX_TEC_REGISTER"]))
     
-            self.opGroups["FAST"]["CONTROLLER"].addOperation(
+            self.opGroups["SLOW"]["CONTROLLER"].addOperation(
                 Operation("ACTION_TEMP_CNTRL_WARM_BOX_STEP"))
     
-            self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+            self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
                 Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
                     ["WARM_BOX_TEC_REGISTER","FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"]))
 
         # Hot Box
-        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                ["CAVITY_RESISTANCE_REGISTER",
-                 "CONVERSION_CAVITY_THERM_CONSTA_REGISTER",
-                 "CONVERSION_CAVITY_THERM_CONSTB_REGISTER",
-                 "CONVERSION_CAVITY_THERM_CONSTC_REGISTER",
-                 "CAVITY_TEMPERATURE_REGISTER"]))
 
-        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                ["HOT_BOX_HEATSINK_RESISTANCE_REGISTER",
-                 "CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER",
-                 "CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTB_REGISTER",
-                 "CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTC_REGISTER",
-                 "HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
+        present = self.installCheck("HOT_BOX_PRESENT")
 
-        self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_CavityTemp","CAVITY_TEMPERATURE_REGISTER"]))
-
-        self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_HotBoxHeatsinkTemp","HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
-
-        self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_HotBoxTec","CAVITY_TEC_REGISTER"]))
-
-        self.opGroups["SLOW"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_HotBoxHeater","HEATER_CNTRL_MARK_REGISTER"]))
+        if present:
+            # Hot box temperatures
+            if present > 0:
+                self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                    Operation("ACTION_READ_CAVITY_THERMISTOR_RESISTANCE",
+                        ["CAVITY_RESISTANCE_REGISTER"]))
         
-        self.opGroups["SLOW"]["CONTROLLER"].addOperation(
-            Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
-
-        self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
-            Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
-                ["CAVITY_TEC_REGISTER","FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))
-
-        self.opGroups["SLOW"]["CONTROLLER"].addOperation(
-            Operation("ACTION_HEATER_CNTRL_STEP"))
-        
-        self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
-            Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
-                ["HEATER_CNTRL_MARK_REGISTER","FPGA_PWM_HEATER","PWM_PULSE_WIDTH"]))
+                self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                    Operation("ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE",
+                        ["HOT_BOX_HEATSINK_RESISTANCE_REGISTER"]))
+                
+            self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                    ["CAVITY_RESISTANCE_REGISTER",
+                     "CONVERSION_CAVITY_THERM_CONSTA_REGISTER",
+                     "CONVERSION_CAVITY_THERM_CONSTB_REGISTER",
+                     "CONVERSION_CAVITY_THERM_CONSTC_REGISTER",
+                     "CAVITY_TEMPERATURE_REGISTER"]))
+    
+            self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                    ["HOT_BOX_HEATSINK_RESISTANCE_REGISTER",
+                     "CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER",
+                     "CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTB_REGISTER",
+                     "CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTC_REGISTER",
+                     "HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
+    
+            self.opGroups["SLOW"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_CavityTemp","CAVITY_TEMPERATURE_REGISTER"]))
+    
+            self.opGroups["SLOW"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_HotBoxHeatsinkTemp","HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
+    
+            self.opGroups["SLOW"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_HotBoxTec","CAVITY_TEC_REGISTER"]))
+    
+            self.opGroups["SLOW"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_HotBoxHeater","HEATER_CNTRL_MARK_REGISTER"]))
+            
+            self.opGroups["SLOW"]["CONTROLLER"].addOperation(
+                Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
+    
+            self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
+                Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                    ["CAVITY_TEC_REGISTER","FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))
+    
+            self.opGroups["SLOW"]["CONTROLLER"].addOperation(
+                Operation("ACTION_HEATER_CNTRL_STEP"))
+            
+            self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
+                Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                    ["HEATER_CNTRL_MARK_REGISTER","FPGA_PWM_HEATER","PWM_PULSE_WIDTH"]))
 
         # Valve control
+
+        if present:
+            # Pressure reading
+            if present>0:
+                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                    Operation("ACTION_READ_CAVITY_PRESSURE_ADC",
+                        ["CAVITY_PRESSURE_ADC_REGISTER"]))
         
-        self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
-            Operation("ACTION_ADC_TO_PRESSURE",
-                ["CAVITY_PRESSURE_ADC_REGISTER",
-                 "CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER",
-                 "CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER",
-                 "CAVITY_PRESSURE_REGISTER"]))
-                
-        self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
-            Operation("ACTION_ADC_TO_PRESSURE",
-                ["AMBIENT_PRESSURE_ADC_REGISTER",
-                 "CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER",
-                 "CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER",
-                 "AMBIENT_PRESSURE_REGISTER"]))
+                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                    Operation("ACTION_READ_AMBIENT_PRESSURE_ADC",
+                        ["AMBIENT_PRESSURE_ADC_REGISTER"]))
+            
+            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+                Operation("ACTION_ADC_TO_PRESSURE",
+                    ["CAVITY_PRESSURE_ADC_REGISTER",
+                     "CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER",
+                     "CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER",
+                     "CAVITY_PRESSURE_REGISTER"]))
+                    
+            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+                Operation("ACTION_ADC_TO_PRESSURE",
+                    ["AMBIENT_PRESSURE_ADC_REGISTER",
+                     "CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER",
+                     "CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER",
+                     "AMBIENT_PRESSURE_REGISTER"]))
+            
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_CavityPressure","CAVITY_PRESSURE_REGISTER"]))
+    
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_AmbientPressure","AMBIENT_PRESSURE_REGISTER"]))
+    
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_InletValve","VALVE_CNTRL_INLET_VALVE_REGISTER"]))
+    
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_OutletValve","VALVE_CNTRL_OUTLET_VALVE_REGISTER"]))
+    
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_ValveMask","VALVE_CNTRL_SOLENOID_VALVES_REGISTER"]))
+            
+            self.opGroups["FAST"]["CONTROLLER"].addOperation(
+                Operation("ACTION_VALVE_CNTRL_STEP"))
         
-        self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_CavityPressure","CAVITY_PRESSURE_REGISTER"]))
-
-        self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_AmbientPressure","AMBIENT_PRESSURE_REGISTER"]))
-
-        self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_InletValve","VALVE_CNTRL_INLET_VALVE_REGISTER"]))
-
-        self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_OutletValve","VALVE_CNTRL_OUTLET_VALVE_REGISTER"]))
-
-        self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_ValveMask","VALVE_CNTRL_SOLENOID_VALVES_REGISTER"]))
-        
-        self.opGroups["FAST"]["CONTROLLER"].addOperation(
-            Operation("ACTION_VALVE_CNTRL_STEP"))
-
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_SPECTRUM_CNTRL_STEP"))
         
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_TUNER_CNTRL_STEP"))
-        
+
         # Update the laser temperature register of the WLM simulator
         self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
             Operation("ACTION_UPDATE_WLMSIM_LASER_TEMP"))
@@ -382,8 +407,8 @@ class DasConfigure(SharedTypes.Singleton):
         sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER",60000.0)
         sender.wrRegFloat("CAVITY_RESISTANCE_REGISTER",59000.0)
 
-        sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER",40000)
-        sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER",20000)
+        sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER",11000000)
+        sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER",1500000)
         
         # Start the ringdown manager
         runCont = (1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B)
