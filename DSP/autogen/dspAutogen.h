@@ -16,7 +16,7 @@
 #include "interface.h"
 
 void initRegisters(void);
-extern RegTypes regTypes[372];
+extern RegTypes regTypes[374];
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env);
 int writeBlock(unsigned int numInt,void *params,void *env);
 int setTimestamp(unsigned int numInt,void *params,void *env);
@@ -82,4 +82,6 @@ int r_simulate_laser_current_reading(unsigned int numInt,void *params,void *env)
 int r_read_cavity_pressure_adc(unsigned int numInt,void *params,void *env);
 int r_read_ambient_pressure_adc(unsigned int numInt,void *params,void *env);
 int r_adc_to_pressure(unsigned int numInt,void *params,void *env);
+int r_set_inlet_valve(unsigned int numInt,void *params,void *env);
+int r_set_outlet_valve(unsigned int numInt,void *params,void *env);
 #endif

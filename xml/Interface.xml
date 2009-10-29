@@ -2229,6 +2229,12 @@
             <save/>
             <display format="%.1f" units="digU">Inlet valve maximum change between samples</display>
         </register>
+        <register ident="VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Peak to peak dither for inlet valve</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.1f" units="digU">Inlet valve dither (p-p)</display>
+        </register>
         <register ident="VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER" type="float" minver="1.0" access="rw">
             <description>Gain 1 for outlet valve</description>
             <initial>50.0</initial>
@@ -2245,7 +2251,7 @@
             <description>Minimum value for outlet valve</description>
             <initial>20000.0</initial>
             <save/>
-            <display format="%.0f" units="digU">Inlet valve minimum value</display>
+            <display format="%.0f" units="digU">Outlet valve minimum value</display>
         </register>
         <register ident="VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Maximum value for outlet valve</description>
@@ -2258,6 +2264,12 @@
             <initial>1000.0</initial>
             <save/>
             <display format="%.1f" units="digU">Outlet valve maximum change between samples</display>
+        </register>
+        <register ident="VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Peak to peak dither for outlet valve</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.1f" units="digU">Outlet valve dither (p-p)</display>
         </register>
         <register ident="VALVE_CNTRL_THRESHOLD_STATE_REGISTER" type="VALVE_CNTRL_THRESHOLD_StateType" minver="1.0" access="rw">
             <description>Loss-based triggering states</description>
@@ -3369,5 +3381,7 @@
         <action ident="ACTION_READ_CAVITY_PRESSURE_ADC">r_read_cavity_pressure_adc</action>
         <action ident="ACTION_READ_AMBIENT_PRESSURE_ADC">r_read_ambient_pressure_adc</action>
         <action ident="ACTION_ADC_TO_PRESSURE">r_adc_to_pressure</action>
+        <action ident="ACTION_SET_INLET_VALVE">r_set_inlet_valve</action>
+        <action ident="ACTION_SET_OUTLET_VALVE">r_set_outlet_valve</action>
     </action_list>
 </Das_Interface>

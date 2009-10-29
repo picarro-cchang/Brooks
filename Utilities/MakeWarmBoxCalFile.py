@@ -26,6 +26,7 @@ from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.WlmCalUtilities import bestFitCentered, WlmFile, AutoCal
+from scipy import interpolate
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -132,6 +133,30 @@ class WarmBoxCalFileMaker(object):
                 pylab.savefig("%s_Laser%02d_Tuning.png" % (self.outfname,laserNum))
             else:
                 self.wlmFileList.append(None)
+        # Plot the wavelength monitor response
+        wOffset = wlmFile.WaveNumber[0]
+        wScale = wlmFile.WaveNumber[-1]-wlmFile.WaveNumber[0]
+        tck, u = interpolate.splprep([wlmFile.Ratio1,wlmFile.Ratio2],u=(wlmFile.WaveNumber-wOffset)/wScale,s=0)
+        ufine = linspace(0.0,1.0,1001)
+        out = interpolate.splev(ufine,tck)
+        pylab.figure()
+        pylab.plot(wlmFile.WaveNumber,wlmFile.Ratio1,'x',wlmFile.WaveNumber,wlmFile.Ratio2,'o')
+        pylab.plot(wOffset+wScale*ufine,out[0],wOffset+wScale*ufine,out[1])
+        pylab.grid(True)
+        pylab.xlabel("Frequency (wavenumbers)")
+        pylab.ylabel("WLM Ratios")
+        pylab.title('WLM Response %s' % self.outfname)
+        pylab.savefig("%s_WLM Response.png" % (self.outfname))
+
+        pylab.figure()
+        pylab.plot(wlmFile.Ratio1,wlmFile.Ratio2,'o')
+        pylab.plot(out[0],out[1])
+        pylab.grid(True)
+        pylab.xlabel("Ratio 1")
+        pylab.ylabel("Ratio 2")
+        pylab.title('WLM Parametric Plot %s' % self.outfname)
+        pylab.savefig("%s_WLM Parametric Plot.png" % (self.outfname))
+
         # Next report the mapping between virtual and actual lasers
         self.op["LASER_MAP"] = {}
         lmSec = self.op["LASER_MAP"]

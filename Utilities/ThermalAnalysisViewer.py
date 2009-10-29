@@ -266,7 +266,7 @@ class Viewer(HasTraits):
     
 if __name__ == "__main__":
     #fname = "../Host/Driver/Sensors_20091005_001334.h5"
-    fname = "WarmBoxThermal_20091022_190413.h5"
+    fname = "WarmBoxWithWlmShroud_20091023_210610.h5"
     #inputStream  = STREAM_Laser2Tec
     #outputStream = STREAM_Laser2Temp
     inputStream = STREAM_WarmBoxTec

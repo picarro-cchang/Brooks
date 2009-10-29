@@ -121,7 +121,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     param_we = Signal(LOW)
     clk_10M, clk_5M, clk_2M5, pulse_1M, pulse_100k = [Signal(LOW) for i in range(5)]
 
-    diag_1 = Signal(intbv(0)[8:])
+    diag_1 = Signal(intbv(0)[16:])
     intronix_clksel = Signal(intbv(0)[5:])
     intronix_1 = Signal(intbv(0)[8:])
     intronix_2 = Signal(intbv(0)[8:])
@@ -197,6 +197,15 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     overload_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     overload_out = Signal(LOW)
 
+    lsr1_ss_temp = Signal(LOW)
+    lsr2_ss_temp = Signal(LOW)
+    lsr3_ss_temp = Signal(LOW)
+    lsr4_ss_temp = Signal(LOW)
+    lsr1_mosi_temp = Signal(LOW)
+    lsr2_mosi_temp = Signal(LOW)
+    lsr3_mosi_temp = Signal(LOW)
+    lsr4_mosi_temp = Signal(LOW)
+    
     dsp_interface = Dsp_interface(clk=clk0, reset=reset, addr=dsp_emif_ea,
                                   to_dsp=dsp_emif_din, re=dsp_emif_re,
                                   we=dsp_emif_we, oe=dsp_emif_oe,
@@ -219,14 +228,14 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     laser_fine_current_in=laser_fine_current,
                     laser_shutdown_in=rd_trig,
                     soa_shutdown_in=rd_trig,
-                    laser1_dac_sync_out=lsr1_ss,
-                    laser2_dac_sync_out=lsr2_ss,
-                    laser3_dac_sync_out=lsr3_ss,
-                    laser4_dac_sync_out=lsr4_ss,
-                    laser1_dac_din_out=lsr1_mosi,
-                    laser2_dac_din_out=lsr2_mosi,
-                    laser3_dac_din_out=lsr3_mosi,
-                    laser4_dac_din_out=lsr4_mosi,
+                    laser1_dac_sync_out=lsr1_ss_temp,
+                    laser2_dac_sync_out=lsr2_ss_temp,
+                    laser3_dac_sync_out=lsr3_ss_temp,
+                    laser4_dac_sync_out=lsr4_ss_temp,
+                    laser1_dac_din_out=lsr1_mosi_temp,
+                    laser2_dac_din_out=lsr2_mosi_temp,
+                    laser3_dac_din_out=lsr3_mosi_temp,
+                    laser4_dac_din_out=lsr4_mosi_temp,
                     laser1_disable_out=lsr1_disable,
                     laser2_disable_out=lsr2_disable,
                     laser3_disable_out=lsr3_disable,
@@ -437,9 +446,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                 rd_sim_low = concat(rdsim_value[6:0],LOW,LOW)
                 rd_sim_high = rdsim_value[14:6]
                 laser_fine_current_low = laser_fine_current[8:]
-                laser_fine_current_high = laser_fine_current[16:]
+                laser_fine_current_high = laser_fine_current[16:8]
                 lock_error_low = lock_error[8:]
-                lock_error_high = lock_error[16:]
+                lock_error_high = lock_error[16:8]
                 ratio1_low = ratio1[8:]
                 ratio1_high = ratio1[16:8]
                 ratio2_low = ratio2[8:]
@@ -692,10 +701,20 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         dsp_ext_int6.next = 0
         dsp_ext_int7.next = 0
 
-        lsr1_sck.next = clk_5M
-        lsr2_sck.next = clk_5M
-        lsr3_sck.next = clk_5M
-        lsr4_sck.next = clk_5M
+        lsr1_sck.next = clk_5M and not diag_1[4]
+        lsr2_sck.next = clk_5M and not diag_1[5]
+        lsr3_sck.next = clk_5M and not diag_1[6]
+        lsr4_sck.next = clk_5M and not diag_1[7]
+
+        lsr1_ss.next = lsr1_ss_temp and not diag_1[4]
+        lsr2_ss.next = lsr2_ss_temp and not diag_1[5]
+        lsr3_ss.next = lsr3_ss_temp and not diag_1[6]
+        lsr4_ss.next = lsr4_ss_temp and not diag_1[7]
+        
+        lsr1_mosi.next = lsr1_mosi_temp and not diag_1[4]
+        lsr2_mosi.next = lsr2_mosi_temp and not diag_1[5]
+        lsr3_mosi.next = lsr3_mosi_temp and not diag_1[6]
+        lsr4_mosi.next = lsr4_mosi_temp and not diag_1[7]
 
         sw4.next = 0
 

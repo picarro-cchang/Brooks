@@ -1,7 +1,7 @@
 from numpy import *
 
-fp = file("sample1.sch","w")
-wList = linspace(6316.0,6317.0,501)
+fp = file("sample2.sch","w")
+wList = linspace(6316.55,6316.80,501)
 wList = concatenate((wList,wList[::-1]))
 dwell = 3
 subschemeId = 25

@@ -366,12 +366,12 @@ class WlmFileMaker(object):
                         try:
                             ratio1Avg.addValue((d["Etalon1"]-etalon1_offset)/(d["Reference1"]-reference1_offset))
                             nRatios1 += 1
-                        except IndexError:
+                        except KeyError:
                             pass
                         try:
                             ratio2Avg.addValue((d["Etalon2"]-etalon2_offset)/(d["Reference2"]-reference2_offset))
                             nRatios2 += 1
-                        except IndexError:
+                        except KeyError:
                             pass
                         laserTempAvg.addValue(d.get("Laser%dTemp" % self.laserNum))
                         etalonTempAvg.addValue(last.get("EtalonTemp"))

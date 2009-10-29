@@ -775,3 +775,53 @@ int r_adc_to_pressure(unsigned int numInt,void *params,void *env)
     WRITE_REG(reg[3],result);
     return STATUS_OK;
 }
+
+int r_set_inlet_valve(unsigned int numInt,void *params,void *env)
+/*
+    Sets up the inlet valve dynamic PWM 
+    Input:
+		Register (float):   Register containing mean inlet valve position
+        Register (float):   Register containing peak-to-peak dither
+*/
+{
+    unsigned int *reg = (unsigned int *) params;
+    float value, dither;
+	float minPwm = 0.0, maxPwm = 65535.0;
+	
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[0],value);
+    READ_REG(reg[1],dither);
+	if (dither > 20000.0) dither = 20000.0;
+	if (value <	minPwm) value = minPwm;
+	if (value >	maxPwm) value = maxPwm;
+	if (value - 0.5*dither < minPwm) dither = 2.0*(value-minPwm);
+	if (value + 0.5*dither > maxPwm) dither = 2.0*(maxPwm-value);
+	writeFPGA(FPGA_DYNAMICPWM_INLET + DYNAMICPWM_HIGH,value + 0.5*dither);	
+	writeFPGA(FPGA_DYNAMICPWM_INLET + DYNAMICPWM_LOW,value - 0.5*dither);	
+    return STATUS_OK;
+}
+
+int r_set_outlet_valve(unsigned int numInt,void *params,void *env)
+/*
+    Sets up the outlet valve dynamic PWM 
+    Input:
+		Register (float):   Register containing mean outlet valve position
+        Register (float):   Register containing peak-to-peak dither
+*/
+{
+    unsigned int *reg = (unsigned int *) params;
+    float value, dither;
+	float minPwm = 0.0, maxPwm = 65535.0;
+	
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[0],value);
+    READ_REG(reg[1],dither);
+	if (dither > 20000.0) dither = 20000.0;
+	if (value <	minPwm) value = minPwm;
+	if (value >	maxPwm) value = maxPwm;
+	if (value - 0.5*dither < minPwm) dither = 2.0*(value-minPwm);
+	if (value + 0.5*dither > maxPwm) dither = 2.0*(maxPwm-value);
+	writeFPGA(FPGA_DYNAMICPWM_OUTLET + DYNAMICPWM_HIGH,value + 0.5*dither);	
+	writeFPGA(FPGA_DYNAMICPWM_OUTLET + DYNAMICPWM_LOW,value - 0.5*dither);	
+    return STATUS_OK;
+}

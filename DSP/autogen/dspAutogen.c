@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[372];
+RegTypes regTypes[374];
 void initRegisters() 
 {
     DataType d;
@@ -576,6 +576,8 @@ void initRegisters()
     writeRegister(VALVE_CNTRL_INLET_VALVE_MAX_REGISTER,d);
     d.asFloat = 1000.0;
     writeRegister(VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER,d);
+    d.asFloat = 1000.0;
+    writeRegister(VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER,d);
     d.asFloat = 50.0;
     writeRegister(VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER,d);
     d.asFloat = 0.5;
@@ -586,6 +588,8 @@ void initRegisters()
     writeRegister(VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER,d);
     d.asFloat = 1000.0;
     writeRegister(VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER,d);
+    d.asFloat = 1000.0;
+    writeRegister(VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER,d);
     d.asUint = VALVE_CNTRL_THRESHOLD_DisabledState;
     writeRegister(VALVE_CNTRL_THRESHOLD_STATE_REGISTER,d);
     d.asFloat = 2000.0;
@@ -997,11 +1001,13 @@ void initRegisters()
     regTypes[VALVE_CNTRL_INLET_VALVE_MIN_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_INLET_VALVE_MAX_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_THRESHOLD_STATE_REGISTER] = uint_type;
     regTypes[VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER] = float_type;
@@ -1179,6 +1185,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_read_ambient_pressure_adc(numInt,params,env);
         case ACTION_ADC_TO_PRESSURE:
             return r_adc_to_pressure(numInt,params,env);
+        case ACTION_SET_INLET_VALVE:
+            return r_set_inlet_valve(numInt,params,env);
+        case ACTION_SET_OUTLET_VALVE:
+            return r_set_outlet_valve(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

@@ -415,9 +415,8 @@ void rdFitting(void)
     double *metaDoublePtr = (double*) &metaDouble;
     int metaSigned[8] = {0,0,0,0,0,1};
     int x, m, N;
-    int s1, si, si2, sx, six;
+    double s1, si, si2, sx, six;
     int wrapped;
-    static int toggle = 0;
     
     while (1)
     {
@@ -536,13 +535,6 @@ void rdFitting(void)
             ringdownEntry->ambientPressure = (unsigned int)(50.0 * rdParams->ambientPressure);
             ringdownEntry->lockerError = metaDouble.lockerError;
 
-            // Test for unexpected combinations of loss and wlmAngle
-            if (!((fabs(uncorrectedLoss - 1.45) < 0.01 && fabs(thetaC - 3.00) < 0.01) ||
-                 (fabs(uncorrectedLoss - 1.11) < 0.01 && fabs(thetaC - 2.91) < 0.01))) {
-                    if (toggle) changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 3, 1, 1);
-                    else changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 3, 1, 0);
-                    toggle = !toggle;
-            }
             // After fitting, the buffer is available again
             if (bufferNum == 0)
                 SEM_postBinary(&SEM_rdBuffer0Available);

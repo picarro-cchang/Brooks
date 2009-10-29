@@ -292,12 +292,12 @@ class CalibrateSystem(object):
             theta0 = RDFreqConv.waveNumberToAngle(self.vLaserNum,[self.waveNumberCen])[0]
             # Make a fine angle-based scheme covering +/- 3FSR for determining PZT sensitivity
             #fwd = arange(-600.0,601.0)
-            fwd = arange(-200.0,201.0)
+            fwd = arange(-600.0,601.0)
             steps = concatenate((fwd,fwd[::-1]))
             wlmAngles = theta0 + steps*(APPROX_FSR/50.0)
             laserTemps = RDFreqConv.angleToLaserTemperature(self.vLaserNum,wlmAngles)
-            # nRepeat = 3
-            nRepeat = 2
+            nRepeat = 3
+            # nRepeat = 2
             dwell = 2
             self.makeAndUploadScheme(wlmAngles,laserTemps,self.vLaserNum,nRepeat,dwell)
             Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER",SPECT_CNTRL_SchemeSingleMode)
