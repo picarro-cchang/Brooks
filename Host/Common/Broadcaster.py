@@ -23,7 +23,7 @@ import Queue
 import array
 
 SOCKET_TIMEOUT = 0.1
-MAX_TIMEOUTS = 5
+MAX_TIMEOUTS = 20
 
 class BroadcastException(Exception):
     "Exception for broadcaster clients"
@@ -35,9 +35,10 @@ class Client(object):
         """listener is the TCP socket which awaits connections to the broadcaster
         maxlen is the maximum number of characters in the client buffer before a forced disconnection
         """
-        socket,address = listener.accept()
-        self.socket = socket
-        socket.settimeout(SOCKET_TIMEOUT)
+        sock,address = listener.accept()
+        self.socket = sock
+        sock.settimeout(SOCKET_TIMEOUT)
+        sock.setsockopt(socket.SOL_SOCKET,socket.SO_SNDBUF,1<<22)
         self.address = address
         self.broadcaster = broadcaster
         self.posInString = 0

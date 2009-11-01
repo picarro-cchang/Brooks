@@ -126,6 +126,14 @@ int spectCntrlStep(void)
             SEM_postBinary(&SEM_startRdCycle);
         }
     }
+    else if (SPECT_CNTRL_IdleState == *(s->state_))
+    {
+        if (SPECT_CNTRL_IdleState != prevState)
+        {
+            switchToRampMode();
+            setManualControl();
+        }
+    }
     else switchToRampMode();
 
     prevState = stateAtStart;
@@ -366,6 +374,27 @@ void setAutomaticControl(void)
     //  periodically write to the INJECT_CONTROL register.
 
     changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL,INJECT_CONTROL_MODE_B,INJECT_CONTROL_MODE_W,1);
+}
+
+void setManualControl(void)
+// Set optical injection, laser current and laser temperature controllers to manual mode.
+{
+    DataType data;
+
+    // The FPGA optical injection block is placed in manual mode
+    // when any laser current controller is in the manual state
+    
+    data.asInt = LASER_CURRENT_CNTRL_ManualState;
+    writeRegister(LASER1_CURRENT_CNTRL_STATE_REGISTER,data);
+    writeRegister(LASER2_CURRENT_CNTRL_STATE_REGISTER,data);
+    writeRegister(LASER3_CURRENT_CNTRL_STATE_REGISTER,data);
+    writeRegister(LASER4_CURRENT_CNTRL_STATE_REGISTER,data);
+
+    data.asInt = TEMP_CNTRL_EnabledState;
+    writeRegister(LASER1_TEMP_CNTRL_STATE_REGISTER,data);
+    writeRegister(LASER2_TEMP_CNTRL_STATE_REGISTER,data);
+    writeRegister(LASER3_TEMP_CNTRL_STATE_REGISTER,data);
+    writeRegister(LASER4_TEMP_CNTRL_STATE_REGISTER,data);
 }
 
 void validateSchemePosition(void)

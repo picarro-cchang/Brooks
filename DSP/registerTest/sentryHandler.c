@@ -46,7 +46,8 @@ static unsigned int *maxTripped;
 static unsigned int *minTripped;
 static unsigned int numSentries = 0;
 unsigned int schedulerAlive = 0;
-static unsigned int secSinceStartup = 0;
+static unsigned int ticksPerSecond = 20;
+static unsigned int ticksSinceStartup = 0;
 static char sentry_msg[32][40];
 static char msg[120];
 
@@ -202,60 +203,86 @@ void safeMode(void)
 // Task function for sentry handler
 void sentryHandler(void)
 {
+    int overloaded = 0, schedulerFailed = 0;
+    int prevOverload = 0, inSafeMode = 0;
     int i;
+    
     while (1)
     {
         int overload;
+        int hardwarePresent = *(int *)registerAddr(HARDWARE_PRESENT_REGISTER);
+        int installedMask = 0;
+            
+        if (hardwarePresent & (1<<HARDWARE_PRESENT_WarmBoxBit)) installedMask |= 1<<OVERLOAD_WarmBoxTecBit;
+        if (hardwarePresent & (1<<HARDWARE_PRESENT_HotBoxBit))  installedMask |= 1<<OVERLOAD_HotBoxTecBit;
+            
         SEM_pend(&SEM_sentryHandler,SYS_FOREVER);
-        // TO DO: Check overload register
-        // overload = readFPGA(FPGA_KERNEL + KERNEL_OVERLOAD);
-        overload = 0;
-        if (overload != 0)
-        {
-            safeMode();
-            sprintf(msg,"Overload condition 0x%x detected. Placing instrument in safe mode.",overload);            
-            message_puts(msg);
-        }
-        secSinceStartup++;
-        if (secSinceStartup >= 10)
-        {
-            if (schedulerAlive < 4)     // Should be 5, since heartbeat occurs every 200ms
-            {
-                safeMode();
-                message_puts("Scheduler is not running. Placing instrument in safe mode.");
+        ticksSinceStartup++;
+        if (inSafeMode) safeMode(); // Force system into safe mode once tripped
+            
+        // Handle overload conditions by seeing if any overload bits persist for more than 50ms
+        
+        if (!inSafeMode) {       
+            overload = readFPGA(FPGA_KERNEL + KERNEL_OVERLOAD);
+            if (overload) {
+                // Reset latched bits in the kernel overload register
+                changeBitsFPGA(FPGA_KERNEL + KERNEL_CONTROL, KERNEL_CONTROL_OVERLOAD_RESET_B, KERNEL_CONTROL_OVERLOAD_RESET_W, 1);
             }
-            else
-            {
-                if (numSentries > 0)
+            overloaded = (overload & prevOverload) & installedMask;
+            if (0 != overloaded) {
+                safeMode();
+                inSafeMode = 1;
+            }
+            prevOverload = overload;
+        }
+        
+        if (ticksSinceStartup > 10*ticksPerSecond) {
+            if (0 == (ticksSinceStartup % ticksPerSecond)) {    // Things to check once every second
+                if (schedulerFailed || schedulerAlive < 4) {    // Should be 5, since heartbeat occurs every 200ms
+                    schedulerFailed = 1;
+                    safeMode();
+                    inSafeMode = 1;
+                }
+                schedulerAlive = 0;
+                
+                for (i=0; i<numSentries; i++)
                 {
-                    for (i=0; i<numSentries; i++)
+                    if (*(sentryChecks[i].value) > *(sentryChecks[i].maxSentry))
                     {
-                        if (*(sentryChecks[i].value) > *(sentryChecks[i].maxSentry))
-                        {
-                            *maxTripped |= sentryChecks[i].bitMask;
-                        }
-                        if (*(sentryChecks[i].value) < *(sentryChecks[i].minSentry))
-                        {
-                            *minTripped |= sentryChecks[i].bitMask;
-                        }
+                        *maxTripped |= sentryChecks[i].bitMask;
                     }
-                    if (*maxTripped != 0 || *minTripped != 0)
+                    if (*(sentryChecks[i].value) < *(sentryChecks[i].minSentry))
                     {
-                        unsigned int max = *maxTripped, min = *minTripped;
-                        safeMode();
-                        for (i=0; i<32; i++) {
-                            if ((max & 1) && (min & 1)) sprintf(msg,"%s minimum and maximum sentries exceeded.",sentry_msg[i]);
-                            else if (max & 1) sprintf(msg,"%s maximum sentry exceeded.",sentry_msg[i]);
-                            else if (min & 1) sprintf(msg,"%s minimum sentry exceeded.",sentry_msg[i]);
-                            if ((max & 1) || (min & 1)) message_puts(msg);
-                            max >>= 1; min >>= 1;
-                        }
-                        message_puts("Instrument placed in safe mode.");
+                        *minTripped |= sentryChecks[i].bitMask;
                     }
                 }
-            }
+                if (*maxTripped != 0 || *minTripped != 0)
+                {
+                    safeMode();
+                    inSafeMode = 1;
+                }
+            }            
         }
-        schedulerAlive = 0;
+    
+        // Send messages every 5s once in safe mode
+        
+        if (0 == (ticksSinceStartup % (5*ticksPerSecond))) {
+            if (inSafeMode) {
+                unsigned int max = *maxTripped, min = *minTripped;
+                for (i=0; i<numSentries; i++) {
+                    if ((max & 1) && (min & 1)) sprintf(msg,"%s minimum and maximum sentries exceeded.",sentry_msg[i]);
+                    else if (max & 1) sprintf(msg,"%s maximum sentry exceeded.",sentry_msg[i]);
+                    else if (min & 1) sprintf(msg,"%s minimum sentry exceeded.",sentry_msg[i]);
+                    if ((max & 1) || (min & 1)) message_puts(msg);
+                    max >>= 1; min >>= 1;
+                }
+                if (schedulerFailed) message_puts("Scheduler failure.");
+                if (overloaded) {
+                    sprintf(msg,"Overload condition detected: 0x%x",overloaded);
+                    message_puts(msg);
+                }
+                message_puts("Instrument placed in safe mode.");
+            }    
+        }
     }
 }
-

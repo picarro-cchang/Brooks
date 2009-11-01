@@ -66,18 +66,21 @@ class RingdownPanel(RingdownPanelGui):
         fillColours = ["red","green","blue","yellow","cyan","magenta","black","white"]
         def  printData(data):
             print data.timestamp, data.uncorrectedAbsorbance
+        def dataGood(data):
+            return not (data.status & interface.RINGDOWN_STATUS_RingdownTimeout)
+        
         choice = self.graphTypeRadioBox.GetSelection()
         y = ""
         self.appendData = printData
-        
         if choice == 0:
             def  lossVsWavenumber(data):
-                #wavenumber = data.wlmAngle
-                wavenumber = data.waveNumber
-                loss_u = data.uncorrectedAbsorbance
-                loss_c = data.correctedAbsorbance
-                waveforms["Ringdown"]["uncorrected"].Add(wavenumber, loss_u)
-                waveforms["Ringdown"]["corrected"].Add(wavenumber, loss_c)
+                if dataGood(data):
+                    #wavenumber = data.wlmAngle
+                    wavenumber = data.waveNumber
+                    loss_u = data.uncorrectedAbsorbance
+                    loss_c = data.correctedAbsorbance
+                    waveforms["Ringdown"]["uncorrected"].Add(wavenumber, loss_u)
+                    waveforms["Ringdown"]["corrected"].Add(wavenumber, loss_c)
             self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
                                                   timeAxes=(False,False),ylabel='Loss (ppm/cm)',grid=True,
                                                   ylabel='Loss (ppm/cm)',grid=True,
@@ -88,10 +91,11 @@ class RingdownPanel(RingdownPanelGui):
         elif choice == 1:
             def  lossVsTime(data):
                 utime = timestamp.unixTime(data.timestamp)
-                loss_u = data.uncorrectedAbsorbance
-                loss_c = data.correctedAbsorbance
-                waveforms["Ringdown"]["uncorrected"].Add(utime, loss_u)
-                waveforms["Ringdown"]["corrected"].Add(utime, loss_c)
+                if dataGood(data):
+                    loss_u = data.uncorrectedAbsorbance
+                    loss_c = data.correctedAbsorbance
+                    waveforms["Ringdown"]["uncorrected"].Add(utime, loss_u)
+                    waveforms["Ringdown"]["corrected"].Add(utime, loss_c)
             self.ringdownGraph.SetGraphProperties(xlabel='',
                                                   timeAxes=(True,False),ylabel='Loss (ppm/cm)',grid=True,
                                                   frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -100,11 +104,12 @@ class RingdownPanel(RingdownPanelGui):
             self.appendData = lossVsTime
         elif choice == 2:
             def  lossVsRatio1(data):
-                loss_u = data.uncorrectedAbsorbance
-                loss_c = data.correctedAbsorbance
-                ratio1 = data.ratio1
-                waveforms["Ringdown"]["uncorrected"].Add(ratio1/32768.0, loss_u)
-                waveforms["Ringdown"]["corrected"].Add(ratio1/32768.0, loss_c)
+                if dataGood(data):
+                    loss_u = data.uncorrectedAbsorbance
+                    loss_c = data.correctedAbsorbance
+                    ratio1 = data.ratio1
+                    waveforms["Ringdown"]["uncorrected"].Add(ratio1/32768.0, loss_u)
+                    waveforms["Ringdown"]["corrected"].Add(ratio1/32768.0, loss_c)
             self.ringdownGraph.SetGraphProperties(xlabel='',
                                                   timeAxes=(False,False),xlabel='Ratio 1',ylabel='Loss (ppm/cm)',grid=True,
                                                   frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -113,11 +118,12 @@ class RingdownPanel(RingdownPanelGui):
             self.appendData = lossVsRatio1
         elif choice == 3:
             def  lossVsRatio2(data):
-                loss_u = data.uncorrectedAbsorbance
-                loss_c = data.correctedAbsorbance
-                ratio2 = data.ratio2
-                waveforms["Ringdown"]["uncorrected"].Add(ratio2/32768.0, loss_u)
-                waveforms["Ringdown"]["corrected"].Add(ratio2/32768.0, loss_c)
+                if dataGood(data):
+                    loss_u = data.uncorrectedAbsorbance
+                    loss_c = data.correctedAbsorbance
+                    ratio2 = data.ratio2
+                    waveforms["Ringdown"]["uncorrected"].Add(ratio2/32768.0, loss_u)
+                    waveforms["Ringdown"]["corrected"].Add(ratio2/32768.0, loss_c)
             self.ringdownGraph.SetGraphProperties(xlabel='',
                                                   timeAxes=(False,False),xlabel='Ratio 2',ylabel='Loss (ppm/cm)',grid=True,
                                                   frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -126,12 +132,13 @@ class RingdownPanel(RingdownPanelGui):
             self.appendData = lossVsRatio2
         elif choice == 4:
             def  ratioVsWavenumber(data):
-                #wavenumber = data.wlmAngle
-                wavenumber = data.waveNumber
-                ratio1 = data.ratio1
-                ratio2 = data.ratio2
-                waveforms["Ringdown"]["ratio1"].Add(wavenumber, ratio1/32768.0)
-                waveforms["Ringdown"]["ratio2"].Add(wavenumber, ratio2/32768.0)
+                if dataGood(data):
+                    #wavenumber = data.wlmAngle
+                    wavenumber = data.waveNumber
+                    ratio1 = data.ratio1
+                    ratio2 = data.ratio2
+                    waveforms["Ringdown"]["ratio1"].Add(wavenumber, ratio1/32768.0)
+                    waveforms["Ringdown"]["ratio2"].Add(wavenumber, ratio2/32768.0)
             self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
                                                   timeAxes=(False,False),ylabel='WLM Ratios',grid=True,
                                                   frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -140,10 +147,11 @@ class RingdownPanel(RingdownPanelGui):
             self.appendData = ratioVsWavenumber
         elif choice == 5:
             def  tunerVsWavenumber(data):
-                #wavenumber = data.wlmAngle
-                wavenumber = data.waveNumber
-                vLaser = (data.laserUsed >> 2) & 7
-                waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(wavenumber, data.tunerValue)
+                if dataGood(data):
+                    #wavenumber = data.wlmAngle
+                    wavenumber = data.waveNumber
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(wavenumber, data.tunerValue)
             self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
             timeAxes=(False,False),ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -152,9 +160,10 @@ class RingdownPanel(RingdownPanelGui):
             self.appendData = tunerVsWavenumber
         elif choice == 6:
             def  tunerVsTime(data):
-                utime = timestamp.unixTime(data.timestamp)
-                vLaser = (data.laserUsed >> 2) & 7
-                waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(utime, data.tunerValue)
+                if dataGood(data):
+                    utime = timestamp.unixTime(data.timestamp)
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(utime, data.tunerValue)
             self.ringdownGraph.SetGraphProperties(xlabel='',
             timeAxes=(True,False),ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -163,9 +172,10 @@ class RingdownPanel(RingdownPanelGui):
             self.appendData = tunerVsTime
         elif choice == 7:
             def  tunerVsRatio1(data):
-                ratio1 = data.ratio1
-                vLaser = (data.laserUsed >> 2) & 7
-                waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(ratio1/32768.0, data.tunerValue)
+                if dataGood(data):
+                    ratio1 = data.ratio1
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(ratio1/32768.0, data.tunerValue)
             self.ringdownGraph.SetGraphProperties(xlabel='',
             timeAxes=(False,False),xlabel='Ratio 1',ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -174,9 +184,10 @@ class RingdownPanel(RingdownPanelGui):
             self.appendData = tunerVsRatio1
         elif choice == 8:
             def  tunerVsRatio2(data):
-                ratio2 = data.ratio2
-                vLaser = (data.laserUsed >> 2) & 7
-                waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(ratio2/32768.0, data.tunerValue)
+                if dataGood(data):
+                    ratio2 = data.ratio2
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(ratio2/32768.0, data.tunerValue)
             self.ringdownGraph.SetGraphProperties(xlabel='',
             timeAxes=(False,False),xlabel='Ratio 2',ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -185,11 +196,12 @@ class RingdownPanel(RingdownPanelGui):
             self.appendData = tunerVsRatio2
         elif choice == 9:
             def  wavenumberVsTime(data):
-                utime = timestamp.unixTime(data.timestamp)
-                #wavenumber = data.wlmAngle
-                wavenumber = data.waveNumber
-                vLaser = (data.laserUsed >> 2) & 7
-                waveforms["Ringdown"]["wavenumber_%d" % (vLaser+1,)].Add(utime, wavenumber)
+                if dataGood(data):
+                    utime = timestamp.unixTime(data.timestamp)
+                    #wavenumber = data.wlmAngle
+                    wavenumber = data.waveNumber
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["wavenumber_%d" % (vLaser+1,)].Add(utime, wavenumber)
             self.ringdownGraph.SetGraphProperties(xlabel='', 
             timeAxes=(True,False),ylabel='Wavenumber',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -198,10 +210,11 @@ class RingdownPanel(RingdownPanelGui):
             self.appendData = wavenumberVsTime
         elif choice == 10:
             def  fineCurrentVsWavenumber(data):
-                #wavenumber = data.wlmAngle
-                wavenumber = data.waveNumber
-                vLaser = (data.laserUsed >> 2) & 7
-                waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)].Add(wavenumber, data.fineLaserCurrent)
+                if dataGood(data):
+                    #wavenumber = data.wlmAngle
+                    wavenumber = data.waveNumber
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)].Add(wavenumber, data.fineLaserCurrent)
             self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
             timeAxes=(False,False),ylabel='Fine Laser Current',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -210,11 +223,12 @@ class RingdownPanel(RingdownPanelGui):
             self.appendData = fineCurrentVsWavenumber
         elif choice == 11:
             def  fineCurrentVsTime(data):
-                utime = timestamp.unixTime(data.timestamp)
-                #wavenumber = data.wlmAngle
-                wavenumber = data.waveNumber
-                vLaser = (data.laserUsed >> 2) & 7
-                waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)].Add(utime, data.fineLaserCurrent)
+                if dataGood(data):
+                    utime = timestamp.unixTime(data.timestamp)
+                    #wavenumber = data.wlmAngle
+                    wavenumber = data.waveNumber
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)].Add(utime, data.fineLaserCurrent)
             self.ringdownGraph.SetGraphProperties(xlabel='',
             timeAxes=(True,False),ylabel='Fine Laser Current',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -665,6 +679,17 @@ class CommandLogPanel(CommandLogPanelGui):
         update3State(self.laser4State,make3State(status,interface.DAS_STATUS_Laser4TempCntrlActiveBit,interface.DAS_STATUS_Laser4TempCntrlLockedBit))
         update3State(self.warmBoxState,make3State(status,interface.DAS_STATUS_WarmBoxTempCntrlActiveBit,interface.DAS_STATUS_WarmBoxTempCntrlLockedBit))
         update3State(self.hotBoxState,make3State(status,interface.DAS_STATUS_CavityTempCntrlActiveBit,interface.DAS_STATUS_CavityTempCntrlLockedBit))
+    def updateCalFileStatus(self):
+        # Update the warm box and hot box calibration file names from the RDFreqConverter
+        fname = os.path.split(RDFreqConv.getWarmBoxCalFilePath())[1]
+        text = self.warmBoxCalFileTextCtrl.GetLabel()
+        if text != fname:
+            self.warmBoxCalFileTextCtrl.SetLabel(fname)
+        fname = os.path.split(RDFreqConv.getHotBoxCalFilePath())[1]
+        text = self.hotBoxCalFileTextCtrl.GetLabel()
+        if text != fname:
+            self.hotBoxCalFileTextCtrl.SetLabel(fname)
+
     def updateAcquisitionState(self):
         # Update the acquisition button label and the associated text control
         state = Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER)

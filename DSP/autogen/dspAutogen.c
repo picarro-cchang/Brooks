@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[374];
+RegTypes regTypes[377];
 void initRegisters() 
 {
     DataType d;
@@ -26,6 +26,8 @@ void initRegisters()
     writeRegister(VERIFY_INIT_REGISTER,d);
     d.asUint = 0;
     writeRegister(SCHEDULER_CONTROL_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(HARDWARE_PRESENT_REGISTER,d);
     d.asUint = 0;
     writeRegister(RD_IRQ_COUNT_REGISTER,d);
     d.asUint = 0;
@@ -561,6 +563,10 @@ void initRegisters()
     d.asFloat = 140.0;
     writeRegister(VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER,d);
     d.asFloat = 0.0;
+    writeRegister(VALVE_CNTRL_USER_INLET_VALVE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER,d);
+    d.asFloat = 0.0;
     writeRegister(VALVE_CNTRL_INLET_VALVE_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(VALVE_CNTRL_OUTLET_VALVE_REGISTER,d);
@@ -684,6 +690,7 @@ void initRegisters()
     regTypes[TIMESTAMP_LSB_REGISTER] = uint_type;
     regTypes[TIMESTAMP_MSB_REGISTER] = uint_type;
     regTypes[SCHEDULER_CONTROL_REGISTER] = uint_type;
+    regTypes[HARDWARE_PRESENT_REGISTER] = uint_type;
     regTypes[RD_IRQ_COUNT_REGISTER] = uint_type;
     regTypes[ACQ_DONE_COUNT_REGISTER] = uint_type;
     regTypes[DAS_STATUS_REGISTER] = uint_type;
@@ -993,6 +1000,8 @@ void initRegisters()
     regTypes[PZT_OFFSET_VIRTUAL_LASER8] = float_type;
     regTypes[VALVE_CNTRL_STATE_REGISTER] = uint_type;
     regTypes[VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_USER_INLET_VALVE_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_INLET_VALVE_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_OUTLET_VALVE_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER] = float_type;

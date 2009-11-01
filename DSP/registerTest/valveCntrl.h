@@ -21,6 +21,8 @@ typedef struct VALVE_CNTRL
     VALVE_CNTRL_StateType *state_;      // Valve controller state
     float *cavityPressure_;             // Cavity pressure
     float *setpoint_;                   // Cavity pressure setpoint
+    float *userInlet_;                  // User-entered inlet valve value
+    float *userOutlet_;                 // User-entered outlet valve value
     float *inlet_;                      // Inlet valve value
     float *outlet_;                     // Outlet valve value
     float *dpdtMax_;                    // Maximum rate of change of pressure

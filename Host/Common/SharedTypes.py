@@ -194,9 +194,12 @@ def dictToCtypes(d,c):
 
 def getNextNonNullLine(sp):
     """ Return next line in a stream which is not blank and which does not
-    start with a # character"""
+    start with a # character. Raise an exception if the file ends."""
     while True:
-        line = sp.readline().strip()
+        line = sp.readline()
+        if not line:
+            raise ValueError("Premature end of scheme file %s" % sp.name)
+        line = line.strip()
         if not line or line[0] == "#":
             continue
         else:

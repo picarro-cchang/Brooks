@@ -56,6 +56,21 @@ class DasConfigure(SharedTypes.Singleton):
     def installCheck(self,key):
         return self.installed.get(key,0)
     
+    def setHardwarePresent(self):
+        mapping = [("LASER1_PRESENT",  1<<interface.HARDWARE_PRESENT_Laser1Bit),
+                   ("LASER2_PRESENT",  1<<interface.HARDWARE_PRESENT_Laser2Bit),
+                   ("LASER3_PRESENT",  1<<interface.HARDWARE_PRESENT_Laser3Bit),
+                   ("LASER4_PRESENT",  1<<interface.HARDWARE_PRESENT_Laser4Bit),
+                   ("SOA_PRESENT",     1<<interface.HARDWARE_PRESENT_SoaBit),
+                   ("WARM_BOX_PRESENT",1<<interface.HARDWARE_PRESENT_WarmBoxBit),
+                   ("HOT_BOX_PRESENT", 1<<interface.HARDWARE_PRESENT_HotBoxBit)
+                   ]
+        mask = 0
+        for key, bit in mapping:
+            if self.installCheck(key) > 0:
+                mask |= bit
+        self.dasInterface.hostToDspSender.wrRegUint("HARDWARE_PRESENT_REGISTER",mask)
+        
     def run(self):
         sender = self.dasInterface.hostToDspSender
         ts = timestamp.getTimestamp()
@@ -63,7 +78,8 @@ class DasConfigure(SharedTypes.Singleton):
         # Check initial value of NOOP register
         if 0x19680511 != sender.rdRegUint("VERIFY_INIT_REGISTER"):
             raise ValueError("VERIFY_INIT_REGISTER not initialized correctly")
-
+        self.setHardwarePresent()
+        
         # Define operation groups as a dictionary accessed using
         #  e.g. self.opGroups["FAST"]["SENSOR_READ"]
         for rate in schedulerPeriods:
@@ -291,6 +307,14 @@ class DasConfigure(SharedTypes.Singleton):
                 self.opGroups["FAST"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_AMBIENT_PRESSURE_ADC",
                         ["AMBIENT_PRESSURE_ADC_REGISTER"]))
+                
+                self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+                    Operation("ACTION_SET_INLET_VALVE",
+                              ["VALVE_CNTRL_INLET_VALVE_REGISTER","VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER"]))
+                
+                self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+                    Operation("ACTION_SET_OUTLET_VALVE",
+                              ["VALVE_CNTRL_OUTLET_VALVE_REGISTER","VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER"]))
             
             self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_ADC_TO_PRESSURE",
@@ -390,7 +414,7 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_VALVE_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_SPECTRUM_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
-
+        
         #sender.doOperation(Operation("ACTION_MODIFY_VALVE_PUMP_TEC",[0x80,0x80])) # Turn on warm box and hot box TEC
         sender.wrRegFloat("LASER1_RESISTANCE_REGISTER",10000.0)
         sender.wrRegFloat("LASER2_RESISTANCE_REGISTER",9000.0)

@@ -181,6 +181,7 @@ class Controller(ControllerFrameGui):
 
     def onUpdateTimer(self,evt):
         self.commandLogPanel.updateLoopStatus()
+        self.commandLogPanel.updateCalFileStatus()
         pageNum = self.topNotebook.GetSelection()
         pageText = self.topNotebook.GetPageText(pageNum)
         if pageText == "Laser1":

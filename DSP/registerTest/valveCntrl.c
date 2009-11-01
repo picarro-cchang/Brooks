@@ -33,6 +33,8 @@
 #define state           (*(v->state_))
 #define cavityPressure  (*(v->cavityPressure_))
 #define setpoint        (*(v->setpoint_))
+#define userInlet       (*(v->userInlet_))
+#define userOutlet      (*(v->userOutlet_))
 #define inlet           (*(v->inlet_))
 #define outlet          (*(v->outlet_))
 #define dpdtMax         (*(v->dpdtMax_))
@@ -78,8 +80,11 @@ void proportionalValveStep()
         outlet = 0;
         break;
     case VALVE_CNTRL_ManualControlState:
+        inlet = userInlet;
+        outlet = userOutlet;
         break;
     case VALVE_CNTRL_OutletControlState:
+        inlet = userInlet;
         // Gain2 sets how the pressure rate setpoint depends on the pressure error
         dpdtSet = outletGain2 * error;
         // Limit rate setpoint to maximum allowed rate of change
@@ -99,6 +104,7 @@ void proportionalValveStep()
         outlet = valveValue;
         break;
     case VALVE_CNTRL_InletControlState:
+        outlet = userOutlet;
         // Gain2 sets how the pressure rate setpoint depends on the pressure error
         dpdtSet = inletGain2 * error;
         // Limit rate setpoint to maximum allowed rate of change
@@ -118,6 +124,8 @@ void proportionalValveStep()
         inlet = valveValue;
         break;
     }
+    userInlet = inlet;
+    userOutlet = outlet;
 }
 
 #define SWAP(a,b) { float temp=(a); (a)=(b); (b)=temp; }
@@ -216,6 +224,8 @@ int valveCntrlInit(void)
     v->state_               = (VALVE_CNTRL_StateType *)registerAddr(VALVE_CNTRL_STATE_REGISTER);
     v->cavityPressure_      = (float*)registerAddr(CAVITY_PRESSURE_REGISTER);
     v->setpoint_            = (float*)registerAddr(VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER);
+    v->userInlet_           = (float*)registerAddr(VALVE_CNTRL_USER_INLET_VALVE_REGISTER);
+    v->userOutlet_          = (float*)registerAddr(VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER);
     v->inlet_               = (float*)registerAddr(VALVE_CNTRL_INLET_VALVE_REGISTER);
     v->outlet_              = (float*)registerAddr(VALVE_CNTRL_OUTLET_VALVE_REGISTER);
     v->dpdtMax_             = (float*)registerAddr(VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER);

@@ -1,15 +1,14 @@
 3. Support laser tuning mode.
 4. In DAS, allow a way of detecting which schemes are valid and which virtual lasers have been defined.
 5. Set up WLM dark currents as offsets
-6. Return laser current and temperature controllers to manual mode when scheming stops.
 9. Tell Alex the units of pressure on the RingdownEntry queue (50*torr)
-10. Deal with SPECTRUM_IGNORE_MASK
 11. Note that max targetting error in hot box calibration is now in RADIANS. 1 cm^-1 is approx 4 radians
 12. Support four-way switch with XC9536XL CPLD.
 15. Add logic to protect cavity if pump is not turned on.
 16. Calculate optimal update factor for WLM calibration.
 17. Tell Carl about labelling of WB Heastsink thermistor on WLM board, Heater/TEC on power board.
-18. Check for end of scheme file in reader
+20. Find out why we get repeated "end of spectra" requests in Calibrate System.
+21. Consider moving sequencer to RDFrequencyConverter.
 
 DONE
 7. Look at implementing averaging of metadata at ringdown, rather than just taking the last value.
@@ -24,5 +23,18 @@ DONE
 13. Implement PZT offsets per virtual laser.
 2. Print out reason for sentry breach in log.
 14. Modify results viewer to read timestamp column, if it exists.
+6. Return laser current and temperature controllers to manual mode when scheming stops.
+    - This is done when the spectrum controller transitions to the idle state.
+10. Deal with SPECTRUM_IGNORE_MASK.
 1. Check over-current flag in DSP and place instrument in safe mode.
+    Do this by increasing sentry handler rate to 20Hz and checking if an overcurrent bit is high on two successive samples. Note that
+    the FPGA (kernel block) latches overload bits, making it necessary to reset them when an overload condition is detected.
+21. Check socket buffer size for broadcaster.
+    - This is now 4MB
+18. Check for end of scheme file in reader
+    - This now raises an exception
+19. Fill out names of hot box and warm box calibration file and sequence number in controller by asking the RDFrequencyConverter
+    - Done hot and warm box calibration files. Cannot do sequence number.
+    
+
     

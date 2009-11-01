@@ -46,7 +46,7 @@ class DriverProxy(SharedTypes.Singleton):
             self.initialized = True
 
 class RDFreqConvProxy(SharedTypes.Singleton):
-    """Encapsulates access to the Driver via RPC calls"""
+    """Encapsulates access to the Ringdown Frequency Converter via RPC calls"""
     initialized = False
     def __init__(self):
         if not self.initialized:

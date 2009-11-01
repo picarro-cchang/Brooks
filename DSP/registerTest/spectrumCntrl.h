@@ -48,6 +48,7 @@ int  spectCntrlInit(void);
 void spectCntrl(void);
 int  spectCntrlStep(void);
 void setAutomaticControl(void);
+void setManualControl(void);
 void setupNextRdParams(void);
 void setupLaserTemperatureAndPztOffset(void);
 void validateSchemePosition(void);
