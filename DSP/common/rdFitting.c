@@ -415,7 +415,8 @@ void rdFitting(void)
     double *metaDoublePtr = (double*) &metaDouble;
     int metaSigned[8] = {0,0,0,0,0,1};
     int x, m, N;
-    double s1, si, si2, sx, six;
+    double s1, sx;
+    // double si, si2, six;
     int wrapped;
     
     while (1)
@@ -473,12 +474,13 @@ void rdFitting(void)
             m = *(unsigned int *)registerAddr(RDFITTER_META_BACKOFF_REGISTER);
             N = *(unsigned int *)registerAddr(RDFITTER_META_SAMPLES_REGISTER);
             s1 = N;
-            si = (-2*m-N+1)*N/2;
-            si2 = N*(6*m*(m+N-1)+2*N*N-3*N+1)/6;
+            // Next two variables are used for extrapolation
+            // si = (-2*m-N+1)*N/2;
+            // si2 = N*(6*m*(m+N-1)+2*N*N-3*N+1)/6;
             for (j=0; j<sizeof(RingdownMetadataType)/sizeof(uint32); j++)
             {
                 sx = 0;
-                six = 0;
+                // six = 0;
                 for (i=-m-N+1; i<=-m; i++)
                 {
                     unsigned int index = base + 8*i;
@@ -488,12 +490,17 @@ void rdFitting(void)
                     // Treat as signed, if necessary
                     if (metaSigned[j] && x>=0x8000) x = x - 0x10000;
                     sx += x;
-                    six += i*x;
+                    // Following line is used for extrapolation
+                    // six += i*x;
                 }
-                if (N > 1) metaDoublePtr[j] = ((double)(si2*sx - si*six))/(s1*si2 - si*si);
+                if (N > 1) {
+                    // First line uses extrapolation, second is simple averaging
+                    // metaDoublePtr[j] = (si2*sx - si*six)/(s1*si2 - si*si);
+                    metaDoublePtr[j] = sx/s1;
+                }
                 else metaDoublePtr[j] = sx;
             }
-            // The extrapolated metadata are in the metaDouble structure
+            // The averaged or extrapolated metadata are in the metaDouble structure
 
             virtLaserNum = (rdParams->injectionSettings >> 2) & 0x7;
             // laserNum = rdParams->injectionSettings & 0x3;

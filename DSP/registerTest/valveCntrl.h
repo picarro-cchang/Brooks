@@ -26,6 +26,7 @@ typedef struct VALVE_CNTRL
     float *inlet_;                      // Inlet valve value
     float *outlet_;                     // Outlet valve value
     float *dpdtMax_;                    // Maximum rate of change of pressure
+    float *dpdtAbort_;                  // Maximum rate of change of pressure above which valves are closed
     float *inletGain1_;                 // Gain 1 for inlet valve
     float *inletGain2_;                 // Gain 2 for inlet valve
     float *inletMin_;                   // Minimum for inlet valve
@@ -53,6 +54,7 @@ typedef struct VALVE_CNTRL
     float lastPressure;                 // Last cavity pressure
     float lastLossPpb;                  // Previous loss
     unsigned int dwellCount;            // Count samples to time valve sequence
+    int nonDecreasingCount;             // Counts samples during which pressure is nondecreasing
 } ValveCntrl;
 
 int valveCntrlInit(void);

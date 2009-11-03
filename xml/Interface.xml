@@ -2221,6 +2221,12 @@
             <save/>
             <display format="%.3f" units="torr/s">Cavity pressure maximum rate of change</display>
         </register>
+        <register ident="VALVE_CNTRL_CAVITY_PRESSURE_RATE_ABORT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity pressure maximum change rate at which controller is disabled</description>
+            <initial>50.0</initial>
+            <save/>
+            <display format="%.3f" units="torr/s">Rate of cavity pressure change to disable controller</display>
+        </register>        
         <register ident="VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER" type="float" minver="1.0" access="rw">
             <description>Gain 1 for inlet valve</description>
             <initial>50.0</initial>

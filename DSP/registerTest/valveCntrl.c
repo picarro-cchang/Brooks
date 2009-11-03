@@ -38,6 +38,7 @@
 #define inlet           (*(v->inlet_))
 #define outlet          (*(v->outlet_))
 #define dpdtMax         (*(v->dpdtMax_))
+#define dpdtAbort       (*(v->dpdtAbort_))
 #define inletGain1      (*(v->inletGain1_))
 #define inletGain2      (*(v->inletGain2_))
 #define inletMin        (*(v->inletMin_))
@@ -65,19 +66,29 @@ void proportionalValveStep()
 {
     ValveCntrl *v = &valveCntrl;
     float delta, dError, dpdt, dpdtSet, error, valveValue;
+    char msg[120];
 
-    if (v->lastPressure > INVALID_PRESSURE_VALUE)
+    if (v->lastPressure > INVALID_PRESSURE_VALUE) {
         dpdt = (cavityPressure-v->lastPressure)/v->deltaT;
+        if (cavityPressure-v->lastPressure >= -0.2) v->nonDecreasingCount++;
+        else v->nonDecreasingCount = 0;
+    }
     else
         dpdt = 0;
     error = setpoint - cavityPressure;
     v->lastPressure = cavityPressure;
-
+    if (dpdt >= dpdtAbort || dpdt <= -dpdtAbort) {
+        sprintf(msg,"Maximum pressure change exceeded, dpdt = %.1f. Valves closed to protect cavity.",dpdt);
+        message_puts(msg);
+        state = VALVE_CNTRL_DisabledState;
+    }
+    
     switch (state)
     {
     case VALVE_CNTRL_DisabledState:
         inlet = 0;
         outlet = 0;
+        v->nonDecreasingCount = 0;
         break;
     case VALVE_CNTRL_ManualControlState:
         inlet = userInlet;
@@ -122,10 +133,18 @@ void proportionalValveStep()
         if (valveValue < inletMin) valveValue = inletMin;
         if (valveValue > inletMax) valveValue = inletMax;
         inlet = valveValue;
+        if (inlet <= inletMin && v->nonDecreasingCount>10) {
+            message_puts("Check vacuum pump connection, valves closed to protect cavity.");
+            state = VALVE_CNTRL_DisabledState;
+        }        
         break;
     }
     userInlet = inlet;
     userOutlet = outlet;
+    if (outlet >= outletMax && v->nonDecreasingCount>10) {
+        message_puts("Check vacuum pump connection, valves closed to protect cavity.");
+        state = VALVE_CNTRL_DisabledState;
+    }
 }
 
 #define SWAP(a,b) { float temp=(a); (a)=(b); (b)=temp; }
@@ -229,6 +248,7 @@ int valveCntrlInit(void)
     v->inlet_               = (float*)registerAddr(VALVE_CNTRL_INLET_VALVE_REGISTER);
     v->outlet_              = (float*)registerAddr(VALVE_CNTRL_OUTLET_VALVE_REGISTER);
     v->dpdtMax_             = (float*)registerAddr(VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER);
+    v->dpdtAbort_           = (float*)registerAddr(VALVE_CNTRL_CAVITY_PRESSURE_RATE_ABORT_REGISTER);
     v->inletGain1_          = (float*)registerAddr(VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER);
     v->inletGain2_          = (float*)registerAddr(VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER);
     v->inletMin_            = (float*)registerAddr(VALVE_CNTRL_INLET_VALVE_MIN_REGISTER);
@@ -261,6 +281,7 @@ int valveCntrlInit(void)
     v->lastLossPpb = 0;
     v->lastPressure = INVALID_PRESSURE_VALUE;
     v->dwellCount = 0;
+    v->nonDecreasingCount = 0;
     return STATUS_OK;
 }
 

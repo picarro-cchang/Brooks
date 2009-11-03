@@ -235,6 +235,7 @@
             <register>VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER</register>
             <register>VALVE_CNTRL_USER_INLET_VALVE_REGISTER</register>
             <register>VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER</register>
+            <register>VALVE_CNTRL_CAVITY_PRESSURE_RATE_ABORT_REGISTER</register>
             <register>VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER</register>
             <register>VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER</register>
             <register>VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER</register>

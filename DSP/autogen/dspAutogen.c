@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[377];
+RegTypes regTypes[378];
 void initRegisters() 
 {
     DataType d;
@@ -573,6 +573,8 @@ void initRegisters()
     d.asFloat = 5.0;
     writeRegister(VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER,d);
     d.asFloat = 50.0;
+    writeRegister(VALVE_CNTRL_CAVITY_PRESSURE_RATE_ABORT_REGISTER,d);
+    d.asFloat = 50.0;
     writeRegister(VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER,d);
     d.asFloat = 0.5;
     writeRegister(VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER,d);
@@ -1005,6 +1007,7 @@ void initRegisters()
     regTypes[VALVE_CNTRL_INLET_VALVE_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_OUTLET_VALVE_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER] = float_type;
+    regTypes[VALVE_CNTRL_CAVITY_PRESSURE_RATE_ABORT_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_INLET_VALVE_MIN_REGISTER] = float_type;
