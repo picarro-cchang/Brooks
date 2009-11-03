@@ -34,6 +34,7 @@ typedef struct SPECT_CNTRL_PARAMS
     float *cavityPressure_;    // Cavity pressure
     float *ambientPressure_;   // Ambient pressure
     float *pztOffsetByVirtualLaser_[8]; // PZT offsets for each virtual laser
+    float *schemeOffsetByVirtualLaser_[8]; // Scheme temperature offsets for each virtual laser
     unsigned int *defaultThreshold_;  // Default ringdown threshold
     // Local variables for controller
     unsigned int schemeCounter_;   // Increments after last ringdown of a scheme

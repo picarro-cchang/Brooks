@@ -4,8 +4,6 @@
 9. Tell Alex the units of pressure on the RingdownEntry queue (50*torr)
 11. Note that max targetting error in hot box calibration is now in RADIANS. 1 cm^-1 is approx 4 radians
 12. Support four-way switch with XC9536XL CPLD.
-15. Add logic to protect cavity if pump is not turned on. If the output valve is at the maximum or the input valve is at the minimum, we
-     flag a pump error and disable valve control if the pressure has not dropped after a certain time.
 16. Calculate optimal update factor for WLM calibration.
 17. Tell Carl about labelling of WB Heastsink thermistor on WLM board, Heater/TEC on power board.
 20. Find out why we get repeated "end of spectra" requests in Calibrate System.
@@ -13,7 +11,6 @@
 22. Consider how to send alerts such as sentry failures, pump not connected error, etc. to the user. May need instrument manager to allow
      user to restart system after such failures.
 23. Implement scheme temperature offset per virtual laser.
-24. Use straight average rather than extrapolation for ratio metadata.
 
 DONE
 7. Look at implementing averaging of metadata at ringdown, rather than just taking the last value.
@@ -40,6 +37,9 @@ DONE
     - This now raises an exception
 19. Fill out names of hot box and warm box calibration file and sequence number in controller by asking the RDFrequencyConverter
     - Done hot and warm box calibration files. Cannot do sequence number, since this is currently part of the controller.
+24. Use straight average rather than extrapolation for ratio metadata.
+15. Add logic to protect cavity if pump is not turned on. If the output valve is at the maximum or the input valve is at the minimum, we
+     flag a pump error and disable valve control if the pressure has not dropped after a certain time.
     
 
     

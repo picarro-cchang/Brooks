@@ -65,6 +65,14 @@ int spectCntrlInit(void)
     s->pztOffsetByVirtualLaser_[5] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER6);
     s->pztOffsetByVirtualLaser_[6] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER7);
     s->pztOffsetByVirtualLaser_[7] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER8);
+    s->schemeOffsetByVirtualLaser_[0] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER1);
+    s->schemeOffsetByVirtualLaser_[1] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER2);
+    s->schemeOffsetByVirtualLaser_[2] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER3);
+    s->schemeOffsetByVirtualLaser_[3] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER4);
+    s->schemeOffsetByVirtualLaser_[4] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER5);
+    s->schemeOffsetByVirtualLaser_[5] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER6);
+    s->schemeOffsetByVirtualLaser_[6] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER7);
+    s->schemeOffsetByVirtualLaser_[7] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER8);
     s->etalonTemperature_ = (float *)registerAddr(ETALON_TEMPERATURE_REGISTER);
     s->cavityPressure_ = (float *)registerAddr(CAVITY_PRESSURE_REGISTER);
     s->ambientPressure_ = (float *)registerAddr(AMBIENT_PRESSURE_REGISTER);
@@ -199,7 +207,7 @@ void setupLaserTemperatureAndPztOffset(void)
     aLaserNum = 1 + (vLaserParams->actualLaser & 0x3);
     if (laserTemp != 0.0)
     {
-        *(s->laserTempSetpoint_[aLaserNum - 1]) = laserTemp;
+        *(s->laserTempSetpoint_[aLaserNum - 1]) = laserTemp + *(s->schemeOffsetByVirtualLaser_[vLaserNum - 1]);
     }
 
     // The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
