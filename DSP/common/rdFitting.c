@@ -397,7 +397,6 @@ int rdFittingProcessRingdown(uint32 *buffer,
                           uncorrectedLoss, correctedLoss);
 }
 
-char msg[120];
 // This is a task function associated with TSK_rdFitting which does the ringdown fitting
 void rdFitting(void)
 {

@@ -282,7 +282,7 @@ def bench():
                 prod2 = signed_mul_sim(ratio2_multiplier,ratio2c)
                 print "Product1 = %04x, Product2 = %04x" % (prod1,prod2)
                 print "Tuning offset = %04x" % (tuning_offset,)
-                lock_error = add_sim(add_sim(tuning_offset-32768,prod1),prod2)
+                lock_error = add_sim(add_sim((tuning_offset - 32768) >> 3,prod1),prod2)
                 print "LockError = %04x" % (lock_error,)
                 locked = abs(intbv(lock_error)[16:].signed()) <= wm_lock_window
                 deriv = lock_error - prev_lock_error

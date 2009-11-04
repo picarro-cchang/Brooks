@@ -66,7 +66,6 @@ void proportionalValveStep()
 {
     ValveCntrl *v = &valveCntrl;
     float delta, dError, dpdt, dpdtSet, error, valveValue;
-    char msg[120];
 
     if (v->lastPressure > INVALID_PRESSURE_VALUE) {
         dpdt = (cavityPressure-v->lastPressure)/v->deltaT;
@@ -77,9 +76,9 @@ void proportionalValveStep()
         dpdt = 0;
     error = setpoint - cavityPressure;
     v->lastPressure = cavityPressure;
+    
     if (dpdt >= dpdtAbort || dpdt <= -dpdtAbort) {
-        sprintf(msg,"Maximum pressure change exceeded, dpdt = %.1f. Valves closed to protect cavity.",dpdt);
-        message_puts(msg);
+        message_puts("Maximum pressure change exceeded. Valves closed to protect cavity.");
         state = VALVE_CNTRL_DisabledState;
     }
     

@@ -40,7 +40,7 @@
 #include "ltc2499.h"
 #include "fpga.h"
 
-char message[120];
+static char message[120];
 
 #define READ_REG(regNum,result) { \
 	DataType d; \
@@ -472,7 +472,6 @@ int r_valveCntrlStep(unsigned int numInt,void *params,void *env)
 int r_envChecker(unsigned int numInt,void *params,void *env)
 // This action tests the use of the environment pointer
 {
-    static char message[120];
     CheckEnvType *myEnv = (CheckEnvType *) env;
     sprintf(message,"envChecker: %5d %5d",myEnv->var1,myEnv->var2);
     myEnv->var1 += 1;

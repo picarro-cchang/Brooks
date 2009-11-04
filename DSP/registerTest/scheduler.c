@@ -30,7 +30,6 @@ unsigned int *operand_table = (unsigned int *) OPERAND_BASE;
 unsigned int *env_table = (unsigned int *) ENVIRONMENT_BASE;
 unsigned short runqueue_head = NO_MORE;
 RunQueue run_table[MAX_GROUPS];
-char debug_msg[120];
 
 void insert_into_runqueue(unsigned short group_num, long long when)
 {

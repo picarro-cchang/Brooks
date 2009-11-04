@@ -484,10 +484,14 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         if cs[LASERLOCKER_CS_ADC_STROBE_B]:
                             if awaiting_strobe:
                                 awaiting_strobe.next = LOW
-                                lock_error.next = (tuning_offset - 32768) % FPGA_REG_MAXVAL
                                 lock_error_out.next = lock_error
                                 cycle_counter.next = 0
                                 current_ok_out.next = 0
+                                # Perform a shift with sign extension
+                                if tuning_offset[15]:
+                                    lock_error.next = concat(LOW,LOW,LOW,LOW,tuning_offset[15:3])
+                                else:
+                                    lock_error.next = concat(HIGH,HIGH,HIGH,HIGH,tuning_offset[15:3])
                         else:
                             awaiting_strobe.next = HIGH
 
