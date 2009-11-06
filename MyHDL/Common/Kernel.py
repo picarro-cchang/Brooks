@@ -18,6 +18,7 @@
 #   27-Jul-2009  sze  Support resetting Cypress FX2 and FPGA. Allow Intronix to monitor
 #                      three waveform channels
 #   25-Sep-2009  sze  Added register and I/O for overload conditions
+#    5-Nov-2009  sze  Added I2C reset bit in control register
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -35,6 +36,7 @@ from Host.autogen.interface import KERNEL_INTRONIX_3, KERNEL_OVERLOAD
 
 from Host.autogen.interface import KERNEL_CONTROL_CYPRESS_RESET_B, KERNEL_CONTROL_CYPRESS_RESET_W
 from Host.autogen.interface import KERNEL_CONTROL_OVERLOAD_RESET_B, KERNEL_CONTROL_OVERLOAD_RESET_W
+from Host.autogen.interface import KERNEL_CONTROL_I2C_RESET_B, KERNEL_CONTROL_I2C_RESET_W
 from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL_DIVISOR_B, KERNEL_INTRONIX_CLKSEL_DIVISOR_W
 from Host.autogen.interface import KERNEL_INTRONIX_1_CHANNEL_B, KERNEL_INTRONIX_1_CHANNEL_W
 from Host.autogen.interface import KERNEL_INTRONIX_2_CHANNEL_B, KERNEL_INTRONIX_2_CHANNEL_W
@@ -47,7 +49,7 @@ LOW, HIGH = bool(0), bool(1)
 def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
            usb_connected,cyp_reset,diag_1_out,intronix_clksel_out,
            intronix_1_out,intronix_2_out,intronix_3_out,overload_in,
-           overload_out,map_base):
+           overload_out,i2c_reset_out,map_base):
     """
     Parameters:
     clk                 -- Clock input
@@ -65,6 +67,7 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     intronix_3_out      -- used to select quantity to display in channel 3 of LogicPort
     overload_in         -- Inputs from overload detection circuitry, readable via a register
     overload_out        -- Goes high if any bit in latched overload_in is high
+    i2c_reset_out       -- Goes high to reset I2C multiplexers
     map_base            -- Base of FPGA map for this block
 
     Registers:
@@ -81,6 +84,7 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     Fields in KERNEL_CONTROL:
     KERNEL_CONTROL_CYPRESS_RESET
     KERNEL_CONTROL_OVERLOAD_RESET
+    KERNEL_CONTROL_I2C_RESET
 
     Fields in KERNEL_INTRONIX_CLKSEL:
     KERNEL_INTRONIX_CLKSEL_DIVISOR
@@ -123,7 +127,8 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     overload = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     state = Signal(t_State.NORMAL)
-
+    control_init = 1 << KERNEL_CONTROL_I2C_RESET_B
+    
     @always_comb
     def  comb():
         intronix_clksel_out.next = intronix_clksel
@@ -131,19 +136,19 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         intronix_2_out.next = intronix_2
         intronix_3_out.next = intronix_3
         diag_1_out.next = diag_1
-
     @instance
     def logic():
         while True:
             yield clk.posedge, reset.posedge
             if reset:
-                control.next = 0
+                control.next = control_init
                 diag_1.next = 0
                 intronix_clksel.next = 0
                 intronix_1.next = 0
                 intronix_2.next = 0
                 intronix_3.next = 0
                 overload.next = 0
+                i2c_reset_out.next = 1
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
@@ -187,6 +192,8 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 else:
                     overload_out.next = 0
                     
+                i2c_reset_out.next = control[KERNEL_CONTROL_I2C_RESET_B]
+                
                 # State machine for handling resetting of Cypress FX2 and FPGA
                 if state == t_State.NORMAL:
                     cyp_reset.next = LOW
@@ -245,6 +252,7 @@ if __name__ == "__main__":
     intronix_3_out = Signal(intbv(0)[8:])
     overload_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     overload_out = Signal(LOW)
+    i2c_reset_out = Signal(LOW)
     map_base = FPGA_KERNEL
 
     toVHDL(Kernel, clk=clk, reset=reset, dsp_addr=dsp_addr,
@@ -256,4 +264,4 @@ if __name__ == "__main__":
                    intronix_2_out=intronix_2_out,
                    intronix_3_out=intronix_3_out,
                    overload_in=overload_in, overload_out=overload_out,
-                   map_base=map_base)
+                   i2c_reset_out=i2c_reset_out, map_base=map_base)

@@ -291,13 +291,11 @@ class CalibrateSystem(object):
             RDFreqConv.restoreOriginalWlmCal(self.vLaserNum)
             theta0 = RDFreqConv.waveNumberToAngle(self.vLaserNum,[self.waveNumberCen])[0]
             # Make a fine angle-based scheme covering +/- 3FSR for determining PZT sensitivity
-            #fwd = arange(-600.0,601.0)
             fwd = arange(-600.0,601.0)
             steps = concatenate((fwd,fwd[::-1]))
             wlmAngles = theta0 + steps*(APPROX_FSR/50.0)
             laserTemps = RDFreqConv.angleToLaserTemperature(self.vLaserNum,wlmAngles)
             nRepeat = 3
-            # nRepeat = 2
             dwell = 2
             self.makeAndUploadScheme(wlmAngles,laserTemps,self.vLaserNum,nRepeat,dwell)
             Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER",SPECT_CNTRL_SchemeSingleMode)
@@ -306,6 +304,7 @@ class CalibrateSystem(object):
             self.tunerSum = zeros(laserTemps.shape,dtype='d')
             self.count = zeros(laserTemps.shape)
             self.processResults = True
+            time.sleep(1.0)
             msg = "Collecting data for PZT sensitivity measurement"
             print msg
             print>>self.op, msg
@@ -358,7 +357,7 @@ class CalibrateSystem(object):
             wlmAngles = theta0 + steps*angleFSR
             laserTemps = RDFreqConv.angleToLaserTemperature(self.vLaserNum,wlmAngles)
             nRepeat = 1
-            dwell = 20
+            dwell = 10
             
             for iter in range(10):
                 self.tunerSum = zeros(wlmAngles.shape,dtype='d')
@@ -368,6 +367,7 @@ class CalibrateSystem(object):
                 # Start collecting data in the rdFilter
                 self.clearLists()
                 self.processResults = True
+                time.sleep(1.0)
                 msg = "Starting spectrum acquisition"
                 print msg
                 print>>self.op, msg
@@ -393,7 +393,7 @@ class CalibrateSystem(object):
                 if abs(tunerCenter-tunerMedian) > 0.5*tunerFSR:
                     tunerCenter = tunerMedian
                 rampAmpl = 0.65*tunerFSR
-                ditherPeakToPeak = 2500
+                ditherPeakToPeak = 4000
                 self.setupRampMode(ditherPeakToPeak,tunerCenter,rampAmpl)
 
             # Use the list of wlmAngles to update the current spline coefficients

@@ -153,10 +153,13 @@ int spectCntrlStep(void)
 void spectCntrl(void)
 {
     int bank, status;
+    int *counter = (int*)(REG_BASE+4*RD_INITIATED_COUNT_REGISTER);
 
     while (1)
     {
         SEM_pendBinary(&SEM_startRdCycle,SYS_FOREVER);
+        (*counter)++;
+        
         // The next while loop periodically checks to see if we are allowed
         //  to start the ringdown
         while (1)

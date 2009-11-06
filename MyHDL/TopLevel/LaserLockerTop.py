@@ -189,6 +189,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     acq_done_irq = Signal(LOW)
     metadata_strobe = Signal(LOW)
     laser_locked = Signal(LOW)
+    i2c_reset = Signal(LOW)
     
     inlet_valve_dac = Signal(intbv(0)[FPGA_REG_WIDTH:])
     outlet_valve_dac = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -262,6 +263,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      intronix_3_out=intronix_3, 
                      overload_in=overload_in,
                      overload_out=overload_out,
+                     i2c_reset_out=i2c_reset,
                      map_base=FPGA_KERNEL )
     
     laserlocker = LaserLocker( clk=clk0, reset=reset, dsp_addr=dsp_addr,
@@ -466,6 +468,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                 wlm_adc = concat(wmm_busy2,wmm_busy1,wmm_rd_out,clk_2M5,wmm_tran2,wmm_refl2,wmm_tran1,wmm_refl1)
                 system_clocks = concat(LOW,clk_10M,clk_5M,clk_2M5,pulse_1M,pulse_100k,wlm_data_available,metadata_strobe)
                 pwm_signals = concat(LOW,heater_pwm_out,hot_box_pwm_out,warm_box_pwm_out,pwm_laser4_out,pwm_laser3_out,pwm_laser2_out,pwm_laser1_out)
+                i2c_signals = concat(LOW, LOW, LOW, LOW, i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1)
+
                 # Latch data for the intronix port
                 if intronix_1 == 0:
                     channel_1.next = tuner_low
@@ -519,8 +523,10 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     channel_1.next = wlm_adc
                 elif intronix_1 == 25:
                     channel_1.next = system_clocks
-                else:
+                elif intronix_1 == 26:
                     channel_1.next = pwm_signals
+                else:
+                    channel_1.next = i2c_signals
                     
                 if intronix_2 == 0:
                     channel_2.next = tuner_low
@@ -574,8 +580,10 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     channel_2.next = wlm_adc
                 elif intronix_2 == 25:
                     channel_2.next = system_clocks
-                else:
+                elif intronix_2 == 26:
                     channel_2.next = pwm_signals
+                else:
+                    channel_2.next = i2c_signals
                     
                 if intronix_3 == 0:
                     channel_3.next = tuner_low
@@ -629,8 +637,10 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     channel_3.next = wlm_adc
                 elif intronix_3 == 25:
                     channel_3.next = system_clocks
-                else:
+                elif intronix_3 == 26:
                     channel_3.next = pwm_signals
+                else:
+                    channel_3.next = i2c_signals
         
                 channel_4.next = concat(rd_trig,diag_1[4:],bank,laser_locked,acc_en,tuner_in_window)
         
@@ -693,8 +703,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         rd_adc_clk.next = adc_clk
         rd_adc_oe.next = 1
         fpga_led.next = counter[NSTAGES:NSTAGES-4]
-        i2c_rst0.next = reset
-        i2c_rst1.next = reset
+        i2c_rst0.next = i2c_reset
+        i2c_rst1.next = i2c_reset
         
         dsp_ext_int4.next = rd_irq
         dsp_ext_int5.next = acq_done_irq

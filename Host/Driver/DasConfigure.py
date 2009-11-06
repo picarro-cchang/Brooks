@@ -63,7 +63,8 @@ class DasConfigure(SharedTypes.Singleton):
                    ("LASER4_PRESENT",  1<<interface.HARDWARE_PRESENT_Laser4Bit),
                    ("SOA_PRESENT",     1<<interface.HARDWARE_PRESENT_SoaBit),
                    ("WARM_BOX_PRESENT",1<<interface.HARDWARE_PRESENT_WarmBoxBit),
-                   ("HOT_BOX_PRESENT", 1<<interface.HARDWARE_PRESENT_HotBoxBit)
+                   ("HOT_BOX_PRESENT", 1<<interface.HARDWARE_PRESENT_HotBoxBit),
+                   ("SAFE_I2C_PRESENT", 1<<interface.HARDWARE_PRESENT_ResettableI2CPort)
                    ]
         mask = 0
         for key, bit in mapping:
@@ -79,6 +80,9 @@ class DasConfigure(SharedTypes.Singleton):
         if 0x19680511 != sender.rdRegUint("VERIFY_INIT_REGISTER"):
             raise ValueError("VERIFY_INIT_REGISTER not initialized correctly")
         self.setHardwarePresent()
+
+        # Reset I2C multiplexers
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[1<<interface.KERNEL_CONTROL_I2C_RESET_B,"FPGA_KERNEL","KERNEL_CONTROL"]))
         
         # Define operation groups as a dictionary accessed using
         #  e.g. self.opGroups["FAST"]["SENSOR_READ"]
@@ -395,6 +399,10 @@ class DasConfigure(SharedTypes.Singleton):
 
         sender.doOperation(Operation("ACTION_INIT_RUNQUEUE",[len(groups)]))
         sender.doOperation(Operation("ACTION_SENTRY_INIT"))
+        
+        # Remove reset on I2C multiplexers
+        time.sleep(0.2)
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0,"FPGA_KERNEL","KERNEL_CONTROL"]))
 
         runCont = (1<<interface.PWM_CS_RUN_B) | (1<<interface.PWM_CS_CONT_B)
         for laserNum in range(1,5):
@@ -411,6 +419,9 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_HEATER_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_HOTBOX","PWM_CS"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_HEATER","PWM_CS"]))
+        time.sleep(0.2)
+        # Must do next line AFTER turning on the warm box and hot box PWM and allowing the monostable
+        #  to trigger
         sender.doOperation(Operation("ACTION_VALVE_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_SPECTRUM_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))

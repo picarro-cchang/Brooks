@@ -488,6 +488,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                             metadata_addr_at_ringdown.next = metadata_addrcntr
                             metadata_addr_at_ringdown.next[FPGA_REG_WIDTH-1] = lapped
                             tuner_at_ringdown.next = tuner_value_in
+                            us_timer_enable.next = LOW # No more timeouts
                             rd_irq.next  = 1
                             # The init_flag is used to allow num_samp = 0 represent 4096
                             #  data points
@@ -513,7 +514,6 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
 
                     elif seqState == SeqState.CHECK_PARAMS_DONE:
                         if paramState == ParamState.DONE:
-                            us_timer_enable.next = LOW # No more timeouts
                             seqState.next = SeqState.ACQ_DONE
                             metadataAcqState.next = MetadataAcqState.IDLE
                             paramState.next = ParamState.IDLE
@@ -619,15 +619,9 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                             us_timer_enable.next = LOW
                             metadataAcqState.next = MetadataAcqState.IDLE
                             paramState.next = ParamState.IDLE
-                            if not rd_trig:
-                                # Timeout before ringdown occured, issue
-                                #  abnormal rd_irq (with timeout set)
-                                rd_trig.next = HIGH     # Turn off the injection
-                                rd_irq.next  = 1
-                            else:
-                                # Timeout after ringdown occured, issue
-                                #  abnormal acq_done_irq (with timeout set)
-                                acq_done_irq.next  = 1
+                            # Signal an abnormal ringdown interrupt
+                            rd_trig.next = HIGH     # Turn off the injection
+                            rd_irq.next  = 1
                             seqState.next = SeqState.IDLE
 
                     # Abort detection

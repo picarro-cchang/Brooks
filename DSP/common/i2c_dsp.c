@@ -43,7 +43,8 @@ I2C_devAddr cavity_pressure_I2C = {&hI2C0,0x17};
 I2C_devAddr ambient_pressure_I2C = {&hI2C0,0x24};
 I2C_devAddr das_temp_sensor_I2C = {&hI2C0,0x4E};
 I2C_devAddr laser_current_monitor_I2C = {&hI2C1,0x14};
-I2C_devAddr valve_pump_tec_I2C = {&hI2C1,0x20};
+I2C_devAddr valve_pump_tec_I2C_old = {&hI2C1,0x20};
+I2C_devAddr valve_pump_tec_I2C_new = {&hI2C1,0x70};
 
 /*----------------------------------------------------------------------------*/
 // Returns 1 if NACK is received, 0 if ACK is received

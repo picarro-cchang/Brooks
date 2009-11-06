@@ -16,7 +16,7 @@
 #include "interface.h"
 
 void initRegisters(void);
-extern RegTypes regTypes[386];
+extern RegTypes regTypes[390];
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env);
 int writeBlock(unsigned int numInt,void *params,void *env);
 int setTimestamp(unsigned int numInt,void *params,void *env);

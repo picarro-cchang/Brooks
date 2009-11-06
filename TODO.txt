@@ -10,7 +10,8 @@
 21. Consider moving sequencer to RDFrequencyConverter.
 22. Consider how to send alerts such as sentry failures, pump not connected error, etc. to the user. May need instrument manager to allow
      user to restart system after such failures.
-23. Implement scheme temperature offset per virtual laser.
+25. Archiver hogs CPU.
+26. Handle PCA9538 I2C to parallel converter.
 
 DONE
 7. Look at implementing averaging of metadata at ringdown, rather than just taking the last value.
@@ -40,6 +41,7 @@ DONE
 24. Use straight average rather than extrapolation for ratio metadata.
 15. Add logic to protect cavity if pump is not turned on. If the output valve is at the maximum or the input valve is at the minimum, we
      flag a pump error and disable valve control if the pressure has not dropped after a certain time.
+23. Implement scheme temperature offset per virtual laser.
     
 
     

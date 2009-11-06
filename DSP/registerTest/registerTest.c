@@ -58,7 +58,7 @@ main(int argc, char *argv[])
     // Initialize I2C
     dspI2CInit();
     // Turn off high power TECs, pump and close all valves
-    write_valve_pump_tec(0);
+    // write_valve_pump_tec(0);
     // Initialize DS1631 for continuous measurements
     ds1631_init(&das_temp_sensor_I2C);
     // Initialize ringdown fitting module

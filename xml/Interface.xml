@@ -511,6 +511,7 @@
             <enum_value ident="HARDWARE_PRESENT_SoaBit" value="4" caption="SOA" /> 
             <enum_value ident="HARDWARE_PRESENT_WarmBoxBit" value="5" caption="Warm Box" /> 
             <enum_value ident="HARDWARE_PRESENT_HotBoxBit" value="6" caption="Hot Box" />             
+            <enum_value ident="HARDWARE_PRESENT_ResettableI2CPort" value="7" caption="Resettable I2C port" />             
         </enum>
     </enum_list>
     <bits_list>
@@ -575,6 +576,26 @@
             <description>Number of acquisition done interrupts</description>
             <initial>0</initial>
             <display format="%d">Acquisition done interrupt count</display>
+        </register>
+        <register ident="RD_DATA_MOVING_COUNT_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Number of times QDMA started</description>
+            <initial>0</initial>
+            <display format="%d">QDMA start count</display>
+        </register>
+        <register ident="RD_QDMA_DONE_COUNT_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Number of times QDMA done</description>
+            <initial>0</initial>
+            <display format="%d">QDMA done interrupt count</display>
+        </register>
+        <register ident="RD_FITTING_COUNT_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Number of times RD fitting done</description>
+            <initial>0</initial>
+            <display format="%d">RD fitting count</display>
+        </register>
+        <register ident="RD_INITIATED_COUNT_REGISTER" type="uint32" minver="1.0" access="r">
+            <description>Number of times RD initiated</description>
+            <initial>0</initial>
+            <display format="%d">RD initiated count</display>
         </register>
         <register ident="DAS_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
             <description>DAS status</description>
@@ -2619,6 +2640,10 @@
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Reset</fielddef>
                 </bitfield>
+                <bitfield ident="I2C_RESET" description="Reset i2c multiplexers" lsb="2" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Reset</fielddef>
+                </bitfield>
             </reg>
             <reg type="uint16" ident="DIAG_1" description="DSP accessible register for diagnostics" access="rw">
             </reg>
@@ -2686,6 +2711,7 @@
                     <fielddef value="24">WLM ADC signals</fielddef>
                     <fielddef value="25">System clocks</fielddef>
                     <fielddef value="26">PWM signals</fielddef>
+                    <fielddef value="27">I2C signals</fielddef>
                 </bitfield>
             </reg>
             <reg type="mask" ident="INTRONIX_2" description="" access="rw">
@@ -2718,6 +2744,7 @@
                     <fielddef value="24">WLM ADC signals</fielddef>
                     <fielddef value="25">System clocks</fielddef>
                     <fielddef value="26">PWM signals</fielddef>
+                    <fielddef value="27">I2C signals</fielddef>
                 </bitfield>
             </reg>
             <reg type="mask" ident="INTRONIX_3" description="" access="rw">
@@ -2750,6 +2777,7 @@
                     <fielddef value="24">WLM ADC signals</fielddef>
                     <fielddef value="25">System clocks</fielddef>
                     <fielddef value="26">PWM signals</fielddef>
+                    <fielddef value="27">I2C signals</fielddef>
                 </bitfield>
             </reg>
             <reg type="uint16" ident="OVERLOAD" description="Overload register" access="r">

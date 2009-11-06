@@ -417,10 +417,12 @@ void rdFitting(void)
     double s1, sx;
     // double si, si2, six;
     int wrapped;
+    int *counter = (int*)(REG_BASE+4*RD_FITTING_COUNT_REGISTER);
     
     while (1)
     {
         SEM_pend(&SEM_rdFitting,SYS_FOREVER);
+        (*counter)++;
         if (!get_queue(&rdBufferQueue,&bufferNum))
         {
             message_puts("rdBuffer queue empty in rdFitting");
@@ -522,6 +524,7 @@ void rdFitting(void)
             ringdownEntry->correctedAbsorbance = correctedLoss;
             // TODO: Modify the status as necessary if there are any fitter issues
             ringdownEntry->status = rdParams->status;
+            if (bufferNum) ringdownEntry->status |= 0x8000;
             ringdownEntry->count = rdParams->countAndSubschemeId >> 16;
             ringdownEntry->tunerValue = rdParams->tunerAtRingdown;
             ringdownEntry->pztValue = metaDouble.pztValue;

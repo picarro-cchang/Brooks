@@ -103,7 +103,10 @@ void edmaDoneInterrupt(int tccNum)
 {
     int bank;
     unsigned int gie;
+    int *counter = (int*)(REG_BASE+4*RD_QDMA_DONE_COUNT_REGISTER);
+    
     gie = IRQ_globalDisable();
+    (*counter)++;
 
     // Reset bit 1 of DIAG_1 after QDMA and set bit 2
     changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 1, 2, 2);
@@ -277,10 +280,12 @@ void acqDoneInterrupt(unsigned int funcArg, unsigned int eventId)
 void rdDataMoving(void)
 {
     int bank;
+    int *counter = (int*)(REG_BASE+4*RD_DATA_MOVING_COUNT_REGISTER);
     while (1)
     {
         // Use SEM_rdDataMoving to indicate when FPGA data are available
         SEM_pend(&SEM_rdDataMoving,SYS_FOREVER);
+        (*counter)++;
         if (!get_queue(&bankQueue,&bank))
         {
             message_puts("bankQueue empty in rdDataMoving");
