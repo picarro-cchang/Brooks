@@ -1,11 +1,11 @@
 from numpy import *
 
-fp = file("sample1.sch","w")
-wList = linspace(6316,6318,2001)
+fp = file("sample2.sch","w")
+wList = linspace(6056.5,6057.5,1001)
 wList = concatenate((wList,wList[::-1]))
 dwell = 3
-subschemeId = 25
-laserNum = 0
+subschemeId = 26
+laserNum = 1
 
 rep = 1
 print >> fp, rep

@@ -105,6 +105,9 @@ class WarmBoxCalFileMaker(object):
                     virtualList[vLaserNum-1]["WMAX"] = None
         self.virtualList = virtualList
 
+    def filenameFromPath(self,path):
+        return os.path.splitext(os.path.split(path)[1])[0]
+    
     def run(self):
         self.op = ConfigObj()
         self.wlmFileList = []
@@ -130,32 +133,34 @@ class WarmBoxCalFileMaker(object):
                 pylab.xlabel("Laser Temperature")
                 pylab.ylabel("Wavenumber")
                 pylab.title('Laser %s, Coarse current %s: %s' % (laserNum,sec["COARSE_CURRENT"],self.outfname))
-                pylab.savefig("%s_Laser%02d_Tuning.png" % (self.outfname,laserNum))
+                pylab.savefig("%s_Laser%02d_Tuning.png" % (self.filenameFromPath(self.outfname),laserNum))
+                # Plot the wavelength monitor response
+                wOffset = wlmFile.WaveNumber[0]
+                wScale = wlmFile.WaveNumber[-1]-wlmFile.WaveNumber[0]
+                tck, u = interpolate.splprep([wlmFile.Ratio1,wlmFile.Ratio2],u=(wlmFile.WaveNumber-wOffset)/wScale,s=0)
+                ufine = linspace(0.0,1.0,1001)
+                out = interpolate.splev(ufine,tck)
+                pylab.figure()
+                pylab.plot(wlmFile.WaveNumber,wlmFile.Ratio1,'x',wlmFile.WaveNumber,wlmFile.Ratio2,'o')
+                pylab.plot(wOffset+wScale*ufine,out[0],wOffset+wScale*ufine,out[1])
+                pylab.grid(True)
+                pylab.xlabel("Frequency (wavenumbers)")
+                pylab.ylabel("WLM Ratios")
+                title = "%s_Laser%02d_WLM Response" % (self.filenameFromPath(self.outfname),laserNum)
+                pylab.title(title)
+                pylab.savefig(title+".png")
+        
+                pylab.figure()
+                pylab.plot(wlmFile.Ratio1,wlmFile.Ratio2,'o')
+                pylab.plot(out[0],out[1])
+                pylab.grid(True)
+                pylab.xlabel("Ratio 1")
+                pylab.ylabel("Ratio 2")
+                title = "%s_Laser%02d_WLM Parametric Plot" % (self.filenameFromPath(self.outfname),laserNum)
+                pylab.title(title)
+                pylab.savefig(title+".png")
             else:
                 self.wlmFileList.append(None)
-        # Plot the wavelength monitor response
-        wOffset = wlmFile.WaveNumber[0]
-        wScale = wlmFile.WaveNumber[-1]-wlmFile.WaveNumber[0]
-        tck, u = interpolate.splprep([wlmFile.Ratio1,wlmFile.Ratio2],u=(wlmFile.WaveNumber-wOffset)/wScale,s=0)
-        ufine = linspace(0.0,1.0,1001)
-        out = interpolate.splev(ufine,tck)
-        pylab.figure()
-        pylab.plot(wlmFile.WaveNumber,wlmFile.Ratio1,'x',wlmFile.WaveNumber,wlmFile.Ratio2,'o')
-        pylab.plot(wOffset+wScale*ufine,out[0],wOffset+wScale*ufine,out[1])
-        pylab.grid(True)
-        pylab.xlabel("Frequency (wavenumbers)")
-        pylab.ylabel("WLM Ratios")
-        pylab.title('WLM Response %s' % self.outfname)
-        pylab.savefig("%s_WLM Response.png" % (self.outfname))
-
-        pylab.figure()
-        pylab.plot(wlmFile.Ratio1,wlmFile.Ratio2,'o')
-        pylab.plot(out[0],out[1])
-        pylab.grid(True)
-        pylab.xlabel("Ratio 1")
-        pylab.ylabel("Ratio 2")
-        pylab.title('WLM Parametric Plot %s' % self.outfname)
-        pylab.savefig("%s_WLM Parametric Plot.png" % (self.outfname))
 
         # Next report the mapping between virtual and actual lasers
         self.op["LASER_MAP"] = {}

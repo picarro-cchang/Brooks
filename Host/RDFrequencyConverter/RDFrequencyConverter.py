@@ -642,7 +642,7 @@ class RDFrequencyConverter(Singleton):
                                 'ratio1Center':    float(p['RATIO1_CENTER']),
                                 'ratio1Scale':     float(p['RATIO1_SCALE']),
                                 'ratio2Center':    float(p['RATIO2_CENTER']),
-                                'ratio2Scale':     float(p['RATIO1_SCALE']),
+                                'ratio2Scale':     float(p['RATIO2_SCALE']),
                                 'phase':           float(p['PHASE']),
                                 'tempSensitivity': float(p['TEMP_SENSITIVITY']),
                                 'calTemp':         float(p['CAL_TEMP']),

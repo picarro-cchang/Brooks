@@ -388,7 +388,7 @@ void setAutomaticControl(void)
 }
 
 void setManualControl(void)
-// Set optical injection, laser current and laser temperature controllers to manual mode.
+// Set optical injection and laser current controllers to manual mode.
 {
     DataType data;
 
@@ -400,12 +400,6 @@ void setManualControl(void)
     writeRegister(LASER2_CURRENT_CNTRL_STATE_REGISTER,data);
     writeRegister(LASER3_CURRENT_CNTRL_STATE_REGISTER,data);
     writeRegister(LASER4_CURRENT_CNTRL_STATE_REGISTER,data);
-
-    data.asInt = TEMP_CNTRL_EnabledState;
-    writeRegister(LASER1_TEMP_CNTRL_STATE_REGISTER,data);
-    writeRegister(LASER2_TEMP_CNTRL_STATE_REGISTER,data);
-    writeRegister(LASER3_TEMP_CNTRL_STATE_REGISTER,data);
-    writeRegister(LASER4_TEMP_CNTRL_STATE_REGISTER,data);
 }
 
 void validateSchemePosition(void)

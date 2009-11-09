@@ -23,6 +23,7 @@ import os
 import Queue
 import socket
 import time
+import threading
 from configobj import ConfigObj
 from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
@@ -32,7 +33,7 @@ from scipy.optimize import fmin
 from Host.Common.WlmCalUtilities import bestFit
 
 #APPROX_FSR = 0.077
-APPROX_FSR = 0.1
+APPROX_FSR = 0.08
 
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -153,7 +154,7 @@ class CalibrateSystem(object):
         self.angleRelax = float(self.config["SETTINGS"]["ANGLE_RELAX"])
         
         self.seq = 0
-        self.processResults = False
+        self.processingDone = threading.Event()
         self.clearLists()
         # Define a listener for the ringdown data
         self.listener = Listener(None,SharedTypes.BROADCAST_PORT_RDRESULTS,RingdownEntryType,self.rdFilter)
@@ -205,7 +206,7 @@ class CalibrateSystem(object):
         
     def rdFilter(self,entry):
         assert isinstance(entry,RingdownEntryType)
-        if self.processResults:
+        if not self.processingDone.isSet():
             if not(entry.status & RINGDOWN_STATUS_RingdownTimeout) and self.seq == (entry.subschemeId & SUBSCHEME_ID_IdMask):
                 schemeRow = entry.schemeRow
                 self.tunerSum[schemeRow] += entry.tunerValue
@@ -216,7 +217,7 @@ class CalibrateSystem(object):
             # Check when we get to the end of the scheme
             if (entry.status & RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask) or \
                (entry.status & RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask):
-                self.processResults = False
+                self.processingDone.set()
 
     def update(self,wlmAngles,vLaserNum,FSR=None,nRefine=4):
         # We now have a list of wlmAngles that correspond to frequencies separated by
@@ -303,14 +304,14 @@ class CalibrateSystem(object):
             self.clearLists()
             self.tunerSum = zeros(laserTemps.shape,dtype='d')
             self.count = zeros(laserTemps.shape)
-            self.processResults = True
+            self.processingDone.clear()
             time.sleep(1.0)
             msg = "Collecting data for PZT sensitivity measurement"
             print msg
             print>>self.op, msg
             Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_StartingState)
-            while self.processResults:
-                time.sleep(1.0)
+            while not self.processingDone.isSet():
+                self.processingDone.wait(1.0)
                 sys.stdout.write(".")
             print "\nCompleted data collection for PZT sensitivity measurement"
             # Discard the first repetition, and turn the rest into arrays
@@ -366,14 +367,14 @@ class CalibrateSystem(object):
                 Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER",SPECT_CNTRL_SchemeSingleMode)
                 # Start collecting data in the rdFilter
                 self.clearLists()
-                self.processResults = True
+                self.processingDone.clear()
                 time.sleep(1.0)
                 msg = "Starting spectrum acquisition"
                 print msg
                 print>>self.op, msg
                 Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_StartingState)
-                while self.processResults:
-                    time.sleep(1.0)
+                while not self.processingDone.isSet():
+                    self.processingDone.wait(1.0)
                     sys.stdout.write(".")
                 print
                 # Find mean and standard deviation of tuner values
