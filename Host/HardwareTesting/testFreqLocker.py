@@ -155,7 +155,8 @@ class TestFreqLocker:
         phase = float(vLaserSec["PHASE"])
         ratio1 = ratio1Mean/32768.0
         ratio2 = ratio2Mean/32768.0
-        assert allclose((ratio1-ratio1Center)*ratio2Scale*sin(wlmAngleMean + phase),(ratio2-ratio2Center)*ratio1Scale*cos(wlmAngleMean),rtol=5e-3)
+        assert allclose((ratio1-ratio1Center)*ratio2Scale*sin(wlmAngleMean + phase),
+                        (ratio2-ratio2Center)*ratio1Scale*cos(wlmAngleMean),rtol=5e-3)
         
 if __name__ == "__main__":
     t = TestFreqLocker()

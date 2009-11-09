@@ -177,6 +177,7 @@ class GraphPanel(wx.Panel):
     def SetGraphProperties(self,**kwargs):
         # Change only the properties specified in the argument list
         self.latestUpdate = None
+        self.canvas.last_draw = None
         for k,v in kwargs.iteritems():
             if k=="xlabel": self.xlabel = v
             elif k =="ylabel": self.ylabel = v
