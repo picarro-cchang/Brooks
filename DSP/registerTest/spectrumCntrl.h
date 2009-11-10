@@ -27,8 +27,10 @@ typedef struct SPECT_CNTRL_PARAMS
     unsigned int *row_;      // Scheme row
     unsigned int *dwell_;    // Dwell counter
     VIRTUAL_LASER_Type *virtLaser_;   // Virtual laser register
-    float *laserTemp_[4];    // Laser temperature registers
+    unsigned int *dasStatus_; // Das status register
+    float *laserTemp_[4];     // Laser temperature registers
     float *laserTempSetpoint_[4];     // Laser temperature setpoint registers
+    float *laserTempUserSetpoint_[4]; // Laser temperature user setpoint registers
     float *coarseLaserCurrent_[4];    // Coarse laser current registers
     float *etalonTemperature_; // Etalon temperature
     float *cavityPressure_;    // Cavity pressure
@@ -41,6 +43,7 @@ typedef struct SPECT_CNTRL_PARAMS
     int incrFlag_;                 // Flag indicating MSB of scheme ID is set
     unsigned int incrCounter_;     // Increments after last ringdown of a scheme row with MSB of subscheme ID set
     unsigned int incrCounterNext_; // Records schemeCounter_ on last increment of incrCounter_
+    int useMemo_;
 } SpectCntrlParams;
 
 extern RingdownParamsType nextRdParams;
@@ -51,7 +54,8 @@ int  spectCntrlStep(void);
 void setAutomaticControl(void);
 void setManualControl(void);
 void setupNextRdParams(void);
-void setupLaserTemperatureAndPztOffset(void);
+void setupLaserTemperatureAndPztOffset(int useMemo);
+int schemeLaserTempLocked(void);
 void validateSchemePosition(void);
 void advanceDwellCounter(void);
 void advanceSchemeRow(void);

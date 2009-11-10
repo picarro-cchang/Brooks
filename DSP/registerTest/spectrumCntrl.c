@@ -53,6 +53,10 @@ int spectCntrlInit(void)
     s->coarseLaserCurrent_[1] = (float *)registerAddr(LASER2_MANUAL_COARSE_CURRENT_REGISTER);
     s->coarseLaserCurrent_[2] = (float *)registerAddr(LASER3_MANUAL_COARSE_CURRENT_REGISTER);
     s->coarseLaserCurrent_[3] = (float *)registerAddr(LASER4_MANUAL_COARSE_CURRENT_REGISTER);
+    s->laserTempUserSetpoint_[0] = (float *)registerAddr(LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER);
+    s->laserTempUserSetpoint_[1] = (float *)registerAddr(LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER);
+    s->laserTempUserSetpoint_[2] = (float *)registerAddr(LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER);
+    s->laserTempUserSetpoint_[3] = (float *)registerAddr(LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     s->laserTempSetpoint_[0] = (float *)registerAddr(LASER1_TEMP_CNTRL_SETPOINT_REGISTER);
     s->laserTempSetpoint_[1] = (float *)registerAddr(LASER2_TEMP_CNTRL_SETPOINT_REGISTER);
     s->laserTempSetpoint_[2] = (float *)registerAddr(LASER3_TEMP_CNTRL_SETPOINT_REGISTER);
@@ -78,10 +82,12 @@ int spectCntrlInit(void)
     s->ambientPressure_ = (float *)registerAddr(AMBIENT_PRESSURE_REGISTER);
     s->defaultThreshold_ = (unsigned int *)registerAddr(SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER);
     s->virtLaser_ = (VIRTUAL_LASER_Type *)registerAddr(VIRTUAL_LASER_REGISTER);
+    s->dasStatus_ = (unsigned int *)registerAddr(DAS_STATUS_REGISTER);
     s->schemeCounter_ =  0;
     s->incrFlag_ = 0;
     s->incrCounter_ = 0;
     s->incrCounterNext_ = 1;
+    s->useMemo_ = 0;
     switchToRampMode();
     return STATUS_OK;
 }
@@ -96,6 +102,7 @@ int spectCntrlStep(void)
     stateAtStart = *(s->state_);
     if (SPECT_CNTRL_StartingState == *(s->state_))
     {
+        s->useMemo_ = 0;
         s->incrCounterNext_ = s->incrCounter_ + 1;
         s->schemeCounter_++;
         setAutomaticControl();
@@ -141,6 +148,7 @@ int spectCntrlStep(void)
             switchToRampMode();
             setManualControl();
         }
+        s->useMemo_ = 0;
     }
     else switchToRampMode();
 
@@ -194,7 +202,8 @@ void spectCntrl(void)
     }
 }
 
-void setupLaserTemperatureAndPztOffset(void)
+static int activeMemo = -1, rowMemo = -1;
+void setupLaserTemperatureAndPztOffset(int useMemo)
 {
     SpectCntrlParams *s=&spectCntrlParams;
     unsigned int aLaserNum, vLaserNum;
@@ -202,22 +211,38 @@ void setupLaserTemperatureAndPztOffset(void)
     volatile VirtualLaserParamsType *vLaserParams;
     int pztOffset;
     float laserTemp;
-
-    *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
-    vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
-    vLaserParams = &virtualLaserParams[vLaserNum-1];
-    laserTemp = 0.001 * schemeTable->rows[*(s->row_)].laserTemp; // Scheme temperatures are in milli-degrees C
-    aLaserNum = 1 + (vLaserParams->actualLaser & 0x3);
-    if (laserTemp != 0.0)
+    
+    if (SPECT_CNTRL_ContinuousMode == *(s->mode_))
     {
-        *(s->laserTempSetpoint_[aLaserNum - 1]) = laserTemp + *(s->schemeOffsetByVirtualLaser_[vLaserNum - 1]);
+        vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
+        // In continuous mode, we use the parameter values currently in the registers
+        vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
+        aLaserNum = 1 + (vLaserParams->actualLaser & 0x3);
+        *(s->laserTempSetpoint_[aLaserNum - 1]) = *(s->laserTempUserSetpoint_[aLaserNum - 1]);
+        pztOffset = *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]);
+        writeFPGA(FPGA_TWGEN+TWGEN_PZT_OFFSET,pztOffset % 65536);
     }
-
-    // The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
-    //  register and any setpoint in the scheme file. Note that all PZT values are interpreted modulo 65536
-
-    pztOffset = *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]) + schemeTable->rows[*(s->row_)].pztSetpoint;
-    writeFPGA(FPGA_TWGEN+TWGEN_PZT_OFFSET,pztOffset % 65536);
+    else {    
+        if (useMemo && *(s->active_) == activeMemo && *(s->row_) == rowMemo) return;
+        *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
+        vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
+        vLaserParams = &virtualLaserParams[vLaserNum-1];
+        laserTemp = 0.001 * schemeTable->rows[*(s->row_)].laserTemp; // Scheme temperatures are in milli-degrees C
+        aLaserNum = 1 + (vLaserParams->actualLaser & 0x3);
+        if (laserTemp != 0.0)
+        {
+            *(s->laserTempSetpoint_[aLaserNum - 1]) = laserTemp + *(s->schemeOffsetByVirtualLaser_[vLaserNum - 1]);
+        }
+    
+        // The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
+        //  register and any setpoint in the scheme file. Note that all PZT values are interpreted modulo 65536
+    
+        pztOffset = *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]) + schemeTable->rows[*(s->row_)].pztSetpoint;
+        writeFPGA(FPGA_TWGEN+TWGEN_PZT_OFFSET,pztOffset % 65536);
+    
+        activeMemo = *(s->active_);
+        rowMemo = *(s->row_);
+    }
 }
 
 void setupNextRdParams(void)
@@ -253,7 +278,16 @@ void setupNextRdParams(void)
     }
     else  	// We are running a scheme
     {
-        schemeTable = &schemeTables[*(s->active_)];
+        do {
+            // This loop is here so that a dwell count of zero can be used to set up the
+            //  laser temperature without triggering a ringdown
+            setupLaserTemperatureAndPztOffset(s->useMemo_);
+            s->useMemo_ = 1;
+            schemeTable = &schemeTables[*(s->active_)];
+            if (schemeTable->rows[*(s->row_)].dwellCount > 0) break;
+            advanceSchemeRow();
+        }
+        while (*(s->row_) != 0);
         *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
         vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
         setpoint = schemeTable->rows[*(s->row_)].setpoint;
@@ -280,9 +314,9 @@ void setupNextRdParams(void)
                 SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
                 SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeActiveMask;
         // Determine if we are on the last ringdown of the scheme and set status bits appropriately
-        if (*(s->iter_) == schemeTables[*(s->active_)].numRepeats-1 &&
-                *(s->row_)  == schemeTables[*(s->active_)].numRows-1 &&
-                *(s->dwell_) == schemeTables[*(s->active_)].rows[*(s->row_)].dwellCount-1)
+        if (*(s->iter_) >= schemeTables[*(s->active_)].numRepeats-1 &&
+                *(s->row_)  >= schemeTables[*(s->active_)].numRows-1 &&
+                *(s->dwell_) >= schemeTables[*(s->active_)].rows[*(s->row_)].dwellCount-1)
         {
             // We need to decide if acquisition is continuing or not. Acquisition stops if the scheme is run in Single mode, or
             //  if we are running a non-looping sequence and have reached the last scheme in the sequence
@@ -494,6 +528,33 @@ void advanceScheme(void)
     *(s->dwell_) = 0;
     if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_))
         *(s->state_) = SPECT_CNTRL_IdleState;
+}
+
+int schemeLaserTempLocked(void)
+// This determines if the laser temperature control loop for the currently selected laser
+//  in the scheme is locked
+{
+    SpectCntrlParams *s=&spectCntrlParams;
+    volatile SchemeTableType *schemeTable = &schemeTables[*(s->active_)];
+    unsigned int dasStatus = *(s->dasStatus_);
+    volatile VirtualLaserParamsType *vLaserParams;
+    unsigned int vLaserNum, aLaserNum;
+
+    *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
+    vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
+    vLaserParams = &virtualLaserParams[vLaserNum-1];
+    aLaserNum = 1 + (vLaserParams->actualLaser & 0x3);
+    switch (aLaserNum) {
+        case 1:
+            return 0 != (dasStatus & DAS_STATUS_Laser1TempCntrlLockedBit);
+        case 2:
+            return 0 != (dasStatus & DAS_STATUS_Laser2TempCntrlLockedBit);
+        case 3:
+            return 0 != (dasStatus & DAS_STATUS_Laser3TempCntrlLockedBit);
+        case 4:
+            return 0 != (dasStatus & DAS_STATUS_Laser4TempCntrlLockedBit);
+    }
+    return 0;
 }
 
 void spectCntrlError(void)

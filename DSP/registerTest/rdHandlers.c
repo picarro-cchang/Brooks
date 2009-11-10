@@ -203,9 +203,12 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
         if (mode == TUNER_RampMode)
         {
             unsigned int schemeCount = getSpectCntrlSchemeCount();
-            advanceSchemeRow();
-            // Enqueue a special code on the ringdown buffer queue to indicate that we are skipping to the next row.
-            modifyParamsOnTimeout(schemeCount);
+            if (schemeLaserTempLocked()) {
+                advanceSchemeRow();
+                // Enqueue a special code on the ringdown buffer queue to indicate that we have
+                //  advanced to the next scheme row
+                modifyParamsOnTimeout(schemeCount);
+            }
             if (!put_queue(&rdBufferQueue,MISSING_RINGDOWN))
             {
                 message_puts("rdBuffer queue full in ringdownInterrupt");
@@ -225,8 +228,8 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
         }
     }
 
-    // Change the temperature amd apply PZT offset for the selected laser
-    setupLaserTemperatureAndPztOffset();
+    // Change the temperature and apply PZT offset for the selected laser
+    setupLaserTemperatureAndPztOffset(1);
 
     // Restore interrupts
     IRQ_globalRestore(gie);

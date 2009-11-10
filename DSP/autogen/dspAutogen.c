@@ -31,6 +31,8 @@ void initRegisters()
     d.asUint = 0;
     writeRegister(RD_IRQ_COUNT_REGISTER,d);
     d.asUint = 0;
+    writeRegister(ACQ_DONE_COUNT_REGISTER,d);
+    d.asUint = 0;
     writeRegister(RD_DATA_MOVING_COUNT_REGISTER,d);
     d.asUint = 0;
     writeRegister(RD_QDMA_DONE_COUNT_REGISTER,d);
@@ -38,8 +40,6 @@ void initRegisters()
     writeRegister(RD_FITTING_COUNT_REGISTER,d);
     d.asUint = 0;
     writeRegister(RD_INITIATED_COUNT_REGISTER,d);
-    d.asUint = 0;
-    writeRegister(ACQ_DONE_COUNT_REGISTER,d);
     d.asUint = 0;
     writeRegister(DAS_STATUS_REGISTER,d);
     d.asFloat = 20.0;
@@ -718,11 +718,11 @@ void initRegisters()
     regTypes[SCHEDULER_CONTROL_REGISTER] = uint_type;
     regTypes[HARDWARE_PRESENT_REGISTER] = uint_type;
     regTypes[RD_IRQ_COUNT_REGISTER] = uint_type;
+    regTypes[ACQ_DONE_COUNT_REGISTER] = uint_type;
     regTypes[RD_DATA_MOVING_COUNT_REGISTER] = uint_type;
     regTypes[RD_QDMA_DONE_COUNT_REGISTER] = uint_type;
     regTypes[RD_FITTING_COUNT_REGISTER] = uint_type;
     regTypes[RD_INITIATED_COUNT_REGISTER] = uint_type;
-    regTypes[ACQ_DONE_COUNT_REGISTER] = uint_type;
     regTypes[DAS_STATUS_REGISTER] = uint_type;
     regTypes[DAS_TEMPERATURE_REGISTER] = float_type;
     regTypes[LASER_TEC_MONITOR_TEMPERATURE_REGISTER] = float_type;

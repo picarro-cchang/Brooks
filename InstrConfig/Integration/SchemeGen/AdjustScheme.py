@@ -3,11 +3,11 @@ from pylab import *
 
 CO2peak = 6237.408
 CH4peak = 6057.09
-FSR = 0.0205943889388
-ref = r'CFBDS02_FSR.sch'
+FSR = 0.0206055189838
+ref = r'..\..\Schemes\CFADS03_CO2nocal_CH4cal1.sch'
 sp = file(ref,"r")
 
-fname = r'CFBDS02_FSR_v2.sch'
+fname = r'..\..\Schemes\001_Alpha_CO2nocal_CH4cal1.sch'
 lp = file(fname,"w")
 
 for line in sp:
