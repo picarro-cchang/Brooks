@@ -1,4 +1,4 @@
-try:
+try :
     Laser2Temp = _OLD_SENSOR_["Laser2Temp"][-1][1]
     Tcav  = _OLD_SENSOR_["CavityTemp"][-1][1]
     Pcav  = _OLD_SENSOR_["CavityPressure"][-1][1]

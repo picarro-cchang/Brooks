@@ -1049,7 +1049,6 @@ class DataStore(object):
             try:
                 obj = self.queue.get_nowait()
                 source = obj['source']
-                
                 if source not in self.oldData:
                     self.oldData[source] = {}
                     

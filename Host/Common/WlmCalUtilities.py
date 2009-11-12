@@ -634,10 +634,12 @@ if __name__ == "__main__":
     xx = bspInverse([-5,0],coeffs,target)
     assert allclose(bspEval([-5,0],coeffs,xx[0]),target)
     
-    w = WlmFile(file("../../Utilities/firstTest.wlm","r"))
+    w = WlmFile(file("../../Utilities/Laser_818028_CH4.wlm","r"))
     a = AutoCal()
     a.loadFromWlmFile(w)
-    ini = ConfigObj(file("../../Utilities/foo.ini","r"))
+    ini = ConfigObj()
+    a.updateIni(ini,2)
+    a.setOffset(0.04)
     a.updateIni(ini,2)
     ini.filename = "../../Utilities/newfoo.ini"
     ini.write()

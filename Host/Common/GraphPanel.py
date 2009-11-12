@@ -177,6 +177,7 @@ class GraphPanel(wx.Panel):
     def SetGraphProperties(self,**kwargs):
         # Change only the properties specified in the argument list
         self.latestUpdate = None
+        save_last_draw = self.canvas.last_draw
         self.canvas.last_draw = None
         for k,v in kwargs.iteritems():
             if k=="xlabel": self.xlabel = v
@@ -197,6 +198,7 @@ class GraphPanel(wx.Panel):
             elif k =="foregroundColour": self.canvas.SetForegroundColour(v)
             else:
                 raise ValueError("Unknown graph property %s" % (k,))
+        self.canvas.last_draw = save_last_draw
 
     def calcStats(self,data,canvas):
         # Calculate mean, std dev and slope of the data within the current window

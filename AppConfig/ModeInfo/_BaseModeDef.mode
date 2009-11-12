@@ -13,7 +13,8 @@
 
 [AVAILABLE_MODES]
 ModeCount = 2
-Mode_1 = Alpha_mode
+#Mode_1 = Alpha_mode
+Mode_1 = CFADS_mode
 Mode_2 = warming_mode
 
 ############################################################################
@@ -25,7 +26,11 @@ Mode_2 = warming_mode
 
 [SPECTRUM_IDS]
 #Specify logical names for referencing each SubSchemeID...
-Alpha = 26
+#Alpha = 26
+CO2 = 10
+CO2_Alt = 12
+CH4 = 25
+H2O = 26
 
 # Default processing to use for any spectra/label can be supplied below.
 # - If the spectrum name is not referred to in the plan file for the active mode, the processing
@@ -33,6 +38,18 @@ Alpha = 26
 #   - This is particularily convenient for occasionally inserted spectra (such as Cal spectra)
 #     that can occur in any mode.
 # - If no processing is indicated here OR in the plan file for the mode, an error will be raised.
+
+[CO2]
+Analyzer= ../Scripts/DataManager/analyze_CFADS.py
+
+[CO2_Alt]
+Analyzer= ../Scripts/DataManager/analyze_CFADS.py
+
+[H2O]
+Analyzer= ../Scripts/DataManager/analyze_CFADS.py
+
+[CH4]
+Analyzer= ../Scripts/DataManager/analyze_CFADS.py
 
 [SENSOR_DATA]
 #
