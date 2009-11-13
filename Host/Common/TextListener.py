@@ -62,9 +62,9 @@ class TextListener(threading.Thread):
         self.setDaemon(True)
         self.start()
 
-    def safeLog(self,msg):
+    def safeLog(self,*a,**k):
         try:
-            if self.logFunc != None: self.logFunc(msg)
+            if self.logFunc != None: self.logFunc(*a,**k)
         except:
             pass
 

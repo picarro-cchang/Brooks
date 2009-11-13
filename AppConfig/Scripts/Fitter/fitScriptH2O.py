@@ -31,7 +31,7 @@ d.wlmSetpointFilter(maxDev=0.005,sigmaThreshold=3)
 d.tunerEnsembleFilter(maxDev=500000,sigmaThreshold=2.5)
 d.sparse(maxPoints=100,width=0.002,height=100000.0,xColumn="waveNumber",yColumn="uncorrectedAbsorbance",sigmaThreshold=1.8)
 d.evaluateGroups(["waveNumber","uncorrectedAbsorbance"])
-d.defineFitData(freq=d.groupMedians["waveNumber"],loss=1000*d.groupMedians["uncorrectedAbsorbance"],sdev=1/sqrt(d.groupSizes))
+d.defineFitData(freq=d.groupMeans["waveNumber"],loss=1000*d.groupMeans["uncorrectedAbsorbance"],sdev=1/sqrt(d.groupSizes))
 P = d["cavitypressure"]
 species = (d.subschemeId & 0x3FF)[0]
 init["base",0] = 800

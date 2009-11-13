@@ -55,7 +55,7 @@ void setAutomaticControl(void);
 void setManualControl(void);
 void setupNextRdParams(void);
 void setupLaserTemperatureAndPztOffset(int useMemo);
-int schemeLaserTempLocked(void);
+int activeLaserTempLocked(void);
 void validateSchemePosition(void);
 void advanceDwellCounter(void);
 void advanceSchemeRow(void);

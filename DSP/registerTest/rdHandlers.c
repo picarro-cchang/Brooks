@@ -203,7 +203,7 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
         if (mode == TUNER_RampMode)
         {
             unsigned int schemeCount = getSpectCntrlSchemeCount();
-            if (schemeLaserTempLocked()) {
+            if (activeLaserTempLocked()) {
                 advanceSchemeRow();
                 // Enqueue a special code on the ringdown buffer queue to indicate that we have
                 //  advanced to the next scheme row

@@ -285,9 +285,13 @@ void setupNextRdParams(void)
             s->useMemo_ = 1;
             schemeTable = &schemeTables[*(s->active_)];
             if (schemeTable->rows[*(s->row_)].dwellCount > 0) break;
+            s->incrFlag_ = schemeTable->rows[*(s->row_)].subschemeId & SUBSCHEME_ID_IncrMask;
             advanceSchemeRow();
+            s->incrCounter_ = s->incrCounterNext_;
         }
-        while (*(s->row_) != 0);
+        while (1);
+        // while (*(s->row_) != 0);
+        schemeTable = &schemeTables[*(s->active_)];
         *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
         vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
         setpoint = schemeTable->rows[*(s->row_)].setpoint;
@@ -530,29 +534,23 @@ void advanceScheme(void)
         *(s->state_) = SPECT_CNTRL_IdleState;
 }
 
-int schemeLaserTempLocked(void)
+int activeLaserTempLocked(void)
 // This determines if the laser temperature control loop for the currently selected laser
 //  in the scheme is locked
 {
     SpectCntrlParams *s=&spectCntrlParams;
-    volatile SchemeTableType *schemeTable = &schemeTables[*(s->active_)];
     unsigned int dasStatus = *(s->dasStatus_);
-    volatile VirtualLaserParamsType *vLaserParams;
-    unsigned int vLaserNum, aLaserNum;
+    unsigned int aLaserNum = 1+readBitsFPGA(FPGA_INJECT+INJECT_CONTROL,INJECT_CONTROL_LASER_SELECT_B,INJECT_CONTROL_LASER_SELECT_W);
 
-    *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
-    vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
-    vLaserParams = &virtualLaserParams[vLaserNum-1];
-    aLaserNum = 1 + (vLaserParams->actualLaser & 0x3);
     switch (aLaserNum) {
         case 1:
-            return 0 != (dasStatus & DAS_STATUS_Laser1TempCntrlLockedBit);
+            return 0 != (dasStatus & (1<<DAS_STATUS_Laser1TempCntrlLockedBit));
         case 2:
-            return 0 != (dasStatus & DAS_STATUS_Laser2TempCntrlLockedBit);
+            return 0 != (dasStatus & (1<<DAS_STATUS_Laser2TempCntrlLockedBit));
         case 3:
-            return 0 != (dasStatus & DAS_STATUS_Laser3TempCntrlLockedBit);
+            return 0 != (dasStatus & (1<<DAS_STATUS_Laser3TempCntrlLockedBit));
         case 4:
-            return 0 != (dasStatus & DAS_STATUS_Laser4TempCntrlLockedBit);
+            return 0 != (dasStatus & (1<<DAS_STATUS_Laser4TempCntrlLockedBit));
     }
     return 0;
 }
