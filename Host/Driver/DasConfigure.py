@@ -436,7 +436,7 @@ class DasConfigure(SharedTypes.Singleton):
         sender.wrRegFloat("LASER3_CURRENT_MONITOR_REGISTER",130.0)
         sender.wrRegFloat("LASER4_CURRENT_MONITOR_REGISTER",140.0)
 
-        sender.wrRegFloat("ETALON_RESISTANCE_REGISTER",30000.0)
+        sender.wrRegFloat("ETALON_RESISTANCE_REGISTER",5800.0)
         sender.wrRegFloat("WARM_BOX_RESISTANCE_REGISTER",5900.0)
         sender.wrRegFloat("WARM_BOX_HEATSINK_RESISTANCE_REGISTER",5800.0)
         sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER",60000.0)

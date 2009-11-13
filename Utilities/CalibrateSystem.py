@@ -152,7 +152,13 @@ class CalibrateSystem(object):
         else:
             self.waveNumberCen = float(self.config["SETTINGS"]["CENTER_WAVENUMBER"])
         self.angleRelax = float(self.config["SETTINGS"]["ANGLE_RELAX"])
-        
+        if "-a" in options:
+            self.approxFsr = float(options["-a"])
+        elif "APPROX_FSR_ANGLE" in self.config["SETTINGS"]:
+            self.approxFsr = float(self.config["SETTINGS"]["APPROX_FSR_ANGLE"])
+        else:
+            self.approxFsr = 0.08
+            
         self.seq = 0
         self.processingDone = threading.Event()
         self.clearLists()
@@ -416,13 +422,14 @@ settings in the configuration file:
 -s                   number of steps on each side of center
 -v                   specify virtual laser (1-origin) to calibrate
 -w                   center wavenumber about which to calibrate
+-a                   approximate cavity FSR in WLM angle (radians)
 """
 
 def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:s:v:w:'
+    shortOpts = 'hc:s:v:w:a:'
     longOpts = ["help"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
