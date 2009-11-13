@@ -582,6 +582,8 @@ class MeasSystem(object):
             if (not self._EnableEvent.isSet()) or self._ShutdownRequested:
                 exitState = STATE_READY
             else:
+                if self._UninterruptedSpectrumCount == 0:
+                    Driver.startScan()
                 spectrum = None
                 try:
                     #Get the spectrum...

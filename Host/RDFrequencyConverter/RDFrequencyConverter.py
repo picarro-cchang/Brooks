@@ -146,7 +146,6 @@ class SchemeManager(object):
         Driver.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeSequenceMode)
         schemeDASIndexSeq = [self.schemes[s].currentIndex for s in self.schemeSeq]
         Driver.wrSchemeSequence(schemeDASIndexSeq, restartFlag = True, loopFlag = True)
-        Driver.startScan()
             
     def update(self):
         Log("Sscheme Manager updates and swaps schemes")

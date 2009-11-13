@@ -190,15 +190,15 @@ class DummySampleManager(object):
         self.DriverRpc.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", 16000)
         Log("Flow started by Dummy Sample Manager", Level = 0)
     def FlowStop(self):
-        Log("Running without Sample Manager - flow stop skipped", Level = 0)
+        Log("Running with Dummy Sample Manager - flow stop skipped", Level = 0)
     def Prepare(self):
-        Log("Running without Sample Manager - prepare skipped", Level = 0)
+        Log("Running with Dummy Sample Manager - prepare skipped", Level = 0)
     def FlowPumpDisable(self):
-        Log("Running without Sample Manager - flow pump disable skipped", Level = 0)
+        Log("RRunning with Dummy Sample Manager - flow pump disable skipped", Level = 0)
     def Park(self):
-        Log("Running without Sample Manager - park skipped", Level = 0)
+        Log("Running with Dummy Sample Manager - park skipped", Level = 0)
     def GetStatus(self):
-        Log("Running without Sample Manager - always returns stable status", Level = 0)
+        #Log("Running with Dummy Sample Manager - always returns pressure stable status", Level = 0)
         return SAMPLEMGR_STATUS_STABLE
         
 class ConfigurationOptions(object):
