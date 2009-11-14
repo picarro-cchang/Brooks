@@ -187,7 +187,7 @@ class DummySampleManager(object):
         Log("Running without Sample Manager - mode set skipped", Level = 0)
     def FlowStart(self):
         self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
-        self.DriverRpc.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", 16000)
+        self.DriverRpc.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", 18000)
         Log("Flow started by Dummy Sample Manager", Level = 0)
     def FlowStop(self):
         Log("Running with Dummy Sample Manager - flow stop skipped", Level = 0)

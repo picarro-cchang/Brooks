@@ -40,7 +40,7 @@ species = (d.subschemeId & 0x3FF)[0]
 #print "SpectrumId", d["spectrumId"]
 init["base",0] = 800
 tstart = time.clock()
-if species==10:
+if species==10 or species==12:
     try:
         Ilaserfine = 0.01*mean(d.fineLaserCurrent) + 0.99*Ilaserfine
     except:
