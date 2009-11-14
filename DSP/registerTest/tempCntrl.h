@@ -42,6 +42,7 @@ typedef struct TEMP_CNTRL
     int lockCount;
     int unlockCount;
     int firstIteration;
+    int disabledValue;
     // PID structures
     PidState pidState;
     PidParamsRef pidParamsRef;
@@ -61,6 +62,8 @@ int tempCntrlCavityInit(void);
 int tempCntrlCavityStep(void);
 int tempCntrlWarmBoxInit(void);
 int tempCntrlWarmBoxStep(void);
+int tempCntrlHeaterInit(void);
+int tempCntrlHeaterStep(void);
 int read_laser_tec_imon(int desired, int next, float *result);
 int read_laser_tec_monitors(void);
 int read_laser_thermistor_adc(int laserNum);

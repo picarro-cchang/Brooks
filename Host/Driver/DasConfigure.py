@@ -281,9 +281,13 @@ class DasConfigure(SharedTypes.Singleton):
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_HotBoxTec","CAVITY_TEC_REGISTER"]))
     
+            #self.opGroups["SLOW"]["STREAMER"].addOperation(
+            #    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+            #        ["STREAM_HotBoxHeater","HEATER_CNTRL_MARK_REGISTER"]))
+
             self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                    ["STREAM_HotBoxHeater","HEATER_CNTRL_MARK_REGISTER"]))
+                    ["STREAM_HotBoxHeater","HEATER_MARK_REGISTER"]))
             
             self.opGroups["SLOW"]["CONTROLLER"].addOperation(
                 Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
@@ -294,10 +298,17 @@ class DasConfigure(SharedTypes.Singleton):
     
             self.opGroups["SLOW"]["CONTROLLER"].addOperation(
                 Operation("ACTION_HEATER_CNTRL_STEP"))
-            
+
             self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
                 Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
-                    ["HEATER_CNTRL_MARK_REGISTER","FPGA_PWM_HEATER","PWM_PULSE_WIDTH"]))
+                    ["HEATER_MARK_REGISTER","FPGA_PWM_HEATER","PWM_PULSE_WIDTH"]))
+
+            #self.opGroups["SLOW"]["CONTROLLER"].addOperation(
+            #    Operation("ACTION_HEATER_CNTRL_STEP"))
+            
+            #self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
+            #    Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+            #        ["HEATER_CNTRL_MARK_REGISTER","FPGA_PWM_HEATER","PWM_PULSE_WIDTH"]))
 
         # Valve control
 

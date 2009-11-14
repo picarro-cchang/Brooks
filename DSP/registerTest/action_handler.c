@@ -415,14 +415,16 @@ int r_tempCntrlCavityStep(unsigned int numInt,void *params,void *env)
 int r_heaterCntrlInit(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
-    return heaterCntrlInit();
+    //return heaterCntrlInit();
+    return tempCntrlHeaterInit();
 }
 
 int r_heaterCntrlStep(unsigned int numInt,void *params,void *env)
 {
     int status;
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
-    status = heaterCntrlStep();
+//    status = heaterCntrlStep();
+    status = tempCntrlHeaterStep();
     return status;
 }
 

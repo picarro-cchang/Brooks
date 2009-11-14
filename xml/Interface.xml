@@ -467,6 +467,8 @@
             <enum_value ident="DAS_STATUS_WarmBoxTempCntrlActiveBit" value="9" caption="Warm Box Temperature Controller On" /> 
             <enum_value ident="DAS_STATUS_CavityTempCntrlLockedBit" value="10" caption="Cavity Temperature Locked" /> 
             <enum_value ident="DAS_STATUS_CavityTempCntrlActiveBit" value="11" caption="Cavity Temperature Controller On" /> 
+            <enum_value ident="DAS_STATUS_HeaterTempCntrlLockedBit" value="12" caption="Heater Control Locked" /> 
+            <enum_value ident="DAS_STATUS_HeaterTempCntrlActiveBit" value="13" caption="Heater Controller On" /> 
         </enum>
         <enum type="TEC_CNTRL_Type">
             <description>Warm box and hot box TEC control</description> 
@@ -657,9 +659,6 @@
             <description>Laser1 Temperature control app state register</description>
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Temperature Controller Mode</display>
-        </register>
-        <register ident="LASER1_TEMP_CNTRL_LOCK_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Laser1 Temperature control app lock status register. 1 if locked 0 otherwise.</description>
         </register>
         <register ident="LASER1_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser1 Temperature Control app setpoint in degC.</description>
@@ -876,9 +875,6 @@
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Temperature Controller Mode</display>
         </register>
-        <register ident="LASER2_TEMP_CNTRL_LOCK_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Laser2 Temperature control app lock status register. 1 if locked 0 otherwise.</description>
-        </register>
         <register ident="LASER2_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser2 Temperature Control app setpoint in degC.</description>
             <initial>25.0</initial>
@@ -1094,9 +1090,6 @@
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Temperature Controller Mode</display>
         </register>
-        <register ident="LASER3_TEMP_CNTRL_LOCK_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Laser3 Temperature control app lock status register. 1 if locked 0 otherwise.</description>
-        </register>
         <register ident="LASER3_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser3 Temperature Control app setpoint in degC.</description>
             <initial>25.0</initial>
@@ -1311,9 +1304,6 @@
             <description>Laser4 Temperature control app state register</description>
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Temperature Controller Mode</display>
-        </register>
-        <register ident="LASER4_TEMP_CNTRL_LOCK_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Laser4 Temperature control app lock status register. 1 if locked 0 otherwise.</description>
         </register>
         <register ident="LASER4_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser4 Temperature Control app setpoint in degC.</description>
@@ -1544,9 +1534,6 @@
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Temperature Controller Mode</display>
         </register>
-        <register ident="WARM_BOX_TEMP_CNTRL_LOCK_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Warm box Temperature control app lock status register. 1 if locked 0 otherwise.</description>
-        </register>
         <register ident="WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
             <description>Warm box Temperature Control app setpoint in degC.</description>
             <initial>25.0</initial>
@@ -1763,9 +1750,6 @@
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Temperature Controller Mode</display>
         </register>
-        <register ident="CAVITY_TEMP_CNTRL_LOCK_STATUS_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Cavity Temperature control app lock status register. 1 if locked 0 otherwise.</description>
-        </register>
         <register ident="CAVITY_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
             <description>Cavity Temperature Control app setpoint in degC.</description>
             <initial>25.0</initial>
@@ -1896,6 +1880,141 @@
             <save/>
             <display format="%.3f" units="degC">Hot Box heatsink maximum temperature</display>
         </register>
+        <register ident="HEATER_MARK_REGISTER" type="float" minver="1.0" access="r">
+            <description>Heater control mark register</description>
+            <initial>0.0</initial>
+            <display format="%.0f">Heater manual mode mark</display>
+        </register>
+        <register ident="HEATER_MANUAL_MARK_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater mark in manual mode register</description>
+            <initial>4000.0</initial>
+            <save/>
+            <display format="%.0f">Heater manual mode mark</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_STATE_REGISTER" type="TEMP_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Heater temperature control app state register</description>
+            <initial>TEMP_CNTRL_DisabledState</initial>
+            <display>Heater Controller Mode</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+            <description>Heater Temperature Control app setpoint for cavity TEC in digU.</description>
+            <initial>32768.0</initial>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature Control app user setpoint for cavity TEC in digU.</description>
+            <initial>32768.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Target cavity TEC value</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature Control app lock tolerance in digU.</description>
+            <initial>1000</initial>
+            <save/>
+            <display format="%.0f" units="digU">Lock tolerance</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature Control app maximum sweep value in digU.</description>
+            <initial>45000</initial>
+            <save/>
+            <display format="%.0f" units="digU">Max sweep value</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature Control app minimum sweep value in digU.</description>
+            <initial>35000</initial>
+            <save/>
+            <display format="%.0f" units="digU">Min sweep value</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature Control app sweep increment in digU/sample.</description>
+            <initial>50</initial>
+            <save/>
+            <display format="%.0f" units="digU/sample">Sweep increment</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature control app interval in seconds.</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.3f" units="s">Sample interval</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_K_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature control app proportional constant.</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f">Loop proportional gain (K)</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_TI_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature control app integrator time constant.</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Integration time (Ti)</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_TD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature control derivative time constant</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Derivative time (Td)</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_B_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature control app proportional setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Proportional setpoint gain (b)</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_C_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature control app derivative setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Derivative setpoint gain (c)</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_N_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature control app derivative regularization</description>
+            <initial>100.0</initial>
+            <save/>
+            <display format="%.2f">Derivative regularization (N)</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_S_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature control app saturation regularization</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.2f">Saturation regularization (S)</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_AMIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature control app minimum mark value</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f">Minimum mark value (Amin)</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_AMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature control app maximum mark value</description>
+            <initial>30000.0</initial>
+            <save/>
+            <display format="%.0f">Maximum mark value (Amax)</display>
+        </register>
+        <register ident="HEATER_TEMP_CNTRL_IMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater Temperature control app maximum mark change/step</description>
+            <initial>10000.0</initial>
+            <save/>
+            <display format="%.1f">Maximum actuator increment (Imax)</display>
+        </register>
+        <register ident="HEATER_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Heater PRBS generator polynomial</description>
+            <initial>0x481</initial>
+            <save/>
+            <display format="$%X">PRBS generator</display>
+        </register>
+        <register ident="HEATER_PRBS_AMPLITUDE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater PRBS amplitude</description>
+            <initial>5000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS amplitude</display>
+        </register>
+        <register ident="HEATER_PRBS_MEAN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Heater PRBS mean</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS mean</display>
+        </register>
+        <!-->
         <register ident="HEATER_CNTRL_STATE_REGISTER" type="HEATER_CNTRL_StateType" minver="1.0" access="rw">
             <description>Heater control app state register</description>
             <initial>HEATER_CNTRL_DisabledState</initial>
@@ -1948,6 +2067,7 @@
             <initial>0.0</initial>
             <display format="%.0f">Heater manual mode mark</display>
         </register>
+        </!-->
         <register ident="CAVITY_PRESSURE_ADC_REGISTER" type="int32" minver="1.0" access="r">
             <description>Cavity pressure ADC register</description>
             <initial>32768</initial>

@@ -96,6 +96,7 @@ int tempCntrlWrite(TempCntrl *t)
 #define unlockCount     (t->unlockCount)
 #define firstIteration  (t->firstIteration)
 #define pidState        (&(t->pidState))
+#define disabledValue   (t->disabledValue)
 #define hasExt    ((0 != t->extMax_) && (0 != t->extTemp_))
 
 int tempCntrlStep(TempCntrl *t)
@@ -109,7 +110,7 @@ int tempCntrlStep(TempCntrl *t)
     case TEMP_CNTRL_DisabledState:
         resetDasStatusBit(activeBit);
         resetDasStatusBit(lockBit);
-        tec = 0x8000;
+        tec = disabledValue;
         prbsReg = 0x1;
         break;
     case TEMP_CNTRL_ManualState:
@@ -190,12 +191,13 @@ int tempCntrlStep(TempCntrl *t)
     }
     if (hasExt)
     {
-        if (extTemp > extMax) tec = 0x8000;
+        if (extTemp > extMax) tec = disabledValue;
     }
     return STATUS_OK;
 }
 
 #undef state
+#undef disabledValue
 #undef tol
 #undef swpMin
 #undef swpMax
@@ -239,6 +241,7 @@ TempCntrl tempCntrlLaser3;
 TempCntrl tempCntrlLaser4;
 TempCntrl tempCntrlWarmBox;
 TempCntrl tempCntrlCavity;
+TempCntrl tempCntrlHeater;
 
 int tempCntrlLaser1Init(void)
 {
@@ -258,6 +261,7 @@ int tempCntrlLaser1Init(void)
     p->Amin_     = (float *)registerAddr(LASER1_TEMP_CNTRL_AMIN_REGISTER);
     p->Amax_     = (float *)registerAddr(LASER1_TEMP_CNTRL_AMAX_REGISTER);
     p->ffwd_     = (float *)registerAddr(LASER1_TEMP_CNTRL_FFWD_REGISTER);
+    t->disabledValue = 0x8000;
     t->userSetpoint_ = (float *)registerAddr(LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     t->state_    = (unsigned int *)registerAddr(LASER1_TEMP_CNTRL_STATE_REGISTER);
     t->tol_      = (float *)registerAddr(LASER1_TEMP_CNTRL_TOLERANCE_REGISTER);
@@ -292,7 +296,6 @@ int tempCntrlLaser1Init(void)
 int tempCntrlLaser1Step(void)
 {
     unsigned int regList[] = {LASER1_TEMP_CNTRL_SETPOINT_REGISTER,
-                              LASER1_TEMP_CNTRL_LOCK_STATUS_REGISTER,
                               LASER1_TEMP_CNTRL_STATE_REGISTER,
                               LASER1_TEC_REGISTER
                              };
@@ -320,6 +323,7 @@ int tempCntrlLaser2Init(void)
     p->Amin_     = (float *)registerAddr(LASER2_TEMP_CNTRL_AMIN_REGISTER);
     p->Amax_     = (float *)registerAddr(LASER2_TEMP_CNTRL_AMAX_REGISTER);
     p->ffwd_     = (float *)registerAddr(LASER2_TEMP_CNTRL_FFWD_REGISTER);
+    t->disabledValue = 0x8000;
     t->userSetpoint_ = (float *)registerAddr(LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     t->state_    = (unsigned int *)registerAddr(LASER2_TEMP_CNTRL_STATE_REGISTER);
     t->tol_      = (float *)registerAddr(LASER2_TEMP_CNTRL_TOLERANCE_REGISTER);
@@ -353,7 +357,6 @@ int tempCntrlLaser2Init(void)
 int tempCntrlLaser2Step(void)
 {
     unsigned int regList[] = {LASER2_TEMP_CNTRL_SETPOINT_REGISTER,
-                              LASER2_TEMP_CNTRL_LOCK_STATUS_REGISTER,
                               LASER2_TEMP_CNTRL_STATE_REGISTER,
                               LASER2_TEC_REGISTER
                              };
@@ -381,6 +384,7 @@ int tempCntrlLaser3Init(void)
     p->Amin_     = (float *)registerAddr(LASER3_TEMP_CNTRL_AMIN_REGISTER);
     p->Amax_     = (float *)registerAddr(LASER3_TEMP_CNTRL_AMAX_REGISTER);
     p->ffwd_     = (float *)registerAddr(LASER3_TEMP_CNTRL_FFWD_REGISTER);
+    t->disabledValue = 0x8000;
     t->userSetpoint_ = (float *)registerAddr(LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     t->state_    = (unsigned int *)registerAddr(LASER3_TEMP_CNTRL_STATE_REGISTER);
     t->tol_      = (float *)registerAddr(LASER3_TEMP_CNTRL_TOLERANCE_REGISTER);
@@ -414,7 +418,6 @@ int tempCntrlLaser3Init(void)
 int tempCntrlLaser3Step(void)
 {
     unsigned int regList[] = {LASER3_TEMP_CNTRL_SETPOINT_REGISTER,
-                              LASER3_TEMP_CNTRL_LOCK_STATUS_REGISTER,
                               LASER3_TEMP_CNTRL_STATE_REGISTER,
                               LASER3_TEC_REGISTER
                              };
@@ -442,6 +445,7 @@ int tempCntrlLaser4Init(void)
     p->Amin_     = (float *)registerAddr(LASER4_TEMP_CNTRL_AMIN_REGISTER);
     p->Amax_     = (float *)registerAddr(LASER4_TEMP_CNTRL_AMAX_REGISTER);
     p->ffwd_     = (float *)registerAddr(LASER4_TEMP_CNTRL_FFWD_REGISTER);
+    t->disabledValue = 0x8000;
     t->userSetpoint_ = (float *)registerAddr(LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     t->state_    = (unsigned int *)registerAddr(LASER4_TEMP_CNTRL_STATE_REGISTER);
     t->tol_      = (float *)registerAddr(LASER4_TEMP_CNTRL_TOLERANCE_REGISTER);
@@ -475,8 +479,8 @@ int tempCntrlLaser4Init(void)
 int tempCntrlLaser4Step(void)
 {
     unsigned int regList[] = {LASER4_TEMP_CNTRL_SETPOINT_REGISTER,
-                              LASER4_TEMP_CNTRL_LOCK_STATUS_REGISTER,
-                              LASER4_TEMP_CNTRL_STATE_REGISTER,
+
+    LASER4_TEMP_CNTRL_STATE_REGISTER,
                               LASER4_TEC_REGISTER
                              };
     int status;
@@ -667,6 +671,7 @@ int tempCntrlWarmBoxInit(void)
     p->Amin_     = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_AMIN_REGISTER);
     p->Amax_     = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_AMAX_REGISTER);
     p->ffwd_     = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_FFWD_REGISTER);
+    t->disabledValue = 0x8000;
     t->userSetpoint_ = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     t->state_    = (unsigned int *)registerAddr(WARM_BOX_TEMP_CNTRL_STATE_REGISTER);
     t->tol_      = (float *)registerAddr(WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER);
@@ -701,7 +706,6 @@ int tempCntrlWarmBoxInit(void)
 int tempCntrlWarmBoxStep(void)
 {
     unsigned int regList[] = {WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER,
-                              WARM_BOX_TEMP_CNTRL_LOCK_STATUS_REGISTER,
                               WARM_BOX_TEMP_CNTRL_STATE_REGISTER,
                               WARM_BOX_TEC_REGISTER
                              };
@@ -731,6 +735,7 @@ int tempCntrlCavityInit(void)
     p->Amin_     = (float *)registerAddr(CAVITY_TEMP_CNTRL_AMIN_REGISTER);
     p->Amax_     = (float *)registerAddr(CAVITY_TEMP_CNTRL_AMAX_REGISTER);
     p->ffwd_     = (float *)registerAddr(CAVITY_TEMP_CNTRL_FFWD_REGISTER);
+    t->disabledValue = 0x8000;
     t->userSetpoint_ = (float *)registerAddr(CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     t->state_    = (unsigned int *)registerAddr(CAVITY_TEMP_CNTRL_STATE_REGISTER);
     t->tol_      = (float *)registerAddr(CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER);
@@ -765,7 +770,6 @@ int tempCntrlCavityInit(void)
 int tempCntrlCavityStep(void)
 {
     unsigned int regList[] = {CAVITY_TEMP_CNTRL_SETPOINT_REGISTER,
-                              CAVITY_TEMP_CNTRL_LOCK_STATUS_REGISTER,
                               CAVITY_TEMP_CNTRL_STATE_REGISTER,
                               CAVITY_TEC_REGISTER
                              };
@@ -773,6 +777,69 @@ int tempCntrlCavityStep(void)
     if (*(TEC_CNTRL_Type *)registerAddr(TEC_CNTRL_REGISTER) == TEC_CNTRL_Disabled) modify_valve_pump_tec(0x80,0x0);
     else modify_valve_pump_tec(0x80,0x80);
     status = tempCntrlStep(&tempCntrlCavity);
+    writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
+    return status;
+}
+
+int tempCntrlHeaterInit(void)
+{
+    static float zero = 0.0;
+    TempCntrl *t = &tempCntrlHeater;
+    PidParamsRef *p = &(t->pidParamsRef);
+    PidState *s  = &(t->pidState);
+    p->r_        = (float *)registerAddr(HEATER_TEMP_CNTRL_SETPOINT_REGISTER);
+    p->b_        = (float *)registerAddr(HEATER_TEMP_CNTRL_B_REGISTER);
+    p->c_        = (float *)registerAddr(HEATER_TEMP_CNTRL_C_REGISTER);
+    p->h_        = (float *)registerAddr(HEATER_TEMP_CNTRL_H_REGISTER);
+    p->K_        = (float *)registerAddr(HEATER_TEMP_CNTRL_K_REGISTER);
+    p->Ti_       = (float *)registerAddr(HEATER_TEMP_CNTRL_TI_REGISTER);
+    p->Td_       = (float *)registerAddr(HEATER_TEMP_CNTRL_TD_REGISTER);
+    p->N_        = (float *)registerAddr(HEATER_TEMP_CNTRL_N_REGISTER);
+    p->S_        = (float *)registerAddr(HEATER_TEMP_CNTRL_S_REGISTER);
+    p->Imax_     = (float *)registerAddr(HEATER_TEMP_CNTRL_IMAX_REGISTER);
+    p->Amin_     = (float *)registerAddr(HEATER_TEMP_CNTRL_AMIN_REGISTER);
+    p->Amax_     = (float *)registerAddr(HEATER_TEMP_CNTRL_AMAX_REGISTER);
+    p->ffwd_     = (float *)(&zero);
+    t->disabledValue = 0x0;
+    t->userSetpoint_ = (float *)registerAddr(HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER);
+    t->state_    = (unsigned int *)registerAddr(HEATER_TEMP_CNTRL_STATE_REGISTER);
+    t->tol_      = (float *)registerAddr(HEATER_TEMP_CNTRL_TOLERANCE_REGISTER);
+    t->activeBit_  = DAS_STATUS_HeaterTempCntrlActiveBit;
+    t->lockBit_    = DAS_STATUS_HeaterTempCntrlLockedBit;
+    t->swpMin_   = (float *)registerAddr(HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER);
+    t->swpMax_   = (float *)registerAddr(HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER);
+    t->swpInc_   = (float *)registerAddr(HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER);
+    t->extMax_   = 0;
+    t->prbsAmp_  = (float *)registerAddr(HEATER_PRBS_AMPLITUDE_REGISTER);
+    t->prbsMean_ = (float *)registerAddr(HEATER_PRBS_MEAN_REGISTER);
+    t->prbsGen_  = (unsigned int *)registerAddr(HEATER_PRBS_GENPOLY_REGISTER);
+    t->temp_     = (float *)registerAddr(CAVITY_TEC_REGISTER);
+    t->extTemp_  = 0;
+    t->dasTemp_  = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
+    t->tec_      = (float *)registerAddr(HEATER_MARK_REGISTER);
+    t->manualTec_ = (float *)registerAddr(HEATER_MANUAL_MARK_REGISTER);
+    t->swpDir    = 1;
+    *(t->state_)  = TEMP_CNTRL_DisabledState;
+    resetDasStatusBit(t->lockBit_);
+    t->lockCount = 0;
+    t->unlockCount = 0;
+    t->firstIteration = TRUE;
+    *(t->tec_) = s->a = s->u = 0x0;
+    s->perr = 0.0;
+    s->derr1 = 0.0;
+    s->derr2 = 0.0;
+    s->Dincr = 0.0;
+    return STATUS_OK;
+}
+
+int tempCntrlHeaterStep(void)
+{
+    unsigned int regList[] = {HEATER_TEMP_CNTRL_SETPOINT_REGISTER,
+                              HEATER_TEMP_CNTRL_STATE_REGISTER,
+                              HEATER_MARK_REGISTER
+                             };
+    int status;
+    status = tempCntrlStep(&tempCntrlHeater);
     writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
     return status;
 }

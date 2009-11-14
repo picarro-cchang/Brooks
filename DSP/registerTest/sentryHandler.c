@@ -186,7 +186,8 @@ void safeMode(void)
     *(TEMP_CNTRL_StateType *)registerAddr(LASER4_TEMP_CNTRL_STATE_REGISTER) = TEMP_CNTRL_DisabledState;
     *(TEMP_CNTRL_StateType *)registerAddr(WARM_BOX_TEMP_CNTRL_STATE_REGISTER) = TEMP_CNTRL_DisabledState;
     *(TEMP_CNTRL_StateType *)registerAddr(CAVITY_TEMP_CNTRL_STATE_REGISTER)   = TEMP_CNTRL_DisabledState;
-    *(HEATER_CNTRL_StateType *)registerAddr(HEATER_CNTRL_STATE_REGISTER)        = HEATER_CNTRL_DisabledState;
+    //*(HEATER_CNTRL_StateType *)registerAddr(HEATER_CNTRL_STATE_REGISTER)   = HEATER_CNTRL_DisabledState;
+    *(TEMP_CNTRL_StateType *)registerAddr(HEATER_TEMP_CNTRL_STATE_REGISTER)  = TEMP_CNTRL_DisabledState;
 
     // Turn off laser currents in FPGA
     writeFPGA(FPGA_INJECT + INJECT_CONTROL, 0);
