@@ -106,7 +106,22 @@ class DriverRpcHandler(SharedTypes.Singleton):
     
     def getLockStatus(self):
         """Need to be implemented"""
-        result = dict(laser1TempLockStatus="Locked", warmChamberTempLockStatus="Locked", cavityTempLockStatus = "Locked")
+        hardwarePresent = self.rdDasReg("HARDWARE_PRESENT_REGISTER")
+        lockStatus = self.rdDasReg("DAS_STATUS_REGISTER")
+        allLasersTempLocked = True
+        if hardwarePresent & (1<< interface.HARDWARE_PRESENT_Laser1Bit):
+            allLasersTempLocked = allLasersTempLocked and (lockStatus & (1<< interface.DAS_STATUS_Laser1TempCntrlLockedBit))
+        if hardwarePresent & (1<< interface.HARDWARE_PRESENT_Laser2Bit):
+            allLasersTempLocked = allLasersTempLocked and (lockStatus & (1<< interface.DAS_STATUS_Laser2TempCntrlLockedBit))
+        if hardwarePresent & (1<< interface.HARDWARE_PRESENT_Laser3Bit):
+            allLasersTempLocked = allLasersTempLocked and (lockStatus & (1<< interface.DAS_STATUS_Laser3TempCntrlLockedBit))
+        if hardwarePresent & (1<< interface.HARDWARE_PRESENT_Laser4Bit):
+            allLasersTempLocked = allLasersTempLocked and (lockStatus & (1<< interface.DAS_STATUS_Laser4TempCntrlLockedBit))
+        
+        laserTempLockStatus = "Locked" if allLasersTempLocked else "Unlocked"
+        warmChamberTempLockStatus = "Locked" if (lockStatus & (1<< interface.DAS_STATUS_WarmBoxTempCntrlLockedBit)) else "Unlocked"
+        cavityTempLockStatus = "Locked" if (lockStatus & (1<< interface.DAS_STATUS_CavityTempCntrlLockedBit)) else "Unlocked"
+        result = dict(laserTempLockStatus=laserTempLockStatus, warmChamberTempLockStatus=warmChamberTempLockStatus, cavityTempLockStatus = cavityTempLockStatus)
         return result
         
     def startTempControl(self):
@@ -365,7 +380,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
                 self.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % laserNum,interface.TEMP_CNTRL_EnabledState)
         self.wrDasReg("WARM_BOX_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
         self.wrDasReg("CAVITY_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
-        # self.wrDasReg("HEATER_CNTRL_STATE_REGISTER",interface.HEATER_CNTRL_EnabledState)
+        self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
         self.wrDasReg("TEC_CNTRL_REGISTER",interface.TEC_CNTRL_Enabled)
         for laserNum in range(1,interface.MAX_LASERS+1):
             if DasConfigure().installCheck("LASER%d_PRESENT" % laserNum):

@@ -2921,7 +2921,6 @@
                 </bitfield>
             </reg>
             <reg type="uint16" ident="PZT_CENTER" description="PZT value (mod 16384) around which cavity fills" access="rw">
-                <save/>
                 <display format="%d">PZT value (mod 16384) around which cavity fills</display>
             </reg>
             <reg type="uint16" ident="PZT_WINDOW_HALF_WIDTH" description="Half-width of PZT window within which cavity fills" access="rw">
@@ -2933,7 +2932,6 @@
                 <display format="%d">Rate of increase of accumulator value during filling</display>
             </reg>
             <reg type="uint16" ident="DECAY" description="Exponential decay of accumulator when not filling" access="rw">
-                <save/>
                 <display format="%d">Exponential decay of accumulator when not filling</display>
             </reg>
             <reg type="uint16" ident="DECAY_IN_SHIFT" description="Bits to  right shift decay input" access="rw">
@@ -3040,19 +3038,15 @@
                 <display format="%d" units="digU">Wavelength monitor ratio 2</display>
             </reg>
             <reg type="uint16" ident="RATIO1_CENTER" description="Ratio 1 ellipse center" access="rw">
-                <save/>
                 <display format="%d" units="digU">Ratio 1 ellipse center</display>
             </reg>
             <reg type="int16" ident="RATIO1_MULTIPLIER" description="Ratio 1 multiplier" access="rw">
-                <save/>
                 <display format="%d" units="digU">Ratio 1 multiplier</display>
             </reg>
             <reg type="uint16" ident="RATIO2_CENTER" description="Ratio 2 ellipse center" access="rw">
-                <save/>
                 <display format="%d" units="digU">Ratio 2 ellipse center</display>
             </reg>
             <reg type="int16" ident="RATIO2_MULTIPLIER" description="Ratio 2 multiplier" access="rw">
-                <save/>
                 <display format="%d" units="digU">Ratio 2 multiplier</display>
             </reg>
             <reg type="uint16" ident="TUNING_OFFSET" description="Error offset to shift frequency" access="rw">
@@ -3259,7 +3253,6 @@
                 <display format="%d">Precontrol duration (us)</display>
             </reg>
             <reg type="uint32" ident="TIMEOUT_DURATION" description="Duration (ms) within which ring-down must occur to be valid" access="rw">
-                <save/>
                 <display format="%d">Ringdown timeout duration (us)</display>
             </reg>
             <reg type="uint16" ident="TUNER_AT_RINGDOWN" description="Value of tuner at ring-down" access="r">
@@ -3298,23 +3291,18 @@
                 <display format="%d" units="digU">Tuner up slope</display>
             </reg>
             <reg type="uint16" ident="SWEEP_LOW" description="Lower limit of sweep">
-                <save/>
                 <display format="%d" units="digU">Tuner sweep lower limit</display>
             </reg>
             <reg type="uint16" ident="SWEEP_HIGH" description="Higher limit of sweep">
-                <save/>
                 <display format="%d" units="digU">Tuner sweep higher limit</display>
             </reg>
             <reg type="uint16" ident="WINDOW_LOW" description="Lower limit of window">
-                <save/>
                 <display format="%d" units="digU">Tuner window lower limit</display>
             </reg>
             <reg type="uint16" ident="WINDOW_HIGH" description="Higher limit of window">
-                <save/>
                 <display format="%d" units="digU">Tuner window higher limit</display>
             </reg>
             <reg type="uint16" ident="PZT_OFFSET" description="PZT offset">
-                <save/>
                 <display format="%d" units="digU">Offset to add to PZT output</display>
             </reg>
         </fpga_block>
@@ -3407,7 +3395,6 @@
                 <display format="%d">Width factor of simulated spectrum</display>
             </reg>
             <reg type="uint32" ident="LASER_TEMP" description="" access="rw">
-                <save/>
                 <display format="%d">WLM simulator laser temperature (milli-degrees C)</display>
             </reg>
             <reg type="uint16" ident="ETA1_OFFSET" description="Etalon 1 offset" access="rw">
@@ -3451,11 +3438,9 @@
                 <display format="%d" units="digU">Pulse width change per update</display>
             </reg>
             <reg type="uint16" ident="HIGH" description="Upper limit of dither waveform" access="rw">
-                <save/>
                 <display format="%d" units="digU">Upper limit of dither waveform</display>
             </reg>
             <reg type="uint16" ident="LOW" description="Lower limit of dither waveform" access="rw">
-                <save/>
                 <display format="%d" units="digU">Lower limit of dither waveform</display>
             </reg>
             <reg type="uint16" ident="SLOPE" description="Slope of dither waveform" access="rw">

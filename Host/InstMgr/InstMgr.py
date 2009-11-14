@@ -179,20 +179,26 @@ class InvalidModeSelection(Exception):
     """An invalid mode was selected."""
 
 class DummySampleManager(object):
+    def __init__(self):
+        self.DriverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                            "DummySampleManager",
+                                            IsDontCareConnection = False)
     def _SetMode(self, mode):
         Log("Running without Sample Manager - mode set skipped", Level = 0)
     def FlowStart(self):
-        Log("Running without Sample Manager - flow start skipped", Level = 0)
+        self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
+        self.DriverRpc.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", 16000)
+        Log("Flow started by Dummy Sample Manager", Level = 0)
     def FlowStop(self):
-        Log("Running without Sample Manager - flow stop skipped", Level = 0)
+        Log("Running with Dummy Sample Manager - flow stop skipped", Level = 0)
     def Prepare(self):
-        Log("Running without Sample Manager - prepare skipped", Level = 0)
+        Log("Running with Dummy Sample Manager - prepare skipped", Level = 0)
     def FlowPumpDisable(self):
-        Log("Running without Sample Manager - flow pump disable skipped", Level = 0)
+        Log("RRunning with Dummy Sample Manager - flow pump disable skipped", Level = 0)
     def Park(self):
-        Log("Running without Sample Manager - park skipped", Level = 0)
+        Log("Running with Dummy Sample Manager - park skipped", Level = 0)
     def GetStatus(self):
-        Log("Running without Sample Manager - always returns stable status", Level = 0)
+        #Log("Running with Dummy Sample Manager - always returns pressure stable status", Level = 0)
         return SAMPLEMGR_STATUS_STABLE
         
 class ConfigurationOptions(object):
@@ -849,8 +855,8 @@ class InstMgr(object):
 
             if (( self.State != INSTMGR_STATE_ERROR ) and ( self.State != INSTMGR_STATE_RESET )):
                 if lockStatus != None:
-                    if lockStatus["laser1TempLockStatus"] != self.LockedStatus[LASER_TEMP_LOCKED_STATUS]:
-                        self.LockedStatus[LASER_TEMP_LOCKED_STATUS] = lockStatus["laser1TempLockStatus"]
+                    if lockStatus["laserTempLockStatus"] != self.LockedStatus[LASER_TEMP_LOCKED_STATUS]:
+                        self.LockedStatus[LASER_TEMP_LOCKED_STATUS] = lockStatus["laserTempLockStatus"]
 
                     if lockStatus["warmChamberTempLockStatus"] != self.LockedStatus[WARM_CHAMBER_TEMP_LOCKED_STATUS]:
                         self.LockedStatus[WARM_CHAMBER_TEMP_LOCKED_STATUS] = lockStatus["warmChamberTempLockStatus"]

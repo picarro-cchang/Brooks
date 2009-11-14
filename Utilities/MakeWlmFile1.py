@@ -133,6 +133,18 @@ class WlmFileMaker(object):
         if self.model not in [7000, 7600]:
             raise ValueError("Valid Wavemeter model numbers are 7000 and 7600")
         
+        self.simulation = False
+        if "--sim" in options or "SIMULATION" in self.config:
+            self.simulation = True
+            if "--wmin" in options:
+                self.simWmin = float(options["--wmin"])
+            else:
+                self.simWmin = float(self.config["SIMULATION"]["WAVENUM_MINTEMP"])
+            if "--wmax" in options:
+                self.simWmax = float(options["--wmax"])
+            else:
+                self.simWmax = float(self.config["SIMULATION"]["WAVENUM_MAXTEMP"])
+            
         # Define a queue for the sensor stream data
         self.queue = Queue(0)
         self.streamFilterState = "COLLECTING_DATA"
@@ -216,17 +228,19 @@ class WlmFileMaker(object):
         except:
             raise ValueError,"Cannot communicate with driver, aborting"
 
-
-        print "Asking wavemeter for identification"
-        if self.model == 7000:
-            self.ser.write("\n*IDN?\n");
-            reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
-            print "Wavemeter id: %s" % reply
+        if not self.simulation:
+            print "Asking wavemeter for identification"
+            if self.model == 7000:
+                self.ser.write("\n*IDN?\n");
+                reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
+                print "Wavemeter id: %s" % reply
+            else:
+                self.ser.write("*IDN?\n")
+                reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
+                print "Wavemeter id: %s" % reply
         else:
-            self.ser.write("*IDN?\n")
-            reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
-            print "Wavemeter id: %s" % reply
-
+            print "Using simulation mode for wavemeter"
+                
         try:
             regVault = Driver.saveRegValues(["LASER%d_TEMP_CNTRL_USER_SETPOINT_REGISTER" % self.laserNum,
                                              "LASER%d_MANUAL_COARSE_CURRENT_REGISTER" % self.laserNum,
@@ -335,10 +349,14 @@ class WlmFileMaker(object):
                 while t < tStart + tWait or abs(last["Laser%dTemp" % self.laserNum]-self.tempScan) > self.tempTol:
                     t,d,last = self.queue.get()
 
-                # Read wavemeter twice, first read is to flush any information from before
-                #  the temperature stabilized
-                waveno = self.readWavenumber()
-                waveno = self.readWavenumber()
+                if self.simulation:
+                    waveno = self.simWmin + (self.tempScan - self.tempMin)/(self.tempMax - self.tempMin) * (self.simWmax - self.simWmin)
+                    time.sleep(1.2)
+                else:
+                    # Read wavemeter twice, first read is to flush any information from before
+                    #  the temperature stabilized
+                    waveno = self.readWavenumber()
+                    waveno = self.readWavenumber()
                 
                 # Read the wavelength monitor data
                 tStart,d,last = self.queue.get()
@@ -414,9 +432,12 @@ settings in the configuration file:
 -m                   model number of wavemeter (7000 or 7600)
 --max                maximum laser temperature
 --min                minimum laser temperature
+--sim                do not use Burleigh (use --wmin and --wmax to specify wavenumbers at min and max temperatures)
 --step               laser temperature step
 --tol                laser temperature tolerance
 -w                   wait time (in minutes)
+--wmin               wavenumber at minimum temperature
+--wmax               wavenumber at maximum temperature
 """
 
 def printUsage():
@@ -424,7 +445,7 @@ def printUsage():
 
 def handleCommandSwitches():
     shortOpts = 'hc:i:l:f:w:m:'
-    longOpts = ["help","min=","max=","step=","tol="]
+    longOpts = ["help","min=","max=","step=","tol=","sim","wmin=","wmax="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
