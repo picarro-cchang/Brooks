@@ -18,8 +18,10 @@ import string
 import wx
 import threading
 
-from ValveSequencerFrame import ValveSequencerFrame, NUM_VALVES
+from ValveSequencerFrame import ValveSequencerFrame
 from Host.Common import CmdFIFO
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.RotValveCtrl import RotValveCtrl
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_VALVE_SEQUENCER
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
@@ -43,10 +45,18 @@ class RpcServerThread(threading.Thread):
             Log("RpcServer exited and no longer serving.")
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
-            
-class ValveSequencer(ValveSequencerFrame):
-    def __init__(self, *args, **kwds):
-        ValveSequencerFrame.__init__(self, *args, **kwds)
+    def __init__(self, configFile, *args, **kwds):
+        co = CustomConfigObj(configFile)
+        self.numSolValves = co.getint("MAIN", "numSolValves", 6)
+        self.comPortRotValve = co.getint("MAIN", "comPortRotValve", 0)
+        ValveSequencerFrame.__init__(self, self.numSolValves, *args, **kwds)
+        try:
+            self.rotValveCtrl = RotValveCtrl(self.comPortRotValve)
+            self.rotValveCtrl.open()
+        except Exception,e:
+            print "%s %r" %(e,e)
+            self.rotValveCtrl = None
+            self.curTextCtrlList[3].Enable(False)
         self.stepTimer = wx.Timer(self)
         self.numSkippedSteps = 0
         self.seqData = None
@@ -65,21 +75,20 @@ class ValveSequencer(ValveSequencerFrame):
         
         # A flag used to start/stop the sequencer for RPC calls (can't start timer directly from RPC)
         self.runSequencer = False
-        
-        # Start timer and show the frame
         self.stepTimer.Start(EXE_INTERVAL)
-        self.Show(True)
+        self.Show(False)
         
     def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onEnableMenu, id = self.idEnableSeq)    
         #self.Bind(wx.EVT_MENU, self.onDisableMenu, id = self.idDisableSeq)
-        self.Bind(wx.EVT_MENU, self.onGoFirstStepMenu, id = self.idGoFirstStep)        
+        self.Bind(wx.EVT_MENU, self.onGoFirstStepMenu, id = self.idGoFirstStep)
+        self.Bind(wx.EVT_MENU, self.onResetAllValvesMenu, id = self.idResetAllValves)       
         self.Bind(wx.EVT_MENU, self.onLoadFileMenu, id = self.idLoadFile)
         self.Bind(wx.EVT_MENU, self.onSaveFileMenu, id = self.idSaveFile)        
         self.Bind(wx.EVT_SPINCTRL, self.onTotStepsSpinCtrl, self.spinCtrlTotSteps)
         self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.buttonApply)      
         self.Bind(wx.EVT_BUTTON, self.onRunNextButton, self.buttonRunNext) 
-        for idx in range(NUM_VALVES):
+        for idx in range(self.numSolValves):
             self.Bind(wx.EVT_CHECKBOX, self.onCurValState, self.curCheckboxList[idx])   
         self.Bind(wx.EVT_TIMER, self.onStepTimer, self.stepTimer)            
         self.Bind(wx.EVT_CLOSE, self.onClose)
@@ -92,7 +101,7 @@ class ValveSequencer(ValveSequencerFrame):
             self.Bind(wx.EVT_TEXT, self.onValCodeTextCtrl, self.valCodeTextCtrlList[row])
             self.Bind(wx.EVT_TEXT, self.onDurationTextCtrl, self.durationTextCtrlList[row])
             self.Bind(wx.EVT_TEXT, self.onRotValCodeTextCtrl, self.rotValCodeTextCtrlList[row])
-            for idx in range(NUM_VALVES):
+            for idx in range(self.numSolValves):
                 self.Bind(wx.EVT_CHECKBOX, self.onValStateCheckbox, self.valStateCheckboxSet[row][idx])
 
     def startServer(self):
@@ -136,21 +145,28 @@ class ValveSequencer(ValveSequencerFrame):
             mask = 64 * rotValCode + valCode
         else:
             valCode = mask % 64
+            rotValCode = (mask - valCode) / 64
+            
+        if self.rotValveCtrl == None:
+            rotValCode = 0
+            mask = valCode
+        else:
+            self.rotValveCtrl.setPosition(rotValCode)
         CRDS_Driver.setValveMask(mask)
-        Log("Set valves with new mask %d" % (mask))
-        print "Set valves with new mask %d" % (mask)
+        Log("Set valves with new mask -- sol valve code = %d; rot valve code = %d, mask = %d" % (valCode, rotValCode, mask))
+        print "Set valves with new mask -- sol valve code = %d; rot valve code = %d, mask = %d" % (valCode, rotValCode, mask)
 
     def getValves(self):
         return CRDS_Driver.getValveMask()
 
     def startValveSeq(self):
         self.runSequencer = True
-        self.frameMenubar.SetLabel(self.idEnableSeq,"Disable Sequencer")
+        self.frameMenubar.SetLabel(self.idEnableSeq,"Pause Sequencer")
         print "Valve Sequencer started."
         
     def stopValveSeq(self):
         self.runSequencer = False
-        self.frameMenubar.SetLabel(self.idEnableSeq,"Enable Sequencer")
+        self.frameMenubar.SetLabel(self.idEnableSeq,"Start Sequencer")
         print "Valve Sequencer stopped."
         
     def isSeqRunning(self):
@@ -163,6 +179,7 @@ class ValveSequencer(ValveSequencerFrame):
             return ("OFF;%d" % CRDS_Driver.getValveMask())
     
     def showCurrent(self, stepNum):
+        # Show current valve status reading from the Driver
         mask = self.getValves()
         if type(mask) == type(1):                   
             valCode = mask % 64
@@ -170,13 +187,22 @@ class ValveSequencer(ValveSequencerFrame):
             self.curTextCtrlList[2].SetValue(str(valCode))
             self.curTextCtrlList[3].SetValue(str(rotValCode))
             newVal = valCode
-            for idx in range(NUM_VALVES):
+            for idx in range(self.numSolValves):
                 self.curCheckboxList[idx].SetValue(newVal % 2)
                 newVal = newVal >> 1 
         else:
             pass
         self.curTextCtrlList[0].SetValue(str(stepNum))    
-            
+    
+    def onResetAllValvesMenu(self, event):
+        self.stopValveSeq()
+        self.setValves(0)
+        self.showCurrent(0)
+        self.curTextCtrlList[1].SetValue("0") 
+        self.currentStep = 0
+        self.holdNewSeq = False
+        self.freshStart = True
+    
     def onEnableMenu(self, event):
         if not self.stepTimer.IsRunning():
             self.stepTimer.Start(EXE_INTERVAL)
@@ -235,7 +261,7 @@ class ValveSequencer(ValveSequencerFrame):
             
     def onValStateCheckbox(self, event):
         self._addTitleNote()    
-        (row, pos) = divmod(self.valStateIdList.index(event.GetEventObject().GetId()), NUM_VALVES)
+        (row, pos) = divmod(self.valStateIdList.index(event.GetEventObject().GetId()), self.numSolValves)
         curValCode = int(self.valCodeTextCtrlList[row].GetValue())
         deviation = 2**pos
         eventChecked = event.IsChecked()
@@ -260,7 +286,7 @@ class ValveSequencer(ValveSequencerFrame):
         except ValueError:
             return
                   
-        for idx in range(NUM_VALVES):
+        for idx in range(self.numSolValves):
             self.valStateCheckboxSet[row][idx].SetValue(newVal % 2)
             newVal = newVal >> 1     
         
@@ -292,8 +318,11 @@ class ValveSequencer(ValveSequencerFrame):
         self.curTextCtrlList[0].SetValue(str(row+1))
         self.curTextCtrlList[1].SetValue(self.durationTextCtrlList[row].GetValue())
         self.curTextCtrlList[2].SetValue(self.valCodeTextCtrlList[row].GetValue())
-        self.curTextCtrlList[3].SetValue(self.rotValCodeTextCtrlList[row].GetValue())        
-        for idx in range(NUM_VALVES):
+        if self.rotValveCtrl != None:
+            self.curTextCtrlList[3].SetValue(self.rotValCodeTextCtrlList[row].GetValue())
+        else:
+            pass
+        for idx in range(self.numSolValves):
             self.curCheckboxList[idx].SetValue(self.valStateCheckboxSet[row][idx].GetValue())
 
     def _addTitleNote(self):
@@ -313,6 +342,8 @@ class ValveSequencer(ValveSequencerFrame):
             d.Destroy()
             if not close:
                 return
+        if self.rotValveCtrl != None:
+            self.rotValveCtrl.close()
         self.Destroy()
         event.Skip()
 
@@ -412,12 +443,55 @@ class ValveSequencer(ValveSequencerFrame):
             except Exception, errMsg:
                 wx.MessageBox("Saving %s failed!\nPython Error: %s" % (self.filename, errMsg))
         dlg.Destroy()    
-                
+
+HELP_STRING = \
+"""
+
+ValveSequencer.py [-h] [-c <FILENAME>]
+
+Where the options can be a combination of the following:
+-h, --help : Print this help.
+-c         : Specify a config file.
+
+"""
+
+def PrintUsage():
+    print HELP_STRING
+    
+def HandleCommandSwitches():
+    import getopt
+
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], "hc:", ["help"])
+    except getopt.GetoptError, data:
+        print "%s %r" % (data, data)
+        sys.exit(1)
+
+    #assemble a dictionary where the keys are the switches and values are switch args...
+    options = {}
+    for o, a in switches:
+        options[o] = a
+
+    if "-h" in options or "--help" in options:
+        PrintUsage()
+        sys.exit()
+
+    #Start with option defaults...
+    configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
+
+    if "-c" in options:
+        configFile = options["-c"]
+        print "Config file specified at command line: %s" % configFile
+
+    return configFile
+    
 if __name__ == "__main__":
+    #Get and handle the command line options...
+    configFile = HandleCommandSwitches()
     Log("%s started." % APP_NAME, Level = 0)
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()
-    frame = ValveSequencer(None, -1, "")
+    frame = ValveSequencer(configFile, None, -1, "")
     app.SetTopWindow(frame)
     app.MainLoop()
     Log("Exiting program")

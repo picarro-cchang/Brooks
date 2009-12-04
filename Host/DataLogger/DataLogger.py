@@ -290,18 +290,21 @@ class DataLog(object):
                 self._WriteEntry(fp,time.strftime("%d/%m/%y",localtime))
                 #write TIME
                 timeStr = time.strftime("%H:%M:%S",localtime)
+                fracSec = Time - int(Time)
                 if self.PrintTimeInHalfSecond:
-                    if Time - int(Time) >= 0.5:
-                        timeStr += ".5"
+                    if fracSec >= 0.5:
+                        timeStr += ".50"
                     else:
-                        timeStr += ".0"
+                        timeStr += ".00"
+                else:
+                    timeStr += ("%.2f" % fracSec)
                 self._WriteEntry(fp,timeStr)
                 #write FRAC_DAYS_SINCE_JAN1
                 days = (Time-Jan1SecondsSinceEpoch)/TWENTY_FOUR_HOURS_IN_SECONDS
-                self._WriteEntry(fp,("%.6f" %days))
+                self._WriteEntry(fp,("%.8f" %days))
                 #write FRAC_HRS_SINCE_JAN1
                 hrs = (Time-Jan1SecondsSinceEpoch)/ONE_HOUR_IN_SECONDS
-                self._WriteEntry(fp,("%.4f" %hrs))
+                self._WriteEntry(fp,("%.6f" %hrs))
 
             #write EPOCH_TIME if enabled
             if self.WriteEpochTime:

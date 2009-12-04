@@ -2,11 +2,11 @@
 import wx
 
 DEFAULT_NUM_STEPS = 10
-NUM_VALVES = 6
 FORMAT_OPTION = 2
 
 class ValveSequencerFrame(wx.Frame):
-    def __init__(self, *args, **kwds):
+    def __init__(self, numSolValves, *args, **kwds):
+        self.numSolValves = numSolValves
         self.numSteps = DEFAULT_NUM_STEPS 
         self.lastNumSteps = 0
         
@@ -21,14 +21,17 @@ class ValveSequencerFrame(wx.Frame):
         self.idSaveFile = wx.NewId()        
         self.idEnableSeq = wx.NewId()
         #self.idDisableSeq = wx.NewId()
-        self.idGoFirstStep = wx.NewId()        
+        self.idGoFirstStep = wx.NewId() 
+        self.idResetAllValves = wx.NewId()   
+        
         menuItem.Append(self.idLoadFile, "Load Valve Sequence File", "", wx.ITEM_NORMAL)
         menuItem.Append(self.idSaveFile, "Save Valve Sequence File", "", wx.ITEM_NORMAL)
         self.frameMenubar.Append(menuItem, "File")
         menuItem = wx.Menu()
-        menuItem.Append(self.idEnableSeq, "Enable Sequencer", "", wx.ITEM_NORMAL)
+        menuItem.Append(self.idEnableSeq, "Start Sequencer", "", wx.ITEM_NORMAL)
         #menuItem.Append(self.idDisableSeq, "Disable Sequencer", "", wx.ITEM_NORMAL)
-        menuItem.Append(self.idGoFirstStep, "Go To First Step", "", wx.ITEM_NORMAL)        
+        menuItem.Append(self.idGoFirstStep, "Go To First Step", "", wx.ITEM_NORMAL) 
+        menuItem.Append(self.idResetAllValves, "Reset All Valves", "", wx.ITEM_NORMAL)        
         self.frameMenubar.Append(menuItem, "Action")
         self.SetMenuBar(self.frameMenubar)
         
@@ -69,7 +72,7 @@ class ValveSequencerFrame(wx.Frame):
             self.curTextCtrlList.append(textCtrl)
         
         self.curValStateIdList = []    
-        for idx in range(NUM_VALVES):
+        for idx in range(self.numSolValves):
             cbId = wx.NewId()
             checkbox = wx.CheckBox(self, cbId, "")
             checkbox.SetMinSize((20, 20))
@@ -135,17 +138,17 @@ class ValveSequencerFrame(wx.Frame):
             for row in range(self.numSteps):
                 for textCtrlList in contTextCtrlList:
                     textCtrlList[row].Enable(True)
-                for elemIdx in range(NUM_VALVES):    
+                for elemIdx in range(self.numSolValves):    
                     self.valStateCheckboxSet[row][elemIdx].Enable(True) 
                         
             for row in range(self.numSteps, curNumRows):
                 for textCtrlList in totTextCtrlList:
                     textCtrlList[row].Destroy()
-                for elemIdx in range(NUM_VALVES):           
+                for elemIdx in range(self.numSolValves):           
                     self.valStateCheckboxSet[row][elemIdx].Destroy()   
             
             # Clean the ID lists
-            self.valStateIdList = self.valStateIdList[:NUM_VALVES*self.numSteps]   
+            self.valStateIdList = self.valStateIdList[:self.numSolValves*self.numSteps]   
             self.durationIdList = self.durationIdList[:self.numSteps]   
             self.valCodeIdList = self.valCodeIdList[:self.numSteps] 
             self.rotValCodeIdList = self.rotValCodeIdList[:self.numSteps]     
@@ -163,7 +166,7 @@ class ValveSequencerFrame(wx.Frame):
             for row in range(self.numSteps, self.lastNumSteps):           
                 for textCtrlList in contTextCtrlList:
                     textCtrlList[row].Enable(False)
-                for elemIdx in range(NUM_VALVES):    
+                for elemIdx in range(self.numSolValves):    
                     self.valStateCheckboxSet[row][elemIdx].Enable(False) 
                         
         elif self.lastNumSteps == self.numSteps:
@@ -176,7 +179,7 @@ class ValveSequencerFrame(wx.Frame):
                 for row in range(self.lastNumSteps, self.numSteps):   
                     for textCtrlList in contTextCtrlList:
                         textCtrlList[row].Enable(True)
-                    for elemIdx in range(NUM_VALVES):    
+                    for elemIdx in range(self.numSolValves):    
                         self.valStateCheckboxSet[row][elemIdx].Enable(True)   
             else:
                 # Need to add some rows
@@ -184,7 +187,7 @@ class ValveSequencerFrame(wx.Frame):
                 for row in range(self.lastNumSteps, curNumRows):   
                     for textCtrlList in contTextCtrlList:
                         textCtrlList[row].Enable(True)
-                    for elemIdx in range(NUM_VALVES):    
+                    for elemIdx in range(self.numSolValves):    
                         self.valStateCheckboxSet[row][elemIdx].Enable(True)  
                 # Then add more rows        
                 for row in range(self.numSteps-curNumRows):    
@@ -200,7 +203,7 @@ class ValveSequencerFrame(wx.Frame):
                     self.durationIdList.append(durationId)              
                     
                     checkboxList = []
-                    for idx in range(NUM_VALVES):
+                    for idx in range(self.numSolValves):
                         cbId = wx.NewId()
                         checkbox = wx.CheckBox(self.panel, cbId, "")
                         checkbox.SetMinSize((20, 20))
@@ -276,7 +279,7 @@ class ValveSequencerFrame(wx.Frame):
         
         sizerCurValState.Add(self.labelCurValState, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 4)  
         sizerCurValStateChecklist.Add(self.checkboxColorFiller, 0, wx.TOP|wx.BOTTOM, 4)        
-        for idx in range(0, NUM_VALVES):
+        for idx in range(0, self.numSolValves):
             sizerCurValStateChecklist.Add(self.curCheckboxList[idx], 0, wx.TOP|wx.BOTTOM, 4)
         sizerCurValState.Add(sizerCurValStateChecklist, 1, wx.EXPAND, 0)
         sizerCurValState.Add(self.labelValState, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 4)
@@ -312,7 +315,7 @@ class ValveSequencerFrame(wx.Frame):
             sizerPanelColumn.Add(sizerDuration, 1, 0, 0)              
             
             checkboxList = self.valStateCheckboxSet[row]
-            for idx in range(NUM_VALVES):
+            for idx in range(self.numSolValves):
                 sizerChecklist.Add(checkboxList[idx], 0, wx.TOP|wx.BOTTOM, 4)
             sizerValState.Add(sizerChecklist, 1, wx.EXPAND, 0)
             sizerPanelColumn.Add(sizerValState, 1, wx.LEFT, 10)
