@@ -35,7 +35,7 @@ try:
             break
     co2_list.append(co2_conc)
     co2_conc_ave = mean(co2_list)
-    _NEW_DATA_["co2_conc_ave"] = co2_conc_ave
+    _NEW_DATA_["co2_conc_ave"] = applyLinear(co2_conc_ave,_USER_CAL_["co2_conc"]) 
 except:
     pass
     
@@ -52,7 +52,7 @@ try:
             break
     ch4_list.append(ch4_conc)
     ch4_conc_ave = mean(ch4_list)
-    _NEW_DATA_["ch4_conc_ave"] = ch4_conc_ave
+    _NEW_DATA_["ch4_conc_ave"] = applyLinear(ch4_conc_ave,_USER_CAL_["ch4_conc"]) 
 except:
     pass
         
