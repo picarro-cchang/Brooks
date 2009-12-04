@@ -11,6 +11,7 @@
 APP_NAME = "ValveSequencer"
 APP_DESCRIPTION = "Valve control with GUI"
 __version__ = 1.0
+DEFAULT_CONFIG_NAME = "ValveSequencer.ini"
 
 import sys
 import os
@@ -25,6 +26,13 @@ from Host.Common.RotValveCtrl import RotValveCtrl
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_VALVE_SEQUENCER
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
+
+#Set up a useful AppPath reference...
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
+AppPath = os.path.abspath(AppPath)
 
 DISP_TIME_PRECISION = 0.01 # in minute
 EXE_INTERVAL = 60000 * DISP_TIME_PRECISION # in ms
@@ -45,6 +53,8 @@ class RpcServerThread(threading.Thread):
             Log("RpcServer exited and no longer serving.")
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
+            
+class ValveSequencer(ValveSequencerFrame):
     def __init__(self, configFile, *args, **kwds):
         co = CustomConfigObj(configFile)
         self.numSolValves = co.getint("MAIN", "numSolValves", 6)

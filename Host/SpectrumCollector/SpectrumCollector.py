@@ -206,7 +206,7 @@ class SpectrumCollector(object):
 
                 # When the "count" is different (set by DSP when bit-15 is set in the scheme file), we know a new spectrum is coming and we have to close whatever we currently have.
                 if thisCount != lastCount:
-                    Log("New spectrum found on ringdown (new count = %d)" % thisCount, errDataDict)
+                    #Log("New spectrum found on ringdown (new count = %d)" % thisCount, errDataDict)
                     self.storedFirstRdTime = self.firstRdTime # Save first RD time to be used in spectrum collection of the "last" spectrum
                     self.firstRdTime = localRdTime
                     #Set aside the point we just read for the next time a spectrum is collected...
