@@ -50,7 +50,7 @@ def resyncAndFilter(dataLabel):
     
 allGood = True
 allGood = allGood and resyncAndFilter("co2_conc")
-allGood = allGood and resyncAndFilter("ch4_adjconc")
+allGood = allGood and resyncAndFilter("ch4_conc")
 
 if allGood:
     _REPORT_["time"] = scriptTime

@@ -17,8 +17,8 @@ if INIT:
     ch4_amp = 0
     ch4_y = 0
     ch4_shift = 0
-    ch4_conc = 0
-    ch4_adjconc = 0
+    ch4_conc_raw = 0
+    ch4_conc_precal = 0
     ch4_conc_peak = 0
     y_avg = 1.2
     base_avg = 1000
@@ -52,17 +52,17 @@ if species==25:
         if r[1002,2] <= 0.005:
             r = anCH4[1](d,init,deps)
         ch4_amp = r[1002,2]
-        ch4_conc = 10*r[1002,2]
+        ch4_conc_raw = 10*r[1002,2]
         ch4_y = r[1002,5]
-        ch4_adjconc = ch4_y*ch4_conc*(140.0/P)
+        ch4_conc_precal = ch4_y*ch4_conc_raw*(140.0/P)
         ch4_conc_peak = r[1002,"peak"]/216.3
-        if ch4_conc > 0.1:
+        if ch4_conc_raw > 0.1:
             ch4_shift = r["base",3]
         else:
             ch4_shift = 0
     ch4_res = r["std_dev_res"]
     RESULT = {"ch4_res":ch4_res, "ch4_conc_peak":ch4_conc_peak,
-              "ch4_conc":ch4_conc,"ch4_y":ch4_y,"ch4_adjconc":ch4_adjconc,
+              "ch4_conc_raw":ch4_conc_raw,"ch4_y":ch4_y,"ch4_conc_precal":ch4_conc_precal,
               "ch4_shift":ch4_shift,"cavity_pressure":P,"species":2,
               "ch4_fittime":time.clock()-tstart,"ch4_Ilaserfine":Ilaserfine}
     avg_count += 1

@@ -76,7 +76,7 @@ if species==10 or species==12:
         peak14_avg = initExpAverage(peak14_avg,r[14,"peak"],15,2000,avg_count)
         co2_res = r["std_dev_res"]
         print "co2_y=", co2_y_avg
-        RESULT = {"co2_res":co2_res,"co2_conc_peak":0.713*r[14,"peak"],"co2_str":r[14,"strength"],
+        RESULT = {"co2_res":co2_res,"co2_conc_precal":0.713*r[14,"peak"],"co2_str":r[14,"strength"],
             "co2_y":co2_y_avg,"str89":str89_avg,"co2_shift":co2_shift,"cavity_pressure":P}
         avg_count += 1
     else:

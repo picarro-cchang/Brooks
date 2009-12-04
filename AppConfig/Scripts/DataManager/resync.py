@@ -23,5 +23,5 @@ def resync(dataLabel):
     _REPORT_[dataLabel] = result
     
 resync("co2_conc")
-resync("ch4_adjconc")
+resync("ch4_conc")
 _REPORT_["time"] = _MEAS_TIME_

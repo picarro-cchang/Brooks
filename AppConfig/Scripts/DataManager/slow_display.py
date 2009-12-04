@@ -11,6 +11,6 @@ except Exception, err:
     print "%s %r" % (err, err)
     
 try:
-    _REPORT_["ch4_adjconc_slow"] = applyLinear(_OLD_DATA_["ch4_adjconc"][-1].value,CH4)
+    _REPORT_["ch4_conc_slow"] = applyLinear(_OLD_DATA_["ch4_conc"][-1].value,CH4)
 except Exception, err:
     print "%s %r" % (err, err)
