@@ -33,6 +33,15 @@ d.sparse(maxPoints=100,width=0.002,height=100000.0,xColumn="waveNumber",yColumn=
 d.evaluateGroups(["waveNumber","uncorrectedAbsorbance"])
 d.defineFitData(freq=d.groupMeans["waveNumber"],loss=1000*d.groupMeans["uncorrectedAbsorbance"],sdev=1/sqrt(d.groupSizes))
 P = d["cavitypressure"]
+T = d["cavitytemperature"]
+solValves = d.sensorDict["ValveMask"]
+dasTemp = d.sensorDict["DasTemp"]
+spectrumId = d.sensorDict["SpectrumID"]
+etalonTemp = d.sensorDict["EtalonTemp"]
+#heaterCurrent = d.sensorDict["Heater_I_mA"]
+inletValvePos = d.sensorDict["InletValve"]
+outletValvePos = d.sensorDict["OutletValve"]
+
 species = (d.subschemeId & 0x3FF)[0]
 init["base",0] = 800
 print d["filterHistory"]
@@ -58,8 +67,14 @@ if species==26:
         h2o_shift = r["base",3]
     RESULT = {"h2o_res":h2o_res, "h2o_peak":h2o_peak, "h2o_strength":h2o_peak,
               "h2o_conc":h2o_conc, "h2o_y":h2o_y, "h2o_quality":h2o_quality,
-              "h2o_shift":h2o_shift, "cavity_pressure":P, "species":3,
-              "h2o_fittime":time.clock()-tstart,"h2o_Ilaserfine":Ilaserfine}
+              "h2o_shift":h2o_shift}
+              
+    RESULT.update({"species":3,"h2o_fittime":time.clock()-tstart,"h2o_Ilaserfine":Ilaserfine,
+                   "cavity_pressure":P,"cavity_temperature":T,
+                   "solenoid_valves":solValves,"das_temp":dasTemp,
+                   "spectrum_id":spectrumId,"etalon_temp":etalonTemp,#"heater_current":heaterCurrent,
+                   "inlet_valve_pos":inletValvePos,"outlet_valve_pos":outletValvePos}
+                  )
     print "H2O Fit time: %.3f" % (RESULT["h2o_fittime"],) 
 else:
     RESULT = {}

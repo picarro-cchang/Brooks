@@ -12,13 +12,19 @@ try:
     co2_conc = applyLinear(_DATA_["co2_conc_precal"],CO2)
     _NEW_DATA_["co2_conc"] = co2_conc
 except:
-    pass
+    try:
+        _NEW_DATA_["co2_conc"] = _DATA_["co2_conc_precal"]
+    except:
+        _NEW_DATA_["co2_conc"] = 0.0
     
 try:
     ch4_conc = applyLinear(_DATA_["ch4_conc_precal"],CH4)
     _NEW_DATA_["ch4_conc"] = ch4_conc
 except:
-    pass
+    try:
+        _NEW_DATA_["ch4_conc"] = _DATA_["ch4_conc_precal"]
+    except:
+        _NEW_DATA_["ch4_conc"] = 0.0
     
 # Averaging concentration of CO2 and CH4
 cutoffTime = time.time() - AVE_TIME_SEC

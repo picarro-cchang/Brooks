@@ -36,6 +36,15 @@ d.sparse(maxPoints=1000,width=0.002,height=100000.0,xColumn="waveNumber",yColumn
 d.evaluateGroups(["waveNumber","uncorrectedAbsorbance"])
 d.defineFitData(freq=d.groupMeans["waveNumber"],loss=1000*d.groupMeans["uncorrectedAbsorbance"],sdev=1/sqrt(d.groupSizes))
 P = d["cavitypressure"]
+T = d["cavitytemperature"]
+solValves = d.sensorDict["ValveMask"]
+dasTemp = d.sensorDict["DasTemp"]
+spectrumId = d.sensorDict["SpectrumID"]
+etalonTemp = d.sensorDict["EtalonTemp"]
+#heaterCurrent = d.sensorDict["Heater_I_mA"]
+inletValvePos = d.sensorDict["InletValve"]
+outletValvePos = d.sensorDict["OutletValve"]
+
 species = (d.subschemeId & 0x3FF)[0]
 #print "SpectrumId", d["spectrumId"]
 init["base",0] = 800
@@ -77,14 +86,17 @@ if species==10 or species==12:
         co2_res = r["std_dev_res"]
         print "co2_y=", co2_y_avg
         RESULT = {"co2_res":co2_res,"co2_conc_precal":0.713*r[14,"peak"],"co2_str":r[14,"strength"],
-            "co2_y":co2_y_avg,"str89":str89_avg,"co2_shift":co2_shift,"cavity_pressure":P}
+            "co2_y":co2_y_avg,"str89":str89_avg,"co2_shift":co2_shift}
+            
+        RESULT.update({"species":1,"co2_fittime":time.clock()-tstart,"co2_Ilaserfine":Ilaserfine,
+                       "cavity_pressure":P,"cavity_temperature":T,
+                       "solenoid_valves":solValves,"das_temp":dasTemp,
+                       "spectrum_id":spectrumId,"etalon_temp":etalonTemp,#"heater_current":heaterCurrent,
+                       "inlet_valve_pos":inletValvePos,"outlet_valve_pos":outletValvePos}
+                      )
         avg_count += 1
     else:
         RESULT = {}
-    RESULT["co2_fittime"] = time.clock()-tstart
-    RESULT["species"] = 1
-    RESULT["co2_Ilaserfine"] = Ilaserfine
-    
     print "CO2 Fit time: %.3f" % (RESULT["co2_fittime"],) 
 else:
     RESULT = {}        

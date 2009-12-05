@@ -37,6 +37,15 @@ d.sparse(maxPoints=1000,width=0.002,height=100000.0,xColumn="waveNumber",yColumn
 d.evaluateGroups(["waveNumber","uncorrectedAbsorbance"])
 d.defineFitData(freq=d.groupMeans["waveNumber"],loss=1000*d.groupMeans["uncorrectedAbsorbance"],sdev=1/sqrt(d.groupSizes))
 P = d["cavitypressure"]
+T = d["cavitytemperature"]
+solValves = d.sensorDict["ValveMask"]
+dasTemp = d.sensorDict["DasTemp"]
+spectrumId = d.sensorDict["SpectrumID"]
+etalonTemp = d.sensorDict["EtalonTemp"]
+#heaterCurrent = d.sensorDict["Heater_I_mA"]
+inletValvePos = d.sensorDict["InletValve"]
+outletValvePos = d.sensorDict["OutletValve"]
+
 species = (d.subschemeId & 0x3FF)[0]
 init["base",0] = 800
 print d["filterHistory"]
@@ -63,8 +72,14 @@ if species==25:
     ch4_res = r["std_dev_res"]
     RESULT = {"ch4_res":ch4_res, "ch4_conc_peak":ch4_conc_peak,
               "ch4_conc_raw":ch4_conc_raw,"ch4_y":ch4_y,"ch4_conc_precal":ch4_conc_precal,
-              "ch4_shift":ch4_shift,"cavity_pressure":P,"species":2,
-              "ch4_fittime":time.clock()-tstart,"ch4_Ilaserfine":Ilaserfine}
+              "ch4_shift":ch4_shift}
+              
+    RESULT.update({"species":2,"ch4_fittime":time.clock()-tstart,"ch4_Ilaserfine":Ilaserfine,
+                   "cavity_pressure":P,"cavity_temperature":T,
+                   "solenoid_valves":solValves,"das_temp":dasTemp,
+                   "spectrum_id":spectrumId,"etalon_temp":etalonTemp,#"heater_current":heaterCurrent,
+                   "inlet_valve_pos":inletValvePos,"outlet_valve_pos":outletValvePos}
+                  )
     avg_count += 1
     print "CH4 Fit time: %.3f" % (RESULT["ch4_fittime"],) 
 else:
