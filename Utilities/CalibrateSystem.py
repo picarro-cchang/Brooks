@@ -32,7 +32,6 @@ from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from scipy.optimize import fmin
 from Host.Common.WlmCalUtilities import bestFit
 
-#APPROX_FSR = 0.077
 APPROX_FSR = 0.08
 
 
@@ -157,7 +156,7 @@ class CalibrateSystem(object):
         elif "APPROX_FSR_ANGLE" in self.config["SETTINGS"]:
             self.approxFsr = float(self.config["SETTINGS"]["APPROX_FSR_ANGLE"])
         else:
-            self.approxFsr = 0.08
+            self.approxFsr = APPROX_FSR
             
         self.seq = 0
         self.processingDone = threading.Event()
@@ -297,10 +296,12 @@ class CalibrateSystem(object):
             # Ensure that we start with original calibration information
             RDFreqConv.restoreOriginalWlmCal(self.vLaserNum)
             theta0 = RDFreqConv.waveNumberToAngle(self.vLaserNum,[self.waveNumberCen])[0]
-            # Make a fine angle-based scheme covering +/- 3FSR for determining PZT sensitivity
-            fwd = arange(-600.0,601.0)
+            # Make a fine angle-based scheme covering +/- 6FSR for determining PZT sensitivity
+            # fwd = arange(-600.0,601.0)
+            fwd = arange(-150.0,151.0)
             steps = concatenate((fwd,fwd[::-1]))
-            wlmAngles = theta0 + steps*(APPROX_FSR/50.0)
+            # wlmAngles = theta0 + steps*(self.approxFsr/50.0)
+            wlmAngles = theta0 + steps*(self.approxFsr/25.0)
             laserTemps = RDFreqConv.angleToLaserTemperature(self.vLaserNum,wlmAngles)
             nRepeat = 3
             dwell = 2
@@ -337,7 +338,7 @@ class CalibrateSystem(object):
             
             fBest = 1e38
             for trialSens in [7000,8000,9000,10000,11000,12000,13000,14000,15000,16000,17000,18000,19000,20000,21000,22000]:
-                popt = fmin(cost,array([APPROX_FSR,trialSens]),args=(self.angleList,self.tunerList),maxiter=10000,maxfun=50000)
+                popt = fmin(cost,array([self.approxFsr,trialSens]),args=(self.angleList,self.tunerList),maxiter=10000,maxfun=50000)
                 fopt = cost(popt,self.angleList,self.tunerList)
                 if fopt < fBest:
                     fBest = fopt
