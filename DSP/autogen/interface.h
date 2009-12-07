@@ -567,9 +567,10 @@ typedef enum {
     HARDWARE_PRESENT_Laser3Bit = 2, // Laser 3
     HARDWARE_PRESENT_Laser4Bit = 3, // Laser 4
     HARDWARE_PRESENT_SoaBit = 4, // SOA
-    HARDWARE_PRESENT_WarmBoxBit = 5, // Warm Box
-    HARDWARE_PRESENT_HotBoxBit = 6, // Hot Box
-    HARDWARE_PRESENT_ResettableI2CPort = 7 // Resettable I2C port
+    HARDWARE_PRESENT_PowerBoardBit = 5, // Power Board
+    HARDWARE_PRESENT_WarmBoxBit = 6, // Warm Box
+    HARDWARE_PRESENT_HotBoxBit = 7, // Hot Box
+    HARDWARE_PRESENT_ResettableI2CPort = 8 // Resettable I2C port
 } HARDWARE_PRESENT_BitType;
 
 /* Definitions for COMM_STATUS_BITMASK */

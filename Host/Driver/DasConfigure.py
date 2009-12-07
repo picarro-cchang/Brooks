@@ -57,14 +57,15 @@ class DasConfigure(SharedTypes.Singleton):
         return self.installed.get(key,0)
     
     def setHardwarePresent(self):
-        mapping = [("LASER1_PRESENT",  1<<interface.HARDWARE_PRESENT_Laser1Bit),
-                   ("LASER2_PRESENT",  1<<interface.HARDWARE_PRESENT_Laser2Bit),
-                   ("LASER3_PRESENT",  1<<interface.HARDWARE_PRESENT_Laser3Bit),
-                   ("LASER4_PRESENT",  1<<interface.HARDWARE_PRESENT_Laser4Bit),
-                   ("SOA_PRESENT",     1<<interface.HARDWARE_PRESENT_SoaBit),
-                   ("WARM_BOX_PRESENT",1<<interface.HARDWARE_PRESENT_WarmBoxBit),
-                   ("HOT_BOX_PRESENT", 1<<interface.HARDWARE_PRESENT_HotBoxBit),
-                   ("SAFE_I2C_PRESENT", 1<<interface.HARDWARE_PRESENT_ResettableI2CPort)
+        mapping = [("LASER1_PRESENT",      1<<interface.HARDWARE_PRESENT_Laser1Bit),
+                   ("LASER2_PRESENT",      1<<interface.HARDWARE_PRESENT_Laser2Bit),
+                   ("LASER3_PRESENT",      1<<interface.HARDWARE_PRESENT_Laser3Bit),
+                   ("LASER4_PRESENT",      1<<interface.HARDWARE_PRESENT_Laser4Bit),
+                   ("SOA_PRESENT",         1<<interface.HARDWARE_PRESENT_SoaBit),
+                   ("POWER_BOARD_PRESENT", 1<<interface.HARDWARE_PRESENT_PowerBoardBit),
+                   ("WARM_BOX_PRESENT",    1<<interface.HARDWARE_PRESENT_WarmBoxBit),
+                   ("HOT_BOX_PRESENT",     1<<interface.HARDWARE_PRESENT_HotBoxBit),
+                   ("SAFE_I2C_PRESENT",    1<<interface.HARDWARE_PRESENT_ResettableI2CPort)
                    ]
         mask = 0
         for key, bit in mapping:

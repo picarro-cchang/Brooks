@@ -506,14 +506,15 @@
         </enum>
         <enum type="HARDWARE_PRESENT_BitType">
             <description>Bit positions indicating hardware configuration</description> 
-            <enum_value ident="HARDWARE_PRESENT_Laser1Bit" value="0" caption="Laser 1" /> 
-            <enum_value ident="HARDWARE_PRESENT_Laser2Bit" value="1" caption="Laser 2" /> 
-            <enum_value ident="HARDWARE_PRESENT_Laser3Bit" value="2" caption="Laser 3" /> 
-            <enum_value ident="HARDWARE_PRESENT_Laser4Bit" value="3" caption="Laser 4" /> 
-            <enum_value ident="HARDWARE_PRESENT_SoaBit" value="4" caption="SOA" /> 
-            <enum_value ident="HARDWARE_PRESENT_WarmBoxBit" value="5" caption="Warm Box" /> 
-            <enum_value ident="HARDWARE_PRESENT_HotBoxBit" value="6" caption="Hot Box" />             
-            <enum_value ident="HARDWARE_PRESENT_ResettableI2CPort" value="7" caption="Resettable I2C port" />             
+            <enum_value ident="HARDWARE_PRESENT_Laser1Bit"         value="0" caption="Laser 1" /> 
+            <enum_value ident="HARDWARE_PRESENT_Laser2Bit"         value="1" caption="Laser 2" /> 
+            <enum_value ident="HARDWARE_PRESENT_Laser3Bit"         value="2" caption="Laser 3" /> 
+            <enum_value ident="HARDWARE_PRESENT_Laser4Bit"         value="3" caption="Laser 4" /> 
+            <enum_value ident="HARDWARE_PRESENT_SoaBit"            value="4" caption="SOA" /> 
+            <enum_value ident="HARDWARE_PRESENT_PowerBoardBit"     value="5" caption="Power Board" /> 
+            <enum_value ident="HARDWARE_PRESENT_WarmBoxBit"        value="6" caption="Warm Box" /> 
+            <enum_value ident="HARDWARE_PRESENT_HotBoxBit"         value="7" caption="Hot Box" />             
+            <enum_value ident="HARDWARE_PRESENT_ResettableI2CPort" value="8" caption="Resettable I2C port" />             
         </enum>
     </enum_list>
     <bits_list>

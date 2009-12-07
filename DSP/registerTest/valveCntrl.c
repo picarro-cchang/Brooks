@@ -294,21 +294,24 @@ int modify_valve_pump_tec(unsigned int mask, unsigned int code)
     static unsigned int shadow = 0;
     unsigned int loops, newValue;
     int usePca9538 = *(int *)registerAddr(HARDWARE_PRESENT_REGISTER) & (1<<HARDWARE_PRESENT_ResettableI2CPort);
+    int powerBoardPresent = *(int *)registerAddr(HARDWARE_PRESENT_REGISTER) & (1<<HARDWARE_PRESENT_PowerBoardBit);
     int activeMask = (1<<PWM_CS_RUN_B)|(1<<PWM_CS_CONT_B);
     int warmBoxPwmActive = (readFPGA(FPGA_PWM_WARMBOX+PWM_CS) & activeMask) == activeMask;
     int hotBoxPwmActive = (readFPGA(FPGA_PWM_HOTBOX+PWM_CS) & activeMask) == activeMask;
     
     newValue = (shadow & (~mask)) | (code & mask);
-    setI2C1Mux(4);  // Select SC15 and SD15
-    for (loops=0;loops<1000;loops++);
-    if (usePca9538) {
-        if (warmBoxPwmActive && hotBoxPwmActive) {
-            pca9538_wrConfig(&valve_pump_tec_I2C_new,0);
-            for (loops=0;loops<1000;loops++);
-            pca9538_wrOutput(&valve_pump_tec_I2C_new,~newValue);
+    if (powerBoardPresent) {    
+        setI2C1Mux(4);  // Select SC15 and SD15
+        for (loops=0;loops<1000;loops++);
+        if (usePca9538) {
+            if (warmBoxPwmActive && hotBoxPwmActive) {
+                pca9538_wrConfig(&valve_pump_tec_I2C_new,0);
+                for (loops=0;loops<1000;loops++);
+                pca9538_wrOutput(&valve_pump_tec_I2C_new,~newValue);
+            }
         }
+        else pca8574_wrByte(&valve_pump_tec_I2C_old,~newValue);
     }
-    else pca8574_wrByte(&valve_pump_tec_I2C_old,~newValue);
     shadow = newValue;
     return STATUS_OK;
 }
