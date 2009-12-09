@@ -97,8 +97,16 @@ class DasConfigure(SharedTypes.Singleton):
         # Start heartbeat to let sentry handler know that the scheduler is alive
         self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SCHEDULER_HEARTBEAT"))
 
+        soa = self.installCheck("SOA_PRESENT")
+
         for laserNum in range(1,5):
             present = self.installCheck("LASER%d_PRESENT" % laserNum)
+            if laserNum == 4:
+                if soa:
+                    if present:
+                        raise ValueError,"Cannot have both laser 4 and SOA present"
+                    else:
+                        present = soa
             if present:
                 # Set present to a negative number to disable I2C reads
                 if present > 0:
@@ -147,23 +155,27 @@ class DasConfigure(SharedTypes.Singleton):
                         ["STREAM_Laser%dTec" % laserNum,"LASER%d_TEC_REGISTER" % laserNum]))
                 self.opGroups["FAST"]["CONTROLLER"].addOperation(
                     Operation("ACTION_TEMP_CNTRL_LASER%d_STEP" % laserNum))
+
                 # Laser current
                 self.opGroups["FAST"]["CONTROLLER"].addOperation(
                     Operation("ACTION_CURRENT_CNTRL_LASER%d_STEP" % laserNum))
-                if present > 0:
-                    self.opGroups["FAST"]["SENSOR_READ"].addOperation(
-                        Operation("ACTION_READ_LASER_CURRENT",
-                                  [laserNum,
-                                   "CONVERSION_LASER%d_CURRENT_SLOPE_REGISTER" % laserNum,
-                                   "CONVERSION_LASER%d_CURRENT_OFFSET_REGISTER" % laserNum,
-                                   "LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
+                if laserNum == 4 and soa:
+                    pass
                 else:
-                    self.opGroups["FAST"]["SENSOR_READ"].addOperation(
-                        Operation("ACTION_SIMULATE_LASER_CURRENT_READING",
-                                  [laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
-                self.opGroups["FAST"]["STREAMER"].addOperation(
-                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                        ["STREAM_Laser%dCurrent" % laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
+                    if present > 0:
+                        self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                            Operation("ACTION_READ_LASER_CURRENT",
+                                      [laserNum,
+                                       "CONVERSION_LASER%d_CURRENT_SLOPE_REGISTER" % laserNum,
+                                       "CONVERSION_LASER%d_CURRENT_OFFSET_REGISTER" % laserNum,
+                                       "LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
+                    else:
+                        self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                            Operation("ACTION_SIMULATE_LASER_CURRENT_READING",
+                                      [laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
+                    self.opGroups["FAST"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                            ["STREAM_Laser%dCurrent" % laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
                 
         # Read the DAS temperature into DAS_TEMPERATURE_REGISTER and stream it
         self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(Operation("ACTION_DS1631_READTEMP",
@@ -173,7 +185,6 @@ class DasConfigure(SharedTypes.Singleton):
 
         present = self.installCheck("WARM_BOX_PRESENT")
 
-        
         if present:
             # Etalon temperature
             
@@ -418,7 +429,7 @@ class DasConfigure(SharedTypes.Singleton):
 
         runCont = (1<<interface.PWM_CS_RUN_B) | (1<<interface.PWM_CS_CONT_B)
         for laserNum in range(1,5):
-            if self.installCheck("LASER%d_PRESENT" % laserNum):
+            if self.installCheck("LASER%d_PRESENT" % laserNum) or (laserNum == 4 and self.installCheck("SOA_PRESENT")):
                 sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER%d_INIT" % laserNum))
                 sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER%d_INIT" % laserNum))
                 sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_LASER%d" % laserNum,"PWM_PULSE_WIDTH"]))

@@ -376,7 +376,8 @@ class DriverRpcHandler(SharedTypes.Singleton):
         # Turn on lasers, warm box and cavity thermal control followed by
         #  laser current sources
         for laserNum in range(1,interface.MAX_LASERS+1):
-            if DasConfigure().installCheck("LASER%d_PRESENT" % laserNum):
+            if DasConfigure().installCheck("LASER%d_PRESENT" % laserNum) or \
+               (laserNum == 4 and DasConfigure().installCheck("SOA_PRESENT")):
                 self.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % laserNum,interface.TEMP_CNTRL_EnabledState)
         self.wrDasReg("WARM_BOX_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
         self.wrDasReg("CAVITY_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
