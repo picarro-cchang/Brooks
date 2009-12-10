@@ -409,6 +409,7 @@ void rdFitting(void)
     RingdownBufferType *ringdownBuffer;
     RingdownMetadataDoubleType metaDouble;
     RingdownParamsType *rdParams;
+    SpectCntrlParams *s=&spectCntrlParams;
     volatile RingdownEntryType *ringdownEntry;
     volatile VirtualLaserParamsType *vLaserParams;
     double *metaDoublePtr = (double*) &metaDouble;
@@ -543,7 +544,12 @@ void rdFitting(void)
             ringdownEntry->cavityPressure  = (unsigned int)(50.0 * rdParams->cavityPressure);
             ringdownEntry->ambientPressure = (unsigned int)(50.0 * rdParams->ambientPressure);
             ringdownEntry->lockerError = metaDouble.lockerError;
-
+            // Next line is used to recenter the PZT values per virtual laser
+            if (0 != (ringdownEntry->subschemeId & SUBSCHEME_ID_RecenterMask)) {
+                *(s->pztOffsetByVirtualLaser_[virtLaserNum]) += *(s->pztOffsetUpdateFactor_) * (ringdownEntry->tunerValue - 32768);
+                if (*(s->pztOffsetByVirtualLaser_[virtLaserNum]) > 0.6*(*(s->pztIncrPerFsr_)))  *(s->pztOffsetByVirtualLaser_[virtLaserNum])  -= *(s->pztIncrPerFsr_);
+                if (*(s->pztOffsetByVirtualLaser_[virtLaserNum]) < -0.6*(*(s->pztIncrPerFsr_))) *(s->pztOffsetByVirtualLaser_[virtLaserNum])  += *(s->pztIncrPerFsr_);
+            }
             // After fitting, the buffer is available again
             if (bufferNum == 0)
                 SEM_postBinary(&SEM_rdBuffer0Available);

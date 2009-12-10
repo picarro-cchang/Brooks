@@ -35,6 +35,8 @@ typedef struct SPECT_CNTRL_PARAMS
     float *etalonTemperature_; // Etalon temperature
     float *cavityPressure_;    // Cavity pressure
     float *ambientPressure_;   // Ambient pressure
+    float *pztIncrPerFsr_;     // PZT increment per cavity FSR
+    float *pztOffsetUpdateFactor_;      // PZT offset update factor
     float *pztOffsetByVirtualLaser_[8]; // PZT offsets for each virtual laser
     float *schemeOffsetByVirtualLaser_[8]; // Scheme temperature offsets for each virtual laser
     unsigned int *defaultThreshold_;  // Default ringdown threshold
@@ -47,6 +49,7 @@ typedef struct SPECT_CNTRL_PARAMS
 } SpectCntrlParams;
 
 extern RingdownParamsType nextRdParams;
+extern SpectCntrlParams spectCntrlParams;
 
 int  spectCntrlInit(void);
 void spectCntrl(void);

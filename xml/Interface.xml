@@ -539,7 +539,10 @@
             <mask  ident="SUBSCHEME_ID_IdMask">0x7FFF</mask>
             <mask  ident="SUBSCHEME_ID_IncrMask">0x8000</mask>
             <mask  ident="SUBSCHEME_ID_IgnoreMask">0x4000</mask>
+            <mask  ident="SUBSCHEME_ID_RecenterMask">0x2000</mask>
             <mask  ident="SUBSCHEME_ID_IsCalMask">0x1000</mask>
+            <mask  ident="SUBSCHEME_ID_SpectrumSubsectionMask">0x0300</mask> 
+            <mask  ident="SUBSCHEME_ID_SpectrumMask">0x00FF</mask> 
         </bits>
     </bits_list>
     <register_list>
@@ -2279,6 +2282,18 @@
             <description>Virtual laser</description>
             <initial>VIRTUAL_LASER_3</initial>
             <display>Virtual laser</display>
+        </register>
+        <register ident="PZT_INCR_PER_CAVITY_FSR" type="float" minver="1.0" access="rw">
+            <description>PZT increment corresponding to cavity FSR</description>
+            <initial>16400</initial>
+            <save/>
+            <display format="%.0f">PZT increment per cavity FSR</display>
+        </register>
+        <register ident="PZT_OFFSET_UPDATE_FACTOR" type="float" minver="1.0" access="rw">
+            <description>PZT offset update factor</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.3f">PZT offset update factor</display>
         </register>
         <register ident="PZT_OFFSET_VIRTUAL_LASER1" type="float" minver="1.0" access="rw">
             <description>PZT offset for virtual laser 1</description>

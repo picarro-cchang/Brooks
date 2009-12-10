@@ -300,6 +300,8 @@
         </gui_page>
         <gui_page>
             <title>Virtual Laser Parameters</title>
+            <register>PZT_INCR_PER_CAVITY_FSR</register>
+            <register>PZT_OFFSET_UPDATE_FACTOR</register>
             <register>PZT_OFFSET_VIRTUAL_LASER1</register>
             <register>PZT_OFFSET_VIRTUAL_LASER2</register>
             <register>PZT_OFFSET_VIRTUAL_LASER3</register>

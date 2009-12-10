@@ -61,6 +61,8 @@ int spectCntrlInit(void)
     s->laserTempSetpoint_[1] = (float *)registerAddr(LASER2_TEMP_CNTRL_SETPOINT_REGISTER);
     s->laserTempSetpoint_[2] = (float *)registerAddr(LASER3_TEMP_CNTRL_SETPOINT_REGISTER);
     s->laserTempSetpoint_[3] = (float *)registerAddr(LASER4_TEMP_CNTRL_SETPOINT_REGISTER);
+    s->pztIncrPerFsr_ = (float *)registerAddr(PZT_INCR_PER_CAVITY_FSR);
+    s->pztOffsetUpdateFactor_ = (float *)registerAddr(PZT_OFFSET_UPDATE_FACTOR);
     s->pztOffsetByVirtualLaser_[0] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER1);
     s->pztOffsetByVirtualLaser_[1] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER2);
     s->pztOffsetByVirtualLaser_[2] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER3);

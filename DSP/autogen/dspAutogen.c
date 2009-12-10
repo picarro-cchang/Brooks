@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[398];
+RegTypes regTypes[400];
 void initRegisters() 
 {
     DataType d;
@@ -578,6 +578,10 @@ void initRegisters()
     writeRegister(SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER,d);
     d.asUint = VIRTUAL_LASER_3;
     writeRegister(VIRTUAL_LASER_REGISTER,d);
+    d.asFloat = 16400;
+    writeRegister(PZT_INCR_PER_CAVITY_FSR,d);
+    d.asFloat = 0;
+    writeRegister(PZT_OFFSET_UPDATE_FACTOR,d);
     d.asFloat = 0;
     writeRegister(PZT_OFFSET_VIRTUAL_LASER1,d);
     d.asFloat = 0;
@@ -1056,6 +1060,8 @@ void initRegisters()
     regTypes[SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER] = uint_type;
     regTypes[SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER] = uint_type;
     regTypes[VIRTUAL_LASER_REGISTER] = uint_type;
+    regTypes[PZT_INCR_PER_CAVITY_FSR] = float_type;
+    regTypes[PZT_OFFSET_UPDATE_FACTOR] = float_type;
     regTypes[PZT_OFFSET_VIRTUAL_LASER1] = float_type;
     regTypes[PZT_OFFSET_VIRTUAL_LASER2] = float_type;
     regTypes[PZT_OFFSET_VIRTUAL_LASER3] = float_type;

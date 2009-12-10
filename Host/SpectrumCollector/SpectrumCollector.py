@@ -49,11 +49,11 @@ else:
 # Some masks for interpreting the "subSchemeID" info (subSchemeID is basically
 # a pass through, with the exception of the special increment bit 15)...
 # !!! NOTE: Bit 15 is reserved for increment flag in firmware, so never use it for other purposes!!!
-INCR_FLAG_MASK       = 0x8000 # 32768 - Bit 15 is used for special increment flag
-SPECTRUM_IGNORE_MASK = 0x4000 # 16384 - Bit 14 is used to indicate the point should be ignored
-SPECTRUM_ISCAL_MASK  = 0x1000 #  4096 - Bit 12 is used to flag a point as a cal point to be collected
-SPECTRUM_SUBSECTION_ID_MASK = 0x0300
-SPECTRUM_ID_MASK    = 0x00FF #Bottom 8 bits of schemeStatus are the spectrum id/name
+INCR_FLAG_MASK       = interface.SUBSCHEME_ID_IncrMask   # 32768 - Bit 15 is used for special increment flag
+SPECTRUM_IGNORE_MASK = interface.SUBSCHEME_ID_IgnoreMask # 16384 - Bit 14 is used to indicate the point should be ignored
+SPECTRUM_ISCAL_MASK  = interface.SUBSCHEME_ID_IsCalMask  #  4096 - Bit 12 is used to flag a point as a cal point to be collected
+SPECTRUM_SUBSECTION_ID_MASK = interface.SUBSCHEME_ID_SpectrumSubsectionMask
+SPECTRUM_ID_MASK     = interface.SUBSCHEME_ID_SpectrumMask # Bottom 8 bits of schemeStatus are the spectrum id/name
 
 # Type conversion dictionary for ctypes to numpy
 ctypes2numpy = {ctypes.c_byte:numpy.byte, ctypes.c_char:numpy.byte, ctypes.c_double:numpy.float_,
