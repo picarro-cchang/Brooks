@@ -38,7 +38,7 @@ from struct import calcsize, unpack
 from time import strptime, mktime, time, localtime
 from EventManagerProxy import Log
 from tables import *
-
+from Host.Common.timestamp import unixTime
 ################################################################################
 # GLOBAL VARIABLES
 ################################################################################
@@ -979,10 +979,10 @@ class RdfData(object):
                 object.__setattr__(rdfData, s, rdData[s][low:high])
             # Initialize indexVector to the identity permutation to indicate that
             #  all data are (initially) good
-            rdfData.nrows = controlData["RDDataSize"]
+            rdfData.nrows = len(rdData[s][low:high])
             rdfData.indexVector = arange(rdfData.nrows)
             # Set the average time of the sensor data
-            rdfData.sensorDict["Time_s"] = otherData["SensorTime"]
+            rdfData.sensorDict["Time_s"] = unixTime(mean(rdfData.timestamp))
             return rdfData
 
         def allowYield(id):

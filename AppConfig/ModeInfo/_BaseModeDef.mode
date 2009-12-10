@@ -14,7 +14,7 @@
 [AVAILABLE_MODES]
 ModeCount = 2
 #Mode_1 = Alpha_mode
-Mode_1 = CFADS_mode
+Mode_1 = flux_mode
 Mode_2 = warming_mode
 
 ############################################################################
@@ -31,6 +31,7 @@ CO2 = 10
 CO2_Alt = 12
 CH4 = 25
 H2O = 26
+Both = 2
 
 # Default processing to use for any spectra/label can be supplied below.
 # - If the spectrum name is not referred to in the plan file for the active mode, the processing
@@ -38,6 +39,9 @@ H2O = 26
 #   - This is particularily convenient for occasionally inserted spectra (such as Cal spectra)
 #     that can occur in any mode.
 # - If no processing is indicated here OR in the plan file for the mode, an error will be raised.
+
+[Both]
+Analyzer= ../Scripts/DataManager/analyze_flux.py
 
 [CO2]
 Analyzer= ../Scripts/DataManager/analyze_CFADS.py

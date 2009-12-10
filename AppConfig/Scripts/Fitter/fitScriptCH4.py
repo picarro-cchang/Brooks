@@ -60,7 +60,7 @@ species = (d.subschemeId & 0x3FF)[0]
 init["base",0] = 800
 
 tstart = time.clock()
-if species==25:
+if species in [25, 258]:
     try:
         Ilaserfine = 0.01*mean(d.fineLaserCurrent) + 0.99*Ilaserfine
     except:
@@ -84,7 +84,6 @@ if species==25:
     ch4_conc_raw = 9.8932*r[1002,2]
     ch4_y = y_avg
     ch4_conc_precal = 0.9157*ch4_y*ch4_conc_raw*(140.0/P)
-    ch4_peak = r[1002,"peak"]
     ch4_shift = shift_avg
     ch4_res = r["std_dev_res"]
     now = time.clock()
@@ -98,7 +97,7 @@ if species==25:
     avg_count += 1
     ignore_count = max(0,ignore_count-1)
     if ignore_count == 0:
-        RESULT = {"ch4_res":ch4_res,"ch4_conc_raw":ch4_conc_raw,"ch4_y":ch4_y,"ch4_conc_peak":ch4_peak,
+        RESULT = {"ch4_res":ch4_res,"ch4_conc_raw":ch4_conc_raw,"ch4_y":ch4_y,
                 "ch4_conc_precal":ch4_conc_precal,"ch4_shift":ch4_shift,"ch4_Ilaserfine":Ilaserfine,
                 "cavity_pressure":P,"cavity_temperature":T,
                 "species":2,"ch4_fit_time":fit_time,"ch4_interval":interval,

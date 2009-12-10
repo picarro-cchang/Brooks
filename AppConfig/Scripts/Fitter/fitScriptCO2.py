@@ -28,7 +28,6 @@ init = InitialValues()
 deps = Dependencies()
 ANALYSIS = []    
 d = DATA
-print d.nrows
 d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.50,maxVal=20.0)
 d.wlmSetpointFilter(maxDev=0.005,sigmaThreshold=3)
 d.tunerEnsembleFilter(maxDev=500000,sigmaThreshold=2.5)
@@ -49,7 +48,7 @@ species = (d.subschemeId & 0x3FF)[0]
 #print "SpectrumId", d["spectrumId"]
 init["base",0] = 800
 tstart = time.clock()
-if species==10 or species==12:
+if species in [10, 12, 2]:
     try:
         Ilaserfine = 0.01*mean(d.fineLaserCurrent) + 0.99*Ilaserfine
     except:
@@ -95,8 +94,8 @@ if species==10 or species==12:
                        "inlet_valve_pos":inletValvePos,"outlet_valve_pos":outletValvePos}
                       )
         avg_count += 1
+        print "CO2 Fit time: %.3f" % (RESULT["co2_fittime"],) 
     else:
         RESULT = {}
-    print "CO2 Fit time: %.3f" % (RESULT["co2_fittime"],) 
 else:
     RESULT = {}        
