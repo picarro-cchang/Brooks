@@ -7,7 +7,7 @@ Tuning = LaserCurrent
 #     care of (primarily for the background load/alternate scheme index stuff)
 
 SchemeCount = 1
-Scheme_1_Path = ../../InstrConfig/Schemes/CFBDS02_CO2_FSR.sch
+Scheme_1_Path = ../../InstrConfig/Schemes/001_Alpha_CO2_flux.sch
 
 [SPECTRUM_IDS]
 #Specify logical names for referencing each SubSchemeID...

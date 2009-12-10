@@ -54,7 +54,7 @@ import traceback
 from inspect import isclass
 
 from Host.autogen import interface
-from Host.SampleManager.SampleManager import SAMPLEMGR_STATUS_STABLE, SAMPLEMGR_STATUS_PARKED, SAMPLEMGR_STATUS_PURGED, SAMPLEMGR_STATUS_PREPARED
+from Host.SampleManager.SampleManager import SAMPLEMGR_STATUS_STABLE, SAMPLEMGR_STATUS_PARKED, SAMPLEMGR_STATUS_PURGED, SAMPLEMGR_STATUS_PREPARED, SAMPLEMGR_STATUS_FLOWING
 from Host.Common import CmdFIFO, Listener, Broadcaster
 from Host.Common.SharedTypes import RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, RPC_PORT_ARCHIVER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_SAMPLE_MGR, RPC_PORT_ALARM_SYSTEM, RPC_PORT_FREQ_CONVERTER, RPC_PORT_PANEL_HANDLER
 from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_INSTMGR_DISPLAY
@@ -186,8 +186,18 @@ class DummySampleManager(object):
     def _SetMode(self, mode):
         Log("Running without Sample Manager - mode set skipped", Level = 0)
     def FlowStart(self):
+        self.pressureTarget = 140
+        self.DriverRpc.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER", self.pressureTarget)
         self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
-        self.DriverRpc.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", 18000)
+        start = self.DriverRpc.rdDasReg("VALVE_CNTRL_INLET_VALVE_MIN_REGISTER")
+        target = 18000
+        step = 500
+        iterations = int((target-start)/step)
+        self.inletTarget = start + iterations*step 
+        interval = 2
+        maxPressureChange = 10
+        self._StepInletValve( start, step, iterations, interval, maxPressureChange)
+        #self.DriverRpc.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", 18000)
         Log("Flow started by Dummy Sample Manager", Level = 0)
     def FlowStop(self):
         Log("Running with Dummy Sample Manager - flow stop skipped", Level = 0)
@@ -199,8 +209,31 @@ class DummySampleManager(object):
         Log("Running with Dummy Sample Manager - park skipped", Level = 0)
     def GetStatus(self):
         #Log("Running with Dummy Sample Manager - always returns pressure stable status", Level = 0)
-        return SAMPLEMGR_STATUS_STABLE
-        
+        if abs(self.DriverRpc.rdDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER")-self.inletTarget) < 1 and abs(self.DriverRpc.getPressureReading()-self.pressureTarget) < 1:
+            return SAMPLEMGR_STATUS_STABLE | SAMPLEMGR_STATUS_FLOWING
+        else:
+            return SAMPLEMGR_STATUS_FLOWING
+
+    def _StepInletValve( self, start, step, iterations, interval, maxPressureChange):
+        index = 0
+        value = start
+        prevPressure = self.DriverRpc.getPressureReading()
+        while index <= iterations:
+            if self.DriverRpc.rdDasReg("VALVE_CNTRL_STATE_REGISTER") == interface.VALVE_CNTRL_OutletControlState:
+                pressure = self.DriverRpc.getPressureReading()
+                # check pressure, we do not want to harm cavity
+                if abs(pressure-prevPressure) < maxPressureChange:
+                    self.DriverRpc.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", value)
+                    value += step
+                    index+=1
+                time.sleep(interval)
+                prevPressure = pressure
+            else:
+                self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
+                index = 0
+                value = start
+                prevPressure = self.DriverRpc.getPressureReading()
+            
 class ConfigurationOptions(object):
     def __init__(self):
         # - AutoEnableAfterBadShutdown is to avoid auto-measure after power failures
@@ -461,6 +494,18 @@ class InstMgr(object):
             Log("Uploading warmbox cal failed %d" % status)
             return INST_ERROR_DAS_CAL_WRITE_FAILED
 
+        if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
+            myThread = threading.Thread(target=self.SampleMgrRpc.FlowStart)
+            myThread.setDaemon(True)
+            myThread.start()
+            self.pressureLockCount = 0
+            self.MeasuringState = MEAS_STATE_PRESSURE_STAB
+            self._SetStatus(INSTMGR_STATUS_GAS_FLOWING)
+            self._SendDisplayMessage("Pressure stabilizing...")
+            self.LockedStatus[PRESSURE_LOCKED_STATUS] = "Unlocked"
+        else:
+            return INST_ERROR_INVALID_SAMPLE_MGR_MODE
+            
         # go into warming state and wait for temperatures to stabilize.
         self.State = INSTMGR_STATE_WARMING
         self.WarmingState = WARMING_STATE_TEMP_STAB
@@ -489,16 +534,17 @@ class InstMgr(object):
 
         self.State = INSTMGR_STATE_MEASURING
 
-        if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
-            self.SampleMgrRpc.FlowStart()
-            self.pressureLockCount = 0
-            self.MeasuringState = MEAS_STATE_PRESSURE_STAB
-            self._SetStatus(INSTMGR_STATUS_GAS_FLOWING)
-            self._SendDisplayMessage("Pressure stabilizing...")
-            self.LockedStatus[PRESSURE_LOCKED_STATUS] = "Unlocked"
-            return INST_ERROR_OKAY
-        else:
-            return INST_ERROR_INVALID_SAMPLE_MGR_MODE
+        return INST_ERROR_OKAY
+        #if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
+        #    self.SampleMgrRpc.FlowStart()
+        #    self.pressureLockCount = 0
+        #    self.MeasuringState = MEAS_STATE_PRESSURE_STAB
+        #    self._SetStatus(INSTMGR_STATUS_GAS_FLOWING)
+        #    self._SendDisplayMessage("Pressure stabilizing...")
+        #    self.LockedStatus[PRESSURE_LOCKED_STATUS] = "Unlocked"
+        #    return INST_ERROR_OKAY
+        #else:
+        #    return INST_ERROR_INVALID_SAMPLE_MGR_MODE
     def _RestartMeasure(self):
         """ called when restarting measuring state """
         self._SendDisplayMessage("Restart Measuring")

@@ -1101,6 +1101,7 @@ class QuickGui(wx.Frame):
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700))
         self.configFile = configFile
         self.config = self.loadConfig(self.configFile)
+        self.numGraphs = max(1, self.config.getint("Graph","NumGraphs",1))
         self.colorDatabase = ColorDatabase(self.config,"Colors")
         self.fontDatabase = FontDatabase(self.config,"Fonts")
         self.sourceSubstDatabase = SubstDatabase.fromIni(self.config,"SourceFilters","string",["replacement"])
@@ -1111,7 +1112,9 @@ class QuickGui(wx.Frame):
         self.keyStandardModeDatabase = SubstDatabase.fromIni(self.config,"StandardModeKeys","string")
         self.displayFilterSubstDatabase = SubstDatabase.fromIni(self.config,"DisplayFilters","key",["select"],[""])
         self.defaultSources = StringDict.fromIni(self.config,"Defaults","source")
-        self.defaultKeys = StringDict.fromIni(self.config,"Defaults","key")
+        self.defaultKeys = {}
+        for idx in range(self.numGraphs):
+            self.defaultKeys[idx] = StringDict.fromIni(self.config,"Defaults","key%d"%idx)
         self.dataStore  = DataStore(self.config)
         self.eventStore = EventStore(self.config)
         self.alarmInterface = AlarmInterface(self.config)
@@ -1119,7 +1122,6 @@ class QuickGui(wx.Frame):
         self.dataLoggerInterface = DataLoggerInterface(self.config)
         self.dataLoggerInterface.getDataLoggerInfo()
         self.instMgrInterface = InstMgrInterface(self.config)
-        self.numGraphs = max(1, self.config.getint("Graph","NumGraphs",1))
         self.numAlarms = min(4, self.config.getint("AlarmBox","NumAlarms",4))
         self.showGraphZoomed = self.config.getboolean("Graph","ShowGraphZoomed",False)
         self.lockTime = False
@@ -1769,9 +1771,13 @@ class QuickGui(wx.Frame):
                         k = decoratedKeys[i][1]
                         self.keyChoice[idx].SetClientData(i,k)
                         if defaultSourceIndex != None:
-                            if k.lower() == self.defaultKeys.getString(defaultSourceIndex).lower():
-                                self.dataKey[idx] = k
-                                self.keyChoice[idx].SetSelection(i)
+                            try:
+                                if k.lower() == self.defaultKeys[idx].getString(defaultSourceIndex).lower():
+                                    self.dataKey[idx] = k
+                                    self.keyChoice[idx].SetSelection(i)
+                            except:
+                                self.dataKey[idx] = decoratedKeys[0][1]
+                                self.keyChoice[idx].SetSelection(0)
                     self.keyChoices[idx] = keyChoices
                     self.dataKeyUpdateAction(idx)
             if self.lockTime:

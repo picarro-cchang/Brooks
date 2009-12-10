@@ -391,6 +391,7 @@ class MeasSystem(object):
         self._UninterruptedSpectrumCount = 0
         self.CurrentMeasMode = self.MeasModes[ModeName]
         self._SetupMeasMode()
+        FreqConverter.setSchemeSequence(self.CurrentMeasMode.Schemes, restart = True)
         
     def _SetupMeasMode(self):
         """Perform any instrument setup required for this mode by calling the instrument manager"""

@@ -106,13 +106,16 @@ class DasScheme(object):
         self.rdFreqConv.RPC_convertScheme(self.currentAlternateIndex)
         self.rdFreqConv.RPC_uploadSchemeToDAS(self.currentAlternateIndex)
         # Get the accurate representation of what the DAS is currently running
-        seq = Driver.rdSchemeSequence()["schemeIndices"]
+        current = Driver.rdSchemeSequence()
+        Log("Current scheme sequence %s" % current)
+        seq = current["schemeIndices"]
         # Replace current scheme index with the alternate in the sequence and write 
         # the new sequence to DAS
         for i in range(len(seq)):
             if seq[i] == self.currentIndex:
                 seq[i] = self.currentAlternateIndex
         Driver.wrSchemeSequence(seq, restartFlag = False, loopFlag = True)
+        Log("Updated scheme sequence %s" % Driver.rdSchemeSequence())
         #Update our local scheme index records
         self.currentIndex, self.currentAlternateIndex = self.currentAlternateIndex, self.currentIndex
 
@@ -146,11 +149,21 @@ class SchemeManager(object):
         Driver.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeSequenceMode)
         schemeDASIndexSeq = [self.schemes[s].currentIndex for s in self.schemeSeq]
         Driver.wrSchemeSequence(schemeDASIndexSeq, restartFlag = True, loopFlag = True)
+        Log("Wrote scheme sequence %s" % Driver.rdSchemeSequence())
             
     def update(self):
-        Log("Sscheme Manager updates and swaps schemes")
+        Log("Scheme Manager updates and swaps schemes")
         for scheme in self.schemes.values():
             scheme.updateAndSwapScheme()
+
+    def setSchemeSequence(self, schemeSequence, restart = True):
+        """Tells the DAS what scheme sequence that should be run.
+
+        schemeSequence is a list of scheme names.  eg: ["NH3", "NH3", "H2O"]
+
+        """
+        indexList = [self.schemes[s].currentIndex for s in schemeSequence]
+        Driver.wrSchemeSequence(indexList, restart, loopFlag = True)
             
 class CalibrationPoint(object):
     """Structure for collecting interspersed ringdowns in a scheme which are marked as calibration points."""
@@ -513,6 +526,9 @@ class RDFrequencyConverter(Singleton):
     def RPC_configSchemeManager(self, schemeDict, schemeSeq):
         self.schemeMgr = SchemeManager(schemeDict, schemeSeq)
         self.schemeMgr.startup()
+    
+    def RPC_setSchemeSequence(self, schemeSequence, restart = True):
+        self.schemeMgr.setSchemeSequence(schemeSequence, restart)
         
     def RPC_angleToLaserTemperature(self,vLaserNum,angles):
         self._assertVLaserNum(vLaserNum)
