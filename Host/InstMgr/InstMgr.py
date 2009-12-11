@@ -885,6 +885,13 @@ class InstMgr(object):
                 else:
                     pressureLocked = "Unlocked"
 
+                if self.DriverRpc.rdDasReg("VALVE_CNTRL_STATE_REGISTER") == interface.VALVE_CNTRL_DisabledState and \
+                   self.State == INSTMGR_STATE_MEASURING:
+                    self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
+                    myThread = threading.Thread(target=self.SampleMgrRpc.FlowStart)
+                    myThread.setDaemon(True)
+                    myThread.start()
+    
             except Exception, e:
                 Log("Das Monitor: error %s" % (e,),Level = 2)
 
