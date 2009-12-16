@@ -101,6 +101,7 @@ class Controller(ControllerFrameGui):
         waveforms["HotBox"]=dict(
             cavityTemperature=self.hotBoxPanel.cavityTemperatureWfm,
             heatsinkTemperature=self.hotBoxPanel.heatsinkTemperatureWfm,
+            dasTemperature=self.hotBoxPanel.dasTemperatureWfm,
             tec=self.hotBoxPanel.tecWfm,
             heater=self.hotBoxPanel.heaterWfm)
         waveforms["Pressure"]=dict(

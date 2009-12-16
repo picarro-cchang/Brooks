@@ -513,6 +513,9 @@ class HotBoxPanel(HotBoxPanelGui):
         self.heatsinkTemperatureWfm = Series(wfmPoints)
         self.temperatureGraph.AddSeriesAsLine(self.heatsinkTemperatureWfm,
             colour='blue',width=2)
+        self.dasTemperatureWfm = Series(wfmPoints)        
+        self.temperatureGraph.AddSeriesAsLine(self.dasTemperatureWfm,
+            colour='green',width=2)
         self.tecWfm = Series(wfmPoints)
         self.tecGraph.AddSeriesAsLine(self.tecWfm,
             colour='red',width=2)
@@ -537,6 +540,9 @@ class HotBoxPanel(HotBoxPanelGui):
         if self.heatsinkTemperatureCheckbox.IsChecked():
             self.temperatureGraph.AddSeriesAsLine(self.heatsinkTemperatureWfm,
                 colour='blue',width=2)
+        if self.dasTemperatureCheckbox.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.dasTemperatureWfm,
+                colour='green',width=2)
 
 class CommandLogPanel(CommandLogPanelGui):
     acqLabels = dict(start="Start Acquisition",resume="Resume Acquisition",
