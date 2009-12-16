@@ -142,6 +142,8 @@ class SensorListener(SharedTypes.Singleton):
             waveforms["HotBox"]["cavityTemperature"].Add(utime,data.value)
         elif data.streamNum == interface.STREAM_HotBoxHeatsinkTemp:
             waveforms["HotBox"]["heatsinkTemperature"].Add(utime,data.value)
+        elif data.streamNum == interface.STREAM_DasTemp:
+            waveforms["HotBox"]["dasTemperature"].Add(utime,data.value)
         elif data.streamNum == interface.STREAM_HotBoxTec:
             waveforms["HotBox"]["tec"].Add(utime,data.value)
         elif data.streamNum == interface.STREAM_HotBoxHeater:
