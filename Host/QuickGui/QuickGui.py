@@ -1147,7 +1147,6 @@ class QuickGui(wx.Frame):
         self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
         try:
             self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
-            valveSeqGuiOn = self.valveSeqRpc.isGuiOn()
         except:
             self.valveSeqRpc = None
             
@@ -1185,11 +1184,7 @@ class QuickGui(wx.Frame):
             
         if self.valveSeqRpc != None:
             self.idValveSeq = wx.NewId()
-            if valveSeqGuiOn:
-                label = "Hide Valve Sequencer GUI"
-            else:
-                label = "Show Valve Sequencer GUI"
-            self.iValveSeq = wx.MenuItem(self.iTools, self.idValveSeq, label, "", wx.ITEM_NORMAL)
+            self.iValveSeq = wx.MenuItem(self.iTools, self.idValveSeq, "Show/Hide Valve Sequencer GUI", "", wx.ITEM_NORMAL)
             self.iTools.AppendItem(self.iValveSeq)  
             self.Bind(wx.EVT_MENU, self.OnValveSeq, id=self.idValveSeq)
         
@@ -1924,10 +1919,8 @@ class QuickGui(wx.Frame):
         try:
             if not self.valveSeqRpc.isGuiOn():
                 self.valveSeqRpc.showGui()
-                self.iTools.SetLabel(self.idValveSeq,"Hide Valve Sequencer GUI")
             else:
                 self.valveSeqRpc.hideGui()
-                self.iTools.SetLabel(self.idValveSeq,"Show Valve Sequencer GUI")
         except Exception, err:
             errMsg = "%s" % err
             if errMsg == "connection failed":
