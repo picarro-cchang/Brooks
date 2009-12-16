@@ -1178,10 +1178,12 @@ class InstMgr(object):
     def INSTMGR_StopSelfTestRpc(self, selfTestType):
         Log("self test not supported")
     def INSTMGR_ReportErrorRpc(self, error):
-        if error < INST_ERROR_OKAY and error >= INST_ERROR_MAX:
+        if self.State == INSTMGR_STATE_PARKING:
+            # Don't do anything when instrument is parking
+            return INSTMGR_RPC_SUCCESS
+        elif error < INST_ERROR_OKAY and error >= INST_ERROR_MAX:
             self._HandleError(error)
             self._SetStatus(INSTMGR_STATUS_ERROR_IN_BUFFER)
-
             return INSTMGR_RPC_SUCCESS
         elif error == INST_ERROR_OKAY:
             return INSTMGR_RPC_SUCCESS

@@ -140,10 +140,16 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Fetches the current cavity pressure.
         """
         return self.rdDasReg("CAVITY_PRESSURE_REGISTER")
-    #
-    #
-    #
-    
+   
+    def getValveCtrlState(self):
+        """Get the current valve control state. Valid values are:
+            0: Disabled (=VALVE_CNTRL_DisabledState)
+            1: Outlet control (=VALVE_CNTRL_OutletControlState)
+            2: Inlet control (=VALVE_CNTRL_InletControlState)
+            3: Manual control (=VALVE_CNTRL_ManualControlState)
+        """
+        return self.rdDasReg("VALVE_CNTRL_STATE_REGISTER")
+   
     def allVersions(self):
         versionDict = {}
         versionDict["interface"] = interface.interface_version
@@ -300,7 +306,23 @@ class DriverRpcHandler(SharedTypes.Singleton):
     
     def setValveMask(self, mask):
         self.wrDasReg("VALVE_CNTRL_SOLENOID_VALVES_REGISTER", mask & 0x3F)
-    
+
+    def closeValves(self,valveMask=0x3F):
+        """ Close the valves specified by the valveMask. This is a bitmask with bits 0 through 5 corresponding with solenoid valves 1 through 6. 
+        A "1" bit causes the valve to close, a "0" bit leaves the valve state unchanged.
+        """
+        currValveMask = self.getValveMask()
+        newValveMask = currValveMask & ~valveMask
+        self.setValveMask(newValveMask)
+
+    def openValves(self,valveMask=0x0):
+        """ Open the valves specified by the valveMask. This is a bitmask with bits 0 through 5 corresponding with solenoid valves 1 through 6. 
+        A "1" bit causes the valve to open, a "0" bit leaves the valve state unchanged.
+        """
+        currValveMask = self.getValveMask()
+        newValveMask = currValveMask | valveMask
+        self.setValveMask(newValveMask)
+        
     def rdValveSequence(self):
         """Reads the valve sequence"""
         return self.dasInterface.hostToDspSender.rdValveSequence()

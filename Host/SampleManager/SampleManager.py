@@ -9,6 +9,7 @@
 # 08-09-18 alex  Replaced ConfigParser with CustomConfigObj
 # 08-12-10 alex  Made constant InletValve and OutletValve all uppercase
 # 08-12-23 alex  Added RPC call to skip pressure check in _Monitor() (in order to run pulse holder)
+# 09-12-14 alex  Cleaned up the code for G2000 platform
 
 APP_NAME = 'SampleManager'
 __version__              = 1.0
@@ -25,7 +26,7 @@ import Queue
 from inspect import isclass
 from operator import isNumberType
 
-import Host.autogen.interface as GlobalDefs
+from Host.autogen import interface
 from Host.Common import CmdFIFO
 from Host.Common import AppStatus
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SAMPLE_MGR, BROADCAST_PORT_SENSORSTREAM, STATUS_PORT_SAMPLE_MGR
@@ -109,9 +110,8 @@ class SampleManagerBaseMode(object):
         self._valveLockIterations    = 10
         self._skipPressureCheck      = False
 
-        vlvcntrl = self._DriverRpc.getVlvcntrlInfo()
-        self._valveEnabled = (vlvcntrl['ValveState'] != GlobalDefs.VLVCNTRL_DisabledState and
-          vlvcntrl['ValveState'] != GlobalDefs.VLVCNTRL_ManualControlState)
+        self._valveCtrl = self._DriverRpc.getValveCtrlState()
+        self._valveEnabled = (self._valveCtrl not in [interface.VALVE_CNTRL_DisabledState, interface.VALVE_CNTRL_ManualControlState])
               
     def _create_var_from_config(self,config):
         for k,v in config.items():
@@ -143,8 +143,8 @@ class SampleManagerBaseMode(object):
 
     def _RPC_ReadPressure(self):
         """Get pressure readings"""
-        #return self._DriverRpc.rdDasReg(GlobalDefs.IOMGR_FLOAT_CAVITY_PRESSURE_REGISTER)
-        return self._pressure
+        return self._DriverRpc.getPressureReading()
+        #return self._pressure
 
     def LpcWrapper(func):
         def wrapper(self,*args,**kwargs):
@@ -160,63 +160,59 @@ class SampleManagerBaseMode(object):
     @LpcWrapper
     def _LPC_WritePressureSetpoint(self, pressure):
         """Write pressure setpoint"""
-        self._DriverRpc.wrDasReg( GlobalDefs.VLVCNTRL_CAVITY_PRESSURE_SETPOINT, pressure )
+        self._DriverRpc.wrDasReg( interface.VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER, pressure )
 
     def _RPC_ReadPressureSetpoint(self):
         """Read pressure setpoint"""
-        return self._DriverRpc.rdDasReg( GlobalDefs.VLVCNTRL_CAVITY_PRESSURE_SETPOINT )
+        return self._DriverRpc.rdDasReg( interface.VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER )
 
     @LpcWrapper
     def _LPC_SetValveControl(self, control ):
-        """ Set Valve Control """
+        """ Set Valve Control. Valid control values are:
+            0: Disabled (=VALVE_CNTRL_DisabledState)
+            1: Outlet control (=VALVE_CNTRL_OutletControlState)
+            2: Inlet control (=VALVE_CNTRL_InletControlState)
+            3: Manual control (=VALVE_CNTRL_ManualControlState)
+        """
         if control != self._RPC_GetValveControl():
-            self._DriverRpc.wrDasReg( GlobalDefs.VLVCNTRL_CMD_REGISTER, GlobalDefs.VLVCNTRL_Disable)
-        self._DriverRpc.wrDasReg( GlobalDefs.VLVCNTRL_CMD_REGISTER, control )
+            self._DriverRpc.wrDasReg( interface.VALVE_CNTRL_STATE_REGISTER, interface.VALVE_CNTRL_DisabledState)
+        self._DriverRpc.wrDasReg( interface.VALVE_CNTRL_STATE_REGISTER, control )
+        self._valveCtrl = control
 
     def _RPC_GetValveControl(self):
         """Get Valve Control State"""
-        return self._DriverRpc.rdDasReg(GlobalDefs.VLVCNTRL_STATE_REGISTER)
+        return self._DriverRpc.getValveCtrlState()
 
     @LpcWrapper
     def _LPC_StopValveControl(self):
         """ Stop Valve Control """
-        self._DriverRpc.wrDasReg(GlobalDefs.VLVCNTRL_CMD_REGISTER,GlobalDefs.VLVCNTRL_Disable)
+        self._LPC_SetValveControl(interface.VALVE_CNTRL_DisabledState)
 
     @LpcWrapper
     def _LPC_SetValve(self, valve, value):
         """Set inlet/outlet valve positions """
         if valve == INLETVALVE:
-            self._DriverRpc.wrDasReg(GlobalDefs.VLVCNTRL_INLET_CONTROL_DAC_VALUE_REGISTER, value)
+            self._DriverRpc.wrDasReg(interface.VALVE_CNTRL_USER_INLET_VALVE_REGISTER, value)
             self._inletDacValue = value
         elif valve == OUTLETVALVE:
-            self._DriverRpc.wrDasReg(GlobalDefs.VLVCNTRL_OUTLET_CONTROL_DAC_VALUE_REGISTER, value)
+            self._DriverRpc.wrDasReg(interface.VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER, value)
             self._outletDacValue = value
 
     def _RPC_GetValve(self, valve ):
         """Get Valve DAC for specified valve """
         if valve == INLETVALVE:
             if self._inletDacValue=='':
-                self._inletDacValue = self._DriverRpc.rdDasReg(GlobalDefs.VLVCNTRL_INLET_CONTROL_DAC_VALUE_REGISTER)
+                self._inletDacValue = self._DriverRpc.rdDasReg(interface.VALVE_CNTRL_USER_INLET_VALVE_REGISTER)
             return self._inletDacValue
         elif valve == OUTLETVALVE:
             if self._outletDacValue=='':
-                self._outletDacValue = self._DriverRpc.rdDasReg(GlobalDefs.VLVCNTRL_OUTLET_CONTROL_DAC_VALUE_REGISTER)
+                self._outletDacValue = self._DriverRpc.rdDasReg(interface.VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER)
             return self._outletDacValue
 
     @LpcWrapper
     def _LPC_CloseValve(self, valve):
         """Close specified valve"""
         self._LPC_SetValve(valve, 0)
-
-    @LpcWrapper
-    def _LPC_StartPump(self):
-        """ Start the pump"""
-        self._DriverRpc.wrDasReg(GlobalDefs.VLVCNTRL_PUMP_CMD_REGISTER,GlobalDefs.VLVCNTRL_PumpEnable)
-
-    @LpcWrapper
-    def _LPC_StopPump(self):
-        """Stop the pump"""
-        self._DriverRpc.wrDasReg(GlobalDefs.VLVCNTRL_PUMP_CMD_REGISTER,GlobalDefs.VLVCNTRL_PumpDisable)
 
     def _RPC_FlowStatus(self):
         """Check status of flow """
@@ -230,7 +226,7 @@ class SampleManagerBaseMode(object):
         inRangeCount = 0
         while index<timeout and self._terminateCalls==False:
             pressure = self._RPC_ReadPressure()
-            inRange  = ( pressure >= (1-tolerance)*setpoint and pressure <= (1+tolerance)*setpoint)
+            inRange  = (abs(pressure-setpoint) <= tolerance*setpoint)
             if inRange:
                 inRangeCount+=1
             else:
@@ -245,6 +241,10 @@ class SampleManagerBaseMode(object):
 
     @LpcWrapper
     def _LPC_StepValve( self, valve, start, step, iterations, interval, maxPressureChange=10 ):
+        """Step valve values in pre-definied iterations and interval. If for safety reason 
+        the valve control was disabled by the firmware, the step process will re-start from 
+        the beginning.
+        """
         try:
             maxPressureChange = self.max_pressure_change
         except:
@@ -254,15 +254,21 @@ class SampleManagerBaseMode(object):
         value = start
         prevPressure = self._RPC_ReadPressure()
         while index < iterations and self._terminateCalls==False:
-            pressure = self._RPC_ReadPressure()
-            # check pressure, we do not want to harm cavity
-            if abs(pressure-prevPressure) < maxPressureChange:
-                self._LPC_SetValve( valve, value )
-                value += step
-                index+=1
-            time.sleep(interval)
-            prevPressure = pressure
-
+            if self._RPC_GetValveControl() != interface.VALVE_CNTRL_DisabledState:
+                pressure = self._RPC_ReadPressure()
+                # check pressure, we do not want to harm cavity
+                if abs(pressure-prevPressure) < maxPressureChange:
+                    self._LPC_SetValve( valve, value )
+                    value += step
+                    index+=1
+                time.sleep(interval)
+                prevPressure = pressure
+            else:
+                self._LPC_SetValveControl(self._valveCtrl)
+                index = 0
+                value = start
+                prevPressure = self._RPC_ReadPressure()
+                
     @LpcWrapper
     def _LPC_PumpDownCavity( self, tolerance=0.2, timeout=300,interval=DEFAULT_SLEEP_INTERVAL, lockCount=1 ):
         """ Use outlet valve to pump down cavity """
@@ -270,7 +276,7 @@ class SampleManagerBaseMode(object):
 
         self._LPC_CloseValve(INLETVALVE)
         self._LPC_CloseValve(OUTLETVALVE)
-        self._LPC_SetValveControl(GlobalDefs.VLVCNTRL_EnterOutletControl)
+        self._LPC_SetValveControl(interface.VALVE_CNTRL_OutletControlState)
 
         pressure = self._RPC_ReadPressureSetpoint()
         status = self._LPC_WaitPressureStabilize( pressure, tolerance=tolerance, timeout=timeout, checkInterval=interval, lockCount=lockCount )
@@ -278,13 +284,6 @@ class SampleManagerBaseMode(object):
             print "Pressure failed to stabilize."
             return False
         return True
-        
-    def _RPC_SetValveMode(self, valveMode):
-        if valveMode <= 1:
-            self.valve_mode = valveMode
-
-    def _RPC_GetValveMode(self):
-        return self.valve_mode
 
     def _Sleep(self, duration, interval = DEFAULT_SLEEP_INTERVAL):
         iterations = duration / interval
@@ -298,29 +297,32 @@ class SampleManagerBaseMode(object):
     @LpcWrapper
     def _LPC_OpenSolenoidValves(self, valves):
         """Open Solenoid Valve(s).
-           valves - solenoid valves is string delimited by comma (one based)"""
-        valveMask = 0
+           valves - solenoid valves is string delimited by comma (one based)
+        """
+        openValveMask = 0
         for v in valves.split(','):
-            if v!='': valveMask += 1 << (int(v)-1)
-        self._DriverRpc.wrDasReg(GlobalDefs.VLVCNTRL_SOLENOID_VALVE_OPEN_REGISTER,valveMask)
+            if v!='': openValveMask += 1 << (int(v)-1)
+        if openValveMask != 0:
+            self._DriverRpc.openValves(openValveMask)
 
     @LpcWrapper
     def _LPC_CloseSolenoidValves(self, valves=None):
         """Close Solenoid Valve(s)
-           valves - solenoid valves is string delimited by comma (one based)"""
+           valves - solenoid valves is string delimited by comma (one based)
+        """
         if valves==None:
-            self._DriverRpc.wrDasReg(GlobalDefs.VLVCNTRL_SOLENOID_VALVE_CLOSE_REGISTER, 0x3F )
+            self._DriverRpc.setValveMask(0)
             return
 
-        valveMask = 0
+        closeValveMask = 0
         for v in valves.split(','):
-            if v!='': valveMask += 1 << (int(v)-1)
-        if valveMask != 0:
-            self._DriverRpc.wrDasReg(GlobalDefs.VLVCNTRL_SOLENOID_VALVE_CLOSE_REGISTER, valveMask)
+            if v!='': closeValveMask += 1 << (int(v)-1)
+        if closeValveMask != 0:
+            self._DriverRpc.closeValves(closeValveMask)
 
     def _RPC_GetSolenoidValves(self):
         """Get bits of Solenoid Valves opened"""
-        return self._DriverRpc.rdDasReg(GlobalDefs.VLVCNTRL_SOLENOID_VALVE_STATUS_REGISTER)
+        return self._DriverRpc.getValveMask()
 
     def _RPC_GetConcentration(self):
         """Get concentration of valves currently opened"""
@@ -408,21 +410,18 @@ class SampleManagerBaseMode(object):
         try:
             if self._skipPressureCheck:
                 self._clearStatus()
-                self._setStatus( SAMPLEMGR_STATUS_STABLE )
-                self._setStatus( SAMPLEMGR_STATUS_FLOWING )                    
+                self._setStatus( SAMPLEMGR_STATUS_STABLE | SAMPLEMGR_STATUS_FLOWING )                    
                 return
-            vlvcntrl = self._DriverRpc.getVlvcntrlInfo()
-            self._pumpEnabled = ( vlvcntrl['PumpState'] == GlobalDefs.VLVCNTRL_PumpEnabledState)
-            self._valveEnabled = (vlvcntrl['ValveState'] != GlobalDefs.VLVCNTRL_DisabledState and
-              vlvcntrl['ValveState'] != GlobalDefs.VLVCNTRL_ManualControlState)
-            if self._pumpEnabled and self._valveEnabled:
+            self._valveCtrl = self._DriverRpc.getValveCtrlState()
+            self._valveEnabled = (self._valveCtrl not in [interface.VALVE_CNTRL_DisabledState, interface.VALVE_CNTRL_ManualControlState])
+            if self._valveEnabled:
                 self._setStatus( SAMPLEMGR_STATUS_FLOWING )
             else:
                 self._clearStatus( SAMPLEMGR_STATUS_FLOWING )
 
-            if self._valveEnabled == False:
-                self._inletDacValue = self._DriverRpc.rdDasReg(GlobalDefs.VLVCNTRL_INLET_CONTROL_DAC_VALUE_REGISTER)
-                self._outletDacValue = self._DriverRpc.rdDasReg(GlobalDefs.VLVCNTRL_OUTLET_CONTROL_DAC_VALUE_REGISTER)
+            if not self._valveEnabled:
+                self._inletDacValue = self._DriverRpc.rdDasReg(interface.VALVE_CNTRL_USER_INLET_VALVE_REGISTER)
+                self._outletDacValue = self._DriverRpc.rdDasReg(interface.VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER)
 
             if self._status._Status & SAMPLEMGR_STATUS_FLOWING:
 
@@ -469,7 +468,7 @@ class SampleManagerBaseMode(object):
                 pressureLocked = False
                 pressure = self._RPC_ReadPressure()
                 pressureTol = self.pressure_tolerance_per
-                pressureSetpoint = vlvcntrl['PressureSetpoint']
+                pressureSetpoint = self._RPC_ReadPressureSetpoint()
                 if pressure < (1-pressureTol)*pressureSetpoint:
                     self._pressureLockCount = 0
                     self._setStatus( SAMPLEMGR_STATUS_PRESSURE_LOW )
@@ -500,12 +499,12 @@ class SampleManagerBaseMode(object):
         try:
             sensorName = obj.streamType
             sensorValue = obj.value.asFloat
-            if sensorName == GlobalDefs.STREAM_CavityPressure:
+            if sensorName == interface.STREAM_CavityPressure:
                 self._pressure = sensorValue
-            elif sensorName == GlobalDefs.STREAM_InletDacValue:
+            elif sensorName == interface.STREAM_InletValve:
                 if self._valveEnabled == True:
                     self._inletDacValue = sensorValue
-            elif sensorName == GlobalDefs.STREAM_OutletDacValue:
+            elif sensorName == interface.STREAM_OutletValve:
                 if self._valveEnabled == True:
                     self._outletDacValue = sensorValue
             else:
@@ -555,7 +554,7 @@ class SampleManager(object):
             
         self.streamListener = Listener(None,
                                        BROADCAST_PORT_SENSORSTREAM,
-                                       GlobalDefs.STREAM_ElementType,
+                                       interface.SensorEntryType,
                                        self.StreamFilter,
                                        retry = True,
                                        name = "Sample Manager sensor stream listener",logFunc = Log)
@@ -744,10 +743,6 @@ class SampleManager(object):
     @RpcWrapStateChangeCalls
     def RPC_FlowStop(self):
         """STOP FLOW"""
-
-    @RpcWrapStateChangeCalls
-    def RPC_FlowPumpDisable(self):
-        """STOP FLOW & PUMP"""
 
     @RpcWrapStateChangeCalls
     def RPC_Park(self):
