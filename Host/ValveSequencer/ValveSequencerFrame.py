@@ -10,7 +10,8 @@ class ValveSequencerFrame(wx.Frame):
         self.numSteps = DEFAULT_NUM_STEPS 
         self.lastNumSteps = 0
         
-        kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
+        #kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
+        kwds["style"] = wx.CAPTION|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
         wx.Frame.__init__(self, *args, **kwds)
         self.panel = wx.ScrolledWindow(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         
@@ -22,7 +23,8 @@ class ValveSequencerFrame(wx.Frame):
         self.idEnableSeq = wx.NewId()
         #self.idDisableSeq = wx.NewId()
         self.idGoFirstStep = wx.NewId() 
-        self.idResetAllValves = wx.NewId()   
+        self.idResetAllValves = wx.NewId()
+        self.idHideInterface = wx.NewId()
         
         menuItem.Append(self.idLoadFile, "Load Valve Sequence File", "", wx.ITEM_NORMAL)
         menuItem.Append(self.idSaveFile, "Save Valve Sequence File", "", wx.ITEM_NORMAL)
@@ -31,7 +33,8 @@ class ValveSequencerFrame(wx.Frame):
         menuItem.Append(self.idEnableSeq, "Start Sequencer", "", wx.ITEM_NORMAL)
         #menuItem.Append(self.idDisableSeq, "Disable Sequencer", "", wx.ITEM_NORMAL)
         menuItem.Append(self.idGoFirstStep, "Go To First Step", "", wx.ITEM_NORMAL) 
-        menuItem.Append(self.idResetAllValves, "Reset All Valves", "", wx.ITEM_NORMAL)        
+        menuItem.Append(self.idResetAllValves, "Reset All Valves", "", wx.ITEM_NORMAL)  
+        menuItem.Append(self.idHideInterface, "Hide Sequencer Interface", "", wx.ITEM_NORMAL)  
         self.frameMenubar.Append(menuItem, "Action")
         self.SetMenuBar(self.frameMenubar)
         

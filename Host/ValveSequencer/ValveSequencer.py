@@ -55,10 +55,12 @@ class RpcServerThread(threading.Thread):
             LogExc("Exception raised when calling exit function at exit of RPC server.")
             
 class ValveSequencer(ValveSequencerFrame):
-    def __init__(self, configFile, *args, **kwds):
-        co = CustomConfigObj(configFile)
-        self.numSolValves = co.getint("MAIN", "numSolValves", 6)
-        self.comPortRotValve = co.getint("MAIN", "comPortRotValve", 0)
+    def __init__(self, configFile, showAtStart, *args, **kwds):
+        self.configFile = configFile
+        self.co = CustomConfigObj(configFile)
+        self.numSolValves = self.co.getint("MAIN", "numSolValves", 6)
+        self.comPortRotValve = self.co.getint("MAIN", "comPortRotValve", 0)
+        self.filename = self.co.get("MAIN", "lastSeqFile", "")
         ValveSequencerFrame.__init__(self, self.numSolValves, *args, **kwds)
         try:
             self.rotValveCtrl = RotValveCtrl(self.comPortRotValve)
@@ -70,7 +72,6 @@ class ValveSequencer(ValveSequencerFrame):
         self.stepTimer = wx.Timer(self)
         self.numSkippedSteps = 0
         self.seqData = None
-        self.filename = None
         self.defaultPath = None
         self.holdNewSeq = False
         
@@ -85,14 +86,25 @@ class ValveSequencer(ValveSequencerFrame):
         
         # A flag used to start/stop the sequencer for RPC calls (can't start timer directly from RPC)
         self.runSequencer = False
-        self.stepTimer.Start(EXE_INTERVAL)
-        self.Show(False)
         
+        # Run the valve sequencer if lastSeqFile is a valid file name
+        if os.path.isfile(self.filename):
+            self.onLoadFileMenu(None, self.filename)
+            self.startValveSeq()
+
+        if showAtStart:
+            self.showGui()
+        else:
+            self.hideGui()
+            
+        self.stepTimer.Start(EXE_INTERVAL)
+                
     def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onEnableMenu, id = self.idEnableSeq)    
         #self.Bind(wx.EVT_MENU, self.onDisableMenu, id = self.idDisableSeq)
         self.Bind(wx.EVT_MENU, self.onGoFirstStepMenu, id = self.idGoFirstStep)
-        self.Bind(wx.EVT_MENU, self.onResetAllValvesMenu, id = self.idResetAllValves)       
+        self.Bind(wx.EVT_MENU, self.onResetAllValvesMenu, id = self.idResetAllValves)
+        self.Bind(wx.EVT_MENU, self.onHideInterface, id = self.idHideInterface)
         self.Bind(wx.EVT_MENU, self.onLoadFileMenu, id = self.idLoadFile)
         self.Bind(wx.EVT_MENU, self.onSaveFileMenu, id = self.idSaveFile)        
         self.Bind(wx.EVT_SPINCTRL, self.onTotStepsSpinCtrl, self.spinCtrlTotSteps)
@@ -153,30 +165,45 @@ class ValveSequencer(ValveSequencerFrame):
             valCode = int(self.curTextCtrlList[2].GetValue())
             rotValCode = int(self.curTextCtrlList[3].GetValue())
             mask = 64 * rotValCode + valCode
-        else:
-            valCode = mask % 64
-            rotValCode = (mask - valCode) / 64
-            
+
+        # Do not interfere with valves which are not controlled by valve sequencer        
+        CRDS_Driver.closeValves((~mask) & (2**self.numSolValves-1))
+        CRDS_Driver.openValves(mask & (2**self.numSolValves-1))
+        mask = CRDS_Driver.getValveMask()
+        valCode = mask % 64
+        rotValCode = (mask - valCode) / 64
+        
         if self.rotValveCtrl == None:
             rotValCode = 0
-            mask = valCode
         else:
             self.rotValveCtrl.setPosition(rotValCode)
-        CRDS_Driver.setValveMask(mask)
+        
         Log("Set valves with new mask -- sol valve code = %d; rot valve code = %d, mask = %d" % (valCode, rotValCode, mask))
         print "Set valves with new mask -- sol valve code = %d; rot valve code = %d, mask = %d" % (valCode, rotValCode, mask)
 
     def getValves(self):
-        return CRDS_Driver.getValveMask()
+        return CRDS_Driver.getValveMask() & (2**self.numSolValves-1)
 
+    def _writeFilenameToIni(self, filename):
+        self.co.set("MAIN", "lastSeqFile", filename)
+        fp = open(self.configFile,"wb")
+        self.co.write(fp)
+        fp.close()
+        
     def startValveSeq(self):
         self.runSequencer = True
-        self.frameMenubar.SetLabel(self.idEnableSeq,"Pause Sequencer")
+        self.frameMenubar.SetLabel(self.idEnableSeq,"Stop Sequencer")
+        # Update the seq file name in .ini file
+        self._writeFilenameToIni(self.filename)
+        
         print "Valve Sequencer started."
         
     def stopValveSeq(self):
         self.runSequencer = False
         self.frameMenubar.SetLabel(self.idEnableSeq,"Start Sequencer")
+        # Clear the seq file name in .ini file
+        self._writeFilenameToIni("")
+        
         print "Valve Sequencer stopped."
         
     def isSeqRunning(self):
@@ -204,6 +231,9 @@ class ValveSequencer(ValveSequencerFrame):
             pass
         self.curTextCtrlList[0].SetValue(str(stepNum))    
     
+    def onHideInterface(self, event):
+        self.hideGui()
+        
     def onResetAllValvesMenu(self, event):
         self.stopValveSeq()
         self.setValves(0)
@@ -212,14 +242,20 @@ class ValveSequencer(ValveSequencerFrame):
         self.currentStep = 0
         self.holdNewSeq = False
         self.freshStart = True
+        # Clear the seq file name in .ini file
+        self._writeFilenameToIni("")
     
     def onEnableMenu(self, event):
         if not self.stepTimer.IsRunning():
             self.stepTimer.Start(EXE_INTERVAL)
         if self.runSequencer:
             self.stopValveSeq()
+            # Clear the seq file name in .ini file
+            self._writeFilenameToIni("")
         else:
             self.startValveSeq()
+            # Update the seq file name in .ini file
+            self._writeFilenameToIni(self.filename)
                 
     #def onDisableMenu(self, event):
     #    self.stepTimer.Stop()
@@ -354,10 +390,12 @@ class ValveSequencer(ValveSequencerFrame):
                 return
         if self.rotValveCtrl != None:
             self.rotValveCtrl.close()
+        # Clear the seq file name in .ini file
+        self._writeFilenameToIni("")
         self.Destroy()
         event.Skip()
 
-    def onLoadFileMenu(self, event):
+    def onLoadFileMenu(self, event, filename = None):
         if self.isSeqRunning():
             msgDlg = wx.MessageDialog(self, "Valve Sequencer is running. Do you want to finish the current step after loading the new sequence? \
                                       \n\nSelect 'YES' to continue the current step and run the new sequence afterwards. \
@@ -365,58 +403,59 @@ class ValveSequencer(ValveSequencerFrame):
                                       "Finish current step?", wx.YES_NO|wx.YES_DEFAULT|wx.ICON_QUESTION)
             self.holdNewSeq = (msgDlg.ShowModal() == wx.ID_YES)                       
             msgDlg.Destroy()    
- 
-        if not self.defaultPath:
-            self.defaultPath = os.getcwd()
             
-        dlg = wx.FileDialog(self, "Select Valve Sequence File...",
-                            self.defaultPath, wildcard = "*.seq", style=wx.OPEN)
-                            
-        if dlg.ShowModal() == wx.ID_OK:
-            self.filename = dlg.GetPath()
-            self.defaultPath = os.path.dirname(self.filename)
-            try:
-                fd = open(self.filename, "r")
-                self.seqData = fd.readlines()
-                fd.close()
-                
-                # Process the data in the sequence file
-                numSteps = len(self.seqData)  
-                self.spinCtrlTotSteps.SetValue(numSteps)
-                self.setNumSteps(numSteps)
-                self.setPanelCtrl(loadNewSeq = True)   
-                self.doLayout()
-                self.bindDynamicEvents()           
-                for row in range(numSteps):
-                    # Separate the values by any number of spaces
-                    (dur, valCode, rotValCode) = string.split(self.seqData[row])[:3]
-                    self.durationTextCtrlList[row].SetValue(dur)    
-                    self.valCodeTextCtrlList[row].SetValue(valCode)
-                    self.rotValCodeTextCtrlList[row].SetValue(rotValCode)   
-                self.SetTitle("External Valve Sequencer (%s)" % self.filename)                
-            except Exception, errMsg:
-                wx.MessageBox("Loading %s failed!\nPython Error: %s" % (self.filename, errMsg))
-                self.holdNewSeq = False
+        if filename == None:
+            if not self.defaultPath:
+                self.defaultPath = os.getcwd()
+            dlg = wx.FileDialog(self, "Select Valve Sequence File...",
+                                self.defaultPath, wildcard = "*.seq", style=wx.OPEN)
+            if dlg.ShowModal() == wx.ID_OK:
+                self.filename = dlg.GetPath()
+                dlg.Destroy()
+            else:
                 dlg.Destroy()
                 return
+        else:
+            self.filename = filename
+
+        try:
+            fd = open(self.filename, "r")
+            self.seqData = fd.readlines()
+            fd.close()
+            # Update the default path
+            self.defaultPath = os.path.dirname(self.filename)
+            # Process the data in the sequence file
+            numSteps = len(self.seqData)  
+            self.spinCtrlTotSteps.SetValue(numSteps)
+            self.setNumSteps(numSteps)
+            self.setPanelCtrl(loadNewSeq = True)   
+            self.doLayout()
+            self.bindDynamicEvents()           
+            for row in range(numSteps):
+                # Separate the values by any number of spaces
+                (dur, valCode, rotValCode) = string.split(self.seqData[row])[:3]
+                self.durationTextCtrlList[row].SetValue(dur)    
+                self.valCodeTextCtrlList[row].SetValue(valCode)
+                self.rotValCodeTextCtrlList[row].SetValue(rotValCode)   
+            self.SetTitle("External Valve Sequencer (%s)" % self.filename)                
+        except Exception, errMsg:
+            wx.MessageBox("Loading %s failed!\nPython Error: %s" % (self.filename, errMsg))
+            self.holdNewSeq = False
                 
-            if self.isSeqRunning():
-                if self.holdNewSeq == False:
-                    # Start new sequence right away
-                    self.currentStep = 1
-                    self._runStep(1)
-                else:
-                    # Hold new sequence
-                    self.curTextCtrlList[0].SetValue(str(self.currentStep)+" (Last Seq.)")
+        if self.isSeqRunning():
+            if self.holdNewSeq == False:
+                # Start new sequence right away
+                self.currentStep = 1
+                self._runStep(1)
             else:
-                self.holdNewSeq = False
-                self.showCurrent(0)
-                self.curTextCtrlList[1].SetValue("0") 
-                self.currentStep = 0
-                self.freshStart = True
+                # Hold new sequence
+                self.curTextCtrlList[0].SetValue(str(self.currentStep)+" (Last Seq.)")
         else:
             self.holdNewSeq = False
-        dlg.Destroy()             
+            self.showCurrent(0)
+            self.curTextCtrlList[1].SetValue("0") 
+            self.currentStep = 0
+            self.freshStart = True
         
     def onSaveFileMenu(self, event):        
         # Update self.seqData
@@ -452,16 +491,17 @@ class ValveSequencer(ValveSequencerFrame):
                 self.SetTitle("External Valve Sequencer (%s)" % self.filename)                
             except Exception, errMsg:
                 wx.MessageBox("Saving %s failed!\nPython Error: %s" % (self.filename, errMsg))
-        dlg.Destroy()    
+        dlg.Destroy()
 
 HELP_STRING = \
 """
 
-ValveSequencer.py [-h] [-c <FILENAME>]
+ValveSequencer.py [-h] [-s] [-c <FILENAME>]
 
 Where the options can be a combination of the following:
 -h, --help : Print this help.
 -c         : Specify a config file.
+-s         : Show interface at startup
 
 """
 
@@ -472,7 +512,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "hc:s", ["help"])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -492,16 +532,21 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-
-    return configFile
+        
+    if "-s" in options:
+        showAtStart = True
+    else:
+        showAtStart = False
+        
+    return (configFile, showAtStart)
     
 if __name__ == "__main__":
     #Get and handle the command line options...
-    configFile = HandleCommandSwitches()
+    (configFile, showAtStart) = HandleCommandSwitches()
     Log("%s started." % APP_NAME, Level = 0)
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()
-    frame = ValveSequencer(configFile, None, -1, "")
+    frame = ValveSequencer(configFile, showAtStart, None, -1, "")
     app.SetTopWindow(frame)
     app.MainLoop()
     Log("Exiting program")
