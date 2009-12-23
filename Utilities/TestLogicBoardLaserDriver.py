@@ -190,6 +190,7 @@ class TestLogicBoardLaserDriver(object):
                        ("Value during ringdown",ringdownValue,0,0.25,"%.3g"),
                        ])
         vt.writeOut(tp.rstFile)
+        print "Overall result: %s" % vt.giveVerdict()
 
 if __name__ == "__main__":
     pname = sys.argv[0]

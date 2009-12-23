@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # FILE:
-#   TestLogicBoardLaserTec.py tests the G2000 logic board laser TEC drive
+#   TestPowerBoardValveDriver.py tests the G2000 power board valve PWM driver 
 #
 # DESCRIPTION:
 #
@@ -29,6 +29,7 @@ from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 
+
 class DriverProxy(SharedTypes.Singleton):
     """Encapsulates access to the Driver via RPC calls"""
     initialized = False
@@ -38,14 +39,14 @@ class DriverProxy(SharedTypes.Singleton):
             self.myaddr = socket.gethostbyname(socket.gethostname())
             serverURI = "http://%s:%d" % (self.hostaddr,
                 SharedTypes.RPC_PORT_DRIVER)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="MakeWlmFile1")
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="TestPowerBoardValveDriver")
             self.initialized = True
 
 # For convenience in calling driver functions
 Driver = DriverProxy().rpc
 
-class TestLogicBoardLaserTec(object):
-    def __init__(self,tp,aLaserNum):
+class TestPowerBoardValveDriver(object):
+    def __init__(self,tp,valve):
         self.testParameters = tp
         self.csv1Name = "data1.csv"
         self.csv1Fp = open(tp.absoluteTestDirectory + self.csv1Name,"w")
@@ -62,49 +63,52 @@ class TestLogicBoardLaserTec(object):
         except:
             raise Exception("Cannot open serial port - aborting")
         self.serialTimeout = 10.0
-        self.aLaserNum = aLaserNum
-
+        self.valve = valve
+        
     def run(self):
-        aLaserNum = self.aLaserNum
+        valve = self.valve
         # Check that the driver can communicate
         id = self.sourcemeter.ask("*IDN?")
         if not id.startswith("KEITHLEY INSTRUMENTS INC.,MODEL 2400"):
             raise ValueError,"Incorrect identification string from sourcemeter: %s" % id
+        block = "FPGA_DYNAMICPWM_%s" % valve.upper()
         try:
-            regVault = Driver.saveRegValues(["LASER%d_MANUAL_TEC_REGISTER" % aLaserNum,
-                                             "LASER%d_TEMP_CNTRL_STATE_REGISTER" % aLaserNum,
-                                             "LASER%d_TEMP_CNTRL_AMIN_REGISTER" % aLaserNum,
-                                             "LASER%d_TEMP_CNTRL_AMAX_REGISTER" % aLaserNum,
+            regVault = Driver.saveRegValues([(block,"DYNAMICPWM_CS"),
+                                             (block,"DYNAMICPWM_DELTA"),
+                                             (block,"DYNAMICPWM_HIGH"),
+                                             (block,"DYNAMICPWM_LOW"),
+                                             (block,"DYNAMICPWM_SLOPE"),
                                              ])
-    
-            setPoints = arange(4000.0,61000.0,2000.0)
+            quiescentValue = 0
+            setPoints = arange(0.0,61000.0,2000.0)
             sweepMon = []
-            self.sourcemeter.ask(":MEAS:VOLT:DC?")
-            Driver.wrDasReg("LASER%d_TEMP_CNTRL_AMIN_REGISTER" % aLaserNum,setPoints[0])
-            Driver.wrDasReg("LASER%d_TEMP_CNTRL_AMAX_REGISTER" % aLaserNum,setPoints[-1])
-            Driver.wrDasReg("LASER%d_MANUAL_TEC_REGISTER" % aLaserNum,setPoints[0])
-            Driver.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % aLaserNum,TEMP_CNTRL_DisabledState)
-            time.sleep(0.25)
-            print "Disabled",float(self.sourcemeter.ask("READ?").split(",")[0])
-            print "TEC sweep"
-            # Step coarse current DAC
-            Driver.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % aLaserNum,TEMP_CNTRL_ManualState)
+            self.sourcemeter.ask(":MEAS:CURR:DC?")
+            cs = (1<<DYNAMICPWM_CS_RUN_B) | (1<<DYNAMICPWM_CS_CONT_B) | (1<<DYNAMICPWM_CS_PWM_ENABLE_B)
+            Driver.wrFPGA(block,"DYNAMICPWM_CS",cs)            
+            Driver.wrFPGA(block,"DYNAMICPWM_DELTA",750)
+            Driver.wrFPGA(block,"DYNAMICPWM_SLOPE",1000)
+            time.sleep(1.0)
+            print "%s valve PWM sweep" % valve
+            # Step upper and lower limits of dynamic PWM ramp
             for s in setPoints:
-                Driver.wrDasReg("LASER%d_MANUAL_TEC_REGISTER" % aLaserNum,s)
+                Driver.wrFPGA(block,"DYNAMICPWM_HIGH",int(s))
+                Driver.wrFPGA(block,"DYNAMICPWM_LOW",int(s))
                 time.sleep(0.25)
-                r = float(self.sourcemeter.ask("READ?").split(",")[0])
+                r = float(self.sourcemeter.ask("READ?").split(",")[1])
                 print s,r
                 sweepMon.append(r)
-            Driver.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % aLaserNum,TEMP_CNTRL_DisabledState)
+            s = quiescentValue
+            Driver.wrFPGA(block,"DYNAMICPWM_HIGH",int(s))
+            Driver.wrFPGA(block,"DYNAMICPWM_LOW",int(s))
             time.sleep(0.25)
-            disabledValue = float(self.sourcemeter.ask("READ?").split(",")[0])
+            disabledValue = float(self.sourcemeter.ask("READ?").split(",")[1])
             self.sourcemeter.sendString(":OUTPUT:STATE OFF")
             sweepMon = array(sweepMon)
         finally:
             Driver.restoreRegValues(regVault)
             self.ser.close()
             
-        p,res,fittedValues = best_fit(setPoints[:],sweepMon[:],1)
+        p,res,fittedValues = best_fit(setPoints[1:-12],sweepMon[1:-12],1)
         
         result1 = CsvData()
         tp = self.testParameters
@@ -112,8 +116,8 @@ class TestLogicBoardLaserTec(object):
                               "DateTime":tp.parameters["DateTime"],
                               "TestCode":'"%s"' % (tp.parameters["TestCode"],),
                              }
-        result1.columnTitles = ["Laser %d TEC PWM" % aLaserNum,"Voltage across 5 ohm load"]
-        result1.columnUnits  = ["digU","Volts"]
+        result1.columnTitles = ["%s valve PWM" % valve,"Current"]
+        result1.columnUnits  = ["digU","Amps"]
         result1.writeOut(self.csv1Fp)
         
         for s,r in zip(setPoints,sweepMon):
@@ -121,37 +125,24 @@ class TestLogicBoardLaserTec(object):
         self.csv1Fp.close()    
         
         figure(1)
-        plot(setPoints,sweepMon,'ro',setPoints[:],fittedValues)
+        plot(setPoints,sweepMon,'ro',setPoints[1:-12],fittedValues)
         grid(True)
         xlabel(result1.columnTitles[0])
         ylabel(result1.columnTitles[1])
         savefig(tp.absoluteTestDirectory + self.graph1Name)
         close(1)
         
-        print >> tp.rstFile, "\nTEC PWM stepping"
+        print >> tp.rstFile, "\n%s valve PWM stepping" % valve
         print >> tp.rstFile, "\nData `directory <%s>`__, " % (tp.relativeTestDirectory,)
         print >> tp.rstFile, "CSV formatted `datafile <%s>`__, " % (tp.relativeTestDirectory+self.csv1Name,)
         print >> tp.rstFile, "PNG `graph <%s>`__" % (tp.relativeTestDirectory+self.graph1Name,)
                 
         vt = VerdictTable(30)
-        vt.setEntries([("TEC Current Slope",p[0],1.32e-4,1.36e-4,"%.3g"),
-                       ("TEC Current Intercept",p[1]+32768*p[0],-0.05,0.05,"%.3g"),
-                       ("TEC Current Residual",sqrt(res),0,0.05,"%.3g"),
-                       ("Disabled value",disabledValue,-0.01,0.01,"%.3g"),
+        slopeOpt = 2.5/(4700.0/470.0)/1.0/65536.0
+        vt.setEntries([("%s valve Current Slope" % valve,p[0],0.95*slopeOpt,1.05*slopeOpt,"%.3g"),
+                       ("%s valve Current Intercept" % valve,p[1]+quiescentValue*p[0],-5e-4,5e-4,"%.3g"),
+                       ("%s valve Current Residual" % valve,sqrt(res),0,1e-4,"%.3g"),
+                       ("Disabled value",disabledValue,-10.0e-3,10.0e-3,"%.3g"),
                        ])
         vt.writeOut(tp.rstFile)
         print "Overall result: %s" % vt.giveVerdict()
-
-if __name__ == "__main__":
-    pname = sys.argv[0]
-    bname = os.path.basename(pname)
-    if len(sys.argv) < 2:
-        engineName = raw_input("Engine name? ")
-    else:
-        engineName = sys.argv[1]
-    assert bname[:4].upper() == "TEST", "Test program name %s is invalid (should start with Test)" % (bname,)
-    tp = TestParameters(engineName,bname[4:10])
-    tst = TestLogicBoardLaserTec(tp,2)
-    tst.run()
-    tp.appendReport()
-    tp.makeHTML()

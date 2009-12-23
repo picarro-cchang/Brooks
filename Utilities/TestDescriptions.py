@@ -39,6 +39,21 @@ description["204002"] = {"Title": """Logic Board Laser 4 TEC Drive""",\
 description["204003"] = {"Title": """Logic Board Laser 4 thermistor test""",\
 "Descr":"This steps the current through thermistor resistor for laser 4 and records the results." }
 
+description["205001"] = {"Title": """Power board warm box TEC test""",\
+"Descr":"This steps the warm box TEC PWM and measures the voltage across a dummy load." }
+
+description["205002"] = {"Title": """Power board cavity TEC test""",\
+"Descr":"This steps the cavity TEC PWM and measures the voltage across a dummy load." }
+
+description["205003"] = {"Title": """Power board heater test""",\
+"Descr":"This steps the heater PWM and measures the voltage across a dummy load." }
+
+description["205004"] = {"Title": """Power board inlet valve test""",\
+"Descr":"This steps the inlet valve PWM and measures the resulting current." }
+
+description["205005"] = {"Title": """Power board outlet valve test""",\
+"Descr":"This steps the outlet valve PWM and measures the resulting current." }
+
 reportFilename = "report.txt"
 htmlReportFilename = "report.html"
 
