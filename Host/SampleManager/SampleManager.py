@@ -497,8 +497,8 @@ class SampleManagerBaseMode(object):
 
     def _HandleStreamCast(self,obj):
         try:
-            sensorName = obj.streamType
-            sensorValue = obj.value.asFloat
+            sensorName = obj.streamNum
+            sensorValue = obj.value
             if sensorName == interface.STREAM_CavityPressure:
                 self._pressure = sensorValue
             elif sensorName == interface.STREAM_InletValve:
@@ -703,7 +703,7 @@ class SampleManager(object):
             if scriptPath not in sys.path: sys.path.append(scriptPath)
 
             print "Importing: >>%s<<" % (modeFile,)
-            print sys.path
+            #print sys.path
             modeModule    = __import__( modeFile )
             modeClass     =  getattr( modeModule, modeFile )
 

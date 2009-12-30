@@ -23,6 +23,7 @@
 #
 # File History:
 # 06-11-06 ytsai   Created file
+# 12-30-09 alex    Modified code for G2000 platform
 
 import os, sys, time, getopt
 from Host.autogen import interface
@@ -35,8 +36,7 @@ class ProportionalMode(SampleManagerBaseMode):
     status = self._RPC_GetStatus()
     mask = SAMPLEMGR_STATUS_STABLE|SAMPLEMGR_STATUS_FLOWING|SAMPLEMGR_STATUS_FLOW_STARTED
     if (status & mask) == mask:
-      return True
-
+        return True
     self._clearStatus()
     
     self._LPC_WritePressureSetpoint( self.operate_pressure_sp_torr )
@@ -46,22 +46,22 @@ class ProportionalMode(SampleManagerBaseMode):
 
     # Set valve control
     if self.valve_mode == INLETVALVE:
-      self._LPC_SetValveControl(interface.VALVE_CNTRL_InletControlState )
+        self._LPC_SetValveControl(interface.VALVE_CNTRL_InletControlState )
     elif self.valve_mode == OUTLETVALVE:
-      self._LPC_SetValveControl(interface.VALVE_CNTRL_OutletControlState )
+        self._LPC_SetValveControl(interface.VALVE_CNTRL_OutletControlState )
 
     # Step valve to target value (valve stepped is opposite of valve controlled )
     if self.valve_mode == INLETVALVE:
-      stepValve = OUTLETVALVE
-      targetpos = self.outlet_valve_target
-      minpos    = self.outlet_valve_start
+        stepValve = OUTLETVALVE
+        targetpos = self.outlet_valve_target
+        minpos    = self.outlet_valve_start
     elif self.valve_mode == OUTLETVALVE:
-      stepValve = INLETVALVE
-      targetpos = self.inlet_valve_target
-      minpos    = self.inlet_valve_start
+        stepValve = INLETVALVE
+        targetpos = self.inlet_valve_target
+        minpos    = self.inlet_valve_start
     startpos    = self._RPC_GetValve( stepValve )
     if startpos < minpos:
-      startpos = minpos
+        startpos = minpos
     deltapos   = targetpos - startpos
     step       = self.proportional_step
     try:
@@ -87,9 +87,9 @@ class ProportionalMode(SampleManagerBaseMode):
   def RPC_FlowStop(self):
     """STOP FLOW"""
     if self.valve_mode == INLETVALVE:
-      self._LPC_CloseValve(OUTLETVALVE)
+        self._LPC_CloseValve(OUTLETVALVE)
     else:
-      self._LPC_CloseValve(INLETVALVE)
+        self._LPC_CloseValve(INLETVALVE)
     self._LPC_StopValveControl()
     self._LPC_StopSolenoidValveControl()
     self._clearStatus()
@@ -102,12 +102,12 @@ class ProportionalMode(SampleManagerBaseMode):
 
     # Check to see if need to pump down cavity
     if self._RPC_ReadPressure() > self._RPC_ReadPressureSetpoint() :
-      if self._LPC_PumpDownCavity(tolerance=0.01)==False:
-        return False   # TODO: report to INSTRMGR
+        if self._LPC_PumpDownCavity(tolerance=0.01)==False:
+            return False   # TODO: report to INSTRMGR
     # Goto pressure with inlet control
     else:
-      self._LPC_SetValveControl( interface.VALVE_CNTRL_InletControlState )
-      self._LPC_WaitPressureStabilize( self.fill_pressure_sp_torr, tolerance=0.001, timeout=600, checkInterval=0.5 )
+        self._LPC_SetValveControl( interface.VALVE_CNTRL_InletControlState )
+        self._LPC_WaitPressureStabilize( self.fill_pressure_sp_torr, tolerance=0.001, timeout=600, checkInterval=0.5 )
 
     self._LPC_StopValveControl()
     self._LPC_WritePressureSetpoint( self.operate_pressure_sp_torr )

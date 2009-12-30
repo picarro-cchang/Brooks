@@ -495,9 +495,12 @@ class InstMgr(object):
             return INST_ERROR_DAS_CAL_WRITE_FAILED
 
         if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
-            myThread = threading.Thread(target=self.SampleMgrRpc.FlowStart)
-            myThread.setDaemon(True)
-            myThread.start()
+            if self.noSampleMgr:
+                myThread = threading.Thread(target=self.SampleMgrRpc.FlowStart)
+                myThread.setDaemon(True)
+                myThread.start()
+            else:
+                self.SampleMgrRpc.FlowStart()
             self.pressureLockCount = 0
             self.MeasuringState = MEAS_STATE_PRESSURE_STAB
             self._SetStatus(INSTMGR_STATUS_GAS_FLOWING)
@@ -887,10 +890,13 @@ class InstMgr(object):
 
                 if self.DriverRpc.rdDasReg("VALVE_CNTRL_STATE_REGISTER") == interface.VALVE_CNTRL_DisabledState and \
                    self.State == INSTMGR_STATE_MEASURING:
-                    self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
-                    myThread = threading.Thread(target=self.SampleMgrRpc.FlowStart)
-                    myThread.setDaemon(True)
-                    myThread.start()
+                    if self.noSampleMgr:
+                        self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
+                        myThread = threading.Thread(target=self.SampleMgrRpc.FlowStart)
+                        myThread.setDaemon(True)
+                        myThread.start()
+                    else:
+                        self.SampleMgrRpc.FlowStart()
     
             except Exception, e:
                 Log("Das Monitor: error %s" % (e,),Level = 2)
