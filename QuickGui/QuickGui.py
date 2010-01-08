@@ -1096,9 +1096,63 @@ class DataStore(object):
     def getDataSequence(self,source,key):
         return self.sourceDict[source][key]
 #end of class DataStore
+class InstStatusPanel(wx.Panel):
+    """The InstStatusPanel has check indicators which show the states of the control loops
+    """
+    def __init__(self, font, warmBoxTempS, cavityTempS, cavityPressureS, *args, **kwds):
+        kwds["style"] = wx.TAB_TRAVERSAL
+        wx.Panel.__init__(self, *args, **kwds)
+ 
+        self.warmBoxTempLabel = wx.StaticText(self, -1, "Warm Box Temp (C)")
+        setItemFont(self.warmBoxTempLabel,font)
+        self.cavityTempLabel = wx.StaticText(self, -1, "Cavity Temperature (C)")
+        setItemFont(self.cavityTempLabel,font)
+        self.cavityPressureLabel = wx.StaticText(self, -1, "Cavity Pressure (Torr)")
+        setItemFont(self.cavityPressureLabel,font)
+ 
+        self.warmBoxTemp = wx.TextCtrl(self, -1, style=wx.TE_READONLY|wx.TE_CENTER|wx.TE_RICH2)
+        self.warmBoxTemp.SetMinSize((55, -1))
+        self.warmBoxTemp.SetBackgroundColour('#85B24A')
+        setItemFont(self.warmBoxTemp,font)
+        
+        self.cavityTemp = wx.TextCtrl(self, -1, style=wx.TE_READONLY|wx.TE_CENTER|wx.TE_RICH2)
+        self.cavityTemp.SetMinSize((55, -1))
+        self.cavityTemp.SetBackgroundColour('#85B24A')
+        setItemFont(self.cavityTemp,font)
+        
+        self.cavityPressure = wx.TextCtrl(self, -1, style=wx.TE_READONLY|wx.TE_CENTER|wx.TE_RICH2)
+        self.cavityPressure.SetMinSize((55, -1)) 
+        self.cavityPressure.SetBackgroundColour('#85B24A')
+        setItemFont(self.cavityPressure,font)
+        
+        self.__do_layout()
+
+    def __do_layout(self):
+        sizer_out = wx.BoxSizer(wx.VERTICAL)
+        sizer_in = wx.FlexGridSizer(3, 2)
+        sizer_in.Add(self.warmBoxTempLabel, 0, wx.RIGHT, 3)
+        sizer_in.Add(self.warmBoxTemp, 0)
+        sizer_in.Add(self.cavityTempLabel, 0, wx.RIGHT, 3)
+        sizer_in.Add(self.cavityTemp, 0)
+        sizer_in.Add(self.cavityPressureLabel, 0, wx.RIGHT, 3)
+        sizer_in.Add(self.cavityPressure, 0)
+        
+        sizer_out.Add(sizer_in, 0, wx.EXPAND, 0)
+        self.SetAutoLayout(True)
+        self.SetSizer(sizer_out)
+        sizer_out.Fit(self)
+        sizer_out.SetSizeHints(self)
+        
 class QuickGui(wx.Frame):
     def __init__(self,configFile):
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700))
+        self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
+        self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
+        #self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = APP_NAME)
+        try:
+            self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
+        except:
+            self.valveSeqRpc = None
         self.configFile = configFile
         self.config = self.loadConfig(self.configFile)
         self.numGraphs = max(1, self.config.getint("Graph","NumGraphs",1))
@@ -1133,23 +1187,46 @@ class QuickGui(wx.Frame):
         self.logo = None
         self.fullInterface = False
         self.showStat = False
+        self.showInstStat = False
         self.serviceModeOnlyControls = []
         self.statControls = []
         self.imageDatabase = ImageDatabase()
         self.loadImageDatabase() # from ini file
 
+        # Collect instrument status setpoint and tolerance
+        try:
+            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
+            self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
+        except:
+            self.cavityTempS = 45.0
+            self.cavityTempT = 0.2
+        try:
+            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
+            self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")
+        except:
+            self.warmBoxTempS = 45.0
+            self.warmBoxTempT = 0.2
+        try:
+            #self.cavityPressureS = self.sampleMgrRpc.ReadOperatePressureSetpoint()
+            #self.cavityPressureTPer = self.sampleMgrRpc.ReadPressureTolerancePer()
+            self.cavityPressureS = self.driverRpc.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")
+            self.cavityPressureTPer = 0.05
+        except:
+            self.cavityPressureS = 140.0
+            self.cavityPressureTPer = 0.05
+        self.cavityPressureT = self.cavityPressureTPer*self.cavityPressureS 
+        
+        # Set up instrument status panel source and key
+        self.instStatSource = self.config.get("InstStatPanel", "Source", "Sensors")
+        self.instStatCavityPressureKey = self.config.get("InstStatPanel", "CavityPressureKey", "CavityPressure")
+        self.instStatCavityTempKey = self.config.get("InstStatPanel", "CavityTempKey", "CavityTemp")
+        self.instStatWarmBoxTempKey = self.config.get("InstStatPanel", "WarmBoxTempKey", "WarmBoxTemp")
+        
         self.layoutFrame()
         # Create the image panels with the frame as parent
         for key in self.imageDatabase.dbase:
             self.imageDatabase.setImagePanel(key,self)
-
-        self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
-        self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
-        try:
-            self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
-        except:
-            self.valveSeqRpc = None
-            
+ 
         self.menuBar = wx.MenuBar()
         self.iSettings = wx.Menu()
         self.iView = wx.Menu()
@@ -1168,6 +1245,9 @@ class QuickGui(wx.Frame):
         self.idStatDisplay = wx.NewId()
         self.iStatDisplay = wx.MenuItem(self.iView, self.idStatDisplay, "Show Statistics", "", wx.ITEM_NORMAL)
         self.iView.AppendItem(self.iStatDisplay)
+        self.idInstStatDisplay = wx.NewId()
+        self.iInstStatDisplay = wx.MenuItem(self.iView, self.idInstStatDisplay, "Show Instrument Status", "", wx.ITEM_NORMAL)
+        self.iView.AppendItem(self.iInstStatDisplay)
         
         self.menuBar.Append(self.iTools,"Tools")
         self.idUserCal = wx.NewId()
@@ -1199,6 +1279,7 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnLockTime, id=self.idLockTime)
         self.iLockTime.Enable(self.numGraphs>1)
         self.Bind(wx.EVT_MENU, self.OnStatDisplay, id=self.idStatDisplay)
+        self.Bind(wx.EVT_MENU, self.OnInstStatDisplay, id=self.idInstStatDisplay)
         self.Bind(wx.EVT_MENU, self.OnUserCal, id=self.idUserCal)
         self.updateTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER,self.OnTimer,self.updateTimer)
@@ -1391,24 +1472,33 @@ class QuickGui(wx.Frame):
 
         # Alarm view
         alarmBox = wx.StaticBox(parent=self.measPanel,id=-1,label="Alarms")
-
         size = self.config.getint("AlarmBox","Width"),self.config.getint("AlarmBox","Height")
-
         font,fgColour,bgColour = self.getFontFromIni('AlarmBox','enabledFont')
         enabled = wx.ListItemAttr(fgColour,bgColour,font)
         font,fgColour,bgColour = self.getFontFromIni('AlarmBox','disabledFont')
         disabled = wx.ListItemAttr(fgColour,bgColour,font)
-
         self.alarmView = AlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
                                            DataSource=self.alarmInterface,
                                            size=size, numAlarms=self.numAlarms)
         self.alarmView.SetMainForm(self)
         setItemFont(alarmBox,self.getFontFromIni('AlarmBox'))
         setItemFont(self.alarmView,self.getFontFromIni('AlarmBox'))
-
         alarmBoxSizer = wx.StaticBoxSizer(alarmBox,wx.HORIZONTAL)
         alarmBoxSizer.Add(self.alarmView,proportion=0,flag=wx.EXPAND)
 
+        # Instrument status panel
+        self.instStatusBox = wx.StaticBox(parent=self.measPanel,id=-1,label="Instrument Status")
+        size = self.config.getint("InstStatPanel","Width", 150),self.config.getint("InstStatPanel","Height", 70)
+        self.instStatusPanel = InstStatusPanel(font=self.getFontFromIni('InstStatPanel'), 
+                                                warmBoxTempS=self.warmBoxTempS, 
+                                                cavityTempS=self.cavityTempS, 
+                                                cavityPressureS=self.cavityPressureS,
+                                                parent=self.measPanel, id=-1, size=size
+                                                )
+        setItemFont(self.instStatusBox,self.getFontFromIni('InstStatPanel'))
+        instStatusBoxSizer = wx.StaticBoxSizer(self.instStatusBox,wx.HORIZONTAL)
+        instStatusBoxSizer.Add(self.instStatusPanel,proportion=0,flag=wx.EXPAND|wx.ALL,border=2)
+        
         # The measurement result consists of a label describing the displayed quantity,
         #  a text control which contains the number, and a label for the units associated
         #  with the quantity. Below these is a collection of three boxes for the mean, standard
@@ -1516,10 +1606,10 @@ class QuickGui(wx.Frame):
         self.measPanelSizer.Add(alarmBoxSizer,proportion=0,flag=wx.ALIGN_CENTER)
         self.measPanelSizer.Add((panelWidth,20),proportion=0)
         self.measPanelSizer.Add(measDisplaySizer,proportion=0,flag=wx.GROW | wx.LEFT | wx.RIGHT,border = 10)
+        self.measPanelSizer.Add(instStatusBoxSizer,proportion=0,flag=wx.ALIGN_CENTER | wx.ALL,border = 5)
         self.measPanelSizer.Add(self.shutdownButton,proportion=0,flag=wx.GROW | wx.ALL,border = 10)
         self.measPanelSizer.Add(self.userLogButton,proportion=0,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
         self.measPanelSizer.Add(self.userLogTextCtrl,proportion=1,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
-
         #measPanelSizer.Add((-1,1),proportion=1,flag=wx.GROW)
 
         self.measPanel.SetSizer(self.measPanelSizer)
@@ -1571,6 +1661,13 @@ class QuickGui(wx.Frame):
             for c in self.statControls:
                 c.Show(False)
 
+        if self.showInstStat:
+            self.instStatusBox.Show(True)
+            self.instStatusPanel.Show(True)
+        else:
+            self.instStatusBox.Show(False)
+            self.instStatusPanel.Show(False)
+
     def getSourcesbyMode(self):
         s = self.dataStore.getSources()
         if not self.fullInterface:
@@ -1600,7 +1697,7 @@ class QuickGui(wx.Frame):
             self.dataStore.getDataSequence(s,'good').Clear()
             for k in self.dataStore.getKeys(s):
                 self.dataStore.getDataSequence(s,k).Clear()
-        self.dataManagerRpc.PulseAnalyzer_ResetFirstDataInFlag()        
+        self.dataManagerRpc.PulseAnalyzer_ResetFirstDataInFlag()
     def OnSourceChoice(self,evt):
         idx = self.sourceChoiceIdList.index(evt.GetEventObject().GetId())
         self.source[idx] = self.sourceChoice[idx].GetClientData(evt.GetSelection())
@@ -1854,7 +1951,43 @@ class QuickGui(wx.Frame):
 
         self.eventViewControl.RefreshList()
         self.alarmView.RefreshList()
-
+       
+        # Update instrument status
+        if self.showInstStat:
+            try:
+                cavityTemp = self.dataStore.getDataSequence(self.instStatSource,self.instStatCavityTempKey).GetLatest()
+                if cavityTemp != 0.0:
+                    self.instStatusPanel.cavityTemp.SetValue("%.3f" % cavityTemp)
+                    cavityTempDev = cavityTemp-self.cavityTempS
+                    if abs(cavityTempDev) > self.cavityTempT:
+                        self.instStatusPanel.cavityTemp.SetBackgroundColour('yellow')
+                    else:
+                        self.instStatusPanel.cavityTemp.SetBackgroundColour('#85B24A')
+            except:
+                pass
+            try:
+                warmBoxTemp = self.dataStore.getDataSequence(self.instStatSource,self.instStatWarmBoxTempKey).GetLatest()
+                if warmBoxTemp != 0.0:
+                    self.instStatusPanel.warmBoxTemp.SetValue("%.3f" % warmBoxTemp)
+                    warmBoxTempDev = warmBoxTemp-self.warmBoxTempS
+                    if abs(warmBoxTempDev) > self.warmBoxTempT:
+                        self.instStatusPanel.warmBoxTemp.SetBackgroundColour('yellow')
+                    else:
+                        self.instStatusPanel.warmBoxTemp.SetBackgroundColour('#85B24A')
+            except:
+                pass
+            try:
+                cavityPressure = self.dataStore.getDataSequence(self.instStatSource,self.instStatCavityPressureKey).GetLatest()
+                if cavityPressure != 0.0:
+                    self.instStatusPanel.cavityPressure.SetValue("%.3f" % cavityPressure)
+                    cavityPressureDev = cavityPressure-self.cavityPressureS
+                    if abs(cavityPressureDev) > self.cavityPressureT:
+                        self.instStatusPanel.cavityPressure.SetBackgroundColour('yellow')
+                    else:
+                        self.instStatusPanel.cavityPressure.SetBackgroundColour('#85B24A')
+            except:
+                pass
+             
     def OnLockTime(self, evt):
         if self.lockTime:
             self.lockTime = False
@@ -1874,6 +2007,17 @@ class QuickGui(wx.Frame):
         self.measPanelSizer.Layout()
         self.Refresh()
 
+    def OnInstStatDisplay(self, evt):
+        if self.showInstStat:
+            self.showInstStat = False
+            self.iView.SetLabel(self.idInstStatDisplay,"Show Instrument Status")
+        else:
+            self.showInstStat = True
+            self.iView.SetLabel(self.idInstStatDisplay,"Hide Instrument Status")
+        self.modifyInterface()
+        self.measPanelSizer.Layout()
+        self.Refresh()
+        
     def OnUserCal(self, evt):
         concList = self.dataManagerRpc.Cal_GetMeasNames()
         if len(concList) == 0:
