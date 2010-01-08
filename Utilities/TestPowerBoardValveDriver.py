@@ -73,15 +73,32 @@ class TestPowerBoardValveDriver(object):
             raise ValueError,"Incorrect identification string from sourcemeter: %s" % id
         block = "FPGA_DYNAMICPWM_%s" % valve.upper()
         try:
-            regVault = Driver.saveRegValues([(block,"DYNAMICPWM_CS"),
+            regVault = Driver.saveRegValues(["VALVE_CNTRL_STATE_REGISTER",
+                                             "VALVE_CNTRL_USER_INLET_VALVE_REGISTER",
+                                             "VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER",
+                                             "VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER",
+                                             "VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER",
+                                             "VALVE_CNTRL_INLET_VALVE_MIN_REGISTER",
+                                             "VALVE_CNTRL_INLET_VALVE_MAX_REGISTER",
+                                             "VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER",
+                                             "VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER",
+                                             (block,"DYNAMICPWM_CS"),
                                              (block,"DYNAMICPWM_DELTA"),
                                              (block,"DYNAMICPWM_HIGH"),
                                              (block,"DYNAMICPWM_LOW"),
                                              (block,"DYNAMICPWM_SLOPE"),
                                              ])
             quiescentValue = 0
+            Driver.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_ManualControlState")
+            Driver.wrDasReg("VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER",0)
+            Driver.wrDasReg("VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER",0)
+            Driver.wrDasReg("VALVE_CNTRL_INLET_VALVE_MIN_REGISTER",0)
+            Driver.wrDasReg("VALVE_CNTRL_INLET_VALVE_MAX_REGISTER",65536)
+            Driver.wrDasReg("VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER",0)
+            Driver.wrDasReg("VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER",65536)
             setPoints = arange(0.0,61000.0,2000.0)
             sweepMon = []
+            self.sourcemeter.sendString(":SOURCE:VOLTAGE 0.0")
             self.sourcemeter.ask(":MEAS:CURR:DC?")
             cs = (1<<DYNAMICPWM_CS_RUN_B) | (1<<DYNAMICPWM_CS_CONT_B) | (1<<DYNAMICPWM_CS_PWM_ENABLE_B)
             Driver.wrFPGA(block,"DYNAMICPWM_CS",cs)            
@@ -91,6 +108,8 @@ class TestPowerBoardValveDriver(object):
             print "%s valve PWM sweep" % valve
             # Step upper and lower limits of dynamic PWM ramp
             for s in setPoints:
+                Driver.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER",int(s))
+                Driver.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER",int(s))
                 Driver.wrFPGA(block,"DYNAMICPWM_HIGH",int(s))
                 Driver.wrFPGA(block,"DYNAMICPWM_LOW",int(s))
                 time.sleep(0.25)
@@ -98,6 +117,8 @@ class TestPowerBoardValveDriver(object):
                 print s,r
                 sweepMon.append(r)
             s = quiescentValue
+            Driver.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER",int(s))
+            Driver.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER",int(s))
             Driver.wrFPGA(block,"DYNAMICPWM_HIGH",int(s))
             Driver.wrFPGA(block,"DYNAMICPWM_LOW",int(s))
             time.sleep(0.25)
@@ -140,8 +161,8 @@ class TestPowerBoardValveDriver(object):
         vt = VerdictTable(30)
         slopeOpt = 2.5/(4700.0/470.0)/1.0/65536.0
         vt.setEntries([("%s valve Current Slope" % valve,p[0],0.95*slopeOpt,1.05*slopeOpt,"%.3g"),
-                       ("%s valve Current Intercept" % valve,p[1]+quiescentValue*p[0],-5e-4,5e-4,"%.3g"),
-                       ("%s valve Current Residual" % valve,sqrt(res),0,1e-4,"%.3g"),
+                       ("%s valve Current Intercept" % valve,p[1]+quiescentValue*p[0],-5e-3,5e-3,"%.3g"),
+                       ("%s valve Current Residual" % valve,sqrt(res),0,5e-3,"%.3g"),
                        ("Disabled value",disabledValue,-10.0e-3,10.0e-3,"%.3g"),
                        ])
         vt.writeOut(tp.rstFile)

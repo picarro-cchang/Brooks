@@ -79,6 +79,7 @@ class TestLogicBoardLaserTec(object):
     
             setPoints = arange(4000.0,61000.0,2000.0)
             sweepMon = []
+            self.sourcemeter.sendString(":SOURCE:CURRENT 0.0")
             self.sourcemeter.ask(":MEAS:VOLT:DC?")
             Driver.wrDasReg("LASER%d_TEMP_CNTRL_AMIN_REGISTER" % aLaserNum,setPoints[0])
             Driver.wrDasReg("LASER%d_TEMP_CNTRL_AMAX_REGISTER" % aLaserNum,setPoints[-1])

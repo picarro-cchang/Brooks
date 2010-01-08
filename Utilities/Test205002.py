@@ -80,6 +80,7 @@ class TestPowerBoardCavityTecDriver(object):
             quiescentValue = 32768
             setPoints = arange(4000.0,61000.0,2000.0)
             sweepMon = []
+            self.sourcemeter.sendString(":SOURCE:CURRENT 0.0")
             self.sourcemeter.ask(":MEAS:VOLT:DC?")
             Driver.wrDasReg("CAVITY_TEMP_CNTRL_AMIN_REGISTER",setPoints[0])
             Driver.wrDasReg("CAVITY_TEMP_CNTRL_AMAX_REGISTER",setPoints[-1])
