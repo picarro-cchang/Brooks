@@ -1,8 +1,0 @@
-pushd c:\work\CostReducedPlatform\Alpha\Host\EventManager
-start EventManager.py -v
-cd ..\Driver
-start Driver.py
-cd ..\Controller
-start ControllerFrame.py
-popd
-
