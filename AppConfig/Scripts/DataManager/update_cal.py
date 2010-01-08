@@ -1,4 +1,4 @@
-max_shift = 5.0e-4
+max_shift = 2.0e-4
 try:
 	co2_shift = _OLD_DATA_["avg_co2_shift"][-1].value/5.0
 	co2_shift = min(max_shift,max(-max_shift,co2_shift))

@@ -82,6 +82,7 @@ class TestLogicBoardLaserDriver(object):
             setPoints = arange(0.0,65000,2000.0)
             coarseSweepMon = []
             Driver.wrDasReg("LASER%d_MANUAL_FINE_CURRENT_REGISTER" % aLaserNum,0)
+            self.sourcemeter.sendString(":SOURCE:CURRENT 0.0")
             self.sourcemeter.ask(":MEAS:VOLT:DC?")
             Driver.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % aLaserNum,LASER_CURRENT_CNTRL_DisabledState)
             time.sleep(0.25)

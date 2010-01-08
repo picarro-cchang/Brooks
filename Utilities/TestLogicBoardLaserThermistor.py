@@ -133,6 +133,7 @@ class TestLogicBoardLaserThermistor(object):
                        ("TEC Current Residual",sqrt(res),0,1e-4,"%.3g"),
                        ])
         vt.writeOut(tp.rstFile)
+        print "Overall result: %s" % vt.giveVerdict()
 
 if __name__ == "__main__":
     pname = sys.argv[0]

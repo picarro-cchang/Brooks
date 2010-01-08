@@ -102,7 +102,7 @@ class DasScheme(object):
         """Updates the DAS scheme in the "alternate" location and switches
         the DAS to run it instead.
         """
-        # Convert the angle again using the new WLM calibration table, and then upload the new angle scheme to the "other" spot and swap them
+        # Convert to angle again using the new WLM calibration table, and then upload the new angle scheme to the "other" spot and swap them
         self.rdFreqConv.RPC_convertScheme(self.currentAlternateIndex)
         self.rdFreqConv.RPC_uploadSchemeToDAS(self.currentAlternateIndex)
         # Get the accurate representation of what the DAS is currently running

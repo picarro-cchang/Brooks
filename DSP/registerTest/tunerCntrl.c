@@ -22,6 +22,17 @@
 #include "registers.h"
 #include <math.h>
 
+
+void switchToRampMode(void)
+{
+    writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_LOW,(unsigned int)*(float*)registerAddr(TUNER_SWEEP_RAMP_LOW_REGISTER));
+    writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_HIGH,(unsigned int)*(float*)registerAddr(TUNER_SWEEP_RAMP_HIGH_REGISTER));
+    writeFPGA(FPGA_TWGEN+TWGEN_WINDOW_LOW,(unsigned int)*(float*)registerAddr(TUNER_WINDOW_RAMP_LOW_REGISTER));
+    writeFPGA(FPGA_TWGEN+TWGEN_WINDOW_HIGH,(unsigned int)*(float*)registerAddr(TUNER_WINDOW_RAMP_HIGH_REGISTER));
+    writeFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,(unsigned int)*(unsigned int*)registerAddr(SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER));
+    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL, RDMAN_CONTROL_RAMP_DITHER_B, RDMAN_CONTROL_RAMP_DITHER_W, 0);
+}
+
 int tunerCntrlStep(void)
 {
     if ((unsigned int)*(unsigned int *)registerAddr(ANALYZER_TUNING_MODE_REGISTER) == ANALYZER_TUNING_CavityLengthTuningMode)
@@ -38,17 +49,10 @@ int tunerCntrlStep(void)
         // Disable PZT tuning
         changeBitsFPGA(FPGA_TWGEN+TWGEN_CS, TWGEN_CS_TUNE_PZT_B, TWGEN_CS_TUNE_PZT_W, 0);
     }
+    if (!readBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RAMP_DITHER_B,RDMAN_CONTROL_RAMP_DITHER_W)) {
+        switchToRampMode();
+    }
     return STATUS_OK;
-}
-
-void switchToRampMode(void)
-{
-    writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_LOW,(unsigned int)*(float*)registerAddr(TUNER_SWEEP_RAMP_LOW_REGISTER));
-    writeFPGA(FPGA_TWGEN+TWGEN_SWEEP_HIGH,(unsigned int)*(float*)registerAddr(TUNER_SWEEP_RAMP_HIGH_REGISTER));
-    writeFPGA(FPGA_TWGEN+TWGEN_WINDOW_LOW,(unsigned int)*(float*)registerAddr(TUNER_WINDOW_RAMP_LOW_REGISTER));
-    writeFPGA(FPGA_TWGEN+TWGEN_WINDOW_HIGH,(unsigned int)*(float*)registerAddr(TUNER_WINDOW_RAMP_HIGH_REGISTER));
-    writeFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,(unsigned int)*(unsigned int*)registerAddr(SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER));
-    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL, RDMAN_CONTROL_RAMP_DITHER_B, RDMAN_CONTROL_RAMP_DITHER_W, 0);
 }
 
 void setupDither(unsigned int center)
