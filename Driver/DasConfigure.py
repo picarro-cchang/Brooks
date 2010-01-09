@@ -187,20 +187,20 @@ class DasConfigure(SharedTypes.Singleton):
 
         if present:
             # Etalon temperature
-            
+            # Read this quickly so that we get good temperature corrections for the wavelength monitor
             if present > 0:
-                self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_ETALON_THERMISTOR_RESISTANCE",
                         ["ETALON_RESISTANCE_REGISTER"]))
     
-            self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                     ["ETALON_RESISTANCE_REGISTER",
                      "CONVERSION_ETALON_THERM_CONSTA_REGISTER",
                      "CONVERSION_ETALON_THERM_CONSTB_REGISTER",
                      "CONVERSION_ETALON_THERM_CONSTC_REGISTER",
                      "ETALON_TEMPERATURE_REGISTER"]))
-            
+            # However, the streamed temperature data can be slow
             self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_EtalonTemp","ETALON_TEMPERATURE_REGISTER"]))

@@ -303,8 +303,8 @@ class SchemeBasedCalibrator(object):
                         updateWarmBoxCalThread.start()
     
     def updateWarmBoxCal(self,warmBoxCalFilePathActive):
-        self.rdFreqConv.RPC_updateWarmBoxCal(warmBoxCalFilePathActive)
         self.rdFreqConv.resetWarmBoxCalTime()
+        self.rdFreqConv.RPC_updateWarmBoxCal(warmBoxCalFilePathActive)
         
     def centerTuner(self,tunerCenter):
         self.rdFreqConv.RPC_centerTuner(tunerCenter)
