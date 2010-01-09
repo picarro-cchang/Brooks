@@ -422,6 +422,14 @@
             <enum_value ident="TUNER_RampMode" value="0" caption="Ramp mode" />
             <enum_value ident="TUNER_DitherMode" value="1" caption="Dither mode" />
         </enum>
+        <enum type="TUNER_DITHER_MEDIAN_CountType">
+            <description>Ringdowns to use for centering dither</description>
+            <enum_value ident="TUNER_DITHER_MEDIAN_1" value="1" caption="1" />
+            <enum_value ident="TUNER_DITHER_MEDIAN_3" value="3" caption="3" />
+            <enum_value ident="TUNER_DITHER_MEDIAN_5" value="5" caption="5" />
+            <enum_value ident="TUNER_DITHER_MEDIAN_7" value="7" caption="7" />
+            <enum_value ident="TUNER_DITHER_MEDIAN_9" value="9" caption="9" />
+        </enum>        
         <enum type="VALVE_CNTRL_StateType">
             <description>Valve control states</description>
             <enum_value ident="VALVE_CNTRL_DisabledState" value="0" caption="Disabled" />
@@ -2160,6 +2168,12 @@
             <save/>
             <display format="%.0f" units="digU">Dither mode lower window offset</display>
         </register>
+        <register ident="TUNER_DITHER_MEDIAN_COUNT_REGISTER" type="TUNER_DITHER_MEDIAN_CountType" minver="1.0" access="rw">
+            <description>Maximum number of ringdowns to use for median calculation of dither position.</description>
+            <initial>9</initial>
+            <save/>
+            <display format="%d">Number of ringdowns to use for centering dither</display>
+        </register>
         <register ident="RDFITTER_MINLOSS_REGISTER" type="float" minver="1.0" access="rw">
             <description>Minimum loss for a valid ringdown.</description>
             <initial>0.2</initial>
@@ -3329,7 +3343,7 @@
                     <fielddef value="0">Manual</fielddef>
                     <fielddef value="1">Automatic</fielddef>
                 </bitfield>
-                <bitfield ident="LASER_SELECT"   description="Laser under automatic control" lsb="1" width="2">
+                <bitfield ident="LASER_SELECT"   description="Laser selected" lsb="1" width="2">
                     <fielddef value="0">Laser 1</fielddef>
                     <fielddef value="1">Laser 2</fielddef>
                     <fielddef value="2">Laser 3</fielddef>

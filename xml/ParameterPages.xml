@@ -340,6 +340,7 @@
             <register>TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER</register>
             <register>TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER</register>
             <register>TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER</register>
+            <register>TUNER_DITHER_MEDIAN_COUNT_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Optical Injection Parameters</title>

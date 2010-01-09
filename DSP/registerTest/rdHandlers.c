@@ -32,6 +32,76 @@
 #include "spectrumCntrl.h"
 #include "tunerCntrl.h"
 
+/* The following computes a median filter by brute force. It is used to make the dither waveform centering robust against
+    outliers */
+
+#define BUFFSIZE 10
+#define SWAP(a,b) { int temp=(a);(a)=(b);(b)=temp; }
+#define SORT(a,b) { if ((a)>(b)) SWAP((a),(b)); }
+
+static int buffer[BUFFSIZE];  // Keeps up to 10 past samples
+static int buffPointer = 0; // Location in buffer for next datum
+static int pointsInBuff = 0; // Number of points currently in buffer
+
+void reset_median(void)
+{
+    buffPointer = 0;
+    pointsInBuff = 0;
+}
+
+void insert_point(int x)
+{
+    buffer[buffPointer] = x;
+    buffPointer++;
+    if (buffPointer >= BUFFSIZE) buffPointer = 0;
+    pointsInBuff++;
+    if (pointsInBuff > BUFFSIZE) pointsInBuff = BUFFSIZE;
+}
+
+int get_median(int maxPoints)
+{
+    static int p[9];
+    int pointer = buffPointer;
+    if (maxPoints > 9) maxPoints = 9;
+    if (maxPoints < 1) maxPoints = 1;
+    if (0 == (maxPoints & 1)) maxPoints++;
+    if (pointsInBuff < 1) return 0;    
+    pointer--; if (pointer<0) pointer += BUFFSIZE; p[0] = buffer[pointer];
+    if (pointsInBuff < 3 || maxPoints == 1) return p[0];
+    pointer--; if (pointer<0) pointer += BUFFSIZE; p[1] = buffer[pointer];
+    pointer--; if (pointer<0) pointer += BUFFSIZE; p[2] = buffer[pointer];
+    if (pointsInBuff < 5 || maxPoints == 3) {
+        SORT(p[0],p[1]) ; SORT(p[1],p[2]) ; SORT(p[0],p[1]) ;
+        return p[1];
+    }
+    pointer--; if (pointer<0) pointer += BUFFSIZE; p[3] = buffer[pointer];
+    pointer--; if (pointer<0) pointer += BUFFSIZE; p[4] = buffer[pointer];
+    if (pointsInBuff < 7 || maxPoints == 5) {
+        SORT(p[0],p[1]); SORT(p[3],p[4]); SORT(p[0],p[3]);
+        SORT(p[1],p[4]); SORT(p[1],p[2]); SORT(p[2],p[3]);
+        SORT(p[1],p[2]); 
+        return(p[2]) ;
+    }
+    pointer--; if (pointer<0) pointer += BUFFSIZE; p[5] = buffer[pointer];
+    pointer--; if (pointer<0) pointer += BUFFSIZE; p[6] = buffer[pointer];
+    if (pointsInBuff < 9 || maxPoints == 7) {
+        SORT(p[0], p[5]) ; SORT(p[0], p[3]) ; SORT(p[1], p[6]) ;
+        SORT(p[2], p[4]) ; SORT(p[0], p[1]) ; SORT(p[3], p[5]) ;
+        SORT(p[2], p[6]) ; SORT(p[2], p[3]) ; SORT(p[3], p[6]) ;
+        SORT(p[4], p[5]) ; SORT(p[1], p[4]) ; SORT(p[1], p[3]) ;
+        SORT(p[3], p[4]) ; return (p[3]) ;
+    }
+    pointer--; if (pointer<0) pointer += BUFFSIZE; p[7] = buffer[pointer];
+    pointer--; if (pointer<0) pointer += BUFFSIZE; p[8] = buffer[pointer];
+    SORT(p[1], p[2]) ; SORT(p[4], p[5]) ; SORT(p[7], p[8]) ;
+    SORT(p[0], p[1]) ; SORT(p[3], p[4]) ; SORT(p[6], p[7]) ;
+    SORT(p[1], p[2]) ; SORT(p[4], p[5]) ; SORT(p[7], p[8]) ;
+    SORT(p[0], p[3]) ; SORT(p[5], p[8]) ; SORT(p[4], p[7]) ;
+    SORT(p[3], p[6]) ; SORT(p[1], p[4]) ; SORT(p[2], p[5]) ;
+    SORT(p[4], p[7]) ; SORT(p[4], p[2]) ; SORT(p[6], p[4]) ;
+    SORT(p[4], p[2]) ; return(p[4]) ;
+}
+
 /* Implement a queue of integers */
 
 void init_queue(QueueInt *q,int *array,int size)
@@ -194,9 +264,14 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
     }
 
     mode = (TUNER_ModeType)readBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL, RDMAN_CONTROL_RAMP_DITHER_B, RDMAN_CONTROL_RAMP_DITHER_W);
-    if (!timedOut && allowDither) setupDither(readFPGA(FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN));
-    else switchToRampMode();
-
+    if (!timedOut && allowDither) {
+        insert_point(readFPGA(FPGA_RDMAN+RDMAN_TUNER_AT_RINGDOWN));
+        setupDither(get_median(*(unsigned int*)registerAddr(TUNER_DITHER_MEDIAN_COUNT_REGISTER)));
+    }
+    else {
+        reset_median();
+        switchToRampMode();
+    }
     if (!timedOut) advanceDwellCounter();
     else
     {

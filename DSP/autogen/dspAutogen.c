@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[400];
+RegTypes regTypes[401];
 void initRegisters() 
 {
     DataType d;
@@ -536,6 +536,8 @@ void initRegisters()
     writeRegister(TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER,d);
     d.asFloat = 1250.0;
     writeRegister(TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER,d);
+    d.asUint = 9;
+    writeRegister(TUNER_DITHER_MEDIAN_COUNT_REGISTER,d);
     d.asFloat = 0.2;
     writeRegister(RDFITTER_MINLOSS_REGISTER,d);
     d.asFloat = 50.0;
@@ -1038,6 +1040,7 @@ void initRegisters()
     regTypes[TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER] = float_type;
     regTypes[TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER] = float_type;
     regTypes[TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER] = float_type;
+    regTypes[TUNER_DITHER_MEDIAN_COUNT_REGISTER] = uint_type;
     regTypes[RDFITTER_MINLOSS_REGISTER] = float_type;
     regTypes[RDFITTER_MAXLOSS_REGISTER] = float_type;
     regTypes[RDFITTER_LATEST_LOSS_REGISTER] = float_type;
