@@ -708,7 +708,7 @@ class RDFrequencyConverter(Singleton):
         Write calibration back to the file with a new checksum.
         """
         # Archive the current HotBoxCal first (add timestamp to the filename too)
-        timeStamp = datetime.datetime.today().strftime("%m%d%y_%H%M%S")
+        timeStamp = datetime.datetime.today().strftime("%Y%m%d_%H%M%S")
         hotBoxCalFilePathWithTime = self.hotBoxCalFilePath.replace(".ini", "_%s.ini" % timeStamp)
         shutil.copy2(self.hotBoxCalFilePath, hotBoxCalFilePathWithTime)
         Archiver.ArchiveFile(self.hbArchiveGroup, hotBoxCalFilePathWithTime, True)
@@ -738,7 +738,7 @@ class RDFrequencyConverter(Singleton):
         Write calibration back to the file with a new checksum.
         """
         # Archive the current WarmBoxCal firstadd timestamp to the filename too)
-        timeStamp = datetime.datetime.today().strftime("%m%d%y_%H%M%S")
+        timeStamp = datetime.datetime.today().strftime("%Y%m%d_%H%M%S")
         warmBoxCalFilePathWithTime = self.warmBoxCalFilePath.replace(".ini", "_%s.ini" % timeStamp)
         shutil.copy2(self.warmBoxCalFilePath, warmBoxCalFilePathWithTime)
         Archiver.ArchiveFile(self.wbArchiveGroup, warmBoxCalFilePathWithTime, True)
