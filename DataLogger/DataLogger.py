@@ -287,7 +287,7 @@ class DataLog(object):
 
             if not self.BareTime:
                 #write DATE
-                self._WriteEntry(fp,time.strftime("%d/%m/%y",localtime))
+                self._WriteEntry(fp,time.strftime("%Y-%m-%d",localtime))
                 #write TIME
                 timeStr = time.strftime("%H:%M:%S",localtime)
                 fracSec = Time - int(Time)
@@ -297,7 +297,7 @@ class DataLog(object):
                     else:
                         timeStr += ".00"
                 else:
-                    timeStr += ("%.2f" % fracSec)
+                    timeStr += (".%02d" % int(100*fracSec))
                 self._WriteEntry(fp,timeStr)
                 #write FRAC_DAYS_SINCE_JAN1
                 days = (Time-Jan1SecondsSinceEpoch)/TWENTY_FOUR_HOURS_IN_SECONDS
