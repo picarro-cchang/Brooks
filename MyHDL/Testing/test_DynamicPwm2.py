@@ -25,6 +25,7 @@ from Host.autogen.interface import DYNAMICPWM_SLOPE
 from Host.autogen.interface import DYNAMICPWM_CS_RUN_B, DYNAMICPWM_CS_RUN_W
 from Host.autogen.interface import DYNAMICPWM_CS_CONT_B, DYNAMICPWM_CS_CONT_W
 from Host.autogen.interface import DYNAMICPWM_CS_PWM_ENABLE_B, DYNAMICPWM_CS_PWM_ENABLE_W
+from Host.autogen.interface import DYNAMICPWM_CS_USE_COMPARATOR_B, DYNAMICPWM_CS_USE_COMPARATOR_W
 from Host.autogen.interface import DYNAMICPWM_CS_PWM_OUT_B, DYNAMICPWM_CS_PWM_OUT_W
 
 from MyHDL.Common.DynamicPwm import DynamicPwm
@@ -112,7 +113,7 @@ def bench():
                              dsp_data_in=dsp_data_in, dsp_wr=dsp_wr,
                              comparator_in=comparator_in,
                              update_in=update_in, pwm_out=pwm_out,
-                             value_out=value_out, map_base=map_base,MIN_WIDTH=500,MAX_WIDTH=65000 )
+                             value_out=value_out, map_base=map_base,MIN_WIDTH=0,MAX_WIDTH=65535 )
 
     clkGen = ClkGen(clk=clk, reset=reset, clk_10M=clk_10M, clk_5M=clk_5M,
                     clk_2M5=clk_2M5, pulse_1M=strobe_1M, pulse_100k=update_in)

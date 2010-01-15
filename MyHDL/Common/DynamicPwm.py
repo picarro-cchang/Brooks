@@ -23,6 +23,7 @@
 #   19-Sep-2009  sze  Add dither waveform generation
 #   20-Sep-2009  sze  Added pwm_enable bit in CS register
 #    4-Oct-2009  sze  Add saturation to the dither waveform generator
+#   15-Jan-2010  sze  Allow comparator input to be used or ignored
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -38,6 +39,7 @@ from Host.autogen.interface import DYNAMICPWM_SLOPE
 from Host.autogen.interface import DYNAMICPWM_CS_RUN_B, DYNAMICPWM_CS_RUN_W
 from Host.autogen.interface import DYNAMICPWM_CS_CONT_B, DYNAMICPWM_CS_CONT_W
 from Host.autogen.interface import DYNAMICPWM_CS_PWM_ENABLE_B, DYNAMICPWM_CS_PWM_ENABLE_W
+from Host.autogen.interface import DYNAMICPWM_CS_USE_COMPARATOR_B, DYNAMICPWM_CS_USE_COMPARATOR_W
 from Host.autogen.interface import DYNAMICPWM_CS_PWM_OUT_B, DYNAMICPWM_CS_PWM_OUT_W
 
 
@@ -78,6 +80,8 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                             at end of cycle.
                            1 places system in continuous mode, which is started by writing 1 to CS_RUN.
     DYNAMICPWM_CS_PWM_ENABLE -- 1 to enable generation of PWM signal
+    DYNAMICPWM_CS_USE_COMPARATOR -- 0 to set pulse width directly from accumulator
+                                    1 to use comparator input to update mark-space ratio
     DYNAMICPWM_CS_PWM_OUT -- A (read-only) copy of the output of the PWM.
     """
     dynamicpwm_cs_addr = map_base + DYNAMICPWM_CS
@@ -158,10 +162,13 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     # Increment the accumulator as needed
                     value = acc[FPGA_REG_WIDTH+extra:extra]
                     # Handle update of accumulator by adding or subtracting the slope, depending
-                    #  on the state of "up". Handle update of width by adding or subtracting delta, 
+                    #  on the state of "up".
+                    # If comparator is used, handle update of width by adding or subtracting delta, 
                     #  depending on the value of comparator_in. We want the width to saturate at 
                     #  MIN_WIDTH and MAX_WIDTH and not to wrap around. Delta can be of either sign, 
-                    #  depending on the sense of the comparator. 
+                    #  depending on the sense of the comparator.
+                    # If comparator is not used, set the pulse width directly on basis of accumulator
+                    #
                     if update_in:
                         if up:
                             if acc + slope > concat(high,extra0):
@@ -175,29 +182,32 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                                 up.next = 1
                             else:
                                 acc.next = acc - slope
-                        if delta > 0:
-                            if comparator_in:
-                                if pulse_width + delta < MAX_WIDTH:
-                                    pulse_width.next = pulse_width + delta
+                        if cs[DYNAMICPWM_CS_USE_COMPARATOR_B]:
+                            if delta > 0:
+                                if comparator_in:
+                                    if pulse_width + delta < MAX_WIDTH:
+                                        pulse_width.next = pulse_width + delta
+                                    else:
+                                        pulse_width.next = MAX_WIDTH
                                 else:
-                                    pulse_width.next = MAX_WIDTH
+                                    if pulse_width - delta > MIN_WIDTH:
+                                        pulse_width.next = pulse_width - delta
+                                    else:
+                                        pulse_width.next = MIN_WIDTH
                             else:
-                                if pulse_width - delta > MIN_WIDTH:
-                                    pulse_width.next = pulse_width - delta
+                                if comparator_in:
+                                    if pulse_width + delta > MIN_WIDTH:
+                                        pulse_width.next = pulse_width + delta
+                                    else:
+                                        pulse_width.next = MIN_WIDTH
                                 else:
-                                    pulse_width.next = MIN_WIDTH
+                                    if pulse_width - delta < MAX_WIDTH:
+                                        pulse_width.next = pulse_width - delta
+                                    else:
+                                        pulse_width.next = MAX_WIDTH
                         else:
-                            if comparator_in:
-                                if pulse_width + delta > MIN_WIDTH:
-                                    pulse_width.next = pulse_width + delta
-                                else:
-                                    pulse_width.next = MIN_WIDTH
-                            else:
-                                if pulse_width - delta < MAX_WIDTH:
-                                    pulse_width.next = pulse_width - delta
-                                else:
-                                    pulse_width.next = MAX_WIDTH
-                                    
+                            pulse_width.next = value
+
                     # Ensure that accumulator and pulse width values are within bounds
                     if acc > concat(high,extra0):
                         acc.next = concat(high,extra0)

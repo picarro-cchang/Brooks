@@ -25,6 +25,7 @@ from Host.autogen.interface import DYNAMICPWM_SLOPE
 from Host.autogen.interface import DYNAMICPWM_CS_RUN_B, DYNAMICPWM_CS_RUN_W
 from Host.autogen.interface import DYNAMICPWM_CS_CONT_B, DYNAMICPWM_CS_CONT_W
 from Host.autogen.interface import DYNAMICPWM_CS_PWM_ENABLE_B, DYNAMICPWM_CS_PWM_ENABLE_W
+from Host.autogen.interface import DYNAMICPWM_CS_USE_COMPARATOR_B, DYNAMICPWM_CS_USE_COMPARATOR_W
 from Host.autogen.interface import DYNAMICPWM_CS_PWM_OUT_B, DYNAMICPWM_CS_PWM_OUT_W
 
 from MyHDL.Common.DynamicPwm import DynamicPwm
@@ -135,7 +136,8 @@ def bench():
         yield writeFPGA(FPGA_DYNAMICPWM_INLET+DYNAMICPWM_SLOPE,slope)
         
         control = (1 << DYNAMICPWM_CS_RUN_B) | \
-                  (1 << DYNAMICPWM_CS_CONT_B)
+                  (1 << DYNAMICPWM_CS_CONT_B) | \
+                  (1 << DYNAMICPWM_CS_USE_COMPARATOR_B)
         yield writeFPGA(FPGA_DYNAMICPWM_INLET+DYNAMICPWM_CS,control)
         comparator_in.next = 1
         while True:

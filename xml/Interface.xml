@@ -3458,7 +3458,11 @@
                     <fielddef value="0">Disable</fielddef>
                     <fielddef value="1">Enable</fielddef>
                 </bitfield>
-                <bitfield ident="PWM_OUT" description="PWM output" lsb="3" width="1">
+                <bitfield ident="USE_COMPARATOR" description="Use comparator" lsb="3" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>
+                </bitfield>
+                <bitfield ident="PWM_OUT" description="PWM output" lsb="4" width="1" >
                     <fielddef value="0">Low</fielddef>
                     <fielddef value="1">High</fielddef>
                 </bitfield>

@@ -1284,7 +1284,9 @@ typedef enum {
 #define DYNAMICPWM_CS_CONT_W (1) // Single/Continuous bit width
 #define DYNAMICPWM_CS_PWM_ENABLE_B (2) // PWM enable bit position
 #define DYNAMICPWM_CS_PWM_ENABLE_W (1) // PWM enable bit width
-#define DYNAMICPWM_CS_PWM_OUT_B (3) // PWM output bit position
+#define DYNAMICPWM_CS_USE_COMPARATOR_B (3) // Use comparator bit position
+#define DYNAMICPWM_CS_USE_COMPARATOR_W (1) // Use comparator bit width
+#define DYNAMICPWM_CS_PWM_OUT_B (4) // PWM output bit position
 #define DYNAMICPWM_CS_PWM_OUT_W (1) // PWM output bit width
 
 #define DYNAMICPWM_DELTA (1) // Pulse width change per update

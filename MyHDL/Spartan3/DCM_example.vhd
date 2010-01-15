@@ -7,11 +7,11 @@
 -- \   \   \/     Version : 10.1.03
 --  \   \         Application : xaw2vhdl
 --  /   /         Filename : DCM_example.vhd
--- /___/   /\     Timestamp : 11/05/2009 20:01:53
+-- /___/   /\     Timestamp : 01/15/2010 09:58:23
 -- \   \  /  \ 
 --  \___\/\___\ 
 --
---Command: xaw2vhdl-intstyle C:/work/CostReducedPlatform/Alpha/MyHDL/Spartan3/DCM_example.xaw -st DCM_example.vhd
+--Command: xaw2vhdl-intstyle C:/work/G2000/SrcCode/MyHDL/Spartan3/DCM_example.xaw -st DCM_example.vhd
 --Design Name: DCM_example
 --Device: xc3s1000-5ft256
 --
