@@ -52,7 +52,9 @@ from Host.Common import GraphPanel
 from Host.Common import BetterTraceback
 from Host.Common import AppStatus
 from Host.Common import SharedTypes
-from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER
+from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, \
+                                    RPC_PORT_SAMPLE_MGR, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER, \
+                                    RPC_PORT_VALVE_SEQUENCER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
@@ -1099,7 +1101,7 @@ class DataStore(object):
 class InstStatusPanel(wx.Panel):
     """The InstStatusPanel has check indicators which show the states of the control loops
     """
-    def __init__(self, font, warmBoxTempS, cavityTempS, cavityPressureS, *args, **kwds):
+    def __init__(self, font, *args, **kwds):
         kwds["style"] = wx.TAB_TRAVERSAL
         wx.Panel.__init__(self, *args, **kwds)
  
@@ -1121,7 +1123,7 @@ class InstStatusPanel(wx.Panel):
         setItemFont(self.cavityTemp,font)
         
         self.cavityPressure = wx.TextCtrl(self, -1, style=wx.TE_READONLY|wx.TE_CENTER|wx.TE_RICH2)
-        self.cavityPressure.SetMinSize((55, -1)) 
+        self.cavityPressure.SetMinSize((55, -1))
         self.cavityPressure.SetBackgroundColour('#85B24A')
         setItemFont(self.cavityPressure,font)
         
@@ -1148,11 +1150,8 @@ class QuickGui(wx.Frame):
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700))
         self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
         self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
-        #self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = APP_NAME)
-        try:
-            self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
-        except:
-            self.valveSeqRpc = None
+        self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = APP_NAME)
+        self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
         self.configFile = configFile
         self.config = self.loadConfig(self.configFile)
         self.numGraphs = max(1, self.config.getint("Graph","NumGraphs",1))
@@ -1192,30 +1191,13 @@ class QuickGui(wx.Frame):
         self.statControls = []
         self.imageDatabase = ImageDatabase()
         self.loadImageDatabase() # from ini file
+        self.cavityTempS = None
+        self.cavityTempT = None
+        self.warmBoxTempS = None
+        self.warmBoxTempT = None
+        self.cavityPressureS = None
+        self.cavityPressureT = None
 
-        # Collect instrument status setpoint and tolerance
-        try:
-            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
-            self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
-        except:
-            self.cavityTempS = 45.0
-            self.cavityTempT = 0.2
-        try:
-            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
-            self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")
-        except:
-            self.warmBoxTempS = 45.0
-            self.warmBoxTempT = 0.2
-        try:
-            #self.cavityPressureS = self.sampleMgrRpc.ReadOperatePressureSetpoint()
-            #self.cavityPressureTPer = self.sampleMgrRpc.ReadPressureTolerancePer()
-            self.cavityPressureS = self.driverRpc.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")
-            self.cavityPressureTPer = 0.05
-        except:
-            self.cavityPressureS = 140.0
-            self.cavityPressureTPer = 0.05
-        self.cavityPressureT = self.cavityPressureTPer*self.cavityPressureS 
-        
         # Set up instrument status panel source and key
         self.instStatSource = self.config.get("InstStatPanel", "Source", "Sensors")
         self.instStatCavityPressureKey = self.config.get("InstStatPanel", "CavityPressureKey", "CavityPressure")
@@ -1262,11 +1244,10 @@ class QuickGui(wx.Frame):
         except:
             self.pulseSource = None
             
-        if self.valveSeqRpc != None:
-            self.idValveSeq = wx.NewId()
-            self.iValveSeq = wx.MenuItem(self.iTools, self.idValveSeq, "Show/Hide Valve Sequencer GUI", "", wx.ITEM_NORMAL)
-            self.iTools.AppendItem(self.iValveSeq)  
-            self.Bind(wx.EVT_MENU, self.OnValveSeq, id=self.idValveSeq)
+        self.idValveSeq = wx.NewId()
+        self.iValveSeq = wx.MenuItem(self.iTools, self.idValveSeq, "Show/Hide Valve Sequencer GUI", "", wx.ITEM_NORMAL)
+        self.iTools.AppendItem(self.iValveSeq)  
+        self.Bind(wx.EVT_MENU, self.OnValveSeq, id=self.idValveSeq)
         
         self.menuBar.Append(self.iHelp,"Help")
         self.idABOUT = wx.NewId()
@@ -1489,10 +1470,7 @@ class QuickGui(wx.Frame):
         # Instrument status panel
         self.instStatusBox = wx.StaticBox(parent=self.measPanel,id=-1,label="Instrument Status")
         size = self.config.getint("InstStatPanel","Width", 150),self.config.getint("InstStatPanel","Height", 70)
-        self.instStatusPanel = InstStatusPanel(font=self.getFontFromIni('InstStatPanel'), 
-                                                warmBoxTempS=self.warmBoxTempS, 
-                                                cavityTempS=self.cavityTempS, 
-                                                cavityPressureS=self.cavityPressureS,
+        self.instStatusPanel = InstStatusPanel(font=self.getFontFromIni('InstStatPanel'),
                                                 parent=self.measPanel, id=-1, size=size
                                                 )
         setItemFont(self.instStatusBox,self.getFontFromIni('InstStatPanel'))
@@ -1958,33 +1936,41 @@ class QuickGui(wx.Frame):
                 cavityTemp = self.dataStore.getDataSequence(self.instStatSource,self.instStatCavityTempKey).GetLatest()
                 if cavityTemp != 0.0:
                     self.instStatusPanel.cavityTemp.SetValue("%.3f" % cavityTemp)
-                    cavityTempDev = cavityTemp-self.cavityTempS
-                    if abs(cavityTempDev) > self.cavityTempT:
-                        self.instStatusPanel.cavityTemp.SetBackgroundColour('yellow')
-                    else:
-                        self.instStatusPanel.cavityTemp.SetBackgroundColour('#85B24A')
+                    # Change display color (yellow or green)
+                    if self.cavityTempS != None and self.cavityTempT != None:
+                        cavityTempDev = cavityTemp-self.cavityTempS
+                        if abs(cavityTempDev) > self.cavityTempT:
+                            self.instStatusPanel.cavityTemp.SetBackgroundColour('yellow')
+                        else:
+                            self.instStatusPanel.cavityTemp.SetBackgroundColour('#85B24A')
             except:
                 pass
+                
             try:
                 warmBoxTemp = self.dataStore.getDataSequence(self.instStatSource,self.instStatWarmBoxTempKey).GetLatest()
                 if warmBoxTemp != 0.0:
                     self.instStatusPanel.warmBoxTemp.SetValue("%.3f" % warmBoxTemp)
-                    warmBoxTempDev = warmBoxTemp-self.warmBoxTempS
-                    if abs(warmBoxTempDev) > self.warmBoxTempT:
-                        self.instStatusPanel.warmBoxTemp.SetBackgroundColour('yellow')
-                    else:
-                        self.instStatusPanel.warmBoxTemp.SetBackgroundColour('#85B24A')
+                    # Change display color (yellow or green)
+                    if self.warmBoxTempS != None and self.warmBoxTempT != None:
+                        warmBoxTempDev = warmBoxTemp-self.warmBoxTempS
+                        if abs(warmBoxTempDev) > self.warmBoxTempT:
+                            self.instStatusPanel.warmBoxTemp.SetBackgroundColour('yellow')
+                        else:
+                            self.instStatusPanel.warmBoxTemp.SetBackgroundColour('#85B24A')
             except:
                 pass
+                
             try:
                 cavityPressure = self.dataStore.getDataSequence(self.instStatSource,self.instStatCavityPressureKey).GetLatest()
                 if cavityPressure != 0.0:
                     self.instStatusPanel.cavityPressure.SetValue("%.3f" % cavityPressure)
-                    cavityPressureDev = cavityPressure-self.cavityPressureS
-                    if abs(cavityPressureDev) > self.cavityPressureT:
-                        self.instStatusPanel.cavityPressure.SetBackgroundColour('yellow')
-                    else:
-                        self.instStatusPanel.cavityPressure.SetBackgroundColour('#85B24A')
+                    # Change display color (yellow or green)
+                    if self.cavityPressureS != None and self.cavityPressureT != None:
+                        cavityPressureDev = cavityPressure-self.cavityPressureS
+                        if abs(cavityPressureDev) > self.cavityPressureT:
+                            self.instStatusPanel.cavityPressure.SetBackgroundColour('yellow')
+                        else:
+                            self.instStatusPanel.cavityPressure.SetBackgroundColour('#85B24A')
             except:
                 pass
              
@@ -2014,6 +2000,21 @@ class QuickGui(wx.Frame):
         else:
             self.showInstStat = True
             self.iView.SetLabel(self.idInstStatDisplay,"Hide Instrument Status")
+            try:
+                self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
+                self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
+                self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
+                self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")            
+            except:
+                pass
+            try:
+                self.cavityPressureS = self.sampleMgrRpc.ReadOperatePressureSetpoint()
+                cavityPressureTPer = self.sampleMgrRpc.ReadPressureTolerancePer()
+                self.cavityPressureT = cavityPressureTPer*self.cavityPressureS
+            except:
+                self.cavityPressureS = 140.0
+                self.cavityPressureT = 5.0
+
         self.modifyInterface()
         self.measPanelSizer.Layout()
         self.Refresh()

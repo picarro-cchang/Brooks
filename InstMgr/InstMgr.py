@@ -190,7 +190,7 @@ class DummySampleManager(object):
         self.DriverRpc.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER", self.pressureTarget)
         self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
         start = self.DriverRpc.rdDasReg("VALVE_CNTRL_INLET_VALVE_MIN_REGISTER")
-        target = 23500
+        target = 18000
         step = 500
         iterations = int((target-start)/step)
         self.inletTarget = start + iterations*step 
