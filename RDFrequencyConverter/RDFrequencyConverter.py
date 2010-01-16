@@ -274,7 +274,9 @@ class SchemeBasedCalibrator(object):
                 m = round_(dtheta / float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","APPROX_WLM_ANGLE_PER_FSR")))
                 anglePerFsr = mean(dtheta[m == 1])
                 m = round_(dtheta/anglePerFsr) # Quantize m to indicate multiples of the FSR
-                offGrid = abs(dtheta/anglePerFsr - m).max()
+                devs = abs(dtheta/anglePerFsr - m)
+                offGrid = devs.max()
+                Log("Calibration angle per FSR = %.4g, offGrid parameter = %.2f, fraction>0.25 = %.2f" % (anglePerFsr,offGrid,sum(devs>0.25)/float(len(devs))))
                 if offGrid > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_OFFGRID")):
                     Log("Calibration not done, offGrid parameter = %.2f" % (offGrid,))
                 else:

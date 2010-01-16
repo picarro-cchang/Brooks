@@ -429,7 +429,7 @@ class PressurePanelGui(wx.Panel):
 
     def __set_properties(self):
         # begin wxGlade: PressurePanelGui.__set_properties
-        self.ambientPressureCheckbox.SetValue(1)
+        self.ambientPressureCheckbox.SetValue(0)
         self.cavityPressureCheckbox.SetValue(1)
         self.inletValveCheckbox.SetValue(1)
         self.outletValveCheckbox.SetValue(1)

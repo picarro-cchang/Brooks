@@ -390,8 +390,8 @@ class PressurePanel(PressurePanelGui):
             backgroundColour=wx.SystemSettings_GetColour(
                 wx.SYS_COLOUR_3DFACE))
         self.ambientPressureWfm = Series(wfmPoints)
-        self.pressureGraph.AddSeriesAsLine(self.ambientPressureWfm,
-            colour='red',width=2)
+        #self.pressureGraph.AddSeriesAsLine(self.ambientPressureWfm,
+        #    colour='red',width=2)
         self.cavityPressureWfm = Series(wfmPoints)
         self.pressureGraph.AddSeriesAsLine(self.cavityPressureWfm,
             colour='green',width=2)
