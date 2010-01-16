@@ -96,7 +96,7 @@ class TestPowerBoardValveDriver(object):
             Driver.wrDasReg("VALVE_CNTRL_INLET_VALVE_MAX_REGISTER",65536)
             Driver.wrDasReg("VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER",0)
             Driver.wrDasReg("VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER",65536)
-            setPoints = arange(0.0,61000.0,2000.0)
+            setPoints = arange(0.0,66000.0,2000.0)
             sweepMon = []
             self.sourcemeter.sendString(":SOURCE:VOLTAGE 0.0")
             self.sourcemeter.ask(":MEAS:CURR:DC?")
@@ -129,7 +129,7 @@ class TestPowerBoardValveDriver(object):
             Driver.restoreRegValues(regVault)
             self.ser.close()
             
-        p,res,fittedValues = best_fit(setPoints[1:-12],sweepMon[1:-12],1)
+        p,res,fittedValues = best_fit(setPoints[1:],sweepMon[1:],1)
         
         result1 = CsvData()
         tp = self.testParameters
@@ -146,7 +146,7 @@ class TestPowerBoardValveDriver(object):
         self.csv1Fp.close()    
         
         figure(1)
-        plot(setPoints,sweepMon,'ro',setPoints[1:-12],fittedValues)
+        plot(setPoints,sweepMon,'ro',setPoints[1:],fittedValues)
         grid(True)
         xlabel(result1.columnTitles[0])
         ylabel(result1.columnTitles[1])

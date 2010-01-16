@@ -12,6 +12,8 @@
      user to restart system after such failures.
 25. Archiver hogs CPU.
 27. Write test for logic board to do memory check, DAS temperature test, etc.
+28. Write routine to track WLM offsets in saved INI files. The process seems to diverge! Try without 
+calibration of WLM
 
 DONE
 7. Look at implementing averaging of metadata at ringdown, rather than just taking the last value.
