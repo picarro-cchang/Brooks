@@ -424,7 +424,9 @@ class RDFrequencyConverter(Singleton):
             if self.sbc.currentCalSpectrum:
                 self.sbc.processCalSpectrum()
                 if self.schemeMgr:
-                    self.schemeMgr.update()
+                    schemeMgrUpdateThread = threading.Thread(target=self.schemeMgr.update)
+                    schemeMgrUpdateThread.setDaemon(True)
+                    schemeMgrUpdateThread.start()
             self.sbc.clear()
             self.lastSchemeCount = (entry.status & interface.RINGDOWN_STATUS_SequenceMask)
         # Check if this is a calibration row and process it accordingly
