@@ -150,6 +150,42 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """
         return self.rdDasReg("VALVE_CNTRL_STATE_REGISTER")
    
+    def startOutletValveControl(self, pressureSetpoint=None, inletValve=None):
+        """ Start outlet valve control with the specified pressure setpoint and inlet valve settings, or using values in the configuration registers if the parameters are omitted """
+        result = {}
+        if pressureSetpoint is not None:
+            self.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER",pressureSetpoint)
+        else:
+            pressureSetpoint = self.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")
+        if self.rdDasReg("VALVE_CNTRL_STATE_REGISTER") != interface.VALVE_CNTRL_OutletControlState:
+            self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_DisabledState")
+        self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_OutletControlState")
+        if inletValve is not None:
+            self.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER",inletValve)
+        else:
+            inletValve = self.rdDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER")
+        result["cavityPressureSetpoint"] = pressureSetpoint
+        result["inletValve"] = inletValve
+        return result
+
+    def startInletValveControl(self, pressureSetpoint=None, outletValve=None):
+        """ Start inlet valve control with the specified pressure setpoint and outlet valve settings, or using values in the configuration registers if the parameters are omitted """
+        result = {}
+        if pressureSetpoint is not None:
+            self.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER",pressureSetpoint)
+        else:
+            pressureSetpoint = self.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")
+        if self.rdDasReg("VALVE_CNTRL_STATE_REGISTER") != interface.VALVE_CNTRL_InletControlState:
+            self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_DisabledState")
+        self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_InletControlState")
+        if outletValve is not None:
+            self.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER",outletValve)
+        else:
+            outletValve = self.rdDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER")
+        result["cavityPressureSetpoint"] = pressureSetpoint
+        result["outletValve"] = outletValve
+        return result
+        
     def allVersions(self):
         versionDict = {}
         versionDict["interface"] = interface.interface_version

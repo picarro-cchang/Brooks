@@ -160,24 +160,28 @@ class DataLog(object):
                     self.CopyToMailboxAndArchive(path)
 
     def CopyToMailboxAndArchive(self, srcPath = ""):
-        if srcPath == "":
-            srcPath = self.LogPath
-        #Log("Archiving: %s" % os.path.basename(srcPath))   
-        
-        # If Mailbox option is enabled:
-        # Make an additional copy and move 2 separate copies to archive and mailbox locations
-        # The problem of copying to mailbox fisrt and then moving to archive location is that
-        # the archiving thread may be done before the copying thread finishes
-        if self.Mbox.Enabled and self.MboxEnabled:        
-            srcPathCopy = os.path.dirname(srcPath) + '/temp_copy'
-            if not os.path.exists(srcPathCopy):
-                os.makedirs(srcPathCopy)
-            srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
-            shutil.copy2(srcPath, srcPathCopy)
-            # if mailbox enabled, copy file to mailbox directory first
-            CRDS_Archiver.ArchiveFile(self.Mbox.GroupName, srcPathCopy, True)  
-        # Archive
-        CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True)
+        def _CopyToMailboxAndArchive():
+            if srcPath == "":
+                srcPath = self.LogPath
+            #Log("Archiving: %s" % os.path.basename(srcPath))   
+            # If Mailbox option is enabled:
+            # Make an additional copy and move 2 separate copies to archive and mailbox locations
+            # The problem of copying to mailbox fisrt and then moving to archive location is that
+            # the archiving thread may be done before the copying thread finishes
+            if self.Mbox.Enabled and self.MboxEnabled:        
+                srcPathCopy = os.path.dirname(srcPath) + '/temp_copy'
+                if not os.path.exists(srcPathCopy):
+                    os.makedirs(srcPathCopy)
+                srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
+                shutil.copy2(srcPath, srcPathCopy)
+                # if mailbox enabled, copy file to mailbox directory first
+                CRDS_Archiver.ArchiveFile(self.Mbox.GroupName, srcPathCopy, True)  
+            # Archive
+            CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True)
+        archivingThread = threading.Thread(target = _CopyToMailboxAndArchive)
+        archivingThread.setDaemon(True)
+        archivingThread.start()
+            
 
     def _Create(self, DataList):
         """Creates a new log file named with a header which contains all the tokens in the DataList."""

@@ -52,9 +52,8 @@ from Host.Common import GraphPanel
 from Host.Common import BetterTraceback
 from Host.Common import AppStatus
 from Host.Common import SharedTypes
-from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, \
-                                    RPC_PORT_SAMPLE_MGR, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER, \
-                                    RPC_PORT_VALVE_SEQUENCER
+from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
+                                    RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
@@ -1151,7 +1150,10 @@ class QuickGui(wx.Frame):
         self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
         self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
         self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = APP_NAME)
-        self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
+        try:
+            self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
+        except:
+            self.valveSeqRpc = None
         self.configFile = configFile
         self.config = self.loadConfig(self.configFile)
         self.numGraphs = max(1, self.config.getint("Graph","NumGraphs",1))
@@ -1198,6 +1200,27 @@ class QuickGui(wx.Frame):
         self.cavityPressureS = None
         self.cavityPressureT = None
 
+        # Collect instrument status setpoint and tolerance
+        try:
+            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
+            self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
+        except:
+            self.cavityTempS = 45.0
+            self.cavityTempT = 0.2
+        try:
+            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
+            self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")
+        except:
+            self.warmBoxTempS = 45.0
+            self.warmBoxTempT = 0.2
+        try:
+            self.cavityPressureS = self.sampleMgrRpc.ReadOperatePressureSetpoint()
+            self.cavityPressureTPer = self.sampleMgrRpc.ReadPressureTolerancePer()
+        except:
+            self.cavityPressureS = 140.0
+            self.cavityPressureTPer = 0.05
+        self.cavityPressureT = self.cavityPressureTPer*self.cavityPressureS 
+        
         # Set up instrument status panel source and key
         self.instStatSource = self.config.get("InstStatPanel", "Source", "Sensors")
         self.instStatCavityPressureKey = self.config.get("InstStatPanel", "CavityPressureKey", "CavityPressure")

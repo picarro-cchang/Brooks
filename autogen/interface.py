@@ -2309,7 +2309,9 @@ DYNAMICPWM_CS_CONT_B = 1 # Single/Continuous bit position
 DYNAMICPWM_CS_CONT_W = 1 # Single/Continuous bit width
 DYNAMICPWM_CS_PWM_ENABLE_B = 2 # PWM enable bit position
 DYNAMICPWM_CS_PWM_ENABLE_W = 1 # PWM enable bit width
-DYNAMICPWM_CS_PWM_OUT_B = 3 # PWM output bit position
+DYNAMICPWM_CS_USE_COMPARATOR_B = 3 # Use comparator bit position
+DYNAMICPWM_CS_USE_COMPARATOR_W = 1 # Use comparator bit width
+DYNAMICPWM_CS_PWM_OUT_B = 4 # PWM output bit position
 DYNAMICPWM_CS_PWM_OUT_W = 1 # PWM output bit width
 
 DYNAMICPWM_DELTA = 1 # Pulse width change per update
@@ -2874,7 +2876,7 @@ parameter_forms.append(('Laser Locker Parameters',__p))
 
 __p = []
 
-__p.append(('fpga','mask',FPGA_DYNAMICPWM_INLET+DYNAMICPWM_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'PWM enable', [(0, u'Disable'), (4, u'Enable')]), (8, u'PWM output', [(0, u'Low'), (8, u'High')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_DYNAMICPWM_INLET+DYNAMICPWM_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'PWM enable', [(0, u'Disable'), (4, u'Enable')]), (8, u'Use comparator', [(0, u'No'), (8, u'Yes')]), (16, u'PWM output', [(0, u'Low'), (16, u'High')])],None,None,1,1))
 __p.append(('fpga','int16',FPGA_DYNAMICPWM_INLET+DYNAMICPWM_DELTA,'Pulse width change per update','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_DYNAMICPWM_INLET+DYNAMICPWM_HIGH,'Upper limit of dither waveform','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_DYNAMICPWM_INLET+DYNAMICPWM_LOW,'Lower limit of dither waveform','digU','%d',1,1))
@@ -2885,7 +2887,7 @@ parameter_forms.append(('Inlet Dynamic Pwm Parameters',__p))
 
 __p = []
 
-__p.append(('fpga','mask',FPGA_DYNAMICPWM_OUTLET+DYNAMICPWM_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'PWM enable', [(0, u'Disable'), (4, u'Enable')]), (8, u'PWM output', [(0, u'Low'), (8, u'High')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_DYNAMICPWM_OUTLET+DYNAMICPWM_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'PWM enable', [(0, u'Disable'), (4, u'Enable')]), (8, u'Use comparator', [(0, u'No'), (8, u'Yes')]), (16, u'PWM output', [(0, u'Low'), (16, u'High')])],None,None,1,1))
 __p.append(('fpga','int16',FPGA_DYNAMICPWM_OUTLET+DYNAMICPWM_DELTA,'Pulse width change per update','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_DYNAMICPWM_OUTLET+DYNAMICPWM_HIGH,'Upper limit of dither waveform','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_DYNAMICPWM_OUTLET+DYNAMICPWM_LOW,'Lower limit of dither waveform','digU','%d',1,1))
