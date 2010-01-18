@@ -181,22 +181,6 @@ class SampleManagerBaseMode(object):
             return self.pressure_tolerance_per
         except:
             return None
-        
-    def _RPC_ReadOperatePressureSetpoint(self):
-        try:
-            return self.operate_pressure_sp_torr
-        except:
-            return None
-            
-    def _RPC_ReadPressureTolerancePer(self):
-        """Read pressure tolerance in percentage of setpoint
-        For example, if setpoint=140 and tolerance_per=0.01, the actual tolerance value=1.4.
-        This function returns tolerance_per
-        """
-        try:
-            return self.pressure_tolerance_per
-        except:
-            return None
             
     @LpcWrapper
     def _LPC_SetValveControl(self, control ):
