@@ -159,8 +159,9 @@ class DataLog(object):
                     path = os.path.join(root,filename)
                     self.CopyToMailboxAndArchive(path)
 
-    def CopyToMailboxAndArchive(self, srcPath = ""):
+    def CopyToMailboxAndArchive(self, s = ""):
         def _CopyToMailboxAndArchive():
+            srcPath = s
             if srcPath == "":
                 srcPath = self.LogPath
             #Log("Archiving: %s" % os.path.basename(srcPath))   
