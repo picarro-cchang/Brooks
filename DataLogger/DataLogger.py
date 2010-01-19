@@ -116,7 +116,7 @@ class Mbox(object):
 class DataLog(object):
     """Class to manage writing (and reading) of data logs to disk."""
     COLUMN_WIDTH = 26
-    def __init__(self, EngineName, Mbox):
+    def __init__(self, EngineName, Mbox, BackupGroupName = None):
         self.EnabledDataList = []
         self.DecimationFactor = 1
         self.DecimationCount = 0
@@ -131,6 +131,7 @@ class DataLog(object):
         self.EngineName = EngineName
         self.LogName = ""
         self.Mbox = Mbox
+        self.BackupGroupName = BackupGroupName
         self.SubDir = ""
         self.AlarmStatus = 0
         self.BareTime = False
@@ -143,7 +144,8 @@ class DataLog(object):
         self.MaxLogDuration = ONE_HOUR_IN_SECONDS * ConfigParser.getfloat(self.LogName, "maxlogduration_hrs")
         self.Enabled = ConfigParser.getboolean(self.LogName, "enabled")
         self.FilterEnabled = ConfigParser.getboolean(self.LogName, "filterenabled")
-        self.MboxEnabled = ConfigParser.getboolean(self.LogName, "mailboxenable")
+        self.MboxEnabled = ConfigParser.getboolean(self.LogName, "mailboxenable", False)
+        self.backupEnabled = ConfigParser.getboolean(self.LogName, "backupenable", False)
         self.SourceScript = ConfigParser.get(self.LogName, "sourcescript")
         self.Port = ConfigParser.getint(self.LogName, "port")
         self.BareTime = ConfigParser.getboolean(self.LogName, "baretime")
@@ -155,7 +157,7 @@ class DataLog(object):
         # Archive all old files
         for root, dirs, files in os.walk(self.srcDir):
             for filename in files:
-                if 'temp_copy' not in root:
+                if ('mailbox_copy' not in root) and ('backup_copy' not in root):
                     path = os.path.join(root,filename)
                     self.CopyToMailboxAndArchive(path)
 
@@ -169,14 +171,23 @@ class DataLog(object):
             # Make an additional copy and move 2 separate copies to archive and mailbox locations
             # The problem of copying to mailbox fisrt and then moving to archive location is that
             # the archiving thread may be done before the copying thread finishes
+            # Do the same thing to "backup_copy" folder if enabled.
             if self.Mbox.Enabled and self.MboxEnabled:        
-                srcPathCopy = os.path.dirname(srcPath) + '/temp_copy'
+                srcPathCopy = os.path.dirname(srcPath) + '/mailbox_copy'
                 if not os.path.exists(srcPathCopy):
                     os.makedirs(srcPathCopy)
                 srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
                 shutil.copy2(srcPath, srcPathCopy)
                 # if mailbox enabled, copy file to mailbox directory first
-                CRDS_Archiver.ArchiveFile(self.Mbox.GroupName, srcPathCopy, True)  
+                CRDS_Archiver.ArchiveFile(self.Mbox.GroupName, srcPathCopy, True)
+            if self.BackupGroupName != None and self.backupEnabled:
+                srcPathCopy = os.path.dirname(srcPath) + '/backup_copy'
+                if not os.path.exists(srcPathCopy):
+                    os.makedirs(srcPathCopy)
+                srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
+                shutil.copy2(srcPath, srcPathCopy)
+                # if mailbox enabled, copy file to mailbox directory first
+                CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True) 
             # Archive
             CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True)
         archivingThread = threading.Thread(target = _CopyToMailboxAndArchive)
@@ -376,15 +387,17 @@ class DataLogger(object):
         try:
             self.engineName = cp.get("DEFAULT", "ENGINE")
             mailGroupName = cp.get("DEFAULT", "ArchiveGroupName")
-            enabled = cp.getboolean("DEFAULT", "mboxenabled")
+            mailGroupEnabled = cp.getboolean("DEFAULT", "mboxenabled")
+            self.backupGroupName = cp.get("DEFAULT", "BackupGroupName")
         except:
             tbMsg = traceback.format_exc()
             Log("Load Config Exception:",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
             self.engineName = "Unknown Engine"
             mailGroupName = ""
-            enabled = False
+            mailGroupEnabled = False
+            self.backupGroupName = None
             
-        self.mbox = Mbox(enabled, mailGroupName)
+        self.mbox = Mbox(mailGroupEnabled, mailGroupName)
 
     def _LoadCustomConfig(self, ConfigParser, LogDict):
         """Creates log dict which store DataLog object for every log section defined in confile file.
@@ -392,7 +405,7 @@ class DataLogger(object):
 
         logList = ConfigParser.list_sections()
         for logName in logList:
-            dl = DataLog(self.engineName, self.mbox)
+            dl = DataLog(self.engineName, self.mbox, self.backupGroupName)
             #load config from .ini
             try:
                 dl.LoadConfig(ConfigParser, self.basePath, logName)
