@@ -26,6 +26,8 @@ from configobj import ConfigObj
 from time import sleep, clock
 from numpy import *
 import sqlite3
+import Queue
+import copy
 
 from Host.autogen import usbdefs, interface
 from Host.Common.crc import calcCrc32
@@ -397,6 +399,7 @@ class DasInterface(Singleton):
         self.stateDatabase.saveIntRegList(intRegList)
     def loadDasState(self):
         """Read in all register contents from an SQLite database"""
+        return
         floatRegList = self.stateDatabase.getFloatRegList()
         intRegList = self.stateDatabase.getIntRegList()
         for name,value in floatRegList:
@@ -795,6 +798,8 @@ class SensorHistory(Singleton):
             #  stream ID
             self.minSensors = [{} for p in self.periods]
             self.maxSensors = [{} for p in self.periods]
+            self.sumSensors = [{} for p in self.periods]
+            self.pointsInSum = [{} for p in self.periods]
             self.initialized = True
     def needToArchive(self,last,now,period):
         """Return true if there is an exact multiple of period between
@@ -812,16 +817,22 @@ class SensorHistory(Singleton):
                     stateDatabase.writeSnapshot(i,self.latestSensors,
                                                 self.minSensors[i],
                                                 self.maxSensors[i],
+                                                self.sumSensors[i],
+                                                self.pointsInSum[i],
                                                 self.maxIdx)
                     self.lastArchived[i] = data.timestamp
                     self.minSensors[i] = {}
                     self.maxSensors[i] = {}
+                    self.sumSensors[i] = {}
+                    self.pointsInSum[i] = {}
             self.mostRecent = data.timestamp
         self.latestSensors[data.streamNum]=(data.timestamp,data.value)
-        # Update minimum and maximum values of sensors
+        # Update the sensor statistics
         for i,p in enumerate(self.periods):
             minSensors = self.minSensors[i]
             maxSensors = self.maxSensors[i]
+            sumSensors = self.sumSensors[i]
+            pointsInSum = self.pointsInSum[i]
             if data.streamNum in minSensors:
                 minSensors[data.streamNum] = min(
                     minSensors[data.streamNum],data.value)
@@ -832,65 +843,76 @@ class SensorHistory(Singleton):
                     maxSensors[data.streamNum],data.value)
             else:
                 maxSensors[data.streamNum] = data.value
+            if data.streamNum in sumSensors:
+                sumSensors[data.streamNum] = sumSensors[data.streamNum] + data.value
+            else:
+                sumSensors[data.streamNum] = data.value
+            if data.streamNum in pointsInSum:
+                pointsInSum[data.streamNum] = pointsInSum[data.streamNum] + 1
+            else:
+                pointsInSum[data.streamNum] = 1
 
+# We are not allowed to access an sqlite3 database for write from multiple threads in NTFS.
+#  We thus create a handler running in a single thread which services requests enqueued
+#  from multiple clients. On the read side, we make the function block until the data are
+#  available. In order to maintain the correct sequence of reads, a lock is used to serialize them.
+
+def protectedRead(func):
+    """This decorator protects reads from the database by using a Lock. The decorated function is
+        executed in the txHandler thread so that all database access is from one thread."""
+    def wrapper(self,*args):
+        def _func(*args):
+            return func(self,*args)
+        self.dbLock.acquire()
+        txId = self.getId()
+        self.txQueue.put((txId,_func,args))
+        while True:
+            rxId, exc, result = self.rxQueue.get()
+            self.dbLock.release()
+            if rxId == txId:
+                break
+        if exc:
+            raise exc
+        return result
+    return wrapper
 
 class StateDatabase(Singleton):
-    fileName = None
     periodByLevel = [1.0,10.0,100.0,1000.0,10000.0]
+    initialized = False
+    txId = 0
     def __init__(self,fileName=None):
-        """On the first invocation, the fileName must be specified.
-        Subsequently, the fileName can be omitted, since this is a
-        Singleton and the existing object will be returned. It is also
-        valid to change the database by calling the constructor with a
-        new filename"""
-        if fileName is not None:
+        if not self.initialized:
             self.fileName = fileName
-            try:
-                con = sqlite3.connect(fileName)
-                self.con = {thread.get_ident():con}
-                tableNames = [s[0] for s in con.execute("select tbl_name from sqlite_master where type='table'").fetchall()]
-                if not tableNames:
-                    con.execute("pragma auto_vacuum=FULL")
-                if "dasRegInt" not in tableNames:
-                    con.execute("create table dasRegInt (name text primary key,value integer)")
-                if "dasRegFloat" not in tableNames:
-                    con.execute("create table dasRegFloat (name text primary key,value real)")
-                if "history" not in tableNames:
-                    con.execute(
-                        "create table history (level integer," +
-                        "time integer,streamNum integer,value real," +
-                        "minVal real,maxVal real,idx integer)")
-                con.commit()
-            except:
-                import traceback
-                traceback.print_exc()
-                self.fileName = None
-                raise ValueError("Unable to connect to database %s" % fileName)
-        elif self.fileName is None:
-            raise ValueError("Empty filename invalid for state database")
-
-    def getCon(self,id):
-        if id not in self.con:
-            self.con[id] = sqlite3.connect(self.fileName)
-            print "New thread: %d, Total threads: %d" % (id,len(self.con))
-        return self.con[id]
-
+            self.dbLock = threading.Lock()
+            self.txQueue = Queue.Queue(0)
+            self.rxQueue = Queue.Queue(0)
+            self.stopThread = threading.Event()
+            self.hThread = threading.Thread(target = self.txQueueHandler)
+            self.hThread.setDaemon(True)
+            self.hThread.start()
+            self.initialized = True
+        elif fileName is not None:
+            raise ValueError("StateDatabase has already been initialized")
+    def getId(self):
+        StateDatabase.txId += 1
+        return StateDatabase.txId
+            
     def saveFloatRegList(self,floatList):
-        """Save a list of (name,value) pairs in the floating point
-        register table"""
-        con = self.getCon(thread.get_ident())
-        con.executemany(
-            "insert or replace into dasRegFloat values (?,?)",floatList)
-        con.commit()
+        """Save a list of (name,value) pairs in the floating point register table."""
+        def _saveFloatRegList(floatList):
+            self.con.executemany("insert or replace into dasRegFloat values (?,?)",floatList)
+            self.con.commit()
+        self.txQueue.put((self.getId(),_saveFloatRegList,[copy.copy(floatList)]))
 
     def saveIntRegList(self,intList):
         """Save a list of (name,value) pairs in the integer register table"""
-        con = self.getCon(thread.get_ident())
-        con.executemany(
-            "insert or replace into dasRegInt values (?,?)",intList)
-        con.commit()
+        def _saveIntRegList(intList):
+            self.con.executemany("insert or replace into dasRegInt values (?,?)",intList)
+            self.con.commit()
+        self.txQueue.put((self.getId(),_saveIntRegList,[copy.copy(intList)]))
 
     def saveRegList(self,regList):
+        """Save a list of (name,value) pairs in the appropriate register table"""
         floatList = []
         intList = []
         for r,v in regList:
@@ -903,26 +925,58 @@ class StateDatabase(Singleton):
         self.saveFloatRegList(floatList)
         self.saveIntRegList(intList)
 
+    def writeSnapshot(self,level,sensors,minSensors,maxSensors,sumSensors,pointsInSum,maxIdx):
+        def _writeSnapshot(level,sensors,minSensors,maxSensors,sumSensors,pointsInSum,maxIdx):
+            maxRows = 1024
+            if maxIdx[level] < 0:
+                values = self.con.execute(
+                    "select max(idx) from history where level=?",
+                    (level,)).fetchall()
+                maxIdx[level] = values[0][0]
+                if maxIdx[level] is None:
+                    maxIdx[level] = -1
+            if sensors:
+                maxIdx[level] += 1
+                dataList = []
+                for streamNum in sensors:
+                    time,value = sensors[streamNum]
+                    minVal = minSensors.get(streamNum,value)
+                    maxVal = maxSensors.get(streamNum,value)
+                    average = sumSensors.get(streamNum,value)/pointsInSum.get(streamNum,1)
+                    dataList.append((level,time,streamNum,average,minVal,
+                                      maxVal,maxIdx[level]))
+                self.con.executemany(
+                    "insert into history values (?,?,?,?,?,?,?)",dataList)
+    
+                if maxIdx[level] % 10 == 0:
+                    self.con.execute("delete from history where level=? and idx<=?",
+                                 (level,maxIdx[level]-maxRows))
+                self.con.commit()
+        self.txQueue.put((self.getId(),_writeSnapshot,[level,sensors.copy(),minSensors.copy(),maxSensors.copy(),
+                                                       sumSensors.copy(),pointsInSum.copy(),copy.copy(maxIdx)]))
+        
+    @protectedRead
     def getFloatRegList(self):
-        con = self.getCon(thread.get_ident())
-        return con.execute("select * from dasRegFloat").fetchall()
+        "Fetch all floating point registers in the database"
+        return self.con.execute("select * from dasRegFloat").fetchall()
 
+    @protectedRead
     def getFloatReg(self,regName):
-        con = self.getCon(thread.get_ident())
-        values = con.execute(
+        values = self.con.execute(
             "select value from dasRegFloat where name=?",(regName,)).fetchall()
         if len(values) != 1:
-            raise KeyError("Cannot access %s" % regName)
+            raise IndexError("Cannot access %s" % regName)
         else:
             return values[0][0]
 
+    @protectedRead
     def getIntRegList(self):
-        con = self.getCon(thread.get_ident())
-        return con.execute("select * from dasRegInt").fetchall()
+        "Fetch all integer registers in the database"
+        return self.con.execute("select * from dasRegInt").fetchall()
 
+    @protectedRead
     def getIntReg(self,regName):
-        con = self.getCon(thread.get_ident())
-        values = con.execute(
+        values = self.con.execute(
             "select value from dasRegInt where name=?",
             (regName,)).fetchall()
         if len(values) != 1:
@@ -930,39 +984,42 @@ class StateDatabase(Singleton):
         else:
             return values[0][0]
 
-    def writeSnapshot(self,level,sensors,minSensors,maxSensors,maxIdx):
-        maxRows = 1024
-        con = self.getCon(thread.get_ident())
-        if maxIdx[level] < 0:
-            values = con.execute(
-                "select max(idx) from history where level=?",
-                (level,)).fetchall()
-            maxIdx[level] = values[0][0]
-            if maxIdx[level] is None:
-                maxIdx[level] = -1
-        if sensors:
-            maxIdx[level] += 1
-            dataList = []
-            for streamNum in sensors:
-                time,value = sensors[streamNum]
-                minVal = minSensors.get(streamNum,value)
-                maxVal = maxSensors.get(streamNum,value)
-                dataList.append((level,time,streamNum,value,minVal,
-                                  maxVal,maxIdx[level]))
-            con.executemany(
-                "insert into history values (?,?,?,?,?,?,?)",dataList)
-
-            if maxIdx[level] % 10 == 0:
-                con.execute("delete from history where level=? and idx<=?",
-                             (level,maxIdx[level]-maxRows))
-            con.commit()
-
+    @protectedRead
     def getHistory(self,streamNum):
-        con = self.getCon(thread.get_ident())
-        values = con.execute(
+        values = self.con.execute(
             "select time,value,level,minVal,maxVal from history" +
             " where streamNum=?",
             (streamNum,)).fetchall()
         return values
-
-    
+        
+    def txQueueHandler(self):
+        """Creates the connection to the database and services the queue of requests"""
+        self.con = sqlite3.connect(self.fileName)
+        tableNames = [s[0] for s in self.con.execute("select tbl_name from sqlite_master where type='table'").fetchall()]
+        if not tableNames:
+            self.con.execute("pragma auto_vacuum=FULL")
+        if "dasRegInt" not in tableNames:
+            self.con.execute("create table dasRegInt (name text primary key,value integer)")
+        if "dasRegFloat" not in tableNames:
+            self.con.execute("create table dasRegFloat (name text primary key,value real)")
+        if "history" not in tableNames:
+            self.con.execute(
+                "create table history (level integer," +
+                "time integer,streamNum integer,value real," +
+                "minVal real,maxVal real,idx integer)")
+        self.con.commit()
+        while not self.stopThread.isSet():
+            txId,func,args = self.txQueue.get()
+            # Place a response on rxQueue if there is a return value or if an error occurs
+            #  N.B. If a tx request does not return a value but throws an exception, this will
+            #  be sent back. It is up to the rxQueue handler to check that the id of the response
+            #  matches that of the request, and to ignore exceptions from tx requests without
+            #  responses. This is done for speed, so that tx requests can return without waiting
+            #  for the database commit.
+            try:
+                r = func(*args)
+                e = None
+            except Exception,e:
+                pass
+            if (r is not None) or (e is not None):
+                self.rxQueue.put((txId,e,r))

@@ -21,7 +21,8 @@
 # 09-07-10  alex  Support multiple panels to display user-selectable measurements. Also support time-axis locking function.
 # 09-07-28  alex  Add pulse analyzer GUI
 # 09-07-29  alex  Create default view (auto-scaled in y-axis) in zoomed mode whenever data keys are switched while keeping x-axis unchanged.
-# 09-08-05 alex Improve time-locking without a master plot
+# 09-08-05  alex  Improve time-locking without a master plot
+# 10-01-22  sze   Changed date format display to ISO standard
 
 APP_NAME = "QuickGui"
 __version__ = 1.0
@@ -779,7 +780,7 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         if config.getboolean("StatusBox","ShowIndex"):
             self.columns.append(("Index",dict(format=wx.LIST_FORMAT_RIGHT,width=55),0))
         if config.getboolean("StatusBox","ShowDate"):
-            self.columns.append(("Date",dict(width=60),1))
+            self.columns.append(("Date",dict(width=80),1))
         if config.getboolean("StatusBox","ShowTime"):
             self.columns.append(("Time",dict(width=60),2))
         if config.getboolean("StatusBox","ShowSource"):

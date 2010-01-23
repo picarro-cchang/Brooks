@@ -41,10 +41,11 @@
 # 08-09-18  alex  Replaced SortedConfigParser with CustomConfigObj
 # 08-09-26  alex  Changed the function names in Directory and DataLog classes so only class-internal functions start with "_"
 # 08-09-29  alex  Moved file logging management to Archiver
-# 08-10-01  alex  Changed the way to copy data to mailbox and move data to archive. Since these
+# 10-01-19  alex  Changed the way to copy data to mailbox and move data to archive. Since these
 #                 2 threads are not synchronized, we should just make an additional local copy and
 #                 simply move both of them to mailbox and archive location.
-
+# 10-01-22  sze   Moved file accesses out of listeners and into handler threads so that the listeners do
+#                   not become disconnected when the file system is busy.
 ####
 ## Set constants for this file...
 ####
@@ -136,7 +137,25 @@ class DataLog(object):
         self.AlarmStatus = 0
         self.BareTime = False
         self.oldDataList = []
+        self.queue = Queue.Queue(0)
+        self.handler = threading.Thread(target=self.qHandler)
+        self.handler.setDaemon(True)
+        self.handler.start()
 
+    def qHandler(self):
+        while True:
+            action,args = self.queue.get()
+            if action == "write":
+                self._Write(*args)
+            elif action == "copyToMailboxAndArchive":
+                self._CopyToMailboxAndArchive(*args)
+    
+    def Write(self, Time, DataDict, alarmStatus):
+        self.queue.put(("write",[Time,DataDict.copy(),alarmStatus]))
+        
+    def CopyToMailboxAndArchive(self, srcPath=""):
+        self.queue.put(("copyToMailboxAndArchive",[srcPath]))
+        
     def LoadConfig(self, ConfigParser, basePath, LogName):
         self.LogName = LogName
         self.EnabledDataList = ConfigParser.get(self.LogName, "datalist").split(',')
@@ -161,45 +180,40 @@ class DataLog(object):
                     path = os.path.join(root,filename)
                     self.CopyToMailboxAndArchive(path)
 
-    def CopyToMailboxAndArchive(self, s = ""):
-        def _CopyToMailboxAndArchive():
-            srcPath = s
-            if srcPath == "":
-                srcPath = self.LogPath
-            #Log("Archiving: %s" % os.path.basename(srcPath))   
-            # If Mailbox option is enabled:
-            # Make an additional copy and move 2 separate copies to archive and mailbox locations
-            # The problem of copying to mailbox fisrt and then moving to archive location is that
-            # the archiving thread may be done before the copying thread finishes
-            # Do the same thing to "backup_copy" folder if enabled.
-            if self.Mbox.Enabled and self.MboxEnabled:        
-                srcPathCopy = os.path.dirname(srcPath) + '/mailbox_copy'
-                if not os.path.exists(srcPathCopy):
-                    os.makedirs(srcPathCopy)
-                srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
-                shutil.copy2(srcPath, srcPathCopy)
-                # if mailbox enabled, copy file to mailbox directory first
-                CRDS_Archiver.ArchiveFile(self.Mbox.GroupName, srcPathCopy, True)
-            if self.BackupGroupName != None and self.backupEnabled:
-                srcPathCopy = os.path.dirname(srcPath) + '/backup_copy'
-                if not os.path.exists(srcPathCopy):
-                    os.makedirs(srcPathCopy)
-                srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
-                shutil.copy2(srcPath, srcPathCopy)
-                # if mailbox enabled, copy file to mailbox directory first
-                CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True) 
-            # Archive
-            CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True)
-        archivingThread = threading.Thread(target = _CopyToMailboxAndArchive)
-        archivingThread.setDaemon(True)
-        archivingThread.start()
+    def _CopyToMailboxAndArchive(self, srcPath=""):
+        if srcPath == "":
+            srcPath = self.LogPath
+        #Log("Archiving: %s" % os.path.basename(srcPath))   
+        # If Mailbox option is enabled:
+        # Make an additional copy and move 2 separate copies to archive and mailbox locations
+        # The problem of copying to mailbox fisrt and then moving to archive location is that
+        # the archiving thread may be done before the copying thread finishes
+        # Do the same thing to "backup_copy" folder if enabled.
+        if self.Mbox.Enabled and self.MboxEnabled:        
+            srcPathCopy = os.path.dirname(srcPath) + '/mailbox_copy'
+            if not os.path.exists(srcPathCopy):
+                os.makedirs(srcPathCopy)
+            srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
+            shutil.copy2(srcPath, srcPathCopy)
+            # if mailbox enabled, copy file to mailbox directory first
+            CRDS_Archiver.ArchiveFile(self.Mbox.GroupName, srcPathCopy, True)
+        if self.BackupGroupName != None and self.backupEnabled:
+            srcPathCopy = os.path.dirname(srcPath) + '/backup_copy'
+            if not os.path.exists(srcPathCopy):
+                os.makedirs(srcPathCopy)
+            srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
+            shutil.copy2(srcPath, srcPathCopy)
+            # if mailbox enabled, copy file to mailbox directory first
+            CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True) 
+        # Archive
+        CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True)
             
 
     def _Create(self, DataList):
         """Creates a new log file named with a header which contains all the tokens in the DataList."""
         # Deal with old file first
         if self.LogPath != "":
-            self.CopyToMailboxAndArchive()
+            self._CopyToMailboxAndArchive()
 
         dirName = self.srcDir        
         # check to see if directory exists. If it doesn't create it.
@@ -253,7 +267,7 @@ class DataLog(object):
                 DataList.append(data)
         return DataList
 
-    def Write(self, Time, DataDict):
+    def _Write(self, Time, DataDict, alarmStatus):
         """Writes a string representation of the provided DataList to disk."""
 
         localtime = time.localtime(Time)
@@ -327,7 +341,7 @@ class DataLog(object):
                 self._WriteEntry(fp,("%.2f" %Time))
                 
             #write ALARM_STATE
-            self._WriteEntry(fp,("%d" %self.AlarmStatus))
+            self._WriteEntry(fp,("%d" %alarmStatus))
 
             for data in DataList:
                 value = DataDict[data]
@@ -447,22 +461,24 @@ class DataLogger(object):
             # iterate through all user and default log config found in the list
             for logName in self.SrcDict[self.md.Source]:
                 if logName in self.UserLogDict:
-                    if self.UserLogDict[logName].Enabled:
-                        self.UserLogDict[logName].Write(self.md.Time, self.md.Data)
+                    dataLog = self.UserLogDict[logName]
+                    if dataLog.Enabled:
+                        dataLog.Write(self.md.Time, self.md.Data, dataLog.AlarmStatus)
                     # Remove Active_ prefix from files for logs which are being stopped
-                    if self.UserLogDict[logName].StopPending:
-                        self.UserLogDict[logName].CopyToMailboxAndArchive()
-                        self.UserLogDict[logName].StopPending = False
+                    if dataLog.StopPending:
+                        dataLog.CopyToMailboxAndArchive()
+                        dataLog.StopPending = False
                 if logName in self.PrivateLogDict:
-                    if self.PrivateLogDict[logName].Enabled:
-                        self.PrivateLogDict[logName].Write(self.md.Time, self.md.Data)
+                    dataLog = self.PrivateLogDict[logName]
+                    if dataLog.Enabled:
+                        dataLog.Write(self.md.Time, self.md.Data, dataLog.AlarmStatus)
                     # Remove the Active_ prefix from files for logs which are being stopped
-                    if self.PrivateLogDict[logName].StopPending:
-                        self.PrivateLogDict[logName].CopyToMailboxAndArchive()
-                        self.PrivateLogDict[logName].StopPending = False
+                    if dataLog.StopPending:
+                        dataLog.CopyToMailboxAndArchive()
+                        dataLog.StopPending = False
+                        
     def _AlarmListener( self, data ):
         """Listener for alarm status"""
-
         try:
             for logName, value in self.UserLogDict.iteritems():
                 self.UserLogDict[logName].AlarmStatus = data.status

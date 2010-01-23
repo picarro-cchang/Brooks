@@ -15,8 +15,7 @@
 # 06-10-26 russ  Support for changing the underlying data source for events
 # 06-12-20 russ  Added ms reading to the event time
 # 08-04-04 sze   Added Linux compatibility
-"""
-"""
+# 10-01-22 sze   Changed date format display to ISO standard
 import wx
 import wx.lib.mixins.listctrl as listmix
 import Queue
@@ -124,7 +123,7 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
                 return "%s" % (self._DataSource[item].Index,)
             elif col == 1: #time
                 if self.ShowEventDate:
-                    ret = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(self._DataSource[item].EventTime))
+                    ret = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self._DataSource[item].EventTime))
                 else:
                     ret = time.strftime("%H:%M:%S", time.localtime(self._DataSource[item].EventTime))
                 ms = int(self._DataSource[item].EventTime * 1000) % 1000
@@ -243,7 +242,7 @@ class MyFrame(wx.Frame):
         evtLog = self.CurrentEventListEventLog
 
         if 0: assert isinstance(evtLog, EventLogger.EventLog) #for Wing
-        self.tlblEventTime.SetLabel(   time.strftime("%y/%m/%d %H:%M:%S", time.localtime(evtLog.EventTime)))
+        self.tlblEventTime.SetLabel(   time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(evtLog.EventTime)))
         self.tlblEventCode.SetLabel(   str(evtLog.Event.Code))
         self.tlblEventID.SetLabel(     str(evtLog.Index))
         #print evtLog.Index
@@ -300,7 +299,7 @@ class MyFrame(wx.Frame):
         import random
         itemCount = self.lstEventLog.GetItemCount()
         #idx = self.lstEventLog.InsertImageStringItem(sys.maxint, str(itemCount), random.choice([0,1,2]))
-        timeStr = time.strftime("%y/%m/%d %H:%M:%S",time.localtime())
+        timeStr = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
 
 #    thisEvent = self._CreateEventLog("Log %s of %s generated with Debug_LogMany." % (i+1, Count))
 #    self._AddEventLog(thisEvent)
@@ -405,7 +404,7 @@ class MyFrame(wx.Frame):
         #idx = 0
         #for i in xrange(1000):
             #idx =frame_1.lstEventLog.InsertImageStringItem(sys.maxint, str(i+1), random.choice([0,1,2]))
-            #timeStr = time.strftime("%y/%m/%d %H:%M:%S",time.localtime())
+            #timeStr = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
             #frame_1.lstEventLog.SetStringItem(idx, 1, timeStr)
             #frame_1.lstEventLog.SetStringItem(idx, 3, str(random.choice([0,100, 200])))
             #frame_1.lstEventLog.SetStringItem(idx, 2, random.choice(['Test_1','Test_2','Test_3']))

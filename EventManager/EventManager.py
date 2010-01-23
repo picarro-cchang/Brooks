@@ -19,9 +19,9 @@
 # 06-05-09 russ  Added AccessLevel instead of Public; Event Data can now be any type (dict recommended)
 # 06-10-26 russ  Added INI file; Events logged to file (with archiving); Limit on event log length in RAM
 # 08-04-04 sze   Added Linux compatibility
-# 08-09-18  alex  Replaced ConfigParser with CustomConfigObj
+# 08-09-18 alex  Replaced ConfigParser with CustomConfigObj
 # 09-01-14 sze   Reduced number of threads needed to clear lurking files
-
+# 10-01-22 sze   Changed date format display to ISO standard
 """
 Event properties...
 ---
@@ -202,7 +202,7 @@ class EventLog(object):
         assert isinstance(self.Event, EventInfo) #for Wing
 
     def __str__(self):
-        timeStr = time.strftime("%y/%m/%d %H:%M:%S",time.localtime(self.EventTime))
+        timeStr = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(self.EventTime))
         ret = "%4s | %s | %-10s | %s" % (self.Index, timeStr, self.Source, self.Event)
         if self.Data:
             ret += ": %s" % (self.Data)
@@ -220,7 +220,7 @@ class EventLogFile(object):
     def _CreateNewLogFilePath(self):
         """Creates a new log file named with the current time stamp and with a version header."""
         fname = "%s%s.%s" % (LOGFILE_PREFIX,
-                             time.strftime("%y_%m_%d_%H_%M_%S",time.localtime()),
+                             time.strftime("%Y_%m_%d_%H_%M_%S",time.localtime()),
                              LOGFILE_EXTENSION)
         self.LogPath = os.path.join(self.LogDir, fname)
         fp = file(self.LogPath, "w")
@@ -231,7 +231,7 @@ class EventLogFile(object):
         """Writes a string representation of the provided event log to disk."""
         assert isinstance(AnEventLog, EventLog)
         el = AnEventLog #character saver
-        timeStr = time.strftime("%y/%m/%d %H:%M:%S",time.localtime(el.EventTime))
+        timeStr = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(el.EventTime))
         summaryLine = "%s\t%s\t%s\tL%s\tC%s\t%s" % (el.Index,
                                                     timeStr,
                                                     el.Source,
