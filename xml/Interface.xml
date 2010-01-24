@@ -658,8 +658,9 @@
         <register ident="LASER1_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
             <description>Laser1 thermistor ADC</description>
         </register>
-        <register ident="LASER1_TEC_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="LASER1_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser1 TEC value</description>
+            <initial>32768.0</initial>
         </register>
         <register ident="LASER1_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser1 manual TEC value</description>
@@ -875,6 +876,7 @@
         </register>
         <register ident="LASER2_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser2 TEC value</description>
+            <initial>32768.0</initial>
         </register>
         <register ident="LASER2_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser2 manual TEC value</description>
@@ -1090,6 +1092,7 @@
         </register>
         <register ident="LASER3_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser3 TEC value</description>
+            <initial>32768.0</initial>
         </register>
         <register ident="LASER3_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser3 manual TEC value</description>
@@ -1305,6 +1308,7 @@
         </register>
         <register ident="LASER4_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser4 TEC value</description>
+            <initial>32768.0</initial>
         </register>
         <register ident="LASER4_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser4 manual TEC value</description>
@@ -1534,6 +1538,7 @@
         </register>
         <register ident="WARM_BOX_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Warm box TEC value</description>
+            <initial>32768.0</initial>
         </register>
         <register ident="WARM_BOX_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
             <description>Warm box manual TEC value</description>
@@ -1750,6 +1755,7 @@
         </register>
         <register ident="CAVITY_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Cavity TEC value</description>
+            <initial>32768.0</initial>
         </register>
         <register ident="CAVITY_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
             <description>Cavity manual TEC value</description>
@@ -1895,7 +1901,6 @@
         <register ident="HEATER_MARK_REGISTER" type="float" minver="1.0" access="r">
             <description>Heater control mark register</description>
             <initial>0.0</initial>
-            <display format="%.0f">Heater manual mode mark</display>
         </register>
         <register ident="HEATER_MANUAL_MARK_REGISTER" type="float" minver="1.0" access="rw">
             <description>Heater mark in manual mode register</description>

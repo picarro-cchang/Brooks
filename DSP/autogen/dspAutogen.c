@@ -57,6 +57,8 @@ void initRegisters()
     d.asFloat = 0.0;
     writeRegister(CONVERSION_LASER1_CURRENT_OFFSET_REGISTER,d);
     d.asFloat = 32768.0;
+    writeRegister(LASER1_TEC_REGISTER,d);
+    d.asFloat = 32768.0;
     writeRegister(LASER1_MANUAL_TEC_REGISTER,d);
     d.asUint = TEMP_CNTRL_DisabledState;
     writeRegister(LASER1_TEMP_CNTRL_STATE_REGISTER,d);
@@ -128,6 +130,8 @@ void initRegisters()
     writeRegister(CONVERSION_LASER2_CURRENT_SLOPE_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(CONVERSION_LASER2_CURRENT_OFFSET_REGISTER,d);
+    d.asFloat = 32768.0;
+    writeRegister(LASER2_TEC_REGISTER,d);
     d.asFloat = 32768.0;
     writeRegister(LASER2_MANUAL_TEC_REGISTER,d);
     d.asUint = TEMP_CNTRL_DisabledState;
@@ -201,6 +205,8 @@ void initRegisters()
     d.asFloat = 0.0;
     writeRegister(CONVERSION_LASER3_CURRENT_OFFSET_REGISTER,d);
     d.asFloat = 32768.0;
+    writeRegister(LASER3_TEC_REGISTER,d);
+    d.asFloat = 32768.0;
     writeRegister(LASER3_MANUAL_TEC_REGISTER,d);
     d.asUint = TEMP_CNTRL_DisabledState;
     writeRegister(LASER3_TEMP_CNTRL_STATE_REGISTER,d);
@@ -272,6 +278,8 @@ void initRegisters()
     writeRegister(CONVERSION_LASER4_CURRENT_SLOPE_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(CONVERSION_LASER4_CURRENT_OFFSET_REGISTER,d);
+    d.asFloat = 32768.0;
+    writeRegister(LASER4_TEC_REGISTER,d);
     d.asFloat = 32768.0;
     writeRegister(LASER4_MANUAL_TEC_REGISTER,d);
     d.asUint = TEMP_CNTRL_DisabledState;
@@ -347,6 +355,8 @@ void initRegisters()
     d.asFloat = 8.72979981636e-008;
     writeRegister(CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER,d);
     d.asFloat = 32768.0;
+    writeRegister(WARM_BOX_TEC_REGISTER,d);
+    d.asFloat = 32768.0;
     writeRegister(WARM_BOX_MANUAL_TEC_REGISTER,d);
     d.asUint = TEMP_CNTRL_DisabledState;
     writeRegister(WARM_BOX_TEMP_CNTRL_STATE_REGISTER,d);
@@ -412,6 +422,8 @@ void initRegisters()
     writeRegister(CONVERSION_CAVITY_THERM_CONSTB_REGISTER,d);
     d.asFloat = 9.26699996739e-008;
     writeRegister(CONVERSION_CAVITY_THERM_CONSTC_REGISTER,d);
+    d.asFloat = 32768.0;
+    writeRegister(CAVITY_TEC_REGISTER,d);
     d.asFloat = 32768.0;
     writeRegister(CAVITY_MANUAL_TEC_REGISTER,d);
     d.asUint = TEMP_CNTRL_DisabledState;
