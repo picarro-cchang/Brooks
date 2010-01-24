@@ -1283,7 +1283,7 @@ registerInfo.append(RegInfo("LASER1_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
 registerByName["LASER1_THERMISTOR_ADC_REGISTER"] = LASER1_THERMISTOR_ADC_REGISTER
 registerInfo.append(RegInfo("LASER1_THERMISTOR_ADC_REGISTER",c_uint,0,1.0,"r"))
 registerByName["LASER1_TEC_REGISTER"] = LASER1_TEC_REGISTER
-registerInfo.append(RegInfo("LASER1_TEC_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEC_REGISTER",c_float,0,1.0,"r"))
 registerByName["LASER1_MANUAL_TEC_REGISTER"] = LASER1_MANUAL_TEC_REGISTER
 registerInfo.append(RegInfo("LASER1_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw"))
 registerByName["LASER1_TEMP_CNTRL_STATE_REGISTER"] = LASER1_TEMP_CNTRL_STATE_REGISTER
