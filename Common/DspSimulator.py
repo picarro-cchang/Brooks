@@ -9,7 +9,7 @@ class DspSimulator(object):
         self.regBase = regBase
         self.hostBase = hostBase
 
-        dspDll = cdll.LoadLibrary("../../DSP/registerTest/registerTest.dll")
+        dspDll = cdll.LoadLibrary("../../DSP/src/depMainSim.dll")
 
         #self.writeRegister = dspDll._writeRegister
         #self.writeRegister.argtypes = [c_uint,DataType]
