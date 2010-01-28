@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "interface.h"
-#include "registerTest.h"
-#include "registerTestSim.h"
+#include "dspMain.h"
+#include "dspMainSim.h"
 #include "registers.h"
 
 unsigned char  SHAREDMEM_BASE[4*SHAREDMEM_SIZE];

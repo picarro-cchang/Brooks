@@ -3,7 +3,6 @@
 5. Set up WLM dark currents as offsets
 9. Tell Alex the units of pressure on the RingdownEntry queue (50*torr)
 11. Note that max targetting error in hot box calibration is now in RADIANS. 1 cm^-1 is approx 4 radians
-12. Support four-way switch with XC9536XL CPLD.
 16. Calculate optimal update factor for WLM calibration.
 17. Tell Carl about labelling of WB Heastsink thermistor on WLM board, Heater/TEC on power board.
 20. Find out why we get repeated "end of spectra" requests in Calibrate System.
@@ -12,8 +11,12 @@
      user to restart system after such failures.
 25. Archiver hogs CPU.
 27. Write test for logic board to do memory check, DAS temperature test, etc.
-28. Write routine to track WLM offsets in saved INI files. The process seems to diverge! Try without 
-calibration of WLM
+28. Rename DSP mainline file from registerTest to dspMain and registerTest directory to src directory.
+29. Look at restarting in sample manager
+30. Look at registering more channels of data to database, e.g. from fitter etc.
+31. Think about versioning releases - should we make a release repository?
+32. Write utility to help in intial determination of laser WLM_OFFSETs.
+33. Write code for programming I2C EEPROMs.
 
 DONE
 7. Look at implementing averaging of metadata at ringdown, rather than just taking the last value.
@@ -45,6 +48,13 @@ DONE
      flag a pump error and disable valve control if the pressure has not dropped after a certain time.
 23. Implement scheme temperature offset per virtual laser.
 26. Handle PCA9538 I2C to parallel converter.
+28. Write routine to track WLM offsets in saved INI files. The process seems to diverge! Try without 
+calibration of WLM.
+The value of ADJUST_FACTOR in HotBoxCal.ini needs to be reduced. 5e-5 was too large for the Alpha2 prototype. 
+The derived value for APPROX_WLM_ANGLE_PER_FSR is now logged to see if it is close to the expected value of 
+0.077 radians.
+12. Support four-way switch with XC9536XL CPLD. 
+Better solution using 74LV139A and some diodes.
     
 
     

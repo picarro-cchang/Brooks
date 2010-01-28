@@ -28,7 +28,7 @@
 
 #include "fpga.h"
 #include "registers.h"
-#include "registerTestcfg.h"
+#include "dspMaincfg.h"
 #include "sentryHandler.h"
 #include "interface.h"
 #include "valveCntrl.h"

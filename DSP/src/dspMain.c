@@ -7,7 +7,7 @@
 #include <log.h>
 #include <sem.h>
 #include <prd.h>
-#include "registerTestcfg.h"
+#include "dspMaincfg.h"
 
 #include "configDsp.h"
 #include "i2c_dsp.h"
@@ -19,7 +19,7 @@
 #include "rdFitting.h"
 #include "rdHandlers.h"
 #include "registers.h"
-#include "registerTest.h"
+#include "dspMain.h"
 #include "scheduler.h"
 #include "spectrumCntrl.h"
 #include "valveCntrl.h"
@@ -78,17 +78,17 @@ main(int argc, char *argv[])
     IRQ_enable(IRQ_EVT_EDMAINT);
     return 0;
 }
-/* The registerTest.c file may be compiled either for the DSP, or using a host based compiler to run a simulation.
+/* The dspMain.c file may be compiled either for the DSP, or using a host based compiler to run a simulation.
 
     It contains the routines which interface with the DSP software register, user register and host message areas.
 
     When run on the DSP, these areas are accessed by the host using HPI transfers which take place through the USB.
     When run in simulation mode, the host program which normally communicates with the AnalyzerUsb object communicates
       instead with a SimulatorUsb object. Both of these are written in Python: whereas AnalyzerUsb interfaces to
-      LibUsb, SimulatorUsb has a DspSimulator object (defined in the file registerTestSim.py) which talks to
-      registerTest.dll, the compiled version of this file.
+      LibUsb, SimulatorUsb has a DspSimulator object (defined in the file dspMainSim.py) which talks to
+      dspMain.dll, the compiled version of this file.
 
-    Since this file makes use of DSP libraries which are not available on the host, the files registerTestSim.c/h
+    Since this file makes use of DSP libraries which are not available on the host, the files dspMainSim.c/h
       are present, to provide stubs for these calls. They also provide the readMem and writeMem functions which allow
       the host to access the (simulated) DSP memory map. As we improve the simulation of the DSP, code needs to be
       added here to handle accesses to the memory space of the simulated DSP.

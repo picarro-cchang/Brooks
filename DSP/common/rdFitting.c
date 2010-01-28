@@ -31,7 +31,7 @@
 #include "rdFitting.h"
 #include "rdHandlers.h"
 #include "registers.h"
-#include "registerTestcfg.h"
+#include "dspMaincfg.h"
 #include "spectrumCntrl.h"
 
 RdFittingParamsType rdFittingParams;

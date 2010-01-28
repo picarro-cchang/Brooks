@@ -21,7 +21,7 @@
 #include <csl_irq.h>
 #include <csl_edma.h>
 #include <sem.h>
-#include "registerTestcfg.h"
+#include "dspMaincfg.h"
 
 #include "dspData.h"
 #include "fpga.h"

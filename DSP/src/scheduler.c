@@ -18,7 +18,7 @@
 #include <string.h>
 #include <sem.h>
 #include <prd.h>
-#include "registerTestcfg.h"
+#include "dspMaincfg.h"
 
 #include "scheduler.h"
 // The following contains the prototype of the dispatcher for actions

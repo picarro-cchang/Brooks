@@ -23,7 +23,7 @@
 #include <log.h>
 #include <prd.h>
 #include <sem.h>
-#include "registerTestcfg.h"
+#include "dspMaincfg.h"
 
 #define EXT_MEM 0
 

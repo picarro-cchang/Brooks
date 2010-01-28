@@ -29,7 +29,7 @@
 #ifdef TESTING
 #include "testHarness.h"
 #else
-#include "registerTestcfg.h"
+#include "dspMaincfg.h"
 #endif
 
 RingdownParamsType nextRdParams;
