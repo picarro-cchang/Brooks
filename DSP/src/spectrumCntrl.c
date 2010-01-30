@@ -162,13 +162,14 @@ int spectCntrlStep(void)
 #define PI 3.141592654
 void spectCntrl(void)
 {
-    int bank, status;
+    int bank, status, nloops;
     int *counter = (int*)(REG_BASE+4*RD_INITIATED_COUNT_REGISTER);
 
     while (1)
     {
         SEM_pendBinary(&SEM_startRdCycle,SYS_FOREVER);
         (*counter)++;
+        nloops = 0;
         
         // The next while loop periodically checks to see if we are allowed
         //  to start the ringdown
@@ -188,14 +189,23 @@ void spectCntrl(void)
                 {
                     if ( !(status & 1<<RDMAN_STATUS_BANK1_IN_USE_B) ) break;
                 }
-                message_puts("Waiting for bank to become available");
+                if (nloops == 0) message_puts("Waiting for bank to become available");
             }
             else
             {
-                message_puts("Ringdown manager busy");
+                if (nloops == 0) message_puts("Ringdown manager busy");
             }
-            // Wait around for another ms and recheck
+            // Wait around for another ms and recheck. Reset manager if busy for more
+            //  than 50ms.
+            nloops++;
             SEM_pendBinary(&SEM_waitForRdMan,SYS_FOREVER);
+            if (nloops > 50) {
+                changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RESET_RDMAN_B,
+                               RDMAN_CONTROL_RESET_RDMAN_W,1);
+                SEM_pendBinary(&SEM_waitForRdMan,SYS_FOREVER);
+                message_puts("Resetting ringdown manager");
+                break;
+            }
         }
         setupNextRdParams();
         // Then initiate the ringdown...
