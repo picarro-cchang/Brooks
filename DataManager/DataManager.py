@@ -338,6 +338,9 @@ class DataManager(object):
         self.serialOutQueue = Queue.Queue(0)
         self.serialPollLock = threading.Lock()
         self.lastTimeGood = True
+        self.maxLate = 0
+        self.maxScriptDuration = {}
+        
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_DATA_MANAGER),
                                                 ServerName = APP_NAME,
@@ -809,9 +812,13 @@ class DataManager(object):
         nextIteration = iteration
         now = time.time()
         if idealTime - now <= 0.01: # Allow up to 10ms early start
+            late = now - idealTime
+            if late > self.maxLate:
+                Log("Max periodic script delay so far %.3fs on iteration %d: %s" % (late,iteration,SyncInfoObj.ReportName))
+                self.maxLate = late
             if __debug__:
-                if now - idealTime > 0.25:
-                    Log("PERIODIC SCRIPT EXECUTION MORE THAN 250ms OFF OF SCHEDULE", Level = 1)
+                if late > 0.25:
+                    Log("PERIODIC SCRIPT LATE BY %.3fs on iteration %d: %s" % (late,iteration,SyncInfoObj.ReportName), Level = 1)
             #Now actually execute the indicated script...
             codeObj = self.AnalyzerCode[SyncInfoObj.AnalyzerInfo.ScriptPath]
             scriptArgs = SyncInfoObj.AnalyzerInfo.ScriptArgs
@@ -824,8 +831,17 @@ class DataManager(object):
                                         )
             nextIteration += 1
             idealTime += SyncInfoObj.Period_s
+        duration = time.time() - now
+        if duration > self.maxScriptDuration.get(SyncInfoObj.ReportName,0):
+            self.maxScriptDuration[SyncInfoObj.ReportName] = duration
+            Log("Time taken by %s on iteration %d took new max time of %.3fs" % (SyncInfoObj.ReportName,iteration,duration))
+        
         # Set up to call this function again at the specified time...
-        delay = max(0,idealTime - time.time())
+        delay = idealTime - time.time()
+        if delay < 0:
+            Log("WARNING: Trying to schedule %s in past by %.3fs" % (SyncInfoObj.ReportName,-delay))
+        
+        delay = max(0,delay)
         tmr = threading.Timer(delay,
                               self._StartPeriodicScriptExec,
                               [SyncInfoObj, startTime, nextIteration])

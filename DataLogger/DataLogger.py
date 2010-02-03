@@ -64,7 +64,6 @@ import time
 import threading
 import socket #for transmitting data to the fitter
 import struct #for converting numbers to byte format
-import time
 import shutil
 import traceback
 from inspect import isclass
@@ -141,15 +140,23 @@ class DataLog(object):
         self.handler = threading.Thread(target=self.qHandler)
         self.handler.setDaemon(True)
         self.handler.start()
+        self.maxDuration = {}
 
     def qHandler(self):
         while True:
             action,args = self.queue.get()
+            now = TimeStamp()
             if action == "write":
                 self._Write(*args)
             elif action == "copyToMailboxAndArchive":
                 self._CopyToMailboxAndArchive(*args)
-    
+            duration = TimeStamp() - now
+            if duration > 10:
+                Log("Datalog: %s action %s takes %.3fs" % (self.LogPath,action,duration))            
+            if duration > self.maxDuration.get(self.LogPath,0):
+                self.maxDuration[self.LogPath] = duration
+                Log("Datalog: %s action %s takes new max time %.3f" % (self.LogPath,action,duration))
+            
     def Write(self, Time, DataDict, alarmStatus):
         self.queue.put(("write",[Time,DataDict.copy(),alarmStatus]))
         
@@ -183,7 +190,7 @@ class DataLog(object):
     def _CopyToMailboxAndArchive(self, srcPath=""):
         if srcPath == "":
             srcPath = self.LogPath
-        #Log("Archiving: %s" % os.path.basename(srcPath))   
+        startTime = TimeStamp()
         # If Mailbox option is enabled:
         # Make an additional copy and move 2 separate copies to archive and mailbox locations
         # The problem of copying to mailbox fisrt and then moving to archive location is that
@@ -207,6 +214,7 @@ class DataLog(object):
             CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True) 
         # Archive
         CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True)
+        Log("Datalog archive processing %s took %s seconds" % (os.path.basename(srcPath),TimeStamp()-startTime))   
             
 
     def _Create(self, DataList):
@@ -393,8 +401,11 @@ class DataLogger(object):
         self.RpcServer.register_function(self.DATALOGGER_getUserLogsRpc)
         self.RpcServer.register_function(self.DATALOGGER_getPrivateLogsRpc)
 
-        #Set up instrument manager rpc connection to report errors
-
+        self.DataListenerLastTime = 0
+        self.maxDataListenerRtt = 0
+        self.AlarmListenerLastTime = 0
+        self.maxAlarmListenerRtt = 0
+        
     def _LoadDefaultConfig(self):
         cp = CustomConfigObj(self.ConfigPath) 
         self.basePath = os.path.split(self.ConfigPath)[0]
@@ -454,7 +465,14 @@ class DataLogger(object):
         except:
             tbMsg = traceback.format_exc()
             Log("Import Pickle Exception:",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-
+        now = TimeStamp()
+        if self.DataListenerLastTime != 0:
+            rtt = now - self.DataListenerLastTime
+            if rtt > self.maxDataListenerRtt:
+                Log("Maximum data listener loop RTT so far: %.3f" % (self.maxDataListenerRtt,))
+                self.maxDataListenerRtt = rtt
+        self.DataListenerLastTime = now
+            
         #Log("Data Listener: source=%s data=%s" % (self.md.Source,self.md.Data))
         # check to make sure this a broadcast that I'm interested in
         if self.md.Source in self.SrcDict:
@@ -479,6 +497,12 @@ class DataLogger(object):
                         
     def _AlarmListener( self, data ):
         """Listener for alarm status"""
+        if self.alarmListenerLastTime != 0:
+            rtt = now - self.alarmListenerLastTime
+            if rtt > self.maxAlarmListenerRtt:
+                Log("Maximum alarm listener loop RTT so far: %.3f" % (self.maxAlarmListenerRtt,))
+                self.maxAlarmListenerRtt = rtt
+        self.alarmListenerLastTime = now
         try:
             for logName, value in self.UserLogDict.iteritems():
                 self.UserLogDict[logName].AlarmStatus = data.status

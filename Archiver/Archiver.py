@@ -224,7 +224,10 @@ class ArchiveGroup(object):
         while True:
             try:
                 cmd,args = self.cmdQueue.get()
+                startTime = time.clock()
                 cmdDict[cmd](*args)
+                if cmd != "archiveData":
+                    Log("Archiver command %s took %s seconds" % (cmd,time.clock()-startTime))
             except Exception, exc:
                 Log("Exception in ArchiveGroup server",
                     dict(GroupName = self.name, Verbose = "Exception = %s %r" % (exc, exc)))

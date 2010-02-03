@@ -107,7 +107,7 @@ class DasScheme(object):
         self.rdFreqConv.RPC_uploadSchemeToDAS(self.currentAlternateIndex)
         # Get the accurate representation of what the DAS is currently running
         current = Driver.rdSchemeSequence()
-        Log("Current scheme sequence %s" % current)
+        # Log("Current scheme sequence %s" % current)
         seq = current["schemeIndices"]
         # Replace current scheme index with the alternate in the sequence and write 
         # the new sequence to DAS
@@ -115,7 +115,7 @@ class DasScheme(object):
             if seq[i] == self.currentIndex:
                 seq[i] = self.currentAlternateIndex
         Driver.wrSchemeSequence(seq, restartFlag = False, loopFlag = True)
-        Log("Updated scheme sequence %s" % Driver.rdSchemeSequence())
+        # Log("Updated scheme sequence %s" % Driver.rdSchemeSequence())
         #Update our local scheme index records
         self.currentIndex, self.currentAlternateIndex = self.currentAlternateIndex, self.currentIndex
 
@@ -152,7 +152,7 @@ class SchemeManager(object):
         Log("Wrote scheme sequence %s" % Driver.rdSchemeSequence())
             
     def update(self):
-        Log("Scheme Manager updates and swaps schemes")
+        # Log("Scheme Manager updates and swaps schemes")
         for scheme in self.schemes.values():
             scheme.updateAndSwapScheme()
 
@@ -251,7 +251,6 @@ class SchemeBasedCalibrator(object):
                 tunerDev  = tuner - tunerMean
                 # Use the median to center the tuner, for robustness
                 tunerCenter = float(self.medianHist(tuner,count,useAverage=False))
-                Log("Standard deviation of tuner: %.1f" % std(tunerDev))
                 # Center the tuner ramp waveform about the median tuner value at the calibration rows
                 #  Since this can get stuck behind scheme uploads due to Driver command serialization,
                 #  we'll do it in a separate thread
@@ -276,11 +275,9 @@ class SchemeBasedCalibrator(object):
                 m = round_(dtheta/anglePerFsr) # Quantize m to indicate multiples of the FSR
                 devs = abs(dtheta/anglePerFsr - m)
                 offGrid = devs.max()
-                Log("Calibration angle per FSR = %.4g, offGrid parameter = %.2f, fraction>0.25 = %.2f" % (anglePerFsr,offGrid,sum(devs>0.25)/float(len(devs))))
                 if offGrid > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_OFFGRID")):
-                    Log("Calibration not done, offGrid parameter = %.2f" % (offGrid,))
+                    Log("Calibration not done, PZT sdev = %.1f, offGrid parameter = %.2f, fraction>0.25 = %.2f" % (std(tunerDev),offGrid,sum(devs>0.25)/float(len(devs))))
                 else:
-                    Log("Updating WLM Calibration for virtual laser", dict(vLaserNum = vLaserNum))
                     #Update the live copy of the polar<->freq coefficients...
                     waveNumberSetpoints = zeros(len(rows),dtype=float) #pre-allocate space
                     for i,calRow in enumerate(rows):
@@ -294,12 +291,12 @@ class SchemeBasedCalibrator(object):
                                                      float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_DEFAULT")),      
                                                      float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_ZERO"))) 
                     self.calibrationDone[vLaserNum-1] = True
-                    Log("WLM Calibration for virtual laser done", dict(vLaserNum = vLaserNum))
+                    Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" % (vLaserNum,anglePerFsr,std(tunerDev)))
                     
                     # Check if it's time to update and archive the warmbox calibration file
                     if self.rdFreqConv.timeToUpdateWarmBoxCal():
                         Log("Time to update warm box calibration file")
-                        #  we'll do it in a separate thread in case it takes to long to write the new calibration file to disk
+                        #  we'll do it in a separate thread in case it takes too long to write the new calibration file to disk
                         updateWarmBoxCalThread = threading.Thread(target = self.updateWarmBoxCal, args=(self.rdFreqConv.warmBoxCalFilePathActive,))
                         updateWarmBoxCalThread.setDaemon(True)
                         updateWarmBoxCalThread.start()
@@ -378,6 +375,7 @@ class RDFrequencyConverter(Singleton):
         
             self.numLasers = interface.NUM_VIRTUAL_LASERS
             self.rdQueue = Queue.Queue()
+            self.rdQueueMaxLevel = 0
             self.rdProcessedCache = []
             self.rpcThread = None
             self._shutdownRequested = False
@@ -449,8 +447,12 @@ class RDFrequencyConverter(Singleton):
         timeout = 2.0
         while not self._shutdownRequested:
             try:
+                rdQueueSize = self.rdQueue.qsize()
+                if rdQueueSize > self.rdQueueMaxLevel:
+                    self.rdQueueMaxLevel = rdQueueSize
+                    Log("rdQueueSize reaches new peak level %d" % self.rdQueueMaxLevel)
                 self.tuningMode = Driver.rdDasReg("ANALYZER_TUNING_MODE_REGISTER")
-                if self.rdQueue.qsize() > MIN_SIZE or time.time()-startTime > timeout:
+                if rdQueueSize > MIN_SIZE or time.time()-startTime > timeout:
                     self._batchConvert()
                     startTime = time.time()
                 else:

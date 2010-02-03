@@ -178,7 +178,9 @@ class SpectrumCollector(object):
         self.numPts = 0
         self.emptyCount = 0
         self.startWaitTime = 0
-        
+        self.rdQueueGetLastTime = 0
+        self.maxRdQueueGetRtt = 0
+       
     def run(self):
         #start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
@@ -191,6 +193,16 @@ class SpectrumCollector(object):
             try:
                 rdData = self.getSpectralDataPoint(timeToRetry=0.5)
                 if rdData is None: continue
+                now = TimeStamp()
+                if self.rdQueueGetLastTime != 0:
+                    rtt = now - self.rdQueueGetLastTime
+                    if rtt > 10:
+                        Log("Processed Ringdowns loop RTT: %.3f" % (rtt,))                    
+                    if rtt > self.maxRdQueueGetRtt:
+                        Log("Maximum Processed Ringdowns loop RTT so far: %.3f" % (self.maxRdQueueGetRtt,))
+                        self.maxRdQueueGetRtt = rtt
+                self.rdQueueGetLastTime = now
+               
                 localRdTime = Driver.hostGetTicks()
                 self.schemeTable = rdData.schemeTable
                 thisSubSchemeID = rdData.subschemeId

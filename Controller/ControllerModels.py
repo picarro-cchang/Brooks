@@ -69,10 +69,10 @@ class RingdownListener(SharedTypes.Singleton):
                             name = "Controller ringdown stream listener",
                             logFunc = Log)
     def  filter(self,data):
-        if data.status & interface.RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask:
-            Log("Scheme complete and acquisition stopping at %s" % data.timestamp)
-        if data.status & interface.RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask:
-            Log("Scheme complete and acquisition continuing at %s" % data.timestamp)
+        #if data.status & interface.RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask:
+        #    Log("Scheme complete and acquisition stopping at %s" % data.timestamp)
+        #if data.status & interface.RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask:
+        #    Log("Scheme complete and acquisition continuing at %s" % data.timestamp)
         if data.status & interface.RINGDOWN_STATUS_RingdownTimeout:
             Log("Ringdown timeout at %s" % data.timestamp)
         panels["Ringdown"].appendData(data)
