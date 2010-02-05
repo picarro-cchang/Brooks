@@ -141,6 +141,7 @@ class DataLog(object):
         self.handler.setDaemon(True)
         self.handler.start()
         self.maxDuration = {}
+        self.fp = None
 
     def qHandler(self):
         while True:
@@ -221,7 +222,10 @@ class DataLog(object):
         """Creates a new log file named with a header which contains all the tokens in the DataList."""
         # Deal with old file first
         if self.LogPath != "":
-            self._CopyToMailboxAndArchive()
+            self.fp.close()
+            del self.maxDuration[self.LogPath]
+            self._CopyToMailboxAndArchive(self.LogPath)
+            self.LogPath = ""
 
         dirName = self.srcDir        
         # check to see if directory exists. If it doesn't create it.
@@ -238,29 +242,33 @@ class DataLog(object):
         self.LogPath = os.path.join(dirName, self.Fname)
         Log("A new log file (%s) created at %s" % (self.LogPath, time.strftime("%Y%m%d-%H%M%S",time.localtime())))    
         # create file and write header
-        fp = file(self.LogPath, "w")
-        self._WriteHeader(fp,DataList)
-        fp.close()
+        self.fp = file(self.LogPath, "w")
+        self.lastFlush = TimeStamp()
+        self._WriteHeader(DataList)
 
-    def _WriteEntry(self, fp, string):
-        fp.write((string[:self.COLUMN_WIDTH-1]).ljust(self.COLUMN_WIDTH))
+    def _WriteEntry(self, string):
+        self.fp.write((string[:self.COLUMN_WIDTH-1]).ljust(self.COLUMN_WIDTH))
+        now = TimeStamp()
+        if now-self.lastFlush > 10:
+            self.fp.flush()
+            self.lastFlush = now
         
-    def _WriteHeader(self,fp,DataList):
+    def _WriteHeader(self,DataList):
         if not self.BareTime:
-            self._WriteEntry(fp,"DATE")
-            self._WriteEntry(fp,"TIME")
-            self._WriteEntry(fp,"FRAC_DAYS_SINCE_JAN1")
-            self._WriteEntry(fp,"FRAC_HRS_SINCE_JAN1")
+            self._WriteEntry("DATE")
+            self._WriteEntry("TIME")
+            self._WriteEntry("FRAC_DAYS_SINCE_JAN1")
+            self._WriteEntry("FRAC_HRS_SINCE_JAN1")
         
         if self.WriteEpochTime:
-            self._WriteEntry(fp,"EPOCH_TIME")
+            self._WriteEntry("EPOCH_TIME")
         
-        self._WriteEntry(fp,"ALARM_STATUS")
+        self._WriteEntry("ALARM_STATUS")
 
         for dataName in DataList:
-            self._WriteEntry(fp,dataName)
+            self._WriteEntry(dataName)
 
-        fp.write("\n")
+        self.fp.write("\n")
         self.DecimationCount = 0
 
     def _MakeListFromDict(self, DataDict):
@@ -316,16 +324,14 @@ class DataLog(object):
             timeTuple =time.strptime( string, "%Y %m %d %H %M %S")
             Jan1SecondsSinceEpoch = time.mktime( timeTuple )
 
-            fp = file(self.LogPath, "a")
-
             if DataList != self.oldDataList:
-                print >>fp, "### Data columns have changed ###"
-                self._WriteHeader(fp,DataList)
+                print >>self.fp, "### Data columns have changed ###"
+                self._WriteHeader(DataList)
                 self.oldDataList = DataList
 
             if not self.BareTime:
                 #write DATE
-                self._WriteEntry(fp,time.strftime("%Y-%m-%d",localtime))
+                self._WriteEntry(time.strftime("%Y-%m-%d",localtime))
                 #write TIME
                 timeStr = time.strftime("%H:%M:%S",localtime)
                 fracSec = Time - int(Time)
@@ -336,31 +342,30 @@ class DataLog(object):
                         timeStr += ".00"
                 else:
                     timeStr += (".%02d" % int(100*fracSec))
-                self._WriteEntry(fp,timeStr)
+                self._WriteEntry(timeStr)
                 #write FRAC_DAYS_SINCE_JAN1
                 days = (Time-Jan1SecondsSinceEpoch)/TWENTY_FOUR_HOURS_IN_SECONDS
-                self._WriteEntry(fp,("%.8f" %days))
+                self._WriteEntry("%.8f" %days)
                 #write FRAC_HRS_SINCE_JAN1
                 hrs = (Time-Jan1SecondsSinceEpoch)/ONE_HOUR_IN_SECONDS
-                self._WriteEntry(fp,("%.6f" %hrs))
+                self._WriteEntry("%.6f" %hrs)
 
             #write EPOCH_TIME if enabled
             if self.WriteEpochTime:
-                self._WriteEntry(fp,("%.2f" %Time))
+                self._WriteEntry("%.2f" %Time)
                 
             #write ALARM_STATE
-            self._WriteEntry(fp,("%d" %alarmStatus))
+            self._WriteEntry("%d" %alarmStatus)
 
             for data in DataList:
                 value = DataDict[data]
                 if self.FilterEnabled:
                     if data in self.EnabledDataList:
-                        self._WriteEntry(fp,("%E" %value))
+                        self._WriteEntry("%E" %value)
                 else:
-                    self._WriteEntry(fp,("%E" %value))
+                    self._WriteEntry("%E" %value)
 
-            fp.write("\n")
-            fp.close()
+            self.fp.write("\n")
 
 ####
 ## Classes...

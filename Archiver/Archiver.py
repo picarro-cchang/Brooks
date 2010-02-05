@@ -330,52 +330,63 @@ class ArchiveGroup(object):
             # Determine size of new file to determine if it will fit
             # Get rid of the oldest file until total file size or total file count can fit
             nBytes = os.path.getsize(fileToArchive)
-            while (self.maxSize > 0 and self.byteCount + nBytes > self.maxSize) or \
-                  (self.maxCount > 0 and self.fileCount > self.maxCount-1) :
-                # Delete files and directories starting with the oldest
-                self._deleteOldest()
-            # Use current time to store file in the correct location (local or GMT)
-            now = time.time()
-            pathName = makeStoragePathName(self.maketimetuple(now),self.quantum)
-            pathName = os.path.join(self.groupRoot,pathName)
-
-            if not os.path.exists(pathName): 
-                os.makedirs(pathName)
-
-            renameFlag = True
-            # Determine the target sourceFiles
-            if self.aggregationCount == 0:
-                if self.compress:
-                    targetName = os.path.join(pathName,os.path.split(sourceFileName)[-1]+".zip")
-                else:
-                    targetName = os.path.join(pathName,os.path.split(sourceFileName)[-1])
-                    renameFlag = removeOriginal
+            
+            if self.maxSize > 0 and nBytes > self.maxSize:
+                Log("Cannot fit file into archive group",dict(Filename=fileToArchive,Group=self.name),Level=2)
             else:
-                targetName = os.path.join(pathName,time.strftime(self.name+"_%Y%m%d_%H%M%S.zip",time.gmtime(now)))
+                maxLoops = 100 
+                while (self.maxSize > 0 and self.byteCount + nBytes > self.maxSize) or \
+                      (self.maxCount > 0 and self.fileCount > self.maxCount-1):
+                    # Delete files and directories starting with the oldest
+                    self._deleteOldest()
+                    maxLoops -= 1
+                    if maxLoops == 0:
+                        Log("More than 100 deletions required",dict(Filename=fileToArchive,Group=self.name))
+                        break
+                # Use current time to store file in the correct location (local or GMT)
 
-            if os.path.exists(targetName):
-                # Replace existing file
-                try:
-                    oldBytes = os.path.getsize(targetName)
-                    os.chmod(targetName,stat.S_IREAD | stat.S_IWRITE)
-                    os.remove(targetName)
-                    self.byteCount -= oldBytes
-                    self.fileCount -= 1
-                except OSError, e:
-                    Log("Error removing file %s. %s" % (targetName,e))
-            try:
-                if renameFlag:
-                    os.rename(fileToArchive,targetName)
+                now = time.time()
+                pathName = makeStoragePathName(self.maketimetuple(now),self.quantum)
+                pathName = os.path.join(self.groupRoot,pathName)
+
+                if not os.path.exists(pathName): 
+                    os.makedirs(pathName)
+
+                renameFlag = True
+                # Determine the target sourceFiles
+                if self.aggregationCount == 0:
+                    if self.compress:
+                        targetName = os.path.join(pathName,os.path.split(sourceFileName)[-1]+".zip")
+                    else:
+                        targetName = os.path.join(pathName,os.path.split(sourceFileName)[-1])
+                        renameFlag = removeOriginal
                 else:
-                    shutil.copy2(fileToArchive,targetName)
-                # On success, touch file modification and last access times, and increment the byte and file counts
-                os.utime(targetName,(now,now))
-                self.byteCount += nBytes
-                self.fileCount += 1
-            except IOError,e:
-                Log("IOError renaming or copying file to %s. %s" % (targetName,e))
-            except OSError,e:
-                Log("OSError renaming or copying file to %s. %s" % (targetName,e))
+                    targetName = os.path.join(pathName,time.strftime(self.name+"_%Y%m%d_%H%M%S.zip",time.gmtime(now)))
+
+                if os.path.exists(targetName):
+                    # Replace existing file
+                    try:
+                        oldBytes = os.path.getsize(targetName)
+                        os.chmod(targetName,stat.S_IREAD | stat.S_IWRITE)
+                        os.remove(targetName)
+                        self.byteCount -= oldBytes
+                        self.fileCount -= 1
+                    except OSError, e:
+                        Log("Error removing file %s. %s" % (targetName,e))
+                try:
+                    if renameFlag:
+                        os.rename(fileToArchive,targetName)
+                    else:
+                        shutil.copy2(fileToArchive,targetName)
+                    # On success, touch file modification and last access times, and increment the byte and file counts
+                    os.utime(targetName,(now,now))
+                    self.byteCount += nBytes
+                    self.fileCount += 1
+                except IOError,e:
+                    Log("IOError renaming or copying file to %s. %s" % (targetName,e))
+                except OSError,e:
+                    Log("OSError renaming or copying file to %s. %s" % (targetName,e))
+                    
             # Make sure the temporary file is gone
             if os.path.exists(self.tempFileName): 
                 deleteFile(self.tempFileName)
@@ -408,13 +419,14 @@ class ArchiveGroup(object):
         """Use the treeWalker to remove the oldest file or directory in the archive group. Returns the number of
         bytes freed, number of files removed, the name of the file or directory removed, and a status message.
         Also updates self.fileCount and self.byteCount as a side-effect"""
-
         try:
             type, name = self.treeWalker.next()
         except StopIteration:
             # We have run out, restart the generator at the root
+            self.updateAndGetArchiveSize()
             self.treeWalker = walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime)
             type, name = self.treeWalker.next()
+        
         if type == 'file':
             nBytes = os.path.getsize(name)
             nFiles = 1

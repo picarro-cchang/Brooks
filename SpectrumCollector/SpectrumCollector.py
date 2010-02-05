@@ -69,7 +69,7 @@ Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
 
 Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
                                     APP_NAME,
-                                    IsDontCareConnection = True)
+                                    IsDontCareConnection = False)
                                     
 class RingdownTimeout(CrdsException):
     """Timed out while waiting for a ringdown to arrive."""
@@ -390,7 +390,10 @@ class SpectrumCollector(object):
                 streamFP.write(cPickle.dumps(self.rdfDict,cPickle.HIGHEST_PROTOCOL)) 
             streamFP.close()
             # Archive spectrum files
-            Archiver.ArchiveFile(self.archiveGroup, streamPath, True)
+            try:
+                Archiver.ArchiveFile(self.archiveGroup, streamPath, True)
+            except Exception:
+                LogExc("Archiver call error")
             
         # Store spectrum in a queue if required
         if self.spectrumQueue:

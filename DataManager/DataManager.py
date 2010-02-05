@@ -8,25 +8,29 @@
 # ToDo:
 #
 # File History:
-# 06-12-19 russ  First official release
-# 06-12-20 russ  Fixed shutdown behaviour; Improved debug handling; Fixed RPC_Mode_Set
-# 06-12-21 russ  Default MeasData label now the analysis script name + In-script ability to override this
-# 08-02-14 sze   Include trap for Null source times
-# 08-02-19 sze   Added RPC_StartInstMgrListener call, to avoid errors associated with trying to listen to instrument
-#                 manager at startup, when the instrument manager has not yet been started.
-# 08-03-03 sze  Adding support for real-time serial output
-# 08-03-07 sze  Moved rescheduling of periodic scripts to end of last execution, to avoid out-of-order executions,
-#                periodic scripts now execute at times which are integer multiples of the period.
-# 08-09-18 alex  Replaced ConfigParser with CustomConfigObj
-# 09-01-21 alex  Added pulse analyzer
-# 09-04-30 alex Added preserved time base feature for serial output
-# 09-05-11 alex  Added more STATUS_MASK_SyncToggle_N flags so more than 4 periodic scripts can be run
-# 09-05-11 alex  Corrected the time stamp for broadcasting in _HandleScriptExecution() function. The current Data Manager broadcasts fitter results with the actual data time, 
-#                           but broadcasts periodic script results with script running time. This has be to changed for re-sync data for data alignment with the original data. 
-#                           Data Manager needs to be modified so that when the script reports "time" in the output dictionary, the reported time will be use for broadcasting. 
-#                           If the script output doesn't contain "time" information, the script running time will be used (same as before). This modification affects both broadcasting and serial output.
-# 09-08-08 alex  Allowed RPC_PulseAnalyzer_SetParam() to update the parameter values in DataManager.ini file
-# 09-10-16 alex  Added an option to run DataManager without InstMgr
+# 2006-12-19 russ  First official release
+# 2006-12-20 russ  Fixed shutdown behaviour; Improved debug handling; Fixed RPC_Mode_Set
+# 2006-12-21 russ  Default MeasData label now the analysis script name + In-script ability to override this
+# 2008-02-14 sze   Include trap for Null source times
+# 2008-02-19 sze   Added RPC_StartInstMgrListener call, to avoid errors associated with trying to listen to instrument
+#                   manager at startup, when the instrument manager has not yet been started.
+# 2008-03-03 sze   Adding support for real-time serial output
+# 2008-03-07 sze   Moved rescheduling of periodic scripts to end of last execution, to avoid out-of-order executions,
+#                   periodic scripts now execute at times which are integer multiples of the period.
+# 2008-09-18 alex  Replaced ConfigParser with CustomConfigObj
+# 2009-01-21 alex  Added pulse analyzer
+# 2009-04-30 alex  Added preserved time base feature for serial output
+# 2009-05-11 alex  Added more STATUS_MASK_SyncToggle_N flags so more than 4 periodic scripts can be run
+# 2009-05-11 alex  Corrected the time stamp for broadcasting in _HandleScriptExecution() function. The current Data Manager 
+#                           broadcasts fitter results with the actual data time, but broadcasts periodic script results with 
+#                           script running time. This has be to changed for re-sync data for data alignment with the original data. 
+#                           Data Manager needs to be modified so that when the script reports "time" in the output dictionary, 
+#                           the reported time will be use for broadcasting. 
+#                           If the script output doesn't contain "time" information, the script running time will be used 
+#                           (same as before). This modification affects both broadcasting and serial output.
+# 2009-08-08 alex  Allowed RPC_PulseAnalyzer_SetParam() to update the parameter values in DataManager.ini file
+# 2009-10-16 alex  Added an option to run DataManager without InstMgr
+# 2010-02-03 sze   Execute synchronous and data-driven scripts within a single thread in order to avoid using a lock
 
 ####
 ## Set constants for this file...
@@ -77,8 +81,9 @@ import time
 import string
 from inspect import isclass
 from collections import deque
-
 import ScriptRunner
+import heapq
+
 from Host.autogen import interface
 from Host.CommandInterface import SerialInterface
 from Host.Common import CmdFIFO, StringPickler
@@ -319,12 +324,10 @@ class DataManager(object):
         if 0: assert isinstance(self.CurrentMeasMode, ModeDef.MeasMode) #for wing
         self.AnalyzerCode = {}   # keys = script paths; values = compiled code objects
         self.InstrData = {}      # keys,values taken from instr files
-        self.AnalyzerLock = threading.RLock()
         self.ConfigPath = ConfigPath
         self.Config = DataManager.ConfigurationOptions()
         self.cp = None
         self.UserCalibration = {} #keys = measurement names; values = (slope, offset); default = (1, 0)
-        self.SyncTimers = {} # keys = SyncAnalyzerInfo objects; values = Timer threads
         self.MeasListener = None
         self.SensorListener = None
         self.InstMgrStatusListener = None
@@ -337,9 +340,13 @@ class DataManager(object):
         self.serialThreadAllowRun = True
         self.serialOutQueue = Queue.Queue(0)
         self.serialPollLock = threading.Lock()
+        # Priority queue for synchronous scripts ordered by ideal execution time and period
+        #  Entries on queue are (execTime, period, startTime, iteration, syncInfoObj)
+        self.syncScriptQueue = []  
         self.lastTimeGood = True
         self.maxLate = 0
         self.maxScriptDuration = {}
+        self.syncScriptDelayHist = {}
         
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_DATA_MANAGER),
@@ -443,6 +450,11 @@ class DataManager(object):
         """Returns a dictionary with a text indication of the system states."""
         ret = dict(State = StateName[self.__State])
         return ret
+    def RPC_GetDelays(self):
+        """Returns dictionary of data manager synchronous script delay histograms, keyed
+        by script name. The 9 bins of each histogram are logarithmically spaced, with 
+        bin=math.floor(2*log10(delay)+6)"""
+        return self.syncScriptDelayHist
     def RPC_Enable(self):
         """Enables the measurement system in the mode set by Mode_Set.
         """
@@ -775,17 +787,30 @@ class DataManager(object):
         cp.write(fp)
         fp.close()
         Log("User calibration file updated.", dict(Sections = self.UserCalibration.keys()))
+
+    def _EnqueueSyncScript(self,sai,startTime,iteration):
+        assert isinstance(sai, ModeDef.SyncAnalyzerInfo)
+        heapq.heappush(self.syncScriptQueue,(startTime+iteration*sai.Period_s,sai.Period_s,startTime,iteration,sai))
+    
+    def _TimeToNextSyncScript(self):
+        if self.syncScriptQueue:
+            xeqTime,period,startTime,iteration,sai = self.syncScriptQueue[0]
+            return xeqTime - time.time()
+        else:
+            return None
+        
     def _LaunchSyncScripts(self):
-        """Launches the periodic analyzer that should be run for the given mode."""
-        if self.CurrentMeasMode.SyncSetup:
-            self.SyncTimers.clear()
+        """Enqueues initial synchronous script execution requests. These run when time.time() is an integer
+           multiple of the period of the script"""
+        if self.CurrentMeasMode and self.CurrentMeasMode.SyncSetup:
             Log("Starting synchronous analyzers", dict(Count = len(self.CurrentMeasMode.SyncSetup),
-                                                       SyncAnalyzers = [sai.ReportName for sai in self.CurrentMeasMode.SyncSetup]))
+                SyncAnalyzers = [sai.ReportName for sai in self.CurrentMeasMode.SyncSetup]))
             for sai in self.CurrentMeasMode.SyncSetup:
                 assert isinstance(sai, ModeDef.SyncAnalyzerInfo)
                 startTime = math.ceil(time.time()/sai.Period_s) * sai.Period_s
-                self._StartPeriodicScriptExec(sai, startTime, 0)
-            Log("Synchronous analyzers have all been started")
+                self._EnqueueSyncScript(sai,startTime,0)
+            Log("Synchronous analyzers have all been enqueued")
+            
     def _ToggleStatusSyncBit(self, SyncInfoObj):
         index = self.CurrentMeasMode.SyncSetup.index(SyncInfoObj)
         if index == 0:
@@ -806,64 +831,50 @@ class DataManager(object):
             mask = STATUS_MASK_SyncToggle_8
             
         self._Status.ToggleStatusBit(mask)
-    def _StartPeriodicScriptExec(self, SyncInfoObj, startTime, iteration):
-        assert isinstance(SyncInfoObj, ModeDef.SyncAnalyzerInfo)
-        idealTime = startTime + iteration * SyncInfoObj.Period_s
-        nextIteration = iteration
-        now = time.time()
-        if idealTime - now <= 0.01: # Allow up to 10ms early start
-            late = now - idealTime
-            if late > self.maxLate:
-                Log("Max periodic script delay so far %.3fs on iteration %d: %s" % (late,iteration,SyncInfoObj.ReportName))
-                self.maxLate = late
-            if __debug__:
-                if late > 0.25:
-                    Log("PERIODIC SCRIPT LATE BY %.3fs on iteration %d: %s" % (late,iteration,SyncInfoObj.ReportName), Level = 1)
-            #Now actually execute the indicated script...
-            codeObj = self.AnalyzerCode[SyncInfoObj.AnalyzerInfo.ScriptPath]
-            scriptArgs = SyncInfoObj.AnalyzerInfo.ScriptArgs
-            self._ToggleStatusSyncBit(SyncInfoObj)
+        
+    def _RunNextSyncScript(self):
+        if self.syncScriptQueue:
+            xeqTime,period,startTime,iteration,sai = heapq.heappop(self.syncScriptQueue)
+            late = time.time() - xeqTime
+            codeObj = self.AnalyzerCode[sai.AnalyzerInfo.ScriptPath]
+            scriptArgs = sai.AnalyzerInfo.ScriptArgs
+            self._ToggleStatusSyncBit(sai)
             self._HandleScriptExecution(ScriptCodeObj = codeObj,
                                         ScriptArgs = scriptArgs,
-                                        ReportSource = SyncInfoObj.ReportName,
-                                        SourceTime_s = idealTime,  #Want to report the perfect time, not actual time
+                                        ReportSource = sai.ReportName,
+                                        SourceTime_s = xeqTime,  #Want to report the perfect time, not actual time
                                         DataDict = {}, #no direct data, sync scripts use histories
                                         )
-            nextIteration += 1
-            idealTime += SyncInfoObj.Period_s
-        duration = time.time() - now
-        if duration > self.maxScriptDuration.get(SyncInfoObj.ReportName,0):
-            self.maxScriptDuration[SyncInfoObj.ReportName] = duration
-            Log("Time taken by %s on iteration %d took new max time of %.3fs" % (SyncInfoObj.ReportName,iteration,duration))
-        
-        # Set up to call this function again at the specified time...
-        delay = idealTime - time.time()
-        if delay < 0:
-            Log("WARNING: Trying to schedule %s in past by %.3fs" % (SyncInfoObj.ReportName,-delay))
-        
-        delay = max(0,delay)
-        tmr = threading.Timer(delay,
-                              self._StartPeriodicScriptExec,
-                              [SyncInfoObj, startTime, nextIteration])
-        tmr.start()
-        #Want to track it so we can stop them if need be...
-        self.SyncTimers[SyncInfoObj] = tmr
+            if late > 0:
+                bin = math.floor(2*math.log10(late)+6)
+                bin = int(min(max(bin,0),8))
+            else:
+                bin = 0
+            if sai.ReportName in self.syncScriptDelayHist:
+                self.syncScriptDelayHist[sai.ReportName][bin] += 1
+            else:
+                self.syncScriptDelayHist[sai.ReportName] = [0 for bin in range(9)]
+                
+            if late > self.maxLate:
+                Log("Max periodic script delay so far %.3fs on iteration %d: %s" % (late,iteration,sai.ReportName))
+                self.maxLate = late
+            if late > 0.25:
+                Log("PERIODIC SCRIPT LATE BY %.3fs on iteration %d: %s" % (late,iteration,sai.ReportName), Level = 1)
+            if late > 5*period: # Skip executions if we are very late
+                skip = int(math.floor(late/period))
+                iteration += skip
+                Log("Skipping %d iterations of synchronous script %s" % (skip,sai.ReportName))
+            # Enqueue next execution time for this script    
+            self._EnqueueSyncScript(sai,startTime,iteration+1)
+        else:
+            Log("A request to run a sync script occured although none were enqueued")
 
     def _StopSyncScripts(self, WaitUntilSure = True):
         """Stops and deletes the existing sync timer scripts.
-
-        Starting them up again will require another _PrepareSyncScripts call.
-
         """
-        if self.SyncTimers:
-            Log("Stopping synchronous analyzers", dict(Count = len(self.SyncTimers)))
-            for tmr in self.SyncTimers.values():
-                tmr.cancel()
-            if WaitUntilSure:
-                for tmr in self.SyncTimers.values():
-                    tmr.join()
-            Log("Synchronous analyzers have all been stopped.")
-        self.SyncTimers.clear()
+        self.syncScriptQueue = []
+        Log("Synchronous analyzers have all been stopped.")
+        
     def _ChangeMode(self, ModeName):
         """Changes the measurement mode of the DataManager."""
         if __debug__: Log("Measurement mode change request received", dict(NewMode = ModeName), Level = 0)
@@ -875,6 +886,7 @@ class DataManager(object):
         self.CurrentMeasMode = self.MeasModes[ModeName]
         self._LaunchSyncScripts()
         Log("Measurement mode changed.", dict(NewMode = ModeName, OldMode = oldModeName))
+        
     def __SetState(self, NewState):
         """Sets the state of the DataManager.  Variable init is done as appropriate."""
         if NewState == self.__State:
@@ -944,6 +956,7 @@ class DataManager(object):
         """Updates the local (latest) copy of the instrument manager status bits."""
         if 0: assert isinstance(obj, AppStatus.STREAM_Status) #for Wing
         self.LatestInstMgrStatus = obj.status
+
     def _HandleState_INIT(self):
         self.ReInitRequested = False
         try:
@@ -1063,10 +1076,20 @@ class DataManager(object):
         except:
             LogExc(Data = dict(State = StateName[self.__State]))
             self.__SetState(STATE_ERROR)
+            
     def _HandleState_READY(self):
         try:
             exitState = STATE__UNDEFINED
             self._EnableEvent.wait(0.05)
+
+            #In ready mode, we can have synchronous scripts, not data-driven scripts
+            # Get the synchronous timers running if they aren't already...
+            if not self.syncScriptQueue:
+                self._LaunchSyncScripts()
+            # Allow script to run if we are within 10ms of the target execution time.
+            if self.syncScriptQueue:
+                while self._TimeToNextSyncScript() < 0.01: self._RunNextSyncScript()
+            
             if self._EnableEvent.isSet():
                 if not self.CurrentMeasMode:
                     raise DataManagerError("No measurement mode set - Can't enable the measurement system!")
@@ -1079,6 +1102,7 @@ class DataManager(object):
         if exitState == STATE__UNDEFINED:
             raise Exception("HandleState_READY has a code error - the exitState has not been specified!!")
         self.__SetState(exitState)
+    
     def _HandleState_ENABLED(self):
         #In this state we processing data as it is appears in the data queue
         # - Sync scripts will be running in the background as appropriate for the mode
@@ -1088,12 +1112,16 @@ class DataManager(object):
                 self.__SetState(STATE_READY)
                 return
             time.sleep(0)
-            #Get the synchronous timers running if they aren't...
-            #  - will only happen on first ENABLED iteration
-            if self.CurrentMeasMode.SyncSetup and (not self.SyncTimers):
+            #Get the synchronous timers running if they aren't already...
+            if self.CurrentMeasMode.SyncSetup and (not self.syncScriptQueue):
                 self._LaunchSyncScripts()
             try:
-                data = self.DataQueue.get(timeout = 0.05)
+                # First deal with synchronous scripts that need to be run. Allow script to
+                #  run if we are within 10ms of the target execution time.
+                if self.syncScriptQueue:
+                    while self._TimeToNextSyncScript() < 0.01: self._RunNextSyncScript()
+                # Ensure we get out at least every 0.5s to check if we need to stop
+                data = self.DataQueue.get(timeout = min(max(0.0,self._TimeToNextSyncScript()),0.5))
                 assert isinstance(data, MeasData) # for Wing
                 self._AnalyzeData(data)
                 exitState = STATE_ENABLED
@@ -1106,12 +1134,14 @@ class DataManager(object):
             LogExc(Data = dict(State = StateName[self.__State]))
             exitState = STATE_ERROR
         if exitState == STATE__UNDEFINED:
-            raise Exception("HandleState_READY has a code error - the exitState has not been specified!!")
+            raise Exception("HandleState_ENABLED has a code error - the exitState has not been specified!!")
         self.__SetState(exitState)
+        
     def _HandleState_ERROR(self):
         self._ClearErrorEvent.wait(0.05)
         if self._ClearErrorEvent.isSet():
             self.__SetState(STATE_INIT)
+            
     def _MainLoop(self):
         #When started, sit and wait until a sweep is started (which sets the
         #Enabled Event). If enabled, loop and keep assembling spectra.  When
@@ -1148,6 +1178,7 @@ class DataManager(object):
             Log("DataManager terminated due to a fatal error.", Level = 3)
         else:
             Log("DataManager exited due to shutdown request.", Level = 2)
+            
     def Start(self):
         self._MainLoop()
     def _AddToHistory(self, HistoryDict, DataDict, DataTime):
@@ -1233,7 +1264,6 @@ class DataManager(object):
         self.lastSourceTime_s = SourceTime_s
         ##First, run the script!!
         self._Status.UpdateStatusBit(STATUS_MASK_Analyzing, True)
-        self.AnalyzerLock.acquire()
         
         # self.LatestInstMgrStatus is updated by self.InstMgrStatusListener
         currentInstMgrStatus = self.LatestInstMgrStatus
@@ -1249,30 +1279,27 @@ class DataManager(object):
         except:
             UserCalDict = {}
             
-        try:
-            ret = ScriptRunner.RunAnalysisScript(ScriptCodeObj = ScriptCodeObj,
-                                                 ScriptArgs = ScriptArgs,
-                                                 SourceTime_s = SourceTime_s,
-                                                 DataDict = DataDict,
-                                                 InstrDataDict = self.InstrData,
-                                                 SensorDataDict = self.LatestSensorData,
-                                                 DataHistory = self.DataHistory,
-                                                 ReportHistory = self.ReportHistory,
-                                                 SensorHistory = self.SensorHistory,
-                                                 DriverRpcServer = CRDS_Driver,
-                                                 InstrumentStatus = self.LatestInstMgrStatus,
-                                                 MeasSysRpcServer = CRDS_MeasSys,
-                                                 FreqConvRpcServer = CRDS_FreqConv,
-                                                 SerialInterface = self.serial,
-                                                 ScriptName = ReportSource,
-                                                 ExcLogFunc = LogExc,
-                                                 UserCalDict = UserCalDict,
-                                                 CalEnabled = self.calEnabled,
-                                                 PulseAnalyzerIni = pulseAnalyzerIni)
-            #unpack the returned tuple (space saving above)...
-            (reportDict, forwardDict, newDataDict, measGood, reportSource_out, pulseDict) = ret
-        finally:
-            self.AnalyzerLock.release()
+        ret = ScriptRunner.RunAnalysisScript(ScriptCodeObj = ScriptCodeObj,
+                                             ScriptArgs = ScriptArgs,
+                                             SourceTime_s = SourceTime_s,
+                                             DataDict = DataDict,
+                                             InstrDataDict = self.InstrData,
+                                             SensorDataDict = self.LatestSensorData,
+                                             DataHistory = self.DataHistory,
+                                             ReportHistory = self.ReportHistory,
+                                             SensorHistory = self.SensorHistory,
+                                             DriverRpcServer = CRDS_Driver,
+                                             InstrumentStatus = self.LatestInstMgrStatus,
+                                             MeasSysRpcServer = CRDS_MeasSys,
+                                             FreqConvRpcServer = CRDS_FreqConv,
+                                             SerialInterface = self.serial,
+                                             ScriptName = ReportSource,
+                                             ExcLogFunc = LogExc,
+                                             UserCalDict = UserCalDict,
+                                             CalEnabled = self.calEnabled,
+                                             PulseAnalyzerIni = pulseAnalyzerIni)
+        #unpack the returned tuple (space saving above)...
+        (reportDict, forwardDict, newDataDict, measGood, reportSource_out, pulseDict) = ret
         self._Status.UpdateStatusBit(STATUS_MASK_Analyzing, False)
 
         # Save pulse analyzer data and status
@@ -1340,6 +1367,7 @@ class DataManager(object):
             #Force a + prefix on all forwarded data labels...
             self.DataQueue.put(MeasData("+%s" % dataPacketLabel, rptSourceTime_s, dataPacketDict, Mode=self.RPC_Mode_Get()))
         time.sleep(0)
+        
     def _AnalyzeData(self, Data):
         """Runs the analysis script appropriate for the given Data and current Mode."""
         #also need to provide
