@@ -8,6 +8,7 @@
 #
 # HISTORY:
 #   12-Oct-2009  alex  Initial version.
+#   05-Feb-2010  sze   Removed relative timestamps, make HDF5 files contain data corresponding to a scheme file.
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 
@@ -51,6 +52,7 @@ else:
 # !!! NOTE: Bit 15 is reserved for increment flag in firmware, so never use it for other purposes!!!
 INCR_FLAG_MASK       = interface.SUBSCHEME_ID_IncrMask   # 32768 - Bit 15 is used for special increment flag
 SPECTRUM_IGNORE_MASK = interface.SUBSCHEME_ID_IgnoreMask # 16384 - Bit 14 is used to indicate the point should be ignored
+SPECTRUM_RECENTER_MASK = interface.SUBSCHEME_ID_RecenterMask # 8192 - Bit 13 is used to indicate that the virtual laser tuner offset is to be adjusted
 SPECTRUM_ISCAL_MASK  = interface.SUBSCHEME_ID_IsCalMask  #  4096 - Bit 12 is used to flag a point as a cal point to be collected
 SPECTRUM_SUBSECTION_ID_MASK = interface.SUBSCHEME_ID_SpectrumSubsectionMask
 SPECTRUM_ID_MASK     = interface.SUBSCHEME_ID_SpectrumMask # Bottom 8 bits of schemeStatus are the spectrum id/name
@@ -91,10 +93,6 @@ class RpcServerThread(threading.Thread):
 class SpectrumCollector(object):
     """A class for collecting spectrum and related information and 
     writing them to files.
-
-    firstRdTime is the clock time of the first RD read from DAS. 
-    All subsequent RDs added to the spectrum will be recorded as
-    relative times from this value.
 
     streamDir is specified to store the output file.
     On creation of an instance, a file header is written.
@@ -164,8 +162,6 @@ class SpectrumCollector(object):
         # Compression filter for HDF5
         self.hdf5Filters = Filters(complevel=1,fletcher32=True)
 
-        self.firstRdTime = Driver.hostGetTicks()
-        self.storedFirstRdTime = Driver.hostGetTicks()
         self.enableSpectrumFiles = True
         self.spectrumQueue = None
         self.maxSpectrumQueueSize = 0
@@ -180,12 +176,17 @@ class SpectrumCollector(object):
         self.startWaitTime = 0
         self.rdQueueGetLastTime = 0
         self.maxRdQueueGetRtt = 0
-       
+        self.lastSchemeCount = -1
+        self.newHdf5File = True
+        self.closeHdf5File = False
+        self.streamFP = None
+        self.tableDict = {}
+        
     def run(self):
         #start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
         self.rpcThread.start()
-        
+        # The following count "spectra" which are delimited by scheme rows which have bit-15 set in the subschemeId
         lastCount = -1
         thisCount = -1
         while not self._shutdownRequested:
@@ -203,12 +204,21 @@ class SpectrumCollector(object):
                         self.maxRdQueueGetRtt = rtt
                 self.rdQueueGetLastTime = now
                
-                localRdTime = Driver.hostGetTicks()
+                #localRdTime = Driver.hostGetTicks()
                 self.schemeTable = rdData.schemeTable
                 thisSubSchemeID = rdData.subschemeId
                 self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
                 thisCount = rdData.count
+                
+                # The schemeCount is changed when a scheme starts, i.e. it tracks entire schemes, including the
+                #  repeat count. We make an HDF5 file each time a scheme is run
                 schemeStatus = rdData.status
+                schemeCount = schemeStatus & interface.RINGDOWN_STATUS_SequenceMask
+                
+                if self.lastSchemeCount != schemeCount:
+                    if self.lastSchemeCount >= 0: self.closeHdf5File = True
+                    self.lastSchemeCount = schemeCount
+                    
                 errDataDict = dict(schemeTable = self.schemeTable,
                                    schemeRow = rdData.schemeRow,
                                    ssID = thisSubSchemeID,
@@ -219,20 +229,18 @@ class SpectrumCollector(object):
                 # When the "count" is different (set by DSP when bit-15 is set in the scheme file), we know a new spectrum is coming and we have to close whatever we currently have.
                 if thisCount != lastCount:
                     #Log("New spectrum found on ringdown (new count = %d)" % thisCount, errDataDict)
-                    self.storedFirstRdTime = self.firstRdTime # Save first RD time to be used in spectrum collection of the "last" spectrum
-                    self.firstRdTime = localRdTime
                     #Set aside the point we just read for the next time a spectrum is collected...
                     self.tempRdDataBuffer = rdData
                     # Close what we have collected so far
                     self.closeSpectrumWhenDone = True
                 else: #still collecting the same spectrum
-                    relativeRdTime = localRdTime - self.firstRdTime
                     if not (thisSubSchemeID & SPECTRUM_IGNORE_MASK):
-                        self.appendPoint(rdData, relativeRdTime)
+                        self.appendPoint(rdData)
             except RingdownTimeout:
                 if self.numPts > 0: 
                     Log("Closing spectrum due to ringdown timeout (count = %d)" % thisCount, Level = 0)
                     self.closeSpectrumWhenDone = True
+                    self.closeHdf5File = True
 
             if self.closeSpectrumWhenDone:
                 self.finish()
@@ -311,8 +319,8 @@ class SpectrumCollector(object):
         except:
             LogExc("Failed to add data in spectrum queue.")
                 
-    def appendPoint(self, rdData, relativeRdTime):
-        """Adds a single set of Data to the spectrum (at a single relativeRdTime)
+    def appendPoint(self, rdData):
+        """Adds a single set of Data to the spectrum
         """
         for fname,ftype in ProcessedRingdownEntryType._fields_:
             if fname in self.rdBuffer:
@@ -320,9 +328,6 @@ class SpectrumCollector(object):
         self.numPts += 1
 
         sensorData = self.getLatestSensors()
-        #Sneak in the local ringdown time for sensor averaging...
-        # Replace "entry.timestamp" with "relativeRdTime"
-        sensorData["timestamp"] = relativeRdTime
         self.doSensorAveraging(sensorData)
 
     def finish(self):
@@ -338,15 +343,12 @@ class SpectrumCollector(object):
         self.rdfDict["rdData"]["tunerValue"] = self.rdfDict["rdData"]["tunerValue"] + 0.0
 
         # Append averaged sensor data
-        # "timestamp" is the averaged absolute DAS time
-        self.avgSensors["timestamp"] += self.storedFirstRdTime
         self.rdfDict["sensorData"] = self.avgSensors.copy()
 
         # Add more sensor data
         self.rdfDict["sensorData"]["SchemeID"] = self.schemeTable
         self.rdfDict["sensorData"]["SpectrumID"] = self.spectrumID
         self.rdfDict["sensorData"]["SensorTime"] = unixTime(self.rdfDict["sensorData"]["timestamp"])
-        #self.rdfDict["sensorData"]["SpectrumStartTime"] = unixTime(self.firstRdTime)
 
         #Write the tagalong data values...
         self.rdfDict["tagalongData"] = self.tagalongData
@@ -358,13 +360,15 @@ class SpectrumCollector(object):
             qsize = 0
         self.rdfDict["controlData"] = {"RDDataSize":self.numPts, "SpectrumQueueSize":qsize}
         
-        # Process spectrum files (HDF5 or RDF)
+        # Process spectrum files (HDF5 or RDF). RDF files contain a single spectrum, while HDF5 files 
+        #  contain the spectra in a single scheme.
         if self.enableSpectrumFiles:
             if self.useHDF5:
-                # Create HDF5 table file
-                filename = "%03d_%013d.h5" % (self.spectrumID, int(time.time()*1000))
-                streamPath = os.path.join(self.streamDir, filename)
-                streamFP = openFile(streamPath, "w")
+                if self.newHdf5File:
+                    # Create HDF5 file
+                    filename = "RD_%013d.h5" % (int(time.time()*1000),)
+                    self.streamPath = os.path.join(self.streamDir, filename)
+                    self.streamFP = openFile(self.streamPath, "w")
                 for dataKey in self.rdfDict.keys():
                     subDataDict = self.rdfDict[dataKey]
                     if len(subDataDict) > 0:
@@ -381,19 +385,34 @@ class SpectrumCollector(object):
                             # Non-array
                             sortedValues = [subDataDict.values()[i] for i in numpy.argsort(subDataDict.keys())]
                             dataRec = numpy.rec.fromrecords([sortedValues], names=sortedKeys)
-                        streamFP.createTable("/", dataKey, dataRec, dataKey, filters=self.hdf5Filters)
+                        # Either append dataRec to an existing table, or create a new one
+                        if self.newHdf5File:
+                            self.tableDict[dataKey] = self.streamFP.createTable("/", dataKey, dataRec, dataKey, filters=self.hdf5Filters)
+                        else:
+                            self.tableDict[dataKey].append(dataRec)
+                self.newHdf5File = False
+                
+                if self.closeHdf5File:
+                    self.closeHdf5File = False
+                    self.newHdf5File = True
+                    self.streamFP.close()
+                    # Archive HDF5 file
+                    try:
+                        Archiver.ArchiveFile(self.archiveGroup, self.streamPath, True)
+                    except Exception:
+                        LogExc("Archiver call error")
             else:
                 # Pickle the rdfDict 
                 filename = "%03d_%013d.rdf" % (self.spectrumID, int(time.time()*1000))
-                streamPath = os.path.join(self.streamDir, filename)
-                streamFP = file(streamPath, "wb")
-                streamFP.write(cPickle.dumps(self.rdfDict,cPickle.HIGHEST_PROTOCOL)) 
-            streamFP.close()
-            # Archive spectrum files
-            try:
-                Archiver.ArchiveFile(self.archiveGroup, streamPath, True)
-            except Exception:
-                LogExc("Archiver call error")
+                self.streamPath = os.path.join(self.streamDir, filename)
+                self.streamFP = file(self.streamPath, "wb")
+                self.streamFP.write(cPickle.dumps(self.rdfDict,cPickle.HIGHEST_PROTOCOL)) 
+                self.streamFP.close()
+                # Archive RDF files
+                try:
+                    Archiver.ArchiveFile(self.archiveGroup, self.streamPath, True)
+                except Exception:
+                    LogExc("Archiver call error")
             
         # Store spectrum in a queue if required
         if self.spectrumQueue:
