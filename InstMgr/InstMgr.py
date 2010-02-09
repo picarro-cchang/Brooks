@@ -517,6 +517,7 @@ class InstMgr(object):
         self._SendDisplayMessage("Temp stabilizing...")
 
         return INST_ERROR_OKAY
+        
     def _EnterMeasure(self):
         """ called when entering measuring state """
         self._SendDisplayMessage("Entering Measuring")
@@ -527,7 +528,17 @@ class InstMgr(object):
             tbMsg = traceback.format_exc()
             Log("SampleMgr mode set: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
             return INST_ERROR_SAMPLE_MGR_RPC_FAILED
-
+            
+        # Wait for up to 5s for the measurement system to get into READY or ENABLED state
+        
+        for waitTime in range(5):
+            stateDict = self.MeasSysRpc.GetStates()
+            if stateDict['State_MeasSystem'] in ['READY','ENABLED']:
+                break
+            time.sleep(1)
+        else:
+            Log("MeasSys fails to enter READY or ENABLED state in _EnterMeasure",Level=2)
+            
         try:
             self.MeasSysRpc.Mode_Set(self.Config.measMode)
         except:

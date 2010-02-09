@@ -82,7 +82,7 @@ class FitterProxy(object):
 
     def checkAbort(self, startTime):
         if (TimeStamp() - startTime) > self.FitterTimeout_s:
-            raise FitterTimeout
+            raise FitterTimeout("Fitter timeout after %s" % (self.FitterTimeout_s,))
         if self.EnabledFlag_Event and not self.EnabledFlag_Event.isSet():
             raise FitterInterrupted("Fitter EnabledFlag_Event cleared while waiting for Fitter response.")
             
@@ -121,10 +121,10 @@ class FitterPool(object):
             try:
                 fitResults += f.getResults()
             except Exception,e:
-                Log("While reading response from fitter %s: %s" % (f,e))
+                Log("Exception while reading response from fitter %s: %r (%s)" % (f,e,e))
                 allOk = False
         if not allOk:
-            raise ValueError("Error while collecting fit data")
+            raise e
 
         # Sort into time order and update the cached values. Write out a list
         # [(t1,rDict1),(t2,rDict2),...] of results from all fitters put together

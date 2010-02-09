@@ -328,12 +328,18 @@ class MeasSystem(object):
         self._AssertValidCallingState([STATE_READY,   
                                        STATE_ENABLED,
                                      ])
-        if self.CurrentMeasMode and (ModeName == self.CurrentMeasMode.Name):
-            return
-        elif not ModeName in self.MeasModes.keys():
+                                     
+        if not ModeName in self.MeasModes.keys():
             raise InvalidModeSelection("An invalid mode was selected: '%s'" % ModeName)
         self._ChangeMode(ModeName)
         return "OK"
+
+        # if self.CurrentMeasMode and (ModeName == self.CurrentMeasMode.Name):
+        #     return
+        # elif not ModeName in self.MeasModes.keys():
+        #     raise InvalidModeSelection("An invalid mode was selected: '%s'" % ModeName)
+        # self._ChangeMode(ModeName)
+        # return "OK"
 
     def RPC_Mode_Get(self):
         """Returns the name of the mode the measurement system is currently set to.
@@ -542,13 +548,6 @@ class MeasSystem(object):
                 #Set it up to automatically start...
                 self._EnableEvent.set()
                 
-            # Set laser tuner parameters
-            try:
-                Driver.wrDasReg("FPGA_TUNER_LASER0_OFFSET_REGISTER", self.Config.Laser0TunerOffset)
-                Driver.wrDasReg("FPGA_TUNER_LASER1_OFFSET_REGISTER", self.Config.Laser1TunerOffset)
-            except:
-                pass
-
             # Set up the starting measurement mode (if defined... normally we wait to be told in ready state)
             if self.Config.StartingMeasMode:
                 self._ChangeMode(self.Config.StartingMeasMode)
