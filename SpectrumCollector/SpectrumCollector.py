@@ -181,6 +181,7 @@ class SpectrumCollector(object):
         self.closeHdf5File = False
         self.streamFP = None
         self.tableDict = {}
+        self.lastSpectrumQueueGet = 0
         
     def run(self):
         #start the rpc server on another thread...
@@ -314,6 +315,8 @@ class SpectrumCollector(object):
         """
         try:
             if self.spectrumQueue.qsize() == self.maxSpectrumQueueSize:
+                Log("Spectrum queue length reaches maximum",dict(QueueSize=self.maxSpectrumQueueSize,
+                    TimeSinceLastGet=TimeStamp()-self.lastSpectrumQueueGet),Level=2)
                 self.spectrumQueue.get()
             self.spectrumQueue.put(rdfDict)
         except:
@@ -440,6 +443,7 @@ class SpectrumCollector(object):
     def RPC_getFromSpectrumQueue(self, timeout=0):
         try:
             return self.spectrumQueue.get(timeout = timeout)
+            self.lastSpectrumQueueGet = TimeStamp()
         except:
             raise
         
