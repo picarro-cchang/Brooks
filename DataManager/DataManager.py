@@ -343,6 +343,7 @@ class DataManager(object):
         # Priority queue for synchronous scripts ordered by ideal execution time and period
         #  Entries on queue are (execTime, period, startTime, iteration, syncInfoObj)
         self.syncScriptQueue = []  
+        self.syncScriptsLaunched = False
         self.lastTimeGood = True
         self.maxLate = 0
         self.maxScriptDuration = {}
@@ -456,7 +457,7 @@ class DataManager(object):
         bin=math.floor(2*log10(delay)+6)"""
         return self.syncScriptDelayHist
     def RPC_Enable(self):
-        """Enables the measurement system in the mode set by Mode_Set.
+        """Enables the data manager in the mode set by Mode_Set.
         """
         try: #catch for DAS errors (and any other remote procedure call error)...
             if __debug__: Log("System Enable request received - RPC_Enable()", Level = 0)
@@ -802,6 +803,7 @@ class DataManager(object):
     def _LaunchSyncScripts(self):
         """Enqueues initial synchronous script execution requests. These run when time.time() is an integer
            multiple of the period of the script"""
+        self.syncScriptsLaunched = True
         if self.CurrentMeasMode and self.CurrentMeasMode.SyncSetup:
             Log("Starting synchronous analyzers", dict(Count = len(self.CurrentMeasMode.SyncSetup),
                 SyncAnalyzers = [sai.ReportName for sai in self.CurrentMeasMode.SyncSetup]))
@@ -865,13 +867,17 @@ class DataManager(object):
                 iteration += skip
                 Log("Skipping %d iterations of synchronous script %s" % (skip,sai.ReportName))
             # Enqueue next execution time for this script    
-            self._EnqueueSyncScript(sai,startTime,iteration+1)
+            if self.syncScriptsLaunched:
+                self._EnqueueSyncScript(sai,startTime,iteration+1)
         else:
             Log("A request to run a sync script occured although none were enqueued")
 
     def _StopSyncScripts(self, WaitUntilSure = True):
-        """Stops and deletes the existing sync timer scripts.
+        """Stops the existing sync timer scripts.
         """
+        self.syncScriptQueue = []
+        self.syncScriptsLaunched = False
+        time.sleep(1)   # Wait to ensure currently running scripts have stopped
         self.syncScriptQueue = []
         Log("Synchronous analyzers have all been stopped.")
         
@@ -1083,8 +1089,8 @@ class DataManager(object):
             self._EnableEvent.wait(0.05)
 
             #In ready mode, we can have synchronous scripts, not data-driven scripts
-            # Get the synchronous timers running if they aren't already...
-            if not self.syncScriptQueue:
+            # Launch synchronous scripts if they aren't already pending...
+            if not self.syncScriptsLaunched:
                 self._LaunchSyncScripts()
             # Allow script to run if we are within 10ms of the target execution time.
             if self.syncScriptQueue:
@@ -1105,15 +1111,15 @@ class DataManager(object):
     
     def _HandleState_ENABLED(self):
         #In this state we processing data as it is appears in the data queue
-        # - Sync scripts will be running in the background as appropriate for the mode
+        # - Sync scripts will be running as appropriate for the mode
         try:
             exitState = STATE__UNDEFINED
             if not self._EnableEvent.isSet():
                 self.__SetState(STATE_READY)
                 return
             time.sleep(0)
-            #Get the synchronous timers running if they aren't already...
-            if self.CurrentMeasMode.SyncSetup and (not self.syncScriptQueue):
+            # Launch synchronous scripts if they aren't already pending...
+            if self.CurrentMeasMode.SyncSetup and (not self.syncScriptsLaunched):
                 self._LaunchSyncScripts()
             try:
                 # First deal with synchronous scripts that need to be run. Allow script to
