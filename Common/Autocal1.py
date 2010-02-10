@@ -13,6 +13,7 @@
 #                 for WLM calibration.
 # 08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
 # 08-12-03 alex  Update it with the newer Autocal1 (merge)
+# 10-02-10 sze   Backported CPU reduction code fix from Apache G1000 code (Ticket #16)
 
 from numpy import *
 from calUtilities import WlmFile, parametricEllipse
@@ -264,6 +265,8 @@ class AutoCal(object):
         """Create sections and keys in "ini" to describe the current AutoCal object,
         using the specified "index" to indicate which wavelength monitor (or laser)
         is used"""
+        if self.lock.locked():
+            return
         self.lock.acquire()
         try: 
             if not ini.has_section("LASER_TEMP_TO_ANGLE_%02d" % (index,)):
@@ -310,12 +313,14 @@ class AutoCal(object):
             ini.set(secName,"WLM_OFFSET","%.12g" % (self.offset,))
             ini.set(secName,"NCOEFFS","%d" % (len(self.coeffs),))
             for i in range(len(self.coeffs)):
-                ini.set(secName,"COEFF%05d" % (i,),"%.12g" % (self.coeffs[i],))
-                time.sleep(0)
-            secName = "WLM_ORIGINAL_%02d" % (index,)
-            for i in range(len(self.coeffs)):
-                ini.set(secName,"COEFF%05d" % (i,),"%.12g" % (self.coeffsOrig[i],))
+                #ini.set(secName,"COEFF%05d" % (i,),"%.12g" % (self.coeffs[i],))
+                #ini.set("WLM_ORIGINAL_%02d" % (index,),"COEFF%05d" % (i,),"%.12g" % (self.coeffsOrig[i],))
 
+                # Need to be careful about the upper/lower cases because there is no more 
+                # case handling in set() function.
+                ini[secName]["coeff%05d" % (i,)] = "%.12g" % (self.coeffs[i],)
+                ini["WLM_ORIGINAL_%02d" % (index,)]["coeff%05d" % (i,)] = "%.12g" % (self.coeffsOrig[i],)
+                time.sleep(0)
         finally:
             self.lock.release()
 
