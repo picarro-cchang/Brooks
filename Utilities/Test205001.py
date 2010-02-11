@@ -138,9 +138,9 @@ class TestPowerBoardWarmBoxTecDriver(object):
                 
         vt = VerdictTable(30)
         slopeOpt = 22.0/65536.0
-        vt.setEntries([("TEC Current Slope",p[0],0.95*slopeOpt,1.05*slopeOpt,"%.3g"),
+        vt.setEntries([("TEC Current Slope",p[0],0.9*slopeOpt,1.0*slopeOpt,"%.3g"),
                        ("TEC Current Intercept",p[1]+quiescentValue*p[0],-0.05,0.05,"%.3g"),
-                       ("TEC Current Residual",sqrt(res),0,0.2,"%.3g"),
+                       ("TEC Current Residual",sqrt(res),0,0.3,"%.3g"),
                        ("Disabled value",disabledValue,-0.02,0.02,"%.3g"),
                        ])
         vt.writeOut(tp.rstFile)

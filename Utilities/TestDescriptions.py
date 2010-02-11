@@ -39,6 +39,9 @@ description["204002"] = {"Title": """Logic Board Laser 4 TEC Drive""",\
 description["204003"] = {"Title": """Logic Board Laser 4 thermistor test""",\
 "Descr":"This steps the current through thermistor resistor for laser 4 and records the results." }
 
+description["204004"] = {"Title": """SOA current test""",\
+"Descr":"This measures the SOA current and tests operation of the shorting transistor." }
+
 description["205001"] = {"Title": """Power board warm box TEC test""",\
 "Descr":"This steps the warm box TEC PWM and measures the voltage across a dummy load." }
 

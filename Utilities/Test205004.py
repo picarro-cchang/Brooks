@@ -28,7 +28,7 @@ from configobj import ConfigObj
 from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from TestPowerBoardValveDriver import TestPowerBoardValveDriver
+from TestPowerBoardValveDriver2 import TestPowerBoardValveDriver
 
 if __name__ == "__main__":
     pname = sys.argv[0]

@@ -289,8 +289,10 @@ class CsvData(object):
         for key in keys:
             print >> fp, "# %s,%s" % tuple([self.protectComma(s) for s in [key,self.parameters[key]]])
         print
-        print >> fp, "# Units,,%s"  % (",".join([self.protectComma(s) for s in self.columnUnits]),)
-        print >> fp, "# Titles,,%s" % (",".join([self.protectComma(s) for s in self.columnTitles]),)
+        if self.columnUnits:
+            print >> fp, "# Units,,%s"  % (",".join([self.protectComma(s) for s in self.columnUnits]),)
+        if self.columnTitles:
+            print >> fp, "# Titles,,%s" % (",".join([self.protectComma(s) for s in self.columnTitles]),)
 
 class TestParameters(object):
     def __init__(self,engineName,testCode):
