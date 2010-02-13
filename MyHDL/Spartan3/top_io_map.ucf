@@ -27,7 +27,11 @@ NET "RD_ADC_CLK"  LOC = "f11"  ;
 NET "RD_ADC_OE_N"  LOC = "e11"  ;
 
 # USB connected
-NET "USB_CONNECTED" LOC = "g1" ;
+NET "USB_REAR_CONNECTED" LOC = "g1" ;
+NET "USB_INTERNAL_CONNECTED" LOC = "g4" ;
+
+# FPGA program enable
+NET "FPGA_PROGRAM_ENABLE" LOC = "h1" ;
 
 # Interrupts power to Cypress device
 NET "CYP_RESET_N" LOC = "j18" ;
@@ -227,6 +231,13 @@ NET "LSR3_0" LOC = "ab15" ;
 NET "LSR3_1" LOC = "v15" ;
 NET "LSR4_0" LOC = "w14" ;
 NET "LSR4_1" LOC = "aa15" ;
+
+# Laser TEC overcurrent lines
+NET "LC1" LOC = "w16" ;
+NET "LC2" LOC = "y16" ;
+NET "LC3" LOC = "y17" ;
+NET "LC4" LOC = "aa17" ;
+
 
 # Mictor connector
 NET "MICTOR<5>" LOC = "m2" ;

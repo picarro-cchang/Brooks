@@ -155,7 +155,7 @@ void TD_Init(void) {           // Called once at startup
 
     // Configure PORTA
     PORTACFG = bmBIT0; // PA0 takes on INT0/ alternate function
-    OEA  |= 0xBE;      // initialize PA7,c PA4, PA3 PA2 and PA1 port i/o pins as outputs, PA6, PA0 as inputs
+    OEA  |= 0x9E;      // initialize PA7,c PA4, PA3 PA2 and PA1 port i/o pins as outputs, PA6, PA5, PA0 as inputs
     IOA = bmHPI_RESETz | bmHPI_HINTz;   // Deassert interrupt and reset
     force_mode = 0x0; 
 }

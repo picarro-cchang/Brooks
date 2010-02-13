@@ -42,6 +42,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          dsp_emif_ddir, dsp_emif_be, dsp_emif_ce,
          dsp_eclk,
          lsr1_0, lsr1_1, lsr2_0, lsr2_1, lsr3_0, lsr3_1, lsr4_0, lsr4_1,
+         lc1, lc2, lc3, lc4, 
          lsr1_sck,lsr1_ss,lsr1_rd,lsr1_mosi,lsr1_disable,
          lsr2_sck,lsr2_ss,lsr2_rd,lsr2_mosi,lsr2_disable,
          lsr3_sck,lsr3_ss,lsr3_rd,lsr3_mosi,lsr3_disable,
@@ -52,7 +53,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          rd_adc, rd_adc_clk, rd_adc_oe,
          monitor,
          dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7,
-         usb_connected, cyp_reset,
+         usb_internal_connected, usb_rear_connected, fpga_program_enable, cyp_reset,
          pzt_valve_dac_ld, pzt_valve_dac_sck, pzt_valve_dac_sdi,
          inlet_valve_pwm, outlet_valve_pwm,
          inlet_valve_comparator, outlet_valve_comparator,
@@ -255,7 +256,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
     kernel = Kernel( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_kernel,
-                     dsp_wr=dsp_wr, usb_connected=usb_connected,
+                     dsp_wr=dsp_wr, usb_connected=usb_rear_connected,
                      cyp_reset=cyp_reset, diag_1_out=diag_1,
                      intronix_clksel_out=intronix_clksel,
                      intronix_1_out=intronix_1,
@@ -731,6 +732,10 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         wmm_clk.next = clk_2M5
         chanC_data_in.next  = 0
         
+        fpga_program_enable.next = 1
+        ## Do not reset Cypress
+        cyp_reset.next = 0
+        
     return instances()
 
 # Clock generator
@@ -757,13 +762,15 @@ rd_adc_clk, rd_adc_oe = [Signal(LOW) for i in range(2)]
 dsp_eclk, monitor = [Signal(LOW) for i in range(2)]
 lsr1_0, lsr1_1, lsr2_0, lsr2_1 = [Signal(LOW) for i in range(4)]
 lsr3_0, lsr3_1, lsr4_0, lsr4_1 = [Signal(LOW) for i in range(4)]
+lc1, lc2, lc3, lc4 = [Signal(LOW) for i in range(4)]
 lsr1_sck,lsr1_ss,lsr1_rd,lsr1_mosi,lsr1_disable = [Signal(LOW) for i in range(5)]
 lsr2_sck,lsr2_ss,lsr2_rd,lsr2_mosi,lsr2_disable = [Signal(LOW) for i in range(5)]
 lsr3_sck,lsr3_ss,lsr3_rd,lsr3_mosi,lsr3_disable = [Signal(LOW) for i in range(5)]
 lsr4_sck,lsr4_ss,lsr4_rd,lsr4_mosi,lsr4_disable = [Signal(LOW) for i in range(5)]
 sw1, sw2, sw3, sw4 = [Signal(LOW) for i in range(4)]
 dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7 = [Signal(LOW) for i in range(4)]
-usb_connected, cyp_reset = [Signal(LOW) for i in range(2)]
+usb_internal_connected, usb_rear_connected, cyp_reset = [Signal(LOW) for i in range(3)]
+fpga_program_enable = Signal(HIGH)
 pzt_valve_dac_ld, pzt_valve_dac_sck, pzt_valve_dac_sdi = [Signal(LOW) for i in range(3)]
 inlet_valve_pwm, outlet_valve_pwm = [Signal(LOW) for i in range(2)]
 inlet_valve_comparator, outlet_valve_comparator = [Signal(LOW) for i in range(2)]
@@ -780,6 +787,7 @@ def makeVHDL():
                 dsp_emif_dout,dsp_emif_ddir, dsp_emif_be, dsp_emif_ce,
                 dsp_eclk,
                 lsr1_0, lsr1_1, lsr2_0, lsr2_1, lsr3_0, lsr3_1, lsr4_0, lsr4_1,
+                lc1, lc2, lc3, lc4,
                 lsr1_sck,lsr1_ss,lsr1_rd,lsr1_mosi,lsr1_disable,
                 lsr2_sck,lsr2_ss,lsr2_rd,lsr2_mosi,lsr2_disable,
                 lsr3_sck,lsr3_ss,lsr3_rd,lsr3_mosi,lsr3_disable,
@@ -790,7 +798,7 @@ def makeVHDL():
                 rd_adc, rd_adc_clk, rd_adc_oe,
                 monitor,
                 dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7,
-                usb_connected, cyp_reset,
+                usb_internal_connected, usb_rear_connected, fpga_program_enable, cyp_reset,
                 pzt_valve_dac_ld, pzt_valve_dac_sck, pzt_valve_dac_sdi,
                 inlet_valve_pwm, outlet_valve_pwm,
                 inlet_valve_comparator, outlet_valve_comparator,

@@ -267,13 +267,14 @@ class Viewer(HasTraits):
 if __name__ == "__main__":
     #fname = "../Host/Driver/Sensors_20091005_001334.h5"
     #fname = "WarmBoxWithWlmShroud_20091023_210610.h5"
-    fname = "../Log/Sensors_20091106_215259.h5"
+    #fname = "../../Log/Sensors_20091106_215259.h5"
+    fname = "../../Log/Sensors_20100210_194007.h5"
     #inputStream  = STREAM_Laser2Tec
     #outputStream = STREAM_Laser2Temp
-    #inputStream = STREAM_WarmBoxTec
-    #outputStream = STREAM_WarmBoxTemp
-    inputStream = STREAM_HotBoxTec
-    outputStream = STREAM_CavityTemp
+    inputStream = STREAM_WarmBoxTec
+    outputStream = STREAM_WarmBoxTemp
+    #inputStream = STREAM_HotBoxTec
+    #outputStream = STREAM_CavityTemp
     viewer = Viewer()
     viewer.process(fname,inputStream,outputStream)
     

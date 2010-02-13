@@ -17,6 +17,9 @@
 31. Think about versioning releases - should we make a release repository?
 32. Write utility to help in intial determination of laser WLM_OFFSETs.
 33. Write code for programming I2C EEPROMs.
+34. Rewrite the data manager so that all scripts run in a single thread:
+        Use a priority queue to keep track of when a synchronous thread is to be run.
+        The server which pulls off the fitter queue needs also to pull off the priority queue.
 
 DONE
 7. Look at implementing averaging of metadata at ringdown, rather than just taking the last value.

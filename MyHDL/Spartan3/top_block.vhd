@@ -50,7 +50,10 @@ entity top_block is
            dsp_emif_be      : in unsigned(3 downto 0);
            dsp_emif_ce      : in unsigned(3 downto 0);
 
-           usb_connected    : in std_logic;
+           usb_internal_connected    : in std_logic;
+           usb_rear_connected        : in std_logic;
+           fpga_program_enable       : out std_logic;
+           
            cyp_reset        : out std_logic;
            cyp_pc           : in unsigned(7 downto 0);
            dsp_ext_int4     : out std_logic;
@@ -124,6 +127,11 @@ entity top_block is
            lsr3_1           : out std_logic;
            lsr4_0           : out std_logic;
            lsr4_1           : out std_logic;
+           
+           lc1              : in std_logic;
+           lc2              : in std_logic;
+           lc3              : in std_logic;
+           lc4              : in std_logic;
 
            intronix         : out unsigned(33 downto 0);
            fpga_led         : out unsigned(3 downto 0);
@@ -206,6 +214,10 @@ begin
         lsr3_1 => lsr3_1,
         lsr4_0 => lsr4_0,
         lsr4_1 => lsr4_1,
+        lc1 => lc1,
+        lc2 => lc2,
+        lc3 => lc3,
+        lc4 => lc4,
         lsr1_sck => lsr1_sck,
         lsr1_ss  => lsr1_ss,
         lsr1_rd  => lsr1_rd,
@@ -244,7 +256,9 @@ begin
         dsp_ext_int5 => dsp_ext_int5,
         dsp_ext_int6 => dsp_ext_int6,
         dsp_ext_int7 => dsp_ext_int7,
-        usb_connected => usb_connected,
+        usb_internal_connected => usb_internal_connected,
+        usb_rear_connected => usb_rear_connected,
+        fpga_program_enable => fpga_program_enable,
         cyp_reset => cyp_reset,
         
         pzt_valve_dac_ld        => pzt_valve_dac_ld,

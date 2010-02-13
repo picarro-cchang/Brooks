@@ -33,7 +33,10 @@ entity top_io_map is
            RD_ADC_CLK       : out std_logic;
            RD_ADC_OE_N      : out std_logic;
            -- USB connected signal
-           USB_CONNECTED    : in std_logic;
+           USB_INTERNAL_CONNECTED    : in std_logic;
+           USB_REAR_CONNECTED        : in std_logic;
+           -- FPGA program enable
+           FPGA_PROGRAM_ENABLE       : out std_logic;
            -- Cypress reset
            CYP_RESET_N      : out std_logic;
            -- Cypress PortC
@@ -81,6 +84,11 @@ entity top_io_map is
            LSR3_1           : out std_logic;
            LSR4_0           : out std_logic;
            LSR4_1           : out std_logic;
+           -- Laser TEC overcurrent lines
+           LC1              : in std_logic;
+           LC2              : in std_logic;
+           LC3              : in std_logic;
+           LC4              : in std_logic;
            -- Mictor connector
            MICTOR           : out std_logic_vector(38 downto 5);
            -- FPGA LEDS
@@ -105,7 +113,9 @@ begin
            RD_ADC           => RD_ADC,
            RD_ADC_CLK       => RD_ADC_CLK,
            RD_ADC_OE_N      => RD_ADC_OE_N,
-           USB_CONNECTED    => USB_CONNECTED,
+           USB_INTERNAL_CONNECTED => USB_INTERNAL_CONNECTED,
+           USB_REAR_CONNECTED     => USB_REAR_CONNECTED,
+           FPGA_PROGRAM_ENABLE    => FPGA_PROGRAM_ENABLE,
            CYP_RESET_N      => CYP_RESET_N,
            CYP_PC           => CYP_PC,
            DSP_EXT_INT4     => DSP_EXT_INT4,
@@ -190,6 +200,10 @@ begin
            LSR3_1           => LSR3_1,
            LSR4_0           => LSR4_0,
            LSR4_1           => LSR4_1,
+           LC1              => LC1,
+           LC2              => LC2,
+           LC3              => LC3,
+           LC4              => LC4,           
            MICTOR           => MICTOR,
            FPGA_LED         => FPGA_LED,
            I2C_RST0_N       => I2C_RST0_N,

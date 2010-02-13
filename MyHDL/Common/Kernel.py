@@ -194,44 +194,44 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     
                 i2c_reset_out.next = control[KERNEL_CONTROL_I2C_RESET_B]
                 
-                # State machine for handling resetting of Cypress FX2 and FPGA
-                if state == t_State.NORMAL:
-                    cyp_reset.next = LOW
-                    if control[KERNEL_CONTROL_CYPRESS_RESET_B]:
-                        counter.next = 0
-                        control.next[KERNEL_CONTROL_CYPRESS_RESET_B] = 0
-                        state.next = t_State.RESETTING
-                    elif not usb_connected:
-                        counter.next = 0
-                        state.next = t_State.DISCONNECTED
-                    else:
-                        state.next = t_State.NORMAL
-                elif state == t_State.DISCONNECTED:
-                    cyp_reset.next = LOW
-                    if usb_connected:
-                        state.next = t_State.NORMAL
-                    elif control[KERNEL_CONTROL_CYPRESS_RESET_B]:
-                        counter.next = 0
-                        control.next[KERNEL_CONTROL_CYPRESS_RESET_B] = 0
-                        state.next = t_State.RESETTING
-                    else:
-                        counter.next = counter + 1
-                        if counter == top_count:
-                            counter.next = 0
-                            state.next = t_State.RESETTING
-                        else:
-                            state.next = t_State.DISCONNECTED
-                elif state == t_State.RESETTING:
-                    cyp_reset.next = HIGH
-                    counter.next = counter + 1
-                    if counter == top_count:
-                        control.next[KERNEL_CONTROL_CYPRESS_RESET_B] = 0
-                        state.next = t_State.NORMAL
-                    else:
-                        state.next = t_State.RESETTING
-                else:
-                    cyp_reset.next = LOW
-                    state.next = t_State.NORMAL
+                ## State machine for handling resetting of Cypress FX2 and FPGA
+                #if state == t_State.NORMAL:
+                    #cyp_reset.next = LOW
+                    #if control[KERNEL_CONTROL_CYPRESS_RESET_B]:
+                        #counter.next = 0
+                        #control.next[KERNEL_CONTROL_CYPRESS_RESET_B] = 0
+                        #state.next = t_State.RESETTING
+                    #elif not usb_connected:
+                        #counter.next = 0
+                        #state.next = t_State.DISCONNECTED
+                    #else:
+                        #state.next = t_State.NORMAL
+                #elif state == t_State.DISCONNECTED:
+                    #cyp_reset.next = LOW
+                    #if usb_connected:
+                        #state.next = t_State.NORMAL
+                    #elif control[KERNEL_CONTROL_CYPRESS_RESET_B]:
+                        #counter.next = 0
+                        #control.next[KERNEL_CONTROL_CYPRESS_RESET_B] = 0
+                        #state.next = t_State.RESETTING
+                    #else:
+                        #counter.next = counter + 1
+                        #if counter == top_count:
+                            #counter.next = 0
+                            #state.next = t_State.RESETTING
+                        #else:
+                            #state.next = t_State.DISCONNECTED
+                #elif state == t_State.RESETTING:
+                    #cyp_reset.next = HIGH
+                    #counter.next = counter + 1
+                    #if counter == top_count:
+                        #control.next[KERNEL_CONTROL_CYPRESS_RESET_B] = 0
+                        #state.next = t_State.NORMAL
+                    #else:
+                        #state.next = t_State.RESETTING
+                #else:
+                    #cyp_reset.next = LOW
+                    #state.next = t_State.NORMAL
 
 
     return instances()
