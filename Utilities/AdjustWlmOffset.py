@@ -81,16 +81,16 @@ if __name__ == "__main__":
             RdFreqConv.convertScheme(schemeIndex)
             RdFreqConv.uploadSchemeToDAS(schemeIndex)
             # Set up multiple mode so that scheme keeps running
-            Driver.wrDasReg(SPECT_CNTRL_NEXT_SCHEME_REGISTER,schemeIndex)
-            Driver.wrDasReg(SPECT_CNTRL_MODE_REGISTER,SPECT_CNTRL_SchemeMultipleMode)            
+            Driver.wrDasReg("SPECT_CNTRL_NEXT_SCHEME_REGISTER",schemeIndex)
+            Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER","SPECT_CNTRL_SchemeMultipleMode")            
             # Start acquisition using the scheme
-            Driver.wrDasReg(SPECT_CNTRL_STATE_REGISTER,SPECT_CNTRL_StartingState)
+            Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_StartingState")
             #
             newOffset = raw_input("New WLM offset? ")
             if not newOffset.strip(): break
             newOffset = float(newOffset)
-            Driver.wrDasReg(SPECT_CNTRL_MODE_REGISTER,SPECT_CNTRL_SchemeSingleMode)            
-            Driver.wrDasReg(SPECT_CNTRL_STATE_REGISTER,SPECT_CNTRL_IdleState)
+            Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER","SPECT_CNTRL_SchemeSingleMode")            
+            Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_IdleState")
             time.sleep(1.0)
             RdFreqConv.setWlmOffset(vLaserNum,newOffset)
             schemeIndex = 1-schemeIndex

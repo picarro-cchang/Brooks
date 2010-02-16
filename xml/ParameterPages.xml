@@ -374,11 +374,11 @@
         <gui_page>
             <title>Ringdown Manager Parameters</title>
             <fpga_register offset="FPGA_RDMAN">CONTROL</fpga_register>
-            <fpga_register offset="FPGA_RDMAN">STATUS</fpga_register>
+            <!-- <fpga_register offset="FPGA_RDMAN">STATUS</fpga_register> -->
             <fpga_register offset="FPGA_RDMAN">OPTIONS</fpga_register>
-            <fpga_register offset="FPGA_RDMAN">DATA_ADDRCNTR</fpga_register>
-            <fpga_register offset="FPGA_RDMAN">METADATA_ADDRCNTR</fpga_register>
-            <fpga_register offset="FPGA_RDMAN">PARAM_ADDRCNTR</fpga_register>
+            <!-- <fpga_register offset="FPGA_RDMAN">DATA_ADDRCNTR</fpga_register>  -->
+            <!-- <fpga_register offset="FPGA_RDMAN">METADATA_ADDRCNTR</fpga_register> -->
+            <!-- <fpga_register offset="FPGA_RDMAN">PARAM_ADDRCNTR</fpga_register>  -->
             <fpga_register offset="FPGA_RDMAN">DIVISOR</fpga_register>
             <fpga_register offset="FPGA_RDMAN">NUM_SAMP</fpga_register>
             <fpga_register offset="FPGA_RDMAN">THRESHOLD</fpga_register>
