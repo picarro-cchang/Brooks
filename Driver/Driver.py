@@ -33,12 +33,11 @@ from DasConfigure import DasConfigure
 from Host.autogen import interface
 from Host.Common import SharedTypes, version
 from Host.Common import CmdFIFO, StringPickler, timestamp
-from Host.Common.SharedTypes import RPC_PORT_DRIVER
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, ctypesToDict
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.hostDasInterface import DasInterface, HostToDspSender, StateDatabase
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.ctypesConvert import ctypesToDict
 from Host.Common.hostDasInterface import Operation
 from Host.Common.InstErrors import *
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
