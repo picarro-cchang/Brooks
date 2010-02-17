@@ -207,20 +207,6 @@ class ValveSequenceEntryType(Structure):
     ("dwell",c_ushort)
     ]
 
-class PidControllerEnvType(Structure):
-    _fields_ = [
-    ("swpDir",c_int),
-    ("lockCount",c_int),
-    ("unlockCount",c_int),
-    ("firstIteration",c_int),
-    ("a",c_float),
-    ("u",c_float),
-    ("perr",c_float),
-    ("derr1",c_float),
-    ("derr2",c_float),
-    ("Dincr",c_float)
-    ]
-
 class CheckEnvType(Structure):
     _fields_ = [
     ("var1",c_int),
@@ -238,6 +224,13 @@ class FilterEnvType(Structure):
     ("num",c_float*9),
     ("den",c_float*9),
     ("state",c_float*8)
+    ]
+
+class InterpolatorEnvType(Structure):
+    _fields_ = [
+    ("target",c_float),
+    ("current",c_float),
+    ("steps",c_uint)
     ]
 
 class SchemeRowType(Structure):
@@ -2349,13 +2342,19 @@ persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_INLET', [u'DYNAMICPWM_DELTA'
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_OUTLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_SLOPE']))
 
 # Environment addresses
-LASER1_TEMP_MODEL_ENV = 0
-LASER2_TEMP_MODEL_ENV = 27
-LASER3_TEMP_MODEL_ENV = 54
-LASER4_TEMP_MODEL_ENV = 81
+WARM_BOX_TEC_INTERPOLATOR_ENV = 0
+CAVITY_TEC_INTERPOLATOR_ENV = 3
+HEATER_INTERPOLATOR_ENV = 6
+LASER1_TEMP_MODEL_ENV = 9
+LASER2_TEMP_MODEL_ENV = 36
+LASER3_TEMP_MODEL_ENV = 63
+LASER4_TEMP_MODEL_ENV = 90
 
 # Dictionary for accessing environments by name
 envByName = {}
+envByName['WARM_BOX_TEC_INTERPOLATOR_ENV'] = (WARM_BOX_TEC_INTERPOLATOR_ENV,InterpolatorEnvType)
+envByName['CAVITY_TEC_INTERPOLATOR_ENV'] = (CAVITY_TEC_INTERPOLATOR_ENV,InterpolatorEnvType)
+envByName['HEATER_INTERPOLATOR_ENV'] = (HEATER_INTERPOLATOR_ENV,InterpolatorEnvType)
 envByName['LASER1_TEMP_MODEL_ENV'] = (LASER1_TEMP_MODEL_ENV,FilterEnvType)
 envByName['LASER2_TEMP_MODEL_ENV'] = (LASER2_TEMP_MODEL_ENV,FilterEnvType)
 envByName['LASER3_TEMP_MODEL_ENV'] = (LASER3_TEMP_MODEL_ENV,FilterEnvType)
@@ -2428,6 +2427,8 @@ ACTION_READ_AMBIENT_PRESSURE_ADC = 63
 ACTION_ADC_TO_PRESSURE = 64
 ACTION_SET_INLET_VALVE = 65
 ACTION_SET_OUTLET_VALVE = 66
+ACTION_INTERPOLATOR_SET_TARGET = 67
+ACTION_INTERPOLATOR_STEP = 68
 
 
 # Parameter form definitions
@@ -2797,11 +2798,7 @@ parameter_forms.append(('Ringdown Simulator Parameters',__p))
 __p = []
 
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Reset ringdown manager', [(0, u'Idle'), (16, u'Reset')]), (32, u'Mark bank 0 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Mark bank 1 available for write', [(0, u'Idle'), (64, u'Mark available')]), (128, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (128, u'Acknowledge')]), (256, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (256, u'Acknowledge')]), (512, u'Tuner waveform mode', [(0, u'Ramp'), (512, u'Dither')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')]), (1024, u'Ringdown Cycle State', [(0, u'Idle'), (1024, u'Busy')])],None,None,1,0))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')]), (16, u'Ringdown data source', [(0, u'Simulator'), (16, u'Actual ADC')])],None,None,1,1))
-__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DATA_ADDRCNTR,'Ringdown data address','','%d',1,0))
-__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_METADATA_ADDRCNTR,'Ringdown metadata address','','%d',1,0))
-__p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_PARAM_ADDRCNTR,'Ringdown parameter address','','%d',1,0))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DIVISOR,'Ringdown ADC divisor','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_NUM_SAMP,'Ringdown samples to collect','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_THRESHOLD,'Ringdown threshold','','%d',1,1))
