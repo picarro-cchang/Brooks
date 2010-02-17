@@ -84,4 +84,6 @@ int r_read_ambient_pressure_adc(unsigned int numInt,void *params,void *env);
 int r_adc_to_pressure(unsigned int numInt,void *params,void *env);
 int r_set_inlet_valve(unsigned int numInt,void *params,void *env);
 int r_set_outlet_valve(unsigned int numInt,void *params,void *env);
+int r_interpolator_set_target(unsigned int numInt,void *params,void *env);
+int r_interpolator_step(unsigned int numInt,void *params,void *env);
 #endif

@@ -97,6 +97,7 @@ int tempCntrlWrite(TempCntrl *t)
 #define firstIteration  (t->firstIteration)
 #define pidState        (&(t->pidState))
 #define disabledValue   (t->disabledValue)
+#define lastTec         (t->lastTec)
 #define hasExt    ((0 != t->extMax_) && (0 != t->extTemp_))
 
 int tempCntrlStep(TempCntrl *t)
@@ -191,8 +192,15 @@ int tempCntrlStep(TempCntrl *t)
     }
     if (hasExt)
     {
-        if (extTemp > extMax) tec = disabledValue;
+        if (extTemp > extMax) {
+            float change = disabledValue - lastTec;
+            if (change > Imax) change = Imax;
+            if (change < -Imax) change = -Imax;
+            tec  = lastTec + change;
+            pidState->a = tec;
+        }  
     }
+    lastTec = tec;
     return STATUS_OK;
 }
 
@@ -234,6 +242,7 @@ int tempCntrlStep(TempCntrl *t)
 #undef unlockCount
 #undef firstIteration
 #undef pidState
+#undef lastTec
 
 TempCntrl tempCntrlLaser1;
 TempCntrl tempCntrlLaser2;
@@ -285,7 +294,7 @@ int tempCntrlLaser1Init(void)
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;
-    *(t->tec_) = s->a = s->u = 0x8000;
+    *(t->tec_) = t->lastTec = s->a = s->u = t->disabledValue;
     s->perr = 0.0;
     s->derr1 = 0.0;
     s->derr2 = 0.0;
@@ -347,7 +356,7 @@ int tempCntrlLaser2Init(void)
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;
-    *(t->tec_) = s->a = s->u = 0x8000;
+    *(t->tec_) = t->lastTec = s->a = s->u = t->disabledValue;
     s->perr = 0.0;
     s->derr1 = 0.0;
     s->derr2 = 0.0;
@@ -408,7 +417,7 @@ int tempCntrlLaser3Init(void)
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;
-    *(t->tec_) = s->a = s->u = 0x8000;
+    *(t->tec_) = t->lastTec = s->a = s->u = t->disabledValue;
     s->perr = 0.0;
     s->derr1 = 0.0;
     s->derr2 = 0.0;
@@ -469,7 +478,7 @@ int tempCntrlLaser4Init(void)
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;
-    *(t->tec_) = s->a = s->u = 0x8000;
+    *(t->tec_) = t->lastTec = s->a = s->u = t->disabledValue;
     s->perr = 0.0;
     s->derr1 = 0.0;
     s->derr2 = 0.0;
@@ -695,7 +704,7 @@ int tempCntrlWarmBoxInit(void)
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;
-    *(t->tec_) = s->a = s->u = 0x8000;
+    *(t->tec_) = t->lastTec = s->a = s->u = t->disabledValue;
     s->perr = 0.0;
     s->derr1 = 0.0;
     s->derr2 = 0.0;
@@ -759,7 +768,7 @@ int tempCntrlCavityInit(void)
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;
-    *(t->tec_) = s->a = s->u = 0x8000;
+    *(t->tec_) = t->lastTec = s->a = s->u = t->disabledValue;
     s->perr = 0.0;
     s->derr1 = 0.0;
     s->derr2 = 0.0;
@@ -824,7 +833,7 @@ int tempCntrlHeaterInit(void)
     t->lockCount = 0;
     t->unlockCount = 0;
     t->firstIteration = TRUE;
-    *(t->tec_) = s->a = s->u = 0x0;
+    *(t->tec_) = t->lastTec = s->a = s->u = t->disabledValue;
     s->perr = 0.0;
     s->derr1 = 0.0;
     s->derr2 = 0.0;

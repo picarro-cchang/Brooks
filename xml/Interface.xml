@@ -191,18 +191,6 @@
             <field ident="maskAndValue" type="uint16"/>
             <field ident="dwell" type="uint16"/>
         </struct>
-        <struct type="PidControllerEnvType">
-            <field ident="swpDir" type="int32"/>
-            <field ident="lockCount" type="int32"/>
-            <field ident="unlockCount" type="int32"/>
-            <field ident="firstIteration" type="int32"/>
-            <field ident="a" type="float"/>
-            <field ident="u" type="float"/>
-            <field ident="perr" type="float"/>
-            <field ident="derr1" type="float"/>
-            <field ident="derr2" type="float"/>
-            <field ident="Dincr" type="float"/>
-        </struct>
         <struct type="CheckEnvType">
             <field ident="var1" type="int32"/>
             <field ident="var2" type="int32"/>
@@ -215,6 +203,11 @@
             <field ident="num" type="float" size="9"/>
             <field ident="den" type="float" size="9"/>
             <field ident="state" type="float" size="8"/>
+        </struct>
+        <struct type="InterpolatorEnvType">
+            <field ident="target" type="float"/>
+            <field ident="current" type="float"/>
+            <field ident="steps" type="uint32"/>
         </struct>
         <struct type="SchemeRowType">
             <field ident="setpoint" type="float"/>
@@ -3539,6 +3532,9 @@
         </fpga_map>
     </fpga_map_list>
     <environment_list>
+        <env type="InterpolatorEnvType" ident="WARM_BOX_TEC_INTERPOLATOR_ENV" />
+        <env type="InterpolatorEnvType" ident="CAVITY_TEC_INTERPOLATOR_ENV" />
+        <env type="InterpolatorEnvType" ident="HEATER_INTERPOLATOR_ENV" />
         <env type="FilterEnvType" ident="LASER1_TEMP_MODEL_ENV" />
         <env type="FilterEnvType" ident="LASER2_TEMP_MODEL_ENV" />
         <env type="FilterEnvType" ident="LASER3_TEMP_MODEL_ENV" />
@@ -3630,5 +3626,7 @@
         <action ident="ACTION_ADC_TO_PRESSURE">r_adc_to_pressure</action>
         <action ident="ACTION_SET_INLET_VALVE">r_set_inlet_valve</action>
         <action ident="ACTION_SET_OUTLET_VALVE">r_set_outlet_valve</action>
+        <action ident="ACTION_INTERPOLATOR_SET_TARGET">r_interpolator_set_target</action>
+        <action ident="ACTION_INTERPOLATOR_STEP">r_interpolator_step</action>
     </action_list>
 </Das_Interface>

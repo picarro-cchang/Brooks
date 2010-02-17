@@ -1294,6 +1294,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_set_inlet_valve(numInt,params,env);
         case ACTION_SET_OUTLET_VALVE:
             return r_set_outlet_valve(numInt,params,env);
+        case ACTION_INTERPOLATOR_SET_TARGET:
+            return r_interpolator_set_target(numInt,params,env);
+        case ACTION_INTERPOLATOR_STEP:
+            return r_interpolator_step(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

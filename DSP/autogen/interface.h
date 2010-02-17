@@ -184,19 +184,6 @@ typedef struct {
 } ValveSequenceEntryType;
 
 typedef struct {
-    int32 swpDir;
-    int32 lockCount;
-    int32 unlockCount;
-    int32 firstIteration;
-    float a;
-    float u;
-    float perr;
-    float derr1;
-    float derr2;
-    float Dincr;
-} PidControllerEnvType;
-
-typedef struct {
     int32 var1;
     int32 var2;
 } CheckEnvType;
@@ -211,6 +198,12 @@ typedef struct {
     float den[9];
     float state[8];
 } FilterEnvType;
+
+typedef struct {
+    float target;
+    float current;
+    uint32 steps;
+} InterpolatorEnvType;
 
 typedef struct {
     float setpoint;
@@ -1315,10 +1308,13 @@ typedef enum {
 
 /* Environment addresses */
 
-#define LASER1_TEMP_MODEL_ENV (0)
-#define LASER2_TEMP_MODEL_ENV (27)
-#define LASER3_TEMP_MODEL_ENV (54)
-#define LASER4_TEMP_MODEL_ENV (81)
+#define WARM_BOX_TEC_INTERPOLATOR_ENV (0)
+#define CAVITY_TEC_INTERPOLATOR_ENV (3)
+#define HEATER_INTERPOLATOR_ENV (6)
+#define LASER1_TEMP_MODEL_ENV (9)
+#define LASER2_TEMP_MODEL_ENV (36)
+#define LASER3_TEMP_MODEL_ENV (63)
+#define LASER4_TEMP_MODEL_ENV (90)
 
 /* Action codes */
 #define ACTION_WRITE_BLOCK (1)
@@ -1387,4 +1383,6 @@ typedef enum {
 #define ACTION_ADC_TO_PRESSURE (64)
 #define ACTION_SET_INLET_VALVE (65)
 #define ACTION_SET_OUTLET_VALVE (66)
+#define ACTION_INTERPOLATOR_SET_TARGET (67)
+#define ACTION_INTERPOLATOR_STEP (68)
 #endif

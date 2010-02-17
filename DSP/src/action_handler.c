@@ -826,3 +826,38 @@ int r_set_outlet_valve(unsigned int numInt,void *params,void *env)
 	writeFPGA(FPGA_DYNAMICPWM_OUTLET + DYNAMICPWM_LOW,value - 0.5*dither);	
     return STATUS_OK;
 }
+
+int r_interpolator_set_target(unsigned int numInt,void *params,void *env)
+/* Interpolators are used to spread out an actuator change over a number of samples so as to
+    reduce the effects of sudden changes. reg[0] specifies a register which contains the target
+	value of the actuator, and reg[1] specifies the number of steps over which the change
+	is to be spread. The interpolator state is stored in an InterpolatorEnvType object. */
+{
+    unsigned int *reg = (unsigned int *) params;
+	InterpolatorEnvType *intenv = (InterpolatorEnvType *)env;
+
+	if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[0],intenv->target);
+	intenv->steps = reg[1];
+    return STATUS_OK;
+}
+
+int r_interpolator_step(unsigned int numInt,void *params,void *env)
+/* Performs a single step of the interpolator indicated by *env, and writes the result to the
+    FPGA register whose block index and register index are passed as params[0] and params[1].
+	This should be run after the interpolator_set_target action by placing it in a lower 
+	priority group. */
+{
+    unsigned int *reg = (unsigned int *) params;
+	InterpolatorEnvType *intenv = (InterpolatorEnvType *)env;
+
+	if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    if (intenv->steps >= 1) {
+        float alpha = 1.0/(intenv->steps);
+        intenv->current = (1-alpha)*(intenv->current) + alpha*(intenv->target);
+        (intenv->steps)--;
+    }
+    else intenv->current = (intenv->target);
+    writeFPGA(reg[0]+reg[1],(unsigned int)(intenv->current));
+    return STATUS_OK;
+}

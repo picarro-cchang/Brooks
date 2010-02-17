@@ -43,6 +43,7 @@ typedef struct TEMP_CNTRL
     int unlockCount;
     int firstIteration;
     int disabledValue;
+    float lastTec;
     // PID structures
     PidState pidState;
     PidParamsRef pidParamsRef;
