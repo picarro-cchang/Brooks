@@ -23,7 +23,7 @@ from MyHDL.Common.DynamicPwm import DynamicPwm
 from MyHDL.Common.Inject import Inject
 from MyHDL.Common.Kernel import Kernel
 from MyHDL.Common.LaserLocker import LaserLocker
-from MyHDL.Common.Ltc2604Dac import Ltc2604Dac
+from MyHDL.Common.Ltc2604DacD import Ltc2604DacD
 from MyHDL.Common.Pwm1 import Pwm
 from MyHDL.Common.RdMan import RdMan
 from MyHDL.Common.Rdmemory import Rdmemory
@@ -409,14 +409,19 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     eta1_out=eta1, ref1_out=ref1, eta2_out=eta2, ref2_out=ref2,
                     data_available_out=wlm_data_available)
     
-    pztValveDac = Ltc2604Dac(clk=clk0, reset=reset, dac_clock_in=clk_10M,
-                             chanA_data_in=inlet_valve_dac,
-                             chanB_data_in=outlet_valve_dac,
-                             chanC_data_in=chanC_data_in,
-                             chanD_data_in=pzt, strobe_in=pulse_100k,
-                             dac_sck_out=pzt_valve_dac_sck,
-                             dac_sdi_out=pzt_valve_dac_sdi, dac_ld_out=pzt_valve_dac_ld)
+    #pztValveDac = Ltc2604Dac(clk=clk0, reset=reset, dac_clock_in=clk_10M,
+    #                         chanA_data_in=inlet_valve_dac,
+    #                         chanB_data_in=outlet_valve_dac,
+    #                         chanC_data_in=chanC_data_in,
+    #                         chanD_data_in=pzt, strobe_in=pulse_100k,
+    #                         dac_sck_out=pzt_valve_dac_sck,
+    #                         dac_sdi_out=pzt_valve_dac_sdi, dac_ld_out=pzt_valve_dac_ld)
 
+    pztValveDac = Ltc2604DacD(clk=clk0, reset=reset, dac_clock_in=clk_2M5,
+                              chanD_data_in=pzt, strobe_in=pulse_100k,
+                              dac_sck_out=pzt_valve_dac_sck,
+                              dac_sdi_out=pzt_valve_dac_sdi, dac_ld_out=pzt_valve_dac_ld)
+    
     dynamicPwmInlet = DynamicPwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                                  dsp_data_out=dsp_data_out,
                                  dsp_data_in=dsp_data_in_dynamicpwm_inlet, dsp_wr=dsp_wr,
