@@ -18,22 +18,22 @@
 #include "i2c_dsp.h"
 #include "ltc2451.h"
 
-unsigned int ltc2451_read()
+unsigned int ltc2451_read(I2C_devAddr *i2c)
 /* Read 2 bytes in high-endian order returning an unsigned */
 {
     Uint8 reply[2];
     unsigned int result=0;
-    I2C_read_bytes(hI2C0,0x14,reply,2);
+    I2C_read_bytes(*(i2c->hI2C),i2c->addr,reply,2);
     result = reply[0];
     result = (result << 8) | reply[1];
     return result;
 }
 
-void ltc2451_set_speed(int low_speed)
+void ltc2451_set_speed(I2C_devAddr *i2c, int low_speed)
 /* low_speed is 1 for 30Hz, 0 for 60Hz */
 {
     Uint8 bytes[1];
     bytes[0] = low_speed;
-    I2C_write_bytes(hI2C0,0x14,bytes,1);
-    I2C_sendStop(hI2C0);
+    I2C_write_bytes(*(i2c->hI2C),i2c->addr,bytes,1);
+    I2C_sendStop(*(i2c->hI2C));
 }

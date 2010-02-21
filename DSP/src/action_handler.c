@@ -39,11 +39,12 @@
 #include "ltc2451.h"
 #include "ltc2499.h"
 #include "fpga.h"
+#include "i2cEeprom.h"
 
 static char message[120];
 
 #define READ_REG(regNum,result) { \
-	DataType d; \
+    DataType d; \
     int status = readRegister((regNum),&d);\
     if (STATUS_OK != status) return status; \
     switch (getRegisterType(regNum)) { \
@@ -60,19 +61,19 @@ static char message[120];
 }
 
 #define WRITE_REG(regNum,result) { \
-	DataType d; \
-	int status; \
+    DataType d; \
+    int status; \
     switch (getRegisterType(regNum)) { \
-		case float_type: \
-			d.asFloat = (result); \
-			break; \
-		case uint_type: \
-			d.asUint = (result); \
-			break; \
-		case int_type: \
-			d.asInt = (result); \
-			break; \
-	} \
+        case float_type: \
+            d.asFloat = (result); \
+            break; \
+        case uint_type: \
+            d.asUint = (result); \
+            break; \
+        case int_type: \
+            d.asInt = (result); \
+            break; \
+    } \
     status = writeRegister((regNum),d); \
     if (STATUS_OK != status) return status; \
 }
@@ -758,7 +759,7 @@ int r_adc_to_pressure(unsigned int numInt,void *params,void *env)
 /*
     Reads laser current monitor of specified laser
     Input:
-		Register (int):  Register containing ADC value
+        Register (int):  Register containing ADC value
         Register (float): Register containing conversion slope
         Register (float): Register containing conversion offset
     Output:
@@ -766,7 +767,7 @@ int r_adc_to_pressure(unsigned int numInt,void *params,void *env)
 */
 {
     unsigned int *reg = (unsigned int *) params;
-	int adcVal;    
+    int adcVal;    
     float slope, offset, result;
     if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
     READ_REG(reg[0],adcVal);
@@ -781,24 +782,24 @@ int r_set_inlet_valve(unsigned int numInt,void *params,void *env)
 /*
     Sets up the inlet valve dynamic PWM 
     Input:
-		Register (float):   Register containing mean inlet valve position
+        Register (float):   Register containing mean inlet valve position
         Register (float):   Register containing peak-to-peak dither
 */
 {
     unsigned int *reg = (unsigned int *) params;
     float value, dither;
-	float minPwm = 0.0, maxPwm = 65535.0;
-	
+    float minPwm = 0.0, maxPwm = 65535.0;
+    
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
     READ_REG(reg[0],value);
     READ_REG(reg[1],dither);
-	if (dither > 20000.0) dither = 20000.0;
-	if (value <	minPwm) value = minPwm;
-	if (value >	maxPwm) value = maxPwm;
-	if (value - 0.5*dither < minPwm) dither = 2.0*(value-minPwm);
-	if (value + 0.5*dither > maxPwm) dither = 2.0*(maxPwm-value);
-	writeFPGA(FPGA_DYNAMICPWM_INLET + DYNAMICPWM_HIGH,value + 0.5*dither);	
-	writeFPGA(FPGA_DYNAMICPWM_INLET + DYNAMICPWM_LOW,value - 0.5*dither);	
+    if (dither > 20000.0) dither = 20000.0;
+    if (value <	minPwm) value = minPwm;
+    if (value >	maxPwm) value = maxPwm;
+    if (value - 0.5*dither < minPwm) dither = 2.0*(value-minPwm);
+    if (value + 0.5*dither > maxPwm) dither = 2.0*(maxPwm-value);
+    writeFPGA(FPGA_DYNAMICPWM_INLET + DYNAMICPWM_HIGH,value + 0.5*dither);	
+    writeFPGA(FPGA_DYNAMICPWM_INLET + DYNAMICPWM_LOW,value - 0.5*dither);	
     return STATUS_OK;
 }
 
@@ -806,52 +807,52 @@ int r_set_outlet_valve(unsigned int numInt,void *params,void *env)
 /*
     Sets up the outlet valve dynamic PWM 
     Input:
-		Register (float):   Register containing mean outlet valve position
+        Register (float):   Register containing mean outlet valve position
         Register (float):   Register containing peak-to-peak dither
 */
 {
     unsigned int *reg = (unsigned int *) params;
     float value, dither;
-	float minPwm = 0.0, maxPwm = 65535.0;
-	
+    float minPwm = 0.0, maxPwm = 65535.0;
+    
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
     READ_REG(reg[0],value);
     READ_REG(reg[1],dither);
-	if (dither > 20000.0) dither = 20000.0;
-	if (value <	minPwm) value = minPwm;
-	if (value >	maxPwm) value = maxPwm;
-	if (value - 0.5*dither < minPwm) dither = 2.0*(value-minPwm);
-	if (value + 0.5*dither > maxPwm) dither = 2.0*(maxPwm-value);
-	writeFPGA(FPGA_DYNAMICPWM_OUTLET + DYNAMICPWM_HIGH,value + 0.5*dither);	
-	writeFPGA(FPGA_DYNAMICPWM_OUTLET + DYNAMICPWM_LOW,value - 0.5*dither);	
+    if (dither > 20000.0) dither = 20000.0;
+    if (value <	minPwm) value = minPwm;
+    if (value >	maxPwm) value = maxPwm;
+    if (value - 0.5*dither < minPwm) dither = 2.0*(value-minPwm);
+    if (value + 0.5*dither > maxPwm) dither = 2.0*(maxPwm-value);
+    writeFPGA(FPGA_DYNAMICPWM_OUTLET + DYNAMICPWM_HIGH,value + 0.5*dither);	
+    writeFPGA(FPGA_DYNAMICPWM_OUTLET + DYNAMICPWM_LOW,value - 0.5*dither);	
     return STATUS_OK;
 }
 
 int r_interpolator_set_target(unsigned int numInt,void *params,void *env)
 /* Interpolators are used to spread out an actuator change over a number of samples so as to
     reduce the effects of sudden changes. reg[0] specifies a register which contains the target
-	value of the actuator, and reg[1] specifies the number of steps over which the change
-	is to be spread. The interpolator state is stored in an InterpolatorEnvType object. */
+    value of the actuator, and reg[1] specifies the number of steps over which the change
+    is to be spread. The interpolator state is stored in an InterpolatorEnvType object. */
 {
     unsigned int *reg = (unsigned int *) params;
-	InterpolatorEnvType *intenv = (InterpolatorEnvType *)env;
+    InterpolatorEnvType *intenv = (InterpolatorEnvType *)env;
 
-	if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
     READ_REG(reg[0],intenv->target);
-	intenv->steps = reg[1];
+    intenv->steps = reg[1];
     return STATUS_OK;
 }
 
 int r_interpolator_step(unsigned int numInt,void *params,void *env)
 /* Performs a single step of the interpolator indicated by *env, and writes the result to the
     FPGA register whose block index and register index are passed as params[0] and params[1].
-	This should be run after the interpolator_set_target action by placing it in a lower 
-	priority group. */
+    This should be run after the interpolator_set_target action by placing it in a lower 
+    priority group. */
 {
     unsigned int *reg = (unsigned int *) params;
-	InterpolatorEnvType *intenv = (InterpolatorEnvType *)env;
+    InterpolatorEnvType *intenv = (InterpolatorEnvType *)env;
 
-	if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
     if (intenv->steps >= 1) {
         float alpha = 1.0/(intenv->steps);
         intenv->current = (1-alpha)*(intenv->current) + alpha*(intenv->target);
@@ -860,4 +861,69 @@ int r_interpolator_step(unsigned int numInt,void *params,void *env)
     else intenv->current = (intenv->target);
     writeFPGA(reg[0]+reg[1],(unsigned int)(intenv->current));
     return STATUS_OK;
+}
+
+int r_eeprom_read(unsigned int numInt,void *params,void *env)
+/* Reads from an EEPROM in the analyzer. Arguments are the EEPROM ID, the address in the EEPROM
+    and the number of bytes to read. The result is placed within the environment. */
+{
+    unsigned int id, addr, nbytes, *reg = (unsigned int *) params;
+    Byte64EnvType *byte64Env = (Byte64EnvType *)env;
+
+    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
+    id = reg[0];
+    addr = reg[1];
+    nbytes = reg[2];
+    eeprom_read(&logic_eeprom_I2C,addr,(unsigned char *)(byte64Env->buffer),nbytes);
+    return STATUS_OK;
+}
+    
+int r_eeprom_write(unsigned int numInt,void *params,void *env)
+/* Writes to an EEPROM in the analyzer. Arguments are the EEPROM ID, the address in the EEPROM
+    and the number of bytes to read. The result is placed within the environment. */
+{
+    unsigned int id, addr, nbytes, *reg = (unsigned int *) params;
+    Byte64EnvType *byte64Env = (Byte64EnvType *)env;
+
+    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
+    id = reg[0];
+    addr = reg[1];
+    nbytes = reg[2];
+    eeprom_write(&logic_eeprom_I2C,addr,(unsigned char *)(byte64Env->buffer),nbytes);
+    return STATUS_OK;
+}
+
+int r_eeprom_ready(unsigned int numInt,void *params,void *env)
+/* Check that the EEPROM in the analyzer is ready for read/write. Argument is the EEPROM ID. The
+    result is placed in the COMM_STATUS_REGISTER. */
+{
+    unsigned int id, *reg = (unsigned int *) params;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    id = reg[0];
+    return !eeprom_busy(&logic_eeprom_I2C);
+}
+
+int r_i2c_check(unsigned int numInt,void *params,void *env)
+/* Check the I2C device specified by checking if it will acknowlege a read request (for 0 bytes). 
+    The arguments are the I2C chain index (0 or 1), the multiplexer setting (0 through 7, or -1 if don't care)
+    and the I2C address. Returned value is the status of the read request.    
+ */
+{
+    int *reg = (int *) params, loops;
+    I2C_devAddr devAddr;
+
+    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
+    switch (reg[0]) {
+        case 0:
+            devAddr.hI2C = &hI2C0;
+            if (reg[1] >= 0) setI2C0Mux(reg[1]);
+            break;
+        case 1:
+            devAddr.hI2C = &hI2C1;
+            if (reg[1] >= 0) setI2C1Mux(reg[1]);
+            break;
+    }
+    for (loops=0;loops<1000;loops++);
+    devAddr.addr = reg[2];
+    return I2C_check_ack(*(devAddr.hI2C),devAddr.addr);
 }

@@ -206,6 +206,18 @@ typedef struct {
 } InterpolatorEnvType;
 
 typedef struct {
+    uint32 buffer[1];
+} Byte4EnvType;
+
+typedef struct {
+    uint32 buffer[4];
+} Byte16EnvType;
+
+typedef struct {
+    uint32 buffer[16];
+} Byte64EnvType;
+
+typedef struct {
     float setpoint;
     uint16 dwellCount;
     uint16 subschemeId;
@@ -1308,13 +1320,16 @@ typedef enum {
 
 /* Environment addresses */
 
-#define WARM_BOX_TEC_INTERPOLATOR_ENV (0)
-#define CAVITY_TEC_INTERPOLATOR_ENV (3)
-#define HEATER_INTERPOLATOR_ENV (6)
-#define LASER1_TEMP_MODEL_ENV (9)
-#define LASER2_TEMP_MODEL_ENV (36)
-#define LASER3_TEMP_MODEL_ENV (63)
-#define LASER4_TEMP_MODEL_ENV (90)
+#define BYTE4_ENV (0)
+#define BYTE16_ENV (1)
+#define BYTE64_ENV (5)
+#define WARM_BOX_TEC_INTERPOLATOR_ENV (21)
+#define CAVITY_TEC_INTERPOLATOR_ENV (24)
+#define HEATER_INTERPOLATOR_ENV (27)
+#define LASER1_TEMP_MODEL_ENV (30)
+#define LASER2_TEMP_MODEL_ENV (57)
+#define LASER3_TEMP_MODEL_ENV (84)
+#define LASER4_TEMP_MODEL_ENV (111)
 
 /* Action codes */
 #define ACTION_WRITE_BLOCK (1)
@@ -1385,4 +1400,8 @@ typedef enum {
 #define ACTION_SET_OUTLET_VALVE (66)
 #define ACTION_INTERPOLATOR_SET_TARGET (67)
 #define ACTION_INTERPOLATOR_STEP (68)
+#define ACTION_EEPROM_WRITE (69)
+#define ACTION_EEPROM_READ (70)
+#define ACTION_EEPROM_READY (71)
+#define ACTION_I2C_CHECK (72)
 #endif

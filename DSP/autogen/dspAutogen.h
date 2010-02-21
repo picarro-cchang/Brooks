@@ -86,4 +86,8 @@ int r_set_inlet_valve(unsigned int numInt,void *params,void *env);
 int r_set_outlet_valve(unsigned int numInt,void *params,void *env);
 int r_interpolator_set_target(unsigned int numInt,void *params,void *env);
 int r_interpolator_step(unsigned int numInt,void *params,void *env);
+int r_eeprom_write(unsigned int numInt,void *params,void *env);
+int r_eeprom_read(unsigned int numInt,void *params,void *env);
+int r_eeprom_ready(unsigned int numInt,void *params,void *env);
+int r_i2c_check(unsigned int numInt,void *params,void *env);
 #endif

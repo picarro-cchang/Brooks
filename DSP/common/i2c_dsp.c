@@ -20,20 +20,16 @@
 #include "i2c_dsp.h"
 #include "registers.h"
 
-#define I2C_BUSY     (-1)
-#define I2C_NACK     (-2)
-#define I2C_NARDY    (-3)
-#define I2C_NRRDY    (-4)
-#define I2C_NXRDY    (-5)
-#define I2C_BADPAGE  (-6)
-
 #define I2C_MAXLOOPS (300)
 
 #define IDEF  static inline
 
 I2C_Handle hI2C0=0, hI2C1=0;
-
+I2C_devAddr logic_eeprom_I2C = {&hI2C0,0x55};
+I2C_devAddr wlm_eeprom_I2C = {&hI2C1,0x50};
 I2C_devAddr laser_thermistor_I2C = {&hI2C0,0x26};
+I2C_devAddr laser_current_I2C = {&hI2C0,0x14};
+I2C_devAddr laser_eeprom_I2C = {&hI2C0,0x50};
 I2C_devAddr etalon_thermistor_I2C = {&hI2C1,0x27};
 I2C_devAddr warm_box_heatsink_thermistor_I2C = {&hI2C1,0x26};
 I2C_devAddr warm_box_thermistor_I2C = {&hI2C1,0x15};
@@ -42,9 +38,9 @@ I2C_devAddr cavity_thermistor_I2C = {&hI2C0,0x26};
 I2C_devAddr cavity_pressure_I2C = {&hI2C0,0x24};
 I2C_devAddr ambient_pressure_I2C = {&hI2C0,0x17};
 I2C_devAddr das_temp_sensor_I2C = {&hI2C0,0x4E};
-I2C_devAddr laser_current_monitor_I2C = {&hI2C1,0x14};
 I2C_devAddr valve_pump_tec_I2C_old = {&hI2C1,0x20};
 I2C_devAddr valve_pump_tec_I2C_new = {&hI2C1,0x70};
+I2C_devAddr laser_tec_current_monitor_I2C = {&hI2C1,0x14};
 
 /*----------------------------------------------------------------------------*/
 // Returns 1 if NACK is received, 0 if ACK is received
@@ -57,6 +53,12 @@ IDEF Uint32 I2C_nack(I2C_Handle hI2c)
 IDEF Uint32 I2C_ardy(I2C_Handle hI2c)
 {
     return I2C_FGETH(hI2c,I2CSTR,ARDY);
+}
+/*----------------------------------------------------------------------------*/
+// Returns 1 if I2C transmit register is empty
+IDEF Uint32 I2C_xsmt(I2C_Handle hI2c)
+{
+    return I2C_FGETH(hI2c,I2CSTR,XSMT);
 }
 /*----------------------------------------------------------------------------*/
 int initializeI2C(I2C_Handle hI2c)
@@ -156,6 +158,7 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
         }
         // LOG_printf(&trace,"WriteByte: 0x%x",data[i]);
         I2C_writeByte(hI2c,buffer[i++]);
+        loops = 0;
     }
     /* Error return if NACK received. Send stop bit to terminate
     I2C_sendStop(hI2c);
@@ -165,6 +168,58 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
     //  NACK problem.
     I2C_FSETSH(hI2c,I2CSTR,ICXRDY,CLR);
     */
+    I2C_sendStop(hI2c);
+    I2C_FSETSH(hI2c,I2CSTR,BB,CLR);
+    I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
+    I2C_FSETSH(hI2c,I2CSTR,ICXRDY,CLR);
+    message_puts("NACK in I2C_write_bytes");
+    return I2C_NACK;
+}
+/*----------------------------------------------------------------------------*/
+int I2C_write_bytes_nostart(I2C_Handle hI2c,Uint8 *buffer,int nbytes)
+// Continue a write without sending the start byte and the I2C slave address.
+//  This is primarily used in conjunction with EEPROM writing code
+{
+    int i;
+    int loops = 0;
+    i = 0;
+    while (0 == I2C_nack(hI2c))
+    {
+        if (0 == I2C_xrdy(hI2c))
+        {
+            loops++;
+            if (loops >= I2C_MAXLOOPS)
+            {
+                I2C_FSETSH(hI2c,I2CSTR,ICXRDY,CLR);
+                message_puts("XRDY timeout in I2C_write_bytes");
+                return I2C_NXRDY;
+            }
+            //TSK_sleep(1);
+            continue;
+        }
+        if (i>=nbytes)
+        {
+            // Normal return. Do NOT send stop, in case we need
+            //  to follow-up with a read which has a repeat-start
+            //  bit.
+            loops = 0;
+            while (0 == I2C_ardy(hI2c))
+            {
+                loops++;
+                if (loops >= I2C_MAXLOOPS)
+                {
+                    I2C_FSETSH(hI2c,I2CSTR,ARDY,CLR);
+                    message_puts("ARDY timeout in I2C_write_bytes");
+                    return I2C_NARDY;
+                }
+                //TSK_sleep(1);
+            }
+            return 0;
+        }
+        // LOG_printf(&trace,"WriteByte: 0x%x",data[i]);
+        I2C_writeByte(hI2c,buffer[i++]);
+        loops = 0;
+    }
     I2C_sendStop(hI2c);
     I2C_FSETSH(hI2c,I2CSTR,BB,CLR);
     I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
@@ -316,3 +371,31 @@ int getI2C1Mux()
     return I2C1MuxChan;
 }
 /*----------------------------------------------------------------------------*/
+int I2C_check_ack(I2C_Handle hI2c,int i2caddr)
+// Writes device address to I2C bus and returns whether something has acknowleged
+{
+    int loops = 0;
+    I2C_outOfReset(hI2c);
+    // Set up the slave address of the I2C
+    I2C_RSETH(hI2c,I2CSAR,i2caddr);
+    // Set up as master transmitter, and send start bit
+    I2C_FSETSH(hI2c,I2CMDR,MST,MASTER);
+    I2C_FSETSH(hI2c,I2CMDR,TRX,XMT);
+    I2C_FSETSH(hI2c,I2CMDR,STT,START);
+    
+    for (loops=0; loops<200; loops++)
+        if (!I2C_xsmt(hI2c)) break;
+    
+    // Check for NACK 
+    if (I2C_nack(hI2c)) {
+        I2C_sendStop(hI2c);
+        I2C_FSETSH(hI2c,I2CSTR,BB,CLR);
+        I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
+        I2C_FSETSH(hI2c,I2CSTR,ICXRDY,CLR);
+        return I2C_NACK;
+    }
+    else {
+        I2C_sendStop(hI2c);
+        return 0;
+    }
+}

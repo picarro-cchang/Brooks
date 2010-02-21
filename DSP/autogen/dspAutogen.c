@@ -1298,6 +1298,14 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_interpolator_set_target(numInt,params,env);
         case ACTION_INTERPOLATOR_STEP:
             return r_interpolator_step(numInt,params,env);
+        case ACTION_EEPROM_WRITE:
+            return r_eeprom_write(numInt,params,env);
+        case ACTION_EEPROM_READ:
+            return r_eeprom_read(numInt,params,env);
+        case ACTION_EEPROM_READY:
+            return r_eeprom_ready(numInt,params,env);
+        case ACTION_I2C_CHECK:
+            return r_i2c_check(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

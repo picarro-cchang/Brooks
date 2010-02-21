@@ -209,6 +209,15 @@
             <field ident="current" type="float"/>
             <field ident="steps" type="uint32"/>
         </struct>
+        <struct type="Byte4EnvType">
+            <field ident="buffer" type="uint32" size="1"/>
+        </struct>
+        <struct type="Byte16EnvType">
+            <field ident="buffer" type="uint32" size="4"/>
+        </struct>
+        <struct type="Byte64EnvType">
+            <field ident="buffer" type="uint32" size="16"/>
+        </struct>
         <struct type="SchemeRowType">
             <field ident="setpoint" type="float"/>
             <field ident="dwellCount" type="uint16"/>
@@ -3532,6 +3541,9 @@
         </fpga_map>
     </fpga_map_list>
     <environment_list>
+        <env type="Byte4EnvType"  ident="BYTE4_ENV" />
+        <env type="Byte16EnvType" ident="BYTE16_ENV" />
+        <env type="Byte64EnvType" ident="BYTE64_ENV" />
         <env type="InterpolatorEnvType" ident="WARM_BOX_TEC_INTERPOLATOR_ENV" />
         <env type="InterpolatorEnvType" ident="CAVITY_TEC_INTERPOLATOR_ENV" />
         <env type="InterpolatorEnvType" ident="HEATER_INTERPOLATOR_ENV" />
@@ -3628,5 +3640,9 @@
         <action ident="ACTION_SET_OUTLET_VALVE">r_set_outlet_valve</action>
         <action ident="ACTION_INTERPOLATOR_SET_TARGET">r_interpolator_set_target</action>
         <action ident="ACTION_INTERPOLATOR_STEP">r_interpolator_step</action>
+        <action ident="ACTION_EEPROM_WRITE">r_eeprom_write</action>
+        <action ident="ACTION_EEPROM_READ">r_eeprom_read</action>
+        <action ident="ACTION_EEPROM_READY">r_eeprom_ready</action>
+        <action ident="ACTION_I2C_CHECK">r_i2c_check</action>
     </action_list>
 </Das_Interface>

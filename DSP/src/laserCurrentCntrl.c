@@ -227,6 +227,6 @@ int read_laser_current_adc(int laserNum)
 
     setI2C0Mux(chan[laserNum]);
     for (loops=0;loops<1000;loops++);
-    result = ltc2451_read();
+    result = ltc2451_read(&laser_current_I2C);
     return result;
 }
