@@ -41,6 +41,8 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.hostDasInterface import Operation
 from Host.Common.InstErrors import *
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.Common.StringPickler import StringAsObject, ObjAsString
+
 EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -479,7 +481,22 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def stopScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
-    
+
+    def rdEnvToString(self,index,envClass):
+        return ObjAsString(self.dasInterface.hostToDspSender.rdEnv(index,envClass))
+        
+    def wrEnvFromString(self,index,envClass,envAsString):
+        return self.dasInterface.hostToDspSender.wrEnv(index,StringAsObject(envAsString,envClass))
+        
+    def rdBlock(self,offset,numInt):
+        # Performs a host read of numInt unsigned integers from
+        #  the communications region starting at offset
+        return self.dasInterface.hostToDspSender.rdBlock(offset,numInt)
+
+    def doOperation(self,op):
+        """Perform an operation"""
+        return self.dasInterface.hostToDspSender.doOperation(op)
+        
 class StreamTableType(tables.IsDescription):
     time = tables.Int64Col()
     streamNum = tables.Int32Col()
