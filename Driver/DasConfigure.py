@@ -51,7 +51,9 @@ class DasConfigure(SharedTypes.Singleton):
             self.installed = {}
             for key in instrConfig["CONFIGURATION"]:
                 self.installed[key] = int(instrConfig["CONFIGURATION"][key])
+            self.enableInterpolation = self.installed.get("ENABLE_INTERPOLATION",1)
             self.initialized = True
+            print "Interpolation enabled", self.enableInterpolation
             
     def installCheck(self,key):
         return self.installed.get(key,0)
@@ -178,10 +180,10 @@ class DasConfigure(SharedTypes.Singleton):
                             ["STREAM_Laser%dCurrent" % laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
                 
         # Read the DAS temperature into DAS_TEMPERATURE_REGISTER and stream it
-        #self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(Operation("ACTION_DS1631_READTEMP",
-        #                                                               ["DAS_TEMPERATURE_REGISTER"]))
-        #self.opGroups["FAST"]["STREAMER"].addOperation(Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-        #                                                         ["STREAM_DasTemp","DAS_TEMPERATURE_REGISTER"]))
+        self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(Operation("ACTION_DS1631_READTEMP",
+                                                                       ["DAS_TEMPERATURE_REGISTER"]))
+        self.opGroups["FAST"]["STREAMER"].addOperation(Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                                                 ["STREAM_DasTemp","DAS_TEMPERATURE_REGISTER"]))
 
         # Set up interpolator environments for the warm box TEC, cavity TEC and heater
 
@@ -263,17 +265,22 @@ class DasConfigure(SharedTypes.Singleton):
         # Set up interpolation for warm box TEC. Make the following unconditional so that 
         #  the PWM will always start up.
         
-        rateRatio = schedulerPeriods["SLOW"]//schedulerPeriods["FAST"]
-        
-        self.opGroups["SLOW"]["ACTUATOR_CONVERT"].addOperation(
-            Operation("ACTION_INTERPOLATOR_SET_TARGET",
-                      ["WARM_BOX_TEC_REGISTER",rateRatio],
-                      "WARM_BOX_TEC_INTERPOLATOR_ENV"))
+        if self.enableInterpolation:
+            rateRatio = schedulerPeriods["SLOW"]//schedulerPeriods["FAST"]
+            
+            self.opGroups["SLOW"]["ACTUATOR_CONVERT"].addOperation(
+                Operation("ACTION_INTERPOLATOR_SET_TARGET",
+                          ["WARM_BOX_TEC_REGISTER",rateRatio],
+                          "WARM_BOX_TEC_INTERPOLATOR_ENV"))
 
-        self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
-            Operation("ACTION_INTERPOLATOR_STEP",
-                      ["FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"],
-                      "WARM_BOX_TEC_INTERPOLATOR_ENV"))
+            self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+                Operation("ACTION_INTERPOLATOR_STEP",
+                          ["FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"],
+                          "WARM_BOX_TEC_INTERPOLATOR_ENV"))
+        else:
+            self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
+                Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                          ["WARM_BOX_TEC_REGISTER","FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"]))
         
         # Hot Box
 
@@ -335,17 +342,23 @@ class DasConfigure(SharedTypes.Singleton):
 
             # Set up the interpolator for the heater
 
-            rateRatio = schedulerPeriods["SLOW"]//schedulerPeriods["FAST"]
+            if self.enableInterpolation:
+                rateRatio = schedulerPeriods["SLOW"]//schedulerPeriods["FAST"]
 
-            self.opGroups["SLOW"]["ACTUATOR_CONVERT"].addOperation(
-                Operation("ACTION_INTERPOLATOR_SET_TARGET",
-                          ["HEATER_MARK_REGISTER",rateRatio],
-                          "HEATER_INTERPOLATOR_ENV"))
-    
-            self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
-                Operation("ACTION_INTERPOLATOR_STEP",
-                          ["FPGA_PWM_HEATER","PWM_PULSE_WIDTH"],
-                          "HEATER_INTERPOLATOR_ENV"))
+                self.opGroups["SLOW"]["ACTUATOR_CONVERT"].addOperation(
+                    Operation("ACTION_INTERPOLATOR_SET_TARGET",
+                              ["HEATER_MARK_REGISTER",rateRatio],
+                              "HEATER_INTERPOLATOR_ENV"))
+        
+                self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+                    Operation("ACTION_INTERPOLATOR_STEP",
+                              ["FPGA_PWM_HEATER","PWM_PULSE_WIDTH"],
+                              "HEATER_INTERPOLATOR_ENV"))
+
+            else:
+                self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
+                    Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                              ["HEATER_MARK_REGISTER","FPGA_PWM_HEATER","PWM_PULSE_WIDTH"]))
 
             #self.opGroups["SLOW"]["CONTROLLER"].addOperation(
             #    Operation("ACTION_HEATER_CNTRL_STEP"))
@@ -357,18 +370,25 @@ class DasConfigure(SharedTypes.Singleton):
         # Set up interpolation for cavity TEC. Make the following unconditional so that 
         #  the PWM will always start up.
         
-        rateRatio = schedulerPeriods["SLOW"]//schedulerPeriods["FAST"]
+        
+        if self.enableInterpolation:
+            rateRatio = schedulerPeriods["SLOW"]//schedulerPeriods["FAST"]
+            
 
-        self.opGroups["SLOW"]["ACTUATOR_CONVERT"].addOperation(
-            Operation("ACTION_INTERPOLATOR_SET_TARGET",
-                      ["CAVITY_TEC_REGISTER",rateRatio],
-                      "CAVITY_TEC_INTERPOLATOR_ENV"))
+            self.opGroups["SLOW"]["ACTUATOR_CONVERT"].addOperation(
+                Operation("ACTION_INTERPOLATOR_SET_TARGET",
+                          ["CAVITY_TEC_REGISTER",rateRatio],
+                          "CAVITY_TEC_INTERPOLATOR_ENV"))
 
-        self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
-            Operation("ACTION_INTERPOLATOR_STEP",
-                      ["FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"],
-                      "CAVITY_TEC_INTERPOLATOR_ENV"))
-
+            self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+                Operation("ACTION_INTERPOLATOR_STEP",
+                          ["FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"],
+                          "CAVITY_TEC_INTERPOLATOR_ENV"))
+        else:
+            self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
+                Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                          ["CAVITY_TEC_REGISTER","FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))
+                
         # Valve control
 
         if present:
