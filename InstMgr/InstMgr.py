@@ -16,27 +16,27 @@
 # ToDo:
 #
 # File History:
-# 06-10-xx al  In progress
-# 06-12-11 Al  Fixed a bunch of things: exception handling, recovery scheme, application restart notification etc..
-# 06-12-11 Al  Changed errorList to contain a list of tuples containing time, error number and error name.
-# 06 12-12 Al  Added a few except statements for meassys RPC calls.
-# 06-12-13 Al  Moved SampleMgr import statement up above EventMgrProxitInit
-# 06-12-18 Al  Using AppStatus class to track and report status.
-# 06-12-20 Al  Changes required for cal manager and data manager integration.
-# 06-12-21 Al  Fixed transition from Warming and removed FlowStop call in INSTRMGR_Start
-# 06-12-21 Al  Remove instrument shutdown when RpcServerExit is requested.
-# 06-12-21 Al  Remove check for laser temperature lock to transition from Warming.
-# 06-12-21 Al  Fix parking issues.
-# 06-12-22 Al  Don't turn off temperature control when the instrument is shutdown.
+# 06-10-xx al   In progress
+# 06-12-11 Al   Fixed a bunch of things: exception handling, recovery scheme, application restart notification etc..
+# 06-12-11 Al   Changed errorList to contain a list of tuples containing time, error number and error name.
+# 06 12-12 Al   Added a few except statements for meassys RPC calls.
+# 06-12-13 Al   Moved SampleMgr import statement up above EventMgrProxitInit
+# 06-12-18 Al   Using AppStatus class to track and report status.
+# 06-12-20 Al   Changes required for cal manager and data manager integration.
+# 06-12-21 Al   Fixed transition from Warming and removed FlowStop call in INSTRMGR_Start
+# 06-12-21 Al   Remove instrument shutdown when RpcServerExit is requested.
+# 06-12-21 Al   Remove check for laser temperature lock to transition from Warming.
+# 06-12-21 Al   Fix parking issues.
+# 06-12-22 Al   Don't turn off temperature control when the instrument is shutdown.
 # 07-01-16 sze  Print out exception message on error
 # 07-03-16 sze  Fixed Shutdown RPC call so that supervisor terminates applications when codes 1 or 2 are used
 # 07-10-23 sze  Added SetInstrumentMode RPC call. Note that _SetupInstModeDispatcher is used to define the valid
 #                instrument modes and to set up the actions to be performed when that mode is selected.
 # 08-04-30 sze  Call TerminateApplications with powerOff == True
 # 08-05-08 sze  Removed code that performs automatic calibration
-# 08-09-18  alex  Replaced ConfigParser with CustomConfigObj
-# 09-10-21  alex  Replaced CalManager with RDFrequencyConverter. Added an option to run without SampleManager.
-
+# 08-09-18 alex Replaced ConfigParser with CustomConfigObj
+# 09-10-21 alex Replaced CalManager with RDFrequencyConverter. Added an option to run without SampleManager.
+# 10-02-25 sze  When SampleManager is disabled, do not adjust valves
 APP_NAME = "InstMgr"
 APP_VERSION = 1.0
 _DEFAULT_CONFIG_NAME = "InstMgr.ini"
@@ -186,17 +186,17 @@ class DummySampleManager(object):
     def _SetMode(self, mode):
         Log("Running without Sample Manager - mode set skipped", Level = 0)
     def FlowStart(self):
-        self.pressureTarget = 140
-        self.DriverRpc.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER", self.pressureTarget)
-        self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
-        start = self.DriverRpc.rdDasReg("VALVE_CNTRL_INLET_VALVE_MIN_REGISTER")
-        target = 18000
-        step = 500
-        iterations = int((target-start)/step)
-        self.inletTarget = start + iterations*step 
-        interval = 2
-        maxPressureChange = 10
-        self._StepInletValve( start, step, iterations, interval, maxPressureChange)
+        #self.pressureTarget = 140
+        #self.DriverRpc.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER", self.pressureTarget)
+        #self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
+        #start = self.DriverRpc.rdDasReg("VALVE_CNTRL_INLET_VALVE_MIN_REGISTER")
+        #target = 18000
+        #step = 500
+        #iterations = int((target-start)/step)
+        #self.inletTarget = start + iterations*step 
+        #interval = 2
+        #maxPressureChange = 10
+        #self._StepInletValve( start, step, iterations, interval, maxPressureChange)
         #self.DriverRpc.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", 18000)
         Log("Flow started by Dummy Sample Manager", Level = 0)
     def FlowStop(self):
@@ -208,12 +208,12 @@ class DummySampleManager(object):
     def Park(self):
         Log("Running with Dummy Sample Manager - park skipped", Level = 0)
     def GetStatus(self):
-        #Log("Running with Dummy Sample Manager - always returns pressure stable status", Level = 0)
-        if abs(self.DriverRpc.rdDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER")-self.inletTarget) < 1 and abs(self.DriverRpc.getPressureReading()-self.pressureTarget) < 1:
-            return SAMPLEMGR_STATUS_STABLE | SAMPLEMGR_STATUS_FLOWING
-        else:
-            return SAMPLEMGR_STATUS_FLOWING
-
+        Log("Running with Dummy Sample Manager - always returns pressure stable status", Level = 0)
+        return SAMPLEMGR_STATUS_STABLE | SAMPLEMGR_STATUS_FLOWING
+        #if abs(self.DriverRpc.rdDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER")-self.inletTarget) < 1 and abs(self.DriverRpc.getPressureReading()-self.pressureTarget) < 1:
+        #    return SAMPLEMGR_STATUS_STABLE | SAMPLEMGR_STATUS_FLOWING
+        #else:
+        #    return SAMPLEMGR_STATUS_FLOWING
     def _StepInletValve( self, start, step, iterations, interval, maxPressureChange):
         index = 0
         value = start
