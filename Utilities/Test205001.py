@@ -80,6 +80,7 @@ class TestPowerBoardWarmBoxTecDriver(object):
             quiescentValue = 32768
             setPoints = arange(4000.0,61000.0,2000.0)
             sweepMon = []
+            self.sourcemeter.sendString(":SOURCE:FUNC CURR")
             self.sourcemeter.sendString(":SOURCE:CURRENT 0.0")
             self.sourcemeter.ask(":MEAS:VOLT:DC?")
             Driver.wrDasReg("WARM_BOX_TEMP_CNTRL_AMIN_REGISTER",setPoints[0])

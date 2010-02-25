@@ -80,6 +80,7 @@ class TestPowerBoardCavityTecDriver(object):
             quiescentValue = 32768
             setPoints = arange(4000.0,61000.0,2000.0)
             sweepMon = []
+            self.sourcemeter.sendString(":SOURCE:FUNC CURR")
             self.sourcemeter.sendString(":SOURCE:CURRENT 0.0")
             self.sourcemeter.ask(":MEAS:VOLT:DC?")
             Driver.wrDasReg("CAVITY_TEMP_CNTRL_AMIN_REGISTER",setPoints[0])
@@ -140,7 +141,7 @@ class TestPowerBoardCavityTecDriver(object):
         slopeOpt = 22.0/65536.0
         vt.setEntries([("TEC Current Slope",p[0],0.9*slopeOpt,1.0*slopeOpt,"%.3g"),
                        ("TEC Current Intercept",p[1]+quiescentValue*p[0],-0.05,0.05,"%.3g"),
-                       ("TEC Current Residual",sqrt(res),0,0.2,"%.3g"),
+                       ("TEC Current Residual",sqrt(res),0,0.3,"%.3g"),
                        ("Disabled value",disabledValue,-0.02,0.02,"%.3g"),
                        ])
         vt.writeOut(tp.rstFile)

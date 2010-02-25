@@ -79,6 +79,7 @@ class TestPowerBoardHeaterDriver(object):
             quiescentValue = 0
             setPoints = arange(0.0,61000.0,2000.0)
             sweepMon = []
+            self.sourcemeter.sendString(":SOURCE:FUNC CURR")
             self.sourcemeter.sendString(":SOURCE:CURRENT 0.0")
             self.sourcemeter.ask(":MEAS:VOLT:DC?")
             Driver.wrDasReg("HEATER_TEMP_CNTRL_AMIN_REGISTER",setPoints[0])
@@ -138,7 +139,7 @@ class TestPowerBoardHeaterDriver(object):
         slopeOpt = 12.0/65536.0
         vt.setEntries([("Heater Current Slope",p[0],0.95*slopeOpt,1.05*slopeOpt,"%.3g"),
                        ("Heater Current Intercept",p[1]+quiescentValue*p[0],-0.2,0.2,"%.3g"),
-                       ("Heater Current Residual",sqrt(res),0,0.2,"%.3g"),
+                       ("Heater Current Residual",sqrt(res),0,0.3,"%.3g"),
                        ("Disabled value",disabledValue,-0.02,0.02,"%.3g"),
                        ])
         vt.writeOut(tp.rstFile)
