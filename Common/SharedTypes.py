@@ -93,6 +93,8 @@ class DasException(CrdsException):
     """Base class for all DAS layer exceptions."""
 class DasAccessException(DasException):
     """Invalid access to DAS registers."""
+class DasCommsException(DasException):
+    """DAS communication exception."""
 
 class Singleton(object):
     """An inheritable singleton class"""

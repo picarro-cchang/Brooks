@@ -233,6 +233,21 @@ class InterpolatorEnvType(Structure):
     ("steps",c_uint)
     ]
 
+class Byte4EnvType(Structure):
+    _fields_ = [
+    ("buffer",c_uint*1)
+    ]
+
+class Byte16EnvType(Structure):
+    _fields_ = [
+    ("buffer",c_uint*4)
+    ]
+
+class Byte64EnvType(Structure):
+    _fields_ = [
+    ("buffer",c_uint*16)
+    ]
+
 class SchemeRowType(Structure):
     _fields_ = [
     ("setpoint",c_float),
@@ -2342,16 +2357,22 @@ persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_INLET', [u'DYNAMICPWM_DELTA'
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_OUTLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_SLOPE']))
 
 # Environment addresses
-WARM_BOX_TEC_INTERPOLATOR_ENV = 0
-CAVITY_TEC_INTERPOLATOR_ENV = 3
-HEATER_INTERPOLATOR_ENV = 6
-LASER1_TEMP_MODEL_ENV = 9
-LASER2_TEMP_MODEL_ENV = 36
-LASER3_TEMP_MODEL_ENV = 63
-LASER4_TEMP_MODEL_ENV = 90
+BYTE4_ENV = 0
+BYTE16_ENV = 1
+BYTE64_ENV = 5
+WARM_BOX_TEC_INTERPOLATOR_ENV = 21
+CAVITY_TEC_INTERPOLATOR_ENV = 24
+HEATER_INTERPOLATOR_ENV = 27
+LASER1_TEMP_MODEL_ENV = 30
+LASER2_TEMP_MODEL_ENV = 57
+LASER3_TEMP_MODEL_ENV = 84
+LASER4_TEMP_MODEL_ENV = 111
 
 # Dictionary for accessing environments by name
 envByName = {}
+envByName['BYTE4_ENV'] = (BYTE4_ENV,Byte4EnvType)
+envByName['BYTE16_ENV'] = (BYTE16_ENV,Byte16EnvType)
+envByName['BYTE64_ENV'] = (BYTE64_ENV,Byte64EnvType)
 envByName['WARM_BOX_TEC_INTERPOLATOR_ENV'] = (WARM_BOX_TEC_INTERPOLATOR_ENV,InterpolatorEnvType)
 envByName['CAVITY_TEC_INTERPOLATOR_ENV'] = (CAVITY_TEC_INTERPOLATOR_ENV,InterpolatorEnvType)
 envByName['HEATER_INTERPOLATOR_ENV'] = (HEATER_INTERPOLATOR_ENV,InterpolatorEnvType)
@@ -2429,6 +2450,10 @@ ACTION_SET_INLET_VALVE = 65
 ACTION_SET_OUTLET_VALVE = 66
 ACTION_INTERPOLATOR_SET_TARGET = 67
 ACTION_INTERPOLATOR_STEP = 68
+ACTION_EEPROM_WRITE = 69
+ACTION_EEPROM_READ = 70
+ACTION_EEPROM_READY = 71
+ACTION_I2C_CHECK = 72
 
 
 # Parameter form definitions

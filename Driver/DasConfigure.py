@@ -178,10 +178,10 @@ class DasConfigure(SharedTypes.Singleton):
                             ["STREAM_Laser%dCurrent" % laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
                 
         # Read the DAS temperature into DAS_TEMPERATURE_REGISTER and stream it
-        self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(Operation("ACTION_DS1631_READTEMP",
-                                                                       ["DAS_TEMPERATURE_REGISTER"]))
-        self.opGroups["FAST"]["STREAMER"].addOperation(Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                                                                 ["STREAM_DasTemp","DAS_TEMPERATURE_REGISTER"]))
+        #self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(Operation("ACTION_DS1631_READTEMP",
+        #                                                               ["DAS_TEMPERATURE_REGISTER"]))
+        #self.opGroups["FAST"]["STREAMER"].addOperation(Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+        #                                                         ["STREAM_DasTemp","DAS_TEMPERATURE_REGISTER"]))
 
         # Set up interpolator environments for the warm box TEC, cavity TEC and heater
 

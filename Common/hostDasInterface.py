@@ -31,7 +31,7 @@ import copy
 
 from Host.autogen import usbdefs, interface
 from Host.Common.crc import calcCrc32
-from Host.Common.SharedTypes    import Singleton, getSchemeTableClass
+from Host.Common.SharedTypes    import Singleton, getSchemeTableClass, DasCommsException
 from Host.Common.simulatorUsbIf import SimulatorUsb
 from Host.Common.DspSimulator   import DspSimulator
 from Host.Common.analyzerUsbIf  import AnalyzerUsb
@@ -485,7 +485,7 @@ class HostToDspSender(Singleton):
         # Assert DSPINT
         self.usb.hpicWrite(0x00010003)
         # print "hpic after DSPINT: %08x" % self.usb.hpicRead()
-        return self.getStatusWhenDone()
+        return self.getStatusWhenDone() # or throw SharedTypes.DasCommsException on error
     @usbLockProtect
     def getSequenceNumber(self):
         # Get the sequence number from the COMM_STATUS_REGISTER
@@ -519,14 +519,12 @@ class HostToDspSender(Singleton):
         seqNum = self.getSequenceNumber()
         try:
             if 0 != (self.status & interface.COMM_STATUS_BadCrcMask):
-                return interface.ERROR_CRC_BAD
+                raise DasCommsException("Bad CRC detected")
             if 0 != (self.status & \
                     interface.COMM_STATUS_BadSequenceNumberMask):
-                print "seqNum = %d, self.seqNum = %d" % (seqNum,self.seqNum)
-                return interface.ERROR_DSP_UNEXPECTED_SEQUENCE_NUMBER
+                raise DasCommsException("DSP unexpected sequence number: %d, %d" % (seqNum,self.seqNum))
             if seqNum != self.seqNum:
-                print "seqNum = %d, self.seqNum = %d" % (seqNum,self.seqNum)
-                return interface.ERROR_HOST_UNEXPECTED_SEQUENCE_NUMBER
+                raise DasCommsException("Host unexpected sequence number: %d, %d" % (seqNum,self.seqNum))
             retVal = (
                 self.status & interface.COMM_STATUS_ReturnValueMask)>> \
                     interface.COMM_STATUS_ReturnValueShift
@@ -540,19 +538,17 @@ class HostToDspSender(Singleton):
         argList = []
         for a in args:
             argList.append(lookup(a))
-        status = self.send(interface.ACTION_WRITE_BLOCK,argList)
-        if interface.STATUS_OK != status:
-            raise RuntimeError(interface.error_messages[-status])
+        return self.send(interface.ACTION_WRITE_BLOCK,argList)
     def wrRegFloat(self,reg,value):
-        self.wrBlock(reg,float(value))
+        return self.wrBlock(reg,float(value))
     def wrRegUint(self,reg,value):
-        self.wrBlock(reg,int(value))
+        return self.wrBlock(reg,int(value))
     def wrEnv(self,index,env):
         # Write the environment structure env to the environment
         #  table at the specified index (integer offset)
         numInt =sizeof(env)/sizeof(c_uint)
-        self.wrBlock(interface.ENVIRONMENT_OFFSET+lookup(index),
-            *(c_uint*numInt).from_address(addressof(env)))
+        envAsArray = (c_uint*numInt).from_address(addressof(env))
+        return self.wrBlock(interface.ENVIRONMENT_OFFSET+lookup(index),*envAsArray)
     @usbLockProtect
     def rdBlock(self,offset,numInt):
         # Performs a host read of numInt unsigned integers from
@@ -646,10 +642,15 @@ class HostToDspSender(Singleton):
         self.usb.hpiRead(MESSAGE_BASE + 128*index + 8,data)
         return data.value
     @usbLockProtect
+    def rdEnv(self,index,envClass):
+        # reads an environment at the specified index into an object 
+        #  of type envClass
+        env = envClass()
+        self.usb.hpiRead(ENVIRONMENT_BASE+4*lookup(index),env)
+        return env
+    @usbLockProtect
     def doOperation(self,op):
-        status = self.send(op.opcode,op.operandList,op.env)
-        if interface.STATUS_OK != status:
-            raise RuntimeError(interface.error_messages[-status])
+        return self.send(op.opcode,op.operandList,op.env)
     @usbLockProtect
     def wrScheme(self,schemeNum,numRepeats,schemeRows):
         # Write schemeRows into scheme table schemeNum. For speed, this is done
