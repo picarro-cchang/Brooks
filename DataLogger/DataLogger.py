@@ -361,9 +361,9 @@ class DataLog(object):
                 value = DataDict[data]
                 if self.FilterEnabled:
                     if data in self.EnabledDataList:
-                        self._WriteEntry("%E" %value)
+                        self._WriteEntry("%.10E" %value)
                 else:
-                    self._WriteEntry("%E" %value)
+                    self._WriteEntry("%.10E" %value)
 
             self.fp.write("\n")
 
