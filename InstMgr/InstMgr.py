@@ -496,9 +496,10 @@ class InstMgr(object):
 
         if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
             if self.noSampleMgr:
-                myThread = threading.Thread(target=self.SampleMgrRpc.FlowStart)
-                myThread.setDaemon(True)
-                myThread.start()
+                pass
+                #myThread = threading.Thread(target=self.SampleMgrRpc.FlowStart)
+                #myThread.setDaemon(True)
+                #myThread.start()
             else:
                 self.SampleMgrRpc.FlowStart()
             self.pressureLockCount = 0
@@ -579,7 +580,7 @@ class InstMgr(object):
 
         if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
             try:
-                self.SampleMgrRpc.FlowStart()
+                if not self.noSampleMgr: self.SampleMgrRpc.FlowStart()
             except:
                 tbMsg = traceback.format_exc()
                 Log("Start Flow: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
@@ -902,10 +903,11 @@ class InstMgr(object):
                 if self.DriverRpc.rdDasReg("VALVE_CNTRL_STATE_REGISTER") == interface.VALVE_CNTRL_DisabledState and \
                    self.State == INSTMGR_STATE_MEASURING:
                     if self.noSampleMgr:
-                        self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
-                        myThread = threading.Thread(target=self.SampleMgrRpc.FlowStart)
-                        myThread.setDaemon(True)
-                        myThread.start()
+                        pass
+                        #self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
+                        #myThread = threading.Thread(target=self.SampleMgrRpc.FlowStart)
+                        #myThread.setDaemon(True)
+                        #myThread.start()
                     else:
                         self.SampleMgrRpc.FlowStart()
     
