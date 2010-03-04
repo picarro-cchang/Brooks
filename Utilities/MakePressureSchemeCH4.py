@@ -39,9 +39,11 @@ def makePressureScheme(peak,fsr,peakDwell,restDwell,fineSteps,subschemeId,nFineF
     vList.append(vLaserNum-1)
     return wList, dList, iList, vList
 #
-vLaserNum = 1
-peak = 6237.408
-subschemeId = 10
+wList = []
+dList = []
+iList = []
+vList = []
+#
 fsr = 0.0206
 peakDwell = 5
 restDwell = 2
@@ -49,23 +51,6 @@ fineSteps = 20
 #
 nFineFsr = 1
 nCoarseFsr = 3
-#
-wList = []
-dList = []
-iList = []
-vList = []
-#
-w1, d1, i1, v1 = makePressureScheme(peak,fsr,peakDwell,restDwell,fineSteps,subschemeId,nFineFsr,nCoarseFsr,vLaserNum)
-wList += w1
-dList += d1
-iList += i1
-vList += v1
-iList[-1] += 32768
-wList += w1[::-1]
-dList += d1[::-1]
-iList += i1[::-1]
-vList += v1[::-1]
-iList[-1] += 32768
 #
 vLaserNum = 2
 peak = 6057.09
@@ -82,7 +67,7 @@ iList += i1[::-1]
 vList += v1[::-1]
 iList[-1] += 32768
 
-fname = "PressureCalScheme2.sch"
+fname = "PressureCalSchemeCH4.sch"
 lp = file(fname,"w")
 print >>lp, 10 # nrepeat
 print >>lp, len(wList)
