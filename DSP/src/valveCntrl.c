@@ -226,21 +226,27 @@ void valveSequencerStep()
     }
 }
 
+static int valveCntrlDelay = 10;
+
 int valveCntrlStep()
 {
     ValveCntrl *v = &valveCntrl;
     // Step the valve controller
-    proportionalValveStep();
-    thresholdTriggerStep();
-    valveSequencerStep();
-    modify_valve_pump_tec(0x3F,solenoidValves);
+    if (valveCntrlDelay == 0) {
+        proportionalValveStep();
+        thresholdTriggerStep();
+        valveSequencerStep();
+        modify_valve_pump_tec(0x3F,solenoidValves);
+    } 
+    else valveCntrlDelay--;
     return STATUS_OK;
 }
 
 int valveCntrlInit(void)
 {
     ValveCntrl *v = &valveCntrl;
-
+    
+    valveCntrlDelay = 20;
     v->state_               = (VALVE_CNTRL_StateType *)registerAddr(VALVE_CNTRL_STATE_REGISTER);
     v->cavityPressure_      = (float*)registerAddr(CAVITY_PRESSURE_REGISTER);
     v->setpoint_            = (float*)registerAddr(VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER);
@@ -283,7 +289,7 @@ int valveCntrlInit(void)
     v->dwellCount = 0;
     v->nonDecreasingCount = 0;
 
-    modify_valve_pump_tec(0x7F,0);    // Close all valves, turn off pump
+    // modify_valve_pump_tec(0x7F,0);    // Close all valves, turn off pump
     return STATUS_OK;
 }
 
@@ -298,7 +304,7 @@ int modify_valve_pump_tec(unsigned int mask, unsigned int code)
     int activeMask = (1<<PWM_CS_RUN_B)|(1<<PWM_CS_CONT_B);
     int warmBoxPwmActive = (readFPGA(FPGA_PWM_WARMBOX+PWM_CS) & activeMask) == activeMask;
     int hotBoxPwmActive = (readFPGA(FPGA_PWM_HOTBOX+PWM_CS) & activeMask) == activeMask;
-    
+
     newValue = (shadow & (~mask)) | (code & mask);
     if (powerBoardPresent) {    
         setI2C1Mux(4);  // Select SC15 and SD15

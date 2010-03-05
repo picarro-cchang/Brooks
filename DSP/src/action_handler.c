@@ -865,7 +865,8 @@ int r_interpolator_step(unsigned int numInt,void *params,void *env)
 
 int r_eeprom_read(unsigned int numInt,void *params,void *env)
 /* Reads from an EEPROM in the analyzer. Arguments are the EEPROM ID, the address in the EEPROM
-    and the number of bytes to read. The result is placed within the environment. */
+    and the number of bytes to read. The result is placed within the environment.
+    TODO: Handle EEPROM id. Current code only talks to logic board EEPROM. */
 {
     unsigned int id, addr, nbytes, *reg = (unsigned int *) params;
     Byte64EnvType *byte64Env = (Byte64EnvType *)env;
@@ -880,7 +881,8 @@ int r_eeprom_read(unsigned int numInt,void *params,void *env)
     
 int r_eeprom_write(unsigned int numInt,void *params,void *env)
 /* Writes to an EEPROM in the analyzer. Arguments are the EEPROM ID, the address in the EEPROM
-    and the number of bytes to read. The result is placed within the environment. */
+    and the number of bytes to read. The result is placed within the environment.
+    TODO: Handle EEPROM id. Current code only talks to logic board EEPROM. */
 {
     unsigned int id, addr, nbytes, *reg = (unsigned int *) params;
     Byte64EnvType *byte64Env = (Byte64EnvType *)env;
@@ -895,7 +897,8 @@ int r_eeprom_write(unsigned int numInt,void *params,void *env)
 
 int r_eeprom_ready(unsigned int numInt,void *params,void *env)
 /* Check that the EEPROM in the analyzer is ready for read/write. Argument is the EEPROM ID. The
-    result is placed in the COMM_STATUS_REGISTER. */
+    result is placed in the COMM_STATUS_REGISTER.
+    TODO: Handle EEPROM id. Current code only talks to logic board EEPROM. */
 {
     unsigned int id, *reg = (unsigned int *) params;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
