@@ -509,10 +509,10 @@ class DasConfigure(SharedTypes.Singleton):
         print "Laser 2 EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,1,0x50]))
         print "Laser 3 thermistor ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,2,0x26]))
         print "Laser 3 current ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,2,0x14]))
-        print "Laser 3 EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,1,0x50]))
+        print "Laser 3 EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,2,0x50]))
         print "Laser 4 thermistor ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,3,0x26]))
         print "Laser 4 current ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,3,0x14]))
-        print "Laser 4 EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,1,0x50]))
+        print "Laser 4 EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,3,0x50]))
  
         print "Logic board EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,0,0x55]))
         print "WLM board EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[1,0,0x50]))
