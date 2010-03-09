@@ -119,9 +119,13 @@ class Error(Exception):
     
 class DuplicateSectionError(Error):
     """Raised when a section is multiply-created."""
-
     def __init__(self, section):
         Error.__init__(self, "Section %r already exists" % section)
+
+class DuplicateOptionError(Error):
+    """Raised when an option is present in several cases, and ignore_option_case_on is in effect."""
+    def __init__(self, option):
+        Error.__init__(self, "Option %r already exists" % option)
         
 class CustomConfigObj(configobj.ConfigObj):   
     def __init__(self, infile=None, options=None, ignore_option_case=True, print_case_convert=False, **kwargs):
@@ -132,33 +136,44 @@ class CustomConfigObj(configobj.ConfigObj):
         configobj.ConfigObj.__init__(self, infile, options, **kwargs)
         self.ignoreOptionCase = ignore_option_case
         self.print_case_convert = print_case_convert
-        
+        if ignore_option_case:
+            self.shadow = self._lowerCaseOpts(self)
+        else:
+            self.shadow = None
+            
+    def _lowerCaseOpts(self,subDict):
+        """Recursive routine which takes a nested dictionary and lower-cases
+        the keys of the leaf nodes"""
+        newDict = {}
+        for k in subDict:
+            v = subDict[k]
+            if isinstance(v,dict):
+                newDict[k] = self._lowerCaseOpts(v)
+            else:
+                if k.lower() in newDict:
+                    raise DuplicateOptionError(k)
+                else:
+                    newDict[k.lower()] = (v,k)
+        return newDict
+    
     def get(self, section, option, default=None):    
         if default is None:
             if not self.ignoreOptionCase:
-                return self.__getitem__(section).__getitem__(option) 
+                return self[section][option] 
             else:
-                try:
-                    return self.__getitem__(section).__getitem__(option) 
-                except KeyError:    
-                    return self._caseIngoreGet(section, option)
+                v,origKey = self.shadow[section][option.lower()]
+                return v
         else:
             default = str(default)
-            if not self.ignoreOptionCase:
-                try:
-                    return self.__getitem__(section).__getitem__(option)
-                except KeyError:
-                        self._add_value(section, option, default)
-                        return default                        
-            else:
-                try:
-                    return self.__getitem__(section).__getitem__(option)
-                except KeyError:
-                    try:
-                        return self._caseIngoreGet(section, option)  
-                    except KeyError:
-                        self._add_value(section, option, default)
-                        return default
+            try:
+                if not self.ignoreOptionCase:
+                    return self[section][option]
+                else:
+                    v,origKey = self.shadow[section][option.lower()] 
+                    return v
+            except KeyError:
+                self._add_value(section, option, default)
+                return default
                     
     def getint(self, section, option, default=None):
         try:
@@ -183,14 +198,16 @@ class CustomConfigObj(configobj.ConfigObj):
             value = format%value
             
         if not self.ignoreOptionCase:
-            self.__getitem__(section).update({option: str(value)})
+            self[section].update({option: str(value)})
         else:
-            for optionKey in self.__getitem__(section).keys():
-                if optionKey.lower() == option.lower():    
-                    self.__getitem__(section).update({optionKey: str(value)})
-                    return
-            # This is a new option regardless the case        
-            self.__getitem__(section).update({option: str(value)})        
+            optionLc = option.lower()
+            if optionLc in self.shadow[section]:
+                v, k = self.shadow[section][optionLc]
+                self[section].update({k: str(value)})
+                self.shadow[section].update({optionLc: str(value)})
+            else:
+                self[section].update({option: str(value)})
+                self.shadow[section].update({optionLc: str(value)})
         
     def has_section(self, section):
         return self.has_key(section)
@@ -202,25 +219,26 @@ class CustomConfigObj(configobj.ConfigObj):
         
     def add_section(self, section):
         if not self.has_key(section):
-            self.__setitem__(section, {})
+            self[section] = {}
+            if not self.ignoreOptionCase:
+                self.shadow[section] = {}
         else:
             raise DuplicateSectionError(section)
 
     def remove_section(self, section):
         existed = self.has_key(section)
         if existed:
-            self.__delitem__(section)
+            del self[section]
+            if self.ignoreOptionCase:
+                del self.shadow[section]
         return existed          
 
     def has_option(self, section, option):
         if self.has_key(section):
             if not self.ignoreOptionCase:
-                return self.__getitem__(section).has_key(option)
+                return option in self[section]
             else:
-                for optionKey in self.__getitem__(section).keys():
-                    if optionKey.lower() == option.lower():
-                        return True
-                return False    
+                return option.lower() in self.shadow[section]
         else:
             return False
             
@@ -228,61 +246,51 @@ class CustomConfigObj(configobj.ConfigObj):
         """ Equivalent to options() function in ConfigParser
         """
         if not self.ignoreOptionCase:
-            return self.__getitem__(section).keys()
+            return self[section].keys()
         else:
-            lcOptList = []
-            for opt in self.__getitem__(section).keys():
-                lcOptList.append(opt.lower())
-            return lcOptList            
+            return self.shadow[section].keys()
 
     def remove_option(self, section, option):
         if self.has_key(section):
             if not self.ignoreOptionCase:
                 try:
-                    self.__getitem__(section).__delitem__(option)
+                    del self[section][option]
                     return True
                 except KeyError:
                     return False
             else:
-                for optionKey in self.__getitem__(section).keys():
-                    if optionKey.lower() == option.lower():
-                        self.__getitem__(section).__delitem__(optionKey)
-                        return True
-                return False    
+                try:
+                    v,k = self.shadow[section][option.lower()]
+                    del self[section][k]
+                    del self.shadow[section][option.lower()]
+                    return True
+                except KeyError:
+                    return False
         else:
             return False    
-
+            
     def list_items(self, section):
         """ Equivalent to items() function in ConfigParser
         """
         if not self.ignoreOptionCase:
-            return self.__getitem__(section).items()
+            return self[section].items()
         else:
-            lcItemList = []
-            for item in self.__getitem__(section).items():
-                lcItemList.append((item[0].lower(), item[1]))
-            return lcItemList
+            return [(k.lower(),self[section][k]) for k in self[section]]
                     
     def ignore_option_case_on(self):
         """ The class treats options as case non-sensitive
         """
         self.ignoreOptionCase = True
+        self.shadow = self._lowerCaseOpts(self)
 
     def ignore_option_case_off(self):
         """ The class treats options as case sensitive
         """
         self.ignoreOptionCase = False
+        self.shadow = None
         
     def _add_value(self, section, option, value):
         if self.has_key(section):
             self.set(section, option, value)
         else:
             self.update({section: {option: value}})  
-            
-    def _caseIngoreGet(self, section, option):
-        for optionKey in self.__getitem__(section).keys():
-            if optionKey.lower() == option.lower():
-                if self.print_case_convert:
-                    print "WARNING! Case conversion performed on option %s in section %s" % (option, section)
-                return self.__getitem__(section).__getitem__(optionKey)
-        raise KeyError, option        
