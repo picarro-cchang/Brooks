@@ -615,7 +615,7 @@ class SampleManager(object):
 
     def CmdHandler(self):
         while ( self.terminate==False ):
-            DoCommand(self)
+            self.DoCommand()
             
     def DoCommand(self):
         try:

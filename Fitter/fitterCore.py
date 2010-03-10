@@ -1029,11 +1029,11 @@ class RdfData(object):
     def __getitem__(self,key):
         # Use item notation to recover certain properties of a data set for use in scripting
         try:
-            if key.lower() == "cavitypressure": return self.sensorDict["CavityPressure"]
-            if key.lower() == "cavitytemperature": return self.sensorDict["CavityTemp"]
-            if key.lower() == "datapoints": return len(self.indexVector)
-            if key.lower() == "spectrumid": return self.sensorDict["SpectrumID"]
-            if key.lower() == "filterhistory": return self.filterHistory
+            if key.lower() == "cavitypressure": return float(mean(self.cavityPressure))
+            elif key.lower() == "cavitytemperature": return self.sensorDict["CavityTemp"]
+            elif key.lower() == "datapoints": return len(self.indexVector)
+            elif key.lower() == "spectrumid": return self.sensorDict["SpectrumID"]
+            elif key.lower() == "filterhistory": return self.filterHistory
             else:
                 raise KeyError("Unknown item for RdfData()")
         except:
