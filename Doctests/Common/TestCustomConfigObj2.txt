@@ -1,0 +1,90 @@
+>>> from Host.Common.CustomConfigObj import CustomConfigObj
+
+First check that the class will work with a list of lines as the input file
+>>> myInit = ["[SEC1]","opt1=val1","OPT2=val2","[SEC2]","OPT3=1,2,3","opt4=val4","opt5=yes","opt6=","opt7='Hi'"]
+>>> config = CustomConfigObj(myInit,ignore_option_case=True)
+
+Check that we have case sensitivity when we access the pseudo dictionary directly
+>>> 'opt1' in config['SEC1'].keys()
+True
+>>> 'OPT2' in config['SEC1'].keys()
+True
+>>> 'OPT3' in config['SEC2'].keys()
+True
+>>> 'opt4' in config['SEC2'].keys()
+True
+>>> 'opt5' in config['SEC2'].keys()
+True
+>>> 'opt6' in config['SEC2'].keys()
+True
+>>> 'opt7' in config['SEC2'].keys()
+True
+
+Check that we can list sections and options without case sensitivity
+>>> config.list_sections()
+['SEC1', 'SEC2']
+>>> config.list_options('SEC1')
+['opt1', 'opt2']
+>>> config.has_section('SEC1')
+True
+>>> config.has_section('sec1')
+False
+>>> config.get('SEC1','OPT2')
+'val2'
+>>> config.get('SEC1','OPT1')
+'val1'
+>>> config.list_items('SEC2')
+[('opt3', '1,2,3'), ('opt4', 'val4'), ('opt5', 'yes'), ('opt6', ''), ('opt7', "'Hi'")]
+>>> config.has_option('SEC2','opt3')
+True
+>>> config.has_option('SEC2','OPT3')
+True
+
+Check that we get a duplicate section error if adding a pre-existing section
+>>> config.add_section('SEC1') # doctest: +ELLIPSIS
+Traceback (most recent call last):
+...
+DuplicateSectionError: Section 'SEC1' already exists
+
+If we specify a default value for get, this adds the key if it does not currently exist
+With case-insensitivity, 'OPT1' and 'opt1' are the same
+>>> config.get('SEC1','OPT1','42')
+'val1'
+>>> config.list_options('SEC1')
+['opt1', 'opt2']
+
+The utility functions cast the value to the specified type before returning them
+>>> config.getint('SEC1','OPT1') # doctest: +ELLIPSIS
+Traceback (most recent call last):
+...
+ValueError: ...
+>>> config.getfloat('SEC1','OPT1') # doctest: +ELLIPSIS
+Traceback (most recent call last):
+...
+ValueError: ...
+>>> config.getboolean('SEC2','opt5')
+True
+>>> config.getboolean('SEC2','opt4') # doctest: +ELLIPSIS
+Traceback (most recent call last):
+...
+ValueError: Not a boolean: val4
+
+Check removal of an option. The return value indicates success.
+>>> config.remove_option('SEC1','OPT1')
+True
+>>> config.remove_option('SEC1','opt1')
+False
+>>> config.list_options('SEC1')
+['opt2']
+>>> config.remove_option('SEC1','OPT1')
+False
+>>> config.list_options('SEC1')
+['opt2']
+
+Check removal of a section. The return value indicates success.
+>>> config.remove_section('SEC3')
+False
+>>> config.remove_section('SEC2')
+True
+>>> config.list_sections()
+['SEC1']

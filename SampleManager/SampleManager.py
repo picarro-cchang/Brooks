@@ -549,7 +549,6 @@ class SampleManager(object):
 
         # find abs path to Ini file
         self.iniAbsBasePath = os.path.split(os.path.abspath(IniPath))[0]
-        
         self.defaultConfig = self.config.list_items( DEFAULT_CONFIGS )
 
         # create thread for processing requests
@@ -586,9 +585,9 @@ class SampleManager(object):
         """ Loads configuration file """
         try:
             self.config = CustomConfigObj(filename)
-        except:
+            return True
+        except IOError:
             msg = "Unable to open config. %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
-            print (msg)
             Log(msg)
             return False
 
@@ -616,23 +615,26 @@ class SampleManager(object):
 
     def CmdHandler(self):
         while ( self.terminate==False ):
-            try:
-                cmd,args,kwargs = self.cmdQueue.get( block=True, timeout=self.cmdTimeout )
-                if self.mode != None:
-                    self.mode._terminateCalls = False
-                    self.state = (cmd.__name__,args,kwargs)
-                    func = getattr( self.mode,cmd.__name__ )
-                    if self.debug: print "B: %s" % func.__name__
-                    func(*args,**kwargs)
-                    if self.debug: print "E: %s" % func.__name__
-                self.state = 'Idle'
-            except Queue.Empty:
-                pass
-            except:
-                msg = "CmdHandler  %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
-                print (msg)
-                Log(msg)
-            time.sleep(0.01)
+            self.DoCommand()
+            
+    def DoCommand(self):
+        try:
+            cmd,args,kwargs = self.cmdQueue.get( block=True, timeout=self.cmdTimeout )
+            if self.mode != None:
+                self.mode._terminateCalls = False
+                self.state = (cmd.__name__,args,kwargs)
+                func = getattr( self.mode,cmd.__name__ )
+                if self.debug: print "B: %s" % func.__name__
+                func(*args,**kwargs)
+                if self.debug: print "E: %s" % func.__name__
+            self.state = 'Idle'
+        except Queue.Empty:
+            pass
+        except:
+            msg = "CmdHandler  %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
+            print (msg)
+            Log(msg)
+        time.sleep(0.01)
 
     def SolenoidHandler(self):
         """Handle solenoid valve control request if any"""
@@ -712,16 +714,14 @@ class SampleManager(object):
 
         try:
             modeConfig    = self.config.list_items( modeName )
-            (modePath, modeFile) = os.path.split(dict(modeConfig)['script_filename'])
+            scriptBasename = dict(modeConfig)['script_filename']
+            (modePath, modeFile) = os.path.split(scriptBasename)
 
-            # Add path to Python script
             scriptPath =  os.path.join(self.iniAbsBasePath, modePath) 
-            if scriptPath not in sys.path: sys.path.append(scriptPath)
-
-            print "Importing: >>%s<<" % (modeFile,)
-            #print sys.path
-            modeModule    = __import__( modeFile )
-            modeClass     =  getattr( modeModule, modeFile )
+            scriptFilename = os.path.join(scriptPath,modeFile).strip() + ".py"
+            
+            exec compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec")
+            modeClass = locals()[modeFile]
 
             self.modeName = modeName
             self.mode     = modeClass(self.defaultConfig + modeConfig)

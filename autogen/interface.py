@@ -159,8 +159,7 @@ class RingdownEntryType(Structure):
     ("coarseLaserCurrent",c_ushort),
     ("laserTemperature",c_float),
     ("etalonTemperature",c_float),
-    ("cavityPressure",c_ushort),
-    ("ambientPressure",c_ushort),
+    ("cavityPressure",c_float),
     ("lockerError",c_short),
     ("padToCacheLine",c_ushort)
     ]
@@ -188,8 +187,7 @@ class ProcessedRingdownEntryType(Structure):
     ("coarseLaserCurrent",c_ushort),
     ("laserTemperature",c_float),
     ("etalonTemperature",c_float),
-    ("cavityPressure",c_ushort),
-    ("ambientPressure",c_ushort),
+    ("cavityPressure",c_float),
     ("lockerError",c_short),
     ("padToCacheLine",c_ushort)
     ]
