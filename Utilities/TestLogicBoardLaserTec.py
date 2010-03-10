@@ -136,7 +136,7 @@ class TestLogicBoardLaserTec(object):
         print >> tp.rstFile, "PNG `graph <%s>`__" % (tp.relativeTestDirectory+self.graph1Name,)
                 
         vt = VerdictTable(30)
-        vt.setEntries([("TEC Current Slope",p[0],1.32e-4,1.36e-4,"%.3g"),
+        vt.setEntries([("TEC Current Slope",p[0],1.25e-4,1.36e-4,"%.3g"),
                        ("TEC Current Intercept",p[1]+32768*p[0],-0.05,0.05,"%.3g"),
                        ("TEC Current Residual",sqrt(res),0,0.05,"%.3g"),
                        ("Disabled value",disabledValue,-0.01,0.01,"%.3g"),

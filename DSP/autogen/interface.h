@@ -138,8 +138,7 @@ typedef struct {
     uint16 coarseLaserCurrent;
     float laserTemperature;
     float etalonTemperature;
-    uint16 cavityPressure;
-    uint16 ambientPressure;
+    float cavityPressure;
     int16 lockerError;
     uint16 padToCacheLine;
 } RingdownEntryType;
@@ -166,8 +165,7 @@ typedef struct {
     uint16 coarseLaserCurrent;
     float laserTemperature;
     float etalonTemperature;
-    uint16 cavityPressure;
-    uint16 ambientPressure;
+    float cavityPressure;
     int16 lockerError;
     uint16 padToCacheLine;
 } ProcessedRingdownEntryType;

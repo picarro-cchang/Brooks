@@ -453,8 +453,7 @@ void rdFitting(void)
             ringdownEntry->coarseLaserCurrent = rdParams->coarseLaserCurrent;
             ringdownEntry->laserTemperature = rdParams->laserTemperature;
             ringdownEntry->etalonTemperature = rdParams->etalonTemperature;
-            ringdownEntry->cavityPressure  = (unsigned int)(50.0 * rdParams->cavityPressure);
-            ringdownEntry->ambientPressure = (unsigned int)(50.0 * rdParams->ambientPressure);
+            ringdownEntry->cavityPressure  = rdParams->cavityPressure;
             ringdownEntry->lockerError = 0;
             ringdown_put();
             if (SPECT_CNTRL_RunningState == *(int*)registerAddr(SPECT_CNTRL_STATE_REGISTER)) SEM_postBinary(&SEM_startRdCycle);
@@ -541,8 +540,7 @@ void rdFitting(void)
             ringdownEntry->coarseLaserCurrent = rdParams->coarseLaserCurrent;
             ringdownEntry->laserTemperature = rdParams->laserTemperature;
             ringdownEntry->etalonTemperature = rdParams->etalonTemperature;
-            ringdownEntry->cavityPressure  = (unsigned int)(50.0 * rdParams->cavityPressure);
-            ringdownEntry->ambientPressure = (unsigned int)(50.0 * rdParams->ambientPressure);
+            ringdownEntry->cavityPressure  = rdParams->cavityPressure;
             ringdownEntry->lockerError = metaDouble.lockerError;
             // Next line is used to recenter the PZT values per virtual laser
             if (0 != (ringdownEntry->subschemeId & SUBSCHEME_ID_RecenterMask)) {

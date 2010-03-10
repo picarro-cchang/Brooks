@@ -110,7 +110,7 @@
             <field ident="lockerOffset" type="double"/>
             <field ident="fineLaserCurrent" type="double"/>
             <field ident="lockerError" type="double"/>
-        </struct>		
+        </struct>
         <struct type="RingdownParamsType">
             <field ident="injectionSettings"      type="uint32"/>
             <field ident="laserTemperature"       type="float"/>
@@ -128,7 +128,7 @@
         <struct type="RingdownBufferType">
             <field ident="ringdownWaveform" type="uint32" size="4096"/>
             <field ident="parameters" type="RingdownParamsType"/>
-        </struct>		
+        </struct>
         <struct type="RingdownEntryType">
             <field ident="timestamp" type="long long"/>
             <field ident="wlmAngle" type="float"/>
@@ -150,8 +150,7 @@
             <field ident="coarseLaserCurrent" type="uint16"/>
             <field ident="laserTemperature" type="float"/>
             <field ident="etalonTemperature" type="float"/>
-            <field ident="cavityPressure" type="uint16"/>
-            <field ident="ambientPressure" type="uint16"/>
+            <field ident="cavityPressure" type="float"/>
             <field ident="lockerError" type="int16"/>
             <field ident="padToCacheLine" type="uint16"/>
         </struct>
@@ -177,8 +176,7 @@
             <field ident="coarseLaserCurrent" type="uint16"/>
             <field ident="laserTemperature" type="float"/>
             <field ident="etalonTemperature" type="float"/>
-            <field ident="cavityPressure" type="uint16"/>
-            <field ident="ambientPressure" type="uint16"/>
+            <field ident="cavityPressure" type="float"/>
             <field ident="lockerError" type="int16"/>
             <field ident="padToCacheLine" type="uint16"/>
         </struct>
