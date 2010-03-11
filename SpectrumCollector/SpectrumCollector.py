@@ -442,8 +442,8 @@ class SpectrumCollector(object):
         
     def RPC_getFromSpectrumQueue(self, timeout=0):
         try:
-            return self.spectrumQueue.get(timeout = timeout)
             self.lastSpectrumQueueGet = TimeStamp()
+            return self.spectrumQueue.get(timeout = timeout)
         except:
             raise
         

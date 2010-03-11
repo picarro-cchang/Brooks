@@ -67,7 +67,6 @@ class DasConfigure(SharedTypes.Singleton):
                    ("POWER_BOARD_PRESENT", 1<<interface.HARDWARE_PRESENT_PowerBoardBit),
                    ("WARM_BOX_PRESENT",    1<<interface.HARDWARE_PRESENT_WarmBoxBit),
                    ("HOT_BOX_PRESENT",     1<<interface.HARDWARE_PRESENT_HotBoxBit),
-                   ("SAFE_I2C_PRESENT",    1<<interface.HARDWARE_PRESENT_ResettableI2CPort)
                    ]
         mask = 0
         for key, bit in mapping:
@@ -493,6 +492,7 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0,"FPGA_KERNEL","KERNEL_CONTROL"]))
 
         # Check to see which I2C devices are installed on this instrument
+
         print "I2C0 MUX status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,0,0x55]))
         print "I2C1 MUX status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[1,0,0x71]))
         print "Power board I2C DIO status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[1,4,0x71]))
