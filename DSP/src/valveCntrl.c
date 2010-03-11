@@ -294,12 +294,12 @@ int valveCntrlInit(void)
 }
 
 int modify_valve_pump_tec(unsigned int mask, unsigned int code)
-// Writes to PCA8574 or PCA9538 I2C to parallel port which controls states of solenoid valves, pump and TEC PWM.
+// Writes to PCA9538 I2C to parallel port which controls states of solenoid valves, pump and TEC PWM.
 //  Note the inversion, which is needed since the I2C port starts up with its outputs high.
 {
+    I2C_device *d = &i2c_devices[VALVE_PUMP_TEC_PORT];
     static unsigned int shadow = 0;
     unsigned int loops, newValue;
-    int usePca9538 = *(int *)registerAddr(HARDWARE_PRESENT_REGISTER) & (1<<HARDWARE_PRESENT_ResettableI2CPort);
     int powerBoardPresent = *(int *)registerAddr(HARDWARE_PRESENT_REGISTER) & (1<<HARDWARE_PRESENT_PowerBoardBit);
     int activeMask = (1<<PWM_CS_RUN_B)|(1<<PWM_CS_CONT_B);
     int warmBoxPwmActive = (readFPGA(FPGA_PWM_WARMBOX+PWM_CS) & activeMask) == activeMask;
@@ -307,23 +307,20 @@ int modify_valve_pump_tec(unsigned int mask, unsigned int code)
 
     newValue = (shadow & (~mask)) | (code & mask);
     if (powerBoardPresent) {    
-        setI2C1Mux(4);  // Select SC15 and SD15
+        setI2C1Mux(d->mux);  // Select SC15 and SD15
         for (loops=0;loops<1000;loops++);
-        if (usePca9538) {
-            if (warmBoxPwmActive && hotBoxPwmActive) {
-                pca9538_wrConfig(&valve_pump_tec_I2C_new,0);
-                for (loops=0;loops<1000;loops++);
-                pca9538_wrOutput(&valve_pump_tec_I2C_new,~newValue);
-            }
+        if (warmBoxPwmActive && hotBoxPwmActive) {
+            pca9538_wrConfig(d,0);
+            for (loops=0;loops<1000;loops++);
+            pca9538_wrOutput(d,~newValue);
         }
-        else pca8574_wrByte(&valve_pump_tec_I2C_old,~newValue);
     }
     shadow = newValue;
     return STATUS_OK;
 }
 
 int write_valve_pump_tec(unsigned int code)
-// Writes to PCA8574 I2C to parallel port which controls states of solenoid valves, pump and TEC PWM.
+// Writes to I2C to parallel port which controls states of solenoid valves, pump and TEC PWM.
 //  Note the inversion, which is needed since the I2C port starts up with its outputs high.
 {
     return modify_valve_pump_tec(0xFF,code);
@@ -333,10 +330,11 @@ int read_cavity_pressure_adc()
 // Read cavity pressure ADC
 {
     int flags, result, loops;
+    I2C_device *d = &i2c_devices[CAVITY_PRESSURE_ADC];
 
-    setI2C0Mux(7);  // I2C bus 7
+    setI2C0Mux(d->mux);  // I2C bus 7
     for (loops=0;loops<1000;loops++);
-    result = ltc2485_getData(&cavity_pressure_I2C, &flags);
+    result = ltc2485_getData(d, &flags);
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
@@ -346,10 +344,11 @@ int read_ambient_pressure_adc()
 // Read ambient pressure ADC
 {
     int flags, result, loops;
+    I2C_device *d = &i2c_devices[AMBIENT_PRESSURE_ADC];
 
-    setI2C0Mux(7);  // I2C bus 7
+    setI2C0Mux(d->mux);  // I2C bus 7
     for (loops=0;loops<1000;loops++);
-    result = ltc2485_getData(&ambient_pressure_I2C, &flags);
+    result = ltc2485_getData(d, &flags);
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;

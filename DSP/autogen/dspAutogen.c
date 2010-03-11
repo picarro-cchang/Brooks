@@ -17,6 +17,35 @@
 
 extern int writeRegister(unsigned int regNum,DataType data);
 RegTypes regTypes[401];
+
+/* I2C devices */
+I2C_device i2c_devices[25] = {
+    {0, -1, 0x55},
+    {0, 0, 0x26},
+    {0, 0, 0x14},
+    {0, 0, 0x50},
+    {0, 1, 0x26},
+    {0, 1, 0x14},
+    {0, 1, 0x50},
+    {0, 2, 0x26},
+    {0, 2, 0x14},
+    {0, 2, 0x50},
+    {0, 3, 0x26},
+    {0, 3, 0x14},
+    {0, 3, 0x50},
+    {1, 0, 0x27},
+    {1, 0, 0x26},
+    {1, 0, 0x15},
+    {1, 0, 0x50},
+    {0, 7, 0x27},
+    {0, 7, 0x26},
+    {0, 7, 0x24},
+    {0, 7, 0x17},
+    {0, -1, 0x4e},
+    {1, 4, 0x70},
+    {0, -1, 0x70},
+    {1, -1, 0x71}};
+
 void initRegisters() 
 {
     DataType d;
@@ -1262,10 +1291,6 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_filter(numInt,params,env);
         case ACTION_DS1631_READTEMP:
             return r_ds1631_readTemp(numInt,params,env);
-        case ACTION_LASER_TEC_IMON:
-            return r_laser_tec_imon(numInt,params,env);
-        case ACTION_READ_LASER_TEC_MONITORS:
-            return r_read_laser_tec_monitors(numInt,params,env);
         case ACTION_READ_LASER_THERMISTOR_RESISTANCE:
             return r_read_laser_thermistor_resistance(numInt,params,env);
         case ACTION_READ_ETALON_THERMISTOR_RESISTANCE:

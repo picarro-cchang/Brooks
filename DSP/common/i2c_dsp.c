@@ -17,14 +17,18 @@
 #include <std.h>
 #include <sem.h>
 #include <tsk.h>
+#include "interface.h"
 #include "i2c_dsp.h"
 #include "registers.h"
+#include "dspAutogen.h"
 
 #define I2C_MAXLOOPS (300)
 
 #define IDEF  static inline
 
-I2C_Handle hI2C0=0, hI2C1=0;
+I2C_Handle hI2C[2] = {0, 0};
+
+/*
 I2C_devAddr logic_eeprom_I2C = {&hI2C0,0x55};
 I2C_devAddr wlm_eeprom_I2C = {&hI2C1,0x50};
 I2C_devAddr laser_thermistor_I2C = {&hI2C0,0x26};
@@ -41,6 +45,7 @@ I2C_devAddr das_temp_sensor_I2C = {&hI2C0,0x4E};
 I2C_devAddr valve_pump_tec_I2C_old = {&hI2C1,0x20};
 I2C_devAddr valve_pump_tec_I2C_new = {&hI2C1,0x70};
 I2C_devAddr laser_tec_current_monitor_I2C = {&hI2C1,0x14};
+*/
 
 /*----------------------------------------------------------------------------*/
 int I2C0MuxChan = 0;
@@ -349,33 +354,37 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
 void dspI2CInit()
 {
     I2C_resetAll();
-    if (hI2C0 != 0) I2C_close(hI2C0);
-    hI2C0 = I2C_open(I2C_PORT0,I2C_OPEN_RESET);
-    initializeI2C(hI2C0);
-    if (hI2C1 != 0) I2C_close(hI2C1);
-    hI2C1 = I2C_open(I2C_PORT1,I2C_OPEN_RESET);
-    initializeI2C(hI2C1);
+    if (hI2C[0] != 0) I2C_close(hI2C[0]);
+    hI2C[0] = I2C_open(I2C_PORT0,I2C_OPEN_RESET);
+    initializeI2C(hI2C[0]);
+    if (hI2C[1] != 0) I2C_close(hI2C[1]);
+    hI2C[1] = I2C_open(I2C_PORT1,I2C_OPEN_RESET);
+    initializeI2C(hI2C[1]);
 }
 /*----------------------------------------------------------------------------*/
 void setI2C0Mux(int channel)
 {
     Uint8 bytes[1];
     int loops;
+    I2C_device *d = &i2c_devices[CHAIN0_MUX];
+
     if (I2C0MuxChan == channel) return;
     bytes[0] =  8 + (channel & 0x7);
     while (1) {
         for (loops = 0; loops < 1000; loops++);
-        if (I2C_write_bytes(hI2C0,0x70,bytes,1) == 0) break;
+        if (I2C_write_bytes(hI2C[d->chain],d->addr,bytes,1) == 0) break;
         message_puts("Retrying setI2C0Mux");
     }
-    I2C_sendStop(hI2C0);
+    I2C_sendStop(hI2C[d->chain]);
     I2C0MuxChan = channel;
 }
 /*----------------------------------------------------------------------------*/
 int fetchI2C0Mux()
 {
     Uint8 bytes[1];
-    I2C_read_bytes(hI2C0,0x70,bytes,1);
+    I2C_device *d = &i2c_devices[CHAIN0_MUX];
+
+    I2C_read_bytes(hI2C[d->chain],d->addr,bytes,1);
     I2C0MuxChan = bytes[0] & 0x7;
     return I2C0MuxChan;
 }
@@ -388,22 +397,24 @@ int getI2C0Mux()
 void setI2C1Mux(int channel)
 {
     Uint8 bytes[1];
+    I2C_device *d = &i2c_devices[CHAIN1_MUX];
     int loops;
     if (I2C1MuxChan == channel) return;
     bytes[0] =  8 + (channel & 0x7);
     while (1) {
         for (loops = 0; loops < 1000; loops++);
-        if (I2C_write_bytes(hI2C1,0x71,bytes,1) == 0) break;
+        if (I2C_write_bytes(hI2C[d->chain],d->addr,bytes,1) == 0) break;
         message_puts("Retrying setI2C1Mux");
     }
-    I2C_sendStop(hI2C1);
+    I2C_sendStop(hI2C[d->chain]);
     I2C1MuxChan = channel;
 }
 /*----------------------------------------------------------------------------*/
 int fetchI2C1Mux()
 {
     Uint8 bytes[1];
-    I2C_read_bytes(hI2C1,0x71,bytes,1);
+    I2C_device *d = &i2c_devices[CHAIN1_MUX];
+    I2C_read_bytes(hI2C[d->chain],d->addr,bytes,1);
     I2C1MuxChan = bytes[0] & 0x7;
     return I2C1MuxChan;
 }

@@ -290,6 +290,39 @@ printFp(intPyFp, "registerByName = {}\nregisterInfo = []" )
 printFp(dspCFp,'extern int writeRegister(unsigned int regNum,DataType data);')
 
 printFp(dspCFp,'RegTypes regTypes[%d];' % (len(registerNames)))
+
+printFp(intHFp,"\n/* I2C device indices */")
+printFp(intPyFp, "\n# Dictionaries for accessing I2C devices\ni2cByIndex = {}")
+
+printFp(dspHFp,"typedef struct i2c_device{ int chain; int mux; int addr; } I2C_device;")
+
+i2cLists = docEl.getElementsByTagName('i2c_list')
+for i2cList in i2cLists:
+    for i,i2c in enumerate(i2cList.getElementsByTagName('i2c')):
+        i2cIdent = i2c.attributes['ident'].value
+        printFp(intHFp,"#define %s %d" % (i2cIdent, i))
+        printFp(intPyFp, "i2cByIndex[%d] = '%s'" % (i,i2cIdent))
+    numI2C = i+1
+    
+printFp(intPyFp, "\n#i2cByIdent tuple is (index,chain,mux,address)\ni2cByIdent = {}" )
+printFp(dspHFp,"extern I2C_device i2c_devices[%d];\n" % numI2C)
+printFp(dspCFp,"\n/* I2C devices */\nI2C_device i2c_devices[%d] = {" % numI2C)
+
+for i2cList in i2cLists:
+    for i,i2c in enumerate(i2cList.getElementsByTagName('i2c')):
+        i2cIdent = i2c.attributes['ident'].value
+        i2cChain = int(i2c.attributes['chain'].value)
+        try:
+            i2cMux = int(i2c.attributes['mux'].value)
+        except:
+            i2cMux = -1
+        i2cAddress = eval(i2c.attributes['address'].value)
+        printFp(intPyFp, "i2cByIdent['%s'] = (%d, %d, %d, 0x%x)" % (i2cIdent,i,i2cChain,i2cMux,i2cAddress))
+        if i < numI2C-1:
+            printFp(dspCFp,"    {%d, %d, 0x%x}," % (i2cChain,i2cMux,i2cAddress))
+        else:
+            printFp(dspCFp,"    {%d, %d, 0x%x}};\n" % (i2cChain,i2cMux,i2cAddress))
+
 printFp(dspCFp,'void initRegisters() \n{\n    DataType d;')
 printFp(dspHFp,'void initRegisters(void);')
 printFp(dspHFp,'extern RegTypes regTypes[%d];' % (len(registerNames)))
@@ -315,7 +348,7 @@ for i,registerName in enumerate(registerNames):
     printFp(dspCFp,'    regTypes[%s] = %s;' % (registerName,regTypesLookUp.get(types[i],"uint_type")))
 printFp(dspCFp,'}')
 
-
+            
 fpgaBlockLists = docEl.getElementsByTagName('fpga_block_list')
 fpgaRegisterDescriptor = {}
 numRegistersByBlock = {}

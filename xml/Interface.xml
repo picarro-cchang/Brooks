@@ -522,7 +522,6 @@
             <enum_value ident="HARDWARE_PRESENT_PowerBoardBit"     value="5" caption="Power Board" /> 
             <enum_value ident="HARDWARE_PRESENT_WarmBoxBit"        value="6" caption="Warm Box" /> 
             <enum_value ident="HARDWARE_PRESENT_HotBoxBit"         value="7" caption="Hot Box" />             
-            <enum_value ident="HARDWARE_PRESENT_ResettableI2CPort" value="8" caption="Resettable I2C port" />             
         </enum>
     </enum_list>
     <bits_list>
@@ -2782,6 +2781,33 @@
             <display format="%.1f" units="torr">Ambient maximum pressure</display>
         </register>
     </register_list>
+    <i2c_list>
+        <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />
+        <i2c ident="LASER1_THERMISTOR_ADC" chain="0" mux="0" address="0x26" />
+        <i2c ident="LASER1_CURRENT_ADC" chain="0" mux="0" address="0x14" />
+        <i2c ident="LASER1_EEPROM" chain="0" mux="0" address="0x50" />
+        <i2c ident="LASER2_THERMISTOR_ADC" chain="0" mux="1" address="0x26" />
+        <i2c ident="LASER2_CURRENT_ADC" chain="0" mux="1" address="0x14" />
+        <i2c ident="LASER2_EEPROM" chain="0" mux="1" address="0x50" />
+        <i2c ident="LASER3_THERMISTOR_ADC" chain="0" mux="2" address="0x26" />
+        <i2c ident="LASER3_CURRENT_ADC" chain="0" mux="2" address="0x14" />
+        <i2c ident="LASER3_EEPROM" chain="0" mux="2" address="0x50" />
+        <i2c ident="LASER4_THERMISTOR_ADC" chain="0" mux="3" address="0x26" />
+        <i2c ident="LASER4_CURRENT_ADC" chain="0" mux="3" address="0x14" />
+        <i2c ident="LASER4_EEPROM" chain="0" mux="3" address="0x50" />
+        <i2c ident="ETALON_THERMISTOR_ADC" chain="1" mux="0" address="0x27" />
+        <i2c ident="WARM_BOX_HEATSINK_THERMISTOR_ADC" chain="1" mux="0" address="0x26" />
+        <i2c ident="WARM_BOX_THERMISTOR_ADC" chain="1" mux="0" address="0x15" />
+        <i2c ident="WLM_EEPROM" chain="1" mux="0" address="0x50" />
+        <i2c ident="HOT_BOX_HEATSINK_THERMISTOR_ADC" chain="0" mux="7" address="0x27" />
+        <i2c ident="CAVITY_THERMISTOR_ADC" chain="0" mux="7" address="0x26" />
+        <i2c ident="CAVITY_PRESSURE_ADC" chain="0" mux="7" address="0x24" />
+        <i2c ident="AMBIENT_PRESSURE_ADC" chain="0" mux="7" address="0x17" />
+        <i2c ident="DAS_TEMP_SENSOR" chain="0" address="0x4E" />
+        <i2c ident="VALVE_PUMP_TEC_PORT" chain="1" mux="4" address="0x70" />
+        <i2c ident="CHAIN0_MUX" chain="0" address="0x70" />
+        <i2c ident="CHAIN1_MUX" chain="1" address="0x71" />
+    </i2c_list>
     <fpga_block_list>
         <fpga_block ident="KERNEL" description="Kernel">
             <reg type="uint16" ident="MAGIC_CODE" description="Code indicating FPGA is programmed" access="r">
@@ -3620,8 +3646,6 @@
             The filter coefficients and state are in FilterEnvType -->
         <action ident="ACTION_FILTER">r_filter</action>
         <action ident="ACTION_DS1631_READTEMP">r_ds1631_readTemp</action>
-        <action ident="ACTION_LASER_TEC_IMON">r_laser_tec_imon</action>
-        <action ident="ACTION_READ_LASER_TEC_MONITORS">r_read_laser_tec_monitors</action>
         <action ident="ACTION_READ_LASER_THERMISTOR_RESISTANCE">r_read_laser_thermistor_resistance</action>
         <action ident="ACTION_READ_ETALON_THERMISTOR_RESISTANCE">r_read_etalon_thermistor_resistance</action>
         <action ident="ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE">r_read_warm_box_thermistor_resistance</action>

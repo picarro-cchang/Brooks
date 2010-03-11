@@ -16,7 +16,7 @@
 #ifndef  _LTC2451_H_
 #define  _LTC2451_H_
 
-unsigned int ltc2451_read(I2C_devAddr *i2c);
-void ltc2451_set_speed(I2C_devAddr *i2c, int low_speed);
+unsigned int ltc2451_read(I2C_device *i2c);
+void ltc2451_set_speed(I2C_device *i2c, int low_speed);
 
 #endif

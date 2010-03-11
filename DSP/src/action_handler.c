@@ -539,36 +539,7 @@ int r_ds1631_readTemp(unsigned int numInt,void *params,void *env)
 {
     unsigned int *reg = (unsigned int *) params;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
-    WRITE_REG(reg[0],ds1631_readTemperatureAsFloat(&das_temp_sensor_I2C));
-    return STATUS_OK;
-}
-
-int r_laser_tec_imon(unsigned int numInt,void *params,void *env)
-/*
-    Reads and sets up next read of the laser TEC current monitor
-    Input:
-        Code (int):  256*next channel + desired channel
-    Output:
-        Register (float):  Register to receive value. Unchanged
-         if the desired channel is unavailable
-*/
-{
-    unsigned int *reg = (unsigned int *) params;
-    int desired, next, status;
-    float result;
-
-    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    desired = reg[0] & 0xFF;
-    next = (reg[0]>>8) & 0xFF;
-    status = read_laser_tec_imon(desired,next,&result);
-    if (STATUS_OK == status) WRITE_REG(reg[1],result);
-    return status;
-}
-
-int r_read_laser_tec_monitors(unsigned int numInt,void *params,void *env)
-{
-    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
-    read_laser_tec_monitors();
+    WRITE_REG(reg[0],ds1631_readTemperatureAsFloat(&i2c_devices[DAS_TEMP_SENSOR]));
     return STATUS_OK;
 }
 
@@ -875,7 +846,7 @@ int r_eeprom_read(unsigned int numInt,void *params,void *env)
     id = reg[0];
     addr = reg[1];
     nbytes = reg[2];
-    eeprom_read(&logic_eeprom_I2C,addr,(unsigned char *)(byte64Env->buffer),nbytes);
+    eeprom_read(&i2c_devices[LOGIC_EEPROM],addr,(unsigned char *)(byte64Env->buffer),nbytes);
     return STATUS_OK;
 }
     
@@ -891,7 +862,7 @@ int r_eeprom_write(unsigned int numInt,void *params,void *env)
     id = reg[0];
     addr = reg[1];
     nbytes = reg[2];
-    eeprom_write(&logic_eeprom_I2C,addr,(unsigned char *)(byte64Env->buffer),nbytes);
+    eeprom_write(&i2c_devices[LOGIC_EEPROM],addr,(unsigned char *)(byte64Env->buffer),nbytes);
     return STATUS_OK;
 }
 
@@ -903,7 +874,7 @@ int r_eeprom_ready(unsigned int numInt,void *params,void *env)
     unsigned int id, *reg = (unsigned int *) params;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
     id = reg[0];
-    return !eeprom_busy(&logic_eeprom_I2C);
+    return !eeprom_busy(&i2c_devices[LOGIC_EEPROM]);
 }
 
 int r_i2c_check(unsigned int numInt,void *params,void *env)
@@ -913,20 +884,19 @@ int r_i2c_check(unsigned int numInt,void *params,void *env)
  */
 {
     int *reg = (int *) params, loops;
-    I2C_devAddr devAddr;
+    int chain, addr;
 
     if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
-    switch (reg[0]) {
+    chain = reg[0];    
+    switch (chain) {
         case 0:
-            devAddr.hI2C = &hI2C0;
             if (reg[1] >= 0) setI2C0Mux(reg[1]);
             break;
         case 1:
-            devAddr.hI2C = &hI2C1;
             if (reg[1] >= 0) setI2C1Mux(reg[1]);
             break;
     }
     for (loops=0;loops<1000;loops++);
-    devAddr.addr = reg[2];
-    return I2C_check_ack(*(devAddr.hI2C),devAddr.addr);
+    addr = reg[2];
+    return I2C_check_ack(hI2C[chain],addr);
 }

@@ -498,99 +498,15 @@ int tempCntrlLaser4Step(void)
     return status;
 }
 
-int read_laser_tec_imon(int desired, int next, float *result)
-/*
-    Read laser TEC current monitor
-    Inputs:
-      Codes for desired monitor channel and for next monitor channel.
-        0 => temperature
-        1 => laser 1
-        2 => laser 2
-        3 => laser 3
-        4 => laser 4
-    Output:
-      *result is value of desired channel read from ADC. It is changed
-        only if the desired channel was the one specified as "next" on
-        the previous call to this function
-    Return:
-      STATUS_OK if desired channel is returned
-      ERROR_UNAVAILABLE if channel data is not available since
-       a different "next channel" was set up previously
-*/
-{
-    int code[5] = {-1, 0, 1, 2, 3};
-    static int prevChan = -1;
-    int flags;
-
-    if (next < 0 || next > 4) return ERROR_BAD_VALUE;
-    //  Set up for next conversion
-    if (next == 0) ltc2499_configure(&laser_tec_current_monitor_I2C,0,0,1,0,0);
-    else ltc2499_configure(&laser_tec_current_monitor_I2C,0,code[next],0,0,0);
-    if (prevChan == desired)
-    {
-        *result = (float) ltc2499_getData(&laser_tec_current_monitor_I2C,&flags);
-        if (flags == 0) *result = -16777216.0;
-        else if (flags == 3) *result = 16777215.0;
-        prevChan = next;
-        return STATUS_OK;
-    }
-    else
-    {
-        ltc2499_getData(&laser_tec_current_monitor_I2C,&flags);
-        prevChan = next;
-        return ERROR_UNAVAILABLE;
-    }
-}
-
-int read_laser_tec_monitors()
-// Cycle around the laser TEC current monitors placing results into registers
-{
-    unsigned int regList[] =
-    {
-        LASER_TEC_MONITOR_TEMPERATURE_REGISTER,
-        LASER1_TEC_MONITOR_REGISTER,
-        LASER2_TEC_MONITOR_REGISTER,
-        LASER3_TEC_MONITOR_REGISTER,
-        LASER4_TEC_MONITOR_REGISTER,
-    };
-    static int chan = 0;
-    switch (chan)
-    {
-    case 0:
-        read_laser_tec_imon(0,1,(float *)registerAddr(LASER_TEC_MONITOR_TEMPERATURE_REGISTER));
-        chan = 1;
-        break;
-    case 1:
-        read_laser_tec_imon(1,2,(float *)registerAddr(LASER1_TEC_MONITOR_REGISTER));
-        chan = 2;
-        break;
-    case 2:
-        read_laser_tec_imon(2,3,(float *)registerAddr(LASER2_TEC_MONITOR_REGISTER));
-        chan = 3;
-        break;
-    case 3:
-        read_laser_tec_imon(3,4,(float *)registerAddr(LASER3_TEC_MONITOR_REGISTER));
-        chan = 4;
-        break;
-    case 4:
-        read_laser_tec_imon(4,0,(float *)registerAddr(LASER4_TEC_MONITOR_REGISTER));
-        chan = 0;
-        break;
-    default:
-        break;
-    }
-    writebackRegisters(regList,sizeof(regList)/sizeof(unsigned int));
-    return STATUS_OK;
-}
-
 int read_etalon_thermistor_adc()
 // Read etalon thermistor ADC
 {
     int flags, result, loops;
-
-    setI2C1Mux(0);  // I2C bus 8
+    I2C_device *d = &i2c_devices[ETALON_THERMISTOR_ADC];
+    
+    setI2C1Mux(d->mux);  // I2C bus 8
     for (loops=0;loops<1000;loops++);
-    result = ltc2485_getData(&etalon_thermistor_I2C, &flags);
+    result = ltc2485_getData(d, &flags);
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
@@ -600,10 +516,11 @@ int read_warm_box_thermistor_adc()
 // Read warm box thermistor ADC
 {
     int flags, result, loops;
+    I2C_device *d = &i2c_devices[WARM_BOX_THERMISTOR_ADC];
 
-    setI2C1Mux(0);  // I2C bus 8
+    setI2C1Mux(d->mux);  // I2C bus 8
     for (loops=0;loops<1000;loops++);
-    result = ltc2485_getData(&warm_box_thermistor_I2C, &flags);
+    result = ltc2485_getData(d, &flags);
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
@@ -613,10 +530,11 @@ int read_warm_box_heatsink_thermistor_adc()
 // Read warm box heatsink thermistor ADC
 {
     int flags, result, loops;
+    I2C_device *d = &i2c_devices[WARM_BOX_HEATSINK_THERMISTOR_ADC];
 
-    setI2C1Mux(0);  // I2C bus 8
+    setI2C1Mux(d->mux);  // I2C bus 8
     for (loops=0;loops<1000;loops++);
-    result = ltc2485_getData(&warm_box_heatsink_thermistor_I2C, &flags);
+    result = ltc2485_getData(d, &flags);
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
@@ -626,10 +544,11 @@ int read_cavity_thermistor_adc()
 // Read cavity thermistor ADC
 {
     int flags, result, loops;
+    I2C_device *d = &i2c_devices[CAVITY_THERMISTOR_ADC];
 
-    setI2C0Mux(7);  // I2C bus 7
+    setI2C0Mux(d->mux);  // I2C bus 7
     for (loops=0;loops<1000;loops++);
-    result = ltc2485_getData(&cavity_thermistor_I2C, &flags);
+    result = ltc2485_getData(d, &flags);
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
@@ -639,10 +558,11 @@ int read_hot_box_heatsink_thermistor_adc()
 // Read hot box heatsink thermistor ADC
 {
     int flags, result, loops;
+    I2C_device *d = &i2c_devices[HOT_BOX_HEATSINK_THERMISTOR_ADC];
 
-    setI2C0Mux(7);  // I2C bus 7
+    setI2C0Mux(d->mux);  // I2C bus 7
     for (loops=0;loops<1000;loops++);
-    result = ltc2485_getData(&hot_box_heatsink_thermistor_I2C, &flags);
+    result = ltc2485_getData(d, &flags);
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
@@ -651,12 +571,16 @@ int read_hot_box_heatsink_thermistor_adc()
 int read_laser_thermistor_adc(int laserNum)
 // Read thermistor ADC for specified laser. laserNum is in the range 1-4
 {
-    unsigned int chan[5] = {0,0,1,2,3};
+    I2C_device *devices[4] =  {&i2c_devices[LASER1_THERMISTOR_ADC],
+                               &i2c_devices[LASER2_THERMISTOR_ADC],
+                               &i2c_devices[LASER3_THERMISTOR_ADC],
+                               &i2c_devices[LASER4_THERMISTOR_ADC]};
+
     int flags, result, loops;
 
-    setI2C0Mux(chan[laserNum]);
+    setI2C0Mux(devices[laserNum-1]->mux);
     for (loops=0;loops<1000;loops++);
-    result = ltc2485_getData(&laser_thermistor_I2C, &flags);
+    result = ltc2485_getData(devices[laserNum-1], &flags);
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;

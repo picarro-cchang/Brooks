@@ -16,9 +16,9 @@
 #include "interface.h"
 #include "registers.h"
 #include "laserCurrentCntrl.h"
+#include "dspAutogen.h"
 #include "i2c_dsp.h"
 #include "ltc2451.h"
-#include "dspAutogen.h"
 #include "fpga.h"
 #include <math.h>
 
@@ -222,11 +222,14 @@ int currentCntrlLaser4Step(void)
 int read_laser_current_adc(int laserNum)
 // Read laser current ADC for specified laser. laserNum is in the range 1-4
 {
-    unsigned int chan[5] = {0,0,1,2,3};
+    I2C_device *devices[4] =  {&i2c_devices[LASER1_CURRENT_ADC],
+                               &i2c_devices[LASER2_CURRENT_ADC],
+                               &i2c_devices[LASER3_CURRENT_ADC],
+                               &i2c_devices[LASER4_CURRENT_ADC]};
     int result, loops;
 
-    setI2C0Mux(chan[laserNum]);
+    setI2C0Mux(devices[laserNum-1]->mux);
     for (loops=0;loops<1000;loops++);
-    result = ltc2451_read(&laser_current_I2C);
+    result = ltc2451_read(devices[laserNum-1]);
     return result;
 }

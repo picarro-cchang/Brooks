@@ -15,6 +15,9 @@
 
 #include "interface.h"
 
+typedef struct i2c_device{ int chain; int mux; int addr; } I2C_device;
+extern I2C_device i2c_devices[25];
+
 void initRegisters(void);
 extern RegTypes regTypes[401];
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env);
@@ -68,8 +71,6 @@ int r_modifyValvePumpTec(unsigned int numInt,void *params,void *env);
 int r_pulseGenerator(unsigned int numInt,void *params,void *env);
 int r_filter(unsigned int numInt,void *params,void *env);
 int r_ds1631_readTemp(unsigned int numInt,void *params,void *env);
-int r_laser_tec_imon(unsigned int numInt,void *params,void *env);
-int r_read_laser_tec_monitors(unsigned int numInt,void *params,void *env);
 int r_read_laser_thermistor_resistance(unsigned int numInt,void *params,void *env);
 int r_read_etalon_thermistor_resistance(unsigned int numInt,void *params,void *env);
 int r_read_warm_box_thermistor_resistance(unsigned int numInt,void *params,void *env);

@@ -16,9 +16,9 @@
 #ifndef  _PCA9538_H_
 #define  _PCA9538_H_
 
-void pca9538_wrConfig(I2C_devAddr *i2c, unsigned char byte);
-void pca9538_wrPolarity(I2C_devAddr *i2c, unsigned char byte);
-void pca9538_wrOutput(I2C_devAddr *i2c, unsigned char byte);
-int pca9538_rdInput(I2C_devAddr *i2c);
+void pca9538_wrConfig(I2C_device *i2c, unsigned char byte);
+void pca9538_wrPolarity(I2C_device *i2c, unsigned char byte);
+void pca9538_wrOutput(I2C_device *i2c, unsigned char byte);
+int pca9538_rdInput(I2C_device *i2c);
 
 #endif
