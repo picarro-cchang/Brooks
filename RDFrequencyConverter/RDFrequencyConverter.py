@@ -1,26 +1,21 @@
 #!/usr/bin/python
 #
-# FILE:
-#   RDFrequencyConverter.py
-#
-# DESCRIPTION:
-#   Converts between WLM angle and frequencies using AutoCal structures
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   30-Sep-2009  alex/sze  Initial version.
-#   02-Oct-2009  alex      Added RPC functions.
-#   09-Oct-2009  sze       Supporting new warm box calibration files and uploading of virtual laser parameters to DAS
-#   11-Oct-2009  sze       Added routines to support CalibrateSystem
-#   14-Oct-2009  sze       Added support for calibration rows in schemes
-#  16-Oct-2009 alex      Added .ini file and update active warmbox and hotbox calibration files
-#  20-Oct-2009 alex    Added functionality to handle scheme switch and update warmbox and hotbox calibration files
-# 21-Oct-2009  alex    Added calibration file paths to .ini file. Added RPC_setCavityLengthTuning() and RPC_setLaserCurrentTuning().
-#
-#  Copyright (c) 2009 Picarro, Inc. All rights reserved
-#
+"""
+File Name: RDFrequencyConverter.py
+Purpose: Converts between WLM angle and frequencies using AutoCal structures
+
+File History:
+    30-Sep-2009  alex/sze  Initial version.
+    02-Oct-2009  alex      Added RPC functions.
+    09-Oct-2009  sze       Supporting new warm box calibration files and uploading of virtual laser parameters to DAS
+    11-Oct-2009  sze       Added routines to support CalibrateSystem
+    14-Oct-2009  sze       Added support for calibration rows in schemes
+    16-Oct-2009  alex      Added .ini file and update active warmbox and hotbox calibration files
+    20-Oct-2009  alex      Added functionality to handle scheme switch and update warmbox and hotbox calibration files
+    21-Oct-2009  alex      Added calibration file paths to .ini file. Added RPC_setCavityLengthTuning() and RPC_setLaserCurrentTuning().
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = "RDFrequencyConverter"
 

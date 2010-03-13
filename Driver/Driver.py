@@ -1,19 +1,14 @@
 #!/usr/bin/python
 #
-# FILE:
-#   Driver.py
-#
-# DESCRIPTION:
-#   Low-level communication with hardware via USB interface
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   07-Jan-2009  sze  Initial version.
-#
-#  Copyright (c) 2009 Picarro, Inc. All rights reserved
-#
+"""
+File Name: Driver.py
+Purpose: Low-level communication with hardware via USB interface
+
+File History:
+    07-Jan-2009  sze  Initial version.
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = "Driver"
 

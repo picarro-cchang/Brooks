@@ -1,17 +1,21 @@
-# File Name: ElectricalInterface.py
-#
-# Purpose: This module manages Electrical Interface signals
-#
-# TODO: 1) Make sure config file can be restored to defaults when corrupted.
-#
-# File History:
-# 06-11-23 ytsai   Created file
-# 06-12-22 russ    Fixed RPC server launch; Added Logs
-# 08-06-04 sze     Allow errorvalue and invalidvalue to lie outside the range of available voltages, to indicate that
-#                              the error or invalid condition should be ignored
-# 08-09-18  alex  Replace ConfigParser with CustomConfigObj
-# 09-08-07  alex Clean up the code and put the physical limitation of analog output in .ini file. 
-#                           Again, allow errorvalue and invalidvalue to lie outside the range of available voltages.
+"""
+File Name: ElectricalInterface.py
+Purpose: This module manages Electrical Interface signals
+
+TODO: 
+    Make sure config file can be restored to defaults when corrupted.
+
+File History:
+    06-11-23 ytsai   Created file
+    06-12-22 russ    Fixed RPC server launch; Added Logs
+    08-06-04 sze     Allow errorvalue and invalidvalue to lie outside the range of available voltages, to indicate that
+                     the error or invalid condition should be ignored
+    08-09-18 alex    Replace ConfigParser with CustomConfigObj
+    09-08-07 alex    Clean up the code and put the physical limitation of analog output in .ini file. 
+                     Again, allow errorvalue and invalidvalue to lie outside the range of available voltages.
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = 'EIF'
 __version__ = 1.0

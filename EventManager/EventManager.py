@@ -1,61 +1,62 @@
 #!/usr/bin/python
 #
-# File Name: EventManager.py
-# Purpose:
-#   This application serves as the single location to log events for all
-#   applications.
-#
-#   It will also be a general event manager for managing intra-application
-#   events for the instrument, but this is not completed yet.
-#
-# Notes:
-#   There is an optional GUI that can be launched via command-line or via an
-#   RPC call.  The GUI takes no memory when not in use.
-#
-#   This replaces the simple Logger.py that existed before.
-#
-# File History:
-# 06-02-18 russ  First release
-# 06-05-09 russ  Added AccessLevel instead of Public; Event Data can now be any type (dict recommended)
-# 06-10-26 russ  Added INI file; Events logged to file (with archiving); Limit on event log length in RAM
-# 08-04-04 sze   Added Linux compatibility
-# 08-09-18 alex  Replaced ConfigParser with CustomConfigObj
-# 09-01-14 sze   Reduced number of threads needed to clear lurking files
-# 10-01-22 sze   Changed date format display to ISO standard
 """
-Event properties...
----
-Index (Time alone may get confusing in case of DST)
-LogTime (time at which the logger received the log)
-SourceTime (time at which the log was sent - comes from the source)
-Code
-EventText
-VerboseDescription (default to "" and optional)
-Source (eg: Driver, Filer, etc)
-Level
-  - 3 = Causes a performance hit or crash (eg: top level exception trap, app restarted)
-  - 2 = Significant (eg: Conc Alarm occurred, Flow stopped, etc)
-  - 1 = info only; used to help with post-mortems (eg: Command received)
-  - 0 = debug (ONLY for msg's that would be spam - only send if debugging)
-AccessLevel (default = picarro only)
+File Name: EventManager.py
+Purpose:
+    This application serves as the single location to log events for all
+    applications.
+    It will also be a general event manager for managing intra-application
+    events for the instrument, but this is not completed yet.
 
-RPC calls
----
-LogEvent
-RegisterEvents
-  -Preregister events to cut down on perpetual traffic - also allows more verbose descriptions
-LogEventNum
+File History:
+    06-02-18 russ  First release
+    06-05-09 russ  Added AccessLevel instead of Public; Event Data can now be any type (dict recommended)
+    06-10-26 russ  Added INI file; Events logged to file (with archiving); Limit on event log length in RAM
+    08-04-04 sze   Added Linux compatibility
+    08-09-18 alex  Replaced ConfigParser with CustomConfigObj
+    09-01-14 sze   Reduced number of threads needed to clear lurking files
+    10-01-22 sze   Changed date format display to ISO standard
 
-Usage
----
-LogEvent("Something happened", 1)
-RegisterEvent(Source, Num, EventText, VerboseDesc, AccessLevel)
-LogEventNum(Source, Num)
+Notes:
+    There is an optional GUI that can be launched via command-line or via an
+    RPC call.  The GUI takes no memory when not in use.
+    This replaces the simple Logger.py that existed before.
+    
+    Event properties...
+    ---
+    Index (Time alone may get confusing in case of DST)
+    LogTime (time at which the logger received the log)
+    SourceTime (time at which the log was sent - comes from the source)
+    Code
+    EventText
+    VerboseDescription (default to "" and optional)
+    Source (eg: Driver, Filer, etc)
+    Level
+      - 3 = Causes a performance hit or crash (eg: top level exception trap, app restarted)
+      - 2 = Significant (eg: Conc Alarm occurred, Flow stopped, etc)
+      - 1 = info only; used to help with post-mortems (eg: Command received)
+      - 0 = debug (ONLY for msg's that would be spam - only send if debugging)
+    AccessLevel (default = picarro only)
 
-Code notes
----
-The fundamental creation of all log entries occurs in EventLogger._CreateEventLog
-The fundamental collection of all logs (and display) occurs in EventLogger._AddEventLog
+    RPC calls
+    ---
+    LogEvent
+    RegisterEvents
+      -Preregister events to cut down on perpetual traffic - also allows more verbose descriptions
+    LogEventNum
+
+    Usage
+    ---
+    LogEvent("Something happened", 1)
+    RegisterEvent(Source, Num, EventText, VerboseDesc, AccessLevel)
+    LogEventNum(Source, Num)
+
+    Code notes
+    ---
+    The fundamental creation of all log entries occurs in EventLogger._CreateEventLog
+    The fundamental collection of all logs (and display) occurs in EventLogger._AddEventLog
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
 APP_NAME = "EventManager"

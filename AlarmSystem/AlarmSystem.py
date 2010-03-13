@@ -1,31 +1,40 @@
 #!/usr/bin/python
 #
-# File Name: AlarmSystem.py
-# Purpose:
-# The alarm system application is responsible for monitoring of gas concentration(s) and reporting alarm(s)
-# if the concentration is: 1. higher than a configured alarm threshold,
-#                          2. lower than configured alarm threshold,
-#                          3. in between two configured thresholds, or
-#                          4. outside two configured thresholds.
-# It clears an alarm(s) if the concentration is: 1. lower than configured clear threshold,
-#                                                2. higher than configured clear threshold,
-#                                                3. outside two clear thresholds, or
-#                                                4. inside two configured thresholds.
-# Each alarm is configured to operate in one and only one of the four modes listed above.
-#
-# The alarm system broadcasts the alarm status register whenever a set or clear bit of one of the alarms changes.
-#
-# The configuration info, i.e, alarm name, measurement source, enabled, alarm threshold, clear threshold, mode,
-# of each alarm is stored in AlarmSystem.ini. The alarm and clear thresholds are the only configs that can be changed
-# on the fly via an RPC call.  Everything else can only be changed by modifying the AlarmSystem.ini.
-#
-# File History:
-# 06-11-xx al  In progress
-# 06-12-18 al  Started using AppStatus class
-# 06-12-19 al  Removed units and shortened Front panel display message.
-# 06-12-20 al  Removed local definition of MeasData
-# 07-04-17 sze Changed alarm display messages to be one origin
-# 08-09-18  alex  Replaced SortedConfigParser with CustomConfigObj
+"""
+File Name: AlarmSystem.py
+Purpose:
+    The alarm system application is responsible for monitoring of gas concentration(s) and reporting alarm(s)
+    
+Notes:
+    An alarm is triggered if the concentration is: 
+        1. higher than a configured alarm threshold,
+        2. lower than configured alarm threshold,
+        3. in between two configured thresholds, or
+        4. outside two configured thresholds.
+    An alarm is cleared if the concentration is: 
+        1. lower than configured clear threshold,
+        2. higher than configured clear threshold,
+        3. outside two clear thresholds, or
+        4. inside two configured thresholds.
+        
+    Each alarm is configured to operate in one and only one of the four modes listed above.
+
+    The alarm system broadcasts the alarm status register whenever a set or clear bit of one of the alarms changes.
+
+    The configuration info, i.e, alarm name, measurement source, enabled, alarm threshold, clear threshold, mode,
+    of each alarm is stored in AlarmSystem.ini. The alarm and clear thresholds are the only configs that can be changed
+    on the fly via an RPC call.  Everything else can only be changed by modifying the AlarmSystem.ini.
+
+File History:
+    06-11-xx al    In progress
+    06-12-18 al    Started using AppStatus class
+    06-12-19 al    Removed units and shortened Front panel display message.
+    06-12-20 al    Removed local definition of MeasData
+    07-04-17 sze   Changed alarm display messages to be one origin
+    08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 ####
 ## Set constants for this file...

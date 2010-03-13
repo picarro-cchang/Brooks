@@ -1,53 +1,55 @@
 #!/usr/bin/python
 #
-# File Name: Supervisor.py
-# Purpose:
-#   This application performs the following functions:
-#      1. It Sequences the execution of all of the application in the CRD host
-#         software
-#      2. It supervises all launched applications after they are running.  If a
-#         launched application stops responding, this application will restart
-#         the app (and any other relevant apps) appropriately.
-#
-# Notes:
-#
-# File History:
-# 05-09-28 russ  Created first release
-# 05-10-13 russ  Added a small sleep to monitoring to reduce (by a lot) the processor overhead
-# 05-10-18 russ  Added ConsoleMode to solve child process closing issues; Added clean
-#                ctrl-q/ctrl-x exit code to monitoring loop; Added option checking
-# 05-11-09 russ  Changed timeout behavior to be more robust (removed usage of setdefaulttimeout)
-# 05-11-22 russ  Added Backup mode; Added an rpc server; Default times now 30s; Improved INI
-#                error checking; Added ctrl-t and revamped kb handling; Improved and expanded
-#                command-line options; Many other misc updates
-# 05-12-13 russ  Added -o switch; backup killed with --nm; Changed App.IsAlive functionality
-# 05-12-21 russ  Mode 3 (non-pingable yet monitored) apps and RPC via basic TCP; Restart
-#                notification; TerminateApplications RPC call
-# 06-02-06 russ  Ping dispatcher timeout now configurable with a default of 10s (from 5s)
-# 06-03-28 russ  Changed/improved log calls to work with new Event Manager; Added GlobalSettings
-#                option to configuration ini; Faster (threaded) app search at start; LaunchApps
-#                sequence is improved to be in proper order only; Backup Supervisor kicked more
-#                often; Changed default ini to PicarroPyConfig.INI
-# 06-04-04 russ  Fixed path referencing for App.Executable definitions
-# 06-04-18 russ  Fixed TerminateApplications bug (crashed when called)
-# 06-05-20 russ  Updated/improved event logging; Updated SharedTypes referencing
-# 06-06-20 russ  Ensure app is terminated when app launch fails; Logs made on ctrl-X or ctrl-T
-# 06-09-13 russ  Last chance exception handler; Updated Log calls
-# 06-10-17 sze   Get "PicarroSupervisor" mutex for benefit of installer
-# 06-12-11 Al    Added call to INSTMGR_ReportRestartRpc whenever an app is restarted.
-# 06-12-22 Al    Check that app is OK before adding it to list which is sent to INSTMGR_ReportRestartRpc
-# 07-03-16 sze   Allow supervisor to power off windows after terminating applications
-# 07-09-22 sze   Added AffinityMask attribute to App to allow process to be scheduled on specific CPUs
-# 08-02-20 sze   Modified GetDependents so that it computes transitive dependencies. i.e, if A depends on B which depends 
-#                 on C, it identifies A as being dependent on C.
-# 08-04-30 sze   Change default on TerminateApplications so that it does not power off the computer
-# 08-07-07 sze  Include TerminateProcessByName which uses taskkill (on Windows) to stop processes forcibly. Apps have a
-#                        KillByName attribute in the INI file which selects whether existing instances of the app should be terminated 
-#                        by name before a new copy is started. This is True by default
-# 08-07-23 sze  Do not use TerminateProcessByName on the backup supervisor, as this prematurely kills the real supervisor
-# 08-09-16 alex 1. Replaced ConfigParser by CustomConfigObj 
-#                          2. Re-formatted supervisor ini file so it doesn't contain application indices and total number of applications -> easier to add or remove applications on the list 
-# 08-10-08  alex  Re-ordered applications to be launched
+"""
+File Name: Supervisor.py
+Purpose:
+    This application performs the following functions:
+      1. It Sequences the execution of all of the application in the CRD host
+         software
+      2. It supervises all launched applications after they are running.  If a
+         launched application stops responding, this application will restart
+         the app (and any other relevant apps) appropriately.
+
+File History:
+    05-09-28 russ  Created first release
+    05-10-13 russ  Added a small sleep to monitoring to reduce (by a lot) the processor overhead
+    05-10-18 russ  Added ConsoleMode to solve child process closing issues; Added clean
+                   ctrl-q/ctrl-x exit code to monitoring loop; Added option checking
+    05-11-09 russ  Changed timeout behavior to be more robust (removed usage of setdefaulttimeout)
+    05-11-22 russ  Added Backup mode; Added an rpc server; Default times now 30s; Improved INI
+                   error checking; Added ctrl-t and revamped kb handling; Improved and expanded
+                   command-line options; Many other misc updates
+    05-12-13 russ  Added -o switch; backup killed with --nm; Changed App.IsAlive functionality
+    05-12-21 russ  Mode 3 (non-pingable yet monitored) apps and RPC via basic TCP; Restart
+                   notification; TerminateApplications RPC call
+    06-02-06 russ  Ping dispatcher timeout now configurable with a default of 10s (from 5s)
+    06-03-28 russ  Changed/improved log calls to work with new Event Manager; Added GlobalSettings
+                   option to configuration ini; Faster (threaded) app search at start; LaunchApps
+                   sequence is improved to be in proper order only; Backup Supervisor kicked more
+                   often; Changed default ini to PicarroPyConfig.INI
+    06-04-04 russ  Fixed path referencing for App.Executable definitions
+    06-04-18 russ  Fixed TerminateApplications bug (crashed when called)
+    06-05-20 russ  Updated/improved event logging; Updated SharedTypes referencing
+    06-06-20 russ  Ensure app is terminated when app launch fails; Logs made on ctrl-X or ctrl-T
+    06-09-13 russ  Last chance exception handler; Updated Log calls
+    06-10-17 sze   Get "PicarroSupervisor" mutex for benefit of installer
+    06-12-11 Al    Added call to INSTMGR_ReportRestartRpc whenever an app is restarted.
+    06-12-22 Al    Check that app is OK before adding it to list which is sent to INSTMGR_ReportRestartRpc
+    07-03-16 sze   Allow supervisor to power off windows after terminating applications
+    07-09-22 sze   Added AffinityMask attribute to App to allow process to be scheduled on specific CPUs
+    08-02-20 sze   Modified GetDependents so that it computes transitive dependencies. i.e, if A depends on B which depends 
+                   on C, it identifies A as being dependent on C.
+    08-04-30 sze   Change default on TerminateApplications so that it does not power off the computer
+    08-07-07 sze   Include TerminateProcessByName which uses taskkill (on Windows) to stop processes forcibly. Apps have a
+                   KillByName attribute in the INI file which selects whether existing instances of the app should be terminated 
+                   by name before a new copy is started. This is True by default
+    08-07-23 sze   Do not use TerminateProcessByName on the backup supervisor, as this prematurely kills the real supervisor
+    08-09-16 alex  Replaced ConfigParser by CustomConfigObj 
+                   Re-formatted supervisor ini file so it doesn't contain application indices and total number of applications -> easier to add or remove applications on the list 
+    08-10-08 alex  Re-ordered applications to be launched
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 import sys
 import ctypes

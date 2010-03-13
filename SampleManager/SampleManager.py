@@ -1,15 +1,20 @@
-# File Name: SampleManager.py
-#
-# Purpose: This is the module responsible for managing sample gas flow and
-#          cavity pressure.
-#
-# File History:
-# 06-11-06 ytsai   Created file
-# 07-01-17 Sze   Corrected bug in pressure stabilization loop
-# 08-09-18 alex  Replaced ConfigParser with CustomConfigObj
-# 08-12-10 alex  Made constant InletValve and OutletValve all uppercase
-# 08-12-23 alex  Added RPC call to skip pressure check in _Monitor() (in order to run pulse holder)
-# 09-12-14 alex  Cleaned up the code for G2000 platform
+"""
+File Name: SampleManager.py
+
+Purpose:
+    This is the module responsible for managing sample gas flow and
+    cavity pressure.
+
+File History:
+    06-11-06 ytsai Created file
+    07-01-17 Sze   Corrected bug in pressure stabilization loop
+    08-09-18 alex  Replaced ConfigParser with CustomConfigObj
+    08-12-10 alex  Made constant InletValve and OutletValve all uppercase
+    08-12-23 alex  Added RPC call to skip pressure check in _Monitor() (in order to run pulse holder)
+    09-12-14 alex  Cleaned up the code for G2000 platform
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = 'SampleManager'
 __version__              = 1.0

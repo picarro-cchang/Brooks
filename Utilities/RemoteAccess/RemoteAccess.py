@@ -1,12 +1,17 @@
-# File Name: RemoteAccess.py
-# Purpose: Program for establishing dialup connection to Internet, performing
-#  time synchronization and e-mailing contents of a results directory
-#
-# File History:
-# 06-08-29 sze   Created file
-# 07-02-27 sze   Send only one attached file per e-mail message
-# 07-03-15 sze   Send e-mail message even if no files are present in directory
-# 08-09-18  alex  Replaced ConfigParser with CustomConfigObj
+"""
+File Name: RemoteAccess.py
+Purpose: 
+    Program for establishing dialup connection to Internet, performing
+    time synchronization and e-mailing contents of a results directory
+
+File History:
+    06-08-29 sze   Created file
+    07-02-27 sze   Send only one attached file per e-mail message
+    07-03-15 sze   Send e-mail message even if no files are present in directory
+    08-09-18 alex  Replaced ConfigParser with CustomConfigObj
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 COMMASPACE = ', '
 

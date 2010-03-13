@@ -1,51 +1,57 @@
 #!/usr/bin/python
 #
-# File Name: DataLogger.py
-# Purpose:
-# The data logger application is responsible logging of public and private logs.
-# The logs can be user configurable or configured via factory defaults.
-# The following configuration is set via .ini file:
-#  - Storage folder
-#  - Data columns list
-#  - Log rate
-#  - Max log duration, i.e The data is logged for the max log duration, archived and repeated.
-#    If the MaxLogDuration is in 24hr increments, the repeat always starts at midnight.
-#  - Whether the log is enabled by default.
-#  - Name of DataManager source script.
-#  - Broadcast port number.
-# User log configuration is stored in userLog.ini. Private factory configured logs
-# configuration is stored in privateLog.ini.
-# The following subset of user log configuration can be changed using RPC calls:
-#  - Adding/removing data columns
-#  - Starting/stopping logging.
-#  - Changing logging rate.
-#
-# File History:
-# 06-11-xx al  In progress
-# 06-12-11 Al  Imported MeasData class instead of having duplicate definition.
-# 06-12-18 Al  Added mailbox, filter enable and 24 folders
-# 06-12-19 Al  Fixed bug in Write.  Was using CreateLogTime before first call to _Create
-# 06-12-21 Al  Added 1. call to _CheckSize after writing to mailbox
-#                    2. Truncation of entry.
-#                    3. Fixed bug in _Create which caused the listener to crash,
-#                       because sub directory name was changed before file was renamed.
-# 06-12-21 Al  Added alarm status listener
-# 06-12-22 Al  Changed mkdir to makedirs so whole directory path is created if it doesn't exist.
-# 07-03-14 sze Added DATALOGGER_getFilenameRpc to return log filename. Added
-#               DataLog.CopyToMailboxAndArchive which renames an Active file to an inactive one.
-#               Added RemoveEmptySubdirs to Directory class which removes empty directories when the
-#               DataLogger is started.
-# 07-10-05 sze Introduced BareTime configuration option to reduce number of time columns in output fie
-# 07-10-05 sze Allow data columns to change in the middle of a file (a new header is written). Data
-#               columns (after the time and alarm) are sorted.
-# 08-09-18  alex  Replaced SortedConfigParser with CustomConfigObj
-# 08-09-26  alex  Changed the function names in Directory and DataLog classes so only class-internal functions start with "_"
-# 08-09-29  alex  Moved file logging management to Archiver
-# 10-01-19  alex  Changed the way to copy data to mailbox and move data to archive. Since these
-#                 2 threads are not synchronized, we should just make an additional local copy and
-#                 simply move both of them to mailbox and archive location.
-# 10-01-22  sze   Moved file accesses out of listeners and into handler threads so that the listeners do
-#                   not become disconnected when the file system is busy.
+"""
+File Name: DataLogger.py
+Purpose: The data logger application is responsible logging of public and private logs.
+
+Notes:
+    The logs can be user configurable or configured via factory defaults.
+    The following configuration is set via .ini file:
+     - Storage folder
+     - Data columns list
+     - Log rate
+     - Max log duration, i.e The data is logged for the max log duration, archived and repeated.
+       If the MaxLogDuration is in 24hr increments, the repeat always starts at midnight.
+     - Whether the log is enabled by default.
+     - Name of DataManager source script.
+     - Broadcast port number.
+    User log configuration is stored in userLog.ini. Private factory configured logs
+    configuration is stored in privateLog.ini.
+    The following subset of user log configuration can be changed using RPC calls:
+     - Adding/removing data columns
+     - Starting/stopping logging.
+     - Changing logging rate.
+
+    File History:
+    06-11-xx al   In progress
+    06-12-11 Al   Imported MeasData class instead of having duplicate definition.
+    06-12-18 Al   Added mailbox, filter enable and 24 folders
+    06-12-19 Al   Fixed bug in Write.  Was using CreateLogTime before first call to _Create
+    06-12-21 Al   Added 1. call to _CheckSize after writing to mailbox
+                        2. Truncation of entry.
+                        3. Fixed bug in _Create which caused the listener to crash,
+                          because sub directory name was changed before file was renamed.
+    06-12-21 Al   Added alarm status listener
+    06-12-22 Al   Changed mkdir to makedirs so whole directory path is created if it doesn't exist.
+    07-03-14 sze  Added DATALOGGER_getFilenameRpc to return log filename. Added
+                  DataLog.CopyToMailboxAndArchive which renames an Active file to an inactive one.
+                  Added RemoveEmptySubdirs to Directory class which removes empty directories when the
+                  DataLogger is started.
+    07-10-05 sze  Introduced BareTime configuration option to reduce number of time columns in output fie
+    07-10-05 sze  Allow data columns to change in the middle of a file (a new header is written). Data
+                  columns (after the time and alarm) are sorted.
+    08-09-18 alex Replaced SortedConfigParser with CustomConfigObj
+    08-09-26 alex Changed the function names in Directory and DataLog classes so only class-internal functions start with "_"
+    08-09-29 alex Moved file logging management to Archiver
+    10-01-19 alex Changed the way to copy data to mailbox and move data to archive. Since these
+                  2 threads are not synchronized, we should just make an additional local copy and
+                  simply move both of them to mailbox and archive location.
+    10-01-22 sze  Moved file accesses out of listeners and into handler threads so that the listeners do
+                  not become disconnected when the file system is busy.
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved 
+"""
+
 ####
 ## Set constants for this file...
 ####

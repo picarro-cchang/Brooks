@@ -1,26 +1,26 @@
 #!/usr/bin/python
 #
-# File Name: FitterThread.py
-# Purpose:
-#  The fitterThread carries out spectral fitting using instructions contained in a fit script
-# and is launched by the fitter in a separate thread
-#
-# Notes:
-#
-# ToDo:
-#
-# File History:
-# 07-02-xx sze In progress
-# 07-05-07 sze Added time.sleep(0.01) to prevent overuse of CPU
-# 07-05-08 sze Renamed fitter to fitterThread and fitViewer to fitter
-# 07-05-11 sze Corrected handling of listening socket for TCP
-# 07-09-02 sze For Python 2.5, creating a generator in one thread and using it in another can
-#               cause problems. Repository creation has been moved into one thread to avoid this.
-# 07-10-04 sze Support multiple fitters in a pool using "Port" and "RPCport" options
-# 07-10-04 sze Introduce FITTER_ERROR reply to indicated
-# 08-09-18  alex  Replaced SortedConfigParser with CustomConfigObj
-# 08-10-13  alex  Replaced TCP by RPC
-# 09-06-30 alex  Support HDF5 format for spectra data
+"""
+File Name: FitterThread.py
+Purpose:
+    The fitterThread carries out spectral fitting using instructions contained in a fit script
+    and is launched by the fitter in a separate thread
+
+File History:
+    07-02-xx sze   In progress
+    07-05-07 sze   Added time.sleep(0.01) to prevent overuse of CPU
+    07-05-08 sze   Renamed fitter to fitterThread and fitViewer to fitter
+    07-05-11 sze   Corrected handling of listening socket for TCP
+    07-09-02 sze   For Python 2.5, creating a generator in one thread and using it in another can
+                   cause problems. Repository creation has been moved into one thread to avoid this.
+    07-10-04 sze   Support multiple fitters in a pool using "Port" and "RPCport" options
+    07-10-04 sze   Introduce FITTER_ERROR reply to indicated
+    08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
+    08-10-13 alex  Replaced TCP by RPC
+    09-06-30 alex  Support HDF5 format for spectra data
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = "Fitter"
 APP_VERSION = 1.0

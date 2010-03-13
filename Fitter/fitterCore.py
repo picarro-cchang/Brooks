@@ -1,24 +1,24 @@
 #!/usr/bin/python
 #
-# File Name: fitterCore.py
-# Purpose:
-#  Low-level fitter routines
-#
-# Notes:
-#
-# ToDo:
-#
-# File History:
-# 07-09-?? sze In development
-# 07-10-03 sze Allow scalar arguments to be passed to BasisFunctions.
-# 07-10-03 sze Allow natural splines to be defined without 2nd derivatives
-#               and check supplied second derivatives for consistency
-# 07-10-03 sze Added "peak" option for bi-splines
-# 08-02-15 sze Allow search window around peak of a bispline to be specified
-#               Make analysis INI configuration data available to fit scripts
-# 08-04-22 sze Let sparse filter report statistics to filterHistory
-# 08-09-18  alex  Replaced ConfigParser with CustomConfigObj
-# 09-06-30 alex  Support HDF5 format for spectra data
+"""
+File Name: fitterCore.py
+Purpose:
+    Low-level fitter routines
+
+File History:
+    07-09-?? sze   In development
+    07-10-03 sze   Allow scalar arguments to be passed to BasisFunctions.
+    07-10-03 sze   Allow natural splines to be defined without 2nd derivatives
+                   and check supplied second derivatives for consistency
+    07-10-03 sze   Added "peak" option for bi-splines
+    08-02-15 sze   Allow search window around peak of a bispline to be specified
+                   Make analysis INI configuration data available to fit scripts
+    08-04-22 sze   Let sparse filter report statistics to filterHistory
+    08-09-18 alex  Replaced ConfigParser with CustomConfigObj
+    09-06-30 alex  Support HDF5 format for spectra data
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 import os
 import sys
