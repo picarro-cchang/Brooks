@@ -1,51 +1,60 @@
 #!/usr/bin/python
 #
-# File Name: DataLogger.py
-# Purpose:
-# The data logger application is responsible logging of public and private logs.
-# The logs can be user configurable or configured via factory defaults.
-# The following configuration is set via .ini file:
-#  - Storage folder
-#  - Data columns list
-#  - Log rate
-#  - Max log duration, i.e The data is logged for the max log duration, archived and repeated.
-#    If the MaxLogDuration is in 24hr increments, the repeat always starts at midnight.
-#  - Whether the log is enabled by default.
-#  - Name of DataManager source script.
-#  - Broadcast port number.
-# User log configuration is stored in userLog.ini. Private factory configured logs
-# configuration is stored in privateLog.ini.
-# The following subset of user log configuration can be changed using RPC calls:
-#  - Adding/removing data columns
-#  - Starting/stopping logging.
-#  - Changing logging rate.
-#
-# File History:
-# 06-11-xx al  In progress
-# 06-12-11 Al  Imported MeasData class instead of having duplicate definition.
-# 06-12-18 Al  Added mailbox, filter enable and 24 folders
-# 06-12-19 Al  Fixed bug in Write.  Was using CreateLogTime before first call to _Create
-# 06-12-21 Al  Added 1. call to _CheckSize after writing to mailbox
-#                    2. Truncation of entry.
-#                    3. Fixed bug in _Create which caused the listener to crash,
-#                       because sub directory name was changed before file was renamed.
-# 06-12-21 Al  Added alarm status listener
-# 06-12-22 Al  Changed mkdir to makedirs so whole directory path is created if it doesn't exist.
-# 07-03-14 sze Added DATALOGGER_getFilenameRpc to return log filename. Added
-#               DataLog.CopyToMailboxAndArchive which renames an Active file to an inactive one.
-#               Added RemoveEmptySubdirs to Directory class which removes empty directories when the
-#               DataLogger is started.
-# 07-10-05 sze Introduced BareTime configuration option to reduce number of time columns in output fie
-# 07-10-05 sze Allow data columns to change in the middle of a file (a new header is written). Data
-#               columns (after the time and alarm) are sorted.
-# 08-09-18  alex  Replaced SortedConfigParser with CustomConfigObj
-# 08-09-26  alex  Changed the function names in Directory and DataLog classes so only class-internal functions start with "_"
-# 08-09-29  alex  Moved file logging management to Archiver
-# 10-01-19  alex  Changed the way to copy data to mailbox and move data to archive. Since these
-#                 2 threads are not synchronized, we should just make an additional local copy and
-#                 simply move both of them to mailbox and archive location.
-# 10-01-22  sze   Moved file accesses out of listeners and into handler threads so that the listeners do
-#                   not become disconnected when the file system is busy.
+"""
+File Name: DataLogger.py
+Purpose: The data logger application is responsible logging of public and private logs.
+
+Notes:
+    The logs can be user configurable or configured via factory defaults.
+    The following configuration is set via .ini file:
+     - Storage folder
+     - Data columns list
+     - Log rate
+     - Max log duration, i.e The data is logged for the max log duration, archived and repeated.
+       If the MaxLogDuration is in 24hr increments, the repeat always starts at midnight.
+     - Whether the log is enabled by default.
+     - Name of DataManager source script.
+     - Broadcast port number.
+    User log configuration is stored in userLog.ini. Private factory configured logs
+    configuration is stored in privateLog.ini.
+    The following subset of user log configuration can be changed using RPC calls:
+     - Adding/removing data columns
+     - Starting/stopping logging.
+     - Changing logging rate.
+
+    File History:
+    06-11-xx al   In progress
+    06-12-11 Al   Imported MeasData class instead of having duplicate definition.
+    06-12-18 Al   Added mailbox, filter enable and 24 folders
+    06-12-19 Al   Fixed bug in Write.  Was using CreateLogTime before first call to _Create
+    06-12-21 Al   Added 1. call to _CheckSize after writing to mailbox
+                        2. Truncation of entry.
+                        3. Fixed bug in _Create which caused the listener to crash,
+                          because sub directory name was changed before file was renamed.
+    06-12-21 Al   Added alarm status listener
+    06-12-22 Al   Changed mkdir to makedirs so whole directory path is created if it doesn't exist.
+    07-03-14 sze  Added DATALOGGER_getFilenameRpc to return log filename. Added
+                  DataLog.CopyToMailboxAndArchive which renames an Active file to an inactive one.
+                  Added RemoveEmptySubdirs to Directory class which removes empty directories when the
+                  DataLogger is started.
+    07-10-05 sze  Introduced BareTime configuration option to reduce number of time columns in output fie
+    07-10-05 sze  Allow data columns to change in the middle of a file (a new header is written). Data
+                  columns (after the time and alarm) are sorted.
+    08-09-18 alex Replaced SortedConfigParser with CustomConfigObj
+    08-09-26 alex Changed the function names in Directory and DataLog classes so only class-internal functions start with "_"
+    08-09-29 alex Moved file logging management to Archiver
+    10-01-19 alex Changed the way to copy data to mailbox and move data to archive. Since these
+                  2 threads are not synchronized, we should just make an additional local copy and
+                  simply move both of them to mailbox and archive location.
+    10-01-22 sze  Moved file accesses out of listeners and into handler threads so that the listeners do
+                  not become disconnected when the file system is busy.
+    10-03-15 sze  Allow datalog files to be written in HDF5 format by setting usehdf5 option to True (default
+                  is False). Create new file if data columns change and filter_enabled is False. If filter_enabled
+                  is True, the data file always contains the specified columns, and unfilled values get zero entries
+                  
+Copyright (c) 2010 Picarro, Inc. All rights reserved 
+"""
+
 ####
 ## Set constants for this file...
 ####
@@ -67,6 +76,7 @@ import struct #for converting numbers to byte format
 import shutil
 import traceback
 from inspect import isclass
+from tables import *
 
 from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster
 from Host.Common.SharedTypes import RPC_PORT_DATALOGGER, BROADCAST_PORT_DATA_MANAGER, RPC_PORT_INSTR_MANAGER, STATUS_PORT_ALARM_SYSTEM, RPC_PORT_ARCHIVER
@@ -135,6 +145,7 @@ class DataLog(object):
         self.SubDir = ""
         self.AlarmStatus = 0
         self.BareTime = False
+        self.useHdf5 = False
         self.oldDataList = []
         self.queue = Queue.Queue(0)
         self.handler = threading.Thread(target=self.qHandler)
@@ -142,6 +153,8 @@ class DataLog(object):
         self.handler.start()
         self.maxDuration = {}
         self.fp = None
+        self.table = None
+        self.lastFlush = 0
 
     def qHandler(self):
         while True:
@@ -176,6 +189,7 @@ class DataLog(object):
         self.SourceScript = ConfigParser.get(self.LogName, "sourcescript")
         self.Port = ConfigParser.getint(self.LogName, "port")
         self.BareTime = ConfigParser.getboolean(self.LogName, "baretime")
+        self.useHdf5 = ConfigParser.getboolean(self.LogName, "usehdf5", False)
         self.ArchiveGroupName = ConfigParser.get(self.LogName, "ArchiveGroupName")
         self.PrintTimeInHalfSecond = ConfigParser.getboolean(self.LogName, "printTimeInHalfSecond", False)
         self.WriteEpochTime = ConfigParser.getboolean(self.LogName, "writeEpochTime", True)
@@ -222,6 +236,9 @@ class DataLog(object):
         """Creates a new log file named with a header which contains all the tokens in the DataList."""
         # Deal with old file first
         if self.LogPath != "":
+            if self.table != None:
+                self.table.flush()
+                self.table = None
             self.fp.close()
             del self.maxDuration[self.LogPath]
             self._CopyToMailboxAndArchive(self.LogPath)
@@ -235,23 +252,26 @@ class DataLog(object):
         # Create name and path of new file
         self.CreateLogTime = time.time()    
         self.LogHour = time.localtime().tm_hour #used to determine when we reached midnight
-        self.Fname = "%s-%s-%s.dat" % (self.EngineName,
-                                  time.strftime("%Y%m%d-%H%M%S",time.localtime()),
-                                  self.LogName)
+        if self.useHdf5:
+            self.Fname = "%s-%s-%s.h5" % (self.EngineName,
+                                      time.strftime("%Y%m%d-%H%M%S",time.localtime()),
+                                      self.LogName)
+            self.LogPath = os.path.join(dirName, self.Fname)
+            self.fp = openFile(self.LogPath,"w")
+            self._MakeTable(DataList)
+        else:
+            self.Fname = "%s-%s-%s.dat" % (self.EngineName,
+                                      time.strftime("%Y%m%d-%H%M%S",time.localtime()),
+                                      self.LogName)
+            self.LogPath = os.path.join(dirName, self.Fname)
+            # create file and write header
+            self.fp = file(self.LogPath, "w")
+            self._WriteHeader(DataList)
 
-        self.LogPath = os.path.join(dirName, self.Fname)
         Log("A new log file (%s) created at %s" % (self.LogPath, time.strftime("%Y%m%d-%H%M%S",time.localtime())))    
-        # create file and write header
-        self.fp = file(self.LogPath, "w")
-        self.lastFlush = TimeStamp()
-        self._WriteHeader(DataList)
-
+        
     def _WriteEntry(self, string):
         self.fp.write((string[:self.COLUMN_WIDTH-1]).ljust(self.COLUMN_WIDTH))
-        now = TimeStamp()
-        if now-self.lastFlush > 10:
-            self.fp.flush()
-            self.lastFlush = now
         
     def _WriteHeader(self,DataList):
         if not self.BareTime:
@@ -271,20 +291,33 @@ class DataLog(object):
         self.fp.write("\n")
         self.DecimationCount = 0
 
+    def _MakeTable(self,DataList):
+        """Construct the HDF5 table from the entries in DataList"""
+        filters = Filters(complevel=1,fletcher32=True)
+        tableDict = { "DATE_TIME":Time64Col() }
+        if not self.BareTime:
+            tableDict["FRAC_DAYS_SINCE_JAN1"] = Float32Col()
+            tableDict["FRAC_HRS_SINCE_JAN1"]  = Float32Col()
+        tableDict["ALARM_STATUS"]  = Float32Col()
+        for dataName in DataList:
+            tableDict[dataName] = Float32Col()
+        self.DecimationCount = 0
+        self.table = self.fp.createTable(self.fp.root,"results",tableDict,filters=filters)
+    
     def _MakeListFromDict(self, DataDict):
         DataList = []
         dataKeys = sorted(DataDict.keys())
         if self.FilterEnabled:
             for data in self.EnabledDataList:
-                if data in dataKeys:
-                    DataList.append(data)
+                DataList.append(data)
         else:
             for data in dataKeys:
                 DataList.append(data)
         return DataList
 
+    
     def _Write(self, Time, DataDict, alarmStatus):
-        """Writes a string representation of the provided DataList to disk."""
+        """Writes a representation of the provided data to disk, either in text or H5 mode"""
 
         localtime = time.localtime(Time)
 
@@ -325,47 +358,64 @@ class DataLog(object):
             Jan1SecondsSinceEpoch = time.mktime( timeTuple )
 
             if DataList != self.oldDataList:
-                print >>self.fp, "### Data columns have changed ###"
-                self._WriteHeader(DataList)
+                # Start a new file since data columns have changed
+                self._Create(DataList)
                 self.oldDataList = DataList
 
-            if not self.BareTime:
-                #write DATE
-                self._WriteEntry(time.strftime("%Y-%m-%d",localtime))
-                #write TIME
-                timeStr = time.strftime("%H:%M:%S",localtime)
-                fracSec = Time - int(Time)
-                if self.PrintTimeInHalfSecond:
-                    if fracSec >= 0.5:
-                        timeStr += ".50"
+            if self.useHdf5:
+                row = self.table.row
+                row["DATE_TIME"] = Time
+                if not self.BareTime:
+                    days = (Time-Jan1SecondsSinceEpoch)/TWENTY_FOUR_HOURS_IN_SECONDS
+                    row["FRAC_DAYS_SINCE_JAN1"] = days
+                    hrs = (Time-Jan1SecondsSinceEpoch)/ONE_HOUR_IN_SECONDS
+                    row["FRAC_HRS_SINCE_JAN1"]  = hrs
+                row["ALARM_STATUS"] = alarmStatus
+                for data in DataList:
+                    row[data] = DataDict.get(data,0.0)
+                row.append()
+                now = TimeStamp()
+                if now-self.lastFlush > 10:
+                    self.table.flush()
+                    self.lastFlush = now
+            else:
+                if not self.BareTime:
+                    #write DATE
+                    self._WriteEntry(time.strftime("%Y-%m-%d",localtime))
+                    #write TIME
+                    timeStr = time.strftime("%H:%M:%S",localtime)
+                    fracSec = Time - int(Time)
+                    if self.PrintTimeInHalfSecond:
+                        if fracSec >= 0.5:
+                            timeStr += ".50"
+                        else:
+                            timeStr += ".00"
                     else:
-                        timeStr += ".00"
-                else:
-                    timeStr += (".%02d" % int(100*fracSec))
-                self._WriteEntry(timeStr)
-                #write FRAC_DAYS_SINCE_JAN1
-                days = (Time-Jan1SecondsSinceEpoch)/TWENTY_FOUR_HOURS_IN_SECONDS
-                self._WriteEntry("%.8f" %days)
-                #write FRAC_HRS_SINCE_JAN1
-                hrs = (Time-Jan1SecondsSinceEpoch)/ONE_HOUR_IN_SECONDS
-                self._WriteEntry("%.6f" %hrs)
-
-            #write EPOCH_TIME if enabled
-            if self.WriteEpochTime:
-                self._WriteEntry("%.2f" %Time)
+                        timeStr += (".%02d" % int(100*fracSec))
+                    self._WriteEntry(timeStr)
+                    #write FRAC_DAYS_SINCE_JAN1
+                    days = (Time-Jan1SecondsSinceEpoch)/TWENTY_FOUR_HOURS_IN_SECONDS
+                    self._WriteEntry("%.8f" %days)
+                    #write FRAC_HRS_SINCE_JAN1
+                    hrs = (Time-Jan1SecondsSinceEpoch)/ONE_HOUR_IN_SECONDS
+                    self._WriteEntry("%.6f" %hrs)
+    
+                #write EPOCH_TIME if enabled
+                if self.WriteEpochTime:
+                    self._WriteEntry("%.2f" %Time)
+                    
+                #write ALARM_STATE
+                self._WriteEntry("%d" %alarmStatus)
+    
+                for data in DataList:
+                    self._WriteEntry("%.10E" % DataDict.get(data,0.0))
+    
+                self.fp.write("\n")
+                now = TimeStamp()
+                if now-self.lastFlush > 10:
+                    self.fp.flush()
+                    self.lastFlush = now
                 
-            #write ALARM_STATE
-            self._WriteEntry("%d" %alarmStatus)
-
-            for data in DataList:
-                value = DataDict[data]
-                if self.FilterEnabled:
-                    if data in self.EnabledDataList:
-                        self._WriteEntry("%.10E" %value)
-                else:
-                    self._WriteEntry("%.10E" %value)
-
-            self.fp.write("\n")
 
 ####
 ## Classes...

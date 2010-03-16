@@ -204,11 +204,12 @@ class DummySampleManager(object):
     def Prepare(self):
         Log("Running with Dummy Sample Manager - prepare skipped", Level = 0)
     def FlowPumpDisable(self):
-        Log("RRunning with Dummy Sample Manager - flow pump disable skipped", Level = 0)
+        Log("Running with Dummy Sample Manager - flow pump disable skipped", Level = 0)
     def Park(self):
         Log("Running with Dummy Sample Manager - park skipped", Level = 0)
     def GetStatus(self):
-        Log("Running with Dummy Sample Manager - always returns pressure stable status", Level = 0)
+        pass
+        # Log("Running with Dummy Sample Manager - always returns pressure stable status", Level = 0)
         return SAMPLEMGR_STATUS_STABLE | SAMPLEMGR_STATUS_FLOWING
         #if abs(self.DriverRpc.rdDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER")-self.inletTarget) < 1 and abs(self.DriverRpc.getPressureReading()-self.pressureTarget) < 1:
         #    return SAMPLEMGR_STATUS_STABLE | SAMPLEMGR_STATUS_FLOWING
