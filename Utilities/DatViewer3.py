@@ -27,6 +27,53 @@ from traceback import format_exc
 from configobj import ConfigObj
 import datetime
 
+def sortByName(top,nameList):
+    nameList.sort()
+    return nameList
+
+def sortByMtime(top,nameList):
+    """Sort a list of files by modification time"""
+    # Decorate with the modification time of the file for sorting
+    fileList = [(os.path.getmtime(os.path.join(top,name)),name) for name in nameList]
+    fileList.sort()
+    return [name for t,name in fileList]
+    
+def walkTree(top,onError=None,sortDir=None,sortFiles=None):
+    """Generator which traverses a directory tree rooted at "top" in bottom to top order (i.e., the children are visited
+    before the parent, and directories are visited before files.) The order of directory traversal is determined by
+    "sortDir" and the order of file traversal is determined by "sortFiles". If "onError" is defined, exceptions during
+    directory listings are passed to this function. When the function yields a result, it is either the pair
+    ('file',fileName)  or ('dir',directoryName)"""
+    try:
+        names = os.listdir(top)
+    except OSError, err:
+        if onError is not None:
+            onError(err)
+        return
+    # Obtain lists of directories and files which are not links
+    dirs, nondirs = [], []
+    for name in names:
+        fullName = os.path.join(top,name)
+        if not os.path.islink(fullName):
+            if os.path.isdir(fullName):
+                dirs.append(name)
+            else:
+                nondirs.append(name)
+    # Sort the directories and nondirectories (in-place)
+    if sortDir is not None:
+        dirs = sortDir(top,dirs)
+    if sortFiles is not None:
+        nondirs = sortFiles(top,nondirs)
+    # Recursively call walkTree on directories
+    for dir in dirs:
+        for x in walkTree(os.path.join(top,dir),onError,sortDir,sortFiles):
+            yield x
+    # Yield up files
+    for file in nondirs:
+        yield 'file', os.path.join(top,file)
+    # Yield up the current directory
+    yield 'dir', top
+
 ORIGIN = datetime.datetime(datetime.MINYEAR,1,1,0,0,0,0)
 UNIXORIGIN = datetime.datetime(1970,1,1,0,0,0,0)
 
@@ -88,7 +135,8 @@ class Plot2D(HasTraits):
     sharey = Instance(matplotlib.axes.Axes)
     traits_view = View(Item("plot2dFigure",editor=MPLFigureEditor(),show_label=False),width=700,height=600,resizable=True)
     lock = Instance(threading.RLock,())
-
+    autoscaleOnUpdate = CBool(False)
+    
     def plotData(self,*a,**k):
         self.lock.acquire()
         self.plot2dFigure.clf()
@@ -147,18 +195,7 @@ class Plot2D(HasTraits):
     def updateData(self,handle,newX,newY,linkedPlots=None):
         self.lock.acquire()
         handle.set_data(newX,newY)
-        autoscale = True
-        try:
-            autoscale &= self.figureInteraction.autoscale.values()[0]
-        except:
-            pass
-        if linkedPlots:
-            for p in linkedPlots:
-                try:
-                    autoscale &= p.figureInteraction.autoscale.values()[0]
-                except:
-                    pass
-        if autoscale:
+        if self.autoscaleOnUpdate:
             self.autoscale()
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
             self.plot2dFigure.canvas.draw()
@@ -174,18 +211,7 @@ class Plot2D(HasTraits):
         else:
             tbase = []
         handle.set_data(tbase,newY)
-        autoscale = True
-        try:
-            autoscale &= self.figureInteraction.autoscale.values()[0]
-        except:
-            pass
-        if linkedPlots:
-            for p in linkedPlots:
-                try:
-                    autoscale &= p.figureInteraction.autoscale.values()[0]
-                except:
-                    pass
-        if autoscale:
+        if self.autoscaleOnUpdate:
             self.autoscale()
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
             self.plot2dFigure.canvas.draw()
@@ -268,7 +294,8 @@ class DatViewer(HasTraits):
     mean = CFloat
     stdDev = CFloat
     parent = Instance(object)
-
+    nLines = CInt(3)
+    
     traits_view = View(
         Group(
             Item("plot",style="custom",show_label=False),
@@ -278,7 +305,7 @@ class DatViewer(HasTraits):
 
     def __init__(self,*a,**k):
         HasTraits.__init__(self,*a,**k)
-        self.dataHandle = self.plot.plotTimeSeries([],[],'-',tz=k.get("tz",pytz.timezone("UTC")))[0]
+        self.dataHandles = self.plot.plotTimeSeries([],zeros((0,self.nLines)),'-',tz=k.get("tz",pytz.timezone("UTC")))
         self.ip = None
         self.plot.axes.callbacks.connect("xlim_changed",self.notify)
         self.xlim = None
@@ -288,17 +315,24 @@ class DatViewer(HasTraits):
 
     def notify(self,ax):
         self.xLim = ax.get_xlim()
-        self.xData, self.yData = self.dataHandle.get_data()
+        self.xData = [h.get_xdata() for h in self.dataHandles]
+        self.yData = [h.get_ydata() for h in self.dataHandles]
         if self.autoscaleY:
-            self.sel = (self.xData>=self.xLim[0]) & (self.xData<=self.xLim[1])
-            if any(self.sel):
-                ax.set_ylim((min(self.yData[self.sel]),max(self.yData[self.sel])))
+            ymin,ymax = None,None
+            for xv,yv in zip(self.xData,self.yData):
+                self.sel = (xv>=self.xLim[0]) & (xv<=self.xLim[1])
+                if any(self.sel):
+                    ymin = min(ymin,min(yv[self.sel])) if ymin!=None else min(yv[self.sel])
+                    ymax = max(ymax,max(yv[self.sel])) if ymax!=None else max(yv[self.sel])
+            if ymin!=None and ymax!=None:
+                ax.set_ylim(ymin,ymax)
         self.yLim = ax.get_ylim()
-        self.sel = (self.xData>=self.xLim[0]) & (self.xData<=self.xLim[1])
-        boxsel = self.sel & (self.yData>=self.yLim[0]) & (self.yData<=self.yLim[1])
+        # For means and standard deviations, use the first time series only
+        self.sel = (self.xData[0]>=self.xLim[0]) & (self.xData[0]<=self.xLim[1])
+        boxsel = self.sel & (self.yData[0]>=self.yLim[0]) & (self.yData[0]<=self.yLim[1])
         if any(boxsel):
-            self.mean = mean(self.yData[boxsel])
-            self.stdDev = std(self.yData[boxsel])
+            self.mean = mean(self.yData[0][boxsel])
+            self.stdDev = std(self.yData[0][boxsel])
         if self.parent.listening:
             wx.CallAfter(self.parent.notify,self,self.xLim,self.yLim)
 
@@ -327,22 +361,35 @@ class DatViewer(HasTraits):
         self.varName = ""
 
     def _varName_changed(self):
+        self.plot.autoscaleOnUpdate = not self.parent.xlimSet
+        for h in self.dataHandles:
+            self.plot.updateTimeSeries(h,[],[])
         try:
             if not self.varName:
-                self.plot.updateTimeSeries(self.dataHandle,[],[])
                 self.mean = 0.0
                 self.stdDev = 0.0
             else:
                 try:
                     dateTime = self.table.col("DATE_TIME")
                 except:
-                    dateTime = array([unixTime(int(t)) for t in self.table.col("timestamp")])
+                    try:
+                        dateTime = array([unixTime(int(t)) for t in self.table.col("timestamp")])
+                    except:
+                        dateTime = array([unixTime(int(t)) for t in self.table.col("time")])
                     
                 values = self.table.col(self.varName)
-                self.plot.updateTimeSeries(self.dataHandle,dateTime,values)
+                p = argsort(dateTime)
+                if values.ndim > 1:
+                    for i in range(values.shape[1]):
+                        self.plot.updateTimeSeries(self.dataHandles[i],dateTime[p],[v[i] for v in values[p]])
+                else:
+                    self.plot.updateTimeSeries(self.dataHandles[0],dateTime[p],values[p])
+            self.autoscaleY = True
+            self.notify(self.plot.axes)        
         except Exception, e:
             d = wx.MessageDialog(None,"%s" % e,"Error while displaying", style=wx.OK|wx.ICON_ERROR)
             d.ShowModal()
+        self.parent.xlimSet = True
         
     def  _autoscaleY_changed(self):
         if self.autoscaleY:
@@ -371,13 +418,14 @@ class Dat2h5(HasTraits):
             root,ext = os.path.splitext(self.datFileName)
             self.h5FileName = ".".join([root,"h5"])
             d = wx.ProgressDialog("Convert DAT file to H5 format","Converting %s" % (os.path.split(self.datFileName)[-1],), 
-                style=wx.PD_APP_MODAL)
+                style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE)
             h5f = openFile(self.h5FileName,"w")
             filters = Filters(complevel=1,fletcher32=True)
             headings = []
             table = None
             for i,line in enumerate(fp):
                 atoms = self.fixed_width(line,26)
+                if len(atoms) < 2: break
                 if not headings:
                     headings = [a.replace(" ","_") for a in atoms]
                     colDict = { "DATE_TIME":Time64Col() }
@@ -435,7 +483,8 @@ class SeriesWindow(Window):
     height  = CInt(768)
     resizable = CBool(True)
     parent = Any()
-
+    xlimSet = CBool(False)
+    
     def __init__(self,*a,**k):
         Window.__init__(self,*a,**k)
         self.tz = k.get("tz",pytz.timezone("UTC"))
@@ -490,6 +539,7 @@ class CorrelationWindow(Window):
     resizable = CBool(True)
     parent = Instance(object)
     correlate = Button
+    xlimSet = CBool(False)
 
     def __init__(self,*a,**k):
         Window.__init__(self,*a,**k)
@@ -535,9 +585,9 @@ class CorrelationWindow(Window):
         xV = self.viewers[0]
         yV = self.viewers[1]
         try:
-            if not (len(xV.yData[xV.sel])>0 and len(yV.yData[yV.sel])>0):
+            if not (len(xV.yData[0][xV.sel])>0 and len(yV.yData[0][yV.sel])>0):
                 raise ValueError
-            viewer.set(xArray=xV.yData[xV.sel],yArray=yV.yData[yV.sel],
+            viewer.set(xArray=xV.yData[0][xV.sel],yArray=yV.yData[0][yV.sel],
                        xLabel=xV.varName,yLabel=yV.varName,
                        xMin=xV.yLim[0],xMax=xV.yLim[1],yMin=yV.yLim[0],yMax=yV.yLim[1])
             viewer.update()
@@ -546,15 +596,73 @@ class CorrelationWindow(Window):
         except Exception,e:
             wx.MessageBox("No data for correlation plot within window" )
             raise
-            return
-        
-    
+                
 class NotebookHandler(Handler):
+    datDirName = CStr
     def onOpen(self,info):
         d = wx.FileDialog(None,"Open HDF5 file",style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,wildcard="h5 files (*.h5)|*.h5")
         if d.ShowModal() == wx.ID_OK:
             info.object.dataFile = d.GetPath()
             info.ui.title = "Viewing [" + info.object.dataFile + "]"
+        d.Destroy()
+        
+    def onConcatenate(self,info):
+        fname = time.strftime("DatViewer_%Y%m%d_%H%M%S.h5",time.localtime())
+        fd = wx.FileDialog(None,"Output file",style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR,defaultFile=fname,wildcard="h5 files (*.h5)|*.h5")
+        if fd.ShowModal() == wx.ID_OK:
+            fname = fd.GetPath()
+            if not self.datDirName:
+                self.datDirName = os.path.split(fname)[0]
+            try:
+                op = openFile(fname,"w")
+            except:
+                wx.MessageBox("Cannot open %s. File may be in use." % fname)
+                return
+            try:
+                d = wx.DirDialog(None,"Select directory tree with individual .h5 files",style=wx.DD_DEFAULT_STYLE,defaultPath=self.datDirName)
+                if d.ShowModal() == wx.ID_OK:
+                    path = d.GetPath()
+                    self.datDirName = path
+                    progress = 0
+                    allData = []
+                    for what,name in walkTree(path,sortDir=sortByName,sortFiles=sortByName):
+                        if what == "file" and os.path.splitext(name)[1]==".h5":
+                            if not progress:
+                                pd = wx.ProgressDialog("Concatenating files","%s" % os.path.split(name)[1],style=wx.PD_APP_MODAL)
+                            ip = openFile(name[:-3]+".h5","r")
+                            try:
+                                allData.append(ip.root.results.read())
+                            finally:
+                                ip.close()
+                            pd.Pulse("%s" % os.path.split(name)[1])
+                            progress += 1
+                    pd.Pulse("Writing output file")
+                    # Concatenate everything together and sort by time of data
+                    allData = concatenate(allData)
+                    perm = argsort(allData['DATE_TIME'])
+                    allData = allData[perm]
+                    # Write output file
+                    filters = Filters(complevel=1,fletcher32=True)
+                    table = op.createTable(op.root,"results",allData,filters=filters)
+                    table.flush()
+                    info.object.dataFile = fname
+                    info.ui.title = "Viewing [" + info.object.dataFile + "]"
+                    pd.Update(100,newmsg = "Done. Close box to view results")
+            finally:
+                op.close()
+        
+    def onBatchConvert(self,info):    
+        d = wx.DirDialog(None,"Open directory with .dat files",style=wx.DD_DEFAULT_STYLE)
+        if d.ShowModal() == wx.ID_OK:
+            path = d.GetPath()
+            progress = 0
+            for what,name in walkTree(path,sortDir=sortByName,sortFiles=sortByName):
+                if what == "file" and os.path.splitext(name)[1]==".dat":
+                    c = Dat2h5(datFileName = name)
+                    try:
+                        c.convert()
+                    except Exception,e:
+                        print "Error converting %s: %s" % (name,e)
         d.Destroy()
         
     def onConvert(self,info):
@@ -622,8 +730,10 @@ class ViewNotebook(HasTraits):
         self.tz = pytz.timezone(self.tzString)
         self.uiSet = set()
 
-        openAction = Action(name="Open...",action="onOpen")
-        convertAction = Action(name="Convert...",action="onConvert")
+        openAction = Action(name="Open H5...",action="onOpen")
+        concatenateAction = Action(name="Concatenate H5...",action="onConcatenate")
+        convertAction = Action(name="Convert DAT...",action="onConvert")
+        batchConvertAction = Action(name="BatchConvert DAT...",action="onBatchConvert")
         exitAction = Action(name="Exit",action="onExit")
         series1Action = Action(name="1 frame",action="onSeries1")
         series2Action = Action(name="2 frames",action="onSeries2")
@@ -631,7 +741,7 @@ class ViewNotebook(HasTraits):
         xyViewAction = Action(name="Correlation Plot",action="onCorrelation")
         self.traits_view = View(Item("dataFile",style="readonly",show_label=False),
                                     buttons=NoButtons,title="HDF5 File Viewer",
-                                    menubar=MenuBar(Menu(openAction,convertAction,exitAction,name='File'),
+                                    menubar=MenuBar(Menu(openAction,concatenateAction,convertAction,batchConvertAction,exitAction,name='File'),
                                                     Menu(Menu(series1Action,series2Action,series3Action,
                                                     name="Time Series Plot"),xyViewAction,name='New')),
                                     handler=NotebookHandler(),width=800,resizable=True)
