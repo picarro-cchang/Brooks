@@ -1,16 +1,13 @@
-# SpectrumCollector.py
-#
-# DESCRIPTION:
-#   Collects spectrum and related information to save in HDF5 files. Spectrum will be stored in a queue if specified.
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   12-Oct-2009  alex  Initial version.
-#   05-Feb-2010  sze   Removed relative timestamps, make HDF5 files contain data corresponding to a scheme file.
-#
-#  Copyright (c) 2009 Picarro, Inc. All rights reserved
+"""
+File Name: SpectrumCollector.py
+Purpose: Collects spectrum and related information to save in HDF5 files. Spectrum will be stored in a queue if specified.
+
+File History:
+    12-Oct-2009  alex  Initial version.
+    05-Feb-2010  sze   Removed relative timestamps, make HDF5 files contain data corresponding to a scheme file.
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = "SpectrumCollector"
 

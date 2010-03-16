@@ -1,9 +1,12 @@
-# File Name: SerialInterface.py
-#
-# Purpose: Handles serial/rs232 interface communication.
-#
-# File History:
-# 06-11-16 ytsai   Created file
+"""
+File Name: SerialInterface.py
+Purpose: Handles serial/rs232 interface communication.
+
+File History:
+    06-11-16 ytsai   Created file
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 import time
 import serial

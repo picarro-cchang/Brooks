@@ -1,20 +1,14 @@
-#
-# FILE:  
-#   Coordinator.py
-#
-# DESCRIPTION:                                                
-#   Coordinator program for autosampler, evaporator and CRDS analyzer
-#                                                             
-# SEE ALSO:                                             
-#   Specify any related information.                   
-#                                                             
-# HISTORY:
-#   08-06-02  sze  Initial version.
-#   08-12-04  alex Used CustomConfigObj to replace configobj. Monitored coordinator using Supervisor.
-#   09-01-30  alex moved the output file to ..\..\Log\PulseAnalyzerResults directory instead of the supervisor directory
-#
-#  Copyright (c) 2009 Picarro, Inc. All rights reserved 
-#               
+"""
+File Name: Coordinator.py
+Purpose: Coordinator program for autosampler, evaporator and CRDS analyzer
+                                                            
+File History:
+    08-06-02  sze  Initial version.
+    08-12-04  alex Used CustomConfigObj to replace configobj. Monitored coordinator using Supervisor.
+    09-01-30  alex moved the output file to ..\..\Log\PulseAnalyzerResults directory instead of the supervisor directory
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved 
+"""             
 
 APP_NAME = "Coordinator"
 APP_DESCRIPTION = "Coordinator program for autosampler, evaporator and CRDS analyzer"

@@ -1,23 +1,23 @@
 #!/usr/bin/python
 #
-# File Name: Archiver.py
-# Purpose:
-#   This application handles the storage (and retrieval) of files that should
-#   be archived.  It manages the space to make sure the storage limits are
-#   are not exceeded.
-#
-# Notes:
-#
-# ToDo:
-#
-# File History:
-# 07-01-05 sze   First release
-# 07-01-10 sze   Added comments, return number of files extracted
-# 07-02-01 sze   Add Directory key to allow a group to be stored in an arbitrary location
-# 07-08-22 sze   Wrap binary data for archival
-# 08-09-18  alex  Replaced SortedConfigParser with CustomConfigObj
-# 08-09-30  alex Added level 0 as the "Quantum" option. Also enabled Archiver to store and manage data for DataLogger.
-# 09-07-03  alex  Provide an option to construct the storage paths using local time (generally GMT is used)
+"""
+File Name: Archiver.py
+Purpose:
+    This application handles the storage (and retrieval) of files that should
+    be archived.  It manages the space to make sure the storage limits are
+    are not exceeded.
+
+File History:
+    07-01-05 sze   First release
+    07-01-10 sze   Added comments, return number of files extracted
+    07-02-01 sze   Add Directory key to allow a group to be stored in an arbitrary location
+    07-08-22 sze   Wrap binary data for archival
+    08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
+    08-09-30 alex  Added level 0 as the "Quantum" option. Also enabled Archiver to store and manage data for DataLogger.
+    09-07-03 alex  Provide an option to construct the storage paths using local time (generally GMT is used)
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = "Archiver"
 __version__ = 1.0

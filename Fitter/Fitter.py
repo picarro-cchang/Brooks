@@ -1,22 +1,23 @@
 #!/usr/bin/python
 #
-# File Name: fitter.py
-# Purpose:
-#  Starts the fitterThread and allows intermediate and final outputs to be viewed and plotted for
-#   diagnosis and debugging of fitter scripts
-# Notes:
-#
-# ToDo:
-#
-# File History:
-# 07-02-xx sze In progress
-# 07-05-07 sze Modifications to allow a list of analyses to be passed back from the fit script
-# 07-05-08 sze Renamed fitter to fitterThread and fitViewer to fitter
-# 07-09-26 sze Added handling of pickled files
-# 07-09-26 sze Added RPCport configuration option to allow multiple fitters in a pool
-# 08-09-18  alex  Replaced SortedConfigParser with CustomConfigObj
-# 08-10-13  alex  Replaced TCP by RPC (FITTER_STATE_TCP --> FITTER_STATE_PROC)
-# 09-06-30 alex  Support HDF5 format for spectra data
+"""
+File Name: fitter.py
+Purpose:
+    Starts the fitterThread and allows intermediate and final outputs to be viewed and plotted for
+    diagnosis and debugging of fitter scripts
+
+File History:
+    07-02-xx sze   In progress
+    07-05-07 sze   Modifications to allow a list of analyses to be passed back from the fit script
+    07-05-08 sze   Renamed fitter to fitterThread and fitViewer to fitter
+    07-09-26 sze   Added handling of pickled files
+    07-09-26 sze   Added RPCport configuration option to allow multiple fitters in a pool
+    08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
+    08-10-13 alex  Replaced TCP by RPC (FITTER_STATE_TCP --> FITTER_STATE_PROC)
+    09-06-30 alex  Support HDF5 format for spectra data
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = "Fitter"
 __version__ = 1.0

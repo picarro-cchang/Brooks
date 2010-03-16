@@ -1,28 +1,30 @@
 #!/usr/bin/python
 #
-# File Name: QuickGui.py
-# Purpose: Simple GUI for plotting measurement system and data manager broadcasts
-#
-# Notes:
-#
-# File History:
-# 07-02-01 sze   Created first release
-# 07-05-22 sze   Improved handling of ini file
-# 08-01-07 sze   DisplayFilters which have blank select fields will select all
-#                 points. Invalid selections are logged, but will again select
-#                 all points
-# 08-03-01 sze   Add matching to substitution database handler to allow sources 
-#                 and keys to be matched for StandardModeSources and StandardModeKeys
-#                 in the INI file
-# 08-03-07 sze   Corrected bad first point when a new data key is added to a pre-existing source
-# 08-03-07 sze   Change handling of [Default] section in INI file to allow multiple default 
-#                 source-key pairs.
-# 08-09-18  alex  Replaced ConfigParser with CustomConfigObj
-# 09-07-10  alex  Support multiple panels to display user-selectable measurements. Also support time-axis locking function.
-# 09-07-28  alex  Add pulse analyzer GUI
-# 09-07-29  alex  Create default view (auto-scaled in y-axis) in zoomed mode whenever data keys are switched while keeping x-axis unchanged.
-# 09-08-05  alex  Improve time-locking without a master plot
-# 10-01-22  sze   Changed date format display to ISO standard
+"""
+File Name: QuickGui.py
+Purpose: Simple GUI for plotting measurement system and data manager broadcasts
+
+File History:
+    07-02-01 sze   Created first release
+    07-05-22 sze   Improved handling of ini file
+    08-01-07 sze   DisplayFilters which have blank select fields will select all
+                   points. Invalid selections are logged, but will again select
+                   all points
+    08-03-01 sze   Add matching to substitution database handler to allow sources 
+                   and keys to be matched for StandardModeSources and StandardModeKeys
+                   in the INI file
+    08-03-07 sze   Corrected bad first point when a new data key is added to a pre-existing source
+    08-03-07 sze   Change handling of [Default] section in INI file to allow multiple default 
+                   source-key pairs.
+    08-09-18  alex Replaced ConfigParser with CustomConfigObj
+    09-07-10  alex Support multiple panels to display user-selectable measurements. Also support time-axis locking function.
+    09-07-28  alex Add pulse analyzer GUI
+    09-07-29  alex Create default view (auto-scaled in y-axis) in zoomed mode whenever data keys are switched while keeping x-axis unchanged.
+    09-08-05  alex Improve time-locking without a master plot
+    10-01-22  sze  Changed date format display to ISO standard
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = "QuickGui"
 __version__ = 1.0

@@ -1,19 +1,14 @@
 #!/usr/bin/python
 #
-# FILE:
-#   Controller.py
-#
-# DESCRIPTION:
-#   Top level frame for the controller application
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   07-Apr-2009  sze  Initial version.
-#
-#  Copyright (c) 2009 Picarro, Inc. All rights reserved
-#
+"""
+File Name: Controller.py
+Purpose: Top level frame for the controller application
+
+File History:
+    07-Apr-2009  sze  Initial version.
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = "Controller"
 

@@ -1,40 +1,39 @@
 #!/usr/bin/python
 #
-# File Name: MeasSystem.py
-# Purpose:
-#   This application is the "top level" measurement system.  All gas measurements
-#   should be handled by this app.
-#
-#   When completed, this app should be the source for all gas measurements
-#   (broadcasted as a stream to anyone who will listen, like the GUI, the
-#   electrical interface, and the front panel).
-#
-# Notes:
-#
-# ToDo:
-#
-# File History:
-# 06-09-13 russ  First release
-# 06-09-15 russ  skip-fitting cmdline; cleaned up app shutdown; SpectrumTimeout_s in INI file
-# 06-12-11 Al    Added INSTMGR_reportErrorRpc call when entering error state.
-# 06-12-13 Al    Moved INSTMGR_reportErrorRpc call further down.
-# 06-12-18 Al    Changed INSTMGR rpc to don't care.
-# 06-12-19 russ  Integration with full HostCore (eg: InstMgr); Debug config settings; Removed
-#                stabilizing state; SetWlmOffset and polar cal support; misc changes
-# 06-12-20 russ  Fixed RPC_Mode_Set
-# 06-12-21 russ  Parameterized RingdownTimeout_s (in ini file now)
-# 07-01-26 sze   Added CalUpdatePeriod_s in ini file for updating active warm box calibration data
-#                        Added GetWlmOffset RPC call, made it and SetWlmOffset compatible with polar and legacy systems
-# 07-08-22 sze   Send binary data to archiver in wrapped format
-# 07-09-26 sze   Support multiple fitter processes in a pool. Configuration keys FitterAddr0, FitterPort0, etc. are used
-#                 to specify where the fitters are listening for data from the measurement system.
-# 07-10-23 sze   When a mode change takes place, _SetupMeasMode() is called, which asks the instrument manager to make
-#                 any required changes to the instrument mode
-# 08-09-18  alex  Replaced SortedConfigParser with CustomConfigObj
-# 08-10-13  alex  Replaced TCP in FitterPool by RPC
-# 08-10-20  alex  Closed all client connection (_HandleState_INIT) before restarting the broadcaster in SpectrumManager
-# 09-06-25  alex  Only "ArchiveFile", no more "ArchiveData" for spectrum data
-# 09-10-16  alex  Work with new structure of cost-reduction platform
+"""
+File Name: MeasSystem.py
+Purpose:
+    This application is the "top level" measurement system.  All gas measurements
+    should be handled by this app.
+    When completed, this app should be the source for all gas measurements
+    (broadcasted as a stream to anyone who will listen, like the GUI, the
+    electrical interface, and the front panel).
+
+File History:
+    06-09-13 russ  First release
+    06-09-15 russ  skip-fitting cmdline; cleaned up app shutdown; SpectrumTimeout_s in INI file
+    06-12-11 Al    Added INSTMGR_reportErrorRpc call when entering error state.
+    06-12-13 Al    Moved INSTMGR_reportErrorRpc call further down.
+    06-12-18 Al    Changed INSTMGR rpc to don't care.
+    06-12-19 russ  Integration with full HostCore (eg: InstMgr); Debug config settings; Removed
+                   stabilizing state; SetWlmOffset and polar cal support; misc changes
+    06-12-20 russ  Fixed RPC_Mode_Set
+    06-12-21 russ  Parameterized RingdownTimeout_s (in ini file now)
+    07-01-26 sze   Added CalUpdatePeriod_s in ini file for updating active warm box calibration data
+                   Added GetWlmOffset RPC call, made it and SetWlmOffset compatible with polar and legacy systems
+    07-08-22 sze   Send binary data to archiver in wrapped format
+    07-09-26 sze   Support multiple fitter processes in a pool. Configuration keys FitterAddr0, FitterPort0, etc. are used
+                   to specify where the fitters are listening for data from the measurement system.
+    07-10-23 sze   When a mode change takes place, _SetupMeasMode() is called, which asks the instrument manager to make
+                   any required changes to the instrument mode
+    08-09-18  alex Replaced SortedConfigParser with CustomConfigObj
+    08-10-13  alex Replaced TCP in FitterPool by RPC
+    08-10-20  alex Closed all client connection (_HandleState_INIT) before restarting the broadcaster in SpectrumManager
+    09-06-25  alex Only "ArchiveFile", no more "ArchiveData" for spectrum data
+    09-10-16  alex Work with new structure of cost-reduction platform
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 if __name__ != "__main__":
     raise Exception("%s is not importable!" % __file__)

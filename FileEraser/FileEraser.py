@@ -1,28 +1,37 @@
 #!/usr/bin/python
 #
-# File Name: FileEraser.py
-# Purpose: To erase obsolete files in specified directories, if they have the specified extensions and are older than a specific time
-# 
-# 08-09-29  alex  Created
-# 09-02-25  alex  Only remove empty directories if they are older than specified time (in case we want to keep some empty directories for future file storage)
 """
-This application removes old files and empty directories periodically with configurable time interval.
-It can be supervised by Supervisor just like other applications. Below is an example .ini file:
+File Name: FileEraser.py
+Purpose: 
+    To erase obsolete files in specified directories, if they have the 
+    specified extensions and are older than a specific time
 
-[MAIN]
-runtime_interval_hrs = 10 # The time interval between each run of this application 
-                          # (i.e. it will sleep for 10 hours before it removes old files again)
+File History:
+    08-09-29  alex  Created
+    09-02-25  alex  Only remove empty directories if they are older than specified time (in case we want to keep some empty directories for future file storage)
 
-[DIR1]
-path = ../../../Log/Archive/DataLog_Private # The target directory that contains log files
-extension = dat, txt # Any file with the listed extensions will be monitored and erased when it gets too old. 
-                     # If this is blank then any file will be monitored.
-delete_time_hrs = 24 # Any monitored file older than the specified hours will be removed.
+Notes:
+    In general this application is only used in Gen 1 platform (Python + LabVIEW).
 
-[DIR2]
-path = ../../../Log/Archive/DataLog_RemotePublic
-extension =
-delete_time_hrs = 16
+    This application removes old files and empty directories periodically with configurable time interval.
+    It can be supervised by Supervisor just like other applications. Below is an example .ini file:
+
+    [MAIN]
+    runtime_interval_hrs = 10 The time interval between each run of this application 
+                              (i.e. it will sleep for 10 hours before it removes old files again)
+
+    [DIR1]
+    path = ../../../Log/Archive/DataLog_Private The target directory that contains log files
+    extension = dat, txt Any file with the listed extensions will be monitored and erased when it gets too old. 
+                         If this is blank then any file will be monitored.
+    delete_time_hrs = 24 Any monitored file older than the specified hours will be removed.
+
+    [DIR2]
+    path = ../../../Log/Archive/DataLog_RemotePublic
+    extension =
+    delete_time_hrs = 16
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
 APP_NAME = "FileEraser"

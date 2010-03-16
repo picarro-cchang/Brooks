@@ -1,15 +1,16 @@
-# File Name: CommandInterface.py
-#
-# Purpose: This is the module responsible for handling ascii command interface.
-#
-# TODO: Add CmdFifo to allow supervisor ping
-#
-# File History:
-# 06-10-29 ytsai   Created file
-# 08-01-18 sze      Use datetime rather than time for improved resolution
-# 08-09-18  alex  Replaced SortedConfigParser with CustomConfigObj
-# 09-07-03  alex  Tested and debugged both serial and socket interfaces
-# 09-07-22  alex  Supported more command sets. Supported multiple concentration reporting. Used semicolon instead of tab.  
+"""
+File Name: CommandInterface.py
+Purpose: This is the module responsible for handling ascii command interface.
+
+File History:
+    06-10-29 ytsai Created file
+    08-01-18 sze   Use datetime rather than time for improved resolution
+    08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
+    09-07-03 alex  Tested and debugged both serial and socket interfaces
+    09-07-22 alex  Supported more command sets. Supported multiple concentration reporting. Used semicolon instead of tab.  
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = "CommandInterface"
 APP_DESCRIPTION = "Command interface (serial or Ethernet)"

@@ -1,42 +1,44 @@
 #!/usr/bin/python
 #
-# File Name: InstMgr.py
-# Purpose:
-# The instrument manager application is responsible for the following:
-# 1. Overall instrument awareness and state machine
-#    - Command management based on overall state, i.e. can't start a measurement if in self-test state.
-#    - Knows the states of each sub-system.
-# 2. Instrument startup
-# 3. Instrument shutdown
-# 4. Instrument Error handling and Health Monitoring
-# 5. System wide procedures
-#    - Start and stop measuring commands.
-# Notes:
-#
-# ToDo:
-#
-# File History:
-# 06-10-xx al   In progress
-# 06-12-11 Al   Fixed a bunch of things: exception handling, recovery scheme, application restart notification etc..
-# 06-12-11 Al   Changed errorList to contain a list of tuples containing time, error number and error name.
-# 06 12-12 Al   Added a few except statements for meassys RPC calls.
-# 06-12-13 Al   Moved SampleMgr import statement up above EventMgrProxitInit
-# 06-12-18 Al   Using AppStatus class to track and report status.
-# 06-12-20 Al   Changes required for cal manager and data manager integration.
-# 06-12-21 Al   Fixed transition from Warming and removed FlowStop call in INSTRMGR_Start
-# 06-12-21 Al   Remove instrument shutdown when RpcServerExit is requested.
-# 06-12-21 Al   Remove check for laser temperature lock to transition from Warming.
-# 06-12-21 Al   Fix parking issues.
-# 06-12-22 Al   Don't turn off temperature control when the instrument is shutdown.
-# 07-01-16 sze  Print out exception message on error
-# 07-03-16 sze  Fixed Shutdown RPC call so that supervisor terminates applications when codes 1 or 2 are used
-# 07-10-23 sze  Added SetInstrumentMode RPC call. Note that _SetupInstModeDispatcher is used to define the valid
-#                instrument modes and to set up the actions to be performed when that mode is selected.
-# 08-04-30 sze  Call TerminateApplications with powerOff == True
-# 08-05-08 sze  Removed code that performs automatic calibration
-# 08-09-18 alex Replaced ConfigParser with CustomConfigObj
-# 09-10-21 alex Replaced CalManager with RDFrequencyConverter. Added an option to run without SampleManager.
-# 10-02-25 sze  When SampleManager is disabled, do not adjust valves
+"""
+File Name: InstMgr.py
+Purpose:
+    The instrument manager application is responsible for the following:
+    1. Overall instrument awareness and state machine
+       - Command management based on overall state, i.e. can't start a measurement if in self-test state.
+       - Knows the states of each sub-system.
+    2. Instrument startup
+    3. Instrument shutdown
+    4. Instrument Error handling and Health Monitoring
+    5. System wide procedures
+       - Start and stop measuring commands.
+
+File History:
+    06-10-xx al   In progress
+    06-12-11 Al   Fixed a bunch of things: exception handling, recovery scheme, application restart notification etc..
+    06-12-11 Al   Changed errorList to contain a list of tuples containing time, error number and error name.
+    06 12-12 Al   Added a few except statements for meassys RPC calls.
+    06-12-13 Al   Moved SampleMgr import statement up above EventMgrProxitInit
+    06-12-18 Al   Using AppStatus class to track and report status.
+    06-12-20 Al   Changes required for cal manager and data manager integration.
+    06-12-21 Al   Fixed transition from Warming and removed FlowStop call in INSTRMGR_Start
+    06-12-21 Al   Remove instrument shutdown when RpcServerExit is requested.
+    06-12-21 Al   Remove check for laser temperature lock to transition from Warming.
+    06-12-21 Al   Fix parking issues.
+    06-12-22 Al   Don't turn off temperature control when the instrument is shutdown.
+    07-01-16 sze  Print out exception message on error
+    07-03-16 sze  Fixed Shutdown RPC call so that supervisor terminates applications when codes 1 or 2 are used
+    07-10-23 sze  Added SetInstrumentMode RPC call. Note that _SetupInstModeDispatcher is used to define the valid
+                  instrument modes and to set up the actions to be performed when that mode is selected.
+    08-04-30 sze  Call TerminateApplications with powerOff == True
+    08-05-08 sze  Removed code that performs automatic calibration
+    08-09-18 alex Replaced ConfigParser with CustomConfigObj
+    09-10-21 alex Replaced CalManager with RDFrequencyConverter. Added an option to run without SampleManager.
+    10-02-25 sze  When SampleManager is disabled, do not adjust valves
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
+
 APP_NAME = "InstMgr"
 APP_VERSION = 1.0
 _DEFAULT_CONFIG_NAME = "InstMgr.ini"

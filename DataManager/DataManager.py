@@ -1,36 +1,36 @@
 #!/usr/bin/python
 #
-# File Name: DataManager.py
-# Purpose:
-#
-# Notes:
-#
-# ToDo:
-#
-# File History:
-# 2006-12-19 russ  First official release
-# 2006-12-20 russ  Fixed shutdown behaviour; Improved debug handling; Fixed RPC_Mode_Set
-# 2006-12-21 russ  Default MeasData label now the analysis script name + In-script ability to override this
-# 2008-02-14 sze   Include trap for Null source times
-# 2008-02-19 sze   Added RPC_StartInstMgrListener call, to avoid errors associated with trying to listen to instrument
-#                   manager at startup, when the instrument manager has not yet been started.
-# 2008-03-03 sze   Adding support for real-time serial output
-# 2008-03-07 sze   Moved rescheduling of periodic scripts to end of last execution, to avoid out-of-order executions,
-#                   periodic scripts now execute at times which are integer multiples of the period.
-# 2008-09-18 alex  Replaced ConfigParser with CustomConfigObj
-# 2009-01-21 alex  Added pulse analyzer
-# 2009-04-30 alex  Added preserved time base feature for serial output
-# 2009-05-11 alex  Added more STATUS_MASK_SyncToggle_N flags so more than 4 periodic scripts can be run
-# 2009-05-11 alex  Corrected the time stamp for broadcasting in _HandleScriptExecution() function. The current Data Manager 
-#                           broadcasts fitter results with the actual data time, but broadcasts periodic script results with 
-#                           script running time. This has be to changed for re-sync data for data alignment with the original data. 
-#                           Data Manager needs to be modified so that when the script reports "time" in the output dictionary, 
-#                           the reported time will be use for broadcasting. 
-#                           If the script output doesn't contain "time" information, the script running time will be used 
-#                           (same as before). This modification affects both broadcasting and serial output.
-# 2009-08-08 alex  Allowed RPC_PulseAnalyzer_SetParam() to update the parameter values in DataManager.ini file
-# 2009-10-16 alex  Added an option to run DataManager without InstMgr
-# 2010-02-03 sze   Execute synchronous and data-driven scripts within a single thread in order to avoid using a lock
+"""
+File Name: DataManager.py
+Purpose: Collect and compute data. Report the results to higher level interface modules (GUI, etc) 
+
+File History:
+    2006-12-19 russ  First official release
+    2006-12-20 russ  Fixed shutdown behaviour; Improved debug handling; Fixed RPC_Mode_Set
+    2006-12-21 russ  Default MeasData label now the analysis script name + In-script ability to override this
+    2008-02-14 sze   Include trap for Null source times
+    2008-02-19 sze   Added RPC_StartInstMgrListener call, to avoid errors associated with trying to listen to instrument
+                     manager at startup, when the instrument manager has not yet been started.
+    2008-03-03 sze   Adding support for real-time serial output
+    2008-03-07 sze   Moved rescheduling of periodic scripts to end of last execution, to avoid out-of-order executions,
+                     periodic scripts now execute at times which are integer multiples of the period.
+    2008-09-18 alex  Replaced ConfigParser with CustomConfigObj
+    2009-01-21 alex  Added pulse analyzer
+    2009-04-30 alex  Added preserved time base feature for serial output
+    2009-05-11 alex  Added more STATUS_MASK_SyncToggle_N flags so more than 4 periodic scripts can be run
+    2009-05-11 alex  Corrected the time stamp for broadcasting in _HandleScriptExecution() function. The current Data Manager 
+                     broadcasts fitter results with the actual data time, but broadcasts periodic script results with 
+                     script running time. This has be to changed for re-sync data for data alignment with the original data. 
+                     Data Manager needs to be modified so that when the script reports "time" in the output dictionary, 
+                     the reported time will be use for broadcasting. 
+                     If the script output doesn't contain "time" information, the script running time will be used 
+                     (same as before). This modification affects both broadcasting and serial output.
+    2009-08-08 alex  Allowed RPC_PulseAnalyzer_SetParam() to update the parameter values in DataManager.ini file
+    2009-10-16 alex  Added an option to run DataManager without InstMgr
+    2010-02-03 sze   Execute synchronous and data-driven scripts within a single thread in order to avoid using a lock
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 ####
 ## Set constants for this file...

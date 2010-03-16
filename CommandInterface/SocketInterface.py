@@ -1,10 +1,14 @@
-# File Name: SocketInterface.py
-#
-# Purpose: Handles socket interface communication.
-#
-# File History:
-# 06-10-29 ytsai   Created file
-# 09-07-03 alex   Cleaned up file
+"""
+File Name: SocketInterface.py
+Purpose: Handles socket interface communication.
+
+File History:
+    06-10-29 ytsai  Created file
+    09-07-03 alex   Cleaned up file
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
+
 import sys
 import time
 import socket

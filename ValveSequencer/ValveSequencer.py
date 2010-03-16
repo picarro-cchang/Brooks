@@ -1,12 +1,17 @@
 #!/usr/bin/python
 #
-# File Name: ValveSequencer.py
-# Purpose: Valve control with GUI
-#
-# File History:
-# 08-11-01 alex  Created
-# 09-07-20 alex Added more RPC calls and added one more flag to control the start/stop of the sequencer instead of turning on/off the timer. Main reason:
-#                   the timer can't be started by any thread other than main thread, and therefore the RPC call would fail.
+"""
+File Name: ValveSequencer.py
+Purpose: Valve control with GUI
+
+File History:
+    08-11-01 alex  Created
+    09-07-20 alex  Added more RPC calls and added one more flag to control the start/stop of the sequencer 
+                   instead of turning on/off the timer. Main reason: the timer can't be started by any 
+                   thread other than main thread, and therefore the RPC call would fail.
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = "ValveSequencer"
 APP_DESCRIPTION = "Valve control with GUI"
