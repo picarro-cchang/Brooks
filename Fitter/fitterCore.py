@@ -354,12 +354,7 @@ def convHdf5ToDict(h5Filename):
         table = h5File.root._v_children[tableName]
         retDict[tableName] = {}
         for colKey in table.colnames:
-            if tableName == "rdData":
-                #return an array
                 retDict[tableName][colKey] = table.read(field=colKey)
-            else:
-                # return a scalar
-                retDict[tableName][colKey] = table.read(field=colKey)[0]
     h5File.close()
     return retDict
     
@@ -371,7 +366,7 @@ def hdf5RepositoryFromList(hdf5Files):
     decList.sort()
     # Iterate through files
     for (d,f) in decList:
-        baseName = split(f)[-1].strip()[:-4]
+        baseName = split(f)[-1].strip()[:-3]
         rdfDict = convHdf5ToDict(f)
         for rdfData in RdfData.getSpectraDict(rdfDict):
             yield rdfData, baseName
@@ -964,28 +959,19 @@ class RdfData(object):
         otherData = rdfDict["sensorData"]
         if "tagalongData" in rdfDict: 
             otherData.update(rdfDict["tagalongData"])
-        controlData = rdfDict["controlData"]
-        # Experimental pacing algorithm for fitter
-        qSize = controlData["SpectrumQueueSize"]
+        try:
+            controlData = rdfDict["controlData"]
+            # Experimental pacing algorithm for fitter
+            rdChunkSizes = controlData["RDDataSize"]
+            qSizes = controlData["SpectrumQueueSize"]
+        except:
+            rdChunkSizes = [len(rdData["wavenum"])]
+            qSizes = [0]
+            
         RED_THRESHOLD = 1
         RED_DISCARD_ALL = 10
-        pace = min(1.0,float(RED_DISCARD_ALL-qSize)/(RED_DISCARD_ALL-RED_THRESHOLD))
 
-        def makeRdfData(low,high):
-            rdfData = RdfData()
-            rdfData.sensorDict = otherData
-            # Store ringdown data for current section as attributes of the RdfData object
-            for s in rdData:
-                object.__setattr__(rdfData, s, rdData[s][low:high])
-            # Initialize indexVector to the identity permutation to indicate that
-            #  all data are (initially) good
-            rdfData.nrows = len(rdData[s][low:high])
-            rdfData.indexVector = arange(rdfData.nrows)
-            # Set the average time of the sensor data
-            rdfData.sensorDict["Time_s"] = unixTime(mean(rdfData.timestamp))
-            return rdfData
-
-        def allowYield(id):
+        def allowYield(pace,id):
             if id in RdfData._pacing:
                 RdfData._pacing[id] += pace
             else:
@@ -996,17 +982,44 @@ class RdfData(object):
             else:
                 return False
 
-        # Split spectra according to subfield of the subschemeId
-        splits = flatnonzero(diff(rdData["subschemeId"] & 0x3FF))
-        low = 0
-        for s in splits:
+        # Split file into chunks according to information in controlData table
+        start = 0
+        for i,rdChunkSize in enumerate(rdChunkSizes):
+            otherDataForChunk = {}
+            for key in otherData:
+                otherDataForChunk[key] = otherData[key][i]
+                
+            # Returns an RdfData object from ringdown data between indices low and high
+            def makeRdfData(low,high):
+                rdfData = RdfData()
+                rdfData.sensorDict = otherDataForChunk
+                # Store ringdown data for current section as attributes of the RdfData object
+                for s in rdData:
+                    object.__setattr__(rdfData, s, rdData[s][low:high])
+                # Initialize indexVector to the identity permutation to indicate that
+                #  all data are (initially) good
+                rdfData.nrows = len(rdData[s][low:high])
+                rdfData.indexVector = arange(rdfData.nrows)
+                # Set the average time of the sensor data
+                rdfData.sensorDict["Time_s"] = unixTime(mean(rdfData.timestamp))
+                rdfData.startRow = low
+                rdfData.endRow = high
+                return rdfData
+
+            pace = min(1.0,float(RED_DISCARD_ALL-qSizes[i])/(RED_DISCARD_ALL-RED_THRESHOLD))
+            # Split spectra further according to subfield of the subschemeId
+            low = start
+            high = start + rdChunkSize
+            splits = flatnonzero(diff(rdData["subschemeId"][low:high] & 0x3FF))
+            for s in splits:
+                id = rdData["subschemeId"][low] & 0x3FF
+                if allowYield(pace,id):
+                    yield makeRdfData(low,start+s+1)
+                low = start+s+1
             id = rdData["subschemeId"][low] & 0x3FF
-            if allowYield(id):
-                yield makeRdfData(low,s+1)
-            low = s+1
-        id = rdData["subschemeId"][low] & 0x3FF
-        if allowYield(id):
-            yield makeRdfData(low,None)
+            if allowYield(pace,id):
+                yield makeRdfData(low,high)
+            start = high
 
     def getTime(self):
         """Returns the averaged time of a spectrum"""
@@ -1024,8 +1037,8 @@ class RdfData(object):
         #  all data are (initially) good
         self.nrows = len(self.time)
         self.indexVector = arange(self.nrows)
-        # Change the waveNumber variables to be in inverse cm
         return self
+        
     def __getitem__(self,key):
         # Use item notation to recover certain properties of a data set for use in scripting
         try:

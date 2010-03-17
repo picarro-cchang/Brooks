@@ -177,13 +177,14 @@ class Fitter(object):
 
     def compileScript(self,scriptName):
         try:
-            fp = file(scriptName,"ra")
+            fp = file(scriptName,"r")
             string = fp.read().strip()
             if sys.platform != 'win32':
                 string = string.replace("\r", "")
             fp.close()
         except IOError:
             Log("Fitter script file %s cannot be processed" % (scriptName,))
+            raise
         return compile(string,scriptName,"exec")
 
     def setupEnvironment(self):
@@ -202,20 +203,23 @@ class Fitter(object):
         return dataEnviron
 
 
-    def fitViewer(self,data):
-        """ Send results to viewer if requested. For data sources other than TCP, hang around
-             until the put succeeds, or until someone tells us not to update the viewer """
+    def fitViewer(self,dataAnalysisResult):
+        """ Send results to viewer if requested. dataAnalysisResult is a list consisting of the DATA, ANALYSIS
+        and RESULT objects from the fitter script. The data is sent to the fit viewer via the fitQueue.
+        For data sources other than TCP, hang around until the put succeeds, or until someone tells us not to 
+        update the viewer """
+        
         while self.updateViewer:
             if self.state == FITTER_STATE_PROC:
                 # We cannot wait for the viewer, just discard data if the queue is full and leave quickly
                 try:
-                    self.fitQueue.put((1,(deepcopy(data),self.spectrumFileName)),False)
+                    self.fitQueue.put((1,(deepcopy(dataAnalysisResult),self.spectrumFileName)),False)
                 except:
                     pass
                 break
             else: # Wait until we can put something on
                 try:
-                    self.fitQueue.put((1,(deepcopy(data),self.spectrumFileName)),timeout=1.0)
+                    self.fitQueue.put((1,(deepcopy(dataAnalysisResult),self.spectrumFileName)),timeout=1.0)
                     break
                 except Full:
                     continue

@@ -117,8 +117,8 @@ class FitViewManager(object):
         self.fitViewDict["fitOutputs"].clear()
         self.fitViewDict["fitOutputs"]["time"]=self.seqMgr.getSequence()
 
-    def update(self,data):
-        spectrum,analysisList,fitOutputs = data
+    def update(self,dataAnalysisResults):
+        data,analysisList,fitOutputs = dataAnalysisResults
         if not analysisList: return
         for analysis in analysisList:
             time = analysis["time"]
@@ -656,7 +656,7 @@ class FitViewer(wx.Frame):
         self.newGraph = wx.Button(panel,-1,"New Graph")
         self.newTable = wx.Button(panel,-1,"New Table")
         self.inputSelect = wx.RadioBox(panel, -1, "Select Input",
-                    choices=["Data Input", "HDF5 files", "RDQ/X files", "Pickled files"], majorDimension=4,
+                    choices=["Data Input", "HDF5 files", "Pickled files"], majorDimension=3,
                     style=wx.RA_SPECIFY_ROWS)
         self.selectFiles = wx.Button(panel,-1,"Select Files")
         self.dataDirLabel = wx.StaticText(panel,-1,"Data Directory")
@@ -676,7 +676,7 @@ class FitViewer(wx.Frame):
         self.analysisStage = wx.Choice(panel,-1,size=(45,-1))
         self.modelLabel = wx.StaticText(panel,-1,"Model Components")
         self.modelList = wx.CheckListBox(panel, -1)
-
+        self.defDir = os.curdir
 
         #self.multiText = wx.TextCtrl(panel,-1,"Here is some text",style=wx.TE_MULTILINE)
         #self.shell = shell.Shell(panel,locals=locals())
@@ -884,7 +884,7 @@ class FitViewer(wx.Frame):
             self.fitterRpc.FITTER_updateViewer(False)
             self.Hide()
     def OnInputSelect(self,evt):
-        self.selectFiles.Enable(self.inputSelect.GetSelection() in [1,2,3])
+        self.selectFiles.Enable(self.inputSelect.GetSelection() in [1,2])
         self.filePaths = []
         self.dataDir.SetValue("")
         self.currentFile.SetValue("")
@@ -934,8 +934,6 @@ class FitViewer(wx.Frame):
             if self.inputSelect.GetSelection() == 1:
                 self.fitterRpc.FITTER_makeHdf5RepositoryRpc(self.filePaths)
             elif self.inputSelect.GetSelection() == 2:
-                self.fitterRpc.FITTER_makeRdqRepositoryRpc(self.filePaths)
-            elif self.inputSelect.GetSelection() == 3:
                 self.fitterRpc.FITTER_makePickledRepositoryRpc(self.filePaths)
             self.currentFile.SetValue("")
 
@@ -944,24 +942,20 @@ class FitViewer(wx.Frame):
         if self.inputSelect.GetSelection() == 1:
             wildcard = "*.h5"
         elif self.inputSelect.GetSelection() == 2:
-            wildcard = "*.rdq"            
-        elif self.inputSelect.GetSelection() == 3:
             wildcard = "*.rdf"
 
-        dialog = wx.FileDialog(None,"Select files to process",os.getcwd(),"",wildcard,wx.OPEN|wx.MULTIPLE)
+        dialog = wx.FileDialog(None,"Select files to process",self.defDir,"",wildcard,wx.OPEN|wx.MULTIPLE)
         self.filePaths = []
         if dialog.ShowModal() == wx.ID_OK:
             self.filePaths = dialog.GetPaths()
-            dir = os.path.split(self.filePaths[0])[0]
-            self.dataDir.SetValue(dir)
+            self.defDir = os.path.split(self.filePaths[0])[0]
+            self.dataDir.SetValue(self.defDir)
             self.fitViewManager.clear()
             for f in self.historyFrames: f.Refresh()
             for f in self.variableFrames: f.Refresh()
             if self.inputSelect.GetSelection() == 1:
                 self.fitterRpc.FITTER_makeHdf5RepositoryRpc(self.filePaths)
             elif self.inputSelect.GetSelection() == 2:
-                self.fitterRpc.FITTER_makeRdqRepositoryRpc(self.filePaths)
-            elif self.inputSelect.GetSelection() == 3:
                 self.fitterRpc.FITTER_makePickledRepositoryRpc(self.filePaths)
         dialog.Destroy()
 
@@ -972,11 +966,10 @@ class FitViewer(wx.Frame):
                 self.fitterRpc.FITTER_updateViewer(self.updateViewer.Value)
                 self.Show()
             elif command == 1:
-                data,fileName = packet
+                (data,analysisList,resultsDict),fileName = packet
                 self.analysisDone = False
-                self.currentFile.SetValue(fileName)
-                self.fitViewManager.update(data)
-                spectrum,analysisList,resultsDQueueictfitQueue = data
+                self.currentFile.SetValue("%s\n[%d to %d]" % (fileName,data.startRow,data.endRow))
+                self.fitViewManager.update([data,analysisList,resultsDict])
                 if analysisList:
                     self.analysisList = analysisList
                     self.setupModelAnalyses()
