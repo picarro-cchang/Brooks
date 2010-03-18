@@ -29,10 +29,9 @@ _MAIN_CONFIG_SECTION = "Setup"
 
 import os
 import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
 from sys import argv
-from CmdFIFO import CmdFIFOServer
-from CustomConfigObj import CustomConfigObj
+from Host.Common.CmdFIFO import CmdFIFOServer
+from Host.Common.CustomConfigObj import CustomConfigObj
 from copy import deepcopy
 from cStringIO import StringIO
 from Queue import Queue, Empty, Full
@@ -41,12 +40,12 @@ from time import sleep
 from traceback import format_exc
 from cPickle import dumps
 
-from EventManagerProxy import EventManagerProxy_Init, Log
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
 from fitterCore import loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary
 from fitterCore import pickledRepository, pickledRepositoryFromList, hdf5RepositoryFromList
 from fitterCore import RdfData, Analysis, InitialValues, Dependencies
-from FitterScriptFunctions import expAverage, initExpAverage, fitQuality
-from SharedTypes import RPC_PORT_FITTER, TCP_PORT_FITTER
+from Host.Common.FitterScriptFunctions import expAverage, initExpAverage, fitQuality
+from Host.Common.SharedTypes import RPC_PORT_FITTER, TCP_PORT_FITTER
 
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 FITTER_STATE_IDLE = 0

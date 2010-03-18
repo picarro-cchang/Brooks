@@ -22,7 +22,7 @@ Copyright (c) 2010 Picarro, Inc. All rights reserved
 
 import os
 import sys
-from CustomConfigObj import CustomConfigObj
+from Host.Common.CustomConfigObj import CustomConfigObj
 from copy import copy
 import cPickle
 from cStringIO import StringIO
@@ -36,7 +36,7 @@ from scipy.optimize import leastsq, brent
 from string import strip
 from struct import calcsize, unpack
 from time import strptime, mktime, time, localtime
-from EventManagerProxy import Log
+from Host.Common.EventManagerProxy import Log
 from tables import *
 from Host.Common.timestamp import unixTime
 ################################################################################
@@ -965,7 +965,7 @@ class RdfData(object):
             rdChunkSizes = controlData["RDDataSize"]
             qSizes = controlData["SpectrumQueueSize"]
         except:
-            rdChunkSizes = [len(rdData["wavenum"])]
+            rdChunkSizes = [len(rdData["waveNumber"])]
             qSizes = [0]
             
         RED_THRESHOLD = 1
