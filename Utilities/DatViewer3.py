@@ -638,13 +638,21 @@ class NotebookHandler(Handler):
                             progress += 1
                     pd.Pulse("Writing output file")
                     # Concatenate everything together and sort by time of data
-                    allData = concatenate(allData)
-                    perm = argsort(allData['DATE_TIME'])
-                    allData = allData[perm]
-                    # Write output file
+                    dtypes = array([d.dtype for d in allData])
+                    u = array(len(dtypes)*[True])
                     filters = Filters(complevel=1,fletcher32=True)
-                    table = op.createTable(op.root,"results",allData,filters=filters)
-                    table.flush()
+                    # Concatenate by unique data type
+                    j = 0
+                    for i,t in enumerate(dtypes):
+                        if u[i]:
+                            match = (dtypes == t)
+                            u[match] = False
+                            data = concatenate([d for d,c in zip(allData,match) if c])
+                            perm = argsort(data['DATE_TIME'])
+                            data = data[perm]
+                            table = op.createTable(op.root,"results_%d" % j,data,filters=filters)
+                            j += 1
+                            table.flush()
                     info.object.dataFile = fname
                     info.ui.title = "Viewing [" + info.object.dataFile + "]"
                     pd.Update(100,newmsg = "Done. Close box to view results")
