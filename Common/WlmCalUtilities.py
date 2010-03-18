@@ -58,10 +58,12 @@ def polyFitEvaluator(coeffs,cen=0,scale=1):
 # Routines for manipulating cubic B-splines defined on a regular unit-spaced grid
 
 def bspEval(p0,coeffs,x):
-    """Evaluate the spline defined by coefficients "coeffs" at the position "x" """
+    """Evaluate the sum of polyval(p0,x) and the spline defined by coefficients "coeffs" 
+       at the position "x" """
     nc = len(coeffs)
     y = polyval(p0,x)
-    inside = (x>-1)&(x<nc)
+    # The "inside" points require explicit calculation of the spline
+    inside = (x>-2)&(x<nc+1)
     x = x[inside]
     ix = array(floor(x),'l')
     fx = x-ix
@@ -69,16 +71,41 @@ def bspEval(p0,coeffs,x):
     w2 = polyval(array([-3,3,3,1],'d')/6,fx)
     w3 = polyval(array([3,-6,0,4],'d')/6,fx)
     w4 = polyval(array([-1,3,-3,1],'d')/6,fx)
-    pcoeffs = zeros(len(coeffs)+3,coeffs.dtype)
-    pcoeffs[1:-2] = coeffs
+    pcoeffs = zeros(len(coeffs)+4,coeffs.dtype)
+    pcoeffs[1:-3] = coeffs
+    y[inside] += w1*pcoeffs[ix+3]+w2*pcoeffs[ix+2]+w3*pcoeffs[ix+1]+w4*pcoeffs[ix]
+    return y
+
+def bspIntEval(coeffs,x):
+    """Evaluate the integral of the spline defined by coefficients "coeffs" at the position "x" """
+    nc = len(coeffs)
+    y = zeros(x.shape,'d')
+    sCoeffs = cumsum(coeffs)
+    # Initialize the y array with the cumulative sum
+    ix = array(floor(x),'l')
+    good = (x>=2) & (x<nc+1)
+    y[good] = sCoeffs[ix[good]-2]
+    # Treat points outside the range of the coefficients
+    y[x>=nc+1] = sum(coeffs)
+    # The "inside" points require explicit calculation of the spline
+    inside = (x>-2)&(x<nc+1)
+    x = x[inside]
+    ix = ix[inside]
+    fx = x-ix
+    w1 = polyval(array([1,0,0,0,0],'d')/24,fx)
+    w2 = polyval(array([-3,4,6,4,1],'d')/24,fx)
+    w3 = polyval(array([3,-8,0,16,12],'d')/24,fx)
+    w4 = polyval(array([-1,4,-6,4,23],'d')/24,fx)
+    pcoeffs = zeros(len(coeffs)+4,coeffs.dtype)
+    pcoeffs[1:-3] = coeffs
     y[inside] += w1*pcoeffs[ix+3]+w2*pcoeffs[ix+2]+w3*pcoeffs[ix+1]+w4*pcoeffs[ix]
     return y
 
 def bspUpdate(N,x,y):
     """Multiply the vector y by the transpose of the collocation matrix of a spline
         whose knots are at 0,1,2,...,N-1 and which is evaluated at the points in x"""
-    result = zeros(N+3,y.dtype)
-    inside = (x>-1)&(x<N)
+    result = zeros(N+4,y.dtype)
+    inside = (x>-2)&(x<N+1)
     x = x[inside]
     y = y[inside]
     ix = array(floor(x),'l')
@@ -89,9 +116,9 @@ def bspUpdate(N,x,y):
     W[:,1] = polyval(array([3,-6,0,4],'d')/6,fx)
     W[:,0] = polyval(array([-1,3,-3,1],'d')/6,fx)
     for k in range(len(ix)):
-        if ix[k]>=0 and ix[k]<N-1:
+        if ix[k]>=0 and ix[k]<N:
             result[ix[k]:(ix[k]+4)] += y[k]*W[k,:]
-    return result[1:-2]
+    return result[1:-3]
 
 def bspInverse(p0,coeffs,y):
     """Looks up the values of y in a B-spline expansion + a linear polynomial.
@@ -128,6 +155,60 @@ def bspInverse(p0,coeffs,y):
         x[i] += r[(r == real(r)) & (r>=0) & (r<=1)][0]
         # time.sleep(0)
     return x,True
+
+class BspInterp(object):
+    def __init__(self,N):
+        self.N = N
+        self.coeffs = zeros(N+4,'d')
+        self.weights = ones(N+4,'d')
+        
+    def eval(self,x):
+        return bspEval([0],self.coeffs,x+1.0)
+        
+    def seqUpdate(self,x,y,relax):
+        """Update the coefficients of a B-spline so that it better interpolates 
+        the points (x,y). The points are processed sequentially, and the residual
+        from a point is used for the next. A relaxation factor relax is used in the
+        updating."""
+        inside = (x>-2)&(x<self.N+1)
+        x = x[inside]
+        y = y[inside]
+        ix = array(floor(x),'l')
+        fx = x-ix
+        W = zeros([len(ix),4],'d')
+        W[:,3] = polyval(array([1,0,0,0],'d')/6,fx)
+        W[:,2] = polyval(array([-3,3,3,1],'d')/6,fx)
+        W[:,1] = polyval(array([3,-6,0,4],'d')/6,fx)
+        W[:,0] = polyval(array([-1,3,-3,1],'d')/6,fx)
+        for k in range(len(ix)):
+            i = ix[k]
+            if i>=0 and i<self.N:
+                self.coeffs[i:i+4] += relax*W[k,:]*(y[k]-dot(W[k,:],self.coeffs[i:i+4]))
+
+    def intEval(self,x):
+        """Evaluate the integral of the spline defined by coefficients "coeffs" at the position "x" """
+        y = zeros(x.shape,'d')
+        coeffs = self.coeffs[1:-3]
+        sCoeffs = cumsum(coeffs)
+        # Initialize the y array with the cumulative sum
+        ix = array(floor(x),'l')
+        good = (x>=2) & (x<self.N+1)
+        y[good] = sCoeffs[ix[good]-2]
+        # Treat points outside the range of the coefficients
+        y[x>=self.N+1] = sum(coeffs)
+        # The "inside" points require explicit calculation of the spline
+        inside = (x>-2)&(x<self.N+1)
+        x = x[inside]
+        ix = ix[inside]
+        fx = x-ix
+        w1 = polyval(array([1,0,0,0,0],'d')/24,fx)
+        w2 = polyval(array([-3,4,6,4,1],'d')/24,fx)
+        w3 = polyval(array([3,-8,0,16,12],'d')/24,fx)
+        w4 = polyval(array([-1,4,-6,4,23],'d')/24,fx)
+        pcoeffs = zeros(len(coeffs)+4,coeffs.dtype)
+        pcoeffs[1:-3] = coeffs
+        y[inside] += w1*pcoeffs[ix+3]+w2*pcoeffs[ix+2]+w3*pcoeffs[ix+1]+w4*pcoeffs[ix]
+        return y
 
 # Routines for ellipse fitting
 
