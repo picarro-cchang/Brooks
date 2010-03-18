@@ -5,6 +5,10 @@ Purpose: Collects spectrum and related information to save in HDF5 files. Spectr
 File History:
     12-Oct-2009  alex  Initial version.
     05-Feb-2010  sze   Removed relative timestamps, make HDF5 files contain data corresponding to a scheme file.
+    17-Mar-2010  sze   Make all the dictionaries in a spectrum (rdData, sensorData and controlData) have values which 
+                        are lists or arrays. This improves compatibility with HDF5 storage of RdfData (spectrum) objects
+                        in which these dictionaries map to tables. For a normal spectrum, sensorData and controlData
+                        contain lists with only one element each.
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -343,22 +347,24 @@ class SpectrumCollector(object):
         self.rdfDict["rdData"]["tunerValue"] = self.rdfDict["rdData"]["tunerValue"] + 0.0
 
         # Append averaged sensor data
-        self.rdfDict["sensorData"] = self.avgSensors.copy()
+        for s in self.avgSensors:
+            self.rdfDict["sensorData"][s] = [self.avgSensors[s]]
 
         # Add more sensor data
-        self.rdfDict["sensorData"]["SchemeID"] = self.schemeTable
-        self.rdfDict["sensorData"]["SpectrumID"] = self.spectrumID
-        self.rdfDict["sensorData"]["SensorTime"] = unixTime(self.rdfDict["sensorData"]["timestamp"])
+        self.rdfDict["sensorData"]["SchemeID"] = [self.schemeTable]
+        self.rdfDict["sensorData"]["SpectrumID"] = [self.spectrumID]
+        self.rdfDict["sensorData"]["SensorTime"] = [unixTime(self.rdfDict["sensorData"]["timestamp"][0])]
 
         #Write the tagalong data values...
-        self.rdfDict["tagalongData"] = self.tagalongData
+        for t in self.tagalongData:
+            self.rdfDict["tagalongData"][t] = [self.tagalongData[t]]
 
         #Write control data dictionary for pacing, etc...
         if self.spectrumQueue:
             qsize = self.spectrumQueue.qsize()
         else:
             qsize = 0
-        self.rdfDict["controlData"] = {"RDDataSize":self.numPts, "SpectrumQueueSize":qsize}
+        self.rdfDict["controlData"] = {"RDDataSize":[self.numPts], "SpectrumQueueSize":[qsize]}
         
         # Process spectrum files (HDF5 or RDF). RDF files contain a single spectrum, while HDF5 files 
         #  contain the spectra in a single scheme.
@@ -382,9 +388,7 @@ class SpectrumCollector(object):
                             sortedValues = [numpy.array(subDataDict.values()[i]) for i in numpy.argsort(subDataDict.keys())]
                             dataRec = numpy.rec.fromarrays(sortedValues, names=sortedKeys)
                         else:
-                            # Non-array
-                            sortedValues = [subDataDict.values()[i] for i in numpy.argsort(subDataDict.keys())]
-                            dataRec = numpy.rec.fromrecords([sortedValues], names=sortedKeys)
+                            raise ValueError("Non-lists or non-arrays are unsupported")
                         # Either append dataRec to an existing table, or create a new one
                         if self.newHdf5File:
                             self.tableDict[dataKey] = self.streamFP.createTable("/", dataKey, dataRec, dataKey, filters=self.hdf5Filters)

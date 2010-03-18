@@ -31,7 +31,9 @@ File History:
     08-10-20  alex Closed all client connection (_HandleState_INIT) before restarting the broadcaster in SpectrumManager
     09-06-25  alex Only "ArchiveFile", no more "ArchiveData" for spectrum data
     09-10-16  alex Work with new structure of cost-reduction platform
-
+    10-03-17  sze  Make all the dictionaries in a spectrum (rdData, sensorData and controlData) have values which 
+                    are lists or arrays. This improves compatibility with HDF5 storage of RdfData (spectrum) objects
+                    in which these dictionaries map to tables.
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -587,8 +589,8 @@ class MeasSystem(object):
                 try:
                     #Get the spectrum...
                     spectrum = self._GetSpectrum()
-                    if spectrum["controlData"]["RDDataSize"] >= 1:
-                        spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrum["sensorData"]["SpectrumID"]]
+                    if spectrum["controlData"]["RDDataSize"][0] >= 1:
+                        spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrum["sensorData"]["SpectrumID"][0]]
                         # Run it through the processors that have been set up for the spectrum...
                         # For each processor, processorResults consist of a list of tuples [(time1,ResultDict1),(time2,ResultDict2)...]
                         # The results from all the processors are sorted into time order and broadcast. If times from two processors
