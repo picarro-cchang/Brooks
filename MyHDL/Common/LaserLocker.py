@@ -13,6 +13,8 @@
 #                      multiplier for applying "ratio multipliers"
 #   17-Sep-2009  sze  Added control register to select between simulator and actual WLM
 #   18-Sep-2009  sze  Removed sample dark current input (must now use register)
+#   18-Mar-2010  sze  Added pid_out for unconditional output of laser locker PID and drive error
+#                      input of locker PID from PRBS sequence
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -94,7 +96,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 eta1_in,ref1_in,eta2_in,ref2_in,tuning_offset_in,
                 acc_en_in,adc_strobe_in,ratio1_out,
                 ratio2_out,lock_error_out,fine_current_out,
-                tuning_offset_out,laser_freq_ok_out,current_ok_out,
+                tuning_offset_out,pid_out,laser_freq_ok_out,current_ok_out,
                 sim_actual_out,map_base):
     """ Laser frequency locking using wavelength monitor
 
@@ -119,6 +121,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     lock_error_out      -- Lock error output
     fine_current_out    -- Fine current output
     tuning_offset_out   -- Tuning offset used, whether from register or input
+    pid_out             -- Output from laser locking PID loop
     laser_freq_ok_out   -- High once absolute value of lock error is within window
     current_ok_out      -- Goes high once fine current has been calculated
     sim_actual_out      -- Low for simulator, high to select actual WLM
@@ -248,7 +251,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
 
     DIV_LATENCY  = 19
     MULT_LATENCY = 2
-    MAX_CYCLES = 2*DIV_LATENCY + 1 + 4*MULT_LATENCY + 3
+    MAX_CYCLES = 2*DIV_LATENCY + 1 + 4*MULT_LATENCY + 4
 
     @always_comb
     def comb():
@@ -435,29 +438,37 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     elif cycle_counter == 2*DIV_LATENCY + 2 + MULT_LATENCY:
                         lock_error.next = (lock_error + mult_p) % FPGA_REG_MAXVAL
                     elif cycle_counter == 2*DIV_LATENCY + 2 + MULT_LATENCY + 1:
+                        lock_error_out.next = lock_error
+                        if cs[LASERLOCKER_CS_PRBS_B]:
+                            # N.B. lock_error is a SIGNED quantity
+                            if prbs_reg[0]:
+                                lock_error.next = 0x0100
+                            else:
+                                lock_error.next = 0xFF00
+                    elif cycle_counter == 2*DIV_LATENCY + 2 + MULT_LATENCY + 2:
                         if lock_error.signed() >= 0:
                             laser_freq_ok_out.next = (lock_error <= wm_lock_window)
                         else:
                             laser_freq_ok_out.next = (-lock_error.signed()) <= wm_lock_window
 
-                        lock_error_out.next = lock_error
                         mult_a.next = lock_error
                         mult_b.next = wm_int_gain
                         deriv.next = (lock_error - prev_lock_error) % FPGA_REG_MAXVAL
                         prev_lock_error.next = lock_error
-                    elif cycle_counter == 2*DIV_LATENCY + 1 + 2*MULT_LATENCY + 1:
+                    elif cycle_counter == 2*DIV_LATENCY + 1 + 2*MULT_LATENCY + 2:
                         mult_a.next = deriv
                         mult_b.next = wm_prop_gain
                         deriv2.next = (deriv - prev_lock_error_deriv) % FPGA_REG_MAXVAL
                         prev_lock_error_deriv.next = deriv
                         fine_current.next = (fine_current + mult_p) % FPGA_REG_MAXVAL
-                    elif cycle_counter == 2*DIV_LATENCY + 1 + 3*MULT_LATENCY + 1:
+                    elif cycle_counter == 2*DIV_LATENCY + 1 + 3*MULT_LATENCY + 2:
                         mult_a.next = deriv2
                         mult_b.next = wm_deriv_gain
                         fine_current.next = (fine_current + mult_p) % FPGA_REG_MAXVAL
-                    elif cycle_counter == 2*DIV_LATENCY + 1 + 4*MULT_LATENCY + 1:
-                        fine_current.next = (fine_current + mult_p)% FPGA_REG_MAXVAL
                     elif cycle_counter == 2*DIV_LATENCY + 1 + 4*MULT_LATENCY + 2:
+                        fine_current.next = (fine_current + mult_p)% FPGA_REG_MAXVAL
+                    elif cycle_counter == 2*DIV_LATENCY + 1 + 4*MULT_LATENCY + 3:
+                        pid_out.next = fine_current
                         if cs[LASERLOCKER_CS_PRBS_B]:
                             if prbs_reg[0]:
                                 fine_current_out.next = 0x8100
@@ -533,6 +544,7 @@ if __name__ == "__main__":
     lock_error_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     fine_current_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     tuning_offset_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    pid_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser_freq_ok_out = Signal(LOW)
     current_ok_out = Signal(LOW)
     sim_actual_out = Signal(LOW)
@@ -550,6 +562,7 @@ if __name__ == "__main__":
                         lock_error_out=lock_error_out,
                         fine_current_out=fine_current_out,
                         tuning_offset_out=tuning_offset_out,
+                        pid_out=pid_out,
                         laser_freq_ok_out=laser_freq_ok_out,
                         current_ok_out=current_ok_out,
                         sim_actual_out=sim_actual_out, map_base=map_base)

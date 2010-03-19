@@ -107,13 +107,12 @@ def selectLaser(aLaserNum):
 if __name__ == "__main__":
     try:
         regVault = Driver.saveRegValues(["VIRTUAL_LASER_REGISTER",
-                                        ("FPGA_RDMAN","RDMAN_OPTIONS"),
-                                        ("FPGA_RDMAN","RDMAN_TIMEOUT_DURATION"),
-                                        ("FPGA_LASERLOCKER","LASERLOCKER_CS"),
-                                        ("FPGA_LASERLOCKER","LASERLOCKER_RATIO1_MULTIPLIER"),
-                                        ("FPGA_LASERLOCKER","LASERLOCKER_RATIO2_MULTIPLIER"),
-                                        ("FPGA_LASERLOCKER","LASERLOCKER_RATIO1_CENTER"),
-                                        ("FPGA_LASERLOCKER","LASERLOCKER_RATIO1_CENTER"),
+                                         ("FPGA_LASERLOCKER","LASERLOCKER_WM_INT_GAIN"),
+                                         ("FPGA_LASERLOCKER","LASERLOCKER_WM_PROP_GAIN"),
+                                         ("FPGA_LASERLOCKER","LASERLOCKER_WM_DERIV_GAIN"),
+                                         ("FPGA_RDMAN","RDMAN_OPTIONS"),
+                                         ("FPGA_RDMAN","RDMAN_TIMEOUT_DURATION"),
+                                         ("FPGA_LASERLOCKER","LASERLOCKER_CS"),
                                         ])
         # Stop any acquisition
         Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_IdleState")
@@ -127,116 +126,63 @@ if __name__ == "__main__":
         # Disable ringdowns on both slopes
         changeBitsFPGA("FPGA_RDMAN","RDMAN_OPTIONS","RDMAN_OPTIONS_UP_SLOPE_ENABLE_B","RDMAN_OPTIONS_UP_SLOPE_ENABLE_W",0)
         changeBitsFPGA("FPGA_RDMAN","RDMAN_OPTIONS","RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B","RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W",0)
-        # Set ringdown timeout duration to one second
-        Driver.wrFPGA("FPGA_RDMAN","RDMAN_TIMEOUT_DURATION",1000000)
-        selectLaser(aLaserNum)
-        setAutomaticControl()
-        # Enable PRBS generation
-        changeBitsFPGA("FPGA_LASERLOCKER","LASERLOCKER_CS","LASERLOCKER_CS_PRBS_B","LASERLOCKER_CS_PRBS_W",1)
-        status = Driver.rdFPGA("FPGA_RDMAN","RDMAN_STATUS")
-        print "Initial RD manager status: 0x%x" % status
-        # Tell RDMAN to collect data
-        changeBitsFPGA("FPGA_RDMAN","RDMAN_CONTROL","RDMAN_CONTROL_START_RD_B","RDMAN_CONTROL_START_RD_W",1)
-        time.sleep(1)
-        status = Driver.rdFPGA("FPGA_RDMAN","RDMAN_STATUS")
-        print "Final RD manager status: 0x%x" % status
-        bank = (status & (1<<RDMAN_STATUS_BANK_B)) == (1<<RDMAN_STATUS_BANK_B)
-        # Get acquired data for analysis
-        if bank:
-            data,meta,param = Driver.rdRingdown(1)
-        else:
-            data,meta,param = Driver.rdRingdown(0)
-        # Convert WLM ratios into angles
-        X = (meta[0,:]/32768.0) - ratio1Center
-        Y = (meta[1,:]/32768.0) - ratio2Center
-        thetaCal = unwrap(arctan2(
-          ratio1Scale * Y - ratio2Scale * X * sin(phase),
-          ratio2Scale * X * cos(phase)))
-        # Extract fine laser current excitation
-        fineCurrent = meta[4,:]
-        # Calculate FFTs to find response of angle to current
-        thetaCal = thetaCal[256:]
-        fineCurrent1 = fineCurrent[256:]
-        THETA_CAL = fft.fft(thetaCal)
-        FINE_CURRENT1 = fft.fft(fineCurrent1)
-        # Calculate delay
-        phi = unwrap(angle(-THETA_CAL/FINE_CURRENT1))
-        p = polyfit(range(2,48),phi[2:48],1)
-        delaySamples = -p[0]*256/(2*pi)
-        print "Delay in samples: %.3f" % delaySamples
-        num1,den1,res,rank,sv,mock = find_ARMA(fineCurrent1,thetaCal,[3,4,5,6],[1,2,3,4,5,6])
-        # Transfer functions as ratios of polynomials in z^-1
-        sysG1 = Ltid.fromNumDen(num1,den1)
-        w = arange(128)*pi/128.0
-        resp1 = sysG1.freqz(w)
-        # Set up the laser locking parameters to target the mean angle, so that we can get the response
-        #  from the fine current to the lock_error signal
-        theta = mean(thetaCal)
-        print theta
-        ratio1Multiplier = (-sin(theta + phase))/(ratio1Scale * cos(phase))
-        ratio2Multiplier = cos(theta)/(ratio2Scale * cos(phase))
-        Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_RATIO1_MULTIPLIER",int(ratio1Multiplier*32767.0))
-        Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_RATIO2_MULTIPLIER",int(ratio2Multiplier*32767.0))
-        Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_RATIO1_CENTER",int(ratio1Center*32768.0))
-        Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_RATIO2_CENTER",int(ratio2Center*32768.0))
-        # Send PRBS again
-        # Set ringdown timeout duration to one second
-        Driver.wrFPGA("FPGA_RDMAN","RDMAN_TIMEOUT_DURATION",1000000)
-        selectLaser(aLaserNum)
-        setAutomaticControl()
-        # Enable PRBS generation
-        changeBitsFPGA("FPGA_LASERLOCKER","LASERLOCKER_CS","LASERLOCKER_CS_PRBS_B","LASERLOCKER_CS_PRBS_W",1)
-        status = Driver.rdFPGA("FPGA_RDMAN","RDMAN_STATUS")
-        print "Initial RD manager status: 0x%x" % status
-        # Tell RDMAN to collect data
-        changeBitsFPGA("FPGA_RDMAN","RDMAN_CONTROL","RDMAN_CONTROL_START_RD_B","RDMAN_CONTROL_START_RD_W",1)
-        time.sleep(1)
-        status = Driver.rdFPGA("FPGA_RDMAN","RDMAN_STATUS")
-        print "Final RD manager status: 0x%x" % status
-        bank = (status & (1<<RDMAN_STATUS_BANK_B)) == (1<<RDMAN_STATUS_BANK_B)
-        # Get acquired data for analysis
-        if bank:
-            data,meta,param = Driver.rdRingdown(1)
-        else:
-            data,meta,param = Driver.rdRingdown(0)
+        # Set up a set of gains for the wavelength locker
+        I_gain = 64
+        P_gain = 0
+        D_gain = 0
         #
-        error_signal = meta[5,:]
-        neg = error_signal>=32768
-        error_signal[neg] = error_signal[neg] - 65536
-        fineCurrent = meta[4,:]
+        Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_WM_INT_GAIN",I_gain)
+        Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_WM_PROP_GAIN",P_gain)
+        Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_WM_DERIV_GAIN",D_gain)
+        # Set ringdown timeout duration to one second
+        Driver.wrFPGA("FPGA_RDMAN","RDMAN_TIMEOUT_DURATION",1000000)
+        selectLaser(aLaserNum)
+        setAutomaticControl()
+        # Enable PRBS generation
+        changeBitsFPGA("FPGA_LASERLOCKER","LASERLOCKER_CS","LASERLOCKER_CS_PRBS_B","LASERLOCKER_CS_PRBS_W",1)
+        status = Driver.rdFPGA("FPGA_RDMAN","RDMAN_STATUS")
+        print "Initial RD manager status: 0x%x" % status
+        # Tell RDMAN to collect data
+        changeBitsFPGA("FPGA_RDMAN","RDMAN_CONTROL","RDMAN_CONTROL_START_RD_B","RDMAN_CONTROL_START_RD_W",1)
+        time.sleep(1)
+        status = Driver.rdFPGA("FPGA_RDMAN","RDMAN_STATUS")
+        print "Final RD manager status: 0x%x" % status
+        bank = (status & (1<<RDMAN_STATUS_BANK_B)) == (1<<RDMAN_STATUS_BANK_B)
+        # Get acquired data for analysis
+        if bank:
+            data,meta,param = Driver.rdRingdown(1)
+        else:
+            data,meta,param = Driver.rdRingdown(0)
 
-        # Convert WLM ratios into angles
-        X = (meta[0,:]/32768.0) - ratio1Center
-        Y = (meta[1,:]/32768.0) - ratio2Center
-        thetaCalNew = unwrap(arctan2(
-          ratio1Scale * Y - ratio2Scale * X * sin(phase),
-          ratio2Scale * X * cos(phase)))
-        print mean(thetaCalNew[256:])
+        # Extract fine laser current excitation
+        fineCurrent = meta[4,:]-32768
+        # Extract output of PID
+        pid_out = meta[6,:]
 
-        # Calculate FFTs to find response of angle to current
-        error_signal = error_signal[256:]
-        fineCurrent2 = fineCurrent[256:]
-        ERROR_SIGNAL = fft.fft(error_signal)
-        FINE_CURRENT2 = fft.fft(fineCurrent2)
-        # Calculate delay
-        phi = unwrap(angle(-ERROR_SIGNAL/FINE_CURRENT2))
-        p = polyfit(range(2,48),phi[2:48],1)
-        delaySamples = -p[0]*256/(2*pi)
-        print "Delay in samples: %.3f" % delaySamples
-        num2,den2,res,rank,sv,mock = find_ARMA(fineCurrent2,error_signal,[3,4,5,6],[1,2,3,4,5,6])
-        # Transfer functions as ratios of polynomials in z^-1
-        sysG2 = Ltid.fromNumDen(num2,den2)
-        w = arange(128)*pi/128.0
-        resp2 = sysG2.freqz(w)
+        fineCurrent = fineCurrent[256:]
+        FINE_CURRENT = fft.fft(fineCurrent)
+        pid_out = pid_out[256:]
+        PID_OUT = fft.fft(pid_out)
         
-        fname = raw_input("File name for output? ")
-        saveVars = ["num1","den1","num2","den2","ratio1Center","ratio1Scale","ratio2Center","ratio2Scale","phase","thetaCal","fineCurrent"]
-        pickle.dump(dict([(v,locals()[v]) for v in saveVars]),file(fname,"wb"))
+        w = arange(128)*pi/128.0
+        resp = PID_OUT/FINE_CURRENT
+        
+        z = exp(1j*w)
+        T = (I_gain/32768.0)*z/(z-1) + (P_gain/32768.0) + (D_gain/32768.0)*(z-1)/z
+        
         pylab.figure()
-        pylab.plot(w,20*log10(abs(resp1)),w,20*log10(abs(THETA_CAL[:128]/FINE_CURRENT1[:128])),'x')
+        pylab.subplot(2,1,1)
+        pylab.plot(fineCurrent)
+        pylab.grid(True)
+        pylab.subplot(2,1,2)
+        pylab.plot(pid_out)
         pylab.grid(True)
         pylab.figure()
-        pylab.plot(w,20*log10(abs(resp2)),w,20*log10(abs(ERROR_SIGNAL[:128]/FINE_CURRENT2[:128])),'x')
+        pylab.subplot(2,1,1)
+        pylab.plot(w,20*log10(abs(resp[:128])),w,20*log10(abs(T)))
+        pylab.grid(True)
+        pylab.subplot(2,1,2)
+        pylab.plot(w,180.0*unwrap(angle(resp[:128]))/pi,w,180.0*angle(T)/pi)
         pylab.grid(True)
         pylab.show()
     finally:

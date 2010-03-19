@@ -78,6 +78,7 @@ ratio2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 lock_error_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 fine_current_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 tuning_offset_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
+pid_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 laser_freq_ok_out = Signal(LOW)
 current_ok_out = Signal(LOW)
 sim_actual_out = Signal(LOW)
@@ -176,6 +177,7 @@ def bench():
                                lock_error_out=lock_error_out,
                                fine_current_out=fine_current_out,
                                tuning_offset_out=tuning_offset_out,
+                               pid_out=pid_out,
                                laser_freq_ok_out=laser_freq_ok_out,
                                current_ok_out=current_ok_out,
                                sim_actual_out=sim_actual_out,

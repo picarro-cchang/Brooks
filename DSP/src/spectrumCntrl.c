@@ -288,7 +288,7 @@ void setupNextRdParams(void)
         changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W, laserNum);
         writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,r->ringdownThreshold);
     }
-    else  	// We are running a scheme
+    else    // We are running a scheme
     {
         do {
             // This loop is here so that a dwell count of zero can be used to set up the

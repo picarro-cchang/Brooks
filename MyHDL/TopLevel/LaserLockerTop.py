@@ -140,6 +140,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     tuner_value = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser_tuning_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser_locking_pid = Signal(intbv(0)[FPGA_REG_WIDTH:])
     lock_error = Signal(intbv(0)[FPGA_REG_WIDTH:])
     pzt = Signal(intbv(0)[FPGA_REG_WIDTH:])    
 
@@ -149,7 +150,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     meta3 = laser_tuning_offset
     meta4 = laser_fine_current
     meta5 = lock_error
-    meta6 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    meta6 = laser_locking_pid
     meta7 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     
     sel_laser = Signal(intbv(0)[2:])
@@ -280,6 +281,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                                lock_error_out=lock_error,
                                fine_current_out=laser_fine_current,
                                tuning_offset_out=laser_tuning_offset,
+                               pid_out=laser_locking_pid,
                                laser_freq_ok_out=laser_freq_ok,
                                current_ok_out=metadata_strobe,
                                sim_actual_out=wlm_sim_actual,
