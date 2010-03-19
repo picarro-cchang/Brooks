@@ -51,7 +51,8 @@ Notes:
     10-03-15 sze  Allow datalog files to be written in HDF5 format by setting usehdf5 option to True (default
                   is False). Create new file if data columns change and filter_enabled is False. If filter_enabled
                   is True, the data file always contains the specified columns, and unfilled values get zero entries
-                  
+    10-03-18 sze  Record time to millisecond resolution to facilitate timing of data reporting rate
+    
 Copyright (c) 2010 Picarro, Inc. All rights reserved 
 """
 
@@ -391,7 +392,7 @@ class DataLog(object):
                         else:
                             timeStr += ".00"
                     else:
-                        timeStr += (".%02d" % int(100*fracSec))
+                        timeStr += (".%03d" % int(1000*fracSec))
                     self._WriteEntry(timeStr)
                     #write FRAC_DAYS_SINCE_JAN1
                     days = (Time-Jan1SecondsSinceEpoch)/TWENTY_FOUR_HOURS_IN_SECONDS
@@ -402,7 +403,7 @@ class DataLog(object):
     
                 #write EPOCH_TIME if enabled
                 if self.WriteEpochTime:
-                    self._WriteEntry("%.2f" %Time)
+                    self._WriteEntry("%.3f" %Time)
                     
                 #write ALARM_STATE
                 self._WriteEntry("%d" %alarmStatus)
