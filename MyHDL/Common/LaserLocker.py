@@ -60,6 +60,7 @@ from Host.autogen.interface import LASERLOCKER_CS_TUNING_OFFSET_SEL_B, LASERLOCK
 from Host.autogen.interface import LASERLOCKER_CS_LASER_FREQ_OK_B, LASERLOCKER_CS_LASER_FREQ_OK_W
 from Host.autogen.interface import LASERLOCKER_CS_CURRENT_OK_B, LASERLOCKER_CS_CURRENT_OK_W
 from Host.autogen.interface import LASERLOCKER_OPTIONS_SIM_ACTUAL_B, LASERLOCKER_OPTIONS_SIM_ACTUAL_W
+from Host.autogen.interface import LASERLOCKER_OPTIONS_DIRECT_TUNE_B, LASERLOCKER_OPTIONS_DIRECT_TUNE_W
 
 from Divider import Divider
 from SignedMultiplier import SignedMultiplier
@@ -202,7 +203,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     laserlocker_fine_current_addr = map_base + LASERLOCKER_FINE_CURRENT
     laserlocker_cycle_counter_addr = map_base + LASERLOCKER_CYCLE_COUNTER
     cs = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    options = Signal(intbv(0)[1:])
+    options = Signal(intbv(0)[2:])
     eta1 = Signal(intbv(0)[WLM_ADC_WIDTH:])
     ref1 = Signal(intbv(0)[WLM_ADC_WIDTH:])
     eta2 = Signal(intbv(0)[WLM_ADC_WIDTH:])
@@ -509,6 +510,9 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     if not cs[LASERLOCKER_CS_ACC_EN_B]:
                         fine_current.next = 0x8000
                         fine_current_out.next = 0x8000
+                        
+                    if options[LASERLOCKER_OPTIONS_DIRECT_TUNE_B]:
+                        fine_current_out.next = tuning_offset_in
 
                     # Reset the run bit if continuous mode is not selected
                     # Ensure this is within clause that cs[LASERLOCKER_CS_RUN_B] == 1

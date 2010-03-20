@@ -1120,6 +1120,8 @@ typedef enum {
 #define LASERLOCKER_OPTIONS (1) // Options register
 #define LASERLOCKER_OPTIONS_SIM_ACTUAL_B (0) // Wavelength Monitor Data Source bit position
 #define LASERLOCKER_OPTIONS_SIM_ACTUAL_W (1) // Wavelength Monitor Data Source bit width
+#define LASERLOCKER_OPTIONS_DIRECT_TUNE_B (1) // Route tuner input to fine current output bit position
+#define LASERLOCKER_OPTIONS_DIRECT_TUNE_W (1) // Route tuner input to fine current output bit width
 
 #define LASERLOCKER_ETA1 (2) // Etalon 1 reading
 #define LASERLOCKER_REF1 (3) // Reference 1 reading

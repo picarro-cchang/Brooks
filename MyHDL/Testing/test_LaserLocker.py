@@ -56,6 +56,7 @@ from Host.autogen.interface import LASERLOCKER_CS_TUNING_OFFSET_SEL_B, LASERLOCK
 from Host.autogen.interface import LASERLOCKER_CS_LASER_FREQ_OK_B, LASERLOCKER_CS_LASER_FREQ_OK_W
 from Host.autogen.interface import LASERLOCKER_CS_CURRENT_OK_B, LASERLOCKER_CS_CURRENT_OK_W
 from Host.autogen.interface import LASERLOCKER_OPTIONS_SIM_ACTUAL_B, LASERLOCKER_OPTIONS_SIM_ACTUAL_W
+from Host.autogen.interface import LASERLOCKER_OPTIONS_DIRECT_TUNE_B, LASERLOCKER_OPTIONS_DIRECT_TUNE_W
 
 from MyHDL.Common.LaserLocker import LaserLocker
 

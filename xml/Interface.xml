@@ -3051,6 +3051,10 @@
                     <fielddef value="0">Simulator</fielddef>
                     <fielddef value="1">Actual WLM</fielddef>
                 </bitfield>
+                <bitfield ident="DIRECT_TUNE" description="Route tuner input to fine current output" lsb="1" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>
+                </bitfield>
             </reg>
             <reg type="uint16" ident="ETA1" description="Etalon 1 reading" access="rw">
                 <display format="%d" units="digU">Etalon 1 reading</display>

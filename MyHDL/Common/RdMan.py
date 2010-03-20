@@ -100,7 +100,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     meta3_in            -- Laser locker tuning offset
     meta4_in            -- Fine laser current from laser locker
     meta5_in            -- Lock error from laser locker
-    meta6_in
+    meta6_in            -- PID output from laser locker
     meta7_in
     rd_sim_in           -- Ringdown data input from simulator
     rd_data_in          -- Ringdown data input from ADC
