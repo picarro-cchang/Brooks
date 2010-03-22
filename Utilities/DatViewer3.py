@@ -291,6 +291,7 @@ class DatViewer(HasTraits):
     varName = CStr
     commands = Button
     autoscaleY = CBool
+    showPoints = CBool
     mean = CFloat
     stdDev = CFloat
     parent = Instance(object)
@@ -330,6 +331,16 @@ class DatViewer(HasTraits):
         # For means and standard deviations, use the first time series only
         self.sel = (self.xData[0]>=self.xLim[0]) & (self.xData[0]<=self.xLim[1])
         boxsel = self.sel & (self.yData[0]>=self.yLim[0]) & (self.yData[0]<=self.yLim[1])
+        #
+        if self.showPoints:
+            for h in self.dataHandles:
+                h.set_marker('o')
+                h.set_linestyle('None')
+        else:    
+            for h in self.dataHandles:
+                h.set_marker('None')
+                h.set_linestyle('-')
+        
         if any(boxsel):
             self.mean = mean(self.yData[0][boxsel])
             self.stdDev = std(self.yData[0][boxsel])
@@ -395,6 +406,9 @@ class DatViewer(HasTraits):
         if self.autoscaleY:
             self.notify(self.plot.axes)
 
+    def  _showPoints_changed(self):
+        self.notify(self.plot.axes)
+            
     def getYDataAndLimInWindow(self):
         return self.table.col(self.varName)
 
@@ -500,7 +514,7 @@ class SeriesWindow(Window):
                         VGroup(
                             Item("dataSetName",object="h%d"%i,editor=EnumEditor(name="dataSetNameList"),width=w),
                             Item("varName",object="h%d"%i,editor=EnumEditor(name="varNameList"),width=w),
-                            Item("autoscaleY",object="h%d"%i,width=w),
+                            HGroup(Item("autoscaleY",object="h%d"%i),Item("showPoints",object="h%d"%i)),
                             Item("mean",object="h%d"%i,width=w),
                             Item("stdDev",object="h%d"%i))
                     ))
