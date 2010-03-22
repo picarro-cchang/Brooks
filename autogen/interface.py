@@ -2176,6 +2176,8 @@ LASERLOCKER_CS_CURRENT_OK_W = 1 # Fine current calculation bit width
 LASERLOCKER_OPTIONS = 1 # Options register
 LASERLOCKER_OPTIONS_SIM_ACTUAL_B = 0 # Wavelength Monitor Data Source bit position
 LASERLOCKER_OPTIONS_SIM_ACTUAL_W = 1 # Wavelength Monitor Data Source bit width
+LASERLOCKER_OPTIONS_DIRECT_TUNE_B = 1 # Route tuner input to fine current output bit position
+LASERLOCKER_OPTIONS_DIRECT_TUNE_W = 1 # Route tuner input to fine current output bit width
 
 LASERLOCKER_ETA1 = 2 # Etalon 1 reading
 LASERLOCKER_REF1 = 3 # Reference 1 reading
@@ -2919,7 +2921,7 @@ parameter_forms.append(('Wavelength Monitor Simulator Parameters',__p))
 __p = []
 
 __p.append(('fpga','mask',FPGA_LASERLOCKER+LASERLOCKER_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Generate PRBS', [(0, u'Idle'), (4, u'Send PRBS')]), (8, u'Enable fine current acc', [(0, u'Reset'), (8, u'Accumulate')]), (16, u'Sample dark currents', [(0, u'Idle'), (16, u'Sample')]), (32, u'Load WLM ADC values', [(0, u'Idle'), (32, u'Load')]), (64, u'Tuner offset source', [(0, u'Register'), (64, u'Input port')]), (128, u'Laser frequency in window', [(0, u'Out of range'), (128, u'In Window')]), (256, u'Fine current calculation', [(0, u'In progress'), (256, u'Complete')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_LASERLOCKER+LASERLOCKER_OPTIONS,[(1, u'Wavelength Monitor Data Source', [(0, u'Simulator'), (1, u'Actual WLM')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_LASERLOCKER+LASERLOCKER_OPTIONS,[(1, u'Wavelength Monitor Data Source', [(0, u'Simulator'), (1, u'Actual WLM')]), (2, u'Route tuner input to fine current output', [(0, u'No'), (2, u'Yes')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_ETA1,'Etalon 1 reading','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_REF1,'Reference 1 reading','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_ETA2,'Etalon 2 reading','digU','%d',1,1))
