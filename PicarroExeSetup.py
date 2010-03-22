@@ -139,6 +139,9 @@ exclusionList = ["Tkconstants","Tkinter","tcl"]
 inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
                  "email.mime.multipart","email.mime.image","email.mime.text",
                  "email.mime.base","scipy.interpolate","scipy.misc"]
+hex_images = glob.glob("Utilities/DasMaintenanceGui/Images/*.hex")
+hex_images = hex_images + glob.glob("Utilities/DasMaintenanceGui/Images/*.xsvf")
+hex_images = hex_images + glob.glob("Utilities/DasMaintenanceGui/Images/*.iic")
 
 setup(version = "1.0",
       description = "Silverstone Host Core Software",
