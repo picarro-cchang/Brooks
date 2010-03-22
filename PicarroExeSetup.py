@@ -59,9 +59,8 @@ sys.path.append("QuickGui")
 sys.path.append("SampleManager")
 sys.path.append("Supervisor")
 sys.path.append("Utilities")
-sys.path.append("Utilities/DiagGui")
-sys.path.append("Utilities/DasMaintenanceGui")
 sys.path.append("Utilities/RemoteAccess")
+sys.path.append("../SrcCode/Utilities")
 
 ################################################################
 # Start of a pile of special setup with the sole purpose
@@ -112,26 +111,6 @@ Controller = Target(description = "Controller", # used for the versioninfo resou
                     dest_base = "Controller"
                     )
 
-DiagGui = Target(description = "DiagGui", # used for the versioninfo resource
-                    script = "Utilities/DiagGui/DiagGui.py", # what to build
-                    other_resources = [(RT_MANIFEST,
-                                        1,
-                                        manifest_template % dict(prog="DiagGui")
-                                        )],
-                    ##    icon_resources = [(1, "icon.ico")],
-                    dest_base = "DiagGui"
-                    )
-
-DasMaintenanceGui = Target(description = "DasMaintenanceGui", # used for the versioninfo resource
-                    script = "Utilities/DasMaintenanceGui/DasMaintenanceGui.py", # what to build
-                    other_resources = [(RT_MANIFEST,
-                                        1,
-                                        manifest_template % dict(prog="DasMaintenanceGui")
-                                        )],
-                    ##    icon_resources = [(1, "icon.ico")],
-                    dest_base = "DasMaintenanceGui"
-                    )
-
 QuickGui = Target(description = "QuickGui", # used for the versioninfo resource
                     script = "QuickGui/QuickGui.py", # what to build
                     other_resources = [(RT_MANIFEST,
@@ -160,10 +139,6 @@ exclusionList = ["Tkconstants","Tkinter","tcl"]
 inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
                  "email.mime.multipart","email.mime.image","email.mime.text",
                  "email.mime.base","scipy.interpolate","scipy.misc"]
-hex_images = glob.glob("Utilities/DasMaintenanceGui/Images/*.hex")
-hex_images = hex_images + glob.glob("Utilities/DasMaintenanceGui/Images/*.xsvf")
-hex_images = hex_images + glob.glob("Utilities/DasMaintenanceGui/Images/*.iic")
-
 
 setup(version = "1.0",
       description = "Silverstone Host Core Software",
@@ -193,17 +168,25 @@ setup(version = "1.0",
                  "SampleManager/SampleManager.py",
                  "Supervisor/Supervisor.py",
                  "Utilities/RemoteAccess/RemoteAccess.py",
-                 "Utilities/DasMaintenanceGui/usbProgramEEPROM.py",
+                 "../SrcCode/Utilities/CalibrateSystem.py",
+                 "../SrcCode/Utilities/AdjustWlmOffset.py",
+                 "../SrcCode/Utilities/ExamineRawRD.py",
+                 "../SrcCode/Utilities/ExamineRDCount.py",
+                 "../SrcCode/Utilities/LaserLockPrbs.py",
+                 "../SrcCode/Utilities/LaserPidPrbs.py",
+                 "../SrcCode/Utilities/MakeWarmBoxCalFile.py",
+                 "../SrcCode/Utilities/MakeWlmFile1.py",
+                 "../SrcCode/Utilities/SaveData.py",
+                 "../SrcCode/Utilities/SaveRaw.py",
+                 "../SrcCode/Utilities/TestClient.py",
+                 "../SrcCode/Utilities/ThresholdStats.py",
                  Fitter,
                  Controller, 
-                 DiagGui, 
-                 DasMaintenanceGui, 
                  QuickGui],
 
       data_files = [(".", ["EventManager/Warning_16x16_32.ico",
                            "EventManager/Info_16x16_32.ico",
                            "EventManager/Critical_16x16_32.ico",
-                           "Utilities/DasMaintenanceGui/P_RGB_WHITEBCKGRND.bmp",
                            "QuickGui/LEDgreen.ico",
                            "QuickGui/LEDgreen2.ico",
                            "QuickGui/LEDoff.ico",
