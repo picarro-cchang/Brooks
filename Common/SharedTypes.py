@@ -54,6 +54,7 @@ RPC_PORT_FITTER             = 50180
 RPC_PORT_FILE_ERASER        = 50190
 RPC_PORT_VALVE_SEQUENCER    = 50200
 RPC_PORT_COORDINATOR        = 50210
+RPC_PORT_QUICK_GUI          = 50220
 
 #TCP_PORT... are the port numbers used by "normal" TCP servers
 TCP_PORT_INTERFACE          = 51000

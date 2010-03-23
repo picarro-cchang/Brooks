@@ -27,6 +27,7 @@ Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
 APP_NAME = "QuickGui"
+APP_DESCRIPTION = "CRDS GUI"
 __version__ = 1.0
 _DEFAULT_CONFIG_NAME = "QuickGui.ini"
 _MAIN_CONFIG_SECTION = "Setup"
@@ -56,7 +57,7 @@ from Host.Common import BetterTraceback
 from Host.Common import AppStatus
 from Host.Common import SharedTypes
 from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
-                                    RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER
+                                    RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_QUICK_GUI
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
@@ -1147,6 +1148,20 @@ class InstStatusPanel(wx.Panel):
         sizer_out.Fit(self)
         sizer_out.SetSizeHints(self)
         
+class RpcServerThread(threading.Thread):
+    def __init__(self, RpcServer, ExitFunction):
+        threading.Thread.__init__(self)
+        self.setDaemon(1) #THIS MUST BE HERE
+        self.RpcServer = RpcServer
+        self.ExitFunction = ExitFunction
+    def run(self):
+        self.RpcServer.serve_forever()
+        try: #it might be a threading.Event
+            self.ExitFunction()
+            Log("RpcServer exited and no longer serving.")
+        except:
+            LogExc("Exception raised when calling exit function at exit of RPC server.")
+    
 class QuickGui(wx.Frame):
     def __init__(self,configFile):
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700))
@@ -1294,7 +1309,24 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_IDLE,self.OnIdle)
         self.Bind(wx.EVT_SIZE,self.OnSize)
         self.Bind(wx.EVT_PAINT,self.OnPaint)
+        
+        self.startServer()
 
+    def startServer(self):
+        self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_QUICK_GUI),
+                                                ServerName = APP_NAME,
+                                                ServerDescription = APP_DESCRIPTION,
+                                                ServerVersion = __version__,
+                                                threaded = True)  
+        self.rpcServer.register_function(self.setTitle)
+        # Start the rpc server on another thread...
+        self.rpcThread = RpcServerThread(self.rpcServer, self.Destroy)
+        self.rpcThread.start()
+    
+    def setTitle(self, newTitle):
+        self.titleLabel.SetLabel(newTitle)
+        return "OK"
+        
     def loadConfig(self,configFile):
         config = CustomConfigObj(configFile)
         return config
@@ -1340,8 +1372,8 @@ class QuickGui(wx.Frame):
         panel.SetBackgroundColour(bgColour)
         panel.SetForegroundColour(fgColour)
         # Define the title band
-        titleLabel = wx.StaticText(parent=panel, id=-1, label=getInnerStr(self.config.get('Title','String')), style=wx.ALIGN_CENTER)
-        setItemFont(titleLabel,self.getFontFromIni('Title'))
+        self.titleLabel = wx.StaticText(parent=panel, id=-1, label=getInnerStr(self.config.get('Title','String')), style=wx.ALIGN_CENTER)
+        setItemFont(self.titleLabel,self.getFontFromIni('Title'))
 
         # Define the footer band
         footerLabel = wx.StaticText(parent=panel, id=-1, label=getInnerStr(self.config.get('Footer','String')), style=wx.ALIGN_CENTER)
@@ -1629,7 +1661,7 @@ class QuickGui(wx.Frame):
 
         vsizer2 = wx.BoxSizer(wx.VERTICAL)
         titleSizer = wx.BoxSizer(wx.VERTICAL)
-        titleSizer.Add(titleLabel,proportion=0,flag=wx.ALIGN_CENTER)
+        titleSizer.Add(self.titleLabel,proportion=0,flag=wx.ALIGN_CENTER)
         vsizer2.Add(titleSizer,proportion=0,flag= wx.GROW | wx.ALL,border=10)
         vsizer2.Add(sizer,proportion=1,flag=wx.GROW)
         vsizer2.Add(toolPanel,proportion=0,flag=wx.GROW)
