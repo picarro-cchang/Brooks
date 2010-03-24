@@ -459,7 +459,7 @@ class DataLogger(object):
 
         self.DataListenerLastTime = 0
         self.maxDataListenerRtt = 0
-        self.AlarmListenerLastTime = 0
+        self.alarmListenerLastTime = 0
         self.maxAlarmListenerRtt = 0
         
     def _LoadDefaultConfig(self):
@@ -553,6 +553,7 @@ class DataLogger(object):
                         
     def _AlarmListener( self, data ):
         """Listener for alarm status"""
+        now = TimeStamp()       
         if self.alarmListenerLastTime != 0:
             rtt = now - self.alarmListenerLastTime
             if rtt > self.maxAlarmListenerRtt:

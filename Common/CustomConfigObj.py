@@ -204,10 +204,10 @@ class CustomConfigObj(configobj.ConfigObj):
             if optionLc in self.shadow[section]:
                 v, k = self.shadow[section][optionLc]
                 self[section].update({k: str(value)})
-                self.shadow[section].update({optionLc: str(value)})
+                self.shadow[section].update({optionLc: (str(value),option)})
             else:
                 self[section].update({option: str(value)})
-                self.shadow[section].update({optionLc: str(value)})
+                self.shadow[section].update({optionLc: (str(value),option)})
         
     def has_section(self, section):
         return self.has_key(section)
