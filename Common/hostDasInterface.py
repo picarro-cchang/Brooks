@@ -460,6 +460,12 @@ class HostToDspSender(Singleton):
         # HOST[len(data)+2]: CRC32
 
         # The total host area is 1KB in size
+        #while True:
+        #    self.initStatus = self.rdRegUint(interface.COMM_STATUS_REGISTER)
+        #    if 0 != self.initStatus & interface.COMM_STATUS_CompleteMask:
+        #        break
+        #    print "Waiting for COMM_STATUS complete before USB communication"
+        #    time.sleep(0.1)            
         self.initStatus = self.rdRegUint(interface.COMM_STATUS_REGISTER)
         if self.seqNum == None:
             self.seqNum = (self.getSequenceNumber() + 1) & 0xFF

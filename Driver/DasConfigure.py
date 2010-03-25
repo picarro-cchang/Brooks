@@ -67,6 +67,7 @@ class DasConfigure(SharedTypes.Singleton):
                    ("POWER_BOARD_PRESENT", 1<<interface.HARDWARE_PRESENT_PowerBoardBit),
                    ("WARM_BOX_PRESENT",    1<<interface.HARDWARE_PRESENT_WarmBoxBit),
                    ("HOT_BOX_PRESENT",     1<<interface.HARDWARE_PRESENT_HotBoxBit),
+                   ("DAS_TEMP_MONITOR",    1<<interface.HARDWARE_PRESENT_DasTempMonitorBit),
                    ]
         mask = 0
         for key, bit in mapping:
@@ -178,10 +179,11 @@ class DasConfigure(SharedTypes.Singleton):
                             ["STREAM_Laser%dCurrent" % laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
                 
         # Read the DAS temperature into DAS_TEMPERATURE_REGISTER and stream it
-        self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(Operation("ACTION_DS1631_READTEMP",
-                                                                       ["DAS_TEMPERATURE_REGISTER"]))
-        self.opGroups["FAST"]["STREAMER"].addOperation(Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                                                                 ["STREAM_DasTemp","DAS_TEMPERATURE_REGISTER"]))
+        if self.installCheck("DAS_TEMP_MONITOR"):
+            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(Operation("ACTION_DS1631_READTEMP",
+                                                                           ["DAS_TEMPERATURE_REGISTER"]))
+            self.opGroups["FAST"]["STREAMER"].addOperation(Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                                                     ["STREAM_DasTemp","DAS_TEMPERATURE_REGISTER"]))
 
         # Set up interpolator environments for the warm box TEC, cavity TEC and heater
 

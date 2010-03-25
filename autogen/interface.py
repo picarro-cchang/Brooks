@@ -792,6 +792,7 @@ HARDWARE_PRESENT_SoaBit = 4 # SOA
 HARDWARE_PRESENT_PowerBoardBit = 5 # Power Board
 HARDWARE_PRESENT_WarmBoxBit = 6 # Warm Box
 HARDWARE_PRESENT_HotBoxBit = 7 # Hot Box
+HARDWARE_PRESENT_DasTempMonitorBit = 8 # Das Temp Monitor
 
 # Dictionary for enumerated constants in HARDWARE_PRESENT_BitType
 HARDWARE_PRESENT_BitTypeDict = {}
@@ -803,6 +804,7 @@ HARDWARE_PRESENT_BitTypeDict[4] = 'HARDWARE_PRESENT_SoaBit' # SOA
 HARDWARE_PRESENT_BitTypeDict[5] = 'HARDWARE_PRESENT_PowerBoardBit' # Power Board
 HARDWARE_PRESENT_BitTypeDict[6] = 'HARDWARE_PRESENT_WarmBoxBit' # Warm Box
 HARDWARE_PRESENT_BitTypeDict[7] = 'HARDWARE_PRESENT_HotBoxBit' # Hot Box
+HARDWARE_PRESENT_BitTypeDict[8] = 'HARDWARE_PRESENT_DasTempMonitorBit' # Das Temp Monitor
 
 # Definitions for COMM_STATUS_BITMASK
 COMM_STATUS_CompleteMask = 0x1
