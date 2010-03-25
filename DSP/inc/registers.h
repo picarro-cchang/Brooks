@@ -74,5 +74,6 @@ void *registerAddr(unsigned int regNum);
 RegTypes getRegisterType(unsigned int regNum);
 
 void hwiHpiInterrupt(unsigned int funcArg, unsigned int eventId);
+void backend(void);
 
 #endif /* _REGISTERS_H_ */

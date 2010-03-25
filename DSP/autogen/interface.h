@@ -580,7 +580,8 @@ typedef enum {
     HARDWARE_PRESENT_SoaBit = 4, // SOA
     HARDWARE_PRESENT_PowerBoardBit = 5, // Power Board
     HARDWARE_PRESENT_WarmBoxBit = 6, // Warm Box
-    HARDWARE_PRESENT_HotBoxBit = 7 // Hot Box
+    HARDWARE_PRESENT_HotBoxBit = 7, // Hot Box
+    HARDWARE_PRESENT_DasTempMonitorBit = 8 // Das Temp Monitor
 } HARDWARE_PRESENT_BitType;
 
 /* Definitions for COMM_STATUS_BITMASK */

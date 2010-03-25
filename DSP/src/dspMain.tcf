@@ -130,6 +130,8 @@ bios.TSK.instance("TSK_spectCntrl").priority = 3;
 bios.TSK.instance("TSK_rdDataMoving").priority = 3;
 bios.PRD.instance("PRD_sentryHandler").period = 50;
 bios.TSK.instance("TSK_scheduler").stackSize = 1536;
+bios.SEM.create("SEM_hpiIntBackend");
+bios.SEM.instance("SEM_hpiIntBackend").comment = "Indicates that an HPI action is pending";
 // !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
 
 prog.gen();

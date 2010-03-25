@@ -836,45 +836,80 @@ int r_interpolator_step(unsigned int numInt,void *params,void *env)
 
 int r_eeprom_read(unsigned int numInt,void *params,void *env)
 /* Reads from an EEPROM in the analyzer. Arguments are the EEPROM ID, the address in the EEPROM
-    and the number of bytes to read. The result is placed within the environment.
-    TODO: Handle EEPROM id. Current code only talks to logic board EEPROM. */
+    and the number of bytes to read. The result is placed within the environment. */
 {
-    unsigned int id, addr, nbytes, *reg = (unsigned int *) params;
+    unsigned int addr, chain, id, loops, nbytes, *reg = (unsigned int *) params;
+    I2C_device *dev;
     Byte64EnvType *byte64Env = (Byte64EnvType *)env;
 
     if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
     id = reg[0];
     addr = reg[1];
     nbytes = reg[2];
-    eeprom_read(&i2c_devices[LOGIC_EEPROM],addr,(unsigned char *)(byte64Env->buffer),nbytes);
+    dev = &i2c_devices[id];
+    chain = dev->chain;
+    // Switch the I2C multiplexer if necessary
+    switch (chain) {
+        case 0:
+            if (dev->mux >= 0) setI2C0Mux(dev->mux);
+            break;
+        case 1:
+            if (dev->mux >= 0) setI2C1Mux(dev->mux);
+            break;
+    }
+    for (loops=0;loops<1000;loops++);
+    eeprom_read(dev,addr,(unsigned char *)(byte64Env->buffer),nbytes);
     return STATUS_OK;
 }
-    
+
 int r_eeprom_write(unsigned int numInt,void *params,void *env)
 /* Writes to an EEPROM in the analyzer. Arguments are the EEPROM ID, the address in the EEPROM
-    and the number of bytes to read. The result is placed within the environment.
-    TODO: Handle EEPROM id. Current code only talks to logic board EEPROM. */
+    and the number of bytes to read. The result is placed within the environment. */
 {
-    unsigned int id, addr, nbytes, *reg = (unsigned int *) params;
+    unsigned int addr, chain, id, loops, nbytes, *reg = (unsigned int *) params;
+    I2C_device *dev;
     Byte64EnvType *byte64Env = (Byte64EnvType *)env;
 
     if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
     id = reg[0];
     addr = reg[1];
     nbytes = reg[2];
-    eeprom_write(&i2c_devices[LOGIC_EEPROM],addr,(unsigned char *)(byte64Env->buffer),nbytes);
+    dev = &i2c_devices[id];
+    chain = dev->chain;
+    // Switch the I2C multiplexer if necessary
+    switch (chain) {
+        case 0:
+            if (dev->mux >= 0) setI2C0Mux(dev->mux);
+            break;
+        case 1:
+            if (dev->mux >= 0) setI2C1Mux(dev->mux);
+            break;
+    }
+    for (loops=0;loops<1000;loops++);
+    eeprom_write(dev,addr,(unsigned char *)(byte64Env->buffer),nbytes);
     return STATUS_OK;
 }
 
 int r_eeprom_ready(unsigned int numInt,void *params,void *env)
 /* Check that the EEPROM in the analyzer is ready for read/write. Argument is the EEPROM ID. The
-    result is placed in the COMM_STATUS_REGISTER.
-    TODO: Handle EEPROM id. Current code only talks to logic board EEPROM. */
+    result is placed in the COMM_STATUS_REGISTER. */
 {
-    unsigned int id, *reg = (unsigned int *) params;
+    unsigned int chain, id, loops, *reg = (unsigned int *) params;
+    I2C_device *dev;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
     id = reg[0];
-    return !eeprom_busy(&i2c_devices[LOGIC_EEPROM]);
+    dev = &i2c_devices[id];
+    chain = dev->chain;
+    switch (chain) {
+        case 0:
+            if (dev->mux >= 0) setI2C0Mux(dev->mux);
+            break;
+        case 1:
+            if (dev->mux >= 0) setI2C1Mux(dev->mux);
+            break;
+    }
+    for (loops=0;loops<1000;loops++);
+    return !eeprom_busy(dev);
 }
 
 int r_i2c_check(unsigned int numInt,void *params,void *env)

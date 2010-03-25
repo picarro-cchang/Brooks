@@ -122,7 +122,6 @@ LaserCurrentCntrl currentCntrlLaser4;
 int currentCntrlLaser1Init(void)
 {
     LaserCurrentCntrl *c = &currentCntrlLaser1;
-    writeFPGA(FPGA_KERNEL+KERNEL_DIAG_1,0);
     c->state_ = (unsigned int *)registerAddr(LASER1_CURRENT_CNTRL_STATE_REGISTER);
     c->manual_coarse_ = (float *)registerAddr(LASER1_MANUAL_COARSE_CURRENT_REGISTER);
     c->manual_fine_ = (float *)registerAddr(LASER1_MANUAL_FINE_CURRENT_REGISTER);
@@ -147,7 +146,6 @@ int currentCntrlLaser1Step(void)
 int currentCntrlLaser2Init(void)
 {
     LaserCurrentCntrl *c = &currentCntrlLaser2;
-    writeFPGA(FPGA_KERNEL+KERNEL_DIAG_1,0);
     c->state_ = (unsigned int *)registerAddr(LASER2_CURRENT_CNTRL_STATE_REGISTER);
     c->manual_coarse_ = (float *)registerAddr(LASER2_MANUAL_COARSE_CURRENT_REGISTER);
     c->manual_fine_ = (float *)registerAddr(LASER2_MANUAL_FINE_CURRENT_REGISTER);
@@ -172,7 +170,6 @@ int currentCntrlLaser2Step(void)
 int currentCntrlLaser3Init(void)
 {
     LaserCurrentCntrl *c = &currentCntrlLaser3;
-    writeFPGA(FPGA_KERNEL+KERNEL_DIAG_1,0);
     c->state_ = (unsigned int *)registerAddr(LASER3_CURRENT_CNTRL_STATE_REGISTER);
     c->manual_coarse_ = (float *)registerAddr(LASER3_MANUAL_COARSE_CURRENT_REGISTER);
     c->manual_fine_ = (float *)registerAddr(LASER3_MANUAL_FINE_CURRENT_REGISTER);
@@ -197,7 +194,6 @@ int currentCntrlLaser3Step(void)
 int currentCntrlLaser4Init(void)
 {
     LaserCurrentCntrl *c = &currentCntrlLaser4;
-    writeFPGA(FPGA_KERNEL+KERNEL_DIAG_1,0);
     c->state_ = (unsigned int *)registerAddr(LASER4_CURRENT_CNTRL_STATE_REGISTER);
     c->manual_coarse_ = (float *)registerAddr(LASER4_MANUAL_COARSE_CURRENT_REGISTER);
     c->manual_fine_ = (float *)registerAddr(LASER4_MANUAL_FINE_CURRENT_REGISTER);

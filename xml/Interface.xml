@@ -522,6 +522,7 @@
             <enum_value ident="HARDWARE_PRESENT_PowerBoardBit"     value="5" caption="Power Board" /> 
             <enum_value ident="HARDWARE_PRESENT_WarmBoxBit"        value="6" caption="Warm Box" /> 
             <enum_value ident="HARDWARE_PRESENT_HotBoxBit"         value="7" caption="Hot Box" />             
+            <enum_value ident="HARDWARE_PRESENT_DasTempMonitorBit" value="8" caption="Das Temp Monitor" />             
         </enum>
     </enum_list>
     <bits_list>

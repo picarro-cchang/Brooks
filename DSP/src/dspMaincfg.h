@@ -41,6 +41,7 @@ extern far SEM_Obj SEM_rdBuffer1Available;
 extern far SEM_Obj SEM_startRdCycle;
 extern far SEM_Obj SEM_waitForRdMan;
 extern far SEM_Obj SEM_sentryHandler;
+extern far SEM_Obj SEM_hpiIntBackend;
 extern far STS_Obj IDL_busyObj;
 
 

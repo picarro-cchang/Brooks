@@ -114,6 +114,7 @@ _SEM_rdBuffer1Available = SEM_rdBuffer1Available;
 _SEM_startRdCycle = SEM_startRdCycle;
 _SEM_waitForRdMan = SEM_waitForRdMan;
 _SEM_sentryHandler = SEM_sentryHandler;
+_SEM_hpiIntBackend = SEM_hpiIntBackend;
 _IDL_busyObj = IDL_busyObj;
 
 /* MODULE GBL */

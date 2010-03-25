@@ -20,6 +20,7 @@
 #include <prd.h>
 #include "dspMaincfg.h"
 
+#include "registers.h"
 #include "scheduler.h"
 // The following contains the prototype of the dispatcher for actions
 #include "dspAutogen.h"
@@ -172,9 +173,12 @@ void scheduler(void)
     DataType d;
     while (1)
     {
-        SEM_pend(&SEM_scheduler,SYS_FOREVER);
-        readRegister(SCHEDULER_CONTROL_REGISTER,&d);
-        if (d.asInt) do_groups(timestamp);
+        // Do any pending host commands issued within HPI interrupts
+        if (SEM_pend(&SEM_hpiIntBackend,10)) backend();
+        if (SEM_pend(&SEM_scheduler,0)) {
+            readRegister(SCHEDULER_CONTROL_REGISTER,&d);
+            if (d.asInt) do_groups(timestamp);
+        }
     }
 }
 

@@ -16,9 +16,12 @@
 #include <std.h>
 #include <tsk.h>
 #include "dspAutogen.h"
+#include "fpga.h"
 #include "i2c_dsp.h"
 #include "i2cEeprom.h"
 #include "registers.h"
+
+static int diag_bit = 0;
 
 int eeprom_send_address(I2C_device *i2c,unsigned short address)
 {
@@ -27,6 +30,9 @@ int eeprom_send_address(I2C_device *i2c,unsigned short address)
     data[0] = (address>>8) & 0xFF;
     data[1] = address & 0xFF;
     for (loops=0; loops<10000; loops++);
+    // Toggle bit 3 of kernel diag register for debugging I2C EEPROM
+    diag_bit = !diag_bit;
+    changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 3, 1, diag_bit);
     return I2C_write_bytes(hI2C[i2c->chain],i2c->addr,data,2);
 }
 
