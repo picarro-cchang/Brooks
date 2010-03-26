@@ -2189,7 +2189,7 @@ class QuickGui(wx.Frame):
             self.imageDatabase.placeImage(key,(w,h))
         evt.Skip()
     def OnAbout(self,e):
-        v = "(c) 2005-2009, Picarro Inc.\n\n"
+        v = "(c) 2005-2010, Picarro Inc.\n\n"
         try:
             dV = self.driverRpc.allVersions()
             klist = dV.keys()
