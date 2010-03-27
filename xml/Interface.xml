@@ -255,7 +255,22 @@
             <field ident="pressureC1" type="float"/>
             <field ident="pressureC2" type="float"/>
             <field ident="pressureC3" type="float"/>
-        </struct>        
+        </struct>
+        <struct type="WLMCalRowType">
+            <field ident="waveNumberAsUint" type="uint32" />
+            <field ident="ratio1" type="float" />
+            <field ident="ratio2" type="float" />
+        </struct>
+        <struct type="WLMCalibrationType">
+            <field ident="identifier" type="uint8" size="32" />
+            <field ident="etalon_temperature" type="float" />
+            <field ident="etalon1_offset" type="float" />
+            <field ident="reference1_offset" type="float" />
+            <field ident="etalon2_offset" type="float" />
+            <field ident="reference2_offset" type="float" />
+            <field ident="padding" type="uint8" size="12" />
+            <field ident="wlmCalRows" type="WLMCalRowType" size="336" />
+        </struct>
     </struct_list>
     <constant_list>
         <!-- N.B. All SIZE and OFFSET variables are in 32 bit integers, all ADDRESS variables are in bytes -->

@@ -165,11 +165,11 @@ void spectCntrl(void)
     int bank, status, nloops;
     int *counter = (int*)(REG_BASE+4*RD_INITIATED_COUNT_REGISTER);
 
+    nloops = 0;
     while (1)
     {
         SEM_pendBinary(&SEM_startRdCycle,SYS_FOREVER);
         (*counter)++;
-        nloops = 0;
         
         // The next while loop periodically checks to see if we are allowed
         //  to start the ringdown
@@ -204,6 +204,7 @@ void spectCntrl(void)
                                RDMAN_CONTROL_RESET_RDMAN_W,1);
                 SEM_pendBinary(&SEM_waitForRdMan,SYS_FOREVER);
                 message_puts("Resetting ringdown manager");
+                nloops = 0;
                 break;
             }
         }

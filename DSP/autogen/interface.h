@@ -260,6 +260,23 @@ typedef struct {
     float pressureC3;
 } VirtualLaserParamsType;
 
+typedef struct {
+    uint32 waveNumberAsUint;
+    float ratio1;
+    float ratio2;
+} WLMCalRowType;
+
+typedef struct {
+    uint8 identifier[32];
+    float etalon_temperature;
+    float etalon1_offset;
+    float reference1_offset;
+    float etalon2_offset;
+    float reference2_offset;
+    uint8 padding[12];
+    WLMCalRowType wlmCalRows[336];
+} WLMCalibrationType;
+
 /* Constant definitions */
 // Maximum number of lasers
 #define MAX_LASERS (4)

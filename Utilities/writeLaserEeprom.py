@@ -1,5 +1,24 @@
-import configobj
+#!/usr/bin/python
+#
+# FILE:
+#   writeLaserEeprom.py
+#
+# DESCRIPTION:
+#   Write to laser EEPROM from a WLM file
+#
+# SEE ALSO:
+#   Specify any related information.
+#
+# HISTORY:
+#   26-March-2010  sze  Initial version.
+#
+#  Copyright (c) 2010 Picarro, Inc. All rights reserved
+#
+import sys
+import getopt
+from configobj import ConfigObj
 import numpy as np
+import os
 import cPickle
 import socket
 import struct
@@ -9,6 +28,11 @@ from Host.Common import CmdFIFO, SharedTypes
 from Host.Common.hostDasInterface import Operation, OperationGroup
 from Host.Common.StringPickler import StringAsObject, ObjAsString
 from Host.Common.WlmCalUtilities import WlmFile
+
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
 
 class DriverProxy(SharedTypes.Singleton):
     """Encapsulates access to the Driver via RPC calls"""
@@ -25,127 +49,108 @@ class DriverProxy(SharedTypes.Singleton):
 # For convenience in calling driver functions
 Driver = DriverProxy().rpc
 
-def encode(pickleString):
-    """Convert a pickle string into a stream of 32-bit quantities, where the
-        first word is the number of bytes in the string and the following
-        words consist of the packed string in little-endian format"""
-    n = len(pickleString)
-    result = [n]
-    pad = 0
-    if n % 4:
-        pad = 4 - (n%4)
-    fmt = "%dI" % ((n+pad)//4,)
-    return [n] + [i for i in struct.unpack(fmt,pickleString + (pad*" "))]
+class WriteLaserEeprom(object):
+    """Write parameters from WLM file to laser EEPROM"""
+    def __init__(self,configFile,options):
+        self.config = ConfigObj(configFile)
+        # Analyze options
+        if "-l" in options:
+            self.laserNum = int(options["-l"])
+        else:
+            self.laserNum = int(self.config["SETTINGS"]["LASER"])
+        if self.laserNum<=0 or self.laserNum>MAX_LASERS:
+            raise ValueError("LASER must be in range 1..4")
 
-def decode(wordArray):
-    """Returns a Python object from a packed pickled string, passed as an
-    array of 32-bit words. The first word is the length in bytes of the 
-    pickled string"""
-    n = wordArray[0]
-    s = struct.pack("%dI"%((n+3)//4,),*wordArray[1:])
-    return cPickle.loads(s)
-
-def eepromWrite(whichEeprom,wordArray,startAddress,pageSize):
-    """Write the 32-bit wordArray to the specified EEPROM starting at byte
-    address startAddress (which must be divisible by 4). The pageSize 
-    (<=64, in bytes) is used to perform the writing in chunks, being careful
-    not to cross page boundaries."""
-
-    if startAddress % 4:
-        raise ValueError("startAddress must be a multiple of 4 in eepromWrite")
-    if pageSize <= 0 or pageSize > 64:
-        raise ValueError("pageSize must lie between 1 and 64")
-
-    myEnv = Byte64EnvType()
-    start = 0
-    while True:
-        pageEnd = pageSize * ((startAddress + pageSize) // pageSize)
-        nBytes = pageEnd - startAddress
-        dataToSend = wordArray[start:start+nBytes//4]
-        if len(dataToSend) == 0: break
-        for i,d in enumerate(dataToSend):
-            myEnv.buffer[i] = d
-        Driver.wrEnvFromString("BYTE64_ENV",Byte64EnvType,ObjAsString(myEnv))
-        op = Operation("ACTION_EEPROM_WRITE",[i2cByIdent[whichEeprom][0],startAddress,nBytes],"BYTE64_ENV")
-        Driver.doOperation(op)
-        print startAddress
-        startAddress = pageEnd
-        start += nBytes//4
-        while not Driver.doOperation(Operation("ACTION_EEPROM_READY",[i2cByIdent[whichEeprom][0]])):
-            time.sleep(0.1)
-
-def eepromRead(whichEeprom,startAddress,chunkSize):
-    """Reads from the specified EEPROM starting at byte address startAddress 
-    (which must be divisible by 4). The first four bytes specifies the number
-    of subsequent bytes to be read. This is rounded up to a multiple of 4.
-    The chunkSize (<=64, in bytes) is used to perform the reading in chunks for efficiency."""
+        if "-f" in options:
+            fname = options["-f"]
+        else:
+            fname = self.config["SETTINGS"]["FILENAME"]
+        self.fname = fname.strip() + ".wlm"
+        self.fp = file(self.fname,"r")
+        
+        if "-s" in options:
+            self.serialNo = options["-s"]
+        else:
+            self.serialNo = self.config["SETTINGS"]["SERIAL"]
+        
+    def run(self):
+        # Check that the driver can communicate
+        try:
+            print "Driver version: %s" % Driver.allVersions()
+        except:
+            raise ValueError,"Cannot communicate with driver, aborting"
     
-    if startAddress % 4:
-        raise ValueError("startAddress must be a multiple of 4 in eepromRead")
-    if chunkSize <= 0 or chunkSize > 64:
-        raise ValueError("chunkSize must lie between 1 and 64")
+        eepromId = "LASER%d_EEPROM" % self.laserNum
+        wlmFile = WlmFile(self.fp)
+        sec = {}
+        sec["COARSE_CURRENT"] = float(wlmFile.parameters["laser_current"])
+        sec["WAVENUM_CEN"]    = wlmFile.WtoT.xcen
+        sec["WAVENUM_SCALE"]  = wlmFile.WtoT.xscale
+        sec["W2T_0"],sec["W2T_1"],sec["W2T_2"],sec["W2T_3"] = wlmFile.WtoT.coeffs
+        sec["TEMP_CEN"]    = wlmFile.TtoW.xcen
+        sec["TEMP_SCALE"]  = wlmFile.TtoW.xscale
+        sec["T2W_0"],sec["T2W_1"],sec["T2W_2"],sec["T2W_3"] = wlmFile.TtoW.coeffs
+        sec["TEMP_ERMS"] = np.sqrt(wlmFile.WtoT.residual)
+        sec["WAVENUM_ERMS"] = np.sqrt(wlmFile.TtoW.residual)
+        
+        header = []
+        self.fp.seek(0)
+        while True:
+            line = self.fp.readline()
+            if line.strip() == "[Data]": break
+            header.append(line)
+        hdrDict = ConfigObj(header)
+        self.fp.close()
+        laserDat = dict(parameters=sec,
+                        serialNo="%s" % self.serialNo,
+                        date=hdrDict["CRDS Header"]["Date"],
+                        time=hdrDict["CRDS Header"]["Time"],
+                        laserTemperature = wlmFile.TLaser,
+                        waveNumber = wlmFile.WaveNumber)
+        print "Starting to write to EEPROM"                
+        Driver.shelveObject(eepromId,laserDat)
+        raw_input("Writing to EEPROM complete. <Enter> to continue.")
+        print "Verification %s" % "succeeded." if Driver.verifyObject(eepromId,laserDat) else "FAILED."
+        
+HELP_STRING = """writeLaserEeprom.py [-c<FILENAME>] [-h|--help]
 
-    myEnv = Byte64EnvType()
-    op = Operation("ACTION_EEPROM_READ",[i2cByIdent[whichEeprom][0],startAddress,4],"BYTE64_ENV")
-    Driver.doOperation(op)
-    result = StringAsObject(Driver.rdEnvToString("BYTE64_ENV",Byte64EnvType),Byte64EnvType)
-    nBytes = result.buffer[0]
-    wordArray = [nBytes]
-    nBytes = 4*((nBytes + 3) // 4)
-    startAddress += 4
-    while nBytes > 0:
-        bytesRead = min(nBytes,chunkSize)
-        op = Operation("ACTION_EEPROM_READ",[i2cByIdent[whichEeprom][0],startAddress,bytesRead],"BYTE64_ENV")
-        Driver.doOperation(op)
-        result = StringAsObject(Driver.rdEnvToString("BYTE64_ENV",Byte64EnvType),Byte64EnvType)
-        for i in range(bytesRead//4):
-            wordArray.append(result.buffer[i])
-        print startAddress
-        startAddress += bytesRead
-        nBytes -= bytesRead
-    return wordArray
-            
-if __name__ == '__main__':
-    # Write parameters from WLM file to laser EEPROM
-    # fname = r'C:\work\G2000\InstrConfig\Integration\Laser_969807_CO2.wlm'
-    fname = r'C:\work\G2000\InstrConfig\Integration\Laser_970174_CH4.wlm'
+Where the options can be a combination of the following. Note that options override
+settings in the configuration file:
 
-    fp = file(fname,'r')
-    wlmFile = WlmFile(fp)
-    sec = {}
-    sec["COARSE_CURRENT"] = float(wlmFile.parameters["laser_current"])
-    sec["WAVENUM_CEN"]    = wlmFile.WtoT.xcen
-    sec["WAVENUM_SCALE"]  = wlmFile.WtoT.xscale
-    sec["W2T_0"],sec["W2T_1"],sec["W2T_2"],sec["W2T_3"] = wlmFile.WtoT.coeffs
-    sec["TEMP_CEN"]    = wlmFile.TtoW.xcen
-    sec["TEMP_SCALE"]  = wlmFile.TtoW.xscale
-    sec["T2W_0"],sec["T2W_1"],sec["T2W_2"],sec["T2W_3"] = wlmFile.TtoW.coeffs
-    sec["TEMP_ERMS"] = np.sqrt(wlmFile.WtoT.residual)
-    sec["WAVENUM_ERMS"] = np.sqrt(wlmFile.TtoW.residual)
-    fp.close()
+-h, --help           print this help
+-c                   specify a config file:  default = "./writeLaserEeprom.ini"
+-f                   name of input WLM file (without extension)
+-l                   actual laser (1-origin) EEPROM to write to
+-s                   serial number of laser
+"""
 
-    header = []
-    fp = file(fname,'r')
-    while True:
-        line = fp.readline()
-        if line.strip() == "[Data]": break
-        header.append(line)
-    hdrDict = configobj.ConfigObj(header)
-    fp.close()
-    laserDat = dict(parameters=sec,
-                    serialNo=hdrDict["CRDS Header"]["Filename"][6:12],
-                    date=hdrDict["CRDS Header"]["Date"],
-                    time=hdrDict["CRDS Header"]["Time"],
-                    laserTemperature = wlmFile.TLaser,
-                    waveNumber = wlmFile.WaveNumber)
-    s = cPickle.dumps(laserDat,-1)
-    w = encode(s)
-    raw_input("Press return to write...")
-    startAddress = 0
-    eepromWrite("LASER2_EEPROM",w,startAddress,32)
+def printUsage():
+    print HELP_STRING
+
+def handleCommandSwitches():
+    shortOpts = 'hc:f:l:s:'
+    longOpts = ["help"]
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
+    except getopt.GetoptError, E:
+        print "%s %r" % (E, E)
+        sys.exit(1)
+    #assemble a dictionary where the keys are the switches and values are switch args...
+    options = {}
+    for o,a in switches:
+        options.setdefault(o,a)
+    if "/?" in args or "/h" in args:
+        options.setdefault('-h',"")
+    #Start with option defaults...
+    configFile = os.path.splitext(AppPath)[0] + ".ini"
+    if "-h" in options or "--help" in options:
+        printUsage()
+        sys.exit()
+    if "-c" in options:
+        configFile = options["-c"]
+    return configFile, options
     
-    
-    
-    
-    
-    
+if __name__ == "__main__":
+    configFile, options = handleCommandSwitches()
+    m = WriteLaserEeprom(configFile, options)
+    m.run()

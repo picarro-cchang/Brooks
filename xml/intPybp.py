@@ -15,7 +15,7 @@ header = """#!/usr/bin/python
 #  Copyright (c) 2008 Picarro, Inc. All rights reserved
 #
 
-from ctypes import c_byte, c_uint, c_int, c_ushort, c_short
+from ctypes import c_ubyte, c_byte, c_uint, c_int, c_ushort, c_short
 from ctypes import c_longlong, c_float, c_double, Structure, Union, sizeof
 
 class RegInfo(object):
