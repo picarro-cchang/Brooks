@@ -45,6 +45,7 @@ class DasConfigure(SharedTypes.Singleton):
         if not self.initialized:
             if dasInterface is None or instrConfig is None:
                 raise ValueError("DasConfigure has not been initialized correctly")
+            self.i2cConfig = {} # Indicates if I2C associated with specific index was detected
             self.dasInterface = dasInterface
             self.opGroups = {}
             self.instrConfig = instrConfig
@@ -492,44 +493,9 @@ class DasConfigure(SharedTypes.Singleton):
         # Remove reset on I2C multiplexers
         time.sleep(0.2)
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0,"FPGA_KERNEL","KERNEL_CONTROL"]))
-
-        # Check to see which I2C devices are installed on this instrument
-
-        print "I2C0 MUX status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,0,0x55]))
-        print "I2C1 MUX status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[1,0,0x71]))
-        print "Power board I2C DIO status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[1,4,0x71]))
-
-        print "Logic board temperature sensor status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,0,0x4E]))
-        print "Logic board EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,0,0x55]))
-        print "Logic board laser TEC monitor ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[1,0,0x14]))
-    
-        print "Laser 1 thermistor ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,0,0x26]))
-        print "Laser 1 current ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,0,0x14]))
-        print "Laser 1 EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,0,0x50]))
-        print "Laser 2 thermistor ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,1,0x26]))
-        print "Laser 2 current ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,1,0x14]))
-        print "Laser 2 EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,1,0x50]))
-        print "Laser 3 thermistor ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,2,0x26]))
-        print "Laser 3 current ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,2,0x14]))
-        print "Laser 3 EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,2,0x50]))
-        print "Laser 4 thermistor ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,3,0x26]))
-        print "Laser 4 current ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,3,0x14]))
-        print "Laser 4 EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,3,0x50]))
- 
-        print "Logic board EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,0,0x55]))
-        print "WLM board EEPROM status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[1,0,0x50]))
-        print "Warm box thermistor ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[1,0,0x15]))
-        print "Etalon thermistor ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[1,0,0x27]))
-        print "Warm box heatsink thermistor ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[1,0,0x26]))
-
-        print "Cavity thermistor ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,7,0x26]))
-        print "Hot box heatsink thermistor ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,7,0x27]))
-        print "Cavity pressure ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,7,0x24]))
-        print "Ambient pressure ADC status: %d"  % sender.doOperation(Operation("ACTION_I2C_CHECK",[0,7,0x17]))
-
-        sender.doOperation(Operation("ACTION_SENTRY_INIT"))
         
         runCont = (1<<interface.PWM_CS_RUN_B) | (1<<interface.PWM_CS_CONT_B)
+
         for laserNum in range(1,5):
             if self.installCheck("LASER%d_PRESENT" % laserNum) or (laserNum == 4 and self.installCheck("SOA_PRESENT")):
                 sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER%d_INIT" % laserNum))
@@ -539,18 +505,32 @@ class DasConfigure(SharedTypes.Singleton):
                 sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_LASER%d" % laserNum,"PWM_CS"]))
 
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_WARM_BOX_INIT"))
-        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_WARMBOX","PWM_CS"]))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_CAVITY_INIT"))
         sender.doOperation(Operation("ACTION_HEATER_CNTRL_INIT"))
+
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"]))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_WARMBOX","PWM_CS"]))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_HOTBOX","PWM_CS"]))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x0,"FPGA_PWM_HEATER","PWM_PULSE_WIDTH"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_HEATER","PWM_CS"]))
-        # Must do next line AFTER turning on the warm box and hot box PWM and allowing the monostable
+
+        # Must do following AFTER turning on the warm box and hot box PWM and allowing the monostable
         #  to trigger
+        
+        # Check to see which I2C devices are installed on this instrument
+        for i in range(len(interface.i2cByIndex)):
+            ident = interface.i2cByIndex[i]
+            status = sender.doOperation(Operation("ACTION_I2C_CHECK",interface.i2cByIdent[ident][-3:]))
+            self.i2cConfig[ident] = (status >= 0)
+            print "%s present: %s" % (ident,"True" if status>=0 else "False")
+
+        sender.doOperation(Operation("ACTION_SENTRY_INIT"))
+        
         sender.doOperation(Operation("ACTION_VALVE_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_SPECTRUM_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
-        
-        #sender.doOperation(Operation("ACTION_MODIFY_VALVE_PUMP_TEC",[0x80,0x80])) # Turn on warm box and hot box TEC
+   
         sender.wrRegFloat("LASER1_RESISTANCE_REGISTER",10000.0)
         sender.wrRegFloat("LASER2_RESISTANCE_REGISTER",9000.0)
         sender.wrRegFloat("LASER3_RESISTANCE_REGISTER",8000.0)
@@ -568,6 +548,7 @@ class DasConfigure(SharedTypes.Singleton):
 
         sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER",11000000)
         sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER",1500000)
+
         
         # Start the ringdown manager
         runCont = (1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B)
@@ -580,6 +561,6 @@ class DasConfigure(SharedTypes.Singleton):
         runCont = (1<<interface.DYNAMICPWM_CS_RUN_B) | (1<<interface.DYNAMICPWM_CS_CONT_B) | (1<<interface.DYNAMICPWM_CS_PWM_ENABLE_B)
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_DYNAMICPWM_INLET","DYNAMICPWM_CS"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_DYNAMICPWM_OUTLET","DYNAMICPWM_CS"]))
-        
+
         # Set the scheduler running
         sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",1);

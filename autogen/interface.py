@@ -13,7 +13,7 @@
 #  Copyright (c) 2008 Picarro, Inc. All rights reserved
 #
 
-from ctypes import c_byte, c_uint, c_int, c_ushort, c_short
+from ctypes import c_ubyte, c_byte, c_uint, c_int, c_ushort, c_short
 from ctypes import c_longlong, c_float, c_double, Structure, Union, sizeof
 
 class RegInfo(object):
@@ -294,6 +294,25 @@ class VirtualLaserParamsType(Structure):
     ("pressureC1",c_float),
     ("pressureC2",c_float),
     ("pressureC3",c_float)
+    ]
+
+class WLMCalRowType(Structure):
+    _fields_ = [
+    ("waveNumberAsUint",c_uint),
+    ("ratio1",c_float),
+    ("ratio2",c_float)
+    ]
+
+class WLMCalibrationType(Structure):
+    _fields_ = [
+    ("identifier",c_ubyte*32),
+    ("etalon_temperature",c_float),
+    ("etalon1_offset",c_float),
+    ("reference1_offset",c_float),
+    ("etalon2_offset",c_float),
+    ("reference2_offset",c_float),
+    ("padding",c_ubyte*12),
+    ("wlmCalRows",WLMCalRowType*336)
     ]
 
 # Constant definitions

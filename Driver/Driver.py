@@ -12,10 +12,12 @@ Copyright (c) 2010 Picarro, Inc. All rights reserved
 
 APP_NAME = "Driver"
 
+import cPickle
 import ctypes
 import getopt
 import inspect
 import os
+import struct
 import sys
 import tables
 import threading
@@ -37,6 +39,7 @@ from Host.Common.hostDasInterface import Operation
 from Host.Common.InstErrors import *
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.StringPickler import StringAsObject, ObjAsString
+from Host.Common.ctypesConvert import ctypesToDict, dictToCtypes
 
 EventManagerProxy_Init(APP_NAME)
 
@@ -492,6 +495,111 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Perform an operation"""
         return self.dasInterface.hostToDspSender.doOperation(op)
         
+    def rdEeprom(self,whichEeprom,startAddress,nBytes,chunkSize=64):
+        """Read nBytes from whichEeprom starting at startAddress (which must be a multiple 
+        of 4). Memory acccesses are done in multiples of chunkSize (<=64 in bytes) for 
+        efficiency. Returns result as a list of bytes."""
+        if startAddress % 4:
+            raise ValueError("startAddress must be a multiple of 4 in rdEeprom")
+        if chunkSize <= 0 or chunkSize > 64:
+            raise ValueError("chunkSize must lie between 1 and 64")
+        myEnv = interface.Byte64EnvType()
+        i2cIndex = interface.i2cByIdent[whichEeprom][0]
+        ctypesObject = (ctypes.c_ubyte*nBytes)()
+        ctypesObjectBase = ctypes.addressof(ctypesObject)
+        objPtr = 0
+        while nBytes > 0:
+            bytesRead = min(4*((nBytes+3)//4),chunkSize)
+            op = Operation("ACTION_EEPROM_READ",[i2cIndex,startAddress,bytesRead],"BYTE64_ENV")
+            self.doOperation(op)
+            result = StringAsObject(self.rdEnvToString("BYTE64_ENV",interface.Byte64EnvType),
+                                    interface.Byte64EnvType)
+            ctypes.memmove(ctypesObjectBase+objPtr,result.buffer,min(nBytes,bytesRead))
+            startAddress += bytesRead
+            objPtr += bytesRead
+            nBytes -= bytesRead
+        return ctypesObject[:]
+
+    def wrEeprom(self,whichEeprom,startAddress,byteList,pageSize=32):
+        """Writes bytes from byteList into whichEeprom starting at startAddress (which must 
+        be a multiple of 4).  The pageSize (<=64, in bytes) is used to perform the writing 
+        in chunks, being careful not to cross page boundaries."""
+        if startAddress % 4:
+            raise ValueError("startAddress must be a multiple of 4 in wrEeprom")
+        if pageSize <= 0 or pageSize > 64:
+            raise ValueError("pageSize must lie between 1 and 64")
+
+        myEnv = interface.Byte64EnvType()
+        i2cIndex = interface.i2cByIdent[whichEeprom][0]
+        bytesLeft = len(byteList)
+        ctypesObject = (ctypes.c_ubyte*bytesLeft)(*byteList)
+        ctypesObjectBase = ctypes.addressof(ctypesObject)
+        objPtr = 0
+        while bytesLeft>0:
+            pageEnd = pageSize * ((startAddress + pageSize) // pageSize)
+            nBytes = min(pageEnd - startAddress, 4*((bytesLeft+3)//4))
+            ctypes.memmove(myEnv.buffer,ctypesObjectBase+objPtr,min(nBytes,bytesLeft))
+            self.wrEnvFromString("BYTE64_ENV",interface.Byte64EnvType,ObjAsString(myEnv))
+            op = Operation("ACTION_EEPROM_WRITE",[i2cIndex,startAddress,nBytes],"BYTE64_ENV")
+            self.doOperation(op)
+            startAddress = pageEnd
+            objPtr += nBytes
+            bytesLeft -= nBytes
+            while not self.doOperation(Operation("ACTION_EEPROM_READY",[i2cIndex])):
+                time.sleep(0.1)
+    
+    def fetchObject(self,whichEeprom,startAddress=0):
+        """Fetch a pickled object from the specified EEPROM, starting at "startAddress".
+        The first four bytes contains the length of the pickled string. Returns the 
+        object and the address of the next object."""
+        if not DasConfigure().i2cConfig[whichEeprom]:
+            raise ValueError("%s is not available" % whichEeprom)
+        nBytes, = struct.unpack("I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
+        return (cPickle.loads("".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress+4,nBytes)])),
+                startAddress + 4*((nBytes+3)//4))
+                
+    def verifyObject(self,whichEeprom,object,startAddress=0):
+        """Verify that the pickled object was written correctly to specified EEPROM, starting at 
+        "startAddress". Returns True iff successful. """
+        if not DasConfigure().i2cConfig[whichEeprom]:
+            raise ValueError("%s is not available" % whichEeprom)
+        s = cPickle.dumps(object,-1)
+        nBytes, = struct.unpack("I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
+        if nBytes != len(s): return False
+        r = "".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress+4,nBytes)])
+        return r == s
+    
+    def shelveObject(self,whichEeprom,object,startAddress=0):
+        """Store a pickled object from to specified EEPROM, starting at "startAddress".
+        The first four bytes contains the length of the pickled string. Returns the 
+        address of the next object."""
+        if not DasConfigure().i2cConfig[whichEeprom]:
+            raise ValueError("%s is not available" % whichEeprom)
+        s = cPickle.dumps(object,-1)
+        nBytes = len(s)
+        self.wrEeprom(whichEeprom,startAddress,[ord(c) for c in struct.pack("I",nBytes)+s])
+        return startAddress + 4*((nBytes+7)//4)
+    
+    def fetchWlmCal(self):
+        """Fetch the WLM calibration data as a dictionary from WLM_EEPROM"""
+        if not DasConfigure().i2cConfig["WLM_EEPROM"]:
+            raise ValueError("WLM_EEPROM is not available" % whichEeprom)
+        wlmCal = interface.WLMCalibrationType()
+        if ctypes.sizeof(wlmCal) != 4096:
+            raise ValueError("WLMCalibrationType has wrong size (%d bytes)" % ctypes.sizeof(wlmCal))
+        ctypes.memmove(ctypes.addressof(wlmCal),"".join([chr(c) for c in self.rdEeprom("WLM_EEPROM",0,4096)]),4096)
+        return ctypesToDict(wlmCal)
+
+    def shelveWlmCal(self,wlmCalDict):
+        """Save the WLM calibration data as a dictionary to the WLM_EEPROM"""
+        if not DasConfigure().i2cConfig["WLM_EEPROM"]:
+            raise ValueError("WLM_EEPROM is not available" % whichEeprom)
+        wlmCal = interface.WLMCalibrationType()
+        dictToCtypes(wlmCalDict,wlmCal)
+        if ctypes.sizeof(wlmCal) != 4096:
+            raise ValueError("WLMCalibrationType has wrong size (%d bytes)" % ctypes.sizeof(wlmCal))
+        self.wrEeprom("WLM_EEPROM",0,[ord(c) for c in buffer(wlmCal)])
+        
 class StreamTableType(tables.IsDescription):
     time = tables.Int64Col()
     streamNum = tables.Int32Col()
@@ -610,16 +718,6 @@ class Driver(SharedTypes.Singleton):
         ringdownHandler = SharedTypes.GenHandler(self.dasInterface.getRingdownData,ringdownProcessor)
         try:
             try:
-                # Ensure that we connect in high speed mode
-                #for attempts in range(3):
-                #    usbSpeed = self.dasInterface.startUsb()
-                #    Log("USB enumerated at %s speed" % (("full","high")[usbSpeed]))
-                #    if usbSpeed:
-                #        break
-                #    self.dasInterface.analyzerUsb.reconnectUsb()
-                #    time.sleep(5.0)
-                #else:
-                #    Log("USB does not enumerate at high speed, falling back to full speed connection")
                 usbSpeed = self.dasInterface.startUsb()
                 Log("USB enumerated at %s speed" % (("full","high")[usbSpeed]))
                 self.dasInterface.upload()
@@ -724,7 +822,7 @@ class InstrumentConfig(SharedTypes.Singleton):
             filename = self.filename
             self.config.write()
         else:
-            fp = file(filename,"wa")
+            fp = file(filename,"w")
             self.config.write(fp)
             fp.close
         return filename
