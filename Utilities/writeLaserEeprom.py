@@ -43,7 +43,7 @@ class DriverProxy(SharedTypes.Singleton):
             self.myaddr = socket.gethostbyname(socket.gethostname())
             serverURI = "http://%s:%d" % (self.hostaddr,
                 SharedTypes.RPC_PORT_DRIVER)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="CalibrateSystem")
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="writeLaserEeprom")
             self.initialized = True
 
 # For convenience in calling driver functions

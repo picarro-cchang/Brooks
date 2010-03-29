@@ -263,6 +263,7 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
     int loops;
     I2C_outOfReset(hI2c);
     i = 0;
+    I2C_FSETSH(hI2c,I2CSTR,ICRRDY,CLR);
     // Set up the slave address of the I2C
     I2C_RSETH(hI2c,I2CSAR,i2caddr);
     // Set up as master receiver, and send start bit
