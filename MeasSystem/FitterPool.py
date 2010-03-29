@@ -56,8 +56,8 @@ class FitterProxy(object):
     def init(self):
         return self.fitterProxy.FITTER_initialize()
 
-    def setData(self, data): 
-        self.fitterProxy.FITTER_setData(data)
+    def setSpectra(self, spectra): 
+        self.fitterProxy.FITTER_setSpectra(spectra)
         
     def getResults(self):
         """Get and convert Fitter result string into a dictionary."""
@@ -106,10 +106,10 @@ class FitterPool(object):
         for f in self.fitters:
             f.setEnableEvent(eventObject)
 
-    def FitData(self, rdfDict):
+    def FitSpectra(self, spectra):
         # Send the data to all the fitters and collect the results
         for f in self.fitters:
-            f.setData(rdfDict)
+            f.setSpectra(spectra)
         return self._CollectResults()
 
     def _CollectResults(self):
@@ -125,20 +125,19 @@ class FitterPool(object):
                 allOk = False
         if not allOk:
             raise e
-
         # Sort into time order and update the cached values. Write out a list
         # [(t1,rDict1),(t2,rDict2),...] of results from all fitters put together
         # where t's are distinct and in ascending order
         fitResults.sort()
         tPrev = None
         rDict = None
-        for t,rDict in fitResults:
+        for t,rDict,spectrumId in fitResults:
             if rDict:
                 if t != tPrev and tPrev != None:
-                    allResults.append((tPrev,self.cachedFitValues.copy()))
+                    allResults.append((tPrev,self.cachedFitValues.copy(),spectrumId))
                 tPrev = t
                 self.cachedFitValues.update(rDict)
-        if rDict: allResults.append((tPrev,self.cachedFitValues.copy()))
+        if rDict: allResults.append((tPrev,self.cachedFitValues.copy(),spectrumId))
         # if fitResults is empty, the tPrev will remain None, and an error will be reported in MeasSystem      
         return allResults
 

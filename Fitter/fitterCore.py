@@ -968,8 +968,8 @@ class RdfData(object):
             rdChunkSizes = [len(rdData["waveNumber"])]
             qSizes = [0]
             
-        RED_THRESHOLD = 1
-        RED_DISCARD_ALL = 10
+        RED_THRESHOLD = 100
+        RED_DISCARD_ALL = 200
 
         def allowYield(pace,id):
             if id in RdfData._pacing:
@@ -985,6 +985,8 @@ class RdfData(object):
         # Split file into chunks according to information in controlData table
         start = 0
         for i,rdChunkSize in enumerate(rdChunkSizes):
+            if rdChunkSize == 0:
+                continue
             otherDataForChunk = {}
             for key in otherData:
                 otherDataForChunk[key] = otherData[key][i]
@@ -1010,6 +1012,7 @@ class RdfData(object):
             # Split spectra further according to subfield of the subschemeId
             low = start
             high = start + rdChunkSize
+            
             splits = flatnonzero(diff(rdData["subschemeId"][low:high] & 0x3FF))
             for s in splits:
                 id = rdData["subschemeId"][low] & 0x3FF
@@ -1020,6 +1023,7 @@ class RdfData(object):
             if allowYield(pace,id):
                 yield makeRdfData(low,high)
             start = high
+            
 
     def getTime(self):
         """Returns the averaged time of a spectrum"""

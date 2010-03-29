@@ -182,7 +182,10 @@ class SpectrumCollector(object):
         self.closeHdf5File = False
         self.streamFP = None
         self.tableDict = {}
-        self.lastSpectrumQueueGet = 0
+        self.lastSpectrumQueuePut = TimeStamp()
+        self.timeBetweenSpectrumQueuePuts = []
+        self.lastSpectrumQueueGet = TimeStamp()
+        self.timeBetweenSpectrumQueueGets = []
         
     def run(self):
         #start the rpc server on another thread...
@@ -320,6 +323,12 @@ class SpectrumCollector(object):
                     TimeSinceLastGet=TimeStamp()-self.lastSpectrumQueueGet),Level=2)
                 self.spectrumQueue.get()
             self.spectrumQueue.put(rdfDict)
+            now = TimeStamp()
+            self.timeBetweenSpectrumQueuePuts.append(now-self.lastSpectrumQueuePut)
+            self.lastSpectrumQueuePut = now
+            if len(self.timeBetweenSpectrumQueuePuts) == 50:
+                # print "interSpectrumQueuePut: ",numpy.mean(self.timeBetweenSpectrumQueuePuts),numpy.std(self.timeBetweenSpectrumQueuePuts),min(self.timeBetweenSpectrumQueuePuts),max(self.timeBetweenSpectrumQueuePuts)
+                self.timeBetweenSpectrumQueuePuts = []
         except:
             LogExc("Failed to add data in spectrum queue.")
                 
@@ -441,13 +450,25 @@ class SpectrumCollector(object):
         else:
             return 0
         
-    def RPC_getFromSpectrumQueue(self, timeout=0):
-        try:
-            self.lastSpectrumQueueGet = TimeStamp()
-            return self.spectrumQueue.get(timeout = timeout)
-        except:
-            raise
-        
+    def RPC_getSpectra(self, nSpectra, timeSinceLast=2):
+        """Get up to nSpectra from the queue, returning with less that this if the time since the last
+            get exceeds the specified value"""
+        until = self.lastSpectrumQueueGet + timeSinceLast
+        spectra = []
+        while len(spectra)<nSpectra:
+            try:
+                timeout = max(0.001,until-TimeStamp())
+                spectra.append(self.spectrumQueue.get(timeout=timeout))
+                now = TimeStamp()
+                self.timeBetweenSpectrumQueueGets.append(now-self.lastSpectrumQueueGet)
+                if len(self.timeBetweenSpectrumQueueGets) == 50:
+                    # print "interSpectrumQueueGet: ",numpy.mean(self.timeBetweenSpectrumQueueGets),numpy.std(self.timeBetweenSpectrumQueueGets),min(self.timeBetweenSpectrumQueueGets),max(self.timeBetweenSpectrumQueueGets)
+                    self.timeBetweenSpectrumQueueGets = []
+                self.lastSpectrumQueueGet = now
+            except Queue.Empty:
+                break
+        return spectra
+                
     def RPC_closeSpectrum(self):
         self.closeSpectrumWhenDone = True
 

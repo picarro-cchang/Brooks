@@ -54,8 +54,8 @@ FITTER_STATE_READY = 2
 FITTER_STATE_FITTING = 3
 FITTER_STATE_COMPLETE = 4
 
-DATA_AVAIL_EVENT_TIMEOUT = 0.5
-RESULTS_AVAIL_EVENT_TIMEOUT = 0.5
+DATA_AVAIL_EVENT_TIMEOUT = 10.0
+RESULTS_AVAIL_EVENT_TIMEOUT = 10.0
 
 class Fitter(object):
     def __init__(self,configFile):
@@ -96,7 +96,7 @@ class Fitter(object):
         self.rpcServer.register_function(self.FITTER_updateViewer)
         self.rpcServer.register_function(self.FITTER_showViewer)
         self.rpcServer.register_function(self.FITTER_initialize)      
-        self.rpcServer.register_function(self.FITTER_setData)
+        self.rpcServer.register_function(self.FITTER_setSpectra)
         self.rpcServer.register_function(self.FITTER_getResults)        
         
     def _rpcServerExit(self):
@@ -157,8 +157,8 @@ class Fitter(object):
         self.dataEnviron = self.setupEnvironment()
         return "Fitter Initialized"
 
-    def FITTER_setData(self, data):
-        self.data = data
+    def FITTER_setSpectra(self, spectra):
+        self.data = spectra
         self.dataAvailEvent.set() 
                 
     def FITTER_getResults(self):
@@ -266,7 +266,7 @@ class Fitter(object):
                 self.fitSpectrum = False
             try:
                 self.spectrum,self.spectrumFileName = self.repository.next()
-                t,r = self.execScript()
+                t,r,spectrumId = self.execScript()
                 if not self.fitSpectrum:
                     self.state = FITTER_STATE_READY
             except StopIteration:
@@ -279,10 +279,15 @@ class Fitter(object):
             if self.dataAvailEvent.isSet():
                 if self.code is not None:
                     try:
-                        # Get data past the \r, then iterate over the spectra
+                        # Get data past the \r, then iterate over the list of spectra
+                        #  which make up self.data
                         fitResults = []
-                        for self.spectrum in RdfData.getSpectraDict(self.data):
-                            fitResults.append(self.execScript())
+                        for spectra in self.data:
+                            if not spectra["controlData"]:
+                                #Empty spectrum
+                                continue
+                            for self.spectrum in RdfData.getSpectraDict(spectra):
+                                fitResults.append(self.execScript())
                         self.resultString = "FIT COMPLETE\r" + dumps(fitResults)
                     except:
                         self.resultString = "FITTER ERROR\r" # Send back error string, log reason locally
@@ -310,7 +315,7 @@ class Fitter(object):
         RESULT = self.dataEnviron["RESULT"]
         # print "%s" % (RESULT,)
         self.fitViewer([DATA,ANALYSIS,RESULT])
-        return (DATA.getTime(),RESULT)
+        return (DATA.getTime(),RESULT,DATA["spectrumid"])
 
     def main(self,queue,useViewer):
         self.fitQueue = queue
