@@ -28,6 +28,7 @@ File History:
     2009-08-08 alex  Allowed RPC_PulseAnalyzer_SetParam() to update the parameter values in DataManager.ini file
     2009-10-16 alex  Added an option to run DataManager without InstMgr
     2010-02-03 sze   Execute synchronous and data-driven scripts within a single thread in order to avoid using a lock
+    2010-03-28 sze   Give scripts initiated by forwarding data priority over those initiated by collected data
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -309,7 +310,8 @@ class DataManager(object):
         self._ShutdownRequested = False #The main state handling loop will exit when this is true
         self._FatalError = False  #The main state handling loop will also exit when this is true
 
-        self.DataQueue = Queue.Queue()      # Will hold collected/generated data queues that need to be processed
+        self.DataQueue = Queue.Queue()      # Will hold collected data that need to be processed asynchronously
+        self.forwardedDataQueue = []        # Used to hold generated data that need to be processed BEFORE any more collected data
         self.DataHistory = {}      # keys = data tokens; values = deque of two-tuples (time, value)
         self.ReportHistory = {}    # keys = data tokens; values = deque of two-tuples (time, value)
         self.LatestSensorData = {} # keys = sensor names; values = values
@@ -1041,7 +1043,7 @@ class DataManager(object):
                     allAnalyzerPaths.append(sai.AnalyzerInfo.ScriptPath)
             import sets
             uniqueAnalyzerPaths = list(sets.Set(allAnalyzerPaths))
-            Log("Starting compilation if identified analyzer scripts", dict(Count = len(uniqueAnalyzerPaths)))
+            Log("Starting compilation of identified analyzer scripts", dict(Count = len(uniqueAnalyzerPaths)))
             for path in uniqueAnalyzerPaths:
                 sourceString = file(path,"ra").read()
                 if sys.platform != 'win32':
@@ -1126,8 +1128,13 @@ class DataManager(object):
                 #  run if we are within 10ms of the target execution time.
                 if self.syncScriptQueue:
                     while self._TimeToNextSyncScript() < 0.01: self._RunNextSyncScript()
-                # Ensure we get out at least every 0.5s to check if we need to stop
-                data = self.DataQueue.get(timeout = min(max(0.0,self._TimeToNextSyncScript()),0.5))
+                # Information on the forwarded data queue must be dealt with before processing more collected
+                #  data, since it implicitly has an earlier timestamp
+                if self.forwardedDataQueue:
+                    data = self.forwardedDataQueue.pop(0)
+                else:
+                    # Check for collected data, ensuring that we get out at least every 0.5s to check if we need to stop
+                    data = self.DataQueue.get(timeout = min(max(0.0,self._TimeToNextSyncScript()),0.5))
                 assert isinstance(data, MeasData) # for Wing
                 self._AnalyzeData(data)
                 exitState = STATE_ENABLED
@@ -1371,7 +1378,7 @@ class DataManager(object):
         for dataPacketLabel in forwardDict.keys():
             dataPacketDict = forwardDict[dataPacketLabel]
             #Force a + prefix on all forwarded data labels...
-            self.DataQueue.put(MeasData("+%s" % dataPacketLabel, rptSourceTime_s, dataPacketDict, Mode=self.RPC_Mode_Get()))
+            self.forwardedDataQueue.append(MeasData("+%s" % dataPacketLabel, rptSourceTime_s, dataPacketDict, Mode=self.RPC_Mode_Get()))
         time.sleep(0)
         
     def _AnalyzeData(self, Data):
