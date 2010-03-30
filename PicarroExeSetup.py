@@ -142,6 +142,9 @@ inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
 hex_images = glob.glob("Utilities/DasMaintenanceGui/Images/*.hex")
 hex_images = hex_images + glob.glob("Utilities/DasMaintenanceGui/Images/*.xsvf")
 hex_images = hex_images + glob.glob("Utilities/DasMaintenanceGui/Images/*.iic")
+hex_images = hex_images + [ "../SrcCode/CypressUSB/analyzer/analyzerUsb.hex", 
+                            "../SrcCode/DSP/src/Debug/dspMain.hex",
+                            "../SrcCode/MyHDL/Spartan3/top_io_map.bit"]
 
 setup(version = "1.0",
       description = "Silverstone Host Core Software",
