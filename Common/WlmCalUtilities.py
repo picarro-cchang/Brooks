@@ -407,6 +407,51 @@ class AutoCal(object):
             self.lock.release()
         return self
 
+    def loadFromEepromDict(self,eepromDict,dTheta,wMin,wMax):
+        # Construct an Autocal object from a Eeprom dictionary based on measured data which lie within the 
+        #  wavenumber range wMin to wMax
+        self.lock.acquire()
+        try:
+            ratio1 = array([row['ratio1'] for row in eepromDict['wlmCalRows']])
+            ratio2 = array([row['ratio2'] for row in eepromDict['wlmCalRows']])
+            waveNumber = array([1.0e-5*row['waveNumberAsUint'] for row in eepromDict['wlmCalRows']])
+            # Select those data which lie within the specified range of wavenumbers
+            if wMin < waveNumber.min() or wMax > waveNumber.max():
+                raise ValueError("Range of wavenumbers requested is not available in EEPROM")
+            window = (waveNumber >= wMin) & (waveNumber <= wMax)
+            # Fit ratios to a parametric ellipse
+            self.ratio1Center,self.ratio2Center,self.ratio1Scale,self.ratio2Scale,self.wlmPhase = \
+                parametricEllipse(ratio1[window],ratio2[window])
+            # Ensure that both ratioScales are larger than 1.05 to avoid issues with ratio multipliers exceeding 1
+            factor = 1.05/min([self.ratio1Scale,self.ratio2Scale])
+            self.ratio1Scale *= factor
+            self.ratio2Scale *= factor
+            self.tEtalonCal = float(eepromDict['header']['etalon_temperature'])
+            # Calculate the unwrapped WLM angles
+            X = ratio1[window] - self.ratio1Center
+            Y = ratio2[window] - self.ratio2Center
+            thetaCalMeasured = unwrap(arctan2(
+              self.ratio1Scale * Y - self.ratio2Scale * X * sin(self.wlmPhase),
+              self.ratio2Scale * X * cos(self.wlmPhase)))
+            # Extract parameters of wavenumber against angle
+            thetaCal2WaveNumber = bestFit(thetaCalMeasured,waveNumber[window],1)
+            # Extract spline scaling constants
+            self.thetaBase = (wMin - thetaCal2WaveNumber.coeffs[1])/thetaCal2WaveNumber.coeffs[0]
+            self.dTheta = dTheta
+            self.sLinear0 = array([thetaCal2WaveNumber.coeffs[0]*self.dTheta,
+                                   thetaCal2WaveNumber([self.thetaBase])[0]],dtype="d")
+            self.sLinear = self.sLinear0 + array([0.0,self.offset])
+            # Find number of spline coefficients needed and initialize the coefficients to zero
+            self.nCoeffs = int(ceil((wMax-wMin)/(thetaCal2WaveNumber.coeffs[0]*self.dTheta)))
+            self.coeffs = zeros(self.nCoeffs,dtype="d")
+            self.coeffsOrig = zeros(self.nCoeffs,dtype="d")
+            # Temperature sensitivity of etalon
+            self.wlmTempSensitivity = -0.185 * (mean(waveNumber[window])/6158.0)# radians/degC
+            self.autocalStatus = 0
+        finally:    
+            self.lock.release()
+        return self
+    
     def loadFromIni(self,ini,vLaserNum):
         """Fill up the AutoCal structure based on the information in the .ini file
         using the specified "vLaserNum" to indicate which virtual laser (1-origin) is involved.

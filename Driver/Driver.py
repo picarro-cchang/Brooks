@@ -590,6 +590,16 @@ class DriverRpcHandler(SharedTypes.Singleton):
         ctypes.memmove(ctypes.addressof(wlmCal),"".join([chr(c) for c in self.rdEeprom("WLM_EEPROM",0,4096)]),4096)
         return ctypesToDict(wlmCal)
 
+    def fetchWlmHdr(self):
+        """Fetch the WLM calibration header from WLM_EEPROM"""
+        if not DasConfigure().i2cConfig["WLM_EEPROM"]:
+            raise ValueError("WLM_EEPROM is not available" % whichEeprom)
+        wlmHdr = interface.WLMHeaderType()
+        if ctypes.sizeof(wlmHdr) != 64:
+            raise ValueError("WLMHeaderType has wrong size (%d bytes)" % ctypes.sizeof(wlmHdr))
+        ctypes.memmove(ctypes.addressof(wlmHdr),"".join([chr(c) for c in self.rdEeprom("WLM_EEPROM",0,64)]),64)
+        return ctypesToDict(wlmHdr)
+        
     def shelveWlmCal(self,wlmCalDict):
         """Save the WLM calibration data as a dictionary to the WLM_EEPROM"""
         if not DasConfigure().i2cConfig["WLM_EEPROM"]:

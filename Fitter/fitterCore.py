@@ -28,7 +28,7 @@ import cPickle
 from cStringIO import StringIO
 from glob import glob
 from numpy import arange, arctan, argmax, argmin, argsort, array, bool_, cos
-from numpy import diff, digitize, dot, exp, flatnonzero, float_, frompyfunc
+from numpy import diff, searchsorted, dot, exp, flatnonzero, float_, frompyfunc
 from numpy import int8, int_, invert, iterable, linspace, logical_and, mean, median, ndarray, ones
 from numpy import pi, shape, sin, sqrt, std, zeros
 from os.path import getmtime, join, split, exists
@@ -531,7 +531,7 @@ class CubicSpline(object):
         y = zeros(x.shape,'d')
         h = diff(self.x_vals)
         n = len(self.x_vals)
-        x_bins = digitize(x,bins=self.x_vals)
+        x_bins = searchsorted(self.x_vals,x,'right')
         # Deal with points which are out of range
         y[x_bins==0] = self.y_vals[0]
         y[x_bins==n] = self.y_vals[-1]

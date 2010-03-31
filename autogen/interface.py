@@ -303,7 +303,7 @@ class WLMCalRowType(Structure):
     ("ratio2",c_float)
     ]
 
-class WLMCalibrationType(Structure):
+class WLMHeaderType(Structure):
     _fields_ = [
     ("identifier",c_ubyte*32),
     ("etalon_temperature",c_float),
@@ -311,7 +311,12 @@ class WLMCalibrationType(Structure):
     ("reference1_offset",c_float),
     ("etalon2_offset",c_float),
     ("reference2_offset",c_float),
-    ("padding",c_ubyte*12),
+    ("padding",c_ubyte*12)
+    ]
+
+class WLMCalibrationType(Structure):
+    _fields_ = [
+    ("header",WLMHeaderType),
     ("wlmCalRows",WLMCalRowType*336)
     ]
 

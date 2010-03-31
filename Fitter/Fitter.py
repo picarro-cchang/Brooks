@@ -446,7 +446,7 @@ class MyGrid(wx.grid.Grid):
         wx.MessageBox("Line of best fit: y = %.4g x %s %.4g\nBest line through origin: y = %.4g x" % (p[0],sc,abs(p[1]),m),"Information")
 
     def OnCopy(self):
-        result = "\n".join(["\t".join([item.translate(self.transtable) for item in row]) for row in self.GetSelection()])
+        result = "\n".join(["\t".join([str(item).translate(self.transtable) for item in row]) for row in self.GetSelection()])
         data = wx.TextDataObject()
         data.SetText(result)
         if wx.TheClipboard.Open():
