@@ -29,7 +29,8 @@
 # 08-01-16 sze  Added .iic files in Images directory for FX2 USB
 # 08-02-13 sze  Added ValveSequencer to list of executables
 # 09-03-12 alex Added Coordinator and ValveSequencer
-# 09-10-23 alex  Added RDFrequencyConverter and SpectrumCollector; removed CalManager, FrontPanel, and some Utilities modules; renamed ControllerGUI to Controller.
+# 09-10-23 alex Added RDFrequencyConverter and SpectrumCollector; removed CalManager, FrontPanel, and some Utilities modules; renamed ControllerGUI to Controller.
+# 10-03-31 alex Added DiagDataCollector
 
 from distutils.core import setup
 import py2exe
@@ -60,6 +61,7 @@ sys.path.append("SampleManager")
 sys.path.append("Supervisor")
 sys.path.append("Utilities")
 sys.path.append("Utilities/RemoteAccess")
+sys.path.append("Utilities/DiagDataCollector")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -174,6 +176,7 @@ setup(version = "1.0",
                  "SampleManager/SampleManager.py",
                  "Supervisor/Supervisor.py",
                  "Utilities/RemoteAccess/RemoteAccess.py",
+                 "Utilities/DiagDataCollector/DiagDataCollector.py",
                  "../SrcCode/Utilities/CalibrateSystem.py",
                  "../SrcCode/Utilities/AdjustWlmOffset.py",
                  "../SrcCode/Utilities/ExamineRawRD.py",
