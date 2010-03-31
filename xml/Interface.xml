@@ -261,7 +261,7 @@
             <field ident="ratio1" type="float" />
             <field ident="ratio2" type="float" />
         </struct>
-        <struct type="WLMCalibrationType">
+        <struct type="WLMHeaderType">
             <field ident="identifier" type="uint8" size="32" />
             <field ident="etalon_temperature" type="float" />
             <field ident="etalon1_offset" type="float" />
@@ -269,6 +269,9 @@
             <field ident="etalon2_offset" type="float" />
             <field ident="reference2_offset" type="float" />
             <field ident="padding" type="uint8" size="12" />
+        </struct>
+        <struct type="WLMCalibrationType">
+            <field ident="header" type="WLMHeaderType" />
             <field ident="wlmCalRows" type="WLMCalRowType" size="336" />
         </struct>
     </struct_list>

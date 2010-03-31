@@ -202,7 +202,7 @@ def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:f:'
+    shortOpts = 'hc:d:f:'
     longOpts = ["help","laser1=","laser2=","laser3=","laser4="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)

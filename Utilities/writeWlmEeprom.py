@@ -121,19 +121,19 @@ class WriteWlmEeprom(object):
         ratio2 = np.concatenate(ratio2)
         etalon_temperature = np.concatenate(etalon_temperature)
         # Calculate means and standard deviations
-        wlmCal.etalon_temperature = np.mean(etalon_temperature)
+        wlmCal.header.etalon_temperature = np.mean(etalon_temperature)
         if np.std(etalon_temperature) > 0.010:
             print "WARNING: Etalon temperature std dev: %.3f" % (np.std(etalon_temperature),)
-        wlmCal.etalon1_offset = np.mean(etalon1_offset)
+        wlmCal.header.etalon1_offset = np.mean(etalon1_offset)
         if np.std(etalon1_offset) > 5:
             print "WARNING: Etalon1 offset std dev: %.1f" % (np.std(etalon1_offset),)
-        wlmCal.etalon2_offset = np.mean(etalon2_offset)
+        wlmCal.header.etalon2_offset = np.mean(etalon2_offset)
         if np.std(etalon2_offset) > 5:
             print "WARNING: Etalon2 offset std dev: %.1f" % (np.std(etalon2_offset),)
-        wlmCal.reference1_offset = np.mean(reference1_offset)
+        wlmCal.header.reference1_offset = np.mean(reference1_offset)
         if np.std(reference1_offset) > 5:
             print "WARNING: Reference1 offset std dev: %.1f" % (np.std(reference1_offset),)
-        wlmCal.reference2_offset = np.mean(reference2_offset)
+        wlmCal.header.reference2_offset = np.mean(reference2_offset)
         if np.std(reference2_offset) > 5:
             print "WARNING: Reference2 offset std dev: %.1f" % (np.std(reference2_offset),)
         # Sort the wavenumbers into order and use same permutation for ratios
@@ -148,7 +148,7 @@ class WriteWlmEeprom(object):
             wlmCal.wlmCalRows[i].ratio1 = ratio1[i]
             wlmCal.wlmCalRows[i].ratio2 = ratio2[i]
         for j,c in enumerate("%s" % self.serialNo):
-            wlmCal.identifier[j] = ord(c) 
+            wlmCal.header.identifier[j] = ord(c) 
         # Write to the EEPROM
         print "Writing WLM data to EEPROM"
         Driver.shelveWlmCal(ctypesToDict(wlmCal))

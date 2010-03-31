@@ -274,6 +274,10 @@ typedef struct {
     float etalon2_offset;
     float reference2_offset;
     uint8 padding[12];
+} WLMHeaderType;
+
+typedef struct {
+    WLMHeaderType header;
     WLMCalRowType wlmCalRows[336];
 } WLMCalibrationType;
 
