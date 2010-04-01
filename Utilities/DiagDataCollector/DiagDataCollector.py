@@ -35,12 +35,14 @@ AppPath = os.path.abspath(AppPath)
 
 class DiagDataCollector(DiagDataCollectorFrame):
     def __init__(self, configFile, *args, **kwds):
-        DiagDataCollectorFrame.__init__(self, *args, **kwds)
-        
         co = CustomConfigObj(configFile)
         self.targetFilePrefix = co.get("Main", "targetFilePrefix", "C:/UserData/Diag")
-        self.instName = co.get("Main", "instName", "CRDS")
-        self.useUTC = co.getboolean("Main", "useUTC", "True")
+        self.instName = co.get("Main", "instName", "G2000")
+        self.useUTC = co.getboolean("Main", "useUTC", True)
+        defaultHrs = co.getint("Main", "defaultHrs", 12)
+        maxHrs = co.getint("Main", "maxHrs", 48)
+        DiagDataCollectorFrame.__init__(self, defaultHrs, maxHrs, *args, **kwds)
+        self.SetTitle("CRDS Diagnostic Data Collector (%s)" % self.instName)
         dbFilename = co.get("Main", "dbFilename")
         self.dbCon = sqlite3.connect(dbFilename)
         self.filters = tables.Filters(complevel=1, fletcher32=True)

@@ -5,7 +5,7 @@ from wx.lib.masked import TimeCtrl
 from datetime import datetime
 
 class DiagDataCollectorFrame(wx.Frame):
-    def __init__(self, *args, **kwds):
+    def __init__(self, defaultHrs, maxHrs, *args, **kwds):
         kwds["style"] = wx.STAY_ON_TOP|wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX)
         wx.Frame.__init__(self, *args, **kwds)
         self.SetTitle("CRDS Diagnostic Data Collector")
@@ -19,7 +19,7 @@ class DiagDataCollectorFrame(wx.Frame):
         self.ctrlStartTime.SetValue(datetime.strftime(datetime.now(), "%H:%M:%S"))
 
         self.labelDataDur = wx.StaticText(self, -1, "Data Duration (hours)")
-        self.spinCtrlDataDur = wx.SpinCtrl(self, -1, size=(89,-1), min=1, max=48, initial=12)
+        self.spinCtrlDataDur = wx.SpinCtrl(self, -1, size=(89,-1), min=1, max=maxHrs, initial=defaultHrs)
         #self.labelEndDate = wx.StaticText(self, -1, "End Date/Time")
         #self.ctrlEndDate = wx.DatePickerCtrl(self, -1, style = wx.DP_DROPDOWN)
         #self.spinButtonEndTime = wx.SpinButton(self, -1, size=(17,22), style=wx.SP_VERTICAL)
@@ -64,7 +64,7 @@ class DiagDataCollectorFrame(wx.Frame):
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
-    frame = DiagDataCollectorFrame(None, -1, "")
+    frame = DiagDataCollectorFrame(12, 48, None, -1, "")
     app.SetTopWindow(frame)
     frame.Show()
     app.MainLoop()
