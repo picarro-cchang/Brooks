@@ -508,7 +508,7 @@ class HostToDspSender(Singleton):
                     interface.COMM_STATUS_SequenceNumberMask)>> \
                     interface.COMM_STATUS_SequenceNumberShift
                 if self.seqNum==None or self.seqNum==seqNum:
-                    self.seqNum=seqNum
+                    #self.seqNum = seqNum
                     return seqNum
             # If not done, sleep and try again
             sleep(0.1)
