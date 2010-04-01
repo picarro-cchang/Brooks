@@ -146,7 +146,7 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                 message_puts("XRDY timeout in I2C_write_bytes");
                 result = I2C_NXRDY;
                 I2C_resetAll();
-                goto done;
+                goto error;
             }
             //TSK_sleep(1);
             continue;
@@ -169,7 +169,7 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                     message_puts("ARDY timeout in I2C_write_bytes");
                     result = I2C_NARDY;
                     I2C_resetAll();
-                    goto done;
+                    goto error;
                 }
                 //TSK_sleep(1);
             }
@@ -197,7 +197,11 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
     message_puts("NACK in I2C_write_bytes");
     result = I2C_NACK;
     I2C_resetAll();
-    goto done;
+    goto error;
+error:
+    IRQ_globalRestore(gie);
+    dspI2CInit();
+    return result;
 done:
     IRQ_globalRestore(gie);
     return result;
@@ -225,7 +229,7 @@ int I2C_write_bytes_nostart(I2C_Handle hI2c,Uint8 *buffer,int nbytes)
                 message_puts("XRDY timeout in I2C_write_bytes_nostart");
                 result = I2C_NXRDY;
                 I2C_resetAll();
-                goto done;
+                goto error;
             }
             //TSK_sleep(1);
             continue;
@@ -248,7 +252,7 @@ int I2C_write_bytes_nostart(I2C_Handle hI2c,Uint8 *buffer,int nbytes)
                     message_puts("ARDY timeout in I2C_write_bytes_nostart");
                     result = I2C_NARDY;
                     I2C_resetAll();
-                    goto done;
+                    goto error;
                 }
                 //TSK_sleep(1);
             }
@@ -269,7 +273,11 @@ int I2C_write_bytes_nostart(I2C_Handle hI2c,Uint8 *buffer,int nbytes)
     message_puts("NACK timeout in I2C_write_bytes_nostart");
     result =  I2C_NACK;
     I2C_resetAll();
-    goto done;
+    goto error;
+error:
+    IRQ_globalRestore(gie);
+    dspI2CInit();
+    return result;
 done:
     IRQ_globalRestore(gie);
     return result;
@@ -311,7 +319,7 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                     I2C_FSETSH(hI2c,I2CSTR,ICRRDY,CLR);
                     result = I2C_NRRDY;
                     I2C_resetAll();
-                    goto done;
+                    goto error;
                 }
                 //TSK_sleep(1);
             }
@@ -329,7 +337,7 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                 I2C_FSETSH(hI2c,I2CSTR,ARDY,CLR);
                 result = I2C_NARDY;
                 I2C_resetAll();
-                goto done;
+                goto error;
             }
         }
         I2C_sendStop(hI2c);
@@ -347,7 +355,7 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                 I2C_FSETSH(hI2c,I2CSTR,ICRRDY,CLR);
                 result = I2C_NRRDY;
                 I2C_resetAll();
-                goto done;
+                goto error;
             }
             //TSK_sleep(1);
         }
@@ -365,7 +373,7 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                 I2C_FSETSH(hI2c,I2CSTR,BB,CLR);
                 result = I2C_BUSY;
                 I2C_resetAll();
-                goto done;
+                goto error;
             }
             //TSK_sleep(1);
         }
@@ -381,7 +389,11 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
     message_puts("NACK in I2C_read_bytes");
     result = I2C_NACK;
     I2C_resetAll();
-    goto done;
+    goto error;
+error:
+    IRQ_globalRestore(gie);
+    dspI2CInit();
+    return result;
 done:
     IRQ_globalRestore(gie);
     return result;
@@ -390,13 +402,16 @@ done:
 /*----------------------------------------------------------------------------*/
 void dspI2CInit()
 {
+    int loops;
     I2C_resetAll();
+    for (loops=0;loops<1000;loops++);
     if (hI2C[0] != 0) I2C_close(hI2C[0]);
     hI2C[0] = I2C_open(I2C_PORT0,I2C_OPEN_RESET);
     initializeI2C(hI2C[0]);
     if (hI2C[1] != 0) I2C_close(hI2C[1]);
     hI2C[1] = I2C_open(I2C_PORT1,I2C_OPEN_RESET);
     initializeI2C(hI2C[1]);
+    for (loops=0;loops<1000;loops++);
 }
 /*----------------------------------------------------------------------------*/
 void setI2C0Mux(int channel)
