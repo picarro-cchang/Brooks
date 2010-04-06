@@ -609,7 +609,15 @@ class DriverRpcHandler(SharedTypes.Singleton):
         if ctypes.sizeof(wlmCal) != 4096:
             raise ValueError("WLMCalibrationType has wrong size (%d bytes)" % ctypes.sizeof(wlmCal))
         self.wrEeprom("WLM_EEPROM",0,[ord(c) for c in buffer(wlmCal)])
-        
+    
+    def readWlmDarkCurrents(self):
+        """Read dark current values from WLM EEPROM (if possible) and update registers"""
+        hdrDict = self.fetchWlmHdr()
+        self.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_ETA1_OFFSET",int(hdrDict['etalon1_offset']+0.5))
+        self.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_REF1_OFFSET",int(hdrDict['reference1_offset']+0.5))
+        self.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_ETA2_OFFSET",int(hdrDict['etalon2_offset']+0.5))
+        self.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_REF2_OFFSET",int(hdrDict['reference2_offset']+0.5))
+    
 class StreamTableType(tables.IsDescription):
     time = tables.Int64Col()
     streamNum = tables.Int32Col()
@@ -736,7 +744,11 @@ class Driver(SharedTypes.Singleton):
                 ic = InstrumentConfig()
                 ic.loadPersistentRegistersFromConfig()
                 # self.dasInterface.loadDasState() # Restore DAS state
-                DasConfigure(self.dasInterface,ic.config).run()
+                DasConfigure(self.dasInterface,ic.config).run()                
+                try:
+                    self.rpcHandler.readWlmDarkCurrents()
+                except:
+                    Log("Cannot read dark currents from WLM EEPROM",Level=2)                
                 daemon = self.rpcHandler.server.daemon
                 Log("DAS firmware uploaded",Level=1)
             except:
