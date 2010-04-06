@@ -19,7 +19,7 @@ import sys
 import getopt
 from numpy import *
 import os
-import pylab
+import socket
 import time
 
 from configobj import ConfigObj
@@ -34,6 +34,21 @@ else:
     AppPath = sys.argv[0]
 
 EventManagerProxy_Init("CalFileFromEepromsMaker")
+
+class DriverProxy(SharedTypes.Singleton):
+    """Encapsulates access to the Driver via RPC calls"""
+    initialized = False
+    def __init__(self):
+        if not self.initialized:
+            self.hostaddr = "localhost"
+            self.myaddr = socket.gethostbyname(socket.gethostname())
+            serverURI = "http://%s:%d" % (self.hostaddr,
+                SharedTypes.RPC_PORT_DRIVER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="CalibrateSystem")
+            self.initialized = True
+
+# For convenience in calling driver functions
+Driver = DriverProxy().rpc
 
 class CalFileFromEepromsMaker(object):
     def __init__(self,configFile,options):
@@ -86,7 +101,18 @@ class CalFileFromEepromsMaker(object):
             self.eepromContents = cPickle.load(fp)
             fp.close()
         else:
-            raise ValueError("Reading from EEPROM not yet implemented")
+            laserEepromContents = []
+            for aLaserNum in range(1,5):
+                ident = "LASER%d_EEPROM" % aLaserNum
+                try:
+                    laserEepromContents.append(Driver.fetchObject(ident)[0])
+                    print "Read %s" % ident
+                except ValueError:
+                    laserEepromContents.append(None)
+            wlmEepromContents = Driver.fetchWlmCal()
+            print "Read WLM_EEPROM"
+            self.eepromContents = {"laserEeproms":laserEepromContents,
+                                   "wlmEeprom":wlmEepromContents}
         
         laserEeproms = self.eepromContents["laserEeproms"]
         wlmEeprom    = self.eepromContents["wlmEeprom"]
