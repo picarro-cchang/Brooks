@@ -345,6 +345,7 @@
         <constant ident="FPGA_MAGIC_CODE" description="Code to confirm FPGA is programmed">0xC0DE0001</constant>
         <constant ident="RDSIM_EXTRA" description="Extra bits in accumulator for ringdown simulator">4</constant>
         <constant ident="WLM_ADC_WIDTH" description="Number of bits for wavelength monitor ADCs">16</constant>
+        <constant ident="I2C_READ_ERROR" description="Bad I2C read value">0x80000000</constant>        
     </constant_list>
     <union_list>
         <union type="DataType">

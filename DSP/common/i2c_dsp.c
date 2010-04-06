@@ -15,6 +15,7 @@
  */
 
 #include <std.h>
+//#include <stdio.h>
 #include <sem.h>
 #include <tsk.h>
 #include "interface.h"
@@ -27,7 +28,7 @@
 #define IDEF  static inline
 
 I2C_Handle hI2C[2] = {0, 0};
-
+//static char msg[120];
 /*
 I2C_devAddr logic_eeprom_I2C = {&hI2C0,0x55};
 I2C_devAddr wlm_eeprom_I2C = {&hI2C1,0x50};
@@ -125,6 +126,7 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
     int loops = 0;
     int gie = IRQ_globalDisable();
     i = 0;
+    
     I2C_outOfReset(hI2c);
     // Set up the slave address of the I2C
     I2C_RSETH(hI2c,I2CSAR,i2caddr);
@@ -140,12 +142,13 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
             if (loops >= I2C_MAXLOOPS)
             {
                 I2C_FSETSH(hI2c,I2CSTR,ICXRDY,CLR);
-                /*sprintf(msg,"XRDY timeout in I2C_write_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
+                /*
+                sprintf(msg,"XRDY timeout in I2C_write_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
                         hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                message_puts(msg);*/
+                message_puts(msg);
+                */
                 message_puts("XRDY timeout in I2C_write_bytes");
                 result = I2C_NXRDY;
-                I2C_resetAll();
                 goto error;
             }
             //TSK_sleep(1);
@@ -163,12 +166,13 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                 if (loops >= I2C_MAXLOOPS)
                 {
                     I2C_FSETSH(hI2c,I2CSTR,ARDY,CLR);
-                    /*sprintf(msg,"ARDY timeout in I2C_write_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
+                    /*
+                    sprintf(msg,"ARDY timeout in I2C_write_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
                                 hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                    message_puts(msg);*/
+                    message_puts(msg);
+                    */
                     message_puts("ARDY timeout in I2C_write_bytes");
                     result = I2C_NARDY;
-                    I2C_resetAll();
                     goto error;
                 }
                 //TSK_sleep(1);
@@ -192,13 +196,14 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
     I2C_FSETSH(hI2c,I2CSTR,BB,CLR);
     I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
     I2C_FSETSH(hI2c,I2CSTR,ICXRDY,CLR);
-    /*sprintf(msg,"NACK in I2C_write_bytes, I2CAddr=%x",i2caddr);
-    message_puts(msg);*/
+    /* sprintf(msg,"NACK in I2C_write_bytes, I2CAddr=%x",i2caddr);
+    message_puts(msg);
+    */
     message_puts("NACK in I2C_write_bytes");
     result = I2C_NACK;
-    I2C_resetAll();
     goto error;
 error:
+    I2C_reset(hI2c);
     IRQ_globalRestore(gie);
     dspI2CInit();
     return result;
@@ -223,12 +228,13 @@ int I2C_write_bytes_nostart(I2C_Handle hI2c,Uint8 *buffer,int nbytes)
             if (loops >= I2C_MAXLOOPS)
             {
                 I2C_FSETSH(hI2c,I2CSTR,ICXRDY,CLR);
-                /*sprintf(msg,"XRDY timeout in I2C_write_bytes_nostart, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d",
+                /*
+                sprintf(msg,"XRDY timeout in I2C_write_bytes_nostart, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d",
                         hI2c,I2C0MuxChan,I2C1MuxChan);
-                message_puts(msg);*/
+                message_puts(msg);
+                */
                 message_puts("XRDY timeout in I2C_write_bytes_nostart");
                 result = I2C_NXRDY;
-                I2C_resetAll();
                 goto error;
             }
             //TSK_sleep(1);
@@ -246,12 +252,13 @@ int I2C_write_bytes_nostart(I2C_Handle hI2c,Uint8 *buffer,int nbytes)
                 if (loops >= I2C_MAXLOOPS)
                 {
                     I2C_FSETSH(hI2c,I2CSTR,ARDY,CLR);
-                    /*sprintf(msg,"ARDY timeout in I2C_write_bytes_nostart, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d",
+                    /*
+                    sprintf(msg,"ARDY timeout in I2C_write_bytes_nostart, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d",
                             hI2c,I2C0MuxChan,I2C1MuxChan);
-                    message_puts(msg);*/
+                    message_puts(msg);
+                    */
                     message_puts("ARDY timeout in I2C_write_bytes_nostart");
                     result = I2C_NARDY;
-                    I2C_resetAll();
                     goto error;
                 }
                 //TSK_sleep(1);
@@ -267,14 +274,16 @@ int I2C_write_bytes_nostart(I2C_Handle hI2c,Uint8 *buffer,int nbytes)
     I2C_FSETSH(hI2c,I2CSTR,BB,CLR);
     I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
     I2C_FSETSH(hI2c,I2CSTR,ICXRDY,CLR);
-    /*sprintf(msg,"NACK timeout in I2C_write_bytes_nostart, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d",
+    /*
+    sprintf(msg,"NACK timeout in I2C_write_bytes_nostart, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d",
             hI2c,I2C0MuxChan,I2C1MuxChan);
-    message_puts(msg);*/
+    message_puts(msg);
+    */
     message_puts("NACK timeout in I2C_write_bytes_nostart");
     result =  I2C_NACK;
-    I2C_resetAll();
     goto error;
 error:
+    I2C_reset(hI2c);
     IRQ_globalRestore(gie);
     dspI2CInit();
     return result;
@@ -292,6 +301,7 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
     int i, result;
     int loops;
     int gie = IRQ_globalDisable();
+    
     I2C_outOfReset(hI2c);
     i = 0;
     // Set up the slave address of the I2C
@@ -309,18 +319,24 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
             while (0 == I2C_rrdy(hI2c))
             {
                 loops++;
-                if (loops >= 50*I2C_MAXLOOPS)
+                if (loops >= 500*I2C_MAXLOOPS)
                 {
                     // Go through here on timeout
-                    /*sprintf(msg,"RRDY (n-1) timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
+                    /*
+                    sprintf(msg,"RRDY (n-1) timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
                             hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                    message_puts(msg);*/
+                    message_puts(msg);
+                    */
                     message_puts("RRDY (n-1) timeout in I2C_read_bytes");
                     I2C_FSETSH(hI2c,I2CSTR,ICRRDY,CLR);
                     result = I2C_NRRDY;
-                    I2C_resetAll();
                     goto error;
                 }
+                if (I2C_nack(hI2c)) {
+                	result = I2C_NACK;
+				    I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
+                	goto error;
+			    }
                 //TSK_sleep(1);
             }
             buffer[i++] = I2C_readByte(hI2c);
@@ -330,13 +346,14 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
             loops++;
             if (loops >= I2C_MAXLOOPS)
             {
-                /* sprintf(msg,"ARDY timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
+                /*
+                sprintf(msg,"ARDY timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
                         hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                message_puts(msg); */
+                message_puts(msg);
+                */
                 message_puts("ARDY timeout in I2C_read_bytes");
                 I2C_FSETSH(hI2c,I2CSTR,ARDY,CLR);
                 result = I2C_NARDY;
-                I2C_resetAll();
                 goto error;
             }
         }
@@ -346,17 +363,23 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
         while (0 == I2C_rrdy(hI2c))
         {
             loops++;
-            if (loops >= 50*I2C_MAXLOOPS)
+            if (loops >= 500*I2C_MAXLOOPS)
             {
-                /*sprintf(msg,"RRDY (1) timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
+                /*
+                sprintf(msg,"RRDY (1) timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
                         hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                message_puts(msg);*/
+                message_puts(msg);
+                */
                 message_puts("RRDY (1) timeout in I2C_read_bytes");
                 I2C_FSETSH(hI2c,I2CSTR,ICRRDY,CLR);
                 result = I2C_NRRDY;
-                I2C_resetAll();
                 goto error;
             }
+            if (I2C_nack(hI2c)) {
+            	result = I2C_NACK;
+			    I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
+            	goto error;
+		    }
             //TSK_sleep(1);
         }
         I2C_readByte(hI2c);
@@ -366,13 +389,14 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
             loops++;
             if (loops >= I2C_MAXLOOPS)
             {
-                /*sprintf(msg,"BB timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
+                /*
+                sprintf(msg,"BB timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
                         hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                message_puts(msg);*/
+                message_puts(msg);
+                */
                 message_puts("BB timeout in I2C_read_bytes");
                 I2C_FSETSH(hI2c,I2CSTR,BB,CLR);
                 result = I2C_BUSY;
-                I2C_resetAll();
                 goto error;
             }
             //TSK_sleep(1);
@@ -383,14 +407,17 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
     I2C_FSETSH(hI2c,I2CSTR,BB,CLR);
     I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
     I2C_FSETSH(hI2c,I2CSTR,ICRRDY,CLR);
-    /*sprintf(msg,"NACK in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
+    /*
+    sprintf(msg,"NACK in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
             hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-    message_puts(msg);*/
+    message_puts(msg);
+    */
     message_puts("NACK in I2C_read_bytes");
     result = I2C_NACK;
-    I2C_resetAll();
     goto error;
 error:
+    I2C_sendStop(hI2c);
+    I2C_reset(hI2c);
     IRQ_globalRestore(gie);
     dspI2CInit();
     return result;
@@ -404,14 +431,14 @@ void dspI2CInit()
 {
     int loops;
     I2C_resetAll();
-    for (loops=0;loops<1000;loops++);
+    for (loops=0;loops<2000;loops++);
     if (hI2C[0] != 0) I2C_close(hI2C[0]);
     hI2C[0] = I2C_open(I2C_PORT0,I2C_OPEN_RESET);
     initializeI2C(hI2C[0]);
     if (hI2C[1] != 0) I2C_close(hI2C[1]);
     hI2C[1] = I2C_open(I2C_PORT1,I2C_OPEN_RESET);
     initializeI2C(hI2C[1]);
-    for (loops=0;loops<1000;loops++);
+    for (loops=0;loops<2000;loops++);
 }
 /*----------------------------------------------------------------------------*/
 void setI2C0Mux(int channel)
@@ -473,6 +500,7 @@ int I2C_check_ack(I2C_Handle hI2c,int i2caddr)
 {
     int result, loops = 0;
     int gie = IRQ_globalDisable();
+    
     I2C_outOfReset(hI2c);
     // Set up the slave address of the I2C
     I2C_RSETH(hI2c,I2CSAR,i2caddr);

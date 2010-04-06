@@ -563,9 +563,11 @@ int r_read_etalon_thermistor_resistance(unsigned int numInt,void *params,void *e
     float Vfrac, Rseries = 30000.0;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
     result = read_etalon_thermistor_adc();
-    Vfrac = result/33554432.0;
-    if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
-    WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    if (result != I2C_READ_ERROR) {
+        Vfrac = result/33554432.0;
+        if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
+        WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    }
     return STATUS_OK;
 }
 
@@ -576,9 +578,11 @@ int r_read_warm_box_thermistor_resistance(unsigned int numInt,void *params,void 
     float Vfrac, Rseries = 30000.0;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
     result = read_warm_box_thermistor_adc();
-    Vfrac = result/33554432.0;
-    if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
-    WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    if (result != I2C_READ_ERROR) {
+        Vfrac = result/33554432.0;
+        if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
+        WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    }
     return STATUS_OK;
 }
 
@@ -589,9 +593,11 @@ int r_read_warm_box_heatsink_thermistor_resistance(unsigned int numInt,void *par
     float Vfrac, Rseries = 30000.0;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
     result = read_warm_box_heatsink_thermistor_adc();
-    Vfrac = result/33554432.0;
-    if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
-    WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    if (result != I2C_READ_ERROR) {
+        Vfrac = result/33554432.0;
+        if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
+        WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    }
     return STATUS_OK;
 }
 
@@ -602,9 +608,11 @@ int r_read_cavity_thermistor_resistance(unsigned int numInt,void *params,void *e
     float Vfrac, Rseries = 124000.0;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
     result = read_cavity_thermistor_adc();
-    Vfrac = result/33554432.0;
-    if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
-    WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    if (result != I2C_READ_ERROR) {
+        Vfrac = result/33554432.0;
+        if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
+        WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    }
     return STATUS_OK;
 }
 
@@ -615,9 +623,11 @@ int r_read_hot_box_heatsink_thermistor_resistance(unsigned int numInt,void *para
     float Vfrac, Rseries = 124000.0;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
     result = read_hot_box_heatsink_thermistor_adc();
-    Vfrac = result/33554432.0;
-    if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
-    WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    if (result != I2C_READ_ERROR) {
+        Vfrac = result/33554432.0;
+        if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
+        WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
+    }
     return STATUS_OK;
 }
 
@@ -627,7 +637,7 @@ int r_read_cavity_pressure_adc(unsigned int numInt,void *params,void *env)
     unsigned int result;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
     result = read_cavity_pressure_adc();
-    WRITE_REG(reg[0],result);
+    if (result != I2C_READ_ERROR) WRITE_REG(reg[0],result);
     return STATUS_OK;
 }
 
@@ -637,13 +647,15 @@ int r_read_ambient_pressure_adc(unsigned int numInt,void *params,void *env)
     unsigned int result;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
     result = read_ambient_pressure_adc();
-    WRITE_REG(reg[0],result);
+    if (result != I2C_READ_ERROR) WRITE_REG(reg[0],result);
     return STATUS_OK;
 }
 
 int r_read_laser_current(unsigned int numInt,void *params,void *env)
 /*
-    Reads laser current monitor of specified laser
+    Reads laser current monitor of specified laser. If an I2C error
+    occurs the register is not updated.
+    
     Input:
         laserNum (int)  :  Laser number to read (1-origin)
         Register (float): Register containing conversion slope
@@ -654,11 +666,15 @@ int r_read_laser_current(unsigned int numInt,void *params,void *env)
 {
     unsigned int *reg = (unsigned int *) params;
     float slope, offset, result;
+    int adc_value;
     if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
     READ_REG(reg[1],slope);
     READ_REG(reg[2],offset);
-    result = read_laser_current_adc(reg[0])*slope + offset;
-    WRITE_REG(reg[3],result);
+    adc_value = read_laser_current_adc(reg[0]);
+    if (adc_value != I2C_READ_ERROR) {   /* Filter out I2C errors */
+        result = adc_value*slope + offset;
+        WRITE_REG(reg[3],result);
+    }
     return STATUS_OK;
 }
 

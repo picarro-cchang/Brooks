@@ -499,7 +499,7 @@ int tempCntrlLaser4Step(void)
 }
 
 int read_etalon_thermistor_adc()
-// Read etalon thermistor ADC
+// Read etalon thermistor ADC. Returns I2C_READ_ERROR on an I2C error 
 {
     int flags, result, loops;
     I2C_device *d = &i2c_devices[ETALON_THERMISTOR_ADC];
@@ -507,6 +507,7 @@ int read_etalon_thermistor_adc()
     setI2C1Mux(d->mux);  // I2C bus 8
     for (loops=0;loops<1000;loops++);
     result = ltc2485_getData(d, &flags);
+    if (result == I2C_READ_ERROR) return result;
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
@@ -521,6 +522,7 @@ int read_warm_box_thermistor_adc()
     setI2C1Mux(d->mux);  // I2C bus 8
     for (loops=0;loops<1000;loops++);
     result = ltc2485_getData(d, &flags);
+    if (result == I2C_READ_ERROR) return result;
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
@@ -535,6 +537,7 @@ int read_warm_box_heatsink_thermistor_adc()
     setI2C1Mux(d->mux);  // I2C bus 8
     for (loops=0;loops<1000;loops++);
     result = ltc2485_getData(d, &flags);
+    if (result == I2C_READ_ERROR) return result;
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
@@ -549,6 +552,7 @@ int read_cavity_thermistor_adc()
     setI2C0Mux(d->mux);  // I2C bus 7
     for (loops=0;loops<1000;loops++);
     result = ltc2485_getData(d, &flags);
+    if (result == I2C_READ_ERROR) return result;
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
@@ -563,6 +567,7 @@ int read_hot_box_heatsink_thermistor_adc()
     setI2C0Mux(d->mux);  // I2C bus 7
     for (loops=0;loops<1000;loops++);
     result = ltc2485_getData(d, &flags);
+    if (result == I2C_READ_ERROR) return result;
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
@@ -581,6 +586,7 @@ int read_laser_thermistor_adc(int laserNum)
     setI2C0Mux(devices[laserNum-1]->mux);
     for (loops=0;loops<1000;loops++);
     result = ltc2485_getData(devices[laserNum-1], &flags);
+    if (result == I2C_READ_ERROR) return result;
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;

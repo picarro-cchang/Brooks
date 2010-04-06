@@ -19,22 +19,22 @@
 #include "i2c_dsp.h"
 #include "ltc2485.h"
 
-static unsigned int ltc2485_rdBytes(I2C_device *i2c, int n)
-/* Read up to 4 bytes in high-endian order returning an unsigned */
+static int ltc2485_rdBytes(I2C_device *i2c, int n)
+/* Read up to 4 bytes in high-endian order. Return -1 on I2C error */
 {
     Uint8 reply[4];
     unsigned int i, result=0;
     if (n>0 && n<=4)
     {
-        I2C_read_bytes(hI2C[i2c->chain],i2c->addr,reply,n);
+        if (I2C_read_bytes(hI2C[i2c->chain],i2c->addr,reply,n) != 0) return I2C_READ_ERROR;
         for (i=0; i<n; i++) result = (result << 8) | (unsigned int)reply[i];
     }
     return result;
 }
 
-static void ltc2485_wrBytes(I2C_device *i2c, Uint8 bytes[],int n)
+static int ltc2485_wrBytes(I2C_device *i2c, Uint8 bytes[],int n)
 {
-    I2C_write_bytes(hI2C[i2c->chain],i2c->addr,bytes,n);
+    return I2C_write_bytes(hI2C[i2c->chain],i2c->addr,bytes,n);
     // Do not send stop signal, since this would start a conversion
 }
 
@@ -52,9 +52,11 @@ void ltc2485_configure(I2C_device *i2c, int selectTemp,int rejectCode,int speed)
 }
 
 int ltc2485_getData(I2C_device *i2c,int *flags)
-/* *flags = 0 => underflow, 3 => overflow, 1 or 2 => ok */
+/* *flags = 0 => underflow, 3 => overflow, 1 or 2 => ok.
+   Returns I2C_READ_ERROR on an I2C problem. */
 {
-    unsigned int result = ltc2485_rdBytes(i2c,4);
+    int result = ltc2485_rdBytes(i2c,4);
+    if (result == I2C_READ_ERROR) return result;
     *flags = result >> 30;
     result = (result & 0x7FFFFFFF) >> 6;
     if (result < 0x1000000) return result;

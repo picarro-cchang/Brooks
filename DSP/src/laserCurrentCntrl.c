@@ -216,7 +216,8 @@ int currentCntrlLaser4Step(void)
 }
 
 int read_laser_current_adc(int laserNum)
-// Read laser current ADC for specified laser. laserNum is in the range 1-4
+// Read laser current ADC for specified laser. laserNum is in the range 1-4.
+//  Returns I2C_READ_ERROR if an I2C error occured.
 {
     I2C_device *devices[4] =  {&i2c_devices[LASER1_CURRENT_ADC],
                                &i2c_devices[LASER2_CURRENT_ADC],

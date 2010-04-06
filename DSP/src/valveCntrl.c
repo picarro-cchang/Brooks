@@ -327,7 +327,7 @@ int write_valve_pump_tec(unsigned int code)
 }
 
 int read_cavity_pressure_adc()
-// Read cavity pressure ADC
+// Read cavity pressure ADC. Returns I2C_READ_ERROR on I2C error.
 {
     int flags, result, loops;
     I2C_device *d = &i2c_devices[CAVITY_PRESSURE_ADC];
@@ -335,13 +335,14 @@ int read_cavity_pressure_adc()
     setI2C0Mux(d->mux);  // I2C bus 7
     for (loops=0;loops<1000;loops++);
     result = ltc2485_getData(d, &flags);
+    if (result==I2C_READ_ERROR) return result;
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;
 }
 
 int read_ambient_pressure_adc()
-// Read ambient pressure ADC
+// Read ambient pressure ADC. Returns I2C_READ_ERROR on I2C error.
 {
     int flags, result, loops;
     I2C_device *d = &i2c_devices[AMBIENT_PRESSURE_ADC];
@@ -349,6 +350,7 @@ int read_ambient_pressure_adc()
     setI2C0Mux(d->mux);  // I2C bus 7
     for (loops=0;loops<1000;loops++);
     result = ltc2485_getData(d, &flags);
+    if (result==I2C_READ_ERROR) return result;
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
     return result;

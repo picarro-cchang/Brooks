@@ -418,6 +418,8 @@ typedef struct {
 #define RDSIM_EXTRA (4)
 // Number of bits for wavelength monitor ADCs
 #define WLM_ADC_WIDTH (16)
+// Bad I2C read value
+#define I2C_READ_ERROR (0x80000000)
 
 typedef enum {
     float_type = 0, // 

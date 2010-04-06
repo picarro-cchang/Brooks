@@ -19,12 +19,12 @@
 #include "i2c_dsp.h"
 #include "ltc2451.h"
 
-unsigned int ltc2451_read(I2C_device *i2c)
-/* Read 2 bytes in high-endian order returning an unsigned */
+int ltc2451_read(I2C_device *i2c)
+/* Read 2 bytes in high-endian order. Return I2C_READ_ERROR on I2C error. */
 {
     Uint8 reply[2];
     unsigned int result=0;
-    I2C_read_bytes(hI2C[i2c->chain],i2c->addr,reply,2);
+    if (I2C_read_bytes(hI2C[i2c->chain],i2c->addr,reply,2) != 0) return I2C_READ_ERROR;
     result = reply[0];
     result = (result << 8) | reply[1];
     return result;
