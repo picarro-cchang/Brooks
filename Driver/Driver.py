@@ -744,6 +744,7 @@ class Driver(SharedTypes.Singleton):
                 ic = InstrumentConfig()
                 ic.loadPersistentRegistersFromConfig()
                 # self.dasInterface.loadDasState() # Restore DAS state
+                Log("Configuring scheduler",Level=1)
                 DasConfigure(self.dasInterface,ic.config).run()                
                 try:
                     self.rpcHandler.readWlmDarkCurrents()
@@ -756,6 +757,7 @@ class Driver(SharedTypes.Singleton):
                 Log("Cannot connect to instrument - please check hardware",Verbose=traceback.format_exc(),Level=3)
                 raise
             # Here follows the main loop.
+            Log("Starting main driver loop",Level=1)
             try:
                 while not daemon.mustShutdown:
                     timeSoFar = 0

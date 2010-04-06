@@ -457,6 +457,8 @@ FPGA_MAGIC_CODE = 0xC0DE0001
 RDSIM_EXTRA = 4
 # Number of bits for wavelength monitor ADCs
 WLM_ADC_WIDTH = 16
+# Bad I2C read value
+I2C_READ_ERROR = 0x80000000
 
 # Enumerated definitions for RegTypes
 RegTypes = c_uint

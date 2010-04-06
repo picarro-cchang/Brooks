@@ -85,8 +85,7 @@ class DasConfigure(SharedTypes.Singleton):
             raise ValueError("VERIFY_INIT_REGISTER not initialized correctly")
         self.setHardwarePresent()
         # Reset I2C multiplexers
-        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[1<<interface.KERNEL_CONTROL_I2C_RESET_B,"FPGA_KERNEL","KERNEL_CONTROL"]))
-                
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[1<<interface.KERNEL_CONTROL_I2C_RESET_B,"FPGA_KERNEL","KERNEL_CONTROL"]))                
         # Define operation groups as a dictionary accessed using
         #  e.g. self.opGroups["FAST"]["SENSOR_READ"]
         for rate in schedulerPeriods:
@@ -490,9 +489,6 @@ class DasConfigure(SharedTypes.Singleton):
 
         sender.doOperation(Operation("ACTION_INIT_RUNQUEUE",[len(groups)]))
         
-        # Remove reset on I2C multiplexers
-        time.sleep(0.2)
-        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0,"FPGA_KERNEL","KERNEL_CONTROL"]))
         
         runCont = (1<<interface.PWM_CS_RUN_B) | (1<<interface.PWM_CS_CONT_B)
 
@@ -507,7 +503,6 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_WARM_BOX_INIT"))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_CAVITY_INIT"))
         sender.doOperation(Operation("ACTION_HEATER_CNTRL_INIT"))
-
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_WARMBOX","PWM_CS"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))
@@ -517,16 +512,18 @@ class DasConfigure(SharedTypes.Singleton):
 
         # Must do following AFTER turning on the warm box and hot box PWM and allowing the monostable
         #  to trigger
-        
+
+        # Remove reset on I2C multiplexers
+        time.sleep(0.5)
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0,"FPGA_KERNEL","KERNEL_CONTROL"]))
+
         # Check to see which I2C devices are installed on this instrument
         for i in range(len(interface.i2cByIndex)):
             ident = interface.i2cByIndex[i]
             status = sender.doOperation(Operation("ACTION_I2C_CHECK",interface.i2cByIdent[ident][-3:]))
             self.i2cConfig[ident] = (status >= 0)
-            print "%s present: %s" % (ident,"True" if status>=0 else "False")
+            print "%s present: %s" % (ident,"True" if self.i2cConfig[ident] else "False")
 
-        sender.doOperation(Operation("ACTION_SENTRY_INIT"))
-        
         sender.doOperation(Operation("ACTION_VALVE_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_SPECTRUM_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
@@ -548,7 +545,6 @@ class DasConfigure(SharedTypes.Singleton):
 
         sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER",11000000)
         sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER",1500000)
-
         
         # Start the ringdown manager
         runCont = (1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B)
@@ -562,5 +558,8 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_DYNAMICPWM_INLET","DYNAMICPWM_CS"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_DYNAMICPWM_OUTLET","DYNAMICPWM_CS"]))
 
+        time.sleep(2)
+        sender.doOperation(Operation("ACTION_SENTRY_INIT"))
         # Set the scheduler running
         sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",1);
+
