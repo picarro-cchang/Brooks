@@ -109,7 +109,7 @@ class WriteLaserEeprom(object):
                         waveNumber = wlmFile.WaveNumber)
         print "Starting to write to EEPROM"                
         Driver.shelveObject(eepromId,laserDat)
-        raw_input("Writing to EEPROM complete. <Enter> to continue.")
+        print "Writing to EEPROM complete. Starting verification."
         print "Verification %s" % "succeeded." if Driver.verifyObject(eepromId,laserDat) else "FAILED."
         
 HELP_STRING = """writeLaserEeprom.py [-c<FILENAME>] [-h|--help]

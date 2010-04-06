@@ -153,7 +153,7 @@ class WriteWlmEeprom(object):
         print "Writing WLM data to EEPROM"
         Driver.shelveWlmCal(ctypesToDict(wlmCal))
         # Read back the data
-        raw_input("Writing complete. Press <Enter> to read back")
+        print "Writing complete. Starting verification"
         wlmCalReadback = WLMCalibrationType()
         dictToCtypes(Driver.fetchWlmCal(),wlmCalReadback)
         if buffer(wlmCalReadback) == buffer(wlmCal):
