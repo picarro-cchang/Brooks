@@ -220,7 +220,7 @@ class CustomConfigObj(configobj.ConfigObj):
     def add_section(self, section):
         if not self.has_key(section):
             self[section] = {}
-            if not self.ignoreOptionCase:
+            if self.ignoreOptionCase:
                 self.shadow[section] = {}
         else:
             raise DuplicateSectionError(section)
