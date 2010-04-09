@@ -1,0 +1,71 @@
+Testing spline calculation in fitterCore
+========================================
+
+>>> from Host.Fitter.fitterCore import CubicSpline
+>>> import numpy as np
+>>> x = np.array([1.0,2.0,2.5,3.5,4.0])
+>>> f = lambda x: x**3 + 2*x**2 + 3*x + 4
+>>> dfdx = lambda x: 3*x**2 + 4*x + 3
+>>> y = f(x)
+>>> dydx = dfdx(x)
+
+Generate a cubic spline with an exact cubic, together with the correct endpoint slopes
+>>> s = CubicSpline(x,y,dydx[0],dydx[-1])
+>>> np.testing.assert_almost_equal(y,s(x))
+
+Now try evaluating on a fine grid, which tests interpolation
+>>> xfine = np.arange(1.0,4.0,0.01)
+>>> yfine = f(xfine)
+>>> np.testing.assert_almost_equal(yfine,s(xfine))
+
+Generate cubic spline with unit slope at zero and zero slope at one
+This should give x**3 - 2*x**2 + x
+>>> s = CubicSpline(np.array([0.0,1.0]),np.array([0.0,0.0]),1.0,0.0)
+>>> f = lambda x: x**3 - 2*x**2 + x
+>>> xfine = np.arange(0.0,1.0,0.01)
+>>> yfine = f(xfine)
+>>> np.testing.assert_almost_equal(yfine,s(xfine))
+
+Generate cubic spline with zero slope at zero and unit slope at one
+This should give x**3 - x**2
+>>> s = CubicSpline(np.array([0.0,1.0]),np.array([0.0,0.0]),0.0,1.0)
+>>> f = lambda x: x**3 - x**2
+>>> xfine = np.arange(0.0,1.0,0.01)
+>>> yfine = f(xfine)
+>>> np.testing.assert_almost_equal(yfine,s(xfine))
+
+Test bisplines
+==============
+
+>>> from Host.Fitter.fitterCore import BiSpline, makeSplineSection, loadSplineLibrary, Model
+>>> from Host.Common.CustomConfigObj import CustomConfigObj
+>>> BiSpline.numParams()
+7
+>>> xc = 6500
+>>> func = lambda x,a,b,c,d: a*(x-xc)**3 + b*(x-xc)**2 + c*(x-xc) + d
+>>> d2func = lambda x,a,b,c,d: 6*a*(x-xc) + 2*b
+
+Construct two splines from ideal data specified by a cubic polynomial
+>>> knots = np.array([6499.0,6499.5,6500.3,6501.0],np.float_)
+>>> a0 = 5; b0 = 6; c0 = 7; d0 = 8
+>>> a1 = 5.1; b1 = 5.9; c1 = 7.1; d1 = 7.9
+>>> config = CustomConfigObj()
+>>> makeSplineSection(config,"spline0","spline0",knots,
+...                   func(knots,a0,b0,c0,d0),d2func(knots,a0,b0,c0,d0))
+>>> makeSplineSection(config,"spline1","spline1",knots,
+...                   func(knots,a1,b1,c1,d1),d2func(knots,a1,b1,c1,d1))
+>>> lib = loadSplineLibrary(config)
+
+Check evaluation of bispline when specifying squishCenter, yEffective and yMultiplier
+>>> b = BiSpline(freqShift=0.0,baselineShift=0.0,amplitude=1.0,squishParam=0.0,
+...              squishCenter=xc,yEffective=1.2,yMultiplier=0.9,splineIndexA=0,
+...              splineIndexB=1)
+>>> model = Model()
+>>> model.addToModel(b,index=0)
+>>> model.createParamVector()
+>>> xVal = np.linspace(6499.5,6500.5,11)
+>>> sA = func(xVal,a0,b0,c0,d0)
+>>> sB = func(xVal,a1,b1,c1,d1)
+>>> wt = 0.9*(1.2-1.0)
+>>> np.testing.assert_almost_equal(model(xVal),(1.0-wt)*sA + wt*sB)
+

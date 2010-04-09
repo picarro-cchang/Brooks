@@ -24,6 +24,8 @@ import time
 
 DEFAULT_OUT_ENDPOINT = USB_ENDPOINT_OUT | 2
 DEFAULT_IN_ENDPOINT  = USB_ENDPOINT_IN  | 6
+AUXILIARY_OUT_ENDPOINT = USB_ENDPOINT_OUT | 4
+AUXILIARY_IN_ENDPOINT = USB_ENDPOINT_IN  | 8
 
 USB_MAX_PACKET_SIZE = 64
 
@@ -299,6 +301,16 @@ class AnalyzerUsb(Singleton):
                 raise ValueError("Invalid response in resetHpidInFifo")
         self._claimInterfaceWrapper(_resetHpidInFifo)
 
+    def auxiliaryWrite(self,data):
+        """Use bulk write to send block of 16 bit words (stored as a string in data) to auxiliary board"""
+        dataLength = sizeof(data)
+        print data.value
+        def _auxWrite():
+            self.usb.usbBulkWrite(self.handle,AUXILIARY_OUT_ENDPOINT,byref(data),dataLength,5000)
+        if 0 == dataLength or 512 < dataLength:
+            raise UsbPacketLengthError("Invalid data length %d in auxiliaryWrite" % (dataLength,))
+        self._claimInterfaceWrapper(_auxWrite)
+        
     def setDspControl(self,value):
         """Use vendor command to reset DSP or send HINT"""
         def _setDspControl():
