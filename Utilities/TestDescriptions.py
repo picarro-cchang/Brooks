@@ -57,6 +57,9 @@ description["205004"] = {"Title": """Power board inlet valve test""",\
 description["205005"] = {"Title": """Power board outlet valve test""",\
 "Descr":"This steps the outlet valve PWM and measures the resulting current." }
 
+description["258001"] = {"Title": """Cavity leak rate test""",\
+"Descr":"Measures how cavity pressure changes with all valves closed, with pump off and on"}
+
 reportFilename = "report.txt"
 htmlReportFilename = "report.html"
 

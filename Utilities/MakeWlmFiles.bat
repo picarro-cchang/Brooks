@@ -4,3 +4,4 @@ WriteLaserEeprom.py -c C:\Work\G2000\InstrConfig\Integration\WriteLaserEeprom1.i
 WriteLaserEeprom.py -c C:\Work\G2000\InstrConfig\Integration\WriteLaserEeprom2.ini
 WriteWlmEeprom.py   -c C:\Work\G2000\InstrConfig\Integration\WriteWlmEeprom.ini
 MakeCalFromEeproms.py -c C:\Work\G2000\InstrConfig\Integration\MakeCalFromEeproms.ini
+FindWlmOffset.py -c C:\Work\G2000\InstrConfig\Integration\FindWlmOffsetCO2.ini
