@@ -29,7 +29,7 @@ from cStringIO import StringIO
 from glob import glob
 from numpy import arange, arctan, argmax, argmin, argsort, array, bool_, cos
 from numpy import diff, searchsorted, dot, exp, flatnonzero, float_, frompyfunc
-from numpy import int8, int_, invert, iterable, linspace, logical_and, mean, median, ndarray, ones
+from numpy import int8, int_, invert, iterable, linspace, logical_and, maximum, mean, median, ndarray, ones
 from numpy import pi, shape, sin, sqrt, std, zeros
 from os.path import getmtime, join, split, exists
 from scipy.optimize import leastsq, brent
@@ -1368,8 +1368,20 @@ class Analysis(object):
         m = self.model
         v,d,s,c1,c2 = self.processDeps(seqIndex,deps)
         p0 = m.parameters[v]
+        self.pscale = ones(p0.shape,dtype=float_)
+        self.poffset = p0
+        #self.poffset = zeros(p0.shape,dtype=float_)
+        #freqVar = abs(p0-self.centerFrequency) < 10.0
+        #self.poffset[freqVar] = self.centerFrequency
+        # Normalize parameters for benefit of fitter
+        def normalize(p):
+            return self.pscale*(p-self.poffset)
+        def unnormalize(q):
+            return self.poffset+(q/self.pscale)
         # Objective function whose sum-of-squares is minimized
-        def fitfunc(p):
+        def fitfunc(q):
+            p = unnormalize(q)
+            # print "Fitfunc parameters: ",p
             m.parameters[v] = p
             if len(s)>0: m.parameters[d] = c1*m.parameters[s]+c2
             return self.weight*(self.yData-m(self.xData))
@@ -1381,14 +1393,16 @@ class Analysis(object):
         try:
             if fine:
                 #params, self.ier = leastsq(fitfunc,p0,xtol=1e-4,epsfcn=1e-11)
-                params, self.ier = leastsq(fitfunc,p0,epsfcn=1e-11)
+                qparams, self.ier = leastsq(fitfunc,normalize(p0),xtol=1e-4,epsfcn=1e-6)
             else:
                 #params, self.ier = leastsq(fitfunc,p0,ftol=1e-3,xtol=1e-3,epsfcn=1e-11)
-                params, self.ier = leastsq(fitfunc,p0,ftol=1e-3,xtol=1e-3,epsfcn=1e-11)
+                qparams, self.ier = leastsq(fitfunc,normalize(p0),ftol=1e-3,xtol=1e-3,epsfcn=1e-6)
+            params = unnormalize(qparams)
         except TypeError:
             params = p0
             print "Error in call to leastsq"
-        self.objective = sum(fitfunc(params)**2)
+        # print "Best fit parameters: ",params
+        self.objective = sum(fitfunc(normalize(params))**2)
         self.res = fitres(params)
         # Return a copy since parameters will change between stages of fitting
         return copy(m.parameters)
@@ -1407,6 +1421,7 @@ class Analysis(object):
         """Run the specified analysis on the RdfData object d, taking into account the dependencies
         and initial values which override the defaults from the spectral library and .ini files.
         Returns "self", the Analysis object"""
+        # print "Analysis %d call" % id(self)
         self.initVals = initVals
         self.deps = deps
         self.time = d.sensorDict["Time_s"]

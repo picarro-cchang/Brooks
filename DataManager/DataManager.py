@@ -388,7 +388,7 @@ class DataManager(object):
                 self.serialPollLock.release()                
             else:
                 try:
-                    (measDataTime, serialOutputToWrite) = self.serialOutQueue.get(block=True,timeout=self.Config.serialQueueTimeout)
+                    (measDataTime, enqueueTime, serialOutputToWrite) = self.serialOutQueue.get(block=True,timeout=self.Config.serialQueueTimeout)
                     timeToSend = measDataTime + self.Config.serialDelay - time.time()
                     if self.Config.serialTimePreserved and timeToSend > SERIAL_CMD_DELAY:
                         time.sleep(timeToSend-SERIAL_CMD_DELAY)
@@ -397,11 +397,14 @@ class DataManager(object):
                         curTime = time.time()
                         if self.Config.serialTimePreserved:
                             offSchedule = curTime - (measDataTime + self.Config.serialDelay)
-                            if abs(offSchedule) > 1.0: 
-                                Log("Serial output %.3f seconds off of schedule" % offSchedule, Level = 1)
+                            #if abs(offSchedule) > 1.0: 
+                            #    Log("Serial output %.3f seconds off of schedule" % offSchedule, Level = 1)
                         else:
-                            offSchedule = curTime - measDataTime
-                        print "Serial output %.2f ms off of schedule" % (1000*offSchedule)
+                            #offSchedule = curTime - measDataTime
+                            # Record the time required to send the data out of queue
+                            offSchedule = curTime - enqueueTime
+                        if abs(offSchedule) > 1.0: 
+                            Log("Serial output %.3f seconds off of schedule" % offSchedule, Level = 1)
                 except Queue.Empty:
                     pass
         self.serialThreadAllowRun = True
@@ -1248,7 +1251,7 @@ class DataManager(object):
                 self.serialString = resultAsString
                 self.serialPollLock.release()
             else:    
-                self.serialOutQueue.put((measDataTime, resultAsString))
+                self.serialOutQueue.put((measDataTime, time.time(), resultAsString))
 
     def _HandleScriptExecution(self,
                                ScriptCodeObj,
