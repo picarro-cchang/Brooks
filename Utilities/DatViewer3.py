@@ -662,7 +662,10 @@ class NotebookHandler(Handler):
                             match = (dtypes == t)
                             u[match] = False
                             data = concatenate([d for d,c in zip(allData,match) if c])
-                            perm = argsort(data['DATE_TIME'])
+                            try:
+                                perm = argsort(data['DATE_TIME'])
+                            except:
+                                perm = argsort(data['timestamp'])
                             data = data[perm]
                             table = op.createTable(op.root,"results_%d" % j,data,filters=filters)
                             j += 1

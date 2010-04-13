@@ -327,7 +327,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
 
     if (display) {
        EZUSB_WriteI2C(LED_ADDR, 0x01, &(Digit[value & 0xF]));
-       EZUSB_WaitForEEPROMWrite(LED_ADDR);
+       // EZUSB_WaitForEEPROMWrite(LED_ADDR);
        display = FALSE;
     }
 
