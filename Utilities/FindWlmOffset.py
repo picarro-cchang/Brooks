@@ -41,6 +41,8 @@ else:
 
 EventManagerProxy_Init("FindWlmOffset")
 
+WMAX_TOLERANCE = 1e-5
+
 class DriverProxy(SharedTypes.Singleton):
     """Encapsulates access to the Driver via RPC calls"""
     initialized = False
@@ -83,6 +85,15 @@ class WlmOffsetFinder(object):
             self.waveNumberCen = float(options["-w"])
         else:
             self.waveNumberCen = float(self.config["SETTINGS"]["CENTER_WAVENUMBER"])
+        if "-a" in options:
+            self.autoMode = True
+        else:
+            self.autoMode = False
+        if "-t" in options:
+            self.wMaxTol = float(options["-t"])
+        else:
+            self.wMaxTol = WMAX_TOLERANCE
+            
         self.rdQueue = Queue.Queue(0)
         
     def run(self):
@@ -107,7 +118,7 @@ class WlmOffsetFinder(object):
         while True:
             # Read the current WLM offset
             offset = RdFreqConv.getWlmOffset(self.vLaserNum)
-            print "Current WLM offset is: %.4f" % offset
+            print "Current WLM offset is: %.6f" % offset
             RdFreqConv.wrFreqScheme(schemeIndex,sch)
             RdFreqConv.convertScheme(schemeIndex)
             RdFreqConv.uploadSchemeToDAS(schemeIndex)
@@ -140,18 +151,24 @@ class WlmOffsetFinder(object):
             #mp.plot(waveNumber,np.polyval(q,waveNumber),waveNumber,loss,'.')
             #mp.show()
             wMax = -0.5*q[1]/q[0]
-            print "Peak position: %.4f" % wMax
-            done = raw_input("Done? [N] ")
-            if done.strip()[:1] in ['y','Y']: break
+            print "Peak position: %.6f" % wMax
+            if self.autoMode:
+                if abs(self.waveNumberCen - wMax) < self.wMaxTol: break
+            else:
+                done = raw_input("Done? [N] ")
+                if done.strip()[:1] in ['y','Y']: break
             offset = offset-wMax+self.waveNumberCen
             Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER","SPECT_CNTRL_SchemeSingleMode")            
             Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_IdleState")
             time.sleep(1.0)
             RdFreqConv.setWlmOffset(self.vLaserNum,offset)
             schemeIndex = 1-schemeIndex
-        writeBack = raw_input("Update warmbox calibration file %s? (y/N)" % RdFreqConv.getWarmBoxCalFilePath())
-        if writeBack.strip()[:1] in ['y','Y']:
+        if self.autoMode:
             RdFreqConv.updateWarmBoxCal()
+        else:
+            writeBack = raw_input("Update warmbox calibration file %s? (y/N)" % RdFreqConv.getWarmBoxCalFilePath())
+            if writeBack.strip()[:1] in ['y','Y']:
+                RdFreqConv.updateWarmBoxCal()
 
 HELP_STRING = """findWlmOffset.py [-c<FILENAME>] [-h|--help]
 
@@ -162,13 +179,16 @@ settings in the configuration file:
 -c                   specify a config file:  default = "./findWlmOffset.ini"
 -v                   specify virtual laser (1-origin) to calibrate
 -w                   center wavenumber of spectral line
+-a                   auto mode - automatically stops when the difference between target and new peak wavenumbers 
+                     is within the tolerance, and writes back the warmbox calibration file
+-t                   peak wavenumber tolerance used in the auto mode
 """
 
 def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:v:w:'
+    shortOpts = 'hac:v:w:t:'
     longOpts = ["help"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
