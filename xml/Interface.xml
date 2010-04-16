@@ -30,7 +30,6 @@
         <constant ident="VENDOR_RESET_HPID_IN_FIFO">0xC6</constant>
         <constant ident="VENDOR_GET_STATUS">0xC7</constant>
         <constant ident="VENDOR_DSP_CONTROL">0xC8</constant>
-        <constant ident="VENDOR_RECONNECT">0xC9</constant>
         <!--  >Value field for VENDOR_FPGA_CONFIGURE</!-->
         <constant ident="FPGA_START_PROGRAM">0x01</constant>
         <constant ident="FPGA_SEND_DATA">0x02</constant>

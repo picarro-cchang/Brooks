@@ -12,8 +12,8 @@ File 1,1,<.\6713_HPI_gpif.c><6713_HPI_gpif.c>
 File 1,1,<.\develKit.c><develKit.c>
 File 1,2,<.\IRQJmpTb.a51><IRQJmpTb.a51>
 File 1,1,<.\analogInterface.c><analogInterface.c>
-File 2,4,<C:\Cypress\USB\Target\Lib\FX2\Ezusb.lib><Ezusb.lib>
 File 2,2,<.\USBJmpTb.a51><USBJmpTb.a51>
+File 2,4,<..\EZUSB_FX2\EZUSB.LIB><EZUSB.LIB>
 
 
 Options 1,0,0  // Target 'Target 1'
@@ -66,7 +66,7 @@ Options 1,0,0  // Target 'Target 1'
  C51MSC ()
  C51DEF ()
  C51UDF ()
- INCC5 (C:\Cypress\USB\Target\Inc\)
+ INCC5 (C:\WORK\G2000\SRCCODE\CYPRESSUSB\Inc\)
  AX51FL=4
  AX51MSC ()
  AX51SET ()
