@@ -18,7 +18,7 @@
 import sys
 import getopt
 from configobj import ConfigObj
-import matplotlib.pyplot as mp
+# import matplotlib.pyplot as mp
 import numpy as np
 import os
 import cPickle

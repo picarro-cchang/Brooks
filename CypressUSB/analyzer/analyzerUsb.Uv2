@@ -10,8 +10,17 @@ File 1,2,<.\descr.a51><descr.a51>
 File 1,1,<..\framework\fw.c><fw.c>
 File 1,1,<.\6713_HPI_gpif.c><6713_HPI_gpif.c>
 File 1,1,<.\analyzerUsb.c><analyzerUsb.c>
-File 2,4,<..\EZUSB_FX2\EZUSB.LIB><EZUSB.LIB>
 File 2,2,<.\USBJmpTb.a51><USBJmpTb.a51>
+File 2,2,<.\IRQJmpTb.a51><IRQJmpTb.a51>
+File 2,1,<..\EZUSB_FX2\EZRegs.c><EZRegs.c>
+File 2,1,<.\i2c_rw.c><i2c_rw.c>
+File 2,1,<.\i2c.c><i2c.c>
+File 2,3,<..\EZUSB_FX2\susp.OBJ><susp.OBJ>
+File 2,3,<..\EZUSB_FX2\delayms.OBJ><delayms.OBJ>
+File 2,3,<..\EZUSB_FX2\resume.OBJ><resume.OBJ>
+File 2,3,<..\EZUSB_FX2\discon.OBJ><discon.OBJ>
+File 2,3,<..\EZUSB_FX2\delay.OBJ><delay.OBJ>
+File 2,3,<..\EZUSB_FX2\get_strd.OBJ><get_strd.OBJ>
 
 
 Options 1,0,0  // Target 'Target 1'
@@ -54,8 +63,8 @@ Options 1,0,0  // Target 'Target 1'
  XBANKS5=0
  RCB51 { 0,0,0,0,0,255,255,0,0 }
  RXB51 { 0,0,0,0,0,0,0,0,0 }
- OCM51 { 0,128,0,0,0,128,23,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }
- OCR51 { 0,0,24,0,0,0,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }
+ OCM51 { 0,128,0,0,0,128,26,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }
+ OCR51 { 0,0,27,0,0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }
  IRO51 { 0,0,0,0,0,0,0,0,0 }
  IRA51 { 0,0,0,0,0,0,1,0,0 }
  XRA51 { 0,0,0,0,0,0,4,0,0 }
@@ -69,7 +78,7 @@ Options 1,0,0  // Target 'Target 1'
  AX51MSC ()
  AX51SET ()
  AX51RST ()
- INCA5 (C:\Cypress\USB\Target\Inc\)
+ INCA5 (C:\Work\G2000\SrcCode\CypressUSB\Inc\)
  IncBld=1
  AlwaysBuild=0
  GenAsm=0
@@ -90,8 +99,8 @@ Options 1,0,0  // Target 'Target 1'
  LX51UCL ()
  LX51CSC ()
  LX51UCS ()
- LX51COB (0X0080-0X17FF)
- LX51XDB (0X1800-0X1FFF)
+ LX51COB (0X0080-0X1AFF)
+ LX51XDB (0X1B00-0X1FFF)
  LX51PDB ()
  LX51BIB ()
  LX51DAB ()

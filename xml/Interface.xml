@@ -30,6 +30,9 @@
         <constant ident="VENDOR_RESET_HPID_IN_FIFO">0xC6</constant>
         <constant ident="VENDOR_GET_STATUS">0xC7</constant>
         <constant ident="VENDOR_DSP_CONTROL">0xC8</constant>
+        <constant ident="VENDOR_SET_DAC">0xC9</constant>
+        <constant ident="VENDOR_DAC_QUEUE_CONTROL">0xCA</constant>
+        <constant ident="VENDOR_DAC_QUEUE_STATUS">0xCB</constant>
         <!--  >Value field for VENDOR_FPGA_CONFIGURE</!-->
         <constant ident="FPGA_START_PROGRAM">0x01</constant>
         <constant ident="FPGA_SEND_DATA">0x02</constant>
@@ -41,6 +44,13 @@
         <!--  >Value field for VENDOR_DSP_CONTROL</!-->
         <constant ident="VENDOR_DSP_CONTROL_RESET">0x01</constant>
         <constant ident="VENDOR_DSP_CONTROL_HINT">0x02</constant>
+        <!--  >Value field for VENDOR_DAC_QUEUE_CONTROL</!-->
+        <constant ident="DAC_QUEUE_RESET">0x01</constant>
+        <constant ident="DAC_QUEUE_SERVE">0x02</constant>
+        <constant ident="DAC_QUEUE_SET_PERIOD">0x03</constant>
+        <!--  >Value field for VENDOR_DAC_QUEUE_STATUS</!-->
+        <constant ident="DAC_QUEUE_GET_FREE">0x01</constant>
+        <constant ident="DAC_QUEUE_GET_ERRORS">0x02</constant>
         <!--  >Bits for PORT E of Cypress USB</!-->
         <constant ident="IO_FPGA_CONF">IOE</constant>
         <constant ident="CYP_LED0">0x01</constant>

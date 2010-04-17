@@ -58,7 +58,6 @@ void LED_On (BYTE LED_Mask);
 void GpifInit( void );
 void send_bytes(BYTE *b, BYTE n);
 
-
 BYTE   Configuration;      // Current configuration
 BYTE   AlternateSetting;   // Alternate settings
 
@@ -66,6 +65,25 @@ static short int xdata Tcount = 0;     // transaction count for input from HPI
 BOOL enum_high_speed = FALSE;     // flag to let firmware know FX2 enumerated at high speed
 static WORD autoinLength = 0;     // Autocommit occurs after these many bytes
 static WORD xFIFOBC_IN = 0x0000;  // variable that contains EP6FIFOBCH/L value
+
+//-----------------------------------------------------------------------------
+// Variables for DAC resynchronization queues
+//-----------------------------------------------------------------------------
+#define QSIZE   (50)
+#define NCHANNELS (8)
+
+struct DataQueue {
+    unsigned char head;
+    unsigned char tail;
+    unsigned char count;
+    unsigned short int qdata[QSIZE];
+} dataQueues[NCHANNELS];
+
+BYTE buffer[4];
+unsigned short int samplePeriods[NCHANNELS];
+unsigned short int nextSample[NCHANNELS];
+unsigned short int now = 0;
+unsigned char underflowFlags = 0, overflowFlags = 0, serveDacs = 0;
 //-----------------------------------------------------------------------------
 
 void GPIF_SingleWordWrite( WORD gdata ) {
@@ -87,6 +105,78 @@ void GPIF_SingleWordRead( WORD *gdata ) {
     *gdata = ( ( WORD )XGPIFSGLDATLNOX << 8 ) | ( WORD )XGPIFSGLDATH;
 }
 
+
+//-----------------------------------------------------------------------------
+// Queue handling routines
+//-----------------------------------------------------------------------------
+void qinit(int qNum)
+{
+    struct DataQueue *q = &dataQueues[qNum];
+    q->head = q->tail = q->count = 0;
+}
+
+unsigned char qput(unsigned char qNum,unsigned short int d)
+// Places data d onto the queue, returns 1 on success, 0 if queue is full 
+{
+    struct DataQueue *q = &dataQueues[qNum];
+    if (q->count == QSIZE) {
+        overflowFlags |= (1<<qNum);
+        return 0;
+    }
+    q->qdata[q->tail++] = d;
+    if (q->tail == QSIZE) q->tail = 0;
+    q->count++;
+    return 1;
+}
+
+unsigned char qget(unsigned char qNum,unsigned short int *d)
+// Get data *d from the queue, returns 1 on success, 0 if queue is empty 
+{
+    struct DataQueue *q = &dataQueues[qNum];
+    if (q->count == 0) {
+        underflowFlags |= (1<<qNum);
+        return 0;
+    }
+    return 0;
+    *d = q->qdata[q->head++];
+    if (q->head == QSIZE) q->head = 0;
+    q->count--;
+    return 1;
+}
+
+void reset()
+// Stop serving, empty all queues, reset underflow and overflow flags
+{
+    unsigned char i;
+    serveDacs = 0;
+    underflowFlags = 0;
+    overflowFlags  = 0;
+    for (i=0; i<NCHANNELS; i++) qinit(i);
+}
+
+void init()
+{
+    unsigned char i;
+	now = 0;
+    serveDacs = 0;
+    for (i=0; i<NCHANNELS; i++) {
+        samplePeriods[i] = 0;
+        nextSample[i] = 0;
+    }
+    reset();
+}
+//-----------------------------------------------------------------------------
+// Write to DAC
+//-----------------------------------------------------------------------------
+void write_dac(unsigned char channel,unsigned short int value)
+{
+	ET2 = 0;	// Do not allow timer interrupts when writing to DAC
+	buffer[0] = 0x30 | channel;
+	buffer[1] = value >> 8;
+	buffer[2] = value & 0xFF;
+	EZUSB_WriteI2C(0x10, 3, buffer);
+	ET2 = 1;
+}
 //-----------------------------------------------------------------------------
 // Task Dispatcher hooks
 //   The following hooks are called by the task dispatcher.
@@ -104,10 +194,11 @@ void TD_Init(void) {           // Called once at startup
     EP1INCFG = 0xA0;         // Activate EP1IN for bulk transfer
     SYNCDELAY;
 
-    EP2CFG = 0xA0;           // Activate EP2 for bulk output, 512 bytes, 4x buffered
-//    EP2CFG = 0xAA;         // Activate EP2 for bulk output, 1024 bytes, 2x buffered
+    EP2CFG = 0xA2;           // Activate EP2 for bulk output, 512 bytes, 2x buffered
+	                         // Note that the endpoint buffer is shared with that for EP4, so
+							 //  we cannot use quad buffering
     SYNCDELAY;
-    EP4CFG = 0x00;           // Deactivate EP4
+    EP4CFG = 0xA0;           // Activate EP4 for bulk output, 512 bytes, 2x buffered
     SYNCDELAY;
     EP6CFG = 0xE0;           // Activate EP6 for bulk input, 512 bytes, 4x buffered
     SYNCDELAY;
@@ -117,6 +208,8 @@ void TD_Init(void) {           // Called once at startup
     FIFORESET = 0x80;        // NAKALL while resetting FIFOs
     SYNCDELAY;
     FIFORESET = 0x02;        // Reset EP2
+    SYNCDELAY;
+    FIFORESET = 0x04;        // Reset EP4
     SYNCDELAY;
     FIFORESET = 0x06;        // Reset EP6
     SYNCDELAY;
@@ -130,6 +223,11 @@ void TD_Init(void) {           // Called once at startup
     EP6FIFOCFG = 0x09;       // Configure EP6 as word-wide, enable AUTOIN
     SYNCDELAY;
     EP1OUTBC = 0x0;          // Arm EP1OUT
+    EP4BCL = 0x80;           // arm EP4OUT by writing dummy byte count (twice)
+    SYNCDELAY;                    
+    EP4BCL = 0x80;    
+    SYNCDELAY;                    
+
     // Initialize the GPIF registers. Do this before changing PORTCCFG and PORTECFG.
     GpifInit();
 
@@ -156,10 +254,40 @@ void TD_Init(void) {           // Called once at startup
     PORTACFG = bmBIT0; // PA0 takes on INT0/ alternate function
     OEA  |= 0x9E;      // initialize PA7,c PA4, PA3 PA2 and PA1 port i/o pins as outputs, PA6, PA5, PA0 as inputs
     IOA = bmHPI_RESETz | bmHPI_HINTz;   // Deassert interrupt and reset
+
+    EZUSB_InitI2C();              // Initialize EZ-USB I2C controller
+	I2CTL = bm400KHZ;		      // Use 400kHz I2C speed
+
+    // Configure timer 2 with a 4MHz clock in 16 bit timer/counter mode with auto
+    // reload. The reload count is set up to give a 100Hz interrupt rate.
+
+    // CKCON.5 T2M = 0 Set CLKOUT/12 = 4MHz
+    // T2CON.2 TR2 = 1 Run timer 2
+    // T2CON.4 TCLK = 0 
+    // T2CON.5 RCLK = 0
+    // T2CON.0 CP_RL2 = 0 Enable reload mode
+
+    CKCON &= ~0x20;
+    TR2 = 1; TCLK = 0; RCLK = 0; CP_RL2 = 0;
+    TF2 = 0; EXF2 = 0;
+    // For 100Hz, we need to set RCAP2 to 65536 - 40000 = 0x63C0
+    RCAP2H = 0x63;
+    RCAP2L = 0xC0;
+
+    // Set timer 2 priority to low and I2C priority to high. This allows the writing to the DACs to take
+	//  place within the timer interrupt.
+	PT2 = 0; 
+	PI2C = 1;
+
+	init();
+
+	ET2 = 1;                            /* enable timer 2 interrupt    */
+
+	EPIE |= 0x20;						/* Enable IRQ on EP4 output */
 }
 
 void TD_Poll(void) {           // Called repeatedly while the device is idle
-    WORD nTransfers;
+	WORD nTransfers;
     if ( GPIFTRIG & 0x80 ) {           // if GPIF interface IDLE
         if ( ! ( EP24FIFOFLGS & 0x02 ) ) { // if there's a packet in the peripheral domain for EP2
             // TODO: Uncomment this line when the hardware arrives
@@ -195,10 +323,8 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
             while(!HPI_RDY);             // wait for HPI to complete internal portion of previous transfer
             SYNCDELAY;
         }
-    }
 
-    if (Tcount) {                           // if Tcount is not zero
-        if ( GPIFTRIG & 0x80 ) {            // if GPIF interface IDLE
+	    if (Tcount) {                           // if Tcount is not zero
             if ( !( EP68FIFOFLGS & 0x01 ) ) { // if EP6 FIFO is not full
 
                 // TODO: Uncomment next line when hardware is present
@@ -250,11 +376,10 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
                 while(!HPI_RDY);             // wait for HPI to complete internal portion of previous transfer
                 SYNCDELAY;
             }
-        }
+	    }
     }
-
-    // blink LED0 to indicate firmware is running
-
+    
+	// blink LED0 to indicate firmware is running
     if (++LED_Count == 10000) {
         if (LED_Status) {
             LED_Off (bmBIT0);
@@ -265,6 +390,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
         }
         LED_Count = 0;
     }
+	
 }
 
 BOOL TD_Suspend(void) {        // Called before the device goes into suspend mode
@@ -346,8 +472,7 @@ BOOL DR_VendorCmnd(void) {
     WORD length = (SETUPDAT[7]<<8)|SETUPDAT[6];
     WORD *Destination;
     BYTE b;
-    int i;
-    int sum = 0;
+    unsigned short int i;
     switch (SETUPDAT[1]) {
     case VENDOR_GET_VERSION:
         EP0BUF[0] = USB_VERSION & 0xFF;
@@ -363,28 +488,13 @@ BOOL DR_VendorCmnd(void) {
         case FPGA_START_PROGRAM:
             OEE = FPGA_SS_PROG | CYP_LED0 | CYP_LED1 | CYP_LED2;
             IOE = FPGA_SS_PROG;
-            _nop_();
-            _nop_();
-            _nop_();
-            _nop_();
-            _nop_();
-            _nop_();
-            _nop_();
-            _nop_();
+            _nop_(); _nop_(); _nop_(); _nop_(); _nop_(); _nop_(); _nop_(); _nop_();
             // Pulses PROG line low momentarily (>0.5us) to start programming
             // TODO: Check length of pulse
             IOE &= ~FPGA_SS_PROG;
-            _nop_();
-            _nop_();
-            _nop_();
-            _nop_();
-            _nop_();
-            _nop_();
-            _nop_();
-            _nop_();
+            _nop_(); _nop_(); _nop_(); _nop_(); _nop_(); _nop_(); _nop_(); _nop_();
             IOE |= FPGA_SS_PROG;
             OEE = CYP_LED0 | CYP_LED1 | CYP_LED2;
-
             // Return 1 to host
             EP0BUF[0] = 1;
             EP0BCH = 0;
@@ -427,18 +537,12 @@ BOOL DR_VendorCmnd(void) {
         case USB_STATUS_SPEED:
             EP0BUF[0] = enum_high_speed;
             // Specify length (in bytes) to return
-            EP0BCH = 0;
             EP0BCL = 1;
-            // Acknowledge handshake phase of device request
-            EP0CS |= bmHSNAK;
             break;
         case USB_STATUS_GPIFTRIG:
             EP0BUF[0] = GPIFTRIG;
             // Specify length (in bytes) to return
-            EP0BCH = 0;
             EP0BCL = 1;
-            // Acknowledge handshake phase of device request
-            EP0CS |= bmHSNAK;
             break;
         case USB_STATUS_GPIFTC:
             EP0BUF[0] = GPIFTCB0;
@@ -446,14 +550,14 @@ BOOL DR_VendorCmnd(void) {
             EP0BUF[2] = GPIFTCB2;
             EP0BUF[3] = GPIFTCB3;
             // Specify length (in bytes) to return
-            EP0BCH = 0;
             EP0BCL = 4;
-            // Acknowledge handshake phase of device request
-            EP0CS |= bmHSNAK;
             break;
         default:
             return TRUE; // Indicates failure
         }
+        EP0BCH = 0;
+        // Acknowledge handshake phase of device request
+        EP0CS |= bmHSNAK;
         break;
     case VENDOR_READ_HPIC:
         // TODO: Enable this when h/w becomes available
@@ -561,17 +665,83 @@ BOOL DR_VendorCmnd(void) {
         // Acknowledge handshake phase of device request
         EP0CS |= bmHSNAK;
         break;
+	case VENDOR_SET_DAC:
+		// value specifies the DAC
+        EP0BCL = 0;
+        // Make sure that EP0 is not busy before trying get from the FIFO
+        while (EP01STAT & bmEP0BSY);
+        // send_bytes(EP0BUF,(BYTE)length);
+		buffer[0] = 0x30 | (SETUPDAT[2] & 0x7);
+		buffer[1] = EP0BUF[0];
+		buffer[2] = EP0BUF[1];
+    	EZUSB_WriteI2C(0x10, 3, buffer);
+        // Acknowledge handshake phase of device request
+        //EP0CS |= bmHSNAK;
+        break;
+	case VENDOR_DAC_QUEUE_CONTROL:
+        switch (value) {
+		case DAC_QUEUE_RESET:
+			reset();
+			break;
+		case DAC_QUEUE_SERVE:
+		    if (!serveDacs) {
+      			ET2 = 0;
+				i = now + 1;
+    			for (b=0; b<NCHANNELS; b++) nextSample[b] = i;
+    			serveDacs = 1;
+    			ET2 = 1;
+			}
+			break;
+		case DAC_QUEUE_SET_PERIOD:
+		    samplePeriods[EP0BUF[0]] = ((WORD)EP0BUF[3]<<8) | EP0BUF[2];
+			break;
+		}
+		break;
+	case VENDOR_DAC_QUEUE_STATUS:
+        switch (value) {
+		case DAC_QUEUE_GET_FREE:
+		    for (b=0; b<NCHANNELS; b++) EP0BUF[b] = QSIZE - dataQueues[b].count;
+            EP0BCL = NCHANNELS;
+			break;
+		case DAC_QUEUE_GET_ERRORS:
+            EP0BUF[0] = underflowFlags;
+            EP0BUF[1] = overflowFlags;
+            // Specify length (in bytes) to return
+            EP0BCL = 2;
+			break;
+		}
+        EP0BCH = 0;
+        // Acknowledge handshake phase of device request
+        EP0CS |= bmHSNAK;
+		break;
     default:
         return TRUE; // Indicates failure
     }
     return FALSE; // Indicates success
 }
-
+//-----------------------------------------------------------------------------
+// Timer interrupt for serving DAC queues
+//-----------------------------------------------------------------------------
+void timer2_isr (void) interrupt TMR2_VECT {
+	/* Service the queues on timer interrupt */
+    unsigned char i;
+    unsigned short int d;
+	if (serveDacs) {
+	    for (i=0; i<NCHANNELS; i++) {
+	        if (samplePeriods[i] != 0 && nextSample[i] == now) {
+	            if (qget(i,&d)) write_dac(i,d);
+	            nextSample[i] += samplePeriods[i];
+	        }
+	    }
+	}
+	now++;
+    TF2 = 0; 
+	EXF2 = 0;
+}
 //-----------------------------------------------------------------------------
 // USB Interrupt Handlers
 //   The following functions are called by the USB interrupt jump table.
 //-----------------------------------------------------------------------------
-
 // Setup Data Available Interrupt Handler
 void ISR_Sudav(void) interrupt 0 {
     GotSUD = TRUE;            // Set flag
@@ -614,10 +784,10 @@ void ISR_Highspeed(void) interrupt 0 {
         pOtherConfigDscr = pFullSpeedConfigDscr;
         ((CONFIGDSCR xdata *) pOtherConfigDscr)->type = OTHERSPEED_DSCR;
     }
-
     EZUSB_IRQ_CLEAR();
     USBIRQ = bmHSGRANT;
 }
+
 void ISR_Ep0ack(void) interrupt 0 {
 }
 void ISR_Stub(void) interrupt 0 {
@@ -633,6 +803,46 @@ void ISR_Ep1out(void) interrupt 0 {
 void ISR_Ep2inout(void) interrupt 0 {
 }
 void ISR_Ep4inout(void) interrupt 0 {
+    unsigned char channels[NCHANNELS];
+    unsigned char j, bitsSet = 0;
+    unsigned short int count;
+    EZUSB_IRQ_CLEAR();
+	EPIRQ = 0x20;
+    AUTOPTRH1 = MSB( &EP4FIFOBUF );  // Set pointer 1 to the buffer address and read out the data
+    AUTOPTRL1 = LSB( &EP4FIFOBUF );
+    count = (WORD)(EP4BCH << 8) | EP4BCL;
+	if (count) {
+		unsigned char channelMask = XAUTODAT1;
+	    if (channelMask) {
+	        // Determine which channel queues are to be replenished
+	        for (j=0; j<NCHANNELS; j++) {
+	            if (channelMask & 1) {
+	                channels[bitsSet++] = j;
+	            }
+	            channelMask >>= 1;
+	        }
+			count--;
+	        // Deal the available data among the channels
+	        j = 0;
+	        while (count > 0) {
+	            unsigned char chan = channels[j];
+				unsigned short int value = 0;
+				value = XAUTODAT1; count--;
+				if (count > 0) {
+					value += (XAUTODAT1 << 8);
+					count--;
+				}
+	            // For zero period
+	            if (samplePeriods[chan]) qput(chan,value);
+	            else write_dac(chan,value);
+	            j++;
+	            if (j == bitsSet) j=0;
+	        }
+	    }
+	}
+    SYNCDELAY;
+    EP4BCL = 0x80;
+    SYNCDELAY;
 }
 void ISR_Ep6inout(void) interrupt 0 {
 }
@@ -690,12 +900,8 @@ void ISR_GpifComplete(void) interrupt 0 {
 }
 void ISR_GpifWaveform(void) interrupt 0 {
 }
-
 // ...debug LEDs
 // use this global variable when (de)asserting debug LEDs...
-
-BYTE xdata portA = 0;
-BYTE xdata portE = 0;
 
 void LED_Off (BYTE LED_Mask) {
     if (LED_Mask & bmBIT0) IOE &= ~CYP_LED0;
@@ -710,3 +916,4 @@ void LED_On (BYTE LED_Mask) {
     if (LED_Mask & bmBIT2) IOE |= CYP_LED2;
     if (LED_Mask & bmBIT3) IOA |= CYP_LED3;
 }
+
