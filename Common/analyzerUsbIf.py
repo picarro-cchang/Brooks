@@ -20,6 +20,7 @@ from ctypes import byref, create_string_buffer, c_ubyte, c_ushort, c_short, c_ui
 from hexfile import HexFile
 from Host.autogen import usbdefs
 from Host.Common.SharedTypes import Singleton
+import struct
 import time
 
 DEFAULT_OUT_ENDPOINT = USB_ENDPOINT_OUT | 2
@@ -109,13 +110,6 @@ class AnalyzerUsb(Singleton):
             self.controlInTransaction(version,usbdefs.VENDOR_GET_VERSION)
             return version.value
         return self._claimInterfaceWrapper(_getUsbVersion)
-
-    def reconnectUsb(self):
-        dummy = c_ushort()
-        try:
-            self.controlInTransaction(dummy,usbdefs.VENDOR_RECONNECT)
-        except:
-            pass
 
     def _claimInterfaceWrapper(self,func,*args,**kwargs):
         """Wraps function call between claim interface and release interface."""
@@ -301,15 +295,15 @@ class AnalyzerUsb(Singleton):
                 raise ValueError("Invalid response in resetHpidInFifo")
         self._claimInterfaceWrapper(_resetHpidInFifo)
 
-    def auxiliaryWrite(self,data):
+    def wrAuxiliary(self,data):
         """Use bulk write to send block of 16 bit words (stored as a string in data) to auxiliary board"""
         dataLength = sizeof(data)
         print data.value
-        def _auxWrite():
+        def _wrAuxiliary():
             self.usb.usbBulkWrite(self.handle,AUXILIARY_OUT_ENDPOINT,byref(data),dataLength,5000)
         if 0 == dataLength or 512 < dataLength:
             raise UsbPacketLengthError("Invalid data length %d in auxiliaryWrite" % (dataLength,))
-        self._claimInterfaceWrapper(_auxWrite)
+        self._claimInterfaceWrapper(_wrAuxiliary)
         
     def setDspControl(self,value):
         """Use vendor command to reset DSP or send HINT"""
@@ -320,6 +314,12 @@ class AnalyzerUsb(Singleton):
                 raise ValueError("Invalid response in setDspControl")
         self._claimInterfaceWrapper(_setDspControl)
 
+    def wrDac(self,channel,value):
+        """Use vendor command to write to DAC on analog interface board"""
+        def _wrDac():
+            self.controlOutTransaction(create_string_buffer(struct.pack(">H",value),2),usbdefs.VENDOR_SET_DAC,channel)
+        self._claimInterfaceWrapper(_wrDac)
+        
     def dspWrite(self,addrValueList):
         """Write a list of (address,value) pairs to the DSP"""
         self.hpicWrite(0x00010001)

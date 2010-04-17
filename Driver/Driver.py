@@ -409,6 +409,15 @@ class DriverRpcHandler(SharedTypes.Singleton):
         configFile = os.path.abspath(InstrumentConfig().filename)
         return configFile
 
+    def wrDac(self,channel,value):
+        """Writes "value" to the specified analog interface DAC channel. """
+        self.dasInterface.hostToDspSender.wrDac(channel,value)
+
+    def wrAuxiliary(self,data):
+        """Writes the "data" string to the auxiliary board"""
+        self.dasInterface.hostToDspSender.wrAuxiliary(ctypes.create_string_buffer(data,len(data)))
+        
+        
     #def disableLaserCurrent(self,laserNum):
     #    # Turn off laser current for laserNum (0-index)
     #    if laserNum<0 or laserNum>=interface.MAX_LASERS:

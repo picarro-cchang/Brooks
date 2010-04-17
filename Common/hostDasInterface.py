@@ -786,6 +786,14 @@ class HostToDspSender(Singleton):
         self.usb.hpiRead(virtualLaserParamsAddr,vLaserParams)
         return vLaserParams
     
+    @usbLockProtect
+    def wrDac(self,channel,value):
+        self.usb.wrDac(channel,value)
+        
+    @usbLockProtect
+    def wrAuxiliary(self,data):
+        self.usb.wrAuxiliary(data)
+
 class SensorHistory(Singleton):
     """Stores latest values of all sensor streams in a dictionary
     so that snapshots of these quantities may be written to the state
