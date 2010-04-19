@@ -67,7 +67,7 @@ class Listener(threading.Thread):
         self.streamFilter = streamFilter
         self.elementType = elementType
         self.IsArbitraryObject = False
-        self.name = name
+        # self.name = name
         self.logFunc = logFunc
         self.notify = notify
         self.retry = retry
@@ -79,7 +79,7 @@ class Listener(threading.Thread):
             pass
         if not self.IsArbitraryObject:
             self.recordLength = ctypes.sizeof(self.elementType)
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self,name=name)
         self.setDaemon(True)
         self.start()
 

@@ -79,7 +79,7 @@ class Broadcaster(threading.Thread):
         name is used to name the thread
         logFunc is called to record logging data from the Broadcaster
         """
-        self.name = name
+        #self.name = name
         self.port = port
         self.clients = {}  # Dictionary of clients (indexed by socket) to which to send out information
         self.sockListen = None
