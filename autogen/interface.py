@@ -459,6 +459,10 @@ RDSIM_EXTRA = 4
 WLM_ADC_WIDTH = 16
 # Bad I2C read value
 I2C_READ_ERROR = 0x80000000
+# Time error (ms) beyond which analyzer timestamp is set to host timestamp
+NUDGE_LIMIT = 5000
+# Maximum change of analyzer timestamp (ms) on each nudge
+NUDGE_INCREMENT = 10
 
 # Enumerated definitions for RegTypes
 RegTypes = c_uint
@@ -2534,6 +2538,7 @@ ACTION_EEPROM_WRITE = 67
 ACTION_EEPROM_READ = 68
 ACTION_EEPROM_READY = 69
 ACTION_I2C_CHECK = 70
+ACTION_NUDGE_TIMESTAMP = 71
 
 
 # Parameter form definitions
