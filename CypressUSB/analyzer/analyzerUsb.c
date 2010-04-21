@@ -137,7 +137,6 @@ unsigned char qget(unsigned char qNum,unsigned short int *d)
         underflowFlags |= (1<<qNum);
         return 0;
     }
-    return 0;
     *d = q->qdata[q->head++];
     if (q->head == QSIZE) q->head = 0;
     q->count--;
@@ -380,7 +379,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
     }
     
 	// blink LED0 to indicate firmware is running
-    if (++LED_Count == 10000) {
+    if (!LED_Count) {
         if (LED_Status) {
             LED_Off (bmBIT0);
             LED_Status = 0;
@@ -388,9 +387,8 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
             LED_On (bmBIT0);
             LED_Status = 1;
         }
-        LED_Count = 0;
-    }
-	
+	}
+    LED_Count++;
 }
 
 BOOL TD_Suspend(void) {        // Called before the device goes into suspend mode
@@ -679,6 +677,10 @@ BOOL DR_VendorCmnd(void) {
         //EP0CS |= bmHSNAK;
         break;
 	case VENDOR_DAC_QUEUE_CONTROL:
+        EP0BCL = 0;
+        // Make sure that EP0 is not busy before trying get from the FIFO
+        while (EP01STAT & bmEP0BSY);
+
         switch (value) {
 		case DAC_QUEUE_RESET:
 			reset();
@@ -693,7 +695,7 @@ BOOL DR_VendorCmnd(void) {
 			}
 			break;
 		case DAC_QUEUE_SET_PERIOD:
-		    samplePeriods[EP0BUF[0]] = ((WORD)EP0BUF[3]<<8) | EP0BUF[2];
+		    samplePeriods[EP0BUF[0]] = ((WORD)EP0BUF[2]<<8) | EP0BUF[1];
 			break;
 		}
 		break;
@@ -706,8 +708,10 @@ BOOL DR_VendorCmnd(void) {
 		case DAC_QUEUE_GET_ERRORS:
             EP0BUF[0] = underflowFlags;
             EP0BUF[1] = overflowFlags;
+            EP0BUF[2] = LSB(now);
+            EP0BUF[3] = MSB(now);
             // Specify length (in bytes) to return
-            EP0BCL = 2;
+            EP0BCL = 4;
 			break;
 		}
         EP0BCH = 0;
