@@ -213,7 +213,7 @@ void sentryHandler(void)
         int overload;
         int hardwarePresent = *(int *)registerAddr(HARDWARE_PRESENT_REGISTER);
         int installedMask = 0;
-		int powerBoardPresent = 0 != (hardwarePresent & (1<<HARDWARE_PRESENT_PowerBoardBit));
+        int powerBoardPresent = 0 != (hardwarePresent & (1<<HARDWARE_PRESENT_PowerBoardBit));
             
         if (hardwarePresent & (1<<HARDWARE_PRESENT_WarmBoxBit)) installedMask |= 1<<OVERLOAD_WarmBoxTecBit;
         if (hardwarePresent & (1<<HARDWARE_PRESENT_HotBoxBit))  installedMask |= 1<<OVERLOAD_HotBoxTecBit;

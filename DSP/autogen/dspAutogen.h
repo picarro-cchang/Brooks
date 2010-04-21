@@ -91,4 +91,5 @@ int r_eeprom_write(unsigned int numInt,void *params,void *env);
 int r_eeprom_read(unsigned int numInt,void *params,void *env);
 int r_eeprom_ready(unsigned int numInt,void *params,void *env);
 int r_i2c_check(unsigned int numInt,void *params,void *env);
+int nudgeTimestamp(unsigned int numInt,void *params,void *env);
 #endif

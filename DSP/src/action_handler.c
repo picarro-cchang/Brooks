@@ -164,12 +164,47 @@ int streamFpgaRegisterAsFloat(unsigned int numInt,void *params,void *env)
 
 int setTimestamp(unsigned int numInt,void *params,void *env)
 // Writes a 64 bit timestamp to the instrument. params[0] is the
-//  least significant 32 bits and params[1]
+//  least significant 32 bits and params[1] is the most significant
+//  32 bits of the host timestamp.
 {
     unsigned int *paramsAsInt = (unsigned int *) params;
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
     timestamp = paramsAsInt[0] + (((long long)paramsAsInt[1])<<32);
     return STATUS_OK;
+}
+
+int nudgeTimestamp(unsigned int numInt,void *params,void *env)
+// Uses 64 bit host timestamp to adjust the instrument timestamp.
+// i.e., the timestamps are compared and if they differ by more 
+//  than NUDGE_LIMIT ms, the analyzer timestamp is changed 
+//  immediately to the host timestamp. Otherwise, the analyzer
+//  timestamp is moved by at most NUDGE_INCREMENT ms towards the
+//  host timestamp.
+// params[0] is the least significant 32 bits and params[1] is 
+//  the most significant 32 bits of the host timestamp.
+{
+    unsigned int *paramsAsInt = (unsigned int *) params;
+    long long hostTimestamp = paramsAsInt[0] + (((long long)paramsAsInt[1])<<32);
+    long long delta = timestamp - hostTimestamp;
+
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    if (delta & 0x80000000) {   // timestamp < hostTimestamp
+        delta = (~delta) + 1;
+        if (delta > NUDGE_LIMIT) {
+            timestamp = hostTimestamp;
+            return STATUS_OK;
+        }
+        timestamp += (NUDGE_INCREMENT < delta) ? NUDGE_INCREMENT : delta;
+        return STATUS_OK;
+    }
+    else {
+        if (delta > NUDGE_LIMIT) {
+            timestamp = hostTimestamp;
+            return STATUS_OK;
+        }
+        timestamp -= (NUDGE_INCREMENT < delta) ? NUDGE_INCREMENT : delta;
+        return STATUS_OK;
+    }
 }
 
 int r_getTimestamp(unsigned int numInt,void *params,void *env)

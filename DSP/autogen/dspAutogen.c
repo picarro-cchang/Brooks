@@ -1331,6 +1331,8 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_eeprom_ready(numInt,params,env);
         case ACTION_I2C_CHECK:
             return r_i2c_check(numInt,params,env);
+        case ACTION_NUDGE_TIMESTAMP:
+            return nudgeTimestamp(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

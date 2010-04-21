@@ -355,6 +355,8 @@
         <constant ident="RDSIM_EXTRA" description="Extra bits in accumulator for ringdown simulator">4</constant>
         <constant ident="WLM_ADC_WIDTH" description="Number of bits for wavelength monitor ADCs">16</constant>
         <constant ident="I2C_READ_ERROR" description="Bad I2C read value">0x80000000</constant>        
+        <constant ident="NUDGE_LIMIT" description="Time error (ms) beyond which analyzer timestamp is set to host timestamp">5000</constant>
+        <constant ident="NUDGE_INCREMENT" description="Maximum change of analyzer timestamp (ms) on each nudge">10</constant>
     </constant_list>
     <union_list>
         <union type="DataType">
@@ -3699,5 +3701,6 @@
         <action ident="ACTION_EEPROM_READ">r_eeprom_read</action>
         <action ident="ACTION_EEPROM_READY">r_eeprom_ready</action>
         <action ident="ACTION_I2C_CHECK">r_i2c_check</action>
+        <action ident="ACTION_NUDGE_TIMESTAMP">nudgeTimestamp</action>
     </action_list>
 </Das_Interface>

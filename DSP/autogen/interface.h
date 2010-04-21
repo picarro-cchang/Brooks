@@ -420,6 +420,10 @@ typedef struct {
 #define WLM_ADC_WIDTH (16)
 // Bad I2C read value
 #define I2C_READ_ERROR (0x80000000)
+// Time error (ms) beyond which analyzer timestamp is set to host timestamp
+#define NUDGE_LIMIT (5000)
+// Maximum change of analyzer timestamp (ms) on each nudge
+#define NUDGE_INCREMENT (10)
 
 typedef enum {
     float_type = 0, // 
@@ -1452,4 +1456,5 @@ typedef enum {
 #define ACTION_EEPROM_READ (68)
 #define ACTION_EEPROM_READY (69)
 #define ACTION_I2C_CHECK (70)
+#define ACTION_NUDGE_TIMESTAMP (71)
 #endif
