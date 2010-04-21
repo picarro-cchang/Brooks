@@ -298,7 +298,6 @@ class AnalyzerUsb(Singleton):
     def wrAuxiliary(self,data):
         """Use bulk write to send block of 16 bit words (stored as a string in data) to auxiliary board"""
         dataLength = sizeof(data)
-        print data.value
         def _wrAuxiliary():
             self.usb.usbBulkWrite(self.handle,AUXILIARY_OUT_ENDPOINT,byref(data),dataLength,5000)
         if 0 == dataLength or 512 < dataLength:
@@ -319,6 +318,51 @@ class AnalyzerUsb(Singleton):
         def _wrDac():
             self.controlOutTransaction(create_string_buffer(struct.pack(">H",value),2),usbdefs.VENDOR_SET_DAC,channel)
         self._claimInterfaceWrapper(_wrDac)
+
+    def getDacQueueFreeSlots(self):
+        """Returns list with the number of slots available for each DAC queue"""
+        def _getDacQueueFreeSlots():
+            freeSlots = (c_ubyte*8)()
+            self.controlInTransaction(freeSlots,usbdefs.VENDOR_DAC_QUEUE_STATUS,usbdefs.DAC_QUEUE_GET_FREE)
+            return [f for f in freeSlots]
+        return self._claimInterfaceWrapper(_getDacQueueFreeSlots)
+
+    def getDacQueueErrors(self):
+        """Returns bit masks of underflows and overflows in the DAC queues"""
+        def _getDacQueueErrors():
+            errors = (c_ubyte*4)()
+            self.controlInTransaction(errors,usbdefs.VENDOR_DAC_QUEUE_STATUS,usbdefs.DAC_QUEUE_GET_ERRORS)
+            return dict(underflows = errors[0], overflows = errors[1], now = (errors[3]<<8) + errors[2])
+        return self._claimInterfaceWrapper(_getDacQueueErrors)
+        
+    def setDacQueuePeriod(self,channel,period):
+        """Sets service period (in hundredth's of a second) of a DAC queue"""
+        if channel<0 or channel>=8:
+            raise ValueError('Only channels 0..7 are available')
+        if period<0 or period>=65535:
+            raise ValueError('Period must be in range 0..65535')
+        def _setDacQueuePeriod():
+            data = (c_ubyte*3)()
+            data[0] = channel
+            data[1] = period & 0xFF
+            data[2] = (period>>8) & 0xFF
+            self.controlOutTransaction(data,
+                usbdefs.VENDOR_DAC_QUEUE_CONTROL,usbdefs.DAC_QUEUE_SET_PERIOD)
+        self._claimInterfaceWrapper(_setDacQueuePeriod)
+        
+    def resetDacQueues(self):
+        """Stop serving from DAC queues and set them all to empty"""
+        def _resetDacQueues():
+            self.controlOutTransaction(c_ubyte(0),
+                usbdefs.VENDOR_DAC_QUEUE_CONTROL,usbdefs.DAC_QUEUE_RESET)
+        self._claimInterfaceWrapper(_resetDacQueues)
+
+    def serveDacQueues(self):
+        """Start serving from DAC queues"""
+        def _serveDacQueues():
+            self.controlOutTransaction(c_ubyte(0),
+                usbdefs.VENDOR_DAC_QUEUE_CONTROL,usbdefs.DAC_QUEUE_SERVE)
+        self._claimInterfaceWrapper(_serveDacQueues)
         
     def dspWrite(self,addrValueList):
         """Write a list of (address,value) pairs to the DSP"""
