@@ -417,7 +417,21 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Writes the "data" string to the auxiliary board"""
         self.dasInterface.hostToDspSender.wrAuxiliary(ctypes.create_string_buffer(data,len(data)))
         
-        
+    def getDacQueueFreeSlots(self):
+        return self.dasInterface.hostToDspSender.getDacQueueFreeSlots()
+
+    def getDacQueueErrors(self):
+        return self.dasInterface.hostToDspSender.getDacQueueErrors()
+
+    def setDacQueuePeriod(self,channel,period):
+        return self.dasInterface.hostToDspSender.setDacQueuePeriod(channel,period)
+
+    def resetDacQueues(self):
+        return self.dasInterface.hostToDspSender.resetDacQueues()
+
+    def serveDacQueues(self):
+        return self.dasInterface.hostToDspSender.serveDacQueues()
+       
     #def disableLaserCurrent(self,laserNum):
     #    # Turn off laser current for laserNum (0-index)
     #    if laserNum<0 or laserNum>=interface.MAX_LASERS:

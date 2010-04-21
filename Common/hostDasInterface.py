@@ -794,6 +794,26 @@ class HostToDspSender(Singleton):
     def wrAuxiliary(self,data):
         self.usb.wrAuxiliary(data)
 
+    @usbLockProtect
+    def getDacQueueFreeSlots(self):
+        return self.usb.getDacQueueFreeSlots()
+
+    @usbLockProtect
+    def getDacQueueErrors(self):
+        return self.usb.getDacQueueErrors()
+
+    @usbLockProtect
+    def setDacQueuePeriod(self,channel,period):
+        return self.usb.setDacQueuePeriod(channel,period)
+
+    @usbLockProtect
+    def resetDacQueues(self):
+        return self.usb.resetDacQueues()
+
+    @usbLockProtect
+    def serveDacQueues(self):
+        return self.usb.serveDacQueues()
+
 class SensorHistory(Singleton):
     """Stores latest values of all sensor streams in a dictionary
     so that snapshots of these quantities may be written to the state
