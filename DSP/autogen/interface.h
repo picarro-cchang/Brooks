@@ -51,7 +51,6 @@ typedef int bool;
 #define ERROR_BAD_VALUE (-14)
 #define ERROR_RD_BAD_RINGDOWN (-15)
 #define ERROR_RD_INSUFFICIENT_DATA (-16)
-#define WARNING_DAS_TIMESTAMP_DISCONTINUOUS (-17)
 
 typedef union {
     float asFloat;
@@ -421,7 +420,7 @@ typedef struct {
 #define WLM_ADC_WIDTH (16)
 // Bad I2C read value
 #define I2C_READ_ERROR (0x80000000)
-// Time error (ms) beyond which analyzer timestamp is set to host timestamp
+// Time error (ms) beyond which fast correction takes place
 #define NUDGE_LIMIT (5000)
 // Do not adjust if timestamps agree within this window (ms)
 #define NUDGE_WINDOW (20)

@@ -178,11 +178,11 @@ int nudgeTimestamp(unsigned int numInt,void *params,void *env)
 // Uses 64 bit host timestamp to adjust the instrument timestamp.
 // i.e., the timestamps are compared and if they differ by more 
 //  than NUDGE_LIMIT ms, the analyzer timestamp is changed 
-//  immediately to the host timestamp. If the difference lies
-//  within NUDGE_WINDOW ms, reset the timer divisor to normal value. 
-//  Otherwise, the analyzer timestamp is moved towards the host timestamp 
-//  by changing the division ratio of the DSP PRD timer to speed up or slow 
-//  down the clock by approximately 1 part in 2**11.
+//  by speeding up or slowing down the clock by 1 part in 64. If the 
+//  difference lies within NUDGE_WINDOW ms, reset the timer divisor to 
+//  normal value. Otherwise, the analyzer timestamp is moved towards the 
+//  host timestamp by changing the division ratio of the DSP PRD timer to 
+//  speed up or slow down the clock by approximately 1 part in 2**11.
 
 // params[0] is the least significant 32 bits and params[1] is 
 //  the most significant 32 bits of the host timestamp.
@@ -195,19 +195,13 @@ int nudgeTimestamp(unsigned int numInt,void *params,void *env)
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
     if (delta & 0x80000000) {   // timestamp < hostTimestamp, may need to speed up DSP clock
         delta = (~delta) + 1;
-        if (delta > NUDGE_LIMIT) {
-            timestamp = hostTimestamp;
-            return WARNING_DAS_TIMESTAMP_DISCONTINUOUS;
-        }
-        if (delta < NUDGE_WINDOW) target_divisor = DSP_TIMER_DIVISOR;
+        if (delta > NUDGE_LIMIT) target_divisor = DSP_TIMER_DIVISOR - (DSP_TIMER_DIVISOR >> 6);
+        else if (delta < NUDGE_WINDOW) target_divisor = DSP_TIMER_DIVISOR;
         else target_divisor = DSP_TIMER_DIVISOR - (DSP_TIMER_DIVISOR >> 11);
     }
     else {  // timestamp > hostTimestamp, may need to slow down DSP clock
-        if (delta > NUDGE_LIMIT) {
-            timestamp = hostTimestamp;
-            return WARNING_DAS_TIMESTAMP_DISCONTINUOUS;
-        }
-        if (delta < NUDGE_WINDOW) target_divisor = DSP_TIMER_DIVISOR;
+        if (delta > NUDGE_LIMIT) target_divisor = DSP_TIMER_DIVISOR + (DSP_TIMER_DIVISOR >> 6);
+        else if (delta < NUDGE_WINDOW) target_divisor = DSP_TIMER_DIVISOR;
         else target_divisor = DSP_TIMER_DIVISOR + (DSP_TIMER_DIVISOR >> 11);
     }
     if (TIMER_getPeriod(hTimer0) != target_divisor) {
