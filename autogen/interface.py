@@ -65,6 +65,8 @@ ERROR_RD_BAD_RINGDOWN = -15
 error_messages.append("Bad ringdown")
 ERROR_RD_INSUFFICIENT_DATA = -16
 error_messages.append("Insufficient data for ringdown calculation")
+WARNING_DAS_TIMESTAMP_DISCONTINUOUS = -17
+error_messages.append("Difference between timestamps was so large that DSP timestamp was reset")
 
 class DataType(Union):
     _fields_ = [
@@ -461,8 +463,12 @@ WLM_ADC_WIDTH = 16
 I2C_READ_ERROR = 0x80000000
 # Time error (ms) beyond which analyzer timestamp is set to host timestamp
 NUDGE_LIMIT = 5000
-# Maximum change of analyzer timestamp (ms) on each nudge
-NUDGE_INCREMENT = 10
+# Do not adjust if timestamps agree within this window (ms)
+NUDGE_WINDOW = 20
+# Base address of DSP timer 0 registers
+DSP_TIMER0_BASE = 0x01940000
+# Divisor to get 1ms for a 225MHz DSP clock
+DSP_TIMER_DIVISOR = 56250
 
 # Enumerated definitions for RegTypes
 RegTypes = c_uint

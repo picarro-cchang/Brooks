@@ -813,7 +813,13 @@ class HostToDspSender(Singleton):
     @usbLockProtect
     def serveDacQueues(self):
         return self.usb.serveDacQueues()
-
+        
+    @usbLockProtect
+    def rdDspTimerRegisters(self):
+        timerRegs = (c_uint*3)()
+        self.usb.hpiRead(interface.DSP_TIMER0_BASE,timerRegs)
+        return [x for x in timerRegs]
+        
 class SensorHistory(Singleton):
     """Stores latest values of all sensor streams in a dictionary
     so that snapshots of these quantities may be written to the state

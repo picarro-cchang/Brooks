@@ -432,6 +432,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def serveDacQueues(self):
         return self.dasInterface.hostToDspSender.serveDacQueues()
        
+    def rdDspTimerRegisters(self):
+        return self.dasInterface.hostToDspSender.rdDspTimerRegisters()
+
     #def disableLaserCurrent(self,laserNum):
     #    # Turn off laser current for laserNum (0-index)
     #    if laserNum<0 or laserNum>=interface.MAX_LASERS:
