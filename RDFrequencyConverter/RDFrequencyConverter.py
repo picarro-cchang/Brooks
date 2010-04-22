@@ -427,8 +427,8 @@ class RDFrequencyConverter(Singleton):
         # Check if this is a calibration row and process it accordingly
         if entry.subschemeId & interface.SUBSCHEME_ID_IsCalMask:
             rowNum = entry.schemeRow
-            angleError = mod(entry.wlmAngle - self.angleScheme[entry.schemeTable].setpoint[entry.schemeRow],2*pi)
-            tempError  = entry.laserTemperature - self.angleScheme[entry.schemeTable].laserTemp[entry.schemeRow]
+            angleError = mod(entry.wlmAngle - self.angleScheme[entry.schemeTable].setpoint[rowNum],2*pi)
+            tempError  = entry.laserTemperature - self.angleScheme[entry.schemeTable].laserTemp[rowNum]
             if min(angleError,2*pi-angleError) < self.dthetaMax and abs(tempError) < self.dtempMax:
                 # The spectral point is close to the setpoint
                 self.sbc.processCalPoint(entry)

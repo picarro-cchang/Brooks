@@ -59,6 +59,7 @@ class Listener(threading.Thread):
         The parameters "name" and "logFunc" are useful for debugging. Mesages from this module are sent by calling
         "logFunc", passing a string which includes "name". If "logFunc" is set to None, no logging takes place.
         """
+        threading.Thread.__init__(self,name=name)
         self.sock = None
         self._stopevent = threading.Event()
         self.data = ""
@@ -79,7 +80,6 @@ class Listener(threading.Thread):
             pass
         if not self.IsArbitraryObject:
             self.recordLength = ctypes.sizeof(self.elementType)
-        threading.Thread.__init__(self)
         self.setDaemon(True)
         self.start()
 
