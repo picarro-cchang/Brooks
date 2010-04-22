@@ -82,6 +82,7 @@
         <status ident="ERROR_BAD_VALUE">Invalid value</status>
         <status ident="ERROR_RD_BAD_RINGDOWN">Bad ringdown</status>
         <status ident="ERROR_RD_INSUFFICIENT_DATA">Insufficient data for ringdown calculation</status>
+        <status ident="WARNING_DAS_TIMESTAMP_DISCONTINUOUS">Difference between timestamps was so large that DSP timestamp was reset</status>
     </status_list>
     <struct_list>
         <struct type="DIAG_EventLogStruct">
@@ -356,7 +357,9 @@
         <constant ident="WLM_ADC_WIDTH" description="Number of bits for wavelength monitor ADCs">16</constant>
         <constant ident="I2C_READ_ERROR" description="Bad I2C read value">0x80000000</constant>        
         <constant ident="NUDGE_LIMIT" description="Time error (ms) beyond which analyzer timestamp is set to host timestamp">5000</constant>
-        <constant ident="NUDGE_INCREMENT" description="Maximum change of analyzer timestamp (ms) on each nudge">10</constant>
+        <constant ident="NUDGE_WINDOW" description="Do not adjust if timestamps agree within this window (ms)">20</constant>
+        <constant ident="DSP_TIMER0_BASE" description="Base address of DSP timer 0 registers">0x01940000</constant>
+        <constant ident="DSP_TIMER_DIVISOR" description="Divisor to get 1ms for a 225MHz DSP clock">56250</constant>
     </constant_list>
     <union_list>
         <union type="DataType">

@@ -17,6 +17,7 @@
 #define _REGISTERS_H_
 
 #include "interface.h"
+#include <csl_timer.h>
 
 /* The shared memory region is divided into the following (by integer address):
 
@@ -43,6 +44,8 @@ Offsets and lengths are in 4-byte integers. Offsets are defined in interface.h
 #define HOST_BASE         (SHAREDMEM_BASE+4*HOST_OFFSET)
 
 extern long long timestamp; // Global timestamp for analyzer
+extern TIMER_Handle hTimer0; // Handle for DSP TIMER0
+
 typedef struct
 {
     unsigned int data[256];

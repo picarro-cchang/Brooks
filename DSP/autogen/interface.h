@@ -51,6 +51,7 @@ typedef int bool;
 #define ERROR_BAD_VALUE (-14)
 #define ERROR_RD_BAD_RINGDOWN (-15)
 #define ERROR_RD_INSUFFICIENT_DATA (-16)
+#define WARNING_DAS_TIMESTAMP_DISCONTINUOUS (-17)
 
 typedef union {
     float asFloat;
@@ -422,8 +423,12 @@ typedef struct {
 #define I2C_READ_ERROR (0x80000000)
 // Time error (ms) beyond which analyzer timestamp is set to host timestamp
 #define NUDGE_LIMIT (5000)
-// Maximum change of analyzer timestamp (ms) on each nudge
-#define NUDGE_INCREMENT (10)
+// Do not adjust if timestamps agree within this window (ms)
+#define NUDGE_WINDOW (20)
+// Base address of DSP timer 0 registers
+#define DSP_TIMER0_BASE (0x01940000)
+// Divisor to get 1ms for a 225MHz DSP clock
+#define DSP_TIMER_DIVISOR (56250)
 
 typedef enum {
     float_type = 0, // 

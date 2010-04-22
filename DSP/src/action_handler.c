@@ -20,6 +20,7 @@
 #include <string.h>
 #include <csl.h>
 #include <csl_cache.h>
+#include <csl_timer.h>
 
 #include "dspAutogen.h"
 #include "interface.h"
@@ -177,34 +178,46 @@ int nudgeTimestamp(unsigned int numInt,void *params,void *env)
 // Uses 64 bit host timestamp to adjust the instrument timestamp.
 // i.e., the timestamps are compared and if they differ by more 
 //  than NUDGE_LIMIT ms, the analyzer timestamp is changed 
-//  immediately to the host timestamp. Otherwise, the analyzer
-//  timestamp is moved by at most NUDGE_INCREMENT ms towards the
-//  host timestamp.
+//  immediately to the host timestamp. If the difference lies
+//  within NUDGE_WINDOW ms, reset the timer divisor to normal value. 
+//  Otherwise, the analyzer timestamp is moved towards the host timestamp 
+//  by changing the division ratio of the DSP PRD timer to speed up or slow 
+//  down the clock by approximately 1 part in 2**11.
+
 // params[0] is the least significant 32 bits and params[1] is 
 //  the most significant 32 bits of the host timestamp.
 {
     unsigned int *paramsAsInt = (unsigned int *) params;
+    unsigned int target_divisor;
     long long hostTimestamp = paramsAsInt[0] + (((long long)paramsAsInt[1])<<32);
     long long delta = timestamp - hostTimestamp;
 
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    if (delta & 0x80000000) {   // timestamp < hostTimestamp
+    if (delta & 0x80000000) {   // timestamp < hostTimestamp, may need to speed up DSP clock
         delta = (~delta) + 1;
         if (delta > NUDGE_LIMIT) {
             timestamp = hostTimestamp;
-            return STATUS_OK;
+            return WARNING_DAS_TIMESTAMP_DISCONTINUOUS;
         }
-        timestamp += (NUDGE_INCREMENT < delta) ? NUDGE_INCREMENT : delta;
-        return STATUS_OK;
+        if (delta < NUDGE_WINDOW) target_divisor = DSP_TIMER_DIVISOR;
+        else target_divisor = DSP_TIMER_DIVISOR - (DSP_TIMER_DIVISOR >> 11);
     }
-    else {
+    else {  // timestamp > hostTimestamp, may need to slow down DSP clock
         if (delta > NUDGE_LIMIT) {
             timestamp = hostTimestamp;
-            return STATUS_OK;
+            return WARNING_DAS_TIMESTAMP_DISCONTINUOUS;
         }
-        timestamp -= (NUDGE_INCREMENT < delta) ? NUDGE_INCREMENT : delta;
-        return STATUS_OK;
+        if (delta < NUDGE_WINDOW) target_divisor = DSP_TIMER_DIVISOR;
+        else target_divisor = DSP_TIMER_DIVISOR + (DSP_TIMER_DIVISOR >> 11);
     }
+    if (TIMER_getPeriod(hTimer0) != target_divisor) {
+        TIMER_pause(hTimer0);
+        TIMER_setPeriod(hTimer0,target_divisor);
+        // Be careful that we do not move period past the current count
+        if (TIMER_getCount(hTimer0) >= target_divisor) TIMER_setCount(hTimer0,target_divisor-1);
+        TIMER_resume(hTimer0);
+    }
+    return STATUS_OK;
 }
 
 int r_getTimestamp(unsigned int numInt,void *params,void *env)

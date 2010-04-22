@@ -48,10 +48,13 @@ static int message_pointer = 0;
 SensorEntryType *sensorEntries = (SensorEntryType *)(SENSOR_BASE);  // This is an array of size NUM_SENSOR_ENTRIES
 static int sensor_pointer = 0;
 static int ringdown_pointer = 0;
+TIMER_Handle hTimer0;
 
 void init_comms()
 {
     DataType d;
+    hTimer0 = TIMER_open(TIMER_DEV0, 0);
+
     memset(messages,0,4*MESSAGE_REGION_SIZE);
     message_pointer = 0;
     memset(sensorEntries,0,4*SENSOR_REGION_SIZE);
