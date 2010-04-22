@@ -79,7 +79,8 @@ class Broadcaster(threading.Thread):
         name is used to name the thread
         logFunc is called to record logging data from the Broadcaster
         """
-        #self.name = name
+        threading.Thread.__init__(self,name=name)
+        self.name = name
         self.port = port
         self.clients = {}  # Dictionary of clients (indexed by socket) to which to send out information
         self.sockListen = None
@@ -87,7 +88,6 @@ class Broadcaster(threading.Thread):
         self.messageQueue = Queue.Queue(0)
 
         self._stopevent = threading.Event()
-        threading.Thread.__init__(self,name=name)
         self.logFunc = logFunc
         self.setDaemon(True)
         self.start()
