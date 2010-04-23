@@ -48,9 +48,13 @@
         <constant ident="DAC_QUEUE_RESET">0x01</constant>
         <constant ident="DAC_QUEUE_SERVE">0x02</constant>
         <constant ident="DAC_QUEUE_SET_PERIOD">0x03</constant>
+        <constant ident="DAC_SET_TIMESTAMP">0x04</constant>
+        <constant ident="DAC_SET_RELOAD_COUNT">0x05</constant>
         <!--  >Value field for VENDOR_DAC_QUEUE_STATUS</!-->
         <constant ident="DAC_QUEUE_GET_FREE">0x01</constant>
         <constant ident="DAC_QUEUE_GET_ERRORS">0x02</constant>
+        <constant ident="DAC_GET_TIMESTAMP">0x03</constant>
+        <constant ident="DAC_GET_RELOAD_COUNT">0x04</constant>
         <!--  >Bits for PORT E of Cypress USB</!-->
         <constant ident="IO_FPGA_CONF">IOE</constant>
         <constant ident="CYP_LED0">0x01</constant>
@@ -63,6 +67,12 @@
         <constant ident="FPGA_SS_DONE">0x40</constant>
         <!--  >Bits for PORT A of Cypress USB</!-->
         <constant ident="CYP_LED3">0x10</constant>
+        <!--  >DAC commands</!-->
+        <constant ident="DAC_IMMEDIATE">0xD1</constant>
+        <constant ident="DAC_ENQUEUE">0xD2</constant>
+        <!--  >DAC error flags</!-->
+        <constant ident="DAC_QUEUE_OVERFLOW">0x1</constant>
+        <constant ident="DAC_QUEUE_UNDERFLOW">0x2</constant>
     </usb_constants>
     <status_list>
         <status ident="STATUS_OK">Status OK</status>

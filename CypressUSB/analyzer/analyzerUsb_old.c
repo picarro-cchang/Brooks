@@ -13,7 +13,6 @@
  * HISTORY:
  *   07-May-2008  sze  Initial version. Vendor command to read 2-byte version number.
  *   30-Apr-2009  sze  Modification to LED flashing routines for alpha prototype hardware.
- *   22-Apr-2010  sze  Routines for analog interface board using timestamp based approach.
  *
  *  Copyright (c) 2008 Picarro, Inc. All rights reserved
  */
@@ -68,21 +67,23 @@ static WORD autoinLength = 0;     // Autocommit occurs after these many bytes
 static WORD xFIFOBC_IN = 0x0000;  // variable that contains EP6FIFOBCH/L value
 
 //-----------------------------------------------------------------------------
-// Variables for DAC resynchronizer
+// Variables for DAC resynchronization queues
 //-----------------------------------------------------------------------------
-#define QSIZE   (1500)
+#define QSIZE   (50)
 #define NCHANNELS (8)
 
-struct Queue {
-    unsigned short int head;
-    unsigned short int tail;
-    unsigned short int count;
-    unsigned char qdata[QSIZE];
-} dac_queue;
+struct DataQueue {
+    unsigned char head;
+    unsigned char tail;
+    unsigned char count;
+    unsigned short int qdata[QSIZE];
+} dataQueues[NCHANNELS];
 
 BYTE buffer[4];
-unsigned short int now = 0, divisor;
-unsigned char errorFlags = 0;
+unsigned short int samplePeriods[NCHANNELS];
+unsigned short int nextSample[NCHANNELS];
+unsigned short int now = 0;
+unsigned char underflowFlags = 0, overflowFlags = 0, serveDacs = 0;
 //-----------------------------------------------------------------------------
 
 void GPIF_SingleWordWrite( WORD gdata ) {
@@ -108,59 +109,59 @@ void GPIF_SingleWordRead( WORD *gdata ) {
 //-----------------------------------------------------------------------------
 // Queue handling routines
 //-----------------------------------------------------------------------------
-void qinit()
+void qinit(int qNum)
 {
-    dac_queue.head = dac_queue.tail = dac_queue.count = 0;
+    struct DataQueue *q = &dataQueues[qNum];
+    q->head = q->tail = q->count = 0;
 }
 
-unsigned char qput(unsigned char d)
+unsigned char qput(unsigned char qNum,unsigned short int d)
 // Places data d onto the queue, returns 1 on success, 0 if queue is full 
 {
-    if (dac_queue.count == QSIZE) {
-        errorFlags |= DAC_QUEUE_OVERFLOW;
+    struct DataQueue *q = &dataQueues[qNum];
+    if (q->count == QSIZE) {
+        overflowFlags |= (1<<qNum);
         return 0;
     }
-    dac_queue.qdata[dac_queue.tail++] = d;
-    if (dac_queue.tail == QSIZE) dac_queue.tail = 0;
-    dac_queue.count++;
+    q->qdata[q->tail++] = d;
+    if (q->tail == QSIZE) q->tail = 0;
+    q->count++;
     return 1;
 }
 
-unsigned char qget(unsigned char *d)
+unsigned char qget(unsigned char qNum,unsigned short int *d)
 // Get data *d from the queue, returns 1 on success, 0 if queue is empty 
 {
-    if (dac_queue.count == 0) {
-        errorFlags |= DAC_QUEUE_UNDERFLOW;
+    struct DataQueue *q = &dataQueues[qNum];
+    if (q->count == 0) {
+        underflowFlags |= (1<<qNum);
         return 0;
     }
-    *d = dac_queue.qdata[dac_queue.head++];
-    if (dac_queue.head == QSIZE) dac_queue.head = 0;
-    dac_queue.count--;
+    *d = q->qdata[q->head++];
+    if (q->head == QSIZE) q->head = 0;
+    q->count--;
     return 1;
-}
-
-unsigned short int qpeekTime()
-// Peek at unsigned short at head of queue without getting it
-{
-    unsigned short int value;
-    unsigned short int addr = dac_queue.head;
-    value = dac_queue.qdata[addr++];
-    if (addr == QSIZE) addr = 0;
-    value += dac_queue.qdata[addr] << 8;
-    return value;
 }
 
 void reset()
-// Empty queue, reset error flags
+// Stop serving, empty all queues, reset underflow and overflow flags
 {
-    errorFlags = 0;
-    qinit();
+    unsigned char i;
+    serveDacs = 0;
+    underflowFlags = 0;
+    overflowFlags  = 0;
+    for (i=0; i<NCHANNELS; i++) qinit(i);
 }
 
 void init()
-// Resets timestamp, queue and error flags
 {
-    now = 0;
+    unsigned char i;
+	now = 0;
+    serveDacs = 0;
+    for (i=0; i<NCHANNELS; i++) {
+        samplePeriods[i] = 0;
+        nextSample[i] = 0;
+    }
     reset();
 }
 //-----------------------------------------------------------------------------
@@ -168,12 +169,12 @@ void init()
 //-----------------------------------------------------------------------------
 void write_dac(unsigned char channel,unsigned short int value)
 {
-    ET2 = 0;	// Do not allow timer interrupts when writing to DAC
-    buffer[0] = 0x30 | channel;
-    buffer[1] = value >> 8;
-    buffer[2] = value & 0xFF;
-    EZUSB_WriteI2C(0x10, 3, buffer);
-    ET2 = 1;
+	ET2 = 0;	// Do not allow timer interrupts when writing to DAC
+	buffer[0] = 0x30 | channel;
+	buffer[1] = value >> 8;
+	buffer[2] = value & 0xFF;
+	EZUSB_WriteI2C(0x10, 3, buffer);
+	ET2 = 1;
 }
 //-----------------------------------------------------------------------------
 // Task Dispatcher hooks
@@ -193,8 +194,8 @@ void TD_Init(void) {           // Called once at startup
     SYNCDELAY;
 
     EP2CFG = 0xA2;           // Activate EP2 for bulk output, 512 bytes, 2x buffered
-                             // Note that the endpoint buffer is shared with that for EP4, so
-                             //  we cannot use quad buffering
+	                         // Note that the endpoint buffer is shared with that for EP4, so
+							 //  we cannot use quad buffering
     SYNCDELAY;
     EP4CFG = 0xA0;           // Activate EP4 for bulk output, 512 bytes, 2x buffered
     SYNCDELAY;
@@ -221,7 +222,7 @@ void TD_Init(void) {           // Called once at startup
     EP6FIFOCFG = 0x09;       // Configure EP6 as word-wide, enable AUTOIN
     SYNCDELAY;
     EP1OUTBC = 0x0;          // Arm EP1OUT
-    EP4BCL = 0x80;           // Arm EP4OUT by writing dummy byte count (twice)
+    EP4BCL = 0x80;           // arm EP4OUT by writing dummy byte count (twice)
     SYNCDELAY;                    
     EP4BCL = 0x80;    
     SYNCDELAY;                    
@@ -254,7 +255,7 @@ void TD_Init(void) {           // Called once at startup
     IOA = bmHPI_RESETz | bmHPI_HINTz;   // Deassert interrupt and reset
 
     EZUSB_InitI2C();              // Initialize EZ-USB I2C controller
-    I2CTL = bm400KHZ;		      // Use 400kHz I2C speed
+	I2CTL = bm400KHZ;		      // Use 400kHz I2C speed
 
     // Configure timer 2 with a 4MHz clock in 16 bit timer/counter mode with auto
     // reload. The reload count is set up to give a 100Hz interrupt rate.
@@ -273,19 +274,19 @@ void TD_Init(void) {           // Called once at startup
     RCAP2L = 0xC0;
 
     // Set timer 2 priority to low and I2C priority to high. This allows the writing to the DACs to take
-    //  place within the timer interrupt.
-    PT2 = 0; 
-    PI2C = 1;
+	//  place within the timer interrupt.
+	PT2 = 0; 
+	PI2C = 1;
 
-    init();
+	init();
 
-    ET2 = 1;                            /* enable timer 2 interrupt    */
+	ET2 = 1;                            /* enable timer 2 interrupt    */
 
-    EPIE |= 0x20;						/* Enable IRQ on EP4 output */
+	EPIE |= 0x20;						/* Enable IRQ on EP4 output */
 }
 
 void TD_Poll(void) {           // Called repeatedly while the device is idle
-    WORD nTransfers;
+	WORD nTransfers;
     if ( GPIFTRIG & 0x80 ) {           // if GPIF interface IDLE
         if ( ! ( EP24FIFOFLGS & 0x02 ) ) { // if there's a packet in the peripheral domain for EP2
             // TODO: Uncomment this line when the hardware arrives
@@ -322,7 +323,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
             SYNCDELAY;
         }
 
-        if (Tcount) {                           // if Tcount is not zero
+	    if (Tcount) {                           // if Tcount is not zero
             if ( !( EP68FIFOFLGS & 0x01 ) ) { // if EP6 FIFO is not full
 
                 // TODO: Uncomment next line when hardware is present
@@ -374,10 +375,10 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
                 while(!HPI_RDY);             // wait for HPI to complete internal portion of previous transfer
                 SYNCDELAY;
             }
-        }
+	    }
     }
     
-    // blink LED0 to indicate firmware is running
+	// blink LED0 to indicate firmware is running
     if (!LED_Count) {
         if (LED_Status) {
             LED_Off (bmBIT0);
@@ -386,7 +387,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
             LED_On (bmBIT0);
             LED_Status = 1;
         }
-    }
+	}
     LED_Count++;
 }
 
@@ -463,11 +464,12 @@ BOOL DR_SetFeature(void) {
 #define BIT0_TOGGLE (FPGA_SS_CCLK)
 #define BIT1_TOGGLE (FPGA_SS_CCLK|FPGA_SS_DIN)
 
+
 BOOL DR_VendorCmnd(void) {
     WORD value = (SETUPDAT[3]<<8)|SETUPDAT[2];
     WORD length = (SETUPDAT[7]<<8)|SETUPDAT[6];
     WORD *Destination;
-    unsigned char b;
+    BYTE b;
     unsigned short int i;
     switch (SETUPDAT[1]) {
     case VENDOR_GET_VERSION:
@@ -661,67 +663,61 @@ BOOL DR_VendorCmnd(void) {
         // Acknowledge handshake phase of device request
         EP0CS |= bmHSNAK;
         break;
-    case VENDOR_SET_DAC:
-        // value specifies the DAC
+	case VENDOR_SET_DAC:
+		// value specifies the DAC
         EP0BCL = 0;
         // Make sure that EP0 is not busy before trying get from the FIFO
         while (EP01STAT & bmEP0BSY);
         // send_bytes(EP0BUF,(BYTE)length);
-        buffer[0] = 0x30 | (SETUPDAT[2] & 0x7);
-        buffer[1] = EP0BUF[0];
-        buffer[2] = EP0BUF[1];
-        EZUSB_WriteI2C(0x10, 3, buffer);
+		buffer[0] = 0x30 | (SETUPDAT[2] & 0x7);
+		buffer[1] = EP0BUF[0];
+		buffer[2] = EP0BUF[1];
+    	EZUSB_WriteI2C(0x10, 3, buffer);
         // Acknowledge handshake phase of device request
         //EP0CS |= bmHSNAK;
         break;
-    case VENDOR_DAC_QUEUE_CONTROL:
+	case VENDOR_DAC_QUEUE_CONTROL:
         EP0BCL = 0;
         // Make sure that EP0 is not busy before trying get from the FIFO
         while (EP01STAT & bmEP0BSY);
 
         switch (value) {
-        case DAC_QUEUE_RESET:
-            reset();
-            break;
-        case DAC_SET_TIMESTAMP:
-            now     = ((WORD)EP0BUF[1]<<8) | EP0BUF[0];
-            break;
-        case DAC_SET_RELOAD_COUNT:
-              ET2 = 0;
-            RCAP2L  = EP0BUF[0];
-            RCAP2H  = EP0BUF[1];
-            ET2 = 1;
-            break;
-        }
-        break;
-    case VENDOR_DAC_QUEUE_STATUS:
+		case DAC_QUEUE_RESET:
+			reset();
+			break;
+		case DAC_QUEUE_SERVE:
+		    if (!serveDacs) {
+      			ET2 = 0;
+				i = now + 1;
+    			for (b=0; b<NCHANNELS; b++) nextSample[b] = i;
+    			serveDacs = 1;
+    			ET2 = 1;
+			}
+			break;
+		case DAC_QUEUE_SET_PERIOD:
+		    samplePeriods[EP0BUF[0]] = ((WORD)EP0BUF[2]<<8) | EP0BUF[1];
+			break;
+		}
+		break;
+	case VENDOR_DAC_QUEUE_STATUS:
         switch (value) {
-        case DAC_GET_TIMESTAMP:
-            EP0BUF[0] = LSB(now);
-            EP0BUF[1] = MSB(now);
-            ET2 = 1;
-            EP0BCL = 2;
-            break;
-        case DAC_GET_RELOAD_COUNT:
-            EP0BUF[0] = RCAP2L;
-            EP0BUF[1] = RCAP2H;
-            EP0BCL = 2;
-            break;
-        case DAC_QUEUE_GET_FREE:
-            i = QSIZE - dac_queue.count;
-            EP0BUF[0] = LSB(i);
-            EP0BUF[1] = MSB(i);
-            EP0BCL = 2;
-            break;
-        case DAC_QUEUE_GET_ERRORS:
-            EP0BUF[0] = errorFlags;
-            EP0BCL = 1;
-            break;
-        }
+		case DAC_QUEUE_GET_FREE:
+		    for (b=0; b<NCHANNELS; b++) EP0BUF[b] = QSIZE - dataQueues[b].count;
+            EP0BCL = NCHANNELS;
+			break;
+		case DAC_QUEUE_GET_ERRORS:
+            EP0BUF[0] = underflowFlags;
+            EP0BUF[1] = overflowFlags;
+            EP0BUF[2] = LSB(now);
+            EP0BUF[3] = MSB(now);
+            // Specify length (in bytes) to return
+            EP0BCL = 4;
+			break;
+		}
         EP0BCH = 0;
         // Acknowledge handshake phase of device request
         EP0CS |= bmHSNAK;
-        break;
+		break;
     default:
         return TRUE; // Indicates failure
     }
@@ -731,34 +727,20 @@ BOOL DR_VendorCmnd(void) {
 // Timer interrupt for serving DAC queues
 //-----------------------------------------------------------------------------
 void timer2_isr (void) interrupt TMR2_VECT {
-    /* Service the queues on timer interrupt */
-    // unsigned char i;
-    unsigned char b, c, channel;
-    short int delta;
-    unsigned short int value;
-    while (dac_queue.count) {
-        delta = qpeekTime() - now;
-        if (delta > 0) break;
-        if (!qget(&b)) break;	// pop off timestamp
-        if (!qget(&b)) break;
-        // Send out data at front of queue
-        if (!qget(&c)) break;   // get channel mask
-        channel = 0;
-        while (c) {
-            if (c & 1) {
-                if (!qget(&b)) break;	// get data
-                value = b;
-                if (!qget(&b)) break;
-                value += ((WORD)(b) << 8); 
-                write_dac(channel,value);
-            }
-            channel++;
-            c >>= 1;
-        }
-    }
-    now++;
+	/* Service the queues on timer interrupt */
+    unsigned char i;
+    unsigned short int d;
+	if (serveDacs) {
+	    for (i=0; i<NCHANNELS; i++) {
+	        if (samplePeriods[i] != 0 && nextSample[i] == now) {
+	            if (qget(i,&d)) write_dac(i,d);
+	            nextSample[i] += samplePeriods[i];
+	        }
+	    }
+	}
+	now++;
     TF2 = 0; 
-    EXF2 = 0;
+	EXF2 = 0;
 }
 //-----------------------------------------------------------------------------
 // USB Interrupt Handlers
@@ -825,47 +807,43 @@ void ISR_Ep1out(void) interrupt 0 {
 void ISR_Ep2inout(void) interrupt 0 {
 }
 void ISR_Ep4inout(void) interrupt 0 {
-    unsigned short int value;
-	short int count;
+    unsigned char channels[NCHANNELS];
+    unsigned char j, bitsSet = 0;
+    unsigned short int count;
     EZUSB_IRQ_CLEAR();
-    EPIRQ = 0x20;
+	EPIRQ = 0x20;
     AUTOPTRH1 = MSB( &EP4FIFOBUF );  // Set pointer 1 to the buffer address and read out the data
     AUTOPTRL1 = LSB( &EP4FIFOBUF );
-    count = ((WORD)(EP4BCH) << 8) | EP4BCL;
-    while (count>0) {
-        unsigned char b, c, channel=0, command;
-        command = XAUTODAT1; count--;
-        switch (command) {
-        case DAC_IMMEDIATE:
-            b = XAUTODAT1;
-            count--;
-            while (b) {
-                if (b & 1) {
-                    value = XAUTODAT1; count--;
-                    value += ((WORD)(XAUTODAT1) << 8); count--;
-                    write_dac(channel,value);
-                }
-                channel++;
-                b >>= 1;
-            }
-            break;
-        case DAC_ENQUEUE:
-            b = XAUTODAT1; count--; qput(b);	// Enqueue timestamp
-            b = XAUTODAT1; count--; qput(b);
-            c = XAUTODAT1; count--; qput(c);    // Enqueue channel bitmask
-            while (c) {
-                if (c & 1) {					// Enqueue data
-                    b = XAUTODAT1; count--; qput(b);
-                    b = XAUTODAT1; count--; qput(b);
-                }
-                channel++;
-                c >>= 1;
-            }
-            break;
-        default:
-            break;
-        }
-    }
+    count = (WORD)(EP4BCH << 8) | EP4BCL;
+	if (count) {
+		unsigned char channelMask = XAUTODAT1;
+	    if (channelMask) {
+	        // Determine which channel queues are to be replenished
+	        for (j=0; j<NCHANNELS; j++) {
+	            if (channelMask & 1) {
+	                channels[bitsSet++] = j;
+	            }
+	            channelMask >>= 1;
+	        }
+			count--;
+	        // Deal the available data among the channels
+	        j = 0;
+	        while (count > 0) {
+	            unsigned char chan = channels[j];
+				unsigned short int value = 0;
+				value = XAUTODAT1; count--;
+				if (count > 0) {
+					value += (XAUTODAT1 << 8);
+					count--;
+				}
+	            // For zero period
+	            if (samplePeriods[chan]) qput(chan,value);
+	            else write_dac(chan,value);
+	            j++;
+	            if (j == bitsSet) j=0;
+	        }
+	    }
+	}
     SYNCDELAY;
     EP4BCL = 0x80;
     SYNCDELAY;
