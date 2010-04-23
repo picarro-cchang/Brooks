@@ -819,10 +819,22 @@ class BiSpline(BasisFunctions):
             xmin,xmax = peakInterval
         x = linspace(xmin,xmax,nTestPoints)
         y = self(x,useModifier)
-        ix = argmax(y)
-        if ix==0 or ix==nTestPoints-1:
-            raise ValueError('Peak of bispline is not in interior of domain')
-        xmin = brent(lambda x: -self(x,useModifier),brack=(x[ix-1],x[ix],x[ix+1]))
+        a = self.getCurrentParametersFromModel()
+        # Find minimum if a[2]<0 and maximum if a[2]>0
+        if a[2]>0:
+            ix = argmax(y)
+            if ix==0 or ix==nTestPoints-1:
+                Log('Maximum of bispline is not in interior of domain')
+                return x[ix],y[ix]
+            xmin = brent(lambda x: -self(x,useModifier),brack=(x[ix-1],x[ix],x[ix+1]))
+        elif a[2]<0:
+            ix = argmin(y)
+            if ix==0 or ix==nTestPoints-1:
+                Log('Minimum of bispline is not in interior of domain')
+                return x[ix],y[ix]
+            xmin = brent(lambda x: self(x,useModifier),brack=(x[ix-1],x[ix],x[ix+1]))
+        else:
+            xmin = x[0]
         return xmin,self(xmin,useModifier)
 ################################################################################
 # Galatry object
