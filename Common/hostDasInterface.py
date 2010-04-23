@@ -786,6 +786,68 @@ class HostToDspSender(Singleton):
         self.usb.hpiRead(virtualLaserParamsAddr,vLaserParams)
         return vLaserParams
     
+    @usbLockProtect
+    def wrDac(self,channel,value):
+        self.usb.wrDac(channel,value)
+        
+    @usbLockProtect
+    def wrAuxiliary(self,data):
+        self.usb.wrAuxiliary(data)
+
+    # @usbLockProtect
+    # def getDacQueueFreeSlots(self):
+        # return self.usb.getDacQueueFreeSlots()
+
+    # @usbLockProtect
+    # def getDacQueueErrors(self):
+        # return self.usb.getDacQueueErrors()
+
+    # @usbLockProtect
+    # def setDacQueuePeriod(self,channel,period):
+        # return self.usb.setDacQueuePeriod(channel,period)
+
+    # @usbLockProtect
+    # def resetDacQueues(self):
+        # return self.usb.resetDacQueues()
+
+    # @usbLockProtect
+    # def serveDacQueues(self):
+        # return self.usb.serveDacQueues()
+        
+    @usbLockProtect
+    def rdDspTimerRegisters(self):
+        timerRegs = (c_uint*3)()
+        self.usb.hpiRead(interface.DSP_TIMER0_BASE,timerRegs)
+        return [x for x in timerRegs]
+
+    @usbLockProtect
+    def resetDacQueue(self):
+        return self.usb.resetDacQueue()
+
+    @usbLockProtect
+    def setDacTimestamp(self,timestamp):
+        return self.usb.setDacTimestamp(timestamp)
+
+    @usbLockProtect
+    def setDacReloadCount(self,reloadCount):
+        return self.usb.setDacReloadCount(reloadCount)
+    
+    @usbLockProtect
+    def getDacTimestamp(self):
+        return self.usb.getDacTimestamp()
+
+    @usbLockProtect
+    def getDacReloadCount(self):
+        return self.usb.getDacReloadCount()
+        
+    @usbLockProtect
+    def getDacQueueFree(self):
+        return self.usb.getDacQueueFree()
+
+    @usbLockProtect
+    def getDacQueueErrors(self):
+        return self.usb.getDacQueueErrors()
+
 class SensorHistory(Singleton):
     """Stores latest values of all sensor streams in a dictionary
     so that snapshots of these quantities may be written to the state

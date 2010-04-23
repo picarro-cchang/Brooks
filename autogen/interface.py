@@ -459,6 +459,14 @@ RDSIM_EXTRA = 4
 WLM_ADC_WIDTH = 16
 # Bad I2C read value
 I2C_READ_ERROR = 0x80000000
+# Time error (ms) beyond which fast correction takes place
+NUDGE_LIMIT = 5000
+# Do not adjust if timestamps agree within this window (ms)
+NUDGE_WINDOW = 20
+# Base address of DSP timer 0 registers
+DSP_TIMER0_BASE = 0x01940000
+# Divisor to get 1ms for a 225MHz DSP clock
+DSP_TIMER_DIVISOR = 56250
 
 # Enumerated definitions for RegTypes
 RegTypes = c_uint
@@ -2534,6 +2542,7 @@ ACTION_EEPROM_WRITE = 67
 ACTION_EEPROM_READ = 68
 ACTION_EEPROM_READY = 69
 ACTION_I2C_CHECK = 70
+ACTION_NUDGE_TIMESTAMP = 71
 
 
 # Parameter form definitions

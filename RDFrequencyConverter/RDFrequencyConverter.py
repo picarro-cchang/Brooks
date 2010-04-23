@@ -13,7 +13,7 @@ File History:
     16-Oct-2009  alex      Added .ini file and update active warmbox and hotbox calibration files
     20-Oct-2009  alex      Added functionality to handle scheme switch and update warmbox and hotbox calibration files
     21-Oct-2009  alex      Added calibration file paths to .ini file. Added RPC_setCavityLengthTuning() and RPC_setLaserCurrentTuning().
-
+    22-Apr-2010  sze       Fixed non-updating of angle schemes when no calibration points are present
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -418,17 +418,19 @@ class RDFrequencyConverter(Singleton):
         if (entry.status & interface.RINGDOWN_STATUS_SequenceMask) != self.lastSchemeCount:
             if self.sbc.currentCalSpectrum:
                 self.sbc.processCalSpectrum()
-                if self.schemeMgr:
-                    schemeMgrUpdateThread = threading.Thread(target=self.schemeMgr.update)
-                    schemeMgrUpdateThread.setDaemon(True)
-                    schemeMgrUpdateThread.start()
+            # We must unconditionally recompile the scheme files whether or not
+            #  there is a cal spectrum, in order to account for changing WLM offset
+            if self.schemeMgr:
+                schemeMgrUpdateThread = threading.Thread(target=self.schemeMgr.update)
+                schemeMgrUpdateThread.setDaemon(True)
+                schemeMgrUpdateThread.start()
             self.sbc.clear()
             self.lastSchemeCount = (entry.status & interface.RINGDOWN_STATUS_SequenceMask)
         # Check if this is a calibration row and process it accordingly
         if entry.subschemeId & interface.SUBSCHEME_ID_IsCalMask:
             rowNum = entry.schemeRow
-            angleError = mod(entry.wlmAngle - self.angleScheme[entry.schemeTable].setpoint[entry.schemeRow],2*pi)
-            tempError  = entry.laserTemperature - self.angleScheme[entry.schemeTable].laserTemp[entry.schemeRow]
+            angleError = mod(entry.wlmAngle - self.angleScheme[entry.schemeTable].setpoint[rowNum],2*pi)
+            tempError  = entry.laserTemperature - self.angleScheme[entry.schemeTable].laserTemp[rowNum]
             if min(angleError,2*pi-angleError) < self.dthetaMax and abs(tempError) < self.dtempMax:
                 # The spectral point is close to the setpoint
                 self.sbc.processCalPoint(entry)

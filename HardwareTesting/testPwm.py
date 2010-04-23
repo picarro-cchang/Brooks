@@ -240,22 +240,11 @@ def loadUsbIfCode():
         pass
     # Wait for renumeration
     sleep(5.0)
-    for attempts in range(10):
-        analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
-        try:
-            analyzerUsb.connect()
-            if not analyzerUsb.getUsbSpeed():
-                print "Connected at reduced speed, retrying..."
-                analyzerUsb.reconnectUsb()
-                sleep(5.0)
-                continue
-            else:
-                logging.info("Connected to Picarro USB interface at high speed")
-                return
-        except:
-            logging.info("Cannot connect to Picarro USB interface, retrying...")
-            sleep(1.0)
-    raise RuntimeError,"USB connection failed"
+    analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
+    try:
+        analyzerUsb.connect()
+    except:
+        raise RuntimeError,"USB connection failed"
 
 def upload():
     #

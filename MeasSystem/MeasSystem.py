@@ -588,7 +588,7 @@ class MeasSystem(object):
                     allResults = {}
                     if not self.SkipFitting:
                         processorResults = self._SendSpectraToFitter(spectra)
-                        print "Processed %d spectra in %s" % (len(spectra),TimeStamp()-prev)
+                        # print "Processed %d spectra in %s" % (len(spectra),TimeStamp()-prev)
                         # Update allResults with the output of the processor
                         for t,rDict,spectrumId in processorResults:
                             spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrumId]
@@ -660,7 +660,7 @@ class MeasSystem(object):
             now = TimeStamp()
             loopTimes.append(now-lastTime)
             if len(loopTimes) == 50:
-                print self.__State, np.mean(loopTimes), np.std(loopTimes), min(loopTimes), max(loopTimes)
+                # print self.__State, np.mean(loopTimes), np.std(loopTimes), min(loopTimes), max(loopTimes)
                 loopTimes = []
             lastTime = now
         #end while

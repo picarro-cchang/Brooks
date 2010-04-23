@@ -409,6 +409,53 @@ class DriverRpcHandler(SharedTypes.Singleton):
         configFile = os.path.abspath(InstrumentConfig().filename)
         return configFile
 
+    def wrDac(self,channel,value):
+        """Writes "value" to the specified analog interface DAC channel. """
+        self.dasInterface.hostToDspSender.wrDac(channel,value)
+
+    def wrAuxiliary(self,data):
+        """Writes the "data" string to the auxiliary board"""
+        self.dasInterface.hostToDspSender.wrAuxiliary(ctypes.create_string_buffer(data,len(data)))
+        
+    def getDacQueueFreeSlots(self):
+        return self.dasInterface.hostToDspSender.getDacQueueFreeSlots()
+
+    def getDacQueueErrors(self):
+        return self.dasInterface.hostToDspSender.getDacQueueErrors()
+
+    def setDacQueuePeriod(self,channel,period):
+        return self.dasInterface.hostToDspSender.setDacQueuePeriod(channel,period)
+
+    def resetDacQueues(self):
+        return self.dasInterface.hostToDspSender.resetDacQueues()
+
+    def serveDacQueues(self):
+        return self.dasInterface.hostToDspSender.serveDacQueues()
+       
+    def rdDspTimerRegisters(self):
+        return self.dasInterface.hostToDspSender.rdDspTimerRegisters()
+
+    def resetDacQueue(self):
+        return self.dasInterface.hostToDspSender.resetDacQueue()
+
+    def setDacTimestamp(self,timestamp):
+        return self.dasInterface.hostToDspSender.setDacTimestamp(timestamp)
+
+    def setDacReloadCount(self,reloadCount):
+        return self.dasInterface.hostToDspSender.setDacReloadCount(reloadCount)
+    
+    def getDacTimestamp(self):
+        return self.dasInterface.hostToDspSender.getDacTimestamp()
+
+    def getDacReloadCount(self):
+        return self.dasInterface.hostToDspSender.getDacReloadCount()
+        
+    def getDacQueueFree(self):
+        return self.dasInterface.hostToDspSender.getDacQueueFree()
+
+    def getDacQueueErrors(self):
+        return self.dasInterface.hostToDspSender.getDacQueueErrors()
+        
     #def disableLaserCurrent(self,laserNum):
     #    # Turn off laser current for laserNum (0-index)
     #    if laserNum<0 or laserNum>=interface.MAX_LASERS:
@@ -467,7 +514,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         sender = self.dasInterface.hostToDspSender
         ts = timestamp.getTimestamp()
         sender.doOperation(Operation("ACTION_SET_TIMESTAMP",[ts&0xFFFFFFFF,ts>>32]))
-    
+        
     def setSingleScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeSingleMode)
 
@@ -721,6 +768,14 @@ class Driver(SharedTypes.Singleton):
             name="CRDI RD Results Broadcaster",logFunc=Log)
         self.lastSaveDasState = 0
 
+    def nudgeDasTimestamp(self):
+        """Makes incremental change in DAS timestamp to bring it closer to the host timestamp,
+        if the two timestamps are within NUDGE_LIMIT. Otherwise the DAS timestamp is set equal
+        to that of the host."""
+        sender = self.dasInterface.hostToDspSender
+        ts = timestamp.getTimestamp()
+        sender.doOperation(Operation("ACTION_NUDGE_TIMESTAMP",[ts&0xFFFFFFFF,ts>>32]))
+        
     def run(self):
         def messageProcessor(data):
             ts, msg = data
@@ -765,9 +820,10 @@ class Driver(SharedTypes.Singleton):
                     timeSoFar += sensorHandler.process(max(0.05,0.2-timeSoFar))
                     timeSoFar += ringdownHandler.process(max(0.05,0.5-timeSoFar))
                     daemon.handleRequests(max(0.005,0.5-timeSoFar))
-                    # Periodically save the state of the DAS
+                    # Periodically save the state of the DAS and nudge the DAS timestamp
                     now = time.time()
                     if now > self.lastSaveDasState + 30.0:
+                        self.nudgeDasTimestamp()
                         self.dasInterface.saveDasState()
                         self.lastSaveDasState = now
                 Log("Driver RPC handler shut down")
