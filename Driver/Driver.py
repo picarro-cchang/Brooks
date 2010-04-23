@@ -435,6 +435,27 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def rdDspTimerRegisters(self):
         return self.dasInterface.hostToDspSender.rdDspTimerRegisters()
 
+    def resetDacQueue(self):
+        return self.dasInterface.hostToDspSender.resetDacQueue()
+
+    def setDacTimestamp(self,timestamp):
+        return self.dasInterface.hostToDspSender.setDacTimestamp(timestamp)
+
+    def setDacReloadCount(self,reloadCount):
+        return self.dasInterface.hostToDspSender.setDacReloadCount(reloadCount)
+    
+    def getDacTimestamp(self):
+        return self.dasInterface.hostToDspSender.getDacTimestamp()
+
+    def getDacReloadCount(self):
+        return self.dasInterface.hostToDspSender.getDacReloadCount()
+        
+    def getDacQueueFree(self):
+        return self.dasInterface.hostToDspSender.getDacQueueFree()
+
+    def getDacQueueErrors(self):
+        return self.dasInterface.hostToDspSender.getDacQueueErrors()
+        
     #def disableLaserCurrent(self,laserNum):
     #    # Turn off laser current for laserNum (0-index)
     #    if laserNum<0 or laserNum>=interface.MAX_LASERS:

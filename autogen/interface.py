@@ -65,8 +65,6 @@ ERROR_RD_BAD_RINGDOWN = -15
 error_messages.append("Bad ringdown")
 ERROR_RD_INSUFFICIENT_DATA = -16
 error_messages.append("Insufficient data for ringdown calculation")
-WARNING_DAS_TIMESTAMP_DISCONTINUOUS = -17
-error_messages.append("Difference between timestamps was so large that DSP timestamp was reset")
 
 class DataType(Union):
     _fields_ = [
@@ -461,7 +459,7 @@ RDSIM_EXTRA = 4
 WLM_ADC_WIDTH = 16
 # Bad I2C read value
 I2C_READ_ERROR = 0x80000000
-# Time error (ms) beyond which analyzer timestamp is set to host timestamp
+# Time error (ms) beyond which fast correction takes place
 NUDGE_LIMIT = 5000
 # Do not adjust if timestamps agree within this window (ms)
 NUDGE_WINDOW = 20
