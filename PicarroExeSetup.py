@@ -62,6 +62,7 @@ sys.path.append("Supervisor")
 sys.path.append("Utilities")
 sys.path.append("Utilities/RemoteAccess")
 sys.path.append("Utilities/DiagDataCollector")
+sys.path.append("Utilities/SupervisorLauncher")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -137,14 +138,17 @@ Fitter = Target(description = "Fitter", # used for the versioninfo resource
 ################################################################
 
 # And now to the main setup routine...
-exclusionList = ["Tkconstants","Tkinter","tcl"]
+exclusionList = ["Tkconstants","Tkinter","tcl", '_gtkagg', '_tkagg', '_agg2', '_cairo', '_cocoaagg',
+                '_fltkagg', '_gtk', '_gtkcairo', ]
 inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
                  "email.mime.multipart","email.mime.image","email.mime.text",
-                 "email.mime.base","scipy.interpolate","scipy.misc"]
-hex_images = glob.glob("Utilities/DasMaintenanceGui/Images/*.hex")
-hex_images = hex_images + glob.glob("Utilities/DasMaintenanceGui/Images/*.xsvf")
-hex_images = hex_images + glob.glob("Utilities/DasMaintenanceGui/Images/*.iic")
-hex_images = hex_images + glob.glob("../SrcCode/CypressUSB/Drivers/*.*")
+                 "email.mime.base","scipy.interpolate","scipy.misc",
+                 "sip", "matplotlib.backends",  "matplotlib.backends.backend_wxagg",
+                 "matplotlib.figure","pylab", "numpy", "matplotlib.numerix.fft",
+                 "matplotlib.numerix.linear_algebra", "matplotlib.numerix.random_array"]
+dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll']
+
+hex_images = glob.glob("../SrcCode/CypressUSB/Drivers/*.*")
 hex_images = hex_images + [ "../SrcCode/CypressUSB/analyzer/analyzerUsb.hex", 
                             "../SrcCode/DSP/src/Debug/dspMain.hex",
                             "../SrcCode/MyHDL/Spartan3/top_io_map.bit"]
@@ -156,7 +160,8 @@ setup(version = "1.0",
                                    optimize = 1,
                                    bundle_files = 1,
                                    excludes = exclusionList,
-                                   includes = inclusionList)
+                                   includes = inclusionList,
+                                   dll_excludes = dllexclusionList)
                      ),
       # targets to build...
       console = ["RDFrequencyConverter/RDFrequencyConverter.py",
@@ -178,6 +183,8 @@ setup(version = "1.0",
                  "Supervisor/Supervisor.py",
                  "Utilities/RemoteAccess/RemoteAccess.py",
                  "Utilities/DiagDataCollector/DiagDataCollector.py",
+                 "Utilities/SupervisorLauncher/SupervisorLauncher.py",
+                 "Utilities/SupervisorLauncher/StopSupervisor.py",
                  "../SrcCode/Utilities/CalibrateSystem.py",
                  "../SrcCode/Utilities/AdjustWlmOffset.py",
                  "../SrcCode/Utilities/ExamineRawRD.py",
@@ -207,8 +214,13 @@ setup(version = "1.0",
                            "QuickGui/LEDoff.ico",
                            "QuickGui/LEDoff2.ico",
                            "QuickGui/LEDred2.ico",
-                           "QuickGui/logo.png",
-                           ]),
+                           "QuickGui/logo.png"]),
+                    (r'mpl-data', glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\*.*')),
+                    # Because matplotlibrc does not have an extension, glob does not find it (at least I think that's why)
+                    # So add it manually here:
+                    (r'mpl-data', [r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\matplotlibrc']),
+                    (r'mpl-data\images',glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\images\*.*')),
+                    (r'mpl-data\fonts',glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\fonts\*.*')),
                     ("Images", hex_images),
                     ]
-      )
+    )
