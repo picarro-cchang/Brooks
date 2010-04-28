@@ -139,7 +139,17 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Fetches the current cavity pressure.
         """
         return self.rdDasReg("CAVITY_PRESSURE_REGISTER")
-   
+
+    def getProportionalValves(self):
+        """Fetches settings of inlet and output proportional valves.
+        """
+        return self.rdDasReg("VALVE_CNTRL_INLET_VALVE_REGISTER"),self.rdDasReg("VALVE_CNTRL_OUTLET_VALVE_REGISTER")
+
+    def getCavityTemperatureAndSetpoint(self):
+        """Fetches cavity temperature and setpoint
+        """
+        return self.rdDasReg("CAVITY_TEMPERATURE_REGISTER"),self.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
+        
     def getValveCtrlState(self):
         """Get the current valve control state. Valid values are:
             0: Disabled (=VALVE_CNTRL_DisabledState)
@@ -527,6 +537,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def stopScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
 
+    def scanIdle(self):
+        return self.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState
+    
     def rdEnvToString(self,index,envClass):
         return ObjAsString(self.dasInterface.hostToDspSender.rdEnv(index,envClass))
         
@@ -665,6 +678,14 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_ETA2_OFFSET",int(hdrDict['etalon2_offset']+0.5))
         self.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_REF2_OFFSET",int(hdrDict['reference2_offset']+0.5))
     
+    def resetDas(self):
+        Log("Reset DAS called",Level=3)
+        return INST_ERROR_OKAY
+        
+    def stopLaserControl(self):
+        Log("Stop laser control called",Level=3)
+        return INST_ERROR_OKAY
+        
 class StreamTableType(tables.IsDescription):
     time = tables.Int64Col()
     streamNum = tables.Int32Col()

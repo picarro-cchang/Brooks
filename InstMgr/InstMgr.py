@@ -12,6 +12,11 @@ Purpose:
     4. Instrument Error handling and Health Monitoring
     5. System wide procedures
        - Start and stop measuring commands.
+       
+The instrument manager state transition methods such as _EnterWarming, _EnterMeasure etc can be called from many 
+  different places, including RPCs (which are served in a separate thread). They perform actions and then return. 
+  The _Monitor method loops around in the main thread and periodically calls RPCs from other applications. From 
+  the data collected, it updates the instrument manager status flags and may call the state transition methods.
 
 File History:
     06-10-xx al   In progress
@@ -35,6 +40,13 @@ File History:
     08-09-18 alex Replaced ConfigParser with CustomConfigObj
     09-10-21 alex Replaced CalManager with RDFrequencyConverter. Added an option to run without SampleManager.
     10-02-25 sze  When SampleManager is disabled, do not adjust valves
+    10-04-26 sze  Allow flow to be established in the Monitor if the valves are all closed, whether or not 
+                   we are in measuring mode. It is up to the sample manager to check that the cavity temperature
+                   is not too far off to protect the cavity from condensation.
+    10-04-27 sze  Modified error recovery features for G2000 analyzer. Provide an RPC to trigger a simulated error condition.
+                    Make the warming state be the entry point for recovering from problems. During monitoring, check if the
+                    measurement system is not enabled, and enable it as necessary. Changed GetStateRpc to return a dictionary
+                    of states.
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -245,6 +257,7 @@ class ConfigurationOptions(object):
         self.StartAppType = 0
         self.TempLockTimeout = 120  # 120 minutes
         self.PressureLockTimeout = 5 # 5 minutes
+        self.AutoRestartFlow = True # Flow restarts automatically if valves are disabled
 class RpcServerThread(threading.Thread):
     def __init__(self, RpcServer, ExitFunction):
         threading.Thread.__init__(self)
@@ -333,6 +346,7 @@ class InstMgr(object):
         self.RpcServer.register_function(self.INSTMGR_startFlowRpc)
         self.RpcServer.register_function(self.INSTMGR_stopFlowRpc)
         self.RpcServer.register_function(self.INSTMGR_disablePumpRpc)
+        self.RpcServer.register_function(self.INSTMGR_simulateErrorRpc)
         self.RpcServer.register_function(self.INSTMGR_GetStateRpc)
         self.RpcServer.register_function(self.INSTMGR_SendDisplayMessageRpc)
         self.RpcServer.register_function(self.INSTMGR_SetInstrumentModeRpc)
@@ -368,10 +382,10 @@ class InstMgr(object):
     def _HandleError(self, error):
         """ Handles error recovery scenarios.  DO NOT CALL from within _StateHandler to
             avoid recursion."""
-        Log("Handling Error %s." % error_info[-error].name)
+        Log("Handling Error %s." % error_info[-error].name, Level = 2)
 
         errorRec = error_info[-error].errorRec
-        Log("Error recovery action: %s" % errorActionDict[errorRec])
+        Log("Error recovery action: %s" % errorActionDict[errorRec], Level = 2)
         if errorRec == CLEAR_ERROR:
             rpcPortNum = error_info[-error].rpcPortNum
             if rpcPortNum in self.rpcDict:
@@ -416,7 +430,9 @@ class InstMgr(object):
     def _EnterWarming(self):
         """ called when entering warming state """
         self._SendDisplayMessage("Warming...")
-
+        self.MeasSysRpc.Disable()
+        self.DataMgrRpc.Disable()
+        
         self.cavityTempLockCount = 0
         self.warmChamberTempLockCount = 0
         self._ClearStatus(INSTMGR_STATUS_READY)
@@ -497,28 +513,21 @@ class InstMgr(object):
             Log("Uploading warmbox cal failed %d" % status)
             return INST_ERROR_DAS_CAL_WRITE_FAILED
 
-        if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
-            if self.noSampleMgr:
-                pass
-                #myThread = threading.Thread(target=self.SampleMgrRpc.FlowStart)
-                #myThread.setDaemon(True)
-                #myThread.start()
-            else:
-                self.SampleMgrRpc.FlowStart()
-            self.pressureLockCount = 0
-            self.MeasuringState = MEAS_STATE_PRESSURE_STAB
-            self._SetStatus(INSTMGR_STATUS_GAS_FLOWING)
-            self._SendDisplayMessage("Pressure stabilizing...")
-            self.LockedStatus[PRESSURE_LOCKED_STATUS] = "Unlocked"
-        else:
-            return INST_ERROR_INVALID_SAMPLE_MGR_MODE
-            
-        # go into warming state and wait for temperatures to stabilize.
+        try:
+            self.SampleMgrRpc._SetMode(self.Config.sampleMgrMode)
+        except:
+            tbMsg = traceback.format_exc()
+            Log("SampleMgr mode set: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            return INST_ERROR_SAMPLE_MGR_RPC_FAILED
+
+        # go into warming state and wait for temperatures and pressure to stabilize.
         self.State = INSTMGR_STATE_WARMING
         self.WarmingState = WARMING_STATE_TEMP_STAB
         self.LockedStatus = [ "Unlocked", "Unlocked", "Unlocked", "Unlocked" ]
         self._SetStatus(INSTMGR_STATUS_WARMING_UP)
-        self._SendDisplayMessage("Temp stabilizing...")
+        self.MeasuringState = MEAS_STATE_PRESSURE_STAB
+        self.LockedStatus[PRESSURE_LOCKED_STATUS] = "Unlocked"
+        self._SendDisplayMessage("Temp and pressure stabilizing...")
 
         return INST_ERROR_OKAY
         
@@ -526,12 +535,6 @@ class InstMgr(object):
         """ called when entering measuring state """
         self._SendDisplayMessage("Entering Measuring")
 
-        try:
-            self.SampleMgrRpc._SetMode(self.Config.sampleMgrMode)
-        except:
-            tbMsg = traceback.format_exc()
-            Log("SampleMgr mode set: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-            return INST_ERROR_SAMPLE_MGR_RPC_FAILED
             
         # Wait for up to 5s for the measurement system to get into READY or ENABLED state
         
@@ -581,17 +584,17 @@ class InstMgr(object):
             Log("DataMgr Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
             return INST_ERROR_DATA_MANAGER_RPC_FAILED
 
-        if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
-            try:
-                if not self.noSampleMgr: self.SampleMgrRpc.FlowStart()
-            except:
-                tbMsg = traceback.format_exc()
-                Log("Start Flow: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-                return INST_ERROR_SAMPLE_MGR_RPC_FAILED
+        #if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
+        #    try:
+        #        if not self.noSampleMgr: self.SampleMgrRpc.FlowStart()
+        #    except:
+        #        tbMsg = traceback.format_exc()
+        #        Log("Start Flow: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+        #        return INST_ERROR_SAMPLE_MGR_RPC_FAILED
 
             self.pressureLockCount = 0
             self.MeasuringState = MEAS_STATE_PRESSURE_STAB
-            self._SetStatus(INSTMGR_STATUS_GAS_FLOWING)
+        #    self._SetStatus(INSTMGR_STATUS_GAS_FLOWING)
             self._SendDisplayMessage("Pressure stabilizing...")
             self.LockedStatus[PRESSURE_LOCKED_STATUS] = "Unlocked"
             return INST_ERROR_OKAY
@@ -616,12 +619,12 @@ class InstMgr(object):
                 Log("Stop Flow: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
                 return INST_ERROR_SAMPLE_MGR_RPC_FAILED
 
-            try:
-                self.MeasSysRpc.Disable()
-            except:
-                tbMsg = traceback.format_exc()
-                Log("MeasSys Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-                return INST_ERROR_MEAS_SYS_RPC_FAILED
+        try:
+            self.MeasSysRpc.Disable()
+        except:
+            tbMsg = traceback.format_exc()
+            Log("MeasSys Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            return INST_ERROR_MEAS_SYS_RPC_FAILED
 
             # try:
                 # self.DataMgrRpc.Disable()
@@ -648,47 +651,28 @@ class InstMgr(object):
             Log("DataMgr Set mode error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
             return INST_ERROR_DATA_MANAGER_RPC_FAILED
 
-        if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
-            try:
-                self.MeasSysRpc.Enable()
-            except:
-                tbMsg = traceback.format_exc()
-                Log("MeasSys Enable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-                return INST_ERROR_MEAS_SYS_RPC_FAILED
+        try:
+            self.MeasSysRpc.Enable()
+        except:
+            tbMsg = traceback.format_exc()
+            Log("MeasSys Enable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            return INST_ERROR_MEAS_SYS_RPC_FAILED
 
-            try:
-                self.DataMgrRpc.Enable()
-            except:
-                tbMsg = traceback.format_exc()
-                Log("DataMgr Enable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-                return INST_ERROR_DATA_MANAGER_RPC_FAILED
+        try:
+            self.DataMgrRpc.Enable()
+        except:
+            tbMsg = traceback.format_exc()
+            Log("DataMgr Enable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            return INST_ERROR_DATA_MANAGER_RPC_FAILED
 
-            self.MeasuringState = MEAS_STATE_CONT_MEASURING
-            self._SetStatus(INSTMGR_STATUS_MEAS_ACTIVE)
+        self.MeasuringState = MEAS_STATE_CONT_MEASURING
+        self._SetStatus(INSTMGR_STATUS_MEAS_ACTIVE)
 
-            self.restartCount = 0
-            self.dasRestartCount = 0
-            self.measRestartCount = 0
-            return INST_ERROR_OKAY
-        #elif self.Config.sampleMgrMode == samplemgr_batch_mode:
-    #      try:
-    #        self.MeasSysRpc.Enable()
-    #      except:
-    #        tbMsg = traceback.format_exc()
-    #        Log("MeasSys Enable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-    #        return INST_ERROR_MEAS_SYS_RPC_FAILED
-    #      try:
-    #        self.DataMgrRpc.Enable()
-    #      except:
-    #        tbMsg = traceback.format_exc()
-    #        Log("DataMgr Enable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-    #        return INST_ERROR_DATA_MANAGER_RPC_FAILED
-
-            #self.MeasuringState = MEAS_STATE_BATCH_MEASURING
-            #NOT Support yet
-        # return INST_ERROR_OKAY
-        else:
-            return INST_ERROR_INVALID_SAMPLE_MGR_MODE
+        self.restartCount = 0
+        self.dasRestartCount = 0
+        self.measRestartCount = 0
+        return INST_ERROR_OKAY
+        
     def _SamplePrepare(self):
         """ called to prepare sample """
         self._SendDisplayMessage("Preparing Sample")
@@ -703,12 +687,12 @@ class InstMgr(object):
         return INST_ERROR_INVALID_SAMPLE_MGR_MODE
     def _ResetSequence(self):
         """ perform reset sequence"""
-
-        try:
-            self.SampleMgrRpc.FlowPumpDisable()
-        except:
-            tbMsg = traceback.format_exc()
-            Log("Sample Mgr Rpc: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+        # Cannot turn off pump with G2000
+        #try:
+        #    self.SampleMgrRpc.FlowPumpDisable()
+        #except:
+        #    tbMsg = traceback.format_exc()
+        #    Log("Sample Mgr Rpc: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
 
         try:
             self.MeasSysRpc.Disable()
@@ -723,11 +707,7 @@ class InstMgr(object):
             Log("DataMgr Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
             return INST_ERROR_DATA_MANAGER_RPC_FAILED
 
-        try:
-            self.DriverRpc.stopLaserControl()
-        except:
-            tbMsg = traceback.format_exc()
-            Log("Stop laser control: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+        Log("Analyzer operation halted",Level = 3)
 
         try:
             self.DriverRpc.hostReady('False')
@@ -779,6 +759,7 @@ class InstMgr(object):
         status = INST_ERROR_OKAY
 
         if event == EVENT_RESTART_INST:
+        
             status = self._EnterWarming()
         elif event == EVENT_RESTART_DAS:
             try:
@@ -896,6 +877,12 @@ class InstMgr(object):
                 lockStatus = self.DriverRpc.getLockStatus()
                 dasState = self.DriverRpc.DAS_GetState(0)
                 pressure = self.DriverRpc.getPressureReading()
+                inletValve, outletValve = self.DriverRpc.getProportionalValves()
+                
+                if inletValve > 0 and outletValve > 0:
+                    self._SetStatus(INSTMGR_STATUS_GAS_FLOWING)
+                else:
+                    self._ClearStatus(INSTMGR_STATUS_GAS_FLOWING)
 
                 sampleMgrStatus = self.SampleMgrRpc.GetStatus()
                 if (( sampleMgrStatus & SAMPLEMGR_STATUS_STABLE ) == SAMPLEMGR_STATUS_STABLE ):
@@ -903,15 +890,11 @@ class InstMgr(object):
                 else:
                     pressureLocked = "Unlocked"
 
-                if self.DriverRpc.rdDasReg("VALVE_CNTRL_STATE_REGISTER") == interface.VALVE_CNTRL_DisabledState and \
-                   self.State == INSTMGR_STATE_MEASURING:
+                if self.Config.AutoRestartFlow and self.DriverRpc.rdDasReg("VALVE_CNTRL_STATE_REGISTER") == interface.VALVE_CNTRL_DisabledState:
                     if self.noSampleMgr:
                         pass
-                        #self.DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", interface.VALVE_CNTRL_OutletControlState)
-                        #myThread = threading.Thread(target=self.SampleMgrRpc.FlowStart)
-                        #myThread.setDaemon(True)
-                        #myThread.start()
                     else:
+                        self.MeasuringState = MEAS_STATE_PRESSURE_STAB
                         self.SampleMgrRpc.FlowStart()
     
             except Exception, e:
@@ -1006,7 +989,15 @@ class InstMgr(object):
                         status = self._StateHandler(EVENT_SHUTDOWN_INST)
                         # ask supervisor to terminate all applications including INSTMGR
                         self.SupervisorRpc.TerminateApplications(True)
-
+                        
+                if self.MeasuringState in [MEAS_STATE_CONT_MEASURING, MEAS_STATE_BATCH_MEASURING]:
+                    try:
+                        stateDict = self.MeasSysRpc.GetStates()
+                        if stateDict['State_MeasSystem'] == 'READY':
+                            self.MeasSysRpc.Enable()
+                    except:
+                        pass
+                        
             time.sleep(5)
     def _PurgingCompleteCallback(self):
         self._SendDisplayMessage("Purge complete")
@@ -1163,38 +1154,35 @@ class InstMgr(object):
         else:
             return INSTMGR_RPC_SUCCESS
     def INSTMGR_startFlowRpc(self):
-        if self.State == INSTMGR_STATE_MEASURING and self.MeasuringState == MEAS_STATE_PRESSURE_STAB:
-            # don't allow command in pressure stabilization state.
-            return INSTMGR_RPC_NOT_READY
+        status = self.SampleMgrRpc.FlowStart()
+        if status == INST_ERROR_OKAY:
+            return INSTMGR_RPC_SUCCESS
         else:
-            self._SetStatus(INSTMGR_STATUS_GAS_FLOWING)
-            status = self.SampleMgrRpc.FlowStart()
-            if status == INST_ERROR_OKAY:
-                return INSTMGR_RPC_SUCCESS
-            else:
-                return INSTMGR_RPC_FAILED
+            return INSTMGR_RPC_FAILED
     def INSTMGR_stopFlowRpc(self):
-        if self.State == INSTMGR_STATE_MEASURING and self.MeasuringState == MEAS_STATE_PRESSURE_STAB:
-            # don't allow command in pressure stabilization state.
-            return INSTMGR_RPC_NOT_READY
+        status = self.SampleMgrRpc.FlowStop()
+        if status == INST_ERROR_OKAY:
+            return INSTMGR_RPC_SUCCESS
         else:
-            self._ClearStatus(INSTMGR_STATUS_GAS_FLOWING)
-            status = self.SampleMgrRpc.FlowStop()
-            if status == INST_ERROR_OKAY:
-                return INSTMGR_RPC_SUCCESS
-            else:
-                return INSTMGR_RPC_FAILED
+            return INSTMGR_RPC_FAILED
+            
+    def INSTMGR_simulateErrorRpc(self,error):
+        # Force instrument to handle the specified error
+        return self._HandleError(error)
+        
     def INSTMGR_disablePumpRpc(self):
-        if self.State == INSTMGR_STATE_MEASURING and self.MeasuringState == MEAS_STATE_PRESSURE_STAB:
-            # don't allow command in pressure stabilization state.
-            return INSTMGR_RPC_NOT_READY
-        else:
-            self._ClearStatus(INSTMGR_STATUS_GAS_FLOWING)
-            status = self.SampleMgrRpc.FlowPumpDisable()
-            if status == INST_ERROR_OKAY:
-                return INSTMGR_RPC_SUCCESS
-            else:
-                return INSTMGR_RPC_FAILED
+        # No pump disable in G2000
+        return INSTMGR_RPC_SUCCESS
+        #if self.State == INSTMGR_STATE_MEASURING and self.MeasuringState == MEAS_STATE_PRESSURE_STAB:
+        #    # don't allow command in pressure stabilization state.
+        #    return INSTMGR_RPC_NOT_READY
+        #else:
+        #    self._ClearStatus(INSTMGR_STATUS_GAS_FLOWING)
+        #    status = self.SampleMgrRpc.FlowPumpDisable()
+        #    if status == INST_ERROR_OKAY:
+        #        return INSTMGR_RPC_SUCCESS
+        #    else:
+        #        return INSTMGR_RPC_FAILED
     def INSTMGR_StartSelfTestRpc(self, selfTestType):
         Log("self test not supported")
     def INSTMGR_StopSelfTestRpc(self, selfTestType):
@@ -1251,13 +1239,10 @@ class InstMgr(object):
         return INSTMGR_RPC_SUCCESS
     def INSTMGR_GetStatusRpc(self):
         return self.AppStatus._Status
-    def INSTMGR_GetStateRpc(self, type):
-        if type == INSTMGR_STATE:
-            return self.State
-        elif type == INSTMGR_WARMING_STATE:
-            return self.WarmingState
-        elif type == INSTMGR_MEASURING_STATE:
-            return self.MeasuringState
+    def INSTMGR_GetStateRpc(self):
+        return {"InstMgr":StateName[self.State], 
+                "Warming":WarmingStateName[self.WarmingState],
+                "Measuring":MeasStateName[self.MeasuringState]}
     def INSTMGR_SendDisplayMessageRpc(self, message):
         self._SendDisplayMessage(message)
         return INSTMGR_RPC_SUCCESS

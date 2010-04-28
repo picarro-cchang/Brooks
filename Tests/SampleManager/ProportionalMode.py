@@ -66,7 +66,10 @@ class ProportionalMode(SampleManagerBaseMode):
     step       = self.proportional_step
     try:
         iterations = deltapos/step
-        self._LPC_StepValve( valve=stepValve, start=startpos, step=step, iterations=iterations, interval=2 ) 
+        status = self._LPC_StepValve( valve=stepValve, start=startpos, step=step, iterations=iterations, interval=2 ) 
+        if status==False:
+          print "Step valve failed."
+          return False
     except:
         pass
     self._LPC_SetValve( stepValve, targetpos )
@@ -79,13 +82,14 @@ class ProportionalMode(SampleManagerBaseMode):
       timeout=600, checkInterval=1, lockCount=5 )
     if status==False:
       print "Pressure failed to stabilize."
-      #return False
+      return False
     print "After pressure stabilization"
     # N.B. Assert SAMPLEMGR_STATUS_FLOW_STARTED to allow measurements to start
     self._setStatus( SAMPLEMGR_STATUS_FLOW_STARTED ) 
 
   def RPC_FlowStop(self):
     """STOP FLOW"""
+    print "RPC_FlowStop"
     if self.valve_mode == INLETVALVE:
         self._LPC_CloseValve(OUTLETVALVE)
     else:
@@ -108,6 +112,8 @@ class ProportionalMode(SampleManagerBaseMode):
     else:
         self._LPC_SetValveControl( interface.VALVE_CNTRL_InletControlState )
         self._LPC_WaitPressureStabilize( self.fill_pressure_sp_torr, tolerance=0.001, timeout=600, checkInterval=0.5 )
+        if status==False:
+            print "Pressure failed to stabilize."
 
     self._LPC_StopValveControl()
     self._LPC_WritePressureSetpoint( self.operate_pressure_sp_torr )

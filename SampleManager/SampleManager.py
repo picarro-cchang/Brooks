@@ -12,7 +12,10 @@ File History:
     08-12-10 alex  Made constant InletValve and OutletValve all uppercase
     08-12-23 alex  Added RPC call to skip pressure check in _Monitor() (in order to run pulse holder)
     09-12-14 alex  Cleaned up the code for G2000 platform
-
+    10-04-27 sze   Added RPC to allow scripts to check cavity temperature and setpoint to see if it is safe to start
+                    flow. Modify StepValve and WaitPressureStabilize to terminate early with a returned value of False
+                    if the valve controller is disabled during the operation.
+                    
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -150,6 +153,10 @@ class SampleManagerBaseMode(object):
         """Get pressure readings"""
         return self._DriverRpc.getPressureReading()
         #return self._pressure
+        
+    def _RPC_ReadCavityTemperatureAndSetpoint(self):
+        """Get cavity temperature and setpoint to see if it is safe to start flow"""
+        return self._DriverRpc.getCavityTemperatureAndSetpoint()
 
     def LpcWrapper(func):
         def wrapper(self,*args,**kwargs):
@@ -207,6 +214,7 @@ class SampleManagerBaseMode(object):
     @LpcWrapper
     def _LPC_StopValveControl(self):
         """ Stop Valve Control """
+        print "StopValveControl called"
         self._LPC_SetValveControl(interface.VALVE_CNTRL_DisabledState)
 
     @LpcWrapper
@@ -246,6 +254,9 @@ class SampleManagerBaseMode(object):
         index        = 0
         inRangeCount = 0
         while index<timeout and self._terminateCalls==False:
+            # Early exit if valves were closed by the hardware
+            if self._RPC_GetValveControl() == interface.VALVE_CNTRL_DisabledState:
+                return False
             pressure = self._RPC_ReadPressure()
             inRange  = (abs(pressure-setpoint) <= tolerance*setpoint)
             if inRange:
@@ -284,12 +295,10 @@ class SampleManagerBaseMode(object):
                     index+=1
                 time.sleep(interval)
                 prevPressure = pressure
-            else:
-                self._LPC_SetValveControl(self._valveCtrl)
-                index = 0
-                value = start
-                prevPressure = self._RPC_ReadPressure()
-                
+            else: # Hardware entered disabled state
+                return False
+        return True
+        
     @LpcWrapper
     def _LPC_PumpDownCavity( self, tolerance=0.2, timeout=300,interval=DEFAULT_SLEEP_INTERVAL, lockCount=1 ):
         """ Use outlet valve to pump down cavity """
@@ -703,7 +712,7 @@ class SampleManager(object):
     # RPCs exported
 
     def RPC__SetMode( self, modeName ):
-
+        print "Mode set to ", modeName
         if self.mode != None:
 
             if modeName == self.modeName:
@@ -760,7 +769,7 @@ class SampleManager(object):
     @RpcWrapStateChangeCalls
     def RPC_FlowStart(self):
         """START FLOW"""
-
+        
     @RpcWrapStateChangeCalls
     def RPC_FlowStop(self):
         """STOP FLOW"""

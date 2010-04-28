@@ -52,6 +52,7 @@ Notes:
                   is False). Create new file if data columns change and filter_enabled is False. If filter_enabled
                   is True, the data file always contains the specified columns, and unfilled values get zero entries
     10-03-18 sze  Record time to millisecond resolution to facilitate timing of data reporting rate
+    10-04-27 sze  Report bad data flagged by measurement system by setting bit 16 of the alarm status column
     
 Copyright (c) 2010 Picarro, Inc. All rights reserved 
 """
@@ -537,7 +538,7 @@ class DataLogger(object):
                 if logName in self.UserLogDict:
                     dataLog = self.UserLogDict[logName]
                     if dataLog.Enabled:
-                        dataLog.Write(self.md.Time, self.md.Data, dataLog.AlarmStatus)
+                        dataLog.Write(self.md.Time, self.md.Data, dataLog.AlarmStatus + 65536*(1-self.md.MeasGood))
                     # Remove Active_ prefix from files for logs which are being stopped
                     if dataLog.StopPending:
                         dataLog.CopyToMailboxAndArchive()
@@ -545,7 +546,7 @@ class DataLogger(object):
                 if logName in self.PrivateLogDict:
                     dataLog = self.PrivateLogDict[logName]
                     if dataLog.Enabled:
-                        dataLog.Write(self.md.Time, self.md.Data, dataLog.AlarmStatus)
+                        dataLog.Write(self.md.Time, self.md.Data, dataLog.AlarmStatus + 65536*(1-self.md.MeasGood))
                     # Remove the Active_ prefix from files for logs which are being stopped
                     if dataLog.StopPending:
                         dataLog.CopyToMailboxAndArchive()

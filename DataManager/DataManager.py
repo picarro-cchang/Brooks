@@ -29,7 +29,7 @@ File History:
     2009-10-16 alex  Added an option to run DataManager without InstMgr
     2010-02-03 sze   Execute synchronous and data-driven scripts within a single thread in order to avoid using a lock
     2010-03-28 sze   Give scripts initiated by forwarding data priority over those initiated by collected data
-
+    2010-04-27 sze   Not having an analyzer for some data is now logged, rather than causing an exception.
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -969,6 +969,11 @@ class DataManager(object):
         self.LatestInstMgrStatus = obj.status
 
     def _HandleState_INIT(self):
+        try:
+            self.RPC_StartInstMgrListener()
+            print "Started instrument manager status listener"
+        except:
+            pass
         self.ReInitRequested = False
         try:
             self.InitCount += 1
@@ -1395,8 +1400,9 @@ class DataManager(object):
         if Data.Source in self.CurrentMeasMode.Analyzers:
             analyzerPath = self.CurrentMeasMode.Analyzers[Data.Source].ScriptPath
         else:
-            raise Exception("Analyzer path not found for given data source! Data source = %s, Analyzers are %s" 
-                            % (Data.Source, self.CurrentMeasMode.Analyzers.keys()))
+            Log("Analyzer path not found for given data source! Data source = %s, Analyzers are %s" 
+                   % (Data.Source, self.CurrentMeasMode.Analyzers.keys()),Level=2)
+            return
         if not self.AnalyzerCode.has_key(analyzerPath):
             #may not always analyze!  Might just let the history collect
             # - eg: with sensor data... might just set up a sync script to report up

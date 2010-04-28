@@ -34,7 +34,11 @@ File History:
     10-03-17  sze  Make all the dictionaries in a spectrum (rdData, sensorData and controlData) have values which 
                     are lists or arrays. This improves compatibility with HDF5 storage of RdfData (spectrum) objects
                     in which these dictionaries map to tables.
-Copyright (c) 2010 Picarro, Inc. All rights reserved
+    10-04-27  sze  Added error recovery features. Driver scan is restarted when Measurement System is in enabled mode and 
+                    is stopped when the measurement system is initialized or is in the ready mode.
+    
+    Copyright (c) 2010 Picarro, Inc. All rights reserved
+
 """
 
 if __name__ != "__main__":
@@ -469,7 +473,7 @@ class MeasSystem(object):
 
         #Do any state initialization that is needed...
         if NewState == STATE_READY:
-            pass
+            Driver.stopScan()
         elif NewState == STATE_ENABLED:
             self._UninterruptedSpectrumCount = 0
         elif NewState == STATE_ERROR:
@@ -492,6 +496,8 @@ class MeasSystem(object):
             Level = eventLevel)
     def _HandleState_INIT(self):
         try:
+            ##Stop any active scan
+            Driver.stopScan()
             ##Load the main application configuration settings...
             self.Config.Load(self.ConfigPath)
 
@@ -579,6 +585,9 @@ class MeasSystem(object):
                 exitState = STATE_READY
             else:
                 if self._UninterruptedSpectrumCount == 0:
+                    Driver.startScan()
+                # If the scan has been stopped for whatever reason, restart it
+                if Driver.scanIdle():
                     Driver.startScan()
                 spectrum = None
                 try:
