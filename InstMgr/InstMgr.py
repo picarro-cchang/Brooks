@@ -997,6 +997,12 @@ class InstMgr(object):
                             self.MeasSysRpc.Enable()
                     except:
                         pass
+                    try:
+                        stateDict = self.DataMgrRpc.GetState()
+                        if stateDict['State'] == 'READY':
+                            self.DataMgrRpc.Enable()
+                    except:
+                        pass
                         
             time.sleep(5)
     def _PurgingCompleteCallback(self):
