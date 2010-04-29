@@ -170,6 +170,8 @@ class SpectrumCollector(object):
         self.tempRdDataBuffer = None
         self.spectrumID = 0
         self.schemeTable = 0
+        self.lastSpectrumID = 0
+        self.lastSchemeTable = 0
         self.tagalongData = {}
         self.controlData = {}            
         self.numPts = 0
@@ -210,8 +212,10 @@ class SpectrumCollector(object):
                 self.rdQueueGetLastTime = now
                
                 #localRdTime = Driver.hostGetTicks()
+                self.lastSchemeTable = self.schemeTable
                 self.schemeTable = rdData.schemeTable
                 thisSubSchemeID = rdData.subschemeId
+                self.lastSpectrumID = self.spectrumID
                 self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
                 thisCount = rdData.count
                 
@@ -360,8 +364,8 @@ class SpectrumCollector(object):
             self.rdfDict["sensorData"][s] = [self.avgSensors[s]]
 
         # Add more sensor data
-        self.rdfDict["sensorData"]["SchemeID"] = [self.schemeTable]
-        self.rdfDict["sensorData"]["SpectrumID"] = [self.spectrumID]
+        self.rdfDict["sensorData"]["SchemeID"] = [self.lastSchemeTable]
+        self.rdfDict["sensorData"]["SpectrumID"] = [self.lastSpectrumID]
         self.rdfDict["sensorData"]["SensorTime"] = [unixTime(self.rdfDict["sensorData"]["timestamp"][0])]
 
         #Write the tagalong data values...
@@ -416,7 +420,7 @@ class SpectrumCollector(object):
                         LogExc("Archiver call error")
             else:
                 # Pickle the rdfDict 
-                filename = "%03d_%013d.rdf" % (self.spectrumID, int(time.time()*1000))
+                filename = "%03d_%013d.rdf" % (self.lastSpectrumID, int(time.time()*1000))
                 self.streamPath = os.path.join(self.streamDir, filename)
                 self.streamFP = file(self.streamPath, "wb")
                 self.streamFP.write(cPickle.dumps(self.rdfDict,cPickle.HIGHEST_PROTOCOL)) 
