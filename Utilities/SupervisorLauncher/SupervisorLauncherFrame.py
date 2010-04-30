@@ -8,11 +8,11 @@ class SupervisorLauncherFrame(wx.Frame):
     def __init__(self, typeChoices, *args, **kwds):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX)
         wx.Frame.__init__(self, *args, **kwds)
-        self.SetTitle("Picarro CRDS Software Launcher")
+        self.SetTitle("Picarro Mode Switcher")
         self.SetBackgroundColour("#E0FFFF")
         
         # labels
-        self.labelTitle = wx.StaticText(self, -1, "Picarro CRDS Software Launcher", style=wx.ALIGN_CENTRE)
+        self.labelTitle = wx.StaticText(self, -1, "Picarro Mode Switcher", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
         self.labelSelect = wx.StaticText(self, -1, "Select Measurement Mode", style=wx.ALIGN_CENTER)
