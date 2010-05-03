@@ -827,6 +827,7 @@ HARDWARE_PRESENT_PowerBoardBit = 5 # Power Board
 HARDWARE_PRESENT_WarmBoxBit = 6 # Warm Box
 HARDWARE_PRESENT_HotBoxBit = 7 # Hot Box
 HARDWARE_PRESENT_DasTempMonitorBit = 8 # Das Temp Monitor
+HARDWARE_PRESENT_AnalogInterface = 9 # Analog Interface
 
 # Dictionary for enumerated constants in HARDWARE_PRESENT_BitType
 HARDWARE_PRESENT_BitTypeDict = {}
@@ -839,6 +840,7 @@ HARDWARE_PRESENT_BitTypeDict[5] = 'HARDWARE_PRESENT_PowerBoardBit' # Power Board
 HARDWARE_PRESENT_BitTypeDict[6] = 'HARDWARE_PRESENT_WarmBoxBit' # Warm Box
 HARDWARE_PRESENT_BitTypeDict[7] = 'HARDWARE_PRESENT_HotBoxBit' # Hot Box
 HARDWARE_PRESENT_BitTypeDict[8] = 'HARDWARE_PRESENT_DasTempMonitorBit' # Das Temp Monitor
+HARDWARE_PRESENT_BitTypeDict[9] = 'HARDWARE_PRESENT_AnalogInterface' # Analog Interface
 
 # Definitions for COMM_STATUS_BITMASK
 COMM_STATUS_CompleteMask = 0x1
@@ -2375,6 +2377,8 @@ INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B = 12 # Enables laser shutdown (in automat
 INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W = 1 # Enables laser shutdown (in automatic mode) bit width
 INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B = 13 # Enables SOA shutdown (in automatic mode) bit position
 INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W = 1 # Enables SOA shutdown (in automatic mode) bit width
+INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B = 14 # Select optical switch type bit position
+INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W = 1 # Select optical switch type bit width
 
 INJECT_LASER1_COARSE_CURRENT = 1 # Sets coarse current for laser 1
 INJECT_LASER2_COARSE_CURRENT = 2 # Sets coarse current for laser 2
@@ -2874,7 +2878,7 @@ parameter_forms.append(('Tuner Parameters',__p))
 __p = []
 
 __p.append(('dsp','choices',VIRTUAL_LASER_REGISTER,'Virtual laser','',[(VIRTUAL_LASER_1,"Virtual laser 1"),(VIRTUAL_LASER_2,"Virtual laser 2"),(VIRTUAL_LASER_3,"Virtual laser 3"),(VIRTUAL_LASER_4,"Virtual laser 4"),(VIRTUAL_LASER_5,"Virtual laser 5"),(VIRTUAL_LASER_6,"Virtual laser 6"),(VIRTUAL_LASER_7,"Virtual laser 7"),(VIRTUAL_LASER_8,"Virtual laser 8"),],1,1))
-__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser selected', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', []), (16, u'Laser 2 current source', []), (32, u'Laser 3 current source', []), (64, u'Laser 4 current source', []), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', []), (256, u'Laser 2 current (in manual mode)', []), (512, u'Laser 3 current (in manual mode)', []), (1024, u'Laser 4 current (in manual mode)', []), (2048, u'SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser selected', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', []), (16, u'Laser 2 current source', []), (32, u'Laser 3 current source', []), (64, u'Laser 4 current source', []), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', []), (256, u'Laser 2 current (in manual mode)', []), (512, u'Laser 3 current (in manual mode)', []), (1024, u'Laser 4 current (in manual mode)', []), (2048, u'SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')]), (16384, u'Select optical switch type', [(0, u'2-way'), (16384, u'4-way')])],None,None,1,1))
 parameter_forms.append(('Optical Injection Parameters',__p))
 
 # Form: Spectrum Controller Parameters

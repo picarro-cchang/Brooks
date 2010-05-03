@@ -20,13 +20,13 @@ import os
 import struct
 import sys
 import tables
-import threading
 import time
 import types
 import traceback
 from numpy import array, transpose
 
 from DasConfigure import DasConfigure
+from DriverAnalogInterface import AnalogInterface
 from Host.autogen import interface
 from Host.Common import SharedTypes, version
 from Host.Common import CmdFIFO, StringPickler, timestamp
@@ -54,13 +54,14 @@ else:
 # The driver provides a serialized RPC interface for accessing the DAS hardware.
 #
 class DriverRpcHandler(SharedTypes.Singleton):
-    def __init__(self,config,dasInterface):
+    def __init__(self,driver):
         self.server = CmdFIFO.CmdFIFOServer(("", RPC_PORT_DRIVER),
                                             ServerName = "Driver",
                                             ServerDescription = "Driver for CRDS hardware",
                                             threaded = True)
-        self.config = config
-        self.dasInterface = dasInterface
+        self.config = driver.config
+        self.dasInterface = driver.dasInterface
+        self.analogInterface = driver.analogInterface
         self._register_rpc_functions()
 
     def _register_rpc_functions_for_object(self, obj):
@@ -693,6 +694,16 @@ class DriverRpcHandler(SharedTypes.Singleton):
         Log("Stop laser control called",Level=3)
         return INST_ERROR_OKAY
         
+    def sendDacSamples(self,samples):
+        """Sends a list of samples of the form [(timestamp,channel,voltage),...]
+        to the analog interface card"""
+        for timestamp,channel,voltage in samples:
+            self.analogInterface.enqueueSample(timestamp,channel,voltage)        
+            
+    def writeDacSample(self,channel,voltage):
+        """Sends a voltage immediately to the specified DAC channel"""
+        self.analogInterface.writeSample(channel,voltage)        
+        
 class StreamTableType(tables.IsDescription):
     time = tables.Int64Col()
     streamNum = tables.Int32Col()
@@ -784,7 +795,8 @@ class Driver(SharedTypes.Singleton):
         self.fpgaFile = os.path.join(basePath, self.config["Files"]["fpgaFileName"])
         self.dasInterface = DasInterface(self.stateDbFile,self.usbFile,
                                          self.dspFile,self.fpgaFile,sim)
-        self.rpcHandler = DriverRpcHandler(self.config,self.dasInterface)
+        self.analogInterface = AnalogInterface(self,self.config)
+        self.rpcHandler = DriverRpcHandler(self)
         InstrumentConfig(self.instrConfigFile)
         self.streamSaver = StreamSaver(self.config, basePath)
         self.rpcHandler._register_rpc_functions_for_object(self.streamSaver)
@@ -839,6 +851,10 @@ class Driver(SharedTypes.Singleton):
                 # type,value,trace = sys.exc_info()
                 Log("Cannot connect to instrument - please check hardware",Verbose=traceback.format_exc(),Level=3)
                 raise
+            # Initialize the analog interface
+            analogInterfacePresent = 0 != (self.dasInterface.hostToDspSender.rdRegUint("HARDWARE_PRESENT_REGISTER") & (1 << interface.HARDWARE_PRESENT_AnalogInterface))
+            print "Analog interface present: %s" % analogInterfacePresent
+            if analogInterfacePresent: self.analogInterface.initializeClock()
             # Here follows the main loop.
             Log("Starting main driver loop",Level=1)
             try:
@@ -848,6 +864,8 @@ class Driver(SharedTypes.Singleton):
                     timeSoFar += sensorHandler.process(max(0.05,0.2-timeSoFar))
                     timeSoFar += ringdownHandler.process(max(0.05,0.5-timeSoFar))
                     daemon.handleRequests(max(0.005,0.5-timeSoFar))
+                    # Service the analog interface
+                    if analogInterfacePresent: self.analogInterface.serve()
                     # Periodically save the state of the DAS and nudge the DAS timestamp
                     now = time.time()
                     if now > self.lastSaveDasState + 30.0:

@@ -69,6 +69,7 @@ class DasConfigure(SharedTypes.Singleton):
                    ("WARM_BOX_PRESENT",    1<<interface.HARDWARE_PRESENT_WarmBoxBit),
                    ("HOT_BOX_PRESENT",     1<<interface.HARDWARE_PRESENT_HotBoxBit),
                    ("DAS_TEMP_MONITOR",    1<<interface.HARDWARE_PRESENT_DasTempMonitorBit),
+                   ("ANALOG_INTERFACE",    1<<interface.HARDWARE_PRESENT_AnalogInterface),
                    ]
         mask = 0
         for key, bit in mapping:

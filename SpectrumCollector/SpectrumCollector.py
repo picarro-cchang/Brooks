@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """
 File Name: SpectrumCollector.py
 Purpose: Collects spectrum and related information to save in HDF5 files. Spectrum will be stored in a queue if specified.
