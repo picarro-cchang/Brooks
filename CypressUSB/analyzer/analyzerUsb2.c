@@ -70,11 +70,8 @@ static WORD xFIFOBC_IN = 0x0000;  // variable that contains EP6FIFOBCH/L value
 //-----------------------------------------------------------------------------
 // Variables for DAC resynchronizer
 //-----------------------------------------------------------------------------
-#define QSIZE   (1400)
+#define QSIZE   (1500)
 #define NCHANNELS (8)
-#define MAGIC_CODE 'S'
-#define MAKEWORD( h, l ) \ 
-  ( ( ( WORD )( h ) << 8 ) | ( BYTE )( l ) )
 
 struct Queue {
     unsigned short int head;
@@ -86,7 +83,7 @@ struct Queue {
 BYTE buffer[4];
 unsigned short int now = 0, divisor;
 unsigned short int next_time;
-unsigned char errorFlags = 0, data_available = 0;
+unsigned char errorFlags = 0;
 //-----------------------------------------------------------------------------
 
 void GPIF_SingleWordWrite( WORD gdata ) {
@@ -149,6 +146,17 @@ unsigned char qget(unsigned char *d)
     dac_queue.count--;
 	EA = 1;
     return 1;
+}
+
+unsigned short int qpeekTime()
+// Peek at unsigned short at head of queue without getting it
+{
+    unsigned short int value;
+    unsigned short int addr = dac_queue.head;
+    value = dac_queue.qdata[addr++];
+    if (addr == QSIZE) addr = 0;
+    value += dac_queue.qdata[addr] << 8;
+    return value;
 }
 
 void reset()
@@ -287,7 +295,7 @@ void TD_Init(void) {           // Called once at startup
 }
 
 void TD_Poll(void) {           // Called repeatedly while the device is idle
-    unsigned char b, c, i, channel;
+    unsigned char b, c, channel;
     short int delta;
     unsigned short int value;
     WORD nTransfers;
@@ -297,7 +305,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
             while(!HPI_RDY);             // wait for HPI to complete internal portion of previous transfer
             // Divide the number of bytes in FIFO by two to get number of GPIF transfers
             // N.B. The (WORD) cast is essential so that the expression is not evaluated as a byte
-            nTransfers = MAKEWORD( EP2FIFOBCH, EP2FIFOBCL );
+            nTransfers = ((WORD)(EP2FIFOBCH<<8) | EP2FIFOBCL);
             nTransfers >>= 1;
             // According to 6713 errata SPRZ191G, last 32-bit transfer should be done without autoincrement
             //  At this point, nTransfers are measured in 16-bit words
@@ -369,7 +377,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
                 while ( !( GPIFTRIG & 0x80 ) );   // poll GPIFTRIG.7 GPIF Done bit
                 SYNCDELAY;
 
-                xFIFOBC_IN = MAKEWORD(EP6FIFOBCH, EP6FIFOBCL ); // get EP6FIFOBCH/L value
+                xFIFOBC_IN = ( (WORD)( EP6FIFOBCH << 8 ) | EP6FIFOBCL ); // get EP6FIFOBCH/L value
                 if ( xFIFOBC_IN < autoinLength ) { // if pkt is short,
                     INPKTEND = 0x06;              // force a commit to the host
                 }
@@ -382,7 +390,6 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
         }
     }
 
-/*	
 	if (now == next_time) {
 		channel = 0;
 		value = now << 8;
@@ -392,43 +399,32 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
         write_dac(channel,value);
 		next_time++;
 	}
-*/    
-
-	EPIE &= ~0x20;						// Disable IRQ on EP4 output
-	if (data_available) {
-        delta = next_time - now;
-        if (delta > 0) goto cont;	// Next time has not yet come
-		data_available = 0;
-		// Check for magic code for resynchronization
-    	do {
-	    	if (!qget(&c)) goto cont;
-		} while ( c != MAGIC_CODE );
+    
+/*
+	if (dac_queue.count) {
+        delta = qpeekTime() - now;
+        if (delta > 0) goto cont;
+        if (!qget(&b)) goto cont;	// pop off timestamp
+        if (!qget(&b)) goto cont;
         // Send out data at front of queue
         if (!qget(&c)) goto cont;   // get channel mask
         channel = 0;
-        for (i=0; (i<8)&&c; i++) {
+        while (c) {
             if (c & 1) {
                 if (!qget(&b)) goto cont;	// get data
                 value = b;
                 if (!qget(&b)) goto cont;
-                value |= ((WORD)(b) << 8); 
+                value += ((WORD)(b) << 8); 
                 write_dac(channel,value);
             }
             channel++;
             c >>= 1;
         }
-		if (dac_queue.count > 0) {
-	        if (!qget(&b)) goto cont;	// pop off timestamp
-			next_time = b;
-    	    if (!qget(&b)) goto cont;
-			next_time |= ((WORD)(b) << 8);
-			data_available = 1;			// more data are still on queue
-		}
     }
 cont:
-    EPIE |= 0x20;						// Enable IRQ on EP4 output
+*/
 
-	// blink LED0 to indicate firmware is running
+    // blink LED0 to indicate firmware is running
     if (!LED_Count) {
         if (LED_Status) {
             LED_Off (bmBIT0);
@@ -854,24 +850,24 @@ void ISR_Ep2inout(void) interrupt 0 {
 }
 void ISR_Ep4inout(void) interrupt 0 {
     unsigned short int value;
-	unsigned char b, i;
 	short int count;
+	EA = 0;
     EZUSB_IRQ_CLEAR();
     EPIRQ = 0x20;
     AUTOPTRH1 = MSB( &EP4FIFOBUF );  // Set pointer 1 to the buffer address and read out the data
     AUTOPTRL1 = LSB( &EP4FIFOBUF );
     count = ((WORD)(EP4BCH) << 8) | EP4BCL;
     while (count>0) {
-        unsigned char c, channel=0, command;
+        unsigned char b, c, channel=0, command;
         command = XAUTODAT1; count--;
         switch (command) {
         case DAC_IMMEDIATE:
             b = XAUTODAT1;
             count--;
-            for (i=0; (i<8) && b; i++) {
+            while (b) {
                 if (b & 1) {
                     value = XAUTODAT1; count--;
-                    value |= ((WORD)(XAUTODAT1) << 8); count--;
+                    value += ((WORD)(XAUTODAT1) << 8); count--;
                     write_dac(channel,value);
                 }
                 channel++;
@@ -881,13 +877,13 @@ void ISR_Ep4inout(void) interrupt 0 {
         case DAC_ENQUEUE:
             b = XAUTODAT1; count--; qput(b);	// Enqueue timestamp
             b = XAUTODAT1; count--; qput(b);
-			qput(MAGIC_CODE);					// Write magic code (for synchronization)
             c = XAUTODAT1; count--; qput(c);    // Enqueue channel bitmask
-            for (i=0; (i<8) && c; i++) {
+            while (c) {
                 if (c & 1) {					// Enqueue data
                     b = XAUTODAT1; count--; qput(b);
                     b = XAUTODAT1; count--; qput(b);
                 }
+                channel++;
                 c >>= 1;
             }
             break;
@@ -898,13 +894,7 @@ void ISR_Ep4inout(void) interrupt 0 {
     SYNCDELAY;
     EP4BCL = 0x80;
     SYNCDELAY;
-	if (!data_available) {
-        qget(&b);	// pop off timestamp
-		next_time = b;
-	    qget(&b);
-		next_time |= ((WORD)(b) << 8);
-		data_available = 1;
-	}
+	EA = 1;
 }
 void ISR_Ep6inout(void) interrupt 0 {
 }
