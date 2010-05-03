@@ -39,6 +39,7 @@ from Host.autogen.interface import INJECT_CONTROL_MANUAL_LASER_ENABLE_B, INJECT_
 from Host.autogen.interface import INJECT_CONTROL_MANUAL_SOA_ENABLE_B, INJECT_CONTROL_MANUAL_SOA_ENABLE_W
 from Host.autogen.interface import INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W
 from Host.autogen.interface import INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B, INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W
+from Host.autogen.interface import INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B, INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W
 
 from MyHDL.Common.Inject import Inject
 
@@ -76,6 +77,7 @@ sel_coarse_current_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 sel_fine_current_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 optical_switch1_out = Signal(LOW)
 optical_switch2_out = Signal(LOW)
+optical_switch4_out = Signal(LOW)
 
 data1 = Signal(intbv(0)[24:])
 data2 = Signal(intbv(0)[24:])
@@ -177,6 +179,7 @@ def bench():
                      sel_fine_current_out=sel_fine_current_out,
                      optical_switch1_out=optical_switch1_out,
                      optical_switch2_out=optical_switch2_out,
+                     optical_switch4_out=optical_switch4_out,
                      map_base=map_base )
 
     clkGen = ClkGen(clk=clk, reset=reset, clk_10M=clk_10M, clk_5M=laser_dac_clk_in,

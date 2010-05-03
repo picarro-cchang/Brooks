@@ -4,7 +4,7 @@
 #   test_Inject.py
 #
 # DESCRIPTION:
-#   Test optical injection subsystem
+#   Test optical injection subsystem. This version tests operation of the 4-way switch
 #
 # SEE ALSO:
 #   Specify any related information.
@@ -206,11 +206,12 @@ def bench():
     @instance
     def  stimulus():
         yield assertReset()
+        yield writeFPGA(FPGA_INJECT+INJECT_CONTROL,(1 << INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B))
         # Test optical switch operation
         yield delay(MS/5)
         for trials in range(10):
             laser_sel = randrange(4)
-            control = (laser_sel << INJECT_CONTROL_LASER_SELECT_B)
+            control = (laser_sel << INJECT_CONTROL_LASER_SELECT_B) | (1 << INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B)
             yield writeFPGA(FPGA_INJECT+INJECT_CONTROL,control)
             yield delay(MS/5)
         raise StopSimulation

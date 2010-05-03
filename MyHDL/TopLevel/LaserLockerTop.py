@@ -253,6 +253,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     sel_fine_current_out=sel_fine_current,
                     optical_switch1_out=sw1,
                     optical_switch2_out=sw2,
+                    optical_switch4_out=sw4,
                     map_base=FPGA_INJECT)
 
     kernel = Kernel( clk=clk0, reset=reset, dsp_addr=dsp_addr,
@@ -733,8 +734,6 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         lsr2_mosi.next = lsr2_mosi_temp and not diag_1[5]
         lsr3_mosi.next = lsr3_mosi_temp and not diag_1[6]
         lsr4_mosi.next = lsr4_mosi_temp and not diag_1[7]
-
-        sw4.next = 0
 
         wmm_clk.next = clk_2M5
         chanC_data_in.next  = 0

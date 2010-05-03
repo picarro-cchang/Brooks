@@ -3473,6 +3473,10 @@
                     <fielddef value="0">Disabled</fielddef>
                     <fielddef value="1">Enabled</fielddef>
                 </bitfield>
+                <bitfield ident="OPTICAL_SWITCH_SELECT" description="Select optical switch type" lsb="14" width="1">
+                    <fielddef value="0">2-way</fielddef>
+                    <fielddef value="1">4-way</fielddef>
+                </bitfield>
             </reg>
             <reg type="uint16" ident="LASER1_COARSE_CURRENT" description="Sets coarse current for laser 1"/>
             <reg type="uint16" ident="LASER2_COARSE_CURRENT" description="Sets coarse current for laser 2"/>
