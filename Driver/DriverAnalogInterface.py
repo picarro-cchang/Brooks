@@ -46,7 +46,7 @@ class AnalogInterface(object):
 
         self.clockPeriodms = 10
         clockFreq = 1000/self.clockPeriodms
-        self.divisor = 4000000//clockFreq
+        self.divisor = int(4000000//clockFreq)
         self.sampleHeap = []
         # List of strings to send to DACs
         self.dacStr = []
@@ -54,21 +54,21 @@ class AnalogInterface(object):
         
     def initializeClock(self):
         timestamp = self.driver.rpcHandler.dasGetTicks()
-        self.driver.rpcHandler.setDacTimestamp((timestamp // self.clockPeriodms) & 0xFFFF)
+        self.driver.rpcHandler.setDacTimestamp(int(timestamp // self.clockPeriodms) & 0xFFFF)
         reloadCount = 65536 - self.divisor
         self.driver.rpcHandler.setDacReloadCount(reloadCount)
         self.driver.rpcHandler.resetDacQueue()
         # Samples which are enqueued with timestamps before 
         #  self.lastClk*self.clockPeriodms are discarded
-        self.lastClk = (self.driver.rpcHandler.dasGetTicks()+1000)//self.clockPeriodms
+        self.lastClk = int((self.driver.rpcHandler.dasGetTicks()+1000)//self.clockPeriodms)
         
     def nudgeClock(self):
         ts1 = self.driver.rpcHandler.dasGetTicks()
         clk = self.driver.rpcHandler.getDacTimestamp()
         ts2 = self.driver.rpcHandler.dasGetTicks()
         if ts2-ts1 < 25:    # Perform nudge if RTT is small enough
-            ts = (ts1+ts2)//2
-            eClk = (ts//self.clockPeriodms) & 0xFFFF
+            ts = int((ts1+ts2)//2)
+            eClk = int(ts//self.clockPeriodms) & 0xFFFF
             # print "Clock error ", clk-eClk
             diff = (clk - eClk) & 0xFFFF
             if diff & 0x8000:   # eClk > clk
@@ -108,12 +108,12 @@ class AnalogInterface(object):
         bufferTime = 2000 # In milliseconds
         timestamp = self.driver.rpcHandler.dasGetTicks()
         # Round horizon up to a multiple of the clock period
-        horizon = ((timestamp + bufferTime + self.clockPeriodms - 1)//self.clockPeriodms) * self.clockPeriodms
+        horizon = int((timestamp + bufferTime + self.clockPeriodms - 1)//self.clockPeriodms) * self.clockPeriodms
         samplesToSend = {}
         while self.sampleHeap and self.sampleHeap[0][0] <= horizon:       # We need to send the sample to the DAC
             ts,channel,dacCounts = heapq.heappop(self.sampleHeap)
-            clk = (ts // self.clockPeriodms)
-            if clk < self.lastClk: continue # Discard late samples
+            clk = int(ts // self.clockPeriodms)
+            if clk < self.lastClk: print "Discarding" # Discard late samples
             elif clk == self.lastClk:
                 samplesToSend[channel] = dacCounts
             else:
@@ -127,11 +127,10 @@ class AnalogInterface(object):
         self.nudgeClock()
         
     def sendToDacs(self,clk,samplesToSend):
-        """Encode data to send to DACs and slices them into USB packet sized chunks (512 bytes).
+        """Encode data to send to DACs and slices them into USB packet sized chunks (64 bytes).
             At each time, we send the 10ms timestamp, a channel bitmask, and then the actual
             channel data."""
         sendStr = []
-        sendStr.append("\xD2")
         sendStr.append(struct.pack("H",clk & 0xFFFF))
         chanMask = 0
         dacCounts = []
@@ -141,8 +140,8 @@ class AnalogInterface(object):
         sendStr.append(struct.pack("B",chanMask))
         sendStr.append(struct.pack("%dH" % len(dacCounts),*dacCounts))
         sendStr = "".join(sendStr)
-        if self.dacStrLen + len(sendStr) >= 512:
-            self.driver.rpcHandler.wrAuxiliary("".join(self.dacStr))
+        if self.dacStrLen + len(sendStr) >= 64:
+            self.driver.rpcHandler.enqueueDacSamples("".join(self.dacStr))
             self.dacStr = []
             self.dacStrLen = 0
         self.dacStrLen += len(sendStr)
@@ -151,7 +150,7 @@ class AnalogInterface(object):
     def flush(self):
         """Flush the USB auxiliary message buffer"""
         if self.dacStr:    
-            self.driver.rpcHandler.wrAuxiliary("".join(self.dacStr))
+            self.driver.rpcHandler.enqueueDacSamples("".join(self.dacStr))
             self.dacStr = []
             self.dacStrLen = 0
     
@@ -176,7 +175,7 @@ if __name__ == "__main__":
     timestamp = Driver.dasGetTicks()    # ms resolution
     # Fill up buffer with samples up to 2000ms in advance of present
     tSamp = 10                          # 10ms sampling
-    tLast = tSamp*((timestamp + tSamp)//tSamp)    # Round up to next sample interval
+    tLast = tSamp*int((timestamp + tSamp)//tSamp)    # Round up to next sample interval
     freq = 1.0
     x = 0.0
     dx = 0.002*pi*freq*tSamp 

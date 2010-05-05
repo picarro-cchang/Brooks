@@ -848,6 +848,10 @@ class HostToDspSender(Singleton):
     def getDacQueueErrors(self):
         return self.usb.getDacQueueErrors()
 
+    @usbLockProtect
+    def enqueueDacSamples(self,data):
+        return self.usb.enqueueDacSamples(data)
+        
 class SensorHistory(Singleton):
     """Stores latest values of all sensor streams in a dictionary
     so that snapshots of these quantities may be written to the state

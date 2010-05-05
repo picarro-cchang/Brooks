@@ -431,24 +431,24 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Writes "value" to the specified analog interface DAC channel. """
         self.dasInterface.hostToDspSender.wrDac(channel,value)
 
-    def wrAuxiliary(self,data):
-        """Writes the "data" string to the auxiliary board"""
-        self.dasInterface.hostToDspSender.wrAuxiliary(ctypes.create_string_buffer(data,len(data)))
+    #def wrAuxiliary(self,data):
+    #    """Writes the "data" string to the auxiliary board"""
+    #    self.dasInterface.hostToDspSender.wrAuxiliary(ctypes.create_string_buffer(data,len(data)))
         
-    def getDacQueueFreeSlots(self):
-        return self.dasInterface.hostToDspSender.getDacQueueFreeSlots()
+    #def getDacQueueFreeSlots(self):
+    #    return self.dasInterface.hostToDspSender.getDacQueueFreeSlots()
 
-    def getDacQueueErrors(self):
-        return self.dasInterface.hostToDspSender.getDacQueueErrors()
+    #def getDacQueueErrors(self):
+    #    return self.dasInterface.hostToDspSender.getDacQueueErrors()
 
-    def setDacQueuePeriod(self,channel,period):
-        return self.dasInterface.hostToDspSender.setDacQueuePeriod(channel,period)
+    #def setDacQueuePeriod(self,channel,period):
+    #    return self.dasInterface.hostToDspSender.setDacQueuePeriod(channel,period)
 
-    def resetDacQueues(self):
-        return self.dasInterface.hostToDspSender.resetDacQueues()
+    #def resetDacQueues(self):
+    #    return self.dasInterface.hostToDspSender.resetDacQueues()
 
-    def serveDacQueues(self):
-        return self.dasInterface.hostToDspSender.serveDacQueues()
+    #def serveDacQueues(self):
+    #    return self.dasInterface.hostToDspSender.serveDacQueues()
        
     def rdDspTimerRegisters(self):
         return self.dasInterface.hostToDspSender.rdDspTimerRegisters()
@@ -473,6 +473,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def getDacQueueErrors(self):
         return self.dasInterface.hostToDspSender.getDacQueueErrors()
+        
+    def enqueueDacSamples(self,data):
+        return self.dasInterface.hostToDspSender.enqueueDacSamples(ctypes.create_string_buffer(data,len(data)))
         
     #def disableLaserCurrent(self,laserNum):
     #    # Turn off laser current for laserNum (0-index)

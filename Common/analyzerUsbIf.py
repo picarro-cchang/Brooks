@@ -422,7 +422,16 @@ class AnalyzerUsb(Singleton):
             self.controlInTransaction(errors,usbdefs.VENDOR_DAC_QUEUE_STATUS,usbdefs.DAC_QUEUE_GET_ERRORS)
             return errors.value
         return self._claimInterfaceWrapper(_getDacQueueErrors)
-        
+    
+    def enqueueDacSamples(self,data):
+        """Use vendor command to send block of 16 bit words (stored as a string in data) to auxiliary board"""
+        dataLength = sizeof(data)
+        def _enqueueDacSamples():
+            self.controlOutTransaction(data,usbdefs.VENDOR_DAC_ENQUEUE_DATA)
+        if 0 == dataLength or 64 < dataLength:
+            raise UsbPacketLengthError("Invalid data length %d in enqueueDacSamples" % (dataLength,))
+        return self._claimInterfaceWrapper(_enqueueDacSamples)
+    
     def dspWrite(self,addrValueList):
         """Write a list of (address,value) pairs to the DSP"""
         self.hpicWrite(0x00010001)
