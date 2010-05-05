@@ -33,6 +33,7 @@
         <constant ident="VENDOR_SET_DAC">0xC9</constant>
         <constant ident="VENDOR_DAC_QUEUE_CONTROL">0xCA</constant>
         <constant ident="VENDOR_DAC_QUEUE_STATUS">0xCB</constant>
+        <constant ident="VENDOR_DAC_ENQUEUE_DATA">0xCC</constant>
         <!--  >Value field for VENDOR_FPGA_CONFIGURE</!-->
         <constant ident="FPGA_START_PROGRAM">0x01</constant>
         <constant ident="FPGA_SEND_DATA">0x02</constant>
@@ -67,9 +68,6 @@
         <constant ident="FPGA_SS_DONE">0x40</constant>
         <!--  >Bits for PORT A of Cypress USB</!-->
         <constant ident="CYP_LED3">0x10</constant>
-        <!--  >DAC commands</!-->
-        <constant ident="DAC_IMMEDIATE">0xD1</constant>
-        <constant ident="DAC_ENQUEUE">0xD2</constant>
         <!--  >DAC error flags</!-->
         <constant ident="DAC_QUEUE_OVERFLOW">0x1</constant>
         <constant ident="DAC_QUEUE_UNDERFLOW">0x2</constant>

@@ -70,7 +70,7 @@ static WORD xFIFOBC_IN = 0x0000;  // variable that contains EP6FIFOBCH/L value
 //-----------------------------------------------------------------------------
 // Variables for DAC resynchronizer
 //-----------------------------------------------------------------------------
-#define QSIZE   (1400)
+#define QSIZE   (1600)
 #define NCHANNELS (8)
 #define MAGIC_CODE 'S'
 #define MAKEWORD( h, l ) \ 
@@ -193,13 +193,19 @@ void TD_Init(void) {           // Called once at startup
     EP1INCFG = 0xA0;         // Activate EP1IN for bulk transfer
     SYNCDELAY;
 
+    EP2CFG = 0xA0;           // Activate EP2 for bulk output, 512 bytes, 4x buffered
+    SYNCDELAY;
+    EP4CFG = 0x00;           // Activate EP4 for bulk output, 512 bytes, 2x buffered
+    SYNCDELAY;
+/*
     EP2CFG = 0xA2;           // Activate EP2 for bulk output, 512 bytes, 2x buffered
                              // Note that the endpoint buffer is shared with that for EP4, so
                              //  we cannot use quad buffering
     SYNCDELAY;
     EP4CFG = 0xA0;           // Activate EP4 for bulk output, 512 bytes, 2x buffered
     SYNCDELAY;
-    EP6CFG = 0xE0;           // Activate EP6 for bulk input, 512 bytes, 4x buffered
+*/
+	EP6CFG = 0xE0;           // Activate EP6 for bulk input, 512 bytes, 4x buffered
     SYNCDELAY;
     EP8CFG = 0x00;           // Deactivate EP8
     SYNCDELAY;
@@ -222,10 +228,6 @@ void TD_Init(void) {           // Called once at startup
     EP6FIFOCFG = 0x09;       // Configure EP6 as word-wide, enable AUTOIN
     SYNCDELAY;
     EP1OUTBC = 0x0;          // Arm EP1OUT
-    EP4BCL = 0x80;           // Arm EP4OUT by writing dummy byte count (twice)
-    SYNCDELAY;                    
-    EP4BCL = 0x80;    
-    SYNCDELAY;                    
 
     // Initialize the GPIF registers. Do this before changing PORTCCFG and PORTECFG.
     GpifInit();
@@ -273,16 +275,8 @@ void TD_Init(void) {           // Called once at startup
     RCAP2H = 0x63;
     RCAP2L = 0xC0;
 
-    // Set timer 2 priority to low and I2C priority to high. This allows the writing to the DACs to take
-    //  place within the timer interrupt.
-    PT2 = 0; 
-    PI2C = 1;
-
     init();
-
     ET2 = 1;                            /* enable timer 2 interrupt    */
-
-    EPIE |= 0x20;						/* Enable IRQ on EP4 output */
 	next_time = now + 10;
 }
 
@@ -394,7 +388,6 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
 	}
 */    
 
-	EPIE &= ~0x20;						// Disable IRQ on EP4 output
 	if (data_available) {
         delta = next_time - now;
         if (delta > 0) goto cont;	// Next time has not yet come
@@ -426,7 +419,6 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
 		}
     }
 cont:
-    EPIE |= 0x20;						// Enable IRQ on EP4 output
 
 	// blink LED0 to indicate firmware is running
     if (!LED_Count) {
@@ -561,7 +553,6 @@ BOOL DR_VendorCmnd(void) {
                 while (SCON0 & 0x2 == 0);
                 SCON0 &= ~0x2;
             }
-
             // Acknowledge handshake phase of device request
             //EP0CS |= bmHSNAK;
             break;
@@ -774,7 +765,36 @@ BOOL DR_VendorCmnd(void) {
         // Acknowledge handshake phase of device request
         EP0CS |= bmHSNAK;
         break;
-   default:
+    case VENDOR_DAC_ENQUEUE_DATA:
+        EP0BCL = 0;
+        // Make sure that EP0 is not busy before trying get from the FIFO
+        while (EP01STAT & bmEP0BSY);
+		i = 0;
+		while (i<length) {
+	        unsigned char c;
+			qput(EP0BUF[i++]);		// Enqueue timestamp
+			qput(EP0BUF[i++]);		
+			qput(MAGIC_CODE);		// Write magic code (for synchronization)
+			qput(c = EP0BUF[i++]);	// Enqueue channel bitmask
+            while (c) {
+                if (c & 1) {		// Enqueue DAC data
+                    qput(EP0BUF[i++]);
+                    qput(EP0BUF[i++]);
+                }
+                c >>= 1;
+            }
+        }
+		if (!data_available) {
+	        if (qget(&b)) {	// pop off timestamp
+				next_time = b;
+		    	if (qget(&b)) {
+					next_time |= ((WORD)(b) << 8);
+					data_available = 1;
+				}
+			}
+		}
+		break;
+    default:
         return TRUE; // Indicates failure
     }
     return FALSE; // Indicates success
@@ -853,58 +873,6 @@ void ISR_Ep1out(void) interrupt 0 {
 void ISR_Ep2inout(void) interrupt 0 {
 }
 void ISR_Ep4inout(void) interrupt 0 {
-    unsigned short int value;
-	unsigned char b, i;
-	short int count;
-    EZUSB_IRQ_CLEAR();
-    EPIRQ = 0x20;
-    AUTOPTRH1 = MSB( &EP4FIFOBUF );  // Set pointer 1 to the buffer address and read out the data
-    AUTOPTRL1 = LSB( &EP4FIFOBUF );
-    count = ((WORD)(EP4BCH) << 8) | EP4BCL;
-    while (count>0) {
-        unsigned char c, channel=0, command;
-        command = XAUTODAT1; count--;
-        switch (command) {
-        case DAC_IMMEDIATE:
-            b = XAUTODAT1;
-            count--;
-            for (i=0; (i<8) && b; i++) {
-                if (b & 1) {
-                    value = XAUTODAT1; count--;
-                    value |= ((WORD)(XAUTODAT1) << 8); count--;
-                    write_dac(channel,value);
-                }
-                channel++;
-                b >>= 1;
-            }
-            break;
-        case DAC_ENQUEUE:
-            b = XAUTODAT1; count--; qput(b);	// Enqueue timestamp
-            b = XAUTODAT1; count--; qput(b);
-			qput(MAGIC_CODE);					// Write magic code (for synchronization)
-            c = XAUTODAT1; count--; qput(c);    // Enqueue channel bitmask
-            for (i=0; (i<8) && c; i++) {
-                if (c & 1) {					// Enqueue data
-                    b = XAUTODAT1; count--; qput(b);
-                    b = XAUTODAT1; count--; qput(b);
-                }
-                c >>= 1;
-            }
-            break;
-        default:
-            break;
-        }
-    }
-    SYNCDELAY;
-    EP4BCL = 0x80;
-    SYNCDELAY;
-	if (!data_available) {
-        qget(&b);	// pop off timestamp
-		next_time = b;
-	    qget(&b);
-		next_time |= ((WORD)(b) << 8);
-		data_available = 1;
-	}
 }
 void ISR_Ep6inout(void) interrupt 0 {
 }
