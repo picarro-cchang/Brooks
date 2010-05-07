@@ -30,6 +30,8 @@ File History:
     2010-02-03 sze   Execute synchronous and data-driven scripts within a single thread in order to avoid using a lock
     2010-03-28 sze   Give scripts initiated by forwarding data priority over those initiated by collected data
     2010-04-27 sze   Not having an analyzer for some data is now logged, rather than causing an exception.
+    2010-05-05 alex  Create the RPC functions and measBuffer for Coordinator to retrieve conc data.
+    
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -342,6 +344,7 @@ class DataManager(object):
         self.serialThreadAllowRun = True
         self.serialOutQueue = Queue.Queue(0)
         self.serialPollLock = threading.Lock()
+        self.measBufferLock = threading.Lock()
         # Priority queue for synchronous scripts ordered by ideal execution time and period
         #  Entries on queue are (execTime, period, startTime, iteration, syncInfoObj)
         self.syncScriptQueue = []  
@@ -366,6 +369,8 @@ class DataManager(object):
 
         self.pulseDict = {}
         self.calEnabled = True
+        self.measBufferConfig = ("",[],20) # (source, colList, bufSize)
+        self.measBuffer = []
         self.noInstMgr = noInstMgr
         if not self.noInstMgr:
             self.rdInstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
@@ -782,7 +787,58 @@ class DataManager(object):
                     self.RPC_PulseAnalyzer_SetParam(scriptName, "firstDataIn", False, concKey) 
         except:
             pass
-            
+    
+    def RPC_MeasBuffer_Set(self, source, colList, bufSize):
+        """Set up an internal measurement buffer for the Coordinator"""
+        self.measBufferLock.acquire()
+        self.measBufferConfig = (source, colList, bufSize)
+        self.measBuffer = []
+        self.measBufferLock.release()
+        return "OK"
+        
+    def RPC_MeasBuffer_Clear(self):
+        """Clear all the data in the internal measurement buffer"""
+        self.measBufferLock.acquire()
+        self.measBuffer = []
+        self.measBufferLock.release()
+        return "OK"
+        
+    def RPC_MeasBuffer_Get(self):
+        """Get all the data in the internal measurement buffer"""
+        self.measBufferLock.acquire()
+        ret = self.measBuffer
+        self.measBuffer = []
+        self.measBufferLock.release()
+        return ret
+        
+    def RPC_MeasBuffer_GetFirst(self):
+        """Get the first (oldest) data in the internal measurement buffer"""
+        if len(self.measBuffer) == 0:
+            return
+        self.measBufferLock.acquire()
+        ret = self.measBuffer[0]
+        self.measBuffer = self.measBuffer[1:]
+        self.measBufferLock.release()
+        return ret
+    
+    def _AddToMeasBuffer(self, measData):
+        (source, colList, bufSize) = self.measBufferConfig
+        if len(colList) == 0 or bufSize < 1:
+            return
+        if measData.Source != source: 
+            return
+        self.measBufferLock.acquire()
+        try:
+            result = {"measTime":measData.Time}
+            result["date"] = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(measData.Time))
+            for c in colList:
+                result[c] = measData.Data[c]
+            if len(self.measBuffer) >= bufSize:
+                self.measBuffer = self.measBuffer[-(bufSize-1):]
+            self.measBuffer.append(result)
+        finally:
+            self.measBufferLock.release()
+                
     def _UpdateUserCalibrationFile(self):
         fp = SafeFile(self.Config.UserCalibrationPath, "wb")
         cp = CustomConfigObj() 
@@ -1381,6 +1437,8 @@ class DataManager(object):
             self.DataBroadcaster.send(measData.dumps())
             #Send to serial port if needed
             self._SendSerial(measData)
+            # Add to the internal measBuffer for Coordinator
+            self._AddToMeasBuffer(measData)
 
         #Put forwarded data in the to-be-analyzed queue...
         for dataPacketLabel in forwardDict.keys():

@@ -41,9 +41,15 @@ from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.StringPickler import StringAsObject, ObjAsString
 from Host.Common.ctypesConvert import ctypesToDict, dictToCtypes
 
-from Host.hostBzrVer import version_info as hostBzrVer
-from Host.srcBzrVer import version_info as srcBzrVer
-
+try:
+    from Host.hostBzrVer import version_info as hostBzrVer
+except:
+    hostBzrVer = None
+try:
+    from Host.srcBzrVer import version_info as srcBzrVer
+except:
+    srcBzrVer = None
+    
 EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -203,10 +209,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
         versionDict = {}
         versionDict["interface"] = interface.interface_version
         versionDict["host release"] = version.versionString()
-        versionDict["host version id"] = hostBzrVer['revision_id']
-        versionDict["host version no"] = hostBzrVer['revno']
-        versionDict["src version id"] = srcBzrVer['revision_id']
-        versionDict["src version no"] = srcBzrVer['revno']
+        if hostBzrVer:
+            versionDict["host version id"] = hostBzrVer['revision_id']
+            versionDict["host version no"] = hostBzrVer['revno']
+        if srcBzrVer:
+            versionDict["src version id"] = srcBzrVer['revision_id']
+            versionDict["src version no"] = srcBzrVer['revno']
         return versionDict
     
     def saveRegValues(self,regList):

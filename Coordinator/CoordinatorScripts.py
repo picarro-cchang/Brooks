@@ -61,7 +61,7 @@ def setRotValveMask(rotPos):
     DRIVER.setValveMask(mask)
     
 ##########################
-# Data manager and pulse analyzer functions
+# Pulse analyzer functions
 ##########################
 def getPulseResultDict(scriptName):
     return DATAMGR.PulseAnalyzer_GetResultDict(scriptName)
@@ -73,14 +73,32 @@ def setTriggerTime(scriptName, value):
     LOGFUNC("Set trigger time (measurement time) in Data Manager to %.2f\n" % float(value))  
     DATAMGR.PulseAnalyzer_SetTriggerTime(scriptName, value)
     
+##########################
+# Data manager functions
+##########################
+def setMeasBuffer(source, colList, bufSize):
+    DATAMGR.MeasBuffer_Set(source, colList, bufSize)
+    LOGFUNC("Meas buffer set\n") 
+    
+def clearMeasBuffer():
+    DATAMGR.MeasBuffer_Clear()
+    LOGFUNC("Meas buffer cleared\n") 
+            
+def measGetBuffer():
+    return DATAMGR.MeasBuffer_Get()
+
+def measGetBufferFirst():
+    return DATAMGR.MeasBuffer_GetFirst()
+                        
 def enableCalScript():
     LOGFUNC("Calibration script from Data Manager is enabled\n") 
     DATAMGR.Cal_Enable()
     
 def disableCalScript():
     LOGFUNC("Calibration script from Data Manager is disabled\n") 
-    DATAMGR.Cal_Disable()    
-# ########################
+    DATAMGR.Cal_Disable()  
+
+#########################
 # Batch mode / rising loss trigger functions    
 #########################
 def configBatchModeToDasReg(configDict):
@@ -133,15 +151,15 @@ def getValveMask():
 def setInletValveMaxChange(value):
     """Set maximum inlet valve DAC change"""
     try:
-        DRIVER.wrDasReg("VLVCNTRL_INLET_VALVE_MAX_CHANGE_REGISTER", value)
+        DRIVER.wrDasReg("VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER", value)
         LOGFUNC("Maximum inlet valve change: %.2f\n" % value) 
     except:
         LOGFUNC("setInletValveMaxChange() failed!\n")
 
 def setInletValveGains(g1, g2):
     try:
-        DRIVER.wrDasReg("VLVCNTRL_INLET_VALVE_GAIN1_REGISTER", g1)
-        DRIVER.wrDasReg("VLVCNTRL_INLET_VALVE_GAIN2_REGISTER", g2)        
+        DRIVER.wrDasReg("VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER", g1)
+        DRIVER.wrDasReg("VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER", g2)        
         LOGFUNC("Inlet valve gain1 = %.2f, gain2 = %.2f\n" % (g1, g2)) 
     except:
         LOGFUNC("setInletValveGains() failed!\n")
@@ -151,9 +169,9 @@ def setValveMinDac(valveSelect, value):
     valveSelect = valveSelect.lower()
     try:
         if valveSelect == "inlet":
-            return DRIVER.wrDasReg("VLVCNTRL_INLET_VALVE_CONTROL_MIN_REGISTER", value)
+            return DRIVER.wrDasReg("VALVE_CNTRL_INLET_VALVE_MIN_REGISTER", value)
         elif valveSelect == "outlet":
-            return DRIVER.wrDasReg("VLVCNTRL_OUTLET_VALVE_CONTROL_MIN_REGISTER", value)
+            return DRIVER.wrDasReg("VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER", value)
         else:
             raise Exception, "Choose either 'inlet' or 'outlet'!"  
     except:
@@ -163,11 +181,11 @@ def getValveMinMaxDac(valveSelect):
     valveSelect = valveSelect.lower()
     try:
         if valveSelect == "inlet":
-            min = DRIVER.rdDasReg("VLVCNTRL_INLET_VALVE_CONTROL_MIN_REGISTER")
-            max = DRIVER.rdDasReg("VLVCNTRL_INLET_VALVE_CONTROL_MAX_REGISTER")
+            min = DRIVER.rdDasReg("VALVE_CNTRL_INLET_VALVE_MIN_REGISTER")
+            max = DRIVER.rdDasReg("VALVE_CNTRL_INLET_VALVE_MAX_REGISTER")
         elif valveSelect == "outlet":
-            min = DRIVER.rdDasReg("VLVCNTRL_OUTLET_VALVE_CONTROL_MIN_REGISTER")
-            max = DRIVER.rdDasReg("VLVCNTRL_OUTLET_VALVE_CONTROL_MAX_REGISTER")
+            min = DRIVER.rdDasReg("VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER")
+            max = DRIVER.rdDasReg("VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER")
         else:
             raise Exception, "Choose either 'inlet' or 'outlet'!"
         return {"min": min, "max": max}    
@@ -192,13 +210,13 @@ def setValveControlMode(mode):
       2 -> Inlet Control
       3 -> Manual Control
     """
-    DRIVER.wrDasReg("VLVCNTRL_CMD_REGISTER", mode)    
+    DRIVER.wrDasReg("VALVE_CNTRL_STATE_REGISTER", mode)    
     LOGFUNC("Current valve control mode: %s\n" % VALVE_CTRL_MODE_DICT[mode])
             
 def getValveDacValues():
     """Get Valve DAC value for both valves """
-    inletDacValue = DRIVER.rdDasReg("VLVCNTRL_INLET_CONTROL_DAC_VALUE_REGISTER")
-    outletDacValue = DRIVER.rdDasReg("VLVCNTRL_OUTLET_CONTROL_DAC_VALUE_REGISTER")
+    inletDacValue = DRIVER.rdDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER")
+    outletDacValue = DRIVER.rdDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER")
     return {"inletDacValue": inletDacValue, "outletDacValue": outletDacValue}
     
 def setValveDacValue(valveSelect, dacValue1, dacValue2 = None):
@@ -210,14 +228,14 @@ def setValveDacValue(valveSelect, dacValue1, dacValue2 = None):
         if valveSelect == "both":
             if dacValue2 == None:
                 raise Exception, "Two valid valve DAC values are required!"
-            DRIVER.wrDasReg("VLVCNTRL_INLET_CONTROL_DAC_VALUE_REGISTER", dacValue1)
-            DRIVER.wrDasReg("VLVCNTRL_OUTLET_CONTROL_DAC_VALUE_REGISTER", dacValue2)            
+            DRIVER.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", dacValue1)
+            DRIVER.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER", dacValue2)            
             LOGFUNC("New inlet valve DAC: %.2f; new outlet valve DAC: %.2f\n" % (dacValue1, dacValue2))            
         elif valveSelect == "inlet":            
-            DRIVER.wrDasReg("VLVCNTRL_INLET_CONTROL_DAC_VALUE_REGISTER", dacValue1)
+            DRIVER.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", dacValue1)
             LOGFUNC("New inlet valve DAC: %.2f\n" % dacValue1)     
         elif valveSelect == "outlet":            
-            DRIVER.wrDasReg("VLVCNTRL_OUTLET_CONTROL_DAC_VALUE_REGISTER", dacValue1)
+            DRIVER.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER", dacValue1)
             LOGFUNC("New outlet valve DAC: %.2f\n" % dacValue1)              
     except:
         LOGFUNC("setValveDacValues() failed!\n")
@@ -227,28 +245,28 @@ def setValveDacValue(valveSelect, dacValue1, dacValue2 = None):
 #####################      
 def getCavityPressure():
     """Read the current cavity pressure"""
-    return DRIVER.rdDasReg("IOMGR_FLOAT_CAVITY_PRESSURE_REGISTER")
+    return DRIVER.rdDasReg("CAVITY_PRESSURE_REGISTER")
 
 def getCavityPressureSetPoint():
     """Get cavity pressure set point in torr """
-    return DRIVER.rdDasReg("VLVCNTRL_CAVITY_PRESSURE_SETPOINT")
+    return DRIVER.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")
 
 def setCavityPressureSetPoint(setpoint):
     """Set cavity pressure set point in torr """
     try:
-        DRIVER.wrDasReg("VLVCNTRL_CAVITY_PRESSURE_SETPOINT", setpoint)
+        DRIVER.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER", setpoint)
         LOGFUNC("New cavity pressure set point: %.2f torr\n" % setpoint) 
     except:
         LOGFUNC("setCavityPressureSetPoint() failed!\n")
         
 def getMaxCavityPressureRate():
     """Get maximum cavity pressure change rate in torr/s """
-    return DRIVER.rdDasReg("VLVCNTRL_MAX_CAVITY_PRESSURE_RATE")
+    return DRIVER.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER")
 
 def setMaxCavityPressureRate(rate):
     """Set maximum cavity pressure change rate in torr/s """
     try:
-        DRIVER.wrDasReg("VLVCNTRL_MAX_CAVITY_PRESSURE_RATE", rate)
+        DRIVER.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER", rate)
         LOGFUNC("Maximum cavity pressure change rate: %.2f torr/s\n" % rate) 
     except:
         LOGFUNC("setMaxCavityPressureRate() failed!\n")
@@ -264,7 +282,7 @@ def waitPressureStabilize(setpoint, tolerance, timeout, checkInterval, lockCount
     isStable     = False
     while index < timeout:
         pressure = getCavityPressure()
-        LOGFUNC("Pressure delta = %.2f\n" %  (pressure - setpoint))
+        LOGFUNC("Pressure delta from setpoint = %.2f\n" %  (pressure - setpoint))
         inRange  = (abs(pressure - setpoint)/setpoint <= tolerance)
         if inRange:
             inRangeCount+=1
@@ -352,13 +370,13 @@ def formatOutput(results,config):
 # Valve sequence functions
 #################            
 def getValveStep():
-    return DRIVER.rdDasReg("VLVCNTRL_STEP_REGISTER")
-
+    return DRIVER.rdDasReg("VALVE_CNTRL_SEQUENCE_STEP_REGISTER")
+    
 def atValveStep(step):
     global _valveSequenceLabels
     if isinstance(step,str):
         step = _valveSequenceLabels[step]
-    return DRIVER.rdDasReg("VLVCNTRL_STEP_REGISTER") == step
+    return DRIVER.rdDasReg("VALVE_CNTRL_SEQUENCE_STEP_REGISTER") == step
         
 def sendValveSequence(configDict):
     global _valveSequenceLabels
@@ -426,13 +444,13 @@ def sendValveSequence(configDict):
         print _valveSequenceLabels
         print sequence
         LOGFUNC("Sending valve sequence definition to DAS\n")
-        DRIVER.setValveSequence(sequence)
+        DRIVER.wrValveSequence(sequence)
 
 def setValveStep(step):
     global _valveSequenceLabels
     if isinstance(step,str):
         step = _valveSequenceLabels[step]
-    DRIVER.wrDasReg("VLVCNTRL_STEP_REGISTER",step)
+    DRIVER.wrDasReg("VALVE_CNTRL_SEQUENCE_STEP_REGISTER",step)
 
 def parseAutosamplerLog(logText):
     logString = logText.split("\n")
