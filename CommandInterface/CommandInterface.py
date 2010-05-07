@@ -128,6 +128,14 @@ class CommandInterface(object):
                 self.meas_label_list.append(label)
                 self._measQueueDict[label] = []
                 self._measLockDict[label] = threading.Lock()
+        except:
+            msg = "Unable to load config. EXCEPTION: %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
+            print msg
+            Log(msg, Level = 3)
+            return False
+
+        # Get pulse analyzer config if available
+        try:
             self.pulse_source = self.config.get(PULSE_ANALYZER_SECTION,'analyzer_source')
             for label in self.config.get(PULSE_ANALYZER_SECTION,'analyzer_label').split(","):
                 label = label.strip()
@@ -136,11 +144,8 @@ class CommandInterface(object):
                 label = label.strip()
                 self.pulse_conc_list.append(label)
         except:
-            msg = "Unable to load config. EXCEPTION: %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
-            print msg
-            Log(msg, Level = 3)
-            return False
-
+            pass
+            
         # Create error constants from config
         for name in self.errorList:
             args = tuple(self.errorList[name].split(',',1))
