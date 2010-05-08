@@ -321,6 +321,8 @@ class WLMCalibrationType(Structure):
     ]
 
 # Constant definitions
+# Scheduler period (ms)
+SCHEDULER_PERIOD = 100
 # Maximum number of lasers
 MAX_LASERS = 4
 # Number of points in controller waveforms
@@ -1302,8 +1304,9 @@ i2cByIndex[19] = 'CAVITY_PRESSURE_ADC'
 i2cByIndex[20] = 'AMBIENT_PRESSURE_ADC'
 i2cByIndex[21] = 'DAS_TEMP_SENSOR'
 i2cByIndex[22] = 'VALVE_PUMP_TEC_PORT'
-i2cByIndex[23] = 'CHAIN0_MUX'
-i2cByIndex[24] = 'CHAIN1_MUX'
+i2cByIndex[23] = 'ANALOG_INTERFACE'
+i2cByIndex[24] = 'CHAIN0_MUX'
+i2cByIndex[25] = 'CHAIN1_MUX'
 
 #i2cByIdent tuple is (index,chain,mux,address)
 i2cByIdent = {}
@@ -1330,8 +1333,9 @@ i2cByIdent['CAVITY_PRESSURE_ADC'] = (19, 0, 7, 0x24)
 i2cByIdent['AMBIENT_PRESSURE_ADC'] = (20, 0, 7, 0x17)
 i2cByIdent['DAS_TEMP_SENSOR'] = (21, 0, -1, 0x4e)
 i2cByIdent['VALVE_PUMP_TEC_PORT'] = (22, 1, 4, 0x70)
-i2cByIdent['CHAIN0_MUX'] = (23, 0, -1, 0x70)
-i2cByIdent['CHAIN1_MUX'] = (24, 1, -1, 0x71)
+i2cByIdent['ANALOG_INTERFACE'] = (23, 0, 4, 0x10)
+i2cByIdent['CHAIN0_MUX'] = (24, 0, -1, 0x70)
+i2cByIdent['CHAIN1_MUX'] = (25, 1, -1, 0x71)
 registerByName["NOOP_REGISTER"] = NOOP_REGISTER
 registerInfo.append(RegInfo("NOOP_REGISTER",c_uint,0,1.0,"rw"))
 registerByName["VERIFY_INIT_REGISTER"] = VERIFY_INIT_REGISTER
