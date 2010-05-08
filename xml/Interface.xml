@@ -119,7 +119,7 @@
             <field ident="lockerOffset" type="uint32"/>
             <field ident="fineLaserCurrent" type="uint32"/>
             <field ident="lockerError" type="int32"/>
-        </struct>		
+        </struct>
         <struct type="RingdownMetadataDoubleType">
             <field ident="ratio1" type="double"/>
             <field ident="ratio2" type="double"/>
@@ -294,6 +294,7 @@
     </struct_list>
     <constant_list>
         <!-- N.B. All SIZE and OFFSET variables are in 32 bit integers, all ADDRESS variables are in bytes -->
+        <constant ident="SCHEDULER_PERIOD" description="Scheduler period (ms)">100</constant>
         <constant ident="MAX_LASERS" description="Maximum number of lasers">4</constant>
         <constant ident="CONTROLLER_WAVEFORM_POINTS" description="Number of points in controller waveforms">1000</constant>
         <constant ident="CONTROLLER_RINGDOWN_POINTS" description="Number of points for waveforms on controller rindown pane">10000</constant>
@@ -2847,6 +2848,7 @@
         <i2c ident="AMBIENT_PRESSURE_ADC" chain="0" mux="7" address="0x17" />
         <i2c ident="DAS_TEMP_SENSOR" chain="0" address="0x4E" />
         <i2c ident="VALVE_PUMP_TEC_PORT" chain="1" mux="4" address="0x70" />
+        <i2c ident="ANALOG_INTERFACE" chain="0" mux="4" address="0x10" />
         <i2c ident="CHAIN0_MUX" chain="0" address="0x70" />
         <i2c ident="CHAIN1_MUX" chain="1" address="0x71" />
     </i2c_list>

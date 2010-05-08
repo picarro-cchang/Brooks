@@ -282,6 +282,8 @@ typedef struct {
 } WLMCalibrationType;
 
 /* Constant definitions */
+// Scheduler period (ms)
+#define SCHEDULER_PERIOD (100)
 // Maximum number of lasers
 #define MAX_LASERS (4)
 // Number of points in controller waveforms
@@ -1071,8 +1073,9 @@ typedef enum {
 #define AMBIENT_PRESSURE_ADC 20
 #define DAS_TEMP_SENSOR 21
 #define VALVE_PUMP_TEC_PORT 22
-#define CHAIN0_MUX 23
-#define CHAIN1_MUX 24
+#define ANALOG_INTERFACE 23
+#define CHAIN0_MUX 24
+#define CHAIN1_MUX 25
 
 /* FPGA block definitions */
 

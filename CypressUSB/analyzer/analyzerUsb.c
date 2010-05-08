@@ -70,7 +70,7 @@ static WORD xFIFOBC_IN = 0x0000;  // variable that contains EP6FIFOBCH/L value
 //-----------------------------------------------------------------------------
 // Variables for DAC resynchronizer
 //-----------------------------------------------------------------------------
-#define QSIZE   (1600)
+#define QSIZE   (1300)
 #define NCHANNELS (8)
 #define MAGIC_CODE 'S'
 #define MAKEWORD( h, l ) \ 
@@ -88,9 +88,48 @@ unsigned short int now = 0, divisor;
 unsigned short int next_time;
 unsigned char errorFlags = 0, data_available = 0;
 //-----------------------------------------------------------------------------
+// Wait for EP0 not busy. Returns 0 on timeout, 1 on success
+//-----------------------------------------------------------------------------
+int wait_EP0_not_busy()
+{
+    WORD i=0, time=1;
+    while (time && (EP01STAT & bmEP0BSY)) {
+        i++;
+        if (i==0) time--;
+    }
+    if (!time) 	LED_On (bmBIT1); // Indicate EP0 busy timeout error
+    return (time != 0);
+}
+//-----------------------------------------------------------------------------
+// Wait for GPIF done. Returns 0 on timeout, 1 on success
+//-----------------------------------------------------------------------------
+int wait_GPIF_done()
+{
+    WORD i=0, time=1;
+    while (time && !( GPIFTRIG & 0x80 ) ) {
+        i++;
+        if (i==0) time--;
+    }
+    if (!time) 	LED_On (bmBIT2); // Indicate GPIF_done timeout error
+    return (time != 0);
+}
+//-----------------------------------------------------------------------------
+// Wait for HPI ready. Returns 0 on timeout, 1 on success
+//-----------------------------------------------------------------------------
+int wait_HPI_ready()
+{
+    WORD i=0, time=1;
+    while (time && !HPI_RDY ) {
+        i++;
+        if (i==0) time--;
+    }
+    if (!time) 	LED_On (bmBIT3); // Indicate HPI_RDY timeout error
+    return (time != 0);
+}
+//-----------------------------------------------------------------------------
 
 void GPIF_SingleWordWrite( WORD gdata ) {
-    while ( !( GPIFTRIG & 0x80 ) ); // poll GPIFTRIG.7 Done bit
+    if (!wait_GPIF_done()) return;
     // using registers in XDATA space
     XGPIFSGLDATH = gdata >> 8;
     XGPIFSGLDATLX = gdata & 0xFFFF; // trigger GPIF Single Word Write transaction
@@ -98,12 +137,11 @@ void GPIF_SingleWordWrite( WORD gdata ) {
 
 void GPIF_SingleWordRead( WORD *gdata ) {
     static BYTE g_data = 0x00;     // dummy variable
-    while ( !( GPIFTRIG & 0x80 ) ); // poll GPIFTRIG.7 Done bit
+    if (!wait_GPIF_done()) return;
     // using register in XDATA space
     g_data = XGPIFSGLDATLX;        // dummy read to trigger GPIF
                                    // Single Word Read transaction
-
-    while ( !( GPIFTRIG & 0x80 ) ); // poll GPIFTRIG.7 Done bit
+    if (!wait_GPIF_done()) return;
     // using register(s) in XDATA space, retrieve word just read from ext. FIFO
     *gdata = ( ( WORD )XGPIFSGLDATLNOX << 8 ) | ( WORD )XGPIFSGLDATH;
 }
@@ -114,40 +152,40 @@ void GPIF_SingleWordRead( WORD *gdata ) {
 //-----------------------------------------------------------------------------
 void qinit()
 {
-	EA = 0;
+    EA = 0;
     dac_queue.head = dac_queue.tail = dac_queue.count = 0;
-	EA = 1;
+    EA = 1;
 }
 
 unsigned char qput(unsigned char d)
 // Places data d onto the queue, returns 1 on success, 0 if queue is full 
 {
-	EA = 0;
+    EA = 0;
     if (dac_queue.count == QSIZE) {
         errorFlags |= DAC_QUEUE_OVERFLOW;
-		EA = 1;
+        EA = 1;
         return 0;
     }
     dac_queue.qdata[dac_queue.tail++] = d;
     if (dac_queue.tail == QSIZE) dac_queue.tail = 0;
     dac_queue.count++;
-	EA = 1;
+    EA = 1;
     return 1;
 }
 
 unsigned char qget(unsigned char *d)
 // Get data *d from the queue, returns 1 on success, 0 if queue is empty 
 {
-	EA = 0;
+    EA = 0;
     if (dac_queue.count == 0) {
         errorFlags |= DAC_QUEUE_UNDERFLOW;
-		EA = 1;
+        EA = 1;
         return 0;
     }
     *d = dac_queue.qdata[dac_queue.head++];
     if (dac_queue.head == QSIZE) dac_queue.head = 0;
     dac_queue.count--;
-	EA = 1;
+    EA = 1;
     return 1;
 }
 
@@ -172,8 +210,8 @@ void write_dac(unsigned char channel,unsigned short int value)
     ET2 = 0;	// Do not allow timer interrupts when writing to DAC
     buffer[0] = 0x30 | channel;
     buffer[1] = MSB(value);
-    buffer[2] = LSB(0xFF);
-    EZUSB_WriteI2C(0x10, 3, buffer);
+    buffer[2] = LSB(value);
+    EZUSB_WriteI2C_(0x10, 3, buffer);
     ET2 = 1;
 }
 //-----------------------------------------------------------------------------
@@ -205,7 +243,7 @@ void TD_Init(void) {           // Called once at startup
     EP4CFG = 0xA0;           // Activate EP4 for bulk output, 512 bytes, 2x buffered
     SYNCDELAY;
 */
-	EP6CFG = 0xE0;           // Activate EP6 for bulk input, 512 bytes, 4x buffered
+    EP6CFG = 0xE0;           // Activate EP6 for bulk input, 512 bytes, 4x buffered
     SYNCDELAY;
     EP8CFG = 0x00;           // Deactivate EP8
     SYNCDELAY;
@@ -213,8 +251,6 @@ void TD_Init(void) {           // Called once at startup
     FIFORESET = 0x80;        // NAKALL while resetting FIFOs
     SYNCDELAY;
     FIFORESET = 0x02;        // Reset EP2
-    SYNCDELAY;
-    FIFORESET = 0x04;        // Reset EP4
     SYNCDELAY;
     FIFORESET = 0x06;        // Reset EP6
     SYNCDELAY;
@@ -277,18 +313,73 @@ void TD_Init(void) {           // Called once at startup
 
     init();
     ET2 = 1;                            /* enable timer 2 interrupt    */
-	next_time = now + 10;
+    // EPIE |= 0x10;                       /* enable EP6 interrupt */
+    next_time = now + 10;
+}
+
+static unsigned char chanMask = 0;	// Mask of channels not yet sent
+static unsigned char channel;
+
+/* The following sends the next sample to the DAC. It is important not
+   to send more than one sample at a time, since this bogs down the idle
+   loop and prevents the GPIF from working properly. Consequently, this
+   routine remembers which sample was sent last and either sends a
+   sample with the same timestamp to another channel or it gets the 
+   sample at next_time, provided of course that it is time to send it out. */
+   
+void sendDacSample()
+{
+    unsigned char b;
+    short int delta;
+    unsigned short int value;
+
+       if (!chanMask) {	// We are not currently sending data to multiple channels
+                        // with the same timestamp
+        if (data_available) {
+            delta = next_time - now;
+            if (delta > 0) return;  // Next time has not yet come
+            // Check for magic code for resynchronization
+            do {
+                if (!qget(&b)) return;
+            } while ( b != MAGIC_CODE );
+            // Send out data at front of queue
+            if (!qget(&chanMask)) return;   // get channel mask
+            channel = 0;
+        }
+    }
+    while (chanMask && (0 == (chanMask & 1))) {	// Find channel to send
+        chanMask >>= 1;
+        channel++;
+    }
+    if (!chanMask) return;
+    if (!qget(&b)) return;	// get data
+    value = b;
+    if (!qget(&b)) return;
+    value |= ((WORD)(b) << 8); 
+    write_dac(channel,value);
+
+       chanMask >>= 1;
+    channel++;
+    if (chanMask != 0) return;
+
+    // If we get here, we have sent the last channel available for this timestamp
+    //  We now need to get the next timestamp off the queue
+    data_available = 0;
+    if (dac_queue.count > 0) {
+        if (!qget(&b)) return;  // pop off timestamp
+        next_time = b;
+        if (!qget(&b)) return;
+        next_time |= ((WORD)(b) << 8);
+        data_available = 1;	    // indicate data are still on queue
+    }
 }
 
 void TD_Poll(void) {           // Called repeatedly while the device is idle
-    unsigned char b, c, i, channel;
-    short int delta;
-    unsigned short int value;
     WORD nTransfers;
     if ( GPIFTRIG & 0x80 ) {           // if GPIF interface IDLE
         if ( ! ( EP24FIFOFLGS & 0x02 ) ) { // if there's a packet in the peripheral domain for EP2
             // TODO: Uncomment this line when the hardware arrives
-            while(!HPI_RDY);             // wait for HPI to complete internal portion of previous transfer
+            if (!wait_HPI_ready()) return;
             // Divide the number of bytes in FIFO by two to get number of GPIF transfers
             // N.B. The (WORD) cast is essential so that the expression is not evaluated as a byte
             nTransfers = MAKEWORD( EP2FIFOBCH, EP2FIFOBCL );
@@ -307,7 +398,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
                 while ( !( GPIFTRIG & 0x80 ) ); // poll GPIFTRIG.7 GPIF Done bit
                 SYNCDELAY;
             }
-            while(!HPI_RDY);             // wait for HPI to complete internal portion of previous transfer
+            if (!wait_HPI_ready()) return;
             IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPID_MANUAL; // select HPID register without address auto-increment
             GPIFTCB1 = 0;      // setup transaction count with number of bytes in the EP2 FIFO
             SYNCDELAY;
@@ -315,9 +406,9 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
             SYNCDELAY;
             GPIFTRIG = GPIFTRIGWR | GPIF_EP2; // launch GPIF FIFO WRITE Transaction from EP2 FIFO
             SYNCDELAY;
-            while ( !( GPIFTRIG & 0x80 ) ); // poll GPIFTRIG.7 GPIF Done bit
+            if (!wait_GPIF_done()) return;
             SYNCDELAY;
-            while(!HPI_RDY);             // wait for HPI to complete internal portion of previous transfer
+            if (!wait_HPI_ready()) return;
             SYNCDELAY;
         }
 
@@ -325,7 +416,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
             if ( !( EP68FIFOFLGS & 0x01 ) ) { // if EP6 FIFO is not full
 
                 // TODO: Uncomment next line when hardware is present
-                while(!HPI_RDY);         // wait for HPI to complete internal portion of previous transfer
+                if (!wait_HPI_ready()) return;
 
                 // According to 6713 errata SPRZ191G, last 32-bit transfer should be done without autoincrement
                 //  At this point, Tcount is measured in 16-bit words
@@ -344,7 +435,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
                     GPIFTRIG = GPIFTRIGRD | GPIF_EP6; // launch GPIF FIFO READ Transaction to EP6IN
                     SYNCDELAY;
 
-                    while ( !( GPIFTRIG & 0x80 ) );   // poll GPIFTRIG.7 GPIF Done bit
+                    if (!wait_GPIF_done()) return;
                     SYNCDELAY;
                 }
                 IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPID_MANUAL;          // select HPID register with address auto-increment
@@ -360,7 +451,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
                 GPIFTRIG = GPIFTRIGRD | GPIF_EP6; // launch GPIF FIFO READ Transaction to EP6IN
                 SYNCDELAY;
 
-                while ( !( GPIFTRIG & 0x80 ) );   // poll GPIFTRIG.7 GPIF Done bit
+                if (!wait_GPIF_done()) return;
                 SYNCDELAY;
 
                 xFIFOBC_IN = MAKEWORD(EP6FIFOBCH, EP6FIFOBCL ); // get EP6FIFOBCH/L value
@@ -370,57 +461,17 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
 
                 Tcount = 0;                       // set Tcount to zero to cease reading from DSP HPI RAM
                 IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPID_MANUAL; // Turn off address auto-increment
-                while(!HPI_RDY);             // wait for HPI to complete internal portion of previous transfer
+                if (!wait_HPI_ready()) return;
                 SYNCDELAY;
             }
         }
     }
+    // Only try to send data if the I2C subsystem is idle, and only one sampple at a time, otherwise 
+    //  we lock out other essential USB processing
+    
+    if (I2CPckt.status == I2C_IDLE) sendDacSample();
 
-/*	
-	if (now == next_time) {
-		channel = 0;
-		value = now << 8;
-    	write_dac(channel,value);
-		channel = 1;
-		value = (65535-now) << 8;
-        write_dac(channel,value);
-		next_time++;
-	}
-*/    
-
-	if (data_available) {
-        delta = next_time - now;
-        if (delta > 0) goto cont;	// Next time has not yet come
-		data_available = 0;
-		// Check for magic code for resynchronization
-    	do {
-	    	if (!qget(&c)) goto cont;
-		} while ( c != MAGIC_CODE );
-        // Send out data at front of queue
-        if (!qget(&c)) goto cont;   // get channel mask
-        channel = 0;
-        for (i=0; (i<8)&&c; i++) {
-            if (c & 1) {
-                if (!qget(&b)) goto cont;	// get data
-                value = b;
-                if (!qget(&b)) goto cont;
-                value |= ((WORD)(b) << 8); 
-                write_dac(channel,value);
-            }
-            channel++;
-            c >>= 1;
-        }
-		if (dac_queue.count > 0) {
-	        if (!qget(&b)) goto cont;	// pop off timestamp
-			next_time = b;
-    	    if (!qget(&b)) goto cont;
-			next_time |= ((WORD)(b) << 8);
-			data_available = 1;			// more data are still on queue
-		}
-    }
-cont:
-
-	// blink LED0 to indicate firmware is running
+    // blink LED0 to indicate firmware is running
     if (!LED_Count) {
         if (LED_Status) {
             LED_Off (bmBIT0);
@@ -544,7 +595,7 @@ BOOL DR_VendorCmnd(void) {
         case FPGA_SEND_DATA:
             EP0BCL = 0;
             // Make sure that EP0 is not busy before trying get from the FIFO
-            while (EP01STAT & bmEP0BSY);
+            if (!wait_EP0_not_busy()) return TRUE;
             // send_bytes(EP0BUF,(BYTE)length);
             // Uncomment the following for synchronous serial port
             // Send bytes via synchronous serial port
@@ -599,18 +650,18 @@ BOOL DR_VendorCmnd(void) {
         break;
     case VENDOR_READ_HPIC:
         // TODO: Enable this when h/w becomes available
-        while(!HPI_RDY);
-
+        if (!wait_HPI_ready()) return TRUE;
+        SYNCDELAY;
         Destination = (WORD *)(&EP0BUF);
         IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIC;       // Select HPIC register with HHWIL low
         SYNCDELAY;
         GPIF_SingleWordRead(Destination);
-        while ( 0 == (GPIFTRIG & 0x80) );
+        if (!wait_GPIF_done()) return TRUE;
         Destination++;
         IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIC | bmHPIHW;     // Set HHWIL high
         SYNCDELAY;
         GPIF_SingleWordRead(Destination);
-        while ( 0 == (GPIFTRIG & 0x80) );
+        if (!wait_GPIF_done()) return TRUE;
         EP0BCH = 0;
         EP0BCL = 4;
         // Acknowledge handshake phase of device request
@@ -618,35 +669,35 @@ BOOL DR_VendorCmnd(void) {
         break;
     case VENDOR_WRITE_HPIC:
         EP0BCL = 0;
-        while (EP01STAT & bmEP0BSY);
+        if (!wait_EP0_not_busy()) return TRUE;
         // TODO: Enable this when h/w becomes available
-        while(!HPI_RDY);
+        if (!wait_HPI_ready()) return TRUE;
 
         IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIC;       // Select HPIC register with HHWIL low
         SYNCDELAY;
         GPIF_SingleWordWrite(((WORD)EP0BUF[1]<<8) | EP0BUF[0]);
-        while ( 0 == (GPIFTRIG & 0x80) );
+        if (!wait_GPIF_done()) return TRUE;
         IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIC | bmHPIHW;     // Set HHWIL high
         SYNCDELAY;
         GPIF_SingleWordWrite(((WORD)EP0BUF[3]<<8) | EP0BUF[2]);
-        while ( 0 == (GPIFTRIG & 0x80) );
+        if (!wait_GPIF_done()) return TRUE;
         // Acknowledge handshake phase of device request
         // EP0CS |= bmHSNAK;
         break;
     case VENDOR_READ_HPIA:
         // TODO: Enable this when h/w becomes available
-        while(!HPI_RDY);
+        if (!wait_HPI_ready()) return TRUE;
 
         Destination = (WORD *)(&EP0BUF);
         IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIA;       // Select HPIC register with HHWIL low
         SYNCDELAY;
         GPIF_SingleWordRead(Destination);
-        while ( 0 == (GPIFTRIG & 0x80) );
+        if (!wait_GPIF_done()) return TRUE;
         Destination++;
         IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIA | bmHPIHW;     // Set HHWIL high
         SYNCDELAY;
         GPIF_SingleWordRead(Destination);
-        while ( 0 == (GPIFTRIG & 0x80) );
+        if (!wait_GPIF_done()) return TRUE;
         EP0BCH = 0;
         EP0BCL = 4;
         // Acknowledge handshake phase of device request
@@ -654,24 +705,24 @@ BOOL DR_VendorCmnd(void) {
         break;
     case VENDOR_WRITE_HPIA:
         EP0BCL = 0;
-        while (EP01STAT & bmEP0BSY);
+        if (!wait_EP0_not_busy()) return TRUE;
         // TODO: Enable this when h/w becomes available
-        while(!HPI_RDY);
+        if (!wait_HPI_ready()) return TRUE;
 
         IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIA;       // Select HPIA register with HHWIL low
         SYNCDELAY;
         GPIF_SingleWordWrite(((WORD)EP0BUF[1]<<8) | EP0BUF[0]);
-        while ( 0 == (GPIFTRIG & 0x80) );
+        if (!wait_GPIF_done()) return TRUE;
         IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIA | bmHPIHW;     // Set HHWIL high
         SYNCDELAY;
         GPIF_SingleWordWrite(((WORD)EP0BUF[3]<<8) | EP0BUF[2]);
-        while ( 0 == (GPIFTRIG & 0x80) );
+        if (!wait_GPIF_done()) return TRUE;
         // Acknowledge handshake phase of device request
         // EP0CS |= bmHSNAK;
         break;
     case VENDOR_SET_HPID_IN_BYTES:
         EP0BCL = 0;
-        while (EP01STAT & bmEP0BSY);
+        if (!wait_EP0_not_busy()) return TRUE;
         Tcount = ((WORD)EP0BUF[1] << 8) | EP0BUF[0];
         Tcount = Tcount >> 1;
         // Acknowledge handshake phase of device request
@@ -707,7 +758,7 @@ BOOL DR_VendorCmnd(void) {
         // value specifies the DAC
         EP0BCL = 0;
         // Make sure that EP0 is not busy before trying get from the FIFO
-        while (EP01STAT & bmEP0BSY);
+        if (!wait_EP0_not_busy()) return TRUE;
         // send_bytes(EP0BUF,(BYTE)length);
         buffer[0] = 0x30 | (SETUPDAT[2] & 0x7);
         buffer[1] = EP0BUF[0];
@@ -719,15 +770,14 @@ BOOL DR_VendorCmnd(void) {
     case VENDOR_DAC_QUEUE_CONTROL:
         EP0BCL = 0;
         // Make sure that EP0 is not busy before trying get from the FIFO
-        while (EP01STAT & bmEP0BSY);
-
+        if (!wait_EP0_not_busy()) return TRUE;
         switch (value) {
         case DAC_QUEUE_RESET:
             reset();
             break;
         case DAC_SET_TIMESTAMP:
             now     = ((WORD)EP0BUF[1]<<8) | EP0BUF[0];
-			next_time = now + 10;
+            next_time = now + 10;
             break;
         case DAC_SET_RELOAD_COUNT:
             ET2 = 0;
@@ -768,32 +818,32 @@ BOOL DR_VendorCmnd(void) {
     case VENDOR_DAC_ENQUEUE_DATA:
         EP0BCL = 0;
         // Make sure that EP0 is not busy before trying get from the FIFO
-        while (EP01STAT & bmEP0BSY);
-		i = 0;
-		while (i<length) {
-	        unsigned char c;
-			qput(EP0BUF[i++]);		// Enqueue timestamp
-			qput(EP0BUF[i++]);		
-			qput(MAGIC_CODE);		// Write magic code (for synchronization)
-			qput(c = EP0BUF[i++]);	// Enqueue channel bitmask
+        if (!wait_EP0_not_busy()) return TRUE;
+        i = 0;
+        while (i<length) {
+            unsigned char c;
+            if (!qput(EP0BUF[i++])) break;		// Enqueue timestamp
+            if (!qput(EP0BUF[i++])) break;		
+            if (!qput(MAGIC_CODE)) break;		// Write magic code (for synchronization)
+            if (!qput(c = EP0BUF[i++])) break;	// Enqueue channel bitmask
             while (c) {
                 if (c & 1) {		// Enqueue DAC data
-                    qput(EP0BUF[i++]);
-                    qput(EP0BUF[i++]);
+                    if (!qput(EP0BUF[i++])) break;
+                    if (!qput(EP0BUF[i++])) break;
                 }
                 c >>= 1;
             }
         }
-		if (!data_available) {
-	        if (qget(&b)) {	// pop off timestamp
-				next_time = b;
-		    	if (qget(&b)) {
-					next_time |= ((WORD)(b) << 8);
-					data_available = 1;
-				}
-			}
-		}
-		break;
+        if (!data_available) {
+            if (qget(&b)) {	// pop off timestamp
+                next_time = b;
+                if (qget(&b)) {
+                    next_time |= ((WORD)(b) << 8);
+                    data_available = 1;
+                }
+            }
+        }
+        break;
     default:
         return TRUE; // Indicates failure
     }
@@ -805,8 +855,8 @@ BOOL DR_VendorCmnd(void) {
 void timer2_isr (void) interrupt TMR2_VECT {
     /* Service the queues on timer interrupt */
     // unsigned char i;
-	now++;
-	TF2 = 0;
+    now++;
+    TF2 = 0;
 }
 //-----------------------------------------------------------------------------
 // USB Interrupt Handlers
@@ -871,6 +921,12 @@ void ISR_Ep1in(void) interrupt 0 {
 void ISR_Ep1out(void) interrupt 0 {
 }
 void ISR_Ep2inout(void) interrupt 0 {
+/*    EZUSB_IRQ_CLEAR();
+    EPIRQ = 0x10;
+    if ( GPIFTRIG & 0x80) {
+        }
+    }
+*/
 }
 void ISR_Ep4inout(void) interrupt 0 {
 }

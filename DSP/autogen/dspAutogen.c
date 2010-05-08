@@ -19,7 +19,7 @@ extern int writeRegister(unsigned int regNum,DataType data);
 RegTypes regTypes[401];
 
 /* I2C devices */
-I2C_device i2c_devices[25] = {
+I2C_device i2c_devices[26] = {
     {0, -1, 0x55},
     {0, 0, 0x26},
     {0, 0, 0x14},
@@ -43,6 +43,7 @@ I2C_device i2c_devices[25] = {
     {0, 7, 0x17},
     {0, -1, 0x4e},
     {1, 4, 0x70},
+    {0, 4, 0x10},
     {0, -1, 0x70},
     {1, -1, 0x71}};
 

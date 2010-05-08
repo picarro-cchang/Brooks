@@ -16,7 +16,7 @@
 #include "interface.h"
 
 typedef struct i2c_device{ int chain; int mux; int addr; } I2C_device;
-extern I2C_device i2c_devices[25];
+extern I2C_device i2c_devices[26];
 
 void initRegisters(void);
 extern RegTypes regTypes[401];

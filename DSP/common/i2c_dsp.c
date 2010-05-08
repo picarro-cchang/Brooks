@@ -72,9 +72,18 @@ IDEF Uint32 I2C_xsmt(I2C_Handle hI2c)
 /*----------------------------------------------------------------------------*/
 int initializeI2C(I2C_Handle hI2c)
 // Initialize I2C port, return I2C_BUSY if I2C bus does not become free
+// SYSCLK2 is set to 50/(3+1)*9 = 112.5MHz and the I2C prescaler is set to 0xE=14
+//  so the I2C prescaled module clock is 112.5/14 = 8.0357MHz. The
+//  high and low durations of SCLK are 1/(ICCH+5) and 1/(ICCL+5) times the prescaled
+//  module clock period.
+//  With ICCH = 1, this gives a high period of 0.75us and
+//  With ICCL = 8, this gives a low period of  1.62us
+
+//  With ICCH = 35, this gives a high period of 4.97us
+//  With ICCL = 35, this gives a low period of  4.97us
 {
     int loops = 0;
-    Uint32 i2coar = I2C_I2COAR_A_OF(0x10);  // Own address
+    Uint32 i2coar = I2C_I2COAR_A_OF(0x44);  // Own address
     Uint32 i2cimr = 0x0;    // Interrupt enable mask
     Uint32 i2cclkl = I2C_I2CCLKL_ICCL_OF(0x8);  // I2C Clock divider (low)
     Uint32 i2cclkh = I2C_I2CCLKH_ICCH_OF(0x1); // I2C Clock divider (high)
