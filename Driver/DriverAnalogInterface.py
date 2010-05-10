@@ -39,10 +39,10 @@ class AnalogInterface(object):
             for key in sec:
                 if key.startswith("SCALE"):
                     chan = int(key[5:])
-                    self.scale[chan-1] = float(sec[key])
+                    self.scale[chan] = float(sec[key])
                 elif key.startswith("OFFSET"):
                     chan = int(key[6:])
-                    self.offset[chan-1] = float(sec[key])
+                    self.offset[chan] = float(sec[key])
 
         self.clockPeriodms = 10
         clockFreq = 1000/self.clockPeriodms
