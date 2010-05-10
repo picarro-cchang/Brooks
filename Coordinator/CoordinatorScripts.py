@@ -98,6 +98,23 @@ def disableCalScript():
     LOGFUNC("Calibration script from Data Manager is disabled\n") 
     DATAMGR.Cal_Disable()  
 
+##########################
+# Data logger functions
+##########################
+def startDataLog(userLogName):
+    try:
+        DATALOGGER.DATALOGGER_startLogRpc(userLogName)
+        LOGFUNC("Data log started\n")
+    except:
+        LOGFUNC("Failed to start data log\n")
+    
+def stopDataLog(userLogName):
+    try:
+        DATALOGGER.DATALOGGER_stopLogRpc(userLogName)
+        LOGFUNC("Data log stopped\n")
+    except:
+        LOGFUNC("Failed to stop data log\n")
+    
 #########################
 # Batch mode / rising loss trigger functions    
 #########################

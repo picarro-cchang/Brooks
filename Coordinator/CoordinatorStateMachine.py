@@ -26,7 +26,7 @@ import CoordinatorScripts
 from Autosampler import Autosampler
 from IsotechGC import GC
 from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, RPC_PORT_DATALOGGER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SerIntrf import SerIntrf
 
@@ -141,6 +141,7 @@ class StateMachine(object):
         self.measSys = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM, ClientName = "Coordinator")
         self.sampleMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = "Coordinator")
         self.dataMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = "Coordinator")
+        self.dataLogger = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "Coordinator")
         
     def defaultLogger(self,str):
         print str
@@ -176,7 +177,8 @@ class StateMachine(object):
         CoordinatorScripts.DRIVER = self.driver
         CoordinatorScripts.MEASSYS = self.measSys
         CoordinatorScripts.SAMPLEMGR = self.sampleMgr
-        CoordinatorScripts.DATAMGR = self.dataMgr         
+        CoordinatorScripts.DATAMGR = self.dataMgr
+        CoordinatorScripts.DATALOGGER = self.dataLogger        
         CoordinatorScripts.LOGFUNC = self.logFunc
         CoordinatorScripts.CONFIG = self.config
         #try:
