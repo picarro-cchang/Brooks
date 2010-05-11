@@ -174,7 +174,6 @@ class ValveSequencer(ValveSequencerFrame):
         # Do not interfere with valves which are not controlled by valve sequencer        
         CRDS_Driver.closeValves((~mask) & (2**self.numSolValves-1))
         CRDS_Driver.openValves(mask & (2**self.numSolValves-1))
-        mask = CRDS_Driver.getValveMask()
         valCode = mask % 64
         rotValCode = (mask - valCode) / 64
         
