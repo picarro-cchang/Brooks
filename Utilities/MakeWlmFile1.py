@@ -85,7 +85,7 @@ class WlmFileMaker(object):
         self.fp = file(self.fname,"w")
 
         if "-w" in options:
-            self.waitTime = int(options["-w"])
+            self.waitTime = float(options["-w"])
         else:
             self.waitTime = float(self.config["SETTINGS"]["WAIT_TIME"])
         if self.waitTime < 0:
