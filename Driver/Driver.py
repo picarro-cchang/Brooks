@@ -20,6 +20,7 @@ import os
 import struct
 import sys
 import tables
+import threading
 import time
 import types
 import traceback
@@ -865,7 +866,8 @@ class Driver(SharedTypes.Singleton):
             # Initialize the analog interface
             analogInterfacePresent = 0 != (self.dasInterface.hostToDspSender.rdRegUint("HARDWARE_PRESENT_REGISTER") & (1 << interface.HARDWARE_PRESENT_AnalogInterface))
             print "Analog interface present: %s" % analogInterfacePresent
-            if analogInterfacePresent: self.analogInterface.initializeClock()
+            if analogInterfacePresent: 
+                self.analogInterface.initializeClock()
             # Here follows the main loop.
             Log("Starting main driver loop",Level=1)
             try:
@@ -875,9 +877,9 @@ class Driver(SharedTypes.Singleton):
                     timeSoFar += sensorHandler.process(max(0.05,0.2-timeSoFar))
                     timeSoFar += ringdownHandler.process(max(0.05,0.5-timeSoFar))
                     daemon.handleRequests(max(0.005,0.5-timeSoFar))
-                    # Service the analog interface
-                    if analogInterfacePresent: self.analogInterface.serve()
                     # Periodically save the state of the DAS and nudge the DAS timestamp
+                    if analogInterfacePresent: 
+                        self.analogInterface.serve()
                     now = time.time()
                     if now > self.lastSaveDasState + 30.0:
                         self.nudgeDasTimestamp()

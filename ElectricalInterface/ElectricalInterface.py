@@ -42,7 +42,7 @@ from inspect import isclass
 from Host.Common import CmdFIFO, Listener
 from Host.Common import MeasData
 from Host.Common import AppStatus
-from Host.Common.timestamp import unixTimeToTimestamp
+from Host.Common.timestamp import unixTimeToTimestamp, getTimestamp
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_EIF_HANDLER, BROADCAST_PORT_DATA_MANAGER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.StringPickler import StringAsObject,ObjAsString,ArbitraryObject
@@ -209,8 +209,7 @@ class EifAnalogOutput(EifSignal):
                 outputLevel = self.allowedMax
                 
         self.currentvalue = outputLevel
-        self.eif.addSample( dasTime, self.channel, outputLevel )
-        return True
+        return ( dasTime, self.channel, outputLevel )
 
     def _writeOutput(self, outputLevel):
         self.eif.writeSample( self.channel, outputLevel )
@@ -222,6 +221,7 @@ class EifAnalogOutput(EifSignal):
 
     def trackMeasOutput( self, dasTime, measuredValue ):
         outputLevel = self._convertMeasuredValue( measuredValue )
+        print dasTime, measuredValue, outputLevel
         return self._sendOutputToBuffer(dasTime, outputLevel)
 
     def setOutput( self, outputLevel ):
@@ -277,7 +277,7 @@ class EifMgr(object):
 
         # list of analog objects
         self.analogOutput={}
-        self.sampleBuffer = []
+        self.sampleBuffer = Queue.Queue(0)
         
         # Load configuration file
         self.loadConfig(filename)
@@ -313,19 +313,22 @@ class EifMgr(object):
 
         for channel in self.analog_outputs:
             Log("Initializing analog channel", dict(Channel = channel))
-            self.analogOutput[channel] = EifAnalogOutput(channel, self._driver, self._config, self.analog_allowedMin, self.analog_allowedMax)
+            self.analogOutput[channel] = EifAnalogOutput(channel, self, self._config, self.analog_allowedMin, self.analog_allowedMax)
 
-    def addSample(self, dasTime, channel, voltage):
-        curDasTime = self._driver.dasGetTicks()
-        if (len(self.sampleBuffer) >= self.analog_buffer_size) or \
-            (self.sampleBuffer[0][0] < (curDasTime+self.analog_time_margin)):
-            self.sendSamples()
-            self.sampleBuffer = []
-        self.sampleBuffer.append(((dasTime + 1000*self.analog_time_delay) , channel, voltage))
-        
-    def sendSamples(self):
-        self._driver.sendDacSamples(self.sampleBuffer)
-        
+    def serviceQueue(self):
+        sampleList = []
+        while True:
+            try:
+                sampleList.append(self.sampleBuffer.get(timeout=0.5))
+            except Queue.Empty:
+                print "Queue.Empty"
+            curDasTime = getTimestamp()
+            if sampleList and \
+                ((len(sampleList) >= self.analog_buffer_size) or \
+                (sampleList[0][0] < (curDasTime+self.analog_time_margin))):
+                self._driver.sendDacSamples(sampleList)
+                sampleList = []
+
     def writeSample(self, channel, voltage):
         self._driver.writeDacSample(channel, voltage)
         
@@ -335,7 +338,6 @@ class EifMgr(object):
         try:
             self._measData.ImportPickleDict( dataDict )
             # if __debug__: print("\nSource (%s), Data (%s) %r" % (self._measData.Source, self._measData.Data, self._measData.MeasGood))
-        
             for channel in self.analog_outputs:
                 if self.analogOutput[channel].mode == EIF_OUTPUT_MODE_TRACKING:
                     source,label = self.analogOutput[channel].source.split( SOURCE_DELIMITER )
@@ -343,9 +345,10 @@ class EifMgr(object):
                         data = float(self._measData.Data[label])
                         dasTime = unixTimeToTimestamp(self._measData.Time)
                         if not self._measData.MeasGood and self.analog_allowedMin<=self.analogOutput[channel].invalidvalue<=self.analog_allowedMax:
-                            self.analogOutput[channel].trackInvalidOutput(dasTime)
+                            (dasTime, channel, voltage) = self.analogOutput[channel].trackInvalidOutput(dasTime)
                         else:
-                            self.analogOutput[channel].trackMeasOutput(dasTime, data)
+                            (dasTime, channel, voltage) = self.analogOutput[channel].trackMeasOutput(dasTime, data)
+                        self.sampleBuffer.put(((dasTime + 1000*self.analog_time_delay) , channel, voltage))
         except:
             msg = "measFilter: %s %s" % ( sys.exc_info()[0], sys.exc_info()[1])
             print msg
@@ -367,7 +370,10 @@ class EifMgr(object):
           ServerName = "ElectricalInterface", ServerDescription = "EifMgr",
           ServerVersion = __version__, threaded = True)
         self.registerRPCs( self )
-        self.RpcServer.serve_forever()
+        rpcThread = threading.Thread(target = self.RpcServer.serve_forever)
+        rpcThread.setDaemon(True)
+        rpcThread.start()
+        self.serviceQueue()
 
     def registerRPCs(self, obj ):
         """ Register base class routines """

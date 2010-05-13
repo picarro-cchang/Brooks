@@ -23,6 +23,7 @@ import time
 import threading
 from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
+from Host.Common.timestamp import getTimestamp
 from Host.Common.CustomConfigObj import CustomConfigObj
 
 NCHANNELS = 8
@@ -53,14 +54,16 @@ class AnalogInterface(object):
         self.dacStrLen = 0
         
     def initializeClock(self):
-        timestamp = self.driver.rpcHandler.dasGetTicks()
+        #timestamp = self.driver.rpcHandler.dasGetTicks()
+        timestamp = getTimestamp()
         self.driver.rpcHandler.setDacTimestamp(int(timestamp // self.clockPeriodms) & 0xFFFF)
         reloadCount = 65536 - self.divisor
         self.driver.rpcHandler.setDacReloadCount(reloadCount)
         self.driver.rpcHandler.resetDacQueue()
         # Samples which are enqueued with timestamps before 
         #  self.lastClk*self.clockPeriodms are discarded
-        self.lastClk = int((self.driver.rpcHandler.dasGetTicks()+1000)//self.clockPeriodms)
+        # self.lastClk = int((self.driver.rpcHandler.dasGetTicks()+1000)//self.clockPeriodms)
+        self.lastClk = int((getTimestamp()+1000)//self.clockPeriodms)
         
     def nudgeClock(self):
         ts1 = self.driver.rpcHandler.dasGetTicks()
@@ -104,9 +107,10 @@ class AnalogInterface(object):
         self.driver.rpcHandler.wrDac(channel,dacCounts)
         
     def serve(self):
-        """Send all enqueued samples which have to be output before the time horizon"""
-        bufferTime = 2000 # In milliseconds
-        timestamp = self.driver.rpcHandler.dasGetTicks()
+        """Send all enqueued samples which have to be output before now + bufferTime"""
+        bufferTime = 1000 # In milliseconds
+        # timestamp = self.driver.rpcHandler.dasGetTicks()
+        timestamp = getTimestamp()
         # Round horizon up to a multiple of the clock period
         horizon = int((timestamp + bufferTime + self.clockPeriodms - 1)//self.clockPeriodms) * self.clockPeriodms
         samplesToSend = {}
@@ -159,8 +163,8 @@ class AnalogInterface(object):
             try:
                 self.serve()
             except:
-                pass
-        time.sleep(0.001*period_ms)
+                raise
+            time.sleep(0.001*period_ms)
                 
 from math import pi, cos, sin
         
@@ -172,7 +176,7 @@ if __name__ == "__main__":
     serviceThread.setDaemon(True)
     serviceThread.start()
 
-    timestamp = Driver.dasGetTicks()    # ms resolution
+    timestamp = getTimestamp()    # ms resolution
     # Fill up buffer with samples up to 2000ms in advance of present
     tSamp = 10                          # 10ms sampling
     tLast = tSamp*int((timestamp + tSamp)//tSamp)    # Round up to next sample interval
@@ -181,7 +185,7 @@ if __name__ == "__main__":
     dx = 0.002*pi*freq*tSamp 
     while True:
         try:
-            timestamp = Driver.dasGetTicks()
+            timestamp = getTimestamp()
             while tLast < timestamp + 3000:
                 a.enqueueSample(tLast,0,5.0+5.0*cos(x))
                 a.enqueueSample(tLast,1,5.0+5.0*sin(x))
