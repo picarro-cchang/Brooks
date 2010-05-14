@@ -344,8 +344,9 @@ class EifMgr(object):
                     if source == self._measData.Source and label in self._measData.Data:
                         data = float(self._measData.Data[label])
                         dasTime = unixTimeToTimestamp(self._measData.Time)
-                        if not self._measData.MeasGood and self.analog_allowedMin<=self.analogOutput[channel].invalidvalue<=self.analog_allowedMax:
-                            (dasTime, channel, voltage) = self.analogOutput[channel].trackInvalidOutput(dasTime)
+                        if (self.analogOutput[channel].invalidvalue != None) and (not self._measData.MeasGood):
+                            if self.analog_allowedMin<=self.analogOutput[channel].invalidvalue<=self.analog_allowedMax:
+                                (dasTime, channel, voltage) = self.analogOutput[channel].trackInvalidOutput(dasTime)
                         else:
                             (dasTime, channel, voltage) = self.analogOutput[channel].trackMeasOutput(dasTime, data)
                         self.sampleBuffer.put(((dasTime + 1000*self.analog_time_delay) , channel, voltage))
