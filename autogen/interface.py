@@ -324,7 +324,7 @@ class WLMCalibrationType(Structure):
 # Scheduler period (ms)
 SCHEDULER_PERIOD = 100
 # Maximum number of lasers
-MAX_LASERS = 4
+MAX_LASERS = 8
 # Number of points in controller waveforms
 CONTROLLER_WAVEFORM_POINTS = 1000
 # Number of points for waveforms on controller rindown pane
