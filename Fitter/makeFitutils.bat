@@ -1,0 +1,1 @@
+c:\python25\scripts\f2py -c -m fitutils fitutils.f --compiler=mingw32

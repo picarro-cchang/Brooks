@@ -29,7 +29,7 @@ from cStringIO import StringIO
 from glob import glob
 from numpy import arange, arctan, argmax, argmin, argsort, array, bool_, cos
 from numpy import diff, searchsorted, dot, exp, flatnonzero, float_, frompyfunc
-from numpy import int8, int_, invert, iterable, linspace, logical_and, maximum, mean, median, ndarray, ones
+from numpy import int8, int_, invert, iterable, linspace, logical_and, mean, median, ndarray, ones
 from numpy import pi, shape, sin, sqrt, std, zeros
 from os.path import getmtime, join, split, exists
 from scipy.optimize import leastsq, brent
@@ -39,9 +39,6 @@ from time import strptime, mktime, time, localtime
 from Host.Common.EventManagerProxy import Log
 from tables import *
 from Host.Common.timestamp import unixTime
-import fitutils
-# import wingdbstub
-
 ################################################################################
 # GLOBAL VARIABLES
 ################################################################################
@@ -119,7 +116,7 @@ Ss = array([ 1.393237000E+0, 2.311524060E-1,
                   -1.553514660E-1, 6.218366240E-3,
                    9.190829860E-5,-6.275259580E-7])
 
-def voigt0(x,y):
+def voigt(x,y):
     """Evaluate the Voigt function with parameter y at the points in vector x."""
 
     def voigtCases():
@@ -169,12 +166,8 @@ def voigt0(x,y):
             ReKvs[mask2] = ReKvs[mask2] + ReKvs2[mask2]
             ReKvs[mask3] = ReKvs[mask3] + ReKvs3[mask3]
     return ReKvs + 1j*ImKvs
-
-def voigt(x,y):
-    return fitutils.voigt(x,y)
-    
 ################################################################################
-def galatry0(x,y,z,strength=1.0,minimum_loss=0.001):
+def galatry(x,y,z,strength=1.0,minimum_loss=0.001):
     """Evaluate the Galatry function at locations x."""
     # Determine which formula to use (region) for each value of x
     result = zeros(shape(x),'d')
@@ -209,7 +202,7 @@ def galatry0(x,y,z,strength=1.0,minimum_loss=0.001):
                     1j*(z**5/10080.0 + c3r*c4r),
                     -z**6/80640.0 + c3r*c5r + c4r**2/2.0],'D')
         xx = x[region1]
-        vv = voigt0(xx,y)
+        vv = voigt(xx,y)
         qq = xx + 1j*y
         ww = zeros((len(xx),9),'D')
         ww[:,0] = vv
@@ -259,9 +252,6 @@ def galatry0(x,y,z,strength=1.0,minimum_loss=0.001):
         result[region4] = 0.0
 
     return result
-    
-def galatry(x,y,z,strength=1.0,minimum_loss=0.001):
-    return fitutils.galatry(x,y,z,strength,minimum_loss)
 ################################################################################
 def makeSplineSection(config,secName,descr,xVal,yVal,y2Val=None):
     config.add_section(secName)
@@ -535,27 +525,24 @@ class CubicSpline(object):
         """Returns minimum and maximum values at which the spline can be computed"""
         return self.x_vals[0],self.x_vals[-1]
 
-    # def call(self,x):
-        # """Evaluate the spline at the points specified by the array x"""
-        # assert isinstance(x,ndarray)
-        # y = zeros(x.shape,'d')
-        # h = diff(self.x_vals)
-        # n = len(self.x_vals)
-        # x_bins = searchsorted(self.x_vals,x,'right')
-        # # Deal with points which are out of range
-        # y[x_bins==0] = self.y_vals[0]
-        # y[x_bins==n] = self.y_vals[-1]
-        # good = logical_and(x_bins > 0, x_bins < n)
-        # xg = x[good]; xbg = x_bins[good]
-        # A = (self.x_vals[xbg] - xg)/h[xbg-1]
-        # B = 1-A
-        # C = (A**3-A)*h[xbg-1]**2/6.0
-        # D = (B**3-B)*h[xbg-1]**2/6.0
-        # y[good] = A*self.y_vals[xbg-1]+B*self.y_vals[xbg]+C*self.y2_vals[xbg-1]+D*self.y2_vals[xbg]
-        # return y
-        
     def call(self,x):
-        return fitutils.speval(self.x_vals,self.y_vals,self.y2_vals,x)
+        """Evaluate the spline at the points specified by the array x"""
+        assert isinstance(x,ndarray)
+        y = zeros(x.shape,'d')
+        h = diff(self.x_vals)
+        n = len(self.x_vals)
+        x_bins = searchsorted(self.x_vals,x,'right')
+        # Deal with points which are out of range
+        y[x_bins==0] = self.y_vals[0]
+        y[x_bins==n] = self.y_vals[-1]
+        good = logical_and(x_bins > 0, x_bins < n)
+        xg = x[good]; xbg = x_bins[good]
+        A = (self.x_vals[xbg] - xg)/h[xbg-1]
+        B = 1-A
+        C = (A**3-A)*h[xbg-1]**2/6.0
+        D = (B**3-B)*h[xbg-1]**2/6.0
+        y[good] = A*self.y_vals[xbg-1]+B*self.y_vals[xbg]+C*self.y2_vals[xbg-1]+D*self.y2_vals[xbg]
+        return y
 
     def __call__(self, x):
         "Simulate a ufunc. Either an array or a scalar may be passed"
@@ -810,16 +797,12 @@ class BiSpline(BasisFunctions):
         self.indexB = kwargs["splineIndexB"]
         self.splineA = splineLibrary.splineList[self.indexA]
         self.splineB = splineLibrary.splineList[self.indexB]
-    # def call(self,a,x):
-        # xs = a[4] + (x-a[4])*(1. + 0.02*arctan(a[3]))
-        # sA = a[1] + a[2]*self.splineA(xs - a[0])
-        # sB = a[1] + a[2]*self.splineB(xs - a[0])
-        # wt = a[6]*(a[5]-1.0)
-        # return (1.0-wt)*sA + wt*sB
     def call(self,a,x):
-        return fitutils.bseval(self.splineA.x_vals,self.splineA.y_vals,self.splineA.y2_vals,
-                              self.splineB.x_vals,self.splineB.y_vals,self.splineB.y2_vals,
-                              a,x)        
+        xs = a[4] + (x-a[4])*(1. + 0.02*arctan(a[3]))
+        sA = a[1] + a[2]*self.splineA(xs - a[0])
+        sB = a[1] + a[2]*self.splineB(xs - a[0])
+        wt = a[6]*(a[5]-1.0)
+        return (1.0-wt)*sA + wt*sB
     def getDomain(self):
         xAmin,xAmax = self.splineA.getDomain()
         xBmin,xBmax = self.splineB.getDomain()
@@ -841,8 +824,8 @@ class BiSpline(BasisFunctions):
         if a[2]>0:
             ix = argmax(y)
             if ix==0 or ix==nTestPoints-1:
-                    Log('Maximum of bispline is not in interior of domain')
-                    return x[ix],y[ix]
+                Log('Maximum of bispline is not in interior of domain')
+                return x[ix],y[ix]
             xmin = brent(lambda x: -self(x,useModifier),brack=(x[ix-1],x[ix],x[ix+1]))
         elif a[2]<0:
             ix = argmin(y)
@@ -1432,7 +1415,6 @@ class Analysis(object):
         """Run the specified analysis on the RdfData object d, taking into account the dependencies
         and initial values which override the defaults from the spectral library and .ini files.
         Returns "self", the Analysis object"""
-        # print "Analysis %d call" % id(self)
         self.initVals = initVals
         self.deps = deps
         self.time = d.sensorDict["Time_s"]

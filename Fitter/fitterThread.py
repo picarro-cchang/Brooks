@@ -18,6 +18,8 @@ File History:
     08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
     08-10-13 alex  Replaced TCP by RPC
     09-06-30 alex  Support HDF5 format for spectra data
+	10-05-21 sze   Allow multiple fitter scripts, each with a distinct environment that are run in
+	                succession with the same data. The results directories from all are combined.
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -41,9 +43,9 @@ from traceback import format_exc
 from cPickle import dumps
 
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
-from fitterCore import loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary
-from fitterCore import pickledRepository, pickledRepositoryFromList, hdf5RepositoryFromList
-from fitterCore import RdfData, Analysis, InitialValues, Dependencies
+from fitterCoreCentered import loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary
+from fitterCoreCentered import pickledRepository, pickledRepositoryFromList, hdf5RepositoryFromList
+from fitterCoreCentered import RdfData, Analysis, InitialValues, Dependencies
 from Host.Common.FitterScriptFunctions import expAverage, initExpAverage, fitQuality
 from Host.Common.SharedTypes import RPC_PORT_FITTER, TCP_PORT_FITTER
 
@@ -62,13 +64,16 @@ class Fitter(object):
         self.stopOnError = 1 # Show modal dialog (and stop fitter) on error
         self.iniBasePath = os.path.split(configFile)[0]       
         self.config = CustomConfigObj(configFile) 
-        self.scriptName = os.path.join(self.iniBasePath, self.config.get(_MAIN_CONFIG_SECTION,"script"))          
+        # Iterate through all script files, specified by keys which start with "script"
+        self.scriptNames = []
+        for key in self.config[_MAIN_CONFIG_SECTION]:
+            if key.lower().startswith("script"):
+                self.scriptNames.append(os.path.join(self.iniBasePath,self.config[_MAIN_CONFIG_SECTION][key]))
         self.rpcPort = self.config.getint("Setup","RPCport",RPC_PORT_FITTER)
         self.stopOnError = self.config.getint("Setup","StopOnError",self.stopOnError)
         self.exitFlag = False
         self.spectrum = None
-        self.code = None
-        self.dataEnviron = self.setupEnvironment()
+        self.compiledScriptsAndEnvironments = []
         self.state = FITTER_STATE_IDLE
         self.repository = None  # Generator for processing spectra from a list of files
         self.procMode = True
@@ -153,8 +158,7 @@ class Fitter(object):
         self.updateViewer = update
 
     def FITTER_initialize(self):    
-        self.code = self.compileScript(self.scriptName)
-        self.dataEnviron = self.setupEnvironment()
+        self.compiledScriptsAndEnvironments = [(self.compileScript(name),self.setupEnvironment()) for name in self.scriptNames]
         return "Fitter Initialized"
 
     def FITTER_setSpectra(self, spectra):
@@ -171,9 +175,6 @@ class Fitter(object):
             self.state = FITTER_STATE_IDLE
             return ""
             
-    def getSpectrum(self):
-        return self.spectrum
-
     def compileScript(self,scriptName):
         try:
             fp = file(scriptName,"r")
@@ -249,9 +250,8 @@ class Fitter(object):
             # The repository needs to be initialized and placed in self.repository.
             # Restart scripts from the beginning
             self.repository = self.makeRepository(*self.makeRepositoryArgs)
-            self.code = self.compileScript(self.scriptName)
             # Reinitialize the fitter, setting INIT to True in the script environment
-            self.dataEnviron = self.setupEnvironment()
+            self.FITTER_initialize()
             Analysis.resetIndex()
             self.state = FITTER_STATE_READY
             self.loadRepository = False
@@ -266,7 +266,7 @@ class Fitter(object):
                 self.fitSpectrum = False
             try:
                 self.spectrum,self.spectrumFileName = self.repository.next()
-                t,r,spectrumId = self.execScript()
+                t,r,spectrumId = self.execScripts()
                 if not self.fitSpectrum:
                     self.state = FITTER_STATE_READY
             except StopIteration:
@@ -277,7 +277,7 @@ class Fitter(object):
         if self.state == FITTER_STATE_PROC:      
             self.dataAvailEvent.wait(DATA_AVAIL_EVENT_TIMEOUT)      
             if self.dataAvailEvent.isSet():
-                if self.code is not None:
+                if self.compiledScriptsAndEnvironments:
                     try:
                         # Get data past the \r, then iterate over the list of spectra
                         #  which make up self.data
@@ -287,7 +287,7 @@ class Fitter(object):
                                 #Empty spectrum
                                 continue
                             for self.spectrum in RdfData.getSpectraDict(spectra):
-                                fitResults.append(self.execScript())
+                                fitResults.append(self.execScripts())
                         self.resultString = "FIT COMPLETE\r" + dumps(fitResults)
                     except:
                         self.resultString = "FITTER ERROR\r" # Send back error string, log reason locally
@@ -304,18 +304,23 @@ class Fitter(object):
                 # Data not ready yet
                 self.state = FITTER_STATE_IDLE               
 
-    def execScript(self):
-        # Returns tuple of (time,resultsDict) from fitting
-        DATA = self.dataEnviron["DATA"] = self.getSpectrum()
-        self.dataEnviron["RESULT"] = {}
-        self.dataEnviron["BASEPATH"] = self.iniBasePath
-        exec self.code in self.dataEnviron
-        self.dataEnviron["INIT"] = False
-        ANALYSIS = self.dataEnviron["ANALYSIS"]
-        RESULT = self.dataEnviron["RESULT"]
-        # print "%s" % (RESULT,)
-        self.fitViewer([DATA,ANALYSIS,RESULT])
-        return (DATA.getTime(),RESULT,DATA["spectrumid"])
+    def execScripts(self):
+        # Returns tuple of (time,resultsDict,spectrumId) from fitting
+        # All scripts are run in sequence and the results from all of them
+        # are combined
+        DATA = self.spectrum
+        RESULTS = {}
+        ANALYSES = []
+        for code,env in self.compiledScriptsAndEnvironments:
+            env["DATA"] = DATA
+            env["RESULT"] = {}
+            env["BASEPATH"] = self.iniBasePath
+            exec code in env
+            env["INIT"] = False
+            ANALYSES += env["ANALYSIS"]
+            RESULTS.update(env["RESULT"])
+        self.fitViewer([DATA,ANALYSES,RESULTS])
+        return (DATA.getTime(),RESULTS,DATA["spectrumid"])
 
     def main(self,queue,useViewer):
         self.fitQueue = queue
