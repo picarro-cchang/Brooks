@@ -185,6 +185,9 @@ class ArchiveGroup(object):
             self.quantum = 3
         self.aggregation = 0
         self.cmdQueue = Queue.Queue(0) # Queue for commands
+        # Enqueue command to initialize the archive group
+        self.cmdQueue.put(("init",()))
+
         self.serverThread = threading.Thread(target=self.server)
         self.fileCount = -1
         self.byteCount = -1
@@ -204,12 +207,9 @@ class ArchiveGroup(object):
         self.tempFileName = os.path.join(archiver.storageRoot,groupName + ".zip")
         if os.path.exists(self.tempFileName): 
             os.remove(self.tempFileName)
-        # The treeWalker is used to delete the oldest entries when required
-        self.treeWalker = walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime)
+
         self.serverThread.setDaemon(True)
         self.serverThread.start()
-        # Remove empty subdirectories
-        self._removeEmptySubdirs()        
 
     def server(self):
         """This is the main thread function which listens to requests from the cmdQueue and executes them sequentially.
@@ -218,7 +218,8 @@ class ArchiveGroup(object):
         cmdDict = dict(archiveData = self.archiveData,
                        copyFiles = self.extractFiles,
                        getFileNames = self.getFileNames,
-                       refreshStats = self.updateAndGetArchiveSize)
+                       refreshStats = self.updateAndGetArchiveSize,
+                       init = self.initArchiveGroup)
         self.updateAndGetArchiveSize()
         Log("Group %s, files %d, bytes %d" % (self.name,self.fileCount,self.byteCount,))
         while True:
@@ -259,6 +260,12 @@ class ArchiveGroup(object):
         zf.close()
         del zf
 
+    def initArchiveGroup(self):
+        # The treeWalker is used to delete the oldest entries when required
+        self.treeWalker = walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime)
+        # Remove empty subdirectories
+        self._removeEmptySubdirs()        
+        
     def extractFiles(self,destDir, startTime=None, endTime=None, uniqueFileNames = False, resultQueue = None):
         """Extract all files between the specified starting and ending times to the destination directory. If uniqueFileNames is
            True, the group name and date code are prepended to each file. Returns the number of files copied, and places them on
