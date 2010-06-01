@@ -43,9 +43,9 @@ from traceback import format_exc
 from cPickle import dumps
 
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
-from fitterCoreCentered import loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary
-from fitterCoreCentered import pickledRepository, pickledRepositoryFromList, hdf5RepositoryFromList
-from fitterCoreCentered import RdfData, Analysis, InitialValues, Dependencies
+from fitterCoreWithFortran import loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary
+from fitterCoreWithFortran import pickledRepository, pickledRepositoryFromList, hdf5RepositoryFromList
+from fitterCoreWithFortran import RdfData, Analysis, InitialValues, Dependencies
 from Host.Common.FitterScriptFunctions import expAverage, initExpAverage, fitQuality
 from Host.Common.SharedTypes import RPC_PORT_FITTER, TCP_PORT_FITTER
 
