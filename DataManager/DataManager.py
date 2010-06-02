@@ -252,6 +252,9 @@ class DataManager(object):
                     self.useSerialPoll = True
                 except KeyError:
                     self.useSerialPoll = False
+                    
+                self.ignoreBadKeys = cp.getboolean(_SERIAL_CONFIG_SECTION,"IgnoreBadKeys",default=True)
+                self.invalidValue = cp.getfloat(_SERIAL_CONFIG_SECTION,"InvalidValue",default=0.0)
                 
                 try:
                     self.emptyString = eval(cp.get(_SERIAL_CONFIG_SECTION,"EmptyString"))
@@ -1291,7 +1294,10 @@ class DataManager(object):
             try:
                 result.append(measData.Data[c])
             except KeyError:
-                badKeys.append(c)
+                if not self.Config.ignoreBadKeys:
+                    badKeys.append(c)
+                else:
+                    result.append(self.Config.invalidValue)
         if badKeys:
             if self.lastTimeGood:
                 Log("Data for column(s) not found for serial output",
