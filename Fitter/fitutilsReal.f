@@ -112,238 +112,168 @@ c  returned in y.
    10 continue
       end      
 c======================================================================
-      SUBROUTINE VOIGT( N, X, Y, K )
+      SUBROUTINE HUMLIK ( N, X, Y, K )
+
+*     To calculate the Faddeeva function with relative error less than 10^(-4).
 c======================================================================
 cf2py intent(out)  :: K
 cf2py intent(hide) :: N
-      INTEGER N
-      DOUBLE PRECISION X(N)
-      DOUBLE PRECISION Y
-      DOUBLE COMPLEX K(N)
-c
-      INTEGER I
-      DOUBLE PRECISION U, V
-      LOGICAL FLAG
-c
-      DO I = 1,N
-          CALL WOFZ(X(I),Y,U,V,FLAG)
-          K(I) = DCMPLX(U,V)
-      END DO
-      END
-C
-C      ALGORITHM 680, COLLECTED ALGORITHMS FROM ACM.
-C      THIS WORK PUBLISHED IN TRANSACTIONS ON MATHEMATICAL SOFTWARE,
-C      VOL. 16, NO. 1, PP. 47.
-      SUBROUTINE WOFZ (XI, YI, U, V, FLAG)
-C
-C  GIVEN A COMPLEX NUMBER Z = (XI,YI), THIS SUBROUTINE COMPUTES
-C  THE VALUE OF THE FADDEEVA-FUNCTION W(Z) = EXP(-Z**2)*ERFC(-I*Z),
-C  WHERE ERFC IS THE COMPLEX COMPLEMENTARY ERROR-FUNCTION AND I
-C  MEANS SQRT(-1).
-C  THE ACCURACY OF THE ALGORITHM FOR Z IN THE 1ST AND 2ND QUADRANT
-C  IS 14 SIGNIFICANT DIGITS; IN THE 3RD AND 4TH IT IS 13 SIGNIFICANT
-C  DIGITS OUTSIDE A CIRCULAR REGION WITH RADIUS 0.126 AROUND A ZERO
-C  OF THE FUNCTION.
-C  ALL REAL VARIABLES IN THE PROGRAM ARE DOUBLE PRECISION.
-C
-C
-C  THE CODE CONTAINS A FEW COMPILER-DEPENDENT PARAMETERS :
-C     RMAXREAL = THE MAXIMUM VALUE OF RMAXREAL EQUALS THE ROOT OF
-C                RMAX = THE LARGEST NUMBER WHICH CAN STILL BE
-C                IMPLEMENTED ON THE COMPUTER IN DOUBLE PRECISION
-C                FLOATING-POINT ARITHMETIC
-C     RMAXEXP  = LN(RMAX) - LN(2)
-C     RMAXGONI = THE LARGEST POSSIBLE ARGUMENT OF A DOUBLE PRECISION
-C                GONIOMETRIC FUNCTION (DCOS, DSIN, ...)
-C  THE REASON WHY THESE PARAMETERS ARE NEEDED AS THEY ARE DEFINED WILL
-C  BE EXPLAINED IN THE CODE BY MEANS OF COMMENTS
-C
-C
-C  PARAMETER LIST
-C     XI     = REAL      PART OF Z
-C     YI     = IMAGINARY PART OF Z
-C     U      = REAL      PART OF W(Z)
-C     V      = IMAGINARY PART OF W(Z)
-C     FLAG   = AN ERROR FLAG INDICATING WHETHER OVERFLOW WILL
-C              OCCUR OR NOT; TYPE LOGICAL;
-C              THE VALUES OF THIS VARIABLE HAVE THE FOLLOWING
-C              MEANING :
-C              FLAG=.FALSE. : NO ERROR CONDITION
-C              FLAG=.TRUE.  : OVERFLOW WILL OCCUR, THE ROUTINE
-C                             BECOMES INACTIVE
-C  XI, YI      ARE THE INPUT-PARAMETERS
-C  U, V, FLAG  ARE THE OUTPUT-PARAMETERS
-C
-C  FURTHERMORE THE PARAMETER FACTOR EQUALS 2/SQRT(PI)
-C
-C  THE ROUTINE IS NOT UNDERFLOW-PROTECTED BUT ANY VARIABLE CAN BE
-C  PUT TO 0 UPON UNDERFLOW;
-C
-C  REFERENCE - GPM POPPE, CMJ WIJERS; MORE EFFICIENT COMPUTATION OF
-C  THE COMPLEX ERROR-FUNCTION, ACM TRANS. MATH. SOFTWARE.
-C
-*
-*
-*
-*
-      IMPLICIT DOUBLE PRECISION (A-H, O-Z)
-*
-      LOGICAL A, B, FLAG
-      PARAMETER (FACTOR   = 1.12837916709551257388D0,
-     *           RMAXREAL = 0.5D+154,
-     *           RMAXEXP  = 708.503061461606D0,
-     *           RMAXGONI = 3.53711887601422D+15)
-*
-      FLAG = .FALSE.
-*
-      XABS = DABS(XI)
-      YABS = DABS(YI)
-      X    = XABS/6.3
-      Y    = YABS/4.4
-*
-C
-C     THE FOLLOWING IF-STATEMENT PROTECTS
-C     QRHO = (X**2 + Y**2) AGAINST OVERFLOW
-C
-      IF ((XABS.GT.RMAXREAL).OR.(YABS.GT.RMAXREAL)) GOTO 100
-*
-      QRHO = X**2 + Y**2
-*
-      XABSQ = XABS**2
-      XQUAD = XABSQ - YABS**2
-      YQUAD = 2*XABS*YABS
-*
-      A     = QRHO.LT.0.085264D0
-*
-      IF (A) THEN
-C
-C  IF (QRHO.LT.0.085264D0) THEN THE FADDEEVA-FUNCTION IS EVALUATED
-C  USING A POWER-SERIES (ABRAMOWITZ/STEGUN, EQUATION (7.1.5), P.297)
-C  N IS THE MINIMUM NUMBER OF TERMS NEEDED TO OBTAIN THE REQUIRED
-C  ACCURACY
-C
-        QRHO  = (1-0.85*Y)*DSQRT(QRHO)
-        N     = IDNINT(6 + 72*QRHO)
-        J     = 2*N+1
-        XSUM  = 1.0/J
-        YSUM  = 0.0D0
-        DO 10 I=N, 1, -1
-          J    = J - 2
-          XAUX = (XSUM*XQUAD - YSUM*YQUAD)/I
-          YSUM = (XSUM*YQUAD + YSUM*XQUAD)/I
-          XSUM = XAUX + 1.0/J
- 10     CONTINUE
-        U1   = -FACTOR*(XSUM*YABS + YSUM*XABS) + 1.0
-        V1   =  FACTOR*(XSUM*XABS - YSUM*YABS)
-        DAUX =  DEXP(-XQUAD)
-        U2   =  DAUX*DCOS(YQUAD)
-        V2   = -DAUX*DSIN(YQUAD)
-*
-        U    = U1*U2 - V1*V2
-        V    = U1*V2 + V1*U2
-*
+
+* Arguments
+      INTEGER N                                                         ! IN   Number of points
+      REAL*8    X(0:N-1)                                                ! IN   Input x array
+      REAL*8    Y                                                       ! IN   Input y value >=0.0
+      REAL*8    K(0:N-1)                                                ! OUT  Real (Voigt) array
+
+* Constants
+      REAL*8        RRTPI                                               ! 1/SQRT(pi)
+      PARAMETER ( RRTPI = 0.56418958 )
+      REAL*8        Y0,       Y0PY0,         Y0Q                        ! for CPF12 algorithm
+      PARAMETER ( Y0 = 1.5, Y0PY0 = Y0+Y0, Y0Q = Y0*Y0  )
+      REAL*8  C(0:5), S(0:5), T(0:5)
+      SAVE  C,      S,      T
+*     SAVE preserves values of C, S and T (static) arrays between procedure calls
+      DATA C / 1.0117281,     -0.75197147,        0.012557727,
+     &         0.010022008,   -0.00024206814,     0.00000050084806 /
+      DATA S / 1.393237,       0.23115241,       -0.15535147,
+     &         0.0062183662,   0.000091908299,   -0.00000062752596 /
+      DATA T / 0.31424038,     0.94778839,        1.5976826,
+     &         2.2795071,      3.0206370,         3.8897249 /
+
+* Local variables
+      INTEGER I, J                                                      ! Loop variables
+      INTEGER RG1, RG2, RG3                                             ! y polynomial flags
+      REAL*8 ABX, XQ, YQ, YRRTPI                                        ! |x|, x^2, y^2, y/SQRT(pi)
+      REAL*8 XLIM0, XLIM1, XLIM2, XLIM3, XLIM4                          ! |x| on region boundaries
+      REAL*8 A0, D0, D2, E0, E2, E4, H0, H2, H4, H6                     ! W4 temporary variables
+      REAL*8 P0, P2, P4, P6, P8, Z0, Z2, Z4, Z6, Z8
+      REAL*8 XP(0:5), XM(0:5), YP(0:5), YM(0:5)                         ! CPF12 temporary values
+      REAL*8 MQ(0:5), PQ(0:5), MF(0:5), PF(0:5)
+      REAL*8 D, YF, YPY0, YPY0Q  
+
+***** Start of executable code *****************************************
+
+      YQ  = Y*Y                                                         ! y^2
+      YRRTPI = Y*RRTPI                                                  ! y/SQRT(pi)
+
+      IF ( Y .GE. 70.55 ) THEN                                          ! All points
+        DO I = 0, N-1                                                   ! in Region 0
+          XQ   = X(I)*X(I)
+          K(I) = YRRTPI / (XQ + YQ)
+        ENDDO
+        RETURN
+      ENDIF
+
+      RG1 = 1                                                           ! Set flags
+      RG2 = 1
+      RG3 = 1
+
+      XLIM0 = SQRT ( 15100.0 + Y*(40.0 - Y*3.6) )                       ! y<70.55
+      IF ( Y .GE. 8.425 ) THEN
+        XLIM1 = 0.0
       ELSE
-C
-C  IF (QRHO.GT.1.O) THEN W(Z) IS EVALUATED USING THE LAPLACE
-C  CONTINUED FRACTION
-C  NU IS THE MINIMUM NUMBER OF TERMS NEEDED TO OBTAIN THE REQUIRED
-C  ACCURACY
-C
-C  IF ((QRHO.GT.0.085264D0).AND.(QRHO.LT.1.0)) THEN W(Z) IS EVALUATED
-C  BY A TRUNCATED TAYLOR EXPANSION, WHERE THE LAPLACE CONTINUED FRACTION
-C  IS USED TO CALCULATE THE DERIVATIVES OF W(Z)
-C  KAPN IS THE MINIMUM NUMBER OF TERMS IN THE TAYLOR EXPANSION NEEDED
-C  TO OBTAIN THE REQUIRED ACCURACY
-C  NU IS THE MINIMUM NUMBER OF TERMS OF THE CONTINUED FRACTION NEEDED
-C  TO CALCULATE THE DERIVATIVES WITH THE REQUIRED ACCURACY
-C
-*
-        IF (QRHO.GT.1.0) THEN
-          H    = 0.0D0
-          KAPN = 0
-          QRHO = DSQRT(QRHO)
-          NU   = IDINT(3 + (1442/(26*QRHO+77)))
-        ELSE
-          QRHO = (1-Y)*DSQRT(1-QRHO)
-          H    = 1.88*QRHO
-          H2   = 2*H
-          KAPN = IDNINT(7  + 34*QRHO)
-          NU   = IDNINT(16 + 26*QRHO)
+        XLIM1 = SQRT ( 164.0 - Y*(4.3 + Y*1.8) )
+      ENDIF
+      XLIM2 = 6.8 - Y
+      XLIM3 = 2.4*Y
+      XLIM4 = 18.1*Y + 1.65
+      IF ( Y .LE. 0.000001 ) THEN                                       ! When y<10^-6
+       XLIM1 = XLIM0                                                    ! avoid W4 algorithm
+       XLIM2 = XLIM0
+      ENDIF
+*.....
+      DO I = 0, N-1                                                     ! Loop over all points
+       ABX = ABS ( X(I) )                                               ! |x|
+       XQ  = ABX*ABX                                                    ! x^2
+       IF     ( ABX .GE. XLIM0 ) THEN                                   ! Region 0 algorithm
+        K(I) = YRRTPI / (XQ + YQ)
+
+       ELSEIF ( ABX .GE. XLIM1 ) THEN                                   ! Humlicek W4 Region 1
+        IF ( RG1 .NE. 0 ) THEN                                          ! First point in Region 1
+         RG1 = 0
+         A0 = YQ + 0.5                                                  ! Region 1 y-dependents
+         D0 = A0*A0
+         D2 = YQ + YQ - 1.0
         ENDIF
-*
-        B = (H.GT.0.0)
-*
-        IF (B) QLAMBDA = H2**KAPN
-*
-        RX = 0.0
-        RY = 0.0
-        SX = 0.0
-        SY = 0.0
-*
-        DO 11 N=NU, 0, -1
-          NP1 = N + 1
-          TX  = YABS + H + NP1*RX
-          TY  = XABS - NP1*RY
-          C   = 0.5/(TX**2 + TY**2)
-          RX  = C*TX
-          RY  = C*TY
-          IF ((B).AND.(N.LE.KAPN)) THEN
-            TX = QLAMBDA + SX
-            SX = RX*TX - RY*SY
-            SY = RY*TX + RX*SY
-            QLAMBDA = QLAMBDA/H2
+        D = RRTPI / (D0 + XQ*(D2 + XQ))
+        K(I) = D*Y   *(A0 + XQ)
+
+       ELSEIF ( ABX .GT. XLIM2 ) THEN                                   ! Humlicek W4 Region 2 
+        IF ( RG2 .NE. 0 ) THEN                                          ! First point in Region 2
+         RG2 = 0
+         H0 =  0.5625 + YQ*(4.5 + YQ*(10.5 + YQ*(6.0 + YQ)))            ! Region 2 y-dependents
+         H2 = -4.5    + YQ*(9.0 + YQ*( 6.0 + YQ* 4.0))
+         H4 = 10.5    - YQ*(6.0 - YQ*  6.0)
+         H6 = -6.0    + YQ* 4.0
+         E0 =  1.875  + YQ*(8.25 + YQ*(5.5 + YQ))
+         E2 =  5.25   + YQ*(1.0  + YQ* 3.0)
+         E4 =  0.75*H6
+        ENDIF
+        D = RRTPI / (H0 + XQ*(H2 + XQ*(H4 + XQ*(H6 + XQ))))
+        K(I) = D*Y   *(E0 + XQ*(E2 + XQ*(E4 + XQ)))
+
+       ELSEIF ( ABX .LT. XLIM3 ) THEN                                   ! Humlicek W4 Region 3
+        IF ( RG3 .NE. 0 ) THEN                                          ! First point in Region 3
+         RG3 = 0
+         Z0 = 272.1014     + Y*(1280.829 + Y*(2802.870 + Y*(3764.966    ! Region 3 y-dependents
+     &       + Y*(3447.629 + Y*(2256.981 + Y*(1074.409 + Y*(369.1989
+     &       + Y*(88.26741 + Y*(13.39880 + Y)))))))))
+         Z2 = 211.678      + Y*(902.3066 + Y*(1758.336 + Y*(2037.310
+     &                     + Y*(1549.675 + Y*(793.4273 + Y*(266.2987
+     &                     + Y*(53.59518 + Y*5.0)))))))
+         Z4 = 78.86585     + Y*(308.1852 + Y*(497.3014 + Y*(479.2576
+     &                     + Y*(269.2916 + Y*(80.39278 + Y*10.0)))))
+         Z6 = 22.03523     + Y*(55.02933 + Y*(92.75679 + Y*(53.59518
+     &                     + Y*10.0)))
+         Z8 = 1.496460     + Y*(13.39880 + Y*5.0)
+         P0 = 153.5168     + Y*(549.3954 + Y*(919.4955 + Y*(946.8970
+     &       + Y*(662.8097 + Y*(328.2151 + Y*(115.3772 + Y*(27.93941
+     &                     + Y*(4.264678 + Y*0.3183291))))))))
+         P2 = -34.16955    + Y*(-1.322256+ Y*(124.5975 + Y*(189.7730
+     &                     + Y*(139.4665 + Y*(56.81652 + Y*(12.79458
+     &                     + Y*1.2733163))))))
+         P4 = 2.584042     + Y*(10.46332 + Y*(24.01655 + Y*(29.81482
+     &                     + Y*(12.79568 + Y*1.9099744))))
+         P6 = -0.07272979  + Y*(0.9377051+ Y*(4.266322 + Y*1.273316))
+         P8 = 0.0005480304 + Y*0.3183291
+        ENDIF
+        D = 1.7724538 / (Z0 + XQ*(Z2 + XQ*(Z4 + XQ*(Z6 + XQ*(Z8+XQ)))))
+        K(I) = D*(P0 + XQ*(P2 + XQ*(P4 + XQ*(P6 + XQ*P8))))
+
+       ELSE                                                             ! Humlicek CPF12 algorithm
+        YPY0 = Y + Y0
+        YPY0Q = YPY0*YPY0
+        K(I) = 0.0
+         DO J = 0, 5
+          D = X(I) - T(J)
+          MQ(J) = D*D
+          MF(J) = 1.0 / (MQ(J) + YPY0Q)
+          XM(J) = MF(J)*D
+          YM(J) = MF(J)*YPY0
+          D = X(I) + T(J)
+          PQ(J) = D*D
+          PF(J) = 1.0 / (PQ(J) + YPY0Q)
+          XP(J) = PF(J)*D
+          YP(J) = PF(J)*YPY0
+         ENDDO
+
+        IF ( ABX .LE. XLIM4 ) THEN                                      ! Humlicek CPF12 Region I
+         DO J = 0, 5
+          K(I) = K(I) + C(J)*(YM(J)+YP(J)) - S(J)*(XM(J)-XP(J))
+         ENDDO
+
+        ELSE                                                            ! Humlicek CPF12 Region II
+         YF   = Y + Y0PY0
+         DO J = 0, 5
+          K(I) = K(I)
+     &     + (C(J)*(MQ(J)*MF(J)-Y0*YM(J)) + S(J)*YF*XM(J)) / (MQ(J)+Y0Q)
+     &     + (C(J)*(PQ(J)*PF(J)-Y0*YP(J)) - S(J)*YF*XP(J)) / (PQ(J)+Y0Q)
+         ENDDO
+         K(I) = Y*K(I) + EXP ( -XQ )
+        ENDIF
        ENDIF
- 11     CONTINUE
-*
-        IF (H.EQ.0.0) THEN
-          U = FACTOR*RX
-          V = FACTOR*RY
-        ELSE
-          U = FACTOR*SX
-          V = FACTOR*SY
-        END IF
-*
-        IF (YABS.EQ.0.0) U = DEXP(-XABS**2)
-*
-      END IF
-*
-*
-C
-C  EVALUATION OF W(Z) IN THE OTHER QUADRANTS
-C
-*
-      IF (YI.LT.0.0) THEN
-*
-        IF (A) THEN
-          U2    = 2*U2
-          V2    = 2*V2
-        ELSE
-          XQUAD =  -XQUAD
-*
-C
-C         THE FOLLOWING IF-STATEMENT PROTECTS 2*EXP(-Z**2)
-C         AGAINST OVERFLOW
-C
-          IF ((YQUAD.GT.RMAXGONI).OR.
-     *        (XQUAD.GT.RMAXEXP)) GOTO 100
-*
-          W1 =  2*DEXP(XQUAD)
-          U2  =  W1*DCOS(YQUAD)
-          V2  = -W1*DSIN(YQUAD)
-        END IF
-*
-        U = U2 - U
-        V = V2 - V
-        IF (XI.GT.0.0) V = -V
-      ELSE
-        IF (XI.LT.0.0) V = -V
-      END IF
-*
-      RETURN
-*
-  100 FLAG = .TRUE.
-      RETURN
-*
+      ENDDO
+*.....
       END
 c======================================================================
       subroutine galatry( x, y, z, n, result, str, min_loss )
@@ -356,8 +286,8 @@ cf2py intent(hide) :: n
       integer i, j, n, nmax, region
       real*8 c3r, c4r, c5r, delta, nz, pi/3.1415926535897932384d0/
       real*8 result(n), x(n), y, z
-      real*8 min_loss, str, xm
-      complex*16 c(0:8), f, sum, term, theta, q, v, w(0:8)
+      real*8 min_loss, str, v, xm
+      complex*16 c(0:8), f, sum, term, theta, q, w(0:8)
  
       xm = y*sqrt(abs(str/min_loss-1.0d0))
       xm = min(max(xm,10.0d0),300.0d0)
@@ -394,7 +324,7 @@ cf2py intent(hide) :: n
               if (abs(x(i)).gt.xm) then
                   result(i) = 0.0d0
               else
-                  call voigt(1,x(i),y,v)
+                  call humlik(1,x(i),y,v)
                   q = dcmplx(x(i),y)
                   w(0) = v
                   w(1) = -2.0d0*(q*w(0))+dcmplx(0.0d0,2.0d0/sqrt(pi))
