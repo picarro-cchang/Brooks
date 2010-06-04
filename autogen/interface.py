@@ -324,7 +324,7 @@ class WLMCalibrationType(Structure):
 # Scheduler period (ms)
 SCHEDULER_PERIOD = 100
 # Maximum number of lasers
-MAX_LASERS = 8
+MAX_LASERS = 4
 # Number of points in controller waveforms
 CONTROLLER_WAVEFORM_POINTS = 1000
 # Number of points for waveforms on controller rindown pane
@@ -2150,25 +2150,30 @@ KERNEL_CONTROL_OVERLOAD_RESET_B = 1 # Reset overload register bit position
 KERNEL_CONTROL_OVERLOAD_RESET_W = 1 # Reset overload register bit width
 KERNEL_CONTROL_I2C_RESET_B = 2 # Reset i2c multiplexers bit position
 KERNEL_CONTROL_I2C_RESET_W = 1 # Reset i2c multiplexers bit width
+KERNEL_CONTROL_DOUT_MAN_B = 3 # Manually set FPGA digital outputs bit position
+KERNEL_CONTROL_DOUT_MAN_W = 1 # Manually set FPGA digital outputs bit width
 
 KERNEL_DIAG_1 = 2 # DSP accessible register for diagnostics
 KERNEL_INTRONIX_CLKSEL = 3 # 
 KERNEL_INTRONIX_CLKSEL_DIVISOR_B = 0 # Intronix sampling rate bit position
 KERNEL_INTRONIX_CLKSEL_DIVISOR_W = 5 # Intronix sampling rate bit width
 
-KERNEL_INTRONIX_1 = 4 # 
+KERNEL_INTRONIX_1 = 4 # Channel for Logicport bits 7-0
 KERNEL_INTRONIX_1_CHANNEL_B = 0 # Intronix display 1 channel bit position
 KERNEL_INTRONIX_1_CHANNEL_W = 8 # Intronix display 1 channel bit width
 
-KERNEL_INTRONIX_2 = 5 # 
+KERNEL_INTRONIX_2 = 5 # Channel for Logicport bits 15-8
 KERNEL_INTRONIX_2_CHANNEL_B = 0 # Intronix display 2 channel bit position
 KERNEL_INTRONIX_2_CHANNEL_W = 8 # Intronix display 2 channel bit width
 
-KERNEL_INTRONIX_3 = 6 # 
+KERNEL_INTRONIX_3 = 6 # Channel for Logicport bits 23-16
 KERNEL_INTRONIX_3_CHANNEL_B = 0 # Intronix display 3 channel bit position
 KERNEL_INTRONIX_3_CHANNEL_W = 8 # Intronix display 3 channel bit width
 
 KERNEL_OVERLOAD = 7 # Overload register
+KERNEL_DOUT_HI = 8 # Manual control of FPGA DOUT 39-32
+KERNEL_DOUT_LO = 9 # Manual control of FPGA DOUT 31-0
+KERNEL_DIN = 10 # FPGA DIN 63-40
 
 # Block PWM Pulse width modulator
 PWM_CS = 0 # Control/Status register
@@ -2427,21 +2432,21 @@ DYNAMICPWM_SLOPE = 4 # Slope of dither waveform
 
 # FPGA map indices
 FPGA_KERNEL = 0 # Kernel registers
-FPGA_PWM_LASER1 = 8 # Laser 1 TEC pulse width modulator registers
-FPGA_PWM_LASER2 = 10 # Laser 2 TEC pulse width modulator registers
-FPGA_PWM_LASER3 = 12 # Laser 3 TEC pulse width modulator registers
-FPGA_PWM_LASER4 = 14 # Laser 4 TEC pulse width modulator registers
-FPGA_PWM_WARMBOX = 16 # Warm box TEC pulse width modulator registers
-FPGA_PWM_HOTBOX = 18 # Hot box TEC pulse width modulator registers
-FPGA_PWM_HEATER = 20 # Heater pulse width modulator registers
-FPGA_RDSIM = 22 # Ringdown simulator registers
-FPGA_LASERLOCKER = 30 # Laser frequency locker registers
-FPGA_RDMAN = 58 # Ringdown manager registers
-FPGA_TWGEN = 82 # Tuner waveform generator
-FPGA_INJECT = 91 # Optical Injection Subsystem
-FPGA_WLMSIM = 100 # WLM Simulator
-FPGA_DYNAMICPWM_INLET = 109 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 114 # Outlet proportional valve dynamic PWM
+FPGA_PWM_LASER1 = 11 # Laser 1 TEC pulse width modulator registers
+FPGA_PWM_LASER2 = 13 # Laser 2 TEC pulse width modulator registers
+FPGA_PWM_LASER3 = 15 # Laser 3 TEC pulse width modulator registers
+FPGA_PWM_LASER4 = 17 # Laser 4 TEC pulse width modulator registers
+FPGA_PWM_WARMBOX = 19 # Warm box TEC pulse width modulator registers
+FPGA_PWM_HOTBOX = 21 # Hot box TEC pulse width modulator registers
+FPGA_PWM_HEATER = 23 # Heater pulse width modulator registers
+FPGA_RDSIM = 25 # Ringdown simulator registers
+FPGA_LASERLOCKER = 33 # Laser frequency locker registers
+FPGA_RDMAN = 61 # Ringdown manager registers
+FPGA_TWGEN = 85 # Tuner waveform generator
+FPGA_INJECT = 94 # Optical Injection Subsystem
+FPGA_WLMSIM = 103 # WLM Simulator
+FPGA_DYNAMICPWM_INLET = 112 # Inlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 117 # Outlet proportional valve dynamic PWM
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
@@ -2570,7 +2575,10 @@ __p.append(('dsp','uint32',RD_DATA_MOVING_COUNT_REGISTER,'QDMA start count','','
 __p.append(('dsp','uint32',RD_QDMA_DONE_COUNT_REGISTER,'QDMA done interrupt count','','%d',1,0))
 __p.append(('dsp','uint32',RD_FITTING_COUNT_REGISTER,'RD fitting count','','%d',1,0))
 __p.append(('fpga','uint16',FPGA_KERNEL+KERNEL_OVERLOAD,'Overload status','','$%X',1,0))
-__p.append(('fpga','mask',FPGA_KERNEL+KERNEL_CONTROL,[(1, u'Reset Cypress FX2 and FPGA', [(0, u'Idle'), (1, u'Reset')]), (2, u'Reset overload register', [(0, u'Idle'), (2, u'Reset')]), (4, u'Reset i2c multiplexers', [(0, u'Idle'), (4, u'Reset')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_KERNEL+KERNEL_CONTROL,[(1, u'Reset Cypress FX2 and FPGA', [(0, u'Idle'), (1, u'Reset')]), (2, u'Reset overload register', [(0, u'Idle'), (2, u'Reset')]), (4, u'Reset i2c multiplexers', [(0, u'Idle'), (4, u'Reset')]), (8, u'Manually set FPGA digital outputs', [(0, u'Automatic control'), (8, u'Manual control')])],None,None,1,1))
+__p.append(('fpga','uint32',FPGA_KERNEL+KERNEL_DOUT_HI,'Manual FPGA digital outputs (bits 39-32)','','$%X',1,1))
+__p.append(('fpga','uint32',FPGA_KERNEL+KERNEL_DOUT_LO,'Manual FPGA digital outputs (bits 31-0)','','$%X',1,1))
+__p.append(('fpga','uint32',FPGA_KERNEL+KERNEL_DIN,'FPGA digital inputs (bits 63-40)','','$%X',1,0))
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_CLKSEL,[(31, u'Intronix sampling rate', [(0, u'20 ns'), (1, u'40 ns'), (2, u'80 ns'), (3, u'160 ns'), (4, u'320 ns'), (5, u'640 ns'), (6, u'1.28 us'), (7, u'2.56 us'), (8, u'5.12 us'), (9, u'10.24 us'), (10, u'20.48 us'), (11, u'40.96 us'), (12, u'81.92 us'), (13, u'163.8 us'), (14, u'327.7 us'), (15, u'655.4 us'), (16, u'1.311 ms'), (17, u'2.621 ms'), (18, u'5.243 ms'), (19, u'10.49 ms'), (20, u'20.97 ms'), (21, u'41.94 ms'), (22, u'83.39 ms'), (23, u'167.8 ms'), (24, u'335.5 ms'), (25, u'671.1 ms'), (26, u'1.342 s'), (27, u'2.684 s'), (28, u'5.368 s')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_1,[(255, u'Intronix display 1 channel', [(0, u'Tuner waveform (LS)'), (1, u'Tuner waveform (MS)'), (2, u'Ringdown ADC waveform (LS)'), (3, u'Ringdown ADC waveform (MS)'), (4, u'Ringdown simulator waveform (LS)'), (5, u'Ringdown simulator waveform (MS)'), (6, u'Laser fine current (LS)'), (7, u'Laser fine current (MS)'), (8, u'Locker error (LS)'), (9, u'Locker error (MS)'), (10, u'Ratio 1 (LS)'), (11, u'Ratio 1 (MS)'), (12, u'Ratio 2 (LS)'), (13, u'Ratio 2 (MS)'), (14, u'PZT (LS)'), (15, u'PZT (MS)'), (16, u'Etalon 1 ADC (LS)'), (17, u'Etalon 1 ADC (MS)'), (18, u'Reference 1 ADC (LS)'), (19, u'Reference 1 ADC (MS)'), (20, u'Etalon 2 ADC (LS)'), (21, u'Etalon 2 ADC (MS)'), (22, u'Reference 2 ADC (LS)'), (23, u'Reference 2 ADC (MS)'), (24, u'WLM ADC signals'), (25, u'System clocks'), (26, u'PWM signals'), (27, u'I2C signals')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_2,[(255, u'Intronix display 2 channel', [(0, u'Tuner waveform (LS)'), (1, u'Tuner waveform (MS)'), (2, u'Ringdown ADC waveform (LS)'), (3, u'Ringdown ADC waveform (MS)'), (4, u'Ringdown simulator waveform (LS)'), (5, u'Ringdown simulator waveform (MS)'), (6, u'Laser fine current (LS)'), (7, u'Laser fine current (MS)'), (8, u'Locker error (LS)'), (9, u'Locker error (MS)'), (10, u'Ratio 1 (LS)'), (11, u'Ratio 1 (MS)'), (12, u'Ratio 2 (LS)'), (13, u'Ratio 2 (MS)'), (14, u'PZT (LS)'), (15, u'PZT (MS)'), (16, u'Etalon 1 ADC (LS)'), (17, u'Etalon 1 ADC (MS)'), (18, u'Reference 1 ADC (LS)'), (19, u'Reference 1 ADC (MS)'), (20, u'Etalon 2 ADC (LS)'), (21, u'Etalon 2 ADC (MS)'), (22, u'Reference 2 ADC (LS)'), (23, u'Reference 2 ADC (MS)'), (24, u'WLM ADC signals'), (25, u'System clocks'), (26, u'PWM signals'), (27, u'I2C signals')])],None,None,1,1))
