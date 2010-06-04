@@ -221,7 +221,7 @@ class EifAnalogOutput(EifSignal):
 
     def trackMeasOutput( self, dasTime, measuredValue ):
         outputLevel = self._convertMeasuredValue( measuredValue )
-        print dasTime, measuredValue, outputLevel
+        # print dasTime, measuredValue, outputLevel
         return self._sendOutputToBuffer(dasTime, outputLevel)
 
     def setOutput( self, outputLevel ):

@@ -444,6 +444,7 @@ class HostToDspSender(Singleton):
             self.initStatus = None
             self.timeout = timeout
             self.initialized = True
+            self.oldStatus = None
     def setTimeout(self,timeout=None):
         self.timeout = timeout
     @usbLockProtect
@@ -486,11 +487,13 @@ class HostToDspSender(Singleton):
             i += 1
         hostMsg[i] = calcCrc32(0,hostMsg,4*(numInt+2))
         # logging.info("CRC = %x" % hostMsg[numInt+2])
+        self.oldStatus = self.rdRegUint(interface.COMM_STATUS_REGISTER)
         self.usb.hpiWrite(HOST_BASE,hostMsg)
         sleep(0.003) # Necessary to ensure hpiWrite completes before signalling interrupt
         # Assert DSPINT
         self.usb.hpicWrite(0x00010003)
         # print "hpic after DSPINT: %08x" % self.usb.hpicRead()
+        
         return self.getStatusWhenDone() # or throw SharedTypes.DasCommsException on error
     @usbLockProtect
     def getSequenceNumber(self):
@@ -501,6 +504,9 @@ class HostToDspSender(Singleton):
         while self.timeout==None or clock()<startTime+self.timeout:
             self.status = self.rdRegUint(interface.COMM_STATUS_REGISTER)
             ntries += 1
+            if self.oldStatus == self.status: # Loop while we still read the old status, since
+                                              #  DSP has not yet updated it
+                continue
             done = (0 != (self.status & \
                 interface.COMM_STATUS_CompleteMask))
             if done:

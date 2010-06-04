@@ -18,8 +18,8 @@ File History:
     08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
     08-10-13 alex  Replaced TCP by RPC
     09-06-30 alex  Support HDF5 format for spectra data
-	10-05-21 sze   Allow multiple fitter scripts, each with a distinct environment that are run in
-	                succession with the same data. The results directories from all are combined.
+    10-05-21 sze   Allow multiple fitter scripts, each with a distinct environment that are run in
+                    succession with the same data. The results directories from all are combined.
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -43,9 +43,9 @@ from traceback import format_exc
 from cPickle import dumps
 
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
-from fitterCoreWithFortran import loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary
-from fitterCoreWithFortran import pickledRepository, pickledRepositoryFromList, hdf5RepositoryFromList
-from fitterCoreWithFortran import RdfData, Analysis, InitialValues, Dependencies
+from fitterCore import loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary
+from fitterCore import pickledRepository, pickledRepositoryFromList, hdf5RepositoryFromList
+from fitterCore import RdfData, Analysis, InitialValues, Dependencies
 from Host.Common.FitterScriptFunctions import expAverage, initExpAverage, fitQuality
 from Host.Common.SharedTypes import RPC_PORT_FITTER, TCP_PORT_FITTER
 
