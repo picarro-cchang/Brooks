@@ -2869,6 +2869,10 @@
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Reset</fielddef>
                 </bitfield>
+                <bitfield ident="DOUT_MAN" description="Manually set FPGA digital outputs" lsb="3" width="1">
+                    <fielddef value="0">Automatic control</fielddef>
+                    <fielddef value="1">Manual control</fielddef>
+                </bitfield>
             </reg>
             <reg type="uint16" ident="DIAG_1" description="DSP accessible register for diagnostics" access="rw">
             </reg>
@@ -2906,7 +2910,7 @@
                     <fielddef value="28">5.368 s</fielddef>
                 </bitfield>
             </reg>
-            <reg type="mask" ident="INTRONIX_1" description="" access="rw">
+            <reg type="mask" ident="INTRONIX_1" description="Channel for Logicport bits 7-0" access="rw">
                 <save />
                 <bitfield ident="CHANNEL" description="Intronix display 1 channel" lsb="0" width="8">
                     <fielddef value="0">Tuner waveform (LS)</fielddef>
@@ -2939,7 +2943,7 @@
                     <fielddef value="27">I2C signals</fielddef>
                 </bitfield>
             </reg>
-            <reg type="mask" ident="INTRONIX_2" description="" access="rw">
+            <reg type="mask" ident="INTRONIX_2" description="Channel for Logicport bits 15-8" access="rw">
                 <save />
                 <bitfield ident="CHANNEL" description="Intronix display 2 channel" lsb="0" width="8">
                     <fielddef value="0">Tuner waveform (LS)</fielddef>
@@ -2972,7 +2976,7 @@
                     <fielddef value="27">I2C signals</fielddef>
                 </bitfield>
             </reg>
-            <reg type="mask" ident="INTRONIX_3" description="" access="rw">
+            <reg type="mask" ident="INTRONIX_3" description="Channel for Logicport bits 23-16" access="rw">
                 <save />
                 <bitfield ident="CHANNEL" description="Intronix display 3 channel" lsb="0" width="8">
                     <fielddef value="0">Tuner waveform (LS)</fielddef>
@@ -3007,6 +3011,15 @@
             </reg>
             <reg type="uint16" ident="OVERLOAD" description="Overload register" access="r">
                 <display format="$%X">Overload status</display>
+            </reg>
+            <reg type="uint32" ident="DOUT_HI" description="Manual control of FPGA DOUT 39-32" access="rw">
+                <display format="$%X">Manual FPGA digital outputs (bits 39-32)</display>
+            </reg>
+            <reg type="uint32" ident="DOUT_LO" description="Manual control of FPGA DOUT 31-0" access="rw">
+                <display format="$%X">Manual FPGA digital outputs (bits 31-0)</display>
+            </reg>
+            <reg type="uint32" ident="DIN" description="FPGA DIN 63-40" access="r">
+                <display format="$%X">FPGA digital inputs (bits 63-40)</display>
             </reg>
         </fpga_block>
         <fpga_block ident="PWM" description="Pulse width modulator">

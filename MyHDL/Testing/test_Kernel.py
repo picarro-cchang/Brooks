@@ -23,10 +23,13 @@ from Host.autogen.interface import KERNEL_DIAG_1
 from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL
 from Host.autogen.interface import KERNEL_INTRONIX_1, KERNEL_INTRONIX_2
 from Host.autogen.interface import KERNEL_INTRONIX_3, KERNEL_OVERLOAD
+from Host.autogen.interface import KERNEL_DOUT_HI, KERNEL_DOUT_LO
+from Host.autogen.interface import KERNEL_DIN
 
 from Host.autogen.interface import KERNEL_CONTROL_CYPRESS_RESET_B, KERNEL_CONTROL_CYPRESS_RESET_W
 from Host.autogen.interface import KERNEL_CONTROL_OVERLOAD_RESET_B, KERNEL_CONTROL_OVERLOAD_RESET_W
 from Host.autogen.interface import KERNEL_CONTROL_I2C_RESET_B, KERNEL_CONTROL_I2C_RESET_W
+from Host.autogen.interface import KERNEL_CONTROL_DOUT_MAN_B, KERNEL_CONTROL_DOUT_MAN_W
 from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL_DIVISOR_B, KERNEL_INTRONIX_CLKSEL_DIVISOR_W
 from Host.autogen.interface import KERNEL_INTRONIX_1_CHANNEL_B, KERNEL_INTRONIX_1_CHANNEL_W
 from Host.autogen.interface import KERNEL_INTRONIX_2_CHANNEL_B, KERNEL_INTRONIX_2_CHANNEL_W
@@ -51,6 +54,9 @@ intronix_3_out = Signal(intbv(0)[8:])
 overload_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 overload_out = Signal(LOW)
 i2c_reset_out = Signal(LOW)
+dout_man_out = Signal(LOW)
+dout_out = Signal(intbv(0)[40:])
+din_in = Signal(intbv(0)[24:])
 map_base = FPGA_KERNEL
 result = Signal(intbv(0))
 
@@ -122,7 +128,9 @@ def bench():
                      intronix_2_out=intronix_2_out,
                      intronix_3_out=intronix_3_out,
                      overload_in=overload_in, overload_out=overload_out,
-                     i2c_reset_out=i2c_reset_out, map_base=map_base )
+                     i2c_reset_out=i2c_reset_out,
+                     dout_man_out=dout_man_out, dout_out=dout_out,
+                     din_in=din_in, map_base=map_base )
     @instance
     def stimulus():
         yield delay(10*PERIOD)
@@ -149,6 +157,9 @@ def bench():
         assert i2c_reset_out        
         yield writeFPGA(FPGA_KERNEL+KERNEL_CONTROL,0)
         assert not i2c_reset_out
+        yield writeFPGA(FPGA_KERNEL+KERNEL_CONTROL,1<<KERNEL_CONTROL_DOUT_MAN_B)
+        yield writeFPGA(FPGA_KERNEL+KERNEL_DOUT_HI,0xFE)
+        yield writeFPGA(FPGA_KERNEL+KERNEL_DOUT_LO,0xDCBA9876)
         yield delay(20*PERIOD)
         raise StopSimulation
     return instances()

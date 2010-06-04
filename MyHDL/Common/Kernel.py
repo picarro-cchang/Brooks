@@ -19,6 +19,7 @@
 #                      three waveform channels
 #   25-Sep-2009  sze  Added register and I/O for overload conditions
 #    5-Nov-2009  sze  Added I2C reset bit in control register
+#   03-Jun-2010  sze  Added manual control of FPGA DIO lines
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -33,10 +34,13 @@ from Host.autogen.interface import KERNEL_DIAG_1
 from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL
 from Host.autogen.interface import KERNEL_INTRONIX_1, KERNEL_INTRONIX_2
 from Host.autogen.interface import KERNEL_INTRONIX_3, KERNEL_OVERLOAD
+from Host.autogen.interface import KERNEL_DOUT_HI, KERNEL_DOUT_LO
+from Host.autogen.interface import KERNEL_DIN
 
 from Host.autogen.interface import KERNEL_CONTROL_CYPRESS_RESET_B, KERNEL_CONTROL_CYPRESS_RESET_W
 from Host.autogen.interface import KERNEL_CONTROL_OVERLOAD_RESET_B, KERNEL_CONTROL_OVERLOAD_RESET_W
 from Host.autogen.interface import KERNEL_CONTROL_I2C_RESET_B, KERNEL_CONTROL_I2C_RESET_W
+from Host.autogen.interface import KERNEL_CONTROL_DOUT_MAN_B, KERNEL_CONTROL_DOUT_MAN_W
 from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL_DIVISOR_B, KERNEL_INTRONIX_CLKSEL_DIVISOR_W
 from Host.autogen.interface import KERNEL_INTRONIX_1_CHANNEL_B, KERNEL_INTRONIX_1_CHANNEL_W
 from Host.autogen.interface import KERNEL_INTRONIX_2_CHANNEL_B, KERNEL_INTRONIX_2_CHANNEL_W
@@ -49,7 +53,8 @@ LOW, HIGH = bool(0), bool(1)
 def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
            usb_connected,cyp_reset,diag_1_out,intronix_clksel_out,
            intronix_1_out,intronix_2_out,intronix_3_out,overload_in,
-           overload_out,i2c_reset_out,map_base):
+           overload_out,i2c_reset_out,dout_man_out,dout_out,din_in,
+           map_base):
     """
     Parameters:
     clk                 -- Clock input
@@ -68,6 +73,9 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     overload_in         -- Inputs from overload detection circuitry, readable via a register
     overload_out        -- Goes high if any bit in latched overload_in is high
     i2c_reset_out       -- Goes high to reset I2C multiplexers
+    dout_man_out        -- Goes high to indicate FPGA DOUT lines are driven manually
+    dout_out            -- Values to write to FPGA DOUT lines when in manual mode
+    din_in              -- Values from FPGA DIN lines
     map_base            -- Base of FPGA map for this block
 
     Registers:
@@ -80,11 +88,15 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     KERNEL_INTRONIX_3
     KERNEL_OVERLOAD     -- Latches any high overload inputs so they may be read by the DSP
                             The contents are reset when OVERLOAD_RESET bit in the kernel register is asserted
+    KERNEL_DOUT_HI      -- High-order bits (39-32) for FPGA DOUT lines
+    KERNEL_DOUT_LO      -- Low-order  bits (31-0)  for FPGA DOUT lines
+    KERNEL_DIN          -- Readback for FPGA DIN lines
 
     Fields in KERNEL_CONTROL:
     KERNEL_CONTROL_CYPRESS_RESET
     KERNEL_CONTROL_OVERLOAD_RESET
     KERNEL_CONTROL_I2C_RESET
+    KERNEL_CONTROL_DOUT_MAN         -- Set to 1 to drive FPGA digital output lines manually
 
     Fields in KERNEL_INTRONIX_CLKSEL:
     KERNEL_INTRONIX_CLKSEL_DIVISOR
@@ -117,6 +129,9 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     kernel_intronix_2_addr = map_base + KERNEL_INTRONIX_2
     kernel_intronix_3_addr = map_base + KERNEL_INTRONIX_3
     kernel_overload_addr = map_base + KERNEL_OVERLOAD
+    kernel_dout_hi_addr = map_base + KERNEL_DOUT_HI
+    kernel_dout_lo_addr = map_base + KERNEL_DOUT_LO
+    kernel_din_addr = map_base + KERNEL_DIN
     magic_code = Signal(intbv(0)[FPGA_REG_WIDTH:])
     control = Signal(intbv(0)[FPGA_REG_WIDTH:])
     diag_1 = Signal(intbv(0)[8:])
@@ -125,6 +140,9 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     intronix_2 = Signal(intbv(0)[8:])
     intronix_3 = Signal(intbv(0)[8:])
     overload = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    dout_hi = Signal(intbv(0)[8:])
+    dout_lo = Signal(intbv(0)[32:])
+    din = Signal(intbv(0)[24:])
 
     state = Signal(t_State.NORMAL)
     control_init = 1 << KERNEL_CONTROL_I2C_RESET_B
@@ -136,6 +154,8 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         intronix_2_out.next = intronix_2
         intronix_3_out.next = intronix_3
         diag_1_out.next = diag_1
+        dout_out.next = concat(dout_hi,dout_lo)
+        din.next = din_in
     @instance
     def logic():
         while True:
@@ -149,6 +169,8 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 intronix_3.next = 0
                 overload.next = 0
                 i2c_reset_out.next = 1
+                dout_hi.next = 0
+                dout_lo.next = 0
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
@@ -174,6 +196,14 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         dsp_data_in.next = intronix_3
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_overload_addr: # r
                         dsp_data_in.next = overload
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_dout_hi_addr: # rw
+                        if dsp_wr: dout_hi.next = dsp_data_out
+                        dsp_data_in.next = dout_hi
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_dout_lo_addr: # rw
+                        if dsp_wr: dout_lo.next = dsp_data_out
+                        dsp_data_in.next = dout_lo
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_din_addr: # r
+                        dsp_data_in.next = din
                     else:
                         dsp_data_in.next = 0
                 else:
@@ -193,6 +223,7 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     overload_out.next = 0
                     
                 i2c_reset_out.next = control[KERNEL_CONTROL_I2C_RESET_B]
+                dout_man_out.next =  control[KERNEL_CONTROL_DOUT_MAN_B]
                 
                 ## State machine for handling resetting of Cypress FX2 and FPGA
                 #if state == t_State.NORMAL:
@@ -253,6 +284,9 @@ if __name__ == "__main__":
     overload_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     overload_out = Signal(LOW)
     i2c_reset_out = Signal(LOW)
+    dout_man_out = Signal(LOW)
+    dout_out = Signal(intbv(0)[40:])
+    din_in = Signal(intbv(0)[24:])
     map_base = FPGA_KERNEL
 
     toVHDL(Kernel, clk=clk, reset=reset, dsp_addr=dsp_addr,
@@ -264,4 +298,6 @@ if __name__ == "__main__":
                    intronix_2_out=intronix_2_out,
                    intronix_3_out=intronix_3_out,
                    overload_in=overload_in, overload_out=overload_out,
-                   i2c_reset_out=i2c_reset_out, map_base=map_base)
+                   i2c_reset_out=i2c_reset_out,
+                   dout_man_out=dout_man_out, dout_out=dout_out,
+                   din_in=din_in, map_base=map_base)

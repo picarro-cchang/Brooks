@@ -41,6 +41,9 @@
             <register>RD_FITTING_COUNT_REGISTER</register>
             <fpga_register offset="FPGA_KERNEL">OVERLOAD</fpga_register>
             <fpga_register offset="FPGA_KERNEL">CONTROL</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">DOUT_HI</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">DOUT_LO</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">DIN</fpga_register>            
             <fpga_register offset="FPGA_KERNEL">INTRONIX_CLKSEL</fpga_register>
             <fpga_register offset="FPGA_KERNEL">INTRONIX_1</fpga_register>
             <fpga_register offset="FPGA_KERNEL">INTRONIX_2</fpga_register>

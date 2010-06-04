@@ -101,7 +101,7 @@ entity top_io_map is
            I2C_SDA0         : in std_logic;
            I2C_SCL1         : in std_logic;
            I2C_SDA1         : in std_logic
-    );
+);
 end top_io_map;
 
 architecture behavioral of top_io_map is
@@ -141,57 +141,6 @@ begin
            FP_PB            => FP_PB,
            FP_RS_N          => FP_RS_N,
            FP_LED           => FP_LED,
-
-           PZT_VALVE_DAC_LD      => BUFF_OUT(0),
-           PZT_VALVE_DAC_SCK     => BUFF_OUT(1),
-           INLET_VALVE_PWM_N     => BUFF_OUT(2),
-           OUTLET_VALVE_PWM_N    => BUFF_OUT(3),
-           PZT_VALVE_DAC_SDI     => BUFF_OUT(4),
-           HEATER_PWM_N          => BUFF_OUT(5),
-           HOT_BOX_PWM_N         => BUFF_OUT(6),
-           WARM_BOX_PWM_N        => BUFF_OUT(7),
-           
-           WARM_BOX_TEC_OVERLOAD_N  => BUFF_IN(44),
-           HOT_BOX_TEC_OVERLOAD_N   => BUFF_IN(45),
-           INLET_VALVE_COMPARATOR   => BUFF_IN(48),
-           OUTLET_VALVE_COMPARATOR  => BUFF_IN(49),
-
-           AUX_DIN(3 downto 0)  => BUFF_OUT(11 downto 8),
-           AUX_DOUT(3 downto 0) => BUFF_IN(43 downto 40),
-           MONITOR          => BUFF_OUT(12),
-           LSR1_SCK         => BUFF_OUT(20),
-           LSR1_SS_N        => BUFF_OUT(22),
-           LSR1_RD          => BUFF_OUT(21),
-           LSR1_MOSI        => BUFF_OUT(23),
-           LSR1_DISABLE     => BUFF_OUT(24),
-           LSR2_SCK         => BUFF_OUT(25),
-           LSR2_SS_N        => BUFF_OUT(27),
-           LSR2_RD          => BUFF_OUT(26),
-           LSR2_MOSI        => BUFF_OUT(28),
-           LSR2_DISABLE     => BUFF_OUT(29),
-           LSR3_SCK         => BUFF_OUT(30),
-           LSR3_SS_N        => BUFF_OUT(32),
-           LSR3_RD          => BUFF_OUT(31),
-           LSR3_MOSI        => BUFF_OUT(33),
-           LSR3_DISABLE     => BUFF_OUT(34),
-           LSR4_SCK         => BUFF_OUT(35),
-           LSR4_SS_N        => BUFF_OUT(37),
-           LSR4_RD          => BUFF_OUT(36),
-           LSR4_MOSI        => BUFF_OUT(38),
-           LSR4_DISABLE     => BUFF_OUT(39),
-           WMM_REFL1        => BUFF_IN(52),
-           WMM_REFL2        => BUFF_IN(53),
-           WMM_TRAN1        => BUFF_IN(54),
-           WMM_TRAN2        => BUFF_IN(55),
-           WMM_BUSY1        => BUFF_IN(56),
-           WMM_BUSY2        => BUFF_IN(57),
-           WMM_RD           => BUFF_OUT(13),
-           WMM_CONVST       => BUFF_OUT(14),
-           WMM_CLK          => BUFF_OUT(15),
-           SW1              => BUFF_OUT(16),
-           SW2              => BUFF_OUT(18),
-           SW3              => BUFF_OUT(17),
-           SW4              => BUFF_OUT(19),
            LSR1_0           => LSR1_0,
            LSR1_1           => LSR1_1,
            LSR2_0           => LSR2_0,
@@ -211,7 +160,9 @@ begin
            I2C_SCL0         => I2C_SCL0,
            I2C_SDA0         => I2C_SDA0,
            I2C_SCL1         => I2C_SCL1,
-           I2C_SDA1         => I2C_SDA1
+           I2C_SDA1         => I2C_SDA1,
+           BUFF_OUT         => BUFF_OUT,
+           BUFF_IN          => BUFF_IN
     );
 
 end behavioral;

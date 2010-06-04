@@ -74,63 +74,6 @@ entity top_io is
            FP_PB            : in std_logic;
            FP_RS_N          : in std_logic;
            FP_LED           : out std_logic_vector(3 downto 0);
-           -- High power board signals
-           PZT_VALVE_DAC_LD    : out std_logic;
-           PZT_VALVE_DAC_SCK   : out std_logic;
-           INLET_VALVE_PWM_N   : out std_logic;
-           OUTLET_VALVE_PWM_N  : out std_logic;
-           PZT_VALVE_DAC_SDI   : out std_logic;
-           HEATER_PWM_N        : out std_logic;
-           HOT_BOX_PWM_N       : out std_logic;
-           WARM_BOX_PWM_N      : out std_logic;
-           WARM_BOX_TEC_OVERLOAD_N  : in std_logic;
-           HOT_BOX_TEC_OVERLOAD_N   : in std_logic;
-           INLET_VALVE_COMPARATOR   : in std_logic;
-           OUTLET_VALVE_COMPARATOR  : in std_logic;
-           -- Auxiliary board
-           AUX_DIN          : out std_logic_vector(3 downto 0);
-           AUX_DOUT         : in  std_logic_vector(3 downto 0);
-           -- Monitor signal
-           MONITOR          : out std_logic;
-           -- Laser 1 board
-           LSR1_SCK         : out std_logic;
-           LSR1_SS_N        : out std_logic;
-           LSR1_RD          : out std_logic;
-           LSR1_MOSI        : out std_logic;
-           LSR1_DISABLE     : out std_logic;
-           -- Laser 2 board
-           LSR2_SCK         : out std_logic;
-           LSR2_SS_N        : out std_logic;
-           LSR2_RD          : out std_logic;
-           LSR2_MOSI        : out std_logic;
-           LSR2_DISABLE     : out std_logic;
-           -- Laser 3 board
-           LSR3_SCK         : out std_logic;
-           LSR3_SS_N        : out std_logic;
-           LSR3_RD          : out std_logic;
-           LSR3_MOSI        : out std_logic;
-           LSR3_DISABLE     : out std_logic;
-           -- Laser 4 board
-           LSR4_SCK         : out std_logic;
-           LSR4_SS_N        : out std_logic;
-           LSR4_RD          : out std_logic;
-           LSR4_MOSI        : out std_logic;
-           LSR4_DISABLE     : out std_logic;
-           -- Wavelength monitor board
-           WMM_REFL1        : in std_logic;
-           WMM_REFL2        : in std_logic;
-           WMM_TRAN1        : in std_logic;
-           WMM_TRAN2        : in std_logic;
-           WMM_BUSY1        : in std_logic;
-           WMM_BUSY2        : in std_logic;
-           WMM_RD           : out std_logic;
-           WMM_CONVST       : out std_logic;
-           WMM_CLK          : out std_logic;
-           -- SOA board
-           SW1              : out std_logic;
-           SW2              : out std_logic;
-           SW3              : out std_logic;
-           SW4              : out std_logic;
            -- Laser TEC PWM lines
            LSR1_0           : out std_logic;
            LSR1_1           : out std_logic;
@@ -156,7 +99,10 @@ entity top_io is
            I2C_SCL0         : in std_logic;
            I2C_SDA0         : in std_logic;
            I2C_SCL1         : in std_logic;
-           I2C_SDA1         : in std_logic
+           I2C_SDA1         : in std_logic;
+           -- Digital IO signals
+           BUFF_OUT         : out std_logic_vector(39 downto 0);
+           BUFF_IN          : in std_logic_vector(63 downto 40)
     );
 end top_io;
 
@@ -194,7 +140,121 @@ architecture behavioral of top_io is
 
     signal reset_counter: unsigned(15 downto 0);
     signal reset       : std_logic;
+
+    signal DOUT_MAN : std_logic;
+    signal DOUT     : unsigned(39 downto 0);
+    signal DIN      : unsigned(23 downto 0);
+
+    signal PZT_VALVE_DAC_LD: std_logic;
+    signal PZT_VALVE_DAC_SCK: std_logic;
+    signal INLET_VALVE_PWM_N: std_logic;
+    signal OUTLET_VALVE_PWM_N: std_logic;
+    signal PZT_VALVE_DAC_SDI: std_logic;
+    signal HEATER_PWM_N: std_logic;
+    signal HOT_BOX_PWM_N: std_logic;
+    signal WARM_BOX_PWM_N: std_logic;
+    signal AUX_DIN: unsigned(3 downto 0);
+    signal MONITOR: std_logic;
+    signal WMM_RD:  std_logic;
+    signal WMM_CONVST: std_logic;
+    signal WMM_CLK: std_logic;
+    signal SW1: std_logic;
+    signal SW2: std_logic;
+    signal SW3: std_logic;
+    signal SW4: std_logic;
+    signal LSR1_SCK: std_logic;
+    signal LSR1_RD: std_logic;
+    signal LSR1_SS_N: std_logic;
+    signal LSR1_MOSI: std_logic;
+    signal LSR1_DISABLE: std_logic;
+    signal LSR2_SCK: std_logic;
+    signal LSR2_RD: std_logic;
+    signal LSR2_SS_N: std_logic;
+    signal LSR2_MOSI: std_logic;
+    signal LSR2_DISABLE: std_logic;
+    signal LSR3_SCK: std_logic;
+    signal LSR3_RD: std_logic;
+    signal LSR3_SS_N: std_logic;
+    signal LSR3_MOSI: std_logic;
+    signal LSR3_DISABLE: std_logic;
+    signal LSR4_SCK: std_logic;
+    signal LSR4_RD: std_logic;
+    signal LSR4_SS_N: std_logic;
+    signal LSR4_MOSI: std_logic;
+    signal LSR4_DISABLE: std_logic;
+    signal AUX_DOUT: unsigned(3 downto 0);
+    signal WARM_BOX_TEC_OVERLOAD_N: std_logic;
+    signal HOT_BOX_TEC_OVERLOAD_N: std_logic;
+    signal INLET_VALVE_COMPARATOR: std_logic;
+    signal OUTLET_VALVE_COMPARATOR: std_logic;
+    signal WMM_REFL1: std_logic;
+    signal WMM_REFL2: std_logic;
+    signal WMM_TRAN1: std_logic;
+    signal WMM_TRAN2: std_logic;
+    signal WMM_BUSY1: std_logic;
+    signal WMM_BUSY2: std_logic;
+    
+    signal BUFF_OUT_U: unsigned(39 downto 0);
+    signal BUFF_IN_U: unsigned(23 downto 0);
+    
 begin
+    dioMap_inst : entity work.dioMap(MyHDL) port map(
+        man                     => DOUT_MAN,
+        buff_out                => BUFF_OUT_U,
+        buff_in                 => BUFF_IN_U,
+        man_out                 => DOUT,
+        man_in                  => DIN,
+
+        pzt_valve_dac_ld        => PZT_VALVE_DAC_LD,
+        pzt_valve_dac_sck       => PZT_VALVE_DAC_SCK,
+        inlet_valve_pwm_n       => INLET_VALVE_PWM_N,
+        outlet_valve_pwm_n      => OUTLET_VALVE_PWM_N,
+        pzt_valve_dac_sdi       => PZT_VALVE_DAC_SDI,
+        heater_pwm_n            => HEATER_PWM_N,
+        hot_box_pwm_n           => HOT_BOX_PWM_N,
+        warm_box_pwm_n          => WARM_BOX_PWM_N,
+        aux_din                 => AUX_DIN,
+        monitor                 => MONITOR,
+        wmm_rd                  => WMM_RD,
+        wmm_convst              => WMM_CONVST,
+        wmm_clk                 => WMM_CLK,
+        sw1                     => SW1,
+        sw2                     => SW2,
+        sw3                     => SW3,
+        sw4                     => SW4,
+        lsr1_sck                => LSR1_SCK,
+        lsr1_rd                 => LSR1_RD,
+        lsr1_ss_n               => LSR1_SS_N,
+        lsr1_mosi               => LSR1_MOSI,
+        lsr1_disable            => LSR1_DISABLE,
+        lsr2_sck                => LSR2_SCK,
+        lsr2_rd                 => LSR2_RD,
+        lsr2_ss_n               => LSR2_SS_N,
+        lsr2_mosi               => LSR2_MOSI,
+        lsr2_disable            => LSR2_DISABLE,
+        lsr3_sck                => LSR3_SCK,
+        lsr3_rd                 => LSR3_RD,
+        lsr3_ss_n               => LSR3_SS_N,
+        lsr3_mosi               => LSR3_MOSI,
+        lsr3_disable            => LSR3_DISABLE,
+        lsr4_sck                => LSR4_SCK,
+        lsr4_rd                 => LSR4_RD,
+        lsr4_ss_n               => LSR4_SS_N,
+        lsr4_mosi               => LSR4_MOSI,
+        lsr4_disable            => LSR4_DISABLE,
+        aux_dout                => AUX_DOUT,
+        warm_box_tec_overload_n => WARM_BOX_TEC_OVERLOAD_N,
+        hot_box_tec_overload_n  => HOT_BOX_TEC_OVERLOAD_N,
+        inlet_valve_comparator  => INLET_VALVE_COMPARATOR,
+        outlet_valve_comparator => OUTLET_VALVE_COMPARATOR,
+        wmm_refl1               => WMM_REFL1,
+        wmm_refl2               => WMM_REFL2,
+        wmm_tran1               => WMM_TRAN1,
+        wmm_tran2               => WMM_TRAN2,
+        wmm_busy1               => WMM_BUSY1,
+        wmm_busy2               => WMM_BUSY2
+    );
+
     top_block_inst : entity work.top_block(behavioral)
     port map (
        clk            => CLK50,
@@ -219,7 +279,7 @@ begin
        usb_internal_connected  => USB_INTERNAL_CONNECTED,
        usb_rear_connected  => USB_REAR_CONNECTED,
        fpga_program_enable  => FPGA_PROGRAM_ENABLE,
-       
+
        cyp_reset      => CYP_RESET,
 
        cyp_pc         => unsigned(CYP_PC),
@@ -294,7 +354,7 @@ begin
        lsr3_1         => LSR3_1,
        lsr4_0         => LSR4_0,
        lsr4_1         => LSR4_1,
-       
+
        lc1            => lc1,
        lc2            => lc2,
        lc3            => lc3,
@@ -319,14 +379,23 @@ begin
        outlet_valve_pwm        => OUTLET_VALVE_PWM,
        inlet_valve_comparator  => INLET_VALVE_COMPARATOR,
        outlet_valve_comparator => OUTLET_VALVE_COMPARATOR,
-       
+
        heater_pwm              => HEATER_PWM,
        hot_box_pwm             => HOT_BOX_PWM,
        hot_box_tec_overload    => HOT_BOX_TEC_OVERLOAD,
        warm_box_pwm            => WARM_BOX_PWM,
-       warm_box_tec_overload   => WARM_BOX_TEC_OVERLOAD
-    );
+       warm_box_tec_overload   => WARM_BOX_TEC_OVERLOAD,
 
+       dout_man                => DOUT_MAN,
+       dout                    => DOUT,
+       din                     => DIN
+       );
+
+    -- digital I/O lines
+    
+    BUFF_OUT            <= std_logic_vector(BUFF_OUT_U);
+    BUFF_IN_U           <= unsigned(BUFF_IN);
+    
     -- change logic polarity to fit hardware
 
     DSP_EMIF_WE         <= not DSP_EMIF_WE_N;
@@ -338,7 +407,7 @@ begin
     DSP_EMIF_CE         <= not DSP_EMIF_CE_N;
     FP_LCD              <= std_logic_vector(FP_LCD_U);
     FP_LED              <= std_logic_vector(FP_LED_U);
-    AUX_DIN             <= std_logic_vector(AUX_DIN_U);
+    AUX_DIN             <= AUX_DIN_U;
     LSR1_SS_N           <= not LSR1_SS;
     LSR2_SS_N           <= not LSR2_SS;
     LSR3_SS_N           <= not LSR3_SS;
@@ -392,7 +461,7 @@ begin
     WARM_BOX_PWM_N      <= not WARM_BOX_PWM;
     HOT_BOX_TEC_OVERLOAD    <= not HOT_BOX_TEC_OVERLOAD_N;
     WARM_BOX_TEC_OVERLOAD   <= not WARM_BOX_TEC_OVERLOAD_N;
-    
+
     -- instantiate the top level bidirectional io buffers
 
     DSP_EMIF_DBUFF:

@@ -1088,25 +1088,30 @@ typedef enum {
 #define KERNEL_CONTROL_OVERLOAD_RESET_W (1) // Reset overload register bit width
 #define KERNEL_CONTROL_I2C_RESET_B (2) // Reset i2c multiplexers bit position
 #define KERNEL_CONTROL_I2C_RESET_W (1) // Reset i2c multiplexers bit width
+#define KERNEL_CONTROL_DOUT_MAN_B (3) // Manually set FPGA digital outputs bit position
+#define KERNEL_CONTROL_DOUT_MAN_W (1) // Manually set FPGA digital outputs bit width
 
 #define KERNEL_DIAG_1 (2) // DSP accessible register for diagnostics
 #define KERNEL_INTRONIX_CLKSEL (3) // 
 #define KERNEL_INTRONIX_CLKSEL_DIVISOR_B (0) // Intronix sampling rate bit position
 #define KERNEL_INTRONIX_CLKSEL_DIVISOR_W (5) // Intronix sampling rate bit width
 
-#define KERNEL_INTRONIX_1 (4) // 
+#define KERNEL_INTRONIX_1 (4) // Channel for Logicport bits 7-0
 #define KERNEL_INTRONIX_1_CHANNEL_B (0) // Intronix display 1 channel bit position
 #define KERNEL_INTRONIX_1_CHANNEL_W (8) // Intronix display 1 channel bit width
 
-#define KERNEL_INTRONIX_2 (5) // 
+#define KERNEL_INTRONIX_2 (5) // Channel for Logicport bits 15-8
 #define KERNEL_INTRONIX_2_CHANNEL_B (0) // Intronix display 2 channel bit position
 #define KERNEL_INTRONIX_2_CHANNEL_W (8) // Intronix display 2 channel bit width
 
-#define KERNEL_INTRONIX_3 (6) // 
+#define KERNEL_INTRONIX_3 (6) // Channel for Logicport bits 23-16
 #define KERNEL_INTRONIX_3_CHANNEL_B (0) // Intronix display 3 channel bit position
 #define KERNEL_INTRONIX_3_CHANNEL_W (8) // Intronix display 3 channel bit width
 
 #define KERNEL_OVERLOAD (7) // Overload register
+#define KERNEL_DOUT_HI (8) // Manual control of FPGA DOUT 39-32
+#define KERNEL_DOUT_LO (9) // Manual control of FPGA DOUT 31-0
+#define KERNEL_DIN (10) // FPGA DIN 63-40
 
 /* Block PWM Pulse width modulator */
 #define PWM_CS (0) // Control/Status register
@@ -1366,21 +1371,21 @@ typedef enum {
 /* FPGA map indices */
 
 #define FPGA_KERNEL (0) // Kernel registers
-#define FPGA_PWM_LASER1 (8) // Laser 1 TEC pulse width modulator registers
-#define FPGA_PWM_LASER2 (10) // Laser 2 TEC pulse width modulator registers
-#define FPGA_PWM_LASER3 (12) // Laser 3 TEC pulse width modulator registers
-#define FPGA_PWM_LASER4 (14) // Laser 4 TEC pulse width modulator registers
-#define FPGA_PWM_WARMBOX (16) // Warm box TEC pulse width modulator registers
-#define FPGA_PWM_HOTBOX (18) // Hot box TEC pulse width modulator registers
-#define FPGA_PWM_HEATER (20) // Heater pulse width modulator registers
-#define FPGA_RDSIM (22) // Ringdown simulator registers
-#define FPGA_LASERLOCKER (30) // Laser frequency locker registers
-#define FPGA_RDMAN (58) // Ringdown manager registers
-#define FPGA_TWGEN (82) // Tuner waveform generator
-#define FPGA_INJECT (91) // Optical Injection Subsystem
-#define FPGA_WLMSIM (100) // WLM Simulator
-#define FPGA_DYNAMICPWM_INLET (109) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (114) // Outlet proportional valve dynamic PWM
+#define FPGA_PWM_LASER1 (11) // Laser 1 TEC pulse width modulator registers
+#define FPGA_PWM_LASER2 (13) // Laser 2 TEC pulse width modulator registers
+#define FPGA_PWM_LASER3 (15) // Laser 3 TEC pulse width modulator registers
+#define FPGA_PWM_LASER4 (17) // Laser 4 TEC pulse width modulator registers
+#define FPGA_PWM_WARMBOX (19) // Warm box TEC pulse width modulator registers
+#define FPGA_PWM_HOTBOX (21) // Hot box TEC pulse width modulator registers
+#define FPGA_PWM_HEATER (23) // Heater pulse width modulator registers
+#define FPGA_RDSIM (25) // Ringdown simulator registers
+#define FPGA_LASERLOCKER (33) // Laser frequency locker registers
+#define FPGA_RDMAN (61) // Ringdown manager registers
+#define FPGA_TWGEN (85) // Tuner waveform generator
+#define FPGA_INJECT (94) // Optical Injection Subsystem
+#define FPGA_WLMSIM (103) // WLM Simulator
+#define FPGA_DYNAMICPWM_INLET (112) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (117) // Outlet proportional valve dynamic PWM
 
 /* Environment addresses */
 

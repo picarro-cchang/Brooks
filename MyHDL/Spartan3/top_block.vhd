@@ -157,7 +157,11 @@ entity top_block is
            hot_box_pwm        : out std_logic;
            hot_box_tec_overload    : in std_logic;
            warm_box_pwm       : out std_logic;
-           warm_box_tec_overload   : in std_logic
+           warm_box_tec_overload   : in std_logic;
+           
+           dout_man           : out std_logic;
+           dout               : out unsigned(39 downto 0);
+           din                : in unsigned(23 downto 0)
     );
 end top_block;
 
@@ -284,6 +288,10 @@ begin
         wmm_busy2               => wmm_busy2,
         wmm_rd                  => wmm_rd,
         wmm_convst              => wmm_convst,
-        wmm_clk                 => wmm_clk
+        wmm_clk                 => wmm_clk,
+        
+        dout_man                => dout_man,
+        dout                    => dout,
+        din                     => din
     );
 end behavioral;

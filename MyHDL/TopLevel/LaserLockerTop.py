@@ -61,7 +61,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          warm_box_pwm, warm_box_tec_overload,
          wmm_refl1, wmm_refl2, wmm_tran1, wmm_tran2,
          wmm_busy1, wmm_busy2,
-         wmm_rd, wmm_convst, wmm_clk
+         wmm_rd, wmm_convst, wmm_clk,
+         dout_man, dout, din
         ):
 
     NSTAGES = 28
@@ -267,8 +268,11 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      overload_in=overload_in,
                      overload_out=overload_out,
                      i2c_reset_out=i2c_reset,
+                     dout_man_out=dout_man,
+                     dout_out=dout,
+                     din_in=din,
                      map_base=FPGA_KERNEL )
-    
+   
     laserlocker = LaserLocker( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                                dsp_data_out=dsp_data_out,
                                dsp_data_in=dsp_data_in_laserlocker, dsp_wr=dsp_wr,
@@ -785,6 +789,9 @@ warm_box_pwm, warm_box_tec_overload = [Signal(LOW) for i in range(2)]
 wmm_refl1, wmm_refl2, wmm_tran1, wmm_tran2 = [Signal(LOW) for i in range(4)]
 wmm_busy1, wmm_busy2 = [Signal(LOW) for i in range(2)]
 wmm_rd, wmm_convst, wmm_clk = [Signal(LOW) for i in range(3)]
+dout_man = Signal(LOW)
+dout = Signal(intbv(0)[40:])
+din  = Signal(intbv(0)[24:])
 
 def makeVHDL():
     toVHDL(main,clk0,clk180,clk3f,clk3f180,clk_locked,reset,
@@ -812,7 +819,8 @@ def makeVHDL():
                 warm_box_pwm, warm_box_tec_overload,
                 wmm_refl1, wmm_refl2, wmm_tran1, wmm_tran2,
                 wmm_busy1, wmm_busy2,
-                wmm_rd, wmm_convst, wmm_clk
+                wmm_rd, wmm_convst, wmm_clk,
+                dout_man, dout, din
                 )
 
 if __name__ == "__main__":
