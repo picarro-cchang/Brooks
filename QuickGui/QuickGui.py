@@ -1976,7 +1976,7 @@ class QuickGui(wx.Frame):
                 logFiles = "\n".join(logFiles)
             else:
                 logFiles = "No log file"
-            if logFiles != self.userLogTextCtrl.GetValue:
+            if logFiles != self.userLogTextCtrl.GetValue():
                 self.userLogTextCtrl.SetValue(logFiles)
         if userLogEnabled:
             self.userLogButton.SetLabel("Stop User Log(s)")
