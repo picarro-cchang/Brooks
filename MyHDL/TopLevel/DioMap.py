@@ -87,8 +87,8 @@ def dioMap(man,buff_out,buff_in,man_out,man_in,
             buff_out[14].next = wmm_convst
             buff_out[15].next = wmm_clk
             buff_out[16].next = sw1
-            buff_out[17].next = sw2
-            buff_out[18].next = sw3
+            buff_out[17].next = sw3
+            buff_out[18].next = sw2
             buff_out[19].next = sw4
             buff_out[20].next = lsr1_sck
             buff_out[21].next = lsr1_rd
