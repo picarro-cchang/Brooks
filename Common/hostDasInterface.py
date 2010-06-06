@@ -444,7 +444,7 @@ class HostToDspSender(Singleton):
             self.initStatus = None
             self.timeout = timeout
             self.initialized = True
-            self.oldStatus = None
+            self.oldStatus = -1
     def setTimeout(self,timeout=None):
         self.timeout = timeout
     @usbLockProtect
@@ -472,6 +472,9 @@ class HostToDspSender(Singleton):
             self.seqNum = (self.getSequenceNumber() + 1) & 0xFF
         numInt = len(data)
         hostMsg = ((numInt+3)*c_uint)()
+        # The following is used to read back the host message to ensure
+        #  that the EMIF transfer has taken place before signalling the DSPINT
+        hostMsgConfirm = ((numInt+3)*c_uint)()
         hostMsg[0] = ((self.seqNum&0xFF) << 24) | \
             ((numInt&0xFF) << 16) | (command&0xFFFF)
         hostMsg[1] = env & 0xFFFF
@@ -488,8 +491,16 @@ class HostToDspSender(Singleton):
         hostMsg[i] = calcCrc32(0,hostMsg,4*(numInt+2))
         # logging.info("CRC = %x" % hostMsg[numInt+2])
         self.oldStatus = self.rdRegUint(interface.COMM_STATUS_REGISTER)
+        
         self.usb.hpiWrite(HOST_BASE,hostMsg)
         sleep(0.003) # Necessary to ensure hpiWrite completes before signalling interrupt
+        for i in range(10): # Retry count
+            self.usb.hpiRead(HOST_BASE,hostMsgConfirm)
+            if tuple(hostMsg)==tuple(hostMsgConfirm): break
+            sleep(0.01)
+        else:
+            raise ValueError("Writing to DSP host area failed")
+            
         # Assert DSPINT
         self.usb.hpicWrite(0x00010003)
         # print "hpic after DSPINT: %08x" % self.usb.hpicRead()
@@ -504,11 +515,12 @@ class HostToDspSender(Singleton):
         while self.timeout==None or clock()<startTime+self.timeout:
             self.status = self.rdRegUint(interface.COMM_STATUS_REGISTER)
             ntries += 1
-            if self.oldStatus == self.status: # Loop while we still read the old status, since
-                                              #  DSP has not yet updated it
+            if self.oldStatus & interface.COMM_STATUS_SequenceNumberMask == \
+                  self.status & interface.COMM_STATUS_SequenceNumberMask: 
+                # Loop while we still read the old status, since
+                #  DSP has not yet updated it
                 continue
-            done = (0 != (self.status & \
-                interface.COMM_STATUS_CompleteMask))
+            done = (0 != (self.status & interface.COMM_STATUS_CompleteMask))
             if done:
                 seqNum = (self.status & \
                     interface.COMM_STATUS_SequenceNumberMask)>> \
