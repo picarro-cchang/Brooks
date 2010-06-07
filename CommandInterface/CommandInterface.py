@@ -8,7 +8,8 @@ File History:
     08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
     09-07-03 alex  Tested and debugged both serial and socket interfaces
     09-07-22 alex  Supported more command sets. Supported multiple concentration reporting. Used semicolon instead of tab.  
-
+    10-06-07 alex  Added function for flux mode switcher
+    
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -38,6 +39,8 @@ from Host.Common.SharedTypes import RPC_PORT_COMMAND_HANDLER, RPC_PORT_INSTR_MAN
 from Host.Common.StringPickler import StringAsObject,ObjAsString,ArbitraryObject
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
+from Host.Common.FluxSwitcher import FluxSwitcher
+
 EventManagerProxy_Init(APP_NAME)
 
 HEADER_SECTION               = 'HEADER'
@@ -145,6 +148,13 @@ class CommandInterface(object):
                 self.pulse_conc_list.append(label)
         except:
             pass
+
+        # Get flux switcher config if available
+        try:
+            switcherConfig = self.config.get("FLUX_MODE_SWITCH", "iniFile")
+            self.switcher = FluxSwitcher(switcherConfig)
+        except:
+            self.switcher = None
             
         # Create error constants from config
         for name in self.errorList:
@@ -629,6 +639,14 @@ class CommandInterface(object):
         self._ValveSeqRpc.setValves(int(valveMask))
         self._VALVES_SEQ_READSTATE()
 
+    def _FLUX_MODE_SWITCH(self, mode):
+        if self.switcher != None:
+            self.switcher.select(mode)
+            self.switcher.launch()
+            self.Print("Starting new mode: %s" % mode)
+        else:
+            self.Print("Flux mode switcher not available")
+        
     # Print functions
     def Print(self, msg, debug=True):
         if self.interface != None:

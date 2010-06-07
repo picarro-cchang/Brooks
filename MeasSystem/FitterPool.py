@@ -146,6 +146,9 @@ class FitterPool(object):
             f.ping()
 
     def Init(self):
-        self.cachedFitValues = {}
+        self.ClearCache()
         for f in self.fitters:
             f.init()
+
+    def ClearCache(self):
+        self.cachedFitValues = {}

@@ -737,7 +737,7 @@ class DataLogger(object):
         else:
             return DATALOGGER_RPC_FAILED
     def DATALOGGER_stopLogRpc(self, UserLogName):
-        """Called to enable logging of the specified user log."""
+        """Called to disable logging of the specified user log."""
         if UserLogName in self.UserLogDict:
             dl =  self.UserLogDict[UserLogName]
             dl.Enabled = False

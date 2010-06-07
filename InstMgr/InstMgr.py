@@ -47,7 +47,8 @@ File History:
                     Make the warming state be the entry point for recovering from problems. During monitoring, check if the
                     measurement system is not enabled, and enable it as necessary. Changed GetStateRpc to return a dictionary
                     of states.
-
+    10-06-07 alex  Stop ringdown acquisition in warming mode
+    
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -432,6 +433,7 @@ class InstMgr(object):
         self._SendDisplayMessage("Warming...")
         self.MeasSysRpc.Disable()
         self.DataMgrRpc.Disable()
+        self.DriverRpc.stopScan()
         
         self.cavityTempLockCount = 0
         self.warmChamberTempLockCount = 0

@@ -63,6 +63,7 @@ sys.path.append("Utilities")
 sys.path.append("Utilities/RemoteAccess")
 sys.path.append("Utilities/DiagDataCollector")
 sys.path.append("Utilities/SupervisorLauncher")
+sys.path.append("Utilities/FluxSwitcher")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -185,6 +186,8 @@ setup(version = "1.0",
                  "Utilities/DiagDataCollector/DiagDataCollector.py",
                  "Utilities/SupervisorLauncher/SupervisorLauncher.py",
                  "Utilities/SupervisorLauncher/StopSupervisor.py",
+                 "Utilities/FluxSwitcher/FluxScheduler.py",
+                 "Utilities/FluxSwitcher/FluxSwitcherGui.py",
                  "../SrcCode/Utilities/CalibrateSystem.py",
                  "../SrcCode/Utilities/AdjustWlmOffset.py",
                  "../SrcCode/Utilities/ExamineRawRD.py",

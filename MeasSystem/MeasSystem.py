@@ -342,6 +342,8 @@ class MeasSystem(object):
         if not ModeName in self.MeasModes.keys():
             raise InvalidModeSelection("An invalid mode was selected: '%s'" % ModeName)
         Driver.stopScan()
+        # Initialize fitter pool
+        self.FitterPool.ClearCache()
         self._ChangeMode(ModeName)
         return "OK"
 
