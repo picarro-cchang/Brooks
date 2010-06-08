@@ -1163,7 +1163,10 @@ class DataManager(object):
                 self._LaunchSyncScripts()
             # Allow script to run if we are within 10ms of the target execution time.
             if self.syncScriptQueue:
-                while self._TimeToNextSyncScript() < 0.01: self._RunNextSyncScript()
+                timeToNextSyncScript = self._TimeToNextSyncScript()
+                while timeToNextSyncScript != None and timeToNextSyncScript < 0.01: 
+                    self._RunNextSyncScript()
+                    timeToNextSyncScript = self._TimeToNextSyncScript()
             
             if self._EnableEvent.isSet():
                 if not self.CurrentMeasMode:
@@ -1194,14 +1197,22 @@ class DataManager(object):
                 # First deal with synchronous scripts that need to be run. Allow script to
                 #  run if we are within 10ms of the target execution time.
                 if self.syncScriptQueue:
-                    while self._TimeToNextSyncScript() < 0.01: self._RunNextSyncScript()
+                    timeToNextSyncScript = self._TimeToNextSyncScript()
+                    while timeToNextSyncScript != None and timeToNextSyncScript < 0.01: 
+                        self._RunNextSyncScript()
+                        timeToNextSyncScript = self._TimeToNextSyncScript()
                 # Information on the forwarded data queue must be dealt with before processing more collected
                 #  data, since it implicitly has an earlier timestamp
                 if self.forwardedDataQueue:
                     data = self.forwardedDataQueue.pop(0)
                 else:
                     # Check for collected data, ensuring that we get out at least every 0.5s to check if we need to stop
-                    data = self.DataQueue.get(timeout = min(max(0.0,self._TimeToNextSyncScript()),0.5))
+                    timeToNextSyncScript = self._TimeToNextSyncScript()
+                    if timeToNextSyncScript != None:
+                        dataQueueTimeout = min(max(0.0,timeToNextSyncScript),0.5)
+                    else:
+                        dataQueueTimeout = 0.5
+                    data = self.DataQueue.get(timeout = dataQueueTimeout)
                 assert isinstance(data, MeasData) # for Wing
                 self._AnalyzeData(data)
                 exitState = STATE_ENABLED
