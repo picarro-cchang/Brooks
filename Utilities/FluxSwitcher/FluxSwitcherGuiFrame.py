@@ -8,11 +8,11 @@ class FluxSwitcherGuiFrame(wx.Frame):
     def __init__(self, typeChoices, *args, **kwds):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX)
         wx.Frame.__init__(self, *args, **kwds)
-        self.SetTitle("Picarro Flux Switcher")
+        self.SetTitle("Picarro Flux Mode Switcher")
         self.SetBackgroundColour("#E0FFFF")
         
         # labels
-        self.labelTitle = wx.StaticText(self, -1, "Picarro Flux Switcher", style=wx.ALIGN_CENTRE)
+        self.labelTitle = wx.StaticText(self, -1, "Picarro Flux Mode Switcher", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
         self.labelSelect = wx.StaticText(self, -1, "Select Measurement Mode", style=wx.ALIGN_CENTER)
@@ -24,6 +24,8 @@ class FluxSwitcherGuiFrame(wx.Frame):
         self.comboBoxSelect = wx.ComboBox(self, -1, value = typeChoices[0], choices = typeChoices, style = wx.CB_READONLY|wx.CB_DROPDOWN)
         
         # button
+        self.buttonCancel = wx.Button(self, -1, "Cancel", size=(110, 20))
+        self.buttonCancel.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonLaunch = wx.Button(self, -1, "Launch", size=(110, 20))
         self.buttonLaunch.SetBackgroundColour(wx.Colour(237, 228, 199))
         
@@ -38,7 +40,7 @@ class FluxSwitcherGuiFrame(wx.Frame):
         sizer_1.Add((-1, 10))
         grid_sizer_1.Add(self.labelSelect, 0, wx.LEFT, 20)
         grid_sizer_1.Add(self.comboBoxSelect, 0, wx.LEFT, 10)
-        grid_sizer_1.Add((-1,30))
+        grid_sizer_1.Add(self.buttonCancel, 0, wx.LEFT|wx.TOP|wx.ALIGN_BOTTOM|wx.RIGHT, 10)
         grid_sizer_1.Add(self.buttonLaunch, 0, wx.LEFT|wx.TOP|wx.ALIGN_BOTTOM|wx.RIGHT, 10)
         sizer_1.Add(grid_sizer_1, 0)
         sizer_1.Add((-1, 10))

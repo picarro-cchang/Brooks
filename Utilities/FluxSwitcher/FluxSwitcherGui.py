@@ -16,26 +16,12 @@ import win32api
 import win32process
 import win32con
 import shutil
-from configobj import ConfigObj
+from Host.Common.CustomConfigObj import CustomConfigObj
 from FluxSwitcherGuiFrame import FluxSwitcherGuiFrame
-from Host.Common import CmdFIFO
-import threading
+from Host.Common.FluxSwitcher import FluxSwitcher
 
-RPC_PORT_MEAS_SYSTEM        = 50070
-RPC_PORT_DATA_MANAGER       = 50160
-RPC_PORT_DATALOGGER         = 50090
-APP_NAME = "FluxSwitcherGui"
-DEFAULT_CONFIG_NAME = "FluxSwitcher.ini"
+DEFAULT_CONFIG_NAME = "FluxSwitcherGui.ini"
 
-CRDS_MeasSys = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_DataManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_DataLogger = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -44,49 +30,29 @@ else:
 AppPath = os.path.abspath(AppPath)
     
 class FluxSwitcherGui(FluxSwitcherGuiFrame):
-    def __init__(self, configFile, *args, **kwds):
-        self.co = ConfigObj(configFile)
+    def __init__(self, configFile, supervisorConfigFile, *args, **kwds):
+        self.co = CustomConfigObj(configFile)
+        self.switcher = FluxSwitcher(configFile, supervisorConfigFile)
         typeChoices = self.co.keys()
         FluxSwitcherGuiFrame.__init__(self, typeChoices, *args, **kwds)
-        self.onSelect(None)
-        self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
         self.Bind(wx.EVT_BUTTON, self.onLaunch, self.buttonLaunch)
 
-    def onSelect(self, event):
-        select = self.comboBoxSelect.GetValue()
-        self.mode = self.co[select]["Mode"].strip()
-        self.guiIni = self.co[select]["GuiIni"]
-            
     def onLaunch(self, event):
         self.buttonLaunch.Enable(False)
-        #CRDS_DataLogger.DATALOGGER_stopLogRpc("DataLog_User")
-        #CRDS_DataLogger.DATALOGGER_stopLogRpc("DataLog_User_Sync")
-        #CRDS_DataLogger.DATALOGGER_stopLogRpc("DataLog_Private")
-        CRDS_MeasSys.Mode_Set(self.mode)
-        time.sleep(4)
-        CRDS_DataManager.Mode_Set(self.mode)
-        os.system("C:/WINDOWS/system32/taskkill.exe /IM QuickGui.exe /F")
-        time.sleep(.1)
-        launchQuickGuiThread = threading.Thread(target = self._restartQuickGui)
-        launchQuickGuiThread.setDaemon(True)
-        launchQuickGuiThread.start()
-    
-    def _restartQuickGui(self):
-        subprocess.Popen(["C:/Picarro/G2000/HostExe/QuickGui.exe","-c",self.guiIni])
+        type = self.comboBoxSelect.GetValue()
+        self.switcher.select(type)
+        self.switcher.launch()
         self.buttonLaunch.Enable(True)
-        #time.sleep(4)
-        #CRDS_DataLogger.DATALOGGER_startLogRpc("DataLog_User")
-        #CRDS_DataLogger.DATALOGGER_startLogRpc("DataLog_User_Sync")
-        #CRDS_DataLogger.DATALOGGER_startLogRpc("DataLog_Private")
                 
 HELP_STRING = \
 """
 
-FluxSwitcherGui.py [-h] [-c <FILENAME>]
+FluxSwitcherGui.py [-h] [-c <FILENAME>] [-s <FILENAME>]
 
 Where the options can be a combination of the following:
 -h, --help : Print this help.
 -c         : Specify a config file.
+-s         : Specify the SupervisorLauncher.ini file
 
 """
 
@@ -97,7 +63,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "hc:s:", ["help"])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -118,13 +84,17 @@ def HandleCommandSwitches():
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
 
-    return configFile
+    if "-s" in options:
+        supervisorConfigFile = options["-s"]
+        print "Supervisor Launcher config file specified at command line: %s" % supervisorConfigFile
+        
+    return configFile, supervisorConfigFile
     
 if __name__ == "__main__":
-    configFile = HandleCommandSwitches()
+    configFile, supervisorConfigFile = HandleCommandSwitches()
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()
-    frame = FluxSwitcherGui(configFile, None, -1, "")
+    frame = FluxSwitcherGui(configFile, supervisorConfigFile, None, -1, "")
     app.SetTopWindow(frame)
     frame.Show()
     app.MainLoop()

@@ -10,6 +10,7 @@ import sys
 import os
 import subprocess
 import time
+import shutil
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common import CmdFIFO
 import threading
@@ -30,16 +31,23 @@ CRDS_DataLogger = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DA
                                          IsDontCareConnection = False)
 
 class FluxSwitcher(object):
-    def __init__(self, configFile):
+    def __init__(self, configFile, supervisorConfigFile):
         self.co = CustomConfigObj(configFile)
+        self.coSupervisor = CustomConfigObj(supervisorConfigFile)
+        apacheDir = self.coSupervisor["Main"]["APACHEDir"].strip()
+        self.supervisorIniDir = os.path.join(apacheDir, "AppConfig\Config\Supervisor")
+        self.guiIniDir = os.path.join(apacheDir, "AppConfig\Config\QuickGui")
+        self.fluxSupervisorIni = os.path.join(self.supervisorIniDir, self.coSupervisor["Flux"]["SupervisorIniFile"].strip())
+        self.startupSupervisorIni = os.path.join(self.supervisorIniDir, self.coSupervisor["Main"]["StartupSupervisorIni"].strip())
 
     def select(self, type):
         self.mode = self.co[type]["Mode"].strip()
-        self.guiIni = self.co[type]["GuiIni"]
+        self.guiIni = os.path.join(self.guiIniDir, self.co[type]["GuiIni"].strip())
+        self.supervisorIni = os.path.join(self.supervisorIniDir, self.co[type]["SupervisorIni"].strip())
             
     def launch(self):
         CRDS_MeasSys.Mode_Set(self.mode)
-        time.sleep(4)
+        time.sleep(5)
         CRDS_DataManager.Mode_Set(self.mode)
         os.system("C:/WINDOWS/system32/taskkill.exe /IM QuickGui.exe /F")
         time.sleep(.1)
@@ -49,6 +57,8 @@ class FluxSwitcher(object):
     
     def _restartQuickGui(self):
         subprocess.Popen(["C:/Picarro/G2000/HostExe/QuickGui.exe","-c",self.guiIni])
+        shutil.copy2(self.supervisorIni, self.fluxSupervisorIni)
+        shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
     
 if __name__ == "__main__":
     configFile = sys.argv[1]

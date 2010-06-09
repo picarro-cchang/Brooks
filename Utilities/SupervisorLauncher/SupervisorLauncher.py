@@ -124,8 +124,12 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                 
     def setGuiTitle(self):
         titleSet = False
+        try:
+            newTitle = self.co[self.supervisorType]["Title"].strip()
+        except:
+            newTitle = None
         count = 0
-        while (not titleSet) and (count < 20):
+        while (not titleSet) and (newTitle != None) and (count < 20):
             try:
                 CRDS_QuickGui.setTitle(self.co[self.supervisorType]["Title"].strip())
                 titleSet = True
