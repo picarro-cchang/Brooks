@@ -3732,5 +3732,8 @@
         <action ident="ACTION_EEPROM_READY">r_eeprom_ready</action>
         <action ident="ACTION_I2C_CHECK">r_i2c_check</action>
         <action ident="ACTION_NUDGE_TIMESTAMP">nudgeTimestamp</action>
+        <action ident="ACTION_EEPROM_WRITE_LOW_LEVEL">r_eeprom_write_low_level</action>
+        <action ident="ACTION_EEPROM_READ_LOW_LEVEL">r_eeprom_read_low_level</action>
+        <action ident="ACTION_EEPROM_READY_LOW_LEVEL">r_eeprom_ready_low_level</action>
     </action_list>
 </Das_Interface>

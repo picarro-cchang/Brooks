@@ -1334,6 +1334,12 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_i2c_check(numInt,params,env);
         case ACTION_NUDGE_TIMESTAMP:
             return nudgeTimestamp(numInt,params,env);
+        case ACTION_EEPROM_WRITE_LOW_LEVEL:
+            return r_eeprom_write_low_level(numInt,params,env);
+        case ACTION_EEPROM_READ_LOW_LEVEL:
+            return r_eeprom_read_low_level(numInt,params,env);
+        case ACTION_EEPROM_READY_LOW_LEVEL:
+            return r_eeprom_ready_low_level(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

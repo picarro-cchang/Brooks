@@ -92,4 +92,7 @@ int r_eeprom_read(unsigned int numInt,void *params,void *env);
 int r_eeprom_ready(unsigned int numInt,void *params,void *env);
 int r_i2c_check(unsigned int numInt,void *params,void *env);
 int nudgeTimestamp(unsigned int numInt,void *params,void *env);
+int r_eeprom_write_low_level(unsigned int numInt,void *params,void *env);
+int r_eeprom_read_low_level(unsigned int numInt,void *params,void *env);
+int r_eeprom_ready_low_level(unsigned int numInt,void *params,void *env);
 #endif

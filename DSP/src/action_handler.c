@@ -892,19 +892,12 @@ int r_interpolator_step(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
-int r_eeprom_read(unsigned int numInt,void *params,void *env)
-/* Reads from an EEPROM in the analyzer. Arguments are the EEPROM ID, the address in the EEPROM
-    and the number of bytes to read. The result is placed within the environment. */
+static int _eeprom_read(I2C_device *dev,unsigned int addr,unsigned int nbytes,void *env)
+/* Reads from an EEPROM. */
 {
-    unsigned int addr, chain, id, loops, nbytes, *reg = (unsigned int *) params;
-    I2C_device *dev;
+    unsigned int chain, loops;
     Byte64EnvType *byte64Env = (Byte64EnvType *)env;
 
-    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
-    id = reg[0];
-    addr = reg[1];
-    nbytes = reg[2];
-    dev = &i2c_devices[id];
     chain = dev->chain;
     // Switch the I2C multiplexer if necessary
     switch (chain) {
@@ -920,19 +913,38 @@ int r_eeprom_read(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
-int r_eeprom_write(unsigned int numInt,void *params,void *env)
-/* Writes to an EEPROM in the analyzer. Arguments are the EEPROM ID, the address in the EEPROM
+int r_eeprom_read_low_level(unsigned int numInt,void *params,void *env)
+/* Reads from an EEPROM. Arguments are the I2C chain, the multiplexer channel, 
+    the I2C address, the address in the EEPROM and the number of bytes to read. The result is 
+    placed within the environment. */
+{
+    unsigned int *reg = (unsigned int *) params;
+    I2C_device device;
+
+    if (5 != numInt) return ERROR_BAD_NUM_PARAMS;
+    device.chain = reg[0];
+    device.mux = reg[1];
+    device.addr = reg[2];
+    return _eeprom_read(&device,reg[3],reg[4],env);
+}
+
+int r_eeprom_read(unsigned int numInt,void *params,void *env)
+/* Reads from an EEPROM in the analyzer. Arguments are the EEPROM ID, the address in the EEPROM
     and the number of bytes to read. The result is placed within the environment. */
 {
-    unsigned int addr, chain, id, loops, nbytes, *reg = (unsigned int *) params;
-    I2C_device *dev;
-    Byte64EnvType *byte64Env = (Byte64EnvType *)env;
+    unsigned int id, *reg = (unsigned int *) params;
 
     if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
     id = reg[0];
-    addr = reg[1];
-    nbytes = reg[2];
-    dev = &i2c_devices[id];
+    return _eeprom_read(&i2c_devices[id],reg[1],reg[2],env);
+}
+
+static int _eeprom_write(I2C_device *dev,unsigned int addr,unsigned int nbytes,void *env)
+/* Writes to an EEPROM */
+{
+    unsigned int chain, loops;
+    Byte64EnvType *byte64Env = (Byte64EnvType *)env;
+
     chain = dev->chain;
     // Switch the I2C multiplexer if necessary
     switch (chain) {
@@ -948,16 +960,39 @@ int r_eeprom_write(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
-int r_eeprom_ready(unsigned int numInt,void *params,void *env)
-/* Check that the EEPROM in the analyzer is ready for read/write. Argument is the EEPROM ID. The
-    result is placed in the COMM_STATUS_REGISTER. */
+int r_eeprom_write_low_level(unsigned int numInt,void *params,void *env)
+/* Writes to an EEPROM. Arguments are the I2C chain, the multiplexer channel, 
+    the I2C address, the address in the EEPROM and the number of bytes to write. 
+    The result is obtained from the environment. */
 {
-    unsigned int chain, id, loops, *reg = (unsigned int *) params;
-    I2C_device *dev;
-    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    unsigned int *reg = (unsigned int *) params;
+    I2C_device device;
+
+    if (5 != numInt) return ERROR_BAD_NUM_PARAMS;
+    device.chain = reg[0];
+    device.mux = reg[1];
+    device.addr = reg[2];
+    return _eeprom_write(&device,reg[3],reg[4],env);
+}
+
+int r_eeprom_write(unsigned int numInt,void *params,void *env)
+/* Writes to an EEPROM in the analyzer. Arguments are the EEPROM ID, the address in the EEPROM
+    and the number of bytes to write. The data is obtained from the environment. */
+{
+    unsigned int id, *reg = (unsigned int *) params;
+
+    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
     id = reg[0];
-    dev = &i2c_devices[id];
+    return _eeprom_write(&i2c_devices[id],reg[1],reg[2],env);
+}
+
+static int _eeprom_ready(I2C_device *dev)
+/* Check that the EEPROM in the analyzer is ready for read/write. */
+{
+    unsigned int chain, loops;
+
     chain = dev->chain;
+    // Switch the I2C multiplexer if necessary
     switch (chain) {
         case 0:
             if (dev->mux >= 0) setI2C0Mux(dev->mux);
@@ -968,6 +1003,31 @@ int r_eeprom_ready(unsigned int numInt,void *params,void *env)
     }
     for (loops=0;loops<1000;loops++);
     return !eeprom_busy(dev);
+}
+
+int r_eeprom_ready_low_level(unsigned int numInt,void *params,void *env)
+/* Check that the EEPROM in the analyzer is ready for read/write. Arguments are the I2C chain, the 
+    multiplexer channel and the I2C address. The result is placed in the COMM_STATUS_REGISTER. */
+{
+    unsigned int *reg = (unsigned int *) params;
+    I2C_device device;
+
+    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
+    device.chain = reg[0];
+    device.mux = reg[1];
+    device.addr = reg[2];
+    return _eeprom_ready(&device);
+}
+
+int r_eeprom_ready(unsigned int numInt,void *params,void *env)
+/* Check that the EEPROM in the analyzer is ready for read/write. Argument is the EEPROM ID.
+    The result is placed in the COMM_STATUS_REGISTER. */
+{
+    unsigned int id, *reg = (unsigned int *) params;
+
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    id = reg[0];
+    return _eeprom_ready(&i2c_devices[id]);
 }
 
 int r_i2c_check(unsigned int numInt,void *params,void *env)
