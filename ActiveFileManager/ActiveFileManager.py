@@ -1,0 +1,440 @@
+#!/usr/bin/python
+#
+"""
+File Name: ActiveFileManager.py
+Purpose: Manages active HDF5 files which are still being written to by the instrument
+Description: This application listens to broadcasts from the driver, ringdown frequency converter and data manager and
+    stores the data in a collection of HDF5 files. These files will ultimately be sent to the archiver, but while they
+    are still being written to by the instrument, we need to carefully control requests to read the data by 
+    interspersing them with the writes. The active file manager runs a single thread that services the listener 
+    queues which cause writes to the actve files and also handles the RPC calls which read from the files. 
+
+File History:
+    06-Jun-2010  sze       Initial version.
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
+
+APP_NAME = "ActiveFileManager"
+
+import ctypes
+import getopt
+from glob import glob
+import inspect
+import numpy
+import os
+from Queue import Queue
+import sys
+import tables
+import threading
+import time
+import traceback
+
+from Host.autogen import interface
+from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster, SharedTypes
+from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_DATA_MANAGER
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_DATA_MANAGER, RPC_PORT_ACTIVE_FILE_MANAGER
+from Host.Common.StringPickler import ArbitraryObject
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.timestamp import getTimestamp
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+EventManagerProxy_Init(APP_NAME)
+
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
+
+class RpcServerThread(threading.Thread):
+    def __init__(self, rpcServer, exitFunction):
+        threading.Thread.__init__(self)
+        self.setDaemon(1) #THIS MUST BE HERE
+        self.rpcServer = rpcServer
+        self.exitFunction = exitFunction
+    def run(self):
+        self.rpcServer.serve_forever()
+        try: #it might be a threading.Event
+            self.exitFunction()
+            Log("RpcServer exited and no longer serving.")
+        except:
+            LogExc("Exception raised when calling exit function at exit of RPC server.")
+
+class ActiveFileManagerRpcHandler(SharedTypes.Singleton):
+    def __init__(self,parent):
+        self.server = CmdFIFO.CmdFIFOServer(("", RPC_PORT_ACTIVE_FILE_MANAGER),
+                                            ServerName = "ActiveFileManager",
+                                            ServerDescription = "Manager for active instrument file",
+                                            threaded = True)
+        self.parent = parent    # Active file manager
+        self._register_rpc_functions()
+
+    def _register_rpc_functions_for_object(self, obj):
+        """ Registers the functions in ActiveFileManagerRpcHandler class which are accessible by XML-RPC
+
+        NOTE - this automatically registers ALL member functions that don't start with '_'.
+
+        i.e.:
+          - if adding new rpc calls, just define them (with no _) and you're done
+          - if putting helper calls in the class for some reason, use a _ prefix
+        """
+        classDir = dir(obj)
+        for s in classDir:
+            attr = obj.__getattribute__(s)
+            if callable(attr) and (not s.startswith("_")) and (not inspect.isclass(attr)):
+                #if __debug__: print "registering", s
+                self.server.register_function(attr,DefaultMode=CmdFIFO.CMD_TYPE_Blocking)
+
+    def _register_rpc_functions(self):
+        """ Registers the functions accessible by XML-RPC """
+        #register the functions contained in this file...
+        self._register_rpc_functions_for_object( self )
+        Log("Registered RPC functions")
+        
+    # def getRdData(self,tstart,tend,varList):
+        # """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tend" (exclusive).
+            # Only "active" files are used to satisfy the request since the database is expected to deal
+            # with files which have already been archived"""
+        # results = []
+        # for baseTime in sorted(self.parent.activeFiles.keys()):
+            # # Determine if [tstart,tend) and [baseTime,stopTime) are disjoint
+            # if tend <= baseTime: continue
+            # a = self.parent.activeFiles[baseTime]
+            # if tstart >= a.stopTime: continue
+            # results.append(a.getRdData(tstart,tend,varList))
+        # if results:
+            # return numpy.concatenate(results,axis=-1)
+        # else:
+            # return None
+            
+    def getRdData(self,*a,**k):
+        """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tend" (exclusive).
+            Only "active" files are used to satisfy the request since the database is expected to deal
+            with files which have already been archived"""
+        self.parent.rpcCommandQueue.put((self.parent.getRdData,(a,k))) 
+        return self.parent.rpcResultQueue.get()
+            
+    def shutdown(self):
+        self.parent._shutdownRequested = True
+        
+        
+ctype2coltype = { ctypes.c_byte:tables.Int8Col, ctypes.c_uint:tables.UInt32Col, ctypes.c_int:tables.Int32Col, 
+                  ctypes.c_short:tables.Int16Col, ctypes.c_ushort:tables.UInt16Col, ctypes.c_longlong:tables.Int64Col, 
+                  ctypes.c_float:tables.Float32Col, ctypes.c_double:tables.Float64Col }
+        
+class ActiveFile(object):
+    """Objects of this class are associated with HDF5 files in the active file directory.
+       The class is use to abstract away details about accessing HDF5 files."""
+       
+    # The following dictionaries are used to create HDF5 tables. They are initialized
+    #  from the ctypes structure definitions of the corresponding broadcasts.
+    Init = False
+    SensorDataDescr = {}
+    RdDataDescr = {}
+    
+    def structureToDescr(self,structure):
+        descr = {}
+        for name,cls in structure._fields_:
+            descr[name] = (ctype2coltype[cls])()
+        return descr
+        
+    def makeDescr(self):
+        ActiveFile.SensorDataDescr = self.structureToDescr(interface.SensorEntryType)
+        ActiveFile.RdDataDescr = self.structureToDescr(interface.ProcessedRingdownEntryType)
+    
+    def __init__(self):
+        self.handle = None
+        self.baseTime = None    # Base time is in ms
+        self.stopTime = None
+        if not ActiveFile.Init: # Compute descriptors once
+            self.makeDescr()
+            ActiveFile.Init = True
+            
+    def create(self,dirName,baseTime,stopTime):
+        self.baseTime = baseTime
+        self.stopTime = stopTime
+        self.abspath = os.path.abspath(os.path.join(dirName,"%d.h5" % self.baseTime))
+        self.handle = tables.openFile(self.abspath,"w")
+        self.handle.setNodeAttr("/","baseTime",self.baseTime)
+        self.handle.setNodeAttr("/","stopTime",self.stopTime)
+        self.handle.createTable("/","sensorData",self.SensorDataDescr,expectedrows=2000000)
+        self.handle.setNodeAttr("/sensorData","streamNames",interface.STREAM_MemberTypeDict)
+        self.handle.createTable("/","rdData",self.RdDataDescr,expectedrows=1000000)
+        return self
+        
+    def getSensorDataTable(self):    
+        return self.handle.root.sensorData
+        
+    def getRdDataTable(self):    
+        return self.handle.root.rdData
+        
+    def open(self,filename):    
+        self.abspath = os.path.abspath(filename)
+        self.handle = tables.openFile(filename,"a")
+        self.baseTime = self.handle.getNodeAttr("/","baseTime")
+        self.stopTime = self.handle.getNodeAttr("/","stopTime")
+        return self
+        
+    def close(self):
+        self.handle.close()
+        self.handle = None
+        
+    def remove(self):
+        if self.handle is not None: self.close()
+        os.remove(self.abspath)
+        
+    def getRdData(self,tstart,tend,varList):
+        table = self.getRdDataTable()
+        result = []
+        for var in varList:
+            result.append(table.readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend),field=var))
+        return numpy.array(result)
+
+    def genRdData(self,tstart,tend,varList):
+        for row in self.getRdDataTable().where('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend)):
+            yield [row[v] for v in varList]
+        
+class ActiveFileManager(object):
+    def __init__(self,configFile):
+        self.config = CustomConfigObj(configFile)
+        basePath = os.path.split(configFile)[0]
+        self.activeFilePeriod = self.config.getint("MainConfig","period_s",600)
+        self.graceInterval = self.config.getint("MainConfig","grace_interval_s",60)
+        self.activeFileDir = os.path.join(basePath, self.config.get("MainConfig","active_dir","ActiveFiles"))
+        if not os.path.exists(self.activeFileDir): os.makedirs(self.activeFileDir)
+
+        self.sensorQueue = Queue(0)
+        self.sensorListener = Listener.Listener(self.sensorQueue,
+                                                BROADCAST_PORT_SENSORSTREAM,
+                                                interface.SensorEntryType,
+                                                retry = True,
+                                                name = "ActiveFileManager listener")
+        self.rdQueue = Queue(0)
+        self.rdListener = Listener.Listener(self.rdQueue,
+                                            BROADCAST_PORT_RD_RECALC,
+                                            interface.ProcessedRingdownEntryType,
+                                            retry = True,
+                                            name = "ActiveFileManager listener")
+        self.dataManagerQueue = Queue(0)
+        self.dataManagerListener = Listener.Listener(self.rdQueue,
+                                            BROADCAST_PORT_DATA_MANAGER,
+                                            ArbitraryObject,
+                                            retry = True,
+                                            name = "ActiveFileManager listener")
+        self.rpcHandler = ActiveFileManagerRpcHandler(self)
+        self.activeFiles = {}   # Maintains open files, keyed by baseTimes
+        self.rpcThread = RpcServerThread(self.rpcHandler.server, self.rpcHandler.shutdown)
+        self.rpcCommandQueue = Queue(0)
+        self.rpcResultQueue  = Queue(0)
+        
+        self._shutdownRequested = False
+        self.rpcInProgress = False
+        
+        self.sensorDataTable = None
+        self.sensorDataBaseTime = 0
+        self.rdDataTable = None
+        self.rdDataBaseTime = 0
+
+    def openActiveFiles(self):
+        """Go through files with extension .h5 in the active file directory
+           and open them."""
+        fileList = glob(os.path.join(self.activeFileDir,'*.h5'))
+        print "active files: ", fileList
+        for f in fileList:
+            a = ActiveFile().open(f)
+            self.activeFiles[a.baseTime] = a
+        
+    def getBaseTime(self,timestamp):
+        return int(numpy.floor(timestamp / (1000*self.activeFilePeriod)) * (1000*self.activeFilePeriod))
+
+    def getActiveFile(self,timestamp):
+        """Creates or gets a pre-existing active file associated with the specified timestamp."""
+        baseTime = self.getBaseTime(timestamp)
+        if baseTime not in self.activeFiles:
+            a = ActiveFile().create(self.activeFileDir,baseTime,baseTime+1000*self.activeFilePeriod)
+            self.activeFiles[a.baseTime] = a
+        return self.activeFiles[baseTime]
+    
+    def closeActiveFiles(self):
+        for a in self.activeFiles.values():
+            a.close()
+    
+    def removeOldFiles(self,timestamp):
+        for k,a in self.activeFiles.items():
+            if timestamp > a.baseTime + 1000*(self.activeFilePeriod + self.graceInterval):
+                del self.activeFiles[k]
+                a.remove()
+    
+    def doRpcRequests(self):
+        # Carry out next bit of work for satisfying RPC requests. Such requests are done
+        #  using methods in this class which either return False to indicate that they
+        #  have completed their work and placed a result on the rpcResultQueue, or they
+        #  return True to indicate that there is still more work to do. We only get
+        #  commands off the rpcCommandQueue if no command is in progress
+        
+        while True: # Later make this return if we have already spent too much time
+            if self.rpcInProgress:
+                a,k = self.lastRpcParams
+            elif not self.rpcCommandQueue.empty():
+                self.lastRpcCmd, self.lastRpcParams = self.rpcCommandQueue.get()
+            else:
+                return
+            a,k = self.lastRpcParams
+            self.rpcInProgress = self.lastRpcCmd(*a,**k)
+            if self.rpcInProgress: 
+                return
+
+    # def getRdData(self,tstart,tend,varList):
+        # """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tend" (exclusive).
+            # Only "active" files are used to satisfy the request since the database is expected to deal
+            # with files which have already been archived"""
+            
+        # if self.rpcInProgress:
+            # print "InProgress functionality has not yet been implemented"
+        # else:
+            # results = []
+            # for baseTime in sorted(self.activeFiles.keys()):
+                # Determine if [tstart,tend) and [baseTime,stopTime) are disjoint
+                # if tend <= baseTime: continue
+                # a = self.activeFiles[baseTime]
+                # if tstart >= a.stopTime: continue
+                # results.append(a.getRdData(tstart,tend,varList))
+            # if results:
+                # self.rpcResultQueue.put(numpy.concatenate(results,axis=-1))
+        # return False    # Indicates I am done    
+
+    def getRdData(self,tstart,tend,varList):
+        """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tend" (exclusive).
+            Only "active" files are used to satisfy the request since the database is expected to deal
+            with files which have already been archived"""
+        if not self.rpcInProgress:
+            self.gen = self.genRdData(tstart,tend,varList)
+            startTime = None
+        else:
+            startTime = time.clock()
+        try:
+            self.gen.send(startTime)
+            return True
+        except StopIteration:
+            return False
+            
+    def genRdData(self,tstart,tend,varList):
+        results = []
+        t = time.clock()
+        for baseTime in sorted(self.activeFiles.keys()):
+            # Determine if [tstart,tend) and [baseTime,stopTime) are disjoint
+            if tend <= baseTime: continue
+            a = self.activeFiles[baseTime]
+            if tstart >= a.stopTime: continue
+            for row in a.genRdData(tstart,tend,varList):
+                results.append(row)
+                if time.clock()-t > 0.5:
+                    t = yield True
+        self.rpcResultQueue.put(numpy.array(results).transpose())
+
+        
+    # There is a directory in which the active file is maintained.
+    # The timestamp is rounded down to a multiple of the activeFilePeriod to give the
+    # "baseTime" which labels the active file to which the data belong.
+    
+    # Given a timestamp and an active file period, we need to see if a new file needs 
+    #  to be created or if a pre-existing active file should be used.
+    # Pre-existing active files which are no longer current must be closed and sent 
+    #  to the archiver for compression and long-term storage
+    # 
+    # We keep track of an active file and the next active file so that points in a 
+    #  queue that stradle the boundary between files can be dealt with properly. It 
+    #  is only safe to close the current active file once there are data from all 
+    #  queues whose baseTime values are after the baseTime of the current active 
+    #  file. However, in order to cope with the situation in which no data arrive
+    #  in a queue for an extended period, there is a grace period beyond which an
+    #  active file is closed unconditionally.
+       
+    def run(self):
+        self.rpcThread.start()
+        # Here follows the main loop.
+        Log("Starting main ActiveFileManager loop",Level=1)
+        self.openActiveFiles()
+        try:
+            while not self._shutdownRequested:
+                # Handle listener queues here
+                while not self.sensorQueue.empty():
+                    d = self.sensorQueue.get()
+                    if not (self.sensorDataBaseTime <= d.timestamp < self.sensorDataBaseTime + self.activeFilePeriod):
+                        if self.sensorDataTable is not None: self.sensorDataTable.flush()
+                        a = self.getActiveFile(d.timestamp)
+                        self.sensorDataTable = a.getSensorDataTable()
+                        self.sensorDataBaseTime = a.baseTime
+                    row = self.sensorDataTable.row
+                    for name,cls in interface.SensorEntryType._fields_:
+                        row[name] = getattr(d,name)
+                    row.append()
+                if self.sensorDataTable is not None: self.sensorDataTable.flush()
+
+                while not self.rdQueue.empty():
+                    d = self.rdQueue.get()
+                    if not (self.rdDataBaseTime <= d.timestamp < self.rdDataBaseTime + self.activeFilePeriod):
+                        if self.rdDataTable is not None: self.rdDataTable.flush()
+                        a = self.getActiveFile(d.timestamp)
+                        self.rdDataTable = a.getRdDataTable()
+                        self.rdDataBaseTime = a.baseTime
+                    row = self.rdDataTable.row
+                    for name,cls in interface.ProcessedRingdownEntryType._fields_:
+                        row[name] = getattr(d,name)
+                    row.append()
+                if self.rdDataTable is not None: self.rdDataTable.flush()
+                
+                ts = getTimestamp()
+                # print "In main loop: %s, activeFiles: %s" % (self.getBaseTime(ts),self.activeFiles)
+                self.getActiveFile(ts)
+                self.removeOldFiles(ts)
+                self.doRpcRequests()
+                time.sleep(0.05)
+                
+            print "Shutdown requested"    
+            Log("ActiveFileManager RPC handler shut down")
+        except:
+            type,value,trace = sys.exc_info()
+            print "Unhandled Exception in main loop: %s: %s" % (str(type),str(value))
+            print traceback.format_exc()
+            Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
+                Verbose=traceback.format_exc(),Level=3)
+        self.closeActiveFiles()
+        
+HELP_STRING = """ActiveFileManager.py [-c<FILENAME>] [-h|--help]
+
+Where the options can be a combination of the following:
+-h, --help           print this help
+-c                   specify a config file:  default = "./ActiveFileManager.ini"
+"""
+
+def printUsage():
+    print HELP_STRING
+
+def handleCommandSwitches():
+    shortOpts = 'hc:'
+    longOpts = ["help"]
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
+    except getopt.GetoptError, E:
+        print "%s %r" % (E, E)
+        sys.exit(1)
+    #assemble a dictionary where the keys are the switches and values are switch args...
+    options = {}
+    for o,a in switches:
+        options.setdefault(o,a)
+    if "/?" in args or "/h" in args:
+        options.setdefault('-h',"")
+    #Start with option defaults...
+    configFile = os.path.dirname(AppPath) + "/ActiveFileManager.ini"
+    if "-h" in options or "--help" in options:
+        printUsage()
+        sys.exit()
+    if "-c" in options:
+        configFile = options["-c"]
+    return configFile
+
+if __name__ == "__main__":
+    configFile = handleCommandSwitches()
+    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+    a = ActiveFileManager(configFile)
+    a.run()
+    
