@@ -600,6 +600,30 @@ class DriverRpcHandler(SharedTypes.Singleton):
             nBytes -= bytesRead
         return ctypesObject[:]
 
+    def rdEepromLowLevel(self,chain,mux,i2cAddr,startAddress,nBytes,chunkSize=64):
+        """Read nBytes from I2C EEPROM starting at startAddress (which must be a multiple 
+        of 4). Memory acccesses are done in multiples of chunkSize (<=64 in bytes) for 
+        efficiency. Returns result as a list of bytes."""
+        if startAddress % 4:
+            raise ValueError("startAddress must be a multiple of 4 in rdEeprom")
+        if chunkSize <= 0 or chunkSize > 64:
+            raise ValueError("chunkSize must lie between 1 and 64")
+        myEnv = interface.Byte64EnvType()
+        ctypesObject = (ctypes.c_ubyte*nBytes)()
+        ctypesObjectBase = ctypes.addressof(ctypesObject)
+        objPtr = 0
+        while nBytes > 0:
+            bytesRead = min(4*((nBytes+3)//4),chunkSize)
+            op = Operation("ACTION_EEPROM_READ_LOW_LEVEL",[chain,mux,i2cAddr,startAddress,bytesRead],"BYTE64_ENV")
+            self.doOperation(op)
+            result = StringAsObject(self.rdEnvToString("BYTE64_ENV",interface.Byte64EnvType),
+                                    interface.Byte64EnvType)
+            ctypes.memmove(ctypesObjectBase+objPtr,result.buffer,min(nBytes,bytesRead))
+            startAddress += bytesRead
+            objPtr += bytesRead
+            nBytes -= bytesRead
+        return ctypesObject[:]
+        
     def wrEeprom(self,whichEeprom,startAddress,byteList,pageSize=32):
         """Writes bytes from byteList into whichEeprom starting at startAddress (which must 
         be a multiple of 4).  The pageSize (<=64, in bytes) is used to perform the writing 
@@ -627,6 +651,38 @@ class DriverRpcHandler(SharedTypes.Singleton):
             bytesLeft -= nBytes
             while not self.doOperation(Operation("ACTION_EEPROM_READY",[i2cIndex])):
                 time.sleep(0.1)
+        
+    def wrEepromLowLevel(self,chain,mux,i2cAddr,startAddress,byteList,pageSize=32):
+        """Writes bytes from byteList into I2c EEPROM starting at startAddress (which must 
+        be a multiple of 4).  The pageSize (<=64, in bytes) is used to perform the writing 
+        in chunks, being careful not to cross page boundaries."""
+        if startAddress % 4:
+            raise ValueError("startAddress must be a multiple of 4 in wrEeprom")
+        if pageSize <= 0 or pageSize > 64:
+            raise ValueError("pageSize must lie between 1 and 64")
+
+        myEnv = interface.Byte64EnvType()
+        bytesLeft = len(byteList)
+        ctypesObject = (ctypes.c_ubyte*bytesLeft)(*byteList)
+        ctypesObjectBase = ctypes.addressof(ctypesObject)
+        objPtr = 0
+        while bytesLeft>0:
+            pageEnd = pageSize * ((startAddress + pageSize) // pageSize)
+            nBytes = min(pageEnd - startAddress, 4*((bytesLeft+3)//4))
+            ctypes.memmove(myEnv.buffer,ctypesObjectBase+objPtr,min(nBytes,bytesLeft))
+            self.wrEnvFromString("BYTE64_ENV",interface.Byte64EnvType,ObjAsString(myEnv))
+            op = Operation("ACTION_EEPROM_WRITE_LOW_LEVEL",[chain,mux,i2cAddr,startAddress,nBytes],"BYTE64_ENV")
+            self.doOperation(op)
+            startAddress = pageEnd
+            objPtr += nBytes
+            bytesLeft -= nBytes
+            while not self.doOperation(Operation("ACTION_EEPROM_READY_LOW_LEVEL",[chain,mux,i2cAddr])):
+                time.sleep(0.1)
+                
+    def i2cCheckLowLevel(self,chain,mux,i2cAddr):
+        """Check for an I2C device on the specified chain, multiplexer channel and I2C address"""
+        status = self.doOperation(Operation("ACTION_I2C_CHECK",[chain,mux,i2cAddr]))
+        return status >= 0
     
     def fetchObject(self,whichEeprom,startAddress=0):
         """Fetch a pickled object from the specified EEPROM, starting at "startAddress".
