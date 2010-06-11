@@ -3383,6 +3383,9 @@
             <reg type="uint16" ident="METADATA_ADDR_AT_RINGDOWN" description="Metadata address at ring-down" access="r">
                 <display format="%d">Metadata address at ringdown</display>
             </reg>
+            <reg type="uint32" ident="RINGDOWN_DATA" description="Ringdown data" access="r">
+                <display format="%d">Ringdown data</display>
+            </reg>
         </fpga_block>
         <fpga_block ident="TWGEN" description="Tuner waveform generator">
             <reg type="uint32" ident="ACC" description="Accumulator"/>

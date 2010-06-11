@@ -34,6 +34,7 @@ from Host.autogen.interface import RDMAN_PRECONTROL_DURATION
 from Host.autogen.interface import RDMAN_TIMEOUT_DURATION
 from Host.autogen.interface import RDMAN_TUNER_AT_RINGDOWN
 from Host.autogen.interface import RDMAN_METADATA_ADDR_AT_RINGDOWN
+from Host.autogen.interface import RDMAN_RINGDOWN_DATA
 
 from Host.autogen.interface import RDMAN_CONTROL_RUN_B, RDMAN_CONTROL_RUN_W
 from Host.autogen.interface import RDMAN_CONTROL_CONT_B, RDMAN_CONTROL_CONT_W

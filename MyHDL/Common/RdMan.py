@@ -13,6 +13,7 @@
 #   15-Jul-2009  sze  Number of parameters increased to 10 (+2 built-ins)
 #   23-Aug-2009  sze  Added RESET_RDMAN bit to control register
 #   16-Sep-2009  sze  Added selection between simulated and actual ringdown data
+#   10-Jun-2010  sze  Added RINGDOWN_DATA register to test high-speed ADC
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -38,6 +39,7 @@ from Host.autogen.interface import RDMAN_PRECONTROL_DURATION
 from Host.autogen.interface import RDMAN_TIMEOUT_DURATION
 from Host.autogen.interface import RDMAN_TUNER_AT_RINGDOWN
 from Host.autogen.interface import RDMAN_METADATA_ADDR_AT_RINGDOWN
+from Host.autogen.interface import RDMAN_RINGDOWN_DATA
 
 from Host.autogen.interface import RDMAN_CONTROL_RUN_B, RDMAN_CONTROL_RUN_W
 from Host.autogen.interface import RDMAN_CONTROL_CONT_B, RDMAN_CONTROL_CONT_W
@@ -151,6 +153,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     RDMAN_TIMEOUT_DURATION -- Microseconds (32 bit) to wait before giving up on a ringdown
     RDMAN_TUNER_AT_RINGDOWN -- Tuner value at time of ringdown
     RDMAN_METADATA_ADDR_AT_RINGDOWN -- Metadata address at time of ringdown
+    RDMAN_RINGDOWN_DATA -- Ringdown data (read-only) from ADC or simulator
 
     Fields in RDMAN_CONTROL:
     RDMAN_CONTROL_RUN
@@ -208,6 +211,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     rdman_timeout_duration_addr = map_base + RDMAN_TIMEOUT_DURATION
     rdman_tuner_at_ringdown_addr = map_base + RDMAN_TUNER_AT_RINGDOWN
     rdman_metadata_addr_at_ringdown_addr = map_base + RDMAN_METADATA_ADDR_AT_RINGDOWN
+    rdman_ringdown_data_addr = map_base + RDMAN_RINGDOWN_DATA
     control = Signal(intbv(0)[FPGA_REG_WIDTH:])
     status = Signal(intbv(0)[FPGA_REG_WIDTH:])
     options = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -232,6 +236,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     timeout_duration = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     tuner_at_ringdown = Signal(intbv(0)[FPGA_REG_WIDTH:])
     metadata_addr_at_ringdown = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ringdown_data = Signal(intbv(0)[18:])
 
     META_SIZE  = (1<<META_BANK_ADDR_WIDTH)/8
 
@@ -305,6 +310,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 timeout_duration.next = 0
                 tuner_at_ringdown.next = 0
                 metadata_addr_at_ringdown.next = 0
+                ringdown_data.next = 0
 
                 abort.next = LOW
                 acq_done_irq.next = 0
@@ -395,6 +401,8 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         dsp_data_in.next = tuner_at_ringdown
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdman_metadata_addr_at_ringdown_addr: # r
                         dsp_data_in.next = metadata_addr_at_ringdown
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == rdman_ringdown_data_addr: # r
+                        dsp_data_in.next = ringdown_data
                     else:
                         dsp_data_in.next = 0
                 else:
@@ -407,6 +415,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
 
                     data_we_out.next = LOW
                     rd_adc_clk.next = not rd_adc_clk
+                    if rd_adc_clk: ringdown_data.next = rd_data
 
                     # Ignore requests to start if the state machine is busy
                     if status[RDMAN_STATUS_BUSY_B]:

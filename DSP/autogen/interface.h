@@ -1271,6 +1271,7 @@ typedef enum {
 #define RDMAN_TIMEOUT_DURATION (21) // Duration (ms) within which ring-down must occur to be valid
 #define RDMAN_TUNER_AT_RINGDOWN (22) // Value of tuner at ring-down
 #define RDMAN_METADATA_ADDR_AT_RINGDOWN (23) // Metadata address at ring-down
+#define RDMAN_RINGDOWN_DATA (24) // Ringdown data
 
 /* Block TWGEN Tuner waveform generator */
 #define TWGEN_ACC (0) // Accumulator
@@ -1381,11 +1382,11 @@ typedef enum {
 #define FPGA_RDSIM (25) // Ringdown simulator registers
 #define FPGA_LASERLOCKER (33) // Laser frequency locker registers
 #define FPGA_RDMAN (61) // Ringdown manager registers
-#define FPGA_TWGEN (85) // Tuner waveform generator
-#define FPGA_INJECT (94) // Optical Injection Subsystem
-#define FPGA_WLMSIM (103) // WLM Simulator
-#define FPGA_DYNAMICPWM_INLET (112) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (117) // Outlet proportional valve dynamic PWM
+#define FPGA_TWGEN (86) // Tuner waveform generator
+#define FPGA_INJECT (95) // Optical Injection Subsystem
+#define FPGA_WLMSIM (104) // WLM Simulator
+#define FPGA_DYNAMICPWM_INLET (113) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (118) // Outlet proportional valve dynamic PWM
 
 /* Environment addresses */
 
