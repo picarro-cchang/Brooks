@@ -2333,6 +2333,7 @@ RDMAN_PRECONTROL_DURATION = 20 # Duration (us) for laser current to be at nomina
 RDMAN_TIMEOUT_DURATION = 21 # Duration (ms) within which ring-down must occur to be valid
 RDMAN_TUNER_AT_RINGDOWN = 22 # Value of tuner at ring-down
 RDMAN_METADATA_ADDR_AT_RINGDOWN = 23 # Metadata address at ring-down
+RDMAN_RINGDOWN_DATA = 24 # Ringdown data
 
 # Block TWGEN Tuner waveform generator
 TWGEN_ACC = 0 # Accumulator
@@ -2442,11 +2443,11 @@ FPGA_PWM_HEATER = 23 # Heater pulse width modulator registers
 FPGA_RDSIM = 25 # Ringdown simulator registers
 FPGA_LASERLOCKER = 33 # Laser frequency locker registers
 FPGA_RDMAN = 61 # Ringdown manager registers
-FPGA_TWGEN = 85 # Tuner waveform generator
-FPGA_INJECT = 94 # Optical Injection Subsystem
-FPGA_WLMSIM = 103 # WLM Simulator
-FPGA_DYNAMICPWM_INLET = 112 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 117 # Outlet proportional valve dynamic PWM
+FPGA_TWGEN = 86 # Tuner waveform generator
+FPGA_INJECT = 95 # Optical Injection Subsystem
+FPGA_WLMSIM = 104 # WLM Simulator
+FPGA_DYNAMICPWM_INLET = 113 # Inlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 118 # Outlet proportional valve dynamic PWM
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))

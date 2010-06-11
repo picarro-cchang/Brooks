@@ -275,6 +275,16 @@ class BoardTest1(object):
         # At this stage we should be able to talk to the FPGA registers
         self.sender = HostToDspSender(self.analyzerUsb,timeout=5) 
         print "Magic code: %x" % self.sender.rdFPGA("FPGA_KERNEL","KERNEL_MAGIC_CODE")
+
+        # Read the output of the high-speed ADC
+        self.sender.wrFPGA("FPGA_RDMAN","RDMAN_CONTROL",(1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B))
+        self.sender.wrFPGA("FPGA_RDMAN","RDMAN_OPTIONS",(1<<interface.RDMAN_OPTIONS_SIM_ACTUAL_B))
+        
+        while True:
+            print "Ringdown ADC: %d" % self.sender.rdFPGA("FPGA_RDMAN","RDMAN_RINGDOWN_DATA")
+            r = raw_input("q to quit, <Enter> to read again")
+            if r and r=="q": break
+            
         # Do some reads and writes to DSP memory
         
         # Check internal memory. There is 256KB of memory at this stage, since
