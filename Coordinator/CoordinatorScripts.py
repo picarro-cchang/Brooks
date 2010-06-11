@@ -508,6 +508,65 @@ def parseAutosamplerLog(logText):
         pass            
     return logDate, logTime, injTime, trayName, sampleNum, jobNum, methodName
 
+#################
+# Temp Cycle functions
+#################            
+def setTempCycleRegisters(sweepMax, sweepMin, sweepIncr):
+    origMax = None
+    origMin = None
+    origIncr = None
+    origState = None
+    try:
+        origState = DRIVER.rdDasReg("CAVITY_TEMP_CNTRL_STATE_REGISTER")
+        DRIVER.wrDasReg("CAVITY_TEMP_CNTRL_STATE_REGISTER","TEMP_CNTRL_SweepingState")
+    except:
+        logFunc("Problem with setTempCycleRegisters for register: CAVITY_TEMP_CNTRL_STATE_REGISTER\n")
+
+    try:
+        origMax = DRIVER.rdDasReg("CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER")
+        DRIVER.wrDasReg("CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER",sweepMax)
+    except:
+        logFunc("Problem with setTempCycleRegisters for register: CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER\n")
+
+    try:
+        origMin = DRIVER.rdDasReg("CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER")
+        DRIVER.wrDasReg("CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER",sweepMin)
+    except:
+        logFunc("Problem with setTempCycleRegisters for register: CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER\n")
+
+    try:
+        origIncr = DRIVER.rdDasReg("CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER")
+        DRIVER.wrDasReg("CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER",sweepIncr)
+    except:
+        logFunc("Problem with setTempCycleRegisters for register: CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER\n")
+
+    return origMax,origMin,origIncr,origState
+
+def restoreTempCycleRegisters(sweepMax, sweepMin, sweepIncr, cntlState):
+    try:
+        if cntlState: DRIVER.wrDasReg("CAVITY_TEMP_CNTRL_STATE_REGISTER",cntlState)
+    except:
+        logFunc("Problem with restoreTempCycleRegisters for register: CAVITY_TEMP_CNTRL_STATE_REGISTER\n")
+
+    try:
+        if sweepMax: DRIVER.wrDasReg("CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER",sweepMax)
+    except:
+        logFunc("Problem with restoreTempCycleRegisters for register: CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER\n")
+
+    try:
+        if sweepMin: DRIVER.wrDasReg("CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER",sweepMin)
+    except:
+        logFunc("Problem with restoreTempCycleRegisters for register: CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER\n")
+
+    try:
+        if sweepIncr: DRIVER.wrDasReg("CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER",sweepIncr)
+    except:
+        logFunc("Problem with restoreTempCycleRegisters for register: CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER\n")
+
+    return True
+
+        
+
 ANALYSIS_FNAME = "/PicarroSeq.txt"
 
 def incrAnalysisNumber():
