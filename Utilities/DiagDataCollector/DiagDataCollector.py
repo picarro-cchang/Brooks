@@ -36,7 +36,10 @@ AppPath = os.path.abspath(AppPath)
 class DiagDataCollector(DiagDataCollectorFrame):
     def __init__(self, configFile, *args, **kwds):
         co = CustomConfigObj(configFile)
-        self.targetFilePrefix = co.get("Main", "targetFilePrefix", "C:/UserData/Diag")
+        self.targetFilePrefix = co.get("Main", "targetFilePrefix", "C:/UserData/Diag/Diag")
+        dirName = os.path.dirname(self.targetFilePrefix)
+        if not os.path.isdir(dirName):
+            os.mkdir(dirName)
         self.instName = co.get("Main", "instName", "G2000")
         self.useUTC = co.getboolean("Main", "useUTC", True)
         defaultHrs = co.getint("Main", "defaultHrs", 12)
