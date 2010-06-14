@@ -152,7 +152,8 @@ class CommandInterface(object):
         # Get flux switcher config if available
         try:
             switcherConfig = self.config.get("FLUX_MODE_SWITCH", "iniFile")
-            self.switcher = FluxSwitcher(switcherConfig)
+            supervisorConfig = self.config.get("FLUX_MODE_SWITCH", "supervisorIniFile")
+            self.switcher = FluxSwitcher(switcherConfig, supervisorConfig)
         except:
             self.switcher = None
             
