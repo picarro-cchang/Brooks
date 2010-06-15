@@ -424,7 +424,7 @@ def sendValveSequence(configDict):
                 if dwell<0 or dwell>0xFFFF:
                     good = False
                     LOGFUNC("Invalid valve sequence dwell %s in %s\n" % (dwell,line))
-                sequence.append([mask<<8 | value,dwell])
+                sequence.append([mask,value,dwell])
             except:
                 good = False
                 LOGFUNC("Invalid valve definition command: %s" % line)
@@ -454,7 +454,7 @@ def sendValveSequence(configDict):
             except Exception,e:
                 LOGFUNC("Error %s in valve sequence definition\n" % e)
                 good = False
-            sequence.append([eval(optValue[0])<<8 | eval(optValue[1]),eval(optValue[2])])
+            sequence.append([eval(optValue[0]),eval(optValue[1]),eval(optValue[2])])
     if not good:
         raise ValueError("Cannot process and send valve sequence definition")
     else:
