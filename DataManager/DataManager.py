@@ -87,6 +87,7 @@ from collections import deque
 import ScriptRunner
 import heapq
 
+from PulseAnalyzer import PulseAnalyzer
 from Host.autogen import interface
 from Host.CommandInterface import SerialInterface
 from Host.Common import CmdFIFO, StringPickler
@@ -379,6 +380,11 @@ class DataManager(object):
             self.rdInstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
                                                         APP_NAME,
                                                         IsDontCareConnection = False)
+                                                        
+        # Pulse Analyzer
+        self.pulseAnalyzer = None
+        self.runPulseAnalyzer = False
+        self.addToPulseAnalyzer = False
                                           
     def _AssertValidCallingState(self, StateList):
         if self.__State not in StateList:
@@ -623,174 +629,82 @@ class DataManager(object):
 
         """
         return self.UserCalibration[measName]
-        
-    def RPC_PulseAnalyzer_GetResultDict(self, scriptName):
-        """Returns the result dictionary in the format of {"data_0": value_0, "data_1": value_1, ...}
-        Note1: The data is retrieved from the latest one 
-        Note2: Time stamp is not given in the result dictionry
-        """
-        try:
-            result = {}
-            validDataFlag = True
-            for dataKey in self.pulseDict[scriptName]["data"]:
-                if len(self.pulseDict[scriptName]["data"][dataKey]) > 0:
-                    retValue = self.pulseDict[scriptName]["data"][dataKey][-1]
-                    result[dataKey] = retValue[0]
-                    # We can clean the data we got, or let the buffer clear it later when reaching max capacity
-                    #cutoffTime = retValue[1] 
-                    #self.RPC_PulseAnalyzer_ClearDataBuffer(scriptName, dataKey, cutoffTime)                     
-                else:
-                    validDataFlag = False
-                    result[dataKey] = 0.0
-            result["validData"] = validDataFlag        
-            return result        
-        except Exception, e:
-            LogExc("PulseAnalyzer_GetResultDict() EXCEPTION: %s %r" % (e, e))  
-            return "Failed"
-            
-    def RPC_PulseAnalyzer_GetData(self, scriptName, dataKey, fromFirst = True, numData = "all"):
-        """Returns the pulse analyzer data based on the given script name, data key and specified number of 
-        data points to be retrieved (from the oldest or latest).
-        Each pulse data is a tuple in the form of (data, time). A list of pulse data will be returned.
-        """
-        try:
-            if str(numData).lower() == "all":
-                return self.pulseDict[scriptName]["data"][dataKey]
-            else:
-                if len(self.pulseDict[scriptName]["data"][dataKey]) > int(numData):
-                    if fromFirst:
-                        # Get from the oldest data
-                        return self.pulseDict[scriptName]["data"][dataKey][:int(numData)]
-                    else:
-                        # Get from the latest data
-                        return self.pulseDict[scriptName]["data"][dataKey][-int(numData):]
-                else:
-                    return self.pulseDict[scriptName]["data"][dataKey]
-        except Exception, e:
-            LogExc("PulseAnalyzer_GetData() EXCEPTION: %s %r" % (e, e))  
-            return "Failed"
-            
-    def RPC_PulseAnalyzer_ClearDataBuffer(self, scriptName, dataKey, cutoffTime = None):
-        """Clears the pulse analyzer data buffer based on the given script name and data key. Any data older
-        than the cutoff time will be deleted.
-        """
-        try:
-            if len(self.pulseDict[scriptName]["data"][dataKey]) > 0:
-                if cutoffTime == None:
-                    self.pulseDict[scriptName]["data"][dataKey] = []
-                    return "OK"        
-                    
-                for (data, time) in self.pulseDict[scriptName]["data"][dataKey]:
-                    if time > float(cutoffTime):
-                        cutoffIdx = self.pulseDict[scriptName]["data"][dataKey].index((data, time))
-                        self.pulseDict[scriptName]["data"][dataKey] = self.pulseDict[scriptName]["data"][dataKey][cutoffIdx:]
-                        return "OK"
-                    else:
-                        pass
-                self.pulseDict[scriptName]["data"][dataKey] = []
-                return "OK"
-            else:
-                pass
-        except Exception, e:
-            LogExc("PulseAnalyzer_ClearDataBuffer() EXCEPTION: %s %r" % (e, e))                
-            return "Failed"
-            
-    def RPC_PulseAnalyzer_GetStatus(self, scriptName, concKey):
-        """Get the current pulse analyzer status of the given script name and conc key.
-        """
-        try:
-            return self.pulseDict[scriptName]["status"][concKey] 
-        except Exception, e:
-            LogExc("PulseAnalyzer_GetStatus() EXCEPTION: %s %r" % (e, e))
-            return "Failed"
-            
-    def RPC_PulseAnalyzer_ExternalTrigger(self, scriptName, concKey):
-        """Trigger the pulse analysis on the given script name and conc key.
-        """
-        return self.RPC_PulseAnalyzer_SetParam(scriptName, "externalTrigger", True, concKey)   
 
-    def RPC_PulseAnalyzer_ExternalTriggerAll(self, scriptName):
-        """Trigger the pulse analysis on all the conc's of the given script name.
-        """
+    def RPC_PulseAnalyzer_Set(self, source, concNameList, targetConc = None, thres1Pair = [0.0, 0.0], 
+                              thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0, 
+                              validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0, 
+                              bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1):
         try:
-            for concKey in self.pulseDict[scriptName]["params"]["externalTrigger"]:
-                self.RPC_PulseAnalyzer_SetParam(scriptName, "externalTrigger", True, concKey)
+            self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair,
+                                               triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
+                                               timeout, bufSize, numPointsToTrigger, numPointsToRelease)
+            self.runPulseAnalyzer = False
+            self.addToPulseAnalyzer = False
             return "OK"
-        except Exception, e:
-            LogExc("PulseAnalyzer_ExternalTriggerAll() EXCEPTION: %s %r" % (e, e))
-            return "Failed"
-
-    def RPC_PulseAnalyzer_SetTriggerTime(self, scriptName, value):
-        """Set the trigger time (measurement time) of the given script name.
-        """
-        return self.RPC_PulseAnalyzer_SetParam(scriptName, "triggerTime", float(value))
+        except Exception, err:
+            return err
         
-    def RPC_PulseAnalyzer_SetThreshold(self, scriptName, concKey, value):
-        """Set the pulse threshold of the given script name and conc key to the specified value.
-        """
-        return self.RPC_PulseAnalyzer_SetParam(scriptName, "threshold", float(value), concKey) 
- 
-    def RPC_PulseAnalyzer_GetThreshold(self, scriptName, concKey):
-        """Get the pulse threshold of the given script name and conc key.
-        """
-        return self.RPC_PulseAnalyzer_GetParam(scriptName, "threshold", concKey) 
+    def RPC_PulseAnalyzer_StartRunning(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        self.pulseAnalyzer.resetAnalyzer()
+        self.runPulseAnalyzer = True
+        self.addToPulseAnalyzer = False
+        return "OK"
+        
+    def RPC_PulseAnalyzer_StopRunning(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        self.runPulseAnalyzer = False
+        return "OK"
+            
+    def RPC_PulseAnalyzer_StartAddingData(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        self.pulseAnalyzer.resetAnalyzer()
+        self.addToPulseAnalyzer = True
+        self.runPulseAnalyzer = False
+        return "OK"
 
-    def RPC_PulseAnalyzer_SetParam(self, scriptName, paramName, value, concKey = None):
-        """Set a new value to the specified pulse analyzer parameter. Note that the new value must have 
-        the same type (int, float, list, etc) as the original value.
-        """
-        try:
-            if concKey == None:
-                origType = type(self.pulseDict[scriptName]["params"][paramName])
-                if type(value) == origType:
-                    self.pulseDict[scriptName]["params"][paramName] = value
-                else:
-                    raise Exception, "The type of given new value should be '%s'" % string.split(repr(origType),"'")[1]
-            else:
-                origType = type(self.pulseDict[scriptName]["params"][paramName][concKey])
-                if type(value) == origType:
-                    self.pulseDict[scriptName]["params"][paramName][concKey] = value
-                else:
-                    raise Exception, "The type of given new value should be '%s'" % string.split(repr(origType),"'")[1]
-            # Update the .ini file
-            if paramName == "threshold":
-                species = self.cp["PulseAnalyzer"][scriptName]["specs"][concKey].split(",")[1]
-                newValue = "%s,%s" % (str(value), species.strip())
-                self.cp.set_subsection(["PulseAnalyzer", scriptName, "specs"], concKey, newValue)
-            elif paramName in self.cp["PulseAnalyzer"][scriptName]["configInt"].keys():
-                self.cp.set_subsection(["PulseAnalyzer", scriptName, "configInt"], paramName, value)
-            elif paramName in self.cp["PulseAnalyzer"][scriptName]["configFloat"].keys():
-                self.cp.set_subsection(["PulseAnalyzer", scriptName, "configFloat"], paramName, value)
-            fp = open(self.ConfigPath,'wb')
-            self.cp.write(fp)
-            fp.close()
-            return "new %s value = %s" % (paramName, str(value))    
-        except Exception, e:
-            LogExc("PulseAnalyzer_SetParam() EXCEPTION: %s %r" % (e, e))
-            return "Failed"
+    def RPC_PulseAnalyzer_StopAddingData(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        self.addToPulseAnalyzer = False
+        return "OK"
             
-    def RPC_PulseAnalyzer_GetParam(self, scriptName, paramName, concKey = None):
-        """Get the specified pulse analyzer parameter value.
+    def RPC_PulseAnalyzer_GetOutput(self):
+        """Returns the result list in the format of [status, pulseFinished, concBufferDict]
         """
-        try:
-            if concKey == None:
-                return self.pulseDict[scriptName]["params"][paramName]
-            else:
-                return self.pulseDict[scriptName]["params"][paramName][concKey]   
-        except Exception, e:
-            LogExc("PulseAnalyzer_GetParam() EXCEPTION: %s %r" % (e, e))
-            return "Failed"
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            return self.pulseAnalyzer.getOutput()
+
+    def RPC_PulseAnalyzer_GetTimestamp(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            return self.pulseAnalyzer.getTimestamp()
+
+    def RPC_PulseAnalyzer_GetDataReady(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            return self.pulseAnalyzer.getDataReady()
             
-    def RPC_PulseAnalyzer_ResetFirstDataInFlag(self):
-        """Reset the "firstDataIn" flag of each concentration in all analyzer scripts to False.
-        """
-        try:
-            for scriptName in self.pulseDict:
-                for concKey in self.pulseDict[scriptName]["params"]["firstDataIn"]:
-                    self.RPC_PulseAnalyzer_SetParam(scriptName, "firstDataIn", False, concKey) 
-        except:
-            pass
-    
+    def RPC_PulseAnalyzer_Reset(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            self.pulseAnalyzer.resetAnalyzer()
+            return "OK"
+
+    def RPC_PulseAnalyzer_GetStatistics(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            return self.pulseAnalyzer.getStatistics()
+            
     def RPC_MeasBuffer_Set(self, source, colList, bufSize):
         """Set up an internal measurement buffer for the Coordinator"""
         self.measBufferLock.acquire()
@@ -1456,6 +1370,12 @@ class DataManager(object):
             self._SendSerial(measData)
             # Add to the internal measBuffer for Coordinator
             self._AddToMeasBuffer(measData)
+            # Use data for Pulse Analyzer
+            if self.pulseAnalyzer != None:
+                if self.runPulseAnalyzer:
+                    self.pulseAnalyzer.runAnalyzer(measData)
+                elif self.addToPulseAnalyzer:
+                    self.pulseAnalyzer.addToBuffer(measData)
 
         #Put forwarded data in the to-be-analyzed queue...
         for dataPacketLabel in forwardDict.keys():

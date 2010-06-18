@@ -63,15 +63,46 @@ def setRotValveMask(rotPos):
 ##########################
 # Pulse analyzer functions
 ##########################
-def getPulseResultDict(scriptName):
-    return DATAMGR.PulseAnalyzer_GetResultDict(scriptName)
+def pulseAnalyzerSet(source, concNameList, targetConc = None, thres1Pair = [0.0, 0.0], 
+                     thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0, 
+                     validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0, 
+                     bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1):
+    DATAMGR.PulseAnalyzer_Set(source, concNameList, targetConc, thres1Pair, thres2Pair,
+                             triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
+                             timeout, bufSize, numPointsToTrigger, numPointsToRelease)
+    LOGFUNC("Pulse analyzer set\n") 
 
-def triggerPulseAnalyzerAll(scriptName):
-    return DATAMGR.PulseAnalyzer_ExternalTriggerAll(scriptName)
+def pulseAnalyzerStartRunning():
+    DATAMGR.PulseAnalyzer_StartRunning()
+    LOGFUNC("Pulse analyzer started\n") 
+        
+def pulseAnalyzerStopRunning():
+    DATAMGR.PulseAnalyzer_StopRunning()
+    LOGFUNC("Pulse analyzer stopped\n") 
+
+def pulseAnalyzerStartAddingData():
+    DATAMGR.PulseAnalyzer_StartAddingData()
+    LOGFUNC("Started adding data to pulse analyzer\n") 
+
+def pulseAnalyzerStopAddingData():
+    DATAMGR.PulseAnalyzer_StopAddingData()
+    LOGFUNC("Stopped adding data to pulse analyzer\n") 
     
-def setTriggerTime(scriptName, value):
-    LOGFUNC("Set trigger time (measurement time) in Data Manager to %.2f\n" % float(value))  
-    DATAMGR.PulseAnalyzer_SetTriggerTime(scriptName, value)
+def pulseAnalyzerGetDataReady(): 
+    return DATAMGR.PulseAnalyzer_GetDataReady()
+
+def pulseAnalyzerGetOutput(): 
+    return DATAMGR.PulseAnalyzer_GetOutput()
+
+def pulseAnalyzerGetTimestamp(): 
+    return DATAMGR.PulseAnalyzer_GetTimestamp()
+
+def pulseAnalyzerReset(): 
+    return DATAMGR.PulseAnalyzer_Reset()
+    LOGFUNC("Pulse analyzer reset\n") 
+
+def pulseAnalyzerGetStatistics(): 
+    return DATAMGR.PulseAnalyzer_GetStatistics()
     
 ##########################
 # Data manager functions
@@ -89,7 +120,7 @@ def measGetBuffer():
 
 def measGetBufferFirst():
     return DATAMGR.MeasBuffer_GetFirst()
-                        
+    
 def enableCalScript():
     LOGFUNC("Calibration script from Data Manager is enabled\n") 
     DATAMGR.Cal_Enable()
@@ -98,6 +129,12 @@ def disableCalScript():
     LOGFUNC("Calibration script from Data Manager is disabled\n") 
     DATAMGR.Cal_Disable()  
 
+##########################
+# Other Driver functions
+##########################
+def getDasTemperature():
+    return DRIVER.rdDasReg("DAS_TEMPERATURE_REGISTER")
+    
 ##########################
 # Data logger functions
 ##########################
