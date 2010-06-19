@@ -65,6 +65,7 @@ sys.path.append("Utilities/DiagDataCollector")
 sys.path.append("Utilities/SupervisorLauncher")
 sys.path.append("Utilities/CoordinatorLauncher")
 sys.path.append("Utilities/FluxSwitcher")
+sys.path.append("Utilities/ValveDisplay")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -210,7 +211,8 @@ setup(version = "1.0",
                  "Utilities/CoordinatorLauncher/CoordinatorLauncher.py",
                  "Utilities/SupervisorLauncher/StopSupervisor.py",
                  "Utilities/FluxSwitcher/FluxScheduler.py",
-                 "Utilities/FluxSwitcher/FluxSwitcherGui.py"],
+                 "Utilities/FluxSwitcher/FluxSwitcherGui.py",
+                 "Utilities/ValveDisplay/ValveDisplay.py"],
                  
       data_files = [(".", ["EventManager/Warning_16x16_32.ico",
                            "EventManager/Info_16x16_32.ico",
