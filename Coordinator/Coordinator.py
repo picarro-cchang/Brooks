@@ -156,6 +156,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.hasCloseOpt = hasCloseOpt
         self.startServer()
         self.sampleNum = 1
+        self.logFp = None
         
     def startServer(self):
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_COORDINATOR),
@@ -216,6 +217,15 @@ class CoordinatorFrame(CoordinatorFrameGui):
     def run(self):
         self.setStatusText("")
         self.saveFileName = self.makeFilename()
+        try:
+            logFname = self.config["Files"]["log"]
+            dirName = os.path.dirname(logFname)
+            if not os.path.isdir(dirName):
+                os.mkdir(dirName)
+            self.logFp = file(time.strftime(logFname+"_%Y%m%d_%H%M%S.log",self.lastFileTime),"w")
+        except:
+            self.logFp = None
+        
         self.manual = True
         try:
             if self.config["Mode"]["inject_mode"].lower() != "manual":
@@ -241,7 +251,8 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 os.mkdir(dirName)
         except:
             baseFname = "PulseAnalysisResults"
-        return time.strftime(baseFname+"_%Y%m%d_%H%M%S.csv",time.localtime())
+        self.lastFileTime = time.localtime()
+        return time.strftime(baseFname+"_%Y%m%d_%H%M%S.csv",self.lastFileTime)
 
     def onLoadSampleDescriptions(self,event):
         try:
@@ -491,6 +502,8 @@ class CoordinatorFrame(CoordinatorFrameGui):
             type, data = self.guiQueue.get()
             if type == LOG:
                 self.logTextCtrl.AppendText(data)
+                if self.logFp is not None:
+                    self.logFp.write(data)
             elif type == OUTFILE:
                 self.outputFileDataList.append(data)
                 self.processData(data)
@@ -531,6 +544,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.Destroy()
             dlg.Destroy()
             event.Skip()
+        if self.logFp is not None: self.logFp.close(data)
 
 def countProgDialog(dlg, maximum):
     count = 0.0

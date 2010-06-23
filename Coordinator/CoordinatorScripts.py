@@ -231,6 +231,18 @@ def setValveMinDac(valveSelect, value):
     except:
         LOGFUNC("setValveMinDac() failed!\n")
 
+def setValveMaxDac(valveSelect, value):
+    valveSelect = valveSelect.lower()
+    try:
+        if valveSelect == "inlet":
+            return DRIVER.wrDasReg("VALVE_CNTRL_INLET_VALVE_MAX_REGISTER", value)
+        elif valveSelect == "outlet":
+            return DRIVER.wrDasReg("VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER", value)
+        else:
+            raise Exception, "Choose either 'inlet' or 'outlet'!"  
+    except:
+        LOGFUNC("setValveMinDac() failed!\n")
+
 def getValveMinMaxDac(valveSelect):
     valveSelect = valveSelect.lower()
     try:
@@ -284,13 +296,13 @@ def setValveDacValue(valveSelect, dacValue1, dacValue2 = None):
                 raise Exception, "Two valid valve DAC values are required!"
             DRIVER.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", dacValue1)
             DRIVER.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER", dacValue2)            
-            LOGFUNC("New inlet valve DAC: %.2f; new outlet valve DAC: %.2f\n" % (dacValue1, dacValue2))            
+            # LOGFUNC("New inlet valve DAC: %.2f; new outlet valve DAC: %.2f\n" % (dacValue1, dacValue2))            
         elif valveSelect == "inlet":            
             DRIVER.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", dacValue1)
-            LOGFUNC("New inlet valve DAC: %.2f\n" % dacValue1)     
+            # LOGFUNC("New inlet valve DAC: %.2f\n" % dacValue1)     
         elif valveSelect == "outlet":            
             DRIVER.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER", dacValue1)
-            LOGFUNC("New outlet valve DAC: %.2f\n" % dacValue1)              
+            # LOGFUNC("New outlet valve DAC: %.2f\n" % dacValue1)              
     except:
         LOGFUNC("setValveDacValues() failed!\n")
 
@@ -309,7 +321,7 @@ def setCavityPressureSetPoint(setpoint):
     """Set cavity pressure set point in torr """
     try:
         DRIVER.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER", setpoint)
-        LOGFUNC("New cavity pressure set point: %.2f torr\n" % setpoint) 
+        # LOGFUNC("New cavity pressure set point: %.2f torr\n" % setpoint) 
     except:
         LOGFUNC("setCavityPressureSetPoint() failed!\n")
         
@@ -321,7 +333,7 @@ def setMaxCavityPressureRate(rate):
     """Set maximum cavity pressure change rate in torr/s """
     try:
         DRIVER.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER", rate)
-        LOGFUNC("Maximum cavity pressure change rate: %.2f torr/s\n" % rate) 
+        # LOGFUNC("Maximum cavity pressure change rate: %.2f torr/s\n" % rate) 
     except:
         LOGFUNC("setMaxCavityPressureRate() failed!\n")
 
@@ -336,7 +348,7 @@ def waitPressureStabilize(setpoint, tolerance, timeout, checkInterval, lockCount
     isStable     = False
     while index < timeout:
         pressure = getCavityPressure()
-        LOGFUNC("Pressure delta from setpoint = %.2f\n" %  (pressure - setpoint))
+        # LOGFUNC("Pressure delta from setpoint = %.2f\n" %  (pressure - setpoint))
         inRange  = (abs(pressure - setpoint)/setpoint <= tolerance)
         if inRange:
             inRangeCount+=1
@@ -345,7 +357,7 @@ def waitPressureStabilize(setpoint, tolerance, timeout, checkInterval, lockCount
         sleep(checkInterval)
         index += 1
         if inRangeCount >= lockCount:
-            LOGFUNC("Pressure locked at %.2f\n" % setpoint)
+            # LOGFUNC("Pressure locked at %.2f\n" % setpoint)
             isStable = True
             break
     return isStable
@@ -477,7 +489,7 @@ def sendValveSequence(configDict):
                 mask = eval(optValue[0])
                 value = eval(optValue[1])
                 dwell = eval(optValue[2])
-                LOGFUNC("Step %d, mask 0x%x, value 0x%x, dwell %d\n" % (step,mask,value,dwell))
+                # LOGFUNC("Step %d, mask 0x%x, value 0x%x, dwell %d\n" % (step,mask,value,dwell))
                 step += 1
                 if mask<0 or mask>0xFF:
                     good = False
@@ -497,7 +509,7 @@ def sendValveSequence(configDict):
     else:
         print _valveSequenceLabels
         print sequence
-        LOGFUNC("Sending valve sequence definition to DAS\n")
+        # LOGFUNC("Sending valve sequence definition to DAS\n")
         DRIVER.wrValveSequence(sequence)
 
 def setValveStep(step):
