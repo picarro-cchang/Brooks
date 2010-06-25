@@ -20,6 +20,8 @@ File History:
     09-06-30 alex  Support HDF5 format for spectra data
     10-05-21 sze   Allow multiple fitter scripts, each with a distinct environment that are run in
                     succession with the same data. The results directories from all are combined.
+    10-06-24 sze   Added getInstrParams to allow instrument-specific parameters to be read into a 
+                    fitter script
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -59,6 +61,24 @@ FITTER_STATE_COMPLETE = 4
 DATA_AVAIL_EVENT_TIMEOUT = 10.0
 RESULTS_AVAIL_EVENT_TIMEOUT = 10.0
 
+def evalLeaves(d):
+    for k in d:
+        if isinstance(d[k],dict): 
+            evalLeaves(d[k])
+        else:
+            try:
+                d[k] = eval(d[k])
+            except:
+                pass
+    return d
+    
+def getInstrParams(fname):
+    try:
+        fp = file(fname,"rb")
+        return evalLeaves(CustomConfigObj(fp,list_values=False).copy())
+    finally:
+        fp.close()
+        
 class Fitter(object):
     def __init__(self,configFile):
         self.stopOnError = 1 # Show modal dialog (and stop fitter) on error
@@ -200,8 +220,8 @@ class Fitter(object):
         dataEnviron["expAverage"] = expAverage
         dataEnviron["initExpAverage"] = initExpAverage
         dataEnviron["fitQuality"] = fitQuality
+        dataEnviron["getInstrParams"] = getInstrParams
         return dataEnviron
-
 
     def fitViewer(self,dataAnalysisResult):
         """ Send results to viewer if requested. dataAnalysisResult is a list consisting of the DATA, ANALYSIS

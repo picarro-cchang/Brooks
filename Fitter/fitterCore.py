@@ -16,6 +16,8 @@ File History:
     08-04-22 sze   Let sparse filter report statistics to filterHistory
     08-09-18 alex  Replaced ConfigParser with CustomConfigObj
     09-06-30 alex  Support HDF5 format for spectra data
+    10-06-14 john  Outlier filter added to sparser
+    10-06-24 sze   Added numGroups key to RdData objects
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -327,6 +329,33 @@ def sigmaFilter(x,threshold,minPoints=2):
     return new_good, dict(iterations=nIter)
 
 ################################################################################
+# outlier filter is used to select good points out of a vector of data
+################################################################################
+def outlierFilter(x,threshold,minPoints=2):
+    """ Return Boolean array giving points in the vector x which lie
+    within +/- threshold * std_deviation of the mean. The filter is applied iteratively
+    until there is no change or unless there are minPoints or fewer remaining"""
+    good = ones(x.shape,bool_)
+    order = list(x.argsort())
+    while len(order)>minPoints:
+        maxIndex = order.pop()
+        good[maxIndex] = 0
+        mu = mean(x[good])
+        sigma = std(x[good])
+        if abs(x[maxIndex]-mu)>=(threshold*sigma):
+            continue
+        good[maxIndex] = 1
+        minIndex = order.pop(0)
+        good[minIndex] = 0
+        mu = mean(x[good])
+        sigma = std(x[good])
+        if abs(x[minIndex]-mu)>=(threshold*sigma):
+            continue
+        good[minIndex] = 1
+        break
+    return good, dict(nDiscarded=len(x)-len(order))
+
+################################################################################
 # sigma filter is used to select good points out of a vector of data
 ################################################################################
 def sigmaFilterMedian(x,threshold,minPoints=2):
@@ -354,7 +383,7 @@ def convHdf5ToDict(h5Filename):
         table = h5File.root._v_children[tableName]
         retDict[tableName] = {}
         for colKey in table.colnames:
-                retDict[tableName][colKey] = table.read(field=colKey)
+            retDict[tableName][colKey] = table.read(field=colKey)
     h5File.close()
     return retDict
     
@@ -1063,6 +1092,7 @@ class RdfData(object):
             elif key.lower() == "datapoints": return len(self.indexVector)
             elif key.lower() == "spectrumid": return self.sensorDict["SpectrumID"]
             elif key.lower() == "filterhistory": return self.filterHistory
+            elif key.lower() == "numgroups": return len(self.groups)
             else:
                 raise KeyError("Unknown item for RdfData()")
         except:
@@ -1118,11 +1148,13 @@ class RdfData(object):
             self.groupMeans[field] = array([mean(x[g]) for g in self.groups])
             self.groupMedians[field] = array([median(x[g]) for g in self.groups])
             self.groupStdDevs[field] = array([std(x[g]) for g in self.groups])
-    def sparse(self,maxPoints,width,height,xColumn,yColumn,sigmaThreshold):
+##  14 June 2010  added modified sigma filter named "outlierFilter            
+    def sparse(self,maxPoints,width,height,xColumn,yColumn,sigmaThreshold=-1,outlierThreshold=-1):
         """Sparse the ringdown data by binning the data specified by "xColumn" and
         "yColumn" into rectangles of maximum dimensions "width" by "height",
         with no more than "maxPoints" data in each bin. A sigma filter
-        with the specified "sigmaThreshold" is applied to the y values in each bin.
+        with the specified "sigmaThreshold" or outlier filter with specified
+        "outlierThreshold" is applied to the y values in each bin.
         Returns a list of bins, each specified by an array of indices of points
         within the bin.
         """
@@ -1146,7 +1178,10 @@ class RdfData(object):
                     # We need to start a new group, close off the previous one and apply
                     #  the sigma filter
                     g = array(g)
-                    sel = flatnonzero(sigmaFilter(yy[g],sigmaThreshold)[0])
+                    if outlierThreshold < 0:
+                        sel = flatnonzero(sigmaFilter(yy[g],sigmaThreshold)[0])
+                    else:
+                        sel = flatnonzero(outlierFilter(yy[g],outlierThreshold)[0])
                     groups.append(g[sel])
                 g = [i]
                 xmin = x
@@ -1155,7 +1190,11 @@ class RdfData(object):
             # Finish off the last group, if non-empty
             if len(g)>0:
                 g = array(g)
-                sel = flatnonzero(sigmaFilter(yy[g],sigmaThreshold)[0])
+                if outlierThreshold < 0:
+                    sel = flatnonzero(sigmaFilter(yy[g],sigmaThreshold)[0])
+                else:
+                    sel = flatnonzero(outlierFilter(yy[g],outlierThreshold)[0])
+                groups.append(g[sel])
                 groups.append(g[sel])
             return groups
         # end of sparseAgg
