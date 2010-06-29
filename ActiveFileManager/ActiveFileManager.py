@@ -23,6 +23,7 @@ import inspect
 import numpy
 import os
 from Queue import Queue
+import socket
 import sys
 import tables
 import threading
@@ -33,9 +34,10 @@ from Host.autogen import interface
 from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster, SharedTypes
 from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_DATA_MANAGER
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_DATA_MANAGER, RPC_PORT_ACTIVE_FILE_MANAGER
+from Host.Common.SharedTypes import RPC_PORT_ARCHIVER
 from Host.Common.StringPickler import ArbitraryObject
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.timestamp import getTimestamp
+from Host.Common.timestamp import getTimestamp, unixTimeToTimestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 EventManagerProxy_Init(APP_NAME)
 
@@ -44,6 +46,21 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 
+class ArchiverProxy(SharedTypes.Singleton):
+    """Encapsulates access to the Archiver via RPC calls"""
+    initialized = False
+    def __init__(self):
+        if not self.initialized:
+            self.hostaddr = "localhost"
+            self.myaddr = socket.gethostbyname(socket.gethostname())
+            serverURI = "http://%s:%d" % (self.hostaddr,
+                SharedTypes.RPC_PORT_ARCHIVER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="ActiveFileManager")
+            self.initialized = True
+
+# For convenience in calling archiver functions
+Archiver = ArchiverProxy().rpc
+    
 class RpcServerThread(threading.Thread):
     def __init__(self, rpcServer, exitFunction):
         threading.Thread.__init__(self)
@@ -88,29 +105,39 @@ class ActiveFileManagerRpcHandler(SharedTypes.Singleton):
         #register the functions contained in this file...
         self._register_rpc_functions_for_object( self )
         Log("Registered RPC functions")
-        
-    # def getRdData(self,tstart,tend,varList):
-        # """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tend" (exclusive).
-            # Only "active" files are used to satisfy the request since the database is expected to deal
-            # with files which have already been archived"""
-        # results = []
-        # for baseTime in sorted(self.parent.activeFiles.keys()):
-            # # Determine if [tstart,tend) and [baseTime,stopTime) are disjoint
-            # if tend <= baseTime: continue
-            # a = self.parent.activeFiles[baseTime]
-            # if tstart >= a.stopTime: continue
-            # results.append(a.getRdData(tstart,tend,varList))
-        # if results:
-            # return numpy.concatenate(results,axis=-1)
-        # else:
-            # return None
-            
+                    
     def getRdData(self,*a,**k):
         """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tend" (exclusive).
             Only "active" files are used to satisfy the request since the database is expected to deal
             with files which have already been archived"""
-        self.parent.rpcCommandQueue.put((self.parent.getRdData,(a,k))) 
-        return self.parent.rpcResultQueue.get()
+        self.parent.rpcCommandQueue.put((self.parent.genRdData,(a,k))) 
+        result = self.parent.rpcResultQueue.get()
+        if isinstance(result,Exception):
+            raise result
+        else:
+            return result
+            
+    def getSensorData(self,*a,**k):
+        """ Get sensor data specified by "streamName" from "tstart" (inclusive) up to "tend" (exclusive).
+            Only "active" files are used to satisfy the request since the database is expected to deal
+            with files which have already been archived"""
+        self.parent.rpcCommandQueue.put((self.parent.genSensorData,(a,k))) 
+        result = self.parent.rpcResultQueue.get()
+        if isinstance(result,Exception):
+            raise result
+        else:
+            return result
+            
+    def getDmData(self,*a,**k):
+        """ Get data manager for "mode" and "source" whose columns are specified by "varList" from 
+            "tstart" (inclusive) up to "tend" (exclusive). Only "active" files are used to satisfy 
+            the request since the database is expected to deal with files which have already been archived"""
+        self.parent.rpcCommandQueue.put((self.parent.genDmData,(a,k))) 
+        result = self.parent.rpcResultQueue.get()
+        if isinstance(result,Exception):
+            raise result
+        else:
+            return result
             
     def shutdown(self):
         self.parent._shutdownRequested = True
@@ -129,6 +156,7 @@ class ActiveFile(object):
     Init = False
     SensorDataDescr = {}
     RdDataDescr = {}
+    DmDataDescr = {}
     
     def structureToDescr(self,structure):
         descr = {}
@@ -144,20 +172,23 @@ class ActiveFile(object):
         self.handle = None
         self.baseTime = None    # Base time is in ms
         self.stopTime = None
+        self.archivalStartTimestamp = None
+        self.compressedFilePath = None
         if not ActiveFile.Init: # Compute descriptors once
             self.makeDescr()
             ActiveFile.Init = True
-            
+        
     def create(self,dirName,baseTime,stopTime):
         self.baseTime = baseTime
         self.stopTime = stopTime
-        self.abspath = os.path.abspath(os.path.join(dirName,"%d.h5" % self.baseTime))
+        self.abspath = os.path.abspath(os.path.join(dirName,"%d_%d.h5" % (self.baseTime,self.stopTime)))
         self.handle = tables.openFile(self.abspath,"w")
         self.handle.setNodeAttr("/","baseTime",self.baseTime)
         self.handle.setNodeAttr("/","stopTime",self.stopTime)
         self.handle.createTable("/","sensorData",self.SensorDataDescr,expectedrows=2000000)
         self.handle.setNodeAttr("/sensorData","streamNames",interface.STREAM_MemberTypeDict)
         self.handle.createTable("/","rdData",self.RdDataDescr,expectedrows=1000000)
+        self.handle.createGroup("/","dataManager")
         return self
         
     def getSensorDataTable(self):    
@@ -166,6 +197,51 @@ class ActiveFile(object):
     def getRdDataTable(self):    
         return self.handle.root.rdData
         
+    def getDmDataTable(self,mode,source,colNameSet,create=False):
+        try:
+            modeGroup = getattr(self.handle.root.dataManager,mode)
+        except AttributeError:
+            if not create:
+                raise
+            modeGroup = self.handle.createGroup("/dataManager",mode)
+        try:
+            table = getattr(modeGroup,source)
+            oldColNameSet = set(table.colnames)
+            if colNameSet.issubset(oldColNameSet):
+                return table
+            else:
+                if not create:
+                    raise AttributeError('No such column(s): %s' % ", ".join([n for n in colNameSet.difference(oldColNameSet)]))
+                # The columns have changed, so we need to extend the table
+                table.rename('__tempTable__')
+                newTable = self.handle.createTable(modeGroup,source,self.descrFromColNames(colNameSet.union(oldColNameSet)),expectedrows=500000)
+                for row in table.iterrows:
+                    newrow = newTable.row
+                    for name in table.colnames:
+                        newrow[name] = row[name]
+                    newrow.append()
+                newTable.flush()
+                table.remove()
+                return newTable
+        except AttributeError:
+            if not create:
+                raise
+            table = self.handle.createTable(modeGroup,source,self.descrFromColNames(colNameSet),expectedrows=500000)
+            return table
+            
+    def descrFromColNames(self,colNameSet):
+        """Construct a table description dictionary from the set of column names.
+            At present, all columns are associated with a Float32Col. Later this will 
+            be moodifiable using INI file options. Two additional columns "time" and 
+            "timestamp" are added of type Float64Col and Int64Col respectively""" 
+        descr = {}
+        colNameSet = colNameSet.union(set(['unixTime','timestamp']))
+        for name in colNameSet:
+            if name == 'unixTime':  descr[name] = tables.Float64Col()
+            elif name == 'timestamp':  descr[name] = tables.Int64Col()
+            else: descr[name] = tables.Float32Col()
+        return descr
+            
     def open(self,filename):    
         self.abspath = os.path.abspath(filename)
         self.handle = tables.openFile(filename,"a")
@@ -181,17 +257,26 @@ class ActiveFile(object):
         if self.handle is not None: self.close()
         os.remove(self.abspath)
         
-    def getRdData(self,tstart,tend,varList):
-        table = self.getRdDataTable()
-        result = []
-        for var in varList:
-            result.append(table.readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend),field=var))
-        return numpy.array(result)
-
     def genRdData(self,tstart,tend,varList):
+        """Generator for ringdown data lying in the specified time range"""
         for row in self.getRdDataTable().where('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend)):
             yield [row[v] for v in varList]
-        
+
+    def genSensorData(self,tstart,tend,streamName):
+        """Generator for sensor data lying in the specified time range. 
+        Raises:
+            AttributeError  if streamName is not found
+            StopIteration   when no more data are available
+        """
+        index = getattr(interface,streamName)
+        for row in self.getSensorDataTable().where('(timestamp >= %d) & (timestamp < %d) & (streamNum == %d)' % (tstart,tend,index)):
+            yield [row["timestamp"],row["value"]]
+
+    def genDmData(self,mode,source,tstart,tend,varList):
+        """Generator for data manager data from specified mode and source lying in the specified time range"""
+        for row in self.getDmDataTable(mode,source,set(varList)).where('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend)):
+            yield [row[v] for v in varList]
+ 
 class ActiveFileManager(object):
     def __init__(self,configFile):
         self.config = CustomConfigObj(configFile)
@@ -213,8 +298,8 @@ class ActiveFileManager(object):
                                             interface.ProcessedRingdownEntryType,
                                             retry = True,
                                             name = "ActiveFileManager listener")
-        self.dataManagerQueue = Queue(0)
-        self.dataManagerListener = Listener.Listener(self.rdQueue,
+        self.dmQueue = Queue(0)
+        self.dmListener = Listener.Listener(self.dmQueue,
                                             BROADCAST_PORT_DATA_MANAGER,
                                             ArbitraryObject,
                                             retry = True,
@@ -232,6 +317,7 @@ class ActiveFileManager(object):
         self.sensorDataBaseTime = 0
         self.rdDataTable = None
         self.rdDataBaseTime = 0
+        self.dmDataTable = None
 
     def openActiveFiles(self):
         """Go through files with extension .h5 in the active file directory
@@ -260,8 +346,14 @@ class ActiveFileManager(object):
     def removeOldFiles(self,timestamp):
         for k,a in self.activeFiles.items():
             if timestamp > a.baseTime + 1000*(self.activeFilePeriod + self.graceInterval):
-                del self.activeFiles[k]
-                a.remove()
+                if a.archivalStartTimestamp is None: # Start archival process
+                    a.compressedFilePath = self.compressHdf5File(a)
+                    a.archivalStartTimestamp = getTimestamp()
+                    Archiver.ArchiveFile("Analyzer_Data", a.compressedFilePath, removeOriginal=True, timestamp=a.baseTime)
+                else: # Check if archival is complete
+                    if Archiver.DoesFileExist("Analyzer_Data", a.compressedFilePath, a.baseTime):
+                        del self.activeFiles[k]
+                        a.remove()
     
     def doRpcRequests(self):
         # Carry out next bit of work for satisfying RPC requests. Such requests are done
@@ -278,10 +370,14 @@ class ActiveFileManager(object):
             else:
                 return
             a,k = self.lastRpcParams
-            self.rpcInProgress = self.lastRpcCmd(*a,**k)
-            if self.rpcInProgress: 
-                return
-
+            try:
+                self.rpcInProgress = self.genWrapper(self.lastRpcCmd,*a,**k)
+                if self.rpcInProgress: 
+                    return
+            except Exception,e:
+                self.rpcInProgress = False
+                self.rpcResultQueue.put(e)
+                
     # def getRdData(self,tstart,tend,varList):
         # """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tend" (exclusive).
             # Only "active" files are used to satisfy the request since the database is expected to deal
@@ -299,14 +395,14 @@ class ActiveFileManager(object):
                 # results.append(a.getRdData(tstart,tend,varList))
             # if results:
                 # self.rpcResultQueue.put(numpy.concatenate(results,axis=-1))
-        # return False    # Indicates I am done    
+        # return False    # Indicates I am done
 
-    def getRdData(self,tstart,tend,varList):
-        """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tend" (exclusive).
-            Only "active" files are used to satisfy the request since the database is expected to deal
-            with files which have already been archived"""
+    def genWrapper(self,gen,*a,**k):
+        """Wrapper for a generator so that it gives a method which returns False to indicate
+           that the generator has terminated and placed a result on rpcResultQueue and which 
+           returns True if there is still more work to do"""
         if not self.rpcInProgress:
-            self.gen = self.genRdData(tstart,tend,varList)
+            self.gen = gen(*a,**k)
             startTime = None
         else:
             startTime = time.clock()
@@ -330,6 +426,52 @@ class ActiveFileManager(object):
                     t = yield True
         self.rpcResultQueue.put(numpy.array(results).transpose())
 
+    def genSensorData(self,tstart,tend,streamName):
+        results = []
+        t = time.clock()
+        for baseTime in sorted(self.activeFiles.keys()):
+            # Determine if [tstart,tend) and [baseTime,stopTime) are disjoint
+            if tend <= baseTime: continue
+            a = self.activeFiles[baseTime]
+            if tstart >= a.stopTime: continue
+            for row in a.genSensorData(tstart,tend,streamName):
+                results.append(row)
+                if time.clock()-t > 0.5:
+                    t = yield True
+        self.rpcResultQueue.put(numpy.array(results).transpose())
+
+    def genDmData(self,mode,source,tstart,tend,varList):
+        results = []
+        t = time.clock()
+        latestException = None
+        for baseTime in sorted(self.activeFiles.keys()):
+            # Determine if [tstart,tend) and [baseTime,stopTime) are disjoint
+            if tend <= baseTime: continue
+            a = self.activeFiles[baseTime]
+            if tstart >= a.stopTime: continue
+            # We may get an AttributeError exception in genDmData for the most
+            #  recent files if the required tables have not yet been created.
+            #  Similarly, when the analyer is warming up, we may not have the 
+            #  correct modes or sources available.
+            # We only report an error if there are no results
+            try:
+                for row in a.genDmData(mode,source,tstart,tend,varList):
+                    results.append(row)
+                    if time.clock()-t > 0.5:
+                        t = yield True
+            except AttributeError,e:
+                latestException = e
+        if not results:
+            raise latestException
+        self.rpcResultQueue.put(numpy.array(results).transpose())
+
+    def compressHdf5File(self,activeFile):
+        """Copy an uncompressed file to a new HDF5 file with the compression filters
+           turned on. Returns name of the compressed file."""
+        filters = tables.Filters(complevel=1,fletcher32=True)
+        newPath = activeFile.abspath.replace('.h5','_c.h5')
+        activeFile.handle.copyFile(newPath,filters=filters,copyuserattrs=True)
+        return newPath
         
     # There is a directory in which the active file is maintained.
     # The timestamp is rounded down to a multiple of the activeFilePeriod to give the
@@ -382,6 +524,26 @@ class ActiveFileManager(object):
                     row.append()
                 if self.rdDataTable is not None: self.rdDataTable.flush()
                 
+                while not self.dmQueue.empty():
+                    d = self.dmQueue.get()
+                    timestamp, mode, source = unixTimeToTimestamp(d['time']), d['mode'], d['source']
+                    colNameSet = set(d['data'].keys())
+                    a = self.getActiveFile(timestamp)
+                    # Get data manager table for given mode and source, creating it if it does not 
+                    #  exist
+                    dmDataTable = a.getDmDataTable(mode,source,colNameSet,create=True)
+                    if self.dmDataTable is not None and self.dmDataTable != dmDataTable:
+                        self.dmDataTable.flush()
+                    self.dmDataTable = dmDataTable
+                    row = self.dmDataTable.row
+                    for name in colNameSet:
+                        row[name] = d['data'][name]
+                    # Always have timestamp and unixTime columns in the data manager table
+                    row['timestamp'] = int(timestamp)
+                    row['unixTime'] = d['time']
+                    row.append()
+                if self.dmDataTable is not None: self.dmDataTable.flush()
+
                 ts = getTimestamp()
                 # print "In main loop: %s, activeFiles: %s" % (self.getBaseTime(ts),self.activeFiles)
                 self.getActiveFile(ts)
