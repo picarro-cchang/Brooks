@@ -1098,12 +1098,12 @@ class InstMgr(object):
             return INSTMGR_RPC_SUCCESS
     def INSTMGR_ShutdownRpc(self, shutdownType):
 
-        try:
-            # disable Keepalive to prevent DAS from continuously resetting
-            self.DriverRpc.disableKeepalive()
-        except:
-            tbMsg = traceback.format_exc()
-            Log("INSTMGR_ShutdownRpc:Disable keepalive error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+        #try:
+            ## disable Keepalive to prevent DAS from continuously resetting
+            #self.DriverRpc.disableKeepalive()
+        #except:
+            #tbMsg = traceback.format_exc()
+            #Log("INSTMGR_ShutdownRpc:Disable keepalive error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
 
         # stop measuring
         status = self._StateHandler(EVENT_STOP_MEAS)

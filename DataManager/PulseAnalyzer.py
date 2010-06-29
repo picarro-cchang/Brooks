@@ -43,6 +43,8 @@ class PulseAnalyzer(object):
         try:
             for concName in self.concBufferDict:
                 self.concBufferDict[concName] = []
+        except:
+            pass
         finally:
             self.bufferLock.release()
         
@@ -107,6 +109,8 @@ class PulseAnalyzer(object):
                     self.concBufferDict[concName].append(measData.Data[concName])
                 else:
                     self.concBufferDict[concName].append(measData.Time)
+        except:
+            pass
         finally:
             self.bufferLock.release()
         
@@ -117,6 +121,8 @@ class PulseAnalyzer(object):
             lastIdx = sum(timeArray < (timeArray[-1]-self.validTimeBeforeEnd))
             for concName in self.concBufferDict:
                 self.concBufferDict[concName] = self.concBufferDict[concName][:lastIdx]
+        except:
+            pass
         finally:
             self.bufferLock.release()
             
@@ -173,6 +179,8 @@ class PulseAnalyzer(object):
                     statDict["%s_slope"%concName] = polyfit(timeArray, dataArray, 1)[0]
                 else:
                     statDict["timestamp_mean"] = (mean(timeArray))
+        except:
+            pass
         finally:
             self.bufferLock.release()
         return statDict

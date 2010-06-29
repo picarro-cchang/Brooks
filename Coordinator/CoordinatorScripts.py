@@ -241,7 +241,7 @@ def setValveMaxDac(valveSelect, value):
         else:
             raise Exception, "Choose either 'inlet' or 'outlet'!"  
     except:
-        LOGFUNC("setValveMinDac() failed!\n")
+        LOGFUNC("setValveMaxDac() failed!\n")
 
 def getValveMinMaxDac(valveSelect):
     valveSelect = valveSelect.lower()
