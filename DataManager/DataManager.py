@@ -753,6 +753,8 @@ class DataManager(object):
             if len(self.measBuffer) >= bufSize:
                 self.measBuffer = self.measBuffer[-(bufSize-1):]
             self.measBuffer.append(result)
+        except:
+            pass
         finally:
             self.measBufferLock.release()
                 

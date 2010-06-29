@@ -22,11 +22,16 @@ class ActiveFileManagerProxy(SharedTypes.Singleton):
 if __name__ == "__main__":
     AFM = ActiveFileManagerProxy().rpc
     now = getTimestamp()
-    result = AFM.getRdData(now-300000, now, ['timestamp', 'waveNumber', 'uncorrectedAbsorbance'])
+#    result = AFM.getRdData(now-300000, now, ['timestamp', 'waveNumber', 'uncorrectedAbsorbance'])
+#    result = AFM.getSensorData(now-300000, now, 'STREAM_Laser1Temp')
+    result = AFM.getDmData('pressure_cal_mode','analyze_CO2_only',now-300000, now, ['unixTime','co2_y','cavity_pressure'])
     print "Time to fetch: %f" % (0.001*(getTimestamp()-now))
     if result is not None:
-        t,w,l = result
-        plot(t,l,'.')
+        t,v,p = result
+        subplot(2,1,1)
+        plot(t,v)
+        subplot(2,1,2)
+        plot(t,p)
         show()
     else:
         print "Null result"

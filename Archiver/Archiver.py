@@ -13,9 +13,11 @@ File History:
     07-02-01 sze   Add Directory key to allow a group to be stored in an arbitrary location
     07-08-22 sze   Wrap binary data for archival
     08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
-    08-09-30 alex  Added level 0 as the "Quantum" option. Also enabled Archiver to store and manage data for DataLogger.
+    08-09-30 alex  Added level 0 as the "Quantum" option. Also enabled Archiver to store and manage data for DataLogger
     09-07-03 alex  Provide an option to construct the storage paths using local time (generally GMT is used)
-
+    10-06-14 sze   Allow a timestamp to be specified when calling archiveData
+    10-06-15 sze   New RPC function "DoesFileExist"
+    
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -42,6 +44,8 @@ from Host.Common import BetterTraceback
 from Host.Common.SharedTypes import RPC_PORT_LOGGER, RPC_PORT_ARCHIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
+from Host.Common.timestamp import timestampToUtcDatetime
+
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
 if sys.platform == 'win32':
@@ -288,8 +292,18 @@ class ArchiveGroup(object):
                 time.sleep(0)
         if resultQueue is not None: resultQueue.put(count)
         return count
+        
+    def doesFileExist(self,fileName,timestamp):
+        """Inquires if the specified file name exists in this group for the specified timestamp"""
+        utcDatetime = timestampToUtcDatetime(timestamp)
+        timeTuple = utcDatetime.timetuple()
+            
+        pathName = makeStoragePathName(timeTuple,self.quantum)
+        pathName = os.path.join(self.groupRoot,pathName)
+        targetName = os.path.join(pathName,os.path.split(fileName)[-1])
+        return os.path.exists(targetName)
 
-    def archiveData(self, source, removeOriginal=False):
+    def archiveData(self, source, removeOriginal=False, timestamp=None):
         """Store the specified data in the group, setting its modification time to the current time. "source" may either be a string
         specifying a file name or a tuple consisting of a data descriptor and the data"""
         try:
@@ -350,10 +364,18 @@ class ArchiveGroup(object):
                     if maxLoops == 0:
                         Log("More than 100 deletions required",dict(Filename=fileToArchive,Group=self.name))
                         break
-                # Use current time to store file in the correct location (local or GMT)
-
-                now = time.time()
-                pathName = makeStoragePathName(self.maketimetuple(now),self.quantum)
+                        
+                # If timestamp is None, use current time to store file in the correct location (local or GMT)
+                #  otherwise use the specified timestamp
+                
+                if timestamp is None:
+                    now = time.time()
+                    timeTuple = self.maketimetuple(now)
+                else:
+                    utcDatetime = timestampToUtcDatetime(timestamp)
+                    timeTuple = utcDatetime.timetuple()
+                    
+                pathName = makeStoragePathName(timeTuple,self.quantum)
                 pathName = os.path.join(self.groupRoot,pathName)
 
                 if not os.path.exists(pathName): 
@@ -503,6 +525,7 @@ class Archiver(object):
         self.rpcServer.register_function(self.RPC_GetGroupInfo, NameSlice = 4)
         self.rpcServer.register_function(self.RPC_RefreshGroupStats, NameSlice = 4)
         self.rpcServer.register_function(self.RPC_GetFileNames, NameSlice = 4)
+        self.rpcServer.register_function(self.RPC_DoesFileExist, NameSlice = 4)
         self.rpcServer.serve_forever()
 
     def LoadConfig(self,filename):
@@ -519,21 +542,29 @@ class Archiver(object):
             return False
         return True
 
-    def RPC_ArchiveFile(self, groupName, sourceFile, removeOriginal = True):
+    def RPC_ArchiveFile(self, groupName, sourceFile, removeOriginal = True, timestamp = None):
         """Archive the file SourceFile according to the rules of the storage group groupName. If removeOriginal
-        is true, the source file is deleted when archival is done."""
+        is true, the source file is deleted when archival is done. The archive time is the current time, unless
+        an explicit timestamp is specified."""
         group = self.storageGroups[groupName]
         if not os.path.exists(sourceFile):
             raise ValueError,"Source file %s does not exist" % (sourceFile,)
-        group.cmdQueue.put(("archiveData",(sourceFile, removeOriginal)))
+        group.cmdQueue.put(("archiveData",(sourceFile, removeOriginal, timestamp)))
         return "archiveFile command queued for group %s" % (groupName,)
 
-    def RPC_ArchiveData(self, groupName, dataName, wrappedData):
-        """Archive the named dataBytes according to the rules of the storage group groupName."""
+    def RPC_ArchiveData(self, groupName, dataName, wrappedData, timestamp = None):
+        """Archive the named dataBytes according to the rules of the storage group groupName. 
+        The archive time is the current time, unless an explicit timestamp is specified."""
         group = self.storageGroups[groupName]
-        group.cmdQueue.put(("archiveData",((dataName,wrappedData.data), False)))
+        group.cmdQueue.put(("archiveData",((dataName,wrappedData.data), False, timestamp)))
         return "archiveData command queued for group %s" % (groupName,)
 
+    def RPC_DoesFileExist(self,groupName,fileName,timestamp):
+        """Determine if the specified file exists in the specified archive group for the given timestamp.
+            Throws exception if archive group does not exist."""
+        group = self.storageGroups[groupName]
+        return group.doesFileExist(fileName,timestamp)
+        
     def RPC_CopyFileDates(self, groupName, startDate_s, stopDate_s, destDir, uniqueFileNames = False, timeOut = 30):
         """Copies archived files in groupName from startDate_s to stopDate_s to destDir. Both startDate_s and
         stopDate_s are in "seconds since epoch". The date checked is the file modification on the archive file.
