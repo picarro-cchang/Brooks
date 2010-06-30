@@ -1002,6 +1002,13 @@ class StateDatabase(Singleton):
             self.con.commit()
         self.txQueue.put((self.getId(),_saveIntRegList,[copy.copy(intList)]))
 
+    def saveWlmHist(self,wlmHist):
+        """Save WLM parameters into the WLM History table."""
+        def _saveWlmHist(*wlmHist):
+            self.con.execute("insert into wlmHistory values (?,?,?,?,?,?,?)",wlmHist)
+            self.con.commit()
+        self.txQueue.put((self.getId(),_saveWlmHist,wlmHist))
+        
     def saveRegList(self,regList):
         """Save a list of (name,value) pairs in the appropriate register table"""
         floatList = []
@@ -1093,6 +1100,10 @@ class StateDatabase(Singleton):
             self.con.execute("create table dasRegInt (name text primary key,value integer)")
         if "dasRegFloat" not in tableNames:
             self.con.execute("create table dasRegFloat (name text primary key,value real)")
+        if "wlmHistory" not in tableNames:
+            self.con.execute("create table wlmHistory (timestamp integer," +
+                             "vLaserNum integer, wlmOffset real," +
+                             "freqMin real, valMin real, freqMax real, valMax real)")
         if "history" not in tableNames:
             self.con.execute(
                 "create table history (level integer," +

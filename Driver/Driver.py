@@ -432,6 +432,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Get historical data associated with streamNum from the database"""
         return StateDatabase().getHistory(streamNum)
 
+    def saveWlmHist(self,wlmHist):
+        """Save WLM history in database"""
+        StateDatabase().saveWlmHist(wlmHist)
+        
     def getConfigFile(self):
         configFile = os.path.abspath(InstrumentConfig().filename)
         return configFile

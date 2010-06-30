@@ -6,9 +6,9 @@ class TimeoutError(Exception):
     pass
 
 class SerIntrf(object):
-    def __init__(self, port):
+    def __init__(self,port,baudrate=9600,timeout=1,xonxoff=1):
         # port = 0 means port = "COM1"
-        self.ser = serial.Serial(port=port,baudrate=9600,timeout=1,xonxoff=1)
+        self.ser = serial.Serial(port=port,baudrate=baudrate,timeout=timeout,xonxoff=xonxoff)
 
     def open(self):
         self.ser.open()
