@@ -357,6 +357,7 @@ class RDFrequencyConverter(Singleton):
                 # Read from .ini file
                 cp = CustomConfigObj(configPath)
                 basePath = os.path.split(configPath)[0]
+                self.saveWlmHistPeriod_s = cp.getfloat("MainConfig", "saveWlmHistPeriod_s", "120")
                 self.wbCalUpdatePeriod_s = cp.getfloat("MainConfig", "wbCalUpdatePeriod_s", "1800")
                 self.hbCalUpdatePeriod_s = cp.getfloat("MainConfig", "hbCalUpdatePeriod_s", "1800")
                 self.wbArchiveGroup = cp.get("MainConfig", "wbArchiveGroup", "WBCAL")
@@ -437,7 +438,12 @@ class RDFrequencyConverter(Singleton):
         return entry
     
     def run(self):
-        #start the rpc server on another thread...
+        # Start the thread to save WLM history into database
+        saveWlmThread = threading.Thread(target = self.runSaveWlmHistory)
+        saveWlmThread.setDaemon(True)
+        saveWlmThread.start()
+        
+        # Start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
         self.rpcThread.start()
         startTime = time.time()
@@ -514,6 +520,31 @@ class RDFrequencyConverter(Singleton):
         if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
             raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
     
+    def runSaveWlmHistory(self):
+        while True:
+            self._saveWlmHistory()
+            #Log("WLM history saved in database")
+            time.sleep(self.saveWlmHistPeriod_s)
+            
+    def _saveWlmHistory(self):
+        """Save WLM history to database"""
+        for i in self.freqConverter:
+            try:
+                ac = self.freqConverter[i]
+                if ac is not None:
+                    vLaserNum = i+1
+                    wlmOffset = ac.offset
+                    deltaCoeffs = ac.coeffs - ac.coeffsOrig
+                    valMin = deltaCoeffs.min()
+                    valMax = deltaCoeffs.max()
+                    freqMin = ac.sLinear[1] + deltaCoeffs.argmin()*ac.sLinear[0]
+                    freqMax = ac.sLinear[1] + deltaCoeffs.argmax()*ac.sLinear[0]
+                    timestamp = Driver.hostGetTicks()
+                    wlmHist = (timestamp,vLaserNum,wlmOffset,freqMin,valMin,freqMax,valMax,)
+                    Driver.saveWlmHist(wlmHist)
+            except:
+                pass
+                
     def resetWarmBoxCalTime(self):
         self.warmBoxCalUpdateTime = Driver.hostGetTicks()
         

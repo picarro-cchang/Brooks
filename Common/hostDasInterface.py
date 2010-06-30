@@ -982,6 +982,11 @@ class StateDatabase(Singleton):
             self.hThread.setDaemon(True)
             self.hThread.start()
             self.initialized = True
+            self.lastTimeCheckWlmHist = None
+            # Max size for WLM history table is 180 days
+            self.wlmHistMaxTime_s = 15552000
+            # Check WLM History table size and delete old data every 30 minutes  
+            self.wlmHistCheckPeriod_s = 1800
         elif fileName is not None:
             raise ValueError("StateDatabase has already been initialized")
     def getId(self):
@@ -1006,6 +1011,16 @@ class StateDatabase(Singleton):
         """Save WLM parameters into the WLM History table."""
         def _saveWlmHist(*wlmHist):
             self.con.execute("insert into wlmHistory values (?,?,?,?,?,?,?)",wlmHist)
+            # Maintain database size based on timestamp
+            timestamp = wlmHist[0]
+            if self.lastTimeCheckWlmHist == None:
+                self.lastTimeCheckWlmHist = timestamp
+            elif timestamp - self.lastTimeCheckWlmHist > self.wlmHistCheckPeriod_s*1000:
+                cutoffTime = timestamp - self.wlmHistMaxTime_s*1000
+                self.con.execute("delete from wlmHistory where timestamp<=?",(cutoffTime,))
+                self.lastTimeCheckWlmHist = timestamp
+            else:
+                pass
             self.con.commit()
         self.txQueue.put((self.getId(),_saveWlmHist,wlmHist))
         
