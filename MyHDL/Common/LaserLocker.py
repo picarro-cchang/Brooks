@@ -512,7 +512,7 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         fine_current_out.next = 0x8000
                         
                     if options[LASERLOCKER_OPTIONS_DIRECT_TUNE_B]:
-                        fine_current_out.next = tuning_offset_in
+                        fine_current_out.next = tuning_offset
 
                     # Reset the run bit if continuous mode is not selected
                     # Ensure this is within clause that cs[LASERLOCKER_CS_RUN_B] == 1

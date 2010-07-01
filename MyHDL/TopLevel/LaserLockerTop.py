@@ -62,12 +62,14 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          wmm_refl1, wmm_refl2, wmm_tran1, wmm_tran2,
          wmm_busy1, wmm_busy2,
          wmm_rd, wmm_convst, wmm_clk,
-         dout_man, dout, din
-        ):
+         dout_man, dout, din,
+         aux_din, aux_dout):
 
     NSTAGES = 28
     counter = Signal(intbv(0)[NSTAGES:])
 
+    aux_pzt_dac_sck, aux_pzt_dac_sdi, aux_pzt_dac_ld = [Signal(LOW) for i in range(3)]
+    
     dsp_addr = Signal(intbv(0)[EMIF_ADDR_WIDTH:])
     dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
@@ -428,7 +430,12 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                               chanD_data_in=pzt, strobe_in=pulse_100k,
                               dac_sck_out=pzt_valve_dac_sck,
                               dac_sdi_out=pzt_valve_dac_sdi, dac_ld_out=pzt_valve_dac_ld)
-    
+
+    auxPztDac = Ltc2604DacD(clk=clk0, reset=reset, dac_clock_in=clk_2M5,
+                              chanD_data_in=laser_fine_current, strobe_in=pulse_100k,
+                              dac_sck_out=aux_pzt_dac_sck,
+                              dac_sdi_out=aux_pzt_dac_sdi, dac_ld_out=aux_pzt_dac_ld)
+
     dynamicPwmInlet = DynamicPwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                                  dsp_data_out=dsp_data_out,
                                  dsp_data_in=dsp_data_in_dynamicpwm_inlet, dsp_wr=dsp_wr,
@@ -696,6 +703,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
             intronix.next[33] = 0
 
         monitor.next = rd_trig
+        aux_din[3].next = rd_trig
         
         ce2.next = dsp_emif_ce[2]
         lsr1_0.next = pwm_laser1_out
@@ -741,6 +749,10 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
         wmm_clk.next = clk_2M5
         chanC_data_in.next  = 0
+
+        aux_din[1].next = aux_pzt_dac_sck
+        aux_din[0].next = aux_pzt_dac_sdi
+        aux_din[2].next = aux_pzt_dac_ld
         
         fpga_program_enable.next = 1
         ## Do not reset Cypress
@@ -792,6 +804,8 @@ wmm_rd, wmm_convst, wmm_clk = [Signal(LOW) for i in range(3)]
 dout_man = Signal(LOW)
 dout = Signal(intbv(0)[40:])
 din  = Signal(intbv(0)[24:])
+aux_dout = Signal(intbv(0)[4:])
+aux_din  = Signal(intbv(0)[4:])
 
 def makeVHDL():
     toVHDL(main,clk0,clk180,clk3f,clk3f180,clk_locked,reset,
@@ -820,8 +834,8 @@ def makeVHDL():
                 wmm_refl1, wmm_refl2, wmm_tran1, wmm_tran2,
                 wmm_busy1, wmm_busy2,
                 wmm_rd, wmm_convst, wmm_clk,
-                dout_man, dout, din
-                )
+                dout_man, dout, din,
+                aux_din, aux_dout)
 
 if __name__ == "__main__":
     makeVHDL()

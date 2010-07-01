@@ -292,6 +292,9 @@ begin
         
         dout_man                => dout_man,
         dout                    => dout,
-        din                     => din
+        din                     => din,
+
+        aux_din                 => aux_din,
+        aux_dout                => aux_dout        
     );
 end behavioral;
