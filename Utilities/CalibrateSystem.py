@@ -210,6 +210,11 @@ class CalibrateSystem(object):
         Driver.wrDasReg("SPECT_CNTRL_NEXT_SCHEME_REGISTER",schemeNum)
         
     def rdFilter(self,entry):
+        """Accumulates statistics in dictionaries (tunerSum and count) keyed by scheme row. These are
+            used for flattening the PZT values during the FSR scheme.
+           tunerList and angleList are lists containing all ringdowns (without regard to scheme row)
+            which are used to determine the approximate FSR and sensitivity during the initial
+            fine scheme."""
         assert isinstance(entry,RingdownEntryType)
         if not self.processingDone.isSet():
             if not(entry.status & RINGDOWN_STATUS_RingdownTimeout) and self.seq == (entry.subschemeId & SUBSCHEME_ID_IdMask):
