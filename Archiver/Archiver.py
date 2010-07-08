@@ -44,7 +44,7 @@ from Host.Common import BetterTraceback
 from Host.Common.SharedTypes import RPC_PORT_LOGGER, RPC_PORT_ARCHIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
-from Host.Common.timestamp import timestampToUtcDatetime
+from Host.Common.timestamp import timestampToUtcDatetime, unixTime
 
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
@@ -374,6 +374,7 @@ class ArchiveGroup(object):
                 else:
                     utcDatetime = timestampToUtcDatetime(timestamp)
                     timeTuple = utcDatetime.timetuple()
+                    now = unixTime(timestamp)
                     
                 pathName = makeStoragePathName(timeTuple,self.quantum)
                 pathName = os.path.join(self.groupRoot,pathName)

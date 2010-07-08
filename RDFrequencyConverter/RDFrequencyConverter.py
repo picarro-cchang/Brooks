@@ -491,7 +491,7 @@ class RDFrequencyConverter(Singleton):
                 rdProcessedData = interface.ProcessedRingdownEntryType()
                 rdData = self.rdQueue.get(False)
                 for name,ctype in rdData._fields_:
-                    if name != "wlmAngle":
+                    if name != "padToCacheLine":
                         setattr(rdProcessedData, name, getattr(rdData,name))
                 self.rdProcessedCache.append(rdProcessedData)
                 vLaserNum = 1 + ((rdData.laserUsed >> 2) & 0x7) # 1-based virtual laser number

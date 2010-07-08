@@ -167,6 +167,7 @@ class RingdownEntryType(Structure):
 class ProcessedRingdownEntryType(Structure):
     _fields_ = [
     ("timestamp",c_longlong),
+    ("wlmAngle",c_float),
     ("waveNumber",c_double),
     ("waveNumberSetpoint",c_double),
     ("uncorrectedAbsorbance",c_float),
@@ -188,8 +189,7 @@ class ProcessedRingdownEntryType(Structure):
     ("laserTemperature",c_float),
     ("etalonTemperature",c_float),
     ("cavityPressure",c_float),
-    ("lockerError",c_short),
-    ("padToCacheLine",c_ushort)
+    ("lockerError",c_short)
     ]
 
 class SensorEntryType(Structure):
