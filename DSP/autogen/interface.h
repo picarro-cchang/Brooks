@@ -145,6 +145,7 @@ typedef struct {
 
 typedef struct {
     long long timestamp;
+    float wlmAngle;
     double waveNumber;
     double waveNumberSetpoint;
     float uncorrectedAbsorbance;
@@ -167,7 +168,6 @@ typedef struct {
     float etalonTemperature;
     float cavityPressure;
     int16 lockerError;
-    uint16 padToCacheLine;
 } ProcessedRingdownEntryType;
 
 typedef struct {

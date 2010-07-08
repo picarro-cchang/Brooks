@@ -173,6 +173,7 @@
         </struct>
         <struct type="ProcessedRingdownEntryType">
             <field ident="timestamp" type="long long"/>
+            <field ident="wlmAngle" type="float"/>
             <field ident="waveNumber" type="double"/>
             <field ident="waveNumberSetpoint" type="double"/>
             <field ident="uncorrectedAbsorbance" type="float"/>
@@ -195,7 +196,6 @@
             <field ident="etalonTemperature" type="float"/>
             <field ident="cavityPressure" type="float"/>
             <field ident="lockerError" type="int16"/>
-            <field ident="padToCacheLine" type="uint16"/>
         </struct>
         <struct type="SensorEntryType">
             <field ident="timestamp" type="long long"/>
