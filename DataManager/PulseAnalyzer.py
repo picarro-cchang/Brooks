@@ -118,7 +118,7 @@ class PulseAnalyzer(object):
         self.bufferLock.acquire()
         try:
             timeArray = array(self.concBufferDict["timestamp"])
-            lastIdx = sum(timeArray < (timeArray[-1]-self.validTimeBeforeEnd))
+            lastIdx = nonzero(timeArray >= (timeArray[-1]-self.validTimeBeforeEnd))[0][0]
             for concName in self.concBufferDict:
                 self.concBufferDict[concName] = self.concBufferDict[concName][:lastIdx]
         except:
@@ -163,6 +163,9 @@ class PulseAnalyzer(object):
     def getDataReady(self):
         """Should only be used in the state transition mode (not manually adding data mode)"""
         return self.pulseFinished
+        
+    def isTriggeredStatus(self):
+        return self.status == "triggered"
             
     def getStatistics(self):
         """Each concentration has statistics values as mean, std, and slope, except "timestamp", which 
@@ -184,5 +187,9 @@ class PulseAnalyzer(object):
         finally:
             self.bufferLock.release()
         return statDict
+        
+    def getPulseStartEndTime(self):
+        timeArray = array(self.concBufferDict["timestamp"])
+        return (timeArray[0], timeArray[-1])
         
         

@@ -691,6 +691,12 @@ class DataManager(object):
             return "No Pulse Analyzer"
         else:
             return self.pulseAnalyzer.getDataReady()
+
+    def RPC_PulseAnalyzer_IsTriggeredStatus(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            return self.pulseAnalyzer.isTriggeredStatus()
             
     def RPC_PulseAnalyzer_Reset(self):
         if self.pulseAnalyzer == None:
@@ -704,6 +710,12 @@ class DataManager(object):
             return "No Pulse Analyzer"
         else:
             return self.pulseAnalyzer.getStatistics()
+            
+    def RPC_PulseAnalyzer_GetPulseStartEndTime(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            return self.pulseAnalyzer.getPulseStartEndTime()
             
     def RPC_MeasBuffer_Set(self, source, colList, bufSize):
         """Set up an internal measurement buffer for the Coordinator"""

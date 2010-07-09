@@ -22,6 +22,7 @@ File History:
     09-07-29  alex Create default view (auto-scaled in y-axis) in zoomed mode whenever data keys are switched while keeping x-axis unchanged.
     09-08-05  alex Improve time-locking without a master plot
     10-01-22  sze  Changed date format display to ISO standard
+    10-07-05  alex Add the function to change line/marker color at a specified time
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -1100,6 +1101,7 @@ class DataStore(object):
 
     def getDataSequence(self,source,key):
         return self.sourceDict[source][key]
+        
 #end of class DataStore
 class InstStatusPanel(wx.Panel):
     """The InstStatusPanel has check indicators which show the states of the control loops
@@ -1217,6 +1219,10 @@ class QuickGui(wx.Frame):
         self.warmBoxTempT = None
         self.cavityPressureS = None
         self.cavityPressureT = None
+        self.defaultLineMarkerColor = self.getColorFromIni("Graph","LineColor")
+        self.defaultLineWidth = self.config.getfloat("Graph","LineWidth")
+        self.defaultMarkerSize = self.config.getfloat("Graph","MarkerSize")
+        self.lineMarkerColor = self.defaultLineMarkerColor
 
         # Collect instrument status setpoint and tolerance
         try:
@@ -1319,14 +1325,39 @@ class QuickGui(wx.Frame):
                                                 ServerVersion = __version__,
                                                 threaded = True)  
         self.rpcServer.register_function(self.setTitle)
+        self.rpcServer.register_function(self.setLineMarkerColor)
+        self.rpcServer.register_function(self.getLineMarkerColor)
         # Start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.Destroy)
         self.rpcThread.start()
     
+    # RPC functions
     def setTitle(self, newTitle):
         self.titleLabel.SetLabel(newTitle)
         return "OK"
+
+    def setLineMarkerColor(self, lineMarkerColor=None, colorTime=None):
+        """Set the graph line and marker color. The default value is defined in INI file"""
+        if lineMarkerColor != None:
+            self.lineMarkerColor = lineMarkerColor
+        else:
+            self.lineMarkerColor = self.defaultLineMarkerColor
+            
+        ds = self.dataStore
+        for idx in range(self.numGraphs):
+            if colorTime == None:
+                cTime = ds.getTime(self.source[idx]).GetLatest()
+            else:
+                cTime = colorTime
+            self.graphPanel[idx].AddColorTime(cTime)
+            self.graphPanel[idx].AddColor(self.lineMarkerColor)
+        return "New line color is %s" % self.lineMarkerColor
         
+    def getLineMarkerColor(self):
+        """Get the graph line and marker color."""
+        return self.lineMarkerColor
+    # End of RPC functions
+    
     def loadConfig(self,configFile):
         config = CustomConfigObj(configFile)
         return config
@@ -1733,7 +1764,6 @@ class QuickGui(wx.Frame):
             self.dataStore.getDataSequence(s,'good').Clear()
             for k in self.dataStore.getKeys(s):
                 self.dataStore.getDataSequence(s,k).Clear()
-        self.dataManagerRpc.PulseAnalyzer_ResetFirstDataInFlag()
     def OnSourceChoice(self,evt):
         idx = self.sourceChoiceIdList.index(evt.GetEventObject().GetId())
         self.source[idx] = self.sourceChoice[idx].GetClientData(evt.GetSelection())
@@ -1764,11 +1794,10 @@ class QuickGui(wx.Frame):
                     selection = None
             else:
                 selection = None
-        self.graphPanel[idx].AddSeriesAsLine(series,selection,statsFlag=True,colour=self.getColorFromIni("Graph","LineColor"),
-                                        width=self.config.getfloat("Graph","LineWidth"))
-        self.graphPanel[idx].AddSeriesAsPoints(series,selection,colour="black",marker=getInnerStr(self.config.get("Graph","Marker")),
-                                          fillcolour=self.getColorFromIni("Graph","MarkerColor"),
-                                          size=self.config.getfloat("Graph","MarkerSize"))
+        self.graphPanel[idx].AddSeriesAsLine(series,selection,statsFlag=True,width=self.defaultLineWidth)
+        self.graphPanel[idx].AddSeriesAsPoints(series,selection,marker=getInnerStr(self.config.get("Graph","Marker")),size=self.defaultMarkerSize)
+        if self.graphPanel[idx].getNumColors() == 0:
+            self.graphPanel[idx].AddColor(self.lineMarkerColor)
         # When changing data keys, if the panel is currently zoomed, we want to keep the x-axis locked but
         # unlock the y-axis in order to show the data of the new key. To do so, we first un-zoom the panel,
         # update it to auto-scale in y-axis only, and then we remove the x-axis enforcement and set it in zoomed mode.
@@ -1786,7 +1815,7 @@ class QuickGui(wx.Frame):
         #  is changed. It effectively sends a resize event that forces a recalculation of the position
         #  of the string within the measPanel
         self.measPanel.SendSizeEvent()
-        
+
     def OnAutoScaleY(self, evt):
         idx = self.autoYIdList.index(evt.GetEventObject().GetId())
         self.autoScaleY(idx)

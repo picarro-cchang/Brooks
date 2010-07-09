@@ -27,6 +27,7 @@ from MyPlotCanvas import MyPlotCanvas
 import time
 import sys
 import threading
+from numpy import *
 
 #Set up a useful TimeStamp function...
 if sys.platform == 'win32':
@@ -36,12 +37,12 @@ else:
 
 class Sequence(object):
     nCreated = 0    # Keep track of number of sequences created
-    def __init__(self,npoints):
+    def __init__(self,npoints,dataType='d'):
         Sequence.nCreated += 1
         self.size = npoints
         self.next = 0
         self.count = 0
-        self.values = _Numeric.zeros(npoints,'d')
+        self.values = _Numeric.zeros(npoints,dataType)
         self.latestUpdate = TimeStamp()
     @classmethod
     def numCreated(cls):
@@ -134,7 +135,14 @@ class GraphPanel(wx.Panel):
         self.canvas.SetBackgroundColour('white')
         self.canvas.SetEnableZoom(True)
         self.latestUpdate = None
-
+        self.colorList = []
+        self.colorTimeList = []
+    def getNumColors(self):
+        return len(self.colorList)
+    def AddColorTime(self, colorTime):
+        self.colorTimeList.append(colorTime)
+    def AddColor(self, color):
+        self.colorList.append(color)
     def GetUnzoomed(self):
         return self.canvas.GetUnzoomed()
     def SetUnzoomed(self, unzoomedFalg):
@@ -240,27 +248,72 @@ class GraphPanel(wx.Panel):
         canvas = self.canvas
         plot_objects = []
         for series,select,statsFlag,attr in self._lineSeries:
-            data = _Numeric.column_stack((series.GetX(),series.GetY()))
-            if len(data) > 0:
-                if select != None:
-                    selSequence,selValue = select
-                    data = data[selSequence.GetValues() == selValue]
-                if len(data)>0: 
-                    plot_objects.append(plot.PolyLine(data,**attr))
-                if statsFlag:
-                    self.stats.append(self.calcStats(data,canvas))
-            del data
+            timeSeries = series.GetX()
+            dataSeries = series.GetY()
+            if len(self.colorList)-len(self.colorTimeList) == 1:    
+                try:
+                    changePtList = self._getColorTimeIndices(timeSeries.copy())
+                    #print changePtList, self.colorList
+                    for i in range(len(changePtList)-1):
+                        startPt = max(0, changePtList[i]-1)
+                        endPt = changePtList[i+1]
+                        data = _Numeric.column_stack((timeSeries[startPt:endPt],dataSeries[startPt:endPt]))
+                        color = self.colorList[i]
+                        if len(data) > 0:
+                            if select != None:
+                                selSequence,selValue = select
+                                data = data[selSequence.GetValues() == selValue]
+                            if len(data)>0:
+                                plot_objects.append(plot.PolyLine(data,colour=color,**attr))
+                            if statsFlag:
+                                self.stats.append(self.calcStats(data,canvas))
+                        del data
+                except Exception, err:
+                    print err
+            else:    
+                data = _Numeric.column_stack((timeSeries,dataSeries))
+                if len(data) > 0:
+                    if select != None:
+                        selSequence,selValue = select
+                        data = data[selSequence.GetValues() == selValue]
+                    if len(data)>0: 
+                        plot_objects.append(plot.PolyLine(data,**attr))
+                    if statsFlag:
+                        self.stats.append(self.calcStats(data,canvas))
+                del data
         for series,select,statsFlag,attr in self._pointSeries:
-            data = _Numeric.column_stack((series.GetX(),series.GetY()))
-            if len(data) > 0:            
-                if select != None:
-                    selSequence,selValue = select
-                    data = data[selSequence.GetValues() == selValue]
-                if len(data)>0: 
-                    plot_objects.append(plot.PolyMarker(data,**attr))
-                if statsFlag:
-                    self.stats.append(self.calcStats(data,canvas))
-            del data
+            timeSeries = series.GetX()
+            dataSeries = series.GetY()
+            if len(self.colorList)-len(self.colorTimeList) == 1:
+                try:
+                    changePtList = self._getColorTimeIndices(timeSeries.copy())
+                    for i in range(len(changePtList)-1):
+                        startPt = max(0, changePtList[i]-1)
+                        endPt = changePtList[i+1]
+                        data = _Numeric.column_stack((timeSeries[startPt:endPt],dataSeries[startPt:endPt]))
+                        color = self.colorList[i]
+                        if len(data) > 0:
+                            if select != None:
+                                selSequence,selValue = select
+                                data = data[selSequence.GetValues() == selValue]
+                            if len(data)>0:
+                                plot_objects.append(plot.PolyMarker(data,colour=color,fillcolour=color,**attr))
+                            if statsFlag:
+                                self.stats.append(self.calcStats(data,canvas))
+                        del data
+                except Exception, err:
+                    print err
+            else:  
+                data = _Numeric.column_stack((timeSeries,dataSeries))
+                if len(data) > 0:            
+                    if select != None:
+                        selSequence,selValue = select
+                        data = data[selSequence.GetValues() == selValue]
+                    if len(data)>0: 
+                        plot_objects.append(plot.PolyMarker(data,**attr))
+                    if statsFlag:
+                        self.stats.append(self.calcStats(data,canvas))
+                del data
         for h in self._text:
             plot_objects.append(self._text[h])
         
@@ -294,6 +347,27 @@ class GraphPanel(wx.Panel):
             canvas.Draw(plot.PlotGraphics(dummy,self.title,self.xlabel,self.ylabel))
         del plot_objects
 
+    def _getColorTimeIndices(self, timeSeries):
+        """Return a list of indices where to change the color in the timeSeries"""
+        numData = len(timeSeries)
+        if numData == 0:
+            return []
+        elif len(self.colorTimeList) == 0:
+            return [0, numData]
+        else:
+            minTime = min(timeSeries)
+            while self.colorTimeList[0] < minTime:
+                self.colorTimeList = self.colorTimeList[1:]
+                self.colorList = self.colorList[1:]
+                
+        if len(self.colorTimeList) > 0:
+            changePtList = digitize(self.colorTimeList, timeSeries)
+            changePtList = compress(changePtList<numData, changePtList).tolist()
+            changePtList = [0]+changePtList+[numData]
+            return changePtList
+        else:
+            return [0, numData]
+        
     def GetCanvas(self):
         #return self.Graph.canvas
         return self.canvas

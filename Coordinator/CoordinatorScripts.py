@@ -91,10 +91,13 @@ def pulseAnalyzerStopAddingData():
 def pulseAnalyzerGetDataReady(): 
     return DATAMGR.PulseAnalyzer_GetDataReady()
 
+def pulseAnalyzerIsTriggeredStatus(): 
+    return DATAMGR.PulseAnalyzer_IsTriggeredStatus()
+    
 def pulseAnalyzerGetOutput(): 
     return DATAMGR.PulseAnalyzer_GetOutput()
 
-def pulseAnalyzerGetTimestamp(): 
+def pulseAnalyzerGetTimestamp():
     return DATAMGR.PulseAnalyzer_GetTimestamp()
 
 def pulseAnalyzerReset(): 
@@ -103,6 +106,9 @@ def pulseAnalyzerReset():
 
 def pulseAnalyzerGetStatistics(): 
     return DATAMGR.PulseAnalyzer_GetStatistics()
+    
+def pulseAnalyzerGetPulseStartEndTime():
+    return DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
     
 ##########################
 # Data manager functions
@@ -135,6 +141,21 @@ def disableCalScript():
 def getDasTemperature():
     return DRIVER.rdDasReg("DAS_TEMPERATURE_REGISTER")
     
+##########################
+# Quick GUI functions
+##########################
+def setLineMarkerColor(color=None, colorTime=None):
+    try:
+        QUICKGUI.setLineMarkerColor(color, colorTime)
+    except:
+        pass
+        
+def getLineMarkerColor():
+    try:
+        return QUICKGUI.getLineMarkerColor()
+    except:
+        pass
+        
 ##########################
 # Data logger functions
 ##########################
