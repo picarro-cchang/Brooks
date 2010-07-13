@@ -254,6 +254,7 @@ class GraphPanel(wx.Panel):
                 try:
                     changePtList = self._getColorTimeIndices(timeSeries.copy())
                     #print changePtList, self.colorList
+                    statData = zeros((0,2), dtype=float)
                     for i in range(len(changePtList)-1):
                         startPt = max(0, changePtList[i]-1)
                         endPt = changePtList[i+1]
@@ -265,9 +266,10 @@ class GraphPanel(wx.Panel):
                                 data = data[selSequence.GetValues() == selValue]
                             if len(data)>0:
                                 plot_objects.append(plot.PolyLine(data,colour=color,**attr))
-                            if statsFlag:
-                                self.stats.append(self.calcStats(data,canvas))
+                                statData = concatenate((statData,data)) 
                         del data
+                    if statsFlag:
+                        self.stats.append(self.calcStats(statData,canvas))
                 except Exception, err:
                     print err
             else:    
@@ -287,6 +289,7 @@ class GraphPanel(wx.Panel):
             if len(self.colorList)-len(self.colorTimeList) == 1:
                 try:
                     changePtList = self._getColorTimeIndices(timeSeries.copy())
+                    statData = zeros((0,2), dtype=float)
                     for i in range(len(changePtList)-1):
                         startPt = max(0, changePtList[i]-1)
                         endPt = changePtList[i+1]
@@ -298,9 +301,10 @@ class GraphPanel(wx.Panel):
                                 data = data[selSequence.GetValues() == selValue]
                             if len(data)>0:
                                 plot_objects.append(plot.PolyMarker(data,colour=color,fillcolour=color,**attr))
-                            if statsFlag:
-                                self.stats.append(self.calcStats(data,canvas))
+                                statData = concatenate((statData,data)) 
                         del data
+                    if statsFlag:
+                        self.stats.append(self.calcStats(statData,canvas))
                 except Exception, err:
                     print err
             else:  
