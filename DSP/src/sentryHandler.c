@@ -210,7 +210,7 @@ void sentryHandler(void)
     
     while (1)
     {
-        int overload;
+        int overload = 0;
         int hardwarePresent = *(int *)registerAddr(HARDWARE_PRESENT_REGISTER);
         int installedMask = 0;
         int powerBoardPresent = 0 != (hardwarePresent & (1<<HARDWARE_PRESENT_PowerBoardBit));
@@ -223,7 +223,7 @@ void sentryHandler(void)
         if (inSafeMode) safeMode(); // Force system into safe mode once tripped
             
         // Handle overload conditions by seeing if any overload bits persist for more than 50ms
-        
+        /*
         if (powerBoardPresent && !inSafeMode) {       
             overload = readFPGA(FPGA_KERNEL + KERNEL_OVERLOAD);
             if (overload) {
@@ -237,6 +237,7 @@ void sentryHandler(void)
             }
             prevOverload = overload;
         }
+        */
         
         if (ticksSinceStartup > 10*ticksPerSecond) {
             if (0 == (ticksSinceStartup % ticksPerSecond)) {    // Things to check once every second

@@ -75,7 +75,7 @@ class CalFileFromEepromsMaker(object):
         else:
             self.infile = None
 
-        virtualList = [{} for i in range(MAX_LASERS)]
+        virtualList = [{} for i in range(NUM_VIRTUAL_LASERS)]
         for key in self.config:
             if key.startswith("VIRTUAL"):
                 vLaserNum = int(key[8:])

@@ -87,7 +87,7 @@ class WarmBoxCalFileMaker(object):
         except KeyError:
             self.wlmFiles.append(None)
 
-        virtualList = [{} for i in range(MAX_LASERS)]
+        virtualList = [{} for i in range(NUM_VIRTUAL_LASERS)]
         for key in self.config:
             if key.startswith("VIRTUAL"):
                 vLaserNum = int(key[8:])
