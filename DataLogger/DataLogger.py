@@ -205,7 +205,9 @@ class DataLog(object):
                     self.CopyToMailboxAndArchive(path)
 
     def _CopyToMailboxAndArchive(self, srcPath=""):
-        if srcPath == "":
+        if self.LogPath == "":
+            return
+        elif srcPath == "":
             srcPath = self.LogPath
         startTime = TimeStamp()
         # If Mailbox option is enabled:
