@@ -304,6 +304,8 @@ class DataLog(object):
         for dataName in DataList:
             tableDict[dataName] = Float32Col()
         self.DecimationCount = 0
+        if self.table is not None:
+            self.table.flush()
         self.table = self.fp.createTable(self.fp.root,"results",tableDict,filters=filters)
     
     def _MakeListFromDict(self, DataDict):
