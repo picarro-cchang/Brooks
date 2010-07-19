@@ -88,6 +88,7 @@ class BoardTest1(object):
         self.dspFile  = os.path.abspath(os.path.join(basePath, self.config["Files"]["dspFileName"]))
         self.fpgaFile = os.path.abspath(os.path.join(basePath, self.config["Files"]["fpgaFileName"]))
         self.sender = None
+        self.dioShadowBits=0
         # print self.usbFile, self.dspFile, self.fpgaFile
         # for k in self.__dict__:
         #     print "%20s: %s" % (k,self.__dict__[k])
@@ -122,7 +123,7 @@ class BoardTest1(object):
                 analyzerUsb.connect()
                 break
             except:
-                sleep(1.0)
+                time.sleep(1.0)
         analyzerUsb.disconnect()
 
     def startUsb(self):
@@ -261,6 +262,33 @@ class BoardTest1(object):
         print
         print "Memory test done: %d trials, %d errors" % (nTrials,nErrors)
         
+    def checkRamRtnString(self,startAddr,endAddr,nTrials):
+        """Do random memory writes followed by reads to check memory"""
+        s= "Memory test of region %x to %x" % (startAddr,endAddr)
+        nErrors = 0
+        refData = {}
+        for t in range(nTrials):
+            while True:
+                addr = randrange(startAddr,endAddr) & 0xFFFFFFFC
+                if addr>=startAddr: break
+            data = randrange(1<<32)
+            self.sender.writeDspMem(addr,c_uint(data))
+            refData[addr]=data
+            if t%1000==0: sys.stderr.write("w")
+        s+='\r\n'
+        for t,addr in enumerate(refData):
+            data = c_uint(0)
+            self.sender.readDspMem(addr,data)
+            readBack = data.value & 0xFFFFFFFF
+            data = refData[addr]
+            if data != readBack:
+                s+="Address: %8x, Wrote: %8x, Read: %8x" % (addr,data,readBack)
+                nErrors += 1
+            if t%1000==0: sys.stderr.write("v")
+        #s+='\r\n'
+        s+= "Memory test done: %d trials, %d errors" % (nTrials,nErrors)
+        return s
+        
     def run(self):
         usbSpeed = self.startUsb()
         print "USB enumerated at %s speed" % (("full","high")[usbSpeed])
@@ -269,6 +297,7 @@ class BoardTest1(object):
         self.programFPGA(self.fpgaFile)
         self.analyzerUsb.setDspControl(0)
         time.sleep(0.5)
+        
         print "Removed DSP reset, starting DSP..."
         self.initPll()
         self.initEmif()
@@ -305,7 +334,57 @@ class BoardTest1(object):
             x = int(eval(x))
             self.sender.wrFPGA("FPGA_KERNEL","KERNEL_DOUT_HI",(x&0xFF00000000)>>32)
             self.sender.wrFPGA("FPGA_KERNEL","KERNEL_DOUT_LO",(x&0xFFFFFFFF))
+
+    def runSelfTest(self,numRAMBytes,numSDRAMBytes):
+        # Check internal memory. There is 256KB of memory at this stage, since
+        #  the L2 cache is not set up until the DSP starts running
+        rslt1=self.checkRamRtnString(0,0x40000,numRAMBytes)
+
+        # Check SDRAM
+        rslt2=self.checkRamRtnString(0x80000000,0x81000000,numSDRAMBytes)
+        return rslt1 + '\r\n\r\n' + rslt2
+
+    def getMagicCode(self):
+        code=self.sender.rdFPGA("FPGA_KERNEL","KERNEL_MAGIC_CODE")
+        print "Magic code: %x" % code
+        return code
         
+    def initLB(self):
+        usbSpeed = self.startUsb()
+        self.analyzerUsb.setDspControl(usbdefs.VENDOR_DSP_CONTROL_RESET)
+        self.programFPGA(self.fpgaFile)
+        self.analyzerUsb.setDspControl(0)
+        time.sleep(0.5)
+        self.initPll()
+        self.initEmif()
+        # At this stage we should be able to talk to the FPGA registers
+        self.sender = HostToDspSender(self.analyzerUsb,timeout=5) 
+        self.sender.wrFPGA("FPGA_KERNEL","KERNEL_CONTROL",1<<interface.KERNEL_CONTROL_DOUT_MAN_B)
+        self.sender.wrFPGA("FPGA_RDMAN","RDMAN_CONTROL",(1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B))
+        self.sender.wrFPGA("FPGA_RDMAN","RDMAN_OPTIONS",(1<<interface.RDMAN_OPTIONS_SIM_ACTUAL_B))
+
+    def RD_ADC(self):
+        # Read the output of the high-speed ADC
+        #returns a number of counts between 0-16k, 32k bit set on overflow
+        return self.sender.rdFPGA("FPGA_RDMAN","RDMAN_RINGDOWN_DATA")
+        
+    def setDigOut(self, bitnum, bitval):
+        #must call initLB() before executing this function
+        if(bitval):
+            self.dioShadowBits |= 1<<bitnum        
+        else: 
+            self.dioShadowBits &= ~(1<<bitnum)        
+        self.sender.wrFPGA("FPGA_KERNEL","KERNEL_DOUT_HI",(self.dioShadowBits&0xFF00000000)>>32)
+        self.sender.wrFPGA("FPGA_KERNEL","KERNEL_DOUT_LO",(self.dioShadowBits&0xFFFFFFFF))
+            
+    def digIn(self, bitnum):
+        #must call initLB() before executing this function
+        #BUFFIOB40-BUFFIOB63 are the valid LB inputs, so bitnum must be in 40..63
+        bitnum=bitnum-40
+        bitvals=self.sender.rdFPGA("FPGA_KERNEL","KERNEL_DIN")
+        rslt=(bitvals >> bitnum) & 1
+        return rslt 
+            
 def handleCommandSwitches():
     shortOpts = 'hc:'
     longOpts = ["help"]
