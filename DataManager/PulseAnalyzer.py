@@ -100,8 +100,8 @@ class PulseAnalyzer(object):
         if measData.Source != self.source: 
             return
         self.bufferLock.acquire()
-        try:
-            for concName in self.concBufferDict:
+        for concName in self.concBufferDict:
+            try:
                 # Control the size of the buffer
                 if len(self.concBufferDict[concName]) >= self.bufSize:
                     self.concBufferDict[concName] = self.concBufferDict[concName][-(self.bufSize-1):]
@@ -109,10 +109,9 @@ class PulseAnalyzer(object):
                     self.concBufferDict[concName].append(measData.Data[concName])
                 else:
                     self.concBufferDict[concName].append(measData.Time)
-        except:
-            pass
-        finally:
-            self.bufferLock.release()
+            except Exception, err:
+                print err
+        self.bufferLock.release()
         
     def cutBuffer(self):
         self.bufferLock.acquire()
@@ -175,13 +174,16 @@ class PulseAnalyzer(object):
         try:
             timeArray = array(self.concBufferDict["timestamp"])
             for concName in self.concBufferDict:
-                if concName != "timestamp":
-                    dataArray = array(self.concBufferDict[concName])
-                    statDict["%s_mean"%concName] = mean(dataArray)
-                    statDict["%s_std"%concName] = std(dataArray)
-                    statDict["%s_slope"%concName] = polyfit(timeArray, dataArray, 1)[0]
-                else:
-                    statDict["timestamp_mean"] = (mean(timeArray))
+                try:
+                    if concName != "timestamp":
+                        dataArray = array(self.concBufferDict[concName])
+                        statDict["%s_mean"%concName] = mean(dataArray)
+                        statDict["%s_std"%concName] = std(dataArray)
+                        statDict["%s_slope"%concName] = polyfit(timeArray, dataArray, 1)[0]
+                    else:
+                        statDict["timestamp_mean"] = (mean(timeArray))
+                except Exception, err:
+                    print err
         except:
             pass
         finally:
