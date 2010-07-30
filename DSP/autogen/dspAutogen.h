@@ -95,4 +95,5 @@ int nudgeTimestamp(unsigned int numInt,void *params,void *env);
 int r_eeprom_write_low_level(unsigned int numInt,void *params,void *env);
 int r_eeprom_read_low_level(unsigned int numInt,void *params,void *env);
 int r_eeprom_ready_low_level(unsigned int numInt,void *params,void *env);
+int r_float_arithmetic(unsigned int numInt,void *params,void *env);
 #endif

@@ -1053,3 +1053,34 @@ int r_i2c_check(unsigned int numInt,void *params,void *env)
     addr = reg[2];
     return I2C_check_ack(hI2C[chain],addr);
 }
+
+int r_float_arithmetic(unsigned int numInt,void *params,void *env)
+{
+    unsigned int op;
+    float x,y,result;
+    
+    unsigned int *reg = (unsigned int *) params;
+    if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[0],x);
+    READ_REG(reg[1],y);
+    op = reg[3];
+    switch (op) {
+    case FLOAT_ARITHMETIC_Addition:
+        result = x + y;
+        break;
+    case FLOAT_ARITHMETIC_Subtraction:
+        result = x - y;
+        break;
+    case FLOAT_ARITHMETIC_Multiplication:
+        result = x * y;
+        break;
+    case FLOAT_ARITHMETIC_Division:
+        result = (y != 0.0) ? (x/y) : 0.0;
+        break;
+    case FLOAT_ARITHMETIC_Average:
+        result = 0.5*(x+y);
+        break;
+    }
+    WRITE_REG(reg[2],result);
+    return STATUS_OK;
+}

@@ -75,7 +75,7 @@ void initRegisters()
     d.asFloat = 20.0;
     writeRegister(DAS_TEMPERATURE_REGISTER,d);
     d.asFloat = 0.0;
-    writeRegister(LASER_TEC_MONITOR_TEMPERATURE_REGISTER,d);
+    writeRegister(HEATER_CNTRL_SENSOR_REGISTER,d);
     d.asFloat = 0.00112789997365;
     writeRegister(CONVERSION_LASER1_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000234289997024;
@@ -801,7 +801,7 @@ void initRegisters()
     regTypes[RD_INITIATED_COUNT_REGISTER] = uint_type;
     regTypes[DAS_STATUS_REGISTER] = uint_type;
     regTypes[DAS_TEMPERATURE_REGISTER] = float_type;
-    regTypes[LASER_TEC_MONITOR_TEMPERATURE_REGISTER] = float_type;
+    regTypes[HEATER_CNTRL_SENSOR_REGISTER] = float_type;
     regTypes[CONVERSION_LASER1_THERM_CONSTA_REGISTER] = float_type;
     regTypes[CONVERSION_LASER1_THERM_CONSTB_REGISTER] = float_type;
     regTypes[CONVERSION_LASER1_THERM_CONSTC_REGISTER] = float_type;
@@ -1340,6 +1340,8 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_eeprom_read_low_level(numInt,params,env);
         case ACTION_EEPROM_READY_LOW_LEVEL:
             return r_eeprom_ready_low_level(numInt,params,env);
+        case ACTION_FLOAT_ARITHMETIC:
+            return r_float_arithmetic(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

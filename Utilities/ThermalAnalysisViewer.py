@@ -268,7 +268,10 @@ if __name__ == "__main__":
     #fname = "../Host/Driver/Sensors_20091005_001334.h5"
     #fname = "WarmBoxWithWlmShroud_20091023_210610.h5"
     #fname = "../../Log/Sensors_20091106_215259.h5"
-    fname = "../../Log/Sensors_20100210_194007.h5"
+    #fname = "../../Log/Sensors_20100210_194007.h5"
+    #fname = r"R:\crd\G2000\623-HBDS2124\HotBox_85CFanStudy\Sensors_20100722_164709.h5"
+    fname = r"R:\crd\G2000\623-HBDS2124\HotBox_85CFanStudy\Sensors_20100722_164709.h5"
+    fname = r"R:\crd\G2000\MidIR\TECThermalCharacterization\Sensors_20000722_185849b.h5"
     #inputStream  = STREAM_Laser2Tec
     #outputStream = STREAM_Laser2Temp
     inputStream = STREAM_WarmBoxTec

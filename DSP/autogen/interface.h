@@ -618,6 +618,14 @@ typedef enum {
     HARDWARE_PRESENT_AnalogInterface = 9 // Analog Interface
 } HARDWARE_PRESENT_BitType;
 
+typedef enum {
+    FLOAT_ARITHMETIC_Addition = 1, // 
+    FLOAT_ARITHMETIC_Subtraction = 2, // 
+    FLOAT_ARITHMETIC_Multiplication = 3, // 
+    FLOAT_ARITHMETIC_Division = 4, // 
+    FLOAT_ARITHMETIC_Average = 5 // 
+} FLOAT_ARITHMETIC_OperatorType;
+
 /* Definitions for COMM_STATUS_BITMASK */
 #define COMM_STATUS_CompleteMask (0x1)
 #define COMM_STATUS_BadCrcMask (0x2)
@@ -662,7 +670,7 @@ typedef enum {
 #define RD_INITIATED_COUNT_REGISTER (12)
 #define DAS_STATUS_REGISTER (13)
 #define DAS_TEMPERATURE_REGISTER (14)
-#define LASER_TEC_MONITOR_TEMPERATURE_REGISTER (15)
+#define HEATER_CNTRL_SENSOR_REGISTER (15)
 #define CONVERSION_LASER1_THERM_CONSTA_REGISTER (16)
 #define CONVERSION_LASER1_THERM_CONSTB_REGISTER (17)
 #define CONVERSION_LASER1_THERM_CONSTC_REGISTER (18)
@@ -1476,4 +1484,5 @@ typedef enum {
 #define ACTION_EEPROM_WRITE_LOW_LEVEL (72)
 #define ACTION_EEPROM_READ_LOW_LEVEL (73)
 #define ACTION_EEPROM_READY_LOW_LEVEL (74)
+#define ACTION_FLOAT_ARITHMETIC (75)
 #endif

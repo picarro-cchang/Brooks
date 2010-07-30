@@ -566,6 +566,14 @@
             <enum_value ident="HARDWARE_PRESENT_DasTempMonitorBit" value="8" caption="Das Temp Monitor" />             
             <enum_value ident="HARDWARE_PRESENT_AnalogInterface"   value="9" caption="Analog Interface" />             
         </enum>
+        <enum type="FLOAT_ARITHMETIC_OperatorType">
+            <description>Enumeration specifying floating point operation to carry out on regiters</description> 
+            <enum_value ident="FLOAT_ARITHMETIC_Addition"         value="1" /> 
+            <enum_value ident="FLOAT_ARITHMETIC_Subtraction"      value="2" /> 
+            <enum_value ident="FLOAT_ARITHMETIC_Multiplication"   value="3" /> 
+            <enum_value ident="FLOAT_ARITHMETIC_Division"         value="4" /> 
+            <enum_value ident="FLOAT_ARITHMETIC_Average"          value="5" /> 
+        </enum>
     </enum_list>
     <bits_list>
         <bits ident="COMM_STATUS_BITMASK">
@@ -662,8 +670,8 @@
             <description>DAS temperature</description>
             <initial>20.0</initial>
         </register>
-        <register ident="LASER_TEC_MONITOR_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
-            <description>Temperature of laser TEC current monitor</description>
+        <register ident="HEATER_CNTRL_SENSOR_REGISTER" type="float" minver="1.0" access="r">
+            <description>Register containing quantity to be controlled by heater</description>
             <initial>0.0</initial>
         </register>
         <register ident="CONVERSION_LASER1_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
@@ -3738,5 +3746,6 @@
         <action ident="ACTION_EEPROM_WRITE_LOW_LEVEL">r_eeprom_write_low_level</action>
         <action ident="ACTION_EEPROM_READ_LOW_LEVEL">r_eeprom_read_low_level</action>
         <action ident="ACTION_EEPROM_READY_LOW_LEVEL">r_eeprom_ready_low_level</action>
+        <action ident="ACTION_FLOAT_ARITHMETIC">r_float_arithmetic</action>        
     </action_list>
 </Das_Interface>
