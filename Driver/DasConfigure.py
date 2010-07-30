@@ -32,9 +32,10 @@ else:
 EventManagerProxy_Init("Driver")
 
 schedulerPriorities = dict(SENSOR_READ=1,SENSOR_CONVERT=2,
-                           CONTROLLER=3,ACTUATOR_CONVERT=4,
-                           ACTUATOR_WRITE=5,STREAMER=6,
-                           MODEL=7)
+                           SENSOR_PROCESSING=3,
+                           CONTROLLER=4,ACTUATOR_CONVERT=5,
+                           ACTUATOR_WRITE=6,STREAMER=7,
+                           MODEL=8)
 
 # Periods are expressed in tenths of a second
 schedulerPeriods = dict(FAST=2, MEDIUM=10, SLOW=50)
@@ -337,6 +338,10 @@ class DasConfigure(SharedTypes.Singleton):
             self.opGroups["SLOW"]["CONTROLLER"].addOperation(
                 Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
     
+            self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
+                Operation("ACTION_FLOAT_ARITHMETIC",
+                         ["CAVITY_TEC_REGISTER","CAVITY_TEC_REGISTER",
+                          "HEATER_CNTRL_SENSOR_REGISTER","FLOAT_ARITHMETIC_Average"]))
     
             self.opGroups["SLOW"]["CONTROLLER"].addOperation(
                 Operation("ACTION_HEATER_CNTRL_STEP"))
