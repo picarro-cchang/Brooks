@@ -43,9 +43,9 @@ def formatTime(dateTime):
     return dateTime.strftime("%Y/%m/%d %H:%M:%S") + (".%03d" % ms)
 
 def unixTime(timestamp):
-    dt = (ORIGIN-UNIXORIGIN)+datetime.timedelta(microseconds=1000*timestamp)
+    dt = (ORIGIN-UNIXORIGIN)+datetime.timedelta(microseconds=1000*float(timestamp))
     return 86400.0*dt.days + dt.seconds + 1.e-6*dt.microseconds
 
 def unixTimeToTimestamp(u):
-    dt = UNIXORIGIN + datetime.timedelta(seconds=u)
+    dt = UNIXORIGIN + datetime.timedelta(seconds=float(u))
     return datetimeToTimestamp(dt)
