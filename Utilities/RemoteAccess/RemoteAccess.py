@@ -154,7 +154,11 @@ class RemoteAccess(object):
         self.useDialUp = self.config.has_section('DIALUP')
         self.sendEmail = self.config.has_section('EMAIL')
         self.syncClock = self.config.has_section('NTP')
-        handler = logging.handlers.RotatingFileHandler(getRequiredOption(self.config,'LOGGING','Logfile'),maxBytes=65536,backupCount=10)
+        logFilepath = getRequiredOption(self.config,'LOGGING','Logfile')
+        logDir = os.path.dirname(logFilepath)
+        if not os.path.isdir(logDir):
+            os.mkdir(logDir)
+        handler = logging.handlers.RotatingFileHandler(logFilepath,maxBytes=65536,backupCount=10)
         handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(message)s',datefmt='%Y%m%d %H:%M:%S'))
         logging.getLogger('').addHandler(handler)
 
@@ -320,6 +324,14 @@ class RemoteAccess(object):
             outer.attach(msg)
         try:
             self.mailServer = smtplib.SMTP(smtpHostname)
+            try:
+                useSSL = self.config.getboolean('EMAIL','UseSSL')
+            except:
+                useSSL = False
+            if useSSL:
+                self.mailServer.ehlo()
+                self.mailServer.starttls() 
+                self.mailServer.ehlo()
             # self.mailServer.set_debuglevel(True)
             try:
                 authenticationNeeded = self.config.getboolean('EMAIL','UseAuthentication')
