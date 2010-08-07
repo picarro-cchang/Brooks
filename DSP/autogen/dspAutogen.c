@@ -508,9 +508,9 @@ void initRegisters()
     writeRegister(HEATER_MANUAL_MARK_REGISTER,d);
     d.asUint = TEMP_CNTRL_DisabledState;
     writeRegister(HEATER_TEMP_CNTRL_STATE_REGISTER,d);
-    d.asFloat = 32768.0;
+    d.asFloat = 0.0;
     writeRegister(HEATER_TEMP_CNTRL_SETPOINT_REGISTER,d);
-    d.asFloat = 32768.0;
+    d.asFloat = 0.0;
     writeRegister(HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER,d);
     d.asFloat = 1000;
     writeRegister(HEATER_TEMP_CNTRL_TOLERANCE_REGISTER,d);

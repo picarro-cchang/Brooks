@@ -1964,20 +1964,20 @@
             <display>Heater Controller Mode</display>
         </register>
         <register ident="HEATER_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
-            <description>Heater Temperature Control app setpoint for cavity TEC in digU.</description>
-            <initial>32768.0</initial>
+            <description>Heater Temperature Control app setpoint for Heatsink minus Cavity temperature.</description>
+            <initial>0.0</initial>
         </register>
         <register ident="HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
-            <description>Heater Temperature Control app user setpoint for cavity TEC in digU.</description>
-            <initial>32768.0</initial>
+            <description>Heater Temperature Control app user setpoint.</description>
+            <initial>0.0</initial>
             <save/>
-            <display format="%.0f" units="digU">Target cavity TEC value</display>
+            <display format="%.3f" units="degC">Target temperature difference between heatsink and cavity</display>
         </register>
         <register ident="HEATER_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
-            <description>Heater Temperature Control app lock tolerance in digU.</description>
+            <description>Heater Temperature Control app lock tolerance in degC.</description>
             <initial>1000</initial>
             <save/>
-            <display format="%.0f" units="digU">Lock tolerance</display>
+            <display format="%.3f" units="degC">Lock tolerance</display>
         </register>
         <register ident="HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
             <description>Heater Temperature Control app maximum sweep value in digU.</description>
