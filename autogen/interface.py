@@ -844,6 +844,22 @@ HARDWARE_PRESENT_BitTypeDict[7] = 'HARDWARE_PRESENT_HotBoxBit' # Hot Box
 HARDWARE_PRESENT_BitTypeDict[8] = 'HARDWARE_PRESENT_DasTempMonitorBit' # Das Temp Monitor
 HARDWARE_PRESENT_BitTypeDict[9] = 'HARDWARE_PRESENT_AnalogInterface' # Analog Interface
 
+# Enumerated definitions for FLOAT_ARITHMETIC_OperatorType
+FLOAT_ARITHMETIC_OperatorType = c_uint
+FLOAT_ARITHMETIC_Addition = 1 # 
+FLOAT_ARITHMETIC_Subtraction = 2 # 
+FLOAT_ARITHMETIC_Multiplication = 3 # 
+FLOAT_ARITHMETIC_Division = 4 # 
+FLOAT_ARITHMETIC_Average = 5 # 
+
+# Dictionary for enumerated constants in FLOAT_ARITHMETIC_OperatorType
+FLOAT_ARITHMETIC_OperatorTypeDict = {}
+FLOAT_ARITHMETIC_OperatorTypeDict[1] = 'FLOAT_ARITHMETIC_Addition' # 
+FLOAT_ARITHMETIC_OperatorTypeDict[2] = 'FLOAT_ARITHMETIC_Subtraction' # 
+FLOAT_ARITHMETIC_OperatorTypeDict[3] = 'FLOAT_ARITHMETIC_Multiplication' # 
+FLOAT_ARITHMETIC_OperatorTypeDict[4] = 'FLOAT_ARITHMETIC_Division' # 
+FLOAT_ARITHMETIC_OperatorTypeDict[5] = 'FLOAT_ARITHMETIC_Average' # 
+
 # Definitions for COMM_STATUS_BITMASK
 COMM_STATUS_CompleteMask = 0x1
 COMM_STATUS_BadCrcMask = 0x2
@@ -888,7 +904,7 @@ RD_FITTING_COUNT_REGISTER = 11
 RD_INITIATED_COUNT_REGISTER = 12
 DAS_STATUS_REGISTER = 13
 DAS_TEMPERATURE_REGISTER = 14
-LASER_TEC_MONITOR_TEMPERATURE_REGISTER = 15
+HEATER_CNTRL_SENSOR_REGISTER = 15
 CONVERSION_LASER1_THERM_CONSTA_REGISTER = 16
 CONVERSION_LASER1_THERM_CONSTB_REGISTER = 17
 CONVERSION_LASER1_THERM_CONSTC_REGISTER = 18
@@ -1366,8 +1382,8 @@ registerByName["DAS_STATUS_REGISTER"] = DAS_STATUS_REGISTER
 registerInfo.append(RegInfo("DAS_STATUS_REGISTER",c_uint,0,1.0,"r"))
 registerByName["DAS_TEMPERATURE_REGISTER"] = DAS_TEMPERATURE_REGISTER
 registerInfo.append(RegInfo("DAS_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
-registerByName["LASER_TEC_MONITOR_TEMPERATURE_REGISTER"] = LASER_TEC_MONITOR_TEMPERATURE_REGISTER
-registerInfo.append(RegInfo("LASER_TEC_MONITOR_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
+registerByName["HEATER_CNTRL_SENSOR_REGISTER"] = HEATER_CNTRL_SENSOR_REGISTER
+registerInfo.append(RegInfo("HEATER_CNTRL_SENSOR_REGISTER",c_float,0,1.0,"r"))
 registerByName["CONVERSION_LASER1_THERM_CONSTA_REGISTER"] = CONVERSION_LASER1_THERM_CONSTA_REGISTER
 registerInfo.append(RegInfo("CONVERSION_LASER1_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw"))
 registerByName["CONVERSION_LASER1_THERM_CONSTB_REGISTER"] = CONVERSION_LASER1_THERM_CONSTB_REGISTER
@@ -2560,6 +2576,7 @@ ACTION_NUDGE_TIMESTAMP = 71
 ACTION_EEPROM_WRITE_LOW_LEVEL = 72
 ACTION_EEPROM_READ_LOW_LEVEL = 73
 ACTION_EEPROM_READY_LOW_LEVEL = 74
+ACTION_FLOAT_ARITHMETIC = 75
 
 
 # Parameter form definitions
@@ -2790,7 +2807,7 @@ parameter_forms.append(('Cavity Temperature Parameters',__p))
 __p = []
 
 __p.append(('dsp','choices',HEATER_TEMP_CNTRL_STATE_REGISTER,'Heater Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),(TEMP_CNTRL_AutomaticState,"Automatic Control"),],1,1))
-__p.append(('dsp','float',HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER,'Target cavity TEC value','digU','%.0f',1,1))
+__p.append(('dsp','float',HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER,'Target temperature difference between heatsink and cavity','digU','%.3f',1,1))
 __p.append(('dsp','float',HEATER_TEMP_CNTRL_TOLERANCE_REGISTER,'Lock tolerance','digU','%.0f',1,1))
 __p.append(('dsp','float',HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER,'Max sweep value','digU','%.0f',1,1))
 __p.append(('dsp','float',HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER,'Min sweep value','digU','%.0f',1,1))
