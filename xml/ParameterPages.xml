@@ -260,6 +260,7 @@
             <register>HEATER_PRBS_AMPLITUDE_REGISTER</register>
             <register>HEATER_PRBS_MEAN_REGISTER</register>
             <register>HEATER_MANUAL_MARK_REGISTER</register>
+            <register>HEATER_CUTOFF_REGISTER</register>
             <!-->
             <register>HEATER_CNTRL_STATE_REGISTER</register>
             <register>HEATER_CNTRL_GAIN_REGISTER</register>

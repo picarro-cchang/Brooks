@@ -419,6 +419,7 @@
             <enum_value ident="STREAM_InletValve" />
             <enum_value ident="STREAM_OutletValve" />
             <enum_value ident="STREAM_ValveMask" />
+            <enum_value ident="STREAM_MPVPosition" />
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>
@@ -2081,6 +2082,12 @@
             <save/>
             <display format="%.1f">PRBS mean</display>
         </register>
+        <register ident="HEATER_CUTOFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity temperature above which to turn off heater</description>
+            <initial>45.1</initial>
+            <save/>
+            <display format="%.3f" units="degC">Cavity temperature above which to turn off heater</display>
+        </register>
         <!-->
         <register ident="HEATER_CNTRL_STATE_REGISTER" type="HEATER_CNTRL_StateType" minver="1.0" access="rw">
             <description>Heater control app state register</description>
@@ -2623,6 +2630,11 @@
             <description>States of solenoid valves</description>
             <initial>0x0</initial>
             <display format="$%X">Solenoid valve states</display>
+        </register>
+        <register ident="VALVE_CNTRL_MPV_POSITION_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Multiport valve position register</description>
+            <initial>0x0</initial>
+            <display format="%d">Multiport valve position</display>
         </register>
         <register ident="TEC_CNTRL_REGISTER" type="TEC_CNTRL_Type" minver="1.0" access="rw">
             <description>Controls warm box and hot box TEC enable</description>

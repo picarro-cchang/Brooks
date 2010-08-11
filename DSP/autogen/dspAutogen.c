@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[401];
+RegTypes regTypes[403];
 
 /* I2C devices */
 I2C_device i2c_devices[26] = {
@@ -548,6 +548,8 @@ void initRegisters()
     writeRegister(HEATER_PRBS_AMPLITUDE_REGISTER,d);
     d.asFloat = 40000.0;
     writeRegister(HEATER_PRBS_MEAN_REGISTER,d);
+    d.asFloat = 45.1;
+    writeRegister(HEATER_CUTOFF_REGISTER,d);
     d.asInt = 32768;
     writeRegister(CAVITY_PRESSURE_ADC_REGISTER,d);
     d.asFloat = 1.5258789E-2;
@@ -716,6 +718,8 @@ void initRegisters()
     writeRegister(VALVE_CNTRL_SEQUENCE_STEP_REGISTER,d);
     d.asUint = 0x0;
     writeRegister(VALVE_CNTRL_SOLENOID_VALVES_REGISTER,d);
+    d.asUint = 0x0;
+    writeRegister(VALVE_CNTRL_MPV_POSITION_REGISTER,d);
     d.asUint = TEC_CNTRL_Disabled;
     writeRegister(TEC_CNTRL_REGISTER,d);
     d.asUint = 0;
@@ -1065,6 +1069,7 @@ void initRegisters()
     regTypes[HEATER_PRBS_GENPOLY_REGISTER] = uint_type;
     regTypes[HEATER_PRBS_AMPLITUDE_REGISTER] = float_type;
     regTypes[HEATER_PRBS_MEAN_REGISTER] = float_type;
+    regTypes[HEATER_CUTOFF_REGISTER] = float_type;
     regTypes[CAVITY_PRESSURE_ADC_REGISTER] = int_type;
     regTypes[CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER] = float_type;
     regTypes[CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER] = float_type;
@@ -1152,6 +1157,7 @@ void initRegisters()
     regTypes[VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER] = uint_type;
     regTypes[VALVE_CNTRL_SEQUENCE_STEP_REGISTER] = int_type;
     regTypes[VALVE_CNTRL_SOLENOID_VALVES_REGISTER] = uint_type;
+    regTypes[VALVE_CNTRL_MPV_POSITION_REGISTER] = uint_type;
     regTypes[TEC_CNTRL_REGISTER] = uint_type;
     regTypes[SENTRY_UPPER_LIMIT_TRIPPED_REGISTER] = uint_type;
     regTypes[SENTRY_LOWER_LIMIT_TRIPPED_REGISTER] = uint_type;

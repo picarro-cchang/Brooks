@@ -748,13 +748,13 @@ int tempCntrlHeaterInit(void)
     t->swpMin_   = (float *)registerAddr(HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER);
     t->swpMax_   = (float *)registerAddr(HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER);
     t->swpInc_   = (float *)registerAddr(HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER);
-    t->extMax_   = 0;
+    t->extMax_   = (float *)registerAddr(HEATER_CUTOFF_REGISTER);
     t->prbsAmp_  = (float *)registerAddr(HEATER_PRBS_AMPLITUDE_REGISTER);
     t->prbsMean_ = (float *)registerAddr(HEATER_PRBS_MEAN_REGISTER);
     t->prbsGen_  = (unsigned int *)registerAddr(HEATER_PRBS_GENPOLY_REGISTER);
     // t->temp_     = (float *)registerAddr(CAVITY_TEC_REGISTER);
     t->temp_     = (float *)registerAddr(HEATER_CNTRL_SENSOR_REGISTER);
-    t->extTemp_  = 0;
+    t->extTemp_  = (float *)registerAddr(CAVITY_TEMPERATURE_REGISTER);
     t->dasTemp_  = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_      = (float *)registerAddr(HEATER_MARK_REGISTER);
     t->manualTec_ = (float *)registerAddr(HEATER_MANUAL_MARK_REGISTER);
