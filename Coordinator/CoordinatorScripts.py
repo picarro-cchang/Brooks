@@ -58,7 +58,8 @@ def setRotValveMask(rotPos):
     """Set the valve mask to rotary valve
     """
     mask = 64 * int(rotPos) 
-    DRIVER.setValveMask(mask)
+    newMask = (DRIVER.getValveMask() & 0x3F) + mask
+    DRIVER.setValveMask(newMask)
     
 ##########################
 # Pulse analyzer functions
