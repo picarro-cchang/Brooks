@@ -82,7 +82,8 @@ def getInstrParams(fname):
 class Fitter(object):
     def __init__(self,configFile):
         self.stopOnError = 1 # Show modal dialog (and stop fitter) on error
-        self.iniBasePath = os.path.split(configFile)[0]       
+        configFile = os.path.abspath(configFile)
+        self.iniBasePath = os.path.split(configFile)[0]
         self.config = CustomConfigObj(configFile) 
         # Iterate through all script files, specified by keys which start with "script"
         self.scriptNames = []

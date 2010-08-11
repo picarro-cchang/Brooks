@@ -41,6 +41,7 @@ from time import strptime, mktime, time, localtime
 from Host.Common.EventManagerProxy import Log
 from tables import *
 from Host.Common.timestamp import unixTime
+import traceback
 ################################################################################
 # GLOBAL VARIABLES
 ################################################################################
@@ -75,7 +76,8 @@ def prependAppDir(fname):
 def readConfig(fname):
     """Returns a ConfigParser object initialized with data from the specified
     file, located (by default) in the application directory"""
-    config = CustomConfigObj(prependAppDir(fname))
+    # config = CustomConfigObj(prependAppDir(fname))
+    config = CustomConfigObj(fname)
     return config
 ################################################################################
 # Functions available to fitter scripts
