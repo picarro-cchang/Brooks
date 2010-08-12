@@ -48,6 +48,7 @@ File History:
                     measurement system is not enabled, and enable it as necessary. Changed GetStateRpc to return a dictionary
                     of states.
     10-06-07 alex  Stop ringdown acquisition in warming mode
+    10-08-12 alex  Added RPC functions and INI parameter to enable/disable auto restart flow after valve control is disabled.
     
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -351,6 +352,8 @@ class InstMgr(object):
         self.RpcServer.register_function(self.INSTMGR_GetStateRpc)
         self.RpcServer.register_function(self.INSTMGR_SendDisplayMessageRpc)
         self.RpcServer.register_function(self.INSTMGR_SetInstrumentModeRpc)
+        self.RpcServer.register_function(self.INSTMGR_EnableAutoRestartFlow)
+        self.RpcServer.register_function(self.INSTMGR_DisableAutoRestartFlow)
 
         if __debug__: Log("Setting up RPC callback functions.")
         # register callback functions
@@ -745,6 +748,9 @@ class InstMgr(object):
         """ called when entering parking state """
         self._SendDisplayMessage("Parking")
         self.State = INSTMGR_STATE_PARKING
+        
+        # Disable auto restart flow in parking state
+        self.INSTMGR_DisableAutoRestartFlow()
 
         try:
             status = self.SampleMgrRpc.Park()
@@ -837,40 +843,32 @@ class InstMgr(object):
         self.cp = CustomConfigObj(configPath)
 
         try:
-            self.Config.AutoMeasure = self.cp.getboolean("DEFAULT", "AutoMeasure")
-            self.Config.AutoStartEngine = self.cp.getboolean("DEFAULT", "AutoStartEngine")
-            self.Config.StartAppType = self.cp.get("DEFAULT", "StartingAppType")
-            self.Config.TempLockTimeout = self.cp.getint("DEFAULT", "TempLockTimeout_min")
-            self.Config.PressureLockTimeout = self.cp.getint("DEFAULT", "PressureLockTimeout_min")
-            self.Config.InstRestartTimeout = self.cp.getint("DEFAULT", "InstRestartTimeout_iter")
-            self.Config.DasRestartTimeout = self.cp.getint("DEFAULT", "DasRestartTimeout_iter")
-            self.Config.MeasRestartTimeout = self.cp.getint("DEFAULT", "MeasRestartTimeout_iter")
+            self.Config.AutoMeasure = self.cp.getboolean("DEFAULT", "AutoMeasure", False)
+            self.Config.AutoStartEngine = self.cp.getboolean("DEFAULT", "AutoStartEngine", False)
+            self.Config.AutoRestartFlow = self.cp.getboolean("DEFAULT", "AutoRestartFlow", True)
+            self.Config.StartAppType = self.cp.get("DEFAULT", "StartingAppType", "")
+            self.Config.TempLockTimeout = self.cp.getint("DEFAULT", "TempLockTimeout_min", 120)
+            self.Config.PressureLockTimeout = self.cp.getint("DEFAULT", "PressureLockTimeout_min", 5)
+            self.Config.InstRestartTimeout = self.cp.getint("DEFAULT", "InstRestartTimeout_iter", 3)
+            self.Config.DasRestartTimeout = self.cp.getint("DEFAULT", "DasRestartTimeout_iter", 3)
+            self.Config.MeasRestartTimeout = self.cp.getint("DEFAULT", "MeasRestartTimeout_iter", 3)
             self.Config.AppTypeList = self.cp.list_sections()
 
             if self.Config.StartAppType in self.Config.AppTypeList:
-                self.Config.measMode = self.cp.get(self.Config.StartAppType,"MeasMode")
-                self.Config.sampleMgrMode = self.cp.get(self.Config.StartAppType, "SampleMgrMode")
-                self.Config.warmMode = self.cp.get(self.Config.StartAppType, "WarmMode")
+                self.Config.measMode = self.cp.get(self.Config.StartAppType,"MeasMode", "")
+                self.Config.sampleMgrMode = self.cp.get(self.Config.StartAppType, "SampleMgrMode", "")
+                self.Config.warmMode = self.cp.get(self.Config.StartAppType, "WarmMode", "")
             else:
                 self.Config.measMode = ""
                 self.Config.sampleMgrMode = ""
         except:
             tbMsg = traceback.format_exc()
             Log("LoadConfigFile failed, using default config",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-            self.Config.AutoMeasure = False
-            self.Config.AutoStartEngine = False
-            self.Config.StartAppType = ""
-            self.Config.TempLockTimeout = 120
-            self.Config.PressureLockTimeout = 5
-            self.Config.InstRestartTimeout = 3
-            self.Config.DasRestartTimeout = 3
-            self.Config.MeasRestartTimeout = 3
             self.Config.AppTypeList = []
-            self.Config.measMode = ""
-            self.Config.sampleMgrMode = ""
 
         if self.Config.measMode == "":
             raise Exception("App Type %d Doesn't Exist" % self.Config.StartAppType)
+            
     def _Monitor(self):
 
         while True and self.MonitorShutdown == False:
@@ -1269,6 +1267,14 @@ class InstMgr(object):
             self.InstModeDispatcher[key][changedModes[key]]()
         self.InstrumentMode.update(changedModes)
 
+    def INSTMGR_EnableAutoRestartFlow(self):
+        self.Config.AutoRestartFlow = True
+        Log("Enabled auto-restart-flow")
+        
+    def INSTMGR_DisableAutoRestartFlow(self):
+        self.Config.AutoRestartFlow = False
+        Log("Disabled auto-restart-flow")
+        
     def _FindChangedInstrumentModes(self,modeDict):
         changedModes = {}
         for key,value in modeDict.items():

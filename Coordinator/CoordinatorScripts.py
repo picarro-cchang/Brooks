@@ -53,13 +53,6 @@ def getSpecUTC(specTime = "00:00:00", option="float"):
         return mktime(newTime)
     elif option.lower() == "string":
         return ctime(mktime(newTime))
-     
-def setRotValveMask(rotPos):
-    """Set the valve mask to rotary valve
-    """
-    mask = 64 * int(rotPos) 
-    newMask = (DRIVER.getValveMask() & 0x3F) + mask
-    DRIVER.setValveMask(newMask)
     
 ##########################
 # Pulse analyzer functions
@@ -220,7 +213,20 @@ def getValveMask():
            ...
     """ 
     return DRIVER.getValveMask()
-        
+
+#####################
+#   Rotary valve control functions
+#####################     
+def setRotValveMask(rotPos):
+    """Set the MPV valve mask (position)
+    """
+    DRIVER.setMPVPosition(rotPos)
+    
+def getRotValveMask(rotPos):
+    """Get the MPV valve mask (position)
+    """
+    DRIVER.getMPVPosition()
+    
 ######################    
 # Inlet/outlet valve control functions
 ######################     
@@ -427,6 +433,15 @@ def resumePressureCheck():
 def setSampleMgrMode(mode):
     SAMPLEMGR._SetMode(mode)    
 
+#################
+# Instrument Manager functions
+#################
+def enableInstMgrAutoRestartFlow():
+    INSTMGR.INSTMGR_EnableAutoRestartFlow()
+    
+def disableInstMgrAutoRestartFlow():
+    INSTMGR.INSTMGR_DisableAutoRestartFlow()
+    
 ################
 # Output format functions  
 ################  
