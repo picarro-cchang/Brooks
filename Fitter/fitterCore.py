@@ -1415,12 +1415,15 @@ class Analysis(object):
             return self.yData-m(self.xData)
         try:
             if fine:
-                params, self.ier = leastsq(fitfunc,p0,xtol=1e-4)
+                params, cov, infodict, msg, self.ier = leastsq(fitfunc,p0,full_output=1,xtol=1e-4,maxfev=30*len(p0))
             else:
-                params, self.ier = leastsq(fitfunc,p0,ftol=1e-3,xtol=1e-3)
-        except TypeError:
+                params, cov, infodict, msg, self.ier = leastsq(fitfunc,p0,full_output=1,ftol=1e-3,xtol=1e-3,maxfev=30*len(p0))
+            # print "Leastsq problem size: %d, function evaluations: %d" % (len(p0),infodict['nfev'])
+        except Exception:
             params = p0
-            print "Error in call to leastsq"
+            tbmsg = traceback.format_exc()
+            Log('Exception in leastsq',Verbose=tbmsg)
+            print tbmsg
         self.objective = sum(fitfunc(params)**2)
         self.res = fitres(params)
         # Return a copy since parameters will change between stages of fitting

@@ -4,7 +4,7 @@ import unittest
 import sys
 import os
 from Host.Common.SharedTypes import Bunch
-from fitterCore import *
+from fitterCoreWithFortran import *
 
 from Host.Common.CustomConfigObj import CustomConfigObj
 from cStringIO import StringIO
@@ -84,7 +84,7 @@ class FitPeakTestCase(unittest.TestCase):
             m.setAttributes(x_center=6237.408,pressure=140,temperature=318)
             iv = InitialValues()
             iv[0,"scaled_strength"] = 0.1
-            iv[0,"scaled_y"] = 0.1
+            iv[0,"scaled_y"] = 0.02
             iv[0,"center"] = 6237.408 + shift
             m.createParamVector(iv)
             # Generate simulated FSR data

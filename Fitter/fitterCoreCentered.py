@@ -1428,14 +1428,17 @@ class Analysis(object):
         try:
             if fine:
                 #params, self.ier = leastsq(fitfunc,p0,xtol=1e-4,epsfcn=1e-11)
-                qparams, self.ier = leastsq(fitfunc,normalize(p0),xtol=1e-4,epsfcn=1e-6)
+                qparams, cov, infodict, msg, self.ier = leastsq(fitfunc,normalize(p0),full_output=1,xtol=1e-4,epsfcn=1e-6,maxfev=30*len(p0))
             else:
                 #params, self.ier = leastsq(fitfunc,p0,ftol=1e-3,xtol=1e-3,epsfcn=1e-11)
-                qparams, self.ier = leastsq(fitfunc,normalize(p0),ftol=1e-3,xtol=1e-3,epsfcn=1e-6)
+                qparams, cov, infodict, msg, self.ier = leastsq(fitfunc,normalize(p0),full_output=1,ftol=1e-3,xtol=1e-3,epsfcn=1e-6,maxfev=30*len(p0))
             params = unnormalize(qparams)
+            # print "Leastsq problem size: %d, function evaluations: %d" % (len(p0),infodict['nfev'])
         except TypeError:
             params = p0
-            print "Error in call to leastsq"
+            tbmsg = traceback.format_exc()
+            Log('Exception in leastsq',Verbose=tbmsg)
+            print tbmsg
         # print "Best fit parameters: ",params
         self.objective = sum(fitfunc(normalize(params))**2)
         self.res = fitres(params)
