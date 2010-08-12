@@ -369,6 +369,14 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def setValveMask(self, mask):
         self.wrDasReg("VALVE_CNTRL_SOLENOID_VALVES_REGISTER", mask & 0x3F)
 
+    def getMPVPosition(self):
+        """Read the multi-position valve (MPV) position.
+        """
+        return self.rdDasReg("VALVE_CNTRL_MPV_POSITION_REGISTER")
+    
+    def setMPVPosition(self, pos):
+        self.wrDasReg("VALVE_CNTRL_MPV_POSITION_REGISTER", pos)
+        
     def closeValves(self,valveMask=0x3F):
         """ Close the valves specified by the valveMask. This is a bitmask with bits 0 through 5 corresponding with solenoid valves 1 through 6. 
         A "1" bit causes the valve to close, a "0" bit leaves the valve state unchanged.

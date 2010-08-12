@@ -15,11 +15,13 @@ import threading
 import win32api
 import win32process
 import win32con
+import win32gui
 import shutil
 from configobj import ConfigObj
 from SupervisorLauncherFrame import SupervisorLauncherFrame
 from Host.Common import CmdFIFO
 import threading
+from Host.Common.SingleInstance import SingleInstance
 
 RPC_PORT_DRIVER    = 50010
 RPC_PORT_QUICK_GUI = 50220
@@ -40,7 +42,7 @@ else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
-taskList = [
+TASKLIST = [
 "BackupSupervisor.exe",
 "Supervisor.exe",
 "EventManager.exe",
@@ -79,6 +81,10 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         typeChoices = self.co.keys()
         typeChoices.remove("Main")
         SupervisorLauncherFrame.__init__(self, typeChoices, *args, **kwds)
+        try:
+            self.consoleMode = int(self.co["Main"]["ConsoleMode"])
+        except:
+            self.consoleMode = 2
         apacheDir = self.co["Main"]["APACHEDir"].strip()
         self.supervisorIniDir = os.path.join(apacheDir, "AppConfig\Config\Supervisor")
         quickGuiIniFile = os.path.join(apacheDir, "AppConfig\Config\QuickGui\QuickGui.ini")
@@ -104,7 +110,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
             restart = (d.ShowModal() == wx.ID_YES)
             d.Destroy()
             if restart:
-                for task in taskList:
+                for task in TASKLIST:
                     try:
                         os.system("C:/WINDOWS/system32/taskkill.exe /IM %s /F" % task)
                     except:
@@ -115,7 +121,11 @@ class SupervisorLauncher(SupervisorLauncherFrame):
             else:
                 return
         os.chdir(self.supervisorExeDir)
-        subprocess.Popen(["supervisor.exe","-f","-c",self.supervisorIni])
+        info = subprocess.STARTUPINFO()
+        if self.consoleMode != 1:
+            info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            info.wShowWindow = subprocess.SW_HIDE
+        subprocess.Popen(["supervisor.exe","-f","-c",self.supervisorIni], startupinfo=info)
 
         # Change QuickGui Title
         setTitleThread = threading.Thread(target=self.setGuiTitle)
@@ -183,10 +193,18 @@ def HandleCommandSwitches():
     return configFile
     
 if __name__ == "__main__":
-    configFile = HandleCommandSwitches()
-    app = wx.PySimpleApp()
-    wx.InitAllImageHandlers()
-    frame = SupervisorLauncher(configFile, None, -1, "")
-    app.SetTopWindow(frame)
-    frame.Show()
-    app.MainLoop()
+    supervisorLauncherApp = SingleInstance("PicarroSupervisorLauncher")
+    if supervisorLauncherApp.alreadyrunning():
+        try:
+            handle = win32gui.FindWindowEx(0, 0, None, "Picarro Mode Switcher")
+            win32gui.SetForegroundWindow(handle)
+        except:
+            pass
+    else:
+        configFile = HandleCommandSwitches()
+        app = wx.PySimpleApp()
+        wx.InitAllImageHandlers()
+        frame = SupervisorLauncher(configFile, None, -1, "")
+        app.SetTopWindow(frame)
+        frame.Show()
+        app.MainLoop()
