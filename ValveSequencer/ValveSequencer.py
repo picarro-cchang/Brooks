@@ -181,6 +181,7 @@ class ValveSequencer(ValveSequencerFrame):
             rotValCode = 0
         else:
             self.rotValveCtrl.setPosition(rotValCode)
+        CRDS_Driver.setMPVPosition(rotValCode)
         
         Log("Set valves with new mask -- sol valve code = %d; rot valve code = %d, mask = %d" % (valCode, rotValCode, mask))
         print "Set valves with new mask -- sol valve code = %d; rot valve code = %d, mask = %d" % (valCode, rotValCode, mask)

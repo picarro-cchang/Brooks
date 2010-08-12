@@ -1177,18 +1177,8 @@ class InstMgr(object):
         return self._HandleError(error)
         
     def INSTMGR_disablePumpRpc(self):
-        # No pump disable in G2000
+        # No pump to be disabled in G2000
         return INSTMGR_RPC_SUCCESS
-        #if self.State == INSTMGR_STATE_MEASURING and self.MeasuringState == MEAS_STATE_PRESSURE_STAB:
-        #    # don't allow command in pressure stabilization state.
-        #    return INSTMGR_RPC_NOT_READY
-        #else:
-        #    self._ClearStatus(INSTMGR_STATUS_GAS_FLOWING)
-        #    status = self.SampleMgrRpc.FlowPumpDisable()
-        #    if status == INST_ERROR_OKAY:
-        #        return INSTMGR_RPC_SUCCESS
-        #    else:
-        #        return INSTMGR_RPC_FAILED
     def INSTMGR_StartSelfTestRpc(self, selfTestType):
         Log("self test not supported")
     def INSTMGR_StopSelfTestRpc(self, selfTestType):

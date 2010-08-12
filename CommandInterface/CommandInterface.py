@@ -557,15 +557,15 @@ class CommandInterface(object):
             self.PrintError(ERROR_EIF_INVALID_CHANNEL)
 
     def _EIF_ANALOGOUT_SETREFERENCE(self, channel, measuredValue):
-        isOK = self._EIFRpc.AO_SetReference(int(channel), float(measuredValue))
+        isOK = self._EIFRpc.AO_SetMeasOutput(int(channel), float(measuredValue))
         if isOK:
             self.Print("OK")
         else:
             self.PrintError(ERROR_EIF_INVALID_CHANNEL)
 
-    def _EIF_ANALOGOUT_CONFIGURE(self, channel, calSlope, calOffset, minOutput, maxOutput, bootmode, bootvalue, errorvalue, invalidvalue ):
+    def _EIF_ANALOGOUT_CONFIGURE(self, channel, calSlope, calOffset, minOutput, maxOutput, bootmode, bootvalue, invalidvalue ):
         isOK = self._EIFRpc.AO_Configure( int(channel), float(calSlope), float(calOffset), float(minOutput), 
-                                          float(maxOutput), int(bootmode), float(bootvalue), float(errorvalue), float(invalidvalue) )
+                                          float(maxOutput), int(bootmode), float(bootvalue), float(invalidvalue) )
         if isOK:
             self.Print("OK")
         else:
