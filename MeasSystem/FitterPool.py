@@ -131,14 +131,21 @@ class FitterPool(object):
         fitResults.sort()
         tPrev = None
         rDict = None
+        moreToWrite = False
         for t,rDict,spectrumId in fitResults:
             if rDict:
                 if t != tPrev and tPrev != None:
-                    allResults.append((tPrev,self.cachedFitValues.copy(),spectrumId))
+                    # Once we have results for a new time, we must write out the data from
+                    #  the previous time
+                    allResults.append((tPrev,self.cachedFitValues.copy(),oldSpectrumId))
                 tPrev = t
+                oldSpectrumId = spectrumId
+                # Keep updating the cached fit values with the latest data from the fitters
+                #  but since there can be multiple fitters returning data with the same 
+                #  timestamp, buffer these until results arrive with a new timestamp
                 self.cachedFitValues.update(rDict)
-        if rDict: allResults.append((tPrev,self.cachedFitValues.copy(),spectrumId))
-        # if fitResults is empty, the tPrev will remain None, and an error will be reported in MeasSystem      
+                moreToWrite = True
+        if moreToWrite: allResults.append((tPrev,self.cachedFitValues.copy(),oldSpectrumId))
         return allResults
 
     def Ping(self):

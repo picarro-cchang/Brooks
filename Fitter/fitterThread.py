@@ -73,8 +73,8 @@ def evalLeaves(d):
     return d
     
 def getInstrParams(fname):
+    fp = file(fname,"rb")
     try:
-        fp = file(fname,"rb")
         return evalLeaves(CustomConfigObj(fp,list_values=False).copy())
     finally:
         fp.close()
