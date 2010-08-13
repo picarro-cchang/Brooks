@@ -154,7 +154,7 @@ class PulseAnalyzer(object):
                 self.status = "waiting"
         
     def getOutput(self):
-        return [self.status, self.pulseFinished, self.concBufferDict]
+        return [self.status, self.pulseFinished, self.concBufferDict.copy()]
         
     def getTimestamp(self):
         return self.currMeasTime
@@ -188,10 +188,18 @@ class PulseAnalyzer(object):
             pass
         finally:
             self.bufferLock.release()
-        return statDict
+        return statDict.copy()
         
     def getPulseStartEndTime(self):
         timeArray = array(self.concBufferDict["timestamp"])
         return (timeArray[0], timeArray[-1])
         
-        
+    def removeFirstData(self):
+        self.bufferLock.acquire()
+        try:
+            for concName in self.concBufferDict:
+                self.concBufferDict[concName] = self.concBufferDict[concName][1:]
+        except:
+            pass
+        finally:
+            self.bufferLock.release()

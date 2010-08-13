@@ -673,7 +673,8 @@ class DataManager(object):
         return "OK"
             
     def RPC_PulseAnalyzer_GetOutput(self):
-        """Returns the result list in the format of [status, pulseFinished, concBufferDict]
+        """Returns the result list in the format of [status, pulseFinished, concBufferDict]. 
+        It won't clear the pulse anlayzer buffer.
         """
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
@@ -705,7 +706,62 @@ class DataManager(object):
             self.pulseAnalyzer.resetAnalyzer()
             return "OK"
 
+    def RPC_PulseAnalyzer_TriggerOn(self):
+        """Start adding data into pulse analyzer without running a state machine"""
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            return self.RPC_PulseAnalyzer_StartAddingData()
+        
+    def RPC_PulseAnalyzer_TriggerOff(self):
+        """Stop adding data into pulse analyzer without running a state machine"""
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            return self.RPC_PulseAnalyzer_StopAddingData()
+            
+    def RPC_PulseAnalyzer_ClearBuffer(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            self.pulseAnalyzer.resetBuffer()
+            return "OK"
+
+    def RPC_PulseAnalyzer_GetStatus(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            return self.pulseAnalyzer.getOutput()[0]
+            
+    def RPC_PulseAnalyzer_GetBuffer(self):
+        """Get every data from pulse analyzer buffer. This will also clear the whole buffer"""
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            retDict = self.pulseAnalyzer.getOutput()[2]
+            self.pulseAnalyzer.resetBuffer()
+            if len(retDict["timestamp"]) > 0:
+                return retDict
+            else:
+                return {}
+            
+    def RPC_PulseAnalyzer_GetBufferFirst(self):
+        """Get the first data from pulse analyzer buffer. It will also remove this data from the buffer"""
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            concBufferDict = self.pulseAnalyzer.getOutput()[2]
+            self.pulseAnalyzer.removeFirstData()
+            retDict = {}
+            try:
+                for concName in concBufferDict:
+                    retDict[concName] = concBufferDict[concName][0]
+            except:
+                pass
+            return retDict
+            
     def RPC_PulseAnalyzer_GetStatistics(self):
+        """Retrieve statistics of data in pulse analyzer buffer"""
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
         else:
