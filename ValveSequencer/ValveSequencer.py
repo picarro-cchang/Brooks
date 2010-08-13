@@ -143,6 +143,7 @@ class ValveSequencer(ValveSequencerFrame):
         self.rpcServer.register_function(self.shutdown)
         self.rpcServer.register_function(self.setValves)
         self.rpcServer.register_function(self.getValves)
+        self.rpcServer.register_function(self.getMPVPosition)
         self.rpcServer.register_function(self.startValveSeq)
         self.rpcServer.register_function(self.stopValveSeq)
         self.rpcServer.register_function(self.getValveSeqStatus)
@@ -189,6 +190,9 @@ class ValveSequencer(ValveSequencerFrame):
     def getValves(self):
         return CRDS_Driver.getValveMask() & (2**self.numSolValves-1)
 
+    def getMPVPosition(self):
+        return CRDS_Driver.getMPVPosition()
+        
     def _writeFilenameToIni(self, filename):
         self.co.set("MAIN", "lastSeqFile", filename)
         fp = open(self.configFile,"wb")
@@ -223,9 +227,10 @@ class ValveSequencer(ValveSequencerFrame):
     def showCurrent(self, stepNum):
         # Show current valve status reading from the Driver
         mask = self.getValves()
-        if type(mask) == type(1):                   
+        mpvPosition = self.getMPVPosition()
+        if type(mask) == type(1L):                   
             valCode = mask % 64
-            rotValCode = (mask - valCode) / 64
+            rotValCode = mpvPosition
             self.curTextCtrlList[2].SetValue(str(valCode))
             self.curTextCtrlList[3].SetValue(str(rotValCode))
             newVal = valCode
