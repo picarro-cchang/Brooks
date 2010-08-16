@@ -210,15 +210,15 @@ def HandleCommandSwitches():
     return (configFile, autoLaunch)
     
 if __name__ == "__main__":
+    (configFile, autoLaunch) = HandleCommandSwitches()
     supervisorLauncherApp = SingleInstance("PicarroSupervisorLauncher")
-    if supervisorLauncherApp.alreadyrunning():
+    if supervisorLauncherApp.alreadyrunning() and not autoLaunch:
         try:
             handle = win32gui.FindWindowEx(0, 0, None, "Picarro Mode Switcher")
             win32gui.SetForegroundWindow(handle)
         except:
             pass
     else:
-        (configFile, autoLaunch) = HandleCommandSwitches()
         app = wx.PySimpleApp()
         wx.InitAllImageHandlers()
         frame = SupervisorLauncher(configFile, autoLaunch, None, -1, "")
