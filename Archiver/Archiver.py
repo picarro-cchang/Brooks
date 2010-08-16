@@ -210,8 +210,7 @@ class ArchiveGroup(object):
         # Create temporary filename for compression and aggregation
         self.tempFileName = os.path.join(archiver.storageRoot,groupName + ".zip")
         if os.path.exists(self.tempFileName): 
-            os.remove(self.tempFileName)
-
+            self.cmdQueue.put(("archiveFile",(self.tempFileName,)))
         self.serverThread.setDaemon(True)
         self.serverThread.start()
 
@@ -223,7 +222,8 @@ class ArchiveGroup(object):
                        copyFiles = self.extractFiles,
                        getFileNames = self.getFileNames,
                        refreshStats = self.updateAndGetArchiveSize,
-                       init = self.initArchiveGroup)
+                       init = self.initArchiveGroup,
+                       archiveFile = self.archiveFile)
         self.updateAndGetArchiveSize()
         Log("Group %s, files %d, bytes %d" % (self.name,self.fileCount,self.byteCount,))
         while True:
@@ -235,7 +235,7 @@ class ArchiveGroup(object):
                     Log("Archiver command %s took %s seconds" % (cmd,time.clock()-startTime))
             except Exception, exc:
                 Log("Exception in ArchiveGroup server",
-                    dict(GroupName = self.name, Verbose = "Exception = %s %r" % (exc, exc)))
+                    dict(GroupName = self.name), Verbose = "Exception = %s %r" % (exc, exc))
 
     def zipSource(self, source, targetPath):
         """
@@ -343,88 +343,89 @@ class ArchiveGroup(object):
                 self.aggregation += 1
                 if self.aggregation < self.aggregationCount: return
             self.aggregation = 0
-
-            # Once we get here, we have something to be archived
-            # First make room for the file by deleting old files, if necessary
-            if not os.path.exists(fileToArchive):
-                raise ValueError,"Cannot archive non-existent file: %s" % (fileToArchive,)
-            # Determine size of new file to determine if it will fit
-            # Get rid of the oldest file until total file size or total file count can fit
-            nBytes = os.path.getsize(fileToArchive)
-            
-            if self.maxSize > 0 and nBytes > self.maxSize:
-                Log("Cannot fit file into archive group",dict(Filename=fileToArchive,Group=self.name),Level=2)
-            else:
-                maxLoops = 100 
-                while (self.maxSize > 0 and self.byteCount + nBytes > self.maxSize) or \
-                      (self.maxCount > 0 and self.fileCount > self.maxCount-1):
-                    # Delete files and directories starting with the oldest
-                    self._deleteOldest()
-                    maxLoops -= 1
-                    if maxLoops == 0:
-                        Log("More than 100 deletions required",dict(Filename=fileToArchive,Group=self.name))
-                        break
-                        
-                # If timestamp is None, use current time to store file in the correct location (local or GMT)
-                #  otherwise use the specified timestamp
-                
-                if timestamp is None:
-                    now = time.time()
-                    timeTuple = self.maketimetuple(now)
-                else:
-                    utcDatetime = timestampToUtcDatetime(timestamp)
-                    timeTuple = utcDatetime.timetuple()
-                    now = unixTime(timestamp)
-                    
-                pathName = makeStoragePathName(timeTuple,self.quantum)
-                pathName = os.path.join(self.groupRoot,pathName)
-
-                if not os.path.exists(pathName): 
-                    os.makedirs(pathName)
-
-                renameFlag = True
-                # Determine the target sourceFiles
-                if self.aggregationCount == 0:
-                    if self.compress:
-                        targetName = os.path.join(pathName,os.path.split(sourceFileName)[-1]+".zip")
-                    else:
-                        targetName = os.path.join(pathName,os.path.split(sourceFileName)[-1])
-                        renameFlag = removeOriginal
-                else:
-                    targetName = os.path.join(pathName,time.strftime(self.name+"_%Y%m%d_%H%M%S.zip",time.gmtime(now)))
-
-                if os.path.exists(targetName):
-                    # Replace existing file
-                    try:
-                        oldBytes = os.path.getsize(targetName)
-                        os.chmod(targetName,stat.S_IREAD | stat.S_IWRITE)
-                        os.remove(targetName)
-                        self.byteCount -= oldBytes
-                        self.fileCount -= 1
-                    except OSError, e:
-                        Log("Error removing file %s. %s" % (targetName,e))
-                try:
-                    if renameFlag:
-                        os.rename(fileToArchive,targetName)
-                    else:
-                        shutil.copy2(fileToArchive,targetName)
-                    # On success, touch file modification and last access times, and increment the byte and file counts
-                    os.utime(targetName,(now,now))
-                    self.byteCount += nBytes
-                    self.fileCount += 1
-                except IOError,e:
-                    Log("IOError renaming or copying file to %s. %s" % (targetName,e))
-                except OSError,e:
-                    Log("OSError renaming or copying file to %s. %s" % (targetName,e))
-                    
-            # Make sure the temporary file is gone
-            if os.path.exists(self.tempFileName): 
-                deleteFile(self.tempFileName)
-
+            self.archiveFile(fileToArchive,timestamp)
         finally:
             if removeOriginal and sourceIsPath and os.path.exists(source):
                 deleteFile(source)
 
+    def archiveFile(self,fileToArchive,timestamp=None):
+        # Once we get here, we have something to be archived
+        # First make room for the file by deleting old files, if necessary
+        if not os.path.exists(fileToArchive):
+            raise ValueError,"Cannot archive non-existent file: %s" % (fileToArchive,)
+        # Determine size of new file to determine if it will fit
+        # Get rid of the oldest file until total file size or total file count can fit
+        nBytes = os.path.getsize(fileToArchive)
+        
+        if self.maxSize > 0 and nBytes > self.maxSize:
+            Log("Cannot fit file into archive group",dict(Filename=fileToArchive,Group=self.name),Level=2)
+        else:
+            maxLoops = 100 
+            while (self.maxSize > 0 and self.byteCount + nBytes > self.maxSize) or \
+                  (self.maxCount > 0 and self.fileCount > self.maxCount-1):
+                # Delete files and directories starting with the oldest
+                self._deleteOldest()
+                maxLoops -= 1
+                if maxLoops == 0:
+                    Log("More than 100 deletions required",dict(Filename=fileToArchive,Group=self.name))
+                    break
+                    
+            # If timestamp is None, use current time to store file in the correct location (local or GMT)
+            #  otherwise use the specified timestamp
+            
+            if timestamp is None:
+                now = time.time()
+                timeTuple = self.maketimetuple(now)
+            else:
+                utcDatetime = timestampToUtcDatetime(timestamp)
+                timeTuple = utcDatetime.timetuple()
+                now = unixTime(timestamp)
+                
+            pathName = makeStoragePathName(timeTuple,self.quantum)
+            pathName = os.path.join(self.groupRoot,pathName)
+
+            if not os.path.exists(pathName): 
+                os.makedirs(pathName)
+
+            renameFlag = True
+            # Determine the target sourceFiles
+            if self.aggregationCount == 0:
+                if self.compress:
+                    targetName = os.path.join(pathName,os.path.split(sourceFileName)[-1]+".zip")
+                else:
+                    targetName = os.path.join(pathName,os.path.split(sourceFileName)[-1])
+                    renameFlag = removeOriginal
+            else:
+                targetName = os.path.join(pathName,time.strftime(self.name+"_%Y%m%d_%H%M%S.zip",time.gmtime(now)))
+
+            if os.path.exists(targetName):
+                # Replace existing file
+                try:
+                    oldBytes = os.path.getsize(targetName)
+                    os.chmod(targetName,stat.S_IREAD | stat.S_IWRITE)
+                    os.remove(targetName)
+                    self.byteCount -= oldBytes
+                    self.fileCount -= 1
+                except OSError, e:
+                    Log("Error removing file %s. %s" % (targetName,e))
+            try:
+                if renameFlag:
+                    os.rename(fileToArchive,targetName)
+                else:
+                    shutil.copy2(fileToArchive,targetName)
+                # On success, touch file modification and last access times, and increment the byte and file counts
+                os.utime(targetName,(now,now))
+                self.byteCount += nBytes
+                self.fileCount += 1
+            except IOError,e:
+                Log("IOError renaming or copying file to %s. %s" % (targetName,e))
+            except OSError,e:
+                Log("OSError renaming or copying file to %s. %s" % (targetName,e))
+                
+        # Make sure the temporary file is gone
+        if os.path.exists(self.tempFileName): 
+            deleteFile(self.tempFileName)
+            
     def updateAndGetArchiveSize(self):
         """
         Determine the number of files and number of bytes presently in the archive group.
