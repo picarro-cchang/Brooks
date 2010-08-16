@@ -100,7 +100,6 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         self.Bind(wx.EVT_BUTTON, self.onLaunch, self.buttonLaunch)
         if autoLaunch:
             self.supervisorIni = self.startupSupervisorIni
-            self.consoleMode = 2
             self.forcedLaunch = True
             self.onLaunch(None)
             time.sleep(3)
