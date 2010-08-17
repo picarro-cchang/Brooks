@@ -290,17 +290,26 @@ class CalibrateSystem(object):
                                              "TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER",
                                              "TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER",
                                              "TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER",
-                                             "TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER"
+                                             "TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER",
+                                             "PZT_OFFSET_VIRTUAL_LASER1",
+                                             "PZT_OFFSET_VIRTUAL_LASER2",
+                                             "PZT_OFFSET_VIRTUAL_LASER3",
+                                             "PZT_OFFSET_VIRTUAL_LASER4",
+                                             "PZT_OFFSET_VIRTUAL_LASER5",
+                                             "PZT_OFFSET_VIRTUAL_LASER6",
+                                             "PZT_OFFSET_VIRTUAL_LASER7",
+                                             "PZT_OFFSET_VIRTUAL_LASER8",
                                              ])
             Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_IdleState)
             self.op = file(time.strftime("CalibrateSystem_%Y%m%d_%H%M%S.txt",time.localtime()),"w")
             print>>self.op, "Virtual laser Index: %d"   % self.vLaserNum
             print>>self.op, "Center wavenumber:   %.3f" % self.waveNumberCen
             print>>self.op, "Number of steps:     %d"   % self.nSteps
-            
+            Driver.wrDasReg("PZT_OFFSET_VIRTUAL_LASER%d" % self.vLaserNum,0)
+
             tunerCenter = 32768 # Center position
             rampAmpl = 25000    # Set to sweep over more than an FSR
-            ditherPeakToPeak = 3200
+            ditherPeakToPeak = 8000
             self.setupRampMode(ditherPeakToPeak,tunerCenter,rampAmpl)
             # Ensure that we start with original calibration information
             RDFreqConv.restoreOriginalWlmCal(self.vLaserNum)
@@ -406,12 +415,13 @@ class CalibrateSystem(object):
                 #  tuner values
                 tunerMedian = median(self.tunerSum[good])
                 tunerDev = self.tunerSum[good] - tunerMedian
+                # print tunerDev
                 wlmAngles[good] = wlmAngles[good] - self.angleRelax*tunerDev
                 # Recenter the tuner if necessary
                 if abs(tunerCenter-tunerMedian) > 0.2*tunerFSR:
                     tunerCenter = tunerMedian
                 rampAmpl = 0.65*tunerFSR
-                ditherPeakToPeak = 4000
+                ditherPeakToPeak = 8000
                 self.setupRampMode(ditherPeakToPeak,tunerCenter,rampAmpl)
 
             # Use the list of wlmAngles to update the current spline coefficients
