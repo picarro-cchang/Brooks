@@ -336,6 +336,7 @@
             <fpga_register offset="FPGA_TWGEN">SLOPE_UP</fpga_register>
             <fpga_register offset="FPGA_TWGEN">SLOPE_DOWN</fpga_register>
             <fpga_register offset="FPGA_TWGEN">PZT_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_SCALER">SCALE1</fpga_register>
             <register>TUNER_SWEEP_RAMP_HIGH_REGISTER</register>
             <register>TUNER_SWEEP_RAMP_LOW_REGISTER</register>
             <register>TUNER_WINDOW_RAMP_HIGH_REGISTER</register>

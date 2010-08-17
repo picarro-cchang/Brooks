@@ -3601,6 +3601,12 @@
                 <display format="%d">Slope of dither waveform</display>
             </reg>            
         </fpga_block>
+        <fpga_block ident="SCALER" description="">
+            <reg type="uint16" ident="SCALE1" description="Scale factor for PZT waveform" access="rw">
+                <save/>
+                <display format="%d" units="digU">Scale factor for PZT waveform</display>                
+            </reg>
+        </fpga_block>
     </fpga_block_list>
     <fpga_map_list>
         <fpga_map ident="FPGA_KERNEL" block="KERNEL">
@@ -3650,6 +3656,9 @@
         </fpga_map>
         <fpga_map ident="FPGA_DYNAMICPWM_OUTLET" block="DYNAMICPWM">
             <description>Outlet proportional valve dynamic PWM</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_SCALER" block="SCALER">
+            <description>Scaler for PZT waveform</description>
         </fpga_map>
     </fpga_map_list>
     <environment_list>

@@ -1380,6 +1380,9 @@ typedef enum {
 #define DYNAMICPWM_LOW (3) // Lower limit of dither waveform
 #define DYNAMICPWM_SLOPE (4) // Slope of dither waveform
 
+/* Block SCALER  */
+#define SCALER_SCALE1 (0) // Scale factor for PZT waveform
+
 /* FPGA map indices */
 
 #define FPGA_KERNEL (0) // Kernel registers
@@ -1398,6 +1401,7 @@ typedef enum {
 #define FPGA_WLMSIM (104) // WLM Simulator
 #define FPGA_DYNAMICPWM_INLET (113) // Inlet proportional valve dynamic PWM
 #define FPGA_DYNAMICPWM_OUTLET (118) // Outlet proportional valve dynamic PWM
+#define FPGA_SCALER (123) // Scaler for PZT waveform
 
 /* Environment addresses */
 

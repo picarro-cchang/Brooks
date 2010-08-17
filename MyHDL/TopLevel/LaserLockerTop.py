@@ -32,6 +32,7 @@ from MyHDL.Common.TWGen import TWGen
 from MyHDL.Common.WlmAdcReader import WlmAdcReader
 from MyHDL.Common.WlmMux import WlmMux
 from MyHDL.Common.WlmSim import WlmSim
+from MyHDL.Common.Scaler import Scaler
 
 LOW, HIGH = bool(0), bool(1)
 
@@ -91,6 +92,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_data_in_twGen       = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_warmbox = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_wlmsim      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_scaler      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     
     dsp_wr, ce2 = [Signal(LOW) for i in range(2)]
     pwm_laser1_out, pwm_laser1_inv_out = [Signal(LOW) for i in range(2)]
@@ -146,7 +148,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     laser_locking_pid = Signal(intbv(0)[FPGA_REG_WIDTH:])
     lock_error = Signal(intbv(0)[FPGA_REG_WIDTH:])
     pzt = Signal(intbv(0)[FPGA_REG_WIDTH:])    
-
+    pzt_scaled = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    
     meta0 = ratio1
     meta1 = ratio2
     meta2 = pzt
@@ -343,7 +346,6 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      pwm_inv_out=heater_pwm_inv,
                      map_base=FPGA_PWM_HEATER)
 
-    
     rdman = RdMan( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                    dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdman,
                    dsp_wr=dsp_wr, pulse_100k_in=pulse_100k,
@@ -427,7 +429,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     #                         dac_sdi_out=pzt_valve_dac_sdi, dac_ld_out=pzt_valve_dac_ld)
 
     pztValveDac = Ltc2604DacD(clk=clk0, reset=reset, dac_clock_in=clk_2M5,
-                              chanD_data_in=pzt, strobe_in=pulse_100k,
+                              chanD_data_in=pzt_scaled, strobe_in=pulse_100k,
                               dac_sck_out=pzt_valve_dac_sck,
                               dac_sdi_out=pzt_valve_dac_sdi, dac_ld_out=pzt_valve_dac_ld)
 
@@ -449,7 +451,12 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                                  comparator_in=outlet_valve_comparator,
                                  update_in=pulse_100k, pwm_out=outlet_valve_pwm,
                                  value_out=outlet_valve_dac, map_base=FPGA_DYNAMICPWM_OUTLET, MIN_WIDTH=1000,MAX_WIDTH=64535)
-
+                                 
+    scaler = Scaler( clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                     dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_scaler,
+                     dsp_wr=dsp_wr, x1_in=pzt, y1_out=pzt_scaled,
+                     map_base=FPGA_SCALER )
+                                 
     @instance
     def  logic():
         while True:
@@ -684,7 +691,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                    dsp_data_in_rdsim             | \
                    dsp_data_in_twGen             | \
                    dsp_data_in_pwm_warmbox       | \
-                   dsp_data_in_wlmsim
+                   dsp_data_in_wlmsim            | \
+                   dsp_data_in_scaler
 
         overload_in.next[OVERLOAD_WarmBoxTecBit] = warm_box_tec_overload
         overload_in.next[OVERLOAD_HotBoxTecBit]  = hot_box_tec_overload
