@@ -845,14 +845,39 @@ class TunerAdjuster(object):
         self.downSlope         = float(rdFreqConv.RPC_getHotBoxCalParam(section,"DOWN_SLOPE"))
     def findCenter(self,value,minCen,maxCen,fsr):
         """Finds the best center value for the tuner, given that the mean over the current scan
-        is value, and the minimum and maximum allowed center values are given"""
+        is value, and the minimum and maximum allowed center values are given. We preferentially
+        choose a value close to minCen."""
+        if maxCen < minCen:
+            Log("Invalid minCen and maxCen in findCenter",
+                dict(minCen = minCen, maxCen = maxCen), Level=2)
+        #
         n1 = floor((minCen-value)/fsr)
         n2 = floor((maxCen-value)/fsr)
-        if (n1+1) <= n2:  # There is enough of a gap between minCen and maxCen to work in
-            if (n1+1) > 0: return value + (n1+1)*fsr # Ensures we are above minCen
-            if n2 < 0: return value + n2*fsr         # Ensures we are below maxCen
-            return value
+        # In the best case, we can find a value which falls between minCen and maxCen and which
+        #  is separated from the initial value by a multiple of the FSR
+        #
+        #  maxCen ----
+        #                --- value + n2*fsr
+        #
+        #                --- value + (n1+1)*fsr
+        #  minCen ----
+        #
+        #  value -----
+        # The condition for this to be the case is that (n1+1)<=n2. We return 
+        #  value+(n1+1)*fsr to be closest to minCen
+        if (n1+1) <= n2:  # There is enough of a gap between minCen and maxCen
+            return value + (n1+1)*fsr
         else:
+            # In the other case, maxCen and minCen are so close together that there is no 
+            #  value+n*fsr (for integral n) lying between them
+            #
+            #                --- value + (n2+1)*fsr
+            #  maxCen ---
+            #  minCen ---
+            #                --- value + n1*fsr
+            # We return either maxCen or minCen depending on which is closer to the grid of
+            #  value+n*fsr
+            #
             if abs(value + n1*fsr - minCen) < abs(value + (n2+1)*fsr - maxCen): return minCen
             return maxCen
     def setTunerRegisters(self, centerValue=None, fsrFactor = 1.3, windowFactor = 0.9):
@@ -865,8 +890,8 @@ class TunerAdjuster(object):
 
         TUNER_WINDOW_RAMP_HIGH_REGISTER <- centerValue + rampAmpl
         TUNER_WINDOW_RAMP_LOW_REGISTER  <- centerValue - rampAmpl
-        TUNER_SWEEP_RAMP_HIGH_REGISTER  <- centerValue + rampAmpl + ditherPeakToPeak
-        TUNER_SWEEP_RAMP_LOW_REGISTER   <- centerValue - rampAmpl - ditherPeakToPeak
+        TUNER_SWEEP_RAMP_HIGH_REGISTER  <- centerValue + rampAmpl + ditherPeakToPeak//2
+        TUNER_SWEEP_RAMP_LOW_REGISTER   <- centerValue - rampAmpl - ditherPeakToPeak//2
 
         TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER  <- ditherPeakToPeak//2
         TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER   <- ditherPeakToPeak//2
@@ -878,16 +903,22 @@ class TunerAdjuster(object):
         """
         rampAmpl = float(0.5* fsrFactor * self.freeSpectralRange)
         ditherPeakToPeak = 2 * self.ditherAmplitude
-        centerMax = self.maxValue - ditherPeakToPeak - rampAmpl
-        centerMin = self.minValue + ditherPeakToPeak + rampAmpl
+        centerMax = self.maxValue - ditherPeakToPeak//2 - rampAmpl
+        centerMin = self.minValue + ditherPeakToPeak//2 + rampAmpl
         if centerMin > centerMax:
-            Log("Error recentering tuner waveform", dict(centerMax = int(centerMax), centerMin = int(centerMin)))
-            return
-        centerValue = self.findCenter(centerValue, centerMin, centerMax, self.freeSpectralRange)
+            # We need to use the maximum range available 
+            centerValue = 0.5*(self.minValue + self.maxValue)
+            rampAmpl = self.maxValue - centerValue - ditherPeakToPeak//2
+            if 2*rampAmpl < self.freeSpectralRange:
+                Log("Insufficient PZT range to cover cavity FSR",
+                    dict(fsr = self.freeSpectralRange, rampAmpl = rampAmpl), Level=2)
+        else:
+            centerValue = self.findCenter(centerValue, centerMin, centerMax, self.freeSpectralRange)
+            
         Driver.wrDasReg("TUNER_WINDOW_RAMP_HIGH_REGISTER",centerValue + rampAmpl)
         Driver.wrDasReg("TUNER_WINDOW_RAMP_LOW_REGISTER", centerValue - rampAmpl)
-        Driver.wrDasReg("TUNER_SWEEP_RAMP_HIGH_REGISTER", centerValue + rampAmpl + ditherPeakToPeak)
-        Driver.wrDasReg("TUNER_SWEEP_RAMP_LOW_REGISTER",  centerValue - rampAmpl - ditherPeakToPeak)
+        Driver.wrDasReg("TUNER_SWEEP_RAMP_HIGH_REGISTER", centerValue + rampAmpl + ditherPeakToPeak//2)
+        Driver.wrDasReg("TUNER_SWEEP_RAMP_LOW_REGISTER",  centerValue - rampAmpl - ditherPeakToPeak//2)
         Driver.wrDasReg("TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER",ditherPeakToPeak//2)
         Driver.wrDasReg("TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER", ditherPeakToPeak//2)
         Driver.wrDasReg("TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER",(windowFactor*ditherPeakToPeak)//2)

@@ -2909,6 +2909,7 @@ __p.append(('fpga','mask',FPGA_TWGEN+TWGEN_CS,[(1, u'Stop/Run', [(0, u'Stop'), (
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SLOPE_UP,'Tuner up slope','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SLOPE_DOWN,'Tuner down slope','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_PZT_OFFSET,'Offset to add to PZT output','digU','%d',1,1))
+__p.append(('fpga','uint16',FPGA_SCALER+SCALER_SCALE1,'Scale factor for PZT waveform','digU','%d',1,1))
 __p.append(('dsp','float',TUNER_SWEEP_RAMP_HIGH_REGISTER,'Ramp mode upper sweep limit','digU','%.0f',1,1))
 __p.append(('dsp','float',TUNER_SWEEP_RAMP_LOW_REGISTER,'Ramp mode lower sweep limit','digU','%.0f',1,1))
 __p.append(('dsp','float',TUNER_WINDOW_RAMP_HIGH_REGISTER,'Ramp mode upper window limit','digU','%.0f',1,1))
