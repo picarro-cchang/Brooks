@@ -2455,6 +2455,9 @@ DYNAMICPWM_HIGH = 2 # Upper limit of dither waveform
 DYNAMICPWM_LOW = 3 # Lower limit of dither waveform
 DYNAMICPWM_SLOPE = 4 # Slope of dither waveform
 
+# Block SCALER 
+SCALER_SCALE1 = 0 # Scale factor for PZT waveform
+
 # FPGA map indices
 FPGA_KERNEL = 0 # Kernel registers
 FPGA_PWM_LASER1 = 11 # Laser 1 TEC pulse width modulator registers
@@ -2472,6 +2475,7 @@ FPGA_INJECT = 95 # Optical Injection Subsystem
 FPGA_WLMSIM = 104 # WLM Simulator
 FPGA_DYNAMICPWM_INLET = 113 # Inlet proportional valve dynamic PWM
 FPGA_DYNAMICPWM_OUTLET = 118 # Outlet proportional valve dynamic PWM
+FPGA_SCALER = 123 # Scaler for PZT waveform
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
@@ -2483,6 +2487,7 @@ persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL']))
 persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_OPTIONS', u'WLMSIM_RFAC', u'WLMSIM_WFAC', u'WLMSIM_ETA1_OFFSET', u'WLMSIM_REF1_OFFSET', u'WLMSIM_ETA2_OFFSET', u'WLMSIM_REF2_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_INLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_SLOPE']))
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_OUTLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_SLOPE']))
+persistent_fpga_registers.append((u'FPGA_SCALER', [u'SCALER_SCALE1']))
 
 # Environment addresses
 BYTE4_ENV = 0

@@ -663,6 +663,16 @@ class RDFrequencyConverter(Singleton):
             self.laserCurrentTunerAdjuster = None
         self.dthetaMax = self.hotBoxCal["AUTOCAL"]["MAX_ANGLE_TARGETTING_ERROR"]
         self.dtempMax  = self.hotBoxCal["AUTOCAL"]["MAX_TEMP_TARGETTING_ERROR"]
+        # Set up the PZT scaling register
+        if "PZT_SCALE_FACTOR" in self.hotBoxCal["CAVITY_LENGTH_TUNING"]:
+            pztScale = self.hotBoxCal["CAVITY_LENGTH_TUNING"]["PZT_SCALE_FACTOR"]
+        else:
+            pztScale = 0xFFFF
+        Driver.wrFPGA("FPGA_SCALER","SCALER_SCALE1",int(pztScale))
+        # Set up the PZT_INCR_PER_CAVITY_FSR register
+        fsr = self.hotBoxCal["CAVITY_LENGTH_TUNING"]["FREE_SPECTRAL_RANGE"]
+        Driver.wrDasReg("PZT_INCR_PER_CAVITY_FSR",float(fsr))
+        
         return "OK"
         
     def RPC_loadWarmBoxCal(self, warmBoxCalFilePath=""):
