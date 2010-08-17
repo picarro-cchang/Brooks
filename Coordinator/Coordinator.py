@@ -106,7 +106,7 @@ class FsmThread(threading.Thread):
         self.fsm.turnOnRunningFlag()
         
 class CoordinatorFrame(CoordinatorFrameGui):
-    def __init__(self, hasSampleDescr, hasSampleNum, useSeptum, hasCloseOpt, hasPause, configFile, *a,**k):
+    def __init__(self, hasSampleDescr, hasSampleNum, useSeptum, hasCloseOpt, hasPause, forcedClose, configFile, *a,**k):
         # The logfile and data file are opened in the main GUI thread. 
         #  They are written to by the control thread which runs the state machine via 
         #  Queues which buffer the writes. The control thread is reinitialized each
@@ -154,6 +154,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.widthRe = re.compile("%(-?\d+)\D*")
         self.lineIndex = 0
         self.hasCloseOpt = hasCloseOpt
+        self.forcedClose = forcedClose
         self.startServer()
         self.sampleNum = 1
         self.logFp = None
@@ -531,18 +532,21 @@ class CoordinatorFrame(CoordinatorFrameGui):
                     self.terminateStateMachineThread()
                     self.Destroy()
                     dlg2.Destroy()
+                else:
+                    pass
                 event.Skip()
             else:
                 pass
             dlg.Destroy()
         else:
-            #dlg = wx.MessageDialog(self,"Coordinator is shutting down", "Exit", style=wx.OK | wx.ICON_INFORMATION)
-            #dlg.ShowModal()
-            dlg = wx.ProgressDialog("Exit", "CRDS Coordinator is shutting down", maximum = 105)
-            countProgDialog(dlg, 105)
-            self.terminateStateMachineThread()
-            self.Destroy()
-            dlg.Destroy()
+            if not self.forcedClose:
+                dlg = wx.ProgressDialog("Exit", "CRDS Coordinator is shutting down", maximum = 105)
+                countProgDialog(dlg, 105)
+                self.terminateStateMachineThread()
+                self.Destroy()
+                dlg.Destroy()
+            else:
+                pass
             event.Skip()
         if self.logFp is not None: self.logFp.close(data)
 
@@ -563,7 +567,9 @@ Where the options can be a combination of the following:
 --no_septum         Disable and remove "Change Septum" button
 --no_sample_descr   Disable and remove "Load Sample Descriptions" button
 --no_sample_num     Disable and remove "Sample Number" display
---has_close_opt     Provide two options to close Coordinator - immediately close or finish current state and run final state
+--has_close_opt     Provide two options to close Coordinator - immediately close or finish current state and 
+                    run final state
+--forced_close      Set the default way to close Coordinator as immediately close. It will be overwritten by "--has_close_opt".
 --has_pause         Add Pause/Start buttons to clear/set internal runningFlag
 """
 def printUsage():
@@ -571,7 +577,7 @@ def printUsage():
 
 def handleCommandSwitches():
     shortOpts = 'c:h'
-    longOpts = ["no_septum", "no_sample_descr", "no_sample_num", "has_close_opt", "has_pause", "help"]
+    longOpts = ["no_septum", "no_sample_descr", "no_sample_num", "has_close_opt", "has_pause", "forced_close", "help"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -597,37 +603,19 @@ def handleCommandSwitches():
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
 
-    if "--no_septum" in options:
-        useSeptum = False
-    else:
-        useSeptum = True
-
-    if "--no_sample_descr" in options:
-        hasSampleDescr = False
-    else:
-        hasSampleDescr = True
+    useSeptum = "--no_septum" not in options
+    hasSampleDescr = "--no_sample_descr" not in options
+    hasSampleNum = "--no_sample_num" not in options
+    hasPause = "--has_pause" in options
+    forcedClose = "--forced_close" in options
+    hasCloseOpt = "--has_close_opt" in options
     
-    if "--no_sample_num" in options:
-        hasSampleNum = False
-    else:
-        hasSampleNum = True
-        
-    if "--has_close_opt" in options:
-        hasCloseOpt = True
-    else:
-        hasCloseOpt = False
-
-    if "--has_pause" in options:
-        hasPause = True
-    else:
-        hasPause = False
-        
-    return (hasSampleDescr, hasSampleNum, useSeptum, hasCloseOpt, hasPause, configFile)
+    return (hasSampleDescr, hasSampleNum, useSeptum, hasCloseOpt, hasPause, forcedClose, configFile)
 
 class App(wx.App):
     def OnInit(self):
-        (hasSampleDescr, hasSampleNum, useSeptum, hasCloseOpt, hasPause, configFile) = handleCommandSwitches()
-        self.coordinatorFrame = CoordinatorFrame(hasSampleDescr, hasSampleNum, useSeptum, hasCloseOpt, hasPause, configFile, None, -1, "")
+        (hasSampleDescr, hasSampleNum, useSeptum, hasCloseOpt, hasPause, forcedClose, configFile) = handleCommandSwitches()
+        self.coordinatorFrame = CoordinatorFrame(hasSampleDescr, hasSampleNum, useSeptum, hasCloseOpt, hasPause, forcedClose, configFile, None, -1, "")
         Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
         self.coordinatorFrame.run()
         self.coordinatorFrame.Show()

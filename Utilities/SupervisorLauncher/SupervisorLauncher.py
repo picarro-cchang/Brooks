@@ -76,8 +76,9 @@ def getWinProcessListStr():
     return processListStr
     
 class SupervisorLauncher(SupervisorLauncherFrame):
-    def __init__(self, configFile, *args, **kwds):
+    def __init__(self, configFile, autoLaunch, *args, **kwds):
         self.co = ConfigObj(configFile)
+        self.forcedLaunch = False
         typeChoices = self.co.keys()
         typeChoices.remove("Main")
         SupervisorLauncherFrame.__init__(self, typeChoices, *args, **kwds)
@@ -97,7 +98,13 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         self.onSelect(None)
         self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
         self.Bind(wx.EVT_BUTTON, self.onLaunch, self.buttonLaunch)
-
+        if autoLaunch:
+            self.supervisorIni = self.startupSupervisorIni
+            self.forcedLaunch = True
+            self.onLaunch(None)
+            time.sleep(3)
+            self.Destroy()
+        
     def onSelect(self, event):
         self.supervisorType = self.comboBoxSelect.GetValue()
         self.supervisorIni = os.path.join(self.supervisorIniDir, self.co[self.supervisorType]["SupervisorIniFile"].strip())
@@ -105,10 +112,13 @@ class SupervisorLauncher(SupervisorLauncherFrame):
     def onLaunch(self, event):
         winProcessListStr = getWinProcessListStr()
         if "\Supervisor.exe" in winProcessListStr or "\supervisor.exe" in winProcessListStr:
-            d = wx.MessageDialog(None,"Picarro CRDS analyzer is currently running.\nDo you want to re-start the analyzer now?\n\nSelect \"Yes\" to re-start the analyzer with the selected measurement mode.\nSelect \"No\" to cancel this action and keep running the current measurement mode.", "Re-start CRDS Analyzer Confirmation", \
-            style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
-            restart = (d.ShowModal() == wx.ID_YES)
-            d.Destroy()
+            if self.forcedLaunch:
+                restart = True
+            else:
+                d = wx.MessageDialog(None,"Picarro CRDS analyzer is currently running.\nDo you want to re-start the analyzer now?\n\nSelect \"Yes\" to re-start the analyzer with the selected measurement mode.\nSelect \"No\" to cancel this action and keep running the current measurement mode.", "Re-start CRDS Analyzer Confirmation", \
+                style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
+                restart = (d.ShowModal() == wx.ID_YES)
+                d.Destroy()
             if restart:
                 for task in TASKLIST:
                     try:
@@ -116,7 +126,10 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     except:
                         pass
                 CRDS_Driver.CmdFIFO.StopServer()
-                shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
+                try:
+                    shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
+                except:
+                    pass
                 time.sleep(1)
             else:
                 return
@@ -159,6 +172,7 @@ SupervisorLauncher.py [-h] [-c <FILENAME>]
 Where the options can be a combination of the following:
 -h, --help : Print this help.
 -c         : Specify a config file.
+-a         : Automatically launch the last selected supervisor ini without showing the "mode switcher" window
 
 """
 
@@ -169,7 +183,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "hc:a", ["help"])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -189,22 +203,24 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
+        
+    autoLaunch = "-a" in options
 
-    return configFile
+    return (configFile, autoLaunch)
     
 if __name__ == "__main__":
+    (configFile, autoLaunch) = HandleCommandSwitches()
     supervisorLauncherApp = SingleInstance("PicarroSupervisorLauncher")
-    if supervisorLauncherApp.alreadyrunning():
+    if supervisorLauncherApp.alreadyrunning() and not autoLaunch:
         try:
             handle = win32gui.FindWindowEx(0, 0, None, "Picarro Mode Switcher")
             win32gui.SetForegroundWindow(handle)
         except:
             pass
     else:
-        configFile = HandleCommandSwitches()
         app = wx.PySimpleApp()
         wx.InitAllImageHandlers()
-        frame = SupervisorLauncher(configFile, None, -1, "")
+        frame = SupervisorLauncher(configFile, autoLaunch, None, -1, "")
         app.SetTopWindow(frame)
         frame.Show()
         app.MainLoop()
