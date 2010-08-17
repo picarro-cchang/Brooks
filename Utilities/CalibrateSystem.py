@@ -174,19 +174,23 @@ class CalibrateSystem(object):
         rampAmpl = float(rampAmpl)
         tunerMean = float(tunerMean)
         ditherPeakToPeak = float(ditherPeakToPeak)
-        if tunerMean > tunerMin + rampAmpl and tunerMean < tunerMax - rampAmpl:
-            msg = "Recentering tuner around %d" % (tunerMean,)
-            print msg
-            print>>self.op, msg
-            if tunerMean - rampAmpl - ditherPeakToPeak < tunerMin:
-                tunerMean += 2*rampAmpl
-            if tunerMean + rampAmpl + ditherPeakToPeak > tunerMax:
-                tunerMean -= 2*rampAmpl
+        
+        if 2*rampAmpl + ditherPeakToPeak > tunerMax - tunerMin:
+            rampAmpl = (tunerMax - tunerMin - ditherPeakToPeak)//2
+            
+        if tunerMean < tunerMin + rampAmpl + ditherPeakToPeak//2:
+            tunerMean = tunerMin + rampAmpl + ditherPeakToPeak//2
+        if tunerMean > tunerMax + rampAmpl + ditherPeakToPeak//2:
+            tunerMean = tunerMax + rampAmpl + ditherPeakToPeak//2
+        
+        msg = "Recentering tuner around %d" % (tunerMean,)
+        print msg
+        print>>self.op, msg
 
         Driver.wrDasReg("TUNER_WINDOW_RAMP_HIGH_REGISTER", tunerMean + rampAmpl)
         Driver.wrDasReg("TUNER_WINDOW_RAMP_LOW_REGISTER",  tunerMean - rampAmpl)
-        Driver.wrDasReg("TUNER_SWEEP_RAMP_HIGH_REGISTER",  tunerMean + rampAmpl + ditherPeakToPeak)
-        Driver.wrDasReg("TUNER_SWEEP_RAMP_LOW_REGISTER",   tunerMean - rampAmpl - ditherPeakToPeak)
+        Driver.wrDasReg("TUNER_SWEEP_RAMP_HIGH_REGISTER",  tunerMean + rampAmpl + ditherPeakToPeak//2)
+        Driver.wrDasReg("TUNER_SWEEP_RAMP_LOW_REGISTER",   tunerMean - rampAmpl - ditherPeakToPeak//2)
         Driver.wrDasReg("TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER", ditherPeakToPeak//2)
         Driver.wrDasReg("TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER",  ditherPeakToPeak//2)
         Driver.wrDasReg("TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER",int(0.45*ditherPeakToPeak))
@@ -295,7 +299,7 @@ class CalibrateSystem(object):
             print>>self.op, "Number of steps:     %d"   % self.nSteps
             
             tunerCenter = 32768 # Center position
-            rampAmpl = 17000    # Set to sweep over more than an FSR
+            rampAmpl = 25000    # Set to sweep over more than an FSR
             ditherPeakToPeak = 3200
             self.setupRampMode(ditherPeakToPeak,tunerCenter,rampAmpl)
             # Ensure that we start with original calibration information
@@ -342,7 +346,7 @@ class CalibrateSystem(object):
                 #return min(c1,c2)
             
             fBest = 1e38
-            for trialSens in [7000,8000,9000,10000,11000,12000,13000,14000,15000,16000,17000,18000,19000,20000,21000,22000]:
+            for trialSens in range(7000,50000,1000):
                 popt = fmin(cost,array([self.approxFsr,trialSens]),args=(self.angleList,self.tunerList),maxiter=10000,maxfun=50000)
                 fopt = cost(popt,self.angleList,self.tunerList)
                 if fopt < fBest:
@@ -359,6 +363,7 @@ class CalibrateSystem(object):
             msg = "Sensitivity (digU/FSR): %.0f" % (popt[1],)
             print msg
             print>>self.op, msg
+            RDFreqConv.setHotBoxCalParam("CAVITY_LENGTH_TUNING","PZT_SCALE_FACTOR",Driver.rdFPGA("FPGA_SCALER","SCALER_SCALE1"))
             RDFreqConv.setHotBoxCalParam("CAVITY_LENGTH_TUNING","FREE_SPECTRAL_RANGE",popt[1])
             RDFreqConv.setHotBoxCalParam("AUTOCAL","APPROX_WLM_ANGLE_PER_FSR",popt[0])
             # Next generate a scheme consisting of nominal FSR steps
@@ -403,7 +408,7 @@ class CalibrateSystem(object):
                 tunerDev = self.tunerSum[good] - tunerMedian
                 wlmAngles[good] = wlmAngles[good] - self.angleRelax*tunerDev
                 # Recenter the tuner if necessary
-                if abs(tunerCenter-tunerMedian) > 0.5*tunerFSR:
+                if abs(tunerCenter-tunerMedian) > 0.2*tunerFSR:
                     tunerCenter = tunerMedian
                 rampAmpl = 0.65*tunerFSR
                 ditherPeakToPeak = 4000
