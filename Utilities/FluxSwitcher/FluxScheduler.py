@@ -15,10 +15,12 @@ import threading
 import win32api
 import win32process
 import win32con
+import win32gui
 import shutil
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.FluxSwitcher import FluxSwitcher
 from FluxSchedulerFrame import FluxSchedulerFrame
+from Host.Common.SingleInstance import SingleInstance
 
 DEFAULT_CONFIG_NAME = "FluxScheduler.ini"
 
@@ -191,10 +193,18 @@ def HandleCommandSwitches():
     return configFile, supervisorConfigFile
     
 if __name__ == "__main__":
-    configFile, supervisorConfigFile = HandleCommandSwitches()
-    app = wx.PySimpleApp()
-    wx.InitAllImageHandlers()
-    frame = FluxScheduler(configFile, supervisorConfigFile, None, -1, "")
-    app.SetTopWindow(frame)
-    frame.Show()
-    app.MainLoop()
+    fluxSchedulerApp = SingleInstance("PicarroFluxModeScheduler")
+    if fluxSchedulerApp.alreadyrunning():
+        try:
+            handle = win32gui.FindWindowEx(0, 0, None, "Flux Mode Scheduler")
+            win32gui.SetForegroundWindow(handle)
+        except:
+            pass
+    else:
+        configFile, supervisorConfigFile = HandleCommandSwitches()
+        app = wx.PySimpleApp()
+        wx.InitAllImageHandlers()
+        frame = FluxScheduler(configFile, supervisorConfigFile, None, -1, "")
+        app.SetTopWindow(frame)
+        frame.Show()
+        app.MainLoop()

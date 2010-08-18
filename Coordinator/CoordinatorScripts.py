@@ -24,6 +24,7 @@ from datetime import datetime
 from numpy import *
 import socket
 import sys
+from Host.Common.CubicSpline import CubicSpline
 #Set up a useful TimeStamp function...
 if sys.platform == 'win32':
     TimeStamp = clock
@@ -33,6 +34,18 @@ _valveSequenceLabels = {}
 
 VALVE_CTRL_MODE_DICT = {0: "Disabled", 1: "Outlet Control", 2: "Inlet Control", 3: "Manual Control"}
 
+##############
+# Numerical calculations
+##############
+def cubicSpline(xList, yList, numPoints):
+    cs = CubicSpline(array(xList), array(yList))
+    newXList = arange(xList[0], xList[-1], (xList[-1]-xList[0])/numPoints)
+    newYList = list(cs(newXList))
+    return list(newXList), newYList
+    
+#############
+# UTC
+#############
 def getUTCTime(option="float"):
     """Get UTC (GMT) time"""
     uctTimeTuple = datetime.timetuple(datetime.utcnow())
