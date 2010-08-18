@@ -54,9 +54,10 @@ class DasConfigure(SharedTypes.Singleton):
             for key in instrConfig["CONFIGURATION"]:
                 self.installed[key] = int(instrConfig["CONFIGURATION"][key])
             self.enableInterpolation = self.installed.get("ENABLE_INTERPOLATION",1)
+            self.heaterControlMode = self.installed.get("HEATER_CONTROL_MODE",0)
             self.initialized = True
-            print "Interpolation enabled", self.enableInterpolation
-            
+            self.parameter_forms = interface.parameter_forms
+                    
     def installCheck(self,key):
         return self.installed.get(key,0)
     
@@ -79,6 +80,23 @@ class DasConfigure(SharedTypes.Singleton):
         self.dasInterface.hostToDspSender.wrRegUint("HARDWARE_PRESENT_REGISTER",mask)
         
     def run(self):
+        # If heaterControlMode == 1, we need to make some changes in the parameter
+        #  forms for heater control
+        if self.heaterControlMode:
+            for formName,p in self.parameter_forms:
+                if formName == 'Heater Controller Parameters':
+                    for i,pItem in enumerate(p):
+                        if pItem[2] == interface.HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER:
+                            p[i] = ('dsp','float',interface.HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER,'Target value of hot box TEC','digU','%.0f',1,1)
+                        elif pItem[2] == interface.HEATER_TEMP_CNTRL_TOLERANCE_REGISTER:
+                            p[i] = ('dsp','float',interface.HEATER_TEMP_CNTRL_TOLERANCE_REGISTER,'Lock tolerance','digU','%.3f',1,1)
+                        elif pItem[2] == interface.HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER:
+                            p[i] = ('dsp','float',interface.HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER,'Max sweep value','digU','%.0f',1,1)
+                        elif pItem[2] == interface.HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER:
+                            p[i] = ('dsp','float',interface.HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER,'Max sweep value','digU','%.0f',1,1)
+                        elif pItem[2] == interface.HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER:
+                            p[i] = ('dsp','float',interface.HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER,'Sweep increment','digU/sample','%.0f',1,1)
+                    break
         sender = self.dasInterface.hostToDspSender
         ts = timestamp.getTimestamp()
         sender.doOperation(Operation("ACTION_SET_TIMESTAMP",[ts&0xFFFFFFFF,ts>>32]))
@@ -338,15 +356,18 @@ class DasConfigure(SharedTypes.Singleton):
             self.opGroups["SLOW"]["CONTROLLER"].addOperation(
                 Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
     
-            self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
-                Operation("ACTION_FLOAT_ARITHMETIC",
-                         ["HOT_BOX_HEATSINK_TEMPERATURE_REGISTER","CAVITY_TEMPERATURE_REGISTER",
-                          "HEATER_CNTRL_SENSOR_REGISTER","FLOAT_ARITHMETIC_Subtraction"]))
-#                         ["CAVITY_TEC_REGISTER","CAVITY_TEC_REGISTER",
-#                          "HEATER_CNTRL_SENSOR_REGISTER","FLOAT_ARITHMETIC_Average"]))
+            if self.heaterControlMode:
+                self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
+                    Operation("ACTION_FLOAT_ARITHMETIC",
+                             ["CAVITY_TEC_REGISTER","CAVITY_TEC_REGISTER",
+                             "HEATER_CNTRL_SENSOR_REGISTER","FLOAT_ARITHMETIC_Average"]))
+            else:
+                self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
+                    Operation("ACTION_FLOAT_ARITHMETIC",
+                             ["HOT_BOX_HEATSINK_TEMPERATURE_REGISTER","CAVITY_TEMPERATURE_REGISTER",
+                              "HEATER_CNTRL_SENSOR_REGISTER","FLOAT_ARITHMETIC_Subtraction"]))
     
-            self.opGroups["SLOW"]["CONTROLLER"].addOperation(
-                Operation("ACTION_HEATER_CNTRL_STEP"))
+            self.opGroups["SLOW"]["CONTROLLER"].addOperation(Operation("ACTION_HEATER_CNTRL_STEP"))
 
             # Set up the interpolator for the heater
 

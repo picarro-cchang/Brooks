@@ -833,7 +833,11 @@ class DriverRpcHandler(SharedTypes.Singleton):
             
     def writeDacSample(self,channel,voltage):
         """Sends a voltage immediately to the specified DAC channel"""
-        self.analogInterface.writeSample(channel,voltage)        
+        self.analogInterface.writeSample(channel,voltage)
+        
+    def getParameterForms(self):
+        """Returns the dictionary of parameter forms for the controller GUI"""
+        return DasConfigure().parameter_forms
         
 class StreamTableType(tables.IsDescription):
     time = tables.Int64Col()
