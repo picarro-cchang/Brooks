@@ -343,12 +343,12 @@ class ArchiveGroup(object):
                 self.aggregation += 1
                 if self.aggregation < self.aggregationCount: return
             self.aggregation = 0
-            self.archiveFile(fileToArchive,timestamp,sourceFileName)
+            self.archiveFile(fileToArchive, sourceFileName, removeOriginal, timestamp)
         finally:
             if removeOriginal and sourceIsPath and os.path.exists(source):
                 deleteFile(source)
 
-    def archiveFile(self,fileToArchive,timestamp=None,sourceFileName=None):
+    def archiveFile(self, fileToArchive, sourceFileName=None, removeOriginal=True, timestamp=None):
         # Once we get here, we have something to be archived
         # First make room for the file by deleting old files, if necessary
         if not os.path.exists(fileToArchive):
@@ -410,6 +410,7 @@ class ArchiveGroup(object):
                 except OSError, e:
                     Log("Error removing file %s. %s" % (targetName,e))
             try:
+                print fileToArchive, targetName, renameFlag
                 if renameFlag:
                     os.rename(fileToArchive,targetName)
                 else:
