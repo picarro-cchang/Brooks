@@ -131,7 +131,7 @@ class Controller(ControllerFrameGui):
 
     def setupParameterDialogs(self):
         idmin = None
-        for f in interface.parameter_forms:
+        for f in Driver.getParameterForms():
             title, details = f
             id = wx.NewId()
             if idmin == None: idmin = id
