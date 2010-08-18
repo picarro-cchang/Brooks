@@ -343,12 +343,12 @@ class ArchiveGroup(object):
                 self.aggregation += 1
                 if self.aggregation < self.aggregationCount: return
             self.aggregation = 0
-            self.archiveFile(fileToArchive,timestamp)
+            self.archiveFile(fileToArchive,timestamp,sourceFileName)
         finally:
             if removeOriginal and sourceIsPath and os.path.exists(source):
                 deleteFile(source)
 
-    def archiveFile(self,fileToArchive,timestamp=None):
+    def archiveFile(self,fileToArchive,timestamp=None,sourceFileName=None):
         # Once we get here, we have something to be archived
         # First make room for the file by deleting old files, if necessary
         if not os.path.exists(fileToArchive):
@@ -389,7 +389,8 @@ class ArchiveGroup(object):
 
             renameFlag = True
             # Determine the target sourceFiles
-            if self.aggregationCount == 0:
+            # The only case when sourceFileName is None is when the Archiver computes the temporary files
+            if self.aggregationCount == 0 and sourceFileName != None:
                 if self.compress:
                     targetName = os.path.join(pathName,os.path.split(sourceFileName)[-1]+".zip")
                 else:
