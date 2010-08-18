@@ -512,13 +512,13 @@ void initRegisters()
     writeRegister(HEATER_TEMP_CNTRL_SETPOINT_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER,d);
-    d.asFloat = 1000;
+    d.asFloat = 0.1;
     writeRegister(HEATER_TEMP_CNTRL_TOLERANCE_REGISTER,d);
-    d.asFloat = 45000;
+    d.asFloat = 2.0;
     writeRegister(HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER,d);
-    d.asFloat = 35000;
+    d.asFloat = -2.0;
     writeRegister(HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER,d);
-    d.asFloat = 50;
+    d.asFloat = 0.01;
     writeRegister(HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER,d);
     d.asFloat = 5.0;
     writeRegister(HEATER_TEMP_CNTRL_H_REGISTER,d);

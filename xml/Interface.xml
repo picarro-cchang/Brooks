@@ -1976,27 +1976,27 @@
         </register>
         <register ident="HEATER_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
             <description>Heater Temperature Control app lock tolerance in degC.</description>
-            <initial>1000</initial>
+            <initial>0.1</initial>
             <save/>
             <display format="%.3f" units="degC">Lock tolerance</display>
         </register>
         <register ident="HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
-            <description>Heater Temperature Control app maximum sweep value in digU.</description>
-            <initial>45000</initial>
+            <description>Heater Temperature Control app maximum sweep value in degC.</description>
+            <initial>2.0</initial>
             <save/>
-            <display format="%.0f" units="digU">Max sweep value</display>
+            <display format="%.3f" units="degC">Max sweep value</display>
         </register>
         <register ident="HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
-            <description>Heater Temperature Control app minimum sweep value in digU.</description>
-            <initial>35000</initial>
+            <description>Heater Temperature Control app minimum sweep value.</description>
+            <initial>-2.0</initial>
             <save/>
-            <display format="%.0f" units="digU">Min sweep value</display>
+            <display format="%.3f" units="degC">Min sweep value</display>
         </register>
         <register ident="HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
-            <description>Heater Temperature Control app sweep increment in digU/sample.</description>
-            <initial>50</initial>
+            <description>Heater Temperature Control app sweep increment.</description>
+            <initial>0.01</initial>
             <save/>
-            <display format="%.0f" units="digU/sample">Sweep increment</display>
+            <display format="%.3f" units="degC/sample">Sweep increment</display>
         </register>
         <register ident="HEATER_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
             <description>Heater Temperature control app interval in seconds.</description>
