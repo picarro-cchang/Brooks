@@ -100,7 +100,6 @@ class CommandInterface(object):
         self._measQueueDict = {}
         self.meas_source = None
         self.meas_label_list = []
-        self.pulse_conc_list = []
         self._cdata = []
         self._ctime = 0
         self._lastctime = None
@@ -134,14 +133,6 @@ class CommandInterface(object):
             print msg
             Log(msg, Level = 3)
             return False
-
-        # Get pulse analyzer config if available
-        try:
-            for label in self.config.get(PULSE_ANALYZER_SECTION,'conc_label').split(","):
-                label = label.strip()
-                self.pulse_conc_list.append(label)
-        except:
-            pass
 
         # Get flux switcher config if available
         try:
@@ -574,57 +565,33 @@ class CommandInterface(object):
         
     # Pulse Analyzer functions
     def _PULSE_GETBUFFERFIRST(self):
-        dataDict = self._DataMgrRpc.PulseAnalyzer_GetBufferFirst()
-        if len(dataDict) == 0:
+        dataRecord = self._DataMgrRpc.PulseAnalyzer_GetBufferFirst()
+        if dataRecord == "Pulse buffer empty":
             self.PrintError( ERROR_PULSE_BUFFER_EMPTY )
             return
-        elif dataDict == "No Pulse Analyzer":
+        elif dataRecord == "No Pulse Analyzer":
             self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
             return
-        timeString = _TimeToString(datetime.datetime.fromtimestamp(dataDict["timestamp"]))
+        timeString = _TimeToString(datetime.datetime.fromtimestamp(dataRecord[0]))
         retString = "%s;" % timeString
-        if self.pulse_conc_list:
-            for concName in self.pulse_conc_list:
-                try:
-                    retString += "%.3f;" % (float(dataDict[concName]),)
-                except:
-                    pass
-        else:
-            for concName in dataDict:
-                if concName != "timestamp":
-                    retString += "%.3f;" % (float(dataDict[concName]),) 
+        for data in dataRecord[1:]:
+            retString += "%.3f;" % (float(data))
         self.Print( retString )
 
     def _PULSE_GETBUFFER(self):
-        dataDict = self._DataMgrRpc.PulseAnalyzer_GetBuffer()
-        self._DataMgrRpc.PulseAnalyzer_ClearBuffer()
-        if len(dataDict) == 0:
+        dataList = self._DataMgrRpc.PulseAnalyzer_GetBuffer()
+        if dataList == "Pulse buffer empty":
             self.PrintError( ERROR_PULSE_BUFFER_EMPTY )
             return
-        elif dataDict == "No Pulse Analyzer":
+        elif dataList == "No Pulse Analyzer":
             self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
             return
-        timeList = []
-        for timestamp in dataDict["timestamp"]:
-            timeList.append(_TimeToString(datetime.datetime.fromtimestamp(timestamp)))
-        retList = [timeList]
-        if self.pulse_conc_list:
-            for concName in self.pulse_conc_list:
-                try:
-                    retList.append(dataDict[concName])
-                except:
-                    pass
-        else:
-            for concName in dataDict:
-                if concName != "timestamp":
-                    retList.append(dataDict[concName])
-        count = len(retList[0])
-        self.Print("%d;" % count)
-        retList = transpose(retList)
-        for data in retList:
-            retString = "%s;" % data[0]
-            for dataValue in data[1:]:
-                retString += ("%.3f;" % (float(dataValue),))
+        for dataRecord in dataList:
+            print dataRecord
+            timeString = _TimeToString(datetime.datetime.fromtimestamp(dataRecord[0]))
+            retString = "%s;" % timeString
+            for data in dataRecord[1:]:
+                retString += "%.3f;" % (float(data))
             self.Print( retString )
 
     def _PULSE_CLEARBUFFER(self):
@@ -642,44 +609,6 @@ class CommandInterface(object):
             return
         retString = PULSE_ANALYZER_STATUS_TABLE[status]
         self.Print( retString )
-
-    def _PULSE_GETSTATISTICS(self, concName):
-        statDict = self._DataMgrRpc.PulseAnalyzer_GetStatistics()
-        if len(statDict) == 0:
-            self.PrintError( ERROR_PULSE_BUFFER_NO_STAT )
-            return
-        elif statDict == "No Pulse Analyzer":
-            self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
-            return
-        retList = [0.0, 0.0, 0.0]
-        for stat in statDict:
-            if concName in stat:
-                if stat.endswith("mean"):
-                    retList[0] = statDict[stat]
-                elif stat.endswith("std"):
-                    retList[1] = statDict[stat]
-                else:
-                    retList[2] = statDict[stat]
-        retString = ""
-        for val in retList:
-            retString += ("%.3f;" % (float(val),))
-        self.Print( retString )
-
-    def _PULSE_TRIGGER_ON(self):
-        ret = self._DataMgrRpc.PulseAnalyzer_TriggerOn()
-        if ret == "No Pulse Analyzer":
-            self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
-            return
-        else:
-            self.Print("OK")
-        
-    def _PULSE_TRIGGER_OFF(self):
-        ret = self._DataMgrRpc.PulseAnalyzer_TriggerOff()
-        if ret == "No Pulse Analyzer":
-            self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
-            return
-        else:
-            self.Print("OK")
             
     # Valve Sequencer functions
     def _VALVES_SEQ_START(self):

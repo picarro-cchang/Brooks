@@ -31,6 +31,7 @@ File History:
     2010-03-28 sze   Give scripts initiated by forwarding data priority over those initiated by collected data
     2010-04-27 sze   Not having an analyzer for some data is now logged, rather than causing an exception.
     2010-05-05 alex  Create the RPC functions and measBuffer for Coordinator to retrieve conc data.
+    2010-08-19 alex  Create the RPC functions and pulseBuffer for command interface to retrieve pulse data.
     
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -349,6 +350,7 @@ class DataManager(object):
         self.serialOutQueue = Queue.Queue(0)
         self.serialPollLock = threading.Lock()
         self.measBufferLock = threading.Lock()
+        self.pulseBufferLock = threading.Lock()
         # Priority queue for synchronous scripts ordered by ideal execution time and period
         #  Entries on queue are (execTime, period, startTime, iteration, syncInfoObj)
         self.syncScriptQueue = []  
@@ -375,6 +377,9 @@ class DataManager(object):
         self.calEnabled = True
         self.measBufferConfig = ("",[],20) # (source, colList, bufSize)
         self.measBuffer = []
+        self.pulseBufferSize = 512
+        self.pulseBuffer = []
+        self.pulseWaitForData = False
         self.noInstMgr = noInstMgr
         if not self.noInstMgr:
             self.rdInstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
@@ -705,60 +710,6 @@ class DataManager(object):
         else:
             self.pulseAnalyzer.resetAnalyzer()
             return "OK"
-
-    def RPC_PulseAnalyzer_TriggerOn(self):
-        """Start adding data into pulse analyzer without running a state machine"""
-        if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            return self.RPC_PulseAnalyzer_StartAddingData()
-        
-    def RPC_PulseAnalyzer_TriggerOff(self):
-        """Stop adding data into pulse analyzer without running a state machine"""
-        if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            return self.RPC_PulseAnalyzer_StopAddingData()
-            
-    def RPC_PulseAnalyzer_ClearBuffer(self):
-        if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            self.pulseAnalyzer.resetBuffer()
-            return "OK"
-
-    def RPC_PulseAnalyzer_GetStatus(self):
-        if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            return self.pulseAnalyzer.getOutput()[0]
-            
-    def RPC_PulseAnalyzer_GetBuffer(self):
-        """Get every data from pulse analyzer buffer. This will also clear the whole buffer"""
-        if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            retDict = self.pulseAnalyzer.getOutput()[2]
-            self.pulseAnalyzer.resetBuffer()
-            if len(retDict["timestamp"]) > 0:
-                return retDict
-            else:
-                return {}
-            
-    def RPC_PulseAnalyzer_GetBufferFirst(self):
-        """Get the first data from pulse analyzer buffer. It will also remove this data from the buffer"""
-        if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            concBufferDict = self.pulseAnalyzer.getOutput()[2]
-            self.pulseAnalyzer.removeFirstData()
-            retDict = {}
-            try:
-                for concName in concBufferDict:
-                    retDict[concName] = concBufferDict[concName][0]
-            except:
-                pass
-            return retDict
             
     def RPC_PulseAnalyzer_GetStatistics(self):
         """Retrieve statistics of data in pulse analyzer buffer"""
@@ -772,6 +723,60 @@ class DataManager(object):
             return "No Pulse Analyzer"
         else:
             return self.pulseAnalyzer.getPulseStartEndTime()
+            
+    # Below pulse analyzer functions are used by Command Interface
+    def RPC_PulseAnalyzer_GetBuffer(self):
+        """Get every analysis output from pulse analyzer buffer. This will also clear the whole buffer"""
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            if len(self.pulseBuffer) == 0:
+                return "Pulse buffer empty"
+            self.pulseBufferLock.acquire()
+            ret = self.pulseBuffer
+            self.pulseBuffer = []
+            self.pulseBufferLock.release()
+            return ret
+        
+    def RPC_PulseAnalyzer_GetBufferFirst(self):
+        """Get the first pulse analysis data from pulse analyzer buffer. It will also remove this data from the buffer"""
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            if len(self.pulseBuffer) == 0:
+                return "Pulse buffer empty"
+            self.pulseBufferLock.acquire()
+            ret = self.pulseBuffer[0]
+            self.pulseBuffer = self.pulseBuffer[1:]
+            self.pulseBufferLock.release()
+            return ret
+        
+    def RPC_PulseAnalyzer_ClearBuffer(self):
+        """Clear all the data in the internal pulse analyzer buffer"""
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            self.pulseBufferLock.acquire()
+            self.pulseBuffer = []
+            self.pulseBufferLock.release()
+            return "OK"
+
+    def RPC_PulseAnalyzer_GetStatus(self):
+        if self.pulseAnalyzer == None:
+            return "No Pulse Analyzer"
+        else:
+            return self.pulseAnalyzer.getStatus()
+          
+    def _AddToPulseBuffer(self, pulseData):
+        self.pulseBufferLock.acquire()
+        try:
+            if len(self.pulseBuffer) >= self.pulseBufferSize:
+                self.pulseBuffer = self.pulseBuffer[-(self.pulseBufferSize-1):]
+            self.pulseBuffer.append(pulseData)
+        except:
+            pass
+        finally:
+            self.pulseBufferLock.release()
             
     def RPC_MeasBuffer_Set(self, source, colList, bufSize):
         """Set up an internal measurement buffer for the Coordinator"""
@@ -1446,7 +1451,21 @@ class DataManager(object):
                     self.pulseAnalyzer.runAnalyzer(measData)
                 elif self.addToPulseAnalyzer:
                     self.pulseAnalyzer.addToBuffer(measData)
-
+                # Add pulse analysis data to Data Manager pulse analysis buffer if available
+                if self.pulseAnalyzer.getStatus() == "triggered":
+                    self.pulseWaitForData = True
+                if self.pulseWaitForData and self.pulseAnalyzer.getDataReady():
+                    pulseOutput = self.pulseAnalyzer.getStatistics()
+                    pulseConcNameList = self.pulseAnalyzer.getConcNameList()
+                    pulseData = [pulseOutput["timestamp_mean"]]
+                    for concName in pulseConcNameList:
+                        pulseData.append(pulseOutput["%s_mean" % concName])
+                        pulseData.append(pulseOutput["%s_std" % concName])
+                        pulseData.append(pulseOutput["%s_slope" % concName])
+                    print pulseData
+                    self._AddToPulseBuffer(pulseData)
+                    self.pulseWaitForData = False
+                
         #Put forwarded data in the to-be-analyzed queue...
         for dataPacketLabel in forwardDict.keys():
             dataPacketDict = forwardDict[dataPacketLabel]

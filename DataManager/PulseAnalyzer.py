@@ -16,6 +16,7 @@ class PulseAnalyzer(object):
                  numPointsToRelease = 1):
         self.source = source
         self.concBufferDict = {"timestamp":[]}
+        self.concNameList = concNameList
         for concName in concNameList:
             self.concBufferDict[concName] = []
         self.targetConc = targetConc
@@ -156,6 +157,9 @@ class PulseAnalyzer(object):
     def getOutput(self):
         return [self.status, self.pulseFinished, self.concBufferDict.copy()]
         
+    def getStatus(self):
+        return self.status
+        
     def getTimestamp(self):
         return self.currMeasTime
         
@@ -194,12 +198,5 @@ class PulseAnalyzer(object):
         timeArray = array(self.concBufferDict["timestamp"])
         return (timeArray[0], timeArray[-1])
         
-    def removeFirstData(self):
-        self.bufferLock.acquire()
-        try:
-            for concName in self.concBufferDict:
-                self.concBufferDict[concName] = self.concBufferDict[concName][1:]
-        except:
-            pass
-        finally:
-            self.bufferLock.release()
+    def getConcNameList(self):
+        return self.concNameList
