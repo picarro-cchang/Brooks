@@ -49,12 +49,6 @@ def Scaler(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,x1_in,
     p = Signal(intbv(0)[34:])
     mult = UnsignedMultiplier(p=p,a=a,b=b)
 
-    @always_comb
-    def comb():
-        a.next = concat(x1_in,intbv(0)[1:])
-        b.next = concat(scale1,intbv(0)[1:])
-        y1_out.next = p[34:18]
-
     @instance
     def logic():
         while True:
@@ -71,6 +65,9 @@ def Scaler(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,x1_in,
                         dsp_data_in.next = 0
                 else:
                     dsp_data_in.next = 0
+                a.next = concat(x1_in,intbv(0)[1:])
+                b.next = concat(scale1,intbv(0)[1:])
+                y1_out.next = p[34:18]
     return instances()
 
 if __name__ == "__main__":
