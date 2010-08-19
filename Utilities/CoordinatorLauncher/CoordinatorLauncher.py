@@ -8,6 +8,7 @@
 
 import sys
 import os
+import subprocess
 import wx
 import time
 import threading
@@ -82,7 +83,11 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
         self.Destroy()
         
     def _launchCoordinator(self):
-        os.system("%s %s -c %s" % (self.coordinatorExe, self.coordinatorArgs, self.coordinatorIni))
+        info = subprocess.STARTUPINFO()
+        argList = self.coordinatorArgs.split(" ")
+        while "" in argList:
+            argList.remove("")
+        subprocess.Popen([self.coordinatorExe] + argList + ["-c", self.coordinatorIni], startupinfo=info)
         
 HELP_STRING = \
 """

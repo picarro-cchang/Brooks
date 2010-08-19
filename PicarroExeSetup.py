@@ -137,6 +137,16 @@ Fitter = Target(description = "Fitter", # used for the versioninfo resource
                     dest_base = "Fitter"
                     )
 
+Coordinator = Target(description = "Coordinator", # used for the versioninfo resource
+                    script = "Coordinator/Coordinator.py", # what to build
+                    other_resources = [(RT_MANIFEST,
+                                        1,
+                                        manifest_template % dict(prog="Coordinator")
+                                        )],
+                    ##    icon_resources = [(1, "icon.ico")],
+                    dest_base = "Coordinator"
+                    )
+                    
 # End of special controller setup stuff (except to use controller below)
 ################################################################
 
@@ -171,7 +181,6 @@ setup(version = "1.0",
       console = ["RDFrequencyConverter/RDFrequencyConverter.py",
                  "SpectrumCollector/SpectrumCollector.py",
                  "ValveSequencer/ValveSequencer.py",
-                 "Coordinator/Coordinator.py",
                  "AlarmSystem/AlarmSystem.py",
                  "Archiver/Archiver.py",
                  "CommandInterface/CommandInterface.py",
@@ -207,7 +216,7 @@ setup(version = "1.0",
                  Controller, 
                  ],
 
-      windows = [QuickGui,
+      windows = [QuickGui, Coordinator,
                  "Utilities/DiagDataCollector/DiagDataCollector.py",
                  "Utilities/SupervisorLauncher/SupervisorLauncher.py",
                  "Utilities/CoordinatorLauncher/CoordinatorLauncher.py",
