@@ -586,8 +586,9 @@ class CommandInterface(object):
         elif dataList == "No Pulse Analyzer":
             self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
             return
+        count = len(dataList)
+        self.Print("%d;" % count)
         for dataRecord in dataList:
-            print dataRecord
             timeString = _TimeToString(datetime.datetime.fromtimestamp(dataRecord[0]))
             retString = "%s;" % timeString
             for data in dataRecord[1:]:
