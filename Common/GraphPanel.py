@@ -252,6 +252,11 @@ class GraphPanel(wx.Panel):
             dataSeries = series.GetY()
             if len(self.colorList)-len(self.colorTimeList) == 1:    
                 try:
+                    if select != None:
+                        selSequence,selValue = select
+                        selectIdx = (selSequence.GetValues() == selValue)
+                        timeSeries = timeSeries[selectIdx]
+                        dataSeries = dataSeries[selectIdx]
                     changePtList = self._getColorTimeIndices(timeSeries.copy())
                     #print changePtList, self.colorList
                     statData = zeros((0,2), dtype=float)
@@ -261,12 +266,8 @@ class GraphPanel(wx.Panel):
                         data = _Numeric.column_stack((timeSeries[startPt:endPt],dataSeries[startPt:endPt]))
                         color = self.colorList[i]
                         if len(data) > 0:
-                            if select != None:
-                                selSequence,selValue = select
-                                data = data[selSequence.GetValues() == selValue]
-                            if len(data)>0:
-                                plot_objects.append(plot.PolyLine(data,colour=color,**attr))
-                                statData = concatenate((statData,data)) 
+                            plot_objects.append(plot.PolyLine(data,colour=color,**attr))
+                            statData = concatenate((statData,data)) 
                         del data
                     if statsFlag:
                         self.stats.append(self.calcStats(statData,canvas))
@@ -288,6 +289,11 @@ class GraphPanel(wx.Panel):
             dataSeries = series.GetY()
             if len(self.colorList)-len(self.colorTimeList) == 1:
                 try:
+                    if select != None:
+                        selSequence,selValue = select
+                        selectIdx = (selSequence.GetValues() == selValue)
+                        timeSeries = timeSeries[selectIdx]
+                        dataSeries = dataSeries[selectIdx]
                     changePtList = self._getColorTimeIndices(timeSeries.copy())
                     statData = zeros((0,2), dtype=float)
                     for i in range(len(changePtList)-1):
@@ -296,12 +302,8 @@ class GraphPanel(wx.Panel):
                         data = _Numeric.column_stack((timeSeries[startPt:endPt],dataSeries[startPt:endPt]))
                         color = self.colorList[i]
                         if len(data) > 0:
-                            if select != None:
-                                selSequence,selValue = select
-                                data = data[selSequence.GetValues() == selValue]
-                            if len(data)>0:
-                                plot_objects.append(plot.PolyMarker(data,colour=color,fillcolour=color,**attr))
-                                statData = concatenate((statData,data)) 
+                            plot_objects.append(plot.PolyMarker(data,colour=color,fillcolour=color,**attr))
+                            statData = concatenate((statData,data)) 
                         del data
                     if statsFlag:
                         self.stats.append(self.calcStats(statData,canvas))
