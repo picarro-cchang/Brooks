@@ -202,13 +202,15 @@ class DataLog(object):
             for filename in files:
                 if ('mailbox_copy' not in root) and ('backup_copy' not in root):
                     path = os.path.join(root,filename)
+                    print "Cleaning...", path
                     self.CopyToMailboxAndArchive(path)
 
     def _CopyToMailboxAndArchive(self, srcPath=""):
-        if self.LogPath == "":
-            return
-        elif srcPath == "":
-            srcPath = self.LogPath
+        if srcPath == "":
+            if self.LogPath != "":
+                srcPath = self.LogPath
+            else:
+                return
         startTime = TimeStamp()
         # If Mailbox option is enabled:
         # Make an additional copy and move 2 separate copies to archive and mailbox locations
@@ -230,7 +232,7 @@ class DataLog(object):
             srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
             shutil.copy2(srcPath, srcPathCopy)
             # if mailbox enabled, copy file to mailbox directory first
-            CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True) 
+            CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True)
         # Archive
         CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True)
         Log("Datalog archive processing %s took %s seconds" % (os.path.basename(srcPath),TimeStamp()-startTime))   

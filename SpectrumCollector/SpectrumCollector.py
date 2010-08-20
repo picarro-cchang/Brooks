@@ -371,7 +371,7 @@ class SpectrumCollector(object):
 
         #Write the tagalong data values...
         for t in self.tagalongData:
-            self.rdfDict["tagalongData"][t] = [self.tagalongData[t]]
+            self.rdfDict["tagalongData"][t] = [self.tagalongData[t][0]]
 
         #Write control data dictionary for pacing, etc...
         if self.spectrumQueue:
@@ -407,7 +407,12 @@ class SpectrumCollector(object):
                         if self.newHdf5File:
                             self.tableDict[dataKey] = self.streamFP.createTable("/", dataKey, dataRec, dataKey, filters=self.hdf5Filters)
                         else:
-                            self.tableDict[dataKey].append(dataRec)
+                            try:
+                                self.tableDict[dataKey].append(dataRec)
+                            except:
+                                self.closeHdf5File = True
+                                break
+                                
                 self.newHdf5File = False
                 
                 if self.closeHdf5File:
