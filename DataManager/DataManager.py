@@ -746,9 +746,13 @@ class DataManager(object):
             if len(self.pulseBuffer) == 0:
                 return "Pulse buffer empty"
             self.pulseBufferLock.acquire()
-            ret = self.pulseBuffer[0]
-            self.pulseBuffer = self.pulseBuffer[1:]
-            self.pulseBufferLock.release()
+            try:
+                ret = self.pulseBuffer[0]
+                self.pulseBuffer = self.pulseBuffer[1:]
+            except:
+                pass
+            finally:
+                self.pulseBufferLock.release()
             return ret
         
     def RPC_PulseAnalyzer_ClearBuffer(self):
@@ -1455,15 +1459,20 @@ class DataManager(object):
                 if self.pulseAnalyzer.getStatus() == "triggered":
                     self.pulseWaitForData = True
                 if self.pulseWaitForData and self.pulseAnalyzer.getDataReady():
-                    pulseOutput = self.pulseAnalyzer.getStatistics()
-                    pulseConcNameList = self.pulseAnalyzer.getConcNameList()
-                    pulseData = [pulseOutput["timestamp_mean"]]
-                    for concName in pulseConcNameList:
-                        pulseData.append(pulseOutput["%s_mean" % concName])
-                        pulseData.append(pulseOutput["%s_std" % concName])
-                        pulseData.append(pulseOutput["%s_slope" % concName])
-                    print pulseData
-                    self._AddToPulseBuffer(pulseData)
+                    try:
+                        pulseOutput = self.pulseAnalyzer.getStatistics()
+                        pulseConcNameList = self.pulseAnalyzer.getConcNameList()
+                        pulseData = [pulseOutput["timestamp_mean"]]
+                        for concName in pulseConcNameList:
+                            try:
+                                pulseData.append(pulseOutput["%s_mean" % concName])
+                                pulseData.append(pulseOutput["%s_std" % concName])
+                                pulseData.append(pulseOutput["%s_slope" % concName])
+                            except:
+                                pass
+                        self._AddToPulseBuffer(pulseData)
+                    except Exception, err:
+                        LogExc("Pulse analyzer operation failed. EXCEPTION: %s %r" % (err, err), Level=3)
                     self.pulseWaitForData = False
                 
         #Put forwarded data in the to-be-analyzed queue...
