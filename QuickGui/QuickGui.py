@@ -1165,8 +1165,9 @@ class RpcServerThread(threading.Thread):
             LogExc("Exception raised when calling exit function at exit of RPC server.")
     
 class QuickGui(wx.Frame):
-    def __init__(self,configFile):
-        wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700))
+    def __init__(self, configFile):
+        wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700), 
+                          style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
         self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
         self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
         self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = APP_NAME)
