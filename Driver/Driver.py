@@ -838,7 +838,47 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def getParameterForms(self):
         """Returns the dictionary of parameter forms for the controller GUI"""
         return DasConfigure().parameter_forms
-        
+ 
+    def shutDown(self):
+        '''Place instrument in idle state for shutdown'''
+        # Disable spectrum controller
+        self.wrDasReg('SPECT_CNTRL_STATE_REGISTER','SPECT_CNTRL_IdleState')
+        # Wait for all current controllers to leave automatic state
+        auto = interface.LASER_CURRENT_CNTRL_AutomaticState
+        while True:
+            if self.rdDasReg('LASER1_CURRENT_CNTRL_STATE_REGISTER')!=auto and \
+               self.rdDasReg('LASER2_CURRENT_CNTRL_STATE_REGISTER')!=auto and \
+               self.rdDasReg('LASER3_CURRENT_CNTRL_STATE_REGISTER')!=auto and \
+               self.rdDasReg('LASER4_CURRENT_CNTRL_STATE_REGISTER')!=auto:
+                break
+            else:
+                time.sleep(0.1)
+        # Close all solenoid valves        
+        self.wrDasReg('VALVE_CNTRL_SOLENOID_VALVES_REGISTER',0)
+        # Close proportional valves
+        self.wrDasReg('VALVE_CNTRL_STATE_REGISTER','VALVE_CNTRL_DisabledState')
+        # Disable laser current control loops
+        self.wrDasReg('LASER1_CURRENT_CNTRL_STATE_REGISTER','LASER_CURRENT_CNTRL_DisabledState')
+        self.wrDasReg('LASER2_CURRENT_CNTRL_STATE_REGISTER','LASER_CURRENT_CNTRL_DisabledState')
+        self.wrDasReg('LASER3_CURRENT_CNTRL_STATE_REGISTER','LASER_CURRENT_CNTRL_DisabledState')
+        self.wrDasReg('LASER4_CURRENT_CNTRL_STATE_REGISTER','LASER_CURRENT_CNTRL_DisabledState')
+        # Ensure SOA is shorted and turn off laser currents in FPGA
+        self.wrFPGA('FPGA_INJECT','INJECT_CONTROL',0)
+        # Disable all temperature controllers
+        self.wrDasReg('LASER1_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
+        self.wrDasReg('LASER2_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
+        self.wrDasReg('LASER3_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
+        self.wrDasReg('LASER4_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
+        self.wrDasReg('HEATER_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
+        # Disable drive to warm box and hot box TECs
+        self.wrDasReg('TEC_CNTRL_REGISTER','TEC_CNTRL_Disabled')
+        # Disable proportional valve PWM 
+        self.wrFPGA('FPGA_DYNAMICPWM_INLET','DYNAMICPWM_CS',0)
+        self.wrFPGA('FPGA_DYNAMICPWM_OUTLET','DYNAMICPWM_CS',0)
+        # Turn off voltage to PZT
+        self.wrDasReg('ANALYZER_TUNING_MODE_REGISTER','ANALYZER_TUNING_LaserCurrentTuningMode')
+        self.wrFPGA('FPGA_TWGEN','TWGEN_PZT_OFFSET',0)
+ 
 class StreamTableType(tables.IsDescription):
     time = tables.Int64Col()
     streamNum = tables.Int32Col()
@@ -1014,12 +1054,13 @@ class Driver(SharedTypes.Singleton):
                 Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
                     Verbose=traceback.format_exc(),Level=3)
         finally:
-            self.rpcHandler.wrDasReg(interface.TEC_CNTRL_REGISTER,interface.TEC_CNTRL_Disabled)
             try:
                 self.dasInterface.saveDasState()
             except:
                 pass
-
+            self.rpcHandler.shutDown()
+                
+        
 class InstrumentConfig(SharedTypes.Singleton):
     """Configuration of instrument."""
     def __init__(self,filename=None):
