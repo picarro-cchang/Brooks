@@ -177,17 +177,19 @@ class PulseAnalyzer(object):
         statDict = {}
         try:
             timeArray = array(self.concBufferDict["timestamp"])
+            statDict["timestamp_mean"] = mean(timeArray)
             for concName in self.concBufferDict:
-                try:
-                    if concName != "timestamp":
+                if concName != "timestamp":
+                    try:
                         dataArray = array(self.concBufferDict[concName])
-                        statDict["%s_mean"%concName] = mean(dataArray)
-                        statDict["%s_std"%concName] = std(dataArray)
-                        statDict["%s_slope"%concName] = polyfit(timeArray, dataArray, 1)[0]
-                    else:
-                        statDict["timestamp_mean"] = (mean(timeArray))
-                except Exception, err:
-                    print err
+                        statMean = mean(dataArray)
+                        statStd = std(dataArray)
+                        statSlope = polyfit(timeArray, dataArray, 1)[0]
+                    except:
+                        continue
+                    statDict["%s_mean"%concName] = statMean
+                    statDict["%s_std"%concName] = statStd
+                    statDict["%s_slope"%concName] = statSlope
         except:
             pass
         finally:

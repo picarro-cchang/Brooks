@@ -70,6 +70,8 @@ class ValveSequencer(ValveSequencerFrame):
         try:
             self.rotValveCtrl = RotValveCtrl(self.comPortRotValve)
             self.rotValveCtrl.open()
+            if self.rotValveCtrl.getPosition() == "-1":
+                raise Exception, "Rot Valve not responding"
         except Exception,e:
             print "%s %r" %(e,e)
             self.rotValveCtrl = None
@@ -460,6 +462,10 @@ class ValveSequencer(ValveSequencerFrame):
             else:
                 # Hold new sequence
                 self.curTextCtrlList[0].SetValue(str(self.currentStep)+" (Last Seq.)")
+            
+            # Update the seq file name in .ini file if it's running
+            self._writeFilenameToIni(self.filename)
+        
         else:
             self.holdNewSeq = False
             self.showCurrent(0)

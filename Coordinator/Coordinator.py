@@ -169,6 +169,15 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.rpcThread = RpcServerThread(self.rpcServer, self.shutdown)
         self.rpcThread.start()
 
+    def popWarning(self, msg, title=""):
+        warningThread = threading.Thread(target=self._showWarning, args = (msg,title,))
+        warningThread.setDaemon(True)
+        warningThread.start()
+      
+    def _showWarning(self, msg, title):
+        d = wx.MessageDialog(None, msg, title, wx.ICON_WARNING)
+        d.ShowModal()
+
     def shutdown(self):
         self.rpcServer.stop_server()
         
