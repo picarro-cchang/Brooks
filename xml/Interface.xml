@@ -448,9 +448,10 @@
             <description>State of spectrum controller</description>
             <enum_value ident="SPECT_CNTRL_IdleState" value="0" caption="Not acquiring"  />
             <enum_value ident="SPECT_CNTRL_StartingState" value="1" caption="Start acquisition"  />
-            <enum_value ident="SPECT_CNTRL_RunningState" value="2" caption="Acquisition in progress" />
-            <enum_value ident="SPECT_CNTRL_PausedState" value="3" caption="Acquisition paused" />
-            <enum_value ident="SPECT_CNTRL_ErrorState" value="4" caption="Error state"  />
+            <enum_value ident="SPECT_CNTRL_StartManualState" value="2" caption="Start acquisition with manual temperature control"  />
+            <enum_value ident="SPECT_CNTRL_RunningState" value="3" caption="Acquisition in progress" />
+            <enum_value ident="SPECT_CNTRL_PausedState" value="4" caption="Acquisition paused" />
+            <enum_value ident="SPECT_CNTRL_ErrorState" value="5" caption="Error state"  />
         </enum>
         <enum type="SPECT_CNTRL_ModeType"> 
             <description>Spectrum controller modes</description> 
@@ -574,6 +575,12 @@
             <enum_value ident="FLOAT_ARITHMETIC_Multiplication"   value="3" /> 
             <enum_value ident="FLOAT_ARITHMETIC_Division"         value="4" /> 
             <enum_value ident="FLOAT_ARITHMETIC_Average"          value="5" /> 
+        </enum>
+        <enum type="HEATER_CONTROL_ModeType">
+            <description>Enumeration specifying heater control mode</description> 
+            <enum_value ident="HEATER_CONTROL_MODE_DELTA_TEMP"     value="0" /> 
+            <enum_value ident="HEATER_CONTROL_MODE_TEC_TARGET"     value="1" /> 
+            <enum_value ident="HEATER_CONTROL_MODE_HEATER_FIXED"   value="2" /> 
         </enum>
     </enum_list>
     <bits_list>

@@ -107,7 +107,8 @@ int spectCntrlStep(void)
         s->useMemo_ = 0;
         s->incrCounterNext_ = s->incrCounter_ + 1;
         s->schemeCounter_++;
-        setAutomaticControl();
+        setAutomaticLaserTemperatureControl();
+        setAutomaticLaserCurrentControl();
         *(s->state_) = SPECT_CNTRL_RunningState;
         if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
                 SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
@@ -128,9 +129,19 @@ int spectCntrlStep(void)
             else *(s->active_) = *(s->next_);
         }
     }
+    else if (SPECT_CNTRL_StartManualState == *(s->state_))
+    {
+        s->useMemo_ = 0;
+        s->incrCounterNext_ = s->incrCounter_ + 1;
+        s->schemeCounter_++;
+        setAutomaticLaserCurrentControl(); // To allow ringdowns
+        *(s->state_) = SPECT_CNTRL_RunningState;
+        *(s->mode_) = SPECT_CNTRL_ContinuousMode;
+    }
     else if (SPECT_CNTRL_RunningState == *(s->state_))
     {
         if (SPECT_CNTRL_StartingState == prevState ||
+                SPECT_CNTRL_StartManualState == prevState ||
                 SPECT_CNTRL_PausedState   == prevState)
         {
             switchToRampMode();
@@ -231,7 +242,7 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
         // In continuous mode, we use the parameter values currently in the registers
         vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
         aLaserNum = 1 + (vLaserParams->actualLaser & 0x3);
-        *(s->laserTempSetpoint_[aLaserNum - 1]) = *(s->laserTempUserSetpoint_[aLaserNum - 1]);
+        // *(s->laserTempSetpoint_[aLaserNum - 1]) = *(s->laserTempUserSetpoint_[aLaserNum - 1]);
         pztOffset = *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]);
         writeFPGA(FPGA_TWGEN+TWGEN_PZT_OFFSET,pztOffset % 65536);
     }
@@ -412,7 +423,18 @@ unsigned int getSpectCntrlSchemeCount(void)
     return s->schemeCounter_;
 }
 
-void setAutomaticControl(void)
+void setAutomaticLaserTemperatureControl(void)
+{
+    DataType data;
+    
+    data.asInt = TEMP_CNTRL_AutomaticState;
+    writeRegister(LASER1_TEMP_CNTRL_STATE_REGISTER,data);
+    writeRegister(LASER2_TEMP_CNTRL_STATE_REGISTER,data);
+    writeRegister(LASER3_TEMP_CNTRL_STATE_REGISTER,data);
+    writeRegister(LASER4_TEMP_CNTRL_STATE_REGISTER,data);
+}
+
+void setAutomaticLaserCurrentControl(void)
 // Set optical injection, laser current and laser temperature controllers to automatic mode. This should be called by the
 //  scheduler thread in response to a request to start a scheme, otherwise a race condition could occur
 //  leading to the wrong value for INJECT_CONTROL_MODE.
@@ -425,11 +447,6 @@ void setAutomaticControl(void)
     writeRegister(LASER3_CURRENT_CNTRL_STATE_REGISTER,data);
     writeRegister(LASER4_CURRENT_CNTRL_STATE_REGISTER,data);
 
-    data.asInt = TEMP_CNTRL_AutomaticState;
-    writeRegister(LASER1_TEMP_CNTRL_STATE_REGISTER,data);
-    writeRegister(LASER2_TEMP_CNTRL_STATE_REGISTER,data);
-    writeRegister(LASER3_TEMP_CNTRL_STATE_REGISTER,data);
-    writeRegister(LASER4_TEMP_CNTRL_STATE_REGISTER,data);
 
     // Setting the FPGA optical injection block to automatic mode has to be done independently
     //  of setting the individual current controllers. Care is needed since the current controllers

@@ -499,9 +499,10 @@ typedef enum {
 typedef enum {
     SPECT_CNTRL_IdleState = 0, // Not acquiring
     SPECT_CNTRL_StartingState = 1, // Start acquisition
-    SPECT_CNTRL_RunningState = 2, // Acquisition in progress
-    SPECT_CNTRL_PausedState = 3, // Acquisition paused
-    SPECT_CNTRL_ErrorState = 4 // Error state
+    SPECT_CNTRL_StartManualState = 2, // Start acquisition with manual temperature control
+    SPECT_CNTRL_RunningState = 3, // Acquisition in progress
+    SPECT_CNTRL_PausedState = 4, // Acquisition paused
+    SPECT_CNTRL_ErrorState = 5 // Error state
 } SPECT_CNTRL_StateType;
 
 typedef enum {
@@ -626,6 +627,12 @@ typedef enum {
     FLOAT_ARITHMETIC_Division = 4, // 
     FLOAT_ARITHMETIC_Average = 5 // 
 } FLOAT_ARITHMETIC_OperatorType;
+
+typedef enum {
+    HEATER_CONTROL_MODE_DELTA_TEMP = 0, // 
+    HEATER_CONTROL_MODE_TEC_TARGET = 1, // 
+    HEATER_CONTROL_MODE_HEATER_FIXED = 2 // 
+} HEATER_CONTROL_ModeType;
 
 /* Definitions for COMM_STATUS_BITMASK */
 #define COMM_STATUS_CompleteMask (0x1)
