@@ -1184,8 +1184,17 @@ class QuickGui(wx.Frame):
         self.keySubstDatabase = SubstDatabase.fromIni(self.config,"KeyFilters","string",
                                                        ["replacement","units","format"],
                                                        ["\g<0>","","%.3f"])
-        self.sourceStandardModeDatabase = SubstDatabase.fromIni(self.config,"StandardModeSources","string")
-        self.keyStandardModeDatabase = SubstDatabase.fromIni(self.config,"StandardModeKeys","string")
+        
+        if "StandardModeKeysSources" in self.config:
+            self.sourceStandardModeDatabase = None
+            self.keyStandardModeDatabase = None
+            self.standardModeSourcesDict = StringDict.fromIni(self.config,"StandardModeKeysSources","source")
+            self.standardModeKeysDict = {}
+            for idx in range(len(self.standardModeSourcesDict.getStrings())):
+                self.standardModeKeysDict[idx] = StringDict.fromIni(self.config,"StandardModeKeysSources","key%d"%idx)
+        else:
+            self.sourceStandardModeDatabase = SubstDatabase.fromIni(self.config,"StandardModeSources","string")
+            self.keyStandardModeDatabase = SubstDatabase.fromIni(self.config,"StandardModeKeys","string")
         self.displayFilterSubstDatabase = SubstDatabase.fromIni(self.config,"DisplayFilters","key",["select"],[""])
         self.defaultSources = StringDict.fromIni(self.config,"Defaults","source")
         self.defaultKeys = {}
@@ -1739,13 +1748,23 @@ class QuickGui(wx.Frame):
     def getSourcesbyMode(self):
         s = self.dataStore.getSources()
         if not self.fullInterface:
-            s = [t for t in s if self.sourceStandardModeDatabase.match(t)>=0]
+            if self.sourceStandardModeDatabase != None:
+                s = [t for t in s if self.sourceStandardModeDatabase.match(t)>=0]
+            else:
+                s = [t for t in s if t in self.standardModeSourcesDict.getStrings().values()]
         return s
 
     def getKeysbyMode(self,source):
         k = self.dataStore.getKeys(source)
         if not self.fullInterface:
-            k = [t for t in k if self.keyStandardModeDatabase.match(t)>=0]
+            if self.keyStandardModeDatabase != None:
+                k = [t for t in k if self.keyStandardModeDatabase.match(t)>=0]
+            else:
+                for sourceKey in self.standardModeSourcesDict.getStrings():
+                    if self.standardModeSourcesDict.getString(sourceKey) == source:
+                        keyDict = self.standardModeKeysDict[sourceKey]
+                        k = [t for t in k if t in keyDict.getStrings().values()]
+                        break
         return k
 
     def OnShutdownButton(self,evt):
