@@ -80,9 +80,9 @@ class DasConfigure(SharedTypes.Singleton):
         self.dasInterface.hostToDspSender.wrRegUint("HARDWARE_PRESENT_REGISTER",mask)
         
     def run(self):
-        # If heaterControlMode == 1, we need to make some changes in the parameter
+        # If heaterControlMode == interface.HEATER_CONTROL_MODE_TEC_TARGET, we need to make some changes in the parameter
         #  forms for heater control
-        if self.heaterControlMode:
+        if self.heaterControlMode in [interface.HEATER_CONTROL_MODE_TEC_TARGET]:
             for formName,p in self.parameter_forms:
                 if formName == 'Heater Controller Parameters':
                     for i,pItem in enumerate(p):
@@ -356,12 +356,12 @@ class DasConfigure(SharedTypes.Singleton):
             self.opGroups["SLOW"]["CONTROLLER"].addOperation(
                 Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
     
-            if self.heaterControlMode:
+            if self.heaterControlMode in [interface.HEATER_CONTROL_MODE_TEC_TARGET]:
                 self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
                     Operation("ACTION_FLOAT_ARITHMETIC",
                              ["CAVITY_TEC_REGISTER","CAVITY_TEC_REGISTER",
                              "HEATER_CNTRL_SENSOR_REGISTER","FLOAT_ARITHMETIC_Average"]))
-            else:
+            elif self.heaterControlMode in [interface.HEATER_CONTROL_MODE_DELTA_TEMP,interface.HEATER_CONTROL_MODE_HEATER_FIXED]:
                 self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
                     Operation("ACTION_FLOAT_ARITHMETIC",
                              ["HOT_BOX_HEATSINK_TEMPERATURE_REGISTER","CAVITY_TEMPERATURE_REGISTER",

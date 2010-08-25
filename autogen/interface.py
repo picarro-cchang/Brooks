@@ -604,17 +604,19 @@ HEATER_CNTRL_StateTypeDict[2] = 'HEATER_CNTRL_ManualState' # Manual Control
 SPECT_CNTRL_StateType = c_uint
 SPECT_CNTRL_IdleState = 0 # Not acquiring
 SPECT_CNTRL_StartingState = 1 # Start acquisition
-SPECT_CNTRL_RunningState = 2 # Acquisition in progress
-SPECT_CNTRL_PausedState = 3 # Acquisition paused
-SPECT_CNTRL_ErrorState = 4 # Error state
+SPECT_CNTRL_StartManualState = 2 # Start acquisition with manual temperature control
+SPECT_CNTRL_RunningState = 3 # Acquisition in progress
+SPECT_CNTRL_PausedState = 4 # Acquisition paused
+SPECT_CNTRL_ErrorState = 5 # Error state
 
 # Dictionary for enumerated constants in SPECT_CNTRL_StateType
 SPECT_CNTRL_StateTypeDict = {}
 SPECT_CNTRL_StateTypeDict[0] = 'SPECT_CNTRL_IdleState' # Not acquiring
 SPECT_CNTRL_StateTypeDict[1] = 'SPECT_CNTRL_StartingState' # Start acquisition
-SPECT_CNTRL_StateTypeDict[2] = 'SPECT_CNTRL_RunningState' # Acquisition in progress
-SPECT_CNTRL_StateTypeDict[3] = 'SPECT_CNTRL_PausedState' # Acquisition paused
-SPECT_CNTRL_StateTypeDict[4] = 'SPECT_CNTRL_ErrorState' # Error state
+SPECT_CNTRL_StateTypeDict[2] = 'SPECT_CNTRL_StartManualState' # Start acquisition with manual temperature control
+SPECT_CNTRL_StateTypeDict[3] = 'SPECT_CNTRL_RunningState' # Acquisition in progress
+SPECT_CNTRL_StateTypeDict[4] = 'SPECT_CNTRL_PausedState' # Acquisition paused
+SPECT_CNTRL_StateTypeDict[5] = 'SPECT_CNTRL_ErrorState' # Error state
 
 # Enumerated definitions for SPECT_CNTRL_ModeType
 SPECT_CNTRL_ModeType = c_uint
@@ -861,6 +863,18 @@ FLOAT_ARITHMETIC_OperatorTypeDict[2] = 'FLOAT_ARITHMETIC_Subtraction' #
 FLOAT_ARITHMETIC_OperatorTypeDict[3] = 'FLOAT_ARITHMETIC_Multiplication' # 
 FLOAT_ARITHMETIC_OperatorTypeDict[4] = 'FLOAT_ARITHMETIC_Division' # 
 FLOAT_ARITHMETIC_OperatorTypeDict[5] = 'FLOAT_ARITHMETIC_Average' # 
+
+# Enumerated definitions for HEATER_CONTROL_ModeType
+HEATER_CONTROL_ModeType = c_uint
+HEATER_CONTROL_MODE_DELTA_TEMP = 0 # 
+HEATER_CONTROL_MODE_TEC_TARGET = 1 # 
+HEATER_CONTROL_MODE_HEATER_FIXED = 2 # 
+
+# Dictionary for enumerated constants in HEATER_CONTROL_ModeType
+HEATER_CONTROL_ModeTypeDict = {}
+HEATER_CONTROL_ModeTypeDict[0] = 'HEATER_CONTROL_MODE_DELTA_TEMP' # 
+HEATER_CONTROL_ModeTypeDict[1] = 'HEATER_CONTROL_MODE_TEC_TARGET' # 
+HEATER_CONTROL_ModeTypeDict[2] = 'HEATER_CONTROL_MODE_HEATER_FIXED' # 
 
 # Definitions for COMM_STATUS_BITMASK
 COMM_STATUS_CompleteMask = 0x1
@@ -2933,7 +2947,7 @@ parameter_forms.append(('Optical Injection Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','choices',SPECT_CNTRL_STATE_REGISTER,'Spectrum Controller State','',[(SPECT_CNTRL_IdleState,"Not acquiring"),(SPECT_CNTRL_StartingState,"Start acquisition"),(SPECT_CNTRL_RunningState,"Acquisition in progress"),(SPECT_CNTRL_PausedState,"Acquisition paused"),(SPECT_CNTRL_ErrorState,"Error state"),],1,1))
+__p.append(('dsp','choices',SPECT_CNTRL_STATE_REGISTER,'Spectrum Controller State','',[(SPECT_CNTRL_IdleState,"Not acquiring"),(SPECT_CNTRL_StartingState,"Start acquisition"),(SPECT_CNTRL_StartManualState,"Start acquisition with manual temperature control"),(SPECT_CNTRL_RunningState,"Acquisition in progress"),(SPECT_CNTRL_PausedState,"Acquisition paused"),(SPECT_CNTRL_ErrorState,"Error state"),],1,1))
 __p.append(('dsp','choices',SPECT_CNTRL_MODE_REGISTER,'Spectrum Controller Mode','',[(SPECT_CNTRL_SchemeSingleMode,"Perform single scheme"),(SPECT_CNTRL_SchemeMultipleMode,"Perform multiple schemes"),(SPECT_CNTRL_SchemeSequenceMode,"Perform scheme sequence"),(SPECT_CNTRL_ContinuousMode,"Continuous acquisition"),],1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_ACTIVE_SCHEME_REGISTER,'Active scheme table index','','%d',1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_NEXT_SCHEME_REGISTER,'Next scheme table index','','%d',1,1))
