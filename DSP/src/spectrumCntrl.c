@@ -134,9 +134,9 @@ int spectCntrlStep(void)
         s->useMemo_ = 0;
         s->incrCounterNext_ = s->incrCounter_ + 1;
         s->schemeCounter_++;
+        *(s->mode_) = SPECT_CNTRL_ContinuousManualTempMode;
         setAutomaticLaserCurrentControl(); // To allow ringdowns
         *(s->state_) = SPECT_CNTRL_RunningState;
-        *(s->mode_) = SPECT_CNTRL_ContinuousMode;
     }
     else if (SPECT_CNTRL_RunningState == *(s->state_))
     {
@@ -246,6 +246,10 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
         pztOffset = *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]);
         writeFPGA(FPGA_TWGEN+TWGEN_PZT_OFFSET,pztOffset % 65536);
     }
+    else if (SPECT_CNTRL_ContinuousManualTempMode == *(s->mode_))
+    {   // With manual temperature control, there are no virtual lasers and the PZT offset is zero
+        writeFPGA(FPGA_TWGEN+TWGEN_PZT_OFFSET,0);    
+    }
     else {    
         if (useMemo && *(s->active_) == activeMemo && *(s->row_) == rowMemo) return;
         *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
@@ -298,6 +302,24 @@ void setupNextRdParams(void)
         laserTempAsInt = 1000.0*r->laserTemperature;
         // Set up the FPGA registers for this ringdown
         changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W, laserNum);
+        writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,r->ringdownThreshold);
+    }
+    else if (SPECT_CNTRL_ContinuousManualTempMode == *(s->mode_))
+    {
+        // In this mode there are no virtual lasers. Get actual laser number from FPGA
+        laserNum = readBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W);
+        r->injectionSettings = laserNum;
+        r->laserTemperature = *(s->laserTemp_[laserNum]);
+        r->coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
+        r->etalonTemperature = *(s->etalonTemperature_);
+        r->cavityPressure = *(s->cavityPressure_);
+        r->ambientPressure = *(s->ambientPressure_);
+        r->schemeTableAndRow = 0;
+        r->countAndSubschemeId = (s->incrCounter_ << 16);
+        r->ringdownThreshold = *(s->defaultThreshold_);
+        r->status = 0;
+        laserTempAsInt = 1000.0*r->laserTemperature;
+        // Set up the FPGA registers for this ringdown
         writeFPGA(FPGA_RDMAN+RDMAN_THRESHOLD,r->ringdownThreshold);
     }
     else    // We are running a scheme
