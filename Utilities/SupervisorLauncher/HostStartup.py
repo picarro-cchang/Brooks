@@ -148,7 +148,6 @@ class HostStartup(HostStartupFrame):
                 taskList.append(taskName.lower())
             if appName == "QuickGui":
                 break
-        taskList[3]="Test Module"
         HostStartupFrame.__init__(self, taskList, *args, **kwds)
         self.taskIdx = 0
         self.timer = wx.Timer(self)
