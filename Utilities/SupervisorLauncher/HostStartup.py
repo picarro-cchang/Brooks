@@ -51,7 +51,7 @@ class HostStartupFrame(wx.Frame):
     def __init__(self, taskList, *args, **kwds):
         self.taskList = taskList
         kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL|wx.STAY_ON_TOP
-        kwds["pos"] = (0,50)
+        kwds["pos"] = (0,20)
         wx.Frame.__init__(self, *args, **kwds)
         self.panel1 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         self.panel2 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
