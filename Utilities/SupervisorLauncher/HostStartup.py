@@ -98,7 +98,7 @@ class HostStartupFrame(wx.Frame):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_1 = wx.FlexGridSizer(-1, 3)
+        grid_sizer_1 = wx.FlexGridSizer(-1, 4)
 
         sizer_1.Add(logoSizer, 0, wx.ALIGN_CENTER|wx.BOTTOM, 5)
         sizer_1.Add(self.labelTitle1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
@@ -117,8 +117,8 @@ class HostStartupFrame(wx.Frame):
                 grid_sizer_1.Add(checkImage, 0, wx.ALL, 10)
             else:
                 grid_sizer_1.Add(self.curCheckboxList[idx], 0, wx.ALL, 10)
-                
             grid_sizer_1.Add(self.curTextList[idx], 0, wx.ALL, 10)
+            grid_sizer_1.Add((50,-1))   
         sizer_2.Add(grid_sizer_1, 0, wx.EXPAND, wx.RIGHT|wx.LEFT, 20)
         self.panel2.SetSizer(sizer_2)
         
