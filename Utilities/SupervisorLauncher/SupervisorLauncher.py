@@ -140,6 +140,10 @@ class SupervisorLauncher(SupervisorLauncherFrame):
             info.wShowWindow = subprocess.SW_HIDE
         subprocess.Popen(["supervisor.exe","-f","-c",self.supervisorIni], startupinfo=info)
 
+        # Launch HostStartup
+        #os.system("C:\Picarro\G2000\Host\Utilities\SupervisorLauncher\HostStartup.py -c %s" % self.supervisorIni)
+        subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
+        
         # Change QuickGui Title
         setTitleThread = threading.Thread(target=self.setGuiTitle)
         setTitleThread.setDaemon(True)
