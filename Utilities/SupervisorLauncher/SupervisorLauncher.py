@@ -142,6 +142,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
 
         # Launch HostStartup
         #os.system("C:\Picarro\G2000\Host\Utilities\SupervisorLauncher\HostStartup.py -c %s" % self.supervisorIni)
+        info = subprocess.STARTUPINFO()
         subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
         
         # Change QuickGui Title

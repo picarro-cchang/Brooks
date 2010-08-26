@@ -129,13 +129,14 @@ class HostStartup(HostStartupFrame):
         fitterFound = False
         for appName in self.co["Applications"]:
             if appName == "RDFreqConverter":
-                taskName = "RDFrequencyConverter.exe"
-            elif appName.startswith("Fitter") and not fitterFound:
-                taskName = "Fitter.exe"
-                fitterFound = True
+                taskList.append("RDFrequencyConverter.exe")
+            elif appName.startswith("Fitter"):
+                if not fitterFound:
+                    taskList.append("Fitter.exe")
+                    fitterFound = True
             else:
                 taskName = "%s.exe" % appName
-            taskList.append(taskName)
+                taskList.append(taskName)
             if appName == "QuickGui":
                 break
         HostStartupFrame.__init__(self, taskList, *args, **kwds)

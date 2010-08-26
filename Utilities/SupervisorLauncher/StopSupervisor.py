@@ -51,6 +51,7 @@ taskList = [
 "DataLogger.exe",
 "CommandInterface.exe",
 "Controller.exe",
+"Coordinator.exe"
 ]
 
 def getWinProcessListStr():
