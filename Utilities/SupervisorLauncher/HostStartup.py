@@ -22,7 +22,9 @@ translationTable = {
 "instmgr.exe": "Instrument Manager",
 "alarmsystem.exe": "Alarm System",
 "valvesequencer.exe": "Valve Sequencer",
-"quickgui.exe": "CRDS Data Viewer"
+"quickgui.exe": "CRDS Data Viewer",
+"electricalinterface.exe": "Electrical Interface",
+"controller.exe": "Controller"
 }
 
 appTimeout = 30 # sec
