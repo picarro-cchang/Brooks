@@ -57,11 +57,12 @@ class HostStartupFrame(wx.Frame):
         wx.Frame.__init__(self, *args, **kwds)
         self.SetMinSize((500,-1))
         self.panel1 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
-        self.panel2 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
+        self.panel2 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB|wx.SUNKEN_BORDER)
         self.panel3 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         self.panel1.SetBackgroundColour("white")
         self.panel2.SetBackgroundColour("#E0FFFF")
-        self.panel3.SetBackgroundColour("#BDEDFF")
+        #self.panel3.SetBackgroundColour("#BDEDFF")
+        self.panel3.SetBackgroundColour("#82CAFF")
         self.SetTitle("Picarro Software Loading Status")
         self.CenterOnScreen(wx.HORIZONTAL)
 
@@ -84,7 +85,7 @@ class HostStartupFrame(wx.Frame):
             self.curCheckboxList.append((20,20))
         
         # Divider line
-        self.staticLine = wx.StaticLine(self.panel1, -1)      
+        #self.staticLine = wx.StaticLine(self.panel1, -1)      
         
         # Image
         logoBmp = wx.Bitmap(os.path.dirname(AppPath)+'/logo.png', wx.BITMAP_TYPE_PNG)
@@ -103,7 +104,7 @@ class HostStartupFrame(wx.Frame):
 
         sizer_1.Add(logoSizer, 0, wx.ALIGN_CENTER|wx.BOTTOM, 5)
         sizer_1.Add(self.labelTitle1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
-        sizer_1.Add(self.staticLine, 0, wx.EXPAND, 0)
+        #sizer_1.Add(self.staticLine, 0, wx.EXPAND, 0)
         self.panel1.SetSizer(sizer_1)
         
         for idx in range(len(self.taskList)):
