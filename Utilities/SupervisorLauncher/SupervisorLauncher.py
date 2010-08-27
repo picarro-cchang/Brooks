@@ -128,13 +128,14 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     except:
                         pass
                 CRDS_Driver.CmdFIFO.StopServer()
-                try:
-                    shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
-                except:
-                    pass
                 time.sleep(1)
             else:
                 return
+        if not self.forcedLaunch:
+            try:
+                shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
+            except:
+                pass
         os.chdir(self.supervisorExeDir)
         info = subprocess.STARTUPINFO()
         if self.consoleMode != 1:
