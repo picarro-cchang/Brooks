@@ -1177,6 +1177,7 @@ class QuickGui(wx.Frame):
             self.valveSeqRpc = None
         self.configFile = configFile
         self.config = self.loadConfig(self.configFile)
+        self.valveSeqOption = self.config.getboolean("ValveSequencer","Enable",True)
         self.numGraphs = max(1, self.config.getint("Graph","NumGraphs",1))
         self.colorDatabase = ColorDatabase(self.config,"Colors")
         self.fontDatabase = FontDatabase(self.config,"Fonts")
@@ -1301,10 +1302,11 @@ class QuickGui(wx.Frame):
         except:
             self.pulseSource = None
             
-        self.idValveSeq = wx.NewId()
-        self.iValveSeq = wx.MenuItem(self.iTools, self.idValveSeq, "Show/Hide Valve Sequencer GUI", "", wx.ITEM_NORMAL)
-        self.iTools.AppendItem(self.iValveSeq)  
-        self.Bind(wx.EVT_MENU, self.OnValveSeq, id=self.idValveSeq)
+        if self.valveSeqOption:
+            self.idValveSeq = wx.NewId()
+            self.iValveSeq = wx.MenuItem(self.iTools, self.idValveSeq, "Show/Hide Valve Sequencer GUI", "", wx.ITEM_NORMAL)
+            self.iTools.AppendItem(self.iValveSeq)  
+            self.Bind(wx.EVT_MENU, self.OnValveSeq, id=self.idValveSeq)
         
         self.menuBar.Append(self.iHelp,"Help")
         self.idABOUT = wx.NewId()
