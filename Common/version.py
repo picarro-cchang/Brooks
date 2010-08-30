@@ -16,7 +16,7 @@
 #                                                            
 HOST_MAJOR_VERSION = 0
 HOST_MINOR_VERSION = 0
-HOST_INTERNAL_VERSION = "3"
+HOST_INTERNAL_VERSION = "4"
 
 def versionString():
     if HOST_INTERNAL_VERSION in [0, "0"]:

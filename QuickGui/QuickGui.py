@@ -57,6 +57,7 @@ from Host.Common import GraphPanel
 from Host.Common import BetterTraceback
 from Host.Common import AppStatus
 from Host.Common import SharedTypes
+from Host.Common import StopSupervisor
 from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
                                     RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_QUICK_GUI
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -259,7 +260,7 @@ class ShutdownDialog(wx.Dialog):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
         self.selectShutdownType = wx.RadioBox(self, -1, "Select shutdown method",
-            choices=["Shutdown in current state", "Prepare for shipping"], majorDimension=2,
+            choices=["Stop instrument software", "Shutdown in current state", "Prepare for shipping"], majorDimension=2,
             style=wx.RA_SPECIFY_ROWS)
         self.okButton = wx.Button(self, wx.ID_OK)
         self.cancelButton = wx.Button(self, wx.ID_CANCEL)
@@ -1175,6 +1176,7 @@ class QuickGui(wx.Frame):
             self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
         except:
             self.valveSeqRpc = None
+        self.stopSupervisor = StopSupervisor.StopSupervisor(None, -1, "")
         self.configFile = configFile
         self.config = self.loadConfig(self.configFile)
         self.valveSeqOption = self.config.getboolean("ValveSequencer","Enable",True)
@@ -1776,8 +1778,10 @@ class QuickGui(wx.Frame):
             type = dialog.getShutdownType()
             # Call appropriate shutdown RPC routine on the instrument manager
             if type == 0:
-                self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(2)
+                self.stopSupervisor.onStop(None, "QuickGui.exe")
             elif type == 1:
+                self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(2)
+            elif type == 2:
                 self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(0)
         dialog.Destroy()
     def OnResetBuffers(self,evt):
