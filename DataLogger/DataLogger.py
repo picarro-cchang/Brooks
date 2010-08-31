@@ -81,7 +81,8 @@ from inspect import isclass
 from tables import *
 
 from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster
-from Host.Common.SharedTypes import RPC_PORT_DATALOGGER, BROADCAST_PORT_DATA_MANAGER, RPC_PORT_INSTR_MANAGER, STATUS_PORT_ALARM_SYSTEM, RPC_PORT_ARCHIVER
+from Host.Common.SharedTypes import RPC_PORT_DATALOGGER, BROADCAST_PORT_DATA_MANAGER, RPC_PORT_INSTR_MANAGER, \
+                                    STATUS_PORT_ALARM_SYSTEM, RPC_PORT_ARCHIVER, RPC_PORT_DRIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SafeFile import SafeFile, FileExists
 from Host.Common.MeasData import MeasData
@@ -114,6 +115,10 @@ CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCH
                                             APP_NAME,
                                             IsDontCareConnection = True)
 
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                            APP_NAME,
+                                            IsDontCareConnection = False)
+                                            
 # Not used now, but may be useful in the future                                            
 CRDS_InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
                                             APP_NAME,
@@ -473,7 +478,13 @@ class DataLogger(object):
         cp = CustomConfigObj(self.ConfigPath) 
         self.basePath = os.path.split(self.ConfigPath)[0]
         try:
-            self.engineName = cp.get("DEFAULT", "ENGINE")
+            try:
+                instInfo = CRDS_Driver.fetchObject("LOGIC_EEPROM")[0]
+                print "instInfo = ", instInfo
+                self.engineName = instInfo["Analyzer"]+instInfo["AnalyzerNum"]
+            except Exception, err:
+                print err
+                self.engineName = cp.get("DEFAULT", "ENGINE")
             mailGroupName = cp.get("DEFAULT", "ArchiveGroupName")
             mailGroupEnabled = cp.getboolean("DEFAULT", "mboxenabled")
             self.backupGroupName = cp.get("DEFAULT", "BackupGroupName")
