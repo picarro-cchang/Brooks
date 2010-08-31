@@ -36,6 +36,21 @@ class DriverProxy(SharedTypes.Singleton):
 # For convenience in calling driver functions
 Driver = DriverProxy().rpc
 
+class RDFreqConvProxy(SharedTypes.Singleton):
+    """Encapsulates access to the Driver via RPC calls"""
+    initialized = False
+    def __init__(self):
+        if not self.initialized:
+            self.hostaddr = "localhost"
+            self.myaddr = socket.gethostbyname(socket.gethostname())
+            serverURI = "http://%s:%d" % (self.hostaddr,
+                SharedTypes.RPC_PORT_FREQ_CONVERTER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="MakeWlmFile1")
+            self.initialized = True
+
+# For convenience in calling driver functions
+RDFreqConv = RDFreqConvProxy().rpc
+
 class CsvData(object):
     "Class for writing to a comma separated value file"
     def __init__(self):
@@ -60,7 +75,7 @@ class StreamData(object):
     pass
 
 class ThresholdStats(object):
-    def __init__(self,instrName,thMin,thMax,thIncr):
+    def __init__(self,instrName,thMin,thMax,thIncr,schemeName):
         # Remove the .flag file to indicate routine has not finished yet
         [basename,ext] = os.path.splitext(sys.argv[0])
         self.flagname = basename + ".flag"
@@ -75,6 +90,7 @@ class ThresholdStats(object):
         self.thMin = thMin
         self.thMax = thMax
         self.thIncr = thIncr
+        self.schemeName = schemeName
         # Set up a listener for the streaming data
         self.queue = Queue.Queue(0)
 
@@ -137,6 +153,20 @@ class ThresholdStats(object):
     def run(self):
         regVault = Driver.saveRegValues(["SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER"])
         self.listener = Listener.Listener(self.queue,SharedTypes.BROADCAST_PORT_RD_RECALC,ProcessedRingdownEntryType)
+        # Stop spectrum collection
+        if self.schemeName:
+            Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_IdleState")
+            time.sleep(1)
+            scheme = SharedTypes.Scheme(self.schemeName)
+            RDFreqConv.wrFreqScheme(1,scheme)
+            RDFreqConv.convertScheme(1)
+            RDFreqConv.uploadSchemeToDAS(1)
+            time.sleep(1)
+            Driver.wrDasReg("SPECT_CNTRL_NEXT_SCHEME_REGISTER",1)
+            Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER","SPECT_CNTRL_SchemeMultipleMode")
+            Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_StartingState")
+            print>>sys.stderr, "Loaded scheme file: %s" % (self.schemeName,)
+            print "Loaded scheme file: %s" % (self.schemeName,)
         self.thresh_list = arange(self.thMin,self.thMax+1,self.thIncr)
         self.rd_rates = zeros(len(self.thresh_list),float_)
         self.shot_to_shot = zeros(len(self.thresh_list),float_)
@@ -146,9 +176,11 @@ class ThresholdStats(object):
             for l in range(len(self.thresh_list)):
                 thresh = float(self.thresh_list[l])
                 self.setTuner(thresh)
-                rate,meanLoss,varLoss,meanWavenumber = self.collectStats(200,10)
+                time.sleep(1)
+                rate,meanLoss,varLoss,meanWavenumber = self.collectStats(1000,20)
                 shot2shot = 0
                 if meanLoss != 0: shot2shot = 100*sqrt(varLoss)/meanLoss
+                print>>sys.stderr, "\nThreshold: %6.0f Ringdown rate: %6.2f Shot-to-shot: %6.3f Mean loss: %6.3f Mean wavenumber: %10.4f" % (thresh,rate,shot2shot,meanLoss,meanWavenumber)
                 print "\nThreshold: %6.0f Ringdown rate: %6.2f Shot-to-shot: %6.3f Mean loss: %6.3f Mean wavenumber: %10.4f" % (thresh,rate,shot2shot,meanLoss,meanWavenumber)
                 self.rd_rates[l] = rate
                 self.shot_to_shot[l] = shot2shot
@@ -175,7 +207,8 @@ class ThresholdStats(object):
         csvOut = CsvData()
         csvOut.parameters = {"DateTime":self.startTime,
                              "Description":"%s" % ("Variation of ringdown statistics with threshold",),
-                             "InstrumentName":self.instrName
+                             "InstrumentName":self.instrName,
+                             "SchemeFile":"%s" % (self.schemeName,)
                             }
         for r in regs:
             if isinstance(r,str):
@@ -207,8 +240,10 @@ if __name__ == "__main__":
     if len(sys.argv)>2: thMin = int(sys.argv[2])
     if len(sys.argv)>3: thMax = int(sys.argv[3])
     if len(sys.argv)>4: thIncr = int(sys.argv[4])
+    schemeName = None
+    if len(sys.argv)>5: schemeName= sys.argv[5].strip()
     if instrName == None:
         instrName = raw_input("Name of instrument? ")
-    tst = ThresholdStats(instrName,thMin,thMax,thIncr)
+    tst = ThresholdStats(instrName,thMin,thMax,thIncr,schemeName)
     tst.run()
     tst.done()

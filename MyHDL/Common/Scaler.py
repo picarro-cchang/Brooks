@@ -54,7 +54,7 @@ def Scaler(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,x1_in,
         while True:
             yield clk.posedge, reset.posedge
             if reset:
-                scale1.next = intbv(0xFFFF)[16:]
+                scale1.next = intbv(40000)[16:]
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
