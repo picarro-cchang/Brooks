@@ -710,6 +710,40 @@ class CommandLogPanel(CommandLogPanelGui):
             self.startAcquisitionButton.SetLabel(CommandLogPanel.acqLabels["stop"])
         pass
     
+    def disableAll(self):
+        self.startEngineButton.Enable(False)
+        self.laser1State.Enable(False)
+        self.laser2State.Enable(False)
+        self.laser3State.Enable(False)
+        self.laser4State.Enable(False)
+        self.warmBoxState.Enable(False)
+        self.hotBoxState.Enable(False)
+        self.streamFileCheckbox.Enable(False)
+        self.streamFileTextCtrl.Enable(False)
+        self.loadCalibrationButton.Enable(False)
+        self.warmBoxCalFileTextCtrl.Enable(False)
+        self.hotBoxCalFileTextCtrl.Enable(False)
+        self.startAcquisitionButton.Enable(False)
+        self.seqTextCtrl.Enable(False)
+        #self.logListCtrl.Enable(False)
+      
+    def enableAll(self):
+        self.startEngineButton.Enable(True)
+        self.laser1State.Enable(True)
+        self.laser2State.Enable(True)
+        self.laser3State.Enable(True)
+        self.laser4State.Enable(True)
+        self.warmBoxState.Enable(True)
+        self.hotBoxState.Enable(True)
+        self.streamFileCheckbox.Enable(True)
+        self.streamFileTextCtrl.Enable(True)
+        self.loadCalibrationButton.Enable(True)
+        self.warmBoxCalFileTextCtrl.Enable(True)
+        self.hotBoxCalFileTextCtrl.Enable(True)
+        self.startAcquisitionButton.Enable(True)
+        self.seqTextCtrl.Enable(True)
+        #self.logListCtrl.Enable(True)
+        
 class StatsPanel(StatsPanelGui):
     def __init__(self,*a,**k):
         StatsPanelGui.__init__(self,*a,**k)

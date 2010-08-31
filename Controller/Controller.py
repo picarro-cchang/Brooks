@@ -71,6 +71,11 @@ class Controller(ControllerFrameGui):
         panels["Ringdown"]=self.ringdownPanel
         panels["Stats"]=self.statsPanel
 
+        # Starting from user mode
+        self.fullInterface = False
+        self.password = "picarro"
+        self.updateInterface()
+
     def setupWaveforms(self):
         waveforms["Laser1"]=dict(
             temperature=self.laser1Panel.temperatureWfm,
@@ -166,6 +171,21 @@ class Controller(ControllerFrameGui):
         #print "About to show dialog"
         pd.Show()
 
+    def onAbout(self,evt):
+        v = "(c) 2005-2010, Picarro Inc.\n\n"
+        try:
+            dV = Driver.allVersions()
+            klist = dV.keys()
+            klist.sort()
+            v += "Version strings:\n"
+            for k in klist:
+                v += "%s : %s\n" % (k,dV[k])
+        except:
+            v += "Driver version information unavailable"
+        d = wx.MessageDialog(None,v,"Picarro CRDS",wx.OK)
+        d.ShowModal()
+        d.Destroy()
+        
     def onClose(self,evt):
         for id in self.openParamDialogs:
             try:
@@ -175,6 +195,34 @@ class Controller(ControllerFrameGui):
         self.updateTimer.Stop()
         self.Close()
 
+    def onFullInterface(self,evt):
+        if self.fullInterface: 
+            return
+        else:
+            dlg = wx.TextEntryDialog(self, 'Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+            self.fullInterface = (dlg.ShowModal() == wx.ID_OK) and (dlg.GetValue() == self.password)
+            dlg.Destroy()
+        if self.fullInterface: 
+            self.updateInterface()
+
+    def onUserInterface(self,evt):
+        if not self.fullInterface: 
+            return
+        else:
+            self.fullInterface = False
+            self.updateInterface()
+
+    def updateInterface(self):
+        """ Update the Controller GUI based on self.fullInterface."""
+        if not self.fullInterface:
+            self.controllerFrameGui_menubar.EnableTop(pos=1,enable=False)
+            self.controllerFrameGui_menubar.EnableTop(pos=2,enable=False) 
+            self.commandLogPanel.disableAll()
+        else:
+            self.controllerFrameGui_menubar.EnableTop(pos=1,enable=True)
+            self.controllerFrameGui_menubar.EnableTop(pos=2,enable=True)
+            self.commandLogPanel.enableAll()
+        
     def onUpdateTimer(self,evt):
         self.commandLogPanel.updateLoopStatus()
         self.commandLogPanel.updateCalFileStatus()
