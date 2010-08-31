@@ -260,7 +260,7 @@ class ShutdownDialog(wx.Dialog):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
         self.selectShutdownType = wx.RadioBox(self, -1, "Select shutdown method",
-            choices=["Stop instrument software", "Shutdown in current state", "Prepare for shipping"], majorDimension=2,
+            choices=["Stop Analyzer Software Only", "Turn Off Analyzer in Current State", "Turn Off Analyzer and Prepare For Shipping"], majorDimension=2,
             style=wx.RA_SPECIFY_ROWS)
         self.okButton = wx.Button(self, wx.ID_OK)
         self.cancelButton = wx.Button(self, wx.ID_CANCEL)
