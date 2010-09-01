@@ -17,8 +17,8 @@ import win32process
 import win32con
 import shutil
 from Host.Common import CmdFIFO
+from Host.Common.SharedTypes import RPC_PORT_DRIVER
 
-RPC_PORT_DRIVER = 50010
 APP_NAME = "SupervisorTerminator"
 
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,

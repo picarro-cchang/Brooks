@@ -22,9 +22,8 @@ from SupervisorLauncherFrame import SupervisorLauncherFrame
 from Host.Common import CmdFIFO
 import threading
 from Host.Common.SingleInstance import SingleInstance
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_QUICK_GUI
 
-RPC_PORT_DRIVER    = 50010
-RPC_PORT_QUICK_GUI = 50220
 APP_NAME = "SupervisorLauncher"
 DEFAULT_CONFIG_NAME = "SupervisorLauncher.ini"
 
