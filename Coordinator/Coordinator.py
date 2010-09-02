@@ -170,12 +170,17 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.rpcThread.start()
 
     def popWarning(self, msg, title=""):
-        warningThread = threading.Thread(target=self._showWarning, args = (msg,title,))
+        warningThread = threading.Thread(target=self._showMessage, args = (msg,title,wx.ICON_WARNING))
         warningThread.setDaemon(True)
         warningThread.start()
-      
-    def _showWarning(self, msg, title):
-        d = wx.MessageDialog(None, msg, title, wx.ICON_WARNING)
+
+    def popInfo(self, msg, title=""):
+        warningThread = threading.Thread(target=self._showMessage, args = (msg,title,wx.ICON_INFORMATION))
+        warningThread.setDaemon(True)
+        warningThread.start()
+        
+    def _showMessage(self, msg, title, iconOption):
+        d = wx.MessageDialog(None, msg, title, iconOption)
         d.ShowModal()
 
     def shutdown(self):

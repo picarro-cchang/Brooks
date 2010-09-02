@@ -20,11 +20,15 @@
 # Note that the module variables DRIVER, MEASSYS, SAMPLEMGR, DATAMGR, and LOGFUNC are set from outside
 
 from time import sleep, mktime, localtime, strptime, strftime, time, clock, ctime
-from datetime import datetime
+from datetime import datetime, timedelta, MINYEAR
 from numpy import *
 import socket
 import sys
 from Host.Common.CubicSpline import CubicSpline
+from matplotlib import pyplot, dates
+from matplotlib.ticker import MaxNLocator
+import pytz
+
 #Set up a useful TimeStamp function...
 if sys.platform == 'win32':
     TimeStamp = clock
@@ -33,7 +37,21 @@ else:
 _valveSequenceLabels = {}
 
 VALVE_CTRL_MODE_DICT = {0: "Disabled", 1: "Outlet Control", 2: "Inlet Control", 3: "Manual Control"}
+ORIGIN = datetime(MINYEAR,1,1,0,0,0,0)
+UNIXORIGIN = datetime(1970,1,1,0,0,0,0)
 
+##############
+# General DRIVER functions
+##############
+def getAnalyzerId():
+    try:
+        instInfo = DRIVER.fetchObject("LOGIC_EEPROM")[0]
+        analyzerId = instInfo["Analyzer"]+instInfo["AnalyzerNum"]
+    except Exception, err:
+        print err
+        analyzerId = "UNKNOWN"
+    return analyzerId
+                
 ##############
 # Numerical calculations
 ##############
@@ -44,7 +62,7 @@ def cubicSpline(xList, yList, numPoints):
     return list(newXList), newYList
     
 #############
-# UTC
+# UTC & Time
 #############
 def getUTCTime(option="float"):
     """Get UTC (GMT) time"""
@@ -67,6 +85,22 @@ def getSpecUTC(specTime = "00:00:00", option="float"):
     elif option.lower() == "string":
         return ctime(mktime(newTime))
     
+def unixTimeArray2MatplotTimeArray(timeArray, tzOption = "US/Pacific"):
+    tz=pytz.timezone(tzOption)
+    dt = datetime.fromtimestamp(timeArray[0],tz=tz)
+    mTime0 = dates.date2num(dt)
+    mTimeArray = (timeArray-timeArray[0])/(3600.0*24.0) + mTime0
+    formatter = dates.DateFormatter('%H:%M:%S\n%Y/%m/%d',tz)
+    return mTimeArray, formatter
+    
+def plotWithMatplotTime(plotObj, matplotTimeArray, dataArray, xLabel, yLabel, formatter, numLocator):
+    plotObj.plot(matplotTimeArray, dataArray)
+    plotObj.set_xlabel(xLabel)
+    plotObj.set_ylabel(yLabel)
+    plotObj.grid()
+    plotObj.xaxis.set_major_formatter(formatter)
+    plotObj.xaxis.set_major_locator(MaxNLocator(numLocator))
+
 ##########################
 # Pulse analyzer functions
 ##########################
