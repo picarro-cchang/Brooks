@@ -27,7 +27,7 @@ import sys
 from Host.Common.CubicSpline import CubicSpline
 from matplotlib import pyplot, dates
 from matplotlib.ticker import MaxNLocator
-import pytz
+#import pytz
 
 #Set up a useful TimeStamp function...
 if sys.platform == 'win32':
@@ -85,12 +85,11 @@ def getSpecUTC(specTime = "00:00:00", option="float"):
     elif option.lower() == "string":
         return ctime(mktime(newTime))
     
-def unixTimeArray2MatplotTimeArray(timeArray, tzOption = "US/Pacific"):
-    tz=pytz.timezone(tzOption)
-    dt = datetime.fromtimestamp(timeArray[0],tz=tz)
+def unixTimeArray2MatplotTimeArray(timeArray):
+    dt = datetime.fromtimestamp(timeArray[0])
     mTime0 = dates.date2num(dt)
     mTimeArray = (timeArray-timeArray[0])/(3600.0*24.0) + mTime0
-    formatter = dates.DateFormatter('%H:%M:%S\n%Y/%m/%d',tz)
+    formatter = dates.DateFormatter('%H:%M:%S\n%Y/%m/%d')
     return mTimeArray, formatter
     
 def plotWithMatplotTime(plotObj, matplotTimeArray, dataArray, xLabel, yLabel, formatter, numLocator):
