@@ -197,7 +197,7 @@ class DataLog(object):
         self.Port = ConfigParser.getint(self.LogName, "port")
         self.BareTime = ConfigParser.getboolean(self.LogName, "baretime")
         self.useHdf5 = ConfigParser.getboolean(self.LogName, "usehdf5", False)
-        self.ArchiveGroupName = ConfigParser.get(self.LogName, "ArchiveGroupName")
+        self.ArchiveGroupName = ConfigParser.get(self.LogName, "ArchiveGroupName", default="")
         self.PrintTimeInHalfSecond = ConfigParser.getboolean(self.LogName, "printTimeInHalfSecond", False)
         self.WriteEpochTime = ConfigParser.getboolean(self.LogName, "writeEpochTime", True)
         relDir = "%s\%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
@@ -239,7 +239,8 @@ class DataLog(object):
             # if mailbox enabled, copy file to mailbox directory first
             CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True)
         # Archive
-        CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True)
+        if self.ArchiveGroupName:
+            CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True)
         Log("Datalog archive processing %s took %s seconds" % (os.path.basename(srcPath),TimeStamp()-startTime))   
             
 

@@ -734,7 +734,27 @@ def getPrefix():
     except:
         prefix = "P"
     return prefix
-    
+
+#################
+# Setting and getting pressure calibration constants
+#################            
+def getCavityPressureCalibration():
+    return (DRIVER.rdDasReg('CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER'),
+            DRIVER.rdDasReg('CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER'))
+
+def setCavityPressureCalibration(scale,offset):
+    return (DRIVER.wrDasReg('CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER',scale),
+            DRIVER.wrDasReg('CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER',offset))
+
+#################
+# Loading and saving Master.ini file
+#################            
+def loadMaster():
+    DRIVER.loadIniFile()
+
+def writeMaster(fileName=None):
+    DRIVER.writeIniFile(fileName)
+            
 def dummyGetLog():
     return """   Print Date: 2008/08/13   10:04:35
    Site Name: CTC, System Name: PAL, System SNo: 142218
