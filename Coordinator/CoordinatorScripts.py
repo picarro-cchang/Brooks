@@ -25,8 +25,12 @@ from numpy import *
 import socket
 import sys
 from Host.Common.CubicSpline import CubicSpline
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot, dates
 from matplotlib.ticker import MaxNLocator
+import urllib2
+from xml.dom import minidom
 #import pytz
 
 #Set up a useful TimeStamp function...
@@ -109,6 +113,17 @@ def plotWithMatplotTime(plotObj, matplotTimeArray, dataArray, xLabel, yLabel, fo
     plotObj.xaxis.set_major_formatter(formatter)
     plotObj.xaxis.set_major_locator(MaxNLocator(numLocator))
 
+##########################
+# Get barometric pressure with Yahoo weather
+##########################
+def getBarometricPressure(zipCode):
+    url = 'http://xml.weather.yahoo.com/forecastrss?p=%s&u=f' % zipCode
+    handler = urllib2.urlopen(url)
+    dom = minidom.parse(handler)    
+    element = dom.getElementsByTagNameNS('http://xml.weather.yahoo.com/ns/rss/1.0', 'atmosphere')[0]
+    handler.close()
+    return 25.4*float(element.getAttribute('pressure'))
+    
 ##########################
 # Pulse analyzer functions
 ##########################
