@@ -643,6 +643,9 @@ def parseAutosamplerLog(logText):
 #################
 # Temp Cycle functions
 #################            
+def setHeaterCutoffTemp(cutoffTemp):
+    DRIVER.wrDasReg("HEATER_CUTOFF_REGISTER",float(cutoffTemp))
+    
 def setTempCycleRegisters(sweepMax, sweepMin, sweepIncr):
     origMax = None
     origMin = None
