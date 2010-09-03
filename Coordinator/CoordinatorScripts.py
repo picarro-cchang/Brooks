@@ -62,6 +62,15 @@ def cubicSpline(xList, yList, numPoints):
     return list(newXList), newYList
     
 #############
+# DAS Register
+#############
+def wrDasReg(regName, regValue):
+    DRIVER.wrDasReg(regName, regValue)
+    
+def rdDasReg(regName):
+    return DRIVER.rdDasReg(regName)
+    
+#############
 # UTC & Time
 #############
 def getUTCTime(option="float"):
@@ -642,10 +651,7 @@ def parseAutosamplerLog(logText):
 
 #################
 # Temp Cycle functions
-#################            
-def setHeaterCutoffTemp(cutoffTemp):
-    DRIVER.wrDasReg("HEATER_CUTOFF_REGISTER",float(cutoffTemp))
-    
+#################           
 def setTempCycleRegisters(sweepMax, sweepMin, sweepIncr):
     origMax = None
     origMin = None
