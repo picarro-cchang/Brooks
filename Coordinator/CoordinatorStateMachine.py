@@ -29,7 +29,7 @@ from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM, \
                                     RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, \
                                     RPC_PORT_DATALOGGER, RPC_PORT_QUICK_GUI, \
-                                    RPC_PORT_INSTR_MANAGER
+                                    RPC_PORT_INSTR_MANAGER, RPC_PORT_FREQ_CONVERTER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SerIntrf import SerIntrf
 
@@ -147,6 +147,7 @@ class StateMachine(object):
         self.dataLogger = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "Coordinator")
         self.quickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUICK_GUI, ClientName = "Coordinator")
         self.instMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "Coordinator")
+        self.rdFreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER, ClientName = "Coordinator")
         
     def defaultLogger(self,str):
         print str
@@ -188,6 +189,7 @@ class StateMachine(object):
         CoordinatorScripts.INSTMGR = self.instMgr
         CoordinatorScripts.LOGFUNC = self.logFunc
         CoordinatorScripts.CONFIG = self.config
+        CoordinatorScripts.FREQCONV = self.rdFreqConverter
         #try:
         #    exec self.script in self.scriptEnv
         #except Exception,e:

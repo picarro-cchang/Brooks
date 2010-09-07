@@ -17,11 +17,12 @@
 
 # Routines to support state machine handler for autosampler
 
-# Note that the module variables DRIVER, MEASSYS, SAMPLEMGR, DATAMGR, and LOGFUNC are set from outside
+# Note that the module variables DRIVER, MEASSYS, SAMPLEMGR, DATAMGR, FREQCONV and LOGFUNC are set from outside
 
 from time import sleep, mktime, localtime, strptime, strftime, time, clock, ctime
 from datetime import datetime, timedelta, MINYEAR
 from numpy import *
+from configobj import ConfigObj
 import socket
 import sys
 from Host.Common.CubicSpline import CubicSpline
@@ -73,6 +74,18 @@ def wrDasReg(regName, regValue):
     
 def rdDasReg(regName):
     return DRIVER.rdDasReg(regName)
+    
+#############
+# Config File accces
+#############
+def getConfig(fileName):
+    return ConfigObj(fileName)
+    
+#############
+# Warm Box Accessor
+#############
+def loadWarmBoxCal(fileName):
+    FREQCONV.loadWarmBoxCal(fileName)
     
 #############
 # UTC & Time
@@ -940,3 +953,4 @@ class DummyAutosampler(object):
         pass
     def getInjected(self):
         return True
+        
