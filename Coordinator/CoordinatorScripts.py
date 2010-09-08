@@ -25,6 +25,7 @@ from numpy import *
 from configobj import ConfigObj
 import socket
 import sys
+import os
 from Host.Common.CubicSpline import CubicSpline
 import matplotlib
 matplotlib.use('Agg')
@@ -50,7 +51,7 @@ UNIXORIGIN = datetime(1970,1,1,0,0,0,0)
 ##############
 def getAnalyzerId():
     try:
-        instInfo = DRIVER.fetchObject("LOGIC_EEPROM")[0]
+        instInfo = DRIVER.fetchLogicEEPROM()[0]
         analyzerId = instInfo["Analyzer"]+instInfo["AnalyzerNum"]
     except Exception, err:
         print err

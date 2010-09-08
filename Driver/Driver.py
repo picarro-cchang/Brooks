@@ -781,11 +781,25 @@ class DriverRpcHandler(SharedTypes.Singleton):
         nBytes = len(s)
         self.wrEeprom(whichEeprom,startAddress,[ord(c) for c in struct.pack("I",nBytes)+s])
         return startAddress + 4*((nBytes+7)//4)
-    
+
+    def fetchLogicEEPROM(self):
+        """Fetch the instrument information from LOGIC_EEPROM.
+        The first four bytes contains the length of the pickled string. Returns the 
+        object and the address of the next object.
+        """
+        if not DasConfigure().i2cConfig["LOGIC_EEPROM"]:
+            raise ValueError("LOGIC_EEPROM is not available")
+        nBytes, = struct.unpack("I","".join([chr(c) for c in self.rdEeprom("LOGIC_EEPROM",0,4)]))
+        # Try to avoid EEPROM error
+        if nBytes > 100:
+            raise ValueError("LOGIC_EEPROM returns wrong size (%d bytes)" % nBytes)
+        return (cPickle.loads("".join([chr(c) for c in self.rdEeprom("LOGIC_EEPROM",4,nBytes)])),
+               4*((nBytes+3)//4))
+                
     def fetchWlmCal(self):
         """Fetch the WLM calibration data as a dictionary from WLM_EEPROM"""
         if not DasConfigure().i2cConfig["WLM_EEPROM"]:
-            raise ValueError("WLM_EEPROM is not available" % whichEeprom)
+            raise ValueError("WLM_EEPROM is not available")
         wlmCal = interface.WLMCalibrationType()
         if ctypes.sizeof(wlmCal) != 4096:
             raise ValueError("WLMCalibrationType has wrong size (%d bytes)" % ctypes.sizeof(wlmCal))
@@ -795,7 +809,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def fetchWlmHdr(self):
         """Fetch the WLM calibration header from WLM_EEPROM"""
         if not DasConfigure().i2cConfig["WLM_EEPROM"]:
-            raise ValueError("WLM_EEPROM is not available" % whichEeprom)
+            raise ValueError("WLM_EEPROM is not available")
         wlmHdr = interface.WLMHeaderType()
         if ctypes.sizeof(wlmHdr) != 64:
             raise ValueError("WLMHeaderType has wrong size (%d bytes)" % ctypes.sizeof(wlmHdr))

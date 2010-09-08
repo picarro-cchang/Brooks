@@ -46,9 +46,9 @@ class InstrEEPROMAccessFrame(wx.Frame):
         self.labelCurEEPROM = wx.StaticText(self.panel1, -1, "Current Instrument Information in EEPROM", style = wx.ALIGN_CENTER)
         self.labelCurEEPROM.SetFont(wx.Font(10, wx.DEFAULT, style = wx.NORMAL,weight = wx.BOLD))
         try:
-            curVal = CRDS_Driver.fetchObject("LOGIC_EEPROM")
-            curValDict = curVal[0]
-        except:
+            curValDict = CRDS_Driver.fetchLogicEEPROM()[0]
+        except Exception, err:
+            print err
             curValDict = {"Chassis":"NONE","Analyzer":"NONE","AnalyzerNum":"NONE"}
         self.chassisNum = curValDict["Chassis"]
         self.analyzerType = curValDict["Analyzer"]
@@ -193,8 +193,7 @@ class InstrEEPROMAccess(InstrEEPROMAccessFrame):
             return
         time.sleep(1.0)
         try:
-            curVal = CRDS_Driver.fetchObject("LOGIC_EEPROM")
-            curValDict = curVal[0]
+            curValDict = CRDS_Driver.fetchLogicEEPROM()[0]
         except:
             curValDict = {"Chassis":"NONE","Analyzer":"NONE","AnalyzerNum":"NONE"}
         self.chassisNum = curValDict["Chassis"]

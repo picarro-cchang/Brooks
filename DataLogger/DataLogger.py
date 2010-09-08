@@ -480,7 +480,7 @@ class DataLogger(object):
         self.basePath = os.path.split(self.ConfigPath)[0]
         try:
             try:
-                instInfo = CRDS_Driver.fetchObject("LOGIC_EEPROM")[0]
+                instInfo = CRDS_Driver.fetchLogicEEPROM()[0]
                 print "instInfo = ", instInfo
                 self.engineName = instInfo["Analyzer"]+instInfo["AnalyzerNum"]
             except Exception, err:
