@@ -175,9 +175,12 @@ class CoordinatorFrame(CoordinatorFrameGui):
         warningThread.start()
 
     def popInfo(self, msg, title=""):
-        warningThread = threading.Thread(target=self._showMessage, args = (msg,title,wx.ICON_INFORMATION))
-        warningThread.setDaemon(True)
-        warningThread.start()
+        infoThread = threading.Thread(target=self._showMessage, args = (msg,title,wx.ICON_INFORMATION))
+        infoThread.setDaemon(True)
+        infoThread.start()
+
+    def popPause(self, msg, title=""):
+        self._showMessage(msg,title,wx.ICON_WARNING)
         
     def _showMessage(self, msg, title, iconOption):
         d = wx.MessageDialog(None, msg, title, iconOption)
