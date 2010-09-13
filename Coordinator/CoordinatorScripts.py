@@ -33,6 +33,8 @@ from matplotlib import pyplot, dates
 from matplotlib.ticker import MaxNLocator
 import urllib2
 from xml.dom import minidom
+from Host.Common import CmdFIFO
+import ImageGrab
 #import pytz
 
 #Set up a useful TimeStamp function...
@@ -111,7 +113,10 @@ def getSpecUTC(specTime = "00:00:00", option="float"):
         return mktime(newTime)
     elif option.lower() == "string":
         return ctime(mktime(newTime))
-    
+   
+##############
+# Plotting and Images
+##############   
 def unixTimeArray2MatplotTimeArray(timeArray):
     dt = datetime.fromtimestamp(timeArray[0])
     mTime0 = dates.date2num(dt)
@@ -127,6 +132,9 @@ def plotWithMatplotTime(plotObj, matplotTimeArray, dataArray, xLabel, yLabel, fo
     plotObj.xaxis.set_major_formatter(formatter)
     plotObj.xaxis.set_major_locator(MaxNLocator(numLocator))
 
+def grabScreenshot(filename):
+    im = ImageGrab.grab()
+    im.save(filename)
 ##########################
 # Get barometric pressure with Yahoo weather
 ##########################
@@ -137,7 +145,30 @@ def getBarometricPressure(zipCode):
     element = dom.getElementsByTagNameNS('http://xml.weather.yahoo.com/ns/rss/1.0', 'atmosphere')[0]
     handler.close()
     return 25.4*float(element.getAttribute('pressure'))
+
+##########################
+# Fitter functions
+##########################
+class FitterRPC(object):
+    def __init__(self, rpcPort):
+        self.fitter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % rpcPort, ClientName = "Coordinator")
     
+    def setH5Files(self, h5FileList):
+        self.fitter.FITTER_makeHdf5RepositoryRpc(h5FileList)
+    
+    def fitSpectrum(self):
+        self.fitter.FITTER_fitSpectrumRpc()
+        sleep(2)
+        self.fitter.FITTER_updateViewer(True)
+        sleep(2)
+        self.fitter.FITTER_setProcModeRpc(False)
+        
+    def maximizeViewer(self):
+        self.fitter.FITTER_maximizeViewer(True)
+        
+    def restoreViewer(self):
+        self.fitter.FITTER_maximizeViewer(False)
+        
 ##########################
 # Pulse analyzer functions
 ##########################

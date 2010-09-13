@@ -991,6 +991,12 @@ class FitViewer(wx.Frame):
                 self.updateTimer.Stop()
                 wx.MessageBox(packet,caption="Fitter exception",style=wx.OK | wx.ICON_ERROR)
                 self.updateTimer.Start()
+            elif command == 4:
+                # Maximize the FitViewer
+                try:
+                    self.Maximize(packet)
+                except:
+                    pass
         except Empty:
             if TimeStamp()-self.lastAnalysisTime > 0.5:
                 if not self.analysisDone:

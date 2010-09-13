@@ -123,7 +123,8 @@ class Fitter(object):
         self.rpcServer.register_function(self.FITTER_showViewer)
         self.rpcServer.register_function(self.FITTER_initialize)      
         self.rpcServer.register_function(self.FITTER_setSpectra)
-        self.rpcServer.register_function(self.FITTER_getResults)        
+        self.rpcServer.register_function(self.FITTER_getResults)   
+        self.rpcServer.register_function(self.FITTER_maximizeViewer)          
         
     def _rpcServerExit(self):
         self.exitFlag = True
@@ -195,7 +196,12 @@ class Fitter(object):
             # resultsAvailEvent timeout
             self.state = FITTER_STATE_IDLE
             return ""
-            
+    def FITTER_maximizeViewer(self, max=True):
+        try:
+            self.fitQueue.put((4, max), False)
+        except:
+            pass
+   
     def compileScript(self,scriptName):
         try:
             fp = file(scriptName,"r")
