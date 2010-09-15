@@ -638,11 +638,11 @@ class DataManager(object):
     def RPC_PulseAnalyzer_Set(self, source, concNameList, targetConc = None, thres1Pair = [0.0, 0.0], 
                               thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0, 
                               validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0, 
-                              bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1):
+                              bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1, armCond = None):
         try:
             self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair,
                                                triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
-                                               timeout, bufSize, numPointsToTrigger, numPointsToRelease)
+                                               timeout, bufSize, numPointsToTrigger, numPointsToRelease, armCond)
             self.runPulseAnalyzer = False
             self.addToPulseAnalyzer = False
             return "OK"

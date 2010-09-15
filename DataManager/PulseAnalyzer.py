@@ -10,10 +10,10 @@ import threading
 from numpy import *
 
 class PulseAnalyzer(object):
-    def __init__(self, source, concNameList, targetConc = None, 
+    def __init__(self, source, concNameList, targetConc = None,
                  thres1Pair = [0.0, 0.0], thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0, 
                  validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0, bufSize = 500, numPointsToTrigger = 1,
-                 numPointsToRelease = 1):
+                 numPointsToRelease = 1, armCond = None):
         self.source = source
         self.concBufferDict = {"timestamp":[]}
         self.concNameList = concNameList
@@ -32,6 +32,7 @@ class PulseAnalyzer(object):
         self.bufSize = bufSize
         self.numPointsToTrigger = numPointsToTrigger
         self.numPointsToRelease = numPointsToRelease
+        self.armCond = armCond
         self.timeMark = None
         self.status = "waiting"
         self.pulseFinished = False
@@ -135,7 +136,10 @@ class PulseAnalyzer(object):
             
         if self.status == "waiting":
             if self.currMeasTime - self.timeMark >= self.waitTime:
-                self.status = "armed"
+                if self.armCond == None:
+                    self.status = "armed"
+                elif self._isInRange(measData.Data[self.targetConc], self.armCond[0], self.armCond[1]):
+                    self.status = "armed"
             
         if self.status == "armed":
             if self.isTriggered(measData.Data[self.targetConc]):

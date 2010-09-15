@@ -175,10 +175,10 @@ class FitterRPC(object):
 def pulseAnalyzerSet(source, concNameList, targetConc = None, thres1Pair = [0.0, 0.0], 
                      thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0, 
                      validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0, 
-                     bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1):
+                     bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1, armCond = None):
     DATAMGR.PulseAnalyzer_Set(source, concNameList, targetConc, thres1Pair, thres2Pair,
                              triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
-                             timeout, bufSize, numPointsToTrigger, numPointsToRelease)
+                             timeout, bufSize, numPointsToTrigger, numPointsToRelease, armCond)
     LOGFUNC("Pulse analyzer set\n") 
 
 def pulseAnalyzerStartRunning():
@@ -335,7 +335,7 @@ def getValveMask():
 def setRotValveMask(rotPos):
     """Set the MPV valve mask (position)
     """
-    DRIVER.setMPVPosition(rotPos)
+    DRIVER.setMPVPosition(int(rotPos))
     
 def getRotValveMask(rotPos):
     """Get the MPV valve mask (position)

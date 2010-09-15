@@ -31,7 +31,7 @@ from cStringIO import StringIO
 from glob import glob
 from numpy import arange, arctan, argmax, argmin, argsort, array, bool_, cos
 from numpy import diff, searchsorted, dot, exp, flatnonzero, float_, frompyfunc
-from numpy import int8, int_, invert, iterable, linspace, logical_and, mean, median, ndarray, ones
+from numpy import int8, int_, invert, iterable, linspace, logical_and, mean, median, ndarray, ones, ptp
 from numpy import pi, shape, sin, sqrt, std, zeros
 from os.path import getmtime, join, split, exists
 from scipy.optimize import leastsq, brent
@@ -1161,12 +1161,14 @@ class RdfData(object):
         self.groupMeans = {}
         self.groupMedians = {}
         self.groupStdDevs = {}
+        self.groupPtp = {}
         self.groupSizes = array(map(len,self.groups))
         for field in fields:
             x = getattr(self,field)
             self.groupMeans[field] = array([mean(x[g]) for g in self.groups])
             self.groupMedians[field] = array([median(x[g]) for g in self.groups])
             self.groupStdDevs[field] = array([std(x[g]) for g in self.groups])
+            self.groupPtp[field] = array([ptp(x[g]) for g in self.groups])
 ##  14 June 2010  added modified sigma filter named "outlierFilter            
     def sparse(self,maxPoints,width,height,xColumn,yColumn,sigmaThreshold=-1,outlierThreshold=-1):
         """Sparse the ringdown data by binning the data specified by "xColumn" and
