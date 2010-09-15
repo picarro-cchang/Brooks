@@ -110,6 +110,7 @@ class Fitter(object):
         self.resultString = ""        
         self.resultsAvailEvent = Event()
         self.resultsAvailEvent.clear()
+        self.fitterOption = ""
               
     def registerRpc(self):
         self.rpcServer.register_function(self.FITTER_fitSpectrumRpc)
@@ -125,6 +126,7 @@ class Fitter(object):
         self.rpcServer.register_function(self.FITTER_setSpectra)
         self.rpcServer.register_function(self.FITTER_getResults)   
         self.rpcServer.register_function(self.FITTER_maximizeViewer)          
+        self.rpcServer.register_function(self.FITTER_setOption)          
         
     def _rpcServerExit(self):
         self.exitFlag = True
@@ -196,11 +198,15 @@ class Fitter(object):
             # resultsAvailEvent timeout
             self.state = FITTER_STATE_IDLE
             return ""
+        
     def FITTER_maximizeViewer(self, max=True):
         try:
             self.fitQueue.put((4, max), False)
         except:
             pass
+   
+    def FITTER_setOption(self,option):
+        self.fitterOption = option
    
     def compileScript(self,scriptName):
         try:
@@ -224,6 +230,7 @@ class Fitter(object):
         dataEnviron["Dependencies"] = Dependencies
         dataEnviron["RdfData"] = RdfData
         dataEnviron["INIT"] = True
+        dataEnviron["OPTION"] = self.fitterOption
         dataEnviron["expAverage"] = expAverage
         dataEnviron["initExpAverage"] = initExpAverage
         dataEnviron["fitQuality"] = fitQuality

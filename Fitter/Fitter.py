@@ -635,7 +635,7 @@ class VariableViewFrame(wx.Frame):
 # FitViewer is the top level frame for viewing fitter outputs
 ################################################################################
 class FitViewer(wx.Frame):
-    def __init__(self,configFile,useViewer):
+    def __init__(self,configFile,useViewer,options):
         wx.Frame.__init__(self,parent=None,id=-1,title='Fit Viewer',size=(1000,700))
         self.config = CustomConfigObj(configFile) 
         self.shutDown = False
@@ -731,9 +731,7 @@ class FitViewer(wx.Frame):
         self.Bind(wx.EVT_CHECKLISTBOX,self.OnModelSelect,self.modelList)
         self.Bind(wx.EVT_CHOICE,self.OnAnalysisStage,self.analysisStage)
         self.Bind(wx.EVT_CHOICE,self.OnAnalysisName,self.analysisName)
-
         self.Bind(wx.EVT_CLOSE,self.OnClose)
-
         self.fitterRpc = CmdFIFOServerProxy("http://localhost:%d" % self.rpcPort, ClientName = "FitViewer")
         self.fitQueue = Queue(1)
         self.historyFrames = []
@@ -746,6 +744,8 @@ class FitViewer(wx.Frame):
         self.fitterThread = threading.Thread(target=fitterMain,args=(configFile,self.fitQueue,useViewer))
         self.fitterThread.setDaemon(True)
         self.fitterThread.start()
+        if "-o" in options: self.fitterRpc.FITTER_setOption(options["-o"])
+
         self.updateTimer.Start(200)
 
     def clearHistory(self):
@@ -876,8 +876,7 @@ class FitViewer(wx.Frame):
             self.historyFrames[0].Close()
         while self.variableFrames:
             self.variableFrames[0].Close()
-        print "Within OnClose"
-        if self.shutDown:
+        if self.shutDown or self.inputSelect.GetSelection() in [1,2]:
             sys.exit()
             evt.Skip()
         else:
@@ -1135,7 +1134,7 @@ def PrintUsage():
 def HandleCommandSwitches():
     import getopt
 
-    shortOpts = 'c:hv'
+    shortOpts = 'c:hvo:'
     longOpts = ["help","viewer"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
@@ -1165,14 +1164,14 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-
-    return (configFile, useViewer)
+        
+    return (configFile, useViewer, options)
     
 def main():
     app = wx.PySimpleApp()
-    configFile, useViewer = HandleCommandSwitches()
+    configFile, useViewer, options = HandleCommandSwitches()
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    frame = FitViewer(configFile,useViewer)
+    frame = FitViewer(configFile,useViewer,options)
     app.MainLoop()
     Log("Exiting program")
 
