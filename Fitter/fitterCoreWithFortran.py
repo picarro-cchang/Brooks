@@ -29,10 +29,10 @@ from copy import copy
 import cPickle
 from cStringIO import StringIO
 from glob import glob
-from numpy import arange, arctan, argmax, argmin, argsort, array, bool_, cos
+from numpy import arange, arctan, argmax, argmin, argsort, array, asarray, bool_, concatenate, cos
 from numpy import diff, searchsorted, dot, exp, flatnonzero, float_, frompyfunc
-from numpy import int8, int_, invert, iterable, linspace, logical_and, mean, median, ndarray, ones, ptp
-from numpy import pi, shape, sin, sqrt, std, zeros
+from numpy import int8, int_, invert, iterable, linspace, logical_and, mean, median, ndarray, ones
+from numpy import pi, polyfit, ptp, shape, sin, sqrt, std, unique, zeros 
 from os.path import getmtime, join, split, exists
 from scipy.optimize import leastsq, brent
 from string import strip
@@ -1225,7 +1225,68 @@ class RdfData(object):
         nStart = len(self.indexVector)
         nEnd = sum([len(g) for g in self.groups])
         self.filterHistory.append(("sparseFilter",nStart-nEnd,nEnd))
-
+    
+    def calcGroupStats(self):
+        self.evaluateGroups(["waveNumber","uncorrectedAbsorbance","waveNumberSetpoint","pztValue"])
+        self.groupStats = {}
+        pztArray = asarray(self.groupMeans["pztValue"])
+        sizeArray = asarray(self.groupSizes)
+        ensemblePzt = dot(pztArray, sizeArray)/(1e-10+sum(sizeArray))
+        for idx,key in enumerate(self.groupMeans["waveNumberSetpoint"]):
+            self.groupStats[key] = dict(freq_mean=self.groupMeans["waveNumber"][idx],
+                                   freq_stddev=self.groupStdDevs["waveNumber"][idx],
+                                   uLoss_mean=self.groupMeans["uncorrectedAbsorbance"][idx],
+                                   uLoss_stddev=self.groupStdDevs["uncorrectedAbsorbance"][idx],
+                                   pzt_mean=self.groupMeans["pztValue"][idx],
+                                   pzt_stddev=self.groupStdDevs["pztValue"][idx],
+                                   setpoint_mean = key,
+                                   target_error = self.groupMeans["waveNumber"][idx] - key,
+                                   pzt_ensemble_offset = self.groupMeans["pztValue"][idx] - ensemblePzt,
+                                   group_size = self.groupSizes[idx]
+                                   )
+            
+    def selectGroupStats(self, nameWaveNumList):
+        """
+        nameWaveNumList = [(name, waveNum), ...]
+        """
+        keys = self.groupStats.keys()
+        results = {}
+        for name, waveNum in nameWaveNumList:
+            closestKey = keys[argmin(abs(waveNum-asarray(keys)))]
+            closestGroupStats = self.groupStats[closestKey]
+            for key in closestGroupStats:
+                results[name+"_"+key] = closestGroupStats[key]
+        return results
+    
+    def calcSpectrumStats(self):
+        ringdownsInSpectrum = unique(concatenate([s for s in self.groups]))
+        ringdownsInSpectrum = ringdownsInSpectrum[self.uncorrectedAbsorbance[ringdownsInSpectrum] != 0.0]
+        self.spectrumStats = {}
+        self.spectrumStats["ss_num_ringdowns"] = len(ringdownsInSpectrum)
+        self.spectrumStats["ss_duration"] = ptp(self.timestamp[ringdownsInSpectrum])*0.001
+        s = (self.correctedAbsorbance - self.uncorrectedAbsorbance)[ringdownsInSpectrum]
+        self.spectrumStats["ss_loss_diff_mean"] = mean(s)
+        self.spectrumStats["ss_loss_diff_stddev"] = std(s)
+        s = self.pztValue[ringdownsInSpectrum]
+        self.spectrumStats["ss_pzt_mean"] = mean(s)
+        self.spectrumStats["ss_pzt_stddev"] = std(s)
+        s = self.fineLaserCurrent[ringdownsInSpectrum]
+        self.spectrumStats["ss_fine_current_mean"] = mean(s)
+        self.spectrumStats["ss_fine_current_min"] = min(s)
+        self.spectrumStats["ss_fine_current_max"] = max(s)
+        s = (self.waveNumber - self.waveNumberSetpoint)[ringdownsInSpectrum]
+        self.spectrumStats["ss_target_error_mean"] = mean(s)
+        self.spectrumStats["ss_target_error_stddev"] = std(s)
+        s = self.groupMeans["waveNumber"] - self.groupMeans["waveNumberSetpoint"]
+        self.spectrumStats["ss_group_target_error_slope"] = polyfit(self.groupMeans["waveNumber"], s, 1)[0]
+        self.spectrumStats["ss_group_target_error_stddev"] = std(s)
+        s = self.groupMeans["pztValue"]
+        self.spectrumStats["ss_group_pzt_slope"] = polyfit(self.groupMeans["waveNumber"], s, 1)[0]
+        self.spectrumStats["ss_group_pzt_stddev"] = std(s)
+        
+    def getSpectrumStats(self):
+        return self.spectrumStats
+        
     def badRingdownFilter(self,fieldName,minVal=0.50,maxVal=20.0):
         """Remove entries whose "field" value lies outside the specified range"""
         def goodValue(x):
