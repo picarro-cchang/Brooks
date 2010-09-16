@@ -1227,7 +1227,7 @@ class RdfData(object):
         self.filterHistory.append(("sparseFilter",nStart-nEnd,nEnd))
     
     def calcGroupStats(self):
-        self.evaluateGroups(["waveNumber","uncorrectedAbsorbance","waveNumberSetpoint","pztValue"])
+        self.evaluateGroups(["waveNumber","uncorrectedAbsorbance","waveNumberSetpoint","pztValue","ratio1","ratio2","wlmAngle","laserTemperature"])
         self.groupStats = {}
         pztArray = asarray(self.groupMeans["pztValue"])
         sizeArray = asarray(self.groupSizes)
@@ -1239,6 +1239,14 @@ class RdfData(object):
                                    uLoss_stddev=self.groupStdDevs["uncorrectedAbsorbance"][idx],
                                    pzt_mean=self.groupMeans["pztValue"][idx],
                                    pzt_stddev=self.groupStdDevs["pztValue"][idx],
+                                   ratio1_mean=self.groupMeans["ratio1"][idx],
+                                   ratio1_stddev=self.groupStdDevs["ratio1"][idx],
+                                   ratio2_mean=self.groupMeans["ratio2"][idx],
+                                   ratio2_stddev=self.groupStdDevs["ratio2"][idx],
+                                   wlm_angle_mean=self.groupMeans["wlmAngle"][idx],
+                                   wlm_angle_stddev=self.groupStdDevs["wlmAngle"][idx],
+                                   laser_temperature_mean=self.groupMeans["laserTemperature"][idx],
+                                   laser_temperature_stddev=self.groupStdDevs["laserTemperature"][idx],
                                    setpoint_mean = key,
                                    target_error = self.groupMeans["waveNumber"][idx] - key,
                                    pzt_ensemble_offset = self.groupMeans["pztValue"][idx] - ensemblePzt,
