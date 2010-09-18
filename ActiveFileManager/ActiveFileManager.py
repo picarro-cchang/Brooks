@@ -149,7 +149,7 @@ ctype2coltype = { ctypes.c_byte:tables.Int8Col, ctypes.c_uint:tables.UInt32Col, 
         
 class ActiveFile(object):
     """Objects of this class are associated with HDF5 files in the active file directory.
-       The class is use to abstract away details about accessing HDF5 files."""
+       The class is used to abstract away details about accessing HDF5 files."""
        
     # The following dictionaries are used to create HDF5 tables. They are initialized
     #  from the ctypes structure definitions of the corresponding broadcasts.
@@ -257,25 +257,18 @@ class ActiveFile(object):
         if self.handle is not None: self.close()
         os.remove(self.abspath)
         
-    def genRdData(self,tstart,tend,varList):
-        """Generator for ringdown data lying in the specified time range"""
-        for row in self.getRdDataTable().where('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend)):
-            yield [row[v] for v in varList]
+    def getRdData(self,tstart,tend,varList):
+        """Get ringdown data lying in the specified time range"""
+        return [[row[v] for v in varList] for row in self.getRdDataTable().where('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend))]
 
-    def genSensorData(self,tstart,tend,streamName):
-        """Generator for sensor data lying in the specified time range. 
-        Raises:
-            AttributeError  if streamName is not found
-            StopIteration   when no more data are available
-        """
+    def getSensorData(self,tstart,tend,streamName):
+        """Get sensor data lying in the specified time range."""
         index = getattr(interface,streamName)
-        for row in self.getSensorDataTable().where('(timestamp >= %d) & (timestamp < %d) & (streamNum == %d)' % (tstart,tend,index)):
-            yield [row["timestamp"],row["value"]]
+        return [[row["timestamp"],row["value"]] for row in self.getSensorDataTable().where('(timestamp >= %d) & (timestamp < %d) & (streamNum == %d)' % (tstart,tend,index))]
 
-    def genDmData(self,mode,source,tstart,tend,varList):
-        """Generator for data manager data from specified mode and source lying in the specified time range"""
-        for row in self.getDmDataTable(mode,source,set(varList)).where('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend)):
-            yield [row[v] for v in varList]
+    def getDmData(self,mode,source,tstart,tend,varList):
+        """Get data manager data from specified mode and source lying in the specified time range"""
+        return [[row[v] for v in varList] for row in self.getDmDataTable(mode,source,set(varList)).where('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend))]
  
 class ActiveFileManager(object):
     def __init__(self,configFile):
@@ -356,13 +349,13 @@ class ActiveFileManager(object):
                         a.remove()
     
     def doRpcRequests(self):
-        # Carry out next bit of work for satisfying RPC requests. Such requests are done
-        #  using methods in this class which either return False to indicate that they
-        #  have completed their work and placed a result on the rpcResultQueue, or they
-        #  return True to indicate that there is still more work to do. We only get
-        #  commands off the rpcCommandQueue if no command is in progress
-        
-        while True: # Later make this return if we have already spent too much time
+        """Carry out up to 500ms of work satisfying up to 10 RPC requests from the rpcCommandQueue. 
+        Since some requests can involve looking through many H5 files and take a long time, a request 
+        is done by a generator which keeps track of which H5 files have been processed so far. A completed 
+        request places a result array on the rpcResultQueue. The rpcInProgress attribute is True while a 
+        request has not yet been completely satisfied.
+        """
+        for iter in range(10):
             if self.rpcInProgress:
                 a,k = self.lastRpcParams
             elif not self.rpcCommandQueue.empty():
@@ -372,30 +365,11 @@ class ActiveFileManager(object):
             a,k = self.lastRpcParams
             try:
                 self.rpcInProgress = self.genWrapper(self.lastRpcCmd,*a,**k)
-                if self.rpcInProgress: 
+                if self.rpcInProgress: # This operation is taking a long time, try again next time
                     return
             except Exception,e:
                 self.rpcInProgress = False
                 self.rpcResultQueue.put(e)
-                
-    # def getRdData(self,tstart,tend,varList):
-        # """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tend" (exclusive).
-            # Only "active" files are used to satisfy the request since the database is expected to deal
-            # with files which have already been archived"""
-            
-        # if self.rpcInProgress:
-            # print "InProgress functionality has not yet been implemented"
-        # else:
-            # results = []
-            # for baseTime in sorted(self.activeFiles.keys()):
-                # Determine if [tstart,tend) and [baseTime,stopTime) are disjoint
-                # if tend <= baseTime: continue
-                # a = self.activeFiles[baseTime]
-                # if tstart >= a.stopTime: continue
-                # results.append(a.getRdData(tstart,tend,varList))
-            # if results:
-                # self.rpcResultQueue.put(numpy.concatenate(results,axis=-1))
-        # return False    # Indicates I am done
 
     def genWrapper(self,gen,*a,**k):
         """Wrapper for a generator so that it gives a method which returns False to indicate
@@ -420,10 +394,8 @@ class ActiveFileManager(object):
             if tend <= baseTime: continue
             a = self.activeFiles[baseTime]
             if tstart >= a.stopTime: continue
-            for row in a.genRdData(tstart,tend,varList):
-                results.append(row)
-                if time.clock()-t > 0.5:
-                    t = yield True
+            results += a.getRdData(tstart,tend,varList)
+            if time.clock()-t > 0.5: t = yield True # Indicate not yet done
         self.rpcResultQueue.put(numpy.array(results).transpose())
 
     def genSensorData(self,tstart,tend,streamName):
@@ -434,10 +406,8 @@ class ActiveFileManager(object):
             if tend <= baseTime: continue
             a = self.activeFiles[baseTime]
             if tstart >= a.stopTime: continue
-            for row in a.genSensorData(tstart,tend,streamName):
-                results.append(row)
-                if time.clock()-t > 0.5:
-                    t = yield True
+            results += a.getSensorData(tstart,tend,streamName)
+            if time.clock()-t > 0.5: t = yield True # Indicate not yet done
         self.rpcResultQueue.put(numpy.array(results).transpose())
 
     def genDmData(self,mode,source,tstart,tend,varList):
@@ -455,10 +425,8 @@ class ActiveFileManager(object):
             #  correct modes or sources available.
             # We only report an error if there are no results
             try:
-                for row in a.genDmData(mode,source,tstart,tend,varList):
-                    results.append(row)
-                    if time.clock()-t > 0.5:
-                        t = yield True
+                results += a.getDmData(mode,source,tstart,tend,varList)
+                if time.clock()-t > 0.5: t = yield True # Indicate not yet done
             except AttributeError,e:
                 latestException = e
         if not results:
@@ -546,9 +514,9 @@ class ActiveFileManager(object):
 
                 ts = getTimestamp()
                 # print "In main loop: %s, activeFiles: %s" % (self.getBaseTime(ts),self.activeFiles)
-                self.getActiveFile(ts)
-                self.removeOldFiles(ts)
-                self.doRpcRequests()
+                self.getActiveFile(ts)  # Create new active file if needed
+                if not self.rpcInProgress: self.removeOldFiles(ts)
+                self.doRpcRequests()    # Perform next bit of work for RPC functions
                 time.sleep(0.05)
                 
             print "Shutdown requested"    
