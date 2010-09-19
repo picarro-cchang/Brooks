@@ -46,7 +46,7 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 from Host.Common.timestamp import timestampToUtcDatetime, unixTime
 
-EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
+EventManagerProxy_Init(APP_NAME,DontCareConnection = False)
 
 if sys.platform == 'win32':
     threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
@@ -255,14 +255,17 @@ class ArchiveGroup(object):
             compressMode = zipfile.ZIP_STORED
 
         zf = zipfile.ZipFile(targetPath, writeMode, compressMode)
-        if isinstance(source,tuple):
-            sourceName, sourceData = source
-            zf.writestr(sourceName, sourceData)
-        else:
-            zf.write(source)
+        try:
+            if isinstance(source,tuple):
+                sourceName, sourceData = source
+                zf.writestr(sourceName, sourceData)
+            else:
+                # Need to convert filename to a str to avoid Unicode errors
+                zf.write(str(source))
 
-        zf.close()
-        del zf
+        finally:
+            zf.close()
+            del zf
 
     def initArchiveGroup(self):
         # The treeWalker is used to delete the oldest entries when required
