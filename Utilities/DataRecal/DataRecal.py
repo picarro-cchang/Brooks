@@ -55,7 +55,7 @@ class DataRecal(DataRecalFrame):
         self.Bind(wx.EVT_COMBOBOX, self.onDataComboBox, self.dataComboBox)
         self.Bind(wx.EVT_BUTTON, self.onComputeButton, self.buttonCompute)
         self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.buttonApply)    
-        self.Bind(wx.EVT_BUTTON, self.onResetButton, self.buttonReset)
+        self.Bind(wx.EVT_BUTTON, self.onClearButton, self.buttonClear)
         self.Bind(wx.EVT_BUTTON, self.onExitButton, self.buttonExit)           
         self.Bind(wx.EVT_CLOSE, self.onClose)
         for row in range(self.numRows):
@@ -202,9 +202,9 @@ class DataRecal(DataRecalFrame):
         except:
             pass
     
-    def onResetButton(self, event):
-        d = wx.MessageDialog(None, "Are you sure you want to reset all the fields?\nCurrent calibration will not be affected.\n\nSelect \"Yes\" to continue.\nSelect \"No\" to cancel this action.",\
-                        "Reset Fields Confirmation", wx.YES_NO|wx.ICON_EXCLAMATION)
+    def onClearButton(self, event):
+        d = wx.MessageDialog(None, "Are you sure you want to clear all the entries?\nCurrent calibration will not be affected.\n\nSelect \"Yes\" to continue.\nSelect \"No\" to cancel this action.",\
+                        "Clear Entries Confirmation", wx.YES_NO|wx.ICON_EXCLAMATION)
         if d.ShowModal() != wx.ID_YES:
             d.Destroy()
             return
