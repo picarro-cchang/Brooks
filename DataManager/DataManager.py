@@ -337,6 +337,7 @@ class DataManager(object):
         self.Config = DataManager.ConfigurationOptions()
         self.cp = None
         self.UserCalibration = {} #keys = measurement names; values = (slope, offset); default = (1, 0)
+        self.UserCalAppListDict = {} #keys = primary measurement names; values = affected measurement names assoicated with each key
         self.MeasListener = None
         self.SensorListener = None
         self.InstMgrStatusListener = None
@@ -533,7 +534,7 @@ class DataManager(object):
         self.calEnabled = False
         Log("Calibration disabled")
     def RPC_Cal_GetMeasNames(self):
-        return self.UserCalibration.keys()
+        return self.UserCalAppListDict.keys()
     def RPC_Cal_AdjustZero(self, MeasName, ObservedOffset):
         """Changes the zero offset for the reported-vs-measured cal for the given MeasName.
 
@@ -557,6 +558,8 @@ class DataManager(object):
                         NewOffset = newOffset,
                         ObservedOffset = ObservedOffset))
         self.UserCalibration[MeasName] = (slope, newOffset)
+        for appMeas in self.UserCalAppListDict[MeasName]:
+            self.UserCalibration[appMeas] = (slope, newOffset)
         self._UpdateUserCalibrationFile()
     def RPC_Cal_AdjustSpan(self, MeasName, ExpectedMeas, ReportedMeas):
         """Changes the cal slope for the reported-vs-measured cal for the given MeasName.
@@ -581,6 +584,8 @@ class DataManager(object):
                         NewSlope = newSlope,
                         Offset = calOffset))
         self.UserCalibration[MeasName] = (newSlope, calOffset)
+        for appMeas in self.UserCalAppListDict[MeasName]:
+            self.UserCalibration[appMeas] = (newSlope, calOffset)
         self._UpdateUserCalibrationFile()
     def RPC_Cal_SetSlopeAndOffset(self, MeasName, Slope = 1, Offset = 0):
         """Changes both the cal slope and offset for the given MeasName.
@@ -594,6 +599,8 @@ class DataManager(object):
                         NewSlope = Slope,
                         NewOffset = Offset))
         self.UserCalibration[MeasName] = (Slope, Offset)
+        for appMeas in self.UserCalAppListDict[MeasName]:
+            self.UserCalibration[appMeas] = (Slope, Offset)
         self._UpdateUserCalibrationFile()
     def RPC_Cal_RestoreFactoryDefaults(self, MeasName):
         """Restores the factory cal (slope =1, offset = 0) for MeasName.
@@ -604,14 +611,18 @@ class DataManager(object):
         Log("Factory defaults restored for user calibration of measurement", dict(MeasName = MeasName))
         #just set slope and offset to 1 and 0
         self.UserCalibration[MeasName] = (1, 0)
+        for appMeas in self.UserCalAppListDict[MeasName]:
+            self.UserCalibration[appMeas] = (1, 0)
         self._UpdateUserCalibrationFile()
     def RPC_Cal_RestoreAllFactoryDefaults(self):
         """Restores the factory cal (slope = 1, offset = 0) for all measurements.
 
         """
         Log("Factory default calibration restored for all measured values.", dict(Changed = self.UserCalibration.keys()))
-        for measName in self.UserCalibration:
-            self.UserCalibration[measName] = (1, 0)
+        for MeasName in self.UserCalibration:
+            self.UserCalibration[MeasName] = (1, 0)
+            for appMeas in self.UserCalAppListDict[MeasName]:
+                self.UserCalibration[appMeas] = (1, 0)
         self._UpdateUserCalibrationFile()
     def RPC_Cal_GetUserCalibrations(self):
         """Returns the set of user calibrations that have been specified.
@@ -836,14 +847,13 @@ class DataManager(object):
             self.measBufferLock.release()
                 
     def _UpdateUserCalibrationFile(self):
-        fp = SafeFile(self.Config.UserCalibrationPath, "wb")
-        cp = CustomConfigObj() 
-        for measName in self.UserCalibration.keys():
-            cp.add_section(measName)
+        cp = CustomConfigObj(self.Config.UserCalibrationPath) 
+        for measName in self.UserCalAppListDict.keys():
+            if measName not in cp.list_sections():
+                cp.add_section(measName)
             cp.set(measName, "slope", self.UserCalibration[measName][USERCAL_SLOPE_INDEX])
             cp.set(measName, "offset", self.UserCalibration[measName][USERCAL_OFFSET_INDEX])
-        cp.write(fp)
-        fp.close()
+        cp.write()
         Log("User calibration file updated.", dict(Sections = self.UserCalibration.keys()))
 
     def _EnqueueSyncScript(self,sai,startTime,iteration):
@@ -1081,18 +1091,26 @@ class DataManager(object):
                 if chr(0) in fp.read(): raise Exception("User calibration file corrupted - likely due to improper shutdown")
                 fp.close()
                 #Now read any cals...
-                cp = CustomConfigObj(self.Config.UserCalibrationPath, ignore_option_case=False)
+                cp = CustomConfigObj(self.Config.UserCalibrationPath, ignore_option_case=False, list_values = True)
                 for measName in cp.list_sections():
                     slope = cp.getfloat(measName, "slope")
                     offset = cp.getfloat(measName, "offset")
                     self.UserCalibration[measName] = (slope, offset)
+                    try:
+                        appList = cp.get(measName, "applist", "")
+                        if len(appList) == 0:
+                            appList = []
+                        elif type(appList) != type([]):
+                            appList = [appList]
+                        self.UserCalAppListDict[measName] = appList
+                        for appMeas in appList:
+                            self.UserCalibration[appMeas] = (slope, offset)
+                    except:
+                        self.UserCalAppListDict[measName] = []
             except:
                 #If *any* error occurs reading this file, always revert to factory defaults...
-                LogExc("Error while reading customer specified measurement calibrations.  Restoring factory defaults.")
-                #Create an empty file (don't use SafeFile here)...
-                fp = file(self.Config.UserCalibrationPath, "w")
-                fp.write("\n")
-                fp.close()
+                LogExc("Error while reading customer specified measurement calibrations.")
+                #self.RPC_Cal_RestoreAllFactoryDefaults()
 
             ##Set up the analyzer scripts...
             self.AnalyzerCode = {}
@@ -1423,9 +1441,12 @@ class DataManager(object):
                         Data = {"measName":measName,"measValue":measValue},
                         Level=2)
                 if self.UserCalibration.has_key(measName):
-                    slope = self.UserCalibration[measName][USERCAL_SLOPE_INDEX]
-                    offset = self.UserCalibration[measName][USERCAL_OFFSET_INDEX]
-                    reportDict[measName] = (measValue * slope) + offset
+                    try:
+                        slope = self.UserCalibration[measName][USERCAL_SLOPE_INDEX]
+                        offset = self.UserCalibration[measName][USERCAL_OFFSET_INDEX]
+                        reportDict[measName] = (measValue * slope) + offset
+                    except Exception, err:
+                        LogExc("User calibration failed. EXCEPTION: %s %r" % (err, err), Level=3)
             #Now figure out if the measurement is a "good" one...
             # - this is the AND of what the script already decided, and what the instrument
             #   conditions are indicating.  All have to indicate good or it isn't.
