@@ -113,7 +113,7 @@ else:
 
 CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
                                             APP_NAME,
-                                            IsDontCareConnection = False)
+                                            IsDontCareConnection = True)
 
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                             APP_NAME,
