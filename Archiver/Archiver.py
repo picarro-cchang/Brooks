@@ -46,7 +46,7 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 from Host.Common.timestamp import timestampToUtcDatetime, unixTime
 
-EventManagerProxy_Init(APP_NAME,DontCareConnection = False)
+EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
 if sys.platform == 'win32':
     threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
