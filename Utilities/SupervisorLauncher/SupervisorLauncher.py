@@ -20,7 +20,6 @@ import shutil
 from configobj import ConfigObj
 from SupervisorLauncherFrame import SupervisorLauncherFrame
 from Host.Common import CmdFIFO
-import threading
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_QUICK_GUI
 

@@ -20,7 +20,7 @@ CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER
 ANALYZER_TYPES = ["CFADS", "HBDS", "CBDS", "CFBDS", "CKADS"]
                   
 class InstrEEPROMAccessFrame(wx.Frame):
-    def __init__(self, *args, **kwds):
+    def __init__(self, defaultChassis, *args, **kwds):
         kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
         wx.Frame.__init__(self, *args, **kwds)
         self.panel1 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
@@ -70,11 +70,14 @@ class InstrEEPROMAccessFrame(wx.Frame):
         self.labelNewEEPROM = wx.StaticText(self.panel2, -1, "Write Instrument Information to EEPROM", style = wx.ALIGN_CENTER)
         self.labelNewEEPROM.SetFont(wx.Font(10, wx.DEFAULT, style = wx.NORMAL,weight = wx.BOLD))
         self.labelNewChassis = wx.StaticText(self.panel2, -1, "Chassis Number", size = (100,-1))
-        try:
-            chassisChoices = [elem['identifier'].split("CHAS2K")[1] for elem in DB.get_values("chassis2k",dict(status__in = ["I","U"]))]
-            chassisChoices.sort()
-        except:
-            chassisChoices = []
+        if defaultChassis == None:
+            try:
+                chassisChoices = [elem['identifier'].split("CHAS2K")[1] for elem in DB.get_values("chassis2k",dict(status__in = ["I","U"]))]
+                chassisChoices.sort()
+            except:
+                chassisChoices = []
+        else:
+            chassisChoices = [defaultChassis]
         if self.chassisNum != "NONE":
             if self.chassisNum not in chassisChoices:
                 chassisChoices.insert(0, self.chassisNum)
@@ -152,8 +155,8 @@ class InstrEEPROMAccessFrame(wx.Frame):
         self.Layout()
 
 class InstrEEPROMAccess(InstrEEPROMAccessFrame):
-    def __init__(self, *args, **kwds):
-        InstrEEPROMAccessFrame.__init__(self, *args, **kwds)
+    def __init__(self, defaultChassis, *args, **kwds):
+        InstrEEPROMAccessFrame.__init__(self, defaultChassis, *args, **kwds)
         self.bindEvents()
         
     def bindEvents(self):
@@ -202,11 +205,34 @@ class InstrEEPROMAccess(InstrEEPROMAccessFrame):
         self.valCurChassis.SetValue(self.chassisNum)
         self.valCurType.SetValue(self.analyzerType)
         self.valCurAnalyzer.SetValue(self.analyzerNum)
-            
+
+def HandleCommandSwitches():
+    import getopt
+
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], "d:", [])
+    except getopt.GetoptError, data:
+        print "%s %r" % (data, data)
+        sys.exit(1)
+
+    #assemble a dictionary where the keys are the switches and values are switch args...
+    options = {}
+    for o, a in switches:
+        options[o] = a
+
+    if "-d" in options:
+        defaultChassis = options["-d"]
+        print "Default Chassis: %s" % defaultChassis
+    else:
+        defaultChassis = None
+
+    return defaultChassis
+    
 if __name__ == "__main__":
+    defaultChassis = HandleCommandSwitches()
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()
-    frame = InstrEEPROMAccess(None, -1, "")
+    frame = InstrEEPROMAccess(defaultChassis, None, -1, "")
     app.SetTopWindow(frame)
     frame.Show()
     app.MainLoop()
