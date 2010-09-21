@@ -14,6 +14,8 @@ File History:
     20-Oct-2009  alex      Added functionality to handle scheme switch and update warmbox and hotbox calibration files
     21-Oct-2009  alex      Added calibration file paths to .ini file. Added RPC_setCavityLengthTuning() and RPC_setLaserCurrentTuning().
     22-Apr-2010  sze       Fixed non-updating of angle schemes when no calibration points are present
+    20-Sep-2010  sze       Added pCalOffset parameter to RPC_loadWarmBoxCal for flight calibration
+    
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -675,7 +677,11 @@ class RDFrequencyConverter(Singleton):
         
         return "OK"
         
-    def RPC_loadWarmBoxCal(self, warmBoxCalFilePath=""):
+    def RPC_loadWarmBoxCal(self, warmBoxCalFilePath="",pCalOffset=None):
+        # Loads the specified warm box calibration file (or the default if not specified)
+        #  into the analyzer. If pCalOffset is specified, this is used to force a constant
+        #  angle offset for all virtual lasers so that the coefficients for pressure 
+        #  calibration may be determined
         self.warmBoxCalUpdateTime = Driver.hostGetTicks()
         if warmBoxCalFilePath != "":
             self.warmBoxCalFilePathActive = os.path.abspath(warmBoxCalFilePath)
@@ -710,6 +716,12 @@ class RDFrequencyConverter(Singleton):
                                 'pressureC1':      float(p['PRESSURE_C1']),
                                 'pressureC2':      float(p['PRESSURE_C2']),
                                 'pressureC3':      float(p['PRESSURE_C3'])}
+                if pCalOffset is not None:
+                    laserParams['calPressure'] = 760.0
+                    laserParams['pressureC0'] = pCalOffset
+                    laserParams['pressureC1'] = 0.0
+                    laserParams['pressureC2'] = 0.0
+                    laserParams['pressureC3'] = 0.0
                 Driver.wrVirtualLaserParams(vLaserNum,laserParams)
         return "OK"
         

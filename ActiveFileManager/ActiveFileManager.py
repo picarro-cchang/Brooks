@@ -215,7 +215,7 @@ class ActiveFile(object):
                 # The columns have changed, so we need to extend the table
                 table.rename('__tempTable__')
                 newTable = self.handle.createTable(modeGroup,source,self.descrFromColNames(colNameSet.union(oldColNameSet)),expectedrows=500000)
-                for row in table.iterrows:
+                for row in table.iterrows():
                     newrow = newTable.row
                     for name in table.colnames:
                         newrow[name] = row[name]

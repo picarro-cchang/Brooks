@@ -11,13 +11,15 @@
 # HISTORY:
 #   15-Sep-2008  sze  Incorporated into compiled code
 #   12-Dec-2008  alex Added batch mode functionality
-#
+#   20-Sep-2010  sze  Add tag along data functions and add pCalOffset parameter
+#                      to loadWarmBoxCal
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved 
 #
 
 # Routines to support state machine handler for autosampler
 
-# Note that the module variables DRIVER, MEASSYS, SAMPLEMGR, DATAMGR, FREQCONV and LOGFUNC are set from outside
+# Note that the module variables DRIVER, MEASSYS, SAMPLEMGR, SPECTCOLLECTOR, DATAMGR, 
+#   FREQCONV and LOGFUNC are set from outside
 
 from time import sleep, mktime, localtime, strptime, strftime, time, clock, ctime
 from datetime import datetime, timedelta, MINYEAR
@@ -87,8 +89,8 @@ def getConfig(fileName):
 #############
 # Warm Box Accessor
 #############
-def loadWarmBoxCal(fileName):
-    FREQCONV.loadWarmBoxCal(fileName)
+def loadWarmBoxCal(fileName='',pCalOffset=None):
+    FREQCONV.loadWarmBoxCal(fileName,pCalOffset)
     
 #############
 # UTC & Time
@@ -766,8 +768,18 @@ def restoreTempCycleRegisters(sweepMax, sweepMin, sweepIncr, cntlState):
 
     return True
 
-        
+#################
+# Tag-along data functions
+#################           
+def setTagalongData(name,value):
+    SPECTCOLLECTOR.setTagalongData(name, value)
 
+def getTagalongData(name):
+    return SPECTCOLLECTOR.getTagalongData(name)
+
+def deleteTagalongData(name):
+    SPECTCOLLECTOR.deleteTagalongData(name)
+        
 ANALYSIS_FNAME = "/PicarroSeq.txt"
 
 def incrAnalysisNumber():

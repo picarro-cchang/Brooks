@@ -1006,15 +1006,81 @@ class RdfData(object):
     _pacing = {}
     def __init__(self):
         """An RdfData object is essentially just a bunch of dynamically created attributes for holding
-        ringdown data"""
+        ringdown data. 
+        
+            self.rdfKeys holds the list of dynamic attribute names
+            self.sensorDict is a dictionary of averaged sensor data
+            self.indexVector is used for selection and permutation so that we can sort and filter the data
+            self.nrows    }
+            self.startRow } count ringdown rows in HDF5 file for display in fit viewer
+            self.endRow   }
+        """
         # filterHistory is a list of tuples (filterName,pointsRemoved,pointsRemaining) containing a record of
         #  what filters have been applied to the data
         self.filterHistory = []
+        self.rdfKeys = []
+        self.indexVector = []
+        self.nrows = 0
+        self.sensorDict = {}
+        
+    def merge(self,rdfDataList):
+        """Make a composite RdfData object from the current object and those in rdfDataList. We check
+        that they are all compatible in the sense of having the same rdfKeys and sensorDict.
+        
+        The numpy concatenate function is used to join the corresponding arrays in rdfDataList. 
+        The keys in the sensorDicts are averaged together, weighted according to the number of 
+        rows in each RdfData object.
+        
+        indexVector is set to select all the data in natural order
+        nrows is set to the sum of the rows of the original object and those in the list
+        """
+        sensorKeys = sorted(self.sensorDict.keys())
+        for d in rdfDataList:
+            if not self.rdfKeys:
+                self.rdfKeys = d.rdfKeys[:]
+            else:
+                if self.rdfKeys != d.rdfKeys:
+                    raise ValueError("Cannot merge RdfData objects with incompatible keys")
+            if not sensorKeys:
+                sensorKeys = sorted(d.sensorDict.keys())
+            else:
+                s = sorted(d.sensorDict.keys())
+                if sensorKeys != s:
+                    raise ValueError("Cannot merge RdfData objects with incompatible sensorDicts")
+        for k in self.rdfKeys:
+            try:
+                aList = [getattr(self,k)]
+            except AttributeError:
+                aList = []
+            aList += [getattr(d,k) for d in rdfDataList]
+            object.__setattr__(self, k, concatenate(aList))
+                    
+        if self.sensorDict:
+            for k in sensorKeys:
+                self.sensorDict[k] *= self.nrows
 
+        for d in rdfDataList:
+            for k in sensorKeys:
+                self.sensorDict[k] = d.nrows * d.sensorDict[k] + self.sensorDict.get(k,0.0)
+            self.nrows += d.nrows
+
+        for k in sensorKeys:
+            self.sensorDict[k] /= self.nrows
+            
+        self.indexVector = arange(self.nrows)
+        self.startRow = 0
+        self.endRow = self.nrows
+        
     @staticmethod
     def getSpectraDict(rdfDict):
-        """Generates individual spectra (in RdfData() format) from a string sent by the SpectrumManager,
-            split according to the subschemeId field & 0x3FF"""
+        """Generates individual spectra (in RdfData() format) from a dictionary with keys 
+        "rdData", "sensorData" and optionally "controlData" and "tagalongData". 
+        
+        rdfDict["controlData"] is typically a numpy record array with a field "RDDataSize"
+        which indicates how the rows of rdfDict["rdData"] are to be divided into "chunks" 
+        containing individual spectra. 
+        
+        """
         rdData = rdfDict["rdData"]
         otherData = rdfDict["sensorData"]
         if "tagalongData" in rdfDict: 
@@ -1056,7 +1122,8 @@ class RdfData(object):
                 rdfData = RdfData()
                 rdfData.sensorDict = otherDataForChunk
                 # Store ringdown data for current section as attributes of the RdfData object
-                for s in rdData:
+                rdfData.rdfKeys = sorted(rdData.keys())
+                for s in rdfData.rdfKeys:
                     object.__setattr__(rdfData, s, rdData[s][low:high])
                 # Initialize indexVector to the identity permutation to indicate that
                 #  all data are (initially) good
@@ -1094,7 +1161,8 @@ class RdfData(object):
         """Reads a pickled dictionary containing ringdown information"""
         s = fp.read()
         self.sensorDict = cPickle.loads(s)
-        for s in self.sensorDict:
+        self.rdfKeys = sorted(self.sensorDict.keys())
+        for s in self.rdfKeys:
             object.__setattr__(self, s, self.sensorDict[s])
         fp.close()
         # Initialize indexVector to the identity permutation to indicate that
@@ -1232,7 +1300,7 @@ class RdfData(object):
         pztArray = asarray(self.groupMeans["pztValue"])
         sizeArray = asarray(self.groupSizes)
         ensemblePzt = dot(pztArray, sizeArray)/(1e-10+sum(sizeArray))
-        for idx,key in enumerate(self.groupMeans["waveNumberSetpoint"]):
+        for idx,key in enumerate(self.groupMeans["waveNumber"]):
             self.groupStats[key] = dict(freq_mean=self.groupMeans["waveNumber"][idx],
                                    freq_stddev=self.groupStdDevs["waveNumber"][idx],
                                    uLoss_mean=self.groupMeans["uncorrectedAbsorbance"][idx],
@@ -1247,7 +1315,7 @@ class RdfData(object):
                                    wlm_angle_stddev=self.groupStdDevs["wlmAngle"][idx],
                                    laser_temperature_mean=self.groupMeans["laserTemperature"][idx],
                                    laser_temperature_stddev=self.groupStdDevs["laserTemperature"][idx],
-                                   setpoint_mean = key,
+                                   setpoint_mean = self.groupMeans["waveNumberSetpoint"][idx],
                                    target_error = self.groupMeans["waveNumber"][idx] - key,
                                    pzt_ensemble_offset = self.groupMeans["pztValue"][idx] - ensemblePzt,
                                    group_size = self.groupSizes[idx]
@@ -1542,16 +1610,26 @@ class Analysis(object):
         """Returns number of fitting steps in analysis"""
         return len(self.fitSequenceParameters)
 
-    def __call__(self,d,initVals=None,deps=None):
-        """Run the specified analysis on the RdfData object d, taking into account the dependencies
-        and initial values which override the defaults from the spectral library and .ini files.
+    def __call__(self,dList,initVals=None,deps=None):
+        """Run the specified analysis on the RdfData object or on a list of RdfData objects.
+        For a list of objects, all of the data are combined before analysis takes place.
+        We take into account the dependencies and initial values which override the defaults from 
+        the spectral library and .ini files.
         Returns "self", the Analysis object"""
         # print "Analysis %d call" % id(self)
         self.initVals = initVals
         self.deps = deps
-        self.time = d.sensorDict["Time_s"]
-        self.setData(d.fitData["freq"],d.fitData["loss"],d.fitData["sdev"])
-        self.model.setAttributes(pressure=d["cavityPressure"], temperature=273.16+d["cavityTemperature"])
+        if not isinstance(dList,list): dList = [dList]
+        nPoints = sum([len(d.timestamp) for d in dList])
+        self.time = unixTime(sum([sum(d.timestamp) for d in dList])/nPoints)
+        pressure = sum([sum(d.cavityPressure) for d in dList])/nPoints
+        temperature = 273.15 + mean([d["cavityTemperature"] for d in dList])
+        freq = concatenate([d.fitData["freq"] for d in dList])
+        loss = concatenate([d.fitData["loss"] for d in dList])
+        sdev = concatenate([d.fitData["sdev"] for d in dList])
+        perm = argsort(freq)
+        self.setData(freq[perm],loss[perm],sdev[perm])
+        self.model.setAttributes(pressure=pressure, temperature=temperature)
         self.model.createParamVector(self.initVals)
         self.parameters = []
         for seqIndex in range(len(self.fitSequenceParameters)):
