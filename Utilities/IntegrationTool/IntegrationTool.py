@@ -34,10 +34,9 @@ Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, "In
 # Connect to database
 try:
     DB = ServerProxy("http://mfg/xmlrpc/",allow_none=True)
-    dbConnected = True
+    DB.system.listMethods()
 except:
     DB = None
-    dbConnected = False
 
 class IntegrationToolFrame(wx.Frame):
     def __init__(self, *args, **kwds):
@@ -76,7 +75,7 @@ class IntegrationToolFrame(wx.Frame):
                 self.comboBoxSelect = wx.ComboBox(self.panel1, -1, choices = analyzerChoices, size = (250, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
                 #self.comboBoxSelect = wx.ComboBox(self.panel1, -1, value = analyzerChoices[0], choices = analyzerChoices, size = (250, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
             except:
-                raise Exception, "Failed to connect to manufacturing database"
+                raise Exception, "Failed to connect to manufacturing database or read instrument ID from EEPROM"
         self.labelSelect = wx.TextCtrl(self.panel1, -1, "Analyzer", size = (80,-1), style = wx.TE_READONLY|wx.NO_BORDER)
         self.labelSelect.SetBackgroundColour("#E0FFFF")
 
@@ -179,7 +178,7 @@ class IntegrationTool(IntegrationToolFrame):
         self.analyzerType = "Beta"
         self.showAnalyzerName()
         
-        if not dbConnected:
+        if DB is None:
             # No database connection available
             if os.path.exists(self.wbCalFile+".ini") and os.path.exists(self.hbCalFile+".ini"):
                 self.testButtonList[4].Enable(True)

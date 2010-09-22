@@ -68,6 +68,7 @@ sys.path.append("Utilities/FluxSwitcher")
 sys.path.append("Utilities/ValveDisplay")
 sys.path.append("Utilities/InstrEEPROMAccess")
 sys.path.append("Utilities/DataRecal")
+sys.path.append("Utilities/IntegrationTool")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -227,7 +228,8 @@ setup(version = "1.0",
                  "Utilities/FluxSwitcher/FluxSwitcherGui.py",
                  "Utilities/ValveDisplay/ValveDisplay.py",
                  "Utilities/InstrEEPROMAccess/InstrEEPROMAccess.py",
-                 "Utilities/DataRecal/DataRecal.py"
+                 "Utilities/DataRecal/DataRecal.py",
+                 "Utilities/IntegrationTool/IntegrationTool.py"
                  ],
                  
       data_files = [(".", ["EventManager/Warning_16x16_32.ico",
