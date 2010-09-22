@@ -10,7 +10,9 @@ import wx
 import sys
 import os
 import time
+import win32gui
 from Host.Common import CmdFIFO
+from Host.Common.SingleInstance import SingleInstance
 from Host.Common.SharedTypes import RPC_PORT_DRIVER
 # Connect to database
 from xmlrpclib import ServerProxy
@@ -230,9 +232,17 @@ def HandleCommandSwitches():
     
 if __name__ == "__main__":
     defaultChassis = HandleCommandSwitches()
-    app = wx.PySimpleApp()
-    wx.InitAllImageHandlers()
-    frame = InstrEEPROMAccess(defaultChassis, None, -1, "")
-    app.SetTopWindow(frame)
-    frame.Show()
-    app.MainLoop()
+    eepromAccessApp = SingleInstance("InstrEEPROMAccess")
+    if eepromAccessApp.alreadyrunning():
+        try:
+            handle = win32gui.FindWindowEx(0, 0, None, "Instrument EEPROM Access")
+            win32gui.SetForegroundWindow(handle)
+        except:
+            pass
+    else:
+        app = wx.PySimpleApp()
+        wx.InitAllImageHandlers()
+        frame = InstrEEPROMAccess(defaultChassis, None, -1, "")
+        app.SetTopWindow(frame)
+        frame.Show()
+        app.MainLoop()

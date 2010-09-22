@@ -11,7 +11,7 @@ import sys
 import os
 import shutil
 import time
-import threading
+import subprocess
 from configobj import ConfigObj
 from xmlrpclib import ServerProxy
 from Host.Common import CmdFIFO
@@ -261,9 +261,9 @@ class IntegrationTool(IntegrationToolFrame):
         try:
             analyzerId = Driver.fetchObject("LOGIC_EEPROM")[0]
             self.name = analyzerId["Chassis"] + "-" + analyzerId["Analyzer"] + analyzerId["AnalyzerNum"]
-            self.textCtrlAnalyzerInfoList[0].SetValue(self.name)
         except:
-            self.textCtrlAnalyzerInfoList[0].SetValue("N/A")
+            self.name = "N/A"
+        self.textCtrlAnalyzerInfoList[0].SetValue(self.name)
         
     def onAboutMenu(self, event):
         d = wx.MessageDialog(None, "Integration tool for calibrating and verifying Picarro G2000 instruments\n\nCopyright 1999-2010 Picarro Inc. All rights reserved.\nVersion: 0.01\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Integration Tool", wx.OK)
@@ -275,14 +275,8 @@ class IntegrationTool(IntegrationToolFrame):
         self.Destroy()
 
     def onWriteInstrName(self, event):
-        newThread = threading.Thread(target=self._runInstrEEPROMAccess)
-        newThread.setDaemon(True)
-        newThread.start()
-       
-    def _runInstrEEPROMAccess(self):
-        cmd = "%s -d %s" % (os.path.join(HOSTEXE_DIR+"/test", "InstrEEPROMAccess.exe"), self.analyzer.split("CHAS2K")[1])
-        print cmd
-        os.system(cmd)
+        info = subprocess.STARTUPINFO()
+        subprocess.Popen([os.path.join(HOSTEXE_DIR, "InstrEEPROMAccess.exe")] + ["-d", self.analyzer.split("CHAS2K")[1]], startupinfo=info)
         self.showAnalyzerName()
 
     def onMakeIniFiles(self, event):
