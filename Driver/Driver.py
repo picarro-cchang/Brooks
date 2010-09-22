@@ -51,42 +51,6 @@ try:
 except:
     srcBzrVer = None
     
-configVer = {}
-try:
-    import iH2OAppVer
-    import iH2OInstrVer
-    configVer["HBDS"] = dict(appVer=iH2OAppVer.version_info, instrVer=iH2OInstrVer.version_info)
-except:
-    configVer["HBDS"] = {}
-    
-try:
-    import iCO2AppVer
-    import iCO2InstrVer
-    configVer["CBDS"] = dict(appVer=iCO2AppVer.version_info, instrVer=iCO2InstrVer.version_info)
-except:
-    configVer["CBDS"] = {}
-    
-try:
-    import CFADSAppVer
-    import CFADSInstrVer
-    configVer["CFADS"] = dict(appVer=CFADSAppVer.version_info, instrVer=CFADSInstrVer.version_info)
-except:
-    configVer["CFADS"] = {}
-
-try:
-    import FluxCFADSAppVer
-    import FluxCFADSInstrVer
-    configVer["CFBDS"] = dict(appVer=FluxCFADSAppVer.version_info, instrVer=FluxCFADSInstrVer.version_info)
-except:
-    configVer["CFBDS"] = {}
-
-try:
-    import FourSpeciesAppVer
-    import FourSpeciesInstrVer
-    configVer["CKADS"] = dict(appVer=FourSpeciesAppVer.version_info, instrVer=FourSpeciesInstrVer.version_info)
-except:
-    configVer["CKADS"] = {}
-    
 EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -105,6 +69,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.config = driver.config
         self.dasInterface = driver.dasInterface
         self.analogInterface = driver.analogInterface
+        self.ver = driver.ver
         self._register_rpc_functions()
 
     def _register_rpc_functions_for_object(self, obj):
@@ -252,14 +217,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
         if srcBzrVer:
             versionDict["src version id"] = srcBzrVer['revision_id']
             versionDict["src version no"] = srcBzrVer['revno']
-
         try:
-            analyzerType = str(self.fetchLogicEEPROM()[0]["Analyzer"])
-            if configVer[analyzerType]:
-                versionDict["config - app version no"] = configVer[analyzerType]["appVer"]["revno"]
-                versionDict["config - instr version no"] = configVer[analyzerType]["instrVer"]["revno"]
-            else:
-                pass
+            versionDict["config - app version no"] = self.ver["appVer"]
+            versionDict["config - instr version no"] = self.ver["instrVer"]
         except Exception, err:
             print err
         return versionDict
@@ -1034,6 +994,15 @@ class Driver(SharedTypes.Singleton):
         self.dasInterface = DasInterface(self.stateDbFile,self.usbFile,
                                          self.dspFile,self.fpgaFile,sim)
         self.analogInterface = AnalogInterface(self,self.config)
+        self.ver = {}
+        for ver in ["appVer", "instrVer"]:
+            try:
+                fPath = os.path.join(basePath, self.config["Files"][ver])
+                co = CustomConfigObj(fPath)
+                self.ver[ver] = co["Version"]["revno"]
+            except Exception, err:
+                print err
+                self.ver[ver] = "N/A"
         self.rpcHandler = DriverRpcHandler(self)
         InstrumentConfig(self.instrConfigFile)
         self.streamSaver = StreamSaver(self.config, basePath)
