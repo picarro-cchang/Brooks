@@ -198,6 +198,7 @@ setup(version = "1.0",
                  "SampleManager/SampleManager.py",
                  "Supervisor/Supervisor.py",
                  "Utilities/RemoteAccess/RemoteAccess.py",
+                 "Utilities/IntegrationTool/IntegrationTool.py",
                  "../SrcCode/Utilities/CalibrateSystem.py",
                  "../SrcCode/Utilities/AdjustWlmOffset.py",
                  "../SrcCode/Utilities/ExamineRawRD.py",
@@ -228,8 +229,7 @@ setup(version = "1.0",
                  "Utilities/FluxSwitcher/FluxSwitcherGui.py",
                  "Utilities/ValveDisplay/ValveDisplay.py",
                  "Utilities/InstrEEPROMAccess/InstrEEPROMAccess.py",
-                 "Utilities/DataRecal/DataRecal.py",
-                 "Utilities/IntegrationTool/IntegrationTool.py"
+                 "Utilities/DataRecal/DataRecal.py"
                  ],
                  
       data_files = [(".", ["EventManager/Warning_16x16_32.ico",
