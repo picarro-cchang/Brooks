@@ -31,15 +31,17 @@ CRDS_DataLogger = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DA
                                          IsDontCareConnection = False)
 
 class FluxSwitcher(object):
-    def __init__(self, configFile, supervisorConfigFile):
+    def __init__(self, configFile, supervisorConfigFile, flux=True):
+        self.flux = flux
         self.co = CustomConfigObj(configFile)
         self.coSupervisor = CustomConfigObj(supervisorConfigFile)
         apacheDir = self.coSupervisor["Main"]["APACHEDir"].strip()
         self.supervisorIniDir = os.path.join(apacheDir, "AppConfig\Config\Supervisor")
         self.guiIniDir = os.path.join(apacheDir, "AppConfig\Config\QuickGui")
-        self.fluxSupervisorIni = os.path.join(self.supervisorIniDir, self.coSupervisor["Flux"]["SupervisorIniFile"].strip())
         self.startupSupervisorIni = os.path.join(self.supervisorIniDir, self.coSupervisor["Main"]["StartupSupervisorIni"].strip())
-
+        if self.flux:
+            self.fluxSupervisorIni = os.path.join(self.supervisorIniDir, self.coSupervisor["Flux"]["SupervisorIniFile"].strip())
+            
     def select(self, type):
         self.mode = self.co[type]["Mode"].strip()
         self.guiIni = os.path.join(self.guiIniDir, self.co[type]["GuiIni"].strip())
@@ -56,13 +58,18 @@ class FluxSwitcher(object):
         launchQuickGuiThread.start()
     
     def _restartQuickGui(self):
+        print "C:/Picarro/G2000/HostExe/QuickGui.exe"
         subprocess.Popen(["C:/Picarro/G2000/HostExe/QuickGui.exe","-c",self.guiIni])
-        shutil.copy2(self.supervisorIni, self.fluxSupervisorIni)
         shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
+        if self.flux:
+            shutil.copy2(self.supervisorIni, self.fluxSupervisorIni)
     
 if __name__ == "__main__":
-    configFile = sys.argv[1]
-    type = sys.argv[2]
-    s = FluxSwitcher(configFile)
+    configFile, supervisorConfigFile, flux, type = sys.argv[1:]
+    if flux.lower() == "true":
+        flux = True
+    else:
+        flux = False
+    s = FluxSwitcher(configFile, supervisorConfigFile, flux)
     s.select(type)
     s.launch()

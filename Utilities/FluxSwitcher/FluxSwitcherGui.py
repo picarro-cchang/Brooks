@@ -30,11 +30,11 @@ else:
 AppPath = os.path.abspath(AppPath)
     
 class FluxSwitcherGui(FluxSwitcherGuiFrame):
-    def __init__(self, configFile, supervisorConfigFile, *args, **kwds):
+    def __init__(self, configFile, supervisorConfigFile, flux, *args, **kwds):
         self.co = CustomConfigObj(configFile)
-        self.switcher = FluxSwitcher(configFile, supervisorConfigFile)
+        self.switcher = FluxSwitcher(configFile, supervisorConfigFile, flux)
         typeChoices = self.co.keys()
-        FluxSwitcherGuiFrame.__init__(self, typeChoices, *args, **kwds)
+        FluxSwitcherGuiFrame.__init__(self, typeChoices, flux, *args, **kwds)
         self.Bind(wx.EVT_BUTTON, self.onLaunch, self.buttonLaunch)
 
     def onLaunch(self, event):
@@ -63,7 +63,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:s:", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "hc:s:", ["help","not_flux"])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -88,13 +88,15 @@ def HandleCommandSwitches():
         supervisorConfigFile = options["-s"]
         print "Supervisor Launcher config file specified at command line: %s" % supervisorConfigFile
         
-    return configFile, supervisorConfigFile
+    flux = "--not_flux" not in options
+    
+    return configFile, supervisorConfigFile, flux
     
 if __name__ == "__main__":
-    configFile, supervisorConfigFile = HandleCommandSwitches()
+    configFile, supervisorConfigFile, flux = HandleCommandSwitches()
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()
-    frame = FluxSwitcherGui(configFile, supervisorConfigFile, None, -1, "")
+    frame = FluxSwitcherGui(configFile, supervisorConfigFile, flux, None, -1, "")
     app.SetTopWindow(frame)
     frame.Show()
     app.MainLoop()
