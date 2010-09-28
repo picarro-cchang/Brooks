@@ -64,7 +64,11 @@ class ValveSequencer(ValveSequencerFrame):
         self.configFile = configFile
         self.co = CustomConfigObj(configFile)
         self.numSolValves = self.co.getint("MAIN", "numSolValves", 6)
-        self.comPortRotValve = self.co.getint("MAIN", "comPortRotValve", 0)
+        self.comPortRotValve = self.co.get("MAIN", "comPortRotValve", "COM2")
+        try:
+            self.comPortRotValve = int(self.comPortRotValve)
+        except:
+            pass
         self.filename = self.co.get("MAIN", "lastSeqFile", "")
         ValveSequencerFrame.__init__(self, self.numSolValves, *args, **kwds)
         try:
