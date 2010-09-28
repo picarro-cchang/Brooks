@@ -30,8 +30,6 @@ class FluxSwitcherGuiFrame(wx.Frame):
         self.comboBoxSelect = wx.ComboBox(self, -1, value = typeChoices[0], choices = typeChoices, style = wx.CB_READONLY|wx.CB_DROPDOWN)
         
         # button
-        self.buttonCancel = wx.Button(self, -1, "Cancel", size=(110, 20))
-        self.buttonCancel.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonLaunch = wx.Button(self, -1, "Launch", size=(110, 20))
         self.buttonLaunch.SetBackgroundColour(wx.Colour(237, 228, 199))
         
@@ -45,8 +43,8 @@ class FluxSwitcherGuiFrame(wx.Frame):
         sizer_1.Add(self.staticLine, 0, wx.EXPAND, 0)
         sizer_1.Add((-1, 10))
         grid_sizer_1.Add(self.labelSelect, 0, wx.LEFT, 20)
-        grid_sizer_1.Add(self.comboBoxSelect, 0, wx.LEFT, 10)
-        grid_sizer_1.Add(self.buttonCancel, 0, wx.LEFT|wx.TOP|wx.ALIGN_BOTTOM|wx.RIGHT, 10)
+        grid_sizer_1.Add(self.comboBoxSelect, 0, wx.LEFT|wx.RIGHT, 10)
+        grid_sizer_1.Add((100,-1))
         grid_sizer_1.Add(self.buttonLaunch, 0, wx.LEFT|wx.TOP|wx.ALIGN_BOTTOM|wx.RIGHT, 10)
         sizer_1.Add(grid_sizer_1, 0)
         sizer_1.Add((-1, 10))
