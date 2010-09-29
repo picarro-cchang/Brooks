@@ -357,7 +357,7 @@ cf2py intent(hide) :: n
       real*8 c3r, c4r, c5r, delta, nz, pi/3.1415926535897932384d0/
       real*8 result(n), x(n), y, z
       real*8 min_loss, str, xm
-      complex*16 c(0:8), f, sum, term, theta, q, v, w(0:8)
+      complex*16 c(0:8), f, sum, term, theta, q, v(1), w(0:8)
  
       xm = y*sqrt(abs(str/min_loss-1.0d0))
       xm = min(max(xm,10.0d0),300.0d0)
@@ -396,15 +396,15 @@ cf2py intent(hide) :: n
               else
                   call voigt(1,x(i),y,v)
                   q = dcmplx(x(i),y)
-                  w(0) = v
+                  w(0) = v(1)
                   w(1) = -2.0d0*(q*w(0))+dcmplx(0.0d0,2.0d0/sqrt(pi))
                   w(2) = -2.0d0*(w(0)   + q*w(1))
                   w(3) = -2.0d0*(2.0d0*w(1) + q*w(2))
-                  w(4) = -2.0d0*(2.0d0*w(2) + q*w(3))
-                  w(5) = -2.0d0*(2.0d0*w(3) + q*w(4))
-                  w(6) = -2.0d0*(2.0d0*w(4) + q*w(5))
-                  w(7) = -2.0d0*(2.0d0*w(5) + q*w(6))
-                  w(8) = -2.0d0*(2.0d0*w(6) + q*w(7))
+                  w(4) = -2.0d0*(3.0d0*w(2) + q*w(3))
+                  w(5) = -2.0d0*(4.0d0*w(3) + q*w(4))
+                  w(6) = -2.0d0*(5.0d0*w(4) + q*w(5))
+                  w(7) = -2.0d0*(6.0d0*w(5) + q*w(6))
+                  w(8) = -2.0d0*(7.0d0*w(6) + q*w(7))
                   result(i) = dble(w(0)*c(0)+w(1)*c(1)+w(2)*c(2)+
      *             w(3)*c(3)+w(4)*c(4)+w(5)*c(5)+w(6)*c(6)+
      *             w(7)*c(7)+w(8)*c(8))
