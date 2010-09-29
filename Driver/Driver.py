@@ -1090,6 +1090,7 @@ class Driver(SharedTypes.Singleton):
                 self.dasInterface.saveDasState()
             except:
                 pass
+            self.dasInterface.analyzerUsb.disconnect()
             self.rpcHandler.shutDown()
                 
         

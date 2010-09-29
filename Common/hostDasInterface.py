@@ -123,7 +123,7 @@ class DasInterface(Singleton):
                     analyzerUsb = AnalyzerUsb(usbdefs.CYPRESS_FX2_VID,usbdefs.CYPRESS_FX2_PID)
                     analyzerUsb.connect()
                 except:
-                    raise "Cannot connect to USB"
+                    raise RuntimeError("Cannot connect to USB")
         logging.info("Downloading USB code to Picarro USB device")
         analyzerUsb.loadHexFile(file(usbCodeFilename,"r"))
         analyzerUsb.disconnect()

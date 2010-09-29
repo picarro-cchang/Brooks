@@ -11,6 +11,8 @@
 #
 # HISTORY:
 #   07-May-2008  sze  Initial version.
+#   28-Sep-2010  sze  Set CLAIM_PER_USE to False in Windows to be consistent with Linux.
+#                     This requires us to reset the USB interface if we cannot claim it.
 #
 #  Copyright (c) 2008 Picarro, Inc. All rights reserved
 #
@@ -51,27 +53,39 @@ class AnalyzerUsb(Singleton):
         if platform == "linux2":
             self.CLAIM_PER_USE = False
         elif platform == "win32":
-            self.CLAIM_PER_USE = True
+            # self.CLAIM_PER_USE = True
+            self.CLAIM_PER_USE = False
         self.usb.usbInit()
 
     def connect(self):
-        self.checkHandleAndClose()
-        self.usbDict["busses"] = []
-        self.usb.usbFindBusses()
-        self.usb.usbFindDevices()
-        for bus in self.usb.usbBusses():
-            busDict = dict(dirname=bus.dirname,devices=[])
-            self.usbDict["busses"].append(busDict)
-            for pDev in self.usb.usbDevices(bus):
-                dev = pDev.contents
-                devDict = dict(filename=dev.filename,vendorId=dev.descriptor.idVendor,productId=dev.descriptor.idProduct)
-                busDict["devices"].append(devDict)
-                if devDict["vendorId"] == self.vid and devDict["productId"] == self.pid:
-                    self.handle = self.usb.usbOpen(pDev)
-        if self.handle == None:
-            raise UsbConnectionError("Cannot connect to device with VID: 0x%x, PID: 0x%x" % (self.vid,self.pid))
-        if self.usb.usbSetConfiguration(self.handle,1) < 0:
-            raise UsbConnectionError("Setting configuration 1 failed")
+        def _connect():
+            self.checkHandleAndClose()
+            self.usbDict["busses"] = []
+            self.usb.usbFindBusses()
+            self.usb.usbFindDevices()
+            for bus in self.usb.usbBusses():
+                busDict = dict(dirname=bus.dirname,devices=[])
+                self.usbDict["busses"].append(busDict)
+                for pDev in self.usb.usbDevices(bus):
+                    dev = pDev.contents
+                    devDict = dict(filename=dev.filename,vendorId=dev.descriptor.idVendor,productId=dev.descriptor.idProduct)
+                    busDict["devices"].append(devDict)
+                    if devDict["vendorId"] == self.vid and devDict["productId"] == self.pid:
+                        self.handle = self.usb.usbOpen(pDev)
+                        break
+            if self.handle == None:
+                raise UsbConnectionError("Cannot connect to device with VID: 0x%x, PID: 0x%x" % (self.vid,self.pid))
+            if self.usb.usbSetConfiguration(self.handle,1) < 0:
+                raise UsbConnectionError("Setting configuration 1 failed")
+        _connect()
+        # Try to claim interface
+        stat = self.usb.usbClaimInterface(self.handle,0)
+        if stat < 0:
+            self.usb.usbReset(self.handle)
+            time.sleep(2.0)
+            _connect()
+        else:
+            self.interfaceClaimed = True            
 
     def controlInTransaction(self,var,cmd,value=0,index=0):
         sv = sizeof(var)
