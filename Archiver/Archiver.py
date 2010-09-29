@@ -20,7 +20,6 @@ File History:
     
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
-
 APP_NAME = "Archiver"
 __version__ = 1.0
 _DEFAULT_CONFIG_NAME = "Archiver.ini"
@@ -346,13 +345,18 @@ class ArchiveGroup(object):
                 self.aggregation += 1
                 if self.aggregation < self.aggregationCount: return
             self.aggregation = 0
-            self.archiveFile(fileToArchive, sourceFileName, removeOriginal, timestamp)
+            status = self.archiveFile(fileToArchive, sourceFileName, removeOriginal, timestamp)
+            # If archiving fails, do not remove original
+            removeOriginal = removeOriginal and status
         finally:
             if removeOriginal and sourceIsPath and os.path.exists(source):
                 deleteFile(source)
 
     def archiveFile(self, fileToArchive, sourceFileName=None, removeOriginal=True, timestamp=None):
         # Once we get here, we have something to be archived
+        # Returns True if archiving succeeded
+        
+        status = False
         # First make room for the file by deleting old files, if necessary
         if not os.path.exists(fileToArchive):
             raise ValueError,"Cannot archive non-existent file: %s" % (fileToArchive,)
@@ -422,6 +426,7 @@ class ArchiveGroup(object):
                 os.utime(targetName,(now,now))
                 self.byteCount += nBytes
                 self.fileCount += 1
+                status = True
             except IOError,e:
                 Log("IOError renaming or copying file to %s. %s" % (targetName,e))
             except OSError,e:
@@ -430,7 +435,8 @@ class ArchiveGroup(object):
         # Make sure the temporary file is gone
         if os.path.exists(self.tempFileName): 
             deleteFile(self.tempFileName)
-            
+        return status
+        
     def updateAndGetArchiveSize(self):
         """
         Determine the number of files and number of bytes presently in the archive group.

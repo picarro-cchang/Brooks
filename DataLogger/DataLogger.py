@@ -182,6 +182,9 @@ class DataLog(object):
         self.queue.put(("write",[Time,DataDict.copy(),alarmStatus]))
         
     def CopyToMailboxAndArchive(self, srcPath=""):
+        if not srcPath and self.fp is not None:
+            self.fp.close()
+            self.fp = None
         self.queue.put(("copyToMailboxAndArchive",[srcPath]))
         
     def LoadConfig(self, ConfigParser, basePath, LogName):
@@ -252,6 +255,7 @@ class DataLog(object):
                 self.table.flush()
                 self.table = None
             self.fp.close()
+            self.fp = None
             del self.maxDuration[self.LogPath]
             self._CopyToMailboxAndArchive(self.LogPath)
             self.LogPath = ""
