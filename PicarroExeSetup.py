@@ -149,6 +149,26 @@ Coordinator = Target(description = "Coordinator", # used for the versioninfo res
                     ##    icon_resources = [(1, "icon.ico")],
                     dest_base = "Coordinator"
                     )
+
+deltaCorrProcessor = Target(description = "DeltaCorrProcessor", # used for the versioninfo resource
+                    script = "Coordinator/DeltaCorrProcessor.py", # what to build
+                    other_resources = [(RT_MANIFEST,
+                                        1,
+                                        manifest_template % dict(prog="deltaCorrProcessor")
+                                        )],
+                    ##    icon_resources = [(1, "icon.ico")],
+                    dest_base = "DeltaCorrProcessor"
+                    )
+
+dilutionCorrProcessor = Target(description = "DilutionCorrProcessor", # used for the versioninfo resource
+                    script = "Coordinator/DilutionCorrProcessor.py", # what to build
+                    other_resources = [(RT_MANIFEST,
+                                        1,
+                                        manifest_template % dict(prog="dilutionCorrProcessor")
+                                        )],
+                    ##    icon_resources = [(1, "icon.ico")],
+                    dest_base = "DilutionCorrProcessor"
+                    )
                     
 # End of special controller setup stuff (except to use controller below)
 ################################################################
@@ -219,7 +239,7 @@ setup(version = "1.0",
                  Fitter,
                  ],
 
-      windows = [QuickGui, Coordinator,Controller,
+      windows = [QuickGui, Coordinator,Controller,deltaCorrProcessor, dilutionCorrProcessor,
                  "Common/StopSupervisor.py",
                  "Utilities/DiagDataCollector/DiagDataCollector.py",
                  "Utilities/SupervisorLauncher/SupervisorLauncher.py",
