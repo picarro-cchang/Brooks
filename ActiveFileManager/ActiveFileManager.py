@@ -31,10 +31,11 @@ import time
 import traceback
 
 from Host.autogen import interface
-from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster, SharedTypes
+from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster
 from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_DATA_MANAGER
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_DATA_MANAGER, RPC_PORT_ACTIVE_FILE_MANAGER
 from Host.Common.SharedTypes import RPC_PORT_ARCHIVER
+from Host.Common.SharedTypes import Singleton
 from Host.Common.StringPickler import ArbitraryObject
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import getTimestamp, unixTimeToTimestamp
@@ -46,15 +47,14 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 
-class ArchiverProxy(SharedTypes.Singleton):
+class ArchiverProxy(Singleton):
     """Encapsulates access to the Archiver via RPC calls"""
     initialized = False
     def __init__(self):
         if not self.initialized:
             self.hostaddr = "localhost"
             self.myaddr = socket.gethostbyname(socket.gethostname())
-            serverURI = "http://%s:%d" % (self.hostaddr,
-                SharedTypes.RPC_PORT_ARCHIVER)
+            serverURI = "http://%s:%d" % (self.hostaddr,RPC_PORT_ARCHIVER)
             self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="ActiveFileManager")
             self.initialized = True
 
@@ -75,7 +75,7 @@ class RpcServerThread(threading.Thread):
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
 
-class ActiveFileManagerRpcHandler(SharedTypes.Singleton):
+class ActiveFileManagerRpcHandler(Singleton):
     def __init__(self,parent):
         self.server = CmdFIFO.CmdFIFOServer(("", RPC_PORT_ACTIVE_FILE_MANAGER),
                                             ServerName = "ActiveFileManager",
@@ -108,6 +108,7 @@ class ActiveFileManagerRpcHandler(SharedTypes.Singleton):
                     
     def getRdData(self,*a,**k):
         """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tend" (exclusive).
+            Result is a numpy record array which is placed on the rpcResultQueue by genRdData.
             Only "active" files are used to satisfy the request since the database is expected to deal
             with files which have already been archived"""
         self.parent.rpcCommandQueue.put((self.parent.genRdData,(a,k))) 
@@ -119,6 +120,7 @@ class ActiveFileManagerRpcHandler(SharedTypes.Singleton):
             
     def getSensorData(self,*a,**k):
         """ Get sensor data specified by "streamName" from "tstart" (inclusive) up to "tend" (exclusive).
+            Result is a numpy record array which is placed on the rpcResultQueue by genSensorData.
             Only "active" files are used to satisfy the request since the database is expected to deal
             with files which have already been archived"""
         self.parent.rpcCommandQueue.put((self.parent.genSensorData,(a,k))) 
@@ -130,8 +132,10 @@ class ActiveFileManagerRpcHandler(SharedTypes.Singleton):
             
     def getDmData(self,*a,**k):
         """ Get data manager for "mode" and "source" whose columns are specified by "varList" from 
-            "tstart" (inclusive) up to "tend" (exclusive). Only "active" files are used to satisfy 
-            the request since the database is expected to deal with files which have already been archived"""
+            "tstart" (inclusive) up to "tend" (exclusive). 
+            Result is a numpy record array which is placed on the rpcResultQueue by genDmData.
+            Only "active" files are used to satisfy the request since the database is expected to deal 
+            with files which have already been archived"""
         self.parent.rpcCommandQueue.put((self.parent.genDmData,(a,k))) 
         result = self.parent.rpcResultQueue.get()
         if isinstance(result,Exception):
@@ -147,6 +151,32 @@ ctype2coltype = { ctypes.c_byte:tables.Int8Col, ctypes.c_uint:tables.UInt32Col, 
                   ctypes.c_short:tables.Int16Col, ctypes.c_ushort:tables.UInt16Col, ctypes.c_longlong:tables.Int64Col, 
                   ctypes.c_float:tables.Float32Col, ctypes.c_double:tables.Float64Col }
         
+def recArrayExtract(A,fields):
+    """
+    Extract the list of named fields (columns) out of a numpy record array to produce
+    another. Each element of fields is either the name of a field in A or a tuple 
+    (originalName,newName) giving the original name of the field in A and the new name
+    of the field in the output array.
+    The field dtypes are copied from the source to the destination file
+    """
+    aFields = A.dtype.fields
+    oldFields = []
+    newFields = {}
+    for field in fields:
+        if isinstance(field,tuple):
+            originalName,newName = field
+            oldFields.append(originalName)
+            newFields[originalName] = newName
+        else:
+            oldFields.append(field)
+            newFields[field] = field
+    dtype = [(newFields[name],aFields[name][0]) for name in oldFields if name in aFields]
+    B = numpy.zeros(len(A),dtype=dtype)
+    for name in oldFields: 
+        if name in aFields:
+            B[newFields[name]] = A[name]
+    return B
+
 class ActiveFile(object):
     """Objects of this class are associated with HDF5 files in the active file directory.
        The class is used to abstract away details about accessing HDF5 files."""
@@ -197,21 +227,22 @@ class ActiveFile(object):
     def getRdDataTable(self):    
         return self.handle.root.rdData
         
-    def getDmDataTable(self,mode,source,colNameSet,create=False):
+    def getDmDataTable(self,mode,source):
+        modeGroup = getattr(self.handle.root.dataManager,mode)
+        return getattr(modeGroup,source)
+    
+    def retrieveOrMakeDmDataTable(self,mode,source,colNames):
         try:
             modeGroup = getattr(self.handle.root.dataManager,mode)
         except AttributeError:
-            if not create:
-                raise
             modeGroup = self.handle.createGroup("/dataManager",mode)
         try:
+            colNameSet = set(colNames)
             table = getattr(modeGroup,source)
             oldColNameSet = set(table.colnames)
             if colNameSet.issubset(oldColNameSet):
                 return table
             else:
-                if not create:
-                    raise AttributeError('No such column(s): %s' % ", ".join([n for n in colNameSet.difference(oldColNameSet)]))
                 # The columns have changed, so we need to extend the table
                 table.rename('__tempTable__')
                 newTable = self.handle.createTable(modeGroup,source,self.descrFromColNames(colNameSet.union(oldColNameSet)),expectedrows=500000)
@@ -224,8 +255,6 @@ class ActiveFile(object):
                 table.remove()
                 return newTable
         except AttributeError:
-            if not create:
-                raise
             table = self.handle.createTable(modeGroup,source,self.descrFromColNames(colNameSet),expectedrows=500000)
             return table
             
@@ -259,17 +288,20 @@ class ActiveFile(object):
         
     def getRdData(self,tstart,tend,varList):
         """Get ringdown data lying in the specified time range"""
-        return [[row[v] for v in varList] for row in self.getRdDataTable().where('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend))]
+        selected = self.getRdDataTable().readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend))
+        return recArrayExtract(selected,varList)
 
     def getSensorData(self,tstart,tend,streamName):
         """Get sensor data lying in the specified time range."""
         index = getattr(interface,streamName)
-        return [[row["timestamp"],row["value"]] for row in self.getSensorDataTable().where('(timestamp >= %d) & (timestamp < %d) & (streamNum == %d)' % (tstart,tend,index))]
+        selected = self.getSensorDataTable().readWhere('(timestamp >= %d) & (timestamp < %d) & (streamNum == %d)' % (tstart,tend,index))
+        return recArrayExtract(selected,["timestamp",("value",streamName[7:])])
 
     def getDmData(self,mode,source,tstart,tend,varList):
         """Get data manager data from specified mode and source lying in the specified time range"""
-        return [[row[v] for v in varList] for row in self.getDmDataTable(mode,source,set(varList)).where('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend))]
- 
+        selected = self.getDmDataTable(mode,source).readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend))
+        return recArrayExtract(selected,varList)
+        
 class ActiveFileManager(object):
     def __init__(self,configFile):
         self.config = CustomConfigObj(configFile)
@@ -394,9 +426,12 @@ class ActiveFileManager(object):
             if tend <= baseTime: continue
             a = self.activeFiles[baseTime]
             if tstart >= a.stopTime: continue
-            results += a.getRdData(tstart,tend,varList)
+            results.append(a.getRdData(tstart,tend,varList))
             if time.clock()-t > 0.5: t = yield True # Indicate not yet done
-        self.rpcResultQueue.put(numpy.array(results).transpose())
+        if results:
+            self.rpcResultQueue.put(numpy.concatenate(results))
+        else:
+            self.rpcResultQueue.put(None)
 
     def genSensorData(self,tstart,tend,streamName):
         results = []
@@ -406,9 +441,12 @@ class ActiveFileManager(object):
             if tend <= baseTime: continue
             a = self.activeFiles[baseTime]
             if tstart >= a.stopTime: continue
-            results += a.getSensorData(tstart,tend,streamName)
+            results.append(a.getSensorData(tstart,tend,streamName))
             if time.clock()-t > 0.5: t = yield True # Indicate not yet done
-        self.rpcResultQueue.put(numpy.array(results).transpose())
+        if results:
+            self.rpcResultQueue.put(numpy.concatenate(results))
+        else:
+            self.rpcResultQueue.put(None)
 
     def genDmData(self,mode,source,tstart,tend,varList):
         results = []
@@ -425,14 +463,15 @@ class ActiveFileManager(object):
             #  correct modes or sources available.
             # We only report an error if there are no results
             try:
-                results += a.getDmData(mode,source,tstart,tend,varList)
+                results.append(a.getDmData(mode,source,tstart,tend,varList))
                 if time.clock()-t > 0.5: t = yield True # Indicate not yet done
             except AttributeError,e:
                 latestException = e
-        if not results:
-            raise latestException
-        self.rpcResultQueue.put(numpy.array(results).transpose())
-
+        if results:
+            self.rpcResultQueue.put(numpy.concatenate(results))
+        else:
+            self.rpcResultQueue.put(None)
+            
     def compressHdf5File(self,activeFile):
         """Copy an uncompressed file to a new HDF5 file with the compression filters
            turned on. Returns name of the compressed file."""
@@ -499,7 +538,7 @@ class ActiveFileManager(object):
                     a = self.getActiveFile(timestamp)
                     # Get data manager table for given mode and source, creating it if it does not 
                     #  exist
-                    dmDataTable = a.getDmDataTable(mode,source,colNameSet,create=True)
+                    dmDataTable = a.retrieveOrMakeDmDataTable(mode,source,colNameSet)
                     if self.dmDataTable is not None and self.dmDataTable != dmDataTable:
                         self.dmDataTable.flush()
                     self.dmDataTable = dmDataTable
