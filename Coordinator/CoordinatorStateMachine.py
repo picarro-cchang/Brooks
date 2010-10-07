@@ -104,6 +104,12 @@ class StateMachine(object):
         self.scriptEnv = {}
         # Parse the configuration file containing the state machine
         self.config = CustomConfigObj(iniFile, list_values = True)
+        self.portDict = {}
+        if "SerialPorts" in self.config:
+            try:
+                self.portDict = self.config["SerialPorts"].copy()
+            except:
+                pass
         self.setup = self.config['Setup']
         # We no longer use a user-specified script file
         # if scriptFile == None:
@@ -183,7 +189,7 @@ class StateMachine(object):
                           "config":self.config,"Autosampler":Autosampler,"DummyAutosampler":DummyAutosampler,\
                           "GC":GC,"SerIntrf":SerIntrf,"GUI":self.guiProxy,"getDescription":self.getDescription,\
                           "time":time,"editParamDict":self.editParamDict,"runningFlag":True,"pause":self.turnOffRunningFlag,\
-                          "resume":self.turnOnRunningFlag})
+                          "resume":self.turnOnRunningFlag, "portDict":self.portDict})
         CoordinatorScripts.DRIVER = self.driver
         CoordinatorScripts.MEASSYS = self.measSys
         CoordinatorScripts.SAMPLEMGR = self.sampleMgr

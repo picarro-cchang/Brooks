@@ -52,8 +52,8 @@ class Autosampler(object):
     def __init__(self):
         self.ser = serial.Serial(None,baudrate=9600,timeout=1,xonxoff=1)
         self.dio = IbaseDio()
-    def open(self):
-        self.ser.port = 0
+    def open(self, port=0):
+        self.ser.port = port
         self.ser.open()
         self.dio.installDriver()
         if not self.dio.isDioAvailable(0):
