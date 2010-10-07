@@ -89,7 +89,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     d.Destroy()
                 if restart:
                     CRDS_Supervisor.TerminateApplications()
-                    time.sleep(1)
+                    time.sleep(4)
                 else:
                     return
         except:
