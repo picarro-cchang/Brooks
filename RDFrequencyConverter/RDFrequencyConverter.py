@@ -133,7 +133,6 @@ class SchemeManager(object):
     def startup(self):
         Driver.stopScan()
         Log("Scheme Manager starts up")
-        Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
         self.rdFreqConv.RPC_loadWarmBoxCal()
         self.rdFreqConv.RPC_loadHotBoxCal()
         # Load up the DAS with schemes in the managed positions...
@@ -377,6 +376,9 @@ class RDFrequencyConverter(Singleton):
             self.rdProcessedCache = []
             self.rpcThread = None
             self._shutdownRequested = False
+            self.freqConvertersLoaded = False
+            # Ensure no ringdowns are being collected when the RDFrequencyConverter starts up
+            Driver.stopScan()
             self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_FREQ_CONVERTER),
                                                     ServerName = "FrequencyConverter",
                                                     ServerDescription = "Frequency Converter for CRDS hardware",
@@ -387,12 +389,6 @@ class RDFrequencyConverter(Singleton):
                 if callable(attr) and s.startswith("RPC_") and (not inspect.isclass(attr)):
                     self.rpcServer.register_function(attr, NameSlice = 4)
                     
-            self.rdListener = Listener.Listener(self.rdQueue,
-                                        BROADCAST_PORT_RDRESULTS,
-                                        interface.RingdownEntryType,
-                                        streamFilter = self.rdFilter,
-                                        retry = True,
-                                        name = "Ringdown frequency converter listener",logFunc = Log)
             self.processedRdBroadcaster = Broadcaster.Broadcaster(
                                         port=BROADCAST_PORT_RD_RECALC,
                                         name="Ringdown frequency converter broadcaster",logFunc = Log)
@@ -723,6 +719,15 @@ class RDFrequencyConverter(Singleton):
                     laserParams['pressureC2'] = 0.0
                     laserParams['pressureC3'] = 0.0
                 Driver.wrVirtualLaserParams(vLaserNum,laserParams)
+        # Start the ringdown listener only once there are frequency converters available to do the conversion
+        if not self.freqConvertersLoaded:
+            self.rdListener = Listener.Listener(self.rdQueue,
+                                        BROADCAST_PORT_RDRESULTS,
+                                        interface.RingdownEntryType,
+                                        streamFilter = self.rdFilter,
+                                        retry = True,
+                                        name = "Ringdown frequency converter listener",logFunc = Log)
+            self.freqConvertersLoaded = True
         return "OK"
         
     def RPC_replaceOriginalWlmCal(self,vLaserNum):

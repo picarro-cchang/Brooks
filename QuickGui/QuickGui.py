@@ -59,7 +59,8 @@ from Host.Common import AppStatus
 from Host.Common import SharedTypes
 from Host.Common import StopSupervisor
 from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
-                                    RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_QUICK_GUI
+                                    RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_QUICK_GUI, \
+                                    RPC_PORT_SUPERVISOR
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
@@ -1176,7 +1177,9 @@ class QuickGui(wx.Frame):
             self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
         except:
             self.valveSeqRpc = None
-        self.stopSupervisor = StopSupervisor.StopSupervisor(None, -1, "")
+        self.SupervisorRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                        APP_NAME,
+                                                        IsDontCareConnection = False)
         self.configFile = configFile
         self.config = self.loadConfig(self.configFile)
         self.valveSeqOption = self.config.getboolean("ValveSequencer","Enable",True)
@@ -1778,7 +1781,7 @@ class QuickGui(wx.Frame):
             type = dialog.getShutdownType()
             # Call appropriate shutdown RPC routine on the instrument manager
             if type == 0:
-                self.stopSupervisor.onStop(None, "QuickGui.exe")
+                self.SupervisorRpc.TerminateApplications(powerDown=False,stopProtected=True)
             elif type == 1:
                 self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(2)
             elif type == 2:

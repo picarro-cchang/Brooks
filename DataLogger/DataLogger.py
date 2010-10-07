@@ -180,11 +180,14 @@ class DataLog(object):
             
     def Write(self, Time, DataDict, alarmStatus):
         self.queue.put(("write",[Time,DataDict.copy(),alarmStatus]))
-        
-    def CopyToMailboxAndArchive(self, srcPath=""):
-        if not srcPath and self.fp is not None:
+    
+    def Close(self):
+        if self.fp is not None:
             self.fp.close()
             self.fp = None
+                
+    def CopyToMailboxAndArchive(self, srcPath=""):
+        if not srcPath: self.Close()
         self.queue.put(("copyToMailboxAndArchive",[srcPath]))
         
     def LoadConfig(self, ConfigParser, basePath, LogName):
@@ -254,8 +257,7 @@ class DataLog(object):
             if self.table != None:
                 self.table.flush()
                 self.table = None
-            self.fp.close()
-            self.fp = None
+            self.Close()
             del self.maxDuration[self.LogPath]
             self._CopyToMailboxAndArchive(self.LogPath)
             self.LogPath = ""
@@ -626,7 +628,15 @@ class DataLogger(object):
                                               name = "Data Logger alarm status listener",logFunc = Log)
 
         self.RpcServer.serve_forever()
+        self.DATALOGGER_shutdown()
         if DEBUG: Log("Shutting Down Data Logger.")
+        
+    def DATALOGGER_shutdown(self):
+        for dl in self.UserLogDict:
+            dl.Close()
+        for dl in self.PrivateLogDict:
+            dl.Close()
+            
     def DATALOGGER_getDataRpc(self, LogName):
         """Returns a string containing a list of data columns being logged for the specified log."""
         dataListStr=""

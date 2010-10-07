@@ -201,7 +201,8 @@ class SpectrumCollector(object):
             #Pull a spectral point from the RD queue...
             try:
                 rdData = self.getSpectralDataPoint(timeToRetry=0.5)
-                if rdData is None: continue
+                if rdData is None: 
+                    continue
                 now = TimeStamp()
                 if self.rdQueueGetLastTime != 0:
                     rtt = now - self.rdQueueGetLastTime

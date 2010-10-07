@@ -139,6 +139,9 @@ if sys.platform == "linux2":
         "6" : -15
     }
     
+# Protected applications (not shut down on normal termination)
+PROTECTED_APPS = ["Driver"]
+
 #set up the main logger connection...
 CRDS_EventLogger = CmdFIFO.CmdFIFOServerProxy(\
     uri = "http://localhost:%d" % RPC_PORT_LOGGER,\
@@ -696,8 +699,11 @@ class App(object):
         self._LaunchTime = TimeStamp()
     def IsProcessActive(self):
         return isProcessActive(self._ProcessHandle)
-    def ShutDown(self, StopMethod = _METHOD_STOPFIRST, StopWaitTime_s = -1, KillWaitTime_s = -1, NoKillByName = False):
-        """Shuts down the application.  The application WILL be dead by the end of call.
+    def ShutDown(self, StopMethod = _METHOD_STOPFIRST, StopWaitTime_s = -1, KillWaitTime_s = -1, NoKillByName = False, 
+                       NoWait = False):
+        """Shuts down the application.  If NoWait is True, return immediately after performing StopMethod.
+           If NoWait is False, keep escalating severity of kill method so that the application WILL be dead by the 
+           end of call.
         """
         #See if our work is already done somehow... if so we just get out...
         if not self.IsProcessActive():
@@ -724,6 +730,7 @@ class App(object):
             #Politely request a shutdown...
             try:
                 self._ServerProxy.CmdFIFO.StopServer()
+                if NoWait: return
                 #Wait for it to disappear...
                 while (TimeStamp() - startTime) < StopWaitTime_s:
                     time.sleep(0.05) #without this we pin the processor while we poll
@@ -732,6 +739,7 @@ class App(object):
                         break
             except Exception, E:
                 Log("Exception raised during StopServer attempt", str(self), Verbose = "Exception = %r %s" % (E,E))
+                if NoWait: return
                 #assume that it still lives to be safe.
 
         #Second - a KillServer request is a bit more rough...
@@ -743,6 +751,7 @@ class App(object):
             #Request instant seppuku...
             try:
                 self._ServerProxy.CmdFIFO.KillServer('please')
+                if NoWait: return
                 #Wait for it to disappear...
                 while (TimeStamp() - startTime) < KillWaitTime_s:
                     if not self.IsProcessActive():
@@ -750,6 +759,7 @@ class App(object):
                         break
             except Exception, E:
                 Log("Exception raised during KillServer attempt", str(self), Verbose = "Exception = %r %s" % (E,E))
+                if NoWait: return
                 #assume that it still lives to be safe.
 
         #Third - if the app is not responding, now we brutally axe it with a system call...
@@ -761,6 +771,7 @@ class App(object):
             #Smite with extreme prejudice (and a nice meaningless but identifiable error code of 42)...
             try:
                 terminateProcess(self._ProcessHandle)
+                if NoWait: return
                 #Wait for it to disappear...
                 while (TimeStamp() - startTime) < _DEFAULT_PROCESS_KILL_WAIT_TIME_s:
                     if not self.IsProcessActive():
@@ -768,6 +779,7 @@ class App(object):
                         break
             except Exception, E:
                 #It is possible we tried to destroy a process that is already gone - so check...
+                if NoWait: return
                 if self.IsProcessActive():
                     Log("Exception raised during TerminateProcess attempt", str(self), Verbose = "Exception = %r %s" % (E,E))
                     #app is still considered alive at this point
@@ -779,6 +791,7 @@ class App(object):
         if self.KillByName and not NoKillByName:
             print "Calling KillByName for application %s (appLives = %s)" % (self.Executable,appLives)
             terminateProcessByName(self.Executable)
+            if NoWait: return
 
         if appLives: #shouldn't be possible by here!
             #the #$@#$!!! operating system can't even kill it... we're screwed.
@@ -928,6 +941,7 @@ class Supervisor(object):
         self.PrintMessages = True
         self._ShutdownRequested = False
         self._TerminateAllRequested = False
+        self._TerminateProtected = False
         self.BackupExists = False
         self.BackupApp = None
         self.Mode3Exists = False
@@ -1196,14 +1210,16 @@ class Supervisor(object):
         else:
             Log("Not restarting because of dependence on app which is not launched", dict(AppName = AppName), Level = 2)
 
-    def RPC_TerminateApplications(self,powerDown=False):
+    def RPC_TerminateApplications(self,powerDown=False,stopProtected=False):
         """Terminates all applications (in the proper order) and closes the Supervisor. Optionally powers down
-        (by shutting down Windows) after termination"""
+        (by shutting down Windows) after termination. If stopProtected is True, protected applications (currently the
+        Driver) are also terminated. """
         Log("TerminateApplications request received via RPC",
             dict(Client = self.RPCServer.CurrentCmd_ClientName),
             Level = 2)
         self._TerminateAllRequested = True
         self.powerDownAfterTermination = powerDown
+        self._TerminateProtected = stopProtected
         return "OK"
 
     def LaunchMasterRPCServer(self):
@@ -1369,14 +1385,28 @@ class Supervisor(object):
         """
         #Get rid of any backup supervisor first...
         if self.BackupExists:
-            self.BackupApp.ShutDown(NoKillByName=True)
+            self.BackupApp.ShutDown(_METHOD_KILLFIRST,NoKillByName=True,NoWait=True)
         # Initiate system shutdown
         if self.powerDownAfterTermination:
             os.system("shutdown -s -t 20")
         #Now shut applications down in the reverse order of launching...
-        for appName in self.AppNameList[::-1]:
-            if not (self.AppDict[appName] is self.BackupApp):
-                self.AppDict[appName].ShutDown()
+        #for severity in [_METHOD_STOPFIRST,_METHOD_KILLFIRST,_METHOD_DESTROYFIRST]:
+        for severity in [_METHOD_KILLFIRST,_METHOD_DESTROYFIRST]:
+            anyAlive = False
+            for appName in self.AppNameList[::-1]:
+                if not (self.AppDict[appName] is self.BackupApp) and not appName in PROTECTED_APPS:
+                    # terminate the application
+                    if self.AppDict[appName].IsProcessActive():
+                        anyAlive = True
+                        self.AppDict[appName].ShutDown(severity,NoWait=True)
+            if anyAlive:
+                time.sleep(_DEFAULT_KILL_WAIT_TIME_s)
+
+        if self._TerminateProtected:
+            for appName in self.AppNameList[::-1]:
+                if appName in PROTECTED_APPS:
+                    self.AppDict[appName].ShutDown()
+            
         self._ShutdownRequested = True
 
     def GetAppStats(self, PrintStats = False):

@@ -440,6 +440,7 @@ class MeasSystem(object):
             if result:
                 # print "Result of length %d sent at %s" % (len(result),TimeStamp())
                 return result
+            time.sleep(0.1)
     def _SendSpectraToFitter(self, spectra):
         self._Status.UpdateStatusBit(STATUS_MASK_WaitingForFitter, True)
         if self._UninterruptedSpectrumCount == 0:
