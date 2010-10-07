@@ -19,7 +19,7 @@ from xmlrpclib import ServerProxy
 DB = ServerProxy("http://mfg/xmlrpc/",allow_none=True)
 
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "InstrEEPROMAccess")
-ANALYZER_TYPES = ["CFADS", "HBDS", "CBDS", "CFBDS", "CKADS"]
+ANALYZER_TYPES = ["CFADS", "HBDS", "CBDS", "CFBDS", "CKADS", "CFKBDS"]
                   
 class InstrEEPROMAccessFrame(wx.Frame):
     def __init__(self, defaultChassis, *args, **kwds):
