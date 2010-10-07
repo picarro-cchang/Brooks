@@ -12,21 +12,18 @@ import subprocess
 import wx
 import time
 import threading
-import win32api
-import win32process
-import win32con
 import win32gui
 import shutil
 from configobj import ConfigObj
 from SupervisorLauncherFrame import SupervisorLauncherFrame
 from Host.Common import CmdFIFO
 from Host.Common.SingleInstance import SingleInstance
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_QUICK_GUI
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_QUICK_GUI
 
 APP_NAME = "SupervisorLauncher"
 DEFAULT_CONFIG_NAME = "SupervisorLauncher.ini"
 
-CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
                                          APP_NAME,
                                          IsDontCareConnection = False)
 CRDS_QuickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUICK_GUI,
@@ -39,45 +36,14 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
-
-TASKLIST = [
-"BackupSupervisor.exe",
-"Supervisor.exe",
-"EventManager.exe",
-"Archiver.exe",
-"RDFrequencyConverter.exe",
-"SpectrumCollector.exe",
-"Fitter.exe",
-"MeasSystem.exe",
-"DataManager.exe",
-"SampleManager.exe",
-"InstMgr.exe",
-"AlarmSystem.exe",
-"ValveSequencer.exe",
-"QuickGui.exe",
-"DataLogger.exe",
-"CommandInterface.exe",
-"Controller.exe",
-"HostStartup.exe",
-"Coordinator.exe"
-]
-
-def getWinProcessListStr():
-    pList = win32process.EnumProcesses()
-    moduleList = []
-    for p in pList:
-        try:
-            h = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ,0,p)
-            moduleList.append(win32process.GetModuleFileNameEx(h,None))
-        except Exception,e:
-            pass
-            #print "Cannot fetch information for %s: %s" % (p,e)
-    processListStr = "\n".join(moduleList)
-    return processListStr
     
 class SupervisorLauncher(SupervisorLauncherFrame):
     def __init__(self, configFile, autoLaunch, *args, **kwds):
         self.co = ConfigObj(configFile)
+        try:
+            self.launchType = self.co["Main"]["Type"].strip().lower()
+        except:
+            self.launchType = "exe"
         self.forcedLaunch = False
         typeChoices = self.co.keys()
         typeChoices.remove("Main")
@@ -93,8 +59,9 @@ class SupervisorLauncher(SupervisorLauncherFrame):
             hostDir = self.co["Main"]["HostDir"].strip()
         except:
             hostDir = "Host"
-        self.supervisorExeDir = os.path.join(apacheDir, hostDir)
+        self.supervisorHostDir = os.path.join(apacheDir, hostDir)
         self.startupSupervisorIni = os.path.join(self.supervisorIniDir, self.co["Main"]["StartupSupervisorIni"].strip())
+        
         self.onSelect(None)
         self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
         self.Bind(wx.EVT_BUTTON, self.onLaunch, self.buttonLaunch)
@@ -110,41 +77,47 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         self.supervisorIni = os.path.join(self.supervisorIniDir, self.co[self.supervisorType]["SupervisorIniFile"].strip())
             
     def onLaunch(self, event):
-        winProcessListStr = getWinProcessListStr()
-        if "\Supervisor.exe" in winProcessListStr or "\supervisor.exe" in winProcessListStr:
-            if self.forcedLaunch:
-                restart = True
-            else:
-                d = wx.MessageDialog(None,"Picarro CRDS analyzer is currently running.\nDo you want to re-start the analyzer now?\n\nSelect \"Yes\" to re-start the analyzer with the selected measurement mode.\nSelect \"No\" to cancel this action and keep running the current measurement mode.", "Re-start CRDS Analyzer Confirmation", \
-                style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
-                restart = (d.ShowModal() == wx.ID_YES)
-                d.Destroy()
-            if restart:
-                for task in TASKLIST:
-                    try:
-                        os.system("C:/WINDOWS/system32/taskkill.exe /IM %s /F" % task)
-                    except:
-                        pass
-                CRDS_Driver.CmdFIFO.StopServer()
-                time.sleep(1)
-            else:
-                return
-        if not self.forcedLaunch:
+        # Terminate the current supervisor
+        try:
+            if CRDS_Supervisor.CmdFIFO.PingFIFO() == "Ping OK":
+                if self.forcedLaunch:
+                    restart = True
+                else:
+                    d = wx.MessageDialog(None,"Picarro CRDS analyzer is currently running.\nDo you want to re-start the analyzer now?\n\nSelect \"Yes\" to re-start the analyzer with the selected measurement mode.\nSelect \"No\" to cancel this action and keep running the current measurement mode.", "Re-start CRDS Analyzer Confirmation", \
+                    style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
+                    restart = (d.ShowModal() == wx.ID_YES)
+                    d.Destroy()
+                if restart:
+                    CRDS_Supervisor.TerminateApplications()
+                    time.sleep(1)
+                else:
+                    return
+        except:
+            pass
+            
+        if (not self.forcedLaunch) and (self.launchType == "exe"):
             try:
                 shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
             except:
                 pass
-        os.chdir(self.supervisorExeDir)
+                
+        os.chdir(self.supervisorHostDir)
         info = subprocess.STARTUPINFO()
         if self.consoleMode != 1:
             info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             info.wShowWindow = subprocess.SW_HIDE
-        subprocess.Popen(["supervisor.exe","-f","-c",self.supervisorIni], startupinfo=info)
+        if self.launchType == "exe":
+            subprocess.Popen(["supervisor.exe","-c",self.supervisorIni], startupinfo=info)
+        else:
+            subprocess.Popen(["python.exe", "Supervisor.py","-c",self.supervisorIni], startupinfo=info)
 
         # Launch HostStartup
-        #os.system("C:\Picarro\G2000\Host\Utilities\SupervisorLauncher\HostStartup.py -c %s" % self.supervisorIni)
-        info = subprocess.STARTUPINFO()
-        subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
+        if self.launchType == "exe":
+            info = subprocess.STARTUPINFO()
+            subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
+        #else:
+        #   os.chdir(r"C:\Picarro\G2000\Host\Utilities\SupervisorLauncher")
+        #   subprocess.Popen(["python.exe", "HostStartup.py","-c",self.supervisorIni.replace("EXE","")], startupinfo=info)
         
         # Change QuickGui Title
         setTitleThread = threading.Thread(target=self.setGuiTitle)
@@ -163,10 +136,12 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                 CRDS_QuickGui.setTitle(self.co[self.supervisorType]["Title"].strip())
                 titleSet = True
             except:
-                winProcessListStr = getWinProcessListStr()
-                if "\Supervisor.exe" in winProcessListStr or "\supervisor.exe" in winProcessListStr:
-                    pass
-                else:
+                try:
+                    if CRDS_Supervisor.CmdFIFO.PingFIFO() == "Ping OK":
+                        pass
+                    else:
+                        count += 1
+                except:
                     count += 1
                 time.sleep(0.5)
                 

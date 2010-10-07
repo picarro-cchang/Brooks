@@ -115,8 +115,13 @@ class CommandInterface(object):
             self.commandList = dict(self.config.list_items(COMMAND_LIST_SECTION))
             self.errorList   = dict(self.config.list_items(ERROR_LIST_SECTION))
             self.errorMap    = dict(self.config.list_items(ERROR_MAP_SECTION))
-            interfaceName    = self.config.get(HEADER_SECTION,'interface')
-            interfaceConfig  = dict(self.config.list_items(interfaceName.upper()))
+            self.interfaceName    = self.config.get(HEADER_SECTION,'interface')
+            if self.interfaceName.upper() == "OFF":
+                msg = "Command Interface disabled"
+                print msg
+                Log(msg, Level = 2)
+                return False
+            interfaceConfig  = dict(self.config.list_items(self.interfaceName.upper()))
             for i in interfaceConfig:
                 interfaceConfig[i]=eval(interfaceConfig[i])
             self.echo     = self.config.get(HEADER_SECTION,'echo')
@@ -156,8 +161,8 @@ class CommandInterface(object):
 
         # Load interface definitions
         try:
-            interfaceModule  = __import__(interfaceName)
-            interfaceClass   = getattr(interfaceModule, interfaceName)
+            interfaceModule  = __import__(self.interfaceName)
+            interfaceClass   = getattr(interfaceModule, self.interfaceName)
             self.interface   = interfaceClass()
             self.interface.config( **interfaceConfig )
         except:
@@ -171,7 +176,8 @@ class CommandInterface(object):
     def RPC_Start(self):
         """ Starts interface """
         if self.interface == None:
-            Log("Failed to start command interface.", Level = 3)
+            if self.interfaceName.upper() != "OFF":
+                Log("Failed to start command interface.", Level = 3)
             return
         try:
             self.interface.open()
