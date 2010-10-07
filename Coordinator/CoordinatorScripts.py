@@ -93,6 +93,12 @@ def loadWarmBoxCal(fileName='',pCalOffset=None):
     FREQCONV.loadWarmBoxCal(fileName,pCalOffset)
     
 #############
+# Hot Box Accessor
+#############
+def loadHotBoxCal(fileName=''):
+    FREQCONV.loadHotBoxCal(fileName)
+    
+#############
 # UTC & Time
 #############
 def getUTCTime(option="float"):
