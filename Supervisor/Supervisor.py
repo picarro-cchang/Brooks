@@ -47,7 +47,8 @@ File History:
     08-09-16 alex  Replaced ConfigParser by CustomConfigObj 
                    Re-formatted supervisor ini file so it doesn't contain application indices and total number of applications -> easier to add or remove applications on the list 
     08-10-08 alex  Re-ordered applications to be launched
-
+    10-10-07 sze   Start the RPC server at once, so that we can terminate a misbehaving stack while it is loading
+    
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -645,7 +646,7 @@ class App(object):
 
         if supervisor.CheckForStopRequests():
             raise TerminationRequest
-        
+
         r = launchProcess(self._AppName,exeName,exeArgs,self.Priority,self.ConsoleMode,self.AffinityMask)
         self._ProcessId, self._ProcessHandle, pAffinity = r
 
@@ -678,7 +679,7 @@ class App(object):
                     #Just sucking it up since we're waiting for the app to start and we do expect errors.
                     #Log("Trapped Exception","%s %r" % (E,E), 0)
                     pass
-                time.sleep(0.05)
+                time.sleep(0.5)
         else:
             #Not verifying, so assume it did start...
             appStarted = True
@@ -1244,7 +1245,9 @@ class Supervisor(object):
             self.RPCServer.register_function(self.RPC_TerminateApplications, NameSlice = 4)
 
             #Launch the server on its own thread...
-            threading.Thread(target = self.RPCServer.serve_forever).start()
+            th = threading.Thread(target = self.RPCServer.serve_forever)
+            th.setDaemon(True)
+            th.start()
         except Exception, E:
             Log("Exception trapped when configuring and launching the Master RPC server", Verbose = "Exception = %s %r" % (E, E))
 
@@ -1296,7 +1299,6 @@ class Supervisor(object):
         """
         Log("Application monitoring loop started")
         appsToMonitor = [self.AppDict[a] for a in self.AppNameList if self.AppDict[a].Mode in [0, 1, 3]]
-        self.LaunchMasterRPCServer() # in separate thread, only supports TerminateApplications RPC
         while (not self._ShutdownRequested) and (not self._TerminateAllRequested): #we'll monitor until it is time to stop!
             sys.stdout.flush()
             for app in appsToMonitor:
@@ -1608,7 +1610,7 @@ def HandleCommandSwitches():
 
     if '-c' in options:
         configFile = options["-c"]
-        print "Config file specified at command line: %s" % configFile
+        # print "Config file specified at command line: %s" % configFile
         Log("Config file specified at command line", dict(Path = configFile))
     else:
         print "No config file specified.  Using default: '%s'." % os.path.basename(configFile)
@@ -1699,10 +1701,13 @@ def main():
         #Now get to the actual program...
         if performDuties:
             # Grab the mutex, as we should be the only one up at this stage
-            SingleInstance("PicarroSupervisor")
+            supervisorApp = SingleInstance("PicarroSupervisor")
+            if supervisorApp.alreadyrunning():
+                sys.exit(0)
             try:
                 supe = Supervisor(FileName = configFile) #loads all the app info
                 supe.AddExtraArgs(extraAppArgs)
+                supe.LaunchMasterRPCServer() # in separate thread, only supports TerminateApplications RPC
                 supe.Execute(KillExistingApps = killExisting,
                              LaunchNonExistent = (not suppressLaunch),
                              DoMonitoring = (not suppressMonitoring))
@@ -1727,10 +1732,10 @@ if __name__ == "__main__":
         # iniCdr.verifyConfig()
     # except Exception, E:    
         # raise IniVerifyErr("%s %r" % (E, E))
-
-    print "PID = %s" % os.getpid()
     try:
         main()
+    except SystemExit:
+        pass
     except:
         # tbMsg = BetterTraceback.get_advanced_traceback()
         tbMsg = traceback.format_exc()
@@ -1739,4 +1744,4 @@ if __name__ == "__main__":
             Level = 3,
             Verbose = tbMsg)
         print tbMsg
-    Log("Exiting program")
+        Log("Exiting program")

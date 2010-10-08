@@ -79,7 +79,8 @@ class SupervisorLauncher(SupervisorLauncherFrame):
     def onLaunch(self, event):
         # Terminate the current supervisor
         try:
-            if CRDS_Supervisor.CmdFIFO.PingFIFO() == "Ping OK":
+            if CRDS_Supervisor.CmdFIFO.PingDispatcher() == "Ping OK":
+                pid = CRDS_Supervisor.CmdFIFO.GetProcessID()
                 if self.forcedLaunch:
                     restart = True
                 else:
@@ -89,9 +90,17 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     d.Destroy()
                 if restart:
                     CRDS_Supervisor.TerminateApplications()
-                    time.sleep(4)
                 else:
                     return
+                # Kill supervisor by PID if it does not stop within 5 seconds
+                try:
+                    for k in range(5):
+                        p = CRDS_Supervisor.CmdFIFO.GetProcessID()
+                        if p == pid: time.sleep(1.0)
+                    os.system(r'taskkill /F /PID %d' % pid)
+                except:
+                    time.sleep(2.0)
+                    pass
         except:
             pass
             
@@ -106,6 +115,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         if self.consoleMode != 1:
             info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             info.wShowWindow = subprocess.SW_HIDE
+            
         if self.launchType == "exe":
             subprocess.Popen(["supervisor.exe","-c",self.supervisorIni], startupinfo=info)
         else:
