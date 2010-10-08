@@ -35,6 +35,10 @@ class StopSupervisorFrame(wx.Frame):
         self.labelTitle = wx.StaticText(self, -1, "Stop CRDS Software", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         
+        self.selectShutdownType = wx.RadioBox(self, -1, "Select shutdown method",
+        choices=["Stop software but keep driver running", "Stop software and driver", "Turn off analyzer in current state"], 
+        majorDimension=1, style=wx.RA_SPECIFY_COLS)
+            
         # button
         self.buttonStop = wx.Button(self, -1, "Stop", style=wx.ALIGN_CENTRE, size=(110, 20))
         self.buttonStop.SetBackgroundColour(wx.Colour(237, 228, 199))
@@ -44,7 +48,8 @@ class StopSupervisorFrame(wx.Frame):
     def __do_layout(self):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
-        sizer_1.Add(self.labelTitle, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
+        sizer_1.Add(self.labelTitle, 0, wx.TOP|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
+        sizer_1.Add(self.selectShutdownType, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
         sizer_1.Add(self.buttonStop, 0, wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
 
         self.SetSizer(sizer_1)
@@ -64,7 +69,15 @@ class StopSupervisor(StopSupervisorFrame):
                 stop = (d.ShowModal() == wx.ID_YES)
                 d.Destroy()
                 if stop:
-                    CRDS_Supervisor.TerminateApplications()
+                    sel = self.selectShutdownType.GetSelection()
+                    if sel == 0:
+                        CRDS_Supervisor.TerminateApplications(False, False)
+                    if sel == 1:
+                        CRDS_Supervisor.TerminateApplications(False, True)
+                    if sel == 2:
+                        CRDS_Supervisor.TerminateApplications(True, True)
+                    # Kill the startup splash screen as well (if it exists)
+                    os.system(r'taskkill.exe /IM HostStartup.exe /F')
                     self.Destroy()
                 else:
                     return
