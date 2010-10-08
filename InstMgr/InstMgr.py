@@ -281,7 +281,7 @@ class InstMgr(object):
     """This is the Instrument Manager application object."""
     def __init__(self, configPath, noSampleMgr=False):
         self.noSampleMgr = noSampleMgr
-        
+        self.flowStarted = False
         self.State = INSTMGR_STATE_RESET
         self._SetupInstModeDispatcher()
         if __debug__: Log("Loading config options.")
@@ -890,12 +890,14 @@ class InstMgr(object):
                 else:
                     pressureLocked = "Unlocked"
 
-                if self.Config.AutoRestartFlow and self.DriverRpc.rdDasReg("VALVE_CNTRL_STATE_REGISTER") == interface.VALVE_CNTRL_DisabledState:
+                if (not self.flowStarted) or \
+                   (self.Config.AutoRestartFlow and self.DriverRpc.rdDasReg("VALVE_CNTRL_STATE_REGISTER") == interface.VALVE_CNTRL_DisabledState):
                     if self.noSampleMgr:
                         pass
                     else:
                         self.MeasuringState = MEAS_STATE_PRESSURE_STAB
                         self.SampleMgrRpc.FlowStart()
+                    self.flowStarted = True
     
             except Exception, e:
                 Log("Das Monitor: error %s" % (e,),Level = 2)
@@ -1024,6 +1026,7 @@ class InstMgr(object):
     def INSTMGR_Start(self):
         self._SendDisplayMessage("Starting")
         self._LoadConfigFile(self.configPath)
+        self.flowStarted = False
         self.restartCount = 0
         self.dasRestartCount = 0
         self.measRestartCount = 0
@@ -1082,6 +1085,7 @@ class InstMgr(object):
         self.MonitorShutdown = True
         self.RpcServer.stop_server()
     def INSTMGR_StartRpc(self):
+        self.flowStarted = False
         self.restartCount = 0
         self.dasRestartCount = 0
         self.measRestartCount = 0
@@ -1162,12 +1166,14 @@ class InstMgr(object):
     def INSTMGR_startFlowRpc(self):
         status = self.SampleMgrRpc.FlowStart()
         if status == INST_ERROR_OKAY:
+            self.flowStarted = True
             return INSTMGR_RPC_SUCCESS
         else:
             return INSTMGR_RPC_FAILED
     def INSTMGR_stopFlowRpc(self):
         status = self.SampleMgrRpc.FlowStop()
         if status == INST_ERROR_OKAY:
+            self.flowStarted = False
             return INSTMGR_RPC_SUCCESS
         else:
             return INSTMGR_RPC_FAILED
