@@ -98,13 +98,13 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                         p = CRDS_Supervisor.CmdFIFO.GetProcessID()
                         if p == pid: time.sleep(1.0)
                     os.system(r'taskkill /F /PID %d' % pid)
-                    # Kill the startup splash screen as well
-                    os.system(r'taskkill.exe /IM HostStartup.exe /F')
-                    # Kill QuickGui if it isn't under Supervisor's supervision
-                    os.system(r'taskkill.exe /IM QuickGui.exe /F')
                 except:
                     time.sleep(2.0)
                     pass
+                # Kill the startup splash screen
+                os.system(r'taskkill.exe /IM HostStartup.exe /F')
+                # Kill QuickGui if it isn't under Supervisor's supervision
+                os.system(r'taskkill.exe /IM QuickGui.exe /F')
         except:
             pass
             
