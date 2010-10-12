@@ -100,6 +100,8 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     os.system(r'taskkill /F /PID %d' % pid)
                     # Kill the startup splash screen as well
                     os.system(r'taskkill.exe /IM HostStartup.exe /F')
+                    # Kill QuickGui if it isn't under Supervisor's supervision
+                    os.system(r'taskkill.exe /IM QuickGui.exe /F')
                 except:
                     time.sleep(2.0)
                     pass

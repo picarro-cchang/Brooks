@@ -78,6 +78,8 @@ class StopSupervisor(StopSupervisorFrame):
                         CRDS_Supervisor.TerminateApplications(True, True)
                     # Kill the startup splash screen as well (if it exists)
                     os.system(r'taskkill.exe /IM HostStartup.exe /F')
+                    # Kill QuickGui if it isn't under Supervisor's supervision
+                    os.system(r'taskkill.exe /IM QuickGui.exe /F')
                     self.Destroy()
                 else:
                     return
