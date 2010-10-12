@@ -89,6 +89,10 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     restart = (d.ShowModal() == wx.ID_YES)
                     d.Destroy()
                 if restart:
+                    # Kill the startup splash screen
+                    os.system(r'taskkill.exe /IM HostStartup.exe /F')
+                    # Kill QuickGui if it isn't under Supervisor's supervision
+                    os.system(r'taskkill.exe /IM QuickGui.exe /F')
                     CRDS_Supervisor.TerminateApplications()
                 else:
                     return
@@ -101,10 +105,6 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                 except:
                     time.sleep(2.0)
                     pass
-                # Kill the startup splash screen
-                os.system(r'taskkill.exe /IM HostStartup.exe /F')
-                # Kill QuickGui if it isn't under Supervisor's supervision
-                os.system(r'taskkill.exe /IM QuickGui.exe /F')
         except:
             pass
             
