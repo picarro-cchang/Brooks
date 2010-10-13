@@ -252,6 +252,12 @@ def disableCalScript():
     LOGFUNC("Calibration script from Data Manager is disabled\n") 
     DATAMGR.Cal_Disable()  
 
+def getUserCalibrations():
+    return DATAMGR.Cal_GetUserCalibrations()
+    
+def getInstrCalibrations():
+    return DATAMGR.Cal_GetInstrCalibrations()
+    
 ##########################
 # Other Driver functions
 ##########################

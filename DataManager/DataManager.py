@@ -646,6 +646,10 @@ class DataManager(object):
         """
         return self.UserCalibration[measName]
 
+    def RPC_Cal_GetInstrCalibrations(self):
+        """Returns instrument calibrations"""
+        return self.InstrData
+            
     def RPC_PulseAnalyzer_Set(self, source, concNameList, targetConc = None, thres1Pair = [0.0, 0.0], 
                               thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0, 
                               validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0, 
