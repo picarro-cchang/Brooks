@@ -16,9 +16,10 @@ import win32gui
 import shutil
 from configobj import ConfigObj
 from SupervisorLauncherFrame import SupervisorLauncherFrame
+from Host.autogen import interface
 from Host.Common import CmdFIFO
 from Host.Common.SingleInstance import SingleInstance
-from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_QUICK_GUI
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_QUICK_GUI, RPC_PORT_DRIVER
 
 APP_NAME = "SupervisorLauncher"
 DEFAULT_CONFIG_NAME = "SupervisorLauncher.ini"
@@ -29,7 +30,9 @@ CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SU
 CRDS_QuickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUICK_GUI,
                                          APP_NAME,
                                          IsDontCareConnection = False)
-
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                         APP_NAME,
+                                         IsDontCareConnection = False)
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -38,7 +41,7 @@ else:
 AppPath = os.path.abspath(AppPath)
     
 class SupervisorLauncher(SupervisorLauncherFrame):
-    def __init__(self, configFile, autoLaunch, *args, **kwds):
+    def __init__(self, configFile, autoLaunch, closeValves, *args, **kwds):
         self.co = ConfigObj(configFile)
         try:
             self.launchType = self.co["Main"]["Type"].strip().lower()
@@ -65,6 +68,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         self.onSelect(None)
         self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
         self.Bind(wx.EVT_BUTTON, self.onLaunch, self.buttonLaunch)
+        self.closeValves = closeValves
         if autoLaunch:
             self.supervisorIni = self.startupSupervisorIni
             self.forcedLaunch = True
@@ -93,6 +97,8 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     os.system(r'taskkill.exe /IM HostStartup.exe /F')
                     # Kill QuickGui if it isn't under Supervisor's supervision
                     os.system(r'taskkill.exe /IM QuickGui.exe /F')
+                    # Kill Controller if it isn't under Supervisor's supervision
+                    os.system(r'taskkill.exe /IM Controller.exe /F')
                     CRDS_Supervisor.TerminateApplications()
                 else:
                     return
@@ -105,6 +111,9 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                 except:
                     time.sleep(2.0)
                     pass
+                if self.closeValves:
+                    CRDS_Driver.wrDasReg( interface.VALVE_CNTRL_STATE_REGISTER, interface.VALVE_CNTRL_DisabledState )
+                    CRDS_Driver.setValveMask(0)
         except:
             pass
             
@@ -168,6 +177,7 @@ Where the options can be a combination of the following:
 -h, --help : Print this help.
 -c         : Specify a config file.
 -a         : Automatically launch the last selected supervisor ini without showing the "mode switcher" window
+-v         : Close all solenoid valves and disable inlet/outlet valves during mode switching
 
 """
 
@@ -178,7 +188,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:a", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "hc:av", ["help"])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -200,11 +210,12 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
         
     autoLaunch = "-a" in options
-
-    return (configFile, autoLaunch)
+    closeValves = "-v" in options
+        
+    return (configFile, autoLaunch, closeValves)
     
 if __name__ == "__main__":
-    (configFile, autoLaunch) = HandleCommandSwitches()
+    (configFile, autoLaunch, closeValves) = HandleCommandSwitches()
     supervisorLauncherApp = SingleInstance("PicarroSupervisorLauncher")
     if supervisorLauncherApp.alreadyrunning() and not autoLaunch:
         try:
@@ -215,7 +226,7 @@ if __name__ == "__main__":
     else:
         app = wx.PySimpleApp()
         wx.InitAllImageHandlers()
-        frame = SupervisorLauncher(configFile, autoLaunch, None, -1, "")
+        frame = SupervisorLauncher(configFile, autoLaunch, closeValves, None, -1, "")
         app.SetTopWindow(frame)
         frame.Show()
         app.MainLoop()

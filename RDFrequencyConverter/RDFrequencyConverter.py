@@ -135,6 +135,7 @@ class SchemeManager(object):
         Log("Scheme Manager starts up")
         self.rdFreqConv.RPC_loadWarmBoxCal()
         self.rdFreqConv.RPC_loadHotBoxCal()
+        self.rdFreqConv.RPC_centerTuner(32768)
         # Load up the DAS with schemes in the managed positions...
         Log("Starting upload of all required DAS schemes")
         for k in self.schemeDict.keys():

@@ -73,6 +73,8 @@ class StopSupervisor(StopSupervisorFrame):
                     os.system(r'taskkill.exe /IM HostStartup.exe /F')
                     # Kill QuickGui if it isn't under Supervisor's supervision
                     os.system(r'taskkill.exe /IM QuickGui.exe /F')
+                    # Kill Controller if it isn't under Supervisor's supervision
+                    os.system(r'taskkill.exe /IM Controller.exe /F')
                     
                     sel = self.selectShutdownType.GetSelection()
                     if sel == 0:
