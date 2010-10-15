@@ -23,7 +23,7 @@ from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes
 from Host.Common.CustomConfigObj import CustomConfigObj
-from ControllerModels import DriverProxy, RDFreqConvProxy
+from ControllerBuildStationModels import DriverProxy, RDFreqConvProxy
 
 # For convenience in calling driver and frequency converter functions
 Driver = DriverProxy().rpc

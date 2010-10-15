@@ -211,31 +211,34 @@ class ActiveFile(object):
     def create(self,dirName,baseTime,stopTime):
         self.baseTime = baseTime
         self.stopTime = stopTime
-        self.abspath = os.path.abspath(os.path.join(dirName,"%d_%d.h5" % (self.baseTime,self.stopTime)))
+        self.tsRange = "%d_%d" % (self.baseTime,self.stopTime)
+        self.abspath = os.path.abspath(os.path.join(dirName,"%s.h5" % self.tsRange))
         self.handle = tables.openFile(self.abspath,"w")
-        self.handle.setNodeAttr("/","baseTime",self.baseTime)
-        self.handle.setNodeAttr("/","stopTime",self.stopTime)
-        self.handle.createTable("/","sensorData",self.SensorDataDescr,expectedrows=2000000)
-        self.handle.setNodeAttr("/sensorData","streamNames",interface.STREAM_MemberTypeDict)
-        self.handle.createTable("/","rdData",self.RdDataDescr,expectedrows=1000000)
-        self.handle.createGroup("/","dataManager")
+        self.baseGroup = self.handle.createGroup("/","t_"+self.tsRange)
+        self.baseGroup._f_setAttr("baseTime",self.baseTime)
+        self.baseGroup._f_setAttr("stopTime",self.stopTime)
+        t = self.handle.createTable(self.baseGroup,"sensorData",self.SensorDataDescr,expectedrows=2000000)
+        t._f_setAttr("streamNames",interface.STREAM_MemberTypeDict)
+        self.handle.createTable(self.baseGroup,"rdData",self.RdDataDescr,expectedrows=1000000)
+        self.handle.createGroup(self.baseGroup,"dataManager")
         return self
         
     def getSensorDataTable(self):    
-        return self.handle.root.sensorData
+        return self.handle.getNode(self.baseGroup,"sensorData")
         
     def getRdDataTable(self):    
-        return self.handle.root.rdData
+        return self.handle.getNode(self.baseGroup,"rdData")
         
     def getDmDataTable(self,mode,source):
-        modeGroup = getattr(self.handle.root.dataManager,mode)
+        modeGroup = getattr(self.handle.getNode(self.baseGroup,"dataManager"),mode)
         return getattr(modeGroup,source)
     
     def retrieveOrMakeDmDataTable(self,mode,source,colNames):
         try:
-            modeGroup = getattr(self.handle.root.dataManager,mode)
+            modeGroup = getattr(self.handle.getNode(self.baseGroup,"dataManager"),mode)
         except AttributeError:
-            modeGroup = self.handle.createGroup("/dataManager",mode)
+            n = self.handle.getNode(self.baseGroup,"dataManager")
+            modeGroup = self.handle.createGroup(n,mode)
         try:
             colNameSet = set(colNames)
             table = getattr(modeGroup,source)
@@ -274,9 +277,16 @@ class ActiveFile(object):
     def open(self,filename):    
         self.abspath = os.path.abspath(filename)
         self.handle = tables.openFile(filename,"a")
-        self.baseTime = self.handle.getNodeAttr("/","baseTime")
-        self.stopTime = self.handle.getNodeAttr("/","stopTime")
-        return self
+        # For active files, we expect there to be only a single group off
+        #  the root, named by the base and stop timestamps
+        for node in self.handle.iterNodes("/"):
+            self.baseGroup = node
+            self.baseTime = node._f_getAttr("baseTime")
+            self.stopTime = node._f_getAttr("stopTime")
+            self.tsRange = "%d_%d" % (self.baseTime,self.stopTime)
+            if "t_" + self.tsRange != node._v_name:
+                raise ValueError("Bad timestamp attributes in %s" % filename) 
+            return self
         
     def close(self):
         self.handle.close()

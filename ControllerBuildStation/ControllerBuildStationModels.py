@@ -26,7 +26,7 @@ import inspect
 from Queue import Queue
 import socket
 
-EventManagerProxy_Init("Controller")
+EventManagerProxy_Init("ControllerBuildStation")
 
 waveforms = {}
 dasInfo = {}

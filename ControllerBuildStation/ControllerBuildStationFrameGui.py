@@ -6,20 +6,20 @@ import wx
 
 # begin wxGlade: extracode
 from wx.py import crust
-from ControllerPanels import StatsPanel
-from ControllerPanels import RingdownPanel
-from ControllerPanels import WlmPanel
-from ControllerPanels import PressurePanel
-from ControllerPanels import HotBoxPanel
-from ControllerPanels import WarmBoxPanel
-from ControllerPanels import LaserPanel
+from ControllerBuildStationPanels import StatsPanel
+from ControllerBuildStationPanels import RingdownPanel
+from ControllerBuildStationPanels import WlmPanel
+from ControllerBuildStationPanels import PressurePanel
+from ControllerBuildStationPanels import HotBoxPanel
+from ControllerBuildStationPanels import WarmBoxPanel
+from ControllerBuildStationPanels import LaserPanel
 
-from ControllerPanels import CommandLogPanel
+from ControllerBuildStationPanels import CommandLogPanel
 # end wxGlade
 
 
 
-class ControllerFrameGui(wx.Frame):
+class ControllerBuildStationFrameGui(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: ControllerFrameGui.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE

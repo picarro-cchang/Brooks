@@ -10,16 +10,16 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "Controller"
+APP_NAME = "ControllerBuildStation"
 
 import wx
 import sys
 import traceback
 
-from Sequencer import Sequencer
-from ControllerFrameGui import ControllerFrameGui
-from ControllerModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy
-from ControllerModels import LogListener, SensorListener, RawRingdownListener, ControllerRpcHandler
+from SequencerBuildStation import Sequencer
+from ControllerBuildStationFrameGui import ControllerBuildStationFrameGui
+from ControllerBuildStationModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy
+from ControllerBuildStationModels import LogListener, SensorListener, RawRingdownListener, ControllerRpcHandler
 from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common.ParameterDialog import ParameterDialog
@@ -35,7 +35,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 
-class Controller(ControllerFrameGui):
+class Controller(ControllerBuildStationFrameGui):
     def __init__(self,*a,**k):
         try:
             self.versions = Driver.allVersions()
@@ -43,7 +43,7 @@ class Controller(ControllerFrameGui):
             wx.MessageDialog(None,"Driver not accessible, cannot continue.",
                 "Controller Startup Error",wx.OK|wx.ICON_ERROR).ShowModal()
             sys.exit()
-        ControllerFrameGui.__init__(self,*a,**k)
+        ControllerBuildStationFrameGui.__init__(self,*a,**k)
         self.updateTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER,self.onUpdateTimer,self.updateTimer)
         self.updateTimer.Start(milliseconds=1000)

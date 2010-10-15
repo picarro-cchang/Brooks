@@ -27,7 +27,7 @@ from math import log10, sqrt
 import os
 import sys
 
-from ControllerModels import DriverProxy, RDFreqConvProxy, ControllerRpcHandler, waveforms, dasInfo
+from ControllerBuildStationModels import DriverProxy, RDFreqConvProxy, ControllerRpcHandler, waveforms, dasInfo
 from ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui, PressurePanelGui
 from ControllerPanelsGui import WarmBoxPanelGui, HotBoxPanelGui, RingdownPanelGui
 from ControllerPanelsGui import WlmPanelGui, StatsPanelGui
