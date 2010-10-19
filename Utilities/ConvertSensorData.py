@@ -40,9 +40,13 @@ ctype2coltype = { c_byte:Int8Col, c_uint:UInt32Col, c_int:Int32Col,
                   c_float:Float32Col, c_double:Float64Col }
 
 class SaveData(object):
-    def __init__(self):
+    def __init__(self,argList):
         filters = Filters(complevel=1,fletcher32=True)
-        self.h5f = openFile("test.h5","w") 
+        if len(argList)>=1: 
+            infileName = argList[0]
+        if len(argList)>=2: 
+            outfileName = argList[1]        
+        self.h5f = openFile(outfileName,"w") 
         self.colDict = { "timestamp" : Int64Col() }
         for name in STREAM_MemberTypeDict.values():
             self.colDict[name[7:]] = Float32Col()
@@ -50,7 +54,7 @@ class SaveData(object):
         filters = Filters(complevel=1,fletcher32=True)
         self.sensorTable = self.h5f.createTable(self.h5f.root,"sensors",TableType,filters=filters)
         
-        self.sf = openFile(r"S:\for Justin\MID IR\data files\proto2\Sensors_20100909_202914.h5","r")
+        self.sf = openFile(infileName,"r")
         self.streamFilterState = "COLLECTING_DATA"
         self.resultDict = {}
         self.latestDict = {}
@@ -99,5 +103,5 @@ class SaveData(object):
             self.h5f.close()
             self.sf.close()
 if __name__ == "__main__":
-    e = SaveData()
+    e = SaveData(sys.argv[1:])
     e.run()
