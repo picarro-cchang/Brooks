@@ -1535,14 +1535,14 @@ class Analysis(object):
                     if key2d >= f.numParams():
                         raise ValueError("Function %s does not have parameter %s in dependency list" % (type(f),key2d))
                     else:
-                        dlist.append(paramIndices[key2d])
+                        dlist.append(f.paramIndices[key2d])
                 if key1s == "base": slist.append(key2s)
                 else:
                     f = self.basisFunctionByIndex[key1s]
                     if key2s >= f.numParams():
                         raise ValueError("Function %s does not have parameter %s in dependency list" % (type(f),key2s))
                     else:
-                        slist.append(paramIndices[key2s])
+                        slist.append(f.paramIndices[key2s])
                 c1list.append(slope)
                 c2list.append(offset)
         fitSeqPar = self.fitSequenceParameters[seqIndex]

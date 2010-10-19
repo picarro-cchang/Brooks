@@ -365,7 +365,9 @@ cf2py intent(hide) :: n
       y = abs(y)
       z = abs(z)
       
-      if (z.lt.0.04d0 .and. y.lt.0.5d0) then
+      if (z.lt.1.0d-6) then
+          region = 0
+      else if (z.lt.0.04d0 .and. y.lt.0.5d0) then
           region = 1
       else if (z.lt.0.1d0) then
           region = 3
@@ -376,8 +378,12 @@ cf2py intent(hide) :: n
       else
           region = 2
       endif
-
-      if (region.eq.1) then
+      if (region.eq.0) then
+          do 5 i = 1,n
+              call voigt(1,x(i),y,v)
+              result(i) = v(1)
+    5     continue
+      else if (region.eq.1) then
           c3r = z/12.0d0
           c4r = -z**2/48.0d0
           c5r = z**3/240.0d0

@@ -29,10 +29,10 @@ from copy import copy
 import cPickle
 from cStringIO import StringIO
 from glob import glob
-from numpy import arange, arctan, argmax, argmin, argsort, array, bool_, cos
+from numpy import arange, arctan, argmax, argmin, argsort, array, asarray, bool_, concatenate, cos
 from numpy import diff, searchsorted, dot, exp, flatnonzero, float_, frompyfunc
 from numpy import int8, int_, invert, iterable, linspace, logical_and, mean, median, ndarray, ones
-from numpy import pi, shape, sin, sqrt, std, zeros
+from numpy import pi, polyfit, ptp, shape, sin, sqrt, std, unique, zeros 
 from os.path import getmtime, join, split, exists
 from scipy.optimize import leastsq, brent
 from string import strip
@@ -989,15 +989,81 @@ class RdfData(object):
     _pacing = {}
     def __init__(self):
         """An RdfData object is essentially just a bunch of dynamically created attributes for holding
-        ringdown data"""
+        ringdown data. 
+        
+            self.rdfKeys holds the list of dynamic attribute names
+            self.sensorDict is a dictionary of averaged sensor data
+            self.indexVector is used for selection and permutation so that we can sort and filter the data
+            self.nrows    }
+            self.startRow } count ringdown rows in HDF5 file for display in fit viewer
+            self.endRow   }
+        """
         # filterHistory is a list of tuples (filterName,pointsRemoved,pointsRemaining) containing a record of
         #  what filters have been applied to the data
         self.filterHistory = []
+        self.rdfKeys = []
+        self.indexVector = []
+        self.nrows = 0
+        self.sensorDict = {}
+        
+    def merge(self,rdfDataList):
+        """Make a composite RdfData object from the current object and those in rdfDataList. We check
+        that they are all compatible in the sense of having the same rdfKeys and sensorDict.
+        
+        The numpy concatenate function is used to join the corresponding arrays in rdfDataList. 
+        The keys in the sensorDicts are averaged together, weighted according to the number of 
+        rows in each RdfData object.
+        
+        indexVector is set to select all the data in natural order
+        nrows is set to the sum of the rows of the original object and those in the list
+        """
+        sensorKeys = sorted(self.sensorDict.keys())
+        for d in rdfDataList:
+            if not self.rdfKeys:
+                self.rdfKeys = d.rdfKeys[:]
+            else:
+                if self.rdfKeys != d.rdfKeys:
+                    raise ValueError("Cannot merge RdfData objects with incompatible keys")
+            if not sensorKeys:
+                sensorKeys = sorted(d.sensorDict.keys())
+            else:
+                s = sorted(d.sensorDict.keys())
+                if sensorKeys != s:
+                    raise ValueError("Cannot merge RdfData objects with incompatible sensorDicts")
+        for k in self.rdfKeys:
+            try:
+                aList = [getattr(self,k)]
+            except AttributeError:
+                aList = []
+            aList += [getattr(d,k) for d in rdfDataList]
+            object.__setattr__(self, k, concatenate(aList))
+                    
+        if self.sensorDict:
+            for k in sensorKeys:
+                self.sensorDict[k] *= self.nrows
 
+        for d in rdfDataList:
+            for k in sensorKeys:
+                self.sensorDict[k] = d.nrows * d.sensorDict[k] + self.sensorDict.get(k,0.0)
+            self.nrows += d.nrows
+
+        for k in sensorKeys:
+            self.sensorDict[k] /= self.nrows
+            
+        self.indexVector = arange(self.nrows)
+        self.startRow = 0
+        self.endRow = self.nrows
+        
     @staticmethod
     def getSpectraDict(rdfDict):
-        """Generates individual spectra (in RdfData() format) from a string sent by the SpectrumManager,
-            split according to the subschemeId field & 0x3FF"""
+        """Generates individual spectra (in RdfData() format) from a dictionary with keys 
+        "rdData", "sensorData" and optionally "controlData" and "tagalongData". 
+        
+        rdfDict["controlData"] is typically a numpy record array with a field "RDDataSize"
+        which indicates how the rows of rdfDict["rdData"] are to be divided into "chunks" 
+        containing individual spectra. 
+        
+        """
         rdData = rdfDict["rdData"]
         otherData = rdfDict["sensorData"]
         if "tagalongData" in rdfDict: 
@@ -1039,7 +1105,8 @@ class RdfData(object):
                 rdfData = RdfData()
                 rdfData.sensorDict = otherDataForChunk
                 # Store ringdown data for current section as attributes of the RdfData object
-                for s in rdData:
+                rdfData.rdfKeys = sorted(rdData.keys())
+                for s in rdfData.rdfKeys:
                     object.__setattr__(rdfData, s, rdData[s][low:high])
                 # Initialize indexVector to the identity permutation to indicate that
                 #  all data are (initially) good
@@ -1077,7 +1144,8 @@ class RdfData(object):
         """Reads a pickled dictionary containing ringdown information"""
         s = fp.read()
         self.sensorDict = cPickle.loads(s)
-        for s in self.sensorDict:
+        self.rdfKeys = sorted(self.sensorDict.keys())
+        for s in self.rdfKeys:
             object.__setattr__(self, s, self.sensorDict[s])
         fp.close()
         # Initialize indexVector to the identity permutation to indicate that
@@ -1144,12 +1212,14 @@ class RdfData(object):
         self.groupMeans = {}
         self.groupMedians = {}
         self.groupStdDevs = {}
+        self.groupPtp = {}
         self.groupSizes = array(map(len,self.groups))
         for field in fields:
             x = getattr(self,field)
             self.groupMeans[field] = array([mean(x[g]) for g in self.groups])
             self.groupMedians[field] = array([median(x[g]) for g in self.groups])
             self.groupStdDevs[field] = array([std(x[g]) for g in self.groups])
+            self.groupPtp[field] = array([ptp(x[g]) for g in self.groups])
 ##  14 June 2010  added modified sigma filter named "outlierFilter            
     def sparse(self,maxPoints,width,height,xColumn,yColumn,sigmaThreshold=-1,outlierThreshold=-1):
         """Sparse the ringdown data by binning the data specified by "xColumn" and
@@ -1206,7 +1276,76 @@ class RdfData(object):
         nStart = len(self.indexVector)
         nEnd = sum([len(g) for g in self.groups])
         self.filterHistory.append(("sparseFilter",nStart-nEnd,nEnd))
-
+    
+    def calcGroupStats(self):
+        self.evaluateGroups(["waveNumber","uncorrectedAbsorbance","waveNumberSetpoint","pztValue","ratio1","ratio2","wlmAngle","laserTemperature"])
+        self.groupStats = {}
+        pztArray = asarray(self.groupMeans["pztValue"])
+        sizeArray = asarray(self.groupSizes)
+        ensemblePzt = dot(pztArray, sizeArray)/(1e-10+sum(sizeArray))
+        for idx,key in enumerate(self.groupMeans["waveNumber"]):
+            self.groupStats[key] = dict(freq_mean=self.groupMeans["waveNumber"][idx],
+                                   freq_stddev=self.groupStdDevs["waveNumber"][idx],
+                                   uLoss_mean=self.groupMeans["uncorrectedAbsorbance"][idx],
+                                   uLoss_stddev=self.groupStdDevs["uncorrectedAbsorbance"][idx],
+                                   pzt_mean=self.groupMeans["pztValue"][idx],
+                                   pzt_stddev=self.groupStdDevs["pztValue"][idx],
+                                   ratio1_mean=self.groupMeans["ratio1"][idx],
+                                   ratio1_stddev=self.groupStdDevs["ratio1"][idx],
+                                   ratio2_mean=self.groupMeans["ratio2"][idx],
+                                   ratio2_stddev=self.groupStdDevs["ratio2"][idx],
+                                   wlm_angle_mean=self.groupMeans["wlmAngle"][idx],
+                                   wlm_angle_stddev=self.groupStdDevs["wlmAngle"][idx],
+                                   laser_temperature_mean=self.groupMeans["laserTemperature"][idx],
+                                   laser_temperature_stddev=self.groupStdDevs["laserTemperature"][idx],
+                                   setpoint_mean = self.groupMeans["waveNumberSetpoint"][idx],
+                                   target_error = self.groupMeans["waveNumber"][idx] - key,
+                                   pzt_ensemble_offset = self.groupMeans["pztValue"][idx] - ensemblePzt,
+                                   group_size = self.groupSizes[idx]
+                                   )
+            
+    def selectGroupStats(self, nameWaveNumList):
+        """
+        nameWaveNumList = [(name, waveNum), ...]
+        """
+        keys = self.groupStats.keys()
+        results = {}
+        for name, waveNum in nameWaveNumList:
+            closestKey = keys[argmin(abs(waveNum-asarray(keys)))]
+            closestGroupStats = self.groupStats[closestKey]
+            for key in closestGroupStats:
+                results[name+"_"+key] = closestGroupStats[key]
+        return results
+    
+    def calcSpectrumStats(self):
+        ringdownsInSpectrum = unique(concatenate([s for s in self.groups]))
+        ringdownsInSpectrum = ringdownsInSpectrum[self.uncorrectedAbsorbance[ringdownsInSpectrum] != 0.0]
+        self.spectrumStats = {}
+        self.spectrumStats["ss_num_ringdowns"] = len(ringdownsInSpectrum)
+        self.spectrumStats["ss_duration"] = ptp(self.timestamp[ringdownsInSpectrum])*0.001
+        s = (self.correctedAbsorbance - self.uncorrectedAbsorbance)[ringdownsInSpectrum]
+        self.spectrumStats["ss_loss_diff_mean"] = mean(s)
+        self.spectrumStats["ss_loss_diff_stddev"] = std(s)
+        s = self.pztValue[ringdownsInSpectrum]
+        self.spectrumStats["ss_pzt_mean"] = mean(s)
+        self.spectrumStats["ss_pzt_stddev"] = std(s)
+        s = self.fineLaserCurrent[ringdownsInSpectrum]
+        self.spectrumStats["ss_fine_current_mean"] = mean(s)
+        self.spectrumStats["ss_fine_current_min"] = min(s)
+        self.spectrumStats["ss_fine_current_max"] = max(s)
+        s = (self.waveNumber - self.waveNumberSetpoint)[ringdownsInSpectrum]
+        self.spectrumStats["ss_target_error_mean"] = mean(s)
+        self.spectrumStats["ss_target_error_stddev"] = std(s)
+        s = self.groupMeans["waveNumber"] - self.groupMeans["waveNumberSetpoint"]
+        self.spectrumStats["ss_group_target_error_slope"] = polyfit(self.groupMeans["waveNumber"], s, 1)[0]
+        self.spectrumStats["ss_group_target_error_stddev"] = std(s)
+        s = self.groupMeans["pztValue"]
+        self.spectrumStats["ss_group_pzt_slope"] = polyfit(self.groupMeans["waveNumber"], s, 1)[0]
+        self.spectrumStats["ss_group_pzt_stddev"] = std(s)
+        
+    def getSpectrumStats(self):
+        return self.spectrumStats
+        
     def badRingdownFilter(self,fieldName,minVal=0.50,maxVal=20.0):
         """Remove entries whose "field" value lies outside the specified range"""
         def goodValue(x):
@@ -1439,15 +1578,26 @@ class Analysis(object):
         """Returns number of fitting steps in analysis"""
         return len(self.fitSequenceParameters)
 
-    def __call__(self,d,initVals=None,deps=None):
-        """Run the specified analysis on the RdfData object d, taking into account the dependencies
-        and initial values which override the defaults from the spectral library and .ini files.
+    def __call__(self,dList,initVals=None,deps=None):
+        """Run the specified analysis on the RdfData object or on a list of RdfData objects.
+        For a list of objects, all of the data are combined before analysis takes place.
+        We take into account the dependencies and initial values which override the defaults from 
+        the spectral library and .ini files.
         Returns "self", the Analysis object"""
+        # print "Analysis %d call" % id(self)
         self.initVals = initVals
         self.deps = deps
-        self.time = d.sensorDict["Time_s"]
-        self.setData(d.fitData["freq"],d.fitData["loss"],d.fitData["sdev"])
-        self.model.setAttributes(pressure=d["cavityPressure"], temperature=273.16+d["cavityTemperature"])
+        if not isinstance(dList,list): dList = [dList]
+        nPoints = sum([len(d.timestamp) for d in dList])
+        self.time = unixTime(sum([sum(d.timestamp) for d in dList])/nPoints)
+        pressure = sum([sum(d.cavityPressure) for d in dList])/nPoints
+        temperature = 273.15 + mean([d["cavityTemperature"] for d in dList])
+        freq = concatenate([d.fitData["freq"] for d in dList])
+        loss = concatenate([d.fitData["loss"] for d in dList])
+        sdev = concatenate([d.fitData["sdev"] for d in dList])
+        perm = argsort(freq)
+        self.setData(freq[perm],loss[perm],sdev[perm])
+        self.model.setAttributes(pressure=pressure, temperature=temperature)
         self.model.createParamVector(self.initVals)
         self.parameters = []
         for seqIndex in range(len(self.fitSequenceParameters)):

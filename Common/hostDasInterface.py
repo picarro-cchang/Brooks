@@ -733,6 +733,7 @@ class HostToDspSender(Singleton):
         # Restart by setting current index to zero, otherwise retain current value
         if restartFlag: schemeSequence.currentIndex = 0
         schemeSequence.numberOfIndices = len(schemeIndices)
+        i = 0
         for i,s in enumerate(schemeIndices):
             schemeSequence.schemeIndices[i] = s
         i += 1
