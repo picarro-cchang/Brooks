@@ -73,7 +73,7 @@ from Host.autogen import interface
 from Host.SampleManager.SampleManager import SAMPLEMGR_STATUS_STABLE, SAMPLEMGR_STATUS_PARKED, SAMPLEMGR_STATUS_PURGED, SAMPLEMGR_STATUS_PREPARED, SAMPLEMGR_STATUS_FLOWING
 from Host.Common import CmdFIFO, Listener, Broadcaster
 from Host.Common.SharedTypes import RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, RPC_PORT_ARCHIVER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_SAMPLE_MGR, RPC_PORT_ALARM_SYSTEM, RPC_PORT_FREQ_CONVERTER, RPC_PORT_PANEL_HANDLER
-from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_INSTMGR_DISPLAY
+from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_INSTMGR_DISPLAY, RPC_PORT_SPECTRUM_COLLECTOR
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.AppStatus import AppStatus
 from Host.Common.InstMgrInc import INSTMGR_STATUS_READY, INSTMGR_STATUS_MEAS_ACTIVE, INSTMGR_STATUS_ERROR_IN_BUFFER, INSTMGR_STATUS_GAS_FLOWING, INSTMGR_STATUS_PRESSURE_LOCKED, INSTMGR_STATUS_CLEAR_MASK
@@ -305,6 +305,10 @@ class InstMgr(object):
         self.FreqConvRpc  = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
                                                      APP_NAME,
                                                      IsDontCareConnection = False)
+                                                            
+        self.SpectrumCollectorRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR,
+                                                        APP_NAME,
+                                                        IsDontCareConnection = False)
 
         self.SupervisorRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
                                                         APP_NAME,
@@ -1280,9 +1284,11 @@ class InstMgr(object):
 
     def _SetInstMode_Tuning_CavityLength(self):
         self.FreqConvRpc.setCavityLengthTuning()
+        self.DriverRpc.setSchemeSequenceScan()
 
     def _SetInstMode_Tuning_LaserCurrent(self):
         self.FreqConvRpc.setLaserCurrentTuning()
+        self.DriverRpc.setSchemeSequenceScan()
 
     def _SetupInstModeDispatcher(self):
         self.InstModeDispatcher = {}

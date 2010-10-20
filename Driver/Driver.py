@@ -572,6 +572,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def setRepeatingScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeMultipleMode)
 
+    def setSchemeSequenceScan(self):
+        self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeSequenceMode)
+        
     def startScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
 

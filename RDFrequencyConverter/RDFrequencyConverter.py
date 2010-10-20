@@ -133,6 +133,7 @@ class SchemeManager(object):
     def startup(self):
         Driver.stopScan()
         Log("Scheme Manager starts up")
+        Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
         self.rdFreqConv.RPC_loadWarmBoxCal()
         self.rdFreqConv.RPC_loadHotBoxCal()
         self.rdFreqConv.RPC_centerTuner(32768)
@@ -780,6 +781,7 @@ class RDFrequencyConverter(Singleton):
         if self.hotBoxCal is None:
             raise ValueError("Hot box calibration has not been loaded")
         try:
+            self.hotBoxCal["AUTOCAL"]["CAVITY_FSR"] = self.cavityFsr
             self.hotBoxCal["timestamp"] = Driver.hostGetTicks()
             calStrIO = StringIO()
             self.hotBoxCal.write(calStrIO)

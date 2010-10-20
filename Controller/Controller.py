@@ -16,9 +16,8 @@ import wx
 import sys
 import traceback
 
-from Sequencer import Sequencer
 from ControllerFrameGui import ControllerFrameGui
-from ControllerModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy
+from ControllerModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy
 from ControllerModels import LogListener, SensorListener, RingdownListener, ControllerRpcHandler
 from Host.autogen import interface
 from Host.Common import SharedTypes
@@ -29,6 +28,7 @@ EventManagerProxy_Init(APP_NAME)
 # For convenience in calling driver and frequency converter functions
 Driver = DriverProxy().rpc
 RDFreqConv = RDFreqConvProxy().rpc
+SpectrumCollector = SpectrumCollectorProxy().rpc
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -54,7 +54,6 @@ class Controller(ControllerFrameGui):
         self.sensorListener = SensorListener()
         self.ringdownListener = RingdownListener()
         self.rpcHandler = ControllerRpcHandler()
-        Sequencer(Driver.getConfigFile())
         self.Bind(wx.EVT_IDLE, self.onIdle)
         panels["Laser1"]=self.laser1Panel
         self.laser1Panel.setLaserNum(1)
@@ -260,8 +259,6 @@ class Controller(ControllerFrameGui):
                 self.commandLogPanel.addMessage(msg)
             else:
                 break
-        # Run the sequencer FSM
-        Sequencer().runFsm()
             
         # Deal with Controller RPC calls within GUI idle loop
         try:
@@ -274,7 +271,8 @@ class Controller(ControllerFrameGui):
 
     def onLoadIni(self, event):
         Driver.loadIniFile()
-        Sequencer().getSequences(Driver.getConfigFile())
+        SpectrumCollector.reloadSequences()
+        # Sequencer().getSequences(Driver.getConfigFile())
 
     def onWriteIni(self, event):
         Driver.writeIniFile()

@@ -37,6 +37,8 @@ from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import unixTime
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Sequencer import Sequencer
+
 EventManagerProxy_Init(APP_NAME)
 
 if sys.platform == 'win32':
@@ -189,11 +191,17 @@ class SpectrumCollector(object):
         self.timeBetweenSpectrumQueuePuts = []
         self.lastSpectrumQueueGet = TimeStamp()
         self.timeBetweenSpectrumQueueGets = []
+
+        self.useSequencer = True
+        self.sequencer = None
         
     def run(self):
-        #start the rpc server on another thread...
+        self.sequencer = Sequencer()
+        # start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
         self.rpcThread.start()
+        # start the sequencer on another thread
+        self.sequencer.runInThread()
         # The following count "spectra" which are delimited by scheme rows which have bit-15 set in the subschemeId
         lastCount = -1
         thisCount = -1
@@ -201,8 +209,7 @@ class SpectrumCollector(object):
             #Pull a spectral point from the RD queue...
             try:
                 rdData = self.getSpectralDataPoint(timeToRetry=0.5)
-                if rdData is None: 
-                    continue
+                if rdData is None: continue
                 now = TimeStamp()
                 if self.rdQueueGetLastTime != 0:
                     rtt = now - self.rdQueueGetLastTime
@@ -443,7 +450,39 @@ class SpectrumCollector(object):
             self.addToSpectrumQueue(self.rdfDict.copy())
 
         self.reset()
+        
+    # RPC functions which are handled by the sequencer
 
+    def RPC_addSequenceByName(self,name,config):
+        self.sequencer.addSequenceByName(name,config)
+
+    def RPC_reloadSequences(self):
+        self.sequencer.reloadSequences()
+        
+    def RPC_getSequenceNames(self):
+        return self.sequencer.getSequenceNames()
+
+    def RPC_startSequence(self,seq=None):
+        if seq is not None:
+            self.sequencer.setSequenceName(seq)
+        self.sequencer.startSequence()
+    
+    def RPC_getSequence(self):
+        return self.sequencer.getSequenceName()
+        
+    def RPC_setSequence(self,seq):
+        self.sequencer.setSequenceName(seq)
+    
+    def RPC_setSequencerMode(self,useSequencer):
+        self.useSequencer = useSequencer
+    
+    def RPC_startScan(self):
+        if self.useSequencer:
+            self.sequencer.startSequence()
+        else:
+            Driver.startScan()
+    
+    # RPC functions for the spectrum collector
     def RPC_setMaxSpectrumQueueSize(self, maxSize):
         if self.spectrumQueue:
             self.spectrumQueue = None

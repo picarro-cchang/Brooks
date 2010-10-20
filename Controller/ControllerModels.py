@@ -56,6 +56,18 @@ class RDFreqConvProxy(SharedTypes.Singleton):
                 SharedTypes.RPC_PORT_FREQ_CONVERTER)
             self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="Controller")
             self.initialized = True
+            
+class SpectrumCollectorProxy(SharedTypes.Singleton):
+    """Encapsulates access to the Spectrum Collector via RPC calls"""
+    initialized = False
+    def __init__(self):
+        if not self.initialized:
+            self.hostaddr = "localhost"
+            self.myaddr = socket.gethostbyname(socket.gethostname())
+            serverURI = "http://%s:%d" % (self.hostaddr,
+                SharedTypes.RPC_PORT_SPECTRUM_COLLECTOR)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="Controller")
+            self.initialized = True
 
 class RingdownListener(SharedTypes.Singleton):
     def __init__(self):

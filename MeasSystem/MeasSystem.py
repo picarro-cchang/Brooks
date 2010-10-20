@@ -411,6 +411,8 @@ class MeasSystem(object):
         self.CurrentMeasMode = self.MeasModes[ModeName]
         self._SetupMeasMode()
         FreqConverter.setSchemeSequence(self.CurrentMeasMode.Schemes, restart = True)
+        SpectrumCollector.setSequencerMode(False)
+        Driver.setSchemeSequenceScan()
         
     def _SetupMeasMode(self):
         """Perform any instrument setup required for this mode by calling the instrument manager"""
@@ -589,10 +591,10 @@ class MeasSystem(object):
                 exitState = STATE_READY
             else:
                 if self._UninterruptedSpectrumCount == 0:
-                    Driver.startScan()
+                    SpectrumCollector.startScan()
                 # If the scan has been stopped for whatever reason, restart it
                 if Driver.scanIdle():
-                    Driver.startScan()
+                    SpectrumCollector.startScan()
                 spectrum = None
                 try:
                     #Get the spectra...
