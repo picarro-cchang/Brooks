@@ -12,6 +12,7 @@ import os
 import time
 import win32gui
 from Host.Common import CmdFIFO
+from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.SharedTypes import RPC_PORT_DRIVER
 # Connect to database
@@ -19,10 +20,14 @@ from xmlrpclib import ServerProxy
 DB = ServerProxy("http://mfg/xmlrpc/",allow_none=True)
 
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "InstrEEPROMAccess")
-ANALYZER_TYPES = ["CFADS", "HBDS", "CBDS", "CFBDS", "CKADS", "CFKBDS"]
                   
 class InstrEEPROMAccessFrame(wx.Frame):
-    def __init__(self, defaultChassis, *args, **kwds):
+    def __init__(self, configFile, defaultChassis, *args, **kwds):
+        try:
+            co = CustomConfigObj(configFile, list_values = True)
+            analyzerTypes = co.get("Main", "AnalyzerTypes")
+        except:
+            analyzerTypes = ["CFADS", "HBDS", "CBDS", "CFBDS", "CKADS", "CFKBDS"]
         kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
         wx.Frame.__init__(self, *args, **kwds)
         self.panel1 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
@@ -88,7 +93,7 @@ class InstrEEPROMAccessFrame(wx.Frame):
             self.comboBoxChassis = wx.ComboBox(self.panel2, -1, choices = chassisChoices, size = (250, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
         
         self.labelNewType = wx.StaticText(self.panel2, -1, "Analyzer Type", size = (100,-1))
-        typeChoices = ANALYZER_TYPES
+        typeChoices = analyzerTypes
         typeChoices.sort()
         if self.analyzerType != "NONE":
             if self.analyzerType not in typeChoices:
@@ -212,7 +217,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "d:", [])
+        switches, args = getopt.getopt(sys.argv[1:], "c:d:", [])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -222,16 +227,22 @@ def HandleCommandSwitches():
     for o, a in switches:
         options[o] = a
 
+    if "-c" in options:
+        configFile = options["-c"]
+        print "Config file specified at command line: %s" % configFile
+    else:
+        configFile = None
+        
     if "-d" in options:
         defaultChassis = options["-d"]
         print "Default Chassis: %s" % defaultChassis
     else:
         defaultChassis = None
-
-    return defaultChassis
+        
+    return configFile, defaultChassis
     
 if __name__ == "__main__":
-    defaultChassis = HandleCommandSwitches()
+    configFile, defaultChassis = HandleCommandSwitches()
     eepromAccessApp = SingleInstance("InstrEEPROMAccess")
     if eepromAccessApp.alreadyrunning():
         try:
@@ -242,7 +253,7 @@ if __name__ == "__main__":
     else:
         app = wx.PySimpleApp()
         wx.InitAllImageHandlers()
-        frame = InstrEEPROMAccess(defaultChassis, None, -1, "")
+        frame = InstrEEPROMAccess(configFile, defaultChassis, None, -1, "")
         app.SetTopWindow(frame)
         frame.Show()
         app.MainLoop()
