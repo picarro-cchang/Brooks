@@ -27,11 +27,10 @@ from math import log10, sqrt
 import os
 import sys
 
-from ControllerBuildStationModels import DriverProxy, RDFreqConvProxy, ControllerRpcHandler, waveforms, dasInfo
+from ControllerBuildStationModels import DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy, ControllerRpcHandler, waveforms, dasInfo
 from ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui, PressurePanelGui
 from ControllerPanelsGui import WarmBoxPanelGui, HotBoxPanelGui, RingdownPanelGui
 from ControllerPanelsGui import WlmPanelGui, StatsPanelGui
-from Sequencer import Sequencer
 
 from Host.autogen import interface
 from Host.Common.Allan import AllanVar
@@ -47,6 +46,7 @@ ringdownPoints = interface.CONTROLLER_RINGDOWN_POINTS
 
 Driver = DriverProxy().rpc
 RDFreqConv = RDFreqConvProxy().rpc
+SpectrumCollector = SpectrumCollectorProxy().rpc
 
 class RingdownPanel(RingdownPanelGui):
     def __init__(self,*a,**k):
@@ -650,23 +650,16 @@ class CommandLogPanel(CommandLogPanelGui):
     def onStartAcquisition(self,event):
         currentLabel = self.startAcquisitionButton.GetLabel()
         if currentLabel == CommandLogPanel.acqLabels["start"]:
-            seqNum = self.seqTextCtrl.GetLabel().strip()
-            if seqNum:
-                sequencer = Sequencer()
-                try:
-                    seqNum = int(seqNum)
-                except:
-                    Log("Unrecognized sequence number",Level=2)
-                    return
-                numSequences = sequencer.numSequences()
-                if seqNum>0 and seqNum<=numSequences:
-                    sequencer.sequence = seqNum
-                    sequencer.state = Sequencer.STARTUP
+            seq = self.seqTextCtrl.GetLabel().strip()
+            if seq:
+                allSeq = SpectrumCollector.getSequenceNames()
+                if seq in allSeq:
+                    SpectrumCollector.startSequence(seq)
                 else:
-                    Log("Invalid sequence number (not in range 1 to %d)" % numSequences,Level=2)
+                    Log("Sequence %s is not recognized" % seq,Level=2)
                     return
             else:
-                Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
+                Log("No sequence specified")
         elif currentLabel == CommandLogPanel.acqLabels["resume"]:
             Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_RunningState)
         elif currentLabel in [CommandLogPanel.acqLabels["clear"],CommandLogPanel.acqLabels["stop"]]:
@@ -716,6 +709,40 @@ class CommandLogPanel(CommandLogPanelGui):
             self.startAcquisitionButton.SetLabel(CommandLogPanel.acqLabels["stop"])
         pass
     
+    def disableAll(self):
+        self.startEngineButton.Enable(False)
+        self.laser1State.Enable(False)
+        self.laser2State.Enable(False)
+        self.laser3State.Enable(False)
+        self.laser4State.Enable(False)
+        self.warmBoxState.Enable(False)
+        self.hotBoxState.Enable(False)
+        self.streamFileCheckbox.Enable(False)
+        self.streamFileTextCtrl.Enable(False)
+        self.loadCalibrationButton.Enable(False)
+        self.warmBoxCalFileTextCtrl.Enable(False)
+        self.hotBoxCalFileTextCtrl.Enable(False)
+        self.startAcquisitionButton.Enable(False)
+        self.seqTextCtrl.Enable(False)
+        #self.logListCtrl.Enable(False)
+      
+    def enableAll(self):
+        self.startEngineButton.Enable(True)
+        self.laser1State.Enable(True)
+        self.laser2State.Enable(True)
+        self.laser3State.Enable(True)
+        self.laser4State.Enable(True)
+        self.warmBoxState.Enable(True)
+        self.hotBoxState.Enable(True)
+        self.streamFileCheckbox.Enable(True)
+        self.streamFileTextCtrl.Enable(True)
+        self.loadCalibrationButton.Enable(True)
+        self.warmBoxCalFileTextCtrl.Enable(True)
+        self.hotBoxCalFileTextCtrl.Enable(True)
+        self.startAcquisitionButton.Enable(True)
+        self.seqTextCtrl.Enable(True)
+        #self.logListCtrl.Enable(True)
+        
 class StatsPanel(StatsPanelGui):
     def __init__(self,*a,**k):
         StatsPanelGui.__init__(self,*a,**k)

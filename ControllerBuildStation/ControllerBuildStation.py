@@ -16,9 +16,8 @@ import wx
 import sys
 import traceback
 
-from SequencerBuildStation import Sequencer
 from ControllerBuildStationFrameGui import ControllerBuildStationFrameGui
-from ControllerBuildStationModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy
+from ControllerBuildStationModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy
 from ControllerBuildStationModels import LogListener, SensorListener, RawRingdownListener, ControllerRpcHandler
 from Host.autogen import interface
 from Host.Common import SharedTypes
@@ -29,6 +28,7 @@ EventManagerProxy_Init(APP_NAME)
 # For convenience in calling driver and frequency converter functions
 Driver = DriverProxy().rpc
 RDFreqConv = RDFreqConvProxy().rpc
+SpectrumCollector = SpectrumCollectorProxy().rpc
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -54,7 +54,6 @@ class Controller(ControllerBuildStationFrameGui):
         self.sensorListener = SensorListener()
         self.ringdownListener = RawRingdownListener()
         self.rpcHandler = ControllerRpcHandler()
-        Sequencer(Driver.getConfigFile())
         self.Bind(wx.EVT_IDLE, self.onIdle)
         panels["Laser1"]=self.laser1Panel
         self.laser1Panel.setLaserNum(1)
@@ -70,6 +69,11 @@ class Controller(ControllerBuildStationFrameGui):
         panels["Wlm"]=self.wlmPanel
         panels["Ringdown"]=self.ringdownPanel
         panels["Stats"]=self.statsPanel
+
+        # Starting from user mode
+        self.fullInterface = False
+        self.password = "picarro"
+        self.updateInterface()
 
     def setupWaveforms(self):
         waveforms["Laser1"]=dict(
@@ -166,6 +170,21 @@ class Controller(ControllerBuildStationFrameGui):
         #print "About to show dialog"
         pd.Show()
 
+    def onAbout(self,evt):
+        v = "(c) 2005-2010, Picarro Inc.\n\n"
+        try:
+            dV = Driver.allVersions()
+            klist = dV.keys()
+            klist.sort()
+            v += "Version strings:\n"
+            for k in klist:
+                v += "%s : %s\n" % (k,dV[k])
+        except:
+            v += "Driver version information unavailable"
+        d = wx.MessageDialog(None,v,"Picarro CRDS",wx.OK)
+        d.ShowModal()
+        d.Destroy()
+        
     def onClose(self,evt):
         for id in self.openParamDialogs:
             try:
@@ -175,6 +194,34 @@ class Controller(ControllerBuildStationFrameGui):
         self.updateTimer.Stop()
         self.Close()
 
+    def onFullInterface(self,evt):
+        if self.fullInterface: 
+            return
+        else:
+            dlg = wx.TextEntryDialog(self, 'Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+            self.fullInterface = (dlg.ShowModal() == wx.ID_OK) and (dlg.GetValue() == self.password)
+            dlg.Destroy()
+        if self.fullInterface: 
+            self.updateInterface()
+
+    def onUserInterface(self,evt):
+        if not self.fullInterface: 
+            return
+        else:
+            self.fullInterface = False
+            self.updateInterface()
+
+    def updateInterface(self):
+        """ Update the Controller GUI based on self.fullInterface."""
+        if not self.fullInterface:
+            self.controllerFrameGui_menubar.EnableTop(pos=1,enable=False)
+            self.controllerFrameGui_menubar.EnableTop(pos=2,enable=False) 
+            self.commandLogPanel.disableAll()
+        else:
+            self.controllerFrameGui_menubar.EnableTop(pos=1,enable=True)
+            self.controllerFrameGui_menubar.EnableTop(pos=2,enable=True)
+            self.commandLogPanel.enableAll()
+        
     def onUpdateTimer(self,evt):
         self.commandLogPanel.updateLoopStatus()
         # self.commandLogPanel.updateCalFileStatus()
@@ -212,8 +259,6 @@ class Controller(ControllerBuildStationFrameGui):
                 self.commandLogPanel.addMessage(msg)
             else:
                 break
-        # Run the sequencer FSM
-        Sequencer().runFsm()
             
         # Deal with Controller RPC calls within GUI idle loop
         try:
@@ -226,7 +271,8 @@ class Controller(ControllerBuildStationFrameGui):
 
     def onLoadIni(self, event):
         Driver.loadIniFile()
-        Sequencer().getSequences(Driver.getConfigFile())
+        SpectrumCollector.reloadSequences()
+        # Sequencer().getSequences(Driver.getConfigFile())
 
     def onWriteIni(self, event):
         Driver.writeIniFile()
