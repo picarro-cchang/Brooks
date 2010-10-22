@@ -222,61 +222,6 @@ def getNextNonNullLine(sp):
         else:
             return line
 
-class Scheme(object):
-    """Class containing a scheme."""
-    def __init__(self,fileName=None):
-        # Create an scheme from the specified file, or a blank
-        #  Scheme if no file is specified
-        self.nrepeat = 0
-        self.numEntries = 0
-        self.setpoint = []
-        self.dwell = []
-        self.subschemeId = []
-        self.virtualLaser = []
-        self.threshold = []
-        self.pztSetpoint = []
-        self.laserTemp = []
-        if fileName is not None:
-            self.fileName = os.path.abspath(fileName)
-            # Read the scheme file
-            sp = file(self.fileName,"r")
-            self.nrepeat = int(getNextNonNullLine(sp).split()[0])
-            self.numEntries = int(getNextNonNullLine(sp).split()[0])
-            for i in range(self.numEntries):
-                toks = getNextNonNullLine(sp).split()
-                toks += (7-len(toks)) * ["0"]
-                self.setpoint.append(float(toks[0]))
-                self.dwell.append(int(toks[1]))
-                self.subschemeId.append(int(toks[2]))
-                self.virtualLaser.append(int(toks[3]))
-                self.threshold.append(float(toks[4]))
-                self.pztSetpoint.append(float(toks[5]))
-                self.laserTemp.append(float(toks[6]))
-                if (i & 0xF) == 0: time.sleep(0) # Processor yield
-            sp.close()
-    
-    def makeAngleTemplate(self):
-        # Make an angle based scheme template from a frequency based scheme where the setpoint 
-        #  and laserTemp fields are copies of the original, while all the other fields point to
-        #  the originals
-        s = Scheme()
-        s.nrepeat = self.nrepeat
-        s.numEntries = self.numEntries
-        s.setpoint = self.setpoint[:]
-        s.dwell = self.dwell
-        s.subschemeId = self.subschemeId
-        s.virtualLaser = self.virtualLaser
-        s.threshold = self.threshold
-        s.pztSetpoint = self.pztSetpoint
-        s.laserTemp = self.laserTemp[:]
-        return s
-        
-    def repack(self):
-        # Generate a tuple (repeats,zip(setpoint,dwell,subschemeId,virtualLaser,threshold,pztSetpoint,laserTemp))
-        #  from the scheme, which is appropriate for sending it to the DAS
-        return (self.nrepeat,zip(self.setpoint,self.dwell,self.subschemeId,self.virtualLaser,self.threshold,
-                                 self.pztSetpoint,self.laserTemp))
-        
 ##Misc stuff...
 
 if __debug__:

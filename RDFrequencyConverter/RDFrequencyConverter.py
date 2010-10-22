@@ -37,7 +37,8 @@ from binascii import crc32
 
 from Host.autogen import interface
 from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster
-from Host.Common.SharedTypes import Scheme, Singleton
+from Host.Common.SharedTypes import Singleton
+from Host.Common.SchemeProcessor import Scheme
 from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_ARCHIVER
 from Host.Common.WlmCalUtilities import AutoCal

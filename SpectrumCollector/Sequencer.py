@@ -25,6 +25,7 @@ from threading import Thread
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes, CmdFIFO
+from Host.Common.SchemeProcessor import Scheme
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import RPC_PORT_FREQ_CONVERTER, RPC_PORT_DRIVER
 
@@ -78,7 +79,6 @@ class Sequencer(object):
                 keysToDelete.append(key)
             except:
                 pass
-        print keysToDelete
         for key in keysToDelete:
             del self.sequences[key]
             
@@ -100,7 +100,7 @@ class Sequencer(object):
                         schemeFileName = os.path.join(basePath, cs["SCHEME%02d" % (i+1,)])
                         repetitions = int(cs["REPEAT%02d" % (i+1,)])
                         name, ext = os.path.splitext(schemeFileName)
-                        schemes.append((SharedTypes.Scheme(schemeFileName),repetitions,ext.lower() == ".sch"))
+                        schemes.append((Scheme(schemeFileName),repetitions,ext.lower() == ".sch"))
                     self.sequences["%s" % index] = schemes
                     nseq += 1
                 except Exception,e:
@@ -117,7 +117,7 @@ class Sequencer(object):
                 schemeFileName = config["Scheme_%d_Path" % (i+1,)]
                 repetitions = config.get("Scheme_%d_Repeat" % (i+1,),1)
                 _, ext = os.path.splitext(schemeFileName)
-                schemes.append((SharedTypes.Scheme(schemeFileName),repetitions,ext.lower() == ".sch"))
+                schemes.append((Scheme(schemeFileName),repetitions,ext.lower() == ".sch"))
             self.sequences[name] = schemes    
         except Exception,e:
             LogExc("Error in processing scheme sequence for %s" % name)
