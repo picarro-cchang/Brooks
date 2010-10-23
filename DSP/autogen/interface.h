@@ -168,6 +168,10 @@ typedef struct {
     float etalonTemperature;
     float cavityPressure;
     int16 lockerError;
+    uint32 extra1;
+    uint32 extra2;
+    uint32 extra3;
+    uint32 extra4;
 } ProcessedRingdownEntryType;
 
 typedef struct {

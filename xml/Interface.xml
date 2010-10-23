@@ -196,6 +196,10 @@
             <field ident="etalonTemperature" type="float"/>
             <field ident="cavityPressure" type="float"/>
             <field ident="lockerError" type="int16"/>
+            <field ident="extra1" type="uint32"/>
+            <field ident="extra2" type="uint32"/>
+            <field ident="extra3" type="uint32"/>
+            <field ident="extra4" type="uint32"/>
         </struct>
         <struct type="SensorEntryType">
             <field ident="timestamp" type="long long"/>
