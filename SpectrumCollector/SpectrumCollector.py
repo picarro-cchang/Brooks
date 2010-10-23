@@ -375,7 +375,6 @@ class SpectrumCollector(object):
         # Add more sensor data
         self.rdfDict["sensorData"]["SchemeID"] = [self.lastSchemeTable]
         self.rdfDict["sensorData"]["SpectrumID"] = [self.lastSpectrumID]
-        self.rdfDict["sensorData"]["SensorTime"] = [unixTime(self.rdfDict["sensorData"]["timestamp"][0])]
 
         #Write the tagalong data values...
         for t in self.tagalongData:

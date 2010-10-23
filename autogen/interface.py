@@ -189,7 +189,11 @@ class ProcessedRingdownEntryType(Structure):
     ("laserTemperature",c_float),
     ("etalonTemperature",c_float),
     ("cavityPressure",c_float),
-    ("lockerError",c_short)
+    ("lockerError",c_short),
+    ("extra1",c_uint),
+    ("extra2",c_uint),
+    ("extra3",c_uint),
+    ("extra4",c_uint)
     ]
 
 class SensorEntryType(Structure):

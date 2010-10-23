@@ -12,16 +12,40 @@
 
 import os
 import pickle
+from Host.autogen.interface import NUM_SCHEME_ROWS
+from copy import deepcopy
 
-def schemeRow(*a,**k):
-    keynames = ['setpoint','dwell','subschemeId','virtualLaser',
-                'threshold','pzt','laserTemp','extra1','extra2']
-    row = 9*[0]
-    row[:len(a)] = a
-    for i,n in enumerate(keynames):
-        if n in k: row[i] = k[n]
-    return row
-
+class Row(object):
+    keynames = {'setpoint':0,
+                'dwell':1,
+                'subschemeId':2,
+                'virtualLaser':3,
+                'threshold':4,
+                'pzt':5,
+                'laserTemp':6,
+                'extra1':7,
+                'extra2':8,
+                'extra3':9,
+                'extra4':10}
+    def __init__(self,*a,**k):
+        self.data = 11*[0]
+        self.data[:len(a)] = a
+        for n in k:
+            if n in self.keynames:
+                self.data[self.keynames[n]] = k[n]
+            else:
+                raise IndexError('Unknown key %s in scheme row' % n)
+    def __getattr__(self,n):
+        if n in self.keynames:
+            return self.data[self.keynames[n]] 
+        else:
+            raise AttributeError('Unknown key %s when getting scheme row attribute' % n)
+    #def __setattr__(self,n,v):
+    #    if n in self.keynames:
+    #        self.data[self.keynames[n]] = v 
+    #    else:
+    #        raise AttributeError('Unknown key %s when setting scheme row attribute' % n)
+        
 class SchemeError(Exception):
     pass
     
@@ -32,7 +56,7 @@ class Scheme(object):
         self.errors = []
         self.numErrors = 0
         # Define sandbox environment for scheme
-        self.env = {'Row':schemeRow, 'schemeVersion':0, 'repeat':0, 'numRows':None, 'schemeRows':[]}
+        self.env = {'Row':Row, 'schemeVersion':0, 'repeat':0, 'numRows':None, 'schemeRows':[], 'deepcopy':deepcopy}
         #
         self.version = 0
         self.nrepeat = 0
@@ -50,7 +74,7 @@ class Scheme(object):
         if self.fileName is not None:
             self.compile()
         if self.numErrors > 0:
-            raise SchemeError("Invalid scheme file %s" % (self.fileName))
+            raise SchemeError(self.__str__())
         
     def __str__(self):
         descr = ['Scheme version %d from %s' % (self.version, self.fileName)]
@@ -80,7 +104,7 @@ class Scheme(object):
             fp = file(self.fileName,"r")
         except Exception, e:
             self.numErrors += 1
-            self.errors.append("[%s]: %s" % (self.lineNum,e.__class__.__name__,e))
+            self.errors.append("[%s]: %s" % (e.__class__.__name__,e))
             return
         try:
             state = 'NORMAL'
@@ -132,18 +156,23 @@ class Scheme(object):
             if self.numEntries != len(schemeRows):
                 self.numErrors += 1
                 self.errors.append("Scheme has incorrect number of rows (%d != %d)" % (len(schemeRows),self.numEntries))
+            if self.numEntries > NUM_SCHEME_ROWS:
+                self.numErrors += 1
+                self.errors.append("Scheme has more than %d rows" % (NUM_SCHEME_ROWS,))                
             if self.numErrors == 0:
                 self.nrepeat = self.env['repeat']
                 self.version = self.env['schemeVersion']
-                self.setpoint = [s[0] for s in schemeRows]
-                self.dwell = [s[1] for s in schemeRows]
-                self.subschemeId = [s[2] for s in schemeRows]
-                self.virtualLaser = [s[3] for s in schemeRows]
-                self.threshold = [s[4] for s in schemeRows]
-                self.pztSetpoint = [s[5] for s in schemeRows]
-                self.laserTemp = [s[6] for s in schemeRows]
-                self.extra1 = [s[7] for s in schemeRows]
-                self.extra2 = [s[8] for s in schemeRows]
+                self.setpoint = [s.setpoint for s in schemeRows]
+                self.dwell = [s.dwell for s in schemeRows]
+                self.subschemeId = [s.subschemeId for s in schemeRows]
+                self.virtualLaser = [s.virtualLaser for s in schemeRows]
+                self.threshold = [s.threshold for s in schemeRows]
+                self.pztSetpoint = [s.pzt for s in schemeRows]
+                self.laserTemp = [s.laserTemp for s in schemeRows]
+                self.extra1 = [s.extra1 for s in schemeRows]
+                self.extra2 = [s.extra2 for s in schemeRows]
+                self.extra3 = [s.extra3 for s in schemeRows]
+                self.extra4 = [s.extra4 for s in schemeRows]
         finally:
             fp.close()
             del self.env
@@ -165,6 +194,8 @@ class Scheme(object):
         s.laserTemp = self.laserTemp[:]
         s.extra1 = self.extra1
         s.extra2 = self.extra2
+        s.extra3 = self.extra3
+        s.extra4 = self.extra4
         return s
         
     def repack(self):
@@ -175,13 +206,12 @@ class Scheme(object):
             
 if __name__ == "__main__":
     fname = "../Tests/RDFrequencyConverter/SampleScheme.sch"
+    fname = "../Tests/RDFrequencyConverter/ProgScheme.sch"
     try:
         s = Scheme(fname)
         print s
-        
+        pickle.dumps(s)        
     except SchemeError,ve:
         print ve
-        print "\n".join(s.errors)
-    pickle.dumps(s)
     
         

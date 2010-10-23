@@ -53,7 +53,8 @@ Notes:
                   is True, the data file always contains the specified columns, and unfilled values get zero entries
     10-03-18 sze  Record time to millisecond resolution to facilitate timing of data reporting rate
     10-04-27 sze  Report bad data flagged by measurement system by setting bit 16 of the alarm status column
-    
+    10-10-23 sze  Remove DATE_TIME column (replaced by time) and get ms timestamp info from DataManager
+
 Copyright (c) 2010 Picarro, Inc. All rights reserved 
 """
 
@@ -311,14 +312,19 @@ class DataLog(object):
 
     def _MakeTable(self,DataList):
         """Construct the HDF5 table from the entries in DataList"""
+        tableDict = {}
         filters = Filters(complevel=1,fletcher32=True)
-        tableDict = { "DATE_TIME":Time64Col() }
         if not self.BareTime:
             tableDict["FRAC_DAYS_SINCE_JAN1"] = Float32Col()
             tableDict["FRAC_HRS_SINCE_JAN1"]  = Float32Col()
         tableDict["ALARM_STATUS"]  = Float32Col()
         for dataName in DataList:
-            tableDict[dataName] = Float32Col()
+            if dataName in ["time"]:
+                tableDict[dataName] = Float64Col()
+            elif dataName in ["timestamp"]:
+                tableDict[dataName] = UInt64Col()
+            else:    
+                tableDict[dataName] = Float32Col()
         self.DecimationCount = 0
         if self.table is not None:
             self.table.flush()
@@ -384,7 +390,6 @@ class DataLog(object):
 
             if self.useHdf5:
                 row = self.table.row
-                row["DATE_TIME"] = Time
                 if not self.BareTime:
                     days = (Time-Jan1SecondsSinceEpoch)/TWENTY_FOUR_HOURS_IN_SECONDS
                     row["FRAC_DAYS_SINCE_JAN1"] = days
@@ -546,6 +551,7 @@ class DataLogger(object):
         except:
             tbMsg = traceback.format_exc()
             Log("Import Pickle Exception:",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+        
         now = TimeStamp()
         if self.DataListenerLastTime != 0:
             rtt = now - self.DataListenerLastTime

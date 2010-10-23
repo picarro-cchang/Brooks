@@ -38,7 +38,7 @@ from Host.Common.SharedTypes import RPC_PORT_ARCHIVER
 from Host.Common.SharedTypes import Singleton
 from Host.Common.StringPickler import ArbitraryObject
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.timestamp import getTimestamp, unixTimeToTimestamp
+from Host.Common.timestamp import getTimestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 EventManagerProxy_Init(APP_NAME)
 
@@ -267,11 +267,14 @@ class ActiveFile(object):
             be moodifiable using INI file options. Two additional columns "time" and 
             "timestamp" are added of type Float64Col and Int64Col respectively""" 
         descr = {}
-        colNameSet = colNameSet.union(set(['unixTime','timestamp']))
+        colNameSet = colNameSet.union(set(['time','timestamp']))
         for name in colNameSet:
-            if name == 'unixTime':  descr[name] = tables.Float64Col()
-            elif name == 'timestamp':  descr[name] = tables.Int64Col()
-            else: descr[name] = tables.Float32Col()
+            if name in ['time']:  
+                descr[name] = tables.Float64Col()
+            elif name in ['timestamp']:  
+                descr[name] = tables.UInt64Col()
+            else: 
+                descr[name] = tables.Float32Col()
         return descr
             
     def open(self,filename):    
@@ -543,7 +546,7 @@ class ActiveFileManager(object):
                 
                 while not self.dmQueue.empty():
                     d = self.dmQueue.get()
-                    timestamp, mode, source = unixTimeToTimestamp(d['time']), d['mode'], d['source']
+                    timestamp, mode, source = d['data']['timestamp'], d['mode'], d['source']
                     colNameSet = set(d['data'].keys())
                     a = self.getActiveFile(timestamp)
                     # Get data manager table for given mode and source, creating it if it does not 
@@ -555,9 +558,6 @@ class ActiveFileManager(object):
                     row = self.dmDataTable.row
                     for name in colNameSet:
                         row[name] = d['data'][name]
-                    # Always have timestamp and unixTime columns in the data manager table
-                    row['timestamp'] = int(timestamp)
-                    row['unixTime'] = d['time']
                     row.append()
                 if self.dmDataTable is not None: self.dmDataTable.flush()
 

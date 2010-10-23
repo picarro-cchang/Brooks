@@ -513,7 +513,13 @@ class RDFrequencyConverter(Singleton):
                     rdProcessedData = self.rdProcessedCache[index]
                     rdProcessedData.waveNumber = w
                     if rdProcessedData.schemeTable in self.freqScheme:
-                        rdProcessedData.waveNumberSetpoint = self.freqScheme[rdProcessedData.schemeTable].setpoint[rdProcessedData.schemeRow]
+                        freqScheme = self.freqScheme[rdProcessedData.schemeTable]
+                        schemeRow = rdProcessedData.schemeRow
+                        rdProcessedData.waveNumberSetpoint = freqScheme.setpoint[schemeRow]
+                        rdProcessedData.extra1 = freqScheme.extra1[schemeRow]
+                        rdProcessedData.extra2 = freqScheme.extra2[schemeRow]
+                        rdProcessedData.extra3 = freqScheme.extra3[schemeRow]
+                        rdProcessedData.extra4 = freqScheme.extra4[schemeRow]
                     else:
                         rdProcessedData.waveNumberSetpoint = 0
                         
