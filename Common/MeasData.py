@@ -16,8 +16,9 @@
 # 06-12-15 russ  Added MeasGood
 # 06-12-19 russ  Fixed/improved version handling
 # 08-03-07 sze   Convert data in MeasData object to floats to avoid issues with pickling numpy output
-
+# 10-10-23 sze   Include ms timestamp in data
 import StringPickler
+from Host.Common.timestamp import unixTimeToTimestamp
 
 class IncompatibleMeasDataPickleVer(Exception): pass
 class InvalidMeasDataPickle(Exception): pass
@@ -44,6 +45,7 @@ class MeasData(object):
         dumpDict["ver"] = self.ver
         dumpDict["source"] = self.Source
         dumpDict["time"] = self.Time
+        self.Data["timestamp"] = unixTimeToTimestamp(self.Time)
         dumpDict["good"] = self.MeasGood
         dumpDict["data"] = self.Data
         dumpDict["mode"] = self.Mode

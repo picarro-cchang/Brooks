@@ -1113,7 +1113,7 @@ class RdfData(object):
                 rdfData.nrows = len(rdData[s][low:high])
                 rdfData.indexVector = arange(rdfData.nrows)
                 # Set the average time of the sensor data
-                rdfData.sensorDict["Time_s"] = unixTime(mean(rdfData.timestamp))
+                rdfData.avgSpectrumTime = unixTime(mean(rdfData.timestamp))
                 rdfData.startRow = low
                 rdfData.endRow = high
                 return rdfData
@@ -1133,11 +1133,10 @@ class RdfData(object):
             if allowYield(pace,id):
                 yield makeRdfData(low,high)
             start = high
-            
 
     def getTime(self):
         """Returns the averaged time of a spectrum"""
-        return self.sensorDict["Time_s"]
+        return self.avgSpectrumTime
 
     """Container for holding ringdown data associated with a single spectrum"""
     def pickledRead(self,fp):
