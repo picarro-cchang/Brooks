@@ -223,11 +223,12 @@ class Controller(ControllerFrameGui):
             self.commandLogPanel.enableAll()
         
     def onUpdateTimer(self,evt):
-        self.commandLogPanel.updateLoopStatus()
-        self.commandLogPanel.updateCalFileStatus()
         pageNum = self.topNotebook.GetSelection()
         pageText = self.topNotebook.GetPageText(pageNum)
-        if pageText == "Laser1":
+        if pageText == "Command/Log":
+            self.commandLogPanel.updateLoopStatus()
+            self.commandLogPanel.updateCalFileStatus()
+        elif pageText == "Laser1":
             self.laser1Panel.update()
         elif pageText == "Laser2":
             self.laser2Panel.update()

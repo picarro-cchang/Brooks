@@ -35,7 +35,7 @@ class FirstTestCase(TestCase):
         """Inject calibration scheme row"""
         # Make up a ringdown entry and check that its contents are entered into currentCalSpectrum
         entry = interface.RingdownEntryType()
-        entry.schemeTable = 5
+        entry.schemeVersionAndTable = 5
         entry.wlmAngle = 0.1
         entry.laserTemperature = 25.1
         entry.tunerValue = 33768
@@ -55,7 +55,7 @@ class FirstTestCase(TestCase):
         np.testing.assert_array_almost_equal(calPoint.tunerVals,[entry.tunerValue])
 
     def testMakeRingdownEntries(self):
-        recipe = dict(schemeTable=[5,5,5,5],
+        recipe = dict(schemeVersionAndTable=[5,5,5,5],
                       wlmAngle=[0.1,0.2,0.3,0.4],
                       laserTemperature=[25.1,25.2,25.3,25.4],
                       tunerValue=[33768,34768,35768,36768],

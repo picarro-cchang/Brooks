@@ -114,7 +114,9 @@ class Scheme(object):
                 if state == 'NORMAL':
                     x = x.strip()
                     if x:
-                        if x[0] == '#':
+                        cpos = x.find('#')
+                        if cpos>=0: x=x[:cpos]
+                        if not x:
                             continue    # Discard comments
                         elif x[0] == '$':
                             if x[1:3] == '$$':  # Start of a code block
@@ -206,7 +208,7 @@ class Scheme(object):
             
 if __name__ == "__main__":
     fname = "../Tests/RDFrequencyConverter/SampleScheme.sch"
-    fname = "../Tests/RDFrequencyConverter/ProgScheme.sch"
+    #fname = "../Tests/RDFrequencyConverter/ProgScheme.sch"
     try:
         s = Scheme(fname)
         print s

@@ -63,6 +63,7 @@ class Sequencer(object):
         self.getSequences(Driver.getConfigFile())
         self.initialized = True
         self.laserTypes = {}
+        self.inDas = {}
         
     def runInThread(self):
         sequencerThread = Thread(target = self.runFsm)
@@ -121,6 +122,16 @@ class Sequencer(object):
             self.sequences[name] = schemes    
         except Exception,e:
             LogExc("Error in processing scheme sequence for %s" % name)
+
+    def addNamedSequenceOfSchemes(self,name,schemeList):
+        schemes = []
+        try:
+            for schemeFileName in schemeList:
+                _, ext = os.path.splitext(schemeFileName)
+                schemes.append((Scheme(schemeFileName),1,ext.lower() == ".sch"))
+            self.sequences[name] = schemes
+        except Exception,e:
+            LogExc("Error in processing scheme sequence for %s" % name)
         
     def getSequenceNames(self):
         return self.sequences.keys()
@@ -136,6 +147,12 @@ class Sequencer(object):
 
     def startSequence(self):
         self.state = Sequencer.STARTUP
+        
+    def getCurrent(self):
+        ss = Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER)
+        active = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
+        if ss in [interface.SPECT_CNTRL_RunningState] and self.state not in [Sequencer.IDLE]:
+            return self.inDas.get(active,None)
         
     def runFsm(self):
         while True:
@@ -156,11 +173,12 @@ class Sequencer(object):
                         self.repeat = 1
                         self.state = Sequencer.SEND_SCHEME
                 elif self.state == Sequencer.SEND_SCHEME:
-                    Log("Sequencer enters SEND_SCHEME state. Sequence = %s, Scheme = %d, Repeat = %d" \
-                        % (self.sequence,self.scheme,self.repeat))
                     self.useIndex = (self.activeIndex + 1) % 4
                     schemes = self.sequences[self.sequence]
                     scheme,rep,freqBased = schemes[self.scheme-1]
+                    Log("Sequencer enters SEND_SCHEME state. Sequence = %s, Scheme = %d (%s), Repeat = %d" \
+                        % (self.sequence,self.scheme,os.path.split(scheme.fileName)[-1],self.repeat))
+                    self.inDas[self.useIndex] = (self.sequence,self.scheme,self.repeat,scheme.fileName)
                     self.repeat += 1
                     if self.repeat > rep:
                         self.repeat = 1

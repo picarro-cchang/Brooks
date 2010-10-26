@@ -550,6 +550,7 @@ class CommandLogPanel(CommandLogPanelGui):
                      stop="Stop Acquisition",clear="Clear Error")
     def __init__(self,*a,**k):
         CommandLogPanelGui.__init__(self,*a,**k)
+        self.seqName = ''
         self.logListCtrl.InsertColumn(0,"Seq",width=70)
         self.logListCtrl.InsertColumn(1,"Date/Time",width=140)
         self.logListCtrl.InsertColumn(2,"Source",width=100)
@@ -701,8 +702,16 @@ class CommandLogPanel(CommandLogPanelGui):
             self.startAcquisitionButton.SetLabel(CommandLogPanel.acqLabels["clear"])
         else:
             self.startAcquisitionButton.SetLabel(CommandLogPanel.acqLabels["stop"])
-        pass
-    
+        t = SpectrumCollector.sequencerGetCurrent()
+        if t is not None:
+            seq,scheme,repeat,schemeName = t
+            schemeName = os.path.split(schemeName)[-1]
+            self.seqTextCtrl.SetValue("%s: %s" % (seq,schemeName))
+        else:
+            seq = self.seqTextCtrl.GetValue().split(':')
+            if len(seq)>1:
+                self.seqTextCtrl.SetValue(seq[0])
+            
     def disableAll(self):
         self.startEngineButton.Enable(False)
         self.laser1State.Enable(False)

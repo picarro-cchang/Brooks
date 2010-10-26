@@ -151,7 +151,7 @@ class RingdownEntryType(Structure):
     ("laserUsed",c_ushort),
     ("ringdownThreshold",c_ushort),
     ("subschemeId",c_ushort),
-    ("schemeTable",c_ushort),
+    ("schemeVersionAndTable",c_ushort),
     ("schemeRow",c_ushort),
     ("ratio1",c_ushort),
     ("ratio2",c_ushort),
@@ -180,7 +180,7 @@ class ProcessedRingdownEntryType(Structure):
     ("laserUsed",c_ushort),
     ("ringdownThreshold",c_ushort),
     ("subschemeId",c_ushort),
-    ("schemeTable",c_ushort),
+    ("schemeVersionAndTable",c_ushort),
     ("schemeRow",c_ushort),
     ("ratio1",c_ushort),
     ("ratio2",c_ushort),
@@ -907,6 +907,12 @@ SUBSCHEME_ID_RecenterMask = 0x2000
 SUBSCHEME_ID_IsCalMask = 0x1000
 SUBSCHEME_ID_SpectrumSubsectionMask = 0x0300
 SUBSCHEME_ID_SpectrumMask = 0x00FF
+
+# Definitions for SCHEME_VERSION_AND_TABLE_BITMASK
+SCHEME_VersionMask = 0xFFF0
+SCHEME_TableMask = 0xF
+SCHEME_VersionShift = 4
+SCHEME_TableShift = 0
 
 # Register definitions
 INTERFACE_NUMBER_OF_REGISTERS = 403

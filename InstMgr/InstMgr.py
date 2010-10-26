@@ -1284,11 +1284,9 @@ class InstMgr(object):
 
     def _SetInstMode_Tuning_CavityLength(self):
         self.FreqConvRpc.setCavityLengthTuning()
-        self.DriverRpc.setSchemeSequenceScan()
 
     def _SetInstMode_Tuning_LaserCurrent(self):
         self.FreqConvRpc.setLaserCurrentTuning()
-        self.DriverRpc.setSchemeSequenceScan()
 
     def _SetupInstModeDispatcher(self):
         self.InstModeDispatcher = {}

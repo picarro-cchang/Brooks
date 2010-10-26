@@ -15,7 +15,7 @@ File History:
     21-Oct-2009  alex      Added calibration file paths to .ini file. Added RPC_setCavityLengthTuning() and RPC_setLaserCurrentTuning().
     22-Apr-2010  sze       Fixed non-updating of angle schemes when no calibration points are present
     20-Sep-2010  sze       Added pCalOffset parameter to RPC_loadWarmBoxCal for flight calibration
-    
+    24-Oct-2010  sze       Put scheme version number in high order bits of schemeVersionAndTable in ProcessedRingdownEntry type
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -59,110 +59,6 @@ Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
 Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
                                     APP_NAME, IsDontCareConnection = True)
                                     
-class DasScheme(object):
-    """DAS scheme management class that handles alternates.
-    Note that all scheme checking rules are ignored.
-    """
-    def __init__(self, DasIndex_A, DasIndex_B):
-        self.rdFreqConv = RDFrequencyConverter()
-        self.dasIndex_A = DasIndex_A
-        self.dasIndex_B = DasIndex_B
-        self.currentIndex = -1
-        self.currentAlternateIndex = -1
-        self.schemeFileName = ""
-        
-    def initialSetup(self, InitialSchemePath):
-        """Loads the specified scheme and uploads it to the DAS.
-        """
-        self.currentIndex = self.dasIndex_A
-        self.currentAlternateIndex = self.dasIndex_B
-        Log("Initializing DAS scheme", dict(SchemePath = InitialSchemePath,
-                                            Index_A = self.dasIndex_A,
-                                            Index_B = self.dasIndex_B))
-        self.schemeFileName = os.path.split(InitialSchemePath)[1]
-        scheme = Scheme(InitialSchemePath)
-        
-        # Upload the scheme to RDFrequencyConverter to both current and alternate positions
-        self.rdFreqConv.RPC_wrFreqScheme(self.currentIndex, scheme)
-        self.rdFreqConv.RPC_wrFreqScheme(self.currentAlternateIndex, scheme)
-
-        # Convert the scheme to angle scheme at both positions
-        self.rdFreqConv.RPC_convertScheme(self.currentIndex)
-        self.rdFreqConv.RPC_convertScheme(self.currentAlternateIndex)
-        Log("Initial freq conversion completed", dict(SchemeFile = self.schemeFileName))
-
-        # Upload the angle scheme to DAS(current scheme position only)
-        Log("Starting scheme upload", dict(TargetIndex = self.currentIndex, Scheme = self.schemeFileName))
-        self.rdFreqConv.RPC_uploadSchemeToDAS(self.currentIndex)
-        Log("Scheme upload completed", dict(TargetIndex = self.currentIndex, Scheme = self.schemeFileName))
-        
-    def updateAndSwapScheme(self):
-        """Updates the DAS scheme in the "alternate" location and switches
-        the DAS to run it instead.
-        """
-        # Convert to angle again using the new WLM calibration table, and then upload the new angle scheme to the "other" spot and swap them
-        self.rdFreqConv.RPC_convertScheme(self.currentAlternateIndex)
-        self.rdFreqConv.RPC_uploadSchemeToDAS(self.currentAlternateIndex)
-        # Get the accurate representation of what the DAS is currently running
-        current = Driver.rdSchemeSequence()
-        # Log("Current scheme sequence %s" % current)
-        seq = current["schemeIndices"]
-        # Replace current scheme index with the alternate in the sequence and write 
-        # the new sequence to DAS
-        for i in range(len(seq)):
-            if seq[i] == self.currentIndex:
-                seq[i] = self.currentAlternateIndex
-        Driver.wrSchemeSequence(seq, restartFlag = False, loopFlag = True)
-        # Log("Updated scheme sequence %s" % Driver.rdSchemeSequence())
-        #Update our local scheme index records
-        self.currentIndex, self.currentAlternateIndex = self.currentAlternateIndex, self.currentIndex
-
-class SchemeManager(object):
-    """
-    Run DAS scheme management
-    """
-    def __init__(self, schemeDict, schemeSeq):
-        """
-        Definition of the inputs:
-            schemeDict = {schemeName: (schemePath, indexA, indexB)}
-        """
-        self.rdFreqConv = RDFrequencyConverter()
-        self.schemeDict = schemeDict
-        self.schemeSeq = schemeSeq
-        self.schemes = {} # key = scheme name; value = DasScheme instance
-            
-    def startup(self):
-        Driver.stopScan()
-        Log("Scheme Manager starts up")
-        Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
-        self.rdFreqConv.RPC_loadWarmBoxCal()
-        self.rdFreqConv.RPC_loadHotBoxCal()
-        self.rdFreqConv.RPC_centerTuner(32768)
-        # Load up the DAS with schemes in the managed positions...
-        Log("Starting upload of all required DAS schemes")
-        for k in self.schemeDict.keys():
-            (schemePath, indexA, indexB) = self.schemeDict[k]
-            self.schemes[k] = DasScheme(indexA, indexB)
-            self.schemes[k].initialSetup(InitialSchemePath = schemePath)
-        Log("Completed upload of all required DAS schemes")
-        Driver.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeSequenceMode)
-        schemeDASIndexSeq = [self.schemes[s].currentIndex for s in self.schemeSeq]
-        Driver.wrSchemeSequence(schemeDASIndexSeq, restartFlag = True, loopFlag = True)
-        Log("Wrote scheme sequence %s" % Driver.rdSchemeSequence())
-            
-    def update(self):
-        # Log("Scheme Manager updates and swaps schemes")
-        for scheme in self.schemes.values():
-            scheme.updateAndSwapScheme()
-
-    def setSchemeSequence(self, schemeSequence, restart = True):
-        """Tells the DAS what scheme sequence that should be run.
-
-        schemeSequence is a list of scheme names.  eg: ["NH3", "NH3", "H2O"]
-
-        """
-        indexList = [self.schemes[s].currentIndex for s in schemeSequence]
-        Driver.wrSchemeSequence(indexList, restart, loopFlag = True)
             
 class CalibrationPoint(object):
     """Structure for collecting interspersed ringdowns in a scheme which are marked as calibration points."""
@@ -200,7 +96,8 @@ class SchemeBasedCalibrator(object):
     def processCalPoint(self,entry):
         # For each calibration point received in the scheme, update the parameters associated with this point
         row = entry.schemeRow
-        table = entry.schemeTable
+        # At this stage entry.schemeVersionAndTable just has the scheme table information
+        table = entry.schemeVersionAndTable
         if row not in self.currentCalSpectrum:
             self.currentCalSpectrum[row] = CalibrationPoint()
             if self.schemeNum is None:
@@ -431,8 +328,10 @@ class RDFrequencyConverter(Singleton):
         # Check if this is a calibration row and process it accordingly
         if entry.subschemeId & interface.SUBSCHEME_ID_IsCalMask:
             rowNum = entry.schemeRow
-            angleError = mod(entry.wlmAngle - self.angleScheme[entry.schemeTable].setpoint[rowNum],2*pi)
-            tempError  = entry.laserTemperature - self.angleScheme[entry.schemeTable].laserTemp[rowNum]
+            # The scheme version has not yet been placed in schemeVersionAndTable 
+            schemeTable = entry.schemeVersionAndTable
+            angleError = mod(entry.wlmAngle - self.angleScheme[schemeTable].setpoint[rowNum],2*pi)
+            tempError  = entry.laserTemperature - self.angleScheme[schemeTable].laserTemp[rowNum]
             if min(angleError,2*pi-angleError) < self.dthetaMax and abs(tempError) < self.dtempMax:
                 # The spectral point is close to the setpoint
                 self.sbc.processCalPoint(entry)
@@ -512,8 +411,12 @@ class RDFrequencyConverter(Singleton):
                     index = cacheIndex[vLaserNum-1][i]
                     rdProcessedData = self.rdProcessedCache[index]
                     rdProcessedData.waveNumber = w
-                    if rdProcessedData.schemeTable in self.freqScheme:
-                        freqScheme = self.freqScheme[rdProcessedData.schemeTable]
+                    # At this point schemeVersionAndTable only has the scheme table
+                    schemeTable = rdProcessedData.schemeVersionAndTable
+                    if schemeTable in self.freqScheme:
+                        freqScheme = self.freqScheme[schemeTable]
+                        # Here we prepend the version to schemeVersionAndTable
+                        rdProcessedData.schemeVersionAndTable = schemeTable | (freqScheme.version << interface.SCHEME_VersionShift)
                         schemeRow = rdProcessedData.schemeRow
                         rdProcessedData.waveNumberSetpoint = freqScheme.setpoint[schemeRow]
                         rdProcessedData.extra1 = freqScheme.extra1[schemeRow]

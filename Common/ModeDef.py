@@ -118,7 +118,7 @@ class MeasMode(object):
         self.SchemeCount = cp.getint(section, "SchemeCount")
         for i in range(1, self.SchemeCount + 1):
             relPath = cp.get(section, "Scheme_%d_Path" % i)
-            self.Schemes.append(os.path.join(basePath, relPath))
+            self.Schemes.append(os.path.abspath(os.path.join(basePath, relPath)))
 
     def _Read_SPECTRUM_IDS(self, cp, section):
         #Note: For some lame reason the string values in cp.items() normally come

@@ -358,15 +358,6 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Writes a scheme to table number schemeNum consisting of numRepeats repeats of the list schemeRows"""
         self.dasInterface.hostToDspSender.wrScheme(schemeNum,numRepeats,schemeRows)
 
-    def rdSchemeSequence(self):
-        """Reads a scheme sequence"""
-        return self.dasInterface.hostToDspSender.rdSchemeSequence()
-
-    def wrSchemeSequence(self,schemeIndices,restartFlag=0,loopFlag=1):
-        """Writes a scheme sequence and sets the spectrum cntroller to running in sequence mode"""
-        self.dasInterface.hostToDspSender.wrSchemeSequence(schemeIndices,restartFlag,loopFlag)
-        self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeSequenceMode)
-
     def getValveMask(self):
         """Read the valve mask - the lower 6 bits represent the binary code of the solenoid valves.
         """
@@ -571,9 +562,6 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def setRepeatingScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeMultipleMode)
-
-    def setSchemeSequenceScan(self):
-        self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeSequenceMode)
         
     def startScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
