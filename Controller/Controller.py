@@ -69,7 +69,7 @@ class Controller(ControllerFrameGui):
         panels["Wlm"]=self.wlmPanel
         panels["Ringdown"]=self.ringdownPanel
         panels["Stats"]=self.statsPanel
-
+        self.controllerFrameGui_statusbar.SetStatusText('',0)
         # Starting from user mode
         self.fullInterface = False
         self.password = "picarro"
@@ -252,7 +252,8 @@ class Controller(ControllerFrameGui):
     def onIdle(self,evt):
         # Deal with updating the command log panel
         self.commandLogPanel.setStreamFileState()
-        self.commandLogPanel.updateAcquisitionState()
+        acqState = self.commandLogPanel.updateAcquisitionState()
+        self.controllerFrameGui_statusbar.SetStatusText(acqState,0)        
         # Deal with event manager log messages
         while True:
             msg = self.logListener.getLogMessage()

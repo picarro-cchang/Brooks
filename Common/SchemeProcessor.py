@@ -13,7 +13,11 @@
 import os
 import pickle
 from Host.autogen.interface import NUM_SCHEME_ROWS
+from configobj import ConfigObj
 from copy import deepcopy
+
+# Memoize configuration files for efficiency
+configMemo = {}
 
 class Row(object):
     keynames = {'setpoint':0,
@@ -55,8 +59,21 @@ class Scheme(object):
         self.lineNum = 0
         self.errors = []
         self.numErrors = 0
+        
+        schemePath = os.path.split(os.path.abspath(fileName))[0]
+
+        def getConfig(relPath):
+            path = os.path.abspath(os.path.join(schemePath,relPath))
+            if path not in configMemo:
+                fp = file(path,'r')
+                try:
+                    configMemo[path] = ConfigObj(fp)
+                finally:
+                    fp.close()
+            return configMemo.get(path,{})
+        
         # Define sandbox environment for scheme
-        self.env = {'Row':Row, 'schemeVersion':0, 'repeat':0, 'numRows':None, 'schemeRows':[], 'deepcopy':deepcopy}
+        self.env = {'Row':Row, 'schemeVersion':0, 'repeat':0, 'numRows':None, 'schemeRows':[], 'deepcopy':deepcopy, 'getConfig':getConfig}
         #
         self.version = 0
         self.nrepeat = 0

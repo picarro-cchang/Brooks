@@ -703,15 +703,18 @@ class CommandLogPanel(CommandLogPanelGui):
         else:
             self.startAcquisitionButton.SetLabel(CommandLogPanel.acqLabels["stop"])
         t = SpectrumCollector.sequencerGetCurrent()
+        result = ''
         if t is not None:
             seq,scheme,repeat,schemeName = t
             schemeName = os.path.split(schemeName)[-1]
-            self.seqTextCtrl.SetValue("%s: %s" % (seq,schemeName))
+            result = "%s: %s" % (seq,schemeName)
+            self.seqTextCtrl.SetValue(result)
         else:
             seq = self.seqTextCtrl.GetValue().split(':')
             if len(seq)>1:
                 self.seqTextCtrl.SetValue(seq[0])
-            
+        return result
+        
     def disableAll(self):
         self.startEngineButton.Enable(False)
         self.laser1State.Enable(False)
