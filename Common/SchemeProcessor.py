@@ -44,11 +44,11 @@ class Row(object):
             return self.data[self.keynames[n]] 
         else:
             raise AttributeError('Unknown key %s when getting scheme row attribute' % n)
-    #def __setattr__(self,n,v):
-    #    if n in self.keynames:
-    #        self.data[self.keynames[n]] = v 
-    #    else:
-    #        raise AttributeError('Unknown key %s when setting scheme row attribute' % n)
+    def __setattr__(self,n,v):
+        if n in self.keynames:
+            self.data[self.keynames[n]] = v 
+        else:
+            object.__setattr__(self,n,v)
         
 class SchemeError(Exception):
     pass
@@ -225,7 +225,7 @@ class Scheme(object):
             
 if __name__ == "__main__":
     fname = "../Tests/RDFrequencyConverter/SampleScheme.sch"
-    #fname = "../Tests/RDFrequencyConverter/ProgScheme.sch"
+    # fname = "../Tests/RDFrequencyConverter/ProgScheme.sch"
     try:
         s = Scheme(fname)
         print s
