@@ -1106,6 +1106,12 @@ class StateDatabase(Singleton):
             (streamNum,)).fetchall()
         return values
         
+    @protectedRead
+    def getHistoryByCommand(self, command, args=None):
+        a = (args,) if args is not None else ()
+        values = self.con.execute(command, *a).fetchall()
+        return values
+        
     def txQueueHandler(self):
         """Creates the connection to the database and services the queue of requests"""
         self.con = sqlite3.connect(self.fileName)
