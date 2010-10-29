@@ -60,6 +60,7 @@ sys.path.append("MeasSystem")
 sys.path.append("QuickGui")
 sys.path.append("SampleManager")
 sys.path.append("Supervisor")
+sys.path.append("ReadExtSensor")
 sys.path.append("Utilities")
 sys.path.append("Utilities/RemoteAccess")
 sys.path.append("Utilities/DiagDataCollector")
@@ -228,6 +229,7 @@ setup(version = "1.0",
                  "MeasSystem/MeasSystem.py",
                  "SampleManager/SampleManager.py",
                  "Supervisor/Supervisor.py",
+                 "ReadExtSensor/ReadExtSensor.py",
                  "Utilities/RemoteAccess/RemoteAccess.py",
                  "Utilities/IntegrationTool/IntegrationTool.py",
                  "../SrcCode/Utilities/CalibrateSystem.py",
