@@ -57,7 +57,6 @@ from Host.Common import GraphPanel
 from Host.Common import BetterTraceback
 from Host.Common import AppStatus
 from Host.Common import SharedTypes
-from Host.Common import StopSupervisor
 from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
                                     RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_QUICK_GUI, \
                                     RPC_PORT_SUPERVISOR

@@ -37,6 +37,8 @@ from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import unixTime
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Sequencer import Sequencer
+
 EventManagerProxy_Init(APP_NAME)
 
 if sys.platform == 'win32':
@@ -171,8 +173,10 @@ class SpectrumCollector(object):
         self.tempRdDataBuffer = None
         self.spectrumID = 0
         self.schemeTable = 0
+        self.schemeVersion = 0
         self.lastSpectrumID = 0
         self.lastSchemeTable = 0
+        self.lastSchemeVersion = 0
         self.tagalongData = {}
         self.controlData = {}            
         self.numPts = 0
@@ -189,11 +193,17 @@ class SpectrumCollector(object):
         self.timeBetweenSpectrumQueuePuts = []
         self.lastSpectrumQueueGet = TimeStamp()
         self.timeBetweenSpectrumQueueGets = []
+
+        self.useSequencer = True
+        self.sequencer = None
         
     def run(self):
-        #start the rpc server on another thread...
+        self.sequencer = Sequencer()
+        # start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
         self.rpcThread.start()
+        # start the sequencer on another thread
+        self.sequencer.runInThread()
         # The following count "spectra" which are delimited by scheme rows which have bit-15 set in the subschemeId
         lastCount = -1
         thisCount = -1
@@ -201,8 +211,7 @@ class SpectrumCollector(object):
             #Pull a spectral point from the RD queue...
             try:
                 rdData = self.getSpectralDataPoint(timeToRetry=0.5)
-                if rdData is None: 
-                    continue
+                if rdData is None: continue
                 now = TimeStamp()
                 if self.rdQueueGetLastTime != 0:
                     rtt = now - self.rdQueueGetLastTime
@@ -215,10 +224,12 @@ class SpectrumCollector(object):
                
                 #localRdTime = Driver.hostGetTicks()
                 self.lastSchemeTable = self.schemeTable
-                self.schemeTable = rdData.schemeTable
+                self.schemeTable = (rdData.schemeVersionAndTable & interface.SCHEME_TableMask) >> interface.SCHEME_TableShift
                 thisSubSchemeID = rdData.subschemeId
                 self.lastSpectrumID = self.spectrumID
                 self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
+                self.lastSchemeVersion = self.schemeVersion
+                self.schemeVersion = (rdData.schemeVersionAndTable & interface.SCHEME_VersionMask) >> interface.SCHEME_VersionShift
                 thisCount = rdData.count
                 
                 # The schemeCount is changed when a scheme starts, i.e. it tracks entire schemes, including the
@@ -366,8 +377,9 @@ class SpectrumCollector(object):
             self.rdfDict["sensorData"][s] = [self.avgSensors[s]]
 
         # Add more sensor data
-        self.rdfDict["sensorData"]["SchemeID"] = [self.lastSchemeTable]
+        self.rdfDict["sensorData"]["SchemeTable"] = [self.lastSchemeTable]
         self.rdfDict["sensorData"]["SpectrumID"] = [self.lastSpectrumID]
+        self.rdfDict["sensorData"]["SchemeVersion"] = [self.lastSchemeVersion]
 
         #Write the tagalong data values...
         for t in self.tagalongData:
@@ -442,7 +454,46 @@ class SpectrumCollector(object):
             self.addToSpectrumQueue(self.rdfDict.copy())
 
         self.reset()
+        
+    # RPC functions which are handled by the sequencer
 
+    def RPC_addSequenceByName(self,name,config):
+        self.sequencer.addSequenceByName(name,config)
+        
+    def RPC_addNamedSequenceOfSchemes(self,name,schemeList):
+        self.sequencer.addNamedSequenceOfSchemes(name,schemeList)
+
+    def RPC_reloadSequences(self):
+        self.sequencer.reloadSequences()
+        
+    def RPC_getSequenceNames(self):
+        return self.sequencer.getSequenceNames()
+
+    def RPC_startSequence(self,seq=None):
+        if seq is not None:
+            self.sequencer.setSequenceName(seq)
+        self.useSequencer = True
+        self.sequencer.startSequence()
+    
+    def RPC_getSequence(self):
+        return self.sequencer.getSequenceName()
+        
+    def RPC_setSequence(self,seq):
+        self.sequencer.setSequenceName(seq)
+    
+    def RPC_setSequencerMode(self,useSequencer):
+        self.useSequencer = useSequencer
+    
+    def RPC_startScan(self):
+        if self.useSequencer:
+            self.sequencer.startSequence()
+        else:
+            Driver.startScan(
+                             )
+    def RPC_sequencerGetCurrent(self):
+        return self.sequencer.getCurrent()
+    
+    # RPC functions for the spectrum collector
     def RPC_setMaxSpectrumQueueSize(self, maxSize):
         if self.spectrumQueue:
             self.spectrumQueue = None

@@ -185,6 +185,7 @@ class DataLog(object):
     def Close(self):
         if self.fp is not None:
             self.fp.close()
+            self.table = None
             self.fp = None
                 
     def CopyToMailboxAndArchive(self, srcPath=""):

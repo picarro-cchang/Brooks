@@ -27,11 +27,10 @@ from math import log10, sqrt
 import os
 import sys
 
-from ControllerModels import DriverProxy, RDFreqConvProxy, ControllerRpcHandler, waveforms, dasInfo
+from ControllerModels import DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy, ControllerRpcHandler, waveforms, dasInfo
 from ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui, PressurePanelGui
 from ControllerPanelsGui import WarmBoxPanelGui, HotBoxPanelGui, RingdownPanelGui
 from ControllerPanelsGui import WlmPanelGui, StatsPanelGui
-from Sequencer import Sequencer
 
 from Host.autogen import interface
 from Host.Common.Allan import AllanVar
@@ -47,6 +46,7 @@ ringdownPoints = interface.CONTROLLER_RINGDOWN_POINTS
 
 Driver = DriverProxy().rpc
 RDFreqConv = RDFreqConvProxy().rpc
+SpectrumCollector = SpectrumCollectorProxy().rpc
 
 class RingdownPanel(RingdownPanelGui):
     def __init__(self,*a,**k):
@@ -550,6 +550,7 @@ class CommandLogPanel(CommandLogPanelGui):
                      stop="Stop Acquisition",clear="Clear Error")
     def __init__(self,*a,**k):
         CommandLogPanelGui.__init__(self,*a,**k)
+        self.seqName = ''
         self.logListCtrl.InsertColumn(0,"Seq",width=70)
         self.logListCtrl.InsertColumn(1,"Date/Time",width=140)
         self.logListCtrl.InsertColumn(2,"Source",width=100)
@@ -644,23 +645,16 @@ class CommandLogPanel(CommandLogPanelGui):
     def onStartAcquisition(self,event):
         currentLabel = self.startAcquisitionButton.GetLabel()
         if currentLabel == CommandLogPanel.acqLabels["start"]:
-            seqNum = self.seqTextCtrl.GetLabel().strip()
-            if seqNum:
-                sequencer = Sequencer()
-                try:
-                    seqNum = int(seqNum)
-                except:
-                    Log("Unrecognized sequence number",Level=2)
-                    return
-                numSequences = sequencer.numSequences()
-                if seqNum>0 and seqNum<=numSequences:
-                    sequencer.sequence = seqNum
-                    sequencer.state = Sequencer.STARTUP
+            seq = self.seqTextCtrl.GetLabel().strip()
+            if seq:
+                allSeq = SpectrumCollector.getSequenceNames()
+                if seq in allSeq:
+                    SpectrumCollector.startSequence(seq)
                 else:
-                    Log("Invalid sequence number (not in range 1 to %d)" % numSequences,Level=2)
+                    Log("Sequence %s is not recognized" % seq,Level=2)
                     return
             else:
-                Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
+                Log("No sequence specified")
         elif currentLabel == CommandLogPanel.acqLabels["resume"]:
             Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_RunningState)
         elif currentLabel in [CommandLogPanel.acqLabels["clear"],CommandLogPanel.acqLabels["stop"]]:
@@ -708,8 +702,19 @@ class CommandLogPanel(CommandLogPanelGui):
             self.startAcquisitionButton.SetLabel(CommandLogPanel.acqLabels["clear"])
         else:
             self.startAcquisitionButton.SetLabel(CommandLogPanel.acqLabels["stop"])
-        pass
-    
+        t = SpectrumCollector.sequencerGetCurrent()
+        result = ''
+        if t is not None:
+            seq,scheme,repeat,schemeName = t
+            schemeName = os.path.split(schemeName)[-1]
+            result = "%s: %s" % (seq,schemeName)
+            self.seqTextCtrl.SetValue(result)
+        else:
+            seq = self.seqTextCtrl.GetValue().split(':')
+            if len(seq)>1:
+                self.seqTextCtrl.SetValue(seq[0])
+        return result
+        
     def disableAll(self):
         self.startEngineButton.Enable(False)
         self.laser1State.Enable(False)

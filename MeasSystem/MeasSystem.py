@@ -410,7 +410,8 @@ class MeasSystem(object):
         self._UninterruptedSpectrumCount = 0
         self.CurrentMeasMode = self.MeasModes[ModeName]
         self._SetupMeasMode()
-        FreqConverter.setSchemeSequence(self.CurrentMeasMode.Schemes, restart = True)
+        SpectrumCollector.setSequencerMode(True)
+        SpectrumCollector.startSequence(ModeName)
         
     def _SetupMeasMode(self):
         """Perform any instrument setup required for this mode by calling the instrument manager"""
@@ -498,6 +499,7 @@ class MeasSystem(object):
             dict(State = StateName[NewState],
                  PreviousState = StateName[self.__LastState]),
             Level = eventLevel)
+        
     def _HandleState_INIT(self):
         try:
             ##Stop any active scan
@@ -508,33 +510,9 @@ class MeasSystem(object):
             ##Figure out what modes are available and load all details...
             self.MeasModes = ModeDef.LoadModeDefinitions(self.Config.ModeDefinitionFile)
             Log("Mode definitions loaded", dict(ModeNames = self.MeasModes.keys()))
-
-            ##Figure out the unique set of schemes to give to the SchemeManager...
-            allSchemes = []
+            
             for m in self.MeasModes.values():
-                allSchemes.extend(m.Schemes)
-            uniqueSchemes = list(sets.Set(allSchemes))
-            uniqueSchemes.sort()
-            #now want to assign the schemes to indexes in the DAS
-            # - should make a dict with keys = scheme names, values = DAS index
-            # - need to make sure that all have backups and the count does not exceed what is available
-            #The management scheme is:
-            # - DAS table indices 0-6 are the primary slots
-            # - DAS table indices 7-13 are the alternate slots
-            # - DAS table indices 14 & 15 are for asap schemes
-            #This scheme is hard-coded right now.. had plans to make it configurable
-            #(and had a big INI file for it), but no real point right now (and I lost
-            #the INI file!)
-            if len(uniqueSchemes) > 7:
-                raise Exception("Too many unique schemes identified in the modes!  Only 7 supported right now.")
-            schemeDict = {}
-            schemeSeq = []
-            for i in range(len(uniqueSchemes)):
-                #this will build up the scheme set with keys based on the full path to the initial scheme...
-                schemeDict[uniqueSchemes[i]] = (uniqueSchemes[i], i, i + 7)
-                schemeSeq.append(uniqueSchemes[i])
-            #After sending this schemeSet to the SchemeManager in RDFrequencyConverter, schemes can simply be referred to by their names...
-            FreqConverter.configSchemeManager(schemeDict, schemeSeq)
+                SpectrumCollector.addNamedSequenceOfSchemes(m.Name,m.Schemes)
             
             # Set up spectrum queue in Spectrum Collector
             SpectrumCollector.setMaxSpectrumQueueSize(210)
@@ -589,10 +567,10 @@ class MeasSystem(object):
                 exitState = STATE_READY
             else:
                 if self._UninterruptedSpectrumCount == 0:
-                    Driver.startScan()
+                    SpectrumCollector.startScan()
                 # If the scan has been stopped for whatever reason, restart it
                 if Driver.scanIdle():
-                    Driver.startScan()
+                    SpectrumCollector.startScan()
                 spectrum = None
                 try:
                     #Get the spectra...
@@ -694,6 +672,11 @@ class MeasSystem(object):
             Log("MeasSystem exited due to shutdown request.", Level = 2)
 
     def Start(self):
+        # Load the calibration file info and start the main loop
+        Driver.stopScan()
+        FreqConverter.loadWarmBoxCal()
+        FreqConverter.loadHotBoxCal()
+        FreqConverter.centerTuner(32768)
         self._MainLoop()
 
 HELP_STRING = \

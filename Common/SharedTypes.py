@@ -106,6 +106,19 @@ class Singleton(object):
             cls._instance=super(Singleton,cls).__new__(cls,*a,**k)
         return cls._instance
 
+class Bunch(object):
+    """ This class is used to group together a collection as a single object, 
+        so that they may be accessed as attributes of that object"""
+    def __init__(self,**kwds):
+        """ The namespace of the object may be initialized using keyword arguments """
+        self.__dict__.update(kwds)
+    def __call__(self,*args,**kwargs):
+        return self.call(self,*args,**kwargs)
+    def __str__(self):
+        return "%s(%s)" % (self.__class__.__name__,self.__dict__)
+    def __repr__(self):
+        return self.__str__()
+        
 class GenHandler(object):
     """This class is used to call a generator repeatedly and to perform some specified
     action on the output of that generator, either for a duration which is as close as 
@@ -208,71 +221,7 @@ def getNextNonNullLine(sp):
             continue
         else:
             return line
-        
-class Bunch(object):
-    """ This class is used to group together a collection as a single object, so that 
-         they may be accessed as attributes of that object"""
-    def __init__(self,**kwds):
-        """ The namespace of the object may be initialized using keyword arguments """
-        self.__dict__.update(kwds)
-    def __call__(self,*args,**kwargs):
-        return self.call(self,*args,**kwargs)
 
-class Scheme(object):
-    """Class containing a scheme."""
-    def __init__(self,fileName=None):
-        # Create an scheme from the specified file, or a blank
-        #  Scheme if no file is specified
-        self.nrepeat = 0
-        self.numEntries = 0
-        self.setpoint = []
-        self.dwell = []
-        self.subschemeId = []
-        self.virtualLaser = []
-        self.threshold = []
-        self.pztSetpoint = []
-        self.laserTemp = []
-        if fileName is not None:
-            self.fileName = os.path.abspath(fileName)
-            # Read the scheme file
-            sp = file(self.fileName,"r")
-            self.nrepeat = int(getNextNonNullLine(sp).split()[0])
-            self.numEntries = int(getNextNonNullLine(sp).split()[0])
-            for i in range(self.numEntries):
-                toks = getNextNonNullLine(sp).split()
-                toks += (7-len(toks)) * ["0"]
-                self.setpoint.append(float(toks[0]))
-                self.dwell.append(int(toks[1]))
-                self.subschemeId.append(int(toks[2]))
-                self.virtualLaser.append(int(toks[3]))
-                self.threshold.append(float(toks[4]))
-                self.pztSetpoint.append(float(toks[5]))
-                self.laserTemp.append(float(toks[6]))
-                if (i & 0xF) == 0: time.sleep(0) # Processor yield
-            sp.close()
-    
-    def makeAngleTemplate(self):
-        # Make an angle based scheme template from a frequency based scheme where the setpoint 
-        #  and laserTemp fields are copies of the original, while all the other fields point to
-        #  the originals
-        s = Scheme()
-        s.nrepeat = self.nrepeat
-        s.numEntries = self.numEntries
-        s.setpoint = self.setpoint[:]
-        s.dwell = self.dwell
-        s.subschemeId = self.subschemeId
-        s.virtualLaser = self.virtualLaser
-        s.threshold = self.threshold
-        s.pztSetpoint = self.pztSetpoint
-        s.laserTemp = self.laserTemp[:]
-        return s
-        
-    def repack(self):
-        # Generate a tuple (repeats,zip(setpoint,dwell,subschemeId,virtualLaser,threshold,pztSetpoint,laserTemp))
-        #  from the scheme, which is appropriate for sending it to the DAS
-        return (self.nrepeat,zip(self.setpoint,self.dwell,self.subschemeId,self.virtualLaser,self.threshold,
-                                 self.pztSetpoint,self.laserTemp))
-        
 ##Misc stuff...
 
 if __debug__:
