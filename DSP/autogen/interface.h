@@ -130,7 +130,7 @@ typedef struct {
     uint16 laserUsed;
     uint16 ringdownThreshold;
     uint16 subschemeId;
-    uint16 schemeTable;
+    uint16 schemeVersionAndTable;
     uint16 schemeRow;
     uint16 ratio1;
     uint16 ratio2;
@@ -158,7 +158,7 @@ typedef struct {
     uint16 laserUsed;
     uint16 ringdownThreshold;
     uint16 subschemeId;
-    uint16 schemeTable;
+    uint16 schemeVersionAndTable;
     uint16 schemeRow;
     uint16 ratio1;
     uint16 ratio2;
@@ -168,6 +168,10 @@ typedef struct {
     float etalonTemperature;
     float cavityPressure;
     int16 lockerError;
+    uint32 extra1;
+    uint32 extra2;
+    uint32 extra3;
+    uint32 extra4;
 } ProcessedRingdownEntryType;
 
 typedef struct {
@@ -660,6 +664,12 @@ typedef enum {
 #define SUBSCHEME_ID_IsCalMask (0x1000)
 #define SUBSCHEME_ID_SpectrumSubsectionMask (0x0300)
 #define SUBSCHEME_ID_SpectrumMask (0x00FF)
+
+/* Definitions for SCHEME_VERSION_AND_TABLE_BITMASK */
+#define SCHEME_VersionMask (0xFFF0)
+#define SCHEME_TableMask (0xF)
+#define SCHEME_VersionShift (4)
+#define SCHEME_TableShift (0)
 
 /* Register definitions */
 #define INTERFACE_NUMBER_OF_REGISTERS (403)
