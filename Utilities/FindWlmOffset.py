@@ -28,6 +28,7 @@ import time
 import Queue
 from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
+from Host.Common.SchemeProcessor import Scheme
 from Host.Common.StringPickler import StringAsObject, ObjAsString
 from Host.Common.WlmCalUtilities import WlmFile
 from Host.Common.ctypesConvert import ctypesToDict, dictToCtypes
@@ -102,7 +103,7 @@ class WlmOffsetFinder(object):
         # Stop current spectrum acquisition
         Driver.wrDasReg(SPECT_CNTRL_STATE_REGISTER,SPECT_CNTRL_IdleState)
         # Create a fine scheme centered about the specified peak
-        sch = SharedTypes.Scheme()
+        sch = Scheme()
         sch.nrepeat = 1
         scan = np.linspace(self.waveNumberCen-0.05,self.waveNumberCen+0.05,501)
         sch.setpoint = np.concatenate((scan,scan[-2:0:-1]))
@@ -113,6 +114,10 @@ class WlmOffsetFinder(object):
         sch.pztSetpoint = np.zeros(sch.setpoint.shape)
         sch.laserTemp = np.zeros(sch.setpoint.shape)
         sch.numEntries = len(sch.setpoint)
+        sch.extra1 = np.zeros(sch.setpoint.shape,dtype=np.uint)
+        sch.extra2 = np.zeros(sch.setpoint.shape,dtype=np.uint)
+        sch.extra3 = np.zeros(sch.setpoint.shape,dtype=np.uint)
+        sch.extra4 = np.zeros(sch.setpoint.shape,dtype=np.uint)
         # We use two scheme indices to ping-pong between as the offset is changed
         schemeIndex = 0
         while True:
