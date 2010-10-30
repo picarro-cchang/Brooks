@@ -427,7 +427,7 @@ class CalibrateSystem(object):
             # Use the list of wlmAngles to update the current spline coefficients
             cavityFSR = self.update(wlmAngles,self.vLaserNum)
             RDFreqConv.setHotBoxCalParam("AUTOCAL","CAVITY_FSR",cavityFSR)
-               
+            RDFreqConv.setHotBoxCalParam("AUTOCAL","CAVITY_FSR_VLASER_%d" % self.vLaserNum,cavityFSR)
         finally:
             RDFreqConv.updateWarmBoxCal()
             RDFreqConv.updateHotBoxCal()
