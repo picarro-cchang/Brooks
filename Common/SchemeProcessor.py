@@ -59,21 +59,22 @@ class Scheme(object):
         self.lineNum = 0
         self.errors = []
         self.numErrors = 0
-        
-        schemePath = os.path.split(os.path.abspath(fileName))[0]
-
-        def getConfig(relPath):
-            path = os.path.abspath(os.path.join(schemePath,relPath))
-            if path not in configMemo:
-                fp = file(path,'r')
-                try:
-                    configMemo[path] = ConfigObj(fp)
-                finally:
-                    fp.close()
-            return configMemo.get(path,{})
-        
         # Define sandbox environment for scheme
-        self.env = {'Row':Row, 'schemeVersion':0, 'repeat':0, 'numRows':None, 'schemeRows':[], 'deepcopy':deepcopy, 'getConfig':getConfig}
+        self.env = {'Row':Row, 'schemeVersion':0, 'repeat':0, 'numRows':None, 'schemeRows':[], 'deepcopy':deepcopy}
+        
+        if fileName is not None:
+            schemePath = os.path.split(os.path.abspath(fileName))[0]
+            def getConfig(relPath):
+                path = os.path.abspath(os.path.join(schemePath,relPath))
+                if path not in configMemo:
+                    fp = file(path,'r')
+                    try:
+                        configMemo[path] = ConfigObj(fp)
+                    finally:
+                        fp.close()
+                return configMemo.get(path,{})
+            self.env['getConfig'] = getConfig
+            
         #
         self.version = 0
         self.nrepeat = 0
@@ -87,6 +88,8 @@ class Scheme(object):
         self.laserTemp = []
         self.extra1 = []
         self.extra2 = []
+        self.extra3 = []
+        self.extra4 = []
         #
         if self.fileName is not None:
             self.compile()
@@ -222,15 +225,28 @@ class Scheme(object):
         #  from the scheme, which is appropriate for sending it to the DAS
         return (self.nrepeat,zip(self.setpoint,self.dwell,self.subschemeId,self.virtualLaser,self.threshold,
                                  self.pztSetpoint,self.laserTemp))
+
+import numpy as np
             
 if __name__ == "__main__":
     fname = "../Tests/RDFrequencyConverter/SampleScheme.sch"
     # fname = "../Tests/RDFrequencyConverter/ProgScheme.sch"
-    try:
-        s = Scheme(fname)
-        print s
-        pickle.dumps(s)        
-    except SchemeError,ve:
-        print ve
-    
+
+    s = Scheme(fname)
+    print s
+    pickle.dumps(s)        
         
+    waveNumberCen = 6237.408
+    vLaserNum = 1
+    sch = Scheme()
+    sch.nrepeat = 1
+    scan = np.linspace(waveNumberCen-0.05,waveNumberCen+0.05,501)
+    sch.setpoint = np.concatenate((scan,scan[-2:0:-1]))
+    sch.dwell = np.ones(sch.setpoint.shape)
+    sch.subschemeId = np.zeros(sch.setpoint.shape)
+    sch.virtualLaser = (vLaserNum-1)*np.ones(sch.setpoint.shape)
+    sch.threshold = np.zeros(sch.setpoint.shape)
+    sch.pztSetpoint = np.zeros(sch.setpoint.shape)
+    sch.laserTemp = np.zeros(sch.setpoint.shape)
+    sch.numEntries = len(sch.setpoint)
+    pickle.dumps(sch)    
