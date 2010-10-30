@@ -691,7 +691,7 @@ class RDFrequencyConverter(Singleton):
         if self.hotBoxCal is None:
             raise ValueError("Hot box calibration has not been loaded")
         try:
-            self.hotBoxCal["AUTOCAL"]["CAVITY_FSR"] = self.cavityFsr
+            # self.hotBoxCal["AUTOCAL"]["CAVITY_FSR"] = self.cavityFsr
             self.hotBoxCal["timestamp"] = Driver.hostGetTicks()
             calStrIO = StringIO()
             self.hotBoxCal.write(calStrIO)
