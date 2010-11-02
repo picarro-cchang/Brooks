@@ -83,7 +83,14 @@ class ValveSequencer(ValveSequencerFrame):
         self.stepTimer = wx.Timer(self)
         self.numSkippedSteps = 0
         self.seqData = None
-        self.defaultPath = None
+        try:
+            defaultPath = self.co.get("MAIN", "defaultPath", "")
+            if not os.path.isdir(defaultPath):
+                #os.makedirs(defaultPath)
+                os.mkdir(defaultPath)
+            self.defaultPath = defaultPath
+        except:
+            self.defaultPath = None
         self.holdNewSeq = False
         
         # Run initialization functions
