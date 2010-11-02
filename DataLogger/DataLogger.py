@@ -81,7 +81,7 @@ import traceback
 from inspect import isclass
 from tables import *
 
-from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster
+from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster, timestamp
 from Host.Common.SharedTypes import RPC_PORT_DATALOGGER, BROADCAST_PORT_DATA_MANAGER, RPC_PORT_INSTR_MANAGER, \
                                     STATUS_PORT_ALARM_SYSTEM, RPC_PORT_ARCHIVER, RPC_PORT_DRIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -125,6 +125,16 @@ CRDS_InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR
                                             APP_NAME,
                                             IsDontCareConnection = True)                                            
 
+def deleteFile(filename):
+    """Delete a file, reporting any error, but not causing an exception. Returns True if delete succeeded"""
+    try:
+        os.chmod(filename,stat.S_IREAD | stat.S_IWRITE)
+        os.remove(filename)
+        return True
+    except OSError,e:
+        Log("Error deleting file: %s. %s" % (filename,e))
+        return False
+
 class Mbox(object):
     """Class to manage mailbox directory """
     def __init__(self, enabled, mailGroupName):
@@ -144,6 +154,7 @@ class DataLog(object):
         self.SourceScript = ""
         self.Port = BROADCAST_PORT_DATA_MANAGER
         self.CreateLogTime = 0
+        self.CreateLogTimestamp = 0
         self.LogPath = ""
         self.Fname = ""
         self.EngineName = EngineName
@@ -187,6 +198,8 @@ class DataLog(object):
             self.fp.close()
             self.table = None
             self.fp = None
+        if self.liveArchive:
+            CRDS_Archiver.StopLiveArchive(self.ArchiveGroupName, self.LogPath)
                 
     def CopyToMailboxAndArchive(self, srcPath=""):
         if not srcPath: self.Close()
@@ -205,18 +218,23 @@ class DataLog(object):
         self.Port = ConfigParser.getint(self.LogName, "port")
         self.BareTime = ConfigParser.getboolean(self.LogName, "baretime")
         self.useHdf5 = ConfigParser.getboolean(self.LogName, "usehdf5", False)
+        self.liveArchive = ConfigParser.getboolean(self.LogName, "liveArchive", False)
         self.ArchiveGroupName = ConfigParser.get(self.LogName, "ArchiveGroupName", default="")
         self.PrintTimeInHalfSecond = ConfigParser.getboolean(self.LogName, "printTimeInHalfSecond", False)
         self.WriteEpochTime = ConfigParser.getboolean(self.LogName, "writeEpochTime", True)
         relDir = "%s\%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
         self.srcDir = os.path.join(basePath, relDir)
+        if self.liveArchive and self.useHdf5:
+            raise ValueError('Cannot use live archive with HDF5 files in %s' % LogName)
+        
         # Archive all old files
         for root, dirs, files in os.walk(self.srcDir):
             for filename in files:
                 if ('mailbox_copy' not in root) and ('backup_copy' not in root):
                     path = os.path.join(root,filename)
-                    print "Cleaning...", path
+                    # print "Cleaning...", path
                     self.CopyToMailboxAndArchive(path)
+                    
 
     def _CopyToMailboxAndArchive(self, srcPath=""):
         if srcPath == "":
@@ -237,7 +255,7 @@ class DataLog(object):
             srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
             shutil.copy2(srcPath, srcPathCopy)
             # if mailbox enabled, copy file to mailbox directory first
-            CRDS_Archiver.ArchiveFile(self.Mbox.GroupName, srcPathCopy, True)
+            CRDS_Archiver.ArchiveFile(self.Mbox.GroupName, srcPathCopy, True, self.CreateLogTimestamp)
         if self.BackupGroupName != None and self.backupEnabled:
             srcPathCopy = os.path.dirname(srcPath) + '/backup_copy'
             if not os.path.exists(srcPathCopy):
@@ -245,10 +263,13 @@ class DataLog(object):
             srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
             shutil.copy2(srcPath, srcPathCopy)
             # if mailbox enabled, copy file to mailbox directory first
-            CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True)
-        # Archive
+            CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True, self.CreateLogTimestamp)
+        # Archive only non-live archives
         if self.ArchiveGroupName:
-            CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True)
+            if not self.liveArchive:
+                CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True, self.CreateLogTimestamp)
+            else:
+                deleteFile(srcPath)
         Log("Datalog archive processing %s took %s seconds" % (os.path.basename(srcPath),TimeStamp()-startTime))   
             
 
@@ -270,7 +291,8 @@ class DataLog(object):
             os.makedirs(dirName)
        
         # Create name and path of new file
-        self.CreateLogTime = time.time()    
+        self.CreateLogTimestamp = timestamp.getTimestamp()  
+        self.CreateLogTime = timestamp.unixTime(self.CreateLogTimestamp)
         self.LogHour = time.localtime().tm_hour #used to determine when we reached midnight
         if self.useHdf5:
             self.Fname = "%s-%s-%s.h5" % (self.EngineName,
@@ -288,6 +310,9 @@ class DataLog(object):
             self.fp = file(self.LogPath, "w")
             self._WriteHeader(DataList)
 
+        if self.liveArchive:
+            CRDS_Archiver.StartLiveArchive(self.ArchiveGroupName, self.LogPath, self.CreateLogTimestamp)
+            
         Log("A new log file (%s) created at %s" % (self.LogPath, time.strftime("%Y%m%d-%H%M%S",time.localtime())))    
         
     def _WriteEntry(self, string):

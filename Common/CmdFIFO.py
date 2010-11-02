@@ -727,8 +727,12 @@ class CmdFIFOServerProxy(object):
         self._FuncCallbacks = {}
         self.uri = uri.lower().replace("http:","PYROLOC:")
         Pyro.core.initClient()
+        self.timeout = Timeout_s
+        self.setupRemoteObject()
+    def setupRemoteObject(self):
         self.remoteObject = Pyro.core.getProxyForURI(self.uri + "/serverObject")
-        self.SetTimeout(Timeout_s)
+        self.setup = True
+        self.SetTimeout(self.timeout)
         # Use Oneway function, if we do not care about the result
         if self.IsDontCare: self.remoteObject._setOneway("_dispatch")
     def __getattr__(self,name):
@@ -753,28 +757,39 @@ class CmdFIFOServerProxy(object):
         #  or if the proxy is in don't care mode, we send off the request
         #  in a thread
         if self.IsDontCare or modeOverride in ["V","C"]:
-            def curried():
+            if not self.setup:
                 try:
-                    self.remoteObject._dispatch(dottedMethodName,client,modeOverride,callbackInfo,a,k)
-                except:
-                    pass
-            DaemonicThread(target=curried).start()
+                    self.setupRemoteObject()
+                except Pyro.errors.ProtocolError:
+                    self.setup = False
+            if self.setup:        
+                def curried():
+                    try:
+                        self.remoteObject._dispatch(dottedMethodName,client,modeOverride,callbackInfo,a,k)
+                    except:
+                        self.setup = False
+                DaemonicThread(target=curried).start()
             if self.IsDontCare: return "DC"
             elif modeOverride == "V": return "OK"
             else: return "CB"
         else:
             while True:
+                # Perform command and re-establish connection if necessary
+                if self.setup:
+                    try:
+                        return self.remoteObject._dispatch(dottedMethodName,client,modeOverride,callbackInfo,a,k)
+                    except Pyro.errors.TimeoutError,e:
+                        self.remoteObject._release()
+                        raise TimeoutError("%s" % e)
+                    except Pyro.errors.ConnectionClosedError:
+                        # print "Retrying proxy call: %s" % (dottedMethodName,)
+                        self.remoteObject._release()
+                time.sleep(1.0)
                 try:
-                    return self.remoteObject._dispatch(dottedMethodName,client,modeOverride,callbackInfo,a,k)
-                except Pyro.errors.TimeoutError,e:
-                    self.remoteObject._release()
-                    raise TimeoutError("%s" % e)
-                except Pyro.errors.ConnectionClosedError:
-                    # print "Retrying proxy call: %s" % (dottedMethodName,)
-                    self.remoteObject._release()
-                    self.remoteObject = Pyro.core.getProxyForURI(self.uri + "/serverObject")
-                    self.SetTimeout(self.timeout)
-                    if self.IsDontCare: self.remoteObject._setOneway("_dispatch")
+                    self.setupRemoteObject()
+                except Pyro.errors.ProtocolError:
+                    self.setup = False
+
     def SetFunctionMode(self, FuncName, FuncMode = CMD_TYPE_Default, Callback = None):
         """Sets how the client would like a registered server function to behave.
 
