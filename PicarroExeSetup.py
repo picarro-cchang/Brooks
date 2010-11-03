@@ -61,6 +61,7 @@ sys.path.append("QuickGui")
 sys.path.append("SampleManager")
 sys.path.append("Supervisor")
 sys.path.append("ReadExtSensor")
+sys.path.append("IPV")
 sys.path.append("Utilities")
 sys.path.append("Utilities/RemoteAccess")
 sys.path.append("Utilities/DiagDataCollector")
@@ -71,6 +72,7 @@ sys.path.append("Utilities/ValveDisplay")
 sys.path.append("Utilities/InstrEEPROMAccess")
 sys.path.append("Utilities/DataRecal")
 sys.path.append("Utilities/IntegrationTool")
+sys.path.append("Utilities/SetupTool")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -194,7 +196,7 @@ inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
                  "sip", "matplotlib.backends",  "matplotlib.backends.backend_wxagg",
                  "matplotlib.figure","pylab", "numpy", "matplotlib.numerix.fft",
                  "matplotlib.numerix.linear_algebra", "matplotlib.numerix.random_array", "configobj",
-                 "encodings.*", "tables.*" ]
+                 "encodings.*", "tables.*", "paramiko" ]
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll']
 
 hex_images = glob.glob("../SrcCode/CypressUSB/Drivers/*.*")
@@ -254,6 +256,7 @@ setup(version = "1.0",
 
       windows = [QuickGui, Coordinator,Controller,ControllerBuildStation,deltaCorrProcessor, dilutionCorrProcessor,
                  "Common/StopSupervisor.py",
+                 "IPV/IPV.py",
                  "Utilities/DiagDataCollector/DiagDataCollector.py",
                  "Utilities/SupervisorLauncher/SupervisorLauncher.py",
                  "Utilities/SupervisorLauncher/HostStartup.py",
@@ -262,7 +265,8 @@ setup(version = "1.0",
                  "Utilities/FluxSwitcher/FluxSwitcherGui.py",
                  "Utilities/ValveDisplay/ValveDisplay.py",
                  "Utilities/InstrEEPROMAccess/InstrEEPROMAccess.py",
-                 "Utilities/DataRecal/DataRecal.py"
+                 "Utilities/DataRecal/DataRecal.py",
+                 "Utilities/SetupTool/SetupTool.py",
                  ],
                  
       data_files = [(".", ["EventManager/Warning_16x16_32.ico",

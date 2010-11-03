@@ -14,12 +14,9 @@
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved 
 #                                                            
-HOST_MAJOR_VERSION = 0
-HOST_MINOR_VERSION = 1
-HOST_INTERNAL_VERSION = "2"
+HOST_MAJOR_VERSION = 1
+HOST_MINOR_VERSION = 0
+HOST_INTERNAL_VERSION = "0"
 
 def versionString():
-    if HOST_INTERNAL_VERSION in [0, "0"]:
-        return "%d.%d" % (HOST_MAJOR_VERSION,HOST_MINOR_VERSION)
-    else:
-        return "%d.%d.%s" % (HOST_MAJOR_VERSION,HOST_MINOR_VERSION,str(HOST_INTERNAL_VERSION))
+    return "%d.%d.%s" % (HOST_MAJOR_VERSION,HOST_MINOR_VERSION,str(HOST_INTERNAL_VERSION))
