@@ -174,6 +174,7 @@ class DataLog(object):
         self.fp = None
         self.table = None
         self.lastFlush = 0
+        self.restart = False
 
     def qHandler(self):
         while True:
@@ -284,6 +285,7 @@ class DataLog(object):
             del self.maxDuration[self.LogPath]
             self._CopyToMailboxAndArchive(self.LogPath)
             self.LogPath = ""
+            self.restart = False
 
         dirName = self.srcDir        
         # check to see if directory exists. If it doesn't create it.
@@ -378,7 +380,7 @@ class DataLog(object):
             DataList = self._MakeListFromDict(DataDict)
 
             # check to see if file was created yet.
-            if self.LogPath == "":
+            if self.LogPath == "" or self.restart:
                 self._Create(DataList)
                 self.oldDataList = DataList
 
@@ -784,13 +786,16 @@ class DataLogger(object):
             return DATALOGGER_RPC_SUCCESS
         else:
             return DATALOGGER_RPC_FAILED
-    def DATALOGGER_startLogRpc(self, UserLogName):
+    def DATALOGGER_startLogRpc(self, UserLogName, restart = False):
         """Called to enable logging of the specified user log."""
         if UserLogName in self.UserLogDict:
             dl =  self.UserLogDict[UserLogName]
             dl.Enabled = True
-            # re-initialize LogPath string to make sure file is created when data comes in.
-            self.UserLogDict[UserLogName].LogPath =""
+            if restart:
+                self.UserLogDict[UserLogName].restart = True
+            else:
+                # re-initialize LogPath string to make sure file is created when data comes in.
+                self.UserLogDict[UserLogName].LogPath =""
 
             self.UserCp.set(UserLogName,"enabled", "true")
             fp = open(self.UserConfigPath,"wb")

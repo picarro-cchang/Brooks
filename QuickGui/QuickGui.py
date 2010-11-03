@@ -697,21 +697,21 @@ class DataLoggerInterface(object):
         self.userLogDict = userLogDict
         self.privateLogDict = privateLogDict
 
-    def startUserLogs(self,userLogList):
+    def startUserLogs(self,userLogList,restart=False):
         """Start a list of user logs by making a non-blocking RPC call to the alarm system"""
         while self.rpcInProgress: time.sleep(0.5)
         # if self.rpcInProgress: return False
         self.exception = None
         self.rpcInProgress = True
-        th = Thread(target=self._startUserLogs,args=(userLogList,))
+        th = Thread(target=self._startUserLogs,args=(userLogList,restart))
         th.setDaemon(True)
         th.start()
         return True
 
-    def _startUserLogs(self,userLogList):
+    def _startUserLogs(self,userLogList,restart):
         try:
             for i in userLogList:
-                self.dataLoggerRpc.DATALOGGER_startLogRpc(i)
+                self.dataLoggerRpc.DATALOGGER_startLogRpc(i,restart)
         except Exception,e:
             self.exception = e
         # Refresh info with changes made
@@ -1238,6 +1238,7 @@ class QuickGui(wx.Frame):
         self.defaultLineWidth = self.config.getfloat("Graph","LineWidth")
         self.defaultMarkerSize = self.config.getfloat("Graph","MarkerSize")
         self.lineMarkerColor = self.defaultLineMarkerColor
+        self.restartUserLog = False
 
         # Collect instrument status setpoint and tolerance
         try:
@@ -1671,6 +1672,8 @@ class QuickGui(wx.Frame):
         self.userLogButton = wx.Button(parent=self.measPanel,id=-1,size=(-1,25),label="Start User Log(s)")
         setItemFont(self.userLogButton,self.getFontFromIni('MeasurementButtons'))
         self.userLogButton.State = False
+        self.restartUserLog = False
+        
         self.Bind(wx.EVT_BUTTON,self.OnUserLogButton,self.userLogButton)
 
         self.userLogTextCtrl = wx.TextCtrl(parent=self.measPanel,id=-1,size=(-1,120),
@@ -1897,7 +1900,7 @@ class QuickGui(wx.Frame):
         self.userLogButton.Disable()
         userLogs = self.dataLoggerInterface.userLogDict.keys()
         if self.userLogButton.State:
-            self.dataLoggerInterface.startUserLogs(userLogs)
+            self.dataLoggerInterface.startUserLogs(userLogs, self.restartUserLog)
         else:
             self.dataLoggerInterface.stopUserLogs(userLogs)
         wx.FutureCall(5000,self.userLogButton.Enable)
@@ -2029,18 +2032,22 @@ class QuickGui(wx.Frame):
                 if len(fname) > 0:
                     #logFiles.append("%s" % (os.path.split(fname)[-1],))
                     logFiles.append("%s" % os.path.abspath(fname))
-            if len(logFiles) > 0:        
+            if len(logFiles) > 0 and userLogEnabled:        
                 logFiles = "\n".join(logFiles)
             else:
                 logFiles = "No log file"
             if logFiles != self.userLogTextCtrl.GetValue():
                 self.userLogTextCtrl.SetValue(logFiles)
         if userLogEnabled:
-            self.userLogButton.SetLabel("Stop User Log(s)")
-            self.userLogButton.State = False
+            self.userLogButton.SetLabel("Restart User Log(s)")
+            self.userLogButton.SetForegroundColour("black")
+            self.userLogButton.State = True
+            self.restartUserLog = True
         else:
             self.userLogButton.SetLabel("Start User Log(s)")
+            self.userLogButton.SetForegroundColour("red")
             self.userLogButton.State = True
+            self.restartUserLog = False
 
         self.eventViewControl.RefreshList()
         self.alarmView.RefreshList()
