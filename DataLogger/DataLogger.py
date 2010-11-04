@@ -519,9 +519,9 @@ class DataLogger(object):
         self.basePath = os.path.split(self.ConfigPath)[0]
         try:
             try:
-                instInfo = CRDS_Driver.fetchLogicEEPROM()[0]
-                print "instInfo = ", instInfo
-                self.engineName = instInfo["Analyzer"]+instInfo["AnalyzerNum"]
+                self.engineName = CRDS_Driver.fetchInstrInfo("analyzername")
+                if self.engineName == None:
+                    self.engineName = cp.get("DEFAULT", "ENGINE")
             except Exception, err:
                 print err
                 self.engineName = cp.get("DEFAULT", "ENGINE")
