@@ -3516,7 +3516,7 @@
                     <!-- <fielddef value="0">Off</fielddef>
                     <fielddef value="1">On</fielddef> -->
                 </bitfield>
-                <bitfield ident="MANUAL_SOA_ENABLE" description="SOA current (in manual mode)"  lsb="11" width="1">
+                <bitfield ident="MANUAL_SOA_ENABLE" description="Enable SOA current (in manual mode)" lsb="11" width="1">
                     <fielddef value="0">Off</fielddef>
                     <fielddef value="1">On</fielddef>
                 </bitfield>
@@ -3531,6 +3531,10 @@
                 <bitfield ident="OPTICAL_SWITCH_SELECT" description="Select optical switch type" lsb="14" width="1">
                     <fielddef value="0">2-way</fielddef>
                     <fielddef value="1">4-way</fielddef>
+                </bitfield>
+                <bitfield ident="SOA_PRESENT" description="SOA Present" lsb="15" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>                
                 </bitfield>
             </reg>
             <reg type="uint16" ident="LASER1_COARSE_CURRENT" description="Sets coarse current for laser 1"/>

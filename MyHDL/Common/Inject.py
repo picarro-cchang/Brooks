@@ -44,6 +44,7 @@ from Host.autogen.interface import INJECT_CONTROL_MANUAL_SOA_ENABLE_B, INJECT_CO
 from Host.autogen.interface import INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W
 from Host.autogen.interface import INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B, INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W
 from Host.autogen.interface import INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B, INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W
+from Host.autogen.interface import INJECT_CONTROL_SOA_PRESENT_B, INJECT_CONTROL_SOA_PRESENT_W
 from MyHDL.Common.LaserDac import LaserDac
 
 OptSwitchState = enum("IDLE","PULSING_1","SELECTED_1","PULSING_2","SELECTED_2")
@@ -121,11 +122,12 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     INJECT_CONTROL_LASER_SELECT -- Selects laser for automatic control 00 -> 11
     INJECT_CONTROL_LASER_CURRENT_ENABLE -- 4 bits controlling laser current regulators
     INJECT_CONTROL_MANUAL_LASER_ENABLE  -- 4 bits controlling laser shorting transistors in manual mode
-    INJECT_CONTROL_MANUAL_SOA_ENABLE    -- controls SOA shorting transistor in manual mode
+    INJECT_CONTROL_MANUAL_SOA_ENABLE    -- Controls SOA current in manual mode
     INJECT_CONTROL_LASER_SHUTDOWN_ENABLE -- enables laser shutdown in automatic mode
     INJECT_CONTROL_SOA_SHUTDOWN_ENABLE   -- enables SOA shutdown in automatic mode.
     INJECT_CONTROL_OPTICAL_SWITCH_SELECT -- 0 for 2-way switch, 1 for 4-way switch
-
+    INJECT_CONTROL_MANUAL_SOA_PRESENT -- if False, SOA is always shorted
+    
     Note: If MODE is automatic, only the SOA and the selected laser are in automatic mode,
            the other lasers remain in manual mode.
     """
@@ -155,6 +157,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     manual_soa_en = Signal(LOW)
     laser_shutdown_en = Signal(LOW)
     soa_shutdown_en = Signal(LOW)
+    soa_present = Signal(LOW)
     laser1_fine = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser2_fine = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser3_fine = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -324,7 +327,9 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         manual_soa_en.next = control[INJECT_CONTROL_MANUAL_SOA_ENABLE_B]
         laser_shutdown_en.next = control[INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B]
         soa_shutdown_en.next = control[INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B]
+        soa_present.next = control[INJECT_CONTROL_SOA_PRESENT_B]
         sel_laser_out.next = s
+        
         if s == 0:
             sel_coarse_current_out.next = laser1_coarse_current
             sel_fine_current_out.next = laser1_fine_current
@@ -370,6 +375,9 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
             else:
                 laser4_fine.next = laser_fine_current_in
                 laser4_shutdown_out.next = laser_shutdown_in and laser_shutdown_en
+
+        if not soa_present:        
+            soa_shutdown_out.next = True
 
     laser1_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
         chanA_data_in=laser1_coarse_current,chanB_data_in=laser1_fine,
