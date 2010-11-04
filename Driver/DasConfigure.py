@@ -119,7 +119,17 @@ class DasConfigure(SharedTypes.Singleton):
         self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SCHEDULER_HEARTBEAT"))
 
         soa = self.installCheck("SOA_PRESENT")
-
+        injCtrl = sender.rdFPGA("FPGA_INJECT","INJECT_CONTROL")
+        
+        # Disable SOA current if the SOA_PRESENT flag is not set in the Master.ini file
+        
+        soaPresent = 1<<interface.INJECT_CONTROL_SOA_PRESENT_B
+        if soa:
+            injCtrl |= soaPresent
+        else:
+            injCtrl &= ~soaPresent
+        sender.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injCtrl)
+        
         for laserNum in range(1,5):
             present = self.installCheck("LASER%d_PRESENT" % laserNum)
             if laserNum == 4:
