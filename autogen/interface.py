@@ -147,7 +147,6 @@ class RingdownEntryType(Structure):
     ("count",c_ushort),
     ("tunerValue",c_ushort),
     ("pztValue",c_ushort),
-    ("lockerOffset",c_ushort),
     ("laserUsed",c_ushort),
     ("ringdownThreshold",c_ushort),
     ("subschemeId",c_ushort),
@@ -160,8 +159,9 @@ class RingdownEntryType(Structure):
     ("laserTemperature",c_float),
     ("etalonTemperature",c_float),
     ("cavityPressure",c_float),
-    ("lockerError",c_short),
-    ("padToCacheLine",c_ushort)
+    ("fitAmplitude",c_ushort),
+    ("fitBackground",c_ushort),
+    ("fitRmsResidual",c_ushort)
     ]
 
 class ProcessedRingdownEntryType(Structure):
@@ -176,7 +176,6 @@ class ProcessedRingdownEntryType(Structure):
     ("count",c_ushort),
     ("tunerValue",c_ushort),
     ("pztValue",c_ushort),
-    ("lockerOffset",c_ushort),
     ("laserUsed",c_ushort),
     ("ringdownThreshold",c_ushort),
     ("subschemeId",c_ushort),
@@ -189,7 +188,9 @@ class ProcessedRingdownEntryType(Structure):
     ("laserTemperature",c_float),
     ("etalonTemperature",c_float),
     ("cavityPressure",c_float),
-    ("lockerError",c_short),
+    ("fitAmplitude",c_ushort),
+    ("fitBackground",c_ushort),
+    ("fitRmsResidual",c_ushort),
     ("extra1",c_uint),
     ("extra2",c_uint),
     ("extra3",c_uint),
