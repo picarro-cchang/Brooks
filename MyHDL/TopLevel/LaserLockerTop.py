@@ -493,7 +493,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                 ref2_adc_low = ref2_actual[8:]
                 ref2_adc_high = ref2_actual[16:8]
                 wlm_adc = concat(wmm_busy2,wmm_busy1,wmm_rd_out,clk_2M5,wmm_tran2,wmm_refl2,wmm_tran1,wmm_refl1)
-                system_clocks = concat(LOW,clk_10M,clk_5M,clk_2M5,pulse_1M,pulse_100k,wlm_data_available,metadata_strobe)
+                system_clocks = concat(data_we,clk_10M,clk_5M,clk_2M5,pulse_1M,pulse_100k,wlm_data_available,metadata_strobe)
                 pwm_signals = concat(LOW,heater_pwm_out,hot_box_pwm_out,warm_box_pwm_out,pwm_laser4_out,pwm_laser3_out,pwm_laser2_out,pwm_laser1_out)
                 i2c_signals = concat(LOW, LOW, LOW, LOW, i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1)
 

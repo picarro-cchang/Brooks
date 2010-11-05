@@ -3400,7 +3400,7 @@
             </reg>
             <reg type="uint16" ident="DIVISOR" description="Ring-down data counter rate divisor" access="rw">
                 <save/>
-                <display format="%d">Ringdown ADC divisor</display>
+                <display format="%d">Ringdown ADC divisor, Sample freq = 25MHz/(divisor+1)</display>
             </reg>
             <reg type="uint16" ident="NUM_SAMP" description="Number of samples to collect for ring-down waveform" access="rw">
                 <save/>

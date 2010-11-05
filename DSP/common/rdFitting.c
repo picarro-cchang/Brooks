@@ -357,9 +357,6 @@ int rdFittingProcessRingdown(uint32 *buffer,
     unsigned int minValue, maxValue, peakSample;
     unsigned int sample, divisor, nSamp, nPoints;
     float tSamp, frac, thresh;
-    static float tSampList[] = {  40.0e-9, 80.0e-9, 160.0e-9, 320.0e-9,
-                                  640.0e-9, 1.28e-6, 2.56e-6, 5.12e-6
-                               };
 
     // Get the current number of samples and sampling interval
     //  by reading the FPGA registers
@@ -374,8 +371,8 @@ int rdFittingProcessRingdown(uint32 *buffer,
         divisor = readFPGA(FPGA_RDMAN + RDMAN_DIVISOR);
     }
 
-    if (divisor >= sizeof(tSampList)/sizeof(float)) return ERROR_BAD_VALUE;
-    tSamp = tSampList[divisor];
+    if (divisor >= 32) return ERROR_BAD_VALUE;
+    tSamp = 40.0e-9*(divisor + 1);
 
     // Get the maximum number of points allowed in the fit window
     nPoints = *(rdFittingParams.numberOfPoints);
