@@ -28,7 +28,7 @@ from CoordinatorFrameGui import CoordinatorFrameGui
 from CoordinatorParamGui import InitialParamDialogGui
 from CoordinatorStateMachine import State, StateMachine, OK, EXCEPTION, TIMEOUT
 from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import RPC_PORT_COORDINATOR
+from Host.Common.SharedTypes import RPC_PORT_COORDINATOR, RPC_PORT_DRIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
@@ -43,6 +43,10 @@ LOG = 1
 OUTFILE = 2
 CONTROL = 3
 
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                             APP_NAME,
+                                             IsDontCareConnection = False)
+                                         
 class RpcServerThread(threading.Thread):
     def __init__(self, RpcServer, ExitFunction):
         threading.Thread.__init__(self)
@@ -158,7 +162,11 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.startServer()
         self.sampleNum = 1
         self.logFp = None
-        
+        try:
+            self.analyzerName = CRDS_Driver.fetchInstrInfo("analyzername")
+        except:
+            self.analyzerName = None
+            
     def startServer(self):
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_COORDINATOR),
                                                 ServerName = APP_NAME,
@@ -268,9 +276,16 @@ class CoordinatorFrame(CoordinatorFrameGui):
             if not os.path.isdir(dirName):
                 os.mkdir(dirName)
         except:
-            baseFname = "PulseAnalysisResults"
+            baseFname = "CoordinatorResults"
         self.lastFileTime = time.localtime()
-        return time.strftime(baseFname+"_%Y%m%d_%H%M%S.csv",self.lastFileTime)
+        if self.analyzerName != None and self.analyzerName not in baseFname:
+            if os.path.basename(baseFname) != "":
+                baseFname += "_%s" % (self.analyzerName,)
+            else:
+                baseFname += self.analyzerName
+            return time.strftime(baseFname+"_%Y%m%d_%H%M%S.csv",self.lastFileTime)
+        else:
+            return time.strftime(baseFname+"_%Y%m%d_%H%M%S.csv",self.lastFileTime)
 
     def onLoadSampleDescriptions(self,event):
         try:

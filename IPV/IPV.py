@@ -296,8 +296,8 @@ class IPV(IPVFrame):
         if not os.path.isdir(dirName):
             os.mkdir(dirName)
         self.reportFilePrefix = co.get("Main", "reportFilePrefix", "C:/UserData/IPV/Report")
-        self.instType = CRDS_Driver.fetchObject("LOGIC_EEPROM")[0]["Analyzer"]
-        self.instName = self.instType + CRDS_Driver.fetchObject("LOGIC_EEPROM")[0]["AnalyzerNum"]
+        self.instType = CRDS_Driver.fetchInstrInfo("analyzer")
+        self.instName = self.instType + CRDS_Driver.fetchInstrInfo("analyzernum")
         self.softwareVersion = CRDS_Driver.allVersions()["host release"]
         self.useUTC = co.getboolean("Main", "useUTC", True)
         self.rdfDurationHrs = co.getfloat("Main", "rdfDurationHrs", 6.0)

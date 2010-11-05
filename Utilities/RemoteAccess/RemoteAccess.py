@@ -9,9 +9,14 @@ File History:
     07-02-27 sze   Send only one attached file per e-mail message
     07-03-15 sze   Send e-mail message even if no files are present in directory
     08-09-18 alex  Replaced ConfigParser with CustomConfigObj
-
+    10-11-03 alex  Get instrument ID from EEPROM
+    
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
+
+APP_NAME = "RemoteAccess"
+APP_DESCRIPTION = "E-mails the contents of a results directory"
+__version__ = 1.0
 
 COMMASPACE = ', '
 
@@ -33,7 +38,13 @@ from struct import pack, unpack
 from time import time, ctime, mktime
 
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common import CmdFIFO
+from Host.Common.SharedTypes import RPC_PORT_DRIVER
 
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                             APP_NAME,
+                                             IsDontCareConnection = False)
+        
 def getRequiredOption(configParser,section,option):
     """Get a key from a configParser object, complaining if it does not exist"""
     try:
@@ -161,7 +172,30 @@ class RemoteAccess(object):
         handler = logging.handlers.RotatingFileHandler(logFilepath,maxBytes=65536,backupCount=10)
         handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(message)s',datefmt='%Y%m%d %H:%M:%S'))
         logging.getLogger('').addHandler(handler)
-
+        
+        # Plug analyzer name in "from address" and "subject" of emails
+        try:
+            analyzerName = CRDS_Driver.fetchInstrInfo("analyzername")
+        except:
+            analyzerName = None
+        self.subject = self.config.get("EMAIL", "Subject", "")
+        if self.subject == "":
+            if analyzerName != None:
+                self.subject = "%s: data from Picarro instrument" % analyzerName
+                self.config.set("EMAIL", "Subject", self.subject)
+                self.config.write()
+            else:
+                pass
+        self.fromAddr = self.config.get("EMAIL", "From", "")
+        if self.fromAddr == "":
+            if analyzerName != None:
+                self.fromAddr = "%s@picarro.com" % analyzerName
+                self.config.set("EMAIL", "From", self.fromAddr)
+                self.config.write()
+            else:
+                logging.error("Error: A valid \"From\" address is required!")
+                sys.exit()
+                
     def dialConnection(self):
         if not self.useDialUp: return
         cmd = ["rasdial"]
@@ -237,7 +271,6 @@ class RemoteAccess(object):
     def sendMail(self):
         if not self.sendEmail: return
         smtpHostname = getRequiredOption(self.config,'EMAIL','Server')
-        fromAddr = getRequiredOption(self.config,'EMAIL','From')
         toAddrList = []
         for option in self.config.list_options('EMAIL'):
             if option[:2].upper() == "TO":
@@ -260,30 +293,30 @@ class RemoteAccess(object):
                 continue
             fnameList.append(filename)
         if len(fnameList) == 0:
-            try:
-                subject = self.config.get('EMAIL','Subject') + " No files to send"
-            except:
+            if self.subject != "":
+                subject = self.subject + " No files to send"
+            else:
                 subject = "No files in directory %s" % (os.path.abspath(dir),)
             logging.info("E-mailing with no files in directory %s" % (os.path.abspath(dir),))
-            self.sendMessage(smtpHostname,fromAddr,toAddrList,subject)
+            self.sendMessage(smtpHostname,toAddrList,subject)
         else:
             for i in range(len(fnameList)):
                 filename = fnameList[i]
                 path = os.path.join(dir, filename)
                 # Send a separate e-mail message for each file in the directory
-                try:
-                    subject = self.config.get('EMAIL','Subject') + " (File %d of %d)" % (i+1,len(fnameList),)
-                except:
+                if self.subject != "":
+                    subject = self.subject + " (File %d of %d)" % (i+1,len(fnameList),)
+                else:
                     subject = "File %s in directory %s (File %d of %d)" % (filename,os.path.abspath(dir),i+1,len(fnameList))
                 logging.info("E-mailing file %s in directory %s" % (filename,os.path.abspath(dir)))
-                self.sendMessage(smtpHostname,fromAddr,toAddrList,subject,path)
+                self.sendMessage(smtpHostname,toAddrList,subject,path)
 
-    def sendMessage(self,smtpHostname,fromAddr,toAddrList,subject,path=None):
+    def sendMessage(self,smtpHostname,toAddrList,subject,path=None):
         # Create the enclosing (outer) message
         outer = MIMEMultipart()
         outer['Subject'] = subject
         outer['To'] = COMMASPACE.join(toAddrList)
-        outer['From'] = fromAddr
+        outer['From'] = self.fromAddr
         outer.preamble = '\n'
         # To guarantee the message ends with a newline
         outer.epilogue = ''
@@ -339,7 +372,7 @@ class RemoteAccess(object):
                 authenticationNeeded = False
             if authenticationNeeded:
                 self.mailServer.login(getRequiredOption(self.config,'EMAIL','UserName'),getRequiredOption(self.config,'EMAIL','PassWord'))
-            failedReceipients = self.mailServer.sendmail(fromAddr,toAddrList,outer.as_string())
+            failedReceipients = self.mailServer.sendmail(self.fromAddr,toAddrList,outer.as_string())
             self.mailServer.quit()
             successList = toAddrList[:]
             failedList = []

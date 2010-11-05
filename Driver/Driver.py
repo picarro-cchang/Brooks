@@ -761,6 +761,29 @@ class DriverRpcHandler(SharedTypes.Singleton):
         return (cPickle.loads("".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress+4,nBytes)])),
                 startAddress + 4*((nBytes+3)//4))
                 
+    def fetchInstrInfo(self, option="all"):
+        option = option.lower()
+        try:
+            curVal = self.fetchObject("LOGIC_EEPROM")
+            curValDict = curVal[0]
+            chassis = curValDict["Chassis"]
+            analyzerType = curValDict["Analyzer"]
+            analyzerNum = curValDict["AnalyzerNum"]
+        except:
+            return None
+        if option == "chassis":
+            return chassis
+        elif option == "analyzer":
+            return analyzerType
+        elif option == "analyzernum":
+            return analyzerNum
+        elif option == "analyzername":
+            return "%s%s" % (analyzerType, analyzerNum)
+        elif option == "all":
+            return "%s-%s%s" % (chassis, analyzerType, analyzerNum)
+        else:
+            return None
+    
     def verifyObject(self,whichEeprom,object,startAddress=0):
         """Verify that the pickled object was written correctly to specified EEPROM, starting at 
         "startAddress". Returns True iff successful. """
