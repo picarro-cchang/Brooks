@@ -155,7 +155,7 @@
             <field ident="count" type="uint16"/>
             <field ident="tunerValue" type="uint16"/>
             <field ident="pztValue" type="uint16"/>
-            <field ident="lockerOffset" type="uint16"/>
+			<!--  ><field ident="lockerOffset" type="uint16"/></!-->
             <field ident="laserUsed" type="uint16"/>
             <field ident="ringdownThreshold" type="uint16"/>
             <field ident="subschemeId" type="uint16"/>
@@ -168,8 +168,11 @@
             <field ident="laserTemperature" type="float"/>
             <field ident="etalonTemperature" type="float"/>
             <field ident="cavityPressure" type="float"/>
-            <field ident="lockerError" type="int16"/>
-            <field ident="padToCacheLine" type="uint16"/>
+			<!--  ><field ident="lockerError" type="int16"/></!-->
+			<!--  ><field ident="padToCacheLine" type="uint16"/></!-->
+            <field ident="fitAmplitude" type="uint16"/>
+            <field ident="fitBackground" type="uint16"/>
+            <field ident="fitRmsResidual" type="uint16"/>
         </struct>
         <struct type="ProcessedRingdownEntryType">
             <field ident="timestamp" type="long long"/>
@@ -182,7 +185,7 @@
             <field ident="count" type="uint16"/>
             <field ident="tunerValue" type="uint16"/>
             <field ident="pztValue" type="uint16"/>
-            <field ident="lockerOffset" type="uint16"/>
+			<!--  ><field ident="lockerOffset" type="uint16"/></!-->
             <field ident="laserUsed" type="uint16"/>
             <field ident="ringdownThreshold" type="uint16"/>
             <field ident="subschemeId" type="uint16"/>
@@ -195,7 +198,10 @@
             <field ident="laserTemperature" type="float"/>
             <field ident="etalonTemperature" type="float"/>
             <field ident="cavityPressure" type="float"/>
-            <field ident="lockerError" type="int16"/>
+			<!--  ><field ident="lockerError" type="int16"/></!-->
+            <field ident="fitAmplitude" type="uint16"/>
+            <field ident="fitBackground" type="uint16"/>
+            <field ident="fitRmsResidual" type="uint16"/>
             <field ident="extra1" type="uint32"/>
             <field ident="extra2" type="uint32"/>
             <field ident="extra3" type="uint32"/>

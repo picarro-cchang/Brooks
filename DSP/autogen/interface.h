@@ -126,7 +126,6 @@ typedef struct {
     uint16 count;
     uint16 tunerValue;
     uint16 pztValue;
-    uint16 lockerOffset;
     uint16 laserUsed;
     uint16 ringdownThreshold;
     uint16 subschemeId;
@@ -139,8 +138,9 @@ typedef struct {
     float laserTemperature;
     float etalonTemperature;
     float cavityPressure;
-    int16 lockerError;
-    uint16 padToCacheLine;
+    uint16 fitAmplitude;
+    uint16 fitBackground;
+    uint16 fitRmsResidual;
 } RingdownEntryType;
 
 typedef struct {
@@ -154,7 +154,6 @@ typedef struct {
     uint16 count;
     uint16 tunerValue;
     uint16 pztValue;
-    uint16 lockerOffset;
     uint16 laserUsed;
     uint16 ringdownThreshold;
     uint16 subschemeId;
@@ -167,7 +166,9 @@ typedef struct {
     float laserTemperature;
     float etalonTemperature;
     float cavityPressure;
-    int16 lockerError;
+    uint16 fitAmplitude;
+    uint16 fitBackground;
+    uint16 fitRmsResidual;
     uint32 extra1;
     uint32 extra2;
     uint32 extra3;

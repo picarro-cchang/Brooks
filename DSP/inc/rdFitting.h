@@ -88,7 +88,8 @@ void rdFittingInit();
 
 int rdFittingDoFit(uint32 *data, float tSamp, unsigned int nPoints,
                    float toffset, float *uncorrectedLoss,
-                   float *correctedLoss);
+                   float *correctedLoss, float *amplitude, float *background,
+                   float *rmsResidual);
 
 //-----------------------------------------------------------------------------
 // rdFittingProcessRingdown
@@ -97,6 +98,7 @@ int rdFittingDoFit(uint32 *data, float tSamp, unsigned int nPoints,
 //  waveform and send it
 int rdFittingProcessRingdown(uint32 *buffer,
                              float *uncorrectedLoss, float *correctedLoss,
+                             float *amplitude, float *background, float *rmsResidual,
                              RdFittingDebug *rdFittingDebug);
 
 //-----------------------------------------------------------------------------

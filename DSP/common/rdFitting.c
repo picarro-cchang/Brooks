@@ -145,6 +145,28 @@ void rdFittingImprove(uint32 *data,float tSamp,int nSamp,
     }
 }
 
+static void rdFittingFindResidual(uint32 *data,float tSamp,int nSamp,
+        float *a, float *b, float *f, float *rmsResidual)
+{
+    double sum;
+    int i;
+    float x, r;
+
+    // Make nSamp a multiple of 4
+    nSamp -= (nSamp & 0x3);
+    x = 1.0f;
+
+#pragma MUST_ITERATE(64,,4)
+	for (i=0; i<nSamp; i++)
+	{
+		r = (0xFFFF & data[i])-((*a)*x+(*b));
+		sum += r*r;
+        x *= (*f);
+	}
+	*rmsResidual = sqrt(sum/nSamp);
+}
+
+
 //-----------------------------------------------------------------------------
 // rdFittingCorrector
 //-----------------------------------------------------------------------------
@@ -276,7 +298,8 @@ void rdFittingInit()
 //  *correctedLoss.
 
 int rdFittingDoFit(uint32 *data, float tSamp, unsigned int nPoints, float toffset,
-                   float *uncorrectedLoss, float *correctedLoss)
+                   float *uncorrectedLoss, float *correctedLoss,
+                   float *amplitude, float *background, float *rmsResidual)
 {
     float a, b, f, a0, b0, f0, tau1, tau2;
     unsigned int nPoints0 = 300, nRecommended;
@@ -296,6 +319,9 @@ int rdFittingDoFit(uint32 *data, float tSamp, unsigned int nPoints, float toffse
     rdFittingSummer(data,tSamp,nPoints,&a,&b,&f);
     rdFittingImprove(data,tSamp,nPoints,&a,&b,&f,
                      *(rdFittingParams.improvementSteps));
+    *amplitude = a;
+    *background = b;
+    rdFittingFindResidual(data,tSamp,nPoints,&a,&b,&f,rmsResidual);
 
     tau1 = tau2 = -tSamp/log(f);
     tau2 += rdFittingCorrector(data,tSamp,nPoints,tau2,a,b,f,toffset);
@@ -320,10 +346,11 @@ int rdFittingDoFit(uint32 *data, float tSamp, unsigned int nPoints, float toffse
 //-----------------------------------------------------------------------------
 // rdFittingProcessRingdown
 //-----------------------------------------------------------------------------
-// Find the portion of the buffer which contains the rindown
+// Find the portion of the buffer which contains the ringdown
 //  waveform and send it
 int rdFittingProcessRingdown(uint32 *buffer,
                              float *uncorrectedLoss, float *correctedLoss,
+                             float *amplitude, float *background, float *rmsResidual,
                              RdFittingDebug *rdFittingDebug)
 {
     unsigned int startSample = *(rdFittingParams.startSample);
@@ -394,7 +421,8 @@ int rdFittingProcessRingdown(uint32 *buffer,
     }
 
     return rdFittingDoFit(&buffer[sample], tSamp, nPoints, 0.0,
-                          uncorrectedLoss, correctedLoss);
+                          uncorrectedLoss, correctedLoss,
+                          amplitude, background, rmsResidual);
 }
 
 // This is a task function associated with TSK_rdFitting which does the ringdown fitting
@@ -405,6 +433,7 @@ void rdFitting(void)
     unsigned int virtLaserNum;
     float arctanvar1, arctanvar2, dp;
     float uncorrectedLoss, correctedLoss, thetaC;
+    float amplitude, background, rmsResidual;
     DataType data;
     RingdownBufferType *ringdownBuffer;
     RingdownMetadataDoubleType metaDouble;
@@ -441,11 +470,11 @@ void rdFitting(void)
             ringdownEntry->count = rdParams->countAndSubschemeId >> 16;
             ringdownEntry->tunerValue = 0;
             ringdownEntry->pztValue = 0;
-            ringdownEntry->lockerOffset = 0;
+            //ringdownEntry->lockerOffset = 0;
             ringdownEntry->laserUsed = rdParams->injectionSettings;
             ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
             ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
-            ringdownEntry->schemeTable = rdParams->schemeTableAndRow >> 16;
+            ringdownEntry->schemeVersionAndTable = rdParams->schemeTableAndRow >> 16;
             ringdownEntry->schemeRow   = rdParams->schemeTableAndRow & 0xFFFF;
             ringdownEntry->ratio1 = 0;
             ringdownEntry->ratio2 = 0;
@@ -454,14 +483,18 @@ void rdFitting(void)
             ringdownEntry->laserTemperature = rdParams->laserTemperature;
             ringdownEntry->etalonTemperature = rdParams->etalonTemperature;
             ringdownEntry->cavityPressure  = rdParams->cavityPressure;
-            ringdownEntry->lockerError = 0;
+            //ringdownEntry->lockerError = 0;
+            ringdownEntry->fitAmplitude = 0;
+            ringdownEntry->fitBackground = 0;
+            ringdownEntry->fitRmsResidual = 0;
             ringdown_put();
             if (SPECT_CNTRL_RunningState == *(int*)registerAddr(SPECT_CNTRL_STATE_REGISTER)) SEM_postBinary(&SEM_startRdCycle);
         }
         else
         {
             ringdownBuffer = &ringdownBuffers[bufferNum];
-            rdFittingProcessRingdown(ringdownBuffer->ringdownWaveform,&uncorrectedLoss,&correctedLoss,0);
+            rdFittingProcessRingdown(ringdownBuffer->ringdownWaveform,&uncorrectedLoss,&correctedLoss,
+            						 &amplitude, &background, &rmsResidual, 0);
             data.asFloat = uncorrectedLoss;
             writeRegister(RDFITTER_LATEST_LOSS_REGISTER,data);
             // We need to find position of metadata just before ringdown. We have a modified circular
@@ -528,11 +561,11 @@ void rdFitting(void)
             ringdownEntry->count = rdParams->countAndSubschemeId >> 16;
             ringdownEntry->tunerValue = rdParams->tunerAtRingdown;
             ringdownEntry->pztValue = metaDouble.pztValue;
-            ringdownEntry->lockerOffset = metaDouble.lockerOffset;
+            // ringdownEntry->lockerOffset = metaDouble.lockerOffset;
             ringdownEntry->laserUsed = rdParams->injectionSettings;
             ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
             ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
-            ringdownEntry->schemeTable = rdParams->schemeTableAndRow >> 16;
+            ringdownEntry->schemeVersionAndTable = rdParams->schemeTableAndRow >> 16;
             ringdownEntry->schemeRow   = rdParams->schemeTableAndRow & 0xFFFF;
             ringdownEntry->ratio1 = metaDouble.ratio1;
             ringdownEntry->ratio2 = metaDouble.ratio2;
@@ -541,7 +574,10 @@ void rdFitting(void)
             ringdownEntry->laserTemperature = rdParams->laserTemperature;
             ringdownEntry->etalonTemperature = rdParams->etalonTemperature;
             ringdownEntry->cavityPressure  = rdParams->cavityPressure;
-            ringdownEntry->lockerError = metaDouble.lockerError;
+            // ringdownEntry->lockerError = metaDouble.lockerError;
+            ringdownEntry->fitAmplitude = 4.0*amplitude;
+            ringdownEntry->fitBackground = 4.0*background;
+            ringdownEntry->fitRmsResidual = 400.0*rmsResidual;
             // Next line is used to recenter the PZT values per virtual laser
             if (0 != (ringdownEntry->subschemeId & SUBSCHEME_ID_RecenterMask)) {
                 *(s->pztOffsetByVirtualLaser_[virtLaserNum]) += *(s->pztOffsetUpdateFactor_) * (ringdownEntry->tunerValue - 32768);
