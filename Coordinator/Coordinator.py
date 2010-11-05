@@ -270,22 +270,16 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.startStateMachineThread(self.paramTupleList)
 
     def makeFilename(self):
-        try:
-            baseFname = self.config["Files"]["output"]
-            dirName = os.path.dirname(baseFname)
-            if not os.path.isdir(dirName):
-                os.mkdir(dirName)
-        except:
-            baseFname = "CoordinatorResults"
+        (dirName, baseName) = os.path.split(self.config.get("Files", "output", "C:/CoordinatorData/"))
+        if not os.path.isdir(dirName):
+            os.mkdir(dirName)
         self.lastFileTime = time.localtime()
-        if self.analyzerName != None and self.analyzerName not in baseFname:
-            if os.path.basename(baseFname) != "":
-                baseFname += "_%s" % (self.analyzerName,)
+        if self.analyzerName != None and self.analyzerName not in baseName:
+            if baseName != "":
+                baseName = "%s_%s" % (self.analyzerName, baseName)
             else:
-                baseFname += self.analyzerName
-            return time.strftime(baseFname+"_%Y%m%d_%H%M%S.csv",self.lastFileTime)
-        else:
-            return time.strftime(baseFname+"_%Y%m%d_%H%M%S.csv",self.lastFileTime)
+                baseName = self.analyzerName
+        return os.path.join(dirName, time.strftime(baseName+"_%Y%m%d_%H%M%S.csv",self.lastFileTime))
 
     def onLoadSampleDescriptions(self,event):
         try:
