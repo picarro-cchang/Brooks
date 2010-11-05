@@ -285,37 +285,51 @@ class DataLog(object):
             del self.maxDuration[self.LogPath]
             self._CopyToMailboxAndArchive(self.LogPath)
             self.LogPath = ""
-            self.restart = False
 
-        dirName = self.srcDir        
         # check to see if directory exists. If it doesn't create it.
-        if( os.access(dirName, os.F_OK) == False ):
-            os.makedirs(dirName)
+        if( os.access(self.srcDir, os.F_OK) == False ):
+            os.makedirs(self.srcDir)
        
         # Create name and path of new file
-        self.CreateLogTimestamp = timestamp.getTimestamp()  
-        self.CreateLogTime = timestamp.unixTime(self.CreateLogTimestamp)
-        self.LogHour = time.localtime().tm_hour #used to determine when we reached midnight
+        self._SetLogPathAndTimestamp()
+        
+        # If multiple files are to be created in the same second,
+        # wait for 2 seconds before creating the new one to avoid
+        # the race condition
+        if os.access(self.LogPath, os.F_OK):
+            time.sleep(2)
+            self._SetLogPathAndTimestamp()
+                
         if self.useHdf5:
-            self.Fname = "%s-%s-%s.h5" % (self.EngineName,
-                                      time.strftime("%Y%m%d-%H%M%S",time.localtime()),
-                                      self.LogName)
-            self.LogPath = os.path.join(dirName, self.Fname)
+            # Create file and make a new table
             self.fp = openFile(self.LogPath,"w")
             self._MakeTable(DataList)
         else:
-            self.Fname = "%s-%s-%s.dat" % (self.EngineName,
-                                      time.strftime("%Y%m%d-%H%M%S",time.localtime()),
-                                      self.LogName)
-            self.LogPath = os.path.join(dirName, self.Fname)
-            # create file and write header
+            # Create file and write header
             self.fp = file(self.LogPath, "w")
             self._WriteHeader(DataList)
 
         if self.liveArchive:
             CRDS_Archiver.StartLiveArchive(self.ArchiveGroupName, self.LogPath, self.CreateLogTimestamp)
             
-        Log("A new log file (%s) created at %s" % (self.LogPath, time.strftime("%Y%m%d-%H%M%S",time.localtime())))    
+        Log("A new log file (%s) created at %s" % (self.LogPath, self.timeString))    
+        
+    def _SetLogPathAndTimestamp(self):
+        self.CreateLogTimestamp = timestamp.getTimestamp()  
+        self.CreateLogTime = timestamp.unixTime(self.CreateLogTimestamp)
+        self.LogHour = time.localtime().tm_hour #used to determine when we reached midnight
+        self.timeString = time.strftime("%Y%m%d-%H%M%S",time.localtime())
+        if self.useHdf5:
+            self.Fname = "%s-%s-%s.h5" % (self.EngineName,
+                                            self.timeString,
+                                            self.LogName)
+        else:
+            self.Fname = "%s-%s-%s.dat" % (self.EngineName,
+                                            self.timeString,
+                                            self.LogName)
+            
+        print self.Fname
+        self.LogPath = os.path.join(self.srcDir, self.Fname)
         
     def _WriteEntry(self, string):
         self.fp.write((string[:self.COLUMN_WIDTH-1]).ljust(self.COLUMN_WIDTH))
@@ -383,6 +397,7 @@ class DataLog(object):
             if self.LogPath == "" or self.restart:
                 self._Create(DataList)
                 self.oldDataList = DataList
+                self.restart = False
 
             self.DecimationCount = 0
 
