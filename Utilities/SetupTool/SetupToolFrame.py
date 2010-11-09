@@ -3,7 +3,6 @@ import os
 import sys
 import wx
 import wx.lib.agw.aui as aui
-from CustomConfigObj import CustomConfigObj
 from SetupToolPages import *
 
 BACKGROUND_COLOR_1 = "#FFF380"
@@ -43,11 +42,21 @@ class SetupToolFrame(wx.Frame):
         self.pages.append(Page4(self.panel4, -1))
 
         # Menu bar
+        
         self.frameMenubar = wx.MenuBar()
-        menuItem = wx.Menu()
+        
+        self.iSettings = wx.Menu()
+        self.frameMenubar.Append(self.iSettings,"Settings")
+        self.idInterface = wx.NewId()
+        self.iInterface = wx.MenuItem(self.iSettings, self.idInterface, "Switch to Service Mode", "", wx.ITEM_NORMAL)
+        self.iSettings.AppendItem(self.iInterface)
+        self.SetMenuBar(self.frameMenubar)
+        
+        self.iHelp = wx.Menu()
+        self.frameMenubar.Append(self.iHelp,"Help")
         self.idAbout = wx.NewId()
-        menuItem.Append(self.idAbout, "About Picarro Analyzer Setup Options", "", wx.ITEM_NORMAL)
-        self.frameMenubar.Append(menuItem, "Help")
+        self.iAbout = wx.MenuItem(self.iHelp, self.idAbout, "About Setup Tool", "", wx.ITEM_NORMAL)
+        self.iHelp.AppendItem(self.iAbout)
         self.SetMenuBar(self.frameMenubar)
         
         # Overall properties

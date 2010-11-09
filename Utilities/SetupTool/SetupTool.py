@@ -1,10 +1,11 @@
 #!/usr/bin/python
-#
-# File Name: SetupTool.py
-# Purpose: Tool to set up Picarro analyzer
-#
-# File History:
-# 2010-09-27 alex  Created
+"""
+File Name: SetupTool.py
+Purpose: Tool to set up Picarro analyzer
+
+File History:
+2010-09-27 alex  Created
+"""
 
 import sys
 import os
@@ -15,9 +16,9 @@ import time
 from numpy import *
 from matplotlib import pyplot
 from matplotlib.artist import *
-from CustomConfigObj import CustomConfigObj
 from SetupToolFrame import SetupToolFrame
-
+from Host.Common.CustomConfigObj import CustomConfigObj
+                                            
 TRANSLATE_TABLE = {"valveSequencer": "Valve Sequencer MPV", "commandInterface": "Command Interface", 
                    "dataManager": "Data Streaming", "coordinator": "Coordinator"}
 
@@ -43,20 +44,54 @@ class SetupTool(SetupToolFrame):
 
         comPortList = self.setupCP.get("Setup", "comPortList")
         self.coordinatorPortList = self.setupCP.get("Setup", "coordinatorPortList")
+        self.dataColsFile = self.setupCP.get("Setup", "dataColsFile")
         self.modeList = self.setupCP.list_sections()
         self.modeList.remove("Setup")
         SetupToolFrame.__init__(self, comPortList, *args, **kwds)
-
         self.onModeComboBox(None)
-
         self.bindEvents()
+        self.fullInterface = False
 
     def bindEvents(self):
+        self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
+        self.Bind(wx.EVT_MENU, self.onInterfaceMenu, self.iInterface)
         self.Bind(wx.EVT_COMBOBOX, self.onModeComboBox, self.comboBoxMode)
         self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.buttonApply)    
         self.Bind(wx.EVT_BUTTON, self.onExitButton, self.buttonExit)
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
+    def onAboutMenu(self, event):
+        d = wx.MessageDialog(None, "Software tool to customize Picarro G2000 analyzer\n\nCopyright 1999-2010 Picarro Inc. All rights reserved.\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Setup Tool", wx.OK)
+        d.ShowModal()
+        d.Destroy()
+        
+    def onInterfaceMenu(self, event):
+        if not self.fullInterface:
+            d = wx.TextEntryDialog(self, 'Service Mode Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+            password = "picarro"
+            okClicked = d.ShowModal() == wx.ID_OK
+            d.Destroy()
+            if not okClicked:
+                return
+            elif d.GetValue() != password:
+                d = wx.MessageDialog(None, "Password incorrect, action cancelled.", "Incorrect Password", wx.OK|wx.ICON_ERROR)
+                d.ShowModal()
+                d.Destroy()
+                return
+            self.fullInterface = True
+        else:
+            self.fullInterface = False
+        self.updateInterface()
+
+    def updateInterface(self):
+        """ Update the GUI based on self.fullInterface."""
+        if self.fullInterface:
+            self.iSettings.SetLabel(self.idInterface, "Switch to User Mode")
+            self.pages[0].setFullInterface(True)
+        else:
+            self.iSettings.SetLabel(self.idInterface, "Switch to Service Mode")
+            self.pages[0].setFullInterface(False)
+            
     def onApplyButton(self, event):
         page = self.nb.GetSelection()
         self.pages[page].apply()
@@ -79,6 +114,9 @@ class SetupTool(SetupToolFrame):
                 iniName = self.setupCP[self.mode][app]
                 iniPath = self.getIniPath(app, iniName)
                 iniList.append(iniPath)
+            if page == 0:
+                # Add data cols file for data logger page
+                iniList.append(self.dataColsFile)
             self.pages[page].setIni(iniList)
             
             comment = ""

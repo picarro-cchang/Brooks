@@ -2,8 +2,14 @@ import os
 import sys
 import wx
 import wx.lib.agw.aui as aui
-from CustomConfigObj import CustomConfigObj
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common import CmdFIFO
+from Host.Common.SharedTypes import RPC_PORT_QUICK_GUI
 
+CRDS_QuickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUICK_GUI,
+                                            "SetupTool",
+                                            IsDontCareConnection = False)
+                                            
 PAGE1_LEFT_MARGIN = 25
 PAGE2_LEFT_MARGIN = 100
 PAGE3_LEFT_MARGIN = 100
@@ -17,11 +23,32 @@ class Page1(wx.Panel):
         self.targetIni = None
         self.labelTitle = wx.StaticText(self, -1, "Data Logger Setup", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        self.buttonGet = wx.Button(self, -1, "Get Complete Data Columns")                  
+        self.buttonGet.SetMinSize((200, 20))
+        self.buttonGet.SetBackgroundColour(wx.Colour(237, 228, 199))
+        self.buttonGet.Enable(False)
         self.comment = wx.TextCtrl(self, -1, "", size = COMMENT_BOX_SIZE, style = wx.TRANSPARENT_WINDOW|wx.TE_READONLY|wx.TE_MULTILINE|wx.NO_BORDER|wx.TE_RICH|wx.ALIGN_LEFT)
         self.comment.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.comment.SetForegroundColour("red")
         self.comment.Enable(False)
 
+    def onGetButton(self, event):
+        dataKeyDict = CRDS_QuickGui.getDataKeys()
+        try:
+            if not os.path.isfile(self.dataColsFile):
+                fd = open(self.dataColsFile, "wb")
+                fd.close()
+            cp = CustomConfigObj(self.dataColsFile)
+            cp["DataCols"] = {}
+            for source in dataKeyDict:
+                dataKeys = dataKeyDict[source]
+                dataKeys.sort()
+                cp["DataCols"][source] = dataKeys
+            cp.write()
+        except Exception, err:
+            print "%r" % err
+            return
+        
     def __do_layout(self):
         sizer1 = wx.BoxSizer(wx.VERTICAL)
         gridSizer1 = wx.FlexGridSizer(-1, 2)
@@ -36,6 +63,7 @@ class Page1(wx.Panel):
         sizer2.Add(sizer1, 0, wx.ALIGN_CENTER_HORIZONTAL)
         sizer2.Add(gridSizer1, 0)
         sizer2.Add(self.comment, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
+        sizer2.Add(self.buttonGet, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
         sizer3.Add(sizer2, 0, wx.LEFT, PAGE1_LEFT_MARGIN)
         self.SetSizer(sizer3)
         sizer3.Fit(self)
@@ -55,11 +83,16 @@ class Page1(wx.Panel):
             return
         self.__clear_layout()
         self.targetIni = iniList[0]
+        self.dataColsFile = iniList[1]
         try:
             cp = CustomConfigObj(self.targetIni, list_values = True)
         except Exception, err:
-            print err
+            print "%r" % err
             return
+        try:
+            dataColsCp = CustomConfigObj(self.dataColsFile, list_values = True)
+        except Exception, err:
+            print "%r" % err
         self.dataCols = []
         self.labelData = []
         self.dataColumnBox = []
@@ -68,7 +101,12 @@ class Page1(wx.Panel):
         self.dataLogSections = cp.list_sections()
         self.numDataLogSections = len(self.dataLogSections)
         for dataLog in self.dataLogSections:
-            dataList = cp.get(dataLog, "datalist")
+            dataSource = cp.get(dataLog, "sourcescript")
+            try:
+                dataList = dataColsCp.get("DataCols", dataSource)
+            except Exception, err:
+                print "%r" % err
+                dataList = cp.get(dataLog, "datalist")
             self.dataCols.append(dataList)
             self.labelData.append(wx.StaticText(self, -1, "Data Columns (%s)" % dataLog, style=wx.ALIGN_LEFT))
             self.labelData[-1].SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
@@ -77,12 +115,13 @@ class Page1(wx.Panel):
             self.labelAddData[-1].SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.textCtrlAddData.append(wx.TextCtrl(self, -1, size = (230,-1)))
         self.__do_layout()
+        self.Bind(wx.EVT_BUTTON, self.onGetButton, self.buttonGet)
            
     def showCurValues(self):
         try:
             cp = CustomConfigObj(self.targetIni, list_values = True)
         except Exception, err:
-            print err
+            print "%r" % err
             return
         for idx in range(self.numDataLogSections):
             curDataList = cp.get(self.dataLogSections[idx], "datalist", "")
@@ -92,9 +131,14 @@ class Page1(wx.Panel):
         try:
             cp = CustomConfigObj(self.targetIni)
         except Exception, err:
-            print err
+            print "%r" % err
             return
+        try:
+            dataColsCp = CustomConfigObj(self.dataColsFile)
+        except Exception, err:
+            print "%r" % err
         for idx in range(self.numDataLogSections):
+            dataLog = self.dataLogSections[idx]
             newData = self.textCtrlAddData[idx].GetValue()
             checkNewData = False
             if (newData != "") and (newData not in self.dataCols[idx]):
@@ -108,10 +152,21 @@ class Page1(wx.Panel):
                     checkedList += "%s, " % self.dataCols[idx][i]
                 if checkNewData:
                     checkedList += "%s, " % self.dataCols[idx][-1]
-                cp.set(self.dataLogSections[idx], "datalist", checkedList[:-2])
+                cp.set(dataLog, "datalist", checkedList[:-2])
                 cp.write()
             except Exception, err:
-                print err
+                print "%r" % err
+            # Update the complete data column list
+            dataSource = cp.get(dataLog, "sourcescript")
+            try:
+                dataList = dataColsCp.get("DataCols", dataSource)
+                if checkNewData:
+                    dataList += ", %s" % self.dataCols[idx][-1]
+                dataColsCp.set("DataCols", dataSource, dataList)
+                dataColsCp.write()
+            except Exception, err:
+                print "%r" % err
+                
         self.showCurValues()
         
     def enable(self, en):
@@ -126,6 +181,17 @@ class Page1(wx.Panel):
         else:
             self.comment.Show()
             
+    # Special functions for Page1
+    def setFullInterface(self, full):
+        if full:
+            try:
+                CRDS_QuickGui.getDataKeys()
+                self.buttonGet.Enable(True)
+            except:
+                self.buttonGet.Enable(False)
+        else:
+            self.buttonGet.Enable(False)
+        
 class Page2(wx.Panel):
     def __init__(self, comPortList, coordinatorPortList, *args, **kwds):
         wx.Panel.__init__(self, *args, **kwds)
@@ -428,7 +494,7 @@ class Page3(wx.Panel):
         try:
             cp = CustomConfigObj(self.targetIni)
         except Exception, err:
-            print err
+            print "%r" % err
             return
             
         try:
@@ -436,7 +502,7 @@ class Page3(wx.Panel):
             if cp.getboolean("EMAIL", "UseSSL"):
                 setVal = "YES"
         except Exception, err:
-            print err
+            print "%r" % err
             setVal = ""
         self.comboBoxList[0].SetValue(setVal)
 
@@ -445,7 +511,7 @@ class Page3(wx.Panel):
             if cp.getboolean("EMAIL", "UseAuthentication"):
                 setVal = "YES"
         except Exception, err:
-            print err
+            print "%r" % err
             setVal = ""
         self.comboBoxList[1].SetValue(setVal)
         self.onAuthComboBox(None)
@@ -461,7 +527,7 @@ class Page3(wx.Panel):
         try:
             cp = CustomConfigObj(self.targetIni)
         except Exception, err:
-            print err
+            print "%r" % err
             return
             
         try:
@@ -481,7 +547,7 @@ class Page3(wx.Panel):
             cp["EMAIL"]["Subject"] = self.textCtrlList[5].GetValue()
             cp.write()
         except Exception, err:
-            print err
+            print "%r" % err
 
     def enable(self, en):
         self.en = en
@@ -546,13 +612,13 @@ class Page4(wx.Panel):
         try:
             cp = CustomConfigObj(self.targetIni)
         except Exception, err:
-            print err
+            print "%r" % err
             return
             
         try:
             setVal = cp.get("Graph", "NumGraphs")
         except Exception, err:
-            print err
+            print "%r" % err
             setVal = ""
         self.comboBoxList[0].SetValue(setVal)
         
@@ -560,14 +626,14 @@ class Page4(wx.Panel):
         try:
             cp = CustomConfigObj(self.targetIni)
         except Exception, err:
-            print err
+            print "%r" % err
             return
             
         try:
             cp.set("Graph", "NumGraphs", self.comboBoxList[0].GetValue())
             cp.write()
         except Exception, err:
-            print err
+            print "%r" % err
             
     def enable(self, en):
         for i in range(len(self.keyLabelList)):

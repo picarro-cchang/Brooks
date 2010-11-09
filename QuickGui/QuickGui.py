@@ -1344,11 +1344,14 @@ class QuickGui(wx.Frame):
         self.rpcServer.register_function(self.setTitle)
         self.rpcServer.register_function(self.setLineMarkerColor)
         self.rpcServer.register_function(self.getLineMarkerColor)
+        self.rpcServer.register_function(self.getDataKeys)
         # Start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.Destroy)
         self.rpcThread.start()
     
+    #
     # RPC functions
+    #
     def setTitle(self, newTitle):
         self.titleLabel.SetLabel(newTitle)
         return "OK"
@@ -1373,7 +1376,21 @@ class QuickGui(wx.Frame):
     def getLineMarkerColor(self):
         """Get the graph line and marker color."""
         return self.lineMarkerColor
+        
+    def getDataKeys(self, source=None):
+        """Get all the data keys (column titles) for a given source or all the sources"""
+        if source != None:
+            return self.dataStore.getKeys(source)
+        else:
+            sources = self.getSourcesbyMode()
+            retDict = {}
+            for source in sources:
+                retDict[source] = self.dataStore.getKeys(source)
+            return retDict
+        
+    #
     # End of RPC functions
+    #
     
     def loadConfig(self,configFile):
         config = CustomConfigObj(configFile)
