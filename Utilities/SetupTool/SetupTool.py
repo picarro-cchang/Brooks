@@ -19,14 +19,15 @@ from matplotlib.artist import *
 from SetupToolFrame import SetupToolFrame
 from Host.Common.CustomConfigObj import CustomConfigObj
                                             
-TRANSLATE_TABLE = {"valveSequencer": "Valve Sequencer MPV", "commandInterface": "Command Interface", 
-                   "dataManager": "Data Streaming", "coordinator": "Coordinator"}
+TRANSLATE_TABLE = {"dataLogger": "Data Logger", "archiver": "Archiver", "valveSequencer": "Valve Sequencer MPV", 
+                   "commandInterface": "Command Interface", "dataManager": "Data Streaming", "coordinator": "Coordinator"}
 
 class SetupTool(SetupToolFrame):
     def __init__(self, setupToolIni, *args, **kwds):       
         self.setupCP = CustomConfigObj(setupToolIni, list_values = True)
         self.appConfigPath = self.setupCP.get("Setup", "appConfigPath")
         
+        archiverDir = os.path.join(self.appConfigPath, "Archiver")
         dataLoggerDir = os.path.join(self.appConfigPath, "DataLogger")
         dataMgrDir = os.path.join(self.appConfigPath, "DataManager")
         cmdDir = os.path.join(self.appConfigPath, "CommandInterface")
@@ -35,9 +36,9 @@ class SetupTool(SetupToolFrame):
         quickGuiDir = os.path.join(self.appConfigPath, "QuickGui")
         coordinatorDir = os.path.join(self.appConfigPath, "Coordinator")
         
-        self.pageAppDict = {0: ["dataLogger"], 1: ["dataManager", "valveSequencer", "commandInterface", "coordinator"],
+        self.pageAppDict = {0: ["dataLogger", "archiver"], 1: ["dataManager", "valveSequencer", "commandInterface", "coordinator"],
                             2: ["remoteAccess"], 3:["quickGui"]}
-        self.appIniDirDict = {"dataLogger": dataLoggerDir, "dataManager": dataMgrDir,
+        self.appIniDirDict = {"archiver": archiverDir, "dataLogger": dataLoggerDir, "dataManager": dataMgrDir,
                               "valveSequencer": valveDir, "commandInterface": cmdDir,
                               "remoteAccess": remoteAccessDir, "quickGui": quickGuiDir,
                               "coordinator": coordinatorDir}
@@ -94,7 +95,11 @@ class SetupTool(SetupToolFrame):
             
     def onApplyButton(self, event):
         page = self.nb.GetSelection()
-        self.pages[page].apply()
+        response = self.pages[page].apply()
+        if response:
+            d = wx.MessageDialog(None, "Changes on \"%s\" page were successfully applied.   " % self.nb.GetPageText(page), "Applied", wx.OK|wx.ICON_INFORMATION)
+            d.ShowModal()
+            d.Destroy()
             
     def onModeComboBox(self, event):
         if event:
@@ -102,47 +107,59 @@ class SetupTool(SetupToolFrame):
         else:
             eventObj = self.comboBoxMode
         self.mode = eventObj.GetValue()
-        self.SetTitle("Picarro Analyzer Setup Options (%s)" % self.mode)
+        self.SetTitle("Picarro Analyzer Setup Tool (%s)" % self.mode)
         self.setIni()
         for page in range(len(self.pages)):
             self.pages[page].showCurValues()
  
     def setIni(self):
         for page in range(len(self.pages)):
+            pageObj = self.pages[page]
             iniList = []
-            for app in self.pageAppDict[page]:
+            appList = self.pageAppDict[page]
+            for app in appList:
                 iniName = self.setupCP[self.mode][app]
                 iniPath = self.getIniPath(app, iniName)
                 iniList.append(iniPath)
             if page == 0:
                 # Add data cols file for data logger page
                 iniList.append(self.dataColsFile)
-            self.pages[page].setIni(iniList)
+            pageObj.setIni(iniList)
             
             comment = ""
-            for app in self.pageAppDict[page]:
+            for app in appList:
                 iniName = self.setupCP[self.mode][app]
                 if iniName in self.modeList:
-                    if page == 1:
-                        if app != "coordinator":
-                            self.pages[page].enable(self.pageAppDict[page].index(app), False)
+                    # Configurations depend on other modes
+                    if page == 0:
+                        if app == "dataLogger":
+                            pageObj.enable([0,1,2], False)
                         else:
-                            for i in range(len(self.coordinatorPortList)):
-                                self.pages[page].enable(3+i, False)
+                            pageObj.enable([3], False)
+                        comment += "* %s controlled by %s Mode\n" % (TRANSLATE_TABLE[app], iniName)
+                    elif page == 1:
+                        if app != "coordinator":
+                            pageObj.enable([appList.index(app)], False)
+                        else:
+                            pageObj.enable(range(3, 3+len(self.coordinatorPortList)), False)
                         comment += "* %s controlled by %s Mode\n" % (TRANSLATE_TABLE[app], iniName)
                     else:
-                        self.pages[page].enable(False)
+                        pageObj.enable(False)
                         comment = "* Controlled by %s Mode" % iniName
                 else:
-                    if page == 1:
-                        if app != "coordinator":
-                            self.pages[page].enable(self.pageAppDict[page].index(app), True)
+                    if page == 0:
+                        if app == "dataLogger":
+                            pageObj.enable([0,1,2], True)
                         else:
-                            for i in range(len(self.coordinatorPortList)):
-                                self.pages[page].enable(3+i, True)
+                            pageObj.enable([3], True)
+                    elif page == 1:
+                        if app != "coordinator":
+                            pageObj.enable([appList.index(app)], True)
+                        else:
+                            pageObj.enable(range(3, 3+len(self.coordinatorPortList)), True)
                     else:
-                        self.pages[page].enable(True)
-            self.pages[page].setComment(comment)
+                        pageObj.enable(True)
+            pageObj.setComment(comment)
             
     def getIniPath(self, app, iniName):
         if iniName in self.modeList:

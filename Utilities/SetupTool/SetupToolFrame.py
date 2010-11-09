@@ -27,11 +27,14 @@ class SetupToolFrame(wx.Frame):
         self.panel4.SetBackgroundColour(BACKGROUND_COLOR_4)
         self.panelBottom.SetBackgroundColour(BACKGROUND_COLOR_BOTTOM)
         
-        self.nb = aui.AuiNotebook(self, -1)
+        self.nb = aui.AuiNotebook(self, -1, agwStyle=aui.AUI_NB_CLOSE_ON_ALL_TABS|aui.AUI_NB_SCROLL_BUTTONS)
+        #self.nb = aui.AuiNotebook(self, -1)
         self.nb.AddPage(self.panel1, "Data Logger")
         self.nb.AddPage(self.panel2, "Port Manager")
         self.nb.AddPage(self.panel3, "Data Delivery")
         self.nb.AddPage(self.panel4, "GUI Properties")
+        for pageIdx in range(self.nb.GetPageCount()):
+            self.nb.SetCloseButton(pageIdx, False)
         self.nbManager = self.nb.GetAuiManager()
 
         # Pages
@@ -60,7 +63,7 @@ class SetupToolFrame(wx.Frame):
         self.SetMenuBar(self.frameMenubar)
         
         # Overall properties
-        self.SetTitle("Picarro Analyzer Setup Options")
+        self.SetTitle("Picarro Analyzer Setup Tool")
         self.labelFooter = wx.StaticText(self.panelBottom, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
 
         # Mode selection
@@ -82,7 +85,7 @@ class SetupToolFrame(wx.Frame):
   
     def doLayout(self):
         sizerToplevel = wx.BoxSizer(wx.VERTICAL)
-        sizerToplevel.SetMinSize((650,550))
+        sizerToplevel.SetMinSize((650,650))
         
         # Add notebook
         sizerToplevel.Add(self.nb, 1, wx.EXPAND, 0)
