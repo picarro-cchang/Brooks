@@ -1035,11 +1035,11 @@ class DataManager(object):
         self.LatestInstMgrStatus = obj.status
 
     def _HandleState_INIT(self):
-        try:
-            self.RPC_StartInstMgrListener()
-            print "Started instrument manager status listener"
-        except:
-            pass
+        #try:
+        #    self.RPC_StartInstMgrListener()
+        #    print "Started instrument manager status listener"
+        #except:
+        #    pass
         self.ReInitRequested = False
         try:
             self.InitCount += 1

@@ -68,9 +68,11 @@ _CONFIG_NAME = "DataLogger.ini"
 _PRIVATE_CONFIG_NAME = "PrivateLog.ini"
 _USER_CONFIG_NAME = "UserLog.ini"
 
+import datetime
 import sys
 import os
 import Queue
+import re
 import stat
 import time
 import threading
@@ -203,8 +205,18 @@ class DataLog(object):
             CRDS_Archiver.StopLiveArchive(self.ArchiveGroupName, self.LogPath)
                 
     def CopyToMailboxAndArchive(self, srcPath=""):
-        if not srcPath: self.Close()
-        self.queue.put(("copyToMailboxAndArchive",[srcPath]))
+        if not srcPath: 
+            self.Close()
+            ts = self.CreateLogTimestamp
+        else:
+            # Try to extract timestamp from the file name
+            # The date and time should be two consecutive fields, one with eight digits and the next with six
+            m = re.compile("-(\d{8}-\d{6})-").search(os.path.split(srcPath)[1])
+            if m:
+                ts = timestamp.unixTimeToTimestamp(time.mktime(time.strptime(m.group(1),"%Y%m%d-%H%M%S")))
+            else:
+                ts = None
+        self.queue.put(("copyToMailboxAndArchive",[srcPath,ts]))
         
     def LoadConfig(self, ConfigParser, basePath, LogName):
         self.LogName = LogName
@@ -237,12 +249,15 @@ class DataLog(object):
                     self.CopyToMailboxAndArchive(path)
                     
 
-    def _CopyToMailboxAndArchive(self, srcPath=""):
+    def _CopyToMailboxAndArchive(self, srcPath="", ts=None):
         if srcPath == "":
             if self.LogPath != "":
                 srcPath = self.LogPath
             else:
                 return
+        if ts is None:
+            ts = timestamp.getTimestamp()
+            
         startTime = TimeStamp()
         # If Mailbox option is enabled:
         # Make an additional copy and move 2 separate copies to archive and mailbox locations
@@ -256,7 +271,7 @@ class DataLog(object):
             srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
             shutil.copy2(srcPath, srcPathCopy)
             # if mailbox enabled, copy file to mailbox directory first
-            CRDS_Archiver.ArchiveFile(self.Mbox.GroupName, srcPathCopy, True, self.CreateLogTimestamp)
+            CRDS_Archiver.ArchiveFile(self.Mbox.GroupName, srcPathCopy, True, ts)
         if self.BackupGroupName != None and self.backupEnabled:
             srcPathCopy = os.path.dirname(srcPath) + '/backup_copy'
             if not os.path.exists(srcPathCopy):
@@ -264,11 +279,11 @@ class DataLog(object):
             srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
             shutil.copy2(srcPath, srcPathCopy)
             # if mailbox enabled, copy file to mailbox directory first
-            CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True, self.CreateLogTimestamp)
+            CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True, ts)
         # Archive only non-live archives
         if self.ArchiveGroupName:
             if not self.liveArchive:
-                CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True, self.CreateLogTimestamp)
+                CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True, ts)
             else:
                 deleteFile(srcPath)
         Log("Datalog archive processing %s took %s seconds" % (os.path.basename(srcPath),TimeStamp()-startTime))   
@@ -317,8 +332,8 @@ class DataLog(object):
     def _SetLogPathAndTimestamp(self):
         self.CreateLogTimestamp = timestamp.getTimestamp()  
         self.CreateLogTime = timestamp.unixTime(self.CreateLogTimestamp)
-        self.LogHour = time.localtime().tm_hour #used to determine when we reached midnight
-        self.timeString = time.strftime("%Y%m%d-%H%M%S",time.localtime())
+        self.LogHour = time.localtime(self.CreateLogTime).tm_hour #used to determine when we reached midnight
+        self.timeString = time.strftime("%Y%m%d-%H%M%S",time.localtime(self.CreateLogTime))
         if self.useHdf5:
             self.Fname = "%s-%s-%s.h5" % (self.EngineName,
                                             self.timeString,
@@ -327,9 +342,7 @@ class DataLog(object):
             self.Fname = "%s-%s-%s.dat" % (self.EngineName,
                                             self.timeString,
                                             self.LogName)
-            
-        print self.Fname
-        self.LogPath = os.path.join(self.srcDir, self.Fname)
+        self.LogPath = os.path.abspath(os.path.join(self.srcDir, self.Fname))
         
     def _WriteEntry(self, string):
         self.fp.write((string[:self.COLUMN_WIDTH-1]).ljust(self.COLUMN_WIDTH))

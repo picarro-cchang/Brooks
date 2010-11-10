@@ -59,7 +59,7 @@ from Host.Common import AppStatus
 from Host.Common import SharedTypes
 from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
                                     RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_QUICK_GUI, \
-                                    RPC_PORT_SUPERVISOR
+                                    RPC_PORT_SUPERVISOR, RPC_PORT_ARCHIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
@@ -655,13 +655,14 @@ class AlarmInterface(object):
 
     def getStatus(self):
         return self.statusWord
+    
 class DataLoggerInterface(object):
-    """Interface to the data logger RPC"""
+    """Interface to the data logger and archiver RPC"""
     def __init__(self,config):
         self.config = config
         self.loadConfig()
+        self.archiverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER, ClientName = "QuickGui")
         self.dataLoggerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "QuickGui")
-
         self.exception = None
         self.rpcInProgress = False
         self.userLogDict = {}
@@ -685,12 +686,20 @@ class DataLoggerInterface(object):
             stat,privateLogs = self.dataLoggerRpc.DATALOGGER_getPrivateLogsRpc()
             for i in userLogs:
                 en = self.dataLoggerRpc.DATALOGGER_logEnabledRpc(i)
-                fname = self.dataLoggerRpc.DATALOGGER_getFilenameRpc(i)
-                userLogDict[i] = (en,fname)
+                if en:
+                    fname = self.dataLoggerRpc.DATALOGGER_getFilenameRpc(i)
+                    live, fname = self.archiverRpc.GetLiveArchiveFileName(i,fname)
+                    userLogDict[i] = (True,live,fname)                    
+                else:
+                    userLogDict[i] = (False,False,'')
             for i in privateLogs:
                 en = self.dataLoggerRpc.DATALOGGER_logEnabledRpc(i)
-                fname = self.dataLoggerRpc.DATALOGGER_getFilenameRpc(i)
-                privateLogDict[i] = (en,fname)
+                if en:
+                    fname = self.dataLoggerRpc.DATALOGGER_getFilenameRpc(i)
+                    live, fname = self.archiverRpc.GetLiveArchiveFileName(i,fname)
+                    privateLogDict[i] = (True,live,fname)                    
+                else:
+                    privateLogDict[i] = (False,False,'')
         except Exception,e:
             self.exception = e
         self.rpcInProgress = False
@@ -2044,11 +2053,12 @@ class QuickGui(wx.Frame):
         if self.dataLoggerInterface.userLogDict:
             logFiles = []
             for i in self.dataLoggerInterface.userLogDict:
-                en,fname = self.dataLoggerInterface.userLogDict[i]
+                en,live,fname = self.dataLoggerInterface.userLogDict[i]
                 userLogEnabled = userLogEnabled or en
-                if len(fname) > 0:
+                if en and len(fname) > 0:
                     #logFiles.append("%s" % (os.path.split(fname)[-1],))
-                    logFiles.append("%s" % os.path.abspath(fname))
+                    logFiles.append("[%s]%s" % (i," - Live" if live else ""))
+                    logFiles.append("%s" % fname)
             if len(logFiles) > 0 and userLogEnabled:        
                 logFiles = "\n".join(logFiles)
             else:

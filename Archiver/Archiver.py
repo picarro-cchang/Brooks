@@ -640,6 +640,7 @@ class Archiver(object):
         self.rpcServer.register_function(self.RPC_RefreshGroupStats, NameSlice = 4)
         self.rpcServer.register_function(self.RPC_GetFileNames, NameSlice = 4)
         self.rpcServer.register_function(self.RPC_DoesFileExist, NameSlice = 4)
+        self.rpcServer.register_function(self.RPC_GetLiveArchiveFileName, NameSlice = 4)
         self.rpcServer.serve_forever()
 
     def LoadConfig(self,filename):
@@ -658,14 +659,23 @@ class Archiver(object):
 
     def RPC_StartLiveArchive(self, groupName, sourceFile, timestamp = None):
         """Create a 'live' archive of the source file in the specified archive group"""
+        sourceFile = os.path.abspath(sourceFile)
         group = self.storageGroups[groupName]
         if not os.path.exists(sourceFile):
             raise ValueError,"Source file %s does not exist" % (sourceFile,)
         group.cmdQueue.put(("startLiveArchive",(sourceFile, timestamp)))
         return "startLiveArchive command queued for group %s" % (groupName,)
-
+    
+    def RPC_GetLiveArchiveFileName(self,groupName,sourceFile):
+        try:
+            group = self.storageGroups[groupName]
+            return (True,os.path.abspath(group.liveArchiveDict[sourceFile].destPathName))
+        except:
+            return (False,sourceFile)
+        
     def RPC_StopLiveArchive(self, groupName, sourceFile):
         """Stop a previously started 'live' archive of the source file in the specified archive group"""
+        sourceFile = os.path.abspath(sourceFile)
         group = self.storageGroups[groupName]
         group.cmdQueue.put(("stopLiveArchive",(sourceFile,)))
         return "stopLiveArchive command queued for group %s" % (groupName,)
@@ -674,6 +684,7 @@ class Archiver(object):
         """Archive the file SourceFile according to the rules of the storage group groupName. If removeOriginal
         is true, the source file is deleted when archival is done. The archive time is the current time, unless
         an explicit timestamp is specified."""
+        sourceFile = os.path.abspath(sourceFile)
         group = self.storageGroups[groupName]
         if not os.path.exists(sourceFile):
             raise ValueError,"Source file %s does not exist" % (sourceFile,)

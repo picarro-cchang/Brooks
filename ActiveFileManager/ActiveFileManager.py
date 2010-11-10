@@ -223,16 +223,25 @@ class ActiveFile(object):
         self.handle.createGroup(self.baseGroup,"dataManager")
         return self
         
-    def getSensorDataTable(self):    
-        return self.handle.getNode(self.baseGroup,"sensorData")
+    def getSensorDataTable(self):
+        try:    
+            return self.handle.getNode(self.baseGroup,"sensorData")
+        except tables.exceptions.NoSuchNodeError:
+            return None
         
-    def getRdDataTable(self):    
-        return self.handle.getNode(self.baseGroup,"rdData")
+    def getRdDataTable(self):
+        try:    
+            return self.handle.getNode(self.baseGroup,"rdData")
+        except tables.exceptions.NoSuchNodeError:
+            return None
         
     def getDmDataTable(self,mode,source):
-        modeGroup = getattr(self.handle.getNode(self.baseGroup,"dataManager"),mode)
-        return getattr(modeGroup,source)
-    
+        try:
+            modeGroup = getattr(self.handle.getNode(self.baseGroup,"dataManager"),mode)
+            return getattr(modeGroup,source)
+        except tables.exceptions.NoSuchNodeError:
+            return None
+        
     def retrieveOrMakeDmDataTable(self,mode,source,colNames):
         try:
             modeGroup = getattr(self.handle.getNode(self.baseGroup,"dataManager"),mode)
@@ -272,7 +281,7 @@ class ActiveFile(object):
             if name in ['time']:  
                 descr[name] = tables.Float64Col()
             elif name in ['timestamp']:  
-                descr[name] = tables.UInt64Col()
+                descr[name] = tables.Int64Col()
             else: 
                 descr[name] = tables.Float32Col()
         return descr
@@ -301,19 +310,31 @@ class ActiveFile(object):
         
     def getRdData(self,tstart,tend,varList):
         """Get ringdown data lying in the specified time range"""
-        selected = self.getRdDataTable().readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend))
-        return recArrayExtract(selected,varList)
+        table = self.getRdDataTable()
+        if table is not None:
+            selected = table.readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend))
+            return recArrayExtract(selected,varList)
+        else:
+            return None
 
     def getSensorData(self,tstart,tend,streamName):
         """Get sensor data lying in the specified time range."""
         index = getattr(interface,streamName)
-        selected = self.getSensorDataTable().readWhere('(timestamp >= %d) & (timestamp < %d) & (streamNum == %d)' % (tstart,tend,index))
-        return recArrayExtract(selected,["timestamp",("value",streamName[7:])])
+        table = self.getSensorDataTable()
+        if table is not None:
+            selected = table.readWhere('(timestamp >= %d) & (timestamp < %d) & (streamNum == %d)' % (tstart,tend,index))
+            return recArrayExtract(selected,["timestamp",("value",streamName[7:])])
+        else:
+            return None
 
     def getDmData(self,mode,source,tstart,tend,varList):
         """Get data manager data from specified mode and source lying in the specified time range"""
-        selected = self.getDmDataTable(mode,source).readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend))
-        return recArrayExtract(selected,varList)
+        table = self.getDmDataTable(mode,source)
+        if table is not None:
+            selected = table.readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend))
+            return recArrayExtract(selected,varList)
+        else:
+            return None
         
 class ActiveFileManager(object):
     def __init__(self,configFile):
@@ -439,7 +460,9 @@ class ActiveFileManager(object):
             if tend <= baseTime: continue
             a = self.activeFiles[baseTime]
             if tstart >= a.stopTime: continue
-            results.append(a.getRdData(tstart,tend,varList))
+            d = a.getRdData(tstart,tend,varList)
+            if d is not None:
+                results.append(d)
             if time.clock()-t > 0.5: t = yield True # Indicate not yet done
         if results:
             self.rpcResultQueue.put(numpy.concatenate(results))
@@ -454,7 +477,9 @@ class ActiveFileManager(object):
             if tend <= baseTime: continue
             a = self.activeFiles[baseTime]
             if tstart >= a.stopTime: continue
-            results.append(a.getSensorData(tstart,tend,streamName))
+            d = a.getSensorData(tstart,tend,streamName)
+            if d is not None: 
+                results.append(d)
             if time.clock()-t > 0.5: t = yield True # Indicate not yet done
         if results:
             self.rpcResultQueue.put(numpy.concatenate(results))
@@ -476,7 +501,9 @@ class ActiveFileManager(object):
             #  correct modes or sources available.
             # We only report an error if there are no results
             try:
-                results.append(a.getDmData(mode,source,tstart,tend,varList))
+                d = a.getDmData(mode,source,tstart,tend,varList)
+                if d is not None:
+                    results.append(d)
                 if time.clock()-t > 0.5: t = yield True # Indicate not yet done
             except AttributeError,e:
                 latestException = e
@@ -553,7 +580,10 @@ class ActiveFileManager(object):
                     #  exist
                     dmDataTable = a.retrieveOrMakeDmDataTable(mode,source,colNameSet)
                     if self.dmDataTable is not None and self.dmDataTable != dmDataTable:
-                        self.dmDataTable.flush()
+                        try:
+                            self.dmDataTable.flush()
+                        except:
+                            pass
                     self.dmDataTable = dmDataTable
                     row = self.dmDataTable.row
                     for name in colNameSet:
