@@ -1178,6 +1178,7 @@ class QuickGui(wx.Frame):
     def __init__(self, configFile):
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700), 
                           style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
+        self.commandQueue = Queue.Queue()                          
         self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
         self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
         self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = APP_NAME)
@@ -1248,7 +1249,6 @@ class QuickGui(wx.Frame):
         self.defaultMarkerSize = self.config.getfloat("Graph","MarkerSize")
         self.lineMarkerColor = self.defaultLineMarkerColor
         self.restartUserLog = False
-
         # Collect instrument status setpoint and tolerance
         try:
             self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
@@ -1343,6 +1343,9 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_PAINT,self.OnPaint)
         
         self.startServer()
+        
+    def enqueueViewerCommand(self, command, *args, **kwargs):
+        self.commandQueue.put((command, args, kwargs))
 
     def startServer(self):
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_QUICK_GUI),
@@ -1362,9 +1365,9 @@ class QuickGui(wx.Frame):
     # RPC functions
     #
     def setTitle(self, newTitle):
-        self.titleLabel.SetLabel(newTitle)
+        self.enqueueViewerCommand(self._setTitle,newTitle)
         return "OK"
-
+        
     def setLineMarkerColor(self, lineMarkerColor=None, colorTime=None):
         """Set the graph line and marker color. The default value is defined in INI file"""
         if lineMarkerColor != None:
@@ -1441,23 +1444,23 @@ class QuickGui(wx.Frame):
         return font, foregroundColour, backgroundColour
 
     def layoutFrame(self):
-        panel = wx.Panel(parent=self,id=-1)
+        self.mainPanel = wx.Panel(parent=self,id=-1)
         font,fgColour,bgColour = self.getFontFromIni('Panel')
-        panel.SetBackgroundColour(bgColour)
-        panel.SetForegroundColour(fgColour)
+        self.mainPanel.SetBackgroundColour(bgColour)
+        self.mainPanel.SetForegroundColour(fgColour)
         # Define the title band
-        self.titleLabel = wx.StaticText(parent=panel, id=-1, label=getInnerStr(self.config.get('Title','String')), style=wx.ALIGN_CENTER)
+        self.titleLabel = wx.StaticText(parent=self.mainPanel, id=-1, label=getInnerStr(self.config.get('Title','String')), style=wx.ALIGN_CENTER)
         setItemFont(self.titleLabel,self.getFontFromIni('Title'))
 
         # Define the footer band
-        footerLabel = wx.StaticText(parent=panel, id=-1, label=getInnerStr(self.config.get('Footer','String')), style=wx.ALIGN_CENTER)
+        footerLabel = wx.StaticText(parent=self.mainPanel, id=-1, label=getInnerStr(self.config.get('Footer','String')), style=wx.ALIGN_CENTER)
         setItemFont(footerLabel,self.getFontFromIni('Footer'))
 
         # Define the graph panels
         self.graphPanel = []
         font,fgColour,bgColour = self.getFontFromIni('Graph')
         for idx in range(self.numGraphs):
-            gp = GraphPanel.GraphPanel(parent=panel,id=-1)
+            gp = GraphPanel.GraphPanel(parent=self.mainPanel,id=-1)
             gp.SetGraphProperties(ylabel='Y',
                                    timeAxes=((self.config.getfloat("Graph","TimeOffset_hr"),
                                               self.config.getboolean("Graph","UseUTC")),False),
@@ -1472,16 +1475,16 @@ class QuickGui(wx.Frame):
             self.graphPanel.append(gp)
         
         # Define a gauge indicating the buffer level
-        self.gauge = wx.Gauge(parent=panel,range=100,style=wx.GA_VERTICAL,
+        self.gauge = wx.Gauge(parent=self.mainPanel,range=100,style=wx.GA_VERTICAL,
                               size=(10,-1))
 
         # Define the status log window
-        statusBox = wx.StaticBox(parent=panel,id=-1,label="")
-        #self.statusLogTextCtrl = wx.TextCtrl(parent=panel,id=-1,style=wx.TE_MULTILINE,size=(-1,150))
+        statusBox = wx.StaticBox(parent=self.mainPanel,id=-1,label="")
+        #self.statusLogTextCtrl = wx.TextCtrl(parent=self.mainPanel,id=-1,style=wx.TE_MULTILINE,size=(-1,150))
         height = self.config.getint("StatusBox","Height")
         if self.numGraphs > 2:
             height *= 0.8
-        self.eventViewControl = EventViewListCtrl(parent=panel,id=-1,config=self.config,
+        self.eventViewControl = EventViewListCtrl(parent=self.mainPanel,id=-1,config=self.config,
                                                   DataSource=self.eventStore,size=(-1,height))
         setItemFont(self.eventViewControl,self.getFontFromIni('StatusBox'))
         setItemFont(statusBox,self.getFontFromIni('Panel'))
@@ -1490,7 +1493,7 @@ class QuickGui(wx.Frame):
         statusBoxSizer.Add(self.eventViewControl,proportion=1,flag=wx.EXPAND)
 
         # Define the data selection tools
-        toolPanel = wx.Panel(parent=panel,id=-1)
+        toolPanel = wx.Panel(parent=self.mainPanel,id=-1)
         font,fgColour,bgColour = self.getFontFromIni('Graph')
         toolPanel.SetBackgroundColour(bgColour)
         
@@ -1580,7 +1583,7 @@ class QuickGui(wx.Frame):
         toolPanel.SetSizer(combToolSizer)
 
         # Panel for measurement result
-        self.measPanel = wx.Panel(parent=panel,id=-1)
+        self.measPanel = wx.Panel(parent=self.mainPanel,id=-1)
         setItemFont(self.measPanel,self.getFontFromIni('MeasurementPanel'))
 
         # Alarm view
@@ -1752,9 +1755,9 @@ class QuickGui(wx.Frame):
         footerSizer = wx.BoxSizer(wx.VERTICAL)
         footerSizer.Add(footerLabel,proportion=0,flag=wx.ALIGN_CENTER)
         vsizer1.Add(footerSizer,proportion=0,flag=wx.GROW | wx.ALL,border=10)
-        panel.SetSizer(vsizer1)
+        self.mainPanel.SetSizer(vsizer1)
         box = wx.BoxSizer(wx.HORIZONTAL)
-        box.Add(panel,proportion=1,flag=wx.EXPAND)
+        box.Add(self.mainPanel,proportion=1,flag=wx.EXPAND)
         self.SetSizer(box)
         self.modifyInterface()
 
@@ -1920,8 +1923,18 @@ class QuickGui(wx.Frame):
         else:
             self.graphPanel[idx].SetGraphProperties(YTickFormat="%."+("%df" % int(precision)))
             self.graphPanel[idx].SetGraphProperties(YSpec=axisLimits)
-    def OnIdle(self,evt):
-        pass
+
+    def OnIdle(self,event):
+        while not self.commandQueue.empty():
+            func, args, kwargs = self.commandQueue.get()
+            func(*args, **kwargs)
+        event.Skip()
+
+    def _setTitle(self,title):
+        """Sets the title and refreshes main panel so that title is recentered"""
+        self.titleLabel.SetLabel(title)
+        self.mainPanel.SendSizeEvent()
+        
     def OnUserLogButton(self,evt):
         self.userLogButton.Disable()
         userLogs = self.dataLoggerInterface.userLogDict.keys()
@@ -1930,6 +1943,7 @@ class QuickGui(wx.Frame):
         else:
             self.dataLoggerInterface.stopUserLogs(userLogs)
         wx.FutureCall(5000,self.userLogButton.Enable)
+        
     def OnTimer(self,evt):
         defaultSourceIndex = None
         self.dataStore.getQueuedData()
