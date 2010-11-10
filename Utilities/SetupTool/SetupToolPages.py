@@ -13,7 +13,7 @@ CRDS_QuickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUIC
 PAGE1_LEFT_MARGIN = 35
 PAGE2_LEFT_MARGIN = 110
 PAGE3_LEFT_MARGIN = 110
-PAGE4_LEFT_MARGIN = 100
+PAGE4_LEFT_MARGIN = 80
 
 COMMENT_BOX_SIZE = (400, 100)
 
@@ -206,12 +206,10 @@ class Page1(wx.Panel):
             dataDuration = self.textCtrlDataDuration[idx].GetValue()
             if float(dataDuration) < 0.01 or float(dataDuration) > 24.0:
                 printError("Data file duration must be between 0.01 and 24.0 hours", "Invalid Data File Duration")
-                self.showCurValues()
                 return False
             numDirLevels = self.textCtrlDirLevel[idx].GetValue()
             if int(numDirLevels) < 0 or int(numDirLevels) > 6:
                 printError("Archived directory level must be an integer between 0 and 6", "Invalid Archived Directory Level")
-                self.showCurValues()
                 return False
             checkNewData = False
             if (newData != "") and (newData not in self.dataCols[idx]):
@@ -245,8 +243,6 @@ class Page1(wx.Panel):
                 archiverCp.write()
             except Exception, err:
                 print "%r" % err
-  
-        self.showCurValues()
         return True
         
     def enable(self, idxList, en):
@@ -392,7 +388,6 @@ class Page2(wx.Panel):
         for p in self.portAppDict:
             if p != "OFF" and len(self.portAppDict[p]) > 1:
                 printError("Conflicting port assignment found.", "Conflicting Ports")
-                self.showCurValues()
                 return False
                     
         streamPort = self.comboBoxList[0].GetValue()
@@ -652,8 +647,8 @@ class Page4(wx.Panel):
     def __init__(self, *args, **kwds):
         wx.Panel.__init__(self, *args, **kwds)
         self.targetIni = None
-        self.keyLabelStrings = ["Number of Graphs"]
-        self.choiceLists = [["1","2","3","4"]]
+        self.keyLabelStrings = ["Number of Graphs", "Enable Control of Valve Sequencer"]
+        self.choiceLists = [["1","2","3","4"], ["Yes", "No"]]
         self.labelTitle = wx.StaticText(self, -1, "GUI Properties", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.comment = wx.TextCtrl(self, -1, "", size = COMMENT_BOX_SIZE, style = wx.TRANSPARENT_WINDOW|wx.TE_READONLY|wx.TE_MULTILINE|wx.NO_BORDER|wx.TE_RICH|wx.ALIGN_LEFT)
@@ -707,15 +702,32 @@ class Page4(wx.Panel):
             setVal = ""
         self.comboBoxList[0].SetValue(setVal)
         
+        try:
+            setVal = cp.get("ValveSequencer", "Enable")
+            if not setVal:
+                self.comboBoxList[1].SetValue("No")
+            else:
+                self.comboBoxList[1].SetValue("Yes")
+        except Exception, err:
+            print "%r" % err
+            self.comboBoxList[1].SetValue("Yes")
+        
     def apply(self):
         try:
             cp = CustomConfigObj(self.targetIni)
+            if not cp.has_section("ValveSequencer"):
+                cp.add_section("ValveSequencer")
         except Exception, err:
             print "%r" % err
             return False
             
         try:
             cp.set("Graph", "NumGraphs", self.comboBoxList[0].GetValue())
+            val = self.comboBoxList[1].GetValue()
+            if val == "Yes":
+                cp.set("ValveSequencer", "Enable", "True")
+            else:
+                cp.set("ValveSequencer", "Enable", "False")
             cp.write()
             return True
         except Exception, err:

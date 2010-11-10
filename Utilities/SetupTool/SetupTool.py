@@ -24,9 +24,12 @@ TRANSLATE_TABLE = {"dataLogger": "Data Logger", "archiver": "Archiver", "valveSe
 
 class SetupTool(SetupToolFrame):
     def __init__(self, setupToolIni, *args, **kwds):       
-        self.setupCP = CustomConfigObj(setupToolIni, list_values = True)
-        self.appConfigPath = self.setupCP.get("Setup", "appConfigPath")
-        
+        self.setupCp = CustomConfigObj(setupToolIni, list_values = True)
+        self.appConfigPath = self.setupCp.get("Setup", "appConfigPath")
+        try:
+            self.clCp =  CustomConfigObj(os.path.join(self.appConfigPath, "Utilities\%s" % self.setupCp.get("Setup", "coordinatorLauncher")))
+        except:
+            self.clCp = None
         archiverDir = os.path.join(self.appConfigPath, "Archiver")
         dataLoggerDir = os.path.join(self.appConfigPath, "DataLogger")
         dataMgrDir = os.path.join(self.appConfigPath, "DataManager")
@@ -43,16 +46,33 @@ class SetupTool(SetupToolFrame):
                               "remoteAccess": remoteAccessDir, "quickGui": quickGuiDir,
                               "coordinator": coordinatorDir}
 
-        comPortList = self.setupCP.get("Setup", "comPortList")
-        self.coordinatorPortList = self.setupCP.get("Setup", "coordinatorPortList")
-        self.dataColsFile = self.setupCP.get("Setup", "dataColsFile")
-        self.modeList = self.setupCP.list_sections()
+        comPortList = self.setupCp.get("Setup", "comPortList")
+        self._getCoordinatorPathAndPortList()
+        self.dataColsFile = self.setupCp.get("Setup", "dataColsFile")
+        self.modeList = self.setupCp.list_sections()
         self.modeList.remove("Setup")
         SetupToolFrame.__init__(self, comPortList, *args, **kwds)
         self.onModeComboBox(None)
         self.bindEvents()
         self.fullInterface = False
 
+    def _getCoordinatorPathAndPortList(self):
+        self.coordinatorPortList = []
+        self.coordinatorPathList = []
+        if self.clCp == None:
+            return
+        for coorOpt in [i for i in self.clCp.list_sections() if i != "Main"]:
+            coorPath = os.path.join(self.appIniDirDict["coordinator"], self.clCp.get(coorOpt, "CoordinatorIni"))
+            cp = CustomConfigObj(coorPath)
+            try:
+                for port in [i[0] for i in cp.list_items("SerialPorts")]:
+                    if port not in self.coordinatorPortList:
+                        self.coordinatorPortList.append(port)
+                if coorPath not in self.coordinatorPathList:
+                    self.coordinatorPathList.append(coorPath)
+            except:
+                continue
+                        
     def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
         self.Bind(wx.EVT_MENU, self.onInterfaceMenu, self.iInterface)
@@ -100,6 +120,7 @@ class SetupTool(SetupToolFrame):
             d = wx.MessageDialog(None, "Changes on \"%s\" page were successfully applied.   " % self.nb.GetPageText(page), "Applied", wx.OK|wx.ICON_INFORMATION)
             d.ShowModal()
             d.Destroy()
+        self.pages[page].showCurValues()
             
     def onModeComboBox(self, event):
         if event:
@@ -118,8 +139,11 @@ class SetupTool(SetupToolFrame):
             iniList = []
             appList = self.pageAppDict[page]
             for app in appList:
-                iniName = self.setupCP[self.mode][app]
-                iniPath = self.getIniPath(app, iniName)
+                if app != "coordinator":
+                    iniName = self.setupCp[self.mode][app]
+                    iniPath = self.getIniPath(app, iniName)
+                else:
+                    iniPath = self.getIniPath(app, None)
                 iniList.append(iniPath)
             if page == 0:
                 # Add data cols file for data logger page
@@ -128,7 +152,7 @@ class SetupTool(SetupToolFrame):
             
             comment = ""
             for app in appList:
-                iniName = self.setupCP[self.mode][app]
+                iniName = self.setupCp[self.mode][app]
                 if iniName in self.modeList:
                     # Configurations depend on other modes
                     if page == 0:
@@ -162,10 +186,12 @@ class SetupTool(SetupToolFrame):
             pageObj.setComment(comment)
             
     def getIniPath(self, app, iniName):
+        if app == "coordinator":
+            return self.coordinatorPathList
         if iniName in self.modeList:
-            if self.setupCP[iniName][app] in self.modeList:
+            if self.setupCp[iniName][app] in self.modeList:
                 raise Exception, "Invalid configuration specified"
-            iniPath = self.getIniPath(app, self.setupCP[iniName][app])
+            iniPath = self.getIniPath(app, self.setupCp[iniName][app])
         else:
             if type(iniName) != type([]):
                 iniPath = os.path.join(self.appIniDirDict[app], iniName)
