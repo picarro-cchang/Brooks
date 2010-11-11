@@ -136,8 +136,9 @@ class SetupTool(SetupToolFrame):
     def setIni(self):
         for page in range(len(self.pages)):
             pageObj = self.pages[page]
-            iniList = []
             appList = self.pageAppDict[page]
+            
+            iniList = []
             for app in appList:
                 if app != "coordinator":
                     iniName = self.setupCp[self.mode][app]
@@ -157,9 +158,9 @@ class SetupTool(SetupToolFrame):
                     # Configurations depend on other modes
                     if page == 0:
                         if app == "dataLogger":
-                            pageObj.enable([0,1,2], False)
+                            pageObj.enable([0,1], False)
                         else:
-                            pageObj.enable([3], False)
+                            pageObj.enable([2,3], False)
                         comment += "* %s controlled by %s Mode\n" % (TRANSLATE_TABLE[app], iniName)
                     elif page == 1:
                         if app != "coordinator":
@@ -173,9 +174,9 @@ class SetupTool(SetupToolFrame):
                 else:
                     if page == 0:
                         if app == "dataLogger":
-                            pageObj.enable([0,1,2], True)
+                            pageObj.enable([0,1], True)
                         else:
-                            pageObj.enable([3], True)
+                            pageObj.enable([2,3], True)
                     elif page == 1:
                         if app != "coordinator":
                             pageObj.enable([appList.index(app)], True)

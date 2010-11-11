@@ -22,53 +22,98 @@ def printError(errMsg, errTitle):
     d.ShowModal()
     d.Destroy()
                 
+def strToList(inStr):
+    retList = inStr.split(",")
+    for i in range(len(retList)):
+        retList[i] = retList[i].strip()
+    return retList
+    
 class Page1(wx.Panel):
     def __init__(self, *args, **kwds):
         wx.Panel.__init__(self, *args, **kwds)
         self.targetIni = None
         self.labelTitle = wx.StaticText(self, -1, "Data Logger Setup", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-        self.buttonGet = wx.Button(self, -1, "Get Complete Data Columns")                  
-        self.buttonGet.SetMinSize((200, 20))
+        self.buttonGet = wx.Button(self, -1, "Get Complete Data Columns")   
+        self.buttonGet.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))       
+        self.buttonGet.SetMinSize((250, 25))
         self.buttonGet.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonGet.Enable(False)
+        self.buttonAdd = wx.Button(self, -1, "Add New Data from External Device") 
+        self.buttonAdd.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))           
+        self.buttonAdd.SetMinSize((250, 25))
+        self.buttonAdd.SetBackgroundColour(wx.Colour(237, 228, 199))
+        self.buttonAdd.Enable(False)
+        self.Bind(wx.EVT_BUTTON, self.onGetButton, self.buttonGet)
+        self.Bind(wx.EVT_BUTTON, self.onAddButton, self.buttonAdd)
+        self.cp = None
+        self.archiverCp = None
+        self.dataColsCp = None
         self.comment = wx.TextCtrl(self, -1, "", size = COMMENT_BOX_SIZE, style = wx.TRANSPARENT_WINDOW|wx.TE_READONLY|wx.TE_MULTILINE|wx.NO_BORDER|wx.TE_RICH|wx.ALIGN_LEFT)
         self.comment.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.comment.SetForegroundColour("red")
         self.comment.Enable(False)
-
+        self.dataLogSections = []
+        self.quantumChoices = ["YEAR", "YEAR/ MONTH", "YEAR/ MONTH/ DAY", "YEAR/ MONTH/ DAY/ HOUR", "YEAR/ MONTH/ DAY/ HOUR/ MINUTE"]
+        self.maxSizeChoices = ["1", "5", "10", "15", "20", "25", "30", "35", "40"]
+        
     def onGetButton(self, event):
         dataKeyDict = CRDS_QuickGui.getDataKeys()
         try:
             if not os.path.isfile(self.dataColsFile):
                 fd = open(self.dataColsFile, "wb")
                 fd.close()
-            cp = CustomConfigObj(self.dataColsFile)
-            cp["DataCols"] = {}
+            if not self.dataColsCp:
+                self.dataColsCp = CustomConfigObj(self.dataColsFile)
+            self.dataColsCp["DataCols"] = {}
             for source in dataKeyDict:
                 dataKeys = dataKeyDict[source]
                 dataKeys.sort()
-                cp["DataCols"][source] = dataKeys
-            cp.write()
+                self.dataColsCp["DataCols"][source] = dataKeys
+            self.dataColsCp.write()
+            
+            for idx in range(self.numDataLogSections):
+                dataLog = self.dataLogSections[idx]
+                source = self.cp.get(dataLog, "sourcescript")
+                dataKeys = dataKeyDict[source]
+                dataKeys.sort()
+                self.dataCols[idx] = dataKeys
             d = wx.MessageDialog(None, "Data columns saved for scource(s):\n%s" % "\n".join(dataKeyDict.keys()), "Data Columns Saved", wx.OK|wx.ICON_INFORMATION)
             d.ShowModal()
             d.Destroy()
         except Exception, err:
             print "%r" % err
             return
-        
+           
+    def onAddButton(self, event):
+        d = wx.TextEntryDialog(self, 'New Data Column Name: ','Add New Data from External Device', '', wx.OK | wx.CANCEL)
+        okClicked = d.ShowModal() == wx.ID_OK
+        d.Destroy()
+        if not okClicked:
+            return
+        else:
+            newData = d.GetValue()
+
+        for idx in range(self.numDataLogSections):
+            dataLog = self.dataLogSections[idx]
+            if (newData != "") and (newData not in self.dataCols[idx]):
+                self.controlDict[dataLog][0].Insert(newData, len(self.dataCols[idx]))
+                self.dataCols[idx].append(newData)
+                # Update the complete data column list
+                try:
+                    dataSource = self.cp.get(dataLog, "sourcescript")
+                    dataList = self.dataColsCp.get("DataCols", dataSource)
+                    if newData not in dataList:
+                        dataList += ", %s" % newData
+                        self.dataColsCp.set("DataCols", dataSource, dataList)
+                        self.dataColsCp.write()
+                except Exception, err:
+                    print "%r" % err
+                
     def onDataDuration(self, event):
         eventObj = event.GetEventObject()
         newVal = float(eventObj.GetValue())
         if newVal < 0.01 or newVal > 24.0:
-            eventObj.SetForegroundColour("red")
-        else:
-            eventObj.SetForegroundColour("black")
-            
-    def onDirLevel(self, event):
-        eventObj = event.GetEventObject()
-        newVal = int(eventObj.GetValue())
-        if newVal < 0 or newVal > 6:
             eventObj.SetForegroundColour("red")
         else:
             eventObj.SetForegroundColour("black")
@@ -79,24 +124,18 @@ class Page1(wx.Panel):
         sizer2 = wx.BoxSizer(wx.VERTICAL)
         sizer3 = wx.BoxSizer(wx.VERTICAL)
         sizer1.Add(self.labelTitle, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 15)
-        for idx in range(self.numDataLogSections):
-            gridSizer1.Add(self.labelData[idx], 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
-            gridSizer1.Add(self.dataColumnBox[idx], 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 20)
-            gridSizer1.Add((-1,5))
-            gridSizer1.Add((-1,5))
-            gridSizer1.Add(self.labelAddData[idx], 0, wx.LEFT|wx.RIGHT, 20)
-            gridSizer1.Add(self.textCtrlAddData[idx], 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 20)
-            gridSizer1.Add((-1,5))
-            gridSizer1.Add((-1,5))
-            gridSizer1.Add(self.labelDataDuration[idx], 0, wx.LEFT|wx.RIGHT, 20)
-            gridSizer1.Add(self.textCtrlDataDuration[idx], 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 20)
-            gridSizer1.Add((-1,5))
-            gridSizer1.Add((-1,5))
-            gridSizer1.Add(self.labelDirLevel[idx], 0, wx.LEFT|wx.RIGHT, 20)
-            gridSizer1.Add(self.textCtrlDirLevel[idx], 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 20)
+        for dataLog in self.dataLogSections:
+            gridSizer1.Add((-1,20))
+            gridSizer1.Add((-1,20))
+            for idx in range(len(self.labelDict[dataLog])):
+                gridSizer1.Add(self.labelDict[dataLog][idx], 0, wx.LEFT|wx.RIGHT, 20)
+                gridSizer1.Add(self.controlDict[dataLog][idx], 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 20)
+                gridSizer1.Add((-1,4))
+                gridSizer1.Add((-1,4))
+        gridSizer1.Add(self.buttonGet, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
+        gridSizer1.Add(self.buttonAdd, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
         sizer2.Add(sizer1, 0, wx.ALIGN_CENTER_HORIZONTAL)
         sizer2.Add(gridSizer1, 0)
-        sizer2.Add(self.buttonGet, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
         sizer2.Add(self.comment, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
         sizer3.Add(sizer2, 0, wx.LEFT, PAGE1_LEFT_MARGIN)
         self.SetSizer(sizer3)
@@ -104,160 +143,150 @@ class Page1(wx.Panel):
 
     def __clear_layout(self):
         try:
-            for idx in range(self.numDataLogSections):
-                self.labelData[idx].Destroy()
-                self.dataColumnBox[idx].Destroy()
-                self.labelAddData[idx].Destroy()
-                self.textCtrlAddData[idx].Destroy()
+            for dataLog in self.labelDict:
+                for idx in range(len(self.labelDict[dataLog])):
+                    self.labelDict[dataLog][idx].Destroy()
+                    self.controlDict[dataLog][idx].Destroy()
         except:
             pass
         
+    def __createGUIElements(self):
+        self.dataCols = []
+        self.labelDict = {} # For each dataLog, the labels are [Data Columns, Hours of Each Log File, Archived Directory Structure, Log Storage Size]
+        self.controlDict = {}
+        self.dataLogSections = self.cp.list_sections()
+        self.numDataLogSections = len(self.dataLogSections)
+        for dataLog in self.dataLogSections:
+            dataSource = self.cp.get(dataLog, "sourcescript")
+            try:
+                dataList = strToList(self.dataColsCp.get("DataCols", dataSource))
+            except Exception, err:
+                print "%r" % err
+                dataList = strToList(self.cp.get(dataLog, "datalist"))
+            self.dataCols.append(dataList)
+            
+            self.labelDict[dataLog] = []
+            self.controlDict[dataLog] = []
+            
+            label = wx.StaticText(self, -1, "Data Columns (%s)" % dataLog, style=wx.ALIGN_LEFT)
+            label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+            self.labelDict[dataLog].append(label)
+            self.controlDict[dataLog].append(wx.CheckListBox(self, -1, choices = dataList, size = (250, 100)))
+            
+            label = wx.StaticText(self, -1, "Hours of Each Log File (0.01~24)", style=wx.ALIGN_LEFT)
+            label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+            self.labelDict[dataLog].append(label)
+            self.controlDict[dataLog].append(wx.TextCtrl(self, -1, size = (230,-1)))
+            self.Bind(wx.EVT_TEXT, self.onDataDuration, self.controlDict[dataLog][-1])
+            
+            label = wx.StaticText(self, -1, "Archived Directory Structure", style=wx.ALIGN_LEFT)
+            label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+            self.labelDict[dataLog].append(label)
+            self.controlDict[dataLog].append(wx.ComboBox(self, -1, choices = self.quantumChoices, size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
+
+            label = wx.StaticText(self, -1, "Total User Log Storage Size (GB)", style=wx.ALIGN_LEFT)
+            label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+            self.labelDict[dataLog].append(label)
+            self.controlDict[dataLog].append(wx.ComboBox(self, -1, choices = self.maxSizeChoices, size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
+            
     def setIni(self, iniList):
         if self.targetIni == iniList[0]:
             return
-        self.__clear_layout()
         self.targetIni = iniList[0]
         self.archiverIni = iniList[1]
-        self.dataColsFile = iniList[-1]
+        self.dataColsFile = iniList[2]
         try:
-            cp = CustomConfigObj(self.targetIni, list_values = True)
+            self.cp = CustomConfigObj(self.targetIni)
         except Exception, err:
             print "%r" % err
             return
         try:
-            dataColsCp = CustomConfigObj(self.dataColsFile, list_values = True)
+            self.archiverCp = CustomConfigObj(self.archiverIni)
         except Exception, err:
             print "%r" % err
-        self.dataCols = []
-        self.labelData = []
-        self.dataColumnBox = []
-        self.labelAddData = []
-        self.textCtrlAddData = []
-        self.labelDataDuration = []
-        self.textCtrlDataDuration = []
-        self.labelDirLevel = []
-        self.textCtrlDirLevel = []
-        self.dataLogSections = cp.list_sections()
-        self.numDataLogSections = len(self.dataLogSections)
-        for dataLog in self.dataLogSections:
-            dataSource = cp.get(dataLog, "sourcescript")
-            try:
-                dataList = dataColsCp.get("DataCols", dataSource)
-            except Exception, err:
-                print "%r" % err
-                dataList = cp.get(dataLog, "datalist")
-            self.dataCols.append(dataList)
-            self.labelData.append(wx.StaticText(self, -1, "Data Columns (%s)" % dataLog, style=wx.ALIGN_LEFT))
-            self.labelData[-1].SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-            self.dataColumnBox.append(wx.CheckListBox(self, -1, choices = dataList, size = (250, 100)))
-            self.labelAddData.append(wx.StaticText(self, -1, "Add New Data", style=wx.ALIGN_LEFT))
-            self.labelAddData[-1].SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-            self.textCtrlAddData.append(wx.TextCtrl(self, -1, size = (230,-1)))
-            self.labelDataDuration.append(wx.StaticText(self, -1, "Data File Duration (Hours)", style=wx.ALIGN_LEFT))
-            self.labelDataDuration[-1].SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-            self.textCtrlDataDuration.append(wx.TextCtrl(self, -1, size = (230,-1)))
-            self.labelDirLevel.append(wx.StaticText(self, -1, "Archived Directory Level", style=wx.ALIGN_LEFT))
-            self.labelDirLevel[-1].SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-            self.textCtrlDirLevel.append(wx.TextCtrl(self, -1, size = (230,-1)))
-            self.Bind(wx.EVT_TEXT, self.onDataDuration, self.textCtrlDataDuration[-1])
-            self.Bind(wx.EVT_TEXT, self.onDirLevel, self.textCtrlDirLevel[-1])
+            return
+        try:
+            self.dataColsCp = CustomConfigObj(self.dataColsFile)
+        except Exception, err:
+            print "%r" % err
+            
+        self.__clear_layout()
+        self.__createGUIElements()
         self.__do_layout()
-        self.Bind(wx.EVT_BUTTON, self.onGetButton, self.buttonGet)
            
     def showCurValues(self):
-        try:
-            cp = CustomConfigObj(self.targetIni, list_values = True)
-        except Exception, err:
-            print "%r" % err
-            return
-        try:
-            archiverCp = CustomConfigObj(self.archiverIni)
-        except Exception, err:
-            print "%r" % err
-            return
-            
         for idx in range(self.numDataLogSections):
             dataLog = self.dataLogSections[idx]
-            curDataList = cp.get(dataLog, "datalist", "")
-            dataDuration = cp.get(dataLog, "maxlogduration_hrs")
-            numDirLevels = archiverCp.get(dataLog, "Quantum")
-            self.dataColumnBox[idx].SetCheckedStrings(curDataList)
-            self.textCtrlDataDuration[idx].SetValue(dataDuration)
-            self.textCtrlDirLevel[idx].SetValue(numDirLevels)
+            curDataList = strToList(self.cp.get(dataLog, "datalist", ""))
+            updateDataLog = False
+            for data in curDataList:
+                if data not in self.dataCols[idx]:
+                    curDataList.remove(data)
+                    updateDataLog = True
+            if updateDataLog:
+                checkedList = ""
+                for data in curDataList:
+                    checkedList += "%s, " % data
+                self.cp.set(dataLog, "datalist", checkedList[:-2])
+                self.cp.write()
+            self.controlDict[dataLog][0].SetCheckedStrings(curDataList)
+            dataDuration = self.cp.get(dataLog, "maxlogduration_hrs")
+            self.controlDict[dataLog][1].SetValue(dataDuration)
+            quantumIdx = int(self.archiverCp.get(dataLog, "Quantum"))-1
+            self.controlDict[dataLog][2].SetValue(self.quantumChoices[quantumIdx])
+            maxSize = str(int(float(self.archiverCp.get(dataLog, "MaxSize_MB"))/1000.0))
+            self.controlDict[dataLog][3].SetValue(maxSize)
                 
     def apply(self):
-        try:
-            cp = CustomConfigObj(self.targetIni)
-        except Exception, err:
-            print "%r" % err
-            return False
-        try:
-            archiverCp = CustomConfigObj(self.archiverIni)
-        except Exception, err:
-            print "%r" % err
-            return False
-        try:
-            dataColsCp = CustomConfigObj(self.dataColsFile)
-        except Exception, err:
-            print "%r" % err
         for idx in range(self.numDataLogSections):
             dataLog = self.dataLogSections[idx]
-            newData = self.textCtrlAddData[idx].GetValue()
-            dataDuration = self.textCtrlDataDuration[idx].GetValue()
+            dataDuration = self.controlDict[dataLog][1].GetValue()
             if float(dataDuration) < 0.01 or float(dataDuration) > 24.0:
                 printError("Data file duration must be between 0.01 and 24.0 hours", "Invalid Data File Duration")
                 return False
-            numDirLevels = self.textCtrlDirLevel[idx].GetValue()
-            if int(numDirLevels) < 0 or int(numDirLevels) > 6:
-                printError("Archived directory level must be an integer between 0 and 6", "Invalid Archived Directory Level")
-                return False
-            checkNewData = False
-            if (newData != "") and (newData not in self.dataCols[idx]):
-                self.dataColumnBox[idx].Insert(newData, len(self.dataCols[idx]))
-                self.dataCols[idx].append(newData)
-                self.textCtrlAddData[idx].SetValue("")
-                checkNewData = True
+                
+            # Update Data Logger
             try:
                 checkedList = ""
-                for i in self.dataColumnBox[idx].GetChecked():
+                for i in self.controlDict[dataLog][0].GetChecked():
                     checkedList += "%s, " % self.dataCols[idx][i]
-                if checkNewData:
-                    checkedList += "%s, " % self.dataCols[idx][-1]
-                cp.set(dataLog, "datalist", checkedList[:-2])
-                cp.set(dataLog, "maxlogduration_hrs", dataDuration)
-                cp.write()
+                writeCp = False
+                if self.cp.get(dataLog, "dataList") != checkedList[:-2]:
+                    self.cp.set(dataLog, "datalist", checkedList[:-2])
+                    writeCp = True
+                if self.cp.get(dataLog, "maxlogduration_hrs") != dataDuration:
+                    self.cp.set(dataLog, "maxlogduration_hrs", dataDuration)
+                    writeCp = True
+                if writeCp:
+                    self.cp.write()
             except Exception, err:
                 print "%r" % err
-            # Update the complete data column list
-            dataSource = cp.get(dataLog, "sourcescript")
+
+            # Update Archiver
             try:
-                dataList = dataColsCp.get("DataCols", dataSource)
-                if checkNewData:
-                    dataList += ", %s" % self.dataCols[idx][-1]
-                dataColsCp.set("DataCols", dataSource, dataList)
-                dataColsCp.write()
-            except Exception, err:
-                print "%r" % err
-            try:
-                archiverCp.set(dataLog, "Quantum", numDirLevels)
-                archiverCp.write()
+                writeArchCp = False
+                quantumIdx = self.quantumChoices.index(self.controlDict[dataLog][2].GetValue())
+                if self.archiverCp.get(dataLog, "Quantum") != str(quantumIdx+1):
+                    self.archiverCp.set(dataLog, "Quantum", quantumIdx+1)
+                    writeArchCp = True
+                maxSize = int(self.controlDict[dataLog][3].GetValue())*1000
+                if self.archiverCp.get(dataLog, "MaxSize_MB") != str(maxSize):
+                    self.archiverCp.set(dataLog, "MaxSize_MB", maxSize)
+                    writeArchCp = True
+                if writeArchCp:
+                    self.archiverCp.write()
             except Exception, err:
                 print "%r" % err
         return True
         
     def enable(self, idxList, en):
-        controlList = [self.dataColumnBox, self.textCtrlAddData, self.textCtrlDataDuration, self.textCtrlDirLevel]
-        for logIdx in range(self.numDataLogSections):
+        for dataLog in self.dataLogSections:
             for idx in idxList:
-                controlList[idx][logIdx].Enable(en)
+                self.controlDict[dataLog][idx].Enable(en)
             
     def setComment(self, comment):
         self.comment.SetValue(comment)
-        if comment == "":
-            self.comment.Hide()
-        else:
-            self.comment.Show()
-            
+
     # Special functions for Page1
     def setFullInterface(self, full):
         if full:
@@ -266,9 +295,11 @@ class Page1(wx.Panel):
                 self.buttonGet.Enable(True)
             except:
                 self.buttonGet.Enable(False)
+            self.buttonAdd.Enable(True)
         else:
             self.buttonGet.Enable(False)
-        
+            self.buttonAdd.Enable(False)
+            
 class Page2(wx.Panel):
     def __init__(self, comPortList, coordinatorPortList, *args, **kwds):
         wx.Panel.__init__(self, *args, **kwds)
@@ -452,10 +483,6 @@ class Page2(wx.Panel):
 
     def setComment(self, comment):
         self.comment.SetValue(comment)
-        if comment == "":
-            self.comment.Hide()
-        else:
-            self.comment.Show()
         
     def onComboBox(self, event):
         eventObj = event.GetEventObject()
@@ -638,10 +665,6 @@ class Page3(wx.Panel):
 
     def setComment(self, comment):
         self.comment.SetValue(comment)
-        if comment == "":
-            self.comment.Hide()
-        else:
-            self.comment.Show()
         
 class Page4(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -740,7 +763,3 @@ class Page4(wx.Panel):
             
     def setComment(self, comment):
         self.comment.SetValue(comment)
-        if comment == "":
-            self.comment.Hide()
-        else:
-            self.comment.Show()
