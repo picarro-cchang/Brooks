@@ -435,16 +435,24 @@ class Page2(wx.Panel):
             for i in range(len(self.coordinatorPortList)):
                 coorPortName = self.coordinatorPortList[i]
                 self.comboBoxList[3+i].SetStringSelection(portDict[coorPortName])
-                self._updatePortDict(self.keyLabelStrings[3+i], setVal)
+                self._updatePortDict(self.keyLabelStrings[3+i], portDict[coorPortName])
         except Exception, err:
              print "Coordinator port Exception: ",err
              
         return True
              
     def apply(self):
+        conflict = False
         for p in self.portAppDict:
             if p != "OFF" and len(self.portAppDict[p]) > 1:
-                printError("Conflicting port assignment found.", "Conflicting Ports")
+                conflict = True
+                break
+        if conflict:
+            d = wx.MessageDialog(None, "Conflicting port assignment found.\nDo you still want to apply the changes?", "Conflicting Ports", 
+                                wx.STAY_ON_TOP|wx.YES|wx.NO|wx.ICON_WARNING)
+            yesClicked = d.ShowModal() == wx.ID_YES
+            d.Destroy()
+            if not yesClicked:
                 return False
                     
         streamPort = self.comboBoxList[0].GetValue()
@@ -490,14 +498,16 @@ class Page2(wx.Panel):
             try:
                 cp = CustomConfigObj(ini, list_values = True)
                 if "SerialPorts" not in cp:
-                    cp["SerialPorts"]  ={}
+                    continue
                 for i in range(len(self.coordinatorPortList)):
+                    coorPortName = self.coordinatorPortList[i]
                     try:
                         port = self.comboBoxList[3+i].GetStringSelection()
-                        cp["SerialPorts"][self.coordinatorPortList[i]] = port
+                        if coorPortName in cp["SerialPorts"]:
+                            cp["SerialPorts"][coorPortName] = port
                     except:
                         pass
-                    cp.write()
+                cp.write()
             except Exception, err:
                  print "Coordinator port Exception: ",err
                  
@@ -545,7 +555,7 @@ class Page2(wx.Panel):
             else:
                 for i in [self._getIdxFromAppLabel(app) for app in self.portAppDict[p]]:
                     self._updateFontColor(i,"black")
-                    
+        
 class Page3(wx.Panel):
     def __init__(self, driverRpc, *args, **kwds):
         self.driverRpc = driverRpc
@@ -803,7 +813,7 @@ class Page4(wx.Panel):
         self.comboBoxList[0].SetValue(setVal)
         
         try:
-            setVal = self.cp.get("ValveSequencer", "Enable")
+            setVal = self.cp.getboolean("ValveSequencer", "Enable")
             if not setVal:
                 self.comboBoxList[1].SetValue("No")
             else:

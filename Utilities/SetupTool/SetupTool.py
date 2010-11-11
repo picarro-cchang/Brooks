@@ -80,9 +80,9 @@ class SetupTool(SetupToolFrame):
             return
         for coorOpt in [i for i in self.clCp.list_sections() if i != "Main"]:
             coorPath = os.path.join(self.appIniDirDict["coordinator"], self.clCp.get(coorOpt, "CoordinatorIni"))
-            cp = CustomConfigObj(coorPath)
+            cp = CustomConfigObj(coorPath, list_values = True)
             try:
-                for port in [i[0] for i in cp.list_items("SerialPorts")]:
+                for port in cp["SerialPorts"].keys():
                     if port not in self.coordinatorPortList:
                         self.coordinatorPortList.append(port)
                 if coorPath not in self.coordinatorPathList:
