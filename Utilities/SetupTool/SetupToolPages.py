@@ -57,9 +57,6 @@ class Page1(wx.Panel):
         self.maxSizeChoices = ["1", "5", "10", "15", "20", "25", "30", "35", "40"]
         
     def onGetButton(self, event):
-        if self.cp == None:
-            printError("INI file not found", "Missing INI file")
-            return
         dataKeyDict = self.quickGuiRpc.getDataKeys()
         try:
             if not os.path.isfile(self.dataColsFile):
@@ -74,12 +71,15 @@ class Page1(wx.Panel):
                 self.dataColsCp["DataCols"][source] = dataKeys
             self.dataColsCp.write()
             
-            for idx in range(self.numDataLogSections):
-                dataLog = self.dataLogSections[idx]
-                source = self.cp.get(dataLog, "sourcescript")
-                dataKeys = dataKeyDict[source]
-                dataKeys.sort()
-                self.dataCols[idx] = dataKeys
+            try:
+                for idx in range(self.numDataLogSections):
+                    dataLog = self.dataLogSections[idx]
+                    source = self.cp.get(dataLog, "sourcescript")
+                    dataKeys = dataKeyDict[source]
+                    dataKeys.sort()
+                    self.dataCols[idx] = dataKeys
+            except:
+                pass
             d = wx.MessageDialog(None, "Data columns saved for scource(s):\n%s" % "\n".join(dataKeyDict.keys()), "Data Columns Saved", wx.OK|wx.ICON_INFORMATION)
             d.ShowModal()
             d.Destroy()
@@ -420,13 +420,21 @@ class Page2(wx.Panel):
         self._updatePortDict(self.keyLabelStrings[2], setVal)
 
         try:
-            cp = CustomConfigObj(self.coordinatorIni[0], list_values = True)
+            portDict = {}
+            for coorIni in self.coordinatorIni:
+                cp = CustomConfigObj(coorIni, list_values = True)
+                for coorPortName in self.coordinatorPortList:
+                    try:
+                        setVal = cp.get("SerialPorts", coorPortName)
+                        if coorPortName not in portDict:
+                            portDict[coorPortName] = setVal
+                        elif portDict[coorPortName] != setVal:
+                            portDict[coorPortName] = ""
+                    except:
+                        pass
             for i in range(len(self.coordinatorPortList)):
-                try:
-                    setVal = cp["SerialPorts"][self.coordinatorPortList[i]]
-                except:
-                    setVal = "OFF"
-                self.comboBoxList[3+i].SetStringSelection(setVal)
+                coorPortName = self.coordinatorPortList[i]
+                self.comboBoxList[3+i].SetStringSelection(portDict[coorPortName])
                 self._updatePortDict(self.keyLabelStrings[3+i], setVal)
         except Exception, err:
              print "Coordinator port Exception: ",err
