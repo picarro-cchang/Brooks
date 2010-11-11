@@ -17,7 +17,20 @@ from numpy import *
 from matplotlib import pyplot
 from matplotlib.artist import *
 from SetupToolFrame import SetupToolFrame
+from SetupToolPages import printError
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common import CmdFIFO
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_QUICK_GUI
+
+APP_NAME = "SetupTool"
+
+CRDS_QuickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUICK_GUI,
+                                            APP_NAME,
+                                            IsDontCareConnection = False)
+
+CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                         APP_NAME,
+                                         IsDontCareConnection = False)
                                             
 TRANSLATE_TABLE = {"dataLogger": "Data Logger", "archiver": "Archiver", "valveSequencer": "Valve Sequencer MPV", 
                    "commandInterface": "Command Interface", "dataManager": "Data Streaming", "coordinator": "Coordinator"}
@@ -51,7 +64,7 @@ class SetupTool(SetupToolFrame):
         self.dataColsFile = self.setupCp.get("Setup", "dataColsFile")
         self.modeList = self.setupCp.list_sections()
         self.modeList.remove("Setup")
-        SetupToolFrame.__init__(self, comPortList, *args, **kwds)
+        SetupToolFrame.__init__(self, comPortList, CRDS_QuickGui, *args, **kwds)
         self.onModeComboBox(None)
         self.bindEvents()
         self.fullInterface = False
@@ -88,16 +101,14 @@ class SetupTool(SetupToolFrame):
         
     def onInterfaceMenu(self, event):
         if not self.fullInterface:
-            d = wx.TextEntryDialog(self, 'Service Mode Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+            d = wx.TextEntryDialog(self, 'Service Mode Password: ','Authorization required', '', wx.STAY_ON_TOP|wx.OK|wx.CANCEL|wx.TE_PASSWORD)
             password = "picarro"
             okClicked = d.ShowModal() == wx.ID_OK
             d.Destroy()
             if not okClicked:
                 return
             elif d.GetValue() != password:
-                d = wx.MessageDialog(None, "Password incorrect, action cancelled.", "Incorrect Password", wx.OK|wx.ICON_ERROR)
-                d.ShowModal()
-                d.Destroy()
+                printError("Password incorrect.", "Incorrect Password")
                 return
             self.fullInterface = True
         else:
@@ -114,10 +125,21 @@ class SetupTool(SetupToolFrame):
             self.pages[0].setFullInterface(False)
             
     def onApplyButton(self, event):
+        try:
+            if CRDS_Supervisor.CmdFIFO.PingFIFO() == "Ping OK":
+                analyzerRunning = True
+            else:
+                analyzerRunning = False
+        except:
+            analyzerRunning = False
+        if analyzerRunning and not self.fullInterface:
+            printError("Analyzer is currently running.\nPlease stop analyzer before applying configuration changes.", "Error")
+            return
+                
         page = self.nb.GetSelection()
         response = self.pages[page].apply()
         if response:
-            d = wx.MessageDialog(None, "Changes on \"%s\" page were successfully applied.   " % self.nb.GetPageText(page), "Applied", wx.OK|wx.ICON_INFORMATION)
+            d = wx.MessageDialog(None, "Changes on \"%s\" page were successfully applied.   " % self.nb.GetPageText(page), "Changes Applied", wx.STAY_ON_TOP|wx.OK|wx.ICON_INFORMATION)
             d.ShowModal()
             d.Destroy()
         self.pages[page].showCurValues()

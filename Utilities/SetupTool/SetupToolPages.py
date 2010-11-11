@@ -3,12 +3,6 @@ import sys
 import wx
 import wx.lib.agw.aui as aui
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import RPC_PORT_QUICK_GUI
-
-CRDS_QuickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUICK_GUI,
-                                            "SetupTool",
-                                            IsDontCareConnection = False)
                                             
 PAGE1_LEFT_MARGIN = 35
 PAGE2_LEFT_MARGIN = 110
@@ -18,7 +12,7 @@ PAGE4_LEFT_MARGIN = 80
 COMMENT_BOX_SIZE = (400, 100)
 
 def printError(errMsg, errTitle):
-    d = wx.MessageDialog(None, errMsg+"\nAction cancelled.", errTitle, wx.OK|wx.ICON_ERROR)
+    d = wx.MessageDialog(None, errMsg+"\nAction cancelled.", errTitle, wx.STAY_ON_TOP|wx.OK|wx.ICON_ERROR)
     d.ShowModal()
     d.Destroy()
                 
@@ -29,7 +23,8 @@ def strToList(inStr):
     return retList
     
 class Page1(wx.Panel):
-    def __init__(self, *args, **kwds):
+    def __init__(self, quickGuiRpc, *args, **kwds):
+        self.quickGuiRpc = quickGuiRpc
         wx.Panel.__init__(self, *args, **kwds)
         self.targetIni = None
         self.labelTitle = wx.StaticText(self, -1, "Data Logger Setup", style=wx.ALIGN_CENTRE)
@@ -58,7 +53,7 @@ class Page1(wx.Panel):
         self.maxSizeChoices = ["1", "5", "10", "15", "20", "25", "30", "35", "40"]
         
     def onGetButton(self, event):
-        dataKeyDict = CRDS_QuickGui.getDataKeys()
+        dataKeyDict = self.quickGuiRpc.getDataKeys()
         try:
             if not os.path.isfile(self.dataColsFile):
                 fd = open(self.dataColsFile, "wb")
@@ -156,6 +151,10 @@ class Page1(wx.Panel):
         self.controlDict = {}
         self.dataLogSections = self.cp.list_sections()
         self.numDataLogSections = len(self.dataLogSections)
+        if self.numDataLogSections == 1:
+            dataColumnBoxHeight = 300
+        else:
+            dataColumnBoxHeight = 200.0/self.numDataLogSections
         for dataLog in self.dataLogSections:
             dataSource = self.cp.get(dataLog, "sourcescript")
             try:
@@ -171,7 +170,7 @@ class Page1(wx.Panel):
             label = wx.StaticText(self, -1, "Data Columns (%s)" % dataLog, style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.labelDict[dataLog].append(label)
-            self.controlDict[dataLog].append(wx.CheckListBox(self, -1, choices = dataList, size = (250, 100)))
+            self.controlDict[dataLog].append(wx.CheckListBox(self, -1, choices = dataList, size = (250, dataColumnBoxHeight)))
             
             label = wx.StaticText(self, -1, "Hours of Each Log File (0.01~24)", style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
@@ -291,7 +290,7 @@ class Page1(wx.Panel):
     def setFullInterface(self, full):
         if full:
             try:
-                CRDS_QuickGui.getDataKeys()
+                self.quickGuiRpc.getDataKeys()
                 self.buttonGet.Enable(True)
             except:
                 self.buttonGet.Enable(False)
