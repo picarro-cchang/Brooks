@@ -20,7 +20,7 @@ from SetupToolFrame import SetupToolFrame
 from SetupToolPages import printError
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_QUICK_GUI
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_QUICK_GUI, RPC_PORT_DRIVER
 
 APP_NAME = "SetupTool"
 
@@ -29,6 +29,10 @@ CRDS_QuickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUIC
                                             IsDontCareConnection = False)
 
 CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                         APP_NAME,
+                                         IsDontCareConnection = False)
+                                         
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                          APP_NAME,
                                          IsDontCareConnection = False)
                                             
@@ -64,7 +68,7 @@ class SetupTool(SetupToolFrame):
         self.dataColsFile = self.setupCp.get("Setup", "dataColsFile")
         self.modeList = self.setupCp.list_sections()
         self.modeList.remove("Setup")
-        SetupToolFrame.__init__(self, comPortList, CRDS_QuickGui, *args, **kwds)
+        SetupToolFrame.__init__(self, comPortList, CRDS_QuickGui, CRDS_Driver, *args, **kwds)
         self.onModeComboBox(None)
         self.bindEvents()
         self.fullInterface = False
@@ -108,7 +112,7 @@ class SetupTool(SetupToolFrame):
             if not okClicked:
                 return
             elif d.GetValue() != password:
-                printError("Password incorrect.", "Incorrect Password")
+                printError("Password incorrect.", "Incorrect Password", "Access denied.")
                 return
             self.fullInterface = True
         else:
@@ -120,9 +124,11 @@ class SetupTool(SetupToolFrame):
         if self.fullInterface:
             self.iSettings.SetLabel(self.idInterface, "Switch to User Mode")
             self.pages[0].setFullInterface(True)
+            self.pages[2].setFullInterface(True)
         else:
             self.iSettings.SetLabel(self.idInterface, "Switch to Service Mode")
             self.pages[0].setFullInterface(False)
+            self.pages[2].setFullInterface(False)
             
     def onApplyButton(self, event):
         try:
@@ -142,7 +148,12 @@ class SetupTool(SetupToolFrame):
             d = wx.MessageDialog(None, "Changes on \"%s\" page were successfully applied.   " % self.nb.GetPageText(page), "Changes Applied", wx.STAY_ON_TOP|wx.OK|wx.ICON_INFORMATION)
             d.ShowModal()
             d.Destroy()
-        self.pages[page].showCurValues()
+        else:
+            printError("Failed to apply changes on \"%s\" page." % self.nb.GetPageText(page), "Error", "")
+            
+        response = self.pages[page].showCurValues()
+        if not response:
+            printError("Failed to show current configurations on \"%s\" page." % self.nb.GetPageText(page), "Error", "")
             
     def onModeComboBox(self, event):
         if event:
@@ -153,7 +164,9 @@ class SetupTool(SetupToolFrame):
         self.SetTitle("Picarro Analyzer Setup Tool (%s)" % self.mode)
         self.setIni()
         for page in range(len(self.pages)):
-            self.pages[page].showCurValues()
+            response = self.pages[page].showCurValues()
+            if not response:
+                printError("Failed to show current configurations on \"%s\" page." % self.nb.GetPageText(page), "Error", "")
  
     def setIni(self):
         for page in range(len(self.pages)):

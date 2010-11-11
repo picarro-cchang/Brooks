@@ -11,8 +11,12 @@ PAGE4_LEFT_MARGIN = 80
 
 COMMENT_BOX_SIZE = (400, 100)
 
-def printError(errMsg, errTitle):
-    d = wx.MessageDialog(None, errMsg+"\nAction cancelled.", errTitle, wx.STAY_ON_TOP|wx.OK|wx.ICON_ERROR)
+def printError(errMsg1, errTitle, errMsg2="Action cancelled."):
+    if errMsg2 != "":
+        errMsg = errMsg1+"\n"+errMsg2
+    else:
+        errMsg = errMsg1
+    d = wx.MessageDialog(None, errMsg, errTitle, wx.STAY_ON_TOP|wx.OK|wx.ICON_ERROR)
     d.ShowModal()
     d.Destroy()
                 
@@ -26,7 +30,6 @@ class Page1(wx.Panel):
     def __init__(self, quickGuiRpc, *args, **kwds):
         self.quickGuiRpc = quickGuiRpc
         wx.Panel.__init__(self, *args, **kwds)
-        self.targetIni = None
         self.labelTitle = wx.StaticText(self, -1, "Data Logger Setup", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.buttonGet = wx.Button(self, -1, "Get Complete Data Columns")   
@@ -41,6 +44,7 @@ class Page1(wx.Panel):
         self.buttonAdd.Enable(False)
         self.Bind(wx.EVT_BUTTON, self.onGetButton, self.buttonGet)
         self.Bind(wx.EVT_BUTTON, self.onAddButton, self.buttonAdd)
+        self.targetIni = None
         self.cp = None
         self.archiverCp = None
         self.dataColsCp = None
@@ -53,6 +57,9 @@ class Page1(wx.Panel):
         self.maxSizeChoices = ["1", "5", "10", "15", "20", "25", "30", "35", "40"]
         
     def onGetButton(self, event):
+        if self.cp == None:
+            printError("INI file not found", "Missing INI file")
+            return
         dataKeyDict = self.quickGuiRpc.getDataKeys()
         try:
             if not os.path.isfile(self.dataColsFile):
@@ -81,6 +88,9 @@ class Page1(wx.Panel):
             return
            
     def onAddButton(self, event):
+        if self.cp == None:
+            printError("INI file not found", "Missing INI file")
+            return
         d = wx.TextEntryDialog(self, 'New Data Column Name: ','Add New Data from External Device', '', wx.OK | wx.CANCEL)
         okClicked = d.ShowModal() == wx.ID_OK
         d.Destroy()
@@ -214,6 +224,9 @@ class Page1(wx.Panel):
         self.__do_layout()
            
     def showCurValues(self):
+        if self.cp == None or self.archiverCp == None:
+            return False
+        
         for idx in range(self.numDataLogSections):
             dataLog = self.dataLogSections[idx]
             curDataList = strToList(self.cp.get(dataLog, "datalist", ""))
@@ -235,8 +248,12 @@ class Page1(wx.Panel):
             self.controlDict[dataLog][2].SetValue(self.quantumChoices[quantumIdx])
             maxSize = str(int(float(self.archiverCp.get(dataLog, "MaxSize_MB"))/1000.0))
             self.controlDict[dataLog][3].SetValue(maxSize)
+        return True
                 
     def apply(self):
+        if self.cp == None or self.archiverCp == None:
+            return False
+            
         for idx in range(self.numDataLogSections):
             dataLog = self.dataLogSections[idx]
             dataDuration = self.controlDict[dataLog][1].GetValue()
@@ -276,6 +293,7 @@ class Page1(wx.Panel):
                     self.archiverCp.write()
             except Exception, err:
                 print "%r" % err
+                
         return True
         
     def enable(self, idxList, en):
@@ -286,7 +304,6 @@ class Page1(wx.Panel):
     def setComment(self, comment):
         self.comment.SetValue(comment)
 
-    # Special functions for Page1
     def setFullInterface(self, full):
         if full:
             try:
@@ -414,6 +431,8 @@ class Page2(wx.Panel):
         except Exception, err:
              print "Coordinator port Exception: ",err
              
+        return True
+             
     def apply(self):
         for p in self.portAppDict:
             if p != "OFF" and len(self.portAppDict[p]) > 1:
@@ -425,10 +444,10 @@ class Page2(wx.Panel):
             cp = CustomConfigObj(self.dataMgrIni)
             if cp.has_section("SerialOutput") and streamPort != "":
                 if streamPort == "OFF":
-                    cp["SerialOutput"]["Enable"] = "False"
+                    cp.set("SerialOutput", "Enable", "False")
                 else:
-                    cp["SerialOutput"]["Enable"] = "True"
-                    cp["SerialOutput"]["Port"] = streamPort
+                    cp.set("SerialOutput", "Enable", "True")
+                    cp.set("SerialOutput", "Port", streamPort)
                 cp.write()
             else:
                 pass
@@ -439,7 +458,7 @@ class Page2(wx.Panel):
         if mpvPort != "":
             try:
                 cp = CustomConfigObj(self.valveIni)
-                cp["MAIN"]["comPortRotValve"] = mpvPort
+                cp.set("MAIN", "comPortRotValve", mpvPort)
                 cp.write()
             except Exception, err:
                 print "MPV port Exception: ",err
@@ -449,12 +468,12 @@ class Page2(wx.Panel):
             try:
                 cp = CustomConfigObj(self.cmdIni)
                 if cmdPort.startswith("COM"):
-                    cp["HEADER"]["interface"] = "SerialInterface"
-                    cp["SERIALINTERFACE"]["port"] = cmdPort
+                    cp.set("HEADER", "interface", "SerialInterface")
+                    cp.set("SERIALINTERFACE", "port", cmdPort)
                 elif cmdPort == "TCP":
-                    cp["HEADER"]["interface"] = "SocketInterface"
+                    cp.set("HEADER", "interface", "SocketInterface")
                 else:
-                    cp["HEADER"]["interface"] = "OFF"
+                    cp.set("HEADER", "interface", "OFF")
                 cp.write()
             except Exception, err:
                  print "Command interface port Exception: ",err
@@ -520,13 +539,19 @@ class Page2(wx.Panel):
                     self._updateFontColor(i,"black")
                     
 class Page3(wx.Panel):
-    def __init__(self, *args, **kwds):
+    def __init__(self, driverRpc, *args, **kwds):
+        self.driverRpc = driverRpc
         wx.Panel.__init__(self, *args, **kwds)
-        self.targetIni = None
         self.keyLabelStrings = ["Use SSL", "Use Authentication", "Server", "User Name", "Password", "From", "To", "Subject"]
         self.choiceLists = [["YES","NO"], ["YES","NO"]]
         self.labelTitle = wx.StaticText(self, -1, "Data Delivery Setup", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        self.buttonGet = wx.Button(self, -1, "Get Default Configurations")   
+        self.buttonGet.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))       
+        self.buttonGet.SetMinSize((230, 25))
+        self.buttonGet.SetBackgroundColour(wx.Colour(237, 228, 199))
+        self.buttonGet.Enable(False)
+        self.Bind(wx.EVT_BUTTON, self.onGetButton, self.buttonGet)
         self.comment = wx.TextCtrl(self, -1, "", size = COMMENT_BOX_SIZE, style = wx.TRANSPARENT_WINDOW|wx.TE_READONLY|wx.TE_MULTILINE|wx.NO_BORDER|wx.TE_RICH|wx.ALIGN_LEFT)
         self.comment.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.comment.SetForegroundColour("red")
@@ -537,6 +562,8 @@ class Page3(wx.Panel):
         self.textCtrlLabelList = []
         self.textCtrlIdList = []
         self.textCtrlList = []
+        self.targetIni = None
+        self.cp = None
         
         for i in range(len(self.keyLabelStrings)):
             label = wx.StaticText(self, -1, self.keyLabelStrings[i], style=wx.ALIGN_LEFT)
@@ -555,6 +582,35 @@ class Page3(wx.Panel):
         self.bindEvents()
         self.__do_layout()
 
+    def onGetButton(self, event):
+        if self.cp == None:
+            printError("INI file not found", "Missing INI file")
+            return
+            
+        # Plug analyzer name in "from address" and "subject" of emails
+        try:
+            analyzerName = self.driverRpc.fetchInstrInfo("analyzername")
+        except:
+            analyzerName = None
+        subject = self.cp.get("EMAIL", "Subject", "")
+        if subject == "":
+            if analyzerName != None:
+                subject = "%s: data from Picarro instrument" % analyzerName
+                self.cp.set("EMAIL", "Subject", subject)
+                self.cp.write()
+            else:
+                pass
+                
+        fromAddr = self.cp.get("EMAIL", "From", "")
+        if fromAddr == "":
+            if analyzerName != None:
+                fromAddr = "%s@picarro.com" % analyzerName
+                self.cp.set("EMAIL", "From", fromAddr)
+                self.cp.write()
+            else:
+                pass
+        self.showCurValues()
+        
     def __do_layout(self):
         sizer1 = wx.BoxSizer(wx.VERTICAL)
         sizer2 = wx.BoxSizer(wx.VERTICAL)
@@ -566,6 +622,8 @@ class Page3(wx.Panel):
         for i in range(len(self.textCtrlLabelList)):
             gridSizer1.Add(self.textCtrlLabelList[i], 0, wx.RIGHT|wx.BOTTOM, 15)
             gridSizer1.Add(self.textCtrlList[i], 0)
+        gridSizer1.Add((-1,-1))
+        gridSizer1.Add(self.buttonGet, 0, wx.TOP, 15)
         sizer1.Add(gridSizer1, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 20)
         sizer1.Add(self.comment, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
         sizer2.Add(sizer1, 0, wx.LEFT, PAGE3_LEFT_MARGIN)
@@ -593,17 +651,18 @@ class Page3(wx.Panel):
         if self.targetIni == iniList[0]:
             return
         self.targetIni = iniList[0]
-           
-    def showCurValues(self):
         try:
-            cp = CustomConfigObj(self.targetIni)
+            self.cp = CustomConfigObj(self.targetIni, list_values = True)
         except Exception, err:
             print "%r" % err
-            return
+            
+    def showCurValues(self):
+        if self.cp == None:
+            return False
             
         try:
             setVal = "NO"
-            if cp.getboolean("EMAIL", "UseSSL"):
+            if self.cp.getboolean("EMAIL", "UseSSL"):
                 setVal = "YES"
         except Exception, err:
             print "%r" % err
@@ -612,7 +671,7 @@ class Page3(wx.Panel):
 
         try:
             setVal = "NO"
-            if cp.getboolean("EMAIL", "UseAuthentication"):
+            if self.cp.getboolean("EMAIL", "UseAuthentication"):
                 setVal = "YES"
         except Exception, err:
             print "%r" % err
@@ -620,36 +679,35 @@ class Page3(wx.Panel):
         self.comboBoxList[1].SetValue(setVal)
         self.onAuthComboBox(None)
         
-        self.textCtrlList[0].SetValue(cp.get("EMAIL", "Server", ""))
-        self.textCtrlList[1].SetValue(cp.get("EMAIL", "UserName", ""))
-        self.textCtrlList[2].SetValue(cp.get("EMAIL", "Password", ""))
-        self.textCtrlList[3].SetValue(cp.get("EMAIL", "From", ""))
-        self.textCtrlList[4].SetValue(cp.get("EMAIL", "To1", ""))
-        self.textCtrlList[5].SetValue(cp.get("EMAIL", "Subject", ""))
+        self.textCtrlList[0].SetValue(self.cp.get("EMAIL", "Server", ""))
+        self.textCtrlList[1].SetValue(self.cp.get("EMAIL", "UserName", ""))
+        self.textCtrlList[2].SetValue(self.cp.get("EMAIL", "Password", ""))
+        self.textCtrlList[3].SetValue(self.cp.get("EMAIL", "From", ""))
+        self.textCtrlList[4].SetValue(self.cp.get("EMAIL", "To1", ""))
+        self.textCtrlList[5].SetValue(self.cp.get("EMAIL", "Subject", ""))
+        
+        return True
 
     def apply(self):
-        try:
-            cp = CustomConfigObj(self.targetIni)
-        except Exception, err:
-            print "%r" % err
+        if self.cp == None:
             return False
             
         try:
             if self.comboBoxList[0].GetValue() == "YES":
-                cp["EMAIL"]["UseSSL"] = "True"
+                self.cp.set("EMAIL", "UseSSL", "True")
             else:
-                cp["EMAIL"]["UseSSL"] = "False"
+                self.cp.set("EMAIL", "UseSSL", "False")
             if self.comboBoxList[1].GetValue() == "YES":
-                cp["EMAIL"]["UseAuthentication"] = "True"
+                self.cp.set("EMAIL", "UseAuthentication", "True")
             else:
-                cp["EMAIL"]["UseAuthentication"] = "False"
-            cp["EMAIL"]["Server"] = self.textCtrlList[0].GetValue()
-            cp["EMAIL"]["UserName"] = self.textCtrlList[1].GetValue()
-            cp["EMAIL"]["Password"] = self.textCtrlList[2].GetValue()
-            cp["EMAIL"]["From"] = self.textCtrlList[3].GetValue()
-            cp["EMAIL"]["To1"] = self.textCtrlList[4].GetValue()
-            cp["EMAIL"]["Subject"] = self.textCtrlList[5].GetValue()
-            cp.write()
+                self.cp.set("EMAIL", "UseAuthentication", "False")
+            self.cp.set("EMAIL", "Server", self.textCtrlList[0].GetValue())
+            self.cp.set("EMAIL", "UserName", self.textCtrlList[1].GetValue())
+            self.cp.set("EMAIL", "Password", self.textCtrlList[2].GetValue())
+            self.cp.set("EMAIL", "From", self.textCtrlList[3].GetValue())
+            self.cp.set("EMAIL", "To1", self.textCtrlList[4].GetValue())
+            self.cp.set("EMAIL", "Subject", self.textCtrlList[5].GetValue())
+            self.cp.write()
             return True
         except Exception, err:
             print "%r" % err
@@ -664,11 +722,20 @@ class Page3(wx.Panel):
 
     def setComment(self, comment):
         self.comment.SetValue(comment)
-        
+
+    def setFullInterface(self, full):
+        if full:
+            try:
+                self.driverRpc.fetchInstrInfo("analyzername")
+                self.buttonGet.Enable(True)
+            except:
+                self.buttonGet.Enable(False)
+        else:
+            self.buttonGet.Enable(False)
+            
 class Page4(wx.Panel):
     def __init__(self, *args, **kwds):
         wx.Panel.__init__(self, *args, **kwds)
-        self.targetIni = None
         self.keyLabelStrings = ["Number of Graphs", "Enable Control of Valve Sequencer"]
         self.choiceLists = [["1","2","3","4"], ["Yes", "No"]]
         self.labelTitle = wx.StaticText(self, -1, "GUI Properties", style=wx.ALIGN_CENTRE)
@@ -680,7 +747,9 @@ class Page4(wx.Panel):
         self.keyLabelList = []
         self.comboBoxIdList = []
         self.comboBoxList = []
-        
+        self.targetIni = None
+        self.cp = None
+                
         for i in range(len(self.keyLabelStrings)):
             label = wx.StaticText(self, -1, self.keyLabelStrings[i], style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
@@ -709,23 +778,24 @@ class Page4(wx.Panel):
         if self.targetIni == iniList[0]:
             return
         self.targetIni = iniList[0]
-        
-    def showCurValues(self):
         try:
-            cp = CustomConfigObj(self.targetIni)
+            self.cp = CustomConfigObj(self.targetIni)
         except Exception, err:
             print "%r" % err
-            return
             
+    def showCurValues(self):
+        if self.cp == None:
+            return False
+        
         try:
-            setVal = cp.get("Graph", "NumGraphs")
+            setVal = self.cp.get("Graph", "NumGraphs")
         except Exception, err:
             print "%r" % err
             setVal = ""
         self.comboBoxList[0].SetValue(setVal)
         
         try:
-            setVal = cp.get("ValveSequencer", "Enable")
+            setVal = self.cp.get("ValveSequencer", "Enable")
             if not setVal:
                 self.comboBoxList[1].SetValue("No")
             else:
@@ -734,23 +804,20 @@ class Page4(wx.Panel):
             print "%r" % err
             self.comboBoxList[1].SetValue("Yes")
         
+        return True
+        
     def apply(self):
-        try:
-            cp = CustomConfigObj(self.targetIni)
-            if not cp.has_section("ValveSequencer"):
-                cp.add_section("ValveSequencer")
-        except Exception, err:
-            print "%r" % err
+        if self.cp == None:
             return False
             
         try:
-            cp.set("Graph", "NumGraphs", self.comboBoxList[0].GetValue())
+            self.cp.set("Graph", "NumGraphs", self.comboBoxList[0].GetValue())
             val = self.comboBoxList[1].GetValue()
             if val == "Yes":
-                cp.set("ValveSequencer", "Enable", "True")
+                self.cp.set("ValveSequencer", "Enable", "True")
             else:
-                cp.set("ValveSequencer", "Enable", "False")
-            cp.write()
+                self.cp.set("ValveSequencer", "Enable", "False")
+            self.cp.write()
             return True
         except Exception, err:
             print "%r" % err
