@@ -469,10 +469,13 @@ class SpectrumCollector(object):
     def RPC_getSequenceNames(self):
         return self.sequencer.getSequenceNames()
 
-    def RPC_startSequence(self,seq=None):
+    def RPC_setSequence(self,seq=None):
         if seq is not None:
             self.sequencer.setSequenceName(seq)
         self.useSequencer = True
+    
+    def RPC_startSequence(self,seq=None):
+        self.RPC_setSequence(seq)
         self.sequencer.startSequence()
     
     def RPC_getSequence(self):

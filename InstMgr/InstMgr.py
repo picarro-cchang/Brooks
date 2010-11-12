@@ -542,9 +542,8 @@ class InstMgr(object):
         
     def _EnterMeasure(self):
         """ called when entering measuring state """
-        self._SendDisplayMessage("Entering Measuring")
+        self._SendDisplayMessage("Preparing to measure")
 
-            
         # Wait for up to 5s for the measurement system to get into READY or ENABLED state
         
         for waitTime in range(5):

@@ -411,7 +411,7 @@ class MeasSystem(object):
         self.CurrentMeasMode = self.MeasModes[ModeName]
         self._SetupMeasMode()
         SpectrumCollector.setSequencerMode(True)
-        SpectrumCollector.startSequence(ModeName)
+        SpectrumCollector.setSequence(ModeName)
         
     def _SetupMeasMode(self):
         """Perform any instrument setup required for this mode by calling the instrument manager"""
