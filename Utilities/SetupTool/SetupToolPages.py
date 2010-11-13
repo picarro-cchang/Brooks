@@ -37,13 +37,13 @@ class Page1(wx.Panel):
         self.buttonGet.SetMinSize((250, 25))
         self.buttonGet.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonGet.Enable(False)
-        self.buttonAdd = wx.Button(self, -1, "Add New Data from External Device") 
-        self.buttonAdd.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))           
-        self.buttonAdd.SetMinSize((250, 25))
-        self.buttonAdd.SetBackgroundColour(wx.Colour(237, 228, 199))
-        self.buttonAdd.Enable(False)
+        #self.buttonAdd = wx.Button(self, -1, "Add New Data from External Device") 
+        #self.buttonAdd.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))           
+        #self.buttonAdd.SetMinSize((250, 25))
+        #self.buttonAdd.SetBackgroundColour(wx.Colour(237, 228, 199))
+        #self.buttonAdd.Enable(False)
         self.Bind(wx.EVT_BUTTON, self.onGetButton, self.buttonGet)
-        self.Bind(wx.EVT_BUTTON, self.onAddButton, self.buttonAdd)
+        #self.Bind(wx.EVT_BUTTON, self.onAddButton, self.buttonAdd)
         self.targetIni = None
         self.cp = None
         self.archiverCp = None
@@ -57,36 +57,33 @@ class Page1(wx.Panel):
         self.maxSizeChoices = ["1", "5", "10", "15", "20", "25", "30", "35", "40"]
         
     def onGetButton(self, event):
-        dataKeyDict = self.quickGuiRpc.getDataKeys()
         try:
-            if not os.path.isfile(self.dataColsFile):
-                fd = open(self.dataColsFile, "wb")
-                fd.close()
-            if not self.dataColsCp:
-                self.dataColsCp = CustomConfigObj(self.dataColsFile)
+            dataKeyDict = self.quickGuiRpc.getDataKeys()
+        except:
+            printError("Data columns not available.", "Error", "Please make sure analyzer is running and taking measurements.")
+            return
+        try:
             self.dataColsCp["DataCols"] = {}
             for source in dataKeyDict:
                 dataKeys = dataKeyDict[source]
                 dataKeys.sort()
                 self.dataColsCp["DataCols"][source] = dataKeys
             self.dataColsCp.write()
-            
-            try:
-                for idx in range(self.numDataLogSections):
-                    dataLog = self.dataLogSections[idx]
-                    source = self.cp.get(dataLog, "sourcescript")
-                    dataKeys = dataKeyDict[source]
-                    dataKeys.sort()
-                    self.dataCols[idx] = dataKeys
-            except:
-                pass
-            d = wx.MessageDialog(None, "Data columns saved for scource(s):\n%s" % "\n".join(dataKeyDict.keys()), "Data Columns Saved", wx.OK|wx.ICON_INFORMATION)
-            d.ShowModal()
-            d.Destroy()
+            # Reset the data col config obj
+            self.dataColsCp = CustomConfigObj(self.dataColsFile)
         except Exception, err:
             print "%r" % err
             return
+            
+        self.__clear_layout()
+        self.__createGUIElements()
+        self.__do_layout()
+        self.showCurValues()
            
+        d = wx.MessageDialog(None, "Data columns saved for scource(s):\n%s" % "\n".join(dataKeyDict.keys()), "Data Columns Saved", wx.OK|wx.ICON_INFORMATION)
+        d.ShowModal()
+        d.Destroy()
+            
     def onAddButton(self, event):
         if self.cp == None:
             printError("INI file not found", "Missing INI file")
@@ -137,14 +134,16 @@ class Page1(wx.Panel):
                 gridSizer1.Add(self.controlDict[dataLog][idx], 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 20)
                 gridSizer1.Add((-1,4))
                 gridSizer1.Add((-1,4))
+        gridSizer1.Add((-1,-1))
         gridSizer1.Add(self.buttonGet, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
-        gridSizer1.Add(self.buttonAdd, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
+        #gridSizer1.Add(self.buttonAdd, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
         sizer2.Add(sizer1, 0, wx.ALIGN_CENTER_HORIZONTAL)
         sizer2.Add(gridSizer1, 0)
         sizer2.Add(self.comment, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
         sizer3.Add(sizer2, 0, wx.LEFT, PAGE1_LEFT_MARGIN)
         self.SetSizer(sizer3)
         sizer3.Fit(self)
+        self.Layout()
 
     def __clear_layout(self):
         try:
@@ -215,7 +214,10 @@ class Page1(wx.Panel):
             print "%r" % err
             return
         try:
-            self.dataColsCp = CustomConfigObj(self.dataColsFile)
+            dataColsDir = os.path.dirname(self.dataColsFile)
+            if not os.path.isdir(dataColsDir):
+                os.makedirs(dataColsDir)
+            self.dataColsCp = CustomConfigObj(self.dataColsFile, create_empty = True, file_error = False)
         except Exception, err:
             print "%r" % err
             
@@ -258,7 +260,7 @@ class Page1(wx.Panel):
             dataLog = self.dataLogSections[idx]
             dataDuration = self.controlDict[dataLog][1].GetValue()
             if float(dataDuration) < 0.01 or float(dataDuration) > 24.0:
-                printError("Data file duration must be between 0.01 and 24.0 hours", "Invalid Data File Duration")
+                printError("Log file duration must be between 0.01 and 24.0 hours", "Invalid Log File Duration")
                 return False
                 
             # Update Data Logger
@@ -306,15 +308,11 @@ class Page1(wx.Panel):
 
     def setFullInterface(self, full):
         if full:
-            try:
-                self.quickGuiRpc.getDataKeys()
-                self.buttonGet.Enable(True)
-            except:
-                self.buttonGet.Enable(False)
-            self.buttonAdd.Enable(True)
+            self.buttonGet.Enable(True)
+            #self.buttonAdd.Enable(True)
         else:
             self.buttonGet.Enable(False)
-            self.buttonAdd.Enable(False)
+            #self.buttonAdd.Enable(False)
             
 class Page2(wx.Panel):
     def __init__(self, comPortList, coordinatorPortList, *args, **kwds):
@@ -560,16 +558,21 @@ class Page3(wx.Panel):
     def __init__(self, driverRpc, *args, **kwds):
         self.driverRpc = driverRpc
         wx.Panel.__init__(self, *args, **kwds)
-        self.keyLabelStrings = ["Use SSL", "Use Authentication", "Server", "User Name", "Password", "From", "To", "Subject"]
+        self.keyLabelStrings = ["Use SSL", "Use Authentication", "Server", "User Name", "Password", "From", "To", "Subject", "Data Directory"]
         self.choiceLists = [["YES","NO"], ["YES","NO"]]
         self.labelTitle = wx.StaticText(self, -1, "Data Delivery Setup", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.buttonGet = wx.Button(self, -1, "Get Default Configurations")   
         self.buttonGet.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))       
-        self.buttonGet.SetMinSize((230, 25))
+        self.buttonGet.SetMinSize((240, 25))
         self.buttonGet.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonGet.Enable(False)
         self.Bind(wx.EVT_BUTTON, self.onGetButton, self.buttonGet)
+        self.buttonDir = wx.Button(self, -1, "Data Directory")   
+        self.buttonDir.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))       
+        self.buttonDir.SetMinSize((240, 25))
+        self.buttonDir.SetBackgroundColour(wx.Colour(237, 228, 199))
+        self.Bind(wx.EVT_BUTTON, self.onDirButton, self.buttonDir)
         self.comment = wx.TextCtrl(self, -1, "", size = COMMENT_BOX_SIZE, style = wx.TRANSPARENT_WINDOW|wx.TE_READONLY|wx.TE_MULTILINE|wx.NO_BORDER|wx.TE_RICH|wx.ALIGN_LEFT)
         self.comment.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.comment.SetForegroundColour("red")
@@ -590,12 +593,13 @@ class Page3(wx.Panel):
             if i < len(self.choiceLists):
                 self.comboBoxLabelList.append(label)
                 self.comboBoxIdList.append(newId)
-                self.comboBoxList.append(wx.ComboBox(self, newId, choices = self.choiceLists[i], value = self.choiceLists[i][0], size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
+                self.comboBoxList.append(wx.ComboBox(self, newId, choices = self.choiceLists[i], value = self.choiceLists[i][0], size = (240,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
             else:
                 self.textCtrlLabelList.append(label)
                 self.textCtrlIdList.append(newId)
-                self.textCtrlList.append(wx.TextCtrl(self, newId, size = (230,-1)))
+                self.textCtrlList.append(wx.TextCtrl(self, newId, size = (240,-1)))
         
+        self.textCtrlList[6].Enable(False)
         self.en = True
         self.bindEvents()
         self.__do_layout()
@@ -609,7 +613,9 @@ class Page3(wx.Panel):
         try:
             analyzerName = self.driverRpc.fetchInstrInfo("analyzername")
         except:
-            analyzerName = None
+            printError("Analyzer name not available.", "Error", "Please make sure analyzer is running.")
+            return
+            
         subject = self.cp.get("EMAIL", "Subject", "")
         if subject == "":
             if analyzerName != None:
@@ -629,6 +635,18 @@ class Page3(wx.Panel):
                 pass
         self.showCurValues()
         
+    def onDirButton(self, event):
+        d = wx.DirDialog(None,"Select the directory where the log files will be delivered", style=wx.DD_DEFAULT_STYLE,
+                         defaultPath=self.dataDir)
+        if d.ShowModal() == wx.ID_OK:
+            self.dataDir = d.GetPath().replace("\\", "/")
+            self.cp.set("EMAIL", "Directory", self.dataDir)
+            self.cp.write()
+            d = wx.MessageDialog(None, "New Data Directory applied.   ", "Changes Applied", wx.STAY_ON_TOP|wx.OK|wx.ICON_INFORMATION)
+            d.ShowModal()
+            d.Destroy()
+        self.showCurValues()
+                    
     def __do_layout(self):
         sizer1 = wx.BoxSizer(wx.VERTICAL)
         sizer2 = wx.BoxSizer(wx.VERTICAL)
@@ -640,6 +658,8 @@ class Page3(wx.Panel):
         for i in range(len(self.textCtrlLabelList)):
             gridSizer1.Add(self.textCtrlLabelList[i], 0, wx.RIGHT|wx.BOTTOM, 15)
             gridSizer1.Add(self.textCtrlList[i], 0)
+        gridSizer1.Add((-1,-1))
+        gridSizer1.Add(self.buttonDir, 0, wx.TOP, 15)            
         gridSizer1.Add((-1,-1))
         gridSizer1.Add(self.buttonGet, 0, wx.TOP, 15)
         sizer1.Add(gridSizer1, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 20)
@@ -703,6 +723,8 @@ class Page3(wx.Panel):
         self.textCtrlList[3].SetValue(self.cp.get("EMAIL", "From", ""))
         self.textCtrlList[4].SetValue(self.cp.get("EMAIL", "To1", ""))
         self.textCtrlList[5].SetValue(self.cp.get("EMAIL", "Subject", ""))
+        self.dataDir = self.cp.get("EMAIL", "Directory", "")
+        self.textCtrlList[6].SetValue(self.dataDir)
         
         return True
 
@@ -725,6 +747,7 @@ class Page3(wx.Panel):
             self.cp.set("EMAIL", "From", self.textCtrlList[3].GetValue())
             self.cp.set("EMAIL", "To1", self.textCtrlList[4].GetValue())
             self.cp.set("EMAIL", "Subject", self.textCtrlList[5].GetValue())
+            self.cp.set("EMAIL", "Directory", self.dataDir)
             self.cp.write()
             return True
         except Exception, err:
@@ -736,18 +759,15 @@ class Page3(wx.Panel):
         for i in range(len(self.comboBoxLabelList)):
             self.comboBoxList[i].Enable(en)
         for i in range(len(self.textCtrlLabelList)):
-            self.textCtrlList[i].Enable(en)
+            if i not in [6]:
+                self.textCtrlList[i].Enable(en)
 
     def setComment(self, comment):
         self.comment.SetValue(comment)
 
     def setFullInterface(self, full):
         if full:
-            try:
-                self.driverRpc.fetchInstrInfo("analyzername")
-                self.buttonGet.Enable(True)
-            except:
-                self.buttonGet.Enable(False)
+            self.buttonGet.Enable(True)
         else:
             self.buttonGet.Enable(False)
             
