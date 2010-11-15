@@ -636,7 +636,7 @@ class Page3(wx.Panel):
         self.showCurValues()
         
     def onDirButton(self, event):
-        d = wx.DirDialog(None,"Select the directory where the log files will be delivered", style=wx.DD_DEFAULT_STYLE,
+        d = wx.DirDialog(None,"Select the source directory where the log files will be delivered from", style=wx.DD_DEFAULT_STYLE,
                          defaultPath=self.dataDir)
         if d.ShowModal() == wx.ID_OK:
             self.dataDir = d.GetPath().replace("\\", "/")
