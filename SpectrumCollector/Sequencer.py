@@ -131,7 +131,7 @@ class Sequencer(object):
                 schemes.append((Scheme(schemeFileName),1,ext.lower() == ".sch"))
             self.sequences[name] = schemes
         except Exception,e:
-            LogExc("Error in processing scheme sequence for %s" % name)
+            LogExc("Error in processing scheme sequence for %s" % name,Level=3)
         
     def getSequenceNames(self):
         return self.sequences.keys()

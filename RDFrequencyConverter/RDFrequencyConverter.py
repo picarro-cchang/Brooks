@@ -249,6 +249,26 @@ class RpcServerThread(threading.Thread):
             Log("RpcServer exited and no longer serving.")
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
+
+def validateChecksum(fname):
+    fp = file(fname,'rb')
+    try:
+        calStr = fp.read()
+        cPos = calStr.find("#checksum=")
+        if cPos<0:
+            raise ValueError("No checksum in file")
+        else:
+            try:
+                csum1 = int(calStr[cPos+10:])
+                csum2 = crc32(calStr[:cPos], 0)
+            except Exception, e:
+                raise ValueError("Error calculating checksum %r" % e)
+            if csum1 == csum2:
+                return "OK"
+            else:
+                raise ValueError("Bad checksum")
+    finally:
+        fp.close()
             
 class RDFrequencyConverter(Singleton):
     initialized = False
@@ -590,17 +610,30 @@ class RDFrequencyConverter(Singleton):
         #  into the analyzer. If pCalOffset is specified, this is used to force a constant
         #  angle offset for all virtual lasers so that the coefficients for pressure 
         #  calibration may be determined
+        
+        # When an empty file name is passed for warmBoxCalFilePath,
+        #  The active file path is checked to see if it exists. If so, its checksum is verified.
+        #  If the active file does not exist or if the checksum is bad, the factory file is used.
+        #
+        # When a non-empty file name is passed for warmBoxCalFilePath,
+        #  Checksums are ignored and the specified file is used unconditionally. Any errors in the
+        #   file or the non-existence of the file will cause an exception. The active file name is
+        
         self.warmBoxCalUpdateTime = Driver.hostGetTicks()
-        if warmBoxCalFilePath != "":
-            self.warmBoxCalFilePathActive = os.path.abspath(warmBoxCalFilePath)
-        if os.path.isfile(self.warmBoxCalFilePathActive):
-            # Need to run checksum on the active one. If failed, factory version will be used.
-            # Need to be implemented!
-            # Here assume checksum has passed
-            self.warmBoxCalFilePath = self.warmBoxCalFilePathActive
+        if warmBoxCalFilePath == "":
+            if os.path.isfile(self.warmBoxCalFilePathActive):
+                try:
+                    validateChecksum(self.warmBoxCalFilePathActive)
+                    self.warmBoxCalFilePath = self.warmBoxCalFilePathActive
+                except:
+                    Log('Bad checksum in active warm box calibration file, using factory file',Level = 2)
+                    self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
+            else:
+                Log('No active warm box calibration file, using factory file',Level = 0)
+                self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
         else:
-            self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
-            
+            self.warmBoxCalFilePath = os.path.abspath(warmBoxCalFilePath)
+                     
         # Load up the frequency converters for each laser in the DAS...
         ini = CustomConfigObj(self.warmBoxCalFilePath)
         for vLaserNum in range(1, self.numLasers + 1): # N.B. In AutoCal, laser indices are 1 based
