@@ -37,13 +37,7 @@ class Page1(wx.Panel):
         self.buttonGet.SetMinSize((250, 25))
         self.buttonGet.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonGet.Enable(False)
-        #self.buttonAdd = wx.Button(self, -1, "Add New Data from External Device") 
-        #self.buttonAdd.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))           
-        #self.buttonAdd.SetMinSize((250, 25))
-        #self.buttonAdd.SetBackgroundColour(wx.Colour(237, 228, 199))
-        #self.buttonAdd.Enable(False)
         self.Bind(wx.EVT_BUTTON, self.onGetButton, self.buttonGet)
-        #self.Bind(wx.EVT_BUTTON, self.onAddButton, self.buttonAdd)
         self.targetIni = None
         self.cp = None
         self.archiverCp = None
@@ -53,14 +47,17 @@ class Page1(wx.Panel):
         self.comment.SetForegroundColour("red")
         self.comment.Enable(False)
         self.dataLogSections = []
+        self.mailboxChoices = ["YES", "NO"]
         self.quantumChoices = ["YEAR", "YEAR/ MONTH", "YEAR/ MONTH/ DAY", "YEAR/ MONTH/ DAY/ HOUR", "YEAR/ MONTH/ DAY/ HOUR/ MINUTE"]
         self.maxSizeChoices = ["1", "5", "10", "15", "20", "25", "30", "35", "40"]
+        self.enFlag = True
+        self.fullInterface = False
         
     def onGetButton(self, event):
         try:
             dataKeyDict = self.quickGuiRpc.getDataKeys()
         except:
-            printError("Data columns not available.", "Error", "Please make sure analyzer is running and taking measurements.")
+            printError("Data columns not available.", "Error", "Please make sure analyzer software is running and taking measurements.")
             return
         try:
             self.dataColsCp["DataCols"] = {}
@@ -83,34 +80,6 @@ class Page1(wx.Panel):
         d = wx.MessageDialog(None, "Data columns saved for scource(s):\n%s" % "\n".join(dataKeyDict.keys()), "Data Columns Saved", wx.OK|wx.ICON_INFORMATION)
         d.ShowModal()
         d.Destroy()
-            
-    def onAddButton(self, event):
-        if self.cp == None:
-            printError("INI file not found", "Missing INI file")
-            return
-        d = wx.TextEntryDialog(self, 'New Data Column Name: ','Add New Data from External Device', '', wx.OK | wx.CANCEL)
-        okClicked = d.ShowModal() == wx.ID_OK
-        d.Destroy()
-        if not okClicked:
-            return
-        else:
-            newData = d.GetValue()
-
-        for idx in range(self.numDataLogSections):
-            dataLog = self.dataLogSections[idx]
-            if (newData != "") and (newData not in self.dataCols[idx]):
-                self.controlDict[dataLog][0].Insert(newData, len(self.dataCols[idx]))
-                self.dataCols[idx].append(newData)
-                # Update the complete data column list
-                try:
-                    dataSource = self.cp.get(dataLog, "sourcescript")
-                    dataList = self.dataColsCp.get("DataCols", dataSource)
-                    if newData not in dataList:
-                        dataList += ", %s" % newData
-                        self.dataColsCp.set("DataCols", dataSource, dataList)
-                        self.dataColsCp.write()
-                except Exception, err:
-                    print "%r" % err
                 
     def onDataDuration(self, event):
         eventObj = event.GetEventObject()
@@ -136,7 +105,6 @@ class Page1(wx.Panel):
                 gridSizer1.Add((-1,4))
         gridSizer1.Add((-1,-1))
         gridSizer1.Add(self.buttonGet, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
-        #gridSizer1.Add(self.buttonAdd, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
         sizer2.Add(sizer1, 0, wx.ALIGN_CENTER_HORIZONTAL)
         sizer2.Add(gridSizer1, 0)
         sizer2.Add(self.comment, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
@@ -161,9 +129,9 @@ class Page1(wx.Panel):
         self.dataLogSections = self.cp.list_sections()
         self.numDataLogSections = len(self.dataLogSections)
         if self.numDataLogSections == 1:
-            dataColumnBoxHeight = 300
+            dataColumnBoxHeight = 340
         else:
-            dataColumnBoxHeight = 200.0/self.numDataLogSections
+            dataColumnBoxHeight = 230.0/self.numDataLogSections
         for dataLog in self.dataLogSections:
             dataSource = self.cp.get(dataLog, "sourcescript")
             try:
@@ -186,6 +154,11 @@ class Page1(wx.Panel):
             self.labelDict[dataLog].append(label)
             self.controlDict[dataLog].append(wx.TextCtrl(self, -1, size = (230,-1)))
             self.Bind(wx.EVT_TEXT, self.onDataDuration, self.controlDict[dataLog][-1])
+            
+            label = wx.StaticText(self, -1, "Enable Mailbox Archiving", style=wx.ALIGN_LEFT)
+            label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+            self.labelDict[dataLog].append(label)
+            self.controlDict[dataLog].append(wx.ComboBox(self, -1, choices = self.mailboxChoices, size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
             
             label = wx.StaticText(self, -1, "Archived Directory Structure", style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
@@ -244,12 +217,24 @@ class Page1(wx.Panel):
                 self.cp.set(dataLog, "datalist", checkedList[:-2])
                 self.cp.write()
             self.controlDict[dataLog][0].SetCheckedStrings(curDataList)
+            
             dataDuration = self.cp.get(dataLog, "maxlogduration_hrs")
             self.controlDict[dataLog][1].SetValue(dataDuration)
+            
+            try:
+                setVal = "NO"
+                if self.cp.getboolean(dataLog, "mailboxenable"):
+                    setVal = "YES"
+            except Exception, err:
+                print "%r" % err
+                setVal = ""
+            self.controlDict[dataLog][2].SetValue(setVal)
+        
             quantumIdx = int(self.archiverCp.get(dataLog, "Quantum"))-1
-            self.controlDict[dataLog][2].SetValue(self.quantumChoices[quantumIdx])
+            self.controlDict[dataLog][3].SetValue(self.quantumChoices[quantumIdx])
+            
             maxSize = str(int(float(self.archiverCp.get(dataLog, "MaxSize_MB"))/1000.0))
-            self.controlDict[dataLog][3].SetValue(maxSize)
+            self.controlDict[dataLog][4].SetValue(maxSize)
         return True
                 
     def apply(self):
@@ -259,6 +244,7 @@ class Page1(wx.Panel):
         for idx in range(self.numDataLogSections):
             dataLog = self.dataLogSections[idx]
             dataDuration = self.controlDict[dataLog][1].GetValue()
+            mailboxenable = self.controlDict[dataLog][2].GetValue()
             if float(dataDuration) < 0.01 or float(dataDuration) > 24.0:
                 printError("Log file duration must be between 0.01 and 24.0 hours", "Invalid Log File Duration")
                 return False
@@ -275,6 +261,12 @@ class Page1(wx.Panel):
                 if self.cp.get(dataLog, "maxlogduration_hrs") != dataDuration:
                     self.cp.set(dataLog, "maxlogduration_hrs", dataDuration)
                     writeCp = True
+                if mailboxenable == "YES" and not self.cp.getboolean(dataLog, "mailboxenable"):
+                    self.cp.set(dataLog, "mailboxenable", "True")
+                    writeCp = True
+                elif mailboxenable == "NO" and self.cp.getboolean(dataLog, "mailboxenable"):
+                    self.cp.set(dataLog, "mailboxenable", "False")
+                    writeCp = True
                 if writeCp:
                     self.cp.write()
             except Exception, err:
@@ -283,11 +275,11 @@ class Page1(wx.Panel):
             # Update Archiver
             try:
                 writeArchCp = False
-                quantumIdx = self.quantumChoices.index(self.controlDict[dataLog][2].GetValue())
+                quantumIdx = self.quantumChoices.index(self.controlDict[dataLog][3].GetValue())
                 if self.archiverCp.get(dataLog, "Quantum") != str(quantumIdx+1):
                     self.archiverCp.set(dataLog, "Quantum", quantumIdx+1)
                     writeArchCp = True
-                maxSize = int(self.controlDict[dataLog][3].GetValue())*1000
+                maxSize = int(self.controlDict[dataLog][4].GetValue())*1000
                 if self.archiverCp.get(dataLog, "MaxSize_MB") != str(maxSize):
                     self.archiverCp.set(dataLog, "MaxSize_MB", maxSize)
                     writeArchCp = True
@@ -299,20 +291,19 @@ class Page1(wx.Panel):
         return True
         
     def enable(self, idxList, en):
+        self.enFlag = en
         for dataLog in self.dataLogSections:
             for idx in idxList:
                 self.controlDict[dataLog][idx].Enable(en)
-            
+        if 0 in idxList:
+            self.buttonGet.Enable(self.enFlag and self.fullInterface)
+        
     def setComment(self, comment):
         self.comment.SetValue(comment)
 
     def setFullInterface(self, full):
-        if full:
-            self.buttonGet.Enable(True)
-            #self.buttonAdd.Enable(True)
-        else:
-            self.buttonGet.Enable(False)
-            #self.buttonAdd.Enable(False)
+        self.fullInterface = full
+        self.buttonGet.Enable(self.enFlag and self.fullInterface)
             
 class Page2(wx.Panel):
     def __init__(self, comPortList, coordinatorPortList, *args, **kwds):
@@ -517,6 +508,9 @@ class Page2(wx.Panel):
 
     def setComment(self, comment):
         self.comment.SetValue(comment)
+
+    def setFullInterface(self, full):
+        pass
         
     def onComboBox(self, event):
         eventObj = event.GetEventObject()
@@ -585,6 +579,8 @@ class Page3(wx.Panel):
         self.textCtrlList = []
         self.targetIni = None
         self.cp = None
+        self.enFlag = True
+        self.fullInterface = False
         
         for i in range(len(self.keyLabelStrings)):
             label = wx.StaticText(self, -1, self.keyLabelStrings[i], style=wx.ALIGN_LEFT)
@@ -600,7 +596,6 @@ class Page3(wx.Panel):
                 self.textCtrlList.append(wx.TextCtrl(self, newId, size = (240,-1)))
         
         self.textCtrlList[6].Enable(False)
-        self.en = True
         self.bindEvents()
         self.__do_layout()
 
@@ -613,7 +608,7 @@ class Page3(wx.Panel):
         try:
             analyzerName = self.driverRpc.fetchInstrInfo("analyzername")
         except:
-            printError("Analyzer name not available.", "Error", "Please make sure analyzer is running.")
+            printError("Analyzer name not available.", "Error", "Please make sure analyzer software is running.")
             return
             
         subject = self.cp.get("EMAIL", "Subject", "")
@@ -672,8 +667,6 @@ class Page3(wx.Panel):
         self.comboBoxList[1].Bind(wx.EVT_COMBOBOX, self.onAuthComboBox)
         
     def onAuthComboBox(self, event):
-        if not self.en:
-            return
         if event:
             eventObj = event.GetEventObject()
         else:
@@ -755,21 +748,21 @@ class Page3(wx.Panel):
             return False
 
     def enable(self, en):
-        self.en = en
+        self.enFlag = en
         for i in range(len(self.comboBoxLabelList)):
             self.comboBoxList[i].Enable(en)
         for i in range(len(self.textCtrlLabelList)):
             if i not in [6]:
                 self.textCtrlList[i].Enable(en)
+        self.buttonDir.Enable(en)
+        self.buttonGet.Enable(self.enFlag and self.fullInterface)
 
     def setComment(self, comment):
         self.comment.SetValue(comment)
 
     def setFullInterface(self, full):
-        if full:
-            self.buttonGet.Enable(True)
-        else:
-            self.buttonGet.Enable(False)
+        self.fullInterface = full
+        self.buttonGet.Enable(self.enFlag and self.fullInterface)
             
 class Page4(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -787,6 +780,8 @@ class Page4(wx.Panel):
         self.comboBoxList = []
         self.targetIni = None
         self.cp = None
+        self.enFlag = True
+        self.fullInterface = False
                 
         for i in range(len(self.keyLabelStrings)):
             label = wx.StaticText(self, -1, self.keyLabelStrings[i], style=wx.ALIGN_LEFT)
@@ -796,6 +791,8 @@ class Page4(wx.Panel):
             self.comboBoxIdList.append(newId)
             self.comboBoxList.append(wx.ComboBox(self, newId, choices = self.choiceLists[i], size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
 
+        self.comboBoxList[1].Enable(False)
+            
         self.__do_layout()
 
     def __do_layout(self):
@@ -862,8 +859,13 @@ class Page4(wx.Panel):
             return False
             
     def enable(self, en):
-        for i in range(len(self.keyLabelList)):
-            self.comboBoxList[i].Enable(en)
+        self.enFlag = en
+        self.comboBoxList[0].Enable(en)
+        self.comboBoxList[1].Enable(self.enFlag and self.fullInterface)
             
     def setComment(self, comment):
         self.comment.SetValue(comment)
+        
+    def setFullInterface(self, full):
+        self.fullInterface = full
+        self.comboBoxList[1].Enable(self.enFlag and self.fullInterface)

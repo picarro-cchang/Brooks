@@ -85,7 +85,7 @@ class SetupToolFrame(wx.Frame):
   
     def doLayout(self):
         sizerToplevel = wx.BoxSizer(wx.VERTICAL)
-        sizerToplevel.SetMinSize((650,700))
+        sizerToplevel.SetMinSize((650,740))
         
         # Add notebook
         sizerToplevel.Add(self.nb, 1, wx.EXPAND, 0)

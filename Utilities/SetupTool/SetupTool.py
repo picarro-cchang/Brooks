@@ -123,12 +123,12 @@ class SetupTool(SetupToolFrame):
         """ Update the GUI based on self.fullInterface."""
         if self.fullInterface:
             self.iSettings.SetLabel(self.idInterface, "Switch to User Mode")
-            self.pages[0].setFullInterface(True)
-            self.pages[2].setFullInterface(True)
+            for pageObj in self.pages:
+                pageObj.setFullInterface(True)
         else:
             self.iSettings.SetLabel(self.idInterface, "Switch to Service Mode")
-            self.pages[0].setFullInterface(False)
-            self.pages[2].setFullInterface(False)
+            for pageObj in self.pages:
+                pageObj.setFullInterface(False)
             
     def onApplyButton(self, event):
         try:
@@ -139,7 +139,7 @@ class SetupTool(SetupToolFrame):
         except:
             analyzerRunning = False
         if analyzerRunning and not self.fullInterface:
-            printError("Analyzer is currently running.\nPlease stop analyzer before applying configuration changes.", "Error")
+            printError("Analyzer software is currently running.\nPlease stop analyzer software before applying configuration changes.", "Error")
             return
                 
         page = self.nb.GetSelection()
@@ -193,9 +193,9 @@ class SetupTool(SetupToolFrame):
                     # Configurations depend on other modes
                     if page == 0:
                         if app == "dataLogger":
-                            pageObj.enable([0,1], False)
+                            pageObj.enable([0,1,2], False)
                         else:
-                            pageObj.enable([2,3], False)
+                            pageObj.enable([3,4], False)
                         comment += "* %s controlled by %s Mode\n" % (TRANSLATE_TABLE[app], iniName)
                     elif page == 1:
                         if app != "coordinator":
@@ -209,9 +209,9 @@ class SetupTool(SetupToolFrame):
                 else:
                     if page == 0:
                         if app == "dataLogger":
-                            pageObj.enable([0,1], True)
+                            pageObj.enable([0,1,2], True)
                         else:
-                            pageObj.enable([2,3], True)
+                            pageObj.enable([3,4], True)
                     elif page == 1:
                         if app != "coordinator":
                             pageObj.enable([appList.index(app)], True)
