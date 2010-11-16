@@ -131,7 +131,6 @@ class ValveSequencer(ValveSequencerFrame):
         for idx in range(self.numSolValves):
             self.Bind(wx.EVT_CHECKBOX, self.onCurValState, self.curCheckboxList[idx])   
         self.Bind(wx.EVT_TIMER, self.onStepTimer, self.stepTimer)            
-        self.Bind(wx.EVT_CLOSE, self.onClose)
         self.bindDynamicEvents() 
         
     def bindDynamicEvents(self):
@@ -175,8 +174,9 @@ class ValveSequencer(ValveSequencerFrame):
         return self.Shown
         
     def shutdown(self):
-        #self.rpcServer.stop_server()
-        self.onClose(None, True)
+        if self.rotValveCtrl != None:
+            self.rotValveCtrl.close()
+        self.rpcServer.stop_server()
         
     def setValves(self, mask = None):
         # Have to update the current row before setting valve register
@@ -207,10 +207,9 @@ class ValveSequencer(ValveSequencerFrame):
         return CRDS_Driver.getMPVPosition()
         
     def _writeFilenameToIni(self, filename):
-        self.co.set("MAIN", "lastSeqFile", filename)
-        fp = open(self.configFile,"wb")
-        self.co.write(fp)
-        fp.close()
+        if filename != self.co.get("MAIN", "lastSeqFile", ""):
+            self.co.set("MAIN", "lastSeqFile", filename)
+            self.co.write()
         
     def startValveSeq(self):
         self.runSequencer = True
@@ -273,12 +272,8 @@ class ValveSequencer(ValveSequencerFrame):
             self.stepTimer.Start(EXE_INTERVAL)
         if self.runSequencer:
             self.stopValveSeq()
-            # Clear the seq file name in .ini file
-            self._writeFilenameToIni("")
         else:
             self.startValveSeq()
-            # Update the seq file name in .ini file
-            self._writeFilenameToIni(self.filename)
                 
     #def onDisableMenu(self, event):
     #    self.stepTimer.Stop()
@@ -402,21 +397,6 @@ class ValveSequencer(ValveSequencerFrame):
     def onCurValState(self, event):    
         # Make current valve state checkboxes as READONLY
         self.curCheckboxList[self.curValStateIdList.index(event.GetEventObject().GetId())].SetValue(not event.IsChecked())
-        
-    def onClose(self, event, forced=False):
-        if not forced:
-            d = wx.MessageDialog(None,"Terminate Valve Sequencer?", "Exit Confirmation", \
-                                 style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
-            close = (d.ShowModal() == wx.ID_YES)
-            d.Destroy()
-            if not close:
-                return
-        if self.rotValveCtrl != None:
-            self.rotValveCtrl.close()
-        # Clear the seq file name in .ini file
-        self._writeFilenameToIni("")
-        self.Destroy()
-        event.Skip()
 
     def onLoadFileMenu(self, event, filename = None):
         if self.isSeqRunning():
