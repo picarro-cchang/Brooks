@@ -126,12 +126,16 @@ class FileUploader(object):
         #    self.ipvBackupDir = None
             
         # Build the channel and client to the remote server
-        host = co.get("FileUpload", "host")
-        user = co.get("FileUpload", "user")
-        password = co.get("FileUpload", "password")
-        self.channel = paramiko.Transport((host, 22))
-        self.channel.connect(username=user, password=password)
-        self.sftpClient = paramiko.SFTPClient.from_transport(self.channel)
+        self.sftpClient = None
+        try:
+            host = co.get("FileUpload", "host")
+            user = co.get("FileUpload", "user")
+            password = co.get("FileUpload", "password")
+            channel = paramiko.Transport((host, 22))
+            channel.connect(username=user, password=password)
+            self.sftpClient = paramiko.SFTPClient.from_transport(channel)
+        except Exception, err:
+            print "%r" % err
         # Some useful available functions of self.sftpClient include:
         # close(self)
         # get_channel(self)
@@ -182,7 +186,7 @@ class FileUploader(object):
                 endTime = time.time()
                 uploadTime = endTime - startTime
             except Exception, err:
-                print err
+                print "%r" % err
             if s != None:
                 print "Finished uploading %.2f bytes in %.2f seconds" % (s.st_size, uploadTime)
             else:
