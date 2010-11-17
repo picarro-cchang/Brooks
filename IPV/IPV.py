@@ -28,6 +28,7 @@ from Host.Common import timestamp
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_ARCHIVER, RPC_PORT_IPV
 from Host.Common import CmdFIFO
+from Host.Common.SingleInstance import SingleInstance
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = False)
 
@@ -797,12 +798,22 @@ def HandleCommandSwitches():
     return configFile, useViewer
     
 if __name__ == "__main__":
-    configFile, useViewer = HandleCommandSwitches()
-    app = wx.PySimpleApp()
-    wx.InitAllImageHandlers()
-    frame = IPV(configFile, useViewer, None, -1, "")
-    frame.startIPVThread()
-    app.SetTopWindow(frame)
-    if useViewer:
-        frame.Show()
-    app.MainLoop()
+    ipvApp = SingleInstance("PicarroIPV")
+    if ipvApp.alreadyrunning():
+        try:
+            CRDS_IPV = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_IPV,
+                                                  APP_NAME,
+                                                  IsDontCareConnection = False)
+            CRDS_IPV.showViewer()
+        except:
+            pass
+    else:
+        configFile, useViewer = HandleCommandSwitches()
+        app = wx.PySimpleApp()
+        wx.InitAllImageHandlers()
+        frame = IPV(configFile, useViewer, None, -1, "")
+        frame.startIPVThread()
+        app.SetTopWindow(frame)
+        if useViewer:
+            frame.Show()
+        app.MainLoop()
