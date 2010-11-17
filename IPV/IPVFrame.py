@@ -34,6 +34,10 @@ class IPVFrame(wx.Frame):
             #gridLabel.SetBackgroundColour('blue')
             gridLabel.SetBackgroundColour('#736AFF')
             self.gridLabelList.append(gridLabel)
+        
+        self.textCtrlStatus = wx.TextCtrl(self.panel_3, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_AUTO_URL|wx.TE_RICH)
+        self.textCtrlStatus.SetMinSize((800,70))
+        
         self.labelTimestamp = wx.StaticText(self.panel_3, -1, "Timestamp", size=(-1,25))
         self.labelTimestamp.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.textCtrlTimestamp = wx.TextCtrl(self.panel_3, -1, size=(152,24), style=wx.TE_READONLY|wx.TE_CENTER)
@@ -93,6 +97,7 @@ class IPVFrame(wx.Frame):
         sizer_5.Add(self.buttonCreateDiagFile, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 23)
         sizer_5.Add(self.buttonUploadAndArchive, 0, wx.ALIGN_CENTER_VERTICAL)
         sizer_6.Add((-1,10))
+        sizer_6.Add(self.textCtrlStatus, 0, wx.BOTTOM|wx.EXPAND, 15)
         sizer_6.Add(sizer_5)
         sizer_6.Add(self.labelFooter, 0, wx.TOP|wx.BOTTOM|wx.EXPAND, 15)
         self.panel_3.SetSizer(sizer_6)
@@ -106,7 +111,7 @@ class IPVFrame(wx.Frame):
         for i in range(self.numSections):
             height = height + 40*(self.numRowsList[i]+1)+25
         height = height + 200
-        self.SetSize((820, height))
+        self.SetSize((820, height+100))
 
 
 if __name__ == "__main__":

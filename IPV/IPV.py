@@ -275,6 +275,9 @@ class IPV(IPVFrame):
         
         IPVFrame.__init__(self, self.numRowsList, *args, **kwds)
         self.SetTitle("Picarro Instrument Performance Verification (%s, Host Verseion: %s)" % (self.instName, self.softwareVersion))
+        self._writeToStatus("Starting Time: %s" % time.ctime(self.reportTime))
+        self._writeToStatus("Time interval: %.2f hours" % (self.repeatSec/3600.0))
+                
         # Fill table with default values
         self._setDefaultResults()
                 
@@ -293,7 +296,19 @@ class IPV(IPVFrame):
         else:
             self.Hide()
             
+    def _getTime(self, format=0):
+        if format == 0:
+            return time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(getUTCTime("float")))
+        else:
+            return time.strftime("%Y%m%d%H%M%S", time.localtime(getUTCTime("float")))
+            
+    def _writeToStatus(self, message):
+        self.statusMessage.append("%s   %s\n" % (self._getTime(), message,))
+        self.statusMessage = self.statusMessage[-30:]
+        self.textCtrlStatus.SetValue("".join(self.statusMessage))
+        
     def _processIni(self, configFile):
+        self.statusMessage = []
         co = CustomConfigObj(configFile, list_values = True)
         self.diagFilePrefix = co.get("Main", "diagFilePrefix", "C:/UserData/IPV/Diag")
         dirName = os.path.dirname(self.diagFilePrefix)
@@ -356,15 +371,18 @@ class IPV(IPVFrame):
                 self.onUploadAndArchive(None)
             
     def uploadAndArchiveIPV(self):
+        self._writeToStatus("Archiving and/or uploading IPV reports...")
         self.fUploader.uploadAndArchiveIPV()
   
     def uploadAndArchiveRDF(self):
+        self._writeToStatus("Archiving and/or uploading RDF files...")
         self.fUploader.uploadAndArchiveRDF(self.rdfUnixTimeLimits)
         
     def createDiagFile(self):
         self._createH5File()
         self._writeH5File()
         log("Diagnostic file saved as: %s"%self.h5Filename)
+        self._writeToStatus("Diagnostic file saved as: %s"%self.h5Filename)
         print "Diagnostic file saved as: %s"%self.h5Filename
         #d = wx.MessageDialog(None,"Diagnostic file saved as:\n\n%s\n\n"%self.h5Filename, "Diagnostic File Saved", \
         #style=wx.OK | wx.ICON_INFORMATION | wx.STAY_ON_TOP)
@@ -448,6 +466,7 @@ class IPV(IPVFrame):
                 reqNumData =  int(self.requiredDataHrs*3600*10**(-level))
                 actNumData = self._estNumData(sigName, level, endTimestamp)
                 if reqNumData > (actNumData+1):
+                    self._writeToStatus("Analyzer not stabilized yet.")
                     print "Analyzer not stabilized yet."
                     ipvFinished = False
                     allOK = False
@@ -484,13 +503,15 @@ class IPV(IPVFrame):
             fd.writelines(linesToWrite)
             fd.close()
             log("Summary report saved as: %s"%self.reportFilename)
+            self._writeToStatus("Summary report saved as: %s"%self.reportFilename)
             print "Summary report saved as: %s"%self.reportFilename
             #d = wx.MessageDialog(None,"Summary report saved as:\n\n%s\n\n"%self.reportFilename, "Summary Report Saved", \
             #style=wx.OK | wx.ICON_INFORMATION | wx.STAY_ON_TOP)
             #d.ShowModal()
             #d.Destroy()
         except Exception, err:
-            print err
+            self._writeToStatus("%r" % err)
+            print "%r" % err
         
     def _getMethodList(self, sigName):
         methodList = self.co.get(sigName,"method","")
@@ -594,7 +615,7 @@ class IPV(IPVFrame):
         try:
             return polyfit(array(timeList), array(valList), 1)[0]
         except Exception, err:
-            print err
+            print "%r" % err
             return 0.0
             
     def _verifySignals(self):
@@ -606,6 +627,7 @@ class IPV(IPVFrame):
                     if not self._verifyEachSignal(sigName, group, rowIdx):
                         allOK = False
                 except Exception, err:
+                    self._writeToStatus("%r" % err)
                     print "%r" % err
         return allOK
                     
@@ -692,7 +714,8 @@ class IPV(IPVFrame):
         try:
             self.h5 = tables.openFile(self.h5Filename, mode="w", title="Picarro IPV File")
         except Exception, err:
-            print err
+            self._writeToStatus("%r" % err)
+            print "%r" % err
             self.h5 = None
         self.histTable = None
         self.wlmTable = None
