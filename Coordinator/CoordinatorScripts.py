@@ -143,6 +143,7 @@ def plotWithMatplotTime(plotObj, matplotTimeArray, dataArray, xLabel, yLabel, fo
 def grabScreenshot(filename):
     im = ImageGrab.grab()
     im.save(filename)
+    
 ##########################
 # Get barometric pressure with Yahoo weather
 ##########################
@@ -176,7 +177,32 @@ class FitterRPC(object):
         
     def restoreViewer(self):
         self.fitter.FITTER_maximizeViewer(False)
+       
+####################
+# External valve sequencer control
+####################
+def startExtValveSequencer():
+    try:
+        VALSEQ.startValveSeq()
+        LOGFUNC("Started external valve sequencer\n") 
+    except Exception, err:
+        LOGFUNC("External valve sequencer: %r\n" % err) 
         
+def stopExtValveSequencer():
+    try:
+        VALSEQ.stopValveSeq()
+        LOGFUNC("Stopped external valve sequencer\n") 
+    except Exception, err:
+        LOGFUNC("External valve sequencer: %r\n" % err) 
+        
+def isExtValveSequencerOn():
+    try:
+        status = VALSEQ.getValveSeqStatus()
+        return "ON" in status
+    except Exception, err:
+        LOGFUNC("External valve sequencer: %r\n" % err)
+        return False
+       
 ##########################
 # Pulse analyzer functions
 ##########################

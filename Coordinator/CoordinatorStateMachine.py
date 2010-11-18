@@ -32,7 +32,7 @@ from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM, \
                                     RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, \
                                     RPC_PORT_DATALOGGER, RPC_PORT_QUICK_GUI, \
                                     RPC_PORT_INSTR_MANAGER, RPC_PORT_FREQ_CONVERTER, \
-                                    RPC_PORT_SPECTRUM_COLLECTOR
+                                    RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_VALVE_SEQUENCER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SerIntrf import SerIntrf
 
@@ -158,6 +158,7 @@ class StateMachine(object):
         self.instMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "Coordinator")
         self.rdFreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER, ClientName = "Coordinator")
         self.spectCollector = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR, ClientName = "Coordinator")
+        self.valveSequencer = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = "Coordinator")
         
     def defaultLogger(self,str):
         print str
@@ -201,6 +202,7 @@ class StateMachine(object):
         CoordinatorScripts.CONFIG = self.config
         CoordinatorScripts.FREQCONV = self.rdFreqConverter
         CoordinatorScripts.SPECTCOLLECTOR = self.spectCollector
+        CoordinatorScripts.VALSEQ = self.valveSequencer
         #try:
         #    exec self.script in self.scriptEnv
         #except Exception,e:
