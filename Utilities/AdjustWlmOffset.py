@@ -23,7 +23,7 @@ import socket
 
 from configobj import ConfigObj
 from Host.autogen.interface import *
-from Host.Common import CmdFIFO, SharedTypes
+from Host.Common import CmdFIFO, SharedTypes, SchemeProcessor
 from Host.Common.Listener import Listener
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         # We use two scheme indices to ping-pong between as the offset is changed
         schemeIndex = 0
         schemeFileName = raw_input("Scheme file to use? ")
-        freqScheme = SharedTypes.Scheme(schemeFileName)
+        freqScheme = SchemeProcessor.Scheme(schemeFileName)
         while True:
             RdFreqConv.wrFreqScheme(schemeIndex,freqScheme)
             RdFreqConv.convertScheme(schemeIndex)

@@ -11,7 +11,7 @@
 
 import sys
 from Host.autogen.interface import *
-from Host.Common import CmdFIFO, SharedTypes, Listener
+from Host.Common import CmdFIFO, SharedTypes, Listener, SchemeProcessor
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 import Queue
 import os
@@ -157,7 +157,7 @@ class ThresholdStats(object):
         if self.schemeName:
             Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_IdleState")
             time.sleep(1)
-            scheme = SharedTypes.Scheme(self.schemeName)
+            scheme = SchemeProcessor.Scheme(self.schemeName)
             RDFreqConv.wrFreqScheme(1,scheme)
             RDFreqConv.convertScheme(1)
             RDFreqConv.uploadSchemeToDAS(1)
