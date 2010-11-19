@@ -467,8 +467,8 @@ class IPV(IPVFrame):
                 reqNumData =  int(self.requiredDataHrs*3600*10**(-level))
                 actNumData = self._estNumData(sigName, level, endTimestamp)
                 if reqNumData > (actNumData+1):
-                    self._writeToStatus("Analyzer not stabilized yet.")
-                    print "Analyzer not stabilized yet."
+                    self._writeToStatus("Insufficient analyzer data for IPV analysis.")
+                    print "Insufficient analyzer data for IPV analysis."
                     ipvFinished = False
                     allOK = False
                     #d = wx.MessageDialog(None, "Analyzer not stabilized yet. Please run IPV later.", "Analyzer not stabilized", wx.OK|wx.ICON_ERROR)

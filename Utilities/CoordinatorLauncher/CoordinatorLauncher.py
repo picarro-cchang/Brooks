@@ -17,9 +17,13 @@ import win32process
 import win32con
 from configobj import ConfigObj
 from CoordinatorLauncherFrame import CoordinatorLauncherFrame
+from Host.Common import CmdFIFO
+from Host.Common.SharedTypes import RPC_PORT_VALVE_SEQUENCER
 
 APP_NAME = "CoordinatorLauncher"
 DEFAULT_CONFIG_NAME = "CoordinatorLauncher.ini"
+
+CRDS_ValveSequencer = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
 
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -74,8 +78,22 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
                 else:
                     return
         except Exception, err:
-            print err
-                     
+            print "%r" % err
+                   
+        try:
+            valSeqStatus = CRDS_ValveSequencer.getValveSeqStatus()
+            if "ON" in valSeqStatus:
+                d = wx.MessageDialog(None,"External Valve Sequencer is currently running.\nIt will be terminated when Coordinator starts.\nDo you want to continue?", "Coordinator Launcher Confirmation", \
+                style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
+                confirm = (d.ShowModal() == wx.ID_YES)
+                d.Destroy()
+                if confirm:
+                    CRDS_ValveSequencer.stopValveSeq()
+                else:
+                    return
+        except Exception, err:
+            print "%r" % err
+        
         launchCoordinatorThread = threading.Thread(target = self._launchCoordinator)
         launchCoordinatorThread.setDaemon(True)
         launchCoordinatorThread.start()
