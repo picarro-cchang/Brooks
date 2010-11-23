@@ -27,7 +27,7 @@ class InstrEEPROMAccessFrame(wx.Frame):
             co = CustomConfigObj(configFile, list_values = True)
             analyzerTypes = co.get("Main", "AnalyzerTypes")
         except:
-            analyzerTypes = ["CFADS", "HBDS", "CBDS", "CFBDS", "CKADS", "CFKBDS"]
+            analyzerTypes = ["AADS", "ADDS", "AEDS", "AFDS", "BADS", "CADS", "CBDS", "CCADS", "CDDS", "CEDS", "CFADS", "CFBDS","CFDDS", "CFEDS", "CFKADS", "CFKBDS", "CHADS", "CKADS", "HBDS"]
         kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
         wx.Frame.__init__(self, *args, **kwds)
         self.panel1 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
