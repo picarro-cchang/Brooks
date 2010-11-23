@@ -275,7 +275,7 @@ class IPV(IPVFrame):
         self._shutdownRequested = False
         
         IPVFrame.__init__(self, self.numRowsList, *args, **kwds)
-        self.SetTitle("Picarro Instrument Performance Verification (%s, Host Verseion: %s)" % (self.instName, self.softwareVersion))
+        self.SetTitle("Picarro Instrument Performance Verification (%s, Host Version: %s)" % (self.instName, self.softwareVersion))
         self._writeToStatus("Starting Time: %s" % time.ctime(self.reportTime))
         self._writeToStatus("Time interval: %.2f hours" % (self.repeatSec/3600.0))
                 
