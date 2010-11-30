@@ -139,7 +139,7 @@ class SetupTool(SetupToolFrame):
         except:
             analyzerRunning = False
         if analyzerRunning and not self.fullInterface:
-            printError("Analyzer software is currently running.\nPlease stop analyzer software before applying configuration changes.", "Error")
+            printError("Analyzer software is currently running.\nPlease stop analyzer software and try to apply configuration changes again.", "Error", "Unapplied changes will be lost if exiting Setup Tool now." )
             return
                 
         page = self.nb.GetSelection()
