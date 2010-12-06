@@ -213,8 +213,8 @@ class Page1(wx.Panel):
             if updateDataLog:
                 checkedList = ""
                 for data in curDataList:
-                    checkedList += "%s, " % data
-                self.cp.set(dataLog, "datalist", checkedList[:-2])
+                    checkedList += "%s," % data
+                self.cp.set(dataLog, "datalist", checkedList[:-1])
                 self.cp.write()
             self.controlDict[dataLog][0].SetCheckedStrings(curDataList)
             
@@ -253,10 +253,10 @@ class Page1(wx.Panel):
             try:
                 checkedList = ""
                 for i in self.controlDict[dataLog][0].GetChecked():
-                    checkedList += "%s, " % self.dataCols[idx][i]
+                    checkedList += "%s," % self.dataCols[idx][i]
                 writeCp = False
-                if self.cp.get(dataLog, "dataList") != checkedList[:-2]:
-                    self.cp.set(dataLog, "datalist", checkedList[:-2])
+                if self.cp.get(dataLog, "dataList") != checkedList[:-1]:
+                    self.cp.set(dataLog, "datalist", checkedList[:-1])
                     writeCp = True
                 if self.cp.get(dataLog, "maxlogduration_hrs") != dataDuration:
                     self.cp.set(dataLog, "maxlogduration_hrs", dataDuration)
