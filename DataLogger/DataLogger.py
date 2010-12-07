@@ -202,6 +202,7 @@ class DataLog(object):
             self.table = None
             self.fp = None
         if self.liveArchive:
+            time.sleep(2.0)
             CRDS_Archiver.StopLiveArchive(self.ArchiveGroupName, self.LogPath)
                 
     def CopyToMailboxAndArchive(self, srcPath=""):
@@ -278,7 +279,7 @@ class DataLog(object):
                 os.makedirs(srcPathCopy)
             srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
             shutil.copy2(srcPath, srcPathCopy)
-            # if mailbox enabled, copy file to mailbox directory first
+            # if backup enabled, copy file to backup directory first
             CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True, ts)
         # Archive only non-live archives
         if self.ArchiveGroupName:

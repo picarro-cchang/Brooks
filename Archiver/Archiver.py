@@ -187,7 +187,7 @@ class LiveArchive(object):
 
     def updater(self):
         while self.updating:
-            data = self.srcFp.read()
+            data = self.srcFp.readline()
             if not data:
                 time.sleep(1.0)
                 continue
