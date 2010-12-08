@@ -22,6 +22,9 @@ File History:
                     succession with the same data. The results directories from all are combined.
     10-06-24 sze   Added getInstrParams to allow instrument-specific parameters to be read into a 
                     fitter script
+    10-12-07 sze   Make copies of DATA when passing them to multiple fitter scripts executed in 
+                    distinct environments so that filtering operations done in one script do not
+                    affect the others
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -36,7 +39,7 @@ import sys
 from sys import argv
 from Host.Common.CmdFIFO import CmdFIFOServer
 from Host.Common.CustomConfigObj import CustomConfigObj
-from copy import deepcopy
+from copy import copy, deepcopy
 from cStringIO import StringIO
 from Queue import Queue, Empty, Full
 from threading import Thread, Event
@@ -346,7 +349,7 @@ class Fitter(object):
         RESULTS = {}
         ANALYSES = []
         for code,env in self.compiledScriptsAndEnvironments:
-            env["DATA"] = DATA
+            env["DATA"] = copy(DATA)
             env["RESULT"] = {}
             env["BASEPATH"] = self.iniBasePath
             exec code in env

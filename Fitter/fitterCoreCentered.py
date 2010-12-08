@@ -18,6 +18,8 @@ File History:
     09-06-30 alex  Support HDF5 format for spectra data
     10-06-14 john  Outlier filter added to sparser
     10-06-24 sze   Added numGroups key to RdData objects
+    10-12-07 sze   Allow scripts to use different spectral and spline libraries instead
+                    of making these libraries global 
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -42,12 +44,6 @@ from Host.Common.EventManagerProxy import Log
 from tables import *
 from Host.Common.timestamp import unixTime
 import traceback
-################################################################################
-# GLOBAL VARIABLES
-################################################################################
-spectralLibrary = None
-splineLibrary = None
-physicalConstants = {}
 
 # The following are used by class Galatry when processing initial values
 #  (in initializeModel) and also by classes InitialValues, Dependencies
@@ -83,24 +79,24 @@ def readConfig(fname):
 # Functions available to fitter scripts
 ################################################################################
 def loadSpectralLibrary(fnameOrConfig):
-    global spectralLibrary
     if not isinstance(fnameOrConfig,CustomConfigObj):
         fnameOrConfig = readConfig(fnameOrConfig)
     spectralLibrary = SpectralLibrary(fnameOrConfig)
+    sys._getframe(1).f_globals["spectralLibrary"] = spectralLibrary
     return spectralLibrary
 
 def loadPhysicalConstants(fnameOrConfig):
-    global physicalConstants
     if not isinstance(fnameOrConfig,CustomConfigObj):
         fnameOrConfig = readConfig(fnameOrConfig)
     physicalConstants = PhysicalConstants(fnameOrConfig)
+    sys._getframe(1).f_globals["physicalConstants"] = physicalConstants
     return physicalConstants
 
 def loadSplineLibrary(fnameOrConfig):
-    global splineLibrary
     if not isinstance(fnameOrConfig,CustomConfigObj):
         fnameOrConfig = readConfig(fnameOrConfig)
     splineLibrary = SplineLibrary(fnameOrConfig)
+    sys._getframe(1).f_globals["splineLibrary"] = splineLibrary
     return splineLibrary
 
 
@@ -794,7 +790,7 @@ class Sinusoid(BasisFunctions):
 class Spline(BasisFunctions):
     nParams = 5
     name = "spline"
-    def __init__(self,params=None,**kwargs):
+    def __init__(self,splineLibrary,params=None,**kwargs):
         BasisFunctions.__init__(self)
         if params is not None:
             self.initialParams = params
@@ -815,7 +811,7 @@ class Spline(BasisFunctions):
 class BiSpline(BasisFunctions):
     nParams = 7
     name = "bispline"
-    def __init__(self,params=None,**kwargs):
+    def __init__(self,splineLibrary,params=None,**kwargs):
         BasisFunctions.__init__(self)
         if params is not None:
             self.initialParams = params
@@ -873,7 +869,7 @@ class BiSpline(BasisFunctions):
 class Galatry(BasisFunctions):
     nParams = 5
     name = "galatry"
-    def __init__(self,params=None,**kwargs):
+    def __init__(self,physicalConstants,spectralLibrary,params=None,**kwargs):
         BasisFunctions.__init__(self)
         if params is not None:
             self.initialParams = params
@@ -887,6 +883,7 @@ class Galatry(BasisFunctions):
             self.mass = float(kwargs["mass"])
         self.base = None
         self.peak = None
+        self.physicalConstants = physicalConstants
     def getPeakAndBase(self):
         """Calculate the peak and baseline for this Galatry peak using the parameter values from the
         current model (which is the parent of  this object)"""
@@ -905,9 +902,9 @@ class Galatry(BasisFunctions):
     # For the Galatry, the model initial conditions are derived from self.initialParams
     #  together with the physical conditions of the cavity
     def initializeModel(self,initDict=None):
-        kB = physicalConstants["k"]
-        c =  physicalConstants["c"]
-        amu = physicalConstants["amu"]
+        kB = self.physicalConstants["k"]
+        c =  self.physicalConstants["c"]
+        amu = self.physicalConstants["amu"]
         params = array(self.initialParams)
         if initDict is not None: # Handle scaled initial conditions
             for p in initDict:
@@ -1387,6 +1384,12 @@ class Analysis(object):
         Analysis.index = 0
 
     def __init__(self,fnameOrConfig,name=None):
+        # Fetch spline library, spectral library and physical constants from the calling script
+        callerGlobals = sys._getframe(1).f_globals
+        spectralLibrary = callerGlobals["spectralLibrary"]
+        splineLibrary = callerGlobals["splineLibrary"]
+        physicalConstants = callerGlobals["physicalConstants"]
+    
         if not isinstance(fnameOrConfig,CustomConfigObj):
             fnameOrConfig = readConfig(fnameOrConfig)
         self.config = fnameOrConfig
@@ -1458,7 +1461,7 @@ class Analysis(object):
         #
         for i in self.basisArray:
             if i<1000:
-                self.basisFunctionByIndex[i] = Galatry(peakNum=i)
+                self.basisFunctionByIndex[i] = Galatry(peakNum=i,physicalConstants=physicalConstants,spectralLibrary=spectralLibrary)
             else: # We need to read details of the basis function from the file
                 section = "function%d" % i
                 # Local function to construct a basis function with parameters "a%d" from the ini file
@@ -1472,10 +1475,11 @@ class Analysis(object):
                 if form == "sinusoid":
                     self.basisFunctionByIndex[i] = FP(Sinusoid)
                 elif form[:6] == "spline":
-                    self.basisFunctionByIndex[i] = FP(Spline,dict(splineIndex=int(form[6:])))
+                    self.basisFunctionByIndex[i] = FP(Spline,dict(splineLibrary=splineLibrary,splineIndex=int(form[6:])))
                 elif form[:8] == "bispline":
                     ndx = form[8:].split("_")
-                    self.basisFunctionByIndex[i] = FP(BiSpline,dict(splineIndexA=int(ndx[0]),
+                    self.basisFunctionByIndex[i] = FP(BiSpline,dict(splineLibrary=splineLibrary,
+                                                                    splineIndexA=int(ndx[0]),
                                                                     splineIndexB=int(ndx[1])))
                 else:
                     raise ValueError("Unimplemented functional form: %s" % form)
@@ -1572,7 +1576,7 @@ class Analysis(object):
                 qparams, cov, infodict, msg, self.ier = leastsq(fitfunc,normalize(p0),full_output=1,ftol=1e-3,xtol=1e-3,epsfcn=1e-6,maxfev=30*len(p0))
             params = unnormalize(qparams)
             # print "Leastsq problem size: %d, function evaluations: %d" % (len(p0),infodict['nfev'])
-        except TypeError:
+        except Exception:
             params = p0
             tbmsg = traceback.format_exc()
             Log('Exception in leastsq',Verbose=tbmsg)
