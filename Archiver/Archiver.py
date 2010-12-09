@@ -226,7 +226,7 @@ class ArchiveGroup(object):
         except:
             self.groupRoot = os.path.join(archiver.storageRoot,groupName)
        
-        if archiver.storageFolderTime.lower() == "local":
+        if archiver.storageFolderTime == "local":
             self.maketimetuple = time.localtime
         else:
             self.maketimetuple = time.gmtime
@@ -355,8 +355,7 @@ class ArchiveGroup(object):
         
     def doesFileExist(self,fileName,timestamp):
         """Inquires if the specified file name exists in this group for the specified timestamp"""
-        utcDatetime = timestampToUtcDatetime(timestamp)
-        timeTuple = utcDatetime.timetuple()
+        timeTuple = self.maketimetuple(unixTime(timestamp))
             
         pathName = makeStoragePathName(timeTuple,self.quantum)
         pathName = os.path.join(self.groupRoot,pathName)
@@ -365,12 +364,10 @@ class ArchiveGroup(object):
 
     def startLiveArchive(self, source, timestamp=None):
         if timestamp is None:
-            now = time.time()
-            timeTuple = self.maketimetuple(now)
+            now = time.time() 
         else:
-            utcDatetime = timestampToUtcDatetime(timestamp)
-            timeTuple = utcDatetime.timetuple()
             now = unixTime(timestamp)
+        timeTuple = self.maketimetuple(now)
             
         pathName = makeStoragePathName(timeTuple,self.quantum)
         pathName = os.path.join(self.groupRoot,pathName)
@@ -484,12 +481,10 @@ class ArchiveGroup(object):
             # If timestamp is None, use current time to store file in the correct location (local or GMT)
             #  otherwise use the specified timestamp
             if timestamp is None:
-                now = time.time()
-                timeTuple = self.maketimetuple(now)
+                now = time.time() 
             else:
-                utcDatetime = timestampToUtcDatetime(timestamp)
-                timeTuple = utcDatetime.timetuple()
                 now = unixTime(timestamp)
+            timeTuple = self.maketimetuple(now)
                 
             pathName = makeStoragePathName(timeTuple,self.quantum)
             pathName = os.path.join(self.groupRoot,pathName)
@@ -507,7 +502,7 @@ class ArchiveGroup(object):
                     targetName = os.path.join(pathName,os.path.split(sourceFileName)[-1])
                     renameFlag = removeOriginal
             else:
-                targetName = os.path.join(pathName,time.strftime(self.name+"_%Y%m%d_%H%M%S.zip",time.gmtime(now)))
+                targetName = os.path.join(pathName,time.strftime(self.name+"_%Y%m%d_%H%M%S.zip",timeTuple))
 
             if os.path.exists(targetName):
                 # Replace existing file
@@ -646,6 +641,11 @@ class Archiver(object):
     def LoadConfig(self,filename):
         self.config = CustomConfigObj(filename)
         self.storageFolderTime = self.config.get(_MAIN_CONFIG_SECTION,'StorageFolderTime',default="gmt")
+        if self.storageFolderTime.lower() == "local":
+            self.storageFolderTime = "local"
+        else:
+            self.storageFolderTime = "gmt"
+        
         basePath = os.path.split(filename)[0]
         try:
             self.storageRoot = os.path.join(basePath, self.config.get(_MAIN_CONFIG_SECTION,'StorageRoot'))

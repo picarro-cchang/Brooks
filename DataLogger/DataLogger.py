@@ -54,7 +54,8 @@ Notes:
     10-03-18 sze  Record time to millisecond resolution to facilitate timing of data reporting rate
     10-04-27 sze  Report bad data flagged by measurement system by setting bit 16 of the alarm status column
     10-10-23 sze  Remove DATE_TIME column (replaced by time) and get ms timestamp info from DataManager
-
+    10-12-08 alex  Provide an option to use GMT or local time in log file name (GMT is used by default)
+    
 Copyright (c) 2010 Picarro, Inc. All rights reserved 
 """
 
@@ -146,7 +147,7 @@ class Mbox(object):
 class DataLog(object):
     """Class to manage writing (and reading) of data logs to disk."""
     COLUMN_WIDTH = 26
-    def __init__(self, EngineName, Mbox, BackupGroupName = None):
+    def __init__(self, EngineName, TimeStandard, Mbox, BackupGroupName = None):
         self.EnabledDataList = []
         self.DecimationFactor = 1
         self.DecimationCount = 0
@@ -160,6 +161,10 @@ class DataLog(object):
         self.LogPath = ""
         self.Fname = ""
         self.EngineName = EngineName
+        if TimeStandard.lower() == "local":
+            self.TimeStandard = "local"
+        else:
+            self.TimeStandard = "gmt"
         self.LogName = ""
         self.Mbox = Mbox
         self.BackupGroupName = BackupGroupName
@@ -333,8 +338,16 @@ class DataLog(object):
     def _SetLogPathAndTimestamp(self):
         self.CreateLogTimestamp = timestamp.getTimestamp()  
         self.CreateLogTime = timestamp.unixTime(self.CreateLogTimestamp)
-        self.LogHour = time.localtime(self.CreateLogTime).tm_hour #used to determine when we reached midnight
-        self.timeString = time.strftime("%Y%m%d-%H%M%S",time.localtime(self.CreateLogTime))
+        
+        if self.TimeStandard == "local":
+            self.LogHour = time.localtime(self.CreateLogTime).tm_hour #used to determine when we reached midnight
+            self.timeString = time.strftime("%Y%m%d-%H%M%S",time.localtime(self.CreateLogTime))
+        else:
+            # Use GMT (UTC)
+            self.LogHour = time.gmtime(self.CreateLogTime).tm_hour #used to determine when we reached midnight
+            self.timeString = time.strftime("%Y%m%d-%H%M%SZ",time.gmtime(self.CreateLogTime))
+            # Z is for GMT (UTC) according to ISO 8601 format
+            
         if self.useHdf5:
             self.Fname = "%s-%s-%s.h5" % (self.EngineName,
                                             self.timeString,
@@ -401,7 +414,10 @@ class DataLog(object):
     def _Write(self, Time, DataDict, alarmStatus):
         """Writes a representation of the provided data to disk, either in text or H5 mode"""
 
-        localtime = time.localtime(Time)
+        if self.TimeStandard == "local":
+            currentTime = time.localtime(Time)
+        else:
+            currentTime = time.gmtime(Time)
 
         self.DecimationCount+=1
         if self.DecimationCount >= self.DecimationFactor:
@@ -422,7 +438,7 @@ class DataLog(object):
                 # MaxLogDuration is set to a 24 increment therefore create new file at 12:00 during the last 24 hrs of logging
                 # If difference <= 24 hrs then check to see if it's midnight yet.
                 if (self.MaxLogDuration - logDuration) <= TWENTY_FOUR_HOURS_IN_SECONDS:
-                    if localtime.tm_hour < self.LogHour:
+                    if currentTime.tm_hour < self.LogHour:
                         self._Create(DataList)
                         self.oldDataList = DataList
             else:
@@ -432,11 +448,11 @@ class DataLog(object):
                     self._Create(DataList)
                     self.oldDataList = DataList
 
-            self.LogHour = localtime.tm_hour
+            self.LogHour = currentTime.tm_hour
 
             # Start by writing fixed data to file
             #calculate SecondsFromEpoch as of Jan1 of this year
-            string = "%s 01 01 00 00 00" % time.strftime("%Y",localtime)
+            string = "%s 01 01 00 00 00" % time.strftime("%Y",currentTime)
             timeTuple =time.strptime( string, "%Y %m %d %H %M %S")
             Jan1SecondsSinceEpoch = time.mktime( timeTuple )
 
@@ -463,9 +479,9 @@ class DataLog(object):
             else:
                 if not self.BareTime:
                     #write DATE
-                    self._WriteEntry(time.strftime("%Y-%m-%d",localtime))
+                    self._WriteEntry(time.strftime("%Y-%m-%d",currentTime))
                     #write TIME
-                    timeStr = time.strftime("%H:%M:%S",localtime)
+                    timeStr = time.strftime("%H:%M:%S",currentTime)
                     fracSec = Time - int(Time)
                     if self.PrintTimeInHalfSecond:
                         if fracSec >= 0.5:
@@ -557,6 +573,7 @@ class DataLogger(object):
             mailGroupName = cp.get("DEFAULT", "ArchiveGroupName")
             mailGroupEnabled = cp.getboolean("DEFAULT", "mboxenabled")
             self.backupGroupName = cp.get("DEFAULT", "BackupGroupName")
+            self.timeStandard = cp.get("DEFAULT","TimeStandard",default="gmt")
         except:
             tbMsg = traceback.format_exc()
             Log("Load Config Exception:",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
@@ -564,6 +581,7 @@ class DataLogger(object):
             mailGroupName = ""
             mailGroupEnabled = False
             self.backupGroupName = None
+            self.timeStandard = "gmt"
             
         self.mbox = Mbox(mailGroupEnabled, mailGroupName)
 
@@ -573,7 +591,7 @@ class DataLogger(object):
 
         logList = ConfigParser.list_sections()
         for logName in logList:
-            dl = DataLog(self.engineName, self.mbox, self.backupGroupName)
+            dl = DataLog(self.engineName, self.timeStandard, self.mbox, self.backupGroupName)
             #load config from .ini
             try:
                 dl.LoadConfig(ConfigParser, self.basePath, logName)
