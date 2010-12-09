@@ -221,7 +221,7 @@ class DataLog(object):
         
     def LoadConfig(self, ConfigParser, basePath, LogName):
         self.LogName = LogName
-        self.EnabledDataList = ConfigParser.get(self.LogName, "datalist").split(',')
+        self.EnabledDataList = [d.strip() for d in ConfigParser.get(self.LogName, "datalist").split(',')]
         self.DecimationFactor = ConfigParser.getint(self.LogName, "decimationfactor")
         self.MaxLogDuration = ONE_HOUR_IN_SECONDS * ConfigParser.getfloat(self.LogName, "maxlogduration_hrs")
         self.Enabled = ConfigParser.getboolean(self.LogName, "enabled")
