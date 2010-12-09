@@ -15,6 +15,8 @@ from Host.Common import CmdFIFO
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.SharedTypes import RPC_PORT_DRIVER
+
+DEFAULT_TYPES = ["AADS", "ADDS", "AEDS", "AFDS", "BADS", "CADS", "CBDS", "CCADS", "CDDS", "CEDS", "CFADS", "CFBDS","CFDDS", "CFEDS", "CFKADS", "CFKBDS", "CHADS", "CKADS", "HBDS"]
 # Connect to database
 from xmlrpclib import ServerProxy
 DB = ServerProxy("http://mfg/xmlrpc/",allow_none=True)
@@ -27,7 +29,18 @@ class InstrEEPROMAccessFrame(wx.Frame):
             co = CustomConfigObj(configFile, list_values = True)
             analyzerTypes = co.get("Main", "AnalyzerTypes")
         except:
-            analyzerTypes = ["AADS", "ADDS", "AEDS", "AFDS", "BADS", "CADS", "CBDS", "CCADS", "CDDS", "CEDS", "CFADS", "CFBDS","CFDDS", "CFEDS", "CFKADS", "CFKBDS", "CHADS", "CKADS", "HBDS"]
+            analyzerTypes = DEFAULT_TYPES
+        try:
+            signaturePath = co.get("Main", "SignaturePath", "C:/Picarro/G2000")
+        except:
+            signaturePath = "C:/Picarro/G2000"
+        try:
+            signatureFile = os.path.join(signaturePath, "installerSignature.txt").replace("\\", "/")
+            sigFd = open(signatureFile, "r")
+            self.installerId = sigFd.readline()
+            sigFd.close()
+        except:
+            self.installerId = None
         kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
         wx.Frame.__init__(self, *args, **kwds)
         self.panel1 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
@@ -165,7 +178,7 @@ class InstrEEPROMAccess(InstrEEPROMAccessFrame):
     def __init__(self, defaultChassis, *args, **kwds):
         InstrEEPROMAccessFrame.__init__(self, defaultChassis, *args, **kwds)
         self.bindEvents()
-        
+ 
     def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
         self.Bind(wx.EVT_BUTTON, self.onCloseButton, self.closeButton)
@@ -184,6 +197,15 @@ class InstrEEPROMAccess(InstrEEPROMAccessFrame):
         chassisNum = self.comboBoxChassis.GetValue()
         analyzerType = self.comboBoxType.GetValue()
         analyzerNum = self.textCtrlNewAnalyzer.GetValue()
+        if (self.installerId != None) and (analyzerType != self.installerId):
+            d = wx.MessageDialog(None, "New Analyzer Type (%s) does NOT match Software Installer ID (%s)\nDo you want to continue?"%\
+                (analyzerType,self.installerId), "Mismatched Analyzer Type", wx.YES_NO|wx.ICON_ERROR)
+            if d.ShowModal() != wx.ID_YES:
+                d.Destroy()
+                return
+            else:
+                d.Destroy()
+            
         if len(analyzerNum) != 4:
             d = wx.MessageDialog(None, "Invalid Analyzer Number: %s\nMust be a 4-digit integer." % analyzerNum, "Error", wx.OK|wx.ICON_ERROR)
             d.ShowModal()
