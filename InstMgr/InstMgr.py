@@ -650,6 +650,7 @@ class InstMgr(object):
             return INST_ERROR_INVALID_SAMPLE_MGR_MODE
     def _StartMeasuring(self):
         """ called to start measuring """
+        self._VerifyInstallerId()
         self._SendDisplayMessage("Measuring...")
 
         try:
@@ -872,6 +873,13 @@ class InstMgr(object):
         if self.Config.measMode == "":
             raise Exception("App Type %d Doesn't Exist" % self.Config.StartAppType)
             
+    def _VerifyInstallerId(self):
+        (validInstallerId, analyzerType, installerId) = self.DriverRpc.verifyInstallerId()
+        if not validInstallerId:
+            Log("EEPROM ID (%s) does not match Software Installer ID (%s) - please correct EEPROM or re-install software" % (analyzerType,installerId),Level=3)
+        elif analyzerType != None and installerId != None:
+            Log("EEPROM ID matches Software Installer ID (%s)" % (analyzerType,),Level=1)            
+
     def _Monitor(self):
 
         while True and self.MonitorShutdown == False:

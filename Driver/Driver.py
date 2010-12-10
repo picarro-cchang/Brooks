@@ -70,6 +70,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.dasInterface = driver.dasInterface
         self.analogInterface = driver.analogInterface
         self.ver = driver.ver
+        self.driver = driver
         self._register_rpc_functions()
 
     def _register_rpc_functions_for_object(self, obj):
@@ -784,6 +785,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
         else:
             return None
     
+    def verifyInstallerId(self):
+        return (self.driver.validInstallerId, self.driver.analyzerType, self.driver.installerId)
+        
     def verifyObject(self,whichEeprom,object,startAddress=0):
         """Verify that the pickled object was written correctly to specified EEPROM, starting at 
         "startAddress". Returns True iff successful. """
@@ -1012,6 +1016,7 @@ class Driver(SharedTypes.Singleton):
         self.dasInterface = DasInterface(self.stateDbFile,self.usbFile,
                                          self.dspFile,self.fpgaFile,sim)
         self.analogInterface = AnalogInterface(self,self.config)
+        # Get appConfig and instrConfig version number
         self.ver = {}
         for ver in ["appVer", "instrVer"]:
             try:
@@ -1021,6 +1026,21 @@ class Driver(SharedTypes.Singleton):
             except Exception, err:
                 print err
                 self.ver[ver] = "N/A"
+        # Get installer ID     
+        try:
+            signaturePath = os.path.join(basePath, self.config.get("Files", "SignaturePath", "../../../installerSignature.txt"))
+        except:
+            signaturePath = os.path.join(basePath, "../../../installerSignature.txt")
+        try:
+            sigFd = open(signaturePath, "r")
+            self.installerId = sigFd.readline()
+            sigFd.close()
+        except Exception, err:
+            print "%r" % err
+            self.installerId = None
+        self.analyzerType = None # Will be retrieved from EEPROM in run() function
+        self.validInstallerId = True
+            
         self.rpcHandler = DriverRpcHandler(self)
         InstrumentConfig(self.instrConfigFile)
         self.streamSaver = StreamSaver(self.config, basePath)
@@ -1081,6 +1101,23 @@ class Driver(SharedTypes.Singleton):
             print "Analog interface present: %s" % analogInterfacePresent
             if analogInterfacePresent: 
                 self.analogInterface.initializeClock()
+            
+            # Compare Analyzer Type from EEPROM with Software Installer ID
+            self.validInstallerId = True
+            if self.installerId != None:
+                try:
+                    self.analyzerType = self.rpcHandler.fetchInstrInfo("analyzer")
+                except Exception, err:
+                    print "%r" % err
+                    self.analyzerType = None
+                    
+                if self.analyzerType != None:
+                    if self.installerId != self.analyzerType:
+                        Log("EEPROM ID (%s) does not match Software Installer ID (%s) - please correct EEPROM or re-install software" % (self.analyzerType,self.installerId),Level=3)
+                        self.validInstallerId = False
+                    else:
+                        Log("EEPROM ID matches Software Installer ID (%s)" % (self.analyzerType,),Level=1)
+            
             # Here follows the main loop.
             Log("Starting main driver loop",Level=1)
             try:

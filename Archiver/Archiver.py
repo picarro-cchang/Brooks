@@ -226,7 +226,7 @@ class ArchiveGroup(object):
         except:
             self.groupRoot = os.path.join(archiver.storageRoot,groupName)
        
-        if archiver.storageFolderTime == "local":
+        if archiver.config.get(groupName,"StorageFolderTime","gmt").lower() == "local":
             self.maketimetuple = time.localtime
         else:
             self.maketimetuple = time.gmtime
@@ -640,12 +640,6 @@ class Archiver(object):
 
     def LoadConfig(self,filename):
         self.config = CustomConfigObj(filename)
-        self.storageFolderTime = self.config.get(_MAIN_CONFIG_SECTION,'StorageFolderTime',default="gmt")
-        if self.storageFolderTime.lower() == "local":
-            self.storageFolderTime = "local"
-        else:
-            self.storageFolderTime = "gmt"
-        
         basePath = os.path.split(filename)[0]
         try:
             self.storageRoot = os.path.join(basePath, self.config.get(_MAIN_CONFIG_SECTION,'StorageRoot'))

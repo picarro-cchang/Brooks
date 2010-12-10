@@ -31,12 +31,11 @@ class InstrEEPROMAccessFrame(wx.Frame):
         except:
             analyzerTypes = DEFAULT_TYPES
         try:
-            signaturePath = co.get("Main", "SignaturePath", "C:/Picarro/G2000")
+            signaturePath = co.get("Main", "SignaturePath", "C:/Picarro/G2000/installerSignature.txt")
         except:
-            signaturePath = "C:/Picarro/G2000"
+            signaturePath = "C:/Picarro/G2000/installerSignature.txt"
         try:
-            signatureFile = os.path.join(signaturePath, "installerSignature.txt").replace("\\", "/")
-            sigFd = open(signatureFile, "r")
+            sigFd = open(signaturePath, "r")
             self.installerId = sigFd.readline()
             sigFd.close()
         except:
@@ -198,8 +197,8 @@ class InstrEEPROMAccess(InstrEEPROMAccessFrame):
         analyzerType = self.comboBoxType.GetValue()
         analyzerNum = self.textCtrlNewAnalyzer.GetValue()
         if (self.installerId != None) and (analyzerType != self.installerId):
-            d = wx.MessageDialog(None, "New Analyzer Type (%s) does NOT match Software Installer ID (%s)\nDo you want to continue?"%\
-                (analyzerType,self.installerId), "Mismatched Analyzer Type", wx.YES_NO|wx.ICON_ERROR)
+            d = wx.MessageDialog(None, "New Analyzer Type (%s) does not match Software Installer ID (%s)\nDo you want to continue?"%\
+                (analyzerType,self.installerId), "Mismatching Analyzer Type", wx.YES_NO|wx.ICON_ERROR)
             if d.ShowModal() != wx.ID_YES:
                 d.Destroy()
                 return
