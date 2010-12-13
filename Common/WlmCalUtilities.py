@@ -128,7 +128,6 @@ def bspInverse(p0,coeffs,y):
 
     Returns interpolated result together with a flag indicating if the spline+linear
     term is monotonic"""
-
     x0 = arange(1,len(coeffs)-1,dtype='d')
     # Evaluate spline + linear polynomial at the knots
     ygrid = polyval(p0,x0) + (coeffs[:-2] + 4*coeffs[1:-1] + coeffs[2:])/6.0
@@ -151,8 +150,13 @@ def bspInverse(p0,coeffs,y):
         pp = cc[i,:]
         pp[2] += p0[0]
         pp[3] += p0[0]*b[i]+p0[1]
+        # Remove small leading coefficients since they lead to false
+        #  complex roots when the cubic portion of the spline is close to zero
+        thresh = 1.0e-8*abs(pp[2])
+        while abs(pp[0])<thresh: pp = pp[1:]
         r = roots(pp)
-        x[i] += r[(r == real(r)) & (r>=0) & (r<=1)][0]
+        rr = r[(r == real(r)) & (r>=0) & (r<=1)]
+        x[i] += rr[0]
         # time.sleep(0)
     return x,True
 
