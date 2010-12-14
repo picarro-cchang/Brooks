@@ -661,7 +661,7 @@ class CommandInterface(object):
                 print "Failed to write error message to interface"
 
 def _TimeToString( t ):
-    return t.strftime("%y/%m/%d %H:%M:%S") + (".%03d" % (t.microsecond/1000,))
+    return t.strftime("%Y-%m-%d %H:%M:%S") + (".%03d" % (t.microsecond/1000,))
 
 def Usage():
     print "[-h] [-c configfile]"

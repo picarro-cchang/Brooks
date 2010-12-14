@@ -8,6 +8,7 @@ PAGE1_LEFT_MARGIN = 35
 PAGE2_LEFT_MARGIN = 110
 PAGE3_LEFT_MARGIN = 110
 PAGE4_LEFT_MARGIN = 80
+PAGE5_LEFT_MARGIN = 100
 
 COMMENT_BOX_SIZE = (400, 100)
 
@@ -27,7 +28,8 @@ def strToList(inStr):
     return retList
     
 class Page1(wx.Panel):
-    def __init__(self, quickGuiRpc, *args, **kwds):
+    def __init__(self, parent, quickGuiRpc, *args, **kwds):
+        self.parent = parent
         self.quickGuiRpc = quickGuiRpc
         wx.Panel.__init__(self, *args, **kwds)
         self.labelTitle = wx.StaticText(self, -1, "Data Logger Setup", style=wx.ALIGN_CENTRE)
@@ -72,11 +74,14 @@ class Page1(wx.Panel):
             print "%r" % err
             return
             
-        self.__clear_layout()
-        self.__createGUIElements()
-        self.__do_layout()
+        self.updateLayout()
         self.showCurValues()
            
+        # Update the Command Interface page as well
+        self.parent.pages[4].updateDataSourceCols()
+        self.parent.pages[4].updateLayout()
+        self.parent.pages[4].showCurValues()
+        
         d = wx.MessageDialog(None, "Data columns saved for scource(s):\n%s" % "\n".join(dataKeyDict.keys()), "Data Columns Saved", wx.OK|wx.ICON_INFORMATION)
         d.ShowModal()
         d.Destroy()
@@ -127,6 +132,7 @@ class Page1(wx.Panel):
         self.labelDict = {} # For each dataLog, the labels are [Data Columns, Hours of Each Log File, Archived Directory Structure, Log Storage Size]
         self.controlDict = {}
         self.dataLogSections = self.cp.list_sections()
+        self.dataSources = []
         self.numDataLogSections = len(self.dataLogSections)
         if self.numDataLogSections == 1:
             dataColumnBoxHeight = 340
@@ -134,6 +140,7 @@ class Page1(wx.Panel):
             dataColumnBoxHeight = 230.0/self.numDataLogSections
         for dataLog in self.dataLogSections:
             dataSource = self.cp.get(dataLog, "sourcescript")
+            self.dataSources.append(dataSource)
             try:
                 dataList = strToList(self.dataColsCp.get("DataCols", dataSource))
             except Exception, err:
@@ -194,10 +201,13 @@ class Page1(wx.Panel):
         except Exception, err:
             print "%r" % err
             
+        self.updateLayout()
+
+    def updateLayout(self):
         self.__clear_layout()
         self.__createGUIElements()
         self.__do_layout()
-           
+        
     def showCurValues(self):
         if self.cp == None or self.archiverCp == None:
             return False
@@ -304,6 +314,9 @@ class Page1(wx.Panel):
     def setFullInterface(self, full):
         self.fullInterface = full
         self.buttonGet.Enable(self.enFlag and self.fullInterface)
+        
+    def getDataSourceCols(self):
+        return self.dataSources, self.dataLogSections, self.dataCols
             
 class Page2(wx.Panel):
     def __init__(self, comPortList, coordinatorPortList, *args, **kwds):
@@ -869,3 +882,141 @@ class Page4(wx.Panel):
     def setFullInterface(self, full):
         self.fullInterface = full
         self.comboBoxList[1].Enable(self.enFlag and self.fullInterface)
+        
+class Page5(wx.Panel):
+    def __init__(self, parent, *args, **kwds):
+        wx.Panel.__init__(self, *args, **kwds)
+        self.parent = parent
+        self.labelTitle = wx.StaticText(self, -1, "Command Interface", style=wx.ALIGN_CENTRE)
+        self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        self.comment = wx.TextCtrl(self, -1, "", size = COMMENT_BOX_SIZE, style = wx.TRANSPARENT_WINDOW|wx.TE_READONLY|wx.TE_MULTILINE|wx.NO_BORDER|wx.TE_RICH|wx.ALIGN_LEFT)
+        self.comment.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        self.comment.SetForegroundColour("red")
+        self.comment.Enable(False)
+        self.targetIni = None
+        self.cp = None
+
+    def __do_layout(self):
+        sizer1 = wx.BoxSizer(wx.VERTICAL)
+        sizer2 = wx.BoxSizer(wx.VERTICAL)
+        gridSizer1 = wx.FlexGridSizer(-1, 2)
+        sizer1.Add(self.labelTitle, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 15)
+        for i in range(len(self.labelList)):
+            gridSizer1.Add(self.labelList[i], 0, wx.RIGHT|wx.BOTTOM, 15)
+            gridSizer1.Add(self.controlList[i], 0, wx.EXPAND)
+        sizer1.Add(gridSizer1, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 20)
+        sizer1.Add(self.comment, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
+        sizer2.Add(sizer1, 0, wx.LEFT, PAGE5_LEFT_MARGIN)
+        self.SetSizer(sizer2)
+        sizer2.Fit(self)
+        self.Layout()
+        
+    def __clear_layout(self):
+        try:
+            self.controlList[1].Destroy()
+        except:
+            pass
+        
+    def __createGUIElements(self):
+        self.labelList = []
+        self.controlList = []
+        label = wx.StaticText(self, -1, "Output Data Source", style=wx.ALIGN_LEFT)
+        label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        self.labelList.append(label)
+        combo = wx.ComboBox(self, -1, choices = self.dataSec, value = self.dataSec[self.idx], size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
+        combo.Bind(wx.EVT_COMBOBOX, self.onSelectDataSource)
+        self.controlList.append(combo)
+
+        label = wx.StaticText(self, -1, "Output Data Columns", style=wx.ALIGN_LEFT)
+        label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        self.labelList.append(label)
+        self.controlList.append(wx.CheckListBox(self, -1, choices = self.dataCols[self.idx], size = (250, 400)))
+    
+    def onSelectDataSource(self, event):
+        eventObj = event.GetEventObject()
+        newDataSource = self.secSourceDict[eventObj.GetValue()]
+        newDataCols = self.sourceColDict[newDataSource]
+        self.idx = self.dataSources.index(newDataSource)
+        self.updateLayout()
+        self.showCurValues()
+       
+    def updateDataSourceCols(self):
+        (self.dataSources, self.dataSec, self.dataCols) = self.parent.pages[0].getDataSourceCols()
+        self.secSourceDict = dict(zip(self.dataSec, self.dataSources))
+        self.sourceColDict = dict(zip(self.dataSources, self.dataCols))
+        
+    def updateLayout(self):
+        self.__clear_layout()
+        self.__createGUIElements()
+        self.__do_layout()
+        
+    def setIni(self, iniList):
+        if self.targetIni == iniList[0]:
+            return
+        self.targetIni = iniList[0]
+        try:
+            self.cp = CustomConfigObj(self.targetIni)
+        except Exception, err:
+            print "%r" % err
+           
+        self.updateDataSourceCols()
+        curDataSource = self.cp.get("HEADER", "meas_source", "")
+        self.idx = self.dataSources.index(curDataSource)
+        self.updateLayout()
+        
+    def showCurValues(self):
+        if self.cp == None:
+            return False
+
+        curDataSource = self.cp.get("HEADER", "meas_source", "")
+        curDataList = strToList(self.cp.get("HEADER", "meas_label", ""))
+        if self.idx == self.dataSources.index(curDataSource):
+            updateDataLog = False
+            for data in curDataList:
+                if data not in self.sourceColDict[curDataSource]:
+                    curDataList.remove(data)
+                    updateDataLog = True
+            if updateDataLog:
+                checkedList = ""
+                for data in curDataList:
+                    checkedList += "%s," % data
+                self.cp.set("HEADER", "meas_label", checkedList[:-1])
+                self.cp.write()
+          
+            self.controlList[1].SetCheckedStrings(curDataList)
+        else:
+            pass
+        return True
+        
+    def apply(self):
+        if self.cp == None:
+            return False
+            
+        dataSource = self.dataSources[self.idx]
+        dataCols = self.sourceColDict[dataSource]
+        try:
+            checkedList = ""
+            for i in self.controlList[1].GetChecked():
+                checkedList += "%s," % dataCols[i]
+            writeCp = False
+            if self.cp.get("HEADER", "meas_label", "") != checkedList[:-1]:
+                self.cp.set("HEADER", "meas_label", checkedList[:-1])
+                writeCp = True
+            if self.cp.get("HEADER", "meas_source", "") != dataSource:
+                self.cp.set("HEADER", "meas_source", dataSource)
+                writeCp = True
+            if writeCp:
+                self.cp.write()
+        except Exception, err:
+            print "%r" % err
+        return True
+        
+    def enable(self, en):
+        for comboBox in self.controlList:
+            comboBox.Enable(en)
+            
+    def setComment(self, comment):
+        self.comment.SetValue(comment)
+        
+    def setFullInterface(self, full):
+        pass
