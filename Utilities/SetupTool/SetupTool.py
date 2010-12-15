@@ -57,7 +57,7 @@ class SetupTool(SetupToolFrame):
         coordinatorDir = os.path.join(self.appConfigPath, "Coordinator")
         
         self.pageAppDict = {0: ["dataLogger", "archiver"], 1: ["dataManager", "valveSequencer", "commandInterface", "coordinator"],
-                            2: ["remoteAccess"], 3:["quickGui"], 4:["commandInterface"]}
+                            2: ["remoteAccess"], 3:["quickGui"], 4:["commandInterface"], 5:["dataManager"]}
         self.appIniDirDict = {"archiver": archiverDir, "dataLogger": dataLoggerDir, "dataManager": dataMgrDir,
                               "valveSequencer": valveDir, "commandInterface": cmdDir,
                               "remoteAccess": remoteAccessDir, "quickGui": quickGuiDir,

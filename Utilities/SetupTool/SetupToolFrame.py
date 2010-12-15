@@ -10,6 +10,7 @@ BACKGROUND_COLOR_2 = "#E0FFFF"
 BACKGROUND_COLOR_3 = "#BDEDFF"
 BACKGROUND_COLOR_4 = "#BCE954"
 BACKGROUND_COLOR_5 = "#ECD872"
+BACKGROUND_COLOR_6 = "#FAAFBE"
 BACKGROUND_COLOR_BOTTOM = "#43C6DB"
 
 class SetupToolFrame(wx.Frame):
@@ -21,6 +22,7 @@ class SetupToolFrame(wx.Frame):
         self.panel3 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         self.panel4 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         self.panel5 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
+        self.panel6 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         self.panelBottom = wx.Panel(self, -1)
         
         self.panel1.SetBackgroundColour(BACKGROUND_COLOR_1)
@@ -28,6 +30,7 @@ class SetupToolFrame(wx.Frame):
         self.panel3.SetBackgroundColour(BACKGROUND_COLOR_3)
         self.panel4.SetBackgroundColour(BACKGROUND_COLOR_4)
         self.panel5.SetBackgroundColour(BACKGROUND_COLOR_5)
+        self.panel6.SetBackgroundColour(BACKGROUND_COLOR_6)
         self.panelBottom.SetBackgroundColour(BACKGROUND_COLOR_BOTTOM)
         
         self.nb = aui.AuiNotebook(self, -1, agwStyle=aui.AUI_NB_CLOSE_ON_ALL_TABS|aui.AUI_NB_SCROLL_BUTTONS)
@@ -37,6 +40,7 @@ class SetupToolFrame(wx.Frame):
         self.nb.AddPage(self.panel3, "Data Delivery")
         self.nb.AddPage(self.panel4, "GUI Properties")
         self.nb.AddPage(self.panel5, "Command Interface")
+        self.nb.AddPage(self.panel6, "Data Streaming")
         for pageIdx in range(self.nb.GetPageCount()):
             self.nb.SetCloseButton(pageIdx, False)
         self.nbManager = self.nb.GetAuiManager()
@@ -48,6 +52,7 @@ class SetupToolFrame(wx.Frame):
         self.pages.append(Page3(driverRpc, self.panel3, -1))
         self.pages.append(Page4(self.panel4, -1))
         self.pages.append(Page5(self, self.panel5, -1))
+        self.pages.append(Page6(self, self.panel6, -1))
 
         # Menu bar
         
