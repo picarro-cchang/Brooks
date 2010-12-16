@@ -69,7 +69,6 @@ class ValveSequencer(ValveSequencerFrame):
             self.comPortRotValve = int(self.comPortRotValve)
         except:
             pass
-        self.filename = self.co.get("MAIN", "lastSeqFile", "")
         ValveSequencerFrame.__init__(self, self.numSolValves, *args, **kwds)
         try:
             self.rotValveCtrl = RotValveCtrl(self.comPortRotValve)
@@ -105,10 +104,13 @@ class ValveSequencer(ValveSequencerFrame):
         # A flag used to start/stop the sequencer for RPC calls (can't start timer directly from RPC)
         self.runSequencer = False
         
-        # Run the valve sequencer if lastSeqFile is a valid file name
+        # Load the valve sequence if lastSeqFile is a valid file name
+        self.filename = self.co.get("MAIN", "lastSeqFile", "")
         if os.path.isfile(self.filename):
             self.onLoadFileMenu(None, self.filename)
-            self.startValveSeq()
+            # Run the valve sequencer if lastRunning == True
+            if self.co.getboolean("MAIN", "lastRunning", "False"):
+                self.startValveSeq()
 
         if showAtStart:
             self.showGui()
@@ -211,19 +213,24 @@ class ValveSequencer(ValveSequencerFrame):
             self.co.set("MAIN", "lastSeqFile", filename)
             self.co.write()
         
+    def _setLastRunning(self, lastRunningFlag):
+        if lastRunningFlag != self.co.getboolean("MAIN", "lastRunning", "False"):
+            self.co.set("MAIN", "lastRunning", str(lastRunningFlag))
+            self.co.write()
+            
     def startValveSeq(self):
         self.runSequencer = True
         self.frameMenubar.SetLabel(self.idEnableSeq,"Stop Sequencer")
         # Update the seq file name in .ini file
         self._writeFilenameToIni(self.filename)
+        self._setLastRunning(True)
         
         print "Valve Sequencer started."
         
     def stopValveSeq(self):
         self.runSequencer = False
         self.frameMenubar.SetLabel(self.idEnableSeq,"Start Sequencer")
-        # Clear the seq file name in .ini file
-        self._writeFilenameToIni("")
+        self._setLastRunning(False)
         
         print "Valve Sequencer stopped."
         
