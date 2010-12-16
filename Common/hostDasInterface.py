@@ -14,6 +14,9 @@
 #
 #  Copyright (c) 2008 Picarro, Inc. All rights reserved
 #
+
+APP_NAME = "hostDasInterface"
+
 import sys
 import logging
 import thread
@@ -35,6 +38,8 @@ from Host.Common.SharedTypes    import Singleton, getSchemeTableClass, DasCommsE
 from Host.Common.simulatorUsbIf import SimulatorUsb
 from Host.Common.DspSimulator   import DspSimulator
 from Host.Common.analyzerUsbIf  import AnalyzerUsb
+from Host.Common.EventManagerProxy import *
+EventManagerProxy_Init(APP_NAME)
 
 # The 6713 has 192KB of internal memory from 0 through 0x2FFFF
 #  With the allocation below, the register area contains 16128 4-byte
@@ -957,7 +962,7 @@ def protectedRead(func):
             return func(self,*args)
         self.dbLock.acquire()
         txId = self.getId()
-        self.txQueue.put((txId,_func,args))
+        self._safeTxQueuePut((txId,_func,args))
         while True:
             rxId, exc, result = self.rxQueue.get()
             self.dbLock.release()
@@ -976,8 +981,12 @@ class StateDatabase(Singleton):
         if not self.initialized:
             self.fileName = fileName
             self.dbLock = threading.Lock()
-            self.txQueue = Queue.Queue(0)
-            self.rxQueue = Queue.Queue(0)
+            self.txQueueSizeLimit = 50
+            self.rxQueueSizeLimit = 50
+            self.txQueue = Queue.Queue(self.txQueueSizeLimit)
+            self.rxQueue = Queue.Queue(self.rxQueueSizeLimit)
+            self.maxTxQueueSize = 0
+            self.maxRxQueueSize = 0
             self.stopThread = threading.Event()
             self.hThread = threading.Thread(target = self.txQueueHandler)
             self.hThread.setDaemon(True)
@@ -994,19 +1003,43 @@ class StateDatabase(Singleton):
         StateDatabase.txId += 1
         return StateDatabase.txId
             
+    def _safeTxQueuePut(self, txCmd):
+        try:
+            self.txQueue.put_nowait(txCmd)
+            txQueueSize = self.txQueue.qsize()
+            if txQueueSize > self.maxTxQueueSize:
+                self.maxTxQueueSize = txQueueSize
+                Log("StateDatabase tx queue new max size = %d" % txQueueSize, Level = 1)
+                if txQueueSize == self.txQueueSizeLimit:
+                    Log("StateDatabase tx queue has reached the max size limit", Level = 2)
+        except:
+            pass
+       
+    def _safeRxQueuePut(self, rxCmd):
+        try:
+            self.rxQueue.put_nowait(rxCmd)
+            rxQueueSize = self.rxQueue.qsize()
+            if rxQueueSize > self.maxRxQueueSize:
+                self.maxRxQueueSize = rxQueueSize
+                Log("StateDatabase rx queue new max size = %d" % rxQueueSize, Level = 1)
+                if rxQueueSize == self.rxQueueSizeLimit:
+                    Log("StateDatabase rx queue has reached the max size limit", Level = 2)
+        except:
+            pass
+            
     def saveFloatRegList(self,floatList):
         """Save a list of (name,value) pairs in the floating point register table."""
         def _saveFloatRegList(floatList):
             self.con.executemany("insert or replace into dasRegFloat values (?,?)",floatList)
             self.con.commit()
-        self.txQueue.put((self.getId(),_saveFloatRegList,[copy.copy(floatList)]))
+        self._safeTxQueuePut((self.getId(),_saveFloatRegList,[copy.copy(floatList)]))
 
     def saveIntRegList(self,intList):
         """Save a list of (name,value) pairs in the integer register table"""
         def _saveIntRegList(intList):
             self.con.executemany("insert or replace into dasRegInt values (?,?)",intList)
             self.con.commit()
-        self.txQueue.put((self.getId(),_saveIntRegList,[copy.copy(intList)]))
+        self._safeTxQueuePut((self.getId(),_saveIntRegList,[copy.copy(intList)]))
 
     def saveWlmHist(self,wlmHist):
         """Save WLM parameters into the WLM History table."""
@@ -1023,8 +1056,8 @@ class StateDatabase(Singleton):
             else:
                 pass
             self.con.commit()
-        self.txQueue.put((self.getId(),_saveWlmHist,wlmHist))
-        
+        self._safeTxQueuePut((self.getId(),_saveWlmHist,wlmHist))
+
     def saveRegList(self,regList):
         """Save a list of (name,value) pairs in the appropriate register table"""
         floatList = []
@@ -1066,9 +1099,9 @@ class StateDatabase(Singleton):
                     self.con.execute("delete from history where level=? and idx<=?",
                                  (level,maxIdx[level]-maxRows))
                 self.con.commit()
-        self.txQueue.put((self.getId(),_writeSnapshot,[level,sensors.copy(),minSensors.copy(),maxSensors.copy(),
-                                                       sumSensors.copy(),pointsInSum.copy(),copy.copy(maxIdx)]))
-        
+        self._safeTxQueuePut((self.getId(),_writeSnapshot,[level,sensors.copy(),minSensors.copy(),maxSensors.copy(),
+                                                            sumSensors.copy(),pointsInSum.copy(),copy.copy(maxIdx)]))
+
     @protectedRead
     def getFloatRegList(self):
         "Fetch all floating point registers in the database"
@@ -1113,6 +1146,8 @@ class StateDatabase(Singleton):
         return values
         
     def txQueueHandler(self):
+        import thread
+        print "txQueueHandler thread id = ", thread.get_ident()
         """Creates the connection to the database and services the queue of requests"""
         self.con = sqlite3.connect(self.fileName)
         tableNames = [s[0] for s in self.con.execute("select tbl_name from sqlite_master where type='table'").fetchall()]
@@ -1146,4 +1181,4 @@ class StateDatabase(Singleton):
             except Exception,e:
                 pass
             if (r is not None) or (e is not None):
-                self.rxQueue.put((txId,e,r))
+                self._safeRxQueuePut((txId,e,r))
