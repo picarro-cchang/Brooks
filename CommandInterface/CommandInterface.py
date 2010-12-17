@@ -123,7 +123,10 @@ class CommandInterface(object):
                 return False
             interfaceConfig  = dict(self.config.list_items(self.interfaceName.upper()))
             for i in interfaceConfig:
-                interfaceConfig[i]=eval(interfaceConfig[i])
+                try:
+                    interfaceConfig[i]=eval(interfaceConfig[i])
+                except:
+                    interfaceConfig[i]=interfaceConfig[i]
             self.echo     = self.config.get(HEADER_SECTION,'echo')
             self.appendLf = eval(self.config.get(HEADER_SECTION,'appendLf'))
             self.appendCr = eval(self.config.get(HEADER_SECTION,'appendCr'))

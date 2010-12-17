@@ -24,7 +24,9 @@ translationTable = {
 "valvesequencer.exe": "Valve Sequencer",
 "quickgui.exe": "CRDS Data Viewer",
 "electricalinterface.exe": "Electrical Interface",
-"controller.exe": "Controller"
+"controller.exe": "Controller",
+"commandinterface.exe": "Command Interface",
+"datalogger.exe": "Data Logger"
 }
 
 appTimeout = 30 # sec
