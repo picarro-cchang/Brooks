@@ -73,6 +73,8 @@ sys.path.append("Utilities/InstrEEPROMAccess")
 sys.path.append("Utilities/DataRecal")
 sys.path.append("Utilities/IntegrationTool")
 sys.path.append("Utilities/SetupTool")
+sys.path.append("Utilities/PicarroKML")
+sys.path.append("Utilities/ReadGPSWS")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -268,6 +270,8 @@ setup(version = "1.0",
                  "Utilities/InstrEEPROMAccess/InstrEEPROMAccess.py",
                  "Utilities/DataRecal/DataRecal.py",
                  "Utilities/SetupTool/SetupTool.py",
+                 "Utilities/PicarroKML/PicarroKML.py",
+                 "Utilities/ReadGPSWS/ReadGPSWS.py",
                  ],
                  
       data_files = [(".", ["EventManager/Warning_16x16_32.ico",

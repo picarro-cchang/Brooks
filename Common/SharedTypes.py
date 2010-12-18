@@ -58,6 +58,7 @@ RPC_PORT_QUICK_GUI          = 50220
 RPC_PORT_READ_EXT_SENSOR    = 50230
 RPC_PORT_ACTIVE_FILE_MANAGER = 50300
 RPC_PORT_IPV                = 50400
+RPC_PORT_READ_GPSWS         = 50071
 
 #TCP_PORT... are the port numbers used by "normal" TCP servers
 TCP_PORT_INTERFACE          = 51000

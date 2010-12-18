@@ -5,7 +5,7 @@ Purpose:
 
 File History:
     10-07-10 Alex  Converted Matt's Gen 1 version to G2000 format
-    12-17-10 sze   Integrate this module into G2000 package
+    12-17-10 Alex  Integrate this module into G2000 package
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
