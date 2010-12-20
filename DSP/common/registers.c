@@ -110,6 +110,7 @@ void ringdown_put()
 {
     long long ts;
     volatile RingdownEntryType *r = ringdownEntries + ringdown_pointer;
+    CACHE_wbL2((void *)r, 64, CACHE_WAIT);
     get_timestamp(&ts);
     r->timestamp = ts;
     CACHE_wbL2((void *)r, 64, CACHE_WAIT);
