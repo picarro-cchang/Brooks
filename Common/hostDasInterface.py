@@ -1146,8 +1146,8 @@ class StateDatabase(Singleton):
         return values
         
     def txQueueHandler(self):
-        import thread
-        print "txQueueHandler thread id = ", thread.get_ident()
+        #import thread
+        #print "txQueueHandler thread id = ", thread.get_ident()
         """Creates the connection to the database and services the queue of requests"""
         self.con = sqlite3.connect(self.fileName)
         tableNames = [s[0] for s in self.con.execute("select tbl_name from sqlite_master where type='table'").fetchall()]
