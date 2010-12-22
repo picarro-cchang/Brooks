@@ -25,12 +25,19 @@ CRDS_DataManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_D
 CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER, ClientName = "PicarroKML", IsDontCareConnection = False)
 
 # kml formatting
-# To use template: kmlopenXXX = KML_OPEN_TEMPLATE % (color, color, conc)
-
-KML_OPEN_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
+KML_OPEN_TEMPLATE = \
+"""<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
-  <Document>
-    <Style id="redLine">
+<Document>
+"""
+
+# To use template: kmlXXX = KML_BODY_TEMPLATE % (index, baseline, multiplier, index, color, color, conc, index, body)
+KML_BODY_TEMPLATE = """
+<!-- Instrument Trace #%d-->
+<!-- baseline = %s-->
+<!-- multiplier = %s-->
+
+    <Style id="lineStyle%d">
         <LineStyle>
             <color>%s</color>
             <width>3</width>
@@ -41,25 +48,23 @@ KML_OPEN_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
     </Style>
 
     <Placemark>
- <name>Picarro Instrument Trace - %s</name>
-
-<styleUrl>redLine</styleUrl>
-  <LineString>
-
-    <extrude>1</extrude>
-    <tessellate>1</tessellate>
-    <altitudeMode>relativeToGround</altitudeMode>
-    <coordinates>
-
+        <name>Picarro Instrument Trace - %s</name>
+        <styleUrl>lineStyle%d</styleUrl>
+        <LineString>
+            <extrude>1</extrude>
+            <tessellate>1</tessellate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>
+            %s
+            </coordinates>
+        </LineString>
+    </Placemark>
 """
 
 KML_CLOSE = """
-
-</coordinates>
-</LineString>
-</Placemark>
 </Document>
-</kml>"""
+</kml>
+"""
 
 # San Fran Latitude, Longitude: 37.7749295, -122.4194155
 # KML: -122.014557,37.353230,520.304443
@@ -86,13 +91,9 @@ class PicarroKMLFrame(wx.Frame):
         # Other graphical components
         self.staticLine = wx.StaticLine(self, -1)
         self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
-        self.labelOutputPath = []
-        self.textCtrlOutputPath = []
-        for i in range(self.numConcs):
-            self.labelOutputPath.append(wx.StaticText(self, -1, "Output KML File #%d" % i))
-            textCtrl = wx.TextCtrl(self, -1, "", style = wx.TE_READONLY)
-            textCtrl.SetMinSize((450,20))
-            self.textCtrlOutputPath.append(textCtrl)
+        self.labelOutputPath = wx.StaticText(self, -1, "Output KML File")
+        self.textCtrlOutputPath = wx.TextCtrl(self, -1, "", style = wx.TE_READONLY)
+        self.textCtrlOutputPath.SetMinSize((450,20))
         self.labelStatus = wx.StaticText(self, -1, "Status (last 20 lines)")
         self.textCtrlStatus = wx.TextCtrl(self, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_AUTO_URL|wx.TE_RICH)
         self.textCtrlStatus.SetMinSize((560,275))
@@ -123,9 +124,8 @@ class PicarroKMLFrame(wx.Frame):
         sizer_1.Add(self.labelTitle, 0, wx.ALL|wx.ALIGN_CENTER, 10)
         sizer_1.Add(self.staticLine, 0, wx.EXPAND|wx.BOTTOM, 5)
         
-        for i in range(self.numConcs):
-            grid_sizer_1.Add(self.labelOutputPath[i], 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
-            grid_sizer_1.Add(self.textCtrlOutputPath[i], 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer_1.Add(self.labelOutputPath, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer_1.Add(self.textCtrlOutputPath, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         
         sizer_2.Add(self.labelStatus, 0, wx.LEFT|wx.RIGHT, 10)
         sizer_2.Add((-1,5))
@@ -150,9 +150,11 @@ class PicarroKML(PicarroKMLFrame):
         self.outputDir = self.cp.get("Main", "outputDir", "C:/Picarro/KML_Files")
         self.concList = self.cp.get("Main", "concList")
         gpsList = self.cp.get("Main", "gpsList")
-        if type(gpsList) == type(""):
-            gpsList = []
+        if type(gpsList) == type("") or len(gpsList) != 2:
+            gpsList = ["GPS_ABS_LAT", "GPS_ABS_LONG"]
         self.colorList = self.cp.get("Main", "colorList")
+        self.baselineList = self.cp.get("Main", "baselineList")
+        self.multiplierList = self.cp.get("Main", "multiplierList")
         self.source = self.cp.get("Main", "sourcescript")
         self.archiveGroupName = self.cp.get("Main", "archiveGroupName", "")
         self.maxNumLines = self.cp.getint("Main", "maxNumLines", 1000)
@@ -216,23 +218,23 @@ class PicarroKML(PicarroKMLFrame):
     def _createFilename(self):
         timestamp = self._getTime(1)
         self.datFilename = []
-        self.kmlFilename = []
         for i in range(self.numConcs):
             conc = self.concList[i]
             if os.path.isdir(self.outputDir):
                 datFilename = os.path.join(self.outputDir, "PicarroGIS-%s-%s.dat" % (timestamp, conc))
-                kmlFilename = os.path.join(self.outputDir, "PicarroGIS-%s-%s.kml" % (timestamp, conc))
             else:
                 try:
                     os.makedirs(self.outputDir)
                     datFilename = os.path.join(self.outputDir, "PicarroGIS-%s-%s.dat" % (timestamp, conc))
-                    kmlFilename = os.path.join(self.outputDir, "PicarroGIS-%s-%s.kml" % (timestamp, conc))
                 except:
                     datFilename = "PicarroGIS-%s-%s.dat" % (timestamp, conc)
-                    kmlFilename = "PicarroGIS-%s-%s.kml" % (timestamp, conc)
             self.datFilename.append(datFilename)
-            self.kmlFilename.append(kmlFilename)
-            self.textCtrlOutputPath[i].SetValue(os.path.abspath(kmlFilename))
+
+        if os.path.isdir(self.outputDir):
+            self.kmlFilename = os.path.join(self.outputDir, "PicarroGIS-%s-%s.kml" % (timestamp, "-".join(self.concList)))
+        else:
+            self.kmlFilename = "PicarroGIS-%s-%s.kml" % (timestamp, "-".join(self.concList))
+        self.textCtrlOutputPath.SetValue(os.path.abspath(self.kmlFilename))
             
     def _start(self):
         self._createFilename()
@@ -252,12 +254,19 @@ class PicarroKML(PicarroKMLFrame):
                     time.sleep(0.5)
                     continue
 
-                valueList = [reply[label] for label in self.completeList]
+                valueList = []
+                for i in range(len(self.completeList)):
+                    label = self.completeList[i]
+                    value = reply[label]
+                    if i < self.numConcs:
+                        value = (value - float(self.baselineList[i])) * float(self.multiplierList[i])
+                    valueList.append(value)
                 valueStrList = [str(val) for val in valueList]
                 labelStr = ", ".join(self.completeList)
                 valueStr = ", ".join(valueStrList)
                 self._writeToStatus('%s = %s' % (labelStr, valueStr))
                 
+                stackList = []
                 for i in range(self.numConcs):
                     conc = self.concList[i]
                     datout = open(self.datFilename[i],'a')
@@ -265,19 +274,19 @@ class PicarroKML(PicarroKMLFrame):
                     datout.close()
 
                     datout = open(self.datFilename[i],'r')
-                    stack = datout.read()
+                    stackList.append(datout.read())
                     datout.close()
+                    numLines += 1
+                    
+                out = open(self.kmlFilename,'w')
+                out.flush()
+                out.write(KML_OPEN_TEMPLATE)
+                # KML_BODY_TEMPLATE % (index, baseline, multiplier, index, color, color, conc, index, body)
+                for i in range(self.numConcs):
+                    out.write(KML_BODY_TEMPLATE % (i, self.baselineList[i], self.multiplierList[i], i, self.colorList[i], self.colorList[i], self.concList[i], i, stackList[i]))
+                out.write(KML_CLOSE)
+                out.close()
 
-                    out = open(self.kmlFilename[i],'w')
-                    out.flush()
-                    out.write(KML_OPEN_TEMPLATE % (self.colorList[i], self.colorList[i], conc))
-                    out.write(stack)
-                    out.write(KML_CLOSE)
-                    out.close()
-
-                numLines += 1
-                print numLines >= self.maxNumLines
-                
                 if numLines >= self.maxNumLines:
                     print "Archiving..."
                     if self.archiveGroupName:
@@ -287,11 +296,12 @@ class PicarroKML(PicarroKMLFrame):
                                 CRDS_Archiver.ArchiveFile(self.archiveGroupName, self.datFilename[i], removeOriginal=True)
                             except Exception, err:
                                 print "%r" % err
-                            self._writeToStatus("Archiving %s" % (self.kmlFilename[i],))
-                            try:
-                                CRDS_Archiver.ArchiveFile(self.archiveGroupName, self.kmlFilename[i], removeOriginal=True)
-                            except Exception, err:
-                                print "%r" % err
+                                
+                        self._writeToStatus("Archiving %s" % (self.kmlFilename,))
+                        try:
+                            CRDS_Archiver.ArchiveFile(self.archiveGroupName, self.kmlFilename, removeOriginal=True)
+                        except Exception, err:
+                            print "%r" % err
                                 
                         self._createFilename()
                         numLines = 0
