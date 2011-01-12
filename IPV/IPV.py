@@ -107,7 +107,8 @@ class RpcServerThread(threading.Thread):
             print "Exception raised when calling exit function at exit of RPC server."
         
 class FileUploader(object):
-    def __init__(self, configFile):
+    def __init__(self, configFile, instName):
+        self.instName = instName
         co = CustomConfigObj(configFile, list_values = True)
         self.ipvDir = os.path.abspath(co.get("FileUpload", "ipvDir"))
         self.ipvRemoteDir = co.get("FileUpload", "ipvRemoteDir")
@@ -116,27 +117,21 @@ class FileUploader(object):
         self.rdfDir = os.path.abspath(co.get("FileUpload", "rdfDir"))
         self.rdfRemoteDir = co.get("FileUpload", "rdfRemoteDir", "")
         self.rdfArchiveGroupName = co.get("RDFBackup", "archiveGroupName")
-        
-        #self._mkRemoteDir(self.ipvRemoteDir)
-        #self._mkRemoteDir(self.rdfRemoteDir)
-        #try:
-        #    self.ipvBackupDir = os.path.abspath(co.get("FileUpload", "ipvBackupDir"))
-        #    if not os.path.isdir(self.ipvBackupDir):
-        #        os.makedirs(self.ipvBackupDir)
-        #except:
-        #    self.ipvBackupDir = None
-            
-        # Build the channel and client to the remote server
+        self.host = co.get("FileUpload", "host")
+        self.user = co.get("FileUpload", "user")
+        self.password = co.get("FileUpload", "password")
         self.sftpClient = None
+        
+    def setSftpClient(self):
+        # Build the channel and client to the remote server
         try:
-            host = co.get("FileUpload", "host")
-            user = co.get("FileUpload", "user")
-            password = co.get("FileUpload", "password")
-            channel = paramiko.Transport((host, 22))
-            channel.connect(username=user, password=password)
+            channel = paramiko.Transport((self.host, 22))
+            channel.connect(username=self.user, password=self.password)
             self.sftpClient = paramiko.SFTPClient.from_transport(channel)
         except Exception, err:
             print "%r" % err
+            Log('SFTP Error: %r' % err)
+            self.sftpClient = None
         # Some useful available functions of self.sftpClient include:
         # close(self)
         # get_channel(self)
@@ -163,42 +158,44 @@ class FileUploader(object):
                 if os.path.basename(filename).split('.')[-1] in self.ipvExtension:
                     try:
                         self._uploadAndArchiveFile(filepath, self.ipvRemoteDir, self.ipvArchiveGroupName, True)
-                    except OSError,errorMsg:
-                        Log('%r' % (errorMsg))
+                    except Exception, err:
+                        Log('%r' % err)
 
     def uploadAndArchiveRDF(self, timeLimits):
         rdfFilelist = self._searchRdfFiles(timeLimits)
         for filepath in rdfFilelist:
             try:
                 self._uploadAndArchiveFile(filepath, self.rdfRemoteDir, self.rdfArchiveGroupName, False)
-            except OSError,errorMsg:
-                Log('%r' % (errorMsg))
+            except Exception, err:
+                Log('%r' % err)
             
     def _uploadAndArchiveFile(self, filepath, remoteDir = "", archiveGroupName = "", removeOriginal = True):
+        self.setSftpClient()
         (dir, filename) = os.path.split(filepath)
         filepath = filepath.replace("\.", "").replace("\\", "/")
-        if remoteDir:
+        if self.instName not in filename:
+            remoteFilepath = os.path.join(remoteDir, "%s_%s" % (self.instName, filename)).replace("\.", "").replace("\\", "/")
+        else:
             remoteFilepath = os.path.join(remoteDir, filename).replace("\.", "").replace("\\", "/")
-            print "Uploading %s to %s" % (filepath, remoteFilepath)
-            s = None
-            try:
-                startTime = time.time()
-                s = self.sftpClient.put(filepath, remoteFilepath)
-                endTime = time.time()
-                uploadTime = endTime - startTime
-            except Exception, err:
-                print "%r" % err
+        print "Uploading %s to %s" % (filepath, remoteFilepath)
+        s = None
+        try:
+            startTime = time.time()
+            s = self.sftpClient.put(filepath, remoteFilepath)
+            endTime = time.time()
+            uploadTime = endTime - startTime
             if s != None:
                 print "Finished uploading %.2f bytes in %.2f seconds" % (s.st_size, uploadTime)
+                if archiveGroupName:
+                    print "Archiving %s" % (filepath,)
+                    try:
+                        CRDS_Archiver.ArchiveFile(archiveGroupName, filepath, removeOriginal)
+                    except Exception, err:
+                        print "%r" % err
             else:
                 print "Failed uploading"
-                
-        if archiveGroupName:
-            print "Archiving %s" % (filepath,)
-            try:
-                CRDS_Archiver.ArchiveFile(archiveGroupName, filepath, removeOriginal)
-            except Exception, err:
-                print "%r" % err
+        except Exception, err:
+            print "%r" % err
             
     def _searchRdfFiles(self, timeLimits):
         fileList = []
@@ -213,30 +210,13 @@ class FileUploader(object):
             print err
         #print fileList
         return fileList
-
-    def _mkRemoteDir(self, remoteDir):
-        childrenRemoteDirList = []
-        parentRemoteDir = remoteDir
-        successful = False
-        while not successful:
-            try:
-                s = self.sftpClient.listdir(parentRemoteDir)
-                successful = True
-            except Exception, err:
-                (parentRemoteDir, child) = os.path.split(parentRemoteDir)
-                childrenRemoteDirList.append(child)
-        if len(childrenRemoteDirList) > 0:
-            newPath = parentRemoteDir
-            for i in range (len(childrenRemoteDirList)-1, -1, -1):
-                newPath = newPath+"/"+childrenRemoteDirList[i]
-                self.sftpClient.mkdir(newPath)
                 
 class IPV(IPVFrame):
     def __init__(self, configFile, useViewer, *args, **kwds):
         self.useViewer = useViewer
         self.commandQueue = Queue()
         self._processIni(configFile)
-        self.fUploader = FileUploader(configFile)
+        self.fUploader = FileUploader(configFile,  self.instName)
         self.signalList = [sigName for sigName in self.co if self.co.getboolean(sigName,"enabled")]
         self.numSignals = len(self.signalList)
         self.descrDict = {}
@@ -367,9 +347,12 @@ class IPV(IPVFrame):
         ipvStatus = self._updateIPV()
         if ipvStatus[0]:
             self._writeReport()
-            if not ipvStatus[1] and auto:
-                self.onCreateDiagFile(None)
-                self.onUploadAndArchive(None)
+            if auto:
+                if not ipvStatus[1]:
+                    self.onCreateDiagFile(None)
+                    self.onUploadAndArchive(None)
+                else:
+                    self.uploadAndArchiveIPV()
             
     def uploadAndArchiveIPV(self):
         self._writeToStatus("Archiving and/or uploading IPV reports...")
