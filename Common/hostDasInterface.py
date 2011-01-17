@@ -292,46 +292,40 @@ class DasInterface(Singleton):
         self.analyzerUsb.hpicWrite(0x00010001)
         #
         self.hostToDspSender = HostToDspSender(self.analyzerUsb,5.0)
-    def getMessages(self):
-        """Generator which retrieves messages from the analyzer"""
-        while True:
-            ts = self.hostToDspSender.rdMessageTimestamp(
-                  self.messageIndex)
-            if ts!=0 and ts>=self.lastMessageTime:
-                msg = self.hostToDspSender.rdMessage(self.messageIndex)
-                self.lastMessageTime = ts
-                self.messageIndex += 1
-                if self.messageIndex >= interface.NUM_MESSAGES:
-                    self.messageIndex = 0
-                yield ts,msg
-            else:
-                break
+        
+    def getMessage(self):
+        """Retrieves message from the analyzer or None if nothing is available"""
+        ts = self.hostToDspSender.rdMessageTimestamp(self.messageIndex)
+        if ts!=0 and ts>=self.lastMessageTime:
+            msg = self.hostToDspSender.rdMessage(self.messageIndex)
+            self.lastMessageTime = ts
+            self.messageIndex += 1
+            if self.messageIndex >= interface.NUM_MESSAGES:
+                self.messageIndex = 0
+            return ts,msg
+                
     def getSensorData(self):
-        """Generator which retrieves sensor data from the analyzer"""
-        while True:
-            data = self.hostToDspSender.rdSensorData(self.sensorIndex)
-            if data.timestamp!=0 and data.timestamp>=self.lastSensorTime:
-                self.lastSensorTime = data.timestamp
-                self.sensorIndex += 1
-                if self.sensorIndex >= interface.NUM_SENSOR_ENTRIES:
-                    self.sensorIndex = 0
-                self.sensorHistory.record(data)
-                yield data
-            else:
-                break
+        """Retrieves sensor data from the analyzer or None if nothing is available"""
+        data = self.hostToDspSender.rdSensorData(self.sensorIndex)
+        if data.timestamp!=0 and data.timestamp>=self.lastSensorTime:
+            self.lastSensorTime = data.timestamp
+            self.sensorIndex += 1
+            if self.sensorIndex >= interface.NUM_SENSOR_ENTRIES:
+                self.sensorIndex = 0
+            self.sensorHistory.record(data)
+            return data
+                
     def getRingdownData(self):
-        """Generator which retrieves sensor data from the analyzer"""
-        while True:
-            data = self.hostToDspSender.rdRingdownData(
-                  self.ringdownIndex)
-            if data.timestamp!=0 and data.timestamp>=self.lastRingdownTime:
-                self.lastRingdownTime = data.timestamp
-                self.ringdownIndex += 1
-                if self.ringdownIndex >= interface.NUM_RINGDOWN_ENTRIES:
-                    self.ringdownIndex = 0
-                yield data
-            else:
-                break
+        """Retrieves ringdown data from the analyzer or None if nothing is available"""
+        data = self.hostToDspSender.rdRingdownData(
+              self.ringdownIndex)
+        if data.timestamp!=0 and data.timestamp>=self.lastRingdownTime:
+            self.lastRingdownTime = data.timestamp
+            self.ringdownIndex += 1
+            if self.ringdownIndex >= interface.NUM_RINGDOWN_ENTRIES:
+                self.ringdownIndex = 0
+            return data
+
     def uploadSchedule(self,operationGroups):
         """Upload all operation groups to the instrument"""
         def shorts2int(x,y):

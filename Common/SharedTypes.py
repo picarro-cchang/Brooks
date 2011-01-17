@@ -122,35 +122,26 @@ class Bunch(object):
     def __repr__(self):
         return self.__str__()
         
-class GenHandler(object):
-    """This class is used to call a generator repeatedly and to perform some specified
-    action on the output of that generator, either for a duration which is as close as 
-    possible to a specified value, or until the generator is exhausted. In __init__,
-    a function is passed to produce a new generator, if an active one does not currently
-    exist. A function accepting the output of the generator is also required.
+class makeHandler(object):
+    """This class is used to call a reader function repeatedly and to perform some specified
+    action on the output of that reader, either for a duration which is as close as 
+    possible to a specified value, or until the reader returns None.
 
     It is useful when handling a number of queues within a single threaded environment
     so that we do not spend too much time trying to empty out a queue while others 
-    remain unserviced. The generator function in such a case would give a generator
-    that yields elements popped off the queue and raise StopIteration once the queue 
-    is empty."""
+    remain unserviced."""
 
-    def __init__(self,genFunc,processFunc):
-        self.genFunc = genFunc
+    def __init__(self,readerFunc,processFunc):
         self.processFunc = processFunc
-        self.generator = None
+        self.reader = readerFunc
 
     def process(self,timeLimit):
-        if not self.generator:
-            self.generator = self.genFunc()
-
         start = time.clock()
         while time.clock()-start < timeLimit:
-            try:
-                d = self.generator.next()
+            d = self.reader()
+            if d is not None:
                 self.processFunc(d)
-            except StopIteration:
-                self.generator = None
+            else:
                 break
 
         duration = time.clock()-start

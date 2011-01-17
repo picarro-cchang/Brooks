@@ -1064,16 +1064,20 @@ class Driver(SharedTypes.Singleton):
     def run(self):
         def messageProcessor(data):
             ts, msg = data
-            Log("%s" % (msg,))
+            if len(msg)>2 and msg[1] == ':':
+                level = int(msg[0])
+                Log("%s" % (msg[2:],),Level=level)
+            else:
+                Log("%s" % (msg,))
         def sensorProcessor(data):
             self.streamCast.send(StringPickler.ObjAsString(data))
             self.streamSaver._writeData(data)
         def ringdownProcessor(data):
             # TODO: Normalize the data format here
             self.resultsCast.send(StringPickler.ObjAsString(data))
-        messageHandler  = SharedTypes.GenHandler(self.dasInterface.getMessages,    messageProcessor)
-        sensorHandler   = SharedTypes.GenHandler(self.dasInterface.getSensorData,  sensorProcessor)
-        ringdownHandler = SharedTypes.GenHandler(self.dasInterface.getRingdownData,ringdownProcessor)
+        messageHandler  = SharedTypes.makeHandler(self.dasInterface.getMessage,    messageProcessor)
+        sensorHandler   = SharedTypes.makeHandler(self.dasInterface.getSensorData,  sensorProcessor)
+        ringdownHandler = SharedTypes.makeHandler(self.dasInterface.getRingdownData,ringdownProcessor)
         try:
             try:
                 usbSpeed = self.dasInterface.startUsb()
@@ -1122,15 +1126,21 @@ class Driver(SharedTypes.Singleton):
             Log("Starting main driver loop",Level=1)
             try:
                 while not daemon.mustShutdown:
+                    startPoll = time.time()
                     timeSoFar = 0
-                    timeSoFar += messageHandler.process(0.05)
-                    timeSoFar += sensorHandler.process(max(0.05,0.2-timeSoFar))
-                    timeSoFar += ringdownHandler.process(max(0.05,0.5-timeSoFar))
-                    daemon.handleRequests(max(0.005,0.5-timeSoFar))
+                    timeSoFar += messageHandler.process(0.02)
+                    timeSoFar += sensorHandler.process(max(0.02,0.2-timeSoFar))
+                    timeSoFar += ringdownHandler.process(max(0.02,0.5-timeSoFar))
+                    daemon.handleRequests(0.02)
+                    #timeSoFar += messageHandler.process(0.01)
+                    #timeSoFar += sensorHandler.process(max(0.01,0.04-timeSoFar))
+                    #timeSoFar += ringdownHandler.process(max(0.01,0.1-timeSoFar))
+                    #daemon.handleRequests(max(0.005,0.1-timeSoFar))
                     # Periodically save the state of the DAS and nudge the DAS timestamp
                     if analogInterfacePresent: 
                         self.analogInterface.serve()
                     now = time.time()
+                    #print "Poll Time", now-startPoll
                     if now > self.lastSaveDasState + 30.0:
                         self.nudgeDasTimestamp()
                         self.dasInterface.saveDasState()

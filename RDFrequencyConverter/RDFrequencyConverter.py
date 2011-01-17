@@ -367,7 +367,7 @@ class RDFrequencyConverter(Singleton):
         self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
         self.rpcThread.start()
         startTime = time.time()
-        timeout = 2.0
+        timeout = 0.1
         while not self._shutdownRequested:
             try:
                 rdQueueSize = self.rdQueue.qsize()
@@ -379,7 +379,7 @@ class RDFrequencyConverter(Singleton):
                     self._batchConvert()
                     startTime = time.time()
                 else:
-                    time.sleep(1.0)
+                    time.sleep(0.02)
                     continue
                 while self.rdProcessedCache:
                     try:
@@ -392,7 +392,7 @@ class RDFrequencyConverter(Singleton):
                 Log("Error: %s: %s" % (str(type),str(value)),Verbose=traceback.format_exc(),Level=3)
                 while not self.rdQueue.empty(): self.rdQueue.get(False)
                 self.rdProcessedCache = []
-                time.sleep(1.0)
+                time.sleep(0.02)
         Log("RD Frequency Converter RPC handler shut down")
 
     def _batchConvert(self):
