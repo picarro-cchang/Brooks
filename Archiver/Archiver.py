@@ -37,9 +37,9 @@ import Queue
 import zipfile
 from inspect import isclass
 from cStringIO import StringIO
-from win32file import CreateFile, WriteFile, GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, INVALID_HANDLE_VALUE
-from win32file import FILE_END, CloseHandle
-
+from win32file import CreateFile, WriteFile, CloseHandle, SetFilePointer, DeleteFile
+from win32file import FILE_BEGIN, FILE_END, GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,\
+                      INVALID_HANDLE_VALUE
 from Host.Common import CmdFIFO
 from Host.Common import BetterTraceback
 from Host.Common.SharedTypes import RPC_PORT_LOGGER, RPC_PORT_ARCHIVER
@@ -166,7 +166,9 @@ class LiveArchive(object):
         self.updating = False
         self.srcFp = None
         self.archiveGroup = archiveGroup
+        self.oldNBytes = 0
         
+    # Live updating for data logs
     def startUpdate(self):
         self.destHandle = CreateFile(self.destPathName,GENERIC_WRITE,
                                      FILE_SHARE_READ,None,CREATE_ALWAYS,
@@ -205,6 +207,54 @@ class LiveArchive(object):
         if self.updateThread.isAlive():
             Log('Live archive %s cannot be closed' % self.destPathName, Level=3)
     
+    # Live copying for coordinator output files
+    def startCopy(self):
+        self.destHandle = CreateFile(self.destPathName,GENERIC_WRITE,
+                                     FILE_SHARE_READ,None,CREATE_ALWAYS,
+                                     FILE_ATTRIBUTE_NORMAL,0)
+        if self.destHandle == INVALID_HANDLE_VALUE:
+            Log('Cannot open live archive file %s' % self.destPathName, Level=2)
+            return False
+        self.updating = True
+        self.oldNBytes = 0
+        self.srcFp = open(self.srcPathName,'rb')
+        if not self.srcFp:
+            Log('Cannot open datalogger file %s' % self.srcPathName, Level=2)
+            return False
+        self.archiveGroup.makeSpace(0,1)
+        self.copyThread = threading.Thread(target=self.copier)
+        self.copyThread.setDaemon(True)
+        self.copyThread.start()
+        return True
+
+    def makeCopy(self):
+        self.srcFp.seek(0)
+        data = self.srcFp.read()
+        nBytes = len(data)
+        deltaNBytes = nBytes - self.oldNBytes
+        if deltaNBytes > 0:
+            self.archiveGroup.makeSpace(deltaNBytes,0)
+            SetFilePointer(self.destHandle, 0, FILE_BEGIN)
+            WriteFile(self.destHandle,data)
+            self.oldNBytes = nBytes
+                
+    def copier(self):
+        while self.updating:
+            self.makeCopy()
+            time.sleep(10.0)
+        # Make the last copy before exiting
+        self.makeCopy()
+        CloseHandle(self.destHandle)
+        if self.srcFp:
+            self.srcFp.close()
+            deleteFile(self.srcPathName)
+        
+    def stopCopy(self):
+        self.updating = False
+        self.copyThread.join(20.0)
+        if self.copyThread.isAlive():
+            Log('Live archive %s cannot be closed' % self.destPathName, Level=3)
+            
 class ArchiveGroup(object):
     """Class associated with each storage group. This corresponds to a directory called "groupName" created under the
     storageRoot of the archiver. Under this directory, files are stored in a tree organized by file modification time in GMT.
@@ -362,7 +412,7 @@ class ArchiveGroup(object):
         targetName = os.path.join(pathName,os.path.split(fileName)[-1])
         return os.path.exists(targetName)
 
-    def startLiveArchive(self, source, timestamp=None):
+    def startLiveArchive(self, source, timestamp=None, copier=False):
         if timestamp is None:
             now = time.time() 
         else:
@@ -377,17 +427,36 @@ class ArchiveGroup(object):
         targetName = os.path.join(pathName,os.path.split(source)[-1])
 
         a = LiveArchive(source, targetName, self)
-        if a.startUpdate():
-            self.liveArchiveDict[source] = a
-            # print "LiveArchive started for source %s, timestamp %s, target %s" % (source, timestamp, targetName)
+        if not copier:
+            if a.startUpdate():
+                self.liveArchiveDict[source] = a
+                # print "LiveArchive started for source %s, timestamp %s, target %s" % (source, timestamp, targetName)
+            else:
+                pass
+                # print "LiveArchive failed"
         else:
-            pass
-            # print "LiveArchive failed"
+            # Archive all the old files in the source directory first
+            sourceDir = os.path.split(source)[0]
+            for root, dirs, files in os.walk(sourceDir):
+                for filename in files:
+                    path = os.path.join(root,filename)
+                    if source not in path:
+                        #print "Cleaning...", path
+                        self.archiveData(path, True, None)
+            if a.startCopy():
+                self.liveArchiveDict[source] = a
+                # print "LiveArchive started for source %s, timestamp %s, target %s" % (source, timestamp, targetName)
+            else:
+                pass
+                # print "LiveArchive failed"
         
-    def stopLiveArchive(self, source):
+    def stopLiveArchive(self, source, copier=False):
         if source in self.liveArchiveDict:
             a = self.liveArchiveDict[source]
-            a.stopUpdate()
+            if not copier:
+                a.stopUpdate()
+            else:
+                a.stopCopy()
             # print "LiveArchive stopped for source %s" % (source,)
         else:
             pass
@@ -651,13 +720,13 @@ class Archiver(object):
             return False
         return True
 
-    def RPC_StartLiveArchive(self, groupName, sourceFile, timestamp = None):
+    def RPC_StartLiveArchive(self, groupName, sourceFile, timestamp = None, copier = False):
         """Create a 'live' archive of the source file in the specified archive group"""
         sourceFile = os.path.abspath(sourceFile)
         group = self.storageGroups[groupName]
         if not os.path.exists(sourceFile):
             raise ValueError,"Source file %s does not exist" % (sourceFile,)
-        group.cmdQueue.put(("startLiveArchive",(sourceFile, timestamp)))
+        group.cmdQueue.put(("startLiveArchive",(sourceFile, timestamp, copier)))
         return "startLiveArchive command queued for group %s" % (groupName,)
     
     def RPC_GetLiveArchiveFileName(self,groupName,sourceFile):
@@ -667,11 +736,11 @@ class Archiver(object):
         except:
             return (False,sourceFile)
         
-    def RPC_StopLiveArchive(self, groupName, sourceFile):
+    def RPC_StopLiveArchive(self, groupName, sourceFile, copier = False):
         """Stop a previously started 'live' archive of the source file in the specified archive group"""
         sourceFile = os.path.abspath(sourceFile)
         group = self.storageGroups[groupName]
-        group.cmdQueue.put(("stopLiveArchive",(sourceFile,)))
+        group.cmdQueue.put(("stopLiveArchive",(sourceFile, copier)))
         return "stopLiveArchive command queued for group %s" % (groupName,)
         
     def RPC_ArchiveFile(self, groupName, sourceFile, removeOriginal = True, timestamp = None):

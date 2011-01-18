@@ -28,7 +28,7 @@ from CoordinatorFrameGui import CoordinatorFrameGui
 from CoordinatorParamGui import InitialParamDialogGui
 from CoordinatorStateMachine import State, StateMachine, OK, EXCEPTION, TIMEOUT
 from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import RPC_PORT_COORDINATOR, RPC_PORT_DRIVER
+from Host.Common.SharedTypes import RPC_PORT_COORDINATOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
@@ -46,7 +46,11 @@ CONTROL = 3
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                              APP_NAME,
                                              IsDontCareConnection = False)
-                                         
+
+CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
+                                            APP_NAME,
+                                            IsDontCareConnection = True)
+        
 class RpcServerThread(threading.Thread):
     def __init__(self, RpcServer, ExitFunction):
         threading.Thread.__init__(self)
@@ -161,11 +165,14 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.forcedClose = forcedClose
         self.startServer()
         self.sampleNum = 1
+        self.guiParamDict = {}
         self.logFp = None
         try:
             self.analyzerName = CRDS_Driver.fetchInstrInfo("analyzername")
         except:
             self.analyzerName = None
+        self.archiveGroupName = self.config.get("Archiver", "archiveGroupName", "")
+        self.maxNumLines = self.config.getint("Files", "max_num_lines", 0)
             
     def startServer(self):
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_COORDINATOR),
@@ -402,26 +409,18 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 self.saveFp = None
                 
     def onNewFile(self,event):
-        dlg = wx.FileDialog(
-            self, message="File name for data ...", defaultDir=os.getcwd(), 
-            defaultFile=self.makeFilename(), wildcard="Comma-separated value file (*.csv)|*.csv", style=wx.SAVE)
-        # dlg.SetFilterIndex(2)
-        if dlg.ShowModal() == wx.ID_OK:
-            self.saveFileName = dlg.GetPath()
-            if self.saveFp != None:
-                self.saveFp.close()
-                self.saveFp = None
-            self.saveFp = file(self.saveFileName,"wb")
-            self.terminateStateMachineThread()
-            # Clear the data list
-            self.outputFileDataList = []
-            # Keep the file closed. It is briefly opened for append when required
+        if self.archiveGroupName:
+            CRDS_Archiver.StopLiveArchive(groupName=self.archiveGroupName, sourceFile=self.saveFileName, copier=True)
+        self.saveFileName = self.makeFilename()
+        self.filenameTextCtrl.SetValue(os.path.split(self.saveFileName)[-1])
+        if self.saveFp != None:
             self.saveFp.close()
             self.saveFp = None
-            self.rewriteOutputFile = True
-            self.startStateMachineThread()
-        dlg.Destroy()
-        event.Skip()
+        # Clear the data list
+        self.outputFileDataList = []
+        self.rewriteOutputFile = True
+        if self.archiveGroupName:
+            CRDS_Archiver.StartLiveArchive(groupName=self.archiveGroupName, sourceFile=self.saveFileName, timestamp=None, copier=True)
 
     def setParamText(self,idx,text):
         try:
@@ -430,6 +429,8 @@ class CoordinatorFrame(CoordinatorFrameGui):
             pass 
             
     def terminateStateMachineThread(self):
+        if self.archiveGroupName:
+            CRDS_Archiver.StopLiveArchive(groupName=self.archiveGroupName, sourceFile=self.saveFileName, copier=True)
         if self.fsmThread != None:
             self.fsmThread.stop()
             self.fsmThread.join()
@@ -438,29 +439,30 @@ class CoordinatorFrame(CoordinatorFrameGui):
         while not self.guiQueue.empty(): self.guiQueue.get()
         while not self.replyQueue.empty(): self.replyQueue.get()
         
-    def startStateMachineThread(self, paramTupleList):
-        guiParamDict = {}
+    def startStateMachineThread(self, paramTupleList=[]):
         if len(paramTupleList) > 0:
             dlg = InitialParamDialogGui(paramTupleList, None, -1, "")
             getParamVals = (dlg.ShowModal() == wx.ID_OK)
             for idx in range(len(paramTupleList)):
                 if getParamVals:
-                    guiParamDict[dlg.nameList[idx]] = dlg.textCtrlList[idx].GetValue()
+                    self.guiParamDict[dlg.nameList[idx]] = dlg.textCtrlList[idx].GetValue()
                 else:
-                    guiParamDict[dlg.nameList[idx]] = paramTupleList[idx][2]
+                    self.guiParamDict[dlg.nameList[idx]] = paramTupleList[idx][2]
                 if idx < self.numDispParams:
-                    self.setParamText(idx, guiParamDict[dlg.nameList[idx]])
+                    self.setParamText(idx, self.guiParamDict[dlg.nameList[idx]])
             dlg.Destroy()
-            print guiParamDict
+            print self.guiParamDict
 
         if self.fsmThread != None:
             self.terminateStateMachineThread()
         self.filenameTextCtrl.SetValue(os.path.split(self.saveFileName)[-1])
         self.fsmThread = FsmThread(configFile=self.configFile,gui=self,
-            guiQueue=self.guiQueue,replyQueue=self.replyQueue,editParamDict=guiParamDict)
+            guiQueue=self.guiQueue,replyQueue=self.replyQueue,editParamDict=self.guiParamDict)
         self.fsmThread.setDaemon(True)
         self.fsmThread.start()
-
+        if self.archiveGroupName:
+            CRDS_Archiver.StartLiveArchive(groupName=self.archiveGroupName, sourceFile=self.saveFileName, timestamp=None, copier=True)
+                    
     def processData(self,data):
         if "sampleNum" not in data:
             data["sampleNum"] = self.sampleNum           
@@ -513,6 +515,9 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.setChangeSampleNumText(str(self.sampleNum))
             
     def onIdle(self,event):
+        if self.maxNumLines > 0 :
+            if len(self.outputFileDataList) >= self.maxNumLines:
+                self.onNewFile(None)
         if self.rewriteOutputFile: # Descriptions have changed, rewrite file
             self.fileDataListCtrl.ClearAll()
             self.lineIndex = 0
