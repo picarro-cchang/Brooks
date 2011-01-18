@@ -173,6 +173,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.analyzerName = None
         self.archiveGroupName = self.config.get("Archiver", "archiveGroupName", "")
         self.maxNumLines = self.config.getint("Files", "max_num_lines", 0)
+        self.fileTime = self.config.get("Files", "file_time", "gmt").lower()
             
     def startServer(self):
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_COORDINATOR),
@@ -280,7 +281,10 @@ class CoordinatorFrame(CoordinatorFrameGui):
         (dirName, baseName) = os.path.split(self.config.get("Files", "output", "C:/CoordinatorData/"))
         if not os.path.isdir(dirName):
             os.mkdir(dirName)
-        self.lastFileTime = time.localtime()
+        if self.fileTime == "local":
+            self.lastFileTime = time.localtime()
+        else:
+            self.lastFileTime = time.gmtime()
         if self.analyzerName != None and self.analyzerName not in baseName:
             if baseName != "":
                 baseName = "%s_%s" % (self.analyzerName, baseName)
