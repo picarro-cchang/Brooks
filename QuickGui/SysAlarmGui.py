@@ -39,8 +39,8 @@ class SysAlarmDialog(wx.Dialog):
         self.instructions = wx.StaticText(self,-1,"")
         if data["name"] == "System Alarm":
             self.instructions.SetLabel(wordwrap("System alarm that monitors current status of instrument",300, wx.ClientDC(self)))
-        elif data["name"] == "IPV Alarm":
-            self.instructions.SetLabel(wordwrap("IPV alarm that monitors continuous status of instrument",300, wx.ClientDC(self)))
+        elif data["name"] == "IPV Connectivity":
+            self.instructions.SetLabel(wordwrap("Alarm that monitors the connectivity between IPV program and Picarro HQ",300, wx.ClientDC(self)))
         sizer.Add(self.instructions, pos=(1,0), span=(1,2), flag=wx.ALL, border=5)
         self.enabled = wx.CheckBox(self,-1,"Enable alarm")
         self.enabled.SetValidator(DataXferValidator(data,"enabled",None))
@@ -171,7 +171,7 @@ class SysAlarmInterface(object):
                                                       self._InstMgrStatusFilter,
                                                       retry = True,
                                                       name = "System Alarm Instrument Manager listener")
-        self.alarmData = [["System Alarm", True], ["IPV Alarm", False]]
+        self.alarmData = [["System Alarm", True], ["IPV Connectivity", False]]
         self.latestInstMgrStatus = -1
         
     def _InstMgrStatusFilter(self, obj):
@@ -208,4 +208,4 @@ class SysAlarmInterface(object):
                     descr += "\n* Measurement Not Active"
             return good, descr
         elif index == 1:
-            return True, "IPV Status: Good"
+            return True, "IPV Connectivity Status: Good"
