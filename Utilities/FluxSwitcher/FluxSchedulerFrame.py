@@ -27,22 +27,23 @@ class FluxSchedulerFrame(wx.Frame):
         self.staticLine = wx.StaticLine(self.panel1, -1) 
         
         # Type select
+        self.numTypes = len(typeChoices)
         self.comboBoxSelect1 = []
-        for i in range(3):
-            self.comboBoxSelect1.append(wx.ComboBox(self.panel1, -1, value = typeChoices[i], choices = typeChoices, size=(100, 20), style = wx.CB_READONLY|wx.CB_DROPDOWN))
-        self.comboBoxSelect2 = wx.ComboBox(self.panel2, -1, value = typeChoices[0], choices = typeChoices, size=(100, 20), style = wx.CB_READONLY|wx.CB_DROPDOWN)
+        for i in range(self.numTypes):
+            self.comboBoxSelect1.append(wx.ComboBox(self.panel1, -1, value = typeChoices[i], choices = typeChoices, size=(150, 20), style = wx.CB_READONLY|wx.CB_DROPDOWN))
+        self.comboBoxSelect2 = wx.ComboBox(self.panel2, -1, value = typeChoices[0], choices = typeChoices, size=(150, 20), style = wx.CB_READONLY|wx.CB_DROPDOWN)
         
         # dwell
         self.dwell = []
-        for i in range(3):
-            self.dwell.append(wx.TextCtrl(self.panel1, -1, "0", size=(100, 20), style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE))
+        for i in range(self.numTypes):
+            self.dwell.append(wx.TextCtrl(self.panel1, -1, "0", size=(150, 20), style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE))
             
         # Button
-        self.buttonStop = wx.Button(self.panel1, -1, "Stop", size=(100, 20))
+        self.buttonStop = wx.Button(self.panel1, -1, "Stop", size=(150, 20))
         self.buttonStop.SetBackgroundColour(wx.Colour(237, 228, 199))
-        self.buttonLaunch1 = wx.Button(self.panel1, -1, "Launch", size=(100, 20))
+        self.buttonLaunch1 = wx.Button(self.panel1, -1, "Launch", size=(150, 20))
         self.buttonLaunch1.SetBackgroundColour(wx.Colour(237, 228, 199))
-        self.buttonLaunch2 = wx.Button(self.panel2, -1, "Launch", size=(100, 20))
+        self.buttonLaunch2 = wx.Button(self.panel2, -1, "Launch", size=(150, 20))
         self.buttonLaunch2.SetBackgroundColour(wx.Colour(237, 228, 199))        
         self.__do_layout()
 
@@ -58,7 +59,7 @@ class FluxSchedulerFrame(wx.Frame):
         sizer_1.Add(self.labelTitle1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
         grid_sizer_1.Add(self.labelMode, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 10)
         grid_sizer_1.Add(self.labelDwell, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 10)
-        for i in range(3):
+        for i in range(self.numTypes):
             grid_sizer_1.Add(self.comboBoxSelect1[i], 0, wx.ALL, 10)
             grid_sizer_1.Add(self.dwell[i], 0, wx.ALL, 10)
         grid_sizer_1.Add(self.buttonStop, 0, wx.LEFT|wx.TOP|wx.ALIGN_BOTTOM|wx.RIGHT, 10)

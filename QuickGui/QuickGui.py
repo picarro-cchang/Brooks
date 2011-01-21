@@ -51,6 +51,8 @@ from wx.lib.wordwrap import wordwrap
 
 from PulseAnalyzerGui import PulseAnalyzerGui
 from UserCalGui import UserCalGui
+from GuiTools import *
+from SysAlarmGui import *
 from Host.Common import CmdFIFO, StringPickler, Listener, TextListener
 from Host.Common import plot
 from Host.Common import GraphPanel
@@ -78,36 +80,6 @@ if sys.platform == 'win32':
     TimeStamp = time.clock
 else:
     TimeStamp = time.time
-
-def normalizeBoolean(s):
-    s = s.lower()
-    if s in ("1","yes","true","on"): return True
-    if s in ("0","no","false","off"): return Falsed
-    raise ValueError("Invalid boolean value: %s" % (s,))
-
-def setItemFont(obj,fontTuple):
-    font,fg,bg = fontTuple
-    obj.SetFont(font)
-    obj.SetForegroundColour(fg)
-    obj.SetBackgroundColour(bg)
-    
-def getInnerStr(str):
-    """
-    This function is used to get around the problem that ConfigObj can't read '#' in
-    any value assignment. To assign a HTML color code we have to use quotes to enclose
-    the color value like '#85B24A'. When ConfigObj parses configuration file it returns
-    "'#85B24A'" (when list_values option is False), and we need to get the inner sring.
-    This is not needed if list_values optin is True in ConfigObj. But to be consistent
-    we always set list_values as False and use this function as special case.
-    """
-    if ("'" in str) or ('"' in str):
-        try:
-            innerStr = eval(str)
-            if type(innerStr) == type(''):
-                return innerStr
-        except:
-            pass        
-    return str
     
 class ImageDatabase(object):
     def __init__(self):
@@ -153,6 +125,7 @@ class ImageDatabase(object):
         y = fh - ih - y
         imagePanel.SetPosition((int(x),int(y)))
         wx.FutureCall(5,imagePanel.Refresh)
+        
 class ImagePanel(wx.Panel):
     def __init__(self,imgFile,parent,id=-1,size=(-1,-1),**kwargs):
         wx.Panel.__init__(self,parent,id,**kwargs)
@@ -170,44 +143,7 @@ class ImagePanel(wx.Panel):
     def OnPaint(self,evt):
         dc = wx.PaintDC(self)
         dc.DrawBitmap(self.bmp,0,0,True)
-class DataXferValidator(wx.PyValidator):
-    def __init__(self,data,key,validator):
-        wx.PyValidator.__init__(self)
-        self.data = data
-        self.key = key
-        self.validator = validator
-
-    def Clone(self):
-        return DataXferValidator(self.data,self.key,self.validator)
-
-    def Validate(self,win):
-        ctrl = self.GetWindow()
-        if isinstance(ctrl,wx.TextCtrl):
-            text = ctrl.GetValue()
-            if len(text)==0:
-                wx.MessageBox("This field should not be empty","Error")
-                ctrl.SetBackgroundColour("pink")
-                ctrl.SetFocus()
-                ctrl.Refresh()
-                return False
-        if self.validator is not None:
-            return self.validator(ctrl,win)
-        else:
-            return True
-
-    def TransferToWindow(self):
-        ctrl = self.GetWindow()
-        if isinstance(ctrl,wx.StaticText):
-            ctrl.SetLabel(self.data.get(self.key,""))
-        else:
-            ctrl.SetValue(self.data.get(self.key,""))
-        return True
-
-    def TransferFromWindow(self):
-        ctrl = self.GetWindow()
-        if not isinstance(ctrl,wx.StaticText):
-            self.data[self.key] = ctrl.GetValue()
-        return True
+        
 class InstMgrInterface(object):
     """Interface to the instrument manager RPC"""
     def __init__(self,config):
@@ -220,6 +156,7 @@ class InstMgrInterface(object):
 
     def loadConfig(self):
         pass
+        
 class OKDialog(wx.Dialog):
     def __init__(self,mainForm,aboutText,parent,id,title,pos=wx.DefaultPosition,size=wx.DefaultSize,
                  style=wx.DEFAULT_DIALOG_STYLE):
@@ -448,6 +385,7 @@ class AlarmDialog(wx.Dialog):
                 wx.MessageBox("In %s mode, Alarm threshold 1 must be above Alarm threshold 2" % mode,"Error")
                 return False
         return True
+        
 class AlarmViewListCtrl(wx.ListCtrl):
     """ListCtrl to display alarm status
     attrib is a list of wx.ListItemAttr objects for the disabled and enabled alarm text
@@ -567,6 +505,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
 
     def RefreshList(self):
         self.RefreshItems(0,self.GetItemCount()-1)
+        
 class AlarmInterface(object):
     """Interface to the alarm system RPC and status ports"""
     def __init__(self,config):
@@ -1219,6 +1158,7 @@ class QuickGui(wx.Frame):
         self.eventStore = EventStore(self.config)
         self.alarmInterface = AlarmInterface(self.config)
         self.alarmInterface.getAlarmData()
+        self.sysAlarmInterface = SysAlarmInterface()
         self.dataLoggerInterface = DataLoggerInterface(self.config)
         self.dataLoggerInterface.getDataLoggerInfo()
         self.instMgrInterface = InstMgrInterface(self.config)
@@ -1599,7 +1539,17 @@ class QuickGui(wx.Frame):
         self.alarmView.SetMainForm(self)
         setItemFont(alarmBox,self.getFontFromIni('AlarmBox'))
         setItemFont(self.alarmView,self.getFontFromIni('AlarmBox'))
-        alarmBoxSizer = wx.StaticBoxSizer(alarmBox,wx.HORIZONTAL)
+        
+        # System Alarm view
+        size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",34)
+        self.sysAlarmView = SysAlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
+                                           DataSource=self.sysAlarmInterface,
+                                           size=size, numAlarms=2)
+        self.sysAlarmView.SetMainForm(self)
+        
+        # Combine system alarm with concentration alarms
+        alarmBoxSizer = wx.StaticBoxSizer(alarmBox,wx.VERTICAL)
+        alarmBoxSizer.Add(self.sysAlarmView,proportion=0,flag=wx.EXPAND)
         alarmBoxSizer.Add(self.alarmView,proportion=0,flag=wx.EXPAND)
 
         # Instrument status panel
@@ -1719,7 +1669,7 @@ class QuickGui(wx.Frame):
         logoSizer.Add(wx.StaticBitmap(self.measPanel, -1, logoBmp),proportion=0, flag=wx.TOP,border = 15)
         self.measPanelSizer.Add(logoSizer,proportion=0,flag=wx.ALIGN_CENTER|wx.BOTTOM,border = 5)
         self.measPanelSizer.Add(alarmBoxSizer,proportion=0,flag=wx.ALIGN_CENTER)
-        self.measPanelSizer.Add((panelWidth,20),proportion=0)
+        self.measPanelSizer.Add((panelWidth,10),proportion=0)
         self.measPanelSizer.Add(measDisplaySizer,proportion=0,flag=wx.GROW | wx.LEFT | wx.RIGHT,border = 10)
         self.measPanelSizer.Add(instStatusBoxSizer,proportion=0,flag=wx.ALIGN_CENTER | wx.ALL,border = 5)
         self.measPanelSizer.Add(self.shutdownButton,proportion=0,flag=wx.GROW | wx.ALL,border = 10)
@@ -1951,6 +1901,7 @@ class QuickGui(wx.Frame):
         self.alarmInterface.getQueuedEvents()
         if not self.alarmInterface.alarmData:
             self.alarmInterface.getAlarmData()
+        self.sysAlarmInterface.getStatus(0)
         sources = self.getSourcesbyMode()
         self.dataLoggerInterface.getDataLoggerInfo()
         # Update the combo box of sources with source names translated via the sourceSubstDatabase
@@ -2092,6 +2043,7 @@ class QuickGui(wx.Frame):
 
         self.eventViewControl.RefreshList()
         self.alarmView.RefreshList()
+        self.sysAlarmView.RefreshList()
        
         # Update instrument status
         if self.showInstStat:

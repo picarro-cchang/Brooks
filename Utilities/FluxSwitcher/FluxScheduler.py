@@ -17,12 +17,16 @@ import win32process
 import win32con
 import win32gui
 import shutil
+from Host.Common import CmdFIFO
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.FluxSwitcher import FluxSwitcher
-from FluxSchedulerFrame import FluxSchedulerFrame
+from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM
 from Host.Common.SingleInstance import SingleInstance
+from Host.Common.FluxSwitcher import FluxSwitcher
+from Host.Utilities.SupervisorLauncher.SupervisorLauncher import SupervisorLauncher
+from FluxSchedulerFrame import FluxSchedulerFrame
 
 DEFAULT_CONFIG_NAME = "FluxScheduler.ini"
+FLUX_TYPES = ["CO2_H2O", "H2O_CH4", "CO2_CH4"]
 
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -48,13 +52,17 @@ class FluxScheduler(FluxSchedulerFrame):
     def __init__(self, configFile, supervisorConfigFile, *args, **kwds):
         self.co = CustomConfigObj(configFile)
         self.switcher = FluxSwitcher(configFile, supervisorConfigFile)
+        self.supervisorLauncher = SupervisorLauncher(supervisorConfigFile, False, True, None, -1, "")
         typeChoices = self.co.keys()
+        typeChoices.append("High_Precision_3_Gas")
         typeChoices.remove("Main")
+        self.numTypes = len(typeChoices)
         self.minDwell = max(self.co.getfloat("Main", "MinDwell", default=15), 0)
         FluxSchedulerFrame.__init__(self, typeChoices, *args, **kwds)
         self.terminate = False
         self.dwellList = []
         self.selectList = []
+        self.currentFlowMode = None
         self.buttonLaunch1.Enable(True)
         self.buttonLaunch2.Enable(True)
         self.buttonStop.Enable(False)
@@ -62,6 +70,11 @@ class FluxScheduler(FluxSchedulerFrame):
         self.Bind(wx.EVT_BUTTON, self.onStop, self.buttonStop)
         self.Bind(wx.EVT_BUTTON, self.onLaunch1, self.buttonLaunch1)
         self.Bind(wx.EVT_BUTTON, self.onLaunch2, self.buttonLaunch2)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
+        
+    def onClose(self, event):
+        self.supervisorLauncher.Destroy()
+        self.Destroy()
 
     def onStop(self, event):
         self.terminate = True
@@ -78,7 +91,7 @@ class FluxScheduler(FluxSchedulerFrame):
         self._disableSelects()
         self.dwellList = []
         self.selectList = []
-        for i in range(3):
+        for i in range(self.numTypes):
             dwell = float(self.dwell[i].GetValue())
             if dwell > 0.0:
                 if dwell >= self.minDwell:
@@ -105,8 +118,30 @@ class FluxScheduler(FluxSchedulerFrame):
       
     def _runSwitcher(self):
         type = self.comboBoxSelect2.GetValue()
-        self.switcher.select(type)
-        self.switcher.launch()
+        if type in FLUX_TYPES:
+            if self.currentFlowMode != "High":
+                supervisorThread = threading.Thread(target=self.launchSupvervisor, args=("Flux",))
+                supervisorThread.setDaemon(True)
+                supervisorThread.start()
+                self.currentFlowMode = "High"
+                measState = None
+                while measState != 'ENABLED':
+                    time.sleep(1)
+                    try:
+                        MeasSysRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
+                                     "FluxScheduler",
+                                      IsDontCareConnection = False)
+                        measState = MeasSysRpc.GetStates()['State_MeasSystem']
+                    except:
+                        measState = None
+            self.switcher.select(type)
+            self.switcher.launch()
+        else:
+            if self.currentFlowMode != "Low":
+                supervisorThread = threading.Thread(target=self.launchSupvervisor, args=("High_Precision_3_Gas",))
+                supervisorThread.setDaemon(True)
+                supervisorThread.start()
+                self.currentFlowMode = "Low"
         print "Run mode %s\n" % type
         self.buttonLaunch1.Enable(True)
         self.buttonLaunch2.Enable(True)
@@ -118,8 +153,40 @@ class FluxScheduler(FluxSchedulerFrame):
         if numModes > 0:
             while not self.terminate:
                 type = self.selectList[idx]
-                self.switcher.select(type)
-                self.switcher.launch()
+                if type in FLUX_TYPES:
+                    if self.currentFlowMode != "High":
+                        supervisorThread = threading.Thread(target=self.launchSupvervisor, args=("Flux",))
+                        supervisorThread.setDaemon(True)
+                        supervisorThread.start()
+                        self.currentFlowMode = "High"
+                        measState = None
+                        while measState != 'ENABLED':
+                            time.sleep(1)
+                            try:
+                                MeasSysRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
+                                             "FluxScheduler",
+                                              IsDontCareConnection = False)
+                                measState = MeasSysRpc.GetStates()['State_MeasSystem']
+                            except:
+                                measState = None
+                    self.switcher.select(type)
+                    self.switcher.launch()
+                else:
+                    if self.currentFlowMode != "Low":
+                        supervisorThread = threading.Thread(target=self.launchSupvervisor, args=("High_Precision_3_Gas",))
+                        supervisorThread.setDaemon(True)
+                        supervisorThread.start()
+                        self.currentFlowMode = "Low"
+                        measState = None
+                        while measState != 'ENABLED':
+                            time.sleep(1)
+                            try:
+                                MeasSysRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
+                                             "FluxScheduler",
+                                              IsDontCareConnection = False)
+                                measState = MeasSysRpc.GetStates()['State_MeasSystem']
+                            except:
+                                measState = None
                 print "Run mode %s\n" % type
                 if numModes == 1:
                     break
@@ -134,14 +201,18 @@ class FluxScheduler(FluxSchedulerFrame):
         else:
             self.onStop(None)
             
+    def launchSupvervisor(self, supervisorType):
+        self.supervisorLauncher.assignType(supervisorType)
+        self.supervisorLauncher.runForcedLaunch()
+                        
     def _disableSelects(self):
-        for i in range(3):
+        for i in range(self.numTypes):
             self.dwell[i].Enable(False)
             self.comboBoxSelect1[i].Enable(False)
             self.comboBoxSelect2.Enable(False)
         
     def _enableSelects(self):
-        for i in range(3):
+        for i in range(self.numTypes):
             self.dwell[i].Enable(True)
             self.comboBoxSelect1[i].Enable(True)
             self.comboBoxSelect2.Enable(True)

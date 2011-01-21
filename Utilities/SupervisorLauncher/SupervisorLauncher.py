@@ -71,15 +71,22 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         self.closeValves = closeValves
         if autoLaunch:
             self.supervisorIni = self.startupSupervisorIni
-            self.forcedLaunch = True
-            self.onLaunch(None)
+            self.runForcedLaunch()
             time.sleep(3)
             self.Destroy()
         
     def onSelect(self, event):
         self.supervisorType = self.comboBoxSelect.GetValue()
         self.supervisorIni = os.path.join(self.supervisorIniDir, self.co[self.supervisorType]["SupervisorIniFile"].strip())
-            
+
+    def assignType(self, supervisorType):
+        self.supervisorType = supervisorType
+        self.supervisorIni = os.path.join(self.supervisorIniDir, self.co[self.supervisorType]["SupervisorIniFile"].strip())
+        
+    def runForcedLaunch(self):
+        self.forcedLaunch = True
+        self.onLaunch(None)
+        
     def onLaunch(self, event):
         # Terminate the current supervisor
         try:
