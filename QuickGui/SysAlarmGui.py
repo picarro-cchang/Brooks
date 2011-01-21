@@ -171,7 +171,7 @@ class SysAlarmInterface(object):
                                                       self._InstMgrStatusFilter,
                                                       retry = True,
                                                       name = "System Alarm Instrument Manager listener")
-        self.alarmData = [["System Alarm", True], ["IPV Alarm", True]]
+        self.alarmData = [["System Alarm", True], ["IPV Alarm", False]]
         self.latestInstMgrStatus = -1
         
     def _InstMgrStatusFilter(self, obj):

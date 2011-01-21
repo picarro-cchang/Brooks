@@ -121,6 +121,7 @@ class FileUploader(object):
         self.user = co.get("FileUpload", "user")
         self.password = co.get("FileUpload", "password")
         self.sftpClient = None
+        self.uploadStatus = True
         
     def setSftpClient(self):
         # Build the channel and client to the remote server
@@ -152,24 +153,31 @@ class FileUploader(object):
         # get(self, remotepath, localpath, callback=None)
         
     def uploadAndArchiveIPV(self):
+        self.uploadStatus = True
         for root, dirs, files in os.walk(self.ipvDir):
             for filename in files:
                 filepath = os.path.join(root, filename)
                 if os.path.basename(filename).split('.')[-1] in self.ipvExtension:
                     try:
-                        self._uploadAndArchiveFile(filepath, self.ipvRemoteDir, self.ipvArchiveGroupName, True)
+                        if not self._uploadAndArchiveFile(filepath, self.ipvRemoteDir, self.ipvArchiveGroupName, True):
+                            self.uploadStatus = False
                     except Exception, err:
                         Log('%r' % err)
+                        self.uploadStatus = False
 
     def uploadAndArchiveRDF(self, timeLimits):
+        self.uploadStatus = True
         rdfFilelist = self._searchRdfFiles(timeLimits)
         for filepath in rdfFilelist:
             try:
-                self._uploadAndArchiveFile(filepath, self.rdfRemoteDir, self.rdfArchiveGroupName, False)
+                if not self._uploadAndArchiveFile(filepath, self.rdfRemoteDir, self.rdfArchiveGroupName, False):
+                    self.uploadStatus = False
             except Exception, err:
                 Log('%r' % err)
+                self.uploadStatus = False
             
     def _uploadAndArchiveFile(self, filepath, remoteDir = "", archiveGroupName = "", removeOriginal = True):
+        status = False
         self.setSftpClient()
         (dir, filename) = os.path.split(filepath)
         filepath = filepath.replace("\.", "").replace("\\", "/")
@@ -192,10 +200,12 @@ class FileUploader(object):
                         CRDS_Archiver.ArchiveFile(archiveGroupName, filepath, removeOriginal)
                     except Exception, err:
                         print "%r" % err
+                status = True
             else:
                 print "Failed uploading"
         except Exception, err:
             print "%r" % err
+        return status
             
     def _searchRdfFiles(self, timeLimits):
         fileList = []
@@ -253,6 +263,7 @@ class IPV(IPVFrame):
         self.histTable = None
         self.wlmTable = None        
         self._shutdownRequested = False
+        self.uploadStatus = True
         
         IPVFrame.__init__(self, self.numRowsList, *args, **kwds)
         self.SetTitle("Picarro Instrument Performance Verification (%s, Host Version: %s)" % (self.instName, self.softwareVersion))
@@ -335,9 +346,13 @@ class IPV(IPVFrame):
         self.rpcServer.register_function(self.shutdown)
         self.rpcServer.register_function(self.showViewer)
         self.rpcServer.register_function(self.hideViewer)
+        self.rpcServer.register_function(self.getUploadStatus)
         # Start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.shutdown)
         self.rpcThread.start()
+        
+    def getUploadStatus(self):
+        return self.fUploader.uploadStatus
         
     def shutdown(self):
         self.Destroy()
