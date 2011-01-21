@@ -208,4 +208,7 @@ class SysAlarmInterface(object):
                     descr += "\n* Measurement Not Active"
             return good, descr
         elif index == 1:
-            return True, "IPV Connectivity Status: Good"
+            if not self.alarmData[index][1]:
+                return True, "IPV Disabled"
+            else:
+                return True, "IPV Connectivity Status: Good"

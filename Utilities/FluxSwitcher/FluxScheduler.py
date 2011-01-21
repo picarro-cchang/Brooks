@@ -120,9 +120,7 @@ class FluxScheduler(FluxSchedulerFrame):
         type = self.comboBoxSelect2.GetValue()
         if type in FLUX_TYPES:
             if self.currentFlowMode != "High":
-                supervisorThread = threading.Thread(target=self.launchSupvervisor, args=("Flux",))
-                supervisorThread.setDaemon(True)
-                supervisorThread.start()
+                self.launchSupvervisor("Flux")
                 self.currentFlowMode = "High"
                 measState = None
                 while measState != 'ENABLED':
@@ -138,9 +136,7 @@ class FluxScheduler(FluxSchedulerFrame):
             self.switcher.launch()
         else:
             if self.currentFlowMode != "Low":
-                supervisorThread = threading.Thread(target=self.launchSupvervisor, args=("High_Precision_3_Gas",))
-                supervisorThread.setDaemon(True)
-                supervisorThread.start()
+                self.launchSupvervisor("High_Precision_3_Gas")
                 self.currentFlowMode = "Low"
         print "Run mode %s\n" % type
         self.buttonLaunch1.Enable(True)
@@ -155,9 +151,7 @@ class FluxScheduler(FluxSchedulerFrame):
                 type = self.selectList[idx]
                 if type in FLUX_TYPES:
                     if self.currentFlowMode != "High":
-                        supervisorThread = threading.Thread(target=self.launchSupvervisor, args=("Flux",))
-                        supervisorThread.setDaemon(True)
-                        supervisorThread.start()
+                        self.launchSupvervisor("Flux")
                         self.currentFlowMode = "High"
                         measState = None
                         while measState != 'ENABLED':
@@ -173,9 +167,7 @@ class FluxScheduler(FluxSchedulerFrame):
                     self.switcher.launch()
                 else:
                     if self.currentFlowMode != "Low":
-                        supervisorThread = threading.Thread(target=self.launchSupvervisor, args=("High_Precision_3_Gas",))
-                        supervisorThread.setDaemon(True)
-                        supervisorThread.start()
+                        self.launchSupvervisor("High_Precision_3_Gas")
                         self.currentFlowMode = "Low"
                         measState = None
                         while measState != 'ENABLED':
