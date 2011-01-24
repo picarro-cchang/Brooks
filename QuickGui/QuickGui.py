@@ -159,10 +159,16 @@ class InstMgrInterface(object):
         
 class OKDialog(wx.Dialog):
     def __init__(self,mainForm,aboutText,parent,id,title,pos=wx.DefaultPosition,size=wx.DefaultSize,
-                 style=wx.DEFAULT_DIALOG_STYLE):
+                 style=wx.DEFAULT_DIALOG_STYLE, boldText = None):
         wx.Dialog.__init__(self,parent,id,title,pos,size,style)
         self.okButton = wx.Button(self, wx.ID_OK)
         self.aboutText = wx.StaticText(self,-1,aboutText)
+        if boldText:
+            boldFont = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD)
+            self.boldText = wx.StaticText(self,-1,boldText)
+            self.boldText.SetFont(boldFont)
+        else:
+            self.boldText = None
         self.mainForm = mainForm
         self.__set_properties()
         self.__do_layout()
@@ -178,6 +184,9 @@ class OKDialog(wx.Dialog):
         # begin wxGlade: ShutdownDialog.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
+        if self.boldText:
+            sizer_1.Add((-1,10))
+            sizer_1.Add(self.boldText, flag=wx.LEFT|wx.RIGHT|wx.TOP, border=5)
         sizer_1.Add(self.aboutText, flag=wx.ALL, border=5)
         #sizer_2.AddButton(self.okButton)
         #sizer_2.Realize()
@@ -1297,6 +1306,7 @@ class QuickGui(wx.Frame):
         self.rpcServer.register_function(self.setLineMarkerColor)
         self.rpcServer.register_function(self.getLineMarkerColor)
         self.rpcServer.register_function(self.getDataKeys)
+        self.rpcServer.register_function(self.setSysAlarmEnable)
         # Start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.Destroy)
         self.rpcThread.start()
@@ -1339,6 +1349,10 @@ class QuickGui(wx.Frame):
             for source in sources:
                 retDict[source] = self.dataStore.getKeys(source)
             return retDict
+            
+    def setSysAlarmEnable(self, index, enable):
+        """Enable/disable one of the system alarms"""
+        self.sysAlarmInterface.setAlarm(index, enable)
         
     #
     # End of RPC functions
@@ -2246,17 +2260,19 @@ class QuickGui(wx.Frame):
             self.imageDatabase.placeImage(key,(w,h))
         evt.Skip()
     def OnAbout(self,e):
-        v = "(c) 2005-2010, Picarro Inc.\n\n"
+        v = "Web site : www.picarro.com\nTechnical support : 408-962-3900\nE-mail : techsupport@picarro.com\n\n(c) 2005-2011, Picarro Inc.\n\n"
         try:
             dV = self.driverRpc.allVersions()
+            boldText = "SOFTWARE RELEASE VERSION : %s\n" % dV["host release"]
             klist = dV.keys()
             klist.sort()
             v += "Version strings:\n"
             for k in klist:
-                v += "%s : %s\n" % (k,dV[k])
+                if k != "host release":
+                    v += "%s : %s\n" % (k,dV[k])
         except:
-            v += "Driver version information unavailable"
-        d = OKDialog(self,v,None,-1,"Picarro CRDS")
+            v += "Software version information unavailable"
+        d = OKDialog(self,v,None,-1,"Picarro CRDS", boldText=boldText)
         d.ShowModal()
         d.Destroy()
     def OnGuiMode(self,e):
