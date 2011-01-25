@@ -21,12 +21,13 @@ import threading
 import paramiko
 from Queue import Queue
 from numpy import *
-from datetime import datetime, timedelta 
+from datetime import datetime, timedelta
 from IPVFrame import IPVFrame
 from Host.autogen import interface
 from Host.Common import timestamp
+from Host.Common import Broadcaster
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_ARCHIVER, RPC_PORT_IPV
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_ARCHIVER, RPC_PORT_IPV, BROADCAST_PORT_IPV 
 from Host.Common import CmdFIFO
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.EventManagerProxy import *
@@ -121,7 +122,7 @@ class FileUploader(object):
         self.user = co.get("FileUpload", "user")
         self.password = co.get("FileUpload", "password")
         self.sftpClient = None
-        self.uploadStatus = True
+        self.uploadStatus = -1
         
     def setSftpClient(self):
         # Build the channel and client to the remote server
@@ -129,10 +130,13 @@ class FileUploader(object):
             channel = paramiko.Transport((self.host, 22))
             channel.connect(username=self.user, password=self.password)
             self.sftpClient = paramiko.SFTPClient.from_transport(channel)
+            self.sftpClient.chdir(self.ipvRemoteDir)
+            self.uploadStatus = 1
         except Exception, err:
             print "%r" % err
             Log('SFTP Error: %r' % err)
             self.sftpClient = None
+            self.uploadStatus = 0
         # Some useful available functions of self.sftpClient include:
         # close(self)
         # get_channel(self)
@@ -152,33 +156,38 @@ class FileUploader(object):
         # put(self, localpath, remotepath, callback=None)
         # get(self, remotepath, localpath, callback=None)
         
+    def closeSftpClient(self):
+        if self.sftpClient:
+            self.sftpClient.close()
+            self.sftpClient = None
+            self.uploadStatus = 0
+            
+    def getUploadStatus(self):
+        return self.uploadStatus
+        
     def uploadAndArchiveIPV(self):
-        self.uploadStatus = True
+        if not self.sftpClient:
+            return
         for root, dirs, files in os.walk(self.ipvDir):
             for filename in files:
                 filepath = os.path.join(root, filename)
                 if os.path.basename(filename).split('.')[-1] in self.ipvExtension:
                     try:
-                        if not self._uploadAndArchiveFile(filepath, self.ipvRemoteDir, self.ipvArchiveGroupName, True):
-                            self.uploadStatus = False
+                        self._uploadAndArchiveFile(filepath, self.ipvRemoteDir, self.ipvArchiveGroupName, True)
                     except Exception, err:
                         Log('%r' % err)
-                        self.uploadStatus = False
 
-    def uploadAndArchiveRDF(self, timeLimits):
-        self.uploadStatus = True
+    def uploadAndArchiveRDF(self, timeLimits): 
+        if not self.sftpClient:
+            return
         rdfFilelist = self._searchRdfFiles(timeLimits)
         for filepath in rdfFilelist:
             try:
-                if not self._uploadAndArchiveFile(filepath, self.rdfRemoteDir, self.rdfArchiveGroupName, False):
-                    self.uploadStatus = False
+                self._uploadAndArchiveFile(filepath, self.rdfRemoteDir, self.rdfArchiveGroupName, False)
             except Exception, err:
                 Log('%r' % err)
-                self.uploadStatus = False
             
     def _uploadAndArchiveFile(self, filepath, remoteDir = "", archiveGroupName = "", removeOriginal = True):
-        status = False
-        self.setSftpClient()
         (dir, filename) = os.path.split(filepath)
         filepath = filepath.replace("\.", "").replace("\\", "/")
         if self.instName not in filename:
@@ -200,12 +209,10 @@ class FileUploader(object):
                         CRDS_Archiver.ArchiveFile(archiveGroupName, filepath, removeOriginal)
                     except Exception, err:
                         print "%r" % err
-                status = True
             else:
                 print "Failed uploading"
         except Exception, err:
             print "%r" % err
-        return status
             
     def _searchRdfFiles(self, timeLimits):
         fileList = []
@@ -263,7 +270,7 @@ class IPV(IPVFrame):
         self.histTable = None
         self.wlmTable = None        
         self._shutdownRequested = False
-        self.uploadStatus = True
+        self.rdfUnixTimeLimits = []
         
         IPVFrame.__init__(self, self.numRowsList, *args, **kwds)
         self.SetTitle("Picarro Instrument Performance Verification (%s, Host Version: %s)" % (self.instName, self.softwareVersion))
@@ -282,6 +289,9 @@ class IPV(IPVFrame):
         
         # Start the RPC server
         self.startServer()
+        
+        # Status broadcaster
+        self.IPVStatusBroadcaster = Broadcaster.Broadcaster(BROADCAST_PORT_IPV)
         
         if self.useViewer:
             self.Show()
@@ -352,7 +362,7 @@ class IPV(IPVFrame):
         self.rpcThread.start()
         
     def getUploadStatus(self):
-        return self.fUploader.uploadStatus
+        return self.fUploader.getUploadStatus()
         
     def shutdown(self):
         self.Destroy()
@@ -371,11 +381,26 @@ class IPV(IPVFrame):
             
     def uploadAndArchiveIPV(self):
         self._writeToStatus("Archiving and/or uploading IPV reports...")
+        self.fUploader.setSftpClient()
+        self._broadcastStatus()
         self.fUploader.uploadAndArchiveIPV()
+        self.fUploader.closeSftpClient()
   
     def uploadAndArchiveRDF(self):
+        if not self.rdfUnixTimeLimits:
+            return
         self._writeToStatus("Archiving and/or uploading RDF files...")
+        self.fUploader.setSftpClient()
+        self._broadcastStatus()
         self.fUploader.uploadAndArchiveRDF(self.rdfUnixTimeLimits)
+        self.fUploader.closeSftpClient()
+        
+    def _broadcastStatus(self):
+        status = self.getUploadStatus()
+        if status == 0:
+            self._writeToStatus("Error: SFTP connection failed")
+            print "Error: SFTP connection failed"
+        self.IPVStatusBroadcaster.send("%d,%f\n" % (status, time.time()))
         
     def createDiagFile(self):
         self._createH5File()
@@ -399,6 +424,11 @@ class IPV(IPVFrame):
         appThread.setDaemon(True)
         appThread.start()
         
+    def startTestConnectionThread(self):
+        appThread = threading.Thread(target = self.testConnection)
+        appThread.setDaemon(True)
+        appThread.start()
+        
     def runIPV(self):
         while not self._shutdownRequested:
             currTime = getUTCTime("float")
@@ -412,6 +442,15 @@ class IPV(IPVFrame):
                 else:
                     time.sleep(10)
 
+    def testConnection(self):
+        while not self._shutdownRequested:
+            if self.getUploadStatus() != 1:
+                #print "Testing connection"
+                self.fUploader.setSftpClient()
+                self._broadcastStatus()
+                self.fUploader.closeSftpClient()
+            time.sleep(60)
+            
     def onClose(self,event):
         self.hideViewer()
     
@@ -811,6 +850,7 @@ if __name__ == "__main__":
         wx.InitAllImageHandlers()
         frame = IPV(configFile, useViewer, None, -1, "")
         frame.startIPVThread()
+        frame.startTestConnectionThread()
         app.SetTopWindow(frame)
         if useViewer:
             frame.Show()

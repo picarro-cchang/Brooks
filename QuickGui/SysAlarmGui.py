@@ -3,11 +3,12 @@ APP_NAME = "QuickGui"
 import os
 import sys
 import wx
+import time
 from wx.lib.wordwrap import wordwrap
 from GuiTools import *
 from Host.Common import AppStatus
-from Host.Common import CmdFIFO, Listener
-from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER
+from Host.Common import CmdFIFO, Listener, TextListener
+from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_IPV
 from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED, \
                                    INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR, \
                                    INSTMGR_STATUS_PRESSURE_LOCKED, INSTMGR_STATUS_MEAS_ACTIVE
@@ -38,17 +39,17 @@ class SysAlarmDialog(wx.Dialog):
         sizer.Add(self.name, pos = (0,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border = 5)
         self.instructions = wx.StaticText(self,-1,"")
         if data["name"] == "System Alarm":
-            self.instructions.SetLabel(wordwrap("System alarm that monitors current status of instrument",300, wx.ClientDC(self)))
+            self.instructions.SetLabel(wordwrap("System alarm monitors the current instrument status, such as pressure, temperature, and measurement status",300, wx.ClientDC(self)))
         elif data["name"] == "IPV Connectivity":
-            self.instructions.SetLabel(wordwrap("Alarm that monitors the connectivity between IPV program and Picarro HQ",300, wx.ClientDC(self)))
+            self.instructions.SetLabel(wordwrap("IPV connectivity alarm monitors the connection between IPV program and Picarro Data Processing Center",300, wx.ClientDC(self)))
         sizer.Add(self.instructions, pos=(1,0), span=(1,2), flag=wx.ALL, border=5)
-        self.enabled = wx.CheckBox(self,-1,"Enable alarm")
-        self.enabled.SetValidator(DataXferValidator(data,"enabled",None))
-        sizer.Add(self.enabled, pos=(2,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, border=5)
+        #self.enabled = wx.CheckBox(self,-1,"Enable alarm")
+        #self.enabled.SetValidator(DataXferValidator(data,"enabled",None))
+        #sizer.Add(self.enabled, pos=(2,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, border=5)
 
         self.vsizer.Add(sizer)
-        line = wx.StaticLine(self, -1, size=(20,-1), style=wx.LI_HORIZONTAL)
-        self.vsizer.Add(line, 0, flag=wx.GROW|wx.ALIGN_CENTER_VERTICAL|wx.LEFT|wx.RIGHT|wx.TOP, border=5)
+        #line = wx.StaticLine(self, -1, size=(20,-1), style=wx.LI_HORIZONTAL)
+        #self.vsizer.Add(line, 0, flag=wx.GROW|wx.ALIGN_CENTER_VERTICAL|wx.LEFT|wx.RIGHT|wx.TOP, border=5)
 
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
@@ -56,9 +57,10 @@ class SysAlarmDialog(wx.Dialog):
         btn.SetDefault()
         btnsizer.AddButton(btn)
 
-        btn = wx.Button(self, wx.ID_CANCEL)
-        setItemFont(btn,getFontFromIni('DialogButtons'))
-        btnsizer.AddButton(btn)
+        #btn = wx.Button(self, wx.ID_CANCEL)
+        #setItemFont(btn,getFontFromIni('DialogButtons'))
+        #btnsizer.AddButton(btn)
+        
         btnsizer.Realize()
 
         self.vsizer.Add(btnsizer, 0, flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, border=5)
@@ -101,7 +103,7 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
         self.attrib = attrib
         self.SetItemCount(numAlarms)
         self.Bind(wx.EVT_LEFT_DOWN,self.OnLeftDown)
-        self.Bind(wx.EVT_RIGHT_DOWN,self.OnMouseDown)
+        #self.Bind(wx.EVT_RIGHT_DOWN,self.OnMouseDown)
         self.Bind(wx.EVT_MOTION,self.OnMouseMotion)
         self.tipWindow = None
         self.tipItem = None
@@ -119,7 +121,7 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
             self.tipWindow.Close()
         name, enabled = self._DataSource.alarmData[item]
         d = dict(name=name,enabled=enabled)
-        dialog = SysAlarmDialog(self.mainForm,d,None,-1,"Setting System Alarm")
+        dialog = SysAlarmDialog(self.mainForm,d,None,-1,"Alarm Description")
         retCode = dialog.ShowModal()
         dialog.Destroy()
         if retCode == wx.ID_OK:
@@ -171,12 +173,23 @@ class SysAlarmInterface(object):
                                                       self._InstMgrStatusFilter,
                                                       retry = True,
                                                       name = "System Alarm Instrument Manager listener")
+        self.ipvListener = TextListener.TextListener(None,
+                                                    BROADCAST_PORT_IPV,
+                                                    self._IPVStatusFilter,
+                                                    retry = True,
+                                                    name = "System Alarm IPV listener")
+                                            
         self.alarmData = [["System Alarm", True], ["IPV Connectivity", False]]
         self.latestInstMgrStatus = -1
+        self.latestIPVStatus = "-1,0.0"
         
     def _InstMgrStatusFilter(self, obj):
         """Updates the local (latest) copy of the instrument manager status bits."""
         self.latestInstMgrStatus = obj.status
+        
+    def _IPVStatusFilter(self, obj):
+        """Updates the local (latest) copy of the IPV status bits."""
+        self.latestIPVStatus = obj
         
     def setAlarm(self,index, enable):
         """Set alarm enable and threshold by making a non-blocking RPC call to the alarm system"""
@@ -208,7 +221,18 @@ class SysAlarmInterface(object):
                     descr += "\n* Measurement Not Active"
             return good, descr
         elif index == 1:
-            if not self.alarmData[index][1]:
+            ipvStatus, timestamp = self.latestIPVStatus.split(",")
+            ipvStatus = int(ipvStatus)
+            timestamp = float(timestamp)
+            if time.time() - timestamp > 120:
+                self.setAlarm(1, False)
                 return True, "IPV Disabled"
             else:
-                return True, "IPV Connectivity Status: Good"
+                self.setAlarm(1, True)
+                if ipvStatus == 1:
+                    return True, "IPV Connectivity Status: Good"
+                elif ipvStatus == -1:
+                    self.setAlarm(1, False)
+                    return True, "IPV Connectivity Status: Unknown"
+                else:
+                    return False, "IPV Connectivity Status: Failed"
