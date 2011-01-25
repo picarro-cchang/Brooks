@@ -825,6 +825,9 @@ class StatsPanel(StatsPanelGui):
         self.ringdownsTextCtrl.SetValue("%d" % n)
         for k in range(statsPoints):
             if v[k]>0: self.lossStats.Add(log10(2**k),0.5*log10(v[k]))
+        self.stdLossTextCtrl.SetValue("%.4f" % (1000.0*sqrt(v[0]),))
+        if rate != 0.0:
+            self.sensitivityTextCtrl.SetValue("%.5f" % (1000.0*sqrt(v[0]/rate),))
         if meanLoss != 0.0: self.shotToShotTextCtrl.SetValue("%.3f" % (100.0*sqrt(v[0])/meanLoss))    
         self.waveNumberStats.Clear()
         n,v = self.waveNumberAllanVar.getVariances()
@@ -855,8 +858,10 @@ class StatsPanel(StatsPanelGui):
             self.startStopButton.SetLabel("Start")
             self.ringdownsTextCtrl.Disable()
             self.meanLossTextCtrl.Disable()
+            self.stdLossTextCtrl.Disable()
             self.shotToShotTextCtrl.Disable()
             self.rateTextCtrl.Disable()
+            self.sensitivityTextCtrl.Disable()
             self.freqStdDevTextCtrl.Disable()
         else:
             self.active = True
@@ -872,6 +877,8 @@ class StatsPanel(StatsPanelGui):
             self.ratio2Stats.Clear()
             self.ringdownsTextCtrl.Enable()
             self.meanLossTextCtrl.Enable()
+            self.stdLossTextCtrl.Enable()
             self.shotToShotTextCtrl.Enable()
             self.rateTextCtrl.Enable()
+            self.sensitivityTextCtrl.Enable()
             self.freqStdDevTextCtrl.Enable()
