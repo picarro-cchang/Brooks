@@ -287,6 +287,7 @@ class InstMgr(object):
         if __debug__: Log("Loading config options.")
         self.configPath = configPath
         self.Config = ConfigurationOptions()
+        self.diableDataManagerWhenExitMeas = False
 
         if __debug__: Log("Setting up RPC connections.")
         #set up a connections to other apps
@@ -611,21 +612,31 @@ class InstMgr(object):
     def _ExitMeasure(self):
         """ called when exiting measuring state """
         self._SendDisplayMessage("Leaving Measuring")
-        # Put the data manager back into the warming mode
-        try:
-            self.DataMgrRpc.Mode_Set(self.Config.warmMode)
-        except:
-            tbMsg = traceback.format_exc()
-            Log("DataMgr Set mode error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-            return INST_ERROR_DATA_MANAGER_RPC_FAILED
-
-        if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
+        
+        if self.diableDataManagerWhenExitMeas:
+            # Disable Data Manager
             try:
-                self.SampleMgrRpc.FlowStop()
+                self.DataMgrRpc.Disable()
+                self._SendDisplayMessage("Disabling Data Manager")
             except:
                 tbMsg = traceback.format_exc()
-                Log("Stop Flow: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-                return INST_ERROR_SAMPLE_MGR_RPC_FAILED
+                Log("DataMgr Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+        else: 
+            # Put the data manager back into the warming mode
+            try:
+                self.DataMgrRpc.Mode_Set(self.Config.warmMode)
+                self._SendDisplayMessage("Putting Data Manager in warming mode")
+            except:
+                tbMsg = traceback.format_exc()
+                Log("DataMgr Set mode error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+                return INST_ERROR_DATA_MANAGER_RPC_FAILED
+
+        try:
+            self.SampleMgrRpc.FlowStop()
+        except:
+            tbMsg = traceback.format_exc()
+            Log("Stop Flow: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            return INST_ERROR_SAMPLE_MGR_RPC_FAILED
 
         try:
             self.MeasSysRpc.Disable()
@@ -634,20 +645,9 @@ class InstMgr(object):
             Log("MeasSys Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
             return INST_ERROR_MEAS_SYS_RPC_FAILED
 
-            # try:
-                # self.DataMgrRpc.Disable()
-            # except:
-                # tbMsg = traceback.format_exc()
-                # Log("DataMgr Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-                # return INST_ERROR_DATA_MANAGER_RPC_FAILED
+        self._ClearStatus(INSTMGR_STATUS_GAS_FLOWING | INSTMGR_STATUS_MEAS_ACTIVE)
+        return INST_ERROR_OKAY
 
-            self._ClearStatus(INSTMGR_STATUS_GAS_FLOWING | INSTMGR_STATUS_MEAS_ACTIVE)
-            return INST_ERROR_OKAY
-        #elif self.Config.sampleMgrMode == samplemgr_batch_mode:
-            #NOT Support yet
-            #return INST_ERROR_OKAY
-        else:
-            return INST_ERROR_INVALID_SAMPLE_MGR_MODE
     def _StartMeasuring(self):
         """ called to start measuring """
         self._VerifyInstallerId()
@@ -758,6 +758,7 @@ class InstMgr(object):
 
         try:
             status = self.SampleMgrRpc.Park()
+            self._SendDisplayMessage("Parking Sample Manager")
         except:
             tbMsg = traceback.format_exc()
             Log("Park instrument: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
@@ -1119,6 +1120,10 @@ class InstMgr(object):
             #Log("INSTMGR_ShutdownRpc:Disable keepalive error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
 
         # stop measuring
+        if shutdownType == INSTMGR_SHUTDOWN_PREP_SHIPMENT:
+            self.diableDataManagerWhenExitMeas = True
+        else:
+            self.diableDataManagerWhenExitMeas = False
         status = self._StateHandler(EVENT_STOP_MEAS)
 
         # TODO ask EventMgr to archive logs.  Functionality doesn't exist in EventMgr yet.

@@ -1135,15 +1135,21 @@ class DataManager(object):
                 self.AnalyzerCode[path] = codeObj
             Log("Analyzer script compilation complete")
 
-            ##Set up some Listeners for the important data...
-            #Set up our listener to catch MeasSystem data broadcasts...
+            #Set up some Listeners for the important data...
+            #Set up our listener to catch MeasSystem data broadcasts (stop the old one if already exists)...
+            if self.MeasListener != None:
+                self.MeasListener.stop()
+                self.MeasListener = None
             self.MeasListener = Listener(self.DataQueue,
                                          BROADCAST_PORT_MEAS_SYSTEM,
                                          StringPickler.ArbitraryObject,
                                          self._MeasDataFilter,
                                          retry = True,
                                          name = "Data manager measurement system listener",logFunc = Log)
-            #And our listener to collect sensor data broadcasts...
+            #And our listener to collect sensor data broadcasts (stop the old one if already exists)...
+            if self.SensorListener != None:
+                self.SensorListener.stop()
+                self.SensorListener = None
             self.SensorListener = Listener(None,
                                          BROADCAST_PORT_SENSORSTREAM,
                                          interface.SensorEntryType,
