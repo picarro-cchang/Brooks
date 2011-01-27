@@ -16,6 +16,7 @@ File History:
     08-09-18 alex  Replaced ConfigParser with CustomConfigObj
     09-01-14 sze   Reduced number of threads needed to clear lurking files
     10-01-22 sze   Changed date format display to ISO standard
+    11-01-26 alex  Use GMT for event logs and local time for broadcasting
 
 Notes:
     There is an optional GUI that can be launched via command-line or via an
@@ -213,15 +214,25 @@ class EventLogFile(object):
     """Class to manage writing (and reading) of event logs to disk."""
     #TODO: Implement reading
     FORMAT_VERSION = 1
-    def __init__(self, LogDir):
+    def __init__(self, LogDir, TimeStandard="gmt"):
         self.NumWrittenEvents = 0
         self.LogDir = LogDir
         self.LogPath = ""
-
+        self.TimeStandard = TimeStandard
+        if self.TimeStandard.lower() == "local":
+            self.maketimetuple = time.localtime
+        else:
+            self.maketimetuple = time.gmtime
+            
     def _CreateNewLogFilePath(self):
         """Creates a new log file named with the current time stamp and with a version header."""
+        if self.TimeStandard.lower() == "local":
+            timeStr = time.strftime("%Y_%m_%d_%H_%M_%S",self.maketimetuple())
+        else:
+            timeStr = time.strftime("%Y_%m_%d_%H_%M_%SZ",self.maketimetuple())
+            
         fname = "%s%s.%s" % (LOGFILE_PREFIX,
-                             time.strftime("%Y_%m_%d_%H_%M_%S",time.localtime()),
+                             timeStr,
                              LOGFILE_EXTENSION)
         self.LogPath = os.path.join(self.LogDir, fname)
         fp = file(self.LogPath, "w")
@@ -232,7 +243,7 @@ class EventLogFile(object):
         """Writes a string representation of the provided event log to disk."""
         assert isinstance(AnEventLog, EventLog)
         el = AnEventLog #character saver
-        timeStr = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(el.EventTime))
+        timeStr = time.strftime("%Y-%m-%d %H:%M:%S",self.maketimetuple(el.EventTime))
         summaryLine = "%s\t%s\t%s\tL%s\tC%s\t%s" % (el.Index,
                                                     timeStr,
                                                     el.Source,
@@ -284,6 +295,7 @@ class EventLogger(object):
             self.MaxResidentEvents = cp.getint(_MAIN_CONFIG_SECTION, "MaxResidentEvents")
             self.MinResidentEvents = cp.getint(_MAIN_CONFIG_SECTION, "MinResidentEvents")
             self.BroadcastEvents = cp.getboolean(_MAIN_CONFIG_SECTION, "BroadcastEvents")
+            self.TimeStandard = cp.get(_MAIN_CONFIG_SECTION,"TimeStandard","gmt")
 
     def __init__(self, ConfigPath):
         self.Config = EventLogger.ConfigurationOptions()
@@ -418,7 +430,7 @@ class EventLogger(object):
         #Log to file if we're supposed to...
         if self.Config.LogToFile:
             if not self._LogFile:
-                self._LogFile = EventLogFile(self.Config.LogFileDir)
+                self._LogFile = EventLogFile(self.Config.LogFileDir, self.Config.TimeStandard)
             self._LogFile.WriteEvent(TheEvent)
             if self._LogFile.NumWrittenEvents >= self.Config.LogFileLength:
                 #archive the file and set it so we'll make a new one...

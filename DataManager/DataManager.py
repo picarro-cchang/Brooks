@@ -210,6 +210,7 @@ class DataManager(object):
             self.UserCalibrationPath = ""
             self.AutoEnable = False
             self.StartingMeasMode = ""
+            self.maketimetuple = time.gmtime
 
         def LoadSerialSettings(self,cp):
             # Get the optional settings for the serial port
@@ -291,6 +292,11 @@ class DataManager(object):
             self.LoadSerialSettings(cp)
             self.AutoEnable = cp.getboolean(_MAIN_CONFIG_SECTION, "AutoEnable", "False")
             self.StartingMeasMode = cp.get(_MAIN_CONFIG_SECTION, "StartingMeasMode", "")
+            if cp.get(_MAIN_CONFIG_SECTION,"TimeStandard","gmt").lower() == "local":
+                self.maketimetuple = time.localtime
+            else:
+                self.maketimetuple = time.gmtime
+                
                 
             if "PulseAnalyzer" in cp:     
                 self.pulseAnalyzerIni = cp["PulseAnalyzer"]
@@ -839,7 +845,7 @@ class DataManager(object):
         self.measBufferLock.acquire()
         try:
             result = {"measTime":measData.Time}
-            result["date"] = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(measData.Time))
+            result["date"] = time.strftime("%Y/%m/%d %H:%M:%S", self.Config.maketimetuple(measData.Time))       
             for c in colList:
                 result[c] = measData.Data[c]
             if len(self.measBuffer) >= bufSize:

@@ -131,6 +131,11 @@ class CommandInterface(object):
             self.appendLf = eval(self.config.get(HEADER_SECTION,'appendLf'))
             self.appendCr = eval(self.config.get(HEADER_SECTION,'appendCr'))
             self.meas_source =  self.config.get(HEADER_SECTION,'meas_source')
+            if self.config.get(HEADER_SECTION,"timeStandard","gmt").lower() == "local":
+                self.maketimetuple = datetime.datetime.fromtimestamp
+            else:
+                self.maketimetuple = datetime.datetime.utcfromtimestamp
+            
             for label in self.config.get(HEADER_SECTION,'meas_label').split(","):
                 label = label.strip()
                 self.meas_label_list.append(label)
@@ -382,7 +387,7 @@ class CommandInterface(object):
             self._measData.ImportPickleDict( dataDict )
             if self.meas_source == self._measData.Source:
                 self._ctime = self._measData.Time
-                self._ctimeString = _TimeToString(datetime.datetime.fromtimestamp(self._ctime))
+                self._ctimeString = _TimeToString(self.maketimetuple(self._ctime))
                 self._cdata = []
                 for label in self.meas_label_list:
                     if label in self._measData.Data:
@@ -581,7 +586,7 @@ class CommandInterface(object):
         elif dataRecord == "No Pulse Analyzer":
             self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
             return
-        timeString = _TimeToString(datetime.datetime.fromtimestamp(dataRecord[0]))
+        timeString = _TimeToString(self.maketimetuple(dataRecord[0]))
         retString = "%s;" % timeString
         for data in dataRecord[1:]:
             retString += "%.3f;" % (float(data))
@@ -598,7 +603,7 @@ class CommandInterface(object):
         count = len(dataList)
         self.Print("%d;" % count)
         for dataRecord in dataList:
-            timeString = _TimeToString(datetime.datetime.fromtimestamp(dataRecord[0]))
+            timeString = _TimeToString(self.maketimetuple(dataRecord[0]))
             retString = "%s;" % timeString
             for data in dataRecord[1:]:
                 retString += "%.3f;" % (float(data))
