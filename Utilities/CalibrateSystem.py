@@ -31,7 +31,8 @@ from Host.Common.Listener import Listener
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from scipy.optimize import fmin
 from Host.Common.WlmCalUtilities import bestFit
-
+from os.path import join, split, splitext
+from shutil import copyfile
 APPROX_FSR = 0.08
 
 
@@ -281,7 +282,20 @@ class CalibrateSystem(object):
             print "Driver version: %s" % Driver.allVersions()
         except:
             raise ValueError,"Cannot communicate with driver, aborting"
+            
+        startTime = time.localtime()
+        jobName = time.strftime("CalibrateSystem_%Y%m%d_%H%M%S",startTime)
+        self.op = file(jobName + ".txt","w")
+       
 
+        # Save the original warm and hot box calibration files in the current directory
+        wbCalFileName = RDFreqConv.getWarmBoxCalFilePath()
+        hbCalFileName = RDFreqConv.getHotBoxCalFilePath()
+        root, ext = splitext(split(wbCalFileName)[1])
+        copyfile(wbCalFileName,'%s_before_%s%s' % (root,jobName,ext))
+        root, ext = splitext(split(hbCalFileName)[1])
+        copyfile(hbCalFileName,'%s_before_%s%s' % (root,jobName,ext))
+        
         try:
             regVault = Driver.saveRegValues(["TUNER_SWEEP_RAMP_HIGH_REGISTER",
                                              "TUNER_SWEEP_RAMP_LOW_REGISTER",
@@ -301,7 +315,6 @@ class CalibrateSystem(object):
                                              "PZT_OFFSET_VIRTUAL_LASER8",
                                              ])
             Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_IdleState)
-            self.op = file(time.strftime("CalibrateSystem_%Y%m%d_%H%M%S.txt",time.localtime()),"w")
             print>>self.op, "Virtual laser Index: %d"   % self.vLaserNum
             print>>self.op, "Center wavenumber:   %.3f" % self.waveNumberCen
             print>>self.op, "Number of steps:     %d"   % self.nSteps
@@ -385,8 +398,8 @@ class CalibrateSystem(object):
             laserTemps = RDFreqConv.angleToLaserTemperature(self.vLaserNum,wlmAngles)
             nRepeat = 1
             dwell = 10
-            
-            for iter in range(10):
+            maxIter = 10
+            for iter in range(maxIter):
                 self.tunerSum = zeros(wlmAngles.shape,dtype='d')
                 self.count = zeros(wlmAngles.shape)
                 self.makeAndUploadScheme(wlmAngles,laserTemps,self.vLaserNum,nRepeat,dwell)
@@ -395,7 +408,7 @@ class CalibrateSystem(object):
                 self.clearLists()
                 self.processingDone.clear()
                 time.sleep(1.0)
-                msg = "Starting spectrum acquisition"
+                msg = "Starting spectrum acquisition (pass %d of %d)" % (iter+1,maxIter)
                 print msg
                 print>>self.op, msg
                 Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_StartingState)
@@ -428,9 +441,16 @@ class CalibrateSystem(object):
             cavityFSR = self.update(wlmAngles,self.vLaserNum)
             RDFreqConv.setHotBoxCalParam("AUTOCAL","CAVITY_FSR",cavityFSR)
             RDFreqConv.setHotBoxCalParam("AUTOCAL","CAVITY_FSR_VLASER_%d" % self.vLaserNum,cavityFSR)
+        except Exception,e:
+            print>>self.op,"ERROR: %s" % e
+            raise
         finally:
             RDFreqConv.updateWarmBoxCal()
             RDFreqConv.updateHotBoxCal()
+            root, ext = splitext(split(wbCalFileName)[1])
+            copyfile(wbCalFileName,'%s_after_%s%s' % (root,jobName,ext))
+            root, ext = splitext(split(hbCalFileName)[1])
+            copyfile(hbCalFileName,'%s_after_%s%s' % (root,jobName,ext))
             Driver.restoreRegValues(regVault)
 
 HELP_STRING = """CalibrateSystem.py [-c<FILENAME>] [-h|--help]
