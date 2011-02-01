@@ -276,6 +276,7 @@ class IPV(IPVFrame):
         self.SetTitle("Picarro Instrument Performance Verification (%s, Host Version: %s)" % (self.instName, self.softwareVersion))
         self._writeToStatus("Starting Time: %s" % time.ctime(self.reportTime))
         self._writeToStatus("Time interval: %.2f hours" % (self.repeatSec/3600.0))
+        self._writeToStatus("Will test connectivity every %.2f hours." % self.testConnHrs)
                 
         # Fill table with default values
         self._setDefaultResults()
@@ -330,8 +331,8 @@ class IPV(IPVFrame):
         currTime = getUTCTime("float")
         while currTime > self.reportTime:
             self.reportTime += self.repeatSec
-        print "Starting Time: %s" % time.ctime(self.reportTime)
-            
+        print "Starting Time: %s" % time.ctime(self.reportTime) 
+        self.testConnHrs = co.getfloat("Main", "testConnHrs", 0.5)
         dbFilename = co.get("Main", "dbFilename")
         # Flatten the ini file
         newCo = co[self.instType]
@@ -449,7 +450,7 @@ class IPV(IPVFrame):
                 self.fUploader.setSftpClient()
                 self._broadcastStatus()
                 self.fUploader.closeSftpClient()
-            time.sleep(60)
+            time.sleep(3600 * self.testConnHrs)
             
     def onClose(self,event):
         self.hideViewer()
