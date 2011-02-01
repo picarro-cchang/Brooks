@@ -399,29 +399,39 @@ class IntegrationTool(IntegrationToolFrame):
         os.chdir(INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
+        iniList = [os.path.abspath(ini) for ini in os.listdir(".") if (ini.startswith("CalibrateSystem") and ini.endswith(".ini"))]
+        newDir = time.strftime("CalibrateSystem_%Y%m%d_%H%M%S",time.localtime())
         try:
-            iniList = [ini for ini in os.listdir(".") if (ini.startswith("CalibrateSystem") and ini.endswith(".ini"))]
+            if not os.path.isdir(newDir):
+                os.makedirs(newDir)            
+            os.chdir(newDir)
             for ini in iniList:
                 cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "CalibrateSystem.exe"), ini)
                 print cmd
                 os.system(cmd)
             self.display += "Calibrate System finished.\n"
         except Exception, err:
-            self.display += "%s\n" % err
+            self.display += "Calibrate System failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
+        os.chdir(INTEGRATION_DIR)
         
     def onWlmOffset(self, event):
         os.chdir(INTEGRATION_DIR)
+        iniList = [os.path.abspath(ini) for ini in os.listdir(".") if (ini.startswith("FindWlmOffset") and ini.endswith(".ini"))]
+        newDir = time.strftime("WlmOffset_%Y%m%d_%H%M%S",time.localtime())
         try:
-            iniList = [ini for ini in os.listdir(".") if (ini.startswith("FindWlmOffset") and ini.endswith(".ini"))]
+            if not os.path.isdir(newDir):
+                os.makedirs(newDir)
+            os.chdir(newDir)
             for ini in iniList:
                 cmd = "%s -a -t 2e-4 -c %s" % (os.path.join(HOSTEXE_DIR, "FindWlmOffset.exe"), ini)
                 print cmd
                 os.system(cmd)
-            self.display += "WLM offsets updated.\n"
+            self.display += "WLM Offset finished.\n"
         except Exception, err:
-            self.display += "%s\n" % err
+            self.display += "WLM Offset failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
+        os.chdir(INTEGRATION_DIR)
         
 if __name__ == "__main__":
     app = wx.PySimpleApp()
