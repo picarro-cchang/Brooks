@@ -84,13 +84,20 @@ class ThresholdStats(object):
         except:
             pass
         self.startTime = time.strftime("%Y%m%d_%H%M%S",time.localtime())
-        self.csvName = "ThresholdStats_%s.csv" % self.startTime
+        self.schemeName = schemeName
+        try:
+            schemeType = os.path.basename(schemeName).split('.')[0]
+            if schemeType:
+                self.csvName = "ThresholdStats_%s_%s.csv" % (schemeType, self.startTime)
+            else:
+                self.csvName = "ThresholdStats_%s.csv" % self.startTime
+        except:
+            self.csvName = "ThresholdStats_%s.csv" % self.startTime
         self.csvFp = open(self.csvName,"w")
         self.instrName = instrName
         self.thMin = thMin
         self.thMax = thMax
         self.thIncr = thIncr
-        self.schemeName = schemeName
         # Set up a listener for the streaming data
         self.queue = Queue.Queue(0)
 
