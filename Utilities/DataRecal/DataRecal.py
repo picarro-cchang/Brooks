@@ -22,7 +22,7 @@ from DataRecalFrame import DataRecalFrame
 DATA_MANAGER = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = "DataRecal")
 
 class DataRecal(DataRecalFrame):
-    def __init__(self, calIniFile, *args, **kwds):
+    def __init__(self, calIniFile, defaultPath, *args, **kwds):
         cp = CustomConfigObj(calIniFile, list_values = True)
         try:
             dataList = cp.list_sections()
@@ -40,7 +40,7 @@ class DataRecal(DataRecalFrame):
         self.newSlope = None
         self.r2 = None
         self.filename = None
-        self.defaultPath = None
+        self.defaultPath = defaultPath
         self.activeFile = os.getcwd()+"\\active.cfg"
         self.bindEvents()
         if self._getNumSelectedRows() == 0:
@@ -440,13 +440,14 @@ DataRecal [-h] [-c <PicarroCRDS.ini path>]
 
 Where the options can be a combination of the following:
 -h                  Print this help.
--c                  Specify the path of PicarroCRDS.ini.
+-c                  Specify the path UserCal.ini.
+-o                  Specify the default log file location.
 """
 def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'c:h'
+    shortOpts = 'o:c:h'
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts)
     except getopt.GetoptError, data:
@@ -466,7 +467,7 @@ def handleCommandSwitches():
         sys.exit(0)
 
     #Start with option defaults...
-    calIniFile = "C:\Picarro\G2000\InstrConfig\Calibration\InstrCal\UserCal.ini"
+    calIniFile = r"C:\Picarro\G2000\InstrConfig\Calibration\InstrCal\UserCal.ini"
     if "-c" in options:
         calIniFile = options["-c"]
     
@@ -481,19 +482,29 @@ def handleCommandSwitches():
         else:
             dlg.Destroy()
             
+    defaultPath = r"C:\Picarro\G2000\InstrConfig\Calibration\DataRecalLogs"
+    if "-o" in options:
+        defaultPath = options["-o"]
+    
+    if not os.path.isdir(defaultPath):
+        try:
+            os.makedirs(defaultPath)
+        except:
+            defaultPath = None
+            
     if not os.path.isfile(calIniFile):
         print "\nERROR: Valid Data Recalibration .INI file path must be specified!\n"
         print HELP_STRING
         sys.exit(0)
     else:
         print "Data Recalibration .INI file specified: %s" % calIniFile
-        return calIniFile
+        return (calIniFile, defaultPath)
 
 if __name__ == "__main__":
-    calIniFile = handleCommandSwitches()
+    calIniFile, defaultPath = handleCommandSwitches()
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()
-    frame = DataRecal(calIniFile, None, -1, "")
+    frame = DataRecal(calIniFile, defaultPath, None, -1, "")
     app.SetTopWindow(frame)
     frame.Show()
     app.MainLoop()
