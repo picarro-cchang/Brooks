@@ -17,8 +17,12 @@ from xmlrpclib import ServerProxy
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER
 
+FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
+                "IntegrationTool", IsDontCareConnection = False)
+Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, "IntegrationTool")
+
 ANALY_INFO_LIST = ["Name", "Warm Box", "WLM", "Laser(s)", "Hot Box", "Cavity"]
-TEST_LIST = ["Write Instrument Name", "Make Integration INI Files", "Calibrate WB Laser/WLM", "Update Laser/WLM EEPROM", "Create WB Cal Table", "Run Calibrate System", "Calculate WLM Offset"]
+TEST_LIST = ["Write Instrument Name", "Make Integration INI Files", "Calibrate WB Laser/WLM", "Update Laser/WLM EEPROM", "Create WB Cal Table", "Run Calibrate System", "Calculate WLM Offset", "Run Threshold Stats"]
 HOSTEXE_DIR = "C:\Picarro\G2000\HostExe"
 INTEGRATION_DIR = "C:\Picarro\G2000\InstrConfig\Integration"
 CAL_DIR = "C:\Picarro\G2000\InstrConfig\Calibration\InstrCal"
@@ -27,10 +31,49 @@ HOTBOX_CAL = "Beta2000_HotBoxCal"
 
 LASER_TYPE_DICT = {"1603.2": "CO2", "1651.0": "CH4", "1599.6": "iCO2", "1392.0": "iH2O", "1567.9": "CO", "1527.0": "NH3", "1554.7": "iH2O"}
 
-FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
-                "IntegrationTool", IsDontCareConnection = False)
-Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, "IntegrationTool")
-
+ANALYZER_TYPE_INDEX = {"HBDS":0, "CFADS":1, "CFBDS":1, "CFDDS":1, "CBDS":2, "CFKADS":3, "CFKBDS":3, "AEDS":4, "CKADS":5}
+ALL_SCHEMES = [
+              { "O18"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak18O.sch",
+                "Baseline" : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Baseline.sch",
+                "O16"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak16O.sch",
+                "dH"       : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_PeakD.sch"
+              },
+              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
+                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
+              },
+              { "Baseline": "C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_Baseline.sch",
+                "C12Peak":  "C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C12Peak.sch",
+                "C13Peak":  "C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C13Peak.sch"
+              },
+              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CO_BL"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_BL.sch",
+                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
+                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch", 
+                "CO_PK"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_PK.sch"
+              },
+              {
+                "NH3_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\NH3_BL.sch",
+                "NH3_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\NH3_PK.sch"
+              },
+              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
+                "CO_BL"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_BL.sch", 
+                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
+                "CO_PK"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_PK.sch"
+              },
+             ]
+             
+THRESHOLD_RANGE = [
+                   [2000, 20000, 500],
+                   [2000, 16383, 1000],
+                   [2000, 16000, 500],
+                   [2000, 16383, 1000],
+                   [2000, 16000, 500],
+                   [2000, 16383, 1000]
+                  ]
+                  
 # Connect to database
 try:
     DB = ServerProxy("http://mfg/xmlrpc/",allow_none=True)
@@ -172,6 +215,7 @@ class IntegrationTool(IntegrationToolFrame):
         self.Bind(wx.EVT_BUTTON, self.onMakeWbCal, self.testButtonList[4])
         self.Bind(wx.EVT_BUTTON, self.onCalibrateSystem, self.testButtonList[5])
         self.Bind(wx.EVT_BUTTON, self.onWlmOffset, self.testButtonList[6])
+        self.Bind(wx.EVT_BUTTON, self.onThresholdStats, self.testButtonList[7])
         
     def onSelect(self, event):
         self.analyzer = self.comboBoxSelect.GetValue()
@@ -184,6 +228,7 @@ class IntegrationTool(IntegrationToolFrame):
                 self.testButtonList[4].Enable(True)
                 self.testButtonList[5].Enable(True)
                 self.testButtonList[6].Enable(True)
+                self.testButtonList[7].Enable(True)
                 return
             else:
                 return
@@ -219,11 +264,13 @@ class IntegrationTool(IntegrationToolFrame):
                             if elem['type'] == 'hotbox2k'][0]
             self.testButtonList[5].Enable(True)
             self.testButtonList[6].Enable(True)
+            self.testButtonList[7].Enable(True)
         except Exception, err:
             #print err
             self.hotbox = "N/A"
             self.testButtonList[5].Enable(False)
             self.testButtonList[6].Enable(False)
+            self.testButtonList[7].Enable(False)
         self.textCtrlAnalyzerInfoList[4].SetValue(self.hotbox)
             
         try:    
@@ -418,7 +465,7 @@ class IntegrationTool(IntegrationToolFrame):
     def onWlmOffset(self, event):
         os.chdir(INTEGRATION_DIR)
         iniList = [os.path.abspath(ini) for ini in os.listdir(".") if (ini.startswith("FindWlmOffset") and ini.endswith(".ini"))]
-        newDir = time.strftime("WlmOffset_%Y%m%d_%H%M%S",time.localtime())
+        newDir = time.strftime("FindWlmOffset_%Y%m%d_%H%M%S",time.localtime())
         try:
             if not os.path.isdir(newDir):
                 os.makedirs(newDir)
@@ -430,6 +477,37 @@ class IntegrationTool(IntegrationToolFrame):
             self.display += "WLM Offset finished.\n"
         except Exception, err:
             self.display += "WLM Offset failed: %s\n" % err
+        self.textCtrlIntegration.SetValue(self.display)
+        os.chdir(INTEGRATION_DIR)
+        
+    def onThresholdStats(self, event):
+        os.chdir(INTEGRATION_DIR)
+        FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
+        FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
+        newDir = time.strftime("ThresholdStats_%Y%m%d_%H%M%S",time.localtime())
+        try:
+            if not os.path.isdir(newDir):
+                os.makedirs(newDir)
+            os.chdir(newDir)
+            analyzerId = Driver.fetchObject("LOGIC_EEPROM")[0]
+            instrType = analyzerId["Analyzer"] 
+            instrName = instrType + analyzerId["AnalyzerNum"]
+            instrIdx = ANALYZER_TYPE_INDEX[instrType]
+            schemeDict = ALL_SCHEMES[instrIdx]
+            start, end, increment = THRESHOLD_RANGE[instrIdx]
+            for schKey in schemeDict:
+                schemeFileName = schemeDict[schKey]
+                if not os.path.isfile(schemeFileName):
+                    raise Exception, "Scheme file does not exist: %s"  % schemeFileName
+                print "Running scheme %s" % schemeFileName
+                currTime = time.strftime("%Y%m%d_%H%M%S", time.localtime())
+                command = "C:\Picarro\G2000\HostExe\ThresholdStats.exe %s %d %d %d %s" % ((instrName+"_"+schKey), start, end, increment, schemeFileName)
+                print command
+                os.system(command)
+                print "Finished scheme %s" % schemeFileName
+            self.display += "Threshold Stats finished.\n"
+        except Exception, err:
+            self.display += "Threshold Stats failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
         os.chdir(INTEGRATION_DIR)
         
