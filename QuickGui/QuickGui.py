@@ -1542,7 +1542,11 @@ class QuickGui(wx.Frame):
 
         # Alarm view
         alarmBox = wx.StaticBox(parent=self.measPanel,id=-1,label="Alarms")
-        size = self.config.getint("AlarmBox","Width"),self.config.getint("AlarmBox","Height")
+        # Define the box height automatically instead of using INI file
+        #size = self.config.getint("AlarmBox","Width"),self.config.getint("AlarmBox","Height")
+        boxWidth = self.config.getint("AlarmBox","Width")
+        boxHeight = 10 + self.numAlarms * 15
+        size = boxWidth,boxHeight
         font,fgColour,bgColour = self.getFontFromIni('AlarmBox','enabledFont')
         enabled = wx.ListItemAttr(fgColour,bgColour,font)
         font,fgColour,bgColour = self.getFontFromIni('AlarmBox','disabledFont')
