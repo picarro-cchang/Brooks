@@ -447,7 +447,7 @@ class IntegrationTool(IntegrationToolFrame):
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
         iniList = [os.path.abspath(ini) for ini in os.listdir(".") if (ini.startswith("CalibrateSystem") and ini.endswith(".ini"))]
-        newDir = time.strftime("CalibrateSystem_%Y%m%d_%H%M%S",time.localtime())
+        newDir = time.strftime(INTEGRATION_DIR + "\CalibrateSystem\%Y%m%d_%H%M%S")
         try:
             if not os.path.isdir(newDir):
                 os.makedirs(newDir)            
@@ -464,8 +464,10 @@ class IntegrationTool(IntegrationToolFrame):
         
     def onWlmOffset(self, event):
         os.chdir(INTEGRATION_DIR)
+        FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
+        FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
         iniList = [os.path.abspath(ini) for ini in os.listdir(".") if (ini.startswith("FindWlmOffset") and ini.endswith(".ini"))]
-        newDir = time.strftime("FindWlmOffset_%Y%m%d_%H%M%S",time.localtime())
+        newDir = time.strftime(INTEGRATION_DIR + "\FindWlmOffset\%Y%m%d_%H%M%S")
         try:
             if not os.path.isdir(newDir):
                 os.makedirs(newDir)
@@ -484,7 +486,7 @@ class IntegrationTool(IntegrationToolFrame):
         os.chdir(INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
-        newDir = time.strftime("ThresholdStats_%Y%m%d_%H%M%S",time.localtime())
+        newDir = time.strftime(INTEGRATION_DIR + "\ThresholdStats\%Y%m%d_%H%M%S")
         try:
             if not os.path.isdir(newDir):
                 os.makedirs(newDir)
