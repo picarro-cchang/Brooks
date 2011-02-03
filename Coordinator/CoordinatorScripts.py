@@ -28,16 +28,20 @@ from configobj import ConfigObj
 import socket
 import sys
 import os
-from Host.Common.CubicSpline import CubicSpline
+from os.path import abspath, exists, join, split
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot, dates
 from matplotlib.ticker import MaxNLocator
 import urllib2
 from xml.dom import minidom
-from Host.Common import CmdFIFO
 import ImageGrab
+from shutil import move
+from glob import glob
 #import pytz
+
+from Host.Common.CubicSpline import CubicSpline
+from Host.Common import CmdFIFO
 
 #Set up a useful TimeStamp function...
 if sys.platform == 'win32':
@@ -51,6 +55,14 @@ ORIGIN = datetime(MINYEAR,1,1,0,0,0,0)
 UNIXORIGIN = datetime(1970,1,1,0,0,0,0)
 
 ##############
+# General file utilities
+##############
+def moveWildToDir(src,dest):
+    srcFiles = glob(src)
+    for f in srcFiles:
+        move(abspath(f),join(dest,split(f)[1]))
+        
+##############
 # General DRIVER functions
 ##############
 def getAnalyzerId():
@@ -61,6 +73,15 @@ def getAnalyzerId():
         print err
         analyzerId = "UNKNOWN"
     return analyzerId
+    
+def getAnalyzerType():
+    try:
+        instInfo = DRIVER.fetchLogicEEPROM()[0]
+        analyzerType = instInfo["Analyzer"]
+    except Exception, err:
+        print err
+        analyzerType = "UNKNOWN"
+    return analyzerType
                 
 ##############
 # Numerical calculations
