@@ -53,8 +53,10 @@ class FluxScheduler(FluxSchedulerFrame):
         self.co = CustomConfigObj(configFile)
         self.switcher = FluxSwitcher(configFile, supervisorConfigFile)
         self.supervisorLauncher = SupervisorLauncher(supervisorConfigFile, False, True, None, -1, "")
+        addCFADS = self.co.getboolean("Main", "AddCFADS", False)
         typeChoices = self.co.keys()
-        typeChoices.append("High_Precision_3_Gas")
+        if addCFADS:
+            typeChoices.append("High_Precision_3_Gas")
         typeChoices.remove("Main")
         self.numTypes = len(typeChoices)
         self.minDwell = max(self.co.getfloat("Main", "MinDwell", default=15), 0)
