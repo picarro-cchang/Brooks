@@ -50,15 +50,22 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
         coorChoices = self.co.keys()
         coorChoices.remove("Main")
         CoordinatorLauncherFrame.__init__(self, coorChoices, *args, **kwds)
-        self.coordinatorExe = os.path.join(self.co["Main"]["APACHEDir"].strip(), "HostExe/Coordinator.exe")
-        self.coordinatorIniDir = os.path.join(self.co["Main"]["APACHEDir"].strip(), "AppConfig/Config/Coordinator")
+        apacheDir = self.co["Main"]["APACHEDir"].strip()
+        self.coordinatorExe = os.path.join(apacheDir, "HostExe/Coordinator.exe")
+        self.coordinatorIniDir = os.path.join(apacheDir, "AppConfig/Config/Coordinator")
         self.onSelect(None)
         self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
         self.Bind(wx.EVT_BUTTON, self.onLaunch, self.buttonLaunch)
 
     def onSelect(self, event):
         self.coordinatorType = self.comboBoxSelect.GetValue()
-        self.coordinatorIni = os.path.join(self.coordinatorIniDir, self.co[self.coordinatorType]["CoordinatorIni"])
+        # Sometimes the coordinator script may not be in the standard folder
+        # So we allow the user to specify the full path of the coordinator script
+        coordintaorFile = self.co[self.coordinatorType]["CoordinatorIni"]
+        if not os.path.isfile(coordintaorFile):
+            self.coordinatorIni = os.path.join(self.coordinatorIniDir, coordintaorFile)
+        else:
+            self.coordinatorIni = coordintaorFile
         try:
             self.coordinatorArgs = self.co[self.coordinatorType]["Arguments"]
         except:

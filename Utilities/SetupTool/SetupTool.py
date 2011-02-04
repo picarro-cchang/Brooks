@@ -79,7 +79,11 @@ class SetupTool(SetupToolFrame):
         if self.clCp == None:
             return
         for coorOpt in [i for i in self.clCp.list_sections() if i != "Main"]:
-            coorPath = os.path.join(self.appIniDirDict["coordinator"], self.clCp.get(coorOpt, "CoordinatorIni"))
+            coordintaorFile = self.clCp.get(coorOpt, "CoordinatorIni")
+            if not os.path.isfile(coordintaorFile):
+                coorPath = os.path.join(self.appIniDirDict["coordinator"], coordintaorFile)
+            else:
+                coorPath = coordintaorFile
             cp = CustomConfigObj(coorPath, list_values = True)
             try:
                 for port in cp["SerialPorts"].keys():
