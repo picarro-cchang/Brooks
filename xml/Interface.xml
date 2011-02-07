@@ -593,6 +593,13 @@
             <enum_value ident="HEATER_CONTROL_MODE_TEC_TARGET"     value="1" /> 
             <enum_value ident="HEATER_CONTROL_MODE_HEATER_FIXED"   value="2" /> 
         </enum>
+        <enum type="LOG_LEVEL_Type">
+            <description>Enumeration specifying event log level</description> 
+            <enum_value ident="LOG_LEVEL_DEBUG"     value="0" /> 
+            <enum_value ident="LOG_LEVEL_INFO"      value="1" /> 
+            <enum_value ident="LOG_LEVEL_STANDARD"  value="2" /> 
+            <enum_value ident="LOG_LEVEL_CRITICAL"  value="3" /> 
+        </enum>
     </enum_list>
     <bits_list>
         <bits ident="COMM_STATUS_BITMASK">

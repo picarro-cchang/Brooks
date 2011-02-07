@@ -68,13 +68,16 @@ void init_comms()
     CACHE_wbL2((void *)(ringdownEntries), sizeof(RingdownEntryType)*NUM_RINGDOWN_ENTRIES, CACHE_WAIT);
 }
 
-void message_puts(char *message)
+void message_puts(unsigned int level,char *message)
 {
     long long ts;
     Message *m = messages + message_pointer;
+    if (level > LOG_LEVEL_CRITICAL) level = LOG_LEVEL_CRITICAL;
     get_timestamp(&ts);
     m->timestamp = 0LL;
-    strncpy(m->message,message,120);
+    m->message[0] = '0' + level;
+    m->message[1] = ':';
+    strncpy(m->message + 2,message,120);
     m->timestamp = ts;
     message_pointer++;
     if (message_pointer>=NUM_MESSAGES) message_pointer = 0;

@@ -52,22 +52,22 @@ int eeprom_write(I2C_device *i2c,unsigned short address,unsigned char *buffer, i
     if (nbytes>0) {
         lastAddress = address+nbytes-1;
         if ((address & 0xFFC0) != (lastAddress & 0xFFC0)) {
-            message_puts("Page error in eeprom_write");
+            message_puts(LOG_LEVEL_CRITICAL,"Page error in eeprom_write");
             return I2C_BADPAGE;
         }
         if (0 != (stat = eeprom_send_address(i2c,address))) {
-            message_puts("eeprom_send_address failed in eeprom_write");
+            message_puts(LOG_LEVEL_CRITICAL,"eeprom_send_address failed in eeprom_write");
             return stat;
         }
     } else {
         nbytes = -nbytes;
         lastAddress = address+nbytes-1;
         if ((address & 0xFFF0) != (lastAddress & 0xFFF0)) {
-            message_puts("Page error in eeprom_write");
+            message_puts(LOG_LEVEL_CRITICAL,"Page error in eeprom_write");
             return I2C_BADPAGE;
         }
         if (0 != (stat = eeprom_send_byte_address(i2c,(unsigned char)address))) {
-            message_puts("eeprom_send_byte_address failed in eeprom_write");
+            message_puts(LOG_LEVEL_CRITICAL,"eeprom_send_byte_address failed in eeprom_write");
             return stat;
         }
     }
@@ -75,7 +75,7 @@ int eeprom_write(I2C_device *i2c,unsigned short address,unsigned char *buffer, i
     stat = I2C_write_bytes_nostart(hI2C[i2c->chain],buffer,nbytes);
     I2C_sendStop(hI2C[i2c->chain]);
     if (0 != stat) {
-        message_puts("eeprom send data failed in eeprom_write");
+        message_puts(LOG_LEVEL_CRITICAL,"eeprom send data failed in eeprom_write");
         return stat;
     }
     return 0;
@@ -92,7 +92,7 @@ int eeprom_read(I2C_device *i2c,unsigned short address,unsigned char *buffer, in
 // If nbytes>0, read bytes from the EEPROM at location address. A two byte address is used.
 // If nbytes<0, read -nbytes bytes from the EEPROM at the location address. A single byte address is used.
     if (eeprom_busy(i2c)) {
-        message_puts("Device busy in eeprom_read");
+        message_puts(LOG_LEVEL_CRITICAL,"Device busy in eeprom_read");
         return I2C_BUSY;
     }
     if (nbytes>0) eeprom_send_address(i2c,address);

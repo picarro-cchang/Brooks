@@ -8,7 +8,7 @@ void SEM_postBinary(void *handle)
 int SEM_pendBinary(void *handle,int timeOut)
 {}
 
-void message_puts(char *message)
+void message_puts(unsigned int level, char *message)
 {
-    printf("message_puts: %s\n", message);
+    printf("message_puts: %d, %s\n", level, message);
 }

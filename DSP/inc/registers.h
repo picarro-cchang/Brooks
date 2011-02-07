@@ -61,7 +61,7 @@ typedef struct
 
 void get_timestamp(long long *ts);
 void init_comms(void);
-void message_puts(char *message);
+void message_puts(unsigned int level, char *message);
 void sensor_put_from(unsigned int streamNum, float value);
 volatile RingdownEntryType *get_ringdown_entry_addr();
 void ringdown_put();

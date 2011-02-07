@@ -48,7 +48,7 @@ int resistanceToTemperature(float resistance,float constA,float constB,
     }
     else
     {
-        message_puts("Bad resistance in resistanceToTemperature");
+        message_puts(LOG_LEVEL_CRITICAL,"Bad resistance in resistanceToTemperature");
         *result = 0.0;
         return STATUS_OK;
     }

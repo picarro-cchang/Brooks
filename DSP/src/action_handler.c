@@ -126,7 +126,7 @@ int testScheduler(unsigned int numInt,void *params,void *env)
     {
         sprintf(message+strlen(message)," %d",paramsAsInt[i]);
     }
-    message_puts(message);
+    message_puts(LOG_LEVEL_STANDARD,message);
     return STATUS_OK;
 }
 
@@ -521,7 +521,7 @@ int r_envChecker(unsigned int numInt,void *params,void *env)
     sprintf(message,"envChecker: %5d %5d",myEnv->var1,myEnv->var2);
     myEnv->var1 += 1;
     myEnv->var2 += 2;
-    message_puts(message);
+    message_puts(LOG_LEVEL_STANDARD,message);
     return STATUS_OK;
 }
 

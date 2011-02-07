@@ -121,7 +121,7 @@ void do_groups(long long now)
         if (NO_MORE == to_do)
         {
             // Should never happen
-            message_puts("Nothing left to do\n");
+            message_puts(LOG_LEVEL_CRITICAL,"Scheduler has nothing left to do\n");
             break;
         }
         if (run_table[to_do].when > now) break;
@@ -142,14 +142,14 @@ void dispatch_group(unsigned short operation_address)
     unsigned int *operands;
     unsigned int *env;
     // sprintf(debug_msg,"Performing group at address %d\n",operation_address);
-    // message_puts(debug_msg);
+    // message_puts(LOG_LEVEL_INFO,debug_msg);
     while (1)
     {
         op = &operation_table[operation_address];
         if (op->opcode == 0) break;
         // sprintf(debug_msg,"Dispatching opcode %d with %d operands\n",
         //  op->opcode,op->num_operands);
-        // message_puts(debug_msg);
+        // message_puts(LOG_LEVEL_INFO,debug_msg);
         operands = &operand_table[op->operand_address];
         env = &env_table[op->env_address];
         doAction((unsigned int)(op->opcode),

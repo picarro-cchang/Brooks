@@ -68,13 +68,16 @@ void init_comms()
     CACHE_wbL2((void *)(ringdownEntries), sizeof(RingdownEntryType)*NUM_RINGDOWN_ENTRIES, CACHE_WAIT);
 }
 
-void message_puts(char *message)
+void message_puts(unsigned int level,char *message)
 {
     long long ts;
     Message *m = messages + message_pointer;
+    if (level > LOG_LEVEL_CRITICAL) level = LOG_LEVEL_CRITICAL;
     get_timestamp(&ts);
     m->timestamp = 0LL;
-    strncpy(m->message,message,120);
+    m->message[0] = '0' + level;
+    m->message[1] = ':';
+    strncpy(m->message + 2,message,120);
     m->timestamp = ts;
     message_pointer++;
     if (message_pointer>=NUM_MESSAGES) message_pointer = 0;
@@ -251,7 +254,7 @@ void hwiHpiInterrupt(unsigned int funcArg, unsigned int eventId)
     {
         char msg[32];
         sprintf(msg,"Incorrect DSP sequence number 0x%x 0x%x",seqNum,commStatSeqNum);
-        message_puts(msg);
+        message_puts(LOG_LEVEL_STANDARD,msg);
         d.asUint = ((commStatSeqNum<<COMM_STATUS_SequenceNumberShift)&COMM_STATUS_SequenceNumberMask)|
                    (COMM_STATUS_BadSequenceNumberMask)|
                    (COMM_STATUS_CompleteMask);

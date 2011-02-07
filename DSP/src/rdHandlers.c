@@ -188,7 +188,7 @@ void edmaDoneInterrupt(int tccNum)
 
     if (!put_queue(&rdBufferQueue,bank))
     {
-        message_puts("rdBuffer queue full in edmaDoneInterrupt");
+        message_puts(LOG_LEVEL_STANDARD,"rdBuffer queue full in edmaDoneInterrupt");
         spectCntrlError();
     }
     else   // put succeeded, post the good news to SEM_rdFitting
@@ -257,7 +257,7 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
     abortedRingdown = (0 != (status & (1<<RDMAN_STATUS_ABORTED_B)));
     if (abortedRingdown)
     {
-        message_puts("Ringdown aborted");
+        message_puts(LOG_LEVEL_STANDARD,"Ringdown aborted");
         spectCntrlError();
         IRQ_globalRestore(gie);
         return;
@@ -286,7 +286,7 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
             }
             if (!put_queue(&rdBufferQueue,MISSING_RINGDOWN))
             {
-                message_puts("rdBuffer queue full in ringdownInterrupt");
+                message_puts(LOG_LEVEL_STANDARD,"rdBuffer queue full in ringdownInterrupt");
                 spectCntrlError();
                 IRQ_globalRestore(gie);
                 return;
@@ -338,7 +338,7 @@ void acqDoneInterrupt(unsigned int funcArg, unsigned int eventId)
 
     if (!put_queue(&bankQueue,!bank))
     {
-        message_puts("bankQueue is full in acqDoneInterrupt.");
+        message_puts(LOG_LEVEL_STANDARD,"bankQueue is full in acqDoneInterrupt.");
         spectCntrlError();
         IRQ_globalRestore(gie);
         return;
@@ -366,7 +366,7 @@ void rdDataMoving(void)
         (*counter)++;
         if (!get_queue(&bankQueue,&bank))
         {
-            message_puts("bankQueue empty in rdDataMoving");
+            message_puts(LOG_LEVEL_STANDARD,"bankQueue empty in rdDataMoving");
             spectCntrlError();
             continue;
         }

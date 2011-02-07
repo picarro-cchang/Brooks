@@ -154,9 +154,9 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                 /*
                 sprintf(msg,"XRDY timeout in I2C_write_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
                         hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                message_puts(msg);
+                message_puts(LOG_LEVEL_CRITICAL,msg);
                 */
-                message_puts("XRDY timeout in I2C_write_bytes");
+                message_puts(LOG_LEVEL_CRITICAL,"XRDY timeout in I2C_write_bytes");
                 result = I2C_NXRDY;
                 goto error;
             }
@@ -178,9 +178,9 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                     /*
                     sprintf(msg,"ARDY timeout in I2C_write_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
                                 hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                    message_puts(msg);
+                    message_puts(LOG_LEVEL_CRITICAL,msg);
                     */
-                    message_puts("ARDY timeout in I2C_write_bytes");
+                    message_puts(LOG_LEVEL_CRITICAL,"ARDY timeout in I2C_write_bytes");
                     result = I2C_NARDY;
                     goto error;
                 }
@@ -206,9 +206,9 @@ int I2C_write_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
     I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
     I2C_FSETSH(hI2c,I2CSTR,ICXRDY,CLR);
     /* sprintf(msg,"NACK in I2C_write_bytes, I2CAddr=%x",i2caddr);
-    message_puts(msg);
+    message_puts(LOG_LEVEL_CRITICAL,msg);
     */
-    message_puts("NACK in I2C_write_bytes");
+    message_puts(LOG_LEVEL_CRITICAL,"NACK in I2C_write_bytes");
     result = I2C_NACK;
     goto error;
 error:
@@ -240,9 +240,9 @@ int I2C_write_bytes_nostart(I2C_Handle hI2c,Uint8 *buffer,int nbytes)
                 /*
                 sprintf(msg,"XRDY timeout in I2C_write_bytes_nostart, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d",
                         hI2c,I2C0MuxChan,I2C1MuxChan);
-                message_puts(msg);
+                message_puts(LOG_LEVEL_CRITICAL,msg);
                 */
-                message_puts("XRDY timeout in I2C_write_bytes_nostart");
+                message_puts(LOG_LEVEL_CRITICAL,"XRDY timeout in I2C_write_bytes_nostart");
                 result = I2C_NXRDY;
                 goto error;
             }
@@ -264,9 +264,9 @@ int I2C_write_bytes_nostart(I2C_Handle hI2c,Uint8 *buffer,int nbytes)
                     /*
                     sprintf(msg,"ARDY timeout in I2C_write_bytes_nostart, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d",
                             hI2c,I2C0MuxChan,I2C1MuxChan);
-                    message_puts(msg);
+                    message_puts(LOG_LEVEL_CRITICAL,msg);
                     */
-                    message_puts("ARDY timeout in I2C_write_bytes_nostart");
+                    message_puts(LOG_LEVEL_CRITICAL,"ARDY timeout in I2C_write_bytes_nostart");
                     result = I2C_NARDY;
                     goto error;
                 }
@@ -286,9 +286,9 @@ int I2C_write_bytes_nostart(I2C_Handle hI2c,Uint8 *buffer,int nbytes)
     /*
     sprintf(msg,"NACK timeout in I2C_write_bytes_nostart, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d",
             hI2c,I2C0MuxChan,I2C1MuxChan);
-    message_puts(msg);
+    message_puts(LOG_LEVEL_CRITICAL,msg);
     */
-    message_puts("NACK timeout in I2C_write_bytes_nostart");
+    message_puts(LOG_LEVEL_CRITICAL,"NACK timeout in I2C_write_bytes_nostart");
     result =  I2C_NACK;
     goto error;
 error:
@@ -334,18 +334,18 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                     /*
                     sprintf(msg,"RRDY (n-1) timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
                             hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                    message_puts(msg);
+                    message_puts(LOG_LEVEL_CRITICAL,msg);
                     */
-                    message_puts("RRDY (n-1) timeout in I2C_read_bytes");
+                    message_puts(LOG_LEVEL_CRITICAL,"RRDY (n-1) timeout in I2C_read_bytes");
                     I2C_FSETSH(hI2c,I2CSTR,ICRRDY,CLR);
                     result = I2C_NRRDY;
                     goto error;
                 }
                 if (I2C_nack(hI2c)) {
-                	result = I2C_NACK;
-				    I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
-                	goto error;
-			    }
+                    result = I2C_NACK;
+                    I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
+                    goto error;
+                }
                 //TSK_sleep(1);
             }
             buffer[i++] = I2C_readByte(hI2c);
@@ -358,9 +358,9 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                 /*
                 sprintf(msg,"ARDY timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
                         hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                message_puts(msg);
+                message_puts(LOG_LEVEL_CRITICAL,msg);
                 */
-                message_puts("ARDY timeout in I2C_read_bytes");
+                message_puts(LOG_LEVEL_CRITICAL,"ARDY timeout in I2C_read_bytes");
                 I2C_FSETSH(hI2c,I2CSTR,ARDY,CLR);
                 result = I2C_NARDY;
                 goto error;
@@ -377,18 +377,18 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                 /*
                 sprintf(msg,"RRDY (1) timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
                         hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                message_puts(msg);
+                message_puts(LOG_LEVEL_CRITICAL,msg);
                 */
-                message_puts("RRDY (1) timeout in I2C_read_bytes");
+                message_puts(LOG_LEVEL_CRITICAL,"RRDY (1) timeout in I2C_read_bytes");
                 I2C_FSETSH(hI2c,I2CSTR,ICRRDY,CLR);
                 result = I2C_NRRDY;
                 goto error;
             }
             if (I2C_nack(hI2c)) {
-            	result = I2C_NACK;
-			    I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
-            	goto error;
-		    }
+                result = I2C_NACK;
+                I2C_FSETSH(hI2c,I2CSTR,NACK,CLR);
+                goto error;
+            }
             //TSK_sleep(1);
         }
         I2C_readByte(hI2c);
@@ -401,9 +401,9 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
                 /*
                 sprintf(msg,"BB timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
                         hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                message_puts(msg);
+                message_puts(LOG_LEVEL_CRITICAL,msg);
                 */
-                message_puts("BB timeout in I2C_read_bytes");
+                message_puts(LOG_LEVEL_CRITICAL,"BB timeout in I2C_read_bytes");
                 I2C_FSETSH(hI2c,I2CSTR,BB,CLR);
                 result = I2C_BUSY;
                 goto error;
@@ -419,9 +419,9 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
     /*
     sprintf(msg,"NACK in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
             hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-    message_puts(msg);
+    message_puts(LOG_LEVEL_CRITICAL,msg);
     */
-    message_puts("NACK in I2C_read_bytes");
+    message_puts(LOG_LEVEL_CRITICAL,"NACK in I2C_read_bytes");
     result = I2C_NACK;
     goto error;
 error:

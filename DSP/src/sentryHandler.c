@@ -276,15 +276,15 @@ void sentryHandler(void)
                     if ((max & 1) && (min & 1)) sprintf(msg,"%s minimum and maximum sentries exceeded.",sentry_msg[i]);
                     else if (max & 1) sprintf(msg,"%s maximum sentry exceeded.",sentry_msg[i]);
                     else if (min & 1) sprintf(msg,"%s minimum sentry exceeded.",sentry_msg[i]);
-                    if ((max & 1) || (min & 1)) message_puts(msg);
+                    if ((max & 1) || (min & 1)) message_puts(LOG_LEVEL_CRITICAL,msg);
                     max >>= 1; min >>= 1;
                 }
-                if (schedulerFailed) message_puts("Scheduler failure.");
+                if (schedulerFailed) message_puts(LOG_LEVEL_CRITICAL,"Scheduler failure.");
                 if (overloaded) {
                     sprintf(msg,"Overload condition detected: 0x%x",overloaded);
-                    message_puts(msg);
+                    message_puts(LOG_LEVEL_CRITICAL,msg);
                 }
-                message_puts("Instrument placed in safe mode.");
+                message_puts(LOG_LEVEL_CRITICAL,"Instrument placed in safe mode.");
             }    
         }
     }

@@ -200,11 +200,11 @@ void spectCntrl(void)
                 {
                     if ( !(status & 1<<RDMAN_STATUS_BANK1_IN_USE_B) ) break;
                 }
-                if (nloops == 0) message_puts("Waiting for bank to become available");
+                if (nloops == 0) message_puts(LOG_LEVEL_STANDARD,"Waiting for bank to become available");
             }
             else
             {
-                if (nloops == 0) message_puts("Ringdown manager busy");
+                if (nloops == 0) message_puts(LOG_LEVEL_STANDARD,"Ringdown manager busy");
             }
             // Wait around for another ms and recheck. Reset manager if busy for more
             //  than 50ms.
@@ -214,7 +214,7 @@ void spectCntrl(void)
                 changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RESET_RDMAN_B,
                                RDMAN_CONTROL_RESET_RDMAN_W,1);
                 SEM_pendBinary(&SEM_waitForRdMan,SYS_FOREVER);
-                message_puts("Resetting ringdown manager");
+                message_puts(LOG_LEVEL_STANDARD,"Resetting ringdown manager");
                 nloops = 0;
                 break;
             }
@@ -499,22 +499,22 @@ void validateSchemePosition(void)
     SpectCntrlParams *s=&spectCntrlParams;
     if (*(s->active_) >= NUM_SCHEME_TABLES)
     {
-        message_puts("Active scheme index is out of range, resetting to zero");
+        message_puts(LOG_LEVEL_STANDARD,"Active scheme index is out of range, resetting to zero");
         *(s->active_) = 0;
     }
     if (*(s->iter_) >= schemeTables[*(s->active_)].numRepeats)
     {
-        message_puts("Scheme iteration is out of range, resetting to zero");
+        message_puts(LOG_LEVEL_STANDARD,"Scheme iteration is out of range, resetting to zero");
         *(s->iter_) = 0;
     }
     if (*(s->row_) >= schemeTables[*(s->active_)].numRows)
     {
-        message_puts("Scheme row is out of range, resetting to zero");
+        message_puts(LOG_LEVEL_STANDARD,"Scheme row is out of range, resetting to zero");
         *(s->row_) = 0;
     }
     if (*(s->dwell_) >= schemeTables[*(s->active_)].rows[*(s->row_)].dwellCount)
     {
-        message_puts("Dwell count is out of range, resetting to zero");
+        message_puts(LOG_LEVEL_STANDARD,"Dwell count is out of range, resetting to zero");
         *(s->dwell_) = 0;
     }
 }
@@ -635,7 +635,7 @@ void spectCntrlError(void)
     SEM_postBinary(&SEM_rdBuffer0Available);
     SEM_postBinary(&SEM_rdBuffer1Available);
     switchToRampMode();
-    message_puts("Spectrum controller enters error state.");
+    message_puts(LOG_LEVEL_CRITICAL,"Spectrum controller enters error state.");
 }
 
 void update_wlmsim_laser_temp(void)

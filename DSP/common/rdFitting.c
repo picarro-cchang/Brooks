@@ -452,7 +452,7 @@ void rdFitting(void)
         (*counter)++;
         if (!get_queue(&rdBufferQueue,&bufferNum))
         {
-            message_puts("rdBuffer queue empty in rdFitting");
+            message_puts(LOG_LEVEL_STANDARD,"rdBuffer queue empty in rdFitting");
             spectCntrlError();
         }
         if (bufferNum == MISSING_RINGDOWN)

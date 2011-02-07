@@ -640,6 +640,13 @@ typedef enum {
     HEATER_CONTROL_MODE_HEATER_FIXED = 2 // 
 } HEATER_CONTROL_ModeType;
 
+typedef enum {
+    LOG_LEVEL_DEBUG = 0, // 
+    LOG_LEVEL_INFO = 1, // 
+    LOG_LEVEL_STANDARD = 2, // 
+    LOG_LEVEL_CRITICAL = 3 // 
+} LOG_LEVEL_Type;
+
 /* Definitions for COMM_STATUS_BITMASK */
 #define COMM_STATUS_CompleteMask (0x1)
 #define COMM_STATUS_BadCrcMask (0x2)

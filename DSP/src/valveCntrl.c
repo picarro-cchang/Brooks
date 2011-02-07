@@ -80,7 +80,7 @@ void proportionalValveStep()
     v->lastPressure = cavityPressure;
     
     if (dpdt >= dpdtAbort || dpdt <= -dpdtAbort) {
-        message_puts("Maximum pressure change exceeded. Valves closed to protect cavity.");
+        message_puts(LOG_LEVEL_STANDARD,"Maximum pressure change exceeded. Valves closed to protect cavity.");
         state = VALVE_CNTRL_DisabledState;
     }
     
@@ -135,7 +135,7 @@ void proportionalValveStep()
         if (valveValue > inletMax) valveValue = inletMax;
         inlet = valveValue;
         if (inlet <= inletMin && v->nonDecreasingCount>10) {
-            message_puts("Check vacuum pump connection, valves closed to protect cavity.");
+            message_puts(LOG_LEVEL_STANDARD,"Check vacuum pump connection, valves closed to protect cavity.");
             state = VALVE_CNTRL_DisabledState;
         }        
         break;
@@ -143,7 +143,7 @@ void proportionalValveStep()
     userInlet = inlet;
     userOutlet = outlet;
     if (outlet >= outletMax && v->nonDecreasingCount>10) {
-        message_puts("Check vacuum pump connection, valves closed to protect cavity.");
+        message_puts(LOG_LEVEL_STANDARD,"Check vacuum pump connection, valves closed to protect cavity.");
         state = VALVE_CNTRL_DisabledState;
     }
 }
