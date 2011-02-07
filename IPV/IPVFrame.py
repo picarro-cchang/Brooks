@@ -23,7 +23,7 @@ class IPVFrame(wx.Frame):
         self.panel_3 = wx.Panel(self, -1)
         self.sizer_3_staticbox = wx.StaticBox(self.panel_2, -1, "")
         self.label_1 = wx.StaticText(self.panel_1, -1, "Picarro Instrument Performance Verification", style=wx.ALIGN_CENTRE)
-        self.labelFooter = wx.StaticText(self.panel_3, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self.panel_3, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
         self.gridList = []
         self.gridLabelList = []
         for i in range(self.numSections):

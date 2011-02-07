@@ -90,7 +90,7 @@ class PicarroKMLFrame(wx.Frame):
         
         # Other graphical components
         self.staticLine = wx.StaticLine(self, -1)
-        self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
         self.labelOutputPath = wx.StaticText(self, -1, "Output KML File")
         self.textCtrlOutputPath = wx.TextCtrl(self, -1, "", style = wx.TE_READONLY)
         self.textCtrlOutputPath.SetMinSize((450,20))

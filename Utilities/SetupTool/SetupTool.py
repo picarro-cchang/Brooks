@@ -103,7 +103,7 @@ class SetupTool(SetupToolFrame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
     def onAboutMenu(self, event):
-        d = wx.MessageDialog(None, "Software tool to customize Picarro G2000 analyzer\n\nCopyright 1999-2010 Picarro Inc. All rights reserved.\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Setup Tool", wx.OK)
+        d = wx.MessageDialog(None, "Software tool to customize Picarro G2000 analyzer\n\nCopyright 1999-2011 Picarro Inc. All rights reserved.\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Setup Tool", wx.OK)
         d.ShowModal()
         d.Destroy()
         

@@ -46,7 +46,7 @@ class InstrEEPROMAccessFrame(wx.Frame):
         self.panel2 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         self.panel3 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         self.SetTitle("Instrument EEPROM Access")
-        self.labelFooter = wx.StaticText(self.panel3, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self.panel3, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
         self.panel1.SetBackgroundColour("#E0FFFF")
         self.panel2.SetBackgroundColour("#BDEDFF")
         self.panel3.SetBackgroundColour("#85B24A")

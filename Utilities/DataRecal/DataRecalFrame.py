@@ -46,7 +46,7 @@ class DataRecalFrame(wx.Frame):
         # Overall properties
         self.SetTitle("Picarro Data Recalibration")
         self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-        self.labelFooter = wx.StaticText(self.panel3, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self.panel3, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
         
         # Column text controls
         self.acceptTextCtrlList = []

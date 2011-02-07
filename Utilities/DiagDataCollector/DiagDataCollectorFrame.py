@@ -10,7 +10,7 @@ class DiagDataCollectorFrame(wx.Frame):
         wx.Frame.__init__(self, *args, **kwds)
         self.SetTitle("CRDS Diagnostic Data Collector")
         self.SetBackgroundColour("#E0FFFF")
-        self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
         
         self.labelStartDate = wx.StaticText(self, -1, "Start Date/Time")
         self.ctrlStartDate = wx.DatePickerCtrl(self, -1, style = wx.DP_DROPDOWN)

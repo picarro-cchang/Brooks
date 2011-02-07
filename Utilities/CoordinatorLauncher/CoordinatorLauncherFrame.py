@@ -14,7 +14,7 @@ class CoordinatorLauncherFrame(wx.Frame):
         # labels
         self.labelTitle = wx.StaticText(self, -1, "Picarro Coordinator Launcher", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-        self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
         self.labelSelect = wx.StaticText(self, -1, "Select Coordinator", style=wx.ALIGN_CENTER)
         
         # Divider line

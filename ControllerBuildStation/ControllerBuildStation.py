@@ -171,7 +171,7 @@ class Controller(ControllerBuildStationFrameGui):
         pd.Show()
 
     def onAbout(self,evt):
-        v = "(c) 2005-2010, Picarro Inc.\n\n"
+        v = "(c) 2005-2011, Picarro Inc.\n\n"
         try:
             dV = Driver.allVersions()
             klist = dV.keys()

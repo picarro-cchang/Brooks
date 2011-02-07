@@ -19,7 +19,7 @@ class FluxSchedulerFrame(wx.Frame):
         self.labelTitle1.SetFont(wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.labelTitle2 = wx.StaticText(self.panel2, -1, "Quick Flux Mode Switcher", style=wx.ALIGN_CENTRE)
         self.labelTitle2.SetFont(wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-        self.labelFooter = wx.StaticText(self.panel2, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self.panel2, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
         self.labelMode = wx.StaticText(self.panel1, -1, "FLUX MODE", style=wx.ALIGN_CENTER)
         self.labelDwell = wx.StaticText(self.panel1, -1, "DWELL TIME (MIN)", style=wx.ALIGN_CENTER)
         

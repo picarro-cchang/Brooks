@@ -18,7 +18,7 @@ class DeltaCorrProcessorFrame(wx.Frame):
         self.SetTitle("Sample Delta Correction")
         self.SetMinSize((270,100))
         self.panel1.SetBackgroundColour("#E0FFFF")
-        self.labelFooter = wx.StaticText(self.panel1, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self.panel1, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
         
         # Menu bar
         self.frameMenubar = wx.MenuBar()

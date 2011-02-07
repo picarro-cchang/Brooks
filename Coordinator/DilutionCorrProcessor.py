@@ -100,7 +100,7 @@ class DilutionCorrProcessorFrame(wx.Frame):
             self.textCtrl.SetValue("Failed to create output file")
             
     def onAboutMenu(self, evt):
-        d = wx.MessageDialog(None, "This application applies standard concentration to correct sample concentration values.\n\nCopyright 1999-2010 Picarro Inc. All rights reserved.\nVersion: 0.01\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Discrete Sample Delta Correction", wx.OK)
+        d = wx.MessageDialog(None, "This application applies standard concentration to correct sample concentration values.\n\nCopyright 1999-2011 Picarro Inc. All rights reserved.\nVersion: 0.01\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Discrete Sample Delta Correction", wx.OK)
         d.ShowModal()
         d.Destroy()
         
