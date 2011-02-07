@@ -144,7 +144,9 @@ class DasConfigure(SharedTypes.Singleton):
                     # Temperature reading
                     self.opGroups["FAST"]["SENSOR_READ"].addOperation(
                         Operation("ACTION_READ_LASER_THERMISTOR_RESISTANCE",
-                                  [laserNum,"LASER%d_RESISTANCE_REGISTER" % laserNum]))
+                                  [laserNum,
+                                  "LASER%d_RESISTANCE_REGISTER" % laserNum,
+                                  "LASER%d_THERMISTOR_SERIES_RESISTANCE_REGISTER" % laserNum]))
                     self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
                         Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                             ["LASER%d_RESISTANCE_REGISTER" % laserNum,
@@ -237,7 +239,8 @@ class DasConfigure(SharedTypes.Singleton):
             if present > 0:
                 self.opGroups["FAST"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_ETALON_THERMISTOR_RESISTANCE",
-                        ["ETALON_RESISTANCE_REGISTER"]))
+                        ["ETALON_RESISTANCE_REGISTER",
+                         "ETALON_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
     
             self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
@@ -255,11 +258,13 @@ class DasConfigure(SharedTypes.Singleton):
             if present > 0:
                 self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE",
-                        ["WARM_BOX_RESISTANCE_REGISTER"]))
+                        ["WARM_BOX_RESISTANCE_REGISTER",
+                         "WARM_BOX_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
         
                 self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE",
-                        ["WARM_BOX_HEATSINK_RESISTANCE_REGISTER"]))
+                        ["WARM_BOX_HEATSINK_RESISTANCE_REGISTER",
+                         "WARM_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
     
             self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
@@ -321,11 +326,13 @@ class DasConfigure(SharedTypes.Singleton):
             if present > 0:
                 self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_CAVITY_THERMISTOR_RESISTANCE",
-                        ["CAVITY_RESISTANCE_REGISTER"]))
+                        ["CAVITY_RESISTANCE_REGISTER",
+                         "CAVITY_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
         
                 self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE",
-                        ["HOT_BOX_HEATSINK_RESISTANCE_REGISTER"]))
+                        ["HOT_BOX_HEATSINK_RESISTANCE_REGISTER",
+                         "HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
                 
             self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
