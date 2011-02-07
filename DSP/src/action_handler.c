@@ -589,8 +589,9 @@ int r_read_laser_thermistor_resistance(unsigned int numInt,void *params,void *en
 {
     unsigned int *reg = (unsigned int *) params;
     float result;
-    float Vfrac, Rseries = 30000.0;
-    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    float Vfrac, Rseries;
+    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[2],Rseries);
     result = read_laser_thermistor_adc(reg[0]);
     Vfrac = result/33554432.0;
     if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
@@ -602,8 +603,9 @@ int r_read_etalon_thermistor_resistance(unsigned int numInt,void *params,void *e
 {
     unsigned int *reg = (unsigned int *) params;
     float result;
-    float Vfrac, Rseries = 30000.0;
-    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    float Vfrac, Rseries;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[1],Rseries);
     result = read_etalon_thermistor_adc();
     if (result != I2C_READ_ERROR) {
         Vfrac = result/33554432.0;
@@ -617,8 +619,9 @@ int r_read_warm_box_thermistor_resistance(unsigned int numInt,void *params,void 
 {
     unsigned int *reg = (unsigned int *) params;
     float result;
-    float Vfrac, Rseries = 30000.0;
-    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    float Vfrac, Rseries;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[1],Rseries);
     result = read_warm_box_thermistor_adc();
     if (result != I2C_READ_ERROR) {
         Vfrac = result/33554432.0;
@@ -632,8 +635,9 @@ int r_read_warm_box_heatsink_thermistor_resistance(unsigned int numInt,void *par
 {
     unsigned int *reg = (unsigned int *) params;
     float result;
-    float Vfrac, Rseries = 30000.0;
-    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    float Vfrac, Rseries;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[1],Rseries);
     result = read_warm_box_heatsink_thermistor_adc();
     if (result != I2C_READ_ERROR) {
         Vfrac = result/33554432.0;
@@ -647,8 +651,9 @@ int r_read_cavity_thermistor_resistance(unsigned int numInt,void *params,void *e
 {
     unsigned int *reg = (unsigned int *) params;
     float result;
-    float Vfrac, Rseries = 124000.0;
-    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    float Vfrac, Rseries;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[1],Rseries);
     result = read_cavity_thermistor_adc();
     if (result != I2C_READ_ERROR) {
         Vfrac = result/33554432.0;
@@ -662,8 +667,9 @@ int r_read_hot_box_heatsink_thermistor_resistance(unsigned int numInt,void *para
 {
     unsigned int *reg = (unsigned int *) params;
     float result;
-    float Vfrac, Rseries = 124000.0;
-    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    float Vfrac, Rseries;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[1],Rseries);
     result = read_hot_box_heatsink_thermistor_adc();
     if (result != I2C_READ_ERROR) {
         Vfrac = result/33554432.0;

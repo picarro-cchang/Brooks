@@ -737,8 +737,10 @@
         <register ident="LASER1_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser1 temperature</description>
         </register>
-        <register ident="LASER1_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Laser1 thermistor ADC</description>
+        <register ident="LASER1_THERMISTOR_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 thermistor series resistance</description>
+            <initial>30000</initial>
+            <save/>
         </register>
         <register ident="LASER1_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser1 TEC value</description>
@@ -755,7 +757,7 @@
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Temperature Controller Mode</display>
         </register>
-        <register ident="LASER1_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+        <register ident="LASER1_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser1 Temperature Control app setpoint in degC.</description>
             <initial>25.0</initial>
         </register>
@@ -953,8 +955,10 @@
         <register ident="LASER2_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser2 temperature</description>
         </register>
-        <register ident="LASER2_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Laser2 thermistor ADC</description>
+        <register ident="LASER2_THERMISTOR_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 thermistor series resistance</description>
+            <initial>30000</initial>
+            <save/>
         </register>
         <register ident="LASER2_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser2 TEC value</description>
@@ -971,7 +975,7 @@
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Temperature Controller Mode</display>
         </register>
-        <register ident="LASER2_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+        <register ident="LASER2_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser2 Temperature Control app setpoint in degC.</description>
             <initial>25.0</initial>
         </register>
@@ -1169,8 +1173,10 @@
         <register ident="LASER3_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser3 temperature</description>
         </register>
-        <register ident="LASER3_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Laser3 thermistor ADC</description>
+        <register ident="LASER3_THERMISTOR_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 thermistor series resistance</description>
+            <initial>30000</initial>
+            <save/>
         </register>
         <register ident="LASER3_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser3 TEC value</description>
@@ -1187,7 +1193,7 @@
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Temperature Controller Mode</display>
         </register>
-        <register ident="LASER3_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+        <register ident="LASER3_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser3 Temperature Control app setpoint in degC.</description>
             <initial>25.0</initial>
         </register>
@@ -1385,8 +1391,10 @@
         <register ident="LASER4_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser4 temperature</description>
         </register>
-        <register ident="LASER4_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Laser4 thermistor ADC</description>
+        <register ident="LASER4_THERMISTOR_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 thermistor series resistance</description>
+            <initial>30000</initial>
+            <save/>
         </register>
         <register ident="LASER4_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Laser4 TEC value</description>
@@ -1403,7 +1411,7 @@
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Temperature Controller Mode</display>
         </register>
-        <register ident="LASER4_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+        <register ident="LASER4_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser4 Temperature Control app setpoint in degC.</description>
             <initial>25.0</initial>
         </register>
@@ -1591,8 +1599,10 @@
         <register ident="ETALON_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Etalon temperature</description>
         </register>
-        <register ident="ETALON_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Etalon thermistor ADC</description>
+        <register ident="ETALON_THERMISTOR_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Etalon thermistor series resistance</description>
+            <initial>30000</initial>
+            <save/>
         </register>
         <register ident="CONVERSION_WARM_BOX_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Warm box thermistor constant A</description>
@@ -1615,8 +1625,10 @@
         <register ident="WARM_BOX_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Warm box temperature</description>
         </register>
-        <register ident="WARM_BOX_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Warm box thermistor ADC</description>
+        <register ident="WARM_BOX_THERMISTOR_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box thermistor series resistance</description>
+            <initial>30000</initial>
+            <save/>
         </register>
         <register ident="WARM_BOX_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Warm box TEC value</description>
@@ -1633,7 +1645,7 @@
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Temperature Controller Mode</display>
         </register>
-        <register ident="WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+        <register ident="WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>Warm box Temperature Control app setpoint in degC.</description>
             <initial>25.0</initial>
         </register>
@@ -1784,8 +1796,10 @@
         <register ident="WARM_BOX_HEATSINK_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Warm box heatsink temperature</description>
         </register>
-        <register ident="WARM_BOX_HEATSINK_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Warm box heatsink thermistor ADC</description>
+        <register ident="WARM_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Warm box heatsink thermistor series resistance</description>
+            <initial>30000</initial>
+            <save/>
         </register>
         <register ident="CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Hot box heatsink thermistor constant A</description>
@@ -1808,8 +1822,10 @@
         <register ident="HOT_BOX_HEATSINK_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Hot box heatsink temperature</description>
         </register>
-        <register ident="HOT_BOX_HEATSINK_ADC_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Hot box heatsink thermistor ADC</description>
+        <register ident="HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Hot box heatsink thermistor series resistance</description>
+            <initial>124000</initial>
+            <save/>
         </register>
         <register ident="CONVERSION_CAVITY_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Cavity thermistor constant A</description>
@@ -1832,8 +1848,10 @@
         <register ident="CAVITY_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Cavity temperature</description>
         </register>
-        <register ident="CAVITY_THERMISTOR_ADC_REGISTER" type="uint32" minver="1.0" access="r">
-            <description>Cavity thermistor ADC</description>
+        <register ident="CAVITY_THERMISTOR_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity thermistor series resistance</description>
+            <initial>124000</initial>
+            <save/>
         </register>
         <register ident="CAVITY_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Cavity TEC value</description>
@@ -1850,7 +1868,7 @@
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Temperature Controller Mode</display>
         </register>
-        <register ident="CAVITY_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+        <register ident="CAVITY_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>Cavity Temperature Control app setpoint in degC.</description>
             <initial>25.0</initial>
         </register>
@@ -1995,7 +2013,7 @@
             <initial>TEMP_CNTRL_DisabledState</initial>
             <display>Heater Controller Mode</display>
         </register>
-        <register ident="HEATER_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="r">
+        <register ident="HEATER_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>Heater Temperature Control app setpoint for Heatsink minus Cavity temperature.</description>
             <initial>0.0</initial>
         </register>
