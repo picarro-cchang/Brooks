@@ -198,6 +198,9 @@ class FitterRPC(object):
         
     def restoreViewer(self):
         self.fitter.FITTER_maximizeViewer(False)
+        
+    def getProcessID(self):
+        return self.fitter.CmdFIFO.GetProcessID()
        
 ####################
 # External valve sequencer control
