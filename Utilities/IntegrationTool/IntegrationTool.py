@@ -29,7 +29,8 @@ CAL_DIR = "C:\Picarro\G2000\InstrConfig\Calibration\InstrCal"
 WARMBOX_CAL = "Beta2000_WarmBoxCal"
 HOTBOX_CAL = "Beta2000_HotBoxCal"
 
-LASER_TYPE_DICT = {"1603.2": "CO2", "1651.0": "CH4", "1599.6": "iCO2", "1392.0": "iH2O", "1567.9": "CO", "1527.0": "NH3", "1554.7": "iH2O"}
+LASER_TYPE_DICT = {"1603.2": "CO2", "1651.0": "CH4", "1599.6": "iCO2", "1392.0": "iH2O", 
+                   "1567.9": "CO", "1527.0": "NH3", "1554.7": "iH2O", "1521.1": "C2H2"}
 
 ANALYZER_TYPE_INDEX = {"HBDS":0, "CFADS":1, "CFBDS":1, "CFDDS":1, "CBDS":2, "CHADS":2, "CFKADS":3, "CFKBDS":3, "AEDS":4, "CKADS":5}
 ALL_SCHEMES = [
