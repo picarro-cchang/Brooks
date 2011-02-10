@@ -1022,7 +1022,7 @@ class Driver(SharedTypes.Singleton):
         self.analogInterface = AnalogInterface(self,self.config)
         # Get appConfig and instrConfig version number
         self.ver = {}
-        for ver in ["appVer", "instrVer"]:
+        for ver in ["appVer", "instrVer", "commonVer"]:
             try:
                 fPath = os.path.join(basePath, self.config["Files"][ver])
                 co = CustomConfigObj(fPath)

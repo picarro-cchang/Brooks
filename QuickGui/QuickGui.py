@@ -1407,7 +1407,11 @@ class QuickGui(wx.Frame):
         setItemFont(self.titleLabel,self.getFontFromIni('Title'))
 
         # Define the footer band
-        footerLabel = wx.StaticText(parent=self.mainPanel, id=-1, label=getInnerStr(self.config.get('Footer','String')), style=wx.ALIGN_CENTER)
+        
+        # Don't use the footer in INI file otherwise we have to change the year of each individual QuickGui.ini (more than 100 files) every year
+        #copyLabel=getInnerStr(self.config.get('Footer','String'))
+        copyLabel = "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0]
+        footerLabel = wx.StaticText(parent=self.mainPanel, id=-1, label=copyLabel, style=wx.ALIGN_CENTER)
         setItemFont(footerLabel,self.getFontFromIni('Footer'))
 
         # Define the graph panels

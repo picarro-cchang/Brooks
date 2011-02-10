@@ -201,6 +201,9 @@ class FitterRPC(object):
         
     def getProcessID(self):
         return self.fitter.CmdFIFO.GetProcessID()
+        
+    def stopServer(self):
+        return self.fitter.CmdFIFO.StopServer()
        
 ####################
 # External valve sequencer control
