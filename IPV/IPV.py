@@ -383,7 +383,6 @@ class IPV(IPVFrame):
     def uploadAndArchiveIPV(self):
         self._writeToStatus("Archiving and/or uploading IPV reports...")
         self.fUploader.setSftpClient()
-        self._broadcastStatus()
         self.fUploader.uploadAndArchiveIPV()
         self.fUploader.closeSftpClient()
   
@@ -392,16 +391,8 @@ class IPV(IPVFrame):
             return
         self._writeToStatus("Archiving and/or uploading RDF files...")
         self.fUploader.setSftpClient()
-        self._broadcastStatus()
         self.fUploader.uploadAndArchiveRDF(self.rdfUnixTimeLimits)
         self.fUploader.closeSftpClient()
-        
-    def _broadcastStatus(self):
-        status = self.getUploadStatus()
-        if status == 0:
-            self._writeToStatus("Error: SFTP connection failed")
-            print "Error: SFTP connection failed"
-        self.IPVStatusBroadcaster.send("%d,%f\n" % (status, time.time()))
         
     def createDiagFile(self):
         self._createH5File()
@@ -429,6 +420,11 @@ class IPV(IPVFrame):
         appThread = threading.Thread(target = self.testConnection)
         appThread.setDaemon(True)
         appThread.start()
+       
+    def startBroadcaseStatusThread(self):
+        appThread = threading.Thread(target = self.broadcastStatus)
+        appThread.setDaemon(True)
+        appThread.start()
         
     def runIPV(self):
         while not self._shutdownRequested:
@@ -448,10 +444,18 @@ class IPV(IPVFrame):
             if self.getUploadStatus() != 1:
                 #print "Testing connection"
                 self.fUploader.setSftpClient()
-                self._broadcastStatus()
                 self.fUploader.closeSftpClient()
             time.sleep(3600 * self.testConnHrs)
             
+    def broadcastStatus(self):
+        while not self._shutdownRequested:
+            status = self.getUploadStatus()
+            if status == 0:
+                self._writeToStatus("Error: SFTP connection failed")
+                print "Error: SFTP connection failed"
+            self.IPVStatusBroadcaster.send("%d,%f\n" % (status, time.time()))
+            time.sleep(120)
+        
     def onClose(self,event):
         self.hideViewer()
     
@@ -852,6 +856,7 @@ if __name__ == "__main__":
         frame = IPV(configFile, useViewer, None, -1, "")
         frame.startIPVThread()
         frame.startTestConnectionThread()
+        frame.startBroadcaseStatusThread()
         app.SetTopWindow(frame)
         if useViewer:
             frame.Show()
