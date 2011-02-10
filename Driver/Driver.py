@@ -221,6 +221,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         try:
             versionDict["config - app version no"] = self.ver["appVer"]
             versionDict["config - instr version no"] = self.ver["instrVer"]
+            versionDict["config - common version no"] = self.ver["commonVer"]
         except Exception, err:
             print err
         return versionDict
