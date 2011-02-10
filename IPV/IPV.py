@@ -111,11 +111,11 @@ class FileUploader(object):
     def __init__(self, configFile, instName):
         self.instName = instName
         co = CustomConfigObj(configFile, list_values = True)
-        self.ipvDir = os.path.abspath(co.get("FileUpload", "ipvDir"))
+        self.ipvDir = os.path.abspath(co.get("Main", "ipvDir", "C:/UserData/IPV_RPT"))
         self.ipvRemoteDir = co.get("FileUpload", "ipvRemoteDir")
         self.ipvExtension = co.get("FileUpload", "ipvExtension")
         self.ipvArchiveGroupName = co.get("IPVBackup", "archiveGroupName")
-        self.rdfDir = os.path.abspath(co.get("FileUpload", "rdfDir"))
+        self.rdfDir = os.path.abspath(co.get("Main", "rdfDir", "C:/UserData/IPV_RDF"))
         self.rdfRemoteDir = co.get("FileUpload", "rdfRemoteDir", "")
         self.rdfArchiveGroupName = co.get("RDFBackup", "archiveGroupName")
         self.host = co.get("FileUpload", "host")
@@ -313,11 +313,11 @@ class IPV(IPVFrame):
     def _processIni(self, configFile):
         self.statusMessage = []
         co = CustomConfigObj(configFile, list_values = True)
-        self.diagFilePrefix = co.get("Main", "diagFilePrefix", "C:/UserData/IPV/Diag")
-        dirName = os.path.dirname(self.diagFilePrefix)
-        if not os.path.isdir(dirName):
-            os.mkdir(dirName)
-        self.reportFilePrefix = co.get("Main", "reportFilePrefix", "C:/UserData/IPV/Report")
+        self.ipvDir = os.path.abspath(co.get("Main", "ipvDir", "C:/UserData/IPV_RPT"))
+        if not os.path.isdir(self.ipvDir):
+            os.makedirs(self.ipvDir)
+        self.diagFilePrefix = os.path.join(self.ipvDir, co.get("Main", "diagFilePrefix", "Diag"))
+        self.reportFilePrefix = os.path.join(self.ipvDir, co.get("Main", "reportFilePrefix", "Report"))
         self.instType = CRDS_Driver.fetchInstrInfo("analyzer")
         self.instName = self.instType + CRDS_Driver.fetchInstrInfo("analyzernum")
         self.softwareVersion = CRDS_Driver.allVersions()["host release"]
@@ -749,7 +749,7 @@ class IPV(IPVFrame):
         if self.h5 != None:
             self.h5.close()
         endTime = datetime.strftime(self.endDatetime, "%Y%m%d%H%M%S")
-        self.h5Filename = "%s_%s_%s.h5" % (self.diagFilePrefix, self.instName, endTime)
+        self.h5Filename = "%s_%s_Host_%s_%s.csv" % (self.diagFilePrefix, self.instName, self.softwareVersion, endTime)
         try:
             self.h5 = tables.openFile(self.h5Filename, mode="w", title="Picarro IPV File")
         except Exception, err:
