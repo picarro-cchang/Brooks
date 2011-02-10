@@ -53,12 +53,17 @@ void ltc2485_configure(I2C_device *i2c, int selectTemp,int rejectCode,int speed)
 
 int ltc2485_getData(I2C_device *i2c,int *flags)
 /* *flags = 0 => underflow, 3 => overflow, 1 or 2 => ok.
+   Return value is signed 24 bit integer, with saturation.
    Returns I2C_READ_ERROR on an I2C problem. */
 {
     int result = ltc2485_rdBytes(i2c,4);
     if (result == I2C_READ_ERROR) return result;
-    *flags = result >> 30;
+    *flags = (result >> 30) & 0x3;
     result = (result & 0x7FFFFFFF) >> 6;
-    if (result < 0x1000000) return result;
-    else return ((int)result) - 0x2000000;
+    if (*flags == 0) return -0x1000000;
+    else if (*flags == 3) return 0xFFFFFF;
+    else {
+        if (result < 0x1000000) return result;
+        else return ((int)result) - 0x2000000;
+    }
 }
