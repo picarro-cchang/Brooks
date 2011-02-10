@@ -1923,7 +1923,7 @@ class QuickGui(wx.Frame):
         self.alarmInterface.getQueuedEvents()
         if not self.alarmInterface.alarmData:
             self.alarmInterface.getAlarmData()
-        self.sysAlarmInterface.getStatus(0)
+        #self.sysAlarmInterface.getStatus(0)
         sources = self.getSourcesbyMode()
         self.dataLoggerInterface.getDataLoggerInfo()
         # Update the combo box of sources with source names translated via the sourceSubstDatabase
