@@ -271,6 +271,8 @@ class IPV(IPVFrame):
         self.wlmTable = None        
         self._shutdownRequested = False
         self.rdfUnixTimeLimits = []
+        self.connStatus = 0
+        self.connStatusLock = threading.Lock()
         
         IPVFrame.__init__(self, self.numRowsList, *args, **kwds)
         self.SetTitle("Picarro Instrument Performance Verification (%s, Host Version: %s)" % (self.instName, self.softwareVersion))
@@ -382,18 +384,32 @@ class IPV(IPVFrame):
             
     def uploadAndArchiveIPV(self):
         self._writeToStatus("Archiving and/or uploading IPV reports...")
-        self.fUploader.setSftpClient()
-        self.fUploader.uploadAndArchiveIPV()
-        self.fUploader.closeSftpClient()
-  
+        self.connStatusLock.acquire()
+        try:
+            self.fUploader.setSftpClient()
+            self.fUploader.uploadAndArchiveIPV()
+            self.connStatus = self.getUploadStatus()
+            self.fUploader.closeSftpClient()
+        except:
+            pass
+        finally:
+            self.connStatusLock.release()
+            
     def uploadAndArchiveRDF(self):
         if not self.rdfUnixTimeLimits:
             return
-        self._writeToStatus("Archiving and/or uploading RDF files...")
-        self.fUploader.setSftpClient()
-        self.fUploader.uploadAndArchiveRDF(self.rdfUnixTimeLimits)
-        self.fUploader.closeSftpClient()
-        
+        self.connStatusLock.acquire()
+        try:
+            self._writeToStatus("Archiving and/or uploading RDF files...")
+            self.fUploader.setSftpClient()
+            self.fUploader.uploadAndArchiveRDF(self.rdfUnixTimeLimits)
+            self.connStatus = self.getUploadStatus()
+            self.fUploader.closeSftpClient()
+        except:
+            pass
+        finally:
+            self.connStatusLock.release()
+            
     def createDiagFile(self):
         self._createH5File()
         self._writeH5File()
@@ -438,22 +454,27 @@ class IPV(IPVFrame):
                     time.sleep(self.reportTime-currTime-60)
                 else:
                     time.sleep(10)
-
+        
     def testConnection(self):
         while not self._shutdownRequested:
+            self.connStatusLock.acquire()
             if self.getUploadStatus() != 1:
-                #print "Testing connection"
-                self.fUploader.setSftpClient()
-                self.fUploader.closeSftpClient()
+                try:
+                    self.fUploader.setSftpClient()
+                    self.connStatus = self.getUploadStatus()
+                    self.fUploader.closeSftpClient()
+                except:
+                    pass
+            else:
+                self.connStatus = 1
+            self.connStatusLock.release()
             time.sleep(3600 * self.testConnHrs)
             
     def broadcastStatus(self):
         while not self._shutdownRequested:
-            status = self.getUploadStatus()
-            if status == 0:
-                self._writeToStatus("Error: SFTP connection failed")
-                print "Error: SFTP connection failed"
-            self.IPVStatusBroadcaster.send("%d,%f\n" % (status, time.time()))
+            self.connStatusLock.acquire()
+            self.IPVStatusBroadcaster.send("%d,%f\n" % (self.connStatus, time.time()))
+            self.connStatusLock.release()
             time.sleep(120)
         
     def onClose(self,event):
