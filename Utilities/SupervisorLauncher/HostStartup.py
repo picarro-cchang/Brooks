@@ -7,6 +7,7 @@ import win32con
 import time
 import getopt
 from configobj import ConfigObj
+from Host.Common import version
 
 translationTable = {
 "supervisor.exe": "Supervisor",
@@ -71,7 +72,7 @@ class HostStartupFrame(wx.Frame):
         # labels
         self.labelTitle1 = wx.StaticText(self.panel1, -1, "CRDS Software Loading Status", style=wx.ALIGN_CENTRE)
         self.labelTitle1.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-        self.labelFooter = wx.StaticText(self.panel3, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self.panel3, -1, "Softwrae Version %s\nCopyright Picarro, Inc. 1999-%d" % (version.versionString(), time.localtime()[0]), style=wx.ALIGN_CENTER)
         
         # Current status display 
         self.curTextList = []        
