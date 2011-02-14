@@ -458,16 +458,14 @@ class IPV(IPVFrame):
     def testConnection(self):
         while not self._shutdownRequested:
             self.connStatusLock.acquire()
-            if self.getUploadStatus() != 1:
-                try:
-                    self.fUploader.setSftpClient()
-                    self.connStatus = self.getUploadStatus()
-                    self.fUploader.closeSftpClient()
-                except:
-                    pass
-            else:
-                self.connStatus = 1
-            self.connStatusLock.release()
+            try:
+                self.fUploader.setSftpClient()
+                self.connStatus = self.getUploadStatus()
+                self.fUploader.closeSftpClient()            
+            except:
+                pass
+            finally:
+                self.connStatusLock.release()
             time.sleep(3600 * self.testConnHrs)
             
     def broadcastStatus(self):
@@ -521,7 +519,7 @@ class IPV(IPVFrame):
         for group in self.groupDict:
             for rowIdx in range(self.numRowsList[group]):
                 sigName = self.groupDict[group][rowIdx]
-                dataDurHrs = max(1.0, self.co.getfloat(sigName,"durationHrs",6.0))
+                dataDurHrs = max(0.1, self.co.getfloat(sigName,"durationHrs",6.0))
                 startDatetime = self.endDatetime - timedelta(hours=dataDurHrs)
                 startTimestamp = timestamp.datetimeToTimestamp(startDatetime)
                 endTimestamp = timestamp.datetimeToTimestamp(self.endDatetime)
@@ -774,7 +772,7 @@ class IPV(IPVFrame):
         if self.h5 != None:
             self.h5.close()
         endTime = datetime.strftime(self.endDatetime, "%Y%m%d%H%M%S")
-        self.h5Filename = "%s_%s_Host_%s_%s.csv" % (self.diagFilePrefix, self.instName, self.softwareVersion, endTime)
+        self.h5Filename = "%s_%s_Host_%s_%s.h5" % (self.diagFilePrefix, self.instName, self.softwareVersion, endTime)
         try:
             self.h5 = tables.openFile(self.h5Filename, mode="w", title="Picarro IPV File")
         except Exception, err:

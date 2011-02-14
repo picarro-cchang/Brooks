@@ -196,7 +196,7 @@ exclusionList = ["Tkconstants","Tkinter","tcl", '_gtkagg', '_tkagg', '_agg2', '_
 inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
                  "email.mime.multipart","email.mime.image","email.mime.text",
                  "email.mime.base","scipy.interpolate","scipy.misc",
-                 "sip", "matplotlib.backends",  "matplotlib.backends.backend_wxagg",
+                 "sip", "matplotlib.backends",  "matplotlib.backends.backend_wxagg", "matplotlib.backends.backend_qt4agg",
                  "matplotlib.figure","pylab", "numpy", "matplotlib.numerix.fft",
                  "matplotlib.numerix.linear_algebra", "matplotlib.numerix.random_array", "configobj",
                  "encodings.*", "tables.*", "paramiko" ]
