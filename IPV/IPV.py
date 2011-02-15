@@ -108,9 +108,8 @@ class RpcServerThread(threading.Thread):
             print "Exception raised when calling exit function at exit of RPC server."
         
 class FileUploader(object):
-    def __init__(self, configFile, instName):
+    def __init__(self, co, instName):
         self.instName = instName
-        co = CustomConfigObj(configFile, list_values = True)
         self.ipvDir = os.path.abspath(co.get("Main", "ipvDir", "C:/UserData/IPV_RPT"))
         self.ipvRemoteDir = co.get("FileUpload", "ipvRemoteDir")
         self.ipvExtension = co.get("FileUpload", "ipvExtension")
@@ -233,7 +232,7 @@ class IPV(IPVFrame):
         self.useViewer = useViewer
         self.commandQueue = Queue()
         self._processIni(configFile)
-        self.fUploader = FileUploader(configFile,  self.instName)
+        self.fUploader = FileUploader(self.baseCo,  self.instName)
         self.signalList = [sigName for sigName in self.co if self.co.getboolean(sigName,"enabled")]
         self.numSignals = len(self.signalList)
         self.descrDict = {}
@@ -320,36 +319,55 @@ class IPV(IPVFrame):
         self.statusMessage = self.statusMessage[-30:]
         self.textCtrlStatus.SetValue("".join(self.statusMessage))
         
+    def _mergeConfig(self):
+        if not self.instrCo:
+            return
+        else:
+            for section in self.baseCo.list_sections():
+                for option in self.baseCo.list_options(section):
+                    try:
+                        if self.instrCo.has_option(section, option):
+                            print "[%s][%s] was overwritten" % (section, option)
+                            self.baseCo.set(section, option, self.instrCo.get(section, option))
+                    except:
+                        pass
+                
     def _processIni(self, configFile):
         self.statusMessage = []
-        co = CustomConfigObj(configFile, list_values = True)
-        self.enabled = co.getboolean("Main", "enabled", False)
-        self.ipvDir = os.path.abspath(co.get("Main", "ipvDir", "C:/UserData/IPV_RPT"))
+        self.baseCo = CustomConfigObj(configFile, list_values = True)
+        try:
+            basePath = os.path.split(configFile)[0]
+            self.instrCo = CustomConfigObj(os.path.join(basePath, self.baseCo.get("Main", "instrConfigPath")), list_values = True)
+        except:
+            self.instrCo = None
+        self._mergeConfig()
+        self.enabled = self.baseCo.getboolean("Main", "enabled", False)
+        self.ipvDir = os.path.abspath(self.baseCo.get("Main", "ipvDir", "C:/UserData/IPV_RPT"))
         if not os.path.isdir(self.ipvDir):
             os.makedirs(self.ipvDir)
-        self.diagFilePrefix = os.path.join(self.ipvDir, co.get("Main", "diagFilePrefix", "Diag"))
-        self.reportFilePrefix = os.path.join(self.ipvDir, co.get("Main", "reportFilePrefix", "Report"))
+        self.diagFilePrefix = os.path.join(self.ipvDir, self.baseCo.get("Main", "diagFilePrefix", "Diag"))
+        self.reportFilePrefix = os.path.join(self.ipvDir, self.baseCo.get("Main", "reportFilePrefix", "Report"))
         self.instType = CRDS_Driver.fetchInstrInfo("analyzer")
         self.instName = self.instType + CRDS_Driver.fetchInstrInfo("analyzernum")
         self.softwareVersion = CRDS_Driver.allVersions()["host release"]
-        self.useUTC = co.getboolean("Main", "useUTC", True)
-        self.rdfDurationHrs = co.getfloat("Main", "rdfDurationHrs", 6.0)
-        self.requiredDataHrs = co.getfloat("Main", "requiredDataHrs", 12.0)
-        self.startTime = co.get("Main", "startTime", "00:00:00")
-        self.repeatSec = 3600 * co.getfloat("Main", "repeatHrs", 6.0)
+        self.useUTC = self.baseCo.getboolean("Main", "useUTC", True)
+        self.rdfDurationHrs = self.baseCo.getfloat("Main", "rdfDurationHrs", 6.0)
+        self.requiredDataHrs = self.baseCo.getfloat("Main", "requiredDataHrs", 12.0)
+        self.startTime = self.baseCo.get("Main", "startTime", "00:00:00")
+        self.repeatSec = 3600 * self.baseCo.getfloat("Main", "repeatHrs", 6.0)
         assert self.repeatSec > 60, "The repeated time must be longer than 1 minute"
         self.reportTime = getSpecUTC(self.startTime, "float")
         currTime = getUTCTime("float")
         while currTime > self.reportTime:
             self.reportTime += self.repeatSec
         print "Starting Time: %s" % time.ctime(self.reportTime) 
-        self.testConnHrs = co.getfloat("Main", "testConnHrs", 0.5)
-        dbFilename = co.get("Main", "dbFilename")
+        self.testConnHrs = self.baseCo.getfloat("Main", "testConnHrs", 0.5)
+        dbFilename = self.baseCo.get("Main", "dbFilename")
         # Flatten the ini file
-        newCo = co[self.instType]
-        for sig in co["Common"]:
+        newCo = self.baseCo[self.instType]
+        for sig in self.baseCo["Common"]:
             if sig not in newCo:
-                newCo[sig] = co["Common"][sig]
+                newCo[sig] = self.baseCo["Common"][sig]
         self.co = CustomConfigObj(newCo)
         
     def enqueueViewerCommand(self, command, *args, **kwargs):
