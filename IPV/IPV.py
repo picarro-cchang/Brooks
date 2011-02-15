@@ -276,9 +276,6 @@ class IPV(IPVFrame):
         
         IPVFrame.__init__(self, self.numRowsList, *args, **kwds)
         self.SetTitle("Picarro Instrument Performance Verification (%s, Host Version: %s)" % (self.instName, self.softwareVersion))
-        self._writeToStatus("Starting Time: %s" % time.ctime(self.reportTime))
-        self._writeToStatus("Time interval: %.2f hours" % (self.repeatSec/3600.0))
-        self._writeToStatus("Will test connectivity every %.2f hours." % self.testConnHrs)
                 
         # Fill table with default values
         self._setDefaultResults()
@@ -301,6 +298,17 @@ class IPV(IPVFrame):
         else:
             self.Hide()
             
+        # If enalbed, start the three major threads
+        if self.enabled:
+            self._writeToStatus("Starting Time: %s" % time.ctime(self.reportTime))
+            self._writeToStatus("Time interval: %.2f hours" % (self.repeatSec/3600.0))
+            self._writeToStatus("Will test connectivity every %.2f hours." % self.testConnHrs)
+            self.startIPVThread()
+            self.startTestConnectionThread()
+            self.startBroadcaseStatusThread()
+        else:
+            self._writeToStatus("IPV disabled")
+            
     def _getTime(self, format=0):
         if format == 0:
             return time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(getUTCTime("float")))
@@ -315,6 +323,7 @@ class IPV(IPVFrame):
     def _processIni(self, configFile):
         self.statusMessage = []
         co = CustomConfigObj(configFile, list_values = True)
+        self.enabled = co.getboolean("Main", "enabled", False)
         self.ipvDir = os.path.abspath(co.get("Main", "ipvDir", "C:/UserData/IPV_RPT"))
         if not os.path.isdir(self.ipvDir):
             os.makedirs(self.ipvDir)
@@ -873,9 +882,6 @@ if __name__ == "__main__":
         app = wx.PySimpleApp()
         wx.InitAllImageHandlers()
         frame = IPV(configFile, useViewer, None, -1, "")
-        frame.startIPVThread()
-        frame.startTestConnectionThread()
-        frame.startBroadcaseStatusThread()
         app.SetTopWindow(frame)
         if useViewer:
             frame.Show()
