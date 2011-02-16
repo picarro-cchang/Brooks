@@ -14,6 +14,7 @@
 #   23-Aug-2009  sze  Added RESET_RDMAN bit to control register
 #   16-Sep-2009  sze  Added selection between simulated and actual ringdown data
 #   10-Jun-2010  sze  Added RINGDOWN_DATA register to test high-speed ADC
+#   14-Feb-2011  sze  Added oscilloscope mode for cavity alignment
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -67,11 +68,14 @@ from Host.autogen.interface import RDMAN_OPTIONS_UP_SLOPE_ENABLE_B, RDMAN_OPTION
 from Host.autogen.interface import RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B, RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W
 from Host.autogen.interface import RDMAN_OPTIONS_DITHER_ENABLE_B, RDMAN_OPTIONS_DITHER_ENABLE_W
 from Host.autogen.interface import RDMAN_OPTIONS_SIM_ACTUAL_B, RDMAN_OPTIONS_SIM_ACTUAL_W
+from Host.autogen.interface import RDMAN_OPTIONS_SCOPE_MODE_B, RDMAN_OPTIONS_SCOPE_MODE_W
+from Host.autogen.interface import RDMAN_OPTIONS_SCOPE_SLOPE_B, RDMAN_OPTIONS_SCOPE_SLOPE_W
 
 SeqState = enum("IDLE","START_INJECT","WAIT_FOR_PRECONTROL",
                 "WAIT_FOR_LOCK","WAIT_FOR_GATING_CONDITIONS",
                 "CHECK_BELOW_THRESHOLD","WAIT_FOR_THRESHOLD",
-                "IN_RINGDOWN","CHECK_PARAMS_DONE","ACQ_DONE")
+                "IN_RINGDOWN","CHECK_PARAMS_DONE","ACQ_DONE",
+                "AWAIT_SWEEP_1","AWAIT_SWEEP_2")
 MetadataAcqState = enum("IDLE","AWAIT_STROBE","ACQUIRING","DONE")
 ParamState = enum("IDLE","STORING","DONE")
 
@@ -186,6 +190,8 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     RDMAN_OPTIONS_DOWN_SLOPE_ENABLE -- Enables ringdowns on negative slope of tuner waveform
     RDMAN_OPTIONS_DITHER_ENABLE -- Allows transition to dither mode. Used by DSP.
     RDMAN_OPTIONS_SIM_ACTUAL -- Selects simulated (0) or actual (1) data
+    RDMAN_OPTIONS_SCOPE_MODE -- Selects normal ringdown mode (0) or oscilloscope mode (1)
+    RDMAN_OPTIONS_SCOPE_SLOPE -- Selects falling (0) or rising (1) slope of tuner to trigger oscilloscope
     """
     rdman_control_addr = map_base + RDMAN_CONTROL
     rdman_status_addr = map_base + RDMAN_STATUS
@@ -228,7 +234,7 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     data_addrcntr = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH:])
     metadata_addrcntr = Signal(intbv(0)[META_BANK_ADDR_WIDTH:])
     param_addrcntr = Signal(intbv(0)[PARAM_BANK_ADDR_WIDTH:])
-    divisor = Signal(intbv(0)[5:])
+    divisor = Signal(intbv(0)[10:])
     num_samp = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH:])
     threshold = Signal(intbv(0)[FPGA_REG_WIDTH:])
     lock_duration = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -429,10 +435,27 @@ def RdMan(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         us_timer_enable.next = LOW
                         acc_en_out.next = LOW
                         laser_locked_out.next = 0
-                        if control[RDMAN_CONTROL_START_RD_B]:
-                            seqState.next = SeqState.START_INJECT
+                        if options[RDMAN_OPTIONS_SCOPE_MODE_B]:
                             status.next[RDMAN_STATUS_BUSY_B] = 1
-
+                            seqState.next = SeqState.AWAIT_SWEEP_1
+                        elif control[RDMAN_CONTROL_START_RD_B]:
+                            status.next[RDMAN_STATUS_BUSY_B] = 1
+                            seqState.next = SeqState.START_INJECT
+                            
+                    elif seqState == SeqState.AWAIT_SWEEP_1:
+                        abort.next = 0
+                        timeout.next = 0
+                        rd_trig.next = LOW          # Turn on the injection
+                        us_timer_enable.next = HIGH # Start microsecond counter
+                        if bool(tuner_slope_in) != bool(options[RDMAN_OPTIONS_SCOPE_SLOPE_B]):
+                            seqState.next = SeqState.AWAIT_SWEEP_2
+                            
+                    elif seqState == SeqState.AWAIT_SWEEP_2:
+                        if bool(tuner_slope_in) == bool(options[RDMAN_OPTIONS_SCOPE_SLOPE_B]):
+                            data_addrcntr.next = 0
+                            rd_divider.next = 0
+                            seqState.next = SeqState.IN_RINGDOWN
+                            
                     elif seqState == SeqState.START_INJECT:
                         abort.next = 0
                         timeout.next = 0

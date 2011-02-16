@@ -3383,6 +3383,14 @@
                     <fielddef value="0">Simulator</fielddef>
                     <fielddef value="1">Actual ADC</fielddef>
                 </bitfield>
+                <bitfield ident="SCOPE_MODE" description="" lsb="5" width="1">
+                    <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef>
+                </bitfield>
+                <bitfield ident="SCOPE_SLOPE" description="" lsb="6" width="1">
+                    <fielddef value="0">Falling</fielddef>
+                    <fielddef value="1">Rising</fielddef>
+                </bitfield>
             </reg>
             <reg type="uint16" ident="PARAM0" description="Parameter 0 register" access="rw">
                 <display format="%d">Parameter 0</display>

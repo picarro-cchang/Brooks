@@ -62,6 +62,8 @@ from Host.autogen.interface import RDMAN_OPTIONS_UP_SLOPE_ENABLE_B, RDMAN_OPTION
 from Host.autogen.interface import RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B, RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W
 from Host.autogen.interface import RDMAN_OPTIONS_DITHER_ENABLE_B, RDMAN_OPTIONS_DITHER_ENABLE_W
 from Host.autogen.interface import RDMAN_OPTIONS_SIM_ACTUAL_B, RDMAN_OPTIONS_SIM_ACTUAL_W
+from Host.autogen.interface import RDMAN_OPTIONS_SCOPE_MODE_B, RDMAN_OPTIONS_SCOPE_MODE_W
+from Host.autogen.interface import RDMAN_OPTIONS_SCOPE_SLOPE_B, RDMAN_OPTIONS_SCOPE_SLOPE_W
 
 from MyHDL.Common.RdMan import *
 from MyHDL.Common.Rdmemory import Rdmemory
