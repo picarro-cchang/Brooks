@@ -1286,10 +1286,10 @@ typedef enum {
 #define RDMAN_OPTIONS_DITHER_ENABLE_W (1) // Allow transition to dither mode bit width
 #define RDMAN_OPTIONS_SIM_ACTUAL_B (4) // Ringdown data source bit position
 #define RDMAN_OPTIONS_SIM_ACTUAL_W (1) // Ringdown data source bit width
-#define RDMAN_OPTIONS_SCOPE_MODE_B (5) //  bit position
-#define RDMAN_OPTIONS_SCOPE_MODE_W (1) //  bit width
-#define RDMAN_OPTIONS_SCOPE_SLOPE_B (6) //  bit position
-#define RDMAN_OPTIONS_SCOPE_SLOPE_W (1) //  bit width
+#define RDMAN_OPTIONS_SCOPE_MODE_B (5) // Oscilloscope mode bit position
+#define RDMAN_OPTIONS_SCOPE_MODE_W (1) // Oscilloscope mode bit width
+#define RDMAN_OPTIONS_SCOPE_SLOPE_B (6) // Tuner slope to trigger scope bit position
+#define RDMAN_OPTIONS_SCOPE_SLOPE_W (1) // Tuner slope to trigger scope bit width
 
 #define RDMAN_PARAM0 (3) // Parameter 0 register
 #define RDMAN_PARAM1 (4) // Parameter 1 register

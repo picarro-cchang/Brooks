@@ -3383,11 +3383,11 @@
                     <fielddef value="0">Simulator</fielddef>
                     <fielddef value="1">Actual ADC</fielddef>
                 </bitfield>
-                <bitfield ident="SCOPE_MODE" description="" lsb="5" width="1">
+                <bitfield ident="SCOPE_MODE" description="Oscilloscope mode" lsb="5" width="1">
                     <fielddef value="0">Disabled</fielddef>
                     <fielddef value="1">Enabled</fielddef>
                 </bitfield>
-                <bitfield ident="SCOPE_SLOPE" description="" lsb="6" width="1">
+                <bitfield ident="SCOPE_SLOPE" description="Tuner slope to trigger scope" lsb="6" width="1">
                     <fielddef value="0">Falling</fielddef>
                     <fielddef value="1">Rising</fielddef>
                 </bitfield>
