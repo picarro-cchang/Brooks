@@ -135,12 +135,12 @@ typedef struct {
     uint16 ratio2;
     uint16 fineLaserCurrent;
     uint16 coarseLaserCurrent;
-    float laserTemperature;
-    float etalonTemperature;
-    float cavityPressure;
     uint16 fitAmplitude;
     uint16 fitBackground;
     uint16 fitRmsResidual;
+    float laserTemperature;
+    float etalonTemperature;
+    float cavityPressure;
 } RingdownEntryType;
 
 typedef struct {
@@ -163,12 +163,12 @@ typedef struct {
     uint16 ratio2;
     uint16 fineLaserCurrent;
     uint16 coarseLaserCurrent;
-    float laserTemperature;
-    float etalonTemperature;
-    float cavityPressure;
     uint16 fitAmplitude;
     uint16 fitBackground;
     uint16 fitRmsResidual;
+    float laserTemperature;
+    float etalonTemperature;
+    float cavityPressure;
     uint32 extra1;
     uint32 extra2;
     uint32 extra3;

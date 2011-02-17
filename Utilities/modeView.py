@@ -144,7 +144,7 @@ class ModeViewFrame(ModeViewGUI):
         self.setLaserTemperature(15.0)
         Driver.wrFPGA("FPGA_RDMAN","RDMAN_NUM_SAMP",self.refSize)
         Driver.wrFPGA("FPGA_RDMAN","RDMAN_DIVISOR",511)
-        setFPGAbits("FPGA_RDMAN","RDMAN_OPTIONS",[("DITHER_ENABLE",False),("SCOPE_MODE",True),("SCOPE_SLOPE",False)])
+        setFPGAbits("FPGA_RDMAN","RDMAN_OPTIONS",[("DITHER_ENABLE",False),("SCOPE_MODE",True),("SCOPE_SLOPE",True)])
         self.refWt = 1
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)        
@@ -218,12 +218,15 @@ class ModeViewFrame(ModeViewGUI):
         #  to best align it with the first
         shift = argmax(ccorr[N+1-winsize:N+1+winsize])-winsize
         print shift
-        dTemp = 0.001 if abs(shift) > 200 else 0.0005 if abs(shift) > 100 else 0.0001
-        if shift < 0: self.setLaserTemperature(self.laserTemperature-dTemp)
-        else: self.setLaserTemperature(self.laserTemperature+dTemp)
+        dTemp = 0.001 if abs(shift) > 200 else 0.0002 if abs(shift) > 100 else 0.0001
+        
+        dTemp = abs(shift)*0.001/200
+        if dTemp > 0.001: dTemp = 0.001
+        if shift < 0: self.setLaserTemperature(self.laserTemperature+dTemp)
+        else: self.setLaserTemperature(self.laserTemperature-dTemp)
         self.data = (self.refWt*self.data + circshift(d,shift))/(self.refWt + 1)
-        self.refWt = min(256,self.refWt+1)
-        if abs(shift)>100: self.refWt = 1
+        self.refWt = min(64,self.refWt+1)
+        if abs(shift)>200: self.refWt = 1
         for x,y in enumerate(self.data):
             self.graph1Waveform.Add(x,y)            
             
