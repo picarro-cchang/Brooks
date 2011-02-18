@@ -12,6 +12,7 @@
 #include <tsk.h>
 #include <log.h>
 #include <sem.h>
+#include <lck.h>
 #include <sts.h>
 
 #ifdef __cplusplus
@@ -31,6 +32,7 @@ extern far TSK_Obj TSK_rdFitting;
 extern far TSK_Obj TSK_rdDataMoving;
 extern far TSK_Obj TSK_spectCntrl;
 extern far TSK_Obj TSK_sentryHandler;
+extern far TSK_Obj TSK_scopeHandler;
 extern far LOG_Obj LOG_system;
 extern far LOG_Obj trace;
 extern far SEM_Obj SEM_scheduler;
@@ -42,6 +44,8 @@ extern far SEM_Obj SEM_startRdCycle;
 extern far SEM_Obj SEM_waitForRdMan;
 extern far SEM_Obj SEM_sentryHandler;
 extern far SEM_Obj SEM_hpiIntBackend;
+extern far SEM_Obj SEM_wfmAvailable;
+extern far LCK_Obj LCK_scopeBuffer;
 extern far STS_Obj IDL_busyObj;
 
 

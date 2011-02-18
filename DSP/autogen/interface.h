@@ -51,6 +51,7 @@ typedef int bool;
 #define ERROR_BAD_VALUE (-14)
 #define ERROR_RD_BAD_RINGDOWN (-15)
 #define ERROR_RD_INSUFFICIENT_DATA (-16)
+#define ERROR_TIMEOUT (-17)
 
 typedef union {
     float asFloat;
@@ -180,6 +181,10 @@ typedef struct {
     uint32 streamNum;
     float value;
 } SensorEntryType;
+
+typedef struct {
+    uint16 data[4096];
+} OscilloscopeTraceType;
 
 typedef struct {
     uint16 maskAndValue;
@@ -349,6 +354,12 @@ typedef struct {
 #define MISSING_RINGDOWN (NUM_RINGDOWN_BUFFERS)
 // Size of a ringdown buffer area in 32 bit ints
 #define RINGDOWN_BUFFER_SIZE ((sizeof(RingdownBufferType)/4))
+// Offset for oscilloscope trace in DSP shared memory
+#define OSCILLOSCOPE_TRACE_OFFSET ((RINGDOWN_BUFFER_OFFSET+NUM_RINGDOWN_BUFFERS*RINGDOWN_BUFFER_SIZE))
+// Size of an oscilloscope trace in 32 bit ints
+#define OSCILLOSCOPE_TRACE_SIZE ((sizeof(OscilloscopeTraceType)/4))
+// Number of oscilloscope traces in 32 bit ints
+#define NUM_OSCILLOSCOPE_TRACES (1)
 // Offset for scheme sequence area in DSP shared memory
 #define SCHEME_SEQUENCE_OFFSET (0x7800)
 // Size of scheme sequence in 32 bit ints
@@ -1524,4 +1535,6 @@ typedef enum {
 #define ACTION_EEPROM_READ_LOW_LEVEL (73)
 #define ACTION_EEPROM_READY_LOW_LEVEL (74)
 #define ACTION_FLOAT_ARITHMETIC (75)
+#define ACTION_GET_SCOPE_TRACE (76)
+#define ACTION_RELEASE_SCOPE_TRACE (77)
 #endif

@@ -1366,6 +1366,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_eeprom_ready_low_level(numInt,params,env);
         case ACTION_FLOAT_ARITHMETIC:
             return r_float_arithmetic(numInt,params,env);
+        case ACTION_GET_SCOPE_TRACE:
+            return r_get_scope_trace(numInt,params,env);
+        case ACTION_RELEASE_SCOPE_TRACE:
+            return r_release_scope_trace(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

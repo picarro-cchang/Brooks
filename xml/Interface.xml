@@ -90,6 +90,7 @@
         <status ident="ERROR_BAD_VALUE">Invalid value</status>
         <status ident="ERROR_RD_BAD_RINGDOWN">Bad ringdown</status>
         <status ident="ERROR_RD_INSUFFICIENT_DATA">Insufficient data for ringdown calculation</status>
+        <status ident="ERROR_TIMEOUT">Operation timed out</status>
     </status_list>
     <struct_list>
         <struct type="DIAG_EventLogStruct">
@@ -211,6 +212,9 @@
             <field ident="timestamp" type="long long"/>
             <field ident="streamNum" type="uint32"/>
             <field ident="value" type="float"/>
+        </struct>
+        <struct type="OscilloscopeTraceType">
+            <field ident="data" type="uint16" size="4096"/>
         </struct>
         <struct type="ValveSequenceEntryType">
             <field ident="maskAndValue" type="uint16"/>
@@ -335,6 +339,9 @@
         <constant ident="NUM_RINGDOWN_BUFFERS" description="Number of ringdown buffer areas in DSP shared memory">2</constant>
         <constant ident="MISSING_RINGDOWN" description="Code to indicate that we abandoned this scheme row due to a timeout">NUM_RINGDOWN_BUFFERS</constant>
         <constant ident="RINGDOWN_BUFFER_SIZE" description="Size of a ringdown buffer area in 32 bit ints">(sizeof(RingdownBufferType)/4)</constant>
+        <constant ident="OSCILLOSCOPE_TRACE_OFFSET" description="Offset for oscilloscope trace in DSP shared memory">(RINGDOWN_BUFFER_OFFSET+NUM_RINGDOWN_BUFFERS*RINGDOWN_BUFFER_SIZE)</constant>
+        <constant ident="OSCILLOSCOPE_TRACE_SIZE" description="Size of an oscilloscope trace in 32 bit ints">(sizeof(OscilloscopeTraceType)/4)</constant>
+        <constant ident="NUM_OSCILLOSCOPE_TRACES" description="Number of oscilloscope traces in 32 bit ints">1</constant>
         <constant ident="SCHEME_SEQUENCE_OFFSET" description="Offset for scheme sequence area in DSP shared memory">0x7800</constant>
         <constant ident="SCHEME_SEQUENCE_SIZE" description="Size of scheme sequence in 32 bit ints">(sizeof(SchemeSequenceType)/4)</constant>
         <constant ident="VALVE_SEQUENCE_OFFSET" description="Offset for valve sequence area in DSP shared memory">(SCHEME_SEQUENCE_OFFSET+SCHEME_SEQUENCE_SIZE)</constant>
@@ -3828,6 +3835,8 @@
         <action ident="ACTION_EEPROM_WRITE_LOW_LEVEL">r_eeprom_write_low_level</action>
         <action ident="ACTION_EEPROM_READ_LOW_LEVEL">r_eeprom_read_low_level</action>
         <action ident="ACTION_EEPROM_READY_LOW_LEVEL">r_eeprom_ready_low_level</action>
-        <action ident="ACTION_FLOAT_ARITHMETIC">r_float_arithmetic</action>        
+        <action ident="ACTION_FLOAT_ARITHMETIC">r_float_arithmetic</action>
+        <action ident="ACTION_GET_SCOPE_TRACE">r_get_scope_trace</action>
+        <action ident="ACTION_RELEASE_SCOPE_TRACE">r_release_scope_trace</action>
     </action_list>
 </Das_Interface>

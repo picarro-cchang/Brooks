@@ -133,7 +133,7 @@ class ModeViewFrame(ModeViewGUI):
 
         self.refSize = 4095
         x = arange(self.refSize,dtype=float) 
-        self.ref = exp(-0.5*((x-1000)/20)**2)
+        self.ref = exp(-0.5*((x-1000)/100)**2)
         self.data = zeros(size(self.ref),dtype=float)
         self.winSize = self.refSize/4
         setTuner(rampParams=(500,1000,65000,65500),slopes=(4000,4000))
@@ -149,7 +149,8 @@ class ModeViewFrame(ModeViewGUI):
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)        
         self.timer.Start(100)
-
+        self.shift = []
+        
     def restoreGuiSettings(self):
         cfg = ConfigObj(self.configName)
         for c in cfg:
@@ -206,7 +207,7 @@ class ModeViewFrame(ModeViewGUI):
     def onTimer(self, evt=None):
         N = self.refSize
         winsize = self.winSize
-        [d,m,p] = Driver.rdRingdownBuffer(1)
+        d = Driver.rdOscilloscopeTrace()
         #for x,y in enumerate(d & 16383):
         #    self.graph1Waveform.Add(x,y)            
 
@@ -218,8 +219,6 @@ class ModeViewFrame(ModeViewGUI):
         #  to best align it with the first
         shift = argmax(ccorr[N+1-winsize:N+1+winsize])-winsize
         print shift
-        dTemp = 0.001 if abs(shift) > 200 else 0.0002 if abs(shift) > 100 else 0.0001
-        
         dTemp = abs(shift)*0.001/200
         if dTemp > 0.001: dTemp = 0.001
         if shift < 0: self.setLaserTemperature(self.laserTemperature+dTemp)

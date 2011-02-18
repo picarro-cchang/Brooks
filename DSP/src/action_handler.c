@@ -23,11 +23,13 @@
 #include <csl_timer.h>
 
 #include "dspAutogen.h"
+#include "dspMainCfg.h"
 #include "interface.h"
 #include "misc.h"
 #include "pid.h"
 #include "registers.h"
 #include "scheduler.h"
+#include "scopeHandler.h"
 #include "sentryHandler.h"
 #include "spectrumCntrl.h"
 #include "tempCntrl.h"
@@ -1088,5 +1090,19 @@ int r_float_arithmetic(unsigned int numInt,void *params,void *env)
         break;
     }
     WRITE_REG(reg[2],result);
+    return STATUS_OK;
+}
+
+int r_get_scope_trace(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    getScopeTrace();
+    return STATUS_OK;
+}
+
+int r_release_scope_trace(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    releaseScopeTrace();
     return STATUS_OK;
 }

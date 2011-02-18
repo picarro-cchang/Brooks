@@ -32,6 +32,7 @@
 #include "rdHandlers.h"
 #include "registers.h"
 #include "dspMaincfg.h"
+#include "scopeHandler.h"
 #include "spectrumCntrl.h"
 
 RdFittingParamsType rdFittingParams;
@@ -491,7 +492,7 @@ void rdFitting(void)
         {
             ringdownBuffer = &ringdownBuffers[bufferNum];
             rdFittingProcessRingdown(ringdownBuffer->ringdownWaveform,&uncorrectedLoss,&correctedLoss,
-            						 &amplitude, &background, &rmsResidual, 0);
+                                     &amplitude, &background, &rmsResidual, 0);
             data.asFloat = uncorrectedLoss;
             writeRegister(RDFITTER_LATEST_LOSS_REGISTER,data);
             // We need to find position of metadata just before ringdown. We have a modified circular
