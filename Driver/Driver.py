@@ -347,6 +347,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         paramsAsUint = self.dasInterface.hostToDspSender.rdRingdownMemArray(base,12)
         param = interface.RingdownParamsType.from_address(ctypes.addressof(paramsAsUint))
         return (array(data),array(meta).reshape(512,8).transpose(),ctypesToDict(param))
+        
     def rdRingdownBuffer(self,buffNum):
         """Fetches contents of ringdown buffer which is QDMA transferred from the FPGA to DSP memory"""
         RINGDOWN_BUFFER_BASE = interface.SHAREDMEM_ADDRESS + 4*interface.RINGDOWN_BUFFER_OFFSET
@@ -356,6 +357,17 @@ class DriverRpcHandler(SharedTypes.Singleton):
         data = [(x&0xFFFF) for x in rdBuffer.ringdownWaveform]
         meta = [(x>>16) for x in rdBuffer.ringdownWaveform]
         return (array(data),array(meta).reshape(512,8).transpose(),ctypesToDict(rdBuffer.parameters))
+
+    def rdOscilloscopeTrace(self):
+        """Fetches contents of oscilloscope trace buffer"""
+        sender = self.dasInterface.hostToDspSender
+        sender.doOperation(Operation("ACTION_GET_SCOPE_TRACE"))
+        base = interface.SHAREDMEM_ADDRESS + 4*interface.OSCILLOSCOPE_TRACE_OFFSET
+        bufferAsUint = self.dasInterface.hostToDspSender.rdDspMemArray(base,interface.OSCILLOSCOPE_TRACE_SIZE)
+        trace = interface.OscilloscopeTraceType.from_address(ctypes.addressof(bufferAsUint))
+        sender.doOperation(Operation("ACTION_RELEASE_SCOPE_TRACE"))
+        return array([x for x in trace.data])
+            
     def rdScheme(self,schemeNum):
         """Reads a scheme from table number schemeNum"""
         return self.dasInterface.hostToDspSender.rdScheme(schemeNum)

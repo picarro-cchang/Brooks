@@ -65,6 +65,8 @@ ERROR_RD_BAD_RINGDOWN = -15
 error_messages.append("Bad ringdown")
 ERROR_RD_INSUFFICIENT_DATA = -16
 error_messages.append("Insufficient data for ringdown calculation")
+ERROR_TIMEOUT = -17
+error_messages.append("Operation timed out")
 
 class DataType(Union):
     _fields_ = [
@@ -156,12 +158,12 @@ class RingdownEntryType(Structure):
     ("ratio2",c_ushort),
     ("fineLaserCurrent",c_ushort),
     ("coarseLaserCurrent",c_ushort),
-    ("laserTemperature",c_float),
-    ("etalonTemperature",c_float),
-    ("cavityPressure",c_float),
     ("fitAmplitude",c_ushort),
     ("fitBackground",c_ushort),
-    ("fitRmsResidual",c_ushort)
+    ("fitRmsResidual",c_ushort),
+    ("laserTemperature",c_float),
+    ("etalonTemperature",c_float),
+    ("cavityPressure",c_float)
     ]
 
 class ProcessedRingdownEntryType(Structure):
@@ -185,12 +187,12 @@ class ProcessedRingdownEntryType(Structure):
     ("ratio2",c_ushort),
     ("fineLaserCurrent",c_ushort),
     ("coarseLaserCurrent",c_ushort),
-    ("laserTemperature",c_float),
-    ("etalonTemperature",c_float),
-    ("cavityPressure",c_float),
     ("fitAmplitude",c_ushort),
     ("fitBackground",c_ushort),
     ("fitRmsResidual",c_ushort),
+    ("laserTemperature",c_float),
+    ("etalonTemperature",c_float),
+    ("cavityPressure",c_float),
     ("extra1",c_uint),
     ("extra2",c_uint),
     ("extra3",c_uint),
@@ -202,6 +204,11 @@ class SensorEntryType(Structure):
     ("timestamp",c_longlong),
     ("streamNum",c_uint),
     ("value",c_float)
+    ]
+
+class OscilloscopeTraceType(Structure):
+    _fields_ = [
+    ("data",c_ushort*4096)
     ]
 
 class ValveSequenceEntryType(Structure):
@@ -388,6 +395,12 @@ NUM_RINGDOWN_BUFFERS = 2
 MISSING_RINGDOWN = NUM_RINGDOWN_BUFFERS
 # Size of a ringdown buffer area in 32 bit ints
 RINGDOWN_BUFFER_SIZE = (sizeof(RingdownBufferType)/4)
+# Offset for oscilloscope trace in DSP shared memory
+OSCILLOSCOPE_TRACE_OFFSET = (RINGDOWN_BUFFER_OFFSET+NUM_RINGDOWN_BUFFERS*RINGDOWN_BUFFER_SIZE)
+# Size of an oscilloscope trace in 32 bit ints
+OSCILLOSCOPE_TRACE_SIZE = (sizeof(OscilloscopeTraceType)/4)
+# Number of oscilloscope traces in 32 bit ints
+NUM_OSCILLOSCOPE_TRACES = 1
 # Offset for scheme sequence area in DSP shared memory
 SCHEME_SEQUENCE_OFFSET = 0x7800
 # Size of scheme sequence in 32 bit ints
@@ -2376,6 +2389,10 @@ RDMAN_OPTIONS_DITHER_ENABLE_B = 3 # Allow transition to dither mode bit position
 RDMAN_OPTIONS_DITHER_ENABLE_W = 1 # Allow transition to dither mode bit width
 RDMAN_OPTIONS_SIM_ACTUAL_B = 4 # Ringdown data source bit position
 RDMAN_OPTIONS_SIM_ACTUAL_W = 1 # Ringdown data source bit width
+RDMAN_OPTIONS_SCOPE_MODE_B = 5 # Oscilloscope mode bit position
+RDMAN_OPTIONS_SCOPE_MODE_W = 1 # Oscilloscope mode bit width
+RDMAN_OPTIONS_SCOPE_SLOPE_B = 6 # Tuner slope to trigger scope bit position
+RDMAN_OPTIONS_SCOPE_SLOPE_W = 1 # Tuner slope to trigger scope bit width
 
 RDMAN_PARAM0 = 3 # Parameter 0 register
 RDMAN_PARAM1 = 4 # Parameter 1 register
@@ -2633,6 +2650,8 @@ ACTION_EEPROM_WRITE_LOW_LEVEL = 72
 ACTION_EEPROM_READ_LOW_LEVEL = 73
 ACTION_EEPROM_READY_LOW_LEVEL = 74
 ACTION_FLOAT_ARITHMETIC = 75
+ACTION_GET_SCOPE_TRACE = 76
+ACTION_RELEASE_SCOPE_TRACE = 77
 
 
 # Parameter form definitions
@@ -3007,7 +3026,8 @@ parameter_forms.append(('Ringdown Simulator Parameters',__p))
 __p = []
 
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Reset ringdown manager', [(0, u'Idle'), (16, u'Reset')]), (32, u'Mark bank 0 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Mark bank 1 available for write', [(0, u'Idle'), (64, u'Mark available')]), (128, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (128, u'Acknowledge')]), (256, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (256, u'Acknowledge')]), (512, u'Tuner waveform mode', [(0, u'Ramp'), (512, u'Dither')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')]), (16, u'Ringdown data source', [(0, u'Simulator'), (16, u'Actual ADC')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')]), (1024, u'Ringdown Cycle State', [(0, u'Idle'), (1024, u'Busy')])],None,None,1,0))
+__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')]), (16, u'Ringdown data source', [(0, u'Simulator'), (16, u'Actual ADC')]), (32, u'Oscilloscope mode', [(0, u'Disabled'), (32, u'Enabled')]), (64, u'Tuner slope to trigger scope', [(0, u'Falling'), (64, u'Rising')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DIVISOR,'Ringdown ADC divisor, Sample freq = 25MHz/(divisor+1)','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_NUM_SAMP,'Ringdown samples to collect','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_THRESHOLD,'Ringdown threshold','','%d',1,1))
