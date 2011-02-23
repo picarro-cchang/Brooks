@@ -199,7 +199,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self._showMessage(msg,title,wx.ICON_WARNING)
         
     def _showMessage(self, msg, title, iconOption):
-        d = wx.MessageDialog(None, msg, title, iconOption)
+        d = wx.MessageDialog(None, msg, title, iconOption|wx.STAY_ON_TOP)
         d.ShowModal()
 
     def shutdown(self):
