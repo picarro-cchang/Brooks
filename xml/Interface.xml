@@ -461,6 +461,11 @@
             <enum_value ident="HEATER_CNTRL_EnabledState" value="1" caption="Controller Enabled" />
             <enum_value ident="HEATER_CNTRL_ManualState" value="2" caption="Manual Control" />
         </enum>
+        <enum type="FAN_CNTRL_StateType">
+            <description>State of fan controller</description>
+            <enum_value ident="FAN_CNTRL_OffState" value="0" caption="Fans off"  />
+            <enum_value ident="FAN_CNTRL_OnState"  value="1" caption="Fans on" />
+        </enum>
         <enum type="SPECT_CNTRL_StateType">
             <description>State of spectrum controller</description>
             <enum_value ident="SPECT_CNTRL_IdleState" value="0" caption="Not acquiring"  />
@@ -469,6 +474,7 @@
             <enum_value ident="SPECT_CNTRL_RunningState" value="3" caption="Acquisition in progress" />
             <enum_value ident="SPECT_CNTRL_PausedState" value="4" caption="Acquisition paused" />
             <enum_value ident="SPECT_CNTRL_ErrorState" value="5" caption="Error state"  />
+            <enum_value ident="SPECT_CNTRL_DiagnosticState" value="6" caption="Diagnostic state"  />
         </enum>
         <enum type="SPECT_CNTRL_ModeType"> 
             <description>Spectrum controller modes</description> 
@@ -594,11 +600,11 @@
             <enum_value ident="FLOAT_ARITHMETIC_Division"         value="4" /> 
             <enum_value ident="FLOAT_ARITHMETIC_Average"          value="5" /> 
         </enum>
-        <enum type="HEATER_CONTROL_ModeType">
+        <enum type="HEATER_CNTRL_ModeType">
             <description>Enumeration specifying heater control mode</description> 
-            <enum_value ident="HEATER_CONTROL_MODE_DELTA_TEMP"     value="0" /> 
-            <enum_value ident="HEATER_CONTROL_MODE_TEC_TARGET"     value="1" /> 
-            <enum_value ident="HEATER_CONTROL_MODE_HEATER_FIXED"   value="2" /> 
+            <enum_value ident="HEATER_CNTRL_MODE_DELTA_TEMP"     value="0" /> 
+            <enum_value ident="HEATER_CNTRL_MODE_TEC_TARGET"     value="1" /> 
+            <enum_value ident="HEATER_CNTRL_MODE_HEATER_FIXED"   value="2" /> 
         </enum>
         <enum type="LOG_LEVEL_Type">
             <description>Enumeration specifying event log level</description> 
@@ -2899,6 +2905,17 @@
             <save/>
             <display format="%.1f" units="torr">Ambient maximum pressure</display>
         </register>
+        <register ident="FAN_CNTRL_STATE_REGISTER" type="FAN_CNTRL_StateType" minver="1.0" access="r">
+            <description>State of fans</description>
+            <initial>FAN_CNTRL_OnState</initial>
+            <display>Fan State</display>
+        </register>
+        <register ident="FAN_CNTRL_TEMPERATURE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Temperature above which fans operate</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.1f" units="degC">Temperature above which fans operate</display>
+        </register>
     </register_list>
     <i2c_list>
         <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />
@@ -3781,6 +3798,9 @@
         <action ident="ACTION_TUNER_CNTRL_STEP">r_tunerCntrlStep</action>
         <action ident="ACTION_SPECTRUM_CNTRL_INIT">r_spectCntrlInit</action>
         <action ident="ACTION_SPECTRUM_CNTRL_STEP">r_spectCntrlStep</action>
+        <action ident="ACTION_FAN_CNTRL_INIT">r_fanCntrlInit</action>
+        <action ident="ACTION_FAN_CNTRL_STEP">r_fanCntrlStep</action>
+        <action ident="ACTION_ACTIVATE_FAN">r_activateFan</action>
         <action ident="ACTION_ENV_CHECKER">r_envChecker</action>
         <action ident="ACTION_WB_INV_CACHE">r_wbInvCache</action>
         <action ident="ACTION_WB_CACHE">r_wbCache</action>

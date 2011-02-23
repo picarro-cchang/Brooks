@@ -126,7 +126,6 @@ int spectCntrlStep(void)
     SpectCntrlParams *s=&spectCntrlParams;
     static SPECT_CNTRL_StateType prevState = SPECT_CNTRL_IdleState;
     SPECT_CNTRL_StateType stateAtStart;
-    int dummy;
     
     stateAtStart = *(s->state_);
     if (SPECT_CNTRL_StartingState == *(s->state_))
@@ -192,6 +191,11 @@ int spectCntrlStep(void)
         }
         s->useMemo_ = 0;
     }
+    else if (SPECT_CNTRL_DiagnosticState == *(s->state_))
+        {
+            switchToRampMode();
+            setAutomaticLaserCurrentControl();
+        }
     else switchToRampMode();
 
     prevState = stateAtStart;

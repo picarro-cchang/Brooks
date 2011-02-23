@@ -1,5 +1,5 @@
 
-APP_NAME = "ModeView"
+APP_NAME = "ScopeView"
 
 import sys
 import wx
@@ -133,14 +133,6 @@ class ModeViewFrame(ModeViewGUI):
         self.restoreGuiSettings()
         self.applySettings()
         cfg = ConfigObj(self.configName)
-        self.modeDict = {}
-        for mode in cfg['ranges']:
-            self.modeDict[mode] = {'range':[int(x) for x in cfg['ranges'][mode]]}
-        self.refSize = 4095
-        x = arange(self.refSize,dtype=float) 
-        self.ref = exp(-0.5*((x-self.mainPos)/100)**2)
-        self.data = zeros(size(self.ref),dtype=float)
-        self.winSize = (self.refSize+1)/4
         stopAcquisition()
         setTunerOffset(0)
         self.slope = 4000
@@ -150,14 +142,12 @@ class ModeViewFrame(ModeViewGUI):
         self.selectLaser(2)
         self.setLaserCurrent(36000)
         self.setLaserTemperature(15.0)
-        Driver.wrFPGA("FPGA_RDMAN","RDMAN_NUM_SAMP",self.refSize)
+        Driver.wrFPGA("FPGA_RDMAN","RDMAN_NUM_SAMP",4095)
         Driver.wrFPGA("FPGA_RDMAN","RDMAN_DIVISOR",self.divisor-1)
         setFPGAbits("FPGA_RDMAN","RDMAN_OPTIONS",[("DITHER_ENABLE",False),("SCOPE_MODE",True),("SCOPE_SLOPE",True)])
-        self.refWt = 1
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)        
         self.timer.Start(100)
-        self.fsr = 0
         
     def setupSweep(self):
         slope = int(self.slope)
@@ -219,55 +209,9 @@ class ModeViewFrame(ModeViewGUI):
         if evt: evt.Skip()
         
     def onTimer(self, evt=None):
-        N = self.refSize
-        winsize = self.winSize
         d = Driver.rdOscilloscopeTrace()
-        #for x,y in enumerate(d & 16383):
-        #    self.graph1Waveform.Add(x,y)            
-
-        d = d[:N] & 16383
-        # Compute the largest cross-correlation within a small window of zero
-        ccorr = fftshift(xcorr(concatenate((self.ref,self.ref[0]*ones(N+2))),
-                               concatenate((d,d[0]*ones(N+2)))))
-        # The following finds the shift that must be applied to the second signal
-        #  to best align it with the first
-        shift = argmax(ccorr[N+1-winsize:N+1+winsize])-winsize
-        skip = (N+1)/4
-        # Find number of samples to the next copy of the cavity spectrum
-        pkpos = argmax(asarray(ccorr[(N+1)+shift-skip::-1])) + skip
-        fsr = 0.004*self.slope*self.divisor*pkpos/512.0
-        
-        scale = (pkpos/self.mainSep)**0.05
-        self.slope *= scale
-        self.pztPk2pk *= scale
-        self.setupSweep()
-        
-        dTemp = abs(shift)*0.001/300
-        if dTemp > 0.001: dTemp = 0.001
-        if shift < 0: self.setLaserTemperature(self.laserTemperature+dTemp)
-        else: self.setLaserTemperature(self.laserTemperature-dTemp)
-        self.data = (self.refWt*self.data + circshift(d,shift))/(self.refWt + 1)
-        self.fsr  = (self.refWt*self.fsr  + fsr)/(self.refWt + 1)
-        self.refWt = min(64,self.refWt+1)
-        if abs(shift)>200 or abs(pkpos-self.mainSep)>50: self.refWt = 1
-        
-        for mode in self.modeDict:
-            md = self.modeDict[mode]
-            xmin,xmax = md['range']
-            md['sum'] = sum(self.data[xmin:xmax])
-            md['min'] = min(self.data[xmin:xmax])
-            md['count'] = xmax - xmin
-        ymin = min([self.modeDict[mode]['min'] for mode in self.modeDict])
-        for mode in self.modeDict:
-            md = self.modeDict[mode]
-            md['area'] = md['sum'] - md['count']*ymin
-        print [(mode,self.modeDict[mode]['area']) for mode in self.modeDict]
-        print shift, pkpos, self.fsr
-        
-        self.graph1Waveform.Clear()
-        for x,y in enumerate(self.data):
+        for x,y in enumerate(d & 16383):
             self.graph1Waveform.Add(x,y)            
-            
         self.graph_panel_1.Update(delay=0)
         if evt: evt.Skip()
         

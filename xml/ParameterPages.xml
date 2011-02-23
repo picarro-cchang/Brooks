@@ -273,6 +273,11 @@
             </!-->
         </gui_page>
         <gui_page>
+            <title>Fan Controller Parameters</title>
+            <register>FAN_CNTRL_TEMPERATURE_REGISTER</register>
+            <register>FAN_CNTRL_STATE_REGISTER</register>
+        </gui_page>
+        <gui_page>
             <title>Sample Handling Parameters</title>
             <register>VALVE_CNTRL_STATE_REGISTER</register>
             <register>VALVE_CNTRL_SOLENOID_VALVES_REGISTER</register>
