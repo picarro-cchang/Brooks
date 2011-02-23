@@ -54,7 +54,7 @@ class DasConfigure(SharedTypes.Singleton):
             for key in instrConfig["CONFIGURATION"]:
                 self.installed[key] = int(instrConfig["CONFIGURATION"][key])
             self.enableInterpolation = self.installed.get("ENABLE_INTERPOLATION",1)
-            self.heaterControlMode = self.installed.get("HEATER_CONTROL_MODE",0)
+            self.heaterCntrlMode = self.installed.get("HEATER_CONTROL_MODE",0)
             self.initialized = True
             self.parameter_forms = interface.parameter_forms
                     
@@ -80,9 +80,9 @@ class DasConfigure(SharedTypes.Singleton):
         self.dasInterface.hostToDspSender.wrRegUint("HARDWARE_PRESENT_REGISTER",mask)
         
     def run(self):
-        # If heaterControlMode == interface.HEATER_CONTROL_MODE_TEC_TARGET, we need to make some changes in the parameter
+        # If heaterCntrlMode == interface.HEATER_CNTRL_MODE_TEC_TARGET, we need to make some changes in the parameter
         #  forms for heater control
-        if self.heaterControlMode in [interface.HEATER_CONTROL_MODE_TEC_TARGET]:
+        if self.heaterCntrlMode in [interface.HEATER_CNTRL_MODE_TEC_TARGET]:
             for formName,p in self.parameter_forms:
                 if formName == 'Heater Controller Parameters':
                     for i,pItem in enumerate(p):
@@ -373,12 +373,12 @@ class DasConfigure(SharedTypes.Singleton):
             self.opGroups["SLOW"]["CONTROLLER"].addOperation(
                 Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
     
-            if self.heaterControlMode in [interface.HEATER_CONTROL_MODE_TEC_TARGET]:
+            if self.heaterCntrlMode in [interface.HEATER_CNTRL_MODE_TEC_TARGET]:
                 self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
                     Operation("ACTION_FLOAT_ARITHMETIC",
                              ["CAVITY_TEC_REGISTER","CAVITY_TEC_REGISTER",
                              "HEATER_CNTRL_SENSOR_REGISTER","FLOAT_ARITHMETIC_Average"]))
-            elif self.heaterControlMode in [interface.HEATER_CONTROL_MODE_DELTA_TEMP,interface.HEATER_CONTROL_MODE_HEATER_FIXED]:
+            elif self.heaterCntrlMode in [interface.HEATER_CNTRL_MODE_DELTA_TEMP,interface.HEATER_CNTRL_MODE_HEATER_FIXED]:
                 self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
                     Operation("ACTION_FLOAT_ARITHMETIC",
                              ["HOT_BOX_HEATSINK_TEMPERATURE_REGISTER","CAVITY_TEMPERATURE_REGISTER",
@@ -435,6 +435,12 @@ class DasConfigure(SharedTypes.Singleton):
                 Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
                           ["CAVITY_TEC_REGISTER","FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))
                 
+        # Fan control
+        
+        self.opGroups["SLOW"]["CONTROLLER"].addOperation(Operation("ACTION_FAN_CNTRL_STEP"))
+        self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
+            Operation("ACTION_ACTIVATE_FAN",["FAN_CNTRL_STATE_REGISTER"]))
+
         # Valve control
 
         if present:
@@ -553,6 +559,7 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_WARM_BOX_INIT"))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_CAVITY_INIT"))
         sender.doOperation(Operation("ACTION_HEATER_CNTRL_INIT"))
+        sender.doOperation(Operation("ACTION_FAN_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_WARMBOX","PWM_CS"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))

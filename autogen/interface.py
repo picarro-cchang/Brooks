@@ -618,6 +618,16 @@ HEATER_CNTRL_StateTypeDict[0] = 'HEATER_CNTRL_DisabledState' # Controller Disabl
 HEATER_CNTRL_StateTypeDict[1] = 'HEATER_CNTRL_EnabledState' # Controller Enabled
 HEATER_CNTRL_StateTypeDict[2] = 'HEATER_CNTRL_ManualState' # Manual Control
 
+# Enumerated definitions for FAN_CNTRL_StateType
+FAN_CNTRL_StateType = c_uint
+FAN_CNTRL_OffState = 0 # Fans off
+FAN_CNTRL_OnState = 1 # Fans on
+
+# Dictionary for enumerated constants in FAN_CNTRL_StateType
+FAN_CNTRL_StateTypeDict = {}
+FAN_CNTRL_StateTypeDict[0] = 'FAN_CNTRL_OffState' # Fans off
+FAN_CNTRL_StateTypeDict[1] = 'FAN_CNTRL_OnState' # Fans on
+
 # Enumerated definitions for SPECT_CNTRL_StateType
 SPECT_CNTRL_StateType = c_uint
 SPECT_CNTRL_IdleState = 0 # Not acquiring
@@ -626,6 +636,7 @@ SPECT_CNTRL_StartManualState = 2 # Start acquisition with manual temperature con
 SPECT_CNTRL_RunningState = 3 # Acquisition in progress
 SPECT_CNTRL_PausedState = 4 # Acquisition paused
 SPECT_CNTRL_ErrorState = 5 # Error state
+SPECT_CNTRL_DiagnosticState = 6 # Diagnostic state
 
 # Dictionary for enumerated constants in SPECT_CNTRL_StateType
 SPECT_CNTRL_StateTypeDict = {}
@@ -635,6 +646,7 @@ SPECT_CNTRL_StateTypeDict[2] = 'SPECT_CNTRL_StartManualState' # Start acquisitio
 SPECT_CNTRL_StateTypeDict[3] = 'SPECT_CNTRL_RunningState' # Acquisition in progress
 SPECT_CNTRL_StateTypeDict[4] = 'SPECT_CNTRL_PausedState' # Acquisition paused
 SPECT_CNTRL_StateTypeDict[5] = 'SPECT_CNTRL_ErrorState' # Error state
+SPECT_CNTRL_StateTypeDict[6] = 'SPECT_CNTRL_DiagnosticState' # Diagnostic state
 
 # Enumerated definitions for SPECT_CNTRL_ModeType
 SPECT_CNTRL_ModeType = c_uint
@@ -884,17 +896,17 @@ FLOAT_ARITHMETIC_OperatorTypeDict[3] = 'FLOAT_ARITHMETIC_Multiplication' #
 FLOAT_ARITHMETIC_OperatorTypeDict[4] = 'FLOAT_ARITHMETIC_Division' # 
 FLOAT_ARITHMETIC_OperatorTypeDict[5] = 'FLOAT_ARITHMETIC_Average' # 
 
-# Enumerated definitions for HEATER_CONTROL_ModeType
-HEATER_CONTROL_ModeType = c_uint
-HEATER_CONTROL_MODE_DELTA_TEMP = 0 # 
-HEATER_CONTROL_MODE_TEC_TARGET = 1 # 
-HEATER_CONTROL_MODE_HEATER_FIXED = 2 # 
+# Enumerated definitions for HEATER_CNTRL_ModeType
+HEATER_CNTRL_ModeType = c_uint
+HEATER_CNTRL_MODE_DELTA_TEMP = 0 # 
+HEATER_CNTRL_MODE_TEC_TARGET = 1 # 
+HEATER_CNTRL_MODE_HEATER_FIXED = 2 # 
 
-# Dictionary for enumerated constants in HEATER_CONTROL_ModeType
-HEATER_CONTROL_ModeTypeDict = {}
-HEATER_CONTROL_ModeTypeDict[0] = 'HEATER_CONTROL_MODE_DELTA_TEMP' # 
-HEATER_CONTROL_ModeTypeDict[1] = 'HEATER_CONTROL_MODE_TEC_TARGET' # 
-HEATER_CONTROL_ModeTypeDict[2] = 'HEATER_CONTROL_MODE_HEATER_FIXED' # 
+# Dictionary for enumerated constants in HEATER_CNTRL_ModeType
+HEATER_CNTRL_ModeTypeDict = {}
+HEATER_CNTRL_ModeTypeDict[0] = 'HEATER_CNTRL_MODE_DELTA_TEMP' # 
+HEATER_CNTRL_ModeTypeDict[1] = 'HEATER_CNTRL_MODE_TEC_TARGET' # 
+HEATER_CNTRL_ModeTypeDict[2] = 'HEATER_CNTRL_MODE_HEATER_FIXED' # 
 
 # Enumerated definitions for LOG_LEVEL_Type
 LOG_LEVEL_Type = c_uint
@@ -943,7 +955,7 @@ SCHEME_VersionShift = 4
 SCHEME_TableShift = 0
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 403
+INTERFACE_NUMBER_OF_REGISTERS = 405
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1348,6 +1360,8 @@ SENTRY_CAVITY_PRESSURE_MIN_REGISTER = 399
 SENTRY_CAVITY_PRESSURE_MAX_REGISTER = 400
 SENTRY_AMBIENT_PRESSURE_MIN_REGISTER = 401
 SENTRY_AMBIENT_PRESSURE_MAX_REGISTER = 402
+FAN_CNTRL_STATE_REGISTER = 403
+FAN_CNTRL_TEMPERATURE_REGISTER = 404
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -2216,6 +2230,10 @@ registerByName["SENTRY_AMBIENT_PRESSURE_MIN_REGISTER"] = SENTRY_AMBIENT_PRESSURE
 registerInfo.append(RegInfo("SENTRY_AMBIENT_PRESSURE_MIN_REGISTER",c_float,1,1.0,"rw"))
 registerByName["SENTRY_AMBIENT_PRESSURE_MAX_REGISTER"] = SENTRY_AMBIENT_PRESSURE_MAX_REGISTER
 registerInfo.append(RegInfo("SENTRY_AMBIENT_PRESSURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerByName["FAN_CNTRL_STATE_REGISTER"] = FAN_CNTRL_STATE_REGISTER
+registerInfo.append(RegInfo("FAN_CNTRL_STATE_REGISTER",FAN_CNTRL_StateType,0,1.0,"r"))
+registerByName["FAN_CNTRL_TEMPERATURE_REGISTER"] = FAN_CNTRL_TEMPERATURE_REGISTER
+registerInfo.append(RegInfo("FAN_CNTRL_TEMPERATURE_REGISTER",c_float,1,1.0,"rw"))
 
 # FPGA block definitions
 
@@ -2614,44 +2632,47 @@ ACTION_TUNER_CNTRL_INIT = 36
 ACTION_TUNER_CNTRL_STEP = 37
 ACTION_SPECTRUM_CNTRL_INIT = 38
 ACTION_SPECTRUM_CNTRL_STEP = 39
-ACTION_ENV_CHECKER = 40
-ACTION_WB_INV_CACHE = 41
-ACTION_WB_CACHE = 42
-ACTION_SCHEDULER_HEARTBEAT = 43
-ACTION_SENTRY_INIT = 44
-ACTION_VALVE_CNTRL_INIT = 45
-ACTION_VALVE_CNTRL_STEP = 46
-ACTION_MODIFY_VALVE_PUMP_TEC = 47
-ACTION_PULSE_GENERATOR = 48
-ACTION_FILTER = 49
-ACTION_DS1631_READTEMP = 50
-ACTION_READ_LASER_THERMISTOR_RESISTANCE = 51
-ACTION_READ_ETALON_THERMISTOR_RESISTANCE = 52
-ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE = 53
-ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE = 54
-ACTION_READ_CAVITY_THERMISTOR_RESISTANCE = 55
-ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE = 56
-ACTION_READ_LASER_CURRENT = 57
-ACTION_UPDATE_WLMSIM_LASER_TEMP = 58
-ACTION_SIMULATE_LASER_CURRENT_READING = 59
-ACTION_READ_CAVITY_PRESSURE_ADC = 60
-ACTION_READ_AMBIENT_PRESSURE_ADC = 61
-ACTION_ADC_TO_PRESSURE = 62
-ACTION_SET_INLET_VALVE = 63
-ACTION_SET_OUTLET_VALVE = 64
-ACTION_INTERPOLATOR_SET_TARGET = 65
-ACTION_INTERPOLATOR_STEP = 66
-ACTION_EEPROM_WRITE = 67
-ACTION_EEPROM_READ = 68
-ACTION_EEPROM_READY = 69
-ACTION_I2C_CHECK = 70
-ACTION_NUDGE_TIMESTAMP = 71
-ACTION_EEPROM_WRITE_LOW_LEVEL = 72
-ACTION_EEPROM_READ_LOW_LEVEL = 73
-ACTION_EEPROM_READY_LOW_LEVEL = 74
-ACTION_FLOAT_ARITHMETIC = 75
-ACTION_GET_SCOPE_TRACE = 76
-ACTION_RELEASE_SCOPE_TRACE = 77
+ACTION_FAN_CNTRL_INIT = 40
+ACTION_FAN_CNTRL_STEP = 41
+ACTION_ACTIVATE_FAN = 42
+ACTION_ENV_CHECKER = 43
+ACTION_WB_INV_CACHE = 44
+ACTION_WB_CACHE = 45
+ACTION_SCHEDULER_HEARTBEAT = 46
+ACTION_SENTRY_INIT = 47
+ACTION_VALVE_CNTRL_INIT = 48
+ACTION_VALVE_CNTRL_STEP = 49
+ACTION_MODIFY_VALVE_PUMP_TEC = 50
+ACTION_PULSE_GENERATOR = 51
+ACTION_FILTER = 52
+ACTION_DS1631_READTEMP = 53
+ACTION_READ_LASER_THERMISTOR_RESISTANCE = 54
+ACTION_READ_ETALON_THERMISTOR_RESISTANCE = 55
+ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE = 56
+ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE = 57
+ACTION_READ_CAVITY_THERMISTOR_RESISTANCE = 58
+ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE = 59
+ACTION_READ_LASER_CURRENT = 60
+ACTION_UPDATE_WLMSIM_LASER_TEMP = 61
+ACTION_SIMULATE_LASER_CURRENT_READING = 62
+ACTION_READ_CAVITY_PRESSURE_ADC = 63
+ACTION_READ_AMBIENT_PRESSURE_ADC = 64
+ACTION_ADC_TO_PRESSURE = 65
+ACTION_SET_INLET_VALVE = 66
+ACTION_SET_OUTLET_VALVE = 67
+ACTION_INTERPOLATOR_SET_TARGET = 68
+ACTION_INTERPOLATOR_STEP = 69
+ACTION_EEPROM_WRITE = 70
+ACTION_EEPROM_READ = 71
+ACTION_EEPROM_READY = 72
+ACTION_I2C_CHECK = 73
+ACTION_NUDGE_TIMESTAMP = 74
+ACTION_EEPROM_WRITE_LOW_LEVEL = 75
+ACTION_EEPROM_READ_LOW_LEVEL = 76
+ACTION_EEPROM_READY_LOW_LEVEL = 77
+ACTION_FLOAT_ARITHMETIC = 78
+ACTION_GET_SCOPE_TRACE = 79
+ACTION_RELEASE_SCOPE_TRACE = 80
 
 
 # Parameter form definitions
@@ -2905,6 +2926,14 @@ __p.append(('dsp','float',HEATER_MANUAL_MARK_REGISTER,'Heater manual mode mark',
 __p.append(('dsp','float',HEATER_CUTOFF_REGISTER,'Cavity temperature above which to turn off heater','degC','%.3f',1,1))
 parameter_forms.append(('Heater Controller Parameters',__p))
 
+# Form: Fan Controller Parameters
+
+__p = []
+
+__p.append(('dsp','float',FAN_CNTRL_TEMPERATURE_REGISTER,'Temperature above which fans operate','degC','%.1f',1,1))
+__p.append(('dsp','choices',FAN_CNTRL_STATE_REGISTER,'Fan State','',[(FAN_CNTRL_OffState,"Fans off"),(FAN_CNTRL_OnState,"Fans on"),],1,0))
+parameter_forms.append(('Fan Controller Parameters',__p))
+
 # Form: Sample Handling Parameters
 
 __p = []
@@ -2995,7 +3024,7 @@ parameter_forms.append(('Optical Injection Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','choices',SPECT_CNTRL_STATE_REGISTER,'Spectrum Controller State','',[(SPECT_CNTRL_IdleState,"Not acquiring"),(SPECT_CNTRL_StartingState,"Start acquisition"),(SPECT_CNTRL_StartManualState,"Start acquisition with manual temperature control"),(SPECT_CNTRL_RunningState,"Acquisition in progress"),(SPECT_CNTRL_PausedState,"Acquisition paused"),(SPECT_CNTRL_ErrorState,"Error state"),],1,1))
+__p.append(('dsp','choices',SPECT_CNTRL_STATE_REGISTER,'Spectrum Controller State','',[(SPECT_CNTRL_IdleState,"Not acquiring"),(SPECT_CNTRL_StartingState,"Start acquisition"),(SPECT_CNTRL_StartManualState,"Start acquisition with manual temperature control"),(SPECT_CNTRL_RunningState,"Acquisition in progress"),(SPECT_CNTRL_PausedState,"Acquisition paused"),(SPECT_CNTRL_ErrorState,"Error state"),(SPECT_CNTRL_DiagnosticState,"Diagnostic state"),],1,1))
 __p.append(('dsp','choices',SPECT_CNTRL_MODE_REGISTER,'Spectrum Controller Mode','',[(SPECT_CNTRL_SchemeSingleMode,"Perform single scheme"),(SPECT_CNTRL_SchemeMultipleMode,"Perform multiple schemes"),(SPECT_CNTRL_SchemeSequenceMode,"Perform scheme sequence"),(SPECT_CNTRL_ContinuousMode,"Continuous acquisition"),(SPECT_CNTRL_ContinuousManualTempMode,"Continuous acquisition with manual temperature control"),],1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_ACTIVE_SCHEME_REGISTER,'Active scheme table index','','%d',1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_NEXT_SCHEME_REGISTER,'Next scheme table index','','%d',1,1))
@@ -3026,7 +3055,6 @@ parameter_forms.append(('Ringdown Simulator Parameters',__p))
 __p = []
 
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Reset ringdown manager', [(0, u'Idle'), (16, u'Reset')]), (32, u'Mark bank 0 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Mark bank 1 available for write', [(0, u'Idle'), (64, u'Mark available')]), (128, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (128, u'Acknowledge')]), (256, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (256, u'Acknowledge')]), (512, u'Tuner waveform mode', [(0, u'Ramp'), (512, u'Dither')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_STATUS,[(1, u'Indicates shutdown of optical injection', [(0, u'Injecting'), (1, u'Shut down')]), (2, u'Ring down interrupt occured', [(0, u'Idle'), (2, u'Interrupt Active')]), (4, u'Data acquired interrupt occured', [(0, u'Idle'), (4, u'Interrupt Active')]), (8, u'Active bank for data acquisition', [(0, u'Bank 0'), (8, u'Bank 1')]), (16, u'Bank 0 memory in use', [(0, u'Available'), (16, u'In Use')]), (32, u'Bank 1 memory in use', [(0, u'Available'), (32, u'In Use')]), (64, u'Metadata counter lapped', [(0, u'Not lapped'), (64, u'Lapped')]), (128, u'Laser frequency locked', [(0, u'Unlocked'), (128, u'Locked')]), (256, u'Timeout without ring-down', [(0, u'Idle'), (256, u'Timed Out')]), (512, u'Ring-down aborted', [(0, u'Idle'), (512, u'Aborted')]), (1024, u'Ringdown Cycle State', [(0, u'Idle'), (1024, u'Busy')])],None,None,1,0))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')]), (16, u'Ringdown data source', [(0, u'Simulator'), (16, u'Actual ADC')]), (32, u'Oscilloscope mode', [(0, u'Disabled'), (32, u'Enabled')]), (64, u'Tuner slope to trigger scope', [(0, u'Falling'), (64, u'Rising')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DIVISOR,'Ringdown ADC divisor, Sample freq = 25MHz/(divisor+1)','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_NUM_SAMP,'Ringdown samples to collect','','%d',1,1))

@@ -546,9 +546,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
                 self.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % laserNum,interface.TEMP_CNTRL_EnabledState)
         self.wrDasReg("WARM_BOX_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
         self.wrDasReg("CAVITY_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
-        if DasConfigure().heaterControlMode in [interface.HEATER_CONTROL_MODE_DELTA_TEMP,interface.HEATER_CONTROL_MODE_TEC_TARGET]:
+        if DasConfigure().heaterCntrlMode in [interface.HEATER_CNTRL_MODE_DELTA_TEMP,interface.HEATER_CNTRL_MODE_TEC_TARGET]:
             self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
-        elif DasConfigure().heaterControlMode in [interface.HEATER_CONTROL_MODE_HEATER_FIXED]:
+        elif DasConfigure().heaterCntrlMode in [interface.HEATER_CNTRL_MODE_HEATER_FIXED]:
             self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_ManualState)        
         self.wrDasReg("TEC_CNTRL_REGISTER",interface.TEC_CNTRL_Enabled)
         for laserNum in range(1,interface.MAX_LASERS+1):
