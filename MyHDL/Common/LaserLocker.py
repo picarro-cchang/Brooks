@@ -462,12 +462,24 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         deriv2.next = (deriv - prev_lock_error_deriv) % FPGA_REG_MAXVAL
                         prev_lock_error_deriv.next = deriv
                         fine_current.next = (fine_current + mult_p) % FPGA_REG_MAXVAL
+                        #t = fine_current + mult_p.signed()
+                        #if t<0: fine_current.next = 0
+                        #elif t>=fine_current.max: fine_current.next = 65535
+                        #else: fine_current.next = t
                     elif cycle_counter == 2*DIV_LATENCY + 1 + 3*MULT_LATENCY + 2:
                         mult_a.next = deriv2
                         mult_b.next = wm_deriv_gain
                         fine_current.next = (fine_current + mult_p) % FPGA_REG_MAXVAL
+                        #t = fine_current + mult_p.signed()
+                        #if t<0: fine_current.next = 0
+                        #elif t>=fine_current.max: fine_current.next = 65535
+                        #else: fine_current.next = t
                     elif cycle_counter == 2*DIV_LATENCY + 1 + 4*MULT_LATENCY + 2:
-                        fine_current.next = (fine_current + mult_p)% FPGA_REG_MAXVAL
+                        fine_current.next = (fine_current + mult_p) % FPGA_REG_MAXVAL
+                        #t = fine_current + mult_p.signed()
+                        #if t<0: fine_current.next = 0
+                        #elif t>=fine_current.max: fine_current.next = 65535
+                        #else: fine_current.next = t
                     elif cycle_counter == 2*DIV_LATENCY + 1 + 4*MULT_LATENCY + 3:
                         pid_out.next = fine_current
                         if cs[LASERLOCKER_CS_PRBS_B]:

@@ -18,6 +18,7 @@
 #   18-Sep-2009  sze  Handle 2 input CrystaLatch optical switch
 #   05-Oct-2009  sze  In automatic mode, the selected fine current register is updated with laser_fine_current_in
 #   29-Apr-2010  sze  Handle 4 input CrystaLatch optical switch
+#   14-Feb-2011  sze  Allow use of two 2-input CrystalLatch optical switches
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -166,6 +167,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     dac_strobe = Signal(LOW)
     sw1_2way = Signal(LOW)
     sw2_2way = Signal(LOW)
+    sw4_4way = Signal(LOW)
     last_sel = Signal(intbv(0)[2:])
     
     OPTICAL_SWITCH_WIDTH = 100 # Units of 10us
@@ -194,7 +196,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 pulse_counter.next = 0
                 optSwitchState.next = OptSwitchState.IDLE
                 switchPulserState.next = SwitchPulserState.START
-                optical_switch4_out.next = 1
+                sw4_4way.next = 1
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
@@ -285,26 +287,28 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         optical_switch_counter.next = 0
 
                 # State machine for generating low-going pulse on laser change for 4-way optical switch
-                if switchPulserState == SwitchPulserState.START:
-                    optical_switch4_out.next = 1
-                    switchPulserState.next = SwitchPulserState.PULSING
-                    pulse_counter.next = 0
-                    
-                elif switchPulserState == SwitchPulserState.PULSING:
-                    optical_switch4_out.next = 0
-                    last_sel.next = sel
-                    if dac_strobe: # This goes high for one clock cycle every 10us
-                        if pulse_counter >= OPTICAL_SWITCH_WIDTH-1:
-                            switchPulserState.next = SwitchPulserState.WAITING
-                            pulse_counter.next = 0
-                        else:
-                            pulse_counter.next = pulse_counter + 1
-                
-                elif switchPulserState == SwitchPulserState.WAITING:
-                    optical_switch4_out.next = 1
-                    if sel != last_sel:
+
+                if control[INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B]:
+                    if switchPulserState == SwitchPulserState.START:
+                        sw4_4way.next = 1
                         switchPulserState.next = SwitchPulserState.PULSING
                         pulse_counter.next = 0
+                        
+                    elif switchPulserState == SwitchPulserState.PULSING:
+                        sw4_4way.next = 0
+                        last_sel.next = sel
+                        if dac_strobe: # This goes high for one clock cycle every 10us
+                            if pulse_counter >= OPTICAL_SWITCH_WIDTH-1:
+                                switchPulserState.next = SwitchPulserState.WAITING
+                                pulse_counter.next = 0
+                            else:
+                                pulse_counter.next = pulse_counter + 1
+                    
+                    elif switchPulserState == SwitchPulserState.WAITING:
+                        sw4_4way.next = 1
+                        if sel != last_sel:
+                            switchPulserState.next = SwitchPulserState.PULSING
+                            pulse_counter.next = 0
                     
     @always_comb
     def  comb1():
@@ -314,13 +318,13 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         sel.next  = s
 
         if control[INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B]:
-            pass
             optical_switch1_out.next = s[0]
             optical_switch2_out.next = s[1]
+            optical_switch4_out.next = sw4_4way
         else:
-            pass
             optical_switch1_out.next = sw1_2way
             optical_switch2_out.next = sw2_2way
+            optical_switch4_out.next = not s[1]
         
         laser_current_en.next = control[INJECT_CONTROL_LASER_CURRENT_ENABLE_B+INJECT_CONTROL_LASER_CURRENT_ENABLE_W:INJECT_CONTROL_LASER_CURRENT_ENABLE_B]
         manual_laser_en.next  = control[INJECT_CONTROL_MANUAL_LASER_ENABLE_B+INJECT_CONTROL_MANUAL_LASER_ENABLE_W:INJECT_CONTROL_MANUAL_LASER_ENABLE_B]

@@ -200,7 +200,7 @@ void spectCntrl(void)
                 {
                     if ( !(status & 1<<RDMAN_STATUS_BANK1_IN_USE_B) ) break;
                 }
-                if (nloops == 0) message_puts(LOG_LEVEL_STANDARD,"Waiting for bank to become available");
+                if (nloops == 0) message_puts(LOG_LEVEL_INFO,"Waiting for bank to become available");
             }
             else
             {
