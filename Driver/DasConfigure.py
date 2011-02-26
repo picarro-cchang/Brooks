@@ -72,6 +72,7 @@ class DasConfigure(SharedTypes.Singleton):
                    ("HOT_BOX_PRESENT",     1<<interface.HARDWARE_PRESENT_HotBoxBit),
                    ("DAS_TEMP_MONITOR",    1<<interface.HARDWARE_PRESENT_DasTempMonitorBit),
                    ("ANALOG_INTERFACE",    1<<interface.HARDWARE_PRESENT_AnalogInterface),
+                   ("FIBER_AMPLIFIER_PRESENT",    1<<interface.HARDWARE_PRESENT_FiberAmplifierBit),
                    ]
         mask = 0
         for key, bit in mapping:
@@ -119,16 +120,25 @@ class DasConfigure(SharedTypes.Singleton):
         self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SCHEDULER_HEARTBEAT"))
 
         soa = self.installCheck("SOA_PRESENT")
+        fiber_amp = self.installCheck("FIBER_AMPLIFIER_PRESENT")
+        if soa and fiber_amp:
+            raise ValueError,"Cannot have both SOA and fiber amplifier present"
+        
         injCtrl = sender.rdFPGA("FPGA_INJECT","INJECT_CONTROL")
         
-        # Disable SOA current if the SOA_PRESENT flag is not set in the Master.ini file
+        # Disable SOA current bit in FPGA if both SOA_PRESENT and FIBER_AMPLIFIER_PRESENT flags are not set in 
+        #  the Master.ini file
         
         soaPresent = 1<<interface.INJECT_CONTROL_SOA_PRESENT_B
-        if soa:
+        if soa or fiber_amp:
             injCtrl |= soaPresent
         else:
             injCtrl &= ~soaPresent
         sender.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injCtrl)
+        
+        if fiber_amp:
+            injCtrl2 = sender.rdFPGA("FPGA_INJECT","INJECT_CONTROL2")
+            sender.wrFPGA("FPGA_INJECT","INJECT_CONTROL2",injCtrl2 | (1<<interface.INJECT_CONTROL2_FIBER_AMP_PRESENT_B))
         
         for laserNum in range(1,5):
             present = self.installCheck("LASER%d_PRESENT" % laserNum)
@@ -138,6 +148,37 @@ class DasConfigure(SharedTypes.Singleton):
                         raise ValueError,"Cannot have both laser 4 and SOA present"
                     else:
                         present = soa
+                elif fiber_amp:
+                    if present:
+                        raise ValueError,"Cannot have both laser 4 and fiber amplifier` present"
+                    # The fiber amplifier thermal control operates on a slower timescale
+                    if fiber_amp > 0:
+                        # Temperature reading
+                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                            Operation("ACTION_READ_LASER_THERMISTOR_RESISTANCE",
+                                      [laserNum,
+                                      "LASER%d_RESISTANCE_REGISTER" % laserNum,
+                                      "LASER%d_THERMISTOR_SERIES_RESISTANCE_REGISTER" % laserNum]))
+                        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                ["LASER%d_RESISTANCE_REGISTER" % laserNum,
+                                 "CONVERSION_LASER%d_THERM_CONSTA_REGISTER" % laserNum,
+                                 "CONVERSION_LASER%d_THERM_CONSTB_REGISTER" % laserNum,
+                                 "CONVERSION_LASER%d_THERM_CONSTC_REGISTER" % laserNum,
+                                 "LASER%d_TEMPERATURE_REGISTER" % laserNum]))
+                    self.opGroups["SLOW"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                            ["STREAM_Laser%dTemp" % laserNum,"LASER%d_TEMPERATURE_REGISTER" % laserNum]))
+                    # TEC current
+                    self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
+                        Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                            ["LASER%d_TEC_REGISTER" % laserNum,"FPGA_PWM_LASER%d" % laserNum,"PWM_PULSE_WIDTH"]))
+                    self.opGroups["SLOW"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                            ["STREAM_Laser%dTec" % laserNum,"LASER%d_TEC_REGISTER" % laserNum]))
+                    self.opGroups["SLOW"]["CONTROLLER"].addOperation(
+                        Operation("ACTION_TEMP_CNTRL_LASER%d_STEP" % laserNum))
+                    
             if present:
                 # Set present to a negative number to disable I2C reads
                 if present > 0:
@@ -192,7 +233,7 @@ class DasConfigure(SharedTypes.Singleton):
                 # Laser current
                 self.opGroups["FAST"]["CONTROLLER"].addOperation(
                     Operation("ACTION_CURRENT_CNTRL_LASER%d_STEP" % laserNum))
-                if laserNum == 4 and soa:
+                if laserNum == 4 and (soa or fiber_amp):
                     pass
                 else:
                     if present > 0:
@@ -549,7 +590,7 @@ class DasConfigure(SharedTypes.Singleton):
         runCont = (1<<interface.PWM_CS_RUN_B) | (1<<interface.PWM_CS_CONT_B)
 
         for laserNum in range(1,5):
-            if self.installCheck("LASER%d_PRESENT" % laserNum) or (laserNum == 4 and self.installCheck("SOA_PRESENT")):
+            if self.installCheck("LASER%d_PRESENT" % laserNum) or (laserNum == 4 and (soa or fiber_amp)):
                 sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER%d_INIT" % laserNum))
                 sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER%d_INIT" % laserNum))
                 sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_LASER%d" % laserNum,"PWM_PULSE_WIDTH"]))

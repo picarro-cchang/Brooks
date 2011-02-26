@@ -866,6 +866,7 @@ HARDWARE_PRESENT_WarmBoxBit = 6 # Warm Box
 HARDWARE_PRESENT_HotBoxBit = 7 # Hot Box
 HARDWARE_PRESENT_DasTempMonitorBit = 8 # Das Temp Monitor
 HARDWARE_PRESENT_AnalogInterface = 9 # Analog Interface
+HARDWARE_PRESENT_FiberAmplifierBit = 10 # Fiber Amplifier
 
 # Dictionary for enumerated constants in HARDWARE_PRESENT_BitType
 HARDWARE_PRESENT_BitTypeDict = {}
@@ -879,6 +880,7 @@ HARDWARE_PRESENT_BitTypeDict[6] = 'HARDWARE_PRESENT_WarmBoxBit' # Warm Box
 HARDWARE_PRESENT_BitTypeDict[7] = 'HARDWARE_PRESENT_HotBoxBit' # Hot Box
 HARDWARE_PRESENT_BitTypeDict[8] = 'HARDWARE_PRESENT_DasTempMonitorBit' # Das Temp Monitor
 HARDWARE_PRESENT_BitTypeDict[9] = 'HARDWARE_PRESENT_AnalogInterface' # Analog Interface
+HARDWARE_PRESENT_BitTypeDict[10] = 'HARDWARE_PRESENT_FiberAmplifierBit' # Fiber Amplifier
 
 # Enumerated definitions for FLOAT_ARITHMETIC_OperatorType
 FLOAT_ARITHMETIC_OperatorType = c_uint
@@ -2489,17 +2491,21 @@ INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B = 13 # Enables SOA shutdown (in automatic m
 INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W = 1 # Enables SOA shutdown (in automatic mode) bit width
 INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B = 14 # Select optical switch type bit position
 INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W = 1 # Select optical switch type bit width
-INJECT_CONTROL_SOA_PRESENT_B = 15 # SOA Present bit position
-INJECT_CONTROL_SOA_PRESENT_W = 1 # SOA Present bit width
+INJECT_CONTROL_SOA_PRESENT_B = 15 # SOA or fiber amplifier present bit position
+INJECT_CONTROL_SOA_PRESENT_W = 1 # SOA or fiber amplifier present bit width
 
-INJECT_LASER1_COARSE_CURRENT = 1 # Sets coarse current for laser 1
-INJECT_LASER2_COARSE_CURRENT = 2 # Sets coarse current for laser 2
-INJECT_LASER3_COARSE_CURRENT = 3 # Sets coarse current for laser 3
-INJECT_LASER4_COARSE_CURRENT = 4 # Sets coarse current for laser 4
-INJECT_LASER1_FINE_CURRENT = 5 # Sets fine current for laser 1
-INJECT_LASER2_FINE_CURRENT = 6 # Sets fine current for laser 2
-INJECT_LASER3_FINE_CURRENT = 7 # Sets fine current for laser 3
-INJECT_LASER4_FINE_CURRENT = 8 # Sets fine current for laser 4
+INJECT_CONTROL2 = 1 # Control register 2
+INJECT_CONTROL2_FIBER_AMP_PRESENT_B = 0 # Fiber amplifier present bit position
+INJECT_CONTROL2_FIBER_AMP_PRESENT_W = 1 # Fiber amplifier present bit width
+
+INJECT_LASER1_COARSE_CURRENT = 2 # Sets coarse current for laser 1
+INJECT_LASER2_COARSE_CURRENT = 3 # Sets coarse current for laser 2
+INJECT_LASER3_COARSE_CURRENT = 4 # Sets coarse current for laser 3
+INJECT_LASER4_COARSE_CURRENT = 5 # Sets coarse current for laser 4
+INJECT_LASER1_FINE_CURRENT = 6 # Sets fine current for laser 1
+INJECT_LASER2_FINE_CURRENT = 7 # Sets fine current for laser 2
+INJECT_LASER3_FINE_CURRENT = 8 # Sets fine current for laser 3
+INJECT_LASER4_FINE_CURRENT = 9 # Sets fine current for laser 4
 
 # Block WLMSIM Wavelength monitor simulator
 WLMSIM_OPTIONS = 0 # Options
@@ -2550,10 +2556,10 @@ FPGA_LASERLOCKER = 33 # Laser frequency locker registers
 FPGA_RDMAN = 61 # Ringdown manager registers
 FPGA_TWGEN = 86 # Tuner waveform generator
 FPGA_INJECT = 95 # Optical Injection Subsystem
-FPGA_WLMSIM = 104 # WLM Simulator
-FPGA_DYNAMICPWM_INLET = 113 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 118 # Outlet proportional valve dynamic PWM
-FPGA_SCALER = 123 # Scaler for PZT waveform
+FPGA_WLMSIM = 105 # WLM Simulator
+FPGA_DYNAMICPWM_INLET = 114 # Inlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 119 # Outlet proportional valve dynamic PWM
+FPGA_SCALER = 124 # Scaler for PZT waveform
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
@@ -2561,7 +2567,7 @@ persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_OPTIONS', u'RDSIM_PZT_
 persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_OPTIONS', u'LASERLOCKER_ETA1_OFFSET', u'LASERLOCKER_REF1_OFFSET', u'LASERLOCKER_ETA2_OFFSET', u'LASERLOCKER_REF2_OFFSET', u'LASERLOCKER_TUNING_OFFSET', u'LASERLOCKER_WM_LOCK_WINDOW', u'LASERLOCKER_WM_INT_GAIN', u'LASERLOCKER_WM_PROP_GAIN', u'LASERLOCKER_WM_DERIV_GAIN']))
 persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION']))
 persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP']))
-persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL']))
+persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL', u'INJECT_CONTROL2']))
 persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_OPTIONS', u'WLMSIM_RFAC', u'WLMSIM_WFAC', u'WLMSIM_ETA1_OFFSET', u'WLMSIM_REF1_OFFSET', u'WLMSIM_ETA2_OFFSET', u'WLMSIM_REF2_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_INLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_SLOPE']))
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_OUTLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_SLOPE']))
@@ -3017,7 +3023,8 @@ parameter_forms.append(('Tuner Parameters',__p))
 __p = []
 
 __p.append(('dsp','choices',VIRTUAL_LASER_REGISTER,'Virtual laser','',[(VIRTUAL_LASER_1,"Virtual laser 1"),(VIRTUAL_LASER_2,"Virtual laser 2"),(VIRTUAL_LASER_3,"Virtual laser 3"),(VIRTUAL_LASER_4,"Virtual laser 4"),(VIRTUAL_LASER_5,"Virtual laser 5"),(VIRTUAL_LASER_6,"Virtual laser 6"),(VIRTUAL_LASER_7,"Virtual laser 7"),(VIRTUAL_LASER_8,"Virtual laser 8"),],1,1))
-__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser selected', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', []), (16, u'Laser 2 current source', []), (32, u'Laser 3 current source', []), (64, u'Laser 4 current source', []), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', []), (256, u'Laser 2 current (in manual mode)', []), (512, u'Laser 3 current (in manual mode)', []), (1024, u'Laser 4 current (in manual mode)', []), (2048, u'Enable SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')]), (16384, u'Select optical switch type', [(0, u'2-way'), (16384, u'4-way')]), (32768, u'SOA Present', [(0, u'No'), (32768, u'Yes')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser selected', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', []), (16, u'Laser 2 current source', []), (32, u'Laser 3 current source', []), (64, u'Laser 4 current source', []), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', []), (256, u'Laser 2 current (in manual mode)', []), (512, u'Laser 3 current (in manual mode)', []), (1024, u'Laser 4 current (in manual mode)', []), (2048, u'Enable SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')]), (16384, u'Select optical switch type', [(0, u'2-way'), (16384, u'4-way')]), (32768, u'SOA or fiber amplifier present', [(0, u'No'), (32768, u'Yes')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL2,[(1, u'Fiber amplifier present', [(0, u'No'), (1, u'Yes')])],None,None,1,1))
 parameter_forms.append(('Optical Injection Parameters',__p))
 
 # Form: Spectrum Controller Parameters
