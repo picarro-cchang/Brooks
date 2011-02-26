@@ -356,7 +356,8 @@
             <title>Optical Injection Parameters</title>
             <register>VIRTUAL_LASER_REGISTER</register>
             <fpga_register offset="FPGA_INJECT">CONTROL</fpga_register>
-        </gui_page>
+            <fpga_register offset="FPGA_INJECT">CONTROL2</fpga_register>
+       </gui_page>
         <gui_page>
             <title>Spectrum Controller Parameters</title>
             <register>SPECT_CNTRL_STATE_REGISTER</register>

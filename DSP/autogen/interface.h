@@ -1390,14 +1390,18 @@ typedef enum {
 #define INJECT_CONTROL_SOA_PRESENT_B (15) // SOA Present bit position
 #define INJECT_CONTROL_SOA_PRESENT_W (1) // SOA Present bit width
 
-#define INJECT_LASER1_COARSE_CURRENT (1) // Sets coarse current for laser 1
-#define INJECT_LASER2_COARSE_CURRENT (2) // Sets coarse current for laser 2
-#define INJECT_LASER3_COARSE_CURRENT (3) // Sets coarse current for laser 3
-#define INJECT_LASER4_COARSE_CURRENT (4) // Sets coarse current for laser 4
-#define INJECT_LASER1_FINE_CURRENT (5) // Sets fine current for laser 1
-#define INJECT_LASER2_FINE_CURRENT (6) // Sets fine current for laser 2
-#define INJECT_LASER3_FINE_CURRENT (7) // Sets fine current for laser 3
-#define INJECT_LASER4_FINE_CURRENT (8) // Sets fine current for laser 4
+#define INJECT_CONTROL2 (1) // Control register 2
+#define INJECT_CONTROL2_FIBER_AMP_PRESENT_B (0) // Fiber amplifier present bit position
+#define INJECT_CONTROL2_FIBER_AMP_PRESENT_W (1) // Fiber amplifier present bit width
+
+#define INJECT_LASER1_COARSE_CURRENT (2) // Sets coarse current for laser 1
+#define INJECT_LASER2_COARSE_CURRENT (3) // Sets coarse current for laser 2
+#define INJECT_LASER3_COARSE_CURRENT (4) // Sets coarse current for laser 3
+#define INJECT_LASER4_COARSE_CURRENT (5) // Sets coarse current for laser 4
+#define INJECT_LASER1_FINE_CURRENT (6) // Sets fine current for laser 1
+#define INJECT_LASER2_FINE_CURRENT (7) // Sets fine current for laser 2
+#define INJECT_LASER3_FINE_CURRENT (8) // Sets fine current for laser 3
+#define INJECT_LASER4_FINE_CURRENT (9) // Sets fine current for laser 4
 
 /* Block WLMSIM Wavelength monitor simulator */
 #define WLMSIM_OPTIONS (0) // Options
@@ -1449,10 +1453,10 @@ typedef enum {
 #define FPGA_RDMAN (61) // Ringdown manager registers
 #define FPGA_TWGEN (86) // Tuner waveform generator
 #define FPGA_INJECT (95) // Optical Injection Subsystem
-#define FPGA_WLMSIM (104) // WLM Simulator
-#define FPGA_DYNAMICPWM_INLET (113) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (118) // Outlet proportional valve dynamic PWM
-#define FPGA_SCALER (123) // Scaler for PZT waveform
+#define FPGA_WLMSIM (105) // WLM Simulator
+#define FPGA_DYNAMICPWM_INLET (114) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (119) // Outlet proportional valve dynamic PWM
+#define FPGA_SCALER (124) // Scaler for PZT waveform
 
 /* Environment addresses */
 
