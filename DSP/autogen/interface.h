@@ -640,7 +640,8 @@ typedef enum {
     HARDWARE_PRESENT_WarmBoxBit = 6, // Warm Box
     HARDWARE_PRESENT_HotBoxBit = 7, // Hot Box
     HARDWARE_PRESENT_DasTempMonitorBit = 8, // Das Temp Monitor
-    HARDWARE_PRESENT_AnalogInterface = 9 // Analog Interface
+    HARDWARE_PRESENT_AnalogInterface = 9, // Analog Interface
+    HARDWARE_PRESENT_FiberAmplifierBit = 10 // Fiber Amplifier
 } HARDWARE_PRESENT_BitType;
 
 typedef enum {
@@ -1387,8 +1388,8 @@ typedef enum {
 #define INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W (1) // Enables SOA shutdown (in automatic mode) bit width
 #define INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B (14) // Select optical switch type bit position
 #define INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W (1) // Select optical switch type bit width
-#define INJECT_CONTROL_SOA_PRESENT_B (15) // SOA Present bit position
-#define INJECT_CONTROL_SOA_PRESENT_W (1) // SOA Present bit width
+#define INJECT_CONTROL_SOA_PRESENT_B (15) // SOA or fiber amplifier present bit position
+#define INJECT_CONTROL_SOA_PRESENT_W (1) // SOA or fiber amplifier present bit width
 
 #define INJECT_CONTROL2 (1) // Control register 2
 #define INJECT_CONTROL2_FIBER_AMP_PRESENT_B (0) // Fiber amplifier present bit position

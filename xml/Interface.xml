@@ -591,6 +591,7 @@
             <enum_value ident="HARDWARE_PRESENT_HotBoxBit"         value="7" caption="Hot Box" />             
             <enum_value ident="HARDWARE_PRESENT_DasTempMonitorBit" value="8" caption="Das Temp Monitor" />             
             <enum_value ident="HARDWARE_PRESENT_AnalogInterface"   value="9" caption="Analog Interface" />             
+            <enum_value ident="HARDWARE_PRESENT_FiberAmplifierBit" value="10" caption="Fiber Amplifier" />             
         </enum>
         <enum type="FLOAT_ARITHMETIC_OperatorType">
             <description>Enumeration specifying floating point operation to carry out on regiters</description> 
@@ -3595,7 +3596,7 @@
                     <fielddef value="0">2-way</fielddef>
                     <fielddef value="1">4-way</fielddef>
                 </bitfield>
-                <bitfield ident="SOA_PRESENT" description="SOA Present" lsb="15" width="1">
+                <bitfield ident="SOA_PRESENT" description="SOA or fiber amplifier present" lsb="15" width="1">
                     <fielddef value="0">No</fielddef>
                     <fielddef value="1">Yes</fielddef>                
                 </bitfield>
