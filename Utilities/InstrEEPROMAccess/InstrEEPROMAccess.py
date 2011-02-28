@@ -17,7 +17,7 @@ from Host.Common.SingleInstance import SingleInstance
 from Host.Common.SharedTypes import RPC_PORT_DRIVER
 
 DEFAULT_TYPES = ["AADS", "ADDS", "AEDS", "AFDS", "BADS", "CADS", "CBDS", "CCADS", "CDDS", "CEDS", "CFADS", 
-                 "CFBDS","CFDDS", "CFEDS", "CFKADS", "CFKBDS", "CHADS", "CKADS", "DFADS", "HBDS"]
+                 "CFBDS","CFDDS", "CFEDS", "CFFDS", "CFKADS", "CFKBDS", "CHADS", "CKADS", "DFADS", "HBDS"]
 # Connect to database
 from xmlrpclib import ServerProxy
 DB = ServerProxy("http://mfg/xmlrpc/",allow_none=True)
