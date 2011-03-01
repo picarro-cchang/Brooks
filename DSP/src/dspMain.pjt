@@ -1,7 +1,7 @@
 ; Code Composer Project File, Version 2.0 (do not modify or remove this line)
 
 [Project Settings]
-ProjectDir="C:\Work\G2000\SrcCode\DSP\src\"
+ProjectDir="C:\Picarro\G2000\SrcCode\DSP\src\"
 ProjectType=Executable
 CPUFamily=TMS320C67XX
 Tool="Compiler"
@@ -32,11 +32,13 @@ Source="action_handler.c"
 Source="c:\CCStudio_v3.3\C6000\csl\lib\csl6713.lib"
 Source="dspMain.c"
 Source="dspMain.tcf"
+Source="fanCntrl.c"
 Source="laserCurrentCntrl.c"
 Source="misc.c"
 Source="pid.c"
 Source="rdHandlers.c"
 Source="scheduler.c"
+Source="scopeHandler.c"
 Source="sentryHandler.c"
 Source="spectrumCntrl.c"
 Source="tempCntrl.c"

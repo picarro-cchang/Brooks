@@ -211,6 +211,8 @@ void sentryHandler(void)
     while (1)
     {
         int overload = 0;
+        int alive = 1;
+        int* _keepAlive = registerAddr(KEEP_ALIVE_REGISTER);
         int hardwarePresent = *(int *)registerAddr(HARDWARE_PRESENT_REGISTER);
         int installedMask = 0;
         int powerBoardPresent = 0 != (hardwarePresent & (1<<HARDWARE_PRESENT_PowerBoardBit));
@@ -247,7 +249,12 @@ void sentryHandler(void)
                     inSafeMode = 1;
                 }
                 schedulerAlive = 0;
-                
+                (*_keepAlive) += 1;
+                if (*_keepAlive > 30) {
+                    safeMode();
+                    alive = 0;
+                    inSafeMode = 1;
+                }
                 for (i=0; i<numSentries; i++)
                 {
                     if (*(sentryChecks[i].value) > *(sentryChecks[i].maxSentry))
@@ -283,6 +290,9 @@ void sentryHandler(void)
                 if (overloaded) {
                     sprintf(msg,"Overload condition detected: 0x%x",overloaded);
                     message_puts(LOG_LEVEL_CRITICAL,msg);
+                }
+                if (!alive) {
+                    message_puts(LOG_LEVEL_CRITICAL,"Keep alive timeout expired.");
                 }
                 message_puts(LOG_LEVEL_CRITICAL,"Instrument placed in safe mode.");
             }    

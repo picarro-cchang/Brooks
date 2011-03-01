@@ -23,15 +23,18 @@
 #include <csl_timer.h>
 
 #include "dspAutogen.h"
+#include "dspMainCfg.h"
 #include "interface.h"
 #include "misc.h"
 #include "pid.h"
 #include "registers.h"
 #include "scheduler.h"
+#include "scopeHandler.h"
 #include "sentryHandler.h"
 #include "spectrumCntrl.h"
 #include "tempCntrl.h"
 #include "laserCurrentCntrl.h"
+#include "fanCntrl.h"
 #include "heaterCntrl.h"
 #include "tunerCntrl.h"
 #include "valveCntrl.h"
@@ -1088,5 +1091,41 @@ int r_float_arithmetic(unsigned int numInt,void *params,void *env)
         break;
     }
     WRITE_REG(reg[2],result);
+    return STATUS_OK;
+}
+
+int r_get_scope_trace(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    getScopeTrace();
+    return STATUS_OK;
+}
+
+int r_release_scope_trace(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    releaseScopeTrace();
+    return STATUS_OK;
+}
+
+int r_fanCntrlInit(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return fanCntrlInit();
+}
+
+int r_fanCntrlStep(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return fanCntrlStep();
+}
+
+int r_activateFan(unsigned int numInt,void *params,void *env)
+{
+    unsigned int state;
+    unsigned int *reg = (unsigned int *) params;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[0],state);
+    setFan((FAN_CNTRL_StateType)state);
     return STATUS_OK;
 }

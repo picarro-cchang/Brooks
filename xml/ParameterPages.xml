@@ -39,6 +39,7 @@
             <register>RD_DATA_MOVING_COUNT_REGISTER</register>
             <register>RD_QDMA_DONE_COUNT_REGISTER</register>
             <register>RD_FITTING_COUNT_REGISTER</register>
+            <register>KEEP_ALIVE_REGISTER</register>
             <fpga_register offset="FPGA_KERNEL">OVERLOAD</fpga_register>
             <fpga_register offset="FPGA_KERNEL">CONTROL</fpga_register>
             <fpga_register offset="FPGA_KERNEL">DOUT_HI</fpga_register>
@@ -273,6 +274,11 @@
             </!-->
         </gui_page>
         <gui_page>
+            <title>Fan Controller Parameters</title>
+            <register>FAN_CNTRL_TEMPERATURE_REGISTER</register>
+            <register>FAN_CNTRL_STATE_REGISTER</register>
+        </gui_page>
+        <gui_page>
             <title>Sample Handling Parameters</title>
             <register>VALVE_CNTRL_STATE_REGISTER</register>
             <register>VALVE_CNTRL_SOLENOID_VALVES_REGISTER</register>
@@ -351,7 +357,8 @@
             <title>Optical Injection Parameters</title>
             <register>VIRTUAL_LASER_REGISTER</register>
             <fpga_register offset="FPGA_INJECT">CONTROL</fpga_register>
-        </gui_page>
+            <fpga_register offset="FPGA_INJECT">CONTROL2</fpga_register>
+       </gui_page>
         <gui_page>
             <title>Spectrum Controller Parameters</title>
             <register>SPECT_CNTRL_STATE_REGISTER</register>
