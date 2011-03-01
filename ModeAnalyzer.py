@@ -279,11 +279,10 @@ class ModeAnalyzer(object):
         self.active = False
         
     def start(self,tuningMode='pzt'):
-        if not self.active:
-            self.active = True
-            self.setupAnalyzer(tuningMode)
-            self.onClear(self.frame)
-            self.captureTimer()
+        self.active = True
+        self.setupAnalyzer(tuningMode)
+        self.onClear(self.frame)
+        self.captureTimer()
         
     def stop(self):
         if self.active:
