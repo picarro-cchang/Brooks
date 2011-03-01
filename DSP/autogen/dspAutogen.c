@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[405];
+RegTypes regTypes[406];
 
 /* I2C devices */
 I2C_device i2c_devices[26] = {
@@ -812,6 +812,8 @@ void initRegisters()
     writeRegister(FAN_CNTRL_STATE_REGISTER,d);
     d.asFloat = 25.0;
     writeRegister(FAN_CNTRL_TEMPERATURE_REGISTER,d);
+    d.asInt = -300;
+    writeRegister(KEEP_ALIVE_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -1217,6 +1219,7 @@ void initRegisters()
     regTypes[SENTRY_AMBIENT_PRESSURE_MAX_REGISTER] = float_type;
     regTypes[FAN_CNTRL_STATE_REGISTER] = uint_type;
     regTypes[FAN_CNTRL_TEMPERATURE_REGISTER] = float_type;
+    regTypes[KEEP_ALIVE_REGISTER] = int_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)

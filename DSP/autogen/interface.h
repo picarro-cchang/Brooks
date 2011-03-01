@@ -486,7 +486,8 @@ typedef enum {
     STREAM_InletValve = 29, // 
     STREAM_OutletValve = 30, // 
     STREAM_ValveMask = 31, // 
-    STREAM_MPVPosition = 32 // 
+    STREAM_MPVPosition = 32, // 
+    STREAM_FanState = 33 // 
 } STREAM_MemberType;
 
 typedef enum {
@@ -698,7 +699,7 @@ typedef enum {
 #define SCHEME_TableShift (0)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (405)
+#define INTERFACE_NUMBER_OF_REGISTERS (406)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1105,6 +1106,7 @@ typedef enum {
 #define SENTRY_AMBIENT_PRESSURE_MAX_REGISTER (402)
 #define FAN_CNTRL_STATE_REGISTER (403)
 #define FAN_CNTRL_TEMPERATURE_REGISTER (404)
+#define KEEP_ALIVE_REGISTER (405)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0

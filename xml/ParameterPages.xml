@@ -39,6 +39,7 @@
             <register>RD_DATA_MOVING_COUNT_REGISTER</register>
             <register>RD_QDMA_DONE_COUNT_REGISTER</register>
             <register>RD_FITTING_COUNT_REGISTER</register>
+            <register>KEEP_ALIVE_REGISTER</register>
             <fpga_register offset="FPGA_KERNEL">OVERLOAD</fpga_register>
             <fpga_register offset="FPGA_KERNEL">CONTROL</fpga_register>
             <fpga_register offset="FPGA_KERNEL">DOUT_HI</fpga_register>

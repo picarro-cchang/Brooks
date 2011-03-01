@@ -437,6 +437,7 @@
             <enum_value ident="STREAM_OutletValve" />
             <enum_value ident="STREAM_ValveMask" />
             <enum_value ident="STREAM_MPVPosition" />
+            <enum_value ident="STREAM_FanState" />
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>
@@ -2916,6 +2917,11 @@
             <initial>25.0</initial>
             <save/>
             <display format="%.1f" units="degC">Temperature above which fans operate</display>
+        </register>
+        <register ident="KEEP_ALIVE_REGISTER" type="int32" minver="1.0" access="rw">
+            <description>Keep-alive register reset by Driver</description>
+            <initial>-300</initial>
+            <display format="%d">Keep alive register</display>
         </register>
     </register_list>
     <i2c_list>
