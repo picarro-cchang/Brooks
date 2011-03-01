@@ -868,10 +868,10 @@ class Page4(wx.Panel):
         try:
             self.cp.set("Graph", "NumGraphs", self.comboBoxList[0].GetValue())
             val = self.comboBoxList[1].GetValue()
-            if val == "Yes":
-                self.cp.set("ValveSequencer", "Enable", "True")
-            else:
-                self.cp.set("ValveSequencer", "Enable", "False")
+            try:
+                self.cp.set("ValveSequencer", "Enable", str(val == "Yes"))
+            except:
+                pass
             self.cp.write()
             return True
         except Exception, err:
