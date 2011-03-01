@@ -573,7 +573,10 @@ class IPV(IPVFrame):
         return (ipvFinished , allOK)
         
     def _writeReport(self):
-        endTime = datetime.strftime(self.endDatetime, "%Y%m%d%H%M%S")
+        if self.useUTC:
+            endTime = datetime.strftime(self.endDatetime, "%Y%m%d%H%M%SZ")
+        else:
+            endTime = datetime.strftime(self.endDatetime, "%Y%m%d%H%M%S")
         self.reportFilename = "%s_%s_Host_%s_%s.csv" % (self.reportFilePrefix, self.instName, self.softwareVersion, endTime)
         linesToWrite = [REPORT_FORMAT % ("Signal","Status","Action","Method","Set Point","Tolerance","Value")]
         for group in self.groupDict:
@@ -798,7 +801,10 @@ class IPV(IPVFrame):
             self.wlmTable.flush()
         if self.h5 != None:
             self.h5.close()
-        endTime = datetime.strftime(self.endDatetime, "%Y%m%d%H%M%S")
+        if self.useUTC:
+            endTime = datetime.strftime(self.endDatetime, "%Y%m%d%H%M%SZ")
+        else:
+            endTime = datetime.strftime(self.endDatetime, "%Y%m%d%H%M%S")
         self.h5Filename = "%s_%s_Host_%s_%s.h5" % (self.diagFilePrefix, self.instName, self.softwareVersion, endTime)
         try:
             self.h5 = tables.openFile(self.h5Filename, mode="w", title="Picarro IPV File")
