@@ -535,6 +535,7 @@ STREAM_InletValve = 29 #
 STREAM_OutletValve = 30 # 
 STREAM_ValveMask = 31 # 
 STREAM_MPVPosition = 32 # 
+STREAM_FanState = 33 # 
 
 # Dictionary for enumerated constants in STREAM_MemberType
 STREAM_MemberTypeDict = {}
@@ -571,6 +572,7 @@ STREAM_MemberTypeDict[29] = 'STREAM_InletValve' #
 STREAM_MemberTypeDict[30] = 'STREAM_OutletValve' # 
 STREAM_MemberTypeDict[31] = 'STREAM_ValveMask' # 
 STREAM_MemberTypeDict[32] = 'STREAM_MPVPosition' # 
+STREAM_MemberTypeDict[33] = 'STREAM_FanState' # 
 
 # Enumerated definitions for TEMP_CNTRL_StateType
 TEMP_CNTRL_StateType = c_uint
@@ -957,7 +959,7 @@ SCHEME_VersionShift = 4
 SCHEME_TableShift = 0
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 405
+INTERFACE_NUMBER_OF_REGISTERS = 406
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1364,6 +1366,7 @@ SENTRY_AMBIENT_PRESSURE_MIN_REGISTER = 401
 SENTRY_AMBIENT_PRESSURE_MAX_REGISTER = 402
 FAN_CNTRL_STATE_REGISTER = 403
 FAN_CNTRL_TEMPERATURE_REGISTER = 404
+KEEP_ALIVE_REGISTER = 405
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -2236,6 +2239,8 @@ registerByName["FAN_CNTRL_STATE_REGISTER"] = FAN_CNTRL_STATE_REGISTER
 registerInfo.append(RegInfo("FAN_CNTRL_STATE_REGISTER",FAN_CNTRL_StateType,0,1.0,"r"))
 registerByName["FAN_CNTRL_TEMPERATURE_REGISTER"] = FAN_CNTRL_TEMPERATURE_REGISTER
 registerInfo.append(RegInfo("FAN_CNTRL_TEMPERATURE_REGISTER",c_float,1,1.0,"rw"))
+registerByName["KEEP_ALIVE_REGISTER"] = KEEP_ALIVE_REGISTER
+registerInfo.append(RegInfo("KEEP_ALIVE_REGISTER",c_int,0,1.0,"rw"))
 
 # FPGA block definitions
 
@@ -2697,6 +2702,7 @@ __p.append(('dsp','uint32',ACQ_DONE_COUNT_REGISTER,'Acquisition done interrupt c
 __p.append(('dsp','uint32',RD_DATA_MOVING_COUNT_REGISTER,'QDMA start count','','%d',1,0))
 __p.append(('dsp','uint32',RD_QDMA_DONE_COUNT_REGISTER,'QDMA done interrupt count','','%d',1,0))
 __p.append(('dsp','uint32',RD_FITTING_COUNT_REGISTER,'RD fitting count','','%d',1,0))
+__p.append(('dsp','int32',KEEP_ALIVE_REGISTER,'Keep alive register','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_KERNEL+KERNEL_OVERLOAD,'Overload status','','$%X',1,0))
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_CONTROL,[(1, u'Reset Cypress FX2 and FPGA', [(0, u'Idle'), (1, u'Reset')]), (2, u'Reset overload register', [(0, u'Idle'), (2, u'Reset')]), (4, u'Reset i2c multiplexers', [(0, u'Idle'), (4, u'Reset')]), (8, u'Manually set FPGA digital outputs', [(0, u'Automatic control'), (8, u'Manual control')])],None,None,1,1))
 __p.append(('fpga','uint32',FPGA_KERNEL+KERNEL_DOUT_HI,'Manual FPGA digital outputs (bits 39-32)','','$%X',1,1))

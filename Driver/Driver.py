@@ -1149,6 +1149,7 @@ class Driver(SharedTypes.Singleton):
                     timeSoFar += sensorHandler.process(max(0.02,0.2-timeSoFar))
                     timeSoFar += ringdownHandler.process(max(0.02,0.5-timeSoFar))
                     daemon.handleRequests(0.02)
+                    self.rpcHandler.wrDasReg("KEEP_ALIVE_REGISTER",0)
                     #timeSoFar += messageHandler.process(0.01)
                     #timeSoFar += sensorHandler.process(max(0.01,0.04-timeSoFar))
                     #timeSoFar += ringdownHandler.process(max(0.01,0.1-timeSoFar))

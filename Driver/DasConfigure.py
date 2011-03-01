@@ -537,6 +537,10 @@ class DasConfigure(SharedTypes.Singleton):
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_ValveMask","VALVE_CNTRL_SOLENOID_VALVES_REGISTER"]))
                     
+            self.opGroups["SLOW"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_FanState","FAN_CNTRL_STATE_REGISTER"]))
+                    
             self.opGroups["FAST"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_MPVPosition","VALVE_CNTRL_MPV_POSITION_REGISTER"]))

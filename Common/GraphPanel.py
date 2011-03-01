@@ -137,6 +137,9 @@ class GraphPanel(wx.Panel):
         self.latestUpdate = None
         self.colorList = []
         self.colorTimeList = []
+    def clearColors(self):
+        self.colorList = []
+        self.colorTimeList = []    
     def getNumColors(self):
         return len(self.colorList)
     def AddColorTime(self, colorTime):
