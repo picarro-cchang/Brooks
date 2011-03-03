@@ -268,24 +268,6 @@
                                                             </events>
                                                         </object>
                                                     </object>
-                                                    <object class="sizeritem">
-                                                        <flag>wxLEFT|wxRIGHT</flag>
-                                                        <border>10</border>
-                                                        <option>0</option>
-                                                        <object class="wxStaticText" name="label_loglog" base="EditStaticText">
-                                                            <attribute>1</attribute>
-                                                            <label>Loglog</label>
-                                                        </object>
-                                                    </object>
-                                                    <object class="sizeritem">
-                                                        <border>0</border>
-                                                        <option>0</option>
-                                                        <object class="wxCheckBox" name="checkbox_loglog" base="EditCheckBox">
-                                                            <events>
-                                                                <handler event="EVT_CHECKBOX">onDitherEnable</handler>
-                                                            </events>
-                                                        </object>
-                                                    </object>
                                                     <object class="sizerslot" />
                                                     <object class="sizerslot" />
                                                 </object>

@@ -311,11 +311,14 @@ class RingdownAnalyzer(object):
         self.rdIndex = 0
         self.nextFree = 0
         self.dataLen = 0
-        self.frame.graph_panel_1.Update()
-        self.frame.graph_panel_2.Update()
-        self.frame.graph_panel_ripple.Update()
-        self.frame.graph_panel_spectrum.Update()
-        
+        try:
+            self.frame.graph_panel_1.Update()
+            self.frame.graph_panel_2.Update()
+            self.frame.graph_panel_ripple.Update()
+            self.frame.graph_panel_spectrum.Update()
+        except:
+            pass
+            
     def onRejectionScaleEnter(self,frame):
         self.rejectionScale = float(frame.text_ctrl_rejection_scale.GetValue())
         

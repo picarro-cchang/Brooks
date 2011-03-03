@@ -32,7 +32,9 @@ else:
 class BuildStationFrame(BuildStationGUI):
     configName = 'BuildStationSettings.ini'
     scriptConfigName = 'BuildStationScript.ini'
-    guiSave = {'text_ctrl':['graph_points', 'rd_threshold','min_1','max_1','min_2','max_2'],
+    guiSave = {'text_ctrl':['graph_points', 'rd_threshold','min_1','max_1','min_2','max_2',
+                            'serial_number', 'rejection_window', 'rejection_scale',
+                            'laser_temperature', 'laser_current', 'num_average'],
                'combo_box':['action','laser'],
                'checkbox':['autoscale_1','autoscale_2','dither_enable']}
     cast = {'text_ctrl':str,

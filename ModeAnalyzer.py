@@ -331,16 +331,19 @@ class ModeAnalyzer(object):
             setAnalyzerTuningMode(interface.ANALYZER_TUNING_CavityLengthTuningMode)
             setTunerOffset(0)
             setDirectTune(False) 
-            self.slope = 4000
-            self.pztPk2pk = 65000
+            self.slope = 2000
+            self.pztPk2pk = 32500
             self.divisor = 512
         else:
             for mode in self.config['_Current Tuning Ranges']:
                 self.modeDict[mode] = {'range':[int(x) for x in self.config['_Current Tuning Ranges'][mode]]}
-            setAnalyzerTuningMode(interface.ANALYZER_TUNING_LaserCurrentTuningMode)
+            if getattr(interface,"ANALYZER_TUNING_FsrHoppingTuningMode",None):
+                setAnalyzerTuningMode(interface.ANALYZER_TUNING_FsrHoppingTuningMode)
+            else:
+                setAnalyzerTuningMode(interface.ANALYZER_TUNING_LaserCurrentTuningMode)
+                setDirectTune(True) 
             setTunerOffset(0)
             setSpectCntrlDiagnostic()
-            setDirectTune(True) 
             self.slope = 200
             self.pztPk2pk = 1600
             self.divisor = 256
