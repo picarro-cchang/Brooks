@@ -62,6 +62,8 @@ class BuildStationFrame(BuildStationGUI):
         self.text_ctrl_max_1.Bind(wx.EVT_KILL_FOCUS, self.onMax1Enter)
         self.text_ctrl_min_2.Bind(wx.EVT_KILL_FOCUS, self.onMin2Enter)
         self.text_ctrl_max_2.Bind(wx.EVT_KILL_FOCUS, self.onMax2Enter)
+        self.button_pause.Show(False)
+        self.button_save.Show(False)
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)        
         self.performAction()
@@ -135,6 +137,16 @@ class BuildStationFrame(BuildStationGUI):
             action = self.scriptConfig['_Macro Environment']['action']
             exec action in self.scriptEnvironment
 
+    def screenDump(self):
+        context = wx.WindowDC(self)
+        memory = wx.MemoryDC( )
+        x,y = self.GetSizeTuple()
+        bitmap = wx.EmptyBitmap( x,y, -1 )
+        memory.SelectObject( bitmap )
+        memory.Blit( 0,0,x,y, context, 0,0)
+        memory.SelectObject( wx.NullBitmap )
+        bitmap.SaveFile( "test.png", wx.BITMAP_TYPE_PNG )    
+        
     def setupFromGui(self):
         self.onMin1Enter()
         self.onMax1Enter()
@@ -242,7 +254,10 @@ class BuildStationFrame(BuildStationGUI):
         if evt: evt.Skip()
         
     def onTimer(self,evt=None):
+        interval = self.timer.GetInterval()
+        self.timer.Stop()
         self.dispatcher()
+        self.timer.Start(interval)
         if evt: evt.Skip()
 
     def onDitherEnable(self,evt=None):
@@ -251,6 +266,15 @@ class BuildStationFrame(BuildStationGUI):
     
     def onClear(self,evt=None):
         self.dispatcher()
+        if evt: evt.Skip()
+
+    def onPause(self,evt=None):
+        self.dispatcher()
+        if evt: evt.Skip()
+        
+    def onSave(self,evt=None):
+        self.dispatcher()
+        self.screenDump()
         if evt: evt.Skip()
         
     def onClose(self,evt=None):

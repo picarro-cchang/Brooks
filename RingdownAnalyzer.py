@@ -187,6 +187,8 @@ class RingdownAnalyzer(object):
             setFPGAbits("FPGA_RDMAN","RDMAN_OPTIONS",[("DITHER_ENABLE",False)])
         
     def onTimer(self,frame):
+        pageNum = frame.notebook_graphs.GetSelection()
+        pageText = frame.notebook_graphs.GetPageText(pageNum)
         c = 0.0299792458
         self.timerCount += 1
         tsNow = timestamp.getTimestamp()
@@ -243,7 +245,7 @@ class RingdownAnalyzer(object):
                     self.graph2Waveform.Add(meanWavenum,self.s2s)
                 if tsNow-ts < self.latency:
                     break
-        if self.plotType == 'wavenumber' and self.timerCount % 20 == 0:
+        if pageText == 'Ripple Analysis' and self.timerCount % 20 == 0:
             if self.dataLen > 0:
                 ofac = 10
                 hifac = 0.5
