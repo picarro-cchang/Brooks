@@ -41,7 +41,8 @@ YES_BUTTON_LIST = ["Activate IPV Trial", "OK"]
 
 class IPVLicenseFrame(wx.Frame):
     def __init__(self, selector, *args, **kwds):
-        kwds["style"] = wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX|wx.STAY_ON_TOP)
+        kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL|wx.STAY_ON_TOP
+        #kwds["style"] = wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX)
         wx.Frame.__init__(self, *args, **kwds)
         self.panel1 = wx.Panel(self, -1)
         self.panel2 = wx.Panel(self, -1)
