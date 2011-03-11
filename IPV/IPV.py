@@ -297,6 +297,14 @@ class IPV(IPVFrame):
         else:
             self.Hide()
             
+        if self.launchLicense:
+            try:
+                self.instrCo.set("License", "launch", "False")
+                self.instrCo.write()
+            except:
+                pass
+            self.startIPVLicense()
+        
         # If enalbed, start the three major threads
         if self.enabled:
             self._writeToStatus("Starting Time: %s" % time.ctime(self.reportTime))
@@ -342,6 +350,9 @@ class IPV(IPVFrame):
             self.instrCo = None
         self._mergeConfig()
         self.enabled = self.baseCo.getboolean("Main", "enabled", False)
+        self.launchLicense = self.baseCo.getboolean("License", "launch", False)
+        self.licenseTrialDays = self.baseCo.getfloat("License", "trialDays", 90.0)
+        self.licenseRemindDays = self.baseCo.getfloat("License", "remindDays", 3.0)
         self.ipvDir = os.path.abspath(self.baseCo.get("Main", "ipvDir", "C:/UserData/IPV_RPT"))
         if not os.path.isdir(self.ipvDir):
             os.makedirs(self.ipvDir)
@@ -453,6 +464,15 @@ class IPV(IPVFrame):
       
     def hideViewer(self):
         self.Hide()
+     
+    def runLicense(self):
+        f = os.popen("C:\Picarro\G2000\HostExe\IPVLicense.exe -s 0 -r %f -t %f" % (self.licenseRemindDays, self.licenseTrialDays), "r")
+        f.read()
+        
+    def startIPVLicense(self):
+        appThread = threading.Thread(target = self.runLicense)
+        appThread.setDaemon(True)
+        appThread.start()
         
     def startIPVThread(self):
         appThread = threading.Thread(target = self.runIPV)
