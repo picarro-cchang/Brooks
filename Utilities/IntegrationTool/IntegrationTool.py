@@ -22,7 +22,7 @@ FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ
 Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, "IntegrationTool")
 
 ANALY_INFO_LIST = ["Name", "Warm Box", "WLM", "Laser(s)", "Hot Box", "Cavity"]
-TEST_LIST = ["Write Instrument Name", "Make Integration INI Files", "Calibrate WB Laser/WLM", "Update Laser/WLM EEPROM", "Create WB Cal Table", "Run Calibrate System", "Calculate WLM Offset", "Run Threshold Stats"]
+TEST_LIST = ["Write Instrument Name", "Make Integration INI Files", "Calibrate WB Laser/WLM", "Update Laser/WLM EEPROM", "Create WB Cal Table", "Run Calibrate System", "Calculate WLM Offset", "Run Threshold Stats", "Run Flow Control"]
 HOSTEXE_DIR = "C:\Picarro\G2000\HostExe"
 INTEGRATION_DIR = "C:\Picarro\G2000\InstrConfig\Integration"
 CAL_DIR = "C:\Picarro\G2000\InstrConfig\Calibration\InstrCal"
@@ -78,7 +78,8 @@ THRESHOLD_RANGE = [
                    [2000, 16000, 500],
                    [2000, 16383, 1000],
                    [2000, 16000, 500],
-                   [2000, 16383, 1000]
+                   [2000, 16383, 1000],
+                   [2000, 16000, 500],
                   ]
                   
 # Connect to database
@@ -114,17 +115,25 @@ class IntegrationToolFrame(wx.Frame):
         # Analyzer information section
         self.labelAnalyzer = wx.StaticText(self.panel1, -1, "Analyzer Information", style = wx.ALIGN_CENTER)
         self.labelAnalyzer.SetFont(wx.Font(10, wx.DEFAULT, style = wx.NORMAL,weight = wx.BOLD))
+        analyzerChassis = None
+        try:
+            analyzerChassis = "CHAS2K"+Driver.fetchObject("LOGIC_EEPROM")[0]["Chassis"]
+        except:
+            pass
+            
         try:
             #analyzerChoices = [elem['identifier'] for elem in DB.get_values("Analyzer",dict(status="I"))]
             analyzerChoices = [elem['identifier'] for elem in DB.get_values("chassis2k",dict(status__in = ["I","U"]))]
             analyzerChoices.sort()
             self.comboBoxSelect = wx.ComboBox(self.panel1, -1, choices = analyzerChoices, size = (250, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
+            if analyzerChassis:
+                self.comboBoxSelect.SetValue(analyzerChassis)
         except:
-            try:
-                analyzerChoices = [Driver.fetchObject("LOGIC_EEPROM")[0]["Chassis"]]
-                self.comboBoxSelect = wx.ComboBox(self.panel1, -1, choices = analyzerChoices, size = (250, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
+            if analyzerChassis:
+                analyzerChoices = [analyzerChassis]
+                self.comboBoxSelect = wx.ComboBox(self.panel1, -1, choices = analyzerChoices, value = analyzerChassis, size = (250, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
                 #self.comboBoxSelect = wx.ComboBox(self.panel1, -1, value = analyzerChoices[0], choices = analyzerChoices, size = (250, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
-            except:
+            else:
                 raise Exception, "Failed to connect to manufacturing database or read instrument ID from EEPROM"
         self.labelSelect = wx.TextCtrl(self.panel1, -1, "Analyzer", size = (80,-1), style = wx.TE_READONLY|wx.NO_BORDER)
         self.labelSelect.SetBackgroundColour("#E0FFFF")
@@ -209,7 +218,7 @@ class IntegrationTool(IntegrationToolFrame):
         self.laserSerNumDict = {}
         # For example, {1: ("966507", "CO2"), 2: ("916778", "CH4")}
         self.bindEvents()
-        #self.onSelect(None)
+        self.onSelect(None)
         
     def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
@@ -223,6 +232,7 @@ class IntegrationTool(IntegrationToolFrame):
         self.Bind(wx.EVT_BUTTON, self.onCalibrateSystem, self.testButtonList[5])
         self.Bind(wx.EVT_BUTTON, self.onWlmOffset, self.testButtonList[6])
         self.Bind(wx.EVT_BUTTON, self.onThresholdStats, self.testButtonList[7])
+        self.Bind(wx.EVT_BUTTON, self.onFlowControl, self.testButtonList[8])
         
     def onSelect(self, event):
         self.analyzer = self.comboBoxSelect.GetValue()
@@ -236,6 +246,7 @@ class IntegrationTool(IntegrationToolFrame):
                 self.testButtonList[5].Enable(True)
                 self.testButtonList[6].Enable(True)
                 self.testButtonList[7].Enable(True)
+                self.testButtonList[8].Enable(True)
                 return
             else:
                 return
@@ -272,12 +283,14 @@ class IntegrationTool(IntegrationToolFrame):
             self.testButtonList[5].Enable(True)
             self.testButtonList[6].Enable(True)
             self.testButtonList[7].Enable(True)
+            self.testButtonList[8].Enable(True)
         except Exception, err:
             #print err
             self.hotbox = "N/A"
             self.testButtonList[5].Enable(False)
             self.testButtonList[6].Enable(False)
             self.testButtonList[7].Enable(False)
+            self.testButtonList[8].Enable(False)
         self.textCtrlAnalyzerInfoList[4].SetValue(self.hotbox)
             
         try:    
@@ -510,16 +523,26 @@ class IntegrationTool(IntegrationToolFrame):
                     raise Exception, "Scheme file does not exist: %s"  % schemeFileName
                 print "Running scheme %s" % schemeFileName
                 currTime = time.strftime("%Y%m%d_%H%M%S", time.localtime())
-                command = "C:\Picarro\G2000\HostExe\ThresholdStats.exe %s %d %d %d %s" % ((instrName+"_"+schKey), start, end, increment, schemeFileName)
-                print command
-                os.system(command)
+                exePath = os.path.join(HOSTEXE_DIR, "ThresholdStats.exe")
+                cmd = "%s %s %d %d %d %s" % (exePath, (instrName+"_"+schKey), start, end, increment, schemeFileName)
+                print cmd
+                os.system(cmd)
                 print "Finished scheme %s" % schemeFileName
             self.display += "Threshold Stats finished.\n"
         except Exception, err:
             self.display += "Threshold Stats failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
         os.chdir(INTEGRATION_DIR)
-        
+     
+    def onFlowControl(self, event):
+        try:
+            cmd = os.path.join(HOSTEXE_DIR, "FlowController.exe")
+            print cmd
+            os.system(cmd)
+            self.display += "Flow Control finished.\n"
+        except Exception, err:
+            self.display += "Flow Control failed: %s\n" % err
+
 if __name__ == "__main__":
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()

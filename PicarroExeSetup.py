@@ -76,6 +76,7 @@ sys.path.append("Utilities/SetupTool")
 sys.path.append("Utilities/PicarroKML")
 sys.path.append("Utilities/ReadGPSWS")
 sys.path.append("Utilities/IntegrationBackup")
+sys.path.append("Utilities/FlowController")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -239,6 +240,7 @@ setup(version = "1.0",
                  "Utilities/RemoteAccess/RemoteAccess.py",
                  "Utilities/IntegrationTool/IntegrationTool.py",
                  "Utilities/IntegrationBackup/IntegrationBackup.py",
+                 "Utilities/FlowController/FlowController.py",
                  "Utilities/Restart/ResetAnalyzer.py",
                  "Utilities/Restart/RestoreStartup.py",
                  "Utilities/Restart/RtcAlarmOff.py",
