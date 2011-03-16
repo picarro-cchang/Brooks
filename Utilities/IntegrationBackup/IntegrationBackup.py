@@ -22,7 +22,8 @@ EXTENSIONS_TO_KEEP = ["ini", "py", "bat", "zip"]
 BACKUP_FOLDER = "AutoIntegration"
 DEFAULT_SOURCE = "C:\\Picarro\\G2000\\InstrConfig\\Integration"
 DEFAULT_TARGET = "Z:\\"
-       
+PASSWORD = "bl52l21fbl52l21f"
+
 def removeFiles(pathToClean, exceptionList):
     for root, dirs, files in os.walk(pathToClean):
         for filename in files:
@@ -69,10 +70,6 @@ class IntegrationBackupFrame(wx.Frame):
         # Other graphical components
         self.staticLine = wx.StaticLine(self, -1)
         self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
-        self.labelPassword = wx.StaticText(self, -1, "Encryption Password")
-        self.textCtrlPassword = wx.TextCtrl(self, -1, "bl52l21f", style = wx.TE_READONLY)
-        self.textCtrlPassword.SetMinSize((450,20))
-        self.textCtrlPassword.Enable(False)
         self.textCtrlSourceDir = wx.TextCtrl(self, -1, DEFAULT_SOURCE, style = wx.TE_READONLY)
         self.textCtrlSourceDir.SetMinSize((450,20))
         self.textCtrlTargetDir = wx.TextCtrl(self, -1, DEFAULT_TARGET, style = wx.TE_READONLY)
@@ -111,9 +108,6 @@ class IntegrationBackupFrame(wx.Frame):
         sizer_1.SetMinSize((550,100))
         sizer_1.Add(self.labelTitle, 0, wx.ALL|wx.ALIGN_CENTER, 10)
         sizer_1.Add(self.staticLine, 0, wx.EXPAND|wx.BOTTOM, 5)
-
-        grid_sizer_1.Add(self.labelPassword, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
-        grid_sizer_1.Add(self.textCtrlPassword, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         
         grid_sizer_1.Add(self.buttonSourceDir, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer_1.Add(self.textCtrlSourceDir, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
@@ -240,7 +234,7 @@ class IntegrationBackup(IntegrationBackupFrame):
                 return
         targetFilename = "IntegrationBackup-%s.zip" % self._getTime(1)
         self.sourceZipPath = os.path.join(self.sourceZipDir,targetFilename)
-        subprocess.call(["7z", "a", "-p"+self.textCtrlPassword.GetValue(),
+        subprocess.call(["7z", "a", "-p"+PASSWORD,
                          "-r", "-xr!zip", self.sourceZipPath, self.sourceDir+"\\*"])
                       
         self._writeToStatus("Password-protected ZIP file was created in %s" % self.sourceZipPath)
