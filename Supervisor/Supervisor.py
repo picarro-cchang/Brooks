@@ -502,6 +502,7 @@ class App(object):
         self.ConsoleMode = CONSOLE_MODE_OWN_WINDOW
         self.NotifyOnRestart = False
         self.KillByName = True
+        self.ShowDispatcherWarning = 1
 
         #now override any defaults with the passed in dictionary values...
         if DefaultSettings:
@@ -708,7 +709,8 @@ class App(object):
         """
         #See if our work is already done somehow... if so we just get out...
         if not self.IsProcessActive():
-            Log("App shutdown attempted, but app already closed", self._AppName, 2)
+            if self.ShowDispatcherWarning:
+                Log("App shutdown attempted, but app already closed", self._AppName, 2)
             return
 
         #Now sort out our args...
@@ -1357,7 +1359,7 @@ class Supervisor(object):
                                 stopMethod = _METHOD_KILLFIRST
                         fifoPingTime = TimeStamp()-curTime
                         if dispatcherProblem or fifoProblem:
-                            if dispatcherProblem:
+                            if dispatcherProblem and app.ShowDispatcherWarning:
                                 Log("Dispatcher problem %s detected with monitored application" % (E,), app._AppName, 3)
                             elif fifoProblem:
                                 Log("FIFO problem %s detected with monitored application" % (E,), app._AppName, 3)
