@@ -122,19 +122,22 @@ class FileUploader(object):
         self.password = co.get("FileUpload", "password")
         self.sftpClient = None
         self.uploadStatus = -1
+        self.channel = None
         
     def setSftpClient(self):
         # Build the channel and client to the remote server
         try:
-            channel = paramiko.Transport((self.host, 22))
-            channel.connect(username=self.user, password=self.password)
-            self.sftpClient = paramiko.SFTPClient.from_transport(channel)
+            if not self.channel:
+                self.channel = paramiko.Transport((self.host, 22))
+                self.channel.connect(username=self.user, password=self.password)
+            self.sftpClient = paramiko.SFTPClient.from_transport(self.channel)
             self.sftpClient.chdir(self.ipvRemoteDir)
             self.uploadStatus = 1
         except Exception, err:
             print "%r" % err
             Log('SFTP Error: %r' % err)
             self.sftpClient = None
+            self.channel = None
             self.uploadStatus = 0
         # Some useful available functions of self.sftpClient include:
         # close(self)
