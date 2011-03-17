@@ -16,7 +16,7 @@
 #                                                            
 HOST_MAJOR_VERSION = 1
 HOST_MINOR_VERSION = 1
-HOST_INTERNAL_VERSION = "2"
+HOST_INTERNAL_VERSION = "3"
 
 def versionString():
     return "%d.%d.%s" % (HOST_MAJOR_VERSION,HOST_MINOR_VERSION,str(HOST_INTERNAL_VERSION))
