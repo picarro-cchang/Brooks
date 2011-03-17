@@ -244,16 +244,14 @@ class ShutdownDialog(wx.Dialog):
 
 # end of class ShutdownDialog
 class AlarmDialog(wx.Dialog):
-    modeInstructions = {"Higher":"Alarm is set when value is above Alarm threshold 1. "
-                        "It is reset when value falls below Clear threshold 1.",
-                        "Lower":"Alarm is set when value is below than Alarm threshold 1. "
-                        "It is reset when value rises above Clear threshold 1.",
-                        "Inside":"Alarm is set when value is below Alarm threshold 1 and above "
-                        "Alarm threshold 2. It is reset when value rises above Clear threshold 1 "
-                        "or falls below Clear threshold 2.",
-                        "Outside":"Alarm is set when value is above Alarm threshold 1 or below "
-                        "Alarm threshold 2. It is reset when value falls below Clear threshold 1 or "
-                        "rises above Clear threshold 2."}
+    modeInstructions = {"Higher":\
+                        "Alarm is set when value is above Alarm threshold 1. It is reset when value falls below Clear threshold 1.",
+                        "Lower":\
+                        "Alarm is set when value is below Alarm threshold 1. It is reset when value rises above Clear threshold 1.",
+                        "Inside":\
+                        "Alarm is set when value is below Alarm threshold 1 and above Alarm threshold 2.\nIt is reset when value rises above Clear threshold 1 or falls below Clear threshold 2.",
+                        "Outside":\
+                        "Alarm is set when value is above Alarm threshold 1 or below Alarm threshold 2.\nIt is reset when value falls below Clear threshold 1 or rises above Clear threshold 2."}
     def __init__(self,mainForm,data,parent,id,title,pos=wx.DefaultPosition,size=wx.DefaultSize,
                  style=wx.DEFAULT_DIALOG_STYLE):
         wx.Dialog.__init__(self,parent,id,title,pos,size,style)
@@ -274,9 +272,9 @@ class AlarmDialog(wx.Dialog):
         self.instructions = wx.StaticText(self,-1,"")
         label = wx.StaticText(self, -1, "Alarm mode")
         sizer.Add(label, pos = (1,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border = 5)
-        #self.mode = wx.ComboBox(parent=self,id=-1,size=(100,-1),style=wx.CB_READONLY,
-        #                    choices=["Higher","Lower","Inside","Outside"])
-        self.mode = wx.StaticText(parent=self,id=-1,size=(100,-1))
+        self.mode = wx.ComboBox(parent=self,id=-1,size=(125,-1),style=wx.CB_READONLY,
+                            choices=["Higher","Lower","Inside","Outside"])
+        #self.mode = wx.StaticText(parent=self,id=-1,size=(100,-1))
         self.mode.SetValidator(DataXferValidator(data,"mode",None))
         sizer.Add(self.mode, pos = (1,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border = 5)
         self.instructions = wx.StaticText(self,-1,"")
@@ -328,6 +326,7 @@ class AlarmDialog(wx.Dialog):
         self.vsizer.Add(btnsizer, 0, flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, border=5)
         self.SetSizer(self.vsizer)
         self.selectMode(data["mode"])
+        self.Bind(wx.EVT_COMBOBOX, self.onModeComboBox, self.mode) 
 
     def setDialogValues(self,name,mode,enabled,alarm1,clear1,alarm2,clear2):
         self.name.SetLabel(name)
@@ -339,7 +338,12 @@ class AlarmDialog(wx.Dialog):
         self.mode.SetLabel(mode)
         self.selectMode(mode)
 
+    def onModeComboBox(self,evt):
+        self.selectMode(evt.GetEventObject().GetValue())
+        
     def selectMode(self,mode):
+        self.mode.SetValidator(DataXferValidator(self.data,"mode",None))
+        self.data["mode"] = mode
         self.instructions.SetLabel(wordwrap(self.modeInstructions[mode],300, wx.ClientDC(self)))
         if mode in ["Higher","Lower"]:
             self.alarm2Edit.Enable(False)
@@ -462,7 +466,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
             retCode = dialog.ShowModal()
             dialog.Destroy()
             if retCode == wx.ID_OK:
-                self._DataSource.setAlarm(item+1,d["enabled"],
+                self._DataSource.setAlarm(item+1,d["enabled"],d["mode"],
                                           float(d["alarm1"]),float(d["clear1"]),
                                           float(d["alarm2"]),float(d["clear2"]))
 
@@ -564,19 +568,20 @@ class AlarmInterface(object):
             self.exception = e
         self.rpcInProgress = False
 
-    def setAlarm(self,index,enable,alarm1,clear1,alarm2=0,clear2=0):
+    def setAlarm(self,index,enable,mode,alarm1,clear1,alarm2=0,clear2=0):
         """Set alarm enable and threshold by making a non-blocking RPC call to the alarm system"""
         if self.rpcInProgress: return False
         self.result = None
         self.exception = None
         self.rpcInProgress = True
-        th = Thread(target=self._setAlarm,args=(index,enable,alarm1,clear1,alarm2,clear2))
+        th = Thread(target=self._setAlarm,args=(index,enable,mode,alarm1,clear1,alarm2,clear2))
         th.setDaemon(True)
         th.start()
         return True
 
-    def _setAlarm(self,index,enable,alarm1,clear1,alarm2,clear2):
+    def _setAlarm(self,index,enable,mode,alarm1,clear1,alarm2,clear2):
         try:
+            self.alarmRpc.ALARMSYSTEM_setModeRpc(index,mode)
             self.alarmRpc.ALARMSYSTEM_setAlarmThresholdRpc(index,1,alarm1)
             self.alarmRpc.ALARMSYSTEM_setClearThresholdRpc(index,1,clear1)
             self.alarmRpc.ALARMSYSTEM_setAlarmThresholdRpc(index,2,alarm2)

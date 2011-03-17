@@ -83,6 +83,8 @@ if sys.platform == 'win32':
 else:
     from time import time as TimeStamp
 
+ALLOWED_MODES = ["Higher", "Lower", "Inside", "Outside"]
+
 class Alarm(object):
     """Class to manage alarms"""
     COLUMN_WIDTH = 26
@@ -209,6 +211,7 @@ class AlarmSystem(object):
         #Register the rpc functions...
         self.RpcServer.register_function(self.ALARMSYSTEM_getNameRpc)
         self.RpcServer.register_function(self.ALARMSYSTEM_getModeRpc)
+        self.RpcServer.register_function(self.ALARMSYSTEM_setModeRpc)
         self.RpcServer.register_function(self.ALARMSYSTEM_isEnabledRpc)
         self.RpcServer.register_function(self.ALARMSYSTEM_enableRpc)
         self.RpcServer.register_function(self.ALARMSYSTEM_disableRpc)
@@ -338,6 +341,24 @@ class AlarmSystem(object):
         else:
             return ALARM_SYSTEM_RPC_FAILED, ""
 
+    def ALARMSYSTEM_setModeRpc(self, alarmIndex, mode):
+        """Called to set the alarm mode specified by alarmIndex. Note: alarmIndex is one based."""
+        if mode not in ALLOWED_MODES:
+            return ALARM_SYSTEM_RPC_FAILED
+        if alarmIndex <= self.NumAlarms:
+            alarmName = "Alarm_%d" % alarmIndex
+            if alarmName in self.AlarmDict:
+                self.AlarmDict[alarmName].Mode = mode
+                self.cp.set(alarmName, "mode", mode)
+                fp = open(self.configPath,"wb")
+                self.cp.write(fp)
+                fp.close()
+                return ALARM_SYSTEM_RPC_SUCCESS
+            else:
+                return ALARM_SYSTEM_RPC_FAILED
+        else:
+            return ALARM_SYSTEM_RPC_FAILED
+            
     def ALARMSYSTEM_isEnabledRpc(self, alarmIndex):
         """Returns the enabled status of the alarm specified by alarmIndex. Note: alarmIndex is one based."""
         """Returns the mode of the alarm specified by alarmIndex. Note: alarmIndex is one based."""
