@@ -148,8 +148,10 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.replyQueue = Queue(0)
         self.fsmThread = None
         self.saveFileName = ""
+        self.logFileName = ""
         
         self.saveFp = None
+        self.logFp = None
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(wx.EVT_IDLE,self.onIdle)
         # sampleDescriptionDict and sampleIndexDict are inverses of each other
@@ -166,7 +168,6 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.startServer()
         self.sampleNum = 1
         self.guiParamDict = {}
-        self.logFp = None
         try:
             self.analyzerName = CRDS_Driver.fetchInstrInfo("analyzername")
         except:
@@ -174,6 +175,12 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.archiveGroupName = self.config.get("Archiver", "archiveGroupName", "")
         self.maxNumLines = self.config.getint("Files", "max_num_lines", 0)
         self.fileTime = self.config.get("Files", "file_time", "gmt").lower()
+        self.logEnable = False
+        try:
+            if self.config.has_option("Files", "log"):
+                self.logEnable = True
+        except:
+            pass
             
     def startServer(self):
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_COORDINATOR),
@@ -249,17 +256,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
         return self.manualSampleNumber
     
     def run(self):
-        self.setStatusText("")
-        self.saveFileName = self.makeFilename()
-        try:
-            logFname = self.config["Files"]["log"]
-            dirName = os.path.dirname(logFname)
-            if not os.path.isdir(dirName):
-                os.mkdir(dirName)
-            self.logFp = file(time.strftime(logFname+"_%Y%m%d_%H%M%S.log",self.lastFileTime),"w")
-        except:
-            self.logFp = None
-        
+        self.setStatusText("")        
         self.manual = True
         try:
             if self.config["Mode"]["inject_mode"].lower() != "manual":
@@ -272,15 +269,22 @@ class CoordinatorFrame(CoordinatorFrameGui):
             
         if self.manual and "Trays" in self.config:
             raise ValueError("Cannot use Trays with manual injection")
-            
+        
+        self.saveFileName = self.makeFilename("save") 
+        self.logFileName = self.makeFilename("log")
         self.saveFp = file(self.saveFileName,"wb")
+        if self.logEnable:
+            self.logFp = file(self.logFileName,"wb")
         self.onWriteHeadings()
         self.startStateMachineThread(self.paramTupleList)
 
-    def makeFilename(self):
-        (dirName, baseName) = os.path.split(self.config.get("Files", "output", "C:/CoordinatorData/"))
+    def makeFilename(self, fileType = "save"):
+        if fileType == "log":
+            (dirName, baseName) = os.path.split(self.config.get("Files", "log", "C:/CoordinatorData/Log/"))
+        else:
+            (dirName, baseName) = os.path.split(self.config.get("Files", "output", "C:/CoordinatorData/"))
         if not os.path.isdir(dirName):
-            os.mkdir(dirName)
+            os.makedirs(dirName)
         if self.fileTime == "local":
             self.lastFileTime = time.localtime()
         else:
@@ -290,7 +294,11 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 baseName = "%s_%s" % (self.analyzerName, baseName)
             else:
                 baseName = self.analyzerName
-        return os.path.join(dirName, time.strftime(baseName+"_%Y%m%d_%H%M%S.csv",self.lastFileTime))
+        if fileType == "log":
+            fileName = os.path.join(dirName, "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.txt",self.lastFileTime)))
+        else:
+            fileName = os.path.join(dirName, "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.csv",self.lastFileTime)))
+        return fileName
 
     def onLoadSampleDescriptions(self,event):
         try:
@@ -415,7 +423,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
     def onNewFile(self,event):
         if self.archiveGroupName:
             CRDS_Archiver.StopLiveArchive(groupName=self.archiveGroupName, sourceFile=self.saveFileName, copier=True)
-        self.saveFileName = self.makeFilename()
+        self.saveFileName = self.makeFilename("save")
         self.filenameTextCtrl.SetValue(os.path.split(self.saveFileName)[-1])
         if self.saveFp != None:
             self.saveFp.close()
@@ -435,6 +443,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
     def terminateStateMachineThread(self):
         if self.archiveGroupName:
             CRDS_Archiver.StopLiveArchive(groupName=self.archiveGroupName, sourceFile=self.saveFileName, copier=True)
+            CRDS_Archiver.StopLiveArchive(groupName=self.archiveGroupName, sourceFile=self.logFileName, copier=True)
         if self.fsmThread != None:
             self.fsmThread.stop()
             self.fsmThread.join()
@@ -466,6 +475,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.fsmThread.start()
         if self.archiveGroupName:
             CRDS_Archiver.StartLiveArchive(groupName=self.archiveGroupName, sourceFile=self.saveFileName, timestamp=None, copier=True)
+            CRDS_Archiver.StartLiveArchive(groupName=self.archiveGroupName, sourceFile=self.logFileName, timestamp=None, copier=True)
                     
     def processData(self,data):
         if "sampleNum" not in data:
@@ -518,6 +528,17 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.sampleNum += 1
             self.setChangeSampleNumText(str(self.sampleNum))
             
+    def processLog(self, data):
+        notOpen = (self.logFp == None)
+        if notOpen:
+            self.logFp = file(self.logFileName,"ab")
+        try:
+            self.logFp.write(data)
+        finally:
+            if notOpen:
+                self.logFp.close()
+                self.logFp = None
+
     def onIdle(self,event):
         if self.maxNumLines > 0 :
             if len(self.outputFileDataList) >= self.maxNumLines:
@@ -538,8 +559,8 @@ class CoordinatorFrame(CoordinatorFrameGui):
             type, data = self.guiQueue.get()
             if type == LOG:
                 self.logTextCtrl.AppendText(data)
-                if self.logFp is not None:
-                    self.logFp.write(data)
+                if self.logEnable:
+                    self.processLog(data)
             elif type == OUTFILE:
                 self.outputFileDataList.append(data)
                 self.processData(data)
@@ -552,6 +573,9 @@ class CoordinatorFrame(CoordinatorFrameGui):
         if self.saveFp != None:
             self.saveFp.close()
             self.saveFp = None
+        if self.logEnable and self.logFp != None:
+            self.logFp.close()
+            self.logFp = None
         event.Skip()
     
     def onClose(self,event):
@@ -583,7 +607,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
             else:
                 pass
             event.Skip()
-        if self.logFp is not None: self.logFp.close(data)
+        if self.logEnable and self.logFp is not None: self.logFp.close()
 
 def countProgDialog(dlg, maximum):
     count = 0.0

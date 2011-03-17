@@ -445,10 +445,9 @@ class ArchiveGroup(object):
                         self.archiveData(path, True, None)
             if a.startCopy():
                 self.liveArchiveDict[source] = a
-                # print "LiveArchive started for source %s, timestamp %s, target %s" % (source, timestamp, targetName)
+                Log("LiveArchive started for source %s, timestamp %s, target %s" % (source, timestamp, targetName))
             else:
-                pass
-                # print "LiveArchive failed"
+                Log("LiveArchive failed")
         
     def stopLiveArchive(self, source, copier=False):
         if source in self.liveArchiveDict:
