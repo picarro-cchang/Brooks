@@ -1,7 +1,9 @@
 import os
 import sys
 import wx
+from datetime import datetime
 import wx.lib.agw.aui as aui
+from wx.lib.masked.timectrl import TimeCtrl
 from Host.Common.CustomConfigObj import CustomConfigObj
                                             
 PAGE1_LEFT_MARGIN = 35
@@ -571,21 +573,29 @@ class Page3(wx.Panel):
     def __init__(self, driverRpc, *args, **kwds):
         self.driverRpc = driverRpc
         wx.Panel.__init__(self, *args, **kwds)
-        self.keyLabelStrings = ["Use SSL", "Use Authentication", "Server", "User Name", "Password", "From", "To", "Subject", "Data Directory"]
+        self.keyLabelStrings = ["Use SSL", "Use Authentication", "Server", "User Name", "Password", "From", "To", "Subject", 
+                                "Data Directory"]
         self.choiceLists = [["YES","NO"], ["YES","NO"]]
         self.labelTitle = wx.StaticText(self, -1, "Data Delivery Setup", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        
         self.buttonGet = wx.Button(self, -1, "Get Default Configurations")   
         self.buttonGet.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))       
         self.buttonGet.SetMinSize((240, 25))
         self.buttonGet.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonGet.Enable(False)
-        self.Bind(wx.EVT_BUTTON, self.onGetButton, self.buttonGet)
         self.buttonDir = wx.Button(self, -1, "Data Directory")   
         self.buttonDir.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))       
         self.buttonDir.SetMinSize((240, 25))
         self.buttonDir.SetBackgroundColour(wx.Colour(237, 228, 199))
-        self.Bind(wx.EVT_BUTTON, self.onDirButton, self.buttonDir)
+        if self.checkRemoteAccessScheduled():
+            self.buttonSch = wx.Button(self, -1, "Stop Delivery Scheduler") 
+        else:
+            self.buttonSch = wx.Button(self, -1, "Start Delivery Scheduler")   
+        self.buttonSch.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))       
+        self.buttonSch.SetMinSize((240, 25))
+        self.buttonSch.SetBackgroundColour(wx.Colour(237, 228, 199))
+        
         self.comment = wx.TextCtrl(self, -1, "", size = COMMENT_BOX_SIZE, style = wx.TRANSPARENT_WINDOW|wx.TE_READONLY|wx.TE_MULTILINE|wx.NO_BORDER|wx.TE_RICH|wx.ALIGN_LEFT)
         self.comment.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.comment.SetForegroundColour("red")
@@ -608,11 +618,24 @@ class Page3(wx.Panel):
             if i < len(self.choiceLists):
                 self.comboBoxLabelList.append(label)
                 self.comboBoxIdList.append(newId)
-                self.comboBoxList.append(wx.ComboBox(self, newId, choices = self.choiceLists[i], value = self.choiceLists[i][0], size = (240,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
+                self.comboBoxList.append(wx.ComboBox(self, newId, choices = self.choiceLists[i], value = self.choiceLists[i][-1], size = (240,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
             else:
                 self.textCtrlLabelList.append(label)
                 self.textCtrlIdList.append(newId)
                 self.textCtrlList.append(wx.TextCtrl(self, newId, size = (240,-1)))
+        
+        self.startTimeLabel = wx.StaticText(self, -1, "Delivery Start Time", style=wx.ALIGN_LEFT)
+        self.startTimeLabel.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        self.spinButtonStartTime = wx.SpinButton(self, -1, size=(17,22), style=wx.SP_VERTICAL)
+        self.ctrlStartTime = TimeCtrl(self, -1, fmt24hr=True, value="00:00:05", spinButton=self.spinButtonStartTime)
+
+        f1=os.popen("echo %userdomain%","r")
+        f2=os.popen("echo %username%","r")
+        d=f1.read().strip()
+        u=f2.read().strip()
+        # Required for Windows scheduler
+        self.user = "%s\%s" % (d,u)
+        self.password = "picarro"
         
         self.textCtrlList[6].Enable(False)
         self.bindEvents()
@@ -664,8 +687,13 @@ class Page3(wx.Panel):
     def __do_layout(self):
         sizer1 = wx.BoxSizer(wx.VERTICAL)
         sizer2 = wx.BoxSizer(wx.VERTICAL)
+        sizerTime = wx.BoxSizer(wx.HORIZONTAL)
         gridSizer1 = wx.FlexGridSizer(-1, 2)
         sizer1.Add(self.labelTitle, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 15)
+        gridSizer1.Add(self.startTimeLabel, 0, wx.RIGHT|wx.BOTTOM, 15)
+        sizerTime.Add(self.ctrlStartTime, 10)
+        sizerTime.Add(self.spinButtonStartTime, 0)
+        gridSizer1.Add(sizerTime, 0, wx.EXPAND)
         for i in range(len(self.comboBoxLabelList)):
             gridSizer1.Add(self.comboBoxLabelList[i], 0, wx.RIGHT|wx.BOTTOM, 15)
             gridSizer1.Add(self.comboBoxList[i], 0, wx.EXPAND)
@@ -673,9 +701,11 @@ class Page3(wx.Panel):
             gridSizer1.Add(self.textCtrlLabelList[i], 0, wx.RIGHT|wx.BOTTOM, 15)
             gridSizer1.Add(self.textCtrlList[i], 0)
         gridSizer1.Add((-1,-1))
-        gridSizer1.Add(self.buttonDir, 0, wx.TOP, 15)            
+        gridSizer1.Add(self.buttonDir, 0)
         gridSizer1.Add((-1,-1))
-        gridSizer1.Add(self.buttonGet, 0, wx.TOP, 15)
+        gridSizer1.Add(self.buttonSch, 0, wx.TOP, 10)
+        gridSizer1.Add((-1,-1))
+        gridSizer1.Add(self.buttonGet, 0, wx.TOP, 10)
         sizer1.Add(gridSizer1, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 20)
         sizer1.Add(self.comment, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
         sizer2.Add(sizer1, 0, wx.LEFT, PAGE3_LEFT_MARGIN)
@@ -683,8 +713,31 @@ class Page3(wx.Panel):
         sizer2.Fit(self)
         
     def bindEvents(self):
-        self.comboBoxList[1].Bind(wx.EVT_COMBOBOX, self.onAuthComboBox)
+        self.Bind(wx.EVT_BUTTON, self.onDirButton, self.buttonDir)
+        self.Bind(wx.EVT_BUTTON, self.onGetButton, self.buttonGet)
+        self.Bind(wx.EVT_BUTTON, self.onSchButton, self.buttonSch)
+        self.Bind(wx.EVT_COMBOBOX, self.onAuthComboBox, self.comboBoxList[1])
         
+    def onSchButton(self, event):
+        print self.checkRemoteAccessScheduled()
+        if self.checkRemoteAccessScheduled():
+            os.system(r'schtasks.exe /delete /tn RemoteAccess /f')
+            self.buttonSch.SetLabel("Start Delivery Scheduler")
+        else:
+            startTime = self.ctrlStartTime.GetValue()
+            os.system(r'schtasks.exe /delete /tn RemoteAccess /f')
+            os.system(r'schtasks.exe /create /tn RemoteAccess /tr "C:\Picarro\G2000\HostExe\RemoteAccess.exe %s" /sc DAILY /st %s /ru %s /rp %s' % (self.targetIni, startTime, self.user, self.password))
+            self.buttonSch.SetLabel("Stop Delivery Scheduler")
+            
+    def checkRemoteAccessScheduled(self):
+        schQuery = os.popen("schtasks.exe /query /fo CSV","r")
+        r = schQuery.read()
+        r = r.replace("\n","").replace("\"",",").split(",")
+        if "RemoteAccess" in r:
+            return True
+        else:
+            return False
+            
     def onAuthComboBox(self, event):
         if event:
             eventObj = event.GetEventObject()
