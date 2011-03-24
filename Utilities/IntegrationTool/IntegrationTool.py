@@ -22,7 +22,9 @@ FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ
 Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, "IntegrationTool")
 
 ANALY_INFO_LIST = ["Name", "Warm Box", "WLM", "Laser(s)", "Hot Box", "Cavity"]
-TEST_LIST = ["Write Instrument Name", "Make Integration INI Files", "Calibrate WB Laser/WLM", "Update Laser/WLM EEPROM", "Create WB Cal Table", "Run Calibrate System", "Calculate WLM Offset", "Run Threshold Stats", "Run Flow Control"]
+TEST_LIST = ["Write Instrument Name", "Make Integration INI Files", "Calibrate WB Laser/WLM", 
+             "Update Laser/WLM EEPROM", "Create WB Cal Table", "Run Calibrate System", 
+             "Calculate WLM Offset", "Run Threshold Stats", "Run Flow Control", "Write Software Version"]
 HOSTEXE_DIR = "C:\Picarro\G2000\HostExe"
 INTEGRATION_DIR = "C:\Picarro\G2000\InstrConfig\Integration"
 CAL_DIR = "C:\Picarro\G2000\InstrConfig\Calibration\InstrCal"
@@ -233,6 +235,7 @@ class IntegrationTool(IntegrationToolFrame):
         self.Bind(wx.EVT_BUTTON, self.onWlmOffset, self.testButtonList[6])
         self.Bind(wx.EVT_BUTTON, self.onThresholdStats, self.testButtonList[7])
         self.Bind(wx.EVT_BUTTON, self.onFlowControl, self.testButtonList[8])
+        self.Bind(wx.EVT_BUTTON, self.onWriteSoftwareVer, self.testButtonList[9])
         
     def onSelect(self, event):
         self.analyzer = self.comboBoxSelect.GetValue()
@@ -247,11 +250,10 @@ class IntegrationTool(IntegrationToolFrame):
                 self.testButtonList[6].Enable(True)
                 self.testButtonList[7].Enable(True)
                 self.testButtonList[8].Enable(True)
-                return
-            else:
-                return
-        else:
-            self.testButtonList[0].Enable(True)
+            return
+
+        self.testButtonList[0].Enable(True)
+        self.testButtonList[9].Enable(True)
 
         try:
             self.warmbox = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer,type="chassis2k")) 
@@ -543,6 +545,15 @@ class IntegrationTool(IntegrationToolFrame):
         except Exception, err:
             self.display += "Flow Control failed: %s\n" % err
 
+    def onWriteSoftwareVer(self, event):
+        try:
+            softwareVer = Driver.allVersions()["host release"]
+            reqDict = {"user": "xml_user", "passwd": "skCyrcFHVZecfD", "identifier": self.analyzer, "Analyzer Software Version": softwareVer}
+            DB.set_compnent_version(reqDict)
+            self.display += "Software version number %s written to database.\n" % softwareVer
+        except Exception, err:
+            self.display += "Software version number can't be written to database: %s\n" % err
+        
 if __name__ == "__main__":
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()
