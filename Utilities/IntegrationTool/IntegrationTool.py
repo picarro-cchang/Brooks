@@ -545,6 +545,7 @@ class IntegrationTool(IntegrationToolFrame):
             self.display += "Flow Control finished.\n"
         except Exception, err:
             self.display += "Flow Control failed: %s\n" % err
+        self.textCtrlIntegration.SetValue(self.display)
 
     def onWriteSoftwareVer(self, event):
         try:
@@ -554,6 +555,7 @@ class IntegrationTool(IntegrationToolFrame):
             self.display += "Software version number %s written to database.\n" % softwareVer
         except Exception, err:
             self.display += "Software version number can't be written to database: %s\n" % err
+        self.textCtrlIntegration.SetValue(self.display)
         
 if __name__ == "__main__":
     app = wx.PySimpleApp()
