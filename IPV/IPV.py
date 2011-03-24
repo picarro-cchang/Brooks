@@ -13,7 +13,6 @@ DEFAULT_CONFIG_NAME = "IPV.ini"
 
 import sys
 import os
-import sqlite3
 import tables
 import wx
 import time
@@ -35,6 +34,8 @@ EventManagerProxy_Init(APP_NAME,DontCareConnection = False)
 
 DB_LEVEL = 2
 # level 0 = 1 sec; level 1 = 10 sec; level 2 = 100 sec; ...
+
+DEFAULT_IPV_DIR = "C:/Picarro/G2000/Log/IPV_RPT/"
 REPORT_FORMAT = "%-30s,%-10s,%-30s,%-30s,%-65s,%-65s,%-65s\n"
 STREAM_NUM_TO_NAME_DICT = {}
 NAME_TO_STREAM_NUM_DICT = {}
@@ -108,15 +109,16 @@ class RpcServerThread(threading.Thread):
             print "Exception raised when calling exit function at exit of RPC server."
         
 class FileUploader(object):
-    def __init__(self, co, instName):
-        self.instName = instName
-        self.ipvDir = os.path.abspath(co.get("Main", "ipvDir", "C:/UserData/IPV_RPT"))
+    def __init__(self, ipv):
+        self.writeToStatus = ipv.writeToStatus
+        self.instName = ipv.instName
+        co = ipv.baseCo
+        if not ipv.archiveDir:
+            self.srcDir = ipv.ipvDir
+        else:
+            self.srcDir = ipv.archiveDir
         self.ipvRemoteDir = co.get("FileUpload", "ipvRemoteDir")
         self.ipvExtension = co.get("FileUpload", "ipvExtension")
-        self.ipvArchiveGroupName = co.get("IPVBackup", "archiveGroupName")
-        self.rdfDir = os.path.abspath(co.get("Main", "rdfDir", "C:/UserData/IPV_RDF"))
-        self.rdfRemoteDir = co.get("FileUpload", "rdfRemoteDir", "")
-        self.rdfArchiveGroupName = co.get("RDFBackup", "archiveGroupName")
         self.host = co.get("FileUpload", "host")
         self.user = co.get("FileUpload", "user")
         self.password = co.get("FileUpload", "password")
@@ -134,8 +136,7 @@ class FileUploader(object):
             self.sftpClient.chdir(self.ipvRemoteDir)
             self.uploadStatus = 1
         except Exception, err:
-            print "%r" % err
-            Log('SFTP Error: %r' % err)
+            self.writeToStatus("%r" % err)
             self.sftpClient = None
             self.channel = None
             self.uploadStatus = 0
@@ -167,75 +168,49 @@ class FileUploader(object):
     def getUploadStatus(self):
         return self.uploadStatus
         
-    def uploadAndArchiveIPV(self):
+    def uploadIPV(self):
         if not self.sftpClient:
             return
-        for root, dirs, files in os.walk(self.ipvDir):
+        for root, dirs, files in os.walk(self.srcDir):
             for filename in files:
                 filepath = os.path.join(root, filename)
                 if os.path.basename(filename).split('.')[-1] in self.ipvExtension:
                     try:
-                        self._uploadAndArchiveFile(filepath, self.ipvRemoteDir, self.ipvArchiveGroupName, True)
+                        self._uploadFile(filepath, self.ipvRemoteDir)
                     except Exception, err:
-                        Log('%r' % err)
-
-    def uploadAndArchiveRDF(self, timeLimits): 
-        if not self.sftpClient:
-            return
-        rdfFilelist = self._searchRdfFiles(timeLimits)
-        for filepath in rdfFilelist:
-            try:
-                self._uploadAndArchiveFile(filepath, self.rdfRemoteDir, self.rdfArchiveGroupName, False)
-            except Exception, err:
-                Log('%r' % err)
+                        self.writeToStatus('%r' % err)
             
-    def _uploadAndArchiveFile(self, filepath, remoteDir = "", archiveGroupName = "", removeOriginal = True):
+    def _uploadFile(self, filepath, remoteDir = ""):
         (dir, filename) = os.path.split(filepath)
         filepath = filepath.replace("\.", "").replace("\\", "/")
         if self.instName not in filename:
             remoteFilepath = os.path.join(remoteDir, "%s_%s" % (self.instName, filename)).replace("\.", "").replace("\\", "/")
         else:
             remoteFilepath = os.path.join(remoteDir, filename).replace("\.", "").replace("\\", "/")
-        print "Uploading %s to %s" % (filepath, remoteFilepath)
+        self.writeToStatus("Uploading %s to %s" % (filepath, remoteFilepath))
         s = None
         try:
             startTime = time.time()
             s = self.sftpClient.put(filepath, remoteFilepath)
             endTime = time.time()
             uploadTime = endTime - startTime
-            if s != None:
-                print "Finished uploading %.2f bytes in %.2f seconds" % (s.st_size, uploadTime)
-                if archiveGroupName:
-                    print "Archiving %s" % (filepath,)
-                    try:
-                        CRDS_Archiver.ArchiveFile(archiveGroupName, filepath, removeOriginal)
-                    except Exception, err:
-                        print "%r" % err
-            else:
-                print "Failed uploading"
         except Exception, err:
             print "%r" % err
-            
-    def _searchRdfFiles(self, timeLimits):
-        fileList = []
-        try:
-            for root, dirs, files in os.walk(self.rdfDir):
-                for filename in files:
-                    filepath = os.path.join(root,filename)
-                    fileMtime = os.path.getmtime(filepath)
-                    if (fileMtime > timeLimits[0] and fileMtime < timeLimits[1]):
-                        fileList.append(filepath)
-        except Exception, err:
-            print err
-        #print fileList
-        return fileList
-                
+        if s != None:
+            self.writeToStatus("Finished uploading %.2f bytes in %.2f seconds" % (s.st_size, uploadTime))
+            try:
+                os.remove(filepath)
+                self.writeToStatus("%s deleted from local drive" % (filepath,))
+            except Exception, err:
+                self.writeToStatus("%r" % err)
+        else:
+            self.writeToStatus("Failed uploading")
+   
 class IPV(IPVFrame):
     def __init__(self, configFile, useViewer, *args, **kwds):
         self.useViewer = useViewer
         self.commandQueue = Queue()
         self._processIni(configFile)
-        self.fUploader = FileUploader(self.baseCo,  self.instName)
         self.signalList = [sigName for sigName in self.co if self.co.getboolean(sigName,"enabled")]
         self.numSignals = len(self.signalList)
         self.descrDict = {}
@@ -272,9 +247,11 @@ class IPV(IPVFrame):
         self.histTable = None
         self.wlmTable = None        
         self._shutdownRequested = False
-        self.rdfUnixTimeLimits = []
         self.connStatus = 0
         self.connStatusLock = threading.Lock()
+        
+        # Set up the file uploader
+        self.fUploader = FileUploader(self)
         
         IPVFrame.__init__(self, self.numRowsList, *args, **kwds)
         self.SetTitle("Picarro Instrument Performance Verification (%s, Host Version: %s)" % (self.instName, self.softwareVersion))
@@ -285,7 +262,7 @@ class IPV(IPVFrame):
         # Bind button event
         self.Bind(wx.EVT_BUTTON, self.onRunIPV, self.buttonRunIPV)
         self.Bind(wx.EVT_BUTTON, self.onCreateDiagFile, self.buttonCreateDiagFile)
-        self.Bind(wx.EVT_BUTTON, self.onUploadAndArchive, self.buttonUploadAndArchive)
+        self.Bind(wx.EVT_BUTTON, self.onUpload, self.buttonUpload)
         self.Bind(wx.EVT_IDLE, self.onIdle)
         self.Bind(wx.EVT_CLOSE, self.onClose)
         
@@ -310,14 +287,14 @@ class IPV(IPVFrame):
         
         # If enalbed, start the three major threads
         if self.enabled:
-            self._writeToStatus("Starting Time: %s" % time.ctime(self.reportTime))
-            self._writeToStatus("Time interval: %.2f hours" % (self.repeatSec/3600.0))
-            self._writeToStatus("Will test connectivity every %.2f hours." % self.testConnHrs)
+            self.writeToStatus("Starting Time: %s" % time.ctime(self.reportTime))
+            self.writeToStatus("Time interval: %.2f hours" % (self.repeatSec/3600.0))
+            self.writeToStatus("Will test connectivity every %.2f hours." % self.testConnHrs)
             self.startIPVThread()
             self.startTestConnectionThread()
             self.startBroadcaseStatusThread()
         else:
-            self._writeToStatus("IPV disabled")
+            self.writeToStatus("IPV disabled")
             
     def _getTime(self, format=0):
         if format == 0:
@@ -325,10 +302,9 @@ class IPV(IPVFrame):
         else:
             return time.strftime("%Y%m%d%H%M%S", time.localtime(getUTCTime("float")))
             
-    def _writeToStatus(self, message):
-        self.statusMessage.append("%s   %s\n" % (self._getTime(), message,))
-        self.statusMessage = self.statusMessage[-30:]
-        self.textCtrlStatus.SetValue("".join(self.statusMessage))
+    def writeToStatus(self, message):
+        self.textCtrlStatus.AppendText("%s   %s\n" % (self._getTime(), message,))
+        Log(message)
         
     def _mergeConfig(self):
         if not self.instrCo:
@@ -344,7 +320,6 @@ class IPV(IPVFrame):
                         pass
                 
     def _processIni(self, configFile):
-        self.statusMessage = []
         self.baseCo = CustomConfigObj(configFile, list_values = True)
         try:
             basePath = os.path.split(configFile)[0]
@@ -356,7 +331,7 @@ class IPV(IPVFrame):
         self.launchLicense = self.baseCo.getboolean("License", "launch", False)
         self.licenseTrialDays = self.baseCo.getfloat("License", "trialDays", 90.0)
         self.licenseRemindDays = self.baseCo.getfloat("License", "remindDays", 3.0)
-        self.ipvDir = os.path.abspath(self.baseCo.get("Main", "ipvDir", "C:/UserData/IPV_RPT"))
+        self.ipvDir = os.path.abspath(self.baseCo.get("Main", "ipvDir", DEFAULT_IPV_DIR))
         if not os.path.isdir(self.ipvDir):
             os.makedirs(self.ipvDir)
         self.diagFilePrefix = os.path.join(self.ipvDir, self.baseCo.get("Main", "diagFilePrefix", "Diag"))
@@ -365,7 +340,6 @@ class IPV(IPVFrame):
         self.instName = self.instType + CRDS_Driver.fetchInstrInfo("analyzernum")
         self.softwareVersion = CRDS_Driver.allVersions()["host release"]
         self.useUTC = self.baseCo.getboolean("Main", "useUTC", True)
-        self.rdfDurationHrs = self.baseCo.getfloat("Main", "rdfDurationHrs", 6.0)
         self.requiredDataHrs = self.baseCo.getfloat("Main", "requiredDataHrs", 12.0)
         self.startTime = self.baseCo.get("Main", "startTime", "00:00:00")
         self.repeatSec = 3600 * self.baseCo.getfloat("Main", "repeatHrs", 6.0)
@@ -376,7 +350,14 @@ class IPV(IPVFrame):
             self.reportTime += self.repeatSec
         print "Starting Time: %s" % time.ctime(self.reportTime) 
         self.testConnHrs = self.baseCo.getfloat("Main", "testConnHrs", 0.5)
-        dbFilename = self.baseCo.get("Main", "dbFilename")
+        
+        # Set up archiver to manage local IPV files
+        self.ipvArchiveGroupName = self.baseCo.get("IPVBackup", "archiveGroupName", "")
+        if self.ipvArchiveGroupName:
+            self.archiveDir = CRDS_Archiver.GetGroupInfo(self.ipvArchiveGroupName)["StorageDir"]
+        else:
+            self.archiveDir = None
+
         # Flatten the ini file
         try:
             newCo = self.baseCo[self.instType]
@@ -397,8 +378,7 @@ class IPV(IPVFrame):
                                                 ServerVersion = __version__,
                                                 threaded = True)
         self.rpcServer.register_function(self.getIPVReport)
-        self.rpcServer.register_function(self.uploadAndArchiveIPV)
-        self.rpcServer.register_function(self.uploadAndArchiveRDF)
+        self.rpcServer.register_function(self.uploadIPV)
         self.rpcServer.register_function(self.createDiagFile)
         self.rpcServer.register_function(self.shutdown)
         self.rpcServer.register_function(self.showViewer)
@@ -414,7 +394,16 @@ class IPV(IPVFrame):
     def shutdown(self):
         self.Destroy()
         self._shutdownRequested = True
-        
+      
+    def archiveFile(self, filepath):
+        if not self.ipvArchiveGroupName:
+            return
+        self.writeToStatus("Archiving %s to %s" % (filepath, self.archiveDir))
+        try:
+            CRDS_Archiver.ArchiveFile(self.ipvArchiveGroupName, filepath, removeOriginal=True)
+        except Exception, err:
+            self.writeToStatus("%r" % err)
+                        
     def getIPVReport(self, auto):
         ipvStatus = self._updateIPV()
         if ipvStatus[0]:
@@ -422,31 +411,14 @@ class IPV(IPVFrame):
             if auto:
                 if not ipvStatus[1]:
                     self.onCreateDiagFile(None)
-                    self.onUploadAndArchive(None)
-                else:
-                    self.uploadAndArchiveIPV()
+                self.uploadIPV()
             
-    def uploadAndArchiveIPV(self):
-        self._writeToStatus("Archiving and/or uploading IPV reports...")
+    def uploadIPV(self):
+        self.writeToStatus("Uploading IPV reports...")
         self.connStatusLock.acquire()
         try:
             self.fUploader.setSftpClient()
-            self.fUploader.uploadAndArchiveIPV()
-            self.connStatus = self.getUploadStatus()
-            self.fUploader.closeSftpClient()
-        except:
-            pass
-        finally:
-            self.connStatusLock.release()
-            
-    def uploadAndArchiveRDF(self):
-        if not self.rdfUnixTimeLimits:
-            return
-        self.connStatusLock.acquire()
-        try:
-            self._writeToStatus("Archiving and/or uploading RDF files...")
-            self.fUploader.setSftpClient()
-            self.fUploader.uploadAndArchiveRDF(self.rdfUnixTimeLimits)
+            self.fUploader.uploadIPV()
             self.connStatus = self.getUploadStatus()
             self.fUploader.closeSftpClient()
         except:
@@ -457,13 +429,6 @@ class IPV(IPVFrame):
     def createDiagFile(self):
         self._createH5File()
         self._writeH5File()
-        log("Diagnostic file saved as: %s"%self.h5Filename)
-        self._writeToStatus("Diagnostic file saved as: %s"%self.h5Filename)
-        print "Diagnostic file saved as: %s"%self.h5Filename
-        #d = wx.MessageDialog(None,"Diagnostic file saved as:\n\n%s\n\n"%self.h5Filename, "Diagnostic File Saved", \
-        #style=wx.OK | wx.ICON_INFORMATION | wx.STAY_ON_TOP)
-        #d.ShowModal()
-        #d.Destroy()
         
     def showViewer(self):
         self.Show()
@@ -543,9 +508,8 @@ class IPV(IPVFrame):
     def onCreateDiagFile(self, event):
         self.createDiagFile()
         
-    def onUploadAndArchive(self, event):
-        self.uploadAndArchiveIPV()
-        self.uploadAndArchiveRDF()
+    def onUpload(self, event):
+        self.uploadIPV()
         
     def _updateIPV(self):
         self._disableButtons()
@@ -556,11 +520,7 @@ class IPV(IPVFrame):
         if self.useUTC:
             offset = datetime.utcnow() - datetime.now()
             self.endDatetime += offset 
-        rdfStartDatetime = self.endDatetime - timedelta(hours=self.rdfDurationHrs)
 
-        # Time range (Unix time) for RDF data retrieval
-        self.rdfUnixTimeLimits = [datetimeToUnixTime(rdfStartDatetime), datetimeToUnixTime(self.endDatetime)]
-        
         # Dict for H5 file
         self.dataDict = {}
         self.wlmDataDict = {}
@@ -581,13 +541,10 @@ class IPV(IPVFrame):
                 reqNumData =  int(self.requiredDataHrs*3600*10**(-level))
                 actNumData = self._estNumData(sigName, level, endTimestamp)
                 if reqNumData > (actNumData+1):
-                    self._writeToStatus("Insufficient analyzer data for IPV analysis.")
+                    self.writeToStatus("Insufficient analyzer data for IPV analysis.")
                     print "Insufficient analyzer data for IPV analysis."
                     ipvFinished = False
                     allOK = False
-                    #d = wx.MessageDialog(None, "Analyzer not stabilized yet. Please run IPV later.", "Analyzer not stabilized", wx.OK|wx.ICON_ERROR)
-                    #d.ShowModal()
-                    #d.Destroy()
                     self._enableButtons()
                     return (ipvFinished , allOK)
                 if sigName.startswith("WlmOffset"):
@@ -620,16 +577,10 @@ class IPV(IPVFrame):
             fd = open(self.reportFilename, "w")
             fd.writelines(linesToWrite)
             fd.close()
-            log("Summary report saved as: %s"%self.reportFilename)
-            self._writeToStatus("Summary report saved as: %s"%self.reportFilename)
-            print "Summary report saved as: %s"%self.reportFilename
-            #d = wx.MessageDialog(None,"Summary report saved as:\n\n%s\n\n"%self.reportFilename, "Summary Report Saved", \
-            #style=wx.OK | wx.ICON_INFORMATION | wx.STAY_ON_TOP)
-            #d.ShowModal()
-            #d.Destroy()
+            # Archive the output file
+            self.archiveFile(self.reportFilename)
         except Exception, err:
-            self._writeToStatus("%r" % err)
-            print "%r" % err
+            self.writeToStatus("%r" % err)
         
     def _getMethodList(self, sigName):
         methodList = self.co.get(sigName,"method","")
@@ -667,12 +618,12 @@ class IPV(IPVFrame):
     def _disableButtons(self):
         self.enqueueViewerCommand(self.buttonRunIPV.Enable, False)
         self.enqueueViewerCommand(self.buttonCreateDiagFile.Enable, False)
-        self.enqueueViewerCommand(self.buttonUploadAndArchive.Enable, False)
+        self.enqueueViewerCommand(self.buttonUpload.Enable, False)
 
     def _enableButtons(self):
         self.enqueueViewerCommand(self.buttonRunIPV.Enable, True)
         self.enqueueViewerCommand(self.buttonCreateDiagFile.Enable, True)
-        self.enqueueViewerCommand(self.buttonUploadAndArchive.Enable, True)
+        self.enqueueViewerCommand(self.buttonUpload.Enable, True)
         
     def _setDefaultResults(self):
         for group in self.groupDict:
@@ -745,7 +696,7 @@ class IPV(IPVFrame):
                     if not self._verifyEachSignal(sigName, group, rowIdx):
                         allOK = False
                 except Exception, err:
-                    self._writeToStatus("%r" % err)
+                    self.writeToStatus("%r" % err)
                     print "%r" % err
         return allOK
                     
@@ -835,8 +786,7 @@ class IPV(IPVFrame):
         try:
             self.h5 = tables.openFile(self.h5Filename, mode="w", title="Picarro IPV File")
         except Exception, err:
-            self._writeToStatus("%r" % err)
-            print "%r" % err
+            self.writeToStatus("%r" % err)
             self.h5 = None
         self.histTable = None
         self.wlmTable = None
@@ -848,6 +798,10 @@ class IPV(IPVFrame):
             self.wlmTable.flush()
         if self.h5 != None:
             self.h5.close()
+            
+        # Archive the H5 file
+        self.archiveFile(self.h5Filename)
+        
         self.h5 = None
         self.histTable = None
         self.wlmTable = None

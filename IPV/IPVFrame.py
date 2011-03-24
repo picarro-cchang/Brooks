@@ -35,14 +35,14 @@ class IPVFrame(wx.Frame):
             gridLabel.SetBackgroundColour('#736AFF')
             self.gridLabelList.append(gridLabel)
         
-        self.textCtrlStatus = wx.TextCtrl(self.panel_3, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_AUTO_URL|wx.TE_RICH)
-        self.textCtrlStatus.SetMinSize((800,70))
+        self.textCtrlStatus = wx.TextCtrl(self.panel_3, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE)
+        self.textCtrlStatus.SetMinSize((800,100))
         
         self.labelTimestamp = wx.StaticText(self.panel_3, -1, "Timestamp", size=(-1,25))
         self.labelTimestamp.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.textCtrlTimestamp = wx.TextCtrl(self.panel_3, -1, size=(152,24), style=wx.TE_READONLY|wx.TE_CENTER)
         self.buttonRunIPV = wx.Button(self.panel_3, -1, "Run IPV", size = (152,25), style=wx.BU_EXACTFIT)
-        self.buttonUploadAndArchive = wx.Button(self.panel_3, -1, "Upload And Archive Files", size = (152,25), style=wx.BU_EXACTFIT)
+        self.buttonUpload = wx.Button(self.panel_3, -1, "Upload Files", size = (152,25), style=wx.BU_EXACTFIT)
         self.buttonCreateDiagFile = wx.Button(self.panel_3, -1, "Create Diagnostic File (.h5)", size = (152,25), style=wx.BU_EXACTFIT)
         
         self.__set_properties()
@@ -70,7 +70,7 @@ class IPVFrame(wx.Frame):
                 self.gridList[i].SetRowSize(rowIdx, 30)
         self.buttonRunIPV.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonCreateDiagFile.SetBackgroundColour(wx.Colour(237, 228, 199))
-        self.buttonUploadAndArchive.SetBackgroundColour(wx.Colour(237, 228, 199))
+        self.buttonUpload.SetBackgroundColour(wx.Colour(237, 228, 199))
         
         #self.okBmp = wx.Bitmap(dirname(AppPath)+'/ok.png',wx.BITMAP_TYPE_PNG)
         #self.warningBmp = wx.Bitmap(dirname(AppPath)+'/warning.png',wx.BITMAP_TYPE_PNG)
@@ -95,7 +95,7 @@ class IPVFrame(wx.Frame):
         sizer_5.Add(self.textCtrlTimestamp, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 23)
         sizer_5.Add(self.buttonRunIPV, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 23)
         sizer_5.Add(self.buttonCreateDiagFile, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 23)
-        sizer_5.Add(self.buttonUploadAndArchive, 0, wx.ALIGN_CENTER_VERTICAL)
+        sizer_5.Add(self.buttonUpload, 0, wx.ALIGN_CENTER_VERTICAL)
         sizer_6.Add((-1,10))
         sizer_6.Add(self.textCtrlStatus, 0, wx.BOTTOM|wx.EXPAND, 15)
         sizer_6.Add(sizer_5)
@@ -111,7 +111,7 @@ class IPVFrame(wx.Frame):
         for i in range(self.numSections):
             height = height + 40*(self.numRowsList[i]+1)+25
         height = height + 200
-        self.SetSize((820, height+100))
+        self.SetSize((820, height+130))
 
 
 if __name__ == "__main__":
