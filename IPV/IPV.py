@@ -378,11 +378,14 @@ class IPV(IPVFrame):
         self.testConnHrs = self.baseCo.getfloat("Main", "testConnHrs", 0.5)
         dbFilename = self.baseCo.get("Main", "dbFilename")
         # Flatten the ini file
-        newCo = self.baseCo[self.instType]
-        for sig in self.baseCo["Common"]:
-            if sig not in newCo:
-                newCo[sig] = self.baseCo["Common"][sig]
-        self.co = CustomConfigObj(newCo)
+        try:
+            newCo = self.baseCo[self.instType]
+            for sig in self.baseCo["Common"]:
+                if sig not in newCo:
+                    newCo[sig] = self.baseCo["Common"][sig]
+            self.co = CustomConfigObj(newCo)
+        except:
+            self.co = CustomConfigObj(self.baseCo["Common"])
         
     def enqueueViewerCommand(self, command, *args, **kwargs):
         self.commandQueue.put((command, args, kwargs))
