@@ -328,9 +328,17 @@ class IPV(IPVFrame):
             self.instrCo = None
         self._mergeConfig()
         self.enabled = self.baseCo.getboolean("Main", "enabled", False)
-        self.launchLicense = self.baseCo.getboolean("License", "launch", False)
-        self.licenseTrialDays = self.baseCo.getfloat("License", "trialDays", 90.0)
-        self.licenseRemindDays = self.baseCo.getfloat("License", "remindDays", 3.0)
+        
+        # IPV license program
+        try:
+            self.launchLicense = self.baseCo.getboolean("License", "launch", False)
+            self.licenseTrialDays = self.baseCo.getfloat("License", "trialDays", 90.0)
+            self.licenseRemindDays = self.baseCo.getfloat("License", "remindDays", 3.0)
+        except:
+            self.launchLicense = False
+            self.licenseTrialDays = 90.0
+            self.licenseRemindDays = 3.0
+            
         self.ipvDir = os.path.abspath(self.baseCo.get("Main", "ipvDir", DEFAULT_IPV_DIR))
         if not os.path.isdir(self.ipvDir):
             os.makedirs(self.ipvDir)
