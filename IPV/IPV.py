@@ -303,7 +303,10 @@ class IPV(IPVFrame):
             return time.strftime("%Y%m%d%H%M%S", time.localtime(getUTCTime("float")))
             
     def writeToStatus(self, message):
-        self.textCtrlStatus.AppendText("%s   %s\n" % (self._getTime(), message,))
+        self.statusMessage.append("%s   %s\n" % (self._getTime(), message,))
+        self.statusMessage = self.statusMessage[-30:]
+        self.textCtrlStatus.SetValue("".join(self.statusMessage))
+        self.textCtrlStatus.SetInsertionPointEnd()
         Log(message)
         
     def _mergeConfig(self):
@@ -320,6 +323,7 @@ class IPV(IPVFrame):
                         pass
                 
     def _processIni(self, configFile):
+        self.statusMessage = []
         self.baseCo = CustomConfigObj(configFile, list_values = True)
         try:
             basePath = os.path.split(configFile)[0]
