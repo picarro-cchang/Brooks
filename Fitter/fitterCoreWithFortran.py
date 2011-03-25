@@ -1216,7 +1216,7 @@ class RdfData(object):
         #  current self.indexVector and stored in self.groups
         args = [getattr(self,field)[self.indexVector] for field in fields]
         localGroups = aggregator(*args)
-        self.groups = [self.indexVector[g] for g in localGroups]
+        self.groups = [self.indexVector[g] for g in localGroups if len(g)>0]
     def evaluateGroups(self,fields):
         """Create grouped data from the data columns and self.groups.
         The dictionaries self.groupMeans and self.groupStdDevs contain the grouped data, with
@@ -1267,7 +1267,7 @@ class RdfData(object):
                         sel = flatnonzero(sigmaFilter(yy[g],sigmaThreshold)[0])
                     else:
                         sel = flatnonzero(outlierFilter(yy[g],outlierThreshold)[0])
-                    groups.append(g[sel])
+                    if len(sel)>0: groups.append(g[sel])
                 g = [i]
                 xmin = x
                 ymin = ymax = y
@@ -1279,8 +1279,7 @@ class RdfData(object):
                     sel = flatnonzero(sigmaFilter(yy[g],sigmaThreshold)[0])
                 else:
                     sel = flatnonzero(outlierFilter(yy[g],outlierThreshold)[0])
-                groups.append(g[sel])
-                groups.append(g[sel])
+                if len(sel)>0: groups.append(g[sel])
             return groups
         # end of sparseAgg
         self.sortBy(xColumn)
