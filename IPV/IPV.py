@@ -18,6 +18,7 @@ import wx
 import time
 import threading
 import paramiko
+import bz2
 from Queue import Queue
 from numpy import *
 from datetime import datetime, timedelta
@@ -121,7 +122,11 @@ class FileUploader(object):
         self.ipvExtension = co.get("FileUpload", "ipvExtension")
         self.host = co.get("FileUpload", "host")
         self.user = co.get("FileUpload", "user")
-        self.password = co.get("FileUpload", "password")
+        password = co.get("FileUpload", "password")
+        try:
+            self.password = bz2.decompress(eval("\"%s\"" % password))
+        except:
+            self.password = password
         self.sftpClient = None
         self.uploadStatus = -1
         self.channel = None
@@ -200,7 +205,7 @@ class FileUploader(object):
             self.writeToStatus("Finished uploading %.2f bytes in %.2f seconds" % (s.st_size, uploadTime))
             try:
                 os.remove(filepath)
-                self.writeToStatus("%s deleted from local drive" % (filepath,))
+                #self.writeToStatus("%s deleted from local drive" % (filepath,))
             except Exception, err:
                 self.writeToStatus("%r" % err)
         else:
@@ -250,9 +255,6 @@ class IPV(IPVFrame):
         self.connStatus = 0
         self.connStatusLock = threading.Lock()
         
-        # Set up the file uploader
-        self.fUploader = FileUploader(self)
-        
         IPVFrame.__init__(self, self.numRowsList, *args, **kwds)
         self.SetTitle("Picarro Instrument Performance Verification (%s, Host Version: %s)" % (self.instName, self.softwareVersion))
                 
@@ -276,7 +278,10 @@ class IPV(IPVFrame):
             self.Show()
         else:
             self.Hide()
-            
+
+        # Set up the file uploader
+        self.fUploader = FileUploader(self)
+        
         if self.launchLicense:
             try:
                 self.instrCo.set("License", "launch", "False")
