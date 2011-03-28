@@ -2285,7 +2285,15 @@ class QuickGui(wx.Frame):
                     v += "%s : %s\n" % (k,dV[k])
         except:
             v += "Software version information unavailable"
-        d = OKDialog(self,v,None,-1,"Picarro CRDS", boldText=boldText)
+            
+        try:
+            analyzerId = self.driverRpc.fetchObject("LOGIC_EEPROM")[0]
+            serialNum = analyzerId["Chassis"] + "-" + analyzerId["Analyzer"] + analyzerId["AnalyzerNum"]
+            aboutTitle = "Picarro CRDS (S/N: %s)" % serialNum
+        except:
+            aboutTitle = "Picarro CRDS"
+            
+        d = OKDialog(self,v,None,-1,aboutTitle, boldText=boldText)
         d.ShowModal()
         d.Destroy()
     def OnGuiMode(self,e):
