@@ -1003,9 +1003,9 @@ class StateDatabase(Singleton):
             txQueueSize = self.txQueue.qsize()
             if txQueueSize > self.maxTxQueueSize:
                 self.maxTxQueueSize = txQueueSize
-                Log("StateDatabase tx queue new max size = %d" % txQueueSize, Level = 1)
+                Log("StateDatabase tx queue new max size = %d while executing (%s, %s)" % (txQueueSize, txCmd[0], txCmd[1]), Level = 1)
                 if txQueueSize == self.txQueueSizeLimit:
-                    Log("StateDatabase tx queue has reached the max size limit", Level = 2)
+                    Log("StateDatabase tx queue has reached the max size limit while executing (%s, %s)" % (txCmd[0], txCmd[1]), Level = 2)
         except:
             pass
        
@@ -1140,8 +1140,7 @@ class StateDatabase(Singleton):
         return values
         
     def txQueueHandler(self):
-        #import thread
-        #print "txQueueHandler thread id = ", thread.get_ident()
+        print "txQueueHandler thread id = ", thread.get_ident()
         """Creates the connection to the database and services the queue of requests"""
         self.con = sqlite3.connect(self.fileName)
         tableNames = [s[0] for s in self.con.execute("select tbl_name from sqlite_master where type='table'").fetchall()]
