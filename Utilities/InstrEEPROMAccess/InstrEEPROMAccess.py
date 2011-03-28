@@ -20,7 +20,8 @@ DEFAULT_TYPES = ["AADS", "ADDS", "AEDS", "AFDS", "BADS", "CADS", "CBDS", "CCADS"
                  "CFBDS","CFDDS", "CFEDS", "CFFDS", "CFKADS", "CFKBDS", "CHADS", "CKADS", "DFADS", "FBDS", "HBDS"]
 # Connect to database
 from xmlrpclib import ServerProxy
-DB = ServerProxy("http://mfg/xmlrpc/",allow_none=True)
+#http://user:pass@host:port/path
+DB = ServerProxy("http://mfgteam:PridJaHop4@mfg.picarro.com/xmlrpc/",allow_none=True)
 
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "InstrEEPROMAccess")
                   

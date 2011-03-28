@@ -87,7 +87,8 @@ THRESHOLD_RANGE = [
                   
 # Connect to database
 try:
-    DB = ServerProxy("http://mfg/xmlrpc/",allow_none=True)
+    #http://user:pass@host:port/path
+    DB = ServerProxy("http://mfgteam:PridJaHop4@mfg.picarro.com/xmlrpc/",allow_none=True)
     DB.system.listMethods()
 except:
     DB = None
