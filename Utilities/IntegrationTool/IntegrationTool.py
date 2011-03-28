@@ -551,7 +551,8 @@ class IntegrationTool(IntegrationToolFrame):
     def onWriteSoftwareVer(self, event):
         try:
             softwareVer = Driver.allVersions()["host release"]
-            reqDict = {"user": "xml_user", "passwd": "skCyrcFHVZecfD", "identifier": self.analyzer, "Analyzer Software Version": softwareVer}
+            dbAnalyzer = DB.get_container(dict(identifier=self.analyzer))["identifier"]
+            reqDict = {"user": "xml_user", "passwd": "skCyrcFHVZecfD", "identifier": dbAnalyzer, "Analyzer Software Version": softwareVer}
             DB.set_compnent_version(reqDict)
             self.display += "Software version number %s written to database.\n" % softwareVer
         except Exception, err:
