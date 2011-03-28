@@ -1279,7 +1279,11 @@ class RdfData(object):
                     sel = flatnonzero(sigmaFilter(yy[g],sigmaThreshold)[0])
                 else:
                     sel = flatnonzero(outlierFilter(yy[g],outlierThreshold)[0])
-                if len(sel)>0: groups.append(g[sel])
+                if len(sel)>0: 
+                    groups.append(g[sel])
+                    # TO DO: The next line is a BUG which should be removed once
+                    #  fitters which rely on counting numGroups are corrected
+                    groups.append(g[sel])
             return groups
         # end of sparseAgg
         self.sortBy(xColumn)
