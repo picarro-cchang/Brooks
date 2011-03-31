@@ -298,12 +298,12 @@ class DataManager(object):
                 self.maketimetuple = time.localtime
             else:
                 self.maketimetuple = time.gmtime
-                
-                
-            if "PulseAnalyzer" in cp:     
-                self.pulseAnalyzerIni = cp["PulseAnalyzer"]
-            else:
-                self.pulseAnalyzerIni = {}
+
+            self.enablePulseAnalyzer = False
+            if "PulseAnalyzer" in cp: 
+                if cp.getboolean("PulseAnalyzer", "enabled", False):
+                    self.enablePulseAnalyzer = True
+
             return cp
         
     #endclass (ConfigurationOptions for DataManager)
@@ -382,7 +382,6 @@ class DataManager(object):
             if callable(attr) and s.startswith("RPC_") and (not isclass(attr)):
                 self.RpcServer.register_function(attr, NameSlice = 4)
 
-        self.pulseDict = {}
         self.calEnabled = True
         self.measBufferConfig = ("",[],20) # (source, colList, bufSize)
         self.measBuffer = []
@@ -1165,9 +1164,9 @@ class DataManager(object):
                                          self._SensorFilter,
                                          retry = True,
                                          name = "Data manager sensor stream listener",logFunc = Log)
-            #The Instrument Manager status listener is started only when the Instrument Manager has started and
+            # The Instrument Manager status listener is started only when the Instrument Manager has started and
             # issued an RPC call.
-            ##Deal with debug options...
+            # Deal with debug options...
             if self.Config.AutoEnable:
                 Log("EnableEvent set due to 'Debug_AutoEnable' configuration setting.")
                 #Set it up to automatically start...
@@ -1181,12 +1180,42 @@ class DataManager(object):
                 self.CRDS_SensorInterpolator = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SENSOR_INTERPOLATOR,
                                                 APP_NAME,
                                                 IsDontCareConnection = False)
+                                                
+            # Initialize pulse analyzer if endabled in INI file
+            if self.Config.enablePulseAnalyzer:
+                try:    
+                    self._configPulseAnalyzerFromIni()
+                    self.runPulseAnalyzer = True
+                    self.addToPulseAnalyzer = False
+                except Exception, err:
+                    print "%r" % err
                                          
             self.__SetState(STATE_READY)
         except:
             LogExc(Data = dict(State = StateName[self.__State]))
             self.__SetState(STATE_ERROR)
             
+    def _configPulseAnalyzerFromIni(self):
+        source = self.cp.get("PulesAnalyzer", "source")
+        concNameList = [conc.strip() for conc in self.cp.get("PulesAnalyzer","concNameList").split(",")]
+        targetConc = self.cp.get("PulesAnalyzer", "targetConc")
+        thres1Pair = [float(t) for t in self.cp.get("PulesAnalyzer","thres1Pair").split(",")]
+        thres2Pair = [float(t) for t in self.cp.get("PulesAnalyzer","thres2Pair").split(",")]
+        triggerType = self.cp.get("PulesAnalyzer", "triggerType")
+        waitTime = self.cp.getfloat("PulesAnalyzer", "waitTime")
+        validTimeAfterTrigger = self.cp.getfloat("PulesAnalyzer", "validTimeAfterTrigger")
+        validTimeBeforeEnd = self.cp.getfloat("PulesAnalyzer", "validTimeBeforeEnd")
+        timeout = self.cp.getfloat("PulesAnalyzer", "timeout")
+        bufSize = self.cp.getint("PulesAnalyzer", "bufSize")
+        numPointsToTrigger = self.cp.getint("PulesAnalyzer", "numPointsToTrigger")
+        numPointsToRelease = self.cp.getint("PulesAnalyzer", "numPointsToRelease")
+        armCond = self.cp.get("PulesAnalyzer", "armCond", "")
+        if armCond:
+            armCond = [float(t) for t in armCond.split(",")]
+        self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair,
+                                           triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
+                                           timeout, bufSize, numPointsToTrigger, numPointsToRelease, armCond)
+        
     def _HandleState_READY(self):
         try:
             exitState = STATE__UNDEFINED
@@ -1307,6 +1336,7 @@ class DataManager(object):
             
     def Start(self):
         self._MainLoop()
+        
     def _AddToHistory(self, HistoryDict, DataDict, DataTime):
         """Records DataDict elements into HistoryDict with the given DataTime stamp.
 
@@ -1397,12 +1427,6 @@ class DataManager(object):
         # self.LatestInstMgrStatus is updated by self.InstMgrStatusListener
         currentInstMgrStatus = self.LatestInstMgrStatus
         
-        # Initialize pulse analyzer
-        if ReportSource in self.Config.pulseAnalyzerIni:
-            pulseAnalyzerIni = self.Config.pulseAnalyzerIni[ReportSource]
-        else:
-            pulseAnalyzerIni = None
-        
         try:
             UserCalDict = self.RPC_Cal_GetUserCalibrations()
         except:
@@ -1426,14 +1450,10 @@ class DataManager(object):
                                              ScriptName = ReportSource,
                                              ExcLogFunc = LogExc,
                                              UserCalDict = UserCalDict,
-                                             CalEnabled = self.calEnabled,
-                                             PulseAnalyzerIni = pulseAnalyzerIni)
+                                             CalEnabled = self.calEnabled)
         #unpack the returned tuple (space saving above)...
-        (reportDict, forwardDict, newDataDict, measGood, reportSource_out, pulseDict) = ret
+        (reportDict, forwardDict, newDataDict, measGood, reportSource_out) = ret
         self._Status.UpdateStatusBit(STATUS_MASK_Analyzing, False)
-
-        # Save pulse analyzer data and status
-        self.pulseDict[ReportSource] = pulseDict
         
         # Update SourceTime_s with the "time" information provided by the script (if available)
         if reportDict and "time" in reportDict:

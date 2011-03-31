@@ -120,39 +120,7 @@ def RunAnalysisScript(ScriptCodeObj,
     # - providing copies to make sure the script doesn't screw the data up
     
     if ScriptName not in persistentDict:
-        persistentDict[ScriptName] = {"init": True, "pulseData": {}, "status": {}, "pulseAnalyzer": {},
-                                      "params": {"allConcList": [], "externalTrigger": {}, "firstDataIn": {}}}    
-        thresholdDict = {}
-        speciesDict = {}
-        if PulseAnalyzerIni != None:
-            if "specs" in PulseAnalyzerIni:
-                for conc in PulseAnalyzerIni["specs"]:
-                    try:
-                        parsedValues = string.split(PulseAnalyzerIni["specs"][conc], ',')
-                        thresholdDict[conc] = float(parsedValues[0])
-                        specValues = parsedValues[1:]
-                        for speciesNum in specValues:
-                            speciesNum = int(speciesNum)
-                            if speciesNum not in speciesDict:
-                                speciesDict[speciesNum] = [conc]
-                            else:    
-                                speciesDict[speciesNum].append(conc)
-                        persistentDict[ScriptName]["params"]["allConcList"].append(conc)    
-                    except:
-                        print "Pulse analyzer for conc %s is skipped - threshold and species are not properly defined" % conc
-                        
-                if "configInt" in PulseAnalyzerIni:
-                    for configKey in PulseAnalyzerIni["configInt"]:
-                        persistentDict[ScriptName]["params"][configKey] = int(PulseAnalyzerIni["configInt"][configKey])
-                        
-                if "configFloat" in PulseAnalyzerIni:
-                    for configKey in PulseAnalyzerIni["configFloat"]:
-                        persistentDict[ScriptName]["params"][configKey] = float(PulseAnalyzerIni["configFloat"][configKey])
-            else:
-                print "Not running pulse analyzer for script %s - specifications are not given" % ScriptName
-        persistentDict[ScriptName]["params"]["threshold"] = thresholdDict
-        persistentDict[ScriptName]["params"]["species"] = speciesDict
-        
+        persistentDict[ScriptName] = {"init": True}    
     dataEnviron = {"_PERSISTENT_" : persistentDict[ScriptName] }
     dataEnviron[SOURCE_TIME_ID] = SourceTime_s
     dataEnviron[DATA_ID] = DataDict.copy()
@@ -190,10 +158,6 @@ def RunAnalysisScript(ScriptCodeObj,
         raise
 
     persistentDict[ScriptName] = dataEnviron["_PERSISTENT_"]
-    pulseData = persistentDict[ScriptName]["pulseData"]
-    pulseStatus = persistentDict[ScriptName]["status"]
-    pulseParams = persistentDict[ScriptName]["params"]
-    pulseDict = {"data": pulseData, "status": pulseStatus, "params": pulseParams}
     
     #Now check for magic keywords created by the script...
     reportedData = dataEnviron[REPORT_ID]
@@ -201,4 +165,4 @@ def RunAnalysisScript(ScriptCodeObj,
     newData = dataEnviron[NEW_DATA_ID]
     measGood = dataEnviron[MEAS_GOOD_ID]
     scriptName = dataEnviron[SCRIPT_NAME_ID]
-    return (reportedData, forwardedData, newData, measGood, scriptName, pulseDict)
+    return (reportedData, forwardedData, newData, measGood, scriptName)
