@@ -409,7 +409,9 @@ class IntegrationTool(IntegrationToolFrame):
                 laserNum = idx+1
                 cmd = "%s -w %.1f -c %s" % (os.path.join(HOSTEXE_DIR, "MakeWlmFile1.exe"), timeDelay, "MakeWlmFileLaser%d.ini" % laserNum)
                 print cmd
-                os.system(cmd)
+                #os.system(cmd)
+                info = subprocess.STARTUPINFO()
+                subprocess.Popen(cmd.split(" "), startupinfo=info)
                 self.display += "WLM file for laser %d created.\n" % laserNum
         except Exception, err:
             self.display += "%s\n" % err
@@ -422,21 +424,27 @@ class IntegrationTool(IntegrationToolFrame):
                 laserNum = idx+1
                 cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "WriteLaserEeprom.exe"), "WriteLaserEeprom%d.ini" % laserNum)
                 print cmd
-                os.system(cmd)
+                #os.system(cmd)
+                info = subprocess.STARTUPINFO()
+                subprocess.Popen(cmd.split(" "), startupinfo=info)
                 self.display += "EEPROM for laser %d written.\n" % laserNum
         except Exception, err:
             self.display += "%s\n" % err
         try:
             cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "WriteWlmEeprom.exe"), "WriteWlmEeprom.ini")
             print cmd
-            os.system(cmd)
+            #os.system(cmd)
+            info = subprocess.STARTUPINFO()
+            subprocess.Popen(cmd.split(" "), startupinfo=info)
             self.display += "EEPROM for WLM written.\n"  
         except Exception, err:
             self.display += "%s\n" % err           
         try:
             cmd = os.path.join(HOSTEXE_DIR, "DumpEeproms.exe")
             print cmd
-            os.system(cmd)
+            #os.system(cmd)
+            info = subprocess.STARTUPINFO()
+            subprocess.Popen(cmd.split(" "), startupinfo=info)
             self.display += "Dump EEPROMs.\n" 
         except Exception, err:
             self.display += "%s\n" % err 
@@ -447,14 +455,18 @@ class IntegrationTool(IntegrationToolFrame):
         try:
             cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "MakeCalFromEeproms.exe"), "MakeCalFromEeproms.ini")
             print cmd
-            os.system(cmd)
+            #os.system(cmd)
+            info = subprocess.STARTUPINFO()
+            subprocess.Popen(cmd.split(" "), startupinfo=info)
             self.display += "WB calibration table created from EEPROMs.\n"
         except Exception, err:
             self.display += "%s\n" % err    
         try:
             cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "MakeWarmBoxCalFile.exe"), "MakeWarmBoxCalFile.ini")
             print cmd
-            os.system(cmd)
+            #os.system(cmd)
+            info = subprocess.STARTUPINFO()
+            subprocess.Popen(cmd.split(" "), startupinfo=info)
             self.display += ("WB calibration plots created by MakeWarmBoxCalFile.\nCheck %s for plots.\n" % INTEGRATION_DIR)
         except Exception, err:
             self.display += "%s\n" % err
@@ -479,7 +491,9 @@ class IntegrationTool(IntegrationToolFrame):
             for ini in iniList:
                 cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "CalibrateSystem.exe"), ini)
                 print cmd
-                os.system(cmd)
+                #os.system(cmd)
+                info = subprocess.STARTUPINFO()
+                subprocess.Popen(cmd.split(" "), startupinfo=info)
             self.display += "Calibrate System finished.\n"
         except Exception, err:
             self.display += "Calibrate System failed: %s\n" % err
@@ -499,7 +513,9 @@ class IntegrationTool(IntegrationToolFrame):
             for ini in iniList:
                 cmd = "%s -a -t 2e-4 -c %s" % (os.path.join(HOSTEXE_DIR, "FindWlmOffset.exe"), ini)
                 print cmd
-                os.system(cmd)
+                #os.system(cmd)
+                info = subprocess.STARTUPINFO()
+                subprocess.Popen(cmd.split(" "), startupinfo=info)
             self.display += "WLM Offset finished.\n"
         except Exception, err:
             self.display += "WLM Offset failed: %s\n" % err
@@ -530,7 +546,9 @@ class IntegrationTool(IntegrationToolFrame):
                 exePath = os.path.join(HOSTEXE_DIR, "ThresholdStats.exe")
                 cmd = "%s %s %d %d %d %s" % (exePath, (instrName+"_"+schKey), start, end, increment, schemeFileName)
                 print cmd
-                os.system(cmd)
+                #os.system(cmd)
+                info = subprocess.STARTUPINFO()
+                subprocess.Popen(cmd.split(" "), startupinfo=info)
                 print "Finished scheme %s" % schemeFileName
             self.display += "Threshold Stats finished.\n"
         except Exception, err:
@@ -542,7 +560,9 @@ class IntegrationTool(IntegrationToolFrame):
         try:
             cmd = os.path.join(HOSTEXE_DIR, "FlowController.exe")
             print cmd
-            os.system(cmd)
+            #os.system(cmd)
+            info = subprocess.STARTUPINFO()
+            subprocess.Popen(cmd.split(" "), startupinfo=info)
             self.display += "Flow Control finished.\n"
         except Exception, err:
             self.display += "Flow Control failed: %s\n" % err
