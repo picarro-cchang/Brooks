@@ -12,6 +12,7 @@ import os
 import shutil
 import time
 import subprocess
+import threading
 from configobj import ConfigObj
 from xmlrpclib import ServerProxy
 from Host.Common import CmdFIFO
@@ -385,7 +386,6 @@ class IntegrationTool(IntegrationToolFrame):
         self.textCtrlIntegration.SetValue(self.display) 
         
     def onLaserWlmCal(self, event):
-        os.chdir(INTEGRATION_DIR)
         d = wx.MessageDialog(None,"Is Burleigh wavemeter connected?", "Check Burleigh wavemeter", \
         style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
         burleighConnected = (d.ShowModal() == wx.ID_YES)
@@ -404,69 +404,75 @@ class IntegrationTool(IntegrationToolFrame):
             self.textCtrlIntegration.SetValue(self.display)
             d.Destroy()
             return 
+            
+        newThread = threading.Thread(target = self._onLaserWlmCal, args = (timeDelay,))
+        newThread.setDaemon(True)
+        newThread.start()
+        
+    def _onLaserWlmCal(self, timeDelay):
+        os.chdir(INTEGRATION_DIR)
         try:
             for idx in range(self.numLasers):
                 laserNum = idx+1
                 cmd = "%s -w %.1f -c %s" % (os.path.join(HOSTEXE_DIR, "MakeWlmFile1.exe"), timeDelay, "MakeWlmFileLaser%d.ini" % laserNum)
                 print cmd
-                #os.system(cmd)
-                info = subprocess.STARTUPINFO()
-                subprocess.Popen(cmd.split(" "), startupinfo=info)
-                self.display += "WLM file for laser %d created.\n" % laserNum
+                os.system(cmd)
+                self.display += "WLM file for laser %d created\n" % laserNum
         except Exception, err:
             self.display += "%s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
  
     def onEEPROM(self, event):
+        newThread = threading.Thread(target = self._onEEPROM)
+        newThread.setDaemon(True)
+        newThread.start()
+        
+    def _onEEPROM(self):
+        # Need to use blocking calls to serialize the events
         os.chdir(INTEGRATION_DIR)
         try:
             for idx in range(self.numLasers):
                 laserNum = idx+1
                 cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "WriteLaserEeprom.exe"), "WriteLaserEeprom%d.ini" % laserNum)
                 print cmd
-                #os.system(cmd)
-                info = subprocess.STARTUPINFO()
-                subprocess.Popen(cmd.split(" "), startupinfo=info)
+                os.system(cmd)
                 self.display += "EEPROM for laser %d written.\n" % laserNum
         except Exception, err:
             self.display += "%s\n" % err
         try:
             cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "WriteWlmEeprom.exe"), "WriteWlmEeprom.ini")
             print cmd
-            #os.system(cmd)
-            info = subprocess.STARTUPINFO()
-            subprocess.Popen(cmd.split(" "), startupinfo=info)
+            os.system(cmd)
             self.display += "EEPROM for WLM written.\n"  
         except Exception, err:
             self.display += "%s\n" % err           
         try:
             cmd = os.path.join(HOSTEXE_DIR, "DumpEeproms.exe")
             print cmd
-            #os.system(cmd)
-            info = subprocess.STARTUPINFO()
-            subprocess.Popen(cmd.split(" "), startupinfo=info)
+            os.system(cmd)
             self.display += "Dump EEPROMs.\n" 
         except Exception, err:
             self.display += "%s\n" % err 
         self.textCtrlIntegration.SetValue(self.display)
-            
+    
     def onMakeWbCal(self, event):
+        newThread = threading.Thread(target = self._onMakeWbCal)
+        newThread.setDaemon(True)
+        newThread.start()
+        
+    def _onMakeWbCal(self):
         os.chdir(INTEGRATION_DIR)
         try:
             cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "MakeCalFromEeproms.exe"), "MakeCalFromEeproms.ini")
             print cmd
-            #os.system(cmd)
-            info = subprocess.STARTUPINFO()
-            subprocess.Popen(cmd.split(" "), startupinfo=info)
+            os.system(cmd)
             self.display += "WB calibration table created from EEPROMs.\n"
         except Exception, err:
             self.display += "%s\n" % err    
         try:
             cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "MakeWarmBoxCalFile.exe"), "MakeWarmBoxCalFile.ini")
             print cmd
-            #os.system(cmd)
-            info = subprocess.STARTUPINFO()
-            subprocess.Popen(cmd.split(" "), startupinfo=info)
+            os.system(cmd)
             self.display += ("WB calibration plots created by MakeWarmBoxCalFile.\nCheck %s for plots.\n" % INTEGRATION_DIR)
         except Exception, err:
             self.display += "%s\n" % err
@@ -478,7 +484,12 @@ class IntegrationTool(IntegrationToolFrame):
             self.display += "%s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
         
-    def onCalibrateSystem(self, event):   
+    def onCalibrateSystem(self, event):
+        newThread = threading.Thread(target = self._onCalibrateSystem)
+        newThread.setDaemon(True)
+        newThread.start()
+        
+    def _onCalibrateSystem(self):   
         os.chdir(INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
@@ -491,9 +502,7 @@ class IntegrationTool(IntegrationToolFrame):
             for ini in iniList:
                 cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "CalibrateSystem.exe"), ini)
                 print cmd
-                #os.system(cmd)
-                info = subprocess.STARTUPINFO()
-                subprocess.Popen(cmd.split(" "), startupinfo=info)
+                os.system(cmd)
             self.display += "Calibrate System finished.\n"
         except Exception, err:
             self.display += "Calibrate System failed: %s\n" % err
@@ -501,6 +510,11 @@ class IntegrationTool(IntegrationToolFrame):
         os.chdir(INTEGRATION_DIR)
         
     def onWlmOffset(self, event):
+        newThread = threading.Thread(target = self._onWlmOffset)
+        newThread.setDaemon(True)
+        newThread.start()
+        
+    def _onWlmOffset(self):
         os.chdir(INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
@@ -513,9 +527,7 @@ class IntegrationTool(IntegrationToolFrame):
             for ini in iniList:
                 cmd = "%s -a -t 2e-4 -c %s" % (os.path.join(HOSTEXE_DIR, "FindWlmOffset.exe"), ini)
                 print cmd
-                #os.system(cmd)
-                info = subprocess.STARTUPINFO()
-                subprocess.Popen(cmd.split(" "), startupinfo=info)
+                os.system(cmd)
             self.display += "WLM Offset finished.\n"
         except Exception, err:
             self.display += "WLM Offset failed: %s\n" % err
@@ -523,6 +535,11 @@ class IntegrationTool(IntegrationToolFrame):
         os.chdir(INTEGRATION_DIR)
         
     def onThresholdStats(self, event):
+        newThread = threading.Thread(target = self._onThresholdStats)
+        newThread.setDaemon(True)
+        newThread.start()
+        
+    def _onThresholdStats(self):
         os.chdir(INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
@@ -546,9 +563,7 @@ class IntegrationTool(IntegrationToolFrame):
                 exePath = os.path.join(HOSTEXE_DIR, "ThresholdStats.exe")
                 cmd = "%s %s %d %d %d %s" % (exePath, (instrName+"_"+schKey), start, end, increment, schemeFileName)
                 print cmd
-                #os.system(cmd)
-                info = subprocess.STARTUPINFO()
-                subprocess.Popen(cmd.split(" "), startupinfo=info)
+                os.system(cmd)
                 print "Finished scheme %s" % schemeFileName
             self.display += "Threshold Stats finished.\n"
         except Exception, err:
@@ -563,7 +578,7 @@ class IntegrationTool(IntegrationToolFrame):
             #os.system(cmd)
             info = subprocess.STARTUPINFO()
             subprocess.Popen(cmd.split(" "), startupinfo=info)
-            self.display += "Flow Control finished.\n"
+            self.display += "Starting Flow Control ...\n"
         except Exception, err:
             self.display += "Flow Control failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
