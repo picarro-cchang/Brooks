@@ -1196,25 +1196,28 @@ class DataManager(object):
             self.__SetState(STATE_ERROR)
             
     def _configPulseAnalyzerFromIni(self):
-        source = self.cp.get("PulesAnalyzer", "source")
-        concNameList = [conc.strip() for conc in self.cp.get("PulesAnalyzer","concNameList").split(",")]
-        targetConc = self.cp.get("PulesAnalyzer", "targetConc")
-        thres1Pair = [float(t) for t in self.cp.get("PulesAnalyzer","thres1Pair").split(",")]
-        thres2Pair = [float(t) for t in self.cp.get("PulesAnalyzer","thres2Pair").split(",")]
-        triggerType = self.cp.get("PulesAnalyzer", "triggerType")
-        waitTime = self.cp.getfloat("PulesAnalyzer", "waitTime")
-        validTimeAfterTrigger = self.cp.getfloat("PulesAnalyzer", "validTimeAfterTrigger")
-        validTimeBeforeEnd = self.cp.getfloat("PulesAnalyzer", "validTimeBeforeEnd")
-        timeout = self.cp.getfloat("PulesAnalyzer", "timeout")
-        bufSize = self.cp.getint("PulesAnalyzer", "bufSize")
-        numPointsToTrigger = self.cp.getint("PulesAnalyzer", "numPointsToTrigger")
-        numPointsToRelease = self.cp.getint("PulesAnalyzer", "numPointsToRelease")
-        armCond = self.cp.get("PulesAnalyzer", "armCond", "")
-        if armCond:
+        source = self.cp.get("PulseAnalyzer", "source")
+        concNameList = [conc.strip() for conc in self.cp.get("PulseAnalyzer","concNameList").split(",")]
+        targetConc = self.cp.get("PulseAnalyzer", "targetConc")
+        thres1Pair = [float(t) for t in self.cp.get("PulseAnalyzer","thres1Pair").split(",")]
+        thres2Pair = [float(t) for t in self.cp.get("PulseAnalyzer","thres2Pair").split(",")]
+        triggerType = self.cp.get("PulseAnalyzer", "triggerType")
+        waitTime = self.cp.getfloat("PulseAnalyzer", "waitTime")
+        validTimeAfterTrigger = self.cp.getfloat("PulseAnalyzer", "validTimeAfterTrigger")
+        validTimeBeforeEnd = self.cp.getfloat("PulseAnalyzer", "validTimeBeforeEnd")
+        timeout = self.cp.getfloat("PulseAnalyzer", "timeout")
+        bufSize = self.cp.getint("PulseAnalyzer", "bufSize")
+        numPointsToTrigger = self.cp.getint("PulseAnalyzer", "numPointsToTrigger")
+        numPointsToRelease = self.cp.getint("PulseAnalyzer", "numPointsToRelease")
+        armCond = self.cp.get("PulseAnalyzer", "armCond", "None")
+        if armCond is not "None":
             armCond = [float(t) for t in armCond.split(",")]
         self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair,
                                            triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
                                            timeout, bufSize, numPointsToTrigger, numPointsToRelease, armCond)
+        msg = "Pre-defined pulse analyzer started. (%s, %s, %s, %s)" % (targetConc, thres1Pair, thres2Pair, triggerType)
+        print msg
+        Log(msg)
         
     def _HandleState_READY(self):
         try:
