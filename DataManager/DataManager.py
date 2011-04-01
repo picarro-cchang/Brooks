@@ -97,7 +97,7 @@ from Host.Common import BetterTraceback
 from Host.Common import InstMgrInc
 from Host.Common import AppStatus
 from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER, RPC_PORT_FREQ_CONVERTER,\
-                                    RPC_PORT_SENSOR_INTERPOLATOR, RPC_PORT_INSTR_MANAGER
+                                    RPC_PORT_PERIPH_INTRF, RPC_PORT_INSTR_MANAGER
 from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_MEAS_SYSTEM, BROADCAST_PORT_SENSORSTREAM
 from Host.Common.SharedTypes import STATUS_PORT_DATA_MANAGER, STATUS_PORT_INST_MANAGER
 from Host.Common.SharedTypes import CrdsException
@@ -293,7 +293,7 @@ class DataManager(object):
             self.LoadSerialSettings(cp)
             self.AutoEnable = cp.getboolean(_MAIN_CONFIG_SECTION, "AutoEnable", "False")
             self.StartingMeasMode = cp.get(_MAIN_CONFIG_SECTION, "StartingMeasMode", "")
-            self.UseSensorInterpolator = cp.getboolean(_MAIN_CONFIG_SECTION, "UseSensorInterpolator", "False")
+            self.UsePeriphIntrf = cp.getboolean(_MAIN_CONFIG_SECTION, "UsePeriphIntrf", "False")
             if cp.get(_MAIN_CONFIG_SECTION,"TimeStandard","gmt").lower() == "local":
                 self.maketimetuple = time.localtime
             else:
@@ -393,7 +393,7 @@ class DataManager(object):
             self.rdInstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
                                                         APP_NAME,
                                                         IsDontCareConnection = False)
-        self.CRDS_SensorInterpolator = None
+        self.CRDS_PeriphIntrf = None
         
         # Pulse Analyzer
         self.pulseAnalyzer = None
@@ -1176,8 +1176,8 @@ class DataManager(object):
                 self.CurrentMeasMode = self.MeasModes[self.Config.StartingMeasMode]
                 Log("Current mode name initialized", dict(Name = self.Config.StartingMeasMode))
 
-            if self.Config.UseSensorInterpolator:
-                self.CRDS_SensorInterpolator = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SENSOR_INTERPOLATOR,
+            if self.Config.UsePeriphIntrf:
+                self.CRDS_PeriphIntrf = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_PERIPH_INTRF,
                                                 APP_NAME,
                                                 IsDontCareConnection = False)
                                                 
@@ -1445,7 +1445,7 @@ class DataManager(object):
                                              InstrumentStatus = self.LatestInstMgrStatus,
                                              MeasSysRpcServer = CRDS_MeasSys,
                                              FreqConvRpcServer = CRDS_FreqConv,
-                                             SensorInterpolator = self.CRDS_SensorInterpolator,
+                                             PeriphIntrf = self.CRDS_PeriphIntrf,
                                              SerialInterface = self.serial,
                                              ScriptName = ReportSource,
                                              ExcLogFunc = LogExc,

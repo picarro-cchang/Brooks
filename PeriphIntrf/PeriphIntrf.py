@@ -9,7 +9,7 @@ from collections import deque
 from matplotlib import pyplot 
 from parserFunc import *
 from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import RPC_PORT_SENSOR_INTERPOLATOR
+from Host.Common.SharedTypes import RPC_PORT_PERIPH_INTRF
 
 APP_NAME = "Sensor Interpolator"
 APP_DESCRIPTION = "Socket client and interpolator"
@@ -50,7 +50,7 @@ def linInterp(pPair, tPair, t):
     except:
         return None
         
-class SensorInterpolator(object):
+class PeriphIntrf(object):
     def __init__(self):
         self.queue = Queue.Queue(0)
         self.sock = None
@@ -66,7 +66,7 @@ class SensorInterpolator(object):
         self.startServer()
         
     def startServer(self):
-        self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_SENSOR_INTERPOLATOR),
+        self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_PERIPH_INTRF),
                                                 ServerName = APP_NAME,
                                                 ServerDescription = APP_DESCRIPTION,
                                                 ServerVersion = __version__,
@@ -206,4 +206,4 @@ class SensorInterpolator(object):
         self._shutdownRequested = True
         
 if __name__ == "__main__":
-    r = SensorInterpolator()
+    r = PeriphIntrf()

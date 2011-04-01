@@ -27,7 +27,7 @@ OLD_SENSORS_ID = "_OLD_SENSOR_"
 DRIVER_RPC_SERVER_ID = "_DRIVER_"
 MEAS_SYS_RPC_SERVER_ID = "_MEAS_SYS_" # provides tagalong data calls
 FREQ_CONV_RPC_SERVER_ID = "_FREQ_CONV_" # provides getWlmOffset and setWlmOffset calls
-SENSOR_INTERPOLATOR_ID = "_SENSOR_INTERP_"
+PERIPH_INTRF_ID = "_PERIPH_INTRF_"
 NEW_DATA_ID = "_NEW_DATA_"
 SCRIPT_ARGS_ID = "_ARGS_"
 INSTR_STATUS_ID = "_INSTR_STATUS_"
@@ -67,7 +67,7 @@ def RunAnalysisScript(ScriptCodeObj,
                       InstrumentStatus,
                       MeasSysRpcServer,
                       FreqConvRpcServer,
-                      SensorInterpolator,
+                      PeriphIntrf,
                       SerialInterface,
                       ScriptName,
                       ExcLogFunc,
@@ -135,7 +135,7 @@ def RunAnalysisScript(ScriptCodeObj,
     dataEnviron[DRIVER_RPC_SERVER_ID] = DriverRpcServer
     dataEnviron[MEAS_SYS_RPC_SERVER_ID] = MeasSysRpcServer
     dataEnviron[FREQ_CONV_RPC_SERVER_ID] = FreqConvRpcServer
-    dataEnviron[SENSOR_INTERPOLATOR_ID] = SensorInterpolator
+    dataEnviron[PERIPH_INTRF_ID] = PeriphIntrf
     dataEnviron[NEW_DATA_ID] = NewDataDict(dataEnviron[DATA_ID])
     dataEnviron[SCRIPT_ARGS_ID] = tuple(ScriptArgs)
     dataEnviron[MEAS_GOOD_ID] = True #script guy has to consciously make it false
