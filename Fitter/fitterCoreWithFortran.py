@@ -1091,8 +1091,8 @@ class RdfData(object):
             rdChunkSizes = [len(rdData["waveNumber"])]
             qSizes = [0]
             
-        RED_THRESHOLD = 100
-        RED_DISCARD_ALL = 200
+        RED_THRESHOLD = 250
+        RED_DISCARD_ALL = 500
 
         def allowYield(pace,id):
             if id in RdfData._pacing:
@@ -1216,7 +1216,7 @@ class RdfData(object):
         #  current self.indexVector and stored in self.groups
         args = [getattr(self,field)[self.indexVector] for field in fields]
         localGroups = aggregator(*args)
-        self.groups = [self.indexVector[g] for g in localGroups]
+        self.groups = [self.indexVector[g] for g in localGroups if len(g)>0]
     def evaluateGroups(self,fields):
         """Create grouped data from the data columns and self.groups.
         The dictionaries self.groupMeans and self.groupStdDevs contain the grouped data, with
@@ -1267,7 +1267,7 @@ class RdfData(object):
                         sel = flatnonzero(sigmaFilter(yy[g],sigmaThreshold)[0])
                     else:
                         sel = flatnonzero(outlierFilter(yy[g],outlierThreshold)[0])
-                    groups.append(g[sel])
+                    if len(sel)>0: groups.append(g[sel])
                 g = [i]
                 xmin = x
                 ymin = ymax = y
@@ -1279,8 +1279,11 @@ class RdfData(object):
                     sel = flatnonzero(sigmaFilter(yy[g],sigmaThreshold)[0])
                 else:
                     sel = flatnonzero(outlierFilter(yy[g],outlierThreshold)[0])
-                groups.append(g[sel])
-                groups.append(g[sel])
+                if len(sel)>0: 
+                    groups.append(g[sel])
+                    # TO DO: The next line is a BUG which should be removed once
+                    #  fitters which rely on counting numGroups are corrected
+                    groups.append(g[sel])
             return groups
         # end of sparseAgg
         self.sortBy(xColumn)
@@ -1596,7 +1599,12 @@ class Analysis(object):
         except Exception:
             params = p0
             tbmsg = traceback.format_exc()
+            tbmsg += "\nxData = %s" % self.xData
+            tbmsg += "\nyData = %s" % self.yData
             Log('Exception in leastsq',Verbose=tbmsg)
+            #print "Exception in leastsq"
+            #print "xData = ", self.xData
+            #print "yData = ", self.yData
             print tbmsg
         self.objective = sum(fitfunc(normalize(params))**2)
         self.res = fitres(params)

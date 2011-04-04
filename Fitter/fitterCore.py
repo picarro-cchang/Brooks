@@ -1076,8 +1076,8 @@ class RdfData(object):
             rdChunkSizes = [len(rdData["waveNumber"])]
             qSizes = [0]
             
-        RED_THRESHOLD = 100
-        RED_DISCARD_ALL = 200
+        RED_THRESHOLD = 250
+        RED_DISCARD_ALL = 500
 
         def allowYield(pace,id):
             if id in RdfData._pacing:
