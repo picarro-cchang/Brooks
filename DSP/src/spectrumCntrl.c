@@ -237,7 +237,7 @@ void spectCntrl(void)
             }
             else
             {
-                if (nloops == 0) message_puts(LOG_LEVEL_STANDARD,"Ringdown manager busy");
+                if (nloops == 0) message_puts(LOG_LEVEL_INFO,"Ringdown manager busy");
             }
             // Wait around for another ms and recheck. Reset manager if busy for more
             //  than 50ms.
@@ -251,7 +251,7 @@ void spectCntrl(void)
                 changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RESET_RDMAN_B,
                                RDMAN_CONTROL_RESET_RDMAN_W,1);
                 SEM_pendBinary(&SEM_waitForRdMan,SYS_FOREVER);
-                message_puts(LOG_LEVEL_STANDARD,"Resetting ringdown manager");
+                message_puts(LOG_LEVEL_INFO,"Resetting ringdown manager");
                 nloops = 0;
                 break;
             }

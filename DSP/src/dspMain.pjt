@@ -1,7 +1,7 @@
 ; Code Composer Project File, Version 2.0 (do not modify or remove this line)
 
 [Project Settings]
-ProjectDir="C:\Picarro\G2000\SrcCode\DSP\src\"
+ProjectDir="R:\crd_G2000\CFBDS\769-CFBDS2036\Config\20110401\SrcCode\DSP\src\"
 ProjectType=Executable
 CPUFamily=TMS320C67XX
 Tool="Compiler"
@@ -12,7 +12,6 @@ Config="Debug"
 Config="Release"
 
 [Source Files]
-Source="..\..\..\..\..\CCStudio_v3.3\C6700\mthlib\lib\fastrts67x.lib"
 Source="..\autogen\dspAutogen.c"
 Source="..\common\configDsp.c"
 Source="..\common\crc.c"
@@ -30,6 +29,7 @@ Source="..\common\rdFitting.c"
 Source="..\common\registers.c"
 Source="action_handler.c"
 Source="c:\CCStudio_v3.3\C6000\csl\lib\csl6713.lib"
+Source="C:\CCStudio_v3.3\C6700\mthlib\lib\fastrts67x.lib"
 Source="dspMain.c"
 Source="dspMain.tcf"
 Source="fanCntrl.c"
