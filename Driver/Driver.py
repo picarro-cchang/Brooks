@@ -936,7 +936,7 @@ class StreamTableType(tables.IsDescription):
     
 class StreamSaver(SharedTypes.Singleton):
     initialized = False
-    def __init__(self,config=None, basePath=""):
+    def __init__(self,config=None, basePath="", maxStreamLines=0):
         if not self.initialized:
             self.fileName = ""
             self.table = None
@@ -946,7 +946,9 @@ class StreamSaver(SharedTypes.Singleton):
             self.lastWrite = 0
             self.initialized = True
             self.observerAccess = {}
-
+            self.streamLines = 0
+            self.maxStreamLines = maxStreamLines
+            
     def registerStreamStatusObserver(self,observerRpcPort,observerToken):
         if not(observerRpcPort in self.observerAccess):
             serverURI = "http://%s:%d" % ("localhost",observerRpcPort)
@@ -975,6 +977,7 @@ class StreamSaver(SharedTypes.Singleton):
             f = time.strftime("Sensors_%Y%m%d_%H%M%S.h5")
         self.fileName = os.path.join(self.basePath,f)
         Log("Opening stream file %s" % self.fileName)
+        self.streamLines = 0
         self.lastWrite = 0
         handle = tables.openFile(self.fileName,mode="w",title="CRDS Sensor Stream File")
         filters = tables.Filters(complevel=1,fletcher32=True)
@@ -1005,14 +1008,27 @@ class StreamSaver(SharedTypes.Singleton):
             row["streamNum"] = data.streamNum
             row["value"] = data.value
             row.append()
+            self.streamLines += 1
             if data.timestamp-self.lastWrite > 5000:
                 self.table.flush()
                 self.lastWrite = data.timestamp
+            if self.maxStreamLines > 0 and self.streamLines >= self.maxStreamLines:
+                self.closeStreamFile()
+                self.openStreamFile()
 
+                
 class Driver(SharedTypes.Singleton):
     def __init__(self,sim,configFile):
         self.config = CustomConfigObj(configFile)
         basePath = os.path.split(configFile)[0]
+        self.autoStreamFile = False
+        maxStreamLines = 0
+        try:
+            if int(self.config["Config"]["startStreamFile"]):
+                self.autoStreamFile = True
+            maxStreamLines = int(self.config["Config"]["maxStreamLines"])
+        except KeyError:
+            pass
         self.stateDbFile = os.path.join(basePath, self.config["Files"]["instrStateFileName"])
         self.instrConfigFile = os.path.join(basePath, self.config["Files"]["instrConfigFileName"])
         self.usbFile  = os.path.join(basePath, self.config["Files"]["usbFileName"])
@@ -1048,7 +1064,7 @@ class Driver(SharedTypes.Singleton):
             
         self.rpcHandler = DriverRpcHandler(self)
         InstrumentConfig(self.instrConfigFile)
-        self.streamSaver = StreamSaver(self.config, basePath)
+        self.streamSaver = StreamSaver(self.config, basePath, maxStreamLines)
         self.rpcHandler._register_rpc_functions_for_object(self.streamSaver)
         self.streamCast = Broadcaster(
             port=SharedTypes.BROADCAST_PORT_SENSORSTREAM,
@@ -1057,6 +1073,7 @@ class Driver(SharedTypes.Singleton):
             port=SharedTypes.BROADCAST_PORT_RDRESULTS,
             name="CRDI RD Results Broadcaster",logFunc=Log)
         self.lastSaveDasState = 0
+        if self.autoStreamFile: self.streamSaver.openStreamFile()
 
     def nudgeDasTimestamp(self):
         """Makes incremental change in DAS timestamp to bring it closer to the host timestamp,
@@ -1160,9 +1177,9 @@ class Driver(SharedTypes.Singleton):
                 self.dasInterface.saveDasState()
             except:
                 pass
-            self.dasInterface.analyzerUsb.disconnect()
             self.rpcHandler.shutDown()
-                
+            self.dasInterface.analyzerUsb.disconnect()
+            self.streamSaver.closeStreamFile()    
         
 class InstrumentConfig(SharedTypes.Singleton):
     """Configuration of instrument."""
