@@ -206,7 +206,7 @@ class ShutdownDialog(wx.Dialog):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
         self.selectShutdownType = wx.RadioBox(self, -1, "Select shutdown method",
-            choices=["Stop Analyzer Software Only", "Turn Off Analyzer in Current State", "Turn Off Analyzer and Prepare For Shipping"], majorDimension=2,
+            choices=["Turn Off Analyzer and Prepare For Shipping", "Turn Off Analyzer in Current State", "Stop Analyzer Software Only"], majorDimension=3,
             style=wx.RA_SPECIFY_ROWS)
         self.okButton = wx.Button(self, wx.ID_OK)
         self.cancelButton = wx.Button(self, wx.ID_CANCEL)
@@ -1789,11 +1789,11 @@ class QuickGui(wx.Frame):
             type = dialog.getShutdownType()
             # Call appropriate shutdown RPC routine on the instrument manager
             if type == 0:
-                self.SupervisorRpc.TerminateApplications(powerDown=False,stopProtected=True)
+                self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(0)
             elif type == 1:
                 self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(2)
             elif type == 2:
-                self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(0)
+                self.SupervisorRpc.TerminateApplications(powerDown=False,stopProtected=True)
         dialog.Destroy()
     def OnResetBuffers(self,evt):
         for s in self.dataStore.getSources():
