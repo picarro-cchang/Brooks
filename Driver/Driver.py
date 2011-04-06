@@ -347,6 +347,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         paramsAsUint = self.dasInterface.hostToDspSender.rdRingdownMemArray(base,12)
         param = interface.RingdownParamsType.from_address(ctypes.addressof(paramsAsUint))
         return (array(data),array(meta).reshape(512,8).transpose(),ctypesToDict(param))
+        
     def rdRingdownBuffer(self,buffNum):
         """Fetches contents of ringdown buffer which is QDMA transferred from the FPGA to DSP memory"""
         RINGDOWN_BUFFER_BASE = interface.SHAREDMEM_ADDRESS + 4*interface.RINGDOWN_BUFFER_OFFSET
@@ -356,6 +357,17 @@ class DriverRpcHandler(SharedTypes.Singleton):
         data = [(x&0xFFFF) for x in rdBuffer.ringdownWaveform]
         meta = [(x>>16) for x in rdBuffer.ringdownWaveform]
         return (array(data),array(meta).reshape(512,8).transpose(),ctypesToDict(rdBuffer.parameters))
+
+    def rdOscilloscopeTrace(self):
+        """Fetches contents of oscilloscope trace buffer"""
+        sender = self.dasInterface.hostToDspSender
+        sender.doOperation(Operation("ACTION_GET_SCOPE_TRACE"))
+        base = interface.SHAREDMEM_ADDRESS + 4*interface.OSCILLOSCOPE_TRACE_OFFSET
+        bufferAsUint = self.dasInterface.hostToDspSender.rdDspMemArray(base,interface.OSCILLOSCOPE_TRACE_SIZE)
+        trace = interface.OscilloscopeTraceType.from_address(ctypes.addressof(bufferAsUint))
+        sender.doOperation(Operation("ACTION_RELEASE_SCOPE_TRACE"))
+        return array([x for x in trace.data])
+            
     def rdScheme(self,schemeNum):
         """Reads a scheme from table number schemeNum"""
         return self.dasInterface.hostToDspSender.rdScheme(schemeNum)
@@ -534,9 +546,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
                 self.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % laserNum,interface.TEMP_CNTRL_EnabledState)
         self.wrDasReg("WARM_BOX_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
         self.wrDasReg("CAVITY_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
-        if DasConfigure().heaterControlMode in [interface.HEATER_CONTROL_MODE_DELTA_TEMP,interface.HEATER_CONTROL_MODE_TEC_TARGET]:
+        if DasConfigure().heaterCntrlMode in [interface.HEATER_CNTRL_MODE_DELTA_TEMP,interface.HEATER_CNTRL_MODE_TEC_TARGET]:
             self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
-        elif DasConfigure().heaterControlMode in [interface.HEATER_CONTROL_MODE_HEATER_FIXED]:
+        elif DasConfigure().heaterCntrlMode in [interface.HEATER_CNTRL_MODE_HEATER_FIXED]:
             self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_ManualState)        
         self.wrDasReg("TEC_CNTRL_REGISTER",interface.TEC_CNTRL_Enabled)
         for laserNum in range(1,interface.MAX_LASERS+1):
@@ -1154,6 +1166,7 @@ class Driver(SharedTypes.Singleton):
                     timeSoFar += sensorHandler.process(max(0.02,0.2-timeSoFar))
                     timeSoFar += ringdownHandler.process(max(0.02,0.5-timeSoFar))
                     daemon.handleRequests(0.02)
+                    self.rpcHandler.wrDasReg("KEEP_ALIVE_REGISTER",0)
                     #timeSoFar += messageHandler.process(0.01)
                     #timeSoFar += sensorHandler.process(max(0.01,0.04-timeSoFar))
                     #timeSoFar += ringdownHandler.process(max(0.01,0.1-timeSoFar))
