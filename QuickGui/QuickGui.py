@@ -1178,6 +1178,7 @@ class QuickGui(wx.Frame):
         self.instMgrInterface = InstMgrInterface(self.config)
         self.numAlarms = min(4, self.config.getint("AlarmBox","NumAlarms",4))
         self.showGraphZoomed = self.config.getboolean("Graph","ShowGraphZoomed",False)
+        self.shutdownShippingSource = self.config.get("ShutdownShippingSource", "Source", "Sensors")
         self.lockTime = False
         self.allTimeLocked = False
         self.sourceChoices = []
@@ -1312,6 +1313,7 @@ class QuickGui(wx.Frame):
         self.rpcServer.register_function(self.getLineMarkerColor)
         self.rpcServer.register_function(self.getDataKeys)
         self.rpcServer.register_function(self.setSysAlarmEnable)
+        self.rpcServer.register_function(self.setDisplayedSource)
         # Start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.Destroy)
         self.rpcThread.start()
@@ -1359,6 +1361,18 @@ class QuickGui(wx.Frame):
         """Enable/disable one of the system alarms"""
         self.sysAlarmInterface.setAlarm(index, enable)
         
+    def setDisplayedSource(self, source):
+        try:
+            srcSel = self.sourceChoice[0].GetItems().index(source)
+            for idx in range(len(self.sourceChoice)):
+                self.sourceChoice[idx].SetSelection(srcSel)
+                self.source[idx] = self.sourceChoice[idx].GetClientData(srcSel)
+                self.graphPanel[idx].RemoveAllSeries()
+                self.dataKey[idx] = None
+                self.keyChoices[idx] = None
+            return "OK"
+        except Exception, err:
+            return "%r" % err
     #
     # End of RPC functions
     #
@@ -1789,6 +1803,10 @@ class QuickGui(wx.Frame):
             type = dialog.getShutdownType()
             # Call appropriate shutdown RPC routine on the instrument manager
             if type == 0:
+                try:
+                    self.setDisplayedSource(self.shutdownShippingSource)
+                except Exception, err:
+                    print "%r" % err
                 self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(0)
             elif type == 1:
                 self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(2)

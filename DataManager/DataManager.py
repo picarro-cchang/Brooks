@@ -514,11 +514,12 @@ class DataManager(object):
             LogExc("Unhandled exception in command call", Data = dict(Command = NameOfThisCall))
             raise
         return "OK"
-    def RPC_Disable(self):
+    def RPC_Disable(self, keepSyncScripts=False):
         """Disables the measurement system and stops the instrument from scanning.
         """
         if __debug__: Log("System DISable request received - RPC_Disable()", Level = 0)
-        self._StopSyncScripts()
+        if not keepSyncScripts:
+            self._StopSyncScripts()
         self._EnableEvent.clear()
         return "OK"
     def RPC_StartInstMgrListener(self):

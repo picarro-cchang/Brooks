@@ -616,7 +616,7 @@ class InstMgr(object):
         if self.diableDataManagerWhenExitMeas:
             # Disable Data Manager
             try:
-                self.DataMgrRpc.Disable()
+                self.DataMgrRpc.Disable(keepSyncScripts=True)
                 self._SendDisplayMessage("Disabling Data Manager")
             except:
                 tbMsg = traceback.format_exc()
