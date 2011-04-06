@@ -132,6 +132,14 @@ bios.PRD.instance("PRD_sentryHandler").period = 50;
 bios.TSK.instance("TSK_scheduler").stackSize = 1536;
 bios.SEM.create("SEM_hpiIntBackend");
 bios.SEM.instance("SEM_hpiIntBackend").comment = "Indicates that an HPI action is pending";
+bios.LCK.create("LCK_scopeBuffer");
+bios.LCK.instance("LCK_scopeBuffer").comment = "Controls access to scope buffer";
+bios.SEM.create("SEM_wfmAvailable");
+bios.SEM.instance("SEM_wfmAvailable").comment = "Semaphore which controls execution of the scopeHandler task";
+bios.TSK.create("TSK_scopeHandler");
+bios.TSK.instance("TSK_scopeHandler").order = 8;
+bios.TSK.instance("TSK_scopeHandler").fxn = prog.extern("scopeHandler");
+bios.TSK.instance("TSK_scopeHandler").comment = "Controls access to the rdBuffers when they are used for oscilloscope mode";
 // !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
 
 prog.gen();

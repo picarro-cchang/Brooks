@@ -101,6 +101,7 @@ _TSK_rdFitting = TSK_rdFitting;
 _TSK_rdDataMoving = TSK_rdDataMoving;
 _TSK_spectCntrl = TSK_spectCntrl;
 _TSK_sentryHandler = TSK_sentryHandler;
+_TSK_scopeHandler = TSK_scopeHandler;
 _IDL_cpuLoad = IDL_cpuLoad;
 _LNK_dataPump = LNK_dataPump;
 _RTA_dispatcher = RTA_dispatcher;
@@ -115,6 +116,8 @@ _SEM_startRdCycle = SEM_startRdCycle;
 _SEM_waitForRdMan = SEM_waitForRdMan;
 _SEM_sentryHandler = SEM_sentryHandler;
 _SEM_hpiIntBackend = SEM_hpiIntBackend;
+_SEM_wfmAvailable = SEM_wfmAvailable;
+_LCK_scopeBuffer = LCK_scopeBuffer;
 _IDL_busyObj = IDL_busyObj;
 
 /* MODULE GBL */
@@ -233,6 +236,8 @@ SECTIONS {
 
         .dsm: {} > IRAM
 
+        .lck: {} > IRAM
+
         .sem: {} > IRAM
 
         .mem: 	  {} > IRAM
@@ -279,6 +284,10 @@ SECTIONS {
 
         .TSK_sentryHandler$stk: {
             *(.TSK_sentryHandler$stk)
+        } > IRAM
+
+        .TSK_scopeHandler$stk: {
+            *(.TSK_scopeHandler$stk)
         } > IRAM
 
         /* LOG_system buffer */

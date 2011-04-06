@@ -27,7 +27,7 @@ from Host.autogen import interface
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_INJECT
 
-from Host.autogen.interface import INJECT_CONTROL
+from Host.autogen.interface import INJECT_CONTROL, INJECT_CONTROL2
 from Host.autogen.interface import INJECT_LASER1_COARSE_CURRENT
 from Host.autogen.interface import INJECT_LASER2_COARSE_CURRENT
 from Host.autogen.interface import INJECT_LASER3_COARSE_CURRENT
@@ -46,6 +46,7 @@ from Host.autogen.interface import INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, INJEC
 from Host.autogen.interface import INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B, INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W
 from Host.autogen.interface import INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B, INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W
 from Host.autogen.interface import INJECT_CONTROL_SOA_PRESENT_B, INJECT_CONTROL_SOA_PRESENT_W
+from Host.autogen.interface import INJECT_CONTROL2_FIBER_AMP_PRESENT_B, INJECT_CONTROL2_FIBER_AMP_PRESENT_W
 from MyHDL.Common.LaserDac import LaserDac
 
 OptSwitchState = enum("IDLE","PULSING_1","SELECTED_1","PULSING_2","SELECTED_2")
@@ -54,15 +55,16 @@ SwitchPulserState = enum("START","PULSING","WAITING")
 LOW, HIGH = bool(0), bool(1)
 def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
            laser_dac_clk_in,strobe_in,laser_fine_current_in,
-           laser_shutdown_in,soa_shutdown_in,laser1_dac_sync_out,
-           laser2_dac_sync_out,laser3_dac_sync_out,laser4_dac_sync_out,
-           laser1_dac_din_out,laser2_dac_din_out,laser3_dac_din_out,
-           laser4_dac_din_out,laser1_disable_out,laser2_disable_out,
-           laser3_disable_out,laser4_disable_out,laser1_shutdown_out,
-           laser2_shutdown_out,laser3_shutdown_out,laser4_shutdown_out,
-           soa_shutdown_out,sel_laser_out,sel_coarse_current_out,
-           sel_fine_current_out,optical_switch1_out,optical_switch2_out,
-           optical_switch4_out,map_base):
+           laser_shutdown_in,soa_shutdown_in,fiber_amp_pwm_in,
+           laser1_dac_sync_out,laser2_dac_sync_out,laser3_dac_sync_out,
+           laser4_dac_sync_out,laser1_dac_din_out,laser2_dac_din_out,
+           laser3_dac_din_out,laser4_dac_din_out,laser1_disable_out,
+           laser2_disable_out,laser3_disable_out,laser4_disable_out,
+           laser1_shutdown_out,laser2_shutdown_out,laser3_shutdown_out,
+           laser4_shutdown_out,soa_shutdown_out,sel_laser_out,
+           sel_coarse_current_out,sel_fine_current_out,
+           optical_switch1_out,optical_switch2_out,optical_switch4_out,
+           map_base):
     """
     Parameters:
     clk                 -- Clock input
@@ -76,6 +78,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     laser_fine_current_in -- Sets fine current for selected laser in automatic mode
     laser_shutdown_in   -- Shuts down selected laser in automatic mode
     soa_shutdown_in     -- Shuts down SOA in automatic mode
+    fiber_amp_pwm_in    -- PWM signal for fiber amplifier TEC
     laser1_dac_sync_out  -- Synchronization signal for laser 1 current DAC
     laser2_dac_sync_out  -- Synchronization signal for laser 2 current DAC
     laser3_dac_sync_out  -- Synchronization signal for laser 3 current DAC
@@ -103,7 +106,10 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     
     optical_switch1_out  -- For 2 way switch, goes high for 1ms when laser 1 or 3 selected. Used for laser select for 4 way switch.
     optical_switch2_out  -- For 2 way switch, goes high for 1ms when laser 2 or 4 selected. Used for laser select for 4 way switch.
-    optical_switch4_out  -- Goes low for 1ms when any laser is selected.
+    optical_switch4_out  -- For 2 way switch, connected to high order laser select bit (for use with
+    2 two-way switched). For 4-way switch, goes low for 1ms when any laser is selected. 
+    If INJECT_CONTROL2_FIBER_AMP_PRESENT is asserted, optical_switch4_out is connected to 
+    fiber_amp_pwm_in, since this signal is also used for the PWM of the fiber amplifier
 
     map_base             -- Base of FPGA map for this block
 
@@ -131,8 +137,15 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     
     Note: If MODE is automatic, only the SOA and the selected laser are in automatic mode,
            the other lasers remain in manual mode.
+
+    INJECT_CONTROL2        -- Second control register
+    Fields in INJECT_CONTROL2:
+    INJECT_CONTROL2_FIBER_AMP_PRESENT -- Indicates if fiber amplifier is present (1) or absent (0)
+                                      -- Connects laser 4 PWM to SW4 output
+           
     """
     inject_control_addr = map_base + INJECT_CONTROL
+    inject_control2_addr = map_base + INJECT_CONTROL2
     inject_laser1_coarse_current_addr = map_base + INJECT_LASER1_COARSE_CURRENT
     inject_laser2_coarse_current_addr = map_base + INJECT_LASER2_COARSE_CURRENT
     inject_laser3_coarse_current_addr = map_base + INJECT_LASER3_COARSE_CURRENT
@@ -142,6 +155,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     inject_laser3_fine_current_addr = map_base + INJECT_LASER3_FINE_CURRENT
     inject_laser4_fine_current_addr = map_base + INJECT_LASER4_FINE_CURRENT
     control = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    control2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser1_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser2_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser3_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -182,6 +196,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
             yield clk.posedge, reset.posedge
             if reset:
                 control.next = 0
+                control2.next = 0
                 laser1_coarse_current.next = 0
                 laser2_coarse_current.next = 0
                 laser3_coarse_current.next = 0
@@ -203,6 +218,9 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_control_addr: # rw
                         if dsp_wr: control.next = dsp_data_out
                         dsp_data_in.next = control
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_control2_addr: # rw
+                        if dsp_wr: control2.next = dsp_data_out
+                        dsp_data_in.next = control2
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser1_coarse_current_addr: # rw
                         if dsp_wr: laser1_coarse_current.next = dsp_data_out
                         dsp_data_in.next = laser1_coarse_current
@@ -326,6 +344,9 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
             optical_switch2_out.next = sw2_2way
             optical_switch4_out.next = not s[1]
         
+        if control2[INJECT_CONTROL2_FIBER_AMP_PRESENT_B]:
+            optical_switch4_out.next = fiber_amp_pwm_in
+        
         laser_current_en.next = control[INJECT_CONTROL_LASER_CURRENT_ENABLE_B+INJECT_CONTROL_LASER_CURRENT_ENABLE_W:INJECT_CONTROL_LASER_CURRENT_ENABLE_B]
         manual_laser_en.next  = control[INJECT_CONTROL_MANUAL_LASER_ENABLE_B+INJECT_CONTROL_MANUAL_LASER_ENABLE_W:INJECT_CONTROL_MANUAL_LASER_ENABLE_B]
         manual_soa_en.next = control[INJECT_CONTROL_MANUAL_SOA_ENABLE_B]
@@ -417,6 +438,7 @@ if __name__ == "__main__":
     laser_fine_current_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser_shutdown_in = Signal(LOW)
     soa_shutdown_in = Signal(LOW)
+    fiber_amp_pwm_in = Signal(LOW)
     laser1_dac_sync_out = Signal(LOW)
     laser2_dac_sync_out = Signal(LOW)
     laser3_dac_sync_out = Signal(LOW)
@@ -449,6 +471,7 @@ if __name__ == "__main__":
                    laser_fine_current_in=laser_fine_current_in,
                    laser_shutdown_in=laser_shutdown_in,
                    soa_shutdown_in=soa_shutdown_in,
+                   fiber_amp_pwm_in=fiber_amp_pwm_in,
                    laser1_dac_sync_out=laser1_dac_sync_out,
                    laser2_dac_sync_out=laser2_dac_sync_out,
                    laser3_dac_sync_out=laser3_dac_sync_out,

@@ -21,6 +21,7 @@
 extern volatile RingdownEntryType        *ringdownEntries;
 extern volatile SchemeTableType          *schemeTables;
 extern volatile VirtualLaserParamsType   *virtualLaserParams;
+extern volatile OscilloscopeTraceType    *oscilloscopeTrace;
 extern volatile SchemeSequenceType       *schemeSequence;
 extern RingdownBufferType                *ringdownBuffers;
 extern ValveSequenceEntryType            *valveSequence;

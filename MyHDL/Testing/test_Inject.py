@@ -22,7 +22,7 @@ from Host.autogen import interface
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_INJECT
 
-from Host.autogen.interface import INJECT_CONTROL
+from Host.autogen.interface import INJECT_CONTROL, INJECT_CONTROL2
 from Host.autogen.interface import INJECT_LASER1_COARSE_CURRENT
 from Host.autogen.interface import INJECT_LASER2_COARSE_CURRENT
 from Host.autogen.interface import INJECT_LASER3_COARSE_CURRENT
@@ -41,6 +41,7 @@ from Host.autogen.interface import INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, INJEC
 from Host.autogen.interface import INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B, INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W
 from Host.autogen.interface import INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B, INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W
 from Host.autogen.interface import INJECT_CONTROL_SOA_PRESENT_B, INJECT_CONTROL_SOA_PRESENT_W
+from Host.autogen.interface import INJECT_CONTROL2_FIBER_AMP_PRESENT_B, INJECT_CONTROL2_FIBER_AMP_PRESENT_W
 
 from MyHDL.Common.Inject import Inject
 
@@ -56,6 +57,7 @@ strobe_in = Signal(LOW)
 laser_fine_current_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 laser_shutdown_in = Signal(LOW)
 soa_shutdown_in = Signal(LOW)
+fiber_amp_pwm_in = Signal(LOW)
 laser1_dac_sync_out = Signal(LOW)
 laser2_dac_sync_out = Signal(LOW)
 laser3_dac_sync_out = Signal(LOW)
@@ -158,6 +160,7 @@ def bench():
                      laser_fine_current_in=laser_fine_current_in,
                      laser_shutdown_in=laser_shutdown_in,
                      soa_shutdown_in=soa_shutdown_in,
+                     fiber_amp_pwm_in=fiber_amp_pwm_in,
                      laser1_dac_sync_out=laser1_dac_sync_out,
                      laser2_dac_sync_out=laser2_dac_sync_out,
                      laser3_dac_sync_out=laser3_dac_sync_out,

@@ -90,6 +90,7 @@
         <status ident="ERROR_BAD_VALUE">Invalid value</status>
         <status ident="ERROR_RD_BAD_RINGDOWN">Bad ringdown</status>
         <status ident="ERROR_RD_INSUFFICIENT_DATA">Insufficient data for ringdown calculation</status>
+        <status ident="ERROR_TIMEOUT">Operation timed out</status>
     </status_list>
     <struct_list>
         <struct type="DIAG_EventLogStruct">
@@ -155,7 +156,7 @@
             <field ident="count" type="uint16"/>
             <field ident="tunerValue" type="uint16"/>
             <field ident="pztValue" type="uint16"/>
-			<!--  ><field ident="lockerOffset" type="uint16"/></!-->
+            <!--  ><field ident="lockerOffset" type="uint16"/></!-->
             <field ident="laserUsed" type="uint16"/>
             <field ident="ringdownThreshold" type="uint16"/>
             <field ident="subschemeId" type="uint16"/>
@@ -165,14 +166,14 @@
             <field ident="ratio2" type="uint16"/>
             <field ident="fineLaserCurrent" type="uint16"/>
             <field ident="coarseLaserCurrent" type="uint16"/>
-            <field ident="laserTemperature" type="float"/>
-            <field ident="etalonTemperature" type="float"/>
-            <field ident="cavityPressure" type="float"/>
-			<!--  ><field ident="lockerError" type="int16"/></!-->
-			<!--  ><field ident="padToCacheLine" type="uint16"/></!-->
             <field ident="fitAmplitude" type="uint16"/>
             <field ident="fitBackground" type="uint16"/>
             <field ident="fitRmsResidual" type="uint16"/>
+            <field ident="laserTemperature" type="float"/>
+            <field ident="etalonTemperature" type="float"/>
+            <field ident="cavityPressure" type="float"/>
+            <!--  ><field ident="lockerError" type="int16"/></!-->
+            <!--  ><field ident="padToCacheLine" type="uint16"/></!-->
         </struct>
         <struct type="ProcessedRingdownEntryType">
             <field ident="timestamp" type="long long"/>
@@ -185,7 +186,7 @@
             <field ident="count" type="uint16"/>
             <field ident="tunerValue" type="uint16"/>
             <field ident="pztValue" type="uint16"/>
-			<!--  ><field ident="lockerOffset" type="uint16"/></!-->
+            <!--  ><field ident="lockerOffset" type="uint16"/></!-->
             <field ident="laserUsed" type="uint16"/>
             <field ident="ringdownThreshold" type="uint16"/>
             <field ident="subschemeId" type="uint16"/>
@@ -195,13 +196,13 @@
             <field ident="ratio2" type="uint16"/>
             <field ident="fineLaserCurrent" type="uint16"/>
             <field ident="coarseLaserCurrent" type="uint16"/>
-            <field ident="laserTemperature" type="float"/>
-            <field ident="etalonTemperature" type="float"/>
-            <field ident="cavityPressure" type="float"/>
-			<!--  ><field ident="lockerError" type="int16"/></!-->
             <field ident="fitAmplitude" type="uint16"/>
             <field ident="fitBackground" type="uint16"/>
             <field ident="fitRmsResidual" type="uint16"/>
+            <field ident="laserTemperature" type="float"/>
+            <field ident="etalonTemperature" type="float"/>
+            <field ident="cavityPressure" type="float"/>
+            <!--  ><field ident="lockerError" type="int16"/></!-->
             <field ident="extra1" type="uint32"/>
             <field ident="extra2" type="uint32"/>
             <field ident="extra3" type="uint32"/>
@@ -211,6 +212,9 @@
             <field ident="timestamp" type="long long"/>
             <field ident="streamNum" type="uint32"/>
             <field ident="value" type="float"/>
+        </struct>
+        <struct type="OscilloscopeTraceType">
+            <field ident="data" type="uint16" size="4096"/>
         </struct>
         <struct type="ValveSequenceEntryType">
             <field ident="maskAndValue" type="uint16"/>
@@ -335,6 +339,9 @@
         <constant ident="NUM_RINGDOWN_BUFFERS" description="Number of ringdown buffer areas in DSP shared memory">2</constant>
         <constant ident="MISSING_RINGDOWN" description="Code to indicate that we abandoned this scheme row due to a timeout">NUM_RINGDOWN_BUFFERS</constant>
         <constant ident="RINGDOWN_BUFFER_SIZE" description="Size of a ringdown buffer area in 32 bit ints">(sizeof(RingdownBufferType)/4)</constant>
+        <constant ident="OSCILLOSCOPE_TRACE_OFFSET" description="Offset for oscilloscope trace in DSP shared memory">(RINGDOWN_BUFFER_OFFSET+NUM_RINGDOWN_BUFFERS*RINGDOWN_BUFFER_SIZE)</constant>
+        <constant ident="OSCILLOSCOPE_TRACE_SIZE" description="Size of an oscilloscope trace in 32 bit ints">(sizeof(OscilloscopeTraceType)/4)</constant>
+        <constant ident="NUM_OSCILLOSCOPE_TRACES" description="Number of oscilloscope traces in 32 bit ints">1</constant>
         <constant ident="SCHEME_SEQUENCE_OFFSET" description="Offset for scheme sequence area in DSP shared memory">0x7800</constant>
         <constant ident="SCHEME_SEQUENCE_SIZE" description="Size of scheme sequence in 32 bit ints">(sizeof(SchemeSequenceType)/4)</constant>
         <constant ident="VALVE_SEQUENCE_OFFSET" description="Offset for valve sequence area in DSP shared memory">(SCHEME_SEQUENCE_OFFSET+SCHEME_SEQUENCE_SIZE)</constant>
@@ -430,6 +437,7 @@
             <enum_value ident="STREAM_OutletValve" />
             <enum_value ident="STREAM_ValveMask" />
             <enum_value ident="STREAM_MPVPosition" />
+            <enum_value ident="STREAM_FanState" />
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>
@@ -454,6 +462,11 @@
             <enum_value ident="HEATER_CNTRL_EnabledState" value="1" caption="Controller Enabled" />
             <enum_value ident="HEATER_CNTRL_ManualState" value="2" caption="Manual Control" />
         </enum>
+        <enum type="FAN_CNTRL_StateType">
+            <description>State of fan controller</description>
+            <enum_value ident="FAN_CNTRL_OffState" value="0" caption="Fans off"  />
+            <enum_value ident="FAN_CNTRL_OnState"  value="1" caption="Fans on" />
+        </enum>
         <enum type="SPECT_CNTRL_StateType">
             <description>State of spectrum controller</description>
             <enum_value ident="SPECT_CNTRL_IdleState" value="0" caption="Not acquiring"  />
@@ -462,6 +475,7 @@
             <enum_value ident="SPECT_CNTRL_RunningState" value="3" caption="Acquisition in progress" />
             <enum_value ident="SPECT_CNTRL_PausedState" value="4" caption="Acquisition paused" />
             <enum_value ident="SPECT_CNTRL_ErrorState" value="5" caption="Error state"  />
+            <enum_value ident="SPECT_CNTRL_DiagnosticState" value="6" caption="Diagnostic state"  />
         </enum>
         <enum type="SPECT_CNTRL_ModeType"> 
             <description>Spectrum controller modes</description> 
@@ -578,6 +592,7 @@
             <enum_value ident="HARDWARE_PRESENT_HotBoxBit"         value="7" caption="Hot Box" />             
             <enum_value ident="HARDWARE_PRESENT_DasTempMonitorBit" value="8" caption="Das Temp Monitor" />             
             <enum_value ident="HARDWARE_PRESENT_AnalogInterface"   value="9" caption="Analog Interface" />             
+            <enum_value ident="HARDWARE_PRESENT_FiberAmplifierBit" value="10" caption="Fiber Amplifier" />             
         </enum>
         <enum type="FLOAT_ARITHMETIC_OperatorType">
             <description>Enumeration specifying floating point operation to carry out on regiters</description> 
@@ -587,11 +602,11 @@
             <enum_value ident="FLOAT_ARITHMETIC_Division"         value="4" /> 
             <enum_value ident="FLOAT_ARITHMETIC_Average"          value="5" /> 
         </enum>
-        <enum type="HEATER_CONTROL_ModeType">
+        <enum type="HEATER_CNTRL_ModeType">
             <description>Enumeration specifying heater control mode</description> 
-            <enum_value ident="HEATER_CONTROL_MODE_DELTA_TEMP"     value="0" /> 
-            <enum_value ident="HEATER_CONTROL_MODE_TEC_TARGET"     value="1" /> 
-            <enum_value ident="HEATER_CONTROL_MODE_HEATER_FIXED"   value="2" /> 
+            <enum_value ident="HEATER_CNTRL_MODE_DELTA_TEMP"     value="0" /> 
+            <enum_value ident="HEATER_CNTRL_MODE_TEC_TARGET"     value="1" /> 
+            <enum_value ident="HEATER_CNTRL_MODE_HEATER_FIXED"   value="2" /> 
         </enum>
         <enum type="LOG_LEVEL_Type">
             <description>Enumeration specifying event log level</description> 
@@ -2892,6 +2907,22 @@
             <save/>
             <display format="%.1f" units="torr">Ambient maximum pressure</display>
         </register>
+        <register ident="FAN_CNTRL_STATE_REGISTER" type="FAN_CNTRL_StateType" minver="1.0" access="r">
+            <description>State of fans</description>
+            <initial>FAN_CNTRL_OnState</initial>
+            <display>Fan State</display>
+        </register>
+        <register ident="FAN_CNTRL_TEMPERATURE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Temperature above which fans operate</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.1f" units="degC">Temperature above which fans operate</display>
+        </register>
+        <register ident="KEEP_ALIVE_REGISTER" type="int32" minver="1.0" access="rw">
+            <description>Keep-alive register reset by Driver</description>
+            <initial>-300</initial>
+            <display format="%d">Keep alive register</display>
+        </register>
     </register_list>
     <i2c_list>
         <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />
@@ -3383,6 +3414,14 @@
                     <fielddef value="0">Simulator</fielddef>
                     <fielddef value="1">Actual ADC</fielddef>
                 </bitfield>
+                <bitfield ident="SCOPE_MODE" description="Oscilloscope mode" lsb="5" width="1">
+                    <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef>
+                </bitfield>
+                <bitfield ident="SCOPE_SLOPE" description="Tuner slope to trigger scope" lsb="6" width="1">
+                    <fielddef value="0">Falling</fielddef>
+                    <fielddef value="1">Rising</fielddef>
+                </bitfield>
             </reg>
             <reg type="uint16" ident="PARAM0" description="Parameter 0 register" access="rw">
                 <display format="%d">Parameter 0</display>
@@ -3563,7 +3602,14 @@
                     <fielddef value="0">2-way</fielddef>
                     <fielddef value="1">4-way</fielddef>
                 </bitfield>
-                <bitfield ident="SOA_PRESENT" description="SOA Present" lsb="15" width="1">
+                <bitfield ident="SOA_PRESENT" description="SOA or fiber amplifier present" lsb="15" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>                
+                </bitfield>
+            </reg>
+            <reg type="mask" ident="CONTROL2" description="Control register 2" access="rw">
+                <save/>
+                <bitfield ident="FIBER_AMP_PRESENT" description="Fiber amplifier present" lsb="0" width="1">
                     <fielddef value="0">No</fielddef>
                     <fielddef value="1">Yes</fielddef>                
                 </bitfield>
@@ -3766,6 +3812,9 @@
         <action ident="ACTION_TUNER_CNTRL_STEP">r_tunerCntrlStep</action>
         <action ident="ACTION_SPECTRUM_CNTRL_INIT">r_spectCntrlInit</action>
         <action ident="ACTION_SPECTRUM_CNTRL_STEP">r_spectCntrlStep</action>
+        <action ident="ACTION_FAN_CNTRL_INIT">r_fanCntrlInit</action>
+        <action ident="ACTION_FAN_CNTRL_STEP">r_fanCntrlStep</action>
+        <action ident="ACTION_ACTIVATE_FAN">r_activateFan</action>
         <action ident="ACTION_ENV_CHECKER">r_envChecker</action>
         <action ident="ACTION_WB_INV_CACHE">r_wbInvCache</action>
         <action ident="ACTION_WB_CACHE">r_wbCache</action>
@@ -3820,6 +3869,8 @@
         <action ident="ACTION_EEPROM_WRITE_LOW_LEVEL">r_eeprom_write_low_level</action>
         <action ident="ACTION_EEPROM_READ_LOW_LEVEL">r_eeprom_read_low_level</action>
         <action ident="ACTION_EEPROM_READY_LOW_LEVEL">r_eeprom_ready_low_level</action>
-        <action ident="ACTION_FLOAT_ARITHMETIC">r_float_arithmetic</action>        
+        <action ident="ACTION_FLOAT_ARITHMETIC">r_float_arithmetic</action>
+        <action ident="ACTION_GET_SCOPE_TRACE">r_get_scope_trace</action>
+        <action ident="ACTION_RELEASE_SCOPE_TRACE">r_release_scope_trace</action>
     </action_list>
 </Das_Interface>

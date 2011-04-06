@@ -29,6 +29,7 @@
 #include "rdFitting.h"
 #include "rdHandlers.h"
 #include "registers.h"
+#include "scopeHandler.h"
 #include "spectrumCntrl.h"
 #include "tunerCntrl.h"
 
@@ -191,9 +192,11 @@ void edmaDoneInterrupt(int tccNum)
         message_puts(LOG_LEVEL_STANDARD,"rdBuffer queue full in edmaDoneInterrupt");
         spectCntrlError();
     }
-    else   // put succeeded, post the good news to SEM_rdFitting
+    else   // put succeeded, post the good news to SEM_rdFitting or SEM_wfmAvailable depending on
+           // whether we are in scope mode
     {
-        SEM_post(&SEM_rdFitting);
+        if (readFPGA(FPGA_RDMAN + RDMAN_OPTIONS) & (1<<RDMAN_OPTIONS_SCOPE_MODE_B)) SEM_post(&SEM_wfmAvailable);
+        else SEM_post(&SEM_rdFitting);
     }
 
     // Indicate bank in FPGA is no longer in use

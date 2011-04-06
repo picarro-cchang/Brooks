@@ -51,6 +51,7 @@ typedef int bool;
 #define ERROR_BAD_VALUE (-14)
 #define ERROR_RD_BAD_RINGDOWN (-15)
 #define ERROR_RD_INSUFFICIENT_DATA (-16)
+#define ERROR_TIMEOUT (-17)
 
 typedef union {
     float asFloat;
@@ -135,12 +136,12 @@ typedef struct {
     uint16 ratio2;
     uint16 fineLaserCurrent;
     uint16 coarseLaserCurrent;
-    float laserTemperature;
-    float etalonTemperature;
-    float cavityPressure;
     uint16 fitAmplitude;
     uint16 fitBackground;
     uint16 fitRmsResidual;
+    float laserTemperature;
+    float etalonTemperature;
+    float cavityPressure;
 } RingdownEntryType;
 
 typedef struct {
@@ -163,12 +164,12 @@ typedef struct {
     uint16 ratio2;
     uint16 fineLaserCurrent;
     uint16 coarseLaserCurrent;
-    float laserTemperature;
-    float etalonTemperature;
-    float cavityPressure;
     uint16 fitAmplitude;
     uint16 fitBackground;
     uint16 fitRmsResidual;
+    float laserTemperature;
+    float etalonTemperature;
+    float cavityPressure;
     uint32 extra1;
     uint32 extra2;
     uint32 extra3;
@@ -180,6 +181,10 @@ typedef struct {
     uint32 streamNum;
     float value;
 } SensorEntryType;
+
+typedef struct {
+    uint16 data[4096];
+} OscilloscopeTraceType;
 
 typedef struct {
     uint16 maskAndValue;
@@ -349,6 +354,12 @@ typedef struct {
 #define MISSING_RINGDOWN (NUM_RINGDOWN_BUFFERS)
 // Size of a ringdown buffer area in 32 bit ints
 #define RINGDOWN_BUFFER_SIZE ((sizeof(RingdownBufferType)/4))
+// Offset for oscilloscope trace in DSP shared memory
+#define OSCILLOSCOPE_TRACE_OFFSET ((RINGDOWN_BUFFER_OFFSET+NUM_RINGDOWN_BUFFERS*RINGDOWN_BUFFER_SIZE))
+// Size of an oscilloscope trace in 32 bit ints
+#define OSCILLOSCOPE_TRACE_SIZE ((sizeof(OscilloscopeTraceType)/4))
+// Number of oscilloscope traces in 32 bit ints
+#define NUM_OSCILLOSCOPE_TRACES (1)
 // Offset for scheme sequence area in DSP shared memory
 #define SCHEME_SEQUENCE_OFFSET (0x7800)
 // Size of scheme sequence in 32 bit ints
@@ -475,7 +486,8 @@ typedef enum {
     STREAM_InletValve = 29, // 
     STREAM_OutletValve = 30, // 
     STREAM_ValveMask = 31, // 
-    STREAM_MPVPosition = 32 // 
+    STREAM_MPVPosition = 32, // 
+    STREAM_FanState = 33 // 
 } STREAM_MemberType;
 
 typedef enum {
@@ -502,12 +514,18 @@ typedef enum {
 } HEATER_CNTRL_StateType;
 
 typedef enum {
+    FAN_CNTRL_OffState = 0, // Fans off
+    FAN_CNTRL_OnState = 1 // Fans on
+} FAN_CNTRL_StateType;
+
+typedef enum {
     SPECT_CNTRL_IdleState = 0, // Not acquiring
     SPECT_CNTRL_StartingState = 1, // Start acquisition
     SPECT_CNTRL_StartManualState = 2, // Start acquisition with manual temperature control
     SPECT_CNTRL_RunningState = 3, // Acquisition in progress
     SPECT_CNTRL_PausedState = 4, // Acquisition paused
-    SPECT_CNTRL_ErrorState = 5 // Error state
+    SPECT_CNTRL_ErrorState = 5, // Error state
+    SPECT_CNTRL_DiagnosticState = 6 // Diagnostic state
 } SPECT_CNTRL_StateType;
 
 typedef enum {
@@ -623,7 +641,8 @@ typedef enum {
     HARDWARE_PRESENT_WarmBoxBit = 6, // Warm Box
     HARDWARE_PRESENT_HotBoxBit = 7, // Hot Box
     HARDWARE_PRESENT_DasTempMonitorBit = 8, // Das Temp Monitor
-    HARDWARE_PRESENT_AnalogInterface = 9 // Analog Interface
+    HARDWARE_PRESENT_AnalogInterface = 9, // Analog Interface
+    HARDWARE_PRESENT_FiberAmplifierBit = 10 // Fiber Amplifier
 } HARDWARE_PRESENT_BitType;
 
 typedef enum {
@@ -635,10 +654,10 @@ typedef enum {
 } FLOAT_ARITHMETIC_OperatorType;
 
 typedef enum {
-    HEATER_CONTROL_MODE_DELTA_TEMP = 0, // 
-    HEATER_CONTROL_MODE_TEC_TARGET = 1, // 
-    HEATER_CONTROL_MODE_HEATER_FIXED = 2 // 
-} HEATER_CONTROL_ModeType;
+    HEATER_CNTRL_MODE_DELTA_TEMP = 0, // 
+    HEATER_CNTRL_MODE_TEC_TARGET = 1, // 
+    HEATER_CNTRL_MODE_HEATER_FIXED = 2 // 
+} HEATER_CNTRL_ModeType;
 
 typedef enum {
     LOG_LEVEL_DEBUG = 0, // 
@@ -680,7 +699,7 @@ typedef enum {
 #define SCHEME_TableShift (0)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (403)
+#define INTERFACE_NUMBER_OF_REGISTERS (406)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1085,6 +1104,9 @@ typedef enum {
 #define SENTRY_CAVITY_PRESSURE_MAX_REGISTER (400)
 #define SENTRY_AMBIENT_PRESSURE_MIN_REGISTER (401)
 #define SENTRY_AMBIENT_PRESSURE_MAX_REGISTER (402)
+#define FAN_CNTRL_STATE_REGISTER (403)
+#define FAN_CNTRL_TEMPERATURE_REGISTER (404)
+#define KEEP_ALIVE_REGISTER (405)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0
@@ -1286,6 +1308,10 @@ typedef enum {
 #define RDMAN_OPTIONS_DITHER_ENABLE_W (1) // Allow transition to dither mode bit width
 #define RDMAN_OPTIONS_SIM_ACTUAL_B (4) // Ringdown data source bit position
 #define RDMAN_OPTIONS_SIM_ACTUAL_W (1) // Ringdown data source bit width
+#define RDMAN_OPTIONS_SCOPE_MODE_B (5) // Oscilloscope mode bit position
+#define RDMAN_OPTIONS_SCOPE_MODE_W (1) // Oscilloscope mode bit width
+#define RDMAN_OPTIONS_SCOPE_SLOPE_B (6) // Tuner slope to trigger scope bit position
+#define RDMAN_OPTIONS_SCOPE_SLOPE_W (1) // Tuner slope to trigger scope bit width
 
 #define RDMAN_PARAM0 (3) // Parameter 0 register
 #define RDMAN_PARAM1 (4) // Parameter 1 register
@@ -1364,17 +1390,21 @@ typedef enum {
 #define INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W (1) // Enables SOA shutdown (in automatic mode) bit width
 #define INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B (14) // Select optical switch type bit position
 #define INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W (1) // Select optical switch type bit width
-#define INJECT_CONTROL_SOA_PRESENT_B (15) // SOA Present bit position
-#define INJECT_CONTROL_SOA_PRESENT_W (1) // SOA Present bit width
+#define INJECT_CONTROL_SOA_PRESENT_B (15) // SOA or fiber amplifier present bit position
+#define INJECT_CONTROL_SOA_PRESENT_W (1) // SOA or fiber amplifier present bit width
 
-#define INJECT_LASER1_COARSE_CURRENT (1) // Sets coarse current for laser 1
-#define INJECT_LASER2_COARSE_CURRENT (2) // Sets coarse current for laser 2
-#define INJECT_LASER3_COARSE_CURRENT (3) // Sets coarse current for laser 3
-#define INJECT_LASER4_COARSE_CURRENT (4) // Sets coarse current for laser 4
-#define INJECT_LASER1_FINE_CURRENT (5) // Sets fine current for laser 1
-#define INJECT_LASER2_FINE_CURRENT (6) // Sets fine current for laser 2
-#define INJECT_LASER3_FINE_CURRENT (7) // Sets fine current for laser 3
-#define INJECT_LASER4_FINE_CURRENT (8) // Sets fine current for laser 4
+#define INJECT_CONTROL2 (1) // Control register 2
+#define INJECT_CONTROL2_FIBER_AMP_PRESENT_B (0) // Fiber amplifier present bit position
+#define INJECT_CONTROL2_FIBER_AMP_PRESENT_W (1) // Fiber amplifier present bit width
+
+#define INJECT_LASER1_COARSE_CURRENT (2) // Sets coarse current for laser 1
+#define INJECT_LASER2_COARSE_CURRENT (3) // Sets coarse current for laser 2
+#define INJECT_LASER3_COARSE_CURRENT (4) // Sets coarse current for laser 3
+#define INJECT_LASER4_COARSE_CURRENT (5) // Sets coarse current for laser 4
+#define INJECT_LASER1_FINE_CURRENT (6) // Sets fine current for laser 1
+#define INJECT_LASER2_FINE_CURRENT (7) // Sets fine current for laser 2
+#define INJECT_LASER3_FINE_CURRENT (8) // Sets fine current for laser 3
+#define INJECT_LASER4_FINE_CURRENT (9) // Sets fine current for laser 4
 
 /* Block WLMSIM Wavelength monitor simulator */
 #define WLMSIM_OPTIONS (0) // Options
@@ -1426,10 +1456,10 @@ typedef enum {
 #define FPGA_RDMAN (61) // Ringdown manager registers
 #define FPGA_TWGEN (86) // Tuner waveform generator
 #define FPGA_INJECT (95) // Optical Injection Subsystem
-#define FPGA_WLMSIM (104) // WLM Simulator
-#define FPGA_DYNAMICPWM_INLET (113) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (118) // Outlet proportional valve dynamic PWM
-#define FPGA_SCALER (123) // Scaler for PZT waveform
+#define FPGA_WLMSIM (105) // WLM Simulator
+#define FPGA_DYNAMICPWM_INLET (114) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (119) // Outlet proportional valve dynamic PWM
+#define FPGA_SCALER (124) // Scaler for PZT waveform
 
 /* Environment addresses */
 
@@ -1484,40 +1514,45 @@ typedef enum {
 #define ACTION_TUNER_CNTRL_STEP (37)
 #define ACTION_SPECTRUM_CNTRL_INIT (38)
 #define ACTION_SPECTRUM_CNTRL_STEP (39)
-#define ACTION_ENV_CHECKER (40)
-#define ACTION_WB_INV_CACHE (41)
-#define ACTION_WB_CACHE (42)
-#define ACTION_SCHEDULER_HEARTBEAT (43)
-#define ACTION_SENTRY_INIT (44)
-#define ACTION_VALVE_CNTRL_INIT (45)
-#define ACTION_VALVE_CNTRL_STEP (46)
-#define ACTION_MODIFY_VALVE_PUMP_TEC (47)
-#define ACTION_PULSE_GENERATOR (48)
-#define ACTION_FILTER (49)
-#define ACTION_DS1631_READTEMP (50)
-#define ACTION_READ_LASER_THERMISTOR_RESISTANCE (51)
-#define ACTION_READ_ETALON_THERMISTOR_RESISTANCE (52)
-#define ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE (53)
-#define ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE (54)
-#define ACTION_READ_CAVITY_THERMISTOR_RESISTANCE (55)
-#define ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE (56)
-#define ACTION_READ_LASER_CURRENT (57)
-#define ACTION_UPDATE_WLMSIM_LASER_TEMP (58)
-#define ACTION_SIMULATE_LASER_CURRENT_READING (59)
-#define ACTION_READ_CAVITY_PRESSURE_ADC (60)
-#define ACTION_READ_AMBIENT_PRESSURE_ADC (61)
-#define ACTION_ADC_TO_PRESSURE (62)
-#define ACTION_SET_INLET_VALVE (63)
-#define ACTION_SET_OUTLET_VALVE (64)
-#define ACTION_INTERPOLATOR_SET_TARGET (65)
-#define ACTION_INTERPOLATOR_STEP (66)
-#define ACTION_EEPROM_WRITE (67)
-#define ACTION_EEPROM_READ (68)
-#define ACTION_EEPROM_READY (69)
-#define ACTION_I2C_CHECK (70)
-#define ACTION_NUDGE_TIMESTAMP (71)
-#define ACTION_EEPROM_WRITE_LOW_LEVEL (72)
-#define ACTION_EEPROM_READ_LOW_LEVEL (73)
-#define ACTION_EEPROM_READY_LOW_LEVEL (74)
-#define ACTION_FLOAT_ARITHMETIC (75)
+#define ACTION_FAN_CNTRL_INIT (40)
+#define ACTION_FAN_CNTRL_STEP (41)
+#define ACTION_ACTIVATE_FAN (42)
+#define ACTION_ENV_CHECKER (43)
+#define ACTION_WB_INV_CACHE (44)
+#define ACTION_WB_CACHE (45)
+#define ACTION_SCHEDULER_HEARTBEAT (46)
+#define ACTION_SENTRY_INIT (47)
+#define ACTION_VALVE_CNTRL_INIT (48)
+#define ACTION_VALVE_CNTRL_STEP (49)
+#define ACTION_MODIFY_VALVE_PUMP_TEC (50)
+#define ACTION_PULSE_GENERATOR (51)
+#define ACTION_FILTER (52)
+#define ACTION_DS1631_READTEMP (53)
+#define ACTION_READ_LASER_THERMISTOR_RESISTANCE (54)
+#define ACTION_READ_ETALON_THERMISTOR_RESISTANCE (55)
+#define ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE (56)
+#define ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE (57)
+#define ACTION_READ_CAVITY_THERMISTOR_RESISTANCE (58)
+#define ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE (59)
+#define ACTION_READ_LASER_CURRENT (60)
+#define ACTION_UPDATE_WLMSIM_LASER_TEMP (61)
+#define ACTION_SIMULATE_LASER_CURRENT_READING (62)
+#define ACTION_READ_CAVITY_PRESSURE_ADC (63)
+#define ACTION_READ_AMBIENT_PRESSURE_ADC (64)
+#define ACTION_ADC_TO_PRESSURE (65)
+#define ACTION_SET_INLET_VALVE (66)
+#define ACTION_SET_OUTLET_VALVE (67)
+#define ACTION_INTERPOLATOR_SET_TARGET (68)
+#define ACTION_INTERPOLATOR_STEP (69)
+#define ACTION_EEPROM_WRITE (70)
+#define ACTION_EEPROM_READ (71)
+#define ACTION_EEPROM_READY (72)
+#define ACTION_I2C_CHECK (73)
+#define ACTION_NUDGE_TIMESTAMP (74)
+#define ACTION_EEPROM_WRITE_LOW_LEVEL (75)
+#define ACTION_EEPROM_READ_LOW_LEVEL (76)
+#define ACTION_EEPROM_READY_LOW_LEVEL (77)
+#define ACTION_FLOAT_ARITHMETIC (78)
+#define ACTION_GET_SCOPE_TRACE (79)
+#define ACTION_RELEASE_SCOPE_TRACE (80)
 #endif

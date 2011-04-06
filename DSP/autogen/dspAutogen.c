@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[403];
+RegTypes regTypes[406];
 
 /* I2C devices */
 I2C_device i2c_devices[26] = {
@@ -808,6 +808,12 @@ void initRegisters()
     writeRegister(SENTRY_AMBIENT_PRESSURE_MIN_REGISTER,d);
     d.asFloat = 900.0;
     writeRegister(SENTRY_AMBIENT_PRESSURE_MAX_REGISTER,d);
+    d.asUint = FAN_CNTRL_OnState;
+    writeRegister(FAN_CNTRL_STATE_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(FAN_CNTRL_TEMPERATURE_REGISTER,d);
+    d.asInt = -300;
+    writeRegister(KEEP_ALIVE_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -1211,6 +1217,9 @@ void initRegisters()
     regTypes[SENTRY_CAVITY_PRESSURE_MAX_REGISTER] = float_type;
     regTypes[SENTRY_AMBIENT_PRESSURE_MIN_REGISTER] = float_type;
     regTypes[SENTRY_AMBIENT_PRESSURE_MAX_REGISTER] = float_type;
+    regTypes[FAN_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[FAN_CNTRL_TEMPERATURE_REGISTER] = float_type;
+    regTypes[KEEP_ALIVE_REGISTER] = int_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
@@ -1294,6 +1303,12 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_spectCntrlInit(numInt,params,env);
         case ACTION_SPECTRUM_CNTRL_STEP:
             return r_spectCntrlStep(numInt,params,env);
+        case ACTION_FAN_CNTRL_INIT:
+            return r_fanCntrlInit(numInt,params,env);
+        case ACTION_FAN_CNTRL_STEP:
+            return r_fanCntrlStep(numInt,params,env);
+        case ACTION_ACTIVATE_FAN:
+            return r_activateFan(numInt,params,env);
         case ACTION_ENV_CHECKER:
             return r_envChecker(numInt,params,env);
         case ACTION_WB_INV_CACHE:
@@ -1366,6 +1381,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_eeprom_ready_low_level(numInt,params,env);
         case ACTION_FLOAT_ARITHMETIC:
             return r_float_arithmetic(numInt,params,env);
+        case ACTION_GET_SCOPE_TRACE:
+            return r_get_scope_trace(numInt,params,env);
+        case ACTION_RELEASE_SCOPE_TRACE:
+            return r_release_scope_trace(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

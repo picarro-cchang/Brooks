@@ -16,11 +16,13 @@
  */
 #include "interface.h"
 #include "registers.h"
+#include "scopeHandler.h"
 #include "spectrumCntrl.h"
 #include "tunerCntrl.h"
 #include "dspAutogen.h"
 #include "dspData.h"
 #include "fpga.h"
+#include "rdHandlers.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -94,19 +96,44 @@ int spectCntrlInit(void)
     return STATUS_OK;
 }
 
+static void resetSpectCntrl(void)
+{
+    // Eat up posted semaphores
+    SEM_pend(&SEM_rdFitting,0);
+    SEM_pend(&SEM_rdDataMoving,0);
+    SEM_pendBinary(&SEM_startRdCycle,0);
+
+    // Reset the RDMAN block, clear bank in use bits, acknowledge all interrupts
+    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RESET_RDMAN_B,
+                   RDMAN_CONTROL_RESET_RDMAN_W,1);
+    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK0_CLEAR_B,
+                   RDMAN_CONTROL_BANK0_CLEAR_W,1);
+    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK1_CLEAR_B,
+                   RDMAN_CONTROL_BANK1_CLEAR_W,1);
+    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RD_IRQ_ACK_B,
+                   RDMAN_CONTROL_RD_IRQ_ACK_W,1);
+    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_ACQ_DONE_ACK_B,
+                   RDMAN_CONTROL_ACQ_DONE_ACK_W,1);
+    // Indicate both ringdown buffers are available
+    SEM_postBinary(&SEM_rdBuffer0Available);
+    SEM_postBinary(&SEM_rdBuffer1Available);
+    switchToRampMode();
+}
+
 int spectCntrlStep(void)
 // This is called every 100ms from the scheduler thread to start spectrum acquisition
 {
     SpectCntrlParams *s=&spectCntrlParams;
     static SPECT_CNTRL_StateType prevState = SPECT_CNTRL_IdleState;
     SPECT_CNTRL_StateType stateAtStart;
-
+    
     stateAtStart = *(s->state_);
     if (SPECT_CNTRL_StartingState == *(s->state_))
     {
         s->useMemo_ = 0;
         s->incrCounterNext_ = s->incrCounter_ + 1;
         s->schemeCounter_++;
+ 
         setAutomaticLaserTemperatureControl();
         setAutomaticLaserCurrentControl();
         *(s->state_) = SPECT_CNTRL_RunningState;
@@ -134,6 +161,7 @@ int spectCntrlStep(void)
         s->useMemo_ = 0;
         s->incrCounterNext_ = s->incrCounter_ + 1;
         s->schemeCounter_++;
+        
         *(s->mode_) = SPECT_CNTRL_ContinuousManualTempMode;
         setAutomaticLaserCurrentControl(); // To allow ringdowns
         *(s->state_) = SPECT_CNTRL_RunningState;
@@ -163,6 +191,11 @@ int spectCntrlStep(void)
         }
         s->useMemo_ = 0;
     }
+    else if (SPECT_CNTRL_DiagnosticState == *(s->state_))
+        {
+            switchToRampMode();
+            setAutomaticLaserCurrentControl();
+        }
     else switchToRampMode();
 
     prevState = stateAtStart;
@@ -204,17 +237,21 @@ void spectCntrl(void)
             }
             else
             {
-                if (nloops == 0) message_puts(LOG_LEVEL_STANDARD,"Ringdown manager busy");
+                if (nloops == 0) message_puts(LOG_LEVEL_INFO,"Ringdown manager busy");
             }
             // Wait around for another ms and recheck. Reset manager if busy for more
             //  than 50ms.
             nloops++;
             SEM_pendBinary(&SEM_waitForRdMan,SYS_FOREVER);
             if (nloops > 50) {
+                changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK0_CLEAR_B,
+                       RDMAN_CONTROL_BANK0_CLEAR_W,1);
+                changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK1_CLEAR_B,
+                       RDMAN_CONTROL_BANK1_CLEAR_W,1);
                 changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RESET_RDMAN_B,
                                RDMAN_CONTROL_RESET_RDMAN_W,1);
                 SEM_pendBinary(&SEM_waitForRdMan,SYS_FOREVER);
-                message_puts(LOG_LEVEL_STANDARD,"Resetting ringdown manager");
+                message_puts(LOG_LEVEL_INFO,"Resetting ringdown manager");
                 nloops = 0;
                 break;
             }
@@ -607,34 +644,14 @@ int activeLaserTempLocked(void)
     return 0;
 }
 
+
 void spectCntrlError(void)
 // This is called to place the spectrum controller subsystem in a sane state
 //  in response to an error or abort condition
 {
     SpectCntrlParams *s=&spectCntrlParams;
-
     *(s->state_) = SPECT_CNTRL_ErrorState;
-    // Eat up posted semaphores
-    SEM_pend(&SEM_rdFitting,0);
-    SEM_pend(&SEM_rdDataMoving,0);
-    SEM_pendBinary(&SEM_startRdCycle,0);
-
-    // Reset the RDMAN block, clear bank in use bits, acknowledge all interrupts
-    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RESET_RDMAN_B,
-                   RDMAN_CONTROL_RESET_RDMAN_W,1);
-    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK0_CLEAR_B,
-                   RDMAN_CONTROL_BANK0_CLEAR_W,1);
-    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK1_CLEAR_B,
-                   RDMAN_CONTROL_BANK1_CLEAR_W,1);
-    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RD_IRQ_ACK_B,
-                   RDMAN_CONTROL_RD_IRQ_ACK_W,1);
-    changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_ACQ_DONE_ACK_B,
-                   RDMAN_CONTROL_ACQ_DONE_ACK_W,1);
-
-    // Indicate both ringdown buffers are available
-    SEM_postBinary(&SEM_rdBuffer0Available);
-    SEM_postBinary(&SEM_rdBuffer1Available);
-    switchToRampMode();
+    resetSpectCntrl();
     message_puts(LOG_LEVEL_CRITICAL,"Spectrum controller enters error state.");
 }
 
