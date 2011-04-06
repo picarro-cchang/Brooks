@@ -2303,15 +2303,20 @@ class QuickGui(wx.Frame):
                     v += "%s : %s\n" % (k,dV[k])
         except:
             v += "Software version information unavailable"
-            
+          
+        biggerSize = False
         try:
             analyzerId = self.driverRpc.fetchObject("LOGIC_EEPROM")[0]
             serialNum = analyzerId["Chassis"] + "-" + analyzerId["Analyzer"] + analyzerId["AnalyzerNum"]
             aboutTitle = "Picarro CRDS (S/N: %s)" % serialNum
+            biggerSize = True
         except:
             aboutTitle = "Picarro CRDS"
             
         d = OKDialog(self,v,None,-1,aboutTitle, boldText=boldText)
+        if biggerSize:
+            currSize = d.GetSize()
+            d.SetSize((currSize[0]+40, currSize[1]))
         d.ShowModal()
         d.Destroy()
     def OnGuiMode(self,e):
