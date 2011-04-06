@@ -11,7 +11,7 @@ from parserFunc import *
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_PERIPH_INTRF
 
-APP_NAME = "Sensor Interpolator"
+APP_NAME = "Peripheral Interface"
 APP_DESCRIPTION = "Socket client and interpolator"
 __version__ = 1.0
 MAX_SENSOR_QUEUE_SIZE = 2000

@@ -293,7 +293,6 @@ class DataManager(object):
             self.LoadSerialSettings(cp)
             self.AutoEnable = cp.getboolean(_MAIN_CONFIG_SECTION, "AutoEnable", "False")
             self.StartingMeasMode = cp.get(_MAIN_CONFIG_SECTION, "StartingMeasMode", "")
-            self.UsePeriphIntrf = cp.getboolean(_MAIN_CONFIG_SECTION, "UsePeriphIntrf", "False")
             if cp.get(_MAIN_CONFIG_SECTION,"TimeStandard","gmt").lower() == "local":
                 self.maketimetuple = time.localtime
             else:
@@ -1177,11 +1176,17 @@ class DataManager(object):
                 self.CurrentMeasMode = self.MeasModes[self.Config.StartingMeasMode]
                 Log("Current mode name initialized", dict(Name = self.Config.StartingMeasMode))
 
-            if self.Config.UsePeriphIntrf:
+            # Get a connection to Peripheral Interface if exists
+            try:
                 self.CRDS_PeriphIntrf = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_PERIPH_INTRF,
                                                 APP_NAME,
                                                 IsDontCareConnection = False)
-                                                
+                # Call a remote function to test if the RPC connection is established.
+                print "Connected to %s" % self.CRDS_PeriphIntrf.CmdFIFO.GetName()
+            except:
+                self.CRDS_PeriphIntrf = None
+                print "Peripheral Interface not running"
+                    
             # Initialize pulse analyzer if endabled in INI file
             if self.Config.enablePulseAnalyzer:
                 try:    
