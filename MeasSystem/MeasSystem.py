@@ -515,7 +515,7 @@ class MeasSystem(object):
                 SpectrumCollector.addNamedSequenceOfSchemes(m.Name,m.Schemes)
             
             # Set up spectrum queue in Spectrum Collector
-            SpectrumCollector.setMaxSpectrumQueueSize(210)
+            SpectrumCollector.setMaxSpectrumQueueSize(510)
 
             # See if the fitter is running (if not the exception will be picked up below)...
             if not self.SkipFitting:

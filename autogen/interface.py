@@ -65,6 +65,8 @@ ERROR_RD_BAD_RINGDOWN = -15
 error_messages.append("Bad ringdown")
 ERROR_RD_INSUFFICIENT_DATA = -16
 error_messages.append("Insufficient data for ringdown calculation")
+ERROR_TIMEOUT = -17
+error_messages.append("Operation timed out")
 
 class DataType(Union):
     _fields_ = [
@@ -156,12 +158,12 @@ class RingdownEntryType(Structure):
     ("ratio2",c_ushort),
     ("fineLaserCurrent",c_ushort),
     ("coarseLaserCurrent",c_ushort),
-    ("laserTemperature",c_float),
-    ("etalonTemperature",c_float),
-    ("cavityPressure",c_float),
     ("fitAmplitude",c_ushort),
     ("fitBackground",c_ushort),
-    ("fitRmsResidual",c_ushort)
+    ("fitRmsResidual",c_ushort),
+    ("laserTemperature",c_float),
+    ("etalonTemperature",c_float),
+    ("cavityPressure",c_float)
     ]
 
 class ProcessedRingdownEntryType(Structure):
@@ -185,12 +187,12 @@ class ProcessedRingdownEntryType(Structure):
     ("ratio2",c_ushort),
     ("fineLaserCurrent",c_ushort),
     ("coarseLaserCurrent",c_ushort),
-    ("laserTemperature",c_float),
-    ("etalonTemperature",c_float),
-    ("cavityPressure",c_float),
     ("fitAmplitude",c_ushort),
     ("fitBackground",c_ushort),
     ("fitRmsResidual",c_ushort),
+    ("laserTemperature",c_float),
+    ("etalonTemperature",c_float),
+    ("cavityPressure",c_float),
     ("extra1",c_uint),
     ("extra2",c_uint),
     ("extra3",c_uint),
@@ -202,6 +204,11 @@ class SensorEntryType(Structure):
     ("timestamp",c_longlong),
     ("streamNum",c_uint),
     ("value",c_float)
+    ]
+
+class OscilloscopeTraceType(Structure):
+    _fields_ = [
+    ("data",c_ushort*4096)
     ]
 
 class ValveSequenceEntryType(Structure):
@@ -388,6 +395,12 @@ NUM_RINGDOWN_BUFFERS = 2
 MISSING_RINGDOWN = NUM_RINGDOWN_BUFFERS
 # Size of a ringdown buffer area in 32 bit ints
 RINGDOWN_BUFFER_SIZE = (sizeof(RingdownBufferType)/4)
+# Offset for oscilloscope trace in DSP shared memory
+OSCILLOSCOPE_TRACE_OFFSET = (RINGDOWN_BUFFER_OFFSET+NUM_RINGDOWN_BUFFERS*RINGDOWN_BUFFER_SIZE)
+# Size of an oscilloscope trace in 32 bit ints
+OSCILLOSCOPE_TRACE_SIZE = (sizeof(OscilloscopeTraceType)/4)
+# Number of oscilloscope traces in 32 bit ints
+NUM_OSCILLOSCOPE_TRACES = 1
 # Offset for scheme sequence area in DSP shared memory
 SCHEME_SEQUENCE_OFFSET = 0x7800
 # Size of scheme sequence in 32 bit ints
@@ -522,6 +535,7 @@ STREAM_InletValve = 29 #
 STREAM_OutletValve = 30 # 
 STREAM_ValveMask = 31 # 
 STREAM_MPVPosition = 32 # 
+STREAM_FanState = 33 # 
 
 # Dictionary for enumerated constants in STREAM_MemberType
 STREAM_MemberTypeDict = {}
@@ -558,6 +572,7 @@ STREAM_MemberTypeDict[29] = 'STREAM_InletValve' #
 STREAM_MemberTypeDict[30] = 'STREAM_OutletValve' # 
 STREAM_MemberTypeDict[31] = 'STREAM_ValveMask' # 
 STREAM_MemberTypeDict[32] = 'STREAM_MPVPosition' # 
+STREAM_MemberTypeDict[33] = 'STREAM_FanState' # 
 
 # Enumerated definitions for TEMP_CNTRL_StateType
 TEMP_CNTRL_StateType = c_uint
@@ -605,6 +620,16 @@ HEATER_CNTRL_StateTypeDict[0] = 'HEATER_CNTRL_DisabledState' # Controller Disabl
 HEATER_CNTRL_StateTypeDict[1] = 'HEATER_CNTRL_EnabledState' # Controller Enabled
 HEATER_CNTRL_StateTypeDict[2] = 'HEATER_CNTRL_ManualState' # Manual Control
 
+# Enumerated definitions for FAN_CNTRL_StateType
+FAN_CNTRL_StateType = c_uint
+FAN_CNTRL_OffState = 0 # Fans off
+FAN_CNTRL_OnState = 1 # Fans on
+
+# Dictionary for enumerated constants in FAN_CNTRL_StateType
+FAN_CNTRL_StateTypeDict = {}
+FAN_CNTRL_StateTypeDict[0] = 'FAN_CNTRL_OffState' # Fans off
+FAN_CNTRL_StateTypeDict[1] = 'FAN_CNTRL_OnState' # Fans on
+
 # Enumerated definitions for SPECT_CNTRL_StateType
 SPECT_CNTRL_StateType = c_uint
 SPECT_CNTRL_IdleState = 0 # Not acquiring
@@ -613,6 +638,7 @@ SPECT_CNTRL_StartManualState = 2 # Start acquisition with manual temperature con
 SPECT_CNTRL_RunningState = 3 # Acquisition in progress
 SPECT_CNTRL_PausedState = 4 # Acquisition paused
 SPECT_CNTRL_ErrorState = 5 # Error state
+SPECT_CNTRL_DiagnosticState = 6 # Diagnostic state
 
 # Dictionary for enumerated constants in SPECT_CNTRL_StateType
 SPECT_CNTRL_StateTypeDict = {}
@@ -622,6 +648,7 @@ SPECT_CNTRL_StateTypeDict[2] = 'SPECT_CNTRL_StartManualState' # Start acquisitio
 SPECT_CNTRL_StateTypeDict[3] = 'SPECT_CNTRL_RunningState' # Acquisition in progress
 SPECT_CNTRL_StateTypeDict[4] = 'SPECT_CNTRL_PausedState' # Acquisition paused
 SPECT_CNTRL_StateTypeDict[5] = 'SPECT_CNTRL_ErrorState' # Error state
+SPECT_CNTRL_StateTypeDict[6] = 'SPECT_CNTRL_DiagnosticState' # Diagnostic state
 
 # Enumerated definitions for SPECT_CNTRL_ModeType
 SPECT_CNTRL_ModeType = c_uint
@@ -841,6 +868,7 @@ HARDWARE_PRESENT_WarmBoxBit = 6 # Warm Box
 HARDWARE_PRESENT_HotBoxBit = 7 # Hot Box
 HARDWARE_PRESENT_DasTempMonitorBit = 8 # Das Temp Monitor
 HARDWARE_PRESENT_AnalogInterface = 9 # Analog Interface
+HARDWARE_PRESENT_FiberAmplifierBit = 10 # Fiber Amplifier
 
 # Dictionary for enumerated constants in HARDWARE_PRESENT_BitType
 HARDWARE_PRESENT_BitTypeDict = {}
@@ -854,6 +882,7 @@ HARDWARE_PRESENT_BitTypeDict[6] = 'HARDWARE_PRESENT_WarmBoxBit' # Warm Box
 HARDWARE_PRESENT_BitTypeDict[7] = 'HARDWARE_PRESENT_HotBoxBit' # Hot Box
 HARDWARE_PRESENT_BitTypeDict[8] = 'HARDWARE_PRESENT_DasTempMonitorBit' # Das Temp Monitor
 HARDWARE_PRESENT_BitTypeDict[9] = 'HARDWARE_PRESENT_AnalogInterface' # Analog Interface
+HARDWARE_PRESENT_BitTypeDict[10] = 'HARDWARE_PRESENT_FiberAmplifierBit' # Fiber Amplifier
 
 # Enumerated definitions for FLOAT_ARITHMETIC_OperatorType
 FLOAT_ARITHMETIC_OperatorType = c_uint
@@ -871,17 +900,17 @@ FLOAT_ARITHMETIC_OperatorTypeDict[3] = 'FLOAT_ARITHMETIC_Multiplication' #
 FLOAT_ARITHMETIC_OperatorTypeDict[4] = 'FLOAT_ARITHMETIC_Division' # 
 FLOAT_ARITHMETIC_OperatorTypeDict[5] = 'FLOAT_ARITHMETIC_Average' # 
 
-# Enumerated definitions for HEATER_CONTROL_ModeType
-HEATER_CONTROL_ModeType = c_uint
-HEATER_CONTROL_MODE_DELTA_TEMP = 0 # 
-HEATER_CONTROL_MODE_TEC_TARGET = 1 # 
-HEATER_CONTROL_MODE_HEATER_FIXED = 2 # 
+# Enumerated definitions for HEATER_CNTRL_ModeType
+HEATER_CNTRL_ModeType = c_uint
+HEATER_CNTRL_MODE_DELTA_TEMP = 0 # 
+HEATER_CNTRL_MODE_TEC_TARGET = 1 # 
+HEATER_CNTRL_MODE_HEATER_FIXED = 2 # 
 
-# Dictionary for enumerated constants in HEATER_CONTROL_ModeType
-HEATER_CONTROL_ModeTypeDict = {}
-HEATER_CONTROL_ModeTypeDict[0] = 'HEATER_CONTROL_MODE_DELTA_TEMP' # 
-HEATER_CONTROL_ModeTypeDict[1] = 'HEATER_CONTROL_MODE_TEC_TARGET' # 
-HEATER_CONTROL_ModeTypeDict[2] = 'HEATER_CONTROL_MODE_HEATER_FIXED' # 
+# Dictionary for enumerated constants in HEATER_CNTRL_ModeType
+HEATER_CNTRL_ModeTypeDict = {}
+HEATER_CNTRL_ModeTypeDict[0] = 'HEATER_CNTRL_MODE_DELTA_TEMP' # 
+HEATER_CNTRL_ModeTypeDict[1] = 'HEATER_CNTRL_MODE_TEC_TARGET' # 
+HEATER_CNTRL_ModeTypeDict[2] = 'HEATER_CNTRL_MODE_HEATER_FIXED' # 
 
 # Enumerated definitions for LOG_LEVEL_Type
 LOG_LEVEL_Type = c_uint
@@ -930,7 +959,7 @@ SCHEME_VersionShift = 4
 SCHEME_TableShift = 0
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 403
+INTERFACE_NUMBER_OF_REGISTERS = 406
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1335,6 +1364,9 @@ SENTRY_CAVITY_PRESSURE_MIN_REGISTER = 399
 SENTRY_CAVITY_PRESSURE_MAX_REGISTER = 400
 SENTRY_AMBIENT_PRESSURE_MIN_REGISTER = 401
 SENTRY_AMBIENT_PRESSURE_MAX_REGISTER = 402
+FAN_CNTRL_STATE_REGISTER = 403
+FAN_CNTRL_TEMPERATURE_REGISTER = 404
+KEEP_ALIVE_REGISTER = 405
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -2203,6 +2235,12 @@ registerByName["SENTRY_AMBIENT_PRESSURE_MIN_REGISTER"] = SENTRY_AMBIENT_PRESSURE
 registerInfo.append(RegInfo("SENTRY_AMBIENT_PRESSURE_MIN_REGISTER",c_float,1,1.0,"rw"))
 registerByName["SENTRY_AMBIENT_PRESSURE_MAX_REGISTER"] = SENTRY_AMBIENT_PRESSURE_MAX_REGISTER
 registerInfo.append(RegInfo("SENTRY_AMBIENT_PRESSURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerByName["FAN_CNTRL_STATE_REGISTER"] = FAN_CNTRL_STATE_REGISTER
+registerInfo.append(RegInfo("FAN_CNTRL_STATE_REGISTER",FAN_CNTRL_StateType,0,1.0,"r"))
+registerByName["FAN_CNTRL_TEMPERATURE_REGISTER"] = FAN_CNTRL_TEMPERATURE_REGISTER
+registerInfo.append(RegInfo("FAN_CNTRL_TEMPERATURE_REGISTER",c_float,1,1.0,"rw"))
+registerByName["KEEP_ALIVE_REGISTER"] = KEEP_ALIVE_REGISTER
+registerInfo.append(RegInfo("KEEP_ALIVE_REGISTER",c_int,0,1.0,"rw"))
 
 # FPGA block definitions
 
@@ -2376,6 +2414,10 @@ RDMAN_OPTIONS_DITHER_ENABLE_B = 3 # Allow transition to dither mode bit position
 RDMAN_OPTIONS_DITHER_ENABLE_W = 1 # Allow transition to dither mode bit width
 RDMAN_OPTIONS_SIM_ACTUAL_B = 4 # Ringdown data source bit position
 RDMAN_OPTIONS_SIM_ACTUAL_W = 1 # Ringdown data source bit width
+RDMAN_OPTIONS_SCOPE_MODE_B = 5 # Oscilloscope mode bit position
+RDMAN_OPTIONS_SCOPE_MODE_W = 1 # Oscilloscope mode bit width
+RDMAN_OPTIONS_SCOPE_SLOPE_B = 6 # Tuner slope to trigger scope bit position
+RDMAN_OPTIONS_SCOPE_SLOPE_W = 1 # Tuner slope to trigger scope bit width
 
 RDMAN_PARAM0 = 3 # Parameter 0 register
 RDMAN_PARAM1 = 4 # Parameter 1 register
@@ -2454,17 +2496,21 @@ INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B = 13 # Enables SOA shutdown (in automatic m
 INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W = 1 # Enables SOA shutdown (in automatic mode) bit width
 INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B = 14 # Select optical switch type bit position
 INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W = 1 # Select optical switch type bit width
-INJECT_CONTROL_SOA_PRESENT_B = 15 # SOA Present bit position
-INJECT_CONTROL_SOA_PRESENT_W = 1 # SOA Present bit width
+INJECT_CONTROL_SOA_PRESENT_B = 15 # SOA or fiber amplifier present bit position
+INJECT_CONTROL_SOA_PRESENT_W = 1 # SOA or fiber amplifier present bit width
 
-INJECT_LASER1_COARSE_CURRENT = 1 # Sets coarse current for laser 1
-INJECT_LASER2_COARSE_CURRENT = 2 # Sets coarse current for laser 2
-INJECT_LASER3_COARSE_CURRENT = 3 # Sets coarse current for laser 3
-INJECT_LASER4_COARSE_CURRENT = 4 # Sets coarse current for laser 4
-INJECT_LASER1_FINE_CURRENT = 5 # Sets fine current for laser 1
-INJECT_LASER2_FINE_CURRENT = 6 # Sets fine current for laser 2
-INJECT_LASER3_FINE_CURRENT = 7 # Sets fine current for laser 3
-INJECT_LASER4_FINE_CURRENT = 8 # Sets fine current for laser 4
+INJECT_CONTROL2 = 1 # Control register 2
+INJECT_CONTROL2_FIBER_AMP_PRESENT_B = 0 # Fiber amplifier present bit position
+INJECT_CONTROL2_FIBER_AMP_PRESENT_W = 1 # Fiber amplifier present bit width
+
+INJECT_LASER1_COARSE_CURRENT = 2 # Sets coarse current for laser 1
+INJECT_LASER2_COARSE_CURRENT = 3 # Sets coarse current for laser 2
+INJECT_LASER3_COARSE_CURRENT = 4 # Sets coarse current for laser 3
+INJECT_LASER4_COARSE_CURRENT = 5 # Sets coarse current for laser 4
+INJECT_LASER1_FINE_CURRENT = 6 # Sets fine current for laser 1
+INJECT_LASER2_FINE_CURRENT = 7 # Sets fine current for laser 2
+INJECT_LASER3_FINE_CURRENT = 8 # Sets fine current for laser 3
+INJECT_LASER4_FINE_CURRENT = 9 # Sets fine current for laser 4
 
 # Block WLMSIM Wavelength monitor simulator
 WLMSIM_OPTIONS = 0 # Options
@@ -2515,10 +2561,10 @@ FPGA_LASERLOCKER = 33 # Laser frequency locker registers
 FPGA_RDMAN = 61 # Ringdown manager registers
 FPGA_TWGEN = 86 # Tuner waveform generator
 FPGA_INJECT = 95 # Optical Injection Subsystem
-FPGA_WLMSIM = 104 # WLM Simulator
-FPGA_DYNAMICPWM_INLET = 113 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 118 # Outlet proportional valve dynamic PWM
-FPGA_SCALER = 123 # Scaler for PZT waveform
+FPGA_WLMSIM = 105 # WLM Simulator
+FPGA_DYNAMICPWM_INLET = 114 # Inlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 119 # Outlet proportional valve dynamic PWM
+FPGA_SCALER = 124 # Scaler for PZT waveform
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
@@ -2526,7 +2572,7 @@ persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_OPTIONS', u'RDSIM_PZT_
 persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_OPTIONS', u'LASERLOCKER_ETA1_OFFSET', u'LASERLOCKER_REF1_OFFSET', u'LASERLOCKER_ETA2_OFFSET', u'LASERLOCKER_REF2_OFFSET', u'LASERLOCKER_TUNING_OFFSET', u'LASERLOCKER_WM_LOCK_WINDOW', u'LASERLOCKER_WM_INT_GAIN', u'LASERLOCKER_WM_PROP_GAIN', u'LASERLOCKER_WM_DERIV_GAIN']))
 persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION']))
 persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP']))
-persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL']))
+persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL', u'INJECT_CONTROL2']))
 persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_OPTIONS', u'WLMSIM_RFAC', u'WLMSIM_WFAC', u'WLMSIM_ETA1_OFFSET', u'WLMSIM_REF1_OFFSET', u'WLMSIM_ETA2_OFFSET', u'WLMSIM_REF2_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_INLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_SLOPE']))
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_OUTLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_SLOPE']))
@@ -2597,42 +2643,47 @@ ACTION_TUNER_CNTRL_INIT = 36
 ACTION_TUNER_CNTRL_STEP = 37
 ACTION_SPECTRUM_CNTRL_INIT = 38
 ACTION_SPECTRUM_CNTRL_STEP = 39
-ACTION_ENV_CHECKER = 40
-ACTION_WB_INV_CACHE = 41
-ACTION_WB_CACHE = 42
-ACTION_SCHEDULER_HEARTBEAT = 43
-ACTION_SENTRY_INIT = 44
-ACTION_VALVE_CNTRL_INIT = 45
-ACTION_VALVE_CNTRL_STEP = 46
-ACTION_MODIFY_VALVE_PUMP_TEC = 47
-ACTION_PULSE_GENERATOR = 48
-ACTION_FILTER = 49
-ACTION_DS1631_READTEMP = 50
-ACTION_READ_LASER_THERMISTOR_RESISTANCE = 51
-ACTION_READ_ETALON_THERMISTOR_RESISTANCE = 52
-ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE = 53
-ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE = 54
-ACTION_READ_CAVITY_THERMISTOR_RESISTANCE = 55
-ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE = 56
-ACTION_READ_LASER_CURRENT = 57
-ACTION_UPDATE_WLMSIM_LASER_TEMP = 58
-ACTION_SIMULATE_LASER_CURRENT_READING = 59
-ACTION_READ_CAVITY_PRESSURE_ADC = 60
-ACTION_READ_AMBIENT_PRESSURE_ADC = 61
-ACTION_ADC_TO_PRESSURE = 62
-ACTION_SET_INLET_VALVE = 63
-ACTION_SET_OUTLET_VALVE = 64
-ACTION_INTERPOLATOR_SET_TARGET = 65
-ACTION_INTERPOLATOR_STEP = 66
-ACTION_EEPROM_WRITE = 67
-ACTION_EEPROM_READ = 68
-ACTION_EEPROM_READY = 69
-ACTION_I2C_CHECK = 70
-ACTION_NUDGE_TIMESTAMP = 71
-ACTION_EEPROM_WRITE_LOW_LEVEL = 72
-ACTION_EEPROM_READ_LOW_LEVEL = 73
-ACTION_EEPROM_READY_LOW_LEVEL = 74
-ACTION_FLOAT_ARITHMETIC = 75
+ACTION_FAN_CNTRL_INIT = 40
+ACTION_FAN_CNTRL_STEP = 41
+ACTION_ACTIVATE_FAN = 42
+ACTION_ENV_CHECKER = 43
+ACTION_WB_INV_CACHE = 44
+ACTION_WB_CACHE = 45
+ACTION_SCHEDULER_HEARTBEAT = 46
+ACTION_SENTRY_INIT = 47
+ACTION_VALVE_CNTRL_INIT = 48
+ACTION_VALVE_CNTRL_STEP = 49
+ACTION_MODIFY_VALVE_PUMP_TEC = 50
+ACTION_PULSE_GENERATOR = 51
+ACTION_FILTER = 52
+ACTION_DS1631_READTEMP = 53
+ACTION_READ_LASER_THERMISTOR_RESISTANCE = 54
+ACTION_READ_ETALON_THERMISTOR_RESISTANCE = 55
+ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE = 56
+ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE = 57
+ACTION_READ_CAVITY_THERMISTOR_RESISTANCE = 58
+ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE = 59
+ACTION_READ_LASER_CURRENT = 60
+ACTION_UPDATE_WLMSIM_LASER_TEMP = 61
+ACTION_SIMULATE_LASER_CURRENT_READING = 62
+ACTION_READ_CAVITY_PRESSURE_ADC = 63
+ACTION_READ_AMBIENT_PRESSURE_ADC = 64
+ACTION_ADC_TO_PRESSURE = 65
+ACTION_SET_INLET_VALVE = 66
+ACTION_SET_OUTLET_VALVE = 67
+ACTION_INTERPOLATOR_SET_TARGET = 68
+ACTION_INTERPOLATOR_STEP = 69
+ACTION_EEPROM_WRITE = 70
+ACTION_EEPROM_READ = 71
+ACTION_EEPROM_READY = 72
+ACTION_I2C_CHECK = 73
+ACTION_NUDGE_TIMESTAMP = 74
+ACTION_EEPROM_WRITE_LOW_LEVEL = 75
+ACTION_EEPROM_READ_LOW_LEVEL = 76
+ACTION_EEPROM_READY_LOW_LEVEL = 77
+ACTION_FLOAT_ARITHMETIC = 78
+ACTION_GET_SCOPE_TRACE = 79
+ACTION_RELEASE_SCOPE_TRACE = 80
 
 
 # Parameter form definitions
@@ -2651,6 +2702,7 @@ __p.append(('dsp','uint32',ACQ_DONE_COUNT_REGISTER,'Acquisition done interrupt c
 __p.append(('dsp','uint32',RD_DATA_MOVING_COUNT_REGISTER,'QDMA start count','','%d',1,0))
 __p.append(('dsp','uint32',RD_QDMA_DONE_COUNT_REGISTER,'QDMA done interrupt count','','%d',1,0))
 __p.append(('dsp','uint32',RD_FITTING_COUNT_REGISTER,'RD fitting count','','%d',1,0))
+__p.append(('dsp','int32',KEEP_ALIVE_REGISTER,'Keep alive register','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_KERNEL+KERNEL_OVERLOAD,'Overload status','','$%X',1,0))
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_CONTROL,[(1, u'Reset Cypress FX2 and FPGA', [(0, u'Idle'), (1, u'Reset')]), (2, u'Reset overload register', [(0, u'Idle'), (2, u'Reset')]), (4, u'Reset i2c multiplexers', [(0, u'Idle'), (4, u'Reset')]), (8, u'Manually set FPGA digital outputs', [(0, u'Automatic control'), (8, u'Manual control')])],None,None,1,1))
 __p.append(('fpga','uint32',FPGA_KERNEL+KERNEL_DOUT_HI,'Manual FPGA digital outputs (bits 39-32)','','$%X',1,1))
@@ -2886,6 +2938,14 @@ __p.append(('dsp','float',HEATER_MANUAL_MARK_REGISTER,'Heater manual mode mark',
 __p.append(('dsp','float',HEATER_CUTOFF_REGISTER,'Cavity temperature above which to turn off heater','degC','%.3f',1,1))
 parameter_forms.append(('Heater Controller Parameters',__p))
 
+# Form: Fan Controller Parameters
+
+__p = []
+
+__p.append(('dsp','float',FAN_CNTRL_TEMPERATURE_REGISTER,'Temperature above which fans operate','degC','%.1f',1,1))
+__p.append(('dsp','choices',FAN_CNTRL_STATE_REGISTER,'Fan State','',[(FAN_CNTRL_OffState,"Fans off"),(FAN_CNTRL_OnState,"Fans on"),],1,0))
+parameter_forms.append(('Fan Controller Parameters',__p))
+
 # Form: Sample Handling Parameters
 
 __p = []
@@ -2969,14 +3029,15 @@ parameter_forms.append(('Tuner Parameters',__p))
 __p = []
 
 __p.append(('dsp','choices',VIRTUAL_LASER_REGISTER,'Virtual laser','',[(VIRTUAL_LASER_1,"Virtual laser 1"),(VIRTUAL_LASER_2,"Virtual laser 2"),(VIRTUAL_LASER_3,"Virtual laser 3"),(VIRTUAL_LASER_4,"Virtual laser 4"),(VIRTUAL_LASER_5,"Virtual laser 5"),(VIRTUAL_LASER_6,"Virtual laser 6"),(VIRTUAL_LASER_7,"Virtual laser 7"),(VIRTUAL_LASER_8,"Virtual laser 8"),],1,1))
-__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser selected', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', []), (16, u'Laser 2 current source', []), (32, u'Laser 3 current source', []), (64, u'Laser 4 current source', []), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', []), (256, u'Laser 2 current (in manual mode)', []), (512, u'Laser 3 current (in manual mode)', []), (1024, u'Laser 4 current (in manual mode)', []), (2048, u'Enable SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')]), (16384, u'Select optical switch type', [(0, u'2-way'), (16384, u'4-way')]), (32768, u'SOA Present', [(0, u'No'), (32768, u'Yes')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser selected', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', []), (16, u'Laser 2 current source', []), (32, u'Laser 3 current source', []), (64, u'Laser 4 current source', []), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', []), (256, u'Laser 2 current (in manual mode)', []), (512, u'Laser 3 current (in manual mode)', []), (1024, u'Laser 4 current (in manual mode)', []), (2048, u'Enable SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')]), (16384, u'Select optical switch type', [(0, u'2-way'), (16384, u'4-way')]), (32768, u'SOA or fiber amplifier present', [(0, u'No'), (32768, u'Yes')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL2,[(1, u'Fiber amplifier present', [(0, u'No'), (1, u'Yes')])],None,None,1,1))
 parameter_forms.append(('Optical Injection Parameters',__p))
 
 # Form: Spectrum Controller Parameters
 
 __p = []
 
-__p.append(('dsp','choices',SPECT_CNTRL_STATE_REGISTER,'Spectrum Controller State','',[(SPECT_CNTRL_IdleState,"Not acquiring"),(SPECT_CNTRL_StartingState,"Start acquisition"),(SPECT_CNTRL_StartManualState,"Start acquisition with manual temperature control"),(SPECT_CNTRL_RunningState,"Acquisition in progress"),(SPECT_CNTRL_PausedState,"Acquisition paused"),(SPECT_CNTRL_ErrorState,"Error state"),],1,1))
+__p.append(('dsp','choices',SPECT_CNTRL_STATE_REGISTER,'Spectrum Controller State','',[(SPECT_CNTRL_IdleState,"Not acquiring"),(SPECT_CNTRL_StartingState,"Start acquisition"),(SPECT_CNTRL_StartManualState,"Start acquisition with manual temperature control"),(SPECT_CNTRL_RunningState,"Acquisition in progress"),(SPECT_CNTRL_PausedState,"Acquisition paused"),(SPECT_CNTRL_ErrorState,"Error state"),(SPECT_CNTRL_DiagnosticState,"Diagnostic state"),],1,1))
 __p.append(('dsp','choices',SPECT_CNTRL_MODE_REGISTER,'Spectrum Controller Mode','',[(SPECT_CNTRL_SchemeSingleMode,"Perform single scheme"),(SPECT_CNTRL_SchemeMultipleMode,"Perform multiple schemes"),(SPECT_CNTRL_SchemeSequenceMode,"Perform scheme sequence"),(SPECT_CNTRL_ContinuousMode,"Continuous acquisition"),(SPECT_CNTRL_ContinuousManualTempMode,"Continuous acquisition with manual temperature control"),],1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_ACTIVE_SCHEME_REGISTER,'Active scheme table index','','%d',1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_NEXT_SCHEME_REGISTER,'Next scheme table index','','%d',1,1))
@@ -3007,7 +3068,7 @@ parameter_forms.append(('Ringdown Simulator Parameters',__p))
 __p = []
 
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Reset ringdown manager', [(0, u'Idle'), (16, u'Reset')]), (32, u'Mark bank 0 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Mark bank 1 available for write', [(0, u'Idle'), (64, u'Mark available')]), (128, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (128, u'Acknowledge')]), (256, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (256, u'Acknowledge')]), (512, u'Tuner waveform mode', [(0, u'Ramp'), (512, u'Dither')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')]), (16, u'Ringdown data source', [(0, u'Simulator'), (16, u'Actual ADC')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')]), (16, u'Ringdown data source', [(0, u'Simulator'), (16, u'Actual ADC')]), (32, u'Oscilloscope mode', [(0, u'Disabled'), (32, u'Enabled')]), (64, u'Tuner slope to trigger scope', [(0, u'Falling'), (64, u'Rising')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DIVISOR,'Ringdown ADC divisor, Sample freq = 25MHz/(divisor+1)','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_NUM_SAMP,'Ringdown samples to collect','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_THRESHOLD,'Ringdown threshold','','%d',1,1))
