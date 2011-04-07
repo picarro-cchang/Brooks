@@ -27,6 +27,7 @@ import time
 import ctypes
 import cPickle
 from tables import *
+import cProfile
 
 from Host.autogen import interface
 from Host.autogen.interface import ProcessedRingdownEntryType
@@ -211,7 +212,9 @@ class SpectrumCollector(object):
             #Pull a spectral point from the RD queue...
             try:
                 rdData = self.getSpectralDataPoint(timeToRetry=0.5)
-                if rdData is None: continue
+                if rdData is None: 
+                    time.sleep(0.5)
+                    continue
                 now = TimeStamp()
                 if self.rdQueueGetLastTime != 0:
                     rtt = now - self.rdQueueGetLastTime
@@ -268,7 +271,7 @@ class SpectrumCollector(object):
                 self.finish()
 
             lastCount = thisCount
- 
+            
         Log("Spectrum Collector RPC handler shut down")
 
     def getSpectralDataPoint(self, timeToRetry, timeout = 10):
@@ -404,15 +407,13 @@ class SpectrumCollector(object):
                 for dataKey in self.rdfDict.keys():
                     subDataDict = self.rdfDict[dataKey]
                     if len(subDataDict) > 0:
-                        sortedKeys = sorted(subDataDict.keys())
-                        if isinstance(subDataDict.values()[0], numpy.ndarray):
+                        keys,values = zip(*sorted(subDataDict.items()))
+                        if isinstance(values[0], numpy.ndarray):
                             # Array
-                            sortedValues = [subDataDict.values()[i] for i in numpy.argsort(subDataDict.keys())]
-                            dataRec = numpy.rec.fromarrays(sortedValues, names=sortedKeys)
-                        elif isinstance(subDataDict.values()[0], list) or isinstance(subDataDict.values()[0], tuple):
+                            dataRec = numpy.rec.fromarrays(values, names=keys)
+                        elif isinstance(values[0], list) or isinstance(values[0], tuple):
                             # Convert list or tuple to array
-                            sortedValues = [numpy.array(subDataDict.values()[i]) for i in numpy.argsort(subDataDict.keys())]
-                            dataRec = numpy.rec.fromarrays(sortedValues, names=sortedKeys)
+                            dataRec = numpy.rec.fromarrays([numpy.asarray(v) for v in values], names=keys)
                         else:
                             raise ValueError("Non-lists or non-arrays are unsupported")
                         # Either append dataRec to an existing table, or create a new one
@@ -612,4 +613,5 @@ if __name__ == "__main__":
     spCollectorApp = SpectrumCollector(configFile)
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     spCollectorApp.run()
+    # cProfile.run('spCollectorApp.run()','c:/spectrumCollectorProfile')
     Log("Exiting program")
