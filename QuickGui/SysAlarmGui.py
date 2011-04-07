@@ -5,7 +5,7 @@ import sys
 import wx
 import time
 from wx.lib.wordwrap import wordwrap
-from GuiTools import *
+from Host.Common.GuiTools import *
 from Host.Common import AppStatus
 from Host.Common import CmdFIFO, Listener, TextListener
 from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_IPV

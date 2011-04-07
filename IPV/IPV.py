@@ -23,6 +23,7 @@ from Queue import Queue
 from numpy import *
 from datetime import datetime, timedelta
 from IPVFrame import IPVFrame
+from ReportSender import ReportSender
 from Host.autogen import interface
 from Host.Common import timestamp
 from Host.Common import Broadcaster
@@ -31,6 +32,7 @@ from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_ARCHIVER, RPC_PORT
 from Host.Common import CmdFIFO
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.EventManagerProxy import *
+from Host.Common.GuiTools import getInnerStr
 EventManagerProxy_Init(APP_NAME,DontCareConnection = False)
 
 DB_LEVEL = 2
@@ -60,7 +62,7 @@ CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCH
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                             APP_NAME,
                                             IsDontCareConnection = False)
-                                            
+    
 def floatListToString(fList, precision=3):
     format = "%."+ "%ie" % int(precision)
     return " ".join([format % i for i in fList])
@@ -122,7 +124,7 @@ class FileUploader(object):
         self.ipvExtension = co.get("FileUpload", "ipvExtension")
         self.host = co.get("FileUpload", "host")
         self.user = co.get("FileUpload", "user")
-        password = co.get("FileUpload", "password")
+        password = getInnerStr(co.get("FileUpload", "password"))
         try:
             self.password = bz2.decompress(eval("\"%s\"" % password))
         except:
@@ -130,6 +132,35 @@ class FileUploader(object):
         self.sftpClient = None
         self.uploadStatus = -1
         self.channel = None
+        # XML-RPC setup
+        xmlrpcUriUser = getInnerStr(co.get("FileUpload", "xmlrpcUriUser", "mfgteam"))
+        try:
+            xmlrpcUriUser = bz2.decompress(eval("\"%s\"" % xmlrpcUriUser))
+        except Exception, err:
+            self.writeToStatus("Error: %r. Use default XML-RPC login username" % err)
+        xmlrpcUriPassword = getInnerStr(co.get("FileUpload", "xmlrpcUriPassword", "PridJaHop4"))
+        try:
+            xmlrpcUriPassword = bz2.decompress(eval("\"%s\"" % xmlrpcUriPassword))
+        except Exception, err:
+            self.writeToStatus("Error: %r. Use default XML-RPC login password" % err)
+        xmlrpcTxUser = getInnerStr(co.get("FileUpload", "xmlrpcTxUser", "xml_user"))
+        try:
+            xmlrpcTxUser = bz2.decompress(eval("\"%s\"" % xmlrpcTxUser))
+        except Exception, err:
+            self.writeToStatus("Error: %r. Use default XML-RPC username" % err)
+        xmlrpcTxPassword = getInnerStr(co.get("FileUpload", "xmlrpcTxPassword", "skCyrcFHVZecfD"))
+        try:
+            xmlrpcTxPassword = bz2.decompress(eval("\"%s\"" % xmlrpcTxPassword))
+        except Exception, err:
+            self.writeToStatus("Error: %r. Use default XML-RPC password" % err)
+        try:
+            self.xmlReportSender = ReportSender("http://%s:%s@mfg.picarro.com/xmlrpc/" % (xmlrpcUriUser, xmlrpcUriPassword),
+                                                xmlrpcTxUser, xmlrpcTxPassword)
+            # To do: send a XML-RPC command to test the connectivity...
+        except Exception, err:
+            self.writeToStatus("Failed to establish XML-RPC interface: %r" % err)
+            self.xmlReportSender = None
+            self.uploadStatus = 0
         
     def setSftpClient(self):
         # Build the channel and client to the remote server
@@ -181,10 +212,24 @@ class FileUploader(object):
                 filepath = os.path.join(root, filename)
                 if os.path.basename(filename).split('.')[-1] in self.ipvExtension:
                     try:
-                        self._uploadFile(filepath, self.ipvRemoteDir)
+                        if os.path.basename(filename).split("_")[0] == "Report":
+                            self._sendFileXmlRpc(filepath)
+                        else:
+                            self._uploadFile(filepath, self.ipvRemoteDir)
                     except Exception, err:
                         self.writeToStatus('%r' % err)
             
+    def _sendFileXmlRpc(self, filepath):
+        try:
+            ret = self.xmlReportSender.sendReport(filepath)
+            if ret == "OK":
+                os.remove(filepath)
+                self.writeToStatus("%s sent via XML-RPC" % (filepath,))
+                return
+        except:
+            pass
+        self.writeToStatus("Failed to send %s via XML-RPC" % (filepath,))
+                            
     def _uploadFile(self, filepath, remoteDir = ""):
         (dir, filename) = os.path.split(filepath)
         filepath = filepath.replace("\.", "").replace("\\", "/")
