@@ -77,7 +77,8 @@ void message_puts(unsigned int level,char *message)
     m->timestamp = 0LL;
     m->message[0] = '0' + level;
     m->message[1] = ':';
-    strncpy(m->message + 2,message,120);
+    strncpy(m->message + 2,message,117);
+    m->message[119] = '\0';
     m->timestamp = ts;
     message_pointer++;
     if (message_pointer>=NUM_MESSAGES) message_pointer = 0;
