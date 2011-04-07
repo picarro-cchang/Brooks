@@ -39,7 +39,7 @@ from os.path import getmtime, join, split, exists
 from scipy.optimize import leastsq, brent
 from string import strip
 from struct import calcsize, unpack
-from time import strptime, mktime, time, localtime
+from time import strptime, mktime, time, localtime, clock
 from Host.Common.EventManagerProxy import Log
 from tables import *
 from Host.Common.timestamp import unixTime
@@ -99,7 +99,17 @@ def loadSplineLibrary(fnameOrConfig):
     splineLibrary = SplineLibrary(fnameOrConfig)
     sys._getframe(1).f_globals["splineLibrary"] = splineLibrary
     return splineLibrary
-
+    
+################################################################################
+# Print deprecation messages
+################################################################################
+deprecateMessageTimes = {}
+def deprecate(msg):
+    now = clock()
+    if not((msg in deprecateMessageTimes) and (now-deprecateMessageTimes[msg] < 60)):
+        print msg
+        Log(msg,Level=2)
+        deprecateMessageTimes[msg] = clock()
 
 ################################################################################
 # Spectral lineshape functions
@@ -1160,10 +1170,14 @@ class RdfData(object):
             elif key.lower() == "datapoints": return len(self.indexVector)
             elif key.lower() == "spectrumid": return self.sensorDict["SpectrumID"]
             elif key.lower() == "filterhistory": return self.filterHistory
-            elif key.lower() == "numgroups": return len(self.groups)
+            elif key.lower() == "numgroups":
+                deprecate("Using numgroups in fitter scripts is deprecated. Replace with ngroups.")
+                return len(self.groups)+1
+            elif key.lower() == "ngroups": return len(self.groups)
             else:
-                raise KeyError("Unknown item for RdfData()")
-        except:
+                raise KeyError("Unknown item %s for RdfData()" % key)
+        except Exception, e:
+            Log("Exception while processing RdfData.__getitem__")
             return None
     def defineFitData(self,freq,loss,sdev):
         self.fitData = dict(freq=freq,loss=loss,sdev=sdev)
