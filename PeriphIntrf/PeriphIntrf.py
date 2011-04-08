@@ -9,7 +9,7 @@ from collections import deque
 from matplotlib import pyplot 
 from parserFunc import *
 from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import RPC_PORT_PERIPH_INTRF
+from Host.Common.SharedTypes import RPC_PORT_PERIPH_INTRF, RPC_PORT_DATA_MANAGER
 
 APP_NAME = "Peripheral Interface"
 APP_DESCRIPTION = "Socket client and interpolator"
@@ -21,8 +21,11 @@ PORT = 5193
 #PORT = 8037
 
 NUM_CHANNELS = 4
-PARSER = [parseAnemometer, parseDefault, parseDefault, parseDefault]
-DATALABELS = [["Anemometer_ux", "Anemometer_uy", "Anemometer_uz", "Anemometer_c"],[],[],[]]
+PARSER = [parseAnemometer, parseGPS, parseDefault, parseDefault]
+DATALABELS = [["ANEMOMETER_UX", "ANEMOMETER_UY", "ANEMOMETER_UZ", "ANEMOMETER_C"],
+              ["GPS_TIME", "GPS_ABS_LAT", "GPS_REL_LAT", "GPS_ABS_LONG", "GPS_REL_LONG", "GPS_FIT"],
+              [],
+              []]
      
 class RpcServerThread(threading.Thread):
     def __init__(self, rpcServer, exitFunction):
@@ -48,10 +51,12 @@ def linInterp(pPair, tPair, t):
         else:
             return ((t-tPair[0])*pPair[1] + (tPair[1]-t)*pPair[0]) / dtime
     except:
-        return None
+        return 0.0
         
 class PeriphIntrf(object):
     def __init__(self):
+        self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
+        self.dataManagerRpc.PeriphIntrf_Enable()
         self.queue = Queue.Queue(0)
         self.sock = None
         self.getThread = None
@@ -72,7 +77,7 @@ class PeriphIntrf(object):
                                                 ServerVersion = __version__,
                                                 threaded = True)
         self.rpcServer.register_function(self.getDataByTime)
-        self.rpcServer.register_function(self.selectDataByTime)
+        self.rpcServer.register_function(self.selectAllDataByTime)
         # Start the rpc server on another thread...
         #self.rpcThread = RpcServerThread(self.rpcServer, self.shutdown)
         self.rpcServer.serve_forever()
@@ -141,10 +146,11 @@ class PeriphIntrf(object):
                     # Store in sensorList
                     self.sensorLock.acquire()
                     try:
-                        # print ts, ["%02x"%ord(c) for c in newStr]
-                        self.sensorList[port].append((ts, PARSER[port](newStr)))
-                        if len(self.sensorList[port]) > MAX_SENSOR_QUEUE_SIZE:
-                            self.sensorList[port].popleft()
+                        parsedList = PARSER[port](newStr)
+                        if parsedList:
+                            self.sensorList[port].append((ts, parsedList))
+                            if len(self.sensorList[port]) > MAX_SENSOR_QUEUE_SIZE:
+                                self.sensorList[port].popleft()
                     except Exception, err:
                         print "%r" % (err,)
                     finally:
@@ -166,7 +172,7 @@ class PeriphIntrf(object):
         self.startSocketThread()
         self.startStateMachineThread()
          
-    def selectDataByTime(self, requestTime):
+    def selectAllDataByTime(self, requestTime):
         sensorDataList = [[[], []]]*NUM_CHANNELS
         self.sensorLock.acquire()
         try:
@@ -188,7 +194,7 @@ class PeriphIntrf(object):
         return sensorDataList
         
     def getDataByTime(self, requestTime, dataList):
-        sensorDataList = self.selectDataByTime(requestTime)
+        sensorDataList = self.selectAllDataByTime(requestTime)
         interpDict = {}
         for port in range(NUM_CHANNELS):
             timeDataLists = sensorDataList[port]
@@ -199,7 +205,7 @@ class PeriphIntrf(object):
             try:
                 retList.append(interpDict[data])
             except:
-                retList.append(None)
+                retList.append(0.0)
         return retList
         
     def shutdown(self):

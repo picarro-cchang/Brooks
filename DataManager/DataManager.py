@@ -838,6 +838,17 @@ class DataManager(object):
         self.measBufferLock.release()
         return ret
     
+    def RPC_PeriphIntrf_Enable(self):
+        """Enables peripheral interface
+        """
+        if self.CRDS_PeriphIntrf:
+            return
+        else:
+            self.CRDS_PeriphIntrf = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_PERIPH_INTRF,
+                                            APP_NAME,
+                                            IsDontCareConnection = False)
+            return "OK"
+        
     def _AddToMeasBuffer(self, measData):
         (source, colList, bufSize) = self.measBufferConfig
         if len(colList) == 0 or bufSize < 1:
@@ -1182,9 +1193,11 @@ class DataManager(object):
                                                 APP_NAME,
                                                 IsDontCareConnection = False)
                 # Call a remote function to test if the RPC connection is established.
+                Log("Connected to %s" % self.CRDS_PeriphIntrf.CmdFIFO.GetName())
                 print "Connected to %s" % self.CRDS_PeriphIntrf.CmdFIFO.GetName()
             except:
                 self.CRDS_PeriphIntrf = None
+                Log("Peripheral Interface not running")
                 print "Peripheral Interface not running"
                     
             # Initialize pulse analyzer if endabled in INI file
@@ -1405,6 +1418,14 @@ class DataManager(object):
             else:    
                 self.serialOutQueue.put((measDataTime, time.time(), resultAsString))
 
+    def _getPeriphData(self, requestTime, dataList):
+        try:
+            return self.CRDS_PeriphIntrf.getDataByTime(requestTime, dataList)
+        except:
+            Log("Peripheral Interface was interrupted")
+            print "Peripheral Interface was interrupted"
+            self.CRDS_PeriphIntrf = None
+            
     def _HandleScriptExecution(self,
                                ScriptCodeObj,
                                ScriptArgs,
@@ -1441,6 +1462,11 @@ class DataManager(object):
         except:
             UserCalDict = {}
             
+        if self.CRDS_PeriphIntrf:
+            periphIntrf = self._getPeriphData
+        else:
+            periphIntrf = None
+            
         ret = ScriptRunner.RunAnalysisScript(ScriptCodeObj = ScriptCodeObj,
                                              ScriptArgs = ScriptArgs,
                                              SourceTime_s = SourceTime_s,
@@ -1454,7 +1480,7 @@ class DataManager(object):
                                              InstrumentStatus = self.LatestInstMgrStatus,
                                              MeasSysRpcServer = CRDS_MeasSys,
                                              FreqConvRpcServer = CRDS_FreqConv,
-                                             PeriphIntrf = self.CRDS_PeriphIntrf,
+                                             PeriphIntrf = periphIntrf,
                                              SerialInterface = self.serial,
                                              ScriptName = ReportSource,
                                              ExcLogFunc = LogExc,
