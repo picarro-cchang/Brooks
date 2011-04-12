@@ -92,6 +92,16 @@ class Page1(wx.Panel):
         d.ShowModal()
         d.Destroy()
                 
+    def onCheckListBox(self, event):
+        eventObj = event.GetEventObject()
+        if self.fullInterface:
+            return
+        else:
+            index = event.GetSelection()
+            checkedList = list(eventObj.GetChecked())
+            checkedList.append(index)
+            eventObj.SetChecked(checkedList)
+            
     def onDataDuration(self, event):
         eventObj = event.GetEventObject()
         newVal = float(eventObj.GetValue())
@@ -147,20 +157,27 @@ class Page1(wx.Panel):
         for dataLog in self.dataLogSections:
             dataSource = self.cp.get(dataLog, "sourcescript")
             self.dataSources.append(dataSource)
+            stddataList = strToList(self.cp.get(dataLog, "datalist"))
             try:
-                dataList = strToList(self.dataColsCp.get("DataCols", dataSource))
+                fulldataList = strToList(self.dataColsCp.get("DataCols", dataSource))
+                self.dataCols.append(fulldataList)
             except Exception, err:
                 print "%r" % err
-                dataList = strToList(self.cp.get(dataLog, "datalist"))
-            self.dataCols.append(dataList)
+                self.dataCols.append(stddataList)
             
             self.labelDict[dataLog] = []
             self.controlDict[dataLog] = []
             
+            if self.fullInterface:
+                datalistChoices = fulldataList
+            else:
+                datalistChoices = stddataList
             label = wx.StaticText(self, -1, "Data Columns (%s)" % dataLog, style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.labelDict[dataLog].append(label)
-            self.controlDict[dataLog].append(wx.CheckListBox(self, -1, choices = dataList, size = (250, dataColumnBoxHeight)))
+            dataCheckListBox = wx.CheckListBox(self, -1, choices = datalistChoices, size = (250, dataColumnBoxHeight))
+            self.controlDict[dataLog].append(dataCheckListBox)
+            self.Bind(wx.EVT_CHECKLISTBOX, self.onCheckListBox, dataCheckListBox)
             
             label = wx.StaticText(self, -1, "Hours of Each Log File (0.01~24)", style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
@@ -224,6 +241,7 @@ class Page1(wx.Panel):
             updateDataLog = False
             for data in curDataList:
                 if data not in self.dataCols[idx]:
+                    # self.dataCols contains the full list
                     curDataList.remove(data)
                     updateDataLog = True
             if updateDataLog:
@@ -267,12 +285,10 @@ class Page1(wx.Panel):
                 
             # Update Data Logger
             try:
-                checkedList = ""
-                for i in self.controlDict[dataLog][0].GetChecked():
-                    checkedList += "%s," % self.dataCols[idx][i]
                 writeCp = False
-                if self.cp.get(dataLog, "dataList") != checkedList[:-1]:
-                    self.cp.set(dataLog, "datalist", checkedList[:-1])
+                checkedList = ",".join(self.controlDict[dataLog][0].GetCheckedStrings())
+                if self.cp.get(dataLog, "dataList") != checkedList:
+                    self.cp.set(dataLog, "datalist", checkedList)
                     writeCp = True
                 if self.cp.get(dataLog, "maxlogduration_hrs") != dataDuration:
                     self.cp.set(dataLog, "maxlogduration_hrs", dataDuration)
@@ -312,15 +328,18 @@ class Page1(wx.Panel):
             for idx in idxList:
                 self.controlDict[dataLog][idx].Enable(en)
         if 0 in idxList:
-            self.buttonGet.Enable(self.enFlag and self.fullInterface)
+            # Use 0 to identify that this is for Data Logger section
+            self.buttonGet.Enable(en and self.fullInterface)
         
     def setComment(self, comment):
         self.comment.SetValue(comment)
 
     def setFullInterface(self, full):
         self.fullInterface = full
+        self.updateLayout()
         self.buttonGet.Enable(self.enFlag and self.fullInterface)
-        
+        self.showCurValues()
+
     def getDataSourceCols(self):
         return self.dataSources, self.dataLogSections, self.dataCols
             
