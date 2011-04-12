@@ -48,7 +48,7 @@ class SetupToolFrame(wx.Frame):
         # Pages
         self.pages = []
         self.pages.append(Page1(self, quickGuiRpc, self.panel1, -1))
-        self.pages.append(Page2(comPortList, self.coordinatorPortList, self.panel2, -1))
+        self.pages.append(Page2(comPortList, self.coordinatorPortList, self.hasReadGPSWS, self.panel2, -1))
         self.pages.append(Page3(driverRpc, self.panel3, -1))
         self.pages.append(Page4(self.panel4, -1))
         self.pages.append(Page5(self, self.panel5, -1))

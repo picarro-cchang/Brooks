@@ -37,7 +37,7 @@ CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER
                                          IsDontCareConnection = False)
                                             
 TRANSLATE_TABLE = {"dataLogger": "Data Logger", "archiver": "Archiver", "valveSequencer": "Valve Sequencer MPV", 
-                   "commandInterface": "Command Interface", "dataManager": "Data Streaming", "coordinator": "Coordinator"}
+                   "commandInterface": "Command Interface", "dataManager": "Data Streaming", "coordinator": "Coordinator", "readGPSWS": "GPS and WS"}
 
 class SetupTool(SetupToolFrame):
     def __init__(self, setupToolIni, *args, **kwds):       
@@ -55,14 +55,20 @@ class SetupTool(SetupToolFrame):
         remoteAccessDir = os.path.join(self.appConfigPath, "Utilities")
         quickGuiDir = os.path.join(self.appConfigPath, "QuickGui")
         coordinatorDir = os.path.join(self.appConfigPath, "Coordinator")
-        
+        readGPSWSDir = os.path.join(self.appConfigPath, "Utilities")
+
         self.pageAppDict = {0: ["dataLogger", "archiver"], 1: ["dataManager", "valveSequencer", "commandInterface", "coordinator"],
                             2: ["remoteAccess"], 3:["quickGui"], 4:["commandInterface"], 5:["dataManager"]}
         self.appIniDirDict = {"archiver": archiverDir, "dataLogger": dataLoggerDir, "dataManager": dataMgrDir,
                               "valveSequencer": valveDir, "commandInterface": cmdDir,
                               "remoteAccess": remoteAccessDir, "quickGui": quickGuiDir,
                               "coordinator": coordinatorDir}
-
+        self.hasReadGPSWS = False
+        if os.path.isfile(os.path.join(readGPSWSDir, self.setupCp.get("Setup", "ReadGPSWS", ""))):
+            self.hasReadGPSWS = True
+            self.pageAppDict[1] += ["readGPSWS"]
+            self.appIniDirDict["readGPSWS"] = readGPSWSDir
+            
         comPortList = self.setupCp.get("Setup", "comPortList")
         self._getCoordinatorPathAndPortList()
         self.dataColsFile = self.setupCp.get("Setup", "dataColsFile")
@@ -179,11 +185,14 @@ class SetupTool(SetupToolFrame):
             
             iniList = []
             for app in appList:
-                if app != "coordinator":
+                if app not in ["coordinator", "readGPSWS"]:
                     iniName = self.setupCp[self.mode][app]
                     iniPath = self.getIniPath(app, iniName)
-                else:
-                    iniPath = self.getIniPath(app, None)
+                elif app == "coordinator":
+                    iniPath = self.getIniPath(app, None) # a list of paths
+                elif app == "readGPSWS" and self.hasReadGPSWS:
+                    iniName = self.setupCp["Setup"][app]
+                    iniPath = self.getIniPath(app, iniName)
                 iniList.append(iniPath)
             if page == 0:
                 # Add data cols file for data logger page
@@ -192,37 +201,33 @@ class SetupTool(SetupToolFrame):
             
             comment = ""
             for app in appList:
-                iniName = self.setupCp[self.mode][app]
-                if iniName in self.modeList:
-                    # Configurations depend on other modes
-                    if page == 0:
-                        if app == "dataLogger":
-                            pageObj.enable([0,1,2], False)
-                        else:
-                            pageObj.enable([3,4], False)
-                        comment += "* %s controlled by %s Mode\n" % (TRANSLATE_TABLE[app], iniName)
-                    elif page == 1:
-                        if app != "coordinator":
+                if app not in ["coordinator", "readGPSWS"]:
+                    # coordinator and readGPSWS are global
+                    iniName = self.setupCp[self.mode][app]
+                    if iniName in self.modeList:
+                        # Configurations depend on other modes
+                        if page == 0:
+                            if app == "dataLogger":
+                                pageObj.enable([0,1,2], False)
+                            else:
+                                pageObj.enable([3,4], False)
+                            comment += "* %s controlled by %s Mode\n" % (TRANSLATE_TABLE[app], iniName)
+                        elif page == 1:
                             pageObj.enable([appList.index(app)], False)
+                            comment += "* %s controlled by %s Mode\n" % (TRANSLATE_TABLE[app], iniName)
                         else:
-                            pageObj.enable(range(3, 3+len(self.coordinatorPortList)), False)
-                        comment += "* %s controlled by %s Mode\n" % (TRANSLATE_TABLE[app], iniName)
+                            pageObj.enable(False)
+                            comment = "* Controlled by %s Mode" % iniName
                     else:
-                        pageObj.enable(False)
-                        comment = "* Controlled by %s Mode" % iniName
-                else:
-                    if page == 0:
-                        if app == "dataLogger":
-                            pageObj.enable([0,1,2], True)
-                        else:
-                            pageObj.enable([3,4], True)
-                    elif page == 1:
-                        if app != "coordinator":
+                        if page == 0:
+                            if app == "dataLogger":
+                                pageObj.enable([0,1,2], True)
+                            else:
+                                pageObj.enable([3,4], True)
+                        elif page == 1:
                             pageObj.enable([appList.index(app)], True)
                         else:
-                            pageObj.enable(range(3, 3+len(self.coordinatorPortList)), True)
-                    else:
-                        pageObj.enable(True)
+                            pageObj.enable(True)
             pageObj.setComment(comment)
             
     def getIniPath(self, app, iniName):
@@ -236,9 +241,7 @@ class SetupTool(SetupToolFrame):
             if type(iniName) != type([]):
                 iniPath = os.path.join(self.appIniDirDict[app], iniName)
             else:
-                iniPath = []
-                for ini in iniName:
-                    iniPath.append(os.path.join(self.appIniDirDict[app], ini))
+                iniPath = [os.path.join(self.appIniDirDict[app], ini) for ini in iniName]
         return iniPath
                     
     def onExitButton(self, event):

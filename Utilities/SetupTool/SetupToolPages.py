@@ -345,7 +345,7 @@ class Page1(wx.Panel):
             
 #----------------------------------------------------------------------------------------------------------------------------------------#
 class Page2(wx.Panel):
-    def __init__(self, comPortList, coordinatorPortList, *args, **kwds):
+    def __init__(self, comPortList, coordinatorPortList, hasReadGPSWS, *args, **kwds):
         wx.Panel.__init__(self, *args, **kwds)
         self.coordinatorPortList = coordinatorPortList
         self.keyLabelStrings = ["Data Streaming", "Valve Sequencer MPV", "Command Interface"]
@@ -353,6 +353,9 @@ class Page2(wx.Panel):
         for i in range(len(coordinatorPortList)):
             self.keyLabelStrings.append("Coordinator (%s)" % coordinatorPortList[i])
             self.choiceLists.append(comPortList)
+        if hasReadGPSWS:
+            self.keyLabelStrings += ["GPS", "Anemometer"]
+            self.choiceLists += [comPortList, comPortList]
         self.labelTitle = wx.StaticText(self, -1, "Serial/Socket Port Manager", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.comment = wx.TextCtrl(self, -1, "", size = COMMENT_BOX_SIZE, style = wx.TRANSPARENT_WINDOW|wx.TE_READONLY|wx.TE_MULTILINE|wx.NO_BORDER|wx.TE_RICH|wx.ALIGN_LEFT)
@@ -395,7 +398,11 @@ class Page2(wx.Panel):
             combo.Bind(wx.EVT_COMBOBOX, self.onComboBox)
         
     def setIni(self, iniList):
-        (self.dataMgrIni, self.valveIni, self.cmdIni, self.coordinatorIni) = iniList
+        try:
+            (self.dataMgrIni, self.valveIni, self.cmdIni, self.coordinatorIni, self.readGPSWSIni) = iniList
+        except:
+            (self.dataMgrIni, self.valveIni, self.cmdIni, self.coordinatorIni) = iniList
+            self.readGPSWSIni = None
         if type(self.coordinatorIni) != type([]):
             self.coordinatorIni = [self.coordinatorIni]
         
@@ -411,7 +418,7 @@ class Page2(wx.Panel):
                 else:
                     setVal = "OFF"
         except Exception, err:
-            print "Data streaming port Exception: ", err
+            print "Data streaming port Exception: %r" % err
             setVal = ""
         self.comboBoxList[0].SetStringSelection(setVal)
         self._updatePortDict(self.keyLabelStrings[0], setVal)
@@ -424,7 +431,7 @@ class Page2(wx.Panel):
             except:
                 pass
         except Exception, err:
-            print "MPV port Exception: ",err
+            print "MPV port Exception: %r" % err
             setVal = ""
         self.comboBoxList[1].SetStringSelection(setVal)
         self._updatePortDict(self.keyLabelStrings[1], setVal)
@@ -442,7 +449,7 @@ class Page2(wx.Panel):
             else:
                 setVal = "OFF"
         except Exception, err:
-             print "Command interface port Exception: ",err
+             print "Command interface port Exception: %r" % err
              setVal = ""
         self.comboBoxList[2].SetStringSelection(setVal)
         self._updatePortDict(self.keyLabelStrings[2], setVal)
@@ -465,8 +472,28 @@ class Page2(wx.Panel):
                 self.comboBoxList[3+i].SetStringSelection(portDict[coorPortName])
                 self._updatePortDict(self.keyLabelStrings[3+i], portDict[coorPortName])
         except Exception, err:
-             print "Coordinator port Exception: ",err
+             print "Coordinator port Exception: %r" % err
              
+        if self.readGPSWSIni:
+            try:
+                cp = CustomConfigObj(self.readGPSWSIni)
+                if cp.getboolean("Enable", "enableGPS"):
+                    gpsPort = cp.get("Serial", "portGPS")
+                else:
+                    gpsPort = "OFF"
+                if cp.getboolean("Enable", "enableWS"):
+                    wsPort = cp.get("Serial", "portWS")
+                else:
+                    wsPort = "OFF"
+            except Exception, err:
+                 print "GPSWS port Exception: %r" % err
+                 gpsPort = ""
+                 wsPort = ""
+            self.comboBoxList[-2].SetStringSelection(gpsPort)
+            self._updatePortDict(self.keyLabelStrings[-2], gpsPort)
+            self.comboBoxList[-1].SetStringSelection(wsPort)
+            self._updatePortDict(self.keyLabelStrings[-1], wsPort)
+        
         return True
              
     def apply(self):
@@ -496,7 +523,7 @@ class Page2(wx.Panel):
             else:
                 pass
         except Exception, err:
-            print "Data streaming port Exception: ", err
+            print "Data streaming port Exception: %r" % err
             
         mpvPort = self.comboBoxList[1].GetValue()
         if mpvPort != "":
@@ -505,7 +532,7 @@ class Page2(wx.Panel):
                 cp.set("MAIN", "comPortRotValve", mpvPort)
                 cp.write()
             except Exception, err:
-                print "MPV port Exception: ",err
+                print "MPV port Exception: %r" % err
         
         cmdPort = self.comboBoxList[2].GetValue()
         if cmdPort != "":
@@ -520,7 +547,7 @@ class Page2(wx.Panel):
                     cp.set("HEADER", "interface", "OFF")
                 cp.write()
             except Exception, err:
-                 print "Command interface port Exception: ",err
+                 print "Command interface port Exception: %r" % err
 
         for ini in self.coordinatorIni:
             try:
@@ -537,8 +564,34 @@ class Page2(wx.Panel):
                         pass
                 cp.write()
             except Exception, err:
-                 print "Coordinator port Exception: ",err
-                 
+                 print "Coordinator port Exception: %r" % err
+
+        if self.readGPSWSIni:
+            gpsPort = self.comboBoxList[-2].GetValue()
+            if gpsPort != "":
+                try:
+                    cp = CustomConfigObj(self.readGPSWSIni)
+                    if gpsPort != "OFF":
+                        cp.set("Enable", "enableGPS", "True")
+                        cp.set("Serial", "portGPS", gpsPort)
+                    else:
+                        cp.set("Enable", "enableGPS", "False")
+                    cp.write()
+                except Exception, err:
+                     print "GPS port Exception: %r" % err
+            wsPort = self.comboBoxList[-1].GetValue()
+            if wsPort != "":
+                try:
+                    cp = CustomConfigObj(self.readGPSWSIni)
+                    if wsPort != "OFF":
+                        cp.set("Enable", "enableWS", "True")
+                        cp.set("Serial", "portWS", wsPort)
+                    else:
+                        cp.set("Enable", "enableWS", "False")
+                    cp.write()
+                except Exception, err:
+                     print "WS port Exception: %r" % err
+            
         return True
         
     def enable(self, idxList, en):
