@@ -5,7 +5,7 @@ DEFAULT_NUM_STEPS = 10
 FORMAT_OPTION = 2
 
 class ValveSequencerFrame(wx.Frame):
-    def __init__(self, numSolValves, *args, **kwds):
+    def __init__(self, numSolValves, numMaxSteps, *args, **kwds):
         self.numSolValves = numSolValves
         self.numSteps = DEFAULT_NUM_STEPS 
         self.lastNumSteps = 0
@@ -55,8 +55,8 @@ class ValveSequencerFrame(wx.Frame):
         self.labelRotVal = wx.StaticText(self, -1, "Rot. Valve Code", style=wx.ALIGN_CENTRE)
         
         # SpinCtrl for defining "total steps" and "go to step"
-        self.spinCtrlTotSteps = wx.SpinCtrl(self, -1, str(self.numSteps), min=1, max=50, style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)        
-        self.spinCtrlGoToStep = wx.SpinCtrl(self, -1, "1", min=1, max=50, style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)
+        self.spinCtrlTotSteps = wx.SpinCtrl(self, -1, str(self.numSteps), min=1, max=numMaxSteps, style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)        
+        self.spinCtrlGoToStep = wx.SpinCtrl(self, -1, "1", min=1, max=numMaxSteps, style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)
 
         self.buttonApply = wx.Button(self, -1, "Apply", style=wx.BU_EXACTFIT)        
         self.buttonRunNext = wx.Button(self, -1, "Run Next Step", style=wx.BU_EXACTFIT)

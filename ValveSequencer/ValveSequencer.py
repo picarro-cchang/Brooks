@@ -42,6 +42,7 @@ AppPath = os.path.abspath(AppPath)
 DISP_TIME_PRECISION = 0.01 # in minute
 EXE_INTERVAL = 60000 * DISP_TIME_PRECISION # in ms
 SKIP_INTERVAL = 1 # in ms
+DEFAULT_MAX_VALVE_STEPS = 300
 
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME)
 
@@ -69,7 +70,8 @@ class ValveSequencer(ValveSequencerFrame):
             self.comPortRotValve = int(self.comPortRotValve)
         except:
             pass
-        ValveSequencerFrame.__init__(self, self.numSolValves, *args, **kwds)
+        numMaxSteps = self.co.getint("MAIN", "numMaxSteps", DEFAULT_MAX_VALVE_STEPS)
+        ValveSequencerFrame.__init__(self, self.numSolValves, numMaxSteps, *args, **kwds)
         try:
             self.rotValveCtrl = RotValveCtrl(self.comPortRotValve)
             self.rotValveCtrl.open()
