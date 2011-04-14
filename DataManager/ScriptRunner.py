@@ -13,11 +13,17 @@
 # 06-12-15 russ  First real release
 # 06-12-21 russ  Script name override; Logging of script exceptions
 # 09-01-21 alex  Added pulse analyzer
+# 11-04-11 sze   Added _GLOBALS_ for information to be shared between all data manager scripts
+# 11-04-13 sze   Add Synchronizer class and _SYNC_OUT_ function to support multiple data-driven 
+#                 resynchronization processes
 
+from Host.DataManager import DataSynchronizer
+from Host.Common import timestamp
 import string
 
 #Input prefix definitions
 SOURCE_TIME_ID = "_MEAS_TIME_"
+SOURCE_TIMESTAMP_ID = "_MEAS_TIMESTAMP_"
 DATA_ID = "_DATA_"
 INSTR_ID = "_INSTR_"
 SENSOR_ID = "_SENSORS_"
@@ -34,6 +40,9 @@ INSTR_STATUS_ID = "_INSTR_STATUS_"
 SERIAL_INTERFACE_ID = "_SERIAL_"
 USER_CAL_ID = "_USER_CAL_"
 
+# Synchronizer output function name...
+SYNC_OUT_ID = "_SYNC_OUT_"
+
 #Output prefix definitions...
 REPORT_ID = "_REPORT_"
 FORWARD_ID = "_ANALYZE_"
@@ -41,6 +50,23 @@ MEAS_GOOD_ID = "_MEAS_GOOD_"
 SCRIPT_NAME_ID = "_SCRIPT_NAME_"
 
 persistentDict = {}
+globals = {}
+
+class Synchronizer(object):
+    def __init__(self,analyzer,varList=[],syncInterval=100,syncLatency=500,processInterval=500,maxDelay=2000):
+        if "synchronizer" not in globals: globals["synchronizer"] = {}
+        if analyzer in globals["synchronizer"]:
+            raise ValueError("Synchronizer %s already exists" % analyzer)
+        globals["synchronizer"][analyzer] = dict(varList=varList,syncInterval=syncInterval,
+                                                 syncLatency=syncLatency,processInterval=processInterval,maxDelay=maxDelay)
+        self.analyzer = analyzer
+        self.processInterval = processInterval
+        self.lastTimestamp = None
+        
+    def dispatch(self,timestamp,forwarder):
+        if self.lastTimestamp == None or (timestamp - self.lastTimestamp)>self.processInterval:
+            forwarder[self.analyzer] = dict(timestamp=timestamp)
+            self.lastTimestamp = timestamp
 
 class NewDataDict(dict):
     """Class to allow new data in the script to be managed like a dict, but
@@ -54,6 +80,7 @@ class NewDataDict(dict):
         if key in self._OldData:
             raise Exception("Key already exists in old data!  New data keys must be new.")
         return dict.__setitem__(self, key, value)
+        
 def RunAnalysisScript(ScriptCodeObj,
                       ScriptArgs,
                       SourceTime_s,
@@ -104,7 +131,8 @@ def RunAnalysisScript(ScriptCodeObj,
     dictionaries, rather than a bunch of single variables.
 
     """
-    global persistentDict
+    global persistentDict, globals
+    
     #need to support inputs (given to the script):
     # - cal data from provided files (INSTR_DATA)
     # - all data from meas system    (DATA)
@@ -120,9 +148,11 @@ def RunAnalysisScript(ScriptCodeObj,
     # - providing copies to make sure the script doesn't screw the data up
     
     if ScriptName not in persistentDict:
-        persistentDict[ScriptName] = {"init": True}    
-    dataEnviron = {"_PERSISTENT_" : persistentDict[ScriptName] }
+        persistentDict[ScriptName] = {"init": True}
+    dataEnviron = {"_GLOBALS_" : globals, "_PERSISTENT_" : persistentDict[ScriptName], "Synchronizer" : Synchronizer }
+    
     dataEnviron[SOURCE_TIME_ID] = SourceTime_s
+    dataEnviron[SOURCE_TIMESTAMP_ID] = timestamp.unixTimeToTimestamp(SourceTime_s)
     dataEnviron[DATA_ID] = DataDict.copy()
     dataEnviron[DATA_ID].update({"cal_enabled":CalEnabled})
     dataEnviron[INSTR_ID] = InstrDataDict.copy()
@@ -150,6 +180,12 @@ def RunAnalysisScript(ScriptCodeObj,
         #dataEnviron["%s%s" % (INSTR_ID, k)] = InstrDataDict[k]
     #for k in OldDataDict.keys():
         #dataEnviron["%s%s" % (OLD_DATA_ID, k)] = OldDataDict[k]
+
+    def synchronizer(analyzer):
+        return DataSynchronizer.resync(analyzer,dataEnviron)
+        
+    dataEnviron.update({SYNC_OUT_ID : synchronizer})
+    
     try:
         exec ScriptCodeObj in dataEnviron
     except Exception, excData:

@@ -96,6 +96,7 @@ from Host.Common import ModeDef
 from Host.Common import BetterTraceback
 from Host.Common import InstMgrInc
 from Host.Common import AppStatus
+from Host.Common import timestamp
 from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER, RPC_PORT_FREQ_CONVERTER,\
                                     RPC_PORT_PERIPH_INTRF, RPC_PORT_INSTR_MANAGER
 from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_MEAS_SYSTEM, BROADCAST_PORT_SENSORSTREAM
@@ -200,7 +201,9 @@ class MeasTuple(tuple):
             return self[0]
         elif name == "value":
             return self[1]
-
+        elif name == "timestamp":
+            return timestamp.unixTimeToTimestamp(self[0])
+            
 class DataManager(object):
     """Container class/structure for DataManager options."""
     class ConfigurationOptions(object):
@@ -1146,7 +1149,7 @@ class DataManager(object):
             uniqueAnalyzerPaths = list(sets.Set(allAnalyzerPaths))
             Log("Starting compilation of identified analyzer scripts", dict(Count = len(uniqueAnalyzerPaths)))
             for path in uniqueAnalyzerPaths:
-                sourceString = file(path,"ra").read()
+                sourceString = file(path,"r").read()
                 if sys.platform != 'win32':
                     sourceString = sourceString.replace("\r","")
                 Log("Compiling analyzer script", dict(Path = path))
@@ -1344,7 +1347,8 @@ class DataManager(object):
 
         ##Any shutdown handling should go here...
         self._StopSyncScripts()
-        self.RpcServer.stop_server()
+        if not self._ShutdownRequested:
+            self.RpcServer.stop_server()
         wait_s = 2
         self.RpcThread.join(wait_s)
         if self.RpcThread.isAlive():
@@ -1489,10 +1493,23 @@ class DataManager(object):
         #unpack the returned tuple (space saving above)...
         (reportDict, forwardDict, newDataDict, measGood, reportSource_out) = ret
         self._Status.UpdateStatusBit(STATUS_MASK_Analyzing, False)
-        
+
         # Update SourceTime_s with the "time" information provided by the script (if available)
-        if reportDict and "time" in reportDict:
-            rptSourceTime_s = reportDict["time"]
+        
+        # Deal with explicit "time" and "timestamp" fields in the reportDict
+        # 1. If "time" is present, it is used to set both SourceTime_s and "timestamp"
+        # 2. Elif "timestamp" is present, it is used to set both SourceTime_s and "time"
+        # 3. Elif neither is present, both are set from the SourceTime_s
+        
+        if reportDict:
+            if "time" in reportDict:
+                rptSourceTime_s = reportDict["time"]
+                reportDict["timestamp"] = timestamp.unixTimeToTimestamp(rptSourceTime_s)
+            elif "timestamp" in reportDict:
+                rptSourceTime_s = timestamp.unixTime(reportDict["timestamp"])
+                reportDict["time"] = rptSourceTime_s
+            else:
+                rptSourceTime_s = SourceTime_s
         else:
             rptSourceTime_s = SourceTime_s
         #Get the data histories set up for the next script execution...
