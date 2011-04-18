@@ -90,6 +90,7 @@ import heapq
 
 from PulseAnalyzer import PulseAnalyzer
 from Host.autogen import interface
+from Host.PeriphIntrf.PeriphIntrf import PeriphIntrf
 from Host.CommandInterface import SerialInterface
 from Host.Common import CmdFIFO, StringPickler
 from Host.Common import ModeDef
@@ -300,7 +301,11 @@ class DataManager(object):
                 self.maketimetuple = time.localtime
             else:
                 self.maketimetuple = time.gmtime
-
+                
+            self.enablePeriphIntrf = False
+            if cp.getboolean("Setup", "EnablePeriphIntrf", False):
+                self.enablePeriphIntrf = True
+                    
             self.enablePulseAnalyzer = False
             if "PulseAnalyzer" in cp: 
                 if cp.getboolean("PulseAnalyzer", "enabled", False):
@@ -840,17 +845,6 @@ class DataManager(object):
         self.measBuffer = self.measBuffer[1:]
         self.measBufferLock.release()
         return ret
-    
-    def RPC_PeriphIntrf_Enable(self):
-        """Enables peripheral interface
-        """
-        if self.CRDS_PeriphIntrf:
-            return
-        else:
-            self.CRDS_PeriphIntrf = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_PERIPH_INTRF,
-                                            APP_NAME,
-                                            IsDontCareConnection = False)
-            return "OK"
         
     def _AddToMeasBuffer(self, measData):
         (source, colList, bufSize) = self.measBufferConfig
@@ -1190,18 +1184,13 @@ class DataManager(object):
                 self.CurrentMeasMode = self.MeasModes[self.Config.StartingMeasMode]
                 Log("Current mode name initialized", dict(Name = self.Config.StartingMeasMode))
 
-            # Get a connection to Peripheral Interface if exists
-            try:
-                self.CRDS_PeriphIntrf = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_PERIPH_INTRF,
-                                                APP_NAME,
-                                                IsDontCareConnection = False)
-                # Call a remote function to test if the RPC connection is established.
-                Log("Connected to %s" % self.CRDS_PeriphIntrf.CmdFIFO.GetName())
-                print "Connected to %s" % self.CRDS_PeriphIntrf.CmdFIFO.GetName()
-            except:
-                self.CRDS_PeriphIntrf = None
-                Log("Peripheral Interface not running")
-                print "Peripheral Interface not running"
+            if self.Config.enablePeriphIntrf:
+                try:
+                    self.CRDS_PeriphIntrf = PeriphIntrf()
+                except Exception, err:
+                    self.CRDS_PeriphIntrf = None
+                    Log("Peripheral Interface not running. Error: %r" % err)
+                    print "Peripheral Interface not running. Error: %r" % err
                     
             # Initialize pulse analyzer if endabled in INI file
             if self.Config.enablePulseAnalyzer:
@@ -1467,9 +1456,9 @@ class DataManager(object):
             UserCalDict = {}
             
         if self.CRDS_PeriphIntrf:
-            periphIntrf = self._getPeriphData
+            periphIntrfFunc = self._getPeriphData
         else:
-            periphIntrf = None
+            periphIntrfFunc = None
             
         ret = ScriptRunner.RunAnalysisScript(ScriptCodeObj = ScriptCodeObj,
                                              ScriptArgs = ScriptArgs,
@@ -1484,7 +1473,7 @@ class DataManager(object):
                                              InstrumentStatus = self.LatestInstMgrStatus,
                                              MeasSysRpcServer = CRDS_MeasSys,
                                              FreqConvRpcServer = CRDS_FreqConv,
-                                             PeriphIntrf = periphIntrf,
+                                             PeriphIntrfFunc = periphIntrfFunc,
                                              SerialInterface = self.serial,
                                              ScriptName = ReportSource,
                                              ExcLogFunc = LogExc,

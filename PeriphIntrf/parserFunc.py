@@ -16,16 +16,16 @@ def parseAnemometer(rawStr):
         retList = [ux, uy, uz, c]
     except Exception, err:
         print "%r" % err
-    print ["%10.3f" % ret for ret in retList]
+    #print ["%10.3f" % ret for ret in retList]
     return retList
      
 def parseGPS(rawStr):
     retList = []
     try:
         atomsGPS = rawStr.split(",")
-        #print atomsGPS
+        #print rawStr
         if atomsGPS[0] == "$GPGGA":
-            print atomsGPS
+            #print atomsGPS
             timeSinceMidnight = 60*(60*int(atomsGPS[1][:2])+int(atomsGPS[1][2:4]))+int(atomsGPS[1][4:6])
             degLat  = int(atomsGPS[2][:2]) if atomsGPS[3]=="N" else -int(atomsGPS[2][:2])
             degLong = int(atomsGPS[4][:3]) if atomsGPS[5]=="E" else -int(atomsGPS[4][:3])
@@ -38,7 +38,7 @@ def parseGPS(rawStr):
                 retList = [timeSinceMidnight, degLat, degLat-int(degLat), degLong, degLong-int(degLong), fit]
     except Exception, err:
         print "%r" % err
-    print ["%10.6f" % ret for ret in retList]
+    #print ["%10.6f" % ret for ret in retList]
     return retList
     
 def parseDefault(rawStr):
@@ -47,5 +47,5 @@ def parseDefault(rawStr):
         data = data.replace("\r","")
         data = data.replace("\n","")
         retList.append(eval("0x"+data))
-    print ["%10.3f" % ret for ret in retList]
+    #print ["%10.3f" % ret for ret in retList]
     return retList

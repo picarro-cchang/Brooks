@@ -94,7 +94,7 @@ def RunAnalysisScript(ScriptCodeObj,
                       InstrumentStatus,
                       MeasSysRpcServer,
                       FreqConvRpcServer,
-                      PeriphIntrf,
+                      PeriphIntrfFunc,
                       SerialInterface,
                       ScriptName,
                       ExcLogFunc,
@@ -165,7 +165,7 @@ def RunAnalysisScript(ScriptCodeObj,
     dataEnviron[DRIVER_RPC_SERVER_ID] = DriverRpcServer
     dataEnviron[MEAS_SYS_RPC_SERVER_ID] = MeasSysRpcServer
     dataEnviron[FREQ_CONV_RPC_SERVER_ID] = FreqConvRpcServer
-    dataEnviron[PERIPH_INTRF_ID] = PeriphIntrf
+    dataEnviron[PERIPH_INTRF_ID] = PeriphIntrfFunc
     dataEnviron[NEW_DATA_ID] = NewDataDict(dataEnviron[DATA_ID])
     dataEnviron[SCRIPT_ARGS_ID] = tuple(ScriptArgs)
     dataEnviron[MEAS_GOOD_ID] = True #script guy has to consciously make it false

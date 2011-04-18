@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import socket
 import sys
+import time
 import Queue
 import threading
 import struct
@@ -8,12 +9,11 @@ from numpy import *
 from collections import deque
 from matplotlib import pyplot 
 from parserFunc import *
-from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import RPC_PORT_PERIPH_INTRF, RPC_PORT_DATA_MANAGER
 
 APP_NAME = "Peripheral Interface"
 APP_DESCRIPTION = "Socket client and interpolator"
 __version__ = 1.0
+
 MAX_SENSOR_QUEUE_SIZE = 2000
 
 HOST = 'localhost'
@@ -27,22 +27,6 @@ DATALABELS = [["ANEMOMETER_UX", "ANEMOMETER_UY", "ANEMOMETER_UZ", "ANEMOMETER_C"
               [],
               []]
      
-class RpcServerThread(threading.Thread):
-    def __init__(self, rpcServer, exitFunction):
-        threading.Thread.__init__(self)
-        self.setDaemon(1) #THIS MUST BE HERE
-        self.rpcServer = rpcServer
-        self.exitFunction = exitFunction
-    def run(self):
-        self.rpcServer.serve_forever()
-        try: #it might be a threading.Event
-            self.exitFunction()
-            Log("RpcServer exited and no longer serving.")
-            print "RpcServer exited and no longer serving."
-        except:
-            LogExc("Exception raised when calling exit function at exit of RPC server.")
-            print "Exception raised when calling exit function at exit of RPC server."
-     
 def linInterp(pPair, tPair, t):
     try:
         dtime = tPair[1] - tPair[0]
@@ -55,8 +39,6 @@ def linInterp(pPair, tPair, t):
         
 class PeriphIntrf(object):
     def __init__(self):
-        self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
-        self.dataManagerRpc.PeriphIntrf_Enable()
         self.queue = Queue.Queue(0)
         self.sock = None
         self.getThread = None
@@ -68,20 +50,7 @@ class PeriphIntrf(object):
         self.connect()
         self.startSocketThread()
         self.startStateMachineThread()
-        self.startServer()
-        
-    def startServer(self):
-        self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_PERIPH_INTRF),
-                                                ServerName = APP_NAME,
-                                                ServerDescription = APP_DESCRIPTION,
-                                                ServerVersion = __version__,
-                                                threaded = True)
-        self.rpcServer.register_function(self.getDataByTime)
-        self.rpcServer.register_function(self.selectAllDataByTime)
-        # Start the rpc server on another thread...
-        #self.rpcThread = RpcServerThread(self.rpcServer, self.shutdown)
-        self.rpcServer.serve_forever()
-        
+    
     def connect(self):
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -97,6 +66,8 @@ class PeriphIntrf(object):
                 if len(data)>0:
                     for c in data: 
                         self.queue.put(c)
+                else:
+                    time.sleep(0.01)
         finally:
             self.sock.close()
 
@@ -131,7 +102,7 @@ class PeriphIntrf(object):
                 value += ord(c)<<(8*counter)
                 counter += 1
                 if counter == maxcount:
-                    print ts, port, value
+                    #print ts, port, value
                     counter, maxcount = 0, value
                     newStr = ""
                     state = "DATA"
@@ -166,11 +137,6 @@ class PeriphIntrf(object):
         appThread = threading.Thread(target = self.sensorStateMachine)
         appThread.setDaemon(True)
         appThread.start()
-        
-    def run(self):
-        self.connect()
-        self.startSocketThread()
-        self.startStateMachineThread()
          
     def selectAllDataByTime(self, requestTime):
         sensorDataList = [[[], []]]*NUM_CHANNELS
@@ -187,6 +153,8 @@ class PeriphIntrf(object):
                             break
                         else:
                             lastVal = (ts, valList)
+                if not sensorDataList[port][0]:
+                    sensorDataList[port] = [[lastVal[0], lastVal[0]], zip(lastVal[1], lastVal[1])]
         except Exception, err:
             print "%r" % (err,)
         finally:
