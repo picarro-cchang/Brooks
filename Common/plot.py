@@ -1488,7 +1488,7 @@ class PlotCanvas(wx.Panel):
                 return lower, upper
         elif spec == 'auto':
             range = upper-lower
-            if range < 10**-10:
+            if range < max(abs(upper), abs(lower))*(10**-10):
                 return lower-0.5, upper+0.5
             log = _Numeric.log10(range)
             power = _Numeric.floor(log)
