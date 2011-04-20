@@ -190,7 +190,7 @@ class StateMachine(object):
                           "config":self.config,"Autosampler":Autosampler,"DummyAutosampler":DummyAutosampler,\
                           "GC":GC,"SerIntrf":SerIntrf,"GUI":self.guiProxy,"getDescription":self.getDescription,\
                           "time":time,"editParamDict":self.editParamDict,"runningFlag":True,"pause":self.turnOffRunningFlag,\
-                          "resume":self.turnOnRunningFlag, "portDict":self.portDict})
+                          "resume":self.turnOnRunningFlag, "portDict":self.portDict, "configObj":CustomConfigObj})
         CoordinatorScripts.DRIVER = self.driver
         CoordinatorScripts.MEASSYS = self.measSys
         CoordinatorScripts.SAMPLEMGR = self.sampleMgr

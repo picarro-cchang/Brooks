@@ -64,7 +64,39 @@ class RpcServerThread(threading.Thread):
             Log("RpcServer exited and no longer serving.")
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
-            
+        
+class ComboBoxDialog(wx.Dialog):
+    def __init__(self, parent, msg, title, comboLabel, choices, defaultValue, hasCancel):
+        wx.Dialog.__init__(self, parent, -1, title, size=(250, 250))
+        self.msg = wx.StaticText(self, -1, msg, style = wx.ALIGN_LEFT)
+        self.comboLabel = wx.StaticText(self, -1, comboLabel, style = wx.ALIGN_LEFT)
+        self.comboBox = wx.ComboBox(self, -1, value = defaultValue, choices = choices, size = (200,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
+        self.okButton = wx.Button(self, wx.ID_OK)
+        self.hasCancel = hasCancel
+        if hasCancel:
+            self.cancelButton = wx.Button(self, wx.ID_CANCEL)
+        self.__do_layout()
+        
+    def __do_layout(self):
+        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+        sizer_2 = wx.StdDialogButtonSizer()
+        sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_3.Add(self.comboLabel, 0, wx.ALL, 5)
+        sizer_3.Add(self.comboBox, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
+        sizer_1.Add(sizer_3, 0, wx.ALL, 10)
+        sizer_1.Add(self.msg, 0, wx.LEFT, 17)
+        sizer_2.AddButton(self.okButton)
+        if self.hasCancel:
+            sizer_2.AddButton(self.cancelButton)
+        sizer_2.Realize()
+        sizer_1.Add(sizer_2, 0, wx.ALL|wx.EXPAND, 10)
+        self.SetSizer(sizer_1)
+        sizer_1.Fit(self)
+        self.Layout()
+        
+    def getSelection(self):
+        return self.comboBox.GetSelection()
+        
 class FsmThread(threading.Thread):
     def __init__(self,configFile,guiQueue,replyQueue,gui,editParamDict,*a,**k):
         threading.Thread.__init__(self,*a,**k)
@@ -209,6 +241,16 @@ class CoordinatorFrame(CoordinatorFrameGui):
         d = wx.MessageDialog(None, msg, title, iconOption|wx.STAY_ON_TOP)
         d.ShowModal()
 
+    def popComboBox(self, msg, title="", comboLabel="", choices=[], defaultValue="", hasCancel=False):
+        d = ComboBoxDialog(None, msg, title, comboLabel, choices, defaultValue, hasCancel)
+        retCode = d.ShowModal()
+        d.Destroy()
+        if retCode == wx.ID_OK:
+            ret = choices[d.getSelection()]
+        else:
+            ret = None
+        return ret
+        
     def shutdown(self):
         self.rpcServer.stop_server()
         
