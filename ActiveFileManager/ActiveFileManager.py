@@ -107,7 +107,7 @@ class ActiveFileManagerRpcHandler(Singleton):
         Log("Registered RPC functions")
                     
     def getRdData(self,*a,**k):
-        """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tend" (exclusive).
+        """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tstop" (exclusive).
             Result is a numpy record array which is placed on the rpcResultQueue by genRdData.
             Only "active" files are used to satisfy the request since the database is expected to deal
             with files which have already been archived"""
@@ -118,8 +118,21 @@ class ActiveFileManagerRpcHandler(Singleton):
         else:
             return result
             
+    def getRdDataStruct(self,*a,**k):
+        """ Get "structure" of the data available from the ringdown data in the time range "tstart" (inclusive) 
+        up to "tstop" (exclusive). The result is a dictionary whose keys are the column names and whose
+        values are the data types of the columns.
+        Only "active" files are used to satisfy the request since the database is expected to deal 
+        with files which have already been archived"""
+        self.parent.rpcCommandQueue.put((self.parent.genRdDataStruct,(a,k))) 
+        result = self.parent.rpcResultQueue.get()
+        if isinstance(result,Exception):
+            raise result
+        else:
+            return result
+            
     def getSensorData(self,*a,**k):
-        """ Get sensor data specified by "streamName" from "tstart" (inclusive) up to "tend" (exclusive).
+        """ Get sensor data specified by "streamName" from "tstart" (inclusive) up to "tstop" (exclusive).
             Result is a numpy record array which is placed on the rpcResultQueue by genSensorData.
             Only "active" files are used to satisfy the request since the database is expected to deal
             with files which have already been archived"""
@@ -132,11 +145,25 @@ class ActiveFileManagerRpcHandler(Singleton):
             
     def getDmData(self,*a,**k):
         """ Get data manager for "mode" and "source" whose columns are specified by "varList" from 
-            "tstart" (inclusive) up to "tend" (exclusive). 
+            "tstart" (inclusive) up to "tstop" (exclusive). 
             Result is a numpy record array which is placed on the rpcResultQueue by genDmData.
             Only "active" files are used to satisfy the request since the database is expected to deal 
             with files which have already been archived"""
         self.parent.rpcCommandQueue.put((self.parent.genDmData,(a,k))) 
+        result = self.parent.rpcResultQueue.get()
+        if isinstance(result,Exception):
+            raise result
+        else:
+            return result
+
+    def getDmDataStruct(self,*a,**k):
+        """ Get "structure" of the data available from the data manager in the time range "tstart" (inclusive) 
+        up to "tstop" (exclusive). The result is a nested dictionary keyed by instrument mode, then by analysis
+        name and finally by column name. The value is a string giving the column type. Only "active" files 
+        are used to satisfy the request since the database is expected to deal with files which have already 
+        been archived """
+        
+        self.parent.rpcCommandQueue.put((self.parent.genDmDataStruct,(a,k))) 
         result = self.parent.rpcResultQueue.get()
         if isinstance(result,Exception):
             raise result
@@ -151,13 +178,45 @@ ctype2coltype = { ctypes.c_byte:tables.Int8Col, ctypes.c_uint:tables.UInt32Col, 
                   ctypes.c_short:tables.Int16Col, ctypes.c_ushort:tables.UInt16Col, ctypes.c_longlong:tables.Int64Col, 
                   ctypes.c_float:tables.Float32Col, ctypes.c_double:tables.Float64Col }
         
-def recArrayExtract(A,fields):
+# def recArrayExtract(A,fields):
+    # """
+    # Extract the list of named fields (columns) out of a numpy record array to produce
+    # another. Each element of fields is either the name of a field in A or a tuple 
+    # (originalName,newName) giving the original name of the field in A and the new name
+    # of the field in the output array.
+    # The field dtypes are copied from the source to the destination file
+    # """
+    # aFields = A.dtype.fields
+    # oldFields = []
+    # newFields = {}
+    # for field in fields:
+        # if isinstance(field,tuple):
+            # originalName,newName = field
+            # oldFields.append(originalName)
+            # newFields[originalName] = newName
+        # else:
+            # oldFields.append(field)
+            # newFields[field] = field
+    # dtype = [(newFields[name],aFields[name][0]) for name in oldFields if name in aFields]
+    # B = numpy.zeros(len(A),dtype=dtype)
+    # for name in oldFields: 
+        # if name in aFields:
+            # B[newFields[name]] = A[name]
+    # return B
+
+def recArrayExtract(A,fields,fieldTypes=None):
     """
     Extract the list of named fields (columns) out of a numpy record array to produce
     another. Each element of fields is either the name of a field in A or a tuple 
     (originalName,newName) giving the original name of the field in A and the new name
     of the field in the output array.
-    The field dtypes are copied from the source to the destination file
+    
+    If fieldTypes is specified, it should be a list of strings with the names of the 
+    dtypes associated with fields. When fieldTypes is not None, the output record array
+    always has as many fields as specified by the "fields" argument, and their types are
+    given by "fieldTypes". On the other hand, if fieldTypes is None, the output record 
+    array only has fields that are present in the "fields" and in the original array. The
+    field dtypes are copied from those of the source array.
     """
     aFields = A.dtype.fields
     oldFields = []
@@ -170,13 +229,16 @@ def recArrayExtract(A,fields):
         else:
             oldFields.append(field)
             newFields[field] = field
-    dtype = [(newFields[name],aFields[name][0]) for name in oldFields if name in aFields]
-    B = numpy.zeros(len(A),dtype=dtype)
+    if fieldTypes is None:
+        dt = [(newFields[name],aFields[name][0]) for name in oldFields if name in aFields]
+    else:
+        dt = [(newFields[name],numpy.dtype(fieldTypes[i])) for i,name in enumerate(oldFields)]
+    B = numpy.zeros(len(A),dtype=dt)
     for name in oldFields: 
         if name in aFields:
             B[newFields[name]] = A[name]
     return B
-
+    
 class ActiveFile(object):
     """Objects of this class are associated with HDF5 files in the active file directory.
        The class is used to abstract away details about accessing HDF5 files."""
@@ -207,6 +269,9 @@ class ActiveFile(object):
         if not ActiveFile.Init: # Compute descriptors once
             self.makeDescr()
             ActiveFile.Init = True
+        self.streamLookup = {}
+        self.sensorDataTableMemo = None
+        self.rdDataTableMemo = None
         
     def create(self,dirName,baseTime,stopTime):
         self.baseTime = baseTime
@@ -219,21 +284,30 @@ class ActiveFile(object):
         self.baseGroup._f_setAttr("stopTime",self.stopTime)
         t = self.handle.createTable(self.baseGroup,"sensorData",self.SensorDataDescr,expectedrows=2000000)
         t._f_setAttr("streamNames",interface.STREAM_MemberTypeDict)
+        for k in interface.STREAM_MemberTypeDict:
+            self.streamLookup[interface.STREAM_MemberTypeDict[k][7:]] = k 
         self.handle.createTable(self.baseGroup,"rdData",self.RdDataDescr,expectedrows=1000000)
         self.handle.createGroup(self.baseGroup,"dataManager")
         return self
         
     def getSensorDataTable(self):
-        try:    
-            return self.handle.getNode(self.baseGroup,"sensorData")
-        except tables.exceptions.NoSuchNodeError:
-            return None
+        if self.sensorDataTableMemo is None:
+            try:
+                self.sensorDataTableMemo = self.handle.getNode(self.baseGroup,"sensorData")
+                streamDict = self.sensorDataTableMemo._f_getAttr("streamNames")
+                for k in streamDict:
+                    self.streamLookup[streamDict[k][7:]] = k 
+            except tables.exceptions.NoSuchNodeError:
+                pass
+        return self.sensorDataTableMemo
         
     def getRdDataTable(self):
-        try:    
-            return self.handle.getNode(self.baseGroup,"rdData")
-        except tables.exceptions.NoSuchNodeError:
-            return None
+        if self.rdDataTableMemo is None:
+            try:    
+                self.rdDataTableMemo = self.handle.getNode(self.baseGroup,"rdData")
+            except tables.exceptions.NoSuchNodeError:
+                pass
+        return self.rdDataTableMemo
         
     def getDmDataTable(self,mode,source):
         try:
@@ -299,7 +373,7 @@ class ActiveFile(object):
             if "t_" + self.tsRange != node._v_name:
                 raise ValueError("Bad timestamp attributes in %s" % filename) 
             return self
-        
+
     def close(self):
         self.handle.close()
         self.handle = None
@@ -308,30 +382,30 @@ class ActiveFile(object):
         if self.handle is not None: self.close()
         os.remove(self.abspath)
         
-    def getRdData(self,tstart,tend,varList):
+    def getRdData(self,tstart,tstop,varList):
         """Get ringdown data lying in the specified time range"""
         table = self.getRdDataTable()
         if table is not None:
-            selected = table.readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend))
+            selected = table.readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart,tstop))
             return recArrayExtract(selected,varList)
         else:
             return None
 
-    def getSensorData(self,tstart,tend,streamName):
+    def getSensorData(self,tstart,tstop,streamName):
         """Get sensor data lying in the specified time range."""
-        index = getattr(interface,streamName)
         table = self.getSensorDataTable()
         if table is not None:
-            selected = table.readWhere('(timestamp >= %d) & (timestamp < %d) & (streamNum == %d)' % (tstart,tend,index))
-            return recArrayExtract(selected,["timestamp",("value",streamName[7:])])
+            index = self.streamLookup.get(streamName,streamName)
+            selected = table.readWhere('(timestamp >= %d) & (timestamp < %d) & (streamNum == %s)' % (tstart,tstop,index))
+            return recArrayExtract(selected,["timestamp",("value",str(streamName))])
         else:
             return None
 
-    def getDmData(self,mode,source,tstart,tend,varList):
+    def getDmData(self,mode,source,tstart,tstop,varList):
         """Get data manager data from specified mode and source lying in the specified time range"""
         table = self.getDmDataTable(mode,source)
         if table is not None:
-            selected = table.readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart,tend))
+            selected = table.readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart,tstop))
             return recArrayExtract(selected,varList)
         else:
             return None
@@ -452,15 +526,15 @@ class ActiveFileManager(object):
         except StopIteration:
             return False
             
-    def genRdData(self,tstart,tend,varList):
+    def genRdData(self,tstart,tstop,varList):
         results = []
         t = time.clock()
         for baseTime in sorted(self.activeFiles.keys()):
-            # Determine if [tstart,tend) and [baseTime,stopTime) are disjoint
-            if tend <= baseTime: continue
+            # Determine if [tstart,tstop) and [baseTime,stopTime) are disjoint
+            if tstop <= baseTime: continue
             a = self.activeFiles[baseTime]
             if tstart >= a.stopTime: continue
-            d = a.getRdData(tstart,tend,varList)
+            d = a.getRdData(tstart,tstop,varList)
             if d is not None:
                 results.append(d)
             if time.clock()-t > 0.5: t = yield True # Indicate not yet done
@@ -469,15 +543,15 @@ class ActiveFileManager(object):
         else:
             self.rpcResultQueue.put(None)
 
-    def genSensorData(self,tstart,tend,streamName):
+    def genSensorData(self,tstart,tstop,streamName):
         results = []
         t = time.clock()
         for baseTime in sorted(self.activeFiles.keys()):
-            # Determine if [tstart,tend) and [baseTime,stopTime) are disjoint
-            if tend <= baseTime: continue
+            # Determine if [tstart,tstop) and [baseTime,stopTime) are disjoint
+            if tstop <= baseTime: continue
             a = self.activeFiles[baseTime]
             if tstart >= a.stopTime: continue
-            d = a.getSensorData(tstart,tend,streamName)
+            d = a.getSensorData(tstart,tstop,streamName)
             if d is not None: 
                 results.append(d)
             if time.clock()-t > 0.5: t = yield True # Indicate not yet done
@@ -486,13 +560,13 @@ class ActiveFileManager(object):
         else:
             self.rpcResultQueue.put(None)
 
-    def genDmData(self,mode,source,tstart,tend,varList):
+    def genDmData(self,mode,source,tstart,tstop,varList):
         results = []
         t = time.clock()
         latestException = None
         for baseTime in sorted(self.activeFiles.keys()):
-            # Determine if [tstart,tend) and [baseTime,stopTime) are disjoint
-            if tend <= baseTime: continue
+            # Determine if [tstart,tstop) and [baseTime,stopTime) are disjoint
+            if tstop <= baseTime: continue
             a = self.activeFiles[baseTime]
             if tstart >= a.stopTime: continue
             # We may get an AttributeError exception in genDmData for the most
@@ -501,7 +575,7 @@ class ActiveFileManager(object):
             #  correct modes or sources available.
             # We only report an error if there are no results
             try:
-                d = a.getDmData(mode,source,tstart,tend,varList)
+                d = a.getDmData(mode,source,tstart,tstop,varList)
                 if d is not None:
                     results.append(d)
                 if time.clock()-t > 0.5: t = yield True # Indicate not yet done
@@ -509,6 +583,57 @@ class ActiveFileManager(object):
                 latestException = e
         if results:
             self.rpcResultQueue.put(numpy.concatenate(results))
+        else:
+            self.rpcResultQueue.put(None)
+
+    def genRdDataStruct(self,tstart,tstop):
+        dataDict = {}
+        t = time.clock()
+        for baseTime in sorted(self.activeFiles.keys(),reverse=True):
+            # Determine if [tstart,tstop) and [baseTime,stopTime) are disjoint
+            if tstop <= baseTime: continue
+            af = self.activeFiles[baseTime]
+            if tstart >= af.stopTime: continue
+            #
+            if time.clock()-t > 0.5: t = yield True # Indicate not yet done
+            # We now have an active file which overlaps with [tstart,tstop)
+            rdDataTable = af.handle.getNode(af.baseGroup,"rdData")
+            colnames = rdDataTable.colnames
+            typeDict = rdDataTable.coltypes
+            for c in colnames:
+                if c not in dataDict:
+                    dataDict[c] = typeDict[c]
+        if dataDict:
+            self.rpcResultQueue.put(dataDict)
+        else:
+            self.rpcResultQueue.put(None)
+             
+    def genDmDataStruct(self,tstart,tstop):
+        dataDict = {}
+        t = time.clock()
+        for baseTime in sorted(self.activeFiles.keys(),reverse=True):
+            # Determine if [tstart,tstop) and [baseTime,stopTime) are disjoint
+            if tstop <= baseTime: continue
+            af = self.activeFiles[baseTime]
+            if tstart >= af.stopTime: continue
+            #
+            if time.clock()-t > 0.5: t = yield True # Indicate not yet done
+            # We now have an active file which overlaps with [tstart,tstop)
+            modes = af.handle.getNode(af.baseGroup,"dataManager")._v_children
+            for m in modes:
+                if m not in dataDict:
+                    dataDict[m] = {}
+                analyses = modes[m]._v_children
+                for a in analyses:
+                    if a not in dataDict[m]:
+                        dataDict[m][a] = {}
+                    colnames = analyses[a].colnames
+                    typeDict = analyses[a].coltypes
+                    for c in colnames:
+                        if c not in dataDict[m][a]:
+                            dataDict[m][a][c] = typeDict[c]
+        if dataDict:
+            self.rpcResultQueue.put(dataDict)
         else:
             self.rpcResultQueue.put(None)
             
