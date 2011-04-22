@@ -134,6 +134,7 @@ def coalascePoints(x,y):
 class CalibrateSystem(object):
     def __init__(self,configFile,options):
         self.config = ConfigObj(configFile)
+        self.fsr = None
         # Analyze options
         if "-s" in options:
             self.nSteps = int(options["-s"])
@@ -158,7 +159,12 @@ class CalibrateSystem(object):
             self.approxFsr = float(self.config["SETTINGS"]["APPROX_FSR_ANGLE"])
         else:
             self.approxFsr = APPROX_FSR
-            
+        if "-f" in options:
+            self.fsr = float(options["-f"])
+        elif "CAVITY_FSR" in self.config["SETTINGS"]:
+            self.fsr = float(self.config["SETTINGS"]["CAVITY_FSR"])
+        
+        
         self.seq = 0
         self.processingDone = threading.Event()
         self.clearLists()
@@ -234,7 +240,7 @@ class CalibrateSystem(object):
                (entry.status & RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask):
                 self.processingDone.set()
 
-    def update(self,wlmAngles,vLaserNum,FSR=None,nRefine=4):
+    def update(self,wlmAngles,vLaserNum,nRefine=4):
         # We now have a list of wlmAngles that correspond to frequencies separated by
         #  multiples of the cavity FSR. We use them to update the B-spline coefficients
         #  in the wavelength monitor calibration.
@@ -261,11 +267,11 @@ class CalibrateSystem(object):
         waveNumbers = linspace(cr[0],cr[-1],nRefine*(cr[-1]-cr[0])+1)
         theta = linearInterp(cr,theta,waveNumbers)
         # Determine the cavity FSR if necessary
-        if FSR == None:
+        if self.fsr == None:
             w = RDFreqConv.angleToWaveNumber(vLaserNum,wlmAngles)
-            FSR = bestFit(cumsum(r),w[1:],1).coeffs[0]
-        waveNumbers *= FSR
-        msg = "Cavity free spectral range = %f wavenumbers" % (FSR,)
+            self.fsr = bestFit(cumsum(r),w[1:],1).coeffs[0]
+        waveNumbers *= self.fsr
+        msg = "Cavity free spectral range = %f wavenumbers" % (self.fsr,)
         print msg
         print>>self.op, msg
         msg = "Virtual laser number = %d" % (vLaserNum,)
@@ -274,7 +280,7 @@ class CalibrateSystem(object):
         for i in range(50):
             RDFreqConv.updateWlmCal(vLaserNum,theta,waveNumbers,1.0,0.1,True)
         RDFreqConv.replaceOriginalWlmCal(vLaserNum)
-        return FSR
+        return self.fsr
 
     def run(self):
         # Check that the driver can communicate
@@ -460,6 +466,7 @@ settings in the configuration file:
 
 -h, --help           print this help
 -c                   specify a config file:  default = "./CalibrateSystem.ini"
+-f                   specify a measured cavity FSR (in wavenumbers)
 -s                   number of steps on each side of center
 -v                   specify virtual laser (1-origin) to calibrate
 -w                   center wavenumber about which to calibrate
@@ -470,7 +477,7 @@ def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:s:v:w:a:'
+    shortOpts = 'hc:s:v:w:a:f:'
     longOpts = ["help"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
