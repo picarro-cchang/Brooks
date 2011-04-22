@@ -44,7 +44,9 @@ from Host.Common.EventManagerProxy import Log
 from tables import *
 from Host.Common.timestamp import unixTime
 import fitutils
+from cluster_analyzer import find_clusters
 import traceback
+
 # import wingdbstub
 
 # The following are used by class Galatry when processing initial values
@@ -1247,6 +1249,26 @@ class RdfData(object):
             self.groupMedians[field] = array([median(x[g]) for g in self.groups])
             self.groupStdDevs[field] = array([std(x[g]) for g in self.groups])
             self.groupPtp[field] = array([ptp(x[g]) for g in self.groups])
+            
+    def cluster(self,xColumn='waveNumber',minSize=3):
+        def clusterAgg(xx):
+            """This is the aggregator function which needs to be passed to groupBy"""
+            perm = argsort(xx)
+            xxs = xx[perm]
+            status,weights = find_clusters(xxs,0.015)
+            N = len(xxs)
+            s = 0
+            clusters = []
+            while s<N:
+                l = weights[s]
+                clusters.append(perm[s:s+l])
+                s += l
+            groups = [c for c in clusters if len(c)>=minSize]
+            self.fsr_indices = arange(len(groups))
+            return groups
+        self.sortBy(xColumn)
+        self.groupBy([xColumn],clusterAgg)
+            
 ##  14 June 2010  added modified sigma filter named "outlierFilter            
     def sparse(self,maxPoints,width,height,xColumn,yColumn,sigmaThreshold=-1,outlierThreshold=-1):
         """Sparse the ringdown data by binning the data specified by "xColumn" and
