@@ -60,6 +60,7 @@ RPC_PORT_ACTIVE_FILE_MANAGER = 50300
 RPC_PORT_IPV                = 50400
 RPC_PORT_READ_GPSWS         = 50071
 RPC_PORT_PERIPH_INTRF       = 50072
+RPC_PORT_CONFIG_MONITOR     = 50073
 
 #TCP_PORT... are the port numbers used by "normal" TCP servers
 TCP_PORT_INTERFACE          = 51000
