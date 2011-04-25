@@ -294,7 +294,9 @@ setup(version = "1.0",
                            "Fitter/fitutils.pyd",
                            "Utilities/SupervisorLauncher/Check.png",
                            "Utilities/SupervisorLauncher/alarm.png",
-                           "Utilities/Restart/inpout32.dll"]),
+                           "Utilities/Restart/inpout32.dll",
+                           "hostBzrVer.py",
+                           "srcBzrVer.py"]),
                     (r'mpl-data', glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\*.*')),
                     # Because matplotlibrc does not have an extension, glob does not find it (at least I think that's why)
                     # So add it manually here:
