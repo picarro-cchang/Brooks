@@ -15,7 +15,7 @@ import os
 import sys
 import time
 import threading
-from Host.Common import CmdFIFO
+from Host.Common import CmdFIFO, version
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import RPC_PORT_CONFIG_MONITOR
 from Host.Common.EventManagerProxy import *
@@ -129,13 +129,33 @@ class ConfigMonitor(object):
     def __init__(self, configFile):
         co = CustomConfigObj(configFile)
         repo = co.get("Main", "Repository")
+        self.swHistFile = co.get("Main", "SoftwareHistory")
+        # Create the software history file if it does not exist
+        fd = open(self.swHistFile, "a")
+        fd.close()
         dirList = co.keys()
         dirList.remove("Main")
         self.monitoredDirs = []
         for dir in dirList:
             dirPath = co.get(dir, "Path")
             ignore = co.get(dir, "IgnoreRules")
-            self.monitoredDirs.append((dirPath, ignore)) 
+            self.monitoredDirs.append((dirPath, ignore))
+        # Get Host and SrcCode version numbers
+        self.releaseVer = version.versionString()
+        try:
+            from Host.hostBzrVer import version_info
+            self.hostVer = str(version_info['revno'])
+        except:
+            self.hostVer = ""
+        try:
+            from Host.srcBzrVer import version_info
+            self.srcVer = str(version_info['revno'])
+        except:
+            self.srcVer = ""
+        
+        # Check Host and srcCode versions
+        self.checkSoftwareVer()
+        # Check configurations and initialize branches if necessary
         self.bzr = BzrHelper(repo)
         for dir, ignore in self.monitoredDirs:
             if not self.bzr.isBranch(dir):
@@ -154,7 +174,32 @@ class ConfigMonitor(object):
         self.rpcServer.register_function(self.monitor)
         self.rpcServer.serve_forever()
         
+    def checkSoftwareVer(self):
+        swHistCo = CustomConfigObj(self.swHistFile)
+        swVerList = swHistCo.list_sections()
+        swVerList.sort()
+        if swVerList:
+            lastSwVer = swVerList[-1]
+            if self.releaseVer == swHistCo.get(lastSwVer, "Release") and \
+               self.hostVer == swHistCo.get(lastSwVer, "Host") and \
+               self.srcVer == swHistCo.get(lastSwVer, "SrcCode"):
+                return
+        timestamp = time.time()
+        timeKey = str(timestamp)
+        swHistCo.add_section(timeKey)
+        swHistCo.set(timeKey, "Release", self.releaseVer)
+        swHistCo.set(timeKey, "Host", self.hostVer)
+        swHistCo.set(timeKey, "SrcCode", self.srcVer)
+        swHistCo.set(timeKey, "Time", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)))
+        swHistCo.write()
+        
     def monitor(self):
+        """
+        Track changes in configuration files and host/srcCode versions
+        """
+        # Check Host and srcCode versions
+        self.checkSoftwareVer()
+        # Check configurations
         for dir, ignore in self.monitoredDirs:
             if self.bzr.st(dir):
                 self.bzr.commit(dir)
