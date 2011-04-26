@@ -62,6 +62,7 @@ sys.path.append("SampleManager")
 sys.path.append("Supervisor")
 sys.path.append("ReadExtSensor")
 sys.path.append("IPV")
+sys.path.append("ConfigMonitor")
 sys.path.append("Utilities")
 sys.path.append("Utilities/RemoteAccess")
 sys.path.append("Utilities/DiagDataCollector")
@@ -262,6 +263,7 @@ setup(version = "1.0",
                  "../SrcCode/Utilities/TestClient.py",
                  "../SrcCode/Utilities/ThresholdStats.py",
                  Fitter,
+                 "ConfigMonitor/ConfigMonitor.py",
                  ],
 
       windows = [QuickGui, Coordinator,Controller,ControllerBuildStation,deltaCorrProcessor, dilutionCorrProcessor,
