@@ -127,18 +127,20 @@ class RpcServerThread(threading.Thread):
             
 class ConfigMonitor(object):
     def __init__(self, configFile):
-        co = CustomConfigObj(configFile)
-        repo = co.get("Main", "Repository")
-        self.swHistFile = co.get("Main", "SoftwareHistory")
+        self.co = CustomConfigObj(configFile)
+        self.enabled = self.co.getboolean("Main", "Enabled")
+        repo = self.co.get("Main", "Repository")
+        self.bzr = BzrHelper(repo)
+        self.swHistFile = self.co.get("Main", "SoftwareHistory")
         # Create the software history file if it does not exist
         fd = open(self.swHistFile, "a")
         fd.close()
-        dirList = co.keys()
+        dirList = self.co.keys()
         dirList.remove("Main")
         self.monitoredDirs = []
         for dir in dirList:
-            dirPath = co.get(dir, "Path")
-            ignore = co.get(dir, "IgnoreRules")
+            dirPath = self.co.get(dir, "Path")
+            ignore = self.co.get(dir, "IgnoreRules")
             self.monitoredDirs.append((dirPath, ignore))
         # Get Host and SrcCode version numbers
         self.releaseVer = version.versionString()
@@ -153,16 +155,16 @@ class ConfigMonitor(object):
         except:
             self.srcVer = ""
         
-        # Check Host and srcCode versions
-        self.checkSoftwareVer()
-        # Check configurations and initialize branches if necessary
-        self.bzr = BzrHelper(repo)
-        for dir, ignore in self.monitoredDirs:
-            if not self.bzr.isBranch(dir):
-                 # Initialize
-                self.bzr.init(dir, ignore)
-            if self.bzr.st(dir):
-                self.bzr.commit(dir)
+        if self.enabled:
+            # Check Host and srcCode versions
+            self.checkSoftwareVer()
+            # Check configurations and initialize branches if necessary
+            for dir, ignore in self.monitoredDirs:
+                if not self.bzr.isBranch(dir):
+                     # Initialize
+                    self.bzr.init(dir, ignore)
+                if self.bzr.st(dir):
+                    self.bzr.commit(dir)
         self.startServer()
         
     def startServer(self):
@@ -172,6 +174,8 @@ class ConfigMonitor(object):
                                                 ServerVersion = __version__,
                                                 threaded = True)
         self.rpcServer.register_function(self.monitor)
+        self.rpcServer.register_function(self.enable)
+        self.rpcServer.register_function(self.disable)
         self.rpcServer.serve_forever()
         
     def checkSoftwareVer(self):
@@ -197,13 +201,24 @@ class ConfigMonitor(object):
         """
         Track changes in configuration files and host/srcCode versions
         """
+        if not self.enabled:
+            return
         # Check Host and srcCode versions
         self.checkSoftwareVer()
         # Check configurations
         for dir, ignore in self.monitoredDirs:
             if self.bzr.st(dir):
                 self.bzr.commit(dir)
+                
+    def enable(self):
+        self.enabled = True
+        self.co.set("Main", "Enabled", "True")
+        self.co.write()
 
+    def disable(self):
+        self.enabled = False
+        self.co.set("Main", "Enabled", "False")
+        self.co.write()
 HELP_STRING = \
 """
 
