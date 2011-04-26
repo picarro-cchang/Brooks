@@ -27,7 +27,8 @@ translationTable = {
 "electricalinterface.exe": "Electrical Interface",
 "controller.exe": "Controller",
 "commandinterface.exe": "Command Interface",
-"datalogger.exe": "Data Logger"
+"datalogger.exe": "Data Logger",
+"configmonitor.exe": "Config Monitor"
 }
 
 appTimeout = 30 # sec

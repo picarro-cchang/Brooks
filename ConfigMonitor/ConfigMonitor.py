@@ -197,7 +197,7 @@ class ConfigMonitor(object):
         swHistCo.set(timeKey, "Time", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)))
         swHistCo.write()
         
-    def monitor(self):
+    def monitor(self, comment=""):
         """
         Track changes in configuration files and host/srcCode versions
         """
@@ -208,7 +208,7 @@ class ConfigMonitor(object):
         # Check configurations
         for dir, ignore in self.monitoredDirs:
             if self.bzr.st(dir):
-                self.bzr.commit(dir)
+                self.bzr.commit(dir, comment)
                 
     def enable(self):
         self.enabled = True

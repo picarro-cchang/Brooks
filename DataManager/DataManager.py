@@ -99,7 +99,7 @@ from Host.Common import InstMgrInc
 from Host.Common import AppStatus
 from Host.Common import timestamp
 from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER, RPC_PORT_FREQ_CONVERTER,\
-                                    RPC_PORT_PERIPH_INTRF, RPC_PORT_INSTR_MANAGER
+                                    RPC_PORT_INSTR_MANAGER, RPC_PORT_CONFIG_MONITOR
 from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_MEAS_SYSTEM, BROADCAST_PORT_SENSORSTREAM
 from Host.Common.SharedTypes import STATUS_PORT_DATA_MANAGER, STATUS_PORT_INST_MANAGER
 from Host.Common.SharedTypes import CrdsException
@@ -167,6 +167,9 @@ CRDS_MeasSys = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_
                                          APP_NAME,
                                          IsDontCareConnection = False)
 CRDS_FreqConv = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
+                                         APP_NAME,
+                                         IsDontCareConnection = False)
+CRDS_ConfigMonitor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_CONFIG_MONITOR,
                                          APP_NAME,
                                          IsDontCareConnection = False)
 ####
@@ -874,6 +877,8 @@ class DataManager(object):
             cp.set(measName, "slope", self.UserCalibration[measName][USERCAL_SLOPE_INDEX])
             cp.set(measName, "offset", self.UserCalibration[measName][USERCAL_OFFSET_INDEX])
         cp.write()
+        # Commit and push such changes using Config Monitor
+        CRDS_ConfigMonitor.monitor("User calibration changed")
         Log("User calibration file updated.", dict(Sections = self.UserCalibration.keys()))
 
     def _EnqueueSyncScript(self,sai,startTime,iteration):
