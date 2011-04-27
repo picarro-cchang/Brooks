@@ -125,14 +125,7 @@ class WlmFileMaker(object):
             self.tempTol = float(self.config["SETTINGS"]["TEMP_TOLERANCE"])
         if self.tempTol < 0.001 or self.tempTol > 0.1:
             raise ValueError("TEMP_TOLERANCE must be in range 0.001 to 0.1")
-        
-        if "-m" in options:
-            self.model = float(options["-m"])
-        else:
-            self.model = int(self.config["SETTINGS"]["WAVEMETER"])
-        if self.model not in [7000, 7600]:
-            raise ValueError("Valid Wavemeter model numbers are 7000 and 7600")
-        
+                
         self.simulation = False
         if "--sim" in options or "SIMULATION" in self.config:
             self.simulation = True
@@ -166,7 +159,7 @@ class WlmFileMaker(object):
     def WaitForString(self,timeout,msg=""):
         tWait = 0
         while tWait < timeout:
-            reply = self.wavemeter.GetString()
+            reply = self.wavemeter.GetString().strip()
             if reply != "":
                 # print "Reply >%s<" % (list(reply),)
                 return reply
@@ -230,14 +223,13 @@ class WlmFileMaker(object):
 
         if not self.simulation:
             print "Asking wavemeter for identification"
-            if self.model == 7000:
-                self.ser.write("\n*IDN?\n");
-                reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
-                print "Wavemeter id: %s" % reply
-            else:
-                self.ser.write("*IDN?\n")
-                reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
-                print "Wavemeter id: %s" % reply
+            self.ser.write("\n");
+            time.sleep(1.0)
+            self.ser.write("*IDN?\n");
+            reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
+            print "Wavemeter id: %s" % reply
+            if ("WA-7000" not in reply) and ("WA-7600" not in reply):
+                raise ValueError,"Unrecognized wavemeter model"
         else:
             print "Using simulation mode for wavemeter"
                 
@@ -429,7 +421,6 @@ settings in the configuration file:
 -f                   name of output file (without extension)
 -i                   coarse laser current (digitizer units)
 -l                   laser number (1-index)
--m                   model number of wavemeter (7000 or 7600)
 --max                maximum laser temperature
 --min                minimum laser temperature
 --sim                do not use Burleigh (use --wmin and --wmax to specify wavenumbers at min and max temperatures)
@@ -444,7 +435,7 @@ def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:i:l:f:w:m:'
+    shortOpts = 'hc:i:l:f:w:'
     longOpts = ["help","min=","max=","step=","tol=","sim","wmin=","wmax="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
