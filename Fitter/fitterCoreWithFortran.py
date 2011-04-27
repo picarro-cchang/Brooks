@@ -37,6 +37,7 @@ from numpy import int8, int_, invert, iterable, linspace, logical_and, mean, med
 from numpy import pi, polyfit, ptp, shape, sin, sqrt, std, unique, zeros 
 from os.path import getmtime, join, split, exists
 from scipy.optimize import leastsq, brent
+from scipy.signal import order_filter
 from string import strip
 from struct import calcsize, unpack
 from time import strptime, mktime, time, localtime, clock
@@ -1249,13 +1250,23 @@ class RdfData(object):
             self.groupMedians[field] = array([median(x[g]) for g in self.groups])
             self.groupStdDevs[field] = array([std(x[g]) for g in self.groups])
             self.groupPtp[field] = array([ptp(x[g]) for g in self.groups])
-            
-    def cluster(self,xColumn='waveNumber',minSize=3):
+    def cluster(self,xColumn='waveNumber',minSize=3,diameter=0.015,minJump=0.015,localJumpEstimatorHalfwidth=3):
+        """This is used to analyze FSR data collected in "frequency hopping" mode. The values in xColumn are
+        grouped into clusters no larger than the specified diameter using the QT algorithm (i.e., a ball of the 
+        specified diameter is used to find the largest cluster. The points in this cluster are removed and the 
+        process is repeated). Clusters with fewer than minSize ringdowns are discarded. The cluster means are 
+        then computed and if any pair is separated by less than minJump, the smaller of the clusters of that 
+        pair is deleted. This is repeated until all cluster means are at least minJump apart.
+            We now need to assign integer FSR indices to the clusters. This is done by computing a local estimate
+        of the FSR and assigning an integer 'jump' to the difference between the cluster means by rounding 
+        the ratio of the difference to the local FSR to the nearest integer. The local estimate of the FSR is 
+        defined as the minimum difference between the cluster means in a collection of 2*localJumpEstimatorHalfwidth+1
+        groups surrounding the location of interest. The assignment of FSRs is placed in self.fsr_indices."""
         def clusterAgg(xx):
             """This is the aggregator function which needs to be passed to groupBy"""
             perm = argsort(xx)
             xxs = xx[perm]
-            status,weights = find_clusters(xxs,0.015)
+            status,weights = find_clusters(xxs,diameter)
             N = len(xxs)
             s = 0
             clusters = []
@@ -1263,13 +1274,43 @@ class RdfData(object):
                 l = weights[s]
                 clusters.append(perm[s:s+l])
                 s += l
-            groups = [c for c in clusters if len(c)>=minSize]
-            self.fsr_indices = arange(len(groups))
+            clusters = [c for c in clusters if len(c)>=minSize]
+            # The following removes groups whose means are closer than minJump
+            xm = asarray([xx[c].mean() for c in clusters])
+            nn = asarray([len(c) for c in clusters])    # Number of ringdowns in clusters
+            dx = diff(xm)
+            good = arange(len(nn))
+            # The following loop goes through small values of dx and finds the smaller of the groups
+            #  which contributes to this value. The group is deleted and dw is updated
+            while True:
+                m = argmin(dx)
+                if dx[m]>=minJump: break
+                if nn[good[m]]<nn[good[m+1]]:
+                    dx[m-1] += dx[m]
+                    dx = delete(dx,m)
+                    good = delete(good,m)
+                else:    
+                    dx[m+1] += dx[m]
+                    dx = delete(dx,m)
+                    good = delete(good,m+1)
+            groups = [clusters[g] for g in good]
+            # Next assign FSR indices to groups. The concern is that there may be missing FSRs.
+            #  We use an order filter which computes the minimum frequency difference in blocks
+            #  of size 2*localJumpEstimatorHalfwidth+1 as a way of obtaining a local estimate of the FSR
+            mx = order_filter(dx,ones(2*localJumpEstimatorHalfwidth+1),0)
+            # Extend the FSR estimate out to the ends of the frequency range
+            mx[:localJumpEstimatorHalfwidth] = mx[localJumpEstimatorHalfwidth]
+            mx[-(localJumpEstimatorHalfwidth+1):] = mx[-(localJumpEstimatorHalfwidth+1)]
+            m = [0]
+            # Go through assigning indices, using the local FSR estimates to determine jumps
+            for i,d in enumerate(dx):
+                m.append(m[-1]+round(d/mx[i]))
+            self.fsr_indices = asarray(m)
             return groups
         self.sortBy(xColumn)
         self.groupBy([xColumn],clusterAgg)
             
-##  14 June 2010  added modified sigma filter named "outlierFilter            
+##  14 June 2010  added modified sigma filter named "outlierFilter"
     def sparse(self,maxPoints,width,height,xColumn,yColumn,sigmaThreshold=-1,outlierThreshold=-1):
         """Sparse the ringdown data by binning the data specified by "xColumn" and
         "yColumn" into rectangles of maximum dimensions "width" by "height",
