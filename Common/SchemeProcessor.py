@@ -19,6 +19,9 @@ from copy import deepcopy
 # Memoize configuration files for efficiency
 configMemo = {}
 
+def clearMemo():
+    configMemo.clear()
+
 class Row(object):
     keynames = {'setpoint':0,
                 'dwell':1,

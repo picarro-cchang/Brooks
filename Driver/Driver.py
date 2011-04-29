@@ -41,6 +41,7 @@ from Host.Common.InstErrors import *
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.StringPickler import StringAsObject, ObjAsString
 from Host.Common.ctypesConvert import ctypesToDict, dictToCtypes
+from Host.Common import SchemeProcessor
 
 try:
     from Host.hostBzrVer import version_info as hostBzrVer
@@ -436,6 +437,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def loadIniFile(self):
         """Loads state from instrument configuration file"""
+        SchemeProcessor.clearMemo()
         config = InstrumentConfig()
         config.reloadFile()
         config.loadPersistentRegistersFromConfig()
