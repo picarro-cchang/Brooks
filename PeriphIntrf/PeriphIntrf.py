@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import socket
+import os
 import sys
 import time
 import Queue
@@ -7,25 +8,24 @@ import threading
 import struct
 from numpy import *
 from collections import deque
-from matplotlib import pyplot 
-from parserFunc import *
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.SharedTypes import TCP_PORT_PERIPH_INTRF
+
+#Set up a useful AppPath reference...
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
+AppPath = os.path.abspath(AppPath)
 
 APP_NAME = "Peripheral Interface"
 APP_DESCRIPTION = "Socket client and interpolator"
 __version__ = 1.0
+DEFAULT_CONFIG_NAME = "serial2socket.ini"
 
 MAX_SENSOR_QUEUE_SIZE = 2000
-
 HOST = 'localhost'
-PORT = 5193
-#PORT = 8037
-
 NUM_CHANNELS = 4
-PARSER = [parseAnemometer, parseGPS, parseDefault, parseDefault]
-DATALABELS = [["ANEMOMETER_UX", "ANEMOMETER_UY", "ANEMOMETER_UZ", "ANEMOMETER_C"],
-              ["GPS_TIME", "GPS_ABS_LAT", "GPS_REL_LAT", "GPS_ABS_LONG", "GPS_REL_LONG", "GPS_FIT"],
-              [],
-              []]
      
 def linInterp(pPair, tPair, t):
     try:
@@ -38,13 +38,27 @@ def linInterp(pPair, tPair, t):
         return 0.0
         
 class PeriphIntrf(object):
-    def __init__(self):
+    def __init__(self, configFile):
+        co = CustomConfigObj(configFile)
+        iniAbsBasePath = os.path.split(os.path.abspath(configFile))[0]
         self.queue = Queue.Queue(0)
         self.sock = None
         self.getThread = None
         self.sensorList = []
-        for port in range(NUM_CHANNELS):
+        self.parser = []
+        self.dataLabels = []
+        for p in range(NUM_CHANNELS):
             self.sensorList.append(deque())
+            paserFunc = co.get("PORT%d" % p, "SCRIPTFUNC").strip()
+            scriptPath =  os.path.join(iniAbsBasePath, co.get("SETUP", "SCRIPTPATH"))
+            scriptFilename = os.path.join(scriptPath, paserFunc) + ".py"
+            exec compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec")
+            self.parser.append(eval(paserFunc))
+            labelList = [i.strip() for i in co.get("PORT%d" % p, "DATALABELS").split(",")]
+            if labelList[0]:
+                self.dataLabels.append(labelList)
+            else:
+                self.dataLabels.append([])
         self.sensorLock = threading.Lock()
         self._shutdownRequested = False
         self.connect()
@@ -54,7 +68,7 @@ class PeriphIntrf(object):
     def connect(self):
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.connect((HOST, PORT))
+            self.sock.connect((HOST, TCP_PORT_PERIPH_INTRF))
         except socket.error, msg:
             sys.stderr.write("[ERROR] %s\n" % msg[1])
             raise
@@ -117,7 +131,7 @@ class PeriphIntrf(object):
                     # Store in sensorList
                     self.sensorLock.acquire()
                     try:
-                        parsedList = PARSER[port](newStr)
+                        parsedList = self.parser[port](newStr)
                         if parsedList:
                             self.sensorList[port].append((ts, parsedList))
                             if len(self.sensorList[port]) > MAX_SENSOR_QUEUE_SIZE:
@@ -167,7 +181,7 @@ class PeriphIntrf(object):
         for port in range(NUM_CHANNELS):
             timeDataLists = sensorDataList[port]
             for dataIdx in range(len(timeDataLists[1])):
-                interpDict[DATALABELS[port][dataIdx]] = linInterp(timeDataLists[1][dataIdx], timeDataLists[0], requestTime)
+                interpDict[self.dataLabels[port][dataIdx]] = linInterp(timeDataLists[1][dataIdx], timeDataLists[0], requestTime)
         retList = []
         for data in dataList:
             try:
@@ -178,6 +192,48 @@ class PeriphIntrf(object):
         
     def shutdown(self):
         self._shutdownRequested = True
-        
+
+HELP_STRING = \
+"""
+
+PeriphIntrf.py [-h] [-c <FILENAME>]
+
+Where the options can be a combination of the following:
+-h, --help : Print this help.
+-c         : Specify a config file.
+
+"""
+
+def PrintUsage():
+    print HELP_STRING
+    
+def HandleCommandSwitches():
+    import getopt
+
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], "hc:", ["help"])
+    except getopt.GetoptError, data:
+        print "%s %r" % (data, data)
+        sys.exit(1)
+
+    #assemble a dictionary where the keys are the switches and values are switch args...
+    options = {}
+    for o, a in switches:
+        options[o] = a
+
+    if "-h" in options or "--help" in options:
+        PrintUsage()
+        sys.exit()
+
+    #Start with option defaults...
+    configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
+
+    if "-c" in options:
+        configFile = options["-c"]
+        print "Config file specified at command line: %s" % configFile
+  
+    return configFile
+    
 if __name__ == "__main__":
-    r = PeriphIntrf()
+    configFile = HandleCommandSwitches()
+    p = PeriphIntrf(configFile)
