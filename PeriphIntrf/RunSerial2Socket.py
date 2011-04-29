@@ -5,6 +5,7 @@ import serial
 import subprocess
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import TCP_PORT_PERIPH_INTRF
+from Host.Common.SingleInstance import SingleInstance
 
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -19,8 +20,9 @@ NUM_PORTS = 4
 class RunSerial2Socket(object):
     def __init__(self, configFile):
         self.appCo = CustomConfigObj(configFile)
-        instrConfigFile = self.appCo.get("SETUP", "INSTRCONFIG")
-        exeFile = self.appCo.get("SETUP", "EXE")
+        iniAbsBasePath = os.path.split(os.path.abspath(configFile))[0]
+        instrConfigFile = os.path.abspath(os.path.join(iniAbsBasePath, self.appCo.get("SETUP", "INSTRCONFIG")))
+        exeFile = os.path.abspath(os.path.join(iniAbsBasePath, self.appCo.get("SETUP", "EXE")))
         self.instrCo = CustomConfigObj(instrConfigFile)
         self.updateIni(self.findPorts())
         info = subprocess.STARTUPINFO()
@@ -35,8 +37,8 @@ class RunSerial2Socket(object):
                     ser = serial.Serial(p)
                     if len(portList) == 0 or (p-1) in portList:
                         portList.append(p)
-                        if len(portList) == 4:
-                            print "4 consecutive COM ports found"
+                        if len(portList) == NUM_PORTS:
+                            print "%d consecutive COM ports found" % NUM_PORTS
                             break
                     else:
                         portList = []
@@ -100,4 +102,6 @@ def HandleCommandSwitches():
     
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
-    RunSerial2Socket(configFile)
+    app = SingleInstance("RunSerial2Socket")
+    if not app.alreadyrunning():
+        RunSerial2Socket(configFile)

@@ -63,6 +63,7 @@ sys.path.append("Supervisor")
 sys.path.append("ReadExtSensor")
 sys.path.append("IPV")
 sys.path.append("ConfigMonitor")
+sys.path.append("PeriphIntrf")
 sys.path.append("Utilities")
 sys.path.append("Utilities/RemoteAccess")
 sys.path.append("Utilities/DiagDataCollector")
@@ -264,6 +265,7 @@ setup(version = "1.0",
                  "../SrcCode/Utilities/ThresholdStats.py",
                  Fitter,
                  "ConfigMonitor/ConfigMonitor.py",
+                 "PeriphIntrf/RunSerial2Socket.py",
                  ],
 
       windows = [QuickGui, Coordinator,Controller,ControllerBuildStation,deltaCorrProcessor, dilutionCorrProcessor,
@@ -298,6 +300,7 @@ setup(version = "1.0",
                            "Utilities/SupervisorLauncher/Check.png",
                            "Utilities/SupervisorLauncher/alarm.png",
                            "Utilities/Restart/inpout32.dll",
+                           "PeriphIntrf/Serial2Socket.exe",
                            "hostBzrVer.py",
                            "srcBzrVer.py"]),
                     (r'mpl-data', glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\*.*')),

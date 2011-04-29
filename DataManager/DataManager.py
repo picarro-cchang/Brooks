@@ -308,6 +308,8 @@ class DataManager(object):
             self.enablePeriphIntrf = False
             if cp.getboolean("Setup", "EnablePeriphIntrf", False):
                 self.enablePeriphIntrf = True
+                self.periphIntrfConfig = os.path.join(basePath, cp.get("Setup", "periphIntrfConfig", \
+                                                                       "../PeriphIntrf/serial2socket.ini"))
                     
             self.enablePulseAnalyzer = False
             if "PulseAnalyzer" in cp: 
@@ -1191,7 +1193,7 @@ class DataManager(object):
 
             if self.Config.enablePeriphIntrf:
                 try:
-                    self.CRDS_PeriphIntrf = PeriphIntrf()
+                    self.CRDS_PeriphIntrf = PeriphIntrf(self.Config.periphIntrfConfig)
                 except Exception, err:
                     self.CRDS_PeriphIntrf = None
                     Log("Peripheral Interface not running. Error: %r" % err)

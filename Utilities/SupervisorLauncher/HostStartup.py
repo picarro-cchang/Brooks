@@ -28,7 +28,8 @@ translationTable = {
 "controller.exe": "Controller",
 "commandinterface.exe": "Command Interface",
 "datalogger.exe": "Data Logger",
-"configmonitor.exe": "Config Monitor"
+"configmonitor.exe": "Config Monitor",
+"runserial2socket.exe": "Peripheral Serial-To-Socket"
 }
 
 appTimeout = 30 # sec
