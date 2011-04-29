@@ -27,6 +27,7 @@ from MyPlotCanvas import MyPlotCanvas
 import time
 import sys
 import threading
+import traceback
 from numpy import *
 
 #Set up a useful TimeStamp function...
@@ -233,8 +234,15 @@ class GraphPanel(wx.Panel):
 
     def GetIsNewXAxis(self):
         return self.isNewXAxis
-        
+    
     def Update(self,delay=0.0,forcedRedraw=False):
+        try:
+            return self._Update(delay,forcedRedraw)
+        except:
+            type,value,trace = sys.exc_info()
+            print "GraphPanel Update : %s: %s\n %s" % (type,value,traceback.format_exc())
+        
+    def _Update(self,delay=0.0,forcedRedraw=False):
         # Check to see if we do not need to update after all, since nothing has changed since the last one
         self.stats = []
         mostRecentChange = 0
