@@ -98,6 +98,10 @@ class Series(object):
     def Clear(self):
         self.x.Clear()
         self.y.Clear()
+    def RetainLast(self):
+        xLast, yLast = self.x.GetLatest(), self.y.GetLatest()
+        self.Clear()
+        self.Add(xLast,yLast)
     def GetX(self):
         if self.maxPoints == None:
             return self.x.GetValues()

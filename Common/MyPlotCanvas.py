@@ -207,7 +207,6 @@ class MyPlotCanvas(plot.PlotCanvas):
             p2= _Numeric.array([xAxis[1], yAxis[1]])     # upper right corner user scale (xmax,ymax)
 
         self.last_draw = (graphics, _Numeric.array(xAxis), _Numeric.array(yAxis))       # saves most recient values
-
         # Get ticks and textExtents for axis if required
         if self._xSpec is not 'none':
             xticks = self._xticks(xAxis[0], xAxis[1])
