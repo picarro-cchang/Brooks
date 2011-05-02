@@ -16,9 +16,9 @@ import wx
 import sys
 import traceback
 
-from ControllerFrameGui import ControllerFrameGui
-from ControllerModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy
-from ControllerModels import LogListener, SensorListener, RingdownListener, ControllerRpcHandler
+from WebControllerFrameGui import ControllerFrameGui
+from WebControllerModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy
+from WebControllerModels import LogListener, SensorListener, RingdownListener, ControllerRpcHandler
 from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common.ParameterDialog import ParameterDialog
@@ -47,11 +47,11 @@ class Controller(ControllerFrameGui):
         self.updateTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER,self.onUpdateTimer,self.updateTimer)
         self.updateTimer.Start(milliseconds=1000)
-        self.openParamDialogs = {}
-        self.setupParameterDialogs()
+        # self.openParamDialogs = {}
+        # self.setupParameterDialogs()
         self.setupWaveforms()
         self.logListener = LogListener()
-        self.sensorListener = SensorListener()
+        # self.sensorListener = SensorListener()
         self.ringdownListener = RingdownListener()
         self.rpcHandler = ControllerRpcHandler()
         self.Bind(wx.EVT_IDLE, self.onIdle)
@@ -184,11 +184,11 @@ class Controller(ControllerFrameGui):
         d.Destroy()
         
     def onClose(self,evt):
-        for id in self.openParamDialogs:
-            try:
-                self.openParamDialogs[id].Close()
-            except:
-                pass
+        #for id in self.openParamDialogs:
+        #    try:
+        #        self.openParamDialogs[id].Close()
+        #    except:
+        #        pass
         self.updateTimer.Stop()
         self.Close()
 
@@ -214,19 +214,20 @@ class Controller(ControllerFrameGui):
         if not self.fullInterface:
             self.controllerFrameGui_menubar.EnableTop(pos=1,enable=False)
             self.controllerFrameGui_menubar.EnableTop(pos=2,enable=False) 
-            self.commandLogPanel.disableAll()
+            # self.commandLogPanel.disableAll()
         else:
             self.controllerFrameGui_menubar.EnableTop(pos=1,enable=True)
             self.controllerFrameGui_menubar.EnableTop(pos=2,enable=True)
-            self.commandLogPanel.enableAll()
+            # self.commandLogPanel.enableAll()
         
     def onUpdateTimer(self,evt):
         pageNum = self.topNotebook.GetSelection()
         pageText = self.topNotebook.GetPageText(pageNum)
-        if pageText == "Command/Log":
-            self.commandLogPanel.updateLoopStatus()
-            self.commandLogPanel.updateCalFileStatus()
-        elif pageText == "Laser1":
+        #if pageText == "Command/Log":
+        #    self.commandLogPanel.updateLoopStatus()
+        #    self.commandLogPanel.updateCalFileStatus()
+        #elif pageText == "Laser1":
+        if pageText == "Laser1":
             self.laser1Panel.update()
         elif pageText == "Laser2":
             self.laser2Panel.update()
@@ -248,17 +249,17 @@ class Controller(ControllerFrameGui):
             self.statsPanel.update()
 
     def onIdle(self,evt):
-        # Deal with updating the command log panel
-        self.commandLogPanel.setStreamFileState()
-        acqState = self.commandLogPanel.updateAcquisitionState()
-        self.controllerFrameGui_statusbar.SetStatusText(acqState,0)        
-        # Deal with event manager log messages
-        while True:
-            msg = self.logListener.getLogMessage()
-            if msg:
-                self.commandLogPanel.addMessage(msg)
-            else:
-                break
+        # # Deal with updating the command log panel
+        # self.commandLogPanel.setStreamFileState()
+        # acqState = self.commandLogPanel.updateAcquisitionState()
+        # self.controllerFrameGui_statusbar.SetStatusText(acqState,0)        
+        # # Deal with event manager log messages
+        # while True:
+            # msg = self.logListener.getLogMessage()
+            # if msg:
+                # self.commandLogPanel.addMessage(msg)
+            # else:
+                # break
             
         # Deal with Controller RPC calls within GUI idle loop
         try:
