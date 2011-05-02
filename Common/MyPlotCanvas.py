@@ -12,7 +12,7 @@
 # 07-05-18 sze   Added color handling for graph text and axis lines
 import wx
 import plot
-import numpy.oldnumeric as _Numeric
+import numpy
 import time
 import calendar
 import math
@@ -65,6 +65,7 @@ class MyPlotCanvas(plot.PlotCanvas):
 
     def OnMouseRightDown(self,event):
         self.unzoomed = False
+        self._screenCoordinates = numpy.array(event.GetPosition())
         plot.PlotCanvas.OnMouseRightDown(self,event)
 
     def OnMouseLeftUp(self,event):
@@ -73,6 +74,8 @@ class MyPlotCanvas(plot.PlotCanvas):
 
     def OnMouseRightUp(self,event):
         self.SetZoomDrag()
+        #if self.canvas.HasCapture():
+        #    self.canvas.ReleaseMouse()
 
     # The Ctrl key is checked to switch between zoom and drag modes, provided that the cursor
     #  is within the graph window. In order for key presses to be captured, the graph window
@@ -96,18 +99,48 @@ class MyPlotCanvas(plot.PlotCanvas):
             self.SetZoomDrag()
         event.Skip()
 
-    # The self._hasDragged variable is True while a rubber-band zoom box is being drawn. We use
-    #  it to suppress drawing to the graph so that the box is not corrupted by updates. The zoom
-    #  is reset and drawing of the zoom box is aborted if the mouse is dragged outside the window
-    #  while a zoom box is being defined. Otherwise, the mouse up message indicating that the zoom
-    #  box is complete is not received, and a partial box is left on the screen.
+    ## The self._hasDragged variable is True while a rubber-band zoom box is being drawn. We use
+    ##  it to suppress drawing to the graph so that the box is not corrupted by updates. The zoom
+    ##  is reset and drawing of the zoom box is aborted if the mouse is dragged outside the window
+    ##  while a zoom box is being defined. Otherwise, the mouse up message indicating that the zoom
+    ##  box is complete is not received, and a partial box is left on the screen.
     def OnLeaveWindow(self,event):
-        self.inWindow = False
-        if self._hasDragged:
-            self._hasDragged = False
-            self.Reset()
+        #self.inWindow = False
+        #if self._hasDragged:
+        #    self._hasDragged = False
+        #    self.Reset()
         plot.PlotCanvas.OnLeave(self,event)
 
+    def OnMotion(self, event):
+        if self._zoomEnabled and event.LeftIsDown():
+            if self._hasDragged:
+                self._drawRubberBand(self._zoomCorner1, self._zoomCorner2) # remove old
+            else:
+                self._hasDragged= True
+            self._zoomCorner2[0], self._zoomCorner2[1] = self._getXY(event)
+            self._drawRubberBand(self._zoomCorner1, self._zoomCorner2) # add new
+        elif self._dragEnabled:
+            coordinates = event.GetPosition()
+            newpos, oldpos = map(numpy.array, map(self.PositionScreenToUser, [coordinates, self._screenCoordinates]))
+            dist = newpos-oldpos
+            self._screenCoordinates = coordinates
+            if self.last_draw is not None:
+                graphics, xAxis, yAxis= self.last_draw
+                if event.LeftIsDown():
+                    yAxis -= dist[1]
+                    xAxis -= dist[0]
+                    self._Draw(graphics,xAxis,yAxis)
+                elif event.RightIsDown():
+                    ymin,ymax = yAxis
+                    yextra = (numpy.exp(-dist[1]/(ymax-ymin))-1)*(ymax-ymin)/2.0
+                    yAxis[0] -= yextra
+                    yAxis[1] += yextra
+                    xmin,xmax = xAxis
+                    xextra = (numpy.exp(-dist[0]/(xmax-xmin))-1)*(xmax-xmin)/2.0
+                    xAxis[0] -= xextra
+                    xAxis[1] += xextra
+                    self._Draw(graphics,xAxis,yAxis)
+        
     # Setter and getter routines for miscellaneous properties of the canvas
     def SetXTickFormat(self,v):
         self.xTickFormat = v
@@ -203,10 +236,10 @@ class MyPlotCanvas(plot.PlotCanvas):
             p2[0],p2[1] = xAxis[1], yAxis[1]     # upper right corner user scale (xmax,ymax)
         else:
             # Both axis specified in Draw
-            p1= _Numeric.array([xAxis[0], yAxis[0]])    # lower left corner user scale (xmin,ymin)
-            p2= _Numeric.array([xAxis[1], yAxis[1]])     # upper right corner user scale (xmax,ymax)
+            p1= numpy.array([xAxis[0], yAxis[0]])    # lower left corner user scale (xmin,ymin)
+            p2= numpy.array([xAxis[1], yAxis[1]])     # upper right corner user scale (xmax,ymax)
 
-        self.last_draw = (graphics, _Numeric.array(xAxis), _Numeric.array(yAxis))       # saves most recient values
+        self.last_draw = (graphics, numpy.array(xAxis), numpy.array(yAxis))       # saves most recient values
         # Get ticks and textExtents for axis if required
         if self._xSpec is not 'none':
             xticks = self._xticks(xAxis[0], xAxis[1])
@@ -240,8 +273,8 @@ class MyPlotCanvas(plot.PlotCanvas):
         lhsW= yTextExtent[0] + yLabelWH[1] + ylabelPadding
         bottomH= max(xTextExtent[1], yTextExtent[1]/2.)+ xLabelWH[1]+scrollBarWidth
         topH= yTextExtent[1]/2. + titleWH[1]
-        textSize_scale= _Numeric.array([rhsW+lhsW,bottomH+topH]) # make plot area smaller by text size
-        textSize_shift= _Numeric.array([lhsW, bottomH])          # shift plot area by this amount
+        textSize_scale= numpy.array([rhsW+lhsW,bottomH+topH]) # make plot area smaller by text size
+        textSize_shift= numpy.array([lhsW, bottomH])          # shift plot area by this amount
 
         # drawing title and labels text
         dc.SetFont(self._getFont(self._fontSizeTitle))
@@ -262,8 +295,8 @@ class MyPlotCanvas(plot.PlotCanvas):
             self._drawLegend(dc,graphics,rhsW,topH,legendBoxWH, legendSymExt, legendTextExt)
 
         # allow for scaling and shifting plotted points
-        scale = (self.plotbox_size-textSize_scale) / (p2-p1)* _Numeric.array((1,-1))
-        shift = -p1*scale + self.plotbox_origin + textSize_shift * _Numeric.array((1,-1))
+        scale = (self.plotbox_size-textSize_scale) / (p2-p1)* numpy.array((1,-1))
+        shift = -p1*scale + self.plotbox_origin + textSize_shift * numpy.array((1,-1))
         self._pointScale= scale  # make available for mouse events
         self._pointShift= shift
 
@@ -307,12 +340,12 @@ class MyPlotCanvas(plot.PlotCanvas):
             xmin, xmax = p1[0],p2[0]
             ymin, ymax = p1[1],p2[1]
             for x, label in xticks:
-                pt1 = scale*_Numeric.array([x, ymin])+shift
-                pt2 = scale*_Numeric.array([x, ymax])+shift
+                pt1 = scale*numpy.array([x, ymin])+shift
+                pt2 = scale*numpy.array([x, ymax])+shift
                 dc.DrawLine(pt1[0],pt1[1],pt2[0],pt2[1]) # draws tick mark d units
             for y, label in yticks:
-                pt1 = scale*_Numeric.array([xmin, y])+shift
-                pt2 = scale*_Numeric.array([xmax, y])+shift
+                pt1 = scale*numpy.array([xmin, y])+shift
+                pt2 = scale*numpy.array([xmax, y])+shift
                 dc.DrawLine(pt1[0],pt1[1],pt2[0],pt2[1]) # draws tick mark d units
         dc.SetPen(wx.Pen(self.GetForegroundColour(), 2*penWidth))
 
@@ -320,11 +353,11 @@ class MyPlotCanvas(plot.PlotCanvas):
             lower, upper = p1[0],p2[0]
             text = 1
             for y, d in [(p1[1], -xTickLength), (p2[1], xTickLength)]:   # miny, maxy and tick lengths
-                a1 = scale*_Numeric.array([lower, y])+shift
-                a2 = scale*_Numeric.array([upper, y])+shift
+                a1 = scale*numpy.array([lower, y])+shift
+                a2 = scale*numpy.array([upper, y])+shift
                 dc.DrawLine(a1[0],a1[1],a2[0],a2[1])  # draws upper and lower axis line
                 for x, label in xticks:
-                    pt = scale*_Numeric.array([x, y])+shift
+                    pt = scale*numpy.array([x, y])+shift
                     dc.DrawLine(pt[0],pt[1],pt[0],pt[1] + d) # draws tick mark d units
                     if text:
                         te = self._getTextExtent(dc,label)
@@ -335,11 +368,11 @@ class MyPlotCanvas(plot.PlotCanvas):
             lower, upper = p1[1],p2[1]
             text = 1
             for x, d in [(p1[0], -yTickLength), (p2[0], yTickLength)]:
-                a1 = scale*_Numeric.array([x, lower])+shift
-                a2 = scale*_Numeric.array([x, upper])+shift
+                a1 = scale*numpy.array([x, lower])+shift
+                a2 = scale*numpy.array([x, upper])+shift
                 dc.DrawLine(a1[0],a1[1],a2[0],a2[1])
                 for y, label in yticks:
-                    pt = scale*_Numeric.array([x, y])+shift
+                    pt = scale*numpy.array([x, y])+shift
                     dc.DrawLine(pt[0],pt[1],pt[0]-d,pt[1])
                     if text:
                         te = self._getTextExtent(dc,label)
@@ -420,13 +453,13 @@ class MyPlotCanvas(plot.PlotCanvas):
 
     def _ticks(self, lower, upper, format=None):
         ideal = (upper-lower)/7.
-        log = _Numeric.log10(ideal)
-        power = _Numeric.floor(log)
+        log = numpy.log10(ideal)
+        power = numpy.floor(log)
         fraction = log-power
         factor = 1.
         error = fraction
         for f, lf in self._multiples:
-            e = _Numeric.fabs(fraction-lf)
+            e = numpy.abs(fraction-lf)
             if e < error:
                 error = e
                 factor = f
@@ -441,13 +474,13 @@ class MyPlotCanvas(plot.PlotCanvas):
                 digits = -int(power)
                 format = '%'+`digits+2`+'.'+`digits`+'f'
         ticks = []
-        t = -grid*_Numeric.floor(-lower/grid)
+        t = -grid*numpy.floor(-lower/grid)
         while t <= upper:
             ticks.append( (t, format % (t,)) )
             t = t + grid
         return ticks
 
-    _multiples = [(2., _Numeric.log10(2.)), (5., _Numeric.log10(5.))]
+    _multiples = [(2., numpy.log10(2.)), (5., numpy.log10(5.))]
 
 
 class PlotWidget(wx.Panel):

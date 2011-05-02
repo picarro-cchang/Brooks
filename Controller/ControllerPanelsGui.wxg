@@ -809,7 +809,7 @@
                                     <border>5</border>
                                     <option>0</option>
                                     <object class="wxCheckBox" name="ambientPressureCheckbox" base="EditCheckBox">
-                                        <checked>1</checked>
+                                        <checked>0</checked>
                                         <label>Ambient pressure</label>
                                         <events>
                                             <handler event="EVT_CHECKBOX">onPressureWaveformSelectChanged</handler>

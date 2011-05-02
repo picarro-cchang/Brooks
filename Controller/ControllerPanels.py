@@ -28,6 +28,7 @@ import os
 import sys
 
 from ControllerModels import DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy, ControllerRpcHandler, waveforms, dasInfo
+from ControllerModels import ringdowns, ringdownLock
 from ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui, PressurePanelGui
 from ControllerPanelsGui import WarmBoxPanelGui, HotBoxPanelGui, RingdownPanelGui
 from ControllerPanelsGui import WlmPanelGui, StatsPanelGui
@@ -35,7 +36,7 @@ from ControllerPanelsGui import WlmPanelGui, StatsPanelGui
 from Host.autogen import interface
 from Host.Common.Allan import AllanVar
 from Host.Common.RdStats import RdStats
-from Host.Common.GraphPanel import Series
+from Host.Common.GraphPanel import Series, ColorSeries
 from Host.Common import CmdFIFO, SharedTypes, timestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 import threading
@@ -51,19 +52,42 @@ SpectrumCollector = SpectrumCollectorProxy().rpc
 class RingdownPanel(RingdownPanelGui):
     def __init__(self,*a,**k):
         RingdownPanelGui.__init__(self,*a,**k)
-        self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber - 6000 (1/cm)',
+        self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
             timeAxes=(False,False),ylabel='Loss (ppm/cm)',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.ringdownWfms = [Series(ringdownPoints) for i in range(interface.NUM_VIRTUAL_LASERS)] # Need one for each virtual laser
+        self.ringdownWfms = [ColorSeries(ringdownPoints) for i in range(2)]
+        self.latestRingdown = None
+        self.oldAppendData = None
         wx.CallAfter(self.onSelectGraphType,None)
     def  update(self):
+        ringdownLock.acquire()
+        try:
+            if self.latestRingdown is None or self.appendData != self.oldAppendData:
+                for r in ringdowns:
+                    self.appendData(r)
+                    self.latestRingdown = r.timestamp
+            else:
+                i = 1
+                while i<=len(ringdowns) and ringdowns[-i].timestamp>self.latestRingdown:
+                    i += 1
+                while i>1:
+                    r = ringdowns[-i+1]
+                    self.appendData(r)
+                    self.latestRingdown = r.timestamp
+                    i -= 1
+        finally:
+            ringdownLock.release()
+        self.oldAppendData = self.appendData
         self.ringdownGraph.Update(delay=0)
     def  onClear(self,evt):
         for w in waveforms["Ringdown"].values():
-            w.Clear()
+            w.RetainLast()
+        self.ringdownGraph.Update(delay=0)
+            
     def  onSelectGraphType(self,evt):
-        fillColours = ["red","green","blue","yellow","cyan","magenta","black","white"]
+        colourNames = ["red","green","blue","yellow","cyan","magenta","black","white"]
+        fillColours = [wx.NamedColor(c).GetRGB() for c in colourNames]
         def  printData(data):
             print data.timestamp, data.uncorrectedAbsorbance
         def dataGood(data):
@@ -151,7 +175,7 @@ class RingdownPanel(RingdownPanelGui):
                     #wavenumber = data.wlmAngle
                     wavenumber = data.waveNumber
                     vLaser = (data.laserUsed >> 2) & 7
-                    waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(wavenumber, data.tunerValue)
+                    waveforms["Ringdown"]["tuner"].Add(wavenumber, data.tunerValue,fillColours[vLaser])
             self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
             timeAxes=(False,False),ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -162,8 +186,8 @@ class RingdownPanel(RingdownPanelGui):
             def  tunerVsTime(data):
                 if dataGood(data):
                     utime = timestamp.unixTime(data.timestamp)
-                    vLaser = (data.laserUsed >> 2) & 7
-                    waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(utime, data.tunerValue)
+                    vLaser = int((data.laserUsed >> 2) & 7)
+                    waveforms["Ringdown"]["tuner"].Add(utime, data.tunerValue,fillColours[vLaser])
             self.ringdownGraph.SetGraphProperties(xlabel='',
             timeAxes=(True,False),ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -175,7 +199,7 @@ class RingdownPanel(RingdownPanelGui):
                 if dataGood(data):
                     ratio1 = data.ratio1
                     vLaser = (data.laserUsed >> 2) & 7
-                    waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(ratio1/32768.0, data.tunerValue)
+                    waveforms["Ringdown"]["tuner"].Add(ratio1/32768.0, data.tunerValue,fillColours[vLaser])
             self.ringdownGraph.SetGraphProperties(xlabel='',
             timeAxes=(False,False),xlabel='Ratio 1',ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -187,7 +211,7 @@ class RingdownPanel(RingdownPanelGui):
                 if dataGood(data):
                     ratio2 = data.ratio2
                     vLaser = (data.laserUsed >> 2) & 7
-                    waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)].Add(ratio2/32768.0, data.tunerValue)
+                    waveforms["Ringdown"]["tuner"].Add(ratio2/32768.0, data.tunerValue,fillColours[vLaser])
             self.ringdownGraph.SetGraphProperties(xlabel='',
             timeAxes=(False,False),xlabel='Ratio 2',ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -201,7 +225,7 @@ class RingdownPanel(RingdownPanelGui):
                     #wavenumber = data.wlmAngle
                     wavenumber = data.waveNumber
                     vLaser = (data.laserUsed >> 2) & 7
-                    waveforms["Ringdown"]["wavenumber_%d" % (vLaser+1,)].Add(utime, wavenumber)
+                    waveforms["Ringdown"]["wavenumber"].Add(utime, wavenumber,fillColours[vLaser])
             self.ringdownGraph.SetGraphProperties(xlabel='', 
             timeAxes=(True,False),ylabel='Wavenumber',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -214,7 +238,7 @@ class RingdownPanel(RingdownPanelGui):
                     #wavenumber = data.wlmAngle
                     wavenumber = data.waveNumber
                     vLaser = (data.laserUsed >> 2) & 7
-                    waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)].Add(wavenumber, data.fineLaserCurrent)
+                    waveforms["Ringdown"]["fineCurrent"].Add(wavenumber, data.fineLaserCurrent,fillColours[vLaser])
             self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
             timeAxes=(False,False),ylabel='Fine Laser Current',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -228,7 +252,7 @@ class RingdownPanel(RingdownPanelGui):
                     #wavenumber = data.wlmAngle
                     wavenumber = data.waveNumber
                     vLaser = (data.laserUsed >> 2) & 7
-                    waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)].Add(utime, data.fineLaserCurrent)
+                    waveforms["Ringdown"]["fineCurrent"].Add(utime, data.fineLaserCurrent,fillColours[vLaser])
             self.ringdownGraph.SetGraphProperties(xlabel='',
             timeAxes=(True,False),ylabel='Fine Laser Current',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
@@ -250,22 +274,19 @@ class RingdownPanel(RingdownPanelGui):
                     colour='green',fillcolour='green',marker='square',
                     size=1,width=1)
         elif y == "FineCurrent":
-            for vLaser in range(interface.NUM_VIRTUAL_LASERS):
                 self.ringdownGraph.AddSeriesAsPoints(
-                    waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)],
-                    colour=fillColours[vLaser],fillcolour=fillColours[vLaser],marker='square',
+                waveforms["Ringdown"]["fineCurrent"],
+                marker='square',
                     size=1,width=1)
         elif y == "Tuner":
-            for vLaser in range(interface.NUM_VIRTUAL_LASERS):
                 self.ringdownGraph.AddSeriesAsPoints(
-                    waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)],
-                    colour=fillColours[vLaser],fillcolour=fillColours[vLaser],marker='square',
+                waveforms["Ringdown"]["tuner"],
+                marker='square',
                     size=1,width=1)
         elif y == "Wavenumber":
-            for vLaser in range(interface.NUM_VIRTUAL_LASERS):
                 self.ringdownGraph.AddSeriesAsPoints(
-                    waveforms["Ringdown"]["wavenumber_%d" % (vLaser+1,)],
-                    colour=fillColours[vLaser],fillcolour=fillColours[vLaser],marker='square',
+                waveforms["Ringdown"]["wavenumber"],
+                marker='square',
                     size=1,width=1)
         elif y == "Ratios":
             self.ringdownGraph.AddSeriesAsPoints(

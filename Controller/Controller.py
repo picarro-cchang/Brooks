@@ -126,12 +126,10 @@ class Controller(ControllerFrameGui):
             corrected=self.ringdownPanel.ringdownWfms[0],
             uncorrected=self.ringdownPanel.ringdownWfms[1],
             ratio1=self.ringdownPanel.ringdownWfms[0],
-            ratio2=self.ringdownPanel.ringdownWfms[1])
-        for vLaser in range(interface.NUM_VIRTUAL_LASERS):
-            waveforms["Ringdown"]["tuner_%d" % (vLaser+1,)] = self.ringdownPanel.ringdownWfms[vLaser]
-            waveforms["Ringdown"]["wavenumber_%d" % (vLaser+1,)] = self.ringdownPanel.ringdownWfms[vLaser]
-            waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)] = self.ringdownPanel.ringdownWfms[vLaser]
-
+            ratio2=self.ringdownPanel.ringdownWfms[1],
+            tuner=self.ringdownPanel.ringdownWfms[0],
+            wavenumber=self.ringdownPanel.ringdownWfms[0],
+            fineCurrent=self.ringdownPanel.ringdownWfms[0])
 
     def setupParameterDialogs(self):
         idmin = None

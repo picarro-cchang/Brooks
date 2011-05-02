@@ -1877,12 +1877,12 @@ class QuickGui(wx.Frame):
 
     def autoScaleY(self, idx):
         if self.graphPanel[idx].GetUnzoomed():
-            self.graphPanel[idx].Update()
+            self.graphPanel[idx].Update(autoscaleY=True)
         else:
             xAxis = self.graphPanel[idx].GetLastDraw()[1]
             self.graphPanel[idx].SetUnzoomed(True)
             self.graphPanel[idx].SetForcedXAxis(tuple(xAxis))
-            self.graphPanel[idx].Update()
+            self.graphPanel[idx].Update(autoscaleY=True)
             self.graphPanel[idx].ClearForcedXAxis()
             self.graphPanel[idx].SetUnzoomed(False)
             

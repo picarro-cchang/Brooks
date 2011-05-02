@@ -21,10 +21,12 @@ from Host.Common.Listener import Listener
 from Host.Common.TextListener import TextListener
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.autogen import interface
+from collections import deque
 
 import inspect
 from Queue import Queue
 import socket
+import threading
 
 EventManagerProxy_Init("Controller")
 
@@ -32,6 +34,9 @@ waveforms = {}
 dasInfo = {}
 parameterForms = {}
 panels = {}
+ringdowns = deque()
+ringdownLock = threading.Lock()
+ringdownPoints = interface.CONTROLLER_RINGDOWN_POINTS
 
 class DriverProxy(SharedTypes.Singleton):
     """Encapsulates access to the Driver via RPC calls"""
@@ -85,10 +90,18 @@ class RingdownListener(SharedTypes.Singleton):
         #    Log("Scheme complete and acquisition stopping at %s" % data.timestamp)
         #if data.status & interface.RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask:
         #    Log("Scheme complete and acquisition continuing at %s" % data.timestamp)
-        if data.status & interface.RINGDOWN_STATUS_RingdownTimeout:
-            Log("Ringdown timeout at %s" % data.timestamp)
-        panels["Ringdown"].appendData(data)
-        panels["Stats"].appendData(data)
+        ringdownLock.acquire()
+        try:
+            if data.status & interface.RINGDOWN_STATUS_RingdownTimeout:
+                Log("Ringdown timeout at %s" % data.timestamp)
+            else:
+                ringdowns.append(data)
+            if len(ringdowns)>ringdownPoints:
+                ringdowns.popleft()
+        finally:
+            ringdownLock.release()
+        # if "Ringdown" in panels: panels["Ringdown"].appendData(data)
+        if "Stats" in panels: panels["Stats"].appendData(data)
 
 class SensorListener(SharedTypes.Singleton):
     def __init__(self):
