@@ -19,11 +19,23 @@ NUM_PORTS = 4
 
 class RunSerial2Socket(object):
     def __init__(self, configFile):
-        self.appCo = CustomConfigObj(configFile)
+        self.appCo = CustomConfigObj(configFile, ignore_option_case=False)
         iniAbsBasePath = os.path.split(os.path.abspath(configFile))[0]
-        instrConfigFile = os.path.abspath(os.path.join(iniAbsBasePath, self.appCo.get("SETUP", "INSTRCONFIG")))
         exeFile = os.path.abspath(os.path.join(iniAbsBasePath, self.appCo.get("SETUP", "EXE")))
+        instrConfigFile = os.path.abspath(os.path.join(iniAbsBasePath, self.appCo.get("SETUP", "INSTRCONFIG")))
+        # Create the instrument config file to run serial2socket.exe
+        instrConfigDir = os.path.dirname(instrConfigFile)
+        if not os.path.isdir(instrConfigDir):
+            os.makedirs(instrConfigDir)
+        if not os.path.isfile(instrConfigFile):
+            fd = open(instrConfigFile, "w")
+            fd.close()
         self.instrCo = CustomConfigObj(instrConfigFile)
+        if not self.instrCo.has_section("PORTS"):
+            self.instrCo.add_section("PORTS")
+        for i in range(NUM_PORTS):
+            if not self.instrCo.has_section("PORT%d" % i):
+                self.instrCo.add_section("PORT%d" % i)
         self.updateIni(self.findPorts())
         info = subprocess.STARTUPINFO()
         subprocess.Popen([exeFile, str(TCP_PORT_PERIPH_INTRF), instrConfigFile], startupinfo=info)
