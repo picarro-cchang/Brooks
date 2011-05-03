@@ -403,8 +403,9 @@ def convHdf5ToDict(h5Filename):
     for tableName in h5File.root._v_children.keys():
         table = h5File.root._v_children[tableName]
         retDict[tableName] = {}
+        r = table.read()
         for colKey in table.colnames:
-            retDict[tableName][colKey] = table.read(field=colKey)
+            retDict[tableName][colKey] = r[colKey] # table.read(field=colKey)
     h5File.close()
     return retDict
     
