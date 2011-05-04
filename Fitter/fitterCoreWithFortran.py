@@ -32,7 +32,7 @@ import cPickle
 from cStringIO import StringIO
 from glob import glob
 from numpy import arange, arctan, argmax, argmin, argsort, array, asarray, bool_, concatenate, cos
-from numpy import diff, searchsorted, dot, exp, flatnonzero, float_, frompyfunc
+from numpy import delete, diff, searchsorted, dot, exp, flatnonzero, float_, frompyfunc
 from numpy import int8, int_, invert, iterable, linspace, logical_and, mean, median, ndarray, ones
 from numpy import pi, polyfit, ptp, shape, sin, sqrt, std, unique, zeros 
 from os.path import getmtime, join, split, exists
