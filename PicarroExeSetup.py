@@ -202,7 +202,7 @@ inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
                  "sip", "matplotlib.backends",  "matplotlib.backends.backend_wxagg", "matplotlib.backends.backend_qt4agg",
                  "matplotlib.figure","pylab", "numpy", "matplotlib.numerix.fft",
                  "matplotlib.numerix.linear_algebra", "matplotlib.numerix.random_array", "configobj",
-                 "encodings.*", "tables.*", "paramiko" ]
+                 "encodings.*", "tables.*" ]
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll']
 
 hex_images = glob.glob("../SrcCode/CypressUSB/Drivers/*.*")

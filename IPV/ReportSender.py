@@ -8,6 +8,22 @@ class ReportSender(object):
         self.xmlUser = user
         self.xmlPasswd = passwd
         
+    def testConnect(self):
+        dataDict = {}
+        dataDict["user"] = self.xmlUser
+        dataDict["passwd"] = self.xmlPasswd
+        ret = self.xmlProxy.xmlrpc_connect_test(dataDict)
+        return ret
+
+    def sendDiagFile(self, filename):
+        diagfile = xmlrpclib.Binary(open(filename,"rb").read())
+        dataDict = {}
+        dataDict["user"] = self.xmlUser
+        dataDict["passwd"] = self.xmlPasswd
+        dataDict["filename"] = filename
+        ret = self.xmlProxy.ipv_upload_h5(dataDict, diagfile)
+        return ret 
+
     def sendReport(self, filename):
         basename = os.path.basename(filename)
         [docType, docName, host, softVer, ymdhms] = basename.split("_")

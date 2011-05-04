@@ -17,7 +17,6 @@ import tables
 import wx
 import time
 import threading
-import paramiko
 import bz2
 from Queue import Queue
 from numpy import *
@@ -120,141 +119,85 @@ class FileUploader(object):
             self.srcDir = ipv.ipvDir
         else:
             self.srcDir = ipv.archiveDir
-        self.ipvRemoteDir = co.get("FileUpload", "ipvRemoteDir")
         self.ipvExtension = co.get("FileUpload", "ipvExtension")
-        self.host = co.get("FileUpload", "host")
-        self.user = co.get("FileUpload", "user")
-        password = getInnerStr(co.get("FileUpload", "password"))
-        try:
-            self.password = bz2.decompress(eval("\"%s\"" % password))
-        except:
-            self.password = password
-        self.sftpClient = None
-        self.uploadStatus = -1
-        self.channel = None
+        testMode = co.getboolean("FileUpload", "testMode", "False")
         # XML-RPC setup
-        xmlrpcUriUser = getInnerStr(co.get("FileUpload", "xmlrpcUriUser", "mfgteam"))
+        if not testMode:
+            xmlrpcUriUser = getInnerStr(co.get("FileUpload", "xmlrpcUriUser", "mfgteam"))
+            try:
+                xmlrpcUriUser = bz2.decompress(eval("\"%s\"" % xmlrpcUriUser))
+            except Exception, err:
+                self.writeToStatus("Error: %r. Use default XML-RPC login username" % err)
+            xmlrpcUriPassword = getInnerStr(co.get("FileUpload", "xmlrpcUriPassword", "PridJaHop4"))
+            try:
+                xmlrpcUriPassword = bz2.decompress(eval("\"%s\"" % xmlrpcUriPassword))
+            except Exception, err:
+                self.writeToStatus("Error: %r. Use default XML-RPC login password" % err)
+            xmlrpcTxUser = getInnerStr(co.get("FileUpload", "xmlrpcTxUser", "xml_user"))
+            try:
+                xmlrpcTxUser = bz2.decompress(eval("\"%s\"" % xmlrpcTxUser))
+            except Exception, err:
+                self.writeToStatus("Error: %r. Use default XML-RPC username" % err)
+            xmlrpcTxPassword = getInnerStr(co.get("FileUpload", "xmlrpcTxPassword", "skCyrcFHVZecfD"))
+            try:
+                xmlrpcTxPassword = bz2.decompress(eval("\"%s\"" % xmlrpcTxPassword))
+            except Exception, err:
+                self.writeToStatus("Error: %r. Use default XML-RPC password" % err)
+            try:
+                self.xmlReportSender = ReportSender("http://%s:%s@mfg.picarro.com/xmlrpc/" % (xmlrpcUriUser, xmlrpcUriPassword),
+                                                    xmlrpcTxUser, xmlrpcTxPassword)
+                self.connectStatus = 1
+            except Exception, err:
+                self.writeToStatus("Failed to establish XML-RPC interface: %r" % err)
+                self.xmlReportSender = None
+                self.connectStatus = 0
+        else:
+            try:
+                self.xmlReportSender = ReportSender("http://plucky/xmlrpc/", "picarro", "picarro") 
+                self.connectStatus = 1
+            except Exception, err:
+                self.writeToStatus("Failed to establish XML-RPC interface: %r" % err)
+                self.xmlReportSender = None
+                self.connectStatus = 0
+                
+    def getConnectStatus(self):
+        return self.connectStatus
+    
+    def testConnect(self):
         try:
-            xmlrpcUriUser = bz2.decompress(eval("\"%s\"" % xmlrpcUriUser))
-        except Exception, err:
-            self.writeToStatus("Error: %r. Use default XML-RPC login username" % err)
-        xmlrpcUriPassword = getInnerStr(co.get("FileUpload", "xmlrpcUriPassword", "PridJaHop4"))
-        try:
-            xmlrpcUriPassword = bz2.decompress(eval("\"%s\"" % xmlrpcUriPassword))
-        except Exception, err:
-            self.writeToStatus("Error: %r. Use default XML-RPC login password" % err)
-        xmlrpcTxUser = getInnerStr(co.get("FileUpload", "xmlrpcTxUser", "xml_user"))
-        try:
-            xmlrpcTxUser = bz2.decompress(eval("\"%s\"" % xmlrpcTxUser))
-        except Exception, err:
-            self.writeToStatus("Error: %r. Use default XML-RPC username" % err)
-        xmlrpcTxPassword = getInnerStr(co.get("FileUpload", "xmlrpcTxPassword", "skCyrcFHVZecfD"))
-        try:
-            xmlrpcTxPassword = bz2.decompress(eval("\"%s\"" % xmlrpcTxPassword))
-        except Exception, err:
-            self.writeToStatus("Error: %r. Use default XML-RPC password" % err)
-        try:
-            self.xmlReportSender = ReportSender("http://%s:%s@mfg.picarro.com/xmlrpc/" % (xmlrpcUriUser, xmlrpcUriPassword),
-                                                xmlrpcTxUser, xmlrpcTxPassword)
-            # To do: send a XML-RPC command to test the connectivity...
-        except Exception, err:
-            self.writeToStatus("Failed to establish XML-RPC interface: %r" % err)
-            self.xmlReportSender = None
-            self.uploadStatus = 0
-        
-    def setSftpClient(self):
-        # Build the channel and client to the remote server
-        try:
-            if not self.channel:
-                self.channel = paramiko.Transport((self.host, 22))
-                self.channel.connect(username=self.user, password=self.password)
-            self.sftpClient = paramiko.SFTPClient.from_transport(self.channel)
-            self.sftpClient.chdir(self.ipvRemoteDir)
-            self.uploadStatus = 1
-        except Exception, err:
-            self.writeToStatus("%r" % err)
-            self.sftpClient = None
-            self.channel = None
-            self.uploadStatus = 0
-        # Some useful available functions of self.sftpClient include:
-        # close(self)
-        # get_channel(self)
-        # listdir(self, path='.')
-        # listdir_attr(self, path='.')
-        # open(self, filename, mode='r', bufsize=-1)
-        # remove(self, path)
-        # rename(self, oldpath, newpath)
-        # mkdir(self, path, mode=0777)
-        # rmdir(self, path)
-        # stat(self, path)
-        # lstat(self, path)
-        # chdir(self, path)
-        # utime(self, path, times): 
-        # truncate(self, path, size): 
-        # getcwd(self)
-        # put(self, localpath, remotepath, callback=None)
-        # get(self, remotepath, localpath, callback=None)
-        
-    def closeSftpClient(self):
-        if self.sftpClient:
-            self.sftpClient.close()
-            self.sftpClient = None
-            self.uploadStatus = 0
-            
-    def getUploadStatus(self):
-        return self.uploadStatus
+            if self.xmlReportSender.testConnect() == "OK":
+                self.connectStatus = 1
+            else:
+                self.connectStatus = 0
+        except:
+            self.connectStatus = 0
         
     def uploadIPV(self):
-        if not self.sftpClient:
-            return
         for root, dirs, files in os.walk(self.srcDir):
             for filename in files:
                 filepath = os.path.join(root, filename)
                 if os.path.basename(filename).split('.')[-1] in self.ipvExtension:
                     try:
-                        if os.path.basename(filename).split("_")[0] == "Report":
-                            self._sendFileXmlRpc(filepath)
-                        else:
-                            self._uploadFile(filepath, self.ipvRemoteDir)
+                        self._sendFileXmlRpc(filepath)
                     except Exception, err:
                         self.writeToStatus('%r' % err)
             
     def _sendFileXmlRpc(self, filepath):
         try:
-            ret = self.xmlReportSender.sendReport(filepath)
+            if os.path.basename(filepath).split("_")[0] == "Report":
+                ret = self.xmlReportSender.sendReport(filepath)
+            else:
+                ret = self.xmlReportSender.sendDiagFile(filepath)
             if ret == "OK":
                 os.remove(filepath)
                 self.writeToStatus("%s sent via XML-RPC" % (filepath,))
+                self.connectStatus = 1
                 return
+            else:
+                self.connectStatus = 0
         except:
-            pass
+            self.connectStatus = 0
         self.writeToStatus("Failed to send %s via XML-RPC" % (filepath,))
-                            
-    def _uploadFile(self, filepath, remoteDir = ""):
-        (dir, filename) = os.path.split(filepath)
-        filepath = filepath.replace("\.", "").replace("\\", "/")
-        if self.instName not in filename:
-            remoteFilepath = os.path.join(remoteDir, "%s_%s" % (self.instName, filename)).replace("\.", "").replace("\\", "/")
-        else:
-            remoteFilepath = os.path.join(remoteDir, filename).replace("\.", "").replace("\\", "/")
-        self.writeToStatus("Uploading %s to %s" % (filepath, remoteFilepath))
-        s = None
-        try:
-            startTime = time.time()
-            s = self.sftpClient.put(filepath, remoteFilepath)
-            endTime = time.time()
-            uploadTime = endTime - startTime
-        except Exception, err:
-            print "%r" % err
-        if s != None:
-            self.writeToStatus("Finished uploading %.2f bytes in %.2f seconds" % (s.st_size, uploadTime))
-            try:
-                os.remove(filepath)
-                #self.writeToStatus("%s deleted from local drive" % (filepath,))
-            except Exception, err:
-                self.writeToStatus("%r" % err)
-        else:
-            self.writeToStatus("Failed uploading")
    
 class IPV(IPVFrame):
     def __init__(self, configFile, useViewer, *args, **kwds):
@@ -445,13 +388,13 @@ class IPV(IPVFrame):
         self.rpcServer.register_function(self.shutdown)
         self.rpcServer.register_function(self.showViewer)
         self.rpcServer.register_function(self.hideViewer)
-        self.rpcServer.register_function(self.getUploadStatus)
+        self.rpcServer.register_function(self.getConnectStatus)
         # Start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.shutdown)
         self.rpcThread.start()
         
-    def getUploadStatus(self):
-        return self.fUploader.getUploadStatus()
+    def getConnectStatus(self):
+        return self.fUploader.getConnectStatus()
         
     def shutdown(self):
         self.Destroy()
@@ -479,10 +422,8 @@ class IPV(IPVFrame):
         self.writeToStatus("Uploading IPV reports...")
         self.connStatusLock.acquire()
         try:
-            self.fUploader.setSftpClient()
             self.fUploader.uploadIPV()
-            self.connStatus = self.getUploadStatus()
-            self.fUploader.closeSftpClient()
+            self.connStatus = self.getConnectStatus()
         except:
             pass
         finally:
@@ -539,9 +480,8 @@ class IPV(IPVFrame):
         while not self._shutdownRequested:
             self.connStatusLock.acquire()
             try:
-                self.fUploader.setSftpClient()
-                self.connStatus = self.getUploadStatus()
-                self.fUploader.closeSftpClient()            
+                self.fUploader.testConnect()
+                self.connStatus = self.getConnectStatus()          
             except:
                 pass
             finally:
@@ -553,7 +493,7 @@ class IPV(IPVFrame):
             self.connStatusLock.acquire()
             self.IPVStatusBroadcaster.send("%d,%f\n" % (self.connStatus, time.time()))
             self.connStatusLock.release()
-            time.sleep(120)
+            time.sleep(100)
         
     def onClose(self,event):
         self.hideViewer()
