@@ -284,7 +284,7 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
         writeFPGA(FPGA_TWGEN+TWGEN_PZT_OFFSET,pztOffset % 65536);
     }
     else if (SPECT_CNTRL_ContinuousManualTempMode == *(s->mode_))
-    {   // With manual temperature control, there are no virtual lasers and the PZT offset is zero
+    {   // With manual temperature control, the PZT offset is zero
         writeFPGA(FPGA_TWGEN+TWGEN_PZT_OFFSET,0);    
     }
     else {    
@@ -343,16 +343,18 @@ void setupNextRdParams(void)
     }
     else if (SPECT_CNTRL_ContinuousManualTempMode == *(s->mode_))
     {
-        // In this mode there are no virtual lasers. Get actual laser number from FPGA
+        // Get actual laser number from FPGA and virtual laser number from register
+        // In this way, if a virtual laser number is specified, it is used (for frequency conversion)
+        //  but if not, it will still work.
         laserNum = readBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W);
-        r->injectionSettings = laserNum;
+        r->injectionSettings = (*(s->virtLaser_) << 2) | laserNum;
         r->laserTemperature = *(s->laserTemp_[laserNum]);
         r->coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
         r->etalonTemperature = *(s->etalonTemperature_);
         r->cavityPressure = *(s->cavityPressure_);
         r->ambientPressure = *(s->ambientPressure_);
         r->schemeTableAndRow = 0;
-        r->countAndSubschemeId = (s->incrCounter_ << 16);
+        r->countAndSubschemeId = 0; // (s->incrCounter_ << 16);
         r->ringdownThreshold = *(s->defaultThreshold_);
         r->status = 0;
         laserTempAsInt = 1000.0*r->laserTemperature;
