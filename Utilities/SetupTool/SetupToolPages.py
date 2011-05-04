@@ -160,10 +160,10 @@ class Page1(wx.Panel):
             stddataList = strToList(self.cp.get(dataLog, "datalist"))
             try:
                 fulldataList = strToList(self.dataColsCp.get("DataCols", dataSource))
-                self.dataCols.append(fulldataList)
             except Exception, err:
                 print "%r" % err
-                self.dataCols.append(stddataList)
+                fulldataList = stddataList
+            self.dataCols.append(fulldataList)
             
             self.labelDict[dataLog] = []
             self.controlDict[dataLog] = []
