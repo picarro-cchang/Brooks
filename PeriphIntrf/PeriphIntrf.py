@@ -155,24 +155,22 @@ class PeriphIntrf(object):
     def selectAllDataByTime(self, requestTime):
         sensorDataList = [[[], []]]*NUM_CHANNELS
         self.sensorLock.acquire()
+        localSensorList = self.sensorList[:]
+        self.sensorLock.release()
         try:
             for port in range(NUM_CHANNELS):
-                lastVal = (None, [])
-                for idx in range(len(self.sensorList[port])):
-                    (ts, valList) = self.sensorList[port][idx]
-                    if len(valList) > 0:
-                        if ts >= requestTime:
-                            # Save a list of [[time0, time1], [(val00, val01), (val10, val11), (val20, val21), ...]]
+                for idx in range(len(localSensorList[port])):
+                    (ts, valList) = localSensorList[port][idx]
+                    if len(valList) > 0 and ts >= requestTime:
+                        # Save a list of [[time0, time1], [(val00, val01), (val10, val11), (val20, val21), ...]]
+                        if idx > 0:
+                            lastVal = localSensorList[port][idx-1]
                             sensorDataList[port] = [[lastVal[0], ts], zip(lastVal[1], valList)]
-                            break
                         else:
-                            lastVal = (ts, valList)
-                if not sensorDataList[port][0]:
-                    sensorDataList[port] = [[lastVal[0], lastVal[0]], zip(lastVal[1], lastVal[1])]
+                            sensorDataList[port] = [[ts, ts], zip(valList, valList)]
+                        break
         except Exception, err:
             print "%r" % (err,)
-        finally:
-            self.sensorLock.release()
         return sensorDataList
         
     def getDataByTime(self, requestTime, dataList):

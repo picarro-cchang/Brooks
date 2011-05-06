@@ -39,8 +39,7 @@ class MeasData(object):
                     self.Data[key] = float(Data[key])
                 except:
                     self.Data[key] = Data[key]
-        if "timestamp" not in self.Data:
-            self.Data["timestamp"] = unixTimeToTimestamp(self.Time)
+        self.Data["timestamp"] = unixTimeToTimestamp(self.Time)
 
     def dumps(self):
         dumpDict = {}

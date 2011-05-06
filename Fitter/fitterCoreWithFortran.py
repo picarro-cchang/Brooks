@@ -1140,7 +1140,7 @@ class RdfData(object):
                 #  all data are (initially) good
                 rdfData.nrows = len(rdData[s][low:high])
                 rdfData.indexVector = arange(rdfData.nrows)
-                # Set the average time of the sensor data
+                # Set the average time of the ringdown data
                 rdfData.avgSpectrumTime = unixTime(mean(rdfData.timestamp))
                 rdfData.startRow = low
                 rdfData.endRow = high
