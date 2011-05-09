@@ -3,6 +3,7 @@ import sys
 import time
 import serial
 import subprocess
+import win32process
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import TCP_PORT_PERIPH_INTRF
 from Host.Common.SingleInstance import SingleInstance
@@ -37,8 +38,31 @@ class RunSerial2Socket(object):
             if not self.instrCo.has_section("PORT%d" % i):
                 self.instrCo.add_section("PORT%d" % i)
         self.updateIni(self.findPorts())
-        info = subprocess.STARTUPINFO()
-        subprocess.Popen([exeFile, str(TCP_PORT_PERIPH_INTRF), instrConfigFile], startupinfo=info)
+        # Launch the EXE program
+        affmask = self.appCo.getint("SETUP", "AFFINITYMASK", 1)
+        lpApplicationName = None
+        lpCommandLine = "%s %d %s" % (exeFile, TCP_PORT_PERIPH_INTRF, instrConfigFile)
+        lpProcessAttributes = None
+        lpThreadAttributes = None
+        bInheritHandles = False
+        dwCreationFlags = win32process.HIGH_PRIORITY_CLASS
+        dwCreationFlags += win32process.CREATE_NO_WINDOW
+        lpEnvironment = None
+        lpCurrentDirectory = None
+        lpStartupInfo = win32process.STARTUPINFO()
+        hProcess, hThread, dwProcessId, dwThreadId =  win32process.CreateProcess(
+            lpApplicationName,
+            lpCommandLine,
+            lpProcessAttributes,
+            lpThreadAttributes,
+            bInheritHandles,
+            dwCreationFlags,
+            lpEnvironment,
+            lpCurrentDirectory,
+            lpStartupInfo
+        )
+        win32process.SetProcessAffinityMask(hProcess, affmask)
+        #subprocess.Popen([exeFile, str(TCP_PORT_PERIPH_INTRF), instrConfigFile], startupinfo=lpStartupInfo, creationflags = dwCreationFlags)
         
     def findPorts(self):
         portList = []

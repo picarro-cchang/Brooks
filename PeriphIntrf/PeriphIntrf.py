@@ -23,7 +23,7 @@ APP_DESCRIPTION = "Socket client and interpolator"
 __version__ = 1.0
 DEFAULT_CONFIG_NAME = "serial2socket.ini"
 
-MAX_SENSOR_QUEUE_SIZE = 2000
+DEFAULT_SENSOR_QUEUE_SIZE = 2000
 HOST = 'localhost'
 NUM_CHANNELS = 4
      
@@ -35,12 +35,13 @@ def linInterp(pPair, tPair, t):
         else:
             return ((t-tPair[0])*pPair[1] + (tPair[1]-t)*pPair[0]) / dtime
     except:
-        return 0.0
+        return None
         
 class PeriphIntrf(object):
     def __init__(self, configFile):
         co = CustomConfigObj(configFile)
         iniAbsBasePath = os.path.split(os.path.abspath(configFile))[0]
+        self.sensorQSize = co.getint("SETUP", "SENSORQUEUESIZE", DEFAULT_SENSOR_QUEUE_SIZE)
         self.queue = Queue.Queue(0)
         self.sock = None
         self.getThread = None
@@ -134,7 +135,7 @@ class PeriphIntrf(object):
                         parsedList = self.parser[port](newStr)
                         if parsedList:
                             self.sensorList[port].append((ts, parsedList))
-                            if len(self.sensorList[port]) > MAX_SENSOR_QUEUE_SIZE:
+                            if len(self.sensorList[port]) > self.sensorQSize:
                                 self.sensorList[port].popleft()
                     except Exception, err:
                         print "%r" % (err,)
@@ -153,7 +154,9 @@ class PeriphIntrf(object):
         appThread.start()
          
     def selectAllDataByTime(self, requestTime):
-        sensorDataList = [[[], []]]*NUM_CHANNELS
+        sensorDataList = []
+        for i in range(NUM_CHANNELS):
+            sensorDataList.append([[], []])
         self.sensorLock.acquire()
         localSensorList = self.sensorList[:]
         self.sensorLock.release()
@@ -185,7 +188,7 @@ class PeriphIntrf(object):
             try:
                 retList.append(interpDict[data])
             except:
-                retList.append(0.0)
+                retList.append(None)
         return retList
         
     def shutdown(self):
