@@ -16,11 +16,12 @@ class ReportSender(object):
         return ret
 
     def sendDiagFile(self, filename):
+        basename = os.path.basename(filename)
         diagfile = xmlrpclib.Binary(open(filename,"rb").read())
         dataDict = {}
         dataDict["user"] = self.xmlUser
         dataDict["passwd"] = self.xmlPasswd
-        dataDict["filename"] = filename
+        dataDict["filename"] = basename
         ret = self.xmlProxy.ipv_upload_h5(dataDict, diagfile)
         return ret 
 

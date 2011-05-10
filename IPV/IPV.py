@@ -318,9 +318,10 @@ class IPV(IPVFrame):
     def _processIni(self, configFile):
         self.statusMessage = []
         self.baseCo = CustomConfigObj(configFile, list_values = True)
+        basePath = os.path.split(configFile)[0]
+        self.instrCoFilename = os.path.join(basePath, self.baseCo.get("Main", "instrConfigPath"))
         try:
-            basePath = os.path.split(configFile)[0]
-            self.instrCo = CustomConfigObj(os.path.join(basePath, self.baseCo.get("Main", "instrConfigPath")), list_values = True)
+            self.instrCo = CustomConfigObj(self.instrCoFilename, list_values = True)
         except:
             self.instrCo = None
         self._mergeConfig()
@@ -440,7 +441,7 @@ class IPV(IPVFrame):
         self.Hide()
      
     def runLicense(self):
-        f = os.popen("C:\Picarro\G2000\HostExe\IPVLicense.exe -s 0 -r %f -t %f" % (self.licenseRemindDays, self.licenseTrialDays), "r")
+        f = os.popen("C:\Picarro\G2000\HostExe\IPVLicense.exe -s 0 -r %f -t %f -c %s" % (self.licenseRemindDays, self.licenseTrialDays, self.instrCoFilename), "r")
         f.read()
         
     def startIPVLicense(self):
