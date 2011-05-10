@@ -50,6 +50,7 @@ EventManagerProxy_Init(APP_NAME)
 
 def interp(old,var,condVar,condVal,ts):
     status = True
+    result = 0.0
     if (var not in old) or (condVar and condVar not in old):
         status = False
     else:
