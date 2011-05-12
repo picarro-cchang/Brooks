@@ -357,7 +357,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
 
     def getSampleDescriptionFile(self,dialogTitle,trayName=None):             
         dlg = wx.FileDialog(
-            self, message=dialogTitle, defaultDir=os.getcwd(), 
+            self, message=dialogTitle, defaultDir=os.path.dirname(self.configFile), 
             wildcard="Comma separated value file (*.csv)|*.csv", style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             self.sampleDescriptionFileName = dlg.GetPath()
@@ -390,6 +390,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 self.updateSampleDescrComboBox()
                 default = self.sampleDescrComboBox.GetString(0)
                 self.sampleDescrComboBox.SetValue(default)
+                self.manualSampleNumber = 0
                 self.rewriteOutputFile = True
             except Exception,e:
                 print e
@@ -439,6 +440,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.updateSampleDescrComboBox()
             self.rewriteOutputFile = True
         self.manualSampleNumber = self.sampleIndexDict[descr]        
+        self.enableManualButton() 
         
     def onWriteHeadings(self):
         notOpen = self.saveFp == None
@@ -526,7 +528,10 @@ class CoordinatorFrame(CoordinatorFrameGui):
             data.update(self.sampleDescriptionDict[(data["trayName"],data["sampleNum"])])
         except:
             try:
-                data.update(self.sampleDescriptionDict[data["sampleNum"]])
+                if self.manualSampleNumber > 0:
+                    data.update(self.sampleDescriptionDict[self.manualSampleNumber])
+                else:
+                    data.update(self.sampleDescriptionDict[data["sampleNum"]])
             except:
                 pass
         if "Tray" in data and "Vial" in data:
@@ -604,8 +609,9 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 if self.logEnable:
                     self.processLog(data)
             elif type == OUTFILE:
-                self.outputFileDataList.append(data)
-                self.processData(data)
+                result = data.copy()
+                self.outputFileDataList.append(result)
+                self.processData(result)
             elif type == CONTROL:
                 try:
                     result = data()
