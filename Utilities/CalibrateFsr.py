@@ -326,7 +326,8 @@ class CalibrateFsr(object):
                                              "RDFITTER_META_BACKOFF_REGISTER",
                                              "RDFITTER_META_SAMPLES_REGISTER",
                                              "VIRTUAL_LASER_REGISTER",
-                                             ("FPGA_LASERLOCKER","LASERLOCKER_OPTIONS")
+                                             ("FPGA_LASERLOCKER","LASERLOCKER_OPTIONS"),
+                                             ("FPGA_LASERLOCKER","LASERLOCKER_TUNING_OFFSET")
                                              ])
             Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_IdleState)
             print>>self.op, "Virtual laser Index: %d"   % self.vLaserNum
@@ -378,10 +379,17 @@ class CalibrateFsr(object):
 
             Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_StartManualState")
             print "Starting to acquire data in FSR hopping mode"
-            time.sleep(0.2*4*(maxLaserTemp-minLaserTemp)/sweepIncr)
+            start = time.clock()
+            totTime = 0.2*4*(maxLaserTemp-minLaserTemp)/sweepIncr
+            complete = 0
+            while complete < 100:
+                now = time.clock()
+                complete = round(100*(now-start)/totTime)
+                sys.stdout.write("\r%d%% complete" % complete)
+                time.sleep(2.0)
+            sys.stdout.write("\r100%% complete\n")
             
             # # Ensure that we start with original calibration information
-            
             # RDFreqConv.restoreOriginalWlmCal(self.vLaserNum)
             # theta0 = RDFreqConv.waveNumberToAngle(self.vLaserNum,[self.waveNumberCen])[0]
             # # Make a fine angle-based scheme covering +/- 6FSR for determining PZT sensitivity
@@ -510,6 +518,7 @@ class CalibrateFsr(object):
             root, ext = splitext(split(hbCalFileName)[1])
             copyfile(hbCalFileName,'%s_after_%s%s' % (root,jobName,ext))
             Driver.restoreRegValues(regVault)
+            Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_TUNING_OFFSET",32768)
 
 HELP_STRING = """CalibrateFsr.py [-c<FILENAME>] [-h|--help]
 
