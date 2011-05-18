@@ -24,6 +24,7 @@ import socket
 import time
 
 from BurleighReply import BurleighReply
+from WavemeterTelnetClient import WavemeterTelnetClient
 from configobj import ConfigObj
 from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
@@ -68,8 +69,20 @@ class Averager(object):
             raise ValueError,"No values to average"
 
 class WlmFileMaker(object):
+    freqQuery = {"WA-7000":"READ:SCAL:FREQ?\n",
+                 "WA-7600":"READ:SCAL:FREQ?\n",
+                 "228A":"READ:FREQ?\n"}
+
     def __init__(self,configFile,options):
         self.config = ConfigObj(configFile)
+        self.port = 'COM1'
+        self.ipAddr = None
+        
+        if "-a" in options:
+            self.ipAddr = options["-a"]
+        elif "IP_ADDR" in self.config["SETTINGS"]:
+            self.ipAddr = self.config["SETTINGS"]["IP_ADDR"]
+            
         if "-l" in options:
             self.laserNum = int(options["-l"])
         else:
@@ -97,7 +110,12 @@ class WlmFileMaker(object):
             self.coarseCurrent = float(self.config["SETTINGS"]["LASER_CURRENT"])
         if self.coarseCurrent < 0 or self.coarseCurrent >= 65536:
             raise ValueError("LASER_CURRENT must be in range 0..65535")
-        
+
+        if "-p" in options:
+            self.port = options["-p"]
+        else:
+            self.port = self.config["SETTINGS"].get("COM_PORT",self.port)
+            
         if "--min" in options:
             self.tempMin = float(options["--min"])
         else:
@@ -148,14 +166,20 @@ class WlmFileMaker(object):
         self.listener = Listener(self.queue,SharedTypes.BROADCAST_PORT_SENSORSTREAM,
                                  SensorEntryType,self.streamFilter)
         
-        # Open serial port to Burleigh for non-blocking read
-        try:
-            self.ser = serial.Serial(0,19200,timeout=0)
-            self.wavemeter = BurleighReply(self.ser,0.02)
-        except:
-            raise Exception("Cannot open serial port - aborting")
+        # Open serial port or TCP connection to wavemeter for non-blocking read
+        if self.ipAddr is None:
+            try:
+                self.ser = serial.Serial(self.port,19200,timeout=0)
+                self.wavemeter = BurleighReply(self.ser,0.02)
+            except:
+                raise Exception("Cannot open serial port - aborting")
+        else:
+            try:
+                self.wavemeter = WavemeterTelnetClient(self.ipAddr,1.0)
+            except:
+                raise Exception("Cannot open TCP connection to %s, Aborting." % self.ipAddr)
         self.serialTimeout = 10.0
-
+        
     def WaitForString(self,timeout,msg=""):
         tWait = 0
         while tWait < timeout:
@@ -170,10 +194,10 @@ class WlmFileMaker(object):
 
     def readWavenumber(self):
         while True:
-            self.ser.write("READ:SCAL:FREQ?\n");
+            self.wavemeter.PutString(self.freqQuery[self.model]);
             try:
                 reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to READ command")
-                # N.B. Sunnyvale Burleigh reads out frequencies in THz
+                # N.B. Sunnyvale Burleigh and Bristol read out frequencies in THz
                 waveno = float(reply)/0.0299792458
                 return waveno
             except IOError:
@@ -223,12 +247,18 @@ class WlmFileMaker(object):
 
         if not self.simulation:
             print "Asking wavemeter for identification"
-            self.ser.write("\n");
+            self.wavemeter.PutString("\n");
             time.sleep(1.0)
-            self.ser.write("*IDN?\n");
+            self.wavemeter.PutString("*IDN?\n");
             reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
             print "Wavemeter id: %s" % reply
-            if ("WA-7000" not in reply) and ("WA-7600" not in reply):
+            if "WA-7000" in reply:
+                self.model = "WA-7000"
+            elif "WA-7600" in reply:
+                self.model = "WA-7600"
+            elif "228A" in reply:
+                self.model = "228A"
+            else:
                 raise ValueError,"Unrecognized wavemeter model"
         else:
             print "Using simulation mode for wavemeter"
@@ -408,6 +438,7 @@ class WlmFileMaker(object):
         finally:
             if self.fp:
                 self.fp.close()
+            self.wavemeter.Close()
             Driver.restoreRegValues(regVault)
             Driver.startEngine()
 
@@ -417,12 +448,14 @@ Where the options can be a combination of the following. Note that options overr
 settings in the configuration file:
 
 -h, --help           print this help
+-a                   ip address or host name for TCP communication (overrides serial port)
 -c                   specify a config file:  default = "./MakeWlmFile1.ini"
 -f                   name of output file (without extension)
 -i                   coarse laser current (digitizer units)
 -l                   laser number (1-index)
 --max                maximum laser temperature
 --min                minimum laser temperature
+-p                   communications port
 --sim                do not use Burleigh (use --wmin and --wmax to specify wavenumbers at min and max temperatures)
 --step               laser temperature step
 --tol                laser temperature tolerance
@@ -435,7 +468,7 @@ def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:i:l:f:w:'
+    shortOpts = 'ha:c:i:l:f:p:w:'
     longOpts = ["help","min=","max=","step=","tol=","sim","wmin=","wmax="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)

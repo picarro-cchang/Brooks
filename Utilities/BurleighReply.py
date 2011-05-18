@@ -8,6 +8,12 @@ class BurleighReply(object):
         self.string = ""
         self.tlast = None
 
+    def Close(self):
+        self.ser.close()
+        
+    def PutString(self,string):
+        self.ser.write(string)
+        
     def GetString(self):
         while True:
             ch = self.ser.read()
