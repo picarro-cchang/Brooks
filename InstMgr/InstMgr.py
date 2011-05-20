@@ -287,7 +287,7 @@ class InstMgr(object):
         if __debug__: Log("Loading config options.")
         self.configPath = configPath
         self.Config = ConfigurationOptions()
-        self.diableDataManagerWhenExitMeas = False
+        self.diableDataManager = False
 
         if __debug__: Log("Setting up RPC connections.")
         #set up a connections to other apps
@@ -613,7 +613,7 @@ class InstMgr(object):
         """ called when exiting measuring state """
         self._SendDisplayMessage("Leaving Measuring")
         
-        if self.diableDataManagerWhenExitMeas:
+        if self.diableDataManager:
             # Disable Data Manager
             try:
                 self.DataMgrRpc.Disable(keepSyncScripts=True)
@@ -1013,7 +1013,8 @@ class InstMgr(object):
                         pass
                     try:
                         stateDict = self.DataMgrRpc.GetState()
-                        if stateDict['State'] == 'READY':
+                        if stateDict['State'] == 'READY' and not self.diableDataManager:
+                            print "self.DataMgrRpc.Enable()"
                             self.DataMgrRpc.Enable()
                     except:
                         pass
@@ -1121,9 +1122,9 @@ class InstMgr(object):
 
         # stop measuring
         if shutdownType == INSTMGR_SHUTDOWN_PREP_SHIPMENT:
-            self.diableDataManagerWhenExitMeas = True
+            self.diableDataManager = True
         else:
-            self.diableDataManagerWhenExitMeas = False
+            self.diableDataManager = False
         status = self._StateHandler(EVENT_STOP_MEAS)
 
         # TODO ask EventMgr to archive logs.  Functionality doesn't exist in EventMgr yet.
