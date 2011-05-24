@@ -25,9 +25,9 @@ def printError(errMsg1, errTitle, errMsg2="Action cancelled."):
     d.Destroy()
                 
 def strToList(inStr):
-    retList = inStr.split(",")
-    for i in range(len(retList)):
-        retList[i] = retList[i].strip()
+    if not inStr:
+        return []
+    retList = [i.strip() for i in inStr.split(",")]
     return retList
     
 #----------------------------------------------------------------------------------------------------------------------------------------#
@@ -59,6 +59,10 @@ class Page1(wx.Panel):
         self.enFlag = True
         self.fullInterface = False
         
+    def _sortDataList(self, reservedList, dataList):
+        addList = [d for d in dataList if d not in reservedList]
+        return reservedList + addList
+                
     def onGetButton(self, event):
         try:
             dataKeyDict = self.quickGuiRpc.getDataKeys()
@@ -70,7 +74,10 @@ class Page1(wx.Panel):
             for source in dataKeyDict:
                 dataKeys = dataKeyDict[source]
                 dataKeys.sort()
-                self.dataColsCp["DataCols"][source] = dataKeys
+                if source in self.resdataDict:
+                    self.dataColsCp["DataCols"][source] = self._sortDataList(self.resdataDict[source], dataKeys)
+                else:
+                    self.dataColsCp["DataCols"][source] = dataKeys
             self.dataColsCp.write()
             # Reset the data col config obj
             self.dataColsCp = CustomConfigObj(self.dataColsFile)
@@ -93,14 +100,21 @@ class Page1(wx.Panel):
         d.Destroy()
                 
     def onCheckListBox(self, event):
-        eventObj = event.GetEventObject()
-        if self.fullInterface:
-            return
-        else:
-            index = event.GetSelection()
-            checkedList = list(eventObj.GetChecked())
-            checkedList.append(index)
-            eventObj.SetChecked(checkedList)
+        return
+        # eventObj = event.GetEventObject()
+        # if self.fullInterface:
+            # return
+        # else:
+            # index = event.GetSelection()
+            # item = eventObj.GetString(index)
+            # dataLogIdx = self.checkListBoxIdList.index(eventObj.GetId())
+            # print self.resdataList[dataLogIdx], item
+            # if item not in self.resdataList[dataLogIdx]:
+                # return
+            # else:
+                # checkedList = list(eventObj.GetChecked())
+                # checkedList.append(index)
+                # eventObj.SetChecked(checkedList)
             
     def onDataDuration(self, event):
         eventObj = event.GetEventObject()
@@ -154,15 +168,21 @@ class Page1(wx.Panel):
             dataColumnBoxHeight = 340
         else:
             dataColumnBoxHeight = 230.0/self.numDataLogSections
+        #self.resdataList = []
+        self.resdataDict = {}
+        #self.checkListBoxIdList = []
         for dataLog in self.dataLogSections:
             dataSource = self.cp.get(dataLog, "sourcescript")
             self.dataSources.append(dataSource)
             stddataList = strToList(self.cp.get(dataLog, "datalist"))
+            resdata = strToList(self.cp.get(dataLog, "reservedlist", ""))
+            #self.resdataList.append(resdata)
+            self.resdataDict[dataSource] = resdata
             try:
-                fulldataList = strToList(self.dataColsCp.get("DataCols", dataSource))
+                fulldataList = self._sortDataList(resdata, strToList(self.dataColsCp.get("DataCols", dataSource)))
             except Exception, err:
                 print "%r" % err
-                fulldataList = stddataList
+                fulldataList = self._sortDataList(resdata, stddataList)
             self.dataCols.append(fulldataList)
             
             self.labelDict[dataLog] = []
@@ -171,11 +191,13 @@ class Page1(wx.Panel):
             if self.fullInterface:
                 datalistChoices = fulldataList
             else:
-                datalistChoices = stddataList
+                datalistChoices = self._sortDataList(resdata, stddataList)
             label = wx.StaticText(self, -1, "Data Columns (%s)" % dataLog, style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.labelDict[dataLog].append(label)
-            dataCheckListBox = wx.CheckListBox(self, -1, choices = datalistChoices, size = (250, dataColumnBoxHeight))
+            newId = wx.NewId()
+            #self.checkListBoxIdList.append(newId)
+            dataCheckListBox = wx.CheckListBox(self, newId, choices = datalistChoices, size = (250, dataColumnBoxHeight))
             self.controlDict[dataLog].append(dataCheckListBox)
             self.Bind(wx.EVT_CHECKLISTBOX, self.onCheckListBox, dataCheckListBox)
             
@@ -794,18 +816,21 @@ class Page3(wx.Panel):
         print self.checkRemoteAccessScheduled()
         if self.checkRemoteAccessScheduled():
             os.system(r'schtasks.exe /delete /tn RemoteAccess /f')
+            os.system(r'schtasks.exe /delete /tn RemoteAccessLogOn /f')
             self.buttonSch.SetLabel("Start Delivery Scheduler")
         else:
             startTime = self.ctrlStartTime.GetValue()
             os.system(r'schtasks.exe /delete /tn RemoteAccess /f')
             os.system(r'schtasks.exe /create /tn RemoteAccess /tr "C:\Picarro\G2000\HostExe\RemoteAccess.exe %s" /sc DAILY /st %s /ru %s /rp %s' % (self.targetIni, startTime, self.user, self.password))
+            os.system(r'schtasks.exe /delete /tn RemoteAccessLogOn /f')
+            os.system(r'schtasks.exe /create /tn RemoteAccessLogOn /tr "C:\Picarro\G2000\HostExe\RemoteAccess.exe %s" /sc ONLOGON /ru %s /rp %s' % (self.targetIni, self.user, self.password))
             self.buttonSch.SetLabel("Stop Delivery Scheduler")
             
     def checkRemoteAccessScheduled(self):
         schQuery = os.popen("schtasks.exe /query /fo CSV","r")
         r = schQuery.read()
         r = r.replace("\n","").replace("\"",",").split(",")
-        if "RemoteAccess" in r:
+        if ("RemoteAccess" in r) or ("RemoteAccessLogOn" in r):
             return True
         else:
             return False
