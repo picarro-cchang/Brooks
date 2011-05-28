@@ -1146,15 +1146,15 @@ class RdfData(object):
                 rdfData.endRow = high
                 return rdfData
 
-            pace = min(1.0,float(RED_DISCARD_ALL-qSizes[i])/(RED_DISCARD_ALL-RED_THRESHOLD))
+            pace = max(0.1,min(1.0,float(RED_DISCARD_ALL-qSizes[i])/(RED_DISCARD_ALL-RED_THRESHOLD)))
             # Split spectra further according to subfield of the subschemeId
             low = start
             high = start + rdChunkSize
             
             splits = flatnonzero(diff(rdData["subschemeId"][low:high] & 0x3FF))
-            for s in splits:
+            for i,s in enumerate(splits):
                 id = rdData["subschemeId"][low] & 0x3FF
-                if allowYield(pace,id):
+                if i==0 or allowYield(pace,id):
                     yield makeRdfData(low,start+s+1)
                 low = start+s+1
             id = rdData["subschemeId"][low] & 0x3FF
