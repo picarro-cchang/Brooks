@@ -7,7 +7,6 @@ from collections import deque
 from Queue import Queue, Empty
 import inspect
 from numpy import *
-from pylab import *
 from fastLomb import fastLomb
 import types
 from Host.Common import timestamp

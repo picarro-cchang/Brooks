@@ -7,7 +7,6 @@ from collections import deque
 from Queue import Queue, Empty
 import inspect
 from numpy import *
-from pylab import *
 import types
 from RingdownAnalyzer import RingdownAnalyzer
 from ModeAnalyzer import ModeAnalyzer
