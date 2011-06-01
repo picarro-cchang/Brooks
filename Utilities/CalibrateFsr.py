@@ -367,8 +367,8 @@ class CalibrateFsr(object):
             setFPGAbits("FPGA_INJECT","INJECT_CONTROL",[("LASER_SELECT",aLaserNum-1)])
             Driver.wrDasReg("VIRTUAL_LASER_REGISTER",self.vLaserNum-1)
             
-            # Ensure that we start with original calibration information
-            RDFreqConv.restoreOriginalWlmCal(self.vLaserNum)
+            # Ensure that we do not use spline (i.e., only use linear model)
+            RDFreqConv.ignoreSpline(self.vLaserNum)
 
             print "Waiting for laser temperature to settle"
             while abs(Driver.rdDasReg("LASER%d_TEMPERATURE_REGISTER" % aLaserNum)-minLaserTemp)>0.05:
@@ -511,12 +511,13 @@ class CalibrateFsr(object):
             raise
         finally:
             Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_IdleState)
-            RDFreqConv.updateWarmBoxCal()
-            RDFreqConv.updateHotBoxCal()
-            root, ext = splitext(split(wbCalFileName)[1])
-            copyfile(wbCalFileName,'%s_after_%s%s' % (root,jobName,ext))
-            root, ext = splitext(split(hbCalFileName)[1])
-            copyfile(hbCalFileName,'%s_after_%s%s' % (root,jobName,ext))
+            #RDFreqConv.updateWarmBoxCal()
+            #RDFreqConv.updateHotBoxCal()
+            #root, ext = splitext(split(wbCalFileName)[1])
+            #copyfile(wbCalFileName,'%s_after_%s%s' % (root,jobName,ext))
+            #root, ext = splitext(split(hbCalFileName)[1])
+            #copyfile(hbCalFileName,'%s_after_%s%s' % (root,jobName,ext))
+            RDFreqConv.useSpline(self.vLaserNum)
             Driver.restoreRegValues(regVault)
             Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_TUNING_OFFSET",32768)
 
