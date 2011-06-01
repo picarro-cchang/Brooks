@@ -160,6 +160,8 @@ class Sequencer(object):
                 if self.state == Sequencer.STARTUP:
                     lastCoarse = None
                     lastVLaserNum = None
+                    for vLaserNum in range(1,interface.NUM_VIRTUAL_LASERS+1):
+                        RDFreqConv.useSpline(vLaserNum)
                     Log("Sequencer enters STARTUP state")
                     Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
                     self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)

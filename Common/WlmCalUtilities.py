@@ -360,7 +360,8 @@ class AutoCal(object):
                                 #  Reset whenever the Autocal object is reloaded from an INI or WLM file
         self.thetaMeasured = None
         self.waveNumberMeasured = None
-
+        self.ignoreSpline = False
+        
     def loadFromWlmFile(self,wlmFile,dTheta = 0.05,wMin = None,wMax = None):
         # Construct an Autocal object from a WlmFile object based on measured data which lie within the 
         #  wavenumber range wMin to wMax
@@ -592,7 +593,10 @@ class AutoCal(object):
         self.lock.acquire()
         try:
             x = (thetaCal-self.thetaBase)/self.dTheta
-            return bspEval(self.sLinear,self.coeffs,x)
+            if self.ignoreSpline:
+                return polyval(self.sLinear,x)            
+            else:
+                return bspEval(self.sLinear,self.coeffs,x)
         finally:
             self.lock.release()
 
@@ -606,7 +610,10 @@ class AutoCal(object):
             thetaHat = self.thetaBase + self.dTheta*(approxWaveNum - self.sLinear[1])/self.sLinear[0]
             thetaCal += 2*pi*floor((thetaHat-thetaCal)/(2*pi)+0.5)
             x = (thetaCal-self.thetaBase)/self.dTheta
-            return bspEval(self.sLinear,self.coeffs,x)
+            if self.ignoreSpline:
+                return polyval(self.sLinear,x)            
+            else:
+                return bspEval(self.sLinear,self.coeffs,x)
         finally:
             self.lock.release()
 
@@ -634,8 +641,11 @@ class AutoCal(object):
         """Look up current calibration to find WLM angle for a given wavenumber"""
         self.lock.acquire()
         try: 
-            result, monotonic = bspInverse(self.sLinear,self.coeffs,waveNumbers)
-            if not monotonic: self.autocalStatus |= 1
+            if self.ignoreSpline:
+                result = (waveNumbers-self.sLinear[1])/self.sLinear[0]
+            else:
+                result, monotonic = bspInverse(self.sLinear,self.coeffs,waveNumbers)
+                if not monotonic: self.autocalStatus |= 1
             return self.thetaBase + self.dTheta * result
         finally:
             self.lock.release()
@@ -722,7 +732,10 @@ class AutoCal(object):
         self.lock.acquire()
         try: 
             x = (thetaCal-self.thetaBase)/self.dTheta
-            currentWaveNumber = bspEval(self.sLinear,self.coeffs,[x])[0]
+            if self.ignoreSpline:
+                currentWaveNumber = polyval(self.sLinear,asarray([x]))[0]
+            else:
+                currentWaveNumber = bspEval(self.sLinear,self.coeffs,asarray([x]))[0]
             res = waveNumber - currentWaveNumber
             self.sLinear[1] += relax * res
             offset = self.sLinear[1] - self.sLinear0[1]
