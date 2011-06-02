@@ -687,13 +687,13 @@ class RDFrequencyConverter(Singleton):
 
     def RPC_ignoreSpline(self,vLaserNum):
         # Do not use cubic spline corrections for angle to frequency transformations for virtual laser vLaserNum
-        self._assertVLaserNum(vLaserNum)
-        self.freqConverter[vLaserNum-1].ignoreSpline = True
+        if (vLaserNum-1 in self.freqConverter) and self.freqConverter[vLaserNum-1] is not None:
+            self.freqConverter[vLaserNum-1].ignoreSpline = True
         
     def RPC_useSpline(self,vLaserNum):
         # Do use cubic spline corrections for angle to frequency transformations for virtual laser vLaserNum
-        self._assertVLaserNum(vLaserNum)
-        self.freqConverter[vLaserNum-1].ignoreSpline = False
+        if (vLaserNum-1 in self.freqConverter) and self.freqConverter[vLaserNum-1] is not None:
+            self.freqConverter[vLaserNum-1].ignoreSpline = False
         
     def RPC_setHotBoxCalParam(self,secName,optName,optValue):
         self.hotBoxCal[secName][optName] = optValue
