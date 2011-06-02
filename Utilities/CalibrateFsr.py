@@ -299,14 +299,17 @@ class CalibrateFsr(object):
         laserParams = Driver.rdVirtualLaserParams(self.vLaserNum)
         aLaserNum = laserParams["actualLaser"] + 1
         
-        # Calculate the laser temperature range over which we should sweep
-        minWaveNumber = self.waveNumberCen - self.nSteps*0.0206
-        maxWaveNumber = self.waveNumberCen + self.nSteps*0.0206
-        theta = RDFreqConv.waveNumberToAngle(self.vLaserNum,[maxWaveNumber,minWaveNumber])
-        minLaserTemp,maxLaserTemp = RDFreqConv.angleToLaserTemperature(self.vLaserNum,theta)
-        
-        print "Laser %d temperature range %.3f to %.3f" % (aLaserNum, minLaserTemp, maxLaserTemp)
         try:
+            # Ensure that we do not use spline (i.e., only use linear model)
+            RDFreqConv.ignoreSpline(self.vLaserNum)
+            # Calculate the laser temperature range over which we should sweep
+            minWaveNumber = self.waveNumberCen - self.nSteps*0.0206
+            maxWaveNumber = self.waveNumberCen + self.nSteps*0.0206
+            theta = RDFreqConv.waveNumberToAngle(self.vLaserNum,[maxWaveNumber,minWaveNumber])
+            minLaserTemp,maxLaserTemp = RDFreqConv.angleToLaserTemperature(self.vLaserNum,theta)
+            
+            print "Laser %d temperature range %.3f to %.3f" % (aLaserNum, minLaserTemp, maxLaserTemp)
+
             regVault = Driver.saveRegValues(["LASER%d_TEMP_CNTRL_SWEEP_MAX_REGISTER" % aLaserNum,
                                              "LASER%d_TEMP_CNTRL_SWEEP_MIN_REGISTER" % aLaserNum,
                                              "LASER%d_TEMP_CNTRL_SWEEP_INCR_REGISTER" % aLaserNum,
@@ -367,9 +370,6 @@ class CalibrateFsr(object):
             setFPGAbits("FPGA_INJECT","INJECT_CONTROL",[("LASER_SELECT",aLaserNum-1)])
             Driver.wrDasReg("VIRTUAL_LASER_REGISTER",self.vLaserNum-1)
             
-            # Ensure that we do not use spline (i.e., only use linear model)
-            RDFreqConv.ignoreSpline(self.vLaserNum)
-
             print "Waiting for laser temperature to settle"
             while abs(Driver.rdDasReg("LASER%d_TEMPERATURE_REGISTER" % aLaserNum)-minLaserTemp)>0.05:
                 sys.stdout.write('.')
