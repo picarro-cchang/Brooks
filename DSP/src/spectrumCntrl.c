@@ -139,21 +139,15 @@ int spectCntrlStep(void)
         *(s->state_) = SPECT_CNTRL_RunningState;
         if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
                 SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
-                SPECT_CNTRL_SchemeSequenceMode == *(s->mode_))
+                SPECT_CNTRL_SchemeMultipleNoRepeatMode == *(s->mode_))
         {
             // Enable frequency locking for schemes
             changeBitsFPGA(FPGA_RDMAN+RDMAN_OPTIONS, RDMAN_OPTIONS_LOCK_ENABLE_B, RDMAN_OPTIONS_LOCK_ENABLE_W, 1);
             *(s->iter_) = 0;
             *(s->row_) = 0;
             *(s->dwell_) = 0;
-            // If we start in sequence mode, automatically start at the beginning
-            if (SPECT_CNTRL_SchemeSequenceMode == *(s->mode_))
-            {
-                schemeSequence->currentIndex =  0;
-                *(s->active_) = schemeSequence->schemeIndices[schemeSequence->currentIndex];
-            }
             // Starting acquisition always goes to the scheme specified by "next"
-            else *(s->active_) = *(s->next_);
+            *(s->active_) = *(s->next_);
         }
     }
     else if (SPECT_CNTRL_StartManualState == *(s->state_))
@@ -401,20 +395,17 @@ void setupNextRdParams(void)
         r->status = (s->schemeCounter_ & RINGDOWN_STATUS_SequenceMask);
         if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
                 SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
-                SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeActiveMask;
+                SPECT_CNTRL_SchemeMultipleNoRepeatMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeActiveMask;
         // Determine if we are on the last ringdown of the scheme and set status bits appropriately
-        if (*(s->iter_) >= schemeTables[*(s->active_)].numRepeats-1 &&
+        if ((*(s->iter_) >= schemeTables[*(s->active_)].numRepeats-1 || SPECT_CNTRL_SchemeMultipleNoRepeatMode == *(s->mode_))&&
                 *(s->row_)  >= schemeTables[*(s->active_)].numRows-1 &&
                 *(s->dwell_) >= schemeTables[*(s->active_)].rows[*(s->row_)].dwellCount-1)
         {
             // We need to decide if acquisition is continuing or not. Acquisition stops if the scheme is run in Single mode, or
             //  if we are running a non-looping sequence and have reached the last scheme in the sequence
-            if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
-                    (SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)
-                     && schemeSequence->currentIndex == schemeSequence->numberOfIndices-1
-                     && !schemeSequence->loopFlag)) r->status |= RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask;
+            if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask;
             else if (SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
-                     SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask;
+                     SPECT_CNTRL_SchemeMultipleNoRepeatMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask;
         }
 
         // Correct the setpoint angle using the etalon temperature and ambient pressure
@@ -469,12 +460,9 @@ void modifyParamsOnTimeout(unsigned int schemeCount)
         r->status &= ~(RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask | RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask);
         // We need to decide if acquisition is continuing or not. Acquisition stops if the scheme is run in Single mode, or
         //  if we are running a non-looping sequence and have reached the last scheme in the sequence
-        if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
-                (SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)
-                 && schemeSequence->currentIndex == schemeSequence->numberOfIndices-1
-                 && !schemeSequence->loopFlag)) r->status |= RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask;
+        if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask;
         else if (SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
-                 SPECT_CNTRL_SchemeSequenceMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask;
+                 SPECT_CNTRL_SchemeMultipleNoRepeatMode == *(s->mode_)) r->status |= RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask;
     }
 }
 
@@ -591,7 +579,8 @@ void advanceSchemeIteration(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
     *(s->iter_) = *(s->iter_) + 1;
-    if (*(s->iter_) >= schemeTables[*(s->active_)].numRepeats)
+    if (*(s->iter_) >= schemeTables[*(s->active_)].numRepeats || 
+        SPECT_CNTRL_SchemeMultipleNoRepeatMode == *(s->mode_))
     {
         advanceScheme();
     }
@@ -607,17 +596,7 @@ void advanceScheme(void)
     SpectCntrlParams *s=&spectCntrlParams;
     s->schemeCounter_++;
     s->incrCounterNext_ = s->incrCounter_ + 1;
-    if (SPECT_CNTRL_SchemeSequenceMode == *(s->mode_))
-    {
-        schemeSequence->currentIndex += 1;
-        if (schemeSequence->currentIndex >= schemeSequence->numberOfIndices)
-        {
-            if (schemeSequence->loopFlag) schemeSequence->currentIndex = 0;
-            else *(s->state_) = SPECT_CNTRL_IdleState;
-        }
-        *(s->active_) = schemeSequence->schemeIndices[schemeSequence->currentIndex];
-    }
-    else *(s->active_) = *(s->next_);
+    *(s->active_) = *(s->next_);
     *(s->iter_) = 0;
     *(s->row_) = 0;
     *(s->dwell_) = 0;

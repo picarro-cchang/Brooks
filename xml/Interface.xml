@@ -481,7 +481,7 @@
             <description>Spectrum controller modes</description> 
             <enum_value ident="SPECT_CNTRL_SchemeSingleMode" value="0" caption="Perform single scheme" /> 
             <enum_value ident="SPECT_CNTRL_SchemeMultipleMode" value="1" caption="Perform multiple schemes" /> 
-            <enum_value ident="SPECT_CNTRL_SchemeSequenceMode" value="2" caption="Perform scheme sequence" /> 
+            <enum_value ident="SPECT_CNTRL_SchemeMultipleNoRepeatMode" value="2" caption="Multiple schemes no repeats" /> 
             <enum_value ident="SPECT_CNTRL_ContinuousMode" value="3" caption="Continuous acquisition" /> 
             <enum_value ident="SPECT_CNTRL_ContinuousManualTempMode" value="4" caption="Continuous acquisition with manual temperature control" /> 
         </enum>         

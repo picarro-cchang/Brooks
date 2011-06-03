@@ -531,7 +531,7 @@ typedef enum {
 typedef enum {
     SPECT_CNTRL_SchemeSingleMode = 0, // Perform single scheme
     SPECT_CNTRL_SchemeMultipleMode = 1, // Perform multiple schemes
-    SPECT_CNTRL_SchemeSequenceMode = 2, // Perform scheme sequence
+    SPECT_CNTRL_SchemeMultipleNoRepeatMode = 2, // Multiple schemes no repeats
     SPECT_CNTRL_ContinuousMode = 3, // Continuous acquisition
     SPECT_CNTRL_ContinuousManualTempMode = 4 // Continuous acquisition with manual temperature control
 } SPECT_CNTRL_ModeType;
