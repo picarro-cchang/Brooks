@@ -170,7 +170,7 @@ class Sequencer(object):
                     if not seqList:
                         self.state = Sequencer.IDLE
                     elif isinstance(seqList[0],tuple):
-                        Driver.setRepeatingScan()
+                        Driver.setMultipleScan()
                         self.scheme = 1
                         self.repeat = 1
                         self.state = Sequencer.SEND_SCHEME

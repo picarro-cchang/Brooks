@@ -1717,6 +1717,7 @@ class Analysis(object):
         self.model.setAttributes(pressure=pressure, temperature=temperature)
         self.model.createParamVector(self.initVals)
         self.parameters = []
+        if len(self.xData) == 0 or len(self.yData) == 0: return self
         for seqIndex in range(len(self.fitSequenceParameters)):
             fitSeqPar = self.fitSequenceParameters[seqIndex]
             self.parameters.append(self.doFit(seqIndex,fine=fitSeqPar["useFine"]))

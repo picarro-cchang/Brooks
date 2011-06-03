@@ -654,7 +654,7 @@ SPECT_CNTRL_StateTypeDict[6] = 'SPECT_CNTRL_DiagnosticState' # Diagnostic state
 SPECT_CNTRL_ModeType = c_uint
 SPECT_CNTRL_SchemeSingleMode = 0 # Perform single scheme
 SPECT_CNTRL_SchemeMultipleMode = 1 # Perform multiple schemes
-SPECT_CNTRL_SchemeSequenceMode = 2 # Perform scheme sequence
+SPECT_CNTRL_SchemeMultipleNoRepeatMode = 2 # Multiple schemes no repeats
 SPECT_CNTRL_ContinuousMode = 3 # Continuous acquisition
 SPECT_CNTRL_ContinuousManualTempMode = 4 # Continuous acquisition with manual temperature control
 
@@ -662,7 +662,7 @@ SPECT_CNTRL_ContinuousManualTempMode = 4 # Continuous acquisition with manual te
 SPECT_CNTRL_ModeTypeDict = {}
 SPECT_CNTRL_ModeTypeDict[0] = 'SPECT_CNTRL_SchemeSingleMode' # Perform single scheme
 SPECT_CNTRL_ModeTypeDict[1] = 'SPECT_CNTRL_SchemeMultipleMode' # Perform multiple schemes
-SPECT_CNTRL_ModeTypeDict[2] = 'SPECT_CNTRL_SchemeSequenceMode' # Perform scheme sequence
+SPECT_CNTRL_ModeTypeDict[2] = 'SPECT_CNTRL_SchemeMultipleNoRepeatMode' # Multiple schemes no repeats
 SPECT_CNTRL_ModeTypeDict[3] = 'SPECT_CNTRL_ContinuousMode' # Continuous acquisition
 SPECT_CNTRL_ModeTypeDict[4] = 'SPECT_CNTRL_ContinuousManualTempMode' # Continuous acquisition with manual temperature control
 
@@ -3038,7 +3038,7 @@ parameter_forms.append(('Optical Injection Parameters',__p))
 __p = []
 
 __p.append(('dsp','choices',SPECT_CNTRL_STATE_REGISTER,'Spectrum Controller State','',[(SPECT_CNTRL_IdleState,"Not acquiring"),(SPECT_CNTRL_StartingState,"Start acquisition"),(SPECT_CNTRL_StartManualState,"Start acquisition with manual temperature control"),(SPECT_CNTRL_RunningState,"Acquisition in progress"),(SPECT_CNTRL_PausedState,"Acquisition paused"),(SPECT_CNTRL_ErrorState,"Error state"),(SPECT_CNTRL_DiagnosticState,"Diagnostic state"),],1,1))
-__p.append(('dsp','choices',SPECT_CNTRL_MODE_REGISTER,'Spectrum Controller Mode','',[(SPECT_CNTRL_SchemeSingleMode,"Perform single scheme"),(SPECT_CNTRL_SchemeMultipleMode,"Perform multiple schemes"),(SPECT_CNTRL_SchemeSequenceMode,"Perform scheme sequence"),(SPECT_CNTRL_ContinuousMode,"Continuous acquisition"),(SPECT_CNTRL_ContinuousManualTempMode,"Continuous acquisition with manual temperature control"),],1,1))
+__p.append(('dsp','choices',SPECT_CNTRL_MODE_REGISTER,'Spectrum Controller Mode','',[(SPECT_CNTRL_SchemeSingleMode,"Perform single scheme"),(SPECT_CNTRL_SchemeMultipleMode,"Perform multiple schemes"),(SPECT_CNTRL_SchemeMultipleNoRepeatMode,"Multiple schemes no repeats"),(SPECT_CNTRL_ContinuousMode,"Continuous acquisition"),(SPECT_CNTRL_ContinuousManualTempMode,"Continuous acquisition with manual temperature control"),],1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_ACTIVE_SCHEME_REGISTER,'Active scheme table index','','%d',1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_NEXT_SCHEME_REGISTER,'Next scheme table index','','%d',1,1))
 __p.append(('dsp','uint32',SPECT_CNTRL_SCHEME_ITER_REGISTER,'Iteration counter for current scheme','','%d',1,0))

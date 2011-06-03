@@ -115,7 +115,29 @@ class SchemeBasedCalibrator(object):
         calPoint.tunerVals.append(entry.tunerValue)
         calPoint.vLaserNum = 1 + ((entry.laserUsed >> 2) & 7)
 
+    def calFailed(self,vLaserNum):
+        scs = self.rdFreqConv.shortCircuitSchemes
+        self.rdFreqConv.calFailed[vLaserNum-1] += 1
+        self.rdFreqConv.calSucceeded[vLaserNum-1] = 0
+        if self.rdFreqConv.calFailed[vLaserNum-1] >= int(scs['failureThreshold']):
+            if Driver.getSpectCntrlMode() != interface.SPECT_CNTRL_SchemeMultipleNoRepeatMode:
+                Driver.setMultipleNoRepeatScan()
+                Log("Setting multiple scheme no repeat mode",dict(calSucceeded=self.rdFreqConv.calSucceeded,
+                calFailed=self.rdFreqConv.calFailed))
+        
+    def calSucceeded(self,vLaserNum):
+        scs = self.rdFreqConv.shortCircuitSchemes
+        self.rdFreqConv.calFailed[vLaserNum-1] = 0
+        self.rdFreqConv.calSucceeded[vLaserNum-1] += 1
+        valid = (self.rdFreqConv.calSucceeded != 0)
+        if all(self.rdFreqConv.calFailed==0) and all(self.rdFreqConv.calSucceeded[valid]>=int(scs['successThreshold'])):
+            if Driver.getSpectCntrlMode() != interface.SPECT_CNTRL_SchemeMultipleMode:
+                Driver.setMultipleScan()
+                Log("Setting multiple scheme mode",dict(calSucceeded=self.rdFreqConv.calSucceeded,
+                calFailed=self.rdFreqConv.calFailed))
+    
     def processCalSpectrum(self):
+        scs = self.rdFreqConv.shortCircuitSchemes
         d = self.currentCalSpectrum
         if len(d) < int(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MIN_CALROWS")):
             return
@@ -141,6 +163,7 @@ class SchemeBasedCalibrator(object):
                 jump = abs(diff(tuner)).max()
                 if jump > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_JUMP")):
                     Log("Calibration not done, maximum jump between calibration rows: %.1f" % (jump,))
+                    if scs: self.calFailed(vLaserNum)
                     continue
                 count = array([d[k].count for k in rows])
                 tunerMean = float(sum(tuner*count))/sum(count)
@@ -173,6 +196,7 @@ class SchemeBasedCalibrator(object):
                 offGrid = devs.max()
                 if offGrid > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_OFFGRID")):
                     Log("Calibration not done, PZT sdev = %.1f, offGrid parameter = %.2f, fraction>0.25 = %.2f" % (std(tunerDev),offGrid,sum(devs>0.25)/float(len(devs))))
+                    if scs: self.calFailed(vLaserNum)
                 else:
                     #Update the live copy of the polar<->freq coefficients...
                     waveNumberSetpoints = zeros(len(rows),dtype=float) #pre-allocate space
@@ -187,7 +211,11 @@ class SchemeBasedCalibrator(object):
                                                      float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_DEFAULT")),      
                                                      float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_ZERO"))) 
                     self.calibrationDone[vLaserNum-1] = True
-                    Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" % (vLaserNum,anglePerFsr,std(tunerDev)))
+                    stdTuner = std(tunerDev)
+                    if scs: 
+                        if stdTuner>float(scs['maxTunerStandardDeviation']): self.calFailed(vLaserNum)
+                        else: self.calSucceeded(vLaserNum)
+                    Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" % (vLaserNum,anglePerFsr,stdTuner))
                     
                     # Check if it's time to update and archive the warmbox calibration file
                     if self.rdFreqConv.timeToUpdateWarmBoxCal():
@@ -287,6 +315,10 @@ class RDFrequencyConverter(Singleton):
                 self.warmBoxCalFilePathFactory = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "warmboxCalFactory", "")))
                 self.hotBoxCalFilePathActive = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "hotboxCalActive", "")))
                 self.hotBoxCalFilePathFactory = os.path.abspath(os.path.join(basePath, cp.get("CalibrationPath", "hotboxCalFactory", "")))
+                if "ShortCircuitSchemes" in cp:
+                    self.shortCircuitSchemes = dict(cp["ShortCircuitSchemes"])
+                else:
+                    self.shortCircuitSchemes = {}
             else:
                 raise ValueError("Configuration file must be specified to initialize RDFrequencyConverter")
         
@@ -331,6 +363,8 @@ class RDFrequencyConverter(Singleton):
             self.schemeMgr = None
             self.warmBoxCalUpdateTime = 0
             self.hotBoxCalUpdateTime = 0
+            self.calFailed = zeros(interface.NUM_VIRTUAL_LASERS)
+            self.calSucceeded = zeros(interface.NUM_VIRTUAL_LASERS)
             
     def rdFilter(self,entry):
         # Figure if we finished a scheme and whether we should process cal points in the last scheme

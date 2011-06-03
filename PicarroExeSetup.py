@@ -37,6 +37,7 @@ import py2exe
 import sys
 import glob
 
+sys.path.append("ActiveFileManager")
 sys.path.append("Coordinator")
 sys.path.append("ValveSequencer")
 sys.path.append("AlarmSystem")
@@ -65,6 +66,7 @@ sys.path.append("IPV")
 sys.path.append("ConfigMonitor")
 sys.path.append("PeriphIntrf")
 sys.path.append("Utilities")
+sys.path.append("WebServer")
 sys.path.append("Utilities/RemoteAccess")
 sys.path.append("Utilities/DiagDataCollector")
 sys.path.append("Utilities/SupervisorLauncher")
@@ -202,8 +204,9 @@ inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
                  "sip", "matplotlib.backends",  "matplotlib.backends.backend_wxagg", "matplotlib.backends.backend_qt4agg",
                  "matplotlib.figure","pylab", "numpy", "matplotlib.numerix.fft",
                  "matplotlib.numerix.linear_algebra", "matplotlib.numerix.random_array", "configobj",
-                 "encodings.*", "tables.*" ]
+                 "encodings.*", "tables.*", "flaskext.*" ]
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll']
+packageList = ["werkzeug","flask"]
 
 hex_images = glob.glob("../SrcCode/CypressUSB/Drivers/*.*")
 hex_images = hex_images + [ "../SrcCode/CypressUSB/analyzer/analyzerUsb.hex", 
@@ -218,10 +221,13 @@ setup(version = "1.0",
                                    bundle_files = 1,
                                    excludes = exclusionList,
                                    includes = inclusionList,
-                                   dll_excludes = dllexclusionList)
+                                   dll_excludes = dllexclusionList,
+                                   packages = packageList)
                      ),
       # targets to build...
-      console = ["RDFrequencyConverter/RDFrequencyConverter.py",
+      console = [
+                 "ActiveFileManager/ActiveFileManager.py",
+                 "RDFrequencyConverter/RDFrequencyConverter.py",
                  "SpectrumCollector/SpectrumCollector.py",
                  "ValveSequencer/ValveSequencer.py",
                  "AlarmSystem/AlarmSystem.py",
@@ -239,6 +245,7 @@ setup(version = "1.0",
                  "SampleManager/SampleManager.py",
                  "Supervisor/Supervisor.py",
                  "ReadExtSensor/ReadExtSensor.py",
+                 "WebServer/server.py",
                  "Utilities/RemoteAccess/RemoteAccess.py",
                  "Utilities/IntegrationTool/IntegrationTool.py",
                  "Utilities/IntegrationBackup/IntegrationBackup.py",
