@@ -2,19 +2,19 @@
 import unittest
 import sys
 import os
-import Host.Fitter.fitterCore as fitterCore
-from fitterCore import voigt
-from fitterCore import galatry
-from fitterCore import CubicSpline
-from fitterCore import makeSplineSection
-from fitterCore import loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary
-from fitterCore import getAppPath, prependAppDir, readConfig, makeConfigFromNestedDict
-from fitterCore import Model
-from fitterCore import FrequencySquish, Quadratic, Sinusoid, Spline, BiSpline, Galatry
-from fitterCore import ClassifyError, classifyKeyTuple
-from fitterCore import InitialValues
-from fitterCore import sigmaFilter, sigmaFilterMedian, RdfData
-from fitterCore import Analysis
+#import Host.Fitter.fitterCoreWithFortran as fitterCore
+from Host.Fitter.fitterCoreWithFortran import voigt
+from Host.Fitter.fitterCoreWithFortran import galatry
+from Host.Fitter.fitterCoreWithFortran import CubicSpline
+from Host.Fitter.fitterCoreWithFortran import makeSplineSection
+from Host.Fitter.fitterCoreWithFortran import loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary
+from Host.Fitter.fitterCoreWithFortran import getAppPath, prependAppDir, readConfig, makeConfigFromNestedDict
+from Host.Fitter.fitterCoreWithFortran import Model
+from Host.Fitter.fitterCoreWithFortran import FrequencySquish, Quadratic, Sinusoid, Spline, BiSpline, Galatry
+from Host.Fitter.fitterCoreWithFortran import ClassifyError, classifyKeyTuple
+from Host.Fitter.fitterCoreWithFortran import InitialValues
+from Host.Fitter.fitterCoreWithFortran import sigmaFilter, sigmaFilterMedian, RdfData
+from Host.Fitter.fitterCoreWithFortran import Analysis
 
 from Host.Common.CustomConfigObj import CustomConfigObj
 from cStringIO import StringIO
@@ -53,6 +53,50 @@ z = 7e-4
 v = -1
 frequency = 6514.252
 species = 0
+
+[peak3]
+peak name="primary C13 6261.8185"
+mass=45
+center=6261.8285
+strength=11.5
+y=0.01
+z=0.004
+v=-1.000000
+frequency=6261.8285
+species=1
+
+[peak5]
+peak name="first C12 doublet 6262.0250"
+mass=42
+center=6262.025000
+strength=2.4E-1
+y=0.01
+z=0.004
+v=-1.000000
+frequency=6262.0250
+species=0
+
+[peak7]
+peak name="secondary C12 peak 6261.6485"
+mass=42
+center=6261.648500
+strength=21
+y=0.00918
+z=0.00384
+v=-1.000000
+frequency=6261.6485
+species=0
+
+[peak9]
+peak name="minor C12O16O18 peak under secondary C12 peak 6261.6400"
+mass=46
+center=6261.640000
+strength=1.174
+y=0.01
+z=0.004
+v=-1.000000
+frequency=6261.6400
+species=2
 """
 ################################################################################
 class VoigtTestCase(unittest.TestCase):
@@ -460,7 +504,7 @@ class BasisFunctionsTestCase(unittest.TestCase):
             func(knots,a1,b1,c1,d1),d2func(knots,a1,b1,c1,d1))
         lib = loadSplineLibrary(config)
         # Do not distort frequency axis for first spline
-        q1 = Spline(freqShift=0.0,baselineShift=0.0,amplitude=1.0,squishParam=0.0,
+        q1 = Spline(lib,freqShift=0.0,baselineShift=0.0,amplitude=1.0,squishParam=0.0,
                     squishCenter=xc,splineIndex=1)
         self.model.addToModel(q1,0)
         self.model.createParamVector()
@@ -468,7 +512,7 @@ class BasisFunctionsTestCase(unittest.TestCase):
         self.assert_(allclose(self.model(xVal),func(xVal,a1,b1,c1,d1)),"Single spline failed")
         # Add in a second spline
         fs = 0.1; bs = 0.2; amp = 2.0; sq = 0.3
-        q0 = Spline(freqShift=fs,baselineShift=bs,amplitude=amp,squishParam=sq,
+        q0 = Spline(lib,freqShift=fs,baselineShift=bs,amplitude=amp,squishParam=sq,
                     squishCenter=xc,splineIndex=0)
         self.model.addToModel(q0,0)
         self.model.createParamVector()
@@ -490,7 +534,7 @@ class BasisFunctionsTestCase(unittest.TestCase):
         makeSplineSection(config,"spline1","spline1",knots,
             func(knots,a1,b1,c1,d1),d2func(knots,a1,b1,c1,d1))
         lib = loadSplineLibrary(config)
-        b = BiSpline(freqShift=0.0,baselineShift=0.0,amplitude=1.0,squishParam=0.0,
+        b = BiSpline(lib,freqShift=0.0,baselineShift=0.0,amplitude=1.0,squishParam=0.0,
                     squishCenter=xc,yEffective=1.2,yMultiplier=0.9,splineIndexA=0,
                     splineIndexB=1)
         self.model.addToModel(b,0)
@@ -513,7 +557,7 @@ class BasisFunctionsTestCase(unittest.TestCase):
         makeSplineSection(config,"spline0","spline0",knots,func0(knots))
         makeSplineSection(config,"spline1","spline1",knots,func1(knots))
         lib = loadSplineLibrary(config)
-        b = BiSpline(freqShift=0.0,baselineShift=0.0,amplitude=1.0,squishParam=0.0,
+        b = BiSpline(lib,freqShift=0.0,baselineShift=0.0,amplitude=1.0,squishParam=0.0,
                     squishCenter=xc0,yEffective=1.2,yMultiplier=0.9,splineIndexA=1,
                     splineIndexB=0)
         self.model.addToModel(b,0)
@@ -535,7 +579,7 @@ class BasisFunctionsTestCase(unittest.TestCase):
         makeSplineSection(config,"spline0","spline0",knots,func0(knots))
         makeSplineSection(config,"spline1","spline1",knots,func1(knots))
         lib = loadSplineLibrary(config)
-        b = BiSpline(freqShift=0.0,baselineShift=0.0,amplitude=1.0,squishParam=0.0,
+        b = BiSpline(lib,freqShift=0.0,baselineShift=0.0,amplitude=1.0,squishParam=0.0,
                     squishCenter=xc0,yEffective=1.0,yMultiplier=0.0,splineIndexA=1,
                     splineIndexB=0)
         self.model.addToModel(b,0)
@@ -715,7 +759,7 @@ class GalatryBasisTestCase(unittest.TestCase):
         pass
     def testGalatryFromLibrary(self):
         self.assertEqual(Galatry.numParams(),5,"Number of parameters is incorrect")
-        g = Galatry(peakNum=0)
+        g = Galatry(self.constants,self.spectralLib,peakNum=0)
         self.model.addToModel(g,0)
         # N.B. Need to call setAttributes BEFORE createParamVector for the values to be used
         self.model.setAttributes(x_center=6513.9676,pressure=140,temperature=300)
@@ -732,7 +776,7 @@ class GalatryBasisTestCase(unittest.TestCase):
         y = a[1]*galatry((xVal-a[0])/a[4],a[2],a[3],a[1])
         self.assertTrue(allclose(self.model(xVal),y),'Check Galatry values')
     def testGalatryFromScaledParameters(self):
-        g = Galatry(center=6514.252,scaled_y=1e-3,scaled_z=7e-4,v=1e-2,scaled_strength=1.74,mass=44)
+        g = Galatry(self.constants,self.spectralLib,center=6514.252,scaled_y=1e-3,scaled_z=7e-4,v=1e-2,scaled_strength=1.74,mass=44)
         self.model.addToModel(g,0)
         self.model.createParamVector()
         P = self.model.pressure
@@ -744,7 +788,7 @@ class GalatryBasisTestCase(unittest.TestCase):
         self.assertTrue(allclose(self.model(xVal),y),'Check Galatry values')
     def testGalatryWithInitialValue1(self):
         self.assertEqual(Galatry.numParams(),5,"Number of parameters is incorrect")
-        g = Galatry(peakNum=0)
+        g = Galatry(self.constants,self.spectralLib,peakNum=0)
         self.model.addToModel(g,0)
         # N.B. Need to call setAttributes BEFORE createParamVector for the values to be used
         self.model.setAttributes(x_center=6513.9676,pressure=140,temperature=300)
@@ -795,6 +839,12 @@ Spectrum_start_time=0.0
 """
 class DataFiltersTestCase(unittest.TestCase):
     def setUp(self):
+        fp = StringIO(sampleConfig1)
+        config = CustomConfigObj(fp)
+        fp.close()
+        self.constants = loadPhysicalConstants(config)
+        self.spectralLib = loadSpectralLibrary(config)
+        self.splineLib = loadSplineLibrary(config)
         self.wavenum = linspace(6513.5,6514.5,101)
         xc = 6514.0
         self.time = 0.01*arange(0,len(self.wavenum))
@@ -804,7 +854,7 @@ class DataFiltersTestCase(unittest.TestCase):
         self.mock.setAttributes(x_center=xc,temperature=300,pressure=140)
         q = Quadratic(curvature=0.0,slope=0.0,offset=800)
         self.mock.addToModel(q,1000)
-        g = Galatry(peakNum=0)
+        g = Galatry(self.constants,self.spectralLib,peakNum=0)
         self.mock.addToModel(g,0)
         self.mock.createParamVector()
         self.uncorrectedAbsorbance = 0.001 * self.mock(self.wavenum)
@@ -1036,10 +1086,12 @@ a3=+0.51
 """
 class AnalysisTestCase(unittest.TestCase):
     def setUp(self):
-        fname = r"Expt\lib1.ini"
-        loadSpectralLibrary(fname)
-        loadPhysicalConstants(fname)
-        loadSplineLibrary(fname)
+        fp = StringIO(sampleConfig1)
+        config = CustomConfigObj(fp)
+        fp.close()
+        self.constants = loadPhysicalConstants(config)
+        self.spectralLib = loadSpectralLibrary(config)
+        self.splineLib = loadSplineLibrary(config)
         Analysis.resetIndex()
         self.config = CustomConfigObj(StringIO(sampleAnalysis1))
     def tearDown(self):
@@ -1060,7 +1112,7 @@ class AnalysisTestCase(unittest.TestCase):
         self.assertEqual(a.nPeaks,5,"number of peaks read incorrectly")
         self.assertTrue(allclose(a.centerFrequency,6514.0),"centerFrequency read incorrectly")
         self.assertEqual(a.regionName,"unknown region","region fit name read incorrectly")
-        self.assertTrue((a.basisArray==[0,3,5,9,7,1000,1001]).all(),"peak identification read incorrectly")
+        self.assertTrue((sorted(a.model.basisFunctionByIndex.keys())==[0,3,5,7,9,1000,1001]),"peak identification read incorrectly")
     def testReadFromFile2(self):
         a = Analysis(self.config)
         # Retrieve the fit sequence parameters for each pass of the fit process
@@ -1084,30 +1136,39 @@ class AnalysisTestCase(unittest.TestCase):
         a = Analysis(self.config)
         m = Model()
         m.setAttributes(x_center=a.centerFrequency)
-        g0 = Galatry(peakNum=0)
+        g0 = Galatry(self.constants,self.spectralLib,peakNum=0)
         m.addToModel(g0,0)
-        g3 = Galatry(peakNum=3)
+        g3 = Galatry(self.constants,self.spectralLib,peakNum=3)
         m.addToModel(g3,3)
-        g5 = Galatry(peakNum=5)
+        g5 = Galatry(self.constants,self.spectralLib,peakNum=5)
         m.addToModel(g5,5)
-        g9 = Galatry(peakNum=9)
+        g9 = Galatry(self.constants,self.spectralLib,peakNum=9)
         m.addToModel(g9,9)
-        g7 = Galatry(peakNum=7)
+        g7 = Galatry(self.constants,self.spectralLib,peakNum=7)
         m.addToModel(g7,7)
         s1000 = Sinusoid(amplitude=-0.255,center=6514.4,period=1.07,phase=0.40)
         m.addToModel(s1000,1000)
         s1001 = Sinusoid(amplitude=-0.0306,center=6513.9,period=0.535,phase=0.51)
         m.addToModel(s1001,1001)
-        self.assertTrue((a.basisFunctionByIndex[0].initialParams==g0.initialParams).all(),"Galatry peak 0 incorrect")
-        self.assertTrue((a.basisFunctionByIndex[3].initialParams==g3.initialParams).all(),"Galatry peak 3 incorrect")
-        self.assertTrue((a.basisFunctionByIndex[5].initialParams==g5.initialParams).all(),"Galatry peak 5 incorrect")
-        self.assertTrue((a.basisFunctionByIndex[7].initialParams==g7.initialParams).all(),"Galatry peak 7 incorrect")
-        self.assertTrue((a.basisFunctionByIndex[9].initialParams==g9.initialParams).all(),"Galatry peak 9 incorrect")
-        self.assertTrue((a.basisFunctionByIndex[1000].initialParams==s1000.initialParams).all(),"Sinusoid 1000 incorrect")
-        self.assertTrue((a.basisFunctionByIndex[1001].initialParams==s1001.initialParams).all(),"Sinusoid 1001 incorrect")
+        m.createParamVector()
+        self.assertTrue((m.basisFunctionByIndex[0].initialParams==g0.initialParams).all(),"Galatry peak 0 incorrect")
+        self.assertTrue((m.basisFunctionByIndex[3].initialParams==g3.initialParams).all(),"Galatry peak 3 incorrect")
+        self.assertTrue((m.basisFunctionByIndex[5].initialParams==g5.initialParams).all(),"Galatry peak 5 incorrect")
+        self.assertTrue((m.basisFunctionByIndex[7].initialParams==g7.initialParams).all(),"Galatry peak 7 incorrect")
+        self.assertTrue((m.basisFunctionByIndex[9].initialParams==g9.initialParams).all(),"Galatry peak 9 incorrect")
+        self.assertTrue((m.basisFunctionByIndex[1000].initialParams==s1000.initialParams).all(),"Sinusoid 1000 incorrect")
+        self.assertTrue((m.basisFunctionByIndex[1001].initialParams==s1001.initialParams).all(),"Sinusoid 1001 incorrect")
         # Read a string from the analysis INI file
         self.assertEqual(a.config.get("Header","analysis class"),"bispline_max71836700")
-
+        self.assertAlmostEqual(m[1000,0],-0.255,5,"Sinusoid amplitude incorrect")
+        self.assertAlmostEqual(m[7,'center'],g7.initialParams[0],5,"Galatry peak 0 center incorrect")
+        # For Galatry peaks, m[pk,'strength'] is actually stored in the parameter vector. However the spectral library
+        #  contains the scaled strength, which is the strength divided by the pressure. This is also the quantity in
+        #  initialParams
+        self.assertAlmostEqual(m[7,'scaled_strength'],g7.initialParams[1],5,"Galatry peak 7 scaled strength incorrect")
+        m[7,'strength'] = m.pressure*19.0
+        self.assertAlmostEqual(m[7,'scaled_strength'],19.0,5,"Galatry peak 7 scaled strength not set")
+        
 class AnalysisTestSuite(unittest.TestSuite):
     def __init__(self):
         unittest.TestSuite.__init__(self)

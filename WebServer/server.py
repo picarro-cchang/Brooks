@@ -1,6 +1,6 @@
 from flask import redirect, url_for, abort, render_template, flash, make_response
 from flask import Flask, Response, request
-from flaskext.jsonrpc import JSONRPCHandler, Fault
+from jsonrpc import JSONRPCHandler, Fault
 
 from Host.Common import timestamp
 from Host.ActiveFileManager.ActiveFileManager import ActiveFile

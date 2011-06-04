@@ -654,6 +654,7 @@ class Model(object):
     def __init__(self):
         self.pressure = 140
         self.temperature = 298
+        self.basisFunctionByIndex = {}
         self.dummyParameters = []
         self.parameters = None
         self.xModifier = None
@@ -678,6 +679,9 @@ class Model(object):
         f.setParamIndices(arange(self.nParameters,self.nParameters+nParams))
         self.nParameters += nParams
         self.funcList.append(f)
+        if index is not None:
+            self.basisFunctionByIndex[index] = f
+        
     def registerXmodifier(self,f):
         f.parent = self
         nParams = f.numParams()
@@ -707,7 +711,99 @@ class Model(object):
             if self.xModifier is not None: x = self.xModifier(x)
             for f in self.funcList: y = y + f(x)
         return y
+        
+    def __setitem__(self,key,value):
+        class1, class2, key1, key2, extra = classifyKeyTuple(key)
+        if class1 == 0: # We have a function between 0 and 999
+            f = self.basisFunctionByIndex[key1]
+            if class2 == 1: # This is a particular index
+                if key2>=f.numParams():
+                    raise IndexError("Function %s of type %s has only %d parameters" % (key1,type(f),f.numParams()))
+                self.parameters[f.paramIndices[key2]] = value
+                return
+            elif class2 == 3: # This is "center", "strength", "y", "z" or "v"
+                self.parameters[f.paramIndices[galDict1[key2]]] = value
+                return 
+            else:
+                raise KeyError("Cannot set parameter %s for function %s of type %s" % (key2,key1,type(f)))
+        elif class1 == 1: # We have a function greater than or equal to 1000
+            f = self.basisFunctionByIndex[key1]
+            if class2 == 1: # This is a particular index
+                if key2>=f.numParams():
+                    raise IndexError("Function %s of type %s has only %d parameters" % (key1,type(f),f.numParams()))
+                self.parameters[f.paramIndices[key2]] = value
+                return
+            else:
+                raise KeyError("Cannot set parameter %s for function %s of type %s" % (key2,key1,type(f)))
+        elif class1 == 2 and class2 == 1: # First key is "base", so we just use the second key as an index into the model parameters
+            try:
+                self.parameters[key2] = value
+                return
+            except:
+                raise KeyError("Model parameter %s is not defined" % (key2,))
+        else:
+            raise KeyError("Model function %s is not defined" % (key1,))
+    
+    def __getitem__(self,key):
+        """We use index notation to extract the values of the model. If the first
+        index is an integer, it represents a function within the basisFunctionByIndex dictionary
+        For example self[17,3] returns the a3 parameter of basisFunctionByIndex[17]. For Galatry peaks
+        (first index from 0 through 999), the following special names are recognized for the second
+        index:
 
+        "peak":            height of the peak, evaluated at the line center
+        "base":            contributions of all other functions under the peak
+        "center":          synonym for 0, the center wavenumber of the peak
+        "strength":        synonym for 1, the strength of the peak at the given pressure
+        "y":               synonym for 2, the y parameter at the given pressure
+        "z":               synonym for 3, the z parameter at the given pressure
+        "v":               synonym for 4, the Doppler factor, at the given temperature
+        "scaled_strength": strength divided by the pressure
+        "scaled_y":        the y parameter divided by the pressure
+        "scaled_z":        the z parameter divided by the pressure
+
+        NOTE: Galatry parameters in the spectral library are the SCALED values.
+        
+        For bispline functions, the second index can also be the string "peak". This returns the peak 
+                            value of the bispline.
+
+        If the first parameter is the string "base", simply return the model parameter with the index
+         given by the second parameter.
+        """
+        class1, class2, key1, key2, extra = classifyKeyTuple(key)
+        if class1 == 0: # We have a function between 0 and 999
+            f = self.basisFunctionByIndex[key1]
+            if class2 == 1: # This is a particular index
+                if key2>=f.numParams():
+                    raise IndexError("Function %s of type %s has only %d parameters" % (key1,type(f),f.numParams()))
+                return self.parameters[f.paramIndices[key2]]
+            elif class2 == 2: # This is "peak" or "base"
+                return f.getPeakAndBase()[galDict0[key2]]
+            elif class2 == 3: # This is "center", "strength", "y", "z" or "v"
+                return self.parameters[f.paramIndices[galDict1[key2]]]
+            elif class2 == 4: # This is "scaled_strength", "scaled_y" or "scaled_z"
+                return self.parameters[f.paramIndices[galDict2[key2]]]/self.pressure
+            else:
+                raise KeyError("Cannot get parameter %s for function %s of type %s" % (key2,key1,type(f)))
+        elif class1 == 1: # We have a function greater than or equal to 1000
+            f = self.basisFunctionByIndex[key1]
+            if class2 == 1: # This is a particular index
+                if key2>=f.numParams():
+                    raise IndexError("Function %s of type %s has only %d parameters" % (key1,type(f),f.numParams()))
+                return self.parameters[f.paramIndices[key2]]
+            elif class2 == 2 and galDict0[key2] == 0: # This is a "peak" request
+                if isinstance(f,BiSpline):
+                    return f.getPeak(peakInterval = extra)[1]
+            else:
+                raise KeyError("Cannot get parameter %s for function %s of type %s" % (key2,key1,type(f)))
+        elif class1 == 2 and class2 == 1: # First key is "base", so we just use the second key as an index into the model parameters
+            try:
+                return self.parameters[key2]
+            except:
+                raise KeyError("Model parameter %s is not defined" % (key2,))
+        else:
+            raise KeyError("Model function %s is not defined" % (key1,))
+        
 ################################################################################
 # Basis functions are summed together to produce a model spectrum
 ################################################################################
@@ -1495,7 +1591,6 @@ class Analysis(object):
         Analysis.index += 1
         self.regionStart = []
         self.regionEnd = []
-        self.basisFunctionByIndex = {}
         self.centerFrequency = None
         self.regionName = None
         self.fitSequenceParameters = []
@@ -1507,13 +1602,13 @@ class Analysis(object):
         self.nPeaks = self.config.getint(section,"number of peaks")
         peakId = self.config.get(section,"peak identification")
         if peakId.strip() != "":
-            self.basisArray = array([int(p) for p in peakId.split(",")])
+            basisArray = array([int(p) for p in peakId.split(",")])
         else:
-            self.basisArray = array([],int_)
-        if ((self.basisArray[:self.nPeaks] < 0) & (self.basisArray[:self.nPeaks] > 1000)).any():
+            basisArray = array([],int_)
+        if ((basisArray[:self.nPeaks] < 0) & (basisArray[:self.nPeaks] > 1000)).any():
             raise ValueError("The first %d elements of the peak identification list must be between 0 and 999" % \
                              (self.nPeaks,))
-        if (self.basisArray[self.nPeaks:] < 1000).any():
+        if (basisArray[self.nPeaks:] < 1000).any():
             raise ValueError("Elements %d and above of the peak identification list must be 1000 or larger" % \
                              (self.nPeaks,))
 
@@ -1550,12 +1645,17 @@ class Analysis(object):
             self.fitSequenceParameters[k]["depDest"] = [int(d[1]) for d in depList]
             self.fitSequenceParameters[k]["depSlope"] = [float(d[2]) for d in depList]
             self.fitSequenceParameters[k]["depOffset"] = [float(d[3]) for d in depList]
-        #
-        # Go through basisArray to assemble the dictionary basisFunctionByIndex
-        #
-        for i in self.basisArray:
+            
+        # We now construct the model
+        m = Model()
+        m.setAttributes(x_center=self.centerFrequency)
+        m.addToModel(Quadratic(offset=0.0,slope=0.0,curvature=0.0),index=None)
+        m.registerXmodifier(FrequencySquish(offset=0.0,squish=0.0))
+        m.addDummyParameter(self.nPeaks)
+        # Go through basisArray to assemble the model
+        for i in basisArray:
             if i<1000:
-                self.basisFunctionByIndex[i] = Galatry(peakNum=i,physicalConstants=physicalConstants,spectralLibrary=spectralLibrary)
+                m.addToModel(Galatry(peakNum=i,physicalConstants=physicalConstants,spectralLibrary=spectralLibrary),index=i)
             else: # We need to read details of the basis function from the file
                 section = "function%d" % i
                 # Local function to construct a basis function with parameters "a%d" from the ini file
@@ -1567,26 +1667,18 @@ class Analysis(object):
 
                 form = self.config.get(section,"functional_form")
                 if form == "sinusoid":
-                    self.basisFunctionByIndex[i] = FP(Sinusoid)
+                    m.addToModel(FP(Sinusoid),index=i)
                 elif form[:6] == "spline":
-                    self.basisFunctionByIndex[i] = FP(Spline,dict(splineLibrary=splineLibrary,splineIndex=int(form[6:])))
+                    m.addToModel(FP(Spline,dict(splineLibrary=splineLibrary,splineIndex=int(form[6:]))),index=i)
                 elif form[:8] == "bispline":
                     ndx = form[8:].split("_")
-                    self.basisFunctionByIndex[i] = FP(BiSpline,dict(splineLibrary=splineLibrary,
-                                                                    splineIndexA=int(ndx[0]),
-                                                                    splineIndexB=int(ndx[1])))
+                    m.addToModel(FP(BiSpline,dict(splineLibrary=splineLibrary,
+                                 splineIndexA=int(ndx[0]),
+                                 splineIndexB=int(ndx[1]))),index=i)
                 else:
                     raise ValueError("Unimplemented functional form: %s" % form)
-
-        # We now construct the model
-        m = Model()
-        m.setAttributes(x_center=self.centerFrequency)
-        m.addToModel(Quadratic(offset=0.0,slope=0.0,curvature=0.0),index=None)
-        m.registerXmodifier(FrequencySquish(offset=0.0,squish=0.0))
-        m.addDummyParameter(self.nPeaks)
-        for f,i in [(self.basisFunctionByIndex[i],i) for i in self.basisArray]:
-            m.addToModel(f,index=i)
         self.model = m
+        
     def __getstate__(self):
         """Remove self.config from deepcopy() dictionary to avoid errors"""
         odict = self.__dict__.copy()
@@ -1611,14 +1703,14 @@ class Analysis(object):
                 key1s,key2s,slope,offset = deps.depDict[(key1d,key2d)]
                 if key1d == "base": dlist.append(key2d)
                 else:
-                    f = self.basisFunctionByIndex[key1d]
+                    f = self.model.basisFunctionByIndex[key1d]
                     if key2d >= f.numParams():
                         raise ValueError("Function %s does not have parameter %s in dependency list" % (type(f),key2d))
                     else:
                         dlist.append(f.paramIndices[key2d])
                 if key1s == "base": slist.append(key2s)
                 else:
-                    f = self.basisFunctionByIndex[key1s]
+                    f = self.model.basisFunctionByIndex[key1s]
                     if key2s >= f.numParams():
                         raise ValueError("Function %s does not have parameter %s in dependency list" % (type(f),key2s))
                     else:
@@ -1746,35 +1838,8 @@ class Analysis(object):
         If the first parameter is the string "base", simply return the model parameter with the index
          given by the second parameter.
         """
-        m = self.model
         class1, class2, key1, key2, extra = classifyKeyTuple(key)
-        if class1 == 0: # We have a function between 0 and 999
-            f = self.basisFunctionByIndex[key1]
-            if class2 == 1: # This is a particular index
-                if key2>=f.numParams():
-                    raise ValueError("Function %d of type %s has only %d parameters" % (funcIndex,type(f),f.numParams()))
-                return m.parameters[f.paramIndices[key2]]
-            elif class2 == 2: # This is "peak" or "base"
-                return f.getPeakAndBase()[galDict0[key2]]
-            elif class2 == 3: # This is "center", "strength", "y", "z" or "v"
-                return m.parameters[f.paramIndices[galDict1[key2]]]
-            elif class2 == 4: # This is "scaled_strength", "scaled_y" or "scaled_z"
-                return m.parameters[f.paramIndices[galDict2[key2]]]/m.pressure
-        elif class1 == 1: # We have a function greater than or equal to 1000
-            f = self.basisFunctionByIndex[key1]
-            if class2 == 1: # This is a particular index
-                if key2>=f.numParams():
-                    raise ValueError("Function %d of type %s has only %d parameters" % (funcIndex,type(f),f.numParams()))
-                return m.parameters[f.paramIndices[key2]]
-            elif class2 == 2 and galDict0[key2] == 0: # This is a "peak" request
-                if isinstance(f,BiSpline):
-                    return f.getPeak(peakInterval = extra)[1]
-        elif class1 == 2 and class2 == 1: # First key is "base", so we just use the second key as an index into the model parameters
-            try:
-                return m.parameters[key2]
-            except:
-                raise ValueError("Model parameter %s is not defined" % (key2,))
-        elif class1 == 3 and class2 == 0: # This asks for some attribute of the analysis object
+        if class1 == 3 and class2 == 0: # Handle attributes of the analysis object
             if key1 == "std_dev_res":
                 if len(self.res)>0:
                     return sqrt(sum(self.res**2)/len(self.res))
@@ -1784,4 +1849,5 @@ class Analysis(object):
                 return getattr(self,key1)
             else:
                 raise ValueError("Unknown analysis parameter: %s" % (key1,))
-        raise ValueError("Unrecognized key tuple for analysis output: %s" % (key,))
+        else: # Defer to the model
+            return self.model[key]
