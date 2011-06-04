@@ -133,8 +133,8 @@ class FitViewManager(object):
                 m = analysis.model
                 for i in range(len(m.parameters)):
                     ad["byIndex"]["%03d" % i] = self.seqMgr.getSequence()
-                for i in analysis.basisFunctionByIndex:
-                    f = analysis.basisFunctionByIndex[i]
+                for i in m.basisFunctionByIndex:
+                    f = m.basisFunctionByIndex[i]
                     if i<1000: # This is a Galatry peak
                         pd = ad["byFunction"]["peak_%03d" % i] = {}
                         pd["center"] = ad["byIndex"]["%03d" % f.paramIndices[0]]
@@ -159,8 +159,8 @@ class FitViewManager(object):
             for i in range(len(m.parameters)):
                 ad["byIndex"]["%03d" % i].Add(m.parameters[i])
             # Deal with "peak" and "base" values
-            for i in analysis.basisFunctionByIndex:
-                f = analysis.basisFunctionByIndex[i]
+            for i in m.basisFunctionByIndex:
+                f = m.basisFunctionByIndex[i]
                 if i<1000: # This is a Galatry peak
                     pd = ad["byFunction"]["peak_%03d" % i]
                     pd["peak"].Add(analysis[i,"peak"])
@@ -808,8 +808,8 @@ class FitViewer(wx.Frame):
         baselineFunc = model.funcList[0]
         self.functionLabels = [ "baseline (%s)" % baselineFunc.name ]
         self.functionList = [ baselineFunc ]
-        for i in sorted(analysis.basisFunctionByIndex.keys()):
-            func = analysis.basisFunctionByIndex[i]
+        for i in sorted(model.basisFunctionByIndex.keys()):
+            func = model.basisFunctionByIndex[i]
             self.functionLabels.append("%d (%s)" % (i,func.name,))
             self.functionList.append(func)
         self.modelList.Set(self.functionLabels)
