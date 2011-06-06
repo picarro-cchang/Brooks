@@ -673,7 +673,11 @@ class ActiveFileManager(object):
                 while not self.sensorQueue.empty():
                     d = self.sensorQueue.get()
                     if not (self.sensorDataBaseTime <= d.timestamp < self.sensorDataBaseTime + self.activeFilePeriod):
-                        if self.sensorDataTable is not None: self.sensorDataTable.flush()
+                        if self.sensorDataTable is not None: 
+                            try:
+                                self.sensorDataTable.flush()
+                            except:
+                                pass
                         a = self.getActiveFile(d.timestamp)
                         self.sensorDataTable = a.getSensorDataTable()
                         self.sensorDataBaseTime = a.baseTime
@@ -681,12 +685,20 @@ class ActiveFileManager(object):
                     for name,cls in interface.SensorEntryType._fields_:
                         row[name] = getattr(d,name)
                     row.append()
-                if self.sensorDataTable is not None: self.sensorDataTable.flush()
+                if self.sensorDataTable is not None: 
+                    try:
+                        self.sensorDataTable.flush()
+                    except:
+                        pass
 
                 while not self.rdQueue.empty():
                     d = self.rdQueue.get()
                     if not (self.rdDataBaseTime <= d.timestamp < self.rdDataBaseTime + self.activeFilePeriod):
-                        if self.rdDataTable is not None: self.rdDataTable.flush()
+                        if self.rdDataTable is not None: 
+                            try:
+                                self.rdDataTable.flush()
+                            except:
+                                pass
                         a = self.getActiveFile(d.timestamp)
                         self.rdDataTable = a.getRdDataTable()
                         self.rdDataBaseTime = a.baseTime
@@ -694,7 +706,11 @@ class ActiveFileManager(object):
                     for name,cls in interface.ProcessedRingdownEntryType._fields_:
                         row[name] = getattr(d,name)
                     row.append()
-                if self.rdDataTable is not None: self.rdDataTable.flush()
+                if self.rdDataTable is not None: 
+                    try:
+                        self.rdDataTable.flush()
+                    except:
+                        pass
                 
                 while not self.dmQueue.empty():
                     d = self.dmQueue.get()
@@ -714,8 +730,11 @@ class ActiveFileManager(object):
                     for name in colNameSet:
                         row[name] = d['data'][name]
                     row.append()
-                if self.dmDataTable is not None: self.dmDataTable.flush()
-
+                if self.dmDataTable is not None: 
+                    try:
+                        self.dmDataTable.flush()
+                    except:
+                        pass
                 ts = getTimestamp()
                 # print "In main loop: %s, activeFiles: %s" % (self.getBaseTime(ts),self.activeFiles)
                 self.getActiveFile(ts)  # Create new active file if needed

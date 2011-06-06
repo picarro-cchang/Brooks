@@ -82,6 +82,7 @@ import threading
 import serial
 import math
 import time
+import traceback
 import string
 from inspect import isclass
 from collections import deque
@@ -94,13 +95,12 @@ from Host.PeriphIntrf.PeriphIntrf import PeriphIntrf
 from Host.CommandInterface import SerialInterface
 from Host.Common import CmdFIFO, StringPickler
 from Host.Common import ModeDef
-from Host.Common import BetterTraceback
 from Host.Common import InstMgrInc
 from Host.Common import AppStatus
 from Host.Common import timestamp
-from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER, RPC_PORT_FREQ_CONVERTER,\
-                                    RPC_PORT_INSTR_MANAGER, RPC_PORT_CONFIG_MONITOR
-from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_MEAS_SYSTEM, BROADCAST_PORT_SENSORSTREAM
+from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER
+from Host.Common.SharedTypes import RPC_PORT_FREQ_CONVERTER,RPC_PORT_INSTR_MANAGER, RPC_PORT_CONFIG_MONITOR
+from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_FITTER_BASE
 from Host.Common.SharedTypes import STATUS_PORT_DATA_MANAGER, STATUS_PORT_INST_MANAGER
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -337,7 +337,8 @@ class DataManager(object):
         self._ShutdownRequested = False #The main state handling loop will exit when this is true
         self._FatalError = False  #The main state handling loop will also exit when this is true
 
-        self.DataQueue = Queue.Queue()      # Will hold collected data that need to be processed asynchronously
+        self.dataQueue = []        # Priority queue for data from fitters
+        self.dataQueueLock = threading.Lock()
         self.forwardedDataQueue = []        # Used to hold generated data that need to be processed BEFORE any more collected data
         self.DataHistory = {}      # keys = data tokens; values = deque of two-tuples (time, value)
         self.ReportHistory = {}    # keys = data tokens; values = deque of two-tuples (time, value)
@@ -358,8 +359,22 @@ class DataManager(object):
         self.cp = None
         self.UserCalibration = {} #keys = measurement names; values = (slope, offset); default = (1, 0)
         self.UserCalAppListDict = {} #keys = primary measurement names; values = affected measurement names assoicated with each key
-        self.MeasListener = None
-        self.SensorListener = None
+        self.SensorListener = Listener(None,
+                                     BROADCAST_PORT_SENSORSTREAM,
+                                     interface.SensorEntryType,
+                                     self._SensorFilter,
+                                     retry = True,
+                                     name = "Data manager sensor stream listener",logFunc = Log)
+        self.fitterListener = []
+        for fitterIndex in range(interface.MAX_FITTERS):
+            self.fitterListener.append(Listener(None,
+                                     BROADCAST_PORT_FITTER_BASE+fitterIndex,
+                                     StringPickler.ArbitraryObject,
+                                     self._FitterFilter,
+                                     retry = True,
+                                     name = "Data manager fitter %d listener" % fitterIndex,logFunc = Log))
+        self.lastFitAnalyzed = 0                             
+        self.resultsByAnalyzer = {}
         self.InstMgrStatusListener = None
         self.LatestInstMgrStatus = -1
         #Set up the Broadcaster that will be used to send processor data to the Data Manager...
@@ -1032,10 +1047,139 @@ class DataManager(object):
         """Small function enabling the InstMgr error reporting call to be called on
         a thread (to get dontcare-like functionality)"""
         self.rdInstMgr.INSTMGR_ReportErrorRpc(ErrorCode)
-    def _MeasDataFilter(self, Obj):
-        measData = MeasData()
-        measData.ImportPickleDict(Obj)
-        return measData
+    def _FitterFilter(self, fitterOut):
+        # Sort the data queue by timestamp as the primary key and spectrumId 
+        #  as the secondary key
+        self.dataQueueLock.acquire()
+        try:
+            avgTimestamp,results,spectrumId = fitterOut
+            heapq.heappush(self.dataQueue,(avgTimestamp,spectrumId,results))
+        finally:
+            self.dataQueueLock.release()
+            
+    def getFitterData(self):
+        if len(self.dataQueue) < 5:
+            time.sleep(0.01)
+            raise Queue.Empty
+            
+        avgTimestamp,spectrumId,results = self.dataQueue[0]
+        self.dataQueueLock.acquire()
+        stragglers = 0
+        while avgTimestamp <= self.lastFitAnalyzed:
+            heapq.heappop(self.dataQueue)
+            stragglers += 1
+            if len(self.dataQueue) == 0: break
+            avgTimestamp,spectrumId,results = self.dataQueue[0]
+        if stragglers>0:
+            Log("%d stragglers removed from fitter data queue. Consider increasing timeout." % stragglers)
+            time.sleep(0.01)
+            raise Queue.Empty
+        # Now coalasce all queue entries with the same timestamp
+        #  and make a list of MeasData objects from them, one for each
+        #  analyzer
+        analyzers = set()
+        spectrumNames = set()
+        avgTimestamp,spectrumId,results = self.dataQueue[0]
+        self.lastFitAnalyzed = avgTimestamp
+        while self.lastFitAnalyzed == avgTimestamp:
+            avgTimestamp,spectrumId,results = heapq.heappop(self.dataQueue)
+            spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrumId]
+            analyzer = self.CurrentMeasMode.Analyzers[spectrumName].ScriptPath
+            if analyzer in self.resultsByAnalyzer:
+                self.resultsByAnalyzer[analyzer].update(results)
+                analyzers.add(analyzer)
+                spectrumNames.add(spectrumName)
+            else:
+                if results:
+                    self.resultsByAnalyzer[analyzer] = results.copy()
+                    analyzers.add(analyzer)
+                    spectrumNames.add(spectrumName)
+            if len(self.dataQueue) == 0: break
+            avgTimestamp,spectrumId,results = self.dataQueue[0]
+        self.dataQueueLock.release()
+        measDataList = []
+        for name in spectrumNames:
+            analyzer = self.CurrentMeasMode.Analyzers[name].ScriptPath
+            results = self.resultsByAnalyzer[analyzer]
+            measDataList.append(MeasData(name, timestamp.unixTime(avgTimestamp), results))
+        return measDataList
+        
+    # def removeStragglers(self):
+        # """Remove entries from the data queue which have timestamps before self.lastFitAnalyzed.
+        # This should be called while holding the dataQueueLock"""
+        # if len(self.dataQueue) == 0: return
+        # avgTimestamp,spectrumId,results = self.dataQueue[0]
+        # stragglers = 0
+        # while avgTimestamp <= self.lastFitAnalyzed:
+            # print avgTimestamp, self.lastFitAnalyzed
+            # heapq.heappop(self.dataQueue)
+            # stragglers += 1
+            # if len(self.dataQueue) == 0: break
+            # avgTimestamp,spectrumId,results = self.dataQueue[0]
+        # if stragglers>0:
+            # Log("%d stragglers removed from fitter data queue. Consider increasing timeout." % stragglers)
+    
+    # def getFitterData1(self,timeout):
+        # """Get the data with the most recent timestamp from self.dataQueue, where the result
+        # dictionaries with exactly equal timestamps must be merged. Keep track of latest timestamp
+        # that has been returned so that we can discard stragglers due to fitters which have failed.
+        # If thead(=time at the head of the queue) is later than the current time-timeout, wait until 
+        # thead+timeout before processing the data and returning anything.
+        # """
+        # self.dataQueueLock.acquire()
+        # self.removeStragglers()
+        # if len(self.dataQueue) == 0:
+            # # If no data are available, wait and try again at the end
+            # #  of the timeout period
+            # self.dataQueueLock.release()
+            # time.sleep(timeout)
+            # self.dataQueueLock.acquire()
+            # self.removeStragglers()
+            # if len(self.dataQueue) == 0:
+                # # There really is nothing available
+                # self.dataQueueLock.release()
+                # raise Queue.Empty
+        # # Next check if we must wait because it is too soon to coalasce
+        # #  results with the same timestamp
+        # avgTimestamp,spectrumId,results = self.dataQueue[0]
+        # now = timestamp.getTimestamp()
+        # waitTime = 0.001*(avgTimestamp-now)+timeout
+        # if waitTime>0.0: 
+            # self.dataQueueLock.release()
+            # time.sleep(waitTime)
+            # self.dataQueueLock.acquire()
+            # self.removeStragglers()
+            # avgTimestamp,spectrumId,results = self.dataQueue[0]
+        # # Now coalasce all queue entries with the same timestamp
+        # #  and make a list of MeasData objects from them, one for each
+        # #  spectrum name
+        # analyzers = set()
+        # spectrumNames = set()
+        # self.lastFitAnalyzed = avgTimestamp
+        # print 0.001*(timestamp.getTimestamp() - avgTimestamp)
+        # while self.lastFitAnalyzed == avgTimestamp:
+            # avgTimestamp,spectrumId,results = heapq.heappop(self.dataQueue)
+            # spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrumId]
+            # analyzer = self.CurrentMeasMode.Analyzers[spectrumName].ScriptPath
+            # if analyzer in self.resultsByAnalyzer:
+                # self.resultsByAnalyzer[analyzer].update(results)
+                # analyzers.add(analyzer)
+                # spectrumNames.add(spectrumName)
+            # else:
+                # if results:
+                    # self.resultsByAnalyzer[analyzer] = results.copy()
+                    # analyzers.add(analyzer)
+                    # spectrumNames.add(spectrumName)
+            # if len(self.dataQueue) == 0: break
+            # avgTimestamp,spectrumId,results = self.dataQueue[0]
+        # self.dataQueueLock.release()
+        # measDataList = []
+        # for name in spectrumNames:
+            # analyzer = self.CurrentMeasMode.Analyzers[name].ScriptPath
+            # results = self.resultsByAnalyzer[analyzer]
+            # measDataList.append(MeasData(name, timestamp.unixTime(avgTimestamp), results))
+        # return measDataList
+        
     def _SensorFilter(self, obj):
         """Updates the latest sensor readings.
 
@@ -1050,7 +1194,7 @@ class DataManager(object):
         sensorValue = obj.value
 
         self.LatestSensorData[sensorName] = sensorValue
-        #TODO: May want to fix the streamTime in the next addition, but relative *should* be fine...
+        #TODO: May want to fix the streamTime in the next edition, but relative *should* be fine...
         self._AddToHistory(self.SensorHistory, {sensorName:sensorValue}, streamTime)
     def _InstMgrStatusFilter(self, obj):
         """Updates the local (latest) copy of the instrument manager status bits."""
@@ -1157,30 +1301,6 @@ class DataManager(object):
                 codeObj = compile(sourceString, path, "exec") #providing path accurately allows debugging of script
                 self.AnalyzerCode[path] = codeObj
             Log("Analyzer script compilation complete")
-
-            #Set up some Listeners for the important data...
-            #Set up our listener to catch MeasSystem data broadcasts (stop the old one if already exists)...
-            if self.MeasListener != None:
-                self.MeasListener.stop()
-                self.MeasListener = None
-            self.MeasListener = Listener(self.DataQueue,
-                                         BROADCAST_PORT_MEAS_SYSTEM,
-                                         StringPickler.ArbitraryObject,
-                                         self._MeasDataFilter,
-                                         retry = True,
-                                         name = "Data manager measurement system listener",logFunc = Log)
-            #And our listener to collect sensor data broadcasts (stop the old one if already exists)...
-            if self.SensorListener != None:
-                self.SensorListener.stop()
-                self.SensorListener = None
-            self.SensorListener = Listener(None,
-                                         BROADCAST_PORT_SENSORSTREAM,
-                                         interface.SensorEntryType,
-                                         self._SensorFilter,
-                                         retry = True,
-                                         name = "Data manager sensor stream listener",logFunc = Log)
-            # The Instrument Manager status listener is started only when the Instrument Manager has started and
-            # issued an RPC call.
             # Deal with debug options...
             if self.Config.AutoEnable:
                 Log("EnableEvent set due to 'Debug_AutoEnable' configuration setting.")
@@ -1290,21 +1410,13 @@ class DataManager(object):
                 #  data, since it implicitly has an earlier timestamp
                 if self.forwardedDataQueue:
                     data = self.forwardedDataQueue.pop(0)
+                    self._AnalyzeData(data)
                 else:
-                    # Check for collected data, ensuring that we get out at least every 0.5s to check if we need to stop
-                    timeToNextSyncScript = self._TimeToNextSyncScript()
-                    if timeToNextSyncScript != None:
-                        dataQueueTimeout = min(max(0.0,timeToNextSyncScript),0.5)
-                    else:
-                        dataQueueTimeout = 0.5
-                    data = self.DataQueue.get(timeout = dataQueueTimeout)
-                assert isinstance(data, MeasData) # for Wing
-                self._AnalyzeData(data)
+                    # Get data from fitters
+                    for data in self.getFitterData():
+                        self._AnalyzeData(data)
                 exitState = STATE_ENABLED
             except Queue.Empty:
-                #don't even have a timeout here... if there is no data there is no data.  period.
-                #This differs from the MeasSystem wherein if there is no data there may be a
-                #problem with the DAS.
                 exitState = STATE_ENABLED
         except:
             LogExc(Data = dict(State = StateName[self.__State]))
@@ -1698,10 +1810,9 @@ if __name__ == "__main__":
     try:
         main()
     except:
-        tbMsg = BetterTraceback.get_advanced_traceback()
         Log("Unhandled exception trapped by last chance handler",
             Data = dict(Note = "<See verbose for debug info>"),
             Level = 3,
-            Verbose = tbMsg)
+            Verbose = traceback.format_exc())
     Log("Exiting program")
     sys.stdout.flush()

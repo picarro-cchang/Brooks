@@ -31,9 +31,10 @@ import cProfile
 
 from Host.autogen import interface
 from Host.autogen.interface import ProcessedRingdownEntryType
-from Host.Common import CmdFIFO, Listener
+from Host.Common import Broadcaster, CmdFIFO, Listener, StringPickler
 from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RD_RECALC
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER 
+from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR 
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import unixTime
@@ -164,12 +165,15 @@ class SpectrumCollector(object):
         for fname,ftype in ProcessedRingdownEntryType._fields_:
             self.rdBuffer[fname] = ([],ftype)
         
+        # Broadcaster for spectra
+        self.spectrumBroadcaster = Broadcaster.Broadcaster(
+                            port=BROADCAST_PORT_SPECTRUM_COLLECTOR,
+                            name="Spectrum Collector broadcaster",logFunc = Log)
+
         # Compression filter for HDF5
         self.hdf5Filters = Filters(complevel=1,fletcher32=True)
 
         self.enableSpectrumFiles = True
-        self.spectrumQueue = None
-        self.maxSpectrumQueueSize = 0
         self.closeSpectrumWhenDone = False
         self.tempRdDataBuffer = None
         self.spectrumID = 0
@@ -190,10 +194,6 @@ class SpectrumCollector(object):
         self.closeHdf5File = False
         self.streamFP = None
         self.tableDict = {}
-        self.lastSpectrumQueuePut = TimeStamp()
-        self.timeBetweenSpectrumQueuePuts = []
-        self.lastSpectrumQueueGet = TimeStamp()
-        self.timeBetweenSpectrumQueueGets = []
 
         self.useSequencer = True
         self.sequencer = None
@@ -333,25 +333,6 @@ class SpectrumCollector(object):
             newAvg = self.sumSensors[k] / self.sensorAvgCount
             self.avgSensors[k] = newAvg
 
-    def addToSpectrumQueue(self, rdfDict):
-        """Adds self.rdfDict to self.spectrumQueue and maintains
-        a valid queue size.
-        """
-        try:
-            if self.spectrumQueue.qsize() == self.maxSpectrumQueueSize:
-                Log("Spectrum queue length reaches maximum",dict(QueueSize=self.maxSpectrumQueueSize,
-                    TimeSinceLastGet=TimeStamp()-self.lastSpectrumQueueGet),Level=2)
-                self.spectrumQueue.get()
-            self.spectrumQueue.put(rdfDict)
-            now = TimeStamp()
-            self.timeBetweenSpectrumQueuePuts.append(now-self.lastSpectrumQueuePut)
-            self.lastSpectrumQueuePut = now
-            if len(self.timeBetweenSpectrumQueuePuts) == 50:
-                # print "interSpectrumQueuePut: ",numpy.mean(self.timeBetweenSpectrumQueuePuts),numpy.std(self.timeBetweenSpectrumQueuePuts),min(self.timeBetweenSpectrumQueuePuts),max(self.timeBetweenSpectrumQueuePuts)
-                self.timeBetweenSpectrumQueuePuts = []
-        except:
-            LogExc("Failed to add data in spectrum queue.")
-                
     def appendPoint(self, rdData):
         """Adds a single set of Data to the spectrum
         """
@@ -388,11 +369,8 @@ class SpectrumCollector(object):
         for t in self.tagalongData:
             self.rdfDict["tagalongData"][t] = [self.tagalongData[t][0]]
 
-        #Write control data dictionary for pacing, etc...
-        if self.spectrumQueue:
-            qsize = self.spectrumQueue.qsize()
-        else:
-            qsize = 0
+        #Write control data dictionary 
+        qsize = 0
         self.rdfDict["controlData"] = {"RDDataSize":[self.numPts], "SpectrumQueueSize":[qsize]}
         
         # Process spectrum files (HDF5 or RDF). RDF files contain a single spectrum, while HDF5 files 
@@ -450,9 +428,7 @@ class SpectrumCollector(object):
                 except Exception:
                     LogExc("Archiver call error")
             
-        # Store spectrum in a queue if required
-        if self.spectrumQueue:
-            self.addToSpectrumQueue(self.rdfDict.copy())
+        self.spectrumBroadcaster.send(StringPickler.PackArbitraryObject(self.rdfDict))
 
         self.reset()
         
@@ -492,47 +468,9 @@ class SpectrumCollector(object):
         if self.useSequencer:
             self.sequencer.startSequence()
         else:
-            Driver.startScan(
-                             )
+            Driver.startScan()
     def RPC_sequencerGetCurrent(self):
         return self.sequencer.getCurrent()
-    
-    # RPC functions for the spectrum collector
-    def RPC_setMaxSpectrumQueueSize(self, maxSize):
-        if self.spectrumQueue:
-            self.spectrumQueue = None
-        if maxSize > 0:
-            self.spectrumQueue = Queue.Queue(maxSize)
-        self.maxSpectrumQueueSize = maxSize
-        return "OK"
-
-    def RPC_getMaxSpectrumQueueSize(self):
-        return self.maxSpectrumQueueSize
-        
-    def RPC_getCurrentSpectrumQueueSize(self):
-        if self.spectrumQueue:
-            return self.spectrumQueue.qsize()
-        else:
-            return 0
-        
-    def RPC_getSpectra(self, nSpectra, timeSinceLast=2):
-        """Get up to nSpectra from the queue, returning with less that this if the time since the last
-            get exceeds the specified value"""
-        until = self.lastSpectrumQueueGet + timeSinceLast
-        spectra = []
-        while len(spectra)<nSpectra:
-            try:
-                timeout = max(0.001,until-TimeStamp())
-                spectra.append(self.spectrumQueue.get(timeout=timeout))
-                now = TimeStamp()
-                self.timeBetweenSpectrumQueueGets.append(now-self.lastSpectrumQueueGet)
-                if len(self.timeBetweenSpectrumQueueGets) == 50:
-                    # print "interSpectrumQueueGet: ",numpy.mean(self.timeBetweenSpectrumQueueGets),numpy.std(self.timeBetweenSpectrumQueueGets),min(self.timeBetweenSpectrumQueueGets),max(self.timeBetweenSpectrumQueueGets)
-                    self.timeBetweenSpectrumQueueGets = []
-                self.lastSpectrumQueueGet = now
-            except Queue.Empty:
-                break
-        return spectra
                 
     def RPC_closeSpectrum(self):
         self.closeSpectrumWhenDone = True
