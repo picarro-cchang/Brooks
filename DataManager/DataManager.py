@@ -1071,6 +1071,7 @@ class DataManager(object):
             if len(self.dataQueue) == 0: break
             avgTimestamp,spectrumId,results = self.dataQueue[0]
         if stragglers>0:
+            self.dataQueueLock.release()
             Log("%d stragglers removed from fitter data queue. Consider increasing timeout." % stragglers)
             time.sleep(0.01)
             raise Queue.Empty

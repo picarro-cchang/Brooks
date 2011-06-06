@@ -1237,7 +1237,7 @@ class RdfData(object):
                 rdfData.nrows = len(rdData[s][low:high])
                 rdfData.indexVector = arange(rdfData.nrows)
                 # Set the average time of the ringdown data
-                rdfData.avgTimestamp = round(mean(rdfData.timestamp))
+                rdfData.avgTimestamp = int(round(mean(rdfData.timestamp)))
                 rdfData.startRow = low
                 rdfData.endRow = high
                 return rdfData
