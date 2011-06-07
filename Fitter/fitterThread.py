@@ -286,7 +286,8 @@ class Fitter(object):
             try:
                 self.spectrum,self.spectrumFileName = self.repository.next()
                 # Carry out the fitting and broadcast results
-                self.fitBroadcaster.send(StringPickler.PackArbitraryObject(self.execScripts()))
+                ts,results,spectrumId = self.execScripts()
+                if results: self.fitBroadcaster.send(StringPickler.PackArbitraryObject((ts,results,spectrumId)))
                 if not self.fitSpectrum:
                     self.state = FITTER_STATE_READY
             except StopIteration:
@@ -302,7 +303,8 @@ class Fitter(object):
                         if spect["controlData"]:
                             for self.spectrum in RdfData.getSpectraDict(spect):
                                 # Carry out the fitting and broadcast results
-                                self.fitBroadcaster.send(StringPickler.PackArbitraryObject(self.execScripts()))
+                                ts,results,spectrumId = self.execScripts()
+                                if results: self.fitBroadcaster.send(StringPickler.PackArbitraryObject((ts,results,spectrumId)))
                     except:
                         tbMsg = format_exc()
                         Log("Error in FIT_DATA while executing fitter script",

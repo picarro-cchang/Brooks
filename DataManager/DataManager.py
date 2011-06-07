@@ -373,7 +373,8 @@ class DataManager(object):
                                      self._FitterFilter,
                                      retry = True,
                                      name = "Data manager fitter %d listener" % fitterIndex,logFunc = Log))
-        self.lastFitAnalyzed = 0                             
+        self.lastFitAnalyzed = 0
+        self.minQueueSamples = 5
         self.resultsByAnalyzer = {}
         self.InstMgrStatusListener = None
         self.LatestInstMgrStatus = -1
@@ -1053,12 +1054,12 @@ class DataManager(object):
         self.dataQueueLock.acquire()
         try:
             avgTimestamp,results,spectrumId = fitterOut
-            heapq.heappush(self.dataQueue,(avgTimestamp,spectrumId,results))
+            if results: heapq.heappush(self.dataQueue,(avgTimestamp,spectrumId,results))
         finally:
             self.dataQueueLock.release()
             
     def getFitterData(self):
-        if len(self.dataQueue) < 5:
+        if len(self.dataQueue) < self.minQueueSamples:
             time.sleep(0.01)
             raise Queue.Empty
             
@@ -1072,7 +1073,8 @@ class DataManager(object):
             avgTimestamp,spectrumId,results = self.dataQueue[0]
         if stragglers>0:
             self.dataQueueLock.release()
-            Log("%d stragglers removed from fitter data queue. Consider increasing timeout." % stragglers)
+            self.minQueueSamples += 1
+            Log("%d stragglers removed from fitter data queue. MinQueueSamples = %d." % (stragglers,self.minQueueSamples))
             time.sleep(0.01)
             raise Queue.Empty
         # Now coalasce all queue entries with the same timestamp
