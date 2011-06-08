@@ -35,16 +35,18 @@ else:
     AppPath = sys.argv[0]
     
 class Spectrum(object):
-    def __init__(self,name,config,basePath):
+    def __init__(self,name,config,basePath,env):
         self.name = name
-        libName = os.path.join(basePath,config["Library"])
+        libName = os.path.join(basePath,eval(config["Library"],env))
         self.spectralLibrary = loadSpectralLibrary(libName)
         self.splineLibrary = loadSplineLibrary(libName)
         self.physicalConstants = loadPhysicalConstants(libName)
-        self.basisArray = asarray([int(i) for i in config["identification"].split(",")])
+        self.basisArray = asarray([eval(i,env) for i in config["identification"].split(",")])
+        self.spectrumIds = asarray([eval(i,env) for i in config["SpectrumId"].split(",")])
+        self.centerFrequency = eval(config["center"],env) if "center" in config else 0
         self.basisFunctions = {}
         m = Model()
-        # m.setAttributes(x_center=self.centerFrequency)
+        m.setAttributes(x_center=self.centerFrequency)
         m.addToModel(Quadratic(offset=0.0,slope=0.0,curvature=0.0),index=None)
         m.registerXmodifier(FrequencySquish(offset=0.0,squish=0.0))
         m.addDummyParameter(sum(self.basisArray<1000))
@@ -60,10 +62,10 @@ class Spectrum(object):
                 def FP(basisFunc,extra={}):
                     nParams = basisFunc.numParams()
                     a = []
-                    for j in range(nParams): a.append(float(basisParams["a%d" % j]))
+                    for j in range(nParams): a.append(eval(basisParams["a%d" % j],env))
                     return basisFunc(params=asarray(a),**extra)
 
-                form = basisParams["functional_form"]
+                form = eval(basisParams["functional_form"],env)
                 if form == "sinusoid":
                     m.addToModel(FP(Sinusoid),index=i)
                 elif form[:6] == "spline":
@@ -76,36 +78,69 @@ class Spectrum(object):
                 else:
                     raise ValueError("Unimplemented functional form: %s" % form)
         m.createParamVector()
+        # Modify parameter values according to [base] and [peak] sections
+        for basisName in config:
+            if basisName in ["base"]:
+                for var in config["base"]:
+                    try:
+                        if var[0] != 'a': raise ValueError
+                        index = int(var[1:])
+                    except:
+                        print "Invalid argument name %s for base" % var
+                        raise
+                    m["base",index] = eval(config["base"][var],env)
+            elif basisName.startswith("peak"):
+                pkNum = int(basisName[4:])
+                for var in config[basisName]:
+                    done = False
+                    if var[0] == 'a':
+                        try:
+                            index = int(var[1:])
+                            m[pkNum,index] = eval(config[basisName][var],env)
+                            done = True
+                        except:
+                            pass
+                    if not done:
+                        m[pkNum,var] = eval(config[basisName][var],env)
         self.model = m
         
 class SpectrumMaker(Singleton):
     initialized = False
-    def __init__(self, configPath=None):        
+    def __init__(self, configPath=None,env={}):
+        env = dict(pressure=400)
         if not self.initialized:
             if configPath != None:
                 # Process INI file
                 cp = CustomConfigObj(configPath)
                 basePath = os.path.split(configPath)[0]
-                self.schemeCount = cp.getint("SCHEME_CONFIG", "schemeCount", "1")
+                self.schemeCount = eval(cp.get("SCHEME_CONFIG", "schemeCount", "1"),env)
                 self.schemePaths = []
                 self.schemes = []
                 for i in range(self.schemeCount):
-                    path = cp.get("SCHEME_CONFIG", "Scheme_%d_Path" % (i+1,))
+                    path = eval(cp.get("SCHEME_CONFIG", "Scheme_%d_Path" % (i+1,)),env)
                     self.schemePaths.append(path)
                     s = Scheme(path)
                     self.schemes.append(s)
-                self.spectra = []
+                self.spectra = {}
                 self.libraries = {}
+                self.spectrumNamesById = {}
                 for secName in cp:
                     if secName.startswith("SPECTRUM"):
-                        self.spectra.append(Spectrum(secName,cp[secName],basePath))
+                        sp = Spectrum(secName,cp[secName],basePath,env)
+                        for id in sp.spectrumIds:
+                            if id not in self.spectrumNamesById:
+                                self.spectrumNamesById[id] = []
+                            self.spectrumNamesById[id].append(secName)
+                        self.spectra[secName] = sp
             else:
                 raise ValueError("Configuration file must be specified to initialize SpectrumMaker")
             self.initialized = True
     def run(self):
         nu = linspace(6235.0,6240.0,1000)
+        #nu = linspace(6056.0,6058.0,1000)
         tot = 0
-        for s in self.spectra:
+        spectrumId = 10
+        for s in [self.spectra[name] for name in self.spectrumNamesById[spectrumId]]:
             tot += s.model(nu)
         plot(nu,tot)
         gca().xaxis.set_major_formatter(ScalarFormatter(useOffset=False))
@@ -152,7 +187,7 @@ def handleCommandSwitches():
 
 if __name__ == "__main__":
     configFile, options = handleCommandSwitches()
-    spectrumMakerApp = SpectrumMaker(configFile)
+    spectrumMakerApp = SpectrumMaker(configFile,{})
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     spectrumMakerApp.run()
     Log("Exiting program")

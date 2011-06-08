@@ -520,6 +520,12 @@ class RDFrequencyConverter(Singleton):
         
     def timeToUpdateHotBoxCal(self):
         return (Driver.hostGetTicks() - self.hotBoxCalUpdateTime) > (self.hbCalUpdatePeriod_s*1000)
+    
+    def RPC_getShortCircuitSchemeStatus(self):
+        """Returns True if a nonempty [ShortCircuitSchemes] section is in this INI file. When this is True,
+        sequences start with the spectrum collector in SchemeMultipleNoRepeatMode, rather than in
+        SchemeMultipleMode"""
+        return len(self.shortCircuitSchemes)>0
         
     def RPC_configSchemeManager(self, schemeDict, schemeSeq):
         self.schemeMgr = SchemeManager(schemeDict, schemeSeq)
