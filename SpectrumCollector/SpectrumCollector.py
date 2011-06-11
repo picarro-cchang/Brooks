@@ -22,8 +22,10 @@ import getopt
 import inspect
 import numpy
 import Queue
+import shutil
 import threading
 import time
+import traceback
 import ctypes
 import cPickle
 from tables import *
@@ -33,6 +35,7 @@ from Host.autogen import interface
 from Host.autogen.interface import ProcessedRingdownEntryType
 from Host.Common import CmdFIFO, Listener
 from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RD_RECALC
+from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR 
 from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER 
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -190,6 +193,7 @@ class SpectrumCollector(object):
         self.closeHdf5File = False
         self.streamFP = None
         self.tableDict = {}
+        self.auxSpectrumFile = ""
         self.lastSpectrumQueuePut = TimeStamp()
         self.timeBetweenSpectrumQueuePuts = []
         self.lastSpectrumQueueGet = TimeStamp()
@@ -432,11 +436,18 @@ class SpectrumCollector(object):
                     self.closeHdf5File = False
                     self.newHdf5File = True
                     self.streamFP.close()
+                    # Copy to auxiliary spectrum file and reset filename to empty
+                    if self.auxSpectrumFile:
+                        try:
+                            shutil.copyfile(self.streamPath,self.auxSpectrumFile)
+                        except:
+                            Log("Error copying to auxiliary spectrum file %s" % self.auxSpectrumFile,Verbose=traceback.format_exc())
+                        self.auxSpectrumFile = ""
                     # Archive HDF5 file
                     try:
                         Archiver.ArchiveFile(self.archiveGroup, self.streamPath, True)
                     except Exception:
-                        LogExc("Archiver call error")
+                        Log("Archiver call error",Verbose=traceback.format_exc())
             else:
                 # Pickle the rdfDict 
                 filename = "%03d_%013d.rdf" % (self.lastSpectrumID, int(time.time()*1000))
@@ -492,8 +503,7 @@ class SpectrumCollector(object):
         if self.useSequencer:
             self.sequencer.startSequence()
         else:
-            Driver.startScan(
-                             )
+            Driver.startScan()
     def RPC_sequencerGetCurrent(self):
         return self.sequencer.getCurrent()
     
@@ -572,6 +582,10 @@ class SpectrumCollector(object):
         
     def RPC_shutdown(self):
         self._shutdownRequested = True
+        
+    def RPC_setAuxiliarySpectrumFile(self,fileName):
+        self.auxSpectrumFile = fileName
+    
 
 HELP_STRING = """SpectrumCollector.py [-c<FILENAME>] [-h|--help]
 
