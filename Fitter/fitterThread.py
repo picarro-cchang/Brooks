@@ -25,6 +25,8 @@ File History:
     10-12-07 sze   Make copies of DATA when passing them to multiple fitter scripts executed in 
                     distinct environments so that filtering operations done in one script do not
                     affect the others
+    11-06-04 sze   Use a Listener to get spectra from the spectrum collector instead of getting spectra from
+                    the measurement system
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -52,7 +54,8 @@ from fitterCoreWithFortran import loadPhysicalConstants, loadSpectralLibrary, lo
 from fitterCoreWithFortran import pickledRepository, pickledRepositoryFromList, hdf5RepositoryFromList
 from fitterCoreWithFortran import RdfData, Analysis, InitialValues, Dependencies
 from Host.Common.FitterScriptFunctions import expAverage, initExpAverage, fitQuality
-from Host.Common.SharedTypes import RPC_PORT_FITTER, TCP_PORT_FITTER
+from Host.Common.SharedTypes import RPC_PORT_FITTER_BASE, BROADCAST_PORT_FITTER_BASE, BROADCAST_PORT_SPECTRUM_COLLECTOR
+from Host.Common import Broadcaster, Listener, StringPickler
 
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 FITTER_STATE_IDLE = 0
@@ -93,7 +96,8 @@ class Fitter(object):
         for key in self.config[_MAIN_CONFIG_SECTION]:
             if key.lower().startswith("script"):
                 self.scriptNames.append(os.path.join(self.iniBasePath,self.config[_MAIN_CONFIG_SECTION][key]))
-        self.rpcPort = self.config.getint("Setup","RPCport",RPC_PORT_FITTER)
+        self.rpcPort = self.config.getint("Setup","RPCport",RPC_PORT_FITTER_BASE)
+        self.broadcastPort = self.rpcPort - RPC_PORT_FITTER_BASE + BROADCAST_PORT_FITTER_BASE
         self.stopOnError = self.config.getint("Setup","StopOnError",self.stopOnError)
         self.exitFlag = False
         self.spectrum = None
@@ -107,27 +111,26 @@ class Fitter(object):
         self.spectrumFileName = ""
         self.showViewer = False
         self.updateViewer = True
-        self.data = None        
-        self.dataAvailEvent = Event()
-        self.dataAvailEvent.clear() 
-        self.resultString = ""        
-        self.resultsAvailEvent = Event()
-        self.resultsAvailEvent.clear()
         self.fitterOption = ""
-              
+        self.FITTER_initialize()
+        self.fitBroadcaster = Broadcaster.Broadcaster(self.broadcastPort, APP_NAME, logFunc=Log)
+        self.spectQueue = Queue(200)
+        spectListener = Listener.Listener(self.spectQueue,
+                                          BROADCAST_PORT_SPECTRUM_COLLECTOR,
+                                          StringPickler.ArbitraryObject,
+                                          retry = True,
+                                          name = "Fitter listener")
+             
     def registerRpc(self):
         self.rpcServer.register_function(self.FITTER_fitSpectrumRpc)
         self.rpcServer.register_function(self.FITTER_setProcModeRpc)
         self.rpcServer.register_function(self.FITTER_setSingleModeRpc)
         self.rpcServer.register_function(self.FITTER_makeHdf5RepositoryRpc)
-        self.rpcServer.register_function(self.FITTER_makeRdqRepositoryRpc)
         self.rpcServer.register_function(self.FITTER_makePickledRepositoryRpc)
         self.rpcServer.register_function(self.FITTER_getFitterStateRpc)
         self.rpcServer.register_function(self.FITTER_updateViewer)
         self.rpcServer.register_function(self.FITTER_showViewer)
         self.rpcServer.register_function(self.FITTER_initialize)      
-        self.rpcServer.register_function(self.FITTER_setSpectra)
-        self.rpcServer.register_function(self.FITTER_getResults)   
         self.rpcServer.register_function(self.FITTER_maximizeViewer)          
         self.rpcServer.register_function(self.FITTER_setOption)          
         
@@ -164,13 +167,6 @@ class Fitter(object):
         self.makeRepositoryArgs = (fileList,)
         self.loadRepository = True
 
-    def FITTER_makeRdqRepositoryRpc(self,fileList):
-        """Pass a list of Rdq file names to the fitter to construct a repository which is
-        attached to self.repository"""
-        self.makeRepository = rdqRepositoryFromList
-        self.makeRepositoryArgs = (fileList,)
-        self.loadRepository = True
-
     def FITTER_makePickledRepositoryRpc(self,fileList):
         """Pass a list of pickled rdf file names to the fitter to construct a repository which is
         attached to self.repository"""
@@ -187,20 +183,6 @@ class Fitter(object):
     def FITTER_initialize(self):    
         self.compiledScriptsAndEnvironments = [(self.compileScript(name),self.setupEnvironment()) for name in self.scriptNames]
         return "Fitter Initialized"
-
-    def FITTER_setSpectra(self, spectra):
-        self.data = spectra
-        self.dataAvailEvent.set() 
-                
-    def FITTER_getResults(self):
-        self.resultsAvailEvent.wait(RESULTS_AVAIL_EVENT_TIMEOUT)      
-        if self.resultsAvailEvent.isSet():  
-            self.resultsAvailEvent.clear()
-            return self.resultString
-        else:
-            # resultsAvailEvent timeout
-            self.state = FITTER_STATE_IDLE
-            return ""
         
     def FITTER_maximizeViewer(self, max=True):
         try:
@@ -303,7 +285,9 @@ class Fitter(object):
                 self.fitSpectrum = False
             try:
                 self.spectrum,self.spectrumFileName = self.repository.next()
-                t,r,spectrumId = self.execScripts()
+                # Carry out the fitting and broadcast results
+                ts,results,spectrumId = self.execScripts()
+                if results: self.fitBroadcaster.send(StringPickler.PackArbitraryObject((ts,results,spectrumId)))
                 if not self.fitSpectrum:
                     self.state = FITTER_STATE_READY
             except StopIteration:
@@ -311,38 +295,29 @@ class Fitter(object):
                 self.fitSpectrum = False
                 self.state = FITTER_STATE_READY # Repository has been exhausted
                 
-        if self.state == FITTER_STATE_PROC:      
-            self.dataAvailEvent.wait(DATA_AVAIL_EVENT_TIMEOUT)      
-            if self.dataAvailEvent.isSet():
+        if self.state == FITTER_STATE_PROC:
+            try:
+                spect = self.spectQueue.get(timeout=DATA_AVAIL_EVENT_TIMEOUT)
                 if self.compiledScriptsAndEnvironments:
                     try:
-                        # Get data past the \r, then iterate over the list of spectra
-                        #  which make up self.data
-                        fitResults = []
-                        for spectra in self.data:
-                            if not spectra["controlData"]:
-                                #Empty spectrum
-                                continue
-                            for self.spectrum in RdfData.getSpectraDict(spectra):
-                                fitResults.append(self.execScripts())
-                        self.resultString = "FIT COMPLETE\r" + dumps(fitResults)
+                        if spect["controlData"]:
+                            for self.spectrum in RdfData.getSpectraDict(spect):
+                                # Carry out the fitting and broadcast results
+                                ts,results,spectrumId = self.execScripts()
+                                if results: self.fitBroadcaster.send(StringPickler.PackArbitraryObject((ts,results,spectrumId)))
                     except:
-                        self.resultString = "FITTER ERROR\r" # Send back error string, log reason locally
                         tbMsg = format_exc()
                         Log("Error in FIT_DATA while executing fitter script",
                             Data = dict(Note = "<See verbose for debug info>"),
                             Level = 3,
                             Verbose = tbMsg)
                 else:
-                    self.resultString = "ERR: initialize fitter first\r"
-                self.resultsAvailEvent.set()
-                self.dataAvailEvent.clear()
-            else:
-                # Data not ready yet
+                    Log("Error fitter is not initialized")
+            except:
                 self.state = FITTER_STATE_IDLE               
 
     def execScripts(self):
-        # Returns tuple of (time,resultsDict,spectrumId) from fitting
+        # Returns tuple of (timestamp,resultsDict,spectrumId) from fitting
         # All scripts are run in sequence and the results from all of them
         # are combined
         DATA = self.spectrum
@@ -357,7 +332,7 @@ class Fitter(object):
             ANALYSES += env["ANALYSIS"]
             RESULTS.update(env["RESULT"])
         self.fitViewer([DATA,ANALYSES,RESULTS])
-        return (DATA.getTime(),RESULTS,DATA["spectrumid"])
+        return (DATA.avgTimestamp,RESULTS,DATA["spectrumid"])
 
     def main(self,queue,useViewer):
         self.fitQueue = queue
@@ -366,7 +341,7 @@ class Fitter(object):
         while not self.exitFlag:
             try:
                 self.stateMachine()
-                sleep(0.01)
+                sleep(0.001)
             except:
                 tbMsg = format_exc()
                 Log("Exception during fitter script execution",
@@ -377,7 +352,8 @@ class Fitter(object):
                     self.fitQueue.put((3,tbMsg))
                     self.loadRepository = True
                     self.fitSpectrum = False
-
+        self.spectListener.stop()
+        self.fitBroadcaster.stop()        
     def debug(self,configFile):
         self.fitQueue = None
         self.showViewer = False

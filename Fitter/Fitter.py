@@ -41,7 +41,7 @@ from Queue import Queue, Empty
 
 from fitterThread import FITTER_STATE_IDLE, FITTER_STATE_PROC, FITTER_STATE_READY, FITTER_STATE_FITTING, FITTER_STATE_COMPLETE
 from fitterThread import main as fitterMain
-from Host.Common.SharedTypes import RPC_PORT_FITTER
+from Host.Common.SharedTypes import RPC_PORT_FITTER_BASE, BROADCAST_PORT_FITTER_BASE
 from Host.Common.GraphPanel import GraphPanel, Sequence, Series
 from Host.Common.CmdFIFO import CmdFIFOServerProxy
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -643,7 +643,8 @@ class FitViewer(wx.Frame):
         self.colorDatabase = ColorDatabase(self.config,'Colors')
         self.filePaths = []
         self.analysisList = None
-        self.rpcPort = self.config.getint("Setup","RPCport",RPC_PORT_FITTER)
+        self.rpcPort = self.config.getint("Setup","RPCport",RPC_PORT_FITTER_BASE)
+        self.broadcastPort = self.rpcPort - RPC_PORT_FITTER_BASE + BROADCAST_PORT_FITTER_BASE
         splitter = wx.SplitterWindow(self,id=-1,style=wx.SP_LIVE_UPDATE)
         #self.notebook = wx.Notebook(splitter,-1,style=0)
         #self.residualsPanel = ResidualsPanel(self.config,self.notebook,self)

@@ -105,10 +105,14 @@ class Listener(threading.Thread):
                         self.sock.connect(("localhost",self.port))
                         self.safeLog("Connection made by %s to port %d from %s." % (self.name,self.port,self.sock.getsockname()))
                     except Exception:
-                        time.sleep(1)
                         self.sock = None
-                        self.safeLog("Connection by %s to port %d failed." % (self.name,self.port),Level=2)
-                        raise Exception("Cannot subscribe to broadcast stream")
+                        if self.notify is not None:
+                            msg = "Connection by %s to port %d failed." % (self.name,self.port)
+                            self.safeLog(msg,Level=2)
+                            self.notify(msg)
+                        time.sleep(1)
+                        if self.retry: continue
+                        else: return
                     self.data = ''
                 try:
                     [iw,ow,ew] = select.select([self.sock],[],[],1.0)

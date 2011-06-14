@@ -487,6 +487,8 @@ NUDGE_WINDOW = 20
 DSP_TIMER0_BASE = 0x01940000
 # Divisor to get 1ms for a 225MHz DSP clock
 DSP_TIMER_DIVISOR = 56250
+# Maximum number of fitter processes
+MAX_FITTERS = 8
 
 # Enumerated definitions for RegTypes
 RegTypes = c_uint

@@ -57,17 +57,16 @@ import Queue
 import profile
 import time
 import threading
+import traceback
 import sets
 from inspect import isclass
 import numpy as np
 
-import FitterPool
 from Host.Common import CmdFIFO
 from Host.Common import ModeDef
-from Host.Common import BetterTraceback
 from Host.Common import AppStatus
 from Host.Common.SharedTypes import CrdsException
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_FITTER, RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_FREQ_CONVERTER
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_FITTER_BASE, RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_FREQ_CONVERTER
 from Host.Common.SharedTypes import BROADCAST_PORT_MEAS_SYSTEM
 from Host.Common.SharedTypes import STATUS_PORT_MEAS_SYSTEM
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -95,9 +94,6 @@ StateName[STATE_INIT] = "INIT"
 StateName[STATE_READY] = "READY"
 StateName[STATE_ENABLED] = "ENABLED"
 StateName[STATE_SHUTDOWN] = "SHUTDOWN"
-
-STATUS_MASK_WaitingForFitter   = 0x40
-DEFAULT_FITTER_TIMEOUT_s = 300
 
 ####
 ## Some debugging/development helpers...
@@ -153,8 +149,6 @@ FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ
                                      
 class MeasSystemError(CrdsException):
     """Base class for MeasSystem errors."""
-class SpectrumTimeout(MeasSystemError):
-    """Timeout period reached while waiting for a spectrum."""
 class MeasurementDisabled(MeasSystemError):
     """The measurement was disabled in the middle of doing something."""
 class InvalidModeSelection(MeasSystemError):
@@ -181,7 +175,6 @@ class MeasSystem(object):
     class ConfigurationOptions(object):
         def __init__(self, SimMode = False):
             self.SimMode = SimMode
-            self.SpectrumTimeout_s = 0
             self.ModeDefinitionFile = ""
             #Debugging settings (all off unless Debug option is set, in which case they get loaded)...
             self.StartEngine = False
@@ -196,11 +189,6 @@ class MeasSystem(object):
             
             basePath = os.path.split(IniPath)[0]
 
-            if not self.SimMode:
-                self.SpectrumTimeout_s = cp.getfloat(_MAIN_CONFIG_SECTION, "SpectrumTimeout_s")
-            else:
-                self.SpectrumTimeout_s = 0.0
-            self.FitterTimeout_s = cp.getfloat(_MAIN_CONFIG_SECTION, "FitterTimeout_s", DEFAULT_FITTER_TIMEOUT_s)
             self.ModeDefinitionFile = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "ModeDefinitionFile"))
             # Fetch the IP addresses and ports of the fitters in the pool
             nFitters = 0
@@ -209,11 +197,11 @@ class MeasSystem(object):
                 self.fitterIpAddressList.append( \
                     cp.get(_MAIN_CONFIG_SECTION,"FitterAddr%d" % (nFitters,),"localhost"))
                 self.fitterPortList.append( \
-                    cp.getint(_MAIN_CONFIG_SECTION,"FitterPort%d" % (nFitters,),RPC_PORT_FITTER))
+                    cp.getint(_MAIN_CONFIG_SECTION,"FitterPort%d" % (nFitters,),RPC_PORT_FITTER_BASE))
                 nFitters += 1
             if nFitters == 0:
                 self.fitterIpAddressList = [ "localhost" ]
-                self.fitterPortList = [ RPC_PORT_FITTER ]
+                self.fitterPortList = [ RPC_PORT_FITTER_BASE ]
 
             self.Laser0TunerOffset = cp.getfloat(_MAIN_CONFIG_SECTION, "Laser0TunerOffset", default = 0.0)
             self.Laser1TunerOffset = cp.getfloat(_MAIN_CONFIG_SECTION, "Laser1TunerOffset", default = 0.0)
@@ -236,7 +224,7 @@ class MeasSystem(object):
         self._ClearErrorEvent = threading.Event()
         self._ShutdownRequested = False #The main state handling loop will exit when this is true
         self._FatalError = False  #The main state handling loop will also exit when this is true
-        self._UninterruptedSpectrumCount = 0
+        self._ScanInProgress = False
         self.SkipFitting = SkipFitting
 
         #Measurement mode properties...
@@ -249,12 +237,7 @@ class MeasSystem(object):
         self.ConfigPath = ConfigPath
         self.Config = MeasSystem.ConfigurationOptions(SimMode)
         self.Config.Load(self.ConfigPath)
-
-        self.FitterPool = FitterPool.FitterPool(self.Config.fitterPortList,
-                                                self.Config.fitterIpAddressList,
-                                                self.Config.FitterTimeout_s)
-        self.SpectrumQueue = Queue.Queue()
-
+        
         #Set up the Broadcaster that will be used to send processor data to the Data Manager...
         self.ProcDataBroadcaster = Broadcaster(BROADCAST_PORT_MEAS_SYSTEM, APP_NAME, logFunc=Log)
         #Now set up the RPC server...
@@ -342,8 +325,6 @@ class MeasSystem(object):
         if not ModeName in self.MeasModes.keys():
             raise InvalidModeSelection("An invalid mode was selected: '%s'" % ModeName)
         Driver.stopScan()
-        # Initialize fitter pool
-        self.FitterPool.ClearCache()
         self._ChangeMode(ModeName)
         return "OK"
 
@@ -407,7 +388,7 @@ class MeasSystem(object):
         
     def _ChangeMode(self, ModeName):
         """Changes the measurement mode of the instrument."""
-        self._UninterruptedSpectrumCount = 0
+        self._ScanInProgress = False
         self.CurrentMeasMode = self.MeasModes[ModeName]
         self._SetupMeasMode()
         SpectrumCollector.setSequencerMode(True)
@@ -421,51 +402,7 @@ class MeasSystem(object):
             Log("Setting instrument mode: %s" % (modeDict,))
         else:
             Log("Running without Instrument Manager - can't set mode in instrument")
-
-    def _GetSpectra(self,nSpectra=50,timeSinceLast=1.0):
-        """Gets up to nSpectra from the Spectrum Collector. Returns with these spectra, or with as many
-        (>=1) spectra as are available by the specified time since last get. If no spectrum has arrived in that time,
-        repeat trying to get spectra until self._SpectrumTimeout_s has elapsed. Throw a SpectrumTimeout
-        exception if this second timeout occurs"""
-        startTime = TimeStamp()
-        result = []
-        while not result:
-            result = SpectrumCollector.getSpectra(nSpectra,timeSinceLast)
-            if self._ShutdownRequested:
-                raise ShutdownRequestCaptured
-            if not self._EnableEvent.isSet():
-                raise MeasurementDisabled
-            if (self.Config.SpectrumTimeout_s != 0) and ((TimeStamp() - startTime) > self.Config.SpectrumTimeout_s):
-                # SpectrumTimeout_s=0 means no time-out requirement is given
-                raise SpectrumTimeout, data
-            if result:
-                # print "Result of length %d sent at %s" % (len(result),TimeStamp())
-                return result
-            time.sleep(0.1)
-    def _SendSpectraToFitter(self, spectra):
-        self._Status.UpdateStatusBit(STATUS_MASK_WaitingForFitter, True)
-        if self._UninterruptedSpectrumCount == 0:
-            ret = self.FitterPool.Init()
-        fitResults = self.FitterPool.FitSpectra(spectra)
-        self._Status.UpdateStatusBit(STATUS_MASK_WaitingForFitter, False)
-        return fitResults
-    def _SendProcessorResultsForAnalysis(self, MeasTime_s, ResultLabelDict):
-        """Sends the provided results to the Data Manager for analysis.
-
-        ResultLabelDict must be a dict of dicts.
-          - keys of the main dict are the result labels to be passed upwards
-          - values are dicts, where the dict is a set of token value pairs (the data)
-
-        """
-        for resultLabel in ResultLabelDict.keys():
-            dataPacket = MeasData(resultLabel, MeasTime_s, ResultLabelDict[resultLabel])
-            txMsg = dataPacket.dumps()
-            self.ProcDataBroadcaster.send(txMsg)
-    def _ProcessFitResults(self, FitResults):
-        """
-        """
-        pass
-        #"%% Fit results would be processed here!"
+            
     def __SetState(self, NewState):
         """Sets the state of the MeasSystem.  Variable init is done as appropriate."""
         if NewState == self.__State:
@@ -480,7 +417,7 @@ class MeasSystem(object):
         if NewState == STATE_READY:
             Driver.stopScan()
         elif NewState == STATE_ENABLED:
-            self._UninterruptedSpectrumCount = 0
+            self._ScanInProgress = False
         elif NewState == STATE_ERROR:
             self._EnableEvent.clear()
             self._ClearErrorEvent.clear()
@@ -514,15 +451,6 @@ class MeasSystem(object):
             for m in self.MeasModes.values():
                 SpectrumCollector.addNamedSequenceOfSchemes(m.Name,m.Schemes)
             
-            # Set up spectrum queue in Spectrum Collector
-            SpectrumCollector.setMaxSpectrumQueueSize(510)
-
-            # See if the fitter is running (if not the exception will be picked up below)...
-            if not self.SkipFitting:
-                self.FitterPool.Ping()
-            # Set the fitter proxy up to be interruptable while waiting for a long fit...
-            self.FitterPool.SetEnableEvent(self._EnableEvent)
-
             # Deal with startup configuration options...
             if self.Config.StartEngine:
                 Log("Engine started (with Driver.startEngine) due to 'StartEngine' startup config setting.")
@@ -566,52 +494,14 @@ class MeasSystem(object):
             if (not self._EnableEvent.isSet()) or self._ShutdownRequested:
                 exitState = STATE_READY
             else:
-                if self._UninterruptedSpectrumCount == 0:
+                if not self._ScanInProgress:
                     SpectrumCollector.startScan()
+                    self._ScanInProgress = True
                 # If the scan has been stopped for whatever reason, restart it
                 if Driver.scanIdle():
                     SpectrumCollector.startScan()
-                spectrum = None
-                try:
-                    #Get the spectra...
-                    prev = TimeStamp()
-                    spectra = self._GetSpectra()
-                    allResults = {}
-                    if not self.SkipFitting:
-                        processorResults = self._SendSpectraToFitter(spectra)
-                        # print "Processed %d spectra in %s" % (len(spectra),TimeStamp()-prev)
-                        # Update allResults with the output of the processor
-                        for t,rDict,spectrumId in processorResults:
-                            spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrumId]
-                            if t in allResults:
-                                if spectrumName in allResults[t]:
-                                    allResults[t][spectrumName].update(rDict)
-                                else:
-                                    allResults[t][spectrumName] = rDict.copy()
-                            else:
-                                allResults[t] = { spectrumName:rDict.copy() }
-                    for t in sorted(allResults.keys()):
-                        self._SendProcessorResultsForAnalysis(t, allResults[t])
-
-                    self._UninterruptedSpectrumCount += len(spectra)
-                    exitState = STATE_ENABLED
-                    #print "SIZE = ", self.RdQueue.qsize()
-                except (ShutdownRequestCaptured,
-                        MeasurementDisabled,
-                        FitterPool.FitterInterrupted):
-                    if __debug__:
-                        Log("User requested shutdown while handling ENABLED state.", Level = 0)
-                    exitState = STATE_READY
-                except SpectrumTimeout:
-                    #No handling right now if we don't get data when we expect it...
-                    LogExc("Timed out while waiting for a completed spectrum to appear in the queue")
-                    exitState = STATE_ERROR
-                except FitterPool.FitterTimeout:
-                    LogExc("Timed out while waiting for fitter to finish/respond")
-                    exitState = STATE_ERROR
-                except FitterPool.FitterError:
-                    LogExc("Error occured during fitting")
-                    exitState = STATE_ERROR
+                time.sleep(1.0)
+                exitState = STATE_ENABLED
         except:
             LogExc(Data = dict(State = StateName[self.__State]))
             exitState = STATE_ERROR
@@ -763,10 +653,9 @@ if __name__ == "__main__":
         #profile.run("main()","c:/temp/measSystemProfile")
         main()
     except:
-        tbMsg = BetterTraceback.get_advanced_traceback()
         Log("Unhandled exception trapped by last chance handler",
             Data = dict(Note = "<See verbose for debug info>"),
             Level = 3,
-            Verbose = tbMsg)
+            Verbose = traceback.format_exc())
     Log("Exiting program")
     sys.stdout.flush()

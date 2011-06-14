@@ -155,6 +155,7 @@ class Sequencer(object):
             return self.inDas.get(active,None)
         
     def runFsm(self):
+        scs = RDFreqConv.getShortCircuitSchemeStatus()
         while True:
             try:
                 if self.state == Sequencer.STARTUP:
@@ -170,7 +171,8 @@ class Sequencer(object):
                     if not seqList:
                         self.state = Sequencer.IDLE
                     elif isinstance(seqList[0],tuple):
-                        Driver.setMultipleScan()
+                        if scs: Driver.setMultipleNoRepeatScan()
+                        else: Driver.setMultipleScan()
                         self.scheme = 1
                         self.repeat = 1
                         self.state = Sequencer.SEND_SCHEME
