@@ -14,6 +14,7 @@ APP_NAME = "SpectrumMaker"
 import sys
 import getopt
 import inspect
+import operator
 import os
 from numpy import *
 from pylab import *
@@ -41,12 +42,17 @@ class Spectrum(object):
         self.spectralLibrary = loadSpectralLibrary(libName)
         self.splineLibrary = loadSplineLibrary(libName)
         self.physicalConstants = loadPhysicalConstants(libName)
-        self.basisArray = asarray([eval(i,env) for i in config["identification"].split(",")])
-        self.spectrumIds = asarray([eval(i,env) for i in config["SpectrumId"].split(",")])
+        self.config = config
+        self.spectrumIds = asarray(eval(config["SpectrumId"]+",",env))
+    def setupModel(self,env):    
+        config = self.config
+        self.basisArray = asarray(eval(config["identification"]+",",env))
         self.centerFrequency = eval(config["center"],env) if "center" in config else 0
         self.basisFunctions = {}
         m = Model()
         m.setAttributes(x_center=self.centerFrequency)
+        if "pressure" in env: m.setAttributes(pressure = env["pressure"])
+        if "temperature" in env: m.setAttributes(temperature = env["temperature"])
         m.addToModel(Quadratic(offset=0.0,slope=0.0,curvature=0.0),index=None)
         m.registerXmodifier(FrequencySquish(offset=0.0,squish=0.0))
         m.addDummyParameter(sum(self.basisArray<1000))
@@ -107,12 +113,30 @@ class Spectrum(object):
 class SpectrumMaker(Singleton):
     initialized = False
     def __init__(self, configPath=None,env={}):
-        env = dict(pressure=400)
+        self.variables = [],[]
+        basePath = os.path.split(configPath)[0]
         if not self.initialized:
             if configPath != None:
                 # Process INI file
                 cp = CustomConfigObj(configPath)
-                basePath = os.path.split(configPath)[0]
+                self.spectra = {}
+                self.libraries = {}
+                self.spectrumNamesById = {}
+                for secName in cp:
+                    if secName.startswith("CODE"):
+                        code = compile(cp[secName]["code"],secName,"exec")
+                        exec code in env
+                    elif secName in ["VARIABLES"]:
+                        self.variables = self.findVariables(cp[secName],env)
+                    elif secName.startswith("SPECTRUM"):
+                        sp = Spectrum(secName,cp[secName],basePath,env)
+                        for id in sp.spectrumIds:
+                            if id not in self.spectrumNamesById:
+                                self.spectrumNamesById[id] = []
+                            self.spectrumNamesById[id].append(secName)
+                        self.spectra[secName] = sp
+                self.baseEnv = env.copy()        
+                self.config = cp
                 self.schemeCount = eval(cp.get("SCHEME_CONFIG", "schemeCount", "1"),env)
                 self.schemePaths = []
                 self.schemes = []
@@ -121,28 +145,60 @@ class SpectrumMaker(Singleton):
                     self.schemePaths.append(path)
                     s = Scheme(path)
                     self.schemes.append(s)
-                self.spectra = {}
-                self.libraries = {}
-                self.spectrumNamesById = {}
-                for secName in cp:
-                    if secName.startswith("SPECTRUM"):
-                        sp = Spectrum(secName,cp[secName],basePath,env)
-                        for id in sp.spectrumIds:
-                            if id not in self.spectrumNamesById:
-                                self.spectrumNamesById[id] = []
-                            self.spectrumNamesById[id].append(secName)
-                        self.spectra[secName] = sp
             else:
                 raise ValueError("Configuration file must be specified to initialize SpectrumMaker")
             self.initialized = True
+
+    def genSpectra(self):
+        """Generator yielding model spectra"""
+        for env in self.genEnv():
+            env.update(self.baseEnv)
+            for name in self.spectra:
+                self.spectra[name].setupModel(env)
+            yield self.spectra
+            
+    def genEnv(self):
+        """Generator yielding environment dictionaries with variables as keys and
+            values drawn from constants and the outer product of sequences"""
+        constants, sequences = self.variables
+        def _genEnv(*sequences):
+            if len(sequences) == 0: yield ()
+            else:
+                for y in _genEnv(*(sequences[:-1])):
+                    name, seq = sequences[-1]
+                    for x in seq: yield y+(x,)
+        for values in _genEnv(*sequences):
+            names = [name for name,s in sequences]
+            envDict = dict(constants)
+            for name,v in zip(names,values): envDict[name]=v
+            yield envDict
+    
+    def findVariables(self,variables,env={}):
+        # Find entries in the variables dictionary which have values that evaluate to sequences
+        #  and those which evaluate to constants. The result is the pair constants, sequences
+        #  where constants is a list with (name,value) pairs and sequences is a list of 
+        #  (name,sequence) pairs, where name is the name of the variable and sequence is a 
+        #  tuple of values that the variable must assume
+        constants, sequences = [], []
+        for k in variables:
+            v = variables[k]
+            e = eval(v,env)
+            if operator.isSequenceType(e):
+                sequences.append((k,e))
+            else:
+                constants.append((k,e))
+        return constants, sequences
+            
     def run(self):
-        nu = linspace(6235.0,6240.0,1000)
+        nu = linspace(6237.0,6238.0,1000)
         #nu = linspace(6056.0,6058.0,1000)
         tot = 0
         spectrumId = 10
-        for s in [self.spectra[name] for name in self.spectrumNamesById[spectrumId]]:
-            tot += s.model(nu)
-        plot(nu,tot)
+        for spectra in self.genSpectra():
+            tot = 0
+            for s in [spectra[name] for name in self.spectrumNamesById[spectrumId]]:
+                tot += s.model(nu)
+            plot(nu,tot)
         gca().xaxis.set_major_formatter(ScalarFormatter(useOffset=False))
         gca().yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
         xlabel('Wavenumber (cm$^{-1}$)')
