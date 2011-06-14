@@ -52,11 +52,11 @@ class DriverProxy(SharedTypes.Singleton):
             self.myaddr = socket.gethostbyname(socket.gethostname())
             serverURI = "http://%s:%d" % (self.hostaddr,
                 SharedTypes.RPC_PORT_DRIVER)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="CalibrateSystem")
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="CalibrateFsr")
             self.initialized = True
 
 class RDFreqConvProxy(SharedTypes.Singleton):
-    """Encapsulates access to the Driver via RPC calls"""
+    """Encapsulates access to the Ringdown Frequency Converter via RPC calls"""
     initialized = False
     def __init__(self):
         if not self.initialized:
@@ -64,12 +64,25 @@ class RDFreqConvProxy(SharedTypes.Singleton):
             self.myaddr = socket.gethostbyname(socket.gethostname())
             serverURI = "http://%s:%d" % (self.hostaddr,
                 SharedTypes.RPC_PORT_FREQ_CONVERTER)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="Controller")
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="CalibrateFsr")
+            self.initialized = True
+
+class SpectrumCollectorProxy(SharedTypes.Singleton):
+    """Encapsulates access to the Spectrum Collector via RPC calls"""
+    initialized = False
+    def __init__(self):
+        if not self.initialized:
+            self.hostaddr = "localhost"
+            self.myaddr = socket.gethostbyname(socket.gethostname())
+            serverURI = "http://%s:%d" % (self.hostaddr,
+                SharedTypes.RPC_PORT_SPECTRUM_COLLECTOR)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="CalibrateFsr")
             self.initialized = True
 
 # For convenience in calling driver and frequency converter functions
 Driver = DriverProxy().rpc
 RDFreqConv = RDFreqConvProxy().rpc
+SpectrumCollector = SpectrumCollectorProxy().rpc
 
 def _value(valueOrName):
     if isinstance(valueOrName,types.StringType):
@@ -154,7 +167,8 @@ def coalascePoints(x,y):
 class CalibrateFsr(object):
     def __init__(self,configFile,options):
         self.config = ConfigObj(configFile)
-        self.fsr = None
+        self.basePath = os.path.split(configFile)[0]
+        self.spectrumFile = "./CalibrateFsr.h5"
         # Analyze options
         if "-s" in options:
             self.nSteps = int(options["-s"])
@@ -180,10 +194,10 @@ class CalibrateFsr(object):
         else:
             self.approxFsr = APPROX_FSR
         if "-f" in options:
-            self.fsr = float(options["-f"])
-        elif "CAVITY_FSR" in self.config["SETTINGS"]:
-            self.fsr = float(self.config["SETTINGS"]["CAVITY_FSR"])
-        
+            self.spectrumFile = options["-f"]
+        elif "SPECTRUM_FILE" in self.config["SETTINGS"]:
+            self.spectrumFile = self.config["SETTINGS"]["SPECTRUM_FILE"]
+        self.spectrumFile = os.path.join(self.basePath,self.spectrumFile)
         
         self.seq = 0
         self.processingDone = threading.Event()
@@ -378,6 +392,8 @@ class CalibrateFsr(object):
             Driver.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % aLaserNum, "TEMP_CNTRL_SweepingState")
 
             Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_StartManualState")
+            
+            SpectrumCollector.setAuxiliarySpectrumFile(self.spectrumFile)
             print "Starting to acquire data in FSR hopping mode"
             start = time.clock()
             totTime = 0.2*4*(maxLaserTemp-minLaserTemp)/sweepIncr
@@ -387,7 +403,7 @@ class CalibrateFsr(object):
                 complete = round(100*(now-start)/totTime)
                 sys.stdout.write("\r%d%% complete" % complete)
                 time.sleep(2.0)
-            sys.stdout.write("\r100%% complete\n")
+            sys.stdout.write("\r100% complete\n")
             
             # # Ensure that we start with original calibration information
             # RDFreqConv.restoreOriginalWlmCal(self.vLaserNum)
@@ -528,7 +544,7 @@ settings in the configuration file:
 
 -h, --help           print this help
 -c                   specify a config file:  default = "./CalibrateFsr.ini"
--f                   specify a measured cavity FSR (in wavenumbers)
+-f                   specify an output file for spectrum: default = "./CalibrateFsr.h5"
 -s                   number of steps on each side of center
 -v                   specify virtual laser (1-origin) to calibrate
 -w                   center wavenumber about which to calibrate
