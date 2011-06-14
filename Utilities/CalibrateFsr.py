@@ -167,7 +167,7 @@ def coalascePoints(x,y):
 class CalibrateFsr(object):
     def __init__(self,configFile,options):
         self.config = ConfigObj(configFile)
-        self.basePath = os.path.split(configFile)[0]
+        self.basePath = os.path.split(os.path.abspath(configFile))[0]
         self.spectrumFile = "./CalibrateFsr.h5"
         # Analyze options
         if "-s" in options:
@@ -197,7 +197,9 @@ class CalibrateFsr(object):
             self.spectrumFile = options["-f"]
         elif "SPECTRUM_FILE" in self.config["SETTINGS"]:
             self.spectrumFile = self.config["SETTINGS"]["SPECTRUM_FILE"]
+            
         self.spectrumFile = os.path.join(self.basePath,self.spectrumFile)
+        print "Basepath: %s, spectrumFile: %s" % (self.basePath,self.spectrumFile)
         
         self.seq = 0
         self.processingDone = threading.Event()
