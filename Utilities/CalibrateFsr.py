@@ -199,7 +199,6 @@ class CalibrateFsr(object):
             self.spectrumFile = self.config["SETTINGS"]["SPECTRUM_FILE"]
             
         self.spectrumFile = os.path.join(self.basePath,self.spectrumFile)
-        print "Basepath: %s, spectrumFile: %s" % (self.basePath,self.spectrumFile)
         
         self.seq = 0
         self.processingDone = threading.Event()

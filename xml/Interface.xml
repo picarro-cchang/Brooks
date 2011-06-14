@@ -385,6 +385,7 @@
         <constant ident="NUDGE_WINDOW" description="Do not adjust if timestamps agree within this window (ms)">20</constant>
         <constant ident="DSP_TIMER0_BASE" description="Base address of DSP timer 0 registers">0x01940000</constant>
         <constant ident="DSP_TIMER_DIVISOR" description="Divisor to get 1ms for a 225MHz DSP clock">56250</constant>
+        <constant ident="MAX_FITTERS" description="Maximum number of fitter processes">8</constant>
     </constant_list>
     <union_list>
         <union type="DataType">
