@@ -100,6 +100,7 @@ def selectLaser(aLaserNum):
     changeBitsFPGA("FPGA_INJECT","INJECT_CONTROL","INJECT_CONTROL_LASER_SELECT_B","INJECT_CONTROL_LASER_SELECT_W",aLaserNum-1)
 
 if __name__ == "__main__":
+    offset = input('Desired WLM angle offset (radians)? ')
     try:
         regVault = Driver.saveRegValues(["VIRTUAL_LASER_REGISTER",
                                         ("FPGA_RDMAN","RDMAN_OPTIONS"),
@@ -158,9 +159,12 @@ if __name__ == "__main__":
           ratio1Scale * Y - ratio2Scale * X * sin(phase),
           ratio2Scale * X * cos(phase))
         print "In steady-state: Ratio1 = %.3f, Ratio2 = %.3f, WlmAngle = %.3f" % (ratio1,ratio2,theta)
-        # Set up the laser locking parameters to target the mean angle
-        ratio1Multiplier = (-sin(theta + phase))/(ratio1Scale * cos(phase))
-        ratio2Multiplier = cos(theta)/(ratio2Scale * cos(phase))
+        # Set up the laser locking parameters to target a value slightly away from the original
+        target = theta + offset
+        #
+        
+        ratio1Multiplier = (-sin(target + phase))/(ratio1Scale * cos(phase))
+        ratio2Multiplier = cos(target)/(ratio2Scale * cos(phase))
         Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_RATIO1_MULTIPLIER",int(ratio1Multiplier*32767.0))
         Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_RATIO2_MULTIPLIER",int(ratio2Multiplier*32767.0))
         Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_RATIO1_CENTER",int(ratio1Center*32768.0))
@@ -192,6 +196,13 @@ if __name__ == "__main__":
         setManualControl()
         ratio1 = mean(meta[0,256:]/32768.0)    
         ratio2 = mean(meta[1,256:]/32768.0)    
+        # Convert WLM ratios into angles
+        X = ratio1 - ratio1Center
+        Y = ratio2 - ratio2Center
+        theta = arctan2(
+          ratio1Scale * Y - ratio2Scale * X * sin(phase),
+          ratio2Scale * X * cos(phase))
+        print "After locking: Ratio1 = %.3f, Ratio2 = %.3f, WlmAngle = %.3f, Target = %.3f" % (ratio1,ratio2,theta,target)
     finally:
         Driver.restoreRegValues(regVault)
     # Plot ratios and fine laser current    
