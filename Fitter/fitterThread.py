@@ -112,10 +112,11 @@ class Fitter(object):
         self.showViewer = False
         self.updateViewer = True
         self.fitterOption = ""
+        self.inputFile = None
         self.FITTER_initialize()
         self.fitBroadcaster = Broadcaster.Broadcaster(self.broadcastPort, APP_NAME, logFunc=Log)
         self.spectQueue = Queue(200)
-        spectListener = Listener.Listener(self.spectQueue,
+        self.spectListener = Listener.Listener(self.spectQueue,
                                           BROADCAST_PORT_SPECTRUM_COLLECTOR,
                                           StringPickler.ArbitraryObject,
                                           retry = True,
@@ -133,6 +134,7 @@ class Fitter(object):
         self.rpcServer.register_function(self.FITTER_initialize)      
         self.rpcServer.register_function(self.FITTER_maximizeViewer)          
         self.rpcServer.register_function(self.FITTER_setOption)          
+        self.rpcServer.register_function(self.FITTER_setInputFile)
         
     def _rpcServerExit(self):
         self.exitFlag = True
@@ -193,6 +195,9 @@ class Fitter(object):
     def FITTER_setOption(self,option):
         self.fitterOption = option
    
+    def FITTER_setInputFile(self,inputFile):
+        self.inputFile = inputFile
+        
     def compileScript(self,scriptName):
         try:
             fp = file(scriptName,"r")
@@ -263,7 +268,18 @@ class Fitter(object):
             except Full:
                 pass
             
-        if self.procMode:
+        if self.inputFile:
+            self.repository = hdf5RepositoryFromList([self.inputFile])
+            # Reinitialize the fitter, setting INIT to True in the script environment
+            self.loadRepository = False
+            self.FITTER_initialize()
+            Analysis.resetIndex()
+            self.fitSpectrum = True
+            self.singleMode = False
+            self.procMode = False
+            self.inputFile = ""
+            self.state = FITTER_STATE_READY
+        elif self.procMode:
             self.state = FITTER_STATE_PROC
         elif self.loadRepository:
             # The repository needs to be initialized and placed in self.repository.
@@ -293,7 +309,11 @@ class Fitter(object):
             except StopIteration:
                 print "Repository empty"
                 self.fitSpectrum = False
-                self.state = FITTER_STATE_READY # Repository has been exhausted
+                if self.inputFile is not None: 
+                    self.exitFlag = True
+                    self.state = FITTER_STATE_IDLE
+                else:
+                    self.state = FITTER_STATE_READY # Repository has been exhausted
                 
         if self.state == FITTER_STATE_PROC:
             try:
