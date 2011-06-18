@@ -27,9 +27,10 @@ ANALY_INFO_LIST = ["Name", "Warm Box", "WLM", "Laser(s)", "Hot Box", "Cavity"]
 TEST_LIST = ["Write Instrument Name", "Make Integration INI Files", "Calibrate WB Laser/WLM", 
              "Update Laser/WLM EEPROM", "Create WB Cal Table", "Run Calibrate FSR", "Run Calibrate System", 
              "Calculate WLM Offset", "Run Threshold Stats", "Run Flow Control", "Write Software Version"]
-HOSTEXE_DIR = "C:\Picarro\G2000\HostExe"
-INTEGRATION_DIR = "C:\Picarro\G2000\InstrConfig\Integration"
-CAL_DIR = "C:\Picarro\G2000\InstrConfig\Calibration\InstrCal"
+HOSTEXE_DIR = r"C:\Picarro\G2000\HostExe"
+INTEGRATION_DIR = r"C:\Picarro\G2000\InstrConfig\Integration"
+COMMON_CONFIG_DIR = r"C:\Picarro\G2000\CommonConfig\Config"
+CAL_DIR = r"C:\Picarro\G2000\InstrConfig\Calibration\InstrCal"
 WARMBOX_CAL = "Beta2000_WarmBoxCal"
 HOTBOX_CAL = "Beta2000_HotBoxCal"
 
@@ -349,7 +350,12 @@ class IntegrationTool(IntegrationToolFrame):
 
     def onWriteInstrName(self, event):
         info = subprocess.STARTUPINFO()
-        subprocess.Popen([os.path.join(HOSTEXE_DIR, "InstrEEPROMAccess.exe")] + ["-d", self.analyzer.split("CHAS2K")[1]], startupinfo=info)
+        iniFile = os.path.join(COMMON_CONFIG_DIR, r"Utilities\InstrEEPROMAccess.ini")
+        if os.path.isfile(iniFile):
+            commandList = [os.path.join(HOSTEXE_DIR, "InstrEEPROMAccess.exe")] + ["-c", iniFile] + ["-d", self.analyzer.split("CHAS2K")[1]]
+        else:
+            commandList = [os.path.join(HOSTEXE_DIR, "InstrEEPROMAccess.exe")] + ["-d", self.analyzer.split("CHAS2K")[1]]
+        subprocess.Popen(commandList, startupinfo=info)
         self.showAnalyzerName()
 
     def onMakeIniFiles(self, event):

@@ -140,6 +140,7 @@ class IPVLicenseFrame(wx.Frame):
 
 class IPVLicense(IPVLicenseFrame):
     def __init__(self, configFile, selector, trialDays, remindDays, *args, **kwds):
+        self.configFileName = configFile
         self.cp = CustomConfigObj(configFile)
         self.selector = selector
         self.trialDays = trialDays 
@@ -185,7 +186,7 @@ class IPVLicense(IPVLicenseFrame):
         startTime = datetime.strftime(nextRunTime, "%H:%M:%S")
         startDate = datetime.strftime(nextRunTime, "%m/%d/%Y")
         os.system(r'schtasks.exe /delete /tn IPVLicense /f')
-        os.system(r'schtasks.exe /create /tn IPVLicense /tr "C:\Picarro\G2000\HostExe\IPVLicense.exe -s %d -r %f -t %f" /sc ONCE /st %s /sd %s /ru %s /rp %s' % (self.renewMsgSelector, self.remindDays, self.trialDays, startTime, startDate, self.user, self.password))
+        os.system(r'schtasks.exe /create /tn IPVLicense /tr "C:\Picarro\G2000\HostExe\IPVLicense.exe -c %s -s %d -r %f -t %f" /sc ONCE /st %s /sd %s /ru %s /rp %s' % (self.configFileName, self.renewMsgSelector, self.remindDays, self.trialDays, startTime, startDate, self.user, self.password))
         self.Destroy()
 
     def onOKButton(self, event):
@@ -202,7 +203,7 @@ class IPVLicense(IPVLicenseFrame):
         startTime = datetime.strftime(nextRunTime, "%H:%M:%S")
         startDate = datetime.strftime(nextRunTime, "%m/%d/%Y")
         os.system(r'schtasks.exe /delete /tn IPVLicense /f')
-        os.system(r'schtasks.exe /create /tn IPVLicense /tr "C:\Picarro\G2000\HostExe\IPVLicense.exe -s %d -r %f -t %f" /sc ONCE /st %s /sd %s /ru %s /rp %s' % (self.selector, self.remindDays, self.trialDays, startTime, startDate, self.user, self.password))
+        os.system(r'schtasks.exe /create /tn IPVLicense /tr "C:\Picarro\G2000\HostExe\IPVLicense.exe -c %s -s %d -r %f -t %f" /sc ONCE /st %s /sd %s /ru %s /rp %s' % (self.configFileName, self.selector, self.remindDays, self.trialDays, startTime, startDate, self.user, self.password))
         self.Destroy()
  
     def killIPV(self):
@@ -222,7 +223,7 @@ def handleCommandSwitches():
     for o, a in switches:
         options[o] = a
 
-    configFile = r"C:\Picarro\G2000\InstrConfig\InstrIPV.ini"
+    configFile = r"C:\Picarro\G2000\InstrConfig\Config\IPV\IPV.ini"
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
