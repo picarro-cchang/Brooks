@@ -19,6 +19,8 @@
 #   05-Oct-2009  sze  In automatic mode, the selected fine current register is updated with laser_fine_current_in
 #   29-Apr-2010  sze  Handle 4 input CrystaLatch optical switch
 #   14-Feb-2011  sze  Allow use of two 2-input CrystalLatch optical switches
+#   17-Jun-2011  sze  Remove support for two 2-input CrystalLatch optical switches because of damage to 4-way switch
+#                      if the system is not properly configured
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -106,8 +108,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     
     optical_switch1_out  -- For 2 way switch, goes high for 1ms when laser 1 or 3 selected. Used for laser select for 4 way switch.
     optical_switch2_out  -- For 2 way switch, goes high for 1ms when laser 2 or 4 selected. Used for laser select for 4 way switch.
-    optical_switch4_out  -- For 2 way switch, connected to high order laser select bit (for use with
-    2 two-way switched). For 4-way switch, goes low for 1ms when any laser is selected. 
+    optical_switch4_out  -- For 4-way switch, goes low for 1ms when any laser is selected. 
     If INJECT_CONTROL2_FIBER_AMP_PRESENT is asserted, optical_switch4_out is connected to 
     fiber_amp_pwm_in, since this signal is also used for the PWM of the fiber amplifier
 
@@ -338,11 +339,13 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         if control[INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B]:
             optical_switch1_out.next = s[0]
             optical_switch2_out.next = s[1]
-            optical_switch4_out.next = sw4_4way
+            # optical_switch4_out.next = sw4_4way
         else:
             optical_switch1_out.next = sw1_2way
             optical_switch2_out.next = sw2_2way
-            optical_switch4_out.next = not s[1]
+            # optical_switch4_out.next = not s[1]
+            
+        optical_switch4_out.next = sw4_4way
         
         if control2[INJECT_CONTROL2_FIBER_AMP_PRESENT_B]:
             optical_switch4_out.next = fiber_amp_pwm_in
