@@ -308,7 +308,13 @@ class SpectrumCollector(object):
         for key in self.latestSensors.keys():
             self.avgSensors[key] = 0.0
             self.sumSensors[key] = 0.0
-        #Initialize the rdBuffer with the names and types of fields in ProcessedRingdownEntryType
+        #
+        # The data are added from ProcessedRingdownEntryType objects, one row at a time from each ringdown.
+        #  We need to store them as columns in the spectrum file. The rdBuffer dictionary is keyed by the
+        #  field (column) name and contains tuples consisting of a list of the column values and the type 
+        #  of the data in the column
+        #
+        # Initialize the rdBuffer with the names and types of fields in ProcessedRingdownEntryType
         self.rdBuffer = {}
         for fname,ftype in ProcessedRingdownEntryType._fields_:
             self.rdBuffer[fname] = ([],ftype)

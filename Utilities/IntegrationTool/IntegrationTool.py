@@ -13,6 +13,7 @@ import shutil
 import time
 import subprocess
 import threading
+import traceback
 from configobj import ConfigObj
 from xmlrpclib import ServerProxy
 from Host.Common import CmdFIFO
@@ -24,7 +25,7 @@ Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, "In
 
 ANALY_INFO_LIST = ["Name", "Warm Box", "WLM", "Laser(s)", "Hot Box", "Cavity"]
 TEST_LIST = ["Write Instrument Name", "Make Integration INI Files", "Calibrate WB Laser/WLM", 
-             "Update Laser/WLM EEPROM", "Create WB Cal Table", "Run Calibrate System", 
+             "Update Laser/WLM EEPROM", "Create WB Cal Table", "Run Calibrate FSR", "Run Calibrate System", 
              "Calculate WLM Offset", "Run Threshold Stats", "Run Flow Control", "Write Software Version"]
 HOSTEXE_DIR = "C:\Picarro\G2000\HostExe"
 INTEGRATION_DIR = "C:\Picarro\G2000\InstrConfig\Integration"
@@ -234,11 +235,12 @@ class IntegrationTool(IntegrationToolFrame):
         self.Bind(wx.EVT_BUTTON, self.onLaserWlmCal, self.testButtonList[2])
         self.Bind(wx.EVT_BUTTON, self.onEEPROM, self.testButtonList[3])
         self.Bind(wx.EVT_BUTTON, self.onMakeWbCal, self.testButtonList[4])
-        self.Bind(wx.EVT_BUTTON, self.onCalibrateSystem, self.testButtonList[5])
-        self.Bind(wx.EVT_BUTTON, self.onWlmOffset, self.testButtonList[6])
-        self.Bind(wx.EVT_BUTTON, self.onThresholdStats, self.testButtonList[7])
-        self.Bind(wx.EVT_BUTTON, self.onFlowControl, self.testButtonList[8])
-        self.Bind(wx.EVT_BUTTON, self.onWriteSoftwareVer, self.testButtonList[9])
+        self.Bind(wx.EVT_BUTTON, self.onCalibrateFSR, self.testButtonList[5])
+        self.Bind(wx.EVT_BUTTON, self.onCalibrateSystem, self.testButtonList[6])
+        self.Bind(wx.EVT_BUTTON, self.onWlmOffset, self.testButtonList[7])
+        self.Bind(wx.EVT_BUTTON, self.onThresholdStats, self.testButtonList[8])
+        self.Bind(wx.EVT_BUTTON, self.onFlowControl, self.testButtonList[9])
+        self.Bind(wx.EVT_BUTTON, self.onWriteSoftwareVer, self.testButtonList[10])
         
     def onSelect(self, event):
         self.analyzer = self.comboBoxSelect.GetValue()
@@ -484,6 +486,85 @@ class IntegrationTool(IntegrationToolFrame):
             self.display += "%s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
         
+    def onCalibrateFSR(self, event):
+        os.chdir(INTEGRATION_DIR)
+        iniList = [os.path.abspath(ini) for ini in os.listdir(".") if (ini.startswith("CalibrateFSR") and ini.endswith(".ini"))]
+        dlg = wx.SingleChoiceDialog(self, "Select FSR calibration to perform","Cavity FSR calibration",
+                iniList,wx.CHOICEDLG_STYLE)
+        if dlg.ShowModal() != wx.ID_OK: return
+        ini = dlg.GetStringSelection()
+        dlg.Destroy()
+        co = ConfigObj(os.path.join("../..",ini), raise_errors=True)
+        if 'INSTRUCTIONS' in co['SETTINGS']:
+            if wx.MessageBox(co['SETTINGS']['INSTRUCTIONS'],"Instructions - Cancel if not ready",
+                wx.OK | wx.CANCEL) != wx.OK: 
+                return
+        spectrumFile = os.path.abspath(co['SETTINGS']['SPECTRUM_FILE'])
+        if os.path.exists(spectrumFile):
+            os.remove(spectrumFile)
+            print "Deleted old spectrum file: %s" % spectrumFile
+        fitIni = os.path.abspath(co['SETTINGS']['FITTER_FILE'])
+        newThread = threading.Thread(target = self._onCalibrateFSR, args=(ini,spectrumFile,fitIni))
+        newThread.setDaemon(True)
+        newThread.start()
+        
+    def _onCalibrateFSR(self,ini,spectrumFile,fitIni):   
+        os.chdir(INTEGRATION_DIR)
+        FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
+        FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
+        newDir = time.strftime(INTEGRATION_DIR + "/CalibrateFSR/%Y%m%d_%H%M%S")
+        try:
+            if not os.path.isdir(newDir):
+                os.makedirs(newDir)            
+            os.chdir(newDir)
+            cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "CalibrateFsr.exe"), ini)
+            print cmd
+            os.system(cmd)
+            time.sleep(2.0)
+            src = spectrumFile
+            dest = os.path.join(newDir,os.path.split(src)[1])
+            nAttempts = 0
+            while nAttempts < 10:
+                try:
+                    shutil.move(src,dest)
+                    print "Moving %s to %s" % (src,dest)
+                    break
+                except:
+                    time.sleep(2.0)
+            if nAttempts >= 10:
+                raise RuntimeError("Cannot move file %s to result directory" % src)
+            # FITTER_CONFIG_DIR = "c:/Picarro/G2000/AppConfig/Config/Fitter"
+            # fitIni = os.path.join(FITTER_CONFIG_DIR,"Fitter_CO2_freq_cal.ini")
+            cmd = "%s -c %s -d %s" % (os.path.join(HOSTEXE_DIR, "Fitter.exe"), fitIni, dest)
+            print cmd
+            os.system(cmd)
+            # Read output file to find FSR and check quality
+            fp = file('FSR_calibration.txt','r')
+            for line in fp:
+                if line.startswith('Fitted '): numLines = int(line[7:line.find(" ",7)])
+                if line.startswith('FSR = '): fsr = float(line[6:line.find(" ",6)])
+                if line.startswith('RMS residual = '): res = float(line[15:line.find(" ",15)])
+            if numLines < 3:
+                raise ValueError("Insufficient reference lines (%d) found" % numLines)
+            if res > 2.0e-4:
+                raise ValueError("Residual (%f) is too large for reliable FSR" % res)
+            fp.close()
+            # On success modify the CalibrateSystem INI files
+            print "Cavity FSR is: %.7f" % fsr
+            calSysList = [i for i in os.listdir("../..") if (i.startswith("CalibrateSystem") and i.endswith(".ini"))]
+            for cs in calSysList:
+                print "Writing cavity FSR into %s" % cs
+                co = ConfigObj(os.path.join("../..",cs), raise_errors=True)
+                co["SETTINGS"]["CAVITY_FSR"] = fsr
+                co.write()
+            self.display += "Calibrate FSR finished.\n"
+        except Exception, err:
+            self.display += "Calibrate FSR failed: %s\n" % err
+            self.display += traceback.format_exc()
+            
+        self.textCtrlIntegration.SetValue(self.display)
+        os.chdir(INTEGRATION_DIR)
+
     def onCalibrateSystem(self, event):
         newThread = threading.Thread(target = self._onCalibrateSystem)
         newThread.setDaemon(True)
@@ -494,7 +575,7 @@ class IntegrationTool(IntegrationToolFrame):
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
         iniList = [os.path.abspath(ini) for ini in os.listdir(".") if (ini.startswith("CalibrateSystem") and ini.endswith(".ini"))]
-        newDir = time.strftime(INTEGRATION_DIR + "\CalibrateSystem\%Y%m%d_%H%M%S")
+        newDir = time.strftime(INTEGRATION_DIR + "/CalibrateSystem/%Y%m%d_%H%M%S")
         try:
             if not os.path.isdir(newDir):
                 os.makedirs(newDir)            

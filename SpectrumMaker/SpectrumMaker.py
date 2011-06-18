@@ -26,8 +26,15 @@ from Host.Common.SchemeProcessor import Scheme
 from Host.Common.SharedTypes import Singleton
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.Common.timestamp import getTimestamp
 from Host.Fitter.fitterCoreWithFortran import *
 
+INCR_FLAG_MASK       = interface.SUBSCHEME_ID_IncrMask   # 32768 - Bit 15 is used for special increment flag
+SPECTRUM_IGNORE_MASK = interface.SUBSCHEME_ID_IgnoreMask # 16384 - Bit 14 is used to indicate the point should be ignored
+SPECTRUM_RECENTER_MASK = interface.SUBSCHEME_ID_RecenterMask # 8192 - Bit 13 is used to indicate that the virtual laser tuner offset is to be adjusted
+SPECTRUM_ISCAL_MASK  = interface.SUBSCHEME_ID_IsCalMask  #  4096 - Bit 12 is used to flag a point as a cal point to be collected
+SPECTRUM_SUBSECTION_ID_MASK = interface.SUBSCHEME_ID_SpectrumSubsectionMask
+SPECTRUM_ID_MASK     = interface.SUBSCHEME_ID_SpectrumMask # Bottom 8 bits of schemeStatus are the spectrum id/name
 EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -113,6 +120,7 @@ class Spectrum(object):
 class SpectrumMaker(Singleton):
     initialized = False
     def __init__(self, configPath=None,env={}):
+        self.startTime = getTimestamp()
         self.variables = [],[]
         basePath = os.path.split(configPath)[0]
         if not self.initialized:
@@ -150,7 +158,8 @@ class SpectrumMaker(Singleton):
             self.initialized = True
 
     def genSpectra(self):
-        """Generator yielding model spectra"""
+        """Generator yielding model spectra. For each set of parameter values, we get a dictionary
+        of spectra which may be used to synthesize data at a collection of frequencies."""
         for env in self.genEnv():
             env.update(self.baseEnv)
             for name in self.spectra:
@@ -171,6 +180,7 @@ class SpectrumMaker(Singleton):
             names = [name for name,s in sequences]
             envDict = dict(constants)
             for name,v in zip(names,values): envDict[name]=v
+            self.currentEnv = envDict
             yield envDict
     
     def findVariables(self,variables,env={}):
@@ -188,8 +198,62 @@ class SpectrumMaker(Singleton):
             else:
                 constants.append((k,e))
         return constants, sequences
-            
+    
+    def collectSpectrum(self,spectra,scheme):
+        s = scheme
+        #for i in range(s.numEntries):
+        #    print "%11.5f,%6d,%6d, %1d,%6d,%6d,%8.4f, %d, %d, %d, %d" % (s.setpoint[i],\
+        #            s.dwell[i],s.subschemeId[i],s.virtualLaser[i],s.threshold[i],s.pztSetpoint[i],\
+        #            s.laserTemp[i],s.extra1[i],s.extra2[i],s.extra3[i],s.extra4[i])
+        nu = asarray(s.setpoint)
+        spectrumId = asarray(s.subschemeId) & SPECTRUM_ID_MASK
+        tot = zeros(nu.shape)
+        # We need to do calculations for each spectrumId separately and combine them,
+        #  since different spectra may be involved
+        for id in unique(spectrumId):
+            rows = spectrumId == id
+            for spectrum in [spectra[name] for name in self.spectrumNamesById[id]]:
+                tot[rows] += spectrum.model(nu[rows])
+                
+        rdfDict = {"rdData": dict(waveNumber=[], waveNumberSetpoint=[], uncorrectedAbsorbance=[],
+                                       subschemeId=[], timestamp=[], tunerValue=[], pztValue=[]),
+                        "sensorData": dict(timestamp=[], SpectrumId=[], CavityPressure=[], CavityTemp=[]), 
+                        "tagalongData":{},
+                        "controlData": dict(RDDataSize=[])}
+
+        rdData = rdfDict["rdData"]
+        sensorData = rdfDict["sensorData"]
+        controlData = rdfDict["controlData"]
+        rowsInSpectrum = 0
+        # Go through the scheme rows and fill up rdfDict appropriately
+        for i in range(s.numEntries):
+            for d in range(s.dwell[i]):
+                rdData["waveNumber"].append(nu[i])
+                rdData["waveNumberSetpoint"].append(nu[i])
+                rdData["uncorrectedAbsorbance"].append(tot[i])
+                rdData["subschemeId"].append(s.subschemeId[i])
+                rdData["timestamp"].append(self.startTime)
+                self.startTime += 5
+                rdData["tunerValue"].append(32768.0)
+                rdData["pztValue"].append(32768.0)
+                rowsInSpectrum += 1
+            if s.subschemeId[i] & INCR_FLAG_MASK:
+                controlData["RDDataSize"].append(rowsInSpectrum)
+                sensorData["timestamp"].append(self.startTime)
+                sensorData["SpectrumId"].append(s.subschemeId[i] & SPECTRUM_ID_MASK)
+                sensorData["CavityPressure"].append(self.currentEnv.get("pressure",140.0))
+                sensorData["CavityTemp"].append(self.currentEnv.get("temperature",45.0))
+                rowsInSpectrum = 0
+        return rdfDict
+        
     def run(self):
+        for spectra in self.genSpectra():
+            figure()
+            for s in self.schemes:
+                rdfDict = self.collectSpectrum(spectra,s)
+                
+                plot(rdfDict["rdData"]["waveNumber"],rdfDict["rdData"]["uncorrectedAbsorbance"],'.')
+
         nu = linspace(6237.0,6238.0,1000)
         #nu = linspace(6056.0,6058.0,1000)
         tot = 0
@@ -199,13 +263,13 @@ class SpectrumMaker(Singleton):
             for s in [spectra[name] for name in self.spectrumNamesById[spectrumId]]:
                 tot += s.model(nu)
             plot(nu,tot)
-        gca().xaxis.set_major_formatter(ScalarFormatter(useOffset=False))
-        gca().yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
-        xlabel('Wavenumber (cm$^{-1}$)')
-        ylabel('Loss (ppb/cm)')
-        grid(True)
+            gca().xaxis.set_major_formatter(ScalarFormatter(useOffset=False))
+            gca().yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
+            xlabel('Wavenumber (cm$^{-1}$)')
+            ylabel('Loss (ppb/cm)')
+            grid(True)
         show()
-        
+            
 HELP_STRING = """SpectrumMaker.py [-c<FILENAME>] [-h|--help]
 
 Where the options can be a combination of the following. Note that options override
