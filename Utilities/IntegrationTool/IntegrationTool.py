@@ -537,6 +537,7 @@ class IntegrationTool(IntegrationToolFrame):
                     break
                 except:
                     time.sleep(2.0)
+                    nAttempts += 1
             if nAttempts >= 10:
                 raise RuntimeError("Cannot move file %s to result directory" % src)
             # FITTER_CONFIG_DIR = "c:/Picarro/G2000/AppConfig/Config/Fitter"
