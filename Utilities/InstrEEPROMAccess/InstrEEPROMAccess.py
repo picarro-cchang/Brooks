@@ -137,7 +137,7 @@ class InstrEEPROMAccessFrame(wx.Frame):
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
 
         sizer_1.Add(self.labelCurEEPROM, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER, 10)
-        grid_sizer_1 = wx.FlexGridSizer(-1, 2)
+        grid_sizer_1 = wx.FlexGridSizer(0, 2)
         grid_sizer_1.Add(self.labelCurChassis, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer_1.Add(self.valCurChassis, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer_1.Add(self.labelCurType, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
@@ -149,7 +149,7 @@ class InstrEEPROMAccessFrame(wx.Frame):
         self.panel1.SetSizer(sizer_1)
         
         sizer_2.Add(self.labelNewEEPROM, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER, 10)
-        grid_sizer_2 = wx.FlexGridSizer(-1, 2)
+        grid_sizer_2 = wx.FlexGridSizer(0, 2)
         grid_sizer_2.Add(self.labelNewChassis, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer_2.Add(self.comboBoxChassis, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer_2.Add(self.labelNewType, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)

@@ -135,7 +135,7 @@ class DeltaCorrProcessorFrame(wx.Frame):
             self.applyButton.Enable(True)
     
     def __do_layout(self):
-        grid_sizer_1 = wx.FlexGridSizer(-1, 2)
+        grid_sizer_1 = wx.FlexGridSizer(0, 2)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_1.Add(self.applyButton, 0, wx.ALL, 5)

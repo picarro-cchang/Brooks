@@ -38,7 +38,7 @@ class DiagDataCollectorFrame(wx.Frame):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
         sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
-        grid_sizer_1 = wx.FlexGridSizer(-1, 4)
+        grid_sizer_1 = wx.FlexGridSizer(0, 4)
         grid_sizer_1.Add(self.labelStartDate, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer_1.Add(self.ctrlStartDate, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer_1.Add(self.ctrlStartTime, 0, wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)

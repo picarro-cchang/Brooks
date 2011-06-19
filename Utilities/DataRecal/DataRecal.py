@@ -303,7 +303,7 @@ class DataRecal(DataRecalFrame):
             resPlotAry = accPlotAry - recalPlotAry
 
             fig = pyplot.figure()
-            fig.subplots_adjust(hspace = 0.35, hspace = 0.35)
+            fig.subplots_adjust(hspace = 0.35)
             sp1 = fig.add_subplot(2,1,1)
             if self.r2 != "invalid":
                 sp1.set_title("Linear fitting (Offset = %.5f, Slope = %.5f, R2 = %.5f)" % (self.newOffset, self.newSlope, self.r2))

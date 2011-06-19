@@ -54,11 +54,11 @@ class TextListener(threading.Thread):
         self.queue = queue
         self.port = port
         self.streamFilter = streamFilter
-        self.name = name
         self.logFunc = logFunc
         self.notify = notify
         self.retry = retry
         threading.Thread.__init__(self)
+        self.name = name
         self.setDaemon(True)
         self.start()
 

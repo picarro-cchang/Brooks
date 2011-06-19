@@ -37,7 +37,7 @@ class FluxSwitcherGuiFrame(wx.Frame):
 
     def __do_layout(self):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_1 = wx.FlexGridSizer(-1, 2)
+        grid_sizer_1 = wx.FlexGridSizer(0, 2)
 
         sizer_1.Add(self.labelTitle, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
         sizer_1.Add(self.staticLine, 0, wx.EXPAND, 0)

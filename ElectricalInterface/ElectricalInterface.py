@@ -67,7 +67,7 @@ EIF_ANALOG_ALLOWED_MAX      = 10
 class EifSignal(object):
     """Base EIF signal class"""
     def __init__( self, channel ):
-        self.__debug__  = False
+        self._debug_  = False
         self.name       = ''
         self.channel    = channel
         self.source     = '-'
@@ -216,7 +216,7 @@ class EifAnalogOutput(EifSignal):
         return True
 
     def trackInvalidOutput(self, dasTime):
-        if self.__debug__: print "SetInvalid: c:%d v:%r" % (self.channel,self.invalidvalue)
+        if self._debug_: print "SetInvalid: c:%d v:%r" % (self.channel,self.invalidvalue)
         return self._sendOutputToBuffer(dasTime, self.invalidvalue, invalidOrError = True)
 
     def trackMeasOutput( self, dasTime, measuredValue ):
@@ -268,7 +268,7 @@ class EifMgr(object):
     def __init__(self, filename):
         """ Initialize class """
         self._terminate = False
-        self.__debug__=False
+        self._debug_=False
         
         self._measData = MeasData.MeasData()
 

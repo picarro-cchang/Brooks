@@ -153,7 +153,7 @@ class DataRecalFrame(wx.Frame):
         sizerSpace3 = wx.BoxSizer(wx.VERTICAL)
         sizerComboBox1 = wx.BoxSizer(wx.VERTICAL)
         sizerComboBox2 = wx.BoxSizer(wx.VERTICAL) 
-        grid_sizer = wx.FlexGridSizer(-1, 5)
+        grid_sizer = wx.FlexGridSizer(0, 5)
         addSpacer = (40,0)
         
         sizerSpace1.Add(self.labelData, 0, wx.TOP|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT, 10)

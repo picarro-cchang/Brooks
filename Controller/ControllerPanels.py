@@ -58,9 +58,11 @@ class RingdownPanel(RingdownPanelGui):
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
         self.ringdownWfms = [ColorSeries(ringdownPoints) for i in range(2)]
         self.latestRingdown = None
+        self.appendData = None
         self.oldAppendData = None
         wx.CallAfter(self.onSelectGraphType,None)
     def  update(self):
+        if self.appendData is None: return
         ringdownLock.acquire()
         try:
             if self.latestRingdown is None or self.appendData != self.oldAppendData:
@@ -87,7 +89,7 @@ class RingdownPanel(RingdownPanelGui):
             
     def  onSelectGraphType(self,evt):
         colourNames = ["red","green","blue","yellow","cyan","magenta","black","white"]
-        fillColours = [wx.NamedColor(c).GetRGB() for c in colourNames]
+        fillColours = [wx.NamedColour(c).GetRGB() for c in colourNames]
         def  printData(data):
             print data.timestamp, data.uncorrectedAbsorbance
         def dataGood(data):
@@ -107,7 +109,6 @@ class RingdownPanel(RingdownPanelGui):
                     waveforms["Ringdown"]["corrected"].Add(wavenumber, loss_c)
             self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
                                                   timeAxes=(False,False),ylabel='Loss (ppm/cm)',grid=True,
-                                                  ylabel='Loss (ppm/cm)',grid=True,
                                                   frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
                                                   backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "Loss"
@@ -134,8 +135,7 @@ class RingdownPanel(RingdownPanelGui):
                     ratio1 = data.ratio1
                     waveforms["Ringdown"]["uncorrected"].Add(ratio1/32768.0, loss_u)
                     waveforms["Ringdown"]["corrected"].Add(ratio1/32768.0, loss_c)
-            self.ringdownGraph.SetGraphProperties(xlabel='',
-                                                  timeAxes=(False,False),xlabel='Ratio 1',ylabel='Loss (ppm/cm)',grid=True,
+            self.ringdownGraph.SetGraphProperties(timeAxes=(False,False),xlabel='Ratio 1',ylabel='Loss (ppm/cm)',grid=True,
                                                   frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
                                                   backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "Loss"
@@ -148,8 +148,7 @@ class RingdownPanel(RingdownPanelGui):
                     ratio2 = data.ratio2
                     waveforms["Ringdown"]["uncorrected"].Add(ratio2/32768.0, loss_u)
                     waveforms["Ringdown"]["corrected"].Add(ratio2/32768.0, loss_c)
-            self.ringdownGraph.SetGraphProperties(xlabel='',
-                                                  timeAxes=(False,False),xlabel='Ratio 2',ylabel='Loss (ppm/cm)',grid=True,
+            self.ringdownGraph.SetGraphProperties(timeAxes=(False,False),xlabel='Ratio 2',ylabel='Loss (ppm/cm)',grid=True,
                                                   frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
                                                   backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "Loss"
@@ -200,8 +199,7 @@ class RingdownPanel(RingdownPanelGui):
                     ratio1 = data.ratio1
                     vLaser = (data.laserUsed >> 2) & 7
                     waveforms["Ringdown"]["tuner"].Add(ratio1/32768.0, data.tunerValue,fillColours[vLaser])
-            self.ringdownGraph.SetGraphProperties(xlabel='',
-            timeAxes=(False,False),xlabel='Ratio 1',ylabel='Tuner value',grid=True,
+            self.ringdownGraph.SetGraphProperties(timeAxes=(False,False),xlabel='Ratio 1',ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "Tuner"
@@ -212,8 +210,7 @@ class RingdownPanel(RingdownPanelGui):
                     ratio2 = data.ratio2
                     vLaser = (data.laserUsed >> 2) & 7
                     waveforms["Ringdown"]["tuner"].Add(ratio2/32768.0, data.tunerValue,fillColours[vLaser])
-            self.ringdownGraph.SetGraphProperties(xlabel='',
-            timeAxes=(False,False),xlabel='Ratio 2',ylabel='Tuner value',grid=True,
+            self.ringdownGraph.SetGraphProperties(timeAxes=(False,False),xlabel='Ratio 2',ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "Tuner"
@@ -275,8 +272,8 @@ class RingdownPanel(RingdownPanelGui):
                     size=1,width=1)
         elif y == "FineCurrent":
                 self.ringdownGraph.AddSeriesAsPoints(
-                waveforms["Ringdown"]["fineCurrent"],
-                marker='square',
+                    waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)],
+                    colour=fillColours[vLaser],fillcolour=fillColours[vLaser],marker='square',
                     size=1,width=1)
         elif y == "Tuner":
                 self.ringdownGraph.AddSeriesAsPoints(
@@ -637,7 +634,7 @@ class CommandLogPanel(CommandLogPanelGui):
                 if fname:
                     RDFreqConv.loadWarmBoxCal(fname)
                     Log("Uploading warm box calibration file %s" % fname)
-                    self.warmBoxCalFileTextCtrl.SetLabel(os.path.split(fname)[1])
+                    self.warmBoxCalFileTextCtrl.SetValue(os.path.split(fname)[1])
         finally:
             dlg.Destroy()
             
@@ -659,14 +656,14 @@ class CommandLogPanel(CommandLogPanelGui):
                 fname = dlg.GetPath()
                 RDFreqConv.loadHotBoxCal(fname)
                 Log("Uploading hot box calibration file %s" % fname)
-                self.hotBoxCalFileTextCtrl.SetLabel(os.path.split(fname)[1])
+                self.hotBoxCalFileTextCtrl.SetValue(os.path.split(fname)[1])
         finally:
             dlg.Destroy()
                 
     def onStartAcquisition(self,event):
         currentLabel = self.startAcquisitionButton.GetLabel()
         if currentLabel == CommandLogPanel.acqLabels["start"]:
-            seq = self.seqTextCtrl.GetLabel().strip()
+            seq = self.seqTextCtrl.GetValue().strip()
             if seq:
                 allSeq = SpectrumCollector.getSequenceNames()
                 if seq in allSeq:
@@ -704,13 +701,13 @@ class CommandLogPanel(CommandLogPanelGui):
     def updateCalFileStatus(self):
         # Update the warm box and hot box calibration file names from the RDFreqConverter
         fname = os.path.split(RDFreqConv.getWarmBoxCalFilePath())[1]
-        text = self.warmBoxCalFileTextCtrl.GetLabel()
+        text = self.warmBoxCalFileTextCtrl.GetValue()
         if text != fname:
-            self.warmBoxCalFileTextCtrl.SetLabel(fname)
+            self.warmBoxCalFileTextCtrl.SetValue(fname)
         fname = os.path.split(RDFreqConv.getHotBoxCalFilePath())[1]
-        text = self.hotBoxCalFileTextCtrl.GetLabel()
+        text = self.hotBoxCalFileTextCtrl.GetValue()
         if text != fname:
-            self.hotBoxCalFileTextCtrl.SetLabel(fname)
+            self.hotBoxCalFileTextCtrl.SetValue(fname)
 
     def updateAcquisitionState(self):
         # Update the acquisition button label and the associated text control
@@ -779,32 +776,28 @@ class StatsPanel(StatsPanelGui):
             grid=True,
             timeAxes=(False,False),
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
-            grid=True,backgroundColour=wx.SystemSettings_GetColour(
-                wx.SYS_COLOUR_3DFACE))
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
         self.waveNumberGraph.SetGraphProperties(
             xlabel='log10[Number of ringdowns]',
             ylabel='log10[Allan std dev(Wavenumber)]',
             grid=True,
             timeAxes=(False,False),
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
-            backgroundColour=wx.SystemSettings_GetColour(
-                wx.SYS_COLOUR_3DFACE))
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
         self.ratio1Graph.SetGraphProperties(
             xlabel='log10[Number of ringdowns]',
             ylabel='log10[Allan std dev(Ratio1)]',
             grid=True,
             timeAxes=(False,False),
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
-            backgroundColour=wx.SystemSettings_GetColour(
-                wx.SYS_COLOUR_3DFACE))
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
         self.ratio2Graph.SetGraphProperties(
             xlabel='log10[Number of ringdowns]',
             ylabel='log10[Allan std dev(Ratio2)]',
             grid=True,
             timeAxes=(False,False),
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
-            backgroundColour=wx.SystemSettings_GetColour(
-                wx.SYS_COLOUR_3DFACE))
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
         self.lossAllanVar = AllanVar(statsPoints)
         self.lossStats = Series(statsPoints)
         self.lossGraph.AddSeriesAsPoints(self.lossStats,

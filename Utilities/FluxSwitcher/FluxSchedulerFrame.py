@@ -53,8 +53,8 @@ class FluxSchedulerFrame(wx.Frame):
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_all = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_1 = wx.FlexGridSizer(-1, 2)
-        grid_sizer_2 = wx.FlexGridSizer(-1, 2)
+        grid_sizer_1 = wx.FlexGridSizer(0, 2)
+        grid_sizer_2 = wx.FlexGridSizer(0, 2)
 
         sizer_1.Add(self.labelTitle1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
         grid_sizer_1.Add(self.labelMode, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 10)

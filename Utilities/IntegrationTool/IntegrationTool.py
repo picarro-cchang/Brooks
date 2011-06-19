@@ -178,7 +178,7 @@ class IntegrationToolFrame(wx.Frame):
         sizer_4 = wx.BoxSizer(wx.VERTICAL)
 
         sizer_1.Add(self.labelAnalyzer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER, 10)
-        grid_sizer_1 = wx.FlexGridSizer(-1, 2)
+        grid_sizer_1 = wx.FlexGridSizer(0, 2)
         grid_sizer_1.Add(self.labelSelect, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer_1.Add(self.comboBoxSelect, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         for i in range(len(self.labelAnalyzerInfoList)):

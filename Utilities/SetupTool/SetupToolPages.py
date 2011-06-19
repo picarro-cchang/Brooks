@@ -126,7 +126,7 @@ class Page1(wx.Panel):
             
     def __do_layout(self):
         sizer1 = wx.BoxSizer(wx.VERTICAL)
-        gridSizer1 = wx.FlexGridSizer(-1, 2)
+        gridSizer1 = wx.FlexGridSizer(0, 2)
         sizer2 = wx.BoxSizer(wx.VERTICAL)
         sizer3 = wx.BoxSizer(wx.VERTICAL)
         sizer1.Add(self.labelTitle, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 15)
@@ -404,7 +404,7 @@ class Page2(wx.Panel):
     def __do_layout(self):
         sizer1 = wx.BoxSizer(wx.VERTICAL)
         sizer2 = wx.BoxSizer(wx.VERTICAL)
-        gridSizer1 = wx.FlexGridSizer(-1, 2)
+        gridSizer1 = wx.FlexGridSizer(0, 2)
         sizer1.Add(self.labelTitle, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 15)
         for i in range(len(self.keyLabelList)):
             gridSizer1.Add(self.keyLabelList[i], 0, wx.RIGHT|wx.BOTTOM, 15)
@@ -782,7 +782,7 @@ class Page3(wx.Panel):
         sizer1 = wx.BoxSizer(wx.VERTICAL)
         sizer2 = wx.BoxSizer(wx.VERTICAL)
         sizerTime = wx.BoxSizer(wx.HORIZONTAL)
-        gridSizer1 = wx.FlexGridSizer(-1, 2)
+        gridSizer1 = wx.FlexGridSizer(0, 2)
         sizer1.Add(self.labelTitle, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 15)
         gridSizer1.Add(self.startTimeLabel, 0, wx.RIGHT|wx.BOTTOM, 15)
         sizerTime.Add(self.ctrlStartTime, 10)
@@ -968,7 +968,7 @@ class Page4(wx.Panel):
     def __do_layout(self):
         sizer1 = wx.BoxSizer(wx.VERTICAL)
         sizer2 = wx.BoxSizer(wx.VERTICAL)
-        gridSizer1 = wx.FlexGridSizer(-1, 2)
+        gridSizer1 = wx.FlexGridSizer(0, 2)
         sizer1.Add(self.labelTitle, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 15)
         for i in range(len(self.keyLabelList)):
             gridSizer1.Add(self.keyLabelList[i], 0, wx.RIGHT|wx.BOTTOM, 15)
@@ -1058,7 +1058,7 @@ class Page5(wx.Panel):
     def __do_layout(self):
         sizer1 = wx.BoxSizer(wx.VERTICAL)
         sizer2 = wx.BoxSizer(wx.VERTICAL)
-        gridSizer1 = wx.FlexGridSizer(-1, 2)
+        gridSizer1 = wx.FlexGridSizer(0, 2)
         sizer1.Add(self.labelTitle, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 15)
         for i in range(len(self.labelList)):
             gridSizer1.Add(self.labelList[i], 0, wx.RIGHT|wx.BOTTOM, 15)
@@ -1202,7 +1202,7 @@ class Page6(wx.Panel):
     def __do_layout(self):
         sizer1 = wx.BoxSizer(wx.VERTICAL)
         sizer2 = wx.BoxSizer(wx.VERTICAL)
-        gridSizer1 = wx.FlexGridSizer(-1, 2)
+        gridSizer1 = wx.FlexGridSizer(0, 2)
         sizer1.Add(self.labelTitle, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 15)
         for i in range(len(self.labelList)):
             gridSizer1.Add(self.labelList[i], 0, wx.RIGHT|wx.BOTTOM, 15)

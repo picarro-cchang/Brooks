@@ -155,7 +155,7 @@ class DilutionCorrProcessorFrame(wx.Frame):
             self.applyButton.Enable(True)
     
     def __do_layout(self):
-        grid_sizer_1 = wx.FlexGridSizer(-1, 3)
+        grid_sizer_1 = wx.FlexGridSizer(0, 3)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_1.Add(self.comboBoxSelect, 0, wx.ALL, 5)

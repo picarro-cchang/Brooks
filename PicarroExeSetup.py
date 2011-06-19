@@ -47,7 +47,7 @@ sys.path.append("CommandInterface")
 sys.path.append("Common")
 sys.path.append("autogen")
 sys.path.append("Controller")
-sys.path.append("ControllerBuildStation")
+# sys.path.append("ControllerBuildStation")
 sys.path.append("DataLogger")
 sys.path.append("DataManager")
 sys.path.append("Driver")
@@ -132,15 +132,15 @@ Controller = Target(description = "Controller", # used for the versioninfo resou
                     dest_base = "Controller"
                     )
 
-ControllerBuildStation = Target(description = "ControllerBuildStation", # used for the versioninfo resource
-                    script = "ControllerBuildStation/ControllerBuildStation.py", # what to build
-                    other_resources = [(RT_MANIFEST,
-                                        1,
-                                        manifest_template % dict(prog="ControllerBuildStation")
-                                        )],
-                    ##    icon_resources = [(1, "icon.ico")],
-                    dest_base = "ControllerBuildStation"
-                    )
+#ControllerBuildStation = Target(description = "ControllerBuildStation", # used for the versioninfo resource
+#                    script = "ControllerBuildStation/ControllerBuildStation.py", # what to build
+#                    other_resources = [(RT_MANIFEST,
+#                                        1,
+#                                        manifest_template % dict(prog="ControllerBuildStation")
+#                                        )],
+#                    ##    icon_resources = [(1, "icon.ico")],
+#                    dest_base = "ControllerBuildStation"
+#                    )
 
 QuickGui = Target(description = "QuickGui", # used for the versioninfo resource
                     script = "QuickGui/QuickGui.py", # what to build
@@ -190,6 +190,16 @@ dilutionCorrProcessor = Target(description = "DilutionCorrProcessor", # used for
                                         )],
                     ##    icon_resources = [(1, "icon.ico")],
                     dest_base = "DilutionCorrProcessor"
+                    )
+                    
+supervisorLauncher = Target(description = "SupervisorLauncher", # used for the versioninfo resource
+                    script = "Utilities/SupervisorLauncher/SupervisorLauncher.py", # what to build
+                    other_resources = [(RT_MANIFEST,
+                                        1,
+                                        manifest_template % dict(prog="supervisorLauncher")
+                                        )],
+                    ##    icon_resources = [(1, "icon.ico")],
+                    dest_base = "SupervisorLauncher"
                     )
                     
 # End of special controller setup stuff (except to use controller below)
@@ -276,12 +286,12 @@ setup(version = "1.0",
                  "PeriphIntrf/RunSerial2Socket.py",
                  ],
 
-      windows = [QuickGui, Coordinator,Controller,ControllerBuildStation,deltaCorrProcessor, dilutionCorrProcessor,
+      windows = [QuickGui, Coordinator,Controller,deltaCorrProcessor, dilutionCorrProcessor,
                  "Common/StopSupervisor.py",
                  "IPV/IPV.py",
                  "IPV/IPVLicense.py",
                  "Utilities/DiagDataCollector/DiagDataCollector.py",
-                 "Utilities/SupervisorLauncher/SupervisorLauncher.py",
+                 supervisorLauncher,
                  "Utilities/SupervisorLauncher/HostStartup.py",
                  "Utilities/CoordinatorLauncher/CoordinatorLauncher.py",
                  "Utilities/FluxSwitcher/FluxScheduler.py",

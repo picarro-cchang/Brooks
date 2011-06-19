@@ -105,7 +105,7 @@ class HostStartupFrame(wx.Frame):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_1 = wx.FlexGridSizer(-1, 4)
+        grid_sizer_1 = wx.FlexGridSizer(0, 4)
 
         sizer_1.Add(logoSizer, 0, wx.ALIGN_CENTER|wx.BOTTOM, 5)
         sizer_1.Add(self.labelTitle1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
