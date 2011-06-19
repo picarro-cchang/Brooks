@@ -22,8 +22,10 @@ import getopt
 import inspect
 import numpy
 import Queue
+import shutil
 import threading
 import time
+import traceback
 import ctypes
 import cPickle
 from tables import *
@@ -190,6 +192,7 @@ class SpectrumCollector(object):
         self.closeHdf5File = False
         self.streamFP = None
         self.tableDict = {}
+        self.auxSpectrumFile = ""
         self.lastSpectrumQueuePut = TimeStamp()
         self.timeBetweenSpectrumQueuePuts = []
         self.lastSpectrumQueueGet = TimeStamp()
@@ -305,7 +308,13 @@ class SpectrumCollector(object):
         for key in self.latestSensors.keys():
             self.avgSensors[key] = 0.0
             self.sumSensors[key] = 0.0
-        #Initialize the rdBuffer with the names and types of fields in ProcessedRingdownEntryType
+        #
+        # The data are added from ProcessedRingdownEntryType objects, one row at a time from each ringdown.
+        #  We need to store them as columns in the spectrum file. The rdBuffer dictionary is keyed by the
+        #  field (column) name and contains tuples consisting of a list of the column values and the type 
+        #  of the data in the column
+        #
+        # Initialize the rdBuffer with the names and types of fields in ProcessedRingdownEntryType
         self.rdBuffer = {}
         for fname,ftype in ProcessedRingdownEntryType._fields_:
             self.rdBuffer[fname] = ([],ftype)
@@ -432,11 +441,18 @@ class SpectrumCollector(object):
                     self.closeHdf5File = False
                     self.newHdf5File = True
                     self.streamFP.close()
+                    # Copy to auxiliary spectrum file and reset filename to empty
+                    if self.auxSpectrumFile:
+                        try:
+                            shutil.copyfile(self.streamPath,self.auxSpectrumFile)
+                        except:
+                            Log("Error copying to auxiliary spectrum file %s" % self.auxSpectrumFile,Verbose=traceback.format_exc())
+                        self.auxSpectrumFile = ""
                     # Archive HDF5 file
                     try:
                         Archiver.ArchiveFile(self.archiveGroup, self.streamPath, True)
                     except Exception:
-                        LogExc("Archiver call error")
+                        Log("Archiver call error",Verbose=traceback.format_exc())
             else:
                 # Pickle the rdfDict 
                 filename = "%03d_%013d.rdf" % (self.lastSpectrumID, int(time.time()*1000))
@@ -492,8 +508,7 @@ class SpectrumCollector(object):
         if self.useSequencer:
             self.sequencer.startSequence()
         else:
-            Driver.startScan(
-                             )
+            Driver.startScan()
     def RPC_sequencerGetCurrent(self):
         return self.sequencer.getCurrent()
     
@@ -572,6 +587,10 @@ class SpectrumCollector(object):
         
     def RPC_shutdown(self):
         self._shutdownRequested = True
+        
+    def RPC_setAuxiliarySpectrumFile(self,fileName):
+        self.auxSpectrumFile = fileName
+    
 
 HELP_STRING = """SpectrumCollector.py [-c<FILENAME>] [-h|--help]
 

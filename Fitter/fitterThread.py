@@ -114,13 +114,13 @@ class Fitter(object):
         self.resultsAvailEvent = Event()
         self.resultsAvailEvent.clear()
         self.fitterOption = ""
+        self.inputFile = None
               
     def registerRpc(self):
         self.rpcServer.register_function(self.FITTER_fitSpectrumRpc)
         self.rpcServer.register_function(self.FITTER_setProcModeRpc)
         self.rpcServer.register_function(self.FITTER_setSingleModeRpc)
         self.rpcServer.register_function(self.FITTER_makeHdf5RepositoryRpc)
-        self.rpcServer.register_function(self.FITTER_makeRdqRepositoryRpc)
         self.rpcServer.register_function(self.FITTER_makePickledRepositoryRpc)
         self.rpcServer.register_function(self.FITTER_getFitterStateRpc)
         self.rpcServer.register_function(self.FITTER_updateViewer)
@@ -130,6 +130,7 @@ class Fitter(object):
         self.rpcServer.register_function(self.FITTER_getResults)   
         self.rpcServer.register_function(self.FITTER_maximizeViewer)          
         self.rpcServer.register_function(self.FITTER_setOption)          
+        self.rpcServer.register_function(self.FITTER_setInputFile)
         
     def _rpcServerExit(self):
         self.exitFlag = True
@@ -161,13 +162,6 @@ class Fitter(object):
         """Pass a list of HDF5 file names (.h5) to the fitter to construct a repository which is
         attached to self.repository"""
         self.makeRepository = hdf5RepositoryFromList
-        self.makeRepositoryArgs = (fileList,)
-        self.loadRepository = True
-
-    def FITTER_makeRdqRepositoryRpc(self,fileList):
-        """Pass a list of Rdq file names to the fitter to construct a repository which is
-        attached to self.repository"""
-        self.makeRepository = rdqRepositoryFromList
         self.makeRepositoryArgs = (fileList,)
         self.loadRepository = True
 
@@ -211,6 +205,9 @@ class Fitter(object):
     def FITTER_setOption(self,option):
         self.fitterOption = option
    
+    def FITTER_setInputFile(self,inputFile):
+        self.inputFile = inputFile
+        
     def compileScript(self,scriptName):
         try:
             fp = file(scriptName,"r")
@@ -281,7 +278,18 @@ class Fitter(object):
             except Full:
                 pass
             
-        if self.procMode:
+        if self.inputFile:
+            self.repository = hdf5RepositoryFromList([self.inputFile])
+            # Reinitialize the fitter, setting INIT to True in the script environment
+            self.loadRepository = False
+            self.FITTER_initialize()
+            Analysis.resetIndex()
+            self.fitSpectrum = True
+            self.singleMode = False
+            self.procMode = False
+            self.inputFile = ""
+            self.state = FITTER_STATE_READY
+        elif self.procMode:
             self.state = FITTER_STATE_PROC
         elif self.loadRepository:
             # The repository needs to be initialized and placed in self.repository.
@@ -309,7 +317,11 @@ class Fitter(object):
             except StopIteration:
                 print "Repository empty"
                 self.fitSpectrum = False
-                self.state = FITTER_STATE_READY # Repository has been exhausted
+                if self.inputFile is not None: 
+                    self.exitFlag = True
+                    self.state = FITTER_STATE_IDLE
+                else:
+                	self.state = FITTER_STATE_READY # Repository has been exhausted
                 
         if self.state == FITTER_STATE_PROC:      
             self.dataAvailEvent.wait(DATA_AVAIL_EVENT_TIMEOUT)      

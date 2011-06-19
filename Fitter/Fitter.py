@@ -745,6 +745,7 @@ class FitViewer(wx.Frame):
         self.fitterThread.setDaemon(True)
         self.fitterThread.start()
         if "-o" in options: self.fitterRpc.FITTER_setOption(options["-o"])
+        if "-d" in options: self.fitterRpc.FITTER_setInputFile(options["-d"])
 
         self.updateTimer.Start(200)
 
@@ -1134,7 +1135,7 @@ def PrintUsage():
 def HandleCommandSwitches():
     import getopt
 
-    shortOpts = 'c:hvo:'
+    shortOpts = 'c:d:hvo:'
     longOpts = ["help","viewer"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
