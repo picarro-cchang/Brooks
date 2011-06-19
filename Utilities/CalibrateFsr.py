@@ -386,10 +386,11 @@ class CalibrateFsr(object):
             Driver.wrDasReg("VIRTUAL_LASER_REGISTER",self.vLaserNum-1)
             
             print "Waiting for laser temperature to settle"
-            while abs(Driver.rdDasReg("LASER%d_TEMPERATURE_REGISTER" % aLaserNum)-minLaserTemp)>0.05:
+            while abs(Driver.rdDasReg("LASER%d_TEMPERATURE_REGISTER" % aLaserNum)-minLaserTemp)>0.01:
                 sys.stdout.write('.')
                 time.sleep(1.0)
             sys.stdout.write('\n')
+            time.sleep(2.0)
             Driver.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % aLaserNum, "TEMP_CNTRL_SweepingState")
 
             Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_StartManualState")
@@ -397,7 +398,7 @@ class CalibrateFsr(object):
             SpectrumCollector.setAuxiliarySpectrumFile(self.spectrumFile)
             print "Starting to acquire data in FSR hopping mode"
             start = time.clock()
-            totTime = 0.2*4*(maxLaserTemp-minLaserTemp)/sweepIncr
+            totTime = 0.2*2*(maxLaserTemp-minLaserTemp)/sweepIncr
             complete = 0
             while complete < 100:
                 now = time.clock()
@@ -405,124 +406,6 @@ class CalibrateFsr(object):
                 sys.stdout.write("\r%d%% complete" % complete)
                 time.sleep(2.0)
             sys.stdout.write("\r100% complete\n")
-            
-            # # Ensure that we start with original calibration information
-            # RDFreqConv.restoreOriginalWlmCal(self.vLaserNum)
-            # theta0 = RDFreqConv.waveNumberToAngle(self.vLaserNum,[self.waveNumberCen])[0]
-            # # Make a fine angle-based scheme covering +/- 6FSR for determining PZT sensitivity
-            # # fwd = arange(-600.0,601.0)
-            # fwd = arange(-150.0,151.0)
-            # steps = concatenate((fwd,fwd[::-1]))
-            # # wlmAngles = theta0 + steps*(self.approxFsr/50.0)
-            # wlmAngles = theta0 + steps*(self.approxFsr/25.0)
-            # laserTemps = RDFreqConv.angleToLaserTemperature(self.vLaserNum,wlmAngles)
-            # nRepeat = 3
-            # dwell = 2
-            # self.makeAndUploadScheme(wlmAngles,laserTemps,self.vLaserNum,nRepeat,dwell)
-            # Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER",SPECT_CNTRL_SchemeSingleMode)
-            # # Start collecting data in the rdFilter
-            # self.clearLists()
-            # self.tunerSum = zeros(laserTemps.shape,dtype='d')
-            # self.count = zeros(laserTemps.shape)
-            # self.processingDone.clear()
-            # time.sleep(1.0)
-            # msg = "Collecting data for PZT sensitivity measurement"
-            # print msg
-            # print>>self.op, msg
-            # Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_StartingState)
-            # while not self.processingDone.isSet():
-                # self.processingDone.wait(1.0)
-                # sys.stdout.write(".")
-            # print "\nCompleted data collection for PZT sensitivity measurement"
-            # # Discard the first repetition, and turn the rest into arrays
-            # L = min(len(self.angleList),len(self.tunerList),len(self.schemeRowList))
-            # self.angleList = array(self.angleList[L//nRepeat:L+1],'d')
-            # self.tunerList = array(self.tunerList[L//nRepeat:L+1],'d')
-            # self.schemeRowList = array(self.schemeRowList[L//nRepeat:L+1],'d')
-            # # To find the PZT sensitivity, we carry out an optimization. The following cost
-            # #  function wraps the angle and tuner information around a torus, using p[0] and
-            # #  p[1] as the trial periods.
-            # def cost(p,angle,tuner):
-                # x = angle/p[0] - tuner/p[1]
-                # c1 = std(x - floor(x))
-                # return c1
-                # #c2 = std(x+0.5 - floor(x+0.5))
-                # #return min(c1,c2)
-            
-            # fBest = 1e38
-            # for trialSens in range(7000,50000,1000):
-                # popt = fmin(cost,array([self.approxFsr,trialSens]),args=(self.angleList,self.tunerList),maxiter=10000,maxfun=50000)
-                # fopt = cost(popt,self.angleList,self.tunerList)
-                # if fopt < fBest:
-                    # fBest = fopt
-                    # pBest = popt
-            # popt = pBest
-            # fopt = fBest
-            # msg = "Residual: %.3f" % (fopt,)
-            # print msg
-            # print>>self.op, msg
-            # msg = "Cavity FSR  (WLM radians):    %.5f" % (popt[0],)
-            # print msg
-            # print>>self.op, msg
-            # msg = "Sensitivity (digU/FSR): %.0f" % (popt[1],)
-            # print msg
-            # print>>self.op, msg
-            # RDFreqConv.setHotBoxCalParam("CAVITY_LENGTH_TUNING","PZT_SCALE_FACTOR",Driver.rdFPGA("FPGA_SCALER","SCALER_SCALE1"))
-            # RDFreqConv.setHotBoxCalParam("CAVITY_LENGTH_TUNING","FREE_SPECTRAL_RANGE",popt[1])
-            # RDFreqConv.setHotBoxCalParam("AUTOCAL","APPROX_WLM_ANGLE_PER_FSR",popt[0])
-            # # Next generate a scheme consisting of nominal FSR steps
-            # angleFSR = float(popt[0])
-            # tunerFSR = float(popt[1])
-            # theta0 = RDFreqConv.waveNumberToAngle(self.vLaserNum,[self.waveNumberCen])[0]
-            # fwd = arange(-self.nSteps,self.nSteps+1)
-            # steps = concatenate((fwd,fwd[::-1]))
-            # wlmAngles = theta0 + steps*angleFSR
-            # laserTemps = RDFreqConv.angleToLaserTemperature(self.vLaserNum,wlmAngles)
-            # nRepeat = 1
-            # dwell = 10
-            # maxIter = 10
-            # for iter in range(maxIter):
-                # self.tunerSum = zeros(wlmAngles.shape,dtype='d')
-                # self.count = zeros(wlmAngles.shape)
-                # self.makeAndUploadScheme(wlmAngles,laserTemps,self.vLaserNum,nRepeat,dwell)
-                # Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER",SPECT_CNTRL_SchemeSingleMode)
-                # # Start collecting data in the rdFilter
-                # self.clearLists()
-                # self.processingDone.clear()
-                # time.sleep(1.0)
-                # msg = "Starting spectrum acquisition (pass %d of %d)" % (iter+1,maxIter)
-                # print msg
-                # print>>self.op, msg
-                # Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_StartingState)
-                # while not self.processingDone.isSet():
-                    # self.processingDone.wait(1.0)
-                    # sys.stdout.write(".")
-                # print
-                # # Find mean and standard deviation of tuner values
-                # good = self.count.nonzero()
-                # self.tunerSum[good] = self.tunerSum[good]/self.count[good]
-                # tunerMean = mean(self.tunerSum[good])
-                # sDev = std(self.tunerSum[good]-tunerMean)
-                # msg = "Standard deviation: %.1f" % (sDev,)
-                # print msg
-                # print>>self.op, msg
-                # # Calculate by how much to change the angles in the scheme to flatten the
-                # #  tuner values
-                # tunerMedian = median(self.tunerSum[good])
-                # tunerDev = self.tunerSum[good] - tunerMedian
-                # # print tunerDev
-                # wlmAngles[good] = wlmAngles[good] - self.angleRelax*tunerDev
-                # # Recenter the tuner if necessary
-                # if abs(tunerCenter-tunerMedian) > 0.2*tunerFSR:
-                    # tunerCenter = tunerMedian
-                # rampAmpl = 0.65*tunerFSR
-                # ditherPeakToPeak = 8000
-                # self.setupRampMode(ditherPeakToPeak,tunerCenter,rampAmpl)
-
-            # # Use the list of wlmAngles to update the current spline coefficients
-            # cavityFSR = self.update(wlmAngles,self.vLaserNum)
-            # RDFreqConv.setHotBoxCalParam("AUTOCAL","CAVITY_FSR",cavityFSR)
-            # RDFreqConv.setHotBoxCalParam("AUTOCAL","CAVITY_FSR_VLASER_%d" % self.vLaserNum,cavityFSR)
         except Exception,e:
             print>>self.op,"ERROR: %s" % e
             raise
@@ -536,6 +419,7 @@ class CalibrateFsr(object):
             #copyfile(hbCalFileName,'%s_after_%s%s' % (root,jobName,ext))
             RDFreqConv.useSpline(self.vLaserNum)
             Driver.restoreRegValues(regVault)
+            time.sleep(2.0)
             Driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_TUNING_OFFSET",32768)
 
 HELP_STRING = """CalibrateFsr.py [-c<FILENAME>] [-h|--help]
