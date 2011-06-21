@@ -34,7 +34,7 @@ CAL_DIR = r"C:\Picarro\G2000\InstrConfig\Calibration\InstrCal"
 WARMBOX_CAL = "Beta2000_WarmBoxCal"
 HOTBOX_CAL = "Beta2000_HotBoxCal"
 
-LASER_TYPE_DICT = {"1603.2": "CO2", "1651.0": "CH4", "1599.6": "iCO2", "1392.0": "iH2O", 
+LASER_TYPE_DICT = {"1603.2": "CO2", "1651.0": "CH4", "1599.6": "iCO2", "1392.0": "iH2O", "1389.0": "iH2O",
                    "1567.9": "CO", "1527.0": "NH3", "1554.7": "iH2O", "1521.1": "C2H2",
                    "1658.7": "CH4", "1278.0": "HF"}
 
