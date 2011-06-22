@@ -323,6 +323,13 @@ for i2cList in i2cLists:
         else:
             printFp(dspCFp,"    {%d, %d, 0x%x}};\n" % (i2cChain,i2cMux,i2cAddress))
 
+printFp(intPyFp, "\n#I2C channel definitions" )
+for i2cList in i2cLists:
+    for i,i2c in enumerate(i2cList.getElementsByTagName('i2c')):
+        i2cIdent = i2c.attributes['ident'].value
+        printFp(intPyFp, "I2C_%s = %d" % (i2cIdent,i))
+printFp(intPyFp, "\n")
+                        
 printFp(dspCFp,'void initRegisters() \n{\n    DataType d;')
 printFp(dspHFp,'void initRegisters(void);')
 printFp(dspHFp,'extern RegTypes regTypes[%d];' % (len(registerNames)))

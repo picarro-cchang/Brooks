@@ -30,7 +30,7 @@ from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_KERNEL
 
 from Host.autogen.interface import KERNEL_MAGIC_CODE, KERNEL_CONTROL
-from Host.autogen.interface import KERNEL_DIAG_1
+from Host.autogen.interface import KERNEL_DIAG_1, KERNEL_CONFIG
 from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL
 from Host.autogen.interface import KERNEL_INTRONIX_1, KERNEL_INTRONIX_2
 from Host.autogen.interface import KERNEL_INTRONIX_3, KERNEL_OVERLOAD
@@ -51,10 +51,10 @@ t_State = enum("NORMAL","DISCONNECTED","RESETTING")
 
 LOW, HIGH = bool(0), bool(1)
 def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
-           usb_connected,cyp_reset,diag_1_out,intronix_clksel_out,
-           intronix_1_out,intronix_2_out,intronix_3_out,overload_in,
-           overload_out,i2c_reset_out,dout_man_out,dout_out,din_in,
-           map_base):
+           usb_connected,cyp_reset,diag_1_out,config_out,
+           intronix_clksel_out,intronix_1_out,intronix_2_out,
+           intronix_3_out,overload_in,overload_out,i2c_reset_out,
+           dout_man_out,dout_out,din_in,map_base):
     """
     Parameters:
     clk                 -- Clock input
@@ -66,6 +66,7 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     usb_connected       -- input which is high if power is detected on the USB connector
     cyp_reset           -- output which interrupts power to the FX2 chip
     diag_1_out          -- DSP accessible register which may be monitored by the LogicPort
+    config_out          -- DSP accessible register for configuring FPGA
     intronix_clksel_out -- selects speed of clock signal for LogicPort
     intronix_1_out      -- used to select quantity to display in channel 1 of LogicPort
     intronix_2_out      -- used to select quantity to display in channel 2 of LogicPort
@@ -81,7 +82,8 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     Registers:
     KERNEL_MAGIC_CODE   -- Magic code register. Read to check if FPGA is programmed.
     KERNEL_CONTROL      -- Control register for resetting FPGA and overload state
-    KERNEL_DIAG_1
+    KERNEL_DIAG_1       -- Register which may be monitored by the LogicPort
+    KERNEL_CONFIG       -- Register for configuring FPGA
     KERNEL_INTRONIX_CLKSEL
     KERNEL_INTRONIX_1
     KERNEL_INTRONIX_2
@@ -124,6 +126,7 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     kernel_magic_code_addr = map_base + KERNEL_MAGIC_CODE
     kernel_control_addr = map_base + KERNEL_CONTROL
     kernel_diag_1_addr = map_base + KERNEL_DIAG_1
+    kernel_config_addr = map_base + KERNEL_CONFIG
     kernel_intronix_clksel_addr = map_base + KERNEL_INTRONIX_CLKSEL
     kernel_intronix_1_addr = map_base + KERNEL_INTRONIX_1
     kernel_intronix_2_addr = map_base + KERNEL_INTRONIX_2
@@ -135,6 +138,7 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     magic_code = Signal(intbv(0)[FPGA_REG_WIDTH:])
     control = Signal(intbv(0)[FPGA_REG_WIDTH:])
     diag_1 = Signal(intbv(0)[8:])
+    config = Signal(intbv(0)[FPGA_REG_WIDTH:])
     intronix_clksel = Signal(intbv(0)[5:])
     intronix_1 = Signal(intbv(0)[8:])
     intronix_2 = Signal(intbv(0)[8:])
@@ -154,6 +158,7 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         intronix_2_out.next = intronix_2
         intronix_3_out.next = intronix_3
         diag_1_out.next = diag_1
+        config_out.next = config
         dout_out.next = concat(dout_hi,dout_lo)
         din.next = din_in
     @instance
@@ -163,6 +168,7 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
             if reset:
                 control.next = control_init
                 diag_1.next = 0
+                config.next = 0
                 intronix_clksel.next = 0
                 intronix_1.next = 0
                 intronix_2.next = 0
@@ -182,6 +188,9 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_diag_1_addr: # rw
                         if dsp_wr: diag_1.next = dsp_data_out
                         dsp_data_in.next = diag_1
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_config_addr: # rw
+                        if dsp_wr: config.next = dsp_data_out
+                        dsp_data_in.next = config
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_intronix_clksel_addr: # rw
                         if dsp_wr: intronix_clksel.next = dsp_data_out
                         dsp_data_in.next = intronix_clksel
@@ -277,6 +286,7 @@ if __name__ == "__main__":
     usb_connected = Signal(LOW)
     cyp_reset = Signal(LOW)
     diag_1_out = Signal(intbv(0)[8:])
+    config_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     intronix_clksel_out = Signal(intbv(0)[5:])
     intronix_1_out = Signal(intbv(0)[8:])
     intronix_2_out = Signal(intbv(0)[8:])
@@ -293,6 +303,7 @@ if __name__ == "__main__":
                    dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
                    dsp_wr=dsp_wr, usb_connected=usb_connected,
                    cyp_reset=cyp_reset, diag_1_out=diag_1_out,
+                   config_out=config_out,
                    intronix_clksel_out=intronix_clksel_out,
                    intronix_1_out=intronix_1_out,
                    intronix_2_out=intronix_2_out,

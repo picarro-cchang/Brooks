@@ -2943,10 +2943,20 @@
         <i2c ident="WARM_BOX_HEATSINK_THERMISTOR_ADC" chain="1" mux="0" address="0x26" />
         <i2c ident="WARM_BOX_THERMISTOR_ADC" chain="1" mux="0" address="0x15" />
         <i2c ident="WLM_EEPROM" chain="1" mux="0" address="0x50" />
+
         <i2c ident="HOT_BOX_HEATSINK_THERMISTOR_ADC" chain="0" mux="7" address="0x27" />
         <i2c ident="CAVITY_THERMISTOR_ADC" chain="0" mux="7" address="0x26" />
         <i2c ident="CAVITY_PRESSURE_ADC" chain="0" mux="7" address="0x24" />
         <i2c ident="AMBIENT_PRESSURE_ADC" chain="0" mux="7" address="0x17" />
+        <i2c ident="P2_THERMISTOR_ADC" chain="0" mux="7" address="0x14" />
+        <i2c ident="P4_THERMISTOR_ADC" chain="0" mux="7" address="0x15" />
+                
+        <i2c ident="P9_THERMISTOR_ADC"  chain="1" mux="4" address="0x14" />
+        <i2c ident="P11_THERMISTOR_ADC" chain="1" mux="4" address="0x15" />
+        <i2c ident="P3_THERMISTOR_ADC"  chain="1" mux="4" address="0x24" />
+        <i2c ident="P12_THERMISTOR_ADC" chain="1" mux="4" address="0x26" />
+        <i2c ident="ENGINE_BOX_EEPROM"  chain="1" mux="4" address="0x50" />
+
         <i2c ident="DAS_TEMP_SENSOR" chain="0" address="0x4E" />
         <i2c ident="VALVE_PUMP_TEC_PORT" chain="1" mux="4" address="0x70" />
         <i2c ident="ANALOG_INTERFACE" chain="0" mux="4" address="0x10" />
@@ -2976,6 +2986,21 @@
                 </bitfield>
             </reg>
             <reg type="uint16" ident="DIAG_1" description="DSP accessible register for diagnostics" access="rw">
+            </reg>
+            <reg type="mask" ident="CONFIG" description="Configuration register" access="rw">
+                <save />
+                <bitfield ident="AUX_PZT"       description="Auxiliary PZT Enable" lsb="0" width="1">
+                    <fielddef value="0">Disable</fielddef>
+                    <fielddef value="1">Enable</fielddef>
+                </bitfield>
+                <bitfield ident="ENGINE1_TEC"    description="Engine 1 TEC Enable" lsb="1" width="1">
+                    <fielddef value="0">Disable</fielddef>
+                    <fielddef value="1">Enable</fielddef>
+                </bitfield>
+                <bitfield ident="ENGINE2_TEC"    description="Engine 2 TEC Enable" lsb="2" width="1">
+                    <fielddef value="0">Disable</fielddef>
+                    <fielddef value="1">Enable</fielddef>
+                </bitfield>
             </reg>
             <reg type="mask" ident="INTRONIX_CLKSEL" description="" access="rw">
                 <save />
@@ -3730,9 +3755,16 @@
         <fpga_map ident="FPGA_PWM_HOTBOX" block="PWM">
             <description>Hot box TEC pulse width modulator registers</description>
         </fpga_map>
+        <fpga_map ident="FPGA_PWM_ENGINE1" block="PWM">
+            <description>Engine 1 TEC pulse width modulator registers</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_PWM_ENGINE2" block="PWM">
+            <description>Engine 2 TEC pulse width modulator registers</description>
+        </fpga_map>
         <fpga_map ident="FPGA_PWM_HEATER" block="PWM">
             <description>Heater pulse width modulator registers</description>
         </fpga_map>
+        
         <fpga_map ident="FPGA_RDSIM" block="RDSIM">
             <description>Ringdown simulator registers</description>
         </fpga_map>
@@ -3846,17 +3878,11 @@
             The filter coefficients and state are in FilterEnvType -->
         <action ident="ACTION_FILTER">r_filter</action>
         <action ident="ACTION_DS1631_READTEMP">r_ds1631_readTemp</action>
-        <action ident="ACTION_READ_LASER_THERMISTOR_RESISTANCE">r_read_laser_thermistor_resistance</action>
-        <action ident="ACTION_READ_ETALON_THERMISTOR_RESISTANCE">r_read_etalon_thermistor_resistance</action>
-        <action ident="ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE">r_read_warm_box_thermistor_resistance</action>
-        <action ident="ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE">r_read_warm_box_heatsink_thermistor_resistance</action>
-        <action ident="ACTION_READ_CAVITY_THERMISTOR_RESISTANCE">r_read_cavity_thermistor_resistance</action>
-        <action ident="ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE">r_read_hot_box_heatsink_thermistor_resistance</action>
+        <action ident="ACTION_READ_THERMISTOR_RESISTANCE">r_read_thermistor_resistance</action>
         <action ident="ACTION_READ_LASER_CURRENT">r_read_laser_current</action>
         <action ident="ACTION_UPDATE_WLMSIM_LASER_TEMP">r_update_wlmsim_laser_temp</action>
         <action ident="ACTION_SIMULATE_LASER_CURRENT_READING">r_simulate_laser_current_reading</action>
-        <action ident="ACTION_READ_CAVITY_PRESSURE_ADC">r_read_cavity_pressure_adc</action>
-        <action ident="ACTION_READ_AMBIENT_PRESSURE_ADC">r_read_ambient_pressure_adc</action>
+        <action ident="ACTION_READ_PRESSURE_ADC">r_read_pressure_adc</action>
         <action ident="ACTION_ADC_TO_PRESSURE">r_adc_to_pressure</action>
         <action ident="ACTION_SET_INLET_VALVE">r_set_inlet_valve</action>
         <action ident="ACTION_SET_OUTLET_VALVE">r_set_outlet_valve</action>

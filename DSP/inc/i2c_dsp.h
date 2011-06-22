@@ -57,5 +57,6 @@ int fetchI2C1Mux();
 int getI2C1Mux();
 int getI2CMode(I2C_Handle hI2c);
 int getI2CStatus(I2C_Handle hI2c);
+int ltc2485_read(int ident);
 
 #endif

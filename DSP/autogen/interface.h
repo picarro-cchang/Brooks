@@ -1132,11 +1132,18 @@ typedef enum {
 #define CAVITY_THERMISTOR_ADC 18
 #define CAVITY_PRESSURE_ADC 19
 #define AMBIENT_PRESSURE_ADC 20
-#define DAS_TEMP_SENSOR 21
-#define VALVE_PUMP_TEC_PORT 22
-#define ANALOG_INTERFACE 23
-#define CHAIN0_MUX 24
-#define CHAIN1_MUX 25
+#define P2_THERMISTOR_ADC 21
+#define P4_THERMISTOR_ADC 22
+#define P9_THERMISTOR_ADC 23
+#define P11_THERMISTOR_ADC 24
+#define P3_THERMISTOR_ADC 25
+#define P12_THERMISTOR_ADC 26
+#define ENGINE_BOX_EEPROM 27
+#define DAS_TEMP_SENSOR 28
+#define VALVE_PUMP_TEC_PORT 29
+#define ANALOG_INTERFACE 30
+#define CHAIN0_MUX 31
+#define CHAIN1_MUX 32
 
 /* FPGA block definitions */
 
@@ -1153,26 +1160,34 @@ typedef enum {
 #define KERNEL_CONTROL_DOUT_MAN_W (1) // Manually set FPGA digital outputs bit width
 
 #define KERNEL_DIAG_1 (2) // DSP accessible register for diagnostics
-#define KERNEL_INTRONIX_CLKSEL (3) // 
+#define KERNEL_CONFIG (3) // Configuration register
+#define KERNEL_CONFIG_AUX_PZT_B (0) // Auxiliary PZT Enable bit position
+#define KERNEL_CONFIG_AUX_PZT_W (1) // Auxiliary PZT Enable bit width
+#define KERNEL_CONFIG_ENGINE1_TEC_B (1) // Engine 1 TEC Enable bit position
+#define KERNEL_CONFIG_ENGINE1_TEC_W (1) // Engine 1 TEC Enable bit width
+#define KERNEL_CONFIG_ENGINE2_TEC_B (2) // Engine 2 TEC Enable bit position
+#define KERNEL_CONFIG_ENGINE2_TEC_W (1) // Engine 2 TEC Enable bit width
+
+#define KERNEL_INTRONIX_CLKSEL (4) // 
 #define KERNEL_INTRONIX_CLKSEL_DIVISOR_B (0) // Intronix sampling rate bit position
 #define KERNEL_INTRONIX_CLKSEL_DIVISOR_W (5) // Intronix sampling rate bit width
 
-#define KERNEL_INTRONIX_1 (4) // Channel for Logicport bits 7-0
+#define KERNEL_INTRONIX_1 (5) // Channel for Logicport bits 7-0
 #define KERNEL_INTRONIX_1_CHANNEL_B (0) // Intronix display 1 channel bit position
 #define KERNEL_INTRONIX_1_CHANNEL_W (8) // Intronix display 1 channel bit width
 
-#define KERNEL_INTRONIX_2 (5) // Channel for Logicport bits 15-8
+#define KERNEL_INTRONIX_2 (6) // Channel for Logicport bits 15-8
 #define KERNEL_INTRONIX_2_CHANNEL_B (0) // Intronix display 2 channel bit position
 #define KERNEL_INTRONIX_2_CHANNEL_W (8) // Intronix display 2 channel bit width
 
-#define KERNEL_INTRONIX_3 (6) // Channel for Logicport bits 23-16
+#define KERNEL_INTRONIX_3 (7) // Channel for Logicport bits 23-16
 #define KERNEL_INTRONIX_3_CHANNEL_B (0) // Intronix display 3 channel bit position
 #define KERNEL_INTRONIX_3_CHANNEL_W (8) // Intronix display 3 channel bit width
 
-#define KERNEL_OVERLOAD (7) // Overload register
-#define KERNEL_DOUT_HI (8) // Manual control of FPGA DOUT 39-32
-#define KERNEL_DOUT_LO (9) // Manual control of FPGA DOUT 31-0
-#define KERNEL_DIN (10) // FPGA DIN 63-40
+#define KERNEL_OVERLOAD (8) // Overload register
+#define KERNEL_DOUT_HI (9) // Manual control of FPGA DOUT 39-32
+#define KERNEL_DOUT_LO (10) // Manual control of FPGA DOUT 31-0
+#define KERNEL_DIN (11) // FPGA DIN 63-40
 
 /* Block PWM Pulse width modulator */
 #define PWM_CS (0) // Control/Status register
@@ -1446,22 +1461,24 @@ typedef enum {
 /* FPGA map indices */
 
 #define FPGA_KERNEL (0) // Kernel registers
-#define FPGA_PWM_LASER1 (11) // Laser 1 TEC pulse width modulator registers
-#define FPGA_PWM_LASER2 (13) // Laser 2 TEC pulse width modulator registers
-#define FPGA_PWM_LASER3 (15) // Laser 3 TEC pulse width modulator registers
-#define FPGA_PWM_LASER4 (17) // Laser 4 TEC pulse width modulator registers
-#define FPGA_PWM_WARMBOX (19) // Warm box TEC pulse width modulator registers
-#define FPGA_PWM_HOTBOX (21) // Hot box TEC pulse width modulator registers
-#define FPGA_PWM_HEATER (23) // Heater pulse width modulator registers
-#define FPGA_RDSIM (25) // Ringdown simulator registers
-#define FPGA_LASERLOCKER (33) // Laser frequency locker registers
-#define FPGA_RDMAN (61) // Ringdown manager registers
-#define FPGA_TWGEN (86) // Tuner waveform generator
-#define FPGA_INJECT (95) // Optical Injection Subsystem
-#define FPGA_WLMSIM (105) // WLM Simulator
-#define FPGA_DYNAMICPWM_INLET (114) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (119) // Outlet proportional valve dynamic PWM
-#define FPGA_SCALER (124) // Scaler for PZT waveform
+#define FPGA_PWM_LASER1 (12) // Laser 1 TEC pulse width modulator registers
+#define FPGA_PWM_LASER2 (14) // Laser 2 TEC pulse width modulator registers
+#define FPGA_PWM_LASER3 (16) // Laser 3 TEC pulse width modulator registers
+#define FPGA_PWM_LASER4 (18) // Laser 4 TEC pulse width modulator registers
+#define FPGA_PWM_WARMBOX (20) // Warm box TEC pulse width modulator registers
+#define FPGA_PWM_HOTBOX (22) // Hot box TEC pulse width modulator registers
+#define FPGA_PWM_ENGINE1 (24) // Engine 1 TEC pulse width modulator registers
+#define FPGA_PWM_ENGINE2 (26) // Engine 2 TEC pulse width modulator registers
+#define FPGA_PWM_HEATER (28) // Heater pulse width modulator registers
+#define FPGA_RDSIM (30) // Ringdown simulator registers
+#define FPGA_LASERLOCKER (38) // Laser frequency locker registers
+#define FPGA_RDMAN (66) // Ringdown manager registers
+#define FPGA_TWGEN (91) // Tuner waveform generator
+#define FPGA_INJECT (100) // Optical Injection Subsystem
+#define FPGA_WLMSIM (110) // WLM Simulator
+#define FPGA_DYNAMICPWM_INLET (119) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (124) // Outlet proportional valve dynamic PWM
+#define FPGA_SCALER (129) // Scaler for PZT waveform
 
 /* Environment addresses */
 
@@ -1530,31 +1547,25 @@ typedef enum {
 #define ACTION_PULSE_GENERATOR (51)
 #define ACTION_FILTER (52)
 #define ACTION_DS1631_READTEMP (53)
-#define ACTION_READ_LASER_THERMISTOR_RESISTANCE (54)
-#define ACTION_READ_ETALON_THERMISTOR_RESISTANCE (55)
-#define ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE (56)
-#define ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE (57)
-#define ACTION_READ_CAVITY_THERMISTOR_RESISTANCE (58)
-#define ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE (59)
-#define ACTION_READ_LASER_CURRENT (60)
-#define ACTION_UPDATE_WLMSIM_LASER_TEMP (61)
-#define ACTION_SIMULATE_LASER_CURRENT_READING (62)
-#define ACTION_READ_CAVITY_PRESSURE_ADC (63)
-#define ACTION_READ_AMBIENT_PRESSURE_ADC (64)
-#define ACTION_ADC_TO_PRESSURE (65)
-#define ACTION_SET_INLET_VALVE (66)
-#define ACTION_SET_OUTLET_VALVE (67)
-#define ACTION_INTERPOLATOR_SET_TARGET (68)
-#define ACTION_INTERPOLATOR_STEP (69)
-#define ACTION_EEPROM_WRITE (70)
-#define ACTION_EEPROM_READ (71)
-#define ACTION_EEPROM_READY (72)
-#define ACTION_I2C_CHECK (73)
-#define ACTION_NUDGE_TIMESTAMP (74)
-#define ACTION_EEPROM_WRITE_LOW_LEVEL (75)
-#define ACTION_EEPROM_READ_LOW_LEVEL (76)
-#define ACTION_EEPROM_READY_LOW_LEVEL (77)
-#define ACTION_FLOAT_ARITHMETIC (78)
-#define ACTION_GET_SCOPE_TRACE (79)
-#define ACTION_RELEASE_SCOPE_TRACE (80)
+#define ACTION_READ_THERMISTOR_RESISTANCE (54)
+#define ACTION_READ_LASER_CURRENT (55)
+#define ACTION_UPDATE_WLMSIM_LASER_TEMP (56)
+#define ACTION_SIMULATE_LASER_CURRENT_READING (57)
+#define ACTION_READ_PRESSURE_ADC (58)
+#define ACTION_ADC_TO_PRESSURE (59)
+#define ACTION_SET_INLET_VALVE (60)
+#define ACTION_SET_OUTLET_VALVE (61)
+#define ACTION_INTERPOLATOR_SET_TARGET (62)
+#define ACTION_INTERPOLATOR_STEP (63)
+#define ACTION_EEPROM_WRITE (64)
+#define ACTION_EEPROM_READ (65)
+#define ACTION_EEPROM_READY (66)
+#define ACTION_I2C_CHECK (67)
+#define ACTION_NUDGE_TIMESTAMP (68)
+#define ACTION_EEPROM_WRITE_LOW_LEVEL (69)
+#define ACTION_EEPROM_READ_LOW_LEVEL (70)
+#define ACTION_EEPROM_READY_LOW_LEVEL (71)
+#define ACTION_FLOAT_ARITHMETIC (72)
+#define ACTION_GET_SCOPE_TRACE (73)
+#define ACTION_RELEASE_SCOPE_TRACE (74)
 #endif

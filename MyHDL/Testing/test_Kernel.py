@@ -19,7 +19,7 @@ from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
 from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_KERNEL
 
 from Host.autogen.interface import KERNEL_MAGIC_CODE, KERNEL_CONTROL
-from Host.autogen.interface import KERNEL_DIAG_1
+from Host.autogen.interface import KERNEL_DIAG_1, KERNEL_CONFIG
 from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL
 from Host.autogen.interface import KERNEL_INTRONIX_1, KERNEL_INTRONIX_2
 from Host.autogen.interface import KERNEL_INTRONIX_3, KERNEL_OVERLOAD
@@ -47,6 +47,7 @@ dsp_wr = Signal(LOW)
 usb_connected = Signal(LOW)
 cyp_reset = Signal(LOW)
 diag_1_out = Signal(intbv(0)[8:])
+config_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 intronix_clksel_out = Signal(intbv(0)[5:])
 intronix_1_out = Signal(intbv(0)[8:])
 intronix_2_out = Signal(intbv(0)[8:])
@@ -123,6 +124,7 @@ def bench():
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
                      dsp_wr=dsp_wr, usb_connected=usb_connected,
                      cyp_reset=cyp_reset, diag_1_out=diag_1_out,
+                     config_out=config_out,
                      intronix_clksel_out=intronix_clksel_out,
                      intronix_1_out=intronix_1_out,
                      intronix_2_out=intronix_2_out,

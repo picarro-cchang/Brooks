@@ -42,6 +42,7 @@
             <register>KEEP_ALIVE_REGISTER</register>
             <fpga_register offset="FPGA_KERNEL">OVERLOAD</fpga_register>
             <fpga_register offset="FPGA_KERNEL">CONTROL</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">CONFIG</fpga_register>
             <fpga_register offset="FPGA_KERNEL">DOUT_HI</fpga_register>
             <fpga_register offset="FPGA_KERNEL">DOUT_LO</fpga_register>
             <fpga_register offset="FPGA_KERNEL">DIN</fpga_register>            

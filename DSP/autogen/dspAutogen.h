@@ -16,7 +16,7 @@
 #include "interface.h"
 
 typedef struct i2c_device{ int chain; int mux; int addr; } I2C_device;
-extern I2C_device i2c_devices[26];
+extern I2C_device i2c_devices[33];
 
 void initRegisters(void);
 extern RegTypes regTypes[406];
@@ -74,17 +74,11 @@ int r_modifyValvePumpTec(unsigned int numInt,void *params,void *env);
 int r_pulseGenerator(unsigned int numInt,void *params,void *env);
 int r_filter(unsigned int numInt,void *params,void *env);
 int r_ds1631_readTemp(unsigned int numInt,void *params,void *env);
-int r_read_laser_thermistor_resistance(unsigned int numInt,void *params,void *env);
-int r_read_etalon_thermistor_resistance(unsigned int numInt,void *params,void *env);
-int r_read_warm_box_thermistor_resistance(unsigned int numInt,void *params,void *env);
-int r_read_warm_box_heatsink_thermistor_resistance(unsigned int numInt,void *params,void *env);
-int r_read_cavity_thermistor_resistance(unsigned int numInt,void *params,void *env);
-int r_read_hot_box_heatsink_thermistor_resistance(unsigned int numInt,void *params,void *env);
+int r_read_thermistor_resistance(unsigned int numInt,void *params,void *env);
 int r_read_laser_current(unsigned int numInt,void *params,void *env);
 int r_update_wlmsim_laser_temp(unsigned int numInt,void *params,void *env);
 int r_simulate_laser_current_reading(unsigned int numInt,void *params,void *env);
-int r_read_cavity_pressure_adc(unsigned int numInt,void *params,void *env);
-int r_read_ambient_pressure_adc(unsigned int numInt,void *params,void *env);
+int r_read_pressure_adc(unsigned int numInt,void *params,void *env);
 int r_adc_to_pressure(unsigned int numInt,void *params,void *env);
 int r_set_inlet_valve(unsigned int numInt,void *params,void *env);
 int r_set_outlet_valve(unsigned int numInt,void *params,void *env);

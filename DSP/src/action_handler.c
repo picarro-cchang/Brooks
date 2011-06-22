@@ -588,117 +588,27 @@ int r_ds1631_readTemp(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
-int r_read_laser_thermistor_resistance(unsigned int numInt,void *params,void *env)
+int r_read_thermistor_resistance(unsigned int numInt,void *params,void *env)
 {
     unsigned int *reg = (unsigned int *) params;
     float result;
     float Vfrac, Rseries;
     if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
     READ_REG(reg[2],Rseries);
-    result = read_laser_thermistor_adc(reg[0]);
+    result = ltc2485_read(reg[0]);
     Vfrac = result/33554432.0;
     if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
     WRITE_REG(reg[1],(Rseries*Vfrac)/(1.0-Vfrac));
     return STATUS_OK;
 }
 
-int r_read_etalon_thermistor_resistance(unsigned int numInt,void *params,void *env)
-{
-    unsigned int *reg = (unsigned int *) params;
-    float result;
-    float Vfrac, Rseries;
-    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    READ_REG(reg[1],Rseries);
-    result = read_etalon_thermistor_adc();
-    if (result != I2C_READ_ERROR) {
-        Vfrac = result/33554432.0;
-        if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
-        WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
-    }
-    return STATUS_OK;
-}
-
-int r_read_warm_box_thermistor_resistance(unsigned int numInt,void *params,void *env)
-{
-    unsigned int *reg = (unsigned int *) params;
-    float result;
-    float Vfrac, Rseries;
-    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    READ_REG(reg[1],Rseries);
-    result = read_warm_box_thermistor_adc();
-    if (result != I2C_READ_ERROR) {
-        Vfrac = result/33554432.0;
-        if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
-        WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
-    }
-    return STATUS_OK;
-}
-
-int r_read_warm_box_heatsink_thermistor_resistance(unsigned int numInt,void *params,void *env)
-{
-    unsigned int *reg = (unsigned int *) params;
-    float result;
-    float Vfrac, Rseries;
-    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    READ_REG(reg[1],Rseries);
-    result = read_warm_box_heatsink_thermistor_adc();
-    if (result != I2C_READ_ERROR) {
-        Vfrac = result/33554432.0;
-        if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
-        WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
-    }
-    return STATUS_OK;
-}
-
-int r_read_cavity_thermistor_resistance(unsigned int numInt,void *params,void *env)
-{
-    unsigned int *reg = (unsigned int *) params;
-    float result;
-    float Vfrac, Rseries;
-    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    READ_REG(reg[1],Rseries);
-    result = read_cavity_thermistor_adc();
-    if (result != I2C_READ_ERROR) {
-        Vfrac = result/33554432.0;
-        if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
-        WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
-    }
-    return STATUS_OK;
-}
-
-int r_read_hot_box_heatsink_thermistor_resistance(unsigned int numInt,void *params,void *env)
-{
-    unsigned int *reg = (unsigned int *) params;
-    float result;
-    float Vfrac, Rseries;
-    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    READ_REG(reg[1],Rseries);
-    result = read_hot_box_heatsink_thermistor_adc();
-    if (result != I2C_READ_ERROR) {
-        Vfrac = result/33554432.0;
-        if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
-        WRITE_REG(reg[0],(Rseries*Vfrac)/(1.0-Vfrac));
-    }
-    return STATUS_OK;
-}
-
-int r_read_cavity_pressure_adc(unsigned int numInt,void *params,void *env)
+int r_read_pressure_adc(unsigned int numInt,void *params,void *env)
 {
     unsigned int *reg = (unsigned int *) params;
     unsigned int result;
-    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
-    result = read_cavity_pressure_adc();
-    if (result != I2C_READ_ERROR) WRITE_REG(reg[0],result);
-    return STATUS_OK;
-}
-
-int r_read_ambient_pressure_adc(unsigned int numInt,void *params,void *env)
-{
-    unsigned int *reg = (unsigned int *) params;
-    unsigned int result;
-    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
-    result = read_ambient_pressure_adc();
-    if (result != I2C_READ_ERROR) WRITE_REG(reg[0],result);
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    result = ltc2485_read(reg[0]);
+    if (result != I2C_READ_ERROR) WRITE_REG(reg[1],result);
     return STATUS_OK;
 }
 

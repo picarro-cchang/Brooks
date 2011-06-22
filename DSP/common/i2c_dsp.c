@@ -22,6 +22,7 @@
 #include "i2c_dsp.h"
 #include "registers.h"
 #include "dspAutogen.h"
+#include "ltc2485.h"
 
 #define I2C_MAXLOOPS (300)
 
@@ -537,5 +538,20 @@ int I2C_check_ack(I2C_Handle hI2c,int i2caddr)
     }
 done:
     IRQ_globalRestore(gie);
+    return result;
+}
+/*----------------------------------------------------------------------------*/
+int ltc2485_read(int ident)
+// Read 24-bit ADC associated with "ident". Returns I2C_READ_ERROR on an I2C error.
+{
+    int flags, result, loops;
+    I2C_device *d = &i2c_devices[ident];
+    if (d->chain) setI2C1Mux(d->mux);
+    else setI2C0Mux(d->mux);
+    for (loops=0;loops<1000;loops++);
+    result = ltc2485_getData(d, &flags);
+    if (result == I2C_READ_ERROR) return result;
+    if (flags == 0) result = -16777216;
+    else if (flags == 3) result = 16777215;
     return result;
 }

@@ -19,7 +19,7 @@ extern int writeRegister(unsigned int regNum,DataType data);
 RegTypes regTypes[406];
 
 /* I2C devices */
-I2C_device i2c_devices[26] = {
+I2C_device i2c_devices[33] = {
     {0, -1, 0x55},
     {0, 0, 0x26},
     {0, 0, 0x14},
@@ -41,6 +41,13 @@ I2C_device i2c_devices[26] = {
     {0, 7, 0x26},
     {0, 7, 0x24},
     {0, 7, 0x17},
+    {0, 7, 0x14},
+    {0, 7, 0x15},
+    {1, 4, 0x14},
+    {1, 4, 0x15},
+    {1, 4, 0x24},
+    {1, 4, 0x26},
+    {1, 4, 0x50},
     {0, -1, 0x4e},
     {1, 4, 0x70},
     {0, 4, 0x10},
@@ -1331,28 +1338,16 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_filter(numInt,params,env);
         case ACTION_DS1631_READTEMP:
             return r_ds1631_readTemp(numInt,params,env);
-        case ACTION_READ_LASER_THERMISTOR_RESISTANCE:
-            return r_read_laser_thermistor_resistance(numInt,params,env);
-        case ACTION_READ_ETALON_THERMISTOR_RESISTANCE:
-            return r_read_etalon_thermistor_resistance(numInt,params,env);
-        case ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE:
-            return r_read_warm_box_thermistor_resistance(numInt,params,env);
-        case ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE:
-            return r_read_warm_box_heatsink_thermistor_resistance(numInt,params,env);
-        case ACTION_READ_CAVITY_THERMISTOR_RESISTANCE:
-            return r_read_cavity_thermistor_resistance(numInt,params,env);
-        case ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE:
-            return r_read_hot_box_heatsink_thermistor_resistance(numInt,params,env);
+        case ACTION_READ_THERMISTOR_RESISTANCE:
+            return r_read_thermistor_resistance(numInt,params,env);
         case ACTION_READ_LASER_CURRENT:
             return r_read_laser_current(numInt,params,env);
         case ACTION_UPDATE_WLMSIM_LASER_TEMP:
             return r_update_wlmsim_laser_temp(numInt,params,env);
         case ACTION_SIMULATE_LASER_CURRENT_READING:
             return r_simulate_laser_current_reading(numInt,params,env);
-        case ACTION_READ_CAVITY_PRESSURE_ADC:
-            return r_read_cavity_pressure_adc(numInt,params,env);
-        case ACTION_READ_AMBIENT_PRESSURE_ADC:
-            return r_read_ambient_pressure_adc(numInt,params,env);
+        case ACTION_READ_PRESSURE_ADC:
+            return r_read_pressure_adc(numInt,params,env);
         case ACTION_ADC_TO_PRESSURE:
             return r_adc_to_pressure(numInt,params,env);
         case ACTION_SET_INLET_VALVE:

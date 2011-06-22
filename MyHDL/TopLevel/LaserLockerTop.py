@@ -82,6 +82,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_data_in_laserlocker = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_heater  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_hotbox  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_pwm_engine1 = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_pwm_engine2 = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_laser1  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_laser2  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_laser3  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
@@ -103,10 +105,14 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     heater_pwm_out = Signal(LOW)
     hot_box_pwm_out = Signal(LOW)
     warm_box_pwm_out = Signal(LOW)
+    engine1_pwm_out = Signal(LOW)
+    engine2_pwm_out = Signal(LOW)
     
     heater_pwm_inv = Signal(LOW)
     hot_box_pwm_inv = Signal(LOW)
     warm_box_pwm_inv = Signal(LOW)
+    engine1_pwm_inv = Signal(LOW)
+    engine2_pwm_inv = Signal(LOW)
 
     wmm_rd_out = Signal(LOW)
                         
@@ -127,7 +133,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     param_we = Signal(LOW)
     clk_10M, clk_5M, clk_2M5, pulse_1M, pulse_100k = [Signal(LOW) for i in range(5)]
 
-    diag_1 = Signal(intbv(0)[16:])
+    diag_1 = Signal(intbv(0)[8:])
+    config = Signal(intbv(0)[16:])
     intronix_clksel = Signal(intbv(0)[5:])
     intronix_1 = Signal(intbv(0)[8:])
     intronix_2 = Signal(intbv(0)[8:])
@@ -267,6 +274,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_kernel,
                      dsp_wr=dsp_wr, usb_connected=usb_rear_connected,
                      cyp_reset=cyp_reset, diag_1_out=diag_1,
+                     config_out=config,
                      intronix_clksel_out=intronix_clksel,
                      intronix_1_out=intronix_1,
                      intronix_2_out=intronix_2,
@@ -340,6 +348,20 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      pwm_inv_out=hot_box_pwm_inv,
                      map_base=FPGA_PWM_HOTBOX)
 
+    pwm_engine1 = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                     dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_engine1,
+                     dsp_wr=dsp_wr,
+                     pwm_out=engine1_pwm_out,
+                     pwm_inv_out=engine1_pwm_inv,
+                     map_base=FPGA_PWM_ENGINE1)
+                     
+    pwm_engine2 = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                     dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_engine2,
+                     dsp_wr=dsp_wr,
+                     pwm_out=engine2_pwm_out,
+                     pwm_inv_out=engine2_pwm_inv,
+                     map_base=FPGA_PWM_ENGINE2)
+                     
     pwm_heater = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_heater,
                      dsp_wr=dsp_wr,
@@ -495,8 +517,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                 ref2_adc_high = ref2_actual[16:8]
                 wlm_adc = concat(wmm_busy2,wmm_busy1,wmm_rd_out,clk_2M5,wmm_tran2,wmm_refl2,wmm_tran1,wmm_refl1)
                 system_clocks = concat(data_we,clk_10M,clk_5M,clk_2M5,pulse_1M,pulse_100k,wlm_data_available,metadata_strobe)
-                pwm_signals = concat(LOW,heater_pwm_out,hot_box_pwm_out,warm_box_pwm_out,pwm_laser4_out,pwm_laser3_out,pwm_laser2_out,pwm_laser1_out)
-                i2c_signals = concat(LOW, LOW, LOW, LOW, i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1)
+                pwm_signals = concat(engine2_pwm_out,engine1_pwm_out,hot_box_pwm_out,warm_box_pwm_out,pwm_laser4_out,pwm_laser3_out,pwm_laser2_out,pwm_laser1_out)
+                i2c_signals = concat(heater_pwm_out, LOW, LOW, LOW, i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1)
 
                 # Latch data for the intronix port
                 if intronix_1 == 0:
@@ -683,6 +705,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                    dsp_data_in_laserlocker       | \
                    dsp_data_in_pwm_heater        | \
                    dsp_data_in_pwm_hotbox        | \
+                   dsp_data_in_pwm_engine1       | \
+                   dsp_data_in_pwm_engine2       | \
                    dsp_data_in_pwm_laser1        | \
                    dsp_data_in_pwm_laser2        | \
                    dsp_data_in_pwm_laser3        | \
@@ -759,9 +783,16 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         wmm_clk.next = clk_2M5
         chanC_data_in.next  = 0
 
-        aux_din[1].next = aux_pzt_dac_sck
-        aux_din[0].next = aux_pzt_dac_sdi
-        aux_din[2].next = aux_pzt_dac_ld
+        if config[KERNEL_CONFIG_AUX_PZT_B]:
+            aux_din[0].next = aux_pzt_dac_sdi
+            aux_din[1].next = aux_pzt_dac_sck
+            aux_din[2].next = aux_pzt_dac_ld
+
+        if config[KERNEL_CONFIG_ENGINE1_TEC_B]:
+            aux_din[2].next = engine1_pwm_out
+            
+        if config[KERNEL_CONFIG_ENGINE2_TEC_B]:
+            aux_din[3].next = engine2_pwm_out
         
         fpga_program_enable.next = 1
         ## Do not reset Cypress
