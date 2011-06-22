@@ -1397,11 +1397,18 @@ i2cByIndex[17] = 'HOT_BOX_HEATSINK_THERMISTOR_ADC'
 i2cByIndex[18] = 'CAVITY_THERMISTOR_ADC'
 i2cByIndex[19] = 'CAVITY_PRESSURE_ADC'
 i2cByIndex[20] = 'AMBIENT_PRESSURE_ADC'
-i2cByIndex[21] = 'DAS_TEMP_SENSOR'
-i2cByIndex[22] = 'VALVE_PUMP_TEC_PORT'
-i2cByIndex[23] = 'ANALOG_INTERFACE'
-i2cByIndex[24] = 'CHAIN0_MUX'
-i2cByIndex[25] = 'CHAIN1_MUX'
+i2cByIndex[21] = 'P2_THERMISTOR_ADC'
+i2cByIndex[22] = 'P4_THERMISTOR_ADC'
+i2cByIndex[23] = 'P9_THERMISTOR_ADC'
+i2cByIndex[24] = 'P11_THERMISTOR_ADC'
+i2cByIndex[25] = 'P3_THERMISTOR_ADC'
+i2cByIndex[26] = 'P12_THERMISTOR_ADC'
+i2cByIndex[27] = 'ENGINE_BOX_EEPROM'
+i2cByIndex[28] = 'DAS_TEMP_SENSOR'
+i2cByIndex[29] = 'VALVE_PUMP_TEC_PORT'
+i2cByIndex[30] = 'ANALOG_INTERFACE'
+i2cByIndex[31] = 'CHAIN0_MUX'
+i2cByIndex[32] = 'CHAIN1_MUX'
 
 #i2cByIdent tuple is (index,chain,mux,address)
 i2cByIdent = {}
@@ -1426,11 +1433,55 @@ i2cByIdent['HOT_BOX_HEATSINK_THERMISTOR_ADC'] = (17, 0, 7, 0x27)
 i2cByIdent['CAVITY_THERMISTOR_ADC'] = (18, 0, 7, 0x26)
 i2cByIdent['CAVITY_PRESSURE_ADC'] = (19, 0, 7, 0x24)
 i2cByIdent['AMBIENT_PRESSURE_ADC'] = (20, 0, 7, 0x17)
-i2cByIdent['DAS_TEMP_SENSOR'] = (21, 0, -1, 0x4e)
-i2cByIdent['VALVE_PUMP_TEC_PORT'] = (22, 1, 4, 0x70)
-i2cByIdent['ANALOG_INTERFACE'] = (23, 0, 4, 0x10)
-i2cByIdent['CHAIN0_MUX'] = (24, 0, -1, 0x70)
-i2cByIdent['CHAIN1_MUX'] = (25, 1, -1, 0x71)
+i2cByIdent['P2_THERMISTOR_ADC'] = (21, 0, 7, 0x14)
+i2cByIdent['P4_THERMISTOR_ADC'] = (22, 0, 7, 0x15)
+i2cByIdent['P9_THERMISTOR_ADC'] = (23, 1, 4, 0x14)
+i2cByIdent['P11_THERMISTOR_ADC'] = (24, 1, 4, 0x15)
+i2cByIdent['P3_THERMISTOR_ADC'] = (25, 1, 4, 0x24)
+i2cByIdent['P12_THERMISTOR_ADC'] = (26, 1, 4, 0x26)
+i2cByIdent['ENGINE_BOX_EEPROM'] = (27, 1, 4, 0x50)
+i2cByIdent['DAS_TEMP_SENSOR'] = (28, 0, -1, 0x4e)
+i2cByIdent['VALVE_PUMP_TEC_PORT'] = (29, 1, 4, 0x70)
+i2cByIdent['ANALOG_INTERFACE'] = (30, 0, 4, 0x10)
+i2cByIdent['CHAIN0_MUX'] = (31, 0, -1, 0x70)
+i2cByIdent['CHAIN1_MUX'] = (32, 1, -1, 0x71)
+
+#I2C channel definitions
+I2C_LOGIC_EEPROM = 0
+I2C_LASER1_THERMISTOR_ADC = 1
+I2C_LASER1_CURRENT_ADC = 2
+I2C_LASER1_EEPROM = 3
+I2C_LASER2_THERMISTOR_ADC = 4
+I2C_LASER2_CURRENT_ADC = 5
+I2C_LASER2_EEPROM = 6
+I2C_LASER3_THERMISTOR_ADC = 7
+I2C_LASER3_CURRENT_ADC = 8
+I2C_LASER3_EEPROM = 9
+I2C_LASER4_THERMISTOR_ADC = 10
+I2C_LASER4_CURRENT_ADC = 11
+I2C_LASER4_EEPROM = 12
+I2C_ETALON_THERMISTOR_ADC = 13
+I2C_WARM_BOX_HEATSINK_THERMISTOR_ADC = 14
+I2C_WARM_BOX_THERMISTOR_ADC = 15
+I2C_WLM_EEPROM = 16
+I2C_HOT_BOX_HEATSINK_THERMISTOR_ADC = 17
+I2C_CAVITY_THERMISTOR_ADC = 18
+I2C_CAVITY_PRESSURE_ADC = 19
+I2C_AMBIENT_PRESSURE_ADC = 20
+I2C_P2_THERMISTOR_ADC = 21
+I2C_P4_THERMISTOR_ADC = 22
+I2C_P9_THERMISTOR_ADC = 23
+I2C_P11_THERMISTOR_ADC = 24
+I2C_P3_THERMISTOR_ADC = 25
+I2C_P12_THERMISTOR_ADC = 26
+I2C_ENGINE_BOX_EEPROM = 27
+I2C_DAS_TEMP_SENSOR = 28
+I2C_VALVE_PUMP_TEC_PORT = 29
+I2C_ANALOG_INTERFACE = 30
+I2C_CHAIN0_MUX = 31
+I2C_CHAIN1_MUX = 32
+
+
 registerByName["NOOP_REGISTER"] = NOOP_REGISTER
 registerInfo.append(RegInfo("NOOP_REGISTER",c_uint,0,1.0,"rw"))
 registerByName["VERIFY_INIT_REGISTER"] = VERIFY_INIT_REGISTER
@@ -2259,26 +2310,34 @@ KERNEL_CONTROL_DOUT_MAN_B = 3 # Manually set FPGA digital outputs bit position
 KERNEL_CONTROL_DOUT_MAN_W = 1 # Manually set FPGA digital outputs bit width
 
 KERNEL_DIAG_1 = 2 # DSP accessible register for diagnostics
-KERNEL_INTRONIX_CLKSEL = 3 # 
+KERNEL_CONFIG = 3 # Configuration register
+KERNEL_CONFIG_AUX_PZT_B = 0 # Auxiliary PZT Enable bit position
+KERNEL_CONFIG_AUX_PZT_W = 1 # Auxiliary PZT Enable bit width
+KERNEL_CONFIG_ENGINE1_TEC_B = 1 # Engine 1 TEC Enable bit position
+KERNEL_CONFIG_ENGINE1_TEC_W = 1 # Engine 1 TEC Enable bit width
+KERNEL_CONFIG_ENGINE2_TEC_B = 2 # Engine 2 TEC Enable bit position
+KERNEL_CONFIG_ENGINE2_TEC_W = 1 # Engine 2 TEC Enable bit width
+
+KERNEL_INTRONIX_CLKSEL = 4 # 
 KERNEL_INTRONIX_CLKSEL_DIVISOR_B = 0 # Intronix sampling rate bit position
 KERNEL_INTRONIX_CLKSEL_DIVISOR_W = 5 # Intronix sampling rate bit width
 
-KERNEL_INTRONIX_1 = 4 # Channel for Logicport bits 7-0
+KERNEL_INTRONIX_1 = 5 # Channel for Logicport bits 7-0
 KERNEL_INTRONIX_1_CHANNEL_B = 0 # Intronix display 1 channel bit position
 KERNEL_INTRONIX_1_CHANNEL_W = 8 # Intronix display 1 channel bit width
 
-KERNEL_INTRONIX_2 = 5 # Channel for Logicport bits 15-8
+KERNEL_INTRONIX_2 = 6 # Channel for Logicport bits 15-8
 KERNEL_INTRONIX_2_CHANNEL_B = 0 # Intronix display 2 channel bit position
 KERNEL_INTRONIX_2_CHANNEL_W = 8 # Intronix display 2 channel bit width
 
-KERNEL_INTRONIX_3 = 6 # Channel for Logicport bits 23-16
+KERNEL_INTRONIX_3 = 7 # Channel for Logicport bits 23-16
 KERNEL_INTRONIX_3_CHANNEL_B = 0 # Intronix display 3 channel bit position
 KERNEL_INTRONIX_3_CHANNEL_W = 8 # Intronix display 3 channel bit width
 
-KERNEL_OVERLOAD = 7 # Overload register
-KERNEL_DOUT_HI = 8 # Manual control of FPGA DOUT 39-32
-KERNEL_DOUT_LO = 9 # Manual control of FPGA DOUT 31-0
-KERNEL_DIN = 10 # FPGA DIN 63-40
+KERNEL_OVERLOAD = 8 # Overload register
+KERNEL_DOUT_HI = 9 # Manual control of FPGA DOUT 39-32
+KERNEL_DOUT_LO = 10 # Manual control of FPGA DOUT 31-0
+KERNEL_DIN = 11 # FPGA DIN 63-40
 
 # Block PWM Pulse width modulator
 PWM_CS = 0 # Control/Status register
@@ -2551,25 +2610,27 @@ SCALER_SCALE1 = 0 # Scale factor for PZT waveform
 
 # FPGA map indices
 FPGA_KERNEL = 0 # Kernel registers
-FPGA_PWM_LASER1 = 11 # Laser 1 TEC pulse width modulator registers
-FPGA_PWM_LASER2 = 13 # Laser 2 TEC pulse width modulator registers
-FPGA_PWM_LASER3 = 15 # Laser 3 TEC pulse width modulator registers
-FPGA_PWM_LASER4 = 17 # Laser 4 TEC pulse width modulator registers
-FPGA_PWM_WARMBOX = 19 # Warm box TEC pulse width modulator registers
-FPGA_PWM_HOTBOX = 21 # Hot box TEC pulse width modulator registers
-FPGA_PWM_HEATER = 23 # Heater pulse width modulator registers
-FPGA_RDSIM = 25 # Ringdown simulator registers
-FPGA_LASERLOCKER = 33 # Laser frequency locker registers
-FPGA_RDMAN = 61 # Ringdown manager registers
-FPGA_TWGEN = 86 # Tuner waveform generator
-FPGA_INJECT = 95 # Optical Injection Subsystem
-FPGA_WLMSIM = 105 # WLM Simulator
-FPGA_DYNAMICPWM_INLET = 114 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 119 # Outlet proportional valve dynamic PWM
-FPGA_SCALER = 124 # Scaler for PZT waveform
+FPGA_PWM_LASER1 = 12 # Laser 1 TEC pulse width modulator registers
+FPGA_PWM_LASER2 = 14 # Laser 2 TEC pulse width modulator registers
+FPGA_PWM_LASER3 = 16 # Laser 3 TEC pulse width modulator registers
+FPGA_PWM_LASER4 = 18 # Laser 4 TEC pulse width modulator registers
+FPGA_PWM_WARMBOX = 20 # Warm box TEC pulse width modulator registers
+FPGA_PWM_HOTBOX = 22 # Hot box TEC pulse width modulator registers
+FPGA_PWM_ENGINE1 = 24 # Engine 1 TEC pulse width modulator registers
+FPGA_PWM_ENGINE2 = 26 # Engine 2 TEC pulse width modulator registers
+FPGA_PWM_HEATER = 28 # Heater pulse width modulator registers
+FPGA_RDSIM = 30 # Ringdown simulator registers
+FPGA_LASERLOCKER = 38 # Laser frequency locker registers
+FPGA_RDMAN = 66 # Ringdown manager registers
+FPGA_TWGEN = 91 # Tuner waveform generator
+FPGA_INJECT = 100 # Optical Injection Subsystem
+FPGA_WLMSIM = 110 # WLM Simulator
+FPGA_DYNAMICPWM_INLET = 119 # Inlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 124 # Outlet proportional valve dynamic PWM
+FPGA_SCALER = 129 # Scaler for PZT waveform
 
 persistent_fpga_registers = []
-persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
+persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_CONFIG', u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
 persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_OPTIONS', u'RDSIM_PZT_WINDOW_HALF_WIDTH', u'RDSIM_FILLING_RATE', u'RDSIM_DECAY_IN_SHIFT', u'RDSIM_DECAY_IN_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_OPTIONS', u'LASERLOCKER_ETA1_OFFSET', u'LASERLOCKER_REF1_OFFSET', u'LASERLOCKER_ETA2_OFFSET', u'LASERLOCKER_REF2_OFFSET', u'LASERLOCKER_TUNING_OFFSET', u'LASERLOCKER_WM_LOCK_WINDOW', u'LASERLOCKER_WM_INT_GAIN', u'LASERLOCKER_WM_PROP_GAIN', u'LASERLOCKER_WM_DERIV_GAIN']))
 persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION']))
@@ -2659,33 +2720,27 @@ ACTION_MODIFY_VALVE_PUMP_TEC = 50
 ACTION_PULSE_GENERATOR = 51
 ACTION_FILTER = 52
 ACTION_DS1631_READTEMP = 53
-ACTION_READ_LASER_THERMISTOR_RESISTANCE = 54
-ACTION_READ_ETALON_THERMISTOR_RESISTANCE = 55
-ACTION_READ_WARM_BOX_THERMISTOR_RESISTANCE = 56
-ACTION_READ_WARM_BOX_HEATSINK_THERMISTOR_RESISTANCE = 57
-ACTION_READ_CAVITY_THERMISTOR_RESISTANCE = 58
-ACTION_READ_HOT_BOX_HEATSINK_THERMISTOR_RESISTANCE = 59
-ACTION_READ_LASER_CURRENT = 60
-ACTION_UPDATE_WLMSIM_LASER_TEMP = 61
-ACTION_SIMULATE_LASER_CURRENT_READING = 62
-ACTION_READ_CAVITY_PRESSURE_ADC = 63
-ACTION_READ_AMBIENT_PRESSURE_ADC = 64
-ACTION_ADC_TO_PRESSURE = 65
-ACTION_SET_INLET_VALVE = 66
-ACTION_SET_OUTLET_VALVE = 67
-ACTION_INTERPOLATOR_SET_TARGET = 68
-ACTION_INTERPOLATOR_STEP = 69
-ACTION_EEPROM_WRITE = 70
-ACTION_EEPROM_READ = 71
-ACTION_EEPROM_READY = 72
-ACTION_I2C_CHECK = 73
-ACTION_NUDGE_TIMESTAMP = 74
-ACTION_EEPROM_WRITE_LOW_LEVEL = 75
-ACTION_EEPROM_READ_LOW_LEVEL = 76
-ACTION_EEPROM_READY_LOW_LEVEL = 77
-ACTION_FLOAT_ARITHMETIC = 78
-ACTION_GET_SCOPE_TRACE = 79
-ACTION_RELEASE_SCOPE_TRACE = 80
+ACTION_READ_THERMISTOR_RESISTANCE = 54
+ACTION_READ_LASER_CURRENT = 55
+ACTION_UPDATE_WLMSIM_LASER_TEMP = 56
+ACTION_SIMULATE_LASER_CURRENT_READING = 57
+ACTION_READ_PRESSURE_ADC = 58
+ACTION_ADC_TO_PRESSURE = 59
+ACTION_SET_INLET_VALVE = 60
+ACTION_SET_OUTLET_VALVE = 61
+ACTION_INTERPOLATOR_SET_TARGET = 62
+ACTION_INTERPOLATOR_STEP = 63
+ACTION_EEPROM_WRITE = 64
+ACTION_EEPROM_READ = 65
+ACTION_EEPROM_READY = 66
+ACTION_I2C_CHECK = 67
+ACTION_NUDGE_TIMESTAMP = 68
+ACTION_EEPROM_WRITE_LOW_LEVEL = 69
+ACTION_EEPROM_READ_LOW_LEVEL = 70
+ACTION_EEPROM_READY_LOW_LEVEL = 71
+ACTION_FLOAT_ARITHMETIC = 72
+ACTION_GET_SCOPE_TRACE = 73
+ACTION_RELEASE_SCOPE_TRACE = 74
 
 
 # Parameter form definitions
@@ -2707,6 +2762,7 @@ __p.append(('dsp','uint32',RD_FITTING_COUNT_REGISTER,'RD fitting count','','%d',
 __p.append(('dsp','int32',KEEP_ALIVE_REGISTER,'Keep alive register','','%d',1,1))
 __p.append(('fpga','uint16',FPGA_KERNEL+KERNEL_OVERLOAD,'Overload status','','$%X',1,0))
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_CONTROL,[(1, u'Reset Cypress FX2 and FPGA', [(0, u'Idle'), (1, u'Reset')]), (2, u'Reset overload register', [(0, u'Idle'), (2, u'Reset')]), (4, u'Reset i2c multiplexers', [(0, u'Idle'), (4, u'Reset')]), (8, u'Manually set FPGA digital outputs', [(0, u'Automatic control'), (8, u'Manual control')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_KERNEL+KERNEL_CONFIG,[(1, u'Auxiliary PZT Enable', [(0, u'Disable'), (1, u'Enable')]), (2, u'Engine 1 TEC Enable', [(0, u'Disable'), (2, u'Enable')]), (4, u'Engine 2 TEC Enable', [(0, u'Disable'), (4, u'Enable')])],None,None,1,1))
 __p.append(('fpga','uint32',FPGA_KERNEL+KERNEL_DOUT_HI,'Manual FPGA digital outputs (bits 39-32)','','$%X',1,1))
 __p.append(('fpga','uint32',FPGA_KERNEL+KERNEL_DOUT_LO,'Manual FPGA digital outputs (bits 31-0)','','$%X',1,1))
 __p.append(('fpga','uint32',FPGA_KERNEL+KERNEL_DIN,'FPGA digital inputs (bits 63-40)','','$%X',1,0))
