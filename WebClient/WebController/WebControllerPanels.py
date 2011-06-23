@@ -23,8 +23,6 @@
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
 import wx
-from cPickle import loads
-from base64 import b64decode
 import threading
 from math import log10, sqrt
 import os
@@ -41,7 +39,8 @@ from Host.autogen import interface
 from Host.Common.Allan import AllanVar
 from Host.Common.RdStats import RdStats
 from Host.Common.GraphPanel import Series, ColorSeries
-from Host.Common import CmdFIFO, SharedTypes, jsonRpc, timestamp
+from Host.Common import CmdFIFO, SharedTypes, timestamp
+from Host.Common import jsonRpcTools
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 
 statsPoints = interface.CONTROLLER_STATS_POINTS
@@ -51,41 +50,6 @@ ringdownPoints = interface.CONTROLLER_RINGDOWN_POINTS
 Driver = DriverProxy().rpc
 RDFreqConv = RDFreqConvProxy().rpc
 SpectrumCollector = SpectrumCollectorProxy().rpc
-JsonRpcService = jsonRpc.Proxy('http://localhost:5000/jsonrpc')
-
-def plotSensors(wfmList,sensorList,maxDuration):
-    # Fetch sensor information and update waveforms by calling JSON RPC. Normally, data from the most
-    #  recent timestamp in the waveforms of wfmList to the current time are retrieved, but if this
-    #  is of greater duration than maxDuration, the interval is truncated to [now-maxDuration,now].
-    #  If a waveforms in wfmList is None, just fetch information about that sensor. Return the data obtained.
-    tstop = timestamp.getTimestamp()
-    minTimestamp = None
-    clearFlag = False
-    latestTs = {}
-    # Examine each waveform for the latest timestamp in that waveform, then find the minimum of these
-    #  We ask for data starting from this time, or from the current time - maxDuration. However, since
-    #  the result may contain points that are already in some of the waveforms, only those points which
-    #  come after rhe lastestTs for each waveform are added to it.
-    for w in wfmList:
-        ts = 0
-        if w is not None and w.x.count>0: 
-            ts = timestamp.unixTimeToTimestamp(w.x.GetLatest())
-            if minTimestamp is None or ts<minTimestamp: minTimestamp = ts
-        latestTs[w] = ts
-    tstart = minTimestamp if minTimestamp is not None else 0
-    if tstart < tstop - maxDuration:
-        tstart = tstop - maxDuration
-        clearFlag = True
-    range = dict(start=tstart,stop=tstop)
-    params = dict(sensorList=sensorList,range=range,pickle=1)
-    result = loads(b64decode(JsonRpcService.getSensorData(params)))
-    for s,w in zip(sensorList,wfmList):
-        if w is not None:
-            if clearFlag: w.Clear()
-            if s in result:
-                for ts,v in zip(result[s]['timestamp'],result[s][s]):
-                    if ts>latestTs[w]: w.Add(timestamp.unixTime(ts),v)
-    return result
 
 class RingdownPanel(RingdownPanelGui):
     def __init__(self,*a,**k):
@@ -385,7 +349,7 @@ class WlmPanel(WlmPanelGui):
         wfmList = [self.etalon1Wfm,self.reference1Wfm,self.etalon2Wfm,self.reference2Wfm,self.ratio1Wfm,self.ratio2Wfm]
         sensorList = ["Etalon1","Reference1","Etalon2","Reference2","Ratio1","Ratio2"] 
         maxDuration = 180000
-        plotSensors(wfmList,sensorList,maxDuration)
+        jsonRpcTools.plotSensors(wfmList,sensorList,maxDuration)
         self.photocurrentGraph.Update(delay=0)
         self.ratioGraph.Update(delay=0)
 
@@ -432,7 +396,7 @@ class LaserPanel(LaserPanelGui):
         wfmList = [self.temperatureWfm,self.tecWfm,self.currentWfm]
         sensorList = ["Laser%dTemp"%self.laserNum,"Laser%dTec"%self.laserNum,"Laser%dCurrent"%self.laserNum]
         maxDuration = 180000
-        plotSensors(wfmList,sensorList,maxDuration)
+        jsonRpcTools.plotSensors(wfmList,sensorList,maxDuration)
         self.temperatureGraph.Update(delay=0)
         self.tecGraph.Update(delay=0)
         self.currentGraph.Update(delay=0)
@@ -477,7 +441,7 @@ class PressurePanel(PressurePanelGui):
         wfmList = [self.cavityPressureWfm,self.ambientPressureWfm,self.inletValveWfm,self.outletValveWfm,None]
         sensorList = ["CavityPressure","AmbientPressure","InletValve","OutletValve","ValveMask"]
         maxDuration = 180000
-        result = plotSensors(wfmList,sensorList,maxDuration)
+        result = jsonRpcTools.plotSensors(wfmList,sensorList,maxDuration)
         self.pressureGraph.Update(delay=0)
         self.propValveGraph.Update(delay=0)
         valveMask = result["ValveMask"]["ValveMask"]
@@ -544,7 +508,7 @@ class WarmBoxPanel(WarmBoxPanelGui):
         wfmList = [self.etalonTemperatureWfm,self.warmBoxTemperatureWfm,self.heatsinkTemperatureWfm,self.tecWfm]
         sensorList = ["EtalonTemp","WarmBoxTemp","WarmBoxHeatsinkTemp","WarmBoxTec"] 
         maxDuration = 3600000
-        plotSensors(wfmList,sensorList,maxDuration)
+        jsonRpcTools.plotSensors(wfmList,sensorList,maxDuration)
         self.temperatureGraph.Update(delay=0)
         self.tecGraph.Update(delay=0)
 
@@ -603,7 +567,7 @@ class HotBoxPanel(HotBoxPanelGui):
         wfmList = [self.cavityTemperatureWfm,self.heatsinkTemperatureWfm,self.dasTemperatureWfm,self.tecWfm,self.heaterWfm]
         sensorList = ["CavityTemp","HotBoxHeatsinkTemp","DasTemp","HotBoxTec","HotBoxHeater"] 
         maxDuration = 3600000
-        plotSensors(wfmList,sensorList,maxDuration)
+        jsonRpcTools.plotSensors(wfmList,sensorList,maxDuration)
         self.temperatureGraph.Update(delay=0)
         self.tecGraph.Update(delay=0)
         self.heaterGraph.Update(delay=0)
