@@ -48,6 +48,7 @@ File History:
                    Re-formatted supervisor ini file so it doesn't contain application indices and total number of applications -> easier to add or remove applications on the list 
     08-10-08 alex  Re-ordered applications to be launched
     10-10-07 sze   Start the RPC server at once, so that we can terminate a misbehaving stack while it is loading
+    11-06-24 alex  When ShutDownAll() is called, all the app names specified in SpecialKilledByNameList will be killed by name
     
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -959,6 +960,11 @@ class Supervisor(object):
         except KeyError:
             self.PingDispatcherTimeout_ms = _DEFAULT_PING_DISPATCHER_TIMEOUT_ms
 
+        try:
+            self.SpecialKilledByNameList = [c.strip() for c in co.get("SpecialKilledByNameList", "List").split(",")]
+        except:
+            self.SpecialKilledByNameList = []
+            
         #Read any global defaults that are to be applied..
         defaultSettings = None
         if co.has_section("GlobalDefaults"):
@@ -1411,6 +1417,10 @@ class Supervisor(object):
                 if appName in PROTECTED_APPS:
                     self.AppDict[appName].ShutDown()
             
+        if self.SpecialKilledByNameList:
+            for appname in self.SpecialKilledByNameList:
+                terminateProcessByName(appname)
+                
         self._ShutdownRequested = True
 
     def GetAppStats(self, PrintStats = False):
