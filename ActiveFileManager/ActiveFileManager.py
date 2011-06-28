@@ -414,9 +414,10 @@ class ActiveFileManager(object):
     def __init__(self,configFile):
         self.config = CustomConfigObj(configFile)
         basePath = os.path.split(configFile)[0]
-        self.activeFilePeriod = self.config.getint("MainConfig","period_s",600)
-        self.graceInterval = self.config.getint("MainConfig","grace_interval_s",60)
-        self.activeFileDir = os.path.join(basePath, self.config.get("MainConfig","active_dir","ActiveFiles"))
+        self.activeFilePeriod = self.config.getint("MainConfig","Period_s",600)
+        self.graceInterval = self.config.getint("MainConfig","GraceInterval_s",60)
+        self.archiveGroupName = self.config.get("MainConfig", "ArchiveGroupName", "Analyzer_Data")
+        self.activeFileDir = os.path.join(basePath, self.config.get("MainConfig","ActiveDir","ActiveFiles"))
         if not os.path.exists(self.activeFileDir): os.makedirs(self.activeFileDir)
 
         self.sensorQueue = Queue(0)
@@ -482,9 +483,9 @@ class ActiveFileManager(object):
                 if a.archivalStartTimestamp is None: # Start archival process
                     a.compressedFilePath = self.compressHdf5File(a)
                     a.archivalStartTimestamp = getTimestamp()
-                    Archiver.ArchiveFile("Analyzer_Data", a.compressedFilePath, removeOriginal=True, timestamp=a.baseTime)
+                    Archiver.ArchiveFile(self.archiveGroupName, a.compressedFilePath, removeOriginal=True, timestamp=a.baseTime)
                 else: # Check if archival is complete
-                    if Archiver.DoesFileExist("Analyzer_Data", a.compressedFilePath, a.baseTime):
+                    if Archiver.DoesFileExist(self.archiveGroupName, a.compressedFilePath, a.baseTime):
                         del self.activeFiles[k]
                         a.remove()
     
