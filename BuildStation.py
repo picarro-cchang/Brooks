@@ -3,6 +3,7 @@ APP_NAME = "BuildStation"
 import sys
 import wx
 import time
+import datetime
 from collections import deque
 from Queue import Queue, Empty
 import inspect
@@ -22,6 +23,8 @@ from Host.Common.SharedTypes import ctypesToDict, RPC_PORT_DRIVER, RPC_PORT_FREQ
 from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR 
 from Host.autogen import interface
 from BuildStationCommon import _value, setFPGAbits, Driver, FreqConverter, SpectrumCollector
+
+from TravellerDataPush import TravellerDataPush
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -62,7 +65,7 @@ class BuildStationFrame(BuildStationGUI):
         self.text_ctrl_min_2.Bind(wx.EVT_KILL_FOCUS, self.onMin2Enter)
         self.text_ctrl_max_2.Bind(wx.EVT_KILL_FOCUS, self.onMax2Enter)
         self.button_pause.Show(False)
-        self.button_save.Show(False)
+        #self.button_save.Show(False)
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)        
         self.performAction()
@@ -137,6 +140,50 @@ class BuildStationFrame(BuildStationGUI):
             exec action in self.scriptEnvironment
 
     def screenDump(self):
+        ##print 'saving the traveller push ctl file'
+        save_ts = datetime.datetime.now()
+        png_name = 'bstn_%s.png' % (save_ts.strftime("%Y%m%d%H%M%S"))
+        dfile_name = 'bstn_%s.ctl' % (save_ts.strftime("%Y%m%d%H%M%S"))
+        
+        ## for now we are building a csv.  But we should build an H5 once
+        ## we learn the proper format
+        h5file_name = 'bstn_%s.h5' % (save_ts.strftime("%Y%m%d%H%M%S"))
+        csvplotfile_name = 'bstn_%s.csv' % (save_ts.strftime("%Y%m%d%H%M%S"))
+        dump_data = {}
+        parm_data = {}
+        lsrsel = self.combo_box_laser.GetString(
+                                                self.combo_box_laser.GetCurrentSelection()
+                                                )
+        optnum, sep, las_sel = lsrsel.partition('-')
+        las_sel = las_sel.strip()
+        laser_str, sep, suffix = las_sel.partition(' ')
+        dump_data['rdmdoc_wavelength'] = laser_str.strip()
+        dump_data['rdmdoc_rd_time'] = self.text_ctrl_rd_time.GetValue()
+        dump_data['rdmdoc_s2s_pct'] = self.text_ctrl_s2s.GetValue()
+        dump_data['cavity_sn'] = self.text_ctrl_serial_number.GetValue()
+        
+        ctl_f = open(dfile_name, "w")
+        str = "[cavity_traveller]\n"
+        for kv in dump_data:
+            str += "%s: %s\n" % (kv, dump_data[kv])
+        
+        try:
+            xvals = self.rdAnalyzer.graph1Waveform.GetX() 
+            yvals = self.rdAnalyzer.graph1Waveform.GetY()
+        except:
+            xvals = []
+            yvals = []
+        
+        if len(xvals) == len(yvals):
+            dta_f = open(csvplotfile_name, 'w')
+            dstr = ''
+            for x, y in zip(xvals, yvals):
+                dstr += '%s,%s\n' % (x, y)
+            
+            dta_f.write(dstr)
+            
+        ctl_f.write(str)
+        
         context = wx.WindowDC(self)
         memory = wx.MemoryDC( )
         x,y = self.GetSizeTuple()
@@ -144,7 +191,25 @@ class BuildStationFrame(BuildStationGUI):
         memory.SelectObject( bitmap )
         memory.Blit( 0,0,x,y, context, 0,0)
         memory.SelectObject( wx.NullBitmap )
-        bitmap.SaveFile( "test.png", wx.BITMAP_TYPE_PNG )    
+        bitmap.SaveFile( png_name, wx.BITMAP_TYPE_PNG )  
+
+        parm_data['image_file'] = png_name
+        parm_data['plot_file'] = csvplotfile_name
+        
+        try:
+            if self.last_userid:
+                dump_data['userid'] = self.last_userid
+        except:
+            self.last_userid = None
+        
+        ## Wrapped in a try so as not to kill the buildstation if there
+        ## is some issuw with the Traveller Push
+        try:
+            c = TravellerDataPush(data_dict=dump_data,parm_dict=parm_data)
+            self.last_userid = c.last_userid 
+            del c
+        except:
+            pass 
         
     def setupFromGui(self):
         self.onMin1Enter()
