@@ -66,18 +66,18 @@ class RunSerial2Socket(object):
         
     def findPorts(self):
         portList = []
-        skipPortNum = [int(i) for i in self.appCo.get("SETUP", "SKIPPORTNUM").split(",")]
+        try:
+            skipPortNum = [int(i) for i in self.appCo.get("SETUP", "SKIPPORTNUM").split(",")]
+        except:
+            skipPortNum = []
         for p in range(100):
             if p not in skipPortNum:
                 try:
                     ser = serial.Serial(p)
-                    if len(portList) == 0 or (p-1) in portList:
-                        portList.append(p)
-                        if len(portList) == NUM_PORTS:
-                            print "%d consecutive COM ports found" % NUM_PORTS
-                            break
-                    else:
-                        portList = []
+                    portList.append(p)
+                    if len(portList) == NUM_PORTS:
+                        print "%d consecutive COM ports found" % NUM_PORTS
+                        break
                 except:
                     continue
         print portList
