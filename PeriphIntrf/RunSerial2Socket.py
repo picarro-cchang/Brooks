@@ -16,7 +16,6 @@ else:
 AppPath = os.path.abspath(AppPath)
 
 DEFAULT_CONFIG_NAME = "serial2socket.ini"
-NUM_PORTS = 4
 
 class RunSerial2Socket(object):
     def __init__(self, configFile):
@@ -24,20 +23,23 @@ class RunSerial2Socket(object):
         iniAbsBasePath = os.path.split(os.path.abspath(configFile))[0]
         exeFile = os.path.abspath(os.path.join(iniAbsBasePath, self.appCo.get("SETUP", "EXE")))
         instrConfigFile = os.path.abspath(os.path.join(iniAbsBasePath, self.appCo.get("SETUP", "INSTRCONFIG")))
+        self.numPorts = len([s for s in self.appCo.list_sections() if s.startswith("PORT")])
+        
         # Create the instrument config file to run serial2socket.exe
+        self.autoSearch = self.appCo.getboolean("SETUP", "AUTOSEARCH", False)
         instrConfigDir = os.path.dirname(instrConfigFile)
         if not os.path.isdir(instrConfigDir):
             os.makedirs(instrConfigDir)
-        if not os.path.isfile(instrConfigFile):
-            fd = open(instrConfigFile, "w")
-            fd.close()
+        if os.path.isfile(instrConfigFile):
+            os.remove(instrConfigFile)
+        fd = open(instrConfigFile, "w")
+        fd.close()
         self.instrCo = CustomConfigObj(instrConfigFile)
         if not self.instrCo.has_section("PORTS"):
             self.instrCo.add_section("PORTS")
-        for i in range(NUM_PORTS):
-            if not self.instrCo.has_section("PORT%d" % i):
-                self.instrCo.add_section("PORT%d" % i)
+        self.instrCo.write()
         self.updateIni(self.findPorts())
+        
         # Launch the EXE program
         affmask = self.appCo.getint("SETUP", "AFFINITYMASK", 1)
         lpApplicationName = None
@@ -65,22 +67,32 @@ class RunSerial2Socket(object):
         #subprocess.Popen([exeFile, str(TCP_PORT_PERIPH_INTRF), instrConfigFile], startupinfo=lpStartupInfo, creationflags = dwCreationFlags)
         
     def findPorts(self):
-        portList = []
+        try:
+            assignPortNum = [int(i) for i in self.appCo.get("SETUP", "ASSIGNPORTNUM").split(",")]
+        except:
+            assignPortNum = []
         try:
             skipPortNum = [int(i) for i in self.appCo.get("SETUP", "SKIPPORTNUM").split(",")]
         except:
             skipPortNum = []
-        for p in range(100):
-            if p not in skipPortNum:
-                try:
-                    ser = serial.Serial(p)
-                    portList.append(p)
-                    if len(portList) == NUM_PORTS:
-                        print "%d consecutive COM ports found" % NUM_PORTS
-                        break
-                except:
-                    continue
-        print portList
+            
+        if self.numPorts <= len(assignPortNum):
+            portList = assignPortNum[:self.numPorts]
+        else:
+            portList = assignPortNum[:]
+            if self.autoSearch:
+                for p in range(100):
+                    if p not in (skipPortNum+assignPortNum):
+                        try:
+                            ser = serial.Serial(p)
+                            portList.append(p)
+                            if len(portList) == self.numPorts:
+                                print "%d COM ports found" % self.numPorts
+                                break
+                        except:
+                            continue
+        assignList = [p for p in portList if p in assignPortNum]
+        print "Auto-search: %s; %s were found; %s were assigned" % (self.autoSearch, portList, assignList)
         return portList
 
     def updateIni(self, portList):
@@ -90,6 +102,8 @@ class RunSerial2Socket(object):
             p = portList[i]
             self.instrCo.set("PORTS", "PORT%d" % i, r"\\.\COM%d" % (p+1))
             section = "PORT%d" % i
+            if not self.instrCo.has_section(section):
+                self.instrCo.add_section(section)
             for option in self.appCo.list_options(section):
                 if option.upper() in ["BAUD", "STOPBITS", "PARITY", "HANDSHAKE", "BLOCKSIZE", "DELIM"]:
                     self.instrCo.set(section, option, self.appCo.get(section, option))
