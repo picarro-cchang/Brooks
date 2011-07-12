@@ -2064,9 +2064,11 @@ class QuickGui(wx.Frame):
         self.sysAlarmView.RefreshList()
        
         # Update instrument status
+        varList = [self.instStatCavityTempKey, self.instStatWarmBoxTempKey, self.instStatCavityPressureKey]
+        latestInstStatus = jsonRpcTools.getLatestDmData(measMode, self.instStatSource, varList)
         if self.showInstStat:
             try:
-                cavityTemp = jsonRpcTools.getLatestData(self.instStatCavityTempKey, measMode, self.instStatSource, 60000)
+                cavityTemp = latestInstStatus[self.instStatCavityTempKey]
                 if cavityTemp != 0.0:
                     self.instStatusPanel.cavityTemp.SetValue("%.3f" % cavityTemp)
                     # Change display color (yellow or green)
@@ -2080,7 +2082,7 @@ class QuickGui(wx.Frame):
                 print "%r" % err
                 
             try:
-                warmBoxTemp = jsonRpcTools.getLatestData(self.instStatWarmBoxTempKey, measMode, self.instStatSource, 60000)
+                warmBoxTemp = latestInstStatus[self.instStatWarmBoxTempKey]
                 if warmBoxTemp != 0.0:
                     self.instStatusPanel.warmBoxTemp.SetValue("%.3f" % warmBoxTemp)
                     # Change display color (yellow or green)
@@ -2094,7 +2096,7 @@ class QuickGui(wx.Frame):
                 print "%r" % err
                 
             try:
-                cavityPressure = jsonRpcTools.getLatestData(self.instStatCavityPressureKey, measMode, self.instStatSource, 60000)
+                cavityPressure = latestInstStatus[self.instStatCavityPressureKey]
                 if cavityPressure != 0.0:
                     self.instStatusPanel.cavityPressure.SetValue("%.3f" % cavityPressure)
                     # Change display color (yellow or green)

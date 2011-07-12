@@ -8,7 +8,7 @@ def getSeriesRange(wfmList,maxDuration):
     """
     Normally, data from the most recent timestamp in the waveforms of wfmList to the current 
     time are retrieved, but if this is of greater duration than maxDuration, the interval is 
-    truncated to [now-maxDuration,now]. 
+    truncated to [now-maxDuration,now] and clearFlag becomes True. 
     """
     tstop = timestamp.getTimestamp()
     minTimestamp = None
@@ -62,13 +62,10 @@ def plotData(wfm,data,mode,source,maxDuration):
             if ts>latestTs[wfm]: wfm.Add(timestamp.unixTime(ts),v)
     return result
   
-def getLatestData(data,mode,source,maxDuration):
-    tstop = timestamp.getTimestamp()
-    tstart = tstop - maxDuration
-    range = dict(start=tstart,stop=tstop)
-    params = dict(mode=mode,source=source,varList=[data],range=range,pickle=1)
-    result = loads(b64decode(JsonRpcService.getDmData(params)))
-    return result[data][-1]
+def getLatestDmData(mode,source,varList):
+    params = dict(mode=mode,source=source,varList=varList,pickle=1)
+    result = loads(b64decode(JsonRpcService.getLatestDmData(params)))
+    return result
     
 def getDataStruct(tstart, tstop):
     """

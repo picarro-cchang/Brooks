@@ -117,6 +117,15 @@ class ActiveFileManagerRpcHandler(Singleton):
             raise result
         else:
             return result
+        
+    def getLatestRdData(self,*a,**k):
+        """ Get the latest ringdown data specified by "varList" """
+        self.parent.rpcCommandQueue.put((self.parent.genLatestRdData,(a,k))) 
+        result = self.parent.rpcResultQueue.get()
+        if isinstance(result,Exception):
+            raise result
+        else:
+            return result
             
     def getRdDataStruct(self,*a,**k):
         """ Get "structure" of the data available from the ringdown data in the time range "tstart" (inclusive) 
@@ -142,6 +151,15 @@ class ActiveFileManagerRpcHandler(Singleton):
             raise result
         else:
             return result
+
+    def getLatestSensorData(self,*a,**k):
+        """ Get the latest sensor data specified by "streamName" """
+        self.parent.rpcCommandQueue.put((self.parent.genLatestSensorData,(a,k))) 
+        result = self.parent.rpcResultQueue.get()
+        if isinstance(result,Exception):
+            raise result
+        else:
+            return result
             
     def getDmData(self,*a,**k):
         """ Get data manager for "mode" and "source" whose columns are specified by "varList" from 
@@ -156,6 +174,15 @@ class ActiveFileManagerRpcHandler(Singleton):
         else:
             return result
 
+    def getLatestDmData(self,*a,**k):
+        """ Get the latest sensor data data manager for "mode" and "source" whose columns are specified by "varList" """
+        self.parent.rpcCommandQueue.put((self.parent.genLatestDmData,(a,k))) 
+        result = self.parent.rpcResultQueue.get()
+        if isinstance(result,Exception):
+            raise result
+        else:
+            return result
+            
     def getDmDataStruct(self,*a,**k):
         """ Get "structure" of the data available from the data manager in the time range "tstart" (inclusive) 
         up to "tstop" (exclusive). The result is a nested dictionary keyed by instrument mode, then by analysis
@@ -391,6 +418,15 @@ class ActiveFile(object):
         else:
             return None
 
+    def getLatestRdData(self, varList):
+        """Get the latest values of the RD data in the varList"""
+        table = self.getRdDataTable()
+        if table is not None:
+            selected = table[-1:]
+            return recArrayExtract(selected,varList)
+        else:
+            return None
+            
     def getSensorData(self,tstart,tstop,streamName):
         """Get sensor data lying in the specified time range."""
         table = self.getSensorDataTable()
@@ -400,7 +436,17 @@ class ActiveFile(object):
             return recArrayExtract(selected,["timestamp",("value",str(streamName))])
         else:
             return None
-
+    
+    def getLatestSensorData(self, streamName):
+        """Get the latest value of the specified sensor data"""
+        table = self.getSensorDataTable()
+        if table is not None:
+            index = self.streamLookup.get(streamName,streamName)
+            selected = table.readWhere('streamNum == %s' % (index,))[-1]
+            return recArrayExtract(selected,["timestamp",("value",str(streamName))])
+        else:
+            return None
+            
     def getDmData(self,mode,source,tstart,tstop,varList):
         """Get data manager data from specified mode and source lying in the specified time range"""
         table = self.getDmDataTable(mode,source)
@@ -409,7 +455,17 @@ class ActiveFile(object):
             return recArrayExtract(selected,varList)
         else:
             return None
-        
+
+
+    def getLatestDmData(self,mode,source,varList):
+        """Get the latest values of the data manager data in the varList from specified mode and source"""
+        table = self.getDmDataTable(mode,source)
+        if table is not None:
+            selected = table[-1:]
+            return recArrayExtract(selected,varList)
+        else:
+            return None
+            
 class ActiveFileManager(object):
     def __init__(self,configFile):
         self.config = CustomConfigObj(configFile)
@@ -538,12 +594,20 @@ class ActiveFileManager(object):
             d = a.getRdData(tstart,tstop,varList)
             if d is not None:
                 results.append(d)
+            # If it takes longer than 0.5 seconds, set self.rpcInProgress as True and try again next time
             if time.clock()-t > 0.5: t = yield True # Indicate not yet done
         if results:
             self.rpcResultQueue.put(numpy.concatenate(results))
         else:
             self.rpcResultQueue.put(None)
 
+    def genLatestRdData(self,varList):
+        latestBaseTime = sorted(self.activeFiles.keys())[-1]
+        a = self.activeFiles[latestBaseTime]
+        result = a.getLatestRdData(varList)
+        self.rpcResultQueue.put(result)
+        t = yield False
+            
     def genSensorData(self,tstart,tstop,streamName):
         results = []
         t = time.clock()
@@ -555,12 +619,20 @@ class ActiveFileManager(object):
             d = a.getSensorData(tstart,tstop,streamName)
             if d is not None: 
                 results.append(d)
+            # If it takes longer than 0.5 seconds, set self.rpcInProgress as True and try again next time
             if time.clock()-t > 0.5: t = yield True # Indicate not yet done
         if results:
             self.rpcResultQueue.put(numpy.concatenate(results))
         else:
             self.rpcResultQueue.put(None)
 
+    def genLatestSensorData(self,streamName):
+        latestBaseTime = sorted(self.activeFiles.keys())[-1]
+        a = self.activeFiles[latestBaseTime]
+        result = a.getLatestSensorData(streamName)
+        self.rpcResultQueue.put(result)
+        t = yield False
+        
     def genDmData(self,mode,source,tstart,tstop,varList):
         results = []
         t = time.clock()
@@ -579,6 +651,7 @@ class ActiveFileManager(object):
                 d = a.getDmData(mode,source,tstart,tstop,varList)
                 if d is not None:
                     results.append(d)
+                # If it takes longer than 0.5 seconds, set self.rpcInProgress as True and try again next time
                 if time.clock()-t > 0.5: t = yield True # Indicate not yet done
             except AttributeError,e:
                 latestException = e
@@ -587,6 +660,13 @@ class ActiveFileManager(object):
         else:
             self.rpcResultQueue.put(None)
 
+    def genLatestDmData(self,mode,source,varList):
+        latestBaseTime = sorted(self.activeFiles.keys())[-1]
+        a = self.activeFiles[latestBaseTime]
+        result = a.getLatestDmData(mode,source,varList)
+        self.rpcResultQueue.put(result)
+        t = yield False
+        
     def genRdDataStruct(self,tstart,tstop):
         dataDict = {}
         t = time.clock()
@@ -595,7 +675,7 @@ class ActiveFileManager(object):
             if tstop <= baseTime: continue
             af = self.activeFiles[baseTime]
             if tstart >= af.stopTime: continue
-            #
+            # If it takes longer than 0.5 seconds, set self.rpcInProgress as True and try again next time
             if time.clock()-t > 0.5: t = yield True # Indicate not yet done
             # We now have an active file which overlaps with [tstart,tstop)
             rdDataTable = af.handle.getNode(af.baseGroup,"rdData")
@@ -617,7 +697,7 @@ class ActiveFileManager(object):
             if tstop <= baseTime: continue
             af = self.activeFiles[baseTime]
             if tstart >= af.stopTime: continue
-            #
+            # If it takes longer than 0.5 seconds, set self.rpcInProgress as True and try again next time
             if time.clock()-t > 0.5: t = yield True # Indicate not yet done
             # We now have an active file which overlaps with [tstart,tstop)
             modes = af.handle.getNode(af.baseGroup,"dataManager")._v_children

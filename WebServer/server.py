@@ -109,6 +109,23 @@ def getDmData(params):
 
 @handler.register
 @rpcWrapper
+def getLatestDmData(params):
+    # Get selected data manager outputs within a specified timestamp range
+    # Keyword parameters are:
+    # mode:   Analyzer mode
+    # source: Source name to extract
+    # varList: A list of variable names to extract
+    # pickle: If present and True, return a base64 encoded pickle rather
+    #          than a plain JSON result
+    pickle = ('pickle' in params) and params['pickle']
+    mode = params['mode']
+    source = params['source']
+    varList = [str(v) for v in params['varList']]
+    data = ActiveUtils.getLatestDmData(mode,source,varList)
+    return b64encode(dumps(data,HIGHEST_PROTOCOL)) if pickle else recArrayToDict(data)
+    
+@handler.register
+@rpcWrapper
 def getRdDataStruct(params):
     # Get structure of ringdown data within a specified timestamp range
     # Keyword parameters are:

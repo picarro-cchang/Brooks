@@ -163,6 +163,9 @@ def getSensorData(tstart,tstop,streamName):
     else:
         return None
         
+def getLatestSensorData(streamName):
+    return ActiveFileManager.getLatestSensorData(streamName)
+    
 def getRdData(tstart,tstop,varList):
     """Return numpy record array with requested variables and specified start and stop times"""
     result_list = []
@@ -187,7 +190,10 @@ def getRdData(tstart,tstop,varList):
         return numpy.concatenate(result_list)
     else:
         return None
-        
+    
+def getLatestRdData(varList):
+    return ActiveFileManager.getLatestRdData(varList)
+    
 def getDmData(mode,source,tstart,tstop,varList):
     """Return numpy record array with requested variables and specified start and stop times"""
     result_list = []
@@ -213,6 +219,9 @@ def getDmData(mode,source,tstart,tstop,varList):
     else:
         return None
 
+def getLatestDmData(mode,source,varList):
+    return ActiveFileManager.getLatestDmData(mode,source,varList)
+    
 def getRdDataStruct(tstart,tstop):
     # Generate a dictionary whose keys are the available ringdown data columns. The values 
     #  stored are the data types of the desired columns as strings.
