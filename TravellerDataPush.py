@@ -182,16 +182,16 @@ import datetime
 import xmlrpclib
 import cStringIO
 
-from Tkinter import *
+import wx
 
 CWD = os.getcwd()
 
 ipvusr="ipvadmin"
 ipvpass="p3c1rr4p3c1rr4"
 ipvup = "%s:%s@" % (ipvusr, ipvpass)
-#RPCURI_DFT = "http://%slocalhost/xmlrpc/" % (ipvup)
-RPCURI_DFT = "http://plucky/xmlrpc/"
-#RPCURI_DFT = "http://ubuntuhost64:8000/xmlrpc/"
+#RPCURI_DFT = "http://%smfg.picarro.com/xmlrpc/" % (ipvup) # Production
+RPCURI_DFT = "http://plucky/xmlrpc/" # Plucky TEST
+#RPCURI_DFT = "http://ubuntuhost64:8000/xmlrpc/" # Dev (local machine)
 
 XMLRPC_USER = 'xml_user'
 XMLRPC_PW = 'skCyrcFHVZecfD'
@@ -221,8 +221,6 @@ MEASURE_STEP = {
              'step_20': 'cadoc_final_rd_measure',
                 }
 
-#import wx
-
 
 class Usage(Exception):
     def __init__(self, msg):
@@ -233,6 +231,7 @@ class _Logger(object):
         run_ts = datetime.datetime.now()
         log_file_name = 'TravellerDataPush_%s.log' % (run_ts.strftime("%Y%m%d%H%M%S"))
         self.path = os.path.join(CWD, log_file_name)
+        self.msg_dict = {}
 
         if kwargs:
             if 'path' in kwargs:
@@ -264,7 +263,7 @@ class _Logger(object):
         
         return True
 
-class TravellerDataPushPnl(Frame):
+class TravellerDataPushPnl(wx.Frame):
     def _step(self, stat):
         if stat in ('step_2', 'step_3'):
             return 'step_3'
@@ -280,12 +279,16 @@ class TravellerDataPushPnl(Frame):
             return 'step_20'
         return None
     
-    def send_new_btn_press(self):
+    def send_new_btn_press(self, event):
         self.send_button_press(True)
         
-    def send_cnt_btn_press(self): 
+    def send_cnt_btn_press(self, event): 
         self.send_button_press("Continue")
-           
+    
+    def quit(self, event):
+        self.Destroy()
+        
+               
     def send_button_press(self, new_set=True):
         def _send_doc_to_mfg(data_dict):
             XMLProxy = xmlrpclib.ServerProxy(self.mfg_uri)
@@ -341,18 +344,22 @@ class TravellerDataPushPnl(Frame):
                   'doc_choice',
                   ):
             if ky in self.cntls:
-                data_dict[ky] = self.cntls[ky]['entry'].get()
+                data_dict[ky] = self.cntls[ky]['entry'].GetValue()
 
         ky = 'userid'
         if ky in self.cntls:
-            data_dict[ky] = self.cntls[ky]['variable'].get()
+            data_dict[ky] = self.cntls[ky]['entry'].GetString(
+                                    self.cntls[ky]['entry'].GetSelection()
+                                                              )
             self.last_userid = data_dict[ky]
+            #passing last userid into log class to preserve value after frame
+            self.my_log.msg_dict['last_userid'] = self.last_userid
         
         if new_set:
             data_dict['new_set'] = new_set
             
         for ky in self.data_items:
-            data_dict[ky] = self.cntls[ky]['entry'].get()
+            data_dict[ky] = self.cntls[ky]['entry'].GetValue()
 
         if self.doc_tuple:
             data_dict['docid'] = self.doc_tuple[1]
@@ -391,24 +398,24 @@ class TravellerDataPushPnl(Frame):
         if 'plot_file' in self.parm_dict:
             _send_attachment(self.parm_dict['plot_file'], data_dict, 'Plot XY Data')
             
-        self.quit()
+        self.quit(None)
 
     
     def createWidgets(self):
-        def _new_entry_widget_dict(label, value):
-            lbl = Label(self)
-            lbl['text'] = label
-            vlu = Entry(self)
-            vlu.insert(END, '%s' % (value))
+        def _new_entry_widget_dict(label, value, size=None):
+            lbl = wx.StaticText(self.panel, -1, label)
+            if size:
+                vlu = wx.TextCtrl(self.panel, -1, '%s' % (value), size=size)
+            else:
+                vlu = wx.TextCtrl(self.panel, -1, '%s' % (value))
+                
             return {'label': lbl, 'entry': vlu}
         
-        def _new_optionmenu_widget_dict(label, value, dflt=0):
-            lbl = Label(self)
-            lbl['text'] = label
-            variable = StringVar(self)
-            variable.set(value[dflt])
-            vlu = OptionMenu(self, variable, *value)
-            return {'label': lbl, 'entry': vlu, 'variable': variable}
+        def _new_choice_widget_dict(label, value, dflt=0):
+            lbl = wx.StaticText(self.panel, -1, label)
+            vlu = wx.Choice(self.panel, -1, choices=value)
+            vlu.SetSelection(dflt)
+            return {'label': lbl, 'entry': vlu}
         
         def _lbl(ky): 
             if ky in PNL_LBLS:
@@ -419,6 +426,13 @@ class TravellerDataPushPnl(Frame):
         
         row=0
         self.cntls = {}
+        self.gbsizer = wx.GridBagSizer(4, 4)
+
+        #Spacers
+        self.gbsizer.Add((20,2), pos=(row, 0), flag=wx.EXPAND)
+        self.gbsizer.Add((20,2), pos=(row, 3), flag=wx.EXPAND)
+        
+        row+=1
         
         ky = 'userid'
 
@@ -432,71 +446,88 @@ class TravellerDataPushPnl(Frame):
             dft = 0
 
         if optlist:
-            self.cntls[ky] = _new_optionmenu_widget_dict(_lbl(ky), optlist, dft)
-            self.cntls[ky]['label'].grid(row=row, column=1)
-            self.cntls[ky]['entry'].grid(row=row, column=2)
+            self.cntls[ky] = _new_choice_widget_dict(_lbl(ky), optlist, dft)
+            self.gbsizer.Add(self.cntls[ky]['label'], pos=(row, 1), flag=wx.EXPAND)
+            self.gbsizer.Add(self.cntls[ky]['entry'], pos=(row, 2), flag=wx.EXPAND)
             row += 1
 
-        row += 2
+        row += 1
         
         ky = 'doc_choice'
         val = self.doc_tuple[0]
-        self.cntls[ky] = _new_entry_widget_dict(_lbl(ky), val)
-        self.cntls[ky]['label'].grid(row=row, column=1)
-        self.cntls[ky]['entry'].grid(row=row, column=2)
-        self.cntls[ky]['entry'].config(state=DISABLED)
-
-        row += 2
+        self.cntls[ky] = _new_entry_widget_dict(_lbl(ky), val, (200, -1))
+        self.gbsizer.Add(self.cntls[ky]['label'], pos=(row, 1), flag=wx.EXPAND)
+        self.gbsizer.Add(self.cntls[ky]['entry'], pos=(row, 2), flag=wx.EXPAND)
+        
+        row += 1
         
         for ky in (
                 'rdmdoc_wavelength',
                 'rdmdoc_rd_time',
                 'rdmdoc_s2s_pct',
-                   ):
-            val = self.data_dict[ky]
-            self.cntls[ky] = _new_entry_widget_dict(_lbl(ky), val)
-            self.cntls[ky]['label'].grid(row=row, column=1)
-            self.cntls[ky]['entry'].grid(row=row, column=2)
-            self.data_items.append(ky)
-            row += 1
-
-        for ky in (
                 'rdmdoc_vert',
                 'rdmdoc_horiz',
                 'rdmdoc_vpzt',
                    ):
-            self.cntls[ky] = _new_entry_widget_dict(_lbl(ky), '')
-            self.cntls[ky]['label'].grid(row=row, column=1)
-            self.cntls[ky]['entry'].grid(row=row, column=2)
+            if ky in self.data_dict:
+                val = self.data_dict[ky]
+            else:
+                val = ''
+            self.cntls[ky] = _new_entry_widget_dict(_lbl(ky), val)
+            self.gbsizer.Add(self.cntls[ky]['label'], pos=(row, 1), flag=wx.EXPAND)
+            self.gbsizer.Add(self.cntls[ky]['entry'], pos=(row, 2), flag=wx.EXPAND)
             self.data_items.append(ky)
             row += 1
-            
-        row += 2
-        self.QUIT = Button(self, width=BTN_WIDTH)
-        self.QUIT["text"] = "Cancel"
-        self.QUIT["command"] =  self.quit
-        self.QUIT.grid(row=row, column=1, columnspan=2)
+                
+        row += 1
+        self.QUIT = wx.Button(self.panel, -1, "Cancel")
+        self.QUIT.SetMinSize((BTN_WIDTH, 20))
+        self.Bind(wx.EVT_BUTTON, self.quit, self.QUIT)
+        self.gbsizer.Add(self.QUIT, pos=(row, 1), span=(1,2), flag=wx.EXPAND)
 
-        row +=3
-        self.send_button = Button(self, width=BTN_WIDTH)
-        self.send_button["text"] = "Send as new %s" % (self._step(self.doc_tuple[2]))
-        self.send_button["command"] = self.send_new_btn_press
-        self.send_button.grid(row=row, column=1, columnspan=2)
+        row +=1
+        self.send_button = wx.Button(self.panel, -1, "Send as new %s" % (self._step(self.doc_tuple[2])))
+        self.send_button.SetMinSize((BTN_WIDTH, 20))
+        self.Bind(wx.EVT_BUTTON, self.send_new_btn_press, self.send_button)
+        self.gbsizer.Add(self.send_button, pos=(row, 1), span=(1,2), flag=wx.EXPAND)
         
-        row +=3
-        self.send_button = Button(self, width=BTN_WIDTH)
-        self.send_button["text"] = "Send as continuation of %s" % (self._step(self.doc_tuple[2]))
-        self.send_button["command"] = self.send_cnt_btn_press
-        self.send_button.grid(row=row, column=1, columnspan=2)
+        row +=1
+        self.send_button2 = wx.Button(self.panel, -1, "Send as continuation %s" % (self._step(self.doc_tuple[2])))
+        self.send_button2.SetMinSize((BTN_WIDTH, 20))
+        self.Bind(wx.EVT_BUTTON, self.send_cnt_btn_press, self.send_button2)
+        self.gbsizer.Add(self.send_button2, pos=(row, 1), span=(1,2), flag=wx.EXPAND)
+
+        row +=1
+        #Spacers
+        self.gbsizer.Add((20,2), pos=(row, 0), flag=wx.EXPAND)
+        self.gbsizer.Add((20,2), pos=(row, 3), flag=wx.EXPAND)
+                
+        self.panel.SetAutoLayout(True)
+        self.panel.SetSizer(self.gbsizer)
+        self.panel.Fit()
 
     def __init__(self, *args, **kwargs):
+        kwargs["style"] = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL|wx.RAISED_BORDER|wx.STAY_ON_TOP
+        
         self.parm_dict=kwargs['parm_dict']
+        del kwargs['parm_dict']
+        
         self.data_dict=kwargs['data_dict']
+        del kwargs['data_dict']
+        
         self.my_log=kwargs['my_log']
+        del kwargs['my_log']
+        
         self.doc_tuple=kwargs['doc_tuple']
+        del kwargs['doc_tuple']
+        
         self.mfg_uri=kwargs['mfg_uri']
+        del kwargs['mfg_uri']
+        
+        self.last_userid=kwargs['last_userid']
+        del kwargs['last_userid']
+        
         self.data_items = []
-        master=kwargs['master']
         
         if 'userid' in self.data_dict:
             self.last_userid = self.data_dict['userid']
@@ -505,10 +536,10 @@ class TravellerDataPushPnl(Frame):
         
         self.user_list = self._get_userlist(self.mfg_uri)
         
-        Frame.__init__(self, master)
-
-        self.grid()
+        wx.Frame.__init__(self, *args, **kwargs)
+        self.panel = wx.Panel(self, -1)
         self.createWidgets()
+        self.Fit()
 
     def _get_userlist(self, full_uri):
         data_dict = {}
@@ -628,34 +659,36 @@ class TravellerDataPush():
             self._show_message(msg)
     
     def _show_message(self, msg):
-        root = Tk()
-        root.wm_title(PNL_TITLE)
-
-        Message(root, text=msg, width=MSG_WIDTH, background='white').pack(padx=10, pady=10, expand=True)
-        
-        root.QUIT = Button(root, width=BTN_WIDTH)
-        root.QUIT["text"] = "Cancel"
-        root.QUIT["command"] =  root.destroy
-        root.QUIT.pack(padx=10, pady=10, expand=True)
-        
-        root.mainloop()
+        app = wx.App()
+        dlg = wx.MessageDialog(None, msg, caption=PNL_TITLE, style=wx.OK|wx.ICON_INFORMATION|wx.STAY_ON_TOP)
+        dlg.ShowModal()
+        dlg.Destroy()
+        app.MainLoop()        
         
     def _show_panel(self, parm_dict, data_dict, my_log, doc_tuple, mfg_uri):
-        root = Tk()
-        root.wm_title(PNL_TITLE)
-        app = TravellerDataPushPnl(
-                          master=root, 
+        
+        app = wx.App()
+        frame = TravellerDataPushPnl(
+                          None,
+                          title=PNL_TITLE,
                           parm_dict=parm_dict, 
                           data_dict=data_dict, 
                           my_log=my_log,
                           doc_tuple=doc_tuple,
-                          mfg_uri=mfg_uri
+                          mfg_uri=mfg_uri,
+                          last_userid=self.last_userid
                           )
-        
-        app.mainloop()
-        self.last_userid = app.last_userid
-        root.destroy()
-      
+        frame.Show(True)
+        app.MainLoop()
+
+        if 'last_userid' in my_log.msg_dict:
+            self.last_userid = my_log.msg_dict['last_userid']
+            del my_log.msg_dict['last_userid']
+            
+        try:
+            app.destroy()
+        except:
+            pass
             
     def _file_pull(self, data_file, data_file_dict, psep=': '):
         try:
@@ -686,6 +719,8 @@ class TravellerDataPush():
             for val in search_criteria:
                 if search_criteria[val]:
                     data_dict[val] = search_criteria[val]
+        else:
+            return None
         
         XMLProxy = xmlrpclib.ServerProxy(full_uri)
         
