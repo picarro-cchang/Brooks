@@ -896,7 +896,10 @@ class DataManager(object):
             cp.set(measName, "offset", self.UserCalibration[measName][USERCAL_OFFSET_INDEX])
         cp.write()
         # Commit and push such changes using Config Monitor
-        CRDS_ConfigMonitor.monitor("User calibration changed")
+        try:
+            CRDS_ConfigMonitor.monitor("User calibration changed")
+        except Exception, err:
+            print "%r" % err
         Log("User calibration file updated.", dict(Sections = self.UserCalibration.keys()))
 
     def _EnqueueSyncScript(self,sai,startTime,iteration):
