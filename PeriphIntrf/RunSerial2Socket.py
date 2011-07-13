@@ -66,23 +66,49 @@ class RunSerial2Socket(object):
         win32process.SetProcessAffinityMask(hProcess, affmask)
         #subprocess.Popen([exeFile, str(TCP_PORT_PERIPH_INTRF), instrConfigFile], startupinfo=lpStartupInfo, creationflags = dwCreationFlags)
         
+    def _getCleanPortList(self, pList):
+        retList = []
+        for i in range(len(pList)):
+            try:
+                # an integer
+                retList.append(int(pList[i]))
+            except:
+                try:
+                    # "COMxx"
+                    retList.append(int(pList[i].upper().replace("COM",""))-1)
+                except:
+                    pass
+        return retList
+        
     def findPorts(self):
+        # Compile the assigned and skipped COM port list
         try:
-            assignPortNum = [int(i) for i in self.appCo.get("SETUP", "ASSIGNPORTNUM").split(",")]
+            pList = [p.strip() for p in self.appCo.get("SETUP", "ASSIGNCOMNUM").split(",")]
         except:
-            assignPortNum = []
+            try:
+                pList = [p.strip() for p in self.appCo.get("SETUP", "ASSIGNPORTNUM").split(",")]
+            except:
+                pList = []
+        assignList = self._getCleanPortList(pList)
+
         try:
-            skipPortNum = [int(i) for i in self.appCo.get("SETUP", "SKIPPORTNUM").split(",")]
+            pList = [p.strip() for p in self.appCo.get("SETUP", "SKIPCOMNUM").split(",")]
         except:
-            skipPortNum = []
-            
-        if self.numPorts <= len(assignPortNum):
-            portList = assignPortNum[:self.numPorts]
+            try:
+                pList = [p.strip() for p in self.appCo.get("SETUP", "SKIPPORTNUM").split(",")]
+            except:
+                pList = []
+        skipList = self._getCleanPortList(pList)
+
+        print "Assigned List: %s; Skipped List: %s" % (assignList, skipList)
+        
+        if self.numPorts <= len(assignList):
+            portList = assignList[:self.numPorts]
         else:
-            portList = assignPortNum[:]
+            portList = assignList[:]
             if self.autoSearch:
                 for p in range(100):
-                    if p not in (skipPortNum+assignPortNum):
+                    if p not in (skipList+assignList):
                         try:
                             ser = serial.Serial(p)
                             portList.append(p)
@@ -91,8 +117,8 @@ class RunSerial2Socket(object):
                                 break
                         except:
                             continue
-        assignList = [p for p in portList if p in assignPortNum]
-        print "Auto-search: %s; %s were found; %s were assigned" % (self.autoSearch, portList, assignList)
+        aList = [p for p in portList if p in assignList]
+        print "Auto-search: %s; %s were found; %s were assigned" % (self.autoSearch, portList, aList)
         return portList
 
     def updateIni(self, portList):
