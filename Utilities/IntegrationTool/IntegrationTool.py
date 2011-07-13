@@ -38,7 +38,7 @@ LASER_TYPE_DICT = {"1603.2": "CO2", "1651.0": "CH4", "1599.6": "iCO2", "1392.0":
                    "1567.9": "CO", "1527.0": "NH3", "1554.7": "iH2O", "1521.1": "C2H2",
                    "1658.7": "CH4", "1278.0": "HF"}
 
-ANALYZER_TYPE_INDEX = {"HBDS":0, "CFADS":1, "CFBDS":1, "CFHADS":1, "CFDDS":1, "CFEDS":1, "CFFDS":6, "CBDS":2, "CHADS":2, "CFKADS":3, "CFKBDS":3, "AEDS":4, "CKADS":5}
+ANALYZER_TYPE_INDEX = {"HBDS":0, "CFADS":1, "CFBDS":1, "CFHADS":7, "CFDDS":1, "CFEDS":1, "CFFDS":6, "CBDS":2, "CHADS":2, "CFKADS":3, "CFKBDS":3, "AEDS":4, "CKADS":5}
 ALL_SCHEMES = [
               { "O18"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak18O.sch",
                 "Baseline" : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Baseline.sch",
@@ -76,6 +76,13 @@ ALL_SCHEMES = [
                 "C12Peak"  : r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C12Peak.sch",
                 "C13Peak"  : r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C13Peak.sch"
               },
+              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "H2O_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2O_BL.sch",
+                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
+                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch",
+                "H2O_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2O_PK.sch"
+              },
              ]
              
 THRESHOLD_RANGE = [
@@ -86,6 +93,7 @@ THRESHOLD_RANGE = [
                    [2000, 16000, 500],
                    [2000, 16383, 1000],
                    [2000, 16000, 500],
+                   [2000, 16383, 1000],
                   ]
                   
 # Connect to database
