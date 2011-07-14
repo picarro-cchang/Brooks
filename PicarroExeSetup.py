@@ -81,6 +81,7 @@ sys.path.append("Utilities/PicarroKML")
 sys.path.append("Utilities/ReadGPSWS")
 sys.path.append("Utilities/IntegrationBackup")
 sys.path.append("Utilities/FlowController")
+sys.path.append("Utilities/ReadMemUsage")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -263,6 +264,7 @@ setup(version = "1.0",
                  "Utilities/Restart/ResetAnalyzer.py",
                  "Utilities/Restart/RestoreStartup.py",
                  "Utilities/Restart/RtcAlarmOff.py",
+                 "Utilities/ReadMemUsage/ReadMemUsage.py",
                  "../SrcCode/Utilities/CalibrateSystem.py",
                  "../SrcCode/Utilities/CalibrateFsr.py",
                  "../SrcCode/Utilities/AdjustWlmOffset.py",
