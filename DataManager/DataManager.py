@@ -109,6 +109,7 @@ from Host.Common.MeasData import MeasData
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.Listener import Listener
 from Host.Common.InstErrors import INST_ERROR_DATA_MANAGER
+from Host.Common.parsePeriphIntrfConfig import parsePeriphIntrfConfig
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME)
 
@@ -291,7 +292,6 @@ class DataManager(object):
             self.ModeDefinitionPath = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "ModeDefinitionPath"))
             self.UserCalibrationPath = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "UserCalibrationPath"))
             calDataCount = cp.getint(_MAIN_CONFIG_SECTION, "InstrDataFile_Count")
-            basePath = os.path.split(IniPath)[0]
             self.InstrDataPaths = []
             for i in range(1, calDataCount + 1):
                 relPath = cp.get(_MAIN_CONFIG_SECTION, "InstrDataFile_%d" % i)
@@ -305,11 +305,14 @@ class DataManager(object):
             else:
                 self.maketimetuple = time.gmtime
                 
-            self.enablePeriphIntrf = False
-            if cp.getboolean("Setup", "EnablePeriphIntrf", False):
-                self.enablePeriphIntrf = True
-                self.periphIntrfConfig = os.path.join(basePath, cp.get("Setup", "periphIntrfConfig", \
-                                                                       "../PeriphIntrf/serial2socket.ini"))
+            # Get INI for peripheral interface
+            try:
+                self.periphIntrfConfig = os.path.join(basePath, cp.get("PeriphIntrf", "periphIntrfConfig"))
+            except:
+                try:
+                    self.periphIntrfConfig = os.path.join(basePath, cp.get("Setup", "periphIntrfConfig"))
+                except:
+                    self.periphIntrfConfig = os.path.join(basePath, "../PeriphIntrf/RunSerial2Socket.ini")
                     
             self.enablePulseAnalyzer = False
             if "PulseAnalyzer" in cp: 
@@ -421,7 +424,9 @@ class DataManager(object):
             self.rdInstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
                                                         APP_NAME,
                                                         IsDontCareConnection = False)
+        # Peripheral Interface
         self.CRDS_PeriphIntrf = None
+        self.periphIntrfCols = []
         
         # Pulse Analyzer
         self.pulseAnalyzer = None
@@ -1218,9 +1223,10 @@ class DataManager(object):
             self.InitCount += 1
             if self.InitCount > 1:
                 Log("Re-initializing application", dict(InitCount = self.InitCount))
-            ##Load the main application configuration settings...
+            #Load the main application configuration settings...
             self.cp = self.Config.Load(self.ConfigPath)
-            ## open the serial port (may be used by scripts)
+                 
+            # open the serial port (may be used by scripts)
             if self.serialThread != None:
                 self.killSerialThread()
                 self.serialThread.join(2.0)   
@@ -1317,14 +1323,18 @@ class DataManager(object):
                 self.CurrentMeasMode = self.MeasModes[self.Config.StartingMeasMode]
                 Log("Current mode name initialized", dict(Name = self.Config.StartingMeasMode))
 
-            if self.Config.enablePeriphIntrf:
-                try:
-                    self.CRDS_PeriphIntrf = PeriphIntrf(self.Config.periphIntrfConfig)
-                except Exception, err:
-                    self.CRDS_PeriphIntrf = None
-                    Log("Peripheral Interface not running. Error: %r" % err)
-                    print "Peripheral Interface not running. Error: %r" % err
-                    
+            # Handle peripheral interface
+            self.CRDS_PeriphIntrf = None
+            self.periphIntrfCols = []
+            try:
+                self.CRDS_PeriphIntrf = PeriphIntrf(self.Config.periphIntrfConfig)
+                periphCo = CustomConfigObj(self.Config.periphIntrfConfig, list_values = True)
+                (rawDict, syncDict) = parsePeriphIntrfConfig(periphCo)
+                self.periphIntrfCols = rawDict["data"][:]
+            except Exception, err:
+                Log("Peripheral Interface not running. Error: %r" % err)
+                print "Peripheral Interface not running. Error: %r" % err
+            
             # Initialize pulse analyzer if endabled in INI file
             if self.Config.enablePulseAnalyzer:
                 try:    
@@ -1599,6 +1609,7 @@ class DataManager(object):
                                              MeasSysRpcServer = CRDS_MeasSys,
                                              FreqConvRpcServer = CRDS_FreqConv,
                                              PeriphIntrfFunc = periphIntrfFunc,
+                                             PeriphIntrfCols = self.periphIntrfCols,
                                              SerialInterface = self.serial,
                                              ScriptName = ReportSource,
                                              ExcLogFunc = LogExc,

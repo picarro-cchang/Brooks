@@ -25,7 +25,6 @@ DEFAULT_CONFIG_NAME = "serial2socket.ini"
 
 DEFAULT_SENSOR_QUEUE_SIZE = 2000
 HOST = 'localhost'
-NUM_CHANNELS = 4
      
 def linInterp(pPair, tPair, t):
     try:
@@ -48,7 +47,8 @@ class PeriphIntrf(object):
         self.sensorList = []
         self.parser = []
         self.dataLabels = []
-        for p in range(NUM_CHANNELS):
+        self.numChannels = len([s for s in co.list_sections() if s.startswith("PORT")])
+        for p in range(self.numChannels):
             self.sensorList.append(deque())
             paserFunc = co.get("PORT%d" % p, "SCRIPTFUNC").strip()
             scriptPath =  os.path.join(iniAbsBasePath, co.get("SETUP", "SCRIPTPATH"))
@@ -155,13 +155,13 @@ class PeriphIntrf(object):
          
     def selectAllDataByTime(self, requestTime):
         sensorDataList = []
-        for i in range(NUM_CHANNELS):
+        for i in range(self.numChannels):
             sensorDataList.append([[], []])
         self.sensorLock.acquire()
         localSensorList = self.sensorList[:]
         self.sensorLock.release()
         try:
-            for port in range(NUM_CHANNELS):
+            for port in range(self.numChannels):
                 for idx in range(len(localSensorList[port])):
                     (ts, valList) = localSensorList[port][idx]
                     if len(valList) > 0 and ts >= requestTime:
@@ -179,7 +179,7 @@ class PeriphIntrf(object):
     def getDataByTime(self, requestTime, dataList):
         sensorDataList = self.selectAllDataByTime(requestTime)
         interpDict = {}
-        for port in range(NUM_CHANNELS):
+        for port in range(self.numChannels):
             timeDataLists = sensorDataList[port]
             for dataIdx in range(len(timeDataLists[1])):
                 interpDict[self.dataLabels[port][dataIdx]] = linInterp(timeDataLists[1][dataIdx], timeDataLists[0], requestTime)

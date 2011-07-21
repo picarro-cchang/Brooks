@@ -92,6 +92,7 @@ from Host.Common.SafeFile import SafeFile, FileExists
 from Host.Common.MeasData import MeasData
 from Host.Common.AppStatus import STREAM_Status
 from Host.Common.InstErrors import *
+from Host.Common.parsePeriphIntrfConfig import parsePeriphIntrfConfig
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME)
 
@@ -147,7 +148,7 @@ class Mbox(object):
 class DataLog(object):
     """Class to manage writing (and reading) of data logs to disk."""
     COLUMN_WIDTH = 26
-    def __init__(self, EngineName, TimeStandard, Mbox, BackupGroupName = None):
+    def __init__(self, EngineName, TimeStandard, Mbox, BackupGroupName = None, PeriphDictTuple = ()):
         self.EnabledDataList = []
         self.DecimationFactor = 1
         self.DecimationCount = 0
@@ -168,6 +169,7 @@ class DataLog(object):
         self.LogName = ""
         self.Mbox = Mbox
         self.BackupGroupName = BackupGroupName
+        self.PeriphDictTuple = PeriphDictTuple
         self.SubDir = ""
         self.AlarmStatus = 0
         self.BareTime = False
@@ -234,6 +236,16 @@ class DataLog(object):
         self.MboxEnabled = ConfigParser.getboolean(self.LogName, "mailboxenable", False)
         self.backupEnabled = ConfigParser.getboolean(self.LogName, "backupenable", False)
         self.SourceScript = ConfigParser.get(self.LogName, "sourcescript")
+        # Add peripheral columns if available
+        try:
+            if self.PeriphDictTuple:
+                for pDict in self.PeriphDictTuple:
+                    if self.SourceScript == pDict["source"]:
+                        for d in pDict["data"]:
+                            if d not in self.EnabledDataList:
+                                self.EnabledDataList.append(d)
+        except Exception, err:
+            print "%r" % err
         self.Port = ConfigParser.getint(self.LogName, "port")
         self.BareTime = ConfigParser.getboolean(self.LogName, "baretime")
         self.useHdf5 = ConfigParser.getboolean(self.LogName, "usehdf5", False)
@@ -574,6 +586,19 @@ class DataLogger(object):
             mailGroupEnabled = cp.getboolean("DEFAULT", "mboxenabled")
             self.backupGroupName = cp.get("DEFAULT", "BackupGroupName")
             self.timeStandard = cp.get("DEFAULT","TimeStandard",default="gmt")
+            # Handle peripheral interface columns
+            try:
+                periphIntrfConfig = os.path.join(self.basePath, cp.get("PeriphIntrf", "periphIntrfConfig"))
+            except Exception, err:
+                print "%r" % err
+                periphIntrfConfig = os.path.join(self.basePath, "../PeriphIntrf/RunSerial2Socket.ini")
+                
+            try:
+                periphCo = CustomConfigObj(periphIntrfConfig, list_values = True)
+                self.periphDictTuple = parsePeriphIntrfConfig(periphCo)
+            except Exception, err:
+                print "%r" % err
+                self.periphDictTuple = ()
         except:
             tbMsg = traceback.format_exc()
             Log("Load Config Exception:",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
@@ -582,6 +607,7 @@ class DataLogger(object):
             mailGroupEnabled = False
             self.backupGroupName = None
             self.timeStandard = "gmt"
+            self.periphDictTuple = ()
             
         self.mbox = Mbox(mailGroupEnabled, mailGroupName)
 
@@ -591,7 +617,7 @@ class DataLogger(object):
 
         logList = ConfigParser.list_sections()
         for logName in logList:
-            dl = DataLog(self.engineName, self.timeStandard, self.mbox, self.backupGroupName)
+            dl = DataLog(self.engineName, self.timeStandard, self.mbox, self.backupGroupName, self.periphDictTuple)
             #load config from .ini
             try:
                 dl.LoadConfig(ConfigParser, self.basePath, logName)

@@ -63,6 +63,7 @@ from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, 
                                     RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_QUICK_GUI, \
                                     RPC_PORT_SUPERVISOR, RPC_PORT_ARCHIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.parsePeriphIntrfConfig import parsePeriphIntrfConfig
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
@@ -860,6 +861,11 @@ class StringDict(object):
         return self.strings[index]
     def getStrings(self):
         return self.strings
+    def addString(self, newStr):
+        if newStr not in self.strings.values():
+            newIdx = max(self.strings.keys())+1
+            self.strings[newIdx] = newStr
+        
 class SubstDatabase(object):
     # The substitution database is used to store collections of compiled regular expressions for matching
     #  against an input string together with substitutions that may be applied to the input string
@@ -1163,6 +1169,7 @@ class QuickGui(wx.Frame):
         else:
             self.sourceStandardModeDatabase = SubstDatabase.fromIni(self.config,"StandardModeSources","string")
             self.keyStandardModeDatabase = SubstDatabase.fromIni(self.config,"StandardModeKeys","string")
+            
         self.displayFilterSubstDatabase = SubstDatabase.fromIni(self.config,"DisplayFilters","key",["select"],[""])
         self.defaultSources = StringDict.fromIni(self.config,"Defaults","source")
         self.defaultKeys = {}
@@ -1231,6 +1238,28 @@ class QuickGui(wx.Frame):
         self.instStatCavityTempKey = self.config.get("InstStatPanel", "CavityTempKey", "CavityTemp")
         self.instStatWarmBoxTempKey = self.config.get("InstStatPanel", "WarmBoxTempKey", "WarmBoxTemp")
         
+        # Get INI for peripheral interface and create an internal dictionary for later use
+        self.periphStandardSourceKey = {}
+        basePath = os.path.split(configFile)[0]
+        self.rawPeriphDict = {}
+        self.syncPeriphDict = {}
+        try:
+            periphIntrfConfig = os.path.join(basePath, self.config.get("PeriphIntrf", "periphIntrfConfig"))
+        except Exception, err:
+            print "%r" % err
+            periphIntrfConfig = os.path.join(basePath, "../PeriphIntrf/RunSerial2Socket.ini")
+        try:
+            periphCo = CustomConfigObj(periphIntrfConfig, list_values = True)
+            (self.rawPeriphDict, self.syncPeriphDict) = parsePeriphIntrfConfig(periphCo)
+        except Exception, err:
+            print "%r" % err
+
+        # Add peripheral interface columns (if available) in standard mode 
+        if self.rawPeriphDict:
+            self._addStandardKeys(self.rawPeriphDict)
+        if self.syncPeriphDict:
+            self._addStandardKeys(self.syncPeriphDict)
+            
         self.layoutFrame()
         # Create the image panels with the frame as parent
         for key in self.imageDatabase.dbase:
@@ -1299,6 +1328,18 @@ class QuickGui(wx.Frame):
         
         self.startServer()
         
+    def _addStandardKeys(self, sourceKeyDict):
+        """Add standard keys on GUI
+        souceKeyDict = {"source": "target source", "data": ["data1", "data2", ...]}
+        """
+        standardSourceDict = self.standardModeSourcesDict.getStrings()
+        try:
+            sourceIdx = [i for i in standardSourceDict if standardSourceDict[i] == sourceKeyDict["source"]][0]
+            for newCol in sourceKeyDict["data"]:
+                self.standardModeKeysDict[sourceIdx].addString(newCol)
+        except Exception, err:
+            print "%r" % err
+                
     def enqueueViewerCommand(self, command, *args, **kwargs):
         self.commandQueue.put((command, args, kwargs))
 
