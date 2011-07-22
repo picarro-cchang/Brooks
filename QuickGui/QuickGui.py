@@ -1249,8 +1249,7 @@ class QuickGui(wx.Frame):
             print "%r" % err
             periphIntrfConfig = os.path.join(basePath, "../PeriphIntrf/RunSerial2Socket.ini")
         try:
-            periphCo = CustomConfigObj(periphIntrfConfig, list_values = True)
-            (self.rawPeriphDict, self.syncPeriphDict) = parsePeriphIntrfConfig(periphCo)
+            (self.rawPeriphDict, self.syncPeriphDict) = parsePeriphIntrfConfig(periphIntrfConfig)
         except Exception, err:
             print "%r" % err
 
@@ -1330,13 +1329,14 @@ class QuickGui(wx.Frame):
         
     def _addStandardKeys(self, sourceKeyDict):
         """Add standard keys on GUI
-        souceKeyDict = {"source": "target source", "data": ["data1", "data2", ...]}
+        souceKeyDict = {"source": ["source1", "source2"], "data": ["data1", "data2", ...]}
         """
         standardSourceDict = self.standardModeSourcesDict.getStrings()
         try:
-            sourceIdx = [i for i in standardSourceDict if standardSourceDict[i] == sourceKeyDict["source"]][0]
+            sourceIdxList = [i for i in standardSourceDict if standardSourceDict[i] in sourceKeyDict["source"]]
             for newCol in sourceKeyDict["data"]:
-                self.standardModeKeysDict[sourceIdx].addString(newCol)
+                for i in sourceIdxList:
+                    self.standardModeKeysDict[i].addString(newCol)
         except Exception, err:
             print "%r" % err
                 

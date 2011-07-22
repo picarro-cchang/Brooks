@@ -1328,8 +1328,7 @@ class DataManager(object):
             self.periphIntrfCols = []
             try:
                 self.CRDS_PeriphIntrf = PeriphIntrf(self.Config.periphIntrfConfig)
-                periphCo = CustomConfigObj(self.Config.periphIntrfConfig, list_values = True)
-                (rawDict, syncDict) = parsePeriphIntrfConfig(periphCo)
+                (rawDict, syncDict) = parsePeriphIntrfConfig(self.Config.periphIntrfConfig)
                 self.periphIntrfCols = rawDict["data"][:]
             except Exception, err:
                 Log("Peripheral Interface not running. Error: %r" % err)

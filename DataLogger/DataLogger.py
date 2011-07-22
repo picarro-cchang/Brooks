@@ -240,7 +240,7 @@ class DataLog(object):
         try:
             if self.PeriphDictTuple:
                 for pDict in self.PeriphDictTuple:
-                    if self.SourceScript == pDict["source"]:
+                    if self.SourceScript in pDict["source"]:
                         for d in pDict["data"]:
                             if d not in self.EnabledDataList:
                                 self.EnabledDataList.append(d)
@@ -594,8 +594,7 @@ class DataLogger(object):
                 periphIntrfConfig = os.path.join(self.basePath, "../PeriphIntrf/RunSerial2Socket.ini")
                 
             try:
-                periphCo = CustomConfigObj(periphIntrfConfig, list_values = True)
-                self.periphDictTuple = parsePeriphIntrfConfig(periphCo)
+                self.periphDictTuple = parsePeriphIntrfConfig(periphIntrfConfig)
             except Exception, err:
                 print "%r" % err
                 self.periphDictTuple = ()
