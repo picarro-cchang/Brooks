@@ -118,6 +118,7 @@ class Spectrum(object):
         self.model = m
         
 class SpectrumMaker(Singleton):
+    rdfIndex = 0
     initialized = False
     def __init__(self, configPath=None,env={}):
         self.startTime = getTimestamp()
@@ -216,11 +217,14 @@ class SpectrumMaker(Singleton):
                 tot[rows] += spectrum.model(nu[rows])
                 
         rdfDict = {"rdData": dict(waveNumber=[], waveNumberSetpoint=[], uncorrectedAbsorbance=[],
-                                       subschemeId=[], timestamp=[], tunerValue=[], pztValue=[]),
-                        "sensorData": dict(timestamp=[], SpectrumId=[], CavityPressure=[], CavityTemp=[]), 
+                                       subschemeId=[], timestamp=[], tunerValue=[], pztValue=[],
+                                       cavityPressure=[]),
+                        "sensorData": dict(timestamp=[], SpectrumID=[], CavityPressure=[], CavityTemp=[],
+                                           ValveMask=[], DasTemp=[], EtalonTemp=[], 
+                                           InletValve=[], OutletValve=[]), 
                         "tagalongData":{},
-                        "controlData": dict(RDDataSize=[])}
-
+                        "controlData": dict(RDDataSize=[],SpectrumQueueSize=[])}
+                        
         rdData = rdfDict["rdData"]
         sensorData = rdfDict["sensorData"]
         controlData = rdfDict["controlData"]
@@ -230,45 +234,72 @@ class SpectrumMaker(Singleton):
             for d in range(s.dwell[i]):
                 rdData["waveNumber"].append(nu[i])
                 rdData["waveNumberSetpoint"].append(nu[i])
-                rdData["uncorrectedAbsorbance"].append(tot[i])
+                rdData["uncorrectedAbsorbance"].append(0.001*tot[i])
                 rdData["subschemeId"].append(s.subschemeId[i])
                 rdData["timestamp"].append(self.startTime)
                 self.startTime += 5
                 rdData["tunerValue"].append(32768.0)
                 rdData["pztValue"].append(32768.0)
+                rdData["cavityPressure"].append(self.currentEnv.get("pressure",140.0))
                 rowsInSpectrum += 1
             if s.subschemeId[i] & INCR_FLAG_MASK:
                 controlData["RDDataSize"].append(rowsInSpectrum)
+                controlData["SpectrumQueueSize"].append(0)
                 sensorData["timestamp"].append(self.startTime)
-                sensorData["SpectrumId"].append(s.subschemeId[i] & SPECTRUM_ID_MASK)
+                sensorData["SpectrumID"].append(s.subschemeId[i] & SPECTRUM_ID_MASK)
                 sensorData["CavityPressure"].append(self.currentEnv.get("pressure",140.0))
                 sensorData["CavityTemp"].append(self.currentEnv.get("temperature",45.0))
+                sensorData["ValveMask"].append(1)
+                sensorData["DasTemp"].append(40.0)
+                sensorData["EtalonTemp"].append(45.0)
+                sensorData["InletValve"].append(32768)
+                sensorData["OutletValve"].append(32768)
                 rowsInSpectrum = 0
         return rdfDict
+        
+    def makeRDF(self,rdfDict):
+        SpectrumMaker.rdfIndex += 1
+        filename = "RD_%013d.h5" % SpectrumMaker.rdfIndex
+        h5 = openFile(filename,"w")
+        for dataKey in rdfDict.keys():
+            subDataDict = rdfDict[dataKey]
+            if len(subDataDict) > 0:
+                keys,values = zip(*sorted(subDataDict.items()))
+                if isinstance(values[0], ndarray):
+                    # Array
+                    dataRec = rec.fromarrays(values, names=keys)
+                elif isinstance(values[0], list) or isinstance(values[0], tuple):
+                    # Convert list or tuple to array
+                    dataRec = rec.fromarrays([asarray(v) for v in values], names=keys)
+                else:
+                    raise ValueError("Non-lists or non-arrays are unsupported")
+                # Either append dataRec to an existing table, or create a new one
+                h5.createTable("/", dataKey, dataRec, dataKey, filters=Filters(complevel=1,fletcher32=True))
+        h5.close()
         
     def run(self):
         for spectra in self.genSpectra():
             figure()
             for s in self.schemes:
                 rdfDict = self.collectSpectrum(spectra,s)
-                
+                self.makeRDF(rdfDict)
                 plot(rdfDict["rdData"]["waveNumber"],rdfDict["rdData"]["uncorrectedAbsorbance"],'.')
 
-        nu = linspace(6237.0,6238.0,1000)
+        #nu = linspace(6237.0,6238.0,1000)
         #nu = linspace(6056.0,6058.0,1000)
-        tot = 0
-        spectrumId = 10
-        for spectra in self.genSpectra():
-            tot = 0
-            for s in [spectra[name] for name in self.spectrumNamesById[spectrumId]]:
-                tot += s.model(nu)
-            plot(nu,tot)
-            gca().xaxis.set_major_formatter(ScalarFormatter(useOffset=False))
-            gca().yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
-            xlabel('Wavenumber (cm$^{-1}$)')
-            ylabel('Loss (ppb/cm)')
-            grid(True)
-        show()
+        #tot = 0
+        #spectrumId = 10
+        #for spectra in self.genSpectra():
+        #    tot = 0
+        #    for s in [spectra[name] for name in self.spectrumNamesById[spectrumId]]:
+        #        tot += s.model(nu)
+        #    plot(nu,tot)
+        #    gca().xaxis.set_major_formatter(ScalarFormatter(useOffset=False))
+        #    gca().yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
+        #    xlabel('Wavenumber (cm$^{-1}$)')
+        #    ylabel('Loss (ppb/cm)')
+        #    grid(True)
+        #show()
             
 HELP_STRING = """SpectrumMaker.py [-c<FILENAME>] [-h|--help]
 
