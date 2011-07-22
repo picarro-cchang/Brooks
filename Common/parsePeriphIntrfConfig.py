@@ -25,5 +25,4 @@ def parsePeriphIntrfConfig(periphIntrfConfig):
             except:
                 pass
 
-    print(rawDict, syncDict)
     return (rawDict, syncDict)
