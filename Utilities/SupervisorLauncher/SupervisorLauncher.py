@@ -41,7 +41,7 @@ else:
 AppPath = os.path.abspath(AppPath)
     
 class SupervisorLauncher(SupervisorLauncherFrame):
-    def __init__(self, configFile, autoLaunch, closeValves, *args, **kwds):
+    def __init__(self, configFile, autoLaunch, closeValves, killAll, *args, **kwds):
         self.co = ConfigObj(configFile)
         try:
             self.launchType = self.co["Main"]["Type"].strip().lower()
@@ -69,6 +69,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
         self.Bind(wx.EVT_BUTTON, self.onLaunch, self.buttonLaunch)
         self.closeValves = closeValves
+        self.killAll = killAll
         if autoLaunch:
             self.supervisorIni = self.startupSupervisorIni
             self.runForcedLaunch()
@@ -106,7 +107,10 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     os.system(r'taskkill.exe /IM QuickGui.exe /F')
                     # Kill Controller if it isn't under Supervisor's supervision
                     os.system(r'taskkill.exe /IM Controller.exe /F')
-                    CRDS_Supervisor.TerminateApplications()
+                    if self.killAll:
+                        CRDS_Supervisor.TerminateApplications(False, True)
+                    else:
+                        CRDS_Supervisor.TerminateApplications(False, False)
                 else:
                     return
                 # Kill supervisor by PID if it does not stop within 5 seconds
@@ -184,6 +188,7 @@ Where the options can be a combination of the following:
 -h, --help : Print this help.
 -c         : Specify a config file.
 -a         : Automatically launch the last selected supervisor ini without showing the "mode switcher" window
+-k         : Kill all applications including Driver when switching modes
 -v         : Close all solenoid valves and disable inlet/outlet valves during mode switching
 
 """
@@ -195,7 +200,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:av", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "hc:avk", ["help"])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -218,11 +223,12 @@ def HandleCommandSwitches():
         
     autoLaunch = "-a" in options
     closeValves = "-v" in options
-        
-    return (configFile, autoLaunch, closeValves)
+    killAll = "-k" in options
+    
+    return (configFile, autoLaunch, closeValves, killAll)
     
 if __name__ == "__main__":
-    (configFile, autoLaunch, closeValves) = HandleCommandSwitches()
+    (configFile, autoLaunch, closeValves, killAll) = HandleCommandSwitches()
     supervisorLauncherApp = SingleInstance("PicarroSupervisorLauncher")
     if supervisorLauncherApp.alreadyrunning() and not autoLaunch:
         try:
@@ -233,7 +239,7 @@ if __name__ == "__main__":
     else:
         app = wx.PySimpleApp()
         wx.InitAllImageHandlers()
-        frame = SupervisorLauncher(configFile, autoLaunch, closeValves, None, -1, "")
+        frame = SupervisorLauncher(configFile, autoLaunch, closeValves, killAll, None, -1, "")
         app.SetTopWindow(frame)
         frame.Show()
         app.MainLoop()
