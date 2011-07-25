@@ -200,6 +200,7 @@ class SpectrumCollector(object):
 
         self.useSequencer = True
         self.sequencer = None
+        self.schemesUsed = {}
         
     def run(self):
         self.sequencer = Sequencer()
@@ -231,6 +232,8 @@ class SpectrumCollector(object):
                 #localRdTime = Driver.hostGetTicks()
                 self.lastSchemeTable = self.schemeTable
                 self.schemeTable = (rdData.schemeVersionAndTable & interface.SCHEME_TableMask) >> interface.SCHEME_TableShift
+                self.schemesUsed[self.schemeTable] = self.sequencer.inDas.get(self.schemeTable,None)
+                
                 thisSubSchemeID = rdData.subschemeId
                 self.lastSpectrumID = self.spectrumID
                 self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
@@ -272,6 +275,7 @@ class SpectrumCollector(object):
 
             if self.closeSpectrumWhenDone:
                 self.finish()
+                self.schemesUsed = {}
 
             lastCount = thisCount
             
@@ -391,6 +395,11 @@ class SpectrumCollector(object):
                     filename = "RD_%013d.h5" % (int(time.time()*1000),)
                     self.streamPath = os.path.join(self.streamDir, filename)
                     self.streamFP = openFile(self.streamPath, "w")
+                    if len(self.schemesUsed) != 1:
+                        Log("Only one scheme should be in RDF file %s" % (filename,),Data=self.schemesUsed)
+                    else:
+                        self.streamFP.root._v_attrs.schemeFile = self.schemesUsed.values()[0][3]
+                        self.streamFP.root._v_attrs.modeName = self.schemesUsed.values()[0][0]
                 for dataKey in self.rdfDict.keys():
                     subDataDict = self.rdfDict[dataKey]
                     if len(subDataDict) > 0:
@@ -411,8 +420,7 @@ class SpectrumCollector(object):
                                 self.tableDict[dataKey].append(dataRec)
                             except:
                                 self.closeHdf5File = True
-                                break
-                                
+                                break                                
                 self.newHdf5File = False
                 
                 if self.closeHdf5File:
