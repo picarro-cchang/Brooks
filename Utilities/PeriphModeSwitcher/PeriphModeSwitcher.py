@@ -9,6 +9,7 @@
 import sys
 import os
 import time
+import threading
 import shutil
 import win32gui
 import wx
@@ -29,6 +30,13 @@ class PeriphModeSwitcher(PeriphModeSwitcherFrame):
     def __init__(self, configFile, *args, **kwds):
         self.co = CustomConfigObj(configFile)
         basePath = os.path.split(configFile)[0]
+
+        try:
+            self.restartCmd = r"%s" % self.co.get("Restart", "command")
+        except Exception, err:
+            print "%r" % err
+            self.restartCmd = r"C:\Picarro\G2000\HostExe\SupervisorLauncher.exe -a -c C:\Picarro\G2000\AppConfig\Config\Utilities\SupervisorLauncher.ini"
+            
         try:
             self.periphIntrfConfig = os.path.abspath(os.path.join(basePath, self.co.get("PeriphIntrf", "periphIntrfConfig")))
         except Exception, err:
@@ -48,13 +56,26 @@ class PeriphModeSwitcher(PeriphModeSwitcherFrame):
             print "%r" % err
             periphModeDir = os.path.dirname(self.periphIntrfConfig)
             
+        try:
+            modeList = [m.strip().upper() for m in self.co.get("PeriphIntrf", "modeList").split(",") if m.strip()]
+        except Exception, err:
+            print "%r" % err
+            modeList = ["ALL"]
+            
         self.periphModeDict = {}
+        periphModeFileList = [f for f in os.listdir(periphModeDir) if f.startswith("PeriphMode_")]
         if os.path.isdir(periphModeDir):
-            for f in [d for d in os.listdir(periphModeDir) if d.startswith("PeriphMode_")]:
-                self.periphModeDict[f.split(".")[0][11:]] = os.path.join(periphModeDir, f)
+            if "ALL" in modeList:
+                for f in periphModeFileList:
+                    self.periphModeDict[f.split(".")[0].upper()[11:]] = os.path.join(periphModeDir, f)
+            else:
+                for m in modeList:
+                    for f in periphModeFileList:
+                        if m == f.split(".")[0].upper()[11:]:
+                            self.periphModeDict[m] = os.path.join(periphModeDir, f)
         else:
             raise Exception, "PeriphMode files not found in %s" % (periphModeDir,)
-            
+ 
         typeChoices = sorted(self.periphModeDict.keys())
         PeriphModeSwitcherFrame.__init__(self, typeChoices, currentPeriphMode, *args, **kwds)
         
@@ -68,11 +89,18 @@ class PeriphModeSwitcher(PeriphModeSwitcherFrame):
         except:
             pass
                 
-        d = wx.MessageDialog(None,"Please re-start the analyzer software to enable the new peripheral mode", "Selected Peripheral Mode: %s" % periphMode, \
-        style=wx.OK | wx.ICON_INFORMATION | wx.STAY_ON_TOP)
-        d.ShowModal()
+        d = wx.MessageDialog(None,"Analyzer software needs to be re-started to enable the new peripheral mode.\nDo you want to re-start the analyzer now?\n\nSelect \"Yes\" to re-start the analyzer now.\nSelect \"No\" to re-start the analyzer manually later.", "New Peripheral Mode: %s" % periphMode, \
+                            style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
+        restart = (d.ShowModal() == wx.ID_YES)
         d.Destroy()
-        time.sleep(0.5)
+        if restart:
+            try:
+                newThread = threading.Thread(target=os.system(self.restartCmd))
+                newThread.setDaemon(True)
+                newThread.start()
+            except:
+                pass
+        time.sleep(0.1)
         self.Destroy()
                 
 HELP_STRING = \
