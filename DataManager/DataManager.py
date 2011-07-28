@@ -707,6 +707,7 @@ class DataManager(object):
             return err
         
     def RPC_PulseAnalyzer_StartRunning(self):
+        # Run pulse analyzer with state machine
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
         self.pulseAnalyzer.resetAnalyzer()
@@ -715,12 +716,14 @@ class DataManager(object):
         return "OK"
         
     def RPC_PulseAnalyzer_StopRunning(self):
+        # Stop pulse analyzer with state machine
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
         self.runPulseAnalyzer = False
         return "OK"
             
     def RPC_PulseAnalyzer_StartAddingData(self):
+        # Manually add data into pulse analyzer buffer
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
         self.pulseAnalyzer.resetAnalyzer()
@@ -729,6 +732,7 @@ class DataManager(object):
         return "OK"
 
     def RPC_PulseAnalyzer_StopAddingData(self):
+        # Stop manually adding data into pulse analyzer buffer
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
         self.addToPulseAnalyzer = False
@@ -1336,7 +1340,7 @@ class DataManager(object):
             
             # Initialize pulse analyzer if endabled in INI file
             if self.Config.enablePulseAnalyzer:
-                try:    
+                try:
                     self._configPulseAnalyzerFromIni()
                     self.runPulseAnalyzer = True
                     self.addToPulseAnalyzer = False
@@ -1363,8 +1367,10 @@ class DataManager(object):
         numPointsToTrigger = self.cp.getint("PulseAnalyzer", "numPointsToTrigger")
         numPointsToRelease = self.cp.getint("PulseAnalyzer", "numPointsToRelease")
         armCond = self.cp.get("PulseAnalyzer", "armCond", "None")
-        if armCond is not "None":
+        try:
             armCond = [float(t) for t in armCond.split(",")]
+        except:
+            armCond = None
         self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair,
                                            triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
                                            timeout, bufSize, numPointsToTrigger, numPointsToRelease, armCond)
