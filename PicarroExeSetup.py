@@ -67,6 +67,7 @@ sys.path.append("ConfigMonitor")
 sys.path.append("PeriphIntrf")
 sys.path.append("Utilities")
 sys.path.append("WebServer")
+sys.path.append("rdReprocessor")
 sys.path.append("Utilities/RemoteAccess")
 sys.path.append("Utilities/DiagDataCollector")
 sys.path.append("Utilities/SupervisorLauncher")
@@ -217,7 +218,7 @@ inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
                  "matplotlib.figure","pylab", "numpy", "matplotlib.numerix.fft",
                  "matplotlib.numerix.linear_algebra", "matplotlib.numerix.random_array", "configobj",
                  "encodings.*", "tables.*" ]
-dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll']
+dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.dll", "powrprof.dll" ]
 packageList = ["werkzeug","flask","jinja2","email"]
 
 hex_images = glob.glob("../SrcCode/CypressUSB/Drivers/*.*")
@@ -258,6 +259,7 @@ setup(version = "1.0",
                  "Supervisor/Supervisor.py",
                  "ReadExtSensor/ReadExtSensor.py",
                  "WebServer/server.py",
+                 "rdReprocessor/rdReprocessor.py",
                  "Utilities/RemoteAccess/RemoteAccess.py",
                  "Utilities/IntegrationTool/IntegrationTool.py",
                  "Utilities/IntegrationBackup/IntegrationBackup.py",
