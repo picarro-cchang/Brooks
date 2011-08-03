@@ -206,15 +206,15 @@ class PicarroKMLFrame(wx.Frame):
 
 class PicarroKML(PicarroKMLFrame):
     def __init__(self, configFile, *args, **kwds):
-        self.cp = CustomConfigObj(configFile, list_values = True)
+        self.cp = CustomConfigObj(configFile)
         self.outputDir = self.cp.get("Main", "outputDir", "C:/Picarro/KML_Files")
-        self.concList = self.cp.get("Main", "concList")
-        gpsList = self.cp.get("Main", "gpsList")
-        if type(gpsList) == type("") or len(gpsList) != 2:
+        self.concList = [c.strip() for c in self.cp.get("Main", "concList").split(",")]
+        gpsList = [c.strip() for c in self.cp.get("Main", "gpsList").split(",")]
+        if len(gpsList) != 2:
             gpsList = ["GPS_ABS_LAT", "GPS_ABS_LONG"]
-        self.colorList = self.cp.get("Main", "colorList")
-        self.baselineList = self.cp.get("Main", "baselineList")
-        self.multiplierList = self.cp.get("Main", "multiplierList")
+        self.colorList = [c.strip() for c in self.cp.get("Main", "colorList").split(",")]
+        self.baselineList = [float(c) for c in self.cp.get("Main", "baselineList").split(",")]
+        self.multiplierList = [float(c) for c in self.cp.get("Main", "multiplierList").split(",")]
         self.source = self.cp.get("Main", "sourcescript")
         self.archiveGroupName = self.cp.get("Main", "archiveGroupName", "")
         self.maxNumLines = self.cp.getint("Main", "maxNumLines", 1000)
@@ -230,9 +230,9 @@ class PicarroKML(PicarroKMLFrame):
         self.buttonStop.Enable(False)
         self.datFilename = []
         self.kmlFilename = []
-        self.range = "5000"
-        self.tilt = "30"
-        self.heading = "0"
+        self.range = self.cp.get("Camera", "range", "5000")
+        self.tilt = self.cp.get("Camera", "tilt", "30")
+        self.heading = self.cp.get("Camera", "heading", "0")
         
     def bindEvents(self):
         self.Bind(wx.EVT_BUTTON, self.onStartButton, self.buttonStart)
@@ -276,6 +276,10 @@ class PicarroKML(PicarroKMLFrame):
             self.tilt = d.textCtrlList[1].GetValue()
             self.heading = d.textCtrlList[2].GetValue()
         d.Destroy()
+        self.cp.set("Camera", "range", self.range)
+        self.cp.set("Camera", "tilt", self.tilt)
+        self.cp.set("Camera", "heading", self.range)
+        self.cp.write()
     
     
     def _getTime(self, format=0):
@@ -333,7 +337,7 @@ class PicarroKML(PicarroKMLFrame):
                     label = self.completeList[i]
                     value = reply[label]
                     if i < self.numConcs:
-                        value = (value - float(self.baselineList[i])) * float(self.multiplierList[i])
+                        value = (value - self.baselineList[i]) * self.multiplierList[i]
                     valueList.append(value)
                 valueStrList = [str(val) for val in valueList]
                 labelStr = ", ".join(self.completeList)
