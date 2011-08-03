@@ -29,6 +29,13 @@ KML_OPEN_TEMPLATE = \
 """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <Document>
+    <LookAt>
+      <longitude>%s</longitude>
+      <latitude>%s</latitude>
+      <range>%s</range>
+      <tilt>%s</tilt>
+      <heading>%s</heading>
+    </LookAt>
 """
 
 # To use template: kmlXXX = KML_BODY_TEMPLATE % (index, baseline, multiplier, index, color, color, conc, index, body)
@@ -68,7 +75,54 @@ KML_CLOSE = """
 
 # San Fran Latitude, Longitude: 37.7749295, -122.4194155
 # KML: -122.014557,37.353230,520.304443
-                   
+
+class CameraCtrlGui(wx.Dialog):
+    def __init__(self, defaults, *args, **kwds):
+        kwds["style"] = wx.DEFAULT_DIALOG_STYLE
+        wx.Dialog.__init__(self, *args, **kwds)
+        self.panel_1 = wx.Panel(self, -1)
+        self.panel_2 = wx.Panel(self, -1)
+        labels =["Range", "Tilt", "Heading"]
+        self.numParams = len(labels)
+        self.labelList = []
+        self.textCtrlList = []
+        for i in range(self.numParams):
+            self.labelList.append(wx.StaticText(self.panel_2, -1, labels[i]))
+            self.textCtrlList.append(wx.TextCtrl(self.panel_2, -1, defaults[i]))
+        self.okButton = wx.Button(self.panel_1, wx.ID_OK, "")
+        self.cancelButton = wx.Button(self.panel_1, wx.ID_CANCEL, "")
+
+        self.__set_properties()
+        self.__do_layout()
+
+    def __set_properties(self):
+        self.SetTitle("Google Earth Camera Control")
+        for textCtrl in self.textCtrlList:
+            textCtrl.SetMinSize((200, -1))
+
+    def __do_layout(self):
+        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
+        grid_sizer_1 = wx.FlexGridSizer(self.numParams, 2, 10, 10)
+        grid_sizer_1.Add(self.labelList[0], 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer_1.Add(self.textCtrlList[0], 1, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)        
+        for idx in range(1,self.numParams):
+            grid_sizer_1.Add(self.labelList[idx], 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 10)
+            grid_sizer_1.Add(self.textCtrlList[idx], 1, wx.LEFT|wx.RIGHT|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)
+        self.panel_2.SetSizer(grid_sizer_1)
+        grid_sizer_1.AddGrowableCol(1)
+        sizer_1.Add(self.panel_2, 1, wx.EXPAND, 0)
+        sizer_2.Add((20, 20), 1, 0, 0)
+        sizer_2.Add(self.okButton, 0, wx.TOP|wx.BOTTOM, 15)
+        sizer_2.Add((20, 40), 0, 0, 0)
+        sizer_2.Add(self.cancelButton, 0, wx.TOP|wx.BOTTOM|wx.RIGHT, 15)
+        #sizer_2.Add((20, 20), 1, 0, 0)
+        self.panel_1.SetSizer(sizer_2)
+        sizer_1.Add(self.panel_1, 0, wx.EXPAND, 0)
+        self.SetSizer(sizer_1)
+        sizer_1.Fit(self)
+        self.Layout()
+        
 class PicarroKMLFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX)
@@ -80,6 +134,12 @@ class PicarroKMLFrame(wx.Frame):
         
         # Menu bar
         self.frameMenubar = wx.MenuBar()
+        
+        self.iSettings = wx.Menu()
+        self.frameMenubar.Append(self.iSettings,"Settings")
+        self.iCameraCtrl = wx.MenuItem(self.iSettings, wx.NewId(), "Camera Control", "", wx.ITEM_NORMAL)
+        self.iSettings.AppendItem(self.iCameraCtrl)
+        
         self.iHelp = wx.Menu()
         self.frameMenubar.Append(self.iHelp,"Help")
         self.idAbout = wx.NewId()
@@ -170,6 +230,9 @@ class PicarroKML(PicarroKMLFrame):
         self.buttonStop.Enable(False)
         self.datFilename = []
         self.kmlFilename = []
+        self.range = "5000"
+        self.tilt = "30"
+        self.heading = "0"
         
     def bindEvents(self):
         self.Bind(wx.EVT_BUTTON, self.onStartButton, self.buttonStart)
@@ -177,6 +240,7 @@ class PicarroKML(PicarroKMLFrame):
         self.Bind(wx.EVT_BUTTON, self.onClose, self.buttonExit)
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)       
         self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.Bind(wx.EVT_MENU, self.onCameraCtrl, self.iCameraCtrl)
         
     def onStartButton(self, evt):
         self.stop = False
@@ -204,6 +268,16 @@ class PicarroKML(PicarroKMLFrame):
             d.Destroy()
         self.Destroy()
 
+    def onCameraCtrl(self, evt):
+        d = CameraCtrlGui([self.range, self.tilt, self.heading], None, -1, "")
+        getCtrl = (d.ShowModal() == wx.ID_OK)
+        if getCtrl:
+            self.range = d.textCtrlList[0].GetValue()
+            self.tilt = d.textCtrlList[1].GetValue()
+            self.heading = d.textCtrlList[2].GetValue()
+        d.Destroy()
+    
+    
     def _getTime(self, format=0):
         if format == 0:
             return time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
@@ -267,20 +341,27 @@ class PicarroKML(PicarroKMLFrame):
                 self._writeToStatus('%s = %s' % (labelStr, valueStr))
                 
                 stackList = []
+                newLat = 0.0
+                newLong = 0.0
                 for i in range(self.numConcs):
                     conc = self.concList[i]
                     datout = open(self.datFilename[i],'a')
                     datout.write('%f,%f,%f\n' % (valueList[-1],valueList[-2],valueList[i]))
                     datout.close()
-
+                    newLat = valueList[-2]
+                    newLong = valueList[-1]
+                    
                     datout = open(self.datFilename[i],'r')
                     stackList.append(datout.read())
                     datout.close()
                     numLines += 1
-                    
+
                 out = open(self.kmlFilename,'w')
                 out.flush()
-                out.write(KML_OPEN_TEMPLATE)
+                
+                # KML_OPEN_TEMPLATE
+                out.write(KML_OPEN_TEMPLATE % (newLong, newLat, self.range, self.tilt, self.heading))
+                
                 # KML_BODY_TEMPLATE % (index, baseline, multiplier, index, color, color, conc, index, body)
                 for i in range(self.numConcs):
                     out.write(KML_BODY_TEMPLATE % (i, self.baselineList[i], self.multiplierList[i], i, self.colorList[i], self.colorList[i], self.concList[i], i, stackList[i]))
