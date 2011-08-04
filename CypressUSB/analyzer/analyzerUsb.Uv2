@@ -37,8 +37,8 @@ Options 1,0,0  // Target 'Target 1'
  EnvBin ()
  EnvInc ()
  EnvLib ()
- EnvReg (ï¿½Cypress\)
- OrgReg (ï¿½Cypress\)
+ EnvReg (ÿCypress\)
+ OrgReg (ÿCypress\)
  TgStat=0
  OutDir (.\)
  OutName (analyzerUsb)
@@ -73,12 +73,12 @@ Options 1,0,0  // Target 'Target 1'
  C51MSC ()
  C51DEF ()
  C51UDF ()
- INCC5 (C:\Work\G2000\SrcCode\CypressUSB\Inc\)
+ INCC5 (C:\Picarro\G2000\SrcCode\CypressUSB\Inc\)
  AX51FL=4
  AX51MSC ()
  AX51SET ()
  AX51RST ()
- INCA5 (C:\Work\G2000\SrcCode\CypressUSB\Inc\)
+ INCA5 (C:\Picarro\G2000\SrcCode\CypressUSB\Inc\)
  IncBld=1
  AlwaysBuild=0
  GenAsm=0
