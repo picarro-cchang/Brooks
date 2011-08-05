@@ -398,8 +398,10 @@ class SpectrumCollector(object):
                     if len(self.schemesUsed) != 1:
                         Log("Only one scheme should be in RDF file %s" % (filename,),Data=self.schemesUsed)
                     else:
-                        self.streamFP.root._v_attrs.schemeFile = self.schemesUsed.values()[0][3]
-                        self.streamFP.root._v_attrs.modeName = self.schemesUsed.values()[0][0]
+                        schemeUsed = self.schemesUsed.values()[0]
+                        if schemeUsed is not None:
+                            self.streamFP.root._v_attrs.schemeFile = schemeUsed[3]
+                            self.streamFP.root._v_attrs.modeName = schemeUsed[0]
                 for dataKey in self.rdfDict.keys():
                     subDataDict = self.rdfDict[dataKey]
                     if len(subDataDict) > 0:

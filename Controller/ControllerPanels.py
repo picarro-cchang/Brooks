@@ -272,8 +272,8 @@ class RingdownPanel(RingdownPanelGui):
                     size=1,width=1)
         elif y == "FineCurrent":
                 self.ringdownGraph.AddSeriesAsPoints(
-                    waveforms["Ringdown"]["fineCurrent_%d" % (vLaser+1,)],
-                    colour=fillColours[vLaser],fillcolour=fillColours[vLaser],marker='square',
+                    waveforms["Ringdown"]["fineCurrent"],
+                    marker='square',
                     size=1,width=1)
         elif y == "Tuner":
                 self.ringdownGraph.AddSeriesAsPoints(
