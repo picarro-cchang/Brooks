@@ -20,6 +20,7 @@ import socket
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_DATA_MANAGER, RPC_PORT_ARCHIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
+from collections import deque
 
 CRDS_DataManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = "PicarroKML")
 CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER, ClientName = "PicarroKML", IsDontCareConnection = False)
@@ -209,20 +210,31 @@ class PicarroKML(PicarroKMLFrame):
         self.cp = CustomConfigObj(configFile)
         self.outputDir = self.cp.get("Main", "outputDir", "C:/Picarro/KML_Files")
         self.concList = [c.strip() for c in self.cp.get("Main", "concList").split(",")]
-        gpsList = [c.strip() for c in self.cp.get("Main", "gpsList").split(",")]
-        if len(gpsList) != 2:
-            gpsList = ["GPS_ABS_LAT", "GPS_ABS_LONG"]
+        self.gpsList = [c.strip() for c in self.cp.get("Main", "gpsList").split(",")]
+        if len(self.gpsList) != 2:
+            self.gpsList = ["GPS_ABS_LAT", "GPS_ABS_LONG"]
         self.colorList = [c.strip() for c in self.cp.get("Main", "colorList").split(",")]
         self.baselineList = [float(c) for c in self.cp.get("Main", "baselineList").split(",")]
         self.multiplierList = [float(c) for c in self.cp.get("Main", "multiplierList").split(",")]
         self.source = self.cp.get("Main", "sourcescript")
         self.archiveGroupName = self.cp.get("Main", "archiveGroupName", "")
         self.maxNumLines = self.cp.getint("Main", "maxNumLines", 1000)
+        self.shiftConcSamples = self.cp.getint("Main", "shiftConcSamples", 0)
         self.numConcs = len(self.concList)
+        self.delayedBuffer = {}
+        if self.shiftConcSamples < 0:
+            # Align concs to earlier GPS - add GPS to buffer
+            for label in self.gpsList:
+                self.delayedBuffer[label] = deque()
+        elif self.shiftConcSamples > 0:
+            # Align concs to later GPS - add concs to buffer
+            for label in self.concList:
+                self.delayedBuffer[label] = deque()
+                
         self.stop = True
         self.statusMessage = []
         #picarro instrument connection
-        self.completeList = self.concList + gpsList
+        self.completeList = self.concList + self.gpsList
         CRDS_DataManager.MeasBuffer_Set(self.source, self.completeList, 50)
         PicarroKMLFrame.__init__(self, *args, **kwds)
         self.bindEvents()
@@ -325,20 +337,49 @@ class PicarroKML(PicarroKMLFrame):
 
         CRDS_DataManager.MeasBuffer_Clear()
         numLines = 0
+        bufferSize = 0
         while not self.stop:
             try:
                 reply = CRDS_DataManager.MeasBuffer_GetFirst()
                 if not reply:
                     time.sleep(0.5)
                     continue
+                
+                for i in range(len(self.concList)):
+                    label = self.concList[i]
+                    try:
+                        reply[label] = (reply[label] - self.baselineList[i]) * self.multiplierList[i]
+                    except:
+                        pass
+                        
+                if self.shiftConcSamples < 0:
+                    for label in self.gpsList:
+                        self.delayedBuffer[label].append(reply[label])
+                elif self.shiftConcSamples > 0:
+                    for label in self.concList:
+                        self.delayedBuffer[label].append(reply[label])
+                        
+                if bufferSize < abs(self.shiftConcSamples):
+                    bufferSize += 1
+                    continue
 
                 valueList = []
-                for i in range(len(self.completeList)):
-                    label = self.completeList[i]
-                    value = reply[label]
-                    if i < self.numConcs:
-                        value = (value - self.baselineList[i]) * self.multiplierList[i]
-                    valueList.append(value)
+                if self.shiftConcSamples == 0:
+                    for label in self.completeList:
+                        valueList.append(reply[label])
+                elif self.shiftConcSamples < 0:
+                    for label in self.concList:
+                        valueList.append(reply[label])
+                    for label in self.gpsList:
+                        valueList.append(self.delayedBuffer[label][0])
+                        self.delayedBuffer[label].popleft()
+                elif self.shiftConcSamples > 0:
+                    for label in self.concList:
+                        valueList.append(self.delayedBuffer[label][0])
+                        self.delayedBuffer[label].popleft()
+                    for label in self.gpsList:
+                        valueList.append(reply[label])
+                
                 valueStrList = [str(val) for val in valueList]
                 labelStr = ", ".join(self.completeList)
                 valueStr = ", ".join(valueStrList)
@@ -392,13 +433,14 @@ class PicarroKML(PicarroKMLFrame):
                         numLines = 0
                         
             # instrument will throw index errors when it runs out of data buffer
+
             except IndexError:
                 time.sleep(0.5)
 
             except Exception, err:
                 self._writeToStatus("%r" % (err,))
                 time.sleep(0.5)
-                
+ 
         self._writeToStatus("Picarro KML Tool stopped")
         
         self.buttonStart.Enable(True)
