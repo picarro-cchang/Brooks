@@ -6,12 +6,13 @@ import wx.lib.agw.aui as aui
 from wx.lib.masked.timectrl import TimeCtrl
 from Host.Common.CustomConfigObj import CustomConfigObj
                                             
-PAGE1_LEFT_MARGIN = 35
-PAGE2_LEFT_MARGIN = 110
-PAGE3_LEFT_MARGIN = 110
-PAGE4_LEFT_MARGIN = 80
-PAGE5_LEFT_MARGIN = 100
-PAGE6_LEFT_MARGIN = 100
+PAGE1_LEFT_MARGIN = 80
+PAGE2_LEFT_MARGIN = 140
+PAGE3_LEFT_MARGIN = 140
+PAGE4_LEFT_MARGIN = 120
+PAGE5_LEFT_MARGIN = 140
+PAGE6_LEFT_MARGIN = 140
+PAGE7_LEFT_MARGIN = 140
 
 COMMENT_BOX_SIZE = (400, 100)
 
@@ -204,23 +205,23 @@ class Page1(wx.Panel):
             label = wx.StaticText(self, -1, "Hours of Each Log File (0.01~24)", style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.labelDict[dataLog].append(label)
-            self.controlDict[dataLog].append(wx.TextCtrl(self, -1, size = (230,-1)))
+            self.controlDict[dataLog].append(wx.TextCtrl(self, -1, size = (230, -1)))
             self.Bind(wx.EVT_TEXT, self.onDataDuration, self.controlDict[dataLog][-1])
             
             label = wx.StaticText(self, -1, "Enable Mailbox Archiving", style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.labelDict[dataLog].append(label)
-            self.controlDict[dataLog].append(wx.ComboBox(self, -1, choices = self.mailboxChoices, size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
+            self.controlDict[dataLog].append(wx.ComboBox(self, -1, choices = self.mailboxChoices, size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
             
             label = wx.StaticText(self, -1, "Archived Directory Structure", style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.labelDict[dataLog].append(label)
-            self.controlDict[dataLog].append(wx.ComboBox(self, -1, choices = self.quantumChoices, size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
+            self.controlDict[dataLog].append(wx.ComboBox(self, -1, choices = self.quantumChoices, size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
 
             label = wx.StaticText(self, -1, "Total User Log Storage Size (GB)", style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.labelDict[dataLog].append(label)
-            self.controlDict[dataLog].append(wx.ComboBox(self, -1, choices = self.maxSizeChoices, size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
+            self.controlDict[dataLog].append(wx.ComboBox(self, -1, choices = self.maxSizeChoices, size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
             
     def setIni(self, iniList):
         if self.targetIni == iniList[0]:
@@ -394,7 +395,7 @@ class Page2(wx.Panel):
             self.keyLabelList.append(label)
             newId = wx.NewId()
             self.comboBoxIdList.append(newId)
-            self.comboBoxList.append(wx.ComboBox(self, newId, choices = self.choiceLists[i], size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
+            self.comboBoxList.append(wx.ComboBox(self, newId, choices = self.choiceLists[i], size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
 
         self.portAppDict = {}
         
@@ -959,7 +960,7 @@ class Page4(wx.Panel):
             self.keyLabelList.append(label)
             newId = wx.NewId()
             self.comboBoxIdList.append(newId)
-            self.comboBoxList.append(wx.ComboBox(self, newId, choices = self.choiceLists[i], size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
+            self.comboBoxList.append(wx.ComboBox(self, newId, choices = self.choiceLists[i], size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
 
         self.comboBoxList[1].Enable(False)
             
@@ -1083,7 +1084,7 @@ class Page5(wx.Panel):
         label = wx.StaticText(self, -1, "Output Data Source", style=wx.ALIGN_LEFT)
         label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.labelList.append(label)
-        combo = wx.ComboBox(self, -1, choices = self.dataSec, value = self.dataSec[self.idx], size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
+        combo = wx.ComboBox(self, -1, choices = self.dataSec, value = self.dataSec[self.idx], size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
         combo.Bind(wx.EVT_COMBOBOX, self.onSelectDataSource)
         self.controlList.append(combo)
 
@@ -1227,7 +1228,7 @@ class Page6(wx.Panel):
         label = wx.StaticText(self, -1, "Data Stream Source", style=wx.ALIGN_LEFT)
         label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.labelList.append(label)
-        combo = wx.ComboBox(self, -1, choices = self.dataSec, value = self.dataSec[self.idx], size = (230,-1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
+        combo = wx.ComboBox(self, -1, choices = self.dataSec, value = self.dataSec[self.idx], size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
         combo.Bind(wx.EVT_COMBOBOX, self.onSelectDataSource)
         self.controlList.append(combo)
 
@@ -1341,3 +1342,213 @@ class Page6(wx.Panel):
         
     def setFullInterface(self, full):
         pass
+        
+#----------------------------------------------------------------------------------------------------------------------------------------#   
+class Page7(wx.Panel):
+    def __init__(self, parent, *args, **kwds):
+        wx.Panel.__init__(self, *args, **kwds)
+        self.parent = parent
+        self.keyLabelStrings = ["Analog Output Channel", "Data Source", "Data Columns", "Mode", "Slope", "Offset", "Manual Voltage (0~10V)", "Min Voltage (0~10V)", 
+                                "Max Voltage (0~10V)", "Invalid Value Voltage (0~10V)"]
+        self.labelTitle = wx.StaticText(self, -1, "Electrical Interface", style=wx.ALIGN_CENTRE)
+        self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        self.comment = wx.TextCtrl(self, -1, "", size = COMMENT_BOX_SIZE, style = wx.TRANSPARENT_WINDOW|wx.TE_READONLY|wx.TE_MULTILINE|wx.NO_BORDER|wx.TE_RICH|wx.ALIGN_LEFT)
+        self.comment.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        self.comment.SetForegroundColour("red")
+        self.comment.Enable(False)
+        self.targetIni = None
+        self.cp = None
+        self.channel = "0"
+        self.channelDataDict = {}
+        self.channelConfigDict = {}
+        self.ctrlConfigDict = {3: "BOOTMODE", 4: "SLOPE",  5: "OFFSET", 6: "BOOTVALUE", 7: "MIN", 8: "MAX", 9: "INVALIDVALUE"}
+        self.configCtrlDict = {"BOOTMODE": 3, "SLOPE": 4,  "OFFSET": 5, "BOOTVALUE": 6, "MIN": 7, "MAX": 8, "INVALIDVALUE": 9}
+
+    def __do_layout(self):
+        sizer1 = wx.BoxSizer(wx.VERTICAL)
+        sizer2 = wx.BoxSizer(wx.VERTICAL)
+        gridSizer1 = wx.FlexGridSizer(0, 2)
+        sizer1.Add(self.labelTitle, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 15)
+        for i in range(len(self.labelList)):
+            gridSizer1.Add(self.labelList[i], 0, wx.RIGHT|wx.BOTTOM, 10)
+            gridSizer1.Add(self.controlList[i], 0, wx.RIGHT|wx.BOTTOM, 10)
+        sizer1.Add(gridSizer1, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 20)
+        sizer1.Add(self.comment, 0, wx.LEFT|wx.RIGHT|wx.TOP, 20)
+        sizer2.Add(sizer1, 0, wx.LEFT, PAGE7_LEFT_MARGIN)
+        self.SetSizer(sizer2)
+        sizer2.Fit(self)
+        self.Layout()
+        
+    def __clear_layout(self):
+        try:
+            for comboBox in self.controlList:
+                comboBox.Destroy()
+        except:
+            pass
+        
+    def __createGUIElements(self, newDataSource):
+        self.labelList = []
+        self.controlList = []
+        self.controlId = []
+        
+        if newDataSource:
+            srcIdx = self.dataSources.index(newDataSource)
+        else:
+            srcIdx = 0
+            
+        for s in self.keyLabelStrings:
+            label = wx.StaticText(self, -1, s, style=wx.ALIGN_LEFT)
+            label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+            self.labelList.append(label)
+        
+        newId = wx.NewId()
+        self.controlId.append(newId)
+        combo = wx.ComboBox(self, newId, choices = [str(i) for i in range(4)], value = self.channel, size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
+        combo.Bind(wx.EVT_COMBOBOX, self.onSelectChannel)
+        self.controlList.append(combo)
+        
+        newId = wx.NewId()
+        self.controlId.append(newId)
+        combo = wx.ComboBox(self, newId, choices = self.dataSec, value = self.dataSec[srcIdx], size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
+        combo.Bind(wx.EVT_COMBOBOX, self.onSelectDataSource)
+        self.controlList.append(combo)
+
+        newId = wx.NewId()
+        self.controlId.append(newId)
+        checklist = wx.CheckListBox(self, newId, choices = self.dataCols[srcIdx], size = (230, 200))
+        checklist.Bind(wx.EVT_CHECKLISTBOX, self.onSelectDataCol)
+        self.controlList.append(checklist)
+
+        newId = wx.NewId()
+        self.controlId.append(newId)
+        combo = wx.ComboBox(self, newId, choices = ["Manual", "Tracking"], value = "Tracking", size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
+        combo.Bind(wx.EVT_COMBOBOX, self.onBootMode)
+        self.controlList.append(combo)
+
+        for i in range(6):
+            newId = wx.NewId()
+            self.controlId.append(newId)
+            self.controlList.append(wx.TextCtrl(self, newId, size = (230, -1)))
+            self.controlList[i+4].Bind(wx.EVT_TEXT, self.onEntry)
+        
+    def onEntry(self, event):
+        eventObj = event.GetEventObject()
+        eventId = eventObj.GetId()
+        controlListIdx = self.controlId.index(eventId)
+        if controlListIdx >= 6:
+            # Force the voltages to be within 0~10 V
+            try:
+                if float(eventObj.GetValue()) > 10.0:
+                    eventObj.SetValue("10.0")
+                if float(eventObj.GetValue()) < 0.0:
+                    eventObj.SetValue("0.0")
+            except:
+                pass
+        self.channelConfigDict["ANALOG_OUTPUT_CHANNEL"+self.channel][self.ctrlConfigDict[controlListIdx]] = eventObj.GetValue()
+        
+    def onBootMode(self, event):
+        self.channelConfigDict["ANALOG_OUTPUT_CHANNEL"+self.channel]["BOOTMODE"] = str(int(event.GetEventObject() == "Tracking"))
+        
+    def onSelectChannel(self, event):
+        eventObj = event.GetEventObject()
+        self.channel = eventObj.GetValue()
+        self.updateLayout()
+        self.showCurValues()
+        
+    def onSelectDataSource(self, event):
+        eventObj = event.GetEventObject()
+        self.updateLayout(self.secSourceDict[eventObj.GetValue()])
+        self.showCurValues()
+
+    def onSelectDataCol(self, event):
+        eventObj = event.GetEventObject()
+        curDataCols = [self.channelDataDict["ANALOG_OUTPUT_CHANNEL"+self.channel][1]]
+        newData = [i for i in eventObj.GetCheckedStrings() if i not in curDataCols]
+        if not newData:
+            return
+        else: 
+            eventObj.SetCheckedStrings(newData)
+            self.channelDataDict["ANALOG_OUTPUT_CHANNEL"+self.channel][0] =  self.secSourceDict[self.controlList[1].GetValue()]
+            self.channelDataDict["ANALOG_OUTPUT_CHANNEL"+self.channel][1] = newData[0]
+            
+    def updateDataSourceCols(self):
+        (self.dataSources, self.dataSec, self.dataCols) = self.parent.pages[0].getDataSourceCols()
+        for idx in range(len(self.dataCols)):
+            for data in self.dataCols[idx]:
+                if data.lower() in ["time", "ymd", "hms"]:
+                    self.dataCols[idx].remove(data)
+        self.secSourceDict = dict(zip(self.dataSec, self.dataSources))
+        self.sourceColDict = dict(zip(self.dataSources, self.dataCols))
+        
+    def updateLayout(self, newDataSource=None):
+        self.__clear_layout()
+        self.__createGUIElements(newDataSource)
+        self.__do_layout()
+        
+    def setIni(self, iniList):
+        if self.targetIni == iniList[0]:
+            return
+        self.targetIni = iniList[0]
+        try:
+            self.cp = CustomConfigObj(self.targetIni)
+        except Exception, err:
+            print "%r" % err
+            
+        self.updateDataSourceCols()
+        self.updateLayout()
+        
+        # Set up the channel dictionaries
+        for channel in ["ANALOG_OUTPUT_CHANNEL%d" % i for i in range(4)]:
+            self.channelDataDict[channel] = self.cp.get(channel, "SOURCE").split(",")
+            self.channelConfigDict[channel] = self.cp[channel]
+            self.channelConfigDict[channel].pop("SOURCE")
+        
+    def showCurValues(self):
+        if self.cp == None:
+            return False
+
+        if "ANALOG_OUTPUT_CHANNEL"+self.channel not in self.cp.list_sections():
+            self.enable(False)
+            return False
+            
+        [curDataSource, curData] = self.channelDataDict["ANALOG_OUTPUT_CHANNEL"+self.channel]
+        if self.secSourceDict[self.controlList[1].GetValue()] == curDataSource:
+            self.controlList[2].SetCheckedStrings([curData])
+            
+        curConfig = self.channelConfigDict["ANALOG_OUTPUT_CHANNEL"+self.channel]
+        for key in curConfig:
+            try:
+                if key == "BOOTMODE":
+                    if curConfig[key].strip() == "0":
+                        self.controlList[self.configCtrlDict[key]].SetValue("Manual")
+                    else:
+                        self.controlList[self.configCtrlDict[key]].SetValue("Tracking")
+                self.controlList[self.configCtrlDict[key]].SetValue(curConfig[key])
+            except:
+                pass
+                
+        return True
+
+    def apply(self):
+        if self.cp == None:
+            return False
+        try:
+            for i in range(4):
+                channel = "ANALOG_OUTPUT_CHANNEL%s" % i
+                self.cp[channel].update(self.channelConfigDict[channel])
+                self.cp[channel]["SOURCE"] =  ",".join(self.channelDataDict[channel])
+            self.cp.write()
+        except Exception, err:
+            print "%r" % err
+        return True
+        
+    def enable(self, en):
+        for comboBox in self.controlList:
+            comboBox.Enable(en)
+            
+    def setComment(self, comment):
+        self.comment.SetValue(comment)
+        
+    def setFullInterface(self, full):
+        pass
+       

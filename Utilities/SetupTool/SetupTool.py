@@ -37,7 +37,8 @@ CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER
                                          IsDontCareConnection = False)
                                             
 TRANSLATE_TABLE = {"dataLogger": "Data Logger", "archiver": "Archiver", "valveSequencer": "Valve Sequencer MPV", 
-                   "commandInterface": "Command Interface", "dataManager": "Data Streaming", "coordinator": "Coordinator", "readGPSWS": "GPS and WS"}
+                   "commandInterface": "Command Interface", "dataManager": "Data Streaming", 
+                   "coordinator": "Coordinator", "readGPSWS": "GPS and WS", "electricalInterface": "Electrical Interface"}
 
 class SetupTool(SetupToolFrame):
     def __init__(self, setupToolIni, *args, **kwds):       
@@ -56,13 +57,14 @@ class SetupTool(SetupToolFrame):
         quickGuiDir = os.path.join(self.appConfigPath, "QuickGui")
         coordinatorDir = os.path.join(self.appConfigPath, "Coordinator")
         readGPSWSDir = os.path.join(self.appConfigPath, "Utilities")
+        electricalInterfaceDir = os.path.join(self.appConfigPath, "ElectricalInterface")
 
         self.pageAppDict = {0: ["dataLogger", "archiver"], 1: ["dataManager", "valveSequencer", "commandInterface", "coordinator"],
-                            2: ["remoteAccess"], 3:["quickGui"], 4:["commandInterface"], 5:["dataManager"]}
+                            2: ["remoteAccess"], 3:["quickGui"], 4:["commandInterface"], 5:["dataManager"], 6:["electricalInterface"]}
         self.appIniDirDict = {"archiver": archiverDir, "dataLogger": dataLoggerDir, "dataManager": dataMgrDir,
                               "valveSequencer": valveDir, "commandInterface": cmdDir,
                               "remoteAccess": remoteAccessDir, "quickGui": quickGuiDir,
-                              "coordinator": coordinatorDir}
+                              "coordinator": coordinatorDir, "electricalInterface": electricalInterfaceDir}
         self.hasReadGPSWS = False
         if os.path.isfile(os.path.join(readGPSWSDir, self.setupCp.get("Setup", "ReadGPSWS", ""))):
             self.hasReadGPSWS = True
