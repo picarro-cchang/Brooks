@@ -74,6 +74,7 @@ class SetupTool(SetupToolFrame):
         comPortList = self.setupCp.get("Setup", "comPortList")
         self._getCoordinatorPathAndPortList()
         self.dataColsFile = self.setupCp.get("Setup", "dataColsFile")
+        self.hasElectricalInterface = self.setupCp.getboolean("Setup", "hasElectricalInterface")
         self.modeList = self.setupCp.list_sections()
         self.modeList.remove("Setup")
         SetupToolFrame.__init__(self, comPortList, CRDS_QuickGui, CRDS_Driver, *args, **kwds)
@@ -228,6 +229,9 @@ class SetupTool(SetupToolFrame):
                                 pageObj.enable([3,4], True)
                         elif page == 1:
                             pageObj.enable([appList.index(app)], True)
+                        elif page == 6 and not self.hasElectricalInterface:
+                            pageObj.enable(False)
+                            comment = "Electrical Interface Not Available"
                         else:
                             pageObj.enable(True)
             pageObj.setComment(comment)
