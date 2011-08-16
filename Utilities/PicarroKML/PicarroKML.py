@@ -16,7 +16,6 @@ import wx
 import threading
 import getopt
 import time
-import socket
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_DATA_MANAGER, RPC_PORT_ARCHIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -151,7 +150,7 @@ class PicarroKMLFrame(wx.Frame):
         
         # Other graphical components
         self.staticLine = wx.StaticLine(self, -1)
-        self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0], style=wx.ALIGN_CENTER)
         self.labelOutputPath = wx.StaticText(self, -1, "Output KML File")
         self.textCtrlOutputPath = wx.TextCtrl(self, -1, "", style = wx.TE_READONLY)
         self.textCtrlOutputPath.SetMinSize((450,20))
@@ -266,7 +265,7 @@ class PicarroKML(PicarroKMLFrame):
         self.stop = True
         
     def onAboutMenu(self, evt):
-        d = wx.MessageDialog(None, "Copyright 1999-2011 Picarro Inc. All rights reserved.\n\nVersion: 1.0.0\n\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc. (http://www.picarro.com)", "About Picarro KML Tool", wx.OK)
+        d = wx.MessageDialog(None, "All rights reserved.\n\nVersion: 1.0.0\n\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc. (http://www.picarro.com)", "About Picarro KML Tool", wx.OK)
         d.ShowModal()
         d.Destroy()
         
