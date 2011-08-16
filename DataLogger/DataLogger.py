@@ -589,11 +589,6 @@ class DataLogger(object):
             # Handle peripheral interface columns
             try:
                 periphIntrfConfig = os.path.join(self.basePath, cp.get("PeriphIntrf", "periphIntrfConfig"))
-            except Exception, err:
-                print "%r" % err
-                periphIntrfConfig = os.path.join(self.basePath, "../PeriphIntrf/RunSerial2Socket.ini")
-                
-            try:
                 self.periphDictTuple = parsePeriphIntrfConfig(periphIntrfConfig)
             except Exception, err:
                 print "%r" % err

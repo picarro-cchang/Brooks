@@ -1245,10 +1245,6 @@ class QuickGui(wx.Frame):
         self.syncPeriphDict = {}
         try:
             periphIntrfConfig = os.path.join(basePath, self.config.get("PeriphIntrf", "periphIntrfConfig"))
-        except Exception, err:
-            print "%r" % err
-            periphIntrfConfig = os.path.join(basePath, "../PeriphIntrf/RunSerial2Socket.ini")
-        try:
             (self.rawPeriphDict, self.syncPeriphDict) = parsePeriphIntrfConfig(periphIntrfConfig)
         except Exception, err:
             print "%r" % err

@@ -312,7 +312,7 @@ class DataManager(object):
                 try:
                     self.periphIntrfConfig = os.path.join(basePath, cp.get("Setup", "periphIntrfConfig"))
                 except:
-                    self.periphIntrfConfig = os.path.join(basePath, "../PeriphIntrf/RunSerial2Socket.ini")
+                    self.periphIntrfConfig = None
                     
             self.enablePulseAnalyzer = False
             if "PulseAnalyzer" in cp: 
@@ -1330,14 +1330,16 @@ class DataManager(object):
             # Handle peripheral interface
             self.CRDS_PeriphIntrf = None
             self.periphIntrfCols = []
-            try:
-                self.CRDS_PeriphIntrf = PeriphIntrf(self.Config.periphIntrfConfig)
-                (rawDict, syncDict) = parsePeriphIntrfConfig(self.Config.periphIntrfConfig)
-                self.periphIntrfCols = rawDict["data"][:]
-            except Exception, err:
-                Log("Peripheral Interface not running. Error: %r" % err)
-                print "Peripheral Interface not running. Error: %r" % err
-            
+            if self.Config.periphIntrfConfig:
+                try:
+                    self.CRDS_PeriphIntrf = PeriphIntrf(self.Config.periphIntrfConfig)
+                    (rawDict, syncDict) = parsePeriphIntrfConfig(self.Config.periphIntrfConfig)
+                    self.periphIntrfCols = rawDict["data"][:]
+                except Exception, err:
+                    Log("Peripheral Interface not running. Error: %r" % err)
+                    print "Peripheral Interface not running. Error: %r" % err
+            else:
+                Log("Peripheral Interface not running.")
             # Initialize pulse analyzer if endabled in INI file
             if self.Config.enablePulseAnalyzer:
                 try:
