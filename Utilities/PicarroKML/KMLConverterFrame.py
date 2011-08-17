@@ -22,6 +22,7 @@ class KMLConverterFrame(wx.Frame):
         # Menu bar
         self.frameMenubar = wx.MenuBar()
         self.iFile = wx.Menu()
+        self.iSetup = wx.Menu()
         self.iHelp = wx.Menu()
         
         self.frameMenubar.Append(self.iFile,"File")
@@ -33,6 +34,11 @@ class KMLConverterFrame(wx.Frame):
         self.iOutDir = wx.MenuItem(self.iFile, self.idOutDir, "Change output directory", "", wx.ITEM_NORMAL)
         self.iFile.AppendItem(self.iOutDir)
 
+        self.frameMenubar.Append(self.iSetup,"Setup")
+        self.idShift = wx.NewId()
+        self.iShift = wx.MenuItem(self.iSetup, self.idShift, "Shift samples", "", wx.ITEM_NORMAL)
+        self.iSetup.AppendItem(self.iShift)
+        
         self.frameMenubar.Append(self.iHelp,"Help")
         self.idAbout = wx.NewId()
         self.iAbout = wx.MenuItem(self.iHelp, self.idAbout, "Picarro KML Converter", "", wx.ITEM_NORMAL)

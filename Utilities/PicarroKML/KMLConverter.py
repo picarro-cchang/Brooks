@@ -90,7 +90,9 @@ class ConvertKML(object):
         else:
             return time.strftime("%Y%m%d%H%M%S", time.localtime())
             
-    def convert(self, concList, gpsList, colorList, baselineList, multiplierList):
+    def convert(self, concList, gpsList, colorList, baselineList, multiplierList, shiftConcSamples=0):
+        # if self.shiftConcSamples < 0 - align concs to earlier GPS
+        # if self.shiftConcSamples > 0 - align concs to later GPS
         concIdxList = [self.titleList.index(i) for i in concList]
         gpsIdxList = [self.titleList.index(i) for i in gpsList]
         numConcs = len(concList)
@@ -103,9 +105,21 @@ class ConvertKML(object):
         stackList = []
         for i in range(numConcs):
             kmlBlock = []
-            for dataLine in self.data:
-                kmlLine = '%s,%s,%f\n' % (dataLine[gpsIdxList[1]],dataLine[gpsIdxList[0]],(float(dataLine[concIdxList[i]]) - baselineList[i]) * multiplierList[i])
-                kmlBlock.append(kmlLine)
+            for l in range(len(self.data)):
+                if shiftConcSamples <= 0 and l >= -1*shiftConcSamples:
+                    # Current Conc with older GPS
+                    try:
+                        kmlLine = '%s,%s,%f\n' % (self.data[l+shiftConcSamples][gpsIdxList[1]],self.data[l+shiftConcSamples][gpsIdxList[0]],(float(self.data[l][concIdxList[i]]) - baselineList[i]) * multiplierList[i])
+                        kmlBlock.append(kmlLine)
+                    except:
+                        pass
+                elif shiftConcSamples > 0 and l >= shiftConcSamples:
+                    # Current GPS with older Conc
+                    try:
+                        kmlLine = '%s,%s,%f\n' % (self.data[l][gpsIdxList[1]],self.data[l][gpsIdxList[0]],(float(self.data[l-shiftConcSamples][concIdxList[i]]) - baselineList[i]) * multiplierList[i])
+                        kmlBlock.append(kmlLine)
+                    except:
+                        pass
             stackList.append("".join(kmlBlock))
 
         out = open(kmlFilename,'w')
@@ -127,7 +141,8 @@ class ConvertKML(object):
 class KMLConverter(KMLConverterFrame):
     def __init__(self, configFile, *args, **kwds):
         self.cp = CustomConfigObj(configFile)
-        self.outputDir = self.cp.get("Main", "convertedOutputDir", "C:/Picarro/KML_Files")
+        self.outputDir = self.cp.get("PostProcess", "outputDir", "C:/Picarro/KML_Files")
+        self.shiftConcSamples = self.cp.getint("PostProcess", "shiftConcSamples", 0)
         self.concList = [c.strip() for c in self.cp.get("Main", "concList").split(",")]
         self.gpsList = [c.strip() for c in self.cp.get("Main", "gpsList").split(",")]
         if len(self.gpsList) != 2:
@@ -144,19 +159,29 @@ class KMLConverter(KMLConverterFrame):
     def bindEvents(self):       
         self.Bind(wx.EVT_MENU, self.onLoadFileMenu, self.iLoadFile)
         self.Bind(wx.EVT_MENU, self.onOutDirMenu, self.iOutDir)
+        self.Bind(wx.EVT_MENU, self.onShiftMenu, self.iShift)
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
         self.Bind(wx.EVT_BUTTON, self.onProcButton, self.procButton)              
         self.Bind(wx.EVT_BUTTON, self.onCloseButton, self.closeButton) 
         self.Bind(wx.EVT_TEXT_URL, self.onOverUrl, self.textCtrlMsg) 
+        self.Bind(wx.EVT_CLOSE, self.onCloseButton)
         
     def onOutDirMenu(self, event):
         d = wx.DirDialog(None,"Specify the output directory for the converted KML files", style=wx.DD_DEFAULT_STYLE,
                          defaultPath=self.outputDir)
         if d.ShowModal() == wx.ID_OK:
             self.outputDir = d.GetPath().replace("\\", "/")
-            self.cp.set("Main", "convertedOutputDir", self.outputDir)
+            self.cp.set("PostProcess", "outputDir", self.outputDir)
             self.cp.write()
-        
+
+    def onShiftMenu(self, event):
+        d = wx.NumberEntryDialog(None,"Specify the number of shifting samples\n-N => Align current concentrations with GPS N samples ago\n+N => Align current GPS with concentrations N samples ago", 
+            "Number of shifting samples", "Number of shifting samples", self.shiftConcSamples, -1000, 1000)
+        if d.ShowModal() == wx.ID_OK:
+            self.shiftConcSamples = d.GetValue()
+            self.cp.set("PostProcess", "shiftConcSamples", self.shiftConcSamples)
+            self.cp.write()
+            
     def onOverUrl(self, event):
         if event.MouseEvent.LeftDown():
             urlString = self.textCtrlMsg.GetRange(event.GetURLStart()+5, event.GetURLEnd())
@@ -207,7 +232,7 @@ class KMLConverter(KMLConverterFrame):
         outList = []
         for c in self.converters:
             try:
-                outList.append(c.convert(self.concList, self.gpsList, self.colorList, self.baselineList, self.multiplierList))
+                outList.append(c.convert(self.concList, self.gpsList, self.colorList, self.baselineList, self.multiplierList, self.shiftConcSamples))
             except Exception, err:
                 self.textCtrlMsg.WriteText("Exception! %r\n" % err)
         if outList:
