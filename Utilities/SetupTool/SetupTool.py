@@ -74,7 +74,12 @@ class SetupTool(SetupToolFrame):
         comPortList = self.setupCp.get("Setup", "comPortList")
         self._getCoordinatorPathAndPortList()
         self.dataColsFile = self.setupCp.get("Setup", "dataColsFile")
-        self.hasElectricalInterface = self.setupCp.getboolean("Setup", "hasElectricalInterface")
+        try:
+            self.hasElectricalInterface = self.setupCp.getboolean("Setup", "hasElectricalInterface")
+        except:
+            self.hasElectricalInterface = False
+            self.setupCp.set("Setup", "hasElectricalInterface", "False")
+            self.setupCp.write()
         self.modeList = self.setupCp.list_sections()
         self.modeList.remove("Setup")
         SetupToolFrame.__init__(self, comPortList, CRDS_QuickGui, CRDS_Driver, *args, **kwds)
@@ -188,8 +193,15 @@ class SetupTool(SetupToolFrame):
             
             iniList = []
             for app in appList:
+                # coordinator and readGPSWS are global - don't belong to any specific mode
                 if app not in ["coordinator", "readGPSWS"]:
-                    iniName = self.setupCp[self.mode][app]
+                    try:
+                        iniName = self.setupCp[self.mode][app]
+                    except:
+                        # If INI file not specified in SetupTool.ini, just search the first available INI file in the INI directory for that application
+                        iniName = [i for i in os.listdir(self.appIniDirDict[app]) if i.endswith(".ini")][0]
+                        self.setupCp[self.mode][app] = iniName
+                        self.setupCp.write()
                     iniPath = self.getIniPath(app, iniName)
                 elif app == "coordinator":
                     iniPath = self.getIniPath(app, None) # a list of paths
@@ -204,9 +216,16 @@ class SetupTool(SetupToolFrame):
             
             comment = ""
             for app in appList:
+                # coordinator and readGPSWS are global - don't belong to any specific mode
                 if app not in ["coordinator", "readGPSWS"]:
-                    # coordinator and readGPSWS are global
-                    iniName = self.setupCp[self.mode][app]
+                    try:
+                        iniName = self.setupCp[self.mode][app]
+                    except:
+                        # If INI file not specified in SetupTool.ini, just search the first available INI file in the INI directory for that application
+                        iniName = [i for i in os.listdir(self.appIniDirDict[app]) if i.endswith(".ini")][0]
+                        self.setupCp[self.mode][app] = iniName
+                        self.setupCp.write()
+                        
                     if iniName in self.modeList:
                         # Configurations depend on other modes
                         if page == 0:
