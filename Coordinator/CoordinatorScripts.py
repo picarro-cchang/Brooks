@@ -12,7 +12,8 @@
 #   15-Sep-2008  sze  Incorporated into compiled code
 #   12-Dec-2008  alex Added batch mode functionality
 #   20-Sep-2010  sze  Add tag along data functions and add pCalOffset parameter
-#                      to loadWarmBoxCal
+#                     to loadWarmBoxCal
+#   18-Aug-2011  alex Added socket interface functions to add tagalong data
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved 
 #
 
@@ -929,6 +930,46 @@ def dummyGetLog():
 |
 """
 
+class SocketInterface(object):
+    def __init__(self, host, port=51020):
+        self.s = None
+        self.host = host
+        self.port = port
+    
+    def sendAndGet(self,str):
+        # Send str and get data back. If a communications error
+        #  occurs, wait 30s, then try again (in case GUI restarts)
+        while True:
+            try:
+                self.connect()
+                self.s.sendall(str + '\r')
+                try:
+                    data = self.s.recv(1024)
+                except:
+                    data = "UNKNOWN\n"
+                break
+            except Exception,e:
+                LOGFUNC("Socket communication error: %s, retrying in 30s\n" % (e,))
+                self.close()
+                sleep(30)
+        self.close()
+        return data
+        
+    def connect(self):
+        self.s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        self.s.connect((self.host,self.port))
+        self.s.settimeout(1.0)
+        
+    def close(self):
+        self.s.close()
+        self.s = None
+            
+    def setTagalongData(self, label, value):
+        return self.sendAndGet("_MEAS_SET_TAGALONG_DATA '%s' %f" % (label, value))
+        
+    def getTagalongData(self, label):
+        return self.sendAndGet("_MEAS_GET_TAGALONG_DATA '%s'" % (label))
+        
 class Comms(object):
     def __init__(self,host,port):
         self.s = None
