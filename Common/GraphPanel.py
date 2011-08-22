@@ -261,6 +261,7 @@ class GraphPanel(wx.Panel):
             elif k =="font": self.canvas.SetFont(v)
             elif k =="fontSizeAxis": self.canvas.SetFontSizeAxis(v)
             elif k =="foregroundColour": self.canvas.SetForegroundColour(v)
+            elif k =="heightAdjustment": self.canvas.SetHeightAdjustment(v)
             else:
                 raise ValueError("Unknown graph property %s" % (k,))
         self.canvas.last_draw = save_last_draw

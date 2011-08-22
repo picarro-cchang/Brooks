@@ -543,6 +543,9 @@ class PlotCanvas(wx.Panel):
         self.border = (1,1)
 
         self.SetBackgroundColour("white")
+        
+        # Adjust canvas size
+        self.heightAdjustment = 0
 
         # Create some mouse events for zooming
         self.canvas.Bind(wx.EVT_LEFT_DOWN, self.OnMouseLeftDown)
@@ -744,6 +747,9 @@ class PlotCanvas(wx.Panel):
         frame.Centre(wx.BOTH)
         frame.Show(True)
 
+    def SetHeightAdjustment(self, value=0):
+        self.heightAdjustment = value
+        
     def setLogScale(self, logscale):
         if type(logscale) != tuple:
             raise TypeError, 'logscale must be a tuple of bools, e.g. (False, False)'
@@ -1342,6 +1348,7 @@ class PlotCanvas(wx.Panel):
             (self.width,self.height) = self.canvas.GetClientSize()
         else:
             self.width, self.height= width,height
+        self.height += self.heightAdjustment
         self.plotbox_size = 0.97*_Numeric.array([self.width, self.height])
         xo = 0.5*(self.width-self.plotbox_size[0])
         yo = self.height-0.5*(self.height-self.plotbox_size[1])

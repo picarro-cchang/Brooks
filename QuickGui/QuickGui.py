@@ -1486,6 +1486,7 @@ class QuickGui(wx.Frame):
                                    frameColour=bgColour,
                                    foregroundColour=fgColour,
                                    XTickFormat=self.config.get("Graph","TimeAxisFormat","%H:%M:%S\n%d-%b-%Y"),
+                                   heightAdjustment = self.config.getfloat("Graph","HeightAdjustment",0.0),
                                    )
             gp.Update()        
             self.graphPanel.append(gp)
