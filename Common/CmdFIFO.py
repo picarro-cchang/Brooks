@@ -27,7 +27,9 @@ import Pyro.core
 import Pyro.errors
 import logging
 import os
+import pydoc
 import threading
+import traceback
 import sys
 import time
 import types
@@ -52,7 +54,21 @@ CMD_Types = [
     CMD_TYPE_ERROR
     ]
 
+class RemoteException(RuntimeError):
+    pass
 
+def rpc_wrap(func):
+    def wrapper(*a,**k):
+        try:
+            return func(*a,**k)
+        except:
+            raise RemoteException(traceback.format_exc())
+    wrapper.__wrapped_co_argcount = func.func_code.co_argcount
+    wrapper.__wrapped_co_varnames = func.func_code.co_varnames
+    wrapper.__wrapped_defaults = func.func_defaults
+    wrapper.__wrapped_doc = pydoc.getdoc(func)
+    return wrapper
+    
 def resolve_dotted_attribute(obj, attr, allow_dotted_names=True):
     """resolve_dotted_attribute(a, 'b.c.d') => a.b.c.d
 
@@ -446,6 +462,12 @@ class CmdFIFOServer(object):
         """Gets the version of the rpc server."""
         return self.serverVersion
 
+    @rpc_wrap    
+    def _CmdFIFO_DebugDelay(self,sec):
+        if sec>0: time.sleep(sec)
+        else:
+            raise ValueError("Invalid delay: %s" % sec)
+    
     def _CmdFIFO_KillServer(self,password):
         """Stops the server immediately"""
         if password == "please":
@@ -492,15 +514,17 @@ class CmdFIFOServer(object):
         optionals wrapped in square brackets."""
 
         f = self.serverObject.funcs[method_name]
-        argCount = f.func_code.co_argcount
+        argCount = getattr(f,"__wrapped_co_argcount",f.func_code.co_argcount)
         optionalCount = 0
-        if f.func_defaults:
-            optionalCount = len(f.func_defaults)
+        defaults = getattr(f,"__wrapped_defaults",f.func_defaults)
+        if defaults:
+            optionalCount = len(defaults)
 
         if argCount == 0:
             ret = ''
         else:
-            args = list(f.func_code.co_varnames)[:argCount]
+            varNames = getattr(f,"__wrapped_co_varnames",f.func_code.co_varnames)
+            args = list(varNames)[:argCount]
             #wrap the optionals in square brackets...
             if optionalCount > 0:
                 args[-optionalCount:] = ["[%s]" % (s,) for s in args[-optionalCount:]]
@@ -535,8 +559,8 @@ class CmdFIFOServer(object):
         if method is None:
             return "%s method not found" % method_name
         else:
-            import pydoc
-            return pydoc.getdoc(method)
+            return getattr(method,"__wrapped_doc",pydoc.getdoc(method))
+            
     def register_function(self, function,name = None,DefaultMode = CMD_TYPE_Blocking,NameSlice = 0,EscapeDoubleUS = False):
         """Registers a function to respond to RPC requests.
 
@@ -643,6 +667,7 @@ class CmdFIFOServer(object):
         self.register_function(self._CmdFIFO_PingFIFO, 'CmdFIFO.PingFIFO', CMD_TYPE_Blocking)
         self._CmdFIFO_StopServer = self.stop_server # alias
         self.register_function(self._CmdFIFO_StopServer, 'CmdFIFO.StopServer', CMD_TYPE_VerifyOnly)
+        self.register_function(self._CmdFIFO_DebugDelay, 'CmdFIFO.DebugDelay', CMD_TYPE_Blocking)
 
         # register some priority CmdFIFO RPCs (that don't need to wait in the FIFO queue)...
         self._register_priority_function(self._CmdFIFO_PingDispatcher,'CmdFIFO.PingDispatcher',CMD_TYPE_Blocking)
