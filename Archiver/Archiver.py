@@ -30,6 +30,7 @@ import os
 import getopt
 import doctest
 import threading
+import traceback
 import shutil
 import stat
 import time
@@ -41,7 +42,6 @@ from win32file import CreateFile, WriteFile, CloseHandle, SetFilePointer, Delete
 from win32file import FILE_BEGIN, FILE_END, GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,\
                       INVALID_HANDLE_VALUE
 from Host.Common import CmdFIFO
-from Host.Common import BetterTraceback
 from Host.Common.SharedTypes import RPC_PORT_LOGGER, RPC_PORT_ARCHIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
@@ -898,6 +898,6 @@ if __name__ == "__main__":
     try:
         main()
     except:
-        tbMsg = BetterTraceback.get_advanced_traceback()
+        tbMsg = traceback.format_exc()
         print "Unhandled exception trapped by last chance handler"
         print "%s" % (tbMsg,)

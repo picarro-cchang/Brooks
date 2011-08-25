@@ -79,7 +79,6 @@ from os import getpid as os_getpid
 from subprocess import Popen, call
 
 from Host.Common import CmdFIFO
-from Host.Common import BetterTraceback
 from Host.Common.SharedTypes import ACCESS_PICARRO_ONLY, RPC_PORT_LOGGER
 from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_SUPERVISOR_BACKUP
 from Host.Common.SharedTypes import CrdsException

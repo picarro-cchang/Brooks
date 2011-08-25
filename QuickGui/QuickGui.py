@@ -46,6 +46,7 @@ import string
 import time
 import threading
 from threading import Thread
+import traceback
 import wx.lib.mixins.listctrl as listmix
 from wx.lib.wordwrap import wordwrap
 
@@ -55,7 +56,6 @@ from SysAlarmGui import *
 from Host.Common import CmdFIFO, StringPickler, Listener, TextListener
 from Host.Common import plot
 from Host.Common import GraphPanel
-from Host.Common import BetterTraceback
 from Host.Common import AppStatus
 from Host.Common import SharedTypes
 from Host.Common.GuiTools import *
