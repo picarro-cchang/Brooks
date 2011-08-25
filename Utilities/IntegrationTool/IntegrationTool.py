@@ -36,10 +36,10 @@ HOTBOX_CAL = "Beta2000_HotBoxCal"
 
 LASER_TYPE_DICT = {"1603.2": "CO2", "1651.0": "CH4", "1599.6": "iCO2", "1392.0": "iH2O", "1389.0": "iH2O",
                    "1567.9": "CO", "1527.0": "NH3", "1554.7": "iH2O", "1521.1": "C2H2", "1574.5": "H2S",
-                   "1658.7": "CH4", "1278.0": "HF"}
+                   "1658.7": "iCH4", "1278.0": "HF"}
 
 ANALYZER_TYPE_INDEX = {"HBDS":0, "HIDS":0, "CFADS":1, "CFBDS":1, "CFHADS":7, "CFDDS":1, "CFEDS":1, "CFFDS":6, 
-                       "CBDS":2, "CHADS":2, "CFKADS":3, "CFKBDS":3, "AEDS":4, "CKADS":5, "BFADS":8}
+                       "CBDS":2, "CHADS":2, "CFKADS":3, "CFKBDS":3, "AEDS":4, "CKADS":5, "BFADS":8, "FCDS":9}
 ALL_SCHEMES = [
               { "O18"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak18O.sch",
                 "Baseline" : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Baseline.sch",
@@ -89,9 +89,15 @@ ALL_SCHEMES = [
                 "H2S_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2S_PK.sch",
                 "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
               },
+              { "iCH4_BL"       : r"C:\Picarro\G2000\AppConfig\Schemes\_BaseLineiCH4.sch",
+                "C12_iCH4_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\_12C-iCH4.sch", 
+                "C13_iCH4_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\_13C-iCH4.sch",
+                "CH4_BL"        : r"C:\Picarro\G2000\AppConfig\Schemes\_BaseLineCFADS.sch"
+              },
              ]
              
 THRESHOLD_RANGE = [
+                   [2000, 16000, 1000],
                    [2000, 16000, 1000],
                    [2000, 16000, 1000],
                    [2000, 16000, 1000],
