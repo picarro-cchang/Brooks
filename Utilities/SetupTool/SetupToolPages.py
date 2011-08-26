@@ -175,8 +175,15 @@ class Page1(wx.Panel):
         for dataLog in self.dataLogSections:
             dataSource = self.cp.get(dataLog, "sourcescript")
             self.dataSources.append(dataSource)
-            stddataList = strToList(self.cp.get(dataLog, "datalist"))
-            resdata = strToList(self.cp.get(dataLog, "reservedlist", ""))
+            datalistStr = self.cp.get(dataLog, "datalist")
+            stddataList = strToList(datalistStr)
+            try:
+                reservedlistStr = self.cp.get(dataLog, "reservedlist")
+            except:
+                reservedlistStr = datalistStr
+                self.cp.set(dataLog, "reservedlist", reservedlistStr)
+                self.cp.write()
+            resdata = strToList(reservedlistStr)
             #self.resdataList.append(resdata)
             self.resdataDict[dataSource] = resdata
             try:
