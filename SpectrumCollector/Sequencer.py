@@ -21,7 +21,7 @@ import sys
 import time
 import traceback
 
-from threading import Thread
+from threading import Thread, Lock
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes, CmdFIFO
@@ -64,6 +64,9 @@ class Sequencer(object):
         self.initialized = True
         self.laserTypes = {}
         self.inDas = {}
+        self.loadSequencePending = False
+        self.loadSequenceLock = Lock()
+        self.pendingSequence = ""
         
     def runInThread(self):
         sequencerThread = Thread(target = self.runFsm)
@@ -123,15 +126,17 @@ class Sequencer(object):
         except Exception,e:
             LogExc("Error in processing scheme sequence for %s" % name, Level=3)
 
-    def addNamedSequenceOfSchemes(self,name,schemeList):
-        schemes = []
+    def addNamedSequenceOfSchemeConfigs(self,name,schemeConfigs):
         try:
-            for schemeFileName in schemeList:
-                _, ext = os.path.splitext(schemeFileName)
-                schemes.append((Scheme(schemeFileName),1,ext.lower() == ".sch"))
-            self.sequences[name] = schemes
-        except Exception,e:
-            LogExc("Error in processing scheme sequence for %s" % name,Level=3)
+            for name_suffix in schemeConfigs:
+                schemes = []
+                schemeList = schemeConfigs[name_suffix].schemes
+                for schemeFileName in schemeList:
+                    _, ext = os.path.splitext(schemeFileName)
+                    schemes.append((Scheme(schemeFileName),1,ext.lower() == ".sch"))
+                self.sequences[name + name_suffix] = schemes
+        except:
+            LogExc("Error in processing scheme configuration for %s" % name,Level=3)
         
     def getSequenceNames(self):
         return self.sequences.keys()
@@ -177,6 +182,18 @@ class Sequencer(object):
                         self.repeat = 1
                         self.state = Sequencer.SEND_SCHEME
                 elif self.state == Sequencer.SEND_SCHEME:
+                    restarting = False
+                    if self.loadSequencePending:
+                        if self.pendingSequence not in self.sequences:
+                            raise ValueError("Invalid sequence name: %s" % self.pendingSequence)
+                        if self.pendingSequence != self.sequence:
+                            self.loadSequenceLock.acquire()
+                            self.setSequenceName(self.pendingSequence)
+                            self.loadSequencePending = False
+                            self.scheme = 1
+                            self.repeat = 1
+                            restarting = True
+                            self.loadSequenceLock.release()
                     self.useIndex = (self.activeIndex + 1) % 4
                     schemes = self.sequences[self.sequence]
                     scheme,rep,freqBased = schemes[self.scheme-1]
@@ -196,6 +213,8 @@ class Sequencer(object):
                     else:
                         Driver.wrScheme(self.useIndex,*(scheme.repack()))
                     Driver.wrDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER,self.useIndex)
+                    #if restarting or Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
+                    #    Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
                     if Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
                         Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
                     self.state = Sequencer.WAIT_UNTIL_ACTIVE

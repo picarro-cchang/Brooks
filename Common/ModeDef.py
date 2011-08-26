@@ -13,9 +13,11 @@
 # File History:
 # 06-12-19 russ  First official release
 # 07-10-23 sze   Added [INSTRUMENT_MODE] section to mode definition file
-# 08-09-18  alex  Replaced SortedConfigParser with CustomConfigObj
+# 08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
+# 11-08-23 sze   Allow multiple [SCHEME_CONFIG...] sections
 
 import os
+from Host.Common.SharedTypes import Bunch
 from CustomConfigObj import CustomConfigObj
 
 class ModeDefException(Exception):
@@ -30,8 +32,9 @@ PROCESSOR_TYPE_UNASSIGNED = -1
 PROCESSOR_TYPE_FITTER = 0
 PROCESSOR_TYPE_CALMGR = 1
 
-SECTION_MODE_CONFIG= "ModeConfig"
+SECTION_MODE_CONFIG = "ModeConfig"
 SECTION_SYNC_ANALYSIS_CONFIG = "SYNC_SETUP"
+SECTION_SCHEME_CONFIG = "SCHEME_CONFIG"
 OPTION_PROCESSOR_COUNT = "ProcessorCount"
 
 def LoadModeDefinitions(ModeDefFilePath):
@@ -75,8 +78,8 @@ class MeasMode(object):
     def __init__(self):
         self.SourcePath = ""
         self.Name = ""
-        self.SchemeCount = -1
-        self.Schemes = [] # The list of schemes, in order, that the DAS should run in this mode
+        self.SchemeConfigs = {} # Dictionary of scheme configurations, keyed by the characters 
+                                #  following "SCHEME_CONFIG" in the section name
 
         self.SpectrumIdLookup = {} # Keys are spectrum IDs, values are names
         self.SyncSetup = []  #List of SyncAnalyzerInfo (what periodic scripts to run and how often)
@@ -114,11 +117,14 @@ class MeasMode(object):
         return self.InstrumentModeDict
 
     def _Read_SCHEME_CONFIG(self, cp, section):
+        extra = section[len(SECTION_SCHEME_CONFIG):]
         basePath = os.path.split(self.SourcePath)[0]
-        self.SchemeCount = cp.getint(section, "SchemeCount")
-        for i in range(1, self.SchemeCount + 1):
+        schemeCount = cp.getint(section, "SchemeCount")
+        schemes = []
+        for i in range(1, schemeCount + 1):
             relPath = cp.get(section, "Scheme_%d_Path" % i)
-            self.Schemes.append(os.path.abspath(os.path.join(basePath, relPath)))
+            schemes.append(os.path.abspath(os.path.join(basePath, relPath)))
+        self.SchemeConfigs[extra] = Bunch(schemeCount=schemeCount,schemes=schemes)
 
     def _Read_SPECTRUM_IDS(self, cp, section):
         #Note: For some lame reason the string values in cp.items() normally come
@@ -215,10 +221,15 @@ class MeasMode(object):
         cp = CustomConfigObj(fp, ignore_option_case=False) 
         #To stop the damn lower casing that ConfigParser does with optionxform -> OK....now it is taken care by CustomConfigObj!
         for section in cp.list_sections():
-            if section in IgnoreSections:
-                continue
-            elif section in IllegalSections:
-                raise IllegalSection
+            ignore = False
+            for i in IgnoreSections:
+                if section.startswith(i): ignore = True
+            if ignore: continue
+            for i in IllegalSections:
+                if section.startswith(i):
+                    raise IllegalSection
+            if section.startswith(SECTION_SCHEME_CONFIG):
+                self._Read_SCHEME_CONFIG(cp,section)
             elif section in self.SectionHandler.keys():
                 self.SectionHandler[section](cp, section)
             else:

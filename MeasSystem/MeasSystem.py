@@ -391,7 +391,6 @@ class MeasSystem(object):
         self._ScanInProgress = False
         self.CurrentMeasMode = self.MeasModes[ModeName]
         self._SetupMeasMode()
-        SpectrumCollector.setSequencerMode(True)
         SpectrumCollector.setSequence(ModeName)
         
     def _SetupMeasMode(self):
@@ -449,7 +448,7 @@ class MeasSystem(object):
             Log("Mode definitions loaded", dict(ModeNames = self.MeasModes.keys()))
             
             for m in self.MeasModes.values():
-                SpectrumCollector.addNamedSequenceOfSchemes(m.Name,m.Schemes)
+                SpectrumCollector.addNamedSequenceOfSchemeConfigs(m.Name,m.SchemeConfigs)
             
             # Deal with startup configuration options...
             if self.Config.StartEngine:

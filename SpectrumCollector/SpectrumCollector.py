@@ -130,7 +130,7 @@ class SpectrumCollector(object):
         for s in dir(self):
             attr = self.__getattribute__(s)
             if callable(attr) and s.startswith("RPC_") and (not inspect.isclass(attr)):
-                self.rpcServer.register_function(attr, NameSlice = 4)
+                self.rpcServer.register_function(attr, name=s, NameSlice = 4)
                 
         # Sensor data handling
         self.sensorListener = Listener.Listener(None, # no queuing, we'll just be tracking the latest
@@ -460,57 +460,77 @@ class SpectrumCollector(object):
         
     # RPC functions which are handled by the sequencer
 
+    @CmdFIFO.rpc_wrap
     def RPC_addSequenceByName(self,name,config):
         self.sequencer.addSequenceByName(name,config)
         
-    def RPC_addNamedSequenceOfSchemes(self,name,schemeList):
-        self.sequencer.addNamedSequenceOfSchemes(name,schemeList)
+    @CmdFIFO.rpc_wrap
+    def RPC_addNamedSequenceOfSchemeConfigs(self,name,schemeConfigs):
+        self.sequencer.addNamedSequenceOfSchemeConfigs(name,schemeConfigs)
 
+    @CmdFIFO.rpc_wrap
     def RPC_reloadSequences(self):
         self.sequencer.reloadSequences()
         
+    @CmdFIFO.rpc_wrap
     def RPC_getSequenceNames(self):
         return self.sequencer.getSequenceNames()
 
+    @CmdFIFO.rpc_wrap
     def RPC_setSequence(self,seq=None):
         if seq is not None:
-            self.sequencer.setSequenceName(seq)
+            if self.sequencer.loadSequencePending:
+                raise ValueError("Cannot set sequence while another load is pending.")
+            if seq not in self.sequencer.sequences:
+                raise ValueError("Invalid sequence name: %s" % seq)
+            self.sequencer.loadSequenceLock.acquire()
+            self.sequencer.loadSequencePending = True
+            self.sequencer.pendingSequence = str(seq)
+            self.sequencer.loadSequenceLock.release()
         self.useSequencer = True
     
+    @CmdFIFO.rpc_wrap
     def RPC_startSequence(self,seq=None):
         self.RPC_setSequence(seq)
         self.sequencer.startSequence()
     
+    @CmdFIFO.rpc_wrap
     def RPC_getSequence(self):
         return self.sequencer.getSequenceName()
-        
-    def RPC_setSequence(self,seq):
-        self.sequencer.setSequenceName(seq)
-    
+            
+    @CmdFIFO.rpc_wrap
     def RPC_setSequencerMode(self,useSequencer):
         self.useSequencer = useSequencer
     
+    @CmdFIFO.rpc_wrap
     def RPC_startScan(self):
         if self.useSequencer:
             self.sequencer.startSequence()
         else:
             Driver.startScan()
+            
+    @CmdFIFO.rpc_wrap
     def RPC_sequencerGetCurrent(self):
         return self.sequencer.getCurrent()
                 
+    @CmdFIFO.rpc_wrap
     def RPC_closeSpectrum(self):
         self.closeSpectrumWhenDone = True
 
+    @CmdFIFO.rpc_wrap
     def RPC_disableSpectrumFiles(self):
         self.enableSpectrumFiles = False
         
+    @CmdFIFO.rpc_wrap
     def RPC_enableSpectrumFiles(self):
         self.enableSpectrumFiles = True
         
+    @CmdFIFO.rpc_wrap
     def RPC_setTagalongData(self, Name, Value):
         """Sets RDF tagalong data (and timestamp) with the given token Name."""
         self.tagalongData[Name] = (Value, time.time())
 
+    @CmdFIFO.rpc_wrap
     def RPC_getTagalongData(self, Name):
         """Returns a [DataValue, DataTime] array for the specified token Name.
         If no data for the given name, an empty array [] is returned.
@@ -521,6 +541,7 @@ class SpectrumCollector(object):
         except KeyError:
             return []
 
+    @CmdFIFO.rpc_wrap
     def RPC_deleteTagalongData(self, Name):
         """Deletes the RDF tagalong data with the specified token Name.
 
@@ -530,13 +551,16 @@ class SpectrumCollector(object):
         """
         return list(self.tagalongData.pop(Name, []))
     
+    @CmdFIFO.rpc_wrap
     def RPC_getSensorData(self):
         sensorData = self.getLatestSensors()
         return sensorData.copy()
         
+    @CmdFIFO.rpc_wrap
     def RPC_shutdown(self):
         self._shutdownRequested = True
         
+    @CmdFIFO.rpc_wrap
     def RPC_setAuxiliarySpectrumFile(self,fileName):
         self.auxSpectrumFile = fileName
     
