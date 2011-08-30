@@ -213,6 +213,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 self.logEnable = True
         except:
             pass
+        self.manualMode = False
             
     def startServer(self):
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_COORDINATOR),
@@ -439,8 +440,9 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.sampleIndexDict[descr] = maxIndex+1
             self.updateSampleDescrComboBox()
             self.rewriteOutputFile = True
-        self.manualSampleNumber = self.sampleIndexDict[descr]        
-        self.enableManualButton() 
+        self.manualSampleNumber = self.sampleIndexDict[descr]
+        if not self.manualMode:
+            self.enableManualButton() 
         
     def onWriteHeadings(self):
         notOpen = self.saveFp == None
@@ -478,6 +480,9 @@ class CoordinatorFrame(CoordinatorFrameGui):
         if self.archiveGroupName:
             CRDS_Archiver.StartLiveArchive(groupName=self.archiveGroupName, sourceFile=self.saveFileName, timestamp=None, copier=True)
 
+    def setManualMode(self, manualFlag):
+        self.manualMode = manualFlag
+        
     def setParamText(self,idx,text):
         try:
             self.paramTextCtrlList[idx].SetValue(text)
