@@ -574,7 +574,7 @@ class IntegrationTool(IntegrationToolFrame):
                 if line.startswith('RMS residual = '): res = float(line[15:line.find(" ",15)])
             if numLines < 3:
                 raise ValueError("Insufficient reference lines (%d) found" % numLines)
-            if res > 2.0e-4:
+            if res > 1.0e-3:
                 raise ValueError("Residual (%f) is too large for reliable FSR" % res)
             fp.close()
             # On success modify the CalibrateSystem INI files
