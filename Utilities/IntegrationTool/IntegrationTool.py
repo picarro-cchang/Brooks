@@ -277,10 +277,11 @@ class IntegrationTool(IntegrationToolFrame):
                 self.testButtonList[6].Enable(True)
                 self.testButtonList[7].Enable(True)
                 self.testButtonList[8].Enable(True)
+                self.testButtonList[9].Enable(True)
             return
 
         self.testButtonList[0].Enable(True)
-        self.testButtonList[9].Enable(True)
+        self.testButtonList[10].Enable(True)
 
         try:
             self.warmbox = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer,type="chassis2k")) 
@@ -313,6 +314,7 @@ class IntegrationTool(IntegrationToolFrame):
             self.testButtonList[6].Enable(True)
             self.testButtonList[7].Enable(True)
             self.testButtonList[8].Enable(True)
+            self.testButtonList[9].Enable(True)
         except Exception, err:
             #print err
             self.hotbox = "N/A"
@@ -320,6 +322,7 @@ class IntegrationTool(IntegrationToolFrame):
             self.testButtonList[6].Enable(False)
             self.testButtonList[7].Enable(False)
             self.testButtonList[8].Enable(False)
+            self.testButtonList[9].Enable(False)
         self.textCtrlAnalyzerInfoList[4].SetValue(self.hotbox)
             
         try:    
