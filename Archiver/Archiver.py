@@ -42,19 +42,24 @@ from win32file import CreateFile, WriteFile, CloseHandle, SetFilePointer, Delete
 from win32file import FILE_BEGIN, FILE_END, GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,\
                       INVALID_HANDLE_VALUE
 from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import RPC_PORT_LOGGER, RPC_PORT_ARCHIVER
+from Host.Common.SharedTypes import RPC_PORT_LOGGER, RPC_PORT_ARCHIVER, RPC_PORT_DRIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 from Host.Common.timestamp import timestampToUtcDatetime, unixTime
+from Host.Common.S3Uploader import S3Uploader
 
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
 if sys.platform == 'win32':
     threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
     
-####
-## Functions
-####
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                            APP_NAME,
+                                            IsDontCareConnection = False)
+                                            
+#
+# Functions
+#
 def NameOfThisCall():
     return sys._getframe(1).f_code.co_name
 
@@ -81,18 +86,24 @@ def deleteFile(filename):
         Log("Error deleting file: %s. %s" % (filename,e))
         return False
 
-def sortByName(top,nameList):
+def sortByName(top,nameList,reversed=False):
     nameList.sort()
-    return nameList
+    if not reversed:
+        return nameList
+    else:
+        return nameList[::-1]
 
-def sortByMtime(top,nameList):
+def sortByMtime(top,nameList,reversed=False):
     """Sort a list of files by modification time"""
     # Decorate with the modification time of the file for sorting
     fileList = [(os.path.getmtime(os.path.join(top,name)),name) for name in nameList]
     fileList.sort()
-    return [name for t,name in fileList]
+    if not reversed:
+        return [name for t,name in fileList]
+    else:
+        return [name for t,name in fileList[::-1]]
     
-def walkTree(top,onError=None,sortDir=None,sortFiles=None):
+def walkTree(top,onError=None,sortDir=None,sortFiles=None,reversed=False):
     """Generator which traverses a directory tree rooted at "top" in bottom to top order (i.e., the children are visited
     before the parent, and directories are visited before files.) The order of directory traversal is determined by
     "sortDir" and the order of file traversal is determined by "sortFiles". If "onError" is defined, exceptions during
@@ -115,12 +126,12 @@ def walkTree(top,onError=None,sortDir=None,sortFiles=None):
                 nondirs.append(name)
     # Sort the directories and nondirectories (in-place)
     if sortDir is not None:
-        dirs = sortDir(top,dirs)
+        dirs = sortDir(top,dirs,reversed)
     if sortFiles is not None:
-        nondirs = sortFiles(top,nondirs)
+        nondirs = sortFiles(top,nondirs,reversed)
     # Recursively call walkTree on directories
     for dir in dirs:
-        for x in walkTree(os.path.join(top,dir),onError,sortDir,sortFiles):
+        for x in walkTree(os.path.join(top,dir),onError,sortDir,sortFiles,reversed):
             yield x
     # Yield up files
     for file in nondirs:
@@ -275,7 +286,7 @@ class ArchiveGroup(object):
             self.groupRoot = archiver.config.get(groupName,'Directory')
         except:
             self.groupRoot = os.path.join(archiver.storageRoot,groupName)
-       
+
         if archiver.config.get(groupName,"StorageFolderTime","gmt").lower() == "local":
             self.maketimetuple = time.localtime
         else:
@@ -316,6 +327,18 @@ class ArchiveGroup(object):
         # Lock for arbitrating access to file deletion routines to make space for new data
         self.makeSpaceLock = threading.Lock()
         
+        # For data uploading
+        self.uploader = archiver.uploader
+        self.retryUploadInterval = archiver.retryUploadInterval
+        self.uploadEnabled = archiver.config.getboolean(groupName,'UploadEnabled', False)
+        self.uploadRetryPath = os.path.join(self.groupRoot, "upload")
+        # Flag to scan the "upload" folder and upload any remaining files
+        self.retryUploadNeeded = True
+        if self.uploadEnabled:
+            self.retryUploadThread = threading.Thread(target=self.retryUploadScheduler)
+            self.retryUploadThread.setDaemon(True)
+            self.retryUploadThread.start()
+            
         self.serverThread.setDaemon(True)
         self.serverThread.start()
 
@@ -330,7 +353,8 @@ class ArchiveGroup(object):
                        init = self.initArchiveGroup,
                        archiveFile = self.archiveFile,
                        startLiveArchive = self.startLiveArchive,
-                       stopLiveArchive = self.stopLiveArchive)
+                       stopLiveArchive = self.stopLiveArchive,
+                       retryUpload = self.retryUpload)
         self.updateAndGetArchiveSize()
         Log("Group %s, files %d, bytes %d" % (self.name,self.fileCount,self.byteCount,))
         while True:
@@ -343,6 +367,12 @@ class ArchiveGroup(object):
             except Exception, exc:
                 Log("Exception in ArchiveGroup server",
                     dict(GroupName = self.name), Verbose = "Exception = %s %r" % (exc, exc))
+                    
+    def retryUploadScheduler(self):
+        while True:
+            if self.retryUploadNeeded:
+                self.cmdQueue.put(("retryUpload",()))
+            time.sleep(self.retryUploadInterval)
 
     def zipSource(self, source, targetPath):
         """
@@ -376,7 +406,9 @@ class ArchiveGroup(object):
 
     def initArchiveGroup(self):
         # The treeWalker is used to delete the oldest entries when required
-        self.treeWalker = walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime)
+        self.treeWalker = walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime,reversed=False)
+        # Create a uploadTreeWalker to retry uploading the newest entries when required
+        self.uploadTreeWalker = walkTree(self.uploadRetryPath,sortDir=sortByName,sortFiles=sortByMtime,reversed=True)
         # Remove empty subdirectories
         self._removeEmptySubdirs()        
         
@@ -387,7 +419,7 @@ class ArchiveGroup(object):
         count = 0
         if not os.path.exists(destDir):
             os.makedirs(destDir)
-        for type,name in walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByName):
+        for type,name in walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByName,reversed=False):
             if type == 'file':
                 fileTime = os.path.getmtime(name)
                 if (startTime is not None) and fileTime < startTime: continue
@@ -533,45 +565,63 @@ class ArchiveGroup(object):
             return True
         finally:
             self.makeSpaceLock.release()
-        
+
     def archiveFile(self, fileToArchive, sourceFileName=None, removeOriginal=True, timestamp=None):
         # Once we get here, we have something to be archived
-        # Returns True if archiving succeeded
-        
-        status = False
-        # First make room for the file by deleting old files, if necessary
         if not os.path.exists(fileToArchive):
             raise ValueError,"Cannot archive non-existent file: %s" % (fileToArchive,)
+
+        # If timestamp is None, use current time to store file in the correct location (local or GMT)
+        #  otherwise use the specified timestamp
+        if timestamp is None:
+            now = time.time() 
+        else:
+            now = unixTime(timestamp)
+        timeTuple = self.maketimetuple(now)
+        
+        # The storage path for files to be uploaded is different from files to be archived locally
+        if self.uploadEnabled:
+            pathName = os.path.join(self.uploadRetryPath, makeStoragePathName(timeTuple,self.quantum))
+        else:
+            pathName = os.path.join(self.groupRoot, makeStoragePathName(timeTuple,self.quantum))
+
+        renameFlag = True
+        # Determine the target sourceFiles
+        # The only case when sourceFileName is None is when the Archiver computes the temporary files
+        if self.aggregationCount == 0 and sourceFileName != None:
+            if self.compress:
+                targetName = os.path.split(sourceFileName)[-1]+".zip"
+            else:
+                targetName = os.path.split(sourceFileName)[-1]
+                renameFlag = removeOriginal
+        else:
+            targetName = time.strftime(self.name+"_%Y%m%d_%H%M%S.zip",timeTuple)
+                
+        # Upload file to data warehouse if required
+        if self.uploadEnabled:
+            if self.uploader.upload(fileToArchive, targetName) == "OK":
+                Log("(Upload) %s uploaded" % (targetName,))
+                print "(Upload) %s uploaded" % (targetName,)
+                if renameFlag:
+                    deleteFile(fileToArchive)
+                return True
+            else:
+                self.retryUploadNeeded = True
+                Log("(Upload) Failed to upload %s" % (targetName,))
+                print "(Upload) Failed to upload %s" % (targetName,)
+                # Upload has failed, so archive those files locally just like others
+
         # Determine size of new file to determine if it will fit
         # Get rid of the oldest file until total file size or total file count can fit
         nBytes = os.path.getsize(fileToArchive)
+        # Returns True if archiving succeeded
+        status = False
+        # First make room for the file by deleting old files, if necessary
         if self.makeSpace(nBytes, 1):
-            # If timestamp is None, use current time to store file in the correct location (local or GMT)
-            #  otherwise use the specified timestamp
-            if timestamp is None:
-                now = time.time() 
-            else:
-                now = unixTime(timestamp)
-            timeTuple = self.maketimetuple(now)
-                
-            pathName = makeStoragePathName(timeTuple,self.quantum)
-            pathName = os.path.join(self.groupRoot,pathName)
-
             if not os.path.exists(pathName): 
                 os.makedirs(pathName)
-
-            renameFlag = True
-            # Determine the target sourceFiles
-            # The only case when sourceFileName is None is when the Archiver computes the temporary files
-            if self.aggregationCount == 0 and sourceFileName != None:
-                if self.compress:
-                    targetName = os.path.join(pathName,os.path.split(sourceFileName)[-1]+".zip")
-                else:
-                    targetName = os.path.join(pathName,os.path.split(sourceFileName)[-1])
-                    renameFlag = removeOriginal
-            else:
-                targetName = os.path.join(pathName,time.strftime(self.name+"_%Y%m%d_%H%M%S.zip",timeTuple))
-
+                
+            targetName = os.path.join(pathName, targetName)
             if os.path.exists(targetName):
                 # Replace existing file
                 try:
@@ -599,6 +649,71 @@ class ArchiveGroup(object):
             deleteFile(self.tempFileName)
         return status
         
+    def retryUpload(self):
+        """Use the treeWalker to upload the newest file in the "upload" directory. Returns the number of
+        bytes freed, number of file uploaded (0 or 1), and the name of the file uploaded,.
+        Also updates self.fileCount and self.byteCount as a side-effect.
+        """
+        # Once we get here, the data upload function is enabled and some local files are waiting to be uploaded
+        self.makeSpaceLock.acquire()
+        nBytes = 0
+        nFiles = 0
+        name = None
+        try:
+            # Always restart the generator
+            self.uploadTreeWalker = walkTree(self.uploadRetryPath,sortDir=sortByName,sortFiles=sortByMtime,reversed=True)
+            type, name = self.uploadTreeWalker.next()
+        except Exception, err:
+            print "%r" % err
+            self.retryUploadNeeded = False
+            return nBytes, nFiles, name
+        else:
+            if type == "file":
+                nBytes, nFiles = self._retryUploadFile(name)
+            else: # Deal with directories
+                while type != "file":
+                    if name == self.uploadRetryPath:
+                        self.retryUploadNeeded = False
+                        break
+                    else:
+                        try:
+                            self._deleteUploadDir(name)
+                            type, name = self.uploadTreeWalker.next()
+                        except:
+                            break
+                if type == "file":
+                    nBytes, nFiles = self._retryUploadFile(name)
+
+            self.byteCount -= nBytes
+            self.fileCount -= nFiles
+            return nBytes, nFiles, name
+        finally:
+            self.makeSpaceLock.release()
+            
+    def _retryUploadFile(self, name):
+        nBytes = 0
+        nFiles = 0
+        targetName = os.path.split(name)[-1]
+        try:
+            if self.uploader.upload(name, targetName) == "OK":
+                Log("(Retry Upload) %s uploaded" % (name,))
+                print "(Retry Upload) %s uploaded" % (name,)
+                nBytes = os.path.getsize(name)
+                nFiles = 1
+                deleteFile(name)
+        except Exception, err:
+            print "_retryUploadFile Error: %r" % err
+        return nBytes, nFiles
+        
+    def _deleteUploadDir(self, name):
+        try:
+            os.chmod(name,stat.S_IREAD | stat.S_IWRITE)
+            os.rmdir(name)
+            Log("(Retry Upload) Directory %s deleted" % (name,))
+            print "(Retry Upload) Directory %s deleted" % (name,)
+        except Exception, err:
+            print "_deleteUploadDir Error: %r" % err
+                    
     def updateAndGetArchiveSize(self):
         """
         Determine the number of files and number of bytes presently in the archive group.
@@ -616,7 +731,7 @@ class ArchiveGroup(object):
     def getFileNames(self,queue):
         """Get a list of file names for this storage group sorted in order of modification time and place it on the
         specified queue"""
-        queue.put([os.path.split(name)[-1] for type,name in walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime)
+        queue.put([os.path.split(name)[-1] for type,name in walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime,reversed=False)
                    if type == 'file'])
 
     def _deleteOldest(self):
@@ -628,7 +743,7 @@ class ArchiveGroup(object):
         except StopIteration:
             # We have run out, restart the generator at the root
             self.updateAndGetArchiveSize()
-            self.treeWalker = walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime)
+            self.treeWalker = walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime,reversed=False)
             type, name = self.treeWalker.next()
         
         if type == 'file':
@@ -711,6 +826,19 @@ class Archiver(object):
         basePath = os.path.split(filename)[0]
         try:
             self.storageRoot = os.path.join(basePath, self.config.get(_MAIN_CONFIG_SECTION,'StorageRoot'))
+            
+            # For S3 uploader
+            uploadBucketName = self.config.get(_MAIN_CONFIG_SECTION, "UploadBucketName", "picarro_analyzerup")
+            try:
+                analyzerId = CRDS_Driver.fetchInstrInfo("analyzername")
+                if analyzerId == None:
+                    analyzerId = "Unknown"
+            except Exception, err:
+                print err
+                analyzerId = "Unknown"
+            self.uploader = S3Uploader(uploadBucketName, analyzerId)
+            self.retryUploadInterval = self.config.getfloat(_MAIN_CONFIG_SECTION, "RetryUploadInterval", 30.0)
+            
             # Fetch names of storage groups
             self.storageGroupNames = self.config.list_sections()
             self.storageGroupNames.remove(_MAIN_CONFIG_SECTION)

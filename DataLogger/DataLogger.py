@@ -60,7 +60,7 @@ Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
 ####
-## Set constants for this file...
+# Set constants for this file...
 ####
 APP_NAME = "DataLogger"
 APP_VERSION = 1.0
