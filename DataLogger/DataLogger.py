@@ -253,6 +253,7 @@ class DataLog(object):
         self.ArchiveGroupName = ConfigParser.get(self.LogName, "ArchiveGroupName", default="")
         self.PrintTimeInHalfSecond = ConfigParser.getboolean(self.LogName, "printTimeInHalfSecond", False)
         self.WriteEpochTime = ConfigParser.getboolean(self.LogName, "writeEpochTime", True)
+        self.WriteJulianDays = ConfigParser.getboolean(self.LogName, "writeJulianDays", True)
         relDir = "%s\%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
         self.srcDir = os.path.join(basePath, relDir)
         if self.liveArchive and self.useHdf5:
@@ -380,6 +381,9 @@ class DataLog(object):
             self._WriteEntry("FRAC_DAYS_SINCE_JAN1")
             self._WriteEntry("FRAC_HRS_SINCE_JAN1")
         
+        if self.WriteJulianDays:
+            self._WriteEntry("JULIAN_DAYS")
+            
         if self.WriteEpochTime:
             self._WriteEntry("EPOCH_TIME")
         
@@ -510,12 +514,16 @@ class DataLog(object):
                     hrs = (Time-Jan1SecondsSinceEpoch)/ONE_HOUR_IN_SECONDS
                     self._WriteEntry("%.6f" %hrs)
     
+                #write JULIAN_DAYS if enabled
+                if self.WriteJulianDays:
+                    self._WriteEntry("%.8f" % (days+1))
+                    
                 #write EPOCH_TIME if enabled
                 if self.WriteEpochTime:
-                    self._WriteEntry("%.3f" %Time)
+                    self._WriteEntry("%.3f" % Time)
                     
                 #write ALARM_STATE
-                self._WriteEntry("%d" %alarmStatus)
+                self._WriteEntry("%d" % alarmStatus)
     
                 for data in DataList:
                     self._WriteEntry("%.10E" % DataDict.get(data,0.0))
