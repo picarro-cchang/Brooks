@@ -23,6 +23,7 @@ import os
 import string
 import wx
 import threading
+import time
 
 from ValveSequencerFrame import ValveSequencerFrame
 from Host.Common import CmdFIFO
@@ -99,9 +100,13 @@ class ValveSequencer(ValveSequencerFrame):
         self.startServer()
 
         # Show valve states at start-up
-        self.showCurrent(0)
         self.currentStep = 0
+        self.showCurrentStep()
         self.freshStart = True
+
+        # Use this time to determine when to run the next step
+        self.currStepEndTime = 0.0
+        self.paused = False
         
         # A flag used to start/stop the sequencer for RPC calls (can't start timer directly from RPC)
         self.runSequencer = False
@@ -245,7 +250,7 @@ class ValveSequencer(ValveSequencerFrame):
         else:
             return ("OFF;%d" % CRDS_Driver.getValveMask())
     
-    def showCurrent(self, stepNum):
+    def showCurrentStep(self):
         # Show current valve status reading from the Driver
         mask = self.getValves()
         mpvPosition = self.getMPVPosition()
@@ -260,7 +265,7 @@ class ValveSequencer(ValveSequencerFrame):
                 newVal = newVal >> 1 
         else:
             pass
-        self.curTextCtrlList[0].SetValue(str(stepNum))    
+        self.curTextCtrlList[0].SetValue(str(self.currentStep))    
     
     def onHideInterface(self, event):
         self.hideGui()
@@ -268,9 +273,9 @@ class ValveSequencer(ValveSequencerFrame):
     def onResetAllValvesMenu(self, event):
         self.stopValveSeq()
         self.setValves(0)
-        self.showCurrent(0)
-        self.curTextCtrlList[1].SetValue("0") 
         self.currentStep = 0
+        self.showCurrentStep()
+        self.curTextCtrlList[1].SetValue("0") 
         self.holdNewSeq = False
         self.freshStart = True
         # Clear the seq file name in .ini file
@@ -288,9 +293,10 @@ class ValveSequencer(ValveSequencerFrame):
     #    self.stepTimer.Stop()
 
     def onGoFirstStepMenu(self, event):
-        if self.isSeqRunning():     
+        if self.isSeqRunning():
+            self.currStepEndTime = time.time()
             self.currentStep = 1        
-            self._runStep(1)
+            self._runCurrentStep()
             
     def onTotStepsSpinCtrl(self, event):
         self._addTitleNote()    
@@ -304,8 +310,9 @@ class ValveSequencer(ValveSequencerFrame):
             self.stepTimer.Start(EXE_INTERVAL)
             self.startValveSeq()
         self.holdNewSeq = False
+        self.currStepEndTime = time.time()
         self.currentStep = self.spinCtrlGoToStep.GetValue()
-        self._runStep(self.currentStep)
+        self._runCurrentStep()
             
     def onRunNextButton(self, event):
         if self.isSeqRunning():     
@@ -316,19 +323,26 @@ class ValveSequencer(ValveSequencerFrame):
                 if self.currentStep < self.numSteps:
                     self.currentStep += 1
                 else:
-                    self.currentStep = 1                      
-            self._runStep(self.currentStep)
+                    self.currentStep = 1
+            self.currStepEndTime = time.time()
+            self._runCurrentStep()
             
     def onStepTimer(self, event):
         if not self.runSequencer:
+            self.paused = True
             return
-        remTime = float(self.curTextCtrlList[1].GetValue())
+        if self.paused:
+            remTime = float(self.curTextCtrlList[1].GetValue())-DISP_TIME_PRECISION
+            self.currStepEndTime = time.time() + 60.0 * remTime
+            self.paused = False
+        else:
+            remTime = (self.currStepEndTime - time.time()) / 60.0
         if (self.stepTimer.GetInterval() == EXE_INTERVAL) and (remTime > DISP_TIME_PRECISION):      
             if self.freshStart:
                 self.setValves()
                 self.freshStart = False
-            # Update remaining time    
-            self.curTextCtrlList[1].SetValue(str(remTime-DISP_TIME_PRECISION))          
+            # Update remaining time
+            self.curTextCtrlList[1].SetValue("%.3f" % remTime)
         else:  
             self.onRunNextButton(event)
             
@@ -369,9 +383,9 @@ class ValveSequencer(ValveSequencerFrame):
     def onRotValCodeTextCtrl(self, event):
         self._addTitleNote()
         
-    def _runStep(self, stepNum):  
+    def _runCurrentStep(self):  
         self.freshStart = False    
-        rowNum = stepNum-1
+        rowNum = self.currentStep-1
         curDuration = float(self.durationTextCtrlList[rowNum].GetValue())
         if curDuration < DISP_TIME_PRECISION:
             self.stepTimer.Start(SKIP_INTERVAL)
@@ -381,6 +395,7 @@ class ValveSequencer(ValveSequencerFrame):
             self.setValves()
             self.stepTimer.Start(EXE_INTERVAL)
             self.numSkippedSteps = 0
+            self.currStepEndTime += (curDuration*60.0)
    
         if self.numSkippedSteps == self.numSteps:
             self.stopValveSeq()
@@ -457,8 +472,9 @@ class ValveSequencer(ValveSequencerFrame):
         if self.isSeqRunning():
             if self.holdNewSeq == False:
                 # Start new sequence right away
+                self.currStepEndTime = time.time()
                 self.currentStep = 1
-                self._runStep(1)
+                self._runCurrentStep()
             else:
                 # Hold new sequence
                 self.curTextCtrlList[0].SetValue(str(self.currentStep)+" (Last Seq.)")
@@ -468,9 +484,9 @@ class ValveSequencer(ValveSequencerFrame):
         
         else:
             self.holdNewSeq = False
-            self.showCurrent(0)
-            self.curTextCtrlList[1].SetValue("0") 
             self.currentStep = 0
+            self.showCurrentStep()
+            self.curTextCtrlList[1].SetValue("0") 
             self.freshStart = True
         
     def onSaveFileMenu(self, event):        
