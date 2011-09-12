@@ -1,5 +1,7 @@
 # -*- coding: iso-8859-15 -*-
 import wx
+from wx.lib.masked import TimeCtrl
+from datetime import datetime
 
 DEFAULT_NUM_STEPS = 10
 FORMAT_OPTION = 2
@@ -40,9 +42,8 @@ class ValveSequencerFrame(wx.Frame):
         
         # Labels
         self.labelTitle = wx.StaticText(self, -1, "External Valve Sequencer", style=wx.ALIGN_CENTRE)
-        self.labelTotSteps = wx.StaticText(self, -1, "Total Steps", style=wx.ALIGN_CENTRE)
-        self.labelGoToStep = wx.StaticText(self, -1, "Run Step #", style=wx.ALIGN_CENTRE)
-        self.labelBlank = wx.StaticText(self, -1, "", style=wx.ALIGN_CENTRE)
+        self.labelTotSteps = wx.StaticText(self, -1, "Total Steps", size = (150,-1), style=wx.ALIGN_CENTRE)
+        self.labelGoToStep = wx.StaticText(self, -1, "Run Step #", size = (150,-1), style=wx.ALIGN_CENTRE)
         self.labelCurStep = wx.StaticText(self, -1, "Current Step #", style=wx.ALIGN_CENTRE)
         self.labelStep = wx.StaticText(self, -1, "Step #", style=wx.ALIGN_CENTRE)        
         self.labelCurDuration = wx.StaticText(self, -1, "Remaining Time (min)", style=wx.ALIGN_CENTRE)
@@ -58,8 +59,10 @@ class ValveSequencerFrame(wx.Frame):
         self.spinCtrlTotSteps = wx.SpinCtrl(self, -1, str(self.numSteps), min=1, max=numMaxSteps, style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)        
         self.spinCtrlGoToStep = wx.SpinCtrl(self, -1, "1", min=1, max=numMaxSteps, style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)
 
-        self.buttonApply = wx.Button(self, -1, "Apply", style=wx.BU_EXACTFIT)        
-        self.buttonRunNext = wx.Button(self, -1, "Run Next Step", style=wx.BU_EXACTFIT)
+        # Buttons
+        self.buttonApply = wx.Button(self, -1, "Apply", size = (150,-1))        
+        self.buttonRunNext = wx.Button(self, -1, "Run Next Step", size = (150,-1))
+        self.buttonSch = wx.Button(self, -1, "Scheduled Event", size = (150,-1))
 
         # Current status display textCtrl
         self.curTextCtrlList = []        
@@ -91,6 +94,13 @@ class ValveSequencerFrame(wx.Frame):
         # Divider line
         self.staticLine = wx.StaticLine(self, -1)      
         
+        # Date/time function
+        self.labelStartDate = wx.StaticText(self, -1, "Start Date", size = (150,-1), style=wx.ALIGN_CENTRE)
+        self.labelStartTime = wx.StaticText(self, -1, "Start Time", size = (150,-1), style=wx.ALIGN_CENTRE)
+        self.ctrlStartDate = wx.DatePickerCtrl(self, -1, size = (150,24), style = wx.DP_DROPDOWN)
+        self.spinButtonStartTime = wx.SpinButton(self, -1, size=(17,25), style=wx.SP_VERTICAL)
+        self.ctrlStartTime = TimeCtrl(self, -1, size = (250,30), fmt24hr=True, spinButton=self.spinButtonStartTime)
+        
         # Overall properties
         self.SetTitle("External Valve Sequencer")
         self.SetBackgroundColour(wx.Colour(255, 255, 255))
@@ -98,12 +108,12 @@ class ValveSequencerFrame(wx.Frame):
         self.panel.SetScrollRate(10, 10)
         
         # Button properties                    
-        self.buttonRunNext.SetMinSize((100, 20))
         self.buttonRunNext.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonRunNext.SetFont(wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
-        self.buttonApply.SetMinSize((100, 20))
         self.buttonApply.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonApply.SetFont(wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
+        self.buttonSch.SetBackgroundColour(wx.Colour(237, 228, 199))
+        self.buttonSch.SetFont(wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
 
         # Lists reserved for panel control elements
         self.stepTextCtrlList = []
@@ -234,31 +244,32 @@ class ValveSequencerFrame(wx.Frame):
         sizerMainLayout.Add(self.labelTitle, 0, wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 10)
         
         # Control section
-        sizerCtrl = wx.BoxSizer(wx.HORIZONTAL)
-        sizerTotSteps = wx.BoxSizer(wx.VERTICAL)
-        sizerGoToStep = wx.BoxSizer(wx.VERTICAL)
-        sizerApply = wx.BoxSizer(wx.VERTICAL)
-        sizerRunNext = wx.BoxSizer(wx.VERTICAL)
+        sizerStartDate = wx.BoxSizer(wx.HORIZONTAL)
+        sizerStartTime = wx.BoxSizer(wx.HORIZONTAL)
+        sizerCtrl = wx.FlexGridSizer(0, 4)
         
-        sizerTotSteps.Add(self.labelTotSteps, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 4)
-        sizerTotSteps.Add(self.spinCtrlTotSteps, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add(sizerTotSteps, 1, 0, 0)
+        sizerCtrl.Add(self.labelTotSteps, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrl.Add(self.labelGoToStep, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrl.Add((0,0))
+        sizerCtrl.Add((0,0))
+        sizerCtrl.Add(self.spinCtrlTotSteps, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrl.Add(self.spinCtrlGoToStep, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrl.Add(self.buttonApply, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrl.Add(self.buttonRunNext, 0, wx.ALL|wx.EXPAND, 4)
         
-        sizerGoToStep.Add(self.labelGoToStep, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 4)
-        sizerGoToStep.Add(self.spinCtrlGoToStep, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add(sizerGoToStep, 1, 0, 0)
-
-        sizerApply.Add(self.labelBlank, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 4)
-        sizerApply.Add(self.buttonApply, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add(sizerApply, 1, 0, 0)
-        
-        sizerRunNext.Add(self.labelBlank, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 4)
-        sizerRunNext.Add(self.buttonRunNext, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add(sizerRunNext, 1, 0, 0)
-
-        if FORMAT_OPTION == 1:
-            sizerMainLayout.Add(sizerCtrl, 0, wx.RIGHT|wx.EXPAND, 20)
-            sizerMainLayout.Add(self.staticLine, 0, wx.EXPAND, 0)
+        # Date/Time section
+        sizerCtrl.Add(self.labelStartDate, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrl.Add(self.labelStartTime, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrl.Add((0,0))
+        sizerCtrl.Add((0,0))
+        sizerStartDate.Add((0,0))
+        sizerStartDate.Add(self.ctrlStartDate, 0, wx.ALIGN_CENTER_VERTICAL)
+        sizerStartTime.Add(self.ctrlStartTime, 1, wx.ALIGN_CENTER_VERTICAL)
+        sizerStartTime.Add(self.spinButtonStartTime, 0, wx.ALIGN_CENTER_VERTICAL)
+        sizerCtrl.Add(sizerStartDate, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrl.Add(sizerStartTime, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrl.Add(self.buttonSch, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrl.Add((0,0))
         
         # Show current values
         sizerDisplayAndPanel = wx.BoxSizer(wx.VERTICAL)
@@ -335,12 +346,16 @@ class ValveSequencerFrame(wx.Frame):
         
         sizerDisplayAndPanel.Add(self.panel, 4, wx.EXPAND, 0)
         
-        # Combine current info and panel
-        sizerMainLayout.Add(sizerDisplayAndPanel, 0, wx.BOTTOM, 5)
-        
-        if FORMAT_OPTION == 2:
+        if FORMAT_OPTION == 1:
+            sizerMainLayout.Add(sizerCtrl, 0, wx.RIGHT|wx.EXPAND, 20)
+            sizerMainLayout.Add(self.staticLine, 0, wx.EXPAND, 0)
+            sizerMainLayout.Add(sizerDisplayAndPanel, 0, wx.BOTTOM, 5)
+        else:
+            sizerMainLayout.Add(sizerDisplayAndPanel, 0, wx.BOTTOM, 5)
             sizerMainLayout.Add(self.staticLine, 0, wx.EXPAND, 0)
             sizerMainLayout.Add(sizerCtrl, 0, wx.EXPAND, 0)
+            
+        #sizerMainLayout.Add(sizerDateTime, 0, wx.EXPAND, 0)
                 
         # Put everything together
         sizerToplevel.Add(sizerMainLayout, 1, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 30)
@@ -350,5 +365,5 @@ class ValveSequencerFrame(wx.Frame):
         #sizerToplevel.Fit(self)
         sizerToplevel.FitInside(self)
         sizerPanel.FitInside(self.panel)      
-        self.SetSize((760, 575))           
+        self.SetSize((760, 620))           
         #self.Layout()

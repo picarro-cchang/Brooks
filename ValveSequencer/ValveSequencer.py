@@ -24,6 +24,8 @@ import string
 import wx
 import threading
 import time
+from datetime import datetime
+from wx.lib.masked import EVT_TIMEUPDATE
 
 from ValveSequencerFrame import ValveSequencerFrame
 from Host.Common import CmdFIFO
@@ -108,6 +110,9 @@ class ValveSequencer(ValveSequencerFrame):
         self.currStepEndTime = 0.0
         self.paused = False
         
+        # Use this time to control the scheduled event
+        self.startTime = 0.0
+        
         # A flag used to start/stop the sequencer for RPC calls (can't start timer directly from RPC)
         self.runSequencer = False
         
@@ -124,6 +129,9 @@ class ValveSequencer(ValveSequencerFrame):
         else:
             self.hideGui()
             
+        self.ctrlStartTime.SetValue(datetime.strftime(datetime.now(), "%H:%M:%S"))
+        self._enableValveCtrls(True)
+        self._checkSchAvailability()
         self.stepTimer.Start(EXE_INTERVAL)
                 
     def bindEvents(self):
@@ -137,9 +145,13 @@ class ValveSequencer(ValveSequencerFrame):
         self.Bind(wx.EVT_SPINCTRL, self.onTotStepsSpinCtrl, self.spinCtrlTotSteps)
         self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.buttonApply)      
         self.Bind(wx.EVT_BUTTON, self.onRunNextButton, self.buttonRunNext) 
+        self.Bind(wx.EVT_BUTTON, self.onSchButton, self.buttonSch)
+        self.Bind(wx.EVT_DATE_CHANGED, self.onStartDate, self.ctrlStartDate)
+        self.Bind(EVT_TIMEUPDATE, self.onStartTime, self.ctrlStartTime)
+        
         for idx in range(self.numSolValves):
             self.Bind(wx.EVT_CHECKBOX, self.onCurValState, self.curCheckboxList[idx])   
-        self.Bind(wx.EVT_TIMER, self.onStepTimer, self.stepTimer)            
+        self.Bind(wx.EVT_TIMER, self.onStepTimer, self.stepTimer)
         self.bindDynamicEvents() 
         
     def bindDynamicEvents(self):
@@ -275,7 +287,8 @@ class ValveSequencer(ValveSequencerFrame):
         self.setValves(0)
         self.currentStep = 0
         self.showCurrentStep()
-        self.curTextCtrlList[1].SetValue("0") 
+        self.curTextCtrlList[1].SetValue("0")
+        self.spinCtrlGoToStep.SetValue(1)        
         self.holdNewSeq = False
         self.freshStart = True
         # Clear the seq file name in .ini file
@@ -327,7 +340,35 @@ class ValveSequencer(ValveSequencerFrame):
             self.currStepEndTime = time.time()
             self._runCurrentStep()
             
+    def onSchButton(self, event):
+        eventObj = event.GetEventObject()
+        if eventObj.GetLabel() == "Schedule Event":
+            startDatetime = self._convToDatetime(self.ctrlStartDate.GetValue(), self.ctrlStartTime.GetValue())
+            self.startTime = time.mktime(startDatetime.timetuple())
+            if self.startTime - time.time() > 1.0:
+                self._enableValveCtrls(False)
+                runThread = threading.Thread(target = self._runScheduledStep)
+                runThread.setDaemon(True)
+                runThread.start()
+        else:
+            self.startTime = 0.0
+        
+    def _checkSchAvailability(self):
+        schDatetime = self._convToDatetime(self.ctrlStartDate.GetValue(), self.ctrlStartTime.GetValue())
+        schTime = time.mktime(schDatetime.timetuple())
+        if schTime - time.time() > 1.0:
+            self.buttonSch.Enable(True)
+        else:
+            self.buttonSch.Enable(False)
+            
+    def onStartDate(self, event):
+        self._checkSchAvailability()
+            
+    def onStartTime(self, event):
+        self._checkSchAvailability()
+            
     def onStepTimer(self, event):
+        self._checkSchAvailability()
         if not self.runSequencer:
             self.paused = True
             return
@@ -342,7 +383,7 @@ class ValveSequencer(ValveSequencerFrame):
                 self.setValves()
                 self.freshStart = False
             # Update remaining time
-            self.curTextCtrlList[1].SetValue("%.3f" % remTime)
+            self.curTextCtrlList[1].SetValue("%.2f" % remTime)
         else:  
             self.onRunNextButton(event)
             
@@ -382,6 +423,35 @@ class ValveSequencer(ValveSequencerFrame):
             
     def onRotValCodeTextCtrl(self, event):
         self._addTitleNote()
+
+    def _enableValveCtrls(self, en=True):
+        self.buttonApply.Enable(en)
+        self.buttonRunNext.Enable(en)
+        self.frameMenubar.Enable(self.idEnableSeq, en)
+        self.frameMenubar.Enable(self.idGoFirstStep, en)
+        self.frameMenubar.Enable(self.idResetAllValves, en)
+        self.spinCtrlGoToStep.Enable(en)
+        self.ctrlStartDate.Enable(en)
+        self.ctrlStartTime.Enable(en)
+        self.spinButtonStartTime.Enable(en)
+        if en:
+            self.buttonSch.SetLabel("Schedule Event")
+        else:
+            self.buttonSch.SetLabel("Cancel Scheduled Event")
+            
+    def _convToDatetime(self, wxDate, timeStr): 
+        return datetime.strptime("%s-%s-%s %s" % (wxDate.GetYear(), wxDate.GetMonth()+1, wxDate.GetDay(), timeStr), "%Y-%m-%d %H:%M:%S")
+        
+    def _runScheduledStep(self):
+        self.onResetAllValvesMenu(None)
+        while self.startTime - time.time() > 0.5:
+            time.sleep(0.5)
+        self._enableValveCtrls(True)
+        if self.startTime > 0.0:
+            self.startValveSeq()
+        else:
+            # this scheduled was cancelled
+            pass
         
     def _runCurrentStep(self):  
         self.freshStart = False    
