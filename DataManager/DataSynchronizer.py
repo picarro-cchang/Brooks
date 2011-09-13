@@ -137,15 +137,13 @@ def resync(analyzer,env):
     if nextResampTimestamp<lastMeasTimestamp-g["syncLatency"]:
         report = {"timestamp":nextResampTimestamp}
         good = True
-        try:
-            for var,syncVar,condVar,condVal in varList:
+        for var,syncVar,condVar,condVal in varList:
+            try:
                 report[syncVar],status = interp(oo,var,condVar,condVal,nextResampTimestamp)
                 good = good and status
-            report['syncStatus'] = int(status)
-        except LookupError:
-            # nextResampTimestamp = None
-            report = {}
-            pass
+            except LookupError:
+                pass
+        report['syncStatus'] = int(status)
         # print "Resampling at %s" % nextResampTimestamp
         p["resampTimestamp"] = nextResampTimestamp
         aa[analyzer] = {"timestamp":lastMeasTimestamp}
