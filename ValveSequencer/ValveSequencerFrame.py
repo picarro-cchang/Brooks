@@ -62,7 +62,7 @@ class ValveSequencerFrame(wx.Frame):
         # Buttons
         self.buttonApply = wx.Button(self, -1, "Apply", size = (150,-1))        
         self.buttonRunNext = wx.Button(self, -1, "Run Next Step", size = (150,-1))
-        self.buttonSch = wx.Button(self, -1, "Scheduled Event", size = (150,-1))
+        self.buttonSch = wx.Button(self, -1, "Scheduled Sequence", size = (150,-1))
 
         # Current status display textCtrl
         self.curTextCtrlList = []        
@@ -92,7 +92,8 @@ class ValveSequencerFrame(wx.Frame):
         self.checkboxColorFiller.SetBackgroundColour("#85B24A")
         
         # Divider line
-        self.staticLine = wx.StaticLine(self, -1)      
+        self.staticLine1 = wx.StaticLine(self, -1)
+        self.staticLine2 = wx.StaticLine(self, -1, size=(-1,3))
         
         # Date/time function
         self.labelStartDate = wx.StaticText(self, -1, "Start Date", size = (150,-1), style=wx.ALIGN_CENTRE)
@@ -246,30 +247,37 @@ class ValveSequencerFrame(wx.Frame):
         # Control section
         sizerStartDate = wx.BoxSizer(wx.HORIZONTAL)
         sizerStartTime = wx.BoxSizer(wx.HORIZONTAL)
-        sizerCtrl = wx.FlexGridSizer(0, 4)
+        sizerCtrlTop = wx.FlexGridSizer(0, 4)
+        sizerCtrlBottom = wx.FlexGridSizer(0, 4)
+        sizerCtrl = wx.BoxSizer(wx.VERTICAL)
         
-        sizerCtrl.Add(self.labelTotSteps, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add(self.labelGoToStep, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add((0,0))
-        sizerCtrl.Add((0,0))
-        sizerCtrl.Add(self.spinCtrlTotSteps, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add(self.spinCtrlGoToStep, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add(self.buttonApply, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add(self.buttonRunNext, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrlTop.Add(self.labelTotSteps, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrlTop.Add(self.labelGoToStep, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrlTop.Add((0,0))
+        sizerCtrlTop.Add((0,0))
+        sizerCtrlTop.Add(self.spinCtrlTotSteps, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrlTop.Add(self.spinCtrlGoToStep, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrlTop.Add(self.buttonApply, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrlTop.Add(self.buttonRunNext, 0, wx.ALL|wx.EXPAND, 4)
         
         # Date/Time section
-        sizerCtrl.Add(self.labelStartDate, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add(self.labelStartTime, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add((0,0))
-        sizerCtrl.Add((0,0))
+        sizerCtrlBottom.Add(self.labelStartDate, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrlBottom.Add(self.labelStartTime, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrlBottom.Add((0,0))
+        sizerCtrlBottom.Add((0,0))
         sizerStartDate.Add((0,0))
         sizerStartDate.Add(self.ctrlStartDate, 0, wx.ALIGN_CENTER_VERTICAL)
         sizerStartTime.Add(self.ctrlStartTime, 1, wx.ALIGN_CENTER_VERTICAL)
         sizerStartTime.Add(self.spinButtonStartTime, 0, wx.ALIGN_CENTER_VERTICAL)
-        sizerCtrl.Add(sizerStartDate, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add(sizerStartTime, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add(self.buttonSch, 0, wx.ALL|wx.EXPAND, 4)
-        sizerCtrl.Add((0,0))
+        sizerCtrlBottom.Add(sizerStartDate, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrlBottom.Add(sizerStartTime, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrlBottom.Add(self.buttonSch, 0, wx.ALL|wx.EXPAND, 4)
+        sizerCtrlBottom.Add((0,0))
+        
+        # Combine top and bottom control panels
+        sizerCtrl.Add(sizerCtrlTop, 0, wx.BOTTOM, 15)
+        sizerCtrl.Add(self.staticLine2, 0, wx.EXPAND)
+        sizerCtrl.Add(sizerCtrlBottom)
         
         # Show current values
         sizerDisplayAndPanel = wx.BoxSizer(wx.VERTICAL)
@@ -348,11 +356,11 @@ class ValveSequencerFrame(wx.Frame):
         
         if FORMAT_OPTION == 1:
             sizerMainLayout.Add(sizerCtrl, 0, wx.RIGHT|wx.EXPAND, 20)
-            sizerMainLayout.Add(self.staticLine, 0, wx.EXPAND, 0)
+            sizerMainLayout.Add(self.staticLine1, 0, wx.EXPAND, 0)
             sizerMainLayout.Add(sizerDisplayAndPanel, 0, wx.BOTTOM, 5)
         else:
             sizerMainLayout.Add(sizerDisplayAndPanel, 0, wx.BOTTOM, 5)
-            sizerMainLayout.Add(self.staticLine, 0, wx.EXPAND, 0)
+            #sizerMainLayout.Add(self.staticLine1, 0, wx.EXPAND, 0)
             sizerMainLayout.Add(sizerCtrl, 0, wx.EXPAND, 0)
             
         #sizerMainLayout.Add(sizerDateTime, 0, wx.EXPAND, 0)
@@ -365,5 +373,5 @@ class ValveSequencerFrame(wx.Frame):
         #sizerToplevel.Fit(self)
         sizerToplevel.FitInside(self)
         sizerPanel.FitInside(self.panel)      
-        self.SetSize((760, 620))           
+        self.SetSize((760, 630))           
         #self.Layout()

@@ -84,6 +84,7 @@ sys.path.append("Utilities/IntegrationBackup")
 sys.path.append("Utilities/FlowController")
 sys.path.append("Utilities/ReadMemUsage")
 sys.path.append("Utilities/PeriphModeSwitcher")
+sys.path.append("Utilities/RecipeEditor")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -308,6 +309,7 @@ setup(version = "1.0",
                  "Utilities/PicarroKML/PicarroKML.py",
                  "Utilities/ReadGPSWS/ReadGPSWS.py",
                  "Utilities/PeriphModeSwitcher/PeriphModeSwitcher.py",
+                 "Utilities/RecipeEditor/RecipeEditor.py",
                  ],
                  
       data_files = [(".", ["EventManager/Warning_16x16_32.ico",

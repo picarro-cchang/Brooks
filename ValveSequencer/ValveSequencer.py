@@ -342,7 +342,7 @@ class ValveSequencer(ValveSequencerFrame):
             
     def onSchButton(self, event):
         eventObj = event.GetEventObject()
-        if eventObj.GetLabel() == "Schedule Event":
+        if eventObj.GetLabel() == "Schedule Sequence":
             startDatetime = self._convToDatetime(self.ctrlStartDate.GetValue(), self.ctrlStartTime.GetValue())
             self.startTime = time.mktime(startDatetime.timetuple())
             if self.startTime - time.time() > 1.0:
@@ -435,9 +435,9 @@ class ValveSequencer(ValveSequencerFrame):
         self.ctrlStartTime.Enable(en)
         self.spinButtonStartTime.Enable(en)
         if en:
-            self.buttonSch.SetLabel("Schedule Event")
+            self.buttonSch.SetLabel("Schedule Sequence")
         else:
-            self.buttonSch.SetLabel("Cancel Scheduled Event")
+            self.buttonSch.SetLabel("Cancel Scheduled Sequence")
             
     def _convToDatetime(self, wxDate, timeStr): 
         return datetime.strptime("%s-%s-%s %s" % (wxDate.GetYear(), wxDate.GetMonth()+1, wxDate.GetDay(), timeStr), "%Y-%m-%d %H:%M:%S")
