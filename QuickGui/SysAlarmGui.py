@@ -12,6 +12,9 @@ from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_IPV
 from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED, \
                                    INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR, \
                                    INSTMGR_STATUS_PRESSURE_LOCKED, INSTMGR_STATUS_MEAS_ACTIVE
+from Host.Common.EventManagerProxy import *
+EventManagerProxy_Init(APP_NAME)
+
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -181,8 +184,14 @@ class SysAlarmInterface(object):
                                             
         self.alarmData = [["System Alarm", True], ["IPV Connectivity", False]]
         self.latestInstMgrStatus = -1
-        self.latestIPVStatus = "-1,0.0"
-        
+        self.latestIPVStatus = "-1,%s" % (time.time()+120)
+        self.ipvStatusDict = {0  : "IPV Connectivity Status: Failed", 
+                              1  : "IPV Connectivity Status: Good",
+                              -1 : "IPV Connectivity Status: Unknown",
+                              100: "IPV Disabled"
+                              }
+        self.lastIPVStatus = None
+
     def _InstMgrStatusFilter(self, obj):
         """Updates the local (latest) copy of the instrument manager status bits."""
         self.latestInstMgrStatus = obj.status
@@ -226,13 +235,17 @@ class SysAlarmInterface(object):
             timestamp = float(timestamp)
             if time.time() - timestamp > 120:
                 self.setAlarm(1, False)
-                return True, "IPV Disabled"
+                ipvStatus = 100
+                goodStatus = True
             else:
                 self.setAlarm(1, True)
-                if ipvStatus == 1:
-                    return True, "IPV Connectivity Status: Good"
-                elif ipvStatus == -1:
+                goodStatus = True
+                if ipvStatus == -1:
                     self.setAlarm(1, False)
-                    return True, "IPV Connectivity Status: Unknown"
-                else:
-                    return False, "IPV Connectivity Status: Failed"
+                elif ipvStatus == 0:
+                    goodStatus = False
+            if ipvStatus != self.lastIPVStatus:
+                Log("New IPV status: %s" % self.ipvStatusDict[ipvStatus])
+                self.lastIPVStatus = ipvStatus
+            return goodStatus, self.ipvStatusDict[ipvStatus]
+            

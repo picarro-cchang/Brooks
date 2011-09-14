@@ -284,8 +284,8 @@ class AlarmSystem(object):
                             bitMask = 1 << num
                             self.AppStatus._Status |= bitMask
                             self.AppStatus._SendStatus()
-                            if __debug__: Log("%s Set: Alarm=%s Mode=%s Data=%s Value=%f"%(alarmName,self.AlarmDict[alarmName].Name, self.AlarmDict[alarmName].Mode, self.AlarmDict[alarmName].Data, self.md.Data[self.AlarmDict[alarmName].Data]))
-                            if __debug__: Log("Alarm1=%d Alarm2=%d Clear1=%d Clear2=%d" %(self.AlarmDict[alarmName].AlarmThreshold1, self.AlarmDict[alarmName].AlarmThreshold2, self.AlarmDict[alarmName].ClearThreshold1, self.AlarmDict[alarmName].ClearThreshold2))
+                            if __debug__: Log("%s Set: Alarm=%s; Mode=%s; Data=%s; Value=%f"%(alarmName,self.AlarmDict[alarmName].Name, self.AlarmDict[alarmName].Mode, self.AlarmDict[alarmName].Data, self.md.Data[self.AlarmDict[alarmName].Data]))
+                            if __debug__: Log("Alarm Threshold 1=%d; Alarm Threshold 2=%d; Clear Threshold 1=%d; Clear Threshold 2=%d" %(self.AlarmDict[alarmName].AlarmThreshold1, self.AlarmDict[alarmName].AlarmThreshold2, self.AlarmDict[alarmName].ClearThreshold1, self.AlarmDict[alarmName].ClearThreshold2))
                             if not self.noInstMgr:
                                 self.InstrMgrRpc.INSTMGR_SendDisplayMessageRpc(r"<%s> Raised" % (self.AlarmDict[alarmName].Name,))
                         elif action == "Clear":
@@ -293,8 +293,8 @@ class AlarmSystem(object):
                             bitMask = 1 << num
                             self.AppStatus._Status &= ~bitMask
                             self.AppStatus._SendStatus()
-                            if __debug__: Log("%s Clear: Alarm=%s Mode=%s Data=%s Value=%f"%(alarmName,self.AlarmDict[alarmName].Name, self.AlarmDict[alarmName].Mode, self.AlarmDict[alarmName].Data, self.md.Data[self.AlarmDict[alarmName].Data]))
-                            if __debug__: Log("Alarm1=%d Alarm2=%d Clear1=%d Clear2=%d" %(self.AlarmDict[alarmName].AlarmThreshold1, self.AlarmDict[alarmName].AlarmThreshold2, self.AlarmDict[alarmName].ClearThreshold1, self.AlarmDict[alarmName].ClearThreshold2))
+                            if __debug__: Log("%s Clear: Alarm=%s; Mode=%s; Data=%s; Value=%f"%(alarmName,self.AlarmDict[alarmName].Name, self.AlarmDict[alarmName].Mode, self.AlarmDict[alarmName].Data, self.md.Data[self.AlarmDict[alarmName].Data]))
+                            if __debug__: Log("Alarm Threshold 1=%d; Alarm Threshold 2=%d; Clear Threshold 1=%d; Clear Threshold 2=%d" %(self.AlarmDict[alarmName].AlarmThreshold1, self.AlarmDict[alarmName].AlarmThreshold2, self.AlarmDict[alarmName].ClearThreshold1, self.AlarmDict[alarmName].ClearThreshold2))
                             if not self.noInstMgr:
                                 self.InstrMgrRpc.INSTMGR_SendDisplayMessageRpc(r"<%s> Cleared" % (self.AlarmDict[alarmName].Name,))
 
