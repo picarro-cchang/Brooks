@@ -39,7 +39,8 @@ LASER_TYPE_DICT = {"1603.2": "CO2", "1651.0": "CH4", "1599.6": "iCO2", "1392.0":
                    "1658.7": "iCH4", "1278.0": "HF"}
 
 ANALYZER_TYPE_INDEX = {"HBDS":0, "HIDS":0, "CFADS":1, "CFBDS":1, "CFHADS":7, "CFDDS":1, "CFEDS":1, "CFFDS":6, 
-                       "CBDS":2, "CHADS":2, "CFKADS":3, "CFKBDS":3, "AEDS":4, "CKADS":5, "BFADS":8, "FCDS":9}
+                       "CBDS":2, "CHADS":2, "CFKADS":3, "CFKBDS":3, "AEDS":4, "CKADS":5, "BFADS":8, "FCDS":9,
+                       "MADS":10}
 ALL_SCHEMES = [
               { "O18"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak18O.sch",
                 "Baseline" : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Baseline.sch",
@@ -94,9 +95,13 @@ ALL_SCHEMES = [
                 "C13_iCH4_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\_13C-iCH4.sch",
                 "CH4_BL"        : r"C:\Picarro\G2000\AppConfig\Schemes\_BaseLineCFADS.sch"
               },
+              { "HF_BL"       : r"C:\Picarro\G2000\AppConfig\Schemes\HF_baseline.sch",
+                "HF_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\HF_peak.sch", 
+              },
              ]
              
 THRESHOLD_RANGE = [
+                   [2000, 16000, 1000],
                    [2000, 16000, 1000],
                    [2000, 16000, 1000],
                    [2000, 16000, 1000],
