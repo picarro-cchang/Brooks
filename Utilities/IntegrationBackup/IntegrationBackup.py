@@ -16,6 +16,8 @@ import threading
 import subprocess
 import time
 import stat
+import traceback
+from Host.Common.CustomConfigObj import CustomConfigObj
         
 STANDARD_BUTTON_COLOR = wx.Colour(237, 228, 199)
 EXTENSIONS_TO_KEEP = ["ini", "py", "bat", "zip"]
@@ -49,6 +51,72 @@ def removeEmptyDirs(rootPath):
                 pass
     return emptyDirFound
     
+class ResetIPVGui(wx.Dialog):
+    def __init__(self, *args, **kwds):
+        kwds["style"] = wx.DEFAULT_DIALOG_STYLE
+        wx.Dialog.__init__(self, *args, **kwds)
+        self.SetTitle("Reset IPV Before Delivery")
+        self.panel_1 = wx.Panel(self, -1)
+        self.panel_2 = wx.Panel(self, -1)
+        self.defaultPath = r"C:\Picarro\G2000\InstrConfig\Config\IPV"
+        self.ipvIni = os.path.join(self.defaultPath, "IPV.ini")
+        self.numParams = 3
+        self.labelList = []
+        self.ctrlList = []
+        labelSize = (150, 20)
+        ctrlSize = (200, 20)
+        textSize = (200, 40)
+        buttonSize = (110, 25)
+        self.labelList.append(wx.StaticText(self.panel_2, -1, "Subscription Type", size=labelSize))
+        self.labelList.append(wx.StaticText(self.panel_2, -1, "Subscription Period (Days)", size=labelSize))
+        self.labelList.append(wx.Button(self.panel_2, -1, "Select IPV INI File", size=labelSize))
+
+        self.ctrlList.append(wx.ComboBox(self.panel_2, -1, value = "Trial", choices = ["Trial", "Paid Subscription"], size=ctrlSize, style = wx.CB_READONLY|wx.CB_DROPDOWN))
+        self.ctrlList.append(wx.TextCtrl(self.panel_2, -1, "90", size=ctrlSize))
+        self.ctrlList.append(wx.TextCtrl(self.panel_2, -1, self.ipvIni, size=textSize, style=wx.TE_READONLY|wx.VSCROLL|wx.TE_MULTILINE|wx.TE_RICH))
+                
+        self.okButton = wx.Button(self.panel_1, wx.ID_OK, "Reset IPV", size=buttonSize)
+        self.cancelButton = wx.Button(self.panel_1, wx.ID_CANCEL, "", size=buttonSize)
+        self.__do_layout()
+        self.bindEvents()
+
+    def bindEvents(self):    
+        self.Bind(wx.EVT_BUTTON, self.onSelectFile, self.labelList[2]) 
+        
+    def __do_layout(self):
+        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
+        grid_sizer_1 = wx.FlexGridSizer(self.numParams, 2, 10, 10)
+        for idx in range(self.numParams):
+            grid_sizer_1.Add(self.labelList[idx], 0, wx.LEFT|wx.RIGHT|wx.ALIGN_TOP, 10)
+            grid_sizer_1.Add(self.ctrlList[idx], 0, wx.LEFT|wx.RIGHT|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)
+        self.panel_2.SetSizer(grid_sizer_1)
+        grid_sizer_1.AddGrowableCol(1)
+        sizer_1.Add(self.panel_2, 1, wx.TOP|wx.EXPAND, 10)
+        sizer_2.Add((80, -1))
+        sizer_2.Add(self.okButton, 0, wx.TOP|wx.BOTTOM, 15)
+        sizer_2.Add((20, -1))
+        sizer_2.Add(self.cancelButton, 0, wx.TOP|wx.BOTTOM|wx.RIGHT, 15)
+        self.panel_1.SetSizer(sizer_2)
+        sizer_1.Add(self.panel_1, 0, wx.EXPAND, 0)
+        self.SetSizer(sizer_1)
+        sizer_1.Fit(self)
+        self.Layout()
+        
+    def onSelectFile(self, evt):
+        if not self.defaultPath:
+            self.defaultPath = os.getcwd()
+        dlg = wx.FileDialog(self, "Select IPV INI file...",
+                            self.defaultPath, wildcard = "*.ini", style=wx.OPEN)
+        if dlg.ShowModal() == wx.ID_OK:
+            self.ipvIni = dlg.GetPaths()[0]
+            self.ctrlList[2].SetValue(self.ipvIni)
+            dlg.Destroy()
+        else:
+            dlg.Destroy()
+            return
+        self.defaultPath = dlg.GetDirectory()
+            
 class IntegrationBackupFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX)
@@ -60,6 +128,11 @@ class IntegrationBackupFrame(wx.Frame):
         
         # Menu bar
         self.frameMenubar = wx.MenuBar()
+        self.iReset = wx.Menu()
+        self.frameMenubar.Append(self.iReset,"Reset")
+        self.idResetIPV = wx.NewId()
+        self.iResetIPV = wx.MenuItem(self.iReset, self.idResetIPV, "Reset IPV", "", wx.ITEM_NORMAL)
+        self.iReset.AppendItem(self.iResetIPV)
         self.iHelp = wx.Menu()
         self.frameMenubar.Append(self.iHelp,"Help")
         self.idAbout = wx.NewId()
@@ -166,6 +239,37 @@ class IntegrationBackup(IntegrationBackupFrame):
         self.Bind(wx.EVT_BUTTON, self.onStartButton, self.buttonStart)
         self.Bind(wx.EVT_BUTTON, self.onCloseButton, self.buttonClose)
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
+        self.Bind(wx.EVT_MENU, self.onResetIPVMenu, self.iResetIPV)
+        
+    def onResetIPVMenu(self, evt):
+        d = ResetIPVGui(None, -1, "")
+        getCtrl = (d.ShowModal() == wx.ID_OK)
+        if getCtrl:
+            sType = d.ctrlList[0].GetValue()
+            period = d.ctrlList[1].GetValue()
+            ipvIni = d.ipvIni
+            if float(period) < 90.0:
+                d2 = wx.MessageDialog(self, "The minimal subscription/trial period is 90 days. Please try again.", "Error", wx.ICON_ERROR|wx.STAY_ON_TOP)
+                d2.ShowModal()
+                d2.Destroy()
+                return
+            try:
+                cp = CustomConfigObj(ipvIni)
+                if sType == "Trial":
+                    cp.set("License", "renewMsgSelector", "1")
+                else:
+                    cp.set("License", "renewMsgSelector", "2")
+                cp.set("License", "trialDays", period)
+                cp.set("License", "launch", "True")
+                cp.set("Main", "enabled", "False")
+                cp.write()
+                d2 = wx.MessageDialog(self, "IPV successfully reset", "Confirmation", wx.ICON_INFORMATION|wx.STAY_ON_TOP)
+                d2.ShowModal()
+                d2.Destroy()
+            except:
+                d2 = wx.MessageDialog(self, "Error occurred. Please try again.\nError: %s" % traceback.format_exc(), "Error", wx.ICON_ERROR|wx.STAY_ON_TOP)
+                d2.ShowModal()
+                d2.Destroy()
         
     def onCloseButton(self, evt):
         self.Destroy()

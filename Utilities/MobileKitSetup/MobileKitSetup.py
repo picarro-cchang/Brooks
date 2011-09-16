@@ -124,6 +124,7 @@ class MobileKitSetup(MobileKitSetupFrame):
             serverCode = self.co.get("Server", "serverCode", "C:/Picarro/G2000/AnalyzerViewer/viewServer.py")
             cleanIpAddr = ".".join([a.strip() for a in ipAddr.split(".")])
             print cleanIpAddr
+            self.onApplyButton(None)
             proc = psutil.Popen(["python.exe", serverCode, "-a", cleanIpAddr])
             self.co.set("Server", "pid", proc.pid)
             self.buttonLaunchServer.SetLabel("Stop Mobile Kit Server")
