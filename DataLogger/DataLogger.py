@@ -236,6 +236,8 @@ class DataLog(object):
         self.MboxEnabled = ConfigParser.getboolean(self.LogName, "mailboxenable", False)
         self.backupEnabled = ConfigParser.getboolean(self.LogName, "backupenable", False)
         self.SourceScript = ConfigParser.get(self.LogName, "sourcescript")
+        self.UpdateInterval = ConfigParser.getfloat(self.LogName, "updateInterval", 10.0)
+        
         # Add peripheral columns if available
         try:
             if self.PeriphDictTuple:
@@ -489,7 +491,7 @@ class DataLog(object):
                     row[data] = DataDict.get(data,0.0)
                 row.append()
                 now = TimeStamp()
-                if now-self.lastFlush > 10:
+                if now-self.lastFlush >  self.UpdateInterval:
                     self.table.flush()
                     self.lastFlush = now
             else:
@@ -530,7 +532,7 @@ class DataLog(object):
     
                 self.fp.write("\n")
                 now = TimeStamp()
-                if now-self.lastFlush > 10:
+                if now-self.lastFlush >  self.UpdateInterval:
                     self.fp.flush()
                     self.lastFlush = now
                 
