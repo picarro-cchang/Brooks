@@ -84,7 +84,7 @@ class TextListener(threading.Thread):
                     except Exception:
                         time.sleep(1)
                         self.sock = None
-                        self.safeLog("Connection by %s to port %d failed." % (self.name,self.port),Level=2)
+                        self.safeLog("Attempt to connect port %d by %s failed." % (self.port, self.name),Level=2)
                         raise Exception("Cannot subscribe to broadcast stream")
                     self.data = ''
                 try:
@@ -94,8 +94,8 @@ class TextListener(threading.Thread):
                     r = self.sock.recv(1600)
                     if len(r) == 0: raise Exception, "Null data invalid"
                     self.data += r
-                except: # Error accessing or reading from socket
-                    self.safeLog("Connection by %s to port %d throws error %s." % (self.name,self.port,e),Level=3)
+                except Exception,e: # Error accessing or reading from socket
+                    self.safeLog("Error accessing or reading from port %d by %s. Error: %s." % (self.port,self.name,e),Level=3)
                     if self.sock != None:
                         self.sock.close()
                         self.sock = None
@@ -112,7 +112,7 @@ class TextListener(threading.Thread):
                     self.data = self.data[nlPos+1:]
                     nlPos = self.data.find("\n")
             except Exception,e:
-                self.safeLog("Connection by %s to port %d broken." % (self.name,self.port),Level=2)
+                self.safeLog("Communication from %s to port %d disconnected." % (self.name,self.port),Level=2)
                 if self.retry:
                     if self.notify is not None: self.notify(e)
                     continue

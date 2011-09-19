@@ -107,7 +107,7 @@ class Listener(threading.Thread):
                     except Exception:
                         self.sock = None
                         if self.notify is not None:
-                            msg = "Connection by %s to port %d failed." % (self.name,self.port)
+                            msg = "Attempt to connect port %d by %s failed." % (self.port, self.name)
                             self.safeLog(msg,Level=2)
                             self.notify(msg)
                         time.sleep(1)
@@ -122,7 +122,7 @@ class Listener(threading.Thread):
                     if len(r) == 0: raise Exception, "Null data invalid"
                     self.data += r
                 except Exception,e: # Error accessing or reading from socket
-                    self.safeLog("Connection by %s to port %d throws error %s." % (self.name,self.port,e),Level=3)
+                    self.safeLog("Error accessing or reading from port %d by %s. Error: %s." % (self.port,self.name,e),Level=3)
                     if self.sock != None:
                         self.sock.close()
                         self.sock = None
@@ -134,7 +134,7 @@ class Listener(threading.Thread):
                 else:
                     self._ProcessCtypesStream()
             except Exception,e:
-                self.safeLog("Connection by %s to port %d broken." % (self.name,self.port),Verbose=traceback.format_exc(),Level=2)
+                self.safeLog("Communication from %s to port %d disconnected." % (self.name,self.port),Verbose=traceback.format_exc(),Level=2)
                 if self.sock != None:
                     self.sock.close()
                     self.sock = None
