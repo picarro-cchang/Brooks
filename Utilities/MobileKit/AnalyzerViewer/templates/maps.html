@@ -1,0 +1,113 @@
+{% extends "layout.html" %}
+{% block head %}
+    <script type="text/javascript">
+    var map;
+    var startTime;
+    var trange = 0;
+    var marker = null;
+    var peakMarker = null;
+    var path = null;
+    var ignoreTimer = false;
+    var ignoreRequests = false;
+    var speedUp = 5.0;
+    var timer1;
+     
+    function callJSONRPC(method,params,success_callback,error_callback) {
+        var request = {
+            "method": method,
+            "params": params,
+            "id": 1
+        };
+        jQuery.ajax( {contentType:"application/json",
+                      data:$.toJSON(request),
+                      dataType:"json",
+                      url:"/jsonrpc",
+                      type:"post",
+                      success: success_callback,
+                      error: error_callback} );
+    }
+    
+    function onTimer() {
+        if (ignoreTimer) return;
+        callJSONRPC("getPath",[{"numRows":60}],
+                    function(data,ts,jqXHR) {
+                        var i, n;
+                        var pathCoords = new Array();
+                        timeStrings = data.result["timeStrings"]
+                        $("#placeholder").html(timeStrings[timeStrings.length-1]);
+                        lat = data.result["lat"];
+                        lon = data.result["long"];
+                        ch4 = data.result["ch4"];
+                        peakPos = data.result["peakPos"];
+                        $("#peakData").html("Max in window " + ch4[peakPos].toFixed(3) + " ppm"); 
+                        n = lat.length;
+                        if (n>0) {
+                            for (i=0;i<n;i++) {
+                                pathCoords[i] = new google.maps.LatLng(lat[i],lon[i]);
+                            }
+                            if (marker) marker.setMap(null);
+                            marker = new google.maps.Marker({position: pathCoords[n-1]});
+                            map.setCenter(pathCoords[n-1]);
+                            marker.setMap(map);
+                        }
+                        if (path) path.setMap(null);
+                        if (n>0) {
+                            path = new google.maps.Polyline(
+                                {   path:pathCoords,
+                                    strokeColor:"#0000FF",
+                                    strokeOpactity:1.0,
+                                    strokeWeight:2  })
+                            path.setMap(map)
+                        }
+                        if (peakMarker) peakMarker.setMap(null);
+                        if (ch4[peakPos]>parseFloat( {{ threshold }} )) {
+                            peakCoords = new google.maps.LatLng(lat[peakPos],lon[peakPos]);
+                            peakMarker = new google.maps.Marker({position:peakCoords, icon:"http://chart.apis.google.com/chart?chst=d_map_spin&chld=1.2|0|FFFF88|10|_|" + ch4[peakPos].toFixed(1) + "|ppm"});
+                            peakMarker.setMap(map);
+                            // var snd = new Audio("static/siren1.wav");
+                            // snd.play();
+
+                        }
+                        timer1 = setTimeout(onTimer,1000);
+                    },
+                    function(jqXHR,ts,et) {  
+                        $("#placeholder").html(jqXHR.responseText); 
+                        timer1 = setTimeout(onTimer,1000);
+                    }
+                   );
+    };
+    
+    
+    function initialize() {
+        var latlng = new google.maps.LatLng(37.41212, -121.98689);
+        var myOptions = {
+          zoom: 14,
+          center: latlng,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById("map_canvas"),
+            myOptions);
+        timer1 = setTimeout(onTimer,1000)
+    };
+    $(initialize)
+    </script>
+{% endblock %}
+
+{% block body %}
+<div style="width:28%; height:85%; float:left;">
+
+<p id="placeholder">Date and Time here</p>
+<p id="peakData">Peak data here</p>
+
+<p>
+Here are some instructions as to what the driver should do in order to best traverse the map looking for any signs of methane.
+</p>
+<p>
+Here are some instructions as to what the driver should do in order to best traverse the map looking for any signs of methane.
+</p>
+<p>
+Here are some instructions as to what the driver should do in order to best traverse the map looking for any signs of methane.
+</p>
+</div>
+<div id="map_canvas" class="map" style="width:70%; height:90%; float:right;"></div>
+{% endblock %}
