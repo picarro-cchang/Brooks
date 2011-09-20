@@ -5,6 +5,7 @@ from jsonrpcutils import Proxy
 from functools import wraps
 from configobj import ConfigObj
 import glob
+from math import cos, pi
 import os
 import sys
 import time
@@ -67,6 +68,7 @@ def maps():
     
 @app.route('/updateView')
 def updateView():
+    DTR = pi/180.0
     range = float(request.values['range'])
     tilt = float(request.values['tilt'])
     heading = float(request.values['heading'])
@@ -92,7 +94,7 @@ def updateView():
           <altitude>%s</altitude>
     </LookAt>
 </Document>
-</kml>""" % (long,lat,range,tilt,heading,altitude)
+</kml>""" % (long,lat,range-altitude/cos(tilt*DTR),tilt,heading,altitude)
         response = make_response(kml)
         response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
         return response
