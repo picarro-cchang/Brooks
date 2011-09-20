@@ -73,7 +73,7 @@ def updateView():
     tilt = float(request.values['tilt'])
     heading = float(request.values['heading'])
     altitude = float(request.values['altitude'])
-    if range>20000:
+    if range<0 or range>20000:
         range = 2000.0
         tilt = 45
         heading = 0
