@@ -73,6 +73,7 @@ import threading
 import Queue
 import traceback
 import SocketServer #for Mode 3 apps
+import psutil
 from os import spawnv
 from os import P_NOWAIT
 from os import getpid as os_getpid
@@ -327,7 +328,7 @@ if sys.platform == "win32":
         [path,filename] = os.path.split(name)
         [base,ext] = os.path.splitext(filename)
         if ext.lower() == ".exe":
-            call(["taskkill","/im",filename],stderr=file("NUL","w"))
+            call(["taskkill","/im",filename,"/t"],stderr=file("NUL","w"))
             # os.system("taskkill /im %s > NUL" % filename)
         else:
             Log("Can only terminate executables by name",dict(name=name))
@@ -1418,8 +1419,11 @@ class Supervisor(object):
                     self.AppDict[appName].ShutDown()
             
         if self.SpecialKilledByNameList:
-            for appname in self.SpecialKilledByNameList:
-                terminateProcessByName(appname)
+            # Kill all the processes with the specified name
+            namesToBeKilled = [n.lower() for n in self.SpecialKilledByNameList]
+            for p in psutil.process_iter():
+                if p.name.lower() in namesToBeKilled:
+                    p.kill()
                 
         self._ShutdownRequested = True
 
