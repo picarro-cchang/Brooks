@@ -34,7 +34,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     appPath = sys.argv[0]
 appDir = os.path.split(appPath)[0]
-changeIni = os.path.join(appDir,'picarro_kml.ini')
+changeIni = os.path.join(appDir,'MobileKit.ini')
 
 class JSON_Remote_Procedure_Error(RuntimeError):
     pass
@@ -141,10 +141,13 @@ def updateData():
                     OFFSET = float(settings.get('offset',OFFSET))
                     LINE_COLOR = settings.get('line_color',LINE_COLOR)
                     POLY_COLOR = settings.get('poly_color',POLY_COLOR)
-                    restart = settings.get('restart',0)
-                    if restart: service.restartDatalog()
+                    restart = int(settings.get('restart',0))
+                    if restart: 
+                        service.restartDatalog({})
+                        print "Restarting Data Log"
             except:
-                print "Error processing picarro_kml.ini"
+                print traceback.format_exc()
+                print "Error processing .ini file"
             finally:
                 os.remove(changeIni)
             clearClientData = True
@@ -234,5 +237,5 @@ if __name__ == '__main__':
 
     # Connect to the analyzer JSON RPC server
     service = Proxy('http://%s:5000/jsonrpc' % addr.strip())
-    app.run(host='0.0.0.0',port=5100)
+    app.run(host='127.0.0.1',port=5100)
     
