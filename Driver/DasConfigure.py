@@ -73,6 +73,7 @@ class DasConfigure(SharedTypes.Singleton):
                    ("DAS_TEMP_MONITOR",    1<<interface.HARDWARE_PRESENT_DasTempMonitorBit),
                    ("ANALOG_INTERFACE",    1<<interface.HARDWARE_PRESENT_AnalogInterface),
                    ("FIBER_AMPLIFIER_PRESENT",    1<<interface.HARDWARE_PRESENT_FiberAmplifierBit),
+                   ("FAN_CONTROL_DISABLED", 1<<interface.HARDWARE_PRESENT_FanCntrlDisabledBit),
                    ]
         mask = 0
         for key, bit in mapping:
@@ -482,10 +483,11 @@ class DasConfigure(SharedTypes.Singleton):
                           ["CAVITY_TEC_REGISTER","FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))
                 
         # Fan control
-        
-        self.opGroups["SLOW"]["CONTROLLER"].addOperation(Operation("ACTION_FAN_CNTRL_STEP"))
-        self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
-            Operation("ACTION_ACTIVATE_FAN",["FAN_CNTRL_STATE_REGISTER"]))
+        fanCntrl = not self.installCheck("FAN_CONTROL_DISABLED")
+        if fanCntrl:
+            self.opGroups["SLOW"]["CONTROLLER"].addOperation(Operation("ACTION_FAN_CNTRL_STEP"))
+            self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
+                Operation("ACTION_ACTIVATE_FAN",["FAN_CNTRL_STATE_REGISTER"]))
 
         # Valve control
 
@@ -611,7 +613,7 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_WARM_BOX_INIT"))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_CAVITY_INIT"))
         sender.doOperation(Operation("ACTION_HEATER_CNTRL_INIT"))
-        sender.doOperation(Operation("ACTION_FAN_CNTRL_INIT"))
+        if fanCntrl: sender.doOperation(Operation("ACTION_FAN_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_WARMBOX","PWM_CS"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))

@@ -871,6 +871,7 @@ HARDWARE_PRESENT_HotBoxBit = 7 # Hot Box
 HARDWARE_PRESENT_DasTempMonitorBit = 8 # Das Temp Monitor
 HARDWARE_PRESENT_AnalogInterface = 9 # Analog Interface
 HARDWARE_PRESENT_FiberAmplifierBit = 10 # Fiber Amplifier
+HARDWARE_PRESENT_FanCntrlDisabledBit = 11 # Fan Control Disabled
 
 # Dictionary for enumerated constants in HARDWARE_PRESENT_BitType
 HARDWARE_PRESENT_BitTypeDict = {}
@@ -885,6 +886,7 @@ HARDWARE_PRESENT_BitTypeDict[7] = 'HARDWARE_PRESENT_HotBoxBit' # Hot Box
 HARDWARE_PRESENT_BitTypeDict[8] = 'HARDWARE_PRESENT_DasTempMonitorBit' # Das Temp Monitor
 HARDWARE_PRESENT_BitTypeDict[9] = 'HARDWARE_PRESENT_AnalogInterface' # Analog Interface
 HARDWARE_PRESENT_BitTypeDict[10] = 'HARDWARE_PRESENT_FiberAmplifierBit' # Fiber Amplifier
+HARDWARE_PRESENT_BitTypeDict[11] = 'HARDWARE_PRESENT_FanCntrlDisabledBit' # Fan Control Disabled
 
 # Enumerated definitions for FLOAT_ARITHMETIC_OperatorType
 FLOAT_ARITHMETIC_OperatorType = c_uint
@@ -2289,7 +2291,7 @@ registerInfo.append(RegInfo("SENTRY_AMBIENT_PRESSURE_MIN_REGISTER",c_float,1,1.0
 registerByName["SENTRY_AMBIENT_PRESSURE_MAX_REGISTER"] = SENTRY_AMBIENT_PRESSURE_MAX_REGISTER
 registerInfo.append(RegInfo("SENTRY_AMBIENT_PRESSURE_MAX_REGISTER",c_float,1,1.0,"rw"))
 registerByName["FAN_CNTRL_STATE_REGISTER"] = FAN_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("FAN_CNTRL_STATE_REGISTER",FAN_CNTRL_StateType,0,1.0,"r"))
+registerInfo.append(RegInfo("FAN_CNTRL_STATE_REGISTER",FAN_CNTRL_StateType,0,1.0,"rw"))
 registerByName["FAN_CNTRL_TEMPERATURE_REGISTER"] = FAN_CNTRL_TEMPERATURE_REGISTER
 registerInfo.append(RegInfo("FAN_CNTRL_TEMPERATURE_REGISTER",c_float,1,1.0,"rw"))
 registerByName["KEEP_ALIVE_REGISTER"] = KEEP_ALIVE_REGISTER
@@ -3001,7 +3003,7 @@ parameter_forms.append(('Heater Controller Parameters',__p))
 __p = []
 
 __p.append(('dsp','float',FAN_CNTRL_TEMPERATURE_REGISTER,'Temperature above which fans operate','degC','%.1f',1,1))
-__p.append(('dsp','choices',FAN_CNTRL_STATE_REGISTER,'Fan State','',[(FAN_CNTRL_OffState,"Fans off"),(FAN_CNTRL_OnState,"Fans on"),],1,0))
+__p.append(('dsp','choices',FAN_CNTRL_STATE_REGISTER,'Fan State','',[(FAN_CNTRL_OffState,"Fans off"),(FAN_CNTRL_OnState,"Fans on"),],1,1))
 parameter_forms.append(('Fan Controller Parameters',__p))
 
 # Form: Sample Handling Parameters

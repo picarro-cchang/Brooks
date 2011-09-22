@@ -377,6 +377,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Writes a scheme to table number schemeNum consisting of numRepeats repeats of the list schemeRows"""
         self.dasInterface.hostToDspSender.wrScheme(schemeNum,numRepeats,schemeRows)
 
+    def setFanState(self, fanState):
+        """Controls the state of fan relay"""
+        self.wrDasReg("FAN_CNTRL_STATE_REGISTER", fanState) 
+        sender = self.dasInterface.hostToDspSender
+        sender.doOperation(Operation("ACTION_ACTIVATE_FAN",["FAN_CNTRL_STATE_REGISTER"]))
+        
     def getValveMask(self):
         """Read the valve mask - the lower 6 bits represent the binary code of the solenoid valves.
         """
