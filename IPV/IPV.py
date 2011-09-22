@@ -18,6 +18,8 @@ import wx
 import time
 import threading
 import bz2
+import traceback
+from collections import deque
 from Queue import Queue
 from numpy import *
 from datetime import datetime, timedelta
@@ -25,9 +27,9 @@ from IPVFrame import IPVFrame
 from ReportSender import ReportSender
 from Host.autogen import interface
 from Host.Common import timestamp
-from Host.Common import Broadcaster
+from Host.Common import Broadcaster, TextListener
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_ARCHIVER, RPC_PORT_IPV, BROADCAST_PORT_IPV 
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_ARCHIVER, RPC_PORT_IPV, BROADCAST_PORT_IPV, BROADCAST_PORT_EVENTLOG
 from Host.Common import CmdFIFO
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.EventManagerProxy import *
@@ -39,6 +41,7 @@ DB_LEVEL = 2
 
 DEFAULT_IPV_DIR = "C:/Picarro/G2000/Log/IPV_RPT/"
 REPORT_FORMAT = "%-30s,%-10s,%-30s,%-30s,%-65s,%-65s,%-65s\n"
+EVENTLOG_FORMAT = "%-10s,%-12s,%-12s,%-30s,%-10s,%s\n"
 STREAM_NUM_TO_NAME_DICT = {}
 NAME_TO_STREAM_NUM_DICT = {}
 for streamNum in interface.STREAM_MemberTypeDict:
@@ -204,6 +207,12 @@ class IPV(IPVFrame):
         self.useViewer = useViewer
         self.commandQueue = Queue()
         self._processIni(configFile)
+        self.eventListener = TextListener.TextListener(None,
+                                          BROADCAST_PORT_EVENTLOG,
+                                          self._eventFilter,
+                                          retry = True,
+                                          name = "IPV event log listener", logFunc = Log)
+        self.eventDeque = deque()
         self.signalList = [sigName for sigName in self.co if self.co.getboolean(sigName,"enabled")]
         self.numSignals = len(self.signalList)
         self.descrDict = {}
@@ -294,6 +303,25 @@ class IPV(IPVFrame):
             return time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(getUTCTime("float")))
         else:
             return time.strftime("%Y%m%d%H%M%S", time.localtime(getUTCTime("float")))
+          
+    def _convertTimeStrLocalToGMT(self, timeStr, formatIn="%Y-%m-%d %H:%M:%S", formatOut="%Y-%m-%d %H:%M:%S"):
+        return time.strftime(formatOut, time.gmtime(time.mktime(time.strptime(timeStr, formatIn))))
+        
+    def _eventFilter(self, data):
+        """Listener filter for event logs"""
+        try:
+            index,eventTime,source,level,code,desc = [s.strip() for s in data.split("|",6)]
+            level = level[1:]
+            logDate, logTime = [s.strip() for s in self._convertTimeStrLocalToGMT(eventTime).split()]
+            eventTuple = (index, logDate, logTime, source, level, desc)
+            # Level 1.5 = info only; message shows on both GUI and EventLog
+            if float(level) >= 2:
+                self.eventDeque.append(eventTuple)
+            while len(self.eventDeque) > self.maxNumbEventLogs:
+                self.eventDeque.popleft()
+        except:
+            tbMsg = traceback.format_exc()
+            Log("Listener Exception",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
             
     def writeToStatus(self, message):
         self.statusMessage.append("%s   %s\n" % (self._getTime(), message,))
@@ -364,6 +392,9 @@ class IPV(IPVFrame):
         else:
             self.archiveDir = None
 
+        # Event logging
+        self.maxNumbEventLogs = self.baseCo.getint("Main", "maxNumbEventLogs", 10)
+        
         # Flatten the ini file
         try:
             newCo = self.baseCo[self.instType]
@@ -564,7 +595,9 @@ class IPV(IPVFrame):
         else:
             endTime = datetime.strftime(self.endDatetime, "%Y%m%d%H%M%S")
         self.reportFilename = "%s_%s_Host_%s_%s.csv" % (self.reportFilePrefix, self.instName, self.softwareVersion, endTime)
-        linesToWrite = [REPORT_FORMAT % ("Signal","Status","Action","Method","Set Point","Tolerance","Value")]
+        linesToWrite = []
+        linesToWrite.append("[SENSORS]\n")
+        linesToWrite.append(REPORT_FORMAT % ("Signal","Status","Action","Method","Set Point","Tolerance","Value"))
         for group in self.groupDict:
             for rowIdx in range(self.numRowsList[group]):
                 sigName = self.groupDict[group][rowIdx]
@@ -576,6 +609,14 @@ class IPV(IPVFrame):
                                                      floatListToString(self.toleranceDict[sigName], 4),
                                                      floatListToString(self.testValDict[sigName], 4))
                                     )
+        # Add event logs to the end if any:
+        if len(self.eventDeque) > 0:
+            linesToWrite.append("\n[EVENTS]\n")
+            linesToWrite.append(EVENTLOG_FORMAT % ("Index","Date","Time","Source","Level","Description"))
+            while len(self.eventDeque) > 0:
+                eventTuple = self.eventDeque.popleft()
+                linesToWrite.append(EVENTLOG_FORMAT % eventTuple)
+            
         try:
             fd = open(self.reportFilename, "w")
             fd.writelines(linesToWrite)
