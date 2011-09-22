@@ -83,7 +83,10 @@ def getAnalyzerType():
         print err
         analyzerType = "UNKNOWN"
     return analyzerType
-                
+             
+def setFanState(fanState):
+    DRIVER.setFanState(fanState)
+    
 ##############
 # Numerical calculations
 ##############
