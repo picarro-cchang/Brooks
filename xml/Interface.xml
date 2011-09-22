@@ -593,7 +593,8 @@
             <enum_value ident="HARDWARE_PRESENT_HotBoxBit"         value="7" caption="Hot Box" />             
             <enum_value ident="HARDWARE_PRESENT_DasTempMonitorBit" value="8" caption="Das Temp Monitor" />             
             <enum_value ident="HARDWARE_PRESENT_AnalogInterface"   value="9" caption="Analog Interface" />             
-            <enum_value ident="HARDWARE_PRESENT_FiberAmplifierBit" value="10" caption="Fiber Amplifier" />             
+            <enum_value ident="HARDWARE_PRESENT_FiberAmplifierBit" value="10" caption="Fiber Amplifier" />  
+            <enum_value ident="HARDWARE_PRESENT_FanCntrlDisabledBit"       value="11" caption="Fan Control Disabled" />             
         </enum>
         <enum type="FLOAT_ARITHMETIC_OperatorType">
             <description>Enumeration specifying floating point operation to carry out on regiters</description> 
@@ -2908,7 +2909,7 @@
             <save/>
             <display format="%.1f" units="torr">Ambient maximum pressure</display>
         </register>
-        <register ident="FAN_CNTRL_STATE_REGISTER" type="FAN_CNTRL_StateType" minver="1.0" access="r">
+        <register ident="FAN_CNTRL_STATE_REGISTER" type="FAN_CNTRL_StateType" minver="1.0" access="rw">
             <description>State of fans</description>
             <initial>FAN_CNTRL_OnState</initial>
             <display>Fan State</display>

@@ -644,7 +644,8 @@ typedef enum {
     HARDWARE_PRESENT_HotBoxBit = 7, // Hot Box
     HARDWARE_PRESENT_DasTempMonitorBit = 8, // Das Temp Monitor
     HARDWARE_PRESENT_AnalogInterface = 9, // Analog Interface
-    HARDWARE_PRESENT_FiberAmplifierBit = 10 // Fiber Amplifier
+    HARDWARE_PRESENT_FiberAmplifierBit = 10, // Fiber Amplifier
+    HARDWARE_PRESENT_FanCntrlDisabledBit = 11 // Fan Control Disabled
 } HARDWARE_PRESENT_BitType;
 
 typedef enum {
