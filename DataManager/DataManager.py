@@ -328,7 +328,7 @@ class DataManager(object):
         
     #endclass (ConfigurationOptions for DataManager)
 
-    def __init__(self, ConfigPath, noInstMgr=False):
+    def __init__(self, ConfigPath, noInstMgr=False, options={}):
         # # # IMPORTANT # # #
         # THIS SHOULD ONLY CONTAIN VARIABLE/PROPERTY INITS... any actual code that
         # can fail (like talking to another CRDS app or reading the HDD) should be
@@ -404,6 +404,7 @@ class DataManager(object):
         self.maxLate = 0
         self.maxScriptDuration = {}
         self.syncScriptDelayHist = {}
+        self.options = options.get("-o","")
         
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_DATA_MANAGER),
@@ -1627,7 +1628,8 @@ class DataManager(object):
                                              ScriptName = ReportSource,
                                              ExcLogFunc = LogExc,
                                              UserCalDict = UserCalDict,
-                                             CalEnabled = self.calEnabled)
+                                             CalEnabled = self.calEnabled,
+                                             Options = self.options)
         #unpack the returned tuple (space saving above)...
         (reportDict, forwardDict, newDataDict, measGood, reportSource_out) = ret
         self._Status.UpdateStatusBit(STATUS_MASK_Analyzing, False)
@@ -1773,6 +1775,7 @@ DataManager.py [--no_inst_mgr] [-h] [-c<FILENAME>]
 Where the options can be a combination of the following:
 -h              Print this help.
 -c              Specify a different config file.  Default = "./DataManager.ini"
+-o              Specify option(s) to be passed to data manager script
 --no_inst_mgr   Run this application without Instrument Manager.
 
 """
@@ -1782,7 +1785,7 @@ def PrintUsage():
 def HandleCommandSwitches():
     import getopt
 
-    shortOpts = 'hc:'
+    shortOpts = 'hc:o:'
     longOpts = ["help", "test", "no_inst_mgr"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
@@ -1819,16 +1822,16 @@ def HandleCommandSwitches():
     else:
         noInstMgr = False
         
-    return (configFile, noInstMgr, executeTest)
+    return (configFile, noInstMgr, executeTest, options)
 def ExecuteTest(DM):
     """A self test executed via the --test command-line switch."""
     print "No self test implemented yet!"
 def main():
     #Get and handle the command line options...
-    configFile, noInstMgr, test = HandleCommandSwitches()
+    configFile, noInstMgr, test, options = HandleCommandSwitches()
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     try:
-        app = DataManager(configFile, noInstMgr)
+        app = DataManager(configFile, noInstMgr, options)
         if test:
             threading.Timer(2, ExecuteTest(app)).start()
         app.Start()

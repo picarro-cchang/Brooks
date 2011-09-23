@@ -51,6 +51,8 @@ FORWARD_ID = "_ANALYZE_"
 MEAS_GOOD_ID = "_MEAS_GOOD_"
 SCRIPT_NAME_ID = "_SCRIPT_NAME_"
 
+OPTIONS_ID = "_OPTIONS_"
+
 persistentDict = {}
 globals = {}
 
@@ -104,7 +106,8 @@ def RunAnalysisScript(ScriptCodeObj,
                       ExcLogFunc,
                       UserCalDict,
                       CalEnabled = True,
-                      PulseAnalyzerIni = None):
+                      PulseAnalyzerIni = None,
+                      Options = ""):
     """Executes the CodeObj in an environment built with the other parameters.
 
     Returns a tuple: (ReportedData, ForwardedData, NewData, MeasGood, ScriptName)
@@ -179,6 +182,8 @@ def RunAnalysisScript(ScriptCodeObj,
     dataEnviron[SCRIPT_NAME_ID] = ScriptName
     dataEnviron[SERIAL_INTERFACE_ID] = SerialInterface
     dataEnviron[USER_CAL_ID] = UserCalDict.copy()
+    dataEnviron[OPTIONS_ID] = Options
+    
     ##Now set up the direct variables (couldn't decide which one was best, so both!)...
     #for k in DataDict.keys():
         #dataEnviron["%s%s" % (DATA_ID, k)] = DataDict[k]
