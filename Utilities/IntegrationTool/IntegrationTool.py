@@ -32,7 +32,9 @@ INTEGRATION_DIR = r"C:\Picarro\G2000\InstrConfig\Integration"
 COMMON_CONFIG_DIR = r"C:\Picarro\G2000\CommonConfig\Config"
 CAL_DIR = r"C:\Picarro\G2000\InstrConfig\Calibration\InstrCal"
 WARMBOX_CAL = "Beta2000_WarmBoxCal"
+WARMBOX_CAL_ACTIVE = "Beta2000_WarmBoxCal_active"
 HOTBOX_CAL = "Beta2000_HotBoxCal"
+HOTBOX_CAL_ACTIVE = "Beta2000_HotBoxCal_active"
 
 LASER_TYPE_DICT = {"1603.2": "CO2", "1651.0": "CH4", "1599.6": "iCO2", "1392.0": "iH2O", "1389.0": "iH2O",
                    "1567.9": "CO", "1527.0": "NH3", "1554.7": "iH2O", "1521.1": "C2H2", "1574.5": "H2S",
@@ -238,7 +240,9 @@ class IntegrationTool(IntegrationToolFrame):
         self.wbCalFile = os.path.join(CAL_DIR, WARMBOX_CAL)
         self.wbCalBackup = os.path.join(CAL_DIR, (WARMBOX_CAL+"_Backup"))
         self.wbCalDuplicate = os.path.join(INTEGRATION_DIR, WARMBOX_CAL)
+        self.wbCalActive = os.path.join(CAL_DIR, WARMBOX_CAL_ACTIVE)
         self.hbCalFile = os.path.join(CAL_DIR, HOTBOX_CAL)
+        self.hbCalActive = os.path.join(CAL_DIR, HOTBOX_CAL_ACTIVE)
         self.display = ""
         self.analyzer = ""
         self.analyzerType = ""
@@ -621,6 +625,14 @@ class IntegrationTool(IntegrationToolFrame):
                 print cmd
                 os.system(cmd)
             self.display += "Calibrate System finished.\n"
+            # Move the current active files to Integration folder
+            if os.path.isfile(self.wbCalActive+".ini"):
+                savedWbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.wbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
+                shutil.move(self.wbCalActive+".ini", savedWbCalActive)
+            if os.path.isfile(self.hbCalActive+".ini"):
+                savedHbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.hbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
+                shutil.move(self.hbCalActive+".ini", savedHbCalActive)
+            self.display += "Archived active WB and HB files.\n"
         except Exception, err:
             self.display += "Calibrate System failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
@@ -645,6 +657,11 @@ class IntegrationTool(IntegrationToolFrame):
                 cmd = "%s -a -t 2e-4 -c %s" % (os.path.join(HOSTEXE_DIR, "FindWlmOffset.exe"), ini)
                 print cmd
                 os.system(cmd)
+            # Move the current active WB file to Integration folder
+            if os.path.isfile(self.wbCalActive+".ini"):
+                savedWbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.wbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
+                shutil.move(self.wbCalActive+".ini", savedWbCalActive)
+            self.display += "Archived active WB file.\n"
             self.display += "WLM Offset finished.\n"
         except Exception, err:
             self.display += "WLM Offset failed: %s\n" % err
