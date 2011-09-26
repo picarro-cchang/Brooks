@@ -247,14 +247,6 @@ typedef struct {
 } SchemeTableType;
 
 typedef struct {
-    uint16 numberOfIndices;
-    uint16 currentIndex;
-    uint16 restartFlag;
-    uint16 loopFlag;
-    uint16 schemeIndices[16];
-} SchemeSequenceType;
-
-typedef struct {
     uint32 actualLaser;
     float tempSensitivity;
     float ratio1Center;
@@ -360,12 +352,8 @@ typedef struct {
 #define OSCILLOSCOPE_TRACE_SIZE ((sizeof(OscilloscopeTraceType)/4))
 // Number of oscilloscope traces in 32 bit ints
 #define NUM_OSCILLOSCOPE_TRACES (1)
-// Offset for scheme sequence area in DSP shared memory
-#define SCHEME_SEQUENCE_OFFSET (0x7800)
-// Size of scheme sequence in 32 bit ints
-#define SCHEME_SEQUENCE_SIZE ((sizeof(SchemeSequenceType)/4))
 // Offset for valve sequence area in DSP shared memory
-#define VALVE_SEQUENCE_OFFSET ((SCHEME_SEQUENCE_OFFSET+SCHEME_SEQUENCE_SIZE))
+#define VALVE_SEQUENCE_OFFSET (0x7800)
 // Number of valve sequence entries
 #define NUM_VALVE_SEQUENCE_ENTRIES (256)
 // Size of a valve sequence in 32 bit ints
