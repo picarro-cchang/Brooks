@@ -282,15 +282,6 @@ class SchemeTableType(Structure):
     ("rows",SchemeRowType*8192)
     ]
 
-class SchemeSequenceType(Structure):
-    _fields_ = [
-    ("numberOfIndices",c_ushort),
-    ("currentIndex",c_ushort),
-    ("restartFlag",c_ushort),
-    ("loopFlag",c_ushort),
-    ("schemeIndices",c_ushort*16)
-    ]
-
 class VirtualLaserParamsType(Structure):
     _fields_ = [
     ("actualLaser",c_uint),
@@ -401,12 +392,8 @@ OSCILLOSCOPE_TRACE_OFFSET = (RINGDOWN_BUFFER_OFFSET+NUM_RINGDOWN_BUFFERS*RINGDOW
 OSCILLOSCOPE_TRACE_SIZE = (sizeof(OscilloscopeTraceType)/4)
 # Number of oscilloscope traces in 32 bit ints
 NUM_OSCILLOSCOPE_TRACES = 1
-# Offset for scheme sequence area in DSP shared memory
-SCHEME_SEQUENCE_OFFSET = 0x7800
-# Size of scheme sequence in 32 bit ints
-SCHEME_SEQUENCE_SIZE = (sizeof(SchemeSequenceType)/4)
 # Offset for valve sequence area in DSP shared memory
-VALVE_SEQUENCE_OFFSET = (SCHEME_SEQUENCE_OFFSET+SCHEME_SEQUENCE_SIZE)
+VALVE_SEQUENCE_OFFSET = 0x7800
 # Number of valve sequence entries
 NUM_VALVE_SEQUENCE_ENTRIES = 256
 # Size of a valve sequence in 32 bit ints
