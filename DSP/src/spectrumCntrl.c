@@ -85,6 +85,7 @@ int spectCntrlInit(void)
     s->cavityPressure_ = (float *)registerAddr(CAVITY_PRESSURE_REGISTER);
     s->ambientPressure_ = (float *)registerAddr(AMBIENT_PRESSURE_REGISTER);
     s->defaultThreshold_ = (unsigned int *)registerAddr(SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER);
+    s->analyzerTuningMode_ = (unsigned int *)registerAddr(ANALYZER_TUNING_MODE_REGISTER);
     s->virtLaser_ = (VIRTUAL_LASER_Type *)registerAddr(VIRTUAL_LASER_REGISTER);
     s->dasStatus_ = (unsigned int *)registerAddr(DAS_STATUS_REGISTER);
     s->schemeCounter_ =  0;
@@ -141,8 +142,13 @@ int spectCntrlStep(void)
                 SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||
                 SPECT_CNTRL_SchemeMultipleNoRepeatMode == *(s->mode_))
         {
-            // Enable frequency locking for schemes
-            changeBitsFPGA(FPGA_RDMAN+RDMAN_OPTIONS, RDMAN_OPTIONS_LOCK_ENABLE_B, RDMAN_OPTIONS_LOCK_ENABLE_W, 1);
+            // For schemes, enable frequency locking only if we are not doing Fsr Hopping
+            if (*(s->analyzerTuningMode_) == ANALYZER_TUNING_FsrHoppingTuningMode) {
+                changeBitsFPGA(FPGA_RDMAN+RDMAN_OPTIONS, RDMAN_OPTIONS_LOCK_ENABLE_B, RDMAN_OPTIONS_LOCK_ENABLE_W, 0);
+            }
+            else {
+                changeBitsFPGA(FPGA_RDMAN+RDMAN_OPTIONS, RDMAN_OPTIONS_LOCK_ENABLE_B, RDMAN_OPTIONS_LOCK_ENABLE_W, 1);
+            }
             *(s->iter_) = 0;
             *(s->row_) = 0;
             *(s->dwell_) = 0;

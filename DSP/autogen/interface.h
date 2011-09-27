@@ -599,7 +599,8 @@ typedef enum {
 
 typedef enum {
     ANALYZER_TUNING_CavityLengthTuningMode = 0, // Cavity Length Tuning
-    ANALYZER_TUNING_LaserCurrentTuningMode = 1 // Laser Current Tuning
+    ANALYZER_TUNING_LaserCurrentTuningMode = 1, // Laser Current Tuning
+    ANALYZER_TUNING_FsrHoppingTuningMode = 2 // Fsr Hopping Tuning
 } ANALYZER_TUNING_ModeType;
 
 typedef enum {

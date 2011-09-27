@@ -551,7 +551,8 @@
         <enum type="ANALYZER_TUNING_ModeType"> 
             <description>Analyzer tuning modes</description> 
             <enum_value ident="ANALYZER_TUNING_CavityLengthTuningMode" value="0" caption="Cavity Length Tuning" /> 
-            <enum_value ident="ANALYZER_TUNING_LaserCurrentTuningMode" value="1" caption="Laser Current Tuning" /> 
+            <enum_value ident="ANALYZER_TUNING_LaserCurrentTuningMode" value="1" caption="Laser Current Tuning" />
+            <enum_value ident="ANALYZER_TUNING_FsrHoppingTuningMode"   value="2" caption="Fsr Hopping Tuning" /> 
         </enum>         
         <enum type="SENTRY_BitType">
             <description>Sentry bit position</description> 
