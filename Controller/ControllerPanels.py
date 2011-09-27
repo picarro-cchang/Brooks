@@ -256,6 +256,19 @@ class RingdownPanel(RingdownPanelGui):
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "FineCurrent"
             self.appendData = fineCurrentVsTime
+        elif choice == 12:
+            def  lossVsFineCurrent(data):
+                if dataGood(data):
+                    loss_u = data.uncorrectedAbsorbance
+                    loss_c = data.correctedAbsorbance
+                    fineCurrent = data.fineLaserCurrent
+                    waveforms["Ringdown"]["uncorrected"].Add(fineCurrent, loss_u)
+                    waveforms["Ringdown"]["corrected"].Add(fineCurrent, loss_c)
+            self.ringdownGraph.SetGraphProperties(timeAxes=(False,False),xlabel='Fine Laser Current',ylabel='Loss (ppm/cm)',grid=True,
+                                                  frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+                                                  backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "Loss"
+            self.appendData = lossVsFineCurrent
 
         self.ringdownGraph.RemoveAllSeries()
 

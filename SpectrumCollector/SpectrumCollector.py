@@ -429,6 +429,7 @@ class SpectrumCollector(object):
                     self.closeHdf5File = False
                     self.newHdf5File = True
                     self.streamFP.close()
+                    time.sleep(1.0)
                     # Copy to auxiliary spectrum file and reset filename to empty
                     if self.auxSpectrumFile:
                         try:

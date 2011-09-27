@@ -801,11 +801,13 @@ OVERLOAD_BitTypeDict[1] = 'OVERLOAD_HotBoxTecBit' # Hot box TEC overload
 ANALYZER_TUNING_ModeType = c_uint
 ANALYZER_TUNING_CavityLengthTuningMode = 0 # Cavity Length Tuning
 ANALYZER_TUNING_LaserCurrentTuningMode = 1 # Laser Current Tuning
+ANALYZER_TUNING_FsrHoppingTuningMode = 2 # Fsr Hopping Tuning
 
 # Dictionary for enumerated constants in ANALYZER_TUNING_ModeType
 ANALYZER_TUNING_ModeTypeDict = {}
 ANALYZER_TUNING_ModeTypeDict[0] = 'ANALYZER_TUNING_CavityLengthTuningMode' # Cavity Length Tuning
 ANALYZER_TUNING_ModeTypeDict[1] = 'ANALYZER_TUNING_LaserCurrentTuningMode' # Laser Current Tuning
+ANALYZER_TUNING_ModeTypeDict[2] = 'ANALYZER_TUNING_FsrHoppingTuningMode' # Fsr Hopping Tuning
 
 # Enumerated definitions for SENTRY_BitType
 SENTRY_BitType = c_uint
@@ -3054,7 +3056,7 @@ parameter_forms.append(('Virtual Laser Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','choices',ANALYZER_TUNING_MODE_REGISTER,'Analyzer tuning mode','',[(ANALYZER_TUNING_CavityLengthTuningMode,"Cavity Length Tuning"),(ANALYZER_TUNING_LaserCurrentTuningMode,"Laser Current Tuning"),],1,1))
+__p.append(('dsp','choices',ANALYZER_TUNING_MODE_REGISTER,'Analyzer tuning mode','',[(ANALYZER_TUNING_CavityLengthTuningMode,"Cavity Length Tuning"),(ANALYZER_TUNING_LaserCurrentTuningMode,"Laser Current Tuning"),(ANALYZER_TUNING_FsrHoppingTuningMode,"Fsr Hopping Tuning"),],1,1))
 __p.append(('fpga','mask',FPGA_TWGEN+TWGEN_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Reset generator', [(0, u'Idle'), (4, u'Reset')]), (8, u'Tune PZT', [(0, u'No'), (8, u'Yes')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SLOPE_UP,'Tuner up slope','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SLOPE_DOWN,'Tuner down slope','digU','%d',1,1))
