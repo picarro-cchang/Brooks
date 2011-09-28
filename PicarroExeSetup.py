@@ -227,6 +227,36 @@ hex_images = hex_images + [ "../SrcCode/CypressUSB/analyzer/analyzerUsb.hex",
                             "../SrcCode/DSP/src/Debug/dspMain.hex",
                             "../SrcCode/MyHDL/Spartan3/top_io_map.bit"]
 
+cypressDriverDirs = ["amd64", "ia64", "license/libusb0", "x86"]
+
+data_files = [(".", ["EventManager/Warning_16x16_32.ico",
+                   "EventManager/Info_16x16_32.ico",
+                   "EventManager/Critical_16x16_32.ico",
+                   "QuickGui/LEDgreen.ico",
+                   "QuickGui/LEDgreen2.ico",
+                   "QuickGui/LEDoff.ico",
+                   "QuickGui/LEDoff2.ico",
+                   "QuickGui/LEDred2.ico",
+                   "QuickGui/logo.png",
+                   "Fitter/fitutils.pyd",
+                   "Fitter/cluster_analyzer.pyd",
+                   "Utilities/SupervisorLauncher/Check.png",
+                   "Utilities/SupervisorLauncher/alarm.png",
+                   "Utilities/Restart/inpout32.dll",
+                   "PeriphIntrf/Serial2Socket.exe",
+                   "hostBzrVer.py",
+                   "srcBzrVer.py"]),
+            (r'mpl-data', glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\*.*')),
+            # Because matplotlibrc does not have an extension, glob does not find it (at least I think that's why)
+            # So add it manually here:
+            (r'mpl-data', [r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\matplotlibrc']),
+            (r'mpl-data\images',glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\images\*.*')),
+            (r'mpl-data\fonts',glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\fonts\*.*')),
+            ("Images", hex_images),
+            ]
+for d in cypressDriverDirs:
+    data_files.append(("Images/%s"%d, glob.glob("../SrcCode/CypressUSB/Drivers/" + "%s/*.*" %d)))
+        
 setup(version = "1.0",
       description = "Silverstone Host Core Software",
       name = "Silverstone CRDS",
@@ -312,29 +342,5 @@ setup(version = "1.0",
                  "Utilities/RecipeEditor/RecipeEditor.py",
                  ],
                  
-      data_files = [(".", ["EventManager/Warning_16x16_32.ico",
-                           "EventManager/Info_16x16_32.ico",
-                           "EventManager/Critical_16x16_32.ico",
-                           "QuickGui/LEDgreen.ico",
-                           "QuickGui/LEDgreen2.ico",
-                           "QuickGui/LEDoff.ico",
-                           "QuickGui/LEDoff2.ico",
-                           "QuickGui/LEDred2.ico",
-                           "QuickGui/logo.png",
-                           "Fitter/fitutils.pyd",
-                           "Fitter/cluster_analyzer.pyd",
-                           "Utilities/SupervisorLauncher/Check.png",
-                           "Utilities/SupervisorLauncher/alarm.png",
-                           "Utilities/Restart/inpout32.dll",
-                           "PeriphIntrf/Serial2Socket.exe",
-                           "hostBzrVer.py",
-                           "srcBzrVer.py"]),
-                    (r'mpl-data', glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\*.*')),
-                    # Because matplotlibrc does not have an extension, glob does not find it (at least I think that's why)
-                    # So add it manually here:
-                    (r'mpl-data', [r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\matplotlibrc']),
-                    (r'mpl-data\images',glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\images\*.*')),
-                    (r'mpl-data\fonts',glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\fonts\*.*')),
-                    ("Images", hex_images),
-                    ]
+      data_files = data_files
     )
