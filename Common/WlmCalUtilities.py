@@ -345,6 +345,65 @@ class WlmFile(object):
             for i in range(self.ncols):
                 self.data[i].append(float(comps[i]))
 
+# Routine for reading calibration files for analyzers with no WLM
+class NoWlmFile(object):
+    def __init__(self,fp):
+        """ Read data from a .nowlm file into an object """
+        # Get parameter values
+        while True:
+            line = fp.readline()
+            if line == "":
+                raise Exception("Unexpected end of .nowlm file")
+            if line.find('[Parameters]') >= 0:
+                break
+        self.parameters = {}
+        while True:
+            line = fp.readline()
+            # Look parameter=value pairs
+            comps = [comp.strip() for comp in line.split("=",1)]
+            if len(comps)<2: break
+            self.parameters[comps[0]] = comps[1]
+
+        # Get the data column names information
+        while True:
+            line = fp.readline()
+            if line == "":
+                raise Exception("Unexpected end of .wlm file")
+            if line.find('[Data column names]') >= 0 or line.find('[Data_column_names]') >= 0:
+                break
+        self.colnames = {}
+        self.colindex = {}
+        while True:
+            line = fp.readline()
+            # Look for column_index=column_name pairs
+            comps = [comp.strip() for comp in line.split("=",1)]
+            if len(comps)<2: break
+            self.colnames[int(comps[0])] = comps[1]
+            self.colindex[comps[1]] = int(comps[0])
+        # Skip to the line which marks the start of the data
+        while True:
+            line = fp.readline()
+            if line == "":
+                raise Exception("Unexpected end of .nowlm file")
+            if line.find('[Data]') >= 0:
+                break
+        self.ncols = len(self.colnames.keys())
+        self.data = []
+        for i in range(self.ncols):
+            self.data.append(list())
+        while True:
+            line = fp.readline()
+            if line == "":
+                self.TLaser = array(self.data[self.colindex["Laser temperature"]],float_)
+                self.WaveNumber = array(self.data[self.colindex["Wavenumber"]],float_)
+                # Calculating polynomial fits of Wavenumber vs Temperature"
+                self.WtoT = bestFitCentered(self.WaveNumber,self.TLaser,3)
+                self.TtoW = bestFitCentered(self.TLaser,self.WaveNumber,3)
+                return
+            comps = line.split()
+            for i in range(self.ncols):
+                self.data[i].append(float(comps[i]))
+                
 class AutoCal(object):
     # Calibration requires us to store:
     # Laser calibration constants which map laser temperature to laser wavenumber
