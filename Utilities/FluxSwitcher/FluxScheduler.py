@@ -52,7 +52,7 @@ class FluxScheduler(FluxSchedulerFrame):
     def __init__(self, configFile, supervisorConfigFile, *args, **kwds):
         self.co = CustomConfigObj(configFile)
         self.switcher = FluxSwitcher(configFile, supervisorConfigFile)
-        self.supervisorLauncher = SupervisorLauncher(supervisorConfigFile, False, True, None, -1, "")
+        self.supervisorLauncher = SupervisorLauncher(supervisorConfigFile, False, True, False, None, -1, "")
         addCFADS = self.co.getboolean("Main", "AddCFADS", False)
         typeChoices = self.co.keys()
         if addCFADS:
