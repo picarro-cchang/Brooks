@@ -47,6 +47,7 @@ import time
 import threading
 from threading import Thread
 import traceback
+from platform import platform
 import wx.lib.mixins.listctrl as listmix
 from wx.lib.wordwrap import wordwrap
 
@@ -1255,7 +1256,10 @@ class QuickGui(wx.Frame):
             self._addStandardKeys(self.rawPeriphDict)
         if self.syncPeriphDict:
             self._addStandardKeys(self.syncPeriphDict)
-            
+           
+        # Set Windows platform type
+        self.platform = platform()[:10]
+        
         self.layoutFrame()
         # Create the image panels with the frame as parent
         for key in self.imageDatabase.dbase:
@@ -1613,7 +1617,10 @@ class QuickGui(wx.Frame):
         # Define the box height automatically instead of using INI file
         #size = self.config.getint("AlarmBox","Width"),self.config.getint("AlarmBox","Height")
         boxWidth = self.config.getint("AlarmBox","Width")
-        boxHeight = 10 + self.numAlarms * 15
+        if self.platform == "Windows-XP":
+            boxHeight = 10 + self.numAlarms * 15
+        else:
+            boxHeight = 15 + self.numAlarms * 15
         size = boxWidth,boxHeight
         font,fgColour,bgColour = self.getFontFromIni('AlarmBox','enabledFont')
         enabled = wx.ListItemAttr(fgColour,bgColour,font)
@@ -1627,7 +1634,11 @@ class QuickGui(wx.Frame):
         setItemFont(self.alarmView,self.getFontFromIni('AlarmBox'))
         
         # System Alarm view
-        size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",34)
+        if self.platform == "Windows-XP":
+            size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",34)
+        else:
+            # Windows 7
+            size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",40)
         self.sysAlarmView = SysAlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
                                            DataSource=self.sysAlarmInterface,
                                            size=size, numAlarms=2)
