@@ -1134,10 +1134,11 @@ class RpcServerThread(threading.Thread):
             LogExc("Exception raised when calling exit function at exit of RPC server.")
     
 class QuickGui(wx.Frame):
-    def __init__(self, configFile):
+    def __init__(self, configFile, defaultTitle = ""):
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700), 
                           style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
-        self.commandQueue = Queue.Queue()                          
+        self.commandQueue = Queue.Queue()
+        self.defaultTitle = defaultTitle
         self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
         self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
         self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = APP_NAME)
@@ -1459,7 +1460,11 @@ class QuickGui(wx.Frame):
         self.mainPanel.SetBackgroundColour(bgColour)
         self.mainPanel.SetForegroundColour(fgColour)
         # Define the title band
-        self.titleLabel = wx.StaticText(parent=self.mainPanel, id=-1, label=getInnerStr(self.config.get('Title','String')), style=wx.ALIGN_CENTER)
+        if self.defaultTitle:
+            label = self.defaultTitle
+        else:
+            label=getInnerStr(self.config.get('Title','String'))
+        self.titleLabel = wx.StaticText(parent=self.mainPanel, id=-1, label=label, style=wx.ALIGN_CENTER)
         setItemFont(self.titleLabel,self.getFontFromIni('Title'))
 
         # Define the footer band
@@ -2403,6 +2408,7 @@ QuickGui.py [-h] [-c<FILENAME>]
 Where the options can be a combination of the following:
 -h  Print this help.
 -c  Specify a different config file.  Default = "./QuickGui.ini"
+-t  Specify the GUI title
 
 """
 
@@ -2411,7 +2417,7 @@ def PrintUsage():
 def HandleCommandSwitches():
     import getopt
 
-    shortOpts = 'hc:'
+    shortOpts = 'hc:t:'
     longOpts = ["help","test"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
@@ -2441,14 +2447,19 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
+        
+    if "-t" in options:
+        defaultTitle = options["-t"]
+    else:
+        defaultTitle = ""
 
-    return (configFile, executeTest)
+    return (configFile, executeTest, defaultTitle)
 
 if __name__ == "__main__":
     app = wx.PySimpleApp()
-    configFile, test = HandleCommandSwitches()
+    configFile, test, defaultTitle = HandleCommandSwitches()
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    frame = QuickGui(configFile)
+    frame = QuickGui(configFile, defaultTitle)
     frame.Show()
     app.MainLoop()
     Log("Exiting program")
