@@ -11,7 +11,8 @@
     var ignoreRequests = false;
     var speedUp = 5.0;
     var timer1;
-     
+    var counter = 0;
+    
     function callJSONRPC(method,params,success_callback,error_callback) {
         var request = {
             "method": method,
@@ -33,13 +34,16 @@
                     function(data,ts,jqXHR) {
                         var i, n;
                         var pathCoords = new Array();
-                        timeStrings = data.result["timeStrings"]
+                        counter += 1;
+                        $("#counter").html("Counter: " + counter);
+                        timeStrings = data.result["timeStrings"];
                         $("#placeholder").html(timeStrings[timeStrings.length-1]);
                         lat = data.result["lat"];
                         lon = data.result["long"];
                         ch4 = data.result["ch4"];
                         peakPos = data.result["peakPos"];
-                        $("#peakData").html("Max in window " + ch4[peakPos].toFixed(3) + " ppm"); 
+                        $("#concData").html("Current concentration " + ch4[ch4.length-1].toFixed(3) + " ppm"); 
+                        $("#peakData").html("Max in window         " + ch4[peakPos].toFixed(3) + " ppm"); 
                         n = lat.length;
                         if (n>0) {
                             for (i=0;i<n;i++) {
@@ -97,7 +101,9 @@
 <div style="width:28%; height:85%; float:left;">
 
 <p id="placeholder">Date and Time here</p>
+<p id="concData">Concentration data here</p>
 <p id="peakData">Peak data here</p>
+<p id="counter">Counter value here</p>
 
 <p>
 Here are some instructions as to what the driver should do in order to best traverse the map looking for any signs of methane.
