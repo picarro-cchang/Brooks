@@ -16,6 +16,9 @@ import cPickle
 import ctypes
 import getopt
 import inspect
+
+
+
 import os
 import struct
 import sys
@@ -135,6 +138,13 @@ class DriverRpcHandler(SharedTypes.Singleton):
         warmChamberTempLockStatus = "Locked" if (lockStatus & (1<< interface.DAS_STATUS_WarmBoxTempCntrlLockedBit)) else "Unlocked"
         cavityTempLockStatus = "Locked" if (lockStatus & (1<< interface.DAS_STATUS_CavityTempCntrlLockedBit)) else "Unlocked"
         result = dict(laserTempLockStatus=laserTempLockStatus, warmChamberTempLockStatus=warmChamberTempLockStatus, cavityTempLockStatus = cavityTempLockStatus)
+        # Override lock status if this is specified in the config file
+        if "LockStatusOverride" in self.config:
+            section = self.config["LockStatusOverride"]
+            for key in section:
+                key = key.strip()
+                if key in result:
+                    result[key] = section[key].strip()
         return result
         
     def startTempControl(self):

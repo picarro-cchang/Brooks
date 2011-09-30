@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block head %}
+    <script type="text/javascript">
+    
+    function callJSONRPC(method,params,success_callback,error_callback) {
+        var request = {
+            "method": method,
+            "params": params,
+            "id": 1
+        };
+        jQuery.ajax( {contentType:"application/json",
+                      data:$.toJSON(request),
+                      dataType:"json",
+                      url:"/jsonrpc",
+                      type:"post",
+                      success: success_callback,
+                      error: error_callback} );
+    }
+    
+    function onTimer() {
+        callJSONRPC("getLatestData",[{}],
+                    function(data,ts,jqXHR) {
+                        if ("CH4" in data.result) {
+                            $("#concData").html(data.result["CH4"].toFixed(2) + " ppm"); 
+                        }
+                        timer1 = setTimeout(onTimer,1000);
+                    },
+                    function(jqXHR,ts,et) {  
+                        $("#placeholder").html(jqXHR.responseText); 
+                        timer1 = setTimeout(onTimer,1000);
+                    }
+                   );
+    };
+    
+    function initialize() {
+        timer1 = setTimeout(onTimer,2000)
+    };
+    $(initialize)
+    </script>
+{% endblock %}
+
+{% block body %}
+<div style="width:100%; height:20%; float:left;">
+<p id="placeholder"></p>
+<p id="concData" class="centered" style="font-family:Georgia;font-size:200%;font-weight:bold;color:black">
+Concentration here</p>
+</div>
+{% endblock %}

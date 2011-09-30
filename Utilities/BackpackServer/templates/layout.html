@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<title>Picarro Methane Detector</title>
+<head>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<style type="text/css">
+  html { height: 100% }
+  body { height: 90%; margin: 0; padding: 0 }
+ .block { margin: 1em; width: 90%; height: 90%; border: 5px solid #888;
+         padding: 0.8em; background: white; }
+ .centered { text-align:center }
+</style>
+<link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/style.css') }}">
+<link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/ui-lightness/jquery-ui-1.8.16.custom.css') }}">
+<script type="text/javascript" src="{{ url_for('static',filename='jquery-1.6.2.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static',filename='jquery-ui-1.8.16.custom.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static',filename='jquery.json-2.2.js') }}"></script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
+{% block head %}{% endblock %}
+</head>
+<body>
+    <div class=block>
+        <h1 class=centered>Methane Concentration</h1>
+        {% for message in get_flashed_messages() %}
+            <div class=flash>{{ message }}</div>
+        {% endfor %}
+        {% block body %}
+        {% endblock %}
+    </div>
+</body>
+</html>    

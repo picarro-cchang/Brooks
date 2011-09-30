@@ -530,9 +530,6 @@ class RDFrequencyConverter(Singleton):
     def RPC_configSchemeManager(self, schemeDict, schemeSeq):
         self.schemeMgr = SchemeManager(schemeDict, schemeSeq)
         self.schemeMgr.startup()
-    
-    def RPC_setSchemeSequence(self, schemeSequence, restart = True):
-        self.schemeMgr.setSchemeSequence(schemeSequence, restart)
         
     def RPC_angleToLaserTemperature(self,vLaserNum,angles):
         self._assertVLaserNum(vLaserNum)
@@ -553,6 +550,11 @@ class RDFrequencyConverter(Singleton):
         Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER", interface.ANALYZER_TUNING_LaserCurrentTuningMode)
         self.tuningMode = interface.ANALYZER_TUNING_LaserCurrentTuningMode
         self.laserCurrentTunerAdjuster.setTunerRegisters(centerValue=32768)
+        
+    def RPC_setFsrHoppingTuning(self):
+        """ Set the instrument to use FSR Hopping tuning, and load up DAS registers appropriately """
+        Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER", interface.ANALYZER_TUNING_FsrHoppingTuningMode)
+        self.tuningMode = interface.ANALYZER_TUNING_FsrHoppingTuningMode
         
     def RPC_centerTuner(self,tunerCenter):
         if self.tuningMode == interface.ANALYZER_TUNING_CavityLengthTuningMode:

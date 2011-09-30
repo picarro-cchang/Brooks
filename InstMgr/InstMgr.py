@@ -1300,12 +1300,16 @@ class InstMgr(object):
 
     def _SetInstMode_Tuning_LaserCurrent(self):
         self.FreqConvRpc.setLaserCurrentTuning()
+        
+    def _SetInstMode_Tuning_FsrHopping(self):
+        self.FreqConvRpc.setFsrHoppingTuning()
 
     def _SetupInstModeDispatcher(self):
         self.InstModeDispatcher = {}
         self.InstModeDispatcher["Tuning"] = {}
         self.InstModeDispatcher["Tuning"]["CavityLength"] = self._SetInstMode_Tuning_CavityLength
         self.InstModeDispatcher["Tuning"]["LaserCurrent"] = self._SetInstMode_Tuning_LaserCurrent
+        self.InstModeDispatcher["Tuning"]["FsrHopping"] = self._SetInstMode_Tuning_FsrHopping
         self.ValidInstrumentModes = {}
         for key,validModes in self.InstModeDispatcher.items():
             self.ValidInstrumentModes[key] = validModes.keys()
