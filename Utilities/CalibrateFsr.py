@@ -364,7 +364,7 @@ class CalibrateFsr(object):
             
             # Set up analyzer for frequency hopping mode acquisition
 
-            Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER",ANALYZER_TUNING_LaserCurrentTuningMode)
+            Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER",ANALYZER_TUNING_FsrHoppingTuningMode)
             Driver.wrFPGA("FPGA_TWGEN","TWGEN_SLOPE_UP",1000)
             Driver.wrFPGA("FPGA_TWGEN","TWGEN_SLOPE_DOWN",1000)
             Driver.wrDasReg("TUNER_SWEEP_RAMP_LOW_REGISTER",14500)

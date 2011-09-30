@@ -265,13 +265,6 @@
             <field ident="numRows" type="uint32"/>
             <field ident="rows"  type="SchemeRowType" size="8192"/>
         </struct>
-        <struct type="SchemeSequenceType">
-            <field ident="numberOfIndices" type="uint16"/>
-            <field ident="currentIndex" type="uint16"/>
-            <field ident="restartFlag" type="uint16"/>
-            <field ident="loopFlag" type="uint16"/>
-            <field ident="schemeIndices"  type="uint16" size="16"/>
-        </struct>
         <struct type="VirtualLaserParamsType">
             <field ident="actualLaser" type="uint32"/>
             <field ident="tempSensitivity" type="float"/>
@@ -342,9 +335,7 @@
         <constant ident="OSCILLOSCOPE_TRACE_OFFSET" description="Offset for oscilloscope trace in DSP shared memory">(RINGDOWN_BUFFER_OFFSET+NUM_RINGDOWN_BUFFERS*RINGDOWN_BUFFER_SIZE)</constant>
         <constant ident="OSCILLOSCOPE_TRACE_SIZE" description="Size of an oscilloscope trace in 32 bit ints">(sizeof(OscilloscopeTraceType)/4)</constant>
         <constant ident="NUM_OSCILLOSCOPE_TRACES" description="Number of oscilloscope traces in 32 bit ints">1</constant>
-        <constant ident="SCHEME_SEQUENCE_OFFSET" description="Offset for scheme sequence area in DSP shared memory">0x7800</constant>
-        <constant ident="SCHEME_SEQUENCE_SIZE" description="Size of scheme sequence in 32 bit ints">(sizeof(SchemeSequenceType)/4)</constant>
-        <constant ident="VALVE_SEQUENCE_OFFSET" description="Offset for valve sequence area in DSP shared memory">(SCHEME_SEQUENCE_OFFSET+SCHEME_SEQUENCE_SIZE)</constant>
+        <constant ident="VALVE_SEQUENCE_OFFSET" description="Offset for valve sequence area in DSP shared memory">0x7800</constant>
         <constant ident="NUM_VALVE_SEQUENCE_ENTRIES" description="Number of valve sequence entries">256</constant>
         <constant ident="VALVE_SEQUENCE_ENTRY_SIZE" description="Size of a valve sequence in 32 bit ints">(sizeof(ValveSequenceEntryType)/4)</constant>
         <constant ident="NEXT_AVAILABLE_OFFSET" description="Offset following used of shared memory">(VALVE_SEQUENCE_OFFSET+NUM_VALVE_SEQUENCE_ENTRIES*VALVE_SEQUENCE_ENTRY_SIZE)</constant>
@@ -560,7 +551,8 @@
         <enum type="ANALYZER_TUNING_ModeType"> 
             <description>Analyzer tuning modes</description> 
             <enum_value ident="ANALYZER_TUNING_CavityLengthTuningMode" value="0" caption="Cavity Length Tuning" /> 
-            <enum_value ident="ANALYZER_TUNING_LaserCurrentTuningMode" value="1" caption="Laser Current Tuning" /> 
+            <enum_value ident="ANALYZER_TUNING_LaserCurrentTuningMode" value="1" caption="Laser Current Tuning" />
+            <enum_value ident="ANALYZER_TUNING_FsrHoppingTuningMode"   value="2" caption="Fsr Hopping Tuning" /> 
         </enum>         
         <enum type="SENTRY_BitType">
             <description>Sentry bit position</description> 

@@ -39,6 +39,7 @@ int tunerCntrlStep(void)
     {
         // Use register for laser locker tuning offset
         changeBitsFPGA(FPGA_LASERLOCKER+LASERLOCKER_CS, LASERLOCKER_CS_TUNING_OFFSET_SEL_B, LASERLOCKER_CS_TUNING_OFFSET_SEL_W, 0);
+        changeBitsFPGA(FPGA_LASERLOCKER+LASERLOCKER_OPTIONS, LASERLOCKER_OPTIONS_DIRECT_TUNE_B, LASERLOCKER_OPTIONS_DIRECT_TUNE_W, 0);
         // Enable PZT tuning
         changeBitsFPGA(FPGA_TWGEN+TWGEN_CS, TWGEN_CS_TUNE_PZT_B, TWGEN_CS_TUNE_PZT_W, 1);
     }
@@ -46,6 +47,15 @@ int tunerCntrlStep(void)
     {
         // Use input from tuner for laser locker tuning offset
         changeBitsFPGA(FPGA_LASERLOCKER+LASERLOCKER_CS, LASERLOCKER_CS_TUNING_OFFSET_SEL_B, LASERLOCKER_CS_TUNING_OFFSET_SEL_W, 1);
+        changeBitsFPGA(FPGA_LASERLOCKER+LASERLOCKER_OPTIONS, LASERLOCKER_OPTIONS_DIRECT_TUNE_B, LASERLOCKER_OPTIONS_DIRECT_TUNE_W, 0);
+        // Disable PZT tuning
+        changeBitsFPGA(FPGA_TWGEN+TWGEN_CS, TWGEN_CS_TUNE_PZT_B, TWGEN_CS_TUNE_PZT_W, 0);
+    }
+    else if ((unsigned int)*(unsigned int *)registerAddr(ANALYZER_TUNING_MODE_REGISTER) == ANALYZER_TUNING_FsrHoppingTuningMode)
+    {
+        // Use input from tuner for fine laser current
+        changeBitsFPGA(FPGA_LASERLOCKER+LASERLOCKER_CS, LASERLOCKER_CS_TUNING_OFFSET_SEL_B, LASERLOCKER_CS_TUNING_OFFSET_SEL_W, 1);
+        changeBitsFPGA(FPGA_LASERLOCKER+LASERLOCKER_OPTIONS, LASERLOCKER_OPTIONS_DIRECT_TUNE_B, LASERLOCKER_OPTIONS_DIRECT_TUNE_W, 1);
         // Disable PZT tuning
         changeBitsFPGA(FPGA_TWGEN+TWGEN_CS, TWGEN_CS_TUNE_PZT_B, TWGEN_CS_TUNE_PZT_W, 0);
     }
