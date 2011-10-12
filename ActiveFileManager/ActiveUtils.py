@@ -5,7 +5,8 @@ File Name: ActiveUtils.py
 Purpose: Utilities for accessing archived and active files
 
 File History:
-    06-Nov-2010  sze  Initial version.
+    06-Nov-2010  sze        Initial version.
+    12-Oct-2011  alex lee   Get the archived analyzer data location from Archiver (through Active File Manager RPC)
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -19,12 +20,15 @@ import tables
 import traceback
 from Host.ActiveFileManager.ActiveFileManager import ActiveFile, recArrayExtract
 from Host.Common import timestamp
-from Host.Common import CmdFIFO, SharedTypes
+from Host.Common import CmdFIFO
+from Host.Common.SharedTypes import RPC_PORT_ACTIVE_FILE_MANAGER
 from Host.Common.timestamp import getTimestamp
 
-ActiveFileManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_ACTIVE_FILE_MANAGER,
-                                    ClientName="django", IsDontCareConnection=False)
-ANALYZER_DATA = 'C:/Picarro/AnalyzerData'
+ActiveFileManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ACTIVE_FILE_MANAGER,
+                                    ClientName="ActiveUtils", IsDontCareConnection=False)
+
+ANALYZER_DATA = ActiveFileManager.getArchivedFileDir()
+print "Archived analyzer data directory: %s" % ANALYZER_DATA
 
         
 def sortByName(top, nameList):

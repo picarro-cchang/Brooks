@@ -106,6 +106,9 @@ class ActiveFileManagerRpcHandler(Singleton):
         self._register_rpc_functions_for_object( self )
         Log("Registered RPC functions")
                     
+    def getArchivedFileDir(self):
+        return self.parent.archivedFileDir
+        
     def getRdData(self,*a,**k):
         """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tstop" (exclusive).
             Result is a numpy record array which is placed on the rpcResultQueue by genRdData.
@@ -473,6 +476,7 @@ class ActiveFileManager(object):
         self.activeFilePeriod = self.config.getint("MainConfig","Period_s",600)
         self.graceInterval = self.config.getint("MainConfig","GraceInterval_s",60)
         self.archiveGroupName = self.config.get("MainConfig", "ArchiveGroupName", "Analyzer_Data")
+        self.archivedFileDir = Archiver.GetGroupInfo(self.archiveGroupName)["StorageDir"]
         self.activeFileDir = os.path.join(basePath, self.config.get("MainConfig","ActiveDir","ActiveFiles"))
         if not os.path.exists(self.activeFileDir): os.makedirs(self.activeFileDir)
 
