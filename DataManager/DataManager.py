@@ -309,7 +309,8 @@ class DataManager(object):
                 self.maketimetuple = time.localtime
             else:
                 self.maketimetuple = time.gmtime
-                
+            self.fitterResequencerLength = cp.getint(_MAIN_CONFIG_SECTION, "FitterResequencerLength", 5)
+            
             # Get INI for peripheral interface
             try:
                 self.periphIntrfConfig = os.path.join(basePath, cp.get("PeriphIntrf", "periphIntrfConfig"))
@@ -381,8 +382,7 @@ class DataManager(object):
                                      self._FitterFilter,
                                      retry = True,
                                      name = "Data manager fitter %d listener" % fitterIndex,logFunc = Log))
-        self.lastFitAnalyzed = 0
-        self.minQueueSamples = 5
+        self.lastFitAnalyzed = 0        
         self.resultsByAnalyzer = {}
         self.InstMgrStatusListener = None
         self.LatestInstMgrStatus = -1
@@ -1235,7 +1235,8 @@ class DataManager(object):
                 Log("Re-initializing application", dict(InitCount = self.InitCount))
             #Load the main application configuration settings...
             self.cp = self.Config.Load(self.ConfigPath)
-                 
+            self.minQueueSamples = self.Config.fitterResequencerLength
+                
             # open the serial port (may be used by scripts)
             if self.serialThread != None:
                 self.killSerialThread()
