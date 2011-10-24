@@ -128,11 +128,18 @@ def bspInverse(p0,coeffs,y):
 
     Returns interpolated result together with a flag indicating if the spline+linear
     term is monotonic"""
+    y = asarray(y)
     x0 = arange(1,len(coeffs)-1,dtype='d')
     # Evaluate spline + linear polynomial at the knots
     ygrid = polyval(p0,x0) + (coeffs[:-2] + 4*coeffs[1:-1] + coeffs[2:])/6.0
+    # Check for monotonicity within the range of values at which inverse 
+    #  interpolation is performed
+    ymin, ymax = y.min(), y.max()
+    index = arange(len(ygrid))
+    wmin = index[ygrid <= ymin].max()
+    wmax = index[ygrid >= ymax].min()
     try:
-        b = digitize(y,bins=ygrid)
+        b = wmin + digitize(y,bins=ygrid[wmin:wmax+1])
     except:
         return (y-p0[1])/p0[0],False
     c1 = coeffs[b-1]
