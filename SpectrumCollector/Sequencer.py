@@ -189,11 +189,11 @@ class Sequencer(object):
                         if self.pendingSequence != self.sequence:
                             self.loadSequenceLock.acquire()
                             self.setSequenceName(self.pendingSequence)
-                            self.loadSequencePending = False
                             self.scheme = 1
                             self.repeat = 1
                             restarting = True
                             self.loadSequenceLock.release()
+                        self.loadSequencePending = False
                     self.useIndex = (self.activeIndex + 1) % 4
                     schemes = self.sequences[self.sequence]
                     scheme,rep,freqBased = schemes[self.scheme-1]

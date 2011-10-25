@@ -85,6 +85,7 @@ sys.path.append("Utilities/FlowController")
 sys.path.append("Utilities/ReadMemUsage")
 sys.path.append("Utilities/PeriphModeSwitcher")
 sys.path.append("Utilities/RecipeEditor")
+sys.path.append("Utilities/BackpackServer")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -299,6 +300,7 @@ setup(version = "1.0",
                  "Utilities/Restart/RestoreStartup.py",
                  "Utilities/Restart/RtcAlarmOff.py",
                  "Utilities/ReadMemUsage/ReadMemUsage.py",
+                 "Utilities/BackpackServer/backpackServer.py",
                  "../SrcCode/Utilities/CalibrateSystem.py",
                  "../SrcCode/Utilities/CalibrateFsr.py",
                  "../SrcCode/Utilities/AdjustWlmOffset.py",
@@ -307,8 +309,10 @@ setup(version = "1.0",
                  "../SrcCode/Utilities/LaserLockPrbs.py",
                  "../SrcCode/Utilities/LaserPidPrbs.py",
                  "../SrcCode/Utilities/MakeWarmBoxCalFile.py",
+                 "../SrcCode/Utilities/MakeWarmBoxCal_NoWlm.py",
                  "../SrcCode/Utilities/MakeWlmFile1.py",
                  "../SrcCode/Utilities/WriteLaserEeprom.py",
+                 "../SrcCode/Utilities/MakeNoWlmFile.py",
                  "../SrcCode/Utilities/WriteWlmEeprom.py",
                  "../SrcCode/Utilities/DumpEeproms.py",
                  "../SrcCode/Utilities/MakeCalFromEeproms.py",

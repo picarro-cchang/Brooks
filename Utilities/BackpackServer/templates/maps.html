@@ -42,8 +42,7 @@
                         lon = data.result["long"];
                         ch4 = data.result["ch4"];
                         peakPos = data.result["peakPos"];
-                        $("#concData").html("Current concentration " + ch4[ch4.length-1].toFixed(3) + " ppm"); 
-                        $("#peakData").html("Max in window         " + ch4[peakPos].toFixed(3) + " ppm"); 
+                        $("#peakData").html("Max in window " + ch4[peakPos].toFixed(3) + " ppm"); 
                         n = lat.length;
                         if (n>0) {
                             for (i=0;i<n;i++) {
@@ -101,7 +100,6 @@
 <div style="width:28%; height:85%; float:left;">
 
 <p id="placeholder">Date and Time here</p>
-<p id="concData">Concentration data here</p>
 <p id="peakData">Peak data here</p>
 <p id="counter">Counter value here</p>
 

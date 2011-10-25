@@ -29,7 +29,6 @@ PASSWORD = 'default'
 #  from an InstrConfig variable
 SHIFT = -4
 USERLOGFILES = os.path.join(AppDir,'static/datalog/*.dat')
-PEAKFILES = os.path.join(AppDir,'static/datalog/*.peaks')
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -76,41 +75,7 @@ def rpcWrapper(func):
             type,value = sys.exc_info()[:2]
             raise JSON_Remote_Procedure_Error, "\n%s" % (traceback.format_exc(),)
     return JSON_RPC_wrapper
-    
-def _getPeaks(fp,startRow,minAmp):
-    #
-    # Gets data from the analyzer peak parameters file "fp" starting  at the specified 
-    #  "startRow" within the file. Only peaks of amplitude no less than "minAmp" are 
-    #  reported. The result dictionary has keys:
-    # DISTANCE        Distance along path at which maxima are located
-    # GPS_ABS_LONG    Longitude of maxima
-    # GPS_ABS_LAT    Latitude of maxima
-    # CH4            Methane concentration of maxima
-    # AMPLITUDE     Amplitudes calculated from space-scale representation
-    # SIGMA            Half-widths calculated from space-scale representation
-    # NEXT_ROW        Next row in file which has yet to be processed
-    #
-    fp.seek(0,0)
-    header = fp.readline().split()
-    amplCol = header.index("AMPLITUDE")
-    result = dict(DISTANCE=[],GPS_ABS_LONG=[],GPS_ABS_LAT=[],CH4=[],AMPLITUDE=[],SIGMA=[])
-    if amplCol<0:
-        print "Cannot find AMPLITUDE column in peak file"
-        result['NEXT_ROW'] = startRow
-        return result
-    lineLength = fp.tell()
-    fp.seek(startRow*lineLength,0)
-    for line in fp:
-        if len(line) != lineLength: break
-        vals = line.split()
-        if len(vals)!=len(header): break
-        if float(vals[amplCol]) >= minAmp:
-            for col,val in zip(header,vals):
-                if col in result: result[col].append(float(val))
-        startRow += 1
-    result['NEXT_ROW'] = startRow
-    return result
-
+        
 def _getData(fp,startPos=None,shift=0):    
     #
     # Gets data from the analyzer live archive file "fp" starting  at the specified 
@@ -173,8 +138,6 @@ def _getData(fp,startPos=None,shift=0):
             for col,h in zip(columns,header):
                 result[h] = []
             lastPos = startPos
-        epochTime = result['EPOCH_TIME']
-        result['timeStrings'] = [time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(t)) for t in epochTime]
         return result, lastPos
     except:
         print traceback.format_exc()
@@ -205,7 +168,7 @@ def getData(params):
     except:
         return {'lastPos':0, 'filename':''}
         
-    if 'startPos' in params and params['startPos'] is not None:
+    if 'startPos' in params:
         startPos = int(params['startPos'])
     else:
         startPos = None
@@ -274,24 +237,6 @@ def getPath(params):
 
 @handler.register
 @rpcWrapper
-def getPeaks(params):
-    startRow = int(params.get('startRow',1))
-    minAmp = float(params.get('minAmp',0))
-    names = sorted(glob.glob(PEAKFILES))
-    try:
-        name = names[-1]
-        fp = file(name,'rb')
-    except:
-        return {'filename':''}
-    result = _getPeaks(fp,startRow,minAmp)
-    fp.close();
-    dist, long, lat = result["DISTANCE"], result["GPS_ABS_LONG"], result["GPS_ABS_LAT"] 
-    ch4, amp, sigma = result["CH4"], result["AMPLITUDE"], result["SIGMA"]
-    nextRow = result["NEXT_ROW"]
-    return(dict(filename=name,dist=dist,long=long,lat=lat,ch4=ch4,amp=amp,sigma=sigma,nextRow=nextRow))
-    
-@handler.register
-@rpcWrapper
 def restartDatalog(params):
     print "<------------------ Restarting data log ------------------>"
     dataLogger = DataLoggerInterface()
@@ -306,13 +251,8 @@ def getDateTime(params):
 
 @app.route('/maps')
 def maps():
-    amplitude = float(request.values.get('amplitude',0.1))
-    do_not_follow = int('do_not_follow' in request.values)
-    follow = int('follow' in request.values or not do_not_follow)
-    center_longitude = float(request.values.get('center_longitude',-121.98432))
-    center_latitude = float(request.values.get('center_latitude',37.39604))
-    return render_template('maps.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
-                                       center_latitude=center_latitude,center_longitude=center_longitude)
+    threshold = float(request.values.get('threshold',2.5))
+    return render_template('maps.html',threshold=threshold)
    
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=5000)

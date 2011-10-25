@@ -282,15 +282,6 @@ class SchemeTableType(Structure):
     ("rows",SchemeRowType*8192)
     ]
 
-class SchemeSequenceType(Structure):
-    _fields_ = [
-    ("numberOfIndices",c_ushort),
-    ("currentIndex",c_ushort),
-    ("restartFlag",c_ushort),
-    ("loopFlag",c_ushort),
-    ("schemeIndices",c_ushort*16)
-    ]
-
 class VirtualLaserParamsType(Structure):
     _fields_ = [
     ("actualLaser",c_uint),
@@ -401,12 +392,8 @@ OSCILLOSCOPE_TRACE_OFFSET = (RINGDOWN_BUFFER_OFFSET+NUM_RINGDOWN_BUFFERS*RINGDOW
 OSCILLOSCOPE_TRACE_SIZE = (sizeof(OscilloscopeTraceType)/4)
 # Number of oscilloscope traces in 32 bit ints
 NUM_OSCILLOSCOPE_TRACES = 1
-# Offset for scheme sequence area in DSP shared memory
-SCHEME_SEQUENCE_OFFSET = 0x7800
-# Size of scheme sequence in 32 bit ints
-SCHEME_SEQUENCE_SIZE = (sizeof(SchemeSequenceType)/4)
 # Offset for valve sequence area in DSP shared memory
-VALVE_SEQUENCE_OFFSET = (SCHEME_SEQUENCE_OFFSET+SCHEME_SEQUENCE_SIZE)
+VALVE_SEQUENCE_OFFSET = 0x7800
 # Number of valve sequence entries
 NUM_VALVE_SEQUENCE_ENTRIES = 256
 # Size of a valve sequence in 32 bit ints
@@ -814,11 +801,13 @@ OVERLOAD_BitTypeDict[1] = 'OVERLOAD_HotBoxTecBit' # Hot box TEC overload
 ANALYZER_TUNING_ModeType = c_uint
 ANALYZER_TUNING_CavityLengthTuningMode = 0 # Cavity Length Tuning
 ANALYZER_TUNING_LaserCurrentTuningMode = 1 # Laser Current Tuning
+ANALYZER_TUNING_FsrHoppingTuningMode = 2 # Fsr Hopping Tuning
 
 # Dictionary for enumerated constants in ANALYZER_TUNING_ModeType
 ANALYZER_TUNING_ModeTypeDict = {}
 ANALYZER_TUNING_ModeTypeDict[0] = 'ANALYZER_TUNING_CavityLengthTuningMode' # Cavity Length Tuning
 ANALYZER_TUNING_ModeTypeDict[1] = 'ANALYZER_TUNING_LaserCurrentTuningMode' # Laser Current Tuning
+ANALYZER_TUNING_ModeTypeDict[2] = 'ANALYZER_TUNING_FsrHoppingTuningMode' # Fsr Hopping Tuning
 
 # Enumerated definitions for SENTRY_BitType
 SENTRY_BitType = c_uint
@@ -3067,7 +3056,7 @@ parameter_forms.append(('Virtual Laser Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','choices',ANALYZER_TUNING_MODE_REGISTER,'Analyzer tuning mode','',[(ANALYZER_TUNING_CavityLengthTuningMode,"Cavity Length Tuning"),(ANALYZER_TUNING_LaserCurrentTuningMode,"Laser Current Tuning"),],1,1))
+__p.append(('dsp','choices',ANALYZER_TUNING_MODE_REGISTER,'Analyzer tuning mode','',[(ANALYZER_TUNING_CavityLengthTuningMode,"Cavity Length Tuning"),(ANALYZER_TUNING_LaserCurrentTuningMode,"Laser Current Tuning"),(ANALYZER_TUNING_FsrHoppingTuningMode,"Fsr Hopping Tuning"),],1,1))
 __p.append(('fpga','mask',FPGA_TWGEN+TWGEN_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Reset generator', [(0, u'Idle'), (4, u'Reset')]), (8, u'Tune PZT', [(0, u'No'), (8, u'Yes')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SLOPE_UP,'Tuner up slope','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_TWGEN+TWGEN_SLOPE_DOWN,'Tuner down slope','digU','%d',1,1))
