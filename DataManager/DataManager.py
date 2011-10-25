@@ -417,7 +417,7 @@ class DataManager(object):
         for s in dir(self):
             attr = self.__getattribute__(s)
             if callable(attr) and s.startswith("RPC_") and (not isclass(attr)):
-                self.RpcServer.register_function(attr, NameSlice = 4)
+                self.RpcServer.register_function(attr, name=s, NameSlice = 4)
 
         self.calEnabled = True
         self.measBufferConfig = ("",[],20) # (source, colList, bufSize)
@@ -479,6 +479,7 @@ class DataManager(object):
     def killSerialThread(self):
         self.serialThreadAllowRun = False
 
+    @CmdFIFO.rpc_wrap
     def RPC_Shutdown(self):
         """Shuts down the Data Manager
 
@@ -486,9 +487,13 @@ class DataManager(object):
 
         """
         self._ShutdownRequested = True
+        
+    @CmdFIFO.rpc_wrap
     def RPC_ReInit(self):
         """Restarts the application, putting it through INIT state again."""
         self.ReInitRequested = True
+        
+    @CmdFIFO.rpc_wrap
     def RPC_Mode_Set(self, ModeName):
         """Sets the measurement mode, determining how data will be analyzed."""
         if self.CurrentMeasMode and (ModeName == self.CurrentMeasMode.Name):
@@ -497,6 +502,8 @@ class DataManager(object):
             raise InvalidModeSelection(ModeName)
         self._ChangeMode(ModeName)
         return "OK"
+        
+    @CmdFIFO.rpc_wrap
     def RPC_Mode_Get(self):
         """Returns the name of the mode the measurement system is currently set to.
 
@@ -505,9 +512,13 @@ class DataManager(object):
         if self.CurrentMeasMode == None:
             return "<NOT SPECIFIED YET>"
         return self.CurrentMeasMode.Name
+        
+    @CmdFIFO.rpc_wrap
     def RPC_Mode_GetAvailable(self):
         """Returns a list of the available measurement modes."""
         return self.MeasModes.keys()
+        
+    @CmdFIFO.rpc_wrap
     def RPC_Error_Clear(self):
         """Clears the current error state (and starts in INIT state again).
 
@@ -519,15 +530,21 @@ class DataManager(object):
         self._AssertValidCallingState([STATE_ERROR,])
         Log("Request received to clear error state")
         self._ClearErrorEvent.set()
+        
+    @CmdFIFO.rpc_wrap
     def RPC_GetState(self):
         """Returns a dictionary with a text indication of the system states."""
         ret = dict(State = StateName[self.__State])
         return ret
+        
+    @CmdFIFO.rpc_wrap
     def RPC_GetDelays(self):
         """Returns dictionary of data manager synchronous script delay histograms, keyed
         by script name. The 9 bins of each histogram are logarithmically spaced, with 
         bin=math.floor(2*log10(delay)+6)"""
         return self.syncScriptDelayHist
+        
+    @CmdFIFO.rpc_wrap
     def RPC_Enable(self):
         """Enables the data manager in the mode set by Mode_Set.
         """
@@ -553,6 +570,8 @@ class DataManager(object):
             LogExc("Unhandled exception in command call", Data = dict(Command = NameOfThisCall))
             raise
         return "OK"
+        
+    @CmdFIFO.rpc_wrap
     def RPC_Disable(self, keepSyncScripts=False):
         """Disables the measurement system and stops the instrument from scanning.
         """
@@ -561,6 +580,8 @@ class DataManager(object):
             self._StopSyncScripts()
         self._EnableEvent.clear()
         return "OK"
+        
+    @CmdFIFO.rpc_wrap
     def RPC_StartInstMgrListener(self):
         """Start the listener for instrument manager status. This is called by the instrument manager when
         it starts up"""
@@ -575,14 +596,21 @@ class DataManager(object):
         else:
             return "Already started"
     
+    @CmdFIFO.rpc_wrap
     def RPC_Cal_Enable(self):
         self.calEnabled = True
         Log("Calibration enabled")
+    
+    @CmdFIFO.rpc_wrap
     def RPC_Cal_Disable(self):
         self.calEnabled = False
         Log("Calibration disabled")
+    
+    @CmdFIFO.rpc_wrap
     def RPC_Cal_GetMeasNames(self):
         return self.UserCalAppListDict.keys()
+    
+    @CmdFIFO.rpc_wrap
     def RPC_Cal_AdjustZero(self, MeasName, ObservedOffset):
         """Changes the zero offset for the reported-vs-measured cal for the given MeasName.
 
@@ -609,6 +637,8 @@ class DataManager(object):
         for appMeas in self.UserCalAppListDict[MeasName]:
             self.UserCalibration[appMeas] = (slope, newOffset)
         self._UpdateUserCalibrationFile()
+    
+    @CmdFIFO.rpc_wrap
     def RPC_Cal_AdjustSpan(self, MeasName, ExpectedMeas, ReportedMeas):
         """Changes the cal slope for the reported-vs-measured cal for the given MeasName.
 
@@ -635,6 +665,8 @@ class DataManager(object):
         for appMeas in self.UserCalAppListDict[MeasName]:
             self.UserCalibration[appMeas] = (newSlope, calOffset)
         self._UpdateUserCalibrationFile()
+    
+    @CmdFIFO.rpc_wrap
     def RPC_Cal_SetSlopeAndOffset(self, MeasName, Slope = 1, Offset = 0):
         """Changes both the cal slope and offset for the given MeasName.
 
@@ -650,6 +682,8 @@ class DataManager(object):
         for appMeas in self.UserCalAppListDict[MeasName]:
             self.UserCalibration[appMeas] = (Slope, Offset)
         self._UpdateUserCalibrationFile()
+    
+    @CmdFIFO.rpc_wrap
     def RPC_Cal_RestoreFactoryDefaults(self, MeasName):
         """Restores the factory cal (slope =1, offset = 0) for MeasName.
 
@@ -662,6 +696,8 @@ class DataManager(object):
         for appMeas in self.UserCalAppListDict[MeasName]:
             self.UserCalibration[appMeas] = (1, 0)
         self._UpdateUserCalibrationFile()
+    
+    @CmdFIFO.rpc_wrap
     def RPC_Cal_RestoreAllFactoryDefaults(self):
         """Restores the factory cal (slope = 1, offset = 0) for all measurements.
 
@@ -672,6 +708,8 @@ class DataManager(object):
             for appMeas in self.UserCalAppListDict[MeasName]:
                 self.UserCalibration[appMeas] = (1, 0)
         self._UpdateUserCalibrationFile()
+    
+    @CmdFIFO.rpc_wrap
     def RPC_Cal_GetUserCalibrations(self):
         """Returns the set of user calibrations that have been specified.
 
@@ -686,6 +724,8 @@ class DataManager(object):
 
         """
         return self.UserCalibration
+    
+    @CmdFIFO.rpc_wrap
     def RPC_Cal_GetUserCal(self, measName):
         """Returns the set of user calibration for a specified measName
 
@@ -694,10 +734,12 @@ class DataManager(object):
         """
         return self.UserCalibration[measName]
 
+    @CmdFIFO.rpc_wrap    
     def RPC_Cal_GetInstrCalibrations(self):
         """Returns instrument calibrations"""
         return self.InstrData
             
+    @CmdFIFO.rpc_wrap        
     def RPC_PulseAnalyzer_Set(self, source, concNameList, targetConc = None, thres1Pair = [0.0, 0.0], 
                               thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0, 
                               validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0, 
@@ -712,6 +754,7 @@ class DataManager(object):
         except Exception, err:
             return err
         
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StartRunning(self):
         # Run pulse analyzer with state machine
         if self.pulseAnalyzer == None:
@@ -721,6 +764,7 @@ class DataManager(object):
         self.addToPulseAnalyzer = False
         return "OK"
         
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StopRunning(self):
         # Stop pulse analyzer with state machine
         if self.pulseAnalyzer == None:
@@ -728,6 +772,7 @@ class DataManager(object):
         self.runPulseAnalyzer = False
         return "OK"
             
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StartAddingData(self):
         # Manually add data into pulse analyzer buffer
         if self.pulseAnalyzer == None:
@@ -737,6 +782,7 @@ class DataManager(object):
         self.runPulseAnalyzer = False
         return "OK"
 
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StopAddingData(self):
         # Stop manually adding data into pulse analyzer buffer
         if self.pulseAnalyzer == None:
@@ -744,6 +790,7 @@ class DataManager(object):
         self.addToPulseAnalyzer = False
         return "OK"
             
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetOutput(self):
         """Returns the result list in the format of [status, pulseFinished, concBufferDict]. 
         It won't clear the pulse anlayzer buffer.
@@ -753,24 +800,28 @@ class DataManager(object):
         else:
             return self.pulseAnalyzer.getOutput()
 
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetTimestamp(self):
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
         else:
             return self.pulseAnalyzer.getTimestamp()
 
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetDataReady(self):
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
         else:
             return self.pulseAnalyzer.getDataReady()
 
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_IsTriggeredStatus(self):
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
         else:
             return self.pulseAnalyzer.isTriggeredStatus()
             
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_Reset(self):
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
@@ -778,6 +829,7 @@ class DataManager(object):
             self.pulseAnalyzer.resetAnalyzer()
             return "OK"
             
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetStatistics(self):
         """Retrieve statistics of data in pulse analyzer buffer"""
         if self.pulseAnalyzer == None:
@@ -785,6 +837,7 @@ class DataManager(object):
         else:
             return self.pulseAnalyzer.getStatistics()
             
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetPulseStartEndTime(self):
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
@@ -792,6 +845,7 @@ class DataManager(object):
             return self.pulseAnalyzer.getPulseStartEndTime()
             
     # Below pulse analyzer functions are used by Command Interface
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetBuffer(self):
         """Get every analysis output from pulse analyzer buffer. This will also clear the whole buffer"""
         if self.pulseAnalyzer == None:
@@ -805,6 +859,7 @@ class DataManager(object):
             self.pulseBufferLock.release()
             return ret
         
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetBufferFirst(self):
         """Get the first pulse analysis data from pulse analyzer buffer. It will also remove this data from the buffer"""
         if self.pulseAnalyzer == None:
@@ -822,6 +877,7 @@ class DataManager(object):
                 self.pulseBufferLock.release()
             return ret
         
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_ClearBuffer(self):
         """Clear all the data in the internal pulse analyzer buffer"""
         if self.pulseAnalyzer == None:
@@ -832,6 +888,7 @@ class DataManager(object):
             self.pulseBufferLock.release()
             return "OK"
 
+    @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetStatus(self):
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
@@ -849,6 +906,7 @@ class DataManager(object):
         finally:
             self.pulseBufferLock.release()
             
+    @CmdFIFO.rpc_wrap
     def RPC_MeasBuffer_Set(self, source, colList, bufSize):
         """Set up an internal measurement buffer for the Coordinator"""
         self.measBufferLock.acquire()
@@ -857,6 +915,7 @@ class DataManager(object):
         self.measBufferLock.release()
         return "OK"
         
+    @CmdFIFO.rpc_wrap
     def RPC_MeasBuffer_Clear(self):
         """Clear all the data in the internal measurement buffer"""
         self.measBufferLock.acquire()
@@ -864,6 +923,7 @@ class DataManager(object):
         self.measBufferLock.release()
         return "OK"
         
+    @CmdFIFO.rpc_wrap
     def RPC_MeasBuffer_Get(self):
         """Get all the data in the internal measurement buffer"""
         self.measBufferLock.acquire()
@@ -872,6 +932,7 @@ class DataManager(object):
         self.measBufferLock.release()
         return ret
         
+    @CmdFIFO.rpc_wrap
     def RPC_MeasBuffer_GetFirst(self):
         """Get the first (oldest) data in the internal measurement buffer"""
         if len(self.measBuffer) == 0:

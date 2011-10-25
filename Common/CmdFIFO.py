@@ -33,6 +33,7 @@ import traceback
 import sys
 import time
 import types
+#from decorator import decorator
 
 if sys.platform == 'win32':
     TimeStamp = time.clock
@@ -57,6 +58,13 @@ CMD_Types = [
 class RemoteException(RuntimeError):
     pass
 
+#@decorator
+#def rpc_wrap(func, *a, **k):
+#    try:
+#        return func(*a, **k)
+#    except:
+#        raise RemoteException(traceback.format_exc())
+    
 def rpc_wrap(func):
     def wrapper(*a,**k):
         try:
@@ -68,7 +76,7 @@ def rpc_wrap(func):
     wrapper.__wrapped_defaults = func.func_defaults
     wrapper.__wrapped_doc = pydoc.getdoc(func)
     return wrapper
-    
+
 def resolve_dotted_attribute(obj, attr, allow_dotted_names=True):
     """resolve_dotted_attribute(a, 'b.c.d') => a.b.c.d
 
