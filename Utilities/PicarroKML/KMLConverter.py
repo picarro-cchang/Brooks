@@ -238,7 +238,7 @@ class KMLConverter(KMLConverterFrame):
         if outList:
             self.textCtrlMsg.WriteText("Conversion Completed:\n")
             for filename in outList:
-                self.textCtrlMsg.WriteText("file:%s\n" % filename)
+                self.textCtrlMsg.WriteText("file:%s\n" % os.path.abspath(filename))
         self.enableAll(True)
 
     def loadFiles(self):
