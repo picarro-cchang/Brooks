@@ -1425,19 +1425,19 @@ class QuickGui(wx.Frame):
             except:
                 self.series.append(None)
         # Define a gauge indicating the buffer level
-        self.gauge = wx.Gauge(parent=self.mainPanel,range=100,style=wx.GA_VERTICAL,
-                              size=(10,-1))
+        #self.gauge = wx.Gauge(parent=self.mainPanel,range=100,style=wx.GA_VERTICAL,
+        #                      size=(10,-1))
 
         # Define the status log window
-        statusBox = wx.StaticBox(parent=self.mainPanel,id=-1,label="")
+        #statusBox = wx.StaticBox(parent=self.mainPanel,id=-1,label="")
         #self.statusLogTextCtrl = wx.TextCtrl(parent=self.mainPanel,id=-1,style=wx.TE_MULTILINE,size=(-1,150))
-        height = self.config.getint("StatusBox","Height")
-        if self.numGraphs > 2:
-            height *= 0.8
+        #height = self.config.getint("StatusBox","Height")
+        #if self.numGraphs > 2:
+        #    height *= 0.8
         #self.eventViewControl = EventViewListCtrl(parent=self.mainPanel,id=-1,config=self.config,
         #                                          DataSource=self.eventStore,size=(-1,height))
         #setItemFont(self.eventViewControl,self.getFontFromIni('StatusBox'))
-        setItemFont(statusBox,self.getFontFromIni('Panel'))
+        #setItemFont(statusBox,self.getFontFromIni('Panel'))
         #statusBoxSizer = wx.StaticBoxSizer(statusBox,wx.VERTICAL)
         #statusBoxSizer.Add(self.statusLogTextCtrl,proportion=1,flag=wx.EXPAND)
         #statusBoxSizer.Add(self.eventViewControl,proportion=1,flag=wx.EXPAND)
@@ -1522,13 +1522,13 @@ class QuickGui(wx.Frame):
             toolSizer.Add((20,10),proportion=0)
             choiceSizer.Add(toolSizer,proportion=1) 
             
-        clearButton = wx.Button(parent=toolPanel,id=-1,label="Reset buffers")
-        setItemFont(clearButton,self.getFontFromIni('GraphButton'))
-        self.Bind(wx.EVT_BUTTON,self.OnResetBuffers,clearButton)
+        #clearButton = wx.Button(parent=toolPanel,id=-1,label="Reset buffers")
+        #setItemFont(clearButton,self.getFontFromIni('GraphButton'))
+        #self.Bind(wx.EVT_BUTTON,self.OnResetBuffers,clearButton)
         
         combToolSizer = wx.BoxSizer(wx.HORIZONTAL)
         combToolSizer.Add(choiceSizer,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM,border=10)
-        combToolSizer.Add(clearButton,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM,border=10)
+        #combToolSizer.Add(clearButton,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM,border=10)
         combToolSizer.Add((10,10),proportion=0)
         toolPanel.SetSizer(combToolSizer)
 
@@ -1698,7 +1698,7 @@ class QuickGui(wx.Frame):
         
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(graphPanelSizer,proportion=1,flag=wx.GROW)
-        sizer.Add(self.gauge,proportion=0,flag=wx.GROW)
+        #sizer.Add(self.gauge,proportion=0,flag=wx.GROW)
 
         vsizer2 = wx.BoxSizer(wx.VERTICAL)
         titleSizer = wx.BoxSizer(wx.VERTICAL)
@@ -2034,8 +2034,8 @@ class QuickGui(wx.Frame):
                 level, size = timeSeq.GetLevelAndSize()
                 gaugeValue.append(100*level//size)
  
-        if len(gaugeValue) > 0:
-            self.gauge.SetValue(max(gaugeValue))
+        #if len(gaugeValue) > 0:
+        #    self.gauge.SetValue(max(gaugeValue))
 
         # userLogEnabled = False
         # if self.dataLoggerInterface.userLogDict:
