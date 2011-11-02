@@ -52,22 +52,23 @@ from wx.lib.wordwrap import wordwrap
 # For JSON-RPC interface
 from cPickle import loads
 from base64 import b64decode
-from Host.Common import timestamp, jsonRpc, jsonRpcTools
-JsonRpcService = jsonRpc.Proxy('http://localhost:5000/jsonrpc')
+from Host.Common import timestamp
+from Host.Common.jsonRpcTools import JsonRpcTools
 # ------------------------
 
 from PulseAnalyzerGui import PulseAnalyzerGui
 from UserCalGui import UserCalGui
-from SysAlarmGui import *
+#from SysAlarmGui import *
 from Host.Common import CmdFIFO, StringPickler, Listener, TextListener
 from Host.Common import plot
 from Host.Common import GraphPanel
 from Host.Common import AppStatus
 from Host.Common import SharedTypes
 from Host.Common.GuiTools import *
-from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
-                                    RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_QUICK_GUI, \
-                                    RPC_PORT_SUPERVISOR, RPC_PORT_ARCHIVER
+#from Host.Common.SharedTypes import RPC_PORT_ALARM_SYSTEM, RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
+#                                    RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_QUICK_GUI, \
+#                                    RPC_PORT_SUPERVISOR, RPC_PORT_ARCHIVER
+from Host.Common.SharedTypes import RPC_PORT_QUICK_GUI
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
@@ -1006,12 +1007,12 @@ class FontDatabase(object):
         return self.default.copy()
 #end of class FontDatabase
 class DataStore(object):
-    def __init__(self,config):
-        self.sourceDict = {}
+    def __init__(self, jsonRpcService):
+        self.jsonRpcService = jsonRpcService
         self.measMode = ""
         
     def getQueuedData(self, tstart, tstop):
-        self.dataStruct = jsonRpcTools.getDataStruct(tstart, tstop)
+        self.dataStruct = self.jsonRpcService.getDataStruct(tstart, tstop)
         self.measMode = self.dataStruct.keys()[0]
                     
     def getMeasMode(self):
@@ -1089,16 +1090,16 @@ class QuickGui(wx.Frame):
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700), 
                           style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
         self.commandQueue = Queue.Queue()                          
-        self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
-        self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
-        self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = APP_NAME)
-        try:
-            self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
-        except:
-            self.valveSeqRpc = None
-        self.SupervisorRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
-                                                        APP_NAME,
-                                                        IsDontCareConnection = False)
+        #self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
+        #self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
+        #self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = APP_NAME)
+        #try:
+        #    self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
+        #except:
+        #    self.valveSeqRpc = None
+        #self.SupervisorRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+        #                                                APP_NAME,
+        #                                                IsDontCareConnection = False)
         self.configFile = configFile
         self.config = self.loadConfig(self.configFile)
         self.valveSeqOption = self.config.getboolean("ValveSequencer","Enable",True)
@@ -1126,15 +1127,17 @@ class QuickGui(wx.Frame):
         for idx in range(self.numGraphs):
             self.defaultKeys[idx] = StringDict.fromIni(self.config,"Defaults","key%d"%idx)
         self.seqPoints = self.config.getint('DataManagerStream','Points')
-        self.dataStore  = DataStore(self.config)
-        self.eventStore = EventStore(self.config)
-        self.alarmInterface = AlarmInterface(self.config)
-        self.alarmInterface.getAlarmData()
-        self.sysAlarmInterface = SysAlarmInterface()
-        self.dataLoggerInterface = DataLoggerInterface(self.config)
-        self.dataLoggerInterface.getDataLoggerInfo()
-        self.instMgrInterface = InstMgrInterface(self.config)
-        self.numAlarms = min(4, self.config.getint("AlarmBox","NumAlarms",4))
+        jsonRpcIp = self.config.get('Web', 'jsonRpcIp', 'http://localhost:5000/jsonrpc')
+        self.jsonRpcService = JsonRpcTools(jsonRpcIp)
+        self.dataStore  = DataStore(self.jsonRpcService)
+        #self.eventStore = EventStore(self.config)
+        #self.alarmInterface = AlarmInterface(self.config)
+        #self.alarmInterface.getAlarmData()
+        #self.sysAlarmInterface = SysAlarmInterface()
+        #self.dataLoggerInterface = DataLoggerInterface(self.config)
+        #self.dataLoggerInterface.getDataLoggerInfo()
+        #self.instMgrInterface = InstMgrInterface(self.config)
+        #self.numAlarms = min(4, self.config.getint("AlarmBox","NumAlarms",4))
         self.showGraphZoomed = self.config.getboolean("Graph","ShowGraphZoomed",False)
         self.shutdownShippingSource = self.config.get("ShutdownShippingSource", "Source", "Sensors")
         self.lockTime = False
@@ -1151,12 +1154,12 @@ class QuickGui(wx.Frame):
         self.statControls = []
         self.imageDatabase = ImageDatabase()
         self.loadImageDatabase() # from ini file
-        self.cavityTempS = None
-        self.cavityTempT = None
-        self.warmBoxTempS = None
-        self.warmBoxTempT = None
-        self.cavityPressureS = None
-        self.cavityPressureT = None
+        # self.cavityTempS = None
+        # self.cavityTempT = None
+        # self.warmBoxTempS = None
+        # self.warmBoxTempT = None
+        # self.cavityPressureS = None
+        # self.cavityPressureT = None
         self.defaultLineMarkerColor = self.getColorFromIni("Graph","LineColor")
         self.defaultLineWidth = self.config.getfloat("Graph","LineWidth")
         self.defaultMarkerSize = self.config.getfloat("Graph","MarkerSize")
@@ -1167,25 +1170,25 @@ class QuickGui(wx.Frame):
         self.lastTimestamp = timestamp.getTimestamp()
         
         # Collect instrument status setpoint and tolerance
-        try:
-            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
-            self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
-        except:
-            self.cavityTempS = 45.0
-            self.cavityTempT = 0.2
-        try:
-            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
-            self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")
-        except:
-            self.warmBoxTempS = 45.0
-            self.warmBoxTempT = 0.2
-        try:
-            self.cavityPressureS = self.sampleMgrRpc.ReadOperatePressureSetpoint()
-            self.cavityPressureTPer = self.sampleMgrRpc.ReadPressureTolerancePer()
-        except:
-            self.cavityPressureS = 140.0
-            self.cavityPressureTPer = 0.05
-        self.cavityPressureT = self.cavityPressureTPer*self.cavityPressureS 
+        # try:
+            # self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
+            # self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
+        # except:
+            # self.cavityTempS = 45.0
+            # self.cavityTempT = 0.2
+        # try:
+            # self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
+            # self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")
+        # except:
+            # self.warmBoxTempS = 45.0
+            # self.warmBoxTempT = 0.2
+        # try:
+            # self.cavityPressureS = self.sampleMgrRpc.ReadOperatePressureSetpoint()
+            # self.cavityPressureTPer = self.sampleMgrRpc.ReadPressureTolerancePer()
+        # except:
+            # self.cavityPressureS = 140.0
+            # self.cavityPressureTPer = 0.05
+        # self.cavityPressureT = self.cavityPressureTPer*self.cavityPressureS 
         
         # Set up instrument status panel source and key
         self.instStatSource = self.config.get("InstStatPanel", "Source", "Sensors")
@@ -1259,6 +1262,9 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_SIZE,self.OnSize)
         self.Bind(wx.EVT_PAINT,self.OnPaint)
         
+        # Disable Tools menu for WebGui
+        self.menuBar.EnableTop(2, False)
+        
         self.startServer()
         
     def enqueueViewerCommand(self, command, *args, **kwargs):
@@ -1274,7 +1280,7 @@ class QuickGui(wx.Frame):
         self.rpcServer.register_function(self.setLineMarkerColor)
         self.rpcServer.register_function(self.getLineMarkerColor)
         self.rpcServer.register_function(self.getDataKeys)
-        self.rpcServer.register_function(self.setSysAlarmEnable)
+        #self.rpcServer.register_function(self.setSysAlarmEnable)
         self.rpcServer.register_function(self.setDisplayedSource)
         # Start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.Destroy)
@@ -1319,9 +1325,9 @@ class QuickGui(wx.Frame):
                 retDict[source] = self.dataStore.getKeys(source)
             return retDict
             
-    def setSysAlarmEnable(self, index, enable):
-        """Enable/disable one of the system alarms"""
-        self.sysAlarmInterface.setAlarm(index, enable)
+    #def setSysAlarmEnable(self, index, enable):
+    #    """Enable/disable one of the system alarms"""
+    #    self.sysAlarmInterface.setAlarm(index, enable)
         
     def setDisplayedSource(self, source):
         try:
@@ -1428,13 +1434,13 @@ class QuickGui(wx.Frame):
         height = self.config.getint("StatusBox","Height")
         if self.numGraphs > 2:
             height *= 0.8
-        self.eventViewControl = EventViewListCtrl(parent=self.mainPanel,id=-1,config=self.config,
-                                                  DataSource=self.eventStore,size=(-1,height))
-        setItemFont(self.eventViewControl,self.getFontFromIni('StatusBox'))
+        #self.eventViewControl = EventViewListCtrl(parent=self.mainPanel,id=-1,config=self.config,
+        #                                          DataSource=self.eventStore,size=(-1,height))
+        #setItemFont(self.eventViewControl,self.getFontFromIni('StatusBox'))
         setItemFont(statusBox,self.getFontFromIni('Panel'))
-        statusBoxSizer = wx.StaticBoxSizer(statusBox,wx.VERTICAL)
+        #statusBoxSizer = wx.StaticBoxSizer(statusBox,wx.VERTICAL)
         #statusBoxSizer.Add(self.statusLogTextCtrl,proportion=1,flag=wx.EXPAND)
-        statusBoxSizer.Add(self.eventViewControl,proportion=1,flag=wx.EXPAND)
+        #statusBoxSizer.Add(self.eventViewControl,proportion=1,flag=wx.EXPAND)
 
         # Define the data selection tools
         toolPanel = wx.Panel(parent=self.mainPanel,id=-1)
@@ -1531,34 +1537,32 @@ class QuickGui(wx.Frame):
         setItemFont(self.measPanel,self.getFontFromIni('MeasurementPanel'))
 
         # Alarm view
-        alarmBox = wx.StaticBox(parent=self.measPanel,id=-1,label="Alarms")
-        # Define the box height automatically instead of using INI file
-        #size = self.config.getint("AlarmBox","Width"),self.config.getint("AlarmBox","Height")
-        boxWidth = self.config.getint("AlarmBox","Width")
-        boxHeight = 10 + self.numAlarms * 15
-        size = boxWidth,boxHeight
-        font,fgColour,bgColour = self.getFontFromIni('AlarmBox','enabledFont')
-        enabled = wx.ListItemAttr(fgColour,bgColour,font)
-        font,fgColour,bgColour = self.getFontFromIni('AlarmBox','disabledFont')
-        disabled = wx.ListItemAttr(fgColour,bgColour,font)
-        self.alarmView = AlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
-                                           DataSource=self.alarmInterface,
-                                           size=size, numAlarms=self.numAlarms)
-        self.alarmView.SetMainForm(self)
-        setItemFont(alarmBox,self.getFontFromIni('AlarmBox'))
-        setItemFont(self.alarmView,self.getFontFromIni('AlarmBox'))
+        # alarmBox = wx.StaticBox(parent=self.measPanel,id=-1,label="Alarms")
+        # boxWidth = self.config.getint("AlarmBox","Width")
+        # boxHeight = 10 + self.numAlarms * 15
+        # size = boxWidth,boxHeight
+        # font,fgColour,bgColour = self.getFontFromIni('AlarmBox','enabledFont')
+        # enabled = wx.ListItemAttr(fgColour,bgColour,font)
+        # font,fgColour,bgColour = self.getFontFromIni('AlarmBox','disabledFont')
+        # disabled = wx.ListItemAttr(fgColour,bgColour,font)
+        # self.alarmView = AlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
+                                           # DataSource=self.alarmInterface,
+                                           # size=size, numAlarms=self.numAlarms)
+        # self.alarmView.SetMainForm(self)
+        # setItemFont(alarmBox,self.getFontFromIni('AlarmBox'))
+        # setItemFont(self.alarmView,self.getFontFromIni('AlarmBox'))
         
         # System Alarm view
-        size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",34)
-        self.sysAlarmView = SysAlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
-                                           DataSource=self.sysAlarmInterface,
-                                           size=size, numAlarms=2)
-        self.sysAlarmView.SetMainForm(self)
+        # size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",34)
+        # self.sysAlarmView = SysAlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
+                                           # DataSource=self.sysAlarmInterface,
+                                           # size=size, numAlarms=2)
+        # self.sysAlarmView.SetMainForm(self)
         
         # Combine system alarm with concentration alarms
-        alarmBoxSizer = wx.StaticBoxSizer(alarmBox,wx.VERTICAL)
-        alarmBoxSizer.Add(self.sysAlarmView,proportion=0,flag=wx.EXPAND)
-        alarmBoxSizer.Add(self.alarmView,proportion=0,flag=wx.EXPAND)
+        # alarmBoxSizer = wx.StaticBoxSizer(alarmBox,wx.VERTICAL)
+        # alarmBoxSizer.Add(self.sysAlarmView,proportion=0,flag=wx.EXPAND)
+        # alarmBoxSizer.Add(self.alarmView,proportion=0,flag=wx.EXPAND)
 
         # Instrument status panel
         self.instStatusBox = wx.StaticBox(parent=self.measPanel,id=-1,label="Instrument Status")
@@ -1676,7 +1680,7 @@ class QuickGui(wx.Frame):
         logoBmp = wx.Bitmap(os_dirname(AppPath)+'/logo.png',wx.BITMAP_TYPE_PNG)
         logoSizer.Add(wx.StaticBitmap(self.measPanel, -1, logoBmp),proportion=0, flag=wx.TOP,border = 15)
         self.measPanelSizer.Add(logoSizer,proportion=0,flag=wx.ALIGN_CENTER|wx.BOTTOM,border = 5)
-        self.measPanelSizer.Add(alarmBoxSizer,proportion=0,flag=wx.ALIGN_CENTER)
+        #self.measPanelSizer.Add(alarmBoxSizer,proportion=0,flag=wx.ALIGN_CENTER)
         self.measPanelSizer.Add((panelWidth,10),proportion=0)
         self.measPanelSizer.Add(measDisplaySizer,proportion=0,flag=wx.GROW | wx.LEFT | wx.RIGHT,border = 10)
         self.measPanelSizer.Add(instStatusBoxSizer,proportion=0,flag=wx.ALIGN_CENTER | wx.ALL,border = 5)
@@ -1702,7 +1706,7 @@ class QuickGui(wx.Frame):
         vsizer2.Add(titleSizer,proportion=0,flag= wx.GROW | wx.ALL,border=10)
         vsizer2.Add(sizer,proportion=1,flag=wx.GROW)
         vsizer2.Add(toolPanel,proportion=0,flag=wx.GROW)
-        vsizer2.Add(statusBoxSizer,proportion=0,flag=wx.GROW)
+        #vsizer2.Add(statusBoxSizer,proportion=0,flag=wx.GROW)
 
         hsizer1 = wx.BoxSizer(wx.HORIZONTAL)
         hsizer1.Add(self.measPanel,proportion = 0,flag=wx.GROW | wx.RIGHT,border=10)
@@ -1764,22 +1768,23 @@ class QuickGui(wx.Frame):
         return k
 
     def OnShutdownButton(self,evt):
-        dialog = ShutdownDialog(self,None,-1)
-        retCode = dialog.ShowModal()
-        if retCode == wx.ID_OK:
-            type = dialog.getShutdownType()
-            # Call appropriate shutdown RPC routine on the instrument manager
-            if type == 0:
-                try:
-                    self.setDisplayedSource(self.shutdownShippingSource)
-                except Exception, err:
-                    print "%r" % err
-                self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(0)
-            elif type == 1:
-                self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(2)
-            elif type == 2:
-                self.SupervisorRpc.TerminateApplications(powerDown=False,stopProtected=True)
-        dialog.Destroy()
+        return
+        # dialog = ShutdownDialog(self,None,-1)
+        # retCode = dialog.ShowModal()
+        # if retCode == wx.ID_OK:
+            # type = dialog.getShutdownType()
+            # # Call appropriate shutdown RPC routine on the instrument manager
+            # if type == 0:
+                # try:
+                    # self.setDisplayedSource(self.shutdownShippingSource)
+                # except Exception, err:
+                    # print "%r" % err
+                # self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(0)
+            # elif type == 1:
+                # self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(2)
+            # elif type == 2:
+                # self.SupervisorRpc.TerminateApplications(powerDown=False,stopProtected=True)
+        # dialog.Destroy()
     def OnResetBuffers(self,evt):
         for s in self.series:
             s.Clear()
@@ -1895,25 +1900,26 @@ class QuickGui(wx.Frame):
         self.mainPanel.SendSizeEvent()
         
     def OnUserLogButton(self,evt):
-        self.userLogButton.Disable()
-        userLogs = self.dataLoggerInterface.userLogDict.keys()
-        if self.userLogButton.State:
-            self.dataLoggerInterface.startUserLogs(userLogs, self.restartUserLog)
-        else:
-            self.dataLoggerInterface.stopUserLogs(userLogs)
-        wx.FutureCall(5000,self.userLogButton.Enable)
+        return
+        # self.userLogButton.Disable()
+        # userLogs = self.dataLoggerInterface.userLogDict.keys()
+        # if self.userLogButton.State:
+            # self.dataLoggerInterface.startUserLogs(userLogs, self.restartUserLog)
+        # else:
+            # self.dataLoggerInterface.stopUserLogs(userLogs)
+        # wx.FutureCall(5000,self.userLogButton.Enable)
         
     def OnTimer(self,evt):
         defaultSourceIndex = None
         currTimestamp = timestamp.getTimestamp()
         self.dataStore.getQueuedData(self.lastTimestamp, currTimestamp)
-        self.eventStore.getQueuedEvents()
-        self.alarmInterface.getQueuedEvents()
-        if not self.alarmInterface.alarmData:
-            self.alarmInterface.getAlarmData()
+        #self.eventStore.getQueuedEvents()
+        # self.alarmInterface.getQueuedEvents()
+        # if not self.alarmInterface.alarmData:
+        #   self.alarmInterface.getAlarmData()
         #self.sysAlarmInterface.getStatus(0)
         sources = self.getSourcesbyMode()
-        self.dataLoggerInterface.getDataLoggerInfo()
+        #self.dataLoggerInterface.getDataLoggerInfo()
         # Update the combo box of sources with source names translated via the sourceSubstDatabase
         #  The actual sources are stored in the ClientData area of the control
         if self.sourceChoices != sources:
@@ -1943,7 +1949,7 @@ class QuickGui(wx.Frame):
 
         # Used for JSON-RPC call
         measMode = self.dataStore.getMeasMode()
-        maxDuration = 3600*1000
+        maxDuration = 300*1000
         
         for idx in range(self.numGraphs):
             if self.source[idx] != None:
@@ -1975,7 +1981,7 @@ class QuickGui(wx.Frame):
                     self.dataKeyUpdateAction(idx)
                     
             # JSON-RPC
-            jsonRpcTools.plotData(wfm=self.series[idx],data=self.dataKey[idx],mode=measMode,source=self.source[idx],maxDuration=maxDuration)
+            self.jsonRpcService.plotData(wfm=self.series[idx],data=self.dataKey[idx],mode=measMode,source=self.source[idx],maxDuration=maxDuration)
             if self.lockTime:
                 self.graphPanel[idx].Update(forcedRedraw=True)
             else:
@@ -2031,52 +2037,53 @@ class QuickGui(wx.Frame):
         if len(gaugeValue) > 0:
             self.gauge.SetValue(max(gaugeValue))
 
-        userLogEnabled = False
-        if self.dataLoggerInterface.userLogDict:
-            logFiles = []
-            for i in self.dataLoggerInterface.userLogDict:
-                en,live,fname = self.dataLoggerInterface.userLogDict[i]
-                userLogEnabled = userLogEnabled or en
-                if en and len(fname) > 0:
-                    #logFiles.append("%s" % (os.path.split(fname)[-1],))
-                    logFiles.append("[%s]%s" % (i," - Live" if live else ""))
-                    logFiles.append("%s" % fname)
-            if len(logFiles) > 0 and userLogEnabled:        
-                logFiles = "\n".join(logFiles)
-            else:
-                logFiles = "No log file"
-            if logFiles != self.userLogTextCtrl.GetValue():
-                self.userLogTextCtrl.SetValue(logFiles)
-        if userLogEnabled:
-            self.userLogButton.SetLabel("Restart User Log(s)")
-            self.userLogButton.SetForegroundColour("black")
-            self.userLogButton.State = True
-            self.restartUserLog = True
-        else:
-            self.userLogButton.SetLabel("Start User Log(s)")
-            self.userLogButton.SetForegroundColour("red")
-            self.userLogButton.State = True
-            self.restartUserLog = False
+        # userLogEnabled = False
+        # if self.dataLoggerInterface.userLogDict:
+            # logFiles = []
+            # for i in self.dataLoggerInterface.userLogDict:
+                # en,live,fname = self.dataLoggerInterface.userLogDict[i]
+                # userLogEnabled = userLogEnabled or en
+                # if en and len(fname) > 0:
+                    # #logFiles.append("%s" % (os.path.split(fname)[-1],))
+                    # logFiles.append("[%s]%s" % (i," - Live" if live else ""))
+                    # logFiles.append("%s" % fname)
+            # if len(logFiles) > 0 and userLogEnabled:        
+                # logFiles = "\n".join(logFiles)
+            # else:
+                # logFiles = "No log file"
+            # if logFiles != self.userLogTextCtrl.GetValue():
+                # self.userLogTextCtrl.SetValue(logFiles)
+        # if userLogEnabled:
+            # self.userLogButton.SetLabel("Restart User Log(s)")
+            # self.userLogButton.SetForegroundColour("black")
+            # self.userLogButton.State = True
+            # self.restartUserLog = True
+        # else:
+            # self.userLogButton.SetLabel("Start User Log(s)")
+            # self.userLogButton.SetForegroundColour("red")
+            # self.userLogButton.State = True
+            # self.restartUserLog = False
 
-        self.eventViewControl.RefreshList()
-        self.alarmView.RefreshList()
-        self.sysAlarmView.RefreshList()
+        #self.eventViewControl.RefreshList()
+        #self.alarmView.RefreshList()
+        #self.sysAlarmView.RefreshList()
        
         # Update instrument status
         varList = [self.instStatCavityTempKey, self.instStatWarmBoxTempKey, self.instStatCavityPressureKey]
-        latestInstStatus = jsonRpcTools.getLatestDmData(measMode, self.instStatSource, varList)
+        latestInstStatus = self.jsonRpcService.getLatestDmData(measMode, self.instStatSource, varList)
         if self.showInstStat:
             try:
                 cavityTemp = latestInstStatus[self.instStatCavityTempKey]
                 if cavityTemp != 0.0:
                     self.instStatusPanel.cavityTemp.SetValue("%.3f" % cavityTemp)
+                    self.instStatusPanel.cavityTemp.SetBackgroundColour('#85B24A')
                     # Change display color (yellow or green)
-                    if self.cavityTempS != None and self.cavityTempT != None:
-                        cavityTempDev = cavityTemp-self.cavityTempS
-                        if abs(cavityTempDev) > self.cavityTempT:
-                            self.instStatusPanel.cavityTemp.SetBackgroundColour('yellow')
-                        else:
-                            self.instStatusPanel.cavityTemp.SetBackgroundColour('#85B24A')
+                    # if self.cavityTempS != None and self.cavityTempT != None:
+                        # cavityTempDev = cavityTemp-self.cavityTempS
+                        # if abs(cavityTempDev) > self.cavityTempT:
+                            # self.instStatusPanel.cavityTemp.SetBackgroundColour('yellow')
+                        # else:
+                            # self.instStatusPanel.cavityTemp.SetBackgroundColour('#85B24A')
             except Exception, err:
                 print "%r" % err
                 
@@ -2084,13 +2091,14 @@ class QuickGui(wx.Frame):
                 warmBoxTemp = latestInstStatus[self.instStatWarmBoxTempKey]
                 if warmBoxTemp != 0.0:
                     self.instStatusPanel.warmBoxTemp.SetValue("%.3f" % warmBoxTemp)
+                    self.instStatusPanel.warmBoxTemp.SetBackgroundColour('#85B24A')
                     # Change display color (yellow or green)
-                    if self.warmBoxTempS != None and self.warmBoxTempT != None:
-                        warmBoxTempDev = warmBoxTemp-self.warmBoxTempS
-                        if abs(warmBoxTempDev) > self.warmBoxTempT:
-                            self.instStatusPanel.warmBoxTemp.SetBackgroundColour('yellow')
-                        else:
-                            self.instStatusPanel.warmBoxTemp.SetBackgroundColour('#85B24A')
+                    # if self.warmBoxTempS != None and self.warmBoxTempT != None:
+                        # warmBoxTempDev = warmBoxTemp-self.warmBoxTempS
+                        # if abs(warmBoxTempDev) > self.warmBoxTempT:
+                            # self.instStatusPanel.warmBoxTemp.SetBackgroundColour('yellow')
+                        # else:
+                            # self.instStatusPanel.warmBoxTemp.SetBackgroundColour('#85B24A')
             except Exception, err:
                 print "%r" % err
                 
@@ -2098,13 +2106,14 @@ class QuickGui(wx.Frame):
                 cavityPressure = latestInstStatus[self.instStatCavityPressureKey]
                 if cavityPressure != 0.0:
                     self.instStatusPanel.cavityPressure.SetValue("%.3f" % cavityPressure)
+                    self.instStatusPanel.cavityPressure.SetBackgroundColour('#85B24A')
                     # Change display color (yellow or green)
-                    if self.cavityPressureS != None and self.cavityPressureT != None:
-                        cavityPressureDev = cavityPressure-self.cavityPressureS
-                        if abs(cavityPressureDev) > self.cavityPressureT:
-                            self.instStatusPanel.cavityPressure.SetBackgroundColour('yellow')
-                        else:
-                            self.instStatusPanel.cavityPressure.SetBackgroundColour('#85B24A')
+                    # if self.cavityPressureS != None and self.cavityPressureT != None:
+                        # cavityPressureDev = cavityPressure-self.cavityPressureS
+                        # if abs(cavityPressureDev) > self.cavityPressureT:
+                            # self.instStatusPanel.cavityPressure.SetBackgroundColour('yellow')
+                        # else:
+                            # self.instStatusPanel.cavityPressure.SetBackgroundColour('#85B24A')
             except Exception, err:
                 print "%r" % err
         self.lastTimestamp = currTimestamp
@@ -2135,26 +2144,27 @@ class QuickGui(wx.Frame):
         else:
             self.showInstStat = True
             self.iView.SetLabel(self.idInstStatDisplay,"Hide Instrument Status")
-            try:
-                self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
-                self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
-                self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
-                self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")            
-            except:
-                pass
-            try:
-                self.cavityPressureS = self.sampleMgrRpc.ReadOperatePressureSetpoint()
-                cavityPressureTPer = self.sampleMgrRpc.ReadPressureTolerancePer()
-                self.cavityPressureT = cavityPressureTPer*self.cavityPressureS
-            except:
-                self.cavityPressureS = 140.0
-                self.cavityPressureT = 5.0
+            # try:
+                # self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
+                # self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
+                # self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
+                # self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")            
+            # except:
+                # pass
+            # try:
+                # self.cavityPressureS = self.sampleMgrRpc.ReadOperatePressureSetpoint()
+                # cavityPressureTPer = self.sampleMgrRpc.ReadPressureTolerancePer()
+                # self.cavityPressureT = cavityPressureTPer*self.cavityPressureS
+            # except:
+                # self.cavityPressureS = 140.0
+                # self.cavityPressureT = 5.0
 
         self.modifyInterface()
         self.measPanelSizer.Layout()
         self.Refresh()
         
     def OnUserCal(self, evt):
+        return
         concList = self.dataManagerRpc.Cal_GetMeasNames()
         if len(concList) == 0:
             d = OKDialog(self,"User calibration not allowed, action cancelled.",None,-1,"User Calibration Disabled")
@@ -2196,6 +2206,7 @@ class QuickGui(wx.Frame):
         dlg.Destroy()
 
     def OnValveSeq(self, evt):
+        return
         try:
             if not self.valveSeqRpc.isGuiOn():
                 self.valveSeqRpc.showGui()
@@ -2210,6 +2221,7 @@ class QuickGui(wx.Frame):
             d.Destroy()
 
     def OnPulseAnalyzerParam(self, evt):
+        return
         errorMsg = ""
         if not self.pulseSource:
             errorMsg = "Pulse Analyzer source not specified"
@@ -2277,6 +2289,7 @@ class QuickGui(wx.Frame):
                 if k != "host release":
                     v += "%s : %s\n" % (k,dV[k])
         except:
+            boldText = "SOFTWARE RELEASE VERSION : WEB GUI"
             v += "Software version information unavailable"
           
         biggerSize = False

@@ -40,7 +40,9 @@ from Host.Common.Allan import AllanVar
 from Host.Common.RdStats import RdStats
 from Host.Common.GraphPanel import Series, ColorSeries
 from Host.Common import CmdFIFO, SharedTypes, timestamp
-from Host.Common import jsonRpcTools
+from Host.Common.jsonRpcTools import JsonRpcTools
+jsonRpcIp = "10.100.2.39"
+JsonRpcService = JsonRpcTools('http://%s:5000/jsonrpc' % jsonRpcIp)
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 
 statsPoints = interface.CONTROLLER_STATS_POINTS
@@ -349,7 +351,7 @@ class WlmPanel(WlmPanelGui):
         wfmList = [self.etalon1Wfm,self.reference1Wfm,self.etalon2Wfm,self.reference2Wfm,self.ratio1Wfm,self.ratio2Wfm]
         sensorList = ["Etalon1","Reference1","Etalon2","Reference2","Ratio1","Ratio2"] 
         maxDuration = 180000
-        jsonRpcTools.plotSensors(wfmList,sensorList,maxDuration)
+        JsonRpcService.plotSensors(wfmList,sensorList,maxDuration)
         self.photocurrentGraph.Update(delay=0)
         self.ratioGraph.Update(delay=0)
 
@@ -396,7 +398,7 @@ class LaserPanel(LaserPanelGui):
         wfmList = [self.temperatureWfm,self.tecWfm,self.currentWfm]
         sensorList = ["Laser%dTemp"%self.laserNum,"Laser%dTec"%self.laserNum,"Laser%dCurrent"%self.laserNum]
         maxDuration = 180000
-        jsonRpcTools.plotSensors(wfmList,sensorList,maxDuration)
+        JsonRpcService.plotSensors(wfmList,sensorList,maxDuration)
         self.temperatureGraph.Update(delay=0)
         self.tecGraph.Update(delay=0)
         self.currentGraph.Update(delay=0)
@@ -441,7 +443,7 @@ class PressurePanel(PressurePanelGui):
         wfmList = [self.cavityPressureWfm,self.ambientPressureWfm,self.inletValveWfm,self.outletValveWfm,None]
         sensorList = ["CavityPressure","AmbientPressure","InletValve","OutletValve","ValveMask"]
         maxDuration = 180000
-        result = jsonRpcTools.plotSensors(wfmList,sensorList,maxDuration)
+        result = JsonRpcService.plotSensors(wfmList,sensorList,maxDuration)
         self.pressureGraph.Update(delay=0)
         self.propValveGraph.Update(delay=0)
         valveMask = result["ValveMask"]["ValveMask"]
@@ -508,7 +510,7 @@ class WarmBoxPanel(WarmBoxPanelGui):
         wfmList = [self.etalonTemperatureWfm,self.warmBoxTemperatureWfm,self.heatsinkTemperatureWfm,self.tecWfm]
         sensorList = ["EtalonTemp","WarmBoxTemp","WarmBoxHeatsinkTemp","WarmBoxTec"] 
         maxDuration = 3600000
-        jsonRpcTools.plotSensors(wfmList,sensorList,maxDuration)
+        JsonRpcService.plotSensors(wfmList,sensorList,maxDuration)
         self.temperatureGraph.Update(delay=0)
         self.tecGraph.Update(delay=0)
 
@@ -567,7 +569,7 @@ class HotBoxPanel(HotBoxPanelGui):
         wfmList = [self.cavityTemperatureWfm,self.heatsinkTemperatureWfm,self.dasTemperatureWfm,self.tecWfm,self.heaterWfm]
         sensorList = ["CavityTemp","HotBoxHeatsinkTemp","DasTemp","HotBoxTec","HotBoxHeater"] 
         maxDuration = 3600000
-        jsonRpcTools.plotSensors(wfmList,sensorList,maxDuration)
+        JsonRpcService.plotSensors(wfmList,sensorList,maxDuration)
         self.temperatureGraph.Update(delay=0)
         self.tecGraph.Update(delay=0)
         self.heaterGraph.Update(delay=0)
