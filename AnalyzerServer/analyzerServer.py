@@ -12,9 +12,8 @@ import sys
 from threading import Thread
 import time
 import traceback
-from Host.Common import CmdFIFO
-from Host.Common import SharedTypes
-from Host.Common.SharedTypes import RPC_PORT_DATALOGGER
+import CmdFIFO
+from SharedTypes import RPC_PORT_DATALOGGER
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
