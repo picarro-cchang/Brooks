@@ -30,6 +30,16 @@
                       success: success_callback,
                       error: error_callback} );
     }
+    
+    function call_rest(method,params,success_callback,error_callback) {
+        jQuery.ajax( {contentType:"application/json",
+                      data:$.param(params),
+                      dataType:"jsonp",
+                      url:"/rest/" + method,
+                      type:"get",
+                      success: success_callback,
+                      error: error_callback} );
+    }
        
     function onTimer() {
         if (ignoreTimer) return;
@@ -37,7 +47,7 @@
     };
     
     function getData() {
-        callJSONRPC("getData",[{"startPos":startPos}],
+        call_rest("getData",{"startPos":startPos},
                     function(data,ts,jqXHR) {
                         counter += 1;
                         $("#counter").html("Counter: " + counter);
@@ -71,7 +81,7 @@
     }                
     
     function showLeaks() {
-        callJSONRPC("getPeaks",[{"startRow":leakLine,"minAmp":minAmp}],
+        call_rest("getPeaks",{"startRow":leakLine,"minAmp":minAmp},
                     function(data,ts,jqXHR) {
                         var i;
                         if ("ch4" in data.result) {
@@ -125,9 +135,12 @@
             {   path:new google.maps.MVCArray(),
                 strokeColor:"#0000FF",
                 strokeOpactity:1.0,
-                strokeWeight:2  })
-        path.setMap(map)
-        timer1 = setTimeout(onTimer,1000)
+                strokeWeight:2  });
+        path.setMap(map);
+        $("#restart_log").click(function() {         
+            call_rest("restartDatalog",{});
+        });
+        timer1 = setTimeout(onTimer,1000);
     };
     $(initialize)
     </script>
@@ -168,6 +181,7 @@ Here are some instructions as to what the driver should do in order to best trav
 {% else %}
 <input type="hidden" id="do_not_follow" name="do_not_follow"/>
 {% endif %}
+<button type="button" id="restart_log" name="Restart Log">Restart Log</button>
 </form>
 </div>
 <div id="map_canvas" class="map" style="width:70%; height:90%; float:right;"></div>
