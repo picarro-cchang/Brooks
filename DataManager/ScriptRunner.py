@@ -34,6 +34,7 @@ DRIVER_RPC_SERVER_ID = "_DRIVER_"
 MEAS_SYS_RPC_SERVER_ID = "_MEAS_SYS_" # provides tagalong data calls
 FREQ_CONV_RPC_SERVER_ID = "_FREQ_CONV_" # provides getWlmOffset and setWlmOffset calls
 SPEC_COLL_RPC_SERVER_ID = "_SPEC_COLL_" # provides getSequenceNames and setSequence calls
+DATA_LOGGER_RPC_SERVER_ID = "_DATA_LOGGER_" # provides DATALOGGER_stopLogRpc and DATALOGGER_startLogRpc calls
 PERIPH_INTRF_ID = "_PERIPH_INTRF_"
 PERIPH_INTRF_COLS_ID = "_PERIPH_INTRF_COLS_"
 NEW_DATA_ID = "_NEW_DATA_"
@@ -99,6 +100,7 @@ def RunAnalysisScript(ScriptCodeObj,
                       MeasSysRpcServer,
                       FreqConvRpcServer,
                       SpecCollRpcServer,
+                      DataLoggerRpcServer,
                       PeriphIntrfFunc,
                       PeriphIntrfCols,
                       SerialInterface,
@@ -173,6 +175,7 @@ def RunAnalysisScript(ScriptCodeObj,
     dataEnviron[MEAS_SYS_RPC_SERVER_ID] = MeasSysRpcServer
     dataEnviron[FREQ_CONV_RPC_SERVER_ID] = FreqConvRpcServer
     dataEnviron[SPEC_COLL_RPC_SERVER_ID] = SpecCollRpcServer
+    dataEnviron[DATA_LOGGER_RPC_SERVER_ID] = DataLoggerRpcServer
     dataEnviron[PERIPH_INTRF_ID] = PeriphIntrfFunc
     dataEnviron[PERIPH_INTRF_COLS_ID] = PeriphIntrfCols
     dataEnviron[NEW_DATA_ID] = NewDataDict(dataEnviron[DATA_ID])
