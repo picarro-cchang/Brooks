@@ -76,3 +76,9 @@ class JsonRpcTools(object):
         range = dict(start=tstart,stop=tstop)
         params = dict(range=range,pickle=1)
         return loads(b64decode(self.jsonRpcService.getDmDataStruct(params)))
+        
+    def invokeRPC(self, rpcProxyName, funcName, argTuple):
+        """Invoke RPC function calls to communicate with Host software
+        """
+        params = dict(rpcProxyName=rpcProxyName,funcName=funcName,argTuple=argTuple)
+        return self.jsonRpcService.invokeRPC(params)

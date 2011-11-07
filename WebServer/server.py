@@ -2,7 +2,8 @@ from flask import redirect, url_for, abort, render_template, flash, make_respons
 from flask import Flask, Response, request
 from jsonrpc import JSONRPCHandler, Fault
 
-from Host.Common import timestamp
+from Host.Common import timestamp, CmdFIFO
+from Host.Common.SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_ARCHIVER
 from Host.ActiveFileManager.ActiveFileManager import ActiveFile
 import Host.ActiveFileManager.ActiveUtils as ActiveUtils
 from numpy import *
@@ -12,6 +13,10 @@ from cPickle import loads, dumps, HIGHEST_PROTOCOL
 import sys
 import traceback
 from functools import wraps
+
+dataLoggerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "UUI Server")
+archiverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER, ClientName = "UUI Server")
+RPC_PROXY_DICT = {"dataLogger": dataLoggerRpc, "archiver": archiverRpc}
 
 # configuration
 DEBUG = True
@@ -46,6 +51,7 @@ def recArrayToDict(recArray):
         #  serialize
         obj[n] = [float(v) for v in recArray[n]]
     return obj
+
 
 @handler.register
 @rpcWrapper
@@ -149,6 +155,17 @@ def getDmDataStruct(params):
     tstart, tstop = range['start'], range['stop']
     data = ActiveUtils.getDmDataStruct(tstart,tstop)
     return b64encode(dumps(data,HIGHEST_PROTOCOL)) if pickle else data
+    
+@handler.register
+@rpcWrapper
+def invokeRPC(params):
+    # Invoke RPC function calls to communicate with Host software
+    print params
+    server = RPC_PROXY_DICT[params['rpcProxyName']]
+    funcName = params['funcName']
+    argTuple = tuple(params['argTuple'])
+    assert isinstance(server, CmdFIFO.CmdFIFOServerProxy)
+    return server.__getattr__(funcName)(*argTuple)
     
 @app.route("/")
 def index():

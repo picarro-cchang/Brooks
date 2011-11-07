@@ -618,11 +618,8 @@ class AlarmInterface(object):
     
 class DataLoggerInterface(object):
     """Interface to the data logger and archiver RPC"""
-    def __init__(self,config):
-        self.config = config
-        self.loadConfig()
-        self.archiverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER, ClientName = "QuickGui")
-        self.dataLoggerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "QuickGui")
+    def __init__(self,jsonRpcService):
+        self.jsonRpcService = jsonRpcService
         self.exception = None
         self.rpcInProgress = False
         self.userLogDict = {}
@@ -642,21 +639,21 @@ class DataLoggerInterface(object):
         userLogDict = {}
         privateLogDict = {}
         try:
-            stat,userLogs = self.dataLoggerRpc.DATALOGGER_getUserLogsRpc()
-            stat,privateLogs = self.dataLoggerRpc.DATALOGGER_getPrivateLogsRpc()
+            stat,userLogs = self.jsonRpcService.invokeRPC("dataLogger", "DATALOGGER_getUserLogsRpc", ())
+            stat,privateLogs = self.jsonRpcService.invokeRPC("dataLogger", "DATALOGGER_getPrivateLogsRpc", ())
             for i in userLogs:
-                en = self.dataLoggerRpc.DATALOGGER_logEnabledRpc(i)
+                en = self.jsonRpcService.invokeRPC("dataLogger", "DATALOGGER_logEnabledRpc", (i,))
                 if en:
-                    fname = self.dataLoggerRpc.DATALOGGER_getFilenameRpc(i)
-                    live, fname = self.archiverRpc.GetLiveArchiveFileName(i,fname)
+                    fname = self.jsonRpcService.invokeRPC("dataLogger", "DATALOGGER_getFilenameRpc", (i,)) 
+                    live, fname = self.jsonRpcService.invokeRPC("archiver", "GetLiveArchiveFileName", (i,fname))
                     userLogDict[i] = (True,live,fname)                    
                 else:
                     userLogDict[i] = (False,False,'')
             for i in privateLogs:
-                en = self.dataLoggerRpc.DATALOGGER_logEnabledRpc(i)
+                en = self.jsonRpcService.invokeRPC("dataLogger", "DATALOGGER_logEnabledRpc", (i,))
                 if en:
-                    fname = self.dataLoggerRpc.DATALOGGER_getFilenameRpc(i)
-                    live, fname = self.archiverRpc.GetLiveArchiveFileName(i,fname)
+                    fname = self.jsonRpcService.invokeRPC("dataLogger", "DATALOGGER_getFilenameRpc", (i,)) 
+                    live, fname = self.jsonRpcService.invokeRPC("archiver", "GetLiveArchiveFileName", (i,fname))
                     privateLogDict[i] = (True,live,fname)                    
                 else:
                     privateLogDict[i] = (False,False,'')
@@ -680,7 +677,7 @@ class DataLoggerInterface(object):
     def _startUserLogs(self,userLogList,restart):
         try:
             for i in userLogList:
-                self.dataLoggerRpc.DATALOGGER_startLogRpc(i,restart)
+                self.jsonRpcService.invokeRPC("dataLogger", "DATALOGGER_startLogRpc", (i,restart))
         except Exception,e:
             self.exception = e
         # Refresh info with changes made
@@ -701,15 +698,13 @@ class DataLoggerInterface(object):
     def _stopUserLogs(self,userLogList):
         try:
             for i in userLogList:
-                self.dataLoggerRpc.DATALOGGER_stopLogRpc(i)
+                self.jsonRpcService.invokeRPC("dataLogger", "DATALOGGER_stopLogRpc", (i,))
         except Exception,e:
             self.exception = e
         # Refresh info with changes made
         self._getDataLoggerInfo()
         self.rpcInProgress = False
 
-    def loadConfig(self):
-        pass
 class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     """ListCtrl that auto-sizes the right-most column to fit the width.
 
@@ -1134,8 +1129,8 @@ class QuickGui(wx.Frame):
         #self.alarmInterface = AlarmInterface(self.config)
         #self.alarmInterface.getAlarmData()
         #self.sysAlarmInterface = SysAlarmInterface()
-        #self.dataLoggerInterface = DataLoggerInterface(self.config)
-        #self.dataLoggerInterface.getDataLoggerInfo()
+        self.dataLoggerInterface = DataLoggerInterface(self.jsonRpcService)
+        self.dataLoggerInterface.getDataLoggerInfo()
         #self.instMgrInterface = InstMgrInterface(self.config)
         #self.numAlarms = min(4, self.config.getint("AlarmBox","NumAlarms",4))
         self.showGraphZoomed = self.config.getboolean("Graph","ShowGraphZoomed",False)
@@ -1900,14 +1895,13 @@ class QuickGui(wx.Frame):
         self.mainPanel.SendSizeEvent()
         
     def OnUserLogButton(self,evt):
-        return
-        # self.userLogButton.Disable()
-        # userLogs = self.dataLoggerInterface.userLogDict.keys()
-        # if self.userLogButton.State:
-            # self.dataLoggerInterface.startUserLogs(userLogs, self.restartUserLog)
-        # else:
-            # self.dataLoggerInterface.stopUserLogs(userLogs)
-        # wx.FutureCall(5000,self.userLogButton.Enable)
+        self.userLogButton.Disable()
+        userLogs = self.dataLoggerInterface.userLogDict.keys()
+        if self.userLogButton.State:
+            self.dataLoggerInterface.startUserLogs(userLogs, self.restartUserLog)
+        else:
+            self.dataLoggerInterface.stopUserLogs(userLogs)
+        wx.FutureCall(5000,self.userLogButton.Enable)
         
     def OnTimer(self,evt):
         defaultSourceIndex = None
@@ -1919,7 +1913,7 @@ class QuickGui(wx.Frame):
         #   self.alarmInterface.getAlarmData()
         #self.sysAlarmInterface.getStatus(0)
         sources = self.getSourcesbyMode()
-        #self.dataLoggerInterface.getDataLoggerInfo()
+        self.dataLoggerInterface.getDataLoggerInfo()
         # Update the combo box of sources with source names translated via the sourceSubstDatabase
         #  The actual sources are stored in the ClientData area of the control
         if self.sourceChoices != sources:
@@ -2037,32 +2031,31 @@ class QuickGui(wx.Frame):
         #if len(gaugeValue) > 0:
         #    self.gauge.SetValue(max(gaugeValue))
 
-        # userLogEnabled = False
-        # if self.dataLoggerInterface.userLogDict:
-            # logFiles = []
-            # for i in self.dataLoggerInterface.userLogDict:
-                # en,live,fname = self.dataLoggerInterface.userLogDict[i]
-                # userLogEnabled = userLogEnabled or en
-                # if en and len(fname) > 0:
-                    # #logFiles.append("%s" % (os.path.split(fname)[-1],))
-                    # logFiles.append("[%s]%s" % (i," - Live" if live else ""))
-                    # logFiles.append("%s" % fname)
-            # if len(logFiles) > 0 and userLogEnabled:        
-                # logFiles = "\n".join(logFiles)
-            # else:
-                # logFiles = "No log file"
-            # if logFiles != self.userLogTextCtrl.GetValue():
-                # self.userLogTextCtrl.SetValue(logFiles)
-        # if userLogEnabled:
-            # self.userLogButton.SetLabel("Restart User Log(s)")
-            # self.userLogButton.SetForegroundColour("black")
-            # self.userLogButton.State = True
-            # self.restartUserLog = True
-        # else:
-            # self.userLogButton.SetLabel("Start User Log(s)")
-            # self.userLogButton.SetForegroundColour("red")
-            # self.userLogButton.State = True
-            # self.restartUserLog = False
+        userLogEnabled = False
+        if self.dataLoggerInterface.userLogDict:
+            logFiles = []
+            for i in self.dataLoggerInterface.userLogDict:
+                en,live,fname = self.dataLoggerInterface.userLogDict[i]
+                userLogEnabled = userLogEnabled or en
+                if en and len(fname) > 0:
+                    logFiles.append("[%s]%s" % (i," - Live" if live else ""))
+                    logFiles.append("%s" % fname)
+            if len(logFiles) > 0 and userLogEnabled:        
+                logFiles = "\n".join(logFiles)
+            else:
+                logFiles = "No log file"
+            if logFiles != self.userLogTextCtrl.GetValue():
+                self.userLogTextCtrl.SetValue(logFiles)
+        if userLogEnabled:
+            self.userLogButton.SetLabel("Restart User Log(s)")
+            self.userLogButton.SetForegroundColour("black")
+            self.userLogButton.State = True
+            self.restartUserLog = True
+        else:
+            self.userLogButton.SetLabel("Start User Log(s)")
+            self.userLogButton.SetForegroundColour("red")
+            self.userLogButton.State = True
+            self.restartUserLog = False
 
         #self.eventViewControl.RefreshList()
         #self.alarmView.RefreshList()
