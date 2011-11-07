@@ -194,7 +194,7 @@ class DataEchoP3(object):
                 socket.setdefaulttimeout(self.timeout)
                 resp = urllib2.urlopen(self.url, data=urllib.urlencode(postparms))
                 break
-            except e:
+            except Exception, e:
                 print '\n%s\n' % e
                 pass
             
@@ -219,7 +219,7 @@ if __name__ == "__main__":
         else:
             AppPath = sys.argv[0]
         AppDir = os.path.split(AppPath)[0]
-        listen_path = os.path.join(AppDir,'static/datalog/*DataLog_User_Minimal.dat')
+        listen_path = os.path.join(AppDir,'static/datalog/*_Minimal.dat')
         
     if 2 < len(sys.argv):
         url=sys.argv[2]
