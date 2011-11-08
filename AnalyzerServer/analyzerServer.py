@@ -220,7 +220,10 @@ def getDataEx(params):
         return {'lastPos':0, 'filename':''}
         
     if 'startPos' in params and (params['startPos'] is not None) and (params['startPos'] != "null"):
-        startPos = int(params['startPos'])
+        try:
+            startPos = int(params['startPos'])
+        except:
+            startPos = None
     else:
         startPos = None
     shift = int(params.get('shift',SHIFT))
@@ -307,7 +310,10 @@ def rest_getPeaks():
         return make_response(json.dumps({"result":result}))
         
 def getPeaksEx(params):
-    startRow = int(params.get('startRow',1))
+    try:
+        startRow = int(params.get('startRow',1))
+    except:
+        startRow = 1
     minAmp = float(params.get('minAmp',0))
     names = sorted(glob.glob(PEAKFILES))
     try:

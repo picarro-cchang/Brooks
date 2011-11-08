@@ -17,6 +17,10 @@ try:
 except:
     import json
 
+from ctypes import Structure, windll, sizeof
+from ctypes import POINTER, byref
+from ctypes import c_ulong, c_uint, c_ubyte, c_char
+
 
 class DataEchoP3(object):
     def __init__(self, *args, **kwargs):
@@ -54,6 +58,24 @@ class DataEchoP3(object):
     def run(self):
         '''
         '''
+        aname = self.getLocalAnalyzerId()
+        for addr in decho.getIPAddresses():
+            params = {aname: {"ip_addr": "%s:5000" % addr}}
+            postparms = {'data': json.dumps(params)}
+            try:    
+                # NOTE: socket only required to set timeout parameter for the urlopen()
+                # In Python26 and beyond we can use the timeout parameter in the urlopen()
+                analyzerIpRegister = self.url.replace("datalogAdd", "analyzerIpRegister")
+                socket.setdefaulttimeout(self.timeout)
+                resp = urllib2.urlopen(analyzerIpRegister, data=urllib.urlencode(postparms))
+                print "postparms: ", postparms
+                print "analyzerIpRegister: ", analyzerIpRegister
+                print "resp: ", resp
+                break
+            except Exception, e:
+                print '\n%s\n' % e
+                pass
+        
         ecounter = 0
         fcounter = 0
         wcounter = 0
@@ -207,6 +229,76 @@ class DataEchoP3(object):
                 break
         
         
+    def getIPAddresses(self):
+        MAX_ADAPTER_DESCRIPTION_LENGTH = 128
+        MAX_ADAPTER_NAME_LENGTH = 256
+        MAX_ADAPTER_ADDRESS_LENGTH = 8
+        class IP_ADDR_STRING(Structure):
+            pass
+        LP_IP_ADDR_STRING = POINTER(IP_ADDR_STRING)
+        IP_ADDR_STRING._fields_ = [
+            ("next", LP_IP_ADDR_STRING),
+            ("ipAddress", c_char * 16),
+            ("ipMask", c_char * 16),
+            ("context", c_ulong)]
+        class IP_ADAPTER_INFO (Structure):
+            pass
+        LP_IP_ADAPTER_INFO = POINTER(IP_ADAPTER_INFO)
+        IP_ADAPTER_INFO._fields_ = [
+            ("next", LP_IP_ADAPTER_INFO),
+            ("comboIndex", c_ulong),
+            ("adapterName", c_char * (MAX_ADAPTER_NAME_LENGTH + 4)),
+            ("description", c_char * (MAX_ADAPTER_DESCRIPTION_LENGTH + 4)),
+            ("addressLength", c_uint),
+            ("address", c_ubyte * MAX_ADAPTER_ADDRESS_LENGTH),
+            ("index", c_ulong),
+            ("type", c_uint),
+            ("dhcpEnabled", c_uint),
+            ("currentIpAddress", LP_IP_ADDR_STRING),
+            ("ipAddressList", IP_ADDR_STRING),
+            ("gatewayList", IP_ADDR_STRING),
+            ("dhcpServer", IP_ADDR_STRING),
+            ("haveWins", c_uint),
+            ("primaryWinsServer", IP_ADDR_STRING),
+            ("secondaryWinsServer", IP_ADDR_STRING),
+            ("leaseObtained", c_ulong),
+            ("leaseExpires", c_ulong)]
+        GetAdaptersInfo = windll.iphlpapi.GetAdaptersInfo
+        GetAdaptersInfo.restype = c_ulong
+        GetAdaptersInfo.argtypes = [LP_IP_ADAPTER_INFO, POINTER(c_ulong)]
+        adapterList = (IP_ADAPTER_INFO * 10)()
+        buflen = c_ulong(sizeof(adapterList))
+        rc = GetAdaptersInfo(byref(adapterList[0]), byref(buflen))
+        if rc == 0:
+            for a in adapterList:
+                adNode = a.ipAddressList
+                while True:
+                    ipAddr = adNode.ipAddress
+                    if ipAddr:
+                        yield ipAddr
+                    adNode = adNode.next
+                    if not adNode:
+                        break
+        
+    def getLocalAnalyzerId(self):
+        def analyzerNameFromFname(fname):
+            '''
+            analyzer path from the analyzer file name
+            name is in form of XXXXXXXX-YYYYMMDD-HHMMSSZ-blah-blah-blah
+            '''
+            fbase = os.path.basename(fname)
+            aname, sep, part = fbase.partition('-')
+            adate, sep, part = part.partition('-')
+            atime, sep, part = part.partition('-')
+            return aname, adate, atime
+
+        names = sorted(glob.glob(self.listen_path))
+        try:    # Stop iteration if we are not the last file
+            fname = names[-1]
+            aname, adate, atime = analyzerNameFromFname(fname)
+            return aname
+        except:
+            return none
 
 if __name__ == "__main__":
 
@@ -224,7 +316,7 @@ if __name__ == "__main__":
     if 2 < len(sys.argv):
         url=sys.argv[2]
     else:
-        url='http://p3.picarro.com/datalogAdd/'
+        url='http://p3.picarro.com/rest/datalogAdd/'
         #url = 'http://ubuntuhost64:5100/datalogAdd/'
         
     if 3 < len(sys.argv):
