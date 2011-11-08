@@ -3,20 +3,23 @@ from flask import Flask, Response, request
 from jsonrpc import JSONRPCHandler, Fault
 
 from Host.Common import timestamp, CmdFIFO
-from Host.Common.SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_ARCHIVER
+from Host.Common.SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_ARCHIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_SUPERVISOR
 from Host.ActiveFileManager.ActiveFileManager import ActiveFile
 import Host.ActiveFileManager.ActiveUtils as ActiveUtils
 from numpy import *
 from base64 import b64encode
 from cPickle import loads, dumps, HIGHEST_PROTOCOL
 
+import os
 import sys
 import traceback
 from functools import wraps
 
 dataLoggerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "UUI Server")
 archiverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER, ClientName = "UUI Server")
-RPC_PROXY_DICT = {"dataLogger": dataLoggerRpc, "archiver": archiverRpc}
+instMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "UUI Server")
+supervisorRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, ClientName = "UUI Server")
+RPC_PROXY_DICT = {"dataLogger": dataLoggerRpc, "archiver": archiverRpc, "instMgr": instMgrRpc, "supervisor": supervisorRpc}
 
 # configuration
 DEBUG = True
@@ -160,12 +163,19 @@ def getDmDataStruct(params):
 @rpcWrapper
 def invokeRPC(params):
     # Invoke RPC function calls to communicate with Host software
-    print params
     server = RPC_PROXY_DICT[params['rpcProxyName']]
     funcName = params['funcName']
     argTuple = tuple(params['argTuple'])
     assert isinstance(server, CmdFIFO.CmdFIFOServerProxy)
     return server.__getattr__(funcName)(*argTuple)
+    
+@handler.register
+@rpcWrapper
+def restartHost(params):
+    # Restart Host software
+    restartCmd = params['restartCmd']
+    print restartCmd
+    return os.system(restartCmd)
     
 @app.route("/")
 def index():

@@ -82,3 +82,9 @@ class JsonRpcTools(object):
         """
         params = dict(rpcProxyName=rpcProxyName,funcName=funcName,argTuple=argTuple)
         return self.jsonRpcService.invokeRPC(params)
+        
+    def restartHost(self, restartCmd):
+        """Restart host software
+        """
+        params = dict(restartCmd=restartCmd)
+        return self.jsonRpcService.restartHost(params)

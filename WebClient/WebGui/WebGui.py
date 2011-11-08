@@ -150,20 +150,7 @@ class ImagePanel(wx.Panel):
     def OnPaint(self,evt):
         dc = wx.PaintDC(self)
         dc.DrawBitmap(self.bmp,0,0,True)
-        
-class InstMgrInterface(object):
-    """Interface to the instrument manager RPC"""
-    def __init__(self,config):
-        self.config = config
-        self.loadConfig()
-        self.instMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "QuickGui")
-        self.result = None
-        self.exception = None
-        self.rpcInProgress = False
 
-    def loadConfig(self):
-        pass
-        
 class OKDialog(wx.Dialog):
     def __init__(self,mainForm,aboutText,parent,id,title,pos=wx.DefaultPosition,size=wx.DefaultSize,
                  style=wx.DEFAULT_DIALOG_STYLE, boldText = None):
@@ -213,7 +200,7 @@ class ShutdownDialog(wx.Dialog):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
         self.selectShutdownType = wx.RadioBox(self, -1, "Select shutdown method",
-            choices=["Turn Off Analyzer and Prepare For Shipping", "Turn Off Analyzer in Current State", "Stop Analyzer Software Only"], majorDimension=3,
+            choices=["Turn Off Analyzer in Current State", "Stop Analyzer Software Only", "Restart Analyzer Software"], majorDimension=3,
             style=wx.RA_SPECIFY_ROWS)
         self.okButton = wx.Button(self, wx.ID_OK)
         self.cancelButton = wx.Button(self, wx.ID_CANCEL)
@@ -1083,7 +1070,7 @@ class RpcServerThread(threading.Thread):
 class QuickGui(wx.Frame):
     def __init__(self, configFile):
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700), 
-                          style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
+                          style=wx.CLOSE_BOX|wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
         self.commandQueue = Queue.Queue()                          
         #self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
         #self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
@@ -1122,6 +1109,8 @@ class QuickGui(wx.Frame):
         for idx in range(self.numGraphs):
             self.defaultKeys[idx] = StringDict.fromIni(self.config,"Defaults","key%d"%idx)
         self.seqPoints = self.config.getint('DataManagerStream','Points')
+        self.restartCmd = self.config.get('Web', 'restartCmd', 
+                                          'C:/Picarro/G2000/HostExe/SupervisorLauncher.exe -a -c C:/Picarro/G2000/AppConfig/Config/Utilities/SupervisorLauncher.ini')
         jsonRpcIp = self.config.get('Web', 'jsonRpcIp', 'http://localhost:5000/jsonrpc')
         self.jsonRpcService = JsonRpcTools(jsonRpcIp)
         self.dataStore  = DataStore(self.jsonRpcService)
@@ -1131,7 +1120,7 @@ class QuickGui(wx.Frame):
         #self.sysAlarmInterface = SysAlarmInterface()
         self.dataLoggerInterface = DataLoggerInterface(self.jsonRpcService)
         self.dataLoggerInterface.getDataLoggerInfo()
-        #self.instMgrInterface = InstMgrInterface(self.config)
+        self.dataLoggerUpdateCounter = 0
         #self.numAlarms = min(4, self.config.getint("AlarmBox","NumAlarms",4))
         self.showGraphZoomed = self.config.getboolean("Graph","ShowGraphZoomed",False)
         self.shutdownShippingSource = self.config.get("ShutdownShippingSource", "Source", "Sensors")
@@ -1256,6 +1245,7 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_IDLE,self.OnIdle)
         self.Bind(wx.EVT_SIZE,self.OnSize)
         self.Bind(wx.EVT_PAINT,self.OnPaint)
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
         
         # Disable Tools menu for WebGui
         self.menuBar.EnableTop(2, False)
@@ -1763,23 +1753,18 @@ class QuickGui(wx.Frame):
         return k
 
     def OnShutdownButton(self,evt):
-        return
-        # dialog = ShutdownDialog(self,None,-1)
-        # retCode = dialog.ShowModal()
-        # if retCode == wx.ID_OK:
-            # type = dialog.getShutdownType()
-            # # Call appropriate shutdown RPC routine on the instrument manager
-            # if type == 0:
-                # try:
-                    # self.setDisplayedSource(self.shutdownShippingSource)
-                # except Exception, err:
-                    # print "%r" % err
-                # self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(0)
-            # elif type == 1:
-                # self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(2)
-            # elif type == 2:
-                # self.SupervisorRpc.TerminateApplications(powerDown=False,stopProtected=True)
-        # dialog.Destroy()
+        dialog = ShutdownDialog(self,None,-1)
+        retCode = dialog.ShowModal()
+        if retCode == wx.ID_OK:
+            type = dialog.getShutdownType()
+            # Call appropriate shutdown RPC routine on the instrument manager
+            if type == 0:
+                self.jsonRpcService.invokeRPC("instMgr", "INSTMGR_ShutdownRpc", (2,))
+            elif type == 1:
+                self.jsonRpcService.invokeRPC("supervisor", "TerminateApplications", (False,True))
+            elif type == 2:
+               self.jsonRpcService.restartHost(self.restartCmd)
+        dialog.Destroy()
     def OnResetBuffers(self,evt):
         for s in self.series:
             s.Clear()
@@ -1913,7 +1898,9 @@ class QuickGui(wx.Frame):
         #   self.alarmInterface.getAlarmData()
         #self.sysAlarmInterface.getStatus(0)
         sources = self.getSourcesbyMode()
-        self.dataLoggerInterface.getDataLoggerInfo()
+        if self.dataLoggerUpdateCounter % 1 == 60:
+            self.dataLoggerInterface.getDataLoggerInfo()
+        self.dataLoggerUpdateCounter = (self.dataLoggerUpdateCounter+1)%60
         # Update the combo box of sources with source names translated via the sourceSubstDatabase
         #  The actual sources are stored in the ClientData area of the control
         if self.sourceChoices != sources:
@@ -2265,11 +2252,16 @@ class QuickGui(wx.Frame):
         for key in self.imageDatabase.dbase:
             self.imageDatabase.placeImage(key,(w,h))
         evt.Skip()
+        
     def OnPaint(self,evt):
         w, h = self.GetClientSizeTuple()
         for key in self.imageDatabase.dbase:
             self.imageDatabase.placeImage(key,(w,h))
         evt.Skip()
+        
+    def OnClose(self,event):
+        self.Destroy()
+    
     def OnAbout(self,e):
         v = "Web site : www.picarro.com\nTechnical support : 408-962-3900\nE-mail : techsupport@picarro.com\n\n(c) 2005-2011, Picarro Inc.\n\n"
         try:
