@@ -40,7 +40,7 @@ class DataEchoP3(object):
         if 'url' in kwargs:
             self.url = kwargs['url']
         else:
-            self.url = 'http://p3.picarro.com/datalogAdd/'
+            self.url = 'http://p3.picarro.com/pcubed/rest/datalogAdd/'
 
         if 'timeout' in kwargs:
             self.timeout = int(kwargs['timeout'])
@@ -316,7 +316,7 @@ if __name__ == "__main__":
     if 2 < len(sys.argv):
         url=sys.argv[2]
     else:
-        url='http://p3.picarro.com/rest/datalogAdd/'
+        url='http://p3.picarro.com/pcubed/rest/datalogAdd/'
         #url = 'http://ubuntuhost64:5100/datalogAdd/'
         
     if 3 < len(sys.argv):
