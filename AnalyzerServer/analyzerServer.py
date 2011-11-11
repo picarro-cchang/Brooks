@@ -227,7 +227,12 @@ def getDataEx(params):
     else:
         startPos = None
     shift = int(params.get('shift',SHIFT))
-    result,lastPos = _getData(fp,startPos,shift)
+
+    try:
+        result,lastPos = _getData(fp,startPos,shift)
+    except:
+        return {'lastPos':"null", 'filename':''}
+    
     result['filename'] = os.path.basename(name)
     result['lastPos'] = lastPos
     return result
@@ -290,7 +295,12 @@ def getPathEx(params):
         fp = file(name,'rb')
     except:
         return {'filename':''}
-    result = _getLastDataRows(fp,numRows,shift)
+
+    try:
+        result = _getLastDataRows(fp,numRows,shift)
+    except:
+        result = _getLastDataRows(fp,numRows,shift)
+    
     epochTime, long, lat, ch4 = result["EPOCH_TIME"], result["GPS_ABS_LONG"], result["GPS_ABS_LAT"], result["CH4"]
     peakPos = ch4.index(max(ch4))
     timeStrings = [time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(t)) for t in epochTime]

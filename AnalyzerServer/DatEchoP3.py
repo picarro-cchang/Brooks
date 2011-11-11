@@ -58,24 +58,25 @@ class DataEchoP3(object):
     def run(self):
         '''
         '''
-        aname = self.getLocalAnalyzerId()
-        for addr in decho.getIPAddresses():
-            params = {aname: {"ip_addr": "%s:5000" % addr}}
-            postparms = {'data': json.dumps(params)}
-            try:    
-                # NOTE: socket only required to set timeout parameter for the urlopen()
-                # In Python26 and beyond we can use the timeout parameter in the urlopen()
-                analyzerIpRegister = self.url.replace("datalogAdd", "analyzerIpRegister")
-                socket.setdefaulttimeout(self.timeout)
-                resp = urllib2.urlopen(analyzerIpRegister, data=urllib.urlencode(postparms))
-                print "postparms: ", postparms
-                print "analyzerIpRegister: ", analyzerIpRegister
-                print "resp: ", resp
-                break
-            except Exception, e:
-                print '\n%s\n' % e
-                pass
-        
+        def pushIP():
+            aname = self.getLocalAnalyzerId()
+            for addr in decho.getIPAddresses():
+                params = {aname: {"ip_addr": "%s:5000" % addr}}
+                postparms = {'data': json.dumps(params)}
+                try:    
+                    # NOTE: socket only required to set timeout parameter for the urlopen()
+                    # In Python26 and beyond we can use the timeout parameter in the urlopen()
+                    analyzerIpRegister = self.url.replace("datalogAdd", "analyzerIpRegister")
+                    socket.setdefaulttimeout(self.timeout)
+                    resp = urllib2.urlopen(analyzerIpRegister, data=urllib.urlencode(postparms))
+                    print "postparms: ", postparms
+                    print "analyzerIpRegister: ", analyzerIpRegister
+                    print "resp: ", resp
+                    break
+                except Exception, e:
+                    print '\n%s\n' % e
+                    pass
+
         ecounter = 0
         fcounter = 0
         wcounter = 0
@@ -99,6 +100,7 @@ class DataEchoP3(object):
             # if we have a file, make sure we have not previously processed it
             ##  if we have proccessed it, sleep for a wile, and wait for a new file
             ##  if we have slept too many times, exit.            
+            pushIP()        
             if self.fname:
                 if self.fname == self._last_fname: 
                     wcounter += 1
@@ -113,6 +115,7 @@ class DataEchoP3(object):
                     headers = None
                     rctr = 0
                     lctr = 0
+                    ipctr = 0
                     nsec = time.time()
                     self._docs = []
                     self._lines = []
@@ -124,6 +127,7 @@ class DataEchoP3(object):
                             continue
                         
                         lctr += 1
+                        ipctr += 1
                         if headers:
                             vals = line.split()
                             if not len(vals) == len(headers):
@@ -150,6 +154,10 @@ class DataEchoP3(object):
                                 self._docs = []
                                 self._lines = []
                                 nsec = time.time()
+                                
+                                if (ipctr > 500):
+                                    pushIP()
+                                    ipctr = 0
                         
         
         return fcounter
