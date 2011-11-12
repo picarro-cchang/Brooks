@@ -477,7 +477,11 @@ typedef enum {
     STREAM_OutletValve = 30, // 
     STREAM_ValveMask = 31, // 
     STREAM_MPVPosition = 32, // 
-    STREAM_FanState = 33 // 
+    STREAM_FanState = 33, // 
+    STREAM_ProcessedLoss1 = 34, // 
+    STREAM_ProcessedLoss2 = 35, // 
+    STREAM_ProcessedLoss3 = 36, // 
+    STREAM_ProcessedLoss4 = 37 // 
 } STREAM_MemberType;
 
 typedef enum {
@@ -690,8 +694,16 @@ typedef enum {
 #define SCHEME_VersionShift (4)
 #define SCHEME_TableShift (0)
 
+/* Definitions for INJECTION_SETTINGS_BITMASK */
+#define INJECTION_SETTINGS_actualLaserMask (0x3)
+#define INJECTION_SETTINGS_virtualLaserMask (0x1C)
+#define INJECTION_SETTINGS_lossTagMask (0xE0)
+#define INJECTION_SETTINGS_actualLaserShift (0)
+#define INJECTION_SETTINGS_virtualLaserShift (2)
+#define INJECTION_SETTINGS_lossTagShift (5)
+
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (406)
+#define INTERFACE_NUMBER_OF_REGISTERS (418)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1099,6 +1111,18 @@ typedef enum {
 #define FAN_CNTRL_STATE_REGISTER (403)
 #define FAN_CNTRL_TEMPERATURE_REGISTER (404)
 #define KEEP_ALIVE_REGISTER (405)
+#define LOSS_BUFFER_0_REGISTER (406)
+#define LOSS_BUFFER_1_REGISTER (407)
+#define LOSS_BUFFER_2_REGISTER (408)
+#define LOSS_BUFFER_3_REGISTER (409)
+#define LOSS_BUFFER_4_REGISTER (410)
+#define LOSS_BUFFER_5_REGISTER (411)
+#define LOSS_BUFFER_6_REGISTER (412)
+#define LOSS_BUFFER_7_REGISTER (413)
+#define PROCESSED_LOSS_1_REGISTER (414)
+#define PROCESSED_LOSS_2_REGISTER (415)
+#define PROCESSED_LOSS_3_REGISTER (416)
+#define PROCESSED_LOSS_4_REGISTER (417)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0

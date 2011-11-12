@@ -41,6 +41,14 @@ typedef struct
 } RdFittingDebug;
 
 extern RdFittingParamsType rdFittingParams;
+
+#define MAXFILT (8)
+
+struct medFilt {
+    float last5[5];
+    int lastPos;
+};
+
 //-----------------------------------------------------------------------------
 // rdFittingSummer
 //-----------------------------------------------------------------------------
@@ -108,5 +116,11 @@ int rdFittingProcessRingdown(uint32 *buffer,
 //  calls the fitting routine
 
 void rdFitting(void);
+
+//-----------------------------------------------------------------------------
+// Median filter support for storing loss values in buffers
+//-----------------------------------------------------------------------------
+void medianFiltBank_init();
+DataType medianFiltBank(int filtNum,DataType data);
 
 #endif

@@ -156,10 +156,13 @@ void thresholdTriggerStep()
     ValveCntrl *v = &valveCntrl;
     // Variables for median filter of last five losses
     static float last5[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+    static int lastPos = 0;
     float t0, t1, t2, t3, t4, lossPpb, lossRate;
 
     lossPpb = 1000.0*latestLoss;
     // Calculate rolling median of last five loss points
+    last5[lastPos++] = lossPpb; 
+    if (lastPos == 5) lastPos=0;
     t0 = last5[0];
     t1 = last5[1];
     t2 = last5[2];

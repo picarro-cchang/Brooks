@@ -285,6 +285,7 @@ void rdFittingInit()
     rdFittingParams.absoluteThreshold = registerAddr(RDFITTER_ABSOLUTE_THRESHOLD_REGISTER);
     rdFittingParams.numberOfPoints = registerAddr(RDFITTER_NUMBER_OF_POINTS_REGISTER);
     rdFittingParams.maxEFoldings = registerAddr(RDFITTER_MAX_E_FOLDINGS_REGISTER);
+    medianFiltBank_init();
 }
 
 #define IDLE 0
@@ -423,10 +424,50 @@ int rdFittingProcessRingdown(uint32 *buffer,
                           amplitude, background, rmsResidual);
 }
 
+#define SWAP(a,b) { float temp=(a); (a)=(b); (b)=temp; }
+#define SORT(a,b) { if ((a)>(b)) SWAP((a),(b)); }
+struct medFilt filtBank[MAXFILT];
+
+void medianFiltBank_init()
+{
+    int i, j;
+    for (i=0; i<MAXFILT; i++) {
+        struct medFilt *mf = &filtBank[i];
+        mf->lastPos = 0;
+        for (j=0;j<5;j++) mf->last5[j] = 0.0;
+    }
+}
+
+DataType medianFiltBank(int filtNum,DataType data)
+// Apply a five point median filter to data.asFloat, returning the filtered result.
+// There are MAXFILT independent filters, selected using filtNum.
+{
+    DataType result;
+    float t0, t1, t2, t3, t4;
+    struct medFilt *mf = &filtBank[filtNum];
+    mf->last5[mf->lastPos] = data.asFloat;
+    mf->lastPos++;
+    if (mf->lastPos == 5) mf->lastPos = 0;
+    t0 = mf->last5[0];
+    t1 = mf->last5[1];
+    t2 = mf->last5[2];
+    t3 = mf->last5[3];
+    t4 = mf->last5[4];
+    SORT(t0,t1);
+    SORT(t3,t4);
+    SORT(t0,t3);
+    SORT(t1,t4);
+    SORT(t1,t2);
+    SORT(t2,t3);
+    SORT(t1,t2);
+    result.asFloat = t2;
+    return result;
+}
+
 // This is a task function associated with TSK_rdFitting which does the ringdown fitting
 void rdFitting(void)
 {
-    int i, j, bufferNum;
+    int i, j, bufferNum, lossTag;
     unsigned int base;
     unsigned int virtLaserNum;
     float arctanvar1, arctanvar2, dp;
@@ -495,9 +536,14 @@ void rdFitting(void)
                                      &amplitude, &background, &rmsResidual, 0);
             data.asFloat = uncorrectedLoss;
             writeRegister(RDFITTER_LATEST_LOSS_REGISTER,data);
+            
+            rdParams = &(ringdownBuffer->parameters);
+            lossTag = (rdParams->injectionSettings & INJECTION_SETTINGS_lossTagMask) >> INJECTION_SETTINGS_lossTagShift;
+            
+            writeRegister(LOSS_BUFFER_0_REGISTER+lossTag,medianFiltBank(lossTag,data));
+
             // We need to find position of metadata just before ringdown. We have a modified circular
             //  buffer which wraps back to the midpoint, and the MSB indicates if this buffer has wrapped.
-            rdParams = &(ringdownBuffer->parameters);
             base = rdParams->addressAtRingdown & ~0x7;
             wrapped = base >= 32768;
             if (base == 32768 + 2048) base = 4096;
@@ -534,8 +580,8 @@ void rdFitting(void)
             }
             // The averaged or extrapolated metadata are in the metaDouble structure
 
-            virtLaserNum = (rdParams->injectionSettings >> 2) & 0x7;
-            // laserNum = rdParams->injectionSettings & 0x3;
+            virtLaserNum = (rdParams->injectionSettings & INJECTION_SETTINGS_virtualLaserMask) >> INJECTION_SETTINGS_virtualLaserShift;
+            // actualLaserNum = (rdParams->injectionSettings & INJECTION_SETTINGS_actualLaserMask) >> INJECTION_SETTINGS_actualLaserShift;
             vLaserParams = &virtualLaserParams[virtLaserNum];
 
             // Get metadata and params, and write results to ringdown queue
@@ -560,7 +606,7 @@ void rdFitting(void)
             ringdownEntry->tunerValue = rdParams->tunerAtRingdown;
             ringdownEntry->pztValue = metaDouble.pztValue;
             // ringdownEntry->lockerOffset = metaDouble.lockerOffset;
-            ringdownEntry->laserUsed = rdParams->injectionSettings;
+            ringdownEntry->laserUsed = rdParams->injectionSettings & (INJECTION_SETTINGS_virtualLaserMask | INJECTION_SETTINGS_actualLaserMask);
             ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
             ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
             ringdownEntry->schemeVersionAndTable = rdParams->schemeTableAndRow >> 16;

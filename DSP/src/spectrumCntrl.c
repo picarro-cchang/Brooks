@@ -315,7 +315,7 @@ void setupNextRdParams(void)
     SpectCntrlParams *s=&spectCntrlParams;
     RingdownParamsType *r=&nextRdParams;
 
-    unsigned int laserNum, laserTempAsInt;
+    unsigned int laserNum, laserTempAsInt, lossTag;
     volatile SchemeTableType *schemeTable;
     volatile VirtualLaserParamsType *vLaserParams;
     float setpoint, dp, theta, ratio1Multiplier, ratio2Multiplier;
@@ -326,7 +326,7 @@ void setupNextRdParams(void)
         // In continuous mode, we run with the parameter values currently in the registers
         vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
         laserNum = vLaserParams->actualLaser & 0x3;
-        r->injectionSettings = (*(s->virtLaser_) << 2) | laserNum;
+        r->injectionSettings = (*(s->virtLaser_) << INJECTION_SETTINGS_virtualLaserShift) | (laserNum << INJECTION_SETTINGS_actualLaserShift);
         r->laserTemperature = *(s->laserTemp_[laserNum]);
         r->coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
         r->etalonTemperature = *(s->etalonTemperature_);
@@ -347,7 +347,7 @@ void setupNextRdParams(void)
         // In this way, if a virtual laser number is specified, it is used (for frequency conversion)
         //  but if not, it will still work.
         laserNum = readBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W);
-        r->injectionSettings = (*(s->virtLaser_) << 2) | laserNum;
+        r->injectionSettings = (*(s->virtLaser_) << INJECTION_SETTINGS_virtualLaserShift) | (laserNum << INJECTION_SETTINGS_actualLaserShift);
         r->laserTemperature = *(s->laserTemp_[laserNum]);
         r->coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
         r->etalonTemperature = *(s->etalonTemperature_);
@@ -381,7 +381,11 @@ void setupNextRdParams(void)
         vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
         setpoint = schemeTable->rows[*(s->row_)].setpoint;
         laserNum = vLaserParams->actualLaser & 0x3;
-        r->injectionSettings = (*(s->virtLaser_) << 2) | laserNum;
+        // The loss tag is used to classify ringdowns for storage in the LOSS_BUFFER_n registers
+        lossTag = schemeTable->rows[*(s->row_)].pztSetpoint & 0x7;
+        r->injectionSettings = (lossTag << INJECTION_SETTINGS_lossTagShift) | 
+                               (*(s->virtLaser_) << INJECTION_SETTINGS_virtualLaserShift) | 
+                               (laserNum << INJECTION_SETTINGS_actualLaserShift);
         r->laserTemperature = *(s->laserTemp_[laserNum]);
         r->coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
         r->etalonTemperature = *(s->etalonTemperature_);

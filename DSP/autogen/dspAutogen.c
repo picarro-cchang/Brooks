@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[406];
+RegTypes regTypes[418];
 
 /* I2C devices */
 I2C_device i2c_devices[33] = {
@@ -821,6 +821,30 @@ void initRegisters()
     writeRegister(FAN_CNTRL_TEMPERATURE_REGISTER,d);
     d.asInt = -300;
     writeRegister(KEEP_ALIVE_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(LOSS_BUFFER_0_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(LOSS_BUFFER_1_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(LOSS_BUFFER_2_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(LOSS_BUFFER_3_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(LOSS_BUFFER_4_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(LOSS_BUFFER_5_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(LOSS_BUFFER_6_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(LOSS_BUFFER_7_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(PROCESSED_LOSS_1_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(PROCESSED_LOSS_2_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(PROCESSED_LOSS_3_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(PROCESSED_LOSS_4_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -1227,6 +1251,18 @@ void initRegisters()
     regTypes[FAN_CNTRL_STATE_REGISTER] = uint_type;
     regTypes[FAN_CNTRL_TEMPERATURE_REGISTER] = float_type;
     regTypes[KEEP_ALIVE_REGISTER] = int_type;
+    regTypes[LOSS_BUFFER_0_REGISTER] = float_type;
+    regTypes[LOSS_BUFFER_1_REGISTER] = float_type;
+    regTypes[LOSS_BUFFER_2_REGISTER] = float_type;
+    regTypes[LOSS_BUFFER_3_REGISTER] = float_type;
+    regTypes[LOSS_BUFFER_4_REGISTER] = float_type;
+    regTypes[LOSS_BUFFER_5_REGISTER] = float_type;
+    regTypes[LOSS_BUFFER_6_REGISTER] = float_type;
+    regTypes[LOSS_BUFFER_7_REGISTER] = float_type;
+    regTypes[PROCESSED_LOSS_1_REGISTER] = float_type;
+    regTypes[PROCESSED_LOSS_2_REGISTER] = float_type;
+    regTypes[PROCESSED_LOSS_3_REGISTER] = float_type;
+    regTypes[PROCESSED_LOSS_4_REGISTER] = float_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)

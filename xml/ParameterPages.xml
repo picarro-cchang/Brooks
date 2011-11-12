@@ -331,6 +331,21 @@
             <register>SCHEME_OFFSET_VIRTUAL_LASER8</register>
         </gui_page>
         <gui_page>
+            <title>Loss Buffer Parameters</title>
+            <register>LOSS_BUFFER_0_REGISTER</register>
+            <register>LOSS_BUFFER_1_REGISTER</register>
+            <register>LOSS_BUFFER_2_REGISTER</register>
+            <register>LOSS_BUFFER_3_REGISTER</register>
+            <register>LOSS_BUFFER_4_REGISTER</register>
+            <register>LOSS_BUFFER_5_REGISTER</register>
+            <register>LOSS_BUFFER_6_REGISTER</register>
+            <register>LOSS_BUFFER_7_REGISTER</register>
+            <register>PROCESSED_LOSS_1_REGISTER</register>
+            <register>PROCESSED_LOSS_2_REGISTER</register>
+            <register>PROCESSED_LOSS_3_REGISTER</register>
+            <register>PROCESSED_LOSS_4_REGISTER</register>
+        </gui_page>
+        <gui_page>
             <title>Tuner Parameters</title>
             <register>ANALYZER_TUNING_MODE_REGISTER</register>
             <fpga_register offset="FPGA_TWGEN">CS</fpga_register>
