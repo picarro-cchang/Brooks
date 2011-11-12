@@ -31,7 +31,7 @@ from ControllerModels import DriverProxy, RDFreqConvProxy, SpectrumCollectorProx
 from ControllerModels import ringdowns, ringdownLock
 from ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui, PressurePanelGui
 from ControllerPanelsGui import WarmBoxPanelGui, HotBoxPanelGui, RingdownPanelGui
-from ControllerPanelsGui import WlmPanelGui, StatsPanelGui
+from ControllerPanelsGui import WlmPanelGui, ProcessedLossPanelGui, StatsPanelGui
 
 from Host.autogen import interface
 from Host.Common.Allan import AllanVar
@@ -216,6 +216,53 @@ class RingdownPanel(RingdownPanelGui):
             y = "Tuner"
             self.appendData = tunerVsRatio2
         elif choice == 9:
+            def  pztVsWavenumber(data):
+                if dataGood(data):
+                    #wavenumber = data.wlmAngle
+                    wavenumber = data.waveNumber
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["pzt"].Add(wavenumber, data.pztValue,fillColours[vLaser])
+            self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
+            timeAxes=(False,False),ylabel='PZT value',grid=True,
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "PZT"
+            self.appendData = pztVsWavenumber
+        elif choice == 10:
+            def  pztVsTime(data):
+                if dataGood(data):
+                    utime = timestamp.unixTime(data.timestamp)
+                    vLaser = int((data.laserUsed >> 2) & 7)
+                    waveforms["Ringdown"]["pzt"].Add(utime, data.pztValue,fillColours[vLaser])
+            self.ringdownGraph.SetGraphProperties(xlabel='',
+            timeAxes=(True,False),ylabel='PZT value',grid=True,
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "PZT"
+            self.appendData = pztVsTime
+        elif choice == 11:
+            def  pztVsRatio1(data):
+                if dataGood(data):
+                    ratio1 = data.ratio1
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["pzt"].Add(ratio1/32768.0, data.pztValue,fillColours[vLaser])
+            self.ringdownGraph.SetGraphProperties(timeAxes=(False,False),xlabel='Ratio 1',ylabel='PZT value',grid=True,
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "PZT"
+            self.appendData = pztVsRatio1
+        elif choice == 12:
+            def  pztVsRatio2(data):
+                if dataGood(data):
+                    ratio2 = data.ratio2
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["pzt"].Add(ratio2/32768.0, data.pztValue,fillColours[vLaser])
+            self.ringdownGraph.SetGraphProperties(timeAxes=(False,False),xlabel='Ratio 2',ylabel='PZT value',grid=True,
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "PZT"
+            self.appendData = tunerVsRatio2
+        elif choice == 13:
             def  wavenumberVsTime(data):
                 if dataGood(data):
                     utime = timestamp.unixTime(data.timestamp)
@@ -229,7 +276,7 @@ class RingdownPanel(RingdownPanelGui):
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "Wavenumber"
             self.appendData = wavenumberVsTime
-        elif choice == 10:
+        elif choice == 14:
             def  fineCurrentVsWavenumber(data):
                 if dataGood(data):
                     #wavenumber = data.wlmAngle
@@ -242,7 +289,7 @@ class RingdownPanel(RingdownPanelGui):
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "FineCurrent"
             self.appendData = fineCurrentVsWavenumber
-        elif choice == 11:
+        elif choice == 15:
             def  fineCurrentVsTime(data):
                 if dataGood(data):
                     utime = timestamp.unixTime(data.timestamp)
@@ -256,7 +303,7 @@ class RingdownPanel(RingdownPanelGui):
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "FineCurrent"
             self.appendData = fineCurrentVsTime
-        elif choice == 12:
+        elif choice == 16:
             def  lossVsFineCurrent(data):
                 if dataGood(data):
                     loss_u = data.uncorrectedAbsorbance
@@ -291,6 +338,11 @@ class RingdownPanel(RingdownPanelGui):
         elif y == "Tuner":
                 self.ringdownGraph.AddSeriesAsPoints(
                 waveforms["Ringdown"]["tuner"],
+                marker='square',
+                    size=1,width=1)
+        elif y == "PZT":
+                self.ringdownGraph.AddSeriesAsPoints(
+                waveforms["Ringdown"]["pzt"],
                 marker='square',
                     size=1,width=1)
         elif y == "Wavenumber":
@@ -576,6 +628,43 @@ class HotBoxPanel(HotBoxPanelGui):
             self.temperatureGraph.AddSeriesAsLine(self.dasTemperatureWfm,
                 colour='green',width=2)
 
+class ProcessedLossPanel(ProcessedLossPanelGui):
+    def __init__(self,*a,**k):
+        ProcessedLossPanelGui.__init__(self,*a,**k)
+        colors = ['red', 'green', 'blue', 'yellow']
+        self.processedLossGraph.SetGraphProperties(
+            ylabel='Processed Loss (ppm/cm)',
+            timeAxes=(True,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            grid=True,backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.processedLossWfm = [Series(wfmPoints) for i in range(4)]
+        for i,w in enumerate(self.processedLossWfm):
+            self.processedLossGraph.AddSeriesAsLine(w,colour=colors[i],width=2)
+
+    def update(self):
+        self.processedLossGraph.Update(delay=0)
+ 
+    def onClear(self,evt):
+        for w in waveforms["ProcessedLoss"].values():
+            w.Clear()
+            
+    def onProcessedLossChanged(self, event):
+        self.processedLossGraph.RemoveAllSeries()
+        if self.processedLoss1Checkbox.IsChecked():
+            self.processedLossGraph.AddSeriesAsLine(self.processedLossWfm[0],
+                colour='red',width=2)
+        if self.processedLoss2Checkbox.IsChecked():
+            self.processedLossGraph.AddSeriesAsLine(self.processedLossWfm[1],
+                colour='green',width=2)
+        if self.processedLoss3Checkbox.IsChecked():
+            self.processedLossGraph.AddSeriesAsLine(self.processedLossWfm[2],
+                colour='blue',width=2)            
+        if self.processedLoss4Checkbox.IsChecked():
+            self.processedLossGraph.AddSeriesAsLine(self.processedLossWfm[3],
+                colour='yellow',width=2)            
+
+                
 class CommandLogPanel(CommandLogPanelGui):
     acqLabels = dict(start="Start Acquisition",resume="Resume Acquisition",
                      stop="Stop Acquisition",clear="Clear Error")

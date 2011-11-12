@@ -120,6 +120,23 @@ class DasConfigure(SharedTypes.Singleton):
         # Start heartbeat to let sentry handler know that the scheduler is alive
         self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SCHEDULER_HEARTBEAT"))
 
+        # Loss processing
+        self.opGroups["FAST"]["SENSOR_PROCESSING"].addOperation(
+            Operation("ACTION_FLOAT_ARITHMETIC",
+                     ["LOSS_BUFFER_2_REGISTER","LOSS_BUFFER_1_REGISTER",
+                      "PROCESSED_LOSS_1_REGISTER","FLOAT_ARITHMETIC_Subtraction"]))
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                ["STREAM_ProcessedLoss1","PROCESSED_LOSS_1_REGISTER"]))
+        #
+        self.opGroups["FAST"]["SENSOR_PROCESSING"].addOperation(
+            Operation("ACTION_FLOAT_ARITHMETIC",
+                     ["LOSS_BUFFER_5_REGISTER","LOSS_BUFFER_4_REGISTER",
+                      "PROCESSED_LOSS_2_REGISTER","FLOAT_ARITHMETIC_Subtraction"]))
+        self.opGroups["FAST"]["STREAMER"].addOperation(
+            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                ["STREAM_ProcessedLoss2","PROCESSED_LOSS_2_REGISTER"]))
+        
         soa = self.installCheck("SOA_PRESENT")
         fiber_amp = self.installCheck("FIBER_AMPLIFIER_PRESENT")
         if soa and fiber_amp:

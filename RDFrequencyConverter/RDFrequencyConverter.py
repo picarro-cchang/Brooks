@@ -64,6 +64,7 @@ class CalibrationPoint(object):
     """Structure for collecting interspersed ringdowns in a scheme which are marked as calibration points."""
     def __init__(self):
         self.tunerVals = []
+        self.pztVals = []
         self.thetaCalCos = []
         self.thetaCalSin = []
         self.laserTempVals = []
@@ -113,6 +114,7 @@ class SchemeBasedCalibrator(object):
         calPoint.thetaCalSin.append(sin(entry.wlmAngle))
         calPoint.laserTempVals.append(entry.laserTemperature)
         calPoint.tunerVals.append(entry.tunerValue)
+        calPoint.pztVals.append(entry.pztValue)
         calPoint.vLaserNum = 1 + ((entry.laserUsed >> 2) & 7)
 
     def calFailed(self,vLaserNum):
@@ -148,6 +150,7 @@ class SchemeBasedCalibrator(object):
             assert(isinstance(b,CalibrationPoint))
             b.thetaCalMed = arctan2(median(b.thetaCalSin),median(b.thetaCalCos))
             b.tunerMed = median(b.tunerVals)
+            b.pztMed = median(b.pztVals)
             b.laserTempMed = median(b.laserTempVals)
         # Process the data one laser at a time
         calDone = False
@@ -159,8 +162,9 @@ class SchemeBasedCalibrator(object):
                 thetaHat  = self.rdFreqConv.RPC_laserTemperatureToAngle(vLaserNum,laserTemp)
                 thetaCal  +=  2*pi*floor((thetaHat-thetaCal)/(2*pi) + 0.5) # Rotate the angles according to laser temperature
                 tuner     = array([d[k].tunerMed for k in rows])
-                # Ideally, tuner values should be close together. We check for large jumps and forgo calibration in such cases
-                jump = abs(diff(tuner)).max()
+                pzt       = array([d[k].pztMed for k in rows])
+                # Ideally, PZT values should be close together. We check for large jumps and forgo calibration in such cases
+                jump = abs(diff(pzt)).max()
                 if jump > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_JUMP")):
                     Log("Calibration not done, maximum jump between calibration rows: %.1f" % (jump,))
                     if scs: self.calFailed(vLaserNum)
@@ -177,11 +181,13 @@ class SchemeBasedCalibrator(object):
                 tunerCenteringThread.setDaemon(True)
                 tunerCenteringThread.start()
 
+                pztMean = float(sum(pzt*count))/sum(count)
+                pztDev  = pzt - pztMean
                 # Calculate the shifted WLM angles which correspond to exact FSR separation
                 #  The ADJUST_FACTOR is an underestimate of the WLM angle shift corresponding to a digitizer
-                #  unit of tuner. This provides a degree of under-relaxation and filtering.
+                #  unit of PZT. This provides a degree of under-relaxation and filtering.
                 # print thetaCal
-                thetaShifted = thetaCal - (float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","ADJUST_FACTOR")) * tunerDev)
+                thetaShifted = thetaCal - (float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","ADJUST_FACTOR")) * pztDev)
                 # Now use the information in scheme for updating the calibration
                 perm = thetaShifted.argsort()
                 thetaShifted = thetaShifted[perm]
@@ -195,7 +201,7 @@ class SchemeBasedCalibrator(object):
                 devs = abs(dtheta/anglePerFsr - m)
                 offGrid = devs.max()
                 if offGrid > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_OFFGRID")):
-                    Log("Calibration not done, PZT sdev = %.1f, offGrid parameter = %.2f, fraction>0.25 = %.2f" % (std(tunerDev),offGrid,sum(devs>0.25)/float(len(devs))))
+                    Log("Calibration not done, PZT sdev = %.1f, offGrid parameter = %.2f, fraction>0.25 = %.2f" % (std(pztDev),offGrid,sum(devs>0.25)/float(len(devs))))
                     if scs: self.calFailed(vLaserNum)
                 else:
                     #Update the live copy of the polar<->freq coefficients...
@@ -212,10 +218,11 @@ class SchemeBasedCalibrator(object):
                                                      float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_ZERO"))) 
                     self.calibrationDone[vLaserNum-1] = True
                     stdTuner = std(tunerDev)
+                    stdPzt = std(pztDev)
                     if scs: 
                         if stdTuner>float(scs['maxTunerStandardDeviation']): self.calFailed(vLaserNum)
                         else: self.calSucceeded(vLaserNum)
-                    Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" % (vLaserNum,anglePerFsr,stdTuner))
+                    Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" % (vLaserNum,anglePerFsr,stdPzt))
                     
                     # Check if it's time to update and archive the warmbox calibration file
                     if self.rdFreqConv.timeToUpdateWarmBoxCal():

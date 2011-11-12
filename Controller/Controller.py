@@ -68,6 +68,7 @@ class Controller(ControllerFrameGui):
         panels["Pressure"]=self.pressurePanel
         panels["Wlm"]=self.wlmPanel
         panels["Ringdown"]=self.ringdownPanel
+        panels["ProcessedLoss"]=self.processedLossPanel
         panels["Stats"]=self.statsPanel
         self.controllerFrameGui_statusbar.SetStatusText('',0)
         # Starting from user mode
@@ -116,6 +117,12 @@ class Controller(ControllerFrameGui):
             ratio1=self.wlmPanel.ratio1Wfm,
             ratio2=self.wlmPanel.ratio2Wfm,
             )
+        waveforms["ProcessedLoss"]=dict(
+            processedLoss1=self.processedLossPanel.processedLossWfm[0],
+            processedLoss2=self.processedLossPanel.processedLossWfm[1],
+            processedLoss3=self.processedLossPanel.processedLossWfm[2],
+            processedLoss4=self.processedLossPanel.processedLossWfm[3],
+            )
         waveforms["Stats"]=dict(
             loss=self.statsPanel.lossStats,
             waveNumber=self.statsPanel.waveNumberStats,
@@ -128,6 +135,7 @@ class Controller(ControllerFrameGui):
             ratio1=self.ringdownPanel.ringdownWfms[0],
             ratio2=self.ringdownPanel.ringdownWfms[1],
             tuner=self.ringdownPanel.ringdownWfms[0],
+            pzt=self.ringdownPanel.ringdownWfms[0],
             wavenumber=self.ringdownPanel.ringdownWfms[0],
             fineCurrent=self.ringdownPanel.ringdownWfms[0])
 
@@ -244,6 +252,8 @@ class Controller(ControllerFrameGui):
             self.wlmPanel.update()
         elif pageText == "Ringdowns":
             self.ringdownPanel.update()
+        elif pageText == "ProcessedLoss":
+            self.processedLossPanel.update()
         elif pageText == "Statistics":
             self.statsPanel.update()
 

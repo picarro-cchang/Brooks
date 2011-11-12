@@ -525,6 +525,10 @@ STREAM_OutletValve = 30 #
 STREAM_ValveMask = 31 # 
 STREAM_MPVPosition = 32 # 
 STREAM_FanState = 33 # 
+STREAM_ProcessedLoss1 = 34 # 
+STREAM_ProcessedLoss2 = 35 # 
+STREAM_ProcessedLoss3 = 36 # 
+STREAM_ProcessedLoss4 = 37 # 
 
 # Dictionary for enumerated constants in STREAM_MemberType
 STREAM_MemberTypeDict = {}
@@ -562,6 +566,10 @@ STREAM_MemberTypeDict[30] = 'STREAM_OutletValve' #
 STREAM_MemberTypeDict[31] = 'STREAM_ValveMask' # 
 STREAM_MemberTypeDict[32] = 'STREAM_MPVPosition' # 
 STREAM_MemberTypeDict[33] = 'STREAM_FanState' # 
+STREAM_MemberTypeDict[34] = 'STREAM_ProcessedLoss1' # 
+STREAM_MemberTypeDict[35] = 'STREAM_ProcessedLoss2' # 
+STREAM_MemberTypeDict[36] = 'STREAM_ProcessedLoss3' # 
+STREAM_MemberTypeDict[37] = 'STREAM_ProcessedLoss4' # 
 
 # Enumerated definitions for TEMP_CNTRL_StateType
 TEMP_CNTRL_StateType = c_uint
@@ -951,8 +959,16 @@ SCHEME_TableMask = 0xF
 SCHEME_VersionShift = 4
 SCHEME_TableShift = 0
 
+# Definitions for INJECTION_SETTINGS_BITMASK
+INJECTION_SETTINGS_actualLaserMask = 0x3
+INJECTION_SETTINGS_virtualLaserMask = 0x1C
+INJECTION_SETTINGS_lossTagMask = 0xE0
+INJECTION_SETTINGS_actualLaserShift = 0
+INJECTION_SETTINGS_virtualLaserShift = 2
+INJECTION_SETTINGS_lossTagShift = 5
+
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 406
+INTERFACE_NUMBER_OF_REGISTERS = 418
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1360,6 +1376,18 @@ SENTRY_AMBIENT_PRESSURE_MAX_REGISTER = 402
 FAN_CNTRL_STATE_REGISTER = 403
 FAN_CNTRL_TEMPERATURE_REGISTER = 404
 KEEP_ALIVE_REGISTER = 405
+LOSS_BUFFER_0_REGISTER = 406
+LOSS_BUFFER_1_REGISTER = 407
+LOSS_BUFFER_2_REGISTER = 408
+LOSS_BUFFER_3_REGISTER = 409
+LOSS_BUFFER_4_REGISTER = 410
+LOSS_BUFFER_5_REGISTER = 411
+LOSS_BUFFER_6_REGISTER = 412
+LOSS_BUFFER_7_REGISTER = 413
+PROCESSED_LOSS_1_REGISTER = 414
+PROCESSED_LOSS_2_REGISTER = 415
+PROCESSED_LOSS_3_REGISTER = 416
+PROCESSED_LOSS_4_REGISTER = 417
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -2285,6 +2313,30 @@ registerByName["FAN_CNTRL_TEMPERATURE_REGISTER"] = FAN_CNTRL_TEMPERATURE_REGISTE
 registerInfo.append(RegInfo("FAN_CNTRL_TEMPERATURE_REGISTER",c_float,1,1.0,"rw"))
 registerByName["KEEP_ALIVE_REGISTER"] = KEEP_ALIVE_REGISTER
 registerInfo.append(RegInfo("KEEP_ALIVE_REGISTER",c_int,0,1.0,"rw"))
+registerByName["LOSS_BUFFER_0_REGISTER"] = LOSS_BUFFER_0_REGISTER
+registerInfo.append(RegInfo("LOSS_BUFFER_0_REGISTER",c_float,0,1.0,"r"))
+registerByName["LOSS_BUFFER_1_REGISTER"] = LOSS_BUFFER_1_REGISTER
+registerInfo.append(RegInfo("LOSS_BUFFER_1_REGISTER",c_float,0,1.0,"r"))
+registerByName["LOSS_BUFFER_2_REGISTER"] = LOSS_BUFFER_2_REGISTER
+registerInfo.append(RegInfo("LOSS_BUFFER_2_REGISTER",c_float,0,1.0,"r"))
+registerByName["LOSS_BUFFER_3_REGISTER"] = LOSS_BUFFER_3_REGISTER
+registerInfo.append(RegInfo("LOSS_BUFFER_3_REGISTER",c_float,0,1.0,"r"))
+registerByName["LOSS_BUFFER_4_REGISTER"] = LOSS_BUFFER_4_REGISTER
+registerInfo.append(RegInfo("LOSS_BUFFER_4_REGISTER",c_float,0,1.0,"r"))
+registerByName["LOSS_BUFFER_5_REGISTER"] = LOSS_BUFFER_5_REGISTER
+registerInfo.append(RegInfo("LOSS_BUFFER_5_REGISTER",c_float,0,1.0,"r"))
+registerByName["LOSS_BUFFER_6_REGISTER"] = LOSS_BUFFER_6_REGISTER
+registerInfo.append(RegInfo("LOSS_BUFFER_6_REGISTER",c_float,0,1.0,"r"))
+registerByName["LOSS_BUFFER_7_REGISTER"] = LOSS_BUFFER_7_REGISTER
+registerInfo.append(RegInfo("LOSS_BUFFER_7_REGISTER",c_float,0,1.0,"r"))
+registerByName["PROCESSED_LOSS_1_REGISTER"] = PROCESSED_LOSS_1_REGISTER
+registerInfo.append(RegInfo("PROCESSED_LOSS_1_REGISTER",c_float,0,1.0,"r"))
+registerByName["PROCESSED_LOSS_2_REGISTER"] = PROCESSED_LOSS_2_REGISTER
+registerInfo.append(RegInfo("PROCESSED_LOSS_2_REGISTER",c_float,0,1.0,"r"))
+registerByName["PROCESSED_LOSS_3_REGISTER"] = PROCESSED_LOSS_3_REGISTER
+registerInfo.append(RegInfo("PROCESSED_LOSS_3_REGISTER",c_float,0,1.0,"r"))
+registerByName["PROCESSED_LOSS_4_REGISTER"] = PROCESSED_LOSS_4_REGISTER
+registerInfo.append(RegInfo("PROCESSED_LOSS_4_REGISTER",c_float,0,1.0,"r"))
 
 # FPGA block definitions
 
@@ -3051,6 +3103,24 @@ __p.append(('dsp','float',SCHEME_OFFSET_VIRTUAL_LASER6,'Virtual laser 6 scheme t
 __p.append(('dsp','float',SCHEME_OFFSET_VIRTUAL_LASER7,'Virtual laser 7 scheme temperature offset','','%.3f',1,1))
 __p.append(('dsp','float',SCHEME_OFFSET_VIRTUAL_LASER8,'Virtual laser 8 scheme temperature offset','','%.3f',1,1))
 parameter_forms.append(('Virtual Laser Parameters',__p))
+
+# Form: Loss Buffer Parameters
+
+__p = []
+
+__p.append(('dsp','float',LOSS_BUFFER_0_REGISTER,'Loss Buffer 0','','%.4f',1,0))
+__p.append(('dsp','float',LOSS_BUFFER_1_REGISTER,'Loss Buffer 1','','%.4f',1,0))
+__p.append(('dsp','float',LOSS_BUFFER_2_REGISTER,'Loss Buffer 2','','%.4f',1,0))
+__p.append(('dsp','float',LOSS_BUFFER_3_REGISTER,'Loss Buffer 3','','%.4f',1,0))
+__p.append(('dsp','float',LOSS_BUFFER_4_REGISTER,'Loss Buffer 4','','%.4f',1,0))
+__p.append(('dsp','float',LOSS_BUFFER_5_REGISTER,'Loss Buffer 5','','%.4f',1,0))
+__p.append(('dsp','float',LOSS_BUFFER_6_REGISTER,'Loss Buffer 6','','%.4f',1,0))
+__p.append(('dsp','float',LOSS_BUFFER_7_REGISTER,'Loss Buffer 7','','%.4f',1,0))
+__p.append(('dsp','float',PROCESSED_LOSS_1_REGISTER,'Processed loss 1','','%.4f',1,0))
+__p.append(('dsp','float',PROCESSED_LOSS_2_REGISTER,'Processed loss 2','','%.4f',1,0))
+__p.append(('dsp','float',PROCESSED_LOSS_3_REGISTER,'Processed loss 3','','%.4f',1,0))
+__p.append(('dsp','float',PROCESSED_LOSS_4_REGISTER,'Processed loss 4','','%.4f',1,0))
+parameter_forms.append(('Loss Buffer Parameters',__p))
 
 # Form: Tuner Parameters
 

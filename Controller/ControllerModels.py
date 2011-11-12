@@ -181,9 +181,16 @@ class SensorListener(SharedTypes.Singleton):
             waveforms["Pressure"]["inletValve"].Add(utime,data.value)
         elif data.streamNum == interface.STREAM_OutletValve:
             waveforms["Pressure"]["outletValve"].Add(utime,data.value)
-
         elif data.streamNum == interface.STREAM_ValveMask:
             dasInfo["solenoidValves"] = data.value
+        elif data.streamNum == interface.STREAM_ProcessedLoss1:
+            waveforms["ProcessedLoss"]["processedLoss1"].Add(utime,data.value)
+        elif data.streamNum == interface.STREAM_ProcessedLoss2:
+            waveforms["ProcessedLoss"]["processedLoss2"].Add(utime,data.value)
+        elif data.streamNum == interface.STREAM_ProcessedLoss3:
+            waveforms["ProcessedLoss"]["processedLoss3"].Add(utime,data.value)
+        elif data.streamNum == interface.STREAM_ProcessedLoss4:
+            waveforms["ProcessedLoss"]["processedLoss4"].Add(utime,data.value)
 
 class LogListener(SharedTypes.Singleton):
     def __init__(self):

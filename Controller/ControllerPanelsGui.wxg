@@ -565,6 +565,10 @@
                                     <choice>Tuner vs Time</choice>
                                     <choice>Tuner vs Ratio 1</choice>
                                     <choice>Tuner vs Ratio 2</choice>
+                                    <choice>PZT vs Wavenumber</choice>
+                                    <choice>PZT vs Time</choice>
+                                    <choice>PZT vs Ratio 1</choice>
+                                    <choice>PZT vs Ratio 2</choice>
                                     <choice>Wavenumber vs Time</choice>
                                     <choice>IL(fine) vs Wavenumber</choice>
                                     <choice>IL(fine) vs Time</choice>
@@ -673,6 +677,111 @@
                                         <label>Heatsink temperature</label>
                                         <events>
                                             <handler event="EVT_CHECKBOX">onWaveformSelectChanged</handler>
+                                        </events>
+                                    </object>
+                                </object>
+                            </object>
+                        </object>
+                        <object class="sizeritem">
+                            <flag>wxEXPAND</flag>
+                            <border>0</border>
+                            <option>1</option>
+                            <object class="spacer" name="spacer" base="EditSpacer">
+                                <height>20</height>
+                                <width>20</width>
+                            </object>
+                        </object>
+                    </object>
+                </object>
+            </object>
+        </object>
+    </object>
+    <object class="ProcessedLossPanelGui" name="processedLossPanel" base="EditTopLevelPanel">
+        <style>wxTAB_TRAVERSAL</style>
+        <object class="wxBoxSizer" name="sizer_1" base="EditBoxSizer">
+            <orient>wxVERTICAL</orient>
+            <object class="sizeritem">
+                <flag>wxEXPAND</flag>
+                <border>0</border>
+                <option>1</option>
+                <object class="GraphPanel" name="processedLossGraph" base="CustomWidget">
+                    <arguments>
+                        <argument>$parent</argument>
+                        <argument>$id</argument>
+                    </arguments>
+                </object>
+            </object>
+            <object class="sizeritem">
+                <flag>wxEXPAND</flag>
+                <border>0</border>
+                <option>0</option>
+                <object class="wxPanel" name="panel_1" base="EditPanel">
+                    <style>wxTAB_TRAVERSAL</style>
+                    <object class="wxBoxSizer" name="sizer_2" base="EditBoxSizer">
+                        <orient>wxHORIZONTAL</orient>
+                        <object class="sizeritem">
+                            <flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
+                            <border>15</border>
+                            <option>0</option>
+                            <object class="wxButton" name="clearButton" base="EditButton">
+                                <stockitem>CLEAR</stockitem>
+                                <label>&amp;Clear</label>
+                                <events>
+                                    <handler event="EVT_BUTTON">onClear</handler>
+                                </events>
+                            </object>
+                        </object>
+                        <object class="sizeritem">
+                            <flag>wxEXPAND</flag>
+                            <border>0</border>
+                            <option>0</option>
+                            <object class="wxBoxSizer" name="sizer_3" base="EditBoxSizer">
+                                <orient>wxVERTICAL</orient>
+                                <object class="sizeritem">
+                                    <flag>wxLEFT|wxTOP|wxBOTTOM|wxALIGN_CENTER_VERTICAL</flag>
+                                    <border>5</border>
+                                    <option>0</option>
+                                    <object class="wxCheckBox" name="processedLoss1Checkbox" base="EditCheckBox">
+                                        <checked>1</checked>
+                                        <label>Processed Loss 1</label>
+                                        <events>
+                                            <handler event="EVT_CHECKBOX">onProcessedLossChanged</handler>
+                                        </events>
+                                    </object>
+                                </object>
+                                <object class="sizeritem">
+                                    <flag>wxLEFT|wxTOP|wxBOTTOM|wxALIGN_CENTER_VERTICAL</flag>
+                                    <border>5</border>
+                                    <option>0</option>
+                                    <object class="wxCheckBox" name="processedLoss2Checkbox" base="EditCheckBox">
+                                        <checked>1</checked>
+                                        <label>Processed Loss 2</label>
+                                        <events>
+                                            <handler event="EVT_CHECKBOX">onProcessedLossChanged</handler>
+                                        </events>
+                                    </object>
+                                </object>
+                                <object class="sizeritem">
+                                    <flag>wxLEFT|wxTOP|wxBOTTOM|wxALIGN_CENTER_VERTICAL</flag>
+                                    <border>5</border>
+                                    <option>0</option>
+                                    <object class="wxCheckBox" name="processedLoss3Checkbox" base="EditCheckBox">
+                                        <checked>1</checked>
+                                        <label>Processed Loss 3</label>
+                                        <events>
+                                            <handler event="EVT_CHECKBOX">onProcessedLossChanged</handler>
+                                        </events>
+                                    </object>
+                                </object>
+                                <object class="sizeritem">
+                                    <flag>wxLEFT|wxTOP|wxBOTTOM|wxALIGN_CENTER_VERTICAL</flag>
+                                    <border>5</border>
+                                    <option>0</option>
+                                    <object class="wxCheckBox" name="processedLoss4Checkbox" base="EditCheckBox">
+                                        <checked>1</checked>
+                                        <label>Processed Loss 4</label>
+                                        <events>
+                                            <handler event="EVT_CHECKBOX">onProcessedLossChanged</handler>
                                         </events>
                                     </object>
                                 </object>
