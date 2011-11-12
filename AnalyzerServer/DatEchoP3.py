@@ -58,6 +58,7 @@ class DataEchoP3(object):
     def run(self):
         '''
         '''
+        ip_register_good = True
         def pushIP():
             aname = self.getLocalAnalyzerId()
             for addr in decho.getIPAddresses():
@@ -69,12 +70,14 @@ class DataEchoP3(object):
                     analyzerIpRegister = self.url.replace("datalogAdd", "analyzerIpRegister")
                     socket.setdefaulttimeout(self.timeout)
                     resp = urllib2.urlopen(analyzerIpRegister, data=urllib.urlencode(postparms))
-                    print "postparms: ", postparms
-                    print "analyzerIpRegister: ", analyzerIpRegister
-                    print "resp: ", resp
+                    ip_register_good = True
+                    print "Registered new ip. postparms: ", postparms
+                    #print "analyzerIpRegister: ", analyzerIpRegister
+                    #print "resp: ", resp
                     break
                 except Exception, e:
-                    print '\n%s\n' % e
+                    ip_register_good = False
+                    print '\nanalyzerIpRegister failed \n%s\n' % e
                     pass
 
         ecounter = 0
@@ -155,7 +158,7 @@ class DataEchoP3(object):
                                 self._lines = []
                                 nsec = time.time()
                                 
-                                if (ipctr > 500):
+                                if (ipctr > 100 or not ip_register_good):
                                     pushIP()
                                     ipctr = 0
                         
