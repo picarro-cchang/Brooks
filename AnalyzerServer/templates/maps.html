@@ -140,6 +140,9 @@
         $("#restart_log").click(function() {         
             call_rest("restartDatalog",{});
         });
+        $("#shutdown_analyzer").click(function() {         
+            call_rest("shutdownAnalyzer",{});
+        });
         timer1 = setTimeout(onTimer,1000);
     };
     $(initialize)
@@ -182,6 +185,7 @@ Here are some instructions as to what the driver should do in order to best trav
 <input type="hidden" id="do_not_follow" name="do_not_follow"/>
 {% endif %}
 <button type="button" id="restart_log" name="Restart Log">Restart Log</button>
+<button type="button" id="shutdown_analyzer" name="Shut Down Analyzer">Shut Down Analyzer</button>
 </form>
 </div>
 <div id="map_canvas" class="map" style="width:70%; height:90%; float:right;"></div>

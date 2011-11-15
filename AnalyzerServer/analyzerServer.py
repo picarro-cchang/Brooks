@@ -13,7 +13,7 @@ from threading import Thread
 import time
 import traceback
 import CmdFIFO
-from SharedTypes import RPC_PORT_DATALOGGER
+from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
@@ -39,10 +39,12 @@ app.config.from_object(__name__)
 handler = JSONRPCHandler('jsonrpc')
 handler.connect(app,'/jsonrpc')
 
+INST_MGR_RPC = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "AnalyzerServer")
+
 class DataLoggerInterface(object):
     """Interface to the data logger and archiver RPC"""
     def __init__(self):
-        self.dataLoggerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "QuickGui")
+        self.dataLoggerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "AnalyzerServer")
         self.exception = None
         self.rpcInProgress = False
 
@@ -355,6 +357,24 @@ def restartDatalogEx(params):
     print "<------------------ Restarting data log ------------------>"
     dataLogger = DataLoggerInterface()
     dataLogger.startUserLogs(['DataLog_User_Minimal'],restart=True)
+    return {}
+    
+@handler.register
+@rpcWrapper
+def shutdownAnalyzer(params):
+    return shutdownAnalyzerEx(params)
+
+@app.route('/rest/shutdownAnalyzer')
+def rest_shutdownAnalyzer():
+    result = shutdownAnalyzerEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+        
+def shutdownAnalyzerEx(params):
+    print "<------------------ Shut down analyzer in current state ------------------>"
+    INST_MGR_RPC.INSTMGR_ShutdownRpc(2)
     return {}
     
 @handler.register
