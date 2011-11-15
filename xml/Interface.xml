@@ -377,6 +377,7 @@
         <constant ident="DSP_TIMER0_BASE" description="Base address of DSP timer 0 registers">0x01940000</constant>
         <constant ident="DSP_TIMER_DIVISOR" description="Divisor to get 1ms for a 225MHz DSP clock">56250</constant>
         <constant ident="MAX_FITTERS" description="Maximum number of fitter processes">8</constant>
+        <constant ident="PEAK_DETECT_MAX_HISTORY_LENGTH" description="Maximum number of samples in peak detection history buffer">1024</constant> 
     </constant_list>
     <union_list>
         <union type="DataType">
@@ -506,6 +507,13 @@
             <enum_value ident="VALVE_CNTRL_THRESHOLD_DisabledState" value="0" caption="Disabled" />
             <enum_value ident="VALVE_CNTRL_THRESHOLD_ArmedState" value="1" caption="Armed" />
             <enum_value ident="VALVE_CNTRL_THRESHOLD_TriggeredState" value="2" caption="Triggered" />
+        </enum>
+        <enum type="PEAK_DETECT_CNTRL_StateType">
+            <description>Peak detection controller states</description>
+            <enum_value ident="PEAK_DETECT_CNTRL_IdleState" value="0" caption="Idle" />
+            <enum_value ident="PEAK_DETECT_CNTRL_ArmedState" value="1" caption="Armed" />
+            <enum_value ident="PEAK_DETECT_CNTRL_TriggerPendingState" value="2" caption="Trigger Pending" />
+            <enum_value ident="PEAK_DETECT_CNTRL_TriggeredState" value="3" caption="Triggered" />
         </enum>
         <enum type="VIRTUAL_LASER_Type">
             <description>Virtual laser selection</description> 
@@ -2989,6 +2997,78 @@
             <initial>0</initial>
             <display format="%.4f">Processed loss 4</display>
         </register>
+        <register ident="PEAK_DETECT_CNTRL_STATE_REGISTER" type="PEAK_DETECT_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Peak detection control app state register</description>
+            <initial>PEAK_DETECT_CNTRL_IdleState</initial>
+            <display>Peak Detection Controller Mode</display>
+        </register>
+
+        <register ident="PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Upper threshold in ppm/cm.</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f" units="ppm/cm">Upper threshold</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Lower threshold 1 in ppm/cm.</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f" units="ppm/cm">Lower Threshold 1</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Lower threshold 2 in ppm/cm.</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f" units="ppm/cm">Lower Threshold 2</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_HISTORY_SIZE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Points in history buffer.</description>
+            <initial>100</initial>
+            <save/>
+            <display format="%d" units="samples">History buffer length</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Condition for triggering.</description>
+            <initial>0x80</initial>
+            <save/>
+            <display format="$%02X">Condition for triggering</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Delay (in samples) before triggering.</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%d" units="samples">Trigger delay (after trigger condition met)</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Delay (in samples) before resetting.</description>
+            <initial>1000</initial>
+            <save/>
+            <display format="%d" units="samples">Reset delay (after trigger)</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Idle state valve mask and value.</description>
+            <initial>0x0000</initial>
+            <save/>
+            <display format="$%04X">Idle state valve mask and values</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Armed state valve mask and value.</description>
+            <initial>0x0000</initial>
+            <save/>
+            <display format="$%04X">Armed state valve mask and values</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Trigger pending state valve mask and value.</description>
+            <initial>0x0000</initial>
+            <save/>
+            <display format="$%04X">Trigger pending state valve mask and values</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Triggered state valve mask and value.</description>
+            <initial>0x0000</initial>
+            <save/>
+            <display format="$%04X">Triggered state valve mask and values</display>
+        </register>
     </register_list>
     <i2c_list>
         <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />
@@ -3015,7 +3095,7 @@
         <i2c ident="AMBIENT_PRESSURE_ADC" chain="0" mux="7" address="0x17" />
         <i2c ident="P2_THERMISTOR_ADC" chain="0" mux="7" address="0x14" />
         <i2c ident="P4_THERMISTOR_ADC" chain="0" mux="7" address="0x15" />
-                
+
         <i2c ident="P9_THERMISTOR_ADC"  chain="1" mux="4" address="0x14" />
         <i2c ident="P11_THERMISTOR_ADC" chain="1" mux="4" address="0x15" />
         <i2c ident="P3_THERMISTOR_ADC"  chain="1" mux="4" address="0x24" />
@@ -3920,7 +4000,9 @@
         <action ident="ACTION_SENTRY_INIT">r_sentryInit</action>
         <action ident="ACTION_VALVE_CNTRL_INIT">r_valveCntrlInit</action>
         <action ident="ACTION_VALVE_CNTRL_STEP">r_valveCntrlStep</action>
-        <action ident="ACTION_MODIFY_VALVE_PUMP_TEC">r_modifyValvePumpTec</action>
+        <action ident="ACTION_PEAK_DETECT_CNTRL_INIT">r_peakDetectCntrlInit</action>
+        <action ident="ACTION_PEAK_DETECT_CNTRL_STEP">r_peakDetectCntrlStep</action>
+        <action ident="ACTION_MODIFY_VALVE_PUMP_TEC_FROM_REGISTER">r_modifyValvePumpTec</action>
         <!-- Pulse generator:
         Inputs:
             Register (int):   Duration of low level

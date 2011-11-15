@@ -205,17 +205,18 @@ void safeMode(void)
 void sentryHandler(void)
 {
     int overloaded = 0, schedulerFailed = 0;
-    int prevOverload = 0, inSafeMode = 0;
+     // int prevOverload = 0;
+    int inSafeMode = 0;
     int i;
     
     while (1)
     {
-        int overload = 0;
+        // int overload = 0;
         int alive = 1;
         int* _keepAlive = registerAddr(KEEP_ALIVE_REGISTER);
         int hardwarePresent = *(int *)registerAddr(HARDWARE_PRESENT_REGISTER);
         int installedMask = 0;
-        int powerBoardPresent = 0 != (hardwarePresent & (1<<HARDWARE_PRESENT_PowerBoardBit));
+        // int powerBoardPresent = 0 != (hardwarePresent & (1<<HARDWARE_PRESENT_PowerBoardBit));
             
         if (hardwarePresent & (1<<HARDWARE_PRESENT_WarmBoxBit)) installedMask |= 1<<OVERLOAD_WarmBoxTecBit;
         if (hardwarePresent & (1<<HARDWARE_PRESENT_HotBoxBit))  installedMask |= 1<<OVERLOAD_HotBoxTecBit;

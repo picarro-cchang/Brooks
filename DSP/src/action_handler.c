@@ -38,6 +38,7 @@
 #include "heaterCntrl.h"
 #include "tunerCntrl.h"
 #include "valveCntrl.h"
+#include "peakDetectCntrl.h"
 #include "i2c_dsp.h"
 #include "ds1631.h"
 #include "ltc2451.h"
@@ -655,12 +656,15 @@ int r_sentryInit(unsigned int numInt,void *params,void *env)
 
 int r_modifyValvePumpTec(unsigned int numInt,void *params,void *env)
 /* Modify the valve, pump and TEC states by using the first parameter as a mask
-    and the second value as the bits to set within the mask */
+    and the second as the index of an integer register specifying bits to set 
+    within the mask */
 {
     unsigned int *reg = (unsigned int *) params;
+    unsigned int valveValues;
 
+    READ_REG(reg[1],valveValues);
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
-    modify_valve_pump_tec(reg[0],reg[1]);
+    modify_valve_pump_tec(reg[0],valveValues);
     return STATUS_OK;
 }
 
@@ -1038,4 +1042,19 @@ int r_activateFan(unsigned int numInt,void *params,void *env)
     READ_REG(reg[0],state);
     setFan((FAN_CNTRL_StateType)state);
     return STATUS_OK;
+}
+
+int r_peakDetectCntrlInit(unsigned int numInt,void *params,void *env)
+/* Initialize the peak detection controller, passing it the index of a 
+   processed loss register which is to be used to trigger the peak detection */
+{
+    unsigned int *reg = (unsigned int *) params;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return peakDetectCntrlInit(reg[0]);
+}
+
+int r_peakDetectCntrlStep(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return peakDetectCntrlStep();
 }

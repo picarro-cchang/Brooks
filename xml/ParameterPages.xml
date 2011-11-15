@@ -346,6 +346,21 @@
             <register>PROCESSED_LOSS_4_REGISTER</register>
         </gui_page>
         <gui_page>
+            <title>Peak Detector Parameters</title>
+            <register>PEAK_DETECT_CNTRL_STATE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_HISTORY_SIZE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER</register>
+        </gui_page>
+        <gui_page>
             <title>Tuner Parameters</title>
             <register>ANALYZER_TUNING_MODE_REGISTER</register>
             <fpga_register offset="FPGA_TWGEN">CS</fpga_register>

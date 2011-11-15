@@ -233,13 +233,15 @@ static int valveCntrlDelay = 10;
 
 int valveCntrlStep()
 {
-    ValveCntrl *v = &valveCntrl;
+    // ValveCntrl *v = &valveCntrl;
     // Step the valve controller
     if (valveCntrlDelay == 0) {
         proportionalValveStep();
         thresholdTriggerStep();
         valveSequencerStep();
-        modify_valve_pump_tec(0x3F,solenoidValves);
+        // The actual modification of the valve status is now done by a 
+        //  separate action
+        // modify_valve_pump_tec(0x3F,solenoidValves);
     } 
     else valveCntrlDelay--;
     return STATUS_OK;

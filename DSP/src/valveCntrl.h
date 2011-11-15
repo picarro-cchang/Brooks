@@ -1,9 +1,9 @@
 /*
     * FILE:
-    *   tempCntrl.h
+    *   valveCntrl.h
     *
     * DESCRIPTION:
-    *   Temperature controller routines
+    *   Valve controller routines
     *
     * SEE ALSO:
     *   Specify any related information.
