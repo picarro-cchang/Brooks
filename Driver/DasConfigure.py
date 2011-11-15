@@ -17,6 +17,7 @@
 import ctypes
 import sys
 import time
+import traceback
 from numpy import *
 from Host.autogen import interface
 from Host.Common import SharedTypes
@@ -42,7 +43,7 @@ schedulerPeriods = dict(FAST=2, MEDIUM=10, SLOW=50)
 
 class DasConfigure(SharedTypes.Singleton):
     initialized = False
-    def __init__(self,dasInterface=None,instrConfig=None):
+    def __init__(self,dasInterface=None,instrConfig=None,driverConfig=None):
         if not self.initialized:
             if dasInterface is None or instrConfig is None:
                 raise ValueError("DasConfigure has not been initialized correctly")
@@ -50,6 +51,7 @@ class DasConfigure(SharedTypes.Singleton):
             self.dasInterface = dasInterface
             self.opGroups = {}
             self.instrConfig = instrConfig
+            self.driverConfig = driverConfig
             self.installed = {}
             for key in instrConfig["CONFIGURATION"]:
                 self.installed[key] = int(instrConfig["CONFIGURATION"][key])
@@ -57,7 +59,19 @@ class DasConfigure(SharedTypes.Singleton):
             self.heaterCntrlMode = self.installed.get("HEATER_CONTROL_MODE",0)
             self.initialized = True
             self.parameter_forms = interface.parameter_forms
-                    
+            self.extraSchedule = None
+            self.extraInit = None
+            self.extraScheduleCode = None
+            self.extraInitCode = None
+            if "DasConfigure" in self.driverConfig:
+                dasConfig = self.driverConfig["DasConfigure"]
+                self.extraSchedule = dasConfig.get("schedule",None)
+                self.extraInit = dasConfig.get("init",None)
+            if self.extraSchedule is not None:
+                self.extraScheduleCode = compile(self.extraSchedule.replace("\r\n","\n"),"<schedule>","exec")
+            if self.extraInit is not None:
+                self.extraInitCode = compile(self.extraInit.replace("\r\n","\n"),"<init>","exec")
+            self.scriptEnv = {"Operation":Operation,"GROUPS":self.opGroups}
     def installCheck(self,key):
         return self.installed.get(key,0)
     
@@ -100,6 +114,7 @@ class DasConfigure(SharedTypes.Singleton):
                             p[i] = ('dsp','float',interface.HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER,'Sweep increment','digU/sample','%.0f',1,1)
                     break
         sender = self.dasInterface.hostToDspSender
+        self.scriptEnv["DO_OPERATION"] = sender.doOperation
         ts = timestamp.getTimestamp()
         sender.doOperation(Operation("ACTION_SET_TIMESTAMP",[ts&0xFFFFFFFF,ts>>32]))
         # Check initial value of NOOP register
@@ -120,23 +135,14 @@ class DasConfigure(SharedTypes.Singleton):
         # Start heartbeat to let sentry handler know that the scheduler is alive
         self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SCHEDULER_HEARTBEAT"))
 
-        # Loss processing
-        self.opGroups["FAST"]["SENSOR_PROCESSING"].addOperation(
-            Operation("ACTION_FLOAT_ARITHMETIC",
-                     ["LOSS_BUFFER_2_REGISTER","LOSS_BUFFER_1_REGISTER",
-                      "PROCESSED_LOSS_1_REGISTER","FLOAT_ARITHMETIC_Subtraction"]))
-        self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_ProcessedLoss1","PROCESSED_LOSS_1_REGISTER"]))
-        #
-        self.opGroups["FAST"]["SENSOR_PROCESSING"].addOperation(
-            Operation("ACTION_FLOAT_ARITHMETIC",
-                     ["LOSS_BUFFER_5_REGISTER","LOSS_BUFFER_4_REGISTER",
-                      "PROCESSED_LOSS_2_REGISTER","FLOAT_ARITHMETIC_Subtraction"]))
-        self.opGroups["FAST"]["STREAMER"].addOperation(
-            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                ["STREAM_ProcessedLoss2","PROCESSED_LOSS_2_REGISTER"]))
         
+        # Schedule code specified in the initialization file
+        if self.extraScheduleCode is not None:
+            try:
+                exec self.extraScheduleCode in self.scriptEnv
+            except:
+                LogExc("Error processing extra scheduler code in Driver initialization file", Level=3)
+                
         soa = self.installCheck("SOA_PRESENT")
         fiber_amp = self.installCheck("FIBER_AMPLIFIER_PRESENT")
         if soa and fiber_amp:
@@ -528,6 +534,10 @@ class DasConfigure(SharedTypes.Singleton):
                 self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
                     Operation("ACTION_SET_OUTLET_VALVE",
                               ["VALVE_CNTRL_OUTLET_VALVE_REGISTER","VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER"]))
+                              
+                self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+                    Operation("ACTION_MODIFY_VALVE_PUMP_TEC_FROM_REGISTER",
+                              [0x3F,"VALVE_CNTRL_SOLENOID_VALVES_REGISTER"]))
             
             self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_ADC_TO_PRESSURE",
@@ -615,7 +625,13 @@ class DasConfigure(SharedTypes.Singleton):
         # Perform one-time initializations
 
         sender.doOperation(Operation("ACTION_INIT_RUNQUEUE",[len(groups)]))
-        
+
+        # Schedule code specified in the initialization file
+        if self.extraInitCode is not None:
+            try:
+                exec self.extraInitCode in self.scriptEnv
+            except:
+                LogExc("Error processing extra initialization code in Driver initialization file", Level=3)
         
         runCont = (1<<interface.PWM_CS_RUN_B) | (1<<interface.PWM_CS_CONT_B)
 
@@ -690,4 +706,3 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_SENTRY_INIT"))
         # Set the scheduler running
         sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",1);
-

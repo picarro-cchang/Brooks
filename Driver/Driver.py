@@ -1147,7 +1147,7 @@ class Driver(SharedTypes.Singleton):
                 ic.loadPersistentRegistersFromConfig()
                 # self.dasInterface.loadDasState() # Restore DAS state
                 Log("Configuring scheduler",Level=1)
-                DasConfigure(self.dasInterface,ic.config).run()                
+                DasConfigure(self.dasInterface,ic.config,self.config).run()                
                 try:
                     self.rpcHandler.readWlmDarkCurrents()
                 except:
