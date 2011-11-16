@@ -13,7 +13,7 @@ from threading import Thread
 import time
 import traceback
 import CmdFIFO
-from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_INSTR_MANAGER
+from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
@@ -39,7 +39,6 @@ app.config.from_object(__name__)
 handler = JSONRPCHandler('jsonrpc')
 handler.connect(app,'/jsonrpc')
 
-INST_MGR_RPC = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "AnalyzerServer")
 
 class DataLoggerInterface(object):
     """Interface to the data logger and archiver RPC"""
@@ -49,7 +48,7 @@ class DataLoggerInterface(object):
         self.rpcInProgress = False
 
     def startUserLogs(self,userLogList,restart=False):
-        """Start a list of user logs by making a non-blocking RPC call to the alarm system"""
+        """Start a list of user logs by making a non-blocking RPC call"""
         while self.rpcInProgress: time.sleep(0.5)
         # if self.rpcInProgress: return False
         self.exception = None
@@ -374,9 +373,34 @@ def rest_shutdownAnalyzer():
         
 def shutdownAnalyzerEx(params):
     print "<------------------ Shut down analyzer in current state ------------------>"
+    INST_MGR_RPC = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "AnalyzerServer")
     INST_MGR_RPC.INSTMGR_ShutdownRpc(2)
     return {}
-    
+
+@handler.register
+@rpcWrapper
+def driverRpc(params):
+    return driverRpcEx(params)
+
+@app.route('/rest/driverRpc')
+def rest_driverRpc():
+    result = driverRpcEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def driverRpcEx(params):
+    # Call any RPC function on the driver by passing
+    #  params['func'] = name of Driver RPC function to call (as a string)
+    #  params['args'] = string which evaluates to a list of positional arguments for the RPC function
+    #  params['kwargs'] = string which evaluates to a dictionary of keyword arguments for the RPC function
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "AnalyzerServer")
+    try:
+        return dict(value=getattr(Driver,params['func'])(*eval(params.get('args','()'),{}),**eval(params.get('kwargs','{}'))))
+    except:
+        return dict(error=traceback.format_exc())
+
 @handler.register
 @rpcWrapper
 def getDateTime(params):

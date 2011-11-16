@@ -43,7 +43,28 @@
        
     function onTimer() {
         if (ignoreTimer) return;
-        getData();
+        getMode();
+    };
+    
+    var modeStrings = {0:"Survey Mode", 1:"Capture Mode", 2:"Capture Mode", 3:"Analyzing Peak"};
+    var modeShow = {0:"#capture",     1:"#cancel",        2:"#cancel",       3:"#cancel"};
+    var modeHide = {0:"#cancel",      1:"#capture",       2:"#capture",      3:"#capture"};
+    
+    function getMode() {
+        call_rest("driverRpc",{"func":"rdDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER']"},
+                    function(data,ts,jqXHR) {
+                        if ("value" in data.result) {
+                            var mode = data.result["value"]
+                            $("#mode").html(modeStrings[mode]);
+                            $(modeShow[mode]).show();
+                            $(modeHide[mode]).hide();                            
+                        }
+                        getData();
+                    },
+                    function(jqXHR,ts,et) {  
+                        $("#errors").html(jqXHR.responseText); 
+                        getData();
+                    });
     };
     
     function getData() {
@@ -138,10 +159,26 @@
                 strokeWeight:2  });
         path.setMap(map);
         $("#restart_log").click(function() {         
-            call_rest("restartDatalog",{});
+            if (confirm("Close current data log and open a new one?")) {
+                call_rest("restartDatalog",{});
+            }
         });
-        $("#shutdown_analyzer").click(function() {         
-            call_rest("shutdownAnalyzer",{});
+        $("#shutdown_analyzer").click(function() {
+            if (confirm("Really shut down analyzer?\nNote: It can take 30 to 45 minutes to warm up.")) {
+                call_rest("shutdownAnalyzer",{});
+            }
+        });
+        $("#cancel").hide()
+        $("#cancel").click(function() {
+            if (confirm("Cancel capture or analysis and return to survey mode?")) {
+                call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',0]"});
+            }
+        });
+        $("#capture").click(function() {
+            ignoreTimer = true;
+            $("#mode").html(modeStrings[1]);
+            call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',1]"});
+            ignoreTimer = false;
         });
         timer1 = setTimeout(onTimer,1000);
     };
@@ -158,34 +195,47 @@
 <p id="counter">Counter value here</p>
 
 <p>
-Here are some instructions as to what the driver should do in order to best traverse the map looking for any signs of methane.
+In <b>survey mode</b>, instrument detects locations of enhanced methane concentration and places indicators on map.
 </p>
 <p>
-Here are some instructions as to what the driver should do in order to best traverse the map looking for any signs of methane.
+In <b>capture mode</b>, instrument collects methane from the next peak encountered and analyzes its composition. 
 </p>
-<p>
-Here are some instructions as to what the driver should do in order to best traverse the map looking for any signs of methane.
+<p> Note: During analysis, the instrument does not detect emissions.
 </p>
 <form id="setoptions" method="get">
-<dl>
-<dt>Follow vehicle:</dt>
-{% if follow %}
-<dd><input type="checkbox" id="follow" name="follow" checked="on"/></dd>
-{% else %}
-<dd><input type="checkbox" id="follow" name="follow"/></dd>
-{% endif %}
-<dt>Minimum amplitude:</dt>
-<dd><input type="text" id="amplitude"        name="amplitude" value="{{ amplitude }}"/></dd>
-<dd><input type="hidden" id="center_longitude" name="center_longitude" value="{{ center_longitude }}"/></dd>
-<dd><input type="hidden" id="center_latitude"  name="center_latitude"  value="{{ center_latitude }}"/></dd>
-</dl>
+<p>
+    <label for="follow">Follow vehicle:</label>
+    {% if follow %}
+        <input type="checkbox" id="follow" name="follow" checked="on"/>
+    {% else %}
+        <input type="checkbox" id="follow" name="follow"/>
+    {% endif %}
+</p>
+<p>
+    <label for="amplitude">Min amplitude:</label>
+    <input type="text" id="amplitude" name="amplitude" value="{{ amplitude }}"/>
+</p>
+<input type="hidden" id="center_longitude" name="center_longitude" value="{{ center_longitude }}"/>
+<input type="hidden" id="center_latitude"  name="center_latitude"  value="{{ center_latitude }}"/>
 {% if do_not_follow %}
-<input type="hidden" id="do_not_follow" name="do_not_follow" checked="on"/>
+    <input type="hidden" id="do_not_follow" name="do_not_follow" checked="on"/>
 {% else %}
-<input type="hidden" id="do_not_follow" name="do_not_follow"/>
+    <input type="hidden" id="do_not_follow" name="do_not_follow"/>
 {% endif %}
+
+<p>
 <button type="button" id="restart_log" name="Restart Log">Restart Log</button>
+</p>
+<p>
 <button type="button" id="shutdown_analyzer" name="Shut Down Analyzer">Shut Down Analyzer</button>
+</p>
+<h3 id="mode">Survey Mode</h3>
+<p>
+<button type="button" id="capture" name="capture">Switch to Capture Mode</button>
+</p>
+<p>
+<button type="button" id="cancel" name="cancel">Cancel Capture and Analysis</button>
+</p>
 </form>
 </div>
 <div id="map_canvas" class="map" style="width:70%; height:90%; float:right;"></div>
