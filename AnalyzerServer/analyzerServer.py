@@ -7,6 +7,8 @@ except:
     import json
 from functools import wraps
 import glob
+import itertools
+import linecache
 import os
 import sys
 from threading import Thread
@@ -81,7 +83,7 @@ def rpcWrapper(func):
             raise JSON_Remote_Procedure_Error, "\n%s" % (traceback.format_exc(),)
     return JSON_RPC_wrapper
     
-def _getPeaks(fp,startRow,minAmp):
+def _getPeaks(name,startRow,minAmp):
     #
     # Gets data from the analyzer peak parameters file "fp" starting  at the specified 
     #  "startRow" within the file. Only peaks of amplitude no less than "minAmp" are 
@@ -94,27 +96,27 @@ def _getPeaks(fp,startRow,minAmp):
     # SIGMA            Half-widths calculated from space-scale representation
     # NEXT_ROW        Next row in file which has yet to be processed
     #
-    fp.seek(0,0)
-    header = fp.readline().split()
+    # N.B. Rows start at zero, whereas linecache starts lines at 1
+    print 'StartRow', startRow
+    header = linecache.getline(name,1).split()
     amplCol = header.index("AMPLITUDE")
     result = dict(DISTANCE=[],GPS_ABS_LONG=[],GPS_ABS_LAT=[],CH4=[],AMPLITUDE=[],SIGMA=[])
     if amplCol<0:
         print "Cannot find AMPLITUDE column in peak file"
         result['NEXT_ROW'] = startRow
         return result
-    lineLength = fp.tell()
-    fp.seek(startRow*lineLength,0)
-    for line in fp:
-        if len(line) != lineLength: break
+    for lineNum in itertools.count(startRow+1):
+        line = linecache.getline(name,lineNum)
+        if not line: break
         vals = line.split()
-        if len(vals)!=len(header): break
+        if len(vals) != len(header): break
         if float(vals[amplCol]) >= minAmp:
             for col,val in zip(header,vals):
                 if col in result: result[col].append(float(val))
         startRow += 1
     result['NEXT_ROW'] = startRow
     return result
-
+        
 def _getData(fp,startPos=None,shift=0):    
     #
     # Gets data from the analyzer live archive file "fp" starting  at the specified 
@@ -329,11 +331,10 @@ def getPeaksEx(params):
     names = sorted(glob.glob(PEAKFILES))
     try:
         name = names[-1]
-        fp = file(name,'rb')
     except:
         return {'filename':''}
-    result = _getPeaks(fp,startRow,minAmp)
-    fp.close();
+    linecache.checkcache(name)
+    result = _getPeaks(name,startRow,minAmp)
     dist, long, lat = result["DISTANCE"], result["GPS_ABS_LONG"], result["GPS_ABS_LAT"] 
     ch4, amp, sigma = result["CH4"], result["AMPLITUDE"], result["SIGMA"]
     nextRow = result["NEXT_ROW"]
