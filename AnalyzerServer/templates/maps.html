@@ -67,6 +67,8 @@
                     });
     };
     
+    var methaneHistory = new Array();
+    var histMax = 200;
     function getData() {
         call_rest("getData",{"startPos":startPos},
                     function(data,ts,jqXHR) {
@@ -81,6 +83,9 @@
                             startPos = data.result["lastPos"];
                             n = ch4.length;
                             if (n>0) {
+                                methaneHistory = methaneHistory.concat(ch4);
+                                if (methaneHistory.length >= histMax) methaneHistory.splice(0,methaneHistory.length-histMax);
+                                $('#concentrationSparkline').sparkline(methaneHistory,{"chartRangeMin":1.8, "width":"180px", "height":"50px"});
                                 $("#concData").html("Current concentration " + ch4[n-1].toFixed(3) + " ppm"); 
                                 pathCoords = path.getPath();
                                 for (i=1;i<n;i++) {
@@ -237,6 +242,9 @@ In <b>capture mode</b>, instrument collects methane from the next peak encounter
 <button type="button" id="cancel" name="cancel">Cancel Capture and Analysis</button>
 </p>
 </form>
+<p>
+<span id="concentrationSparkline">Loading..</span>
+</p>
 </div>
 <div id="map_canvas" class="map" style="width:70%; height:90%; float:right;"></div>
 {% endblock %}
