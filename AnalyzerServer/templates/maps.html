@@ -13,6 +13,7 @@
     var timer1;
     var counter = 0;
     var leakLine = 1;
+    var analysisLine = 1;
     var minAmp = {{ amplitude }};
     var startPos = null;
     
@@ -47,17 +48,18 @@
     };
     
     var modeStrings = {0:"Survey Mode", 1:"Capture Mode", 2:"Capture Mode", 3:"Analyzing Peak"};
-    var modeShow = {0:"#capture",     1:"#cancel",        2:"#cancel",       3:"#cancel"};
-    var modeHide = {0:"#cancel",      1:"#capture",       2:"#capture",      3:"#capture"};
+    var modeShow = {0:["#capture"],     1:["#cancel"],    2:["#cancel"],    3:[]};
+    var modeHide = {0:["#cancel"],      1:["#capture"],   2:["#capture"],   3:["#capture","#cancel"]};
     
     function getMode() {
         call_rest("driverRpc",{"func":"rdDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER']"},
                     function(data,ts,jqXHR) {
                         if ("value" in data.result) {
-                            var mode = data.result["value"]
+                            var mode = data.result["value"];
+                            var e;
                             $("#mode").html(modeStrings[mode]);
-                            $(modeShow[mode]).show();
-                            $(modeHide[mode]).hide();                            
+                            for (e in modeShow[mode]) $(e).show();
+                            for (e in modeHide[mode]) $(e).hide();
                         }
                         getData();
                     },
@@ -127,13 +129,44 @@
                                 peakMarkers[peakMarkers.length] = peakMarker;
                             }
                         }
+                        showAnalysis();
+                    },
+                    function(jqXHR,ts,et) {  
+                        $("#errors").html(jqXHR.responseText); 
+                        showAnalysis();
+                    });
+    }                
+    
+    function showAnalysis() { 
+        call_rest("getAnalysis",{"startRow":analysisLine},
+                    function(data,ts,jqXHR) {
+                        var i;
+                        if ("conc" in data.result) {
+                            lat = data.result["lat"];
+                            lon = data.result["long"];
+                            conc = data.result["conc"];
+                            delta = data.result["delta"];
+                            uncertainty = data.result["uncertainty"];
+                            analysisLine = data.result["nextRow"];
+                            for (i=0;i<conc.length;i++) {
+                                analysisCoords = new google.maps.LatLng(lat[i],lon[i]);
+                                var result = delta[i].toFixed(1)+" +/- "+uncertainty[i].toFixed(1);
+                                $("#analysis").html("Delta: " + result);
+                                result = result.replace("+","%2B").replace(" ","+");
+                                analysisMarker = new google.maps.Marker({position:analysisCoords,
+                                icon:new google.maps.MarkerImage(
+        "http://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=bbtl|"+result+"|FF8080|000000",
+        null, null, new google.maps.Point(0, 0))});
+                                analysisMarker.setMap(map);
+                            }
+                        }
                         timer1 = setTimeout(onTimer,1000);                        
                     },
                     function(jqXHR,ts,et) {  
                         $("#errors").html(jqXHR.responseText); 
                         timer1 = setTimeout(onTimer,1000);                        
                     });
-    }                
+    }
     
     function initialize() {
         var latlng = new google.maps.LatLng({{ center_latitude }},{{ center_longitude }});
@@ -245,6 +278,7 @@ In <b>capture mode</b>, instrument collects methane from the next peak encounter
 <p>
 <span id="concentrationSparkline">Loading..</span>
 </p>
+<p id="analysis">Analysis result here</p>
 </div>
 <div id="map_canvas" class="map" style="width:70%; height:90%; float:right;"></div>
 {% endblock %}

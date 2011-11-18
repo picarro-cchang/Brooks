@@ -215,7 +215,7 @@ class PeakFinder(object):
                             dist += jump
                         x0, y0 = x, y
                         if jump < JUMP_MAX:
-                            yield dist,(long,lat),(entry['EPOCH_TIME'],entry['CH4'])
+                            yield dist,(long,lat),(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'])
                         else:
                             yield None,None,None    # Indicate that dist is bad, and we must restart
                             dist = None
@@ -343,6 +343,9 @@ class PeakFinder(object):
             on a grid with an odd number of points which just covers the interval
             [-5*sqrt(tfactor*t_i),5*sqrt(tfactor*t_i)]
             """
+            # The following is true when the tape recorder is playing back
+            collecting = lambda v: (v == int(v)) and (int(v) & 1) != 0
+            
             hList = []
             kernelList = []
             scaleList = []
@@ -375,12 +378,20 @@ class PeakFinder(object):
                          (v>ssbuff[level-1,colp]) and (v>ssbuff[level-1,col]) and (v>ssbuff[level+1,colm])
                 return isPeak, col         
             initBuff = True
+            countdown = 10
             for x,y in source:
                 if x is None:
                     initBuff = True
                     continue
                 # Initialize 
-                long,lat,epochTime,methane = y
+                long,lat,epochTime,methane,valves = y
+                if collecting(valves):
+                    countdown -= 1
+                    if countdown<0:
+                        initBuff = True
+                        continue
+                else:
+                    countdown = 10
                 if initBuff:
                     ssbuff = zeros((nlevels,npoints),float)
                     # Define a cache for the position and concentration data so that the

@@ -307,11 +307,13 @@ class PeakAnalyzer(object):
                     while tempStore[-1].sourceData.time - tempStore[0].sourceData.time > MAX_DURATION:
                         tempStore.popleft()
                     if lastCollecting:  # Check to see if there are data for a Keeling plot
-                        if keelingStore:
+                        if len(keelingStore)>10:
                             conc = asarray([s.sourceData.conc for s in keelingStore])
                             delta = asarray([s.sourceData.delta for s in keelingStore])
                             protInvconc = 1/maximum(conc,0.001)
                             result = linfit(protInvconc,delta,11.0*protInvconc)
+                            if abs(result.coeffs[1]+40) > 20:
+                                print conc, delta
                             if lastPeak:
                                 yield namedtuple('PeakData','time dist long lat conc delta uncertainty')(delta=result.coeffs[1],
                                             uncertainty=sqrt(result.cov[1][1]),**lastPeak._asdict())
@@ -354,7 +356,7 @@ class PeakAnalyzer(object):
                 except:
                     raise RuntimeError('Cannot open analysis output file %s' % analysisFile)
                 
-                handle.write("%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","DELTA","UNCERTAINTY"))
+                handle.write("%-14s%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY"))
  
                 # Make a generator which yields (distance,(long,lat,valve_mask,epoch_time,methane,delta)))
                 #  from the analyzer data by applying a shift to the concentration and
@@ -364,9 +366,9 @@ class PeakAnalyzer(object):
                 
                 for r in doKeelingAnalysis(alignedData):
                     print r
+                    handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.2f%-14.2f\r\n" % (r.time,r.dist,r.long,r.lat,r.conc,r.delta,r.uncertainty))
                     
                 handle.close()
-
 
 if __name__ == "__main__":
 

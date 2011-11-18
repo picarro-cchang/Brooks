@@ -35,6 +35,7 @@ PASSWORD = 'default'
 SHIFT = -4
 USERLOGFILES = os.path.join(AppDir,'static/datalog/*.dat')
 PEAKFILES = os.path.join(AppDir,'static/datalog/*.peaks')
+ANALYSISFILES = os.path.join(AppDir,'static/datalog/*.analysis')
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -83,9 +84,35 @@ def rpcWrapper(func):
             raise JSON_Remote_Procedure_Error, "\n%s" % (traceback.format_exc(),)
     return JSON_RPC_wrapper
     
+def _getAnalysis(name,startRow):
+    #
+    # Gets data from the analyzer analysis file "name" starting  at the specified 
+    #  "startRow" within the file. The result dictionary has keys:
+    # DISTANCE        Distance along path at which maxima are located
+    # GPS_ABS_LONG    Longitude of maxima
+    # GPS_ABS_LAT     Latitude of maxima
+    # CONC            Methane concentration at peak
+    # DELTA           Isotopic ratio value
+    # UNCERTAINTY     Uncertainty in delta
+    # NEXT_ROW        Next row in file which has yet to be processed
+    #
+    # N.B. Rows start at zero, whereas linecache starts lines at 1
+    header = linecache.getline(name,1).split()
+    result = dict(DISTANCE=[],GPS_ABS_LONG=[],GPS_ABS_LAT=[],CONC=[],DELTA=[],UNCERTAINTY=[])
+    for lineNum in itertools.count(startRow+1):
+        line = linecache.getline(name,lineNum)
+        if not line: break
+        vals = line.split()
+        if len(vals) != len(header): break
+        for col,val in zip(header,vals):
+            if col in result: result[col].append(float(val))
+        startRow += 1
+    result['NEXT_ROW'] = startRow
+    return result
+    
 def _getPeaks(name,startRow,minAmp):
     #
-    # Gets data from the analyzer peak parameters file "fp" starting  at the specified 
+    # Gets data from the analyzer peak parameters file "name" starting  at the specified 
     #  "startRow" within the file. Only peaks of amplitude no less than "minAmp" are 
     #  reported. The result dictionary has keys:
     # DISTANCE        Distance along path at which maxima are located
@@ -97,7 +124,6 @@ def _getPeaks(name,startRow,minAmp):
     # NEXT_ROW        Next row in file which has yet to be processed
     #
     # N.B. Rows start at zero, whereas linecache starts lines at 1
-    print 'StartRow', startRow
     header = linecache.getline(name,1).split()
     amplCol = header.index("AMPLITUDE")
     result = dict(DISTANCE=[],GPS_ABS_LONG=[],GPS_ABS_LAT=[],CH4=[],AMPLITUDE=[],SIGMA=[])
@@ -339,7 +365,38 @@ def getPeaksEx(params):
     ch4, amp, sigma = result["CH4"], result["AMPLITUDE"], result["SIGMA"]
     nextRow = result["NEXT_ROW"]
     return(dict(filename=name,dist=dist,long=long,lat=lat,ch4=ch4,amp=amp,sigma=sigma,nextRow=nextRow))
-    
+
+@handler.register
+@rpcWrapper
+def getAnalysis(params):
+    return getAnalysisEx(params)
+
+@app.route('/rest/getAnalysis')
+def rest_getAnalysis():
+    result = getAnalysisEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+        
+def getAnalysisEx(params):
+    try:
+        startRow = int(params.get('startRow',1))
+    except:
+        startRow = 1
+    names = sorted(glob.glob(ANALYSISFILES))
+    try:
+        name = names[-1]
+    except:
+        return {'filename':''}
+    linecache.checkcache(name)
+    result = _getAnalysis(name,startRow)
+    dist, long, lat = result["DISTANCE"], result["GPS_ABS_LONG"], result["GPS_ABS_LAT"] 
+    conc, delta, uncertainty = result["CONC"], result["DELTA"], result["UNCERTAINTY"]
+    nextRow = result["NEXT_ROW"]
+    return(dict(filename=name,dist=dist,long=long,lat=lat,conc=conc,delta=delta,
+                uncertainty=uncertainty,nextRow=nextRow))
+                
 @handler.register
 @rpcWrapper
 def restartDatalog(params):
