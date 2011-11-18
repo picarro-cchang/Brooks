@@ -344,7 +344,7 @@ class PeakFinder(object):
             [-5*sqrt(tfactor*t_i),5*sqrt(tfactor*t_i)]
             """
             # The following is true when the tape recorder is playing back
-            collecting = lambda v: (v == int(v)) and (int(v) & 1) != 0
+            collecting = lambda v: (v == int(v)) and (int(v) & 3) == 3
             
             hList = []
             kernelList = []

@@ -56,10 +56,10 @@
                     function(data,ts,jqXHR) {
                         if ("value" in data.result) {
                             var mode = data.result["value"];
-                            var e;
+                            var i;
                             $("#mode").html(modeStrings[mode]);
-                            for (e in modeShow[mode]) $(e).show();
-                            for (e in modeHide[mode]) $(e).hide();
+                            for (i=0;i<modeShow[mode].length;i++) $(modeShow[mode][i]).show();
+                            for (i=0;i<modeHide[mode].length;i++) $(modeHide[mode][i]).hide();
                         }
                         getData();
                     },

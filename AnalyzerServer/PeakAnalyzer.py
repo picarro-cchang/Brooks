@@ -291,7 +291,7 @@ class PeakAnalyzer(object):
             Perform a Keeling analysis of the data during the interval that the recorder is being played back"""
             
             MAX_DURATION = 30
-            collecting = lambda v: (v == int(v)) and (int(v) & 1) != 0
+            collecting = lambda v: (v == int(v)) and (int(v) & 3) == 3
             tempStore = deque()
             keelingStore = []
             lastPeak = None
@@ -333,9 +333,7 @@ class PeakAnalyzer(object):
                             lastPeak = namedtuple('PeakData1','time dist long lat conc')(epoch_time[pk],dist[pk],long[pk],lat[pk],conc[pk])
                             tempStore.clear()
                 lastCollecting = collectingNow
-            
-        
-        
+
         shift = self.shift
         
         while True:
