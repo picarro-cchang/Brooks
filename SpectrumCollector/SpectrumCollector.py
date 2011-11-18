@@ -212,12 +212,15 @@ class SpectrumCollector(object):
         # The following count "spectra" which are delimited by scheme rows which have bit-15 set in the subschemeId
         lastCount = -1
         thisCount = -1
+        MAXLOOPS = 100
+        loops = 0
         while not self._shutdownRequested:
             #Pull a spectral point from the RD queue...
             try:
                 rdData = self.getSpectralDataPoint(timeToRetry=0.5)
                 if rdData is None: 
                     time.sleep(0.5)
+                    loops = 0
                     continue
                 now = TimeStamp()
                 if self.rdQueueGetLastTime != 0:
@@ -278,6 +281,10 @@ class SpectrumCollector(object):
                 self.schemesUsed = {}
 
             lastCount = thisCount
+            loops += 1
+            if loops >= MAXLOOPS:
+                loops = 0
+                time.sleep(0.1)
             
         Log("Spectrum Collector RPC handler shut down")
 
@@ -437,6 +444,7 @@ class SpectrumCollector(object):
                         except:
                             Log("Error copying to auxiliary spectrum file %s" % self.auxSpectrumFile,Verbose=traceback.format_exc())
                         self.auxSpectrumFile = ""
+                    time.sleep(1.0)
                     # Archive HDF5 file
                     try:
                         Archiver.ArchiveFile(self.archiveGroup, self.streamPath, True)
