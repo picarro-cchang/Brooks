@@ -3196,7 +3196,7 @@ __p.append(('dsp','float',PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER,'Upper thre
 __p.append(('dsp','float',PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER,'Lower Threshold 1 (relative to background)','ppm/cm','%.3f',1,1))
 __p.append(('dsp','float',PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER,'Lower Threshold 2 (relative to background)','ppm/cm','%.3f',1,1))
 __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER,'Active buffer length','samples','%d',1,1))
-__p.append(('dsp','uint32',PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER,'Active buffer length','samples','%d',1,1))
+__p.append(('dsp','uint32',PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER,'Samples after peak','samples','%d',1,1))
 __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER,'Condition for triggering','','$%04X',1,1))
 __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER,'Trigger delay (after trigger condition met)','samples','%d',1,1))
 __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER,'Reset delay (after trigger)','samples','%d',1,1))
