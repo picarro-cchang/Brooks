@@ -13,22 +13,29 @@
  *  PEAK_DETECT_CNTRL_TriggerPendingState: Peak has been found in history buffer
  *  PEAK_DETECT_CNTRL_TriggeredState: triggerDelay samples have arrived since peak was found
  *
- * Conceptually, the history buffer is cleared when entering the ArmedState. Up to "historySize"
- *  points are kept in the buffer, and on the introduction of each new processedLoss
- *  1) The peak value in the history buffer is found, its location is peakIndex
- *  2) The minimum value in the buffer from the start to peakIndex is found
- *  3) The minimum value in the buffer from the peakIndex to the end of the buffer 
+ * The minimum of the previous "backgroundSamples" points within the history buffer are used 
+ *  determine the value of "background". If "backgroundSamples" is zero, the value of 
+ *  "background" is not updated.
+ * The most recent points in the history buffer are called the active points. The number of
+ *  active points is set to zero when entering the ArmedState. As points are collected, the
+ *  number of active points is incremented, but its value is capped at "activeSize"
+ * When new points arrive:
+ *  1) The peak value in the active region is found, its location is peakIndex
+ *  2) The minimum value in the active region from the start to peakIndex is found
+ *  3) The minimum value in the active region from the peakIndex to the end of the buffer 
  *      (i.e., the current sample) is found
  *
- * The peak value is compared against upperThreshold: Condition 0 is true if it exceeds the threshold.
- * The minimum between start and peakIndex is compared against lowerThreshold1: Condition 1 is true if
+ * The peak value is compared against background + upperThreshold: Condition 0 is true if it exceeds the threshold.
+ * The minimum between start and peakIndex is compared against background + lowerThreshold1: Condition 1 is true if
  *   it is below the threshold
- * The minimum between peakIndex and the current sample is compared against lowerThreshold2: Condition 2 
+ * The minimum between peakIndex and the current sample is compared against background + lowerThreshold2: Condition 2 
  *   is true it is below the threshold
+ * The position of the peak is compared against "postPeakSamples": Condition 3 is true if there are at least this
+ *  number of samples in the active region since the peak
  * 
  * The value of "triggerCondition" specifies the logical function which is to be applied to the results
  *  of the three conditions to determine whether a transition to the triggered state should occur.
- * From the conditions, the "conditionBit" = 4*(Condition 2) + 2*(Condition 1) + (Condition 0) is found.
+ * From the conditions, the "conditionBit" = 8*(Condition 3) + 4*(Condition 2) + 2*(Condition 1) + (Condition 0) is found.
  * When triggerCondition is written out as a binary number, if the conditionBit is 1, the controller
  *  will enter the TriggerPending state
  *
@@ -57,10 +64,13 @@
 
 #define state               (*(p->state_))
 #define processedLoss       (*(p->processedLoss_))
+#define backgroundSamples   (*(p->backgroundSamples_))
+#define background          (*(p->background_))
 #define upperThreshold      (*(p->upperThreshold_))
 #define lowerThreshold1     (*(p->lowerThreshold1_))
 #define lowerThreshold2     (*(p->lowerThreshold2_))
-#define historySize         (*(p->historySize_))
+#define postPeakSamples     (*(p->postPeakSamples_))
+#define activeSize          (*(p->activeSize_))
 #define triggerCondition    (*(p->triggerCondition_))
 #define triggerDelay        (*(p->triggerDelay_))
 #define resetDelay          (*(p->resetDelay_))
@@ -79,10 +89,13 @@ int peakDetectCntrlInit(unsigned int processedLossRegisterIndex)
     
     p->state_ = (PEAK_DETECT_CNTRL_StateType *)registerAddr(PEAK_DETECT_CNTRL_STATE_REGISTER);
     p->processedLoss_ = (float *)registerAddr(processedLossRegisterIndex);
+    p->backgroundSamples_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER);
+    p->background_ = (float *)registerAddr(PEAK_DETECT_CNTRL_BACKGROUND_REGISTER);
     p->upperThreshold_ = (float *)registerAddr(PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER);
     p->lowerThreshold1_ = (float *)registerAddr(PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER);
     p->lowerThreshold2_ = (float *)registerAddr(PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER);
-    p->historySize_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_HISTORY_SIZE_REGISTER);
+    p->postPeakSamples_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER);
+    p->activeSize_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER);
     p->triggerCondition_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER);
     p->triggerDelay_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER);
     p->resetDelay_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER);
@@ -92,7 +105,7 @@ int peakDetectCntrlInit(unsigned int processedLossRegisterIndex)
     p->triggeredValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER);
     p->solenoidValves_ = (unsigned int *)registerAddr(VALVE_CNTRL_SOLENOID_VALVES_REGISTER);
     p->historyTail = 0;
-    p->historyLength = 0;
+    p->activeLength = 0;
     p->triggerWait = 0;
     p->resetWait = 0;
     p->lastState = state = PEAK_DETECT_CNTRL_IdleState;
@@ -111,13 +124,23 @@ static unsigned int modifyValves(unsigned int current, unsigned int maskAndValue
 
 static unsigned int processHistoryBuffer(PeakDetectCntrl *p, unsigned int tail, unsigned int length)
 {
-    unsigned int bitPos, cond0, cond1, cond2, i, peakPos;
+    unsigned int bitPos, cond0, cond1, cond2, cond3, i, peakPos;
+    int postPeak;
     float peakValue, minValue1, minValue2;
     
-    int start = tail - length;
+    int start;
+    // Find background
+    start = tail - backgroundSamples;
     if (start < 0) start += PEAK_DETECT_MAX_HISTORY_LENGTH;
-
-    // Find peak within buffer
+    
+    if (backgroundSamples > 0) background = p->historyBuffer[start];
+    for (i=start; i!=tail; i=(i+1)%PEAK_DETECT_MAX_HISTORY_LENGTH) {
+        if (p->historyBuffer[i] <= background) background = p->historyBuffer[i];
+    }
+    // Now deal with samples in the active region
+    start = tail - length;
+    if (start < 0) start += PEAK_DETECT_MAX_HISTORY_LENGTH;
+    // Find peak within active region
     peakValue = p->historyBuffer[start];
     peakPos = start;
     for (i=start; i!=tail; i=(i+1)%PEAK_DETECT_MAX_HISTORY_LENGTH) {
@@ -126,44 +149,49 @@ static unsigned int processHistoryBuffer(PeakDetectCntrl *p, unsigned int tail, 
             peakPos = i;
         }
     }
-    cond0 = (peakValue >= upperThreshold);
+    cond0 = (peakValue >= background + upperThreshold);
     // Find minimum between start and peak
     minValue1 = p->historyBuffer[start];
     for (i=start; i!=peakPos; i=(i+1)%PEAK_DETECT_MAX_HISTORY_LENGTH) {
         if (p->historyBuffer[i] <= minValue1) minValue1 = p->historyBuffer[i];
     }
-    cond1 = (minValue1 <= lowerThreshold1);
+    cond1 = (minValue1 <= background + lowerThreshold1);
     // Find minimum between peak and tail
     minValue2 = p->historyBuffer[peakPos];
     for (i=peakPos; i!=tail; i=(i+1)%PEAK_DETECT_MAX_HISTORY_LENGTH) {
         if (p->historyBuffer[i] <= minValue2) minValue2 = p->historyBuffer[i];
     }
-    cond2 = (minValue2 <= lowerThreshold2);
+    cond2 = (minValue2 <= background + lowerThreshold2);
+    // Find number of samples after peak
+    postPeak = tail-peakPos-1;
+    if (postPeak<0) postPeak += PEAK_DETECT_MAX_HISTORY_LENGTH;
+    cond3 =(postPeak >= postPeakSamples);
+    
     // Apply triggerCondition logical function to see if a peak has been found
-    bitPos = 4*(cond2) + 2*(cond1) + (cond0);
+    bitPos = 8*(cond3) + 4*(cond2) + 2*(cond1) + (cond0);
     return 0 != ((triggerCondition >> bitPos) & 1);
 }
 
 int peakDetectCntrlStep()
 {
     PeakDetectCntrl *p = &peakDetectCntrl;
-    if (historySize > PEAK_DETECT_MAX_HISTORY_LENGTH) historySize = PEAK_DETECT_MAX_HISTORY_LENGTH;
+    if (activeSize > PEAK_DETECT_MAX_HISTORY_LENGTH) activeSize = PEAK_DETECT_MAX_HISTORY_LENGTH;
     
     // Save most recent processed loss to history buffer
     p->historyBuffer[p->historyTail++] = processedLoss;
     if (p->historyTail >= PEAK_DETECT_MAX_HISTORY_LENGTH) p->historyTail -= PEAK_DETECT_MAX_HISTORY_LENGTH;
-    p->historyLength++;
-    if (p->historyLength >= historySize) p->historyLength = historySize;
+    p->activeLength++;
+    if (p->activeLength >= activeSize) p->activeLength = activeSize;
     
     // State machine transition code
     if (state == PEAK_DETECT_CNTRL_IdleState) {
         solenoidValves = modifyValves(solenoidValves,idleValveMaskAndValue);
     }
     else if (state == PEAK_DETECT_CNTRL_ArmedState) {
-        // If we newly transition to armed state, reset effective length of history buffer
-        if (p->lastState != state) p->historyLength = 1;
+        // If we newly transition to armed state, reset effective length of active buffer
+        if (p->lastState != state) p->activeLength = 1;
         solenoidValves = modifyValves(solenoidValves,armedValveMaskAndValue);
-        if (processHistoryBuffer(p,p->historyTail,p->historyLength)) {
+        if (processHistoryBuffer(p,p->historyTail,p->activeLength)) {
             // Peak detected! Trigger immediately or after specified delay
             if (triggerDelay == 0) {
                 state = PEAK_DETECT_CNTRL_TriggeredState;

@@ -3002,36 +3002,54 @@
             <initial>PEAK_DETECT_CNTRL_IdleState</initial>
             <display>Peak Detection Controller Mode</display>
         </register>
-
+        <register ident="PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Number of points for calculating background.</description>
+            <initial>200</initial>
+            <save/>
+            <display format="%d" units="samples">Number of samples for calculating background</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_BACKGROUND_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Background loss in ppm/cm.</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f" units="ppm/cm">Background loss</display>
+        </register>
         <register ident="PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER" type="float" minver="1.0" access="rw">
             <description>Upper threshold in ppm/cm.</description>
             <initial>1.0</initial>
             <save/>
-            <display format="%.3f" units="ppm/cm">Upper threshold</display>
+            <display format="%.3f" units="ppm/cm">Upper threshold (relative to background)</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER" type="float" minver="1.0" access="rw">
             <description>Lower threshold 1 in ppm/cm.</description>
             <initial>0.0</initial>
             <save/>
-            <display format="%.3f" units="ppm/cm">Lower Threshold 1</display>
+            <display format="%.3f" units="ppm/cm">Lower Threshold 1 (relative to background)</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER" type="float" minver="1.0" access="rw">
             <description>Lower threshold 2 in ppm/cm.</description>
             <initial>0.0</initial>
             <save/>
-            <display format="%.3f" units="ppm/cm">Lower Threshold 2</display>
+            <display format="%.3f" units="ppm/cm">Lower Threshold 2 (relative to background)</display>
         </register>
-        <register ident="PEAK_DETECT_CNTRL_HISTORY_SIZE_REGISTER" type="uint32" minver="1.0" access="rw">
-            <description>Points in history buffer.</description>
+
+        <register ident="PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Points in active buffer.</description>
             <initial>100</initial>
             <save/>
-            <display format="%d" units="samples">History buffer length</display>
+            <display format="%d" units="samples">Active buffer length</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Samples after peak required.</description>
+            <initial>300</initial>
+            <save/>
+            <display format="%d" units="samples">Active buffer length</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Condition for triggering.</description>
-            <initial>0x80</initial>
+            <initial>0xA800</initial>
             <save/>
-            <display format="$%02X">Condition for triggering</display>
+            <display format="$%04X">Condition for triggering</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Delay (in samples) before triggering.</description>
@@ -3041,7 +3059,7 @@
         </register>
         <register ident="PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Delay (in samples) before resetting.</description>
-            <initial>1000</initial>
+            <initial>600</initial>
             <save/>
             <display format="%d" units="samples">Reset delay (after trigger)</display>
         </register>

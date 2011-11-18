@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[430];
+RegTypes regTypes[433];
 
 /* I2C devices */
 I2C_device i2c_devices[33] = {
@@ -847,6 +847,10 @@ void initRegisters()
     writeRegister(PROCESSED_LOSS_4_REGISTER,d);
     d.asUint = PEAK_DETECT_CNTRL_IdleState;
     writeRegister(PEAK_DETECT_CNTRL_STATE_REGISTER,d);
+    d.asUint = 200;
+    writeRegister(PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER,d);
+    d.asFloat = 1.0;
+    writeRegister(PEAK_DETECT_CNTRL_BACKGROUND_REGISTER,d);
     d.asFloat = 1.0;
     writeRegister(PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER,d);
     d.asFloat = 0.0;
@@ -854,12 +858,14 @@ void initRegisters()
     d.asFloat = 0.0;
     writeRegister(PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER,d);
     d.asUint = 100;
-    writeRegister(PEAK_DETECT_CNTRL_HISTORY_SIZE_REGISTER,d);
-    d.asUint = 0x80;
+    writeRegister(PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER,d);
+    d.asUint = 300;
+    writeRegister(PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER,d);
+    d.asUint = 0xA800;
     writeRegister(PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER,d);
     d.asUint = 0;
     writeRegister(PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER,d);
-    d.asUint = 1000;
+    d.asUint = 600;
     writeRegister(PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER,d);
     d.asUint = 0x0000;
     writeRegister(PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER,d);
@@ -1288,10 +1294,13 @@ void initRegisters()
     regTypes[PROCESSED_LOSS_3_REGISTER] = float_type;
     regTypes[PROCESSED_LOSS_4_REGISTER] = float_type;
     regTypes[PEAK_DETECT_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER] = uint_type;
+    regTypes[PEAK_DETECT_CNTRL_BACKGROUND_REGISTER] = float_type;
     regTypes[PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER] = float_type;
     regTypes[PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER] = float_type;
     regTypes[PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER] = float_type;
-    regTypes[PEAK_DETECT_CNTRL_HISTORY_SIZE_REGISTER] = uint_type;
+    regTypes[PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER] = uint_type;
+    regTypes[PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER] = uint_type;
     regTypes[PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER] = uint_type;
     regTypes[PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER] = uint_type;
     regTypes[PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER] = uint_type;

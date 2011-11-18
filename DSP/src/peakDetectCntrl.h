@@ -54,10 +54,13 @@ typedef struct PEAK_DETECT_CNTRL
 {
     PEAK_DETECT_CNTRL_StateType *state_; // Valve controller state
     float *processedLoss_;              // Processed loss
+    unsigned int *backgroundSamples_;   // Number of samples for background calculation
+    float *background_;                 // Background value
     float *upperThreshold_;             // Upper threshold
     float *lowerThreshold1_;            // Lower threshold 1
     float *lowerThreshold2_;            // Lower threshold 2
-    unsigned int *historySize_;         // Size of history to use for peak detection
+    unsigned int *postPeakSamples_;     // Required number of points after peak
+    unsigned int *activeSize_;          // Size of active region to use for peak detection
     unsigned int *triggerCondition_;    // Specifies logical function for triggering
     unsigned int *triggerDelay_;        // Number of samples to delay when trigger conditions are met
     unsigned int *resetDelay_;          // Number of samples after entering triggered state before resetting to idle state
@@ -67,7 +70,7 @@ typedef struct PEAK_DETECT_CNTRL
     unsigned int *triggeredValveMaskAndValue_;      // Valve mask and value for triggered state
     unsigned int *solenoidValves_;      // Solenoid valve mask
     unsigned int historyTail;
-    unsigned int historyLength;
+    unsigned int activeLength;
     unsigned int triggerWait;
     unsigned int resetWait;
     PEAK_DETECT_CNTRL_StateType lastState;

@@ -348,10 +348,13 @@
         <gui_page>
             <title>Peak Detector Parameters</title>
             <register>PEAK_DETECT_CNTRL_STATE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_BACKGROUND_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER</register>
-            <register>PEAK_DETECT_CNTRL_HISTORY_SIZE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER</register>
