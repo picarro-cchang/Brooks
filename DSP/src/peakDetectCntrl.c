@@ -149,19 +149,19 @@ static unsigned int processHistoryBuffer(PeakDetectCntrl *p, unsigned int tail, 
             peakPos = i;
         }
     }
-    cond0 = (peakValue >= background + upperThreshold);
+    cond0 = peakValue >= (background + upperThreshold);
     // Find minimum between start and peak
     minValue1 = p->historyBuffer[start];
     for (i=start; i!=peakPos; i=(i+1)%PEAK_DETECT_MAX_HISTORY_LENGTH) {
         if (p->historyBuffer[i] <= minValue1) minValue1 = p->historyBuffer[i];
     }
-    cond1 = (minValue1 <= background + lowerThreshold1);
+    cond1 = minValue1 <= (background + lowerThreshold1);
     // Find minimum between peak and tail
     minValue2 = p->historyBuffer[peakPos];
     for (i=peakPos; i!=tail; i=(i+1)%PEAK_DETECT_MAX_HISTORY_LENGTH) {
         if (p->historyBuffer[i] <= minValue2) minValue2 = p->historyBuffer[i];
     }
-    cond2 = (minValue2 <= background + lowerThreshold2);
+    cond2 = minValue2 <= (background + lowerThreshold2);
     // Find number of samples after peak
     postPeak = tail-peakPos-1;
     if (postPeak<0) postPeak += PEAK_DETECT_MAX_HISTORY_LENGTH;

@@ -1,7 +1,7 @@
 ; Code Composer Project File, Version 2.0 (do not modify or remove this line)
 
 [Project Settings]
-ProjectDir="R:\crd_G2000\CFBDS\769-CFBDS2036\Config\20110401\SrcCode\DSP\src\"
+ProjectDir="C:\Picarro\G2000\SrcCode\DSP\src\"
 ProjectType=Executable
 CPUFamily=TMS320C67XX
 Tool="Compiler"
@@ -35,6 +35,7 @@ Source="dspMain.tcf"
 Source="fanCntrl.c"
 Source="laserCurrentCntrl.c"
 Source="misc.c"
+Source="peakDetectCntrl.c"
 Source="pid.c"
 Source="rdHandlers.c"
 Source="scheduler.c"

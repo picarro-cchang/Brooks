@@ -857,9 +857,9 @@ void initRegisters()
     writeRegister(PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER,d);
-    d.asUint = 100;
-    writeRegister(PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER,d);
     d.asUint = 300;
+    writeRegister(PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER,d);
+    d.asUint = 100;
     writeRegister(PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER,d);
     d.asUint = 0xA800;
     writeRegister(PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER,d);

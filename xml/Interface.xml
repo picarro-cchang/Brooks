@@ -3035,15 +3035,15 @@
 
         <register ident="PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Points in active buffer.</description>
-            <initial>100</initial>
+            <initial>300</initial>
             <save/>
             <display format="%d" units="samples">Active buffer length</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Samples after peak required.</description>
-            <initial>300</initial>
+            <initial>100</initial>
             <save/>
-            <display format="%d" units="samples">Active buffer length</display>
+            <display format="%d" units="samples">Samples after peak</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Condition for triggering.</description>
