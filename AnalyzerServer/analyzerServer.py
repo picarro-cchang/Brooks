@@ -461,6 +461,37 @@ def driverRpcEx(params):
 
 @handler.register
 @rpcWrapper
+def injectCal(params):
+    return injectCalEx(params)
+
+@app.route('/rest/injectCal')
+def rest_injectCal():
+    result = injectCalEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def injectCalEx(params):
+    # Inject calibration gas using "valve" for a duration of length 0.2*samples seconds
+    #  An additional "flagValve" is opened for an extra 2s so that we have an indication of the calibration
+    #  in the data log
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "AnalyzerServer")
+    try:
+        valve = int(params.get('valve',3))
+        valveMask = 1 << (valve-1)
+        flagValve = int(params.get('flagValve',4))
+        flagValveMask = 1 << (flagValve-1)
+        mask = valveMask | flagValveMask
+        samples = int(params.get('samples',5))
+        Driver.wrValveSequence([[mask,mask,samples],[mask,flagValveMask,10],[mask,0,1],[0,0,0]])
+        Driver.wrDasReg("VALVE_CNTRL_SEQUENCE_STEP_REGISTER",0)
+        return dict(value='OK')
+    except:
+        return dict(error=traceback.format_exc())
+        
+@handler.register
+@rpcWrapper
 def getDateTime(params):
     return getDateTimeEx(params)
     

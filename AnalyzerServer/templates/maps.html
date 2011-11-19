@@ -84,7 +84,9 @@
                             ch4 = data.result["CH4"];
                             startPos = data.result["lastPos"];
                             n = ch4.length;
-                            if (n>0) {
+                            if (n>1) {
+                                ch4.shift()
+                                n = n-1
                                 methaneHistory = methaneHistory.concat(ch4);
                                 if (methaneHistory.length >= histMax) methaneHistory.splice(0,methaneHistory.length-histMax);
                                 $('#concentrationSparkline').sparkline(methaneHistory,{"chartRangeMin":1.8, "width":"180px", "height":"50px"});
@@ -208,7 +210,7 @@
         });
         $("#cancel").hide()
         $("#cancel").click(function() {
-            if (confirm("Cancel capture or analysis and return to survey mode?")) {
+            if (confirm("Cancel capture and return to survey mode?")) {
                 call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',0]"});
             }
         });
@@ -217,6 +219,9 @@
             $("#mode").html(modeStrings[1]);
             call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',1]"});
             ignoreTimer = false;
+        });
+        $("#calibrate").click(function() {
+            call_rest("injectCal",{"valve":3,"samples":5});
         });
         timer1 = setTimeout(onTimer,1000);
     };
@@ -260,7 +265,7 @@ In <b>capture mode</b>, instrument collects methane from the next peak encounter
 {% else %}
     <input type="hidden" id="do_not_follow" name="do_not_follow"/>
 {% endif %}
-
+</form>
 <p>
 <button type="button" id="restart_log" name="Restart Log">Restart Log</button>
 </p>
@@ -272,13 +277,15 @@ In <b>capture mode</b>, instrument collects methane from the next peak encounter
 <button type="button" id="capture" name="capture">Switch to Capture Mode</button>
 </p>
 <p>
-<button type="button" id="cancel" name="cancel">Cancel Capture and Analysis</button>
+<button type="button" id="cancel" name="cancel">Cancel Capture</button>
 </p>
-</form>
 <p>
 <span id="concentrationSparkline">Loading..</span>
 </p>
 <p id="analysis">Analysis result here</p>
+<p>
+<button type="button" id="calibrate" name="calibrate">Calibrate</button>
+</p>
 </div>
 <div id="map_canvas" class="map" style="width:70%; height:90%; float:right;"></div>
 {% endblock %}

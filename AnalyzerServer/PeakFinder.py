@@ -396,7 +396,7 @@ class PeakFinder(object):
                     ssbuff = zeros((nlevels,npoints),float)
                     # Define a cache for the position and concentration data so that the
                     #  coordinates and value of peaks can be looked up
-                    cache = zeros((4,npoints),float)
+                    cache = zeros((5,npoints),float)
                     # c is the where in ssbuff the center of the kernel is placed
                     c = hmax+2
                     # z is the column in ssbuff which has to be set to zero before adding
@@ -405,7 +405,7 @@ class PeakFinder(object):
                     for i in range(nlevels):
                         ssbuff[i,c-hList[i]:c+hList[i]+1] = -methane*cumsum(kernelList[i])
                     initBuff = False
-                cache[:,c] = (x,long,lat,methane)
+                cache[:,c] = (epochTime,x,long,lat,methane)
                 # Zero out the old data
                 ssbuff[:,z] = 0
                 # Do the convolution by adding in the current methane concentration
@@ -468,7 +468,7 @@ class PeakFinder(object):
                 except:
                     raise RuntimeError('Cannot open peak output file %s' % peakFile)
                 
-                handle.write("%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA"))
+                handle.write("%-14s%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA"))
  
                 # Make a generator which yields (distance,(long,lat,epoch_time,methane))
                 #  from the analyzer data by applying a shift to the concentration and
@@ -477,10 +477,10 @@ class PeakFinder(object):
                 alignedData = combiner(shifter(analyzerData(source),shift))
                 intData = interpolator(alignedData,dx)
                 peakData = spaceScale(intData,dx,t0,nlevels,factor)
-                filteredPeakData = ((dist,long,lat,methane,amplitude,sigma) for dist,long,lat,methane,amplitude,sigma in peakData if amplitude>minAmpl)
+                filteredPeakData = ((epoch_time,dist,long,lat,methane,amplitude,sigma) for epoch_time,dist,long,lat,methane,amplitude,sigma in peakData if amplitude>minAmpl)
                 content = []
-                for dist,long,lat,methane,amplitude,sigma in filteredPeakData:
-                    handle.write("%-14.3f%-14.6f%-14.6f%-14.3f%-14.4f%-14.3f\r\n" % (dist,long,lat,methane,amplitude, sigma))
+                for epoch_time,dist,long,lat,methane,amplitude,sigma in filteredPeakData:
+                    handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.4f%-14.3f\r\n" % (epoch_time,dist,long,lat,methane,amplitude, sigma))
                     
                 handle.close()
 
