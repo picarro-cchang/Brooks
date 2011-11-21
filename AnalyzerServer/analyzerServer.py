@@ -516,7 +516,10 @@ def maps():
     center_latitude = float(request.values.get('center_latitude',37.39604))
     return render_template('maps.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
                                        center_latitude=center_latitude,center_longitude=center_longitude)
-                                       
+@app.route('/layout2')
+def layout2():
+    return render_template('layout2.html')
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=5000,debug=True)
     

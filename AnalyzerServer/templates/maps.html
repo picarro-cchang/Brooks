@@ -1,291 +1,116 @@
 {% extends "layout.html" %}
+
 {% block head %}
     <script type="text/javascript">
-    var map;
-    var startTime;
-    var trange = 0;
-    var marker = null;
-    var peakMarkers = new Array();
-    var path = null;
-    var ignoreTimer = false;
-    var ignoreRequests = false;
-    var speedUp = 5.0;
-    var timer1;
-    var counter = 0;
-    var leakLine = 1;
-    var analysisLine = 1;
-    var minAmp = {{ amplitude }};
-    var startPos = null;
-    
-    function callJSONRPC(method,params,success_callback,error_callback) {
-        var request = {
-            "method": method,
-            "params": params,
-            "id": 1
-        };
-        jQuery.ajax( {contentType:"application/json",
-                      data:$.toJSON(request),
-                      dataType:"json",
-                      url:"/jsonrpc",
-                      type:"post",
-                      success: success_callback,
-                      error: error_callback} );
-    }
-    
-    function call_rest(method,params,success_callback,error_callback) {
-        jQuery.ajax( {contentType:"application/json",
-                      data:$.param(params),
-                      dataType:"jsonp",
-                      url:"/rest/" + method,
-                      type:"get",
-                      success: success_callback,
-                      error: error_callback} );
-    }
-       
-    function onTimer() {
-        if (ignoreTimer) return;
-        getMode();
-    };
-    
-    var modeStrings = {0:"Survey Mode", 1:"Capture Mode", 2:"Capture Mode", 3:"Analyzing Peak"};
-    var modeShow = {0:["#capture"],     1:["#cancel"],    2:["#cancel"],    3:[]};
-    var modeHide = {0:["#cancel"],      1:["#capture"],   2:["#capture"],   3:["#capture","#cancel"]};
-    
-    function getMode() {
-        call_rest("driverRpc",{"func":"rdDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER']"},
-                    function(data,ts,jqXHR) {
-                        if ("value" in data.result) {
-                            var mode = data.result["value"];
-                            var i;
-                            $("#mode").html(modeStrings[mode]);
-                            for (i=0;i<modeShow[mode].length;i++) $(modeShow[mode][i]).show();
-                            for (i=0;i<modeHide[mode].length;i++) $(modeHide[mode][i]).hide();
-                        }
-                        getData();
-                    },
-                    function(jqXHR,ts,et) {  
-                        $("#errors").html(jqXHR.responseText); 
-                        getData();
-                    });
-    };
-    
-    var methaneHistory = new Array();
-    var histMax = 200;
-    function getData() {
-        call_rest("getData",{"startPos":startPos},
-                    function(data,ts,jqXHR) {
-                        counter += 1;
-                        $("#counter").html("Counter: " + counter);
-                        if ("timeStrings" in data.result) {
-                            timeStrings = data.result["timeStrings"];
-                            $("#placeholder").html(timeStrings[timeStrings.length-1]);
-                            lat = data.result["GPS_ABS_LAT"];
-                            lon = data.result["GPS_ABS_LONG"];
-                            ch4 = data.result["CH4"];
-                            startPos = data.result["lastPos"];
-                            n = ch4.length;
-                            if (n>1) {
-                                ch4.shift()
-                                n = n-1
-                                methaneHistory = methaneHistory.concat(ch4);
-                                if (methaneHistory.length >= histMax) methaneHistory.splice(0,methaneHistory.length-histMax);
-                                $('#concentrationSparkline').sparkline(methaneHistory,{"chartRangeMin":1.8, "width":"180px", "height":"50px"});
-                                $("#concData").html("Current concentration " + ch4[n-1].toFixed(3) + " ppm"); 
-                                pathCoords = path.getPath();
-                                for (i=1;i<n;i++) {
-                                    pathCoords.push(new google.maps.LatLng(lat[i],lon[i]));
-                                }                            
-                                if (marker) marker.setMap(null);
-                                where = new google.maps.LatLng(lat[n-1],lon[n-1]);
-                                marker = new google.maps.Marker({position:where});
-                                if ({{ follow }}) map.setCenter(where);
-                                marker.setMap(map);
-                            }
-                        }
-                        showLeaks();
-                    },
-                    function(jqXHR,ts,et) {  
-                        $("#errors").html(jqXHR.responseText); 
-                        showLeaks();
-                    });
-    }                
-    
-    function showLeaks() {
-        call_rest("getPeaks",{"startRow":leakLine,"minAmp":minAmp},
-                    function(data,ts,jqXHR) {
-                        var i;
-                        if ("ch4" in data.result) {
-                            lat = data.result["lat"];
-                            lon = data.result["long"];
-                            ch4 = data.result["ch4"];
-                            amp = data.result["amp"];
-                            sigma = data.result["sigma"];
-                            leakLine = data.result["nextRow"];
-                            for (i=0;i<ch4.length;i++) {
-                                peakCoords = new google.maps.LatLng(lat[i],lon[i]);
-                                size = Math.pow(amp[i],1.0/4.0)
-                                fontsize = 20.0*Math.pow(amp[i],1.0/4.0)
-                                peakMarker = new google.maps.Marker({position:peakCoords,title:"Amp: "+amp[i].toFixed(2)+" HalfWidth: "+sigma[i].toFixed(1),
-                                                                     icon:"http://chart.apis.google.com/chart?chst=d_map_spin&chld="+size+"|0|40FFFF|"+fontsize+"|b|" + ch4[i].toFixed(1)});
-                                peakMarker.setMap(map);
-                                peakMarkers[peakMarkers.length] = peakMarker;
-                            }
-                        }
-                        showAnalysis();
-                    },
-                    function(jqXHR,ts,et) {  
-                        $("#errors").html(jqXHR.responseText); 
-                        showAnalysis();
-                    });
-    }                
-    
-    function showAnalysis() { 
-        call_rest("getAnalysis",{"startRow":analysisLine},
-                    function(data,ts,jqXHR) {
-                        var i;
-                        if ("conc" in data.result) {
-                            lat = data.result["lat"];
-                            lon = data.result["long"];
-                            conc = data.result["conc"];
-                            delta = data.result["delta"];
-                            uncertainty = data.result["uncertainty"];
-                            analysisLine = data.result["nextRow"];
-                            for (i=0;i<conc.length;i++) {
-                                analysisCoords = new google.maps.LatLng(lat[i],lon[i]);
-                                var result = delta[i].toFixed(1)+" +/- "+uncertainty[i].toFixed(1);
-                                $("#analysis").html("Delta: " + result);
-                                result = result.replace("+","%2B").replace(" ","+");
-                                analysisMarker = new google.maps.Marker({position:analysisCoords,
-                                icon:new google.maps.MarkerImage(
-        "http://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=bbtl|"+result+"|FF8080|000000",
-        null, null, new google.maps.Point(0, 0))});
-                                analysisMarker.setMap(map);
-                            }
-                        }
-                        timer1 = setTimeout(onTimer,1000);                        
-                    },
-                    function(jqXHR,ts,et) {  
-                        $("#errors").html(jqXHR.responseText); 
-                        timer1 = setTimeout(onTimer,1000);                        
-                    });
-    }
-    
-    function initialize() {
-        var latlng = new google.maps.LatLng({{ center_latitude }},{{ center_longitude }});
-        var myOptions = {
-          zoom: 14,
-          center: latlng,
-          mapTypeId: google.maps.MapTypeId.ROADMAP
-        };
-        $("#follow").change(function(){
-            if ($(this).is(':checked')) $("#do_not_follow").removeAttr('checked');
-            else $("#do_not_follow").attr('checked','checked');
-            $("#setoptions").submit()
-        })
-        $("#amplitude").change(function(){
-            $("#setoptions").submit()
-        })
-        map = new google.maps.Map(document.getElementById("map_canvas"),
-            myOptions);
-        google.maps.event.addListener(map, 'center_changed', function() {
-            var where = map.getCenter();
-            $("#center_latitude").val(where.lat())
-            $("#center_longitude").val(where.lng())
-        });
-        path = new google.maps.Polyline(
-            {   path:new google.maps.MVCArray(),
-                strokeColor:"#0000FF",
-                strokeOpactity:1.0,
-                strokeWeight:2  });
-        path.setMap(map);
-        $("#restart_log").click(function() {         
-            if (confirm("Close current data log and open a new one?")) {
-                call_rest("restartDatalog",{});
-            }
-        });
-        $("#shutdown_analyzer").click(function() {
-            if (confirm("Really shut down analyzer?\nNote: It can take 30 to 45 minutes to warm up.")) {
-                call_rest("shutdownAnalyzer",{});
-            }
-        });
-        $("#cancel").hide()
-        $("#cancel").click(function() {
-            if (confirm("Cancel capture and return to survey mode?")) {
-                call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',0]"});
-            }
-        });
-        $("#capture").click(function() {
-            ignoreTimer = true;
-            $("#mode").html(modeStrings[1]);
-            call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',1]"});
-            ignoreTimer = false;
-        });
-        $("#calibrate").click(function() {
-            call_rest("injectCal",{"valve":3,"samples":5});
-        });
-        timer1 = setTimeout(onTimer,1000);
-    };
-    $(initialize)
+    var _par = {"center_latitude":{{ center_latitude }}, 
+                "center_longitude":{{ center_longitude }} };
     </script>
+    <script type="text/javascript" src="{{ url_for('static',filename='mapsApplication.js') }}"></script>
 {% endblock %}
 
 {% block body %}
-<div style="width:28%; height:85%; float:left;">
+    <div class="container-fluid">
+        <div id="id_sidebar" class="sidebar">
+            <span>
 
-<p id="errors"></p>
-<p id="placeholder">Date and Time here</p>
-<p id="concData">Concentration data here</p>
-<p id="counter">Counter value here</p>
+            <div class="topicon" id="id_topleft">
+                <div id="id_p3_icon">
+                    <img alt="Picarro" src="/static/images/pcube_ppp_logo_60.png" />
+                </div>
+            </div>
+           <br /><br /><br />
+           </span>
+           <div class="row"><br /><br /></div>
+            <div class="row">
+                <span>
+                    <form id="setoptions" method="get">
+                        <br />
+                        <fieldset>
+                            <div class="clearfix">
+                                <ul class="inputs-list">
+                                <span id="concentrationSparkline">Loading..</span>
+                                <br />
+                                <table width="80%" border="0">
+                                    <tr>
+                                    <td align="left"><b><div id="id_stream_stat">Stream OK</div></b></td>
+                                    <td align="left"><b><div id="id_analyzer_stat">Analyzer OK</div></b></td>
+                                    <td align="left"><b><div id="id_gps_stat">GPS OK</div></b></td>
+                                    </tr>
+                                </table>
+                                <li>
+                                <label for="follow">Follow</label>
+                                <input type="checkbox" id="id_follow" name="follow" checked="checked" onclick="changeFollow();" style="height: 40px; width: 40px;"/>
+                                </li>
+                                <br />
+                                <li class="input">
+                                <label for="id_amplitude_btn">Minimum Amplitude</label>
+                                <button id="id_amplitude_btn" type="button" value="_" class="btn large" onclick="requestMinAmpChange();"></button>
+                                <span id="amplitudeErr"></span>
+                                </li>
+                                <br />
+                                <li>
+                                    <button class="btn primary large" type="button" id="restart_log" name="Restart Log" onclick="restart_datalog();">Restart Log</button>
+                                </li>
+                                <br />
+                                <li>
+                                    <button class="btn primary large" type="button" id="shutdown" name="Shut Down Analyzer" onclick="shutdown_analyzer();">Shut Down Analyzer</button>
+                                </li>
+                                <br />
+                                <li>
+                                    <button class="btn primary large" type="button" id="calibrate" name="calibrate" onclick="injectCal();">Calibrate</button>
+                                </li>
+                                <br />
+                                <h2 id="mode">Survey Mode</h3>
+                                <br />
+                                <li>
+                                    <button class="btn primary large" type="button" id="capture" name="capture" onclick="captureSwitch();">Switch to Capture Mode</button>
+                                </li>
+                                <li>
+                                    <button class="btn primary large" type="button" id="cancel" name="cancel" onclick="cancelCapSwitch();">Cancel Capture</button>
+                                </li>
+                                <br />
+                                <p id="analysis">Analysis result here</p>
+                                <input type="hidden" id="center_longitude" name="center_longitude" value="{{ center_longitude }}"/>
+                                <input type="hidden" id="center_latitude"  name="center_latitude"  value="{{ center_latitude }}"/>
+                                </ul>
+                            </div>
+                        </fieldset>
+                    </form>
+                </span>
+            </div>
+        </div>
 
-<p>
-In <b>survey mode</b>, instrument detects locations of enhanced methane concentration and places indicators on map.
-</p>
-<p>
-In <b>capture mode</b>, instrument collects methane from the next peak encountered and analyzes its composition. 
-</p>
-<p> Note: During analysis, the instrument does not detect emissions.
-</p>
-<form id="setoptions" method="get">
-<p>
-    <label for="follow">Follow vehicle:</label>
-    {% if follow %}
-        <input type="checkbox" id="follow" name="follow" checked="on"/>
-    {% else %}
-        <input type="checkbox" id="follow" name="follow"/>
-    {% endif %}
-</p>
-<p>
-    <label for="amplitude">Min amplitude:</label>
-    <input type="text" id="amplitude" name="amplitude" value="{{ amplitude }}"/>
-</p>
-<input type="hidden" id="center_longitude" name="center_longitude" value="{{ center_longitude }}"/>
-<input type="hidden" id="center_latitude"  name="center_latitude"  value="{{ center_latitude }}"/>
-{% if do_not_follow %}
-    <input type="hidden" id="do_not_follow" name="do_not_follow" checked="on"/>
-{% else %}
-    <input type="hidden" id="do_not_follow" name="do_not_follow"/>
-{% endif %}
-</form>
-<p>
-<button type="button" id="restart_log" name="Restart Log">Restart Log</button>
-</p>
-<p>
-<button type="button" id="shutdown_analyzer" name="Shut Down Analyzer">Shut Down Analyzer</button>
-</p>
-<h3 id="mode">Survey Mode</h3>
-<p>
-<button type="button" id="capture" name="capture">Switch to Capture Mode</button>
-</p>
-<p>
-<button type="button" id="cancel" name="cancel">Cancel Capture</button>
-</p>
-<p>
-<span id="concentrationSparkline">Loading..</span>
-</p>
-<p id="analysis">Analysis result here</p>
-<p>
-<button type="button" id="calibrate" name="calibrate">Calibrate</button>
-</p>
-</div>
-<div id="map_canvas" class="map" style="width:70%; height:90%; float:right;"></div>
+        <div id="id_content" class="content">
+            <span>
+                <div class="topbar-wrapper" id="id_topright">
+                    <div class="topbar" id="id_topbar">
+                        <div><ul class="nav secondary-nav"><li class="menu">
+                            <a href="#"><span>Prime User</span></a></li></ul></div>
+                    </div>
+                </div>
+            </span>
+            <div id="id_content_title">
+                <br /><br />
+                <h2>Gas Detection Utility</h2>
+                <br />
+            </div>
+            <span>
+                <div class="row">
+                    <div id="id_feedback">
+                        <div class="span4 columns" id="id_msg_placeholder">
+                            <div id="id_msg"></div>
+                            <div id="id_modal"></div>
+                            <div id="id_mod_change"></div>
+                            <div id="placeholder"><img alt="Initializing Route Trace" src="/static/images/ajax-loader.gif" /></div>
+
+                        </div>
+                        <div class="span5 columns" id="concData"></div>
+                        <div class="span3 columns" id="counter"></div>
+                    </div>
+                    <br />
+                    <div style="width:100%; top: 5px; bottom: 5px;" id="map_canvas"></div>
+                </div>		
+            </span>
+        </div>
+    </div>
 {% endblock %}
