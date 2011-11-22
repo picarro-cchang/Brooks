@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import traceback
+from namedtuple import namedtuple
 
 # Convert a minimal .dat file to a text file for Matlab processing
 #  The columns in the output file are distance(m), methane 
@@ -84,10 +85,18 @@ class PeakFinder(object):
         else:
             self.debug = None
             
-    
     def run(self):
         '''
         '''
+        posFields = 'long lat'
+        baseFields = 'time conc valves'
+        extraFields  = 'conc_up conc_down conc_dt species'
+        
+        PosData  = namedtuple('PosData',  posFields)
+        BaseData = namedtuple('BaseData', baseFields)
+        FullData = namedtuple('FullData', baseFields+" "+extraFields)
+        PosBaseData = namedtuple('PosBaseData', posFields+" "+baseFields)
+        
         def distVincenty(lat1, lon1, lat2, lon2):
             # WGS-84 ellipsiod. lat and lon in DEGREES
             a = 6378137
@@ -177,9 +186,9 @@ class PeakFinder(object):
                             pass
                         counter = 0
                     time.sleep(0.1)
-                    if self.debug: sys.stderr.write('-')
+                    #if self.debug: sys.stderr.write('-')
                     continue
-                if self.debug: sys.stderr.write('.')
+                #if self.debug: sys.stderr.write('.')
                 yield line
         
         def analyzerData(source):
@@ -191,6 +200,8 @@ class PeakFinder(object):
             line = source.next()
             atoms = fixed_width(line,26)
             headings = [a.replace(" ","_") for a in atoms]
+            # Determine if there are extra data in the file
+            extra = "CH4dt" in headings
             for line in source:
                 try:
                     entry = {}
@@ -204,6 +215,13 @@ class PeakFinder(object):
                             except:
                                 entry[h] = NaN
                         long, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
+                        pos = PosData(long,lat)
+ 
+                        if extra:
+                            data = FullData(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'],entry['CH4up'],entry['CH4down'],entry['CH4dt'],entry['species'])
+                        else:
+                            data = BaseData(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'])
+
                         if lat_ref == None or long_ref == None:
                             long_ref, lat_ref = lat, long
                         x,y = toXY(lat,long,lat_ref,long_ref)
@@ -215,7 +233,7 @@ class PeakFinder(object):
                             dist += jump
                         x0, y0 = x, y
                         if jump < JUMP_MAX:
-                            yield dist,(long,lat),(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'])
+                            yield dist,pos,data
                         else:
                             yield None,None,None    # Indicate that dist is bad, and we must restart
                             dist = None
@@ -332,7 +350,49 @@ class PeakFinder(object):
                     mult += 1
                     xi = interval*mult
                 x_p, d_p = x, d
-        
+                
+        def refiner(source):
+            """A basic methane only instrument collects a single concentration for each line in the data log file whereas a 
+            FCDS style analyzer collects three methane concentrations per line. The refiner presents these as two separate lines
+            to the subsequent analysis, so that no further changes are required"""
+                
+            # Linear intepolation factory
+            def lin_interp(alpha): return lambda old,new: (1-alpha)*old + alpha*new
+
+            baseLength  = len(PosData._fields) + len(BaseData._fields)
+            fieldList = (posFields+" "+baseFields).split()
+            oldDist, oldData = None, None
+            s1, sx, sy, sx2, sxy = 1.0, 2.0, 2.0, 4.0, 4.0
+            for dist,data in source:
+                if len(data) == baseLength:
+                    oldDist, oldData = None, None
+                    yield dist,PosBaseData(*data)
+                else: # extra fields means we have to do fancy interpolation
+                    allFields = posFields+" "+baseFields+" "+extraFields
+                    data = namedtuple("PosFullData",allFields)(*data)
+                    if int(data.species) != 150: continue   # Not iso-methane
+                    if True:
+                        yield dist,PosBaseData(*[getattr(data,field) for field in fieldList])
+                    else:
+                        # Find best scale factor between concentration measurements
+                        y = 0.5*(data.conc_up + data.conc_down)
+                        x = data.conc
+                        s1  = 0.999*s1  + 0.001
+                        sx  = 0.999*sx  + 0.001*x
+                        sy  = 0.999*sy  + 0.001*y
+                        sxy = 0.999*sxy + 0.001*x*y
+                        sx2 = 0.999*sx2 + 0.001*x**2
+                        det = sx2*s1 - sx**2
+                        m = (s1*sxy-sx*sy)/det
+                        c = (sx2*sy-sx*sxy)/det
+                        if oldData is not None: # We have two data points and can interpolate
+                            yield oldDist,PosBaseData(*[getattr(oldData,field) for field in fieldList])
+                            t = 0.5*(oldData.time + data.time)
+                            li = lin_interp(0.5)  # Mid-point interpolator
+                            newData = PosBaseData(*[li(getattr(oldData,field),getattr(data,field)) for field in fieldList])
+                            yield li(oldDist,dist),newData._replace(conc=(li(oldData.conc_down,data.conc_up)-c)/m)
+                        oldDist, oldData = dist, data
+                        
         def spaceScale(source,dx,t_0,nlevels,tfactor):
             """Analyze source at a variety of scales using the differences of Gaussians of
             different scales. We define
@@ -449,7 +509,6 @@ class PeakFinder(object):
         t0 = 2*(sigmaMin/factor)**2
         nlevels = int(ceil((log(2*sigmaMax**2)-log(t0))/log(factor)))+1
 
-        
         while True:
             # Getting source
             names = sorted(glob.glob(self.userlogfiles))
@@ -475,7 +534,8 @@ class PeakFinder(object):
                 #  time data to align the rows
                 source = followLastUserFile(fname)
                 alignedData = combiner(shifter(analyzerData(source),shift))
-                intData = interpolator(alignedData,dx)
+                refinedData = refiner(alignedData)
+                intData = interpolator(refinedData,dx)
                 peakData = spaceScale(intData,dx,t0,nlevels,factor)
                 filteredPeakData = ((epoch_time,dist,long,lat,methane,amplitude,sigma) for epoch_time,dist,long,lat,methane,amplitude,sigma in peakData if amplitude>minAmpl)
                 content = []

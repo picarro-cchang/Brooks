@@ -301,6 +301,7 @@ function get_time_zone_offset( ) {
 
 function captureSwitch() {
     ignoreTimer = true;
+    $("#analysis").html("");
     $("#id_mode_pane").html(modeStrings[1]);
     call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',1]"});
     ignoreTimer = false;
@@ -313,7 +314,8 @@ function cancelCapSwitch() {
 };
 
 function injectCal() {
-    call_rest("injectCal",{"valve":3,"samples":5});
+    call_rest("injectCal",{"valve":3,"samples":1});
+    alert("Calibration pulse injected");
 };
 
 function onTimer() {

@@ -194,6 +194,7 @@ class PeakAnalyzer(object):
             line = source.next()
             atoms = fixed_width(line,26)
             headings = [a.replace(" ","_") for a in atoms]
+            if 'C13_Delta_Raw' not in headings: return
             for line in source:
                 try:
                     entry = {}
@@ -312,8 +313,6 @@ class PeakAnalyzer(object):
                             delta = asarray([s.sourceData.delta for s in keelingStore])
                             protInvconc = 1/maximum(conc,0.001)
                             result = linfit(protInvconc,delta,11.0*protInvconc)
-                            if abs(result.coeffs[1]+40) > 20:
-                                print conc, delta
                             if lastPeak:
                                 yield namedtuple('PeakData','time dist long lat conc delta uncertainty')(delta=result.coeffs[1],
                                             uncertainty=sqrt(result.cov[1][1]),**lastPeak._asdict())
@@ -363,7 +362,6 @@ class PeakAnalyzer(object):
                 alignedData = combiner(shifter(analyzerData(source),shift))
                 
                 for r in doKeelingAnalysis(alignedData):
-                    print r
                     handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.2f%-14.2f\r\n" % (r.time,r.dist,r.long,r.lat,r.conc,r.delta,r.uncertainty))
                     
                 handle.close()

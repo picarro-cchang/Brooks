@@ -18,7 +18,7 @@ handle = CreateFile(liveFile,GENERIC_WRITE,
                              FILE_ATTRIBUTE_NORMAL,0)
 if handle == INVALID_HANDLE_VALUE:
     raise RuntimeError('Cannot open live archive file %s' % liveFile)
-WriteFile(handle,"%-26s%-26s%-26s%-26s%-26s\r\n" % ("EPOCH_TIME","ALARM_STATUS","GPS_ABS_LONG","GPS_ABS_LAT","CH4"))
+WriteFile(handle,"%-26s%-26s%-26s%-26s%-26s%-26s\r\n" % ("EPOCH_TIME","ALARM_STATUS","GPS_ABS_LONG","GPS_ABS_LAT","CH4","ValveMask"))
 
 ip = open(dataFile,'r')
 header = ip.readline().split()
@@ -30,8 +30,8 @@ idEpochTime = header.index('EPOCH_TIME')
 for line in ip.readlines():
     line = line.split()
     epochTime = float(line[idEpochTime])
-    data = "%-26.3f%-26d%-26.10e%-26.10e%-26.10e\r\n" % (epochTime, 0, float(line[idLong]), \
-        float(line[idLat]), float(line[idMethane]))
+    data = "%-26.3f%-26d%-26.10e%-26.10e%-26.10e%-26.10e\r\n" % (epochTime, 0, float(line[idLong]), \
+        float(line[idLat]), float(line[idMethane]), 0)
     while True:
         time.sleep(0.25)
         try:
