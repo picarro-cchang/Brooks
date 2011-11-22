@@ -46,28 +46,9 @@
                                 <label for="id_amplitude_btn">Minimum Amplitude</label>
                                 <button id="id_amplitude_btn" type="button" value="_" class="btn large" onclick="requestMinAmpChange();"></button>
                                 <span id="amplitudeErr"></span>
+                                <span id="id_primeControlButton_span"></span>
                                 </li>
-                                <br />
-                                <li>
-                                    <button class="btn primary large" type="button" id="restart_log" name="Restart Log" onclick="restart_datalog();">Restart Log</button>
-                                </li>
-                                <br />
-                                <li>
-                                    <button class="btn primary large" type="button" id="shutdown" name="Shut Down Analyzer" onclick="shutdown_analyzer();">Shut Down Analyzer</button>
-                                </li>
-                                <br />
-                                <li>
-                                    <button class="btn primary large" type="button" id="calibrate" name="calibrate" onclick="injectCal();">Calibrate</button>
-                                </li>
-                                <br />
                                 <h2 id="mode">Survey Mode</h3>
-                                <br />
-                                <li>
-                                    <button class="btn primary large" type="button" id="capture" name="capture" onclick="captureSwitch();">Switch to Capture Mode</button>
-                                </li>
-                                <li>
-                                    <button class="btn primary large" type="button" id="cancel" name="cancel" onclick="cancelCapSwitch();">Cancel Capture</button>
-                                </li>
                                 <br />
                                 <p id="analysis">Analysis result here</p>
                                 <input type="hidden" id="center_longitude" name="center_longitude" value="{{ center_longitude }}"/>

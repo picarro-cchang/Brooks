@@ -1,8 +1,12 @@
 var minAmp = 0.1;
+var svcurl = "rest";
 var alog = "";
 var center_longitude = -121.98432;
 var center_latitude = 37.39604; 
+var use_callback = true;
+var log_selection_options = [];
 
+// Normal js vars and functions
 var net_abort_count = 0;
 var follow = true;
 var normal_path_color = "#0000FF";
@@ -12,6 +16,7 @@ var resize_map_inprocess = false;
 var resize_map_timer;
 var current_mapTypeId;
 var current_zoom;
+var current_mode = 0;
 
 var gglOptions;
 var map;
@@ -56,7 +61,7 @@ function setCookie(name,value,days) {
     }
     else var expires = "";
     document.cookie = name+"="+value+expires+"; path=/";
-}
+};
 
 function getCookie(name) {
     var nameEQ = name + "=";
@@ -67,18 +72,17 @@ function getCookie(name) {
         if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
     }
     return null;
-}
+};
 
 function deleteCookie(name) {
     setCookie(name,"",-1);
-}
+};
 
 function setModalChrome(hdr, msg, click) {
     var modalChrome = "";
     modalChrome = '<div class="modal" style="position: relative; top: auto; left: auto; margin: 0 auto; z-index: 1">'
     modalChrome += '<div class="modal-header">'
     modalChrome +='<h3>' + hdr + '</h3>'
-    modalChrome +='<a href="#" class="close">&times;</a>'      
     modalChrome +='</div>'    
     modalChrome +='<div class="modal-body">'    
     modalChrome += msg      
@@ -88,18 +92,45 @@ function setModalChrome(hdr, msg, click) {
     modalChrome +='</div>'    
     modalChrome +='</div>'  
     return modalChrome
-}
+};
 
 var modalNetWarning = setModalChrome('<h3>Connection Warning</h3>', 
-    '<p>There is a problem with the network connection. Please verify connectivity.</p>',
-    '<button onclick="restoreModalDiv();" class="btn primary large">Close</a>'
+		'<p><h3>There is a problem with the network connection. Please verify connectivity.</h3></p>',
+		'<button id="id_warningCloseBtn" onclick="restoreModalDiv();" class="btn primary large">Close</button>'
 );
+
+var primeControlsBtn = '<li><div><button id="id_primeControlsBtn" type="button" onclick="primeControls();" class="btn primary large">Analyzer Controls</button></div></li>';
+var restartBtn = '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn primary large">Restart Log</button></div>';
+var captureBtn = '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn primary large">Switch to Capture Mode</button></div>';
+var cancelCapBtn = '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn primary large">Cancel Capture</button></div>';
+var calibrateBtn = '<div><button id="id_calibrateBtn" type="button" onclick="injectCal();" class="btn primary large">Calibrate</button></div>';
+var shutdownBtn = '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn primary large">Shutdown Analyzer</button></div>';
+
+function primeControls() {
+	var capOrCan = "";
+    for (var i=0;i<modeBtn[current_mode].length;i++) {
+        capOrCan += modeBtn[current_mode][i]+ "<br/>";
+    }
+	var primeControlBtns = setModalChrome('<h3>Analyzer Controls</h3>',
+			restartBtn + "<br/>" +
+			capOrCan  +
+            calibrateBtn +
+			"<br/><br/>" + shutdownBtn + "<br/>",
+			'<button onclick="restoreModChangeDiv();" class="btn primary large">Close</button>'
+	);
+	$("#id_mod_change").html(primeControlBtns);
+	$("#id_restartBtn").focus();
+};
+
+function restoreModChangeDiv() {
+	$("#id_mod_change").html("");
+};
 
 var saved_html = "";
 function restoreModalDiv() {
     $("#id_modal").html("");
     net_abort_count = 0;
-}
+};
 
 function changeMinAmpVal(reqbool) {
     ignoreTimer = true;
@@ -108,17 +139,18 @@ function changeMinAmpVal(reqbool) {
     }
     $("#id_mod_change").html("");
     ignoreTimer = false;
-}
+};
 
 function requestMinAmpChange() {
     var modalChangeMinAmp = setModalChrome('<h3>Change Minimum Amplitude</h3>',
             '<div><input type="text" id="id_amplitude" value="' + minAmp + '"/></div>',
-            '<div><button onclick="changeMinAmpVal(false);" class="btn primary large">Cancel</a></div>' +
-            '<div><button onclick="changeMinAmpVal(true);" class="btn primary large">OK</a></div>'
+			'<div><button onclick="changeMinAmpVal(false);" class="btn primary large">Cancel</button></div>' +
+			'<div><button onclick="changeMinAmpVal(true);" class="btn primary large">OK</button></div>'
     );
 
     $("#id_mod_change").html(modalChangeMinAmp);
-}
+    $("#id_amplitude").focus();
+};
 
 function colorPathFromValveMask(value) {
     var value_float = parseFloat(value);
@@ -146,14 +178,20 @@ function colorPathFromValveMask(value) {
                     strokeWeight:2  });
         path.setMap(map);
     }
-}
+};
 
 function initialize_gdu(winH, winW) {
     pge_wdth = $('#id_topbar').width();
     $('#map_canvas').css('height', winH-200);
    	$('#map_canvas').css('width', pge_wdth);
-    
-    $('#cancel').hide();
+    initialize_btns();
+
+    if (use_callback) {
+    	current_mapTypeId = google.maps.MapTypeId.ROADMAP;
+    } else {
+    	current_mapTypeId = google.maps.MapTypeId.SATELLITE;
+    }
+
     
     var followCookie = getCookie("pcubed_follow");
     if (followCookie) follow = parseInt(followCookie);
@@ -181,13 +219,30 @@ function initialize_gdu(winH, winW) {
     var myOptions = {
       zoom: current_zoom,
       center: latlng,
-      mapTypeId: google.maps.MapTypeId.ROADMAP
+      mapTypeId: current_mapTypeId
     };
     gglOptions = myOptions;
     
     initialize_map();
     timer1 = setTimeout(onTimer,1000);    
-}
+};
+
+function initialize_btns() {
+    $('#cancel').hide();
+
+    if (use_callback) {
+    	$("#id_primeControlButton_span").html(primeControlsBtn);
+    } else {
+    	$("#id_primeControlButton_span").html("");
+        $("#id_exportButton_span").html("");
+        var type = $("#id_selectLogBtn").html();
+        if (type == "Live") {
+            $("#id_exportButton_span").html("");
+        } else {
+            $("#id_exportButton_span").html(exportControlsBtn);
+        }
+    }
+};
 
 function initialize_map() {
     map = new google.maps.Map(document.getElementById("map_canvas"),gglOptions);
@@ -206,11 +261,11 @@ function initialize_map() {
     });
     path = new google.maps.Polyline(
         {   path:new google.maps.MVCArray(),
-            strokeColor:"#0000FF",
+            strokeColor: normal_path_color,
             strokeOpactity:1.0,
             strokeWeight:2  });
     path.setMap(map);
-}
+};
 
 function resize_map() {
     pge_wdth = $('#id_topbar').width();
@@ -221,9 +276,14 @@ function resize_map() {
     new_height = winH - hgth_top - margin - 40;
     new_top = hgth_top + margin;
     
+	$("#id_modal_span").css('position', 'absolute');
+	$("#id_modal_span").css('top', hgth_top);
     if (new_width < 640) {
         new_top = new_top + 30;
         new_height = new_height - 30;
+		$("#id_modal_span").css('left', margin + 5);
+	} else {
+		$("#id_modal_span").css('left', lpge_wdth + margin + 5);
     }
     
     $('#map_canvas').css('position', 'absolute');
@@ -237,14 +297,68 @@ function resize_map() {
     map.setCenter(cen);
     
     resize_map_inprocess = false;
-}
+};
 
 function resize_page() {
     if (!resize_map_inprocess) {
         resize_map_inprocess = true;
-        resize_map_timer = setTimeout(resize_map,100);
+		resize_map_timer = setTimeout(resize_map,25);
     }
 };
+
+function restart_datalog() {
+    if (confirm("Close current data log and open a new one?")) {
+        call_rest("restartDatalog",{});
+		restoreModChangeDiv();
+    }
+};
+
+function shutdown_analyzer() {
+    if (confirm("Do you want to shut down the Analyzer? \n\nWhen the analyzer is shutdown it can take 30 to 45 minutes warm up.")) {
+        call_rest("shutdownAnalyzer",{});	
+		restoreModChangeDiv();
+    }
+};
+
+function get_time_zone_offset( ) {
+    var current_date = new Date( );
+    var gmt_offset = current_date.getTimezoneOffset( ) / 60;
+    $('#gmt_offset').val(gmt_offset);
+    rtn_offset = $('#gmt_offset').val()
+    // alert(rtn_offset)
+    return gmt_offset;
+};
+
+
+function call_rest(method,params,success_callback,error_callback) {
+jQuery.ajax( {contentType:"application/json",
+              data:$.param(params),
+              dataType:"jsonp",
+              url:"/rest/" + method,
+              type:"get",
+              timeout: 5000,
+              success: success_callback,
+              error: error_callback} );
+}
+
+/*
+function call_rest(method,params,success_callback,error_callback) {
+	var dtype = "json";
+	if (use_callback) {dtype = "jsonp";}
+	
+	if (svcurl == "") {svcurl = "p3.picarro.com/pcubed/rest";}
+	// var url = 'http://' + svcurl + '/' + method
+    var url = "/rest/" + method;
+	jQuery.ajax({contentType:"application/json",
+        data: $.param(params),
+        dataType: dtype,
+        url: url,
+        type: "get",
+        timeout: 5000,
+        ssuccess: success_callback,
+        error: error_callback})
+};
+*/
 
 function changeFollow() {
     var cval = $("#id_follow").attr("checked");
@@ -255,7 +369,7 @@ function changeFollow() {
         follow = false;
     }
     setCookie("pcubed_follow",(follow)? "1":"0",7);
-}
+};
 
 function changeMinAmp() {
     minAmp = $("#id_amplitude").val();
@@ -276,51 +390,15 @@ function changeMinAmp() {
         mkr.setMap(null);
     }
     peakMarkers = new Array();
-}
-
-function restart_datalog() {
-    if (confirm("Close current data log and open a new one?")) {
-        call_rest("restartDatalog",{});
-    }
-};
-
-function shutdown_analyzer() {
-    if (confirm("Do you want to shut down the Analyzer? \n\nWhen the analyzer is shutdown it can take 30 to 45 minutes warm up.")) {
-        call_rest("shutdownAnalyzer",{});	
-    }
-};
-
-function get_time_zone_offset( ) {
-    var current_date = new Date( );
-    var gmt_offset = current_date.getTimezoneOffset( ) / 60;
-    $('#gmt_offset').val(gmt_offset);
-    rtn_offset = $('#gmt_offset').val()
-    // alert(rtn_offset)
-    return gmt_offset;
-};
-
-function captureSwitch() {
-    ignoreTimer = true;
-    $("#analysis").html("");
-    $("#id_mode_pane").html(modeStrings[1]);
-    call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',1]"});
-    ignoreTimer = false;
-};
-
-function cancelCapSwitch() {
-    if (confirm("Cancel capture and return to survey mode?")) {
-        call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',0]"});
-    }
-};
-
-function injectCal() {
-    call_rest("injectCal",{"valve":3,"samples":1});
-    alert("Calibration pulse injected");
 };
 
 function onTimer() {
     if (ignoreTimer) timer1 = setTimeout(onTimer,1000);
-    getMode();
+    if (use_callback) {
+    	getMode();
+    } else {
+        getData();
+    }
 };
 
 function statCheck() {
@@ -336,11 +414,16 @@ function statCheck() {
             $("#id_stream_stat").html("Stream Warning");
         } else {
             $("#id_stream_stat").html("Stream OK");
-            if (lastFit != 2.0) {
+			if (lastFit) {
+				if (lastFit == 0) {
                 $("#id_gps_stat").html("<font color='red'><strike>GPS</strike></font>");
             } else {
                 $("#id_gps_stat").html("GPS OK");
             }      
+			} else {
+				$("#id_gps_stat").html("<font color='red'><strike>GPS</strike></font>");
+			}
+			
             if (lastInst != 963) {
                 $("#id_analyzer_stat").html("<font color='red'><strike>Analyzer</strike></font>");
             } else {
@@ -349,56 +432,6 @@ function statCheck() {
         };
     };        
 };
-
-function call_rest(method,params,success_callback,error_callback) {
-jQuery.ajax( {contentType:"application/json",
-              data:$.param(params),
-              dataType:"jsonp",
-              url:"/rest/" + method,
-              type:"get",
-              timeout: 5000,
-              success: success_callback,
-              error: error_callback} );
-}
-
-var modeStrings = {0:"Survey Mode", 1:"Capture Mode", 2:"Capture Mode", 3:"Analyzing Peak"};
-var modeShow = {0:["#capture"],     1:["#cancel"],    2:["#cancel"],    3:[]};
-var modeHide = {0:["#cancel"],      1:["#capture"],   2:["#capture"],   3:["#capture","#cancel"]};
-
-function setModePane(mode) {
-    var i;
-    $("#mode").html(modeStrings[mode]);
-    for (i=0;i<modeShow[mode].length;i++) $(modeShow[mode][i]).show();
-    for (i=0;i<modeHide[mode].length;i++) $(modeHide[mode][i]).hide();
-}
-
-function getMode() {
-call_rest("driverRpc",{"func":"rdDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER']"},
-            function(data,ts,jqXHR) {
-                if ("value" in data.result) {
-                    var mode = data.result["value"];
-                    setModePane(mode);
-                }
-                getData();
-            },
-            function(jqXHR,ts,et) {  
-                $("#errors").html(jqXHR.responseText); 
-                getData();
-            });
-};
-
-function getData() {
-    var params = {'startPos': startPos, 'alog': alog, 'gmtOffset': gmt_offset};
-    call_rest("getData", params, 
-        function(json, status, jqXHR) { 
-            net_abort_count = 0;
-            successData(json);
-        },
-        function(jqXHR,ts,et) {  
-            errorData(jqXHR.responseText); 
-        }
-    );
-}                
 
 function successData(data) {
     restoreModalDiv();
@@ -498,30 +531,7 @@ function successData(data) {
     }
     statCheck();
     showLeaks();
-}
-
-function errorData(text) {
-    net_abort_count += 1;
-    if (net_abort_count >= 2) {
-        $("#id_modal").html(modalNetWarning);
-    }
-    $("#errors").html(text);
-    statCheck();
-    showLeaks();
-}
-
-function showLeaks() {
-    var params = {'startRow': leakLine, 'alog': alog, 'minAmp': minAmp, 'gmtOffset': gmt_offset};
-    call_rest("getPeaks", params, 
-            function(json, status, jqXHR) { 
-                net_abort_count = 0;
-                successPeaks(json);
-            },
-            function(jqXHR,ts,et) {  
-                errorPeaks(jqXHR.responseText); 
-            }
-        );
-} 
+};
 
 function successPeaks(data) {
     var i;
@@ -561,29 +571,7 @@ function successPeaks(data) {
         }
     }
     showAnalysis();
-}
-
-function errorPeaks(text) {
-    net_abort_count += 1;
-    if (net_abort_count >= 2) {
-        $("#id_modal").html(modalNetWarning);
-    }
-    $("#errors").html(text); 
-    showAnalysis();
-}
-
-function showAnalysis() {
-    var params = {'startRow': analysisLine, 'alog': alog, 'gmtOffset': gmt_offset};
-    call_rest("getAnalysis", params, 
-            function(json, status, jqXHR) { 
-                net_abort_count = 0;
-                successAnalysis(json);
-            },
-            function(jqXHR,ts,et) {  
-                errorAnalysis(jqXHR.responseText); 
-            }
-        );
-} 
+};
 
 function successAnalysis(data) {
     var i;
@@ -626,7 +614,27 @@ function successAnalysis(data) {
         }
     }
     timer1 = setTimeout(onTimer,1000);                        
-}
+};
+
+function errorData(text) {
+    net_abort_count += 1;
+    if (net_abort_count >= 2) {
+        $("#id_modal").html(modalNetWarning);
+        $("id_warningCloseBtn").focus();
+    }
+    $("#errors").html(text);
+    statCheck();
+    showLeaks();
+};
+
+function errorPeaks(text) {
+    net_abort_count += 1;
+    if (net_abort_count >= 2) {
+        $("#id_modal").html(modalNetWarning);
+    }
+    $("#errors").html(text); 
+    showAnalysis();
+};
 
 function errorAnalysis(text) {
     net_abort_count += 1;
@@ -635,7 +643,93 @@ function errorAnalysis(text) {
     }
     $("#errors").html(text); 
     timer1 = setTimeout(onTimer,1000);                        
-}
+};
+
+var modeStrings = {0:"Survey Mode", 1:"Capture Mode", 2:"Capture Mode", 3:"Analyzing Peak"};
+var modeBtn =     {0:[captureBtn],  1:[cancelCapBtn], 2:[cancelCapBtn], 3:[]};
+
+function setModePane(mode) {
+    var i;
+    $("#mode").html(modeStrings[mode]);
+    current_mode = mode;
+};
+
+function captureSwitch() {
+    ignoreTimer = true;
+    $("#analysis").html("");
+    $("#id_mode_pane").html(modeStrings[1]);
+    call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',1]"});
+    ignoreTimer = false;
+	restoreModChangeDiv();
+};
+
+function cancelCapSwitch() {
+    if (confirm("Cancel capture and return to survey mode?")) {
+        call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',0]"});
+		restoreModChangeDiv();
+    }
+};
+
+function injectCal() {
+    call_rest("injectCal",{"valve":3,"samples":1});
+    alert("Calibration pulse injected");
+    restoreModChangeDiv();
+};
+
+function getMode() {
+    call_rest("driverRpc",{"func":"rdDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER']"},
+        function(data,ts,jqXHR) {
+            if ("value" in data.result) {
+                var mode = data.result["value"];
+                setModePane(mode);
+            }
+            getData();
+        },
+        function(jqXHR,ts,et) {  
+            $("#errors").html(jqXHR.responseText); 
+            getData();
+        }
+    );
+};
+
+function getData() {
+    var params = {'startPos': startPos, 'alog': alog, 'gmtOffset': gmt_offset};
+    call_rest("getData", params, 
+        function(json, status, jqXHR) { 
+            net_abort_count = 0;
+            successData(json);
+        },
+        function(jqXHR,ts,et) {  
+            errorData(jqXHR.responseText); 
+        }
+    );
+}                
+
+function showLeaks() {
+    var params = {'startRow': leakLine, 'alog': alog, 'minAmp': minAmp, 'gmtOffset': gmt_offset};
+    call_rest("getPeaks", params, 
+        function(json, status, jqXHR) { 
+            net_abort_count = 0;
+            successPeaks(json);
+        },
+        function(jqXHR,ts,et) {  
+            errorPeaks(jqXHR.responseText); 
+        }
+    );
+} 
+
+function showAnalysis() {
+    var params = {'startRow': analysisLine, 'alog': alog, 'gmtOffset': gmt_offset};
+    call_rest("getAnalysis", params, 
+        function(json, status, jqXHR) { 
+            net_abort_count = 0;
+            successAnalysis(json);
+        },
+        function(jqXHR,ts,et) {  
+            errorAnalysis(jqXHR.responseText); 
+        }
+    );
+} 
 
 function initialize(winH,winW)
 { 
