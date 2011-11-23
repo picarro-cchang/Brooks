@@ -3,7 +3,7 @@ var svcurl = "rest";
 var alog = "";
 var center_longitude = -121.98432;
 var center_latitude = 37.39604; 
-var use_callback = true;
+var prime_view = true;
 var log_selection_options = [];
 
 // Normal js vars and functions
@@ -37,8 +37,8 @@ var streamdiff = 0;
 var startTime;
 var trange = 0;
 var marker = null;
-var peakMarkers = new Array();
-var analysisMarkers = new Array();
+var peakMarkers = [];
+var analysisMarkers = [];
 var path = null;
 var ignoreTimer = false;
 var ignoreRequests = false;
@@ -48,9 +48,9 @@ var leakLine = 1;
 var analysisLine = 1;
 var startPos = null;
 var gmt_offset = get_time_zone_offset();
-var conc_array = new Array();
+var conc_array = [];
 
-var methaneHistory = new Array();
+var methaneHistory = [];
 var histMax = 200;
 
 function setCookie(name,value,days) {
@@ -99,12 +99,17 @@ var modalNetWarning = setModalChrome('<h3>Connection Warning</h3>',
 		'<button id="id_warningCloseBtn" onclick="restoreModalDiv();" class="btn primary large">Close</button>'
 );
 
+var exportControlsBtn = '<li><div><button id="id_exportControlsBtn" type="button" onclick="exportControls();" class="btn primary large">Download Files</button></div></li><br/>';
+var exptLogBtn = '<div><button id="id_exptLogBtn" type="button" onclick="exportLog();" class="btn primary large">Download Concentration</button></div>';
+var exptPeakBtn = '<div><button id="id_exptPeakBtn" type="button" onclick="exportPeaks();" class="btn primary large">Download Peaks</button></div>';
+var exportBtns = '<ul class="inputs-list"><li>' + exptLogBtn + '</li><br/>';
+exportBtns += '<li>' + exptPeakBtn + '</li></ul><br/>';
 var primeControlsBtn = '<li><div><button id="id_primeControlsBtn" type="button" onclick="primeControls();" class="btn primary large">Analyzer Controls</button></div></li>';
 var restartBtn = '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn primary large">Restart Log</button></div>';
 var captureBtn = '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn primary large">Switch to Capture Mode</button></div>';
 var cancelCapBtn = '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn primary large">Cancel Capture</button></div>';
 var calibrateBtn = '<div><button id="id_calibrateBtn" type="button" onclick="injectCal();" class="btn primary large">Calibrate</button></div>';
-var shutdownBtn = '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn primary large">Shutdown Analyzer</button></div>';
+var shutdownBtn = '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn red large">Shutdown Analyzer</button></div>';
 
 function primeControls() {
 	var capOrCan = "";
@@ -115,11 +120,82 @@ function primeControls() {
 			restartBtn + "<br/>" +
 			capOrCan  +
             calibrateBtn +
-			"<br/><br/>" + shutdownBtn + "<br/>",
+			"<br/><br/><br/>" + shutdownBtn + "<br/>",
 			'<button onclick="restoreModChangeDiv();" class="btn primary large">Close</button>'
 	);
 	$("#id_mod_change").html(primeControlBtns);
 	$("#id_restartBtn").focus();
+};
+
+function exportControls() {
+	var primeControlBtns = setModalChrome('<h3>Analyzer Controls</h3>',
+			exportBtns,
+			'<button onclick="restoreModChangeDiv();" class="btn primary large">Close</button>'
+	);
+	$("#id_mod_change").html(primeControlBtns);
+	$("#id_restartBtn").focus();
+};
+
+function exportLog() {
+	var url = 'http://' + svcurl + '/sendLog?alog=' + alog;
+	window.location = url;
+};
+
+function exportPeaks() {
+	var apath = alog.replace(".dat", ".peaks")
+	var url = 'http://' + svcurl + '/sendLog?alog=' + apath;
+	window.location = url;
+};
+
+function selectLog() {
+	var options = ""
+		
+	for(var i=0,len=log_selection_options.length; value=log_selection_options[i], i<len; i++) {
+		var row = log_selection_options[i];
+		var selected = "";
+		if (alog == row[0]) {
+			selected = ' selected="selected" ';
+		}
+		options += '<option value="' + row[0] + '"' + selected + '>' + row[1] + '</option>';
+	}
+	
+	var modalChangeMinAmp = setModalChrome('<h3>Select log</h3>',
+			'<div><select id="id_selectLog" class="large">' + options + '</select>' +
+			'&nbsp;&nbsp;<button onclick="switchLog();" class="btn primary large">Select Log</button></div>',
+			'<div><button onclick="restoreModChangeDiv();" class="btn primary large">Cancel</button></div>'
+	);
+
+    $("#id_mod_change").html(modalChangeMinAmp);
+    $("#id_amplitude").focus();
+};
+
+function switchLog() {
+	var newlog = $("#id_selectLog").val();
+	var newtitle = "";
+	for(var i=0,len=log_selection_options.length; value=log_selection_options[i], i<len; i++) {
+		var row = log_selection_options[i];
+		var selected = "";
+		if (newlog == row[0]) {
+			newtitle = row[1];
+		}
+	}
+	
+	if (newlog != alog) {
+		alog = newlog;
+		startPos = null;
+		$("#id_selectLogBtn").html(newtitle);
+        if (prime_view) {
+    		$("#concentrationSparkline").html("Loading..");
+        } else {
+            $('#concentrationSparkline').html("");
+        }
+	    if (newtitle == "Live") {
+	        $("#id_exportButton_span").html("");
+	    } else {
+	        $("#id_exportButton_span").html(exportControlsBtn);
+	    }
+	}
+	$("#id_mod_change").html("");
 };
 
 function restoreModChangeDiv() {
@@ -186,7 +262,7 @@ function initialize_gdu(winH, winW) {
    	$('#map_canvas').css('width', pge_wdth);
     initialize_btns();
 
-    if (use_callback) {
+    if (prime_view) {
     	current_mapTypeId = google.maps.MapTypeId.ROADMAP;
     } else {
     	current_mapTypeId = google.maps.MapTypeId.SATELLITE;
@@ -230,7 +306,7 @@ function initialize_gdu(winH, winW) {
 function initialize_btns() {
     $('#cancel').hide();
 
-    if (use_callback) {
+    if (prime_view) {
     	$("#id_primeControlButton_span").html(primeControlsBtn);
     } else {
     	$("#id_primeControlButton_span").html("");
@@ -329,36 +405,19 @@ function get_time_zone_offset( ) {
     return gmt_offset;
 };
 
-
-function call_rest(method,params,success_callback,error_callback) {
-jQuery.ajax( {contentType:"application/json",
-              data:$.param(params),
-              dataType:"jsonp",
-              url:"/rest/" + method,
-              type:"get",
-              timeout: 5000,
-              success: success_callback,
-              error: error_callback} );
-}
-
-/*
 function call_rest(method,params,success_callback,error_callback) {
 	var dtype = "json";
-	if (use_callback) {dtype = "jsonp";}
-	
-	if (svcurl == "") {svcurl = "p3.picarro.com/pcubed/rest";}
-	// var url = 'http://' + svcurl + '/' + method
-    var url = "/rest/" + method;
-	jQuery.ajax({contentType:"application/json",
+	if (prime_view) {dtype = "jsonp";}
+	var url = 'http://' + svcurl + '/' + method
+	$.ajax({contentType:"application/json",
         data: $.param(params),
         dataType: dtype,
         url: url,
         type: "get",
         timeout: 5000,
-        ssuccess: success_callback,
+        success: success_callback,
         error: error_callback})
 };
-*/
 
 function changeFollow() {
     var cval = $("#id_follow").attr("checked");
@@ -389,12 +448,12 @@ function changeMinAmp() {
         var mkr = peakMarkers[i];
         mkr.setMap(null);
     }
-    peakMarkers = new Array();
+    peakMarkers = [];
 };
 
 function onTimer() {
     if (ignoreTimer) timer1 = setTimeout(onTimer,1000);
-    if (use_callback) {
+    if (prime_view) {
     	getMode();
     } else {
         getData();
@@ -508,7 +567,11 @@ function successData(data) {
                     n = n-1
                     methaneHistory = methaneHistory.concat(ch4);
                     if (methaneHistory.length >= histMax) methaneHistory.splice(0,methaneHistory.length-histMax);
-                    $('#concentrationSparkline').sparkline(methaneHistory,{"chartRangeMin":1.8, "width":"180px", "height":"50px"});
+                    if (prime_view) {
+                        $('#concentrationSparkline').sparkline(methaneHistory,{"chartRangeMin":1.8, "width":"180px", "height":"50px"});
+                    } else {
+                        $('#concentrationSparkline').html("");
+                    }
                     $("#concData").html("<h4>" + "Current concentration " + ch4[n-1].toFixed(3) + " ppm" + "</h4>"); 
                     pathCoords = path.getPath();
                     for (i=1;i<n;i++) {
@@ -527,7 +590,10 @@ function successData(data) {
                     }
                 }
             }
-        }
+	    } else {
+            $("#placeholder").html("<h4>" + "---" + "</h4>");
+            $("#concData").html("<h4>" + "Current concentration " + "---" + "</h4>"); 
+	    }
     }
     statCheck();
     showLeaks();
@@ -546,7 +612,7 @@ function successPeaks(data) {
                     var mkr = peakMarkers[i];
                     mkr.setMap(null);
                 }
-                peakMarkers = new Array();
+                peakMarkers = [];
             }
             lastPeakFilename = data.result["filename"]
         }
@@ -586,7 +652,7 @@ function successAnalysis(data) {
                     var mkr = analysisMarkers[i];
                     mkr.setMap(null);
                 }
-                analysisMarkers = new Array();
+                analysisMarkers = [];
             }
             lastAnalysisFilename = data.result["filename"]
         }
@@ -693,6 +759,7 @@ function getMode() {
 };
 
 function getData() {
+	//if (startPos) {startPosStr = startPos;} else {startPosStr = 'null';};
     var params = {'startPos': startPos, 'alog': alog, 'gmtOffset': gmt_offset};
     call_rest("getData", params, 
         function(json, status, jqXHR) { 
@@ -703,7 +770,7 @@ function getData() {
             errorData(jqXHR.responseText); 
         }
     );
-}                
+};                
 
 function showLeaks() {
     var params = {'startRow': leakLine, 'alog': alog, 'minAmp': minAmp, 'gmtOffset': gmt_offset};
@@ -716,7 +783,7 @@ function showLeaks() {
             errorPeaks(jqXHR.responseText); 
         }
     );
-} 
+}; 
 
 function showAnalysis() {
     var params = {'startRow': analysisLine, 'alog': alog, 'gmtOffset': gmt_offset};
@@ -729,7 +796,7 @@ function showAnalysis() {
             errorAnalysis(jqXHR.responseText); 
         }
     );
-} 
+}; 
 
 function initialize(winH,winW)
 { 
