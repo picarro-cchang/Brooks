@@ -21,7 +21,7 @@ for line in ip:
     WriteFile(handle,line.replace("\n","\r\n"))
     sys.stderr.write('.')
     sys.stderr.flush()
-    time.sleep(0.05)
+    time.sleep(0.5)
     
 CloseHandle(handle)
 ip.close()    

@@ -1,5 +1,5 @@
 var minAmp = 0.1;
-var svcurl = "rest";
+var svcurl = "/rest";
 var alog = "";
 var center_longitude = -121.98432;
 var center_latitude = 37.39604; 
@@ -95,8 +95,8 @@ function setModalChrome(hdr, msg, click) {
 };
 
 var modalNetWarning = setModalChrome('<h3>Connection Warning</h3>', 
-		'<p><h3>There is a problem with the network connection. Please verify connectivity.</h3></p>',
-		'<button id="id_warningCloseBtn" onclick="restoreModalDiv();" class="btn primary large">Close</button>'
+        '<p><h3>There is a problem with the network connection. Please verify connectivity.</h3></p>',
+        '<button id="id_warningCloseBtn" onclick="restoreModalDiv();" class="btn primary large">Close</button>'
 );
 
 var exportControlsBtn = '<li><div><button id="id_exportControlsBtn" type="button" onclick="exportControls();" class="btn primary large">Download Files</button></div></li><br/>';
@@ -112,94 +112,94 @@ var calibrateBtn = '<div><button id="id_calibrateBtn" type="button" onclick="inj
 var shutdownBtn = '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn red large">Shutdown Analyzer</button></div>';
 
 function primeControls() {
-	var capOrCan = "";
+    var capOrCan = "";
     for (var i=0;i<modeBtn[current_mode].length;i++) {
         capOrCan += modeBtn[current_mode][i]+ "<br/>";
     }
-	var primeControlBtns = setModalChrome('<h3>Analyzer Controls</h3>',
-			restartBtn + "<br/>" +
-			capOrCan  +
+    var primeControlBtns = setModalChrome('<h3>Analyzer Controls</h3>',
+            restartBtn + "<br/>" +
+            capOrCan  +
             calibrateBtn +
-			"<br/><br/><br/>" + shutdownBtn + "<br/>",
-			'<button onclick="restoreModChangeDiv();" class="btn primary large">Close</button>'
-	);
-	$("#id_mod_change").html(primeControlBtns);
-	$("#id_restartBtn").focus();
+            "<br/><br/><br/>" + shutdownBtn + "<br/>",
+            '<button onclick="restoreModChangeDiv();" class="btn primary large">Close</button>'
+    );
+    $("#id_mod_change").html(primeControlBtns);
+    $("#id_restartBtn").focus();
 };
 
 function exportControls() {
-	var primeControlBtns = setModalChrome('<h3>Analyzer Controls</h3>',
-			exportBtns,
-			'<button onclick="restoreModChangeDiv();" class="btn primary large">Close</button>'
-	);
-	$("#id_mod_change").html(primeControlBtns);
-	$("#id_restartBtn").focus();
+    var primeControlBtns = setModalChrome('<h3>Analyzer Controls</h3>',
+            exportBtns,
+            '<button onclick="restoreModChangeDiv();" class="btn primary large">Close</button>'
+    );
+    $("#id_mod_change").html(primeControlBtns);
+    $("#id_restartBtn").focus();
 };
 
 function exportLog() {
-	var url = 'http://' + svcurl + '/sendLog?alog=' + alog;
-	window.location = url;
+    var url = 'http://' + svcurl + '/sendLog?alog=' + alog;
+    window.location = url;
 };
 
 function exportPeaks() {
-	var apath = alog.replace(".dat", ".peaks")
-	var url = 'http://' + svcurl + '/sendLog?alog=' + apath;
-	window.location = url;
+    var apath = alog.replace(".dat", ".peaks")
+    var url = 'http://' + svcurl + '/sendLog?alog=' + apath;
+    window.location = url;
 };
 
 function selectLog() {
-	var options = ""
-		
-	for(var i=0,len=log_selection_options.length; value=log_selection_options[i], i<len; i++) {
-		var row = log_selection_options[i];
-		var selected = "";
-		if (alog == row[0]) {
-			selected = ' selected="selected" ';
-		}
-		options += '<option value="' + row[0] + '"' + selected + '>' + row[1] + '</option>';
-	}
-	
-	var modalChangeMinAmp = setModalChrome('<h3>Select log</h3>',
-			'<div><select id="id_selectLog" class="large">' + options + '</select>' +
-			'&nbsp;&nbsp;<button onclick="switchLog();" class="btn primary large">Select Log</button></div>',
-			'<div><button onclick="restoreModChangeDiv();" class="btn primary large">Cancel</button></div>'
-	);
+    var options = ""
+        
+    for(var i=0,len=log_selection_options.length; value=log_selection_options[i], i<len; i++) {
+        var row = log_selection_options[i];
+        var selected = "";
+        if (alog == row[0]) {
+            selected = ' selected="selected" ';
+        }
+        options += '<option value="' + row[0] + '"' + selected + '>' + row[1] + '</option>';
+    }
+    
+    var modalChangeMinAmp = setModalChrome('<h3>Select log</h3>',
+            '<div><select id="id_selectLog" class="large">' + options + '</select>' +
+            '&nbsp;&nbsp;<button onclick="switchLog();" class="btn primary large">Select Log</button></div>',
+            '<div><button onclick="restoreModChangeDiv();" class="btn primary large">Cancel</button></div>'
+    );
 
     $("#id_mod_change").html(modalChangeMinAmp);
     $("#id_amplitude").focus();
 };
 
 function switchLog() {
-	var newlog = $("#id_selectLog").val();
-	var newtitle = "";
-	for(var i=0,len=log_selection_options.length; value=log_selection_options[i], i<len; i++) {
-		var row = log_selection_options[i];
-		var selected = "";
-		if (newlog == row[0]) {
-			newtitle = row[1];
-		}
-	}
-	
-	if (newlog != alog) {
-		alog = newlog;
-		startPos = null;
-		$("#id_selectLogBtn").html(newtitle);
+    var newlog = $("#id_selectLog").val();
+    var newtitle = "";
+    for(var i=0,len=log_selection_options.length; value=log_selection_options[i], i<len; i++) {
+        var row = log_selection_options[i];
+        var selected = "";
+        if (newlog == row[0]) {
+            newtitle = row[1];
+        }
+    }
+    
+    if (newlog != alog) {
+        alog = newlog;
+        startPos = null;
+        $("#id_selectLogBtn").html(newtitle);
         if (prime_view) {
-    		$("#concentrationSparkline").html("Loading..");
+            $("#concentrationSparkline").html("Loading..");
         } else {
             $('#concentrationSparkline').html("");
         }
-	    if (newtitle == "Live") {
-	        $("#id_exportButton_span").html("");
-	    } else {
-	        $("#id_exportButton_span").html(exportControlsBtn);
-	    }
-	}
-	$("#id_mod_change").html("");
+        if (newtitle == "Live") {
+            $("#id_exportButton_span").html("");
+        } else {
+            $("#id_exportButton_span").html(exportControlsBtn);
+        }
+    }
+    $("#id_mod_change").html("");
 };
 
 function restoreModChangeDiv() {
-	$("#id_mod_change").html("");
+    $("#id_mod_change").html("");
 };
 
 var saved_html = "";
@@ -220,8 +220,8 @@ function changeMinAmpVal(reqbool) {
 function requestMinAmpChange() {
     var modalChangeMinAmp = setModalChrome('<h3>Change Minimum Amplitude</h3>',
             '<div><input type="text" id="id_amplitude" value="' + minAmp + '"/></div>',
-			'<div><button onclick="changeMinAmpVal(false);" class="btn primary large">Cancel</button></div>' +
-			'<div><button onclick="changeMinAmpVal(true);" class="btn primary large">OK</button></div>'
+            '<div><button onclick="changeMinAmpVal(false);" class="btn primary large">Cancel</button></div>' +
+            '<div><button onclick="changeMinAmpVal(true);" class="btn primary large">OK</button></div>'
     );
 
     $("#id_mod_change").html(modalChangeMinAmp);
@@ -232,6 +232,7 @@ function colorPathFromValveMask(value) {
     var value_float = parseFloat(value);
     var value_int = Math.round(value_float);
     var clr = normal_path_color;
+    var lastPoint = null;
     if (Math.abs(value_float - value_int) > 1e-4) {
         clr = normal_path_color;
     } else {
@@ -243,15 +244,21 @@ function colorPathFromValveMask(value) {
             clr = normal_path_color;
         }
     }
+    if (clr == normal_path_color) $("#analysis").html("")
     // when path color needs to change, we instatiate a new path
     // this is because strokeColor changes the entire Polyline, not just
     // new points
     if (clr != path.strokeColor) {
+        var pathLen = path.getPath().getLength();
+        if (pathLen > 0) {
+            lastPoint = path.getPath().getAt(pathLen-1);
+        }
         path = new google.maps.Polyline(
                 {   path:new google.maps.MVCArray(),
                     strokeColor: clr,
                     strokeOpactity:1.0,
                     strokeWeight:2  });
+        if (lastPoint) path.getPath().push(lastPoint);
         path.setMap(map);
     }
 };
@@ -259,13 +266,13 @@ function colorPathFromValveMask(value) {
 function initialize_gdu(winH, winW) {
     pge_wdth = $('#id_topbar').width();
     $('#map_canvas').css('height', winH-200);
-   	$('#map_canvas').css('width', pge_wdth);
+       $('#map_canvas').css('width', pge_wdth);
     initialize_btns();
 
     if (prime_view) {
-    	current_mapTypeId = google.maps.MapTypeId.ROADMAP;
+        current_mapTypeId = google.maps.MapTypeId.ROADMAP;
     } else {
-    	current_mapTypeId = google.maps.MapTypeId.SATELLITE;
+        current_mapTypeId = google.maps.MapTypeId.SATELLITE;
     }
 
     
@@ -307,9 +314,9 @@ function initialize_btns() {
     $('#cancel').hide();
 
     if (prime_view) {
-    	$("#id_primeControlButton_span").html(primeControlsBtn);
+        $("#id_primeControlButton_span").html(primeControlsBtn);
     } else {
-    	$("#id_primeControlButton_span").html("");
+        $("#id_primeControlButton_span").html("");
         $("#id_exportButton_span").html("");
         var type = $("#id_selectLogBtn").html();
         if (type == "Live") {
@@ -352,14 +359,14 @@ function resize_map() {
     new_height = winH - hgth_top - margin - 40;
     new_top = hgth_top + margin;
     
-	$("#id_modal_span").css('position', 'absolute');
-	$("#id_modal_span").css('top', hgth_top);
+    $("#id_modal_span").css('position', 'absolute');
+    $("#id_modal_span").css('top', hgth_top);
     if (new_width < 640) {
         new_top = new_top + 30;
         new_height = new_height - 30;
-		$("#id_modal_span").css('left', margin + 5);
-	} else {
-		$("#id_modal_span").css('left', lpge_wdth + margin + 5);
+        $("#id_modal_span").css('left', margin + 5);
+    } else {
+        $("#id_modal_span").css('left', lpge_wdth + margin + 5);
     }
     
     $('#map_canvas').css('position', 'absolute');
@@ -378,21 +385,21 @@ function resize_map() {
 function resize_page() {
     if (!resize_map_inprocess) {
         resize_map_inprocess = true;
-		resize_map_timer = setTimeout(resize_map,25);
+        resize_map_timer = setTimeout(resize_map,25);
     }
 };
 
 function restart_datalog() {
     if (confirm("Close current data log and open a new one?")) {
         call_rest("restartDatalog",{});
-		restoreModChangeDiv();
+        restoreModChangeDiv();
     }
 };
 
 function shutdown_analyzer() {
     if (confirm("Do you want to shut down the Analyzer? \n\nWhen the analyzer is shutdown it can take 30 to 45 minutes warm up.")) {
-        call_rest("shutdownAnalyzer",{});	
-		restoreModChangeDiv();
+        call_rest("shutdownAnalyzer",{});    
+        restoreModChangeDiv();
     }
 };
 
@@ -406,10 +413,10 @@ function get_time_zone_offset( ) {
 };
 
 function call_rest(method,params,success_callback,error_callback) {
-	var dtype = "json";
-	if (prime_view) {dtype = "jsonp";}
-	var url = 'http://' + svcurl + '/' + method
-	$.ajax({contentType:"application/json",
+    var dtype = "json";
+    if (prime_view) {dtype = "jsonp";}
+    var url = svcurl + '/' + method;
+    $.ajax({contentType:"application/json",
         data: $.param(params),
         dataType: dtype,
         url: url,
@@ -418,7 +425,18 @@ function call_rest(method,params,success_callback,error_callback) {
         success: success_callback,
         error: error_callback})
 };
-
+/*
+function call_rest(method,params,success_callback,error_callback) {
+    jQuery.ajax( {contentType:"application/json",
+              data:$.param(params),
+              dataType:"jsonp",
+              url:"/rest/" + method,
+              type:"get",
+              timeout: 5000,
+              success: success_callback,
+              error: error_callback} );
+};
+*/
 function changeFollow() {
     var cval = $("#id_follow").attr("checked");
     if (cval == "checked") {
@@ -454,7 +472,7 @@ function changeMinAmp() {
 function onTimer() {
     if (ignoreTimer) timer1 = setTimeout(onTimer,1000);
     if (prime_view) {
-    	getMode();
+        getMode();
     } else {
         getData();
     }
@@ -473,16 +491,16 @@ function statCheck() {
             $("#id_stream_stat").html("Stream Warning");
         } else {
             $("#id_stream_stat").html("Stream OK");
-			if (lastFit) {
-				if (lastFit == 0) {
+            if (lastFit) {
+                if (lastFit == 0) {
                 $("#id_gps_stat").html("<font color='red'><strike>GPS</strike></font>");
             } else {
                 $("#id_gps_stat").html("GPS OK");
             }      
-			} else {
-				$("#id_gps_stat").html("<font color='red'><strike>GPS</strike></font>");
-			}
-			
+            } else {
+                $("#id_gps_stat").html("<font color='red'><strike>GPS</strike></font>");
+            }
+            
             if (lastInst != 963) {
                 $("#id_analyzer_stat").html("<font color='red'><strike>Analyzer</strike></font>");
             } else {
@@ -563,9 +581,7 @@ function successData(data) {
                     marker.setMap(map);
                 }
                 if (n>1) {
-                    ch4.shift()
-                    n = n-1
-                    methaneHistory = methaneHistory.concat(ch4);
+                    methaneHistory = methaneHistory.concat(ch4.slice(1));
                     if (methaneHistory.length >= histMax) methaneHistory.splice(0,methaneHistory.length-histMax);
                     if (prime_view) {
                         $('#concentrationSparkline').sparkline(methaneHistory,{"chartRangeMin":1.8, "width":"180px", "height":"50px"});
@@ -573,27 +589,29 @@ function successData(data) {
                         $('#concentrationSparkline').html("");
                     }
                     $("#concData").html("<h4>" + "Current concentration " + ch4[n-1].toFixed(3) + " ppm" + "</h4>"); 
-                    pathCoords = path.getPath();
-                    for (i=1;i<n;i++) {
+                    //pathCoords = path.getPath();
+                    for (var i=1;i<n;i++) {
                         if (vmask) {
                             colorPathFromValveMask(vmask[i]);
                         }
                         if (fit) {
                             if (fit[i] != 0) {
-                                pathCoords.push(new google.maps.LatLng(lat[i],lon[i]));
+                                path.getPath().push(new google.maps.LatLng(lat[i],lon[i]));
+                                //pathCoords.push(new google.maps.LatLng(lat[i],lon[i]));
                                 conc_array.push(ch4[i]);
                             }
                         } else {
-                            pathCoords.push(new google.maps.LatLng(lat[i],lon[i]));
+                            path.getPath().push(new google.maps.LatLng(lat[i],lon[i]));
+                            //pathCoords.push(new google.maps.LatLng(lat[i],lon[i]));
                             conc_array.push(ch4[i]);
                         }
                     }
                 }
             }
-	    } else {
+        } else {
             $("#placeholder").html("<h4>" + "---" + "</h4>");
             $("#concData").html("<h4>" + "Current concentration " + "---" + "</h4>"); 
-	    }
+        }
     }
     statCheck();
     showLeaks();
@@ -726,13 +744,13 @@ function captureSwitch() {
     $("#id_mode_pane").html(modeStrings[1]);
     call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',1]"});
     ignoreTimer = false;
-	restoreModChangeDiv();
+    restoreModChangeDiv();
 };
 
 function cancelCapSwitch() {
     if (confirm("Cancel capture and return to survey mode?")) {
         call_rest("driverRpc",{"func":"wrDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER',0]"});
-		restoreModChangeDiv();
+        restoreModChangeDiv();
     }
 };
 
@@ -759,7 +777,7 @@ function getMode() {
 };
 
 function getData() {
-	//if (startPos) {startPosStr = startPos;} else {startPosStr = 'null';};
+    //if (startPos) {startPosStr = startPos;} else {startPosStr = 'null';};
     var params = {'startPos': startPos, 'alog': alog, 'gmtOffset': gmt_offset};
     call_rest("getData", params, 
         function(json, status, jqXHR) { 
