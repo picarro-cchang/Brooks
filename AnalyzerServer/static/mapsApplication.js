@@ -154,9 +154,9 @@ function requestMinAmpChange() {
 
 function colorPathFromValveMask(value) {
     var value_float = parseFloat(value);
-    var value_int = parseInt(value);
+    var value_int = Math.round(value_float);
     var clr = normal_path_color;
-    if (value_float != value_int) {
+    if (Math.abs(value_float - value_int) > 1e-4) {
         clr = normal_path_color;
     } else {
         var value_binstr = value_int.toString(2);

@@ -292,7 +292,7 @@ class PeakAnalyzer(object):
             Perform a Keeling analysis of the data during the interval that the recorder is being played back"""
             
             MAX_DURATION = 30
-            collecting = lambda v: (v == int(v)) and (int(v) & 3) == 3
+            collecting = lambda v: abs(v - round(v))<1e-4 and (int(round(v)) & 1) == 1
             tempStore = deque()
             keelingStore = []
             lastPeak = None

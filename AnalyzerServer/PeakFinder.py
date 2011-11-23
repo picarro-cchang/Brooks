@@ -48,12 +48,12 @@ class PeakFinder(object):
         if 'dx' in kwargs:
             self.dx = float(kwargs['dx'])
         else:
-            self.dx = 2.0
+            self.dx = 1.0
     
         if 'sigmaMinFactor' in kwargs:
             sigmaMinFactor = float(kwargs['sigmaMinFactor'])
         else:
-            sigmaMinFactor = 0.75
+            sigmaMinFactor = 1.5
     
         self.sigmaMin = sigmaMinFactor*self.dx
     
@@ -364,6 +364,9 @@ class PeakFinder(object):
             oldDist, oldData = None, None
             s1, sx, sy, sx2, sxy = 1.0, 2.0, 2.0, 4.0, 4.0
             for dist,data in source:
+                if dist is None:
+                    yield None, None
+                    continue
                 if len(data) == baseLength:
                     oldDist, oldData = None, None
                     yield dist,PosBaseData(*data)
@@ -404,7 +407,7 @@ class PeakFinder(object):
             [-5*sqrt(tfactor*t_i),5*sqrt(tfactor*t_i)]
             """
             # The following is true when the tape recorder is playing back
-            collecting = lambda v: (v == int(v)) and (int(v) & 3) == 3
+            collecting = lambda v: abs(v-round(v))<1e-4 and (int(round(v)) & 1) == 1
             
             hList = []
             kernelList = []
@@ -438,25 +441,17 @@ class PeakFinder(object):
                          (v>ssbuff[level-1,colp]) and (v>ssbuff[level-1,col]) and (v>ssbuff[level+1,colm])
                 return isPeak, col         
             initBuff = True
-            countdown = 10
             for x,y in source:
                 if x is None:
                     initBuff = True
                     continue
                 # Initialize 
                 long,lat,epochTime,methane,valves = y
-                if collecting(valves):
-                    countdown -= 1
-                    if countdown<0:
-                        initBuff = True
-                        continue
-                else:
-                    countdown = 10
                 if initBuff:
                     ssbuff = zeros((nlevels,npoints),float)
                     # Define a cache for the position and concentration data so that the
                     #  coordinates and value of peaks can be looked up
-                    cache = zeros((5,npoints),float)
+                    cache = zeros((6,npoints),float)
                     # c is the where in ssbuff the center of the kernel is placed
                     c = hmax+2
                     # z is the column in ssbuff which has to be set to zero before adding
@@ -465,7 +460,7 @@ class PeakFinder(object):
                     for i in range(nlevels):
                         ssbuff[i,c-hList[i]:c+hList[i]+1] = -methane*cumsum(kernelList[i])
                     initBuff = False
-                cache[:,c] = (epochTime,x,long,lat,methane)
+                cache[:,c] = (epochTime,x,long,lat,methane,valves)
                 # Zero out the old data
                 ssbuff[:,z] = 0
                 # Do the convolution by adding in the current methane concentration
@@ -488,7 +483,11 @@ class PeakFinder(object):
                         #  of the form (dist,long,lat,methane,amplitude,sigma)
                         isPeak,col = checkPeak(i,c-hList[i]-1)
                         if isPeak:
-                            peaks.append(tuple([v for v in cache[:,col]]) + (0.5*ssbuff[i,col]/(3.0**(-1.5)),sqrt(0.5*scaleList[i]),))
+                            # A peak is disqualified if the valve settings in an interval before the 
+                            #  peak arrives were in the collecting state. This means that the tape recorder
+                            #  was on, and the peak was a replay of a previously collected one
+                            if not(collecting(mean([cache[5,j%npoints] for j in range(col-5,col+1)]))):
+                                peaks.append(tuple([v for v in cache[:,col]]) + (0.5*ssbuff[i,col]/(3.0**(-1.5)),sqrt(0.5*scaleList[i]),))
                 c += 1
                 if c>=npoints: c -= npoints
                 z += 1
@@ -537,10 +536,10 @@ class PeakFinder(object):
                 refinedData = refiner(alignedData)
                 intData = interpolator(refinedData,dx)
                 peakData = spaceScale(intData,dx,t0,nlevels,factor)
-                filteredPeakData = ((epoch_time,dist,long,lat,methane,amplitude,sigma) for epoch_time,dist,long,lat,methane,amplitude,sigma in peakData if amplitude>minAmpl)
+                filteredPeakData = ((epoch_time,dist,long,lat,methane,amplitude,sigma) for epoch_time,dist,long,lat,methane,valves,amplitude,sigma in peakData if amplitude>minAmpl)
                 content = []
                 for epoch_time,dist,long,lat,methane,amplitude,sigma in filteredPeakData:
-                    handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.4f%-14.3f\r\n" % (epoch_time,dist,long,lat,methane,amplitude, sigma))
+                    handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.4f%-14.3f\r\n" % (epoch_time,dist,long,lat,methane,amplitude,sigma))
                     
                 handle.close()
 
