@@ -216,8 +216,8 @@ class PeakFinder(object):
                                 entry[h] = NaN
                         long, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
                         pos = PosData(long,lat)
- 
-                        if extra:
+                        if not 'ValveMask' in entry: entry['ValveMask'] = 0
+                        if extra: 
                             data = FullData(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'],entry['CH4up'],entry['CH4down'],entry['CH4dt'],entry['species'])
                         else:
                             data = BaseData(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'])
