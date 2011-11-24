@@ -244,7 +244,7 @@ function colorPathFromValveMask(value) {
             clr = normal_path_color;
         }
     }
-    if (clr == normal_path_color) $("#analysis").html("")
+    if (clr == analyze_path_color) $("#analysis").html("")
     // when path color needs to change, we instatiate a new path
     // this is because strokeColor changes the entire Polyline, not just
     // new points
