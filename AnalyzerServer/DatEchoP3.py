@@ -126,7 +126,8 @@ class DataEchoP3(object):
                         if first_row:
                             first_row = None
                             headers = line.split()
-                            self.pushToP3(self.fname, None, [line], True)
+                            ##print "line", line
+                            self.pushToP3(self.fname, None, [(line, 0)], True, None)
                             continue
                         
                         lctr += 1
@@ -145,7 +146,7 @@ class DataEchoP3(object):
                             rctr += 1
                             doc['row'] = rctr
                             
-                            self._lines.append(line)
+                            self._lines.append((line, rctr))
                             self._docs.append(doc)
                             
                             # attempt to smooth the transmission by only
@@ -153,7 +154,7 @@ class DataEchoP3(object):
                             tsec = time.time() - nsec
                             if (lctr > 100 or tsec >= .7):
                                 lctr = 0
-                                self.pushToP3(self.fname, self._docs, self._lines, None)
+                                self.pushToP3(self.fname, self._docs, self._lines, None, rctr)
                                 self._docs = []
                                 self._lines = []
                                 nsec = time.time()
@@ -179,7 +180,7 @@ class DataEchoP3(object):
 
                 # clear the remaining data
                 if self._docs or self._lines:                
-                    self.pushToP3(self.fname, self._docs, self._lines, None)
+                    self.pushToP3(self.fname, self._docs, self._lines, None, None)
                     self._docs = []
                     self._lines = []
                 
@@ -199,7 +200,9 @@ class DataEchoP3(object):
             
             yield line
 
-    def pushToP3(self, path, docs=None, flat_rows=None, replace=None):
+    def pushToP3(self, path, docs=None, flat_rows=None, replace=None, last_pos=None):
+        err_rtn_str = 'ERROR: missing data:'
+        rtn = "OK"
         fname = os.path.basename(path) 
         if docs: 
             params = {fname: docs}
@@ -208,6 +211,7 @@ class DataEchoP3(object):
         postparms = {'data': json.dumps(params)}
 
         if flat_rows:
+            ## flat_rows is a tuple of row, rctr
             fparams = {fname: flat_rows}
             postparms['flat_data'] = json.dumps(fparams)
         else:
@@ -217,7 +221,9 @@ class DataEchoP3(object):
         postparms['flat_data_replace'] = 'no'
         
         if replace:
-            postparms['flat_data_replace'] = 'yes'
+            if replace == True:
+                postparms['flat_data_replace'] = 'yes'
+                ##print "flat_rows in pushToP3: ", flat_rows
         
         tctr = 0
         while True:
@@ -226,7 +232,17 @@ class DataEchoP3(object):
                 # In Python26 and beyond we can use the timeout parameter in the urlopen()
                 socket.setdefaulttimeout(self.timeout)
                 resp = urllib2.urlopen(self.url, data=urllib.urlencode(postparms))
-                break
+                rtn_data = resp.read()
+                ##print rtn_data
+                if err_rtn_str in rtn_data:
+                    rslt = json.loads(rtn_data)
+                    expect_ctr = rslt['result'].replace(err_rtn_str, "").strip()
+                    if last_pos:
+                        missing_rtn = self.pushMissingRows(path, int(expect_ctr), last_pos)
+                    else:
+                        break
+                else:
+                    break
             except Exception, e:
                 print '\n%s\n' % e
                 pass
@@ -235,9 +251,33 @@ class DataEchoP3(object):
             tctr += 1
             time.sleep(self.timeout)
                 
+            ## we want to keep trying forever.  This is intentional.
+            '''   
             if tctr > 100:
                 print 'r\nError trying to send data from file %s to url: %s\r\n' % (self.fname, self.url)
+                rtn = "ERROR"
                 break
+            '''
+            
+        return rtn
+    
+    def pushMissingRows(self, path, pos, last_pos):
+        fp = file(self.fname,'rb')
+        fp.seek(pos,0)
+        line = fp.readline()
+        while True:
+            line = fp.readline()
+            cpos = fp.tell()
+            sys.stderr.write('+')
+            if line:
+                self.pushToP3(self.fname, None, [(line, cpos)], None, None)
+            else:
+                return "ERROR"
+            if cpos >= last_pos:
+                break
+            
+        return "OK"
+            
         
         
     def getIPAddresses(self):
