@@ -135,9 +135,9 @@ class PulseAnalyzer(object):
             timeArray = array(self.concBufferDict["timestamp"])
             lastIdx = nonzero(timeArray >= (timeArray[-1]-self.validTimeBeforeEnd))[0][0]
             for concName in self.concBufferDict:
-                self.concBufferDict[concName] = self.concBufferDict[concName][:lastIdx]
-        except:
-            pass
+                self.concBufferDict[concName] = deque(list(self.concBufferDict[concName])[:lastIdx])
+        except Exception, err:
+            print err
         finally:
             self.bufferLock.release()
             
