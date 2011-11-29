@@ -194,6 +194,7 @@ class Fitter(object):
    
     def FITTER_setOption(self,option):
         self.fitterOption = option
+        self.FITTER_initialize()
    
     def FITTER_setInputFile(self,inputFile):
         self.inputFile = inputFile
