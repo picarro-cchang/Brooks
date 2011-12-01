@@ -13,8 +13,8 @@ import shutil
 import subprocess
 import psutil
 import win32gui
-import CustomConfigObj
-import SingleInstance
+from CustomConfigObj import CustomConfigObj
+from SingleInstance import SingleInstance
 from MobileKitSetupFrame import MobileKitSetupFrame
 
 DEFAULT_CONFIG_NAME = "MobileKitSetup.ini"
