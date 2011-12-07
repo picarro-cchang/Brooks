@@ -445,13 +445,13 @@ class MyPlotCanvas(plot.PlotCanvas):
             return zip(time_list,label_list)
         else:
             result = []
-            for t,l in self._ticks(lower,upper):
+            for t,l in self._ticks(lower,upper,timeTicks=True):
                 fmtfrac = format.replace("%S","%S."+("%s"%(l.split(".")[-1],)))
                 label = time.strftime(fmtfrac,to_tm(int(t)))
                 result.append((t,label))
             return result
 
-    def _ticks(self, lower, upper, format=None):
+    def _ticks(self, lower, upper, format=None, timeTicks = False):
         ideal = (upper-lower)/7.
         log = numpy.log10(ideal)
         power = numpy.floor(log)
@@ -465,7 +465,7 @@ class MyPlotCanvas(plot.PlotCanvas):
                 factor = f
         grid = factor * 10.**power
         if format is None:
-            if power > 4 or power < -4:
+            if (power > 4 or power < -4) and not timeTicks:
                 format = '%+7.1e'
             elif power >= 0:
                 digits = max(1, int(power))
@@ -475,9 +475,11 @@ class MyPlotCanvas(plot.PlotCanvas):
                 format = '%'+`digits+2`+'.'+`digits`+'f'
         ticks = []
         t = -grid*numpy.floor(-lower/grid)
-        while t <= upper:
+        tickCounter = 0
+        while t <= upper and tickCounter < 20:
             ticks.append( (t, format % (t,)) )
             t = t + grid
+            tickCounter += 1
         return ticks
 
     _multiples = [(2., numpy.log10(2.)), (5., numpy.log10(5.))]
