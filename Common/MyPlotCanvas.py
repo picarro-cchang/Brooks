@@ -40,6 +40,7 @@ class MyPlotCanvas(plot.PlotCanvas):
         self.xTickFormat = None
         self.yTickFormat = None
         self._timeAxes = (False,False)
+        self.busy = False
 
     def Reset(self):
         self.unzoomed = True
@@ -112,35 +113,42 @@ class MyPlotCanvas(plot.PlotCanvas):
         plot.PlotCanvas.OnLeave(self,event)
 
     def OnMotion(self, event):
-        if self._zoomEnabled and event.LeftIsDown():
-            if self._hasDragged:
-                self._drawRubberBand(self._zoomCorner1, self._zoomCorner2) # remove old
-            else:
-                self._hasDragged= True
-            self._zoomCorner2[0], self._zoomCorner2[1] = self._getXY(event)
-            self._drawRubberBand(self._zoomCorner1, self._zoomCorner2) # add new
-        elif self._dragEnabled:
-            coordinates = event.GetPosition()
-            newpos, oldpos = map(numpy.array, map(self.PositionScreenToUser, [coordinates, self._screenCoordinates]))
-            dist = newpos-oldpos
-            self._screenCoordinates = coordinates
-            if self.last_draw is not None:
-                graphics, xAxis, yAxis= self.last_draw
-                if event.LeftIsDown():
-                    yAxis -= dist[1]
-                    xAxis -= dist[0]
-                    self._Draw(graphics,xAxis,yAxis)
-                elif event.RightIsDown():
-                    ymin,ymax = yAxis
-                    yextra = (numpy.exp(-dist[1]/(ymax-ymin))-1)*(ymax-ymin)/2.0
-                    yAxis[0] -= yextra
-                    yAxis[1] += yextra
-                    xmin,xmax = xAxis
-                    xextra = (numpy.exp(-dist[0]/(xmax-xmin))-1)*(xmax-xmin)/2.0
-                    xAxis[0] -= xextra
-                    xAxis[1] += xextra
-                    self._Draw(graphics,xAxis,yAxis)
-        
+        if self.busy:
+            event.Skip()
+            return
+        try:
+            self.busy = True
+            if self._zoomEnabled and event.LeftIsDown():
+                if self._hasDragged:
+                    self._drawRubberBand(self._zoomCorner1, self._zoomCorner2) # remove old
+                else:
+                    self._hasDragged= True
+                self._zoomCorner2[0], self._zoomCorner2[1] = self._getXY(event)
+                self._drawRubberBand(self._zoomCorner1, self._zoomCorner2) # add new
+            elif self._dragEnabled:
+                coordinates = event.GetPosition()
+                newpos, oldpos = map(numpy.array, map(self.PositionScreenToUser, [coordinates, self._screenCoordinates]))
+                dist = newpos-oldpos
+                self._screenCoordinates = coordinates
+                if self.last_draw is not None:
+                    graphics, xAxis, yAxis= self.last_draw
+                    if event.LeftIsDown():
+                        yAxis -= dist[1]
+                        xAxis -= dist[0]
+                        self._Draw(graphics,xAxis,yAxis)
+                    elif event.RightIsDown():
+                        ymin,ymax = yAxis
+                        yextra = (numpy.exp(-dist[1]/(ymax-ymin))-1)*(ymax-ymin)/2.0
+                        yAxis[0] -= yextra
+                        yAxis[1] += yextra
+                        xmin,xmax = xAxis
+                        xextra = (numpy.exp(-dist[0]/(xmax-xmin))-1)*(xmax-xmin)/2.0
+                        xAxis[0] -= xextra
+                        xAxis[1] += xextra
+                        self._Draw(graphics,xAxis,yAxis)
+        finally:
+            self.busy = False
+
     # Setter and getter routines for miscellaneous properties of the canvas
     def SetXTickFormat(self,v):
         self.xTickFormat = v
