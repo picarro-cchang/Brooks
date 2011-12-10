@@ -39,6 +39,7 @@ var trange = 0;
 var marker = null;
 var peakMarkers = [];
 var analysisMarkers = [];
+var startNewPath = true;
 var path = null;
 var ignoreTimer = false;
 var ignoreRequests = false;
@@ -232,7 +233,6 @@ function colorPathFromValveMask(value) {
     var value_float = parseFloat(value);
     var value_int = Math.round(value_float);
     var clr = normal_path_color;
-    var lastPoint = null;
     if (Math.abs(value_float - value_int) > 1e-4) {
         clr = normal_path_color;
     } else {
@@ -244,11 +244,16 @@ function colorPathFromValveMask(value) {
             clr = normal_path_color;
         }
     }
+    return clr;
+}
+
+function updatePath(where,clr) {
+    var lastPoint = null;
     if (clr == analyze_path_color) $("#analysis").html("")
     // when path color needs to change, we instatiate a new path
     // this is because strokeColor changes the entire Polyline, not just
     // new points
-    if (clr != path.strokeColor) {
+    if (startNewPath || clr != path.strokeColor) {
         var pathLen = path.getPath().getLength();
         if (pathLen > 0) {
             lastPoint = path.getPath().getAt(pathLen-1);
@@ -258,9 +263,12 @@ function colorPathFromValveMask(value) {
                     strokeColor: clr,
                     strokeOpactity:1.0,
                     strokeWeight:2  });
-        if (lastPoint) path.getPath().push(lastPoint);
-        path.setMap(map);
+                    
+        if (lastPoint && !startNewPath) path.getPath().push(lastPoint);
     }
+    startNewPath = false;
+    path.getPath().push(where);
+    path.setMap(map);
 };
 
 function initialize_gdu(winH, winW) {
@@ -421,7 +429,7 @@ function call_rest(method,params,success_callback,error_callback) {
         dataType: dtype,
         url: url,
         type: "get",
-        timeout: 5000,
+        timeout: 60000,
         success: success_callback,
         error: error_callback})
 };
@@ -591,18 +599,27 @@ function successData(data) {
                     $("#concData").html("<h4>" + "Current concentration " + ch4[n-1].toFixed(3) + " ppm" + "</h4>"); 
                     //pathCoords = path.getPath();
                     for (var i=1;i<n;i++) {
+                        var clr = vmask ? colorPathFromValveMask(vmask[i]) : normal_path_color;
+                        
+                        
+                        
                         if (vmask) {
-                            colorPathFromValveMask(vmask[i]);
+                            clr = colorPathFromValveMask(vmask[i]);
                         }
                         if (fit) {
                             if (fit[i] != 0) {
-                                path.getPath().push(new google.maps.LatLng(lat[i],lon[i]));
-                                //pathCoords.push(new google.maps.LatLng(lat[i],lon[i]));
+                                updatePath(new google.maps.LatLng(lat[i],lon[i]),clr);
+                                // path.getPath().push(new google.maps.LatLng(lat[i],lon[i]));
+                                // pathCoords.push(new google.maps.LatLng(lat[i],lon[i]));
                                 conc_array.push(ch4[i]);
                             }
+                            else {
+                                startNewPath = true;
+                            }
                         } else {
-                            path.getPath().push(new google.maps.LatLng(lat[i],lon[i]));
-                            //pathCoords.push(new google.maps.LatLng(lat[i],lon[i]));
+                            updatePath(new google.maps.LatLng(lat[i],lon[i]),clr);
+                            // path.getPath().push(new google.maps.LatLng(lat[i],lon[i]));
+                            // pathCoords.push(new google.maps.LatLng(lat[i],lon[i]));
                             conc_array.push(ch4[i]);
                         }
                     }
