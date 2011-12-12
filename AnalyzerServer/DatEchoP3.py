@@ -362,7 +362,7 @@ if __name__ == "__main__":
         else:
             AppPath = sys.argv[0]
         AppDir = os.path.split(AppPath)[0]
-        listen_path = os.path.join(AppDir,'static/datalog/*_Minimal.dat')
+        listen_path = os.path.join(AppDir,'C:/UserData/AnalyzerServer/*_Minimal.dat')
         
     if 2 < len(sys.argv):
         url=sys.argv[2]
