@@ -33,9 +33,9 @@ PASSWORD = 'default'
 #  be changed by the viewers. Later we should read this
 #  from an InstrConfig variable
 SHIFT = -4
-USERLOGFILES = os.path.join(AppDir,'static/datalog/*.dat')
-PEAKFILES = os.path.join(AppDir,'static/datalog/*.peaks')
-ANALYSISFILES = os.path.join(AppDir,'static/datalog/*.analysis')
+USERLOGFILES = 'C:/UserData/AnalyzerServer/*.dat'
+PEAKFILES = 'C:/UserData/AnalyzerServer/*.peaks'
+ANALYSISFILES = 'C:/UserData/AnalyzerServer/*.analysis'
 
 app = Flask(__name__)
 app.config.from_object(__name__)

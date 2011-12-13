@@ -364,8 +364,8 @@ if __name__ == "__main__":
         else:
             AppPath = sys.argv[0]
         AppDir = os.path.split(AppPath)[0]
-        listen_path = os.path.join(AppDir,'C:/UserData/AnalyzerServer/*_Minimal.dat')
-        
+        listen_path = 'C:/UserData/AnalyzerServer/*_Minimal.dat'
+
     if 2 < len(sys.argv):
         url=sys.argv[2]
     else:
@@ -375,7 +375,7 @@ if __name__ == "__main__":
     if 3 < len(sys.argv):
         timeout=sys.argv[3]
     else:
-        timeout=2
+        timeout=10
         
     decho = DataEchoP3(listen_path=listen_path,
                        url=url,

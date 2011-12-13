@@ -22,7 +22,7 @@ if __name__ == "__main__":
     if localAnalyzerId:
         # Local
         analyzer = localAnalyzerId
-        data_dir = os.path.join(AppDir,'static/datalog') # local Analyzer data location
+        data_dir = 'C:/UserData/AnalyzerServer' # local Analyzer data location
         debug = True
     else:
         # P3
