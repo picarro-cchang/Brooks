@@ -62,6 +62,8 @@ class DataEchoP3(object):
         def pushIP():
             aname = self.getLocalAnalyzerId()
             for addr in decho.getIPAddresses():
+                if addr == "0.0.0.0":
+                    continue
                 params = {aname: {"ip_addr": "%s:5000" % addr}}
                 postparms = {'data': json.dumps(params)}
                 try:    
