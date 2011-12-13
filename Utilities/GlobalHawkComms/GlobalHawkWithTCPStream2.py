@@ -156,9 +156,6 @@ def sntp_time(server):
     except:
         # 
         return 3*(None,)
-
-def inRange(value,optimal,tolerance):
-    return abs(value - optimal) <= tolerance
     
 class AnalyzerStatus(object):
     # Determine the analyzer status based upon which subsystems are reporting. At the lowest
@@ -186,12 +183,10 @@ class AnalyzerStatus(object):
         self.sensorsWithoutData = 0
         self.heartBeatWithoutSensors = 0
         self.level = AnalyzerStatus.DATA_ACTIVE
-        warn = not inRange(data["CavityPressure"],140.0,0.5) or not inRange(data["CavityTemp"],45.0,0.1) 
         state = {
             AnalyzerStatus.OPERATING   : data["CO2"] > 10 and data["CH4"] > 0.1,
             AnalyzerStatus.CALIBRATING : False,
-            AnalyzerStatus.WARNING     : warn
-            }
+            AnalyzerStatus.WARNING     : abs(data["CavityPressure"] - 140.0) > 0.5 }
         mask = sum(state.keys())
         value = sum([k for k in state if state[k]])
         self.status = (self.status & ~mask) | value
@@ -415,7 +410,7 @@ class TcpServer(asyncore.dispatcher):
     """
     def __init__(self, address,target,welcome=''):
         asyncore.dispatcher.__init__(self)
-        self.handlers = []
+        self.handler = None
         self.target = target
         self.welcome = welcome
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -426,37 +421,14 @@ class TcpServer(asyncore.dispatcher):
         return
     def handle_accept(self):
         # Called when a client connects to our socket
-        self.handlers[:] = [h for h in self.handlers if not h.closed]
         client_info = self.accept()
-        if not self.handlers:
-            self.handlers.append(TcpHandler(client_info[0],self.target,self.welcome))
+        if self.handler is None or self.handler.closed:
+            self.handler = TcpHandler(client_info[0],self.target,self.welcome)
         else:
             GoAwayHandler(sock=client_info[0])
     def handle_close(self):
         self.close()
-        return
-
-class TcpMultiServer(asyncore.dispatcher):
-    """Receives connections and establishes handlers for each client.
-    """
-    def __init__(self, address,target,welcome=''):
-        asyncore.dispatcher.__init__(self)
-        self.handlers = []
-        self.target = target
-        self.welcome = welcome
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.set_reuse_addr()
-        self.bind(address)
-        self.address = self.socket.getsockname()
-        self.listen(1)
-        return
-    def handle_accept(self):
-        # Called when a client connects to our socket
-        self.handlers[:] = [h for h in self.handlers if not h.closed]
-        client_info = self.accept()
-        self.handlers.append(TcpHandler(client_info[0],self.target,self.welcome))
-    def handle_close(self):
-        self.close()
+        self.handler = None
         return
         
 class UdpServer(asyncore.dispatcher):
@@ -653,13 +625,9 @@ class GlobalHawk(Singleton):
         Log('GlobalHawk initialized',Data=dict(statusIP='%s:%d'%(self.statusHost,self.statusPort)))
         
     def sendPacket(self,data):
-        try:
-            self.statusSocket.sendto(data,('<broadcast>',self.statusPort))
-        except:
-            print traceback.format_exc()
-        for h in self.tcpDataServer.handlers:
-            if not h.closed:
-                h.send_data(data)
+        self.statusSocket.sendto(data,('<broadcast>',self.statusPort))
+        if self.tcpDataServer.handler is not None and not self.tcpDataServer.handler.closed:
+            self.tcpDataServer.handler.send_data(data)
         
     # Get data from sensor queue until some timestamp (from any stream) exceeds reportTime. 
     # If the queue becomes empty before this happens, return None
@@ -689,7 +657,7 @@ class GlobalHawk(Singleton):
         try:
             self.analyzerControl = AnalyzerControl(self.config)
             self.tcpServer = TcpServer((self.tcpHost,self.tcpPort),self.analyzerControl,"Connected to Picarro Control Server")
-            self.tcpDataServer = TcpMultiServer((self.tcpDataHost,self.tcpDataPort),self.analyzerControl)
+            self.tcpDataServer = TcpServer((self.tcpDataHost,self.tcpDataPort),self.analyzerControl)
             self.udpServer = UdpServer((self.udpHost,self.udpPort),self.analyzerControl)
             self.analyzerStatus = AnalyzerStatus()
             count = 0
@@ -710,10 +678,10 @@ class GlobalHawk(Singleton):
                     ts, mode, source = d['data']['timestamp'], d['mode'], d['source']
                     if source == self.dataSource:
                         self.analyzerStatus.receivedData(d['data'])
-                        uTime = unixTime(ts)
-                        tsAsString = timestampToUtcDatetime(ts).strftime('%Y%m%dT%H%M%S') + '.%03d' % (ts % 1000,)
+                        unixTime = unixTime(ts)
                         now = datetime.datetime.utcnow()
-                        # tsAsString = now.strftime('%Y%m%dT%H%M%S') + '.%03d' % (now.microsecond/1000)
+                        # tsAsString = timestampToUtcDatetime(ts).strftime('%Y%m%dT%H%M%S') + '.%03d' % (ts % 1000,)
+                        tsAsString = now.strftime('%Y%m%dT%H%M%S') + '.%03d' % (now[-1]/1000)
                         fields.append(tsAsString)
                         fields.append('%d' % (self.analyzerStatus.getStatus() | AnalyzerStatus.DATA,))
                         fields += [format(formatList,d['data'].get(v,None)) for v in self.dataNames]
@@ -729,10 +697,10 @@ class GlobalHawk(Singleton):
                             selected[self.streamNames.index(name)] = sensors[name]
                     # We have sensor data that was current as of nextReport
                     fields = [self.id]
-                    uTime = unixTime(nextReport)
-                    tsAsString = timestampToUtcDatetime(nextReport).strftime('%Y%m%dT%H%M%S') + '.%03d' % (nextReport % 1000,)
+                    unixTime = unixTime(nextReport)
+                    # tsAsString = timestampToUtcDatetime(nextReport).strftime('%Y%m%dT%H%M%S') + '.%03d' % (nextReport % 1000,)
                     now = datetime.datetime.utcnow()
-                    # tsAsString = now.strftime('%Y%m%dT%H%M%S') + '.%03d' % (now.microsecond/1000)
+                    tsAsString = now.strftime('%Y%m%dT%H%M%S') + '.%03d' % (now[-1]/1000)
                     fields.append(tsAsString)
                     fields.append('%d' % (self.analyzerStatus.getStatus() | AnalyzerStatus.SENSOR,))
                     fields += [format(formatList,v) for v in selected]
@@ -744,10 +712,10 @@ class GlobalHawk(Singleton):
                 if ts>nextHeartbeat:
                     self.analyzerStatus.receivedHeartbeat()
                     if self.analyzerStatus.getLevel() == AnalyzerStatus.HOST_ONLY:
-                        uTime = unixTime(nextHeartbeat)
-                        tsAsString = timestampToUtcDatetime(nextHeartbeat).strftime('%Y%m%dT%H%M%S') + '.%03d' % (nextHeartbeat % 1000,)
+                        unixTime = unixTime(nextHeartbeat)
+                        # tsAsString = timestampToUtcDatetime(nextHeartbeat).strftime('%Y%m%dT%H%M%S') + '.%03d' % (nextHeartbeat % 1000,)
                         now = datetime.datetime.utcnow()
-                        # tsAsString = now.strftime('%Y%m%dT%H%M%S') + '.%03d' % (now.microsecond/1000)
+                        tsAsString = now.strftime('%Y%m%dT%H%M%S') + '.%03d' % (now[-1]/1000)
                         fields.append(tsAsString)
                         fields.append('%d' % self.analyzerStatus.getStatus())
                         data = ','.join(fields)
