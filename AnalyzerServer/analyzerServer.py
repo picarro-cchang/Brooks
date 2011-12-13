@@ -8,7 +8,7 @@ except:
 from functools import wraps
 import glob
 import itertools
-import linecache
+import linecacheCopy as linecache
 import os
 import sys
 from threading import Thread
