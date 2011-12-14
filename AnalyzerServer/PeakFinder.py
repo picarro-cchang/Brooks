@@ -53,7 +53,7 @@ class PeakFinder(object):
         if 'sigmaMinFactor' in kwargs:
             sigmaMinFactor = float(kwargs['sigmaMinFactor'])
         else:
-            sigmaMinFactor = 1.5
+            sigmaMinFactor = 0.8
     
         self.sigmaMin = sigmaMinFactor*self.dx
     

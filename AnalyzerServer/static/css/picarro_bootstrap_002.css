@@ -430,6 +430,24 @@ a:hover {
 .btn.primary:hover {
   color: #fff;
 }
+.btn.red {
+  background-color: #8b0000;
+  background-repeat: repeat-x;
+  background-image: -khtml-gradient(linear, left top, left bottom, from(#9d261d), to(#8b0000));
+  background-image: -moz-linear-gradient(#9d261d, #8b0000);
+  background-image: -ms-linear-gradient(#9d261d, #8b0000);
+  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #9d261d), color-stop(100%, #8b0000));
+  background-image: -webkit-linear-gradient(#9d261d, #8b0000);
+  background-image: -o-linear-gradient(#9d261d, #8b0000);
+  -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#9d261d', endColorstr='#8b0000', GradientType=0)";
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#9d261d', endColorstr='#8b0000', GradientType=0);
+  background-image: linear-gradient(#9d261d, #8b0000);
+  color: #fff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+.btn.red:hover {
+  color: #fff;
+}
 .btn.large {
   font-size: 16px;
   line-height: 28px;
@@ -715,7 +733,7 @@ form .uneditable-input {
 form :-moz-placeholder {
   color: #bfbfbf;
 }
-form ::-webkit-input-placeholder {
+form::-webkit-input-placeholder {
   color: #bfbfbf;
 }
 form input[type=text],
@@ -1103,7 +1121,7 @@ div.topicon {
   -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ffffff', GradientType=0)";
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ffffff', GradientType=0);
   background-image: linear-gradient(#ffffff, #ffffff);
-  height: 60px;
+  height: 75px;
   position: fixed;
   top: 0;
   z-index: 10000;

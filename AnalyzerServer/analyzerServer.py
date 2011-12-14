@@ -171,7 +171,7 @@ def _getData(fp,startPos=None,shift=0):
             fp.seek(startPos,0)
         startPos = fp.tell()
         posList = [startPos]
-        while True:
+        for l in range(100):
             line = fp.readline()
             if not line: break
             vals = line.split()

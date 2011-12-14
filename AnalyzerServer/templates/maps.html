@@ -4,6 +4,7 @@
     <script type="text/javascript">
     var _par = {"center_latitude":{{ center_latitude }}, 
                 "center_longitude":{{ center_longitude }} };
+    var init_vars = false;
     </script>
     <script type="text/javascript" src="{{ url_for('static',filename='mapsApplication.js') }}"></script>
 {% endblock %}
@@ -38,15 +39,21 @@
                                     </tr>
                                 </table>
                                 <li>
-                                <label for="follow">Follow</label>
-                                <input type="checkbox" id="id_follow" name="follow" checked="checked" onclick="changeFollow();" style="height: 40px; width: 40px;"/>
-                                </li>
-                                <br />
-                                <li class="input">
-                                <label for="id_amplitude_btn">Minimum Amplitude</label>
-                                <button id="id_amplitude_btn" type="button" value="_" class="btn large" onclick="requestMinAmpChange();"></button>
-                                <span id="amplitudeErr"></span>
-                                <span id="id_primeControlButton_span"></span>
+                                    <table>
+                                        <tr>
+                                            <td>
+                                                <label for="id_follow">Follow</label>
+                                                <input checked="checked" onchange="changeFollow();" value="true" type="checkbox" name="follow" id="id_follow" style="height: 40px; width: 40px;" />
+                                                <input name="follow" type="hidden" value="false" />
+                                            </td>
+                                            <td>
+                                                <label for="id_amplitude_btn">Minimum Amplitude</label>
+                                                <button id="id_amplitude_btn" type="button" value="_" class="btn large" onclick="requestMinAmpChange();">0.1</button>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <span id="amplitudeErr"></span>
+                                    <span id="id_primeControlButton_span"></span>
                                 </li>
                                 <h2 id="mode">Survey Mode</h3>
                                 <br />

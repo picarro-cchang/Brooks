@@ -5,12 +5,16 @@ var center_longitude = -121.98432;
 var center_latitude = 37.39604; 
 var prime_view = true;
 var log_selection_options = [];
+var analyzer_name = "";
+var callbacktest_url = "";
 
 // Normal js vars and functions
 var net_abort_count = 0;
 var follow = true;
 var normal_path_color = "#0000FF";
 var analyze_path_color = "#000000";
+var prime_available = false;
+var prime_timer;
 
 var resize_map_inprocess = false;
 var resize_map_timer;
@@ -160,9 +164,21 @@ function selectLog() {
         options += '<option value="' + row[0] + '"' + selected + '>' + row[1] + '</option>';
     }
     
+    var opendiv = "<div>"
+    var closediv = "</div>"
+    var btns = ""
+    if (prime_available) {
+    	btns = '&nbsp;&nbsp;<button onclick="switchLog();" class="btn primary large">Select Log</button>' + 
+    	       '&nbsp;&nbsp;<button onclick="switchToPrime();" class="btn primary large">Switch to Prime View</button>'
+    } else {
+    	btns = '&nbsp;&nbsp;<button onclick="switchLog();" class="btn primary large">Select Log</button>'
+    }
+    
     var modalChangeMinAmp = setModalChrome('<h3>Select log</h3>',
-            '<div><select id="id_selectLog" class="large">' + options + '</select>' +
-            '&nbsp;&nbsp;<button onclick="switchLog();" class="btn primary large">Select Log</button></div>',
+            opendiv + 
+            '<select id="id_selectLog" class="large">' + options + '</select>' +
+            btns + 
+            closediv,
             '<div><button onclick="restoreModChangeDiv();" class="btn primary large">Cancel</button></div>'
     );
 
@@ -184,6 +200,7 @@ function switchLog() {
     if (newlog != alog) {
         alog = newlog;
         startPos = null;
+        initialize_map();
         $("#id_selectLogBtn").html(newtitle);
         if (prime_view) {
             $("#concentrationSparkline").html("Loading..");
@@ -197,6 +214,38 @@ function switchLog() {
         }
     }
     $("#id_mod_change").html("");
+};
+
+function switchToPrime() {
+    if (confirm("Do you want to switch to Prime View Mode? \n\nWhen the browser is in Prime View Mode, you will have limited control of the Analyzer.")) {
+        var url = '/gduprime/' + analyzer_name;
+        window.location = url;
+    	restoreModChangeDiv();
+    }
+};
+
+function testPrime() {
+    var params = {'startPos': 'null', 'alog': alog, 'gmtOffset': gmt_offset};
+    var url = callbacktest_url + '/' + 'getData';
+    $.ajax({contentType:"application/json",
+        data: $.param(params),
+        dataType: "jsonp",
+        url: url,
+        type: "get",
+        timeout: 6000,
+        success: function(data) {
+        	prime_available = true;
+        	prime_timer = null;
+        },
+        error: function(data) {
+        	prime_available = false;
+        	prime_timer = setTimeout(primeTimer,10000);
+        }
+    });
+};               
+
+function primeTimer() {
+	testPrime();
 };
 
 function restoreModChangeDiv() {
@@ -245,7 +294,7 @@ function colorPathFromValveMask(value) {
         }
     }
     return clr;
-}
+};
 
 function updatePath(where,clr) {
     var lastPoint = null;
@@ -324,7 +373,8 @@ function initialize_btns() {
     if (prime_view) {
         $("#id_primeControlButton_span").html(primeControlsBtn);
     } else {
-        $("#id_primeControlButton_span").html("");
+    	testPrime()
+    	$("#id_primeControlButton_span").html("");
         $("#id_exportButton_span").html("");
         var type = $("#id_selectLogBtn").html();
         if (type == "Live") {
@@ -433,18 +483,7 @@ function call_rest(method,params,success_callback,error_callback) {
         success: success_callback,
         error: error_callback})
 };
-/*
-function call_rest(method,params,success_callback,error_callback) {
-    jQuery.ajax( {contentType:"application/json",
-              data:$.param(params),
-              dataType:"jsonp",
-              url:"/rest/" + method,
-              type:"get",
-              timeout: 5000,
-              success: success_callback,
-              error: error_callback} );
-};
-*/
+
 function changeFollow() {
     var cval = $("#id_follow").attr("checked");
     if (cval == "checked") {
@@ -478,7 +517,10 @@ function changeMinAmp() {
 };
 
 function onTimer() {
-    if (ignoreTimer) timer1 = setTimeout(onTimer,1000);
+    if (ignoreTimer) {
+        timer1 = setTimeout(onTimer,1000);
+        return;
+    }
     if (prime_view) {
         getMode();
     } else {
@@ -530,6 +572,7 @@ function successData(data) {
             } else {
                 initialize_map();
                 startPos = null;
+                leakLine = 1;
             }
             lastDataFilename = data.result["filename"]
         }
@@ -805,7 +848,7 @@ function getData() {
             errorData(jqXHR.responseText); 
         }
     );
-};                
+}                
 
 function showLeaks() {
     var params = {'startRow': leakLine, 'alog': alog, 'minAmp': minAmp, 'gmtOffset': gmt_offset};
@@ -818,7 +861,7 @@ function showLeaks() {
             errorPeaks(jqXHR.responseText); 
         }
     );
-}; 
+};
 
 function showAnalysis() {
     var params = {'startRow': analysisLine, 'alog': alog, 'gmtOffset': gmt_offset};
@@ -831,9 +874,12 @@ function showAnalysis() {
             errorAnalysis(jqXHR.responseText); 
         }
     );
-}; 
+} 
 
 function initialize(winH,winW)
 { 
-    initialize_gdu(winH,winW);
+    if (init_vars) {
+		init_vars();
+	}
+	initialize_gdu(winH,winW);
 };

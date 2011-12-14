@@ -7,8 +7,9 @@ import datetime
 
 # When started, this program creates a file with the same columns as the original, one line at a time
 
-dataFile = 'data/Modified FCDS2003-20111116-060310Z-DataLog_User_Minimal.dat';
-liveFile = time.strftime('static/datalog/ZZZ-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
+# dataFile = 'data/FCDS2003-20111213-234606Z-DataLog_User_Minimal.dat'
+dataFile = 'data/FCDS2003-20111206-032437Z-DataLog_User_Minimal.dat'
+liveFile = time.strftime('C:/UserData/AnalyzerServer/ZZZ-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
 
 handle = CreateFile(liveFile,GENERIC_WRITE,
                              FILE_SHARE_READ,None,CREATE_ALWAYS,
@@ -21,7 +22,7 @@ for line in ip:
     WriteFile(handle,line.replace("\n","\r\n"))
     sys.stderr.write('.')
     sys.stderr.flush()
-    time.sleep(0.5)
+    time.sleep(0.1)
     
 CloseHandle(handle)
 ip.close()    
