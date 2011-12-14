@@ -21,6 +21,7 @@ var resize_map_timer;
 var current_mapTypeId;
 var current_zoom;
 var current_mode = 0;
+var getting_mode = false;
 
 var gglOptions;
 var map;
@@ -829,19 +830,23 @@ function injectCal() {
 };
 
 function getMode() {
-    call_rest("driverRpc",{"func":"rdDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER']"},
-        function(data,ts,jqXHR) {
-            if ("value" in data.result) {
-                var mode = data.result["value"];
-                setModePane(mode);
+    if (!getting_mode) {
+        getting_mode = true;
+        call_rest("driverRpc",{"func":"rdDasReg","args":"['PEAK_DETECT_CNTRL_STATE_REGISTER']"},
+            function(data,ts,jqXHR) {
+                if ("value" in data.result) {
+                    var mode = data.result["value"];
+                    setModePane(mode);
+                }
+                getting_mode = false;
+            },
+            function(jqXHR,ts,et) {  
+                $("#errors").html(jqXHR.responseText); 
+                getting_mode = false;
             }
-            getData();
-        },
-        function(jqXHR,ts,et) {  
-            $("#errors").html(jqXHR.responseText); 
-            getData();
-        }
-    );
+        );
+    }
+    getData();
 };
 
 function getData() {
