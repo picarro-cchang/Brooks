@@ -21,7 +21,7 @@
             winW = window.innerWidth;
 
             initialize(winH, winW);
-            setup_viewport();
+            // setup_viewport();
             resize_me();
         };
 
@@ -71,7 +71,7 @@
         };
         
         function resize_time() {
-            setup_viewport();
+            // setup_viewport();
             if (!resize_inprocess) {
                 resize_inprocess = true;
                 resize_timer = setTimeout(resize_me,500);
