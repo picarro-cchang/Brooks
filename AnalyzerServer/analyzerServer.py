@@ -99,7 +99,7 @@ def _getAnalysis(name,startRow):
     # N.B. Rows start at zero, whereas linecache starts lines at 1
     header = linecache.getline(name,1).split()
     result = dict(DISTANCE=[],GPS_ABS_LONG=[],GPS_ABS_LAT=[],CONC=[],DELTA=[],UNCERTAINTY=[])
-    for lineNum in itertools.count(startRow+1):
+    for lineNum in range(startRow+1,startRow+20):
         line = linecache.getline(name,lineNum)
         if not line: break
         vals = line.split()
@@ -131,7 +131,7 @@ def _getPeaks(name,startRow,minAmp):
         print "Cannot find AMPLITUDE column in peak file"
         result['NEXT_ROW'] = startRow
         return result
-    for lineNum in itertools.count(startRow+1):
+    for lineNum in range(startRow+1,startRow+20):
         line = linecache.getline(name,lineNum)
         if not line: break
         vals = line.split()

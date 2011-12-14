@@ -359,7 +359,12 @@ function initialize_gdu(winH, winW) {
     var myOptions = {
       zoom: current_zoom,
       center: latlng,
-      mapTypeId: current_mapTypeId
+      mapTypeId: current_mapTypeId,
+      scaleControl: true,
+      zoomControl: true,
+      zoomControlOptions: {
+        style: google.maps.ZoomControlStyle.SMALL
+      }
     };
     gglOptions = myOptions;
     
@@ -406,6 +411,9 @@ function initialize_map() {
             strokeOpactity:1.0,
             strokeWeight:2  });
     path.setMap(map);
+    if (marker) marker.setMap(null);
+    marker = new google.maps.Marker({position:map.getCenter(),visible:false});
+    marker.setMap(map);
 };
 
 function resize_map() {
@@ -617,19 +625,19 @@ function successData(data) {
             n = ch4.length;
             if (n>0) {
                 where = new google.maps.LatLng(lat[n-1],lon[n-1]);
-                if (marker) marker.setMap(null);
                 if (fit) {
                     if (fit[n-1] != 0) {
                         lastwhere = where;
-                        marker = new google.maps.Marker({position:where});
+                        marker.setPosition(where);
+                        marker.setVisible(true);
                         if (follow) map.setCenter(where);
-                        marker.setMap(map);
                     }
+                    else marker.setVisible(false);
                 } else {
                     lastwhere = where;
-                    marker = new google.maps.Marker({position:where});
                     if (follow) map.setCenter(where);
-                    marker.setMap(map);
+                    marker.setPosition(where);
+                    marker.setVisible(true);
                 }
                 if (n>1) {
                     methaneHistory = methaneHistory.concat(ch4.slice(1));

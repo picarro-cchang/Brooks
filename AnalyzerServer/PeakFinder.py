@@ -8,6 +8,14 @@ import time
 import traceback
 from namedtuple import namedtuple
 
+import urllib2
+import urllib
+import socket
+try:
+    import simplejson as json
+except:
+    import json
+
 # Convert a minimal .dat file to a text file for Matlab processing
 #  The columns in the output file are distance(m), methane 
 #  concentration(ppm), longitude(deg), latitude(deg) and 
@@ -79,7 +87,26 @@ class PeakFinder(object):
         else:
             self.sleep_seconds = 30.0
 
+        if 'url' in kwargs:
+            self.url = kwargs['url']
+        else:
+            self.url = 'http://p3.picarro.com/pcubed/rest/getData/'
 
+        if 'timeout' in kwargs:
+            self.timeout = int(kwargs['timeout'])
+        else:
+            self.timeout = 5
+
+        if 'sleep_seconds' in kwargs:
+            self.sleep_seconds = float(kwargs['sleep_seconds'])
+        else:
+            self.sleep_seconds = 30.0
+
+        if 'usedb' in kwargs:
+            self.usedb = kwargs['usedb']
+        else:
+            self.usedb = None
+            
         if 'debug' in kwargs:
             self.debug = kwargs['debug']
         else:
@@ -167,7 +194,77 @@ class PeakFinder(object):
                     time.sleep(0.1)
                     continue
                 yield line
-                
+        
+        def followLastUserLogDb():
+            aname = self.analyzerId
+            def getLastLog():
+                lastlog = None
+                params = {"analyzer": aname}
+                postparms = {'data': json.dumps(params)}
+                getLastLogUrl = self.url.replace("getData", "getLastLog")
+                while True:
+                    try:
+                        socket.setdefaulttimeout(self.timeout)
+                        resp = urllib2.urlopen(getLastLogUrl, data=urllib.urlencode(postparms))
+                        rtn_data = resp.read()
+                    except:
+                        time.sleep(2)
+                        continue
+                    
+                    rslt = json.loads(rtn_data)
+                    if "result" in rslt:
+                        if "lastLog" in rslt["result"]:
+                            lastlog = rslt["result"]["lastLog"]
+                            
+                    return lastlog
+            
+            lastlog = getLastLog()  
+            if lastlog:
+                lastPos = 0
+                while True:
+                    params = {"alog": lastlog, "startPos": lastPos, "limit": 20}
+                    postparms = {'data': json.dumps(params)}
+                    getAnalyzerDatLogUrl = self.url.replace("getData", "getAnalyzerDatLog")
+                    try:
+                        socket.setdefaulttimeout(self.timeout)
+                        resp = urllib2.urlopen(getAnalyzerDatLogUrl, data=urllib.urlencode(postparms))
+                        rtn_data = resp.read()
+                    except:
+                        time.sleep(1)
+                        continue
+                    
+                    rslt = json.loads(rtn_data)
+                    if "result" in rslt:
+                        if "data" in rslt["result"]:
+                            dbdata = rslt["result"]["data"]
+                            if len(dbdata) > 0:
+                                for doc in dbdata:
+                                    if "row" in doc:
+                                        lastPos = int(doc["row"]) + 1
+                                    yield doc
+                            else:
+                                time.sleep(5)
+                                newlastlog = getLastLog()
+                                if not lastlog == newlastlog:
+                                    print "\r\nClosing log stream\r\n"
+                                    return
+                                
+                        else:
+                            time.sleep(5)
+                            newlastlog = getLastLog()
+                            if not lastlog == newlastlog:
+                                print "\r\nClosing log stream\r\n"
+                                return
+                                
+                        time.sleep(1)
+                    else:
+                        time.sleep(5)
+                        newlastlog = getLastLog()
+                        if not lastlog == newlastlog:
+                            print "\r\nClosing log stream\r\n"
+                            return
+            
+               
         def followLastUserFile(fname):
             fp = file(fname,'rb')
             counter = 0
@@ -191,6 +288,49 @@ class PeakFinder(object):
                 #if self.debug: sys.stderr.write('.')
                 yield line
         
+        def analyzerDataDb(source):
+            # Generates data from a minimal archive as a stream consisting of tuples:
+            #  (dist,methane_conc,longitude,latitude,epoch_time)
+            JUMP_MAX = 500.0
+            dist = None
+            lat_ref, long_ref = None, None
+            # Determine if there are extra data in the file
+            for line in source:
+                try:
+                    entry = {}
+                    extra = "CH4dt" in line
+                    for  h in line.keys():
+                        try:
+                            entry[h] = float(line[h])
+                        except:
+                            entry[h] = NaN
+                    long, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
+                    pos = PosData(long,lat)
+                    if not 'ValveMask' in entry: entry['ValveMask'] = 0
+                    if extra: 
+                        data = FullData(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'],entry['CH4up'],entry['CH4down'],entry['CH4dt'],entry['species'])
+                    else:
+                        data = BaseData(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'])
+
+                    if lat_ref == None or long_ref == None:
+                        long_ref, lat_ref = lat, long
+                    x,y = toXY(lat,long,lat_ref,long_ref)
+                    if dist is None:
+                        jump = 0.0
+                        dist = 0.0
+                    else:
+                        jump = sqrt((x-x0)**2 + (y-y0)**2)
+                        dist += jump
+                    x0, y0 = x, y
+                    if jump < JUMP_MAX:
+                        yield dist,pos,data
+                    else:
+                        yield None,None,None    # Indicate that dist is bad, and we must restart
+                        dist = None
+                        lat_ref, long_ref = None, None
+                except:
+                    print traceback.format_exc()
+            
         def analyzerData(source):
             # Generates data from a minimal archive as a stream consisting of tuples:
             #  (dist,methane_conc,longitude,latitude,epoch_time)
@@ -531,8 +671,13 @@ class PeakFinder(object):
                 # Make a generator which yields (distance,(long,lat,epoch_time,methane))
                 #  from the analyzer data by applying a shift to the concentration and
                 #  time data to align the rows
-                source = followLastUserFile(fname)
-                alignedData = combiner(shifter(analyzerData(source),shift))
+                if self.usedb:
+                    source = followLastUserLogDb()
+                    alignedData = combiner(shifter(analyzerDataDb(source),shift))
+                else:
+                    source = followLastUserFile(fname)
+                    alignedData = combiner(shifter(analyzerData(source),shift))
+                    
                 refinedData = refiner(alignedData)
                 intData = interpolator(refinedData,dx)
                 peakData = spaceScale(intData,dx,t0,nlevels,factor)
@@ -564,9 +709,16 @@ if __name__ == "__main__":
         analyzer = sys.argv[1]
     else:
         analyzer = 'ZZZ'
-        
+
     if 2 < len(sys.argv):
-        debug = sys.argv[2]
+        url=sys.argv[2]
+    else:
+        #url='http://p3.picarro.com/pcubed/rest/getData/'
+        url = 'http://10.100.2.97:8080/rest/getData/'
+        #url = 'http://10.0.1.13:8080/rest/getData/'
+        
+    if 3 < len(sys.argv):
+        debug = sys.argv[3]
     else:
         debug = None
     
@@ -590,8 +742,12 @@ if __name__ == "__main__":
     ulog = os.path.join(data_dir, '*.dat')
     
     pf = PeakFinder()
+    pf.analyzerId = analyzer
     pf.userlogfiles = ulog
+    pf.url = url
     pf.debug = debug
+    pf.usedb = True
+
     pf.run()
 
     os.remove(pidpath)
