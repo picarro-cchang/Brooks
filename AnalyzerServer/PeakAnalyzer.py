@@ -569,5 +569,7 @@ if __name__ == "__main__":
     pf.debug = debug
     pf.usedb = True
     
+    pf.run()
+    
     os.remove(pidpath)
     
