@@ -4,7 +4,7 @@
         <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
         <meta name="description" content="" />
         <meta name="keywords" content="" />
-        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+        <meta name="viewport" id="meta_viewport" content="initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
         <title>Picarro Methane Detector</title>
         <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/picarro_bootstrap_002.css') }}" />
         <script type="text/javascript" src="{{ url_for('static',filename='jquery-1.6.2.min.js') }}"></script>
@@ -21,6 +21,7 @@
             winW = window.innerWidth;
 
             initialize(winH, winW);
+            setup_viewport();
             resize_me();
         };
 
@@ -32,6 +33,7 @@
         function resize_me() {
             winH = window.innerHeight;
             winW = window.innerWidth;
+            
             lpge_wdth = $('#id_sidebar').width();
             rpge_wdth = winW - lpge_wdth;
             
@@ -54,10 +56,25 @@
             }
             resize_inprocess = false;
         };
+        
+        function setup_viewport() {
+            var winH = window.innerHeight;
+            var winW = window.innerWidth;
+            if (winH < winW) {
+                // Landscape mode
+                $('#meta_viewport').attr("content","initial-scale=1.0; maximum-scale=1.0; user-scalable=0;")
+            }
+            else {
+                // Portrait mode
+                $('#meta_viewport').attr("content","initial-scale=0.8; maximum-scale=0.8; user-scalable=0;")
+            }
+        };
+        
         function resize_time() {
+            setup_viewport();
             if (!resize_inprocess) {
                 resize_inprocess = true;
-                resize_timer = setTimeout(resize_me,2000);
+                resize_timer = setTimeout(resize_me,500);
             }
         };
         </script>
