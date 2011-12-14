@@ -271,6 +271,7 @@ function changeMinAmpVal(reqbool) {
 function requestMinAmpChange() {
     var modalChangeMinAmp = setModalChrome('<h3>Change Minimum Amplitude</h3>',
             '<div><input type="text" id="id_amplitude" value="' + minAmp + '"/></div>',
+            '<div style="display: hidden;"><button onclick="changeMinAmpVal(true);"/></div>' +
             '<div><button onclick="changeMinAmpVal(false);" class="btn primary large">Cancel</button></div>' +
             '<div><button onclick="changeMinAmpVal(true);" class="btn primary large">OK</button></div>'
     );
