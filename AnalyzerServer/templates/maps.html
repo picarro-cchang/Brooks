@@ -41,15 +41,22 @@
                                 <li>
                                     <table>
                                         <tr>
-                                            <td>
+                                            <td width="33%">
                                                 <label for="id_follow">Follow</label>
                                                 <input checked="checked" onchange="changeFollow();" value="true" type="checkbox" name="follow" id="id_follow" style="height: 40px; width: 40px;" />
                                                 <input name="follow" type="hidden" value="false" />
                                             </td>
-                                            <td>
+                                            <td width="33%">
                                                 <label for="id_amplitude_btn">Minimum Amplitude</label>
                                                 <button id="id_amplitude_btn" type="button" value="_" class="btn large" onclick="requestMinAmpChange();">0.1</button>
                                             </td>
+                                            
+                                            
+                                    		<td width="33%">
+    											<label for="id_data_alert">Data Rcv</label>
+    											<div id="id_data_alert">   </div>
+    										</td>
+                                            
                                         </tr>
                                     </table>
                                     <span id="amplitudeErr"></span>

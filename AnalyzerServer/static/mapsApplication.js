@@ -15,6 +15,7 @@ var normal_path_color = "#0000FF";
 var analyze_path_color = "#000000";
 var prime_available = false;
 var prime_timer;
+var green_on = false;
 
 var resize_map_inprocess = false;
 var resize_map_timer;
@@ -574,7 +575,14 @@ function successData(data) {
     restoreModalDiv();
     var resultWasReturned = false;
     counter += 1;
-    $("#counter").html("<h4>" + "Counter: " + counter + "</h4>");
+    if (green_on) {
+        $("#id_data_alert").css('background-color', 'green');
+        green_on = false;
+    } else {
+        $("#id_data_alert").css('background-color', 'white');
+        green_on = true;
+    }
+    // $("#counter").html("<h4>" + "Counter: " + counter + "</h4>");
     if (data.result) {
         if ("filename" in data.result) {
             if (lastDataFilename == data.result["filename"]) {
