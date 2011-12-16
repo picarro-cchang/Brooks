@@ -15,6 +15,7 @@ var normal_path_color = "#0000FF";
 var analyze_path_color = "#000000";
 var prime_available = false;
 var prime_timer;
+var prime_test_count = 0;
 var green_on = false;
 
 var resize_map_inprocess = false;
@@ -144,13 +145,15 @@ function exportControls() {
 };
 
 function exportLog() {
-    var url = 'http://' + svcurl + '/sendLog?alog=' + alog;
+    //var url = 'http://' + svcurl + '/sendLog?alog=' + alog;
+    var url = svcurl + '/sendLog?alog=' + alog;
     window.location = url;
 };
 
 function exportPeaks() {
     var apath = alog.replace(".dat", ".peaks")
-    var url = 'http://' + svcurl + '/sendLog?alog=' + apath;
+    //var url = 'http://' + svcurl + '/sendLog?alog=' + apath;
+    var url = svcurl + '/sendLog?alog=' + apath;
     window.location = url;
 };
 
@@ -219,14 +222,21 @@ function switchLog() {
 };
 
 function switchToPrime() {
-    if (confirm("Do you want to switch to Prime View Mode? \n\nWhen the browser is in Prime View Mode, you will have limited control of the Analyzer.")) {
-        var url = '/gduprime/' + analyzer_name;
+    if (confirm("Do you want to switch to Prime View Mode? \n\nWhen the browser is in Prime View Mode, you will have control of the Analyzer.")) {
+        var baseurl = svcurl.replace("rest", "gduprime")
+    	var url = baseurl + '/' + analyzer_name;
         window.location = url;
     	restoreModChangeDiv();
     }
 };
 
 function testPrime() {
+	if (prime_test_count >= 10) {
+		prime_timer = null
+	} else {
+		if (prime_view) {
+			prime_timer = null
+		} else {
     var params = {'startPos': 'null', 'alog': alog, 'gmtOffset': gmt_offset};
     var url = callbacktest_url + '/' + 'getData';
     $.ajax({contentType:"application/json",
@@ -234,7 +244,7 @@ function testPrime() {
         dataType: "jsonp",
         url: url,
         type: "get",
-        timeout: 6000,
+		        timeout: 60000,
         success: function(data) {
         	prime_available = true;
         	prime_timer = null;
@@ -244,10 +254,13 @@ function testPrime() {
         	prime_timer = setTimeout(primeTimer,10000);
         }
     });
+		}
+	}
 };               
 
 function primeTimer() {
 	testPrime();
+	prime_test_count += 1;
 };
 
 function restoreModChangeDiv() {
@@ -268,6 +281,8 @@ function changeMinAmpVal(reqbool) {
     $("#id_mod_change").html("");
     ignoreTimer = false;
 };
+
+
 
 function requestMinAmpChange() {
     var modalChangeMinAmp = setModalChrome('<h3>Change Minimum Amplitude</h3>',
@@ -332,7 +347,11 @@ function initialize_gdu(winH, winW) {
     if (prime_view) {
         current_mapTypeId = google.maps.MapTypeId.ROADMAP;
     } else {
-        current_mapTypeId = google.maps.MapTypeId.SATELLITE;
+        current_mapTypeId = google.maps.MapTypeId.ROADMAP;
+        var mapTypeCookie = getCookie("pcubed_mapTypeId");
+        if (mapTypeCookie) {
+        	current_mapTypeId = mapTypeCookie;
+        }
     }
 
     
@@ -408,6 +427,10 @@ function initialize_map() {
         var new_zoom = map.getZoom();
         setCookie("pcubed_zoom", new_zoom, 7);
     });
+    google.maps.event.addListener(map, 'maptypeid_changed', function() {
+    	var new_currentMapId = map.getMapTypeId();
+    	setCookie("pcubed_mapTypeId", new_currentMapId, google.maps.MapTypeId.ROADMAP);
+    });
     path = new google.maps.Polyline(
         {   path:new google.maps.MVCArray(),
             strokeColor: normal_path_color,
@@ -443,6 +466,7 @@ function resize_map() {
     $('#map_canvas').css('top', new_top);
     $('#map_canvas').css('height', new_height);
     $('#map_canvas').css('width', new_width);
+    $('#id_feedback').css('width', new_width);
     
     cen = map.getCenter();
     google.maps.event.trigger(map, 'resize')

@@ -290,22 +290,15 @@ class PeakAnalyzer(object):
             lat_ref, long_ref = None, None
             # Determine if there are extra data in the file
             for line in source:
+                if 'C13_Delta_Raw' not in line: return
                 try:
                     entry = {}
-                    extra = "CH4dt" in line
                     for  h in line.keys():
                         try:
                             entry[h] = float(line[h])
                         except:
                             entry[h] = NaN
                     long, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
-                    pos = PosData(long,lat)
-                    if not 'ValveMask' in entry: entry['ValveMask'] = 0
-                    if extra: 
-                        data = FullData(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'],entry['CH4up'],entry['CH4down'],entry['CH4dt'],entry['species'])
-                    else:
-                        data = BaseData(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'])
-
                     if lat_ref == None or long_ref == None:
                         long_ref, lat_ref = lat, long
                     x,y = toXY(lat,long,lat_ref,long_ref)
@@ -317,7 +310,7 @@ class PeakAnalyzer(object):
                         dist += jump
                     x0, y0 = x, y
                     if jump < JUMP_MAX:
-                        yield dist,pos,data
+                            yield dist,PosData(long,lat),RestData(entry['EPOCH_TIME'],entry['ValveMask'],entry['CH4'],entry['C13_Delta_Raw'])
                     else:
                         yield None,None,None    # Indicate that dist is bad, and we must restart
                         dist = None
