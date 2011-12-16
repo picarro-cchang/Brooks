@@ -290,7 +290,7 @@ class PeakAnalyzer(object):
             lat_ref, long_ref = None, None
             # Determine if there are extra data in the file
             for line in source:
-                if 'C13_Delta_Raw' not in line: return
+                if 'C13_Delta_Raw' not in line: yield None, None, None
                 try:
                     entry = {}
                     for  h in line.keys():
@@ -327,7 +327,7 @@ class PeakAnalyzer(object):
             line = source.next()
             atoms = fixed_width(line,26)
             headings = [a.replace(" ","_") for a in atoms]
-            if 'C13_Delta_Raw' not in headings: return
+            if 'C13_Delta_Raw' not in headings: yield None,None,None
             for line in source:
                 try:
                     entry = {}
