@@ -60,6 +60,7 @@ var conc_array = [];
 
 var methaneHistory = [];
 var histMax = 200;
+var updatePeriod = 500;
 
 function setCookie(name,value,days) {
     if (days) {
@@ -335,7 +336,6 @@ function updatePath(where,clr) {
     }
     startNewPath = false;
     path.getPath().push(where);
-    path.setMap(map);
 };
 
 function initialize_gdu(winH, winW) {
@@ -553,7 +553,7 @@ function changeMinAmp() {
 
 function onTimer() {
     if (ignoreTimer) {
-        timer1 = setTimeout(onTimer,1000);
+        timer1 = setTimeout(onTimer,updatePeriod);
         return;
     }
     if (prime_view) {
@@ -685,12 +685,6 @@ function successData(data) {
                     //pathCoords = path.getPath();
                     for (var i=1;i<n;i++) {
                         var clr = vmask ? colorPathFromValveMask(vmask[i]) : normal_path_color;
-                        
-                        
-                        
-                        if (vmask) {
-                            clr = colorPathFromValveMask(vmask[i]);
-                        }
                         if (fit) {
                             if (fit[i] != 0) {
                                 updatePath(new google.maps.LatLng(lat[i],lon[i]),clr);
@@ -708,6 +702,7 @@ function successData(data) {
                             conc_array.push(ch4[i]);
                         }
                     }
+                    path.setMap(map);
                 }
             }
         } else {
@@ -799,7 +794,7 @@ function successAnalysis(data) {
             }
         }
     }
-    timer1 = setTimeout(onTimer,1000);                        
+    timer1 = setTimeout(onTimer,updatePeriod);                        
 };
 
 function errorData(text) {
@@ -884,7 +879,7 @@ function getMode() {
 
 function getData() {
     //if (startPos) {startPosStr = startPos;} else {startPosStr = 'null';};
-    var params = {'startPos': startPos, 'alog': alog, 'gmtOffset': gmt_offset};
+    var params = {'startPos': startPos, 'alog': alog, 'gmtOffset': gmt_offset, 'varList':'["GPS_ABS_LAT","GPS_ABS_LONG","GPS_FIT","CH4","ValveMask"]'};
     call_rest("getData", params, 
         function(json, status, jqXHR) { 
             net_abort_count = 0;

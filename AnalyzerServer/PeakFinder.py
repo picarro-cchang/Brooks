@@ -118,11 +118,13 @@ class PeakFinder(object):
         posFields = 'long lat'
         baseFields = 'time conc valves'
         extraFields  = 'conc_up conc_down conc_dt species'
+        allFields = posFields+' '+baseFields+' '+extraFields
         
         PosData  = namedtuple('PosData',  posFields)
         BaseData = namedtuple('BaseData', baseFields)
         FullData = namedtuple('FullData', baseFields+" "+extraFields)
         PosBaseData = namedtuple('PosBaseData', posFields+" "+baseFields)
+        PosFullData = namedtuple("PosFullData",allFields)
         
         def distVincenty(lat1, lon1, lat2, lon2):
             # WGS-84 ellipsiod. lat and lon in DEGREES
@@ -493,8 +495,7 @@ class PeakFinder(object):
                 
         def refiner(source):
             """A basic methane only instrument collects a single concentration for each line in the data log file whereas a 
-            FCDS style analyzer collects three methane concentrations per line. The refiner presents these as two separate lines
-            to the subsequent analysis, so that no further changes are required"""
+            FCDS style analyzer collects extra information which must be filtered according to species."""
                 
             # Linear intepolation factory
             def lin_interp(alpha): return lambda old,new: (1-alpha)*old + alpha*new
@@ -502,7 +503,6 @@ class PeakFinder(object):
             baseLength  = len(PosData._fields) + len(BaseData._fields)
             fieldList = (posFields+" "+baseFields).split()
             oldDist, oldData = None, None
-            s1, sx, sy, sx2, sxy = 1.0, 2.0, 2.0, 4.0, 4.0
             for dist,data in source:
                 if dist is None:
                     yield None, None
@@ -510,31 +510,10 @@ class PeakFinder(object):
                 if len(data) == baseLength:
                     oldDist, oldData = None, None
                     yield dist,PosBaseData(*data)
-                else: # extra fields means we have to do fancy interpolation
-                    allFields = posFields+" "+baseFields+" "+extraFields
-                    data = namedtuple("PosFullData",allFields)(*data)
+                else: # extra fields present
+                    data = PosFullData(*data)
                     if int(data.species) != 150: continue   # Not iso-methane
-                    if True:
-                        yield dist,PosBaseData(*[getattr(data,field) for field in fieldList])
-                    else:
-                        # Find best scale factor between concentration measurements
-                        y = 0.5*(data.conc_up + data.conc_down)
-                        x = data.conc
-                        s1  = 0.999*s1  + 0.001
-                        sx  = 0.999*sx  + 0.001*x
-                        sy  = 0.999*sy  + 0.001*y
-                        sxy = 0.999*sxy + 0.001*x*y
-                        sx2 = 0.999*sx2 + 0.001*x**2
-                        det = sx2*s1 - sx**2
-                        m = (s1*sxy-sx*sy)/det
-                        c = (sx2*sy-sx*sxy)/det
-                        if oldData is not None: # We have two data points and can interpolate
-                            yield oldDist,PosBaseData(*[getattr(oldData,field) for field in fieldList])
-                            t = 0.5*(oldData.time + data.time)
-                            li = lin_interp(0.5)  # Mid-point interpolator
-                            newData = PosBaseData(*[li(getattr(oldData,field),getattr(data,field)) for field in fieldList])
-                            yield li(oldDist,dist),newData._replace(conc=(li(oldData.conc_down,data.conc_up)-c)/m)
-                        oldDist, oldData = dist, data
+                    yield dist,PosBaseData(*[getattr(data,field) for field in fieldList])
                         
         def spaceScale(source,dx,t_0,nlevels,tfactor):
             """Analyze source at a variety of scales using the differences of Gaussians of

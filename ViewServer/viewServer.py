@@ -1,15 +1,18 @@
 from flask import Flask, Markup
 from flask import make_response, render_template, request
-from jsonrpc import JSONRPCHandler, Fault
-from jsonrpcutils import Proxy
+try:
+    import simplejson as json
+except:
+    import json
 from functools import wraps
 from configobj import ConfigObj
-import glob
+import httplib
 from math import cos, pi
 import os
 import sys
 import time
 import traceback
+import urllib
 
 # configuration
 DEBUG = True
@@ -25,10 +28,6 @@ POLY_COLOR = "7f00ff00"
 app = Flask(__name__)
 app.config.from_object(__name__)
 
-# Provide JSON RPC service for mapping software
-handler = JSONRPCHandler('jsonrpc')
-handler.connect(app,'/jsonrpc')
-
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     appPath = sys.executable
 else:
@@ -36,21 +35,27 @@ else:
 appDir = os.path.split(appPath)[0]
 changeIni = os.path.join(appDir,'MobileKit.ini')
 
-class JSON_Remote_Procedure_Error(RuntimeError):
+class RestCallError(Exception):
     pass
-
-def rpcWrapper(func):
-    """This decorator wraps a remote procedure call so that any exceptions from the procedure
-    raise a JSON_Remote_Procedure_Error and has a traceback."""
-    @wraps(func)
-    def JSON_RPC_wrapper(*args,**kwargs):
-        try:
-            return func(*args,**kwargs)
-        except:
-            type,value = sys.exc_info()[:2]
-            raise JSON_Remote_Procedure_Error, "\n%s" % (traceback.format_exc(),)
-    return JSON_RPC_wrapper
-
+    
+class RestProxy(object):
+    # Proxy to make a rest call to a server
+    def __init__(self,host):
+        self.host = host
+    # Attributes are mapped to a function which performs
+    #  a GET request to host/rest/attrName
+    def __getattr__(self,attrName):
+        def dispatch(argsDict):
+            url = "rest/%s" % attrName
+            conn = httplib.HTTPConnection(self.host)
+            conn.request("GET","%s?%s" % (url,urllib.urlencode(argsDict)))
+            r = conn.getresponse()
+            if not r.reason == 'OK':
+                raise RestCallError("%s: %s\n%s" % (r.status,r.reason,r.read()))
+            else:
+                return json.loads(r.read()).get("result",{})
+        return dispatch
+        
 def emptyResponse():
     empty_kml = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
@@ -60,11 +65,6 @@ def emptyResponse():
     response = make_response(empty_kml)
     response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
     return response
-
-@app.route('/maps')
-def maps():
-    threshold = float(request.values.get('threshold',2.5))
-    return render_template('maps.html',threshold=threshold)
     
 @app.route('/updateView')
 def updateView():
@@ -79,9 +79,9 @@ def updateView():
         heading = 0
         altitude = 0
     try:
-        result = service.getPos()
-        long = result['GPS_ABS_LONG']
-        lat = result['GPS_ABS_LAT']
+        result = service.getData({'startPos':-2,'varList':'["GPS_ABS_LONG","GPS_ABS_LAT"]'})
+        long = result['GPS_ABS_LONG'][-1]
+        lat = result['GPS_ABS_LAT'][-1]
         kml = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <Document>
@@ -101,15 +101,6 @@ def updateView():
     except:
         print traceback.format_exc()
         return emptyResponse()
-
-@handler.register
-@rpcWrapper
-def getPath(params):
-    result = service.getLastDataRows(params)
-    epochTime, long, lat, ch4 = result["EPOCH_TIME"], result["GPS_ABS_LONG"], result["GPS_ABS_LAT"], result["CH4"]
-    peakPos = ch4.index(max(ch4))
-    timeStrings = [time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(t)) for t in epochTime]
-    return(dict(long=long,lat=lat,ch4=ch4,timeStrings=timeStrings,peakPos=peakPos))
         
 @app.route('/updateData')
 def updateData():
@@ -119,9 +110,9 @@ def updateData():
     
     try:
         if 'lastPos' in request.values:
-            result = service.getData({'startPos':int(request.values['lastPos'])})
+            result = service.getData({'startPos':int(request.values['lastPos']),'varList':'["CH4","GPS_ABS_LAT","GPS_ABS_LONG"]'})
         else:
-            result = service.getData({})
+            result = service.getData({'varList':'["CH4","GPS_ABS_LAT","GPS_ABS_LONG"]'})
             
         filename = request.values.get('filename','')
         lastPos = result['lastPos']
@@ -153,17 +144,34 @@ def updateData():
             clearClientData = True
             
         kmlPrefix = ""
-        data = []                
+        data = []
+        data2 = []
         if clearClientData:
             kmlPrefix = """
 <Delete>
     <Folder targetId="multi1">
     </Folder>
+    <Folder targetId="multi2">
+    </Folder>
 </Delete>
 <Create>
     <Document targetId="baseDoc">
+        <name>Select Concentrations to Display</name>
         <Folder id="multi1">
-            <Style id="yellowLineGreenPoly">
+            <name>Methane Concentration</name>
+            <Style id="poly1">
+                <LineStyle>
+                    <color>%s</color>
+                    <width>4</width>
+                </LineStyle>
+                <PolyStyle>
+                    <color>%s</color>
+                </PolyStyle>
+            </Style>
+        </Folder>
+        <Folder id="multi2">
+            <name>Hydrogen Sulphide Concentration</name>
+            <Style id="poly2">
                 <LineStyle>
                     <color>%s</color>
                     <width>4</width>
@@ -174,11 +182,13 @@ def updateData():
             </Style>
         </Folder>
     </Document>
-</Create>""" % (LINE_COLOR, POLY_COLOR)
+</Create>""" % (LINE_COLOR, POLY_COLOR, "7fff0000", "7fff0000"
+)
         else:
             cookie["lastPos"] = "%s" % lastPos
             for ch4,lat,long in zip(CH4,lat,long):
                 data.append("%.5f,%.5f,%.0f" % (long,lat,SCALE*(ch4-OFFSET)))
+                data2.append("%.5f,%.5f,%.0f" % (long,lat,0.5*SCALE*(ch4-OFFSET)))
         
         # Convert the cookie dictionary into a string
         cookie = Markup.escape("&".join(["%s=%s" % (k,cookie[k]) for k in cookie]))
@@ -187,13 +197,31 @@ def updateData():
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <NetworkLinkControl>
     <Update>
-        <targetHref>http://localhost:5100/static/base2.kml</targetHref>
+        <targetHref>http://localhost:5100/static/base.kml</targetHref>
         %s
         <Create>
             <Folder targetId="multi1">
+                <name>Methane Concentration</name>
+                <visibility>1</visibility>
                 <Placemark>
                     <name>Methane Concentration</name>
-                    <styleUrl>#yellowLineGreenPoly</styleUrl>
+                    <styleUrl>#poly1</styleUrl>
+                    <LineString>
+                        <extrude>1</extrude>
+                        <tessellate>1</tessellate>
+                        <altitudeMode>relativeToGround</altitudeMode>
+                        <coordinates>
+                            %s
+                        </coordinates>
+                     </LineString>
+                </Placemark>
+            </Folder>
+            <Folder targetId="multi2">
+                <name>Hydrogen Sulphide Concentration</name>
+                <visibility>1</visibility>
+                <Placemark>
+                    <name>Hydrogen Sulphide Concentration</name>
+                    <styleUrl>#poly2</styleUrl>
                     <LineString>
                         <extrude>1</extrude>
                         <tessellate>1</tessellate>
@@ -208,7 +236,7 @@ def updateData():
     </Update>
     <cookie>%s</cookie>
 </NetworkLinkControl>
-</kml>""" % (kmlPrefix, "\n".join(data), cookie)
+</kml>""" % (kmlPrefix, "\n".join(data), "\n".join(data2), cookie)
         response = make_response(kml)
         response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
         return response
@@ -235,7 +263,7 @@ if __name__ == '__main__':
     if "-a" in options:
         addr = options["-a"]
 
-    # Connect to the analyzer JSON RPC server
-    service = Proxy('http://%s:5000/jsonrpc' % addr.strip())
+    # Connect to the analyzer rest server
+    service = RestProxy('%s:5000' % addr.strip())
     app.run(host='127.0.0.1',port=5100)
     

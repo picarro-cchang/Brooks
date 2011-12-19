@@ -4,12 +4,12 @@
     <name>Network Links</name>
     <visibility>0</visibility>
     <open>0</open>
-    <description>Methane Concentration Viewer</description>
+    <description>Gas Concentration Viewer</description>
     <NetworkLink>
-      <name>Base Definition</name>
+      <name>Concentration Display</name>
       <flyToView>0</flyToView>
       <Link>
-        <href>http://localhost:5100/static/base2.kml</href>
+        <href>http://localhost:5100/static/base.kml</href>
       </Link>
     </NetworkLink>
     <NetworkLink>
