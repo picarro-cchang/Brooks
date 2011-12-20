@@ -331,7 +331,7 @@ function updatePath(where,clr) {
                     strokeColor: clr,
                     strokeOpactity:1.0,
                     strokeWeight:2  });
-                    
+        path.setMap(map);            
         if (lastPoint && !startNewPath) path.getPath().push(lastPoint);
     }
     startNewPath = false;
@@ -702,7 +702,7 @@ function successData(data) {
                             conc_array.push(ch4[i]);
                         }
                     }
-                    path.setMap(map);
+                    // path.setMap(map);
                 }
             }
         } else {

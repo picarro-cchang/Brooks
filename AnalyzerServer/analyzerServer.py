@@ -48,6 +48,7 @@ SHIFT = -4
 USERLOGFILES = 'C:/UserData/AnalyzerServer/*.dat'
 PEAKFILES = 'C:/UserData/AnalyzerServer/*.peaks'
 ANALYSISFILES = 'C:/UserData/AnalyzerServer/*.analysis'
+MAX_DATA_POINTS = 500
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -186,7 +187,7 @@ def _getData(name,startPos=None,shift=0,varList=None):
             startPos -= abs(shift)
             endPos = None
         else:
-            endPos = startPos + abs(shift) + 200
+            endPos = startPos + abs(shift) + MAX_DATA_POINTS
         for l in getSliceIter(name,startPos,endPos):
             lineNum = l.lineNumber
             line = l.line
