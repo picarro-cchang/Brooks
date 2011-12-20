@@ -57,7 +57,8 @@ class LineCachedFile(object):
         
     def getSliceIter(self,start=None,end=None):
         if os.path.getsize(self.filename) == 0: return
-        with open(self.filename,"rb") as f:
+        try:
+            f = open(self.filename,"rb")
             fmap = mmap.mmap(f.fileno(),0,access=mmap.ACCESS_READ)
             def getLine(p):
                 fmap.seek(p)
@@ -79,6 +80,8 @@ class LineCachedFile(object):
                     raise RuntimeError("Lines changed in cached file!")
                 yield NumberedLine(start+i,getLine(p))
             fmap.close()
+        finally:
+            f.close()
     
     def clear(self):
         self.linePtr = [0]
@@ -88,29 +91,44 @@ class LineCachedFile(object):
 if __name__ == "__main__":
     import tempfile
     
-    with tempfile.NamedTemporaryFile(mode="wb",delete=False) as f:
+    try:
+        f = open("tempFile.tmp",mode="wb")
         fname = f.name
         pass
+    finally:
+        f.close()
     assert getSlice(fname,0,10) == []
     assert getSlice(fname,0) == []
     
-    with open(fname,"wb") as f:
+    try:
+        f = open(fname,"wb")
         f.write("\n\n ")
+    finally:
+        f.close()
     assert getSlice(fname,0,10,clear=True) == [(0,"\n"), (1,"\n"), (2," ")]
     assert getSlice(fname,0,-1) == [(0,"\n"), (1,"\n")]
 
-    with open(fname,"wb") as f:
+    try:
+        f = open(fname,"wb")
         f.write("First line\nNo newline at EOF")
+    finally:
+        f.close()
     assert getSlice(fname,0,10,clear=True) == [(0,"First line\n"), (1,"No newline at EOF")]
     
-    with open(fname,"wb") as f:
+    try:
+        f = open(fname,"wb")
         f.write("First line\nWith newline at EOF\n")
+    finally:
+        f.close()
     assert getSlice(fname,0,10,clear=True) == [(0,"First line\n"), (1,"With newline at EOF\n")]
 
-    with tempfile.NamedTemporaryFile(mode="wb",delete=False) as f:
+    try:
+        f = open("tempFile1.tmp",mode="wb")
         fname1 = f.name
         for i in range(20000):
             print >>f, "This is line %d" % i
+    finally:
+        f.close()
     assert getSlice(fname1,None,10) == [(i,"This is line %d\n" % i) for i in range(10)]
     assert getSlice(fname1,-10,None)  == [(i,"This is line %d\n" % i) for i in range(20000-10,20000)]
     assert getSlice(fname1,17,54)  == [(i,"This is line %d\n" % i) for i in range(17,54)]
