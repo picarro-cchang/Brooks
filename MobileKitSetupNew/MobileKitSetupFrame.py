@@ -20,6 +20,17 @@ class MobileKitSetupFrame(wx.Frame):
         self.panel2.SetBackgroundColour("#BDEDFF")
         self.panel3.SetBackgroundColour("#64E986")
 
+        # Menu bar
+        self.frameMenubar = wx.MenuBar()
+        self.iControl = wx.Menu()
+        
+        self.frameMenubar.Append(self.iControl, "Control")
+        self.iShutdown = wx.MenuItem(self.iControl, -1, "Shut Down Analyzer", "", wx.ITEM_NORMAL)
+        self.iShutdown.SetBackgroundColour("red")
+        self.iControl.AppendItem(self.iShutdown)
+        
+        self.SetMenuBar(self.frameMenubar)
+        
         # General Settings
         titleFont = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, "")
         labelFont = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "")
@@ -66,7 +77,7 @@ class MobileKitSetupFrame(wx.Frame):
             label.SetFont(labelFont)
             self.labelPolyOpacity.append(label)
         
-        self.labelTitle3 = wx.StaticText(self.panel3, -1, "Control", style=wx.ALIGN_CENTRE)
+        self.labelTitle3 = wx.StaticText(self.panel3, -1, "Start a New Run", style=wx.ALIGN_CENTRE)
         self.labelTitle3.SetFont(titleFont)
         self.labelFooter = wx.StaticText(self.panel3, -1, "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0], style=wx.ALIGN_CENTER)
         
@@ -100,13 +111,9 @@ class MobileKitSetupFrame(wx.Frame):
         self.buttonApply.SetBackgroundColour(buttonColor)
         self.buttonApply.SetFont(labelFont)
                
-        self.buttonNewRun = wx.Button(self.panel3, -1, "Start a New Run", size=buttonSize)
+        self.buttonNewRun = wx.Button(self.panel3, -1, "Start", size=buttonSize)
         self.buttonNewRun.SetBackgroundColour(buttonColor)
         self.buttonNewRun.SetFont(labelFont)
-        
-        self.buttonShutdown = wx.Button(self.panel3, -1, "Shut Down Analyzer", size=buttonSize)
-        self.buttonShutdown.SetBackgroundColour(buttonColor)
-        self.buttonShutdown.SetFont(labelFont)
         
         self.__do_layout()
         
@@ -169,7 +176,6 @@ class MobileKitSetupFrame(wx.Frame):
         sizer_5.Add(self.labelTitle3, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
         sizer_5.Add(self.buttonNewRun, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 3)
         sizer_5.Add((0,5))
-        sizer_5.Add(self.buttonShutdown, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 3)
         sizer_5.Add(self.labelFooter, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER, 10)
         self.panel3.SetSizer(sizer_5)
         

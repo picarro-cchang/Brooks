@@ -91,7 +91,7 @@ class MobileKitSetup(MobileKitSetupFrame):
         self.Bind(wx.EVT_BUTTON, self.onLaunchButton, self.buttonLaunchServer)
         self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.buttonApply) 
         self.Bind(wx.EVT_BUTTON, self.onNewRunButton, self.buttonNewRun) 
-        self.Bind(wx.EVT_BUTTON, self.onShutdownButton, self.buttonShutdown) 
+        self.Bind(wx.EVT_MENU, self.onShutdownMenu, self.iShutdown) 
         for c in self.comboBoxOnOff:
             self.Bind(wx.EVT_COMBOBOX, self.onOnOffCombo, c) 
 
@@ -191,7 +191,7 @@ class MobileKitSetup(MobileKitSetupFrame):
         self.targetConfig.write()
         self._copyIniFiles()
             
-    def onShutdownButton(self, event):
+    def onShutdownMenu(self, event):
         d = wx.MessageDialog(None, "Are you sure you want to shut down the analyzer?\nIt could take up to 30 minutes to restart the analyzer after shutting down.\n\nSelect \"Yes\" to continue.\nSelect \"No\" to cancel this action.",\
                         "Shut Down Analyzer Confirmation", wx.YES_NO|wx.ICON_EXCLAMATION)
         if d.ShowModal() != wx.ID_YES:
