@@ -9,7 +9,7 @@
       <name>Concentration Display</name>
       <flyToView>0</flyToView>
       <Link>
-        <href>http://localhost:5100/static/base.kml</href>
+        <href>http://localhost:5100/base</href>
       </Link>
     </NetworkLink>
     <NetworkLink>

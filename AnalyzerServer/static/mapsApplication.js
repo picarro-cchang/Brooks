@@ -823,7 +823,7 @@ function errorAnalysis(text) {
         $("#id_modal").html(modalNetWarning);
     }
     $("#errors").html(text); 
-    timer1 = setTimeout(onTimer,1000);                        
+    timer1 = setTimeout(onTimer,updatePeriod);                        
 };
 
 var modeStrings = {0:"Survey Mode", 1:"Capture Mode", 2:"Capture Mode", 3:"Analyzing Peak"};

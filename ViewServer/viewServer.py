@@ -20,11 +20,61 @@ SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
 
-SCALE = 300.0
-OFFSET = 1.85
-LINE_COLOR = "7f00ffff"
-POLY_COLOR = "7f00ff00"
+viewParamsList = []
+viewParamsAsDir = {}
 
+class ViewParams(object):
+    def __init__(self,speciesName,scale,offset,line_color,poly_color,enabled=True):
+        self.speciesName = speciesName
+        self.scale = scale
+        self.offset = offset
+        self.line_color = line_color
+        self.poly_color = poly_color
+        self.enabled = enabled
+    def __repr__(self):
+        return "<%s, scale: %s, offset: %s, line_color: %s, poly_color: %s, enabled: %s>" % (self.speciesName, 
+            self.scale, self.offset, self.line_color, self.poly_color, self.enabled)
+            
+def setupFromConfig(baseIni):
+    ini = ConfigObj(baseIni)
+    for secName in ini:
+        if secName == 'SETTINGS': continue
+        scale = float(ini[secName].get('scale',1.0))
+        offset = float(ini[secName].get('offset',0.0))
+        line_color = ini[secName].get('line_color',"7fffffff")
+        poly_color = ini[secName].get('poly_color',"7fffffff")
+        enabled = int(ini[secName].get('enabled',1))
+        viewParamsList.append(ViewParams(secName,scale,offset,line_color,poly_color,enabled))
+        viewParamsAsDir[secName] = viewParamsList[-1]
+        
+def updateFromConfig(changeIni):
+    ini = ConfigObj(changeIni)
+    refreshNeeded = False
+    settingsDict = {}
+    for secName in ini:
+        if secName == 'SETTINGS': 
+            settingsDict = dict(ini[secName])
+            continue
+        settings = ini[secName]
+        viewParams = viewParamsAsDir[secName]
+        def update(key,conv):
+            # Update the value of the specified key in viewParamsList, 
+            #  if this is in the ini file
+            #  Return True iff this changes the value of the key
+            if key in settings:
+                if getattr(viewParams,key) != conv(settings[key]):
+                    setattr(viewParams,key,conv(settings[key]))
+                    return True
+            return False
+        refreshNeeded = update('scale',float) | refreshNeeded
+        refreshNeeded = update('offset',float) | refreshNeeded
+        refreshNeeded = update('line_color',str) | refreshNeeded
+        refreshNeeded = update('poly_color',str) | refreshNeeded
+        if 'enabled' in settings:
+            viewParams.enabled = int(settings['enabled'])
+    print "Refresh needed", refreshNeeded
+    return refreshNeeded, settingsDict
+    
 app = Flask(__name__)
 app.config.from_object(__name__)
 
@@ -34,6 +84,7 @@ else:
     appPath = sys.argv[0]
 appDir = os.path.split(appPath)[0]
 changeIni = os.path.join(appDir,'MobileKit.ini')
+baseIni = os.path.join(appDir,'MobileKit_inactive.ini') 
 
 class RestCallError(Exception):
     pass
@@ -63,6 +114,33 @@ def emptyResponse():
   </Document>
 </kml>"""
     response = make_response(empty_kml)
+    response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
+    return response
+
+@app.route('/base')
+def base():
+    blockStrings = []
+    for i,viewParams in enumerate(viewParamsList):
+        blockStrings.append("""<Folder id="multi%d">
+</Folder>
+<Style id="poly%d">
+    <LineStyle>
+        <color>%s</color>
+        <width>4</width>
+    </LineStyle>
+    <PolyStyle>
+        <color>%s</color>
+    </PolyStyle>
+</Style>""" % (i,i,viewParams.line_color,viewParams.poly_color))
+
+    kml = """<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+    <Document id="baseDoc">
+        <name>Select Concentrations to Display</name>
+        %s
+    </Document>
+</kml>""" % ("\n".join(blockStrings),)
+    response = make_response(kml)
     response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
     return response
     
@@ -104,92 +182,111 @@ def updateView():
         
 @app.route('/updateData')
 def updateData():
-    global SCALE, OFFSET, LINE_COLOR, POLY_COLOR
     cookie = {}
     clearClientData = False
     
     try:
+        varList = ["GPS_ABS_LAT","GPS_ABS_LONG"]
+        for viewParams in viewParamsList:
+            varList.append(viewParams.speciesName)
         if 'lastPos' in request.values:
-            result = service.getData({'startPos':int(request.values['lastPos']),'varList':'["CH4","GPS_ABS_LAT","GPS_ABS_LONG"]'})
+            result = service.getData({'startPos':int(request.values['lastPos']),'varList':json.dumps(varList)})
         else:
-            result = service.getData({'varList':'["CH4","GPS_ABS_LAT","GPS_ABS_LONG"]'})
+            result = service.getData({'varList':json.dumps(varList)})
             
         filename = request.values.get('filename','')
         lastPos = result['lastPos']
-        CH4 = result['CH4']
-        long = result['GPS_ABS_LONG']
-        lat = result['GPS_ABS_LAT']
+        concs = [result[viewParams.speciesName] for viewParams in viewParamsList]
+        longs = result['GPS_ABS_LONG']
+        lats = result['GPS_ABS_LAT']
+        data = [[] for viewParams in viewParamsList]
         cookie['filename'] = result['filename']
         if filename != result['filename']:
             clearClientData = True
         
         if os.path.exists(changeIni):
+            refreshNeeded = False
             try:
-                ini = ConfigObj(changeIni)
-                if 'SETTINGS' in ini:
-                    settings = ini['SETTINGS']
-                    SCALE = float(settings.get('scale',SCALE))
-                    OFFSET = float(settings.get('offset',OFFSET))
-                    LINE_COLOR = settings.get('line_color',LINE_COLOR)
-                    POLY_COLOR = settings.get('poly_color',POLY_COLOR)
-                    restart = int(settings.get('restart',0))
-                    if restart: 
-                        service.restartDatalog({})
-                        print "Restarting Data Log"
+                refreshNeeded,settingsDict = updateFromConfig(changeIni)
+                restart = int(settingsDict.get('restart',0))
+                if restart: 
+                    service.restartDatalog({})
+                    print "Restarting Data Log"
+                shutdown = int(settingsDict.get('shutdown',0))
+                if shutdown: 
+                    service.shutdownAnalyzer({})
+                    print "Shutting down analyzer"
             except:
                 print traceback.format_exc()
                 print "Error processing .ini file"
             finally:
                 os.remove(changeIni)
-            clearClientData = True
-            
+            if refreshNeeded or restart: 
+                clearClientData = True
+        
         kmlPrefix = ""
-        data = []
-        data2 = []
+        kmlData = ""
         if clearClientData:
+            delStrings = []
+            createStrings = []
+            for i,viewParams in enumerate(viewParamsList):
+                print "ViewParams %r,%r,%r" % (viewParams.speciesName,viewParams.line_color,viewParams.poly_color)
+                delStrings.append("""<Folder targetId="multi%d"></Folder>""" % (i,))
+                createStrings.append("""
+<Folder id="multi%d">
+    <name>%s Concentration</name>
+    <Style id="poly%d">
+        <LineStyle>
+            <color>%s</color>
+            <width>4</width>
+        </LineStyle>
+        <PolyStyle>
+            <color>%s</color>
+        </PolyStyle>
+    </Style>
+</Folder>""" % (i,viewParams.speciesName,i,viewParams.line_color,viewParams.poly_color))
+
             kmlPrefix = """
 <Delete>
-    <Folder targetId="multi1">
-    </Folder>
-    <Folder targetId="multi2">
-    </Folder>
+    %s
 </Delete>
 <Create>
     <Document targetId="baseDoc">
         <name>Select Concentrations to Display</name>
-        <Folder id="multi1">
-            <name>Methane Concentration</name>
-            <Style id="poly1">
-                <LineStyle>
-                    <color>%s</color>
-                    <width>4</width>
-                </LineStyle>
-                <PolyStyle>
-                    <color>%s</color>
-                </PolyStyle>
-            </Style>
-        </Folder>
-        <Folder id="multi2">
-            <name>Hydrogen Sulphide Concentration</name>
-            <Style id="poly2">
-                <LineStyle>
-                    <color>%s</color>
-                    <width>4</width>
-                </LineStyle>
-                <PolyStyle>
-                    <color>%s</color>
-                </PolyStyle>
-            </Style>
-        </Folder>
+        %s
     </Document>
-</Create>""" % (LINE_COLOR, POLY_COLOR, "7fff0000", "7fff0000"
-)
+</Create>""" % ("\n".join(delStrings), "\n".join(createStrings))
         else:
             cookie["lastPos"] = "%s" % lastPos
-            for ch4,lat,long in zip(CH4,lat,long):
-                data.append("%.5f,%.5f,%.0f" % (long,lat,SCALE*(ch4-OFFSET)))
-                data2.append("%.5f,%.5f,%.0f" % (long,lat,0.5*SCALE*(ch4-OFFSET)))
-        
+            
+            dataStrings = []
+            
+            for i,viewParams in enumerate(viewParamsList):
+                placeMark = ""
+                if len(lats)>1:
+                    for conc,lat,long in zip(concs[i],lats,longs):
+                        data[i].append("%.5f,%.5f,%.0f" % (long,lat,viewParams.scale*(conc-viewParams.offset)))
+                    placeMark = """
+<Placemark>
+    <name>%s Concentration</name>
+    <styleUrl>#poly%d</styleUrl>
+    <LineString>
+        <extrude>1</extrude>
+        <tessellate>1</tessellate>
+        <altitudeMode>relativeToGround</altitudeMode>
+        <coordinates>
+            %s
+        </coordinates>
+     </LineString>
+</Placemark>""" % (viewParams.speciesName,i,"\n".join(data[i]))
+                dataStrings.append("""
+<Folder targetId="multi%d">
+    <name>%s Concentration</name>
+    <visibility>%s</visibility>
+    %s
+</Folder>""" % (i,viewParams.speciesName,viewParams.enabled,placeMark))
+
+                kmlData = """<Create>%s</Create>""" % ("\n".join(dataStrings))
         # Convert the cookie dictionary into a string
         cookie = Markup.escape("&".join(["%s=%s" % (k,cookie[k]) for k in cookie]))
         
@@ -197,46 +294,13 @@ def updateData():
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <NetworkLinkControl>
     <Update>
-        <targetHref>http://localhost:5100/static/base.kml</targetHref>
+        <targetHref>http://localhost:5100/base</targetHref>
         %s
-        <Create>
-            <Folder targetId="multi1">
-                <name>Methane Concentration</name>
-                <visibility>1</visibility>
-                <Placemark>
-                    <name>Methane Concentration</name>
-                    <styleUrl>#poly1</styleUrl>
-                    <LineString>
-                        <extrude>1</extrude>
-                        <tessellate>1</tessellate>
-                        <altitudeMode>relativeToGround</altitudeMode>
-                        <coordinates>
-                            %s
-                        </coordinates>
-                     </LineString>
-                </Placemark>
-            </Folder>
-            <Folder targetId="multi2">
-                <name>Hydrogen Sulphide Concentration</name>
-                <visibility>1</visibility>
-                <Placemark>
-                    <name>Hydrogen Sulphide Concentration</name>
-                    <styleUrl>#poly2</styleUrl>
-                    <LineString>
-                        <extrude>1</extrude>
-                        <tessellate>1</tessellate>
-                        <altitudeMode>relativeToGround</altitudeMode>
-                        <coordinates>
-                            %s
-                        </coordinates>
-                     </LineString>
-                </Placemark>
-            </Folder>
-        </Create>
+        %s
     </Update>
     <cookie>%s</cookie>
 </NetworkLinkControl>
-</kml>""" % (kmlPrefix, "\n".join(data), "\n".join(data2), cookie)
+</kml>""" % (kmlPrefix, kmlData, cookie)
         response = make_response(kml)
         response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
         return response
@@ -263,6 +327,8 @@ if __name__ == '__main__':
     if "-a" in options:
         addr = options["-a"]
 
+    setupFromConfig(baseIni)
+    
     # Connect to the analyzer rest server
     service = RestProxy('%s:5000' % addr.strip())
     app.run(host='127.0.0.1',port=5100)
