@@ -1,12 +1,70 @@
 #!/usr/bin/env python
-
+import sys
+import os
 import wx
 import time
 from wx.lib.masked import IpAddrCtrl
 import  wx.lib.colourselect as  csel
 
 OPACITY = ["100%", "75%", "50%", "25%"]
+PANEL1_COLOR = "#E0FFFF"
+PANEL2_COLOR = "#BDEDFF"
+PANEL3_COLOR = "#64E986"
+        
+#Set up a useful AppPath reference...
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
+AppPath = os.path.abspath(AppPath)
 
+class SysAlarmListCtrl(wx.ListCtrl):
+    def __init__(self, parent, id=-1, pos=wx.DefaultPosition, size=wx.DefaultSize, numAlarms=2):
+        wx.ListCtrl.__init__(self, parent, id, pos, size,
+                             style = wx.LC_REPORT
+                             | wx.LC_VIRTUAL
+                             | wx.BORDER_NONE
+                             | wx.LC_NO_HEADER)
+        self.ilEventIcons = wx.ImageList(31, 16)
+        self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
+        self.SetBackgroundColour(PANEL1_COLOR)
+        myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
+        thisDir = os.path.dirname(AppPath)
+        self.IconAlarmClear = myIL.Add(wx.Bitmap(thisDir + '/LEDgreen2.ico',
+                                                     wx.BITMAP_TYPE_ICO))
+        self.IconAlarmSet = myIL.Add(wx.Bitmap(thisDir + '/LEDred2.ico',
+                                                     wx.BITMAP_TYPE_ICO))
+        self.InsertColumn(0,"Icon",width=40)
+        sx,sy = self.GetSize()
+        self.InsertColumn(1,"Name",width=sx-40)
+        self.SetItemCount(numAlarms)
+        self.status = [1, 1]
+        self.statusText = ["Analyzer", "GPS"]
+
+    def OnGetItemText(self,item,col):
+        if col == 1:
+            return self.statusText[item]
+        else:
+            return
+
+    def OnGetItemAttr(self,item):
+        return
+            
+    def OnGetItemImage(self, item):
+        if self.status[item]:
+            return self.IconAlarmClear
+        else:
+            return self.IconAlarmSet
+         
+    def setMainForm(self, mainForm):
+        self.mainForm = mainForm
+
+    def setStatus(self, item, status):
+        self.status[item] = status
+        
+    def refreshList(self):
+        self.RefreshItems(0,self.GetItemCount()-1)
+        
 class MobileKitSetupFrame(wx.Frame):
     def __init__(self, concList, *args, **kwds):
         self.concList = concList
@@ -16,9 +74,9 @@ class MobileKitSetupFrame(wx.Frame):
         self.panel1 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         self.panel2 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         self.panel3 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
-        self.panel1.SetBackgroundColour("#E0FFFF")
-        self.panel2.SetBackgroundColour("#BDEDFF")
-        self.panel3.SetBackgroundColour("#64E986")
+        self.panel1.SetBackgroundColour(PANEL1_COLOR)
+        self.panel2.SetBackgroundColour(PANEL2_COLOR)
+        self.panel3.SetBackgroundColour(PANEL3_COLOR)
 
         # Menu bar
         self.frameMenubar = wx.MenuBar()
@@ -31,6 +89,10 @@ class MobileKitSetupFrame(wx.Frame):
         
         self.SetMenuBar(self.frameMenubar)
         
+        # System status alarms
+        self.sysAlarmView = SysAlarmListCtrl(parent=self.panel1)
+        self.sysAlarmView.setMainForm(self)
+        
         # General Settings
         titleFont = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, "")
         labelFont = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "")
@@ -39,7 +101,7 @@ class MobileKitSetupFrame(wx.Frame):
         comboBoxSize = (100, 20)
         
         # labels
-        self.labelTitle1 = wx.StaticText(self.panel1, -1, "Server Setup", style=wx.ALIGN_CENTRE)
+        self.labelTitle1 = wx.StaticText(self.panel1, -1, "System Status And Server Setup", style=wx.ALIGN_CENTRE)
         self.labelTitle1.SetFont(titleFont)
         self.labelIp = wx.StaticText(self.panel1, -1, "Analyzer IP Address", style=wx.ALIGN_CENTRE)
         self.labelIp.SetFont(labelFont)
@@ -82,7 +144,7 @@ class MobileKitSetupFrame(wx.Frame):
         self.labelFooter = wx.StaticText(self.panel3, -1, "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0], style=wx.ALIGN_CENTER)
         
         # Divider lines
-        self.staticLine1 = wx.StaticLine(self.panel1, -1, size=(0,3))
+        self.staticLine1 = wx.StaticLine(self.panel2, -1, size=(0,3))
         self.staticLine2 = wx.StaticLine(self.panel2, -1, size=(0,3))
         
         # Controls
@@ -118,7 +180,10 @@ class MobileKitSetupFrame(wx.Frame):
         self.__do_layout()
         
     def __do_layout(self):
+        sizer_0 = wx.BoxSizer(wx.VERTICAL)
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
+        sizer_0_1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_panel1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
@@ -126,8 +191,9 @@ class MobileKitSetupFrame(wx.Frame):
         sizer_all = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_1 = wx.FlexGridSizer(0, 4)
 
-        sizer_1.Add(self.labelTitle1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
-        sizer_2.Add((75,0))
+        sizer_panel1.Add(self.labelTitle1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
+        sizer_0.Add(self.sysAlarmView, 0, wx.LEFT, 10)
+        sizer_2.Add((15,0))
         sizer_2.Add(self.labelIp, 0, wx.ALL, 5)
         sizer_2.Add((5,0))
         sizer_2.Add(self.ipCtrl, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER)
@@ -135,11 +201,14 @@ class MobileKitSetupFrame(wx.Frame):
         sizer_1.Add((5,0))
         sizer_1.Add(sizer_2, 0)
         sizer_1.Add((0,10))
-        sizer_1.Add(self.buttonLaunchServer, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 5)
+        sizer_1.Add(self.buttonLaunchServer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER)
         sizer_1.Add((0,10))
-        sizer_1.Add(self.staticLine1, 0, wx.EXPAND)
-        self.panel1.SetSizer(sizer_1)
+        sizer_0_1.Add(sizer_0, 0, wx.EXPAND)
+        sizer_0_1.Add(sizer_1, 0, wx.EXPAND)
+        sizer_panel1.Add(sizer_0_1, 0, wx.EXPAND)
+        self.panel1.SetSizer(sizer_panel1)
         
+        sizer_3.Add(self.staticLine1, 0, wx.EXPAND)
         sizer_3.Add(self.labelTitle2, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
         
         for i in range(len(self.concList)):
