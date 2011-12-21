@@ -7,6 +7,7 @@ from wx.lib.masked import IpAddrCtrl
 import  wx.lib.colourselect as  csel
 
 OPACITY = ["100%", "75%", "50%", "25%"]
+PANEL0_COLOR = "#A0FFFF"
 PANEL1_COLOR = "#E0FFFF"
 PANEL2_COLOR = "#BDEDFF"
 PANEL3_COLOR = "#64E986"
@@ -27,7 +28,7 @@ class SysAlarmListCtrl(wx.ListCtrl):
                              | wx.LC_NO_HEADER)
         self.ilEventIcons = wx.ImageList(31, 16)
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
-        self.SetBackgroundColour(PANEL1_COLOR)
+        self.SetBackgroundColour(PANEL0_COLOR)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
         thisDir = os.path.dirname(AppPath)
         self.IconAlarmClear = myIL.Add(wx.Bitmap(thisDir + '/LEDgreen2.ico',
@@ -71,9 +72,11 @@ class MobileKitSetupFrame(wx.Frame):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX)
         wx.Frame.__init__(self, *args, **kwds)
         self.SetTitle("Picarro Mobile Kit Setup")
-        self.panel1 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
-        self.panel2 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
-        self.panel3 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
+        self.panel0 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB|wx.SUNKEN_BORDER)
+        self.panel1 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB|wx.SUNKEN_BORDER)
+        self.panel2 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB|wx.SUNKEN_BORDER)
+        self.panel3 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB|wx.SUNKEN_BORDER)
+        self.panel0.SetBackgroundColour(PANEL0_COLOR)
         self.panel1.SetBackgroundColour(PANEL1_COLOR)
         self.panel2.SetBackgroundColour(PANEL2_COLOR)
         self.panel3.SetBackgroundColour(PANEL3_COLOR)
@@ -90,7 +93,7 @@ class MobileKitSetupFrame(wx.Frame):
         self.SetMenuBar(self.frameMenubar)
         
         # System status alarms
-        self.sysAlarmView = SysAlarmListCtrl(parent=self.panel1)
+        self.sysAlarmView = SysAlarmListCtrl(parent=self.panel0)
         self.sysAlarmView.setMainForm(self)
         
         # General Settings
@@ -101,7 +104,9 @@ class MobileKitSetupFrame(wx.Frame):
         comboBoxSize = (100, 20)
         
         # labels
-        self.labelTitle1 = wx.StaticText(self.panel1, -1, "System Status And Server Setup", style=wx.ALIGN_CENTRE)
+        self.labelStatus = wx.StaticText(self.panel0, -1, "Status", style=wx.ALIGN_CENTRE)
+        self.labelStatus.SetFont(titleFont)
+        self.labelTitle1 = wx.StaticText(self.panel1, -1, "Server Setup", style=wx.ALIGN_CENTRE)
         self.labelTitle1.SetFont(titleFont)
         self.labelIp = wx.StaticText(self.panel1, -1, "Analyzer IP Address", style=wx.ALIGN_CENTRE)
         self.labelIp.SetFont(labelFont)
@@ -142,10 +147,6 @@ class MobileKitSetupFrame(wx.Frame):
         self.labelTitle3 = wx.StaticText(self.panel3, -1, "Start a New Run", style=wx.ALIGN_CENTRE)
         self.labelTitle3.SetFont(titleFont)
         self.labelFooter = wx.StaticText(self.panel3, -1, "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0], style=wx.ALIGN_CENTER)
-        
-        # Divider lines
-        self.staticLine1 = wx.StaticLine(self.panel2, -1, size=(0,3))
-        self.staticLine2 = wx.StaticLine(self.panel2, -1, size=(0,3))
         
         # Controls
         self.ipCtrl = IpAddrCtrl(self.panel1, -1)
@@ -191,9 +192,13 @@ class MobileKitSetupFrame(wx.Frame):
         sizer_all = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_1 = wx.FlexGridSizer(0, 4)
 
-        sizer_panel1.Add(self.labelTitle1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
+        sizer_0.Add(self.labelStatus, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
+        sizer_0.Add((0,3))
         sizer_0.Add(self.sysAlarmView, 0, wx.LEFT, 10)
-        sizer_2.Add((15,0))
+        self.panel0.SetSizer(sizer_0)
+        
+        sizer_1.Add(self.labelTitle1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
+        sizer_2.Add((25,0))
         sizer_2.Add(self.labelIp, 0, wx.ALL, 5)
         sizer_2.Add((5,0))
         sizer_2.Add(self.ipCtrl, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER)
@@ -203,12 +208,8 @@ class MobileKitSetupFrame(wx.Frame):
         sizer_1.Add((0,10))
         sizer_1.Add(self.buttonLaunchServer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER)
         sizer_1.Add((0,10))
-        sizer_0_1.Add(sizer_0, 0, wx.EXPAND)
-        sizer_0_1.Add(sizer_1, 0, wx.EXPAND)
-        sizer_panel1.Add(sizer_0_1, 0, wx.EXPAND)
-        self.panel1.SetSizer(sizer_panel1)
+        self.panel1.SetSizer(sizer_1)
         
-        sizer_3.Add(self.staticLine1, 0, wx.EXPAND)
         sizer_3.Add(self.labelTitle2, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
         
         for i in range(len(self.concList)):
@@ -239,7 +240,6 @@ class MobileKitSetupFrame(wx.Frame):
         #sizer_3.Add((0,10))
         sizer_3.Add(self.buttonApply, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 5)
         sizer_3.Add((0,10))
-        sizer_3.Add(self.staticLine2, 0, wx.EXPAND)
         self.panel2.SetSizer(sizer_3)
         
         sizer_5.Add(self.labelTitle3, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
@@ -248,7 +248,9 @@ class MobileKitSetupFrame(wx.Frame):
         sizer_5.Add(self.labelFooter, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER, 10)
         self.panel3.SetSizer(sizer_5)
         
-        sizer_all.Add(self.panel1, 0, wx.EXPAND)
+        sizer_0_1.Add(self.panel0, 0, wx.EXPAND)
+        sizer_0_1.Add(self.panel1, 1, wx.EXPAND)
+        sizer_all.Add(sizer_0_1, 0, wx.EXPAND)
         sizer_all.Add(self.panel2, 0, wx.EXPAND)
         sizer_all.Add(self.panel3, 0, wx.EXPAND)
         self.SetSizer(sizer_all)
