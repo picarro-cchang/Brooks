@@ -145,8 +145,6 @@ class MobileKitSetupFrame(wx.Frame):
             label.SetFont(labelFont)
             self.labelPolyOpacity.append(label)
         
-        self.labelTitle3 = wx.StaticText(self.panel3, -1, "Start a New Run", style=wx.ALIGN_CENTRE)
-        self.labelTitle3.SetFont(titleFont)
         self.labelFooter = wx.StaticText(self.panel3, -1, "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0], style=wx.ALIGN_CENTER)
         
         # Controls
@@ -175,7 +173,7 @@ class MobileKitSetupFrame(wx.Frame):
         self.buttonApply.SetBackgroundColour(buttonColor)
         self.buttonApply.SetFont(labelFont)
                
-        self.buttonNewRun = wx.Button(self.panel3, -1, "Start", size=buttonSize)
+        self.buttonNewRun = wx.Button(self.panel3, -1, "Start a New Run", size=buttonSize)
         self.buttonNewRun.SetBackgroundColour(buttonColor)
         self.buttonNewRun.SetFont(labelFont)
         
@@ -185,7 +183,6 @@ class MobileKitSetupFrame(wx.Frame):
         sizer_0 = wx.BoxSizer(wx.VERTICAL)
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_0_1 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_panel1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
@@ -194,7 +191,6 @@ class MobileKitSetupFrame(wx.Frame):
         grid_sizer_1 = wx.FlexGridSizer(0, 4)
 
         sizer_0.Add(self.labelStatus, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
-        sizer_0.Add((0,3))
         sizer_0.Add(self.sysAlarmView, 0, wx.LEFT, 10)
         self.panel0.SetSizer(sizer_0)
         
@@ -231,7 +227,7 @@ class MobileKitSetupFrame(wx.Frame):
             grid_sizer_1.Add(self.labelPolyOpacity[i], 0, wx.ALL, 3)
             grid_sizer_1.Add(self.comboBoxPolyOpacity[i], 0, wx.ALL, 3)
             for j in range(4):
-                grid_sizer_1.Add((0,0), 0, wx.ALL, 10)
+                grid_sizer_1.Add((0,0), 0, wx.ALL, 5)
 
         sizer_4.Add((10,0))
         sizer_4.Add(grid_sizer_1, 0)
@@ -239,13 +235,12 @@ class MobileKitSetupFrame(wx.Frame):
         sizer_3.Add((5,0))
         sizer_3.Add(sizer_4, 0)
         #sizer_3.Add((0,10))
-        sizer_3.Add(self.buttonApply, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 5)
-        sizer_3.Add((0,10))
+        sizer_3.Add(self.buttonApply, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER)
+        sizer_3.Add((0,15))
         self.panel2.SetSizer(sizer_3)
         
-        sizer_5.Add(self.labelTitle3, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
-        sizer_5.Add(self.buttonNewRun, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 3)
-        sizer_5.Add((0,5))
+        sizer_5.Add((0,15))
+        sizer_5.Add(self.buttonNewRun, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER)
         sizer_5.Add(self.labelFooter, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER, 10)
         self.panel3.SetSizer(sizer_5)
         
