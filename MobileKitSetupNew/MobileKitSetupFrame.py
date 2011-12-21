@@ -35,7 +35,7 @@ class SysAlarmListCtrl(wx.ListCtrl):
                                                      wx.BITMAP_TYPE_ICO))
         self.IconAlarmSet = myIL.Add(wx.Bitmap(thisDir + '/LEDred2.ico',
                                                      wx.BITMAP_TYPE_ICO))
-        iconWidth = 37
+        iconWidth = 35
         self.InsertColumn(0,"Icon",width=iconWidth)
         sx,sy = self.GetSize()
         self.InsertColumn(1,"Name",width=sx-iconWidth)
