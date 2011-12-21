@@ -682,14 +682,11 @@ function successData(data) {
                         $('#concentrationSparkline').html("");
                     }
                     $("#concData").html("<h4>" + "Current concentration " + ch4[n-1].toFixed(3) + " ppm" + "</h4>"); 
-                    //pathCoords = path.getPath();
                     for (var i=1;i<n;i++) {
                         var clr = vmask ? colorPathFromValveMask(vmask[i]) : normal_path_color;
                         if (fit) {
                             if (fit[i] != 0) {
                                 updatePath(new google.maps.LatLng(lat[i],lon[i]),clr);
-                                // path.getPath().push(new google.maps.LatLng(lat[i],lon[i]));
-                                // pathCoords.push(new google.maps.LatLng(lat[i],lon[i]));
                                 conc_array.push(ch4[i]);
                             }
                             else {
@@ -697,12 +694,9 @@ function successData(data) {
                             }
                         } else {
                             updatePath(new google.maps.LatLng(lat[i],lon[i]),clr);
-                            // path.getPath().push(new google.maps.LatLng(lat[i],lon[i]));
-                            // pathCoords.push(new google.maps.LatLng(lat[i],lon[i]));
                             conc_array.push(ch4[i]);
                         }
                     }
-                    // path.setMap(map);
                 }
             }
         } else {

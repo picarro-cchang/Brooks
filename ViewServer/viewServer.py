@@ -99,12 +99,15 @@ class RestProxy(object):
         def dispatch(argsDict):
             url = "rest/%s" % attrName
             conn = httplib.HTTPConnection(self.host)
-            conn.request("GET","%s?%s" % (url,urllib.urlencode(argsDict)))
-            r = conn.getresponse()
-            if not r.reason == 'OK':
-                raise RestCallError("%s: %s\n%s" % (r.status,r.reason,r.read()))
-            else:
-                return json.loads(r.read()).get("result",{})
+            try:
+                conn.request("GET","%s?%s" % (url,urllib.urlencode(argsDict)))
+                r = conn.getresponse()
+                if not r.reason == 'OK':
+                    raise RestCallError("%s: %s\n%s" % (r.status,r.reason,r.read()))
+                else:
+                    return json.loads(r.read()).get("result",{})
+            finally:
+                conn.close()
         return dispatch
         
 def emptyResponse():
