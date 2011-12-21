@@ -182,7 +182,7 @@ def _getData(name,startPos=None,shift=0,varList=None):
     try:
         header = getSlice(name,0,1)[0].line.split()
         columns = [[] for i in range(len(header))]
-        if startPos is None: startPos = 1
+        if (startPos==0 or startPos is None): startPos = 1
         if startPos<0: 
             startPos -= abs(shift)
             endPos = None

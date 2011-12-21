@@ -23,7 +23,7 @@ changeIni = os.path.join(appDir,'MobileKit.ini')
 baseIni = os.path.join(appDir,'MobileKit_inactive.ini') 
 
 # configuration
-DEBUG = True
+DEBUG = False
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
@@ -98,6 +98,7 @@ class RestProxy(object):
     def __getattr__(self,attrName):
         def dispatch(argsDict):
             url = "rest/%s" % attrName
+            #print self.host, "GET","%s?%s" % (url,urllib.urlencode(argsDict))
             conn = httplib.HTTPConnection(self.host)
             try:
                 conn.request("GET","%s?%s" % (url,urllib.urlencode(argsDict)))
@@ -352,7 +353,7 @@ if __name__ == '__main__':
     configFile,options = HandleCommandSwitches()
     configFile = os.path.abspath(configFile)
     configPath = os.path.split(configFile)[0]
-    
+    #print "configFile, options = ", configFile, options
     addr = '127.0.0.1'
     if "-a" in options:
         addr = options["-a"]

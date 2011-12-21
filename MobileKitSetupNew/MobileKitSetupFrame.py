@@ -35,12 +35,13 @@ class SysAlarmListCtrl(wx.ListCtrl):
                                                      wx.BITMAP_TYPE_ICO))
         self.IconAlarmSet = myIL.Add(wx.Bitmap(thisDir + '/LEDred2.ico',
                                                      wx.BITMAP_TYPE_ICO))
-        self.InsertColumn(0,"Icon",width=40)
+        iconWidth = 37
+        self.InsertColumn(0,"Icon",width=iconWidth)
         sx,sy = self.GetSize()
-        self.InsertColumn(1,"Name",width=sx-40)
+        self.InsertColumn(1,"Name",width=sx-iconWidth)
         self.SetItemCount(numAlarms)
-        self.status = [1, 1]
-        self.statusText = ["Analyzer", "GPS"]
+        self.status = [0, 0, 0]
+        self.statusText = ["Stream", "Analyzer", "GPS"]
 
     def OnGetItemText(self,item,col):
         if col == 1:
@@ -93,7 +94,7 @@ class MobileKitSetupFrame(wx.Frame):
         self.SetMenuBar(self.frameMenubar)
         
         # System status alarms
-        self.sysAlarmView = SysAlarmListCtrl(parent=self.panel0)
+        self.sysAlarmView = SysAlarmListCtrl(parent=self.panel0, numAlarms=3)
         self.sysAlarmView.setMainForm(self)
         
         # General Settings
