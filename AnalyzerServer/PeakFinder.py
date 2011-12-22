@@ -1,5 +1,5 @@
 from collections import deque
-import glob
+import fnmatch
 import itertools
 from numpy import *
 import os
@@ -15,6 +15,15 @@ try:
     import simplejson as json
 except:
     import json
+
+def genLatestFiles(baseDir,pattern):
+    # Generate files in baseDir and its subdirectories which match pattern
+    for dirPath, dirNames, fileNames in os.walk(baseDir):
+        dirNames.sort(reverse=True)
+        fileNames.sort(reverse=True)
+        for name in fileNames:
+            if fnmatch.fnmatch(name,pattern):
+                yield os.path.join(dirPath,name)
 
 # Convert a minimal .dat file to a text file for Matlab processing
 #  The columns in the output file are distance(m), methane 
@@ -197,28 +206,31 @@ class PeakFinder(object):
                     continue
                 yield line
         
+        def getLastLog():
+            aname = self.analyzerId
+            
+            lastlog = None
+            params = {"analyzer": aname}
+            postparms = {'data': json.dumps(params)}
+            getLastLogUrl = self.url.replace("getData", "getLastLog")
+            while True:
+                try:
+                    socket.setdefaulttimeout(self.timeout)
+                    resp = urllib2.urlopen(getLastLogUrl, data=urllib.urlencode(postparms))
+                    rtn_data = resp.read()
+                except:
+                    time.sleep(2)
+                    continue
+                
+                rslt = json.loads(rtn_data)
+                if "result" in rslt:
+                    if "lastLog" in rslt["result"]:
+                        lastlog = rslt["result"]["lastLog"]
+                        
+                return lastlog
+            
         def followLastUserLogDb():
             aname = self.analyzerId
-            def getLastLog():
-                lastlog = None
-                params = {"analyzer": aname}
-                postparms = {'data': json.dumps(params)}
-                getLastLogUrl = self.url.replace("getData", "getLastLog")
-                while True:
-                    try:
-                        socket.setdefaulttimeout(self.timeout)
-                        resp = urllib2.urlopen(getLastLogUrl, data=urllib.urlencode(postparms))
-                        rtn_data = resp.read()
-                    except:
-                        time.sleep(2)
-                        continue
-                    
-                    rslt = json.loads(rtn_data)
-                    if "result" in rslt:
-                        if "lastLog" in rslt["result"]:
-                            lastlog = rslt["result"]["lastLog"]
-                            
-                    return lastlog
             
             lastlog = getLastLog()  
             if lastlog:
@@ -275,9 +287,11 @@ class PeakFinder(object):
                 if not line:
                     counter += 1
                     if counter == 10:
-                        names = sorted(glob.glob(self.userlogfiles))
-                        try:    # Stop iteration if we are not the last file
-                            if fname != names[-1]: 
+                        try:
+                            # Get last file
+                            lastName = genLatestFiles(*os.path.split(self.userlogfiles)).next()
+                            # Stop iteration if we are not the last file
+                            if fname != lastName: 
                                 fp.close()
                                 print "\r\nClosing source stream\r\n"
                                 return
@@ -613,6 +627,38 @@ class PeakFinder(object):
                 if z>=npoints: z -= npoints
                 for peak in peaks: yield peak
         
+        def pushData(peakname, doc_data):
+            print "pushData: ", peakname, doc_data
+            
+            err_rtn_str = 'ERROR: missing data:'
+            rtn = "OK"
+            if doc_data: 
+                params = {peakname: doc_data}
+            else:    
+                params = {peakname: []}
+            postparms = {'data': json.dumps(params)}
+            dataPeakAddUrl = self.url.replace("getData", "gdu/dataPeakAdd")
+            
+            tctr = 0
+            while True:
+                try:
+                    # NOTE: socket only required to set timeout parameter for the urlopen()
+                    # In Python26 and beyond we can use the timeout parameter in the urlopen()
+                    socket.setdefaulttimeout(self.timeout)
+                    resp = urllib2.urlopen(dataPeakAddUrl, data=urllib.urlencode(postparms))
+                    rtn_data = resp.read()
+                    print rtn_data
+                    if err_rtn_str in rtn_data:
+                        rslt = json.loads(rtn_data)
+                        expect_ctr = rslt['result'].replace(err_rtn_str, "").strip()
+                        break
+                    else:
+                        break
+                except Exception, e:
+                    print '\n%s\n' % e
+                    pass
+            
+            return
         
         shift = self.shift
         dx = self.dx
@@ -629,24 +675,38 @@ class PeakFinder(object):
 
         while True:
             # Getting source
-            names = sorted(glob.glob(self.userlogfiles))
-            try:
-                fname = names[-1]
-            except:
-                fname = None
-                time.sleep(self.sleep_seconds)
-                print "No files to process: sleeping for %s seconds" % self.sleep_seconds
+            if self.usedb:
+                lastlog = getLastLog()  
+                if lastlog:
+                    fname = lastlog
+                else:
+                    fname = None
+                    time.sleep(self.sleep_seconds)
+                    print "No files to process: sleeping for %s seconds" % self.sleep_seconds
+            else:
+                try:
+                    fname = genLatestFiles(*os.path.split(self.userlogfiles)).next()
+                except:
+                    fname = None
+                    time.sleep(self.sleep_seconds)
+                    print "No files to process: sleeping for %s seconds" % self.sleep_seconds
 
             if fname:
                 # initializing peak output
-                peakFile = os.path.splitext(fname)[0] + '.peaks'
-                try:
-                    handle = open(peakFile, 'wb+', 0) #open file with NO buffering
-                except:
-                    raise RuntimeError('Cannot open peak output file %s' % peakFile)
-                
-                handle.write("%-14s%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA"))
- 
+                if self.usedb:
+                    peakname = fname.replace(".dat", ".peaks")
+                    doc_hdrs = ["EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA"]
+                    doc_data = []
+                    doc_row = 0
+                else:
+                    peakFile = os.path.splitext(fname)[0] + '.peaks'
+                    try:
+                        handle = open(peakFile, 'wb+', 0) #open file with NO buffering
+                    except:
+                        raise RuntimeError('Cannot open peak output file %s' % peakFile)
+                    
+                    handle.write("%-14s%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA"))
+
                 # Make a generator which yields (distance,(long,lat,epoch_time,methane))
                 #  from the analyzer data by applying a shift to the concentration and
                 #  time data to align the rows
@@ -663,9 +723,26 @@ class PeakFinder(object):
                 filteredPeakData = ((epoch_time,dist,long,lat,methane,amplitude,sigma) for epoch_time,dist,long,lat,methane,valves,amplitude,sigma in peakData if amplitude>minAmpl)
                 content = []
                 for epoch_time,dist,long,lat,methane,amplitude,sigma in filteredPeakData:
-                    handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.4f%-14.3f\r\n" % (epoch_time,dist,long,lat,methane,amplitude,sigma))
-                    
-                handle.close()
+                    if self.usedb:
+                        doc = {}
+                        #Note: please assure that value list and doc_hdrs are in the same sequence
+                        for col, val in zip(doc_hdrs, [epoch_time,dist,long,lat,methane,amplitude,sigma]):
+                            doc[col] = float(val)
+                        
+                        doc_row += 1
+                        doc["row"] = doc_row 
+                        doc["ANALYZER"] = self.analyzerId
+   
+                        doc_data.append(doc)
+                            
+                        pushData(peakname, doc_data)
+                        doc_data = []
+                        
+                    else:
+                        handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.4f%-14.3f\r\n" % (epoch_time,dist,long,lat,methane,amplitude,sigma))
+                
+                if not self.usedb:
+                    handle.close()
 
 
 if __name__ == "__main__":
@@ -694,6 +771,7 @@ if __name__ == "__main__":
     else:
         #url='http://p3.picarro.com/pcubed/rest/getData/'
         url = 'http://10.100.2.97:8080/rest/getData/'
+        #url = 'http://192.168.2.104:8080/rest/getData/'
         #url = 'http://10.0.1.13:8080/rest/getData/'
         
     if 3 < len(sys.argv):

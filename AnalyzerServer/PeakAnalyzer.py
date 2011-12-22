@@ -1,5 +1,5 @@
 from collections import deque
-import glob
+import fnmatch
 import itertools
 from numpy import *
 import scipy.stats
@@ -16,6 +16,15 @@ try:
     import simplejson as json
 except:
     import json
+
+def genLatestFiles(baseDir,pattern):
+    # Generate files in baseDir and its subdirectories which match pattern
+    for dirPath, dirNames, fileNames in os.walk(baseDir):
+        dirNames.sort(reverse=True)
+        fileNames.sort(reverse=True)
+        for name in fileNames:
+            if fnmatch.fnmatch(name,pattern):
+                yield os.path.join(dirPath,name)
     
 # Peak analyzer carries out Keeling plot analysis of peaks found by the isotopic methane
 #  analyzer
@@ -190,29 +199,30 @@ class PeakAnalyzer(object):
                     continue
                 yield line
         
-        def followLastUserLogDb():
+        def getLastLog():
             aname = self.analyzerId
-            def getLastLog():
-                lastlog = None
-                params = {"analyzer": aname}
-                postparms = {'data': json.dumps(params)}
-                getLastLogUrl = self.url.replace("getData", "getLastLog")
-                while True:
-                    try:
-                        socket.setdefaulttimeout(self.timeout)
-                        resp = urllib2.urlopen(getLastLogUrl, data=urllib.urlencode(postparms))
-                        rtn_data = resp.read()
-                    except:
-                        time.sleep(2)
-                        continue
-                    
-                    rslt = json.loads(rtn_data)
-                    if "result" in rslt:
-                        if "lastLog" in rslt["result"]:
-                            lastlog = rslt["result"]["lastLog"]
-                            
-                    return lastlog
             
+            lastlog = None
+            params = {"analyzer": aname}
+            postparms = {'data': json.dumps(params)}
+            getLastLogUrl = self.url.replace("getData", "getLastLog")
+            while True:
+                try:
+                    socket.setdefaulttimeout(self.timeout)
+                    resp = urllib2.urlopen(getLastLogUrl, data=urllib.urlencode(postparms))
+                    rtn_data = resp.read()
+                except:
+                    time.sleep(2)
+                    continue
+                
+                rslt = json.loads(rtn_data)
+                if "result" in rslt:
+                    if "lastLog" in rslt["result"]:
+                        lastlog = rslt["result"]["lastLog"]
+                        
+                return lastlog
+        
+        def followLastUserLogDb():
             lastlog = getLastLog()  
             if lastlog:
                 lastPos = 0
@@ -267,9 +277,11 @@ class PeakAnalyzer(object):
                 if not line:
                     counter += 1
                     if counter == 10:
-                        names = sorted(glob.glob(self.userlogfiles))
-                        try:    # Stop iteration if we are not the last file
-                            if fname != names[-1]: 
+                        try:
+                            # Get last file
+                            lastName = genLatestFiles(*os.path.split(self.userlogfiles)).next()
+                            # Stop iteration if we are not the last file
+                            if fname != lastName: 
                                 fp.close()
                                 print "\r\nClosing source stream\r\n"
                                 return
@@ -290,14 +302,17 @@ class PeakAnalyzer(object):
             lat_ref, long_ref = None, None
             # Determine if there are extra data in the file
             for line in source:
-                if 'C13_Delta_Raw' not in line: yield None, None, None
+                if 'C13_Delta_Raw' not in line: 
+                    yield None, None, None
+                    break
+                
                 try:
                     entry = {}
                     for  h in line.keys():
                         try:
-                            entry[h] = float(line[h])
+                            entry["%s" % h] = float(line[h])
                         except:
-                            entry[h] = NaN
+                            entry["%s" % h] = NaN
                     long, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
                     if lat_ref == None or long_ref == None:
                         long_ref, lat_ref = lat, long
@@ -327,38 +342,40 @@ class PeakAnalyzer(object):
             line = source.next()
             atoms = fixed_width(line,26)
             headings = [a.replace(" ","_") for a in atoms]
-            if 'C13_Delta_Raw' not in headings: yield None,None,None
-            for line in source:
-                try:
-                    entry = {}
-                    atoms = fixed_width(line,26)
-                    if not headings:
-                        headings = [a.replace(" ","_") for a in atoms]
-                    else:
-                        for h,a in zip(headings,atoms):
-                            try:
-                                entry[h] = float(a)
-                            except:
-                                entry[h] = NaN
-                        long, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
-                        if lat_ref == None or long_ref == None:
-                            long_ref, lat_ref = lat, long
-                        x,y = toXY(lat,long,lat_ref,long_ref)
-                        if dist is None:
-                            jump = 0.0
-                            dist = 0.0
+            if 'C13_Delta_Raw' not in headings: 
+                yield None,None,None
+            else:
+                for line in source:
+                    try:
+                        entry = {}
+                        atoms = fixed_width(line,26)
+                        if not headings:
+                            headings = [a.replace(" ","_") for a in atoms]
                         else:
-                            jump = sqrt((x-x0)**2 + (y-y0)**2)
-                            dist += jump
-                        x0, y0 = x, y
-                        if jump < JUMP_MAX:
-                            yield dist,PosData(long,lat),RestData(entry['EPOCH_TIME'],entry['ValveMask'],entry['CH4'],entry['C13_Delta_Raw'])
-                        else:
-                            yield None,None,None    # Indicate that dist is bad, and we must restart
-                            dist = None
-                            lat_ref, long_ref = None, None
-                except:
-                    print traceback.format_exc()
+                            for h,a in zip(headings,atoms):
+                                try:
+                                    entry[h] = float(a)
+                                except:
+                                    entry[h] = NaN
+                            long, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
+                            if lat_ref == None or long_ref == None:
+                                long_ref, lat_ref = lat, long
+                            x,y = toXY(lat,long,lat_ref,long_ref)
+                            if dist is None:
+                                jump = 0.0
+                                dist = 0.0
+                            else:
+                                jump = sqrt((x-x0)**2 + (y-y0)**2)
+                                dist += jump
+                            x0, y0 = x, y
+                            if jump < JUMP_MAX:
+                                yield dist,PosData(long,lat),RestData(entry['EPOCH_TIME'],entry['ValveMask'],entry['CH4'],entry['C13_Delta_Raw'])
+                            else:
+                                yield None,None,None    # Indicate that dist is bad, and we must restart
+                                dist = None
+                                lat_ref, long_ref = None, None
+                    except:
+                        print traceback.format_exc()
                     
         def shifter(source,shift=0):
             """ Applies the specified shift (in samples) to the output of
@@ -466,27 +483,74 @@ class PeakAnalyzer(object):
                             tempStore.clear()
                 lastCollecting = collectingNow
 
+        def pushData(peakname, doc_data):
+            print "pushData: ", peakname, doc_data
+            
+            err_rtn_str = 'ERROR: missing data:'
+            rtn = "OK"
+            if doc_data: 
+                params = {peakname: doc_data}
+            else:    
+                params = {peakname: []}
+            postparms = {'data': json.dumps(params)}
+            dataPeakAddUrl = self.url.replace("getData", "gdu/dataAnalysisAdd")
+            
+            tctr = 0
+            while True:
+                try:
+                    # NOTE: socket only required to set timeout parameter for the urlopen()
+                    # In Python26 and beyond we can use the timeout parameter in the urlopen()
+                    socket.setdefaulttimeout(self.timeout)
+                    resp = urllib2.urlopen(dataPeakAddUrl, data=urllib.urlencode(postparms))
+                    rtn_data = resp.read()
+                    print rtn_data
+                    if err_rtn_str in rtn_data:
+                        rslt = json.loads(rtn_data)
+                        expect_ctr = rslt['result'].replace(err_rtn_str, "").strip()
+                        break
+                    else:
+                        break
+                except Exception, e:
+                    print '\n%s\n' % e
+                    pass
+            
+            return
+        
         shift = self.shift
         
         while True:
             # Getting source
-            names = sorted(glob.glob(self.userlogfiles))
-            try:
-                fname = names[-1]
-            except:
-                fname = None
-                time.sleep(self.sleep_seconds)
-                print "No files to process: sleeping for %s seconds" % self.sleep_seconds
+            if self.usedb:
+                lastlog = getLastLog()  
+                if lastlog:
+                    fname = lastlog
+                else:
+                    fname = None
+                    time.sleep(self.sleep_seconds)
+                    print "No files to process: sleeping for %s seconds" % self.sleep_seconds
+            else:
+                try:
+                    fname = genLatestFiles(*os.path.split(self.userlogfiles)).next()
+                except:
+                    fname = None
+                    time.sleep(self.sleep_seconds)
+                    print "No files to process: sleeping for %s seconds" % self.sleep_seconds
 
             if fname:
                 # initializing peak output
-                analysisFile = os.path.splitext(fname)[0] + '.analysis'
-                try:
-                    handle = open(analysisFile, 'wb+', 0) #open file with NO buffering
-                except:
-                    raise RuntimeError('Cannot open analysis output file %s' % analysisFile)
-                
-                handle.write("%-14s%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY"))
+                if self.usedb:
+                    peakname = fname.replace(".dat", ".peaks")
+                    doc_hdrs = ["EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY"]
+                    doc_data = []
+                    doc_row = 0
+                else:
+                    analysisFile = os.path.splitext(fname)[0] + '.analysis'
+                    try:
+                        handle = open(analysisFile, 'wb+', 0) #open file with NO buffering
+                    except:
+                        raise RuntimeError('Cannot open analysis output file %s' % analysisFile)
+                    
+                    handle.write("%-14s%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY"))
  
                 # Make a generator which yields (distance,(long,lat,valve_mask,epoch_time,methane,delta)))
                 #  from the analyzer data by applying a shift to the concentration and
@@ -499,9 +563,26 @@ class PeakAnalyzer(object):
                     alignedData = combiner(shifter(analyzerData(source),shift))
                 
                 for r in doKeelingAnalysis(alignedData):
-                    handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.2f%-14.2f\r\n" % (r.time,r.dist,r.long,r.lat,r.conc,r.delta,r.uncertainty))
+                    if self.usedb:
+                        doc = {}
+                        #Note: please assure that value list and doc_hdrs are in the same sequence
+                        for col, val in zip(doc_hdrs, [r.time,r.dist,r.long,r.lat,r.conc,r.delta,r.uncertainty]):
+                            doc[col] = float(val)
+                        
+                        doc_row += 1
+                        doc["row"] = doc_row 
+                        doc["ANALYZER"] = self.analyzerId
+   
+                        doc_data.append(doc)
+                            
+                        pushData(peakname, doc_data)
+                        doc_data = []
+                        
+                    else:
+                        handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.2f%-14.2f\r\n" % (r.time,r.dist,r.long,r.lat,r.conc,r.delta,r.uncertainty))
                     
-                handle.close()
+                if not self.usedb:
+                    handle.close()
 
 if __name__ == "__main__":
 
@@ -529,6 +610,7 @@ if __name__ == "__main__":
     else:
         #url='http://p3.picarro.com/pcubed/rest/getData/'
         url = 'http://10.100.2.97:8080/rest/getData/'
+        #url = 'http://192.168.2.104:8080/rest/getData/'
         #url = 'http://10.0.1.13:8080/rest/getData/'
         
     if 3 < len(sys.argv):
