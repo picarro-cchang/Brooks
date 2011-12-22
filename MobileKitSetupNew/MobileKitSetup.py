@@ -116,9 +116,10 @@ class MobileKitSetup(MobileKitSetupFrame):
         
     def _updateStatus(self):
         while True:
-            print "Update status..."
             try:
-                result = self.restService.getData({'startPos':-1,'varList':'["INST_STATUS","GPS_FIT"]'})
+                varList = ["INST_STATUS","GPS_FIT"]
+                varList += self.concList
+                result = self.restService.getData({'startPos':-1,'varList':json.dumps(varList)})
                 if "error" in result:
                     if self.restErrorCount < MAX_REST_ERROR_COUNT:
                         self.restErrorCount += 1
@@ -134,6 +135,13 @@ class MobileKitSetup(MobileKitSetupFrame):
                         self.sysAlarmView.setStatus(2, 0)
                     else:
                         self.sysAlarmView.setStatus(2, 1)
+                    for i in range(len(self.concList)):
+                        conc = self.concList[i]
+                        if conc in result:
+                            concValue = float(result[conc][-1])
+                        else:
+                            concValue = 0.0
+                        self.textCtrlConc[i].SetValue("%.3f"%concValue)
             except Exception, err:
                 print "%r" % err
                 if self.restErrorCount < MAX_REST_ERROR_COUNT:
@@ -144,7 +152,7 @@ class MobileKitSetup(MobileKitSetupFrame):
                 for i in range(3):
                     self.sysAlarmView.setStatus(i, 0)
             self.sysAlarmView.refreshList()
-            time.sleep(5.0)
+            time.sleep(2.0)
             
     def setInit(self):
         currentPid = self.co.getint("Server", "pid")

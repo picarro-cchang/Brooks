@@ -11,6 +11,7 @@ PANEL0_COLOR = "#A0FFFF"
 PANEL1_COLOR = "#E0FFFF"
 PANEL2_COLOR = "#BDEDFF"
 PANEL3_COLOR = "#64E986"
+CONC_COLOR = "#BDEDFF"
         
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -100,6 +101,7 @@ class MobileKitSetupFrame(wx.Frame):
         # General Settings
         titleFont = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, "")
         labelFont = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "")
+        concFont = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, "")
         buttonSize = (150, 25)
         buttonColor = wx.Colour(237, 228, 199)
         comboBoxSize = (100, 20)
@@ -115,7 +117,8 @@ class MobileKitSetupFrame(wx.Frame):
         self.labelTitle2 = wx.StaticText(self.panel2, -1, "Graphical Properties", style=wx.ALIGN_CENTRE)
         self.labelTitle2.SetFont(titleFont)
 
-        self.labelConc = []
+        self.labelName = []
+        self.labelDisplay = []
         self.labelBaseline = []
         self.labelScaling = []
         self.labelLineColor = []
@@ -125,7 +128,10 @@ class MobileKitSetupFrame(wx.Frame):
         for conc in self.concList:
             label = wx.StaticText(self.panel2, -1, conc, style=wx.ALIGN_CENTRE)
             label.SetFont(titleFont)
-            self.labelConc.append(label)
+            self.labelName.append(label)
+            label = wx.StaticText(self.panel2, -1, "Visible", style=wx.ALIGN_CENTRE)
+            label.SetFont(labelFont)
+            self.labelDisplay.append(label)
             label = wx.StaticText(self.panel2, -1, "Baseline", style=wx.ALIGN_CENTRE)
             label.SetFont(labelFont)
             self.labelBaseline.append(label)
@@ -154,6 +160,7 @@ class MobileKitSetupFrame(wx.Frame):
         self.buttonLaunchServer.SetFont(labelFont)
 
         self.comboBoxOnOff = []
+        self.textCtrlConc = []
         self.textCtrlBaseline = []
         self.textCtrlScaling = []
         self.cselLineColor = []
@@ -162,6 +169,10 @@ class MobileKitSetupFrame(wx.Frame):
         self.comboBoxPolyOpacity = []
         for conc in self.concList:
             self.comboBoxOnOff.append(wx.ComboBox(self.panel2, -1, value = "ON", choices = ["ON", "OFF"], size=comboBoxSize, style = wx.CB_READONLY|wx.CB_DROPDOWN))
+            textCtrlConc = wx.TextCtrl(self.panel2, -1, "0.0", size=comboBoxSize, style=wx.TE_READONLY|wx.BORDER_NONE)
+            textCtrlConc.SetBackgroundColour(CONC_COLOR)
+            textCtrlConc.SetFont(titleFont)
+            self.textCtrlConc.append(textCtrlConc)
             self.textCtrlBaseline.append(wx.TextCtrl(self.panel2, -1, "1.5", size=comboBoxSize))
             self.textCtrlScaling.append(wx.TextCtrl(self.panel2, -1, "100", size=comboBoxSize))
             self.cselLineColor.append(csel.ColourSelect(self.panel2, -1, "", (255, 0, 0), size = comboBoxSize))
@@ -210,10 +221,10 @@ class MobileKitSetupFrame(wx.Frame):
         sizer_3.Add(self.labelTitle2, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
         
         for i in range(len(self.concList)):
-            grid_sizer_1.Add(self.labelConc[i], 0, wx.ALL|wx.ALIGN_LEFT, 3)
+            grid_sizer_1.Add(self.labelName[i], 0, wx.ALL|wx.ALIGN_LEFT, 3)
+            grid_sizer_1.Add(self.textCtrlConc[i], 0, wx.ALL, 3)
+            grid_sizer_1.Add(self.labelDisplay[i], 0, wx.ALL|wx.ALIGN_LEFT, 3)
             grid_sizer_1.Add(self.comboBoxOnOff[i], 0, wx.ALL, 3)
-            grid_sizer_1.Add((0,0), 0, wx.ALL, 3)
-            grid_sizer_1.Add((0,0), 0, wx.ALL, 3)
             grid_sizer_1.Add(self.labelBaseline[i], 0, wx.ALL|wx.ALIGN_LEFT, 3)
             grid_sizer_1.Add(self.textCtrlBaseline[i], 0, wx.ALL, 3)
             grid_sizer_1.Add(self.labelScaling[i], 0, wx.ALL, 3)
