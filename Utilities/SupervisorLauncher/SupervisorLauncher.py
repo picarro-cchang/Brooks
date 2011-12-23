@@ -42,11 +42,16 @@ AppPath = os.path.abspath(AppPath)
     
 class SupervisorLauncher(SupervisorLauncherFrame):
     def __init__(self, configFile, autoLaunch, closeValves, killAll, *args, **kwds):
+        self.mode = None
+        if 'mode' in kwds:
+            self.mode = kwds['mode']
+            del kwds['mode']
         self.co = ConfigObj(configFile)
         try:
             self.launchType = self.co["Main"]["Type"].strip().lower()
         except:
             self.launchType = "exe"
+        self.explicitModeLaunch = False
         self.forcedLaunch = False
         typeChoices = self.co.keys()
         typeChoices.remove("Main")
@@ -70,12 +75,24 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         self.Bind(wx.EVT_BUTTON, self.onLaunch, self.buttonLaunch)
         self.closeValves = closeValves
         self.killAll = killAll
-        if autoLaunch:
+        if self.mode is not None:
+            self.assignType(self.mode)
+            self.runExplicitModeLaunch()
+            time.sleep(3)
+            self.Destroy()
+        elif autoLaunch:
             self.supervisorIni = self.startupSupervisorIni
             self.runForcedLaunch()
             time.sleep(3)
             self.Destroy()
-        
+    
+    def initMode(self):
+        ini = ConfigObj(self.startupSupervisorIni)
+        try:
+            self.comboBoxSelect.SetValue(ini['ModeSwitcher']['Mode'])
+        except:
+            pass
+            
     def onSelect(self, event):
         self.supervisorType = self.comboBoxSelect.GetValue()
         self.supervisorIni = os.path.join(self.supervisorIniDir, self.co[self.supervisorType]["SupervisorIniFile"].strip())
@@ -83,7 +100,11 @@ class SupervisorLauncher(SupervisorLauncherFrame):
     def assignType(self, supervisorType):
         self.supervisorType = supervisorType
         self.supervisorIni = os.path.join(self.supervisorIniDir, self.co[self.supervisorType]["SupervisorIniFile"].strip())
-        
+    
+    def runExplicitModeLaunch(self):
+        self.explicitModeLaunch = True
+        self.onLaunch(None)
+    
     def runForcedLaunch(self):
         self.forcedLaunch = True
         self.onLaunch(None)
@@ -93,7 +114,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         try:
             if CRDS_Supervisor.CmdFIFO.PingDispatcher() == "Ping OK":
                 pid = CRDS_Supervisor.CmdFIFO.GetProcessID()
-                if self.forcedLaunch:
+                if self.forcedLaunch or self.explicitModeLaunch:
                     restart = True
                 else:
                     d = wx.MessageDialog(None,"Picarro CRDS analyzer is currently running.\nDo you want to re-start the analyzer now?\n\nSelect \"Yes\" to re-start the analyzer with the selected measurement mode.\nSelect \"No\" to cancel this action and keep running the current measurement mode.", "Re-start CRDS Analyzer Confirmation", \
@@ -131,6 +152,11 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         if (not self.forcedLaunch) and (self.launchType == "exe"):
             try:
                 shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
+                startupIni = ConfigObj(self.startupSupervisorIni)
+                startupIni['ModeSwitcher'] = {}
+                startupIni['ModeSwitcher']['Mode'] = self.supervisorType
+                startupIni.write_empty_values = True
+                startupIni.write()
             except:
                 pass
                 
@@ -190,6 +216,7 @@ Where the options can be a combination of the following:
 -a         : Automatically launch the last selected supervisor ini without showing the "mode switcher" window
 -k         : Kill all applications including Driver when switching modes
 -v         : Close all solenoid valves and disable inlet/outlet valves during mode switching
+-m         : Launch the specified supervisor mode (use quotes if the mode contains spaces)
 
 """
 
@@ -200,7 +227,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:avk", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "hc:avkm:", ["help"])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -224,22 +251,30 @@ def HandleCommandSwitches():
     autoLaunch = "-a" in options
     closeValves = "-v" in options
     killAll = "-k" in options
+    modeSpecified = options.get("-m",None)
     
-    return (configFile, autoLaunch, closeValves, killAll)
+    return (configFile, autoLaunch, closeValves, killAll, modeSpecified)
     
 if __name__ == "__main__":
-    (configFile, autoLaunch, closeValves, killAll) = HandleCommandSwitches()
+    (configFile, autoLaunch, closeValves, killAll, modeSpecified) = HandleCommandSwitches()
     supervisorLauncherApp = SingleInstance("PicarroSupervisorLauncher")
-    if supervisorLauncherApp.alreadyrunning() and not autoLaunch:
+    
+    if supervisorLauncherApp.alreadyrunning() and not (autoLaunch or modeSpecified!=None):
         try:
             handle = win32gui.FindWindowEx(0, 0, None, "Picarro Mode Switcher")
             win32gui.SetForegroundWindow(handle)
         except:
             pass
     else:
+        try:
+            handle = win32gui.FindWindowEx(0, 0, None, "Picarro Mode Switcher")
+            win32gui.CloseWindow(handle)
+        except:
+            pass
         app = wx.PySimpleApp()
         wx.InitAllImageHandlers()
-        frame = SupervisorLauncher(configFile, autoLaunch, closeValves, killAll, None, -1, "")
+        frame = SupervisorLauncher(configFile, autoLaunch, closeValves, killAll, None, -1, "", mode=modeSpecified)
+        frame.initMode()
         app.SetTopWindow(frame)
         frame.Show()
         app.MainLoop()
