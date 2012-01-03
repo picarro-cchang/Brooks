@@ -312,7 +312,7 @@ class DataManager(object):
                 self.maketimetuple = time.localtime
             else:
                 self.maketimetuple = time.gmtime
-            self.fitterResequencerLength = cp.getint(_MAIN_CONFIG_SECTION, "FitterResequencerLength", 5)
+            self.fitterResequencerLength = cp.getint(_MAIN_CONFIG_SECTION, "FitterResequencerLength", 1)
             
             # Get INI for peripheral interface
             try:

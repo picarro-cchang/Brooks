@@ -1841,9 +1841,9 @@ class Analysis(object):
         class1, class2, key1, key2, extra = classifyKeyTuple(key)
         if class1 == 3 and class2 == 0: # Handle attributes of the analysis object
             if key1 == "std_dev_res":
-                if len(self.res)>0:
+                try:
                     return sqrt(sum(self.res**2)/len(self.res))
-                else:
+                except:
                     return 0
             elif hasattr(self,key1):
                 return getattr(self,key1)

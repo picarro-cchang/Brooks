@@ -19,7 +19,7 @@ import win32gui
 import shutil
 from Host.Common import CmdFIFO
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.FluxSwitcher import FluxSwitcher
 from Host.Utilities.SupervisorLauncher.SupervisorLauncher import SupervisorLauncher
@@ -114,11 +114,21 @@ class FluxScheduler(FluxSchedulerFrame):
         self.buttonLaunch1.Enable(False)
         self.buttonLaunch2.Enable(False)
         self._disableSelects()
-        runSwitcherThread = threading.Thread(target = self._runSwitcher)
-        runSwitcherThread.setDaemon(True)
-        runSwitcherThread.start()
-      
+        self._runSwitcher()
+        #runSwitcherThread = threading.Thread(target = self._runSwitcher)
+        #runSwitcherThread.setDaemon(True)
+        #runSwitcherThread.start()
+
+    def getCurrentFlowMode(self):
+        DriverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                     "FluxScheduler",
+                      IsDontCareConnection = False)
+        solValves = DriverRpc.rdDasReg("VALVE_CNTRL_SOLENOID_VALVES_REGISTER")
+        self.currentFlowMode = "High" if (solValves and 0x4) else "Low"
+    
     def _runSwitcher(self):
+        self.getCurrentFlowMode()
+        print "runSwitcher: ",self.currentFlowMode
         type = self.comboBoxSelect2.GetValue()
         if type in FLUX_TYPES:
             if self.currentFlowMode != "High":
@@ -146,6 +156,7 @@ class FluxScheduler(FluxSchedulerFrame):
         self._enableSelects()
         
     def _runScheduler(self):
+        self.getCurrentFlowMode()
         idx = 0
         numModes = len(self.dwellList)
         if numModes > 0:

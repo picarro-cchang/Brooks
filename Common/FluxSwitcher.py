@@ -48,9 +48,21 @@ class FluxSwitcher(object):
         self.supervisorIni = os.path.join(self.supervisorIniDir, self.co[type]["SupervisorIni"].strip())
             
     def launch(self):
-        CRDS_MeasSys.Mode_Set(self.mode)
+        for tries in range(5):
+            try:
+                print "Calling MeasSys.Mode_Set %s" % self.mode
+                CRDS_MeasSys.Mode_Set(self.mode)
+                break
+            except:
+                time.sleep(2.0)
         time.sleep(5)
-        CRDS_DataManager.Mode_Set(self.mode)
+        for tries in range(5):
+            try:
+                print "Calling DataManager.Mode_Set %s" % self.mode
+                CRDS_DataManager.Mode_Set(self.mode)
+                break
+            except:
+                time.sleep(2.0)
         os.system("C:/WINDOWS/system32/taskkill.exe /IM QuickGui.exe /F")
         time.sleep(.1)
         launchQuickGuiThread = threading.Thread(target = self._restartQuickGui)
