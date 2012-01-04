@@ -86,6 +86,7 @@ sys.path.append("Utilities/ReadMemUsage")
 sys.path.append("Utilities/PeriphModeSwitcher")
 sys.path.append("Utilities/RecipeEditor")
 sys.path.append("Utilities/BackpackServer")
+sys.path.append("Utilities/ConfigManager")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -206,7 +207,7 @@ supervisorLauncher = Target(description = "SupervisorLauncher", # used for the v
                     ##    icon_resources = [(1, "icon.ico")],
                     dest_base = "SupervisorLauncher"
                     )
-                    
+
 # End of special controller setup stuff (except to use controller below)
 ################################################################
 
@@ -344,6 +345,7 @@ setup(version = "1.0",
                  "Utilities/ReadGPSWS/ReadGPSWS.py",
                  "Utilities/PeriphModeSwitcher/PeriphModeSwitcher.py",
                  "Utilities/RecipeEditor/RecipeEditor.py",
+                 "Utilities/ConfigManager/ConfigManager.py",
                  ],
                  
       data_files = data_files
