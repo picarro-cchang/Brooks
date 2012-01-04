@@ -92,7 +92,8 @@ class SupervisorLauncher(SupervisorLauncherFrame):
             self.comboBoxSelect.SetValue(ini['ModeSwitcher']['Mode'])
         except:
             pass
-            
+        self.assignType(self.comboBoxSelect.GetValue())
+        
     def onSelect(self, event):
         self.supervisorType = self.comboBoxSelect.GetValue()
         self.supervisorIni = os.path.join(self.supervisorIniDir, self.co[self.supervisorType]["SupervisorIniFile"].strip())
