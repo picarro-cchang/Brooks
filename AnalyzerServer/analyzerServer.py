@@ -267,7 +267,26 @@ def getDataEx(params):
     result['filename'] = os.path.basename(name)
     result['lastPos'] = lastPos
     return result
+   
+@handler.register
+@rpcWrapper
+def getPos():
+    return getPosEx()
     
+@app.route('/rest/getPos')
+def rest_getPos():
+    result = getPosEx()
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+    
+def getPosEx():
+    result = getDataEx({'startPos':-2,'varList':'["GPS_ABS_LONG","GPS_ABS_LAT"]'})
+    long = result['GPS_ABS_LONG'][-1]
+    lat = result['GPS_ABS_LAT'][-1]
+    return {'result':dict(GPS_ABS_LONG=long,GPS_ABS_LAT=lat)}
+        
 @handler.register
 @rpcWrapper
 def getPeaks(params):
