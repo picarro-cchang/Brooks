@@ -13,14 +13,25 @@ import shutil
 import subprocess
 import psutil
 import win32gui
+import threading
+import time
+import httplib
+import urllib
+import traceback
+import socket
+import simplejson as json
 from CustomConfigObj import CustomConfigObj
 from SingleInstance import SingleInstance
 from MobileKitSetupFrame import MobileKitSetupFrame
 
 DEFAULT_CONFIG_NAME = "MobileKitSetup.ini"
+MAX_REST_ERROR_COUNT = 5
 
 OPACITY_DICT = {"25%":"3F", "50%":"7F", "75%":"BF", "100%":"FF"}
 OPACITY_LIST = ["25%", "50%", "75%", "100%"]
+
+TIMEOUT = 5.0
+socket.setdefaulttimeout(TIMEOUT)
 
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -31,10 +42,41 @@ AppPath = os.path.abspath(AppPath)
 
 def getPidList():
     return [p.pid for p in psutil.get_process_list()]
+   
+class RestCallError(Exception):
+    pass
+
+class RestCallTimeout(Exception):
+    pass
     
+class RestProxy(object):
+    # Proxy to make a rest call to a server
+    def __init__(self, host):
+        self.host = host
+    # Attributes are mapped to a function which performs
+    #  a GET request to host/rest/attrName
+    def __getattr__(self,attrName):
+        def dispatch(argsDict):
+            url = "rest/%s" % attrName
+            #print self.host, "GET","%s?%s" % (url,urllib.urlencode(argsDict))
+            conn = httplib.HTTPConnection(self.host)
+            try:
+                conn.request("GET","%s?%s" % (url,urllib.urlencode(argsDict)))
+                r = conn.getresponse()
+                if not r.reason == 'OK':
+                    raise RestCallError("%s: %s\n%s" % (r.status,r.reason,r.read()))
+                else:
+                    return json.loads(r.read()).get("result",{})
+            except socket.timeout:
+                raise RestCallTimeout(traceback.format_exc())
+            finally:
+                conn.close()
+        return dispatch
+   
 class MobileKitSetup(MobileKitSetupFrame):
     def __init__(self, configFile, *args, **kwds):
         self.co = CustomConfigObj(configFile)
+        self.setupIniFile = os.path.abspath(configFile)
         self.activeIniFile = self.co.get("Main", "activeIniPath")
         self.inactiveIniFile = self.co.get("Main", "inactiveIniPath")
         if os.path.isfile(self.activeIniFile):
@@ -59,7 +101,59 @@ class MobileKitSetup(MobileKitSetupFrame):
 
         self.bindEvents()
         self.setInit()
+        self.restErrorCount = 0
         
+        currentPid = self.co.getint("Server", "pid")
+        if currentPid in getPidList():
+            ipAddr = self.ipCtrl.GetValue()
+            cleanIpAddr = ".".join([a.strip() for a in ipAddr.split(".")])
+            self.restService = RestProxy("%s:5000" % (cleanIpAddr,))
+        else:
+            self.restService = None
+        statusThread = threading.Thread(target = self._updateStatus)
+        statusThread.setDaemon(True)
+        statusThread.start()
+        
+    def _updateStatus(self):
+        while True:
+            try:
+                varList = ["INST_STATUS","GPS_FIT"]
+                varList += self.concList
+                result = self.restService.getData({'startPos':-1,'varList':json.dumps(varList)})
+                if "error" in result:
+                    if self.restErrorCount < MAX_REST_ERROR_COUNT:
+                        self.restErrorCount += 1
+                else:
+                    self.restErrorCount = 0
+                    instStatus = int(result["INST_STATUS"][-1])
+                    gpsFit = int(result["GPS_FIT"][-1])
+                    if instStatus == 963:
+                        self.sysAlarmView.setStatus(1, 1)
+                    else:
+                        self.sysAlarmView.setStatus(1, 0)
+                    if gpsFit == 0:
+                        self.sysAlarmView.setStatus(2, 0)
+                    else:
+                        self.sysAlarmView.setStatus(2, 1)
+                    for i in range(len(self.concList)):
+                        conc = self.concList[i]
+                        if conc in result:
+                            concValue = float(result[conc][-1])
+                        else:
+                            concValue = 0.0
+                        self.textCtrlConc[i].SetValue("%.3f"%concValue)
+            except Exception, err:
+                print "%r" % err
+                if self.restErrorCount < MAX_REST_ERROR_COUNT:
+                    self.restErrorCount += 1
+            if self.restErrorCount < MAX_REST_ERROR_COUNT:
+                self.sysAlarmView.setStatus(0, 1)
+            else:
+                for i in range(3):
+                    self.sysAlarmView.setStatus(i, 0)
+            self.sysAlarmView.refreshList()
+            time.sleep(2.0)
+            
     def setInit(self):
         currentPid = self.co.getint("Server", "pid")
         if currentPid in getPidList():
@@ -151,17 +245,30 @@ class MobileKitSetup(MobileKitSetupFrame):
             self.ipCtrl.Enable(True)
         else:
             ipAddr = self.ipCtrl.GetValue()
-            self.co.set("Server", "ipAddr", ipAddr)
             serverCode = self.co.get("Server", "serverCode", "C:/Picarro/G2000/AnalyzerViewer/viewServer.py")
             cleanIpAddr = ".".join([a.strip() for a in ipAddr.split(".")])
             print cleanIpAddr
             self.onApplyButton(None)
-            proc = psutil.Popen(["python.exe", serverCode, "-a", cleanIpAddr])
-            self.co.set("Server", "pid", proc.pid)
+            
+            launchThread = threading.Thread(target = self._launchServer, args = (ipAddr, serverCode, cleanIpAddr))
+            launchThread.setDaemon(True)
+            launchThread.start()
+            
             self.buttonLaunchServer.SetLabel("Stop Mobile Kit Server")
             self.ipCtrl.Enable(False)
+            # Establish a new connection
+            self.restService = RestProxy("%s:5000" % (cleanIpAddr,))
         self.co.write()
-            
+           
+    def _launchServer(self, ipAddr, serverCode, cleanIpAddr):
+        self.co.set("Server", "ipAddr", ipAddr)
+        if os.path.basename(serverCode).split(".")[-1] == "py":
+            proc = psutil.Popen(["python.exe", serverCode, "-a", cleanIpAddr, "-c", self.setupIniFile])
+        else:
+            proc = psutil.Popen([serverCode, "-a", cleanIpAddr, "-c", self.setupIniFile])
+        self.co.set("Server", "pid", proc.pid)
+        self.co.write()
+        
     def onApplyButton(self, event):
         # Graphical Properties
         for i in range(len(self.concList)):
