@@ -10,9 +10,12 @@ from numpy import *
 from collections import deque
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import TCP_PORT_PERIPH_INTRF
+from Host.Common.timestamp import getTimestamp, unixTime
+from Host.Common.MeasData import MeasData
+from Host.Common.Broadcaster import Broadcaster
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"): # we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -25,9 +28,15 @@ DEFAULT_CONFIG_NAME = "serial2socket.ini"
 
 DEFAULT_SENSOR_QUEUE_SIZE = 2000
 HOST = 'localhost'
+
+from Host.Common.EventManagerProxy import *
+EventManagerProxy_Init(APP_NAME)
      
 def linInterp(pPair, tPair, t):
     try:
+        t = float(t)
+        tPair = [float(u) for u in tPair]
+        pPair = [float(p) for p in pPair]
         dtime = tPair[1] - tPair[0]
         if dtime == 0:
             return 0.5*(pPair[0] + pPair[1])
@@ -37,9 +46,10 @@ def linInterp(pPair, tPair, t):
         return None
         
 class PeriphIntrf(object):
-    def __init__(self, configFile):
+    def __init__(self, configFile, dmBroadcaster):
         co = CustomConfigObj(configFile)
         iniAbsBasePath = os.path.split(os.path.abspath(configFile))[0]
+        self.DataBroadcaster = dmBroadcaster
         self.sensorQSize = co.getint("SETUP", "SENSORQUEUESIZE", DEFAULT_SENSOR_QUEUE_SIZE)
         self.queue = Queue.Queue(0)
         self.sock = None
@@ -47,19 +57,21 @@ class PeriphIntrf(object):
         self.sensorList = []
         self.parser = []
         self.dataLabels = []
+        self.parsers = []
         self.numChannels = len([s for s in co.list_sections() if s.startswith("PORT")])
         for p in range(self.numChannels):
             self.sensorList.append(deque())
-            paserFunc = co.get("PORT%d" % p, "SCRIPTFUNC").strip()
+            parserFunc = co.get("PORT%d" % p, "SCRIPTFUNC").strip()
             scriptPath =  os.path.join(iniAbsBasePath, co.get("SETUP", "SCRIPTPATH"))
-            scriptFilename = os.path.join(scriptPath, paserFunc) + ".py"
+            scriptFilename = os.path.join(scriptPath, parserFunc) + ".py"
             exec compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec")
-            self.parser.append(eval(paserFunc))
+            self.parser.append(eval(parserFunc))
             labelList = [i.strip() for i in co.get("PORT%d" % p, "DATALABELS").split(",")]
             if labelList[0]:
                 self.dataLabels.append(labelList)
             else:
                 self.dataLabels.append([])
+            self.parsers.append(parserFunc)
         self.sensorLock = threading.Lock()
         self._shutdownRequested = False
         self.connect()
@@ -134,6 +146,7 @@ class PeriphIntrf(object):
                     try:
                         parsedList = self.parser[port](newStr)
                         if parsedList:
+                            self.sendOut(port,ts,parsedList)
                             self.sensorList[port].append((ts, parsedList))
                             if len(self.sensorList[port]) > self.sensorQSize:
                                 self.sensorList[port].popleft()
@@ -143,6 +156,14 @@ class PeriphIntrf(object):
                         self.sensorLock.release()
                     state = "SYNC1"
 
+    def sendOut(self,port,ts,parsedList):
+        measGood = True
+        reportDict = {}
+        for label,value in zip(self.dataLabels[port],parsedList):
+            reportDict[label] = value
+        measData = MeasData(self.parsers[port], unixTime(ts), reportDict, measGood, port)
+        self.DataBroadcaster.send(measData.dumps())
+                    
     def startSocketThread(self):
         appThread = threading.Thread(target = self.getFromSocket)
         appThread.setDaemon(True)
@@ -158,22 +179,30 @@ class PeriphIntrf(object):
         for i in range(self.numChannels):
             sensorDataList.append([[], []])
         self.sensorLock.acquire()
-        localSensorList = self.sensorList[:]
-        self.sensorLock.release()
         try:
             for port in range(self.numChannels):
-                for idx in range(len(localSensorList[port])):
-                    (ts, valList) = localSensorList[port][idx]
-                    if len(valList) > 0 and ts >= requestTime:
-                        # Save a list of [[time0, time1], [(val00, val01), (val10, val11), (val20, val21), ...]]
-                        if idx > 0:
-                            lastVal = localSensorList[port][idx-1]
-                            sensorDataList[port] = [[lastVal[0], ts], zip(lastVal[1], valList)]
+                # Obtain data from which we can linearly interpolate the data at requestTime
+                # Ideally we get two time stamps which bracket the requested time. If this is
+                #  not possible because the requested time is outside the range stored in a deque,
+                #  the closest point available is returned
+                ts, savedTs = None, None
+                valList, savedValList = None, None
+                for (ts, valList) in reversed(self.sensorList[port]):
+                    if len(valList) == 0: break
+                    if ts < requestTime:
+                        if savedTs is None:
+                            sensorDataList[port] = [[ts,ts],zip(valList,valList)]
                         else:
-                            sensorDataList[port] = [[ts, ts], zip(valList, valList)]
+                            sensorDataList[port] = [[ts,savedTs],zip(valList,savedValList)]
                         break
+                    else:
+                        savedTs = ts
+                        savedValList = valList
+                else:
+                    if ts is not None: sensorDataList[port] = [[ts,ts],zip(valList,valList)]
         except Exception, err:
             print "%r" % (err,)
+        self.sensorLock.release()
         return sensorDataList
         
     def getDataByTime(self, requestTime, dataList):
@@ -236,5 +265,15 @@ def HandleCommandSwitches():
     return configFile
     
 if __name__ == "__main__":
+    from pylab import *
+    from numpy import *
     configFile = HandleCommandSwitches()
     p = PeriphIntrf(configFile)
+    while True:
+        ts = getTimestamp()
+        tVals = ts - arange(0.0,10000.0,57)
+        r = [p.getDataByTime(t,["FOO1"])[0] for t in tVals]
+        #if not(None in r):
+        #    plot(tVals-tVals[0],r,'x')
+        #    show()
+        time.sleep(1.0)

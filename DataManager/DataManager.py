@@ -1403,7 +1403,7 @@ class DataManager(object):
             self.periphIntrfCols = []
             if self.Config.periphIntrfConfig:
                 try:
-                    self.CRDS_PeriphIntrf = PeriphIntrf(self.Config.periphIntrfConfig)
+                    self.CRDS_PeriphIntrf = PeriphIntrf(self.Config.periphIntrfConfig,self.DataBroadcaster)
                     (rawDict, syncDict) = parsePeriphIntrfConfig(self.Config.periphIntrfConfig)
                     self.periphIntrfCols = rawDict["data"][:]
                 except Exception, err:

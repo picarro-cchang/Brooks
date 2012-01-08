@@ -235,6 +235,7 @@ class ConfigManager(ConfigManagerGui):
         self.notebookEditorPanels = []
         self.notebookEditorTextCtrls = []
         self.notebookEditorFileAbsPaths = []
+        self.notebookEditorFileMtimes = []
         self.treeNodesByFileAbsPath = {}
         self.whichEditor = -1
         self.finddlg = None
@@ -254,13 +255,15 @@ class ConfigManager(ConfigManagerGui):
         rootNode.findChildren()
         self.treeCtrlFiles.SetItemHasChildren(self.treeRoot,True)
         self.treeCtrlFiles.SetItemPyData(self.treeRoot,rootNode)
+        self.updateTimer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER,self.onUpdateTimer,self.updateTimer)
+        self.updateTimer.Start(milliseconds=2000)
 
     def traverse(self, traverseroot, function):
+        function(traverseroot)
         child, cookie = self.treeCtrlFiles.GetFirstChild(traverseroot)
         while child:
-            function(child)
-            if self.treeCtrlFiles.ItemHasChildren(child):
-                self.traverse(child, function)
+            self.traverse(child, function)
             child,cookie = self.treeCtrlFiles.GetNextChild(traverseroot,cookie)
         
     def removeChildren(self,treeNode):
@@ -320,8 +323,10 @@ class ConfigManager(ConfigManagerGui):
                 t.SetText(f.read())
                 t.SetSavePoint()
                 t.EmptyUndoBuffer()
+                self.notebookEditorFileMtimes.append(os.stat(selNode.absPath).st_mtime)
             except:
                 print "Cannot find file"
+                self.notebookEditorFileMtimes.append(None)
             finally:
                 if f: f.close()
         # Set the focus to the i'th tab
@@ -352,10 +357,16 @@ class ConfigManager(ConfigManagerGui):
         mod = evt.GetEventObject().GetModify()
         self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)
         
+    def onHelpSelectAll(self,evt):
+        t = self.notebookEditorTextCtrls[self.whichEditor]
+        t.SelectAll()
+        
     def onHelpFind(self,evt):
         if self.finddlg != None:
             return
         t = self.notebookEditorTextCtrls[self.whichEditor]
+        if t.GetSelectedText():
+            self.finddata.SetFindString(t.GetSelectedText())
         t.SetSelectionEnd(t.GetAnchor())
         self.finddlg = wx.FindReplaceDialog(self, self.finddata, "Find")
         self.finddlg.Show(True)
@@ -364,6 +375,8 @@ class ConfigManager(ConfigManagerGui):
         if self.finddlg != None:
             return
         t = self.notebookEditorTextCtrls[self.whichEditor]
+        if t.GetSelectedText():
+            self.finddata.SetFindString(t.GetSelectedText())
         t.SetSelectionEnd(t.GetAnchor())
         self.finddlg = wx.FindReplaceDialog(self, self.finddata, "Replace", wx.FR_REPLACEDIALOG|wx.FR_NOUPDOWN)
         self.finddlg.Show(True)
@@ -448,6 +461,34 @@ class ConfigManager(ConfigManagerGui):
         evt.GetDialog().Destroy()
         self.finddlg = None
     
+    def onReload(self,evt):
+        t = self.notebookEditorTextCtrls[self.whichEditor]
+        mod = t.GetModify()
+        p = self.notebookEditorFileAbsPaths[self.whichEditor]
+        f = None
+        try:
+            f = open(p,"r")
+            t.SetText(f.read())
+            t.SetSavePoint()
+        except:
+            t.SetText("")
+        finally:
+            if f: f.close()
+        # Update the tree to reflect the changes in the file
+        #  by collapsing all the nodes associated with this path
+        for n in self.treeNodesByFileAbsPath[p]:
+            self.treeCtrlFiles.Collapse(n)
+            # Find the new children of the updated node
+            configNode = self.treeCtrlFiles.GetItemPyData(n)
+            configNode.findChildren()
+            self.treeCtrlFiles.SetItemHasChildren(n,bool(configNode.children))
+        try:
+            self.notebookEditorFileMtimes[self.whichEditor] = os.stat(p).st_mtime
+        except:
+            self.notebookEditorFileMtimes[self.whichEditor] = None        
+        mod = t.GetModify()
+        self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)        
+    
     def onSave(self,evt):
         t = self.notebookEditorTextCtrls[self.whichEditor]
         mod = t.GetModify()
@@ -469,6 +510,10 @@ class ConfigManager(ConfigManagerGui):
                 configNode = self.treeCtrlFiles.GetItemPyData(n)
                 configNode.findChildren()
                 self.treeCtrlFiles.SetItemHasChildren(n,bool(configNode.children))
+        try:
+            self.notebookEditorFileMtimes[self.whichEditor] = os.stat(p).st_mtime
+        except:
+            self.notebookEditorFileMtimes[self.whichEditor] = None
         mod = t.GetModify()
         self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)
 
@@ -518,11 +563,15 @@ class ConfigManager(ConfigManagerGui):
             mod = t.GetModify()
             self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)
             self.frameMainStatusbar.SetStatusText(p, 2)
+            try:
+                self.notebookEditorFileMtimes[self.whichEditor] = os.stat(p).st_mtime
+            except:
+                self.notebookEditorFileMtimes[self.whichEditor] = None
         dlg.Destroy()        
     
     def onSaveAll(self,evt):
         # Iterate through files in editors and save any modified files
-        for t,p in zip(self.notebookEditorTextCtrls,self.notebookEditorFileAbsPaths):
+        for w,(t,p) in enumerate(zip(self.notebookEditorTextCtrls,self.notebookEditorFileAbsPaths)):
             mod = t.GetModify()
             if mod:
                 f = None
@@ -541,18 +590,27 @@ class ConfigManager(ConfigManagerGui):
                     configNode = self.treeCtrlFiles.GetItemPyData(n)
                     configNode.findChildren()
                     self.treeCtrlFiles.SetItemHasChildren(n,bool(configNode.children))
+            try:
+                self.notebookEditorFileMtimes[w] = os.stat(p).st_mtime
+            except:
+                self.notebookEditorFileMtimes[w] = None
+            
         t = self.notebookEditorTextCtrls[self.whichEditor]
         mod = t.GetModify()
         self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)
     
     def onKeyPressed(self,evt):
         key = evt.GetKeyCode()
-        if key == 70 and evt.ControlDown():
+        if key == 65 and evt.ControlDown():
+            self.onHelpSelectAll(evt)
+        elif key == 70 and evt.ControlDown():
             self.onHelpFind(evt)
-        if key == 72 and evt.ControlDown():
+        elif key == 72 and evt.ControlDown():
             self.onHelpReplace(evt)
-        if key == 83 and evt.ControlDown():
-            self.onSave(evt)
+        elif key == 83 and evt.ControlDown():
+            self.onSave(evt)    
+        elif key == 344:
+            self.onReload(evt)    
         else:    
             evt.Skip()
             
@@ -562,7 +620,7 @@ class ConfigManager(ConfigManagerGui):
             mod = t.GetModify()
             if mod:
                 self.notebookEditors.SetSelection(w)
-                dlg = wx.MessageDialog(self, '%s has not been modified. Save file?' % p,
+                dlg = wx.MessageDialog(self, '%s has been modified. Save file?' % p,
                               'File Modified',
                               wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION)
                 result = dlg.ShowModal()
@@ -573,6 +631,27 @@ class ConfigManager(ConfigManagerGui):
                 elif result == wx.ID_CANCEL:
                     return
         self.Close()        
+
+    def onUpdateTimer(self,evt):
+        self.updateTimer.Stop()
+        for w,(t,p) in enumerate(zip(self.notebookEditorTextCtrls,self.notebookEditorFileAbsPaths)):
+            try:
+                mtime = os.stat(p).st_mtime
+            except:
+                mtime = None
+            if self.notebookEditorFileMtimes[w] != mtime:
+                dlg = wx.MessageDialog(self, '%s modified on disk. Reload?' % p,
+                              'File Modified on Disk',
+                              wx.YES_NO | wx.ICON_INFORMATION)
+                result = dlg.ShowModal()
+                dlg.Destroy()
+                if result == wx.ID_YES:
+                    self.notebookEditors.SetSelection(w)
+                    self.onReload(evt)
+                else:
+                    self.notebookEditorFileMtimes[w] = mtime
+        self.updateTimer.Start(self.updateTimer.Interval)
+
        
 if __name__ == "__main__":
     appConfigManager = wx.PySimpleApp(0)
