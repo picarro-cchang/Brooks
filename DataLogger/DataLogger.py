@@ -608,7 +608,7 @@ class DataLogger(object):
             # Handle peripheral interface columns
             try:
                 periphIntrfConfig = os.path.join(self.basePath, cp.get("PeriphIntrf", "periphIntrfConfig"))
-                self.periphDictTuple = parsePeriphIntrfConfig(periphIntrfConfig)
+                self.periphDictTuple = parsePeriphIntrfConfig(periphIntrfConfig, selectAll=False)
             except Exception, err:
                 print "%r" % err
                 self.periphDictTuple = ()
