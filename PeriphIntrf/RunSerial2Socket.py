@@ -181,3 +181,6 @@ if __name__ == "__main__":
     app = SingleInstance("RunSerial2Socket")
     if not app.alreadyrunning():
         RunSerial2Socket(configFile)
+    else:
+        print "Serial to socket already running"
+    print "RunSerial2Socket terminating"

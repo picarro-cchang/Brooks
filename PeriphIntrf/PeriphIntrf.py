@@ -58,6 +58,7 @@ class PeriphIntrf(object):
         self.parser = []
         self.dataLabels = []
         self.parsers = []
+        self.offsets = []
         self.numChannels = len([s for s in co.list_sections() if s.startswith("PORT")])
         for p in range(self.numChannels):
             self.sensorList.append(deque())
@@ -72,6 +73,7 @@ class PeriphIntrf(object):
             else:
                 self.dataLabels.append([])
             self.parsers.append(parserFunc)
+            self.offsets.append(co.getfloat("PORT%d" % p, "OFFSET", 0.0))
         self.sensorLock = threading.Lock()
         self._shutdownRequested = False
         self.connect()
@@ -187,7 +189,16 @@ class PeriphIntrf(object):
                 #  the closest point available is returned
                 ts, savedTs = None, None
                 valList, savedValList = None, None
-                for (ts, valList) in reversed(self.sensorList[port]):
+                for (tsRaw, valList) in reversed(self.sensorList[port]):
+                    # Apply the offset (in seconds) to the timestamp (in milliseconds) recorded for 
+                    #  these data to compensate for the time taken for the sample to enter the cavity 
+                    #  and be probed by the light.
+                    # A negative offset for a port means that there the gas concentration is measured
+                    #  AFTER the data are measured at the peripheral port. Since "requestTime" is the
+                    #  timestamp of the ringdowns, we need to interpolate into the pripheral data at
+                    #  requestTime + 1000*offset, This is equivalent to changing the raw peripheral
+                    #  timestamp by subtracting 1000*offset.
+                    ts = tsRaw - 1000.0*self.offsets[port]
                     if len(valList) == 0: break
                     if ts < requestTime:
                         if savedTs is None:
