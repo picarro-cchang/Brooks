@@ -8,7 +8,7 @@ import datetime
 # When started, this program creates a file with the same columns as the original, one line at a time
 
 # dataFile = 'data/FCDS2003-20111206-032437Z-DataLog_User_Minimal.dat'
-dataFile = 'data/FCDS2003-20111205-050551Z-DataLog_User_Minimal.dat'
+dataFile = 'data/Demo_FCDS2003-20111206-032437Z-DataLog_User_Minimal.dat'
 # dataFile = 'data/FCDS2003-20111213-234606Z-DataLog_User_Minimal.dat'
 # dataFile = 'data/FCDS2003-20111215-013558Z-DataLog_User_Minimal.dat'
 liveFile = time.strftime('C:/UserData/AnalyzerServer/ZZZ-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
