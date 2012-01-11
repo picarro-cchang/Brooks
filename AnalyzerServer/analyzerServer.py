@@ -42,7 +42,7 @@ PASSWORD = 'default'
 #  This is a property of the analyzer and should not
 #  be changed by the viewers. Later we should read this
 #  from an InstrConfig variable
-SHIFT = -4
+SHIFT = 0
 # The following are split into a path and a filename with unix style wildcards. 
 #  We search for the filename in the specified path and its subdirectories.
 USERLOGFILES = 'C:/UserData/AnalyzerServer/*.dat'
@@ -110,7 +110,7 @@ def _getAnalysis(name,startRow):
     # NEXT_ROW        Next row in file which has yet to be processed
     #
     header = getSlice(name,0,1)[0].line.split()
-    result = dict(DISTANCE=[],GPS_ABS_LONG=[],GPS_ABS_LAT=[],CONC=[],DELTA=[],UNCERTAINTY=[])
+    result = dict(EPOCH_TIME=[],DISTANCE=[],GPS_ABS_LONG=[],GPS_ABS_LAT=[],CONC=[],DELTA=[],UNCERTAINTY=[])
     for l in getSliceIter(name,startRow,startRow+50):
         line = l.line
         if not line: break
@@ -137,7 +137,7 @@ def _getPeaks(name,startRow,minAmp):
     #
     header = getSlice(name,0,1)[0].line.split()
     amplCol = header.index("AMPLITUDE")
-    result = dict(DISTANCE=[],GPS_ABS_LONG=[],GPS_ABS_LAT=[],CH4=[],AMPLITUDE=[],SIGMA=[])
+    result = dict(EPOCH_TIME=[],DISTANCE=[],GPS_ABS_LONG=[],GPS_ABS_LAT=[],CH4=[],AMPLITUDE=[],SIGMA=[])
     if amplCol<0:
         print "Cannot find AMPLITUDE column in peak file"
         result['NEXT_ROW'] = startRow
@@ -188,6 +188,7 @@ def _getData(name,startPos=None,shift=0,varList=None):
             endPos = None
         else:
             endPos = startPos + abs(shift) + MAX_DATA_POINTS
+        lineNum = -1
         for l in getSliceIter(name,startPos,endPos):
             lineNum = l.lineNumber
             line = l.line
@@ -196,6 +197,8 @@ def _getData(name,startPos=None,shift=0,varList=None):
             if len(vals)!=len(header): break
             for col,val in zip(columns,vals):
                 col.append(float(val))
+        if lineNum < 0:
+            return {},1
         nRows = len(columns[0])
         result = {}
         if nRows>=abs(shift):
@@ -311,10 +314,11 @@ def getPeaksEx(params):
     except:
         return {'filename':''}
     result = _getPeaks(name,startRow,minAmp)
-    dist, long, lat = result["DISTANCE"], result["GPS_ABS_LONG"], result["GPS_ABS_LAT"] 
-    ch4, amp, sigma = result["CH4"], result["AMPLITUDE"], result["SIGMA"]
+    retKeys = ["DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA","EPOCH_TIME"]
     nextRow = result["NEXT_ROW"]
-    return(dict(filename=name,dist=dist,long=long,lat=lat,ch4=ch4,amp=amp,sigma=sigma,nextRow=nextRow))
+    retDict = dict(filename=name,nextRow=nextRow)
+    for k in retKeys: retDict[k] = result[k]
+    return(retDict)
 
 @handler.register
 @rpcWrapper
@@ -339,11 +343,11 @@ def getAnalysisEx(params):
     except:
         return {'filename':''}
     result = _getAnalysis(name,startRow)
-    dist, long, lat = result["DISTANCE"], result["GPS_ABS_LONG"], result["GPS_ABS_LAT"] 
-    conc, delta, uncertainty = result["CONC"], result["DELTA"], result["UNCERTAINTY"]
+    retKeys = ["DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY","EPOCH_TIME"]
     nextRow = result["NEXT_ROW"]
-    return(dict(filename=name,dist=dist,long=long,lat=lat,conc=conc,delta=delta,
-                uncertainty=uncertainty,nextRow=nextRow))
+    retDict = dict(filename=name,nextRow=nextRow)
+    for k in retKeys: retDict[k] = result[k]
+    return(retDict)
                 
 @handler.register
 @rpcWrapper

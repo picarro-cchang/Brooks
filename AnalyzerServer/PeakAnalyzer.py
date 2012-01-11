@@ -59,7 +59,7 @@ class PeakAnalyzer(object):
         if 'shift' in kwargs:
             self.shift = int(kwargs['shift'])
         else:
-            self.shift = -4
+            self.shift = 0
 
         if 'sleep_seconds' in kwargs:
             self.sleep_seconds = float(kwargs['sleep_seconds'])

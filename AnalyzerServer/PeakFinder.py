@@ -60,7 +60,7 @@ class PeakFinder(object):
         if 'shift' in kwargs:
             self.shift = int(kwargs['shift'])
         else:
-            self.shift = -4
+            self.shift = 0
 
         if 'dx' in kwargs:
             self.dx = float(kwargs['dx'])
