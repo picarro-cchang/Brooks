@@ -153,7 +153,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         if (not self.forcedLaunch) and (self.launchType == "exe"):
             try:
                 shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
-                startupIni = ConfigObj(self.startupSupervisorIni)
+                startupIni = ConfigObj(self.startupSupervisorIni, list_values=False)
                 startupIni['ModeSwitcher'] = {}
                 startupIni['ModeSwitcher']['Mode'] = self.supervisorType
                 startupIni.write_empty_values = True
