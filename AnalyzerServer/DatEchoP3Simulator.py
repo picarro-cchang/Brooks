@@ -41,7 +41,7 @@ class DataEchoP3(object):
         if 'url' in kwargs:
             self.url = kwargs['url']
         else:
-            self.url = 'http://dev.picarro.com/pcubed/rest/datalogAdd/'
+            self.url = 'http://p3.picarro.com/dev/rest/datalogAdd/'
 
         if 'timeout' in kwargs:
             self.timeout = int(kwargs['timeout'])
@@ -266,7 +266,7 @@ if __name__ == "__main__":
         else:
             AppPath = sys.argv[0]
         AppDir = os.path.split(AppPath)[0]
-        inputFile = 'C:/UserData/AnalyzerServer/Demo_FCDS2003.dat'
+        inputFile = 'C:\Picarro\G2000\MobileKit\AnalyzerServer\data\Demo_FCDS2003-20111206-032437Z-DataLog_User_Minimal.dat'
 
     if 2 < len(sys.argv):
         speed_factor=sys.argv[2]
@@ -276,7 +276,7 @@ if __name__ == "__main__":
     if 3 < len(sys.argv):
         url=sys.argv[3]
     else:
-        url='http://dev.picarro.com/pcubed/rest/datalogAdd/'
+        url='http://p3.picarro.com/dev/rest/datalogAdd/'
         
     if 4 < len(sys.argv):
         timeout=sys.argv[4]

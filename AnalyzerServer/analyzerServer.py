@@ -316,7 +316,7 @@ def getPeaksEx(params):
     result = _getPeaks(name,startRow,minAmp)
     retKeys = ["DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA","EPOCH_TIME"]
     nextRow = result["NEXT_ROW"]
-    retDict = dict(filename=name,nextRow=nextRow)
+    retDict = dict(filename=os.path.basename(name),nextRow=nextRow)
     for k in retKeys: retDict[k] = result[k]
     return(retDict)
 
@@ -345,7 +345,7 @@ def getAnalysisEx(params):
     result = _getAnalysis(name,startRow)
     retKeys = ["DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY","EPOCH_TIME"]
     nextRow = result["NEXT_ROW"]
-    retDict = dict(filename=name,nextRow=nextRow)
+    retDict = dict(filename=os.path.basename(name),nextRow=nextRow)
     for k in retKeys: retDict[k] = result[k]
     return(retDict)
                 

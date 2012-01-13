@@ -351,7 +351,7 @@ class DataEchoP3(object):
             aname, adate, atime = analyzerNameFromFname(fname)
             return aname
         except:
-            return none
+            return None
 
 if __name__ == "__main__":
 
