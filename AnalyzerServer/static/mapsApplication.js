@@ -1788,7 +1788,7 @@ function getMode() {
         CSTATE.getting_mode = true;
         call_rest(CNSNT.svcurl, "driverRpc", {"func": "rdDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER']"},
                 function (data, ts, jqXHR) {
-                if (data.result.value === undefined) {
+                if (!(data.result.value === undefined)) {
                     var mode = data.result.value;
                     setModePane(mode);
                 }
