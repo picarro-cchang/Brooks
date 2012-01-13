@@ -302,7 +302,7 @@ class PeakAnalyzer(object):
             lat_ref, long_ref = None, None
             # Determine if there are extra data in the file
             for line in source:
-                if 'C13_Delta_Raw' not in line: 
+                if 'HP_Delta_iCH4_Raw' not in line: 
                     yield None, None, None
                     break
                 
@@ -325,7 +325,7 @@ class PeakAnalyzer(object):
                         dist += jump
                     x0, y0 = x, y
                     if jump < JUMP_MAX:
-                            yield dist,PosData(long,lat),RestData(entry['EPOCH_TIME'],entry['ValveMask'],entry['CH4'],entry['C13_Delta_Raw'])
+                            yield dist,PosData(long,lat),RestData(entry['EPOCH_TIME'],entry['ValveMask'],entry['CH4'],entry['HP_Delta_iCH4_Raw'])
                     else:
                         yield None,None,None    # Indicate that dist is bad, and we must restart
                         dist = None
@@ -342,7 +342,7 @@ class PeakAnalyzer(object):
             line = source.next()
             atoms = fixed_width(line,26)
             headings = [a.replace(" ","_") for a in atoms]
-            if 'C13_Delta_Raw' not in headings: 
+            if 'HP_Delta_iCH4_Raw' not in headings: 
                 yield None,None,None
             else:
                 for line in source:
@@ -369,7 +369,7 @@ class PeakAnalyzer(object):
                                 dist += jump
                             x0, y0 = x, y
                             if jump < JUMP_MAX:
-                                yield dist,PosData(long,lat),RestData(entry['EPOCH_TIME'],entry['ValveMask'],entry['CH4'],entry['C13_Delta_Raw'])
+                                yield dist,PosData(long,lat),RestData(entry['EPOCH_TIME'],entry['ValveMask'],entry['CH4'],entry['HP_Delta_iCH4_Raw'])
                             else:
                                 yield None,None,None    # Indicate that dist is bad, and we must restart
                                 dist = None

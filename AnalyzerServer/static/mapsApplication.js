@@ -48,7 +48,12 @@ var TXT = {
         dnote: 'Route annotation',
         anote: 'Analysis annotation',
         pnote: 'Peak annotation',
-        show_notes: 'Show user annotations on map'
+        show_notes: 'Show user annotations on map',
+        abubble: 'Analysis markers',
+        pbubble: 'Peak markers',
+        show_markers: 'Show system markers on map',
+        show_txt: 'Show',
+        hide_txt: 'Hide'
     };
 
 //Html button
@@ -99,7 +104,7 @@ var CNSNT = {
         peak_bbl_tail: "bb|", // tail bottom left
         analysis_bbl_tail: "bb|",  // tail bottom left
         path_bbl_tail: "bbtl|", // tail top left
-        
+
         peak_bbl_anchor: newPoint(0, 42), //d_bubble_text_small is 42px high 
         analysis_bbl_anchor: newPoint(0, 42), //d_bubble_text_small is 42px high
         path_bbl_anchor: newPoint(0, 0),
@@ -140,7 +145,6 @@ var CNSNT = {
         mapControlDiv: undefined,
 
         cookie_duration: 14
-        
     };
 
 // Current State
@@ -167,6 +171,8 @@ var CSTATE = {
         showDnote: true,
         showPnote: true,
         showAnote: true,
+        showPbubble: true,
+        showAbubble: true,
 
         lastwhere: '',
         lastFit: '',
@@ -197,9 +203,7 @@ var CSTATE = {
         marker: null,
         gglOptions: null,
         peakMarkers: {},
-        peakNoteDict: {},
         analysisMarkers: {},
-        analysisNoteDict: {},
         methaneHistory: [],
 
         peakNoteMarkers: {},
@@ -217,7 +221,7 @@ var CSTATE = {
         datNoteListener: {},
 
         pobj: [],
-        
+
         noteSortSel: undefined
 
     };
@@ -230,7 +234,7 @@ var TIMER = {
         peak: null, // timer for showLeaks (getPeaks)
         pnote: null, // timer for getPeakNotes
         analysis: null, // timer for showAnalysis (getAnalysis)
-        anote: null, // timer for getAnalysisNotes
+        anote: null // timer for getAnalysisNotes
     };
 
 var modeStrings = {0: TXT.survey_mode, 1: TXT.capture_mode, 2: TXT.capture_mode, 3: TXT.analyzing_mode};
@@ -282,7 +286,7 @@ function newAnzLocationMarker(map) {
 }
 
 function newPeakMarker(map, latLng, amp, sigma, ch4) {
-    var size, fontsize, mk
+    var size, fontsize, mk;
     size = Math.pow(amp, 1.0 / 4.0);
     fontsize = 20.0 * Math.pow(amp, 1.0 / 4.0);
     mk = new google.maps.Marker({position: latLng,
@@ -297,7 +301,7 @@ function newPeakMarker(map, latLng, amp, sigma, ch4) {
 }
 
 function newAnalysisMarker(map, latLng, delta, uncertainty) {
-    var result, mk
+    var result, mk;
     result = delta.toFixed(1) + " +/- " + uncertainty.toFixed(1);
     result = result.replace("+", "%2B").replace(" ", "+");
     mk = new google.maps.Marker({position: latLng,
@@ -336,7 +340,7 @@ function newNoteMarker(map, latLng, text, cat) {
             mkrAnchor = CNSNT.path_bbl_anchor;
         }
     }
-    mkrUrlFrag = "http://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=" + mkrBbl + pathTxt + mkrClr
+    mkrUrlFrag = "http://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=" + mkrBbl + pathTxt + mkrClr;
     mk = new google.maps.Marker({position: latLng,
         icon: new google.maps.MarkerImage(
             mkrUrlFrag,
@@ -353,7 +357,7 @@ function newNoteMarker(map, latLng, text, cat) {
 }
 
 function updateNoteMarkerText(map, mkr, text, cat) {
-    var mk, pathTxt, mkrUrlFrag, mkrClr, mkrBbl, mkrOrigin, mkrAnchor, micon;
+    var pathTxt, mkrUrlFrag, mkrClr, mkrBbl, mkrOrigin, mkrAnchor, micon;
     pathTxt = (text.length <= 20) ? text : text.substring(0, 20) + " ...";
     if (cat === "peak") {
         mkrClr = CNSNT.peak_bbl_clr;
@@ -373,13 +377,13 @@ function updateNoteMarkerText(map, mkr, text, cat) {
             mkrAnchor = CNSNT.path_bbl_anchor;
         }
     }
-    mkrUrlFrag = "http://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=" + mkrBbl + pathTxt + mkrClr
+    mkrUrlFrag = "http://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=" + mkrBbl + pathTxt + mkrClr;
     micon = new google.maps.MarkerImage(
         mkrUrlFrag,
         null,
         mkrOrigin,
         mkrAnchor
-        );
+    );
     mkr.setIcon(micon);
 }
 
@@ -389,7 +393,6 @@ function removeListener(handle) {
 
 function clearPeakMarkerArray() {
     var i, ky;
-    clearPeakNoteMarkers();
     CSTATE.peakNoteDict = {};
     for (i = 0; i < CSTATE.peakMarkers.length; i += 1) {
         CSTATE.peakMarkers[i].setMap(null);
@@ -399,11 +402,11 @@ function clearPeakMarkerArray() {
     }
     CSTATE.peakMarkers = [];
     CSTATE.peakBblListener = {};
+    CSTATE.leakLine = 1;
 }
 
 function clearAnalysisMarkerArray() {
     var i, ky;
-    clearAnalysisNoteMarkers();
     CSTATE.analysisNoteDict = {};
     for (i = 0; i < CSTATE.analysisMarkers.length; i += 1) {
         CSTATE.analysisMarkers[i].setMap(null);
@@ -413,6 +416,7 @@ function clearAnalysisMarkerArray() {
     }
     CSTATE.analysisMarkers = [];
     CSTATE.analysisBblListener = {};
+    CSTATE.analysisLine = 1;
 }
 
 function clearDatNoteMarkers(emptyTheDict) {
@@ -462,8 +466,6 @@ function clearPeakNoteMarkers() {
 }
 
 function resetLeakPosition() {
-    CSTATE.leakLine = 1;
-    CSTATE.analysisLine = 1;
     clearPeakMarkerArray();
     clearAnalysisMarkerArray();
 }
@@ -512,7 +514,7 @@ function deleteCookie(name) {
     setCookie(name, "", -1);
 }
 
-function HomeControl(controlDiv, map) {
+function MapControl(controlDiv, map) {
     var controlUI, controlText;
 
     // Set CSS styles for the DIV containing the control
@@ -539,24 +541,21 @@ function HomeControl(controlDiv, map) {
     controlText.innerHTML = TXT.controls;
     controlUI.appendChild(controlText);
 
-    // Setup the click event listeners: simply set the map to Chicago.
-    google.maps.event.addDomListener(controlUI, 'click', function() {
+    google.maps.event.addDomListener(controlUI, 'click', function () {
         controlPane();
     });
-  }
+}
 
 function initialize_map() {
-    var where, new_zoom, new_currentMapId;
-    
-    CSTATE.map = newMap(document.getElementById("map_canvas"));
-    
-    if (CNSNT.annotation_url) {
-        CNSNT.mapControlDiv = document.createElement('DIV');
-        CNSNT.mapControl = new HomeControl(CNSNT.mapControlDiv, CSTATE.map);
+    var where;
 
-        CNSNT.mapControlDiv.index = 1;
-        CSTATE.map.controls[google.maps.ControlPosition.TOP_RIGHT].push(CNSNT.mapControlDiv);
-    }
+    CSTATE.map = newMap(document.getElementById("map_canvas"));
+
+    CNSNT.mapControlDiv = document.createElement('DIV');
+    CNSNT.mapControl = new MapControl(CNSNT.mapControlDiv, CSTATE.map);
+
+    CNSNT.mapControlDiv.index = 1;
+    CSTATE.map.controls[google.maps.ControlPosition.TOP_RIGHT].push(CNSNT.mapControlDiv);
 
     google.maps.event.addListener(CSTATE.map, 'center_changed', function () {
         where = CSTATE.map.getCenter();
@@ -576,8 +575,9 @@ function initialize_map() {
         setCookie("pcubed_mapTypeId", CSTATE.current_mapTypeId, CNSNT.cookie_duration);
     });
     CSTATE.path = newPolyline(CSTATE.map, CNSNT.normal_path_color);
+
     google.maps.event.addListener(CSTATE.path, 'click', function (event) {
-        var newhash, closepobjs, i, pobj, datadict;
+        var newhash, closepobjs, i, pobj;
         newhash = encodeGeoHash(event.latLng.lat(), event.latLng.lng());
         closepobjs = getNearest(newhash, 1);
         for (i = 0; i < closepobjs.length; i += 1) {
@@ -593,7 +593,7 @@ function initialize_map() {
             alert("There was no path found under your click.");
         }
     });
-    
+
     if (CSTATE.marker) {
         CSTATE.marker.setMap(null);
     }
@@ -775,6 +775,8 @@ function switchLog() {
         CSTATE.alog = newlog;
         CSTATE.startPos = null;
         resetLeakPosition();
+        clearPeakNoteMarkers();
+        clearAnalysisNoteMarkers();
         clearDatNoteMarkers(true);
 
         $("#id_selectLogBtn").html(newtitle);
@@ -858,36 +860,98 @@ function changeMinAmpVal(reqbool) {
 }
 
 function showDnoteCb() {
-    var cval = $("#id_showDnoteCb").attr("checked");
-    if (cval === "checked") {
+    var btxt;
+
+    if (CSTATE.showDnote === false) {
         CSTATE.showDnote = true;
     } else {
         CSTATE.showDnote = false;
         clearDatNoteMarkers(false);
     }
     setCookie("pcubed_dnote", (CSTATE.showDnote) ? "1" : "0", CNSNT.cookie_duration);
+
+    btxt = TXT.show_txt;
+    if (CSTATE.showDnote) {
+        btxt = TXT.hide_txt;
+    }
+    btxt += " " + TXT.dnote;
+    $('#id_showDnoteCb').html(btxt);
 }
 
 function showPnoteCb() {
-    var cval = $("#id_showPnoteCb").attr("checked");
-    if (cval === "checked") {
+    var btxt;
+
+    if (CSTATE.showPnote === false) {
         CSTATE.showPnote = true;
     } else {
         CSTATE.showPnote = false;
         clearPeakNoteMarkers();
     }
     setCookie("pcubed_pnote", (CSTATE.showPnote) ? "1" : "0", CNSNT.cookie_duration);
+
+    btxt = TXT.show_txt;
+    if (CSTATE.showPnote) {
+        btxt = TXT.hide_txt;
+    }
+    btxt += " " + TXT.pnote;
+    $('#id_showPnoteCb').html(btxt);
 }
 
 function showAnoteCb() {
-    var cval = $("#id_showAnoteCb").attr("checked");
-    if (cval === "checked") {
+    var btxt;
+
+    if (CSTATE.showAnote === false) {
         CSTATE.showAnote = true;
     } else {
         CSTATE.showAnote = false;
         clearAnalysisNoteMarkers();
     }
     setCookie("pcubed_anote", (CSTATE.showAnote) ? "1" : "0", CNSNT.cookie_duration);
+
+    btxt = TXT.show_txt;
+    if (CSTATE.showAnote) {
+        btxt = TXT.hide_txt;
+    }
+    btxt += " " + TXT.anote;
+    $('#id_showAnoteCb').html(btxt);
+}
+
+function showPbubbleCb() {
+    var btxt;
+
+    if (CSTATE.showPbubble === false) {
+        CSTATE.showPbubble = true;
+    } else {
+        CSTATE.showPbubble = false;
+        clearPeakMarkerArray();
+    }
+    setCookie("pcubed_pbubble", (CSTATE.showPbubble) ? "1" : "0", CNSNT.cookie_duration);
+
+    btxt = TXT.show_txt;
+    if (CSTATE.showPbubble) {
+        btxt = TXT.hide_txt;
+    }
+    btxt += " " + TXT.pbubble;
+    $('#id_showPbubbleCb').html(btxt);
+}
+
+function showAbubbleCb() {
+    var btxt;
+
+    if (CSTATE.showAbubble === false) {
+        CSTATE.showAbubble = true;
+    } else {
+        CSTATE.showAbubble = false;
+        clearAnalysisMarkerArray();
+    }
+    setCookie("pcubed_abubble", (CSTATE.showAbubble) ? "1" : "0", CNSNT.cookie_duration);
+
+    btxt = TXT.show_txt;
+    if (CSTATE.showAbubble) {
+        btxt = TXT.hide_txt;
+    }
+    btxt += " " + TXT.abubble;
+    $('#id_showAbubbleCb').html(btxt);
 }
 
 function requestMinAmpChange() {
@@ -943,7 +1007,7 @@ function updateNote(cat, fnm, etm, note, type) {
         method = 'gdu/dataNoteUpdate';
         docrow.UPDATE_USER = CNSNT.user_id;
     }
-    post_rest(CNSNT.svcurl,
+    post_rest(CNSNT.annotation_url,
         method,
         docrow,
         function (json, status, jqXHR, cat) {
@@ -1002,7 +1066,7 @@ function updateNote(cat, fnm, etm, note, type) {
 }
 
 function noteUpdate(reqbool, etm, cat) {
-    var noteText, datadict, currnote, ntype, fname, pathCoords, pathMarker, pathTxt, mkr, mkrUrlFrag, mkrClr, mkrBbl, mkrOrigin, mkrAnchor, micon;
+    var noteText, datadict, currnote, ntype, fname, pathCoords, pathMarker, mkr, mkrClr, mkrBbl, mkrOrigin, mkrAnchor;
 
     if (reqbool) {
         if (cat === 'peak') {
@@ -1079,13 +1143,13 @@ function sortNoteList(a, b) {
 }
 
 function notePaneSwitch(selobj) {
-    var idx
+    var idx;
     idx = selobj.selectedIndex;
     notePane(CSTATE.noteSortSel[idx].etm, CSTATE.noteSortSel[idx].cat);
 }
 
 function notePane(etm, cat) {
-    var k, kk, options, row, lst, selected, dsp, noteSel, logseldiv, modalPinNote, hdr, body, buttons, proplist, vlu, datadict, currnote, catstr;
+    var k, kk, options, lst, selected, dsp, noteSel, logseldiv, modalPinNote, hdr, body, buttons, proplist, vlu, datadict, currnote, catstr;
 
     noteSel = [];
     for (kk in CSTATE.peakNoteDict) {
@@ -1134,7 +1198,7 @@ function notePane(etm, cat) {
     logseldiv += '</div>';
     logseldiv += '</div>';
     logseldiv += '<br/>';
-    
+
     catstr = "'" + cat + "'";
     if (cat === 'peak') {
         datadict = CSTATE.peakNoteDict[etm];
@@ -1148,27 +1212,29 @@ function notePane(etm, cat) {
             lst = CNSNT.datNoteList;
         }
     }
-    
+
     hdr = '<h3>' + TXT[cat]  +  ':&nbsp;' + timeStringFromEtm(etm) + '</h3>';
     proplist = '';
-    
+
     $.each(lst, function (ky) {
         k = lst[ky];
-        if (k === 'amp') {
-            vlu = datadict[k].toFixed(2);
-        } else {
-            if (k === 'sigma') {
-                vlu = datadict[k].toFixed(1);
+        if (datadict[k]) {
+            if (k === 'amp') {
+                vlu = datadict[k].toFixed(2);
             } else {
-                vlu = datadict[k].toFixed(3);
+                if (k === 'sigma') {
+                    vlu = datadict[k].toFixed(1);
+                } else {
+                    vlu = datadict[k].toFixed(3);
+                }
             }
+            proplist += '<div class="clearfix">';
+            proplist += '<label for="id_' + k + '">' + TXT[k]  +  '</label>';
+            proplist += '<div class="input">';
+            proplist += '<span id="id_' + k + '" class="uneditable-input">' + vlu + '</span>';
+            proplist += '</div>';
+            proplist += '</div>';
         }
-        proplist += '<div class="clearfix">';
-        proplist += '<label for="id_' + k + '">' + TXT[k]  +  '</label>';
-        proplist += '<div class="input">';
-        proplist += '<span id="id_' + k + '" class="uneditable-input">' + vlu + '</span>';
-        proplist += '</div>';
-        proplist += '</div>';
     });
     if (datadict.note) {
         currnote = datadict.note;
@@ -1176,24 +1242,27 @@ function notePane(etm, cat) {
         currnote = '';
     }
 
-    proplist += '<div class="clearfix">';
-    proplist += '<label for="id_note">' + TXT.note + '</label>';
-    proplist += '<div class="input">';
+    if (CNSNT.annotation_url) {
+        proplist += '<div class="clearfix">';
+        proplist += '<label for="id_note">' + TXT.note + '</label>';
+        proplist += '<div class="input">';
 
-    if (datadict.lock === true) {
-        proplist += '<span class="large uneditable-input" id="id_note" name="textarea">';
-        proplist += currnote;
-        proplist += '</span>';
-    } else {
-        proplist += '<textarea class="large" id="id_note" name="textarea">';
-        proplist += currnote;
-        proplist += '</textarea>';
+        if (datadict.lock === true) {
+            proplist += '<span class="large uneditable-input" id="id_note" name="textarea">';
+            proplist += currnote;
+            proplist += '</span>';
+        } else {
+            proplist += '<textarea class="large" id="id_note" name="textarea">';
+            proplist += currnote;
+            proplist += '</textarea>';
+        }
+
+        proplist += '</div>';
+        proplist += '</div>';
     }
 
-    proplist += '</div>';
-    proplist += '</div>';
-
     body = '';
+    body += logseldiv;
     body += '<div class="row">';
     body += '<div class="span2 columns">';
     body += '<fieldset>';
@@ -1202,11 +1271,16 @@ function notePane(etm, cat) {
     body += '</div>';
     body += '</div>';
 
+
     buttons = '';
-    buttons += '<div style="display: hidden;"><button onclick="noteUpdate(true, ' + etm + ',' + catstr + ');"/></div>';
-    buttons += logseldiv;
+    if (CNSNT.annotation_url) {
+        buttons += '<div style="display: hidden;"><button onclick="noteUpdate(true, ' + etm + ',' + catstr + ');"/></div>';
+    }
     buttons += '<div><button onclick="noteUpdate(false, ' + etm + ',' + catstr + ');" class="btn primary large">' + TXT.close + '</button></div>';
-    buttons += '<div><button onclick="noteUpdate(true, ' + etm + ', ' + catstr + ');" class="btn primary large">' + TXT.save_note + '</button></div>';
+
+    if (CNSNT.annotation_url) {
+        buttons += '<div><button onclick="noteUpdate(true, ' + etm + ', ' + catstr + ');" class="btn primary large">' + TXT.save_note + '</button></div>';
+    }
 
     modalPinNote = setModalChrome(hdr, body, buttons);
 
@@ -1215,37 +1289,78 @@ function notePane(etm, cat) {
 }
 
 function controlPane() {
-    var modalChangeMinAmp, showDnoteCb, showPnoteCb, showAnoteCb, dchkd, pchkd, achkd, body;
-    
-    dchkd = '';
+    var modalChangeMinAmp, showDnoteCntl, showPnoteCntl, showAbubbleCntl, showPbubbleCntl, showAnoteCntl, dchkd, pchkd, achkd, pbchkd, abchkd, body;
+
+    dchkd = TXT.show_txt;
     if (CSTATE.showDnote) {
-        dchkd = 'checked="yes"';
+        dchkd = TXT.hide_txt;
     }
-    pchkd = '';
+    dchkd += " " + TXT.dnote;
+    
+    pchkd = TXT.show_txt;
     if (CSTATE.showPnote) {
-        pchkd = 'checked="yes"';
+        pchkd = TXT.hide_txt;
     }
-    achkd = '';
+    pchkd += " " + TXT.pnote;
+    
+    achkd = TXT.show_txt;
     if (CSTATE.showAnote) {
-        achkd = 'checked="yes"';
+        achkd = TXT.hide_txt;
+    }
+    achkd += " " + TXT.anote;
+    
+
+    pbchkd = TXT.show_txt;
+    if (CSTATE.showPbubble) {
+        pbchkd = TXT.hide_txt;
+    }
+    pbchkd += " " + TXT.pbubble;
+    
+    abchkd = TXT.show_txt;
+    if (CSTATE.showAbubble) {
+        abchkd = TXT.hide_txt;
+    }
+    abchkd += " " + TXT.abubble;
+
+    showDnoteCntl = '<div><button id="id_showDnoteCb" type="button" onclick="showDnoteCb();" class="btn large">' + dchkd + '</button></div>',
+    showPnoteCntl = '<div><button id="id_showPnoteCb" type="button" onclick="showPnoteCb();" class="btn large">' + pchkd + '</button></div>',
+    showAnoteCntl = '<div><button id="id_showAnoteCb" type="button" onclick="showAnoteCb();" class="btn large">' + achkd + '</button></div>',
+
+    showPbubbleCntl = '<div><button id="id_showPbubbleCb" type="button" onclick="showPbubbleCb();" class="btn large">' + pbchkd + '</button></div>',
+    showAbubbleCntl = '<div><button id="id_showAbubbleCb" type="button" onclick="showAbubbleCb();" class="btn large">' + abchkd + '</button></div>',
+
+
+    //showDnoteCntl ='<label><h3><input type="checkbox" id="id_showDnoteCb" onclick="showDnoteCb();" ' + dchkd + '/><span>' + TXT.dnote + '</span></h3></label>';
+    //showPnoteCntl ='<label><h3><input type="checkbox" id="id_showPnoteCb" onclick="showPnoteCb();" ' + pchkd + '/><span>' + TXT.pnote + '</span></h3></label>';
+    //showAnoteCntl ='<label><h3><input type="checkbox" id="id_showAnoteCb" onclick="showAnoteCb();" ' + achkd + '/><span>' + TXT.anote + '</span></h3></label>';
+
+    //showPbubbleCntl ='<label><h3><input type="checkbox" id="id_showPbubbleCb" onclick="showPbubbleCb();" ' + pbchkd + '/><span>' + TXT.pbubble + '</span></h3></label>';
+    //showAbubbleCntl ='<label><h3><input type="checkbox" id="id_showAbubbleCb" onclick="showAbubbleCb();" ' + abchkd + '/><span>' + TXT.abubble + '</span></h3></label>';
+
+    body = "";
+    if (CNSNT.annotation_url) {
+        body += '<div class="clearfix">';
+        body += '<label>' + TXT.show_notes + '</label>';
+        body += '<div class="input">';
+        body += '<ul class="inputs-list">';
+        body += '<li>' + showDnoteCntl + '</li>';
+        body += '<li>' + showPnoteCntl + '</li>';
+        body += '<li>' + showAnoteCntl + '</li>';
+        body += '</ul>';
+        body += '</div>';
+        body += '</div>';
     }
 
-    showDnoteCb = '<label><input type="checkbox" id="id_showDnoteCb" onclick="showDnoteCb();" ' + dchkd + '/><span>' + TXT.dnote + '</span></label>',
-    showPnoteCb = '<label><input type="checkbox" id="id_showPnoteCb" onclick="showPnoteCb();" ' + pchkd + '/><span>' + TXT.pnote + '</span></label>',
-    showAnoteCb = '<label><input type="checkbox" id="id_showAnoteCb" onclick="showAnoteCb();" ' + achkd + '/><span>' + TXT.anote + '</span></label>',
-    
-    body = "";
     body += '<div class="clearfix">';
-    body += '<label>' + TXT.show_notes + '</label>'
+    body += '<label>' + TXT.show_markers + '</label>';
     body += '<div class="input">';
     body += '<ul class="inputs-list">';
-    body += '<li>' + showDnoteCb + '</li>';
-    body += '<li>' + showPnoteCb + '</li>';
-    body += '<li>' + showAnoteCb + '</li>';
+    body += '<li>' + showPbubbleCntl + '</li>';
+    body += '<li>' + showAbubbleCntl + '</li>';
     body += '</ul>';
     body += '</div>';
     body += '</div>';
-    
+
     modalChangeMinAmp = setModalChrome('<h3>' + TXT.show_controls + '</h3>',
         body,
         HBTN.modChangeCloseBtn
@@ -1292,7 +1407,7 @@ function updatePath(pdata, clr, etm) {
         CSTATE.path = newPolyline(CSTATE.map, clr);
 
         google.maps.event.addListener(CSTATE.path, 'click', function (event) {
-            var newhash, closepobjs, i, pobj, datadict;
+            var newhash, closepobjs, i, pobj;
             newhash = encodeGeoHash(event.latLng.lat(), event.latLng.lng());
             closepobjs = getNearest(newhash, 1);
             for (i = 0; i < closepobjs.length; i += 1) {
@@ -1326,9 +1441,9 @@ function getNearest(currentHash, maxNeighbors) {
     accuracy = 12;
     matchCount = 0;
     while (matchCount < maxNeighbors && accuracy > 0) {
-        cmpHash = currentHash.substring(0,accuracy);
+        cmpHash = currentHash.substring(0, accuracy);
         for (i = 0; i < CSTATE.pathGeoObjs.length; i += 1) {
-            if (CSTATE.pathGeoObjs[i].geohash in matching) {
+            if (matching.hasOwnProperty(CSTATE.pathGeoObjs[i].geohash)) {
                 continue;
             }
             if (CSTATE.pathGeoObjs[i].geohash.substring(0, accuracy) === cmpHash) {
@@ -1349,7 +1464,7 @@ function getNearest(currentHash, maxNeighbors) {
 }
 
 function initialize_gdu(winH, winW) {
-    var mapTypeCookie, current_mapTypeId, current_zoom, followCookie, minAmpCookie, latCookie, dnoteCookie, pnoteCookie, anoteCookie;
+    var mapTypeCookie, current_zoom, followCookie, minAmpCookie, latCookie, dnoteCookie, pnoteCookie, anoteCookie;
     pge_wdth = $('#id_topbar').width();
     $('#map_canvas').css('height', winH - 200);
     $('#map_canvas').css('width', pge_wdth);
@@ -1364,7 +1479,7 @@ function initialize_gdu(winH, winW) {
             CSTATE.current_mapTypeId = mapTypeCookie;
         }
     }
-    
+
     dnoteCookie = getCookie("pcubed_dnote");
     if (dnoteCookie) {
         CSTATE.showDnote = parseInt(dnoteCookie, 2);
@@ -1379,7 +1494,17 @@ function initialize_gdu(winH, winW) {
     if (anoteCookie) {
         CSTATE.showAnote = parseInt(anoteCookie, 2);
     }
-    
+
+    pbubbleCookie = getCookie("pcubed_pbubble");
+    if (pbubbleCookie) {
+        CSTATE.showPbubble = parseInt(pbubbleCookie, 2);
+    }
+
+    abubbleCookie = getCookie("pcubed_abubble");
+    if (abubbleCookie) {
+        CSTATE.showAbubble = parseInt(abubbleCookie, 2);
+    }
+
     followCookie = getCookie("pcubed_follow");
     if (followCookie) {
         CSTATE.follow = parseInt(followCookie, 2);
@@ -1680,6 +1805,10 @@ function getMode() {
 
 function showLeaks() {
     var params = {'startRow': CSTATE.leakLine, 'alog': CSTATE.alog, 'minAmp': CSTATE.minAmp, 'gmtOffset': CNSNT.gmt_offset};
+    if (!CSTATE.showPbubble) {
+        setGduTimer('peak');
+        return;
+    }
     call_rest(CNSNT.svcurl, "getPeaks", params,
             function (json, status, jqXHR) {
             CSTATE.net_abort_count = 0;
@@ -1693,6 +1822,10 @@ function showLeaks() {
 
 function showAnalysis() {
     var params = {'startRow': CSTATE.analysisLine, 'alog': CSTATE.alog, 'gmtOffset': CNSNT.gmt_offset};
+    if (!CSTATE.showAbubble) {
+        setGduTimer('analysis');
+        return;
+    }
     call_rest(CNSNT.svcurl, "getAnalysis", params,
             function (json, status, jqXHR) {
             CSTATE.net_abort_count = 0;
@@ -1705,8 +1838,8 @@ function showAnalysis() {
 }
 
 function getNotes(cat) {
-    var params, fname, etm, fnToCall;
-    if (cat == "peak") {
+    var params, fname, etm;
+    if (cat === "peak") {
         if (!CSTATE.showPnote) {
             setGduTimer('pnote');
             return;
@@ -1714,7 +1847,7 @@ function getNotes(cat) {
         fname = CSTATE.lastPeakFilename;
         etm = CSTATE.nextPeakEtm;
     } else {
-        if (cat == "analysis") {
+        if (cat === "analysis") {
             if (!CSTATE.showAnote) {
                 setGduTimer('anote');
                 return;
@@ -1741,14 +1874,14 @@ function getNotes(cat) {
                 errorDatNotes(jqXHR.responseText);
             }
             );
-    } 
+    }
     // NOTE: if there is no annotation_url, this will STOP the note timers
     // as there is no ELSE logic to restart them. 
     // This is the expected behavior.
 }
 
 function successData(data) {
-    var resultWasReturned, timeStrings, newTimestring, newFit, newInst, i, clr, pdata;
+    var resultWasReturned, newTimestring, newFit, newInst, i, clr, pdata;
     restoreModalDiv();
     resultWasReturned = false;
     CSTATE.counter += 1;
@@ -1768,9 +1901,13 @@ function successData(data) {
                 initialize_map();
                 CSTATE.startPos = null;
                 resetLeakPosition();
+                clearPeakNoteMarkers();
+                clearAnalysisNoteMarkers();
                 clearDatNoteMarkers(true);
             }
             CSTATE.lastDataFilename = data.result.filename;
+            CSTATE.lastPeakFilename = CSTATE.lastDataFilename.replace(".dat", ".peaks");
+            CSTATE.lastAnalysisFilename = CSTATE.lastDataFilename.replace(".dat", ".analysis");
         }
     }
     if (resultWasReturned) {
@@ -1844,8 +1981,8 @@ function successData(data) {
                             lat: data.result.GPS_ABS_LAT[i],
                             lon: data.result.GPS_ABS_LONG[i],
                             etm: data.result.EPOCH_TIME[i],
-                            ch4: data.result.CH4[i],
-                            };
+                            ch4: data.result.CH4[i]
+                        };
                         if (data.result.GPS_FIT) {
                             if (data.result.GPS_FIT[i] !== 0) {
                                 updatePath(pdata, clr, data.result.EPOCH_TIME[i]);
@@ -1886,10 +2023,8 @@ function successPeaks(data) {
         if (data.result.filename) {
             if (CSTATE.lastPeakFilename === data.result.filename) {
                 resultWasReturned = true;
-            } else {
-                resetLeakPosition();
             }
-            CSTATE.lastPeakFilename = data.result.filename;
+            //CSTATE.lastPeakFilename = data.result.filename;
         }
     }
     if (resultWasReturned) {
@@ -1948,11 +2083,8 @@ function successAnalysis(data) {
         if (data.result.filename) {
             if (CSTATE.lastAnalysisFilename === data.result.filename) {
                 resultWasReturned = true;
-            } else {
-                CSTATE.analysisLine = 1;
-                clearAnalysisMarkerArray();
             }
-            CSTATE.lastAnalysisFilename = data.result.filename;
+            //CSTATE.lastAnalysisFilename = data.result.filename;
         }
     }
     if (resultWasReturned) {
@@ -1986,7 +2118,7 @@ function successAnalysis(data) {
 //drop (or update) the note bubble (and add listener if dropping)
 //and update the current state dictionary for the note(s) from the result set
 function dropResultNoteBubbles(results, cat) {
-    var i, etm, ntx, datadict, pathCoords, pathMarker, pathTxt, mkr, mkrUrlFrag, mkrClr, mkrBbl, mkrAnchor, mkrOrigin, micon;
+    var i, etm, ntx, datadict, pathCoords, pathMarker, mkr;
     utm = results.UPDATE_TIME;
     etm = results.EPOCH_TIME;
     ntx = results.NOTE_TXT;
@@ -2022,29 +2154,16 @@ function dropResultNoteBubbles(results, cat) {
         if (ch4) {
             datadict.ch4 = ch4[i];
         }
-        
+
         datadict.note = ntx[i];
         datadict.db = true;
         datadict.lock = false;
-        CSTATE.datNoteDict[etm[i]] = datadict;
         if (cat === "peak") {
-            mkrClr = CNSNT.peak_bbl_clr;
-            mkrBbl = CNSNT.peak_bbl_tail;
-            mkrOrigin = CNSNT.peak_bbl_origin;
-            mkrAnchor = CNSNT.peak_bbl_anchor;
             mkr = CSTATE.peakNoteMarkers[etm[i]];
         } else {
             if (cat === "analysis") {
-                mkrClr = CNSNT.analysis_bbl_clr;
-                mkrBbl = CNSNT.analysis_bbl_tail;
-                mkrOrigin = CNSNT.analysis_bbl_origin;
-                mkrAnchor = CNSNT.analysis_bbl_anchor;
                 mkr = CSTATE.analysisNoteMarkers[etm[i]];
             } else {
-                mkrClr = CNSNT.path_bbl_clr;
-                mkrBbl = CNSNT.path_bbl_tail;
-                mkrOrigin = CNSNT.path_bbl_origin;
-                mkrAnchor = CNSNT.path_bbl_anchor;
                 mkr = CSTATE.datNoteMarkers[etm[i]];
             }
         }
