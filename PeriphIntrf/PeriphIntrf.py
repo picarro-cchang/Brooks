@@ -6,8 +6,10 @@ import time
 import Queue
 import threading
 import struct
+import traceback
 from numpy import *
 from collections import deque
+from PeriphProcessor import PeriphProcessor
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import TCP_PORT_PERIPH_INTRF
 from Host.Common.timestamp import getTimestamp, unixTime
@@ -55,9 +57,10 @@ class PeriphIntrf(object):
         self.sock = None
         self.getThread = None
         self.sensorList = []
-        self.parser = []
+        self.parserFuncCode = []
         self.dataLabels = []
         self.parsers = []
+        self.scriptFilenames = []
         self.offsets = []
         self.numChannels = len([s for s in co.list_sections() if s.startswith("PORT")])
         for p in range(self.numChannels):
@@ -65,8 +68,12 @@ class PeriphIntrf(object):
             parserFunc = co.get("PORT%d" % p, "SCRIPTFUNC").strip()
             scriptPath =  os.path.join(iniAbsBasePath, co.get("SETUP", "SCRIPTPATH"))
             scriptFilename = os.path.join(scriptPath, parserFunc) + ".py"
-            exec compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec")
-            self.parser.append(eval(parserFunc))
+            self.scriptFilenames.append(scriptFilename)
+            if parserFunc.startswith("parse"):
+                exec compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec")
+                self.parserFuncCode.append(eval(parserFunc))
+            else:
+                self.parserFuncCode.append(None)
             labelList = [i.strip() for i in co.get("PORT%d" % p, "DATALABELS").split(",")]
             if labelList[0]:
                 self.dataLabels.append(labelList)
@@ -74,6 +81,19 @@ class PeriphIntrf(object):
                 self.dataLabels.append([])
             self.parsers.append(parserFunc)
             self.offsets.append(co.getfloat("PORT%d" % p, "OFFSET", 0.0))
+            
+        # Set up the peripheral processor
+        try:
+            self.procInputPorts = [int(p) for p in co.get("PROCESSOR", "INPUTPORTS").split(",") if p.strip()]
+            procOutputPort = co.getint("PROCESSOR", "OUTPUTPORT")
+            procLabels = [self.dataLabels[i] for i in self.procInputPorts]
+            scriptPath = self.scriptFilenames[procOutputPort]
+            self.periphProcessor = PeriphProcessor(self, procLabels, procOutputPort, scriptPath)
+        except Exception:
+            print traceback.format_exc()
+            self.procInputPorts = []
+            self.periphProcessor = None
+        
         self.sensorLock = threading.Lock()
         self._shutdownRequested = False
         self.connect()
@@ -142,30 +162,32 @@ class PeriphIntrf(object):
                     #sys.stdout.write(c)
                 counter += 1
                 if counter >= maxcount:
-                    #sys.stdout.write('\n')
-                    # Store in sensorList
-                    self.sensorLock.acquire()
                     try:
-                        parsedList = self.parser[port](newStr)
+                        parsedList = self.parserFuncCode[port](newStr)
                         if parsedList:
-                            self.sendOut(port,ts,parsedList)
-                            self.sensorList[port].append((ts, parsedList))
-                            if len(self.sensorList[port]) > self.sensorQSize:
-                                self.sensorList[port].popleft()
+                            self.appendAndSendOutData(port,ts,parsedList)
+                            if port in self.procInputPorts and self.periphProcessor:
+                                self.periphProcessor.appendData(self.procInputPorts.index(port),ts,parsedList)
                     except Exception, err:
                         print "%r" % (err,)
-                    finally:
-                        self.sensorLock.release()
                     state = "SYNC1"
 
-    def sendOut(self,port,ts,parsedList):
-        measGood = True
-        reportDict = {}
-        for label,value in zip(self.dataLabels[port],parsedList):
-            reportDict[label] = value
-        measData = MeasData(self.parsers[port], unixTime(ts), reportDict, measGood, port)
-        self.DataBroadcaster.send(measData.dumps())
-                    
+    def appendAndSendOutData(self,port,ts,parsedList):
+        self.sensorLock.acquire()
+        try:
+            self.sensorList[port].append((ts, parsedList))
+            if len(self.sensorList[port]) > self.sensorQSize:
+                self.sensorList[port].popleft()
+                                
+            measGood = True
+            reportDict = dict(zip(self.dataLabels[port],parsedList))
+            measData = MeasData(self.parsers[port], unixTime(ts), reportDict, measGood, port)
+            self.DataBroadcaster.send(measData.dumps())
+        except Exception, err:
+            print "%r" % (err,)
+        finally:
+            self.sensorLock.release()
+                        
     def startSocketThread(self):
         appThread = threading.Thread(target = self.getFromSocket)
         appThread.setDaemon(True)
