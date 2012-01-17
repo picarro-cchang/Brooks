@@ -9,13 +9,16 @@ sys.path.append("ViewServer")
 exclusionList = ["Tkconstants","Tkinter","tcl"]
 inclusionList = []
 packageList = ["simplejson", "werkzeug", "jinja2", "email"]
-data_files = [(".", ["MobileKitSetupNew/LEDgreen2.ico", "MobileKitSetupNew/LEDred2.ico"])]
+data_files = [(".", ["MobileKitSetupNew/LEDgreen2.ico", "MobileKitSetupNew/LEDred2.ico", "MobileKitSetupNew/MobileKitSetup.ini",
+                    "MobileKitSetupNew/MobileKit_inactive.ini", "ViewServer/view.kml"])]
 setup(console=['AnalyzerServer/RunPeakFinder.py', 
                'AnalyzerServer/RunPeakAnalyzer.py', 
                'AnalyzerServer/DatEchoP3.py', 
                'AnalyzerServer/analyzerServer.py',
-               'ViewServer/ViewServer.py',],
-     windows=['MobileKitSetupNew/MobileKitSetup.py',],
+               'ViewServer/ViewServer.py',
+               ],
+     windows=['MobileKitSetupNew/MobileKitSetup.py',
+              'MobileKitSetupNew/RemoteMobileKitSetup.py',],
      options = dict(py2exe = dict(compressed = 1,
                    optimize = 1,
                    bundle_files = 1,

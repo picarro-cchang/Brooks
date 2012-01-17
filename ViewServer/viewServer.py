@@ -419,10 +419,16 @@ if __name__ == '__main__':
     else:
         urlcomp = url.split("/",1)
         host = urlcomp[0]
-        restUrl = "/rest"
-        if len(urlcomp) > 1: 
-            restUrl = url_join('/' + urlcomp[1],restUrl)
+        restUrl = "/"
+        if len(urlcomp)>1: restUrl += urlcomp[1]
         service = RestProxy(host,restUrl)
+        
+        # urlcomp = url.split("/",1)
+        # host = urlcomp[0]
+        # restUrl = "/rest"
+        # if len(urlcomp) > 1: 
+            # restUrl = url_join('/' + urlcomp[1],restUrl)
+        # service = RestProxy(host,restUrl)
         
     # alogName = "FCDS2003-20120113-221904Z-DataLog_User_Minimal.dat"
     app.run(host='127.0.0.1',port=5100)
