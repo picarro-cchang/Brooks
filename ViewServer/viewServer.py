@@ -31,7 +31,31 @@ DEFAULT_CONFIG_NAME = "viewServer.ini"
 
 viewParamsList = []
 viewParamsAsDir = {}
+alogName = None
 
+def url_join(*args):
+    """Join any arbitrary strings into a forward-slash delimited list.
+    Do not strip leading / from first element, nor trailing / from last element."""
+    if len(args) == 0:
+        return ""
+
+    if len(args) == 1:
+        return str(args[0])
+
+    else:
+        args = [str(arg).replace("\\", "/") for arg in args]
+
+        work = [args[0]]
+        for arg in args[1:]:
+            if arg.startswith("/"):
+                work.append(arg[1:])
+            else:
+                work.append(arg)
+
+        joined = reduce(os.path.join, work)
+
+    return joined.replace("\\", "/")
+    
 class ViewParams(object):
     def __init__(self,speciesName,scale,offset,line_color,poly_color,enabled=True):
         self.speciesName = speciesName
@@ -91,14 +115,15 @@ class RestCallError(Exception):
     
 class RestProxy(object):
     # Proxy to make a rest call to a server
-    def __init__(self,host):
+    def __init__(self,host,baseUrl):
         self.host = host
+        self.baseUrl = baseUrl
     # Attributes are mapped to a function which performs
     #  a GET request to host/rest/attrName
     def __getattr__(self,attrName):
         def dispatch(argsDict):
-            url = "rest/%s" % attrName
-            #print self.host, "GET","%s?%s" % (url,urllib.urlencode(argsDict))
+            url = "%s/%s" % (self.baseUrl,attrName)
+            print self.host, "GET","%s?%s" % (url,urllib.urlencode(argsDict))
             conn = httplib.HTTPConnection(self.host)
             try:
                 conn.request("GET","%s?%s" % (url,urllib.urlencode(argsDict)))
@@ -180,12 +205,18 @@ def updateView():
         heading = 0
         altitude = 0
     try:
-        result = service.getData({'startPos':-2,'varList':'["GPS_ABS_LONG","GPS_ABS_LAT"]'})
-        long = result['GPS_ABS_LONG'][-1]
-        lat = result['GPS_ABS_LAT'][-1]
-        kml = VIEW % (long,lat,range-altitude/cos(tilt*DTR),tilt,heading,altitude)
-        response = make_response(kml)
-        response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
+        varList = ["GPS_ABS_LONG","GPS_ABS_LAT"]
+        params = {'startPos':-2,'varList':json.dumps(varList)}
+        if alogName is not None: params['alog'] = alogName
+        result = service.getData(params)
+        try:
+            long = result['GPS_ABS_LONG'][-1]
+            lat = result['GPS_ABS_LAT'][-1]
+            kml = VIEW % (long,lat,range-altitude/cos(tilt*DTR),tilt,heading,altitude)
+            response = make_response(kml)
+            response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
+        except:
+            response = emptyResponse()
         return response
     except:
         print traceback.format_exc()
@@ -233,6 +264,7 @@ NETLINKCONTROL = """<?xml version="1.0" encoding="UTF-8"?>
 
 @app.route('/updateData')
 def updateData():
+    global alogName
     cookie = {}
     clearClientData = False
     
@@ -240,21 +272,26 @@ def updateData():
         varList = ["GPS_ABS_LAT","GPS_ABS_LONG"]
         for viewParams in viewParamsList:
             varList.append(viewParams.speciesName)
-        if 'lastPos' in request.values:
-            result = service.getData({'startPos':int(request.values['lastPos']),'varList':json.dumps(varList)})
-        else:
-            result = service.getData({'varList':json.dumps(varList)})
+        params = {'varList':json.dumps(varList)}
+        if 'lastPos' in request.values: params['startPos'] = int(request.values['lastPos'])
+        if alogName is not None: params['alog'] = alogName
+        result = service.getData(params)
             
         filename = request.values.get('filename','')
         lastPos = result['lastPos']
-        concs = [result[viewParams.speciesName] for viewParams in viewParamsList]
-        longs = result['GPS_ABS_LONG']
-        lats = result['GPS_ABS_LAT']
         data = [[] for viewParams in viewParamsList]
         cookie['filename'] = result['filename']
         if filename != result['filename']:
             clearClientData = True
-        
+        try:
+            concs = [result[viewParams.speciesName] for viewParams in viewParamsList]
+            longs = result['GPS_ABS_LONG']
+            lats = result['GPS_ABS_LAT']
+        except:
+            concs = []
+            longs = []
+            lats = []
+            
         if os.path.exists(changeIni):
             refreshNeeded = False
             try:
@@ -267,6 +304,7 @@ def updateData():
                 if shutdown: 
                     service.shutdownAnalyzer({})
                     print "Shutting down analyzer"
+                alogName = settingsDict.get('alog',None)
             except:
                 print traceback.format_exc()
                 print "Error processing .ini file"
@@ -313,9 +351,13 @@ HELP_STRING = \
 viewServer.py [-h] [-c <FILENAME>] [-a <IPADDR>]
 
 Where the options can be a combination of the following:
+
 -h, --help : Print this help.
 -c         : Specify a config file.
--a         : Specify IP address fror analyzerServer
+-a         : Specify IP address fror analyzerServer (local mode)
+-u         : Specify path to p3 server (remote mode)
+
+Note: Options -a and -u are mutually exclusive
 """
 
 def PrintUsage():
@@ -326,7 +368,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:a:", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "hc:a:u:", ["help"])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -354,10 +396,15 @@ if __name__ == '__main__':
     configFile = os.path.abspath(configFile)
     configPath = os.path.split(configFile)[0]
     #print "configFile, options = ", configFile, options
+    
     addr = '127.0.0.1'
+    url = None
     if "-a" in options:
         addr = options["-a"]
-
+    if "-u" in options:
+        url = options["-u"]
+        addr = None
+        
     ini = ConfigObj(configFile)
     if 'Main' in ini:
         baseIni = os.path.join(configPath,ini['Main'].get('inactiveIniPath',baseIni))
@@ -366,6 +413,23 @@ if __name__ == '__main__':
     setupFromConfig(baseIni)
     
     # Connect to the analyzer rest server
-    service = RestProxy('%s:5000' % addr.strip())
+    
+    if addr is not None:
+        service = RestProxy('%s:5000' % addr.strip(),"/rest")
+    else:
+        urlcomp = url.split("/",1)
+        host = urlcomp[0]
+        restUrl = "/"
+        if len(urlcomp)>1: restUrl += urlcomp[1]
+        service = RestProxy(host,restUrl)
+        
+        # urlcomp = url.split("/",1)
+        # host = urlcomp[0]
+        # restUrl = "/rest"
+        # if len(urlcomp) > 1: 
+            # restUrl = url_join('/' + urlcomp[1],restUrl)
+        # service = RestProxy(host,restUrl)
+        
+    # alogName = "FCDS2003-20120113-221904Z-DataLog_User_Minimal.dat"
     app.run(host='127.0.0.1',port=5100)
     
