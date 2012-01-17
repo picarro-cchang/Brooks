@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <meta name="viewport" id="meta_viewport" content="initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+        <title>Experimental Graph Viewer</title>
+        <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/picarro_bootstrap_002.css') }}" />
+        <script type="text/javascript" src="{{ url_for('static',filename='jquery-1.6.2.min.js') }}"></script>
+        {% block head %}{% endblock %}
+        
+        <script type="text/javascript" language="javascript">
+        
+        function pageLoadFunction() {
+            winH = window.innerHeight;
+            winW = window.innerWidth;
+
+            initialize(winH, winW);
+            // setup_viewport();
+            resize_me();
+        };
+
+        var resize_page;
+        var resize_inprocess = false;
+        var resize_timer;
+        var buffer = 50;
+        var margin = 20;
+        function resize_me() {
+            winH = window.innerHeight;
+            winW = window.innerWidth;
+            
+            lpge_wdth = $('#id_sidebar').width();
+            rpge_wdth = winW - lpge_wdth;
+            
+            $('#id_topleft').css('left', 0);
+            $('#id_p3_icon').css('position', 'fixed');
+            $('#id_p3_icon').css('left', buffer);
+            
+            $('#id_content').css('width', rpge_wdth - buffer);
+            
+            $('#id_topright').css('width', rpge_wdth - buffer);
+            $('#id_topright').css('left', lpge_wdth + margin);
+            $('#id_topright').css('right', 0);
+            
+            $('#id_topbar').css('width', rpge_wdth - buffer);
+            $('#id_topbar').css('left', lpge_wdth + margin);
+            $('#id_topbar').css('right', 0);
+            
+            if (resize_page) {
+                resize_page();
+            }
+            resize_inprocess = false;
+        };
+        
+        function setup_viewport() {
+            var winH = window.innerHeight;
+            var winW = window.innerWidth;
+            if (winH < winW) {
+                // Landscape mode
+                $('#meta_viewport').attr("content","initial-scale=1.0; maximum-scale=1.0; user-scalable=0;")
+            }
+            else {
+                // Portrait mode
+                $('#meta_viewport').attr("content","initial-scale=0.8; maximum-scale=0.8; user-scalable=0;")
+            }
+        };
+        
+        function resize_time() {
+            // setup_viewport();
+            if (!resize_inprocess) {
+                resize_inprocess = true;
+                resize_timer = setTimeout(resize_me,500);
+            }
+        };
+        </script>
+    </head>
+    <body onload="pageLoadFunction()" onresize="resize_time()">
+        {% block body %}
+        {% endblock %}
+        <div class="bottombar-wrapper">
+            <div id="id_copyright" class="bottombar" style="float: left; bottom: 5px; left: 5px; width: 100%;">
+                &nbsp; &nbsp; &copy; 2011 <a href="http://www.picarro.com">Picarro Inc.</a>
+            </div>	
+        </div>
+    </body>
+</html>    

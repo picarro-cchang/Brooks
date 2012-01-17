@@ -7,10 +7,9 @@ import datetime
 
 # When started, this program creates a file with the same columns as the original, one line at a time
 
-# dataFile = 'data/FCDS2003-20111206-032437Z-DataLog_User_Minimal.dat'
-dataFile = 'data/Demo_FCDS2003-20111206-032437Z-DataLog_User_Minimal.dat'
-# dataFile = 'data/FCDS2003-20111213-234606Z-DataLog_User_Minimal.dat'
-# dataFile = 'data/FCDS2003-20111215-013558Z-DataLog_User_Minimal.dat'
+dataFile = 'data/FCDS2003-20120113-225524Z-DataLog_User_Minimal.dat'
+dataFile = r'R:\crd_G2000\FCDS\1061-FCDS2003\Data_20120113\AnalyzerServer\FCDS2003-20120113-221530Z-DataLog_User_Minimal.dat'
+
 liveFile = time.strftime('C:/UserData/AnalyzerServer/ZZZ-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
 
 handle = CreateFile(liveFile,GENERIC_WRITE,

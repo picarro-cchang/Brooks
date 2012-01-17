@@ -65,19 +65,19 @@ class PeakFinder(object):
         if 'dx' in kwargs:
             self.dx = float(kwargs['dx'])
         else:
-            self.dx = 1.0
+            self.dx = 0.5
     
         if 'sigmaMinFactor' in kwargs:
             sigmaMinFactor = float(kwargs['sigmaMinFactor'])
         else:
-            sigmaMinFactor = 0.8
+            sigmaMinFactor = 0.75
     
         self.sigmaMin = sigmaMinFactor*self.dx
     
         if 'sigmaMaxFactor' in kwargs:
             sigmaMaxFactor = float(kwargs['sigmaMaxFactor'])
         else:
-            sigmaMaxFactor = 10.0
+            sigmaMaxFactor = 40.0
             
         self.sigmaMax = sigmaMaxFactor*self.dx   # Widest peak to be detected
 

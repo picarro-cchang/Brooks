@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <script type="text/javascript" src="{{ url_for('static',filename='graphApplication.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div id="id_sidebar" class="sidebar">
+        <p>This is in the sidebar</p>
+        </div>
+        <div id="id_content" class="content">
+            <span>
+                <div class="topbar-wrapper" id="id_topright">
+                    <div class="topbar" id="id_topbar">
+                        <div><ul class="nav secondary-nav"><li class="menu">
+                            <a href="#"><span>Prime User</span></a></li></ul></div>
+                    </div>
+                </div>
+            </span>
+            <div id="id_content_title">
+                <br /><br />
+                <h2>Graph Display</h2>
+                <br />
+            </div>
+            <div style="width:100%; top: 5px; bottom: 5px;" id="map_canvas"></div>
+                <canvas id="canvas" width="800" height="600">
+                Your browser does not support HTML5 canvas.</canvas>
+            </div>
+        </div>
+    </div>
+{% endblock %}
