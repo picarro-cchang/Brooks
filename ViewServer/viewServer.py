@@ -182,8 +182,8 @@ VIEW = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <Document>
     <LookAt>
-          <longitude>%s</longitude>
-          <latitude>%s</latitude>
+          %s
+          %s
           <range>%s</range>
           <tilt>%s</tilt>
           <heading>%s</heading>
@@ -208,15 +208,16 @@ def updateView():
         varList = ["GPS_ABS_LONG","GPS_ABS_LAT"]
         params = {'startPos':-2,'varList':json.dumps(varList)}
         if alogName is not None: params['alog'] = alogName
-        result = service.getData(params)
         try:
-            long = result['GPS_ABS_LONG'][-1]
-            lat = result['GPS_ABS_LAT'][-1]
-            kml = VIEW % (long,lat,range-altitude/cos(tilt*DTR),tilt,heading,altitude)
-            response = make_response(kml)
-            response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
-        except:
-            response = emptyResponse()
+            result = service.getData(params)
+            longStr = "<longitude>%s</longitude>" % result['GPS_ABS_LONG'][-1]
+            latStr = "<latitude>%s</latitude>" % result['GPS_ABS_LAT'][-1]
+        except:    
+            longStr = ""
+            latStr = ""
+        kml = VIEW % (longStr,latStr,range-altitude/cos(tilt*DTR),tilt,heading,altitude)
+        response = make_response(kml)
+        response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
         return response
     except:
         print traceback.format_exc()
@@ -269,29 +270,39 @@ def updateData():
     clearClientData = False
     
     try:
+        lastPos = 1
         varList = ["GPS_ABS_LAT","GPS_ABS_LONG"]
         for viewParams in viewParamsList:
             varList.append(viewParams.speciesName)
         params = {'varList':json.dumps(varList)}
-        if 'lastPos' in request.values: params['startPos'] = int(request.values['lastPos'])
+        if 'lastPos' in request.values: 
+            lastPos = int(request.values['lastPos'])
+            params['startPos'] = lastPos
         if alogName is not None: params['alog'] = alogName
-        result = service.getData(params)
-            
-        filename = request.values.get('filename','')
-        lastPos = result['lastPos']
-        data = [[] for viewParams in viewParamsList]
-        cookie['filename'] = result['filename']
-        if filename != result['filename']:
-            clearClientData = True
+
         try:
-            concs = [result[viewParams.speciesName] for viewParams in viewParamsList]
-            longs = result['GPS_ABS_LONG']
-            lats = result['GPS_ABS_LAT']
+            result = service.getData(params)
+            filename = request.values.get('filename','')
+            print "request filename=",filename,"  received filename=",result['filename']
+            if filename != result['filename']: print "******************* NEW RUN **************************"
+            lastPos = result['lastPos']
+            data = [[] for viewParams in viewParamsList]
+            cookie['filename'] = result['filename']
+            if filename != result['filename']:
+                clearClientData = True
+            try:
+                concs = [result[viewParams.speciesName] for viewParams in viewParamsList]
+                longs = result['GPS_ABS_LONG']
+                lats = result['GPS_ABS_LAT']
+            except:
+                concs = []
+                longs = []
+                lats = []
         except:
             concs = []
             longs = []
             lats = []
-            
+        
         if os.path.exists(changeIni):
             refreshNeeded = False
             try:
