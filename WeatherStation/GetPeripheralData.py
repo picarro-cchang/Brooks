@@ -21,6 +21,8 @@ import socket
 import urllib
 
 HOST = 'localhost:5200'
+# Dummy address for debugging
+BROADCAST_PORT_DATA_MANAGER = 40500
 
 class RestCallError(Exception):
     pass
@@ -59,7 +61,7 @@ def renderFigure(fig,name):
     canvas.print_figure(fp,facecolor='w',edgecolor='w',format='png')
     fp.close()
     try:
-        print registerImage(name,when)
+        registerImage(name,when)
     except:
         print traceback.format_exc()
         
