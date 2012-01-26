@@ -32,7 +32,8 @@ from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM, \
                                     RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, \
                                     RPC_PORT_DATALOGGER, RPC_PORT_QUICK_GUI, \
                                     RPC_PORT_INSTR_MANAGER, RPC_PORT_FREQ_CONVERTER, \
-                                    RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_VALVE_SEQUENCER
+                                    RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_VALVE_SEQUENCER, \
+                                    RPC_PORT_AUTOSAMPLER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SerIntrf import SerIntrf
 
@@ -159,7 +160,8 @@ class StateMachine(object):
         self.rdFreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER, ClientName = "Coordinator")
         self.spectCollector = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR, ClientName = "Coordinator")
         self.valveSequencer = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = "Coordinator")
-        
+        self.newAutosampler = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_AUTOSAMPLER, ClientName = "Coordinator")
+
     def defaultLogger(self,str):
         print str
 
@@ -190,7 +192,8 @@ class StateMachine(object):
                           "config":self.config,"Autosampler":Autosampler,"DummyAutosampler":DummyAutosampler,\
                           "GC":GC,"SerIntrf":SerIntrf,"GUI":self.guiProxy,"getDescription":self.getDescription,\
                           "time":time,"editParamDict":self.editParamDict,"runningFlag":True,"pause":self.turnOffRunningFlag,\
-                          "resume":self.turnOnRunningFlag, "portDict":self.portDict, "configObj":CustomConfigObj})
+                          "resume":self.turnOnRunningFlag, "portDict":self.portDict, "configObj":CustomConfigObj,
+                          "NEWAUTOSAMPLER":self.newAutosampler})
         CoordinatorScripts.DRIVER = self.driver
         CoordinatorScripts.MEASSYS = self.measSys
         CoordinatorScripts.SAMPLEMGR = self.sampleMgr
@@ -203,6 +206,7 @@ class StateMachine(object):
         CoordinatorScripts.FREQCONV = self.rdFreqConverter
         CoordinatorScripts.SPECTCOLLECTOR = self.spectCollector
         CoordinatorScripts.VALSEQ = self.valveSequencer
+        
         #try:
         #    exec self.script in self.scriptEnv
         #except Exception,e:
