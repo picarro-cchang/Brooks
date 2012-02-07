@@ -205,13 +205,14 @@ def updateView():
         heading = 0
         altitude = 0
     try:
-        varList = ["GPS_ABS_LONG","GPS_ABS_LAT"]
+        varList = ["GPS_ABS_LONG","GPS_ABS_LAT","GPS_FIT"]
         params = {'startPos':-2,'varList':json.dumps(varList)}
         if alogName is not None: params['alog'] = alogName
         try:
             result = service.getData(params)
-            longStr = "<longitude>%s</longitude>" % result['GPS_ABS_LONG'][-1]
-            latStr = "<latitude>%s</latitude>" % result['GPS_ABS_LAT'][-1]
+            if result['GPS_FIT'][-1] > 0:
+                longStr = "<longitude>%s</longitude>" % result['GPS_ABS_LONG'][-1]
+                latStr = "<latitude>%s</latitude>" % result['GPS_ABS_LAT'][-1]
         except:    
             longStr = ""
             latStr = ""

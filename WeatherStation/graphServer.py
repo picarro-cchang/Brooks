@@ -55,6 +55,10 @@ for dirpath,dirnames,filenames in os.walk(IMAGEROOT):
 app = Flask(__name__)
 app.config.from_object(__name__)
 
+@app.route('/map')
+def map():
+    return render_template('showmap.html')
+
 @app.route('/')
 def index():
     return render_template('graph.html')

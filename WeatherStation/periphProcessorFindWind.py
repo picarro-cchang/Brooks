@@ -14,7 +14,7 @@ import itertools
 
 SourceTuple = namedtuple('SourceTuple',['ts','valTuple'])
 
-# periphDataProcessor.py is a script for the peripheral data processor
+# periphProcessorFindWind.py is a script for finding the wind statistics
 
 class RawSource(object):
     """RawSource objects are created from a data queue. They expose a getData method
@@ -136,7 +136,7 @@ def toXY(lat,lon,lat_ref,lon_ref):
     if lat<lat_ref: y = -y
     return x,y
 
-def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.1):
+def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.01):
     """Use linear interpolation to synchronize a collection of decendents of RawSource (in 
     sourceList) to a grid of times which are multiples of msInterval. A per-source offset is 
     specified in offsetList to compensate for timestamp differences. Each source either returns None
@@ -166,7 +166,7 @@ def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.1):
         for s,offset in zip(sourceList,msOffsetList):
             while True:
                 d = s.getData(ts+offset)
-                if DONE(): return
+                # if DONE(): return
                 if d is not None:
                     valTuples.append(d.valTuple)
                     break
@@ -174,7 +174,7 @@ def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.1):
         yield ts, valTuples
         ts += msInterval
         
-SyncCdataTuple = namedtuple('SyncCdataTuple',['ts','lon','lat','fit','zPos','mHead','aHead','aVel'])
+SyncCdataTuple  = namedtuple('SyncCdataTuple',['ts','lon','lat','fit','zPos','mHead','aHead','aVel'])
 DerivCdataTuple = namedtuple('DerivCdataTuple',SyncCdataTuple._fields + ('zVel',))
 CalibCdataTuple = namedtuple('CalibCdataTuple',DerivCdataTuple._fields + ('tVel','calParams'))
 StatsCdataTuple = namedtuple('StatsCdataTuple',CalibCdataTuple._fields + ('wMean','aStdDev'))
@@ -182,15 +182,23 @@ StatsCdataTuple = namedtuple('StatsCdataTuple',CalibCdataTuple._fields + ('wMean
 def syncCdataSource(syncDataSource):
     """Convert GPS lat and lon to Cartesian coordinates and represent vectors of interest 
     as complex numbers (North)+1j*(East) so that the argument of the complex number is the 
-    bearing. Note that x and y remain at zero until there is at least one valid GPS fix"""
+    bearing. Note that x and y remain at zero until the GPS is good"""
     lon_ref, lat_ref = None, None
     x, y = 0.0, 0.0
+    gpsOkThreshold = 4  # Need these many good GPS points before using data
+    
+    gpsCount = gpsOkThreshold
     for ts,[gps,mag,anem] in syncDataSource:
         lat, lon, fit = gps.GPS_ABS_LAT, gps.GPS_ABS_LONG, gps.GPS_FIT
-        if lat_ref is None and fit>=1.0:
+        if gpsCount>0: gpsCount -= 1
+        if fit < 1.0: gpsCount = gpsOkThreshold # Indicate bad GPS
+        if lat_ref is None and gpsCount == 0:
             lat_ref, lon_ref = lat, lon
         if lat_ref is not None:
-            x,y = toXY(lat,lon,lat_ref,lon_ref)
+            if gpsCount == 0:
+                x,y = toXY(lat,lon,lat_ref,lon_ref)
+            else:
+                x,y = float('nan'), float('nan')
         zPos = y+1j*x
         mHead = mag.WS_COS_HEADING+1j*mag.WS_SIN_HEADING
         aHead = anem.WS_COS_HEADING+1j*anem.WS_SIN_HEADING
@@ -264,7 +272,7 @@ def trueWindSource(derivCdataSource):
     nBins = 4
     maxPoints = 200
     dataDeques = [deque() for i in range(nBins)]
-
+    
     # Scalars for determining scaling between weather station and GPS speeds
     zVelSsq = 0.0
     zVelcVel = 0.0
@@ -291,19 +299,22 @@ def trueWindSource(derivCdataSource):
         phi = angle(r*exp(1j*(theta-p0))-w)
         # Corrected wind velocity relative to the vehicle
         cVel = d.aVel*exp(1j*(phi-theta+p0))
-        # Subtract the velocity of the vehicle derived from GPS to get the wind bearing relative to ground
-        tVel = cVel - d.zVel
         # Compute statistics for estimating scale factor between GPS and weather station speeds
-        zVelSsq += abs(d.zVel)**2
-        zVelcVel += real(d.zVel*conj(cVel))
+        if not isnan(d.zVel):
+            zVelSsq += abs(d.zVel)**2
+            zVelcVel += real(d.zVel*conj(cVel))
         
         # Following is scale factor to apply to weather station speed before subtraction of GPS velocity
-        print zVelSsq/zVelcVel
+        # print zVelSsq/zVelcVel
+
+        # Subtract the velocity of the vehicle derived from GPS to get the wind bearing relative to ground
+        scaleFac = 1.0
+        tVel = scaleFac*cVel - d.zVel
         
         # Update the parameters of the calibration from time to time
         phi0 = angle(d.zVel)
         theta0 = -angle(d.mHead)
-        if d.fit >= 1:
+        if not isnan(d.zVel):      # Reject bad GPS data
             if abs(d.zVel) > 2.0:  # Car is moving fast if speed > 2m/s. Use these for calibrating
                                    # magnetometer against GPS
                 # Determine which deque to put data onto 
@@ -322,6 +333,7 @@ def trueWindSource(derivCdataSource):
             if len(phi0)>=50:
                 try:
                     p0,p1,p2 = calCompass(phi0,theta0,[p0,p1,p2])
+                    print "Compass params: %10.2f %10.2f %10.2f" % (p0, p1, p2)
                 except:
                     pass
         yield CalibCdataTuple(*(d+(tVel,[p0,p1,p2]))) 
@@ -334,17 +346,27 @@ def windStatistics(windSource,statsInterval):
     aSum = 0.0
     buff = deque()    
     for w in windSource:
-        buff.append(w.tVel)
-        wSum += w.tVel
-        aSum += exp(1j*angle(w.tVel))
-        if len(buff)>statsInterval:
-            oldest = buff.popleft()
-            wSum -= oldest
-            aSum -= exp(1j*angle(oldest))
-        n = len(buff)
-        wMean = wSum/n
-        eps = sqrt(1-abs(aSum/n)**2)
-        aStdDev = arcsin(eps)*(1+0.1547*eps**3)
+        if isnan(w.tVel):
+            wSum = 0.0
+            aSum = 0.0
+            buff.clear()
+            wMean   = float('nan')+1j*float('nan')
+            aStdDev = float('nan')
+        else:
+            buff.append(w.tVel)
+            wSum += w.tVel
+            aSum += exp(1j*angle(w.tVel))
+            if len(buff)>statsInterval:
+                oldest = buff.popleft()
+                wSum -= oldest
+                aSum -= exp(1j*angle(oldest))
+            n = len(buff)
+            wMean = wSum/n
+            if n>0:
+                eps = sqrt(1-abs(aSum/n)**2)
+                aStdDev = arcsin(eps)*(1+0.1547*eps**3)
+            else:
+                aStdDev = pi/2.0
         yield StatsCdataTuple(*(w+(wMean,aStdDev))) 
 
 def main():
@@ -354,307 +376,6 @@ def main():
     syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
     statsAvg = 20
     for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource))),statsAvg)):
-        WRITEOUTPUT(d.ts,[real(d.wMean),imag(d.wMean),d.aStdDev])
+        WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev])
 
-        
-def main1(): 
-    gpsSource = GpsSource(SENSORLIST[0])
-    wsSource  = WsSource(SENSORLIST[1])
-    OFFSET = 0.0   # Offset for weather station magnetometer data to be in sync with GPS data
-    # Split the synchronized sources into two, so that one can be passed to the Cartesian converter
-    src1, src2 = itertools.tee(syncSources([gpsSource,wsSource,wsSource],[0,0,2000],1000),2)
-    csrc1 = cartSource(((gps.GPS_ABS_LONG,gps.GPS_ABS_LAT) for ts,(gps,ws1,ws2) in src1))
-    # Use izip to recombine the sources and produce the desired complex-valued tuple for analysis
-    syncCdataSource = (syncCdata(cartData,syncData) for cartData,syncData in itertools.izip(csrc1, src2))
-
-    name = 'mygraph'
-    fig = Figure()
-    ax = fig.add_subplot(1,1,1)
-    x = []
-    y = []
-    line1, = ax.plot(x,y,'bo')
-    line2, = ax.plot(x,y,'y.')
-    line3, = ax.plot(x,y,'g.')
-    ax.set_xlim(-200.0,200.0)
-    ax.set_ylim(-200.0,200.0)
-    ax.grid(True)
-    ax.set_xlabel('GPS Heading (degrees)')
-    ax.set_ylabel('Magnetometer Heading (degrees)')
-    
-    # We wish to model relationship between GPS heading and weather station heading, but only over those points
-    #  where the speed of the vehicle is large enough. So we split the data into two pairs of lists, one pair
-    #  when the car is moving fast and the other when it is not
-    gps_head1 = []
-    gps_head2 = []
-    ws_head1 = []
-    ws_head2 = []
-    phi_new1 = [] 
-    lastPlot = 0
-    toDeg = 180.0/pi
-
-    # We want to fit the most recent magnetometer data to a model consisting of a static bias field.
-    #  This model maps the GPS derived heading phi to the magnetometer heading theta. Data are required 
-    #  over a range of phi to get a good fit. We divide the range of phi into four bins. In each bin, we
-    #  have a deque of recent data points consisting of (phi,theta) pairs. Each deque has a certain 
-    #  maximum number of points. The fit is carried out on the points which are currently in the deques
-
-    p0 = 0  # Parameters of magnetometer calibration
-    p1 = 0  #  theta = p0 + arctan2(p2+sin(phi),p1+cos(phi))
-    p2 = 0
-
-    nBins = 4
-    maxPoints = 200
-    dataDeques = [deque() for i in range(nBins)]
-
-    def whichBin(phi,nBins):
-        return int(min(nBins-1,floor(nBins*(mod(phi,2*pi)/(2*pi)))))
-      
-    fp = file('compassFit.txt','w',0)
-    for i,d in enumerate(derivCdataSource(syncCdataSource)):
-        now = time.time()
-        phi = angle(d.zVel)
-        theta = -angle(d.wHead)
-        psi = angle(d.wVel)
-        # Apply corrections to the wind velocity using the current magnetometer calibration
-        # We need the inverse of the relation  theta = p0 + arctan2(p2+sin(phi),p1+cos(phi))
-        #  to solve for phi in terms of theta.
-        w = p1+1j*p2;
-        b = -2.0*real(w*exp(-1j*(theta-p0)))
-        c = abs(w)**2 - 1.0
-        disc = b**2 - 4.0*c
-        r = 0.5*(-b+sqrt(disc))
-        phi_new = angle(r*exp(1j*(theta-p0))-w)
-        # Corrected wind velocity relative to the vehicle
-        cVel = d.wVel*exp(1j*(phi_new-theta+p0))
-        # Subtract the velocity of the vehicle derived from GPS
-        
-        
-        #
-        if abs(d.zVel) > 2.0:  # Car is moving fast if speed > 2m/s. Use these for determining model
-            # Determine which deque to put data onto 
-            b = whichBin(phi,nBins)
-            dataDeques[b].append((phi,theta))
-            # Limit size of deque
-            while len(dataDeques[b])>maxPoints: dataDeques[b].popleft()
-            gps_head1.append(toDeg*phi)
-            ws_head1.append(toDeg*theta)
-            phi_new1.append(phi_new) 
-            print>>fp,"%12.7f%12.7f%12.7f" % (phi,theta,psi)
-        else:
-            gps_head2.append(toDeg*phi)
-            ws_head2.append(toDeg*theta)
-        if now-lastPlot > 5.0:  # Do a plot and calculate magnetometer calibration every 5s
-            phi = []
-            theta = []
-            for q in dataDeques:
-                phi    += [p for (p,t) in q]
-                theta  += [t for (p,t) in q]
-            phi = asarray(phi)
-            theta = asarray(theta)
-            
-            if len(phi)>50:
-                data = concatenate((cos(theta),sin(theta)))
-                def mock(params,phi):    # Generates mock data
-                    p0,p1,p2 = params
-                    th = p0 + arctan2(p2+sin(phi),p1+cos(phi))
-                    return concatenate((cos(th),sin(th)))
-                def fun(params):    # Function whose sum of squares is to be minimized
-                    return mock(params,phi)-data
-                def dfun(params):   # Jacobian of fun
-                    N = len(phi)
-                    dm = mock(params,phi)
-                    cth = dm[:N]
-                    sth = dm[N:]
-                    p0,p1,p2 = params
-                    f1 = p1+cos(phi)
-                    f2 = p2+sin(phi)
-                    den = f1**2 + f2**2
-                    c0 = concatenate((-sth,cth))
-                    c1 = concatenate((sth*f2/den,-cth*f2/den))
-                    c2 = concatenate((-sth*f1/den,cth*f1/den))
-                    return column_stack((c0,c1,c2))
-                x0 = array([0.0,0.0,0.0])
-                x,ier = leastsq(fun,x0,Dfun=dfun)
-                if ier in [1,2,3,4]:    # Successful return
-                    p0, p1, p2 = x[0], x[1], x[2]
-                phifine=linspace(-pi,pi,500)
-                N = len(phifine)    
-                yfine = mock(x,phifine)
-                # line3.set_data(toDeg*phifine,toDeg*arctan2(yfine[N:],yfine[:N]))
-                print "%15.3f %15.3f %15.3f" % (x[0], x[1], x[2])
-            line1.set_data(toDeg*phi,toDeg*theta)
-            line2.set_data(gps_head2,ws_head2)
-            line3.set_data(gps_head1,toDeg*asarray(phi_new1))
-            ax.set_title('Line %d' % i)
-            # ax.relim()
-            # ax.autoscale_view()
-            RENDER_FIGURE(fig,name)
-            lastPlot = time.time()
-        
-def xReadDatFile(fileName):
-    # Read a data file with column headings and yield a list of named tuples with the file contents
-    fp = open(fileName,'r')
-    headerLine = True
-    for l in fp:
-        if headerLine:
-            colHeadings = l.split()
-            DataTuple = namedtuple(os.path.splitext(os.path.split(fileName)[1])[0],colHeadings)
-            headerLine = False
-        else:
-            yield DataTuple(*[float(v) for v in l.split()])
-    fp.close()
-
-def list2cols(datAsList):
-    datAsCols = []
-    if datAsList:
-        for f in datAsList[0]._fields:
-            datAsCols.append(asarray([getattr(d,f) for d in datAsList]))
-        return datAsList[0]._make(datAsCols)
-    
-def aReadDatFile(fileName):
-    # Read a data file into a collection of numpy arrays
-    return list2cols([x for x in xReadDatFile(fileName)])
-        
-from scipy.interpolate import interp1d
-
-# The following is useful for testing the interpolation and
-#  synchronization of data sources. Change msInterval argument of 
-#  syncSources to a number other than 1000, or modify the startEtm 
-#  in simGpsWs to a non-integer value in order to check that 
-#  on-the-fly interpolation works. Run testSyncSource and confirm 
-#  that near-zero numbers are printed out
-
-def testSyncSource():
-    gpsSource = GpsSource(SENSORLIST[0])
-    wsSource  = WsSource(SENSORLIST[1])
-    msOffsets = [0,0,2000]  # ms offsets for GPS, magnetometer and sonic anemometer
-    
-    ssList = []
-    for ss in syncSources([gpsSource,wsSource,wsSource],msOffsets,1000):
-        ssList.append(ss)
-    
-    gpsCols = aReadDatFile('gps.dat')
-    wsCols  = aReadDatFile('ws.dat')
-
-    d1Cols = list2cols([d1 for ts,[d1,d2,d3] in ssList])
-    d2Cols = list2cols([d2 for ts,[d1,d2,d3] in ssList])
-    
-    f = interp1d(gpsCols.EPOCH_TIME,gpsCols.GPS_ABS_LAT)
-    print abs(f(d1Cols.EPOCH_TIME) - d1Cols.GPS_ABS_LAT)
-
-    f = interp1d(wsCols.EPOCH_TIME,wsCols.WS_COS_DIR)
-    print abs(f(d2Cols.EPOCH_TIME) - d2Cols.WS_COS_DIR)
-    raw_input('<Enter> to continue')
-
-def testSyncCdataSource():
-    gpsSource = GpsSource(SENSORLIST[0])
-    wsSource  = WsSource(SENSORLIST[1])
-    msOffsets = [0,0,2000]  # ms offsets for GPS, magnetometer and sonic anemometer
-    syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
-    
-    name = 'mygraph'
-    fig = Figure()
-    ax = fig.add_subplot(1,1,1)
-    x = []
-    y = []
-    line1, = ax.plot(x,y,'b.')
-    ax.grid(True)
-    ax.set_xlabel('Northwards Velocity')
-    ax.set_ylabel('Eastwards  Velocity')
-    
-    for d in derivCdataSource(syncCdataSource(syncDataSource)):
-        x.append(imag(d.zVel))
-        y.append(real(d.zVel))
-        
-    line1.set_data(asarray(x),asarray(y))
-    ax.relim()
-    ax.autoscale_view()
-    RENDER_FIGURE(fig,name)
-    raw_input("<Enter> to continue")
-
-def testTrueWindSource():
-    gpsSource = GpsSource(SENSORLIST[0])
-    wsSource  = WsSource(SENSORLIST[1])
-    msOffsets = [0,0,2000]  # ms offsets for GPS, magnetometer and sonic anemometer
-    syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
-    
-    name = 'mygraph'
-    fig = Figure()
-    ax = fig.add_subplot(1,1,1)
-    x = []
-    y = []
-    line1, = ax.plot(x,y,'b.')
-    ax.grid(True)
-    ax.set_xlabel('Northwards Velocity')
-    ax.set_ylabel('Eastwards  Velocity')
-    
-    for d in trueWindSource(derivCdataSource(syncCdataSource(syncDataSource))):
-        x.append(imag(d.tVel))
-        y.append(real(d.tVel))
-        print abs(d.tVel), (180.0/pi)*angle(d.tVel), d.calParams
-        
-    line1.set_data(asarray(x),asarray(y))
-    ax.relim()
-    ax.autoscale_view()
-    RENDER_FIGURE(fig,name)
-    print d.calParams
-    raw_input("<Enter> to continue")
-
-def testWindStatistics():
-    gpsSource = GpsSource(SENSORLIST[0])
-    wsSource  = WsSource(SENSORLIST[1])
-    msOffsets = [0,0,2000]  # ms offsets for GPS, magnetometer and sonic anemometer
-    syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
-    
-    name = 'mygraph'
-    fig = Figure()
-    ax1 = fig.add_subplot(2,1,1)
-    ax2 = fig.add_subplot(2,1,2)
-    t = []
-    y1 = []
-    y2 = []
-    y3 = []
-    y4 = []
-    line1, = ax1.plot(t,y1,'b.')
-    line2, = ax1.plot(t,y2,'g.')
-    line3, = ax2.plot(t,y3,'g.')
-    line4, = ax2.plot(t,y4,'r.')
-    ax1.grid(True)
-    ax2.grid(True)
-    ax1.set_xlabel('Time')
-    ax2.set_xlabel('Time')
-    ax1.set_ylabel('Speed')
-    ax2.set_ylabel('Bearing and Std Dev')
-    
-    tOrigin = None
-    for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource))),20)):
-        if tOrigin is None: tOrigin = d.ts
-        t.append(0.001*(d.ts - tOrigin))
-        y1.append(abs(d.zVel))
-        y2.append(abs(d.wMean))
-        
-        y3.append(180.0/pi * angle(d.wMean))
-        y4.append(180.0/pi * d.aStdDev)
-        if i % 20 == 0:
-            line1.set_data(asarray(t),asarray(y1))
-            line2.set_data(asarray(t),asarray(y2))
-            line3.set_data(asarray(t),asarray(y3))
-            line4.set_data(asarray(t),asarray(y4))
-            ax1.relim()
-            ax1.autoscale_view()
-            ax2.relim()
-            ax2.autoscale_view()
-            RENDER_FIGURE(fig,name)
-        
-    line1.set_data(asarray(t),asarray(y1))
-    line2.set_data(asarray(t),asarray(y2))
-    line3.set_data(asarray(t),asarray(y3))
-    line4.set_data(asarray(t),asarray(y4))
-    ax1.relim()
-    ax1.autoscale_view()
-    ax2.relim()
-    ax2.autoscale_view()
-    RENDER_FIGURE(fig,name)
-    raw_input("<Enter> to continue")
-
-testWindStatistics()
+main()

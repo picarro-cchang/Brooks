@@ -25,11 +25,6 @@ def genLatestFiles(baseDir,pattern):
             if fnmatch.fnmatch(name,pattern):
                 yield os.path.join(dirPath,name)
 
-# Convert a minimal .dat file to a text file for Matlab processing
-#  The columns in the output file are distance(m), methane 
-#  concentration(ppm), longitude(deg), latitude(deg) and 
-#  time.
-# N.B. NO SHIFT is applied to the data
 class PeakFinder(object):
     '''
     Find peak values
@@ -57,11 +52,6 @@ class PeakFinder(object):
         else:
             self.userlogfiles = '/data/mdudata/datalogAdd/*.dat'
 
-        if 'shift' in kwargs:
-            self.shift = int(kwargs['shift'])
-        else:
-            self.shift = 0
-
         if 'dx' in kwargs:
             self.dx = float(kwargs['dx'])
         else:
@@ -70,7 +60,7 @@ class PeakFinder(object):
         if 'sigmaMinFactor' in kwargs:
             sigmaMinFactor = float(kwargs['sigmaMinFactor'])
         else:
-            sigmaMinFactor = 0.75
+            sigmaMinFactor = 9.0
     
         self.sigmaMin = sigmaMinFactor*self.dx
     
@@ -89,7 +79,7 @@ class PeakFinder(object):
         if 'factor' in kwargs:
             self.factor = float(kwargs['factor'])
         else:
-            self.factor = 1.1
+            self.factor = 1.2
 
         if 'sleep_seconds' in kwargs:
             self.sleep_seconds = float(kwargs['sleep_seconds'])
@@ -123,18 +113,7 @@ class PeakFinder(object):
             
     def run(self):
         '''
-        '''
-        posFields = 'long lat'
-        baseFields = 'time conc valves'
-        extraFields  = 'conc_up conc_down conc_dt species'
-        allFields = posFields+' '+baseFields+' '+extraFields
-        
-        PosData  = namedtuple('PosData',  posFields)
-        BaseData = namedtuple('BaseData', baseFields)
-        FullData = namedtuple('FullData', baseFields+" "+extraFields)
-        PosBaseData = namedtuple('PosBaseData', posFields+" "+baseFields)
-        PosFullData = namedtuple("PosFullData",allFields)
-        
+        '''        
         def distVincenty(lat1, lon1, lat2, lon2):
             # WGS-84 ellipsiod. lat and lon in DEGREES
             a = 6378137
@@ -181,10 +160,10 @@ class PeakFinder(object):
                          B/6*cos2SigmaM*(-3+4*sinSigma*sinSigma)*(-3+4*cos2SigmaM*cos2SigmaM)))
             return b*A*(sigma-deltaSigma)
         
-        def toXY(lat,long,lat_ref,long_ref):
-            x = distVincenty(lat_ref,long_ref,lat_ref,long)
-            if long<long_ref: x = -x
-            y = distVincenty(lat_ref,long,lat,long)
+        def toXY(lat,lon,lat_ref,lon_ref):
+            x = distVincenty(lat_ref,lon_ref,lat_ref,lon)
+            if lon<lon_ref: x = -x
+            y = distVincenty(lat_ref,lon,lat,lon)
             if lat<lat_ref: y = -y
             return x,y
             
@@ -309,28 +288,23 @@ class PeakFinder(object):
             #  (dist,methane_conc,longitude,latitude,epoch_time)
             JUMP_MAX = 500.0
             dist = None
-            lat_ref, long_ref = None, None
+            lat_ref, lon_ref = None, None
+            DataTuple = None
             # Determine if there are extra data in the file
             for line in source:
                 try:
                     entry = {}
-                    extra = "CH4dt" in line
+                    if DataTuple is None:
+                        DataTuple = namedtuple("DataTuple",line.keys())
                     for  h in line.keys():
                         try:
                             entry[h] = float(line[h])
                         except:
                             entry[h] = NaN
-                    long, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
-                    pos = PosData(long,lat)
-                    if not 'ValveMask' in entry: entry['ValveMask'] = 0
-                    if extra: 
-                        data = FullData(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'],entry['CH4up'],entry['CH4down'],entry['CH4dt'],entry['species'])
-                    else:
-                        data = BaseData(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'])
-
-                    if lat_ref == None or long_ref == None:
-                        long_ref, lat_ref = lat, long
-                    x,y = toXY(lat,long,lat_ref,long_ref)
+                    lon, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
+                    if lat_ref == None or lon_ref == None:
+                        lon_ref, lat_ref = lat, lon
+                    x,y = toXY(lat,lon,lat_ref,lon_ref)
                     if dist is None:
                         jump = 0.0
                         dist = 0.0
@@ -339,11 +313,11 @@ class PeakFinder(object):
                         dist += jump
                     x0, y0 = x, y
                     if jump < JUMP_MAX:
-                        yield dist,pos,data
+                        yield dist,DataTuple(**entry)
                     else:
-                        yield None,None,None    # Indicate that dist is bad, and we must restart
+                        yield None,None    # Indicate that dist is bad, and we must restart
                         dist = None
-                        lat_ref, long_ref = None, None
+                        lat_ref, lon_ref = None, None
                 except:
                     print traceback.format_exc()
             
@@ -352,12 +326,11 @@ class PeakFinder(object):
             #  (dist,methane_conc,longitude,latitude,epoch_time)
             JUMP_MAX = 500.0
             dist = None
-            lat_ref, long_ref = None, None
+            lat_ref, lon_ref = None, None
             line = source.next()
             atoms = fixed_width(line,26)
             headings = [a.replace(" ","_") for a in atoms]
-            # Determine if there are extra data in the file
-            extra = "CH4dt" in headings
+            DataTuple = namedtuple("DataTuple",headings)
             for line in source:
                 try:
                     entry = {}
@@ -370,17 +343,11 @@ class PeakFinder(object):
                                 entry[h] = float(a)
                             except:
                                 entry[h] = NaN
-                        long, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
-                        pos = PosData(long,lat)
-                        if not 'ValveMask' in entry: entry['ValveMask'] = 0
-                        if extra: 
-                            data = FullData(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'],entry['CH4up'],entry['CH4down'],entry['CH4dt'],entry['species'])
-                        else:
-                            data = BaseData(entry['EPOCH_TIME'],entry['CH4'],entry['ValveMask'])
+                        lon, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
 
-                        if lat_ref == None or long_ref == None:
-                            long_ref, lat_ref = lat, long
-                        x,y = toXY(lat,long,lat_ref,long_ref)
+                        if lat_ref == None or lon_ref == None:
+                            lon_ref, lat_ref = lat, lon
+                        x,y = toXY(lat,lon,lat_ref,lon_ref)
                         if dist is None:
                             jump = 0.0
                             dist = 0.0
@@ -389,72 +356,13 @@ class PeakFinder(object):
                             dist += jump
                         x0, y0 = x, y
                         if jump < JUMP_MAX:
-                            yield dist,pos,data
+                            yield dist,DataTuple(**entry)
                         else:
-                            yield None,None,None    # Indicate that dist is bad, and we must restart
+                            yield None,None    # Indicate that dist is bad, and we must restart
                             dist = None
-                            lat_ref, long_ref = None, None
+                            lat_ref, lon_ref = None, None
                 except:
                     print traceback.format_exc()
-                    
-        def shifter(source,shift=0):
-            """ Applies the specified shift (in samples) to the output of
-            "source" to align the unshifted data colums with the shifted
-            data columns. For example, consider a source generating the following:
-            >>> src = (e for e in [('x0','U0','S0'),('x1','U1','S1'),('x2','U2','S2'), \
-                                   ('x3','U3','S3'),('x4','U4','S4'),('x5','U5','S5')])
-        
-            We now split this into several sources for the following tests:
-            >>> src1,src2,src3 = itertools.tee(src,3)
-            
-            and the shift is zero, the result should just be the original data:
-            >>> for e in shifter(src1,0): print e
-            ('x0', 'U0', 'S0')
-            ('x1', 'U1', 'S1')
-            ('x2', 'U2', 'S2')
-            ('x3', 'U3', 'S3')
-            ('x4', 'U4', 'S4')
-            ('x5', 'U5', 'S5')
-            
-            If the shift is negative, we move the shifted data up relative to the unshifted data:
-            >>> for e in shifter(src2,-2): print e
-            ('x0', 'U0', 'S2')
-            ('x1', 'U1', 'S3')
-            ('x2', 'U2', 'S4')
-            ('x3', 'U3', 'S5')
-        
-            If the shift is positive, we move the shifted data down relative to the unshifted data:
-            >>> for e in shifter(src3,2): print e
-            ('x2', 'U2', 'S0')
-            ('x3', 'U3', 'S1')
-            ('x4', 'U4', 'S2')
-            ('x5', 'U5', 'S3')
-            """
-            tempStore = deque()
-            if shift == 0:
-                for x,u,s in source:
-                    yield x,u,s
-            elif shift < 0:
-                for i,(x,u,s) in enumerate(source):
-                    tempStore.append((x,u))
-                    if i>=-shift:
-                        yield tempStore.popleft()+(s,)
-            else:
-                for i,(x,u,s) in enumerate(source):
-                    tempStore.append(s)
-                    if i>=shift:
-                        yield x,u,tempStore.popleft() 
-        
-        def combiner(source):
-            """
-            The source produces triples of the form (x,u,s) where u and s represent unshifted and
-            shifted data. If x, u and s are all not None, yield (x,u+s). If any is None, yield (None,None)
-            """
-            for x,u,s in source:
-                if (x is None) or (u is None) or (s is None):
-                    yield (None,None)
-                else:
-                    yield (x,u+s)
                         
         def interpolator(source,interval):
             """
@@ -501,7 +409,7 @@ class PeakFinder(object):
                     if x_p is not None:
                         if x != x_p:
                             alpha = (xi-x_p)/(x-x_p)
-                            di = tuple([alpha*y+(1-alpha)*y_p for y,y_p in zip(d,d_p)])
+                            di = d._make([alpha*y+(1-alpha)*y_p for y,y_p in zip(d,d_p)])
                     yield xi, di
                     mult += 1
                     xi = interval*mult
@@ -510,24 +418,16 @@ class PeakFinder(object):
         def refiner(source):
             """A basic methane only instrument collects a single concentration for each line in the data log file whereas a 
             FCDS style analyzer collects extra information which must be filtered according to species."""
-                
             # Linear intepolation factory
             def lin_interp(alpha): return lambda old,new: (1-alpha)*old + alpha*new
-
-            baseLength  = len(PosData._fields) + len(BaseData._fields)
-            fieldList = (posFields+" "+baseFields).split()
             oldDist, oldData = None, None
             for dist,data in source:
                 if dist is None:
                     yield None, None
                     continue
-                if len(data) == baseLength:
-                    oldDist, oldData = None, None
-                    yield dist,PosBaseData(*data)
-                else: # extra fields present
-                    data = PosFullData(*data)
+                if 'species' in data._fields:
                     if int(data.species) != 150: continue   # Not iso-methane
-                    yield dist,PosBaseData(*[getattr(data,field) for field in fieldList])
+                yield dist,data
                         
         def spaceScale(source,dx,t_0,nlevels,tfactor):
             """Analyze source at a variety of scales using the differences of Gaussians of
@@ -571,29 +471,32 @@ class PeakFinder(object):
                 v = ssbuff[level,col]
                 isPeak = (v>ssbuff[level+1,colp]) and (v>ssbuff[level+1,col]) and (v>ssbuff[level+1,colm]) and \
                          (v>ssbuff[level,colp])   and (v>ssbuff[level,colm])  and \
-                         (v>ssbuff[level-1,colp]) and (v>ssbuff[level-1,col]) and (v>ssbuff[level+1,colm])
+                         (level==0 or (v>ssbuff[level-1,colp]) and (v>ssbuff[level-1,col]) and (v>ssbuff[level-1,colm]))
                 return isPeak, col         
             initBuff = True
-            for x,y in source:
-                if x is None:
+            PeakTuple = None
+            for dist,data in source:
+                if dist is None:
                     initBuff = True
                     continue
                 # Initialize 
-                long,lat,epochTime,methane,valves = y
                 if initBuff:
                     ssbuff = zeros((nlevels,npoints),float)
-                    # Define a cache for the position and concentration data so that the
+                    # Define a cache for the distance and data so that the
                     #  coordinates and value of peaks can be looked up
-                    cache = zeros((6,npoints),float)
+                    cache = zeros((1+len(data),npoints),float)
                     # c is the where in ssbuff the center of the kernel is placed
                     c = hmax+2
                     # z is the column in ssbuff which has to be set to zero before adding
                     #  in the kernels
                     z = 0
                     for i in range(nlevels):
-                        ssbuff[i,c-hList[i]:c+hList[i]+1] = -methane*cumsum(kernelList[i])
+                        ssbuff[i,c-hList[i]:c+hList[i]+1] = -data.CH4*cumsum(kernelList[i])
                     initBuff = False
-                cache[:,c] = (epochTime,x,long,lat,methane,valves)
+                if PeakTuple is None:
+                    PeakTuple = namedtuple("PeakTuple",("DISTANCE",) + data._fields + ("AMPLITUDE","SIGMA"))
+    
+                cache[:,c] = (dist,) + data
                 # Zero out the old data
                 ssbuff[:,z] = 0
                 # Do the convolution by adding in the current methane concentration
@@ -603,24 +506,30 @@ class PeakFinder(object):
                     # Add the kernel into the space-scale buffer, taking into account wrap-around
                     #  into the buffer
                     if c-hList[i]<0:
-                        ssbuff[i,:c+hList[i]+1] += methane*kernelList[i][hList[i]-c:]
-                        ssbuff[i,npoints-hList[i]+c:] += methane*kernelList[i][:hList[i]-c]
+                        ssbuff[i,:c+hList[i]+1] += data.CH4*kernelList[i][hList[i]-c:]
+                        ssbuff[i,npoints-hList[i]+c:] += data.CH4*kernelList[i][:hList[i]-c]
                     elif c+hList[i]>=npoints:
-                        ssbuff[i,c-hList[i]:] += methane*kernelList[i][:npoints-c+hList[i]]
-                        ssbuff[i,:c+hList[i]+1-npoints] += methane*kernelList[i][npoints-c+hList[i]:]
+                        ssbuff[i,c-hList[i]:] += data.CH4*kernelList[i][:npoints-c+hList[i]]
+                        ssbuff[i,:c+hList[i]+1-npoints] += data.CH4*kernelList[i][npoints-c+hList[i]:]
                     else:
-                        ssbuff[i,c-hList[i]:c+hList[i]+1] += methane*kernelList[i]
-                    if i>0 and i<nlevels-1:
+                        ssbuff[i,c-hList[i]:c+hList[i]+1] += data.CH4*kernelList[i]
+                    if i<nlevels-1:
                         # Check if we have found a peak in space-scale representation
                         # If so, add it to a list of peaks which are stored as tuples
-                        #  of the form (dist,long,lat,methane,amplitude,sigma)
+                        #  of the form (dist,*dataTuple,amplitude,sigma)
                         isPeak,col = checkPeak(i,c-hList[i]-1)
                         if isPeak:
                             # A peak is disqualified if the valve settings in an interval before the 
                             #  peak arrives were in the collecting state. This means that the tape recorder
                             #  was on, and the peak was a replay of a previously collected one
-                            if not(collecting(mean([cache[5,j%npoints] for j in range(col-5,col+1)]))):
-                                peaks.append(tuple([v for v in cache[:,col]]) + (0.5*ssbuff[i,col]/(3.0**(-1.5)),sqrt(0.5*scaleList[i]),))
+                            reject = False
+                            if 'ValveMask' in data._fields:
+                                where = data._fields.index('ValveMask')
+                                reject = collecting(mean([cache[where+1,j%npoints] for j in range(col-5,col+1)]))
+                            if not reject:
+                                amplitude = 0.5*ssbuff[i,col]/(3.0**(-1.5))
+                                sigma = sqrt(0.5*scaleList[i])
+                                peaks.append(PeakTuple(*[v for v in cache[:,col]],AMPLITUDE=amplitude,SIGMA=sigma))
                 c += 1
                 if c>=npoints: c -= npoints
                 z += 1
@@ -660,7 +569,6 @@ class PeakFinder(object):
             
             return
         
-        shift = self.shift
         dx = self.dx
         source = None
         sigmaMin = self.sigmaMin
@@ -672,7 +580,9 @@ class PeakFinder(object):
         factor = self.factor
         t0 = 2*(sigmaMin/factor)**2
         nlevels = int(ceil((log(2*sigmaMax**2)-log(t0))/log(factor)))+1
-
+        # Quantities to place in peak data file, if they are available
+        headings = ["EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA","WIND_N","WIND_E","WIND_DIR_SDEV"]
+        hFormat  = ["%-14.2f","%-14.3f","%-14.6f","%-14.6f","%-14.3f","%-14.4f","%-14.3f","%-14.4f","%-14.4f","%-14.3f"]
         while True:
             # Getting source
             if self.usedb:
@@ -692,41 +602,47 @@ class PeakFinder(object):
                     print "No files to process: sleeping for %s seconds" % self.sleep_seconds
 
             if fname:
-                # initializing peak output
-                if self.usedb:
-                    peakname = fname.replace(".dat", ".peaks")
-                    doc_hdrs = ["EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA"]
-                    doc_data = []
-                    doc_row = 0
-                else:
-                    peakFile = os.path.splitext(fname)[0] + '.peaks'
-                    try:
-                        handle = open(peakFile, 'wb+', 0) #open file with NO buffering
-                    except:
-                        raise RuntimeError('Cannot open peak output file %s' % peakFile)
-                    
-                    handle.write("%-14s%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA"))
-
-                # Make a generator which yields (distance,(long,lat,epoch_time,methane))
-                #  from the analyzer data by applying a shift to the concentration and
-                #  time data to align the rows
+                headerWritten = False
+                # Make a generator which yields (distance,data)
                 if self.usedb:
                     source = followLastUserLogDb()
-                    alignedData = combiner(shifter(analyzerDataDb(source),shift))
+                    alignedData = analyzerDataDb(source)
                 else:
                     source = followLastUserFile(fname)
-                    alignedData = combiner(shifter(analyzerData(source),shift))
+                    alignedData = analyzerData(source)
                     
                 refinedData = refiner(alignedData)
                 intData = interpolator(refinedData,dx)
                 peakData = spaceScale(intData,dx,t0,nlevels,factor)
-                filteredPeakData = ((epoch_time,dist,long,lat,methane,amplitude,sigma) for epoch_time,dist,long,lat,methane,valves,amplitude,sigma in peakData if amplitude>minAmpl)
+                filteredPeakData = (pk for pk in peakData if pk.AMPLITUDE>minAmpl)
                 content = []
-                for epoch_time,dist,long,lat,methane,amplitude,sigma in filteredPeakData:
+                for pk in filteredPeakData:
+                    if not headerWritten:
+                        # Get the list of variables and formats for the entries
+                        #  in the peakData source
+                        hList = []
+                        hfList = []
+                        for h,hf in zip(headings,hFormat):
+                            if h in pk._fields:
+                                hList.append(h)
+                                hfList.append(hf)
+                        if self.usedb:
+                            peakname = fname.replace(".dat", ".peaks")
+                            doc_hdrs = hList
+                            doc_data = []
+                            doc_row = 0
+                        else:
+                            peakFile = os.path.splitext(fname)[0] + '.peaks'
+                            try:
+                                handle = open(peakFile, 'wb+', 0) #open file with NO buffering
+                            except:
+                                raise RuntimeError('Cannot open peak output file %s' % peakFile)
+                            handle.write((len(hList)*"%-14s"+"\r\n") % tuple(hList))
+                        headerWritten = True
                     if self.usedb:
                         doc = {}
                         #Note: please assure that value list and doc_hdrs are in the same sequence
-                        for col, val in zip(doc_hdrs, [epoch_time,dist,long,lat,methane,amplitude,sigma]):
+                        for col, val in zip(doc_hdrs, [getattr(pk,h) for h in doc_hdrs]):
                             doc[col] = float(val)
                         
                         doc_row += 1
@@ -739,7 +655,7 @@ class PeakFinder(object):
                         doc_data = []
                         
                     else:
-                        handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.4f%-14.3f\r\n" % (epoch_time,dist,long,lat,methane,amplitude,sigma))
+                        handle.write(("".join(hfList)+"\r\n") % tuple([getattr(pk,h) for h in hList]))
                 
                 if not self.usedb:
                     handle.close()

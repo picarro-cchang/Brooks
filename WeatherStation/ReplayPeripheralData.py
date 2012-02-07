@@ -2,6 +2,9 @@ from Host.Common.MeasData import MeasData
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.LineCacheMmap import getSlice, getSliceIter
 from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER
+from Host.Common import StringPickler
+
+import cPickle
 import time
 # Dummy address for debugging
 BROADCAST_PORT_DATA_MANAGER = 40500
@@ -36,12 +39,16 @@ def line2Dict(line,header):
 #gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Tuesday 1_17_12 data\GPS_Raw\2012\01\17\FCDS2003-20120117-165607Z-DataLog_GPS_Raw.dat"
 #wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Tuesday 1_17_12 data\WS_Raw\2012\01\17\FCDS2003-20120117-165607Z-DataLog_WS_Raw.dat"
 
-gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Tuesday 1_17_12 data\GPS_Raw\2012\01\17\FCDS2003-20120117-205610Z-DataLog_GPS_Raw.dat"
-wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Tuesday 1_17_12 data\WS_Raw\2012\01\17\FCDS2003-20120117-205609Z-DataLog_WS_Raw.dat"
+#gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Tuesday 1_17_12 data\GPS_Raw\2012\01\17\FCDS2003-20120117-205610Z-DataLog_GPS_Raw.dat"
+#wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Tuesday 1_17_12 data\WS_Raw\2012\01\17\FCDS2003-20120117-205609Z-DataLog_WS_Raw.dat"
+
+#gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Wednesday 1_18_12\GPS_Raw\2012\01\18\FCDS2003-20120118-164701Z-DataLog_GPS_Raw.dat"
+#wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Wednesday 1_18_12\WS_Raw\2012\01\18\FCDS2003-20120118-164701Z-DataLog_WS_Raw.dat"
 
 #gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Wednesday 1_18_12\GPS_Raw\2012\01\18\FCDS2003-20120118-173257Z-DataLog_GPS_Raw.dat"
 #wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Wednesday 1_18_12\WS_Raw\2012\01\18\FCDS2003-20120118-173256Z-DataLog_WS_Raw.dat"
 
+#BAD MAGNETOMETER DATA
 #gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Wednesday 1_18_12\GPS_Raw\2012\01\18\FCDS2003-20120118-213300Z-DataLog_GPS_Raw.dat"
 #wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Wednesday 1_18_12\WS_Raw\2012\01\18\FCDS2003-20120118-213259Z-DataLog_WS_Raw.dat"
 
@@ -57,6 +64,12 @@ wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Tue
 #gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Friday 1_19_12 data\GPS_Raw\2012\01\20\FCDS2003-20120120-163430Z-DataLog_GPS_Raw.dat"
 #wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Friday 1_19_12 data\WS_Raw\2012\01\20\FCDS2003-20120120-163431Z-DataLog_WS_Raw.dat"
 
+gpsFile = "ConcordData/FCDS2003-20120203-194800Z-DataLog_GPS_Raw.dat"
+wsFile  = "ConcordData/FCDS2003-20120203-194759Z-DataLog_WS_Raw.dat"
+
+#gpsFile = "gps.dat"
+#wsFile  = "ws.dat"
+
 h1 = getSlice(gpsFile,0,1)[0].line.split()
 h2  = getSlice(wsFile,0,1)[0].line.split()
 
@@ -64,17 +77,24 @@ it1 = getSliceIter(gpsFile,1)
 it2 = getSliceIter(wsFile,1)
 
 dataBroadcaster = Broadcaster(BROADCAST_PORT_DATA_MANAGER, "ReplayPeriphData", logFunc=Log)
-
+time.sleep(2.0)
 
 while True:
-    l1 = it1.next()
-    d1 = line2Dict(l1.line,h1)
-    u1 = d1['EPOCH_TIME']
-    measData = MeasData('parseGPS', u1, d1, True, 0)
-    dataBroadcaster.send(measData.dumps())
-    l2 = it2.next()
-    d2 = line2Dict(l2.line,h2)
-    u2 = d2['EPOCH_TIME']
-    measData = MeasData('parseWeatherStation', u2, d2, True, 0)
-    dataBroadcaster.send(measData.dumps())
-    time.sleep(0.05)
+    try:
+        l1 = it1.next()
+        d1 = line2Dict(l1.line,h1)
+        u1 = d1['EPOCH_TIME']
+        measData = MeasData('parseGPS', u1, d1, True, 0)
+        dataBroadcaster.send(measData.dumps())
+        l2 = it2.next()
+        d2 = line2Dict(l2.line,h2)
+        u2 = d2['EPOCH_TIME']
+        measData = MeasData('parseWeatherStation', u2, d2, True, 0)
+        dataBroadcaster.send(measData.dumps())
+        time.sleep(0.01)
+    except StopIteration,e:
+        print "Out of data"
+        dataBroadcaster.send(StringPickler.PackArbitraryObject(e))
+        break
+        
+time.sleep(2.0)

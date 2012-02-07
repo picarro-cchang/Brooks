@@ -2,6 +2,7 @@
 #  which came from the peripherals
 
 import Queue
+import sys
 import threading
 import time
 import traceback
@@ -10,6 +11,7 @@ from Host.Common import CmdFIFO, StringPickler, timestamp
 from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER
 from Host.Common.Listener import Listener
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from math import pi
 
 try:
     import simplejson as json
@@ -70,14 +72,21 @@ def Log(msg):
     
 class DataManagerOutput(object):
     def __init__(self):
+        self.doneFlag = False
         self.dmQueue = Queue.Queue(0)
         self.gpsQueue = Queue.Queue(100)
         self.wsQueue = Queue.Queue(100)
-        self.scriptEnviron = dict(QUEUES=[self.gpsQueue,self.wsQueue],RENDER_FIGURE=renderFigure)
-        self.scriptFile = "periphDataProcessor.py"
+        self.scriptEnviron = dict(
+            SENSORLIST=[self.gpsQueue,self.wsQueue],
+            RENDER_FIGURE=renderFigure,
+            DONE=self.done,
+            WRITEOUTPUT=self.writeOutput)
+        self.scriptFile = "periphProcessorFindWind.py"
         sourceString = file(self.scriptFile,"r").read().strip()
         sourceString = sourceString.replace("\r\n","\n")
         self.scriptCode = compile(sourceString, self.scriptFile, "exec") #providing path accurately allows debugging of script
+        self.op = file("windStats.txt","w",0)
+        print >>self.op, "%-20s%-20s%-20s%-20s" % ("EPOCH_TIME","WIND_N","WIND_E","WIND_DIR_SDEV")
         
     def listen(self):
         self.dmListener = Listener(self.dmQueue,
@@ -93,26 +102,37 @@ class DataManagerOutput(object):
         except Exception:
             print "Exception in PeriphDataProcessorScript"
             print traceback.format_exc()   
-        print "PeriphDataProcessorScript terminated unexpectedly"
-        
+            sys.exit(1)
+            
     def run(self):
         self.scriptThread = threading.Thread(target=self.runScript)
         self.scriptThread.setDaemon(True)
         self.scriptThread.start()
         while True:
             output = self.dmQueue.get()
-            if output['source'] == 'parseGPS':
+            if isinstance(output,Exception):
+                self.doneFlag = True
+                break
+            elif output['source'] == 'parseGPS':
                 ts = int(timestamp.unixTimeToTimestamp(output['time']))
                 self.gpsQueue.put((ts,output['data']))
             elif output['source'] == 'parseWeatherStation':
                 ts = int(timestamp.unixTimeToTimestamp(output['time']))
                 self.wsQueue.put((ts,output['data']))
-            
+        print "Waiting for PeripDataProcessorScript to terminate"
+        self.scriptThread.join()
+        
+    def done(self):
+        return self.doneFlag and self.gpsQueue.qsize() == 0 and self.wsQueue.qsize() == 0 
+        
     def stop(self):
         self.dmListener.stop()
+    
+    def writeOutput(self,ts,dataList):
+        # print "%-20.3f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],(180.0/pi)*dataList[2])
+        print >> self.op, "%-20.3f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],(180.0/pi)*dataList[2])
         
 if __name__ == "__main__":
     dm = DataManagerOutput()
     dm.listen()
     dm.run()
-    

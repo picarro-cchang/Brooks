@@ -56,11 +56,6 @@ class PeakAnalyzer(object):
         else:
             self.userlogfiles = '/data/mdudata/datalogAdd/*.dat'
 
-        if 'shift' in kwargs:
-            self.shift = int(kwargs['shift'])
-        else:
-            self.shift = 0
-
         if 'sleep_seconds' in kwargs:
             self.sleep_seconds = float(kwargs['sleep_seconds'])
         else:
@@ -97,8 +92,6 @@ class PeakAnalyzer(object):
         '''
         posFields = 'long lat'
         restFields = 'time valves conc delta'
-        PosData = namedtuple('PosData', posFields)
-        RestData = namedtuple('RestData', restFields)
         SourceData = namedtuple('SourceData', '%s %s' % (posFields,restFields))
 
         def linfit(x,y,sigma):
@@ -325,7 +318,7 @@ class PeakAnalyzer(object):
                         dist += jump
                     x0, y0 = x, y
                     if jump < JUMP_MAX:
-                            yield dist,PosData(long,lat),RestData(entry['EPOCH_TIME'],entry['ValveMask'],entry['CH4'],entry['HP_Delta_iCH4_Raw'])
+                            yield dist,SourceData(long,lat,entry['EPOCH_TIME'],entry['ValveMask'],entry['CH4'],entry['HP_Delta_iCH4_Raw'])
                     else:
                         yield None,None,None    # Indicate that dist is bad, and we must restart
                         dist = None
@@ -369,72 +362,13 @@ class PeakAnalyzer(object):
                                 dist += jump
                             x0, y0 = x, y
                             if jump < JUMP_MAX:
-                                yield dist,PosData(long,lat),RestData(entry['EPOCH_TIME'],entry['ValveMask'],entry['CH4'],entry['HP_Delta_iCH4_Raw'])
+                                yield dist,SourceData(long,lat,entry['EPOCH_TIME'],entry['ValveMask'],entry['CH4'],entry['HP_Delta_iCH4_Raw'])
                             else:
                                 yield None,None,None    # Indicate that dist is bad, and we must restart
                                 dist = None
                                 lat_ref, long_ref = None, None
                     except:
                         print traceback.format_exc()
-                    
-        def shifter(source,shift=0):
-            """ Applies the specified shift (in samples) to the output of
-            "source" to align the unshifted data colums with the shifted
-            data columns. For example, consider a source generating the following:
-            >>> src = (e for e in [('x0','U0','S0'),('x1','U1','S1'),('x2','U2','S2'), \
-                                   ('x3','U3','S3'),('x4','U4','S4'),('x5','U5','S5')])
-        
-            We now split this into several sources for the following tests:
-            >>> src1,src2,src3 = itertools.tee(src,3)
-            
-            and the shift is zero, the result should just be the original data:
-            >>> for e in shifter(src1,0): print e
-            ('x0', 'U0', 'S0')
-            ('x1', 'U1', 'S1')
-            ('x2', 'U2', 'S2')
-            ('x3', 'U3', 'S3')
-            ('x4', 'U4', 'S4')
-            ('x5', 'U5', 'S5')
-            
-            If the shift is negative, we move the shifted data up relative to the unshifted data:
-            >>> for e in shifter(src2,-2): print e
-            ('x0', 'U0', 'S2')
-            ('x1', 'U1', 'S3')
-            ('x2', 'U2', 'S4')
-            ('x3', 'U3', 'S5')
-        
-            If the shift is positive, we move the shifted data down relative to the unshifted data:
-            >>> for e in shifter(src3,2): print e
-            ('x2', 'U2', 'S0')
-            ('x3', 'U3', 'S1')
-            ('x4', 'U4', 'S2')
-            ('x5', 'U5', 'S3')
-            """
-            tempStore = deque()
-            if shift == 0:
-                for x,u,s in source:
-                    yield x,u,s
-            elif shift < 0:
-                for i,(x,u,s) in enumerate(source):
-                    tempStore.append((x,u))
-                    if i>=-shift:
-                        yield tempStore.popleft()+(s,)
-            else:
-                for i,(x,u,s) in enumerate(source):
-                    tempStore.append(s)
-                    if i>=shift:
-                        yield x,u,tempStore.popleft() 
-        
-        def combiner(source):
-            """
-            The source produces triples of the form (x,u,s) where u and s represent unshifted and
-            shifted data. If x, u and s are all not None, yield (x,u+s). If any is None, yield (None,None)
-            """
-            for x,u,s in source:
-                if (x is None) or (u is None) or (s is None):
-                    yield (None,None)
-                else:
-                    yield (x,u+s)        
         
         def doKeelingAnalysis(source):
             """Keep a buffer of recent concentrations within a certain time duration of the present. When the valve mask switches to the value
@@ -516,8 +450,6 @@ class PeakAnalyzer(object):
             
             return
         
-        shift = self.shift
-        
         while True:
             # Getting source
             if self.usedb:
@@ -553,14 +485,12 @@ class PeakAnalyzer(object):
                     handle.write("%-14s%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY"))
  
                 # Make a generator which yields (distance,(long,lat,valve_mask,epoch_time,methane,delta)))
-                #  from the analyzer data by applying a shift to the concentration and
-                #  time data to align the rows
                 if self.usedb:
                     source = followLastUserLogDb()
-                    alignedData = combiner(shifter(analyzerDataDb(source),shift))
+                    alignedData = analyzerDataDb(source)
                 else:
                     source = followLastUserFile(fname)
-                    alignedData = combiner(shifter(analyzerData(source),shift))
+                    alignedData = analyzerData(source)
                 
                 for r in doKeelingAnalysis(alignedData):
                     if self.usedb:

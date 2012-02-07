@@ -38,11 +38,6 @@ SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
 
-# Default shift between GPS and concentration data
-#  This is a property of the analyzer and should not
-#  be changed by the viewers. Later we should read this
-#  from an InstrConfig variable
-SHIFT = 0
 # The following are split into a path and a filename with unix style wildcards. 
 #  We search for the filename in the specified path and its subdirectories.
 USERLOGFILES = 'C:/UserData/AnalyzerServer/*.dat'
@@ -101,25 +96,19 @@ def _getAnalysis(name,startRow):
     #
     # Gets data from the analyzer analysis file "name" starting  at the specified 
     #  "startRow" within the file. The result dictionary has keys:
-    # DISTANCE        Distance along path at which maxima are located
-    # GPS_ABS_LONG    Longitude of maxima
-    # GPS_ABS_LAT     Latitude of maxima
-    # CONC            Methane concentration at peak
-    # DELTA           Isotopic ratio value
-    # UNCERTAINTY     Uncertainty in delta
-    # NEXT_ROW        Next row in file which has yet to be processed
     #
     header = getSlice(name,0,1)[0].line.split()
-    result = dict(EPOCH_TIME=[],DISTANCE=[],GPS_ABS_LONG=[],GPS_ABS_LAT=[],CONC=[],DELTA=[],UNCERTAINTY=[])
+    result = {}
+    for h in header: result[h] = []
     for l in getSliceIter(name,startRow,startRow+50):
         line = l.line
         if not line: break
         vals = line.split()
         if len(vals) != len(header): break
         for col,val in zip(header,vals):
-            if col in result: result[col].append(float(val))
+            result[col].append(float(val))
         startRow += 1
-    result['NEXT_ROW'] = startRow
+    result['nextRow'] = startRow
     return result
     
 def _getPeaks(name,startRow,minAmp):
@@ -127,20 +116,14 @@ def _getPeaks(name,startRow,minAmp):
     # Gets data from the analyzer peak parameters file "name" starting  at the specified 
     #  "startRow" within the file. Only peaks of amplitude no less than "minAmp" are 
     #  reported. The result dictionary has keys:
-    # DISTANCE        Distance along path at which maxima are located
-    # GPS_ABS_LONG    Longitude of maxima
-    # GPS_ABS_LAT    Latitude of maxima
-    # CH4            Methane concentration of maxima
-    # AMPLITUDE     Amplitudes calculated from space-scale representation
-    # SIGMA            Half-widths calculated from space-scale representation
-    # NEXT_ROW        Next row in file which has yet to be processed
     #
     header = getSlice(name,0,1)[0].line.split()
     amplCol = header.index("AMPLITUDE")
-    result = dict(EPOCH_TIME=[],DISTANCE=[],GPS_ABS_LONG=[],GPS_ABS_LAT=[],CH4=[],AMPLITUDE=[],SIGMA=[])
+    result = {}
+    for h in header: result[h] = []
     if amplCol<0:
         print "Cannot find AMPLITUDE column in peak file"
-        result['NEXT_ROW'] = startRow
+        result['nextRow'] = startRow
         return result
     nresults = 0
     for l in getSliceIter(name,startRow):
@@ -151,30 +134,16 @@ def _getPeaks(name,startRow,minAmp):
         if float(vals[amplCol]) >= minAmp:
             nresults += 1
             for col,val in zip(header,vals):
-                if col in result: result[col].append(float(val))
+                result[col].append(float(val))
             if nresults >= 50: break
         startRow += 1
-    result['NEXT_ROW'] = startRow
+    result['nextRow'] = startRow
     return result
         
-def _getData(name,startPos=None,shift=0,varList=None):    
+def _getData(name,startPos=None,varList=None):    
     #
     # Gets data from the analyzer live archive file "name" starting  at the specified 
-    #  line "startPos" within the file. It is also possible to specify a 
-    #  "shift" for aligning the GPS data with the concentration data. By convention
-    #  a NEGATIVE shift associates concentration data with EARLIER GPS data. Any
-    #  columns whose names start with "GPS" are shifted in this way.
-    #
-    # If shift is negative, "startPos" is the position in the file of the GPS data
-    # If shift is positive, "startPos" is the position in the file of the concentration data
-    #
-    # If we read nRows of data from the file, we can only report nRows-abs(shift) rows back to 
-    #  the caller. If nRows<abs(shift), we return nothing.
-    #
-    # For shift>0, we report GPS[shift:] and nonGPS[:-shift]
-    # For shift<0, we report GPS[:shift] and nonGPS[-shift:]
-    # For shift==0, we report GPS[:] and nonGPS[:]
-    # In each case, and return lastPos = lineNum + shift where lineNum is the last row processed
+    #  line "startPos" within the file.
     #
     if varList is not None:
         if "EPOCH_TIME" not in varList:
@@ -184,10 +153,9 @@ def _getData(name,startPos=None,shift=0,varList=None):
         columns = [[] for i in range(len(header))]
         if (startPos==0 or startPos is None): startPos = 1
         if startPos<0: 
-            startPos -= abs(shift)
             endPos = None
         else:
-            endPos = startPos + abs(shift) + MAX_DATA_POINTS
+            endPos = startPos + MAX_DATA_POINTS
         lineNum = -1
         for l in getSliceIter(name,startPos,endPos):
             lineNum = l.lineNumber
@@ -201,26 +169,11 @@ def _getData(name,startPos=None,shift=0,varList=None):
             return {},1
         nRows = len(columns[0])
         result = {}
-        if nRows>=abs(shift):
-            if shift>0:
-                for col,h in zip(columns,header):
-                    if varList is None or h in varList:
-                        if h.startswith('GPS'):
-                            result[h] = col[shift:]
-                        else:
-                            result[h] = col[:-shift]
-            elif shift<0:
-                for col,h in zip(columns,header):
-                    if varList is None or h in varList:
-                        if h.startswith('GPS'):
-                            result[h] = col[:shift]
-                        else:
-                            result[h] = col[-shift:]
-            else:
-                for col,h in zip(columns,header):
-                    if varList is None or h in varList:
-                        result[h] = col
-            lastPos = lineNum + shift
+        if nRows>=0:
+            for col,h in zip(columns,header):
+                if varList is None or h in varList:
+                    result[h] = col
+            lastPos = lineNum
         else:
             for col,h in zip(columns,header):
                 if varList is None or h in varList:
@@ -258,12 +211,11 @@ def getDataEx(params):
             startPos = None
     else:
         startPos = None
-    shift = int(params.get('shift',SHIFT))
 
     varList = json.loads(params['varList']) if 'varList' in params else None
         
     try:
-        result,lastPos = _getData(name,startPos,shift,varList)
+        result,lastPos = _getData(name,startPos,varList)
     except:
         return {'lastPos':"null", 'filename':''}
     
@@ -314,11 +266,8 @@ def getPeaksEx(params):
     except:
         return {'filename':''}
     result = _getPeaks(name,startRow,minAmp)
-    retKeys = ["DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA","EPOCH_TIME"]
-    nextRow = result["NEXT_ROW"]
-    retDict = dict(filename=os.path.basename(name),nextRow=nextRow)
-    for k in retKeys: retDict[k] = result[k]
-    return(retDict)
+    result["filename"]=os.path.basename(name)
+    return result
 
 @handler.register
 @rpcWrapper
@@ -343,11 +292,8 @@ def getAnalysisEx(params):
     except:
         return {'filename':''}
     result = _getAnalysis(name,startRow)
-    retKeys = ["DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY","EPOCH_TIME"]
-    nextRow = result["NEXT_ROW"]
-    retDict = dict(filename=os.path.basename(name),nextRow=nextRow)
-    for k in retKeys: retDict[k] = result[k]
-    return(retDict)
+    result["filename"]=os.path.basename(name)
+    return result
                 
 @handler.register
 @rpcWrapper
@@ -479,10 +425,10 @@ def maps():
     center_latitude = float(request.values.get('center_latitude',37.39604))
     return render_template('maps.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
                                        center_latitude=center_latitude,center_longitude=center_longitude)
-@app.route('/layout2')
-def layout2():
-    return render_template('layout2.html')
+@app.route('/test')
+def test():
+    return render_template('test.html')
     
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=5000,debug=False)
+    app.run(host='0.0.0.0',port=5000,debug=True)
     

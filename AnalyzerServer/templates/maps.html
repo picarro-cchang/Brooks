@@ -30,7 +30,9 @@
                             <div class="clearfix">
                                 <ul class="inputs-list">
                                 <span id="concentrationSparkline">Conc..</span>
-                                <!-- <span id="windRose">Wind..</span> -->                                
+                                <span id="windRose">
+                                    <canvas id="windCanvas" width="50" height="50">
+                                </span>
                                 <br />
                                 <table width="80%" border="0">
                                     <tr>
@@ -52,7 +54,7 @@
                                                 <button id="id_amplitude_btn" type="button" value="_" class="btn large" onclick="requestMinAmpChange();">0.1</button>
                                             </td>
                                             <td width="33%">
-                                                <label for="id_data_alert">Data Rcv</label>
+                                                <label>Data Rcv</label>
                                                 <div style="width:100% ; height:15px;" id="id_data_alert">   </div>
                                             </td>
                                             
@@ -61,7 +63,7 @@
                                     <span id="amplitudeErr"></span>
                                     <span id="id_primeControlButton_span"></span>
                                 </li>
-                                <h2 id="mode">Survey Mode</h3>
+                                <h2 id="mode">Survey Mode</h2>
                                 <br />
                                 <p id="analysis">Analysis result here</p>
                                 <input type="hidden" id="center_longitude" name="center_longitude" value="{{ center_longitude }}"/>
