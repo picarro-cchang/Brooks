@@ -54,7 +54,8 @@ Notes:
     10-03-18 sze  Record time to millisecond resolution to facilitate timing of data reporting rate
     10-04-27 sze  Report bad data flagged by measurement system by setting bit 16 of the alarm status column
     10-10-23 sze  Remove DATE_TIME column (replaced by time) and get ms timestamp info from DataManager
-    10-12-08 alex  Provide an option to use GMT or local time in log file name (GMT is used by default)
+    10-12-08 alex Provide an option to use GMT or local time in log file name (GMT is used by default)
+    12-02-07 alex Disable write-back function to INI file
     
 Copyright (c) 2010 Picarro, Inc. All rights reserved 
 """
@@ -853,9 +854,9 @@ class DataLogger(object):
                     dataListStr = dataListStr[0:len(dataListStr)-1]
                 # write string to UserConfig
                 self.UserCp.set(UserLogName,"datalist", dataListStr)
-                fp = open(self.UserConfigPath,"wb")
-                self.UserCp.write(fp)
-                fp.close()
+                #fp = open(self.UserConfigPath,"wb")
+                #self.UserCp.write(fp)
+                #fp.close()
 
             return DATALOGGER_RPC_SUCCESS
         else:
@@ -887,9 +888,9 @@ class DataLogger(object):
                     dataListStr = dataListStr[0:len(dataListStr)-1]
                 # write string to UserConfig
                 self.UserCp.set(UserLogName,"datalist", dataListStr)
-                fp = open(self.UserConfigPath,"wb")
-                self.UserCp.write(fp)
-                fp.close()
+                #fp = open(self.UserConfigPath,"wb")
+                #self.UserCp.write(fp)
+                #fp.close()
 
             return DATALOGGER_RPC_SUCCESS
         else:
@@ -906,9 +907,9 @@ class DataLogger(object):
                 self.UserLogDict[UserLogName].LogPath =""
 
             self.UserCp.set(UserLogName,"enabled", "true")
-            fp = open(self.UserConfigPath,"wb")
-            self.UserCp.write(fp)
-            fp.close()
+            #fp = open(self.UserConfigPath,"wb")
+            #self.UserCp.write(fp)
+            #fp.close()
 
             return DATALOGGER_RPC_SUCCESS
         else:
@@ -920,9 +921,9 @@ class DataLogger(object):
             dl.Enabled = False
             dl.StopPending = True
             self.UserCp.set(UserLogName,"enabled", "false")
-            fp = open(self.UserConfigPath,"wb")
-            self.UserCp.write(fp)
-            fp.close()
+            #fp = open(self.UserConfigPath,"wb")
+            #self.UserCp.write(fp)
+            #fp.close()
 
             return DATALOGGER_RPC_SUCCESS
         else:
@@ -944,9 +945,9 @@ class DataLogger(object):
             dl.DecimationFactor = factor
 
             self.UserCp.set(UserLogName,"decimationfactor", "%d" % factor)
-            fp = open(self.UserConfigPath,"wb")
-            self.UserCp.write(fp)
-            fp.close()
+            #fp = open(self.UserConfigPath,"wb")
+            #self.UserCp.write(fp)
+            #fp.close()
             return DATALOGGER_RPC_SUCCESS
         else:
             return DATALOGGER_RPC_FAILED
