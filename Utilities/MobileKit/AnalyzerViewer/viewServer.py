@@ -101,15 +101,6 @@ def updateView():
     except:
         print traceback.format_exc()
         return emptyResponse()
-
-@handler.register
-@rpcWrapper
-def getPath(params):
-    result = service.getLastDataRows(params)
-    epochTime, long, lat, ch4 = result["EPOCH_TIME"], result["GPS_ABS_LONG"], result["GPS_ABS_LAT"], result["CH4"]
-    peakPos = ch4.index(max(ch4))
-    timeStrings = [time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(t)) for t in epochTime]
-    return(dict(long=long,lat=lat,ch4=ch4,timeStrings=timeStrings,peakPos=peakPos))
         
 @app.route('/updateData')
 def updateData():
