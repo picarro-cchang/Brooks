@@ -1,4 +1,4 @@
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 from collections import deque
 from threading import Lock
 import Queue
@@ -6,8 +6,6 @@ import os
 import sys
 import time
 
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
 from numpy import *
 from scipy.optimize import leastsq
 import itertools
@@ -309,7 +307,7 @@ def trueWindSource(derivCdataSource):
         # print zVelSsq/zVelcVel
 
         # Subtract the velocity of the vehicle derived from GPS to get the wind bearing relative to ground
-        scaleFac = 1.0
+        scaleFac = float(PARAMS.get('SPEEDFACTOR',1.0))
         tVel = scaleFac*cVel - d.zVel
         
         # Update the parameters of the calibration from time to time
@@ -374,10 +372,21 @@ def windStatistics(windSource,statsInterval):
 def main():
     gpsSource = GpsSource(SENSORLIST[0])
     wsSource  = WsSource(SENSORLIST[1])
-    msOffsets = [0,0,2000]  # ms offsets for GPS, magnetometer and sonic anemometer
+    gpsDelay_ms = 0
+    anemDelay_ms = round(1000*float(PARAMS.get("ANEMDELAY",3.0)))
+    compassDelay_ms = round(1000*float(PARAMS.get("COMPASSDELAY",0.0)))
+    
+    msOffsets = [gpsDelay_ms,compassDelay_ms,anemDelay_ms]  # ms offsets for GPS, magnetometer and sonic anemometer
     syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
-    statsAvg = 20
+    statsAvg = int(PARAMS.get("STATSAVG",20))
     for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource))),statsAvg)):
-        WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev])
+        p0,p1,p2 = d.calParams
+        WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),    # Mean wind N and E
+                          d.aStdDev,                                    # Wind direction std dev (degrees)
+                          float(real(d.zVel)),float(imag(d.zVel)),      # Car velocity N and E
+                          float(real(d.mHead)),-float(imag(d.mHead)),   # Compass heading N and E
+                          float(real(d.tVel)),float(imag(d.tVel)),      # Instantaneous wind N and E
+                          p0,p1,p2                                      # Calibration parameters
+                          ])
 
 main()

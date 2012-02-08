@@ -17,6 +17,8 @@ try:
 except:
     import json
 
+NaN = 1e1000/1e1000
+
 def genLatestFiles(baseDir,pattern):
     # Generate files in baseDir and its subdirectories which match pattern
     for dirPath, dirNames, fileNames in os.walk(baseDir):

@@ -16,6 +16,8 @@ try:
 except:
     import json
 
+NaN = 1e1000/1e1000
+
 def genLatestFiles(baseDir,pattern):
     # Generate files in baseDir and its subdirectories which match pattern
     for dirPath, dirNames, fileNames in os.walk(baseDir):
@@ -529,7 +531,7 @@ class PeakFinder(object):
                             if not reject:
                                 amplitude = 0.5*ssbuff[i,col]/(3.0**(-1.5))
                                 sigma = sqrt(0.5*scaleList[i])
-                                peaks.append(PeakTuple(*[v for v in cache[:,col]],AMPLITUDE=amplitude,SIGMA=sigma))
+                                peaks.append(PeakTuple(*([v for v in cache[:,col]]+[amplitude,sigma])))
                 c += 1
                 if c>=npoints: c -= npoints
                 z += 1

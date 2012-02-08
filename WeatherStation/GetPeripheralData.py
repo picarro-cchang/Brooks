@@ -130,7 +130,7 @@ class DataManagerOutput(object):
     
     def writeOutput(self,ts,dataList):
         # print "%-20.3f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],(180.0/pi)*dataList[2])
-        print >> self.op, "%-20.3f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],(180.0/pi)*dataList[2])
+        print >> self.op, "%-20.3f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],dataList[2])
         
 if __name__ == "__main__":
     dm = DataManagerOutput()

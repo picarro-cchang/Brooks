@@ -4,7 +4,15 @@ from namedtuple import namedtuple
 from numpy import *
 import os
 
+NOT_A_NUMBER = 1e1000/1e1000
+def pFloat(x):
+    try:
+        return float(x)
+    except:
+        return NOT_A_NUMBER
+        
 def xReadDatFile(fileName):
+            
     # Read a data file with column headings and yield a list of named tuples with the file contents
     fp = open(fileName,'r')
     headerLine = True
@@ -14,7 +22,7 @@ def xReadDatFile(fileName):
             DataTuple = namedtuple("Bunch",colHeadings)
             headerLine = False
         else:
-            yield DataTuple(*[float(v) for v in l.split()])
+            yield DataTuple(*[pFloat(v) for v in l.split()])
     fp.close()
 
 def list2cols(datAsList):

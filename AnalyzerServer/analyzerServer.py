@@ -17,6 +17,13 @@ import traceback
 import CmdFIFO
 from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER
 
+NaN = 1e1000/1e1000
+def pFloat(x):
+    try:
+        return float(x)
+    except:
+        return NaN
+
 def genLatestFiles(baseDir,pattern):
     # Generate files in baseDir and its subdirectories which match pattern
     for dirPath, dirNames, fileNames in os.walk(baseDir):
@@ -106,7 +113,7 @@ def _getAnalysis(name,startRow):
         vals = line.split()
         if len(vals) != len(header): break
         for col,val in zip(header,vals):
-            result[col].append(float(val))
+            result[col].append(pFloat(val))
         startRow += 1
     result['nextRow'] = startRow
     return result
@@ -131,10 +138,10 @@ def _getPeaks(name,startRow,minAmp):
         if not line: break
         vals = line.split()
         if len(vals) != len(header): break
-        if float(vals[amplCol]) >= minAmp:
+        if pFloat(vals[amplCol]) >= minAmp:
             nresults += 1
             for col,val in zip(header,vals):
-                result[col].append(float(val))
+                result[col].append(pFloat(val))
             if nresults >= 50: break
         startRow += 1
     result['nextRow'] = startRow
@@ -164,7 +171,7 @@ def _getData(name,startPos=None,varList=None):
             vals = line.split()
             if len(vals)!=len(header): break
             for col,val in zip(columns,vals):
-                col.append(float(val))
+                col.append(pFloat(val))
         if lineNum < 0:
             return {},1
         nRows = len(columns[0])
