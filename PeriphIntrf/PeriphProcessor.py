@@ -2,14 +2,17 @@
 import sys
 import time
 import threading
+import traceback
 from numpy import *
 import Queue
+from Host.Common import namedtuple
                     
 class PeriphProcessor(object):
-    def __init__(self, periphIntrf, dataLabels, outputPort, scriptPath):
+    def __init__(self, periphIntrf, dataLabels, outputPort, scriptPath, params):
         self.periphIntrf = periphIntrf
         self.dataLabels = dataLabels
         self.outputPort = outputPort
+        self.params = params
         numChannels = len(dataLabels)
         sensorQSize = 100
         self.sensorList = []
@@ -17,7 +20,8 @@ class PeriphProcessor(object):
             self.sensorList.append(Queue.Queue(sensorQSize))
         
         # Define the script environment and compile the script
-        self.dataEnviron = {"SENSORLIST": self.sensorList, "WRITEOUTPUT": self.writeOutput}
+        self.dataEnviron = {"SENSORLIST": self.sensorList, "WRITEOUTPUT": self.writeOutput, 
+                            "PARAMS":self.params }
         sourceString = file(scriptPath,"r").read()
         if sys.platform != 'win32':
             sourceString = sourceString.replace("\r","")
@@ -29,6 +33,7 @@ class PeriphProcessor(object):
         try:
             self.sensorList[port].put((ts, dict(zip(self.dataLabels[port], dataList))))
         except Exception, err:
+            print traceback.format_exc()
             print "%r" % (err,)
         
     def writeOutput(self, ts, dataList):

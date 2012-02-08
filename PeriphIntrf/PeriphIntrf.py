@@ -86,9 +86,10 @@ class PeriphIntrf(object):
         try:
             self.procInputPorts = [int(p) for p in co.get("PROCESSOR", "INPUTPORTS").split(",") if p.strip()]
             procOutputPort = co.getint("PROCESSOR", "OUTPUTPORT")
+            procParams = dict(co["PROCESSOR"])
             procLabels = [self.dataLabels[i] for i in self.procInputPorts]
             scriptPath = self.scriptFilenames[procOutputPort]
-            self.periphProcessor = PeriphProcessor(self, procLabels, procOutputPort, scriptPath)
+            self.periphProcessor = PeriphProcessor(self, procLabels, procOutputPort, scriptPath, procParams)
         except Exception:
             print traceback.format_exc()
             self.procInputPorts = []
@@ -169,6 +170,7 @@ class PeriphIntrf(object):
                             if port in self.procInputPorts and self.periphProcessor:
                                 self.periphProcessor.appendData(self.procInputPorts.index(port),ts,parsedList)
                     except Exception, err:
+                        print traceback.format_exc()
                         print "%r" % (err,)
                     state = "SYNC1"
 
@@ -184,6 +186,7 @@ class PeriphIntrf(object):
             measData = MeasData(self.parsers[port], unixTime(ts), reportDict, measGood, port)
             self.DataBroadcaster.send(measData.dumps())
         except Exception, err:
+            print traceback.format_exc()
             print "%r" % (err,)
         finally:
             self.sensorLock.release()
@@ -234,6 +237,7 @@ class PeriphIntrf(object):
                 else:
                     if ts is not None: sensorDataList[port] = [[ts,ts],zip(valList,valList)]
         except Exception, err:
+            print traceback.format_exc()
             print "%r" % (err,)
         self.sensorLock.release()
         return sensorDataList
