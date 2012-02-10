@@ -184,7 +184,7 @@ var CSTATE = {
         showPbubble: true,
         showAbubble: true,
         showWbubble: true,
-        showSwath: false,
+        showSwath: true,
 
         lastwhere: '',
         lastFit: '',
@@ -670,20 +670,7 @@ function initialize_map() {
         CSTATE.marker.setMap(null);
     }
     CSTATE.marker = newAnzLocationMarker(CSTATE.map);
-    
-    // Hardwire PG&E plats for display
-    var bounds, overlay;
-    bounds = new google.maps.LatLngBounds(
-        new google.maps.LatLng(37.9181,-122.0662),
-        new google.maps.LatLng(37.9275,-122.0584));
-    overlay = new google.maps.GroundOverlay("static/45C16.jpg",bounds)
-    overlay.setMap(CSTATE.map);
-    bounds = new google.maps.LatLngBounds(
-        new google.maps.LatLng(37.8901,-122.1272),
-        new google.maps.LatLng(37.8995,-122.1197));
-    overlay = new google.maps.GroundOverlay("static/45F08.jpg",bounds)
-    overlay.setMap(CSTATE.map);
-};
+}
 
 function resize_map() {
     var pge_wdth, hgth_top, lpge_wdth, new_width, new_height, new_top, cen;
@@ -1495,7 +1482,7 @@ function controlPane() {
     body += '<li>' + showPbubbleCntl + '</li>';
     body += '<li>' + showAbubbleCntl + '</li>';
     body += '<li>' + showWbubbleCntl + '</li>';
-    // body += '<li>' + showSwathCntl + '</li>';
+    body += '<li>' + showSwathCntl + '</li>';
     body += '</ul>';
     body += '</div>';
     body += '</div>';
