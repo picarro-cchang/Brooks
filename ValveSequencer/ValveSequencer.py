@@ -42,7 +42,7 @@ else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
-DISP_TIME_PRECISION = 0.01 # in minute
+DISP_TIME_PRECISION = 0.005 # in minute
 EXE_INTERVAL = 60000 * DISP_TIME_PRECISION # in ms
 SKIP_INTERVAL = 1 # in ms
 DEFAULT_MAX_VALVE_STEPS = 300
@@ -206,8 +206,11 @@ class ValveSequencer(ValveSequencerFrame):
             rotValCode = int(self.curTextCtrlList[3].GetValue())
             mask = 64 * rotValCode + valCode
 
-        # Do not interfere with valves which are not controlled by valve sequencer        
+        print time.strftime("Start: %Y-%m-%d %H:%M:%S", time.localtime())
+        # Do not interfere with valves which are not controlled by valve sequencer   
+        print "CRDS_Driver.closeValves(%d)" % ((~mask) & (2**self.numSolValves-1))
         CRDS_Driver.closeValves((~mask) & (2**self.numSolValves-1))
+        print "CRDS_Driver.openValves(%d)" % ((mask) & (2**self.numSolValves-1))
         CRDS_Driver.openValves(mask & (2**self.numSolValves-1))
         valCode = mask % 64
         rotValCode = (mask - valCode) / 64
@@ -215,9 +218,14 @@ class ValveSequencer(ValveSequencerFrame):
         if self.rotValveCtrl == None:
             rotValCode = 0
         else:
-            self.rotValveCtrl.setPosition(rotValCode)
-        CRDS_Driver.setMPVPosition(rotValCode)
-        
+            print "self.rotValveCtrl.setPosition(%d)" % rotValCode
+            try:
+                self.rotValveCtrl.setPosition(rotValCode)
+                print "CRDS_Driver.setMPVPosition(%d)" % rotValCode
+                CRDS_Driver.setMPVPosition(rotValCode)
+            except:
+                print "Rotary valve position command failed"
+        print time.strftime("End: %Y-%m-%d %H:%M:%S", time.localtime())
         Log("Set valves with new mask -- sol valve code = %d; rot valve code = %d, mask = %d" % (valCode, rotValCode, mask))
         print "Set valves with new mask -- sol valve code = %d; rot valve code = %d, mask = %d" % (valCode, rotValCode, mask)
 
