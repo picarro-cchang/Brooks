@@ -36,6 +36,7 @@ from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM, \
                                     RPC_PORT_AUTOSAMPLER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SerIntrf import SerIntrf
+from Host.Utilities.ModbusIntrf.ModbusIntrf import ModbusIntrf
 
 OK = 1
 EXCEPTION = 2
@@ -193,7 +194,7 @@ class StateMachine(object):
                           "GC":GC,"SerIntrf":SerIntrf,"GUI":self.guiProxy,"getDescription":self.getDescription,\
                           "time":time,"editParamDict":self.editParamDict,"runningFlag":True,"pause":self.turnOffRunningFlag,\
                           "resume":self.turnOnRunningFlag, "portDict":self.portDict, "configObj":CustomConfigObj,
-                          "NEWAUTOSAMPLER":self.newAutosampler})
+                          "NEWAUTOSAMPLER":self.newAutosampler, "ModbusIntrf":ModbusIntrf})
         CoordinatorScripts.DRIVER = self.driver
         CoordinatorScripts.MEASSYS = self.measSys
         CoordinatorScripts.SAMPLEMGR = self.sampleMgr
