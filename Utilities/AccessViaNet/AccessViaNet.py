@@ -1,6 +1,6 @@
 """
-File Name: GlobalHawk.py
-Purpose: This is responsible for network communications with the NASA Global Hawk Aircraft
+File Name: AccessViaNet.py
+Purpose: This is responsible for network communications to an analyzer
          It supports several external commands via TCP or UDP. 
          N.B. These MUST be terminated using a "\n" before they are obeyed.
          
@@ -18,8 +18,8 @@ File History:
 Copyright (c) 2011 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "Global Hawk"
-APP_DESCRIPTION = "Communication with Global Hawk Aircraft Network"
+APP_NAME = "AccessViaNet"
+APP_DESCRIPTION = "Communication with an Analyzer via Network"
 __version__ = 1.0
 
 import asynchat
@@ -55,47 +55,6 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 
-import serial
-
-class SerialInterface(object):
-    def __init__(self):
-        """ Initializes Serial Interface """
-        self.terminate     = False
-
-    def config( self,
-      port=None,                     #number of device, numbering starts at
-                                     #zero. if everything fails, the user
-                                     #can specify a device string, note
-                                     #that this isn't portable anymore
-                                     #if no port is specified an unconfigured
-                                     #an closed serial port object is created
-      baudrate=9600,                 #baudrate
-      bytesize=serial.EIGHTBITS,     #number of databits
-      parity=serial.PARITY_NONE,     #enable parity checking
-      stopbits=serial.STOPBITS_ONE,  #number of stopbits
-      timeout=None,                  #set a timeout value, None for waiting forever
-      xonxoff=0,                     #enable software flow control
-      rtscts=0):                     #enable RTS/CTS flow control
-        self.serial = serial.Serial ( port, baudrate, bytesize, parity, stopbits, timeout, xonxoff, rtscts )
-
-    def open( self ):
-        """ Opens port """
-        if self.serial != None:
-            if self.serial.isOpen() == False:
-                self.serial.open()
-
-    def close( self ):
-        """ Closes port """
-        if self.serial != None:
-            if self.serial.isOpen()==True:
-                self.serial.close()
-
-    def read( self, size=1 ):
-        return self.serial.read(size)
-
-    def write(self, msg):
-        self.serial.write(msg)
-    
 _TIME1970 = 2208988800L      # Thanks to F.Lundh
 _data = '\x1b' + 47*'\0'
 
@@ -209,14 +168,9 @@ class AnalyzerStatus(object):
     SENSORS_ACTIVE = 2
     DATA_ACTIVE = 3
     #
-    READY = 1
-    OPERATING = 2
-    CALIBRATING = 4
-    WARNING = 8
-    INVALID = 16
-    FAILED = 32
-    SENSOR = 256
-    DATA   = 512
+    READY  = 1
+    SENSOR = 2
+    DATA   = 4
     #
     def __init__(self):
         self.level = AnalyzerStatus.HOST_ONLY
@@ -227,13 +181,9 @@ class AnalyzerStatus(object):
         self.sensorsWithoutData = 0
         self.heartBeatWithoutSensors = 0
         self.level = AnalyzerStatus.DATA_ACTIVE
-        warn = not inRange(data["CavityPressure"],140.0,0.5) or not inRange(data["CavityTemp"],45.0,0.1) 
         state = {
             AnalyzerStatus.DATA     : True,
             AnalyzerStatus.SENSOR   : False,
-            AnalyzerStatus.OPERATING   : data["CO2"] > 10 and data["CH4"] > 0.1,
-            AnalyzerStatus.CALIBRATING : False,
-            AnalyzerStatus.WARNING     : warn
             }
         mask = sum(state.keys())
         value = sum([k for k in state if state[k]])
@@ -247,9 +197,7 @@ class AnalyzerStatus(object):
         state = {
             AnalyzerStatus.DATA     : False,
             AnalyzerStatus.SENSOR   : True,
-            AnalyzerStatus.OPERATING   : False,
-            AnalyzerStatus.CALIBRATING : False,
-            AnalyzerStatus.WARNING     : abs(sensors["CavityPressure"] - 140.0) > 0.5 }
+            }
         mask = sum(state.keys())
         value = sum([k for k in state if state[k]])
         self.status = (self.status & ~mask) | value
@@ -376,7 +324,6 @@ class AnalyzerControl(Singleton):
         usage.append("SHUTDOWN - Turns off analyzer computer (CANNOT BE RESTARTED)")
         usage.append("STANDBY  - Closes valves, stops measurement, but leaves analyzer driver running")
         usage.append("STOP     - Stops measurement and analyzer control loops")
-        usage.append("SYNC     - Synchronize analyzer computer clock with time servers")
         return "\n".join(usage)
         
     def standby(self):
@@ -437,22 +384,26 @@ class AnalyzerControl(Singleton):
         except:
             pass
         time.sleep(5.0)        
+        
         os.chdir(self.supervisorHostDir)
         info = subprocess.STARTUPINFO()
         if self.consoleMode != 1:
             info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             info.wShowWindow = subprocess.SW_HIDE
         dwCreationFlags = win32process.CREATE_NEW_CONSOLE
-            
-        if self.launchType == "exe":
-            subprocess.Popen(["supervisor.exe","-c",self.supervisorIni], startupinfo=info, creationflags=dwCreationFlags)
-        else:
-            subprocess.Popen(["python.exe", "Supervisor.py","-c",self.supervisorIni], startupinfo=info, creationflags=dwCreationFlags)
+        print ["SupervisorLauncher.exe","-a","-c",AccessViaNet().launcherConfigFile]
+        
+        subprocess.Popen(["SupervisorLauncher.exe","-a","-c",AccessViaNet().launcherConfigFile], startupinfo=info, creationflags=dwCreationFlags)
+
+        #if self.launchType == "exe":
+        #    subprocess.Popen(["supervisor.exe","-c",self.supervisorIni], startupinfo=info, creationflags=dwCreationFlags)
+        #else:
+        #    subprocess.Popen(["python.exe", "Supervisor.py","-c",self.supervisorIni], startupinfo=info, creationflags=dwCreationFlags)
 
         # Launch HostStartup
-        if self.launchType == "exe":
-            info = subprocess.STARTUPINFO()
-            subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
+        #if self.launchType == "exe":
+        #    info = subprocess.STARTUPINFO()
+        #    subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
         return 'OK'
                                         
 class TcpServer(asyncore.dispatcher):
@@ -554,29 +505,7 @@ class GoAwayHandler(asynchat.async_chat):
     def handle_close(self):
         self.close()
         return
-
-class SerialCmdHandler(object):
-    def __init__(self,interface,target,welcome=""):
-        self.interface = interface
-        self.handler = CommandHandler(target)
-        if welcome: self.interface.write("%s\r\n" % welcome)
-        self.buffer = ""
-        self.welcome = welcome
-    def send_data(self,data):
-        self.interface.write("%s" % data)
-    def poll(self):
-        str = self.interface.read(2048)
-        if str:
-            self.send_data(str)
-            if str=="\r": self.send_data("\n")
-            self.buffer += str
-        term = self.buffer.find("\r")
-        if term >= 0:
-            cmd = self.buffer[:term+1].strip()
-            response = self.handler.doCommand(cmd)
-            self.send_data(response)
-            self.buffer = self.buffer[term+1:]
-        
+    
 class TcpCmdHandler(asynchat.async_chat):
     """Handles processing commands from a single client.
     """
@@ -638,8 +567,7 @@ class CommandHandler(object):
                             STOP     = self.target.stop,
                             RESTART  = self.target.restart,
                             REBOOT   = self.target.reboot,
-                            SHUTDOWN = self.target.shutdown,
-                            SYNC     = self.target.syncTime)
+                            SHUTDOWN = self.target.shutdown)
                    
     def doCommand(self,cmd):
         cmd = tidy(cmd.strip()).split(None,1)
@@ -672,16 +600,15 @@ def format(fmtList,v):
 MAX_SENSORS = 14
 MAX_DATA = 14
     
-class GlobalHawk(Singleton):
+class AccessViaNet(Singleton):
     initialized = False
     def __init__(self, configPath=None):        
         if not self.initialized:
             if configPath != None:
                 # Read from .ini file
-                self.serialPort = None
-                self.serialHandler = None
                 self.config = ConfigObj(configPath)
                 basePath = os.path.split(configPath)[0]
+                self.launcherConfigFile = os.path.join(basePath,self.config['Main']['LauncherConfig'])
                 self.statusHost, self.statusPort = self.config['Addresses']['Status'].split(':')
                 self.statusPort = int(self.statusPort)
                 self.statusSocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -694,13 +621,13 @@ class GlobalHawk(Singleton):
                                                         BROADCAST_PORT_SENSORSTREAM,
                                                         interface.SensorEntryType,
                                                         retry = True,
-                                                        name = "GlobalHawk listener")
+                                                        name = "AccessViaNet listener")
                 self.dmQueue = Queue(512)
                 self.dmListener = Listener.Listener(self.dmQueue,
                                                     BROADCAST_PORT_DATA_MANAGER,
                                                     ArbitraryObject,
                                                     retry = True,
-                                                    name = "GlobalHawk listener")
+                                                    name = "AccessViaNet listener")
                 self.tcpHost, self.tcpPort = self.config['Addresses']['TCPcontrol'].split(':')
                 self.tcpPort = int(self.tcpPort)
                 self.tcpDataHost, self.tcpDataPort = self.config['Addresses']['TCPdata'].split(':')
@@ -735,23 +662,10 @@ class GlobalHawk(Singleton):
                             nmax = max(nmax,num)
                             self.dataNames[num-1] = self.config['DataReport'][k]
                 self.dataNames = self.dataNames[:nmax]
-                if 'SerialInterface' in self.config:
-                    options = self.config['SerialInterface']
-                    kwds = {}
-                    for o in options: 
-                        try:
-                            kwds[o.lower()]=eval(options[o])
-                        except:
-                            kwds[o.lower()]=options[o]
-                    kwds['timeout'] = 0
-                    kwds['xonxoff'] = False
-                    kwds['rtscts'] = False
-                    self.serialPort = SerialInterface()
-                    self.serialPort.config(**kwds)
             else:
-                raise ValueError("Configuration file must be specified to initialize GlobalHawk network interface")
+                raise ValueError("Configuration file must be specified to initialize AccessViaNet network interface")
             self.initialized = True
-        Log('GlobalHawk initialized',Data=dict(statusIP='%s:%d'%(self.statusHost,self.statusPort)))
+        Log('AccessViaNet initialized',Data=dict(statusIP='%s:%d'%(self.statusHost,self.statusPort)))
         
     def sendPacket(self,data):
         try:
@@ -792,9 +706,6 @@ class GlobalHawk(Singleton):
             self.tcpServer = TcpServer((self.tcpHost,self.tcpPort),self.analyzerControl,"Connected to Picarro Control Server")
             self.tcpDataServer = TcpMultiServer((self.tcpDataHost,self.tcpDataPort),self.analyzerControl)
             self.udpServer = UdpServer((self.udpHost,self.udpPort),self.analyzerControl)
-            if self.serialPort is not None:
-                self.serialPort.open()
-                self.serialHandler = SerialCmdHandler(self.serialPort,self.analyzerControl)
             self.analyzerStatus = AnalyzerStatus()
             count = 0
             # TODO: For actual code, set up startTs from actual time, rather than from timestamp in the file
@@ -807,8 +718,6 @@ class GlobalHawk(Singleton):
             
             while True:
                 asyncore.loop(timeout=0.1,count=1)
-                if self.serialPort is not None:
-                    self.serialHandler.poll()
                 # Get available data manager queue data
                 nGet = 10
                 while nGet>0 and not self.dmQueue.empty():
@@ -869,16 +778,15 @@ class GlobalHawk(Singleton):
             self.tcpServer.close()
             self.tcpDataServer.close()
             self.udpServer.close()
-            if self.serialPort is not None:
-                self.serialPort.close()
                 
-HELP_STRING = """GlobalHawk.py [-c<FILENAME>] [-h|--help]
+                
+HELP_STRING = """AccessViaNet.py [-c<FILENAME>] [-h|--help]
 
 Where the options can be a combination of the following. Note that options override
 settings in the configuration file:
 
 -h, --help           print this help
--c                   specify a config file:  default = "./GlobalHawk.ini"
+-c                   specify a config file:  default = "./AccessViaNet.ini"
 """
 
 def printUsage():
@@ -908,12 +816,12 @@ def handleCommandSwitches():
     return configFile, options
 
 if __name__ == "__main__":
-    globalHawkApp = SingleInstance("GlobalHawk")
-    if globalHawkApp.alreadyrunning():
-        Log("Instance of Global Hawk application is already running",Level=3)
+    accessViaNetApp = SingleInstance("AccessViaNet")
+    if accessViaNetApp.alreadyrunning():
+        Log("Instance of AccessViaNet application is already running",Level=3)
     else:
         configFile, options = handleCommandSwitches()
-        app = GlobalHawk(configFile)
+        app = AccessViaNet(configFile)
         Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
         app.run()
     Log("Exiting program")

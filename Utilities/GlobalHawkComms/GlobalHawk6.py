@@ -55,47 +55,6 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 
-import serial
-
-class SerialInterface(object):
-    def __init__(self):
-        """ Initializes Serial Interface """
-        self.terminate     = False
-
-    def config( self,
-      port=None,                     #number of device, numbering starts at
-                                     #zero. if everything fails, the user
-                                     #can specify a device string, note
-                                     #that this isn't portable anymore
-                                     #if no port is specified an unconfigured
-                                     #an closed serial port object is created
-      baudrate=9600,                 #baudrate
-      bytesize=serial.EIGHTBITS,     #number of databits
-      parity=serial.PARITY_NONE,     #enable parity checking
-      stopbits=serial.STOPBITS_ONE,  #number of stopbits
-      timeout=None,                  #set a timeout value, None for waiting forever
-      xonxoff=0,                     #enable software flow control
-      rtscts=0):                     #enable RTS/CTS flow control
-        self.serial = serial.Serial ( port, baudrate, bytesize, parity, stopbits, timeout, xonxoff, rtscts )
-
-    def open( self ):
-        """ Opens port """
-        if self.serial != None:
-            if self.serial.isOpen() == False:
-                self.serial.open()
-
-    def close( self ):
-        """ Closes port """
-        if self.serial != None:
-            if self.serial.isOpen()==True:
-                self.serial.close()
-
-    def read( self, size=1 ):
-        return self.serial.read(size)
-
-    def write(self, msg):
-        self.serial.write(msg)
-    
 _TIME1970 = 2208988800L      # Thanks to F.Lundh
 _data = '\x1b' + 47*'\0'
 
@@ -229,8 +188,6 @@ class AnalyzerStatus(object):
         self.level = AnalyzerStatus.DATA_ACTIVE
         warn = not inRange(data["CavityPressure"],140.0,0.5) or not inRange(data["CavityTemp"],45.0,0.1) 
         state = {
-            AnalyzerStatus.DATA     : True,
-            AnalyzerStatus.SENSOR   : False,
             AnalyzerStatus.OPERATING   : data["CO2"] > 10 and data["CH4"] > 0.1,
             AnalyzerStatus.CALIBRATING : False,
             AnalyzerStatus.WARNING     : warn
@@ -245,8 +202,6 @@ class AnalyzerStatus(object):
             return
         self.level = AnalyzerStatus.SENSORS_ACTIVE
         state = {
-            AnalyzerStatus.DATA     : False,
-            AnalyzerStatus.SENSOR   : True,
             AnalyzerStatus.OPERATING   : False,
             AnalyzerStatus.CALIBRATING : False,
             AnalyzerStatus.WARNING     : abs(sensors["CavityPressure"] - 140.0) > 0.5 }
@@ -474,7 +429,7 @@ class TcpServer(asyncore.dispatcher):
         self.handlers[:] = [h for h in self.handlers if not h.closed]
         client_info = self.accept()
         if not self.handlers:
-            self.handlers.append(TcpCmdHandler(client_info[0],self.target,self.welcome))
+            self.handlers.append(TcpHandler(client_info[0],self.target,self.welcome))
         else:
             GoAwayHandler(sock=client_info[0])
     def handle_close(self):
@@ -499,7 +454,7 @@ class TcpMultiServer(asyncore.dispatcher):
         # Called when a client connects to our socket
         self.handlers[:] = [h for h in self.handlers if not h.closed]
         client_info = self.accept()
-        self.handlers.append(TcpDataHandler(client_info[0],self.target,self.welcome))
+        self.handlers.append(TcpHandler(client_info[0],self.target,self.welcome))
     def handle_close(self):
         self.close()
         return
@@ -554,31 +509,9 @@ class GoAwayHandler(asynchat.async_chat):
     def handle_close(self):
         self.close()
         return
-
-class SerialCmdHandler(object):
-    def __init__(self,interface,target,welcome=""):
-        self.interface = interface
-        self.handler = CommandHandler(target)
-        if welcome: self.interface.write("%s\r\n" % welcome)
-        self.buffer = ""
-        self.welcome = welcome
-    def send_data(self,data):
-        self.interface.write("%s" % data)
-    def poll(self):
-        str = self.interface.read(2048)
-        if str:
-            self.send_data(str)
-            if str=="\r": self.send_data("\n")
-            self.buffer += str
-        term = self.buffer.find("\r")
-        if term >= 0:
-            cmd = self.buffer[:term+1].strip()
-            response = self.handler.doCommand(cmd)
-            self.send_data(response)
-            self.buffer = self.buffer[term+1:]
-        
-class TcpCmdHandler(asynchat.async_chat):
-    """Handles processing commands from a single client.
+    
+class TcpHandler(asynchat.async_chat):
+    """Handles processing data from a single client.
     """
     def __init__(self,sock,target,welcome):
         self.handler = CommandHandler(target)
@@ -600,25 +533,6 @@ class TcpCmdHandler(asynchat.async_chat):
         self.closed = True
         self.close()        
 
-class TcpDataHandler(asynchat.async_chat):
-    """Handles sending data to a client.
-    """
-    def __init__(self,sock,target,welcome):
-        asynchat.async_chat.__init__(self,sock)
-        self.set_terminator('\n')
-        if welcome: self.push("%s\r\n" % welcome)
-        self.closed = False
-        self.buffer = []
-    def send_data(self,data):
-        self.push(data)
-    def collect_incoming_data(self,data):
-        self.buffer.append(data)
-    def found_terminator(self):
-        self.buffer = []
-    def handle_close(self):
-        self.closed = True
-        self.close()        
-        
 def tidy(line):
     """Handle backspace characters in line"""
     result = []
@@ -678,8 +592,6 @@ class GlobalHawk(Singleton):
         if not self.initialized:
             if configPath != None:
                 # Read from .ini file
-                self.serialPort = None
-                self.serialHandler = None
                 self.config = ConfigObj(configPath)
                 basePath = os.path.split(configPath)[0]
                 self.statusHost, self.statusPort = self.config['Addresses']['Status'].split(':')
@@ -735,19 +647,6 @@ class GlobalHawk(Singleton):
                             nmax = max(nmax,num)
                             self.dataNames[num-1] = self.config['DataReport'][k]
                 self.dataNames = self.dataNames[:nmax]
-                if 'SerialInterface' in self.config:
-                    options = self.config['SerialInterface']
-                    kwds = {}
-                    for o in options: 
-                        try:
-                            kwds[o.lower()]=eval(options[o])
-                        except:
-                            kwds[o.lower()]=options[o]
-                    kwds['timeout'] = 0
-                    kwds['xonxoff'] = False
-                    kwds['rtscts'] = False
-                    self.serialPort = SerialInterface()
-                    self.serialPort.config(**kwds)
             else:
                 raise ValueError("Configuration file must be specified to initialize GlobalHawk network interface")
             self.initialized = True
@@ -792,9 +691,6 @@ class GlobalHawk(Singleton):
             self.tcpServer = TcpServer((self.tcpHost,self.tcpPort),self.analyzerControl,"Connected to Picarro Control Server")
             self.tcpDataServer = TcpMultiServer((self.tcpDataHost,self.tcpDataPort),self.analyzerControl)
             self.udpServer = UdpServer((self.udpHost,self.udpPort),self.analyzerControl)
-            if self.serialPort is not None:
-                self.serialPort.open()
-                self.serialHandler = SerialCmdHandler(self.serialPort,self.analyzerControl)
             self.analyzerStatus = AnalyzerStatus()
             count = 0
             # TODO: For actual code, set up startTs from actual time, rather than from timestamp in the file
@@ -807,13 +703,10 @@ class GlobalHawk(Singleton):
             
             while True:
                 asyncore.loop(timeout=0.1,count=1)
-                if self.serialPort is not None:
-                    self.serialHandler.poll()
+                fields = [self.id]
                 # Get available data manager queue data
-                nGet = 10
-                while nGet>0 and not self.dmQueue.empty():
+                if not self.dmQueue.empty():
                     d = self.dmQueue.get()
-                    nGet -= 1
                     ts, mode, source = d['data']['timestamp'], d['mode'], d['source']
                     if source == self.dataSource:
                         self.analyzerStatus.receivedData(d['data'])
@@ -821,9 +714,8 @@ class GlobalHawk(Singleton):
                         tsAsString = timestampToUtcDatetime(ts).strftime('%Y%m%dT%H%M%S') + '.%03d' % (ts % 1000,)
                         now = datetime.datetime.utcnow()
                         # tsAsString = now.strftime('%Y%m%dT%H%M%S') + '.%03d' % (now.microsecond/1000)
-                        fields = [self.id]
                         fields.append(tsAsString)
-                        fields.append('%d' % (self.analyzerStatus.getStatus(),))
+                        fields.append('%d' % (self.analyzerStatus.getStatus() | AnalyzerStatus.DATA,))
                         fields += [format(formatList,d['data'].get(v,None)) for v in self.dataNames]
                         data = ','.join(fields)
                         self.sendPacket('%s\r\n' % data)
@@ -842,7 +734,7 @@ class GlobalHawk(Singleton):
                     now = datetime.datetime.utcnow()
                     # tsAsString = now.strftime('%Y%m%dT%H%M%S') + '.%03d' % (now.microsecond/1000)
                     fields.append(tsAsString)
-                    fields.append('%d' % (self.analyzerStatus.getStatus(),))
+                    fields.append('%d' % (self.analyzerStatus.getStatus() | AnalyzerStatus.SENSOR,))
                     fields += [format(formatList,v) for v in selected]
                     data = ','.join(fields)
                     if self.analyzerStatus.getLevel() == AnalyzerStatus.SENSORS_ACTIVE:
@@ -852,7 +744,6 @@ class GlobalHawk(Singleton):
                 if ts>nextHeartbeat:
                     self.analyzerStatus.receivedHeartbeat()
                     if self.analyzerStatus.getLevel() == AnalyzerStatus.HOST_ONLY:
-                        fields = [self.id]
                         uTime = unixTime(nextHeartbeat)
                         tsAsString = timestampToUtcDatetime(nextHeartbeat).strftime('%Y%m%dT%H%M%S') + '.%03d' % (nextHeartbeat % 1000,)
                         now = datetime.datetime.utcnow()
@@ -869,8 +760,7 @@ class GlobalHawk(Singleton):
             self.tcpServer.close()
             self.tcpDataServer.close()
             self.udpServer.close()
-            if self.serialPort is not None:
-                self.serialPort.close()
+                
                 
 HELP_STRING = """GlobalHawk.py [-c<FILENAME>] [-h|--help]
 
