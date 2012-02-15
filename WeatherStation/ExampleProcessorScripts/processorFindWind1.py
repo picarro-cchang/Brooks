@@ -173,7 +173,7 @@ def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.01):
         yield ts, valTuples
         ts += msInterval
         
-SyncCdataTuple  = namedtuple('SyncCdataTuple',['ts','lon','lat','fit','zPos','mHead','bHead','aHead','aVel'])
+SyncCdataTuple  = namedtuple('SyncCdataTuple',['ts','lon','lat','fit','zPos','mHead','aHead','aVel'])
 DerivCdataTuple = namedtuple('DerivCdataTuple',SyncCdataTuple._fields + ('zVel',))
 CalibCdataTuple = namedtuple('CalibCdataTuple',DerivCdataTuple._fields + ('tVel','calParams'))
 StatsCdataTuple = namedtuple('StatsCdataTuple',CalibCdataTuple._fields + ('wMean','aStdDev'))
@@ -187,7 +187,7 @@ def syncCdataSource(syncDataSource):
     gpsOkThreshold = 4  # Need these many good GPS points before using data
     
     gpsCount = gpsOkThreshold
-    for ts,[gps,mag,bcorr,anem] in syncDataSource:
+    for ts,[gps,mag,anem] in syncDataSource:
         lat, lon, fit = gps.GPS_ABS_LAT, gps.GPS_ABS_LONG, gps.GPS_FIT
         if gpsCount>0: gpsCount -= 1
         if fit < 1.0: gpsCount = gpsOkThreshold # Indicate bad GPS
@@ -201,9 +201,8 @@ def syncCdataSource(syncDataSource):
         zPos = y+1j*x
         mHead = mag.WS_COS_HEADING+1j*mag.WS_SIN_HEADING
         aHead = anem.WS_COS_HEADING+1j*anem.WS_SIN_HEADING
-        bHead = bcorr.WS_COS_HEADING+1j*bcorr.WS_SIN_HEADING
         aVel  = anem.WS_SPEED*(anem.WS_COS_DIR+1j*anem.WS_SIN_DIR)
-        yield SyncCdataTuple(ts,lon,lat,fit,zPos,mHead,bHead,aHead,aVel)
+        yield SyncCdataTuple(ts,lon,lat,fit,zPos,mHead,aHead,aVel)
 
 # Compute the centered derivative of the GPS position data. We may later use Savitzky-Golay filtering here.
 
@@ -282,14 +281,15 @@ def trueWindSource(derivCdataSource):
     
     for i,d in enumerate(derivCdataSource):
         # Apply corrections to the anemometer wind velocity using the current magnetometer 
-        #  calibration.
+        #  calibration. The anemometer readings appropriate for the current GPS data are
+        #  in aHead and aVel. 
         # 
         # theta = p0 + arctan2(p2+sin(phi),p1+cos(phi))
         #
         #  where theta is the observed magnetometer heading and phi is the corresponding
         #  GPS heading. The rotation required for aVel to get the bearing relative to the
         #  vehicle is phi-theta+p0
-        theta = -angle(d.mHead) # Negative sign appears to be the magnetometer convention for angles
+        theta = -angle(d.aHead) # Negative sign appears to be the magnetometer convention for angles
         w = p1 + 1j*p2;
         b = -2.0*real(w*exp(-1j*(theta-p0)))
         c = abs(w)**2 - 1.0
@@ -297,7 +297,7 @@ def trueWindSource(derivCdataSource):
         r = 0.5*(-b+sqrt(disc))
         phi = angle(r*exp(1j*(theta-p0))-w)
         # Corrected wind velocity relative to the vehicle
-        cVel = d.aVel*exp(1j*(phi-theta+p0))*d.bHead/d.mHead
+        cVel = d.aVel*exp(1j*(phi-theta+p0))
         # Compute statistics for estimating scale factor between GPS and weather station speeds
         if not isnan(d.zVel):
             zVelSsq += abs(d.zVel)**2
@@ -373,11 +373,10 @@ def main():
     gpsSource = GpsSource(SENSORLIST[0])
     wsSource  = WsSource(SENSORLIST[1])
     gpsDelay_ms = 0
-    anemDelay_ms = round(1000*float(PARAMS.get("ANEMDELAY",4.0)))
-    dirCorrectDelay_ms = round(1000*float(PARAMS.get("DIRCORRECTDELAY",2.0)))
+    anemDelay_ms = round(1000*float(PARAMS.get("ANEMDELAY",3.0)))
     compassDelay_ms = round(1000*float(PARAMS.get("COMPASSDELAY",0.0)))
     
-    msOffsets = [gpsDelay_ms,compassDelay_ms,dirCorrectDelay_ms,anemDelay_ms]  # ms offsets for GPS, magnetometer and sonic anemometer
+    msOffsets = [gpsDelay_ms,compassDelay_ms,anemDelay_ms]  # ms offsets for GPS, magnetometer and sonic anemometer
     syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
     statsAvg = int(PARAMS.get("STATSAVG",20))
     for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource))),statsAvg)):

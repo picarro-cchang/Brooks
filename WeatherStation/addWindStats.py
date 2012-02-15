@@ -37,9 +37,15 @@ def aReadDatFile(fileName):
     return list2cols([x for x in xReadDatFile(fileName)])
         
 if __name__ == "__main__":
-    datlogName = r'ConcordData\FCDS2003-20120203-224635Z-DataLog_User_Minimal.dat';
-    fwind = 'windStats20120203.txt';
+    #datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\MountainViewDrivearound_20120208\DAT\FCDS2003-20120208-223124Z-DataLog_User_Minimal.dat';
+    #fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\MountainViewDrivearound_20120208\GPSWS\windStats.txt';
     
+    datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\DAT\FCDS2003-20120213-223639Z-DataLog_User_Minimal.dat';
+    fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\GPSWS\windStats.txt';
+    
+    datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\DAT\FCDS2003-20120213-172559Z-DataLog_User_Minimal.dat';
+    fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\GPSWS\windStats.txt';
+
     wind = aReadDatFile(fwind)
     datlog = aReadDatFile(datlogName)
     itimes = datlog.EPOCH_TIME

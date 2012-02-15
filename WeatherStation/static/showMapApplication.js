@@ -16,7 +16,30 @@ function draw_map()
         imageBounds);
     oldmap.setMap(map);
     
-    
+    /* 
+	var triangle1Coords = [
+        new google.maps.LatLng(38.0022, -122.1346),
+        new google.maps.LatLng(38.1022, -122.1346),
+        new google.maps.LatLng(38.1022, -122.1280)
+    ];
+    var triangle2Coords = [
+        new google.maps.LatLng(38.1022, -122.1280),
+        new google.maps.LatLng(38.1022, -122.1346),
+        new google.maps.LatLng(38.2022, -122.1346)
+    ];
+
+    bermudaTriangle = new google.maps.Polygon({
+        paths: triangle1Coords,
+        strokeColor: "#FF0000",
+        strokeOpacity: 0.35,
+        strokeWeight: 0,
+        fillColor: "#FF0000",
+        fillOpacity: 0.35
+    });
+
+    bermudaTriangle.setMap(map);
+    bermudaTriangle.getPaths().push(new google.maps.MVCArray(triangle2Coords));
+    */
     
     var marker = new google.maps.Marker({
       position: testloc,

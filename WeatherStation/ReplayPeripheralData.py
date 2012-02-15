@@ -64,8 +64,17 @@ def line2Dict(line,header):
 #gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Friday 1_19_12 data\GPS_Raw\2012\01\20\FCDS2003-20120120-163430Z-DataLog_GPS_Raw.dat"
 #wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\PG&E Phase I experiment Jan 2012\Friday 1_19_12 data\WS_Raw\2012\01\20\FCDS2003-20120120-163431Z-DataLog_WS_Raw.dat"
 
-gpsFile = "ConcordData/FCDS2003-20120203-194800Z-DataLog_GPS_Raw.dat"
-wsFile  = "ConcordData/FCDS2003-20120203-194759Z-DataLog_WS_Raw.dat"
+#gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120203\GPSWS\FCDS2003-20120203-194800Z-DataLog_GPS_Raw.dat"
+#wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120203\GPSWS\FCDS2003-20120203-194759Z-DataLog_WS_Raw.dat"
+
+#gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\MountainViewDrivearound_20120208\GPSWS\Composite_GPS_Raw.dat"
+#wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\MountainViewDrivearound_20120208\GPSWS\Composite_WS_Raw.dat"
+
+#gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\GPSWS\Composite_GPS_Raw.dat"
+#wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\GPSWS\Composite_WS_Raw.dat"
+
+gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120214\GPSWS\FCDS2003-20120214-214802Z-DataLog_GPS_Raw.dat"
+wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120214\GPSWS\FCDS2003-20120214-200418Z-DataLog_WS_Raw.dat"
 
 #gpsFile = "gps.dat"
 #wsFile  = "ws.dat"
