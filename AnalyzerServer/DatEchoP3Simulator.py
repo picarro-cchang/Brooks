@@ -88,7 +88,12 @@ class DataEchoP3(object):
                     pass
 
         while True:
-            self.fname = ('Demo_FCDS2003') + time.strftime('-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
+            if "demo" not in self.analyzerName.lower():
+                fnameAnalyzer = "Demo_" + self.analyzerName
+            else:
+                fnameAnalyzer = self.analyzerName
+            
+            self.fname = fnameAnalyzer + time.strftime('-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
             print self.fname
             pushIP()        
             self.ipmap.seek(0,0)
@@ -121,7 +126,7 @@ class DataEchoP3(object):
                     timeInterval = epochTime - lastEpochTime
                 lastEpochTime = epochTime
                 
-                print timeInterval
+                print timeInterval/self.speedFactor
                 time.sleep(timeInterval/self.speedFactor)
 
 
