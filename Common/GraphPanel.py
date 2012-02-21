@@ -249,7 +249,7 @@ class GraphPanel(wx.Panel):
             elif k =="ylabel": self.ylabel = v
             elif k =="title": self.title = v
             elif k =="timeAxes": self.canvas.SetTimeAxes(v)
-            elif k =="logScale": self.canvas.SetLogScale(v)
+            elif k =="logScale": self.canvas.setLogScale(v)
             elif k =="XTickFormat": self.canvas.SetXTickFormat(v)
             elif k =="YTickFormat": self.canvas.SetYTickFormat(v)
             elif k =="XSpec": self.canvas.SetXSpec(v)

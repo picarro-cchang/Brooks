@@ -97,25 +97,8 @@ import  time as _time
 import  wx
 
 # Needs Numeric or numarray or NumPy
-try:
-    import numpy.oldnumeric as _Numeric
-except:
-    try:
-        import numarray as _Numeric  #if numarray is used it is renamed Numeric
-    except:
-        try:
-            import Numeric as _Numeric
-        except:
-            msg= """
-            This module requires the Numeric/numarray or NumPy module,
-            which could not be imported.  It probably is not installed
-            (it's not part of the standard Python distribution). See the
-            Numeric Python site (http://numpy.scipy.org) for information on
-            downloading source or binaries."""
-            raise ImportError, "Numeric,numarray or NumPy not found. \n" + msg
-
-
-
+import numpy
+NaN = 1e1000/1e1000
 #
 # Plotting classes...
 #
@@ -125,7 +108,7 @@ class PolyPoints:
     """
 
     def __init__(self, points, attr):
-        self._points = _Numeric.array(points).astype(_Numeric.Float64)
+        self._points = numpy.array(points,dtype=numpy.float64)
         self._logscale = (False, False)
         self.currentScale= (1,1)
         self.currentShift= (0,0)
@@ -143,7 +126,7 @@ class PolyPoints:
     def __getattr__(self, name):
         if name == 'points':
             if len(self._points)>0:
-                data = _Numeric.array(self._points,copy=True)
+                data = numpy.array(self._points,copy=True)
                 if self._logscale[0]:
                     data = self.log10(data, 0)
                 if self._logscale[1]:
@@ -155,19 +138,21 @@ class PolyPoints:
             raise AttributeError, name
 
     def log10(self, data, ind):
-        data = _Numeric.compress(data[:,ind]>0,data,0)
-        data[:,ind] = _Numeric.log10(data[:,ind])
+        # Replace all non-finite quantities with NaN to suppress display
+        temp = numpy.log10(data[:,ind])
+        temp[~numpy.isfinite(temp)] = NaN
+        data[:,ind] = temp
         return data
 
     def boundingBox(self):
         if len(self.points) == 0:
             # no curves to draw
             # defaults to (-1,-1) and (1,1) but axis can be set in Draw
-            minXY= _Numeric.array([-1.0,-1.0])
-            maxXY= _Numeric.array([ 1.0, 1.0])
+            minXY=numpy.array([-1.0,-1.0])
+            maxXY=numpy.array([ 1.0, 1.0])
         else:
-            minXY= _Numeric.minimum.reduce(self.points)
-            maxXY= _Numeric.maximum.reduce(self.points)
+            minXY=numpy.asarray([numpy.nanmin(self.points[:,0]),numpy.nanmin(self.points[:,1])])
+            maxXY=numpy.asarray([numpy.nanmax(self.points[:,0]),numpy.nanmax(self.points[:,1])])
         return minXY, maxXY
 
     def scaleAndShift(self, scale=(1,1), shift=(0,0)):
@@ -193,14 +178,14 @@ class PolyPoints:
         if pointScaled == True:
             #Using screen coords
             p = self.scaled
-            pxy = self.currentScale * _Numeric.array(pntXY)+ self.currentShift
+            pxy = self.currentScale * numpy.array(pntXY)+ self.currentShift
         else:
             #Using user coords
             p = self.points
-            pxy = _Numeric.array(pntXY)
+            pxy = numpy.array(pntXY)
         #determine distance for each point
-        d= _Numeric.sqrt(_Numeric.add.reduce((p-pxy)**2,1)) #sqrt(dx^2+dy^2)
-        pntIndex = _Numeric.argmin(d)
+        d= numpy.sqrt(numpy.add.reduce((p-pxy)**2,1)) #sqrt(dx^2+dy^2)
+        pntIndex = numpy.argmin(d)
         dist = d[pntIndex]
         return [pntIndex, self.points[pntIndex], self.scaled[pntIndex], dist]
 
@@ -228,6 +213,7 @@ class PolyLine(PolyPoints):
         PolyPoints.__init__(self, points, attr)
 
     def draw(self, dc, printerScale, coord= None):
+        GROUPSIZE = 500
         colour = self.attributes['colour']
         width = self.attributes['width'] * printerScale
         style= self.attributes['style']
@@ -237,8 +223,14 @@ class PolyLine(PolyPoints):
         pen.SetCap(wx.CAP_BUTT)
         dc.SetPen(pen)
         if coord == None:
-            for i in range(0,len(self.scaled),500):
-                dc.DrawLines(self.scaled[i:i+501])
+            for i in range(0,len(self.scaled),GROUPSIZE):
+                # Find NaN and skip drawing these points
+                nanList = numpy.flatnonzero(numpy.logical_or.reduce(numpy.isnan(self.scaled[i:i+GROUPSIZE+1]),axis=1))
+                start = i
+                for j in nanList:
+                    dc.DrawLines(self.scaled[start:i+j])
+                    start = i+j+1
+                dc.DrawLines(self.scaled[start:i+GROUPSIZE+1])
                 _time.sleep(0)
         else:
             dc.DrawLines(coord) # draw legend line
@@ -289,6 +281,7 @@ class PolyMarker(PolyPoints):
         PolyPoints.__init__(self, points, attr)
 
     def draw(self, dc, printerScale, coord= None):
+        GROUPSIZE = 500
         colour = self.attributes['colour']
         width = self.attributes['width'] * printerScale
         size = self.attributes['size'] * printerScale
@@ -307,8 +300,14 @@ class PolyMarker(PolyPoints):
         else:
             dc.SetBrush(wx.Brush(colour, fillstyle))
         if coord == None:
-            for i in range(0,len(self.scaled),500):
-                self._drawmarkers(dc, self.scaled[i:i+501], marker, size)
+            for i in range(0,len(self.scaled),GROUPSIZE):
+                # Find NaN and skip drawing these points
+                nanList = numpy.flatnonzero(numpy.logical_or.reduce(numpy.isnan(self.scaled[i:i+GROUPSIZE+1]),axis=1))
+                start = i
+                for j in nanList:
+                    self._drawmarkers(dc, self.scaled[i:i+j], marker, size)
+                    start = i+j+1
+                self._drawmarkers(dc, self.scaled[start:i+GROUPSIZE+1], marker, size)
                 _time.sleep(0)
         else:
             self._drawmarkers(dc, coord, marker, size) # draw legend marker
@@ -325,9 +324,9 @@ class PolyMarker(PolyPoints):
     def _circle(self, dc, coords, size=1):
         fact= 2.5*size
         wh= 5.0*size
-        rect= _Numeric.zeros((len(coords),4),_Numeric.Float)+[0.0,0.0,wh,wh]
+        rect= numpy.zeros((len(coords),4),dtype=numpy.float)+[0.0,0.0,wh,wh]
         rect[:,0:2]= coords-[fact,fact]
-        dc.DrawEllipseList(rect.astype(_Numeric.Int32))
+        dc.DrawEllipseList(rect.astype(numpy.int32))
 
     def _dot(self, dc, coords, size=1):
         dc.DrawPointList(coords)
@@ -335,35 +334,35 @@ class PolyMarker(PolyPoints):
     def _square(self, dc, coords, size=1):
         fact= 2.5*size
         wh= 5.0*size
-        rect= _Numeric.zeros((len(coords),4),_Numeric.Float)+[0.0,0.0,wh,wh]
+        rect= numpy.zeros((len(coords),4),dtype=numpy.float)+[0.0,0.0,wh,wh]
         rect[:,0:2]= coords-[fact,fact]
-        dc.DrawRectangleList(rect.astype(_Numeric.Int32))
+        dc.DrawRectangleList(rect.astype(numpy.int32))
 
     def _triangle(self, dc, coords, size=1):
         shape= [(-2.5*size,1.44*size), (2.5*size,1.44*size), (0.0,-2.88*size)]
-        poly= _Numeric.repeat(coords,3)
+        poly= numpy.repeat(coords,3)
         poly.shape= (len(coords),3,2)
         poly += shape
-        dc.DrawPolygonList(poly.astype(_Numeric.Int32))
+        dc.DrawPolygonList(poly.astype(numpy.int32))
 
     def _triangle_down(self, dc, coords, size=1):
         shape= [(-2.5*size,-1.44*size), (2.5*size,-1.44*size), (0.0,2.88*size)]
-        poly= _Numeric.repeat(coords,3)
+        poly= numpy.repeat(coords,3)
         poly.shape= (len(coords),3,2)
         poly += shape
-        dc.DrawPolygonList(poly.astype(_Numeric.Int32))
+        dc.DrawPolygonList(poly.astype(numpy.int32))
 
     def _cross(self, dc, coords, size=1):
         fact= 2.5*size
         for f in [[-fact,-fact,fact,fact],[-fact,fact,fact,-fact]]:
-            lines= _Numeric.concatenate((coords,coords),axis=1)+f
-            dc.DrawLineList(lines.astype(_Numeric.Int32))
+            lines= numpy.concatenate((coords,coords),axis=1)+f
+            dc.DrawLineList(lines.astype(numpy.int32))
 
     def _plus(self, dc, coords, size=1):
         fact= 2.5*size
         for f in [[-fact,0,fact,0],[0,-fact,0,fact]]:
-            lines= _Numeric.concatenate((coords,coords),axis=1)+f
-            dc.DrawLineList(lines.astype(_Numeric.Int32))
+            lines= numpy.concatenate((coords,coords),axis=1)+f
+            dc.DrawLineList(lines.astype(numpy.int32))
 
 class PolyText(PolyPoints):
     """Class to define text strings within the graph
@@ -405,7 +404,8 @@ class PolyText(PolyPoints):
             for i in range(0,len(self.scaled)):
                 s = strings[i%n]
                 sx,sy = dc.GetTextExtent(s)
-                dc.DrawText(s,self.scaled[i][0]-sx*just[0],self.scaled[i][1]-sy*(1.0-just[1]))
+                if not(numpy.isnan(self.scaled[i][0]) or numpy.isnan(self.scaled[i][1])):
+                    dc.DrawText(s,self.scaled[i][0]-sx*just[0],self.scaled[i][1]-sy*(1.0-just[1]))
 
 class PlotGraphics:
     """Container to hold PolyXXX objects and graph labels
@@ -438,8 +438,8 @@ class PlotGraphics:
         p1, p2 = self.objects[0].boundingBox()
         for o in self.objects[1:]:
             p1o, p2o = o.boundingBox()
-            p1 = _Numeric.minimum(p1, p1o)
-            p2 = _Numeric.maximum(p2, p2o)
+            p1 = numpy.minimum(p1, p1o)
+            p2 = numpy.maximum(p2, p2o)
         return p1, p2
 
     def scaleAndShift(self, scale=(1,1), shift=(0,0)):
@@ -486,7 +486,7 @@ class PlotGraphics:
         symExt = self.objects[0].getSymExtent(printerScale)
         for o in self.objects[1:]:
             oSymExt = o.getSymExtent(printerScale)
-            symExt = _Numeric.maximum(symExt, oSymExt)
+            symExt = numpy.maximum(symExt, oSymExt)
         return symExt
 
     def getLegendNames(self):
@@ -587,15 +587,15 @@ class PlotCanvas(wx.Panel):
         self._sb_yunit = 0
 
         self._dragEnabled = False
-        self._screenCoordinates = _Numeric.array([0.0, 0.0])
+        self._screenCoordinates = numpy.array([0.0, 0.0])
 
         self._logscale = (False, False)
 
         # Zooming variables
         self._zoomInFactor =  0.5
         self._zoomOutFactor = 2
-        self._zoomCorner1= _Numeric.array([0.0, 0.0]) # left mouse down corner
-        self._zoomCorner2= _Numeric.array([0.0, 0.0])   # left mouse up corner
+        self._zoomCorner1= numpy.array([0.0, 0.0]) # left mouse down corner
+        self._zoomCorner2= numpy.array([0.0, 0.0])   # left mouse up corner
         self._zoomEnabled= False
         self._hasDragged= False
 
@@ -903,9 +903,9 @@ class PlotCanvas(wx.Panel):
         """Wrapper around _getXY, which handles log scales"""
         x,y = self._getXY(event)
         if self.getLogScale()[0]:
-            x = _Numeric.power(10,x)
+            x = numpy.power(10,x)
         if self.getLogScale()[1]:
-            y = _Numeric.power(10,y)
+            y = numpy.power(10,y)
         return x,y
 
     def _getXY(self,event):
@@ -915,13 +915,13 @@ class PlotCanvas(wx.Panel):
 
     def PositionUserToScreen(self, pntXY):
         """Converts User position to Screen Coordinates"""
-        userPos= _Numeric.array(pntXY)
+        userPos= numpy.array(pntXY)
         x,y= userPos * self._pointScale + self._pointShift
         return x,y
 
     def PositionScreenToUser(self, pntXY):
         """Converts Screen position to User Coordinates"""
-        screenPos= _Numeric.array(pntXY)
+        screenPos= numpy.array(pntXY)
         x,y= (screenPos-self._pointShift)/self._pointScale
         return x,y
 
@@ -954,7 +954,7 @@ class PlotCanvas(wx.Panel):
     def GetXMaxRange(self):
         xAxis = self._getXMaxRange()
         if self.getLogScale()[0]:
-            xAxis = _Numeric.power(10,xAxis)
+            xAxis = numpy.power(10,xAxis)
         return xAxis
 
     def _getXMaxRange(self):
@@ -967,7 +967,7 @@ class PlotCanvas(wx.Panel):
     def GetYMaxRange(self):
         yAxis = self._getYMaxRange()
         if self.getLogScale()[1]:
-            yAxis = _Numeric.power(10,yAxis)
+            yAxis = numpy.power(10,yAxis)
         return yAxis
 
     def _getYMaxRange(self):
@@ -980,7 +980,7 @@ class PlotCanvas(wx.Panel):
     def GetXCurrentRange(self):
         xAxis = self._getXCurrentRange()
         if self.getLogScale()[0]:
-            xAxis = _Numeric.power(10,xAxis)
+            xAxis = numpy.power(10,xAxis)
         return xAxis
 
     def _getXCurrentRange(self):
@@ -990,7 +990,7 @@ class PlotCanvas(wx.Panel):
     def GetYCurrentRange(self):
         yAxis = self._getYCurrentRange()
         if self.getLogScale()[1]:
-            yAxis = _Numeric.power(10,yAxis)
+            yAxis = numpy.power(10,yAxis)
         return yAxis
 
     def _getYCurrentRange(self):
@@ -999,7 +999,7 @@ class PlotCanvas(wx.Panel):
 
     def Draw(self, graphics, xAxis = None, yAxis = None, dc = None):
         """Wrapper around _Draw, which handles log axes"""
-
+        
         graphics.setLogScale(self.getLogScale())
 
         # check Axis is either tuple or none
@@ -1013,12 +1013,12 @@ class PlotCanvas(wx.Panel):
             if xAxis[0] == xAxis[1]:
                 return
             if self.getLogScale()[0]:
-                xAxis = _Numeric.log10(xAxis)
+                xAxis = numpy.log10(xAxis)
         if yAxis != None:
             if yAxis[0] == yAxis[1]:
                 return
             if self.getLogScale()[1]:
-                yAxis = _Numeric.log10(yAxis)
+                yAxis = numpy.log10(yAxis)
         self._Draw(graphics, xAxis, yAxis, dc)
 
     def _Draw(self, graphics, xAxis = None, yAxis = None, dc = None):
@@ -1030,7 +1030,6 @@ class PlotCanvas(wx.Panel):
         dc - drawing context - doesn't have to be specified.
         If it's not, the offscreen buffer is used
         """
-
         if dc == None:
             # sets new dc and clears it
             dc = wx.BufferedDC(wx.ClientDC(self.canvas), self._Buffer)
@@ -1055,10 +1054,10 @@ class PlotCanvas(wx.Panel):
             p2[0],p2[1] = xAxis[1], yAxis[1]     # upper right corner user scale (xmax,ymax)
         else:
             # Both axis specified in Draw
-            p1= _Numeric.array([xAxis[0], yAxis[0]])    # lower left corner user scale (xmin,ymin)
-            p2= _Numeric.array([xAxis[1], yAxis[1]])     # upper right corner user scale (xmax,ymax)
+            p1= numpy.array([xAxis[0], yAxis[0]])    # lower left corner user scale (xmin,ymin)
+            p2= numpy.array([xAxis[1], yAxis[1]])     # upper right corner user scale (xmax,ymax)
 
-        self.last_draw = (graphics, _Numeric.array(xAxis), _Numeric.array(yAxis))       # saves most recient values
+        self.last_draw = (graphics, numpy.array(xAxis), numpy.array(yAxis))       # saves most recient values
 
         # Get ticks and textExtents for axis if required
         if self._xSpec is not 'none':
@@ -1091,8 +1090,8 @@ class PlotCanvas(wx.Panel):
         lhsW= yTextExtent[0]+ yLabelWH[1]
         bottomH= max(xTextExtent[1], yTextExtent[1]/2.)+ xLabelWH[1]
         topH= yTextExtent[1]/2. + titleWH[1]
-        textSize_scale= _Numeric.array([rhsW+lhsW,bottomH+topH]) # make plot area smaller by text size
-        textSize_shift= _Numeric.array([lhsW, bottomH])          # shift plot area by this amount
+        textSize_scale= numpy.array([rhsW+lhsW,bottomH+topH]) # make plot area smaller by text size
+        textSize_shift= numpy.array([lhsW, bottomH])          # shift plot area by this amount
 
         # drawing title and labels text
         dc.SetFont(self._getFont(self._fontSizeTitle))
@@ -1113,8 +1112,8 @@ class PlotCanvas(wx.Panel):
             self._drawLegend(dc,graphics,rhsW,topH,legendBoxWH, legendSymExt, legendTextExt)
 
         # allow for scaling and shifting plotted points
-        scale = (self.plotbox_size-textSize_scale) / (p2-p1)* _Numeric.array((1,-1))
-        shift = -p1*scale + self.plotbox_origin + textSize_shift * _Numeric.array((1,-1))
+        scale = (self.plotbox_size-textSize_scale) / (p2-p1)* numpy.array((1,-1))
+        shift = -p1*scale + self.plotbox_origin + textSize_shift * numpy.array((1,-1))
         self._pointScale= scale  # make available for mouse events
         self._pointShift= shift
         self._drawAxes(dc, p1, p2, scale, shift, xticks, yticks)
@@ -1222,7 +1221,7 @@ class PlotCanvas(wx.Panel):
         """
         if self.last_PointLabel != None:
             #compare pointXY
-            if _Numeric.sometrue(mDataDict["pointXY"] != self.last_PointLabel["pointXY"]):
+            if numpy.sometrue(mDataDict["pointXY"] != self.last_PointLabel["pointXY"]):
                 #closest changed
                 self._drawPointLabel(self.last_PointLabel) #erase old
                 self._drawPointLabel(mDataDict) #plot new
@@ -1243,7 +1242,7 @@ class PlotCanvas(wx.Panel):
             self._drawRubberBand(self._zoomCorner1, self._zoomCorner2) # add new
         elif self._dragEnabled and event.LeftIsDown():
             coordinates = event.GetPosition()
-            newpos, oldpos = map(_Numeric.array, map(self.PositionScreenToUser, [coordinates, self._screenCoordinates]))
+            newpos, oldpos = map(numpy.array, map(self.PositionScreenToUser, [coordinates, self._screenCoordinates]))
             dist = newpos-oldpos
             self._screenCoordinates = coordinates
 
@@ -1255,7 +1254,7 @@ class PlotCanvas(wx.Panel):
 
     def OnMouseLeftDown(self,event):
         self._zoomCorner1[0], self._zoomCorner1[1]= self._getXY(event)
-        self._screenCoordinates = _Numeric.array(event.GetPosition())
+        self._screenCoordinates = numpy.array(event.GetPosition())
         if self._dragEnabled:
             self.SetCursor(self.GrabHandCursor)
         self.canvas.CaptureMouse()
@@ -1266,8 +1265,8 @@ class PlotCanvas(wx.Panel):
                 self._drawRubberBand(self._zoomCorner1, self._zoomCorner2) # remove old
                 self._zoomCorner2[0], self._zoomCorner2[1]= self._getXY(event)
                 self._hasDragged = False  # reset flag
-                minX, minY= _Numeric.minimum( self._zoomCorner1, self._zoomCorner2)
-                maxX, maxY= _Numeric.maximum( self._zoomCorner1, self._zoomCorner2)
+                minX, minY= numpy.minimum( self._zoomCorner1, self._zoomCorner2)
+                maxX, maxY= numpy.maximum( self._zoomCorner1, self._zoomCorner2)
                 self.last_PointLabel = None        #reset pointLabel
                 if self.last_draw != None:
                     self._Draw(self.last_draw[0], xAxis = (minX,maxX), yAxis = (minY,maxY), dc = None)
@@ -1349,10 +1348,10 @@ class PlotCanvas(wx.Panel):
         else:
             self.width, self.height= width,height
         self.height += self.heightAdjustment
-        self.plotbox_size = 0.97*_Numeric.array([self.width, self.height])
+        self.plotbox_size = 0.97*numpy.array([self.width, self.height])
         xo = 0.5*(self.width-self.plotbox_size[0])
         yo = self.height-0.5*(self.height-self.plotbox_size[1])
-        self.plotbox_origin = _Numeric.array([xo, yo])
+        self.plotbox_origin = numpy.array([xo, yo])
 
     def _setPrinterScale(self, scale):
         """Used to thicken lines and increase marker size for print out."""
@@ -1395,12 +1394,12 @@ class PlotCanvas(wx.Panel):
             if isinstance(o,PolyMarker):
                 # draw marker with legend
                 pnt= (trhc[0]+legendLHS+legendSymExt[0]/2., trhc[1]+s+lineHeight/2.)
-                o.draw(dc, self.printerScale, coord= _Numeric.array([pnt]))
+                o.draw(dc, self.printerScale, coord= numpy.array([pnt]))
             elif isinstance(o,PolyLine):
                 # draw line with legend
                 pnt1= (trhc[0]+legendLHS, trhc[1]+s+lineHeight/2.)
                 pnt2= (trhc[0]+legendLHS+legendSymExt[0], trhc[1]+s+lineHeight/2.)
-                o.draw(dc, self.printerScale, coord= _Numeric.array([pnt1,pnt2]))
+                o.draw(dc, self.printerScale, coord= numpy.array([pnt1,pnt2]))
             elif isinstance(o,PolyText):
                 pass
             else:
@@ -1434,7 +1433,7 @@ class PlotCanvas(wx.Panel):
             txtList= graphics.getLegendNames()
             txtExt= dc.GetTextExtent(txtList[0])
             for txt in graphics.getLegendNames()[1:]:
-                txtExt= _Numeric.maximum(txtExt,dc.GetTextExtent(txt))
+                txtExt= numpy.maximum(txtExt,dc.GetTextExtent(txt))
             maxW= symExt[0]+txtExt[0]
             maxH= max(symExt[1],txtExt[1])
             # padding .1 for lhs of legend box and space between lines
@@ -1474,14 +1473,14 @@ class PlotCanvas(wx.Panel):
 
     def _point2ClientCoord(self, corner1, corner2):
         """Converts user point coords to client screen int coords x,y,width,height"""
-        c1= _Numeric.array(corner1)
-        c2= _Numeric.array(corner2)
+        c1= numpy.array(corner1)
+        c2= numpy.array(corner2)
         # convert to screen coords
         pt1= c1*self._pointScale+self._pointShift
         pt2= c2*self._pointScale+self._pointShift
         # make height and width positive
-        pul= _Numeric.minimum(pt1,pt2) # Upper left corner
-        plr= _Numeric.maximum(pt1,pt2) # Lower right corner
+        pul= numpy.minimum(pt1,pt2) # Upper left corner
+        plr= numpy.maximum(pt1,pt2) # Lower right corner
         rectWidth, rectHeight= plr-pul
         ptx,pty= pul
         return ptx, pty, rectWidth, rectHeight
@@ -1497,8 +1496,8 @@ class PlotCanvas(wx.Panel):
             range = upper-lower
             if range <= max(abs(upper), abs(lower))*(10**-10):
                 return lower-0.5, upper+0.5
-            log = _Numeric.log10(range)
-            power = _Numeric.floor(log)
+            log = numpy.log10(range)
+            power = numpy.floor(log)
             fraction = log-power
             if fraction <= 0.05:
                 power = power-1
@@ -1542,11 +1541,11 @@ class PlotCanvas(wx.Panel):
             lower, upper = p1[0],p2[0]
             text = 1
             for y, d in [(p1[1], -xTickLength), (p2[1], xTickLength)]:   # miny, maxy and tick lengths
-                a1 = scale*_Numeric.array([lower, y])+shift
-                a2 = scale*_Numeric.array([upper, y])+shift
+                a1 = scale*numpy.array([lower, y])+shift
+                a2 = scale*numpy.array([upper, y])+shift
                 dc.DrawLine(a1[0],a1[1],a2[0],a2[1])  # draws upper and lower axis line
                 for x, label in xticks:
-                    pt = scale*_Numeric.array([x, y])+shift
+                    pt = scale*numpy.array([x, y])+shift
                     dc.DrawLine(pt[0],pt[1],pt[0],pt[1] + d) # draws tick mark d units
                     if text:
                         dc.DrawText(label,pt[0],pt[1])
@@ -1557,11 +1556,11 @@ class PlotCanvas(wx.Panel):
             text = 1
             h = dc.GetCharHeight()
             for x, d in [(p1[0], -yTickLength), (p2[0], yTickLength)]:
-                a1 = scale*_Numeric.array([x, lower])+shift
-                a2 = scale*_Numeric.array([x, upper])+shift
+                a1 = scale*numpy.array([x, lower])+shift
+                a2 = scale*numpy.array([x, upper])+shift
                 dc.DrawLine(a1[0],a1[1],a2[0],a2[1])
                 for y, label in yticks:
-                    pt = scale*_Numeric.array([x, y])+shift
+                    pt = scale*numpy.array([x, y])+shift
                     dc.DrawLine(pt[0],pt[1],pt[0]-d,pt[1])
                     if text:
                         dc.DrawText(label,pt[0]-dc.GetTextExtent(label)[0],
@@ -1581,23 +1580,23 @@ class PlotCanvas(wx.Panel):
             return self._ticks(*args)
 
     def _logticks(self, lower, upper):
-        #lower,upper = map(_Numeric.log10,[lower,upper])
+        #lower,upper = map(numpy.log10,[lower,upper])
         #print 'logticks',lower,upper
         ticks = []
-        mag = _Numeric.power(10,_Numeric.floor(lower))
+        mag = numpy.power(10,numpy.floor(lower))
         if upper-lower > 6:
-            t = _Numeric.power(10,_Numeric.ceil(lower))
-            base = _Numeric.power(10,_Numeric.floor((upper-lower)/6))
+            t = numpy.power(10,numpy.ceil(lower))
+            base = numpy.power(10,numpy.floor((upper-lower)/6))
             def inc(t):
                 return t*base-t
         else:
-            t = _Numeric.ceil(_Numeric.power(10,lower)/mag)*mag
+            t = numpy.ceil(numpy.power(10,lower)/mag)*mag
             def inc(t):
-                return 10**int(_Numeric.floor(_Numeric.log10(t)+1e-16))
-        majortick = int(_Numeric.log10(mag))
+                return 10**int(numpy.floor(numpy.log10(t)+1e-16))
+        majortick = int(numpy.log10(mag))
         while t <= pow(10,upper):
-            if majortick != int(_Numeric.floor(_Numeric.log10(t)+1e-16)):
-                majortick = int(_Numeric.floor(_Numeric.log10(t)+1e-16))
+            if majortick != int(numpy.floor(numpy.log10(t)+1e-16)):
+                majortick = int(numpy.floor(numpy.log10(t)+1e-16))
                 ticklabel = '1e%d'%majortick
             else:
                 if upper-lower < 2:
@@ -1605,7 +1604,7 @@ class PlotCanvas(wx.Panel):
                     ticklabel = '%de%d'%(minortick,majortick)
                 else:
                     ticklabel = ''
-            ticks.append((_Numeric.log10(t), ticklabel))
+            ticks.append((numpy.log10(t), ticklabel))
             t += inc(t)
         if len(ticks) == 0:
             ticks = [(0,'')]
@@ -1613,13 +1612,13 @@ class PlotCanvas(wx.Panel):
 
     def _ticks(self, lower, upper):
         ideal = (upper-lower)/7.
-        log = _Numeric.log10(ideal)
-        power = _Numeric.floor(log)
+        log = numpy.log10(ideal)
+        power = numpy.floor(log)
         fraction = log-power
         factor = 1.
         error = fraction
         for f, lf in self._multiples:
-            e = _Numeric.fabs(fraction-lf)
+            e = numpy.fabs(fraction-lf)
             if e < error:
                 error = e
                 factor = f
@@ -1633,13 +1632,13 @@ class PlotCanvas(wx.Panel):
             digits = -int(power)
             format = '%'+`digits+2`+'.'+`digits`+'f'
         ticks = []
-        t = -grid*_Numeric.floor(-lower/grid)
+        t = -grid*numpy.floor(-lower/grid)
         while t <= upper:
             ticks.append( (t, format % (t,)) )
             t = t + grid
         return ticks
 
-    _multiples = [(2., _Numeric.log10(2.)), (5., _Numeric.log10(5.))]
+    _multiples = [(2., numpy.log10(2.)), (5., numpy.log10(5.))]
 
 
     def _adjustScrollbars(self):
@@ -1862,19 +1861,19 @@ def getHandImage():
 
 def _draw1Objects():
     # 100 points sin function, plotted as green circles
-    data1 = 2.*_Numeric.pi*_Numeric.arange(200)/200.
+    data1 = 2.*numpy.pi*numpy.arange(200)/200.
     data1.shape = (100, 2)
-    data1[:,1] = _Numeric.sin(data1[:,0])
+    data1[:,1] = numpy.sin(data1[:,0])
     markers1 = PolyMarker(data1, legend='Green Markers', colour='green', marker='circle',size=1)
 
     # 50 points cos function, plotted as red line
-    data1 = 2.*_Numeric.pi*_Numeric.arange(100)/100.
+    data1 = 2.*numpy.pi*numpy.arange(100)/100.
     data1.shape = (50,2)
-    data1[:,1] = _Numeric.cos(data1[:,0])
+    data1[:,1] = numpy.cos(data1[:,0])
     lines = PolyLine(data1, legend= 'Red Line', colour='red')
 
     # A few more points...
-    pi = _Numeric.pi
+    pi = numpy.pi
     markers2 = PolyMarker([(0., 0.), (pi/4., 1.), (pi/2, 0.),
                           (3.*pi/4., -1)], legend='Cross Legend', colour='blue',
                           marker='cross')
@@ -1885,19 +1884,19 @@ def _draw1Objects():
 
 def _draw2Objects():
     # 100 points sin function, plotted as green dots
-    data1 = 2.*_Numeric.pi*_Numeric.arange(200)/200.
+    data1 = 2.*numpy.pi*numpy.arange(200)/200.
     data1.shape = (100, 2)
-    data1[:,1] = _Numeric.sin(data1[:,0])
+    data1[:,1] = numpy.sin(data1[:,0])
     line1 = PolyLine(data1, legend='Green Line', colour='green', width=6, style=wx.DOT)
 
     # 50 points cos function, plotted as red dot-dash
-    data1 = 2.*_Numeric.pi*_Numeric.arange(100)/100.
+    data1 = 2.*numpy.pi*numpy.arange(100)/100.
     data1.shape = (50,2)
-    data1[:,1] = _Numeric.cos(data1[:,0])
+    data1[:,1] = numpy.cos(data1[:,0])
     line2 = PolyLine(data1, legend='Red Line', colour='red', width=3, style= wx.DOT_DASH)
 
     # A few more points...
-    pi = _Numeric.pi
+    pi = numpy.pi
     markers1 = PolyMarker([(0., 0.), (pi/4., 1.), (pi/2, 0.),
                           (3.*pi/4., -1)], legend='Cross Hatch Square', colour='blue', width= 3, size= 6,
                           fillcolour= 'red', fillstyle= wx.CROSSDIAG_HATCH,
@@ -1916,7 +1915,7 @@ def _draw3Objects():
 
 def _draw4Objects():
     # 25,000 point line
-    data1 = _Numeric.arange(5e5,1e6,10)
+    data1 = numpy.arange(5e5,1e6,10)
     data1.shape = (25000, 2)
     line1 = PolyLine(data1, legend='Wide Line', colour='green', width=5)
 
@@ -1951,11 +1950,11 @@ def _draw6Objects():
                         "Bar Graph - (Turn on Grid, Legend)", "Months", "Number of Students")
 def _draw7Objects():
     # Empty graph with axis defined but no points/lines
-    x = _Numeric.arange(1,1000,1)
+    x = numpy.arange(1,1000,1)
     y1 = 4.5*x**2
     y2 = 2.2*x**3
-    points1 = _Numeric.transpose([x,y1])
-    points2 = _Numeric.transpose([x,y2])
+    points1 = numpy.transpose([x,y1])
+    points2 = numpy.transpose([x,y2])
     line1 = PolyLine(points1, legend='quadratic', colour='blue', width=1)
     line2 = PolyLine(points2, legend='cubic', colour='red', width=1)
     return PlotGraphics([line1,line2], "double log plot", "Value X", "Value Y")

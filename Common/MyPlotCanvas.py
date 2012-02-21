@@ -135,7 +135,7 @@ class MyPlotCanvas(plot.PlotCanvas):
                     if event.LeftIsDown():
                         yAxis -= dist[1]
                         xAxis -= dist[0]
-                        self._Draw(graphics,xAxis,yAxis)
+                        self.Draw(graphics,xAxis,yAxis)
                     elif event.RightIsDown():
                         ymin,ymax = yAxis
                         yextra = (numpy.exp(-dist[1]/(ymax-ymin))-1)*(ymax-ymin)/2.0
@@ -145,7 +145,7 @@ class MyPlotCanvas(plot.PlotCanvas):
                         xextra = (numpy.exp(-dist[0]/(xmax-xmin))-1)*(xmax-xmin)/2.0
                         xAxis[0] -= xextra
                         xAxis[1] += xextra
-                        self._Draw(graphics,xAxis,yAxis)
+                        self.Draw(graphics,xAxis,yAxis)
         finally:
             self.busy = False
 
@@ -199,6 +199,25 @@ class MyPlotCanvas(plot.PlotCanvas):
         if self.GraphBackgroundColour == None: return self.GetBackgroundColour()
         else: return self.GraphBackgroundColour
 
+    def Draw(self, graphics, xAxis = None, yAxis = None, dc = None):
+        """Wrapper around _Draw, which handles log axes"""
+        
+        graphics.setLogScale(self.getLogScale())
+        # check Axis is either tuple or none
+        if type(xAxis) not in [type(None),tuple]:
+            raise TypeError, "xAxis should be None or (minX,maxX)"+str(type(xAxis))
+        if type(yAxis) not in [type(None),tuple]:
+            raise TypeError, "yAxis should be None or (minY,maxY)"+str(type(xAxis))
+
+        # check case for axis = (a,b) where a==b caused by improper zooms
+        if xAxis != None:
+            if xAxis[0] == xAxis[1]:
+                return
+        if yAxis != None:
+            if yAxis[0] == yAxis[1]:
+                return
+        self._Draw(graphics, xAxis, yAxis, dc)
+        
     def _Draw(self, graphics, xAxis = None, yAxis = None, dc = None):
         """\
         Draw objects in graphics with specified x and y axis.
