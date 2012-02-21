@@ -34,7 +34,7 @@ from Host.Common import CmdFIFO, Listener, TextListener
 from Host.Common import MeasData
 from Host.Common.SharedTypes import RPC_PORT_COMMAND_HANDLER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
                                     RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_MEAS_SYSTEM,\
-                                    RPC_PORT_EIF_HANDLER, \
+                                    RPC_PORT_EIF_HANDLER,  RPC_PORT_DATALOGGER,\
                                     BROADCAST_PORT_MEAS_SYSTEM, BROADCAST_PORT_DATA_MANAGER 
 from Host.Common.StringPickler import StringAsObject,ObjAsString,ArbitraryObject
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -90,6 +90,7 @@ class CommandInterface(object):
         self._ValveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = "CommandInterface")
         self._MeasSystemRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM, ClientName = "CommandInterface")
         self._EIFRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_EIF_HANDLER, ClientName = "CommandInterface")
+        self._DataLoggerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "CommandInterface")
         self.cmdThread = None
         
         # Create measurement system related variables
@@ -494,6 +495,13 @@ class CommandInterface(object):
         self._MeasSystemRpc.Backdoor.DeleteData(label)
         self.Print("OK")
 
+    # Data Logger functions
+    def _DATALOGGER_RESTART(self):
+        stat,userLogs = self._DataLoggerRpc.DATALOGGER_getUserLogsRpc()
+        for i in userLogs:
+            self._DataLoggerRpc.DATALOGGER_startLogRpc(i,True)
+        self.Print("OK")
+        
     # Instrument Manager functions
     def _INSTR_PARK(self):
         self._InstMgrRpc.INSTMGR_ShutdownRpc( INSTMGR_SHUTDOWN_PREP_SHIPMENT )
