@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import wx
+import time
 from wx.lib.masked import TimeCtrl
 from datetime import datetime
 
@@ -14,7 +15,8 @@ class SupervisorLauncherFrame(wx.Frame):
         # labels
         self.labelTitle = wx.StaticText(self, -1, "Picarro Mode Switcher", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-        self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
+        copyrightText = "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0]
+        self.labelFooter = wx.StaticText(self, -1, copyrightText, style=wx.ALIGN_CENTER)
         self.labelSelect = wx.StaticText(self, -1, "Select Measurement Mode", style=wx.ALIGN_CENTER)
         
         # Divider line
