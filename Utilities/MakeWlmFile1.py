@@ -30,6 +30,7 @@ from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
 from Host.Common.Listener import Listener
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.Common.scanSerialPorts import scanSerialPorts
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -167,18 +168,50 @@ class WlmFileMaker(object):
                                  SensorEntryType,self.streamFilter)
         
         # Open serial port or TCP connection to wavemeter for non-blocking read
+        self.serialTimeout = 10.0
+        self.ser = None
+        self.wavemeter = None
         if self.ipAddr is None:
-            try:
-                self.ser = serial.Serial(self.port,19200,timeout=0)
-                self.wavemeter = BurleighReply(self.ser,0.02)
-            except:
-                raise Exception("Cannot open serial port - aborting")
+            self.searchSerPort()
         else:
             try:
                 self.wavemeter = WavemeterTelnetClient(self.ipAddr,1.0)
             except:
                 raise Exception("Cannot open TCP connection to %s, Aborting." % self.ipAddr)
-        self.serialTimeout = 10.0
+        
+    def searchSerPort(self):
+        reply = None
+        for p in scanSerialPorts():
+            if self.wavemeter:
+                self.wavemeter.Close()
+                self.ser = None
+                self.wavemeter = None
+            try:
+                self.ser = serial.Serial(p, 19200, timeout=0)
+                self.wavemeter = BurleighReply(self.ser,0.02)
+                time.sleep(2)
+            except:
+                continue
+            try:
+                print "Testing serial %s..." % (p)
+                self.wavemeter.PutString("\n");
+                time.sleep(1.0)
+                self.wavemeter.PutString("*IDN?\n");
+                reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
+                self.port = p
+                break
+            except:
+                reply = None
+                
+        if not reply:
+            if self.wavemeter:
+                self.wavemeter.Close()
+                self.ser = None
+                self.wavemeter = None
+            raise Exception("Cannot open serial port - aborting")
+        else:
+            print "Serial port to wavemeter found at %s" % (p)
+            return p
         
     def WaitForString(self,timeout,msg=""):
         tWait = 0
