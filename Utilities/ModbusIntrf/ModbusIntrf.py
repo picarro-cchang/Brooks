@@ -19,7 +19,7 @@ import defines as cst
 import _winreg as winreg
 import modbus_rtu
 
-def enumerateSerialPorts():
+def scanSerialPorts():
     """ Uses the Win32 registry to return an
         iterator of serial (COM) ports
         existing on this computer.
@@ -43,7 +43,7 @@ class ModbusIntrf(object):
         self.master = None
         
     def searchSerPort(self):
-        for p in enumerateSerialPorts():
+        for p in scanSerialPorts():
             if self.ser:
                 self.ser.close()
                 self.ser = None
