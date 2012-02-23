@@ -40,16 +40,26 @@ if __name__ == "__main__":
     #datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\MountainViewDrivearound_20120208\DAT\FCDS2003-20120208-223124Z-DataLog_User_Minimal.dat';
     #fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\MountainViewDrivearound_20120208\GPSWS\windStats.txt';
     
-    datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\DAT\FCDS2003-20120213-223639Z-DataLog_User_Minimal.dat';
-    fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\GPSWS\windStats.txt';
+    #datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\DAT\FCDS2003-20120213-223639Z-DataLog_User_Minimal.dat';
+    #fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\GPSWS\windStats.txt';
     
-    datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\DAT\FCDS2003-20120213-172559Z-DataLog_User_Minimal.dat';
-    fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\GPSWS\windStats.txt';
+    #datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\20120213b\DAT\FCDS2003-20120213-223639Z-DataLog_User_Minimal.dat';
+    #fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\20120213b\GPSWS\windStats.txt';
 
+    #datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120215\DAT\FCDS2003-20120215-235259Z-DataLog_User_Minimal.dat';
+    #fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120215\GPSWS\windStats.txt';
+
+    #datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120216\DAT20120216-145816Z\FCDS2003-20120216-145816Z-DataLog_User_Minimal.dat';
+    #fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120216\GPSWS20120216-121652Z\windStats.txt';
+    
+    datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120221\DAT\FCDS2003-20120221-195904Z-DataLog_User_Minimal.dat';
+    fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120221\GPSWS\windStats.txt';
+    
     wind = aReadDatFile(fwind)
     datlog = aReadDatFile(datlogName)
     itimes = datlog.EPOCH_TIME
-
+    print min(itimes), max(itimes)
+    print min(wind.EPOCH_TIME), max(wind.EPOCH_TIME)
     newFields = []
     for n in wind._fields:
         if n == "EPOCH_TIME": continue

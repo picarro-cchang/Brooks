@@ -74,8 +74,8 @@ class DataManagerOutput(object):
     def __init__(self):
         self.doneFlag = False
         self.dmQueue = Queue.Queue(0)
-        self.gpsQueue = Queue.Queue(100)
-        self.wsQueue = Queue.Queue(100)
+        self.gpsQueue = Queue.Queue(1000)
+        self.wsQueue = Queue.Queue(1000)
         self.scriptEnviron = dict(
             SENSORLIST=[self.gpsQueue,self.wsQueue],
             RENDER_FIGURE=renderFigure,
@@ -129,7 +129,7 @@ class DataManagerOutput(object):
         self.dmListener.stop()
     
     def writeOutput(self,ts,dataList):
-        # print "%-20.3f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],(180.0/pi)*dataList[2])
+        print "%-20.3f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],(180.0/pi)*dataList[2])
         print >> self.op, "%-20.3f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],dataList[2])
         
 if __name__ == "__main__":

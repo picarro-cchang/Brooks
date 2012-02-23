@@ -62,7 +62,7 @@ class PeakFinder(object):
         if 'sigmaMinFactor' in kwargs:
             sigmaMinFactor = float(kwargs['sigmaMinFactor'])
         else:
-            sigmaMinFactor = 9.0
+            sigmaMinFactor = 2.0
     
         self.sigmaMin = sigmaMinFactor*self.dx
     
@@ -81,7 +81,7 @@ class PeakFinder(object):
         if 'factor' in kwargs:
             self.factor = float(kwargs['factor'])
         else:
-            self.factor = 1.2
+            self.factor = 1.1
 
         if 'sleep_seconds' in kwargs:
             self.sleep_seconds = float(kwargs['sleep_seconds'])
@@ -473,7 +473,7 @@ class PeakFinder(object):
                 v = ssbuff[level,col]
                 isPeak = (v>ssbuff[level+1,colp]) and (v>ssbuff[level+1,col]) and (v>ssbuff[level+1,colm]) and \
                          (v>ssbuff[level,colp])   and (v>ssbuff[level,colm])  and \
-                         (level==0 or (v>ssbuff[level-1,colp]) and (v>ssbuff[level-1,col]) and (v>ssbuff[level-1,colm]))
+                         (level==0 or ((v>ssbuff[level-1,colp]) and (v>ssbuff[level-1,col]) and (v>ssbuff[level-1,colm])))
                 return isPeak, col         
             initBuff = True
             PeakTuple = None

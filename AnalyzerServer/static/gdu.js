@@ -185,7 +185,9 @@ var CSTATE = {
 
         counter: 0,
         leakLine: 1,
+        clearLeaks: false,
         analysisLine: 1,
+        clearAnalyses: false,
         startNewPath: true,
         nextAnalysisEtm: 0.0,
         nextPeakEtm: 0.0,
@@ -403,6 +405,7 @@ function clearPeakMarkerArray() {
     CSTATE.peakMarkers = [];
     CSTATE.peakBblListener = {};
     CSTATE.leakLine = 1;
+    CSTATE.clearLeaks = true;
 }
 
 function clearAnalysisMarkerArray() {
@@ -417,6 +420,7 @@ function clearAnalysisMarkerArray() {
     CSTATE.analysisMarkers = [];
     CSTATE.analysisBblListener = {};
     CSTATE.analysisLine = 1;
+    CSTATE.clearAnalyses = true;
 }
 
 function clearDatNoteMarkers(emptyTheDict) {
@@ -472,9 +476,7 @@ function resetLeakPosition() {
 
 function timeStringFromEtm(etm) {
     var gmtoffset_mil, etm_mil, tmil, tdate, tstring;
-    gmtoffset_mil = (CNSNT.gmt_offset * 3600 * 1000);
     etm_mil = (etm * 1000);
-    tmil = (etm_mil - gmtoffset_mil);
     tdate = new Date(etm_mil);
     tstring = tdate.toLocaleDateString() + " " + tdate.toLocaleTimeString();
     return tstring;
@@ -1289,7 +1291,8 @@ function notePane(etm, cat) {
 }
 
 function controlPane() {
-    var modalChangeMinAmp, showDnoteCntl, showPnoteCntl, showAbubbleCntl, showPbubbleCntl, showAnoteCntl, dchkd, pchkd, achkd, pbchkd, abchkd, body;
+    var modalChangeMinAmp, showDnoteCntl, showPnoteCntl, showAbubbleCntl, showPbubbleCntl, showAnoteCntl
+	var dchkd, pchkd, achkd, pbchkd, abchkd, body;
 
     dchkd = TXT.show_txt;
     if (CSTATE.showDnote) {
@@ -1428,8 +1431,8 @@ function updatePath(pdata, clr, etm) {
             pushToPath(CSTATE.path, lastPoint);
         }
     }
-    CSTATE.startNewPath = false;
     pushToPath(CSTATE.path, where);
+    CSTATE.startNewPath = false;
     npdata = pdata;
     npdata.geohash = encodeGeoHash(where.lat(), where.lng());
     CSTATE.pathGeoObjs.push(npdata);
@@ -1465,6 +1468,7 @@ function getNearest(currentHash, maxNeighbors) {
 
 function initialize_gdu(winH, winW) {
     var mapTypeCookie, current_zoom, followCookie, minAmpCookie, latCookie, dnoteCookie, pnoteCookie, anoteCookie;
+	var abubbleCookie, pbubbleCookie;
     pge_wdth = $('#id_topbar').width();
     $('#map_canvas').css('height', winH - 200);
     $('#map_canvas').css('width', pge_wdth);
@@ -1543,6 +1547,7 @@ function initialize_gdu(winH, winW) {
         zoom: CSTATE.current_zoom,
         center: latlng,
         mapTypeId: CSTATE.current_mapTypeId,
+        rotateControl: false,
         scaleControl: true,
         zoomControl: true,
         zoomControlOptions: {style: google.maps.ZoomControlStyle.SMALL}
@@ -1770,7 +1775,8 @@ function statCheck() {
 
 function getData() {
     //if (startPos) {startPosStr = startPos;} else {startPosStr = 'null';};
-    var params = {'startPos': CSTATE.startPos, 'alog': CSTATE.alog, 'gmtOffset': CNSNT.gmt_offset, 'varList': '["GPS_ABS_LAT","GPS_ABS_LONG","GPS_FIT","CH4","ValveMask", "INST_STATUS"]'};
+    var params = {'startPos': CSTATE.startPos, 'alog': CSTATE.alog, 'gmtOffset': CNSNT.gmt_offset, 
+        'varList': '["GPS_ABS_LAT","GPS_ABS_LONG","GPS_FIT","CH4","ValveMask", "INST_STATUS", "WIND_N", "WIND_E", "WIND_DIR_SDEV"]'};
     call_rest(CNSNT.svcurl, "getData", params,
             function (json, status, jqXHR) {
             CSTATE.net_abort_count = 0;
@@ -1788,7 +1794,7 @@ function getMode() {
         CSTATE.getting_mode = true;
         call_rest(CNSNT.svcurl, "driverRpc", {"func": "rdDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER']"},
                 function (data, ts, jqXHR) {
-                if (!(data.result.value === undefined)) {
+                if (data.result.value !== undefined) {
                     var mode = data.result.value;
                     setModePane(mode);
                 }
@@ -2033,24 +2039,29 @@ function successPeaks(data) {
     }
     if (resultWasReturned) {
         if (data.result.CH4) {
-            CSTATE.leakLine = data.result.nextRow;
-            for (i = 0; i < data.result.CH4.length; i += 1) {
-                peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
-                peakMarker = newPeakMarker(CSTATE.map, peakCoords, data.result.AMPLITUDE[i], data.result.SIGMA[i], data.result.CH4[i]);
-                CSTATE.peakMarkers[CSTATE.peakMarkers.length] = peakMarker;
+            if (CSTATE.clearLeaks) {
+                CSTATE.clearLeaks = false;
+            }
+            else {
+                CSTATE.leakLine = data.result.nextRow;
+                for (i = 0; i < data.result.CH4.length; i += 1) {
+                    peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
+                    peakMarker = newPeakMarker(CSTATE.map, peakCoords, data.result.AMPLITUDE[i], data.result.SIGMA[i], data.result.CH4[i]);
+                    CSTATE.peakMarkers[CSTATE.peakMarkers.length] = peakMarker;
 
-                datadict = CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]];
-                if (!datadict) {
-                    datadict = {};
+                    datadict = CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]];
+                    if (!datadict) {
+                        datadict = {};
+                    }
+                    datadict.lat = data.result.GPS_ABS_LAT[i];
+                    datadict.lon = data.result.GPS_ABS_LONG[i];
+                    datadict.ch4 = data.result.CH4[i];
+                    datadict.amp = data.result.AMPLITUDE[i];
+                    datadict.sigma = data.result.SIGMA[i];
+
+                    CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]] = datadict;
+                    attachMarkerListener(peakMarker, data.result.EPOCH_TIME[i], "peak", true);
                 }
-                datadict.lat = data.result.GPS_ABS_LAT[i];
-                datadict.lon = data.result.GPS_ABS_LONG[i];
-                datadict.ch4 = data.result.CH4[i];
-                datadict.amp = data.result.AMPLITUDE[i];
-                datadict.sigma = data.result.SIGMA[i];
-
-                CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]] = datadict;
-                attachMarkerListener(peakMarker, data.result.EPOCH_TIME[i], "peak", true);
             }
         }
     }
@@ -2093,26 +2104,31 @@ function successAnalysis(data) {
     }
     if (resultWasReturned) {
         if (data.result.CONC) {
-            CSTATE.analysisLine = data.result.nextRow;
-            for (i = 0; i < data.result.CONC.length; i += 1) {
-                analysisCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
-                result = data.result.DELTA[i].toFixed(1) + " +/- " + data.result.UNCERTAINTY[i].toFixed(1);
-                $("#analysis").html(TXT.delta + ": " + result);
-                analysisMarker = newAnalysisMarker(CSTATE.map, analysisCoords, data.result.DELTA[i], data.result.UNCERTAINTY[i]);
-                CSTATE.analysisMarkers[CSTATE.analysisMarkers.length] = analysisMarker;
+            if (CSTATE.clearAnalyses) {
+                CSTATE.clearAnalyses = false;
+            }
+            else {
+                CSTATE.analysisLine = data.result.nextRow;
+                for (i = 0; i < data.result.CONC.length; i += 1) {
+                    analysisCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
+                    result = data.result.DELTA[i].toFixed(1) + " +/- " + data.result.UNCERTAINTY[i].toFixed(1);
+                    $("#analysis").html(TXT.delta + ": " + result);
+                    analysisMarker = newAnalysisMarker(CSTATE.map, analysisCoords, data.result.DELTA[i], data.result.UNCERTAINTY[i]);
+                    CSTATE.analysisMarkers[CSTATE.analysisMarkers.length] = analysisMarker;
 
-                datadict = CSTATE.analysisNoteDict[data.result.EPOCH_TIME[i]];
-                if (!datadict) {
-                    datadict = {};
+                    datadict = CSTATE.analysisNoteDict[data.result.EPOCH_TIME[i]];
+                    if (!datadict) {
+                        datadict = {};
+                    }
+                    datadict.lat = data.result.GPS_ABS_LAT[i];
+                    datadict.lon = data.result.GPS_ABS_LONG[i];
+                    datadict.conc = data.result.CONC[i];
+                    datadict.delta = data.result.DELTA[i];
+                    datadict.uncertainty = data.result.UNCERTAINTY[i];
+
+                    CSTATE.analysisNoteDict[data.result.EPOCH_TIME[i]] = datadict;
+                    attachMarkerListener(analysisMarker, data.result.EPOCH_TIME[i], "analysis", true);
                 }
-                datadict.lat = data.result.GPS_ABS_LAT[i];
-                datadict.lon = data.result.GPS_ABS_LONG[i];
-                datadict.conc = data.result.CONC[i];
-                datadict.delta = data.result.DELTA[i];
-                datadict.uncertainty = data.result.UNCERTAINTY[i];
-
-                CSTATE.analysisNoteDict[data.result.EPOCH_TIME[i]] = datadict;
-                attachMarkerListener(analysisMarker, data.result.EPOCH_TIME[i], "analysis", true);
             }
         }
     }

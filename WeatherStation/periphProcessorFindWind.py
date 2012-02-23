@@ -12,6 +12,8 @@ from numpy import *
 from scipy.optimize import leastsq
 import itertools
 
+from Host.Common import timestamp
+
 NOT_A_NUMBER = 1e1000/1e1000
 SourceTuple = namedtuple('SourceTuple',['ts','valTuple'])
 

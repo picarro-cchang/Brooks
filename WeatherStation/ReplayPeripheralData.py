@@ -70,14 +70,20 @@ def line2Dict(line,header):
 #gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\MountainViewDrivearound_20120208\GPSWS\Composite_GPS_Raw.dat"
 #wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\MountainViewDrivearound_20120208\GPSWS\Composite_WS_Raw.dat"
 
-#gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\GPSWS\Composite_GPS_Raw.dat"
-#wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\GPSWS\Composite_WS_Raw.dat"
+#gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120214\GPSWS\Composite_GPS_Raw.dat"
+#wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120214\GPSWS\Composite_WS_Raw.dat"
 
-gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120214\GPSWS\FCDS2003-20120214-214802Z-DataLog_GPS_Raw.dat"
-wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120214\GPSWS\FCDS2003-20120214-200418Z-DataLog_WS_Raw.dat"
+#gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\20120213b\GPSWS\Composite_GPS_Raw.dat"
+#wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\20120213b\GPSWS\Composite_WS_Raw.dat"
 
 #gpsFile = "gps.dat"
 #wsFile  = "ws.dat"
+
+gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120216\GPSWS20120216-121652Z\Composite_GPS_Raw.dat"
+wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120216\GPSWS20120216-121652Z\Composite_WS_Raw.dat"
+
+gpsFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120221\GPSWS\Composite_GPS_Raw.dat"
+wsFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120221\GPSWS\Composite_WS_Raw.dat"
 
 h1 = getSlice(gpsFile,0,1)[0].line.split()
 h2  = getSlice(wsFile,0,1)[0].line.split()

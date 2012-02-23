@@ -11,6 +11,7 @@ import datetime
 # dataFile = 'data/FCDS2003-20120202-231310Z-DataLog_User_Minimal.dat'
 # dataFile = r'R:\crd_G2000\FCDS\1061-FCDS2003\Data_20120113\AnalyzerServer\FCDS2003-20120113-221530Z-DataLog_User_Minimal.dat'
 dataFile = r'C:\Picarro\G2000\MobileKit\WeatherStation\withWind.dat'
+dataFile = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120215\DAT\FCDS2003-20120215-235259Z-DataLog_User_Minimal.dat'
 
 liveFile = time.strftime('C:/UserData/AnalyzerServer/ZZZ-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
 
