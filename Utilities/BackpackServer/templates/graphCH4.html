@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+{% block head %}
+    <script type="text/javascript">
+    
+    function callJSONRPC(method,params,success_callback,error_callback) {
+        var request = {
+            "method": method,
+            "params": params,
+            "id": 1
+        };
+        jQuery.ajax( {contentType:"application/json",
+                      data:$.toJSON(request),
+                      dataType:"json",
+                      url:"/jsonrpc",
+                      type:"post",
+                      success: success_callback,
+                      error: error_callback} );
+    }
+
+    var fileRow = 1;
+    var d1 = [];    // For graph
+    var plt;
+    var maxLength = 50;
+    var d = new Date()
+    var gmtHours = -d.getTimezoneOffset()/60;
+    
+    function onTimer() {
+        callJSONRPC("getData",[{"startRow":fileRow}],
+                    function(data,ts,jqXHR) {
+                        var i;
+                        if ("CH4" in data.result) {
+                            t = data.result["EPOCH_TIME"];
+                            ch4 = data.result["CH4"];
+                            n = ch4.length;
+                            if (n>0) {
+                                $("#concData").html(ch4[n-1].toFixed(2) + " ppm");
+                                for (i=0;i<n;i++) d1.push([1000.0*t[i]+gmtHours*3600000,ch4[i]>0 ? ch4[i]:0.0]);
+                                while (d1.length > maxLength) d1.shift();
+                                plt.setData([ {data:d1} ])                                
+                                newProps = {'xaxis':{'min':d1[0][0],'max':d1[d1.length-1][0]}}
+                                $.extend(true,plt.getOptions(),newProps);
+                                plt.setupGrid();
+                                plt.draw();
+                            }
+                            fileRow = data.result["NEXT_ROW"];
+                        }
+                        timer1 = setTimeout(onTimer,200);                        
+                    },
+                    function(jqXHR,ts,et) {  
+                        $("#errors").html(jqXHR.responseText); 
+                        timer1 = setTimeout(onTimer,200);                        
+                    });
+    }
+    
+    function clearGraph() {
+        d1 = [];
+        plt.setData([ {data:d1} ])                                ;
+        plt.draw();
+    }
+    
+    function plotMe() {
+        var options = {xaxis:{mode:"time",timeformat:"%H:%M:%S",ticks:3},
+                       grid:{tickColor:"#808080",backgroundColor:{colors:["#408020","#204010"]},
+                             borderWidth:2, borderColor:"#000000"}};               
+        $("#graph").width(0.8*$(window).width())
+        $("#graph").height(0.65*$(window).height())
+        $("#graph_cntrl").width(0.8*$(window).width())
+        $("#footer").width($(window).width())
+        plt = $.plot($("#graph"), [], options=options);
+    };
+
+    function initialize() {
+        $(window).resize(function() {
+            plotMe();
+        });
+        // $("#placeholder").html("Document: " + $(document).width() + " by " + $(document).height());
+        // $("#placeholder").html("Graph: " + $("#graph").width() + " by " + $("#graph").height()); 
+        plotMe();
+        timer1 = setTimeout(onTimer,200);
+    };
+    $(initialize)
+    </script>
+{% endblock %}
+{% block body %}
+
+<div>
+<div id="graph" style="width:600px;height:400px; margin-top:20px; margin-left:auto; margin-right:auto;"></div>
+<div id="graph_cntrl" style="margin-left:auto; margin-right:auto;"><input type="button" value="Clear" onClick="clearGraph();"/></div>
+<p id="placeholder"></p>
+<div id="concData" class="centered" style="font-family:Georgia;font-size:150%;font-weight:bold;color:black;margin-bottom:10px;">
+Concentration here</div>
+<img id="footer" src="static/footer.jpg" width="680" height="22" margin="0" />  
+</div>
+{% endblock %}

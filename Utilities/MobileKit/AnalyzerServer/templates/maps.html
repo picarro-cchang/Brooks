@@ -30,6 +30,16 @@
                       success: success_callback,
                       error: error_callback} );
     }
+    
+    function call_rest(method,params,success_callback,error_callback) {
+        jQuery.ajax( {contentType:"application/json",
+                      data:$.param(params),
+                      dataType:"jsonp",
+                      url:"/rest/" + method,
+                      type:"get",
+                      success: success_callback,
+                      error: error_callback} );
+    }
        
     function onTimer() {
         if (ignoreTimer) return;
@@ -37,7 +47,7 @@
     };
     
     function getData() {
-        callJSONRPC("getData",[{"startPos":startPos}],
+        call_rest("getData",{"startPos":startPos},
                     function(data,ts,jqXHR) {
                         counter += 1;
                         $("#counter").html("Counter: " + counter);

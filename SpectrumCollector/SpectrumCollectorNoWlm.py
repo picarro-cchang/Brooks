@@ -32,10 +32,9 @@ from tables import *
 import cProfile
 
 from Host.autogen import interface
-from Host.autogen.interface import ProcessedRingdownEntryType
 from Host.autogen.interface import RingdownEntryType
 from Host.Common import CmdFIFO, Broadcaster, Listener, StringPickler
-from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
+from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RDRESULTS
 from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR 
 from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER
 from Host.Common.SharedTypes import CrdsException
@@ -111,16 +110,6 @@ class SpectrumCollector(object):
         # Read from .ini file
         cp = CustomConfigObj(configPath)
         basePath = os.path.split(configPath)[0]
-        self.ringdownSource = cp.get("MainConfig", "ringdownSource", "processed")
-        self.ringdownSource = self.ringdownSource.lower()
-        if self.ringdownSource not in ["raw","processed"]:
-            raise ValueError("Unknown ringdownSource type: %s" % self.ringdownSource)
-        if self.ringdownSource == 'raw':
-            self.rdEntryType = RingdownEntryType
-            self.rdBroadcastPort = BROADCAST_PORT_RDRESULTS
-        else:    
-            self.rdEntryType = ProcessedRingdownEntryType
-            self.rdBroadcastPort = BROADCAST_PORT_RD_RECALC
         self.useHDF5 = cp.getboolean("MainConfig", "useHDF5", "True")
         self.archiveGroup = cp.get("MainConfig", "archiveGroup", "RDF")
         self.streamDir = os.path.abspath(os.path.join(basePath, cp.get("MainConfig", "streamDir", "../../../Log/RDF")))
@@ -160,8 +149,8 @@ class SpectrumCollector(object):
         # Processed RD data (frequency-based) handling
         self.rdQueue = Queue.Queue()
         self.processedRdListener = Listener.Listener(self.rdQueue,
-                                            self.rdBroadcastPort,
-                                            self.rdEntryType,
+                                            BROADCAST_PORT_RDRESULTS,
+                                            RingdownEntryType,
                                             retry = True,
                                             name = "Spectrum collector listener",logFunc = Log)
         
@@ -173,9 +162,9 @@ class SpectrumCollector(object):
             self.avgSensors[key] = 0.0
             self.sumSensors[key] = 0.0
 
-        #Initialize the rdBuffer with the names and types of fields in (Processed)RingdownEntryType
+        #Initialize the rdBuffer with the names and types of fields in ProcessedRingdownEntryType
         self.rdBuffer = {}
-        for fname,ftype in self.rdEntryType._fields_:
+        for fname,ftype in RingdownEntryType._fields_:
             self.rdBuffer[fname] = ([],ftype)
         
         # Broadcaster for spectra
@@ -223,15 +212,12 @@ class SpectrumCollector(object):
         # The following count "spectra" which are delimited by scheme rows which have bit-15 set in the subschemeId
         lastCount = -1
         thisCount = -1
-        MAXLOOPS = 100
-        loops = 0
         while not self._shutdownRequested:
             #Pull a spectral point from the RD queue...
             try:
                 rdData = self.getSpectralDataPoint(timeToRetry=0.5)
                 if rdData is None: 
                     time.sleep(0.5)
-                    loops = 0
                     continue
                 now = TimeStamp()
                 if self.rdQueueGetLastTime != 0:
@@ -292,10 +278,6 @@ class SpectrumCollector(object):
                 self.schemesUsed = {}
 
             lastCount = thisCount
-            loops += 1
-            if loops >= MAXLOOPS:
-                loops = 0
-                time.sleep(0.1)
             
         Log("Spectrum Collector RPC handler shut down")
 
@@ -331,14 +313,14 @@ class SpectrumCollector(object):
             self.avgSensors[key] = 0.0
             self.sumSensors[key] = 0.0
         #
-        # The data are added from ProcessedRingdownEntryType objects, one row at a time from each ringdown.
+        # The data are added from RingdownEntryType objects, one row at a time from each ringdown.
         #  We need to store them as columns in the spectrum file. The rdBuffer dictionary is keyed by the
         #  field (column) name and contains tuples consisting of a list of the column values and the type 
         #  of the data in the column
         #
-        # Initialize the rdBuffer with the names and types of fields in (Processed)RingdownEntryType
+        # Initialize the rdBuffer with the names and types of fields in RingdownEntryType
         self.rdBuffer = {}
-        for fname,ftype in self.rdEntryType._fields_:
+        for fname,ftype in RingdownEntryType._fields_:
             self.rdBuffer[fname] = ([],ftype)
         
     def _sensorFilter(self, entry):
@@ -367,7 +349,7 @@ class SpectrumCollector(object):
     def appendPoint(self, rdData):
         """Adds a single set of Data to the spectrum
         """
-        for fname,ftype in self.rdEntryType._fields_:
+        for fname,ftype in RingdownEntryType._fields_:
             if fname in self.rdBuffer:
                 self.rdBuffer[fname][0].append(getattr(rdData,fname))
         self.numPts += 1
@@ -455,7 +437,6 @@ class SpectrumCollector(object):
                         except:
                             Log("Error copying to auxiliary spectrum file %s" % self.auxSpectrumFile,Verbose=traceback.format_exc())
                         self.auxSpectrumFile = ""
-                    time.sleep(1.0)
                     # Archive HDF5 file
                     try:
                         Archiver.ArchiveFile(self.archiveGroup, self.streamPath, True)

@@ -1,6 +1,10 @@
 from flask import Flask
 from flask import make_response, render_template, request
 from jsonrpc import JSONRPCHandler, Fault
+try:
+    import simplejson as json
+except:
+    import json
 from functools import wraps
 import glob
 import os
@@ -198,6 +202,17 @@ def _getLastDataRows(fp,numRows=1,shift=0):
 @handler.register
 @rpcWrapper
 def getData(params):
+    return getDataEx(params)
+
+@app.route('/rest/getData')
+def rest_getData():
+    result = getDataEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+    
+def getDataEx(params):
     names = sorted(glob.glob(USERLOGFILES))
     try:
         name = names[-1]
@@ -205,7 +220,7 @@ def getData(params):
     except:
         return {'lastPos':0, 'filename':''}
         
-    if 'startPos' in params and params['startPos'] is not None:
+    if 'startPos' in params and (params['startPos'] is not None) and (params['startPos'] != "null"):
         startPos = int(params['startPos'])
     else:
         startPos = None
@@ -214,10 +229,21 @@ def getData(params):
     result['filename'] = os.path.basename(name)
     result['lastPos'] = lastPos
     return result
-
+   
 @handler.register
 @rpcWrapper
 def getPos():
+    return getPosEx()
+    
+@app.route('/rest/getPos')
+def rest_getPos():
+    result = getPosEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+    
+def getPosEx():
     names = sorted(glob.glob(USERLOGFILES))
     try:
         name = names[-1]
@@ -239,21 +265,6 @@ def getPos():
         return result
     finally:
         fp.close()
-
-@handler.register
-@rpcWrapper
-def getLastDataRows(params):
-    numRows = int(params.get('numRows',1))
-    shift = int(params.get('shift',SHIFT))
-    names = sorted(glob.glob(USERLOGFILES))
-    try:
-        name = names[-1]
-        fp = file(name,'rb')
-    except:
-        return {'filename':''}
-    result = _getLastDataRows(fp,numRows,shift)
-    result['filename'] = os.path.basename(name)
-    return result
     
 @handler.register
 @rpcWrapper
@@ -313,7 +324,7 @@ def maps():
     center_latitude = float(request.values.get('center_latitude',37.39604))
     return render_template('maps.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
                                        center_latitude=center_latitude,center_longitude=center_longitude)
-   
+                                       
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=5000)
+    app.run(host='0.0.0.0',port=5000,debug=True)
     

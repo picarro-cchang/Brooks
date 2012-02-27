@@ -48,7 +48,7 @@ def rpcWrapper(func):
 def _getData(fp,startRow):
     fp.seek(0,0)
     header = fp.readline().split()
-    result = dict(EPOCH_TIME=[],CH4=[])
+    result = dict(CH4=[])
     lineLength = fp.tell()
     fp.seek(0,2)
     if fp.tell() < startRow*lineLength:
@@ -78,20 +78,18 @@ def getData(params):
         return {'filename':''}
     result = _getData(fp,startRow)
     fp.close();
-    result["filename"]=name
-    return(result)
+    ch4 = result["CH4"]
+    nextRow = result["NEXT_ROW"]
+    print nextRow
+    return(dict(filename=name,ch4=ch4,nextRow=nextRow))
 
 @app.route('/methane')
 def data():
-    return render_template('graphCH4.html')
+    return render_template('methane.html')
 
 @app.route('/')
 def hello():
-    return render_template('graphCH4.html')
-
-@app.route('/conc')
-def conc():
     return render_template('methane.html')
-    
+   
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=5000)
