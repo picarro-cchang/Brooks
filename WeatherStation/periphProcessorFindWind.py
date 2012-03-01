@@ -46,6 +46,8 @@ class RawSource(object):
         to the deque"""
         try:
             d = self.queue.get(block=False)
+            if not d:
+                sys.exit(0)
             if self.DataTuple is None:
                 self.getDataTupleType(d)
             self.oldData.append(SourceTuple(d[0],self.DataTuple(**d[1])))

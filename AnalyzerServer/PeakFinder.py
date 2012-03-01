@@ -526,7 +526,7 @@ class PeakFinder(object):
                             #  was on, and the peak was a replay of a previously collected one
                             reject = False
                             if 'ValveMask' in data._fields:
-                                where = data._fields.index('ValveMask')
+                                where = list(data._fields).index('ValveMask')
                                 reject = collecting(mean([cache[where+1,j%npoints] for j in range(col-5,col+1)]))
                             if not reject:
                                 amplitude = 0.5*ssbuff[i,col]/(3.0**(-1.5))
