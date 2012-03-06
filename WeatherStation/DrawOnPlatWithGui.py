@@ -9,13 +9,13 @@ import sys
 import sets
 import wx
 import threading
+import traceback
 from namedtuple import namedtuple
 from FindPlats import FindPlats
 from DrawOnPlatFrame import DrawOnPlatFrame
 
 DECIMATION_FACTOR = 20
 NOT_A_NUMBER = 1e1000/1e1000
-MINAMP = 0.1
 EARTH_RADIUS = 6378100
     
 def pFloat(x):
@@ -103,17 +103,18 @@ class DrawOnPlatWithGui(DrawOnPlatFrame):
         self.outDir = os.getcwd()
         self.padX = 50
         self.padY = 200
-        defaults = (self.datFile, self.peakFile, self.boundaryFile, self.missFile, self.tifDir, self.outDir) 
+        self.minAmpl = 0.1
+        defaults = (self.datFile, self.peakFile, self.boundaryFile, self.missFile, self.tifDir, self.outDir, str(self.minAmpl)) 
         DrawOnPlatFrame.__init__(self, defaults, *args, **kwds)
         self.bindEvents()
     
     def bindEvents(self):
-        self.Bind(wx.EVT_BUTTON, self.onDatButton, self.buttonList[0])              
-        self.Bind(wx.EVT_BUTTON, self.onPeakButton, self.buttonList[1])
-        self.Bind(wx.EVT_BUTTON, self.onBoundaryButton, self.buttonList[2])              
-        self.Bind(wx.EVT_BUTTON, self.onMissButton, self.buttonList[3])
-        self.Bind(wx.EVT_BUTTON, self.onTifDirButton, self.buttonList[4])              
-        self.Bind(wx.EVT_BUTTON, self.onOutDirButton, self.buttonList[5])  
+        handlers = [self.onDatButton, self.onPeakButton, 
+                    self.onBoundaryButton, self.onMissButton, 
+                    self.onTifDirButton, self.onOutDirButton,
+                    self.onMinAmplButton]
+        for handler,button in zip(handlers,self.buttonList):
+            self.Bind(wx.EVT_BUTTON, handler, button)              
         self.Bind(wx.EVT_BUTTON, self.onProcButton, self.procButton)  
         self.Bind(wx.EVT_TEXT_URL, self.onOverUrl, self.textCtrlMsg) 
 
@@ -197,6 +198,12 @@ class DrawOnPlatWithGui(DrawOnPlatFrame):
         if d.ShowModal() == wx.ID_OK:
             self.outDir = d.GetPath().replace("\\", "/")
         self.textCtrlButton[5].SetValue(self.outDir)
+
+    def onMinAmplButton(self,event):
+        d = wx.GetTextFromUser("Set Minimum Amplitude","Minimum Amplitude",self.textCtrlButton[6].GetValue())
+        if d:
+            self.minAmpl = float(d)
+            self.textCtrlButton[6].SetValue("%s" % self.minAmpl)
         
     def onProcButton(self, event):
         self.textCtrlMsg.Clear()
@@ -204,7 +211,7 @@ class DrawOnPlatWithGui(DrawOnPlatFrame):
         procThread = threading.Thread(target = self.draw)
         procThread.setDaemon(True)
         procThread.start()
-
+    
     def enableAll(self, onFlag):
         for i in range(len(self.buttonList)):
             self.buttonList[i].Enable(onFlag)
@@ -321,7 +328,7 @@ class DrawOnPlatWithGui(DrawOnPlatFrame):
             b = b.convert('RGBA')
             bx,by = b.size
             x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
-            if (0<=x<nx) and (0<=y<ny) and (amp>MINAMP):
+            if (0<=x<nx) and (0<=y<ny) and (amp>self.minAmpl):
                 box = (padX+x-bx//2,padY+y-by)
                 q.paste(b,box,mask=b)
                 if "WIND_N" in pk._fields:
@@ -330,7 +337,7 @@ class DrawOnPlatWithGui(DrawOnPlatFrame):
                     if not(np.isnan(wind) or np.isnan(meanBearing)):
                         minBearing = meanBearing-min(2*windSdev,180.0)
                         maxBearing = meanBearing+min(2*windSdev,180.0)
-                        radius = min(500.0,int(100.0*wind))
+                        radius = min(500,int(100.0*wind))
                         odraw.pieslice((padX+x-radius,padY+y-radius,padX+x+radius,padY+y+radius),int(minBearing-90.0),int(maxBearing-90.0),
                                         fill=(255,255,0,200),outline=(0,0,0,255))
         for i,miss in enumerate(xReadDatFile(missFile)):
@@ -350,7 +357,7 @@ class DrawOnPlatWithGui(DrawOnPlatFrame):
         q.paste(ov,mask=ov)
         # p.show()
         bubble.close()
-        outputPngFile = os.path.join(self.outDir, platName + "_" + datTimestamp + "_missed_padded.png")
+        outputPngFile = os.path.join(self.outDir, platName + "_" + datTimestamp + "_%s.png" % (self.minAmpl,))
         print outputPngFile
         q.save(outputPngFile,format="PNG")
         self.textCtrlMsg.WriteText("file:%s\n" % os.path.abspath(outputPngFile))

@@ -1,3 +1,3 @@
-start python.exe GetPeripheralData.py
+start python.exe GetPeripheralDataListenerBased.py
 start python.exe ReplayPeripheralData.py
 

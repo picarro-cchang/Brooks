@@ -24,7 +24,8 @@ class DrawOnPlatFrame(wx.Frame):
 
         # Other components
         buttonLabels = ["Load DAT file (.dat)", "Load PEAKS file (.peaks)", "Load PLAT BOUNDARIES file (.npz)",
-                        "Load MISSED LEAKS file (.txt)", "Change TIF FILES directory", "Change OUTPUT directory"]
+                        "Load MISSED LEAKS file (.txt)", "Change TIF FILES directory", "Change OUTPUT directory",
+                        "Change Minimum Amplitude"]
         self.buttonList = []
         self.textCtrlButton = []
         for i in range(len(buttonLabels)):
@@ -70,7 +71,7 @@ class DrawOnPlatFrame(wx.Frame):
 if __name__ == "__main__":
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()
-    frame = DrawOnPlatFrame(("", "", "", "", os.getcwd(), os.getcwd()), None, -1, "")
+    frame = DrawOnPlatFrame(("", "", "", "", os.getcwd(), os.getcwd(), "0.1"), None, -1, "")
     app.SetTopWindow(frame)
     frame.Show()
     app.MainLoop()
