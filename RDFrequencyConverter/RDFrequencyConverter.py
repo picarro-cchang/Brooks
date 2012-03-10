@@ -16,6 +16,7 @@ File History:
     22-Apr-2010  sze       Fixed non-updating of angle schemes when no calibration points are present
     20-Sep-2010  sze       Added pCalOffset parameter to RPC_loadWarmBoxCal for flight calibration
     24-Oct-2010  sze       Put scheme version number in high order bits of schemeVersionAndTable in ProcessedRingdownEntry type
+    09-Mar-2012  sze       Use 7th (1-origin) column of scheme file to specify laser temperature offset from the nominal temperature
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -594,7 +595,8 @@ class RDFrequencyConverter(Singleton):
             laserTemp = fc.thetaCal2LaserTemp(wlmAngle)
             for j,i in enumerate(dataByLaser[vLaserNum][0]):
                 angleScheme.setpoint[i] = wlmAngle[j]
-                angleScheme.laserTemp[i]= laserTemp[j]
+                # Add in scheme.laserTemp as an offset to the value calculated
+                angleScheme.laserTemp[i]= laserTemp[j]+scheme.laserTemp[i]
         self.isAngleSchemeConverted[schemeNum] = True
 
     def RPC_getHotBoxCalFilePath(self):
