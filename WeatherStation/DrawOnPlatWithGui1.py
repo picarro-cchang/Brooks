@@ -366,6 +366,19 @@ class DrawOnPlatWithGui(DrawOnPlatFrame):
                 print "Miss at", x,y
                 box = (padX+x-bx//2,padY+y-by)
                 q.paste(b,box,mask=b)
+        meterSetFile = r'R:\crd_G2000\FCDS\1061-FCDS2003\Comparison\MeterSet.txt'
+        for i,miss in enumerate(xReadDatFile(meterSetFile)):
+            lng = miss.GPS_ABS_LONG
+            lat = miss.GPS_ABS_LAT
+            x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
+            if (0<=x<nx) and (0<=y<ny):
+                buff = cStringIO.StringIO(bubble.getMiss(5,100,"%d"%(i+1,),'CCCCCC'))
+                b = Image.open(buff)
+                b = b.convert('RGBA')
+                bx,by = b.size
+                print "Miss at", x,y
+                box = (padX+x-bx//2,padY+y-by)
+                q.paste(b,box,mask=b)
         
         q.paste(ov,mask=ov)
         # p.show()

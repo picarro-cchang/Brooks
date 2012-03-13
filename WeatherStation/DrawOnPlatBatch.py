@@ -1,18 +1,18 @@
 import PIL
 import cStringIO
 from PIL import Image
-from PIL import ImageDraw
+from PIL import ImageDraw, ImageFont
 import httplib
 import numpy as np
+import csv
 import os
 import sys
 import sets
-import wx
 import threading
 import traceback
 from namedtuple import namedtuple
 from FindPlats import FindPlats
-from DrawOnPlatFrame import DrawOnPlatFrame
+from configobj import ConfigObj
 
 DECIMATION_FACTOR = 20
 NOT_A_NUMBER = 1e1000/1e1000
@@ -87,161 +87,46 @@ def widthFunc(windspeed):
     w0 = 50
     return w0*np.exp(1.0)*(windspeed/v0)*np.exp(-windspeed/v0)
     
-class DrawOnPlatWithGui(DrawOnPlatFrame):
-    def __init__(self, *args, **kwds):
-        self.boundaryFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\Comparison\platBoundaries.npz"
-        self.findPlats = FindPlats(self.boundaryFile)
-        self.boundaries = np.load(self.boundaryFile,"rb")
-        self.datFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\20120213a\ZZZ-20120217-011711Z-DataLog_User_Minimal.dat"
-        self.peakFile  = r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120213\20120213a\ZZZ-20120217-011711Z-DataLog_User_Minimal.peaks"
-        self.missFile = r"R:\crd_G2000\FCDS\1061-FCDS2003\Comparison\PicarroMissed.txt"
-        self.defaultDatPath = os.path.dirname(self.datFile)
-        self.defaultPeakPath = os.path.dirname(self.peakFile)
-        self.defaultBoundaryPath = os.path.dirname(self.boundaryFile)
-        self.defaultMissPath = os.path.dirname(self.missFile)
-        self.tifDir = r"S:\Projects\Natural Gas Detection + P3\Files from PGE including TIFF maps\GEMS\CompTif\Gas\Distribution"
-        self.outDir = os.getcwd()
+class DrawOnPlatBatch(object):
+    def __init__(self, iniFile):
+        self.config = ConfigObj(iniFile)
         self.padX = 50
         self.padY = 200
-        self.minAmpl = 0.1
-        self.platList = []
-        defaults = (self.datFile, self.peakFile, self.boundaryFile, self.missFile, self.tifDir, self.outDir, str(self.minAmpl),
-                    " ".join(self.platList)) 
-        DrawOnPlatFrame.__init__(self, defaults, *args, **kwds)
-        self.bindEvents()
-    
-    def bindEvents(self):
-        handlers = [self.onDatButton, self.onPeakButton, 
-                    self.onBoundaryButton, self.onMissButton, 
-                    self.onTifDirButton, self.onOutDirButton,
-                    self.onMinAmplButton, self.onPlatsButton ]
-        for handler,button in zip(handlers,self.buttonList):
-            self.Bind(wx.EVT_BUTTON, handler, button)              
-        self.Bind(wx.EVT_BUTTON, self.onProcButton, self.procButton)  
-        self.Bind(wx.EVT_TEXT_URL, self.onOverUrl, self.textCtrlMsg) 
-
-    def onOverUrl(self, event):
-        if event.MouseEvent.LeftDown():
-            urlString = self.textCtrlMsg.GetRange(event.GetURLStart()+5, event.GetURLEnd())
-            print urlString
-            wx.LaunchDefaultBrowser(urlString)
-        else:
-            event.Skip()
-
-    def onDatButton(self, event):
-        if not self.defaultDatPath:
-            self.defaultDatPath = os.getcwd()
-        dlg = wx.FileDialog(self, "Select DAT file...",
-                            self.defaultDatPath, wildcard = "*.dat", style=wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            self.datFile = dlg.GetPath()
-            dlg.Destroy()
-        else:
-            dlg.Destroy()
-            return
-        self.defaultDatPath = dlg.GetDirectory()
-        self.textCtrlButton[0].SetValue(self.datFile)
         
-    def onPeakButton(self, event):
-        if not self.defaultPeakPath:
-            self.defaultPeakPath = os.getcwd()
-        dlg = wx.FileDialog(self, "Select PEAKS file...",
-                            self.defaultPeakPath, wildcard = "*.peaks", style=wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            self.peakFile = dlg.GetPath()
-            dlg.Destroy()
-        else:
-            dlg.Destroy()
-            return
-        self.defaultPeakPath = dlg.GetDirectory()
-        self.textCtrlButton[1].SetValue(self.peakFile)
+    def run(self):
+        varList = {'DAT_FILE':'datFile','PEAKS_FILE':'peakFile',
+                   'MISS_FILE':'missFile','BOUNDARIES_FILE':'boundaryFile',
+                   'TIF_DIR':'tifDir','OUT_DIR':'outDir','MIN_AMP':'minAmpl',
+                   'PLATS':'platList'}
         
-    def onBoundaryButton(self, event):
-        if not self.defaultBoundaryPath:
-            self.defaultBoundaryPath = os.getcwd()
-        dlg = wx.FileDialog(self, "Select PLAT BOUNDARIES file...",
-                            self.defaultBoundaryPath, wildcard = "*.npz", style=wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            self.boundaryFile = dlg.GetPath()
-            dlg.Destroy()
-        else:
-            dlg.Destroy()
-            return
-        self.defaultBoundaryPath = dlg.GetDirectory()
-        # Re-process the boundaries
-        self.findPlats = FindPlats(self.boundaryFile)
-        self.boundaries = np.load(self.boundaryFile,"rb")
-        self.textCtrlButton[2].SetValue(self.boundaryFile)
-
-    def onMissButton(self, event):
-        if not self.defaultMissPath:
-            self.defaultMissPath = os.getcwd()
-        dlg = wx.FileDialog(self, "Select MISSED LEAKS file...",
-                            self.defaultMissPath, wildcard = "*.txt", style=wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            self.missFile = dlg.GetPath()
-            dlg.Destroy()
-        else:
-            dlg.Destroy()
-            return
-        self.defaultMissPath = dlg.GetDirectory()
-        self.textCtrlButton[3].SetValue(self.missFile)
-        
-    def onTifDirButton(self, event):
-        d = wx.DirDialog(None,"Specify the directory that contains TIF files", style=wx.DD_DEFAULT_STYLE,
-                         defaultPath=self.tifDir)
-        if d.ShowModal() == wx.ID_OK:
-            self.tifDir = d.GetPath().replace("\\", "/")
-        self.textCtrlButton[4].SetValue(self.tifDir)
+        for secName in self.config:
+            if secName == 'DEFAULTS': continue
+            if 'DEFAULTS' in self.config:
+                for v in varList:
+                    if v in self.config['DEFAULTS']: 
+                        setattr(self,varList[v],self.config['DEFAULTS'][v])
+                    else: 
+                        setattr(self,varList[v],None)
+                for v in varList:
+                    if v in self.config[secName]: 
+                        setattr(self,varList[v],self.config[secName][v])
+            self.minAmpl = float(self.minAmpl)
+            if isinstance(self.platList,type("")):
+                self.platList = [self.platList.strip()]
+            self.findPlats = FindPlats(self.boundaryFile)
+            self.boundaries = np.load(self.boundaryFile,"rb")
             
-    def onOutDirButton(self, event):
-        d = wx.DirDialog(None,"Specify the output directory that contains the output PNG files", style=wx.DD_DEFAULT_STYLE,
-                         defaultPath=self.outDir)
-        if d.ShowModal() == wx.ID_OK:
-            self.outDir = d.GetPath().replace("\\", "/")
-        self.textCtrlButton[5].SetValue(self.outDir)
-
-    def onMinAmplButton(self,event):
-        d = wx.TextEntryDialog(None,"Minimum Amplitude","Set Minimum Amplitude",self.textCtrlButton[6].GetValue(),style=wx.OK|wx.CANCEL)
-        if d.ShowModal() == wx.ID_OK:
-            self.minAmpl = float(d.GetValue())
-            self.textCtrlButton[6].SetValue("%s" % self.minAmpl)
-        d.Destroy()
-            
-    def onPlatsButton(self,event):
-        d = wx.TextEntryDialog(None,"Plats (space separated)","Specify plats",self.textCtrlButton[7].GetValue(),style=wx.OK|wx.CANCEL)
-        if d.ShowModal() == wx.ID_OK:
-            self.platList = d.GetValue().split()
-            self.textCtrlButton[7].SetValue("%s" % " ".join(self.platList))
-        d.Destroy()
-        
-    def onProcButton(self, event):
-        self.textCtrlMsg.Clear()
-        self.textCtrlMsg.WriteText("Search for plats...\n")
-        procThread = threading.Thread(target = self.draw)
-        procThread.setDaemon(True)
-        procThread.start()
-    
-    def enableAll(self, onFlag):
-        for i in range(len(self.buttonList)):
-            self.buttonList[i].Enable(onFlag)
-        self.procButton.Enable(onFlag)
-        
-    def draw(self):
-        self.enableAll(False)
-        try:
-            if not self.platList:
-                platChoices = self.findPlats.search(self.datFile, DECIMATION_FACTOR)
-            else:
-                platChoices = self.platList
-            
-            self.textCtrlMsg.WriteText("Plats to process: %s\nCreating composite plots\n" % platChoices)
-            for p in platChoices:
-                self._draw(p, self.datFile, self.peakFile, self.missFile, self.padX, self.padY)
-        except Exception:
-            self.textCtrlMsg.WriteText(traceback.format_exc())
-        finally:
-            self.enableAll(True)
+            try:
+                if not self.platList:
+                    platChoices = self.findPlats.search(self.datFile, DECIMATION_FACTOR)
+                else:
+                    platChoices = self.platList
+                
+                print "Plats to process: %s\nCreating composite plots\n" % platChoices
+                for p in platChoices:
+                    self._draw(p, self.datFile, self.peakFile, self.missFile, self.padX, self.padY)
+            except Exception:
+                print traceback.format_exc()
             
     def _draw(self, platName, datFile, peakFile, missFile, padX, padY):
         datTimestamp = "-".join(os.path.basename(self.datFile).split("-")[1:3])
@@ -257,7 +142,8 @@ class DrawOnPlatWithGui(DrawOnPlatFrame):
 
         tifFile = os.path.join(self.tifDir, platName+".tif")
         pngFile = os.path.join(self.outDir, platName+".png")
-        os.system('convert "%s" "%s"' % ( tifFile, pngFile))
+        if not os.path.exists(pngFile):
+            os.system('convert "%s" "%s"' % ( tifFile, pngFile))
         p = Image.open(pngFile)
         nx,ny = p.size
         print p.size
@@ -268,6 +154,7 @@ class DrawOnPlatWithGui(DrawOnPlatFrame):
         
         # p = p.resize((nx//8,ny//8),Image.ANTIALIAS)
         odraw = ImageDraw.Draw(ov)
+        font = ImageFont.truetype("ariblk.ttf",60)
         # Draw the path of the vehicle
         path = []
         penDown = False
@@ -344,7 +231,7 @@ class DrawOnPlatWithGui(DrawOnPlatFrame):
             x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
             if (0<=x<nx) and (0<=y<ny) and (amp>self.minAmpl):
                 box = (padX+x-bx//2,padY+y-by)
-                q.paste(b,box,mask=b)
+                #q.paste(b,box,mask=b)
                 if "WIND_N" in pk._fields:
                     wind = np.sqrt(windN*windN + windE*windE)
                     meanBearing = (180.0/np.pi)*np.arctan2(windE,windN)
@@ -354,34 +241,45 @@ class DrawOnPlatWithGui(DrawOnPlatFrame):
                         radius = min(500,int(100.0*wind))
                         odraw.pieslice((padX+x-radius,padY+y-radius,padX+x+radius,padY+y+radius),int(minBearing-90.0),int(maxBearing-90.0),
                                         fill=(255,255,0,200),outline=(0,0,0,255))
-        for i,miss in enumerate(xReadDatFile(missFile)):
-            lng = miss.GPS_ABS_LONG
-            lat = miss.GPS_ABS_LAT
-            x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
-            if (0<=x<nx) and (0<=y<ny):
-                buff = cStringIO.StringIO(bubble.getMiss(5,100,"%d"%(i+1,)))
-                b = Image.open(buff)
-                b = b.convert('RGBA')
-                bx,by = b.size
-                print "Miss at", x,y
-                box = (padX+x-bx//2,padY+y-by)
-                q.paste(b,box,mask=b)
+                odraw.text((padX+x,padY+y),"%.1f"%ch4,font=font,fill=(0,0,255,255))
+        cp = open(missFile,"rb")
+        reader = csv.reader(cp)
+        color = {'P':'6060FF','T':'60FF60','B':'808080'}
+        for i,row in enumerate(reader):
+            if i==1: # Headings
+                headings = [r.strip() for r in row]
+                LNG = headings.index('LONG')
+                LAT = headings.index('LAT')
+                GRADE = headings.index('GRADE')
+                CODE = headings.index('P/T/B')
+            elif i>1:
+                try:
+                    lng = float(row[LNG])
+                    lat = float(row[LAT])
+                    grade = row[GRADE]
+                    code = row[CODE]
+                    x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
+                    if (0<=x<nx) and (0<=y<ny) and (grade not in ['MS']):
+                        buff = cStringIO.StringIO(bubble.getMiss(5,100,"%d"%(i+1,),color[code]))
+                        b = Image.open(buff)
+                        b = b.convert('RGBA')
+                        bx,by = b.size
+                        print "Marker at", x,y
+                        box = (padX+x-bx//2,padY+y-by)
+                        q.paste(b,box,mask=b)
+                except:
+                    print traceback.format_exc()
+                    print row
+        cp.close()
         
         q.paste(ov,mask=ov)
         # p.show()
         bubble.close()
         outputPngFile = os.path.join(self.outDir, platName + "_" + datTimestamp + "_%s.png" % (self.minAmpl,))
-        print outputPngFile
         q.save(outputPngFile,format="PNG")
-        self.textCtrlMsg.WriteText("file:%s\n" % os.path.abspath(outputPngFile))
+        print "file:%s\n" % os.path.abspath(outputPngFile)
         
-        #Remove the originally converted PNG file
-        os.remove(pngFile)
         
 if __name__ == "__main__":
-    app = wx.PySimpleApp()
-    wx.InitAllImageHandlers()
-    frame = DrawOnPlatWithGui(None, -1, "")
-    app.SetTopWindow(frame)
-    frame.Show()
-    app.MainLoop()
+    app = DrawOnPlatBatch(sys.argv[1])
+    app.run()

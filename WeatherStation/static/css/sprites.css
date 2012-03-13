@@ -1,0 +1,57 @@
+#nav_buttons {
+margin: 0;
+padding: 0;
+position: relative;
+}
+ 
+#nav_buttons li {
+margin: 0;
+padding: 0;
+display: inline;
+list-style-type: none;
+/* position: absolute; */
+top: 0;
+}
+
+
+#nav_buttons a {
+height: 80px;
+display: inline-block;
+// float: left;
+}
+
+#nav_buttons li a span{
+display: none;
+}
+ 
+#button1 a {left: 0; width: 80px;
+background: url(/static/example_sprite.jpg) 0px 0px no-repeat;
+}
+ 
+#button1 a:hover {left: 0; width: 80px;
+background: url(/static/example_sprite.jpg) 0px -80px no-repeat;
+}
+
+#button2 a {left: 80px; width: 80px;
+background: url(/static/example_sprite.jpg) -80px 0px no-repeat;
+}
+ 
+#button2 a:hover {left: 80px; width: 80px;
+background: url(/static/example_sprite.jpg) -80px -80px no-repeat;
+}
+ 
+#button3 a {left: 160px; width: 80px;
+background: url(/static/example_sprite.jpg) -160px 0px no-repeat;
+}
+ 
+#button3 a:hover {left: 160px; width: 80px;
+background: url(/static/example_sprite.jpg) -160px -80px no-repeat;
+}
+  
+#button4 a {left: 240px; width: 80px;
+background: url(/static/example_sprite.jpg) -240px 0px no-repeat;
+}
+ 
+#button4 a:hover {left: 240px; width: 80px;
+background: url(/static/example_sprite.jpg) -240px -80px no-repeat;
+}

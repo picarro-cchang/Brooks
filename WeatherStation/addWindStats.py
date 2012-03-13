@@ -58,14 +58,17 @@ if __name__ == "__main__":
     #datlogName = r'R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\WindTests20120222\DAT\FCDS2006-20120222-221309Z-DataLog_User_Minimal.dat';
     #fwind = r'R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\WindTests20120222\GPSWS\windStats-FCDS2006-20120222-203647Z.txt';
 
-    datlogName = r'R:\crd_G2000\FCDS\1135-FCDS2008\WeatherStationInstantaneousMode\Drive20120227\AnalyzerServer\FCDS2008-20120228-021939Z-DataLog_User_Minimal.dat';
-    fwind = r'R:\crd_G2000\FCDS\1135-FCDS2008\WeatherStationInstantaneousMode\Drive20120227\GPSWS\windStats-FCDS2008-20120228-012743Z.txt';
+    #datlogName = r'R:\crd_G2000\FCDS\1135-FCDS2008\WeatherStationInstantaneousMode\Drive20120227\AnalyzerServer\FCDS2008-20120228-021939Z-DataLog_User_Minimal.dat';
+    #fwind = r'R:\crd_G2000\FCDS\1135-FCDS2008\WeatherStationInstantaneousMode\Drive20120227\GPSWS\windStats.txt';
 
     #datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120220\DAT\FCDS2003-20120220-214652Z-DataLog_User_Minimal.dat';
     #fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120220\GPSWS\windStats.txt'
     
     #datlogName = r'R:\crd_G2000\FCDS\1185-FCDS2010\Survey20120303\DAT\FCDS2010-20120303-200106Z-DataLog_User_Minimal.dat';
-    #fwind = r'R:\crd_G2000\FCDS\1185-FCDS2010\Survey20120303\GPSWS\XXXwindStats-FCDS2010-20120303-181853Z.txt'
+    #fwind = r'R:\crd_G2000\FCDS\1185-FCDS2010\Survey20120303\GPSWS_Inst\YYYwindStats-FCDS2010-20120303-181853Z.txt'
+
+    datlogName = r'R:\crd_G2000\FCDS\1185-FCDS2010\DataFromAnalyzer\AnalyzerServer\FCDS2010-20120306-130727Z-DataLog_User_Minimal.dat';
+    fwind = r'R:\crd_G2000\FCDS\1185-FCDS2010\Survey20120306\GPSWSInst\windStats-Composite-DataLog_GPS_Raw.dat.txt';
     
     wind = aReadDatFile(fwind)
     datlog = aReadDatFile(datlogName)

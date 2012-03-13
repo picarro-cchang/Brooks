@@ -58,7 +58,15 @@ app.config.from_object(__name__)
 @app.route('/map')
 def map():
     return render_template('showmap.html')
+    
+@app.route('/sprites')
+def map():
+    return render_template('sprites.html')
 
+@app.route('/bar')
+def map():
+    return render_template('progressbar.html')
+    
 @app.route('/')
 def index():
     return render_template('graph.html')

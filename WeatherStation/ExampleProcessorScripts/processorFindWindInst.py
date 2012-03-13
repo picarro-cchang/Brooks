@@ -1,4 +1,4 @@
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 from collections import deque
 from threading import Lock
 import Queue
@@ -6,13 +6,9 @@ import os
 import sys
 import time
 
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
 from numpy import *
 from scipy.optimize import leastsq
 import itertools
-
-from Host.Common import timestamp
 
 NOT_A_NUMBER = 1e1000/1e1000
 SourceTuple = namedtuple('SourceTuple',['ts','valTuple'])
@@ -46,8 +42,6 @@ class RawSource(object):
         to the deque"""
         try:
             d = self.queue.get(block=False)
-            if not d:
-                sys.exit(0)
             if self.DataTuple is None:
                 self.getDataTupleType(d)
             self.oldData.append(SourceTuple(d[0],self.DataTuple(**d[1])))
@@ -346,7 +340,7 @@ def trueWindSource(derivCdataSource,distFromAxle):
             den += real(d.zVel*conj(sVel)*exp(-1j*(phi-p0)))
 
         # Subtract velocity of vehicle
-        scale = 1.0
+        scale = float(PARAMS.get('SPEEDFACTOR',1.0))
         cVel = scale*sVel - abs(d.zVel)*exp(1j*axleCorr)
         
         # Rotate back to geographic coordinates
@@ -455,11 +449,23 @@ def windStatistics(windSource,statsInterval):
 def main():
     gpsSource = GpsSource(SENSORLIST[0])
     wsSource  = WsSource(SENSORLIST[1])
-    msOffsets = [0,0,1500]  # ms offsets for GPS, magnetometer and anemometer
-    distFromAxle = 1.5
+    gpsDelay_ms = 0
+    anemDelay_ms = round(1000*float(PARAMS.get("ANEMDELAY",1.5)))
+    compassDelay_ms = round(1000*float(PARAMS.get("COMPASSDELAY",0.0)))
+    distFromAxle = float(PARAMS.get("DISTFROMAXLE",1.5))
+    
+    msOffsets = [0,compassDelay_ms,anemDelay_ms]  # ms offsets for GPS, magnetometer and anemometer
     syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
-    statsAvg = 20
+    statsAvg = int(PARAMS.get("STATSAVG",20))
+
     for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle),statsAvg)):
-        WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev])
+        p0,p1,p2 = d.calParams
+        WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),    # Mean wind N and E
+                          d.aStdDev,                                    # Wind direction std dev (degrees)
+                          float(real(d.zVel)),float(imag(d.zVel)),      # Car velocity N and E
+                          float(real(d.mHead)),-float(imag(d.mHead)),   # Compass heading N and E
+                          float(real(d.tVel)),float(imag(d.tVel)),      # Instantaneous wind N and E
+                          p0,p1,p2                                      # Calibration parameters
+                          ])
 
 main()

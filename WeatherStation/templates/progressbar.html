@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Experiments with progress bar</title>
+        <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/progressbar.css') }}" />
+    </head>
+    <style>
+        td {padding:15px}
+    </style>
+    <body>
+        <table>
+        <tr>
+            <td>Warm Box Temperature</td>
+            <td style="width:500px">
+                <div class="ui-progress-bar error">
+                    <div class="ui-progress" style="width:43%;"><span class="ui-label"><b>29</b></span></div>
+                </div>
+            </td>
+            <td>45</td>
+        </tr>
+        <tr>
+            <td>Cavity Temperature</td>
+            <td style="width:500px">
+                <div class="ui-progress-bar warning">
+                    <div class="ui-progress" style="width:65%;"><span class="ui-label"><b>43</b></span></div>
+                </div>
+            </td>
+            <td>45</td>
+        </tr>
+        <tr>
+            <td>Cavity Pressure</td>
+            <td style="width:500px">
+                <div class="ui-progress-bar success">
+                    <div class="ui-progress" style="width:83%;"><span class="ui-label"><b>120</b></span></div>
+                </div>
+            </td>
+            <td>140</td>
+        </tr>
+    </body>
+</html>    
