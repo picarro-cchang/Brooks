@@ -454,11 +454,19 @@ a:hover {
   -webkit-border-radius: 6px;
   -moz-border-radius: 6px;
   border-radius: 6px;
+  width:100%;
+}
+.btn.frontpage {
+  width:200px;
 }
 .btn.small {
   padding-right: 9px;
   padding-left: 9px;
   font-size: 11px;
+}
+.btn.medium {
+  font-size: 14px;
+  line-height: 22px;
 }
 .btn:disabled, .btn.disabled {
   background-image: none;
@@ -1810,4 +1818,107 @@ div.bottombar {
 }
 .popover .content p, .popover .content ul, .popover .content ol {
   margin-bottom: 0;
+}
+
+img.follow
+{
+width:48px;
+height:48px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -4px 0px;
+}
+img.follow-checked
+{
+width:48px;
+height:48px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -60px 0px;
+}
+img.overlay
+{
+width:48px;
+height:48px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -116px -1px;
+}
+img.overlay-checked
+{
+width:48px;
+height:48px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -170px -1px;
+}
+img.wifi-0
+{
+width:48px;
+height:48px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -224px -1px;
+}
+img.wifi-1
+{
+width:48px;
+height:48px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -280px -1px;
+}
+img.wifi-2
+{
+width:48px;
+height:48px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -336px -2px;
+}
+img.wifi-3
+{
+width:48px;
+height:48px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -390px -2px;
+}
+img.stream-ok
+{
+width:40px;
+height:40px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -448px -4px;
+}
+img.stream-warning
+{
+width:40px;
+height:40px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -496px -4px;
+}
+img.stream-failed
+{
+width:40px;
+height:40px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -545px -5px;
+}
+img.analyzer-ok
+{
+width:40px;
+height:40px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -592px -4px;
+}
+img.analyzer-failed
+{
+width:40px;
+height:40px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -638px -4px;
+}
+img.gps-ok
+{
+width:40px;
+height:40px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -683px -4px;
+}
+img.gps-failed
+{
+width:40px;
+height:40px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -733px -4px;
+}
+img.ws-ok
+{
+width:40px;
+height:40px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -832px -5px;
+}
+img.ws-failed
+{
+width:40px;
+height:40px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -883px -5px;
 }

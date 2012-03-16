@@ -1,5 +1,6 @@
-//default (eng) values for dsp.  Override this 
-//for each language specific labels
+var COOKIE_PREFIX = "p3gdu";
+var COOKIE_NAMES = {};
+
 var TXT = {
         amp: 'Amp',
         sigma: 'HalfWidth',
@@ -19,9 +20,12 @@ var TXT = {
         download_peaks: 'Download Peaks',
         anz_cntls: 'Analyzer Controls',
         restart_log: 'Restart Log',
-        switch_to_cptr: 'Switch to Capture Mode',
+        start_survey: "Start Survey",
+        stop_survey: "Stop Survey",
+        complete_survey: "Complete Survey",
+        switch_to_cptr: 'Start Capture',
         cancl_cptr: 'Cancel Capture',
-        calibrate: 'Calibrate',
+        calibrate: 'Analyze Reference Gas',
         shutdown: 'Shutdown Analyzer',
         select_log: 'Select Log',
         switch_to_prime: 'Switch to Prime View',
@@ -34,17 +38,19 @@ var TXT = {
         survey_mode: 'Survey Mode',
         capture_mode: 'Capture Mode',
         analyzing_mode: 'Analyzing Peak',
+        inactive_mode: 'Inactive Mode',
         prime_conf_msg: 'Do you want to switch to Prime View Mode? \n\nWhen the browser is in Prime View Mode, you will have control of the Analyzer.',
-        change_min_amp: 'Change Minimum Amplitude',
+        change_min_amp: 'Minimum Amplitude',
         restart_datalog_msg: 'Close current data log and open a new one?',
         shutdown_anz_msg: 'Do you want to shut down the Analyzer? \n\nWhen the analyzer is shutdown it can take 30 to 45 minutes warm up.',
+        stop_survey_msg: 'Do you want to stop survey?',
         cancel_cap_msg: 'Cancel capture and return to survey mode?',
         show_controls: 'Show Controls',
         show_dnote: 'Show route annotations',
         show_pnote: 'Show peak annotations',
         show_anote: 'Show analysis annotations',
         click_show_cntls: 'Click to show controls',
-        controls: 'Controls',
+        map_controls: 'Map Controls',
         dnote: 'Route annotation',
         anote: 'Analysis annotation',
         pnote: 'Peak annotation',
@@ -55,7 +61,8 @@ var TXT = {
         swath: 'Swath',
         show_markers: 'Show system markers on map',
         show_txt: 'Show',
-        hide_txt: 'Hide'
+        hide_txt: 'Hide',
+        working: 'Working',
     };
 
 //Html button
@@ -63,37 +70,53 @@ var HBTN = {
         exptLogBtn: '<div><button id="id_exptLogBtn" type="button" onclick="exportLog();" class="btn primary large">' + TXT.download_concs + '</button></div>',
         exptPeakBtn: '<div><button id="id_exptPeakBtn" type="button" onclick="exportPeaks();" class="btn primary large">' + TXT.download_peaks + '</button></div>',
         restartBtn: '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn primary large">' + TXT.restart_log + '</button></div>',
-        captureBtn: '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn primary large">' + TXT.switch_to_cptr + '</button></div>',
+        captureBtn: '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn primary large frontpage">' + TXT.switch_to_cptr + '</button></div>',
         cancelCapBtn: '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn primary large">' + TXT.cancl_cptr + '</button></div>',
         calibrateBtn: '<div><button id="id_calibrateBtn" type="button" onclick="injectCal();" class="btn primary large">' + TXT.calibrate + '</button></div>',
         shutdownBtn: '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn red large">' + TXT.shutdown + '</button></div>',
         downloadBtn: '<div><button id="id_downloadBtn" type="button" onclick="exportControls();" class="btn primary large">' + TXT.download_files + '</button></div>',
-        analyzerCntlBtn: '<div><button id="id_analyzerCntlBtn" type="button" onclick="primeControls();" class="btn primary large">' + TXT.anz_cntls + '</button></div>',
-        warningCloseBtn: '<div><button id="id_warningCloseBtn" onclick="restoreModalDiv();" class="btn primary large">' + TXT.close + '</button></div>',
-        modChangeCloseBtn: '<div><button id="id_modChangeCloseBtn" onclick="restoreModChangeDiv();" class="btn primary large">' + TXT.close + '</button></div>',
+        analyzerCntlBtn: '<div><button id="id_analyzerCntlBtn" type="button" onclick="modalPanePrimeControls();" class="btn primary large frontpage">' + TXT.anz_cntls + '</button></div>',
+        warningCloseBtn: '<div><button id="id_warningCloseBtn" onclick="restoreModalDiv();" class="btn medium">' + TXT.close + '</button></div>',
+        modChangeCloseBtn: '<div><button id="id_modChangeCloseBtn" onclick="restoreModChangeDiv();" class="btn medium">' + TXT.close + '</button></div>',
         switchLogBtn: '<div><button id="id_switchLogBtn" onclick="switchLog();" class="btn primary large">' + TXT.select_log + '</button></div>',
         switchToPrimeBtn: '<div><button id="id_switchToPrimeBtn" onclick="switchToPrime();" class="btn primary large">' + TXT.switch_to_prime + '</button></div>',
         cancelModalBtn: '<div><button id="id_cancelModalBtn" onclick="restoreModChangeDiv();" class="btn primary large">' + TXT.cancel + '</button></div>',
-        changeMinAmpCancelBtn: '<div><button id="id_changeMinAmpCancelBtn" onclick="changeMinAmpVal(false);" class="btn primary large">' + TXT.cancel + '</button></div>',
+        changeMinAmpCancelBtn: '<div><button id="id_changeMinAmpCancelBtn" onclick="changeMinAmpVal(false);" class="btn medium">' + TXT.cancel + '</button></div>',
         changeMinAmpOkBtn: '<div><button id="id_changeMinAmpOkBtn" onclick="changeMinAmpVal(true);" class="btn primary large">' + TXT.ok + '</button></div>',
-        changeMinAmpOkHidBtn: '<div style="display: hidden;"><button id="id_changeMinAmpOkHidBtn" onclick="changeMinAmpVal(true);"/></div>'
+        changeMinAmpOkHidBtn: '<div style="display: hidden;"><button id="id_changeMinAmpOkHidBtn" onclick="changeMinAmpVal(true);"/></div>',
+        surveyOnOffBtn: '<div><button id="id_surveyOnOffBtn" type="button" onclick="stopSurvey();" class="btn primary large frontpage">' + TXT.stop_survey + '</button></div>',
+        completeSurveyBtn: '<div><button id="id_completeSurveyBtn" type="button" onclick="completeSurvey();" class="btn primary large">' + TXT.complete_survey + '</button></div>',
     };
 
 
 // List of Html buttons (<li>....</li><li>....</li>...)
 var LBTNS = {
         downloadBtns: '<li>' + HBTN.downloadBtn + '</li>',
-        analyzerCntlBtns: '<li>' + HBTN.analyzerCntlBtn + '</li>',
-        exptBtns: '<li>' + HBTN.exptLogBtn + '</li><br/><li>' + HBTN.exptPeakBtn + '</li>'
+        analyzerCntlBtns: '<li>' + HBTN.surveyOnOffBtn + '</li><br/><li>' + HBTN.captureBtn + '</li><br/><li>' + HBTN.analyzerCntlBtn + '</li>',
+        exptBtns: '<li>' + HBTN.exptLogBtn + '</li><br/><li>' + HBTN.exptPeakBtn + '</li>',
     };
 
 // Fixed HTML pane
-var HPANE = {
-        modalNetWarning: setModalChrome('<h3>' + TXT.conn_warning_hdr + '</h3>',
-                '<p><h3>' + TXT.conn_warning_txt + '</h3></p>',
-                HBTN.warningCloseBtn
-                )
-    };
+function modalNetWarning() {
+    var hdr, body, footer, c1array, c2array;
+    
+    body = '<p><h3>' + TXT.conn_warning_txt + '</h3></p>';
+    
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c1array.push('<h3>' + TXT.conn_warning_hdr + '</h3>');
+    c2array.push(HBTN.warningCloseBtn);
+    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+    footer = "";
+    
+    return setModalChrome(
+        hdr,
+        body,
+        footer
+        );   
+}
 
 //Constant Values
 var CNSNT = {
@@ -161,9 +184,10 @@ var CNSNT = {
 var CSTATE = {
         net_abort_count: 0,
         follow: true,
+        overlay: false,
         prime_available: false,
         prime_test_count: 0,
-        green_on: false,
+        green_count: 2,
 
         resize_map_inprocess: false,
         current_mode: 0,
@@ -261,8 +285,74 @@ var TIMER = {
         wind: null, // timer for showWind (getPeaks)
     };
 
-var modeStrings = {0: TXT.survey_mode, 1: TXT.capture_mode, 2: TXT.capture_mode, 3: TXT.analyzing_mode};
+var modeStrings = {0: TXT.survey_mode, 1: TXT.capture_mode, 2: TXT.capture_mode, 3: TXT.analyzing_mode, 4: TXT.inactive_mode};
 var modeBtn = {0: [HBTN.captureBtn],  1: [HBTN.cancelCapBtn], 2: [HBTN.cancelCapBtn], 3: []};
+
+// tableChrome NOTE: first element (index 0) in each cNarray is the "style" tag for the td div
+function tableChrome(tblStyle, trStyle, c1array, c2array, c3array, c4array) {
+    var tbl, i, len, body, c1sty, c2sty, c3sty, c4sty;
+    tbl = '';
+    body = '';
+    
+    c1sty = '';
+    c2sty = '';
+    c3sty = '';
+    c4sty = '';
+    
+    // all passed arrays must be of same length
+    if (c2array !== undefined) {
+        if (c1array.length !== c2array.length) {
+            return tbl;
+        }
+    }
+    if (c3array !== undefined) {
+        if (c1array.length !== c3array.length) {
+            return tbl;
+        }
+    }
+    if (c4array !== undefined) {
+        if (c1array.length !== c4array.length) {
+            return tbl;
+        }
+    }
+    
+    len = c1array.length
+    for (i = 0; i < len; i += 1) {
+        if (i === 0) {
+            c1sty = c1array[i];
+            if (c2array !== undefined) {
+                c2sty = c2array[i];
+            }
+            if (c3array !== undefined) {
+                c3sty = c3array[i];
+            }
+            if (c4array !== undefined) {
+                c4sty = c4array[i];
+            }
+        } else {
+            body += '<tr ' + trStyle + '>';
+            
+            body += '<td ' + c1sty + '>' + c1array[i] + '</td>';
+            if (c2array !== undefined) {
+                body += '<td ' + c2sty + '>' + c2array[i] + '</td>';
+            }
+            if (c3array !== undefined) {
+                body += '<td ' + c3sty + '>' + c3array[i] + '</td>';
+            }
+            if (c4array !== undefined) {
+                body += '<td ' + c4sty + '>' + c4array[i] + '</td>';
+            }
+            
+            body += '</tr>';
+        }
+    }
+    
+    tbl += '<table ' + tblStyle + '>';
+    tbl += body;
+    tbl += '</table>';
+
+    return tbl;
+}
 
 function newMap(canvas) {
     return new google.maps.Map(canvas, CSTATE.gglOptions);
@@ -534,6 +624,14 @@ function hideSwath() {
     for (i=0;i<CSTATE.swathPolys.length;i++) CSTATE.swathPolys[i].setVisible(false);
 }
 
+function single_quote(txt) {
+    return "'" + txt + "'";
+}
+
+function double_quote(txt) {
+    return '"' + txt + '"';
+}
+
 function resetLeakPosition() {
     clearPeakMarkerArray();
     clearAnalysisMarkerArray();
@@ -544,42 +642,9 @@ function timeStringFromEtm(etm) {
     var gmtoffset_mil, etm_mil, tmil, tdate, tstring;
     etm_mil = (etm * 1000);
     tdate = new Date(etm_mil);
-    tstring = tdate.toLocaleDateString() + " " + tdate.toLocaleTimeString();
+    //tstring = tdate.toLocaleDateString() + " " + tdate.toLocaleTimeString();
+    tstring = tdate.toString().substring(0,24);
     return tstring;
-}
-
-function setCookie(name, value, days) {
-    var date, expires;
-
-    if (days) {
-        date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        expires = "; expires = " + date.toGMTString();
-    } else {
-        expires = "";
-    }
-    document.cookie = name + "=" + value + expires + "; path=/";
-}
-
-function getCookie(name) {
-    var nameEQ, ca, i, c;
-
-    nameEQ = name + "=";
-    ca = document.cookie.split(';');
-    for (i = 0; i < ca.length; i += 1) {
-        c = ca[i];
-        while (c.charAt(0) === ' ') {
-            c = c.substring(1, c.length);
-        }
-        if (c.indexOf(nameEQ) === 0) {
-            return c.substring(nameEQ.length, c.length);
-        }
-    }
-    return null;
-}
-
-function deleteCookie(name) {
-    setCookie(name, "", -1);
 }
 
 function MapControl(controlDiv, map) {
@@ -606,11 +671,11 @@ function MapControl(controlDiv, map) {
     controlText.style.fontSize = '12px';
     controlText.style.paddingLeft = '4px';
     controlText.style.paddingRight = '4px';
-    controlText.innerHTML = TXT.controls;
+    controlText.innerHTML = TXT.map_controls;
     controlUI.appendChild(controlText);
 
     google.maps.event.addDomListener(controlUI, 'click', function () {
-        controlPane();
+        modalPaneMapControls();
     });
 }
 
@@ -629,18 +694,18 @@ function initialize_map() {
         where = CSTATE.map.getCenter();
         CSTATE.center_lat = where.lat();
         CSTATE.center_lon = where.lng();
-        setCookie("pcubed_center_latitude", CSTATE.center_lat, CNSNT.cookie_duration);
-        setCookie("pcubed_center_longitude", CSTATE.center_lon, CNSNT.cookie_duration);
+        setCookie(COOKIE_NAMES.center_latitude, CSTATE.center_lat, CNSNT.cookie_duration);
+        setCookie(COOKIE_NAMES.center_longitude, CSTATE.center_lon, CNSNT.cookie_duration);
         $("#center_latitude").val(where.lat());
         $("#center_longitude").val(where.lng());
     });
     google.maps.event.addListener(CSTATE.map, 'zoom_changed', function () {
         CSTATE.current_zoom = CSTATE.map.getZoom();
-        setCookie("pcubed_zoom", CSTATE.current_zoom, CNSNT.cookie_duration);
+        setCookie(COOKIE_NAMES.zoom, CSTATE.current_zoom, CNSNT.cookie_duration);
     });
     google.maps.event.addListener(CSTATE.map, 'maptypeid_changed', function () {
         CSTATE.current_mapTypeId = CSTATE.map.getMapTypeId();
-        setCookie("pcubed_mapTypeId", CSTATE.current_mapTypeId, CNSNT.cookie_duration);
+        setCookie(COOKIE_NAMES.mapTypeId, CSTATE.current_mapTypeId, CNSNT.cookie_duration);
     });
     CSTATE.path = newPolyline(CSTATE.map, CNSNT.normal_path_color);
     CSTATE.swathPolys = []
@@ -684,9 +749,10 @@ function resize_map() {
 
     $("#id_modal_span").css('position', 'absolute');
     $("#id_modal_span").css('top', hgth_top);
+    new_top_margin = -10;
     if (new_width < 640) {
-        new_top = new_top + 30;
-        new_height = new_height - 30;
+        new_top = new_top + new_top_margin;
+        new_height = new_height - new_top_margin;
         $("#id_modal_span").css('left', CNSNT.hmargin);
     } else {
         $("#id_modal_span").css('left', lpge_wdth + CNSNT.hmargin);
@@ -694,8 +760,8 @@ function resize_map() {
 
     $("#id_side_modal_span").css('position', 'absolute');
     $("#id_side_modal_span").css('top', hgth_top);
-    new_top = new_top + 30;
-    new_height = new_height - 30;
+    new_top = new_top + new_top_margin;
+    new_height = new_height - new_top_margin;
     $("#id_side_modal_span").css('left', CNSNT.hmargin);
 
     $('#map_canvas').css('position', 'absolute');
@@ -741,20 +807,44 @@ function setModalChrome(hdr, msg, click) {
     return modalChrome;
 }
 
-function primeControls() {
-    var capOrCan, i, modalChrome;
+function modalPanePrimeControls() {
+    var capOrCan, i, modalChrome, hdr, body, footer, c1array, c2array;
 
-    capOrCan = "";
-    for (i = 0; i < modeBtn[CSTATE.current_mode].length; i += 1) {
-        capOrCan += modeBtn[CSTATE.current_mode][i] + "<br/>";
-    }
+    c1array = [];
+    c2array = [];
+    
+    c1array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c2array.push('style="border-style: none; width: 50%;"');
+    
+    c1array.push(HBTN.restartBtn);
+    c2array.push(HBTN.calibrateBtn);
+    
+    c1array.push(HBTN.completeSurveyBtn);
+    c2array.push('');
+    
+    body = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
 
-    modalChrome = setModalChrome('<h3>' + TXT.anz_cntls + '</h3>',
-        HBTN.restartBtn + "<br/>" +
-        capOrCan +
-        HBTN.calibrateBtn +
-        "<br/><br/><br/>" + HBTN.shutdownBtn + "<br/>",
-        HBTN.modChangeCloseBtn
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c1array.push('<h3>' + TXT.anz_cntls + '</h3>');
+    c2array.push(HBTN.modChangeCloseBtn);
+    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c1array.push(HBTN.shutdownBtn);
+    c2array.push('');
+    footer = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+    
+    modalChrome = setModalChrome(
+        hdr,
+        body,
+        footer
         );
 
     $("#id_mod_change").html(modalChrome);
@@ -931,6 +1021,12 @@ function changeMinAmpVal(reqbool) {
     CSTATE.ignoreTimer = false;
 }
 
+function workingBtnPassThrough(btnBase) {
+    $('#id_' + btnBase).html(TXT.working + "...");
+    $('#id_' + btnBase).redraw;
+    setTimeout(btnBase + '()', 2);
+}
+
 function showDnoteCb() {
     var btxt;
 
@@ -940,7 +1036,7 @@ function showDnoteCb() {
         CSTATE.showDnote = false;
         clearDatNoteMarkers(false);
     }
-    setCookie("pcubed_dnote", (CSTATE.showDnote) ? "1" : "0", CNSNT.cookie_duration);
+    setCookie(COOKIE_NAMES.dnote, (CSTATE.showDnote) ? "1" : "0", CNSNT.cookie_duration);
 
     btxt = TXT.show_txt;
     if (CSTATE.showDnote) {
@@ -959,7 +1055,7 @@ function showPnoteCb() {
         CSTATE.showPnote = false;
         clearPeakNoteMarkers();
     }
-    setCookie("pcubed_pnote", (CSTATE.showPnote) ? "1" : "0", CNSNT.cookie_duration);
+    setCookie(COOKIE_NAMES.pnote, (CSTATE.showPnote) ? "1" : "0", CNSNT.cookie_duration);
 
     btxt = TXT.show_txt;
     if (CSTATE.showPnote) {
@@ -978,7 +1074,7 @@ function showAnoteCb() {
         CSTATE.showAnote = false;
         clearAnalysisNoteMarkers();
     }
-    setCookie("pcubed_anote", (CSTATE.showAnote) ? "1" : "0", CNSNT.cookie_duration);
+    setCookie(COOKIE_NAMES.anote, (CSTATE.showAnote) ? "1" : "0", CNSNT.cookie_duration);
 
     btxt = TXT.show_txt;
     if (CSTATE.showAnote) {
@@ -997,7 +1093,7 @@ function showPbubbleCb() {
         CSTATE.showPbubble = false;
         clearPeakMarkerArray();
     }
-    setCookie("pcubed_pbubble", (CSTATE.showPbubble) ? "1" : "0", CNSNT.cookie_duration);
+    setCookie(COOKIE_NAMES.pbubble, (CSTATE.showPbubble) ? "1" : "0", CNSNT.cookie_duration);
 
     btxt = TXT.show_txt;
     if (CSTATE.showPbubble) {
@@ -1016,7 +1112,7 @@ function showAbubbleCb() {
         CSTATE.showAbubble = false;
         clearAnalysisMarkerArray();
     }
-    setCookie("pcubed_abubble", (CSTATE.showAbubble) ? "1" : "0", CNSNT.cookie_duration);
+    setCookie(COOKIE_NAMES.abubble, (CSTATE.showAbubble) ? "1" : "0", CNSNT.cookie_duration);
 
     btxt = TXT.show_txt;
     if (CSTATE.showAbubble) {
@@ -1035,7 +1131,7 @@ function showWbubbleCb() {
         CSTATE.showWbubble = false;
         clearWindMarkerArray();
     }
-    setCookie("pcubed_wbubble", (CSTATE.showWbubble) ? "1" : "0", CNSNT.cookie_duration);
+    setCookie(COOKIE_NAMES.wbubble, (CSTATE.showWbubble) ? "1" : "0", CNSNT.cookie_duration);
 
     btxt = TXT.show_txt;
     if (CSTATE.showWbubble) {
@@ -1055,7 +1151,7 @@ function showSwathCb() {
         CSTATE.showSwath = false;
         hideSwath();
     }
-    setCookie("pcubed_swath", (CSTATE.showSwath) ? "1" : "0", CNSNT.cookie_duration);
+    setCookie(COOKIE_NAMES.swath, (CSTATE.showSwath) ? "1" : "0", CNSNT.cookie_duration);
 
     btxt = TXT.show_txt;
     if (CSTATE.showSwath) {
@@ -1066,15 +1162,36 @@ function showSwathCb() {
 }
 
 function requestMinAmpChange() {
-    var modalChangeMinAmp;
-    modalChangeMinAmp = setModalChrome('<h3>' + TXT.change_min_amp + '</h3>',
-        '<div><input type="text" id="id_amplitude" value="' + CSTATE.minAmp + '"/></div>',
-        HBTN.changeMinAmpOkHidBtn +
-        HBTN.changeMinAmpCancelBtn +
-        HBTN.changeMinAmpOkBtn
+    var modalChrome, hdr, body, footer, c1array, c2array;
+    var textinput;
+    
+    textinput = '<div><input type="text" id="id_amplitude" style="width:90%; height:25px; font-size:20px; text-align:center;" value="' + CSTATE.minAmp + '"/></div>';
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c2array.push('style="border-style: none; width: 50%;"');
+    c1array.push(textinput);
+    c2array.push(HBTN.changeMinAmpOkBtn);
+    body = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c1array.push('<h3>' + TXT.change_min_amp + '</h3>');
+    c2array.push(HBTN.changeMinAmpCancelBtn);
+    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+
+    footer = '';
+    
+    modalChrome = setModalChrome(
+        hdr,
+        body,
+        footer
         );
 
-    $("#id_mod_change").html(modalChangeMinAmp);
+    $("#id_mod_change").html(modalChrome);
     $("#id_amplitude").focus();
 }
 
@@ -1399,9 +1516,9 @@ function notePane(etm, cat) {
     $("#id_note").focus();
 }
 
-function controlPane() {
-    var modalChangeMinAmp, showDnoteCntl, showPnoteCntl, showAbubbleCntl, showPbubbleCntl, showAnoteCntl, showWbubbleCntl, showSwathCntl;
-    var dchkd, pchkd, achkd, pbchkd, abchkd, wbchkd, swchkd, body;
+function modalPaneMapControls() {
+    var modalPane, showDnoteCntl, showPnoteCntl, showAbubbleCntl, showPbubbleCntl, showAnoteCntl, showWbubbleCntl, showSwathCntl, changeMinAmpCntl;
+    var dchkd, pchkd, achkd, pbchkd, abchkd, wbchkd, swchkd, hdr, body, footer, c1array, c2array;
 
     dchkd = TXT.show_txt;
     if (CSTATE.showDnote) {
@@ -1445,54 +1562,62 @@ function controlPane() {
     }
     swchkd += " " + TXT.swath;
     
-    showDnoteCntl = '<div><button id="id_showDnoteCb" type="button" onclick="showDnoteCb();" class="btn large">' + dchkd + '</button></div>',
-    showPnoteCntl = '<div><button id="id_showPnoteCb" type="button" onclick="showPnoteCb();" class="btn large">' + pchkd + '</button></div>',
-    showAnoteCntl = '<div><button id="id_showAnoteCb" type="button" onclick="showAnoteCb();" class="btn large">' + achkd + '</button></div>',
+    showDnoteCntl = '<div><button id="id_showDnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showDnoteCb") + ');" class="btn primary large">' + dchkd + '</button></div>',
+    showPnoteCntl = '<div><button id="id_showPnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPnoteCb") + ');" class="btn primary large">' + pchkd + '</button></div>',
+    showAnoteCntl = '<div><button id="id_showAnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAnoteCb") + ');" class="btn primary large">' + achkd + '</button></div>',
 
-    showPbubbleCntl = '<div><button id="id_showPbubbleCb" type="button" onclick="showPbubbleCb();" class="btn large">' + pbchkd + '</button></div>',
-    showAbubbleCntl = '<div><button id="id_showAbubbleCb" type="button" onclick="showAbubbleCb();" class="btn large">' + abchkd + '</button></div>',
-    showWbubbleCntl = '<div><button id="id_showWbubbleCb" type="button" onclick="showWbubbleCb();" class="btn large">' + wbchkd + '</button></div>',
-    showSwathCntl   = '<div><button id="id_showSwathCb"   type="button" onclick="showSwathCb();"   class="btn large">' + swchkd + '</button></div>',
-
-    //showDnoteCntl ='<label><h3><input type="checkbox" id="id_showDnoteCb" onclick="showDnoteCb();" ' + dchkd + '/><span>' + TXT.dnote + '</span></h3></label>';
-    //showPnoteCntl ='<label><h3><input type="checkbox" id="id_showPnoteCb" onclick="showPnoteCb();" ' + pchkd + '/><span>' + TXT.pnote + '</span></h3></label>';
-    //showAnoteCntl ='<label><h3><input type="checkbox" id="id_showAnoteCb" onclick="showAnoteCb();" ' + achkd + '/><span>' + TXT.anote + '</span></h3></label>';
-
-    //showPbubbleCntl ='<label><h3><input type="checkbox" id="id_showPbubbleCb" onclick="showPbubbleCb();" ' + pbchkd + '/><span>' + TXT.pbubble + '</span></h3></label>';
-    //showAbubbleCntl ='<label><h3><input type="checkbox" id="id_showAbubbleCb" onclick="showAbubbleCb();" ' + abchkd + '/><span>' + TXT.abubble + '</span></h3></label>';
-
+    showPbubbleCntl = '<div><button id="id_showPbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPbubbleCb") + ');" class="btn primary large">' + pbchkd + '</button></div>',
+    showAbubbleCntl = '<div><button id="id_showAbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAbubbleCb") + ');" class="btn primary large">' + abchkd + '</button></div>',
+    showWbubbleCntl = '<div><button id="id_showWbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showWbubbleCb") + ');" class="btn primary large">' + wbchkd + '</button></div>',
+    showSwathCntl   = '<div><button id="id_showSwathCb"   type="button" onclick="workingBtnPassThrough(' + single_quote("showSwathCb") + ');"   class="btn primary large">' + swchkd + '</button></div>',
+    changeMinAmpCntl= '<div><button id="id_changeMinAmp"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestMinAmpChange") + ');"   class="btn primary large">' + TXT.change_min_amp + '</button></div>',
+    
     body = "";
+    c1array = [];
+    c2array = [];
+    
+    c1array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c2array.push('style="border-style: none; width: 50%;"');
+    
+    c1array.push(showPbubbleCntl);
+    c2array.push(showAbubbleCntl);
+    
+    c1array.push(showWbubbleCntl);
+    c2array.push(showSwathCntl);
+    
+    c1array.push(changeMinAmpCntl);
+    
     if (CNSNT.annotation_url) {
-        body += '<div class="clearfix">';
-        body += '<label>' + TXT.show_notes + '</label>';
-        body += '<div class="input">';
-        body += '<ul class="inputs-list">';
-        body += '<li>' + showDnoteCntl + '</li>';
-        body += '<li>' + showPnoteCntl + '</li>';
-        body += '<li>' + showAnoteCntl + '</li>';
-        body += '</ul>';
-        body += '</div>';
-        body += '</div>';
+        c2array.push(showPnoteCntl);
+        c1array.push(showAnoteCntl);
+        
+        c2array.push(showDnoteCntl);
+        
+    } else {
+        c2array.push('');
     }
-
+    
     body += '<div class="clearfix">';
-    body += '<label>' + TXT.show_markers + '</label>';
-    body += '<div class="input">';
-    body += '<ul class="inputs-list">';
-    body += '<li>' + showPbubbleCntl + '</li>';
-    body += '<li>' + showAbubbleCntl + '</li>';
-    body += '<li>' + showWbubbleCntl + '</li>';
-    body += '<li>' + showSwathCntl + '</li>';
-    body += '</ul>';
-    body += '</div>';
+    tbl = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+    body += tbl;
     body += '</div>';
 
-    modalChangeMinAmp = setModalChrome('<h3>' + TXT.show_controls + '</h3>',
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c1array.push('<h3>' + TXT.map_controls + '</h3>');
+    c2array.push(HBTN.modChangeCloseBtn);
+    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+    footer = '';
+    
+    modalPane = setModalChrome(
+        hdr,
         body,
-        HBTN.modChangeCloseBtn
+        footer
         );
 
-    $("#id_mod_change").html(modalChangeMinAmp);
+    $("#id_mod_change").html(modalPane);
     $("#id_showDnoteCb").focus();
 }
 
@@ -1696,7 +1821,7 @@ function getNearest(currentHash, maxNeighbors) {
 }
 
 function initialize_gdu(winH, winW) {
-    var mapTypeCookie, current_zoom, followCookie, minAmpCookie, latCookie, dnoteCookie, pnoteCookie, anoteCookie;
+    var mapTypeCookie, current_zoom, followCookie, overlayCookie, minAmpCookie, latCookie, dnoteCookie, pnoteCookie, anoteCookie;
     var abubbleCookie, pbubbleCookie, wbubbleCookie, swathCookie;
     pge_wdth = $('#id_topbar').width();
     $('#map_canvas').css('height', winH - 200);
@@ -1707,77 +1832,87 @@ function initialize_gdu(winH, winW) {
         CSTATE.current_mapTypeId = google.maps.MapTypeId.ROADMAP;
     } else {
         CSTATE.current_mapTypeId = google.maps.MapTypeId.ROADMAP;
-        mapTypeCookie = getCookie("pcubed_mapTypeId");
+        mapTypeCookie = getCookie(COOKIE_NAMES.mapTypeId);
         if (mapTypeCookie) {
             CSTATE.current_mapTypeId = mapTypeCookie;
         }
     }
 
-    dnoteCookie = getCookie("pcubed_dnote");
+    dnoteCookie = getCookie(COOKIE_NAMES.dnote);
     if (dnoteCookie) {
         CSTATE.showDnote = parseInt(dnoteCookie, 2);
     }
 
-    pnoteCookie = getCookie("pcubed_pnote");
+    pnoteCookie = getCookie(COOKIE_NAMES.pnote);
     if (pnoteCookie) {
         CSTATE.showPnote = parseInt(pnoteCookie, 2);
     }
 
-    anoteCookie = getCookie("pcubed_anote");
+    anoteCookie = getCookie(COOKIE_NAMES.anote);
     if (anoteCookie) {
         CSTATE.showAnote = parseInt(anoteCookie, 2);
     }
 
-    pbubbleCookie = getCookie("pcubed_pbubble");
+    pbubbleCookie = getCookie(COOKIE_NAMES.pbubble);
     if (pbubbleCookie) {
         CSTATE.showPbubble = parseInt(pbubbleCookie, 2);
     }
 
-    abubbleCookie = getCookie("pcubed_abubble");
+    abubbleCookie = getCookie(COOKIE_NAMES.abubble);
     if (abubbleCookie) {
         CSTATE.showAbubble = parseInt(abubbleCookie, 2);
     }
 
-    wbubbleCookie = getCookie("pcubed_wbubble");
+    wbubbleCookie = getCookie(COOKIE_NAMES.wbubble);
     if (wbubbleCookie) {
         CSTATE.showWbubble = parseInt(wbubbleCookie, 2);
     }
     
-    swathCookie = getCookie("pcubed_swath");
+    swathCookie = getCookie(COOKIE_NAMES.swath);
     if (swathCookie) {
         var value = parseInt(swathCookie, 2);
         CSTATE.showSwath = !(value === 0);
     }
 
-    followCookie = getCookie("pcubed_follow");
+    followCookie = getCookie(COOKIE_NAMES.follow);
     if (followCookie) {
         CSTATE.follow = parseInt(followCookie, 2);
     }
     if (CSTATE.follow) {
-        $("#id_follow").attr("checked", "checked");
+        $("#id_follow").attr("class","follow-checked").attr("data-checked",'false')
     } else {
-        $("#id_follow").removeAttr("checked");
+        $("#id_follow").attr("class","follow").attr("data-checked",'true')
     }
 
+    overlayCookie = getCookie("pcubed_overlay");
+    if (overlayCookie) {
+        CSTATE.overlay = parseInt(overlayCookie, 2);
+    }
+    if (CSTATE.overlay) {
+        $("#id_overlay").attr("class","overlay-checked").attr("data-checked",'false')
+    } else {
+        $("#id_overlay").attr("class","overlay").attr("data-checked",'true')
+    }
+    
     minAmpCookie = getCookie("pcubed_minAmp");
     if (minAmpCookie) {
         CSTATE.minAmp = parseFloat(minAmpCookie);
     }
     $("#id_amplitude_btn").html(CSTATE.minAmp);
 
-    current_zoom = getCookie("pcubed_zoom");
+    current_zoom = getCookie(COOKIE_NAMES.zoom);
     if (current_zoom) {
         CSTATE.current_zoom = parseInt(current_zoom, 10);
     } else {
         CSTATE.current_zoom = 14;
     }
 
-    latCookie = getCookie("pcubed_center_latitude");
+    latCookie = getCookie(COOKIE_NAMES.center_latitude);
     if (latCookie) {
         CSTATE.center_lat = parseFloat(latCookie);
     }
 
-    lonCookie = getCookie("pcubed_center_longitude");
+    lonCookie = getCookie(COOKIE_NAMES.center_longitude);
     if (lonCookie) {
         CSTATE.center_lon = parseFloat(lonCookie);
     }
@@ -1877,16 +2012,31 @@ function post_rest(call_url, method, params, success_callback, error_callback) {
 }
 
 function changeFollow() {
-    var cval = $("#id_follow").attr("checked");
-    if (cval === "checked") {
+    var checked = $("#id_follow").attr("data-checked");
+    if (checked == 'true') {
         if (CSTATE.lastwhere && CSTATE.map) {
             CSTATE.map.setCenter(CSTATE.lastwhere);
         }
+        $("#id_follow").attr("class","follow-checked").attr("data-checked",'false')
         CSTATE.follow = true;
     } else {
         CSTATE.follow = false;
+        $("#id_follow").attr("class","follow").attr("data-checked",'true')
     }
-    setCookie("pcubed_follow", (CSTATE.follow) ? "1" : "0", CNSNT.cookie_duration);
+    setCookie(COOKIE_NAMES.follow, (CSTATE.follow) ? "1" : "0", CNSNT.cookie_duration);
+}
+
+function changeOverlay() {
+    var checked = $("#id_overlay").attr("data-checked");
+    if (checked == 'true') {
+        // Function placeholder
+        $("#id_overlay").attr("class","overlay-checked").attr("data-checked",'false')
+        CSTATE.overlay = true;
+    } else {
+        CSTATE.overlay = false;
+        $("#id_overlay").attr("class","overlay").attr("data-checked",'true')
+    }
+    setCookie("pcubed_overlay", (CSTATE.overlay) ? "1" : "0", CNSNT.cookie_duration);
 }
 
 function changeMinAmp() {
@@ -2002,24 +2152,26 @@ function statCheck() {
     curtime = dte.getTime();
     streamdiff = curtime - CSTATE.laststreamtime;
     if (streamdiff > CNSNT.streamerror) {
-        $("#id_stream_stat").html("<font color='red'><strike>Stream</strike></font>");
-        $("#id_gps_stat").html("<font color='red'><strike>GPS</strike></font>");
-        $("#id_analyzer_stat").html("<font color='red'><strike>Analyzer</strike></font>");
+        $("#id_stream_stat").attr("class", "stream-failed");
+        $("#id_analyzer_stat").attr("class", "analyzer-failed");
+        $("#id_gps_stat").attr("class", "gps-failed");
+        $("#id_ws_stat").attr("class", "ws-failed");
     } else {
         if (streamdiff > CNSNT.streamwarning) {
-            $("#id_stream_stat").html("Stream Warning");
+            $("#id_stream_stat").attr("class", "stream-warning");
         } else {
-            $("#id_stream_stat").html("Stream OK");
+            $("#id_stream_stat").attr("class", "stream-ok");
+            
             if (CSTATE.lastFit === 0) {
-                $("#id_gps_stat").html("<font color='red'><strike>GPS</strike></font>");
+                $("#id_gps_stat").attr("class", "gps-failed");
             } else {
-                $("#id_gps_stat").html("GPS OK");
+                $("#id_gps_stat").attr("class", "gps-ok");
             }
 
             if (CSTATE.lastInst !== 963) {
-                $("#id_analyzer_stat").html("<font color='red'><strike>Analyzer</strike></font>");
+                $("#id_analyzer_stat").attr("class", "analyzer-failed");
             } else {
-                $("#id_analyzer_stat").html("Analyzer OK");
+                $("#id_analyzer_stat").attr("class", "analyzer-ok");
             }
         }
     }
@@ -2160,12 +2312,15 @@ function successData(data) {
     restoreModalDiv();
     resultWasReturned = false;
     CSTATE.counter += 1;
-    if (CSTATE.green_on) {
-        $("#id_data_alert").css('background-color', 'green');
-        CSTATE.green_on = false;
-    } else {
-        $("#id_data_alert").css('background-color', 'white');
-        CSTATE.green_on = true;
+    CSTATE.green_count = (CSTATE.green_count+1) % 4;
+    if (CSTATE.green_count == 0) {
+        $("#id_data_alert").attr("class","wifi-0");
+    } else if (CSTATE.green_count == 1) {
+        $("#id_data_alert").attr("class","wifi-1");
+    } else if (CSTATE.green_count == 2) {
+        $("#id_data_alert").attr("class","wifi-2");
+    } else if (CSTATE.green_count == 3) {
+        $("#id_data_alert").attr("class","wifi-3");
     }
     // $("#counter").html("<h4>" + "Counter: " + CSTATE.counter + "</h4>");
     if (data.result) {
@@ -2256,12 +2411,14 @@ function successData(data) {
                             var direction = CNSNT.rtd*Math.atan2(data.result.WIND_E[n-1],data.result.WIND_N[n-1]);
                             var stddev = data.result.WIND_DIR_SDEV[n-1];
                             if (stddev>90.0) stddev = 90.0;
-                            makeWindRose(70,30,direction,2*stddev,5.0*speed,15.0,60.0);
+                            $("#windData").html("<b style='font-size:12px; color:#404040;'>" + "Wind: " + speed.toFixed(2) + " m/s" + "</b>");
+                            makeWindRose(70,27,direction,2*stddev,5.0*speed,15.0,60.0);
                         }
                     } else {
                         $('#concentrationSparkline').html("");
+                        $("#windData").html("");
                     }
-                    $("#concData").html("<h4>" + "Current concentration " + data.result.CH4[n - 1].toFixed(3) + " ppm" + "</h4>");
+                    $("#concData").html("<b style='font-size:12px; color:#404040;'>" + "CH4: " + data.result.CH4[n - 1].toFixed(3) + " ppm" + "</b>");
                     for (i = 1; i < n; i += 1) {
                         clr = data.result.ValveMask ? colorPathFromValveMask(data.result.ValveMask[i]) : CNSNT.normal_path_color;
                         pdata = {
@@ -2575,7 +2732,7 @@ function successNotes(data, cat) {
 function errorData(text) {
     CSTATE.net_abort_count += 1;
     if (CSTATE.net_abort_count >= 2) {
-        $("#id_modal").html(HPANE.modalNetWarning);
+        $("#id_modal").html(modalNetWarning());
         $("id_warningCloseBtn").focus();
     }
     $("#errors").html(text);
@@ -2586,7 +2743,7 @@ function errorData(text) {
 function errorPeaks(text) {
     CSTATE.net_abort_count += 1;
     if (CSTATE.net_abort_count >= 2) {
-        $("#id_modal").html(HPANE.modalNetWarning);
+        $("#id_modal").html(modalNetWarning());
     }
     $("#errors").html(text);
     setGduTimer('peak');
@@ -2595,7 +2752,7 @@ function errorPeaks(text) {
 function errorAnalysis(text) {
     CSTATE.net_abort_count += 1;
     if (CSTATE.net_abort_count >= 2) {
-        $("#id_modal").html(HPANE.modalNetWarning);
+        $("#id_modal").html(modalNetWarning());
     }
     $("#errors").html(text);
     setGduTimer('analysis');
@@ -2604,7 +2761,7 @@ function errorAnalysis(text) {
 function errorWind(text) {
     CSTATE.net_abort_count += 1;
     if (CSTATE.net_abort_count >= 2) {
-        $("#id_modal").html(HPANE.modalNetWarning);
+        $("#id_modal").html(modalNetWarning());
     }
     $("#errors").html(text);
     setGduTimer('wind');
@@ -2613,7 +2770,7 @@ function errorWind(text) {
 function errorPeakNotes(text) {
     CSTATE.net_abort_count += 1;
     if (CSTATE.net_abort_count >= 2) {
-        $("#id_modal").html(HPANE.modalNetWarning);
+        $("#id_modal").html(modalNetWarning());
     }
     $("#errors").html(text);
     setGduTimer('pnote');
@@ -2622,7 +2779,7 @@ function errorPeakNotes(text) {
 function errorAnalysisNotes(text) {
     CSTATE.net_abort_count += 1;
     if (CSTATE.net_abort_count >= 2) {
-        $("#id_modal").html(HPANE.modalNetWarning);
+        $("#id_modal").html(modalNetWarning());
     }
     $("#errors").html(text);
     setGduTimer('anote');
@@ -2631,7 +2788,7 @@ function errorAnalysisNotes(text) {
 function errorDatNotes(text) {
     CSTATE.net_abort_count += 1;
     if (CSTATE.net_abort_count >= 2) {
-        $("#id_modal").html(HPANE.modalNetWarning);
+        $("#id_modal").html(modalNetWarning());
     }
     $("#errors").html(text);
     setGduTimer('dnote');
@@ -2645,15 +2802,21 @@ function setModePane(mode) {
 function captureSwitch() {
     CSTATE.ignoreTimer = true;
     $("#analysis").html("");
-    $("#id_mode_pane").html(modeStrings[1]);
+    //$("#id_mode_pane").html(modeStrings[1]);
     call_rest(CNSNT.svcurl, "driverRpc", {"func": "wrDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER', 1]"});
     CSTATE.ignoreTimer = false;
+    $("#mode").html(modeStrings[1]);
+    $("#id_captureBtn").html(TXT.cancl_cptr).attr("onclick", "cancelCapSwitch();");
+    $("#id_surveyOnOffBtn").attr("disabled", "disabled");
     restoreModChangeDiv();
 }
 
 function cancelCapSwitch() {
     if (confirm(TXT.cancel_cap_msg)) {
         call_rest(CNSNT.svcurl, "driverRpc", {"func": "wrDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER', 0]"});
+        $("#mode").html(modeStrings[0]);
+        $("#id_captureBtn").html(TXT.switch_to_cptr).attr("onclick","captureSwitch();");
+        $("#id_surveyOnOffBtn").removeAttr("disabled");
         restoreModChangeDiv();
     }
 }
@@ -2664,9 +2827,50 @@ function injectCal() {
     restoreModChangeDiv();
 }
 
+function startSurvey() {
+    $("#mode").html(modeStrings[0]);
+    $("#id_surveyOnOffBtn").html(TXT.stop_survey).attr("onclick", "stopSurvey();");
+    $("#id_captureBtn").removeAttr("disabled");
+    restoreModChangeDiv();
+}
+
+function stopSurvey() {
+    if (confirm(TXT.stop_survey_msg)) {
+        $("#mode").html("<font color='red'>" + modeStrings[4] + "</font>");
+        $("#id_surveyOnOffBtn").html(TXT.start_survey).attr("onclick","startSurvey();");
+        $("#id_captureBtn").attr("disabled", "disabled");
+        restoreModChangeDiv();
+    }
+}
+
+function completeSurvey() {
+    alert("Complete Survey button pressed");
+    restoreModChangeDiv();
+}
+
+function initialize_cookienames() {
+    COOKIE_NAMES = {
+        mapTypeId: COOKIE_PREFIX + '_mapTypeId',
+        dnote: COOKIE_PREFIX + '_dnote',
+        pnote: COOKIE_PREFIX + '_pnote',
+        anote: COOKIE_PREFIX + '_anote',
+        pbubble: COOKIE_PREFIX + '_pbubble',
+        abubble: COOKIE_PREFIX + '_abubble',
+        dbubble: COOKIE_PREFIX + '_dbubble',
+        plat: COOKIE_PREFIX + '_plat',
+        follow: COOKIE_PREFIX + '_follow',
+        zoom: COOKIE_PREFIX + '_zoom',
+        center_latitude: COOKIE_PREFIX + '_center_latitude',
+        center_longitude: COOKIE_PREFIX + '_center_longitude',
+        wbubble: COOKIE_PREFIX + '_wbubble',
+        swath: COOKIE_PREFIX + '_swath',
+    };
+}
+
 function initialize(winH, winW) {
     if (init_vars) {
         init_vars();
     }
+    initialize_cookienames();
     initialize_gdu(winH, winW);
 }
