@@ -63,6 +63,7 @@ class PeriphIntrf(object):
         self.scriptFilenames = []
         self.offsets = []
         self.numChannels = len([s for s in co.list_sections() if s.startswith("PORT")])
+        self.lastTimestamps = {}
         for p in range(self.numChannels):
             self.sensorList.append(deque())
             parserFunc = co.get("PORT%d" % p, "SCRIPTFUNC").strip()
@@ -165,6 +166,7 @@ class PeriphIntrf(object):
                 if counter >= maxcount:
                     try:
                         parsedList = self.parserFuncCode[port](newStr)
+                        self.lastTimestamps[port] = ts
                         if parsedList:
                             self.appendAndSendOutData(port,ts,parsedList)
                             if port in self.procInputPorts and self.periphProcessor:

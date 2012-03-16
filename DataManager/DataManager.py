@@ -945,6 +945,15 @@ class DataManager(object):
         self.measBuffer = self.measBuffer[1:]
         self.measBufferLock.release()
         return ret
+    
+    @CmdFIFO.rpc_wrap
+    def RPC_Periph_GetLastTimestamps(self):
+        """Return timestamps of the most recent lines successfully parsed by 
+        the peripheral interface"""
+        if self.CRDS_PeriphIntrf is not None:
+            return self.CRDS_PeriphIntrf.lastTimestamps
+        else:
+            return None
         
     def _AddToMeasBuffer(self, measData):
         (source, colList, bufSize) = self.measBufferConfig

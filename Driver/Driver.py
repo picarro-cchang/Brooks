@@ -173,7 +173,13 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Fetches cavity temperature and setpoint
         """
         return self.rdDasReg("CAVITY_TEMPERATURE_REGISTER"),self.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
-        
+    
+    def getWarmingState(self):
+        """Fetches warm box temperature, cavity temperature and cavity pressure with their setpoints"""
+        return dict(WarmBoxTemperature=(self.rdDasReg("WARM_BOX_TEMPERATURE_REGISTER"),self.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")),
+               CavityTemperature=(self.rdDasReg("CAVITY_TEMPERATURE_REGISTER"),self.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")),
+               CavityPressure=(self.rdDasReg("CAVITY_PRESSURE_REGISTER"),self.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")))
+               
     def getValveCtrlState(self):
         """Get the current valve control state. Valid values are:
             0: Disabled (=VALVE_CNTRL_DisabledState)
