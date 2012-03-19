@@ -454,10 +454,12 @@ a:hover {
   -webkit-border-radius: 6px;
   -moz-border-radius: 6px;
   border-radius: 6px;
-  width:100%;
 }
 .btn.frontpage {
   width:200px;
+}
+.btn.fullwidth {
+  width:100%;
 }
 .btn.small {
   padding-right: 9px;

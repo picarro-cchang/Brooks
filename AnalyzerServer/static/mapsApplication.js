@@ -67,25 +67,25 @@ var TXT = {
 
 //Html button
 var HBTN = {
-        exptLogBtn: '<div><button id="id_exptLogBtn" type="button" onclick="exportLog();" class="btn primary large">' + TXT.download_concs + '</button></div>',
-        exptPeakBtn: '<div><button id="id_exptPeakBtn" type="button" onclick="exportPeaks();" class="btn primary large">' + TXT.download_peaks + '</button></div>',
-        restartBtn: '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn primary large">' + TXT.restart_log + '</button></div>',
+        exptLogBtn: '<div><button id="id_exptLogBtn" type="button" onclick="exportLog();" class="btn primary large fullwidth">' + TXT.download_concs + '</button></div>',
+        exptPeakBtn: '<div><button id="id_exptPeakBtn" type="button" onclick="exportPeaks();" class="btn primary large fullwidth">' + TXT.download_peaks + '</button></div>',
+        restartBtn: '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn primary large fullwidth">' + TXT.restart_log + '</button></div>',
         captureBtn: '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn primary large frontpage">' + TXT.switch_to_cptr + '</button></div>',
-        cancelCapBtn: '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn primary large">' + TXT.cancl_cptr + '</button></div>',
-        calibrateBtn: '<div><button id="id_calibrateBtn" type="button" onclick="injectCal();" class="btn primary large">' + TXT.calibrate + '</button></div>',
-        shutdownBtn: '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn red large">' + TXT.shutdown + '</button></div>',
-        downloadBtn: '<div><button id="id_downloadBtn" type="button" onclick="exportControls();" class="btn primary large">' + TXT.download_files + '</button></div>',
+        cancelCapBtn: '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn primary large fullwidth">' + TXT.cancl_cptr + '</button></div>',
+        calibrateBtn: '<div><button id="id_calibrateBtn" type="button" onclick="injectCal();" class="btn primary large fullwidth">' + TXT.calibrate + '</button></div>',
+        shutdownBtn: '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn red large fullwidth">' + TXT.shutdown + '</button></div>',
+        downloadBtn: '<div><button id="id_downloadBtn" type="button" onclick="exportControls();" class="btn primary large fullwidth">' + TXT.download_files + '</button></div>',
         analyzerCntlBtn: '<div><button id="id_analyzerCntlBtn" type="button" onclick="modalPanePrimeControls();" class="btn primary large frontpage">' + TXT.anz_cntls + '</button></div>',
         warningCloseBtn: '<div><button id="id_warningCloseBtn" onclick="restoreModalDiv();" class="btn medium">' + TXT.close + '</button></div>',
         modChangeCloseBtn: '<div><button id="id_modChangeCloseBtn" onclick="restoreModChangeDiv();" class="btn medium">' + TXT.close + '</button></div>',
-        switchLogBtn: '<div><button id="id_switchLogBtn" onclick="switchLog();" class="btn primary large">' + TXT.select_log + '</button></div>',
-        switchToPrimeBtn: '<div><button id="id_switchToPrimeBtn" onclick="switchToPrime();" class="btn primary large">' + TXT.switch_to_prime + '</button></div>',
-        cancelModalBtn: '<div><button id="id_cancelModalBtn" onclick="restoreModChangeDiv();" class="btn primary large">' + TXT.cancel + '</button></div>',
+        switchLogBtn: '<div><button id="id_switchLogBtn" onclick="switchLog();" class="btn primary large fullwidth">' + TXT.select_log + '</button></div>',
+        switchToPrimeBtn: '<div><button id="id_switchToPrimeBtn" onclick="switchToPrime();" class="btn primary large fullwidth">' + TXT.switch_to_prime + '</button></div>',
+        cancelModalBtn: '<div><button id="id_cancelModalBtn" onclick="restoreModChangeDiv();" class="btn primary large fullwidth">' + TXT.cancel + '</button></div>',
         changeMinAmpCancelBtn: '<div><button id="id_changeMinAmpCancelBtn" onclick="changeMinAmpVal(false);" class="btn medium">' + TXT.cancel + '</button></div>',
-        changeMinAmpOkBtn: '<div><button id="id_changeMinAmpOkBtn" onclick="changeMinAmpVal(true);" class="btn primary large">' + TXT.ok + '</button></div>',
+        changeMinAmpOkBtn: '<div><button id="id_changeMinAmpOkBtn" onclick="changeMinAmpVal(true);" class="btn primary large fullwidth">' + TXT.ok + '</button></div>',
         changeMinAmpOkHidBtn: '<div style="display: hidden;"><button id="id_changeMinAmpOkHidBtn" onclick="changeMinAmpVal(true);"/></div>',
         surveyOnOffBtn: '<div><button id="id_surveyOnOffBtn" type="button" onclick="stopSurvey();" class="btn primary large frontpage">' + TXT.stop_survey + '</button></div>',
-        completeSurveyBtn: '<div><button id="id_completeSurveyBtn" type="button" onclick="completeSurvey();" class="btn primary large">' + TXT.complete_survey + '</button></div>',
+        completeSurveyBtn: '<div><button id="id_completeSurveyBtn" type="button" onclick="completeSurvey();" class="btn primary large fullwidth">' + TXT.complete_survey + '</button></div>',
     };
 
 
@@ -1562,15 +1562,15 @@ function modalPaneMapControls() {
     }
     swchkd += " " + TXT.swath;
     
-    showDnoteCntl = '<div><button id="id_showDnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showDnoteCb") + ');" class="btn primary large">' + dchkd + '</button></div>',
-    showPnoteCntl = '<div><button id="id_showPnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPnoteCb") + ');" class="btn primary large">' + pchkd + '</button></div>',
-    showAnoteCntl = '<div><button id="id_showAnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAnoteCb") + ');" class="btn primary large">' + achkd + '</button></div>',
+    showDnoteCntl = '<div><button id="id_showDnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showDnoteCb") + ');" class="btn primary large fullwidth">' + dchkd + '</button></div>',
+    showPnoteCntl = '<div><button id="id_showPnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPnoteCb") + ');" class="btn primary large fullwidth">' + pchkd + '</button></div>',
+    showAnoteCntl = '<div><button id="id_showAnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAnoteCb") + ');" class="btn primary large fullwidth">' + achkd + '</button></div>',
 
-    showPbubbleCntl = '<div><button id="id_showPbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPbubbleCb") + ');" class="btn primary large">' + pbchkd + '</button></div>',
-    showAbubbleCntl = '<div><button id="id_showAbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAbubbleCb") + ');" class="btn primary large">' + abchkd + '</button></div>',
-    showWbubbleCntl = '<div><button id="id_showWbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showWbubbleCb") + ');" class="btn primary large">' + wbchkd + '</button></div>',
-    showSwathCntl   = '<div><button id="id_showSwathCb"   type="button" onclick="workingBtnPassThrough(' + single_quote("showSwathCb") + ');"   class="btn primary large">' + swchkd + '</button></div>',
-    changeMinAmpCntl= '<div><button id="id_changeMinAmp"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestMinAmpChange") + ');"   class="btn primary large">' + TXT.change_min_amp + '</button></div>',
+    showPbubbleCntl = '<div><button id="id_showPbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPbubbleCb") + ');" class="btn primary large fullwidth">' + pbchkd + '</button></div>',
+    showAbubbleCntl = '<div><button id="id_showAbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAbubbleCb") + ');" class="btn primary large fullwidth">' + abchkd + '</button></div>',
+    showWbubbleCntl = '<div><button id="id_showWbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showWbubbleCb") + ');" class="btn primary large fullwidth">' + wbchkd + '</button></div>',
+    showSwathCntl   = '<div><button id="id_showSwathCb"   type="button" onclick="workingBtnPassThrough(' + single_quote("showSwathCb") + ');"   class="btn primary large fullwidth">' + swchkd + '</button></div>',
+    changeMinAmpCntl= '<div><button id="id_changeMinAmp"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestMinAmpChange") + ');"   class="btn primary large fullwidth">' + TXT.change_min_amp + '</button></div>',
     
     body = "";
     c1array = [];
