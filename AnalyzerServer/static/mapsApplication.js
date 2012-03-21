@@ -63,6 +63,21 @@ var TXT = {
         show_txt: 'Show',
         hide_txt: 'Hide',
         working: 'Working',
+        
+        stream_title: 'Data Transfer Status Indicators',
+        stream_ok: 'Data Transfer OK',
+        stream_warning: 'Intermitten Data Transfer',
+        stream_failed: 'Data Transfer Failed',
+        gps_title: 'GPS Signal Quality Indicators',
+        gps_ok: 'GPS Signal OK',
+        gps_failed: 'GPS Signal Lost (or Status Unknown)',
+        ws_title: 'Weather Status Indicators',
+        ws_ok: 'Weather Station OK',
+        ws_failed: 'Weather Station Failed (or Status Unknown)',
+        analyzer_title: 'Current Analyzer Status',
+        cavity_p: 'Cavity Pressure',
+        cavity_t: 'Cavity Temperature',
+        wb_t: 'Warm Box Temperature',
     };
 
 //Html button
@@ -80,7 +95,6 @@ var HBTN = {
         modChangeCloseBtn: '<div><button id="id_modChangeCloseBtn" onclick="restoreModChangeDiv();" class="btn medium">' + TXT.close + '</button></div>',
         switchLogBtn: '<div><button id="id_switchLogBtn" onclick="switchLog();" class="btn primary large fullwidth">' + TXT.select_log + '</button></div>',
         switchToPrimeBtn: '<div><button id="id_switchToPrimeBtn" onclick="switchToPrime();" class="btn primary large fullwidth">' + TXT.switch_to_prime + '</button></div>',
-        cancelModalBtn: '<div><button id="id_cancelModalBtn" onclick="restoreModChangeDiv();" class="btn primary large fullwidth">' + TXT.cancel + '</button></div>',
         changeMinAmpCancelBtn: '<div><button id="id_changeMinAmpCancelBtn" onclick="changeMinAmpVal(false);" class="btn medium">' + TXT.cancel + '</button></div>',
         changeMinAmpOkBtn: '<div><button id="id_changeMinAmpOkBtn" onclick="changeMinAmpVal(true);" class="btn primary large fullwidth">' + TXT.ok + '</button></div>',
         changeMinAmpOkHidBtn: '<div style="display: hidden;"><button id="id_changeMinAmpOkHidBtn" onclick="changeMinAmpVal(true);"/></div>',
@@ -910,7 +924,7 @@ function selectLog() {
         '<select id="id_selectLog" class="large">' + options + '</select>' +
         btns +
         closediv,
-        HBTN.cancelModalBtn
+        HBTN.modChangeCloseBtn
         );
 
     $("#id_mod_change").html(modalChangeMinAmp);
@@ -2873,4 +2887,149 @@ function initialize(winH, winW) {
     }
     initialize_cookienames();
     initialize_gdu(winH, winW);
+}
+
+function showStream() {
+    var modalChrome, hdr, body, footer, c1array, c2array;
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 30%; text-align: right;"');
+    c2array.push('style="border-style: none; width: 70%;"');
+    c1array.push('<img class="stream-ok" src="/static/images/icons/spacer.gif" />');
+    c2array.push('<h4>' + TXT.stream_ok + '</h4>');
+    c1array.push('<img class="stream-warning" src="/static/images/icons/spacer.gif" />');
+    c2array.push('<h4>' + TXT.stream_warning + '</h4>');
+    c1array.push('<img class="stream-failed" src="/static/images/icons/spacer.gif" />');
+    c2array.push('<h4>' + TXT.stream_failed + '</h4>');
+    body = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 70%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 30%; text-align: right;"');
+    c1array.push('<h3>' + TXT.stream_title + '</h3>');
+    c2array.push(HBTN.modChangeCloseBtn);
+    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+
+    footer = '';
+    
+    modalChrome = setModalChrome(
+        hdr,
+        body,
+        footer
+        );
+
+    $("#id_mod_change").html(modalChrome);
+}
+
+function showGps() {
+    var modalChrome, hdr, body, footer, c1array, c2array;
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 30%; text-align: right;"');
+    c2array.push('style="border-style: none; width: 70%;"');
+    c1array.push('<img class="gps-ok" src="/static/images/icons/spacer.gif" />');
+    c2array.push('<h4>' + TXT.gps_ok + '</h4>');
+    c1array.push('<img class="gps-failed" src="/static/images/icons/spacer.gif" />');
+    c2array.push('<h4>' + TXT.gps_failed + '</h4>');
+    body = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 70%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 30%; text-align: right;"');
+    c1array.push('<h3>' + TXT.gps_title + '</h3>');
+    c2array.push(HBTN.modChangeCloseBtn);
+    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+
+    footer = '';
+    
+    modalChrome = setModalChrome(
+        hdr,
+        body,
+        footer
+        );
+
+    $("#id_mod_change").html(modalChrome);
+}
+
+function showWs() {
+    var modalChrome, hdr, body, footer, c1array, c2array;
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 30%; text-align: right;"');
+    c2array.push('style="border-style: none; width: 70%;"');
+    c1array.push('<img class="ws-ok" src="/static/images/icons/spacer.gif" />');
+    c2array.push('<h4>' + TXT.ws_ok + '</h4>');
+    c1array.push('<img class="ws-failed" src="/static/images/icons/spacer.gif" />');
+    c2array.push('<h4>' + TXT.ws_failed + '</h4>');
+    body = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 70%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 30%; text-align: right;"');
+    c1array.push('<h3>' + TXT.ws_title + '</h3>');
+    c2array.push(HBTN.modChangeCloseBtn);
+    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+
+    footer = '';
+    
+    modalChrome = setModalChrome(
+        hdr,
+        body,
+        footer
+        );
+
+    $("#id_mod_change").html(modalChrome);
+}
+        
+function showAnalyzer() {
+    var modalChrome, hdr, body, footer, c1array, c2array, c3array;
+    c1array = [];
+    c2array = [];
+    c3array = [];
+    c1array.push('style="border-style: none; width: 40%; text-align: right;"');
+    c2array.push('style="border-style: none; width: 45%;"');
+    c3array.push('style="border-style: none; width: 15%; text-align: left;"');
+    
+    bar1 = '<div class="ui-progress-bar error">' +
+           '<div class="ui-progress" style="width:20%;"><span class="ui-label"><b>29</b></span></div>' +
+           '</div>';
+    c1array.push('<h4>' + TXT.cavity_p + '</h4>');
+    c2array.push(bar1);
+    c3array.push('<h5> 148 Torr </h5>');
+    
+    bar2 = '<div class="ui-progress-bar warning">' +
+       '<div class="ui-progress" style="width:89%;"><span class="ui-label"><b>43</b></span></div>' +
+       '</div>'; 
+    c1array.push('<h4>' + TXT.cavity_t + '</h4>');
+    c2array.push(bar2);
+    c3array.push('<h5> 45 C </h5>');
+    
+    bar3 = '<div class="ui-progress-bar success">' +
+       '<div class="ui-progress" style="width:100%;"><span class="ui-label"><b>45</b></span></div>' +
+       '</div>'; 
+    c1array.push('<h4>' + TXT.wb_t + '</h4>');
+    c2array.push(bar3);
+    c3array.push('<h5> 45 C </h5>');
+    body = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array, c3array);
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 70%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 30%; text-align: right;"');
+    c1array.push('<h3>' + TXT.analyzer_title + '</h3>');
+    c2array.push(HBTN.modChangeCloseBtn);
+    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+
+    footer = '';
+    
+    modalChrome = setModalChrome(
+        hdr,
+        body,
+        footer
+        );
+
+    $("#id_mod_change").html(modalChrome);
 }
