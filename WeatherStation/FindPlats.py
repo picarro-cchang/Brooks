@@ -88,6 +88,6 @@ class FindPlats(object):
         return sorted([self.names[w] for w in platIndices])
     
 if __name__ == "__main__":
-    app = FindPlats("Plats/platBoundaries.npz")
-    print app.search(r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120229\DAT\20120229_012351Z\ZZZ-20120301-014325Z-DataLog_User_Minimal.dat", 30)
+    app = FindPlats(r"R:\crd_G2000\FCDS\1061-FCDS2003\Comparison\platBoundaries.npz")
+    print app.search(r"R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120311\DAT\ZZZ-20120317-020843Z-DataLog_User_Minimal.peaks", 1)
              

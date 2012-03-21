@@ -67,8 +67,13 @@ if __name__ == "__main__":
     #datlogName = r'R:\crd_G2000\FCDS\1185-FCDS2010\Survey20120303\DAT\FCDS2010-20120303-200106Z-DataLog_User_Minimal.dat';
     #fwind = r'R:\crd_G2000\FCDS\1185-FCDS2010\Survey20120303\GPSWS_Inst\YYYwindStats-FCDS2010-20120303-181853Z.txt'
 
-    datlogName = r'R:\crd_G2000\FCDS\1185-FCDS2010\DataFromAnalyzer\AnalyzerServer\FCDS2010-20120306-130727Z-DataLog_User_Minimal.dat';
-    fwind = r'R:\crd_G2000\FCDS\1185-FCDS2010\Survey20120306\GPSWSInst\windStats-Composite-DataLog_GPS_Raw.dat.txt';
+    #datlogName = r'R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120311\DAT\FCDS2006-20120311-121939Z-DataLog_User_Minimal.dat';
+    #fwind = r'R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120311\GPSWS\windStats-Composite-DataLog.txt';
+    
+    datlogName = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120311\DAT\FCDS2003-20120311-134150Z-DataLog_User_Minimal.dat'
+    fwind = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120311\GPS_WS\windStats-Composite.txt';
+    
+    offset = -4 # Time between ringdown measurement and derived wind data 
     
     wind = aReadDatFile(fwind)
     datlog = aReadDatFile(datlogName)
@@ -79,7 +84,7 @@ if __name__ == "__main__":
     for n in wind._fields:
         if n == "EPOCH_TIME": continue
         f = interp1d(wind.EPOCH_TIME,getattr(wind,n))
-        newFields.append(f(itimes))
+        newFields.append(f(itimes+offset))
     # Write out the new file
     op = file('withWind.dat','w')
     for n in datlog._fields:

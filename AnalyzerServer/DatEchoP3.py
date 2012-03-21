@@ -3,8 +3,8 @@ DatEchoP3 - Listen to a path of .dat (type) files on the local system,
 and echo new rows to the P3 archive
 '''
 import sys
+import fnmatch
 import os
-import glob
 import time
 from collections import deque
 import urllib2
@@ -21,6 +21,16 @@ from ctypes import Structure, windll, sizeof
 from ctypes import POINTER, byref
 from ctypes import c_ulong, c_uint, c_ubyte, c_char
 
+NaN = 1e1000/1e1000
+
+def genLatestFiles(baseDir,pattern):
+    # Generate files in baseDir and its subdirectories which match pattern
+    for dirPath, dirNames, fileNames in os.walk(baseDir):
+        dirNames.sort(reverse=True)
+        fileNames.sort(reverse=True)
+        for name in fileNames:
+            if fnmatch.fnmatch(name,pattern):
+                yield os.path.join(dirPath,name)
 
 class DataEchoP3(object):
     def __init__(self, *args, **kwargs):
@@ -41,7 +51,7 @@ class DataEchoP3(object):
             self.url = kwargs['url']
         else:
             #self.url = 'http://p3.picarro.com/pge/rest/datalogAdd/'
-			self.url = 'http://localhost:8080/rest/datalogAdd/'
+            self.url = 'http://localhost:8080/rest/datalogAdd/'
         if 'timeout' in kwargs:
             self.timeout = int(kwargs['timeout'])
         else:
@@ -87,9 +97,8 @@ class DataEchoP3(object):
         wcounter = 0
         while True:
             # Getting source
-            names = sorted(glob.glob(self.listen_path))
             try:
-                self.fname = names[-1]
+                self.fname = genLatestFiles(*os.path.split(self.listen_path)).next()
             except:
                 ecounter += 1
                 time.sleep(self.sleep_seconds)
@@ -144,7 +153,10 @@ class DataEchoP3(object):
                             
                             doc = {}
                             for col, val in zip(headers, vals):
-                                doc[col] = float(val)
+                                try:
+                                    doc[col] = float(val)
+                                except:
+                                    doc[col] = NaN
                             rctr += 1
                             doc['row'] = rctr
                             
@@ -188,9 +200,8 @@ class DataEchoP3(object):
                 
                 counter += 1
                 if counter == 10:
-                    names = sorted(glob.glob(self.listen_path))
                     try:    # Stop iteration if we are not the last file
-                        if self.fname != names[-1]: 
+                        if self.fname != genLatestFiles(*os.path.split(self.listen_path)).next(): 
                             fp.close()
                             print "\r\nClosing source stream %s\r\n" % self.fname
                             return
@@ -246,7 +257,7 @@ class DataEchoP3(object):
                 else:
                     break
             except Exception, e:
-                print '\n%s\n' % e
+                print 'EXCEPTION in pushToP3\n%s\n' % e
                 pass
             
             sys.stderr.write('-')
@@ -344,10 +355,9 @@ class DataEchoP3(object):
             adate, sep, part = part.partition('-')
             atime, sep, part = part.partition('-')
             return aname, adate, atime
-
-        names = sorted(glob.glob(self.listen_path))
+            
         try:    # Stop iteration if we are not the last file
-            fname = names[-1]
+            fname = genLatestFiles(*os.path.split(self.listen_path)).next()
             aname, adate, atime = analyzerNameFromFname(fname)
             return aname
         except:

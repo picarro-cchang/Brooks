@@ -82,10 +82,18 @@ def xform(lng,lat,minlng,maxlng,minlat,maxlat,imsize):
     y = int((ny-1)*(lat-maxlat)/(minlat-maxlat))
     return x,y
 
-def widthFunc(windspeed):
-    v0 = 5
-    w0 = 50
-    return w0*np.exp(1.0)*(windspeed/v0)*np.exp(-windspeed/v0)
+def widthFunc(windspeed,minAmpl,minLeak):
+    # For v>>v0, we want c*v**b
+    v0 = 1
+    a = 1       # low velocity power law
+    b = -0.5    # high velocity power law
+    p = 2       # Power for transition
+    Q = minLeak    # cubic ft/hr
+    L = 1000*minAmpl # ppb detection limit
+    c = 1200*np.sqrt(Q/L)
+    x = windspeed/v0
+    if x<1e-6: x=1e-6
+    return c*(v0**b)*x**(a+b)/((x**a)**p+(x**b)**p)**(1.0/p)
     
 class DrawOnPlatBatch(object):
     def __init__(self, iniFile):
@@ -97,7 +105,7 @@ class DrawOnPlatBatch(object):
         varList = {'DAT_FILE':'datFile','PEAKS_FILE':'peakFile',
                    'MISS_FILE':'missFile','BOUNDARIES_FILE':'boundaryFile',
                    'TIF_DIR':'tifDir','OUT_DIR':'outDir','MIN_AMP':'minAmpl',
-                   'PLATS':'platList'}
+                   'PLATS':'platList','MIN_LEAK':'minLeak','SHOW_BUBBLES':'showBubbles'}
         
         for secName in self.config:
             if secName == 'DEFAULTS': continue
@@ -111,6 +119,8 @@ class DrawOnPlatBatch(object):
                     if v in self.config[secName]: 
                         setattr(self,varList[v],self.config[secName][v])
             self.minAmpl = float(self.minAmpl)
+            self.minLeak = float(self.minLeak)
+            self.showBubbles = int(self.showBubbles)
             if isinstance(self.platList,type("")):
                 self.platList = [self.platList.strip()]
             self.findPlats = FindPlats(self.boundaryFile)
@@ -174,7 +184,7 @@ class DrawOnPlatBatch(object):
                         windE = d.WIND_E
                         bearing = np.arctan2(windE,windN)
                         speed = np.sqrt(windE*windE + windN*windN)
-                        width = widthFunc(speed)
+                        width = widthFunc(speed,self.minAmpl,self.minLeak)
                         deltaLat = (180.0/np.pi)*width*np.cos(bearing)/EARTH_RADIUS
                         deltaLng = (180.0/np.pi)*width*np.sin(bearing)/(EARTH_RADIUS*np.cos(lat*(np.pi/180.0)))
                         if not (np.isnan(deltaLat) or np.isnan(deltaLng)):
@@ -191,7 +201,7 @@ class DrawOnPlatBatch(object):
                                     temp = Image.new('RGBA',(xmax-xmin+1,ymax-ymin+1),(0,0,0,0))
                                     tdraw = ImageDraw.Draw(temp)
                                     tdraw.polygon([(x1-xmin,y1-ymin),(x2-xmin,y2-ymin),(x3-xmin,y3-ymin),(x4-xmin,y4-ymin)],
-                                                    fill=(0,0,0xCC,0x40),outline=(0,0,0xCC,0xFF))
+                                                    fill=(0xFF,0xA0,0x00,0x40),outline=(0xFF,0xA0,0x0,0xFF))
                                     mask = (padX+xmin,padY+ymin)
                                     q.paste(temp,mask,temp)
                             lastMeasured = LastMeasTuple(lat,lng,deltaLat,deltaLng)
@@ -231,7 +241,7 @@ class DrawOnPlatBatch(object):
             x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
             if (0<=x<nx) and (0<=y<ny) and (amp>self.minAmpl):
                 box = (padX+x-bx//2,padY+y-by)
-                #q.paste(b,box,mask=b)
+                # q.paste(b,box,mask=b)
                 if "WIND_N" in pk._fields:
                     wind = np.sqrt(windN*windN + windE*windE)
                     meanBearing = (180.0/np.pi)*np.arctan2(windE,windN)
@@ -266,7 +276,7 @@ class DrawOnPlatBatch(object):
                         bx,by = b.size
                         print "Marker at", x,y
                         box = (padX+x-bx//2,padY+y-by)
-                        q.paste(b,box,mask=b)
+                        if self.showBubbles: q.paste(b,box,mask=b)
                 except:
                     print traceback.format_exc()
                     print row

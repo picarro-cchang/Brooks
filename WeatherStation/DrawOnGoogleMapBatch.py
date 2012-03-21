@@ -48,6 +48,19 @@ def aReadDatFile(fileName):
     # Read a data file into a collection of numpy arrays
     return list2cols([x for x in xReadDatFile(fileName)])
 
+class GoogleMap(object):
+    def __init__(self):
+        self.conn = httplib.HTTPConnection("maps.googleapis.com")
+    def close(self):
+        self.conn.close()
+    def getMap(self,latCen,lonCen,zoom,nx,ny,scale=1):
+        self.conn.request("GET","/maps/api/staticmap?center=%.6f,%.6f&zoom=%d&maptype=satellite&size=%dx%d&scale=%d&sensor=false" % 
+                          (latCen,lonCen,zoom,nx,ny,scale))
+        r1 = self.conn.getresponse()
+        if r1.status != 200:
+            raise RuntimeError("%d %s" % (r1.status,r1.reason))
+        return r1.read()
+    
 class Bubble(object):
     def __init__(self):
         self.conn = httplib.HTTPConnection("chart.apis.google.com")
@@ -87,17 +100,17 @@ def widthFunc(windspeed):
     w0 = 50
     return w0*np.exp(1.0)*(windspeed/v0)*np.exp(-windspeed/v0)
     
-class DrawOnPlatBatch(object):
+class DrawOnMapBatch(object):
     def __init__(self, iniFile):
         self.config = ConfigObj(iniFile)
         self.padX = 50
         self.padY = 200
         
     def run(self):
-        varList = {'DAT_FILE':'datFile','PEAKS_FILE':'peakFile',
-                   'MISS_FILE':'missFile','BOUNDARIES_FILE':'boundaryFile',
-                   'TIF_DIR':'tifDir','OUT_DIR':'outDir','MIN_AMP':'minAmpl',
-                   'PLATS':'platList'}
+        self.gMap = GoogleMap()
+        varList = {'DAT_FILE':'datFile','OUT_DIR':'outDir','MIN_AMP':'minAmpl',
+                   'LAT_CENTER': 'latCen', 'LON_CENTER':'lngCen', 'ZOOM':'zoom',
+                   'PNG_FILE': 'pngFile'}
         
         for secName in self.config:
             if secName == 'DEFAULTS': continue
@@ -111,47 +124,34 @@ class DrawOnPlatBatch(object):
                     if v in self.config[secName]: 
                         setattr(self,varList[v],self.config[secName][v])
             self.minAmpl = float(self.minAmpl)
-            if isinstance(self.platList,type("")):
-                self.platList = [self.platList.strip()]
-            self.findPlats = FindPlats(self.boundaryFile)
-            self.boundaries = np.load(self.boundaryFile,"rb")
-            
+            self.latCen = float(self.latCen)
+            self.lngCen = float(self.lngCen)
+            self.zoom = int(self.zoom)
             try:
-                if not self.platList:
-                    platChoices = self.findPlats.search(self.datFile, DECIMATION_FACTOR)
-                else:
-                    platChoices = self.platList
-                
-                print "Plats to process: %s\nCreating composite plots\n" % platChoices
-                for p in platChoices:
-                    self._draw(p, self.datFile, self.peakFile, self.missFile, self.padX, self.padY)
+                datName = os.path.join(self.outDir,self.datFile)
+                peakName = datName.replace(".dat", ".peaks")
+                self._draw(datName,peakName,self.padX,self.padY)
             except Exception:
                 print traceback.format_exc()
             
-    def _draw(self, platName, datFile, peakFile, missFile, padX, padY):
-        datTimestamp = "-".join(os.path.basename(self.datFile).split("-")[1:3])
-        which = np.flatnonzero(self.boundaries["names"]==platName)
-        if len(which) == 0:
-            raise ValueError("Plat %s not found" % which)
-        indx = which[0]
-        minlng = self.boundaries["minlng"][indx]
-        maxlng = self.boundaries["maxlng"][indx]
-        minlat = self.boundaries["minlat"][indx]
-        maxlat = self.boundaries["maxlat"][indx]
-        print minlng, maxlng, minlat, maxlat
-
-        tifFile = os.path.join(self.tifDir, platName+".tif")
-        pngFile = os.path.join(self.outDir, platName+".png")
-        if not os.path.exists(pngFile):
-            os.system('convert "%s" "%s"' % ( tifFile, pngFile))
-        p = Image.open(pngFile)
+    def _draw(self, datFile, peakFile, padX, padY):
+        mx,my = 640, 640
+        scale = 2
+        p = Image.open(cStringIO.StringIO(self.gMap.getMap(self.latCen,self.lngCen,self.zoom,mx,my,scale)))
+        # 1 pxl = 360/(256*scale*2**zoom) degrees longitude
+        # 1 pxl = 360*cos(latitude)/(256*scale*2**zoom) degrees latitude
+        dlngpp = 360.0/(256.0*scale*2**(self.zoom))
+        dlatpp = dlngpp*np.cos(self.latCen*np.pi/180.0)
+        minlng, maxlng = self.lngCen-(mx*scale/2)*dlngpp, self.lngCen+(mx*scale/2)*dlngpp
+        minlat, maxlat = self.latCen-(my*scale/2)*dlatpp, self.latCen+(my*scale/2)*dlatpp
+        self.imsize = (scale*mx,scale*my)
         nx,ny = p.size
-        print p.size
         q = Image.new('RGBA',(nx+2*padX,ny+2*padY),(255,255,255,255))
         q.paste(p,(padX,padY))
-        
+        datTimestamp = "-".join(os.path.basename(self.datFile).split("-")[1:3])
+        print minlng, maxlng, minlat, maxlat
+        # Overlay for path, bubbles, etc.
         ov = Image.new('RGBA',q.size,(0,0,0,0))
-        
         # p = p.resize((nx//8,ny//8),Image.ANTIALIAS)
         odraw = ImageDraw.Draw(ov)
         font = ImageFont.truetype("ariblk.ttf",60)
@@ -193,7 +193,7 @@ class DrawOnPlatBatch(object):
                                     tdraw.polygon([(x1-xmin,y1-ymin),(x2-xmin,y2-ymin),(x3-xmin,y3-ymin),(x4-xmin,y4-ymin)],
                                                     fill=(0,0,0xCC,0x40),outline=(0,0,0xCC,0xFF))
                                     mask = (padX+xmin,padY+ymin)
-                                    q.paste(temp,mask,temp)
+                                    # q.paste(temp,mask,temp)
                             lastMeasured = LastMeasTuple(lat,lng,deltaLat,deltaLng)
                         else:
                             lastMeasured = None
@@ -205,10 +205,10 @@ class DrawOnPlatBatch(object):
                 penDown = False
                 lastMeasured = None
             if (penDown == False) and path:
-                odraw.line(path,fill=(0,0,255,255),width=4)
+                odraw.line(path,fill=(0,0,255,255),width=2)
                 path = []
         if path:        
-            odraw.line(path,fill=(0,0,255,255),width=4)
+            odraw.line(path,fill=(0,0,255,255),width=2)
         
         # Draw the peak bubbles and wind wedges
         bubble = Bubble()
@@ -222,7 +222,7 @@ class DrawOnPlatBatch(object):
                 windN = pk.WIND_N
                 windE = pk.WIND_E
                 windSdev = pk.WIND_DIR_SDEV
-            size = 5*amp**0.25
+            size = 1.5*amp**0.25
             fontsize = int(20.0*size);
             buff = cStringIO.StringIO(bubble.getBubble(size,fontsize,"%.1f"%ch4))
             b = Image.open(buff)
@@ -231,55 +231,51 @@ class DrawOnPlatBatch(object):
             x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
             if (0<=x<nx) and (0<=y<ny) and (amp>self.minAmpl):
                 box = (padX+x-bx//2,padY+y-by)
-                #q.paste(b,box,mask=b)
                 if "WIND_N" in pk._fields:
                     wind = np.sqrt(windN*windN + windE*windE)
                     meanBearing = (180.0/np.pi)*np.arctan2(windE,windN)
                     if not(np.isnan(wind) or np.isnan(meanBearing)):
                         minBearing = meanBearing-min(2*windSdev,180.0)
                         maxBearing = meanBearing+min(2*windSdev,180.0)
-                        radius = min(500,int(100.0*wind))
+                        radius = min(150,int(30.0*wind))
                         odraw.pieslice((padX+x-radius,padY+y-radius,padX+x+radius,padY+y+radius),int(minBearing-90.0),int(maxBearing-90.0),
-                                        fill=(255,255,0,200),outline=(0,0,0,255))
-                odraw.text((padX+x,padY+y),"%.1f"%ch4,font=font,fill=(0,0,255,255))
-        cp = open(missFile,"rb")
-        reader = csv.reader(cp)
-        color = {'P':'9090FF','T':'90FF90','B':'C0C0C0'}
-        for i,row in enumerate(reader):
-            if i==1: # Headings
-                headings = [r.strip() for r in row]
-                LNG = headings.index('LONG')
-                LAT = headings.index('LAT')
-                GRADE = headings.index('GRADE')
-                CODE = headings.index('P/T/B')
-            elif i>1:
-                try:
-                    lng = float(row[LNG])
-                    lat = float(row[LAT])
-                    grade = row[GRADE]
-                    code = row[CODE]
-                    x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
-                    if (0<=x<nx) and (0<=y<ny) and (grade not in ['MS']):
-                        buff = cStringIO.StringIO(bubble.getMiss(5,100,"%d"%(i+1,),color[code]))
-                        b = Image.open(buff)
-                        b = b.convert('RGBA')
-                        bx,by = b.size
-                        print "Marker at", x,y
-                        box = (padX+x-bx//2,padY+y-by)
-                        q.paste(b,box,mask=b)
-                except:
-                    print traceback.format_exc()
-                    print row
-        cp.close()
+                                        fill=(255,255,0,100),outline=(0,0,0,255))
+                q.paste(b,box,mask=b)
+                #odraw.text((padX+x,padY+y),"%.1f"%ch4,font=font,fill=(0,0,255,255))
+        # cp = open(missFile,"rb")
+        # reader = csv.reader(cp)
+        # color = {'P':'9090FF','T':'90FF90','B':'C0C0C0'}
+        # for i,row in enumerate(reader):
+            # if i==1: # Headings
+                # headings = [r.strip() for r in row]
+                # LNG = headings.index('LONG')
+                # LAT = headings.index('LAT')
+                # GRADE = headings.index('GRADE')
+                # CODE = headings.index('P/T/B')
+            # elif i>1:
+                # try:
+                    # lng = float(row[LNG])
+                    # lat = float(row[LAT])
+                    # grade = row[GRADE]
+                    # code = row[CODE]
+                    # x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
+                    # if (0<=x<nx) and (0<=y<ny) and (grade not in ['MS']):
+                        # buff = cStringIO.StringIO(bubble.getMiss(5,100,"%d"%(i+1,),color[code]))
+                        # b = Image.open(buff)
+                        # b = b.convert('RGBA')
+                        # bx,by = b.size
+                        # print "Marker at", x,y
+                        # box = (padX+x-bx//2,padY+y-by)
+                        # q.paste(b,box,mask=b)
+                # except:
+                    # print traceback.format_exc()
+                    # print row
+        # cp.close()
         
         q.paste(ov,mask=ov)
-        # p.show()
         bubble.close()
-        outputPngFile = os.path.join(self.outDir, platName + "_" + datTimestamp + "_%s.png" % (self.minAmpl,))
-        q.save(outputPngFile,format="PNG")
-        print "file:%s\n" % os.path.abspath(outputPngFile)
-        
+        q.save(os.path.join(self.outDir,self.pngFile),format="PNG")                
         
 if __name__ == "__main__":
-    app = DrawOnPlatBatch(sys.argv[1])
+    app = DrawOnMapBatch(sys.argv[1])
     app.run()
