@@ -163,6 +163,7 @@ var CNSNT = {
         analysisUpdatePeriod: 500,
         windUpdatePeriod: 500,
         noteUpdatePeriod: 1500,
+        progressUpdatePeriod: 2000,
         hmargin: 25,
         vmargin: 0,
 
@@ -207,6 +208,9 @@ var CSTATE = {
         current_mode: 0,
         getting_mode: false,
 
+        getting_warming_status: false,
+        end_warming_status: false,
+        
         current_zoom: undefined,
         current_mapTypeId: undefined,
 
@@ -297,6 +301,7 @@ var TIMER = {
         analysis: null, // timer for showAnalysis (getAnalysis)
         anote: null, // timer for getAnalysisNotes
         wind: null, // timer for showWind (getPeaks)
+        progress: null, //timer for updateProgress
     };
 
 var modeStrings = {0: TXT.survey_mode, 1: TXT.capture_mode, 2: TXT.capture_mode, 3: TXT.analyzing_mode, 4: TXT.inactive_mode};
@@ -1018,6 +1023,11 @@ function primeTimer() {
 }
 
 function restoreModChangeDiv() {
+    if (TIMER.progress !== null) {
+        clearTimeout(TIMER.progress);
+        TIMER.progress = null;
+        CSTATE.end_warming_status = true;
+    }
     $("#id_mod_change").html("");
 }
 
@@ -2983,36 +2993,104 @@ function showWs() {
 
     $("#id_mod_change").html(modalChrome);
 }
+      
+var bar = ['<div id="id_cavity_p_bar" class="ui-progress-bar error">' +
+           '<div id="id_cavity_p_prog" class="ui-progress" style="width:0%;"><span id="id_cavity_p_val" class="ui-label"><b>0.0</b></span></div>' +
+           '</div>',
+           '<div id="id_cavity_t_bar" class="ui-progress-bar error">' +
+           '<div id="id_cavity_t_prog" class="ui-progress" style="width:0%;"><span id="id_cavity_t_val" class="ui-label"><b>0.0</b></span></div>' +
+           '</div>', 
+           '<div id="id_wb_t_bar" class="ui-progress-bar error">' +
+          '<div id="id_wb_t_prog" class="ui-progress" style="width:0%;"><span id="id_wb_t_val" class="ui-label"><b>0.0</b></span></div>' +
+          '</div>',];
         
+function updateBar(id_sp, id_val, id_prog, id_bar, sp, val) {
+    var unit, prog, barClass;
+    if (sp !== null) {
+        barClass = "ui-progress-bar success";
+        if (id_sp ==  '#id_cavity_p_sp') {
+            unit = 'Torr';
+            if (Math.abs(val-sp) > 5) {
+                barClass = "ui-progress-bar warning";
+            }
+        } else {
+            unit = 'C';
+            if (Math.abs(val-sp) > 0.3) {
+                barClass = "ui-progress-bar warning";
+            }
+        }
+        $(id_sp).html("<h5>" + sp.toFixed(1) + " " + unit + "</h5>");
+        $(id_val).html("<b>" + val.toFixed(1) + "</b>");
+        prog = Math.min(100.0, 100.0 * val / sp);
+        $(id_prog).attr("style", "width:" + prog + "%")
+        $(id_bar).attr("class", barClass);
+    } else {
+        $(id_sp).html("<h5> Unavailable </h5>");
+        $(id_val).html("");
+        $(id_prog).attr("style", "width:0%")
+        $(id_bar).attr("class", "ui-progress-bar error");
+    }
+    
+}
+
+function updateProgress() {
+    var cavity_p_val, cavity_p_sp, cavity_t_val, cavity_t_sp, wb_t_val, wb_t_sp;
+    if (!CSTATE.getting_warming_status) {
+        CSTATE.getting_warming_status = true;
+        call_rest(CNSNT.svcurl, "driverRpc", {"func": "getWarmingState", "args": "[]"},
+                function (data, ts, jqXHR) {
+                if (data.result.value !== undefined) {
+                    cavity_p_val = data.result.value['CavityPressure'][0];
+                    cavity_p_sp = data.result.value['CavityPressure'][1];
+                    cavity_t_val = data.result.value['CavityTemperature'][0];
+                    cavity_t_sp = data.result.value['CavityTemperature'][1];
+                    wb_t_val = data.result.value['WarmBoxTemperature'][0];
+                    wb_t_sp = data.result.value['WarmBoxTemperature'][1];
+                    updateBar("#id_cavity_p_sp", "#id_cavity_p_val", "#id_cavity_p_prog", "#id_cavity_p_bar", cavity_p_sp, cavity_p_val);
+                    updateBar("#id_cavity_t_sp", "#id_cavity_t_val", "#id_cavity_t_prog", "#id_cavity_t_bar", cavity_t_sp, cavity_t_val);
+                    updateBar("#id_wb_t_sp", "#id_wb_t_val", "#id_wb_t_prog", "#id_wb_t_bar", wb_t_sp, wb_t_val);
+                } else {
+                    updateBar("#id_cavity_p_sp", "#id_cavity_p_val", "#id_cavity_p_prog", "#id_cavity_p_bar", null, 0.0);
+                    updateBar("#id_cavity_t_sp", "#id_cavity_t_val", "#id_cavity_t_prog", "#id_cavity_t_bar", null, 0.0);
+                    updateBar("#id_wb_t_sp", "#id_wb_t_val", "#id_wb_t_prog", "#id_wb_t_bar", null, 0.0);
+                }
+                CSTATE.getting_warming_status = false;
+            },
+            function (jqXHR, ts, et) {
+                $("#errors").html(jqXHR.responseText);
+                updateBar("#id_cavity_p_sp", "#id_cavity_p_val", "#id_cavity_p_prog", "#id_cavity_p_bar", null, 0.0);
+                updateBar("#id_cavity_t_sp", "#id_cavity_t_val", "#id_cavity_t_prog", "#id_cavity_t_bar", null, 0.0);
+                updateBar("#id_wb_t_sp", "#id_wb_t_val", "#id_wb_t_prog", "#id_wb_t_bar", null, 0.0);
+                CSTATE.getting_warming_status = false;
+            }
+            );
+    }
+    if (!CSTATE.end_warming_status){
+        TIMER.progress = setTimeout(updateProgress, CNSNT.progressUpdatePeriod);
+    }
+}
+    
 function showAnalyzer() {
     var modalChrome, hdr, body, footer, c1array, c2array, c3array;
+
     c1array = [];
     c2array = [];
     c3array = [];
     c1array.push('style="border-style: none; width: 40%; text-align: right;"');
-    c2array.push('style="border-style: none; width: 45%;"');
-    c3array.push('style="border-style: none; width: 15%; text-align: left;"');
-    
-    bar1 = '<div class="ui-progress-bar error">' +
-           '<div class="ui-progress" style="width:20%;"><span class="ui-label"><b>29</b></span></div>' +
-           '</div>';
+    c2array.push('style="border-style: none; width: 40%;"');
+    c3array.push('style="border-style: none; width: 20%; text-align: left;"');
+
     c1array.push('<h4>' + TXT.cavity_p + '</h4>');
-    c2array.push(bar1);
-    c3array.push('<h5> 148 Torr </h5>');
-    
-    bar2 = '<div class="ui-progress-bar warning">' +
-       '<div class="ui-progress" style="width:89%;"><span class="ui-label"><b>43</b></span></div>' +
-       '</div>'; 
+    c2array.push(bar[0]);
+    c3array.push('<span id="id_cavity_p_sp"><h5> Unavailable </h5></span>');
+
     c1array.push('<h4>' + TXT.cavity_t + '</h4>');
-    c2array.push(bar2);
-    c3array.push('<h5> 45 C </h5>');
-    
-    bar3 = '<div class="ui-progress-bar success">' +
-       '<div class="ui-progress" style="width:100%;"><span class="ui-label"><b>45</b></span></div>' +
-       '</div>'; 
+    c2array.push(bar[1]);
+    c3array.push('<span id="id_cavity_t_sp"><h5> Unavailable </h5></span>');
+
     c1array.push('<h4>' + TXT.wb_t + '</h4>');
-    c2array.push(bar3);
-    c3array.push('<h5> 45 C </h5>');
+    c2array.push(bar[2]);
+    c3array.push('<span id="id_wb_t_sp"><h5> Unavailable </h5></span>');
     body = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array, c3array);
 
     c1array = [];
@@ -3032,4 +3110,9 @@ function showAnalyzer() {
         );
 
     $("#id_mod_change").html(modalChrome);
+
+    if (TIMER.progress == null) {
+        CSTATE.end_warming_status = false;
+        updateProgress();
+    }
 }
