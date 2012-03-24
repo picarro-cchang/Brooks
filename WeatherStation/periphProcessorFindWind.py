@@ -217,12 +217,15 @@ def derivCdataSource(syncCdataSource):
     dBuff = []
     for d in syncCdataSource:
         dBuff.append(d)
-        dBuff[:] = dBuff[-3:]
-        if len(dBuff) == 3:
+        dBuff[:] = dBuff[-5:]
+        if len(dBuff) == 5:
+            d4 = dBuff[4]
+            d3 = dBuff[3]
             d2 = dBuff[2]
             d1 = dBuff[1]
             d0 = dBuff[0]
-            zVel = 1000.0*(d2.zPos-d0.zPos)/(d2.ts-d0.ts)
+            # Use higher order velocity estimate
+            zVel = (-d4.zPos + 8.0*d3.zPos - 8.0*d1.zPos + d0.zPos)/12.0
             yield DerivCdataTuple(*(d1+(zVel,)))
 
 def calCompass(phi,theta,params0=[0.0,0.0,0.0]):
@@ -313,21 +316,21 @@ def trueWindSource(derivCdataSource):
         # print zVelSsq/zVelcVel
 
         # Subtract the velocity of the vehicle derived from GPS to get the wind bearing relative to ground
-        scaleFac = 0.9
+        scaleFac = float(PARAMS.get('SPEEDFACTOR',0.9))
         tVel = scaleFac*cVel - d.zVel
         
         # Update the parameters of the calibration from time to time
         phi0 = angle(d.zVel)
         theta0 = -angle(d.mHead)
         if not isnan(d.zVel):      # Reject bad GPS data
-            if abs(d.zVel) > 5.0:  # Car is moving fast if speed > 5m/s. Use these for calibrating
+            if abs(d.zVel) > 2.0:  # Car is moving fast if speed > 2m/s. Use these for calibrating
                                    # magnetometer against GPS
                 # Determine which deque to put data onto 
                 b = whichBin(phi0,nBins)
                 dataDeques[b].append((phi0,theta0))
                 # Limit size of deque
                 while len(dataDeques[b])>maxPoints: dataDeques[b].popleft()
-        if i%50 == 0: # Carry out the compass calibration based on available data
+        if i%20 == 0: # Carry out the compass calibration based on available data
             phi0, theta0 = [], []
             for q in dataDeques:
                 phi0    += [p for (p,t) in q]
@@ -378,9 +381,14 @@ def windStatistics(windSource,statsInterval):
 def main():
     gpsSource = GpsSource(SENSORLIST[0])
     wsSource  = WsSource(SENSORLIST[1])
-    msOffsets = [0,0,2000,4000]  # ms offsets for GPS, magnetometer, anemometer direction and anemometer speed
+    gpsDelay_ms = 0
+    anemDelay_ms = round(1000*float(PARAMS.get("ANEMDELAY",4.0)))
+    compassDelay_ms = round(1000*float(PARAMS.get("COMPASSDELAY",0.0)))
+    dirCorrectDelay_ms = float(1000*PARAMS.get("DIRCORRECTDELAY",2.0))
+
+    msOffsets = [0,compassDelay_ms,dirCorrectDelay_ms,anemDelay_ms]  # ms offsets for GPS, magnetometer, anemometer direction and anemometer speed
     syncDataSource = syncSources([gpsSource,wsSource,wsSource,wsSource],msOffsets,1000)
-    statsAvg = 20
+    statsAvg = int(PARAMS.get("STATSAVG",10))
     for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource))),statsAvg)):
         WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev])
 

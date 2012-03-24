@@ -107,9 +107,9 @@ class DrawOnPlatBatch(object):
                         setattr(self,varList[v],self.config['DEFAULTS'][v])
                     else: 
                         setattr(self,varList[v],None)
-                for v in varList:
-                    if v in self.config[secName]: 
-                        setattr(self,varList[v],self.config[secName][v])
+            for v in varList:
+                if v in self.config[secName]: 
+                    setattr(self,varList[v],self.config[secName][v])
             self.minAmpl = float(self.minAmpl)
             if isinstance(self.platList,type("")):
                 self.platList = [self.platList.strip()]

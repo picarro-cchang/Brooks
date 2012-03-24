@@ -6,9 +6,11 @@ import httplib
 import numpy as np
 import csv
 import os
+import re
 import sys
 import sets
 import threading
+import time
 import traceback
 from namedtuple import namedtuple
 from FindPlats import FindPlats
@@ -17,6 +19,8 @@ from configobj import ConfigObj
 DECIMATION_FACTOR = 20
 NOT_A_NUMBER = 1e1000/1e1000
 EARTH_RADIUS = 6378100
+
+AttrTuple = namedtuple('AttrTuple',['attr','default','conv'])
 
 class PasquillGiffordApprox(object):
     def __init__(self):
@@ -144,42 +148,74 @@ class DrawOnPlatBatch(object):
         self.padY = 200
         
     def run(self):
-        varList = {'DAT_FILE':'datFile','PEAKS_FILE':'peakFile',
-                   'MISS_FILE':'missFile','BOUNDARIES_FILE':'boundaryFile',
-                   'TIF_DIR':'tifDir','OUT_DIR':'outDir','MIN_AMP':'minAmpl',
-                   'PLATS':'platList','MIN_LEAK':'minLeak',
-                   'STABILITY_CLASS':'stabClass','SHOW_BUBBLES':'showBubbles'}
-        
+        varList = {re.compile('MISS_FILE$'):AttrTuple('missFile',None,lambda x:x),
+                   re.compile('BOUNDARIES_FILE$'):AttrTuple('boundaryFile',None,lambda x:x),
+                   re.compile('TIF_DIR$'):AttrTuple('tifDir',None,lambda x:x),
+                   re.compile('REPORT_DIR$'):AttrTuple('outDir',None,lambda x:x),
+                   re.compile('MIN_AMP$'):AttrTuple('minAmpl',0.1,lambda x:float(x)),
+                   re.compile('PLAT$'):AttrTuple('plat',None,lambda x:x),
+                   re.compile('MIN_LEAK$'):AttrTuple('minLeak',1.0,lambda x:float(x)),
+                   re.compile('STABILITY_CLASS(_[0-9]+)?$'):AttrTuple('stabClass',{'':'D'},lambda x:x),
+                   re.compile('SHOW_INDICATORS(_[0-9]+)?$'):AttrTuple('showIndicators',{'':1},lambda x:int(x)),
+                   re.compile('SHOW_MARKERS(_[0-9]+)?$'):AttrTuple('showMarkers',{'':1},lambda x:int(x)),
+                   re.compile('SHOW_LISA(_[0-9]+)?$'):AttrTuple('showLisa',{'':1},lambda x:int(x)),
+                   re.compile('SHOW_FOV(_[0-9]+)?$'):AttrTuple('showFov',{'':1},lambda x:int(x)),
+                   re.compile('DAT(_[0-9]+)?$'):AttrTuple('dat',{},lambda x:x),
+                   re.compile('FOV(_[0-9]+)?$'):AttrTuple('fov',{'':('FFA00040','FFA000FF')},lambda x:x)}
         for secName in self.config:
+            for k in varList:
+                setattr(self,varList[k].attr,varList[k].default)
             if secName == 'DEFAULTS': continue
             if 'DEFAULTS' in self.config:
-                for v in varList:
-                    if v in self.config['DEFAULTS']: 
-                        setattr(self,varList[v],self.config['DEFAULTS'][v])
-                    else: 
-                        setattr(self,varList[v],None)
-                for v in varList:
-                    if v in self.config[secName]: 
-                        setattr(self,varList[v],self.config[secName][v])
-            self.minAmpl = float(self.minAmpl)
-            self.minLeak = float(self.minLeak)
-            self.showBubbles = int(self.showBubbles)
-            if isinstance(self.platList,type("")):
-                self.platList = [self.platList.strip()]
+                for v in self.config['DEFAULTS']:
+                    for k in varList:
+                        varName = varList[k].attr
+                        result = k.match(v)
+                        if result:
+                            value = varList[k].conv(self.config['DEFAULTS'][v])
+                            if result.groups():
+                                if not hasattr(self,varName): setattr(self,varName,{})
+                                if result.group(1):
+                                    getattr(self,varName)[result.group(1)] = value
+                                else:
+                                    getattr(self,varName)[''] = value
+                            else:
+                                setattr(self,varName,value)
+            for v in self.config[secName]:
+                for k in varList:
+                    varName = varList[k].attr
+                    result = k.match(v)
+                    if result:
+                        value = varList[k].conv(self.config[secName][v])
+                        if result.groups():
+                            if not hasattr(self,varName): setattr(self,varName,{})
+                            if result.group(1):
+                                getattr(self,varName)[result.group(1)] = value
+                            else:
+                                getattr(self,varName)[''] = value
+                        else:
+                            setattr(self,varName,value)
+                            
             self.findPlats = FindPlats(self.boundaryFile)
             self.boundaries = np.load(self.boundaryFile,"rb")
             
-            try:
-                if not self.platList:
-                    platChoices = self.findPlats.search(self.datFile, DECIMATION_FACTOR)
-                else:
-                    platChoices = self.platList
-                
-                print "Plats to process: %s\nCreating composite plots\n" % platChoices
-                for p in platChoices:
-                    self._draw(p, self.datFile, self.peakFile, self.missFile, self.padX, self.padY)
-            except Exception:
-                print traceback.format_exc()
+            for k in self.dat:  # Iterate through keys of DAT
+                self.keyselect(['stabClass','showIndicators','showMarkers','showLisa','showFov','fov'],k)
+                datName = self.dat[k]
+                self.datFile = datName + '.dat'
+                self.peakFile = datName + '.peaks'
+                try:
+                    self._draw(self.plat, self.datFile, self.peakFile, self.missFile, self.padX, self.padY)
+                except Exception:
+                    print traceback.format_exc()
+                    
+    def keyselect(self,attrList,k):
+        for attr in attrList:
+            var = getattr(self,attr)
+            if k in var:
+                setattr(self,attr,var[k])
+            elif '' in var:
+                setattr(self,attr,var[''])
             
     def _draw(self, platName, datFile, peakFile, missFile, padX, padY):
         datTimestamp = "-".join(os.path.basename(self.datFile).split("-")[1:3])
@@ -215,13 +251,17 @@ class DrawOnPlatBatch(object):
         lastMeasured = None
         
         self.mpp = metersPerPixel(minlng,maxlng,minlat,maxlat,(nx,ny))
+        startTime = None
         for d in xReadDatFile(datFile):
             lng = d.GPS_ABS_LONG
             lat = d.GPS_ABS_LAT
+            t = d.EPOCH_TIME
+            if startTime is None:
+                startTime = time.strftime("%d %b %Y %H:%M",time.localtime(t))
             fit = d.GPS_FIT
             if fit>0:
                 x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
-                if (0<=x<nx) and (0<=y<ny):
+                if (0<=x<nx) and (0<=y<ny) and self.showFov:
                     path.append((padX+x,padY+y))
                     if "WIND_N" in d._fields:
                         windN = d.WIND_N
@@ -244,8 +284,11 @@ class DrawOnPlatBatch(object):
                                     ymax = max(y1,y2,y3,y4)
                                     temp = Image.new('RGBA',(xmax-xmin+1,ymax-ymin+1),(0,0,0,0))
                                     tdraw = ImageDraw.Draw(temp)
+                                    fill,outline = int(self.fov[0],16),int(self.fov[1],16)
+                                    fill = tuple([x&0xFF for x in (fill>>24,fill>>16,fill>>8,fill)])
+                                    outline = tuple([x&0xFF for x in (outline>>24,outline>>16,outline>>8,outline)])
                                     tdraw.polygon([(x1-xmin,y1-ymin),(x2-xmin,y2-ymin),(x3-xmin,y3-ymin),(x4-xmin,y4-ymin)],
-                                                    fill=(0xFF,0xA0,0x00,0x40),outline=(0xFF,0xA0,0x0,0xFF))
+                                                    fill=fill,outline=outline)
                                     mask = (padX+xmin,padY+ymin)
                                     q.paste(temp,mask,temp)
                             lastMeasured = LastMeasTuple(lat,lng,deltaLat,deltaLng)
@@ -285,57 +328,69 @@ class DrawOnPlatBatch(object):
             x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
             if (0<=x<nx) and (0<=y<ny) and (amp>self.minAmpl):
                 box = (padX+x-bx//2,padY+y-by)
-                # q.paste(b,box,mask=b)
+                if self.showIndicators: q.paste(b,box,mask=b)
                 if "WIND_N" in pk._fields:
                     wind = np.sqrt(windN*windN + windE*windE)
+                    radius = 50.0; speedmin = 0.5
                     meanBearing = (180.0/np.pi)*np.arctan2(windE,windN)
                     if not(np.isnan(wind) or np.isnan(meanBearing)):
                         minBearing = meanBearing-min(2*windSdev,180.0)
                         maxBearing = meanBearing+min(2*windSdev,180.0)
-                        radius = self.pg.getMaxDist(self.stabClass,self.minLeak,speed,self.minAmpl,u0=1.0,a=1,q=2)
-                        # Convert distance in meters to pixels
-                        radius = int(radius/self.mpp)
-                        odraw.pieslice((padX+x-radius,padY+y-radius,padX+x+radius,padY+y+radius),int(minBearing-90.0),int(maxBearing-90.0),
-                                        fill=(255,255,0,100),outline=(0,0,0,255))
-                odraw.text((padX+x,padY+y),"%.1f"%ch4,font=font,fill=(0,0,255,255))
+                        # If the windspeed is too low, increase uncertainty
+                        if wind<speedmin:
+                            minBearing = 0
+                            maxBearing = 359.99
+                    else:
+                        minBearing = 0
+                        maxBearing = 359.99
+                    # min(75.0,self.pg.getMaxDist(self.stabClass,self.minLeak,speed,self.minAmpl,u0=1.0,a=1,q=2))
+                    # Convert distance in meters to pixels
+                    radius = int(radius/self.mpp)
+                    if self.showLisa: odraw.pieslice((padX+x-radius,padY+y-radius,padX+x+radius,padY+y+radius),
+                        int(minBearing-90.0),int(maxBearing-90.0),fill=(255,255,0,150),outline=(0,0,0,255))
+                if not self.showIndicators: odraw.text((padX+x,padY+y),"%.1f"%ch4,font=font,fill=(0,0,255,255))
+
+        font1 = ImageFont.truetype("arial.ttf",80)
+        odraw.text((padX,50),"Plat %s, Start Time %s, MinAmpl %.3f" % (platName,startTime,self.minAmpl),font=font1,fill=(0,0,0,255))
+        q.paste(ov,mask=ov)
+
         cp = open(missFile,"rb")
         reader = csv.reader(cp)
-        color = {'P':'9090FF','T':'90FF90','B':'C0C0C0'}
+        color = {'P':'9090FF','T':'FF9090','B':'C0C0C0'}
         for i,row in enumerate(reader):
-            if i==1: # Headings
+            if i==0: # Headings
                 headings = [r.strip() for r in row]
                 LNG = headings.index('LONG')
                 LAT = headings.index('LAT')
                 GRADE = headings.index('GRADE')
                 CODE = headings.index('P/T/B')
-            elif i>1:
+                ID =  headings.index('Picarro Indication ID')
+            elif i>0:
                 try:
                     lng = float(row[LNG])
                     lat = float(row[LAT])
                     grade = row[GRADE]
                     code = row[CODE]
+                    id = int(row[ID])
                     x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
                     if (0<=x<nx) and (0<=y<ny) and (grade not in ['MS']):
-                        buff = cStringIO.StringIO(bubble.getMiss(5,100,"%d"%(i+1,),color[code]))
+                        buff = cStringIO.StringIO(bubble.getMiss(5,100,"%d"%(id,),color[code]))
                         b = Image.open(buff)
                         b = b.convert('RGBA')
                         bx,by = b.size
-                        print "Marker at", x,y
                         box = (padX+x-bx//2,padY+y-by)
-                        if self.showBubbles: q.paste(b,box,mask=b)
+                        if self.showMarkers: q.paste(b,box,mask=b)
                 except:
                     print traceback.format_exc()
                     print row
         cp.close()
         
-        q.paste(ov,mask=ov)
         # p.show()
         bubble.close()
         outputPngFile = os.path.join(self.outDir, platName + "_" + datTimestamp + "_%s.png" % (self.minAmpl,))
         q.save(outputPngFile,format="PNG")
         print "file:%s\n" % os.path.abspath(outputPngFile)
-        
-        
+                
 if __name__ == "__main__":
     app = DrawOnPlatBatch(sys.argv[1])
     app.run()

@@ -346,7 +346,7 @@ def trueWindSource(derivCdataSource,distFromAxle):
             den += real(d.zVel*conj(sVel)*exp(-1j*(phi-p0)))
 
         # Subtract velocity of vehicle
-        scale = 1.0
+        scale = float(PARAMS.get('SPEEDFACTOR',1.0))
         cVel = scale*sVel - abs(d.zVel)*exp(1j*axleCorr)
         
         # Rotate back to geographic coordinates
@@ -455,10 +455,14 @@ def windStatistics(windSource,statsInterval):
 def main():
     gpsSource = GpsSource(SENSORLIST[0])
     wsSource  = WsSource(SENSORLIST[1])
-    msOffsets = [0,0,1500]  # ms offsets for GPS, magnetometer and anemometer
-    distFromAxle = 1.5
+    gpsDelay_ms = 0
+    anemDelay_ms = round(1000*float(PARAMS.get("ANEMDELAY",1.5)))
+    compassDelay_ms = round(1000*float(PARAMS.get("COMPASSDELAY",0.0)))
+    distFromAxle = float(PARAMS.get("DISTFROMAXLE",1.5))
+    
+    msOffsets = [0,compassDelay_ms,anemDelay_ms]  # ms offsets for GPS, magnetometer and anemometer
     syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
-    statsAvg = 20
+    statsAvg = int(PARAMS.get("STATSAVG",10))
     for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle),statsAvg)):
         WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev])
 

@@ -13,6 +13,7 @@ import traceback
 from namedtuple import namedtuple
 from FindPlats import FindPlats
 from configobj import ConfigObj
+import time
 
 DECIMATION_FACTOR = 20
 NOT_A_NUMBER = 1e1000/1e1000
@@ -109,8 +110,7 @@ class DrawOnMapBatch(object):
     def run(self):
         self.gMap = GoogleMap()
         varList = {'DAT_FILE':'datFile','OUT_DIR':'outDir','MIN_AMP':'minAmpl',
-                   'LAT_CENTER': 'latCen', 'LON_CENTER':'lngCen', 'ZOOM':'zoom',
-                   'PNG_FILE': 'pngFile'}
+                   'LAT_CENTER': 'latCen', 'LON_CENTER':'lngCen', 'ZOOM':'zoom'}
         
         for secName in self.config:
             if secName == 'DEFAULTS': continue
@@ -154,17 +154,21 @@ class DrawOnMapBatch(object):
         ov = Image.new('RGBA',q.size,(0,0,0,0))
         # p = p.resize((nx//8,ny//8),Image.ANTIALIAS)
         odraw = ImageDraw.Draw(ov)
-        font = ImageFont.truetype("ariblk.ttf",60)
+        font = ImageFont.truetype("arial.ttf",20)
+
         # Draw the path of the vehicle
         path = []
         penDown = False
         LastMeasTuple = namedtuple("LastMeasTuple",["lat","lng","deltaLat","deltaLng"])
         lastMeasured = None
-        
+        startTime = None
         for d in xReadDatFile(datFile):
             lng = d.GPS_ABS_LONG
             lat = d.GPS_ABS_LAT
             fit = d.GPS_FIT
+            t = d.EPOCH_TIME
+            if startTime is None:
+                startTime = time.strftime("%d %b %Y %H:%M",time.localtime(t))
             if fit>0:
                 x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
                 if (0<=x<nx) and (0<=y<ny):
@@ -272,9 +276,11 @@ class DrawOnMapBatch(object):
                     # print row
         # cp.close()
         
+        odraw.text((padX,50),"Start Time %s, MinAmpl %.3f" % (startTime,self.minAmpl),font=font,fill=(0,0,0,255))
         q.paste(ov,mask=ov)
         bubble.close()
-        q.save(os.path.join(self.outDir,self.pngFile),format="PNG")                
+        pngFile = datFile.replace(".dat", ".png")
+        q.save(os.path.join(self.outDir,pngFile),format="PNG")                
         
 if __name__ == "__main__":
     app = DrawOnMapBatch(sys.argv[1])

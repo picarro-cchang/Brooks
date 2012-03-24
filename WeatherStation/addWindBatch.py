@@ -46,8 +46,9 @@ class AddWindBatch(object):
 
     def addWind(self):
         if not os.path.exists(self.outDir): os.makedirs(self.outDir)
-        offset = -4 # Time between ringdown measurement and derived wind data 
-        wind = aReadDatFile(self.windFile)
+        offset = self.analyzerOffset # Time between ringdown measurement and derived wind data 
+        windFileName = os.path.join(self.windDir,self.windFile)
+        wind = aReadDatFile(windFileName)
         datlogName = os.path.join(self.datDir,self.datFile)
         datlog = aReadDatFile(datlogName)
         itimes = datlog.EPOCH_TIME
@@ -86,8 +87,8 @@ class AddWindBatch(object):
 
         
     def run(self):
-        varList = {'DAT_DIR':'datDir','OUT_DIR':'outDir',
-                   'WIND_FILE':'windFile','DAT_FILE':'datFile'}
+        varList = {'DAT_DIR':'datDir','OUT_DIR':'outDir','GPS_WS_DIR':'windDir',
+                   'WIND_FILE':'windFile','DAT_FILE':'datFile','ANALYZER_OFFSET':'analyzerOffset'}
         
         for secName in self.config:
             if secName == 'DEFAULTS': continue
@@ -97,9 +98,10 @@ class AddWindBatch(object):
                         setattr(self,varList[v],self.config['DEFAULTS'][v])
                     else: 
                         setattr(self,varList[v],None)
-                for v in varList:
-                    if v in self.config[secName]: 
-                        setattr(self,varList[v],self.config[secName][v])
+            for v in varList:
+                if v in self.config[secName]: 
+                    setattr(self,varList[v],self.config[secName][v])
+            self.analyzerOffset = float(self.analyzerOffset)
             
             try:
                 print "Processing",os.path.join(self.datDir,self.datFile)
@@ -108,6 +110,7 @@ class AddWindBatch(object):
                 pf.userlogfiles = self.outFile
                 pf.debug = False
                 pf.noWait = True
+                pf.minAmpl = 0.01
                 pf.run()
                 
             except Exception:

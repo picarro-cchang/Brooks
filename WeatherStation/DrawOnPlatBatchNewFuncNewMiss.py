@@ -9,6 +9,7 @@ import os
 import sys
 import sets
 import threading
+import time
 import traceback
 from namedtuple import namedtuple
 from FindPlats import FindPlats
@@ -158,9 +159,9 @@ class DrawOnPlatBatch(object):
                         setattr(self,varList[v],self.config['DEFAULTS'][v])
                     else: 
                         setattr(self,varList[v],None)
-                for v in varList:
-                    if v in self.config[secName]: 
-                        setattr(self,varList[v],self.config[secName][v])
+            for v in varList:
+                if v in self.config[secName]: 
+                    setattr(self,varList[v],self.config[secName][v])
             self.minAmpl = float(self.minAmpl)
             self.minLeak = float(self.minLeak)
             self.showBubbles = int(self.showBubbles)
@@ -215,9 +216,13 @@ class DrawOnPlatBatch(object):
         lastMeasured = None
         
         self.mpp = metersPerPixel(minlng,maxlng,minlat,maxlat,(nx,ny))
+        startTime = None
         for d in xReadDatFile(datFile):
             lng = d.GPS_ABS_LONG
             lat = d.GPS_ABS_LAT
+            t = d.EPOCH_TIME
+            if startTime is None:
+                startTime = time.strftime("%d %b %Y %H:%M",time.localtime(t))
             fit = d.GPS_FIT
             if fit>0:
                 x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
@@ -292,31 +297,43 @@ class DrawOnPlatBatch(object):
                     if not(np.isnan(wind) or np.isnan(meanBearing)):
                         minBearing = meanBearing-min(2*windSdev,180.0)
                         maxBearing = meanBearing+min(2*windSdev,180.0)
-                        radius = self.pg.getMaxDist(self.stabClass,self.minLeak,speed,self.minAmpl,u0=1.0,a=1,q=2)
+                        # Define size of LISA to be rmax when speed>speedmin and
+                        #  to linearly increase up to this value for lower speeds
+                        rmax = 30.0; speedmin = 1.0
+                        if speed>speedmin: radius = rmax
+                        else: radius = speed*rmax/speedmin
+                        # min(75.0,self.pg.getMaxDist(self.stabClass,self.minLeak,speed,self.minAmpl,u0=1.0,a=1,q=2))
                         # Convert distance in meters to pixels
                         radius = int(radius/self.mpp)
                         odraw.pieslice((padX+x-radius,padY+y-radius,padX+x+radius,padY+y+radius),int(minBearing-90.0),int(maxBearing-90.0),
                                         fill=(255,255,0,100),outline=(0,0,0,255))
                 odraw.text((padX+x,padY+y),"%.1f"%ch4,font=font,fill=(0,0,255,255))
+
+        font1 = ImageFont.truetype("arial.ttf",80)
+        odraw.text((padX,50),"Plat %s, Start Time %s, MinAmpl %.3f" % (platName,startTime,self.minAmpl),font=font1,fill=(0,0,0,255))
+        q.paste(ov,mask=ov)
+
         cp = open(missFile,"rb")
         reader = csv.reader(cp)
-        color = {'P':'9090FF','T':'90FF90','B':'C0C0C0'}
+        color = {'P':'9090FF','T':'FF9090','B':'C0C0C0'}
         for i,row in enumerate(reader):
-            if i==1: # Headings
+            if i==0: # Headings
                 headings = [r.strip() for r in row]
                 LNG = headings.index('LONG')
                 LAT = headings.index('LAT')
                 GRADE = headings.index('GRADE')
                 CODE = headings.index('P/T/B')
-            elif i>1:
+                ID =  headings.index('Picarro Indication ID')
+            elif i>0:
                 try:
                     lng = float(row[LNG])
                     lat = float(row[LAT])
                     grade = row[GRADE]
                     code = row[CODE]
+                    id = int(row[ID])
                     x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
                     if (0<=x<nx) and (0<=y<ny) and (grade not in ['MS']):
-                        buff = cStringIO.StringIO(bubble.getMiss(5,100,"%d"%(i+1,),color[code]))
+                        buff = cStringIO.StringIO(bubble.getMiss(5,100,"%d"%(id,),color[code]))
                         b = Image.open(buff)
                         b = b.convert('RGBA')
                         bx,by = b.size
@@ -328,14 +345,12 @@ class DrawOnPlatBatch(object):
                     print row
         cp.close()
         
-        q.paste(ov,mask=ov)
         # p.show()
         bubble.close()
         outputPngFile = os.path.join(self.outDir, platName + "_" + datTimestamp + "_%s.png" % (self.minAmpl,))
         q.save(outputPngFile,format="PNG")
         print "file:%s\n" % os.path.abspath(outputPngFile)
-        
-        
+                
 if __name__ == "__main__":
     app = DrawOnPlatBatch(sys.argv[1])
     app.run()
