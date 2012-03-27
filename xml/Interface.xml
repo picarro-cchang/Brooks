@@ -514,6 +514,7 @@
             <enum_value ident="PEAK_DETECT_CNTRL_ArmedState" value="1" caption="Armed" />
             <enum_value ident="PEAK_DETECT_CNTRL_TriggerPendingState" value="2" caption="Trigger Pending" />
             <enum_value ident="PEAK_DETECT_CNTRL_TriggeredState" value="3" caption="Triggered" />
+            <enum_value ident="PEAK_DETECT_CNTRL_InactiveState" value="4" caption="Inactive" />
         </enum>
         <enum type="VIRTUAL_LASER_Type">
             <description>Virtual laser selection</description> 
@@ -2999,7 +3000,7 @@
         </register>
         <register ident="PEAK_DETECT_CNTRL_STATE_REGISTER" type="PEAK_DETECT_CNTRL_StateType" minver="1.0" access="rw">
             <description>Peak detection control app state register</description>
-            <initial>PEAK_DETECT_CNTRL_IdleState</initial>
+            <initial>PEAK_DETECT_CNTRL_InactiveState</initial>
             <display>Peak Detection Controller Mode</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER" type="uint32" minver="1.0" access="rw">
@@ -3086,6 +3087,12 @@
             <initial>0x0000</initial>
             <save/>
             <display format="$%04X">Triggered state valve mask and values</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Inactive state valve mask and value.</description>
+            <initial>0x0000</initial>
+            <save/>
+            <display format="$%04X">Inactive state valve mask and values</display>
         </register>
     </register_list>
     <i2c_list>

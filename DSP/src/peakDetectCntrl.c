@@ -6,12 +6,14 @@
  *   Peak detection controller routines for determining whether an eligible peak
  * in the "processedLoss" has been found. The routine runs periodically (typically every 0.2s)
  * and maintains a history buffer containing the previous processed losses. The controller
- * can be in one of three states:
+ * can be in one of these states:
  *
  *  PEAK_DETECT_CNTRL_IdleState: Do not process contents of history buffer
  *  PEAK_DETECT_CNTRL_ArmedState: Process contents of history buffer
  *  PEAK_DETECT_CNTRL_TriggerPendingState: Peak has been found in history buffer
  *  PEAK_DETECT_CNTRL_TriggeredState: triggerDelay samples have arrived since peak was found
+ *  PEAK_DETECT_CNTRL_InactiveState: Do not process contents of history buffer, used to indicate
+ *   non-survey mode for methane leak detection applications
  *
  * The minimum of the previous "backgroundSamples" points within the history buffer are used 
  *  determine the value of "background". If "backgroundSamples" is zero, the value of 
@@ -78,6 +80,7 @@
 #define armedValveMaskAndValue          (*(p->armedValveMaskAndValue_))
 #define triggerPendingValveMaskAndValue (*(p->triggerPendingValveMaskAndValue_))
 #define triggeredValveMaskAndValue      (*(p->triggeredValveMaskAndValue_))
+#define inactiveValveMaskAndValue       (*(p->inactiveValveMaskAndValue_))
 #define solenoidValves      (*(p->solenoidValves_))
 
 PeakDetectCntrl peakDetectCntrl;
@@ -103,6 +106,7 @@ int peakDetectCntrlInit(unsigned int processedLossRegisterIndex)
     p->armedValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER);
     p->triggerPendingValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER);
     p->triggeredValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER);
+    p->inactiveValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER);
     p->solenoidValves_ = (unsigned int *)registerAddr(VALVE_CNTRL_SOLENOID_VALVES_REGISTER);
     p->historyTail = 0;
     p->activeLength = 0;
@@ -217,6 +221,9 @@ int peakDetectCntrlStep()
         if (p->resetWait >= resetDelay) {
             state = PEAK_DETECT_CNTRL_IdleState;
         }
+    }
+    else if (state == PEAK_DETECT_CNTRL_InactiveState) {
+        solenoidValves = modifyValves(solenoidValves,inactiveValveMaskAndValue);
     }
     // Save state
     p->lastState = state;

@@ -12,6 +12,8 @@
  *  PEAK_DETECT_CNTRL_ArmedState: Process contents of history buffer
  *  PEAK_DETECT_CNTRL_TriggerPendingState: Peak has been found in history buffer
  *  PEAK_DETECT_CNTRL_TriggeredState: triggerDelay samples have arrived since peak was found
+ *  PEAK_DETECT_CNTRL_InactiveState: Do not process contents of history buffer, used to indicate
+ *   non-survey mode for methane leak detection applications
  *
  * Conceptually, the history buffer is cleared when entering the ArmedState. Up to "historySize"
  *  points are kept in the buffer, and on the introduction of each new processedLoss
@@ -68,6 +70,7 @@ typedef struct PEAK_DETECT_CNTRL
     unsigned int *armedValveMaskAndValue_;          // Valve mask and value for armed state
     unsigned int *triggerPendingValveMaskAndValue_; // Valve mask and value for trigger pending state
     unsigned int *triggeredValveMaskAndValue_;      // Valve mask and value for triggered state
+    unsigned int *inactiveValveMaskAndValue_;      // Valve mask and value for triggered state
     unsigned int *solenoidValves_;      // Solenoid valve mask
     unsigned int historyTail;
     unsigned int activeLength;

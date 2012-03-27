@@ -562,7 +562,8 @@ typedef enum {
     PEAK_DETECT_CNTRL_IdleState = 0, // Idle
     PEAK_DETECT_CNTRL_ArmedState = 1, // Armed
     PEAK_DETECT_CNTRL_TriggerPendingState = 2, // Trigger Pending
-    PEAK_DETECT_CNTRL_TriggeredState = 3 // Triggered
+    PEAK_DETECT_CNTRL_TriggeredState = 3, // Triggered
+    PEAK_DETECT_CNTRL_InactiveState = 4 // Inactive
 } PEAK_DETECT_CNTRL_StateType;
 
 typedef enum {
@@ -712,7 +713,7 @@ typedef enum {
 #define INJECTION_SETTINGS_lossTagShift (5)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (433)
+#define INTERFACE_NUMBER_OF_REGISTERS (434)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1147,6 +1148,7 @@ typedef enum {
 #define PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER (430)
 #define PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER (431)
 #define PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER (432)
+#define PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER (433)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0

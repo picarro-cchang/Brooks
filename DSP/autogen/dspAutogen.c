@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[433];
+RegTypes regTypes[434];
 
 /* I2C devices */
 I2C_device i2c_devices[33] = {
@@ -845,7 +845,7 @@ void initRegisters()
     writeRegister(PROCESSED_LOSS_3_REGISTER,d);
     d.asFloat = 0;
     writeRegister(PROCESSED_LOSS_4_REGISTER,d);
-    d.asUint = PEAK_DETECT_CNTRL_IdleState;
+    d.asUint = PEAK_DETECT_CNTRL_InactiveState;
     writeRegister(PEAK_DETECT_CNTRL_STATE_REGISTER,d);
     d.asUint = 200;
     writeRegister(PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER,d);
@@ -875,6 +875,8 @@ void initRegisters()
     writeRegister(PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER,d);
     d.asUint = 0x0000;
     writeRegister(PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER,d);
+    d.asUint = 0x0000;
+    writeRegister(PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -1308,6 +1310,7 @@ void initRegisters()
     regTypes[PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER] = uint_type;
     regTypes[PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER] = uint_type;
     regTypes[PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER] = uint_type;
+    regTypes[PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER] = uint_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
