@@ -223,7 +223,7 @@ class SpectrumCollector(object):
         # The following count "spectra" which are delimited by scheme rows which have bit-15 set in the subschemeId
         lastCount = -1
         thisCount = -1
-        MAXLOOPS = 100
+        MAXLOOPS = 500
         loops = 0
         while not self._shutdownRequested:
             #Pull a spectral point from the RD queue...
@@ -295,7 +295,7 @@ class SpectrumCollector(object):
             loops += 1
             if loops >= MAXLOOPS:
                 loops = 0
-                time.sleep(0.1)
+                time.sleep(0.01)
             
         Log("Spectrum Collector RPC handler shut down")
 
@@ -447,20 +447,10 @@ class SpectrumCollector(object):
                     self.closeHdf5File = False
                     self.newHdf5File = True
                     self.streamFP.close()
-                    time.sleep(1.0)
-                    # Copy to auxiliary spectrum file and reset filename to empty
-                    if self.auxSpectrumFile:
-                        try:
-                            shutil.copyfile(self.streamPath,self.auxSpectrumFile)
-                        except:
-                            Log("Error copying to auxiliary spectrum file %s" % self.auxSpectrumFile,Verbose=traceback.format_exc())
-                        self.auxSpectrumFile = ""
-                    time.sleep(1.0)
                     # Archive HDF5 file
-                    try:
-                        Archiver.ArchiveFile(self.archiveGroup, self.streamPath, True)
-                    except Exception:
-                        Log("Archiver call error",Verbose=traceback.format_exc())
+                    archiveThread = threading.Thread(target = self._archiveFile)
+                    archiveThread.setDaemon(True)
+                    archiveThread.start()
             else:
                 # Pickle the rdfDict 
                 filename = "%03d_%013d.rdf" % (self.lastSpectrumID, int(time.time()*1000))
@@ -477,7 +467,22 @@ class SpectrumCollector(object):
         self.spectrumBroadcaster.send(StringPickler.PackArbitraryObject(self.rdfDict))
 
         self.reset()
-        
+
+    def _archiveFile(self):
+        time.sleep(1.0)
+        # Copy to auxiliary spectrum file and reset filename to empty
+        if self.auxSpectrumFile:
+            try:
+                shutil.copyfile(self.streamPath,self.auxSpectrumFile)
+            except:
+                Log("Error copying to auxiliary spectrum file %s" % self.auxSpectrumFile,Verbose=traceback.format_exc())
+            self.auxSpectrumFile = ""
+        time.sleep(1.0)
+        try:
+            Archiver.ArchiveFile(self.archiveGroup, self.streamPath, True)
+        except Exception:
+            Log("Archiver call error",Verbose=traceback.format_exc())
+            
     # RPC functions which are handled by the sequencer
 
     @CmdFIFO.rpc_wrap

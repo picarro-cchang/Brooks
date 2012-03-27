@@ -723,6 +723,7 @@ PEAK_DETECT_CNTRL_IdleState = 0 # Idle
 PEAK_DETECT_CNTRL_ArmedState = 1 # Armed
 PEAK_DETECT_CNTRL_TriggerPendingState = 2 # Trigger Pending
 PEAK_DETECT_CNTRL_TriggeredState = 3 # Triggered
+PEAK_DETECT_CNTRL_InactiveState = 4 # Inactive
 
 # Dictionary for enumerated constants in PEAK_DETECT_CNTRL_StateType
 PEAK_DETECT_CNTRL_StateTypeDict = {}
@@ -730,6 +731,7 @@ PEAK_DETECT_CNTRL_StateTypeDict[0] = 'PEAK_DETECT_CNTRL_IdleState' # Idle
 PEAK_DETECT_CNTRL_StateTypeDict[1] = 'PEAK_DETECT_CNTRL_ArmedState' # Armed
 PEAK_DETECT_CNTRL_StateTypeDict[2] = 'PEAK_DETECT_CNTRL_TriggerPendingState' # Trigger Pending
 PEAK_DETECT_CNTRL_StateTypeDict[3] = 'PEAK_DETECT_CNTRL_TriggeredState' # Triggered
+PEAK_DETECT_CNTRL_StateTypeDict[4] = 'PEAK_DETECT_CNTRL_InactiveState' # Inactive
 
 # Enumerated definitions for VIRTUAL_LASER_Type
 VIRTUAL_LASER_Type = c_uint
@@ -984,7 +986,7 @@ INJECTION_SETTINGS_virtualLaserShift = 2
 INJECTION_SETTINGS_lossTagShift = 5
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 433
+INTERFACE_NUMBER_OF_REGISTERS = 434
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1419,6 +1421,7 @@ PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER = 429
 PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER = 430
 PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER = 431
 PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER = 432
+PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER = 433
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -2398,6 +2401,8 @@ registerByName["PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER"
 registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
 registerByName["PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER
 registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
 
 # FPGA block definitions
 
@@ -3189,7 +3194,7 @@ parameter_forms.append(('Loss Buffer Parameters',__p))
 
 __p = []
 
-__p.append(('dsp','choices',PEAK_DETECT_CNTRL_STATE_REGISTER,'Peak Detection Controller Mode','',[(PEAK_DETECT_CNTRL_IdleState,"Idle"),(PEAK_DETECT_CNTRL_ArmedState,"Armed"),(PEAK_DETECT_CNTRL_TriggerPendingState,"Trigger Pending"),(PEAK_DETECT_CNTRL_TriggeredState,"Triggered"),],1,1))
+__p.append(('dsp','choices',PEAK_DETECT_CNTRL_STATE_REGISTER,'Peak Detection Controller Mode','',[(PEAK_DETECT_CNTRL_IdleState,"Idle"),(PEAK_DETECT_CNTRL_ArmedState,"Armed"),(PEAK_DETECT_CNTRL_TriggerPendingState,"Trigger Pending"),(PEAK_DETECT_CNTRL_TriggeredState,"Triggered"),(PEAK_DETECT_CNTRL_InactiveState,"Inactive"),],1,1))
 __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER,'Number of samples for calculating background','samples','%d',1,1))
 __p.append(('dsp','float',PEAK_DETECT_CNTRL_BACKGROUND_REGISTER,'Background loss','ppm/cm','%.3f',1,1))
 __p.append(('dsp','float',PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER,'Upper threshold (relative to background)','ppm/cm','%.3f',1,1))
@@ -3204,6 +3209,7 @@ __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER,
 __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER,'Armed state valve mask and values','','$%04X',1,1))
 __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER,'Trigger pending state valve mask and values','','$%04X',1,1))
 __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER,'Triggered state valve mask and values','','$%04X',1,1))
+__p.append(('dsp','uint32',PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER,'Inactive state valve mask and values','','$%04X',1,1))
 parameter_forms.append(('Peak Detector Parameters',__p))
 
 # Form: Tuner Parameters
