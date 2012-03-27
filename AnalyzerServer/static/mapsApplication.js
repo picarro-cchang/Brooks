@@ -1,3 +1,5 @@
+//default (eng) values for dsp.  Override this 
+//for each language specific labels
 var COOKIE_PREFIX = "p3gdu";
 var COOKIE_NAMES = {};
 
@@ -18,12 +20,13 @@ var TXT = {
         download_files: 'Download Files',
         download_concs: 'Download Concentration',
         download_peaks: 'Download Peaks',
+        download_notes: 'Download Notes',
         anz_cntls: 'Analyzer Controls',
         restart_log: 'Restart Log',
+        switch_to_cptr: 'Start Capture',
         start_survey: "Start Survey",
         stop_survey: "Stop Survey",
         complete_survey: "Complete Survey",
-        switch_to_cptr: 'Start Capture',
         cancl_cptr: 'Cancel Capture',
         calibrate: 'Analyze Reference Gas',
         shutdown: 'Shutdown Analyzer',
@@ -62,11 +65,26 @@ var TXT = {
         show_markers: 'Show system markers on map',
         show_txt: 'Show',
         hide_txt: 'Hide',
+        plat_outline: 'Plat Outline',
+        hlite_plat: 'Highlight Current Plat',
+        remove_plat_hlite: 'Remove Current Highlight',
+        remove_all_plat_hlite: 'Remove Highlights for all plats',
+        select_active_plat: 'Set as Active Plat',
+        remove_active_plat: 'Set at Inactive Plat',
+        show_plat: 'Show plat',
+        remove_plat: 'Remove plat',
+
+        show_plat_outlines: 'Show plat outlines on map',
+        show_plat_image: 'Show plat image for this plat',
+        highlite_plat_outline: 'Highlight outline for this plat',
+        plat_menu: 'Plat Display Menu',
         working: 'Working',
+        plat: 'Plat',
+        calibration_pulse_injected: 'Calibration pulse injected',
         
         stream_title: 'Data Transfer Status Indicators',
         stream_ok: 'Data Transfer OK',
-        stream_warning: 'Intermitten Data Transfer',
+        stream_warning: 'Intermittent Data Transfer',
         stream_failed: 'Data Transfer Failed',
         gps_title: 'GPS Signal Quality Indicators',
         gps_ok: 'GPS Signal OK',
@@ -84,6 +102,7 @@ var TXT = {
 var HBTN = {
         exptLogBtn: '<div><button id="id_exptLogBtn" type="button" onclick="exportLog();" class="btn primary large fullwidth">' + TXT.download_concs + '</button></div>',
         exptPeakBtn: '<div><button id="id_exptPeakBtn" type="button" onclick="exportPeaks();" class="btn primary large fullwidth">' + TXT.download_peaks + '</button></div>',
+        exptNoteBtn: '<div><button id="id_exptNoteBtn" type="button" onclick="exportNotes();" class="btn primary large fullwidth">' + TXT.download_notes + '</button></div>',
         restartBtn: '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn primary large fullwidth">' + TXT.restart_log + '</button></div>',
         captureBtn: '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn primary large frontpage">' + TXT.switch_to_cptr + '</button></div>',
         cancelCapBtn: '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn primary large fullwidth">' + TXT.cancl_cptr + '</button></div>',
@@ -97,7 +116,9 @@ var HBTN = {
         switchToPrimeBtn: '<div><button id="id_switchToPrimeBtn" onclick="switchToPrime();" class="btn primary large fullwidth">' + TXT.switch_to_prime + '</button></div>',
         changeMinAmpCancelBtn: '<div><button id="id_changeMinAmpCancelBtn" onclick="changeMinAmpVal(false);" class="btn medium">' + TXT.cancel + '</button></div>',
         changeMinAmpOkBtn: '<div><button id="id_changeMinAmpOkBtn" onclick="changeMinAmpVal(true);" class="btn primary large fullwidth">' + TXT.ok + '</button></div>',
+        
         changeMinAmpOkHidBtn: '<div style="display: hidden;"><button id="id_changeMinAmpOkHidBtn" onclick="changeMinAmpVal(true);"/></div>',
+        allHliteCntl: '<div><button id="id_allHliteCntl" type="button" onclick="removeAllHlites();" class="btn primary large fullwidth">' + TXT.remove_all_plat_hlite + '</button></div>',
         surveyOnOffBtn: '<div><button id="id_surveyOnOffBtn" type="button" onclick="stopSurvey();" class="btn primary large frontpage">' + TXT.stop_survey + '</button></div>',
         completeSurveyBtn: '<div><button id="id_completeSurveyBtn" type="button" onclick="completeSurvey();" class="btn primary large fullwidth">' + TXT.complete_survey + '</button></div>',
     };
@@ -107,7 +128,6 @@ var HBTN = {
 var LBTNS = {
         downloadBtns: '<li>' + HBTN.downloadBtn + '</li>',
         analyzerCntlBtns: '<li>' + HBTN.surveyOnOffBtn + '</li><br/><li>' + HBTN.captureBtn + '</li><br/><li>' + HBTN.analyzerCntlBtn + '</li>',
-        exptBtns: '<li>' + HBTN.exptLogBtn + '</li><br/><li>' + HBTN.exptPeakBtn + '</li>',
     };
 
 // Fixed HTML pane
@@ -156,7 +176,17 @@ var CNSNT = {
         analyze_path_color: "#000000",
         streamwarning:  (1000 * 10),
         streamerror:  (1000 * 30),
-
+        
+        normal_plat_outline_color: "#000000",
+        normal_plat_outline_opacity: 0.4,
+        normal_plat_outline_weight: 0.5,
+        hlite_plat_outline_color: "#000000",
+        hlite_plat_outline_opacity: 0.8,
+        hlite_plat_outline_weight: 2,
+        active_plat_outline_color: "#008000",
+        active_plat_outline_opacity: 0.8,
+        active_plat_outline_weight: 3,
+        
         histMax: 200,
         datUpdatePeriod: 500,
         peakUpdatePeriod: 500,
@@ -166,6 +196,8 @@ var CNSNT = {
         progressUpdatePeriod: 2000,
         hmargin: 25,
         vmargin: 0,
+        map_topbuffer: 0,
+        map_bottombuffer: 0, 
 
         peakNoteList: ['amp', 'ch4', 'sigma', 'lat', 'lon'],
         analysisNoteList: ['conc', 'delta', 'uncertainty', 'lat', 'lon'],
@@ -175,7 +207,8 @@ var CNSNT = {
 
         svcurl: "/rest",
         callbacktest_url: "",
-        annotation_url: undefined,
+        callbacktest_timeout: 4000,
+        annotation_url: false,
 
         prime_view: true,
         log_sel_opts: [],
@@ -192,7 +225,10 @@ var CNSNT = {
         dtr : Math.PI/180.0,    // Degrees to radians
         rtd : 180.0/Math.PI,    // Radians to degrees
         
-        cookie_duration: 14
+        cookie_duration: 14,
+        dashboard_app: false,
+
+        loader_gif_img: '<img src="/static/images/ajax-loader.gif" alt="processing"/>'
     };
 
 // Current State
@@ -200,6 +236,8 @@ var CSTATE = {
         net_abort_count: 0,
         follow: true,
         overlay: false,
+        activePlatName: "",
+        
         prime_available: false,
         prime_test_count: 0,
         green_count: 2,
@@ -227,6 +265,7 @@ var CSTATE = {
         showAbubble: true,
         showWbubble: true,
         showSwath: true,
+        showPlat: true,
 
         lastwhere: '',
         lastFit: '',
@@ -251,6 +290,10 @@ var CSTATE = {
         nextAnalysisUtm: 0.0,
         nextPeakUtm: 0.0,
         nextDatUtm: 0.0,
+        clearDatNote: false,
+        clearPeakNote: false,
+        clearAnalysisNote: false,
+
         startPos: null,
 
         ignoreTimer: false,
@@ -289,6 +332,10 @@ var CSTATE = {
         pobj: [],
 
         noteSortSel: undefined,
+        resize_for_conc_data: true,
+
+        getDataLimit: 1000,
+
     };
 
 var TIMER = {
@@ -423,6 +470,37 @@ function newPoint(x, y) {
     // return new Microsoft.Maps.Point(x, y);
 }
 
+function newRectangle(minlng, maxlng, minlat, maxlat) {
+    var sw, ne, bounds, rectOpts, rect;
+
+    sw = newLatLng(minlat, minlng);
+    ne = newLatLng(maxlat, maxlng);
+    bounds = new google.maps.LatLngBounds(sw, ne);
+
+    rectOpts = {
+        strokeColor: CNSNT.normal_plat_outline_color,
+        strokeOpacity: CNSNT.normal_plat_outline_opacity,
+        strokeWeight: CNSNT.normal_plat_outline_weight,
+        fillColor: "#FFFFFF",
+        fillOpacity: 0,
+        bounds: bounds,
+        editable: false,
+        visible: true
+    };
+
+    return rect = new google.maps.Rectangle(rectOpts);
+}
+
+function newGroundOverlay(minlng, maxlng, minlat, maxlat, img) {
+    var sw, ne, bounds, goOpts, go;
+
+    sw = newLatLng(minlat, minlng);
+    ne = newLatLng(maxlat, maxlng);
+    bounds = new google.maps.LatLngBounds(sw, ne);
+
+    return go = new google.maps.GroundOverlay(img, bounds);
+}
+
 function newAnzLocationMarker(map) {
     var mk = new google.maps.Marker({position: map.getCenter(), visible: false});
     mk.setMap(map);
@@ -440,7 +518,6 @@ function newPeakMarker(map, latLng, amp, sigma, ch4) {
         title: TXT.amp + ": " + amp.toFixed(2) + " " + TXT.sigma + ": " + sigma.toFixed(1),
         icon: "http://chart.apis.google.com/chart?chst=d_map_spin&chld=" + size + "|0|40FFFF|" + fontsize + "|b|" + ch4.toFixed(1)
         });
-    mk.setMap(map);
     mk.setMap(map);
     return mk;
     // var mk = new Microsoft.Maps.Pushpin(map.getCenter(), null); 
@@ -549,6 +626,7 @@ function removeListener(handle) {
 
 function clearPeakMarkerArray() {
     var i, ky;
+    CSTATE.clearLeaks = true;
     CSTATE.peakNoteDict = {};
     for (i = 0; i < CSTATE.peakMarkers.length; i += 1) {
         CSTATE.peakMarkers[i].setMap(null);
@@ -559,11 +637,11 @@ function clearPeakMarkerArray() {
     CSTATE.peakMarkers = [];
     CSTATE.peakBblListener = {};
     CSTATE.leakLine = 1;
-    CSTATE.clearLeaks = true;
 }
 
 function clearAnalysisMarkerArray() {
     var i, ky;
+    CSTATE.clearAnalyses = true;
     CSTATE.analysisNoteDict = {};
     for (i = 0; i < CSTATE.analysisMarkers.length; i += 1) {
         CSTATE.analysisMarkers[i].setMap(null);
@@ -574,21 +652,21 @@ function clearAnalysisMarkerArray() {
     CSTATE.analysisMarkers = [];
     CSTATE.analysisBblListener = {};
     CSTATE.analysisLine = 1;
-    CSTATE.clearAnalyses = true;
 }
 
 function clearWindMarkerArray() {
     var i;
+    CSTATE.clearWind = true;
     for (i = 0; i < CSTATE.windMarkers.length; i += 1) {
         CSTATE.windMarkers[i].setMap(null);
     }
     CSTATE.windMarkers = [];
     CSTATE.windLine = 1;
-    CSTATE.clearWind = true;
 }
 
 function clearDatNoteMarkers(emptyTheDict) {
     var ky;
+    CSTATE.clearDatNote = true;
     for (ky in CSTATE.datNoteMarkers) {
         CSTATE.datNoteMarkers[ky].setMap(null);
     }
@@ -607,6 +685,7 @@ function clearDatNoteMarkers(emptyTheDict) {
 
 function clearAnalysisNoteMarkers() {
     var ky;
+    CSTATE.clearAnalysisNote = true;
     for (ky in CSTATE.analysisNoteMarkers) {
         CSTATE.analysisNoteMarkers[ky].setMap(null);
     }
@@ -621,6 +700,7 @@ function clearAnalysisNoteMarkers() {
 
 function clearPeakNoteMarkers() {
     var ky;
+    CSTATE.clearPeakNote = true;
     for (ky in CSTATE.peakNoteMarkers) {
         CSTATE.peakNoteMarkers[ky].setMap(null);
     }
@@ -760,27 +840,40 @@ function resize_map() {
     var pge_wdth, hgth_top, lpge_wdth, new_width, new_height, new_top, cen;
     pge_wdth = $('#id_topbar').width();
     hgth_top = $('#id_topbar').height() + $('#id_feedback').height() + $('#id_content_title').height();
-    lpge_wdth = $('#id_sidebar').width();
 
+
+    if ($('#id_sidebar')) {
+        lpge_wdth = $('#id_sidebar').width();
+    } else {
+        lpge_wdth = 0;
+    }
     new_width = pge_wdth - CNSNT.hmargin;
     new_height = winH - hgth_top - CNSNT.hmargin - 40;
     new_top = hgth_top + CNSNT.vmargin;
 
     $("#id_modal_span").css('position', 'absolute');
     $("#id_modal_span").css('top', hgth_top);
-    new_top_margin = -10;
-    if (new_width < 640) {
-        new_top = new_top + new_top_margin;
-        new_height = new_height - new_top_margin;
+
+    var placeholder_wdth = document.getElementById("placeholder").clientWidth;
+    var concData_wdth = document.getElementById("concData").clientWidth;
+    var placeConc = placeholder_wdth + concData_wdth + 5;
+    
+    var idwdth = document.getElementById("id_feedback").clientWidth;
+    var idhgth = document.getElementById("concData").clientHeight;
+    //alert("id_feedback height: " + idhgth + "  width: " + idwdth);
+    
+    if (placeConc > idwdth) {
+        new_top = new_top + idhgth;
+        new_height = new_height - idhgth;
         $("#id_modal_span").css('left', CNSNT.hmargin);
     } else {
         $("#id_modal_span").css('left', lpge_wdth + CNSNT.hmargin);
     }
-
+    
     $("#id_side_modal_span").css('position', 'absolute');
     $("#id_side_modal_span").css('top', hgth_top);
-    new_top = new_top + new_top_margin;
-    new_height = new_height - new_top_margin;
+    new_top = new_top + CNSNT.map_topbuffer;
+    new_height = new_height - CNSNT.map_bottombuffer;
     $("#id_side_modal_span").css('left', CNSNT.hmargin);
 
     $('#map_canvas').css('position', 'absolute');
@@ -870,13 +963,35 @@ function modalPanePrimeControls() {
     $("#id_restartBtn").focus();
 }
 
-function exportControls() {
-    var modalChrome, exportBtns;
-    exportBtns = '<ul class="inputs-list">' + LBTNS.exptBtns + '</ul><br/>';
+function modalPaneExportControls() {
+    var modalChrome, exportBtns, hdr, body, footer, c1array, c2array;
 
-    modalChrome = setModalChrome('<h3>' + TXT.download_files + '</h3>',
-        exportBtns,
-        HBTN.modChangeCloseBtn
+    c1array = [];
+    c2array = [];
+    
+    c1array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c2array.push('style="border-style: none; width: 50%;"');
+    c1array.push('');
+    c2array.push(HBTN.exptLogBtn);
+    c1array.push('');
+    c2array.push(HBTN.exptPeakBtn);
+    c1array.push('');
+    c2array.push(HBTN.exptNoteBtn);
+    body = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c1array.push('<h3>' + TXT.download_files + '</h3>');
+    c2array.push(HBTN.modChangeCloseBtn);
+    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+    footer = '';
+    
+    modalChrome = setModalChrome(
+        hdr,
+        body,
+        footer
         );
 
     $("#id_mod_change").html(modalChrome);
@@ -898,9 +1013,17 @@ function exportPeaks() {
     window.location = url;
 }
 
-function selectLog() {
-    var options, i, len, row, selected, opendiv, closediv, btns, modalChangeMinAmp;
+function exportNotes() {
+    var apath, url;
 
+    apath = CSTATE.alog.replace(".dat", ".notes");
+    url = CNSNT.svcurl + '/sendLog?alog=' + apath;
+
+    window.location = url;
+}
+
+function modalPaneSelectLog() {
+    var options, i, len, row, selected, opendiv, closediv, btns, modalChangeMinAmp, hdr, body, footer, c1array, c2array;
     options = "";
 
     len = CNSNT.log_sel_opts.length;
@@ -913,23 +1036,36 @@ function selectLog() {
         options += '<option value="' + row[0] + '"' + selected + '>' + row[1] + '</option>';
     }
 
-    opendiv = "<div>";
-    closediv = "</div>";
-    btns = "";
-
+    c1array = [];
+    c2array = [];
+    
+    c1array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c2array.push('style="border-style: none; width: 50%;"');
+    
+    c1array.push('<select id="id_selectLog" class="large">' + options + '</select>');
+    c2array.push(HBTN.switchLogBtn);
+    
     if (CSTATE.prime_available) {
-        btns = '&nbsp;&nbsp;' + HBTN.switchLogBtn +
-            '&nbsp;&nbsp;' + HBTN.switchToPrimeBtn;
-    } else {
-        btns = '&nbsp;&nbsp;' + HBTN.switchLogBtn;
+        c1array.push("");
+        c2array.push("");
+        c1array.push('');
+        c2array.push(HBTN.switchToPrimeBtn);
     }
+    body = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
 
-    modalChangeMinAmp = setModalChrome('<h3>' + TXT.select_log + '</h3>',
-        opendiv +
-        '<select id="id_selectLog" class="large">' + options + '</select>' +
-        btns +
-        closediv,
-        HBTN.modChangeCloseBtn
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c1array.push('<h3>' + TXT.select_log + '</h3>');
+    c2array.push(HBTN.modChangeCloseBtn);
+    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+    footer = '';
+    
+    modalChangeMinAmp = setModalChrome(
+        hdr,
+        body,
+        footer
         );
 
     $("#id_mod_change").html(modalChangeMinAmp);
@@ -1003,7 +1139,7 @@ function testPrime() {
                 dataType: "jsonp",
                 url: url,
                 type: "get",
-                timeout: 60000,
+                timeout: CNSNT.callbacktest_timeout,
                 success: function () {
                     CSTATE.prime_available = true;
                     TIMER.prime = null;
@@ -1125,6 +1261,46 @@ function showPbubbleCb() {
     }
     btxt += " " + TXT.pbubble;
     $('#id_showPbubbleCb').html(btxt);
+}
+
+function showPlatCb() {
+    var btxt, showPlatCntl;
+    if (CSTATE.showPlat === false) {
+        CSTATE.showPlat = true;
+        show_plat_outlines();
+    } else {
+        CSTATE.showPlat = false;
+        hide_plat_outlines();
+    }
+    setCookie(COOKIE_NAMES.plat, (CSTATE.showPlat) ? "1" : "0", CNSNT.cookie_duration);
+
+    btxt = TXT.show_txt;
+    if (CSTATE.showPlat) {
+        btxt = TXT.hide_txt;
+    }
+    btxt += " " + TXT.plat_outline;
+    $('#id_showPlatCb').html(btxt);
+}
+
+function showTifCb() {
+    var plobj, hcntl, img;
+    plobj = PLATOBJS[CSTATE.activePlatName];
+    
+    if (plobj.show_tiff === true) {
+        plobj.show_tiff = false;
+        if (plobj.go !== null) {
+            plobj.go.setMap(null);
+        }
+    } else {
+        plobj.show_tiff = true;
+        img = PLAT_IMG_BASE + CSTATE.activePlatName.replace('tif', 'png');
+        if (plobj.go === null) {
+            plobj.go = newGroundOverlay(plobj.minlng, plobj.maxlng, plobj.minlat, plobj.maxlat, img);
+            attachGoListener(plobj.go, CSTATE.activePlatName);
+        }
+        plobj.go.setMap(null);
+        plobj.go.setMap(CSTATE.map);
+    }
 }
 
 function showAbubbleCb() {
@@ -1573,7 +1749,13 @@ function modalPaneMapControls() {
         abchkd = TXT.hide_txt;
     }
     abchkd += " " + TXT.abubble;
-    
+
+    platchkd = TXT.show_txt;
+    if (CSTATE.showPlat) {
+        platchkd = TXT.hide_txt;
+    }
+    platchkd += " " + TXT.plat_outline;
+
     wbchkd = TXT.show_txt;
     if (CSTATE.showWbubble) {
         wbchkd = TXT.hide_txt;
@@ -1586,15 +1768,17 @@ function modalPaneMapControls() {
     }
     swchkd += " " + TXT.swath;
     
-    showDnoteCntl = '<div><button id="id_showDnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showDnoteCb") + ');" class="btn primary large fullwidth">' + dchkd + '</button></div>',
-    showPnoteCntl = '<div><button id="id_showPnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPnoteCb") + ');" class="btn primary large fullwidth">' + pchkd + '</button></div>',
-    showAnoteCntl = '<div><button id="id_showAnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAnoteCb") + ');" class="btn primary large fullwidth">' + achkd + '</button></div>',
+    showDnoteCntl = '<div><button id="id_showDnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showDnoteCb") + ');" class="btn primary large fullwidth">' + dchkd + '</button></div>';
+    showPnoteCntl = '<div><button id="id_showPnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPnoteCb") + ');" class="btn primary large fullwidth">' + pchkd + '</button></div>';
+    showAnoteCntl = '<div><button id="id_showAnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAnoteCb") + ');" class="btn primary large fullwidth">' + achkd + '</button></div>';
 
-    showPbubbleCntl = '<div><button id="id_showPbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPbubbleCb") + ');" class="btn primary large fullwidth">' + pbchkd + '</button></div>',
-    showAbubbleCntl = '<div><button id="id_showAbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAbubbleCb") + ');" class="btn primary large fullwidth">' + abchkd + '</button></div>',
-    showWbubbleCntl = '<div><button id="id_showWbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showWbubbleCb") + ');" class="btn primary large fullwidth">' + wbchkd + '</button></div>',
-    showSwathCntl   = '<div><button id="id_showSwathCb"   type="button" onclick="workingBtnPassThrough(' + single_quote("showSwathCb") + ');"   class="btn primary large fullwidth">' + swchkd + '</button></div>',
-    changeMinAmpCntl= '<div><button id="id_changeMinAmp"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestMinAmpChange") + ');"   class="btn primary large fullwidth">' + TXT.change_min_amp + '</button></div>',
+    showPbubbleCntl = '<div><button id="id_showPbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPbubbleCb") + ');" class="btn primary large fullwidth">' + pbchkd + '</button></div>';
+    showAbubbleCntl = '<div><button id="id_showAbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAbubbleCb") + ');" class="btn primary large fullwidth">' + abchkd + '</button></div>';
+
+    showPlatCntl = '<div><button id="id_showPlatCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPlatCb") + ');" class="btn primary large fullwidth">' + platchkd + '</button></div>';
+    showWbubbleCntl = '<div><button id="id_showWbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showWbubbleCb") + ');" class="btn primary large fullwidth">' + wbchkd + '</button></div>';
+    showSwathCntl   = '<div><button id="id_showSwathCb"   type="button" onclick="workingBtnPassThrough(' + single_quote("showSwathCb") + ');"   class="btn primary large fullwidth">' + swchkd + '</button></div>';
+    changeMinAmpCntl= '<div><button id="id_changeMinAmp"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestMinAmpChange") + ');"   class="btn primary large fullwidth">' + TXT.change_min_amp + '</button></div>';
     
     body = "";
     c1array = [];
@@ -1610,17 +1794,16 @@ function modalPaneMapControls() {
     c2array.push(showSwathCntl);
     
     c1array.push(changeMinAmpCntl);
+    c2array.push(showPlatCntl);
     
     if (CNSNT.annotation_url) {
-        c2array.push(showPnoteCntl);
-        c1array.push(showAnoteCntl);
+        c1array.push(showPnoteCntl);
+        c2array.push(showAnoteCntl);
         
-        c2array.push(showDnoteCntl);
-        
-    } else {
+        c1array.push(showDnoteCntl);
         c2array.push('');
     }
-    
+
     body += '<div class="clearfix">';
     tbl = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
     body += tbl;
@@ -1634,7 +1817,7 @@ function modalPaneMapControls() {
     c2array.push(HBTN.modChangeCloseBtn);
     hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
     footer = '';
-    
+
     modalPane = setModalChrome(
         hdr,
         body,
@@ -1643,6 +1826,195 @@ function modalPaneMapControls() {
 
     $("#id_mod_change").html(modalPane);
     $("#id_showDnoteCb").focus();
+}
+
+function platPane(plname) {
+    var modalChange, hdr, body, footer, plobj, plnameQte, hliteBtn;
+    plobj = PLATOBJS[plname];
+    hliteBtn = '<div><button id="id_hliteBtn" onclick="hlitePlat(' + single_quote(plname) + ');" class="btn primary large">' + TXT.highlite_plat_outline + '</button></div>';
+    //hliteBtn = '<div><button id="id_hliteBtn" onclick="hlitePlat();" class="btn primary large">' + TXT.highlite_plat_outline + '</button></div>';
+    
+    body = "";
+    body += "<h3>" + plname + "</h3>";
+    body += hliteBtn;
+    body += HBTN.modChangeCloseBtn;
+    
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c1array.push('<h3>' + TXT.plat_menu + '</h3>');
+    c2array.push(HBTN.modChangeCloseBtn);
+    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+    footer = "";
+
+    modalChange = setModalChrome(
+        hdr,
+        body,
+        footer
+        );
+
+    $("#id_mod_change").html(modalChange);
+}
+
+function modalPanePlatControls(plname) {
+    var modalPane, plobj, hcntl, hliteCntl, showTifCntl, hdr, body, footer, c1array, c2array;
+    plobj = PLATOBJS[plname];
+
+    hcntl = TXT.hlite_plat;
+    if (plobj.hlite === true) {
+        hcntl = TXT.remove_plat_hlite;
+    }
+    hliteCntl = '<div><button id="id_hliteCntl" type="button" onclick="hlitePlat(' + single_quote(plname) + ');" class="btn primary large fullwidth">' + hcntl + '</button></div>';
+
+    acntl = TXT.select_active_plat;
+    if (plobj.active === true) {
+        acntl = TXT.remove_active_plat;
+    } 
+    activeCntl = '<div><button id="id_activeCntl" type="button" onclick="setActivePlat(' + single_quote(plname) + ');" class="btn primary large fullwidth">' + acntl + '</button></div>';
+    
+    c1array = [];
+    c2array = [];
+    
+    c1array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c2array.push('style="border-style: none; width: 50%;"');
+    
+    c1array.push(hliteCntl);
+    c2array.push(activeCntl);
+    c1array.push('<span id="allHliteCntlSpan">' + HBTN.allHliteCntl + '</span>');
+    c2array.push("");
+    
+    body = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+    
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c1array.push("<h3>" + TXT.plat + " " + plname.replace('.tif', '') + "</h3>");
+    c2array.push(HBTN.modChangeCloseBtn);
+    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
+    footer = "";
+
+    modalPane = setModalChrome(
+    hdr,
+    body,
+    footer
+    );
+    $("#id_mod_change").html(modalPane);
+}
+
+function removeAllHlites() {
+    var plname, plobj, rect;
+    $("#allHliteCntlSpan").html(CNSNT.loader_gif_img);
+    if (PLATOBJS) {
+        for (plname in PLATOBJS) {
+            plobj = PLATOBJS[plname];
+            if (plobj.hlite === true) {
+                hlitePlat(plname)
+            }
+        }
+    }
+    $("#allHliteCntlSpan").html(HBTN.allHliteCntl);
+    
+}
+
+function hlitePlat(plname) {
+    var plobj, hcntl;
+    plobj = PLATOBJS[plname];
+
+    if (plobj.hlite === true) {
+        hcntl = TXT.hlite_plat;
+        plobj.hlite = false;
+        if (!plobj.active) {
+            plobj.rect.setOptions({
+                strokeColor: CNSNT.normal_plat_outline_color,
+                strokeOpacity: CNSNT.normal_plat_outline_opacity,
+                strokeWeight: CNSNT.normal_plat_outline_weight,
+                visible: true
+            });
+        }
+    } else {
+        hcntl = TXT.remove_plat_hlite
+        plobj.hlite = true;
+        if (!plobj.active) {
+            plobj.rect.setOptions({
+                strokeColor: CNSNT.hlite_plat_outline_color,
+                strokeOpacity: CNSNT.hlite_plat_outline_opacity,
+                strokeWeight: CNSNT.hlite_plat_outline_weight,
+                visible: true
+            });
+        }
+    }
+    plobj.rect.setMap(null);
+    plobj.rect.setMap(CSTATE.map);
+    
+    $("#id_hliteCntl").html(hcntl);
+}
+
+function restoreHlitePlat(plobj) {
+    if (plobj.hlite === true) {
+        plobj.rect.setOptions({
+            strokeColor: CNSNT.hlite_plat_outline_color,
+            strokeOpacity: CNSNT.hlite_plat_outline_opacity,
+            strokeWeight: CNSNT.hlite_plat_outline_weight,
+            visible: true
+        });
+    } else {
+        plobj.rect.setOptions({
+            strokeColor: CNSNT.normal_plat_outline_color,
+            strokeOpacity: CNSNT.normal_plat_outline_opacity,
+            strokeWeight: CNSNT.normal_plat_outline_weight,
+            visible: true
+        });
+    } 
+}
+
+function setActivePlat(plname) {
+    var plobj, actPlObj, acntl;
+    plobj = PLATOBJS[plname];
+
+    // Remove the old active plat if it's different from the current selection (only one can be active)
+    if ((CSTATE.activePlatName !== plname) && (CSTATE.activePlatName !== "")) {
+        try {
+            actPlObj = PLATOBJS[CSTATE.activePlatName];
+            if (actPlObj.active === true) {
+                actPlObj.active = false;
+                restoreHlitePlat(actPlObj);
+            }
+            // Hide the overlay of old active plat
+            if (CSTATE.overlay) {
+                hideTifCb();
+            }
+        } catch(err) {
+            actPlObj = null;
+        }
+    }
+    
+    if (plobj.active === true) {
+        if (CSTATE.overlay) {
+            hideTifCb();
+        }
+        CSTATE.activePlatName = "";
+        acntl = TXT.select_active_plat;
+        plobj.active = false;
+        restoreHlitePlat(plobj);
+    } else {
+        CSTATE.activePlatName = plname;
+        acntl = TXT.remove_active_plat;
+        plobj.active = true;
+        plobj.rect.setOptions({
+            strokeColor: CNSNT.active_plat_outline_color,
+            strokeOpacity: CNSNT.active_plat_outline_opacity,
+            strokeWeight: CNSNT.active_plat_outline_weight,
+            visible: true
+        });
+        if (CSTATE.overlay) {
+            showTifCb();
+        }
+    }
+    plobj.rect.setMap(null);
+    plobj.rect.setMap(CSTATE.map);
+    $("#id_activeCntl").html(acntl);
 }
 
 function colorPathFromValveMask(value) {
@@ -1845,7 +2217,7 @@ function getNearest(currentHash, maxNeighbors) {
 }
 
 function initialize_gdu(winH, winW) {
-    var mapTypeCookie, current_zoom, followCookie, overlayCookie, minAmpCookie, latCookie, dnoteCookie, pnoteCookie, anoteCookie;
+    var mapTypeCookie, current_zoom, followCookie, overlayCookie, minAmpCookie, latCookie, dnoteCookie, pnoteCookie, anoteCookie, new_height;
     var abubbleCookie, pbubbleCookie, wbubbleCookie, swathCookie;
     pge_wdth = $('#id_topbar').width();
     $('#map_canvas').css('height', winH - 200);
@@ -1885,6 +2257,11 @@ function initialize_gdu(winH, winW) {
     abubbleCookie = getCookie(COOKIE_NAMES.abubble);
     if (abubbleCookie) {
         CSTATE.showAbubble = parseInt(abubbleCookie, 2);
+    }
+
+    platCookie = getCookie(COOKIE_NAMES.plat);
+    if (platCookie) {
+        CSTATE.showPlat = parseInt(platCookie, 2);
     }
 
     wbubbleCookie = getCookie(COOKIE_NAMES.wbubble);
@@ -2053,14 +2430,43 @@ function changeFollow() {
 function changeOverlay() {
     var checked = $("#id_overlay").attr("data-checked");
     if (checked == 'true') {
-        // Function placeholder
+        showTifCb();
         $("#id_overlay").attr("class","overlay-checked").attr("data-checked",'false')
         CSTATE.overlay = true;
     } else {
-        CSTATE.overlay = false;
+        hideTifCb();
         $("#id_overlay").attr("class","overlay").attr("data-checked",'true')
+        CSTATE.overlay = false;
     }
     setCookie("pcubed_overlay", (CSTATE.overlay) ? "1" : "0", CNSNT.cookie_duration);
+}
+
+function showTifCb() {
+    var plobj, img;
+    try {
+        plobj = PLATOBJS[CSTATE.activePlatName];
+        img = PLAT_IMG_BASE + CSTATE.activePlatName.replace('tif', 'png');
+        if (plobj.go === null) {
+            plobj.go = newGroundOverlay(plobj.minlng, plobj.maxlng, plobj.minlat, plobj.maxlat, img);
+            attachGoListener(plobj.go, CSTATE.activePlatName);
+        }
+        plobj.go.setMap(null);
+        plobj.go.setMap(CSTATE.map);
+    } catch(err) {
+        plobj = null;
+    }
+}
+
+function hideTifCb() {
+    var plobj;
+    try {
+        plobj = PLATOBJS[CSTATE.activePlatName];
+        if (plobj.go !== null) {
+            plobj.go.setMap(null);
+        }
+    } catch(err) {
+        plobj = null;
+    }
 }
 
 function changeMinAmp() {
@@ -2203,7 +2609,7 @@ function statCheck() {
 
 function getData() {
     //if (startPos) {startPosStr = startPos;} else {startPosStr = 'null';};
-    var params = {'startPos': CSTATE.startPos, 'alog': CSTATE.alog, 'gmtOffset': CNSNT.gmt_offset, 
+    var params = {'limit': CSTATE.getDataLimit, 'startPos': CSTATE.startPos, 'alog': CSTATE.alog, 'gmtOffset': CNSNT.gmt_offset, 
         'varList': '["GPS_ABS_LAT","GPS_ABS_LONG","GPS_FIT","CH4","ValveMask", "INST_STATUS", "WIND_N", "WIND_E", "WIND_DIR_SDEV"]'};
     call_rest(CNSNT.svcurl, "getData", params,
             function (json, status, jqXHR) {
@@ -2362,6 +2768,13 @@ function successData(data) {
                 clearPeakNoteMarkers();
                 clearAnalysisNoteMarkers();
                 clearDatNoteMarkers(true);
+
+                if (CSTATE.showPlat === true) {
+                    show_plat_outlines();
+                } else {
+                    hide_plat_outlines();
+                }
+
             }
             CSTATE.lastDataFilename = data.result.filename;
             CSTATE.lastPeakFilename = CSTATE.lastDataFilename.replace(".dat", ".peaks");
@@ -2505,8 +2918,7 @@ function successPeaks(data) {
         if (data.result.CH4) {
             if (CSTATE.clearLeaks) {
                 CSTATE.clearLeaks = false;
-            }
-            else {
+            } else {
                 CSTATE.leakLine = data.result.nextRow;
                 for (i = 0; i < data.result.CH4.length; i += 1) {
                     peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
@@ -2615,8 +3027,7 @@ function successAnalysis(data) {
         if (data.result.CONC) {
             if (CSTATE.clearAnalyses) {
                 CSTATE.clearAnalyses = false;
-            }
-            else {
+            } else {
                 CSTATE.analysisLine = data.result.nextRow;
                 for (i = 0; i < data.result.CONC.length; i += 1) {
                     analysisCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
@@ -2726,18 +3137,40 @@ function dropResultNoteBubbles(results, cat) {
 }
 
 function successNotes(data, cat) {
+    var process_result;
     if (data.result) {
-        if (data.result.EPOCH_TIME) {
-            dropResultNoteBubbles(data.result, cat);
-        }
-        if (data.result.nextEtm) {
-            if (cat === "peak") {
-                CSTATE.nextPeakEtm = data.result.nextEtm;
+        process_result = true;
+        if (cat === "peak") {
+            if (CSTATE.clearPeakNote) {
+                CSTATE.clearPeakNote = false;
+                process_result = false;
+            }
+        } else {
+            if (cat === "analysis") {
+                if (CSTATE.clearAnalysisNote) {
+                    CSTATE.clearAnalysisNote = false;
+                    process_result = false;
+                }
             } else {
-                if (cat === "analysis") {
-                    CSTATE.nextAnalysisEtm = data.result.nextEtm;
+                if (CSTATE.clearDatNote) {
+                    CSTATE.clearDatNote = false;
+                    process_result = false;
+                }
+            }
+        }
+        if (process_result) {
+            if (data.result.EPOCH_TIME) {
+                dropResultNoteBubbles(data.result, cat);
+            }
+            if (data.result.nextEtm) {
+                if (cat === "peak") {
+                    CSTATE.nextPeakEtm = data.result.nextEtm;
                 } else {
-                    CSTATE.nextDatEtm = data.result.nextEtm;
+                    if (cat === "analysis") {
+                        CSTATE.nextAnalysisEtm = data.result.nextEtm;
+                    } else {
+                        CSTATE.nextDatEtm = data.result.nextEtm;
+                    }
                 }
             }
         }
@@ -2891,11 +3324,64 @@ function initialize_cookienames() {
     };
 }
 
+function attachPlatListener(plat, plname) {
+    var platClickListener;
+    platClickListener = new google.maps.event.addListener(plat, 'click', function() {
+        modalPanePlatControls(plname);
+    });
+    PLATOBJS[plname].listener = platClickListener;
+}
+
+function attachGoListener(plat, plname) {
+    var goClickListener;
+    goClickListener = new google.maps.event.addListener(plat, 'click', function() {
+        modalPanePlatControls(plname);
+    });
+    PLATOBJS[plname].go_listener = goClickListener;
+}
+
+function initialize_plats() {
+    var plname, plobj, rect;
+    if (PLATOBJS) {
+        for (plname in PLATOBJS) {
+            plobj = PLATOBJS[plname];
+            rect = newRectangle(plobj.minlng, plobj.maxlng, plobj.minlat, plobj.maxlat);
+            attachPlatListener(rect, plname);
+            plobj.rect = rect;
+            plobj.hlite = false;
+            plobj.active = false;
+            plobj.go = null;
+            plobj.go_listener = null;
+        }
+    }
+}
+
+function show_plat_outlines() {
+    var plname, plobj, rect;
+    if (PLATOBJS) {
+        for (plname in PLATOBJS) {
+            plobj = PLATOBJS[plname];
+            plobj.rect.setMap(CSTATE.map);
+        }
+    }
+}
+
+function hide_plat_outlines() {
+    var plname, plobj, rect;
+    if (PLATOBJS) {
+        for (plname in PLATOBJS) {
+            plobj = PLATOBJS[plname];
+            plobj.rect.setMap(null);
+        }
+    }
+}
+
 function initialize(winH, winW) {
     if (init_vars) {
         init_vars();
     }
     initialize_cookienames();
+    initialize_plats();
     initialize_gdu(winH, winW);
 }
 
