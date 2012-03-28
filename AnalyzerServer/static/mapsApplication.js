@@ -68,7 +68,7 @@ var TXT = {
         plat_outline: 'Plat Outline',
         hlite_plat: 'Highlight Current Plat',
         remove_plat_hlite: 'Remove Current Highlight',
-        remove_all_plat_hlite: 'Remove Highlights for all plats',
+        remove_all_plat_hlite: 'Remove All Highlights',
         select_active_plat: 'Set as Active Plat',
         remove_active_plat: 'Set at Inactive Plat',
         show_plat: 'Show plat',
@@ -265,7 +265,7 @@ var CSTATE = {
         showAbubble: true,
         showWbubble: true,
         showSwath: true,
-        showPlat: true,
+        showPlatOutlines: true,
 
         lastwhere: '',
         lastFit: '',
@@ -1265,42 +1265,21 @@ function showPbubbleCb() {
 
 function showPlatCb() {
     var btxt, showPlatCntl;
-    if (CSTATE.showPlat === false) {
-        CSTATE.showPlat = true;
+    if (CSTATE.showPlatOutlines === false) {
+        CSTATE.showPlatOutlines = true;
         show_plat_outlines();
     } else {
-        CSTATE.showPlat = false;
+        CSTATE.showPlatOutlines = false;
         hide_plat_outlines();
     }
-    setCookie(COOKIE_NAMES.plat, (CSTATE.showPlat) ? "1" : "0", CNSNT.cookie_duration);
+    setCookie(COOKIE_NAMES.platOutlines, (CSTATE.showPlatOutlines) ? "1" : "0", CNSNT.cookie_duration);
 
     btxt = TXT.show_txt;
-    if (CSTATE.showPlat) {
+    if (CSTATE.showPlatOutlines) {
         btxt = TXT.hide_txt;
     }
     btxt += " " + TXT.plat_outline;
     $('#id_showPlatCb').html(btxt);
-}
-
-function showTifCb() {
-    var plobj, hcntl, img;
-    plobj = PLATOBJS[CSTATE.activePlatName];
-    
-    if (plobj.show_tiff === true) {
-        plobj.show_tiff = false;
-        if (plobj.go !== null) {
-            plobj.go.setMap(null);
-        }
-    } else {
-        plobj.show_tiff = true;
-        img = PLAT_IMG_BASE + CSTATE.activePlatName.replace('tif', 'png');
-        if (plobj.go === null) {
-            plobj.go = newGroundOverlay(plobj.minlng, plobj.maxlng, plobj.minlat, plobj.maxlat, img);
-            attachGoListener(plobj.go, CSTATE.activePlatName);
-        }
-        plobj.go.setMap(null);
-        plobj.go.setMap(CSTATE.map);
-    }
 }
 
 function showAbubbleCb() {
@@ -1751,7 +1730,7 @@ function modalPaneMapControls() {
     abchkd += " " + TXT.abubble;
 
     platchkd = TXT.show_txt;
-    if (CSTATE.showPlat) {
+    if (CSTATE.showPlatOutlines) {
         platchkd = TXT.hide_txt;
     }
     platchkd += " " + TXT.plat_outline;
@@ -2259,9 +2238,9 @@ function initialize_gdu(winH, winW) {
         CSTATE.showAbubble = parseInt(abubbleCookie, 2);
     }
 
-    platCookie = getCookie(COOKIE_NAMES.plat);
+    platCookie = getCookie(COOKIE_NAMES.platOutlines);
     if (platCookie) {
-        CSTATE.showPlat = parseInt(platCookie, 2);
+        CSTATE.showPlatOutlines = parseInt(platCookie, 2);
     }
 
     wbubbleCookie = getCookie(COOKIE_NAMES.wbubble);
@@ -2769,7 +2748,7 @@ function successData(data) {
                 clearAnalysisNoteMarkers();
                 clearDatNoteMarkers(true);
 
-                if (CSTATE.showPlat === true) {
+                if (CSTATE.showPlatOutlines === true) {
                     show_plat_outlines();
                 } else {
                     hide_plat_outlines();
@@ -3314,7 +3293,7 @@ function initialize_cookienames() {
         pbubble: COOKIE_PREFIX + '_pbubble',
         abubble: COOKIE_PREFIX + '_abubble',
         dbubble: COOKIE_PREFIX + '_dbubble',
-        plat: COOKIE_PREFIX + '_plat',
+        platOutlines: COOKIE_PREFIX + '_platOutlines',
         follow: COOKIE_PREFIX + '_follow',
         zoom: COOKIE_PREFIX + '_zoom',
         center_latitude: COOKIE_PREFIX + '_center_latitude',
@@ -3338,6 +3317,11 @@ function attachGoListener(plat, plname) {
         modalPanePlatControls(plname);
     });
     PLATOBJS[plname].go_listener = goClickListener;
+}
+
+function removeGoListener(plobj) {
+    google.maps.event.removeListener(plobj.go_listener);
+    plobj.go_listener = null;
 }
 
 function initialize_plats() {
@@ -3372,6 +3356,9 @@ function hide_plat_outlines() {
         for (plname in PLATOBJS) {
             plobj = PLATOBJS[plname];
             plobj.rect.setMap(null);
+            if (plobj.go_listener !== null) {
+                removeGoListener(plobj)
+            }
         }
     }
 }
