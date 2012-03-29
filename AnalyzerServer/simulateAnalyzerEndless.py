@@ -13,7 +13,7 @@ UNIXORIGIN = datetime.datetime(1969,12,31,16,0,0,0) # Pacific standard time
 def run(dataFile, speedFactor=1.0):
     while True:
         analyzerId = os.path.basename(dataFile).split("-")[0]
-        liveFile = ('static/datalog/Z_%s' % analyzerId) + time.strftime('-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
+        liveFile = time.strftime('C:/UserData/AnalyzerServer/ZZZ-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
         print "\nNew live flie: %s" % liveFile
         handle = CreateFile(liveFile,GENERIC_WRITE,
                                      FILE_SHARE_READ,None,CREATE_ALWAYS,

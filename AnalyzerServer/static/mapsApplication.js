@@ -58,10 +58,10 @@ var TXT = {
         anote: 'Analysis annotation',
         pnote: 'Peak annotation',
         show_notes: 'Show user annotations on map',
-        abubble: 'Analysis markers',
-        pbubble: 'Peak markers',
-        wbubble: 'Wind markers',
-        swath: 'Swath',
+        abubble: 'Isotopic Analysis',
+        pbubble: 'Peak Bubbles',
+        wbubble: 'Wind Markers',
+        swath: 'Field of View',
         show_markers: 'Show system markers on map',
         show_txt: 'Show',
         hide_txt: 'Hide',
@@ -71,13 +71,7 @@ var TXT = {
         remove_all_plat_hlite: 'Remove All Highlights',
         select_active_plat: 'Set as Active Plat',
         remove_active_plat: 'Set at Inactive Plat',
-        show_plat: 'Show plat',
         remove_plat: 'Remove plat',
-
-        show_plat_outlines: 'Show plat outlines on map',
-        show_plat_image: 'Show plat image for this plat',
-        highlite_plat_outline: 'Highlight outline for this plat',
-        plat_menu: 'Plat Display Menu',
         working: 'Working',
         plat: 'Plat',
         calibration_pulse_injected: 'Calibration pulse injected',
@@ -1807,35 +1801,6 @@ function modalPaneMapControls() {
     $("#id_showDnoteCb").focus();
 }
 
-function platPane(plname) {
-    var modalChange, hdr, body, footer, plobj, plnameQte, hliteBtn;
-    plobj = PLATOBJS[plname];
-    hliteBtn = '<div><button id="id_hliteBtn" onclick="hlitePlat(' + single_quote(plname) + ');" class="btn primary large">' + TXT.highlite_plat_outline + '</button></div>';
-    //hliteBtn = '<div><button id="id_hliteBtn" onclick="hlitePlat();" class="btn primary large">' + TXT.highlite_plat_outline + '</button></div>';
-    
-    body = "";
-    body += "<h3>" + plname + "</h3>";
-    body += hliteBtn;
-    body += HBTN.modChangeCloseBtn;
-    
-    c1array = [];
-    c2array = [];
-    c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
-    c2array.push('style="border-style: none; width: 50%; text-align: right;"');
-    c1array.push('<h3>' + TXT.plat_menu + '</h3>');
-    c2array.push(HBTN.modChangeCloseBtn);
-    hdr = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
-    footer = "";
-
-    modalChange = setModalChrome(
-        hdr,
-        body,
-        footer
-        );
-
-    $("#id_mod_change").html(modalChange);
-}
-
 function modalPanePlatControls(plname) {
     var modalPane, plobj, hcntl, hliteCntl, showTifCntl, hdr, body, footer, c1array, c2array;
     plobj = PLATOBJS[plname];
@@ -1894,6 +1859,7 @@ function removeAllHlites() {
         }
     }
     $("#allHliteCntlSpan").html(HBTN.allHliteCntl);
+    $("#id_mod_change").html("");
     
 }
 
@@ -1928,6 +1894,7 @@ function hlitePlat(plname) {
     plobj.rect.setMap(CSTATE.map);
     
     $("#id_hliteCntl").html(hcntl);
+    $("#id_mod_change").html("");
 }
 
 function restoreHlitePlat(plobj) {
@@ -1994,6 +1961,7 @@ function setActivePlat(plname) {
     plobj.rect.setMap(null);
     plobj.rect.setMap(CSTATE.map);
     $("#id_activeCntl").html(acntl);
+    $("#id_mod_change").html("");
 }
 
 function colorPathFromValveMask(value) {
