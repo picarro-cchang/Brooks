@@ -46,8 +46,9 @@ var TXT = {
         change_min_amp: 'Minimum Amplitude',
         restart_datalog_msg: 'Close current data log and open a new one?',
         shutdown_anz_msg: 'Do you want to shut down the Analyzer? \n\nWhen the analyzer is shutdown it can take 30 to 45 minutes warm up.',
-        stop_survey_msg: 'Do you want to stop survey?',
+        stop_survey_msg: 'Are you sure you want to stop collecting data?',
         cancel_cap_msg: 'Cancel capture and return to survey mode?',
+        start_inject_msg: 'Inject reference gas now?',
         show_controls: 'Show Controls',
         show_dnote: 'Show route annotations',
         show_pnote: 'Show peak annotations',
@@ -74,7 +75,7 @@ var TXT = {
         remove_plat: 'Remove plat',
         working: 'Working',
         plat: 'Plat',
-        calibration_pulse_injected: 'Calibration pulse injected',
+        calibration_pulse_injected: 'Reference gas injected',
         
         stream_title: 'Data Transfer Status Indicators',
         stream_ok: 'Data Transfer OK',
@@ -2578,6 +2579,27 @@ function getMode() {
                 if (data.result.value !== undefined) {
                     var mode = data.result.value;
                     setModePane(mode);
+                    if (mode==0) {
+                        $("#id_captureBtn").html(TXT.switch_to_cptr).attr("onclick","captureSwitch();").removeAttr("disabled");
+                        $("#id_surveyOnOffBtn").removeAttr("disabled").html(TXT.stop_survey).attr("onclick", "stopSurvey();");
+                        $("#id_calibrateBtn").removeAttr("disabled");
+                    } else if (mode==1) {
+                        $("#id_captureBtn").html(TXT.cancl_cptr).attr("onclick", "cancelCapSwitch();");
+                        $("#id_surveyOnOffBtn").attr("disabled", "disabled");
+                        $("#id_calibrateBtn").removeAttr("disabled");
+                    } else if (mode==2) {
+                        $("#id_captureBtn").html(TXT.cancl_cptr).attr("onclick", "cancelCapSwitch();");
+                        $("#id_surveyOnOffBtn").attr("disabled", "disabled");
+                        $("#id_calibrateBtn").attr("disabled", "disabled");
+                    } else if (mode==3) {
+                        $("#id_captureBtn").attr("disabled", "disabled");
+                        $("#id_surveyOnOffBtn").attr("disabled", "disabled");
+                        $("#id_calibrateBtn").attr("disabled", "disabled");
+                    } else if (mode==4) {
+                        $("#id_captureBtn").attr("disabled", "disabled");
+                        $("#id_surveyOnOffBtn").html(TXT.start_survey).attr("onclick","startSurvey();");
+                        $("#id_calibrateBtn").attr("disabled", "disabled");
+                    }
                 }
                 CSTATE.getting_mode = false;
             },
@@ -3199,50 +3221,50 @@ function errorDatNotes(text) {
 }
 
 function setModePane(mode) {
-    $("#mode").html(modeStrings[mode]);
+    if (mode==4) {
+        $("#mode").html("<font color='red'>" + modeStrings[mode] + "</font>");
+    } else {
+        $("#mode").html(modeStrings[mode]);
+    }
     CSTATE.current_mode = mode;
 }
 
 function captureSwitch() {
     CSTATE.ignoreTimer = true;
     $("#analysis").html("");
-    //$("#id_mode_pane").html(modeStrings[1]);
     call_rest(CNSNT.svcurl, "driverRpc", {"func": "wrDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER', 1]"});
     CSTATE.ignoreTimer = false;
-    $("#mode").html(modeStrings[1]);
-    $("#id_captureBtn").html(TXT.cancl_cptr).attr("onclick", "cancelCapSwitch();");
-    $("#id_surveyOnOffBtn").attr("disabled", "disabled");
     restoreModChangeDiv();
 }
 
 function cancelCapSwitch() {
     if (confirm(TXT.cancel_cap_msg)) {
         call_rest(CNSNT.svcurl, "driverRpc", {"func": "wrDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER', 0]"});
-        $("#mode").html(modeStrings[0]);
-        $("#id_captureBtn").html(TXT.switch_to_cptr).attr("onclick","captureSwitch();");
-        $("#id_surveyOnOffBtn").removeAttr("disabled");
         restoreModChangeDiv();
     }
 }
 
 function injectCal() {
+    if (confirm(TXT.start_inject_msg)) {
+    captureSwitch();
+    setTimeout(callInject, 1000);
+    }
+}
+
+function callInject() {
     call_rest(CNSNT.svcurl, "injectCal", {"valve": 3, "samples": 1});
-    alert("Calibration pulse injected");
+    alert("Reference gas injected");
     restoreModChangeDiv();
 }
 
 function startSurvey() {
-    $("#mode").html(modeStrings[0]);
-    $("#id_surveyOnOffBtn").html(TXT.stop_survey).attr("onclick", "stopSurvey();");
-    $("#id_captureBtn").removeAttr("disabled");
+    call_rest(CNSNT.svcurl, "driverRpc", {"func": "wrDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER', 0]"});
     restoreModChangeDiv();
 }
 
 function stopSurvey() {
     if (confirm(TXT.stop_survey_msg)) {
-        $("#mode").html("<font color='red'>" + modeStrings[4] + "</font>");
-        $("#id_surveyOnOffBtn").html(TXT.start_survey).attr("onclick","startSurvey();");
-        $("#id_captureBtn").attr("disabled", "disabled");
+        call_rest(CNSNT.svcurl, "driverRpc", {"func": "wrDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER', 4]"});
         restoreModChangeDiv();
     }
 }
