@@ -265,7 +265,7 @@ var CSTATE = {
         showAbubble: true,
         showWbubble: true,
         showSwath: true,
-        showPlatOutlines: true,
+        showPlatOutlines: false,
 
         lastwhere: '',
         lastFit: '',
@@ -1265,7 +1265,7 @@ function showPbubbleCb() {
 
 function showPlatCb() {
     var btxt, showPlatCntl;
-    if (CSTATE.showPlatOutlines === false) {
+    if (!CSTATE.showPlatOutlines) {
         CSTATE.showPlatOutlines = true;
         show_plat_outlines();
     } else {
@@ -2748,7 +2748,7 @@ function successData(data) {
                 clearAnalysisNoteMarkers();
                 clearDatNoteMarkers(true);
 
-                if (CSTATE.showPlatOutlines === true) {
+                if (CSTATE.showPlatOutlines) {
                     show_plat_outlines();
                 } else {
                     hide_plat_outlines();
