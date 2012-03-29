@@ -448,9 +448,10 @@ class SpectrumCollector(object):
                     self.newHdf5File = True
                     self.streamFP.close()
                     # Archive HDF5 file
-                    archiveThread = threading.Thread(target = self._archiveFile)
+                    archiveThread = threading.Thread(target = self._archiveFile, args = (self.streamPath, self.auxSpectrumFile))
                     archiveThread.setDaemon(True)
                     archiveThread.start()
+                    self.auxSpectrumFile = ""
             else:
                 # Pickle the rdfDict 
                 filename = "%03d_%013d.rdf" % (self.lastSpectrumID, int(time.time()*1000))
@@ -468,18 +469,17 @@ class SpectrumCollector(object):
 
         self.reset()
 
-    def _archiveFile(self):
+    def _archiveFile(self, streamPath, auxSpectrumFile):
         time.sleep(1.0)
         # Copy to auxiliary spectrum file and reset filename to empty
-        if self.auxSpectrumFile:
+        if auxSpectrumFile:
             try:
-                shutil.copyfile(self.streamPath,self.auxSpectrumFile)
+                shutil.copyfile(streamPath, auxSpectrumFile)
             except:
-                Log("Error copying to auxiliary spectrum file %s" % self.auxSpectrumFile,Verbose=traceback.format_exc())
-            self.auxSpectrumFile = ""
+                Log("Error copying to auxiliary spectrum file %s" % auxSpectrumFile,Verbose=traceback.format_exc())
         time.sleep(1.0)
         try:
-            Archiver.ArchiveFile(self.archiveGroup, self.streamPath, True)
+            Archiver.ArchiveFile(self.archiveGroup, streamPath, True)
         except Exception:
             Log("Archiver call error",Verbose=traceback.format_exc())
             

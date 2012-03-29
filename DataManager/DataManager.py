@@ -1195,7 +1195,7 @@ class DataManager(object):
         for name in spectrumNames:
             analyzer = self.CurrentMeasMode.Analyzers[name].ScriptPath
             results = self.resultsByAnalyzer[analyzer]
-            measDataList.append(MeasData(name, timestamp.unixTime(avgTimestamp), results))
+            measDataList.append(MeasData(name, timestamp.unixTime(self.lastFitAnalyzed), results))
         return measDataList
         
     # def removeStragglers(self):
