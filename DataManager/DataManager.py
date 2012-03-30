@@ -1150,6 +1150,34 @@ class DataManager(object):
             self.dataQueueLock.release()
             
     def getFitterData(self):
+        """We now use a set of fitters which listen to the spectrum collector, asynchronously run the appropriate
+        fit scripts, and broadcast the results on a collection of ports which are monitored by the data manager.
+        
+        Each fitter report has a timestamp which is the average of the timestamps of the ringdowns that are used
+        to generate the spectrum. 
+        
+        These fitter reports are placed on a priority queue (self.dataQueue) ordered by the timestamp. 
+        
+        The data manager needs to process the reports in order of the timestamps, and may need to combine
+        the outputs of more than one fitter, if the report times are the same. Since we do not know how long each fitter
+        will take, we do not get any fitter data until there are at least self.minQueue entries on the queue. 
+        
+        We collect together all entries (from the fitters) at the head of the queue with the same timestamp and use them to update
+        dictionaries in a list of MeasData objects (one per analysis script). The common timestamp is stored in 
+        self.lastFitAnalyzed.
+        
+        If there is an entry on self.dataQueue which has an timestamp <= self.lastFitAnalyzed, it is a straggler
+        which should have previously been been analyzed. Such stragglers must be removed from the data queue, and
+        the value of self.minQueue is increased, making the data manager wait for more fitter reports to be present
+        before any are processed, so that it is less likely that a straggler will be left behind next time
+        
+        Note that fitter reports keep updating the MeasData dictionary, so that any value which is missing in the report just
+        retains its previous value. 
+        
+        We only call the analysis scripts associated with spectra that are reported on by some fitter at any single timestamp.
+        
+        At most one timestamp is processed each time this function is called.
+        """
         if len(self.dataQueue) < self.minQueueSamples:
             time.sleep(0.01)
             raise Queue.Empty
@@ -1195,6 +1223,8 @@ class DataManager(object):
         for name in spectrumNames:
             analyzer = self.CurrentMeasMode.Analyzers[name].ScriptPath
             results = self.resultsByAnalyzer[analyzer]
+            # Note: We must use self.lastFitAnalyzed below as this is the common timestamp of
+            #  the spectra to be analyzed
             measDataList.append(MeasData(name, timestamp.unixTime(self.lastFitAnalyzed), results))
         return measDataList
         

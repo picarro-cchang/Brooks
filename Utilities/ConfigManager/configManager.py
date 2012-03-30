@@ -64,11 +64,11 @@ class ConfigNode(object):
         childBasePath = kwargs.get('childBasePath',None)
         self.childBasePath = childBasePath if (childBasePath is not None) else self.basePath
         
-    def addChild(self,p):
+    def addChild(self,p,option=None):
         f = os.path.join(self.childBasePath,p)
         n = ConfigNodeFactory(f,parent=self,
             childBasePath=self.getChildBasePath(),
-            nodeClass=self.nodeClass(f))
+            nodeClass=self.nodeClass(f,option))
         for c in self.children:
             if n.absPath == c.absPath: break
         else:
@@ -77,7 +77,7 @@ class ConfigNode(object):
     def findChildren(self):
         print "Should be implemented in a subclass"
     
-    def nodeClass(self,filename):
+    def nodeClass(self,filename,option):
         return None
 
     def getChildBasePath(self):
@@ -89,7 +89,7 @@ class DefIniConfigNode(ConfigNode):
     def findChildren(self):
         self.children = []
         patt = re.compile(*self.pattRe())
-        ini = ConfigObj(self.absPath)
+        ini = ConfigObj(self.absPath,list_values=False)
         for sec in ini:
             options = ini[sec]
             if isinstance(options,str): continue
@@ -97,9 +97,9 @@ class DefIniConfigNode(ConfigNode):
                 val = ini[sec][opt]
                 if isinstance(val,str):
                     for p in patt.findall(ini[sec][opt]):
-                        self.addChild(p)
+                        self.addChild(p,opt)
                     for p in self.extraChildren(sec,opt,ini[sec][opt]):
-                        self.addChild(p)
+                        self.addChild(p,opt)
                     
     def pattRe(self):
         return r".*?\.ini|.*?\.py|.*?\.sch",re.I
@@ -114,9 +114,17 @@ class MeasSystemIniConfigNode(DefIniConfigNode):
 class DataManagerIniConfigNode(DefIniConfigNode):
     def pattRe(self):
         return r".*?\.ini|.*?\.py|.*?\.sch|.*?\.mode",re.I
+    def nodeClass(self,filename,option):
+       if option == "periphIntrfConfig":
+           return RunSerial2SocketIniConfigNode
+            
+class DataLoggerIniConfigNode(DefIniConfigNode):
+    def nodeClass(self,filename,option):
+       if option == "periphIntrfConfig":
+           return RunSerial2SocketIniConfigNode
     
 class FitterIniConfigNode(DefIniConfigNode):
-    def nodeClass(self,filename):
+    def nodeClass(self,filename,option):
         return FitterScriptConfigNode
     def getChildBasePath(self):
         return self.basePath
@@ -127,7 +135,20 @@ class SampleManagerIniConfigNode(DefIniConfigNode):
             return [value.strip() + '.py']
         else:
             return []
-            
+
+class RunSerial2SocketIniConfigNode(DefIniConfigNode):
+    def __init__(self,*args,**kwargs):
+        DefIniConfigNode.__init__(self,*args,**kwargs)
+        ini = ConfigObj(self.absPath,list_values=False)
+        scriptPath = ini['SETUP']['SCRIPTPATH']
+        self.childBasePath = os.path.join(self.basePath,scriptPath)
+    
+    def extraChildren(self,sec,opt,value):
+        if opt.upper() == 'SCRIPTFUNC':
+            return [value.strip() + '.py']
+        else:
+            return []
+    
 class DefPyConfigNode(ConfigNode):
     # Default PY handler 
     def findChildren(self):
@@ -175,7 +196,7 @@ class DefModeConfigNode(DefIniConfigNode):
     # Default MODE handler 
     def findChildren(self):
         DefIniConfigNode.findChildren(self)
-        ini = ConfigObj(self.absPath)
+        ini = ConfigObj(self.absPath,list_values=False)
         if 'AVAILABLE_MODES' in ini:
             modeSec = ini['AVAILABLE_MODES']
             nModes = int(modeSec['ModeCount'])
@@ -184,7 +205,7 @@ class DefModeConfigNode(DefIniConfigNode):
                 f = os.path.join(self.childBasePath,modeName+'.mode')
                 n = ConfigNodeFactory(f,parent=self,
                     childBasePath=self.getChildBasePath(),
-                    nodeClass=self.nodeClass(f))
+                    nodeClass=self.nodeClass(f,None))
                 for c in self.children:
                     if n.absPath == c.absPath: break
                 else:
@@ -200,7 +221,7 @@ class SupervisorConfigNode(ConfigNode):
     def findChildren(self):
         self.children = []
         patt = re.compile(r"\S*?\.ini",re.I)
-        ini = ConfigObj(self.absPath)
+        ini = ConfigObj(self.absPath,list_values=False)
         if 'Applications' in ini:
             for a in ini['Applications']:
                 if 'LaunchArgs' in ini[a]:
@@ -210,17 +231,19 @@ class SupervisorConfigNode(ConfigNode):
                         f = os.path.join(self.childBasePath,p)
                         n = ConfigNodeFactory(f,parent=self,
                         childBasePath=self.getChildBasePath(),
-                        nodeClass=self.nodeClass(e))
+                        nodeClass=self.nodeClass(e,None))
                         for c in self.children:
                             if n.absPath == c.absPath: break
                         else:
                             self.children.append(n)
                             
-    def nodeClass(self,execName):
+    def nodeClass(self,execName,option):
         if execName.lower().find('fitter')>=0: return FitterIniConfigNode
         elif execName.lower().find('meassystem')>=0: return MeasSystemIniConfigNode
         elif execName.lower().find('datamanager')>=0: return DataManagerIniConfigNode
         elif execName.lower().find('samplemanager')>=0: return SampleManagerIniConfigNode
+        elif execName.lower().find('runserial2socket')>=0: return RunSerial2SocketIniConfigNode
+        elif execName.lower().find('datalogger')>=0: return DataLoggerIniConfigNode
         else: return DefIniConfigNode
         
 class ConfigManager(ConfigManagerGui):
@@ -664,7 +687,7 @@ if __name__ == "__main__":
         dname = dlg.GetDirectory()
         superConfig = os.path.join(dname,fname)
         # Use heuristic to determine directory of supervisor
-        ini = ConfigObj(superConfig)
+        ini = ConfigObj(superConfig,list_values=False)
         npy, nexe = 0, 0
         for s in ini:
             try:
