@@ -2893,7 +2893,9 @@ function successPeaks(data) {
                     peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
                     peakMarker = newPeakMarker(CSTATE.map, peakCoords, data.result.AMPLITUDE[i], data.result.SIGMA[i], data.result.CH4[i]);
                     CSTATE.peakMarkers[CSTATE.peakMarkers.length] = peakMarker;
-
+                    // Play warning sound
+                    var myAudio = document.getElementsByTagName('audio')[0];
+                    myAudio.play();
                     datadict = CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]];
                     if (!datadict) {
                         datadict = {};
