@@ -43,51 +43,57 @@ def aReadDatFile(fileName):
 class AddWindBatch(object):
     def __init__(self, iniFile):
         self.config = ConfigObj(iniFile)
-
-    def addWind(self):
+        
+    def addGpsWind(self):
         if not os.path.exists(self.outDir): os.makedirs(self.outDir)
         offset = self.analyzerOffset # Time between ringdown measurement and derived wind data 
         windFileName = os.path.join(self.windDir,self.windFile)
         wind = aReadDatFile(windFileName)
+            
         datlogName = os.path.join(self.datDir,self.datFile)
         datlog = aReadDatFile(datlogName)
         itimes = datlog.EPOCH_TIME
         print min(itimes), max(itimes)
         print min(wind.EPOCH_TIME), max(wind.EPOCH_TIME)
-        newFields = []
+        newFields = {}
         for n in wind._fields:
             if n == "EPOCH_TIME": continue
             f = interp1d(wind.EPOCH_TIME,getattr(wind,n))
-            newFields.append(f(itimes+offset))
+            newFields[n] = f(itimes+offset)
+        if self.gpsFile is not None:
+            gpsFileName =  os.path.join(self.windDir,self.gpsFile)
+            gps = aReadDatFile(gpsFileName)
+            for n in gps._fields:
+                if n == "EPOCH_TIME": continue
+                f = interp1d(gps.EPOCH_TIME,getattr(gps,n))
+                newFields[n] = f(itimes+offset)
         # Write out the new file
         self.outFile = os.path.join(self.outDir,os.path.split(self.datFile)[-1])
         op = file(self.outFile,'w')
-        for n in datlog._fields:
-            op.write("%-26s" % n)
-        for n in wind._fields:
-            if n == "EPOCH_TIME": continue
+        allFields = []
+        for n in datlog._fields + wind._fields:
+            if n not in allFields: allFields.append(n)
+            
+        for n in allFields:
             op.write("%-26s" % n)
         op.write("\n")
         nRows = len(itimes)
         for i in range(nRows):
-            for n in datlog._fields:
+            for n in allFields:
                 if n in ["EPOCH_TIME"]:
                     op.write("%-26.3f" % getattr(datlog,n)[i])
                 elif n in ["ALARM_STATUS","INST_STATUS"]:
                     op.write("%-26d" % getattr(datlog,n)[i])
+                elif n in newFields:
+                    op.write("%-26.10e" % newFields[n][i])
                 else:
                     op.write("%-26.10e" % getattr(datlog,n)[i])
-            j = 0
-            for n in wind._fields:
-                if n == "EPOCH_TIME": continue
-                op.write("%-26.10e" % newFields[j][i])
-                j += 1
             op.write("\n")
         op.close()
 
         
     def run(self):
-        varList = {'DAT_DIR':'datDir','OUT_DIR':'outDir','GPS_WS_DIR':'windDir',
+        varList = {'DAT_DIR':'datDir','OUT_DIR':'outDir','GPS_WS_DIR':'windDir','GPS_FILE':'gpsFile',
                    'WIND_FILE':'windFile','DAT_FILE':'datFile','ANALYZER_OFFSET':'analyzerOffset'}
         
         for secName in self.config:
@@ -105,7 +111,7 @@ class AddWindBatch(object):
             
             try:
                 print "Processing",os.path.join(self.datDir,self.datFile)
-                self.addWind()
+                self.addGpsWind()
                 pf = PeakFinder()
                 pf.userlogfiles = self.outFile
                 pf.debug = False

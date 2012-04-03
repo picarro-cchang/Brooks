@@ -485,6 +485,7 @@ class PeakFinder(object):
                 return isPeak, col         
             initBuff = True
             PeakTuple = None
+            cstart = hmax+3
             for dist,data in source:
                 if dist is None:
                     initBuff = True
@@ -496,7 +497,7 @@ class PeakFinder(object):
                     #  coordinates and value of peaks can be looked up
                     cache = zeros((1+len(data),npoints),float)
                     # c is the where in ssbuff the center of the kernel is placed
-                    c = hmax+2
+                    c = cstart
                     # z is the column in ssbuff which has to be set to zero before adding
                     #  in the kernels
                     z = 0
@@ -523,12 +524,12 @@ class PeakFinder(object):
                         ssbuff[i,:c+hList[i]+1-npoints] += data.CH4*kernelList[i][npoints-c+hList[i]:]
                     else:
                         ssbuff[i,c-hList[i]:c+hList[i]+1] += data.CH4*kernelList[i]
-                    if i<nlevels-1:
+                    if i>0:
                         # Check if we have found a peak in space-scale representation
                         # If so, add it to a list of peaks which are stored as tuples
                         #  of the form (dist,*dataTuple,amplitude,sigma)
-                        isPeak,col = checkPeak(i,c-hList[i]-1)
-                        if isPeak:
+                        isPeak,col = checkPeak(i-1,c-hList[i]-1)
+                        if isPeak and cache[0,col]>0.0:
                             # A peak is disqualified if the valve settings in an interval before the 
                             #  peak arrives were in the collecting state. This means that the tape recorder
                             #  was on, and the peak was a replay of a previously collected one
@@ -537,8 +538,8 @@ class PeakFinder(object):
                                 where = list(data._fields).index('ValveMask')
                                 reject = collecting(mean([cache[where+1,j%npoints] for j in range(col-5,col+1)]))
                             if not reject:
-                                amplitude = 0.5*ssbuff[i,col]/(3.0**(-1.5))
-                                sigma = sqrt(0.5*scaleList[i])
+                                amplitude = 0.5*ssbuff[i-1,col]/(3.0**(-1.5))
+                                sigma = sqrt(0.5*scaleList[i-1])
                                 peaks.append(PeakTuple(*([v for v in cache[:,col]]+[amplitude,sigma])))
                 c += 1
                 if c>=npoints: c -= npoints

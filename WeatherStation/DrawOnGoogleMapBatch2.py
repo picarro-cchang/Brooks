@@ -105,15 +105,6 @@ def widthFunc(windspeed):
     w0 = 50
     return w0*np.exp(1.0)*(windspeed/v0)*np.exp(-windspeed/v0)
     
-def metersPerPixel(minlng,maxlng,minlat,maxlat,imsize):
-    nx,ny = imsize
-    deltaLat = (180.0/np.pi)/EARTH_RADIUS
-    deltaLng = (180.0/np.pi)/(EARTH_RADIUS*np.cos(0.5*(minlat+maxlat)*(np.pi/180.0)))
-    mppx = (maxlng-minlng)/(deltaLng*nx)
-    mppy = (maxlat-minlat)/(deltaLat*ny)
-    print "Meters per pixel: ", mppx, mppy
-    return 0.5*(mppx+mppy)
-    
 class DrawOnMapBatch(object):
     def __init__(self, iniFile):
         self.config = ConfigObj(iniFile)
@@ -147,7 +138,7 @@ class DrawOnMapBatch(object):
             try:
                 datName = os.path.join(self.outDir,self.datFile)
                 if self.pngFile == None:
-                    self.pngFile = datName.replace(".dat", ".png")
+                    self.pngFile = datFile.replace(".dat", ".png")
                 peakName = datName.replace(".dat", ".peaks")
                 self._draw(datName,peakName,self.padX,self.padY)
             except Exception:
@@ -235,7 +226,6 @@ class DrawOnMapBatch(object):
         
         # Draw the peak bubbles and wind wedges
         bubble = Bubble()
-        self.mpp = metersPerPixel(minlng,maxlng,minlat,maxlat,(nx,ny))
         
         for pk in xReadDatFile(peakFile):
             lng = pk.GPS_ABS_LONG
@@ -257,23 +247,13 @@ class DrawOnMapBatch(object):
                 box = (padX+x-bx//2,padY+y-by)
                 if "WIND_N" in pk._fields:
                     wind = np.sqrt(windN*windN + windE*windE)
-                    radius = 5.0; speedmin = 0.5
                     meanBearing = (180.0/np.pi)*np.arctan2(windE,windN)
                     if not(np.isnan(wind) or np.isnan(meanBearing)):
                         minBearing = meanBearing-min(2*windSdev,180.0)
                         maxBearing = meanBearing+min(2*windSdev,180.0)
-                        # If the windspeed is too low, increase uncertainty
-                        if wind<speedmin:
-                            minBearing = 0.0
-                            maxBearing = 360.0
-                    else:
-                        minBearing = 0
-                        maxBearing = 360.0
-                    # min(75.0,self.pg.getMaxDist(self.stabClass,self.minLeak,speed,self.minAmpl,u0=1.0,a=1,q=2))
-                    # Convert distance in meters to pixels
-                    radius = int(radius/self.mpp)
-                    odraw.pieslice((padX+x-radius,padY+y-radius,padX+x+radius,padY+y+radius),
-                        int(minBearing-90.0),int(maxBearing-90.0),fill=(255,255,0,100),outline=(0,0,0,255))
+                        radius = min(150,int(30.0*wind))
+                        odraw.pieslice((padX+x-radius,padY+y-radius,padX+x+radius,padY+y+radius),int(minBearing-90.0),int(maxBearing-90.0),
+                                        fill=(255,255,0,100),outline=(0,0,0,255))
                 q.paste(b,box,mask=b)
                 #odraw.text((padX+x,padY+y),"%.1f"%ch4,font=font,fill=(0,0,255,255))
         # cp = open(missFile,"rb")

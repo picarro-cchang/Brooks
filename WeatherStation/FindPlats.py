@@ -89,7 +89,5 @@ class FindPlats(object):
     
 if __name__ == "__main__":
     app = FindPlats(r"R:\crd_G2000\FCDS\1061-FCDS2003\Comparison\platBoundaries.npz")
-    print app.search(r"R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120321\OUT\FCDS2006-20120321-161050Z-DataLog_User_Minimal.peaks", 1)
-    print app.search(r"R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120311\OUT\FCDS2006-20120311-121939Z-DataLog_User_Minimal.peaks", 1)
-    print app.search(r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120311\OUT\FCDS2003-20120311-134150Z-DataLog_User_Minimal.peaks", 1)
-    print app.search(r"R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120312\OUT\FCDS2003-20120312-150509Z-DataLog_User_Minimal.peaks", 1)
+    # print app.search(r"R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120323\DAT\FCDS2006-20120323-020431Z-DataLog_User_Minimal.dat", 30)
+    print app.search(r"R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120401\DAT\FCDS2006-20120401-095924Z-DataLog_User_Minimal.dat", 30)

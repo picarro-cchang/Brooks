@@ -24,41 +24,38 @@ AttrTuple = namedtuple('AttrTuple',['attr','default','conv','sel'])
 
 class PasquillGiffordApprox(object):
     def __init__(self):
-        # Semi opening angle of a cone representing turbulence induced
-        #  atmospheric dispersion for rural conditions
-        PGTuple = namedtuple("PGTuple",["theta_y","theta_z"])
-        self.classConstants = {'A':PGTuple(0.2685,0.1395),
-                               'B':PGTuple(0.1927,0.1060),
-                               'C':PGTuple(0.1246,0.0744),
-                               'D':PGTuple(0.0820,0.0465),
-                               'E':PGTuple(0.0612,0.0353),
-                               'F':PGTuple(0.0407,0.0233)}
+        PGTuple = namedtuple("PGTuple",["power","scale"])
+        self.classConstants = { 'A':PGTuple(1.92607854134,7.06164265123),
+                                'B':PGTuple(1.85109993492,9.23174186112),
+                                'C':PGTuple(1.83709437442,14.0085461312),
+                                'D':PGTuple(1.79141020506,21.8533325178),
+                                'E':PGTuple(1.74832538645,29.2243762172),
+                                'F':PGTuple(1.72286808749,46.0503577192)}
 
-    def getConc(self,stabClass,Q,u,dstd,x,umin=0):
+    def getConc(self,stabClass,Q,u,x):
         """Get concentration in ppm from a point source of Q cu ft/hr at 
-        distance x m downwind when the wind speed is u m/s and dstd is the
-        standard deviation of the wind direction in radians.
-        Since this would normally diverge at small u, a regularization is applied
-        so that u is replaced by max(u,umin)
-        """
+        distance x m downwind when the wind speed is u m/s."""
         pg = self.classConstants[stabClass.upper()]
-        theta_y = np.sqrt((dstd/2)**2 + pg.theta_y**2)
-        u = max(u,umin)
-        return 7.866*Q/(np.pi*u*theta_y*pg.theta_z*x**2)
+        return (Q/u)*(x/pg.scale)**(-pg.power)
         
-    def getMaxDist(self,stabClass,Q,u,dstd,conc,umin=0):
+    def getMaxDist(self,stabClass,Q,u,dstd,conc,u0=0,a=1,q=2):
         """Get the maximum distance at which a source of rate Q cu ft/hr can
         be located if it is to be found with an instrument capable of measuring
         concentration "conc" above ambient, when the wind speed is u m/s and dstd
         is the standard deviation of the wind direction in radians
         
         Since this would normally diverge at small u, a regularization is applied
-        so that u is replaced by max(u,umin)
+        so that the maximum distance is made to vary as u**a for u<u0. The 
+        sharpness of the transition at u0 is controlled by 1<q<infinity
         """
         pg = self.classConstants[stabClass.upper()]
-        theta_y = np.sqrt((dstd/2)**2 + pg.theta_y**2)
-        u = max(u,umin)
-        return np.sqrt(7.866*Q/(conc*np.pi*u*theta_y*pg.theta_z))
+        d = pg.scale*((u*conc)/Q)**(-1.0/pg.power)
+        if u0>0:
+            v = u/u0
+            d *= v**a/(v**(a*q)+v**(-float(q)/pg.power))**(1.0/q)
+        dn = np.sqrt(3)*dstd
+        fac = np.sin(dn)/(dn+1.e-6) if dn<np.pi else 0.0       
+        return d*fac**(1.0/pg.power)
 
 def pFloat(x):
     try:
@@ -137,15 +134,15 @@ class DrawOnPlatBatch(object):
     def __init__(self, iniFile):
         self.config = ConfigObj(iniFile)
         self.pg = PasquillGiffordApprox()
-        self.padX = 200
+        self.padX = 50
         self.padY = 200
         
     def run(self):
         varList = {re.compile('MISS_FILE$'):AttrTuple('missFile',None,lambda x:x,False),
-                   re.compile('RANK_FILE$'):AttrTuple('rankFile',None,lambda x:x,False),
                    re.compile('BOUNDARIES_FILE$'):AttrTuple('boundaryFile',None,lambda x:x,False),
                    re.compile('TIF_DIR$'):AttrTuple('tifDir',None,lambda x:x,False),
                    re.compile('REPORT_DIR$'):AttrTuple('outDir',None,lambda x:x,False),
+                   re.compile('MIN_AMP$'):AttrTuple('minAmpl',0.1,lambda x:float(x),False),
                    re.compile('PLAT$'):AttrTuple('plat',None,lambda x:x,False),
                    re.compile('MIN_LEAK$'):AttrTuple('minLeak',1.0,lambda x:float(x),False),
                    re.compile('STABILITY_CLASS(_[0-9]+)?$'):AttrTuple('stabClass',{'':'D'},lambda x:x,True),
@@ -154,10 +151,7 @@ class DrawOnPlatBatch(object):
                    re.compile('SHOW_LISA(_[0-9]+)?$'):AttrTuple('showLisa',{'':1},lambda x:int(x),True),
                    re.compile('SHOW_FOV(_[0-9]+)?$'):AttrTuple('showFov',{'':1},lambda x:int(x),True),
                    re.compile('DAT(_[0-9]+)?$'):AttrTuple('dat',{},lambda x:x,True),
-                   re.compile('PEAKS(_[0-9]+)?$'):AttrTuple('peaks',{'':''},lambda x:x,True),
-                   re.compile('FOV(_[0-9]+)?$'):AttrTuple('fov',{'':('FFA00040','FFA000FF')},lambda x:x,True),
-                   re.compile('MIN_AMP(_[0-9]+)?$'):AttrTuple('minAmpl',{'':0.1},lambda x:float(x),True),
-                   re.compile('MAX_AMP(_[0-9]+)?$'):AttrTuple('maxAmpl',{'':None},lambda x:float(x),True)}
+                   re.compile('FOV(_[0-9]+)?$'):AttrTuple('fov',{'':('FFA00040','FFA000FF')},lambda x:x,True)}
         for secName in self.config:
             for k in varList:
                 if varList[k].sel:
@@ -235,69 +229,19 @@ class DrawOnPlatBatch(object):
         q = Image.new('RGBA',(nx+2*padX,ny+2*padY),(255,255,255,255))
         q.paste(p,(padX,padY))
         
-        qdraw = ImageDraw.Draw(q)
         ov = Image.new('RGBA',q.size,(0,0,0,0))
         odraw = ImageDraw.Draw(ov)
         font = ImageFont.truetype("ariblk.ttf",60)
         font1 = ImageFont.truetype("arial.ttf",80)
-
         bubble = Bubble()
         self.mpp = metersPerPixel(minlng,maxlng,minlat,maxlat,(nx,ny))
-        
+
         for k in sorted(self.dat_dict.keys()):  # Iterate through keys of DAT
             kIndex = int(k[1:])
-            self.keyselect(['dat','peaks','stabClass','showIndicators','showMarkers','showLisa','showFov','fov','minAmpl','maxAmpl'],k)
+            self.keyselect(['dat','stabClass','showIndicators','showMarkers','showLisa','showFov','fov'],k)
             datName = self.dat
             datFile = datName + '.dat'
-            if not self.peaks:
-                peakFile = datName + '.peaks'
-            else:
-                peakFile = self.peaks
-
-            # Draw the peak bubbles and wind wedges
-            pList = [(dat.AMPLITUDE,dat) for dat in xReadDatFile(peakFile)]
-            for amp,pk in sorted(pList):
-                if amp<self.minAmpl: continue
-                if (self.maxAmpl is not None) and amp>self.maxAmpl: break
-                lng = pk.GPS_ABS_LONG
-                lat = pk.GPS_ABS_LAT
-                ch4 = pk.CH4
-                if "WIND_N" in pk._fields:
-                    windN = pk.WIND_N
-                    windE = pk.WIND_E
-                    windSdev = pk.WIND_DIR_SDEV
-                size = 5*amp**0.25
-                fontsize = int(20.0*size);
-                buff = cStringIO.StringIO(bubble.getBubble(size,fontsize,"%.1f"%ch4))
-                b = Image.open(buff)
-                b = b.convert('RGBA')
-                bx,by = b.size
-                x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
-                if (-padX<=x<nx+padX) and (-padY<=y<ny+padY) and (amp>self.minAmpl) and ((self.maxAmpl is None) or (amp<=self.maxAmpl)):
-                    box = (padX+x-bx//2,padY+y-by)
-                    if "WIND_N" in pk._fields:
-                        wind = np.sqrt(windN*windN + windE*windE)
-                        radius = 50.0; speedmin = 0.5
-                        meanBearing = (180.0/np.pi)*np.arctan2(windE,windN)
-                        if not(np.isnan(wind) or np.isnan(meanBearing)):
-                            minBearing = meanBearing-min(2*windSdev,180.0)
-                            maxBearing = meanBearing+min(2*windSdev,180.0)
-                            # If the windspeed is too low, increase uncertainty
-                            if wind<speedmin:
-                                minBearing = 0.0
-                                maxBearing = 360.0
-                        else:
-                            minBearing = 0
-                            maxBearing = 360.0
-                        # min(75.0,self.pg.getMaxDist(self.stabClass,self.minLeak,speed,self.minAmpl,u0=1.0,a=1,q=2))
-                        # Convert distance in meters to pixels
-                        radius = int(radius/self.mpp)
-                        if self.showLisa: 
-                            odraw.pieslice((padX+x-radius,padY+y-radius,padX+x+radius,padY+y+radius),
-                                int(minBearing-90.0),int(maxBearing-90.0),fill=(255,255,0,100),outline=(0,0,0,255))
-                            if not self.showIndicators: odraw.text((padX+x,padY+y),"%.1f"%ch4,font=font,fill=(0,0,255,255))
-                    if self.showIndicators: ov.paste(b,box,mask=b)
-                
+            peakFile = datName + '.peaks'
             # Draw the path of the vehicle
             path = []
             penDown = False
@@ -314,7 +258,7 @@ class DrawOnPlatBatch(object):
                 fit = d.GPS_FIT
                 if fit>0:
                     x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
-                    if (-padX<=x<nx+padX) and (-padY<=y<ny+padY) and self.showFov:
+                    if (0<=x<nx) and (0<=y<ny) and self.showFov:
                         path.append((padX+x,padY+y))
                         if "WIND_N" in d._fields:
                             windN = d.WIND_N
@@ -322,7 +266,7 @@ class DrawOnPlatBatch(object):
                             dstd = (np.pi/180.0)*d.WIND_DIR_SDEV
                             bearing = np.arctan2(windE,windN)
                             speed = np.sqrt(windE*windE + windN*windN)
-                            width = self.pg.getMaxDist(self.stabClass,self.minLeak,speed,dstd,self.minAmpl,umin=1.0)
+                            width = self.pg.getMaxDist(self.stabClass,self.minLeak,speed,dstd,self.minAmpl,u0=1.0,a=1,q=2)
                             deltaLat = (180.0/np.pi)*width*np.cos(bearing)/EARTH_RADIUS
                             deltaLng = (180.0/np.pi)*width*np.sin(bearing)/(EARTH_RADIUS*np.cos(lat*(np.pi/180.0)))
                             if not (np.isnan(deltaLat) or np.isnan(deltaLng)):
@@ -361,66 +305,85 @@ class DrawOnPlatBatch(object):
             if path:        
                 odraw.line(path,fill=(0,0,255,255),width=4)
             
-            # Write the heading on the page
+            # Draw the peak bubbles and wind wedges
             
-            if self.maxAmpl is None:
-                odraw.text((padX,75*kIndex),"Plat %s, Start Time %s, PG class %s, MinAmpl %.3f" % (platName,startTime,self.stabClass,self.minAmpl),font=font1,fill=(0,0,0,255))
-            else:
-                odraw.text((padX,75*kIndex),"Plat %s, Start Time %s, PG class %s, MinAmpl %.3f, MaxAmpl %.3f" % (platName,startTime,self.stabClass,self.minAmpl,self.maxAmpl),font=font1,fill=(0,0,0,255))
-                
+            for pk in xReadDatFile(peakFile):
+                lng = pk.GPS_ABS_LONG
+                lat = pk.GPS_ABS_LAT
+                amp = pk.AMPLITUDE
+                ch4 = pk.CH4
+                if "WIND_N" in pk._fields:
+                    windN = pk.WIND_N
+                    windE = pk.WIND_E
+                    windSdev = pk.WIND_DIR_SDEV
+                size = 5*amp**0.25
+                fontsize = int(20.0*size);
+                buff = cStringIO.StringIO(bubble.getBubble(size,fontsize,"%.1f"%ch4))
+                b = Image.open(buff)
+                b = b.convert('RGBA')
+                bx,by = b.size
+                x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
+                if (0<=x<nx) and (0<=y<ny) and (amp>self.minAmpl):
+                    box = (padX+x-bx//2,padY+y-by)
+                    if "WIND_N" in pk._fields:
+                        wind = np.sqrt(windN*windN + windE*windE)
+                        radius = 50.0; speedmin = 0.5
+                        meanBearing = (180.0/np.pi)*np.arctan2(windE,windN)
+                        if not(np.isnan(wind) or np.isnan(meanBearing)):
+                            minBearing = meanBearing-min(2*windSdev,180.0)
+                            maxBearing = meanBearing+min(2*windSdev,180.0)
+                            # If the windspeed is too low, increase uncertainty
+                            if wind<speedmin:
+                                minBearing = 0.0
+                                maxBearing = 360.0
+                        else:
+                            minBearing = 0
+                            maxBearing = 360.0
+                        # min(75.0,self.pg.getMaxDist(self.stabClass,self.minLeak,speed,self.minAmpl,u0=1.0,a=1,q=2))
+                        # Convert distance in meters to pixels
+                        radius = int(radius/self.mpp)
+                        if self.showLisa: 
+                            odraw.pieslice((padX+x-radius,padY+y-radius,padX+x+radius,padY+y+radius),
+                                int(minBearing-90.0),int(maxBearing-90.0),fill=(255,255,0,100),outline=(0,0,0,255))
+                            if not self.showIndicators: odraw.text((padX+x,padY+y),"%.1f"%ch4,font=font,fill=(0,0,255,255))
+                    if self.showIndicators: q.paste(b,box,mask=b)
+
+            odraw.text((padX,75*kIndex),"Plat %s, Start Time %s, MinAmpl %.3f" % (platName,startTime,self.minAmpl),font=font1,fill=(0,0,0,255))
         q.paste(ov,mask=ov)
         bubble.close()
 
-        if self.missFile:
-            cp = open(self.missFile,"rb")
-            reader = csv.reader(cp)
-            color = {'P':'9090FF','T':'FF9090','B':'C0C0C0'}
-            for i,row in enumerate(reader):
-                if i==0: # Headings
-                    headings = [r.strip() for r in row]
-                    LNG = headings.index('LONG')
-                    LAT = headings.index('LAT')
-                    GRADE = headings.index('GRADE')
-                    CODE = headings.index('P/T/B')
-                    ID =  headings.index('Picarro Indication ID')
-                elif i>0:
-                    try:
-                        lng = float(row[LNG])
-                        lat = float(row[LAT])
-                        grade = row[GRADE]
-                        code = row[CODE]
-                        id = int(row[ID])
-                        x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
-                        if (-padX<=x<nx+padX) and (-padY<=y<ny+padY) and (grade not in ['MS']):
-                            buff = cStringIO.StringIO(bubble.getMiss(5,100,"%d"%(id,),color[code]))
-                            b = Image.open(buff)
-                            b = b.convert('RGBA')
-                            bx,by = b.size
-                            box = (padX+x-bx//2,padY+y-by)
-                            if self.showMarkers: q.paste(b,box,mask=b)
-                    except:
-                        print traceback.format_exc()
-                        print row
-            cp.close()
-
-        if self.rankFile:
-            rList = [(r+1,dat) for r,dat in enumerate(xReadDatFile(self.rankFile))]
-            for id,dat in reversed(rList):
-                lng = dat.GPS_ABS_LONG
-                lat = dat.GPS_ABS_LAT
-                x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
-                if (-padX<=x<nx+padX) and (-padY<=y<ny+padY):
-                    buff = cStringIO.StringIO(bubble.getMiss(5,100,"%d" % id,"90FF90"))
-                    b = Image.open(buff)
-                    b = b.convert('RGBA')
-                    bx,by = b.size
-                    box = (padX+x-bx//2,padY+y-by)
-                q.paste(b,box,mask=b)
-        
-        if self.maxAmpl is None:
-            outputPngFile = os.path.join(self.outDir, platName + "_%s.png" % (self.minAmpl,))
-        else:    
-            outputPngFile = os.path.join(self.outDir, platName + "_%s_%s.png" % (self.minAmpl,self.maxAmpl,))
+        cp = open(missFile,"rb")
+        reader = csv.reader(cp)
+        color = {'P':'9090FF','T':'FF9090','B':'C0C0C0'}
+        for i,row in enumerate(reader):
+            if i==0: # Headings
+                headings = [r.strip() for r in row]
+                LNG = headings.index('LONG')
+                LAT = headings.index('LAT')
+                GRADE = headings.index('GRADE')
+                CODE = headings.index('P/T/B')
+                ID =  headings.index('Picarro Indication ID')
+            elif i>0:
+                try:
+                    lng = float(row[LNG])
+                    lat = float(row[LAT])
+                    grade = row[GRADE]
+                    code = row[CODE]
+                    id = int(row[ID])
+                    x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
+                    if (0<=x<nx) and (0<=y<ny) and (grade not in ['MS']):
+                        buff = cStringIO.StringIO(bubble.getMiss(5,100,"%d"%(id,),color[code]))
+                        b = Image.open(buff)
+                        b = b.convert('RGBA')
+                        bx,by = b.size
+                        box = (padX+x-bx//2,padY+y-by)
+                        if self.showMarkers: q.paste(b,box,mask=b)
+                except:
+                    print traceback.format_exc()
+                    print row
+        cp.close()
+            
+        outputPngFile = os.path.join(self.outDir, platName + "_%s.png" % (self.minAmpl,))
         q.save(outputPngFile,format="PNG")
         print "file:%s\n" % os.path.abspath(outputPngFile)
                 
