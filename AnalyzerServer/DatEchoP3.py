@@ -3,6 +3,8 @@ DatEchoP3 - Listen to a path of .dat (type) files on the local system,
 and echo new rows to the P3 archive
 '''
 import sys
+from optparse import OptionParser
+
 import fnmatch
 import os
 import time
@@ -47,15 +49,36 @@ class DataEchoP3(object):
         else:
             self.listen_path = None
 
-        if 'url' in kwargs:
-            self.url = kwargs['url']
+        if 'file_path' in kwargs:
+            self.file_path = kwargs['file_path']
         else:
-            #self.url = 'http://p3.picarro.com/pge/rest/datalogAdd/'
-            self.url = 'http://localhost:8080/rest/datalogAdd/'
+            self.file_path = None
+
+        if not self.listen_path:
+            if not self.file_path:
+                self.listen_path = 'C:/UserData/AnalyzerServer/*_Minimal.dat'
+
+        if 'ip_url' in kwargs:
+            self.ip_url = kwargs['ip_url']
+        else:
+            #self.ip_url = 'http://localhost:8080/rest/analyzerIpRegister/'
+            self.ip_url = 'http://dev.picarro.com/dev/rest/gdu/analyzerIpRegister/'
+
+        if 'push_url' in kwargs:
+            self.push_url = kwargs['push_url']
+        else:
+            #self.push_url = 'http://localhost:8080/rest/datalogAdd/'
+            self.push_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
+            
         if 'timeout' in kwargs:
             self.timeout = int(kwargs['timeout'])
         else:
             self.timeout = 2
+
+        if 'logtype' in kwargs:
+            self.logtype = kwargs['logtype']
+        else:
+            self.logtype = "dat"
 
         if 'sleep_seconds' in kwargs:
             self.sleep_seconds = float(kwargs['sleep_seconds'])
@@ -71,7 +94,7 @@ class DataEchoP3(object):
         ip_register_good = True
         def pushIP():
             aname = self.getLocalAnalyzerId()
-            for addr in decho.getIPAddresses():
+            for addr in self.getIPAddresses():
                 if addr == "0.0.0.0":
                     continue
                 params = {aname: {"ip_addr": "%s:5000" % addr}}
@@ -79,7 +102,7 @@ class DataEchoP3(object):
                 try:    
                     # NOTE: socket only required to set timeout parameter for the urlopen()
                     # In Python26 and beyond we can use the timeout parameter in the urlopen()
-                    analyzerIpRegister = self.url.replace("datalogAdd", "analyzerIpRegister")
+                    analyzerIpRegister = self.ip_url
                     socket.setdefaulttimeout(self.timeout)
                     resp = urllib2.urlopen(analyzerIpRegister, data=urllib.urlencode(postparms))
                     ip_register_good = True
@@ -97,19 +120,27 @@ class DataEchoP3(object):
         wcounter = 0
         while True:
             # Getting source
-            try:
-                self.fname = genLatestFiles(*os.path.split(self.listen_path)).next()
-            except:
-                ecounter += 1
-                time.sleep(self.sleep_seconds)
-                self.fname = None
-                
-                if ecounter > 2000:
-                    print "listen_path: %s" % self.listen_path
-                    print "No files to process: Exiting DataEchoP3.run()"
+            if self.file_path:
+                if self.fname == os.path.join(self.file_path):
+                    print "processing complete for file_path: %s" % self.fname
                     break
                 else:
-                    print "No files to process: sleeping for %s seconds" % self.sleep_seconds
+                    self.fname = os.path.join(self.file_path)
+                    
+            else:
+                try:
+                    self.fname = genLatestFiles(*os.path.split(self.listen_path)).next()
+                except:
+                    ecounter += 1
+                    time.sleep(self.sleep_seconds)
+                    self.fname = None
+                    
+                    if ecounter > 200000:
+                        print "listen_path: %s" % self.listen_path
+                        print "No files to process: Exiting DataEchoP3.run()"
+                        break
+                    else:
+                        print "No files to process: sleeping for %s seconds" % self.sleep_seconds
 
             # if we have a file, make sure we have not previously processed it
             ##  if we have proccessed it, sleep for a wile, and wait for a new file
@@ -138,7 +169,9 @@ class DataEchoP3(object):
                             first_row = None
                             headers = line.split()
                             ##print "line", line
-                            self.pushToP3(self.fname, None, [(line, 0)], True, None)
+                            
+                            ## We no longer push the file line
+                            #self.pushToP3(self.fname, None, [(line, 0)], True, None)
                             continue
                         
                         lctr += 1
@@ -156,7 +189,11 @@ class DataEchoP3(object):
                                 try:
                                     doc[col] = float(val)
                                 except:
-                                    doc[col] = NaN
+                                    #JSON does not have NaN as part of the standard
+                                    # (even though JavaScrip does)
+                                    # so send a text "NaN" and the server will convert
+                                    doc[col] = "NaN"
+
                             rctr += 1
                             doc['row'] = rctr
                             
@@ -173,7 +210,7 @@ class DataEchoP3(object):
                                 self._lines = []
                                 nsec = time.time()
                                 
-                                if (ipctr > 100 or not ip_register_good):
+                                if (ipctr > 1000 or not ip_register_good):
                                     pushIP()
                                     ipctr = 0
                         
@@ -201,6 +238,11 @@ class DataEchoP3(object):
                 counter += 1
                 if counter == 10:
                     try:    # Stop iteration if we are not the last file
+                        if self.fname == os.path.join(self.file_path):
+                            fp.close()
+                            print "\r\nClosing source stream %s\r\n" % self.fname
+                            return
+                        
                         if self.fname != genLatestFiles(*os.path.split(self.listen_path)).next(): 
                             fp.close()
                             print "\r\nClosing source stream %s\r\n" % self.fname
@@ -218,56 +260,39 @@ class DataEchoP3(object):
         rtn = "OK"
         fname = os.path.basename(path) 
         if docs: 
-            params = {fname: docs}
-        else:    
-            params = {fname: []}
-        postparms = {'data': json.dumps(params)}
-
-        if flat_rows:
-            ## flat_rows is a tuple of row, rctr
-            fparams = {fname: flat_rows}
-            postparms['flat_data'] = json.dumps(fparams)
-        else:
-            fparams = {fname: []}
-            postparms['flat_data'] = json.dumps(fparams)
+            params = [{"logname": fname, "logdata": docs, "logtype": self.logtype}]
+            postparms = {'data': json.dumps(params)}
         
-        postparms['flat_data_replace'] = 'no'
-        
-        if replace:
-            if replace == True:
-                postparms['flat_data_replace'] = 'yes'
-                ##print "flat_rows in pushToP3: ", flat_rows
-        
-        tctr = 0
-        while True:
-            try:    
-                # NOTE: socket only required to set timeout parameter for the urlopen()
-                # In Python26 and beyond we can use the timeout parameter in the urlopen()
-                socket.setdefaulttimeout(self.timeout)
-                resp = urllib2.urlopen(self.url, data=urllib.urlencode(postparms))
-                rtn_data = resp.read()
-                ##print rtn_data
-                if err_rtn_str in rtn_data:
-                    rslt = json.loads(rtn_data)
-                    expect_ctr = rslt['result'].replace(err_rtn_str, "").strip()
-                    if last_pos:
-                        missing_rtn = self.pushMissingRows(path, int(expect_ctr), last_pos)
+            tctr = 0
+            while True:
+                try:    
+                    # NOTE: socket only required to set timeout parameter for the urlopen()
+                    # In Python26 and beyond we can use the timeout parameter in the urlopen()
+                    socket.setdefaulttimeout(self.timeout)
+                    resp = urllib2.urlopen(self.push_url, data=urllib.urlencode(postparms))
+                    rtn_data = resp.read()
+                    ##print rtn_data
+                    if err_rtn_str in rtn_data:
+                        rslt = json.loads(rtn_data)
+                        expect_ctr = rslt['result'].replace(err_rtn_str, "").strip()
+                        if last_pos:
+                            missing_rtn = self.pushMissingRows(path, int(expect_ctr), last_pos)
+                        else:
+                            break
                     else:
                         break
-                else:
-                    break
-            except Exception, e:
-                print 'EXCEPTION in pushToP3\n%s\n' % e
-                pass
-            
-            sys.stderr.write('-')
-            tctr += 1
-            time.sleep(self.timeout)
+                except Exception, e:
+                    print 'EXCEPTION in pushToP3\n%s\n' % e
+                    pass
+                
+                sys.stderr.write('-')
+                tctr += 1
+                time.sleep(self.timeout)
                 
             ## we want to keep trying forever.  This is intentional.
             '''   
             if tctr > 100:
-                print 'r\nError trying to send data from file %s to url: %s\r\n' % (self.fname, self.url)
+                print 'r\nError trying to send data from file %s to url: %s\r\n' % (self.fname, self.push_url)
                 rtn = "ERROR"
                 break
             '''
@@ -363,30 +388,78 @@ class DataEchoP3(object):
         except:
             return None
 
-if __name__ == "__main__":
-
-    print sys.argv
-    if 1 < len(sys.argv):
-        listen_path=sys.argv[1]
-    else:
-        if hasattr(sys, "frozen"): #we're running compiled with py2exe
-            AppPath = sys.executable
-        else:
-            AppPath = sys.argv[0]
-        AppDir = os.path.split(AppPath)[0]
-        listen_path = 'C:/UserData/AnalyzerServer/*_Minimal.dat'
-
-    if 2 < len(sys.argv):
-        url=sys.argv[2]
-    else:
-        url='http://localhost:8080/rest/datalogAdd/'
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
         
-    if 3 < len(sys.argv):
-        timeout=sys.argv[3]
-    else:
-        timeout=10
+    usage = "usage: %prog [options]"
+    parser = OptionParser(usage=usage)
+    parser.add_option("-d", "--data-type", dest="data_type",
+                      help="Data type (log type).", metavar="<DATA_TYPE>")
+    parser.add_option("-l", "--listen-path", dest="listen_path",
+                      help="Search path for constant updates.", metavar="<LISTEN_PATH>")
+    parser.add_option("-f", "--file-path", dest="file_path",
+                      help="path to specific file to upload.", metavar="<FILE_PATH>")
+    parser.add_option("-t", "--timeout", dest="timeout",
+                      help="timeout value for response from server.", metavar="<TIMEOUT>")
+    parser.add_option("-i", "--ip-reg-url", dest="ip_url",
+                      help="rest url for ip registration.", metavar="<IP_REG_URL>")
+    parser.add_option("-p", "--push-url", dest="push_url",
+                      help="rest url for data push to server.", metavar="<PUSH_URL>")
+    
+    (options, args) = parser.parse_args()
+    #if len(args) != 1:
+    #    parser.error("incorrect number of arguments")
         
+    if options.listen_path:
+        listen_path = options.listen_path
+    else:
+        listen_path = None
+        
+    if options.file_path:
+        file_path = options.file_path
+    else:
+        file_path = None
+
+    if not listen_path:
+        if not file_path:
+            listen_path = 'C:/UserData/AnalyzerServer/*_Minimal.dat'
+            
+    if options.timeout:
+        timeout = options.timeout
+    else:
+        timeout = 10
+
+    if options.ip_url:
+        ip_url = options.ip_url
+    else:
+        ip_url = 'http://dev.picarro.com/dev/rest/gdu/analyzerIpRegister/'
+
+    if options.push_url:
+        push_url = options.push_url
+    else:
+        push_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
+
+    if options.data_type:
+        logtype = options.data_type
+    else:
+        logtype = "dat"
+
+    print listen_path
+    print file_path
+    print ip_url
+    print push_url
+    print timeout
+    print logtype
+
     decho = DataEchoP3(listen_path=listen_path,
-                       url=url,
-                       timeout=timeout)
+                       file_path=file_path,
+                       ip_url=ip_url,
+                       push_url=push_url,
+                       timeout=timeout,
+                       logtype=logtype)
     decho.run()
+
+if __name__ == '__main__':
+    sys.exit(main())
+
