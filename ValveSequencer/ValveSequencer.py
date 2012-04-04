@@ -180,11 +180,15 @@ class ValveSequencer(ValveSequencerFrame):
         self.rpcServer.register_function(self.startValveSeq)
         self.rpcServer.register_function(self.stopValveSeq)
         self.rpcServer.register_function(self.getValveSeqStatus)
+        self.rpcServer.register_function(self.loadSeqFile)
         
         # Start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.shutdown)
         self.rpcThread.start()
 
+    def loadSeqFile(self, filename):
+        self.onLoadFileMenu(None, filename)
+        
     def showGui(self):
         self.Show(True)
 
@@ -501,58 +505,67 @@ class ValveSequencer(ValveSequencerFrame):
         self.curCheckboxList[self.curValStateIdList.index(event.GetEventObject().GetId())].SetValue(not event.IsChecked())
 
     def onLoadFileMenu(self, event, filename = None):
-        if self.isSeqRunning():
-            msgDlg = wx.MessageDialog(self, "Valve Sequencer is running. Do you want to finish the current step after loading the new sequence? \
-                                      \n\nSelect 'YES' to continue the current step and run the new sequence afterwards. \
-                                      \n\nSelect 'NO' to abandon the current step and run the new sequence immediately.",
-                                      "Finish current step?", wx.YES_NO|wx.YES_DEFAULT|wx.ICON_QUESTION)
-            self.holdNewSeq = (msgDlg.ShowModal() == wx.ID_YES)                       
-            msgDlg.Destroy()    
-            
         if filename == None:
+            if self.isSeqRunning():
+                msgDlg = wx.MessageDialog(self, "Valve Sequencer is running. Do you want to finish the current step after loading the new sequence? \
+                                          \n\nSelect 'YES' to continue the current step and run the new sequence afterwards. \
+                                          \n\nSelect 'NO' to abandon the current step and run the new sequence immediately.",
+                                          "Finish current step?", wx.YES_NO|wx.YES_DEFAULT|wx.ICON_QUESTION)
+                holdNewSeq = (msgDlg.ShowModal() == wx.ID_YES)                       
+                msgDlg.Destroy() 
+            else:
+                holdNewSeq = False
+                
             if not self.defaultPath:
                 self.defaultPath = os.getcwd()
-            dlg = wx.FileDialog(self, "Select Valve Sequence File...",
-                                self.defaultPath, wildcard = "*.seq", style=wx.OPEN)
+            dlg = wx.FileDialog(self, "Select Valve Sequence File...", self.defaultPath, wildcard = "*.seq", style=wx.OPEN)
             if dlg.ShowModal() == wx.ID_OK:
-                self.filename = dlg.GetPath()
+                filename = dlg.GetPath()
                 dlg.Destroy()
             else:
                 dlg.Destroy()
                 return
         else:
-            self.filename = filename
+            if not os.path.isfile(filename):
+                wx.MessageBox("Loading '%s' failed!\nNot a valid file." % (filename,), "Error")
+                return
+            holdNewSeq = False
 
         try:
-            fd = open(self.filename, "r")
-            self.seqData = fd.readlines()
+            fd = open(filename, "r")
+            seqData = fd.readlines()
             fd.close()
-            # Update the default path
-            self.defaultPath = os.path.dirname(self.filename)
-            # Process the data in the sequence file
-            numSteps = len(self.seqData)  
-            self.spinCtrlTotSteps.SetValue(numSteps)
-            self.setNumSteps(numSteps)
-            self.setPanelCtrl(loadNewSeq = True)   
-            self.doLayout()
-            self.bindDynamicEvents()           
-            for row in range(numSteps):
-                # Separate the values by any number of spaces
-                (dur, valCode, rotValCode) = string.split(self.seqData[row])[:3]
-                self.durationTextCtrlList[row].SetValue(dur)    
-                self.valCodeTextCtrlList[row].SetValue(valCode)
-                self.rotValCodeTextCtrlList[row].SetValue(rotValCode)   
-            self.SetTitle("External Valve Sequencer (%s)" % self.filename)                
         except Exception, errMsg:
-            wx.MessageBox("Loading %s failed!\nPython Error: %s" % (self.filename, errMsg))
-            self.holdNewSeq = False
-                
+            wx.MessageBox("Loading %s failed!\nPython Error: %s" % (filename, errMsg), "Error")
+            return
+
+        self.filename = filename
+        self.seqData = seqData
+        self.holdNewSeq = holdNewSeq
+        
+        # Update the default path
+        self.defaultPath = os.path.dirname(self.filename)
+        # Process the data in the sequence file
+        numSteps = len(self.seqData)  
+        self.spinCtrlTotSteps.SetValue(numSteps)
+        self.setNumSteps(numSteps)
+        self.setPanelCtrl(loadNewSeq = True)   
+        self.doLayout()
+        self.bindDynamicEvents()           
+        for row in range(numSteps):
+            # Separate the values by any number of spaces
+            (dur, valCode, rotValCode) = string.split(self.seqData[row])[:3]
+            self.durationTextCtrlList[row].SetValue(dur)    
+            self.valCodeTextCtrlList[row].SetValue(valCode)
+            self.rotValCodeTextCtrlList[row].SetValue(rotValCode)   
+        self.SetTitle("External Valve Sequencer (%s)" % self.filename)                
+
         if self.isSeqRunning():
             if self.holdNewSeq == False:
                 # Start new sequence right away
                 self.currStepEndTime = time.time()
-                self.currentStep = 1
-                self._runCurrentStep()
+                self.currentStep = 0
+                #self._runCurrentStep()
             else:
                 # Hold new sequence
                 self.curTextCtrlList[0].SetValue(str(self.currentStep)+" (Last Seq.)")
