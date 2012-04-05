@@ -90,7 +90,7 @@ class AircraftValveSwitcher(AircraftValveSwitcherFrame):
         self.shutdownDelayCount = self.co.getint("MAIN", "shutdownDelayCount", 10)
         self.dioChannel = self.co.getint("DIO", "dioChannel", 1)
         dioFlightSig = self.co.getint("DIO", "dioFlightSig", 1)
-        assert dioFlightSig in [0, 1], "DIO Flight signal must be within [0,1]"
+        assert dioFlightSig in [0, 1], "DIO Flight signal must be either 0 or 1"
         self.powerOnSeq = self.co.get("MAIN", "powerOnSeq", "")
         self.flightSeq = self.co.get("MAIN", "flightSeq", "")
         self.landingSeq = self.co.get("MAIN", "landingSeq", "")
