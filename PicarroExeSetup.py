@@ -87,6 +87,7 @@ sys.path.append("Utilities/PeriphModeSwitcher")
 sys.path.append("Utilities/RecipeEditor")
 sys.path.append("Utilities/BackpackServer")
 sys.path.append("Utilities/ConfigManager")
+sys.path.append("Utilities/AircraftValveSwitcher")
 sys.path.append("../SrcCode/Utilities")
 
 ################################################################
@@ -346,6 +347,7 @@ setup(version = "1.0",
                  "Utilities/PeriphModeSwitcher/PeriphModeSwitcher.py",
                  "Utilities/RecipeEditor/RecipeEditor.py",
                  "Utilities/ConfigManager/ConfigManager.py",
+                 "Utilities/AircraftValveSwitcher/AircraftValveSwitcher.py",
                  ],
                  
       data_files = data_files
