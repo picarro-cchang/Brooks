@@ -11,6 +11,7 @@ import time
 from collections import deque
 import urllib2
 import urllib
+import math
 
 import socket
 
@@ -188,6 +189,11 @@ class DataEchoP3(object):
                             for col, val in zip(headers, vals):
                                 try:
                                     doc[col] = float(val)
+                                    #JSON does not have NaN as part of the standard
+                                    # (even though JavaScrip does)
+                                    # so send a text "NaN" and the server will convert
+                                    if math.isnan(doc[col]):
+                                        doc[col] = "NaN"
                                 except:
                                     #JSON does not have NaN as part of the standard
                                     # (even though JavaScrip does)
