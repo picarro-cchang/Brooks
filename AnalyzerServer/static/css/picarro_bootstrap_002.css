@@ -1912,6 +1912,18 @@ width:40px;
 height:40px;
 background:url("/static/images/icons/icon-combined-all-v5.png") -733px -4px;
 }
+img.gps-uninstalled
+{
+width:40px;
+height:40px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -783px -4px;
+}
+img.gps-warning
+{
+width:40px;
+height:40px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -983px -4px;
+}
 img.ws-ok
 {
 width:40px;
@@ -1923,4 +1935,10 @@ img.ws-failed
 width:40px;
 height:40px;
 background:url("/static/images/icons/icon-combined-all-v5.png") -883px -5px;
+}
+img.ws-uninstalled
+{
+width:40px;
+height:40px;
+background:url("/static/images/icons/icon-combined-all-v5.png") -933px -5px;
 }

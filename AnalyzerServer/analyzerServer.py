@@ -15,7 +15,8 @@ from threading import Thread
 import time
 import traceback
 import CmdFIFO
-from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER
+from timestamp import getTimestamp
+from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DATA_MANAGER
 
 NaN = 1e1000/1e1000
 def pFloat(x):
@@ -423,6 +424,29 @@ def getDateTimeEx(params):
     print time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
     return(dict(dateTime=time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())))
 
+@app.route('/rest/getLastPeriphUpdate')
+def rest_getLastPeriphUpdate():
+    result = getLastPeriphUpdateEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def getLastPeriphUpdateEx(params):
+    # Get the last timestamps of peripheral data
+    DataManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = "AnalyzerServer")
+    try:
+        lastTimestamps = DataManager.Periph_GetLastTimestamps()
+        currentTimestamp = getTimestamp()
+        if len(lastTimestamps) > 0:
+            for port in lastTimestamps:
+                lastTimestamps[port] = currentTimestamp - lastTimestamps[port]
+            return lastTimestamps
+        else:
+            return {}
+    except:
+        return dict(error=traceback.format_exc())
+        
 @app.route('/maps')
 def maps():
     amplitude = float(request.values.get('amplitude',0.1))

@@ -82,11 +82,14 @@ var TXT = {
         stream_warning: 'Intermittent Data Transfer',
         stream_failed: 'Data Transfer Failed',
         gps_title: 'GPS Signal Quality Indicators',
-        gps_ok: 'GPS Signal OK',
-        gps_failed: 'GPS Signal Lost (or Status Unknown)',
+        gps_ok: 'GPS OK',
+        gps_warning: 'Unreliable GPS Signal',
+        gps_failed: 'GPS Failed',
+        gps_uninstalled: 'GPS Not Detectable',
         ws_title: 'Weather Status Indicators',
         ws_ok: 'Weather Station OK',
-        ws_failed: 'Weather Station Failed (or Status Unknown)',
+        ws_failed: 'Weather Station Failed',
+        ws_uninstalled: 'Weather Station Not Detectable',
         analyzer_title: 'Current Analyzer Status',
         cavity_p: 'Cavity Pressure',
         cavity_t: 'Cavity Temperature',
@@ -204,6 +207,11 @@ var CNSNT = {
         callbacktest_url: "",
         callbacktest_timeout: 4000,
         annotation_url: false,
+        
+        gpsPort: 0,
+        wsPort: 1,
+        gpsUpdateTimeout: 60000,
+        wsUpdateTimeout: 60000,
 
         prime_view: true,
         log_sel_opts: [],
@@ -240,6 +248,7 @@ var CSTATE = {
         resize_map_inprocess: false,
         current_mode: 0,
         getting_mode: false,
+        getting_periph_time: false,
 
         getting_warming_status: false,
         end_warming_status: false,
@@ -264,6 +273,8 @@ var CSTATE = {
 
         lastwhere: '',
         lastFit: '',
+        lastGpsUpdateStatus: 0, //0: Not installed; 1: Good; 2: Failed
+        lastWsUpdateStatus: 0, //0: Not installed; 1: Good; 2: Failed
         lastInst: '',
         lastTimestring: '',
         lastDataFilename: '',
@@ -2532,20 +2543,34 @@ function statCheck() {
     if (streamdiff > CNSNT.streamerror) {
         $("#id_stream_stat").attr("class", "stream-failed");
         $("#id_analyzer_stat").attr("class", "analyzer-failed");
-        $("#id_gps_stat").attr("class", "gps-failed");
-        $("#id_ws_stat").attr("class", "ws-failed");
+        if (CSTATE.lastGpsUpdateStatus !== 0) {
+            $("#id_gps_stat").attr("class", "gps-failed");
+        }
+        if (CSTATE.lastWsUpdateStatus !== 0) {
+            $("#id_ws_stat").attr("class", "ws-failed");
+        }
     } else {
         if (streamdiff > CNSNT.streamwarning) {
             $("#id_stream_stat").attr("class", "stream-warning");
         } else {
             $("#id_stream_stat").attr("class", "stream-ok");
             
-            if (CSTATE.lastFit === 0) {
+            if (CSTATE.lastGpsUpdateStatus === 2) {
                 $("#id_gps_stat").attr("class", "gps-failed");
-            } else {
-                $("#id_gps_stat").attr("class", "gps-ok");
+            } else if (CSTATE.lastGpsUpdateStatus === 1) {
+                if (CSTATE.lastFit === 0) {
+                    $("#id_gps_stat").attr("class", "gps-warning");
+                } else {
+                    $("#id_gps_stat").attr("class", "gps-ok");
+                }
             }
 
+            if (CSTATE.lastWsUpdateStatus === 2) {
+                $("#id_ws_stat").attr("class", "ws-failed");
+            } else if (CSTATE.lastWsUpdateStatus === 1) {
+                $("#id_ws_stat").attr("class", "ws-ok");
+            }
+            
             if (CSTATE.lastInst !== 963) {
                 $("#id_analyzer_stat").attr("class", "analyzer-failed");
             } else {
@@ -2575,7 +2600,7 @@ function getMode() {
     if (!CSTATE.getting_mode) {
         CSTATE.getting_mode = true;
         call_rest(CNSNT.svcurl, "driverRpc", {"func": "rdDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER']"},
-                function (data, ts, jqXHR) {
+            function (data, ts, jqXHR) {
                 if (data.result.value !== undefined) {
                     var mode = data.result.value;
                     setModePane(mode);
@@ -2610,6 +2635,41 @@ function getMode() {
             );
     }
     getData();
+}
+
+function checkPeriphUpdate() {
+    if (!CSTATE.getting_periph_time) {
+        CSTATE.getting_periph_time = true;
+        call_rest(CNSNT.svcurl, "getLastPeriphUpdate", {},
+            function (data, ts, jqXHR) {
+                var gpsPort = CNSNT.gpsPort;
+                var wsPort = CNSNT.wsPort;
+                if (gpsPort in data.result) {
+                    if (data.result[gpsPort] > CNSNT.gpsUpdateTimeout) {
+                        CSTATE.lastGpsUpdateStatus = 2;
+                    } else {
+                        CSTATE.lastGpsUpdateStatus = 1;
+                    }
+                } else {
+                    CSTATE.lastGpsUpdateStatus = 0;
+                }
+                if (wsPort in data.result) {
+                    if (data.result[wsPort] > CNSNT.wsUpdateTimeout) {
+                        CSTATE.lastWsUpdateStatus = 2;
+                    } else {
+                        CSTATE.lastWsUpdateStatus = 1;
+                    }
+                } else {
+                    CSTATE.lastWsUpdateStatus = 0;
+                }
+                CSTATE.getting_periph_time = false;
+            },
+            function (jqXHR, ts, et) {
+                $("#errors").html(jqXHR.responseText);
+                CSTATE.getting_periph_time = false;
+            }
+            );
+    }
 }
 
 function showLeaks() {
@@ -2850,6 +2910,9 @@ function successData(data) {
             }
         }
     }
+    // Check GPS and WS update status
+    checkPeriphUpdate();
+    // Update overall status
     statCheck();
     setGduTimer('dat');
     if (TIMER.peak === null) {
@@ -3405,8 +3468,12 @@ function showGps() {
     c2array.push('style="border-style: none; width: 70%;"');
     c1array.push('<img class="gps-ok" src="/static/images/icons/spacer.gif" />');
     c2array.push('<h4>' + TXT.gps_ok + '</h4>');
+    c1array.push('<img class="gps-warning" src="/static/images/icons/spacer.gif" />');
+    c2array.push('<h4>' + TXT.gps_warning + '</h4>');
     c1array.push('<img class="gps-failed" src="/static/images/icons/spacer.gif" />');
     c2array.push('<h4>' + TXT.gps_failed + '</h4>');
+    c1array.push('<img class="gps-uninstalled" src="/static/images/icons/spacer.gif" />');
+    c2array.push('<h4>' + TXT.gps_uninstalled + '</h4>');
     body = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
 
     c1array = [];
@@ -3438,6 +3505,8 @@ function showWs() {
     c2array.push('<h4>' + TXT.ws_ok + '</h4>');
     c1array.push('<img class="ws-failed" src="/static/images/icons/spacer.gif" />');
     c2array.push('<h4>' + TXT.ws_failed + '</h4>');
+    c1array.push('<img class="ws-uninstalled" src="/static/images/icons/spacer.gif" />');
+    c2array.push('<h4>' + TXT.ws_uninstalled + '</h4>');
     body = tableChrome('style="border-spacing: 0px;"', '', c1array, c2array);
 
     c1array = [];
