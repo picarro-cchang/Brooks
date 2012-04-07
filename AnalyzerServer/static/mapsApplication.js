@@ -2957,7 +2957,7 @@ function successPeaks(data) {
                     peakMarker = newPeakMarker(CSTATE.map, peakCoords, data.result.AMPLITUDE[i], data.result.SIGMA[i], data.result.CH4[i]);
                     CSTATE.peakMarkers[CSTATE.peakMarkers.length] = peakMarker;
                     // Play warning sound
-                    var myAudio = document.getElementsByTagName('audio')[0];
+                    var myAudio = document.getElementById("plume");
                     myAudio.play();
                     datadict = CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]];
                     if (!datadict) {

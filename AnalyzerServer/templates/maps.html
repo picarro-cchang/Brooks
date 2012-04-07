@@ -13,7 +13,10 @@
 
 {% block body %}
     <div class="container-fluid">
-        <audio src="static/sound/beep-7.mp3"></audio>
+        <audio id="plume">
+           <source src="/static/sound/beep-7.mp3" />
+           <source src="/static/sound/beep-7.wav" />
+        </audio>
         <div id="id_sidebar" class="sidebar">
             <span>
 
