@@ -172,6 +172,8 @@ var CNSNT = {
 
         normal_path_color: "#0000FF",
         analyze_path_color: "#000000",
+        //inactive_path_color: "#996633",
+        inactive_path_color: "#FF0000",
         streamwarning:  (1000 * 10),
         streamerror:  (1000 * 30),
         
@@ -212,6 +214,7 @@ var CNSNT = {
         wsPort: 1,
         gpsUpdateTimeout: 60000,
         wsUpdateTimeout: 60000,
+        turnOnAudio: false,
 
         prime_view: true,
         log_sel_opts: [],
@@ -275,6 +278,7 @@ var CSTATE = {
         lastFit: '',
         lastGpsUpdateStatus: 0, //0: Not installed; 1: Good; 2: Failed
         lastWsUpdateStatus: 0, //0: Not installed; 1: Good; 2: Failed
+        lastPathColor: CNSNT.normal_path_color,
         lastInst: '',
         lastTimestring: '',
         lastDataFilename: '',
@@ -1977,20 +1981,23 @@ function setActivePlat(plname) {
 }
 
 function colorPathFromValveMask(value) {
-    var value_float, value_int, clr, value_binstr, value_lastbits;
+    var value_float, value_int, clr, value_binstr, valve0_bit, valve4_bit;
     value_float = parseFloat(value);
     value_int = Math.round(value_float);
-    clr = CNSNT.normal_path_color;
-    if (Math.abs(value_float - value_int) > 1e-4) {
-        clr = CNSNT.normal_path_color;
-    } else {
+    clr = CSTATE.lastPathColor;
+    if (Math.abs(value_float - value_int) <= 1e-4) {
+        // Only change the path color when valve mask is an integer
         value_binstr = value_int.toString(2);
-        value_lastbits = value_binstr.substring(value_binstr.length - 1, value_binstr.length);
-        if (value_lastbits === "1") {
+        valve0_bit = value_binstr.substring(value_binstr.length-1, value_binstr.length);
+        valve4_bit = value_binstr.substring(value_binstr.length-5, value_binstr.length-4);
+        if (valve0_bit === "1") {
             clr = CNSNT.analyze_path_color;
+        } else if (valve4_bit === "1") {
+            clr = CNSNT.inactive_path_color;
         } else {
             clr = CNSNT.normal_path_color;
         }
+        CSTATE.lastPathColor = clr;
     }
     return clr;
 }
@@ -2956,9 +2963,11 @@ function successPeaks(data) {
                     peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
                     peakMarker = newPeakMarker(CSTATE.map, peakCoords, data.result.AMPLITUDE[i], data.result.SIGMA[i], data.result.CH4[i]);
                     CSTATE.peakMarkers[CSTATE.peakMarkers.length] = peakMarker;
-                    // Play warning sound
-                    var myAudio = document.getElementById("plume");
-                    myAudio.play();
+                    if (CNSNT.turnOnAudio) {
+                        // Play warning sound
+                        var myAudio = document.getElementById("plume");
+                        myAudio.play();
+                    }
                     datadict = CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]];
                     if (!datadict) {
                         datadict = {};
