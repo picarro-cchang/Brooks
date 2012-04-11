@@ -22,7 +22,7 @@ from Host.Common import CmdFIFO
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.TTLIntrf import TTLIntrf
 from Host.Common.SingleInstance import SingleInstance
-from Host.Common.SharedTypes import RPC_PORT_VALVE_SEQUENCER, RPC_PORT_SUPERVISOR
+from Host.Common.SharedTypes import RPC_PORT_VALVE_SEQUENCER, RPC_PORT_SUPERVISOR, RPC_PORT_INSTR_MANAGER
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
@@ -83,11 +83,13 @@ class AircraftValveSwitcher(AircraftValveSwitcherFrame):
     def __init__(self, configFile, *args, **kwds):
         self.valveSequencerRPC = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, APP_NAME)
         self.supervisorRPC = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME)
+        self.instMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, APP_NAME)
         self.configFile = configFile
         self.co = CustomConfigObj(configFile)
         timerIntervalS = self.co.getfloat("MAIN", "timerIntervalS", 2.0)
         self.landingTimeout = self.co.getfloat("MAIN", "landingTimeout", 660.0)
         self.shutdownDelayCount = self.co.getint("MAIN", "shutdownDelayCount", 10)
+        self.shutdownOption = self.co.getint("MAIN", "shutdownOption", 0)
         self.dioChannel = self.co.getint("DIO", "dioChannel", 1)
         dioFlightSig = self.co.getint("DIO", "dioFlightSig", 1)
         assert dioFlightSig in [0, 1], "DIO Flight signal must be either 0 or 1"
@@ -112,6 +114,12 @@ class AircraftValveSwitcher(AircraftValveSwitcherFrame):
     
     def readDIO(self):
         return self.dio.getStatus(self.dioChannel)
+        
+    def shutdown(self):
+        if self.shutdownOption == 0:
+            self.instMgrRpc.INSTMGR_ShutdownRpc(2)
+        else:
+            self.supervisorRPC.TerminateApplications(powerDown=False,stopProtected=True)
         
     def onTimer(self, event):
             dio = self.readDIO()
@@ -145,11 +153,11 @@ class AircraftValveSwitcher(AircraftValveSwitcherFrame):
             elif self.state == "Shutting Down":
                 if self.shutdownCount > self.shutdownDelayCount:
                     self.dio.close()
-                    self.supervisorRPC.TerminateApplications(powerDown=False,stopProtected=True)
+                    self.shutdown()
                     sys.exit(0)
                 else:
                    self.shutdownCount += 1 
-            print "Current state = %s" % (self.state,)
+            #print "Current state = %s" % (self.state,)
             self.valCurStatus.SetValue(self.state)
             if self.state == "Shutting Down":
                 self.valCurStatus.SetForegroundColour("red")
