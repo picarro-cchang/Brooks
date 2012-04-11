@@ -203,6 +203,9 @@ class MyPlotCanvas(plot.PlotCanvas):
         """Wrapper around _Draw, which handles log axes"""
         
         graphics.setLogScale(self.getLogScale())
+        
+        if xAxis is not None: xAxis = tuple(xAxis)
+        if yAxis is not None: yAxis = tuple(yAxis)
         # check Axis is either tuple or none
         if type(xAxis) not in [type(None),tuple]:
             raise TypeError, "xAxis should be None or (minX,maxX)"+str(type(xAxis))
