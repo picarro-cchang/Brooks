@@ -84,6 +84,15 @@ BuildStation = Target(description = "BuildStation", # used for the versioninfo r
                     ##    icon_resources = [(1, "icon.ico")],
                     dest_base = "BuildStation"
                     )
+DetectorViewer = Target(description = "DetectorViewer", # used for the versioninfo resource
+                    script = "DetectorViewer.py", # what to build
+                    other_resources = [(RT_MANIFEST,
+                                        1,
+                                        manifest_template % dict(prog="DetectorViewer")
+                                        )],
+                    ##    icon_resources = [(1, "icon.ico")],
+                    dest_base = "DetectorViewer"
+                    )
                     
 ################################################################
 
@@ -103,4 +112,4 @@ setup(version = "1.0",
                                    includes = inclusionList,
                                    dll_excludes = dllexclusionList)
                      ),
-      windows = [BuildStation])
+      windows = [BuildStation, DetectorViewer])
