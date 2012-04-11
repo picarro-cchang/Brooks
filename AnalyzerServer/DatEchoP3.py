@@ -62,8 +62,8 @@ class DataEchoP3(object):
         if 'ip_url' in kwargs:
             self.ip_url = kwargs['ip_url']
         else:
-            #self.ip_url = 'http://localhost:8080/rest/analyzerIpRegister/'
-            self.ip_url = 'http://dev.picarro.com/dev/rest/gdu/analyzerIpRegister/'
+            #self.ip_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzMeta/'
+            self.ip_url = None
 
         if 'push_url' in kwargs:
             self.push_url = kwargs['push_url']
@@ -75,6 +75,11 @@ class DataEchoP3(object):
             self.timeout = int(kwargs['timeout'])
         else:
             self.timeout = 2
+
+        if 'replace' in kwargs:
+            self.replace = kwargs['replace']
+        else:
+            self.replace = None
 
         if 'logtype' in kwargs:
             self.logtype = kwargs['logtype']
@@ -88,33 +93,44 @@ class DataEchoP3(object):
 
         self._last_fname = None
         self.fname = None
+        self.first_pass_complete = None
 
     def run(self):
         '''
         '''
         ip_register_good = True
         def pushIP():
-            aname = self.getLocalAnalyzerId()
-            for addr in self.getIPAddresses():
-                if addr == "0.0.0.0":
-                    continue
-                params = {aname: {"ip_addr": "%s:5000" % addr}}
-                postparms = {'data': json.dumps(params)}
-                try:    
-                    # NOTE: socket only required to set timeout parameter for the urlopen()
-                    # In Python26 and beyond we can use the timeout parameter in the urlopen()
-                    analyzerIpRegister = self.ip_url
-                    socket.setdefaulttimeout(self.timeout)
-                    resp = urllib2.urlopen(analyzerIpRegister, data=urllib.urlencode(postparms))
-                    ip_register_good = True
-                    print "Registered new ip. postparms: ", postparms
-                    #print "analyzerIpRegister: ", analyzerIpRegister
-                    #print "resp: ", resp
-                    break
-                except Exception, e:
-                    ip_register_good = False
-                    print '\nanalyzerIpRegister failed \n%s\n' % e
-                    pass
+            if self.ip_url:
+                aname = self.getLocalAnalyzerId()
+                for addr in self.getIPAddresses():
+                    if addr == "0.0.0.0":
+                        continue
+                    
+                    
+                    doc_data = []
+                    datarow = {}
+                    datarow["ANALYZER"] = aname
+                    datarow["PRIVATE_IP"] = "%s:5000" % addr 
+                    doc_data.append(datarow)
+                    postparms = {'data': json.dumps(doc_data)}
+                    
+                    #params = {aname: {"ip_addr": "%s:5000" % addr}}
+                    #postparms = {'data': json.dumps(params)}
+                    try:    
+                        # NOTE: socket only required to set timeout parameter for the urlopen()
+                        # In Python26 and beyond we can use the timeout parameter in the urlopen()
+                        analyzerIpRegister = self.ip_url
+                        socket.setdefaulttimeout(self.timeout)
+                        resp = urllib2.urlopen(analyzerIpRegister, data=urllib.urlencode(postparms))
+                        ip_register_good = True
+                        print "Registered new ip. postparms: ", postparms
+                        #print "analyzerIpRegister: ", analyzerIpRegister
+                        #print "resp: ", resp
+                        break
+                    except Exception, e:
+                        ip_register_good = False
+                        print '\nanalyzerIpRegister failed \n%s\n' % e
+                        pass
 
         ecounter = 0
         fcounter = 0
@@ -209,7 +225,7 @@ class DataEchoP3(object):
                             # attempt to smooth the transmission by only
                             # sending to server every .8 seconds OR ever 100 lines
                             tsec = time.time() - nsec
-                            if (lctr > 100 or tsec >= .7):
+                            if (lctr > 1000 or tsec >= .7):
                                 lctr = 0
                                 self.pushToP3(self.fname, self._docs, self._lines, None, rctr)
                                 self._docs = []
@@ -266,7 +282,12 @@ class DataEchoP3(object):
         rtn = "OK"
         fname = os.path.basename(path) 
         if docs: 
-            params = [{"logname": fname, "logdata": docs, "logtype": self.logtype}]
+            replace_the_log = None
+            if (not self.first_pass_complete):
+                if (self.replace == True):
+                    replace_the_log = 1
+                    
+            params = [{"logname": fname, "replace": replace_the_log, "logtype": self.logtype, "logdata": docs}]
             postparms = {'data': json.dumps(params)}
         
             tctr = 0
@@ -387,9 +408,15 @@ class DataEchoP3(object):
             adate, sep, part = part.partition('-')
             atime, sep, part = part.partition('-')
             return aname, adate, atime
+
+                    
             
         try:    # Stop iteration if we are not the last file
-            fname = genLatestFiles(*os.path.split(self.listen_path)).next()
+            if self.file_path:
+                fname = os.path.join(self.file_path)
+            else:
+                fname = genLatestFiles(*os.path.split(self.listen_path)).next()
+                
             aname, adate, atime = analyzerNameFromFname(fname)
             return aname
         except:
@@ -413,10 +440,18 @@ def main(argv=None):
                       help="rest url for ip registration.", metavar="<IP_REG_URL>")
     parser.add_option("-p", "--push-url", dest="push_url",
                       help="rest url for data push to server.", metavar="<PUSH_URL>")
+    parser.add_option("-r", "--replace", dest="replace", action="store_true",
+                      help="replace this log in the server (Dangerous!!, use with caution. This will delete FIRST!).")
     
     (options, args) = parser.parse_args()
     #if len(args) != 1:
     #    parser.error("incorrect number of arguments")
+        
+    if options.listen_path and options.file_path:
+        parser.error("listen-path and file-path are mutually exclusive")
+        
+    if options.listen_path and options.replace:
+        parser.error("listen-path and replace are mutually exclusive")
         
     if options.listen_path:
         listen_path = options.listen_path
@@ -440,8 +475,8 @@ def main(argv=None):
     if options.ip_url:
         ip_url = options.ip_url
     else:
-        ip_url = 'http://dev.picarro.com/dev/rest/gdu/analyzerIpRegister/'
-
+        ip_url = None
+        
     if options.push_url:
         push_url = options.push_url
     else:
@@ -451,6 +486,11 @@ def main(argv=None):
         logtype = options.data_type
     else:
         logtype = "dat"
+
+    if options.replace:
+        replace = options.replace
+    else:
+        replace = None
 
     print listen_path
     print file_path
@@ -464,7 +504,8 @@ def main(argv=None):
                        ip_url=ip_url,
                        push_url=push_url,
                        timeout=timeout,
-                       logtype=logtype)
+                       logtype=logtype,
+                       replace=replace)
     decho.run()
 
 if __name__ == '__main__':
