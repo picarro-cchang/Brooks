@@ -194,6 +194,8 @@ var CNSNT = {
         windUpdatePeriod: 500,
         noteUpdatePeriod: 1500,
         progressUpdatePeriod: 2000,
+        modeUpdatePeriod: 2000,
+        periphUpdatePeriod: 3000,
         hmargin: 25,
         vmargin: 0,
         map_topbuffer: 0,
@@ -359,6 +361,8 @@ var TIMER = {
         anote: null, // timer for getAnalysisNotes
         wind: null, // timer for showWind (getPeaks)
         progress: null, //timer for updateProgress
+        mode: null, // timer for getMode 
+        periph: null, // timer for checkPeriphUpdate
     };
 
 var modeStrings = {0: TXT.survey_mode, 1: TXT.capture_mode, 2: TXT.capture_mode, 3: TXT.analyzing_mode, 4: TXT.inactive_mode};
@@ -2480,6 +2484,14 @@ function setGduTimer(tcat) {
         TIMER.anote = setTimeout(anoteTimer, CNSNT.noteUpdatePeriod);
         return;
     }
+    if (tcat === "mode") {
+        TIMER.mode = setTimeout(modeTimer, CNSNT.modeUpdatePeriod);
+        return;
+    }
+    if (tcat === "periph") {
+        TIMER.periph = setTimeout(periphTimer, CNSNT.periphUpdatePeriod);
+        return;
+    }
 }
 
 function datTimer() {
@@ -2487,11 +2499,7 @@ function datTimer() {
         setGduTimer('dat');
         return;
     }
-    if (CNSNT.prime_view) {
-        getMode();
-    } else {
-        getData();
-    }
+    getData();
 }
 
 function peakTimer() {
@@ -2540,6 +2548,22 @@ function anoteTimer() {
         return;
     }
     getNotes("analysis");
+}
+
+function modeTimer() {
+    if (CSTATE.ignoreTimer) {
+        setGduTimer('mode');
+        return;
+    }
+    getMode();
+}
+
+function periphTimer() {
+    if (CSTATE.ignoreTimer) {
+        setGduTimer('periph');
+        return;
+    }
+    checkPeriphUpdate();
 }
 
 function statCheck() {
@@ -2608,6 +2632,7 @@ function getMode() {
         CSTATE.getting_mode = true;
         call_rest(CNSNT.svcurl, "driverRpc", {"func": "rdDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER']"},
             function (data, ts, jqXHR) {
+                CSTATE.net_abort_count = 0;
                 if (data.result.value !== undefined) {
                     var mode = data.result.value;
                     setModePane(mode);
@@ -2634,14 +2659,14 @@ function getMode() {
                     }
                 }
                 CSTATE.getting_mode = false;
+                setGduTimer('mode');
             },
             function (jqXHR, ts, et) {
-                $("#errors").html(jqXHR.responseText);
                 CSTATE.getting_mode = false;
+                errorMode(jqXHR.responseText);
             }
             );
     }
-    getData();
 }
 
 function checkPeriphUpdate() {
@@ -2649,6 +2674,7 @@ function checkPeriphUpdate() {
         CSTATE.getting_periph_time = true;
         call_rest(CNSNT.svcurl, "getLastPeriphUpdate", {},
             function (data, ts, jqXHR) {
+                CSTATE.net_abort_count = 0;
                 var gpsPort = CNSNT.gpsPort;
                 var wsPort = CNSNT.wsPort;
                 if (gpsPort in data.result) {
@@ -2670,10 +2696,11 @@ function checkPeriphUpdate() {
                     CSTATE.lastWsUpdateStatus = 0;
                 }
                 CSTATE.getting_periph_time = false;
+                setGduTimer('periph');
             },
             function (jqXHR, ts, et) {
-                $("#errors").html(jqXHR.responseText);
                 CSTATE.getting_periph_time = false;
+                errorPeriph(jqXHR.responseText);
             }
             );
     }
@@ -2917,11 +2944,18 @@ function successData(data) {
             }
         }
     }
-    // Check GPS and WS update status
-    checkPeriphUpdate();
-    // Update overall status
     statCheck();
     setGduTimer('dat');
+
+    if (CNSNT.prime_view) {
+        if (TIMER.mode === null) {
+            setGduTimer('mode');
+        }
+        if (TIMER.periph === null) {
+            setGduTimer('periph');
+        }
+    }
+
     if (TIMER.peak === null) {
         setGduTimer('peak');
     }
@@ -3292,6 +3326,24 @@ function errorDatNotes(text) {
     }
     $("#errors").html(text);
     setGduTimer('dnote');
+}
+
+function errorMode(text) {
+    CSTATE.net_abort_count += 1;
+    if (CSTATE.net_abort_count >= 2) {
+        $("#id_modal").html(modalNetWarning());
+    }
+    $("#errors").html(text);
+    setGduTimer('mode');
+}
+
+function errorPeriph(text) {
+    CSTATE.net_abort_count += 1;
+    if (CSTATE.net_abort_count >= 2) {
+        $("#id_modal").html(modalNetWarning());
+    }
+    $("#errors").html(text);
+    setGduTimer('periph');
 }
 
 function setModePane(mode) {

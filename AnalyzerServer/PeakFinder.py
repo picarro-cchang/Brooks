@@ -451,6 +451,9 @@ class PeakFinder(object):
             """
             # The following is true when the tape recorder is playing back
             collecting = lambda v: abs(v-round(v))<1e-4 and (int(round(v)) & 1) == 1
+
+            # The following is true when the surveyor is inactive
+            inactive = lambda v: abs(v-round(v))<1 and ((int(round(v)) >> 4) & 1) == 1
             
             hList = []
             kernelList = []
@@ -536,7 +539,9 @@ class PeakFinder(object):
                             reject = False
                             if 'ValveMask' in data._fields:
                                 where = list(data._fields).index('ValveMask')
-                                reject = collecting(mean([cache[where+1,j%npoints] for j in range(col-5,col+1)]))
+                                coll= collecting(mean([cache[where+1,j%npoints] for j in range(col-5,col+1)]))
+                                inact = inactive(cache[where+1,col%npoints])
+                                reject = (coll or inact)
                             if not reject:
                                 amplitude = 0.5*ssbuff[i-1,col]/(3.0**(-1.5))
                                 sigma = sqrt(0.5*scaleList[i-1])
@@ -622,7 +627,7 @@ class PeakFinder(object):
                     if self.noWait:
                         source = sourceFromFile(fname)
                     else:
-                    source = followLastUserFile(fname)
+                        source = followLastUserFile(fname)
                     alignedData = analyzerData(source)
                     
                 refinedData = refiner(alignedData)
