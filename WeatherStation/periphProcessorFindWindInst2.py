@@ -1,4 +1,4 @@
-from Host.Common.namedtuple import namedtuple
+from namedtuple import namedtuple
 from collections import deque
 from threading import Lock
 import Queue
@@ -6,14 +6,21 @@ import os
 import sys
 import time
 
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 from numpy import *
 from scipy.optimize import leastsq
 import itertools
+
+from Host.Common import timestamp
 
 NOT_A_NUMBER = 1e1000/1e1000
 SourceTuple = namedtuple('SourceTuple',['ts','valTuple'])
 
 # periphProcessorFindWind.py is a script for finding the wind statistics
+# This vesion also processes the cross wind (wind transverse to the vehicle
+#  axis) so that it may be used to reduce the field of view when there is
+#  doubt as to which side of the vehicle is being sampled. 
 
 class RawSource(object):
     """RawSource objects are created from a data queue. They expose a getData method
@@ -42,6 +49,8 @@ class RawSource(object):
         to the deque"""
         try:
             d = self.queue.get(block=False)
+            if not d:
+                sys.exit(0)
             if self.DataTuple is None:
                 self.getDataTupleType(d)
             self.oldData.append(SourceTuple(d[0],self.DataTuple(**d[1])))
@@ -200,8 +209,8 @@ def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.01):
         
 SyncCdataTuple  = namedtuple('SyncCdataTuple',['ts','lon','lat','fit','zPos','mHead','rVel'])
 DerivCdataTuple = namedtuple('DerivCdataTuple',SyncCdataTuple._fields + ('zVel','kappa'))
-CalibCdataTuple = namedtuple('CalibCdataTuple',DerivCdataTuple._fields + ('tVel','calParams'))
-StatsCdataTuple = namedtuple('StatsCdataTuple',CalibCdataTuple._fields + ('wMean','aStdDev'))
+CalibCdataTuple = namedtuple('CalibCdataTuple',DerivCdataTuple._fields + ('tVel','cVel','calParams'))
+StatsCdataTuple = namedtuple('StatsCdataTuple',CalibCdataTuple._fields + ('wMean','aStdDev','cMean','cStdDev'))
     
 def syncCdataSource(syncDataSource):
     """Convert GPS lat and lon to Cartesian coordinates and represent vectors of interest 
@@ -374,7 +383,7 @@ def trueWindSource(derivCdataSource,distFromAxle):
                     print "Scale: ", num/den
                 except:
                     pass
-        yield CalibCdataTuple(*(d+(tVel,[p0,p1,p2]))) 
+        yield CalibCdataTuple(*(d+(tVel,cVel,[p0,p1,p2]))) 
 
 # Calculate the statistics of the wind velocity by averaging the northerly and easterly components of the wind velocity
 #  as well as the Yamartino standard deviation of the wind direction taken over some interval of time
@@ -382,8 +391,29 @@ def trueWindSource(derivCdataSource,distFromAxle):
 def windStatistics(windSource,statsInterval):
     wSum = 0.0
     aSum = 0.0
+    cbuff = deque()
+    cSum = 0.0
+    cSumSq = 0.0
     buff = deque()    
     for w in windSource:
+        if isnan(w.cVel):
+            cSum = 0.0
+            cSumSq = 0.0
+            cbuff.clear()
+            cMean = NOT_A_NUMBER
+            cStdDev = NOT_A_NUMBER
+        else:
+            cbuff.append(w.cVel)
+            cSum += imag(w.cVel)
+            cSumSq += imag(w.cVel)**2
+            if len(cbuff)>statsInterval:
+                oldest = cbuff.popleft()
+                cSum -= imag(oldest)
+                cSumSq -= imag(oldest)**2
+            n = len(cbuff)
+            cMean = cSum/n
+            cStdDev = sqrt((cSumSq/n)-cMean**2)
+    
         if isnan(w.tVel):
             wSum = 0.0
             aSum = 0.0
@@ -406,7 +436,7 @@ def windStatistics(windSource,statsInterval):
             else:
                 aStdDev = pi/2.0
             aStdDev = 180.0/pi * aStdDev
-        yield StatsCdataTuple(*(w+(wMean,aStdDev))) 
+        yield StatsCdataTuple(*(w+(wMean,aStdDev,cMean,cStdDev))) 
 
 # def windStatistics(windSource,statsInterval,sdevAvgInterval=5):
     # wSum = 0.0
@@ -457,15 +487,7 @@ def main():
     msOffsets = [0,compassDelay_ms,anemDelay_ms]  # ms offsets for GPS, magnetometer and anemometer
     syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
     statsAvg = int(PARAMS.get("STATSAVG",10))
-
     for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle),statsAvg)):
-        p0,p1,p2 = d.calParams
-        WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),    # Mean wind N and E
-                          d.aStdDev,                                    # Wind direction std dev (degrees)
-                          float(real(d.zVel)),float(imag(d.zVel)),      # Car velocity N and E
-                          float(real(d.mHead)),-float(imag(d.mHead)),   # Compass heading N and E
-                          float(real(d.tVel)),float(imag(d.tVel)),      # Instantaneous wind N and E
-                          p0,p1,p2                                      # Calibration parameters
-                          ])
+        WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev,d.cMean,d.cStdDev])
 
 main()

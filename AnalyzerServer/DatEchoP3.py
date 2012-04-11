@@ -275,7 +275,8 @@ class DataEchoP3(object):
                     # NOTE: socket only required to set timeout parameter for the urlopen()
                     # In Python26 and beyond we can use the timeout parameter in the urlopen()
                     socket.setdefaulttimeout(self.timeout)
-                    resp = urllib2.urlopen(self.push_url, data=urllib.urlencode(postparms))
+                    myDat = urllib.urlencode(postparms)
+                    resp = urllib2.urlopen(self.push_url, data=myDat)
                     rtn_data = resp.read()
                     ##print rtn_data
                     if err_rtn_str in rtn_data:

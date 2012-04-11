@@ -36,7 +36,7 @@ class GetPeripheralDataBatch(object):
         if not os.path.exists(iniFile):
             raise ValueError("Configuration file %s missing" % iniFile)
         self.config = ConfigObj(iniFile)
-        self.scriptFile = "periphProcessorFindWindInst.py"
+        self.scriptFile = "periphProcessorFindWindInst3.py"
         sourceString = file(self.scriptFile,"r").read().strip()
         sourceString = sourceString.replace("\r\n","\n")
         self.scriptCode = compile(sourceString, self.scriptFile, "exec") #providing path accurately allows debugging of script

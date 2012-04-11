@@ -464,6 +464,6 @@ def main():
     syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
     statsAvg = int(PARAMS.get("STATSAVG",10))
     for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle),statsAvg)):
-        WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev])
+        WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev,float(abs(d.zVel))])
 
 main()

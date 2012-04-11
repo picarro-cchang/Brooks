@@ -36,7 +36,7 @@ class GetPeripheralDataBatch(object):
         if not os.path.exists(iniFile):
             raise ValueError("Configuration file %s missing" % iniFile)
         self.config = ConfigObj(iniFile)
-        self.scriptFile = "periphProcessorFindWindInst.py"
+        self.scriptFile = "periphProcessorFindWindInst2.py"
         sourceString = file(self.scriptFile,"r").read().strip()
         sourceString = sourceString.replace("\r\n","\n")
         self.scriptCode = compile(sourceString, self.scriptFile, "exec") #providing path accurately allows debugging of script
@@ -95,7 +95,7 @@ class GetPeripheralDataBatch(object):
         print "Processing %s and %s" % (self.gpsFile,self.wsFile)
         self.loadFiles()
         self.op = file(self.outFile,"w",0)
-        print >>self.op, "%-20s%-20s%-20s%-20s%-20s" % ("EPOCH_TIME","WIND_N","WIND_E","WIND_DIR_SDEV","CAR_SPEED")
+        print >>self.op, "%-20s%-20s%-20s%-20s%-20s%-20s" % ("EPOCH_TIME","WIND_N","WIND_E","WIND_DIR_SDEV","CWIND_MEAN","CWIND_SDEV")
         
         while True:
             try:
@@ -126,7 +126,7 @@ class GetPeripheralDataBatch(object):
     
     def writeOutput(self,ts,dataList):
         # print "%-20.3f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],(180.0/pi)*dataList[2])
-        print >> self.op, "%-20.3f%-20.10f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],dataList[2],dataList[3])
+        print >> self.op, "%-20.3f%-20.10f%-20.10f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],dataList[2],dataList[3],dataList[4])
         
     def loadFiles(self):
         self.hGps = getSlice(self.gpsFile,0,1)[0].line.split()

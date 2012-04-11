@@ -18,6 +18,8 @@ import time
 DECIMATION_FACTOR = 20
 NOT_A_NUMBER = 1e1000/1e1000
 EARTH_RADIUS = 6378100
+DTR = np.pi/180.0
+RTD = 180.0/np.pi
     
 def pFloat(x):
     try:
@@ -114,6 +116,12 @@ def metersPerPixel(minlng,maxlng,minlat,maxlat,imsize):
     print "Meters per pixel: ", mppx, mppy
     return 0.5*(mppx+mppy)
     
+def astd(wind,vcar):
+    a = 0.15*np.pi
+    b = 0.25
+    c = 0.0
+    return min(np.pi,a*(b+c*vcar)/(wind+0.01))
+
 class DrawOnMapBatch(object):
     def __init__(self, iniFile):
         self.config = ConfigObj(iniFile)
@@ -242,10 +250,11 @@ class DrawOnMapBatch(object):
             lat = pk.GPS_ABS_LAT
             amp = pk.AMPLITUDE
             ch4 = pk.CH4
+            vcar = pk.CAR_SPEED if "CAR_SPEED" in pk._fields else 0.0
             if "WIND_N" in pk._fields:
                 windN = pk.WIND_N
                 windE = pk.WIND_E
-                windSdev = pk.WIND_DIR_SDEV
+                dstd = DTR*pk.WIND_DIR_SDEV
             size = 1.5*amp**0.25
             fontsize = int(20.0*size);
             buff = cStringIO.StringIO(bubble.getBubble(size,fontsize,"%.1f"%ch4))
@@ -257,8 +266,10 @@ class DrawOnMapBatch(object):
                 box = (padX+x-bx//2,padY+y-by)
                 if "WIND_N" in pk._fields:
                     wind = np.sqrt(windN*windN + windE*windE)
-                    radius = 5.0; speedmin = 0.5
-                    meanBearing = (180.0/np.pi)*np.arctan2(windE,windN)
+                    radius = 50.0; speedmin = 0.5
+                    meanBearing = RTD*np.arctan2(windE,windN)
+                    dstd = np.sqrt(dstd**2 + astd(wind,vcar)**2)
+                    windSdev = RTD*dstd
                     if not(np.isnan(wind) or np.isnan(meanBearing)):
                         minBearing = meanBearing-min(2*windSdev,180.0)
                         maxBearing = meanBearing+min(2*windSdev,180.0)

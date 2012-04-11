@@ -43,6 +43,8 @@ def aReadDatFile(fileName):
 class AddWindBatch(object):
     def __init__(self, iniFile):
         self.config = ConfigObj(iniFile)
+        if not self.config:
+            raise ValueError("Error opening configuration file %s" % iniFile)
         
     def addGpsWind(self):
         if not os.path.exists(self.outDir): os.makedirs(self.outDir)
