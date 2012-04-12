@@ -195,7 +195,7 @@ var CNSNT = {
         noteUpdatePeriod: 1500,
         progressUpdatePeriod: 2000,
         modeUpdatePeriod: 2000,
-        periphUpdatePeriod: 3000,
+        periphUpdatePeriod: 5000,
         hmargin: 25,
         vmargin: 0,
         map_topbuffer: 0,
@@ -848,6 +848,10 @@ function initialize_map() {
         CSTATE.marker.setMap(null);
     }
     CSTATE.marker = newAnzLocationMarker(CSTATE.map);
+    
+    if (CSTATE.overlay) {
+        showTifCb();
+    }
 }
 
 function resize_map() {
@@ -1978,6 +1982,7 @@ function setActivePlat(plname) {
             showTifCb();
         }
     }
+    setCookie(COOKIE_NAMES.activePlatName, CSTATE.activePlatName, CNSNT.cookie_duration);
     plobj.rect.setMap(null);
     plobj.rect.setMap(CSTATE.map);
     $("#id_activeCntl").html(acntl);
@@ -2188,7 +2193,7 @@ function getNearest(currentHash, maxNeighbors) {
 
 function initialize_gdu(winH, winW) {
     var mapTypeCookie, current_zoom, followCookie, overlayCookie, minAmpCookie, latCookie, dnoteCookie, pnoteCookie, anoteCookie, new_height;
-    var abubbleCookie, pbubbleCookie, wbubbleCookie, swathCookie;
+    var abubbleCookie, pbubbleCookie, wbubbleCookie, swathCookie, activePlatNameCookie;
     pge_wdth = $('#id_topbar').width();
     $('#map_canvas').css('height', winH - 200);
     $('#map_canvas').css('width', pge_wdth);
@@ -2245,6 +2250,11 @@ function initialize_gdu(winH, winW) {
         CSTATE.showSwath = !(value === 0);
     }
 
+    activePlatNameCookie = getCookie(COOKIE_NAMES.activePlatName);
+    if (activePlatNameCookie) {
+        setActivePlat(activePlatNameCookie);
+    }
+    
     followCookie = getCookie(COOKIE_NAMES.follow);
     if (followCookie) {
         CSTATE.follow = parseInt(followCookie, 2);
@@ -3416,6 +3426,7 @@ function initialize_cookienames() {
         center_longitude: COOKIE_PREFIX + '_center_longitude',
         wbubble: COOKIE_PREFIX + '_wbubble',
         swath: COOKIE_PREFIX + '_swath',
+        activePlatName: COOKIE_PREFIX + '_activePlatName',
     };
 }
 
