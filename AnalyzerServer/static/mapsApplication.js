@@ -815,6 +815,7 @@ function initialize_map() {
     google.maps.event.addListener(CSTATE.map, 'zoom_changed', function () {
         CSTATE.current_zoom = CSTATE.map.getZoom();
         setCookie(COOKIE_NAMES.zoom, CSTATE.current_zoom, CNSNT.cookie_duration);
+        CSTATE.gglOptions["zoom"] = CSTATE.current_zoom;
     });
     google.maps.event.addListener(CSTATE.map, 'maptypeid_changed', function () {
         CSTATE.current_mapTypeId = CSTATE.map.getMapTypeId();
