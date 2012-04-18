@@ -109,6 +109,8 @@ class ThresholdStats(object):
         self.sumLoss = 0
         self.sumSquareLoss = 0
         self.sumWavenumber = 0
+        self.sumSqWavenumber = 0
+        offset = None
         self.nRingdowns = nRingdowns
         while not self.queue.empty():
             self.queue.get()    # Flush the queue to start
@@ -127,16 +129,22 @@ class ThresholdStats(object):
                 t = 0.001*e.timestamp
                 loss = float(e.uncorrectedAbsorbance)
                 waveNumber = e.waveNumber
+                if offset==None: offset = waveNumber
                 fitStatus = e.status
                 if 0 == (fitStatus & RINGDOWN_STATUS_RingdownTimeout):
                     self.sumWavenumber += waveNumber
+                    self.sumSqWavenumber += (waveNumber-offset)**2
                     self.sumLoss += loss
                     self.sumSquareLoss += loss**2
                     nRd += 1
                 if t >= tStart+tMax or nRd >= self.nRingdowns:
-                    return (nRd/(t-tStart),self.sumLoss/nRd,self.sumSquareLoss/nRd-(self.sumLoss/nRd)**2,self.sumWavenumber/nRd)
+                    waveNumberMean = self.sumWavenumber/nRd
+                    waveNumberSdev = sqrt((self.sumSqWavenumber/nRd) - (waveNumberMean-offset)**2)
+                    return (nRd/(t-tStart),self.sumLoss/nRd,self.sumSquareLoss/nRd-(self.sumLoss/nRd)**2,waveNumberMean,waveNumberSdev)
             except Queue.Empty:
-                return (nRd/(t-tStart),self.sumLoss/nRd,self.sumSquareLoss/nRd-(self.sumLoss/nRd)**2,self.sumWavenumber/nRd)
+                waveNumberMean = self.sumWavenumber/nRd
+                waveNumberSdev = sqrt((self.sumSqWavenumber/nRd) - (waveNumberMean-offset)**2)
+                return (nRd/(t-tStart),self.sumLoss/nRd,self.sumSquareLoss/nRd-(self.sumLoss/nRd)**2,waveNumberMean,waveNumberSdev)
             sys.stderr.write(".")
 
     def flushQueue(self):
@@ -180,25 +188,28 @@ class ThresholdStats(object):
         self.mean_loss = zeros(len(self.thresh_list),float_)
         self.std_loss = zeros(len(self.thresh_list),float_)
         self.mean_wavenumber = zeros(len(self.thresh_list),float_)
+        self.std_frequency = zeros(len(self.thresh_list),float_)
         self.sensitivity = zeros(len(self.thresh_list),float_)
         try:
             for l in range(len(self.thresh_list)):
                 thresh = float(self.thresh_list[l])
                 self.setTuner(thresh)
                 time.sleep(1)
-                rate,meanLoss,varLoss,meanWavenumber = self.collectStats(1000,20)
+                rate,meanLoss,varLoss,meanWavenumber,sdevWavenumber = self.collectStats(1000,20)
                 shot2shot = 0
                 stdLoss = 1000.0*sqrt(varLoss)
                 if meanLoss != 0: shot2shot = 100*stdLoss/(1000.0*meanLoss)
                 sensitivity = stdLoss/sqrt(rate) if rate != 0 else 0.0
-                msg = "\nThreshold: %6.0f Ringdown rate: %6.2f Shot-to-shot: %6.3f Mean loss: %6.3f Mean wavenumber: %10.4f StdDev loss: %10.4f Sensitivity: %10.5f" % \
-                      (thresh,rate,shot2shot,meanLoss,meanWavenumber,stdLoss,sensitivity)
+                sdevFrequency = 30000.0*sdevWavenumber
+                msg = "\nThreshold: %6.0f Ringdown rate: %6.2f Shot-to-shot: %6.3f Mean loss: %6.3f Mean wavenumber: %10.4f Sdev freq (MHz): %10.4f StdDev loss: %10.4f Sensitivity: %10.5f" % \
+                      (thresh,rate,shot2shot,meanLoss,meanWavenumber,sdevFrequency,stdLoss,sensitivity)
                 print>>sys.stderr, msg
                 print msg
                 self.rd_rates[l] = rate
                 self.shot_to_shot[l] = shot2shot
                 self.mean_loss[l] = meanLoss
                 self.mean_wavenumber[l] = meanWavenumber
+                self.std_frequency[l] = sdevFrequency
                 self.std_loss[l] = stdLoss
                 self.sensitivity[l] = sensitivity
         finally:
@@ -231,8 +242,8 @@ class ThresholdStats(object):
             else:
                 csvOut.parameters[r[1]] = "%s" % Driver.rdFPGA(r[0],r[1])
                 
-        csvOut.columnTitles = ["Threshold", "Rate", "Shot-to-shot", "Mean loss", "Mean wavenumber", "StdDev loss", "Sensitivity"]
-        csvOut.columnUnits  = ["digU", "rd/s", "%", "ppm/cm", "cm^-1", "ppb/cm", "ppb/cm/sqrt(Hz)" ]
+        csvOut.columnTitles = ["Threshold", "Rate", "Shot-to-shot", "Mean loss", "Mean wavenumber", "StdDev freq", "StdDev loss", "Sensitivity"]
+        csvOut.columnUnits  = ["digU", "rd/s", "%", "ppm/cm", "cm^-1", "MHz", "ppb/cm", "ppb/cm/sqrt(Hz)" ]
         csvOut.writeOut(self.csvFp)
 
         for l in range(len(self.thresh_list)):
@@ -241,9 +252,10 @@ class ThresholdStats(object):
             shot2shot = self.shot_to_shot[l]
             meanLoss = self.mean_loss[l]
             meanWavenumber = self.mean_wavenumber[l]
+            stdFrequency = self.std_frequency[l]
             stdLoss = self.std_loss[l]
             sensitivity = self.sensitivity[l]
-            print >> self.csvFp,",,%.0f,%.2f,%.4f,%.4f,%.4f,%.4f,%.5f" % (thresh,rate,shot2shot,meanLoss,meanWavenumber,stdLoss,sensitivity)
+            print >> self.csvFp,",,%.0f,%.2f,%.4f,%.4f,%.4f,%.2f,%.4f,%.5f" % (thresh,rate,shot2shot,meanLoss,meanWavenumber,stdFrequency,stdLoss,sensitivity)
         self.csvFp.close()
 
 if __name__ == "__main__":
