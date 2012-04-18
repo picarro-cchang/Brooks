@@ -14,6 +14,7 @@ import urllib
 import math
 
 import socket
+import datetime
 
 try:
     import simplejson as json
@@ -71,6 +72,11 @@ class DataEchoP3(object):
             #self.push_url = 'http://localhost:8080/rest/datalogAdd/'
             self.push_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
             
+        if 'ticket_url' in kwargs:
+            self.ticket_url = kwargs['ticket_url']
+        else:
+            self.ticket_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
+            
         if 'timeout' in kwargs:
             self.timeout = int(kwargs['timeout'])
         else:
@@ -86,6 +92,16 @@ class DataEchoP3(object):
         else:
             self.logtype = "dat"
 
+        if 'identity' in kwargs:
+            self.identity = kwargs['identity']
+        else:
+            self.identity = None
+
+        if 'psys' in kwargs:
+            self.psys = kwargs['psys']
+        else:
+            self.psys = None
+
         if 'sleep_seconds' in kwargs:
             self.sleep_seconds = float(kwargs['sleep_seconds'])
         else:
@@ -94,14 +110,55 @@ class DataEchoP3(object):
         self._last_fname = None
         self.fname = None
         self.first_pass_complete = None
+        self.ticket = None
+        self.startTime = datetime.datetime.now()
+
+    def getTicket(self):
+        self.ticket = None
+        ticket = None
+        qry = "issueTicket"
+        sys = self.psys
+        identity = self.identity
+        rprocs = '["AnzMeta:data", "AnzLog:data"]'
+        
+        params = {"qry": qry, "sys": sys, "identity": identity, "rprocs": rprocs}
+        try:
+            resp = urllib2.urlopen(self.ticket_url, data=urllib.urlencode(params))
+            rtndata_str = resp.read()
+            rtndata = json.loads(rtndata_str)
+            if "ticket" in rtndata:
+                ticket = rtndata["ticket"]
+
+        except urllib2.HTTPError, e:
+            err_str = e.read()
+            print '\nissueTicket failed \n%s\n' % err_str
+                
+        except Exception, e:
+            print '\nissueTicket failed \n%s\n' % e
+
+        if ticket:
+            self.ticket = ticket;
+            print "new ticket: ", self.ticket
+        
 
     def run(self):
         '''
         '''
+        
+        if not self.psys:
+            print "Cannot proceed. No Identity for authentication"
+            sys.exit()
+            
+        if not self.ticket:
+            self.ticket = "abcdefg"
+            
         ip_register_good = True
         def pushIP():
+            aname = self.getLocalAnalyzerId()
+            if self.psys == None:
+                self.psys = aname
+                
             if self.ip_url:
-                aname = self.getLocalAnalyzerId()
                 for addr in self.getIPAddresses():
                     if addr == "0.0.0.0":
                         continue
@@ -114,23 +171,41 @@ class DataEchoP3(object):
                     doc_data.append(datarow)
                     postparms = {'data': json.dumps(doc_data)}
                     
-                    #params = {aname: {"ip_addr": "%s:5000" % addr}}
-                    #postparms = {'data': json.dumps(params)}
-                    try:    
-                        # NOTE: socket only required to set timeout parameter for the urlopen()
-                        # In Python26 and beyond we can use the timeout parameter in the urlopen()
-                        analyzerIpRegister = self.ip_url
-                        socket.setdefaulttimeout(self.timeout)
-                        resp = urllib2.urlopen(analyzerIpRegister, data=urllib.urlencode(postparms))
-                        ip_register_good = True
-                        print "Registered new ip. postparms: ", postparms
-                        #print "analyzerIpRegister: ", analyzerIpRegister
-                        #print "resp: ", resp
-                        break
-                    except Exception, e:
-                        ip_register_good = False
-                        print '\nanalyzerIpRegister failed \n%s\n' % e
-                        pass
+                    continueRequest = True;
+                    continueRequestCtr = 0;
+                    while continueRequest:
+                        continueRequest = None
+                        
+                        try:    
+                            # NOTE: socket only required to set timeout parameter for the urlopen()
+                            # In Python26 and beyond we can use the timeout parameter in the urlopen()
+                            analyzerIpRegister = self.ip_url.replace("<TICKET>", self.ticket)
+                            print "analyzerIpRegister: ", analyzerIpRegister
+                            socket.setdefaulttimeout(self.timeout)
+                            resp = urllib2.urlopen(analyzerIpRegister, data=urllib.urlencode(postparms))
+                            ip_register_good = True
+                            print "Registered new ip. postparms: ", postparms
+                            break
+                        
+                        except urllib2.HTTPError, e:
+                            err_str = e.read()
+                            if "invalid ticket" in err_str:
+                                if continueRequestCtr < 10:
+                                    print "We Have an invalid or expired ticket"
+                                    continueRequest = True
+                                    continueRequestCtr += 1
+                                    self.getTicket()
+                                
+                            else:
+                                ip_register_good = False
+                                print '\nanalyzerIpRegister failed \n%s\n' % err_str
+                                
+                            break
+                            
+                        except Exception, e:
+                            ip_register_good = False
+                            print '\nanalyzerIpRegister failed \n%s\n' % e
+                            pass
 
         ecounter = 0
         fcounter = 0
@@ -225,17 +300,21 @@ class DataEchoP3(object):
                             # attempt to smooth the transmission by only
                             # sending to server every .8 seconds OR ever 100 lines
                             tsec = time.time() - nsec
-                            if (lctr > 1000 or tsec >= .7):
+                            if (lctr > 2000 or tsec >= .7):
                                 lctr = 0
                                 self.pushToP3(self.fname, self._docs, self._lines, None, rctr)
                                 self._docs = []
                                 self._lines = []
                                 nsec = time.time()
                                 
-                                if (ipctr > 1000 or not ip_register_good):
+                                if (ipctr > 5000 or not ip_register_good):
                                     pushIP()
                                     ipctr = 0
                         
+        
+        self.endTime = datetime.datetime.now()
+        print "start: ", self.startTime
+        print "end: ", self.endTime
         
         return fcounter
 
@@ -252,7 +331,7 @@ class DataEchoP3(object):
             if not line:
 
                 # clear the remaining data
-                if self._docs or self._lines:                
+                if self._docs or self._lines:
                     self.pushToP3(self.fname, self._docs, self._lines, None, None)
                     self._docs = []
                     self._lines = []
@@ -291,13 +370,17 @@ class DataEchoP3(object):
             postparms = {'data': json.dumps(params)}
         
             tctr = 0
+            waitForRetryCtr = 0
+            waitForRetry = True
             while True:
+                
                 try:    
                     # NOTE: socket only required to set timeout parameter for the urlopen()
                     # In Python26 and beyond we can use the timeout parameter in the urlopen()
                     socket.setdefaulttimeout(self.timeout)
                     myDat = urllib.urlencode(postparms)
-                    resp = urllib2.urlopen(self.push_url, data=myDat)
+                    push_with_ticket = self.push_url.replace("<TICKET>", self.ticket)
+                    resp = urllib2.urlopen(push_with_ticket, data=myDat)
                     rtn_data = resp.read()
                     ##print rtn_data
                     if err_rtn_str in rtn_data:
@@ -309,13 +392,30 @@ class DataEchoP3(object):
                             break
                     else:
                         break
+                    
+                except urllib2.HTTPError, e:
+                    err_str = e.read()
+                    if "invalid ticket" in err_str:
+                        print "We Have an invalid or expired ticket"
+                        self.getTicket()
+                        waitForRetryCtr += 1
+                        if waitForRetryCtr < 100:
+                            waitForRetry = None
+                        
+                    else:
+                        print 'Ticket EXCEPTION in pushToP3, and could not get valid ticket.\n%s\n' % err_str
+                        pass
+                    
                 except Exception, e:
                     print 'EXCEPTION in pushToP3\n%s\n' % e
                     pass
-                
+                    
                 sys.stderr.write('-')
                 tctr += 1
-                time.sleep(self.timeout)
+                if waitForRetry:
+                    time.sleep(self.timeout)
+                    
+                waitForRetry = True
                 
             ## we want to keep trying forever.  This is intentional.
             '''   
@@ -336,6 +436,7 @@ class DataEchoP3(object):
             cpos = fp.tell()
             sys.stderr.write('+')
             if line:
+                print "trying for missing!"
                 self.pushToP3(self.fname, None, [(line, cpos)], None, None)
             else:
                 return "ERROR"
@@ -436,10 +537,16 @@ def main(argv=None):
                       help="path to specific file to upload.", metavar="<FILE_PATH>")
     parser.add_option("-t", "--timeout", dest="timeout",
                       help="timeout value for response from server.", metavar="<TIMEOUT>")
-    parser.add_option("-i", "--ip-reg-url", dest="ip_url",
-                      help="rest url for ip registration.", metavar="<IP_REG_URL>")
+    parser.add_option("-i", "--ip-req-url", dest="ip_url",
+                      help="rest url for ip registration. Use the string <TICKET> as the place-holder for the authentication ticket.", metavar="<IP_REQ_URL>")
     parser.add_option("-p", "--push-url", dest="push_url",
-                      help="rest url for data push to server.", metavar="<PUSH_URL>")
+                      help="rest url for data push to server. Use the string <TICKET> as the place-holder for the authentication ticket.", metavar="<PUSH_URL>")
+    parser.add_option("-k", "--ticket-url", dest="ticket_url",
+                      help="rest url for authentication ticket.", metavar="<TICKET_URL>")
+    parser.add_option("-y", "--identity", dest="identity",
+                      help="Authentication identity string.", metavar="<IDENTITY>")
+    parser.add_option("-s", "--sys", dest="psys",
+                      help="Authentication sys.", metavar="<SYS>")
     parser.add_option("-r", "--replace", dest="replace", action="store_true",
                       help="replace this log in the server (Dangerous!!, use with caution. This will delete FIRST!).")
     
@@ -480,7 +587,22 @@ def main(argv=None):
     if options.push_url:
         push_url = options.push_url
     else:
-        push_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
+        push_url = 'https://dev.picarro.com/node/gdu/<TICKET>/1/AnzLog/'
+
+    if options.ticket_url:
+        ticket_url = options.ticket_url
+    else:
+        ticket_url = 'https://dev.picarro.com/node/gdu/dummy/1/Admin/'
+
+    if options.psys:
+        psys = options.psys
+    else:
+        psys = None
+
+    if options.identity:
+        identity = options.identity
+    else:
+        identity = None
 
     if options.data_type:
         logtype = options.data_type
@@ -492,17 +614,23 @@ def main(argv=None):
     else:
         replace = None
 
-    print listen_path
-    print file_path
-    print ip_url
-    print push_url
-    print timeout
-    print logtype
+    print "listen_path", listen_path
+    print "file_path", file_path
+    print "ip_url", ip_url
+    print "push_url", push_url
+    print "ticket_url", ticket_url
+    print "identity", identity
+    print "psys", psys
+    print "timeout", timeout
+    print "logtype", logtype
 
     decho = DataEchoP3(listen_path=listen_path,
                        file_path=file_path,
                        ip_url=ip_url,
                        push_url=push_url,
+                       ticket_url=ticket_url,
+                       psys=psys,
+                       identity=identity,
                        timeout=timeout,
                        logtype=logtype,
                        replace=replace)
