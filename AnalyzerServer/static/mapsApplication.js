@@ -189,9 +189,8 @@ var CNSNT = {
         
         histMax: 200,
         datUpdatePeriod: 500,
-        peakUpdatePeriod: 500,
-        analysisUpdatePeriod: 500,
-        windUpdatePeriod: 500,
+        analysisUpdatePeriod: 1500,
+        peakAndWindUpdatePeriod: 1500,
         noteUpdatePeriod: 1500,
         progressUpdatePeriod: 2000,
         modeUpdatePeriod: 2000,
@@ -289,12 +288,11 @@ var CSTATE = {
         laststreamtime: new Date().getTime(),
 
         counter: 0,
-        leakLine: 1,
+        peakLine: 1,
         clearLeaks: false,
+        clearWind: false,
         analysisLine: 1,
         clearAnalyses: false,
-        windLine: 1,
-        clearWind: false,
         startNewPath: true,
         nextAnalysisEtm: 0.0,
         nextPeakEtm: 0.0,
@@ -355,11 +353,10 @@ var TIMER = {
         resize: null,
         data: null, // timer for getData
         dnote: null, // timer for getDatNotes
-        peak: null, // timer for showLeaks (getPeaks)
         pnote: null, // timer for getPeakNotes
         analysis: null, // timer for showAnalysis (getAnalysis)
         anote: null, // timer for getAnalysisNotes
-        wind: null, // timer for showWind (getPeaks)
+        peakAndWind: null, // timer for showLeaksAndWind
         progress: null, //timer for updateProgress
         mode: null, // timer for getMode 
         periph: null, // timer for checkPeriphUpdate
@@ -650,7 +647,7 @@ function clearPeakMarkerArray() {
     }
     CSTATE.peakMarkers = [];
     CSTATE.peakBblListener = {};
-    CSTATE.leakLine = 1;
+    CSTATE.peakLine = 1;
 }
 
 function clearAnalysisMarkerArray() {
@@ -675,7 +672,7 @@ function clearWindMarkerArray() {
         CSTATE.windMarkers[i].setMap(null);
     }
     CSTATE.windMarkers = [];
-    CSTATE.windLine = 1;
+    CSTATE.peakLine = 1;
 }
 
 function clearDatNoteMarkers(emptyTheDict) {
@@ -747,8 +744,8 @@ function double_quote(txt) {
 
 function resetLeakPosition() {
     clearPeakMarkerArray();
-    clearAnalysisMarkerArray();
     clearWindMarkerArray();
+    clearAnalysisMarkerArray();
 }
 
 function timeStringFromEtm(etm) {
@@ -1270,8 +1267,8 @@ function showPbubbleCb() {
         CSTATE.showPbubble = true;
     } else {
         CSTATE.showPbubble = false;
-        clearPeakMarkerArray();
     }
+    clearPeakMarkerArray();
     setCookie(COOKIE_NAMES.pbubble, (CSTATE.showPbubble) ? "1" : "0", CNSNT.cookie_duration);
 
     btxt = TXT.show_txt;
@@ -1327,8 +1324,8 @@ function showWbubbleCb() {
         CSTATE.showWbubble = true;
     } else {
         CSTATE.showWbubble = false;
-        clearWindMarkerArray();
     }
+    clearWindMarkerArray();
     setCookie(COOKIE_NAMES.wbubble, (CSTATE.showWbubble) ? "1" : "0", CNSNT.cookie_duration);
 
     btxt = TXT.show_txt;
@@ -2471,16 +2468,12 @@ function setGduTimer(tcat) {
         TIMER.data = setTimeout(datTimer, CNSNT.datUpdatePeriod);
         return;
     }
-    if (tcat === "peak") {
-        TIMER.peak = setTimeout(peakTimer, CNSNT.peakUpdatePeriod);
-        return;
-    }
     if (tcat === "analysis") {
         TIMER.analysis = setTimeout(analysisTimer, CNSNT.analysisUpdatePeriod);
         return;
     }
-    if (tcat === "wind") {
-        TIMER.wind = setTimeout(windTimer, CNSNT.windUpdatePeriod);
+    if (tcat === "peakAndWind") {
+        TIMER.peakAndWind = setTimeout(peakAndWindTimer, CNSNT.peakAndWindUpdatePeriod);
         return;
     }
     if (tcat === "dnote") {
@@ -2513,20 +2506,12 @@ function datTimer() {
     getData();
 }
 
-function peakTimer() {
+function peakAndWindTimer() {
     if (CSTATE.ignoreTimer) {
-        setGduTimer('peak');
+        setGduTimer('peakAndWind');
         return;
     }
-    showLeaks();
-}
-
-function windTimer() {
-    if (CSTATE.ignoreTimer) {
-        setGduTimer('wind');
-        return;
-    }
-    showWind();
+    showLeaksAndWind();
 }
 
 function analysisTimer() {
@@ -2717,23 +2702,6 @@ function checkPeriphUpdate() {
     }
 }
 
-function showLeaks() {
-    var params = {'startRow': CSTATE.leakLine, 'alog': CSTATE.alog, 'minAmp': CSTATE.minAmp, 'gmtOffset': CNSNT.gmt_offset};
-    if (!CSTATE.showPbubble) {
-        setGduTimer('peak');
-        return;
-    }
-    call_rest(CNSNT.svcurl, "getPeaks", params,
-            function (json, status, jqXHR) {
-            CSTATE.net_abort_count = 0;
-            successPeaks(json);
-        },
-        function (jqXHR, ts, et) {
-            errorPeaks(jqXHR.responseText);
-        }
-        );
-}
-
 function showAnalysis() {
     var params = {'startRow': CSTATE.analysisLine, 'alog': CSTATE.alog, 'gmtOffset': CNSNT.gmt_offset};
     if (!CSTATE.showAbubble) {
@@ -2751,19 +2719,19 @@ function showAnalysis() {
         );
 }
 
-function showWind() {
-    var params = {'startRow': CSTATE.windLine, 'alog': CSTATE.alog, 'minAmp': CSTATE.minAmp, 'gmtOffset': CNSNT.gmt_offset};
-    if (!CSTATE.showWbubble) {
-        setGduTimer('wind');
+function showLeaksAndWind() {
+    if ((!CSTATE.showPbubble) && (!CSTATE.showWbubble)) {
+        setGduTimer('peakAndWind');
         return;
     }
+    var params = {'startRow': CSTATE.peakLine, 'alog': CSTATE.alog, 'minAmp': CSTATE.minAmp, 'gmtOffset': CNSNT.gmt_offset};
     call_rest(CNSNT.svcurl, "getPeaks", params,
             function (json, status, jqXHR) {
             CSTATE.net_abort_count = 0;
-            successWind(json);
+            successPeaksAndWind(json);
         },
         function (jqXHR, ts, et) {
-            errorWind(jqXHR.responseText);
+            errorPeakAndWind(jqXHR.responseText);
         }
         );
 }
@@ -2967,14 +2935,11 @@ function successData(data) {
         }
     }
 
-    if (TIMER.peak === null) {
-        setGduTimer('peak');
-    }
     if (TIMER.analysis === null) {
         setGduTimer('analysis');
     }
-    if (TIMER.wind === null) {
-        setGduTimer('wind');
+    if (TIMER.peakAndWind === null) {
+        setGduTimer('peakAndWind');
     }
     if (TIMER.dnote === null) {
         setGduTimer('dnote');
@@ -2987,7 +2952,7 @@ function successData(data) {
     }
 }
 
-function successPeaks(data) {
+function successPeaksAndWind(data) {
     var resultWasReturned, i;
     resultWasReturned = false;
     if (data.result) {
@@ -2999,82 +2964,56 @@ function successPeaks(data) {
         }
     }
     if (resultWasReturned) {
-        if (data.result.CH4) {
-            if (CSTATE.clearLeaks) {
-                CSTATE.clearLeaks = false;
-            } else {
-                CSTATE.leakLine = data.result.nextRow;
+        var resetClear = false;
+        if (data.result.CH4 && CSTATE.showPbubble && CSTATE.clearLeaks) {
+            CSTATE.clearLeaks = false;
+            resetClear = true;
+        }
+        if (data.result.WIND_DIR_SDEV && CSTATE.showWbubble && CSTATE.clearWind) {
+            CSTATE.clearWind = false;
+            resetClear = true;
+        }
+        if (resetClear) {
+            CSTATE.peakLine = 1;
+        } else {
+            var showPeaks = (data.result.CH4 && CSTATE.showPbubble);
+            var showWind = (data.result.WIND_DIR_SDEV && CSTATE.showWbubble);
+            if (showPeaks || showWind){
                 for (i = 0; i < data.result.CH4.length; i += 1) {
                     peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
-                    peakMarker = newPeakMarker(CSTATE.map, peakCoords, data.result.AMPLITUDE[i], data.result.SIGMA[i], data.result.CH4[i]);
-                    CSTATE.peakMarkers[CSTATE.peakMarkers.length] = peakMarker;
-                    if (CNSNT.turnOnAudio) {
-                        // Play warning sound
-                        var myAudio = document.getElementById("plume");
-                        myAudio.play();
-                    }
-                    datadict = CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]];
-                    if (!datadict) {
-                        datadict = {};
-                    }
-                    datadict.lat = data.result.GPS_ABS_LAT[i];
-                    datadict.lon = data.result.GPS_ABS_LONG[i];
-                    datadict.ch4 = data.result.CH4[i];
-                    datadict.amp = data.result.AMPLITUDE[i];
-                    datadict.sigma = data.result.SIGMA[i];
+                    if (showPeaks) {
+                        peakMarker = newPeakMarker(CSTATE.map, peakCoords, data.result.AMPLITUDE[i], data.result.SIGMA[i], data.result.CH4[i]);
+                        CSTATE.peakMarkers[CSTATE.peakMarkers.length] = peakMarker;
+                        if (CNSNT.turnOnAudio) {
+                            // Play warning sound
+                            var myAudio = document.getElementById("plume");
+                            myAudio.play();
+                        }
+                        datadict = CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]];
+                        if (!datadict) {
+                            datadict = {};
+                        }
+                        datadict.lat = data.result.GPS_ABS_LAT[i];
+                        datadict.lon = data.result.GPS_ABS_LONG[i];
+                        datadict.ch4 = data.result.CH4[i];
+                        datadict.amp = data.result.AMPLITUDE[i];
+                        datadict.sigma = data.result.SIGMA[i];
 
-                    CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]] = datadict;
-                    attachMarkerListener(peakMarker, data.result.EPOCH_TIME[i], "peak", true);
+                        CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]] = datadict;
+                        attachMarkerListener(peakMarker, data.result.EPOCH_TIME[i], "peak", true);
+                    }
+                    if (showWind) {
+                        var windDirection = CNSNT.rtd*Math.atan2(data.result.WIND_E[i],data.result.WIND_N[i]);
+                        var windSpeed = Math.sqrt(data.result.WIND_N[i]*data.result.WIND_N[i]+data.result.WIND_E[i]*data.result.WIND_E[i]);
+                        windMarker = newWindMarker(CSTATE.map, peakCoords, windSpeed, windDirection, data.result.WIND_DIR_SDEV[i]);
+                        CSTATE.windMarkers[CSTATE.windMarkers.length] = windMarker;
+                    }
                 }
+                CSTATE.peakLine = data.result.nextRow;
             }
         }
     }
-    setGduTimer('peak');
-}
-
-function successWind(data) {
-    var resultWasReturned, i;
-    resultWasReturned = false;
-    if (data.result) {
-        if (data.result.filename) {
-            if (CSTATE.lastPeakFilename === data.result.filename) {
-                resultWasReturned = true;
-            }
-            //CSTATE.lastPeakFilename = data.result.filename;
-        }
-    }
-    if (resultWasReturned) {
-        if (data.result.WIND_DIR_SDEV) {
-            if (CSTATE.clearWind) {
-                CSTATE.clearWind = false;
-            }
-            else {
-                CSTATE.windLine = data.result.nextRow;
-                for (i = 0; i < data.result.WIND_DIR_SDEV.length; i += 1) {
-                    var windDirection = CNSNT.rtd*Math.atan2(data.result.WIND_E[i],data.result.WIND_N[i]);
-                    var windSpeed = Math.sqrt(data.result.WIND_N[i]*data.result.WIND_N[i]+data.result.WIND_E[i]*data.result.WIND_E[i]);
-                    peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
-                    windMarker = newWindMarker(CSTATE.map, peakCoords, windSpeed, windDirection, data.result.WIND_DIR_SDEV[i]);
-                    CSTATE.windMarkers[CSTATE.windMarkers.length] = windMarker;
-                    /*
-                    datadict = CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]];
-                    if (!datadict) {
-                        datadict = {};
-                    }
-                    datadict.lat = data.result.GPS_ABS_LAT[i];
-                    datadict.lon = data.result.GPS_ABS_LONG[i];
-                    datadict.ch4 = data.result.CH4[i];
-                    datadict.amp = data.result.AMPLITUDE[i];
-                    datadict.sigma = data.result.SIGMA[i];
-
-                    CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]] = datadict;
-                    attachMarkerListener(peakMarker, data.result.EPOCH_TIME[i], "peak", true);
-                    */
-                }
-            }
-        }
-    }
-    setGduTimer('wind');
+    setGduTimer('peakAndWind');
 }
 
 function attachMarkerListener(marker, etm, cat, bubble) {
@@ -3285,13 +3224,13 @@ function errorData(text) {
     setGduTimer('dat');
 }
 
-function errorPeaks(text) {
+function errorPeakAndWind(text) {
     CSTATE.net_abort_count += 1;
     if (CSTATE.net_abort_count >= 2) {
         $("#id_modal").html(modalNetWarning());
     }
     $("#errors").html(text);
-    setGduTimer('peak');
+    setGduTimer('peakAndWind');
 }
 
 function errorAnalysis(text) {
@@ -3301,15 +3240,6 @@ function errorAnalysis(text) {
     }
     $("#errors").html(text);
     setGduTimer('analysis');
-}
-
-function errorWind(text) {
-    CSTATE.net_abort_count += 1;
-    if (CSTATE.net_abort_count >= 2) {
-        $("#id_modal").html(modalNetWarning());
-    }
-    $("#errors").html(text);
-    setGduTimer('wind');
 }
 
 function errorPeakNotes(text) {
