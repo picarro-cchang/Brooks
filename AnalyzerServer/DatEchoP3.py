@@ -145,7 +145,7 @@ class DataEchoP3(object):
         '''
         '''
         
-        if not self.psys:
+        if not self.identity:
             print "Cannot proceed. No Identity for authentication"
             sys.exit()
             
