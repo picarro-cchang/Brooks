@@ -1,6 +1,5 @@
 from flask import Flask
 from flask import make_response, render_template, request
-from jsonrpc import JSONRPCHandler, Fault
 try:
     import simplejson as json
 except:
@@ -17,6 +16,8 @@ import traceback
 import CmdFIFO
 from timestamp import getTimestamp
 from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DATA_MANAGER
+import SwathProcessor as sp
+import math
 
 NaN = 1e1000/1e1000
 def pFloat(x):
@@ -51,13 +52,11 @@ PASSWORD = 'default'
 USERLOGFILES = 'C:/UserData/AnalyzerServer/*.dat'
 PEAKFILES = 'C:/UserData/AnalyzerServer/*.peaks'
 ANALYSISFILES = 'C:/UserData/AnalyzerServer/*.analysis'
+SWATHFILES = 'C:/UserData/AnalyzerServer/*.swath'
 MAX_DATA_POINTS = 500
 
 app = Flask(__name__)
 app.config.from_object(__name__)
-handler = JSONRPCHandler('jsonrpc')
-handler.connect(app,'/jsonrpc')
-
 
 class DataLoggerInterface(object):
     """Interface to the data logger and archiver RPC"""
@@ -84,21 +83,6 @@ class DataLoggerInterface(object):
         except Exception,e:
             self.exception = e
         self.rpcInProgress = False
-
-class JSON_Remote_Procedure_Error(RuntimeError):
-    pass
-
-def rpcWrapper(func):
-    """This decorator wraps a remote procedure call so that any exceptions from the procedure
-    raise a JSON_Remote_Procedure_Error and has a traceback."""
-    @wraps(func)
-    def JSON_RPC_wrapper(*args,**kwargs):
-        try:
-            return func(*args,**kwargs)
-        except:
-            type,value = sys.exc_info()[:2]
-            raise JSON_Remote_Procedure_Error, "\n%s" % (traceback.format_exc(),)
-    return JSON_RPC_wrapper
     
 def _getAnalysis(name,startRow):
     #
@@ -147,8 +131,60 @@ def _getPeaks(name,startRow,minAmp):
         startRow += 1
     result['nextRow'] = startRow
     return result
-        
-def _getData(name,startPos=None,varList=None):    
+    
+def _getSwath(name,startRow,limit):
+    #
+    # Gets data from the analyzer peak parameters file "name" starting  at the specified 
+    #  "startRow" within the file:
+    #
+    header = getSlice(name,0,1)[0].line.split()
+    result = {}
+    for h in header: result[h] = []
+    nresults = 0
+    for l in getSliceIter(name,startRow):
+        line = l.line
+        if not line: break
+        vals = line.split()
+        if len(vals) != len(header): break
+        nresults += 1
+        for col,val in zip(header,vals):
+            result[col].append(pFloat(val))
+        if nresults >= limit: break
+        startRow += 1
+    result['nextRow'] = startRow
+    return result
+
+def _makeSwath(name,startRow,limit,nWindow,stabClass,minLeak,minAmp,astdParams):
+    # Making a swath requires 2*nWindow+1 points centered about
+    #  each position, so to produce the swath at startRow, we need
+    #  to fetch rows startRow-nWindow through startRow+nWindow.
+    # We need to keep track of the rows that will have their swaths
+    #  calculated by this call, so that result['nextRow'] can be 
+    #  filled up.
+    header = getSlice(name,0,1)[0].line.split()
+    result = {}
+    source = []     # This is the collection of rows to be processed
+    nresults = 0
+    firstRow = max(1,startRow-nWindow)
+    row = firstRow  
+    for l in getSliceIter(name,firstRow):
+        line = l.line
+        if not line: break
+        vals = line.split()
+        if len(vals) != len(header): break
+        row += 1
+        if row >= firstRow+limit+2*nWindow: break
+        # source is a list of dictionaries, one for
+        #  each row of the data file
+        rowDict = {}
+        for col,val in zip(header,vals):
+            rowDict[col] = pFloat(val)
+        source.append(rowDict)            
+    result = sp.process(source,nWindow,stabClass,minLeak,minAmp,astdParams)
+    result['nextRow'] = row-nWindow
+    return result
+    
+def _getData(name,startPos=None,varList=None,limit=MAX_DATA_POINTS):    
     #
     # Gets data from the analyzer live archive file "name" starting  at the specified 
     #  line "startPos" within the file.
@@ -163,7 +199,7 @@ def _getData(name,startPos=None,varList=None):
         if startPos<0: 
             endPos = None
         else:
-            endPos = startPos + MAX_DATA_POINTS
+            endPos = startPos + limit
         lineNum = -1
         for l in getSliceIter(name,startPos,endPos):
             lineNum = l.lineNumber
@@ -192,11 +228,6 @@ def _getData(name,startPos=None,varList=None):
         return result, lastPos
     except:
         print traceback.format_exc()
-    
-@handler.register
-@rpcWrapper
-def getData(params):
-    return getDataEx(params)
 
 @app.route('/rest/getData')
 def rest_getData():
@@ -221,9 +252,14 @@ def getDataEx(params):
         startPos = None
 
     varList = json.loads(params['varList']) if 'varList' in params else None
+
+    try:
+        limit = int(params.get('limit',MAX_DATA_POINTS))
+    except:
+        limit = MAX_DATA_POINTS
         
     try:
-        result,lastPos = _getData(name,startPos,varList)
+        result,lastPos = _getData(name,startPos,varList,limit)
     except:
         return {'lastPos':"null", 'filename':''}
     
@@ -231,11 +267,6 @@ def getDataEx(params):
     result['lastPos'] = lastPos
     return result
    
-@handler.register
-@rpcWrapper
-def getPos():
-    return getPosEx()
-    
 @app.route('/rest/getPos')
 def rest_getPos():
     result = getPosEx()
@@ -249,11 +280,6 @@ def getPosEx():
     long = result['GPS_ABS_LONG'][-1]
     lat = result['GPS_ABS_LAT'][-1]
     return {'result':dict(GPS_ABS_LONG=long,GPS_ABS_LAT=lat)}
-        
-@handler.register
-@rpcWrapper
-def getPeaks(params):
-    return getPeaksEx(params)
 
 @app.route('/rest/getPeaks')
 def rest_getPeaks():
@@ -277,11 +303,85 @@ def getPeaksEx(params):
     result["filename"]=os.path.basename(name)
     return result
 
-@handler.register
-@rpcWrapper
-def getAnalysis(params):
-    return getAnalysisEx(params)
+@app.route('/rest/getSwath')
+def rest_getSwath():
+    result = getSwathEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+        
+def getSwathEx(params):
+    try:
+        startRow = int(params.get('startRow',1))
+    except:
+        startRow = 1
+    try:
+        limit = int(params.get('limit',MAX_DATA_POINTS))
+    except:
+        limit = MAX_DATA_POINTS
+    try:
+        name = genLatestFiles(*os.path.split(SWATHFILES)).next()
+    except:
+        return {'filename':''}
+    result = _getSwath(name,startRow,limit)
+    result["filename"]=os.path.basename(name)
+    return result
 
+@app.route('/rest/makeSwath')
+def rest_makeSwath():
+    result = makeSwathEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+        
+def makeSwathEx(params):
+    astdParams = dict(a=0.15*math.pi,b=0.25,c=0.0)
+    try:
+        startRow = int(params.get('startRow',1))
+    except:
+        startRow = 1
+    try:
+        limit = int(params.get('limit',MAX_DATA_POINTS))
+    except:
+        limit = MAX_DATA_POINTS
+    try:
+        nWindow = int(params.get('nWindow',10))
+    except:
+        nWindow = 10
+    try:
+        stabClass = params.get('stabClass','D')
+    except:
+        stabClass = 'D'
+    try:
+        minLeak = float(params.get('minLeak',1.0))
+    except:
+        minLeak = 1.0
+    try:
+        minAmp = float(params.get('minAmp',0.05))
+    except:
+        minAmp = 0.05
+    try:
+        astdParams['a'] = float(params.get('astd_a',0.15*math.pi))
+    except:
+        astdParams['a'] = 0.15*math.pi
+    try:
+        astdParams['b'] = float(params.get('astd_b',0.25))
+    except:
+        astdParams['b'] = 0.25
+    try:
+        astdParams['c'] = float(params.get('astd_c',0.0))
+    except:
+        astdParams['c'] = 0.0
+    try:
+        name = genLatestFiles(*os.path.split(USERLOGFILES)).next()
+    except:
+        return {'filename':''}
+    result = _makeSwath(name,startRow,limit,nWindow,stabClass,minLeak,minAmp,astdParams)
+    result["filename"]=os.path.basename(name)
+    return result
+    
 @app.route('/rest/getAnalysis')
 def rest_getAnalysis():
     result = getAnalysisEx(request.values)
@@ -302,11 +402,6 @@ def getAnalysisEx(params):
     result = _getAnalysis(name,startRow)
     result["filename"]=os.path.basename(name)
     return result
-                
-@handler.register
-@rpcWrapper
-def restartDatalog(params):
-    return restartDatalogEx(params)
 
 @app.route('/rest/restartDatalog')
 def rest_restartDatalog():
@@ -321,11 +416,6 @@ def restartDatalogEx(params):
     dataLogger = DataLoggerInterface()
     dataLogger.startUserLogs(['DataLog_User_Minimal'],restart=True)
     return {}
-    
-@handler.register
-@rpcWrapper
-def shutdownAnalyzer(params):
-    return shutdownAnalyzerEx(params)
 
 @app.route('/rest/shutdownAnalyzer')
 def rest_shutdownAnalyzer():
@@ -340,11 +430,6 @@ def shutdownAnalyzerEx(params):
     INST_MGR_RPC = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "AnalyzerServer")
     INST_MGR_RPC.INSTMGR_ShutdownRpc(2)
     return {}
-
-@handler.register
-@rpcWrapper
-def driverRpc(params):
-    return driverRpcEx(params)
 
 @app.route('/rest/driverRpc')
 def rest_driverRpc():
@@ -375,11 +460,6 @@ def driverRpcEx(params):
     else:
         if time.clock() - lastDriverCheck > 60: driverAvailable = True
         return(dict(error="No Driver"))
-        
-@handler.register
-@rpcWrapper
-def injectCal(params):
-    return injectCalEx(params)
 
 @app.route('/rest/injectCal')
 def rest_injectCal():
@@ -406,11 +486,6 @@ def injectCalEx(params):
         return dict(value='OK')
     except:
         return dict(error=traceback.format_exc())
-        
-@handler.register
-@rpcWrapper
-def getDateTime(params):
-    return getDateTimeEx(params)
     
 @app.route('/rest/getDateTime')
 def rest_getDateTime():

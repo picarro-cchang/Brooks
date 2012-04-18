@@ -1,13 +1,13 @@
 from namedtuple import namedtuple
 from collections import deque
 from threading import Lock
+from configobj import ConfigObj
+import getFromP3 as gp3
 import Queue
 import os
 import sys
 import time
 
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
 from numpy import *
 from scipy.optimize import leastsq
 import itertools
@@ -176,8 +176,7 @@ def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.01):
     or a SourceTuple (which is a millisecond timestamp together with a valTuple) when 
     its getData method is called.
     
-    This is a generator which yields a timestamp and a list of valTuples from each source.
-    A StopIteration is thrown if the DONE() function returns True."""
+    This is a generator which yields a timestamp and a list of valTuples from each source."""
     
     # First determine when to start synchronized timestamps
     oldestTs = []
@@ -199,7 +198,6 @@ def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.01):
         for s,offset in zip(sourceList,msOffsetList):
             while True:
                 d = s.getData(ts+offset)
-                # if DONE(): return
                 if d is not None:
                     valTuples.append(d.valTuple)
                     break
@@ -302,7 +300,7 @@ def calCompass(phi,theta,params0=[0.0,0.0,0.0]):
 #  from the anemometer velocity. This is done in the frame of the anemometer, which is nominally aligned
 #  with the vehicle
 
-def trueWindSource(derivCdataSource,distFromAxle):
+def trueWindSource(derivCdataSource,distFromAxle,speedFactor=1.0):
     #
     # We want to fit the most recent magnetometer data to a model consisting of a static bias field.
     #  This model maps the GPS derived heading phi to the magnetometer heading theta. Data are required 
@@ -362,8 +360,7 @@ def trueWindSource(derivCdataSource,distFromAxle):
             den += real(d.zVel*conj(sVel)*exp(-1j*(phi-p0)))
 
         # Subtract velocity of vehicle
-        scale = float(PARAMS.get('SPEEDFACTOR',1.0))
-        cVel = scale*sVel - abs(d.zVel)*exp(1j*axleCorr)
+        cVel = speedFactor*sVel - abs(d.zVel)*exp(1j*axleCorr)
         
         # Rotate back to geographic coordinates, use either GPS direction if car is travelling
         #  quickly or the compass direction if travelling slowly
@@ -401,7 +398,7 @@ def trueWindSource(derivCdataSource,distFromAxle):
                 print "Samples", i
                 try:
                     p0,p1,p2 = calCompass(phi0,theta0,[p0,p1,p2])
-                    print "Compass params: %10.2f %10.2f %10.2f" % (p0, p1, p2)
+                    #print "Compass params: %10.2f %10.2f %10.2f" % (p0, p1, p2)
                     rot = -arctan2(iCorr,rCorr)
                     print "Rotation: %10.2f degrees %10.2f degrees, Scale:%10.4f" % ((180/pi)*rot,(180/pi)*p0,num/den)
                 except:
@@ -478,18 +475,93 @@ def windStatistics(windSource,statsInterval):
             # aStdDev = 180.0/pi * aStdDev
         # yield StatsCdataTuple(*(w+(wMean,aStdDev))) 
         
-def main():
+def runAsScript():
     gpsSource = GpsSource(SENSORLIST[0])
     wsSource  = WsSource(SENSORLIST[1])
     gpsDelay_ms = 0
     anemDelay_ms = round(1000*float(PARAMS.get("ANEMDELAY",1.5)))
     compassDelay_ms = round(1000*float(PARAMS.get("COMPASSDELAY",0.0)))
     distFromAxle = float(PARAMS.get("DISTFROMAXLE",1.5))
-    
+    speedFactor = float(PARAMS.get('SPEEDFACTOR',1.0))
+
     msOffsets = [0,compassDelay_ms,anemDelay_ms]  # ms offsets for GPS, magnetometer and anemometer
     syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
     statsAvg = int(PARAMS.get("STATSAVG",10))
-    for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle),statsAvg)):
+    for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle,speedFactor),statsAvg)):
         WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev,float(abs(d.zVel))])
 
-main()
+class BatchProcessor(object):
+    def __init__(self, iniFile):
+        if not os.path.exists(iniFile):
+            raise ValueError("Configuration file %s missing" % iniFile)
+        self.config = ConfigObj(iniFile)
+            
+    def run(self):
+        varList = {'ANALYZER':'analyzer','START_ETM':'startEtm',
+                   'END_ETM':'endEtm','STATSAVG':'statsAvg',
+                   'WIND_FILE':'outFile', # Full path to wind file
+                   'ANEMDELAY':'anemDelay','COMPASSDELAY':'compassDelay',
+                   'DISTFROMAXLE':'distFromAxle','SPEEDFACTOR':'speedFactor'}
+        
+        for secName in self.config:
+            if secName == 'DEFAULTS': continue
+            if 'DEFAULTS' in self.config:
+                for v in varList:
+                    if v in self.config['DEFAULTS']: 
+                        setattr(self,varList[v],self.config['DEFAULTS'][v])
+                    else: 
+                        setattr(self,varList[v],None)
+            for v in varList:
+                if v in self.config[secName]: 
+                    setattr(self,varList[v],self.config[secName][v])
+            
+            self.startEtm = float(self.startEtm)
+            self.endEtm = float(self.endEtm)
+            self.statsAvg = int(self.statsAvg)
+            self.anemDelay = float(self.anemDelay)
+            self.speedFactor = float(self.speedFactor)
+            self.compassDelay = float(self.compassDelay)
+            self.distFromAxle = float(self.distFromAxle)
+        self._run()
+    
+    def _run(self):
+        self.op = file(self.outFile,"w",0)
+        print >>self.op, "%-20s%-20s%-20s%-20s%-20s" % ("EPOCH_TIME","WIND_N","WIND_E","WIND_DIR_SDEV","CAR_SPEED")
+        p3 = gp3.P3_Accessor(self.analyzer)
+        gpsSource = gp3.P3_Source(p3.genGpsData,"gpsSource",endEtm=self.endEtm,limit=2000)
+        wsSource  = gp3.P3_Source(p3.genWsData,"wsSource",endEtm=self.endEtm,limit=2000)
+        syncSource = gp3.SyncSource([gpsSource,wsSource,wsSource],[0.0,self.compassDelay,self.anemDelay],
+                                    interval=1.0,startEtm=self.startEtm)
+        def p3SyncDataSource():
+            # Convert P3 source into a format acceptable to the processor
+            GpsTuple = namedtuple("GpsTuple",["GPS_ABS_LAT", "GPS_ABS_LONG", "GPS_FIT"])
+            MagTuple = namedtuple("MagTuple",["WS_COS_HEADING", "WS_SIN_HEADING"])
+            AnemTuple = namedtuple("AnemTuple",["WS_WIND_LON", "WS_WIND_LAT"])
+            for s in syncSource.generator():
+                if s is None:
+                    print "No data available, sleeping..."
+                    time.sleep(1.0)
+                else:
+                    etm,[gpsDict,magDict,anemDict] = s
+                    ts = int(timestamp.unixTimeToTimestamp(etm))
+                    gps = GpsTuple(*[gpsDict[f] for f in GpsTuple._fields])
+                    mag = MagTuple(*[magDict[f] for f in MagTuple._fields])
+                    rwind = anemDict["WS_SPEED"]*(anemDict["WS_COS_DIR"]+1j*anemDict["WS_SIN_DIR"])*\
+                                                 (anemDict["WS_COS_HEADING"]+1j*anemDict["WS_SIN_HEADING"])
+                    anem = AnemTuple(real(rwind),imag(rwind))
+                yield ts,[gps,mag,anem]
+
+        for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(p3SyncDataSource())),
+                                self.distFromAxle,self.speedFactor),self.statsAvg)):
+            self.writeOutput(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev,float(abs(d.zVel))])
+            
+    def writeOutput(self,ts,dataList):
+        # print "%-20.3f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],(180.0/pi)*dataList[2])
+        print >> self.op, "%-20.3f%-20.10f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],dataList[2],dataList[3])
+
+if __name__ == "__main__":
+    if len(sys.argv)<2:
+        raise ValueError('Please specify INI file as argument to script')
+    BatchProcessor(sys.argv[1]).run()    
+else:
+    runAsScript()

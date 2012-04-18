@@ -195,6 +195,7 @@ var CNSNT = {
         progressUpdatePeriod: 2000,
         modeUpdatePeriod: 2000,
         periphUpdatePeriod: 5000,
+        swathUpdatePeriod: 500,
         hmargin: 25,
         vmargin: 0,
         map_topbuffer: 0,
@@ -228,6 +229,7 @@ var CNSNT = {
         earthRadius: 6378100,
         swath_color: "#0000CC", 
         swath_opacity: 0.3,
+        swathWindow: 10,
         
         dtr : Math.PI/180.0,    // Degrees to radians
         rtd : 180.0/Math.PI,    // Radians to degrees
@@ -293,6 +295,8 @@ var CSTATE = {
         clearWind: false,
         analysisLine: 1,
         clearAnalyses: false,
+        swathLine: 1,
+        clearSwath: false,
         startNewPath: true,
         nextAnalysisEtm: 0.0,
         nextPeakEtm: 0.0,
@@ -345,7 +349,15 @@ var CSTATE = {
         resize_for_conc_data: true,
 
         getDataLimit: 1000,
-
+        getSwathLimit: 1000,
+        
+        stabClass: 'D',     // Pasquill-Gifford stability class
+        minLeak:   1.0,     // Minimum leak to consider in cubic feet/hour
+        
+        // Parameters for estimating addtional standard deviation in wind direction
+        astd_a : 0.15*Math.PI,
+        astd_b : 0.25,          // Wind speed in m/s for standard deviation to be astd_a
+        astd_c : 0.0,           // Factor multiplying car speed in m/s
     };
 
 var TIMER = {
@@ -360,10 +372,30 @@ var TIMER = {
         progress: null, //timer for updateProgress
         mode: null, // timer for getMode 
         periph: null, // timer for checkPeriphUpdate
+        swath: null, // timer for showing swath
     };
-
+    
 var modeStrings = {0: TXT.survey_mode, 1: TXT.capture_mode, 2: TXT.capture_mode, 3: TXT.analyzing_mode, 4: TXT.inactive_mode};
 var modeBtn = {0: [HBTN.captureBtn],  1: [HBTN.cancelCapBtn], 2: [HBTN.cancelCapBtn], 3: []};
+
+// Calculate the additional wind direction standard deviation based on the wind speed and the car speed.
+//  This is an empirical model to estimate the performace of the measurement process.
+//  N.B. This must be consistent with that used for calculation of swath width
+
+function astd(wind,vcar)
+{
+    return Math.min(Math.PI,CSTATE.astd_a*(CSTATE.astd_b+CSTATE.astd_c*vcar)/(wind+0.01));
+}
+
+function totSdev(wind,wSdev,vcar)
+// Calculate the total standard deviation of the wind in DEGREES given the wind speed, the standard deviation
+//  in DEGREES from WIND_DIR_SDEV and the speed of the car. Uses astd to provide the additional standard deviation
+//  estimate
+{
+    var dstd = CNSNT.dtr * wSdev;
+    var extra = astd(wind,vcar);
+    return CNSNT.rtd*Math.sqrt(dstd*dstd + extra*extra);
+}
 
 // tableChrome NOTE: first element (index 0) in each cNarray is the "style" tag for the td div
 function tableChrome(tblStyle, trStyle, c1array, c2array, c3array, c4array) {
@@ -536,9 +568,9 @@ function newPeakMarker(map, latLng, amp, sigma, ch4) {
     // return mk;
 }
 
-function newWindMarker(map, latLng, speed, dir, dirSdev) {
+function newWindMarker(map, latLng, radius, dir, dirSdev) {
     var wr, wedge;
-    wedge = makeWindWedge(20.0*speed,dir,2*dirSdev);
+    wedge = makeWindWedge(radius,dir,2*dirSdev);
     wr = new google.maps.Marker({position: latLng, icon: new google.maps.MarkerImage(wedge.url,null,null,newPoint(wedge.radius,wedge.radius)),zIndex:0});
     wr.setMap(map);
     return wr;
@@ -665,6 +697,19 @@ function clearAnalysisMarkerArray() {
     CSTATE.analysisLine = 1;
 }
 
+function clearSwathPolys() {
+    var i;
+    CSTATE.clearSwath = true;
+    for (i = 0; i < CSTATE.swathPolys.length; i += 1) {
+        CSTATE.swathPolys[i].setMap(null);
+    }
+    CSTATE.swathPolys = [];
+    CSTATE.lastMeasPathLoc = null;
+    CSTATE.lastMeasPathDeltaLat = null;
+    CSTATE.lastMeasPathDeltaLon = null;
+    CSTATE.swathLine = 1;
+}
+
 function clearWindMarkerArray() {
     var i;
     CSTATE.clearWind = true;
@@ -744,8 +789,9 @@ function double_quote(txt) {
 
 function resetLeakPosition() {
     clearPeakMarkerArray();
-    clearWindMarkerArray();
     clearAnalysisMarkerArray();
+    clearWindMarkerArray();
+    clearSwathPolys();
 }
 
 function timeStringFromEtm(etm) {
@@ -1268,7 +1314,7 @@ function showPbubbleCb() {
     } else {
         CSTATE.showPbubble = false;
     }
-    clearPeakMarkerArray();
+        clearPeakMarkerArray();
     setCookie(COOKIE_NAMES.pbubble, (CSTATE.showPbubble) ? "1" : "0", CNSNT.cookie_duration);
 
     btxt = TXT.show_txt;
@@ -1325,7 +1371,7 @@ function showWbubbleCb() {
     } else {
         CSTATE.showWbubble = false;
     }
-    clearWindMarkerArray();
+        clearWindMarkerArray();
     setCookie(COOKIE_NAMES.wbubble, (CSTATE.showWbubble) ? "1" : "0", CNSNT.cookie_duration);
 
     btxt = TXT.show_txt;
@@ -2056,7 +2102,7 @@ function updatePath(pdata, clr, etm) {
         }
     }
     pushToPath(CSTATE.path, where);
-
+    /*
     if ('windN' in pdata) { 
         if (clr === CNSNT.normal_path_color) {
             var dir = Math.atan2(pdata.windE,pdata.windN);
@@ -2085,6 +2131,7 @@ function updatePath(pdata, clr, etm) {
             CSTATE.lastMeasPathDeltaLon = null;
         }
     }
+    */
     CSTATE.startNewPath = false;
     npdata = pdata;
     npdata.geohash = encodeGeoHash(where.lat(), where.lng());
@@ -2496,6 +2543,10 @@ function setGduTimer(tcat) {
         TIMER.periph = setTimeout(periphTimer, CNSNT.periphUpdatePeriod);
         return;
     }
+    if (tcat === "swath") {
+        TIMER.swath = setTimeout(swathTimer, CNSNT.swathUpdatePeriod);
+        return;
+    }
 }
 
 function datTimer() {
@@ -2562,6 +2613,14 @@ function periphTimer() {
     checkPeriphUpdate();
 }
 
+function swathTimer() {
+    if (CSTATE.ignoreTimer) {
+        setGduTimer('swath');
+        return;
+    }
+    fetchSwath();
+}
+
 function statCheck() {
     var dte, curtime, streamdiff;
     dte = new Date();
@@ -2610,7 +2669,7 @@ function statCheck() {
 function getData() {
     //if (startPos) {startPosStr = startPos;} else {startPosStr = 'null';};
     var params = {'limit': CSTATE.getDataLimit, 'startPos': CSTATE.startPos, 'alog': CSTATE.alog, 'gmtOffset': CNSNT.gmt_offset, 
-        'varList': '["GPS_ABS_LAT","GPS_ABS_LONG","GPS_FIT","CH4","ValveMask", "INST_STATUS", "WIND_N", "WIND_E", "WIND_DIR_SDEV"]'};
+        'varList': '["GPS_ABS_LAT","GPS_ABS_LONG","GPS_FIT","CH4","ValveMask", "INST_STATUS", "WIND_N", "WIND_E", "WIND_DIR_SDEV","CAR_SPEED"]'};
     call_rest(CNSNT.svcurl, "getData", params,
             function (json, status, jqXHR) {
             CSTATE.net_abort_count = 0;
@@ -2717,6 +2776,27 @@ function showAnalysis() {
             errorAnalysis(jqXHR.responseText);
         }
         );
+}
+
+function fetchSwath() {
+    var params = {'startRow': CSTATE.swathLine, 'limit':CSTATE.getSwathLimit, 
+                  'nWindow': CNSNT.swathWindow, 'stabClass':CSTATE.stabClass,
+                  'minLeak': CSTATE.minLeak, 'minAmp':CSTATE.minAmp,
+                  'astd_a': CSTATE.astd_a, 'astd_b': CSTATE.astd_b, 'astd_c': CSTATE.astd_c, 
+                  'alog': CSTATE.alog, 'gmtOffset': CNSNT.gmt_offset};
+    // if (!CSTATE.showSwath) {
+    //     setGduTimer('swath');
+    //     return;
+    // }
+    call_rest(CNSNT.svcurl, "makeSwath", params,
+            function (json, status, jqXHR) {
+            CSTATE.net_abort_count = 0;
+            successSwath(json);
+        },
+        function (jqXHR, ts, et) {
+            errorSwath(jqXHR.responseText);
+        }
+    );
 }
 
 function showLeaksAndWind() {
@@ -2889,6 +2969,9 @@ function successData(data) {
                                 data.result.WIND_N[n-1]*data.result.WIND_N[n-1]);
                             var direction = CNSNT.rtd*Math.atan2(data.result.WIND_E[n-1],data.result.WIND_N[n-1]);
                             var stddev = data.result.WIND_DIR_SDEV[n-1];
+                            var vCar = 0.0;
+                            if ("CAR_SPEED" in data.result) vCar = data.result.CAR_SPEED[n-1];
+                            stddev = totSdev(speed,stddev,vCar);
                             if (stddev>90.0) stddev = 90.0;
                             $("#windData").html("<b style='font-size:12px; color:#404040;'>" + "Wind: " + speed.toFixed(2) + " m/s" + "</b>");
                             makeWindRose(70,27,direction,2*stddev,5.0*speed,15.0,60.0);
@@ -2950,6 +3033,9 @@ function successData(data) {
     if (TIMER.anote === null) {
         setGduTimer('anote');
     }
+    if (TIMER.swath === null) {
+        setGduTimer('swath');
+    }
 }
 
 function successPeaksAndWind(data) {
@@ -2966,7 +3052,7 @@ function successPeaksAndWind(data) {
     if (resultWasReturned) {
         var resetClear = false;
         if (data.result.CH4 && CSTATE.showPbubble && CSTATE.clearLeaks) {
-            CSTATE.clearLeaks = false;
+                CSTATE.clearLeaks = false;
             resetClear = true;
         }
         if (data.result.WIND_DIR_SDEV && CSTATE.showWbubble && CSTATE.clearWind) {
@@ -2975,38 +3061,43 @@ function successPeaksAndWind(data) {
         }
         if (resetClear) {
             CSTATE.peakLine = 1;
-        } else {
+            } else {
             var showPeaks = (data.result.CH4 && CSTATE.showPbubble);
             var showWind = (data.result.WIND_DIR_SDEV && CSTATE.showWbubble);
             if (showPeaks || showWind){
                 for (i = 0; i < data.result.CH4.length; i += 1) {
                     peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
                     if (showPeaks) {
-                        peakMarker = newPeakMarker(CSTATE.map, peakCoords, data.result.AMPLITUDE[i], data.result.SIGMA[i], data.result.CH4[i]);
-                        CSTATE.peakMarkers[CSTATE.peakMarkers.length] = peakMarker;
-                        if (CNSNT.turnOnAudio) {
-                            // Play warning sound
-                            var myAudio = document.getElementById("plume");
-                            myAudio.play();
-                        }
-                        datadict = CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]];
-                        if (!datadict) {
-                            datadict = {};
-                        }
-                        datadict.lat = data.result.GPS_ABS_LAT[i];
-                        datadict.lon = data.result.GPS_ABS_LONG[i];
-                        datadict.ch4 = data.result.CH4[i];
-                        datadict.amp = data.result.AMPLITUDE[i];
-                        datadict.sigma = data.result.SIGMA[i];
-
-                        CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]] = datadict;
-                        attachMarkerListener(peakMarker, data.result.EPOCH_TIME[i], "peak", true);
+                    peakMarker = newPeakMarker(CSTATE.map, peakCoords, data.result.AMPLITUDE[i], data.result.SIGMA[i], data.result.CH4[i]);
+                    CSTATE.peakMarkers[CSTATE.peakMarkers.length] = peakMarker;
+                    if (CNSNT.turnOnAudio) {
+                        // Play warning sound
+                        var myAudio = document.getElementById("plume");
+                        myAudio.play();
                     }
+                    datadict = CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]];
+                    if (!datadict) {
+                        datadict = {};
+                    }
+                    datadict.lat = data.result.GPS_ABS_LAT[i];
+                    datadict.lon = data.result.GPS_ABS_LONG[i];
+                    datadict.ch4 = data.result.CH4[i];
+                    datadict.amp = data.result.AMPLITUDE[i];
+                    datadict.sigma = data.result.SIGMA[i];
+
+                    CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]] = datadict;
+                    attachMarkerListener(peakMarker, data.result.EPOCH_TIME[i], "peak", true);
+                }
                     if (showWind) {
-                        var windDirection = CNSNT.rtd*Math.atan2(data.result.WIND_E[i],data.result.WIND_N[i]);
-                        var windSpeed = Math.sqrt(data.result.WIND_N[i]*data.result.WIND_N[i]+data.result.WIND_E[i]*data.result.WIND_E[i]);
-                        windMarker = newWindMarker(CSTATE.map, peakCoords, windSpeed, windDirection, data.result.WIND_DIR_SDEV[i]);
-                        CSTATE.windMarkers[CSTATE.windMarkers.length] = windMarker;
+                    var windDirection = CNSNT.rtd*Math.atan2(data.result.WIND_E[i],data.result.WIND_N[i]);
+                    var windSpeed = Math.sqrt(data.result.WIND_N[i]*data.result.WIND_N[i]+data.result.WIND_E[i]*data.result.WIND_E[i]);
+                    var vCar = 0;
+                    var windStddev = data.result.WIND_DIR_SDEV[i];
+                    if ("CAR_SPEED" in data.result) vCar = data.result.CAR_SPEED[i];
+                    windStddev = totSdev(windSpeed,windStddev,vCar);
+                    peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
+                    windMarker = newWindMarker(CSTATE.map, peakCoords, 50, windDirection, windStddev);
+                    CSTATE.windMarkers[CSTATE.windMarkers.length] = windMarker;
                     }
                 }
                 CSTATE.peakLine = data.result.nextRow;
@@ -3080,6 +3171,56 @@ function successAnalysis(data) {
         }
     }
     setGduTimer('analysis');
+}
+
+function successSwath(data) {
+    var resultWasReturned, i;
+    resultWasReturned = false;
+    if (data.result) {
+        if (data.result.filename) {
+            if (CSTATE.lastDataFilename === data.result.filename) {
+            // if (CSTATE.lastSwathFilename === data.result.filename) {
+                resultWasReturned = true;
+            }
+            //CSTATE.lastAnalysisFilename = data.result.filename;
+        }
+    }
+    if (resultWasReturned) {
+        if (data.result.GPS_ABS_LAT) {
+            if (CSTATE.clearSwath) {
+                CSTATE.clearSwath = false;
+            } else {
+                for (i=0;i<data.result.GPS_ABS_LAT.length;i+=1) {
+                    var where = newLatLng(data.result.GPS_ABS_LAT[i],data.result.GPS_ABS_LONG[i]);
+                    var deltaLat = data.result.DELTA_LAT[i];
+                    var deltaLon = data.result.DELTA_LONG[i];
+
+                    if (CSTATE.lastMeasPathLoc) {
+                        var noLastView = (Math.abs(CSTATE.lastMeasPathDeltaLat) < 1.0e-6) && 
+                                         (Math.abs(CSTATE.lastMeasPathDeltaLon) < 1.0e-6);
+                        if (!noLastView) {
+                            var noView = (Math.abs(deltaLat) < 1.0e-6) && 
+                                         (Math.abs(deltaLon) < 1.0e-6); 
+                            if (!noView) {
+                                // Draw the polygon
+                                var coords = [newLatLng(CSTATE.lastMeasPathLoc.lat()+CSTATE.lastMeasPathDeltaLat,
+                                                        CSTATE.lastMeasPathLoc.lng()+CSTATE.lastMeasPathDeltaLon),
+                                              CSTATE.lastMeasPathLoc,
+                                              where,
+                                              newLatLng(where.lat()+deltaLat, where.lng()+deltaLon)];
+                                CSTATE.swathPolys.push(newPolygonWithoutOutline(CSTATE.map,CNSNT.swath_color,CNSNT.swath_opacity,coords,CSTATE.showSwath));
+                            }
+                        }    
+                    }
+                    CSTATE.lastMeasPathLoc = where;
+                    CSTATE.lastMeasPathDeltaLat = deltaLat;
+                    CSTATE.lastMeasPathDeltaLon = deltaLon;
+                }
+                CSTATE.swathLine = data.result.nextRow;
+            }
+        }
+    }
+    setGduTimer('swath');
 }
 
 //drop (or update) the note bubble (and add listener if dropping)
@@ -3285,6 +3426,15 @@ function errorPeriph(text) {
     }
     $("#errors").html(text);
     setGduTimer('periph');
+}
+
+function errorSwath(text) {
+    CSTATE.net_abort_count += 1;
+    if (CSTATE.net_abort_count >= 2) {
+        $("#id_modal").html(modalNetWarning());
+    }
+    $("#errors").html(text);
+    setGduTimer('swath');
 }
 
 function setModePane(mode) {
