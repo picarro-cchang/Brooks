@@ -153,21 +153,26 @@ class ControlPanel(wx.Panel):
         self.average = 64
         self.averageCount = 0
         self.enableAverage = False
+        self.enable = True
         
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         
         self.check_box_enable_average = wx.CheckBox(self, -1, "Exponential Average")
         self.label_average = wx.StaticText(self, -1, "Average")
         self.text_ctrl_average = wx.TextCtrl(self, -1, "%d" % self.average, style=wx.TE_PROCESS_ENTER)
-
+        self.check_box_enable = wx.CheckBox(self, -1, "Enable")
+        self.check_box_enable.SetValue(True)
+        
         sizer_1.Add(self.check_box_enable_average, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         sizer_1.Add(self.label_average, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         sizer_1.Add(self.text_ctrl_average, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, 10)
+        sizer_1.Add(self.check_box_enable, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         sizer_1.AddStretchSpacer()
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
         
         self.Bind(wx.EVT_CHECKBOX, self.onAverageCheckbox, self.check_box_enable_average)
+        self.Bind(wx.EVT_CHECKBOX, self.onEnableCheckbox, self.check_box_enable)
                 
         self.Bind(wx.EVT_TEXT_ENTER, self.onAverageEnter, self.text_ctrl_average)
         self.text_ctrl_average.Bind(wx.EVT_KILL_FOCUS, self.onAverageEnter)
@@ -191,6 +196,10 @@ class ControlPanel(wx.Panel):
             self.text_ctrl_average.SetValue("%d" % self.average)
         else:
             self.text_ctrl_average.SetEditable(False)
+        if evt: evt.Skip()
+        
+    def onEnableCheckbox(self,evt):
+        self.enable = self.check_box_enable.GetValue()
         if evt: evt.Skip()
         
 class GenericPanel(wx.Panel):
@@ -293,6 +302,7 @@ class DetectorViewer(wx.Frame):
         extra = 9 # Extra bits in high-resolution tuner accumulator
         hTuner = 0.01 # Tuner interval in ms
 
+        
         if self.nSample % 8 == 0:
             self.npoints = Driver.rdFPGA("FPGA_RDMAN","RDMAN_NUM_SAMP")
             self.divisor = Driver.rdFPGA("FPGA_RDMAN","RDMAN_DIVISOR")+1
@@ -302,42 +312,44 @@ class DetectorViewer(wx.Frame):
             self.pztMin = Driver.rdDasReg("TUNER_SWEEP_RAMP_LOW_REGISTER")
 
         self.nSample += 1
+        
         N = self.npoints
-        d = Driver.rdOscilloscopeTrace()
-        d = d[:N] & 16383
-        
-        if self.controlPanel.enableAverage:
-            self.controlPanel.averageCount += 1
-            if self.controlPanel.averageCount >= self.controlPanel.average:
-                self.controlPanel.averageCount = self.controlPanel.average
-            self.data = ((self.controlPanel.averageCount-1)*self.data + d)/self.controlPanel.averageCount
-            self.controlPanel.text_ctrl_average.SetValue("%d / %d" % (self.controlPanel.averageCount,self.controlPanel.average))
-        else:
-            self.data = d
-
         self.dt = self.divisor/(25.0e3) # In milliseconds
-        
         tMax = N*self.dt
-        w = self.scopePanel.graph1Waveform
-        w.Clear()        
-        for x,y in enumerate(self.data):
-            w.Add(x*self.dt,y)
-        pztRange = (self.pztMax-self.pztMin)*2**extra
-        upPoints = pztRange//self.upSlope
-        downPoints = pztRange//self.downSlope
-        start = 0
         
-        w = self.scopePanel.graph2Waveform
-        w.Clear()
-        w.Add(start,self.pztMin)
-        while start<=tMax:
-            w.Add(start+upPoints*hTuner,self.pztMin+upPoints*float(self.upSlope)/2**extra)
-            start += (upPoints+1)*hTuner
-            if start>tMax: break
-            w.Add(start,self.pztMax)
-            w.Add(start+downPoints*hTuner,self.pztMax-downPoints*float(self.downSlope)/2**extra)
-            start += (downPoints+1)*hTuner
+        if self.controlPanel.enable:
+            d = Driver.rdOscilloscopeTrace()
+            d = d[:N] & 16383
             
+            if self.controlPanel.enableAverage:
+                self.controlPanel.averageCount += 1
+                if self.controlPanel.averageCount >= self.controlPanel.average:
+                    self.controlPanel.averageCount = self.controlPanel.average
+                self.data = ((self.controlPanel.averageCount-1)*self.data + d)/self.controlPanel.averageCount
+                self.controlPanel.text_ctrl_average.SetValue("%d / %d" % (self.controlPanel.averageCount,self.controlPanel.average))
+            else:
+                self.data = d
+
+            w = self.scopePanel.graph1Waveform
+            w.Clear()        
+            for x,y in enumerate(self.data):
+                w.Add(x*self.dt,y)
+            pztRange = (self.pztMax-self.pztMin)*2**extra
+            upPoints = pztRange//self.upSlope
+            downPoints = pztRange//self.downSlope
+            start = 0
+            
+            w = self.scopePanel.graph2Waveform
+            w.Clear()
+            w.Add(start,self.pztMin)
+            while start<=tMax:
+                w.Add(start+upPoints*hTuner,self.pztMin+upPoints*float(self.upSlope)/2**extra)
+                start += (upPoints+1)*hTuner
+                if start>tMax: break
+                w.Add(start,self.pztMax)
+                w.Add(start+downPoints*hTuner,self.pztMax-downPoints*float(self.downSlope)/2**extra)
+                start += (downPoints+1)*hTuner
+                
         numGraphs = 2
         for idx in range(numGraphs):
             if not self.graphPanel[idx].GetIsNewXAxis():
