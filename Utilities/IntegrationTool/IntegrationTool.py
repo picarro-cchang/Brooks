@@ -13,11 +13,21 @@ import shutil
 import time
 import subprocess
 import threading
+import getopt
 import traceback
 from configobj import ConfigObj
 from xmlrpclib import ServerProxy
+from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER
+
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
+AppPath = os.path.abspath(AppPath)
+
+DEFAULT_CONFIG_NAME = "IntegrationTool.ini"
 
 FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
                 "IntegrationTool", IsDontCareConnection = False)
@@ -40,24 +50,54 @@ LASER_TYPE_DICT = {"1603.2": "CO2", "1651.0": "CH4", "1599.6": "iCO2", "1392.0":
                    "1567.9": "CO", "1527.0": "NH3", "1554.7": "iH2O", "1521.1": "C2H2", "1574.5": "H2S",
                    "1658.7": "iCH4", "1278.0": "HF"}
 
-ANALYZER_TYPE_INDEX = {"HBDS":0, "HIDS":0, "CFADS":1, "CFBDS":1, "CFHADS":7, "CFDDS":1, "CFEDS":1, "CFFDS":6, 
-                       "CBDS":2, "CHADS":2, "CFKADS":3, "CFKBDS":3, "AEDS":4, "CKADS":5, "BFADS":8, "FCDS":9,
-                       "MADS":10}
-ALL_SCHEMES = [
+THRESHOLD_STATS_SCHEMES = {
+              "HBDS":
               { "O18"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak18O.sch",
                 "Baseline" : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Baseline.sch",
                 "O16"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak16O.sch",
                 "dH"       : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_PeakD.sch"
               },
+              "HIDS":
+              { "O18"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak18O.sch",
+                "Baseline" : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Baseline.sch",
+                "O16"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak16O.sch",
+                "dH"       : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_PeakD.sch"
+              },
+              "CFADS":
               { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
                 "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
                 "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
                 "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
               },
+              "CFBDS":
+              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
+                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
+              },
+              "CFDDS":
+              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
+                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
+              },
+              "CFEDS":
+              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
+                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
+              },
+              "CBDS":
               { "Baseline": r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_Baseline.sch",
                 "C12Peak":  r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C12Peak.sch",
                 "C13Peak":  r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C13Peak.sch"
               },
+              "CHADS":
+              { "Baseline": r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_Baseline.sch",
+                "C12Peak":  r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C12Peak.sch",
+                "C13Peak":  r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C13Peak.sch"
+              },
+              "CFKADS":
               { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
                 "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
                 "CO_BL"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_BL.sch",
@@ -65,21 +105,32 @@ ALL_SCHEMES = [
                 "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch", 
                 "CO_PK"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_PK.sch"
               },
-              {
-                "NH3_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\NH3_BL.sch",
+              "CFKBDS":
+              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CO_BL"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_BL.sch",
+                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
+                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch", 
+                "CO_PK"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_PK.sch"
+              },
+              "AEDS":
+              { "NH3_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\NH3_BL.sch",
                 "NH3_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\NH3_PK.sch"
               },
+              "CKADS":
               { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
                 "CO_BL"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_BL.sch", 
                 "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
                 "CO_PK"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_PK.sch"
               },
+              "CFFDS":
               { "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
                 "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch", 
                 "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_Baseline.sch",
                 "C12Peak"  : r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C12Peak.sch",
                 "C13Peak"  : r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C13Peak.sch"
               },
+              "CFHADS":
               { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
                 "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
                 "H2O_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2O_BL.sch",
@@ -87,34 +138,23 @@ ALL_SCHEMES = [
                 "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch",
                 "H2O_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2O_PK.sch"
               },
+              "BFADS":
               { "H2S_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2S_BL.sch",
                 "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
                 "H2S_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2S_PK.sch",
                 "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
               },
+              "FCDS":
               { "iCH4_BL"       : r"C:\Picarro\G2000\AppConfig\Schemes\_BaseLineiCH4.sch",
                 "C12_iCH4_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\_12C-iCH4.sch", 
                 "C13_iCH4_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\_13C-iCH4.sch",
                 "CH4_BL"        : r"C:\Picarro\G2000\AppConfig\Schemes\_BaseLineCFADS.sch"
               },
-              { "HF_BL"       : r"C:\Picarro\G2000\AppConfig\Schemes\HF_baseline.sch",
+              "MADS":
+              { "HF_BL"   : r"C:\Picarro\G2000\AppConfig\Schemes\HF_baseline.sch",
                 "HF_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\HF_peak.sch", 
               },
-             ]
-             
-THRESHOLD_RANGE = [
-                   [2000, 16000, 1000],
-                   [2000, 16000, 1000],
-                   [2000, 16000, 1000],
-                   [2000, 16000, 1000],
-                   [2000, 16000, 1000],
-                   [2000, 16000, 1000],
-                   [2000, 16000, 1000],
-                   [2000, 16000, 1000],
-                   [2000, 16000, 1000],
-                   [2000, 16000, 1000],
-                   [2000, 16000, 1000],
-                  ]
+             }
                   
 # Connect to database
 try:
@@ -235,8 +275,23 @@ class IntegrationToolFrame(wx.Frame):
         self.Layout()
 
 class IntegrationTool(IntegrationToolFrame):
-    def __init__(self, *args, **kwds):
+    def __init__(self, configFile, *args, **kwds):
         IntegrationToolFrame.__init__(self, *args, **kwds)
+        self.LaserTypeDict = LASER_TYPE_DICT
+        self.allSchemes = THRESHOLD_STATS_SCHEMES
+        try:
+            self.cp = CustomConfigObj(configFile)
+            self.LaserTypeDict.update(self.cp["LASER_TYPE_DICT"])
+            for aType in self.cp["THRESHOLD_STATS_SCHEMES"]:
+                for sName in self.cp["THRESHOLD_STATS_SCHEMES"][aType]:
+                    newStr = r"%s" % self.cp["THRESHOLD_STATS_SCHEMES"][aType][sName]
+                    self.cp["THRESHOLD_STATS_SCHEMES"][aType][sName] = newStr
+            self.allSchemes.update(self.cp["THRESHOLD_STATS_SCHEMES"])
+            self.textCtrlIntegration.SetValue("Config file specified at command line: %s" % configFile) 
+        except Exception, err:
+            #print traceback.format_exc()
+            self.textCtrlIntegration.SetValue("Config file not used")
+        
         self.wbCalFile = os.path.join(CAL_DIR, WARMBOX_CAL)
         self.wbCalBackup = os.path.join(CAL_DIR, (WARMBOX_CAL+"_Backup"))
         self.wbCalDuplicate = os.path.join(INTEGRATION_DIR, WARMBOX_CAL)
@@ -352,7 +407,7 @@ class IntegrationTool(IntegrationToolFrame):
                 laserId = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer,type="chassis2k")) 
                             if elem['slot'] == 'Laser%dPcb'%(idx+1)][0]
                 laserSerNum, laserTypeKey = DB.get_contents(dict(identifier=laserId,type="laserpcb2k"))[0]["identifier"].split("-")
-                laserType = LASER_TYPE_DICT[laserTypeKey]
+                laserType = self.LaserTypeDict[laserTypeKey]
                 self.laserSerNumDict[idx+1] = (laserSerNum, laserType)
                 laserSer = laserSerNum+"-"+laserType
                 laserNumStr += "%s, "%laserSer
@@ -685,9 +740,8 @@ class IntegrationTool(IntegrationToolFrame):
             analyzerId = Driver.fetchObject("LOGIC_EEPROM")[0]
             instrType = analyzerId["Analyzer"] 
             instrName = instrType + analyzerId["AnalyzerNum"]
-            instrIdx = ANALYZER_TYPE_INDEX[instrType]
-            schemeDict = ALL_SCHEMES[instrIdx]
-            start, end, increment = THRESHOLD_RANGE[instrIdx]
+            schemeDict = self.allSchemes[instrType]
+            start, end, increment = [2000, 16000, 1000]
             for schKey in schemeDict:
                 schemeFileName = schemeDict[schKey]
                 if not os.path.isfile(schemeFileName):
@@ -727,11 +781,35 @@ class IntegrationTool(IntegrationToolFrame):
         except Exception, err:
             self.display += "Software version number can't be written to database: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
+     
+def handleCommandSwitches():
+    shortOpts = "c:"
+    longOpts = []
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
+    except getopt.GetoptError, data:
+        print "%s %r" % (data, data)
+        sys.exit(1)
+
+    #assemble a dictionary where the keys are the switches and values are switch args...
+    options = {}
+    for o, a in switches:
+        options[o] = a
+
+    #Start with option defaults...
+    configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
+    
+    if "-c" in options:
+        configFile = options["-c"]
+        print "Config file specified at command line: %s" % configFile
         
+    return configFile
+    
 if __name__ == "__main__":
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()
-    frame = IntegrationTool(None, -1, "")
+    configFile = handleCommandSwitches()
+    frame = IntegrationTool(configFile, None, -1, "")
     app.SetTopWindow(frame)
     frame.Show()
     app.MainLoop()
