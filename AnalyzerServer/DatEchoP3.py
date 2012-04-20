@@ -41,70 +41,76 @@ class DataEchoP3(object):
         '''
         Constructor
         '''
+        self.debug = None
         if 'debug' in kwargs:
             self.debug = kwargs['debug']
-        else:
+        if not self.debug:
             self.debug = None
-            
+        
+        self.listen_path = None    
         if 'listen_path' in kwargs:
             self.listen_path = kwargs['listen_path']
-        else:
-            self.listen_path = None
 
+        self.file_path = None
         if 'file_path' in kwargs:
             self.file_path = kwargs['file_path']
-        else:
-            self.file_path = None
 
         if not self.listen_path:
             if not self.file_path:
                 self.listen_path = 'C:/UserData/AnalyzerServer/*_Minimal.dat'
 
+        self.ip_url = None
+        #self.ip_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzMeta/'
         if 'ip_url' in kwargs:
             self.ip_url = kwargs['ip_url']
-        else:
-            #self.ip_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzMeta/'
-            self.ip_url = None
 
+        self.push_url = None
         if 'push_url' in kwargs:
             self.push_url = kwargs['push_url']
-        else:
-            #self.push_url = 'http://localhost:8080/rest/datalogAdd/'
+        if not self.push_url:
             self.push_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
-            
+            #self.push_url = 'http://localhost:8080/rest/datalogAdd/'
+        
+        self.ticket_url = None    
         if 'ticket_url' in kwargs:
             self.ticket_url = kwargs['ticket_url']
-        else:
+        if not self.ticket_url:
             self.ticket_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
-            
+        
+        self.timeout = None    
         if 'timeout' in kwargs:
             self.timeout = int(kwargs['timeout'])
-        else:
+        if not self.timeout:
             self.timeout = 2
 
+        self.replace = None
         if 'replace' in kwargs:
             self.replace = kwargs['replace']
-        else:
-            self.replace = None
 
+        self.logtype = None
         if 'logtype' in kwargs:
             self.logtype = kwargs['logtype']
-        else:
+        if not self.logtype:
             self.logtype = "dat"
 
+        self.identity = None
         if 'identity' in kwargs:
             self.identity = kwargs['identity']
-        else:
-            self.identity = None
 
+        self.psys = None
         if 'psys' in kwargs:
             self.psys = kwargs['psys']
-        else:
-            self.psys = None
 
+        self.lines = None
+        if 'lines' in kwargs:
+            self.lines = kwargs['lines']
+        if not self.lines: 
+            self.lines = 1000
+
+        self.sleep_seconds = None
         if 'sleep_seconds' in kwargs:
             self.sleep_seconds = float(kwargs['sleep_seconds'])
-        else:
+        if not self.sleep_seconds:
             self.sleep_seconds = 30.0
 
         self._last_fname = None
@@ -300,7 +306,7 @@ class DataEchoP3(object):
                             # attempt to smooth the transmission by only
                             # sending to server every .8 seconds OR ever 100 lines
                             tsec = time.time() - nsec
-                            if (lctr > 2000 or tsec >= .7):
+                            if (lctr > self.lines or tsec >= .7):
                                 lctr = 0
                                 self.pushToP3(self.fname, self._docs, self._lines, None, rctr)
                                 self._docs = []
@@ -537,6 +543,8 @@ def main(argv=None):
                       help="path to specific file to upload.", metavar="<FILE_PATH>")
     parser.add_option("-t", "--timeout", dest="timeout",
                       help="timeout value for response from server.", metavar="<TIMEOUT>")
+    parser.add_option("-n", "--nbr-lines", dest="lines",
+                      help="number of lines per send.", metavar="<NBR_LINES>")
     parser.add_option("-i", "--ip-req-url", dest="ip_url",
                       help="rest url for ip registration. Use the string <TICKET> as the place-holder for the authentication ticket.", metavar="<IP_REQ_URL>")
     parser.add_option("-p", "--push-url", dest="push_url",
@@ -576,6 +584,7 @@ def main(argv=None):
             
     if options.timeout:
         timeout = options.timeout
+        timeout = int(timeout)
     else:
         timeout = 10
 
@@ -604,6 +613,12 @@ def main(argv=None):
     else:
         identity = None
 
+    if options.lines:
+        lines = options.lines
+        lines = int(lines)
+    else:
+        lines = None
+
     if options.data_type:
         logtype = options.data_type
     else:
@@ -622,6 +637,7 @@ def main(argv=None):
     print "identity", identity
     print "psys", psys
     print "timeout", timeout
+    print "lines", lines
     print "logtype", logtype
 
     decho = DataEchoP3(listen_path=listen_path,
@@ -632,6 +648,7 @@ def main(argv=None):
                        psys=psys,
                        identity=identity,
                        timeout=timeout,
+                       lines=lines,
                        logtype=logtype,
                        replace=replace)
     decho.run()
