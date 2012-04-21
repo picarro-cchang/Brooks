@@ -13,13 +13,53 @@ import traceback
 from namedtuple import namedtuple
 from FindPlats import FindPlats
 from configobj import ConfigObj
+from collections import deque
 import time
+import findFovWidth as fw
 
 DECIMATION_FACTOR = 20
 NOT_A_NUMBER = 1e1000/1e1000
 EARTH_RADIUS = 6378100
 DTR = np.pi/180.0
 RTD = 180.0/np.pi
+    
+class PasquillGiffordApprox(object):
+    def __init__(self):
+        # Semi opening angle of a cone representing turbulence induced
+        #  atmospheric dispersion for rural conditions
+        PGTuple = namedtuple("PGTuple",["theta_y","theta_z"])
+        self.classConstants = {'A':PGTuple(0.2685,0.1395),
+                               'B':PGTuple(0.1927,0.1060),
+                               'C':PGTuple(0.1246,0.0744),
+                               'D':PGTuple(0.0820,0.0465),
+                               'E':PGTuple(0.0612,0.0353),
+                               'F':PGTuple(0.0407,0.0233)}
+
+    def getConc(self,stabClass,Q,u,dstd,x,umin=0):
+        """Get concentration in ppm from a point source of Q cu ft/hr at 
+        distance x m downwind when the wind speed is u m/s and dstd is the
+        standard deviation of the wind direction in radians.
+        Since this would normally diverge at small u, a regularization is applied
+        so that u is replaced by max(u,umin)
+        """
+        pg = self.classConstants[stabClass.upper()]
+        theta_y = np.sqrt((dstd/2)**2 + pg.theta_y**2)
+        u = max(u,umin)
+        return 7.866*Q/(np.pi*u*theta_y*pg.theta_z*x**2)
+        
+    def getMaxDist(self,stabClass,Q,u,dstd,conc,umin=0):
+        """Get the maximum distance at which a source of rate Q cu ft/hr can
+        be located if it is to be found with an instrument capable of measuring
+        concentration "conc" above ambient, when the wind speed is u m/s and dstd
+        is the standard deviation of the wind direction in radians
+        
+        Since this would normally diverge at small u, a regularization is applied
+        so that u is replaced by max(u,umin)
+        """
+        pg = self.classConstants[stabClass.upper()]
+        theta_y = np.sqrt((dstd/2)**2 + pg.theta_y**2)
+        u = max(u,umin)
+        return np.sqrt(7.866*Q/(conc*np.pi*u*theta_y*pg.theta_z))
     
 def pFloat(x):
     try:
@@ -127,12 +167,14 @@ class DrawOnMapBatch(object):
         self.config = ConfigObj(iniFile)
         self.padX = 50
         self.padY = 200
+        self.pg = PasquillGiffordApprox()
         
     def run(self):
         self.gMap = GoogleMap()
         varList = {'DAT_FILE':'datFile','OUT_DIR':'outDir','MIN_AMP':'minAmpl',
                    'LAT_CENTER': 'latCen', 'LON_CENTER':'lngCen', 'ZOOM':'zoom',
-                   'PNG_FILE':'pngFile', 'SATELLITE':'satellite'}
+                   'MIN_LEAK': 'minLeak', 'PNG_FILE':'pngFile', 'SATELLITE':'satellite', 
+                   'STAB_CLASS':'stabClass'}
         
         for secName in self.config:
             if secName == 'DEFAULTS': continue
@@ -148,6 +190,7 @@ class DrawOnMapBatch(object):
             self.minAmpl = float(self.minAmpl)
             self.latCen = float(self.latCen)
             self.lngCen = float(self.lngCen)
+            self.minLeak = float(self.minLeak)
             self.zoom = int(self.zoom)
             if self.satellite == None:
                 self.satellite = 1
@@ -189,6 +232,7 @@ class DrawOnMapBatch(object):
         LastMeasTuple = namedtuple("LastMeasTuple",["lat","lng","deltaLat","deltaLng"])
         lastMeasured = None
         startTime = None
+
         for d in xReadDatFile(datFile):
             lng = d.GPS_ABS_LONG
             lat = d.GPS_ABS_LAT
@@ -200,14 +244,56 @@ class DrawOnMapBatch(object):
                 x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
                 if (0<=x<nx) and (0<=y<ny):
                     path.append((padX+x,padY+y))
+                    penDown = True
+                else:
+                    penDown = False
+                    lastMeasured = None
+            else:
+                penDown = False
+                lastMeasured = None
+            if (penDown == False) and path:
+                odraw.line(path,fill=(0,0,255,255),width=2)
+                path = []
+        if path:        
+            odraw.line(path,fill=(0,0,255,255),width=2)
+
+        # Draw the field of view
+
                     if "WIND_N" in d._fields:
+            penDown = False
+            LastMeasTuple = namedtuple("LastMeasTuple",["lat","lng","deltaLat","deltaLng"])
+            lastMeasured = None
+            fovBuff = deque()
+            N = 10              # Use 2*N+1 samples for calculating FOV
+            for newdat in xReadDatFile(datFile):
+                while len(fovBuff) >= 2*N+1: fovBuff.popleft()
+                fovBuff.append(newdat)
+                if len(fovBuff) == 2*N+1:
+                    d = fovBuff[N]
+                    lng = d.GPS_ABS_LONG
+                    lat = d.GPS_ABS_LAT
+                    cosLat = np.cos(lat*DTR)
+                    t = d.EPOCH_TIME
+                    fit = d.GPS_FIT
                         windN = d.WIND_N
                         windE = d.WIND_E
+                    dstd = DTR*d.WIND_DIR_SDEV
+                    if fit>0:
+                        x,y = xform(lng,lat,minlng,maxlng,minlat,maxlat,(nx,ny))
+                        if (-padX<=x<nx+padX) and (-padY<=y<ny+padY):
                         bearing = np.arctan2(windE,windN)
-                        speed = np.sqrt(windE*windE + windN*windN)
-                        width = widthFunc(speed)
-                        deltaLat = (180.0/np.pi)*width*np.cos(bearing)/EARTH_RADIUS
-                        deltaLng = (180.0/np.pi)*width*np.sin(bearing)/(EARTH_RADIUS*np.cos(lat*(np.pi/180.0)))
+                            wind = np.sqrt(windE*windE + windN*windN)
+                            dmax = self.pg.getMaxDist(self.stabClass,self.minLeak,wind,0.0,self.minAmpl,umin=0.5)
+                            xx = np.asarray([fovBuff[i].GPS_ABS_LONG for i in range(2*N+1)])
+                            yy = np.asarray([fovBuff[i].GPS_ABS_LAT for i in range(2*N+1)])
+                            xx = DTR*(xx-lng)*EARTH_RADIUS*cosLat
+                            yy = DTR*(yy-lat)*EARTH_RADIUS
+                            dt = fovBuff[N+1].EPOCH_TIME - fovBuff[N-1].EPOCH_TIME
+                            vcar = np.sqrt((xx[N+1]-xx[N-1])**2 + (yy[N+1]-yy[N-1])**2)/dt
+                            dstd = np.sqrt(dstd**2 + astd(wind,vcar)**2)
+                            width = fw.maxDist(xx,yy,N,windE,windN,dstd,dmax,thresh=0.7,tol=1.0)
+                            deltaLat = RTD*width*np.cos(bearing)/EARTH_RADIUS
+                            deltaLng = RTD*width*np.sin(bearing)/(EARTH_RADIUS*cosLat)
                         if not (np.isnan(deltaLat) or np.isnan(deltaLng)):
                             if lastMeasured is not None:
                                 if penDown:
@@ -224,7 +310,7 @@ class DrawOnMapBatch(object):
                                     tdraw.polygon([(x1-xmin,y1-ymin),(x2-xmin,y2-ymin),(x3-xmin,y3-ymin),(x4-xmin,y4-ymin)],
                                                     fill=(0,0,0xCC,0x40),outline=(0,0,0xCC,0xFF))
                                     mask = (padX+xmin,padY+ymin)
-                                    # q.paste(temp,mask,temp)
+                                        q.paste(temp,mask,temp)
                             lastMeasured = LastMeasTuple(lat,lng,deltaLat,deltaLng)
                         else:
                             lastMeasured = None
@@ -235,12 +321,6 @@ class DrawOnMapBatch(object):
             else:
                 penDown = False
                 lastMeasured = None
-            if (penDown == False) and path:
-                odraw.line(path,fill=(0,0,255,255),width=2)
-                path = []
-        if path:        
-            odraw.line(path,fill=(0,0,255,255),width=2)
-        
         # Draw the peak bubbles and wind wedges
         bubble = Bubble()
         self.mpp = metersPerPixel(minlng,maxlng,minlat,maxlat,(nx,ny))
@@ -266,7 +346,7 @@ class DrawOnMapBatch(object):
                 box = (padX+x-bx//2,padY+y-by)
                 if "WIND_N" in pk._fields:
                     wind = np.sqrt(windN*windN + windE*windE)
-                    radius = 50.0; speedmin = 0.5
+                    radius = 5.0; speedmin = 0.1
                     meanBearing = RTD*np.arctan2(windE,windN)
                     dstd = np.sqrt(dstd**2 + astd(wind,vcar)**2)
                     windSdev = RTD*dstd

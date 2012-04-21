@@ -1,6 +1,8 @@
 from Host.Common.namedtuple import namedtuple
 from collections import deque
 from threading import Lock
+from Host.Common.configobj import ConfigObj
+from Host.Common import timestamp
 import Queue
 import os
 import sys
@@ -13,7 +15,10 @@ import itertools
 NOT_A_NUMBER = 1e1000/1e1000
 SourceTuple = namedtuple('SourceTuple',['ts','valTuple'])
 
-# periphProcessorFindWind.py is a script for finding the wind statistics
+# processorFindWindInst.py is a script for finding the wind statistics.
+#  This version uses a correlation method to align the anemometer axes with
+#  the axis of the vehicle by reducing the correlation of the vehicle speed
+#  and the transverse wind to zero
 
 class RawSource(object):
     """RawSource objects are created from a data queue. They expose a getData method
@@ -167,8 +172,7 @@ def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.01):
     or a SourceTuple (which is a millisecond timestamp together with a valTuple) when 
     its getData method is called.
     
-    This is a generator which yields a timestamp and a list of valTuples from each source.
-    A StopIteration is thrown if the DONE() function returns True."""
+    This is a generator which yields a timestamp and a list of valTuples from each source."""
     
     # First determine when to start synchronized timestamps
     oldestTs = []
@@ -190,7 +194,6 @@ def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.01):
         for s,offset in zip(sourceList,msOffsetList):
             while True:
                 d = s.getData(ts+offset)
-                # if DONE(): return
                 if d is not None:
                     valTuples.append(d.valTuple)
                     break
@@ -200,7 +203,7 @@ def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.01):
         
 SyncCdataTuple  = namedtuple('SyncCdataTuple',['ts','lon','lat','fit','zPos','mHead','rVel'])
 DerivCdataTuple = namedtuple('DerivCdataTuple',SyncCdataTuple._fields + ('zVel','kappa'))
-CalibCdataTuple = namedtuple('CalibCdataTuple',DerivCdataTuple._fields + ('tVel','calParams'))
+CalibCdataTuple = namedtuple('CalibCdataTuple',DerivCdataTuple._fields + ('tVel','calParams','wcorr'))
 StatsCdataTuple = namedtuple('StatsCdataTuple',CalibCdataTuple._fields + ('wMean','aStdDev'))
     
 def syncCdataSource(syncDataSource):
@@ -250,6 +253,9 @@ def derivCdataSource(syncCdataSource):
             kappa = 4.0*imag(conj(dz)*d2z)*sqrt(r)/(r**2+4.0)
             yield DerivCdataTuple(*(d2+(zVel,kappa)))
 
+def orientAnem(cSpeed0,rVel0):
+    return -arctan2(sum(imag(rVel0)*cSpeed0),sum(real(rVel0)*cSpeed0))
+    
 def calCompass(phi,theta,params0=[0.0,0.0,0.0]):
     """Use least-squares fit to calibrate the compass heading theta against
         the GPS derived heading phi. The initial value of the parameters may 
@@ -290,18 +296,28 @@ def calCompass(phi,theta,params0=[0.0,0.0,0.0]):
 #  from the anemometer velocity. This is done in the frame of the anemometer, which is nominally aligned
 #  with the vehicle
 
-def trueWindSource(derivCdataSource,distFromAxle):
+def trueWindSource(derivCdataSource,distFromAxle,speedFactor=1.0):
     #
     # We want to fit the most recent magnetometer data to a model consisting of a static bias field.
     #  This model maps the GPS derived heading phi to the magnetometer heading theta. Data are required 
     #  over a range of phi to get a good fit. We divide the range of phi into four bins. In each bin, we
     #  have a deque of recent data points consisting of (phi,theta) pairs. Each deque has a certain 
     #  maximum number of points. The fit is carried out on the points which are currently in the deques
+    # We also use these deques to store vehicle speed, together with longitudinal and lateral wind 
+    #  velocity components, so that we can estimate the orientation of the anemometer. This involves 
+    #  finding the angle through which the anemometer needs to be rotated to make the correlation
+    #  betwen the vehicle speed and the transvere velocity component vanish.
+    #
+    # We only use points where the vehicle speed is not too small, and we also discard bad points as those
+    #  in which vehicle_speed/(5+wind_speed)>2.
 
     p0 = 0  # Parameters of magnetometer calibration
     p1 = 0  #  theta = p0 + arctan2(p2+sin(phi),p1+cos(phi))
     p2 = 0
-
+    rot = 0.0
+    rCorr = 0.0 # Rotation between axis of anemometer and axis of vehicle
+    iCorr = 0.0
+    
     nBins = 4
     maxPoints = 200
     dataDeques = [deque() for i in range(nBins)]
@@ -330,7 +346,7 @@ def trueWindSource(derivCdataSource,distFromAxle):
         phi = angle(r*exp(1j*(theta-p0))-w)
         
         # Rotate the anemometer measured wind to the axes of the vehicle
-        sVel = d.rVel*exp(1j*p0)
+        sVel = d.rVel*exp(1j*rot)
         # Compute an angular correction based on the curvature of the path
         #  and the distance between anemometer and the rear axle of the car
         axleCorr = d.kappa*distFromAxle
@@ -340,25 +356,33 @@ def trueWindSource(derivCdataSource,distFromAxle):
             den += real(d.zVel*conj(sVel)*exp(-1j*(phi-p0)))
 
         # Subtract velocity of vehicle
-        scale = float(PARAMS.get('SPEEDFACTOR',1.0))
-        cVel = scale*sVel - abs(d.zVel)*exp(1j*axleCorr)
+        cVel = speedFactor*sVel - abs(d.zVel)*exp(1j*axleCorr)
         
-        # Rotate back to geographic coordinates
-        tVel = cVel*exp(1j*phi)
+        # Rotate back to geographic coordinates, use either GPS direction if car is travelling
+        #  quickly or the compass direction if travelling slowly
+        
+        cutOver = 2
+        fac = abs(d.zVel)**2/(abs(d.zVel)**2+cutOver**2)
+        optAngle = angle((1-fac)*exp(1j*phi) + fac*exp(1j*angle(d.zVel)))
+        tVel = cVel*exp(1j*optAngle)
         #print 'True wind speed and direction', abs(tVel), (180/pi)*angle(tVel)
                 
         # Update the parameters of the calibration from time to time
         phi0 = angle(d.zVel)
         theta0 = -angle(d.mHead)
         if not isnan(d.zVel):      # Reject bad GPS data
-            if abs(d.zVel) > 2.0:  # Car is moving fast if speed > 2m/s. Use these for calibrating
-                                   # magnetometer against GPS
+            if abs(d.zVel) > 2.0 and abs(d.zVel)<2.0*(5.0+abs(d.rVel)): # Car is moving fast if speed > 2m/s. 
+                # Also reject points where car speed is too great. Use these for calibrating magnetometer against GPS
+                #  and for finding orientation of anemometer. 
                 # Determine which deque to put data onto 
                 b = whichBin(phi0,nBins)
                 dataDeques[b].append((phi0,theta0))
                 # Limit size of deque
                 while len(dataDeques[b])>maxPoints: dataDeques[b].popleft()
-        if i%20 == 0: # Carry out the compass calibration based on available data
+                rCorr += abs(d.zVel)*real(d.rVel)
+                iCorr += abs(d.zVel)*imag(d.rVel)
+                
+        if i%20 == 0: # Carry out the compass and orientation calibration based on available data
             phi0, theta0 = [], []
             for q in dataDeques:
                 phi0    += [p for (p,t) in q]
@@ -370,11 +394,12 @@ def trueWindSource(derivCdataSource,distFromAxle):
                 print "Samples", i
                 try:
                     p0,p1,p2 = calCompass(phi0,theta0,[p0,p1,p2])
-                    print "Compass params: %10.2f %10.2f %10.2f" % (p0, p1, p2)
-                    print "Scale: ", num/den
+                    #print "Compass params: %10.2f %10.2f %10.2f" % (p0, p1, p2)
+                    rot = -arctan2(iCorr,rCorr)
+                    print "Rotation: %10.2f degrees %10.2f degrees, Scale:%10.4f" % ((180/pi)*rot,(180/pi)*p0,num/den)
                 except:
                     pass
-        yield CalibCdataTuple(*(d+(tVel,[p0,p1,p2]))) 
+        yield CalibCdataTuple(*(d+(tVel,[p0,p1,p2],[rCorr,iCorr]))) 
 
 # Calculate the statistics of the wind velocity by averaging the northerly and easterly components of the wind velocity
 #  as well as the Yamartino standard deviation of the wind direction taken over some interval of time
@@ -446,18 +471,18 @@ def windStatistics(windSource,statsInterval):
             # aStdDev = 180.0/pi * aStdDev
         # yield StatsCdataTuple(*(w+(wMean,aStdDev))) 
         
-def main():
+def runAsScript():
     gpsSource = GpsSource(SENSORLIST[0])
     wsSource  = WsSource(SENSORLIST[1])
     gpsDelay_ms = 0
     anemDelay_ms = round(1000*float(PARAMS.get("ANEMDELAY",1.5)))
     compassDelay_ms = round(1000*float(PARAMS.get("COMPASSDELAY",0.0)))
     distFromAxle = float(PARAMS.get("DISTFROMAXLE",1.5))
-    
+    speedFactor = float(PARAMS.get('SPEEDFACTOR',1.0))
+
     msOffsets = [0,compassDelay_ms,anemDelay_ms]  # ms offsets for GPS, magnetometer and anemometer
     syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
     statsAvg = int(PARAMS.get("STATSAVG",10))
-
     for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle),statsAvg)):
         p0,p1,p2 = d.calParams
         WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),    # Mean wind N and E
@@ -465,7 +490,83 @@ def main():
                           float(real(d.zVel)),float(imag(d.zVel)),      # Car velocity N and E
                           float(real(d.mHead)),-float(imag(d.mHead)),   # Compass heading N and E
                           float(real(d.tVel)),float(imag(d.tVel)),      # Instantaneous wind N and E
-                          p0,p1,p2                                      # Calibration parameters
-                          ])
+                          p0,p1,p2,                                     # Calibration parameters
+                          (180/pi)*arctan2(d.iCorr,d.rCorr)             # Angle of anemometer from true
+        ])
 
-main()
+class BatchProcessor(object):
+    def __init__(self, iniFile):
+        if not os.path.exists(iniFile):
+            raise ValueError("Configuration file %s missing" % iniFile)
+        self.config = ConfigObj(iniFile)
+            
+    def run(self):
+        varList = {'ANALYZER':'analyzer','START_ETM':'startEtm',
+                   'END_ETM':'endEtm','STATSAVG':'statsAvg',
+                   'WIND_FILE':'outFile', # Full path to wind file
+                   'ANEMDELAY':'anemDelay','COMPASSDELAY':'compassDelay',
+                   'DISTFROMAXLE':'distFromAxle','SPEEDFACTOR':'speedFactor'}
+        
+        for secName in self.config:
+            if secName == 'DEFAULTS': continue
+            if 'DEFAULTS' in self.config:
+                for v in varList:
+                    if v in self.config['DEFAULTS']: 
+                        setattr(self,varList[v],self.config['DEFAULTS'][v])
+                    else: 
+                        setattr(self,varList[v],None)
+            for v in varList:
+                if v in self.config[secName]: 
+                    setattr(self,varList[v],self.config[secName][v])
+            
+            self.startEtm = float(self.startEtm)
+            self.endEtm = float(self.endEtm)
+            self.statsAvg = int(self.statsAvg)
+            self.anemDelay = float(self.anemDelay)
+            self.speedFactor = float(self.speedFactor)
+            self.compassDelay = float(self.compassDelay)
+            self.distFromAxle = float(self.distFromAxle)
+        self._run()
+    
+    def _run(self):
+        import getFromP3 as gp3
+        self.op = file(self.outFile,"w",0)
+        print >>self.op, "%-20s%-20s%-20s%-20s%-20s" % ("EPOCH_TIME","WIND_N","WIND_E","WIND_DIR_SDEV","CAR_SPEED")
+        p3 = gp3.P3_Accessor(self.analyzer)
+        gpsSource = gp3.P3_Source(p3.genGpsData,"gpsSource",endEtm=self.endEtm,limit=2000)
+        wsSource  = gp3.P3_Source(p3.genWsData,"wsSource",endEtm=self.endEtm,limit=2000)
+        syncSource = gp3.SyncSource([gpsSource,wsSource,wsSource],[0.0,self.compassDelay,self.anemDelay],
+                                    interval=1.0,startEtm=self.startEtm)
+        def p3SyncDataSource():
+            # Convert P3 source into a format acceptable to the processor
+            GpsTuple = namedtuple("GpsTuple",["GPS_ABS_LAT", "GPS_ABS_LONG", "GPS_FIT"])
+            MagTuple = namedtuple("MagTuple",["WS_COS_HEADING", "WS_SIN_HEADING"])
+            AnemTuple = namedtuple("AnemTuple",["WS_WIND_LON", "WS_WIND_LAT"])
+            for s in syncSource.generator():
+                if s is None:
+                    print "No data available, sleeping..."
+                    time.sleep(1.0)
+                else:
+                    etm,[gpsDict,magDict,anemDict] = s
+                    ts = int(timestamp.unixTimeToTimestamp(etm))
+                    gps = GpsTuple(*[gpsDict[f] for f in GpsTuple._fields])
+                    mag = MagTuple(*[magDict[f] for f in MagTuple._fields])
+                    rwind = anemDict["WS_SPEED"]*(anemDict["WS_COS_DIR"]+1j*anemDict["WS_SIN_DIR"])*\
+                                                 (anemDict["WS_COS_HEADING"]+1j*anemDict["WS_SIN_HEADING"])
+                    anem = AnemTuple(real(rwind),imag(rwind))
+                yield ts,[gps,mag,anem]
+
+        for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(p3SyncDataSource())),
+                                self.distFromAxle,self.speedFactor),self.statsAvg)):
+            self.writeOutput(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev,float(abs(d.zVel))])
+            
+    def writeOutput(self,ts,dataList):
+        # print "%-20.3f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],(180.0/pi)*dataList[2])
+        print >> self.op, "%-20.3f%-20.10f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],dataList[2],dataList[3])
+
+if __name__ == "__main__":
+    if len(sys.argv)<2:
+        raise ValueError('Please specify INI file as argument to script')
+    BatchProcessor(sys.argv[1]).run()    
+else:
+    runAsScript()

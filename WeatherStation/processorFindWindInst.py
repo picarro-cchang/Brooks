@@ -1,8 +1,8 @@
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 from collections import deque
 from threading import Lock
-from configobj import ConfigObj
-import getFromP3 as gp3
+from Host.Common.configobj import ConfigObj
+from Host.Common import timestamp
 import Queue
 import os
 import sys
@@ -12,12 +12,10 @@ from numpy import *
 from scipy.optimize import leastsq
 import itertools
 
-from Host.Common import timestamp
-
 NOT_A_NUMBER = 1e1000/1e1000
 SourceTuple = namedtuple('SourceTuple',['ts','valTuple'])
 
-# periphProcessorFindWind.py is a script for finding the wind statistics.
+# processorFindWindInst.py is a script for finding the wind statistics.
 #  This version uses a correlation method to align the anemometer axes with
 #  the axis of the vehicle by reducing the correlation of the vehicle speed
 #  and the transverse wind to zero
@@ -49,8 +47,6 @@ class RawSource(object):
         to the deque"""
         try:
             d = self.queue.get(block=False)
-            if not d:
-                sys.exit(0)
             if self.DataTuple is None:
                 self.getDataTupleType(d)
             self.oldData.append(SourceTuple(d[0],self.DataTuple(**d[1])))
@@ -207,7 +203,7 @@ def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.01):
         
 SyncCdataTuple  = namedtuple('SyncCdataTuple',['ts','lon','lat','fit','zPos','mHead','rVel'])
 DerivCdataTuple = namedtuple('DerivCdataTuple',SyncCdataTuple._fields + ('zVel','kappa'))
-CalibCdataTuple = namedtuple('CalibCdataTuple',DerivCdataTuple._fields + ('tVel','calParams'))
+CalibCdataTuple = namedtuple('CalibCdataTuple',DerivCdataTuple._fields + ('tVel','calParams','wcorr'))
 StatsCdataTuple = namedtuple('StatsCdataTuple',CalibCdataTuple._fields + ('wMean','aStdDev'))
     
 def syncCdataSource(syncDataSource):
@@ -403,7 +399,7 @@ def trueWindSource(derivCdataSource,distFromAxle,speedFactor=1.0):
                     print "Rotation: %10.2f degrees %10.2f degrees, Scale:%10.4f" % ((180/pi)*rot,(180/pi)*p0,num/den)
                 except:
                     pass
-        yield CalibCdataTuple(*(d+(tVel,[p0,p1,p2]))) 
+        yield CalibCdataTuple(*(d+(tVel,[p0,p1,p2],[rCorr,iCorr]))) 
 
 # Calculate the statistics of the wind velocity by averaging the northerly and easterly components of the wind velocity
 #  as well as the Yamartino standard deviation of the wind direction taken over some interval of time
@@ -487,8 +483,16 @@ def runAsScript():
     msOffsets = [0,compassDelay_ms,anemDelay_ms]  # ms offsets for GPS, magnetometer and anemometer
     syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
     statsAvg = int(PARAMS.get("STATSAVG",10))
-    for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle,speedFactor),statsAvg)):
-        WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev,float(abs(d.zVel))])
+    for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle),statsAvg)):
+        p0,p1,p2 = d.calParams
+        WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),    # Mean wind N and E
+                          d.aStdDev,                                    # Wind direction std dev (degrees)
+                          float(real(d.zVel)),float(imag(d.zVel)),      # Car velocity N and E
+                          float(real(d.mHead)),-float(imag(d.mHead)),   # Compass heading N and E
+                          float(real(d.tVel)),float(imag(d.tVel)),      # Instantaneous wind N and E
+                          p0,p1,p2,                                     # Calibration parameters
+                          (180/pi)*arctan2(d.iCorr,d.rCorr)             # Angle of anemometer from true
+        ])
 
 class BatchProcessor(object):
     def __init__(self, iniFile):
@@ -525,6 +529,7 @@ class BatchProcessor(object):
         self._run()
     
     def _run(self):
+        import getFromP3 as gp3
         self.op = file(self.outFile,"w",0)
         print >>self.op, "%-20s%-20s%-20s%-20s%-20s" % ("EPOCH_TIME","WIND_N","WIND_E","WIND_DIR_SDEV","CAR_SPEED")
         p3 = gp3.P3_Accessor(self.analyzer)
