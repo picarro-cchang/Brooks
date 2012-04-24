@@ -162,11 +162,15 @@ class ControlPanel(wx.Panel):
         self.text_ctrl_average = wx.TextCtrl(self, -1, "%d" % self.average, style=wx.TE_PROCESS_ENTER)
         self.check_box_enable = wx.CheckBox(self, -1, "Enable")
         self.check_box_enable.SetValue(True)
+        self.label_std_dev = wx.StaticText(self, -1, "Std Dev")
+        self.text_ctrl_std_dev = wx.TextCtrl(self, -1, style=wx.TE_READONLY)
         
         sizer_1.Add(self.check_box_enable_average, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         sizer_1.Add(self.label_average, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         sizer_1.Add(self.text_ctrl_average, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, 10)
         sizer_1.Add(self.check_box_enable, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
+        sizer_1.Add(self.label_std_dev, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
+        sizer_1.Add(self.text_ctrl_std_dev, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, 10)
         sizer_1.AddStretchSpacer()
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
@@ -320,7 +324,7 @@ class DetectorViewer(wx.Frame):
         if self.controlPanel.enable:
             d = Driver.rdOscilloscopeTrace()
             d = d[:N] & 16383
-            
+            self.controlPanel.text_ctrl_std_dev.SetValue('%.2f' % numpy.std(d))
             if self.controlPanel.enableAverage:
                 self.controlPanel.averageCount += 1
                 if self.controlPanel.averageCount >= self.controlPanel.average:
