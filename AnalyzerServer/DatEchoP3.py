@@ -289,8 +289,13 @@ class DataEchoP3(object):
                                     #JSON does not have NaN as part of the standard
                                     # (even though JavaScrip does)
                                     # so send a text "NaN" and the server will convert
-                                    if math.isnan(doc[col]):
-                                        doc[col] = "NaN"
+                                    try:
+                                        if math.isnan(doc[col]):
+                                            doc[col] = "NaN"
+                                    except:
+                                        #just skip on isnan error
+                                        skip = 1
+                                        
                                 except:
                                     #JSON does not have NaN as part of the standard
                                     # (even though JavaScrip does)
@@ -371,7 +376,7 @@ class DataEchoP3(object):
             if (not self.first_pass_complete):
                 if (self.replace == True):
                     replace_the_log = 1
-                    
+            
             params = [{"logname": fname, "replace": replace_the_log, "logtype": self.logtype, "logdata": docs}]
             postparms = {'data': json.dumps(params)}
         
