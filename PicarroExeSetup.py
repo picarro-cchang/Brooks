@@ -223,7 +223,7 @@ inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
                  "matplotlib.numerix.linear_algebra", "matplotlib.numerix.random_array", "configobj",
                  "encodings.*", "tables.*" ]
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.dll", "powrprof.dll" ]
-packageList = ["werkzeug","flask","jinja2","email"]
+packageList = ["simplejson", "werkzeug","flask","jinja2","email"]
 
 hex_images = glob.glob("../SrcCode/CypressUSB/Drivers/*.*")
 hex_images = hex_images + [ "../SrcCode/CypressUSB/analyzer/analyzerUsb.hex", 
