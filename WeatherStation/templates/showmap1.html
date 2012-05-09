@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <script type="text/javascript" src="{{ url_for('static',filename='showMapApplication.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div id="id_sidebar" class="sidebar">
+        <p>This is in the sidebar</p>
+        </div>
+        <div id="id_content" class="content">
+            <span>
+                <div class="topbar-wrapper" id="id_topright">
+                    <div class="topbar" id="id_topbar">
+                        <div><ul class="nav secondary-nav"><li class="menu">
+                            <a href="#"><span>Prime User</span></a></li></ul></div>
+                    </div>
+                </div>
+            </span>
+            <div id="id_content_title">
+                <br /><br />
+                <h2>Map Display</h2>
+                <br />
+            </div>
+            <div style="width:100%; height:100%; top: 5px; bottom: 5px;" id="map_canvas"></div>
+        </div>
+    </div>
+{% endblock %}

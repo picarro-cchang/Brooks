@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/ui-lightness/jquery-ui-1.8.20.custom.css') }}" />
+    <script type="text/javascript" src="{{ url_for('static',filename='jquery-ui-1.8.20.custom.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='makeInstructions.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+<style>
+    #regionTable .ui-selecting { background: #FECA40; }
+    #regionTable .ui-selected { background: #F39814; color: white; }
+    #regionTable td { margin: 3px; padding: 0.4em; font-size: 1.4em; height: 18px; }
+    .ui-dialog .ui-state-error { padding: .3em; }
+    .validateTips { border: 1px solid transparent; padding: 0.3em; }
+    .ui-autocomplete {
+            max-height: 300px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+            /* add padding to account for vertical scrollbar */
+            padding-right: 20px;
+        }
+</style>
+<div class="container">
+<div class="row">
+<h1>Date Picker</h1>
+<input type="text" name="date" id="date" />
+
+<input type="text" name="plat" id="plat" />
+
+<h1>Plats</h1>
+<div id="id_plats_table_div"></div>
+
+<!--
+<table id="selectable">
+  <thead>
+  <tr class="ui-widget-content">
+    <th>Plat</th>
+    <th>Min Lng</th>
+    <th>Max Lng</th>
+    <th>Min Lat</th>
+    <th>Max Lat</th>
+    <th>Base Image</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr class="ui-widget-content">
+    <td>45C12</td>
+    <td>-122.0967</td>
+    <td>-122.0888</td>
+    <td>37.9180</td>
+    <td>37.9275</td>
+    <td>Google Map</td>
+  </tr>
+  </tbody>
+</table>
+-->
+
+<span><button type="button" id="id_add_regions_button" class="btn large medium">Add plat</button></span>
+<span><button type="button" id="id_delete_regions_button" class="btn large medium">Delete selected regions</button></span>
+<span><button type="button" id="id_clear_all_regions_button" class="btn large medium">Clear all regions</button></span>
+<div id="id_feedback" style="position:fixed;"><div id="id_mod_change"></div></div>
+
+<!--
+<div id="add_regions_dialog" title="Add map region">
+    <form class="well">
+    <fieldset>
+        <label for="name">Name</label>
+        <input type="text" name="name" id="name" class="span12" />
+        <label for="email">Email</label>
+        <input type="text" name="email" id="email" value="" class="span12" />
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" value="" class="span12" />
+        <label for="plat">Plat</label>
+        <input type="text" name="plat" id="plat" class="span12" />
+        <label for="map_type">Map Type</label>
+        <input type="text" name="map_type" id="map_type" value="" class="span12" />
+    </fieldset>
+    </form>
+</div>
+-->
+
+<h1>Runs</h1>
+</div>
+</div>
+{% endblock %}

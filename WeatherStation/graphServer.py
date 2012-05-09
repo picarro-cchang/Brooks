@@ -1,21 +1,44 @@
-from flask import Flask, Markup
-from flask import make_response, render_template, request, Response
-try:
-    import simplejson as json
-except:
-    import json
-import os
-import sys
 import calendar
+import cStringIO
+from collections import namedtuple
+from flask import Flask, Markup
+from flask import make_response, redirect, render_template, request, Response, url_for
+import getFromP3 as gp3
+from glob import glob
+try:
+    import json
+except:
+    import simplejson as json
+import math
+import os
+from pygments import highlight
+from pygments.lexers import get_lexer_by_name, get_lexer_for_filename, guess_lexer, guess_lexer_for_filename
+from pygments.formatters import HtmlFormatter
+import sys
 import time
 import traceback
+import urllib2
 import urllib
+from werkzeug import secure_filename
+from ReportGenSupport import ReportGen, ReportStatus, GoogleMap, SurveyorLayers
+from ReportGenSupport import LayerFilenamesGetter, CompositeMapMaker
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     appPath = sys.executable
 else:
     appPath = sys.argv[0]
 appDir = os.path.split(appPath)[0]
+
+fname = "platBoundaries.json"
+fp = open(fname,"rb")
+platBoundaries = json.loads(fp.read())
+fp.close()
+
+RTD = 180.0/math.pi
+DTR = math.pi/180.0
+EARTH_RADIUS = 6378100
+
+MapParams = namedtuple("MapParams",["minLng","minLat","maxLng","maxLat","nx","ny","padX","padY"])
 
 # configuration
 DEBUG = True
@@ -24,7 +47,16 @@ USERNAME = 'admin'
 PASSWORD = 'default'
 IMAGEROOT = os.path.join(appDir,'images')
 STATICROOT = os.path.join(appDir,'static')
+REPORTROOT = os.path.join(appDir,'static/ReportGen')
+LAYERBASEURL = '/static/ReportGen/' # Need trailing /
 imagesAvailable = {}
+
+UPLOAD_FOLDER = os.path.join(appDir,'static')
+ALLOWED_EXTENSIONS = set(['png'])
+
+app = Flask(__name__)
+app.config.from_object(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Images are stored in images/<imageName>/<epochTime>.png. This allows multiple versions of each image to be kept.
 #
@@ -52,20 +84,242 @@ for dirpath,dirnames,filenames in os.walk(IMAGEROOT):
             os.remove(os.path.join(dirpath,'%d.png'%f))
         imagesAvailable[name] = pngfiles[-2:]
 
-app = Flask(__name__)
-app.config.from_object(__name__)
-
 @app.route('/map')
 def map():
     return render_template('showmap.html')
     
+@app.route('/basic')
+def basic():
+    return render_template('basic.html')
+
 @app.route('/sprites')
-def map():
+def sprites():
     return render_template('sprites.html')
 
 @app.route('/bar')
-def map():
+def bar():
     return render_template('progressbar.html')
+
+@app.route('/wait')
+def wait():    
+    duration = float(request.values.get('duration',10))
+    time.sleep(duration)
+    return "Responding after %s seconds" % (duration,)
+    
+@app.route('/rest/instrUpload',methods=['GET','POST'])
+def instrUpload():
+    # Services upload of instructions for generating report
+    f = request.files.get('files')
+    contents = f.read()
+    # Pass directory in which report files are to be placed and the 
+    #  contents of the instruction file
+    ticket = ReportGen(REPORTROOT,contents).run()
+    data = [{'name': f.filename, 'contents': contents, 'ticket':ticket}]
+    return make_response(json.dumps(data))
+
+@app.route('/rest/getReportStatus')
+def getReportStatus():
+    ticket = request.values.get('ticket')
+    data = ReportStatus(REPORTROOT,ticket).run()
+    return make_response(json.dumps(data))
+
+@app.route('/rest/getLayerUrls')
+def getLayerUrls():
+    ticket = request.values.get('ticket')
+    data = LayerFilenamesGetter(REPORTROOT,ticket).run()
+    for d in data:
+        data[d] = LAYERBASEURL + data[d]
+    return make_response(json.dumps(data))
+
+@app.route('/showLayers')
+def showLayers():
+    ticket = request.values.get('ticket')
+    return render_template('showLayers.html',ticket=ticket)
+    
+@app.route('/rest/getComposite')
+def getComposite():
+    ticket = request.values.get('ticket')
+    response = make_response(CompositeMapMaker(REPORTROOT,ticket).run())
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(time.time()))
+    return response
+
+@app.route('/rest/pathLayer',methods=['GET'])
+def pathLayer():
+    startEtmDef = calendar.timegm(time.strptime("2012-04-01T09:50:00","%Y-%m-%dT%H:%M:%S"))
+    endEtmDef   = calendar.timegm(time.strptime("2012-04-01T12:00:00","%Y-%m-%dT%H:%M:%S"))
+    analyzerDef = 'FCDS2006'
+    startEtm = float(request.values.get('startEtm',startEtmDef))
+    endEtm = float(request.values.get('endEtm',endEtmDef))
+    anz = request.values.get('analyzer',analyzerDef)
+    plat = request.values.get('plat','2465F1')
+    mp = GoogleMap().getPlatParams(plat)
+    sl = SurveyorLayers(mp.minLng,mp.minLat,mp.maxLng,mp.maxLat,mp.nx,mp.ny,mp.padX,mp.padY)
+    response = make_response(sl.makePath(anz,startEtm,endEtm))
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(time.time()))
+    return response
+    
+@app.route('/rest/markerLayer',methods=['GET'])
+def markerLayer():
+    startEtmDef = calendar.timegm(time.strptime("2012-04-01T09:50:00","%Y-%m-%dT%H:%M:%S"))
+    endEtmDef   = calendar.timegm(time.strptime("2012-04-01T12:00:00","%Y-%m-%dT%H:%M:%S"))
+    analyzerDef = 'FCDS2006'
+    minAmplDef = 0.10
+    maxAmplDef = 1000000.0
+    startEtm = float(request.values.get('startEtm',startEtmDef))
+    endEtm = float(request.values.get('endEtm',endEtmDef))
+    minAmpl = float(request.values.get('minAmpl',minAmplDef))
+    maxAmpl = float(request.values.get('maxAmpl',maxAmplDef))
+    anz = request.values.get('analyzer',analyzerDef)
+    plat = request.values.get('plat','2465F1')
+    mp = GoogleMap().getPlatParams(plat)
+    sl = SurveyorLayers(mp.minLng,mp.minLat,mp.maxLng,mp.maxLat,mp.nx,mp.ny,mp.padX,mp.padY)
+    response = make_response(sl.makeMarkers(anz,startEtm,endEtm,minAmpl,maxAmpl,True,True))
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(time.time()))
+    return response
+    
+@app.route('/rest/plat')
+def plat():
+    plat = request.values.get('plat','2465F1')
+    satellite = int(request.values.get('satellite',0))
+    image,mp = GoogleMap().getPlat(plat,satellite)
+    response = make_response(image)
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(time.time()))
+    return response
+    
+@app.route('/rest/mapImage')
+def map_image():
+    # Default is plat 2465F1
+    minLat = float(request.values.get('minLat',38.6838))
+    minLng = float(request.values.get('minLng',-121.4556))
+    maxLat = float(request.values.get('maxLat',38.6927))
+    maxLng = float(request.values.get('maxLng',-121.4474))
+    meanLat = 0.5*(minLat + maxLat)
+    meanLng = 0.5*(minLng + maxLng)
+    Xp = maxLng-minLng
+    Yp = maxLat-minLat
+    # Find the largest zoom consistent with these limits
+    cosLat = math.cos(meanLat*DTR)
+    zoom = int(math.floor(math.log(min((360.0*640)/(256*Xp),(360.0*640*cosLat)/(256*Yp)))/math.log(2.0)))
+    # Find the number of pixels in each direction
+    fac = (256.0/360.0)*2**zoom
+    mx = int(math.ceil(fac*Xp))
+    my = int(math.ceil(fac*Yp/cosLat))
+    response = make_response(GoogleMap().getMap(meanLat,meanLng,zoom,mx,my,scale=2,satellite=True))
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(time.time()))
+    return response
+    
+@app.route('/rest/platBoundaries')
+def get_plat_boundaries():
+    result = [[k]+platBoundaries[k] for k in sorted(platBoundaries.keys())]
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"aaData":result}) + ')')
+    else:
+        return make_response(json.dumps({"aaData":result}))
+
+@app.route('/rest/autocompletePlat')
+def autocompletePlat():
+    term = request.values.get('term').upper()
+    result = sorted([k for k in platBoundaries.keys() if k.upper().startswith(term)]) + sorted([k for k in platBoundaries.keys() if term in k.upper() and not(k.upper().startswith(term))])
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps(result) + ')')
+    else:
+        return make_response(json.dumps(result))
+
+@app.route('/rest/platCorners')
+def get_plat_corners():
+    plat = request.values.get('plat','').upper().strip()
+    result = {}
+    if plat in platBoundaries:
+        minLng,minLat,maxLng,maxLat = platBoundaries[plat]
+        result = {"MIN_LONG":minLng, "MAX_LONG":maxLng, "MIN_LAT":minLat, "MAX_LAT":maxLat, "PLAT":plat}
+    return make_response(json.dumps(result))
+        
+@app.route('/show_plats',methods=['GET'])
+def show_plats():
+    return render_template('show_plats.html')
+
+def allowed_file(filename,allowed=ALLOWED_EXTENSIONS):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in allowed
+
+@app.route('/show_peaks',methods=['GET'])
+def show_peaks():
+    startEtmDef = calendar.timegm(time.strptime("2012-04-01T09:50:00","%Y-%m-%dT%H:%M:%S"))
+    endEtmDef   = calendar.timegm(time.strptime("2012-04-01T15:00:00","%Y-%m-%dT%H:%M:%S"))
+    analyzerDef = 'FCDS2006'
+    startEtm = float(request.values.get('startEtm',startEtmDef))
+    endEtm = float(request.values.get('endEtm',endEtmDef))
+    anz = request.values.get('analyzer',analyzerDef)
+    p3 = gp3.P3_Accessor(anz)
+    headings = None
+    rows = []
+    for m in p3.genAnzLog("peaks")(startEtm=startEtm,endEtm=endEtm):
+        if headings is None:
+            headings = sorted(m.data.keys())
+        rows.append([m.data[h] for h in headings])    
+    return render_template('show_peaks.html',peak_table=dict(headings=headings,rows=rows))
+           
+@app.route('/upload',methods=['GET','POST'])
+def upload_file():
+    if request.method == 'POST':
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
+            return redirect(url_for('uploaded_file',filename=filename))
+    return render_template('upload.html')
+
+@app.route('/print',methods=['GET','POST'])
+def print_file():
+    if request.method == 'POST':
+        file = request.files['file']
+        print file.filename
+        if file and allowed_file(file.filename,["js","py"]):
+            code = file.read()
+            lexer = guess_lexer_for_filename(file.filename,code)
+            formatter = HtmlFormatter(linenos=True)
+            result = highlight(code, lexer, formatter)
+            file.close()
+            print result
+            return render_template('pygments.html',body=result)
+    return render_template('upload.html')
+
+@app.route('/report',methods=['GET','POST'])
+def report():
+    if request.method == 'POST':
+        file = request.files['file']
+        print file.filename
+        if file and allowed_file(file.filename,["js","py"]):
+            code = file.read()
+            lexer = guess_lexer_for_filename(file.filename,code)
+            formatter = HtmlFormatter(linenos=True)
+            result = highlight(code, lexer, formatter)
+            file.close()
+            print result
+            return render_template('pygments.html',body=result)
+    return render_template('report.html')
+
+@app.route('/makeInstructions')
+def makeInstructions():
+    return render_template('makeInstructions.html')
+    
+@app.route('/uploaded_file')
+def uploaded_file():
+    filename = request.values['filename']
+    fp = open(os.path.join(app.config['UPLOAD_FOLDER'],filename),'rb')
+    try:
+        response = make_response(fp.read())
+        when = time.time()
+    finally:
+        fp.close()
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(when))
+    return response
     
 @app.route('/')
 def index():
@@ -151,4 +405,4 @@ def getImage():
     return response
     
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=5200,debug=True)
+    app.run(host='0.0.0.0',port=5200,debug=True,threaded=True)

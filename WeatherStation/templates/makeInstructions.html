@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/ui-lightness/jquery-ui-1.8.20.custom.css') }}" />
+    <script type="text/javascript" src="{{ url_for('static',filename='jquery-ui-1.8.20.custom.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='makeInstructions.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+<style>
+    #regionTable td { margin: 3px; padding: 0.4em; }
+    .ui-state-error { padding: .3em; background:#FFCCCC; }
+    .validateTips { border: 1px solid transparent; padding: 0.3em; }
+    .ui-autocomplete {
+            max-height: 300px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+            /* add padding to account for vertical scrollbar */
+            padding-right: 20px;
+        }
+</style>
+<div class="container">
+<div class="row">
+<h1>Date Picker</h1>
+<input type="text" name="date" id="date" />
+
+<input type="text" name="plat" id="plat" />
+
+<div id="id_feedback" style="position:fixed;"><div id="id_mod_change"></div></div>
+
+<h1>Plats</h1>
+<div id="id_plats_table_div"></div>
+
+<span><button type="button" id="id_add_by_name_button" class="btn large medium">Add by plat name</button></span>
+<span><button type="button" id="id_add_by_corners_button" class="btn large medium">Add by corners</button></span>
+<span><button type="button" id="id_delete_region_button" class="btn large medium">Delete selected region</button></span>
+<span><button type="button" id="id_clear_all_regions_button" class="btn large medium">Clear all regions</button></span>
+<span><button type="button" id="id_show_as_json_button" class="btn large medium">Show as JSON</button></span>
+
+<h1>Runs</h1>
+<div id="id_runs_table_div"></div>
+<span><button type="button" id="id_add_run_button" class="btn large medium">Add run</button></span>
+<span><button type="button" id="id_delete_run_button" class="btn large medium">Delete selected run</button></span>
+<span><button type="button" id="id_edit_run_button" class="btn large medium">Edit selected run</button></span>
+<span><button type="button" id="id_clear_all_runs_button" class="btn large medium">Clear all runs</button></span>
+
+</div>
+</div>
+{% endblock %}

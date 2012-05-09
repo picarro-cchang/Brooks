@@ -3725,7 +3725,7 @@ function updateProgress() {
     if (!CSTATE.getting_warming_status) {
         CSTATE.getting_warming_status = true;
         call_rest(CNSNT.svcurl, "driverRpc", {"func": "getWarmingState", "args": "[]"},
-                function (data, ts, jqXHR) {
+            function (data, ts, jqXHR) {
                 if (data.result.value !== undefined) {
                     cavity_p_val = data.result.value['CavityPressure'][0];
                     cavity_p_sp = data.result.value['CavityPressure'][1];

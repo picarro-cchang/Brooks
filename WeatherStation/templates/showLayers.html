@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block head %}
+    <script type="text/javascript" src="{{ url_for('static',filename='2.5.3-crypto-md5.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='json2.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='showLayers.js') }}"></script>
+    <script type="text/javascript" language="javascript">
+        $(function() {
+            showLayers("{{ ticket }}")
+        });
+    </script>
+    
+{% endblock %}
+
+{% block body %}
+<h1>Layers</h1>
+<div id="canvasesdiv" style="position:relative;">
+<canvas id="composite" style="position:absolute; left:0px; top:0px;">
+This text is displayed if your browser does not support HTML5 Canvas.
+</canvas>
+
+{% endblock %}

@@ -319,7 +319,7 @@ class PeakFinder(object):
                         jump = 0.0
                         dist = 0.0
                     else:
-                        jump = sqrt((x-x0)**2 + (y-y0)**2)
+                        jump = sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0))
                         dist += jump
                     x0, y0 = x, y
                     if jump < JUMP_MAX:
@@ -362,7 +362,7 @@ class PeakFinder(object):
                             jump = 0.0
                             dist = 0.0
                         else:
-                            jump = sqrt((x-x0)**2 + (y-y0)**2)
+                            jump = sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0))
                             dist += jump
                         x0, y0 = x, y
                         if jump < JUMP_MAX:
@@ -461,7 +461,7 @@ class PeakFinder(object):
                 h = int(ceil(5*sqrt(tb)/dx))
                 hList.append(h)
                 x = arange(-h,h+1)*dx
-                kernel = amp*(exp(-0.5*x**2/ta)/sqrt(2*pi*ta) - exp(-0.5*x**2/tb)/sqrt(2*pi*tb))*dx
+                kernel = amp*(exp(-0.5*x*x/ta)/sqrt(2*pi*ta) - exp(-0.5*x*x/tb)/sqrt(2*pi*tb))*dx
                 kernelList.append(kernel)
                 scaleList.append(sqrt(ta*tb))
                 ta, tb = tb, tfactor*tb
@@ -589,8 +589,8 @@ class PeakFinder(object):
         #  sigma, we get a peak in the space-scale plane when we convolve it with a kernel
         #  of scale 2*sigma**2
         factor = self.factor
-        t0 = 2*(sigmaMin/factor)**2
-        nlevels = int(ceil((log(2*sigmaMax**2)-log(t0))/log(factor)))+1
+        t0 = 2*(sigmaMin/factor)*(sigmaMin/factor)
+        nlevels = int(ceil((log(2*sigmaMax*sigmaMax)-log(t0))/log(factor)))+1
         # Quantities to place in peak data file, if they are available
         headings = ["EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA","WIND_N","WIND_E","WIND_DIR_SDEV","CAR_SPEED"]
         hFormat  = ["%-14.2f","%-14.3f","%-14.6f","%-14.6f","%-14.3f","%-14.4f","%-14.3f","%-14.4f","%-14.4f","%-14.3f","%-14.3f"]

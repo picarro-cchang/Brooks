@@ -47,6 +47,7 @@ class RawSource(object):
         to the deque"""
         try:
             d = self.queue.get(block=False)
+            if d is None: return False
             if self.DataTuple is None:
                 self.getDataTupleType(d)
             self.oldData.append(SourceTuple(d[0],self.DataTuple(**d[1])))
@@ -194,6 +195,7 @@ def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.01):
         for s,offset in zip(sourceList,msOffsetList):
             while True:
                 d = s.getData(ts+offset)
+                if DONE(): return 
                 if d is not None:
                     valTuples.append(d.valTuple)
                     break
@@ -203,7 +205,7 @@ def syncSources(sourceList,msOffsetList,msInterval,sleepTime=0.01):
         
 SyncCdataTuple  = namedtuple('SyncCdataTuple',['ts','lon','lat','fit','zPos','mHead','rVel'])
 DerivCdataTuple = namedtuple('DerivCdataTuple',SyncCdataTuple._fields + ('zVel','kappa'))
-CalibCdataTuple = namedtuple('CalibCdataTuple',DerivCdataTuple._fields + ('tVel','calParams','wcorr'))
+CalibCdataTuple = namedtuple('CalibCdataTuple',DerivCdataTuple._fields + ('tVel','calParams','wCorr'))
 StatsCdataTuple = namedtuple('StatsCdataTuple',CalibCdataTuple._fields + ('wMean','aStdDev'))
     
 def syncCdataSource(syncDataSource):
@@ -248,9 +250,10 @@ def derivCdataSource(syncCdataSource):
             zVel = (-d4.zPos + 8.0*d3.zPos - 8.0*d1.zPos + d0.zPos)/12.0
             dz = d3.zPos - d1.zPos
             d2z = d3.zPos - 2*d2.zPos + d1.zPos
-            r = abs(dz)**2
+            r = abs(dz)
+            r2 = r*r
             # Calculate curvature of path, with protection for low speeds
-            kappa = 4.0*imag(conj(dz)*d2z)*sqrt(r)/(r**2+4.0)
+            kappa = 4.0*imag(conj(dz)*d2z)*r/(r2*r2+4.0)
             yield DerivCdataTuple(*(d2+(zVel,kappa)))
 
 def orientAnem(cSpeed0,rVel0):
@@ -280,7 +283,7 @@ def calCompass(phi,theta,params0=[0.0,0.0,0.0]):
         p0,p1,p2 = params
         f1 = p1+cos(phi)
         f2 = p2+sin(phi)
-        den = f1**2 + f2**2
+        den = f1*f1 + f2*f2
         c0 = concatenate((-sth,cth))
         c1 = concatenate((sth*f2/den,-cth*f2/den))
         c2 = concatenate((-sth*f1/den,cth*f1/den))
@@ -340,8 +343,8 @@ def trueWindSource(derivCdataSource,distFromAxle,speedFactor=1.0):
         theta = -angle(d.mHead) # Negative sign appears to be the magnetometer convention for angles
         w = p1 + 1j*p2;
         b = -2.0*real(w*exp(-1j*(theta-p0)))
-        c = abs(w)**2 - 1.0
-        disc = b**2 - 4.0*c
+        c = abs(w)*abs(w) - 1.0
+        disc = b*b - 4.0*c
         r = 0.5*(-b+sqrt(disc))
         phi = angle(r*exp(1j*(theta-p0))-w)
         
@@ -355,22 +358,24 @@ def trueWindSource(derivCdataSource,distFromAxle,speedFactor=1.0):
             num += real(d.zVel*abs(d.zVel)*exp(-1j*axleCorr)*exp(-1j*(phi-p0)))
             den += real(d.zVel*conj(sVel)*exp(-1j*(phi-p0)))
 
-        # Subtract velocity of vehicle
-        cVel = speedFactor*sVel - abs(d.zVel)*exp(1j*axleCorr)
+        if isfinite(d.zVel):
+            # Subtract velocity of vehicle
+            cVel = speedFactor*sVel - abs(d.zVel)*exp(1j*axleCorr)
+            # Rotate back to geographic coordinates, use either GPS direction if car is travelling
+            #  quickly or the compass direction if travelling slowly
+            cutOver = 2
+            fac = abs(d.zVel)**2/(abs(d.zVel)**2+cutOver**2)
+            optAngle = angle((1-fac)*exp(1j*phi) + fac*exp(1j*angle(d.zVel)))
+            tVel = cVel*exp(1j*optAngle)
+        else:
+            tVel = NOT_A_NUMBER
         
-        # Rotate back to geographic coordinates, use either GPS direction if car is travelling
-        #  quickly or the compass direction if travelling slowly
-        
-        cutOver = 2
-        fac = abs(d.zVel)**2/(abs(d.zVel)**2+cutOver**2)
-        optAngle = angle((1-fac)*exp(1j*phi) + fac*exp(1j*angle(d.zVel)))
-        tVel = cVel*exp(1j*optAngle)
         #print 'True wind speed and direction', abs(tVel), (180/pi)*angle(tVel)
                 
         # Update the parameters of the calibration from time to time
-        phi0 = angle(d.zVel)
-        theta0 = -angle(d.mHead)
-        if not isnan(d.zVel):      # Reject bad GPS data
+        if isfinite(d.zVel):      # Reject bad GPS data
+            phi0 = angle(d.zVel)
+            theta0 = -angle(d.mHead)
             if abs(d.zVel) > 2.0 and abs(d.zVel)<2.0*(5.0+abs(d.rVel)): # Car is moving fast if speed > 2m/s. 
                 # Also reject points where car speed is too great. Use these for calibrating magnetometer against GPS
                 #  and for finding orientation of anemometer. 
@@ -426,8 +431,9 @@ def windStatistics(windSource,statsInterval):
             n = len(buff)
             wMean = wSum/n
             if n>0:
-                eps = sqrt(1-abs(aSum/n)**2)
-                aStdDev = arcsin(eps)*(1+0.1547*eps**3)
+                vmean = abs(aSum/n)
+                eps = sqrt(1-vmean*vmean)
+                aStdDev = arcsin(eps)*(1+0.1547*eps*eps*eps)
             else:
                 aStdDev = pi/2.0
             aStdDev = 180.0/pi * aStdDev
@@ -485,13 +491,14 @@ def runAsScript():
     statsAvg = int(PARAMS.get("STATSAVG",10))
     for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle),statsAvg)):
         p0,p1,p2 = d.calParams
+        rCorr,iCorr = d.wCorr
         WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),    # Mean wind N and E
                           d.aStdDev,                                    # Wind direction std dev (degrees)
                           float(real(d.zVel)),float(imag(d.zVel)),      # Car velocity N and E
                           float(real(d.mHead)),-float(imag(d.mHead)),   # Compass heading N and E
                           float(real(d.tVel)),float(imag(d.tVel)),      # Instantaneous wind N and E
                           p0,p1,p2,                                     # Calibration parameters
-                          (180/pi)*arctan2(d.iCorr,d.rCorr)             # Angle of anemometer from true
+                          (180/pi)*arctan2(iCorr,rCorr)                 # Angle of anemometer from true
         ])
 
 class BatchProcessor(object):
@@ -533,8 +540,8 @@ class BatchProcessor(object):
         self.op = file(self.outFile,"w",0)
         print >>self.op, "%-20s%-20s%-20s%-20s%-20s" % ("EPOCH_TIME","WIND_N","WIND_E","WIND_DIR_SDEV","CAR_SPEED")
         p3 = gp3.P3_Accessor(self.analyzer)
-        gpsSource = gp3.P3_Source(p3.genGpsData,"gpsSource",endEtm=self.endEtm,limit=2000)
-        wsSource  = gp3.P3_Source(p3.genWsData,"wsSource",endEtm=self.endEtm,limit=2000)
+        gpsSource = gp3.P3_Source(p3.genAnzLog("GPS_Raw"),"gpsSource",endEtm=self.endEtm,limit=2000)
+        wsSource  = gp3.P3_Source(p3.genAnzLog("WS_Raw"),"wsSource",endEtm=self.endEtm,limit=2000)
         syncSource = gp3.SyncSource([gpsSource,wsSource,wsSource],[0.0,self.compassDelay,self.anemDelay],
                                     interval=1.0,startEtm=self.startEtm)
         def p3SyncDataSource():
@@ -558,15 +565,31 @@ class BatchProcessor(object):
 
         for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(p3SyncDataSource())),
                                 self.distFromAxle,self.speedFactor),self.statsAvg)):
-            self.writeOutput(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),d.aStdDev,float(abs(d.zVel))])
+            p0,p1,p2 = d.calParams
+            rCorr,iCorr = d.wCorr
+            self.writeOutput(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),    # Mean wind N and E
+                                   d.aStdDev,                                    # Wind direction std dev (degrees)
+                                   float(real(d.zVel)),float(imag(d.zVel)),      # Car velocity N and E
+                                   float(real(d.mHead)),-float(imag(d.mHead)),   # Compass heading N and E
+                                   float(real(d.tVel)),float(imag(d.tVel)),      # Instantaneous wind N and E
+                                   p0,p1,p2,                                     # Calibration parameters
+                                   (180/pi)*arctan2(iCorr,rCorr)                 # Angle of anemometer from true
+            ])
             
     def writeOutput(self,ts,dataList):
-        # print "%-20.3f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],(180.0/pi)*dataList[2])
-        print >> self.op, "%-20.3f%-20.10f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),dataList[0],dataList[1],dataList[2],dataList[3])
+        windN = dataList[0]
+        windE = dataList[1]
+        stdDevDeg = dataList[2]
+        vCarN = dataList[3]
+        vCarE = dataList[4]
+        vCar = abs(vCarN+1j*vCarE)
+        print >> self.op, "%-20.3f%-20.10f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),windN,windE,stdDevDeg,vCar)
 
 if __name__ == "__main__":
     if len(sys.argv)<2:
         raise ValueError('Please specify INI file as argument to script')
     BatchProcessor(sys.argv[1]).run()    
 else:
+    if "DONE" not in locals():
+        DONE = lambda: False
     runAsScript()
