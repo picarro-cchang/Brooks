@@ -6,7 +6,12 @@ import traceback
 from numpy import *
 import Queue
 from Host.Common import namedtuple
-                    
+
+APP_NAME = "Peripheral Processor"
+
+from Host.Common.EventManagerProxy import *
+EventManagerProxy_Init(APP_NAME)
+
 class PeriphProcessor(object):
     def __init__(self, periphIntrf, dataLabels, outputPort, scriptPath, params):
         self.periphIntrf = periphIntrf
@@ -31,10 +36,9 @@ class PeriphProcessor(object):
                 
     def appendData(self, port, ts, dataList):
         try:
-            self.sensorList[port].put((ts, dict(zip(self.dataLabels[port], dataList))))
+            self.sensorList[port].put((ts, dict(zip(self.dataLabels[port], dataList))),block=False)
         except Exception, err:
-            print traceback.format_exc()
-            print "%r" % (err,)
+            Log("Peripheral processor synchronization queue error: Check if some sensor is missing", Level=2, Verbose=traceback.format_exc())
         
     def writeOutput(self, ts, dataList):
         self.periphIntrf.appendAndSendOutData(self.outputPort, ts, dataList)
