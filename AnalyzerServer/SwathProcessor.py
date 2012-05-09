@@ -164,7 +164,7 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
             fit = d["GPS_FIT"]
             windN = d["WIND_N"]
             windE = d["WIND_E"]
-            vcar = d["CAR_SPEED"]
+            vcar = d.get("CAR_SPEED",0.0)
             dstd = DTR*d["WIND_DIR_SDEV"]
             mask = d["ValveMask"]
             if (fit>0) and (mask<1.0e-3):
