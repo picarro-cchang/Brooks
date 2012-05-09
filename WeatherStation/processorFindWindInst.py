@@ -102,7 +102,7 @@ class WsSource(RawSource):
             if self.ValTuple is None:
                 self.ValTuple = namedtuple('WsSourceEx_tuple',valTuple._fields+('WS_WIND_LON','WS_WIND_LAT'))
             rwind = valTuple.WS_SPEED*(valTuple.WS_COS_DIR+1j*valTuple.WS_SIN_DIR)*(valTuple.WS_COS_HEADING+1j*valTuple.WS_SIN_HEADING)
-            valTuple = self.ValTuple(*valTuple,WS_WIND_LON=real(rwind),WS_WIND_LAT=imag(rwind))
+            valTuple = self.ValTuple(WS_WIND_LON=real(rwind),WS_WIND_LAT=imag(rwind),*valTuple)
             if ts < requestTs:
                 alpha = float(requestTs-ts)/(savedTs-ts)
                 di = tuple([alpha*y+(1-alpha)*y_p for y,y_p in zip(savedValTuple,valTuple)])
