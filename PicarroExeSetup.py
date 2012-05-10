@@ -256,6 +256,8 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
             (r'mpl-data\images',glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\images\*.*')),
             (r'mpl-data\fonts',glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\fonts\*.*')),
             ("Images", hex_images),
+            ("static", glob.glob(r'Utilities\BackpackServer\static\*.*')),
+            ("templates", glob.glob(r'Utilities\BackpackServer\templates\*.*')),
             ]
 for d in cypressDriverDirs:
     data_files.append(("Images/%s"%d, glob.glob("../SrcCode/CypressUSB/Drivers/" + "%s/*.*" %d)))
