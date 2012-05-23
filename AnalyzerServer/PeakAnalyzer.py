@@ -347,6 +347,7 @@ class PeakAnalyzer(object):
                         if not headings:
                             headings = [a.replace(" ","_") for a in atoms]
                         else:
+                            if len(headings) != len(atoms): continue
                             for h,a in zip(headings,atoms):
                                 try:
                                     entry[h] = float(a)
@@ -453,6 +454,7 @@ class PeakAnalyzer(object):
             return
         
         while True:
+            handle = None
             # Getting source
             if self.usedb:
                 lastlog = getLastLog()  
@@ -513,7 +515,7 @@ class PeakAnalyzer(object):
                     else:
                         handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.2f%-14.2f\r\n" % (r.time,r.dist,r.long,r.lat,r.conc,r.delta,r.uncertainty))
                     
-                if not self.usedb:
+                if not self.usedb and (handle is not None):
                     handle.close()
 
 if __name__ == "__main__":

@@ -348,6 +348,7 @@ class PeakFinder(object):
                     if not headings:
                         headings = [a.replace(" ","_") for a in atoms]
                     else:
+                        if len(headings) != len(atoms): continue
                         for h,a in zip(headings,atoms):
                             try:
                                 entry[h] = float(a)
@@ -599,6 +600,7 @@ class PeakFinder(object):
         # Quantities to place in peak data file, if they are available
         headings = ["EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CH4","AMPLITUDE","SIGMA","WIND_N","WIND_E","WIND_DIR_SDEV","CAR_SPEED"]
         hFormat  = ["%-14.2f","%-14.3f","%-14.6f","%-14.6f","%-14.3f","%-14.4f","%-14.3f","%-14.4f","%-14.4f","%-14.3f","%-14.3f"]
+        handle = None
         while True:
             # Getting source
             if self.usedb:
@@ -676,7 +678,7 @@ class PeakFinder(object):
                     else:
                         handle.write(("".join(hfList)+"\r\n") % tuple([getattr(pk,h) for h in hList]))
                 
-                if not self.usedb:
+                if not self.usedb and (handle is not None):
                     handle.close()
 
                 if self.noWait: break
