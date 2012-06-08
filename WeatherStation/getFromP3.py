@@ -52,7 +52,8 @@ class P3_Accessor(object):
         self.svc = "gdu"
         self.analyzerName = anz
         #self.discardList = ["EPOCH_TIME", "LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH", "row"]
-        self.discardList = ["LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH"]
+        #self.discardList = ["LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH"]
+        self.discardList = ["FILENAME_nint", "_id", "SERVER_HASH"]
         self.getTicket()
         
     def getTicket(self):
@@ -125,7 +126,7 @@ class P3_Accessor(object):
                     tstart = time.clock()
                     url = '%s/%s/%s/%s/%s' % (self.csp, "rest", self.svc, self.ticket, v_rsc)
                     get_url = url+("?%s" % paramStr if params else "")
-                    # print get_url
+                    print "URL: %s" % get_url
                     resp = urllib2.urlopen(get_url,timeout=5.0)
                     rtndata_str = resp.read()
                     # Only push rows which are of the correct logtype
@@ -146,6 +147,7 @@ class P3_Accessor(object):
                     threadDict["latestEtm"] = etm
                     # print "P3 get from %s, %.1f s, startTime %.1f, lastTime %.1f" % (params["logtype"],time.clock()-tstart,params["startEtm"],threadDict["latestEtm"])
                     params["startEtm"] = etm    # Start at the last time, but may need to reject duplicate lines
+                    params["excludeStart"] = True
                     return
                 except urllib2.URLError,e:
                     if not hasattr(e,"code") or e.code in [502,504]: # Bad gateway, gateway timeout
@@ -260,7 +262,8 @@ class P3_Accessor_ByPos(object):
         self.svc = "gdu"
         self.alogName = alog
         #self.discardList = ["EPOCH_TIME", "LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH", "row"]
-        self.discardList = ["LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH"]
+        #self.discardList = ["LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH"]
+        self.discardList = ["FILENAME_nint", "_id", "SERVER_HASH"]
         self.getTicket()
         
     def getTicket(self):
@@ -596,21 +599,21 @@ if __name__ == "__main__":
     #startEtm = calendar.timegm(time.strptime("2012-03-23T02:30:00","%Y-%m-%dT%H:%M:%S"))
     #endEtm   = calendar.timegm(time.strptime("2012-03-23T03:00:00","%Y-%m-%dT%H:%M:%S"))
 
-    startEtm = calendar.timegm(time.strptime("2012-04-01T09:50:00","%Y-%m-%dT%H:%M:%S"))
-    endEtm   = calendar.timegm(time.strptime("2012-04-01T12:00:00","%Y-%m-%dT%H:%M:%S"))
+    startEtm = calendar.timegm(time.strptime("2012-03-23T02:04:30","%Y-%m-%dT%H:%M:%S"))
+    endEtm   = calendar.timegm(time.strptime("2012-03-23T04:00:00","%Y-%m-%dT%H:%M:%S"))
     
     for i,m in enumerate(p3.genAnzLog("peaks")(startEtm=startEtm,endEtm=endEtm)):
         print i,m
         raw_input()
     sys.exit()
         
-    for i,m in enumerate(p3.genAnzLogMeta("peaks")(startEtm=startEtm,endEtm=endEtm)):
-        alog = m.data["LOGNAME"]        
-        acc = P3_Accessor_ByPos(alog)
-        print "Starting to access", alog
-        for p in acc.genAnzLog("peaks")(startPos=0,endPos=5000):
-            print p
-            raw_input()
+    # for i,m in enumerate(p3.genAnzLogMeta("peaks")(startEtm=startEtm,endEtm=endEtm)):
+        # alog = m.data["LOGNAME"]        
+        # acc = P3_Accessor_ByPos(alog)
+        # print "Starting to access", alog
+        # for p in acc.genAnzLog("peaks")(startPos=0,endPos=5000):
+            # print p
+            # raw_input()
 
     
     # etmLast = None
@@ -621,9 +624,11 @@ if __name__ == "__main__":
     #     etmLast = d.etm
         
     # endEtm = 1332491271
-    analyzerSource = P3_Source(p3.genAnzLog("dat"),"analyzerSource",endEtm=endEtm,limit=100)
-    gpsSource = P3_Source(p3.genAnzLog("GPS_Raw"),"gpsSource",endEtm=endEtm,limit=100)
-    wsSource = P3_Source(p3.genAnzLog("WS_Raw"),"wsSource",endEtm=endEtm,limit=100)
+    #analyzerSource = P3_Source(p3.genAnzLog("dat"),"analyzerSource",endEtm=endEtm,limit=100)
+    #gpsSource = P3_Source(p3.genAnzLog("GPS_Raw"),"gpsSource",endEtm=endEtm,limit=100)
+    #wsSource = P3_Source(p3.genAnzLog("WS_Raw"),"wsSource",endEtm=endEtm,limit=100)
+        
+    
     # startEtm = calendar.timegm(time.strptime("2012-03-23T08:20:00","%Y-%m-%dT%H:%M:%S"))
     # startEtm = calendar.timegm(time.strptime("2012-03-23T02:00:00","%Y-%m-%dT%H:%M:%S"))
     # startEtm = 0

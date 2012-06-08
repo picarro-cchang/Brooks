@@ -1,6 +1,5 @@
 from Host.Common.namedtuple import namedtuple
 from collections import deque
-from threading import Lock
 from Host.Common.configobj import ConfigObj
 from Host.Common import timestamp
 import Queue
@@ -10,7 +9,6 @@ import time
 
 from numpy import *
 from scipy.optimize import leastsq
-import itertools
 
 NOT_A_NUMBER = 1e1000/1e1000
 SourceTuple = namedtuple('SourceTuple',['ts','valTuple'])
@@ -86,32 +84,7 @@ class GpsSource(RawSource):
     pass
     
 class WsSource(RawSource):
-    def __init__(self,*a,**k):
-        RawSource.__init__(self,*a,**k)
-        self.ValTuple = None
-        
-    def getData(self,requestTs):
-        """Get data at timestamp "requestTs" using linear interpolation. Returns None if data
-        are not available. For the weather station in instantaneous mode, we need to rotate the 
-        wind direction using the heading to get the rotated wind"""
-        while self.latestTimestamp < requestTs:
-            if not self.getFromQueue(): return None
-        ts, savedTs = None, None
-        valTuple, savedValTuple = None, None
-        for (ts, valTuple) in reversed(self.oldData):
-            if self.ValTuple is None:
-                self.ValTuple = namedtuple('WsSourceEx_tuple',valTuple._fields+('WS_WIND_LON','WS_WIND_LAT'))
-            rwind = valTuple.WS_SPEED*(valTuple.WS_COS_DIR+1j*valTuple.WS_SIN_DIR)*(valTuple.WS_COS_HEADING+1j*valTuple.WS_SIN_HEADING)
-            valTuple = self.ValTuple(WS_WIND_LON=real(rwind),WS_WIND_LAT=imag(rwind),*valTuple)
-            if ts < requestTs:
-                alpha = float(requestTs-ts)/(savedTs-ts)
-                di = tuple([alpha*y+(1-alpha)*y_p for y,y_p in zip(savedValTuple,valTuple)])
-                return SourceTuple(requestTs,self.ValTuple(*di))
-            else:
-                savedTs = ts
-                savedValTuple = valTuple
-        else:
-            return self.oldData[0]
+    pass
 
 def distVincenty(lat1, lon1, lat2, lon2):
     # WGS-84 ellipsiod. lat and lon in DEGREES
@@ -349,7 +322,13 @@ def trueWindSource(derivCdataSource,distFromAxle,speedFactor=1.0):
         phi = angle(r*exp(1j*(theta-p0))-w)
         
         # Rotate the anemometer measured wind to the axes of the vehicle
-        sVel = d.rVel*exp(1j*rot)
+        # In this version we only measure the rotation using correlation between car speed and
+        #  the sonic anemometer components. We do NOT apply the measured rotation to the data to
+        #  correct them, as it is assumed that the anemometer will be rotated to make it point
+        #  in the correct direction
+        # rot = 0.0
+        # sVel = d.rVel*exp(1j*rot)
+        sVel = d.rVel
         # Compute an angular correction based on the curvature of the path
         #  and the distance between anemometer and the rear axle of the car
         axleCorr = d.kappa*distFromAxle
@@ -540,7 +519,7 @@ class BatchProcessor(object):
     def _run(self):
         import getFromP3 as gp3
         self.op = file(self.outFile,"w",0)
-        print >>self.op, "%-20s%-20s%-20s%-20s%-20s" % ("EPOCH_TIME","WIND_N","WIND_E","WIND_DIR_SDEV","CAR_SPEED")
+        print >>self.op, "%-20s,%-20s,%-20s,%-20s,%-20s,%-20s" % ("EPOCH_TIME","WIND_N","WIND_E","WIND_DIR_SDEV","CAR_SPEED","WS_ROTATION")
         p3 = gp3.P3_Accessor(self.analyzer)
         gpsSource = gp3.P3_Source(p3.genAnzLog("GPS_Raw"),"gpsSource",endEtm=self.endEtm,limit=2000)
         wsSource  = gp3.P3_Source(p3.genAnzLog("WS_Raw"),"wsSource",endEtm=self.endEtm,limit=2000)
@@ -560,8 +539,7 @@ class BatchProcessor(object):
                     ts = int(timestamp.unixTimeToTimestamp(etm))
                     gps = GpsTuple(*[gpsDict[f] for f in GpsTuple._fields])
                     mag = MagTuple(*[magDict[f] for f in MagTuple._fields])
-                    rwind = anemDict["WS_SPEED"]*(anemDict["WS_COS_DIR"]+1j*anemDict["WS_SIN_DIR"])*\
-                                                 (anemDict["WS_COS_HEADING"]+1j*anemDict["WS_SIN_HEADING"])
+                    rwind = anemDict["WS_WIND_LON"]+1j*anemDict["WS_WIND_LAT"]
                     anem = AnemTuple(real(rwind),imag(rwind))
                 yield ts,[gps,mag,anem]
 
@@ -585,7 +563,8 @@ class BatchProcessor(object):
         windE = dataList[1]
         stdDevDeg = dataList[2]
         vCar = dataList[13]
-        print >> self.op, "%-20.3f%-20.10f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),windN,windE,stdDevDeg,vCar)
+        wsRot = dataList[12]
+        print >> self.op, "%-20.3f,%-20.10f,%-20.10f,%-20.10f,%-20.10f,%20.3f" % (timestamp.unixTime(ts),windN,windE,stdDevDeg,vCar,wsRot)
 
 if __name__ == "__main__":
     if len(sys.argv)<2:

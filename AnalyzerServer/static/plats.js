@@ -1,5 +1,5 @@
 // manually created PLATOBJS object from the concord set of maps.
-var PLAT_IMG_BASE = "/static/images/platdata/";
+var PLAT_IMG_BASE = "/p3static/platdata/";
 var PLATOBJS = {};
 PLATOBJS['03A16.tif'] = {minlng: -122.188, maxlng: -122.1805, minlat: 37.9369, maxlat: 37.9462};
 PLATOBJS['03B16.tif'] = {minlng: -122.188, maxlng: -122.1805, minlat: 37.9277, maxlat: 37.937};

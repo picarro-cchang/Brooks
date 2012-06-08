@@ -5,6 +5,7 @@ from flask import Flask, Markup
 from flask import make_response, redirect, render_template, request, Response, url_for
 import getFromP3 as gp3
 from glob import glob
+import hashlib
 try:
     import json
 except:
@@ -28,6 +29,8 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     appPath = sys.argv[0]
 appDir = os.path.split(appPath)[0]
+
+time.strptime("2012-04-01T09:50:00","%Y-%m-%dT%H:%M:%S")
 
 fname = "platBoundaries.json"
 fp = open(fname,"rb")
@@ -84,13 +87,16 @@ for dirpath,dirnames,filenames in os.walk(IMAGEROOT):
             os.remove(os.path.join(dirpath,'%d.png'%f))
         imagesAvailable[name] = pngfiles[-2:]
 
+def unix_line_endings(str):
+    return str.replace('\r\n', '\n').replace('\r', '\n')
+                
 @app.route('/map')
 def map():
     return render_template('showmap.html')
     
-@app.route('/basic')
-def basic():
-    return render_template('basic.html')
+@app.route('/dateTime')
+def dateTime():
+    return render_template('datetimeEntryBasic.html')
 
 @app.route('/sprites')
 def sprites():
@@ -106,22 +112,42 @@ def wait():
     time.sleep(duration)
     return "Responding after %s seconds" % (duration,)
     
-@app.route('/rest/instrUpload',methods=['GET','POST'])
+@app.route('/rest/validate',methods=['GET','POST'])
+def validate():
+    # Checks the validity of the secure hash at the top of a Picarro JSON file
+    data = request.values.get('contents')
+    try:
+        sig,rest = data.split('\n',1)
+        secHash = hashlib.md5('Picarro Surveyor' + rest).hexdigest()
+        if sig != '// ' + secHash:
+            raise ValueError('Invalid hash')
+        data = { 'contents':rest }
+    except:
+        data = { 'error':traceback.format_exc() }
+    response = make_response(json.dumps(data))
+    response.headers['Content-Type'] = 'application/json'
+    return response
+    
+
+@app.route('/rest/instrUpload')
 def instrUpload():
     # Services upload of instructions for generating report
-    f = request.files.get('files')
-    contents = f.read()
+    contents = request.values.get('contents')
     # Pass directory in which report files are to be placed and the 
     #  contents of the instruction file
     ticket = ReportGen(REPORTROOT,contents).run()
-    data = [{'name': f.filename, 'contents': contents, 'ticket':ticket}]
-    return make_response(json.dumps(data))
+    data = {'contents': contents, 'ticket':ticket}
+    response = make_response(json.dumps(data))
+    response.headers['Content-Type'] = 'application/json'
+    return response
 
 @app.route('/rest/getReportStatus')
 def getReportStatus():
     ticket = request.values.get('ticket')
     data = ReportStatus(REPORTROOT,ticket).run()
-    return make_response(json.dumps(data))
+    response = make_response(json.dumps(data))
+    response.headers['Content-Type'] = 'application/json'
+    return response
 
 @app.route('/rest/getLayerUrls')
 def getLayerUrls():
@@ -129,7 +155,9 @@ def getLayerUrls():
     data = LayerFilenamesGetter(REPORTROOT,ticket).run()
     for d in data:
         data[d] = LAYERBASEURL + data[d]
-    return make_response(json.dumps(data))
+    response = make_response(json.dumps(data))
+    response.headers['Content-Type'] = 'application/json'
+    return response
 
 @app.route('/showLayers')
 def showLayers():
@@ -139,9 +167,18 @@ def showLayers():
 @app.route('/rest/getComposite')
 def getComposite():
     ticket = request.values.get('ticket')
-    response = make_response(CompositeMapMaker(REPORTROOT,ticket).run())
+    region = int(request.values.get('region'))
+    fname = os.path.join(REPORTROOT,'%s.compositeMap.%d.png'%(ticket,region))
+    if os.path.exists(fname):
+        when = os.path.getmtime(fname)
+    else:
+        fname = os.path.join(STATICROOT,'errorIcon.png')
+        when = time.time()
+    fp = open(fname,'rb')
+    response = make_response(fp.read())
+    fp.close()
     response.headers['Content-Type'] = 'image/png'
-    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(time.time()))
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(when))
     return response
 
 @app.route('/rest/pathLayer',methods=['GET'])
@@ -217,19 +254,23 @@ def map_image():
 def get_plat_boundaries():
     result = [[k]+platBoundaries[k] for k in sorted(platBoundaries.keys())]
     if 'callback' in request.values:
-        return make_response(request.values['callback'] + '(' + json.dumps({"aaData":result}) + ')')
+        response = make_response(request.values['callback'] + '(' + json.dumps({"aaData":result}) + ')')
     else:
-        return make_response(json.dumps({"aaData":result}))
+        response = make_response(json.dumps({"aaData":result}))
+    response.headers['Content-Type'] = 'application/json'
+    return response
 
 @app.route('/rest/autocompletePlat')
 def autocompletePlat():
-    term = request.values.get('term').upper()
+    term = request.values.get('query').upper()
     result = sorted([k for k in platBoundaries.keys() if k.upper().startswith(term)]) + sorted([k for k in platBoundaries.keys() if term in k.upper() and not(k.upper().startswith(term))])
     if 'callback' in request.values:
-        return make_response(request.values['callback'] + '(' + json.dumps(result) + ')')
+        response =  make_response(request.values['callback'] + '(' + json.dumps(result) + ')')
     else:
-        return make_response(json.dumps(result))
-
+        response =  make_response(json.dumps(result))
+    response.headers['Content-Type'] = 'application/json'
+    return response
+    
 @app.route('/rest/platCorners')
 def get_plat_corners():
     plat = request.values.get('plat','').upper().strip()
@@ -237,8 +278,25 @@ def get_plat_corners():
     if plat in platBoundaries:
         minLng,minLat,maxLng,maxLat = platBoundaries[plat]
         result = {"MIN_LONG":minLng, "MAX_LONG":maxLng, "MIN_LAT":minLat, "MAX_LAT":maxLat, "PLAT":plat}
-    return make_response(json.dumps(result))
-        
+    response = make_response(json.dumps(result))
+    response.headers['Content-Type'] = 'application/json'
+    return response
+
+@app.route('/rest/download',methods=['GET','POST'])
+def download():
+    filename = request.values.get('filename','')
+    content =  request.values.get('content','')
+    if not content or not filename: return
+    filename = secure_filename(filename)
+    content = unix_line_endings(content)
+    # Prepend a secure hash to the content
+    secHash = hashlib.md5('Picarro Surveyor' + content).hexdigest()
+    response = make_response('// ' + secHash + '\n' + content)
+    response.headers['Cache-Control'] = ''
+    response.headers['Content-Type'] = 'application/octet-stream'
+    response.headers['Content-Disposition'] = 'attachment; filename="' + filename + '"'
+    return response
+    
 @app.route('/show_plats',methods=['GET'])
 def show_plats():
     return render_template('show_plats.html')
@@ -335,9 +393,11 @@ def getImagePathEx(params):
 def getImagePath():
     result = getImagePathEx(request.values)
     if 'callback' in request.values:
-        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+        response = make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
-        return make_response(json.dumps({"result":result}))
+        response = make_response(json.dumps({"result":result}))
+    response.headers['Content-Type'] = 'application/json'
+    return response
     
 def newImageEx(params):
     try:
@@ -362,9 +422,11 @@ def newImageEx(params):
 def newImage():
     result = newImageEx(request.values)
     if 'callback' in request.values:
-        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+        response = make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
-        return make_response(json.dumps({"result":result}))
+        response = make_response(json.dumps({"result":result}))
+    response.headers['Content-Type'] = 'application/json'
+    return response
 
 def mostRecentImageEx(params):
     try:
@@ -377,9 +439,11 @@ def mostRecentImageEx(params):
 def mostRecentImage():
     result = mostRecentImageEx(request.values)
     if 'callback' in request.values:
-        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+        response = make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
-        return make_response(json.dumps({"result":result}))
+        response = make_response(json.dumps({"result":result}))
+    response.headers['Content-Type'] = 'application/json'
+    return response
         
 @app.route('/rest/getImage')
 def getImage():

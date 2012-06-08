@@ -36,10 +36,10 @@ def genLatestFiles(baseDir,pattern):
                 yield os.path.join(dirPath,name)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
-    AppPath = sys.executable
+    appPath = sys.executable
 else:
-    AppPath = sys.argv[0]
-AppDir = os.path.split(AppPath)[0]
+    appPath = sys.argv[0]
+appDir = os.path.split(appPath)[0]
 
 # configuration
 DEBUG = True
@@ -54,6 +54,8 @@ PEAKFILES = 'C:/UserData/AnalyzerServer/*.peaks'
 ANALYSISFILES = 'C:/UserData/AnalyzerServer/*.analysis'
 SWATHFILES = 'C:/UserData/AnalyzerServer/*.swath'
 MAX_DATA_POINTS = 500
+
+STATICROOT = os.path.join(appDir,'static')
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -521,6 +523,19 @@ def getLastPeriphUpdateEx(params):
             return {}
     except:
         return dict(error=traceback.format_exc())
+
+@app.route('/rest/ping')
+def ping():
+    return 'ping'
+    
+@app.route('/rest/admin')
+def issueTicket():
+    print "Ticket:", request.values
+    ticket = 'abcdefghijkl'
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"ticket":ticket}) + ')')
+    else:
+        return make_response(json.dumps({"ticket":ticket}))
         
 @app.route('/maps')
 def maps():
@@ -534,7 +549,8 @@ def maps():
 @app.route('/test')
 def test():
     return render_template('test.html')
+
     
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=5000,debug=False)
+    app.run(host='0.0.0.0',port=5000,debug=True)
     

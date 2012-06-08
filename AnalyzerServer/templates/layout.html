@@ -6,25 +6,24 @@
         <meta name="keywords" content="" />
         <meta name="viewport" id="meta_viewport" content="initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
         <title>Picarro Methane Detector</title>
-        <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/picarro_bootstrap_002.css') }}" />
-        <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/progressbar.css') }}" />
-        <script type="text/javascript" src="{{ url_for('static',filename='jquery-1.6.2.min.js') }}"></script>
+        <!-- <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/progressbar.css') }}" /> -->
+        <script type="text/javascript" src="{{ url_for('static',filename='jquery-1.7.2.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='bootstrap-dropdown.js') }}"></script>
+        <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/picarro_bootstrap.css') }}" />
         <script type="text/javascript" src="{{ url_for('static',filename='jquery.sparkline.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='jquery.tablesorter.min.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static',filename='jquery-ui-1.8.16.custom.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='jquery.jsonp-2.3.0.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='geohash.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static',filename='application.js') }}"></script>
         <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
         {% block head %}{% endblock %}
-        
+
         <script type="text/javascript" language="javascript">
-        
+
         function pageLoadFunction() {
             winH = window.innerHeight;
             winW = window.innerWidth;
 
             initialize(winH, winW);
-            // setup_viewport();
             resize_me();
         };
 
@@ -32,11 +31,11 @@
         var resize_inprocess = false;
         var resize_timer;
         var buffer = 50;
-        var margin = 20;
+        var margin = 5;
+        var gutter = 20;
         function resize_me() {
             winH = window.innerHeight;
             winW = window.innerWidth;
-            
             lpge_wdth = $('#id_sidebar').width();
             rpge_wdth = winW - lpge_wdth;
             
@@ -44,40 +43,40 @@
             $('#id_p3_icon').css('position', 'fixed');
             $('#id_p3_icon').css('left', buffer);
             
-            $('#id_content').css('width', rpge_wdth - buffer);
+            //$('#id_content').css('width', rpge_wdth - buffer);
             
-            $('#id_topright').css('width', rpge_wdth - buffer);
-            $('#id_topright').css('left', lpge_wdth + margin);
+            //$('#id_topright').css('width', rpge_wdth - buffer);
+            $('#id_topright').css('left', lpge_wdth + gutter);
             $('#id_topright').css('right', 0);
             
-            $('#id_topbar').css('width', rpge_wdth - buffer);
-            $('#id_topbar').css('left', lpge_wdth + margin);
-            $('#id_topbar').css('right', 0);
+            //$('#id_topbar').css('width', rpge_wdth - buffer);
+            //$('#id_topbar').css('left', lpge_wdth + margin);
+            //$('#id_topbar').css('right', 0);
+            
+            //$('#real_content').css('width', winW);
             
             if (resize_page) {
                 resize_page();
             }
             resize_inprocess = false;
         };
-        
+        function resize_time() {
+            if (!resize_inprocess) {
+                //setup_viewport();
+                resize_inprocess = true;
+                resize_timer = setTimeout(resize_me,500);
+            }
+        };
         function setup_viewport() {
             var winH = window.innerHeight;
             var winW = window.innerWidth;
             if (winH < winW) {
                 // Landscape mode
-                $('#meta_viewport').attr("content","initial-scale=1.0; maximum-scale=1.0; user-scalable=0;")
+                $('#meta_viewport').attr('content','initial-scale=1.0; maximum-scale=1.0; user-scalable=0;')
             }
             else {
                 // Portrait mode
-                $('#meta_viewport').attr("content","initial-scale=0.8; maximum-scale=0.8; user-scalable=0;")
-            }
-        };
-        
-        function resize_time() {
-            // setup_viewport();
-            if (!resize_inprocess) {
-                resize_inprocess = true;
-                resize_timer = setTimeout(resize_me,500);
+                $('#meta_viewport').attr('content','initial-scale=0.8; maximum-scale=0.8; user-scalable=0;')
             }
         };
         </script>

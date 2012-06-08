@@ -1,19 +1,22 @@
 {% extends "layout.html" %}
 
 {% block head %}
-    <script type="text/javascript" src="{{ url_for('static',filename='2.5.3-crypto-md5.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static',filename='report.js') }}"></script>
+<script type="text/javascript" language="javascript">
+    function initialize(winH,winW) {
+    }
+</script>
 {% endblock %}
 
 {% block body %}
-<h1>Drop instruction file into text box</h1>
-<p>
-or upload from disk <input id="instrUpload" type="file" size="50" name="files" data-url="/rest/instrUpload" multiple></input>
-</p>
-<p>
-<b>Instructions</b><br>
-<textarea id="instructions" rows="10" cols="132" readonly></textarea><br>
-<b>Status</b><br>
-<textarea id="status" rows="10" cols="132" readonly></textarea><br>
-</p>
+<div class="container-fluid">
+    <h1>Sample Report</h1>
+    <div class="row-fluid">
+        <div class="span5">
+            {{ peaksTable | safe }}
+        </div>
+        <div class="span7">
+            <img src={{ mapUrl }} alt="Map"></img>
+        </div>
+    </div>
+</div>
 {% endblock %}

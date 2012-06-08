@@ -1,50 +1,79 @@
 {% extends "layout.html" %}
 
 {% block head %}
-    <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/ui-lightness/jquery-ui-1.8.20.custom.css') }}" />
+    <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/fileinput.css') }}" />
     <script type="text/javascript" src="{{ url_for('static',filename='jquery-ui-1.8.20.custom.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='jquery.datetimeentry.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='jquery.mousewheel.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='jquery.generateFile.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='bootstrap-modal.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='typeahead.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='jquery.validate.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static',filename='makeInstructions.js') }}"></script>
 {% endblock %}
 
 {% block body %}
 <style>
-    #regionTable td { margin: 3px; padding: 0.4em; }
-    .ui-state-error { padding: .3em; background:#FFCCCC; }
-    .validateTips { border: 1px solid transparent; padding: 0.3em; }
-    .ui-autocomplete {
-            max-height: 300px;
-            overflow-y: auto;
-            /* prevent horizontal scrollbar */
-            overflow-x: hidden;
-            /* add padding to account for vertical scrollbar */
-            padding-right: 20px;
-        }
+.validate_tips { text-align:center; }
 </style>
-<div class="container">
-<div class="row">
-<h1>Date Picker</h1>
-<input type="text" name="date" id="date" />
 
-<input type="text" name="plat" id="plat" />
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span6">
+            <h1>Instruction file</h1>
+            <div class="custom_file_upload">
+                <input type="text" class="file" id="id_instr_upload_name" name="file_info" readonly>
+                <div class="btn-primary file_upload">
+                    <input type="file" id="id_instr_upload" name="files[]">
+                </div>
+            </div>
 
-<div id="id_feedback" style="position:fixed;"><div id="id_mod_change"></div></div>
+            <div>
+                <textarea id="id_instructions" style="height:17em;width:100%;resize:none;" readonly>
+                </textarea><br>
+            </div>
+        </div>
 
-<h1>Plats</h1>
-<div id="id_plats_table_div"></div>
+        <div class="span6">
+            <h1>Status</h1>
+            <div><textarea id="id_status" style="height:20em;width:100%;resize:none;" readonly>
+            </textarea></div>
+        </div>
+    </div>
+    <div id="id_modal"></div>
+    <div class="row-fluid">
+        <h1>Plats</h1>
+        <div id="id_regions_table_div"></div>
+        <span><button type="button" id="id_add_by_name_button" class="btn-large btn-primary">Add by plat name</button></span>
+        <span><button type="button" id="id_add_by_corners_button" class="btn-large btn-primary">Add by corners</button></span>
+        <span><button type="button" id="id_delete_region_button" class="btn-large btn-primary">Delete selected region</button></span>
+        <span><button type="button" id="id_edit_region_button" class="btn-large btn-primary">Edit selected region</button></span>
+        <span><button type="button" id="id_clear_all_regions_button" class="btn-large btn-primary">Clear all regions</button></span>
+    </div>
 
-<span><button type="button" id="id_add_by_name_button" class="btn large medium">Add by plat name</button></span>
-<span><button type="button" id="id_add_by_corners_button" class="btn large medium">Add by corners</button></span>
-<span><button type="button" id="id_delete_region_button" class="btn large medium">Delete selected region</button></span>
-<span><button type="button" id="id_clear_all_regions_button" class="btn large medium">Clear all regions</button></span>
-<span><button type="button" id="id_show_as_json_button" class="btn large medium">Show as JSON</button></span>
+    <div class="row-fluid">
+        <h1>Runs</h1>
+        <div id="id_runs_table_div"></div>
+        <span><button type="button" id="id_add_run_button" class="btn-large btn-primary">Add run</button></span>
+        <span><button type="button" id="id_delete_run_button" class="btn-large btn-primary">Delete selected run</button></span>
+        <span><button type="button" id="id_edit_run_button" class="btn-large btn-primary">Edit selected run</button></span>
+        <span><button type="button" id="id_clear_all_runs_button" class="btn-large btn-primary">Clear all runs</button></span>
+    </div>
 
-<h1>Runs</h1>
-<div id="id_runs_table_div"></div>
-<span><button type="button" id="id_add_run_button" class="btn large medium">Add run</button></span>
-<span><button type="button" id="id_delete_run_button" class="btn large medium">Delete selected run</button></span>
-<span><button type="button" id="id_edit_run_button" class="btn large medium">Edit selected run</button></span>
-<span><button type="button" id="id_clear_all_runs_button" class="btn large medium">Clear all runs</button></span>
+    <div class="row-fluid">
+        <h1>Actions</h1>
+        <span><button type="button" id="id_save_instructions" class="btn-large btn-primary">Save Instructions</button></span>
+        <span><button type="button" id="id_make_report" class="btn-large btn-primary">Make Report</button></span>
+    </div>
 
+    <div class="row-fluid">
+        <h1>Results</h1>
+        <div id="id_results_container">
+        </div>
+    </div>
+    <div id="id_hidden_name" style="display:none;">{{ fname }}</div>
+    <div id="id_hidden_contents" style="display:none;">{{ contents }}</div>
+    <div id="id_hidden_ticket" style="display:none;">{{ ticket }}</div>
 </div>
-</div>
+
 {% endblock %}

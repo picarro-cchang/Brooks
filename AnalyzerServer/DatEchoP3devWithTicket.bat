@@ -1,4 +1,4 @@
-set file-path="R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120410\OUT\FCDS2003-20120410-035159Z-DataLog_User_Minimal.dat"
+set file-path="R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120407\OUT\FCDS2006-20120407-102214Z-DataLog_User_Minimal.dat"
 set data-type=dat   
 set psys=APITEST   
 set identity=85490338d7412a6d31e99ef58bce5de6
@@ -16,7 +16,6 @@ rem Data files from Sacramento comparison
 set file-path="R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120323\OUT\FCDS2006-20120323-020431Z-DataLog_User_Minimal.dat"
 set file-path="R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120401\OUT\FCDS2006-20120401-095924Z-DataLog_User_Minimal.dat"
 set file-path="R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120410\OUT\FCDS2003-20120410-035159Z-DataLog_User_Minimal.dat"
-
 set file-path="R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120407\OUT\FCDS2003-20120407-042604Z-DataLog_User_Minimal.dat"
 set file-path="R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120407\OUT\FCDS2003-20120407-053754Z-DataLog_User_Minimal.dat"
 set file-path="R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120407\OUT\FCDS2003-20120407-064816Z-DataLog_User_Minimal.dat"

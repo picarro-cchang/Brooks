@@ -118,13 +118,13 @@ class PeakFinder(object):
     def run(self):
         '''
         '''        
-        def distVincenty(lat1, lon1, lat2, lon2):
-            # WGS-84 ellipsiod. lat and lon in DEGREES
+        def distVincenty(lat1, lng1, lat2, lng2):
+            # WGS-84 ellipsiod. lat and lng in DEGREES
             a = 6378137
             b = 6356752.3142
             f = 1/298.257223563;
             toRad = pi/180.0
-            L = (lon2-lon1)*toRad
+            L = (lng2-lng1)*toRad
             U1 = arctan((1-f) * tan(lat1*toRad))
             U2 = arctan((1-f) * tan(lat2*toRad));
             sinU1 = sin(U1)
@@ -164,10 +164,10 @@ class PeakFinder(object):
                          B/6*cos2SigmaM*(-3+4*sinSigma*sinSigma)*(-3+4*cos2SigmaM*cos2SigmaM)))
             return b*A*(sigma-deltaSigma)
         
-        def toXY(lat,lon,lat_ref,lon_ref):
-            x = distVincenty(lat_ref,lon_ref,lat_ref,lon)
-            if lon<lon_ref: x = -x
-            y = distVincenty(lat_ref,lon,lat,lon)
+        def toXY(lat,lng,lat_ref,lng_ref):
+            x = distVincenty(lat_ref,lng_ref,lat_ref,lng)
+            if lng<lng_ref: x = -x
+            y = distVincenty(lat_ref,lng,lat,lng)
             if lat<lat_ref: y = -y
             return x,y
             
@@ -298,7 +298,7 @@ class PeakFinder(object):
             #  (dist,methane_conc,longitude,latitude,epoch_time)
             JUMP_MAX = 500.0
             dist = None
-            lat_ref, lon_ref = None, None
+            lat_ref, lng_ref = None, None
             DataTuple = None
             # Determine if there are extra data in the file
             for line in source:
@@ -311,10 +311,10 @@ class PeakFinder(object):
                             entry[h] = float(line[h])
                         except:
                             entry[h] = NaN
-                    lon, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
-                    if lat_ref == None or lon_ref == None:
-                        lon_ref, lat_ref = lat, lon
-                    x,y = toXY(lat,lon,lat_ref,lon_ref)
+                    lng, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
+                    if lat_ref == None or lng_ref == None:
+                        lng_ref, lat_ref = lat, lng
+                    x,y = toXY(lat,lng,lat_ref,lng_ref)
                     if dist is None:
                         jump = 0.0
                         dist = 0.0
@@ -327,7 +327,7 @@ class PeakFinder(object):
                     else:
                         yield None,None    # Indicate that dist is bad, and we must restart
                         dist = None
-                        lat_ref, lon_ref = None, None
+                        lat_ref, lng_ref = None, None
                 except:
                     print traceback.format_exc()
             
@@ -336,7 +336,7 @@ class PeakFinder(object):
             #  (dist,methane_conc,longitude,latitude,epoch_time)
             JUMP_MAX = 500.0
             dist = None
-            lat_ref, lon_ref = None, None
+            lat_ref, lng_ref = None, None
             line = source.next()
             atoms = fixed_width(line,26)
             headings = [a.replace(" ","_") for a in atoms]
@@ -353,11 +353,11 @@ class PeakFinder(object):
                                 entry[h] = float(a)
                             except:
                                 entry[h] = NaN
-                        lon, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
+                        lng, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
 
-                        if lat_ref == None or lon_ref == None:
-                            lon_ref, lat_ref = lat, lon
-                        x,y = toXY(lat,lon,lat_ref,lon_ref)
+                        if lat_ref == None or lng_ref == None:
+                            lng_ref, lat_ref = lat, lng
+                        x,y = toXY(lat,lng,lat_ref,lng_ref)
                         if dist is None:
                             jump = 0.0
                             dist = 0.0
@@ -370,7 +370,7 @@ class PeakFinder(object):
                         else:
                             yield None,None    # Indicate that dist is bad, and we must restart
                             dist = None
-                            lat_ref, lon_ref = None, None
+                            lat_ref, lng_ref = None, None
                 except:
                     print traceback.format_exc()
                         
@@ -451,6 +451,9 @@ class PeakFinder(object):
             """
             # The following is true when the tape recorder is playing back
             collecting = lambda v: abs(v-round(v))<1e-4 and (int(round(v)) & 1) == 1
+            
+            # The following is true when the surveyor is inactive
+            inactive = lambda v: abs(v-round(v))<1 and ((int(round(v)) >> 4) & 1) == 1
             
             hList = []
             kernelList = []
@@ -536,7 +539,9 @@ class PeakFinder(object):
                             reject = False
                             if 'ValveMask' in data._fields:
                                 where = list(data._fields).index('ValveMask')
-                                reject = collecting(mean([cache[where+1,j%npoints] for j in range(col-5,col+1)]))
+                                coll= collecting(mean([cache[where+1,j%npoints] for j in range(col-5,col+1)]))
+                                inact = inactive(cache[where+1,col%npoints])
+                                reject = (coll or inact)
                             if not reject:
                                 amplitude = 0.5*ssbuff[i-1,col]/(3.0**(-1.5))
                                 sigma = sqrt(0.5*scaleList[i-1])
@@ -607,7 +612,6 @@ class PeakFinder(object):
             else:
                 try:
                     fname = genLatestFiles(*os.path.split(self.userlogfiles)).next()
-                    print fname
                 except:
                     fname = None
                     time.sleep(self.sleep_seconds)

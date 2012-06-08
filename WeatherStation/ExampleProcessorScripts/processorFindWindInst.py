@@ -492,13 +492,15 @@ def runAsScript():
     for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle),statsAvg)):
         p0,p1,p2 = d.calParams
         rCorr,iCorr = d.wCorr
+        vCar = abs(d.zVel)
         WRITEOUTPUT(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),    # Mean wind N and E
                           d.aStdDev,                                    # Wind direction std dev (degrees)
                           float(real(d.zVel)),float(imag(d.zVel)),      # Car velocity N and E
                           float(real(d.mHead)),-float(imag(d.mHead)),   # Compass heading N and E
                           float(real(d.tVel)),float(imag(d.tVel)),      # Instantaneous wind N and E
                           p0,p1,p2,                                     # Calibration parameters
-                          (180/pi)*arctan2(iCorr,rCorr)                 # Angle of anemometer from true
+                          (180/pi)*arctan2(iCorr,rCorr),                # Angle of anemometer from true
+                          vCar                                          # Speed of car    
         ])
 
 class BatchProcessor(object):
@@ -567,22 +569,22 @@ class BatchProcessor(object):
                                 self.distFromAxle,self.speedFactor),self.statsAvg)):
             p0,p1,p2 = d.calParams
             rCorr,iCorr = d.wCorr
+            vCar = abs(d.zVel)
             self.writeOutput(d.ts,[float(real(d.wMean)),float(imag(d.wMean)),    # Mean wind N and E
                                    d.aStdDev,                                    # Wind direction std dev (degrees)
                                    float(real(d.zVel)),float(imag(d.zVel)),      # Car velocity N and E
                                    float(real(d.mHead)),-float(imag(d.mHead)),   # Compass heading N and E
                                    float(real(d.tVel)),float(imag(d.tVel)),      # Instantaneous wind N and E
                                    p0,p1,p2,                                     # Calibration parameters
-                                   (180/pi)*arctan2(iCorr,rCorr)                 # Angle of anemometer from true
+                                   (180/pi)*arctan2(iCorr,rCorr),                # Angle of anemometer from true
+                                   vCar                                          # Speed of car    
             ])
             
     def writeOutput(self,ts,dataList):
         windN = dataList[0]
         windE = dataList[1]
         stdDevDeg = dataList[2]
-        vCarN = dataList[3]
-        vCarE = dataList[4]
-        vCar = abs(vCarN+1j*vCarE)
+        vCar = dataList[13]
         print >> self.op, "%-20.3f%-20.10f%-20.10f%-20.10f%-20.10f" % (timestamp.unixTime(ts),windN,windE,stdDevDeg,vCar)
 
 if __name__ == "__main__":

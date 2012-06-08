@@ -6,11 +6,9 @@
         <meta name="keywords" content="" />
         <meta name="viewport" id="meta_viewport" content="initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
         <title>Experimental Graph Viewer</title>
-        <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/picarro_bootstrap_002.css') }}" />
+        <!-- <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/picarro_bootstrap_002.css') }}" /> -->
+        <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/picarro_bootstrap.css') }}" />
         <script type="text/javascript" src="{{ url_for('static',filename='jquery.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static',filename='vendor/jquery.ui.widget.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static',filename='jquery.iframe-transport.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static',filename='jquery.fileupload.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='json2.js') }}"></script>
         <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
         {% block head %}
