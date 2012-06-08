@@ -30,7 +30,7 @@ MAX_REST_ERROR_COUNT = 5
 OPACITY_DICT = {"25%":"3F", "50%":"7F", "75%":"BF", "100%":"FF"}
 OPACITY_LIST = ["25%", "50%", "75%", "100%"]
 
-TIMEOUT = 5.0
+TIMEOUT = 15.0
 socket.setdefaulttimeout(TIMEOUT)
 
 #Set up a useful AppPath reference...
