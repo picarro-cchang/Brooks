@@ -186,10 +186,12 @@ class RingdownGrabber(HasTraits):
     fitEnd = CInt(4096)
     thresholdPercent = CFloat(80.0)
     lowerThreshold = CFloat(13000.0)
+    fitFile = EnthoughtFile("",filter=["*.csv"])
     
     traits_view = View(VGroup(Item("loss"),
                               Item("a"),
                               Item("b"),
+                              Item("fitFile"),
                               Item("fitStart"),
                               Item("fitEnd"),
                               Item("thresholdPercent"),
@@ -198,9 +200,12 @@ class RingdownGrabber(HasTraits):
     def __init__(self):
         self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                     "", IsDontCareConnection = False)
-    
+        self.fp = None
+        
     def getData(self):
         self.driverRpc.wrDasReg(SPECT_CNTRL_STATE_REGISTER,SPECT_CNTRL_PausedState)
+        divisor = self.driverRpc.rdFPGA("FPGA_RDMAN","RDMAN_DIVISOR")
+        self.tSamp = (divisor+1)/(25.0e6)
         time.sleep(0.2)
         data, meta, params = self.driverRpc.rdRingdown(0)
         self.driverRpc.wrDasReg(SPECT_CNTRL_STATE_REGISTER,SPECT_CNTRL_RunningState)
@@ -208,7 +213,15 @@ class RingdownGrabber(HasTraits):
         self.rd = asarray(data) & 0x3FFF
         self.t = self.tSamp*arange(len(self.rd))
         return self.t, self.rd
-
+        
+    def _fitFile_changed(self,old,new):
+        if self.fp != None:
+            self.fp.close()
+            self.fp = None
+        if self.fitFile:
+            self.fp = file(self.fitFile,"wb",0)
+            print >>self.fp, "%20s,%20s,%20s,%20s" % ("Loss","Amplitude","Baseline","RmsResidual")
+            
     def fitExp(self):
         c = 3e8
         minVal = min(self.rd[self.fitStart:self.fitEnd])
@@ -224,6 +237,8 @@ class RingdownGrabber(HasTraits):
         self.loss = 1.0e4/(c*self.tau)
         self.tres = self.t[istart:self.fitEnd]
         self.res = self.rd[istart:self.fitEnd] - (self.a*exp(-(self.tres-self.tres[0])/self.tau)+self.b)
+        if self.fp is not None:
+            print >>self.fp, "%20.5f,%20.3f,%20.3f,%20.3f" % (self.loss,self.a,self.b,sqrt(mean(self.res*self.res)))
         return self.a, self.b, self.tau, self.loss, self.tres, self.res
 
 class Waveform(IsDescription):
@@ -233,15 +248,19 @@ class Waveform(IsDescription):
 class Main(HasTraits):
     plot2d = Instance(Plot2D)
     instrument = Instance(RingdownGrabber)
-    resScale = CFloat(20.0)
+    resScale = CFloat(200.0)
     run = CBool(True)
-    nPoints = CInt(0)
+    showRes = CBool(True)
+    showAvg = CBool(False)
+    nStats = CInt(0)
     meanLoss = CFloat
     stdLoss = CFloat
     shotToShot = CFloat
     resetStats = Button
-    outputFile = EnthoughtFile("",filter=["*.h5"])
-    fCutoff = CFloat(50000.0)
+    nAverage = CInt(0)
+    resetAverage = Button
+    ringdownFile = EnthoughtFile("",filter=["*.h5"])
+    fCutoff = CFloat(500000.0)
     aFilt = CArray(value=[1.0,0.0,0.0])
     bFilt = CArray(value=[1.0,0.0,0.0])
     def __init__(self):
@@ -252,28 +271,34 @@ class Main(HasTraits):
         self.h5f = None
         self.sumLoss = 0
         self.sumSqLoss = 0
+        self.sumBufferLength = None
+        self.sumBuffer = None
         self._fCutoff_changed()
-        self.plotHandles = self.plot2d.plotData([],[],'b-',[],[],'g-')
+        self.plotHandles = self.plot2d.plotData([],[],'b-',[],[],'g-',[],[],'r-')
 
     def _fCutoff_changed(self):
         self.bFilt, self.aFilt = butter(3,2*self.instrument.tSamp*self.fCutoff) 
     
-    def _outputFile_changed(self,old,new):
+    def _ringdownFile_changed(self,old,new):
         if self.h5f != None:
             self.h5f.close()
             self.h5f = None
-        h5f = openFile(self.outputFile,"w")
-        filters = Filters(complevel=1,fletcher32=True)
-        self.table = h5f.createTable(h5f.root,"ringdown",Waveform,filters=filters)
-        self.table.attrs.sample_time = self.instrument.tSamp
-        self.table.attrs.next_index = 0
-        self.h5f = h5f
+        if self.ringdownFile:
+            h5f = openFile(self.ringdownFile,"w")
+            filters = Filters(complevel=1,fletcher32=True)
+            self.table = h5f.createTable(h5f.root,"ringdown",Waveform,filters=filters)
+            self.table.attrs.sample_time = self.instrument.tSamp
+            self.table.attrs.next_index = 0
+            self.h5f = h5f
         
     def doPlot(self):
         if self.run:
             t, rd = self.instrument.getData()
             t = t[:self.instrument.fitEnd]
             rd = rd[:self.instrument.fitEnd]
+            if self.sumBufferLength is None: 
+                self.sumBufferLength = len(t)-400
+                self.sumBuffer = zeros(self.sumBufferLength,dtype=float)
             if self.h5f:
                 for v in rd:
                     entry = self.table.row
@@ -285,37 +310,53 @@ class Main(HasTraits):
             try:
                 a, b, tau, loss, tres, res = self.instrument.fitExp()
                 res = lfilter(self.bFilt,self.aFilt,res)
+                # print self.sumBuffer.shape, res[:self.sumBufferLength].shape
+                self.sumBuffer += res[:self.sumBufferLength]
+                self.nAverage += 1
                 self.plot2d.updateData(self.plotHandles[0],1e6*t,rd)
-                self.plot2d.updateData(self.plotHandles[1],1e6*tres,self.resScale*res)
+                if self.showRes: 
+                    self.plot2d.updateData(self.plotHandles[1],1e6*tres,self.resScale*res)
+                else:
+                    self.plot2d.updateData(self.plotHandles[1],[0],[0])
+                if self.showAvg: 
+                    self.plot2d.updateData(self.plotHandles[2],1e6*t[:self.sumBufferLength],self.resScale*self.sumBuffer/self.nAverage)
+                else:
+                    self.plot2d.updateData(self.plotHandles[2],[0],[0])
                 self.sumLoss += loss
                 self.sumSqLoss += loss**2
-                self.nPoints += 1
-                self.meanLoss = self.sumLoss/self.nPoints
-                self.stdLoss = sqrt(self.sumSqLoss/self.nPoints - self.meanLoss**2)
+                self.nStats += 1
+                self.meanLoss = self.sumLoss/self.nStats
+                self.stdLoss = sqrt(self.sumSqLoss/self.nStats - self.meanLoss**2)
                 self.shotToShot = 100.0*self.stdLoss/self.meanLoss
             except:
-                pass
+                print format_exc()
         threading.Timer(0.2,self.doPlot).start()
 
     def _resetStats_fired(self):
-        self.nPoints = 0
+        self.nStats = 0
         self.sumLoss = 0
         self.sumSqLoss = 0
 
+    def _resetAverage_fired(self):
+        self.nAverage = 0
+        self.sumBuffer = 0.0
+        
 if __name__ == "__main__":
     m =  Main()
     viewer = View(
         HGroup(Item("plot2d",style="custom",show_label=False),
                VGroup(Item("instrument",style="custom",show_label=False),
-                      VGroup(Item("outputFile"),
-                             Item("run"),
+                      VGroup(Item("ringdownFile"),
+                             HGroup(Item("run"),Item("showRes"),Item("showAvg")),
                              Item("fCutoff",editor=TextEditor(auto_set=False,enter_set=True)),
                              Item("resScale"),
-                             Item("nPoints",style="readonly"),
+                             Item("nStats",style="readonly"),
                              Item("meanLoss",style="readonly",format_str="%.4f"),
                              Item("stdLoss",style="readonly",format_str="%.5f"),
                              Item("shotToShot",style="readonly",format_str="%.4f"),
-                             Item("resetStats",show_label=False)
+                             Item("resetStats",show_label=False),
+                             Item("nAverage",style="readonly"),
+                             Item("resetAverage",show_label=False)
               ))),
         width=700,height=600,resizable=True,buttons=NoButtons,title="Examine Ringdowns") 
     m.configure_traits(view = viewer)
