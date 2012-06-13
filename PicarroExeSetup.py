@@ -198,7 +198,7 @@ dilutionCorrProcessor = Target(description = "DilutionCorrProcessor", # used for
                     ##    icon_resources = [(1, "icon.ico")],
                     dest_base = "DilutionCorrProcessor"
                     )
-                    
+
 supervisorLauncher = Target(description = "SupervisorLauncher", # used for the versioninfo resource
                     script = "Utilities/SupervisorLauncher/SupervisorLauncher.py", # what to build
                     other_resources = [(RT_MANIFEST,
@@ -226,7 +226,7 @@ dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.d
 packageList = ["simplejson", "werkzeug","flask","jinja2","email"]
 
 hex_images = glob.glob("../SrcCode/CypressUSB/Drivers/*.*")
-hex_images = hex_images + [ "../SrcCode/CypressUSB/analyzer/analyzerUsb.hex", 
+hex_images = hex_images + [ "../SrcCode/CypressUSB/analyzer/analyzerUsb.hex",
                             "../SrcCode/DSP/src/Debug/dspMain.hex",
                             "../SrcCode/MyHDL/Spartan3/top_io_map.bit"]
 
@@ -261,7 +261,7 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
             ]
 for d in cypressDriverDirs:
     data_files.append(("Images/%s"%d, glob.glob("../SrcCode/CypressUSB/Drivers/" + "%s/*.*" %d)))
-        
+
 setup(version = "1.0",
       description = "Silverstone Host Core Software",
       name = "Silverstone CRDS",
@@ -325,6 +325,7 @@ setup(version = "1.0",
                  "../SrcCode/Utilities/SaveRaw.py",
                  "../SrcCode/Utilities/TestClient.py",
                  "../SrcCode/Utilities/ThresholdStats.py",
+                 "../SrcCode/Utilities/CheckLaserCal.py",
                  Fitter,
                  "ConfigMonitor/ConfigMonitor.py",
                  "PeriphIntrf/RunSerial2Socket.py",
@@ -351,6 +352,6 @@ setup(version = "1.0",
                  "Utilities/ConfigManager/ConfigManager.py",
                  "Utilities/AircraftValveSwitcher/AircraftValveSwitcher.py",
                  ],
-                 
+
       data_files = data_files
     )

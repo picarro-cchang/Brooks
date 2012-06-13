@@ -286,7 +286,7 @@ def parametricEllipse(X,Y):
 
 # Routine for reading in WLM files
 class WlmFile(object):
-    def __init__(self,fp):
+    def __init__(self, fp):
         """ Read data from a .wlm file into an object """
         # Get parameter values
         while True:
@@ -344,13 +344,19 @@ class WlmFile(object):
                 self.Reference2 = array(self.data[self.colindex["Reference 2 (offset removed)"]],float_)
                 self.PointsAveraged = array(self.data[self.colindex["Points averaged"]],int)
                 self.Tcal = mean(self.TEtalon) # Effective calibration temperature for etalon
-                # Calculating polynomial fits of Wavenumber vs Temperature"
-                self.WtoT = bestFitCentered(self.WaveNumber,self.TLaser,3)
-                self.TtoW = bestFitCentered(self.TLaser,self.WaveNumber,3)
+
+                self.generateWTCoeffs()
+
                 return
+
             comps = line.split()
             for i in range(self.ncols):
                 self.data[i].append(float(comps[i]))
+
+    def generateWTCoeffs(self):
+        self.WtoT = bestFitCentered(self.WaveNumber, self.TLaser, 3)
+        self.TtoW = bestFitCentered(self.TLaser, self.WaveNumber, 3)
+
 
 # Routine for reading calibration files for analyzers with no WLM
 class NoWlmFile(object):
