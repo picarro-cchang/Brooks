@@ -402,6 +402,7 @@ class DataEchoP3(object):
                         else:
                             break
                     else:
+                        self.first_pass_complete = True
                         break
                     
                 except urllib2.HTTPError, e:
