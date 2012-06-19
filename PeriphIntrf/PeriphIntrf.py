@@ -33,7 +33,7 @@ HOST = 'localhost'
 
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME)
-     
+
 def linInterp(pPair, tPair, t):
     try:
         t = float(t)
@@ -64,17 +64,33 @@ class PeriphIntrf(object):
         self.offsets = []
         self.numChannels = len([s for s in co.list_sections() if s.startswith("PORT")])
         self.lastTimestamps = {}
+        self.outputDict = {}
+        self.parserVersion = None
         for p in range(self.numChannels):
+            self.outputDict[p] = None
             self.sensorList.append(deque())
             parserFunc = co.get("PORT%d" % p, "SCRIPTFUNC").strip()
             scriptPath =  os.path.join(iniAbsBasePath, co.get("SETUP", "SCRIPTPATH"))
             scriptFilename = os.path.join(scriptPath, parserFunc) + ".py"
             self.scriptFilenames.append(scriptFilename)
             if parserFunc.startswith("parse"):
-                exec compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec")
-                self.parserFuncCode.append(eval(parserFunc))
+                scriptCodeObj = compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec")
+                try:
+                    exec scriptCodeObj
+                    if not self.parserVersion:
+                        self.parserVersion = PARSER_VERSION
+                    if self.parserVersion > 0.0:
+                        self.parserFuncCode.append(scriptCodeObj)
+                    else:
+                        self.parserFuncCode.append(eval(parserFunc))
+                except:
+                    self.parserFuncCode.append(eval(parserFunc))
             else:
                 self.parserFuncCode.append(None)
+            if not self.parserVersion:
+                self.parserVersion = 0.0
+            print "Peripheral Interface parser version number: ", self.parserVersion
+            
             labelList = [i.strip() for i in co.get("PORT%d" % p, "DATALABELS").split(",")]
             if labelList[0]:
                 self.dataLabels.append(labelList)
@@ -165,7 +181,15 @@ class PeriphIntrf(object):
                 counter += 1
                 if counter >= maxcount:
                     try:
-                        parsedList = self.parserFuncCode[port](newStr)
+                        if self.parserVersion > 0.0:
+                            dataEnviron = {"_OUTPUT_" : self.outputDict[port], "_RAWSTRING_": newStr}
+                            exec self.parserFuncCode[port] in dataEnviron
+                            self.outputDict[port] = dataEnviron["_OUTPUT_"]
+                            parsedList = dataEnviron["_OUTPUT_"]
+                        else:
+                            # Make it backward compatibility
+                            parsedList = self.parserFuncCode[port](newStr)
+
                         self.lastTimestamps[port] = ts
                         if parsedList:
                             self.appendAndSendOutData(port,ts,parsedList)
