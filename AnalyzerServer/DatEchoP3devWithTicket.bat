@@ -8,7 +8,7 @@ set ticket-url="https://dev.picarro.com/node/rest/sec/dummy/1.0/Admin/"
 set ip-req-url="https://dev.picarro.com/node/rest/gdu/<TICKET>/1.0/AnzMeta/"  
 set push-url="https://dev.picarro.com/node/rest/gdu/<TICKET>/1.0/AnzLog/"
 
-python DatEchoP3.py --file-path=%file-path% --data-type=%data-type% --ticket-url=%ticket-url% --ip-req-url=%ip-req-url% --push-url=%push-url% --sys=%psys% --identity=%identity% --nbr-lines=%lines% 
+python DatEchoP3.py --file-path=%file-path% --data-type=%data-type% --ticket-url=%ticket-url% --ip-req-url=%ip-req-url% --push-url=%push-url% --sys=%psys% --identity=%identity% --nbr-lines=%lines% --replace
 
 
 rem Data files from Sacramento comparison

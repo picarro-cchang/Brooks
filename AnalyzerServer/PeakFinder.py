@@ -1,6 +1,4 @@
-from collections import deque
 import fnmatch
-import itertools
 from numpy import *
 import os
 import sys
@@ -8,7 +6,7 @@ from optparse import OptionParser
 import time
 import datetime
 import traceback
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 
 import urllib2
 import urllib
@@ -216,62 +214,69 @@ class PeakFinder(object):
         if 'file_path' in kwargs:
             self.file_path = kwargs['file_path']
 
-        if 'dx' in kwargs:
-            self.dx = float(kwargs['dx'])
-        else:
-            self.dx = 0.5
-    
-        if 'sigmaMinFactor' in kwargs:
-            sigmaMinFactor = float(kwargs['sigmaMinFactor'])
-        else:
-            sigmaMinFactor = 2.0
-    
-        self.sigmaMin = sigmaMinFactor*self.dx
-    
-        if 'sigmaMaxFactor' in kwargs:
-            sigmaMaxFactor = float(kwargs['sigmaMaxFactor'])
-        else:
-            sigmaMaxFactor = 40.0
-            
-        self.sigmaMax = sigmaMaxFactor*self.dx   # Widest peak to be detected
-
-        if 'minAmpl' in kwargs:
-            self.minAmpl = float(kwargs['minAmpl'])
-        else:
-            self.minAmpl = 0.01
-    
-        if 'factor' in kwargs:
-            self.factor = float(kwargs['factor'])
-        else:
-            self.factor = 1.1
-
+        self.sleep_seconds = None
         if 'sleep_seconds' in kwargs:
-            self.sleep_seconds = float(kwargs['sleep_seconds'])
-        else:
+            if kwargs['sleep_seconds']:
+                self.sleep_seconds = float(kwargs['sleep_seconds'])
+        if self.sleep_seconds == None:
             self.sleep_seconds = 30.0
 
-        if 'url' in kwargs:
-            self.url = kwargs['url']
-        else:
-            self.url = 'http://p3.picarro.com/pcubed/rest/getData/'
-
+        self.timeout = None
         if 'timeout' in kwargs:
-            self.timeout = int(kwargs['timeout'])
-        else:
+            if kwargs['timeout']:
+                self.timeout = int(kwargs['timeout'])
+        if self.timeout == None:
             self.timeout = 5
-
-        if 'sleep_seconds' in kwargs:
-            self.sleep_seconds = float(kwargs['sleep_seconds'])
-        else:
-            self.sleep_seconds = 30.0
 
         self.debug = None
         if 'debug' in kwargs:
             self.debug = kwargs['debug']
             
+        self.dx = None
+        if 'dx' in kwargs:
+            if kwargs['dx']:
+                self.dx = float(kwargs['dx'])
+        if self.dx == None:
+            self.dx = 1.0
+        
+    
+        sigmaMinFactor = None
+        if 'sigmaMinFactor' in kwargs:
+            if kwargs['sigmaMinFactor']:
+                sigmaMinFactor = float(kwargs['sigmaMinFactor'])
+        if sigmaMinFactor == None:
+            sigmaMinFactor = 2.0
+    
+        self.sigmaMin = sigmaMinFactor*self.dx
+    
+        sigmaMaxFactor = None
+        if 'sigmaMaxFactor' in kwargs:
+            if kwargs['sigmaMaxFactor']:
+                sigmaMaxFactor = float(kwargs['sigmaMaxFactor'])
+        if sigmaMaxFactor == None:
+            sigmaMaxFactor = 20.0
+            
+        self.sigmaMax = sigmaMaxFactor*self.dx   # Widest peak to be detected
+
+        self.minAmpl = 0.01
+        if 'minAmpl' in kwargs:
+            if kwargs['minAmpl']:
+                self.minAmpl = float(kwargs['minAmpl'])
+        if self.minAmpl == None:
+            self.minAmpl = 0.01
+    
+        self.factor = None
+        if 'factor' in kwargs:
+            if kwargs['factor']:
+                self.factor = float(kwargs['factor'])
+        if self.factor == None:
+            self.factor = 1.1
+
         self.noWait = 'nowait' in kwargs
         self.logtype = "peaks"
-        
+        self.last_peakname = None
+        self.sockettimeout = 10
+                
     #######################################################################
     # Generators for getting data from files or the database
     #######################################################################
@@ -329,7 +334,6 @@ class PeakFinder(object):
             lastPos = 0
             rtn_data = None
             
-            tctr = 0
             waitForRetryCtr = 0
             waitForRetry = True
             while True:
@@ -341,7 +345,7 @@ class PeakFinder(object):
                     if self.debug == True:
                         print "qry_with_ticket", qry_with_ticket
                 
-                    socket.setdefaulttimeout(self.timeout)
+                    socket.setdefaulttimeout(self.sockettimeout)
                     resp = urllib2.urlopen(qry_with_ticket)
                     #resp = urllib2.urlopen(getAnalyzerDatLogUrl, data=urllib.urlencode(postparms))
                     rtn_data = resp.read()
@@ -391,7 +395,6 @@ class PeakFinder(object):
                             print "\r\nClosing log stream\r\n"
                             return
                 else:
-                    tctr += 1
                     if waitForRetry:
                         time.sleep(self.timeout)
                         
@@ -404,7 +407,6 @@ class PeakFinder(object):
         lastlog = None
         rtn_data = None
         
-        tctr = 0
         waitForRetryCtr = 0
         waitForRetry = True
         while True:
@@ -413,7 +415,7 @@ class PeakFinder(object):
                 if self.debug == True:
                     print "getLastLog() qry_with_ticket", qry_with_ticket
                 
-                socket.setdefaulttimeout(self.timeout)
+                socket.setdefaulttimeout(self.sockettimeout)
                 resp = urllib2.urlopen(qry_with_ticket)
                 rtn_data = resp.read()
                 
@@ -453,7 +455,6 @@ class PeakFinder(object):
                 print '\ngetLastLog failed \n%s\n' % "No LOGNAME found"
                 time.sleep(2)
             
-            tctr += 1
             if waitForRetry:
                 time.sleep(self.timeout)
                 
@@ -467,8 +468,16 @@ class PeakFinder(object):
     def pushData(self, peakname, doc_data):
         err_rtn_str = 'ERROR: missing data:'
         rtn = "OK"
-        if doc_data: 
-            params = [{"logname": peakname, "replace": False, "logtype": self.logtype, "logdata": doc_data}]
+        if doc_data:
+            # we want to replace (which removed old data for the log)
+            # when we have a new log
+            # but only for the very first push
+            replace_log = "False"
+            if not self.last_peakname == peakname:
+                replace_log = "True"
+                self.last_peakname = peakname
+                
+            params = [{"logname": peakname, "replace": replace_log, "logtype": self.logtype, "logdata": doc_data}]
             if self.debug == True:
                 print "params: ", params
         else: 
@@ -476,7 +485,12 @@ class PeakFinder(object):
             
         postparms = {'data': json.dumps(params)}
         
-        tctr = 0
+        # Normally we will wait for a timeout period before retrying the urlopen
+        # However, after an expired ticket error, we want to immediately retry
+        # BUT, we do not want to skip the timeout forever (even with an invalid ticket)
+        # So we instantiate a retry counter, and only skip timeout when the 
+        # counter is < 100.  After that, we will continue to retry forever, but 
+        # WITH a timeout between retry events.        
         waitForRetryCtr = 0
         waitForRetry = True
         
@@ -484,7 +498,7 @@ class PeakFinder(object):
             try:
                 # NOTE: socket only required to set timeout parameter for the urlopen()
                 # In Python26 and beyond we can use the timeout parameter in the urlopen()
-                socket.setdefaulttimeout(self.timeout)
+                socket.setdefaulttimeout(self.sockettimeout)
 
                 myDat = urllib.urlencode(postparms)
                 push_with_ticket = self.anzlog_url.replace("<TICKET>", self.ticket)
@@ -521,7 +535,6 @@ class PeakFinder(object):
                 print 'EXCEPTION in pushData\n%s\n' % e
                 pass
 
-            tctr += 1
             if waitForRetry:
                 time.sleep(self.timeout)
                 
@@ -542,6 +555,7 @@ class PeakFinder(object):
         dist = None
         lat_ref, lng_ref = None, None
         DataTuple = None
+        x0, y0 = 0, 0
         # Determine if there are extra data in the file
         for line in source:
             try:
@@ -590,6 +604,7 @@ class PeakFinder(object):
         atoms = line.split()
         headings = [a.replace(" ","_") for a in atoms]
         DataTuple = namedtuple("DataTuple",["DISTANCE"] + headings)
+        x0, y0 = 0, 0
         for line in source:
             try:
                 entry = {}
@@ -661,15 +676,16 @@ class PeakFinder(object):
         #  is generated
         hmax = hList[-1]
         npoints = 2*hmax+4
-        def checkPeak(level,pos):
+        def checkPeak(level,pos,minAmpl=0.003):
             """Checks if the specified location in the ssbuff array is a peak
             relative to its eight neighbors"""
             col = pos % npoints
+            v = ssbuff[level,col]
+            if v<minAmpl: return False,0
             colp = col + 1
             if colp>=npoints: colp -= npoints
             colm = col - 1
             if colm<0: colm += npoints
-            v = ssbuff[level,col]
             isPeak = (v>ssbuff[level+1,colp]) and (v>ssbuff[level+1,col]) and (v>ssbuff[level+1,colm]) and \
                      (v>ssbuff[level,colp])   and (v>ssbuff[level,colm])  and \
                      (level==0 or ((v>ssbuff[level-1,colp]) and (v>ssbuff[level-1,col]) and (v>ssbuff[level-1,colm])))
@@ -700,6 +716,7 @@ class PeakFinder(object):
                 PeakTuple = namedtuple("PeakTuple",data._fields + ("AMPLITUDE","SIGMA"))
 
             cache[:,c] = data
+            etmIndex  = list(data._fields).index('EPOCH_TIME')
             distIndex  = list(data._fields).index('DISTANCE')
             valveIndex = list(data._fields).index('ValveMask')
             # Zero out the old data
@@ -722,14 +739,27 @@ class PeakFinder(object):
                     # Check if we have found a peak in space-scale representation
                     # If so, add it to a list of peaks which are stored as tuples
                     #  of the form (dist,*dataTuple,amplitude,sigma)
-                    isPeak,col = checkPeak(i-1,c-hList[i]-1)
+                    isPeak,col = checkPeak(i-1,c-hList[i]-1,minAmpl=self.minAmpl*2.0*3.0**(-1.5))
                     if isPeak and cache[distIndex,col]>0.0:
-                        # A peak is disqualified if the valve settings in an interval before the 
+                        # A peak is disqualified if the valves in an interval before the 
                         #  peak arrives were in the collecting state. This means that the tape recorder
                         #  was on, and the peak was a replay of a previously collected one
                         reject = False
                         if valveIndex >= 0:
-                            coll= collecting(mean([cache[valveIndex,j%npoints] for j in range(col-5,col+1)]))
+                            coll = False
+                            # Determine if the instrument was in analyzing mode at any time
+                            #  during the past 10s or distance 200*dx. If so coll is set True
+                            #  to disable the peak being recorded.
+                            j = col
+                            pkTime = cache[etmIndex,col%npoints]
+                            while j>col-200:
+                                if collecting(cache[valveIndex,j%npoints]): 
+                                    coll=True
+                                    break
+                                if pkTime-cache[etmIndex,j%npoints]>10.0:
+                                    break
+                                j -= 1
+                            # print "Time: %10s, Dist: %.2f, col: %d, ampl: %s, scale: %s" % (cache[7,col],cache[distIndex,col],col,ssbuff[i-1,col],sqrt(0.5*scaleList[i-1]))
                             inact = inactive(cache[valveIndex,col%npoints])
                             reject = (coll or inact)
                         if not reject:
@@ -904,7 +934,7 @@ def main(argv=None):
                       help="Search path for constant updates.", metavar="<LISTEN_PATH>")
     parser.add_option("-f", "--file-path", dest="file_path",
                       help="path to specific file to upload.", metavar="<FILE_PATH>")
-    parser.add_option("-a", "--analyzer", dest="analyzer",
+    parser.add_option("-a", "--analyzer", dest="analyzerId",
                       help="Analyzer Name.", metavar="<ANALYZER>")
     parser.add_option("-g", "--logname", dest="logname",
                       help="Log Name.", metavar="<LOGNAME>")
@@ -922,13 +952,23 @@ def main(argv=None):
                       help="Authentication sys.", metavar="<SYS>")
     parser.add_option("-d", "--debug", dest="debug", action="store_true",
                       help="Debug mode")
+    parser.add_option("--calc-dx", dest="dx",
+                      help="Default calc value for dx.", metavar="<CALC_dx>")
+    parser.add_option("--calc-sigmaMinFactor", dest="sigmaMinFactor",
+                      help="Default calc value for sigmaMinFactor.", metavar="<CALC_sigmaMinFactor>")
+    parser.add_option("--calc-sigmaMaxFactor", dest="sigmaMaxFactor",
+                      help="Default calc value for sigmaMaxFactor.", metavar="<CALC_sigmaMaxFactor>")
+    parser.add_option("--calc-minAmpl", dest="minAmpl",
+                      help="Default calc value for minAmpl.", metavar="<CALC_minAmpl>")
+    parser.add_option("--calc-factor", dest="factor",
+                      help="Default calc value for factor.", metavar="<CALC_factor>")
     
     (options, args) = parser.parse_args()
 
     if not options.pid_path:
         parser.error("pid-path is required")
 
-    if not options.analyzer:
+    if not options.analyzerId:
         if not options.logname:
             if not options.file_path:
                 parser.error("One of analyzer, or logname, or file_path is required.")
@@ -950,127 +990,74 @@ def main(argv=None):
             parser.error("Authentication identity string is required when other REST url's are provided.")
         if not options.psys:
             parser.error("Authentication sys name is required when other REST url's are provided.")
-        
-    if options.pid_path:
-        pid_path = options.pid_path
-    else:
-        pid_path = None
-        
-    if options.listen_path:
-        listen_path = options.listen_path
-    else:
-        listen_path = None
-        
-    if options.file_path:
-        file_path = options.file_path
-    else:
-        file_path = None
-
-    if options.analyzer:
-        analyzer = options.analyzer
-    else:
-        analyzer = None
-        
-    if options.logname:
-        logname = options.logname
-    else:
-        logname = None
-
-    if options.timeout:
-        timeout = options.timeout
-        timeout = int(timeout)
-    else:
-        timeout = 10
-
-    usedb = False
-    if options.anzlog_url:
-        anzlog_url = options.anzlog_url
-        usedb = True
-    else:
-        anzlog_url = None #'https://dev.picarro.com/node/gdu/<TICKET>/1/AnzLog/'
-
-    if options.meta_url:
-        meta_url = options.meta_url
-    else:
-        meta_url = None #'https://dev.picarro.com/node/gdu/<TICKET>/1/AnzLog/'
-
-    if options.ticket_url:
-        ticket_url = options.ticket_url
-    else:
-        ticket_url = None #'https://dev.picarro.com/node/gdu/dummy/1/Admin/'
-
-    if options.psys:
-        psys = options.psys
-    else:
-        psys = None
-
-    if options.identity:
-        identity = options.identity
-    else:
-        identity = None
-        
-    debug = False
-    if options.debug:
-        debug = True
-
-    if not analyzer:
-        if logname:
-            fbase = logname
+    
+    class_opts = {}
+    
+    for copt in [
+                 "pid_path"         #path for PID file
+                 , "analyzerId"     #Analyzer ID
+                 , "anzlog_url"     #URL for AnzLog resource
+                 , "meta_url"       #URL for AnzLogMeta resource
+                 , "ticket_url"     #URL for Admin (issueTicket) resource
+                 , "logname"        #logname (when processing single log)
+                 , "identity"       #identity (authentication)
+                 , "psys"           #picarro sys (authentication)
+                 , "usedb"          #True/False use REST DB calls (instead of file system)
+                 , "listen_path"    #listen path (when processing file system)
+                 , "file_path"      #file path (when procesing single log from file system)
+                 , "dx"             #override default dx value
+                 , "sigmaMinFactor" #override default sigmaMinFactor value
+                 , "sigmaMaxFactor" #override default sigmaMaxFactor value
+                 , "factor"         #override default factor value
+                 , "minAmpl"        #override default minAmpl value
+                 , "sleep_seconds"  #override default sleep_seconds value
+                 , "timeout"        #override default REST timeout value
+                 , "debug"          #True/False show debug print (in stdout)
+                 ]:
+        if copt in dir(options):
+            class_opts[copt] = getattr(options, copt)
         else:
-            if file_path:
-                fbase = os.path.basename(file_path)
+            class_opts[copt] = None
+    
+    if class_opts["anzlog_url"]:
+        class_opts["usedb"] = True
+    else:
+        class_opts["usedb"] = False
+        
+    if not class_opts["analyzerId"]:
+        if class_opts["logname"]:
+            fbase = class_opts["logname"]
+        else:
+            if class_opts["file_path"]:
+                fbase = os.path.basename(class_opts["file_path"])
         
         if fbase:         
-            analyzer, sep, part = fbase.partition('-')
+            class_opts["analyzerId"], sep, part = fbase.partition('-')
         else:
             parser.error("Analyzer Name not provided, and could not be determined from logname or file-path.")
-
-
-    print "pid_path", pid_path
-    print "listen_path", listen_path
-    print "file_path", file_path
-    print "usedb (computed)", usedb
-    print "analyzer", analyzer
-    print "logname", logname
-    print "timeout", timeout
-    print "anzlog_url", anzlog_url
-    print "meta_url", meta_url
-    print "ticket_url", ticket_url
-    print "identity", identity
-    print "psys", psys
-    print "debug", debug
-
+    
+    for copt in class_opts:
+        print copt, class_opts[copt]
+            
     try:
-        testf = open(pid_path, 'r')
-        raise RuntimeError('pidfile exists. Verify that there is not another peakFinder task for the directory. path: %s.' % data_dir)
+        testf = open(class_opts["pid_path"], 'r')
+        testf.close()
+        raise RuntimeError('pidfile exists. Verify that there is not another PeakFinder task for the directory. path: %s.' % class_opts["pid_path"])
     except:
         try:
-            pidf = open(pid_path, 'wb+', 0) #open file with NO buffering
+            pidf = open(class_opts["pid_path"], 'wb+', 0) #open file with NO buffering
         except:
-            raise RuntimeError('Cannot open pidfile for output. path: %s.' % pid_path)
+            raise RuntimeError('Cannot open pidfile for output. path: %s.' % class_opts["pid_path"])
     
     pid = os.getpid()
     pidf.write("%s" % (pid))
     pidf.close()
     
-    pf = PeakFinder(analyzerId=analyzer
-                    , listen_path=listen_path
-                    , file_path=file_path
-                    , logname=logname
-                    , anzlog_url=anzlog_url
-                    , meta_url=meta_url
-                    , ticket_url=ticket_url
-                    , identity=identity
-                    , psys=psys
-                    , usedb=usedb
-                    , timeout=timeout
-                    , debug=debug
-                    )
+    pf = PeakFinder(**class_opts)
     
     pf.run()
-    os.remove(pid_path)
+    os.remove(class_opts["pid_path"])
 
 
 if __name__ == "__main__":
     sys.exit(main())
-    

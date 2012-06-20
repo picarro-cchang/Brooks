@@ -1,11 +1,13 @@
 import os
 import sys
+import threading
+
 from PeakAnalyzer import PeakAnalyzer
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_PEAK_ANALYZER
+from Host.Common import CmdFIFO
 
 def getLocalAnalyzerId():
     try:
-        import CmdFIFO
-        RPC_PORT_DRIVER = 50010
         CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "RunPeakAnalyzer")
         curValDict = CRDS_Driver.fetchLogicEEPROM()[0]
         localAnalyzerId = curValDict["Analyzer"]+curValDict["AnalyzerNum"]
@@ -14,10 +16,7 @@ def getLocalAnalyzerId():
         localAnalyzerId = None
     return localAnalyzerId
     
-if __name__ == "__main__":
-    AppPath = sys.argv[0]
-    AppDir = os.path.split(AppPath)[0]
-    
+def appMain():
     localAnalyzerId = getLocalAnalyzerId()
     if localAnalyzerId:
         # Local
@@ -41,6 +40,7 @@ if __name__ == "__main__":
         pidpath = os.path.join(data_dir, 'peakAnalyzerMain.pid') 
         try:
             testf = open(pidpath, 'r')
+            testf.close()
             raise RuntimeError('pidfile exists. Verify that there is not another peakFinderMain task for the directory. path: %s.' % data_dir)
         except:
             try:
@@ -60,3 +60,25 @@ if __name__ == "__main__":
 
     if not localAnalyzerId:
         os.remove(pidpath)
+        
+ 
+def main():
+    th = threading.Thread(target=appMain)
+    th.setDaemon(True)
+    th.start()
+    rpcServer = CmdFIFO.CmdFIFOServer(("",RPC_PORT_PEAK_ANALYZER),
+                                       ServerName="PeakAnalyzer",
+                                       ServerDescription="PeakAnalyzer",
+                                       ServerVersion="1.0",
+                                       threaded=True)
+    try:
+        while True:
+            rpcServer.daemon.handleRequests(0.5)
+            if not th.isAlive(): break
+        print "Supervised PeakAnalyzer died"
+    except:
+        print "CmdFIFO stopped"
+                    
+if __name__ == '__main__':
+    main()
+        

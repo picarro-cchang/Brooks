@@ -42,7 +42,7 @@ else:
 appDir = os.path.split(appPath)[0]
 
 # configuration
-DEBUG = True
+DEBUG = False
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
@@ -552,5 +552,5 @@ def test():
 
     
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=5000,debug=True)
+    app.run(host='0.0.0.0',port=5000,debug=DEBUG)
     

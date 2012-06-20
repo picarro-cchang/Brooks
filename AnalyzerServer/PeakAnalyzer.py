@@ -1,13 +1,14 @@
 from collections import deque
 import fnmatch
-import itertools
 from numpy import *
 import scipy.stats
 import os
 import sys
+from optparse import OptionParser
 import time
+import datetime
 import traceback
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 
 import urllib2
 import urllib
@@ -146,48 +147,80 @@ class PeakAnalyzer(object):
                 AppPath = sys.argv[0]
             self.AppDir = os.path.split(AppPath)[0]
 
-        if 'userlogfiles' in kwargs:
-            self.userlogfiles = kwargs['userlogfiles']
-        else:
-            self.userlogfiles = '/data/mdudata/datalogAdd/*.dat'
+        self.anzlog_url = None    
+        if 'anzlog_url' in kwargs:
+            self.anzlog_url = kwargs['anzlog_url']
 
-        if 'sleep_seconds' in kwargs:
-            self.sleep_seconds = float(kwargs['sleep_seconds'])
-        else:
-            self.sleep_seconds = 30.0
-            
-        if 'url' in kwargs:
-            self.url = kwargs['url']
-        else:
-            self.url = 'http://p3.picarro.com/pcubed/rest/getData/'
+        self.logname = None
+        if 'logname' in kwargs:
+            self.logname = kwargs['logname']
 
-        if 'timeout' in kwargs:
-            self.timeout = int(kwargs['timeout'])
-        else:
-            self.timeout = 5
+        self.meta_url = None    
+        if 'meta_url' in kwargs:
+            self.meta_url = kwargs['meta_url']
 
-        if 'sleep_seconds' in kwargs:
-            self.sleep_seconds = float(kwargs['sleep_seconds'])
-        else:
-            self.sleep_seconds = 30.0
+        self.ticket_url = None    
+        if 'ticket_url' in kwargs:
+            self.ticket_url = kwargs['ticket_url']
+        #if not self.ticket_url:
+        #    self.ticket_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
+        
+        self.identity = None
+        if 'identity' in kwargs:
+            self.identity = kwargs['identity']
+
+        self.psys = None
+        if 'psys' in kwargs:
+            self.psys = kwargs['psys']
 
         if 'usedb' in kwargs:
             self.usedb = kwargs['usedb']
         else:
             self.usedb = None
             
+        self.ticket = "NONE"
+        self.startTime = datetime.datetime.now()
+        self.lastEtm = 0.0
+
+        self.listen_path = None
+        if 'listen_path' in kwargs:
+            self.listen_path = kwargs['listen_path']
+        self.userlogfiles = self.listen_path
+
+        self.file_path = None
+        if 'file_path' in kwargs:
+            self.file_path = kwargs['file_path']
+
+        self.sleep_seconds = None
+        if 'sleep_seconds' in kwargs:
+            if kwargs['sleep_seconds']:
+                self.sleep_seconds = float(kwargs['sleep_seconds'])
+        if self.sleep_seconds == None:
+            self.sleep_seconds = 30.0
+
+        self.timeout = None
+        if 'timeout' in kwargs:
+            if kwargs['timeout']:
+                self.timeout = int(kwargs['timeout'])
+        if self.timeout == None:
+            self.timeout = 5
+
+        self.debug = None
         if 'debug' in kwargs:
             self.debug = kwargs['debug']
-        else:
-            self.debug = None
             
-        self.noWait = 'nowait' in kwargs
-
+            
+        self.samples_to_skip = None
         if 'samples_to_skip' in kwargs:
-            self.samples_to_skip = int(kwargs['samples_to_skip'])
-        else:
+            if kwargs['samples_to_skip']:
+                self.samples_to_skip = int(kwargs['samples_to_skip'])
+        if self.samples_to_skip == None:
             self.samples_to_skip = 8
-        
+
+        self.noWait = 'nowait' in kwargs
+        self.logtype = "analysis"
+        self.last_peakname = None
+        self.sockettimeout = 10
     #######################################################################
     # Generators for getting data from files or the database
     #######################################################################
@@ -206,6 +239,7 @@ class PeakAnalyzer(object):
         #  we are still the latest file. Raise StopIteration if a new file has become
         #  the live file.
         fp = file(fname,'rb')
+        print "\r\nOpening source stream %s\r\n" % fname
         counter = 0
         while True:
             line = fp.readline()
@@ -214,6 +248,11 @@ class PeakAnalyzer(object):
                 if counter == 10:
                     try:
                         # Get last file
+                        if fname == os.path.join(self.file_path):
+                            fp.close()
+                            print "\r\nClosing source stream %s\r\n" % self.fname
+                            return
+                        
                         lastName = genLatestFiles(*os.path.split(self.userlogfiles)).next()
                         # Stop iteration if we are not the last file
                         if fname != lastName: 
@@ -231,70 +270,141 @@ class PeakAnalyzer(object):
 
     def followLastUserLogDb(self):
         aname = self.analyzerId
-        lastlog = self.getLastLog()  
+        if self.logname:
+            lastlog = self.logname
+        else:
+            lastlog = self.getLastLog()
+            
         if lastlog:
             lastPos = 0
+            rtn_data = None
+            
+            waitForRetryCtr = 0
+            waitForRetry = True
             while True:
-                params = {"alog": lastlog, "startPos": lastPos, "limit": 20}
-                postparms = {'data': json.dumps(params)}
-                getAnalyzerDatLogUrl = self.url.replace("getData", "getAnalyzerDatLog")
+                #params = {"alog": lastlog, "startPos": lastPos, "limit": 20}
+                #postparms = {'data': json.dumps(params)}
+                #getAnalyzerDatLogUrl = self.url.replace("getData", "getAnalyzerDatLog")
                 try:
-                    socket.setdefaulttimeout(self.timeout)
-                    resp = urllib2.urlopen(getAnalyzerDatLogUrl, data=urllib.urlencode(postparms))
+                    qry_with_ticket = '%s?qry=byPos&alog=%s&startPos=%s&limit=20' % (self.anzlog_url.replace("<TICKET>", self.ticket), lastlog, lastPos)
+                    if self.debug == True:
+                        print "qry_with_ticket", qry_with_ticket
+                
+                    socket.setdefaulttimeout(self.sockettimeout)
+                    resp = urllib2.urlopen(qry_with_ticket)
+                    #resp = urllib2.urlopen(getAnalyzerDatLogUrl, data=urllib.urlencode(postparms))
                     rtn_data = resp.read()
-                except:
+
+                except urllib2.HTTPError, e:
+                    err_str = e.read()
+                    if "invalid ticket" in err_str:
+                        if self.debug == True:
+                            print "We Have an invalid or expired ticket"
+                        self.getTicket()
+                        waitForRetryCtr += 1
+                        if waitForRetryCtr < 100:
+                            waitForRetry = None
+                        
+                    else:
+                        if "Log not found" in err_str:
+                            if self.logname == lastlog:
+                                print "\r\nLog complete. Closing log stream\r\n"
+                                return
+                        
+                        if self.debug == True:
+                            print 'EXCEPTION in PeakFinder - followLastUserLogDb().\n%s\n' % err_str
+                        pass
+                    
+                except Exception, e:
+                    print '\nfollowLastUserLogDb failed \n%s\n' % e
                     time.sleep(1)
                     continue
-                rslt = json.loads(rtn_data)
-                if "result" in rslt:
-                    if "data" in rslt["result"]:
-                        dbdata = rslt["result"]["data"]
-                        if len(dbdata) > 0:
-                            for doc in dbdata:
-                                if "row" in doc:
-                                    lastPos = int(doc["row"]) + 1
-                                yield doc
-                        else:
-                            time.sleep(5)
-                            newlastlog = self.getLastLog()
-                            if not lastlog == newlastlog:
-                                print "\r\nClosing log stream\r\n"
-                                return
+                
+                if (rtn_data):
+                    rslt = json.loads(rtn_data)
+                    #print "followLastUserLogDb rslt: ", rslt
+                    dbdata = rslt
+                    if len(dbdata) > 0:
+                        for doc in dbdata:
+                            if "row" in doc:
+                                lastPos = int(doc["row"]) + 1
+                                
+                            if self.debug == True:
+                                print "doc: ", doc
+                                
+                            yield doc
                     else:
                         time.sleep(5)
                         newlastlog = self.getLastLog()
                         if not lastlog == newlastlog:
                             print "\r\nClosing log stream\r\n"
                             return
-                    time.sleep(1)
                 else:
-                    time.sleep(5)
-                    newlastlog = self.getLastLog()
-                    if not lastlog == newlastlog:
-                        print "\r\nClosing log stream\r\n"
-                        return
+                    if waitForRetry:
+                        time.sleep(self.timeout)
+                        
+                    waitForRetry = True
+                time.sleep(.050)
 
     def getLastLog(self):
         # Get the name of the live (last) log file from the database
         aname = self.analyzerId
         lastlog = None
-        params = {"analyzer": aname}
-        postparms = {'data': json.dumps(params)}
-        getLastLogUrl = self.url.replace("getData", "getLastLog")
+        rtn_data = None
+        
+        waitForRetryCtr = 0
+        waitForRetry = True
         while True:
             try:
-                socket.setdefaulttimeout(self.timeout)
-                resp = urllib2.urlopen(getLastLogUrl, data=urllib.urlencode(postparms))
+                qry_with_ticket = '%s?qry=byEpoch&anz=%s&startEtm=%s&limit=1&reverse=true' % (self.meta_url.replace("<TICKET>", self.ticket), self.analyzerId, self.lastEtm)
+                if self.debug == True:
+                    print "getLastLog() qry_with_ticket", qry_with_ticket
+                
+                socket.setdefaulttimeout(self.sockettimeout)
+                resp = urllib2.urlopen(qry_with_ticket)
                 rtn_data = resp.read()
-            except:
+                
+            except urllib2.HTTPError, e:
+                err_str = e.read()
+                if "invalid ticket" in err_str:
+                    if self.debug == True:
+                        print "We Have an invalid or expired ticket"
+                    self.getTicket()
+                    waitForRetryCtr += 1
+                    if waitForRetryCtr < 100:
+                        waitForRetry = None
+                    
+                else:
+                    if self.debug == True:
+                        print 'EXCEPTION in PeakFinder - getLastLog().\n%s\n' % err_str
+                    pass
+                
+            except Exception, e:
+                print '\ngetLastLog failed \n%s\n' % e
+                
                 time.sleep(2)
                 continue
-            rslt = json.loads(rtn_data)
-            if "result" in rslt:
-                if "lastLog" in rslt["result"]:
-                    lastlog = rslt["result"]["lastLog"]
-            return lastlog
-
+           
+            if (rtn_data):
+                rslt = json.loads(rtn_data)
+                if self.debug == True:
+                    print "rslt: ", rslt
+                
+                for robj in rslt:
+                    if robj["LOGNAME"]:
+                        lastlog = robj["LOGNAME"]
+                        if self.debug == True:
+                            print "lastlog found: ", lastlog
+                        return lastlog
+                
+                print '\ngetLastLog failed \n%s\n' % "No LOGNAME found"
+                time.sleep(2)
+            
+            if waitForRetry:
+                time.sleep(self.timeout)
+                
+            waitForRetry = True
+            
     #######################################################################
     # Perform REST call to push analysis data to the database
     #######################################################################
@@ -303,30 +413,77 @@ class PeakAnalyzer(object):
         err_rtn_str = 'ERROR: missing data:'
         rtn = "OK"
         if doc_data: 
-            params = {peakname: doc_data}
-        else:    
-            params = {peakname: []}
+            # we want to replace (which removed old data for the log)
+            # when we have a new log
+            # but only for the very first push
+            replace_log = "False"
+            if not self.last_peakname == peakname:
+                print "I should be doing a replace now"
+                replace_log = "True"
+                self.last_peakname = peakname
+            params = [{"logname": peakname, "replace": replace_log, "logtype": self.logtype, "logdata": doc_data}]
+            if self.debug == True:
+                print "params: ", params
+        else: 
+            return   
+            
         postparms = {'data': json.dumps(params)}
-        dataPeakAddUrl = self.url.replace("getData", "gdu/dataAnalysisAdd")
         
-        tctr = 0
+        # Normally we will wait for a timeout period before retrying the urlopen
+        # However, after an expired ticket error, we want to immediately retry
+        # BUT, we do not want to skip the timeout forever (even with an invalid ticket)
+        # So we instantiate a retry counter, and only skip timeout when the 
+        # counter is < 100.  After that, we will continue to retry forever, but 
+        # WITH a timeout between retry events.        
+        waitForRetryCtr = 0
+        waitForRetry = True
+        
         while True:
             try:
                 # NOTE: socket only required to set timeout parameter for the urlopen()
                 # In Python26 and beyond we can use the timeout parameter in the urlopen()
-                socket.setdefaulttimeout(self.timeout)
-                resp = urllib2.urlopen(dataPeakAddUrl, data=urllib.urlencode(postparms))
+                socket.setdefaulttimeout(self.sockettimeout)
+
+                myDat = urllib.urlencode(postparms)
+                push_with_ticket = self.anzlog_url.replace("<TICKET>", self.ticket)
+
+                resp = urllib2.urlopen(push_with_ticket, data=myDat)
                 rtn_data = resp.read()
-                print rtn_data
+                
+                if self.debug == True:
+                    print rtn_data
+                
                 if err_rtn_str in rtn_data:
                     rslt = json.loads(rtn_data)
                     expect_ctr = rslt['result'].replace(err_rtn_str, "").strip()
                     break
                 else:
                     break
+            
+            except urllib2.HTTPError, e:
+                err_str = e.read()
+                if "invalid ticket" in err_str:
+                    if self.debug == True:
+                        print "We Have an invalid or expired ticket"
+                    self.getTicket()
+                    waitForRetryCtr += 1
+                    if waitForRetryCtr < 100:
+                        waitForRetry = None
+                    
+                else:
+                    if self.debug == True:
+                        print 'Data EXCEPTION in pushData, send data to server.\n%s\n' % err_str
+                    pass
+                
             except Exception, e:
-                print '\n%s\n' % e
+                print 'EXCEPTION in pushData\n%s\n' % e
                 pass
+
+            if waitForRetry:
+                time.sleep(self.timeout)
+                
+            waitForRetry = True
+            
         return
             
     #######################################################################
@@ -342,17 +499,20 @@ class PeakAnalyzer(object):
         dist = None
         lat_ref, lng_ref = None, None
         DataTuple = None
+        x0, y0 = 0, 0
         # Determine if there are extra data in the file
         for line in source:
             try:
                 entry = {}
                 if DataTuple is None:
-                    DataTuple = namedtuple("DataTuple",line.keys())
+                    DataTuple = namedtuple("DataTuple",["DISTANCE"] + line.keys())
                 for  h in line.keys():
+                    #if h not in ["_id", "ANALYZER", "SERVER_HASH"]:
                     try:
                         entry[h] = float(line[h])
                     except:
                         entry[h] = NaN
+                            
                 lng, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
                 if lat_ref == None or lng_ref == None:
                     lng_ref, lat_ref = lat, lng
@@ -365,9 +525,13 @@ class PeakAnalyzer(object):
                     dist += jump
                 x0, y0 = x, y
                 if jump < JUMP_MAX:
-                    yield dist,DataTuple(**entry)
+                    if self.debug == True:
+                        print "\ndist: ", dist
+                        print "\nentry: ", entry
+                        
+                    yield DataTuple(dist,**entry)
                 else:
-                    yield None,None    # Indicate that dist is bad, and we must restart
+                    yield None      # Indicate that dist are bad, and we must restart
                     dist = None
                     lat_ref, lng_ref = None, None
             except:
@@ -384,6 +548,7 @@ class PeakAnalyzer(object):
         atoms = line.split()
         headings = [a.replace(" ","_") for a in atoms]
         DataTuple = namedtuple("DataTuple",["DISTANCE"] + headings)
+        x0, y0 = 0, 0
         for line in source:
             try:
                 entry = {}
@@ -471,22 +636,61 @@ class PeakAnalyzer(object):
                         tempStore.clear()
             lastCollecting = collectingNow
                         
+    def getTicket(self):
+        self.ticket = None
+        ticket = None
+        qry = "issueTicket"
+        sys = self.psys
+        identity = self.identity
+        rprocs = '["AnzLogMeta:byEpoch", "AnzLog:data", "AnzLog:byPos"]'
+        
+        params = {"qry": qry, "sys": sys, "identity": identity, "rprocs": rprocs}
+        try:
+            print "ticket_url", self.ticket_url
+            resp = urllib2.urlopen(self.ticket_url, data=urllib.urlencode(params))
+            rtndata_str = resp.read()
+            rtndata = json.loads(rtndata_str)
+            if "ticket" in rtndata:
+                ticket = rtndata["ticket"]
+
+        except urllib2.HTTPError, e:
+            err_str = e.read()
+            print '\nissueTicket failed \n%s\n' % err_str
+                
+        except Exception, e:
+            print '\nissueTicket failed \n%s\n' % e
+
+        if ticket:
+            self.ticket = ticket;
+            print "new ticket: ", self.ticket
+        
+
     def run(self):
         # Assemble the chain of generators which process the data from the logs in a file or in the database 
         handle = None
         while True:
             # Get source
             if self.usedb:
-                lastlog = self.getLastLog()  
+                if self.logname:
+                    lastlog = self.logname
+                else:
+                    lastlog = self.getLastLog()
+                      
                 if lastlog:
                     fname = lastlog
                 else:
                     fname = None
                     time.sleep(self.sleep_seconds)
                     print "No files to process: sleeping for %s seconds" % self.sleep_seconds
+                    
+                ##sys.exit()
             else:
                 try:
-                    fname = genLatestFiles(*os.path.split(self.userlogfiles)).next()
+                    if self.file_path:
+                        fname = os.path.join(self.file_path)
+                    else:
+                        fname = genLatestFiles(*os.path.split(self.userlogfiles)).next()
+
                 except:
                     fname = None
                     time.sleep(self.sleep_seconds)
@@ -495,7 +699,7 @@ class PeakAnalyzer(object):
             if fname:
                 # Initialize output structure for writing to database or to analysis file
                 if self.usedb:
-                    peakname = fname.replace(".dat", ".peaks")
+                    peakname = fname.replace(".dat", ".%s" % self.logtype)
                     doc_hdrs = ["EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY"]
                     doc_data = []
                     doc_row = 0
@@ -526,6 +730,16 @@ class PeakAnalyzer(object):
                         #Note: please assure that value list and doc_hdrs are in the same sequence
                         for col, val in zip(doc_hdrs, [r.time,r.dist,r.lng,r.lat,r.conc,r.delta,r.uncertainty]):
                             doc[col] = float(val)
+
+                            # JSON does not support nan, so change to string "NaN"
+                            # The server will handle appropriately
+                            try:
+                                if math.isnan(doc[col]):
+                                    doc[col] = "NaN"
+                            except:
+                                #just skip on isnan error
+                                skip = 1
+                            
                         doc_row += 1
                         doc["row"] = doc_row 
                         doc["ANALYZER"] = self.analyzerId
@@ -539,69 +753,136 @@ class PeakAnalyzer(object):
                 if not self.usedb and handle is not None:
                     handle.close()
 
+                if self.logname:
+                    break
+                
                 if self.noWait: break
 
-if __name__ == "__main__":
-
-    '''
-    if hasattr(sys, "frozen"): #we're running compiled with py2exe
-        AppPath = sys.executable
-    else:
-        AppPath = sys.argv[0]
-    AppDir = os.path.split(AppPath)[0]
-    
-    USERLOGFILES = os.path.join(AppDir,'static/datalog/*.dat')
-    ANALYSISFILES = os.path.join(AppDir,'static/datalog/*.analysis')
-    '''
-
-    AppPath = sys.argv[0]
-    AppDir = os.path.split(AppPath)[0]
-    
-    if 1 < len(sys.argv):
-        analyzer = sys.argv[1]
-    else:
-        analyzer = 'ZZZ'
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
         
-    if 2 < len(sys.argv):
-        url=sys.argv[2]
-    else:
-        #url='http://p3.picarro.com/pcubed/rest/getData/'
-        url = 'http://10.100.2.97:8080/rest/getData/'
-        #url = 'http://192.168.2.104:8080/rest/getData/'
-        #url = 'http://10.0.1.13:8080/rest/getData/'
+    usage = "usage: %prog [options]"
+    parser = OptionParser(usage=usage)
+    parser.add_option("-p", "--pid-path", dest="pid_path",
+                      help="path to specific pid (to test for running process).", metavar="<PID_PATH>")
+    parser.add_option("-l", "--listen-path", dest="listen_path",
+                      help="Search path for constant updates.", metavar="<LISTEN_PATH>")
+    parser.add_option("-f", "--file-path", dest="file_path",
+                      help="path to specific file to upload.", metavar="<FILE_PATH>")
+    parser.add_option("-a", "--analyzer", dest="analyzerId",
+                      help="Analyzer Name.", metavar="<ANALYZER>")
+    parser.add_option("-g", "--logname", dest="logname",
+                      help="Log Name.", metavar="<LOGNAME>")
+    parser.add_option("-t", "--timeout", dest="timeout",
+                      help="timeout value for response from server.", metavar="<TIMEOUT>")
+    parser.add_option("-u", "--anzlog-url", dest="anzlog_url",
+                      help="rest url for AnzLog Resource. Use the string <TICKET> as the place-holder for the authentication ticket.", metavar="<LOG_URL>")
+    parser.add_option("-m", "--meta-url", dest="meta_url",
+                      help="rest url for AnzLogMeta Resource. Use the string <TICKET> as the place-holder for the authentication ticket.", metavar="<META_URL>")
+    parser.add_option("-k", "--ticket-url", dest="ticket_url",
+                      help="rest url for authentication ticket. Use the string 'dummy' as the place-holder for the authentication ticket.",  metavar="<TICKET_URL>")
+    parser.add_option("-y", "--identity", dest="identity",
+                      help="Authentication identity string.", metavar="<IDENTITY>")
+    parser.add_option("-s", "--sys", dest="psys",
+                      help="Authentication sys.", metavar="<SYS>")
+    parser.add_option("-d", "--debug", dest="debug", action="store_true",
+                      help="Debug mode")
+    parser.add_option("--calc-samples_to_skip", dest="samples_to_skip",
+                      help="Default calc value for samples_to_skip.", metavar="<CALC_samples_to_skip>")
+    
+    (options, args) = parser.parse_args()
+
+    if not options.pid_path:
+        parser.error("pid-path is required")
+
+    if not options.analyzerId:
+        if not options.logname:
+            if not options.file_path:
+                parser.error("One of analyzer, or logname, or file_path is required.")
+
+    if options.listen_path and options.file_path:
+        parser.error("listen-path and file-path are mutually exclusive.")
         
-    if 3 < len(sys.argv):
-        debug = sys.argv[3]
+    if ((options.listen_path or options.file_path) and options.anzlog_url):
+        parser.error("anzlog_url is mutually exclusive to listen-path and/or file-path.")    
+
+    if (options.logname or options.anzlog_url or options.meta_url or options.ticket_url or options.identity or options.psys):
+        if not options.anzlog_url:
+            parser.error("AnzLog Resource URL is required when other REST url's are provided.")
+        if not options.meta_url:
+            parser.error("AnzLogMeta Resource URL is required when other REST url's are provided.")
+        if not options.ticket_url:
+            parser.error("Authentication ticket Resource URL is required when other REST url's are provided.")
+        if not options.identity:
+            parser.error("Authentication identity string is required when other REST url's are provided.")
+        if not options.psys:
+            parser.error("Authentication sys name is required when other REST url's are provided.")
+        
+    class_opts = {}
+    
+    for copt in [
+                 "pid_path"         #path for PID file
+                 , "analyzerId"     #Analyzer ID
+                 , "anzlog_url"     #URL for AnzLog resource
+                 , "meta_url"       #URL for AnzLogMeta resource
+                 , "ticket_url"     #URL for Admin (issueTicket) resource
+                 , "logname"        #logname (when processing single log)
+                 , "identity"       #identity (authentication)
+                 , "psys"           #picarro sys (authentication)
+                 , "usedb"          #True/False use REST DB calls (instead of file system)
+                 , "listen_path"    #listen path (when processing file system)
+                 , "file_path"      #file path (when procesing single log from file system)
+                 , "samples_to_skip" #override default samples_to_skip value
+                 , "sleep_seconds"  #override default sleep_seconds value
+                 , "timeout"        #override default REST timeout value
+                 , "debug"          #True/False show debug print (in stdout)
+                 ]:
+        if copt in dir(options):
+            class_opts[copt] = getattr(options, copt)
+        else:
+            class_opts[copt] = None
+    
+    if class_opts["anzlog_url"]:
+        class_opts["usedb"] = True
     else:
-        debug = None
+        class_opts["usedb"] = False
+        
+    if not class_opts["analyzerId"]:
+        if class_opts["logname"]:
+            fbase = class_opts["logname"]
+        else:
+            if class_opts["file_path"]:
+                fbase = os.path.basename(class_opts["file_path"])
+        
+        if fbase:         
+            class_opts["analyzerId"], sep, part = fbase.partition('-')
+        else:
+            parser.error("Analyzer Name not provided, and could not be determined from logname or file-path.")
     
-    #data_dir = os.path.join('/data/mdudata/datalogAdd', analyzer) # P3 Server data location
-    data_dir = 'C:/UserData/AnalyzerServer' # local Analyzer data location
-    pidpath = os.path.join(data_dir, 'peakAnalyzerMain.pid')
-    
+    for copt in class_opts:
+        print copt, class_opts[copt]
+            
     try:
-        testf = open(pidpath, 'r')
-        raise RuntimeError('pidfile exists. Verify that there is not another peakAnalyzerMain task for the directory. path: %s.' % data_dir)
+        testf = open(class_opts["pid_path"], 'r')
+        testf.close()
+        raise RuntimeError('pidfile exists. Verify that there is not another PeakAnalyzer task for the directory. path: %s.' % class_opts["pid_path"])
     except:
         try:
-            pidf = open(pidpath, 'wb+', 0) #open file with NO buffering
+            pidf = open(class_opts["pid_path"], 'wb+', 0) #open file with NO buffering
         except:
-            raise RuntimeError('Cannot open pidfile for output. path: %s.' % pidpath)
+            raise RuntimeError('Cannot open pidfile for output. path: %s.' % class_opts["pid_path"])
     
     pid = os.getpid()
     pidf.write("%s" % (pid))
     pidf.close()
     
-    ulog = os.path.join(data_dir, '*.dat')
-    
-    pf = PeakAnalyzer()
-    pf.analyzerId = analyzer
-    pf.userlogfiles = ulog
-    pf.url = url
-    pf.debug = debug
-    pf.usedb = False
+    pf = PeakAnalyzer(**class_opts)
     
     pf.run()
-    
-    os.remove(pidpath)
-    
+    os.remove(class_opts["pid_path"])
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+

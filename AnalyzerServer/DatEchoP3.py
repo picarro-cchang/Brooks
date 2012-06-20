@@ -24,6 +24,10 @@ except:
 from ctypes import Structure, windll, sizeof
 from ctypes import POINTER, byref
 from ctypes import c_ulong, c_uint, c_ubyte, c_char
+import threading
+
+from Host.Common import CmdFIFO
+from Host.Common.SharedTypes import RPC_PORT_ECHO_P3_BASE, RPC_PORT_ECHO_P3_MAX
 
 NaN = 1e1000/1e1000
 
@@ -563,6 +567,8 @@ def main(argv=None):
                       help="Authentication sys.", metavar="<SYS>")
     parser.add_option("-r", "--replace", dest="replace", action="store_true",
                       help="replace this log in the server (Dangerous!!, use with caution. This will delete FIRST!).")
+    parser.add_option("-c", "--cmdfifo-port", dest="cport",
+                      help="Port for supervisor CmdFIFO ping", metavar="<CmdFIFO_PORT>")
     
     (options, args) = parser.parse_args()
     #if len(args) != 1:
@@ -635,6 +641,13 @@ def main(argv=None):
     else:
         replace = None
 
+    if options.cport:
+        cport = int(options.cport)
+    else:
+        cport = RPC_PORT_ECHO_P3_BASE
+    if cport<RPC_PORT_ECHO_P3_BASE or cport>RPC_PORT_ECHO_P3_MAX:
+        parser.error("CmdFIFO_port outside valid range")
+        
     print "listen_path", listen_path
     print "file_path", file_path
     print "ip_url", ip_url
@@ -645,7 +658,8 @@ def main(argv=None):
     print "timeout", timeout
     print "lines", lines
     print "logtype", logtype
-
+    print "CmdFIFO_port", cport
+    
     decho = DataEchoP3(listen_path=listen_path,
                        file_path=file_path,
                        ip_url=ip_url,
@@ -657,8 +671,23 @@ def main(argv=None):
                        lines=lines,
                        logtype=logtype,
                        replace=replace)
-    decho.run()
-
+    th = threading.Thread(target=decho.run)
+    th.setDaemon(True)
+    th.start()
+    rpcServer = CmdFIFO.CmdFIFOServer(("",cport),
+                                       ServerName="DatEchoP3",
+                                       ServerDescription="DatEchoP3",
+                                       ServerVersion="1.0",
+                                       threaded=True)
+    try:
+        while True:
+            rpcServer.daemon.handleRequests(0.5)
+            if not th.isAlive(): break
+        print "Supervised DatEchoP3 died"
+        return 1
+    except:
+        print "CmdFIFO stopped"
+        return 0
+        
 if __name__ == '__main__':
     sys.exit(main())
-
