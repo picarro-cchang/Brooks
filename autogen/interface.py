@@ -531,6 +531,7 @@ STREAM_ProcessedLoss1 = 34 #
 STREAM_ProcessedLoss2 = 35 # 
 STREAM_ProcessedLoss3 = 36 # 
 STREAM_ProcessedLoss4 = 37 # 
+STREAM_Flow1 = 38 # 
 
 # Dictionary for enumerated constants in STREAM_MemberType
 STREAM_MemberTypeDict = {}
@@ -572,6 +573,7 @@ STREAM_MemberTypeDict[34] = 'STREAM_ProcessedLoss1' #
 STREAM_MemberTypeDict[35] = 'STREAM_ProcessedLoss2' # 
 STREAM_MemberTypeDict[36] = 'STREAM_ProcessedLoss3' # 
 STREAM_MemberTypeDict[37] = 'STREAM_ProcessedLoss4' # 
+STREAM_MemberTypeDict[38] = 'STREAM_Flow1' # 
 
 # Enumerated definitions for TEMP_CNTRL_StateType
 TEMP_CNTRL_StateType = c_uint
@@ -887,6 +889,7 @@ HARDWARE_PRESENT_DasTempMonitorBit = 8 # Das Temp Monitor
 HARDWARE_PRESENT_AnalogInterface = 9 # Analog Interface
 HARDWARE_PRESENT_FiberAmplifierBit = 10 # Fiber Amplifier
 HARDWARE_PRESENT_FanCntrlDisabledBit = 11 # Fan Control Disabled
+HARDWARE_PRESENT_FlowSensorBit = 12 # Flow Sensor
 
 # Dictionary for enumerated constants in HARDWARE_PRESENT_BitType
 HARDWARE_PRESENT_BitTypeDict = {}
@@ -902,6 +905,7 @@ HARDWARE_PRESENT_BitTypeDict[8] = 'HARDWARE_PRESENT_DasTempMonitorBit' # Das Tem
 HARDWARE_PRESENT_BitTypeDict[9] = 'HARDWARE_PRESENT_AnalogInterface' # Analog Interface
 HARDWARE_PRESENT_BitTypeDict[10] = 'HARDWARE_PRESENT_FiberAmplifierBit' # Fiber Amplifier
 HARDWARE_PRESENT_BitTypeDict[11] = 'HARDWARE_PRESENT_FanCntrlDisabledBit' # Fan Control Disabled
+HARDWARE_PRESENT_BitTypeDict[12] = 'HARDWARE_PRESENT_FlowSensorBit' # Flow Sensor
 
 # Enumerated definitions for FLOAT_ARITHMETIC_OperatorType
 FLOAT_ARITHMETIC_OperatorType = c_uint
@@ -986,7 +990,7 @@ INJECTION_SETTINGS_virtualLaserShift = 2
 INJECTION_SETTINGS_lossTagShift = 5
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 434
+INTERFACE_NUMBER_OF_REGISTERS = 437
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1422,6 +1426,9 @@ PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER = 430
 PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER = 431
 PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER = 432
 PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER = 433
+FLOW1_REGISTER = 434
+CONVERSION_FLOW1_SCALE_REGISTER = 435
+CONVERSION_FLOW1_OFFSET_REGISTER = 436
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -1457,11 +1464,12 @@ i2cByIndex[24] = 'P11_THERMISTOR_ADC'
 i2cByIndex[25] = 'P3_THERMISTOR_ADC'
 i2cByIndex[26] = 'P12_THERMISTOR_ADC'
 i2cByIndex[27] = 'ENGINE_BOX_EEPROM'
-i2cByIndex[28] = 'DAS_TEMP_SENSOR'
-i2cByIndex[29] = 'VALVE_PUMP_TEC_PORT'
-i2cByIndex[30] = 'ANALOG_INTERFACE'
-i2cByIndex[31] = 'CHAIN0_MUX'
-i2cByIndex[32] = 'CHAIN1_MUX'
+i2cByIndex[28] = 'FLOW1_SENSOR'
+i2cByIndex[29] = 'DAS_TEMP_SENSOR'
+i2cByIndex[30] = 'VALVE_PUMP_TEC_PORT'
+i2cByIndex[31] = 'ANALOG_INTERFACE'
+i2cByIndex[32] = 'CHAIN0_MUX'
+i2cByIndex[33] = 'CHAIN1_MUX'
 
 #i2cByIdent tuple is (index,chain,mux,address)
 i2cByIdent = {}
@@ -1493,11 +1501,12 @@ i2cByIdent['P11_THERMISTOR_ADC'] = (24, 1, 4, 0x15)
 i2cByIdent['P3_THERMISTOR_ADC'] = (25, 1, 4, 0x24)
 i2cByIdent['P12_THERMISTOR_ADC'] = (26, 1, 4, 0x26)
 i2cByIdent['ENGINE_BOX_EEPROM'] = (27, 1, 4, 0x50)
-i2cByIdent['DAS_TEMP_SENSOR'] = (28, 0, -1, 0x4e)
-i2cByIdent['VALVE_PUMP_TEC_PORT'] = (29, 1, 4, 0x70)
-i2cByIdent['ANALOG_INTERFACE'] = (30, 0, 4, 0x10)
-i2cByIdent['CHAIN0_MUX'] = (31, 0, -1, 0x70)
-i2cByIdent['CHAIN1_MUX'] = (32, 1, -1, 0x71)
+i2cByIdent['FLOW1_SENSOR'] = (28, 1, 4, 0x49)
+i2cByIdent['DAS_TEMP_SENSOR'] = (29, 0, -1, 0x4e)
+i2cByIdent['VALVE_PUMP_TEC_PORT'] = (30, 1, 4, 0x70)
+i2cByIdent['ANALOG_INTERFACE'] = (31, 0, 4, 0x10)
+i2cByIdent['CHAIN0_MUX'] = (32, 0, -1, 0x70)
+i2cByIdent['CHAIN1_MUX'] = (33, 1, -1, 0x71)
 
 #I2C channel definitions
 I2C_LOGIC_EEPROM = 0
@@ -1528,11 +1537,12 @@ I2C_P11_THERMISTOR_ADC = 24
 I2C_P3_THERMISTOR_ADC = 25
 I2C_P12_THERMISTOR_ADC = 26
 I2C_ENGINE_BOX_EEPROM = 27
-I2C_DAS_TEMP_SENSOR = 28
-I2C_VALVE_PUMP_TEC_PORT = 29
-I2C_ANALOG_INTERFACE = 30
-I2C_CHAIN0_MUX = 31
-I2C_CHAIN1_MUX = 32
+I2C_FLOW1_SENSOR = 28
+I2C_DAS_TEMP_SENSOR = 29
+I2C_VALVE_PUMP_TEC_PORT = 30
+I2C_ANALOG_INTERFACE = 31
+I2C_CHAIN0_MUX = 32
+I2C_CHAIN1_MUX = 33
 
 
 registerByName["NOOP_REGISTER"] = NOOP_REGISTER
@@ -2403,6 +2413,12 @@ registerByName["PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER"] = PE
 registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
 registerByName["PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER
 registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["FLOW1_REGISTER"] = FLOW1_REGISTER
+registerInfo.append(RegInfo("FLOW1_REGISTER",c_float,0,1.0,"rw"))
+registerByName["CONVERSION_FLOW1_SCALE_REGISTER"] = CONVERSION_FLOW1_SCALE_REGISTER
+registerInfo.append(RegInfo("CONVERSION_FLOW1_SCALE_REGISTER",c_float,1,1.0,"rw"))
+registerByName["CONVERSION_FLOW1_OFFSET_REGISTER"] = CONVERSION_FLOW1_OFFSET_REGISTER
+registerInfo.append(RegInfo("CONVERSION_FLOW1_OFFSET_REGISTER",c_float,1,1.0,"rw"))
 
 # FPGA block definitions
 
@@ -2852,6 +2868,7 @@ ACTION_EEPROM_READY_LOW_LEVEL = 73
 ACTION_FLOAT_ARITHMETIC = 74
 ACTION_GET_SCOPE_TRACE = 75
 ACTION_RELEASE_SCOPE_TRACE = 76
+ACTION_READ_FLOW_SENSOR = 77
 
 
 # Parameter form definitions

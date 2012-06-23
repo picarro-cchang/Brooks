@@ -1138,7 +1138,7 @@ class StateDatabase(Singleton):
             try:
                 r = func(*args)
                 e = None
+                if (r is not None) or (e is not None):
+                    self._safeRxQueuePut((txId,e,r))
             except Exception,e:
                 pass
-            if (r is not None) or (e is not None):
-                self._safeRxQueuePut((txId,e,r))

@@ -615,6 +615,15 @@ class DasConfigure(SharedTypes.Singleton):
             Operation("ACTION_STREAM_FPGA_REGISTER_ASFLOAT",
                 ["STREAM_Ratio2","FPGA_LASERLOCKER","LASERLOCKER_RATIO2"]))
 
+        if self.installCheck("FLOW_SENSOR_PRESENT"):
+            self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                Operation("ACTION_READ_FLOW_SENSOR",
+                        ["I2C_FLOW1_SENSOR","CONVERSION_FLOW1_SCALE_REGISTER",
+                         "CONVERSION_FLOW1_OFFSET_REGISTER","FLOW1_REGISTER"]))
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_Flow1","FLOW1_REGISTER"]))
+                
         # Stop the scheduler before loading new schedule
         sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",0);
         # Schedule operation groups which are non-empty
