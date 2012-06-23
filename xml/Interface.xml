@@ -435,6 +435,7 @@
             <enum_value ident="STREAM_ProcessedLoss2" />
             <enum_value ident="STREAM_ProcessedLoss3" />
             <enum_value ident="STREAM_ProcessedLoss4" />
+            <enum_value ident="STREAM_Flow1" />
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>
@@ -600,6 +601,7 @@
             <enum_value ident="HARDWARE_PRESENT_AnalogInterface"   value="9" caption="Analog Interface" />             
             <enum_value ident="HARDWARE_PRESENT_FiberAmplifierBit" value="10" caption="Fiber Amplifier" />  
             <enum_value ident="HARDWARE_PRESENT_FanCntrlDisabledBit"       value="11" caption="Fan Control Disabled" />             
+            <enum_value ident="HARDWARE_PRESENT_FlowSensorBit"     value="12" caption="Flow Sensor" />             
         </enum>
         <enum type="FLOAT_ARITHMETIC_OperatorType">
             <description>Enumeration specifying floating point operation to carry out on regiters</description> 
@@ -3094,6 +3096,19 @@
             <save/>
             <display format="$%04X">Inactive state valve mask and values</display>
         </register>
+        <register ident="FLOW1_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Flow 1 register</description>
+        </register>
+        <register ident="CONVERSION_FLOW1_SCALE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Flow 1 scale register</description>
+            <initial>1.0</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_FLOW1_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Flow 1 offset register</description>
+            <initial>0.0</initial>
+            <save/>
+        </register>
     </register_list>
     <i2c_list>
         <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />
@@ -3127,6 +3142,7 @@
         <i2c ident="P12_THERMISTOR_ADC" chain="1" mux="4" address="0x26" />
         <i2c ident="ENGINE_BOX_EEPROM"  chain="1" mux="4" address="0x50" />
 
+        <i2c ident="FLOW1_SENSOR" chain="1" mux="4" address="0x49" />
         <i2c ident="DAS_TEMP_SENSOR" chain="0" address="0x4E" />
         <i2c ident="VALVE_PUMP_TEC_PORT" chain="1" mux="4" address="0x70" />
         <i2c ident="ANALOG_INTERFACE" chain="0" mux="4" address="0x10" />
@@ -4071,5 +4087,6 @@
         <action ident="ACTION_FLOAT_ARITHMETIC">r_float_arithmetic</action>
         <action ident="ACTION_GET_SCOPE_TRACE">r_get_scope_trace</action>
         <action ident="ACTION_RELEASE_SCOPE_TRACE">r_release_scope_trace</action>
+        <action ident="ACTION_READ_FLOW_SENSOR">r_read_flow_sensor</action>
     </action_list>
 </Das_Interface>

@@ -45,6 +45,7 @@
 #include "ltc2499.h"
 #include "fpga.h"
 #include "i2cEeprom.h"
+#include "read_flow_sensor.h"
 
 static char message[120];
 
@@ -1057,4 +1058,35 @@ int r_peakDetectCntrlStep(unsigned int numInt,void *params,void *env)
 {
     if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
     return peakDetectCntrlStep();
+}
+
+static int _flow_sensor_read(I2C_device *dev)
+/* Reads from a flow sensor. */
+{
+    unsigned int chain, loops;
+    chain = dev->chain;
+    // Switch the I2C multiplexer if necessary
+    switch (chain) {
+        case 0:
+            if (dev->mux >= 0) setI2C0Mux(dev->mux);
+            break;
+        case 1:
+            if (dev->mux >= 0) setI2C1Mux(dev->mux);
+            break;
+    }
+    for (loops=0;loops<1000;loops++);
+    return read_flow_sensor(dev);
+}
+
+int r_read_flow_sensor(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    float slope, offset, result;
+    if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
+    
+    result = _flow_sensor_read(&i2c_devices[reg[0]]);
+    READ_REG(reg[1],slope);
+    READ_REG(reg[2],offset);
+    WRITE_REG(reg[3],slope*result+offset);
+    return STATUS_OK;
 }

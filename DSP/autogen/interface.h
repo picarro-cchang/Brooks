@@ -483,7 +483,8 @@ typedef enum {
     STREAM_ProcessedLoss1 = 34, // 
     STREAM_ProcessedLoss2 = 35, // 
     STREAM_ProcessedLoss3 = 36, // 
-    STREAM_ProcessedLoss4 = 37 // 
+    STREAM_ProcessedLoss4 = 37, // 
+    STREAM_Flow1 = 38 // 
 } STREAM_MemberType;
 
 typedef enum {
@@ -648,7 +649,8 @@ typedef enum {
     HARDWARE_PRESENT_DasTempMonitorBit = 8, // Das Temp Monitor
     HARDWARE_PRESENT_AnalogInterface = 9, // Analog Interface
     HARDWARE_PRESENT_FiberAmplifierBit = 10, // Fiber Amplifier
-    HARDWARE_PRESENT_FanCntrlDisabledBit = 11 // Fan Control Disabled
+    HARDWARE_PRESENT_FanCntrlDisabledBit = 11, // Fan Control Disabled
+    HARDWARE_PRESENT_FlowSensorBit = 12 // Flow Sensor
 } HARDWARE_PRESENT_BitType;
 
 typedef enum {
@@ -713,7 +715,7 @@ typedef enum {
 #define INJECTION_SETTINGS_lossTagShift (5)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (434)
+#define INTERFACE_NUMBER_OF_REGISTERS (437)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1149,6 +1151,9 @@ typedef enum {
 #define PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER (431)
 #define PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER (432)
 #define PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER (433)
+#define FLOW1_REGISTER (434)
+#define CONVERSION_FLOW1_SCALE_REGISTER (435)
+#define CONVERSION_FLOW1_OFFSET_REGISTER (436)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0
@@ -1179,11 +1184,12 @@ typedef enum {
 #define P3_THERMISTOR_ADC 25
 #define P12_THERMISTOR_ADC 26
 #define ENGINE_BOX_EEPROM 27
-#define DAS_TEMP_SENSOR 28
-#define VALVE_PUMP_TEC_PORT 29
-#define ANALOG_INTERFACE 30
-#define CHAIN0_MUX 31
-#define CHAIN1_MUX 32
+#define FLOW1_SENSOR 28
+#define DAS_TEMP_SENSOR 29
+#define VALVE_PUMP_TEC_PORT 30
+#define ANALOG_INTERFACE 31
+#define CHAIN0_MUX 32
+#define CHAIN1_MUX 33
 
 /* FPGA block definitions */
 
@@ -1610,4 +1616,5 @@ typedef enum {
 #define ACTION_FLOAT_ARITHMETIC (74)
 #define ACTION_GET_SCOPE_TRACE (75)
 #define ACTION_RELEASE_SCOPE_TRACE (76)
+#define ACTION_READ_FLOW_SENSOR (77)
 #endif
