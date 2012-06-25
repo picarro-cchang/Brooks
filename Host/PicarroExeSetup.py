@@ -88,7 +88,7 @@ sys.path.append("Utilities/RecipeEditor")
 sys.path.append("Utilities/BackpackServer")
 sys.path.append("Utilities/ConfigManager")
 sys.path.append("Utilities/AircraftValveSwitcher")
-sys.path.append("../SrcCode/Utilities")
+sys.path.append("../Firmware/Utilities")
 
 ################################################################
 # Start of a pile of special setup with the sole purpose
@@ -225,10 +225,10 @@ inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.dll", "powrprof.dll" ]
 packageList = ["simplejson", "werkzeug","flask","jinja2","email"]
 
-hex_images = glob.glob("../SrcCode/CypressUSB/Drivers/*.*")
-hex_images = hex_images + [ "../SrcCode/CypressUSB/analyzer/analyzerUsb.hex",
-                            "../SrcCode/DSP/src/Debug/dspMain.hex",
-                            "../SrcCode/MyHDL/Spartan3/top_io_map.bit"]
+hex_images = glob.glob("../Firmware/CypressUSB/Drivers/*.*")
+hex_images = hex_images + [ "../Firmware/CypressUSB/analyzer/analyzerUsb.hex",
+                            "../Firmware/DSP/src/Debug/dspMain.hex",
+                            "../Firmware/MyHDL/Spartan3/top_io_map.bit"]
 
 cypressDriverDirs = ["amd64", "ia64", "license/libusb0", "x86"]
 
@@ -260,7 +260,7 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
             ("templates", glob.glob(r'Utilities\BackpackServer\templates\*.*')),
             ]
 for d in cypressDriverDirs:
-    data_files.append(("Images/%s"%d, glob.glob("../SrcCode/CypressUSB/Drivers/" + "%s/*.*" %d)))
+    data_files.append(("Images/%s"%d, glob.glob("../Firmware/CypressUSB/Drivers/" + "%s/*.*" %d)))
 
 setup(version = "1.0",
       description = "Silverstone Host Core Software",
@@ -305,27 +305,27 @@ setup(version = "1.0",
                  "Utilities/Restart/RtcAlarmOff.py",
                  "Utilities/ReadMemUsage/ReadMemUsage.py",
                  "Utilities/BackpackServer/backpackServer.py",
-                 "../SrcCode/Utilities/CalibrateSystem.py",
-                 "../SrcCode/Utilities/CalibrateFsr.py",
-                 "../SrcCode/Utilities/AdjustWlmOffset.py",
-                 "../SrcCode/Utilities/ExamineRawRD.py",
-                 "../SrcCode/Utilities/ExamineRDCount.py",
-                 "../SrcCode/Utilities/LaserLockPrbs.py",
-                 "../SrcCode/Utilities/LaserPidPrbs.py",
-                 "../SrcCode/Utilities/MakeWarmBoxCalFile.py",
-                 "../SrcCode/Utilities/MakeWarmBoxCal_NoWlm.py",
-                 "../SrcCode/Utilities/MakeWlmFile1.py",
-                 "../SrcCode/Utilities/WriteLaserEeprom.py",
-                 "../SrcCode/Utilities/MakeNoWlmFile.py",
-                 "../SrcCode/Utilities/WriteWlmEeprom.py",
-                 "../SrcCode/Utilities/DumpEeproms.py",
-                 "../SrcCode/Utilities/MakeCalFromEeproms.py",
-                 "../SrcCode/Utilities/FindWlmOffset.py",
-                 "../SrcCode/Utilities/SaveData.py",
-                 "../SrcCode/Utilities/SaveRaw.py",
-                 "../SrcCode/Utilities/TestClient.py",
-                 "../SrcCode/Utilities/ThresholdStats.py",
-                 "../SrcCode/Utilities/CheckLaserCal.py",
+                 "../Firmware/Utilities/CalibrateSystem.py",
+                 "../Firmware/Utilities/CalibrateFsr.py",
+                 "../Firmware/Utilities/AdjustWlmOffset.py",
+                 "../Firmware/Utilities/ExamineRawRD.py",
+                 "../Firmware/Utilities/ExamineRDCount.py",
+                 "../Firmware/Utilities/LaserLockPrbs.py",
+                 "../Firmware/Utilities/LaserPidPrbs.py",
+                 "../Firmware/Utilities/MakeWarmBoxCalFile.py",
+                 "../Firmware/Utilities/MakeWarmBoxCal_NoWlm.py",
+                 "../Firmware/Utilities/MakeWlmFile1.py",
+                 "../Firmware/Utilities/WriteLaserEeprom.py",
+                 "../Firmware/Utilities/MakeNoWlmFile.py",
+                 "../Firmware/Utilities/WriteWlmEeprom.py",
+                 "../Firmware/Utilities/DumpEeproms.py",
+                 "../Firmware/Utilities/MakeCalFromEeproms.py",
+                 "../Firmware/Utilities/FindWlmOffset.py",
+                 "../Firmware/Utilities/SaveData.py",
+                 "../Firmware/Utilities/SaveRaw.py",
+                 "../Firmware/Utilities/TestClient.py",
+                 "../Firmware/Utilities/ThresholdStats.py",
+                 "../Firmware/Utilities/CheckLaserCal.py",
                  Fitter,
                  "ConfigMonitor/ConfigMonitor.py",
                  "PeriphIntrf/RunSerial2Socket.py",
