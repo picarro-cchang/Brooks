@@ -359,6 +359,7 @@ class InstMgr(object):
         self.RpcServer.register_function(self.INSTMGR_SetInstrumentModeRpc)
         self.RpcServer.register_function(self.INSTMGR_EnableAutoRestartFlow)
         self.RpcServer.register_function(self.INSTMGR_DisableAutoRestartFlow)
+        self.RpcServer.register_function(self.INSTMGR_ModifyAuxStatusRpc)
 
         if __debug__: Log("Setting up RPC callback functions.")
         # register callback functions
@@ -1255,6 +1256,15 @@ class InstMgr(object):
         if len(self.ErrorList) == 0:
             self._ClearStatus(INSTMGR_STATUS_ERROR_IN_BUFFER)
 
+        return INSTMGR_RPC_SUCCESS
+    def INSTMGR_ModifyAuxStatusRpc(self,auxStatus,auxStatusMask=0xFFFF):
+        # Modify auxiliary status bits, which are the high-order 16 bits of
+        #  the 32-bit status word. Only the bits specified in the mask are 
+        #  modified
+        auxStatusMask &= 0xFFFF
+        status = auxStatus & auxStatusMask
+        self._ClearStatus(auxStatusMask << 16)
+        self._SetStatus(status << 16)
         return INSTMGR_RPC_SUCCESS
     def INSTMGR_GetStatusRpc(self):
         return self.AppStatus._Status
