@@ -177,6 +177,8 @@ class SensorListener(SharedTypes.Singleton):
             waveforms["Pressure"]["ambientPressure"].Add(utime,data.value)
         elif data.streamNum == interface.STREAM_CavityPressure:
             waveforms["Pressure"]["cavityPressure"].Add(utime,data.value)
+        elif data.streamNum == interface.STREAM_Flow1:
+            waveforms["Pressure"]["flow1"].Add(utime,data.value)
         elif data.streamNum == interface.STREAM_InletValve:
             waveforms["Pressure"]["inletValve"].Add(utime,data.value)
         elif data.streamNum == interface.STREAM_OutletValve:

@@ -107,6 +107,7 @@ class Controller(ControllerFrameGui):
         waveforms["Pressure"]=dict(
             ambientPressure=self.pressurePanel.ambientPressureWfm,
             cavityPressure=self.pressurePanel.cavityPressureWfm,
+            flow1=self.pressurePanel.flow1Wfm,
             inletValve=self.pressurePanel.inletValveWfm,
             outletValve=self.pressurePanel.outletValveWfm)
         waveforms["Wlm"]=dict(
