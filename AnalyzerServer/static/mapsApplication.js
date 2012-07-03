@@ -20,6 +20,7 @@ var TXT = {
         download_files: 'Download Files',
         download_concs: 'Download Concentration',
         download_peaks: 'Download Peaks',
+        download_analysis: 'Download Analysis',
         download_notes: 'Download Notes',
         anz_cntls: 'Surveyor Controls',
         restart_log: 'Restart Log',
@@ -43,7 +44,8 @@ var TXT = {
         analyzing_mode: 'Analyzing Peak',
         inactive_mode: 'Inactive Mode',
         prime_conf_msg: 'Do you want to switch to Prime View Mode? \n\nWhen the browser is in Prime View Mode, you will have control of the Surveyor.',
-        change_min_amp: 'Minimum Amplitude',
+        change_min_amp: 'Min Amplitude', //'Minimum Amplitude',
+        change_stab_class: 'Stability Class', //'Minimum Amplitude',
         restart_datalog_msg: 'Close current data log and open a new one?',
         shutdown_anz_msg: 'Do you want to shut down the Surveyor? \n\nWhen the analyzer is shutdown it can take 30 to 45 minutes warm up.',
         stop_survey_msg: 'Are you sure you want to stop collecting data?',
@@ -94,12 +96,23 @@ var TXT = {
         cavity_p: 'Cavity Pressure',
         cavity_t: 'Cavity Temperature',
         wb_t: 'Warm Box Temperature',
+        
+        stab_a: "Text for Stab Class A",
+        stab_b: "Text for Stab Class B",
+        stab_c: "Text for Stab Class C",
+        stab_d: "Text for Stab Class D",
+        stab_e: "Text for Stab Class E",
+        stab_f: "Text for Stab Class F",
+        
+        export_as_txt: "Export data as txt file.",
+        export_as_csv: "Export data as csv file."
     };
 
 //Html button
 var HBTN = {
         exptLogBtn: '<div><button id="id_exptLogBtn" type="button" onclick="exportLog();" class="btn btn-primary btn-fullwidth">' + TXT.download_concs + '</button></div>',
         exptPeakBtn: '<div><button id="id_exptPeakBtn" type="button" onclick="exportPeaks();" class="btn btn-primary btn-fullwidth">' + TXT.download_peaks + '</button></div>',
+        exptAnalysisBtn: '<div><button id="id_exptAnalysisBtn" type="button" onclick="exportAnalysis();" class="btn btn-primary btn-fullwidth">' + TXT.download_analysis + '</button></div>',
         exptNoteBtn: '<div><button id="id_exptNoteBtn" type="button" onclick="exportNotes();" class="btn btn-primary btn-fullwidth">' + TXT.download_notes + '</button></div>',
         restartBtn: '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn btn-primary btn-fullwidth">' + TXT.restart_log + '</button></div>',
         captureBtn: '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn btn-primary btn-fullwidth">' + TXT.switch_to_cptr + '</button></div>',
@@ -112,8 +125,10 @@ var HBTN = {
         modChangeCloseBtn: '<div><button id="id_modChangeCloseBtn" onclick="restoreModChangeDiv();" class="btn btn-fullwidth">' + TXT.close + '</button></div>',
         switchLogBtn: '<div><button id="id_switchLogBtn" onclick="switchLog();" class="btn btn-primary btn-fullwidth">' + TXT.select_log + '</button></div>',
         switchToPrimeBtn: '<div><button id="id_switchToPrimeBtn" onclick="switchToPrime();" class="btn btn-primary btn-fullwidth">' + TXT.switch_to_prime + '</button></div>',
-        changeMinAmpCancelBtn: '<div><button id="id_changeMinAmpCancelBtn" onclick="changeMinAmpVal(false);" class="btn">' + TXT.cancel + '</button></div>',
+        changeMinAmpCancelBtn: '<div><button id="id_changeMinAmpCancelBtn" onclick="changeMinAmpVal(false);" class="btn btn-fullwidth">' + TXT.cancel + '</button></div>',
         changeMinAmpOkBtn: '<div><button id="id_changeMinAmpOkBtn" onclick="changeMinAmpVal(true);" class="btn btn-primary btn-fullwidth">' + TXT.ok + '</button></div>',
+        changeStabClassCancelBtn: '<div><button id="id_changeStabClassCancelBtn" onclick="changeStabClassVal(false);" class="btn btn-fullwidth">' + TXT.cancel + '</button></div>',
+        changeStabClassOkBtn: '<div><button id="id_changeStabClassOkBtn" onclick="changeStabClassVal(true);" class="btn btn-primary btn-fullwidth">' + TXT.ok + '</button></div>',
         
         changeMinAmpOkHidBtn: '<div style="display: hidden;"><button id="id_changeMinAmpOkHidBtn" onclick="changeMinAmpVal(true);"/></div>',
         allHliteCntl: '<div><button id="id_allHliteCntl" type="button" onclick="removeAllHlites();" class="btn btn-primary btn-fullwidth">' + TXT.remove_all_plat_hlite + '</button></div>',
@@ -207,7 +222,7 @@ var CNSNT = {
 //        periphUpdatePeriod: 5000,
 //        swathUpdatePeriod: 5000,
         
-        hmargin: 25,
+        hmargin: 30,
         vmargin: 0,
         map_topbuffer: 0,
         map_bottombuffer: 0, 
@@ -220,6 +235,20 @@ var CNSNT = {
 
         rest_default_timeout: 60000,
         
+        stab_control: {
+              A: TXT.stab_a
+            , B: TXT.stab_b
+            , C: TXT.stab_c
+            , D: TXT.stab_d
+            , E: TXT.stab_e
+            , F: TXT.stab_f
+        },
+
+        export_control: {
+            "file": TXT.export_as_txt
+          , "csv": TXT.export_as_csv
+      },
+
         
         spacer_gif: '/static/images/icons/spacer.gif',
         svcurl: "/rest",
@@ -314,6 +343,7 @@ var modePane = function() {
 
 // Current State
 var CSTATE = {
+        firstData: true,
         initialFnIsRun: false,
         net_abort_count: 0,
         follow: true,
@@ -338,7 +368,6 @@ var CSTATE = {
         center_lon: -121.98432,
         center_lat: 37.39604,
 
-        minAmp: 0.1,
         alog: "",
         alog_peaks: "",
         alog_analysis: "",
@@ -428,11 +457,13 @@ var CSTATE = {
         noteSortSel: undefined,
         resize_for_conc_data: true,
 
-        getDataLimit: 3000,
+        getDataLimit: 2000,
         getSwathLimit: 1000,
         
+        exportClass: 'file',   
         stabClass: 'D',     // Pasquill-Gifford stability class
         minLeak:   1.0,     // Minimum leak to consider in cubic feet/hour
+        minAmp: 0.1,
         
         // Parameters for estimating addtional standard deviation in wind direction
         astd_a : 0.15*Math.PI,
@@ -921,12 +952,16 @@ function MapControl(controlDiv, map) {
     controlText.style.fontSize = '12px';
     controlText.style.paddingLeft = '4px';
     controlText.style.paddingRight = '4px';
-    controlText.innerHTML = TXT.map_controls;
+    controlText.innerHTML = TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass;
     controlUI.appendChild(controlText);
 
     google.maps.event.addDomListener(controlUI, 'click', function () {
         modalPaneMapControls();
     });
+    
+    this.changeControlText = function(newText) {
+        controlText.innerHTML = newText;
+    }
 }
 
 function initialize_map() {
@@ -936,7 +971,7 @@ function initialize_map() {
 
     CNSNT.mapControlDiv = document.createElement('DIV');
     CNSNT.mapControl = new MapControl(CNSNT.mapControlDiv, CSTATE.map);
-
+    
     CNSNT.mapControlDiv.index = 1;
     CSTATE.map.controls[google.maps.ControlPosition.TOP_RIGHT].push(CNSNT.mapControlDiv);
     
@@ -1000,6 +1035,7 @@ function initialize_map() {
     if (CSTATE.overlay) {
         showTifCb();
     }
+    CSTATE.firstData = true; 
 }
 
 function resize_map() {
@@ -1140,10 +1176,12 @@ function modalPaneExportControls() {
     
     c1array.push('style="border-style: none; width: 50%; text-align: right;"');
     c2array.push('style="border-style: none; width: 50%;"');
-    c1array.push('');
+    c1array.push(exportClassCntl('style="width: 100%;"'));
     c2array.push(HBTN.exptLogBtn);
     c1array.push('');
     c2array.push(HBTN.exptPeakBtn);
+    c1array.push('');
+    c2array.push(HBTN.exptAnalysisBtn);
     c1array.push('');
     c2array.push(HBTN.exptNoteBtn);
     body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
@@ -1167,28 +1205,49 @@ function modalPaneExportControls() {
     $("#id_restartBtn").focus();
 }
 
+function doExport(log) {
+    var exptlog = "export:" + log;
+    get_ticket(null, exptlog);
+    //url = CNSNT.svcurl + blah;
+}
+
 function exportLog() {
     var url = CNSNT.svcurl + '/sendLog?alog=' + CSTATE.alog;
-
-    window.location = url;
+    
+    $('#id_exptLogBtn').html(TXT.working + "...");
+    $('#id_exptLogBtn').redraw;
+    
+    doExport(CSTATE.alog);
 }
 
 function exportPeaks() {
     var apath, url;
 
+    $('#id_exptPeakBtn').html(TXT.working + "...");
+    $('#id_exptPeakBtn').redraw;
+    
     apath = CSTATE.alog.replace(".dat", ".peaks");
-    url = CNSNT.svcurl + '/sendLog?alog=' + apath;
+    doExport(apath);
+}
 
-    window.location = url;
+function exportAnalysis() {
+    var apath, url;
+
+    $('#id_exptAnalysisBtn').html(TXT.working + "...");
+    $('#id_exptAnalysisBtn').redraw;
+    
+    apath = CSTATE.alog.replace(".dat", ".analysis");
+    doExport(apath);
 }
 
 function exportNotes() {
     var apath, url;
 
+    $('#id_exptNoteBtn').html(TXT.working + "...");
+    $('#id_exptNoteBtn').redraw;
+    
     apath = CSTATE.alog.replace(".dat", ".notes");
-    url = CNSNT.svcurl + '/sendLog?alog=' + apath;
-
-    window.location = url;
+    doExport(apath);
 }
 
 function modalPaneSelectLog() {
@@ -1211,7 +1270,7 @@ function modalPaneSelectLog() {
     c1array.push('style="border-style: none; width: 50%; text-align: right;"');
     c2array.push('style="border-style: none; width: 50%;"');
     
-    c1array.push('<select id="id_selectLog" class="large">' + options + '</select>');
+    c1array.push('<select id="id_selectLog" class="large" style="width: 100%;">' + options + '</select>');
     c2array.push(HBTN.switchLogBtn);
     
     if (CSTATE.prime_available) {
@@ -1270,13 +1329,16 @@ function switchLog() {
         $("#id_selectLogBtn").html(newtitle);
         if (CNSNT.prime_view) {
             $("#concentrationSparkline").html("Loading..");
+            $("#id_exportButton_span").html("");
+            $("#id_selectAnalyzerBtn").css("display", "none");
+            $("#id_selectAnalyzerBtn").css("visibility", "hidden");
         } else {
             $('#concentrationSparkline').html("");
-        }
-        if (newtitle === "Live") {
-            $("#id_exportButton_span").html("");
-        } else {
-            $("#id_exportButton_span").html(LBTNS.downloadBtns + '<br/>');
+            if (newtitle === "Live") {
+                $("#id_exportButton_span").html("");
+            } else {
+                $("#id_exportButton_span").html(LBTNS.downloadBtns + '<br/>');
+            }
         }
     }
     $("#id_mod_change").html("");
@@ -1347,6 +1409,15 @@ function changeMinAmpVal(reqbool) {
     CSTATE.ignoreTimer = true;
     if (reqbool) {
         changeMinAmp();
+    }
+    $("#id_mod_change").html("");
+    CSTATE.ignoreTimer = false;
+}
+
+function changeStabClassVal(reqbool) {
+    CSTATE.ignoreTimer = true;
+    if (reqbool) {
+        changeStabClass();
     }
     $("#id_mod_change").html("");
     CSTATE.ignoreTimer = false;
@@ -1531,6 +1602,37 @@ function requestMinAmpChange() {
     c2array.push('style="border-style: none; width: 50%; text-align: right;"');
     c1array.push('<h3>' + TXT.change_min_amp + '</h3>');
     c2array.push(HBTN.changeMinAmpCancelBtn);
+    hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
+
+    footer = '';
+    
+    modalChrome = setModalChrome(
+        hdr,
+        body,
+        footer
+        );
+
+    $("#id_mod_change").html(modalChrome);
+    $("#id_amplitude").focus();
+}
+
+function requestStabClassChange() {
+    var modalChrome, hdr, body, footer, c1array, c2array;
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c2array.push('style="border-style: none; width: 50%;"');
+    c1array.push(stabClassCntl('style="width: 100%;"'));
+    c2array.push(HBTN.changeStabClassOkBtn);
+    body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c1array.push('<h3>' + TXT.change_stab_class + '</h3>');
+    c2array.push(HBTN.changeStabClassCancelBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
     footer = '';
@@ -1877,7 +1979,10 @@ function notePane(etm, cat) {
 }
 
 function modalPaneMapControls() {
-    var modalPane, showDnoteCntl, showPnoteCntl, showAbubbleCntl, showPbubbleCntl, showAnoteCntl, showWbubbleCntl, showSwathCntl, changeMinAmpCntl;
+    var modalPane, showDnoteCntl, showPnoteCntl
+        , showAbubbleCntl, showPbubbleCntl, showAnoteCntl
+        , showWbubbleCntl, showSwathCntl, changeMinAmpCntl
+        , changeStabClassCntl;
     var dchkd, pchkd, achkd, pbchkd, abchkd, wbchkd, swchkd, hdr, body, footer, c1array, c2array;
 
     dchkd = TXT.show_txt;
@@ -1938,7 +2043,8 @@ function modalPaneMapControls() {
     showPlatCntl = '<div><button id="id_showPlatCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPlatCb") + ');" class="btn btn-primary btn-fullwidth">' + platchkd + '</button></div>';
     showWbubbleCntl = '<div><button id="id_showWbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showWbubbleCb") + ');" class="btn btn-primary btn-fullwidth">' + wbchkd + '</button></div>';
     showSwathCntl   = '<div><button id="id_showSwathCb"   type="button" onclick="workingBtnPassThrough(' + single_quote("showSwathCb") + ');"   class="btn btn-primary btn-fullwidth">' + swchkd + '</button></div>';
-    changeMinAmpCntl= '<div><button id="id_changeMinAmp"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestMinAmpChange") + ');"   class="btn btn-primary btn-fullwidth">' + TXT.change_min_amp + '</button></div>';
+    changeMinAmpCntl = '<div><button id="id_changeMinAmp"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestMinAmpChange") + ');"   class="btn btn-primary btn-fullwidth">' + TXT.change_min_amp + ': ' + CSTATE.minAmp + '</button></div>';
+    changeStabClassCntl = '<div><button id="id_changeStabClass"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestStabClassChange") + ');"   class="btn btn-primary btn-fullwidth">' + TXT.change_stab_class + ': ' + CSTATE.stabClass + '</button></div>';
     
     body = "";
     c1array = [];
@@ -1947,20 +2053,25 @@ function modalPaneMapControls() {
     c1array.push('style="border-style: none; width: 50%; text-align: right;"');
     c2array.push('style="border-style: none; width: 50%;"');
     
+    c1array.push(changeMinAmpCntl);
+    c2array.push(changeStabClassCntl);
+    
+    
     c1array.push(showPbubbleCntl);
     c2array.push(showAbubbleCntl);
     
     c1array.push(showWbubbleCntl);
     c2array.push(showSwathCntl);
     
-    c1array.push(changeMinAmpCntl);
-    c2array.push(showPlatCntl);
+    c1array.push(showPlatCntl);
     
     if (CNSNT.annotation_url) {
-        c1array.push(showPnoteCntl);
-        c2array.push(showAnoteCntl);
+        c2array.push(showPnoteCntl);
+        c1array.push(showAnoteCntl);
         
-        c1array.push(showDnoteCntl);
+        c2array.push(showDnoteCntl);
+    }
+    else {
         c2array.push('');
     }
 
@@ -2419,6 +2530,16 @@ function initialize_gdu(winH, winW) {
     if (activePlatNameCookie) {
         setActivePlat(activePlatNameCookie);
     }
+
+    dspStabClassCookie = getCookie(COOKIE_NAMES.dspStabClass);
+    if (dspStabClassCookie) {
+        CSTATE.stabClass = dspStabClassCookie;
+    }
+
+    dspExportClassCookie = getCookie(COOKIE_NAMES.dspExportClass);
+    if (dspExportClassCookie) {
+        CSTATE.exportClass = dspExportClassCookie;
+    }
     
     followCookie = getCookie(COOKIE_NAMES.follow);
     if (followCookie) {
@@ -2559,7 +2680,7 @@ function call_rest(call_url, method, dtype, params, success_callback, error_call
     }
 }
 
-function get_ticket(initialFn) {
+function get_ticket(initialFn, expt) {
     var params, ruri, resource;
     if (CSTATE.ticket !== "WAITING") {
         var successTicket = function(json, textStatus) {
@@ -2573,6 +2694,71 @@ function get_ticket(initialFn) {
                     }
                     CSTATE.initialFnIsRun = true;
                 }
+            }
+        }
+        var successTicketExport = function(json, textStatus) {
+            var rui, resource, tkt, fmt;
+            var ifn = expt;
+            var alog = ifn.replace("export:", "");
+            var ltype = "dat";
+            if (alog.indexOf(".analysis") !== -1) {
+                ltype = "analysis";
+            } else {
+                if (alog.indexOf(".peaks") !== -1) {
+                    ltype = "peaks";
+                } else {
+                    if (alog.indexOf(".notes") !== -1) {
+                        ltype = "notes";
+                    }
+                }
+            }
+            if (json.ticket) {
+                tkt = json.ticket;
+                ruri = CNSNT.resturl; //"https://ubuntuhost64:3000/node/rest"
+                if (ltype === "notes") {
+                    resource = CNSNT.resource_AnzLogNote;
+                } else {
+                    resource = CNSNT.resource_AnzLog; //"gdu/<TICKET>/1.0/AnzLogMeta"
+                }
+                resource = resource.replace("&lt;TICKET&gt;", tkt);
+                resource = resource.replace("<TICKET>", tkt);
+                
+                if (ltype === "notes") {
+                    expturl = ruri + "/" + resource 
+                    + "?qry=byEpoch&alog=" + alog
+                    + "&logtype=" + ltype
+                    + "&startEtm=0&rtnFmt=file";
+                } else {
+                    expturl = ruri + "/" + resource 
+                    + "?qry=byPos&alog=" + alog
+                    + "&logtype=" + ltype
+                    + "&startPos=0&rtnFmt=" + CSTATE.exportClass
+                    + "&limit=all";
+                }
+
+                switch(ltype) {
+                case "dat":
+                    $('#id_exptLogBtn').html(TXT.download_concs);
+                    $('#id_exptLogBtn').redraw;
+                    break;
+                    
+                case "peaks":
+                    $('#id_exptPeakBtn').html(TXT.download_peaks);
+                    $('#id_exptPeakBtn').redraw;
+                    break;
+                    
+                case "analysis":
+                    $('#id_exptAnalysisBtn').html(TXT.download_analysis);
+                    $('#id_exptAnalysisBtn').redraw;
+                    break;
+                    
+                case "notes":
+                    $('#id_exptNoteBtn').html(TXT.download_notes);
+                    $('#id_exptNoteBtn').redraw;
+                    break;
+                }
+                window.location = expturl;
+                //alert("expturl: " + expturl);
             }
         }
         var errorTicket = function(xOptions, textStatus) {
@@ -2591,16 +2777,37 @@ function get_ticket(initialFn) {
             
             alert("Ticket error. Please refresh the page. \nIf the error continues, contact Customer Support.")
         }
-        CSTATE.ticket = "WAITING";
+        var errorTicketExport = function(xOptions, textStatus) {
+            //alert("we have an error");
+            //var opts = "";
+            //var sep = "";
+            //for (arg in xOptions) {
+            //    opts += sep + arg + ": " + xOptions[arg];
+            //    sep = "\n";
+            //}
+            //alert("textStatus: " + textStatus
+            //    + "\nopts: " + opts
+            //);
+            
+            alert("Ticket error. Please refresh the page. \nIf the error continues, contact Customer Support.")
+        }
+        if (expt && expt.indexOf("export") !== -1)  {
+            var sTicketFn = successTicketExport;
+            var eTicketFn = errorTicketExport;
+        } else {
+            CSTATE.ticket = "WAITING";
+            var sTicketFn = successTicket;
+            var eTicketFn = errorTicket;
+        }
         ruri = CNSNT.resturl; //"https://ubuntuhost64:3000/node/rest"
         resource = CNSNT.resource_Admin; //"sec/abcdefg/1.0/Admin"
         resource = insertTicket(resource);
         params = {"qry":"issueTicket"
             , "sys": CNSNT.sys
             , "identity": CNSNT.identity
-            , "rprocs": '["AnzMeta:byAnz","AnzLogMeta:byEpoch", "AnzLogNote:byEpoch", "AnzLog:byPos", "AnzLogNote:dataIns"]'
+            , "rprocs": '["AnzMeta:byAnz","AnzLogMeta:byEpoch", "AnzLogNote:byEpoch", "AnzLog:byPos", "AnzLogNote:dataIns", "AnzLog:makeSwath"]'
         }
-        call_rest(ruri, resource, "jsonp", params, successTicket, errorTicket);
+        call_rest(ruri, resource, "jsonp", params, sTicketFn, eTicketFn);
     }
 }
 
@@ -2680,9 +2887,75 @@ function changeMinAmp() {
     } catch (err) {
         CSTATE.minAmp = 0.1;
     }
+    CNSNT.mapControl.changeControlText(TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass);
     $("#id_amplitude_btn").html(CSTATE.minAmp);
     setCookie("pcubed_minAmp", CSTATE.minAmp, CNSNT.cookie_duration);
     resetLeakPosition();
+}
+
+function stabClassCntl(style) {
+    var ht, opendiv, closediv, len, i, options, vlu, selcntl, sty;
+    sty = ""
+    if (style) {
+        sty = style
+    }
+    ht = "";
+    options = "";
+    for (sc in CNSNT.stab_control) {
+        vlu = sc //CNSNT.stab_control[sc];
+        selected = "";
+        if (vlu === CSTATE.stabClass) {
+            selected = ' selected="selected" ';
+        }
+        options += '<option value="' + vlu + '"' + selected + '>' + CNSNT.stab_control[sc]
+            + '</option>';
+    }
+    selcntl = '<select ' + sty + ' id="id_stabClassCntl">'
+        + options + '</select>';
+    return selcntl;
+}
+
+function changeStabClass() {
+    var value, len, i, aname, mhtml;
+    value = $("#id_stabClassCntl").val()
+    if (value !== CSTATE.stabClass) {
+        CSTATE.stabClass = value;
+        
+        setCookie(COOKIE_NAMES.dspStabClass, CSTATE.stabClass, CNSNT.cookie_duration)
+        CNSNT.mapControl.changeControlText(TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass);
+        clearSwathPolys();
+    }
+}
+
+function exportClassCntl(style) {
+    var ht, opendiv, closediv, len, i, options, vlu, selcntl, sty;
+    sty = ""
+    if (style) {
+        sty = style
+    }
+    ht = "";
+    options = "";
+    for (sc in CNSNT.export_control) {
+        vlu = sc //CNSNT.export_control[sc];
+        selected = "";
+        if (vlu === CSTATE.exportClass) {
+            selected = ' selected="selected" ';
+        }
+        options += '<option value="' + vlu + '"' + selected + '>' + CNSNT.export_control[sc]
+            + '</option>';
+    }
+    selcntl = '<select ' + sty + ' id="id_exportClassCntl" onchange="changeExportClass()">'
+        + options + '</select>';
+    return selcntl;
+}
+
+function changeExportClass() {
+    var value, len, i, aname, mhtml;
+    value = $("#id_exportClassCntl").val()
+    if (value !== CSTATE.exportClass) {
+        CSTATE.exportClass = value;
+        setCookie(COOKIE_NAMES.dspExportClass, CSTATE.exportClass, CNSNT.cookie_duration)
+    }
 }
 
 function setGduTimer(tcat) {
@@ -2887,7 +3160,7 @@ function getData() {
                 CSTATE.lastPeakFilename = CSTATE.lastDataFilename.replace(".dat", ".peaks");
                 CSTATE.lastAnalysisFilename = CSTATE.lastDataFilename.replace(".dat", ".analysis");
             } else {
-                // alert("data and data.result: " + data);
+                alert("data and data.result: ", data.result);
             }
         } else {
             if (data && (data.indexOf("ERROR: invalid ticket") !== -1)) {
@@ -3057,6 +3330,11 @@ function getData() {
             ruri = CNSNT.resturl; //"https://ubuntuhost64:3000/node/rest"
             resource = CNSNT.resource_AnzLog; //"gdu/<TICKET>/1.0/AnzLog"
             resource = insertTicket(resource);
+            var lmt = CSTATE.getDataLimit;
+            if (CSTATE.firstData === true) {
+                lmt = 1;
+                CSTATE.firstData = false;
+            }
             params = { 
                 "qry": "byPos"
                 , "alog": CSTATE.alog
@@ -3292,37 +3570,117 @@ function showAnalysis() {
 }
 
 function fetchSwath() {
+    function successSwath(data) {
+        //alert("Im back from swath")
+        var resultWasReturned, i;
+        resultWasReturned = false;
+        if (data.result) {
+            if (data.result.filename) {
+                if (CSTATE.lastDataFilename === data.result.filename) {
+                // if (CSTATE.lastSwathFilename === data.result.filename) {
+                    resultWasReturned = true;
+                }
+                //CSTATE.lastAnalysisFilename = data.result.filename;
+            }
+        }
+        if (resultWasReturned) {
+            if (data.result.GPS_ABS_LAT) {
+                if (CSTATE.clearSwath) {
+                    CSTATE.clearSwath = false;
+                } else {
+                    for (i=0;i<data.result.GPS_ABS_LAT.length;i+=1) {
+                        var where = newLatLng(data.result.GPS_ABS_LAT[i],data.result.GPS_ABS_LONG[i]);
+                        var deltaLat = data.result.DELTA_LAT[i];
+                        var deltaLon = data.result.DELTA_LONG[i];
+
+                        if (CSTATE.lastMeasPathLoc) {
+                            var noLastView = (Math.abs(CSTATE.lastMeasPathDeltaLat) < 1.0e-6) && 
+                                             (Math.abs(CSTATE.lastMeasPathDeltaLon) < 1.0e-6);
+                            if (!noLastView) {
+                                var noView = (Math.abs(deltaLat) < 1.0e-6) && 
+                                             (Math.abs(deltaLon) < 1.0e-6); 
+                                if (!noView) {
+                                    // Draw the polygon
+                                    var coords = [newLatLng(CSTATE.lastMeasPathLoc.lat()+CSTATE.lastMeasPathDeltaLat,
+                                                            CSTATE.lastMeasPathLoc.lng()+CSTATE.lastMeasPathDeltaLon),
+                                                  CSTATE.lastMeasPathLoc,
+                                                  where,
+                                                  newLatLng(where.lat()+deltaLat, where.lng()+deltaLon)];
+                                    CSTATE.swathPolys.push(newPolygonWithoutOutline(CSTATE.map,CNSNT.swath_color,CNSNT.swath_opacity,coords,CSTATE.showSwath));
+                                }
+                            }    
+                        }
+                        CSTATE.lastMeasPathLoc = where;
+                        CSTATE.lastMeasPathDeltaLat = deltaLat;
+                        CSTATE.lastMeasPathDeltaLon = deltaLon;
+                    }
+                    CSTATE.swathLine = data.result.nextRow;
+                }
+            }
+        }
+        setGduTimer('swath');
+    }
     function errorSwath(text) {
         //CSTATE.net_abort_count += 1;
         //if (CSTATE.net_abort_count >= 2) {
         //    $("#id_modal").html(modalNetWarning());
         //}
-        $("#errors").html(text);
+        $("#errors").html("fetchSwath() error.");
         setGduTimer('swath');
     }
 
-    var params = {'startRow': CSTATE.swathLine, 'limit':CSTATE.getSwathLimit, 
-                  'nWindow': CNSNT.swathWindow, 'stabClass':CSTATE.stabClass,
-                  'minLeak': CSTATE.minLeak, 'minAmp':CSTATE.minAmp,
-                  'astd_a': CSTATE.astd_a, 'astd_b': CSTATE.astd_b, 'astd_c': CSTATE.astd_c, 
-                  'alog': CSTATE.alog, 'gmtOffset': CNSNT.gmt_offset};
-    // if (!CSTATE.showSwath) {
-    //     setGduTimer('swath');
-    //     return;
-    // }
-    var dtype = "json";
-    if (CNSNT.prime_view === true) {
-        dtype = "jsonp";
+    var params = {'startRow': CSTATE.swathLine
+                    , 'limit':CSTATE.getSwathLimit
+                    , 'nWindow': CNSNT.swathWindow
+                    , 'stabClass':CSTATE.stabClass
+                    , 'minLeak': CSTATE.minLeak
+                    , 'minAmp':CSTATE.minAmp
+                    , 'astd_a': CSTATE.astd_a
+                    , 'astd_b': CSTATE.astd_b
+                    , 'astd_c': CSTATE.astd_c
+                    , 'alog': CSTATE.alog
+                    , 'gmtOffset': CNSNT.gmt_offset
+                    };
+    
+    if (!CSTATE.showSwath) {
+         setGduTimer('swath');
+         return;
     }
-    call_rest(CNSNT.svcurl, "makeSwath", dtype, params,
-            function (json, status, jqXHR) {
+    
+    switch(CNSNT.prime_view) {
+    case false:
+        ruri = CNSNT.resturl; //"https://ubuntuhost64:3000/node/rest"
+        resource = CNSNT.resource_AnzLog; //"gdu/<TICKET>/1.0/AnzLog"
+        resource = insertTicket(resource);
+        params["qry"] = "makeSwath";
+        params["startPos"] = params["startRow"];
+        call_rest(ruri, resource, "jsonp", params, function(
+            json, status, jqXHR) {
             CSTATE.net_abort_count = 0;
             successSwath(json);
-        },
-        function (jqXHR, ts, et) {
-            errorSwath(jqXHR.responseText);
+            }, 
+            function (jqXHR, ts, et) {
+                errorSwath(jqXHR.responseText);
+            }
+        );
+        break;
+        
+    default:
+        var dtype = "json";
+        if (CNSNT.prime_view === true) {
+            dtype = "jsonp";
         }
-    );
+        call_rest(CNSNT.svcurl, "makeSwath", dtype, params,
+                function (json, status, jqXHR) {
+                CSTATE.net_abort_count = 0;
+                successSwath(json);
+            },
+            function (jqXHR, ts, et) {
+                errorSwath(jqXHR.responseText);
+            }
+        );
+        break;
+    }
 }
 
 function showLeaksAndWind() {
@@ -3428,6 +3786,7 @@ function showLeaksAndWind() {
                 "qry": "byPos"
                 , "alog": CSTATE.alog_peaks
                 , "logtype": "peaks"
+                , 'postFilter': '{"AMPLITUDE": {"$gte": ' + CSTATE.minAmp + '}}' 
                 , "limit": CSTATE.getDataLimit
                 , "startPos": CSTATE.peakLine
                 , "gmtOffset": CNSNT.gmt_offset
@@ -3597,6 +3956,19 @@ function getNotes(cat) {
 
     if (CSTATE.ticket !== "WAITING") {
         if (CNSNT.resource_AnzLogNote) {
+            if (cat === "peak") {
+                fname = CSTATE.lastPeakFilename;
+                etm = CSTATE.nextPeakEtm;
+            } else {
+                if (cat === "analysis") {
+                    fname = CSTATE.lastAnalysisFilename;
+                    etm = CSTATE.nextAnalysisEtm;
+                } else {
+                    fname = CSTATE.lastDataFilename;
+                    etm = CSTATE.nextDatEtm;
+                }
+            }
+            
             ruri = CNSNT.resturl; //"https://ubuntuhost64:3000/node/rest"
             resource = CNSNT.resource_AnzLogNote; //"gdu/<TICKET>/1.0/AnzLog"
             resource = insertTicket(resource);
@@ -3621,7 +3993,7 @@ function getNotes(cat) {
                 successData(json);
                 }, 
                 function (jqXHR, ts, et) {
-                    errorData(jqXHR.responseText);
+                    errorDatNotes(jqXHR.responseText);
                 }
                 );
         }
@@ -3656,57 +4028,6 @@ function attachMarkerListener(marker, etm, cat, bubble) {
             CSTATE.datNoteListener[etm] = markerListener;
         }
     }
-}
-
-
-function successSwath(data) {
-    var resultWasReturned, i;
-    resultWasReturned = false;
-    if (data.result) {
-        if (data.result.filename) {
-            if (CSTATE.lastDataFilename === data.result.filename) {
-            // if (CSTATE.lastSwathFilename === data.result.filename) {
-                resultWasReturned = true;
-            }
-            //CSTATE.lastAnalysisFilename = data.result.filename;
-        }
-    }
-    if (resultWasReturned) {
-        if (data.result.GPS_ABS_LAT) {
-            if (CSTATE.clearSwath) {
-                CSTATE.clearSwath = false;
-            } else {
-                for (i=0;i<data.result.GPS_ABS_LAT.length;i+=1) {
-                    var where = newLatLng(data.result.GPS_ABS_LAT[i],data.result.GPS_ABS_LONG[i]);
-                    var deltaLat = data.result.DELTA_LAT[i];
-                    var deltaLon = data.result.DELTA_LONG[i];
-
-                    if (CSTATE.lastMeasPathLoc) {
-                        var noLastView = (Math.abs(CSTATE.lastMeasPathDeltaLat) < 1.0e-6) && 
-                                         (Math.abs(CSTATE.lastMeasPathDeltaLon) < 1.0e-6);
-                        if (!noLastView) {
-                            var noView = (Math.abs(deltaLat) < 1.0e-6) && 
-                                         (Math.abs(deltaLon) < 1.0e-6); 
-                            if (!noView) {
-                                // Draw the polygon
-                                var coords = [newLatLng(CSTATE.lastMeasPathLoc.lat()+CSTATE.lastMeasPathDeltaLat,
-                                                        CSTATE.lastMeasPathLoc.lng()+CSTATE.lastMeasPathDeltaLon),
-                                              CSTATE.lastMeasPathLoc,
-                                              where,
-                                              newLatLng(where.lat()+deltaLat, where.lng()+deltaLon)];
-                                CSTATE.swathPolys.push(newPolygonWithoutOutline(CSTATE.map,CNSNT.swath_color,CNSNT.swath_opacity,coords,CSTATE.showSwath));
-                            }
-                        }    
-                    }
-                    CSTATE.lastMeasPathLoc = where;
-                    CSTATE.lastMeasPathDeltaLat = deltaLat;
-                    CSTATE.lastMeasPathDeltaLon = deltaLon;
-                }
-                CSTATE.swathLine = data.result.nextRow;
-            }
-        }
-    }
-    setGduTimer('swath');
 }
 
 //drop (or update) the note bubble (and add listener if dropping)
@@ -3882,6 +4203,8 @@ function initialize_cookienames() {
         wbubble: COOKIE_PREFIX + '_wbubble',
         swath: COOKIE_PREFIX + '_swath',
         activePlatName: COOKIE_PREFIX + '_activePlatName',
+        dspStabClass: COOKIE_PREFIX + '_dspStabClass',
+        dspExportClass: COOKIE_PREFIX + '_dspExportClass'
     };
 }
 

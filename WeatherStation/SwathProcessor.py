@@ -10,12 +10,9 @@ File History:
 Copyright (c) 2012 Picarro, Inc. All rights reserved
 """
 from collections import deque
-from numpy import *
-import os
-import sys
-import time
-import traceback
-from namedtuple import namedtuple
+from numpy import arange, arcsin, arctan2, asarray, cos, isfinite, isnan
+from numpy import log, pi, sin, sqrt, unwrap
+from collections import namedtuple
 from scipy.special import erf
 
 EARTH_RADIUS = 6378100
@@ -221,12 +218,12 @@ def ltqnorm( p ):
         raise ValueError( "Argument to ltqnorm %f must be in open interval (0,1)" % p )
 
     # Coefficients in rational approximations.
-    a = (-3.969683028665376e+01,  2.209460984245205e+02, \
-         -2.759285104469687e+02,  1.383577518672690e+02, \
-         -3.066479806614716e+01,  2.506628277459239e+00)
-    b = (-5.447609879822406e+01,  1.615858368580409e+02, \
-         -1.556989798598866e+02,  6.680131188771972e+01, \
-         -1.328068155288572e+01 )
+    #a = (-3.969683028665376e+01,  2.209460984245205e+02, \
+    #     -2.759285104469687e+02,  1.383577518672690e+02, \
+    #     -3.066479806614716e+01,  2.506628277459239e+00)
+    #b = (-5.447609879822406e+01,  1.615858368580409e+02, \
+    #     -1.556989798598866e+02,  6.680131188771972e+01, \
+    #     -1.328068155288572e+01 )
     c = (-7.784894002430293e-03, -3.223964580411365e-01, \
          -2.400758277161838e+00, -2.549732539343734e+00, \
           4.374664141464968e+00,  2.938163982698783e+00)
@@ -239,13 +236,13 @@ def ltqnorm( p ):
 
     # Rational approximation for lower region:
     if p < plow:
-       q  = math.sqrt(-2*math.log(p))
-       return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / \
+        q  = sqrt(-2*log(p))
+        return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / \
                ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)
 
     # Rational approximation for upper region:
     if phigh < p:
-       q  = math.sqrt(-2*math.log(1-p))    
+        q  = sqrt(-2*log(1-p))    
 
 def cnorm(z):
     # Calculate probability that a normal random variable will be 

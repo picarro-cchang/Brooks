@@ -7,6 +7,7 @@
 # 2011-09-14 Alex Lee  Created
 
 import sys
+sys.path.append(r"C:\Picarro\G2000\ReportGen\ViewServer")
 import os
 import wx
 import shutil
@@ -23,6 +24,7 @@ import simplejson as json
 from CustomConfigObj import CustomConfigObj
 from SingleInstance import SingleInstance
 from RemoteMobileKitSetupFrame import RemoteMobileKitSetupFrame
+from SecureRestProxy import SecureRestProxy
 
 DEFAULT_CONFIG_NAME = "MobileKitSetup.ini"
 MAX_REST_ERROR_COUNT = 5
@@ -94,7 +96,7 @@ class RestProxy(object):
             finally:
                 conn.close()
         return dispatch
-   
+    
 class RemoteMobileKitSetup(RemoteMobileKitSetupFrame):
     def __init__(self, configFile, *args, **kwds):
         self.co = CustomConfigObj(configFile)
@@ -125,11 +127,15 @@ class RemoteMobileKitSetup(RemoteMobileKitSetupFrame):
         self.setInit()
 
         # Set up REST service
-        urlcomp = self.url.split("/",1)
-        host = urlcomp[0]
-        restUrl = "/"
-        if len(urlcomp)>1: restUrl += urlcomp[1]
-        self.restService = RestProxy(host,restUrl)
+        if self.secure:
+            self.restService = SecureRestProxy("https://"+self.csp_url, self.svc, 
+                                               "https://"+self.ticket_url, self.identity, self.psys)
+        else:
+            urlcomp = self.url.split("/",1)
+            host = urlcomp[0]
+            restUrl = "/"
+            if len(urlcomp)>1: restUrl += urlcomp[1]
+            self.restService = RestProxy(host,restUrl)
         
         self.analyzerList = []
         self.nameList = []
@@ -148,20 +154,21 @@ class RemoteMobileKitSetup(RemoteMobileKitSetupFrame):
     def _updateStatus(self):
         while True:
             try:
-                print "self.getAlog() ", self.getAlog()
-                result = self.restService.getData({'alog':self.getAlog(), 'startPos':-1, 'varList':json.dumps(self.concList)})
-                if "error" in result:
-                    pass
-                else:
-                    for i in range(len(self.concList)):
-                        conc = self.concList[i]
-                        if conc in result:
-                            concValue = float(result[conc][-1])
-                        else:
-                            concValue = 0.0
-                        self.textCtrlConc[i].SetValue("%.3f"%concValue)
-            except Exception, err:
-                print "%r" % err
+                alog = self.getAlog()
+                if alog:
+                    result = self.restService.getData({'alog':alog, 'startPos':-1, 'varList':json.dumps(self.concList)})
+                    if "error" in result:
+                        pass
+                    else:
+                        for i in range(len(self.concList)):
+                            conc = self.concList[i]
+                            if conc in result:
+                                concValue = float(result[conc][-1])
+                            else:
+                                concValue = 0.0
+                            self.textCtrlConc[i].SetValue("%.3f"%concValue)
+            except:
+                print traceback.format_exc()
             time.sleep(2.0)
 
     def getAnalyzerList(self):
@@ -180,12 +187,24 @@ class RemoteMobileKitSetup(RemoteMobileKitSetupFrame):
             
     def getAlog(self):
         name = self.dataCtrl.GetValue()
-        alog = self.alogList[self.nameList.index(name)]
+        try:
+            alog = self.alogList[self.nameList.index(name)]
+        except ValueError:
+            alog = ''
         return alog
         
     def setInit(self):
         # Start view server
-        self.url = self.co.get("Server", "url", "p3.picarro.com/dev")
+        self.secure = int(self.co.get("Server", "secure", 0))
+        if self.secure:
+            self.csp_url = self.co.get("Server", "csp_url", "dev.picarro.com/node")
+            self.ticket_url = self.co.get("Server", "ticket_url", "dev.picarro.com/node/rest/sec/dummy/1.0/Admin")
+            self.identity = self.co.get("Server","identity")
+            self.psys = self.co.get("Server","sys")
+            self.svc = "gdu"
+        else:
+            self.url = self.co.get("Server", "url", "p3.picarro.com/dev")
+            
         self.stopViewServer()
         self.startViewServer()
         
@@ -290,12 +309,30 @@ class RemoteMobileKitSetup(RemoteMobileKitSetupFrame):
         launchThread = threading.Thread(target = self._launchServer, args = (serverCode,))
         launchThread.setDaemon(True)
         launchThread.start()
-           
+
     def _launchServer(self, serverCode):
         if os.path.basename(serverCode).split(".")[-1] == "py":
-            proc = psutil.Popen(["python.exe", serverCode, "-u", self.url, "-c", self.setupIniFile])
+            if self.secure:
+                proc = psutil.Popen(["python.exe", serverCode, "-s",
+                                     "--svc=%s" % self.svc, 
+                                     "--csp-url=%s" % self.csp_url,
+                                     "--ticket-url=%s" % self.ticket_url,
+                                     "--identity=%s" % self.identity,
+                                     "--sys=%s" % self.psys,
+                                     "--config=%s" % self.setupIniFile])
+            else:
+                proc = psutil.Popen(["python.exe", serverCode, "-u", self.url, "-c", self.setupIniFile])
         else:
-            proc = psutil.Popen([serverCode, "-u", self.url, "-c", self.setupIniFile])
+            if self.secure:
+                proc = psutil.Popen([serverCode, "-s",
+                                     "--svc=%s" % self.svc,
+                                     "--csp-url=%s" % self.csp_url,
+                                     "--ticket-url=%s" % self.ticket_url,
+                                     "--identity=%s" % self.identity,
+                                     "--sys=%s" % self.psys,
+                                     "--config=%s" % self.setupIniFile])
+            else:
+                proc = psutil.Popen([serverCode, "-u", self.url, "-c", self.setupIniFile])
         self.co.set("Server", "pid", proc.pid)
         self.co.write()
         

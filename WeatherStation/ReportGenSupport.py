@@ -10,7 +10,6 @@ Copyright (c) 2012 Picarro, Inc. All rights reserved
 """
 import calendar
 from collections import namedtuple
-import copy
 import cStringIO
 import getFromP3 as gp3
 import hashlib
@@ -21,16 +20,21 @@ except:
 import math
 import numpy as np
 import os
-import PIL.Image
-import PIL.ImageDraw
-import PIL.ImageMath
-import SwathProcessor as sp
+import Image
+import ImageDraw
+import ImageMath
+from SwathProcessor import process
 import sys
 import threading
 import time
 import traceback
 import urllib
 import urllib2
+import subprocess
+
+# Executable for HTML to PDF conversion
+WKHTMLTOPDF = r"C:\Program Files (x86)\wkhtmltopdf\wkhtmltopdf.exe"
+SVCURL = "http://localhost:5200/rest"
 
 RTD = 180.0/math.pi
 DTR = math.pi/180.0
@@ -66,10 +70,10 @@ def overBackground(a,b,box):
 
 def backgroundToOverlay(im):
     r,g,b,a = im.split()
-    r = PIL.ImageMath.eval("int(256*n/(d+1))",n=r,d=a).convert('L')
-    g = PIL.ImageMath.eval("int(256*n/(d+1))",n=g,d=a).convert('L')
-    b = PIL.ImageMath.eval("int(256*n/(d+1))",n=b,d=a).convert('L')
-    return PIL.Image.merge("RGBA",(r,g,b,a))
+    r = ImageMath.eval("int(256*n/(d+1))",n=r,d=a).convert('L')
+    g = ImageMath.eval("int(256*n/(d+1))",n=g,d=a).convert('L')
+    b = ImageMath.eval("int(256*n/(d+1))",n=b,d=a).convert('L')
+    return Image.merge("RGBA",(r,g,b,a))
 
 def merge_dictionary(dst, src):
     stack = [(dst, src)]
@@ -117,7 +121,11 @@ def asPNG(image):
 def strToEtm(s):
     return calendar.timegm(time.strptime(s,"%Y-%m-%d  %H:%M"))
 
-class CompositeMapMaker(object):
+def pretty_ticket(ticket):
+    t = ticket.upper()
+    return " ".join([t[s:s+4] for s in range(0,32,4)])
+
+class ReportCompositeMap(object):
     def __init__(self,reportDir,ticket,region):
         self.reportDir = reportDir
         self.ticket = ticket
@@ -158,9 +166,9 @@ class CompositeMapMaker(object):
                 compositeImage = None
                 for layer in layers:
                     if layer in files:
-                        image = PIL.Image.open(cStringIO.StringIO(files[layer]))
+                        image = Image.open(cStringIO.StringIO(files[layer]))
                         if compositeImage is None:
-                            compositeImage = PIL.Image.new('RGBA',image.size,(0,0,0,0))
+                            compositeImage = Image.new('RGBA',image.size,(0,0,0,0))
                         compositeImage = overBackground(image,compositeImage,None)
                         # Remove the component status and image files
                         os.remove(statusFnames[layer])
@@ -169,6 +177,73 @@ class CompositeMapMaker(object):
                 op.write(asPNG(compositeImage))
                 op.close()
                 updateStatus(self.statusFname,{"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
+            except:
+                msg = traceback.format_exc()
+                updateStatus(self.statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H:%M:%S")})
+
+class ReportPDF(object):
+    def __init__(self,reportDir,ticket,instructions,region):
+        self.reportDir = reportDir
+        self.ticket = ticket
+        self.instructions = instructions
+        self.region = region
+        self.PdfFname = os.path.join(self.reportDir,"%s.report.%d.pdf" % (self.ticket,self.region))
+        self.statusFname  = os.path.join(self.reportDir,"%s.report.%d.status" % (self.ticket,self.region))
+        
+    def getStatus(self):
+        return getStatus(self.statusFname)
+        
+    def run(self):
+        style = """
+        <style>
+            table.table-fmt1 td {text-align:center; vertical-align:middle; }
+            table.table-fmt1 th {text-align:center; }
+        </style>
+        """
+        name = self.instructions["regions"][self.region]["name"]
+        heading = "<h2>Report %s, Region %d (%s)</h2>" % (pretty_ticket(self.ticket),self.region+1,name)
+        peaksHeading = "<h3>Methane Peaks Detected</h3>"
+        surveyHeading = "<h3>Surveys</h3>"
+        if "done" in getStatus(self.statusFname):
+            return  # This has already been computed and the output exists
+        else:
+            updateStatus(self.statusFname,{"start":time.strftime("%Y%m%dT%H:%M:%S")},True)
+            try:
+                # Find the peaks report file and the path report file
+                peaksReportFname = os.path.join(self.reportDir,"%s.peaksMap.%d.html" % (self.ticket,self.region))
+                pathReportFname = os.path.join(self.reportDir,"%s.pathMap.%d.html" % (self.ticket,self.region))
+                compositeMapFname = os.path.join(self.reportDir,"%s.compositeMap.%d.png" % (self.ticket,self.region))
+                
+                #params = {"ticket":self.ticket, "region":self.region}
+                #compositeMapUrl = "%s/getComposite?%s" % (SVCURL,urllib.urlencode(params))
+                compositeMapUrl = "file:%s" % urllib.pathname2url(compositeMapFname)
+                updateStatus(self.statusFname,{"peaksReport":peaksReportFname,"pathReport":pathReportFname,
+                                               "compositeMapUrl":compositeMapUrl})
+                # Read in the peaks report and path report
+                fp = None
+                try:
+                    fp = file(peaksReportFname,"rb")
+                    peaksReport = fp.read()
+                except:
+                    updateStatus(self.statusFname,{"peaksWarning":traceback.format_exc()})
+                finally:
+                    if fp: fp.close()
+                pathReport = ""
+                fp = None
+                try:
+                    fp = file(pathReportFname,"rb")
+                    pathReport = fp.read()
+                except:
+                    updateStatus(self.statusFname,{"pathWarning":traceback.format_exc()})
+                finally:
+                    if fp: fp.close()
+                # Generate the composite map as an image
+                pic = '<img id="image" src="%s" alt="" width="95%%"></img>' % compositeMapUrl
+                s = style + heading + peaksHeading + peaksReport + surveyHeading + pathReport + heading + pic
+                proc = subprocess.Popen([WKHTMLTOPDF,"-",self.PdfFname],
+                                        stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                stdout = proc.communicate(s)
+                updateStatus(self.statusFname,{"stdout":stdout,"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
             except:
                 msg = traceback.format_exc()
                 updateStatus(self.statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H:%M:%S")})
@@ -233,6 +308,12 @@ class ReportGen(object):
         return self.ticket
 
 class Supervisor(object):
+    # Start up various report generation tasks. Processing takes place one region at a time
+    #  with the generation of a composite map and a PDF report for each. The composite map
+    #  is made only once there are a base map, a marker map and a path map, and the PDF report
+    #  is made only once there is a composite map. For each of the base, marker and path maps,
+    #  we iterate over the runs sequentially, and test that all three are complete before 
+    #  proceeding the next, so as not to start too many concurrent threads.
     def __init__(self,reportDir,ticket,instr):
         self.instructions = instr
         self.ticket = ticket
@@ -241,25 +322,29 @@ class Supervisor(object):
         statusFname = os.path.join(self.reportDir,"%s.json.status" % self.ticket)
         for i,r in enumerate(self.instructions["regions"]):
             # Check if a composite map already exists for this region
-            cm = CompositeMapMaker(self.reportDir,self.ticket,i)
+            cm = ReportCompositeMap(self.reportDir,self.ticket,i)
             if "done" not in cm.getStatus():
                 components = { "baseMap":{}, "pathMap":{}, "markerMap":{} }
+                # Start generating the base map
                 bm = ReportBaseMap(self.reportDir,self.ticket,self.instructions,i)
                 components["baseMap"]["object"] = bm
                 bmThread = threading.Thread(target = bm.run)
                 bmThread.setDaemon(True)
                 bmThread.start()
+                # Start generating the path map
                 mp = bm.getMapParams()
                 pm = ReportPathMap(self.reportDir,self.ticket,self.instructions,mp,i)
                 components["pathMap"]["object"] = pm
                 pmThread = threading.Thread(target = pm.run)
                 pmThread.setDaemon(True)
                 pmThread.start()
+                # Start generating the marker map
                 mm = ReportMarkerMap(self.reportDir,self.ticket,self.instructions,mp,i)
                 components["markerMap"]["object"] = mm
                 mmThread = threading.Thread(target = mm.run)
                 mmThread.setDaemon(True)
                 mmThread.start()
+                # Wait until completion of all component maps
                 while True:
                     errors = False
                     complete = True
@@ -289,29 +374,24 @@ class Supervisor(object):
                 updateStatus(statusFname,{("%s.%d" % ("composite",i)):st})
                 if complete: break
                 time.sleep(1.0)
-                
-        updateStatus(statusFname,{"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
+            # Check if a PDF report already exists for this region
+            pdf = ReportPDF(self.reportDir,self.ticket,self.instructions,i)
+            if "done" not in pdf.getStatus() and not errors:
+                # Start PDF report generation in thread and wait until end is in status
+                pdfThread = threading.Thread(target=pdf.run)
+                pdfThread.setDaemon(True)
+                pdfThread.start()
+                while True:
+                    st = pdf.getStatus()
+                    if "error" in st: errors = True
+                    updateStatus(statusFname,{("%s.%d" % ("report",i)):st})
+                    if "end" in st: break
+                    time.sleep(1.0)
+        if errors:
+            updateStatus(statusFname,{"error":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
+        else:
+            updateStatus(statusFname,{"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
             
-        # try:
-            # bm = ReportBaseMap(self.reportDir,self.ticket,self.instructions)
-            # bmThread = threading.Thread(target = bm.run)
-            # bmThread.setDaemon(True)
-            # bmThread.start()
-            # # The map parameters are necessary for the additional layers
-            # mp = bm.getMapParams()
-            # pm = ReportPathMap(self.reportDir,self.ticket,self.instructions,mp)
-            # pmThread = threading.Thread(target = pm.run)
-            # pmThread.setDaemon(True)
-            # pmThread.start()           
-            # mm = ReportMarkerMap(self.reportDir,self.ticket,self.instructions,mp)
-            # mmThread = threading.Thread(target = mm.run)
-            # mmThread.setDaemon(True)
-            # mmThread.start()            
-        # except:
-            # msg = traceback.format_exc()
-            # updateStatus(statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H:%M:%S")})
-        # #
-        # return self.ticket
 
 class ReportBaseMap(object):
     def __init__(self,reportDir,ticket,instructions,region):
@@ -322,23 +402,21 @@ class ReportBaseMap(object):
         self.baseMapFname = os.path.join(self.reportDir,"%s.baseMap.%d.png" % (self.ticket,self.region))
         self.statusFname  = os.path.join(self.reportDir,"%s.baseMap.%d.status" % (self.ticket,self.region))
         self.name   = self.instructions["regions"][region]["name"]
-        self.minLng = float(self.instructions["regions"][region]["minLng"])
-        self.maxLng = float(self.instructions["regions"][region]["maxLng"])
-        self.minLat = float(self.instructions["regions"][region]["minLat"])
-        self.maxLat = float(self.instructions["regions"][region]["maxLat"])
-        self.baseImage = self.instructions["regions"][region]["baseImage"]
+        self.minLat, self.minLng = self.instructions["regions"][region]["swCorner"]
+        self.maxLat, self.maxLng = self.instructions["regions"][region]["neCorner"]
+        self.baseType = self.instructions["regions"][region]["baseType"]
         
     def getMapParams(self):
-        if self.baseImage == "Google map image":
+        if self.baseType == "map":
             mp = GoogleMap().getPlatParams(self.minLng,self.maxLng,self.minLat,self.maxLat,satellite=False)
-        elif self.baseImage == "Google satellite image": 
+        elif self.baseType == "satellite": 
             mp = GoogleMap().getPlatParams(self.minLng,self.maxLng,self.minLat,self.maxLat,satellite=True)
-        elif self.baseImage == "Plat image":
+        elif self.baseType == "plat":
             mp = PlatFetcher().getPlatParams(self.name,self.minLng,self.maxLng,self.minLat,self.maxLat)
             if mp is None:
                 mp = GoogleMap().getPlatParams(self.minLng,self.maxLng,self.minLat,self.maxLat,satellite=False)             
         else:
-            raise ValueError("Base Image type not yet supported")
+            raise ValueError("Base type %s not yet supported" % self.baseType)
         return mp
     
     def getStatus(self):
@@ -350,16 +428,16 @@ class ReportBaseMap(object):
         else:
             updateStatus(self.statusFname,{"start":time.strftime("%Y%m%dT%H:%M:%S")},True)
             try:
-                if self.baseImage == "Google map image":
+                if self.baseType == "map":
                     image, mp = GoogleMap().getPlat(self.minLng,self.maxLng,self.minLat,self.maxLat,satellite=False)
-                elif self.baseImage == "Google satellite image": 
+                elif self.baseType == "satellite": 
                     image, mp = GoogleMap().getPlat(self.minLng,self.maxLng,self.minLat,self.maxLat,satellite=True)
-                elif self.baseImage == "Plat image":
+                elif self.baseType == "plat":
                     image, mp = PlatFetcher().getPlat(self.name,self.minLng,self.maxLng,self.minLat,self.maxLat)
                     if mp is None:
                         image, mp = GoogleMap().getPlat(self.minLng,self.maxLng,self.minLat,self.maxLat,satellite=False)             
                 else:
-                    raise ValueError("Base Image type not yet supported")
+                    raise ValueError("Base type %s not yet supported" % self.baseType)
                 op = open(self.baseMapFname,"wb")
                 op.write(asPNG(image))
                 op.close()
@@ -368,25 +446,86 @@ class ReportBaseMap(object):
                 msg = traceback.format_exc()
                 updateStatus(self.statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H:%M:%S")})
 
+def colorStringToRGB(colorString):
+    if colorString == "None": return False
+    if colorString[0] != "#": raise ValueError("Invalid color string")
+    red = int(colorString[1:3],16)
+    green = int(colorString[3:5],16)
+    blue = int(colorString[5:7],16)
+    return (red,green,blue)
+
+def makeColorPatch(value):
+    if value == "None":
+        result = "None"
+    else:
+        result= '<div style="width:15px;height:15px;border:1px solid #000;margin:0 auto;'
+        result += 'background-color:%s;"></div>' % value
+    return result
+    
 class ReportPathMap(object):
+    """ Generate the path and swath. The parameters for each run (e.g. colors for markers, wedges,
+        minimum amplitudes, etc.) are associated with the various drive-arounds which make up
+        the run, so these can be included in the path report. """
+        
     def __init__(self,reportDir,ticket,instructions,mapParams,region,timeout=300):
         self.reportDir = reportDir
         self.ticket = ticket
         self.region = region
         self.instructions = instructions
+        self.pathHtmlFname = os.path.join(self.reportDir,"%s.pathMap.%d.html" % (self.ticket,self.region))
         self.pathMapFname = os.path.join(self.reportDir,"%s.pathMap.%d.png" % (self.ticket,self.region))
         self.pathStatusFname  = os.path.join(self.reportDir,"%s.pathMap.%d.status" % (self.ticket,self.region))
         self.swathMapFname = os.path.join(self.reportDir,"%s.swathMap.%d.png" % (self.ticket,self.region))
         self.swathStatusFname  = os.path.join(self.reportDir,"%s.swathMap.%d.status" % (self.ticket,self.region))
         self.mapParams = mapParams
         self.timeout = timeout
+        self.paramsByLogname = {}
+        
+    def makePathReport(self,op):
+        pathTableString = []
+        pathTableString.append('<table style="page-break-after:always;" class="table table-striped table-condensed table-fmt1">')
+        pathTableString.append('<thead><tr>')
+        pathTableString.append('<th style="width:20%%">%s</th>' % "Analyzer")
+        pathTableString.append('<th style="width:20%%">%s</th>' % "Survey Start (GMT)")
+        pathTableString.append('<th style="width:10%%">%s</th>' % "Markers")
+        pathTableString.append('<th style="width:10%%">%s</th>' % "Wedges")
+        pathTableString.append('<th style="width:10%%">%s</th>' % "Swath")
+        pathTableString.append('<th style="width:10%%">%s</th>' % "Min Ampl")
+        pathTableString.append('<th style="width:10%%">%s</th>' % "Excl Radius")
+        pathTableString.append('<th style="width:10%%">%s</th>' % "Stab Class")
+        pathTableString.append('</tr></thead>')
+        pathTableString.append('<tbody>')
+        # Helper to sort surveys by start time
+        logHelper = []
+        for logname in self.paramsByLogname:
+            params = self.paramsByLogname[logname]
+            anz,dt,tm = logname.split('-')[:3]
+            utime = calendar.timegm(time.strptime(dt+tm, "%Y%m%d%H%M%SZ"))
+            logHelper.append((utime,logname))
+        logHelper.sort()
+        # Iterate through sorted surveys
+        for utime,logname in logHelper:
+            params = self.paramsByLogname[logname]
+            anz,dt,tm = logname.split('-')[:3]            
+            pathTableString.append('<tr>')
+            pathTableString.append('<td>%s</td>' % anz)
+            tstr = time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(utime))
+            pathTableString.append('<td>%s</td>' % tstr)
+            pathTableString.append('<td>%s</td>' % makeColorPatch(params['marker']))
+            pathTableString.append('<td>%s</td>' % makeColorPatch(params['wedges']))
+            pathTableString.append('<td>%s</td>' % makeColorPatch(params['swath']))
+            pathTableString.append('<td>%s</td>' % params['minAmpl'])
+            pathTableString.append('<td>%s</td>' % params['exclRadius'])
+            pathTableString.append('<td>%s</td>' % params['stabClass'])
+            pathTableString.append('</tr>')
+        pathTableString.append('</tbody>')
+        pathTableString.append('</table>')
+        op.write("\n".join(pathTableString))
         
     def getStatus(self):
         return getStatus(self.pathStatusFname),getStatus(self.swathStatusFname)
         
     def run(self):
-        swathColors = dict(No=False,Yes=(64,64,255,64),Red=(255,64,64,64),Green=(64,255,64,64),Blue=(64,64,255,64),
-                           Yellow=(255,255,64,64),Magenta=(255,64,255,64),Cyan=(64,255,255,64))
         if "done" in getStatus(self.pathStatusFname) and "done" in getStatus(self.swathStatusFname):
             return  # This has already been computed and the output exists
         else:
@@ -399,8 +538,8 @@ class ReportPathMap(object):
                     pathMaps = []
                     swathMaps = []
                     for ir,params in enumerate(self.instructions["runs"]):
-                        showPath = (params["path"] == "Yes")
-                        showSwath = swathColors[params["swath"]]
+                        showPath = True
+                        showSwath = colorStringToRGB(params["swath"])
                         def report(nPoints):
                             if showPath:  updateStatus(self.pathStatusFname,{"run%d" % (ir,): "%d points" % nPoints})
                             if showSwath: updateStatus(self.swathStatusFname,{"run%d" % (ir,): "%d points" % nPoints})
@@ -412,7 +551,11 @@ class ReportPathMap(object):
                                 minAmpl   = params["minAmpl"]
                                 stabClass = params["stabClass"]
                                 sl.setSwathParams(minAmpl=minAmpl,stabClass=stabClass)
-                            pMap,sMap = sl.makePathAndSwath(analyzer,startEtm,endEtm,showPath,showSwath,report,self.timeout)
+                            pMap,sMap,lognames = sl.makePathAndSwath(analyzer,startEtm,endEtm,showPath,showSwath,report,self.timeout)
+                            for n in lognames:
+                                if n in self.paramsByLogname:
+                                    raise ValueError("Log %s appears in more than one run" % n)
+                                self.paramsByLogname[n] = dict(params).copy()
                             if showPath: pathMaps.append(pMap)
                             if showSwath: swathMaps.append(sMap)
                     # Now merge the paths on the run maps together to form the composite path
@@ -432,6 +575,9 @@ class ReportPathMap(object):
                         op = open(self.swathMapFname,"wb")
                         op.write(asPNG(image))
                         op.close()
+                    op = open(self.pathHtmlFname,"wb")
+                    self.makePathReport(op)
+                    op.close()
                 updateStatus(self.pathStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
                 updateStatus(self.swathStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
             except:
@@ -459,42 +605,41 @@ class ReportMarkerMap(object):
     
     def makePeakReport(self,op,peakDict):
         peakTableString = []
-        peakTableString.append('<table class="table table-striped table-condensed">')
+        zoom = 18
+        peakTableString.append('<table class="table table-striped table-condensed table-fmt1 table-datatable">')
         peakTableString.append('<thead><tr>')
-        peakTableString.append('<th>%s</th>' % "Rank")
-        peakTableString.append('<th>%s</th>' % "Designation")
-        peakTableString.append('<th>%s</th>' % "Longitude")
-        peakTableString.append('<th>%s</th>' % "Latitude")
-        peakTableString.append('<th>%s</th>' % "Conc")
-        peakTableString.append('<th>%s</th>' % "Ampl")
+        peakTableString.append('<th style="width:10%%">%s</th>' % "Rank")
+        peakTableString.append('<th style="width:30%%">%s</th>' % "Designation")
+        peakTableString.append('<th style="width:20%%">%s</th>' % "Latitude")
+        peakTableString.append('<th style="width:20%%">%s</th>' % "Longitude")
+        peakTableString.append('<th style="width:10%%">%s</th>' % "Conc")
+        peakTableString.append('<th style="width:10%%">%s</th>' % "Ampl")
         peakTableString.append('</tr></thead>')
         peakTableString.append('<tbody>')
         for i in range(len(peakDict)):
             r = i+1
-            peakTableString.append('<tr>')
-            peakTableString.append('<td>%d</td>' % r)
             tstr = time.strftime("%Y%m%dT%H%M%S",time.gmtime(peakDict[r].etm))
             anz = peakDict[r].data['ANALYZER']
-            peakTableString.append('<td>%s_%s</td>' % (anz,tstr))
-            lng = peakDict[r].data['GPS_ABS_LONG']
-            peakTableString.append('<td>%.6f</td>' % lng)
             lat = peakDict[r].data['GPS_ABS_LAT']
-            peakTableString.append('<td>%.6f</td>' % lat)
+            lng = peakDict[r].data['GPS_ABS_LONG']
             ch4 = peakDict[r].data['CH4']
-            peakTableString.append('<td>%.1f</td>' % ch4)
             ampl = peakDict[r].data['AMPLITUDE']
+            des = "%s_%s" % (anz,tstr)
+            coords = "%s,%s" % (lat,lng)
+            peakTableString.append('<tr>')
+            peakTableString.append('<td>%d</td>' % r)
+            peakTableString.append('<td><a href="http://maps.google.com?q=%s+(%s)&z=%d" target="_blank">%s</a></td>' % (coords,des,zoom,des))
+            peakTableString.append('<td>%.6f</td>' % lat)
+            peakTableString.append('<td>%.6f</td>' % lng)
+            peakTableString.append('<td>%.1f</td>' % ch4)
             peakTableString.append('<td>%.2f</td>' % ampl)
             peakTableString.append('</tr>')
-        peakTableString.append('</tr></tbody>')
+        peakTableString.append('</tbody>')
         peakTableString.append('</table>')
         op.write("\n".join(peakTableString))
         
     def run(self):
         markerTypes = {"None":MT_NONE,"Concentration":MT_CONC,"Rank":MT_RANK}
-        markerColors = dict(Red=(255,64,64),Green=(64,255,64),Blue=(64,64,255),
-                            Yellow=(255,255,64),Magenta=(255,64,255),Cyan=(64,255,255))
-        wedgeColors = dict(No=False,Yes=(255,255,64,192),Red=(255,64,64,192),Green=(64,255,64,192),Blue=(64,64,255,192),
-                           Yellow=(255,255,64,192),Magenta=(255,64,255,192),Cyan=(64,255,255,192))
         if "done" in getStatus(self.peaksStatusFname) and "done" in getStatus(self.wedgesStatusFname):
             return  # This has already been computed and the output files exist
         else:
@@ -508,16 +653,16 @@ class ReportMarkerMap(object):
                     MarkerParams = namedtuple('MarkerParams',['analyzer','startEtm','endEtm','minAmpl',
                                               'maxAmpl','mType','mColor','showWedges','exclRadius'])
                     for ir,params in enumerate(self.instructions["runs"]):
-                        mType  = markerTypes[params["markerType"]]
-                        mColor = markerColors[params["markerColor"]]
+                        mType  = MT_RANK
+                        mColor = colorStringToRGB(params["marker"])
                         showPeaks = (mType != MT_NONE)
-                        showWedges = wedgeColors[params["wedges"]]
+                        showWedges = colorStringToRGB(params["wedges"])
                         if showPeaks or showWedges:
                             startEtm = strToEtm(params["startEtm"])
                             endEtm   = strToEtm(params["endEtm"])
                             analyzer = params["analyzer"]
                             minAmpl  = params["minAmpl"]
-                            maxAmpl  = params.get("maxAmpl",None)
+                            maxAmpl  = None
                             exclRadius = params["exclRadius"]
                             markerParams.append(MarkerParams(analyzer,startEtm,endEtm,minAmpl,maxAmpl,
                                                 mType,mColor,showWedges,exclRadius))
@@ -554,7 +699,7 @@ class PlatFetcher(object):
         if not os.path.exists(tifFile):
             return (None, None) if fetchPlat else None
         if not fetchPlat:
-            p = PIL.Image.open(tifFile)
+            p = Image.open(tifFile)
             nx,ny = p.size
             mp = MapParams(minLng,minLat,maxLng,maxLat,nx,ny,padX,padY)
             return mp
@@ -562,9 +707,9 @@ class PlatFetcher(object):
             if not os.path.exists(pngFile):
                 # Call ImageMagik to convert the TIF to a PNG
                 os.system('convert "%s" "%s"' % ( tifFile, pngFile))
-            p = PIL.Image.open(pngFile)
+            p = Image.open(pngFile)
             nx,ny = p.size
-            q = PIL.Image.new('RGBA',(nx+2*padX,ny+2*padY),(255,255,255,255))
+            q = Image.new('RGBA',(nx+2*padX,ny+2*padY),(255,255,255,255))
             q.paste(p,(padX,padY))
             mp = MapParams(minLng,minLat,maxLng,maxLat,nx,ny,padX,padY)
             return q,mp
@@ -607,8 +752,8 @@ class GoogleMap(object):
         scale = 2
         mp = MapParams(minLng,minLat,maxLng,maxLat,mx*scale,my*scale,padX,padY)
         if fetchPlat:
-            p = PIL.Image.open(cStringIO.StringIO(self.getMap(meanLat,meanLng,zoom,mx,my,scale,satellite)))
-            q = PIL.Image.new('RGBA',(scale*mx+2*padX,scale*my+2*padY),(255,255,255,255))
+            p = Image.open(cStringIO.StringIO(self.getMap(meanLat,meanLng,zoom,mx,my,scale,satellite)))
+            q = Image.new('RGBA',(scale*mx+2*padX,scale*my+2*padY),(255,255,255,255))
             q.paste(p,(padX,padY))
             return q, mp
         else:
@@ -668,7 +813,7 @@ class SurveyorLayers(object):
         return x,y
         
     def makeEmpty(self):
-        return PIL.Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
+        return Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
     
     def setSwathParams(self,minAmpl=0.05,minLeak=1.0,stabClass='D',nWindow=10,astdParams=dict(a=0.15*math.pi,b=0.25,c=0.0)):
         self.minAmpl = minAmpl
@@ -684,7 +829,7 @@ class SurveyorLayers(object):
         return min(math.pi,a*(b+c*vcar)/(wind+0.01))
         
     def drawSwath(self,source,sv,makeSwath):
-        result = sp.process(source,self.nWindow,self.stabClass,self.minLeak,self.minAmpl,self.astdParams)
+        result = process(source,self.nWindow,self.stabClass,self.minLeak,self.minAmpl,self.astdParams)
         lastLng, lastLat, lastDeltaLng, lastDeltaLat = None, None, None, None
         for etm,lng,lat,deltaLng,deltaLat in zip(result["EPOCH_TIME"],result["GPS_ABS_LONG"],result["GPS_ABS_LAT"],result["DELTA_LONG"],result["DELTA_LAT"]):
             if lastLng is not None:
@@ -700,21 +845,23 @@ class SurveyorLayers(object):
                         xmax = max(x1,x2,x3,x4)
                         ymin = min(y1,y2,y3,y4)
                         ymax = max(y1,y2,y3,y4)
-                        temp = PIL.Image.new('RGBA',(xmax-xmin+1,ymax-ymin+1),(0,0,0,0))
-                        tdraw = PIL.ImageDraw.Draw(temp)
+                        temp = Image.new('RGBA',(xmax-xmin+1,ymax-ymin+1),(0,0,0,0))
+                        tdraw = ImageDraw.Draw(temp)
                         tdraw.polygon([(x1-xmin,y1-ymin),(x2-xmin,y2-ymin),(x3-xmin,y3-ymin),(x4-xmin,y4-ymin)],
-                                        fill=makeSwath,outline=makeSwath[0:3]+(128,))
+                                        fill=makeSwath+(128,),outline=makeSwath+(200,))
                         mask = (self.padX+xmin,self.padY+ymin)
                         sv = overBackground(temp,sv,mask)
                         
             lastLng, lastLat, lastDeltaLng, lastDeltaLat = lng, lat, deltaLng, deltaLat
     
     def makePathAndSwath(self,analyzer,startEtm,endEtm,makePath,makeSwath,reportFunc=None,timeout=None):
-        """Use analyzer name, start and end epoch times to make a REST call to P3 and draw the path taken 
-        by the vehicle onto a layer. Only points lying in the layer rectangle (within the padded region)
-        are displayed"""
+        """Use analyzer name, start and end epoch times to make a REST call to P3 to draw the path taken 
+        by the vehicle and the associated swath. Only points lying in the layer rectangle (within the padded region)
+        are displayed. There may be many drive-arounds (represented by a distinct LOGNAMEs) associated with 
+        single run. Return a set of these, together with images of the path and swath"""
+        lognames = set()
         startTime = time.clock()
-        colors = dict(normal=(0,0,255,255),analyze=(0,0,0,255),inactive=(255,0,0))
+        colors = dict(normal=(0,0,255,255),analyze=(0,0,0,255),inactive=(255,0,0,255))
         lastColor = [colors["normal"]]
         def getColorFromValveMask(mask):
             # Determine color of path from valve mask
@@ -729,11 +876,11 @@ class SurveyorLayers(object):
             
         ov, sv = None, None
         if makePath:
-            ov = PIL.Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
-            odraw = PIL.ImageDraw.Draw(ov)
+            ov = Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
+            odraw = ImageDraw.Draw(ov)
         if makeSwath:
-            sv = PIL.Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
-            sdraw = PIL.ImageDraw.Draw(sv)
+            sv = Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
+            sdraw = ImageDraw.Draw(sv)
         lastRow = -1
         penDown = False
         path = []               # Path in (x,y) coordinates
@@ -769,6 +916,8 @@ class SurveyorLayers(object):
                             bufferedPath = [bufferedPath[-1]]
                     pathColor = color
                 path.append((self.padX+x,self.padY+y))
+                if (-self.padX<=x<self.nx+self.padX) and (-self.padY<=y<self.ny+self.padY):
+                    lognames.add(m.data.get("LOGNAME",""))
                 bufferedPath.append(m.data)
                 newPath = False
             else:
@@ -782,7 +931,7 @@ class SurveyorLayers(object):
         if path:        
             if makePath: odraw.line(path,fill=pathColor,width=2)
             if makeSwath and pathColor == colors["normal"]: self.drawSwath(bufferedPath,sv,makeSwath)
-        return ov, sv
+        return ov, sv, lognames
             
     def makeMarkers(self,markerParams):
         markersByRank = {}
@@ -846,7 +995,7 @@ class SurveyorLayers(object):
         peaks.sort()
                 
         if anyPeaks:
-            ov1 = PIL.Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
+            ov1 = Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
             # Count ranked markers
             nRanked = 0
             for amp,m,region in peaks:
@@ -885,13 +1034,13 @@ class SurveyorLayers(object):
                             else:
                                 msg = "*"
                         buff = cStringIO.StringIO(GoogleMarkers().getMarker(size,fontsize,msg,color))
-                        b = PIL.Image.open(buff)
+                        b = Image.open(buff)
                         bx,by = b.size
                         box = (self.padX+x-bx//2,self.padY+y-by)
                         ov1 = overBackground(b,ov1,box)
         if anyWedges:
-            ov2 = PIL.Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
-            odraw2 = PIL.ImageDraw.Draw(ov2)
+            ov2 = Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
+            odraw2 = ImageDraw.Draw(ov2)
             for amp,m,region in peaks:
                 analyzer,startEtm,endEtm,minAmpl,maxAmpl,mType,mColor,makeWedges,exclRadius = markerParams[region]
                 if not makeWedges: continue
@@ -917,9 +1066,10 @@ class SurveyorLayers(object):
                         minBearing = 0
                         maxBearing = 360.0
                     radius = int(radius/self.mpp)
-                    b = PIL.Image.new('RGBA',(2*radius+1,2*radius+1),(0,0,0,0))
-                    bdraw = PIL.ImageDraw.Draw(b)
-                    bdraw.pieslice((0,0,2*radius,2*radius),int(minBearing-90.0),int(maxBearing-90.0),fill=makeWedges,outline=(0,0,0,255))
+                    b = Image.new('RGBA',(2*radius+1,2*radius+1),(0,0,0,0))
+                    bdraw = ImageDraw.Draw(b)
+                    bdraw.pieslice((0,0,2*radius,2*radius),int(minBearing-90.0),int(maxBearing-90.0),fill=makeWedges+(128,),
+                                   outline=(0,0,0,255))
                     ov2 = overBackground(b,ov2,(self.padX+x-radius,self.padY+y-radius))
                    
         return ov1, ov2, markersByRank

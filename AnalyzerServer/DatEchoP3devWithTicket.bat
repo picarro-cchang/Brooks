@@ -1,4 +1,4 @@
-set file-path="R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120407\OUT\FCDS2006-20120407-102214Z-DataLog_User_Minimal.dat"
+set file-path="R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120323\OUT\FCDS2006-20120323-020431Z-DataLog_User_Minimal.dat"
 set data-type=dat   
 set psys=APITEST   
 set identity=85490338d7412a6d31e99ef58bce5de6

@@ -4,82 +4,21 @@
         <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
         <meta name="description" content="" />
         <meta name="keywords" content="" />
-        <meta name="viewport" id="meta_viewport" content="initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
-        <title>Experimental Graph Viewer</title>
-        <!-- <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/picarro_bootstrap_002.css') }}" /> -->
         <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/picarro_bootstrap.css') }}" />
-        <script type="text/javascript" src="{{ url_for('static',filename='jquery.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static',filename='json2.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='scripts/jquery.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='scripts/json2.js') }}"></script>
         <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
         {% block head %}
         {% endblock %}
-        
-        <script type="text/javascript" language="javascript">
-        
-        function pageLoadFunction() {
-            winH = window.innerHeight;
-            winW = window.innerWidth;
-
-            initialize(winH, winW);
-            // setup_viewport();
-            resize_me();
-        };
-
-        var resize_page;
-        var resize_inprocess = false;
-        var resize_timer;
-        var buffer = 50;
-        var margin = 20;
-        function resize_me() {
-            winH = window.innerHeight;
-            winW = window.innerWidth;
-            
-            lpge_wdth = $('#id_sidebar').width();
-            rpge_wdth = winW - lpge_wdth;
-            
-            $('#id_topleft').css('left', 0);
-            $('#id_p3_icon').css('position', 'fixed');
-            $('#id_p3_icon').css('left', buffer);
-            
-            $('#id_content').css('width', rpge_wdth - buffer);
-            
-            $('#id_topright').css('width', rpge_wdth - buffer);
-            $('#id_topright').css('left', lpge_wdth + margin);
-            $('#id_topright').css('right', 0);
-            
-            $('#id_topbar').css('width', rpge_wdth - buffer);
-            $('#id_topbar').css('left', lpge_wdth + margin);
-            $('#id_topbar').css('right', 0);
-            
-            if (resize_page) {
-                resize_page();
-            }
-            resize_inprocess = false;
-        };
-        
-        function setup_viewport() {
-            var winH = window.innerHeight;
-            var winW = window.innerWidth;
-            if (winH < winW) {
-                // Landscape mode
-                $('#meta_viewport').attr("content","initial-scale=1.0; maximum-scale=1.0; user-scalable=0;")
-            }
-            else {
-                // Portrait mode
-                $('#meta_viewport').attr("content","initial-scale=0.8; maximum-scale=0.8; user-scalable=0;")
-            }
-        };
-        
-        function resize_time() {
-            // setup_viewport();
-            if (!resize_inprocess) {
-                resize_inprocess = true;
-                resize_timer = setTimeout(resize_me,500);
-            }
-        };
+        <script type="text/javascript">
+	        function pageLoadFunction() {
+	            winH = window.innerHeight;
+	            winW = window.innerWidth;
+	            initialize(winH, winW);
+	        };
         </script>
     </head>
-    <body onload="pageLoadFunction()" onresize="resize_time()">
+    <body onload="pageLoadFunction()">
         {% block body %}
         {% endblock %}
         <div class="bottombar-wrapper">

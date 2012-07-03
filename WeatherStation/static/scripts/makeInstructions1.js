@@ -123,7 +123,7 @@ function clearTable(template)
 
 function setCell(template,row,col,value)
 {
-    $('#' + template.id + ' > tbody tr:eq(' + row + ') td:eq(' + col + ')').html(value)
+    $('#' + template.id + ' > tbody tr:eq(' + row + ') td:eq(' + col + ')').html(value);
 }
 
 function getRowItems(row)
@@ -545,7 +545,7 @@ function addOrEditRunChrome(okButton)
     hdr += '<h3>' + TXT.addRun + '</h3>';
     hdr += '</div>';
     
-    msg += '<div class="modal-body" style="max-height:550px;">'
+    msg += '<div class="modal-body" style="max-height:450px;">'
     msg += '<form id="id_run_form" class="form-horizontal" >';
     msg += '<fieldset>';
 
@@ -632,6 +632,14 @@ function addOrEditRunChrome(okButton)
     msg += '        <select name="stab_class" id="id_stab_class" class="input-xlarge"/>';
     msg += '    </div>';
     msg += '</div>';
+    
+    msg += '<div class="control-group">';
+    msg += '    <label class="control-label" for="id_run_comments">Comments</label>';
+    msg += '    <div class="controls">';
+    msg += '        <textarea name="run_comments" id="id_run_comments" class="input-xlarge" style="resize:none"></textarea>';
+    msg += '    </div>';
+    msg += '</div>';
+    
     msg += '</fieldset>';
     msg += '</form>';
     msg += '<p class="validate_tips alert alert-error"></p>'

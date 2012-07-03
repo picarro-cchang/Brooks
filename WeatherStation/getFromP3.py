@@ -9,9 +9,8 @@ except:
     import json
 
 from collections import deque
-from namedtuple import namedtuple
+from collections import namedtuple
 import calendar
-import datetime
 import sys
 import time
 import traceback
@@ -66,7 +65,7 @@ class P3_Accessor(object):
         ticket = "dummy"
         rprocs = '["AnzLog:byEpoch","AnzLogMeta:byEpoch"]'
         get_url = '%s/%s/%s/%s/%s?qry=%s&sys=%s&identity=%s&rprocs=%s' %(self.csp, "rest", svc, ticket, v_rsc, qry, sys, identity, rprocs)
-        # print "GET URL: %s"  % get_url
+        print "Ticket URL: %s"  % get_url
 
         params = {"qry": qry, "sys": sys, "identity": identity, "rprocs": rprocs}
         post_url = '%s/%s/%s/%s/%s' %(self.csp, "rest", svc, ticket, v_rsc)
@@ -164,8 +163,10 @@ class P3_Accessor(object):
                         print traceback.format_exc()
                         resultQueue.put(e)
                 except Exception,e:
-                    print traceback.format_exc()
-                    resultQueue.put(e)
+                    print "I/O Error, retrying"
+                    time.sleep(1.0)
+                    continue
+                    # resultQueue.put(e)
                     
         while True:
             if resultQueue.empty(): # We must initiate a fetch unless one is in progress
@@ -219,7 +220,7 @@ class P3_Accessor(object):
                 
     def genAnzLog(self,logtype):
         def _genAnzLog(startEtm,endEtm=None,limit=500,**kwds):
-            get_params = dict(qry="byEpoch",anz=self.analyzerName,limit=limit,startEtm=startEtm,logtype=logtype)
+            get_params = dict(qry="byEpoch",anz=self.analyzerName,limit=limit,startEtm=startEtm,logtype=logtype,resolveLogname=True)
             if kwds: get_params.update(kwds)
             if endEtm is not None: get_params["endEtm"] = endEtm
             return self._genCore(get_params,v_rsc="1.0/AnzLog",lwm=limit)
@@ -425,10 +426,10 @@ class P3_Accessor_ByPos(object):
                             print "Emptying prefetch queue"
                             # Empty out the queue and specify new start time
                             while not resultQueue.empty(): resultQueue.get() 
-                            params["startPos"] = max(row,reqPos)
+                            params["startPos"] = max(row,reqRow)
                 
     def genAnzLog(self,logtype):
-        def _genAnzLog(startEtm,endEtm=None,limit=500,**kwds):
+        def _genAnzLog(startPos,endPos=None,limit=500,**kwds):
             get_params = dict(qry="byPos",alog=self.alogName,limit=limit,startPos=startPos,logtype=logtype)
             if kwds: get_params.update(kwds)
             if endPos is not None: get_params["endPos"] = endPos
@@ -551,7 +552,7 @@ class P3_Source(object):
                 savedEtm = etm
                 savedData = data
         else:
-            firstEtm,firstData = self.oldData[0]
+            firstEtm,_ = self.oldData[0]
             raise P3NoDataUntil(firstEtm)
 
 class SyncSource(object):
@@ -625,8 +626,8 @@ if __name__ == "__main__":
         
     # endEtm = 1332491271
     #analyzerSource = P3_Source(p3.genAnzLog("dat"),"analyzerSource",endEtm=endEtm,limit=100)
-    #gpsSource = P3_Source(p3.genAnzLog("GPS_Raw"),"gpsSource",endEtm=endEtm,limit=100)
-    #wsSource = P3_Source(p3.genAnzLog("WS_Raw"),"wsSource",endEtm=endEtm,limit=100)
+    gpsSource = P3_Source(p3.genAnzLog("GPS_Raw"),"gpsSource",endEtm=endEtm,limit=100)
+    wsSource = P3_Source(p3.genAnzLog("WS_Raw"),"wsSource",endEtm=endEtm,limit=100)
         
     
     # startEtm = calendar.timegm(time.strptime("2012-03-23T08:20:00","%Y-%m-%dT%H:%M:%S"))

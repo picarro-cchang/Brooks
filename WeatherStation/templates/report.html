@@ -1,18 +1,35 @@
 {% extends "layout.html" %}
 
 {% block head %}
-<script type="text/javascript" language="javascript">
+<title>{{ name }}</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/jquery.dataTables.css') }}" />
+<script type="text/javascript" src="{{ url_for('static',filename='scripts/jquery.dataTables.min.js') }}"></script>
+<script type="text/javascript">
     function initialize(winH,winW) {
+        $.extend( $.fn.dataTableExt.oStdClasses, {
+            "sWrapper": "dataTables_wrapper form-inline"
+        });
+        $(".table-datatable").dataTable({
+            "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"
+        });
     }
 </script>
+<style>
+    table.table-fmt1 td {text-align:center; vertical-align:middle; }
+    table.table-fmt1 th {text-align:center; }
+</style>
+
 {% endblock %}
 
 {% block body %}
 <div class="container-fluid">
-    <h1>Sample Report</h1>
+    <h1>Report {{ prettyTicket }}, Region {{ region+1 }} ({{ name }})</h1>
     <div class="row-fluid">
         <div class="span5">
+            <h2>Methane Peaks Detected</h2>
             {{ peaksTable | safe }}
+            <h2>Surveys</h2>
+            {{ pathLogs | safe }}
         </div>
         <div class="span7">
             <img src={{ mapUrl }} alt="Map"></img>

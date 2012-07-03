@@ -1,10 +1,13 @@
-import calendar
-import cStringIO
+'''
+Flask server for Picarro Surveyor Report Generation
+
+Created on Jun 9, 2012
+
+@author: stan
+'''
 from collections import namedtuple
-from flask import Flask, Markup
-from flask import make_response, redirect, render_template, request, Response, url_for
-import getFromP3 as gp3
-from glob import glob
+from flask import Flask, abort
+from flask import make_response, render_template, request
 import hashlib
 try:
     import json
@@ -12,19 +15,13 @@ except:
     import simplejson as json
 import math
 import os
-from pygments import highlight
-from pygments.lexers import get_lexer_by_name, get_lexer_for_filename, guess_lexer, guess_lexer_for_filename
-from pygments.formatters import HtmlFormatter
 import sys
 import time
 import traceback
-import urllib2
 import urllib
 from werkzeug import secure_filename
-from ReportGenSupport import ReportGen, ReportStatus, GoogleMap, SurveyorLayers
-from ReportGenSupport import LayerFilenamesGetter, CompositeMapMaker
-
-from peaksReport import testPage
+from ReportGenSupport import ReportGen, ReportStatus
+from ReportGenSupport import LayerFilenamesGetter, pretty_ticket
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     appPath = sys.executable
@@ -59,9 +56,9 @@ LAYERBASEURL = '/static/ReportGen/' # Need trailing /
 app = Flask(__name__)
 app.config.from_object(__name__)
 
-def unix_line_endings(str):
-    return str.replace('\r\n', '\n').replace('\r', '\n')
-    
+def unix_line_endings(s):
+    return s.replace('\r\n', '\n').replace('\r', '\n')
+
 @app.route('/rest/validate',methods=['GET','POST'])
 def validate():
     # Checks the validity of the secure hash at the top of a Picarro JSON file
@@ -112,8 +109,16 @@ def getLayerUrls():
 def getReport():
     ticket = request.values.get('ticket')
     region = int(request.values.get('region'))
+    name = request.values.get('name')
     params = urllib.urlencode(request.values)
     mapUrl = '/rest/getComposite?%s' % params
+    pathFileName = os.path.join(REPORTROOT,'%s.pathMap.%d.html'%(ticket,region))
+    if os.path.exists(pathFileName):
+        fp = file(pathFileName,'rb')
+        pathLogs = fp.read()
+        fp.close()
+    else:
+        pathLogs = ""
     peaksTableFileName = os.path.join(REPORTROOT,'%s.peaksMap.%d.html'%(ticket,region))
     if os.path.exists(peaksTableFileName):
         fp = file(peaksTableFileName,'rb')
@@ -121,7 +126,8 @@ def getReport():
         fp.close()
     else:
         peaksTable = ""
-    return render_template('report.html',peaksTable=peaksTable,mapUrl=mapUrl)
+    return render_template('report.html',peaksTable=peaksTable,pathLogs=pathLogs,mapUrl=mapUrl,
+                           name=name,region=region,prettyTicket=pretty_ticket(ticket))
 
 @app.route('/rest/getComposite')
 def getComposite():
@@ -137,6 +143,39 @@ def getComposite():
     response = make_response(fp.read())
     fp.close()
     response.headers['Content-Type'] = 'image/png'
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(when))
+    return response
+
+@app.route('/rest/getPDF')
+def getPDF():
+    ticket = request.values.get('ticket')
+    region = int(request.values.get('region'))
+    fname = os.path.join(REPORTROOT,'%s.report.%d.pdf'%(ticket,region))
+    if os.path.exists(fname):
+        when = os.path.getmtime(fname)
+    else:
+        abort(404)
+    fp = open(fname,'rb')
+    response = make_response(fp.read())
+    fp.close()
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'attachment; filename="%s_region_%d.pdf"' % (ticket,region+1)
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(when))
+    return response
+
+@app.route('/rest/getZIP')
+def getZIP():
+    ticket = request.values.get('ticket')
+    fname = os.path.join(REPORTROOT,'%s.archive.zip'%(ticket,))
+    if os.path.exists(fname):
+        when = os.path.getmtime(fname)
+    else:
+        flask.abort(404)
+    fp = open(fname,'rb')
+    response = make_response(fp.read())
+    fp.close()
+    response.headers['Content-Type'] = 'application/zip'
+    response.headers['Content-Disposition'] = 'attachment; filename="%s.zip"' % (ticket,)
     response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(when))
     return response
 
@@ -193,7 +232,7 @@ def index():
     
 @app.route('/test')
 def test():
-    return render_template('test.html',html="\n".join([line for line in testPage()]))
+    return render_template('testTable.html');
     
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=5200,debug=True,threaded=True)

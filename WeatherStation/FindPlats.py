@@ -90,12 +90,7 @@ class FindPlats(object):
 if __name__ == "__main__":
     app = FindPlats(r"R:\crd_G2000\FCDS\1061-FCDS2003\Comparison\platBoundaries.npz")
     # print app.search(r"R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120323\DAT\FCDS2006-20120323-020431Z-DataLog_User_Minimal.dat", 30)
-    dirname = r"R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120410a\DAT"
-    fname = r"FCDS2006-20120410-125734Z-DataLog_User_Minimal.dat"
-    print fname
-    print app.search(os.path.join(dirname,fname), 30)
-    
-    dirname = r"R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120410b\DAT"
-    fname = r"FCDS2006-20120410-155157Z-DataLog_User_Minimal.dat"
+    dirname = r"R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120407\DAT"
+    fname = r"FCDS2006-20120407-102214Z-DataLog_User_Minimal.dat"
     print fname
     print app.search(os.path.join(dirname,fname), 30)
