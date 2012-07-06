@@ -105,8 +105,11 @@ var TXT = {
         stab_f: "Text for Stab Class F",
         
         export_as_txt: "Export data as txt file.",
-        export_as_csv: "Export data as csv file."
+        export_as_csv: "Export data as csv file.",
+            
+        copyClipboard: "Ctrl-C copies cursor position to clipboard"
     };
+
 
 //Html button
 var HBTN = {
@@ -134,6 +137,7 @@ var HBTN = {
         allHliteCntl: '<div><button id="id_allHliteCntl" type="button" onclick="removeAllHlites();" class="btn btn-primary btn-fullwidth">' + TXT.remove_all_plat_hlite + '</button></div>',
         surveyOnOffBtn: '<div><button id="id_surveyOnOffBtn" type="button" onclick="stopSurvey();" class="btn btn-primary btn-fullwidth">' + TXT.stop_survey + '</button></div>',
         completeSurveyBtn: '<div><button id="id_completeSurveyBtn" type="button" onclick="completeSurvey();" class="btn btn-primary btn-fullwidth">' + TXT.complete_survey + '</button></div>',
+        copyClipboardOkBtn: '<div><button id="id_copyClipboardOkBtn" onclick="copyCliboard();" class="btn btn-primary btn-fullwidth">' + TXT.ok + '</button></div>'
     };
 
 
@@ -1027,6 +1031,12 @@ function initialize_map() {
     });
     CSTATE.pathListener[pathListener] = pathListener;
     
+    google.maps.event.addListener(CSTATE.map,"rightclick",function(event) {
+        var lat = event.latLng.lat();
+        var lng = event.latLng.lng();
+        modalPaneCopyClipboard(lat.toFixed(5) + ', ' + lng.toFixed(5));
+    });
+    
     if (CSTATE.marker) {
         CSTATE.marker.setMap(null);
     }
@@ -1203,6 +1213,35 @@ function modalPaneExportControls() {
 
     $("#id_mod_change").html(modalChrome);
     $("#id_restartBtn").focus();
+}
+
+function modalPaneCopyClipboard(string) {
+    var modalChrome, hdr, body, footer, c1array, c2array;
+    var textinput;
+    
+    textinput = '<div><input type="text" id="id_copystr" style="width:90%; height:25px; font-size:20px; text-align:center;" value="' + string + '"/></div>';
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c2array.push('style="border-style: none; width: 50%;"');
+    c1array.push(textinput);
+    c2array.push(HBTN.copyClipboardOkBtn);
+    body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
+
+    hdr = '<h3>' + TXT.copyClipboard + '</h3>';
+
+    footer = '';
+    
+    modalChrome = setModalChrome(
+        hdr,
+        body,
+        footer
+        );
+
+    $("#id_mod_change").html(modalChrome);
+    $("#id_copystr").select();
+    $("#id_copystr").focus();
 }
 
 function doExport(log) {
@@ -1421,6 +1460,10 @@ function changeStabClassVal(reqbool) {
     }
     $("#id_mod_change").html("");
     CSTATE.ignoreTimer = false;
+}
+
+function copyCliboard() {
+    $("#id_mod_change").html("");
 }
 
 function workingBtnPassThrough(btnBase) {

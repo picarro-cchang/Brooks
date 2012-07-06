@@ -40,7 +40,7 @@ def angleRange(x,y,N,dist,u,v,dmax=100.0):
     # Unwrap, ignoring non finite quantities
     mask = isfinite(alist)
     alist[mask] = unwrap(alist[mask])
-    d = sqrt((sx-x)**2+(sy-y)**2)
+    d = sqrt((sx-x)*(sx-x)+(sy-y)*(sy-y))
     good = isfinite(d) & (d<=dmax)
     da = alist-alist[N]
     # Go through "good" to find groups of valid path segments. These contribute to the covered angles
@@ -164,15 +164,15 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
             vcar = d.get("CAR_SPEED",0.0)
             dstd = DTR*d["WIND_DIR_SDEV"]
             mask = d["ValveMask"]
-            if (fit>0) and (mask<1.0e-3):
+            if (fit>0) and (mask<1.0e-3) and isfinite(windN) and isfinite(windE):
                 bearing = arctan2(windE,windN)
                 wind = sqrt(windE*windE + windN*windN)
                 xx = asarray([fovBuff[i]["GPS_ABS_LONG"] for i in range(2*N+1)])
                 yy = asarray([fovBuff[i]["GPS_ABS_LAT"] for i in range(2*N+1)])
                 xx = DTR*(xx-lng)*EARTH_RADIUS*cosLat
                 yy = DTR*(yy-lat)*EARTH_RADIUS
-                asdev = astd(wind,vcar,astdParams)
-                dstd = sqrt(dstd*dstd + asdev*asdev)
+                asd = astd(wind,vcar,astdParams)
+                dstd = sqrt(dstd*dstd + asd*asd)
                 dmax = pga.getMaxDist(stabClass,minLeak,wind,minAmpl,u0=0.5)
                 width = maxDist(xx,yy,N,windE,windN,dstd,dmax,thresh=0.7,tol=1.0)
                 # print "Wind speed: %.2f, Wind stdDev (deg): %.2f, dmax: %.2f, Width: %.2f" % (wind,dstd*RTD,dmax,width)

@@ -40,6 +40,8 @@ RTD = 180.0/math.pi
 DTR = math.pi/180.0
 EARTH_RADIUS = 6378100
 
+NOT_A_NUMBER = 1e1000/1e1000
+
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     appPath = sys.executable
 else:
@@ -124,6 +126,13 @@ def strToEtm(s):
 def pretty_ticket(ticket):
     t = ticket.upper()
     return " ".join([t[s:s+4] for s in range(0,32,4)])
+
+def getPossibleNaN(d,k,default):
+    try:
+        result = float(d.get(k,default))
+    except:
+        result = NOT_A_NUMBER
+    return result
 
 class ReportCompositeMap(object):
     def __init__(self,reportDir,ticket,region):
@@ -1046,10 +1055,10 @@ class SurveyorLayers(object):
                 if not makeWedges: continue
                 lat = m.data["GPS_ABS_LAT"]
                 lng = m.data["GPS_ABS_LONG"]
-                vcar = m.data.get("CAR_SPEED",0.0)
-                windN = m.data.get("WIND_N",0.0)
-                windE = m.data.get("WIND_E",0.0)
-                dstd  = DTR*m.data.get("WIND_DIR_SDEV",0.0)
+                vcar = getPossibleNaN(m.data,"CAR_SPEED",0.0)
+                windN = getPossibleNaN(m.data,"WIND_N",0.0)
+                windE = getPossibleNaN(m.data,"WIND_E",0.0)
+                dstd  = DTR*getPossibleNaN(m.data,"WIND_DIR_SDEV",0.0)
                 x,y = self.xform(lng,lat)
                 if (-self.padX<=x<self.nx+self.padX) and (-self.padY<=y<self.ny+self.padY) and \
                    (amp>minAmpl) and ((maxAmpl is None) or (amp<=maxAmpl)):
