@@ -97,49 +97,66 @@ var TXT = {
         cavity_t: 'Cavity Temperature',
         wb_t: 'Warm Box Temperature',
         
-        stab_a: "Text for Stab Class A",
-        stab_b: "Text for Stab Class B",
-        stab_c: "Text for Stab Class C",
-        stab_d: "Text for Stab Class D",
-        stab_e: "Text for Stab Class E",
-        stab_f: "Text for Stab Class F",
+        stab_star: "*: Use reported weather data",
+        stab_a: "A: Very Unstable",
+        stab_b: "B: Unstable",
+        stab_c: "C: Slightly Unstable",
+        stab_d: "D: Neutral",
+        stab_e: "E: Slightly Stable",
+        stab_f: "F: Stable",
         
         export_as_txt: "Export data as txt file.",
         export_as_csv: "Export data as csv file.",
             
-        copyClipboard: "Ctrl-C copies cursor position to clipboard"
+        copyClipboard: "Ctrl-C copies cursor position to clipboard",
+            
+        survey_time: "Survey time",
+        day: "Day",
+        night: "Night",
+        sunlight: "Solar Radiation",
+        strong_sunlight: "Strong",
+        moderate_sunlight: "Moderate",
+        overcast_sunlight: "Overcast",
+        cloud: "Cloud Cover",
+        less50_cloud: "&lt;50%",
+        more50_cloud: "&gt;50%",
+        wind: "Wind",
+        calm_wind: "Calm",
+        light_wind: "Light",
+        strong_wind: "Strong",
+        choose: "Please select an option",
+        select_weather: "Weather Conditions"
     };
-
 
 //Html button
 var HBTN = {
-        exptLogBtn: '<div><button id="id_exptLogBtn" type="button" onclick="exportLog();" class="btn btn-primary btn-fullwidth">' + TXT.download_concs + '</button></div>',
-        exptPeakBtn: '<div><button id="id_exptPeakBtn" type="button" onclick="exportPeaks();" class="btn btn-primary btn-fullwidth">' + TXT.download_peaks + '</button></div>',
-        exptAnalysisBtn: '<div><button id="id_exptAnalysisBtn" type="button" onclick="exportAnalysis();" class="btn btn-primary btn-fullwidth">' + TXT.download_analysis + '</button></div>',
-        exptNoteBtn: '<div><button id="id_exptNoteBtn" type="button" onclick="exportNotes();" class="btn btn-primary btn-fullwidth">' + TXT.download_notes + '</button></div>',
-        restartBtn: '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn btn-primary btn-fullwidth">' + TXT.restart_log + '</button></div>',
-        captureBtn: '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn btn-primary btn-fullwidth">' + TXT.switch_to_cptr + '</button></div>',
-        cancelCapBtn: '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn btn-primary btn-fullwidth">' + TXT.cancl_cptr + '</button></div>',
-        calibrateBtn: '<div><button id="id_calibrateBtn" type="button" onclick="injectCal();" class="btn btn-primary btn-fullwidth">' + TXT.calibrate + '</button></div>',
+        exptLogBtn: '<div><button id="id_exptLogBtn" type="button" onclick="exportLog();" class="btn btn-fullwidth">' + TXT.download_concs + '</button></div>',
+        exptPeakBtn: '<div><button id="id_exptPeakBtn" type="button" onclick="exportPeaks();" class="btn btn-fullwidth">' + TXT.download_peaks + '</button></div>',
+        exptAnalysisBtn: '<div><button id="id_exptAnalysisBtn" type="button" onclick="exportAnalysis();" class="btn btn-fullwidth">' + TXT.download_analysis + '</button></div>',
+        exptNoteBtn: '<div><button id="id_exptNoteBtn" type="button" onclick="exportNotes();" class="btn btn-fullwidth">' + TXT.download_notes + '</button></div>',
+        restartBtn: '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn btn-fullwidth">' + TXT.restart_log + '</button></div>',
+        captureBtn: '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn btn-fullwidth">' + TXT.switch_to_cptr + '</button></div>',
+        cancelCapBtn: '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn btn-fullwidth">' + TXT.cancl_cptr + '</button></div>',
+        calibrateBtn: '<div><button id="id_calibrateBtn" type="button" onclick="injectCal();" class="btn btn-fullwidth">' + TXT.calibrate + '</button></div>',
         shutdownBtn: '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn btn-danger btn-fullwidth">' + TXT.shutdown + '</button></div>',
-        downloadBtn: '<div><button id="id_downloadBtn" type="button" onclick="modalPaneExportControls();" class="btn btn-primary btn-fullwidth">' + TXT.download_files + '</button></div>',
-        analyzerCntlBtn: '<div><button id="id_analyzerCntlBtn" type="button" onclick="modalPanePrimeControls();" class="btn btn-primary btn-fullwidth">' + TXT.anz_cntls + '</button></div>',
+        downloadBtn: '<div><button id="id_downloadBtn" type="button" onclick="modalPaneExportControls();" class="btn btn-fullwidth">' + TXT.download_files + '</button></div>',
+        analyzerCntlBtn: '<div><button id="id_analyzerCntlBtn" type="button" onclick="modalPanePrimeControls();" class="btn btn-fullwidth">' + TXT.anz_cntls + '</button></div>',
         warningCloseBtn: '<div><button id="id_warningCloseBtn" onclick="restoreModalDiv();" class="btn btn-fullwidth">' + TXT.close + '</button></div>',
         modChangeCloseBtn: '<div><button id="id_modChangeCloseBtn" onclick="restoreModChangeDiv();" class="btn btn-fullwidth">' + TXT.close + '</button></div>',
-        switchLogBtn: '<div><button id="id_switchLogBtn" onclick="switchLog();" class="btn btn-primary btn-fullwidth">' + TXT.select_log + '</button></div>',
-        switchToPrimeBtn: '<div><button id="id_switchToPrimeBtn" onclick="switchToPrime();" class="btn btn-primary btn-fullwidth">' + TXT.switch_to_prime + '</button></div>',
+        switchLogBtn: '<div><button id="id_switchLogBtn" onclick="switchLog();" class="btn btn-fullwidth">' + TXT.select_log + '</button></div>',
+        switchToPrimeBtn: '<div><button id="id_switchToPrimeBtn" onclick="switchToPrime();" class="btn btn-fullwidth">' + TXT.switch_to_prime + '</button></div>',
         changeMinAmpCancelBtn: '<div><button id="id_changeMinAmpCancelBtn" onclick="changeMinAmpVal(false);" class="btn btn-fullwidth">' + TXT.cancel + '</button></div>',
-        changeMinAmpOkBtn: '<div><button id="id_changeMinAmpOkBtn" onclick="changeMinAmpVal(true);" class="btn btn-primary btn-fullwidth">' + TXT.ok + '</button></div>',
+        changeMinAmpOkBtn: '<div><button id="id_changeMinAmpOkBtn" onclick="changeMinAmpVal(true);" class="btn btn-fullwidth">' + TXT.ok + '</button></div>',
         changeStabClassCancelBtn: '<div><button id="id_changeStabClassCancelBtn" onclick="changeStabClassVal(false);" class="btn btn-fullwidth">' + TXT.cancel + '</button></div>',
-        changeStabClassOkBtn: '<div><button id="id_changeStabClassOkBtn" onclick="changeStabClassVal(true);" class="btn btn-primary btn-fullwidth">' + TXT.ok + '</button></div>',
+        changeStabClassOkBtn: '<div><button id="id_changeStabClassOkBtn" onclick="changeStabClassVal(true);" class="btn btn-fullwidth">' + TXT.ok + '</button></div>',
         
         changeMinAmpOkHidBtn: '<div style="display: hidden;"><button id="id_changeMinAmpOkHidBtn" onclick="changeMinAmpVal(true);"/></div>',
-        allHliteCntl: '<div><button id="id_allHliteCntl" type="button" onclick="removeAllHlites();" class="btn btn-primary btn-fullwidth">' + TXT.remove_all_plat_hlite + '</button></div>',
-        surveyOnOffBtn: '<div><button id="id_surveyOnOffBtn" type="button" onclick="stopSurvey();" class="btn btn-primary btn-fullwidth">' + TXT.stop_survey + '</button></div>',
-        completeSurveyBtn: '<div><button id="id_completeSurveyBtn" type="button" onclick="completeSurvey();" class="btn btn-primary btn-fullwidth">' + TXT.complete_survey + '</button></div>',
-        copyClipboardOkBtn: '<div><button id="id_copyClipboardOkBtn" onclick="copyCliboard();" class="btn btn-primary btn-fullwidth">' + TXT.ok + '</button></div>'
+        allHliteCntl: '<div><button id="id_allHliteCntl" type="button" onclick="removeAllHlites();" class="btn btn-fullwidth">' + TXT.remove_all_plat_hlite + '</button></div>',
+        surveyOnOffBtn: '<div><button id="id_surveyOnOffBtn" type="button" onclick="stopSurvey();" class="btn btn-fullwidth">' + TXT.stop_survey + '</button></div>',
+        completeSurveyBtn: '<div><button id="id_completeSurveyBtn" type="button" onclick="completeSurvey();" class="btn btn-fullwidth">' + TXT.complete_survey + '</button></div>',
+        copyClipboardOkBtn: '<div><button id="id_copyClipboardOkBtn" type="button" onclick="copyCliboard();" class="btn btn-fullwidth">' + TXT.ok + '</button></div>',
+        weatherFormOkBtn: '<div><button id="id_weatherFormOkBtn" type="button" class="btn btn-fullwidth">' + TXT.ok + '</button></div>'
     };
-
 
 // List of Html buttons (<li>....</li><li>....</li>...)
 var LBTNS = {
@@ -240,7 +257,8 @@ var CNSNT = {
         rest_default_timeout: 60000,
         
         stab_control: {
-              A: TXT.stab_a
+            "*": TXT.stab_star
+            , A: TXT.stab_a
             , B: TXT.stab_b
             , C: TXT.stab_c
             , D: TXT.stab_d
@@ -251,7 +269,7 @@ var CNSNT = {
         export_control: {
             "file": TXT.export_as_txt
           , "csv": TXT.export_as_csv
-      },
+        },
 
         
         spacer_gif: '/static/images/icons/spacer.gif',
@@ -292,7 +310,18 @@ var CNSNT = {
         cookie_duration: 14,
         dashboard_app: false,
 
-        loader_gif_img: '<img src="/static/images/ajax-loader.gif" alt="processing"/>'
+        loader_gif_img: '<img src="/static/images/ajax-loader.gif" alt="processing"/>',
+        
+        INSTMGR_STATUS_READY: 0x0001,
+        INSTMGR_STATUS_MEAS_ACTIVE: 0x0002,
+        INSTMGR_STATUS_ERROR_IN_BUFFER: 0x0004,
+        INSTMGR_STATUS_GAS_FLOWING: 0x0040,
+        INSTMGR_STATUS_PRESSURE_LOCKED: 0x0080,
+        INSTMGR_STATUS_CAVITY_TEMP_LOCKED: 0x0100,
+        INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED: 0x0200,
+        INSTMGR_STATUS_WARMING_UP: 0x2000,
+        INSTMGR_STATUS_SYSTEM_ERROR: 0x4000,
+        INSTMGR_STATUS_MASK: 0xFFFF
     };
 
 var statusPane = function() {
@@ -457,7 +486,7 @@ var CSTATE = {
         lastMeasPathDeltaLon: null,
         
         pobj: [],
-
+        
         noteSortSel: undefined,
         resize_for_conc_data: true,
 
@@ -1228,7 +1257,6 @@ function modalPaneCopyClipboard(string) {
     c1array.push(textinput);
     c2array.push(HBTN.copyClipboardOkBtn);
     body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
-
     hdr = '<h3>' + TXT.copyClipboard + '</h3>';
 
     footer = '';
@@ -2009,10 +2037,10 @@ function notePane(etm, cat) {
     if (CNSNT.annotation_url) {
         buttons += '<div style="display: hidden;"><button onclick="noteUpdate(true, ' + etm + ',' + catstr + ');"/></div>';
     }
-    buttons += '<div><button onclick="noteUpdate(false, ' + etm + ',' + catstr + ');" class="btn btn-primary large">' + TXT.close + '</button></div>';
+    buttons += '<div><button onclick="noteUpdate(false, ' + etm + ',' + catstr + ');" class="btn large">' + TXT.close + '</button></div>';
 
     if (CNSNT.annotation_url) {
-        buttons += '<div><button onclick="noteUpdate(true, ' + etm + ', ' + catstr + ');" class="btn btn-primary large">' + TXT.save_note + '</button></div>';
+        buttons += '<div><button onclick="noteUpdate(true, ' + etm + ', ' + catstr + ');" class="btn large">' + TXT.save_note + '</button></div>';
     }
 
     modalPinNote = setModalChrome(hdr, body, buttons);
@@ -2076,18 +2104,18 @@ function modalPaneMapControls() {
     }
     swchkd += " " + TXT.swath;
     
-    showDnoteCntl = '<div><button id="id_showDnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showDnoteCb") + ');" class="btn btn-primary btn-fullwidth">' + dchkd + '</button></div>';
-    showPnoteCntl = '<div><button id="id_showPnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPnoteCb") + ');" class="btn btn-primary btn-fullwidth">' + pchkd + '</button></div>';
-    showAnoteCntl = '<div><button id="id_showAnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAnoteCb") + ');" class="btn btn-primary btn-fullwidth">' + achkd + '</button></div>';
+    showDnoteCntl = '<div><button id="id_showDnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showDnoteCb") + ');" class="btn btn-fullwidth">' + dchkd + '</button></div>';
+    showPnoteCntl = '<div><button id="id_showPnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPnoteCb") + ');" class="btn btn-fullwidth">' + pchkd + '</button></div>';
+    showAnoteCntl = '<div><button id="id_showAnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAnoteCb") + ');" class="btn btn-fullwidth">' + achkd + '</button></div>';
 
-    showPbubbleCntl = '<div><button id="id_showPbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPbubbleCb") + ');" class="btn btn-primary btn-fullwidth">' + pbchkd + '</button></div>';
-    showAbubbleCntl = '<div><button id="id_showAbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAbubbleCb") + ');" class="btn btn-primary btn-fullwidth">' + abchkd + '</button></div>';
+    showPbubbleCntl = '<div><button id="id_showPbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPbubbleCb") + ');" class="btn btn-fullwidth">' + pbchkd + '</button></div>';
+    showAbubbleCntl = '<div><button id="id_showAbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showAbubbleCb") + ');" class="btn btn-fullwidth">' + abchkd + '</button></div>';
 
-    showPlatCntl = '<div><button id="id_showPlatCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPlatCb") + ');" class="btn btn-primary btn-fullwidth">' + platchkd + '</button></div>';
-    showWbubbleCntl = '<div><button id="id_showWbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showWbubbleCb") + ');" class="btn btn-primary btn-fullwidth">' + wbchkd + '</button></div>';
-    showSwathCntl   = '<div><button id="id_showSwathCb"   type="button" onclick="workingBtnPassThrough(' + single_quote("showSwathCb") + ');"   class="btn btn-primary btn-fullwidth">' + swchkd + '</button></div>';
-    changeMinAmpCntl = '<div><button id="id_changeMinAmp"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestMinAmpChange") + ');"   class="btn btn-primary btn-fullwidth">' + TXT.change_min_amp + ': ' + CSTATE.minAmp + '</button></div>';
-    changeStabClassCntl = '<div><button id="id_changeStabClass"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestStabClassChange") + ');"   class="btn btn-primary btn-fullwidth">' + TXT.change_stab_class + ': ' + CSTATE.stabClass + '</button></div>';
+    showPlatCntl = '<div><button id="id_showPlatCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPlatCb") + ');" class="btn btn-fullwidth">' + platchkd + '</button></div>';
+    showWbubbleCntl = '<div><button id="id_showWbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showWbubbleCb") + ');" class="btn btn-fullwidth">' + wbchkd + '</button></div>';
+    showSwathCntl   = '<div><button id="id_showSwathCb"   type="button" onclick="workingBtnPassThrough(' + single_quote("showSwathCb") + ');"   class="btn btn-fullwidth">' + swchkd + '</button></div>';
+    changeMinAmpCntl = '<div><button id="id_changeMinAmp"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestMinAmpChange") + ');"   class="btn btn-fullwidth">' + TXT.change_min_amp + ': ' + CSTATE.minAmp + '</button></div>';
+    changeStabClassCntl = '<div><button id="id_changeStabClass"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestStabClassChange") + ');"   class="btn btn-fullwidth">' + TXT.change_stab_class + ': ' + CSTATE.stabClass + '</button></div>';
     
     body = "";
     c1array = [];
@@ -2150,13 +2178,13 @@ function modalPanePlatControls(plname) {
     if (plobj.hlite === true) {
         hcntl = TXT.remove_plat_hlite;
     }
-    hliteCntl = '<div><button id="id_hliteCntl" type="button" onclick="hlitePlat(' + single_quote(plname) + ');" class="btn btn-primary btn-fullwidth">' + hcntl + '</button></div>';
+    hliteCntl = '<div><button id="id_hliteCntl" type="button" onclick="hlitePlat(' + single_quote(plname) + ');" class="btn btn-fullwidth">' + hcntl + '</button></div>';
 
     acntl = TXT.select_active_plat;
     if (plobj.active === true) {
         acntl = TXT.remove_active_plat;
     } 
-    activeCntl = '<div><button id="id_activeCntl" type="button" onclick="setActivePlat(' + single_quote(plname) + ');" class="btn btn-primary btn-fullwidth">' + acntl + '</button></div>';
+    activeCntl = '<div><button id="id_activeCntl" type="button" onclick="setActivePlat(' + single_quote(plname) + ');" class="btn btn-fullwidth">' + acntl + '</button></div>';
     
     c1array = [];
     c2array = [];
@@ -2324,6 +2352,19 @@ function colorPathFromValveMask(value) {
             clr = CNSNT.normal_path_color;
         }
         CSTATE.lastPathColor = clr;
+    }
+    return clr;
+}
+
+function colorPathFromInstrumentStatus(clr) {
+    // Modify color to CNSNT.inactive_path_color if instrument status is not good
+    var good = CNSNT.INSTMGR_STATUS_READY | CNSNT.INSTMGR_STATUS_MEAS_ACTIVE |
+    CNSNT.INSTMGR_STATUS_GAS_FLOWING | CNSNT.INSTMGR_STATUS_PRESSURE_LOCKED |
+    CNSNT.INSTMGR_STATUS_CAVITY_TEMP_LOCKED | CNSNT.INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED;
+    
+    if ((CSTATE.lastInst & CNSNT.INSTMGR_STATUS_MASK) !== good) {
+        clr = CNSNT.inactive_path_color;
+        CSTATE.lastPathColor = clr;        
     }
     return clr;
 }
@@ -2666,13 +2707,27 @@ function initialize_btns() {
 }
 
 function restart_datalog() {
+    var init;
     if (confirm(TXT.restart_datalog_msg)) {
-        var dtype = "json";
-        if (CNSNT.prime_view === true) {
-            dtype = "jsonp";
+        init = getCookie(COOKIE_NAMES.weather);
+        try {
+            init = JSON.parse(init);
         }
-        call_rest(CNSNT.svcurl, "restartDatalog", dtype, {});
-        restoreModChangeDiv();
+        catch (e) {
+            init = [0,0,0];
+        }
+        makeWeatherForm(function (result) {
+            var code, dtype = "json";
+            if (CNSNT.prime_view === true) {
+                dtype = "jsonp";
+            }
+            setCookie(COOKIE_NAMES.weather, JSON.stringify(result), CNSNT.cookie_duration);
+            // Convert the reported weather into a code for inclusion in the auxiliary instrument status
+            //  Note that 1 is added so that we can tell if there is no weather information in the file
+            code = (8*result[2] + 2*result[1] + result[0]) + 1;
+            call_rest(CNSNT.svcurl, "restartDatalog", dtype, {weatherCode:code});
+            restoreModChangeDiv();
+        },init);
     }
 }
 
@@ -2818,7 +2873,7 @@ function get_ticket(initialFn, expt) {
             //    + "\nopts: " + opts
             //);
             
-            alert("Ticket error. Please refresh the page. \nIf the error continues, contact Customer Support.")
+            alert("Ticket error. Please refresh the page. \nIf the error continues, contact Customer Support.");
         }
         var errorTicketExport = function(xOptions, textStatus) {
             //alert("we have an error");
@@ -3114,6 +3169,10 @@ function swathTimer() {
 
 function statCheck() {
     var dte, curtime, streamdiff;
+    var good = CNSNT.INSTMGR_STATUS_READY | CNSNT.INSTMGR_STATUS_MEAS_ACTIVE |
+               CNSNT.INSTMGR_STATUS_GAS_FLOWING | CNSNT.INSTMGR_STATUS_PRESSURE_LOCKED |
+               CNSNT.INSTMGR_STATUS_CAVITY_TEMP_LOCKED | CNSNT.INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED;
+
     //$('#id_statusPane').html(statusPane());
     dte = new Date();
     curtime = dte.getTime();
@@ -3149,7 +3208,7 @@ function statCheck() {
                 $("#id_ws_stat").attr("class", "ws-ok");
             }
             
-            if (CSTATE.lastInst !== 963) {
+            if ((CSTATE.lastInst & CNSNT.INSTMGR_STATUS_MASK) !== good) {
                 $("#id_analyzer_stat").attr("class", "analyzer-failed");
             } else {
                 $("#id_analyzer_stat").attr("class", "analyzer-ok");
@@ -3299,6 +3358,7 @@ function getData() {
                         $("#concData").html("<b style='font-size:12px; color:#404040;'>" + "CH4: " + data.result.CH4[n - 1].toFixed(3) + " ppm" + "</b>");
                         for (i = 1; i < n; i += 1) {
                             clr = data.result.ValveMask ? colorPathFromValveMask(data.result.ValveMask[i]) : CNSNT.normal_path_color;
+                            clr = colorPathFromInstrumentStatus(clr);
                             pdata = {
                                 lat: data.result.GPS_ABS_LAT[i],
                                 lon: data.result.GPS_ABS_LONG[i],
@@ -4247,7 +4307,8 @@ function initialize_cookienames() {
         swath: COOKIE_PREFIX + '_swath',
         activePlatName: COOKIE_PREFIX + '_activePlatName',
         dspStabClass: COOKIE_PREFIX + '_dspStabClass',
-        dspExportClass: COOKIE_PREFIX + '_dspExportClass'
+        dspExportClass: COOKIE_PREFIX + '_dspExportClass',
+        weather: COOKIE_PREFIX + '_weather'
     };
 }
 
@@ -4427,44 +4488,44 @@ function showWs() {
 
     $("#id_mod_change").html(modalChrome);
 }
-      
-var bar = ['<div id="id_cavity_p_bar" class="ui-progress-bar error">' +
-           '<div id="id_cavity_p_prog" class="ui-progress" style="width:0%;"><span id="id_cavity_p_val" class="ui-label"><b>0.0</b></span></div>' +
+
+var bar = ['<div id="id_cavity_p_bar" class="progress progress-danger" style="position:relative; top:9px">' +
+           '<div id="id_cavity_p_prog" class="bar" style="width:100%;"><span id="id_cavity_p_val" class="ui-label"><b>?</b></span></div>' +
            '</div>',
-           '<div id="id_cavity_t_bar" class="ui-progress-bar error">' +
-           '<div id="id_cavity_t_prog" class="ui-progress" style="width:0%;"><span id="id_cavity_t_val" class="ui-label"><b>0.0</b></span></div>' +
+           '<div id="id_cavity_t_bar" class="progress progress-danger" style="position:relative; top:9px">' +
+           '<div id="id_cavity_t_prog" class="bar" style="width:100%;"><span id="id_cavity_t_val" class="ui-label"><b>?</b></span></div>' +
            '</div>', 
-           '<div id="id_wb_t_bar" class="ui-progress-bar error">' +
-          '<div id="id_wb_t_prog" class="ui-progress" style="width:0%;"><span id="id_wb_t_val" class="ui-label"><b>0.0</b></span></div>' +
-          '</div>',];
+           '<div id="id_wb_t_bar" class="progress progress-danger" style="position:relative; top:9px">' +
+          '<div id="id_wb_t_prog" class="bar" style="width:100%;"><span id="id_wb_t_val" class="ui-label"><b>?</b></span></div>' +
+          '</div>'];
         
 function updateBar(id_sp, id_val, id_prog, id_bar, sp, val) {
     var unit, prog, barClass;
     if (sp !== null) {
-        barClass = "ui-progress-bar success";
+        barClass = "progress progress-success";
         if (id_sp ==  '#id_cavity_p_sp') {
             unit = 'Torr';
-            if (Math.abs(val-sp) > 5) {
-                barClass = "ui-progress-bar warning";
+            if (Math.abs(val-sp) > 5.0) {
+                barClass = "progress progress-warning";
             }
+            prog = 100.0*Math.exp(-Math.abs(0.05*(val-sp)/5.0));
         } else {
             unit = 'C';
             if (Math.abs(val-sp) > 0.3) {
-                barClass = "ui-progress-bar warning";
+                barClass = "progress progress-warning";
             }
+            prog = 100.0*Math.exp(-Math.abs(0.05*(val-sp)/0.3));
         }
         $(id_sp).html("<h5>" + sp.toFixed(1) + " " + unit + "</h5>");
         $(id_val).html("<b>" + val.toFixed(1) + "</b>");
-        prog = Math.min(100.0, 100.0 * val / sp);
-        $(id_prog).attr("style", "width:" + prog + "%")
+        $(id_prog).css("width", prog + "%")
         $(id_bar).attr("class", barClass);
     } else {
-        $(id_sp).html("<h5> Unavailable </h5>");
-        $(id_val).html("");
-        $(id_prog).attr("style", "width:0%")
-        $(id_bar).attr("class", "ui-progress-bar error");
-    }
-    
+        $(id_sp).html("<h5></h5>");
+        $(id_val).html("<b>?</b>");
+        $(id_prog).css("width", "100%")
+        $(id_bar).attr("class", "progress progress-danger");
+    }    
 }
 
 function updateProgress() {
@@ -4515,20 +4576,20 @@ function showAnalyzer() {
     c2array = [];
     c3array = [];
     c1array.push('style="border-style: none; width: 40%; text-align: right;"');
-    c2array.push('style="border-style: none; width: 40%;"');
+    c2array.push('style="border-style: none; width: 40%; "');
     c3array.push('style="border-style: none; width: 20%; text-align: left;"');
 
     c1array.push('<h4>' + TXT.cavity_p + '</h4>');
     c2array.push(bar[0]);
-    c3array.push('<span id="id_cavity_p_sp"><h5> Unavailable </h5></span>');
+    c3array.push('<span id="id_cavity_p_sp"><h5></h5></span>');
 
     c1array.push('<h4>' + TXT.cavity_t + '</h4>');
     c2array.push(bar[1]);
-    c3array.push('<span id="id_cavity_t_sp"><h5> Unavailable </h5></span>');
+    c3array.push('<span id="id_cavity_t_sp"><h5></h5></span>');
 
     c1array.push('<h4>' + TXT.wb_t + '</h4>');
     c2array.push(bar[2]);
-    c3array.push('<span id="id_wb_t_sp"><h5> Unavailable </h5></span>');
+    c3array.push('<span id="id_wb_t_sp"><h5></h5></span>');
     body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array, c3array);
 
     c1array = [];
@@ -4553,4 +4614,158 @@ function showAnalyzer() {
         CSTATE.end_warming_status = false;
         updateProgress();
     }
+}
+
+function setupRadioControlGroup(params)
+{
+    var result = '';
+    result += '<div class="control-group" id="' + params.control_group_id + '">';
+    result += '<label class="control-label" for="' + params.control_div_id + '">';
+    result += params.label + '</label>';
+    result += '<div class="controls">';
+    result += '<div id="' + params.control_div_id + '" class="btn-group" data-toggle="buttons-radio">';
+    $.each(params.buttons, function (i, v) {
+        result += '<button id="' + v.id + '" type="button" class="btn btn-large">' + v.caption + '</button>';
+    });
+    result += '</div></div></div>';
+    return result;
+}
+
+function makeWeatherForm(resultFunc, init) {
+    /* Makes a weather selection form in the modal box "id_weather". There are currently three questions, where the
+     * second question depends on the first
+     * 
+     * Day (0) or Night (1)
+     * If Day:   Weak sunlight (0), moderate sunlight (1) or strong sunlight (2)
+     * If Night: <50% cloud cover (0), >50% cloud cover (1)
+     * Calm (0), light wind (1) or strong wind (2)
+     * 
+     * The user selects the appropriate options, and the result is returned as a 3 element array. 
+     * e.g. [0,1,2] = Day, moderate sunlight, strong wind
+     *      [1,0,1] = Night, <50% cloud cover, light wind
+     * 
+     * The initial settings of the buttons in the form can be specified using init, which must be a valid 
+     *  3-element array
+     *  
+     * After a successful selection has been made, the function "resultFunc" is called. This function has a
+     * single parameter which is the 3-element array of the selections. 
+     *  */
+    var weatherFormTemplate = [{label: "<h4>" + TXT.survey_time + "</h4>",
+        control_div_id: "id_day_night", 
+        control_group_id: "id_day_night_group",
+        buttons: [{id: "id_day", caption: TXT.day},
+                  {id: "id_night", caption: TXT.night}]},
+       {label: "<h4>" + TXT.sunlight + "</h4>",
+        control_div_id: "id_sunlight",
+        control_group_id: "id_sunlight_group",
+        buttons: [{id: "id_overcast_sunlight", caption: TXT.overcast_sunlight },
+                  {id: "id_moderate_sunlight", caption: TXT.moderate_sunlight },
+                  {id: "id_strong_sunlight", caption: TXT.strong_sunlight }]},
+       {label: "<h4>" + TXT.cloud + "</h4>",
+        control_div_id: "id_cloud",
+        control_group_id: "id_cloud_group",
+        buttons: [{id: "id_less50_cloud", caption: TXT.less50_cloud },
+                  {id: "id_more50_cloud", caption: TXT.more50_cloud }]},
+       {label: "<h4>Wind</h4>",
+        control_div_id: "id_wind",
+        control_group_id: "id_wind_group",
+        buttons: [{id: "id_calm_wind", caption: TXT.calm_wind },
+                  {id: "id_light_wind", caption: TXT.light_wind },
+                  {id: "id_strong_wind", caption: TXT.strong_wind }]}];                              
+
+    function addError(field_id, message) {
+        var id = "#" + field_id;
+        if ($(id).next('.help-inline').length === 0) {
+            $(id).after('<span class="help-inline">' + message + '</span>');
+            $(id).parents("div .control-group").addClass("error");
+        }
+        $(id).on('focus keypress click', function () {
+            $(this).next('.help-inline').fadeOut("fast", function () {
+                $(this).remove();
+            });
+            $(this).parents('.control-group').removeClass('error');
+        });
+    }
+    
+    function getSelected(field_id) {
+        var selection = [];
+        var id = "#" + field_id;
+        $(id).find("button").each(function (i) {
+            if ($(this).hasClass("active")) selection.push(i);
+        });
+        if (selection.length === 0) {
+            addError(field_id,TXT.choose);
+        }
+        return selection;
+    }
+    
+    var modalChrome, header, body, footer, c1array, c2array;
+    c1array = []; c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: right;"');
+    c1array.push('<h3>' + TXT.select_weather + '</h3>');
+    c2array.push(HBTN.weatherFormOkBtn);
+    header = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
+    body = '<form id="id_weather_form" class="form-horizontal"><fieldset>';
+    $.each(weatherFormTemplate, function (i, v) {
+        body += setupRadioControlGroup(v);
+    });
+    body += '</fieldset></form>';
+    footer = '';
+
+    modalChrome = '<div class="modal-header">' + header + '</div>';
+    modalChrome += '<div class="modal-body">' + body + '</div>';
+    modalChrome += '<div class="modal-footer">' + footer +'</div>';
+    
+    $("#id_weather").html(modalChrome);
+    $("#id_weather").modal({show: true, backdrop: "static", keyboard: false})
+    
+    if (undefined !== init) {
+        $("#"+weatherFormTemplate[0].buttons[init[0]].id).button("toggle");
+        switch (init[0]) {
+        case 0:
+            $("#"+weatherFormTemplate[1].buttons[init[1]].id).button("toggle");
+            $("#id_sunlight_group").removeClass("hide");
+            $("#id_cloud_group").addClass("hide");
+            break;
+        case 1:
+            $("#"+weatherFormTemplate[2].buttons[init[1]].id).button("toggle");
+            $("#id_sunlight_group").addClass("hide");
+            $("#id_cloud_group").removeClass("hide");        
+            break;
+        }
+        $("#"+weatherFormTemplate[3].buttons[init[2]].id).button("toggle");        
+    }
+    
+    $("#id_day").on("click", function (e) {
+        $("#id_sunlight_group").removeClass("hide");
+        $("#id_cloud_group").addClass("hide");
+    });
+    $("#id_night").on("click", function (e) {
+        $("#id_sunlight_group").addClass("hide");
+        $("#id_cloud_group").removeClass("hide");        
+    });
+    $("#id_weatherFormOkBtn").on("click", function (e) {
+        var c, s, result = [];
+        var dn = getSelected("id_day_night");
+        var w  = getSelected("id_wind");
+        
+        if (dn.length > 0) {
+            result.push(dn[0]);
+            if (dn[0] === 0) { // Day selected
+                s = getSelected("id_sunlight");
+                if (s.length > 0) result.push(s[0]);
+            }
+            else {  // Night selected
+                c = getSelected("id_cloud");
+                if (c.length > 0) result.push(c[0]);
+            }
+        }
+        if (w.length > 0) result.push(w[0]);
+
+        if (result.length === 3) {
+            $("#id_weather").modal("hide").html("");            
+            if (undefined !== resultFunc) resultFunc(result);
+        }
+    });
 }

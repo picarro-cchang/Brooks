@@ -417,6 +417,12 @@ def restartDatalogEx(params):
     print "<------------------ Restarting data log ------------------>"
     dataLogger = DataLoggerInterface()
     dataLogger.startUserLogs(['DataLog_User_Minimal'],restart=True)
+    if 'weatherCode' in params:
+        InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "AnalyzerServer")
+        try:
+            InstMgr.INSTMGR_ModifyAuxStatusRpc(int(params["weatherCode"]),0x3F)
+        except:
+            print traceback.format_exc()
     return {}
 
 @app.route('/rest/shutdownAnalyzer')
@@ -429,8 +435,8 @@ def rest_shutdownAnalyzer():
         
 def shutdownAnalyzerEx(params):
     print "<------------------ Shut down analyzer in current state ------------------>"
-    INST_MGR_RPC = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "AnalyzerServer")
-    INST_MGR_RPC.INSTMGR_ShutdownRpc(2)
+    InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "AnalyzerServer")
+    InstMgr.INSTMGR_ShutdownRpc(2)
     return {}
 
 @app.route('/rest/driverRpc')
