@@ -45,7 +45,7 @@ EARTH_RADIUS = 6378100
 MapParams = namedtuple("MapParams",["minLng","minLat","maxLng","maxLat","nx","ny","padX","padY"])
 
 # configuration
-DEBUG = True
+DEBUG = False
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
@@ -112,14 +112,14 @@ def getReport():
     name = request.values.get('name')
     params = urllib.urlencode(request.values)
     mapUrl = '/rest/getComposite?%s' % params
-    pathFileName = os.path.join(REPORTROOT,'%s.pathMap.%d.html'%(ticket,region))
+    pathFileName = os.path.join(REPORTROOT,'%s/pathMap.%d.html'%(ticket,region))
     if os.path.exists(pathFileName):
         fp = file(pathFileName,'rb')
         pathLogs = fp.read()
         fp.close()
     else:
         pathLogs = ""
-    peaksTableFileName = os.path.join(REPORTROOT,'%s.peaksMap.%d.html'%(ticket,region))
+    peaksTableFileName = os.path.join(REPORTROOT,'%s/peaksMap.%d.html'%(ticket,region))
     if os.path.exists(peaksTableFileName):
         fp = file(peaksTableFileName,'rb')
         peaksTable = fp.read()
@@ -133,7 +133,7 @@ def getReport():
 def getComposite():
     ticket = request.values.get('ticket')
     region = int(request.values.get('region'))
-    fname = os.path.join(REPORTROOT,'%s.compositeMap.%d.png'%(ticket,region))
+    fname = os.path.join(REPORTROOT,'%s/compositeMap.%d.png'%(ticket,region))
     if os.path.exists(fname):
         when = os.path.getmtime(fname)
     else:
@@ -150,7 +150,7 @@ def getComposite():
 def getPDF():
     ticket = request.values.get('ticket')
     region = int(request.values.get('region'))
-    fname = os.path.join(REPORTROOT,'%s.report.%d.pdf'%(ticket,region))
+    fname = os.path.join(REPORTROOT,'%s/report.%d.pdf'%(ticket,region))
     if os.path.exists(fname):
         when = os.path.getmtime(fname)
     else:
@@ -166,7 +166,7 @@ def getPDF():
 @app.route('/rest/getZIP')
 def getZIP():
     ticket = request.values.get('ticket')
-    fname = os.path.join(REPORTROOT,'%s.archive.zip'%(ticket,))
+    fname = os.path.join(REPORTROOT,'%s/archive.zip'%(ticket,))
     if os.path.exists(fname):
         when = os.path.getmtime(fname)
     else:
@@ -213,13 +213,13 @@ def download():
     response.headers['Content-Disposition'] = 'attachment; filename="' + filename + '"'
     return response
     
-@app.route('/makeInstructions')
-def makeInstructions():
+@app.route('/report')
+def report():
     ticket = request.values.get('ticket','')
     contents = ""
     fname = request.values.get('fname','')
     if ticket:
-        instrFname  = os.path.join(REPORTROOT,"%s.json" % ticket)
+        instrFname  = os.path.join(REPORTROOT,"%s/json" % ticket)
         if os.path.exists(instrFname):
             fp = open(instrFname,"rb")
             contents = fp.read()
@@ -228,11 +228,11 @@ def makeInstructions():
     
 @app.route('/')
 def index():
-    return makeInstructions()
+    return report()
     
 @app.route('/test')
 def test():
     return render_template('testTable.html');
     
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=5200,debug=True,threaded=True)
+    app.run(host='0.0.0.0',port=5200,debug=DEBUG,threaded=True)

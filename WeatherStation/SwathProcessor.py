@@ -14,6 +14,7 @@ from numpy import arange, arcsin, arctan2, asarray, cos, isfinite, isnan
 from numpy import log, pi, sin, sqrt, unwrap
 from collections import namedtuple
 from scipy.special import erf
+import SurveyorInstStatus as sis
 
 EARTH_RADIUS = 6378100
 DTR = pi/180.0
@@ -144,7 +145,9 @@ def astd(wind,vcar,params):
     return min(pi,params["a"]*(params["b"]+params["c"]*vcar)/(wind+0.01))
                 
 def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
-    fields = ["EPOCH_TIME","GPS_ABS_LAT","GPS_ABS_LONG","DELTA_LAT","DELTA_LONG"]
+    # The stablility class can "A" through "F" for an explicit class, or "*" if the class is
+    #  to be determined from the auxiliary instrument status
+    fields = ["EPOCH_TIME","GPS_ABS_LAT","GPS_ABS_LONG","DELTA_LAT","DELTA_LONG","INST_STATUS"]
     fovBuff = deque()
     N = maxWindow              # Use 2*N+1 samples for calculating FOV
     result = {}
@@ -164,7 +167,15 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
             vcar = d.get("CAR_SPEED",0.0)
             dstd = DTR*d["WIND_DIR_SDEV"]
             mask = d["ValveMask"]
-            if (fit>0) and (mask<1.0e-3) and isfinite(windN) and isfinite(windE):
+            instStatus = int(d["INST_STATUS"])
+            auxStatus = instStatus >> sis.INSTMGR_AUX_STATUS_SHIFT
+            instStatus = instStatus & sis.INSTMGR_STATUS_MASK
+            weatherCode = auxStatus & sis.INSTMGR_AUX_STATUS_WEATHER_MASK
+            # Note that weatherCode is zero if there are no reported weather data in the file. Otherwise, we 
+            #  SUBTRACT ONE before using it to look up the stability class in classByWeather. If we have an
+            #  invalid code in the data file and try to fetch it using "*", the swath is suppressed.
+            if stabClass == "*": stabClass = sis.classByWeather.get(weatherCode-1,None)
+            if (fit>0) and (mask<1.0e-3) and isfinite(windN) and isfinite(windE) and (instStatus == sis.INSTMGR_STATUS_GOOD) and (stabClass is not None):
                 bearing = arctan2(windE,windN)
                 wind = sqrt(windE*windE + windN*windN)
                 xx = asarray([fovBuff[i]["GPS_ABS_LONG"] for i in range(2*N+1)])

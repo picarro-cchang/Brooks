@@ -31,6 +31,7 @@ import traceback
 import urllib
 import urllib2
 import subprocess
+import SurveyorInstStatus as sis
 
 # Executable for HTML to PDF conversion
 WKHTMLTOPDF = r"C:\Program Files (x86)\wkhtmltopdf\wkhtmltopdf.exe"
@@ -57,6 +58,7 @@ fname = "platBoundaries.json"
 fp = open(fname,"rb")
 platBoundaries = json.loads(fp.read())
 fp.close()
+statusLocks = {}
 
 def overBackground(a,b,box):
     # Overlay the RGBA image a on top of an RGBA background image b, 
@@ -92,25 +94,37 @@ def merge_dictionary(dst, src):
     return dst
 
 def getStatus(fname):
-    stDict = {}
-    if os.path.exists(fname):
-        sp = open(fname,"rb")
-        try:
-            stDict = json.load(sp)
-        except:
-            stDict = {}
-        sp.close()
-    return stDict
-    
+    if fname not in statusLocks:
+        statusLocks[fname] = threading.Lock()
+    statusLocks[fname].acquire()
+    try:
+        stDict = {}
+        if os.path.exists(fname):
+            sp = open(fname,"rb")
+            try:
+                stDict = json.load(sp)
+            except:
+                stDict = {}
+            sp.close()
+        return stDict
+    finally:
+        statusLocks[fname].release()
+        
 def updateStatus(fname,statusDict,init=False):
-    dst = {}
-    if not init:
-        sp = open(fname,"rb")
-        dst = json.load(sp)
+    if fname not in statusLocks:
+        statusLocks[fname] = threading.Lock()
+    statusLocks[fname].acquire()
+    try:
+        dst = {}
+        if not init:
+            sp = open(fname,"rb")
+            dst = json.load(sp)
+            sp.close()
+        sp = open(fname,"wb")
+        json.dump(merge_dictionary(dst,statusDict),sp)
         sp.close()
-    sp = open(fname,"wb")
-    json.dump(merge_dictionary(dst,statusDict),sp)
-    sp.close()
+    finally:
+        statusLocks[fname].release()
 
 def asPNG(image):
     output = cStringIO.StringIO()
@@ -139,8 +153,8 @@ class ReportCompositeMap(object):
         self.reportDir = reportDir
         self.ticket = ticket
         self.region = region
-        self.compositeMapFname = os.path.join(self.reportDir,"%s.compositeMap.%d.png" % (self.ticket,self.region))
-        self.statusFname  = os.path.join(self.reportDir,"%s.compositeMap.%d.status" % (self.ticket,self.region))
+        self.compositeMapFname = os.path.join(self.reportDir,"%s/compositeMap.%d.png" % (self.ticket,self.region))
+        self.statusFname  = os.path.join(self.reportDir,"%s/compositeMap.%d.status" % (self.ticket,self.region))
         
     def getStatus(self):
         return getStatus(self.statusFname)
@@ -149,21 +163,22 @@ class ReportCompositeMap(object):
         if "done" in getStatus(self.statusFname):
             return  # This has already been computed and the output exists
         else:
-            updateStatus(self.statusFname,{"start":time.strftime("%Y%m%dT%H:%M:%S")},True)
+            updateStatus(self.statusFname,{"start":time.strftime("%Y%m%dT%H%M%S")},True)
             try:
                 files = {}
                 imageFnames = {}
                 statusFnames = {}
-                for dirPath, dirNames, fileNames in os.walk(self.reportDir):
+                targetDir = os.path.join(self.reportDir,"%s" % self.ticket)
+                for dirPath, dirNames, fileNames in os.walk(targetDir):
                     for name in fileNames:
                         atoms = name.split('.')
-                        if atoms[0] == self.ticket and atoms[-2] == ("%d" % self.region) and atoms[-1] == 'png':
-                            key = '.'.join(atoms[1:-2])
+                        if len(atoms)>=2 and atoms[-2] == ("%d" % self.region) and atoms[-1] == 'png':
+                            key = '.'.join(atoms[:-2])
                             base = '.'.join(atoms[:-1])
                             # Having found a png file, look for the associated .status file
                             #  to see if the png file is valid
-                            statusName = os.path.join(dirPath,base+'.status')
-                            pngName = os.path.join(dirPath,name)
+                            statusName = os.path.join(targetDir,base+'.status')
+                            pngName = os.path.join(targetDir,name)
                             if "done" in getStatus(statusName):
                                 try:
                                     files[key] = file(pngName,"rb").read()
@@ -185,10 +200,10 @@ class ReportCompositeMap(object):
                 op = open(self.compositeMapFname,"wb")
                 op.write(asPNG(compositeImage))
                 op.close()
-                updateStatus(self.statusFname,{"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
+                updateStatus(self.statusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
             except:
                 msg = traceback.format_exc()
-                updateStatus(self.statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H:%M:%S")})
+                updateStatus(self.statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H%M%S")})
 
 class ReportPDF(object):
     def __init__(self,reportDir,ticket,instructions,region):
@@ -196,8 +211,8 @@ class ReportPDF(object):
         self.ticket = ticket
         self.instructions = instructions
         self.region = region
-        self.PdfFname = os.path.join(self.reportDir,"%s.report.%d.pdf" % (self.ticket,self.region))
-        self.statusFname  = os.path.join(self.reportDir,"%s.report.%d.status" % (self.ticket,self.region))
+        self.PdfFname = os.path.join(self.reportDir,"%s/report.%d.pdf" % (self.ticket,self.region))
+        self.statusFname  = os.path.join(self.reportDir,"%s/report.%d.status" % (self.ticket,self.region))
         
     def getStatus(self):
         return getStatus(self.statusFname)
@@ -216,19 +231,18 @@ class ReportPDF(object):
         if "done" in getStatus(self.statusFname):
             return  # This has already been computed and the output exists
         else:
-            updateStatus(self.statusFname,{"start":time.strftime("%Y%m%dT%H:%M:%S")},True)
+            updateStatus(self.statusFname,{"start":time.strftime("%Y%m%dT%H%M%S")},True)
             try:
                 # Find the peaks report file and the path report file
-                peaksReportFname = os.path.join(self.reportDir,"%s.peaksMap.%d.html" % (self.ticket,self.region))
-                pathReportFname = os.path.join(self.reportDir,"%s.pathMap.%d.html" % (self.ticket,self.region))
-                compositeMapFname = os.path.join(self.reportDir,"%s.compositeMap.%d.png" % (self.ticket,self.region))
+                peaksReportFname = os.path.join(self.reportDir,"%s/peaksMap.%d.html" % (self.ticket,self.region))
+                pathReportFname = os.path.join(self.reportDir,"%s/pathMap.%d.html" % (self.ticket,self.region))
+                compositeMapFname = os.path.join(self.reportDir,"%s/compositeMap.%d.png" % (self.ticket,self.region))
                 
                 #params = {"ticket":self.ticket, "region":self.region}
                 #compositeMapUrl = "%s/getComposite?%s" % (SVCURL,urllib.urlencode(params))
                 compositeMapUrl = "file:%s" % urllib.pathname2url(compositeMapFname)
-                updateStatus(self.statusFname,{"peaksReport":peaksReportFname,"pathReport":pathReportFname,
-                                               "compositeMapUrl":compositeMapUrl})
                 # Read in the peaks report and path report
+                peaksReport = ""
                 fp = None
                 try:
                     fp = file(peaksReportFname,"rb")
@@ -252,10 +266,10 @@ class ReportPDF(object):
                 proc = subprocess.Popen([WKHTMLTOPDF,"-",self.PdfFname],
                                         stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
                 stdout = proc.communicate(s)
-                updateStatus(self.statusFname,{"stdout":stdout,"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
+                updateStatus(self.statusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
             except:
                 msg = traceback.format_exc()
-                updateStatus(self.statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H:%M:%S")})
+                updateStatus(self.statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H%M%S")})
     
 class LayerFilenamesGetter(object):
     def __init__(self,reportDir,ticket):
@@ -263,11 +277,12 @@ class LayerFilenamesGetter(object):
         self.ticket = ticket
     def run(self):
         files = {}
-        for dirPath, dirNames, fileNames in os.walk(self.reportDir):
+        targetDir = os.path.join(self.reportDir,"%s" % self.ticket)
+        for dirPath, dirNames, fileNames in os.walk(targetDir):
             for name in fileNames:
                 atoms = name.split('.')
-                if atoms[0] == self.ticket and atoms[-1] == 'png':
-                    key = '.'.join(atoms[1:-1])
+                if atoms[-1] == 'png':
+                    key = '.'.join(atoms[:-1])
                     files[key] = name
         return files
     
@@ -277,11 +292,12 @@ class ReportStatus(object):
         self.ticket = ticket
     def run(self):
         files = {}
-        for dirPath, dirNames, fileNames in os.walk(self.reportDir):
+        targetDir = os.path.join(self.reportDir,"%s" % self.ticket)
+        for dirPath, dirNames, fileNames in os.walk(targetDir):
             for name in fileNames:
                 atoms = name.split('.')
-                if atoms[0] == self.ticket and atoms[-2] == 'json' and atoms[-1] == 'status':
-                    key = '.'.join(atoms[1:-1])
+                if len(atoms)>=2 and atoms[-2] == 'json' and atoms[-1] == 'status':
+                    key = '.'.join(atoms[:-1])
                     try:
                         files[key] = json.load(file(os.path.join(dirPath,name),"rb"))
                     except:
@@ -297,15 +313,34 @@ class ReportGen(object):
         
     def run(self):
         self.ticket = hashlib.md5(self.contents).hexdigest()
-        instrFname  = os.path.join(self.reportDir,"%s.json" % self.ticket)
-        statusFname = os.path.join(self.reportDir,"%s.json.status" % self.ticket)
-        ip = open(instrFname,"wb")
-        ip.write(self.contents)
-        ip.close()
-        #
-        updateStatus(statusFname,{"start":time.strftime("%Y%m%dT%H:%M:%S")},True)
-        # Read the instructions as a JSON object
+        targetDir = os.path.join(self.reportDir,"%s" % self.ticket)
+        if not os.path.exists(targetDir): os.makedirs(targetDir)
+        instrFname  = os.path.join(self.reportDir,"%s/json" % self.ticket)
+        statusFname = os.path.join(self.reportDir,"%s/json.status" % self.ticket)
         try:
+            if os.path.exists(statusFname): # This job has already been done
+                status = getStatus(statusFname)
+                # If there is an "error" in the status, we delete everything in this directory
+                #  so as to get a fresh start
+                if "error" in status:
+                    for dirPath, dirNames, fileNames in os.walk(targetDir):
+                        for name in fileNames:
+                            os.remove(os.path.join(targetDir,name))
+                else:
+                    return self.ticket
+            if os.path.exists(instrFname):
+                ip = open(instrFname,"rb")
+                if ip.read() != self.contents:
+                    updateStatus(statusFname,{"start":time.strftime("%Y%m%dT%H%M%S")},True)
+                    ip.close()
+                    raise ValueError("MD5 hash collision in cached instructions")
+            else:
+                ip = open(instrFname,"wb")
+                ip.write(self.contents)
+                ip.close()
+                    
+            updateStatus(statusFname,{"start":time.strftime("%Y%m%dT%H%M%S")},True)
+            # Read the instructions as a JSON object
             self.instructions = json.loads(self.contents)
             o = Supervisor(self.reportDir,self.ticket,self.instructions)
             th = threading.Thread(target = o.run)
@@ -313,7 +348,7 @@ class ReportGen(object):
             th.start()
         except:
             msg = traceback.format_exc()
-            updateStatus(statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H:%M:%S")})
+            updateStatus(statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H%M%S")})
         return self.ticket
 
 class Supervisor(object):
@@ -328,7 +363,8 @@ class Supervisor(object):
         self.ticket = ticket
         self.reportDir = reportDir
     def run(self):
-        statusFname = os.path.join(self.reportDir,"%s.json.status" % self.ticket)
+        errors = False
+        statusFname = os.path.join(self.reportDir,"%s/json.status" % self.ticket)
         for i,r in enumerate(self.instructions["regions"]):
             # Check if a composite map already exists for this region
             cm = ReportCompositeMap(self.reportDir,self.ticket,i)
@@ -397,9 +433,9 @@ class Supervisor(object):
                     if "end" in st: break
                     time.sleep(1.0)
         if errors:
-            updateStatus(statusFname,{"error":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
+            updateStatus(statusFname,{"error":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
         else:
-            updateStatus(statusFname,{"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
+            updateStatus(statusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
             
 
 class ReportBaseMap(object):
@@ -408,8 +444,8 @@ class ReportBaseMap(object):
         self.ticket = ticket
         self.instructions = instructions
         self.region = region
-        self.baseMapFname = os.path.join(self.reportDir,"%s.baseMap.%d.png" % (self.ticket,self.region))
-        self.statusFname  = os.path.join(self.reportDir,"%s.baseMap.%d.status" % (self.ticket,self.region))
+        self.baseMapFname = os.path.join(self.reportDir,"%s/baseMap.%d.png" % (self.ticket,self.region))
+        self.statusFname  = os.path.join(self.reportDir,"%s/baseMap.%d.status" % (self.ticket,self.region))
         self.name   = self.instructions["regions"][region]["name"]
         self.minLat, self.minLng = self.instructions["regions"][region]["swCorner"]
         self.maxLat, self.maxLng = self.instructions["regions"][region]["neCorner"]
@@ -435,7 +471,7 @@ class ReportBaseMap(object):
         if os.path.exists(self.baseMapFname) and "done" in getStatus(self.statusFname):
             return  # This has already been computed and the output file exists
         else:
-            updateStatus(self.statusFname,{"start":time.strftime("%Y%m%dT%H:%M:%S")},True)
+            updateStatus(self.statusFname,{"start":time.strftime("%Y%m%dT%H%M%S")},True)
             try:
                 if self.baseType == "map":
                     image, mp = GoogleMap().getPlat(self.minLng,self.maxLng,self.minLat,self.maxLat,satellite=False)
@@ -450,10 +486,10 @@ class ReportBaseMap(object):
                 op = open(self.baseMapFname,"wb")
                 op.write(asPNG(image))
                 op.close()
-                updateStatus(self.statusFname,{"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
+                updateStatus(self.statusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
             except:
                 msg = traceback.format_exc()
-                updateStatus(self.statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H:%M:%S")})
+                updateStatus(self.statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H%M%S")})
 
 def colorStringToRGB(colorString):
     if colorString == "None": return False
@@ -470,6 +506,22 @@ def makeColorPatch(value):
         result= '<div style="width:15px;height:15px;border:1px solid #000;margin:0 auto;'
         result += 'background-color:%s;"></div>' % value
     return result
+
+def mostCommon(iterable):
+    hist = {}
+    for c in iterable:
+        if c not in hist: hist[c] = 0
+        hist[c] += 1
+    sc = [(hist[c],c) for c in iterable]
+    sc.sort()
+    return sc[-1][1] if sc else None
+
+def getStabClass(alog):
+    p3 = gp3.P3_Accessor_ByPos(alog)
+    gen = p3.genAnzLog("dat")(startPos=0,endPos=100)
+    weatherCodes = [(int(d.data["INST_STATUS"])>>sis.INSTMGR_AUX_STATUS_SHIFT) & sis.INSTMGR_AUX_STATUS_WEATHER_MASK for d in gen]
+    stabClasses = [sis.classByWeather.get(c-1,"None") for c in weatherCodes]
+    return mostCommon(stabClasses)
     
 class ReportPathMap(object):
     """ Generate the path and swath. The parameters for each run (e.g. colors for markers, wedges,
@@ -481,11 +533,11 @@ class ReportPathMap(object):
         self.ticket = ticket
         self.region = region
         self.instructions = instructions
-        self.pathHtmlFname = os.path.join(self.reportDir,"%s.pathMap.%d.html" % (self.ticket,self.region))
-        self.pathMapFname = os.path.join(self.reportDir,"%s.pathMap.%d.png" % (self.ticket,self.region))
-        self.pathStatusFname  = os.path.join(self.reportDir,"%s.pathMap.%d.status" % (self.ticket,self.region))
-        self.swathMapFname = os.path.join(self.reportDir,"%s.swathMap.%d.png" % (self.ticket,self.region))
-        self.swathStatusFname  = os.path.join(self.reportDir,"%s.swathMap.%d.status" % (self.ticket,self.region))
+        self.pathHtmlFname = os.path.join(self.reportDir,"%s/pathMap.%d.html" % (self.ticket,self.region))
+        self.pathMapFname = os.path.join(self.reportDir,"%s/pathMap.%d.png" % (self.ticket,self.region))
+        self.pathStatusFname  = os.path.join(self.reportDir,"%s/pathMap.%d.status" % (self.ticket,self.region))
+        self.swathMapFname = os.path.join(self.reportDir,"%s/swathMap.%d.png" % (self.ticket,self.region))
+        self.swathStatusFname  = os.path.join(self.reportDir,"%s/swathMap.%d.status" % (self.ticket,self.region))
         self.mapParams = mapParams
         self.timeout = timeout
         self.paramsByLogname = {}
@@ -525,7 +577,10 @@ class ReportPathMap(object):
             pathTableString.append('<td>%s</td>' % makeColorPatch(params['swath']))
             pathTableString.append('<td>%s</td>' % params['minAmpl'])
             pathTableString.append('<td>%s</td>' % params['exclRadius'])
-            pathTableString.append('<td>%s</td>' % params['stabClass'])
+            if params['stabClass'] == '*':
+                pathTableString.append('<td>%s</td>' % getStabClass(logname))
+            else:
+                pathTableString.append('<td>%s</td>' % params['stabClass'])
             pathTableString.append('</tr>')
         pathTableString.append('</tbody>')
         pathTableString.append('</table>')
@@ -538,8 +593,8 @@ class ReportPathMap(object):
         if "done" in getStatus(self.pathStatusFname) and "done" in getStatus(self.swathStatusFname):
             return  # This has already been computed and the output exists
         else:
-            updateStatus(self.pathStatusFname,{"start":time.strftime("%Y%m%dT%H:%M:%S")},True)
-            updateStatus(self.swathStatusFname,{"start":time.strftime("%Y%m%dT%H:%M:%S")},True)
+            updateStatus(self.pathStatusFname,{"start":time.strftime("%Y%m%dT%H%M%S")},True)
+            updateStatus(self.swathStatusFname,{"start":time.strftime("%Y%m%dT%H%M%S")},True)
             mp = self.mapParams
             sl = SurveyorLayers(mp.minLng,mp.minLat,mp.maxLng,mp.maxLat,mp.nx,mp.ny,mp.padX,mp.padY)
             try:
@@ -587,12 +642,12 @@ class ReportPathMap(object):
                     op = open(self.pathHtmlFname,"wb")
                     self.makePathReport(op)
                     op.close()
-                updateStatus(self.pathStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
-                updateStatus(self.swathStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
+                updateStatus(self.pathStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
+                updateStatus(self.swathStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
             except:
                 msg = traceback.format_exc()
-                updateStatus(self.pathStatusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H:%M:%S")})
-                updateStatus(self.swathStatusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H:%M:%S")})          
+                updateStatus(self.pathStatusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H%M%S")})
+                updateStatus(self.swathStatusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H%M%S")})          
 
 MT_NONE, MT_CONC, MT_RANK = 0, 1, 2
 
@@ -602,11 +657,11 @@ class ReportMarkerMap(object):
         self.ticket = ticket
         self.instructions = instructions
         self.region = region
-        self.peaksHtmlFname = os.path.join(self.reportDir,"%s.peaksMap.%d.html" % (self.ticket,self.region))
-        self.peaksMapFname = os.path.join(self.reportDir,"%s.peaksMap.%d.png" % (self.ticket,self.region))
-        self.peaksStatusFname  = os.path.join(self.reportDir,"%s.peaksMap.%d.status" % (self.ticket,self.region))
-        self.wedgesMapFname = os.path.join(self.reportDir,"%s.wedgesMap.%d.png" % (self.ticket,self.region))
-        self.wedgesStatusFname  = os.path.join(self.reportDir,"%s.wedgesMap.%d.status" % (self.ticket,self.region))
+        self.peaksHtmlFname = os.path.join(self.reportDir,"%s/peaksMap.%d.html" % (self.ticket,self.region))
+        self.peaksMapFname = os.path.join(self.reportDir,"%s/peaksMap.%d.png" % (self.ticket,self.region))
+        self.peaksStatusFname  = os.path.join(self.reportDir,"%s/peaksMap.%d.status" % (self.ticket,self.region))
+        self.wedgesMapFname = os.path.join(self.reportDir,"%s/wedgesMap.%d.png" % (self.ticket,self.region))
+        self.wedgesStatusFname  = os.path.join(self.reportDir,"%s/wedgesMap.%d.status" % (self.ticket,self.region))
         self.mapParams = mapParams
         
     def getStatus(self):
@@ -652,8 +707,8 @@ class ReportMarkerMap(object):
         if "done" in getStatus(self.peaksStatusFname) and "done" in getStatus(self.wedgesStatusFname):
             return  # This has already been computed and the output files exist
         else:
-            updateStatus(self.peaksStatusFname,{"start":time.strftime("%Y%m%dT%H:%M:%S")},True)
-            updateStatus(self.wedgesStatusFname,{"start":time.strftime("%Y%m%dT%H:%M:%S")},True)
+            updateStatus(self.peaksStatusFname,{"start":time.strftime("%Y%m%dT%H%M%S")},True)
+            updateStatus(self.wedgesStatusFname,{"start":time.strftime("%Y%m%dT%H%M%S")},True)
             mp = self.mapParams
             sl = SurveyorLayers(mp.minLng,mp.minLat,mp.maxLng,mp.maxLat,mp.nx,mp.ny,mp.padX,mp.padY)
             try:
@@ -691,12 +746,12 @@ class ReportMarkerMap(object):
                         op = open(self.wedgesMapFname,"wb")
                         op.write(asPNG(im2))
                         op.close()
-                updateStatus(self.peaksStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
-                updateStatus(self.wedgesStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H:%M:%S")})            
+                updateStatus(self.peaksStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
+                updateStatus(self.wedgesStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
             except:
                 msg = traceback.format_exc()
-                updateStatus(self.peaksStatusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H:%M:%S")})
-                updateStatus(self.wedgesStatusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H:%M:%S")})
+                updateStatus(self.peaksStatusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H%M%S")})
+                updateStatus(self.wedgesStatusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H%M%S")})
                 
 class PlatFetcher(object):
     def getPlatParams(self,platName,minLng,maxLng,minLat,maxLat,padX=50,padY=50):
@@ -882,7 +937,11 @@ class SurveyorLayers(object):
                 else:            color = colors["normal"]
                 lastColor[0] = color
             return color
-            
+        def colorPathFromInstrumentStatus(instStatus,color):
+            if (instStatus & sis.INSTMGR_STATUS_MASK) != sis.INSTMGR_STATUS_GOOD:
+                color = colors["inactive"]
+                lastColor[0] = color
+            return color
         ov, sv = None, None
         if makePath:
             ov = Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
@@ -906,7 +965,9 @@ class SurveyorLayers(object):
             fit = m.data.get("GPS_FIT",1)
             mask = m.data.get("ValveMask",0)
             row = m.data.get("row",0)   # Used to detect contiguous points
+            instStatus = m.data.get("INST_STATUS",0)
             color = getColorFromValveMask(mask)
+            color = colorPathFromInstrumentStatus(instStatus,color)
             isNormal = (color == colors["normal"])
             x,y = self.xform(lng,lat)
             # newPath = True means that there is to be a break in the path. A simple change

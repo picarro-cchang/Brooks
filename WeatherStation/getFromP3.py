@@ -46,24 +46,26 @@ class P3_Accessor(object):
     the generator does not terminate, but yields None if there are no documents yet available from the 
     collection"""
     
-    def __init__(self,anz):
+    def __init__(self,anz,sys="",identity=""):
         self.csp = "https://dev.picarro.com/node"
         self.svc = "gdu"
         self.analyzerName = anz
         #self.discardList = ["EPOCH_TIME", "LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH", "row"]
         #self.discardList = ["LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH"]
         self.discardList = ["FILENAME_nint", "_id", "SERVER_HASH"]
+        self.sys = sys or "APITEST"
+        self.identity = identity or "85490338d7412a6d31e99ef58bce5de6"
         self.getTicket()
         
     def getTicket(self):
         # Version and Resource
         v_rsc = "1.0/Admin"
         qry = "issueTicket"
-        sys = "APITEST"
         svc = "sec"
-        identity = "85490338d7412a6d31e99ef58bce5de6"
         ticket = "dummy"
         rprocs = '["AnzLog:byEpoch","AnzLogMeta:byEpoch"]'
+        sys = self.sys
+        identity = self.identity        
         get_url = '%s/%s/%s/%s/%s?qry=%s&sys=%s&identity=%s&rprocs=%s' %(self.csp, "rest", svc, ticket, v_rsc, qry, sys, identity, rprocs)
         print "Ticket URL: %s"  % get_url
 
@@ -258,22 +260,24 @@ class P3_Accessor_ByPos(object):
     the generator does not terminate, but yields None if there are no documents yet available from the 
     collection"""
     
-    def __init__(self,alog):
+    def __init__(self,alog,sys="",identity=""):
         self.csp = "https://dev.picarro.com/node"
         self.svc = "gdu"
         self.alogName = alog
         #self.discardList = ["EPOCH_TIME", "LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH", "row"]
         #self.discardList = ["LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH"]
         self.discardList = ["FILENAME_nint", "_id", "SERVER_HASH"]
+        self.sys = sys or "APITEST"
+        self.identity = identity or "85490338d7412a6d31e99ef58bce5de6"
         self.getTicket()
         
     def getTicket(self):
         # Version and Resource
         v_rsc = "1.0/Admin"
         qry = "issueTicket"
-        sys = "APITEST"
+        sys = self.sys
         svc = "sec"
-        identity = "85490338d7412a6d31e99ef58bce5de6"
+        identity = self.identity
         ticket = "dummy"
         rprocs = '["AnzLog:byPos"]'
         get_url = '%s/%s/%s/%s/%s?qry=%s&sys=%s&identity=%s&rprocs=%s' %(self.csp, "rest", svc, ticket, v_rsc, qry, sys, identity, rprocs)
@@ -348,7 +352,7 @@ class P3_Accessor_ByPos(object):
                         for d in self.discardList: 
                             if d in drowCopy: del drowCopy[d]
                         resultQueue.put((row,drowCopy))
-                        if row>= params["endPos"]-1: break
+                        if "endPos" in params and row>= params["endPos"]-1: break
                     threadDict["latestPos"] = row
                     print "P3 get from %s, %.1f s, startTime %.1f, lastTime %.1f" % (params["logtype"],time.clock()-tstart,params["startPos"],threadDict["latestPos"])
                     params["startPos"] = row+1    # Start at the next row
@@ -375,7 +379,7 @@ class P3_Accessor_ByPos(object):
             if resultQueue.empty(): # We must initiate a fetch unless one is in progress
                 print "*** Result Queue is empty"
                 if threadDict["thread"] is None or not threadDict["thread"].isAlive():
-                    if params["startPos"] < params["endPos"]:
+                    if "endPos" not in params or params["startPos"] < params["endPos"]:
                         threadDict["thread"] = threading.Thread(target=fetchBuffer)
                         threadDict["thread"].setDaemon(True)
                         threadDict["start"] = time.clock()
@@ -405,7 +409,7 @@ class P3_Accessor_ByPos(object):
                 #  c) it has been at least two seconds since the last fetch 
                 # If so initiate another fetch in the background
                 if (threadDict["thread"] is None or not threadDict["thread"].isAlive()) and (resultQueue.qsize()<lwm) and (time.clock()-threadDict["start"]>2.0):
-                    if params["startPos"] < params["endPos"]:
+                    if "endPos" not in params or params["startPos"] < params["endPos"]:
                         threadDict["thread"] = threading.Thread(target=fetchBuffer)
                         threadDict["thread"].setDaemon(True)
                         threadDict["start"] = time.clock()

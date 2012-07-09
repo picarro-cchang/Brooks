@@ -56,7 +56,7 @@ function makeColorPatch(value) {
         result = "None";
     } 
     else {
-        result= '<div style="width:15px;height:15px;border:1px solid #000;margin:0 auto;';
+        result = '<div style="width:15px;height:15px;border:1px solid #000;margin:0 auto;';
         result += 'background-color:' + value + ';"></div>';
     }
     return (undefined !== value) ? result : '';
@@ -143,7 +143,7 @@ function styleRunsTable() {
 
 function updateTables(contents) {
     var instrDict;
-    $("#id_instructions").val(contents);
+    // $("#id_instructions").val(contents);
     instrDict = JSON.parse(contents);
     if (instrDict.hasOwnProperty("regions")) {
         $("#" + CNSNT.regions.id).replaceWith(tableFuncs.makeTable(instrDict.regions, CNSNT.regions));
@@ -231,7 +231,7 @@ function makeReport() {
             var fname = $("#id_instr_upload_name").val();
             CSTATE.reportImages = [];
             CSTATE.ticket = data.ticket;
-            $(window.location).attr('href', '/makeInstructions?' + $.param({ticket: data.ticket, fname: fname}));
+            $(window.location).attr('href', '/report?' + $.param({ticket: data.ticket, fname: fname}));
         },
         function (data, et, jqXHR) {
         }
@@ -244,51 +244,40 @@ function processStatus(statusDict)
    This will later produce some metadata describing the image as 
    well as the PNG file */
 {
-    var region, row, words, s, t, url, statByRegion = {}, taburl;
+    var e, region, row, words, s, t, url, statByRegion = {}, taburl;
+
+    function updateStatByRegion(region,sd,stage) {
+        if (!statByRegion.hasOwnProperty(region)) {
+            statByRegion[region] = {stages:"", error: false};
+        }
+        if (sd.hasOwnProperty("done")) statByRegion[region].stages += stage;
+        if (sd.hasOwnProperty("error")) statByRegion[region].error = true;
+    }
+    
     for (var key in statusDict) {
         if (statusDict.hasOwnProperty(key)) {
             words = key.split('.');
-            if (words[0] === 'composite') {
+            if (words[0] === 'report') {
                 region = parseInt(words[1], 10);
-                if (!statByRegion.hasOwnProperty(region)) {
-                    statByRegion[region] = "";
-                }
-                if ("done" in statusDict[key]) {
-                    statByRegion[region] += "C";
-                }
+                updateStatByRegion(region,statusDict[key],"R");
+            }
+            else if (words[0] === 'composite') {
+                region = parseInt(words[1], 10);
+                updateStatByRegion(region,statusDict[key],"C");
             }
             else if (words[0] === 'baseMap') {
                 region = parseInt(words[1], 10);
-                if (!statByRegion.hasOwnProperty(region)) {
-                    statByRegion[region] = "";
-                }
-                if ("done" in statusDict[key]) {
-                    statByRegion[region] += "B";
-                }
+                updateStatByRegion(region,statusDict[key],"B");
             }
             else if (words[0] === 'pathMap') {
                 region = parseInt(words[1], 10);
-                if (!statByRegion.hasOwnProperty(region)) {
-                    statByRegion[region] = "";
-                }
-                if ("done" in statusDict[key][0]) {
-                    statByRegion[region] += "P";
-                }
-                if ("done" in statusDict[key][1]) {
-                    statByRegion[region] += "W";
-                }
+                updateStatByRegion(region,statusDict[key][0],"P");
+                updateStatByRegion(region,statusDict[key][1],"W");
             }
             else if (words[0] === 'markerMap') {
                 region = parseInt(words[1], 10);
-                if (!statByRegion.hasOwnProperty(region)) {
-                    statByRegion[region] = "";
-                }
-                if ("done" in statusDict[key][0]) {
-                    statByRegion[region] += "M";
-                }
-                if ("done" in statusDict[key][1]) {
-                    statByRegion[region] += "S";
-                }
+                updateStatByRegion(region,statusDict[key][0],"M");
+                updateStatByRegion(region,statusDict[key][1],"S");
             }
         }
     }
@@ -296,12 +285,17 @@ function processStatus(statusDict)
         row = tableFuncs.getRowByIndex(region,CNSNT.regions);
         name = tableFuncs.getRowData(row,CNSNT.regions).name;
         if (statByRegion.hasOwnProperty(region)) {
-            s = statByRegion[region];
+            s = statByRegion[region].stages;
+            e = statByRegion[region].error;
             url = CNSNT.svcurl + "/getPDF?" + $.param({ticket: CSTATE.ticket, region: region});
             taburl = CNSNT.svcurl + "/getReport?" + $.param({ticket: CSTATE.ticket, region: region, name:name});
-            if (s.indexOf("C") >= 0) {
+            if (e) {
+                t = "<b>Error, see detailed status</b>"
+                tableFuncs.setCell(row, "status", t, CNSNT.regions);
+            }
+            else if (s.indexOf("R") >= 0) {
                 t = '<b>Done <a href="' + url + '"> PDF</a><a href="';
-                t += taburl + '" target="_blank"> Report</a> </b>';
+                t += taburl + '" target="_blank"> View</a> </b>';
                 tableFuncs.setCell(row, "status", t, CNSNT.regions);
             }
             else {
@@ -310,11 +304,22 @@ function processStatus(statusDict)
                 t += CSTATE.progress + '%;width:20%;"></div></div>';
                 CSTATE.progress = (CSTATE.progress + 20) % 100;
                 tableFuncs.setCell(row, "status", t, CNSNT.regions);
-                
-                // t = "Processing" + "..........".substring(0 ,s.length);
             }
         }
     }
+}
+
+function formatStatus(contents)
+{
+    var i, k, keys=[], result=[];
+    for (k in contents) {
+        keys.push(k);
+    }
+    keys.sort();
+    for (i=0; i<keys.length; i++) {
+        result.push('"' + keys[i] +'": ' + JSON.stringify(contents[keys[i]]));
+    }
+    return result.join("\n");
 }
 
 function statusTimer()
@@ -325,12 +330,12 @@ function statusTimer()
             var done = true;
             $("#id_status").val('');
             $.each(data.files,function(fName,contents) {
-                $("#id_status").val($("#id_status").val() + fName + 
-                "\n" + JSON.stringify(contents,null,2) + "\n");
+                $("#id_status").val($("#id_status").val() + formatStatus(contents) + "\n");
                 processStatus(contents);
                 if (!("end" in contents)) done = false;
             });
             if (!done) {
+                $(".sortable").sortable('disable');
                 TIMER.status = setTimeout(statusTimer, 1000);
             }
             else {
@@ -522,8 +527,8 @@ function editRunsChrome()
     body += tableFuncs.editControl("Exclusion radius", tableFuncs.makeSelect("id_excl_radius", {"class": controlClass},
             {"0": "0", "10": "10", "20": "20", "30": "30", "50": "50" }));
     body += tableFuncs.editControl("Stability Class", tableFuncs.makeSelect("id_stab_class", {"class": controlClass},
-            {"A": "Very Unstable", "B": "Unstable", "C": "Slightly Unstable", 
-             "D": "Neutral", "E": "Slightly Stable", "F": "Stable" }));
+            {"*": "*: Use reported weather data", "A": "A: Very Unstable", "B": "B: Unstable", 
+             "C": "C: Slightly Unstable", "D": "D: Neutral", "E": "E: Slightly Stable", "F": "F: Stable" }));
     body += tableFuncs.editControl("Comments", tableFuncs.makeTextArea("id_comments", {"class": controlClass}));
     body += '</fieldset></form></div>';
     footer = '<div class="modal-footer">';
@@ -534,18 +539,20 @@ function editRunsChrome()
     return header + body + footer;
 }
 
-function datetimeRange(input) {
-    return {minDatetime: (input.id=='id_end_etm'   ? $('#id_start_etm').datetimeEntry('getDatetime'):null),
-            maxDatetime: (input.id=='id_start_etm' ? $('#id_end_etm').datetimeEntry('getDatetime'):null)};
-}
 
 function beforeRunsShow()
 {
-    $.datetimeEntry.setDefaults({spinnerImage: null, datetimeFormat: 'Y-O-D  H:M', show24Hours:true});
+    var GMToffset = new Date().getTimezoneOffset()*60;
+    function datetimeRange(input) {
+        if ("" === $('#id_end_etm').val()) $('#id_end_etm').datetimeEntry('setDatetime',GMToffset); 
+        return {minDatetime: (input.id=='id_end_etm'   ? $('#id_start_etm').datetimeEntry('getDatetime'): null),
+                maxDatetime: (input.id=='id_start_etm' ? $('#id_end_etm').datetimeEntry('getDatetime'): GMToffset )};
+    }
+    $.datetimeEntry.setDefaults({spinnerImage: null, datetimeFormat: 'Y-O-D  H:M', show24Hours: true });
     $('input.datetimeRange').datetimeEntry({beforeShow:datetimeRange});
 }
 
-var initRunRow = {"analyzer": "FCDS2008", "marker": "#00FFFF", "wedges": "#FFFF00", "swath": "#0000FF", "minAmpl": 0.1, 
+var initRunRow = {"analyzer": "FCDS2008", "marker": "#FFFF00", "wedges": "#0000FF", "swath": "#00FF00", "minAmpl": 0.1, 
         "exclRadius": 10, "stabClass": "D"};
 
 function validateRun(eidByKey,template,container,onSuccess) {
@@ -607,7 +614,7 @@ function initialize(winH,winW)
     $("#id_instr_upload_name").val('');
     $("#id_instr_upload").change( function(e){ handleFileSelect(e); });
     // Setup the dnd listeners.
-    dropZone = document.getElementById('id_instructions');
+    dropZone = document.getElementById("id_instr_upload_name");
     dropZone.addEventListener('dragover', handleDragOver, false);
     dropZone.addEventListener('drop', handleFileDrop, false);
 
@@ -622,15 +629,20 @@ function initialize(winH,winW)
                     script      : CNSNT.svcurl + '/download'
         });
         e.preventDefault();
-        $("#id_instructions").val(instr);
+        // $("#id_instructions").val(instr);
         $("#id_instr_upload_name").val(name);
     });
     
-    $("#id_make_report").click(function(e){ makeReport(); e.preventDefault(); }); 
+    $("#id_make_report").click(function(e) { 
+        $(".sortable").sortable('disable');
+        makeReport(); 
+        e.preventDefault(); 
+    });
+    
     ticket = $("#id_hidden_ticket").text();
     contents = $("#id_hidden_contents").text();
     name = $("#id_hidden_name").text();
-    $('#id_instructions').val(contents);
+    // $('#id_instructions').val(contents);
     $("#id_instr_upload_name").val(name);
     if (contents) {
         $(".sortable").sortable('disable');
@@ -639,4 +651,9 @@ function initialize(winH,winW)
         TIMER.status = setTimeout(statusTimer, 1000);
     }
     $('#id_status').val('');
+    $('#id_show_hide_status').on('click',function () {
+        $('#id_status').toggleClass("hide");
+        if ($('#id_status').hasClass("hide")) $('#id_show_hide_status').html("Show detailed status");
+        else $('#id_show_hide_status').html("Hide detailed status");
+    });
 }

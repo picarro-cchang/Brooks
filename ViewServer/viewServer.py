@@ -338,19 +338,8 @@ def updateData():
         params['alog'] = SETTINGS.alogName
 
         try:
-            print "Getting from %s to %s"  % (params.get('startPos','None'), params.get('lastPos','None'))
             result = SETTINGS.service.getData(params)
-            if result:
-                print result.keys()
-                try:
-                    print "Number of points: ",len(result["CH4"])
-                    print "Last point: ",result["lastPos"]
-                except:
-                    print 'No points or bad lastPos'
-            else:
-                print "Null result"
             thisFilename = result['filename']
-            print "request filename=",lastFilename,"  received filename=",thisFilename
             if thisFilename != lastFilename: 
                 print "******************* LOG CHANGED **************************"
                 SETTINGS.refreshNeeded = True
@@ -362,13 +351,10 @@ def updateData():
                 longs = result['GPS_ABS_LONG']
                 lats = result['GPS_ABS_LAT']
             except:
-                print "Getting concs exception", traceback.format_exc()
                 concs = []
                 longs = []
                 lats = []
         except:
-            print "updateData exception", traceback.format_exc()
-            print "exception resulted from calling updateData with %s" % request.values
             if 'filename' in request.values: cookie['filename'] = request.values['filename']            
             concs = []
             longs = []
@@ -387,7 +373,6 @@ def updateData():
             SETTINGS.refreshDone()
             lastPos = 1
         else:
-            print "Number of latitude points", len(lats)
             dataStrings = []
             for i,viewParams in enumerate(SETTINGS.viewParamsList):
                 placeMark = ""
@@ -400,7 +385,6 @@ def updateData():
         cookie["lastPos"] = "%s" % lastPos
         # Convert the cookie dictionary into a string
         cookie = Markup.escape("&".join(["%s=%s" % (k,cookie[k]) for k in cookie]))
-        print "Cookie for next call to updateData", cookie
         kml = NETLINKCONTROL  % (kmlPrefix, kmlData, cookie)
         response = make_response(kml)
         response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'

@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "reportBase.html" %}
 
 {% block head %}
     <title>Surveyor Report Generation</title>
@@ -16,7 +16,7 @@
 
     <style>
     table.table-fmt1 td {text-align:center; vertical-align:middle; }
-    table.table-fmt1 th {text-align:center; }
+    table.table-fmt1 th {text-align:center; border: #000 solid; border-width: 0px 0px 1px 0px; }
     .validate_tips {text-align:center; }
     </style>
 
@@ -27,24 +27,18 @@
 <div class="container-fluid">
     <div class="row-fluid">
         <div class="span6">
-            <h1>Instruction file</h1>
+            <h1>Instructions</h1>
             <div class="custom_file_upload">
                 <input type="text" class="file" id="id_instr_upload_name" name="file_info" readonly>
                 <div class="btn-primary file_upload">
                     <input type="file" id="id_instr_upload" name="files[]">
                 </div>
             </div>
-
-            <div>
-                <textarea id="id_instructions" style="height:17em;width:100%;resize:none;" readonly>
-                </textarea><br>
-            </div>
         </div>
-
         <div class="span6">
-            <h1>Status</h1>
-            <div><textarea id="id_status" style="height:20em;width:100%;resize:none;" readonly>
-            </textarea></div>
+            <h1>Actions</h1>
+            <div><button type="button" style="float:left;" id="id_make_report" class="btn btn-large btn-primary">Make Report</button></div>
+            <div><button type="button" style="float:right;" id="id_save_instructions" class="btn">Save Instructions</button></div>
         </div>
     </div>
     <div class="row-fluid">
@@ -61,16 +55,11 @@
         </div>
     </div>
 
-    <div class="row-fluid">
-        <h1>Actions</h1>
-        <span><button type="button" id="id_save_instructions" class="btn-large btn-primary">Save Instructions</button></span>
-        <span><button type="button" id="id_make_report" class="btn-large btn-primary">Make Report</button></span>
-    </div>
 
     <div class="row-fluid">
-        <h1>Results</h1>
-        <div id="id_results_container">
-        </div>
+        <div><textarea id="id_status" class="hide" style="height:20em;width:100%;resize:none;" readonly>
+        </textarea></div>
+        <a id="id_show_hide_status" href="#">Show detailed status</a>
     </div>
     <div id="id_hidden_name" style="display:none;">{{ fname }}</div>
     <div id="id_hidden_contents" style="display:none;">{{ contents }}</div>
