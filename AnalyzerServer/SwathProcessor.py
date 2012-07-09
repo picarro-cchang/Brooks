@@ -12,53 +12,13 @@ Copyright (c) 2012 Picarro, Inc. All rights reserved
 from collections import deque
 from numpy import arange, arcsin, arctan2, asarray, cos, isfinite, isnan
 from numpy import log, pi, sin, sqrt, unwrap
-from collections import namedtuple
+from Host.Common.namedtuple import namedtuple
 from scipy.special import erf
+import SurveyorInstStatus as sis
 
 EARTH_RADIUS = 6378100
 DTR = pi/180.0
 RTD = 180.0/pi
-
-# status register bit definitions
-INSTMGR_STATUS_READY                    = 0x0001
-INSTMGR_STATUS_MEAS_ACTIVE              = 0x0002
-INSTMGR_STATUS_ERROR_IN_BUFFER          = 0x0004
-INSTMGR_STATUS_GAS_FLOWING              = 0x0040
-INSTMGR_STATUS_PRESSURE_LOCKED          = 0x0080
-INSTMGR_STATUS_CAVITY_TEMP_LOCKED       = 0x0100
-INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED = 0x0200
-INSTMGR_STATUS_WARMING_UP               = 0x2000
-INSTMGR_STATUS_SYSTEM_ERROR             = 0x4000
-INSTMGR_STATUS_MASK                     = 0xFFFF
-INSTMGR_AUX_STATUS_SHIFT                = 16
-INSTMGR_AUX_STATUS_WEATHER_MASK         = 0x1F
-
-# Codes for weather information. The entry in the auxiliary status is
-#  ONE PLUS the bitwise OR of the codes below. This allows us to detect
-#  a file which has no weather data in it.
-
-WEATHER_DAY                 = 0
-WEATHER_NIGHT               = 1
-WEATHER_SUNLIGHT_OVERCAST   = 0 * 2
-WEATHER_SUNLIGHT_MODERATE   = 1 * 2
-WEATHER_SUNLIGHT_STRONG     = 2 * 2
-WEATHER_CLOUD_LESS50        = 0 * 2
-WEATHER_CLOUD_MORE50        = 1 * 2
-WEATHER_WIND_CALM           = 0 * 8
-WEATHER_WIND_LIGHT          = 1 * 8
-WEATHER_WIND_STRONG         = 2 * 8
-
-# Pasquill stability class dictionary
-classByWeather = { 0: "D",  8: "D", 16: "D", # Daytime, Overcast
-                   2: "B", 10: "C", 18: "D", # Daytime, moderate sun
-                   4: "A", 12: "B", 20: "C", # Daytime, strong sun
-                   1: "F",  9: "E", 17: "D", # Nighttime, <50% cloud
-                   3: "E", 11: "D", 19: "D"  # Nighttime, >50% cloud
-                 }
-
-# Good status
-INSTMGR_STATUS_GOOD = INSTMGR_STATUS_READY | INSTMGR_STATUS_MEAS_ACTIVE | INSTMGR_STATUS_GAS_FLOWING | INSTMGR_STATUS_PRESSURE_LOCKED |\
-                      INSTMGR_STATUS_CAVITY_TEMP_LOCKED | INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
 
 # Calculate maximum width of field of view about the point (x_N,y_N) based on a path of 2N+1 points (x_0,y_0) through (x_{2N},y_{2N})
 #  where the mean wind bearing is (u=WIND_E,v=WIND_N) and there is a standard deviation of the wind direction given by d_sdev
@@ -208,14 +168,14 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
             dstd = DTR*d["WIND_DIR_SDEV"]
             mask = d["ValveMask"]
             instStatus = int(d["INST_STATUS"])
-            auxStatus = instStatus >> INSTMGR_AUX_STATUS_SHIFT
-            instStatus = instStatus & INSTMGR_STATUS_MASK
-            weatherCode = auxStatus & INSTMGR_AUX_STATUS_WEATHER_MASK
+            auxStatus = instStatus >> sis.INSTMGR_AUX_STATUS_SHIFT
+            instStatus = instStatus & sis.INSTMGR_STATUS_MASK
+            weatherCode = auxStatus & sis.INSTMGR_AUX_STATUS_WEATHER_MASK
             # Note that weatherCode is zero if there are no reported weather data in the file. Otherwise, we 
             #  SUBTRACT ONE before using it to look up the stability class in classByWeather. If we have an
             #  invalid code in the data file and try to fetch it using "*", the swath is suppressed.
-            if stabClass == "*": stabClass = classByWeather.get(weatherCode-1,None)
-            if (fit>0) and (mask<1.0e-3) and isfinite(windN) and isfinite(windE) and (instStatus == INSTMGR_STATUS_GOOD) and (stabClass is not None):
+            if stabClass == "*": stabClass = sis.classByWeather.get(weatherCode-1,None)
+            if (fit>0) and (mask<1.0e-3) and isfinite(windN) and isfinite(windE) and (instStatus == sis.INSTMGR_STATUS_GOOD) and (stabClass is not None):
                 bearing = arctan2(windE,windN)
                 wind = sqrt(windE*windE + windN*windN)
                 xx = asarray([fovBuff[i]["GPS_ABS_LONG"] for i in range(2*N+1)])

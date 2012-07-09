@@ -2712,6 +2712,7 @@ function restart_datalog() {
         init = getCookie(COOKIE_NAMES.weather);
         try {
             init = JSON.parse(init);
+            if (null === init) throw "null";
         }
         catch (e) {
             init = [0,0,0];
