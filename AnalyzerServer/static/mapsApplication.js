@@ -2709,6 +2709,9 @@ function initialize_btns() {
 function restart_datalog() {
     var init;
     if (confirm(TXT.restart_datalog_msg)) {
+        /*
+         * Uncomment the following to request weather data from operator on restarting a log
+         *
         init = getCookie(COOKIE_NAMES.weather);
         try {
             init = JSON.parse(init);
@@ -2729,6 +2732,11 @@ function restart_datalog() {
             call_rest(CNSNT.svcurl, "restartDatalog", dtype, {weatherCode:code});
             restoreModChangeDiv();
         },init);
+        */
+        if (CNSNT.prime_view === true) {
+            dtype = "jsonp";
+        }
+        call_rest(CNSNT.svcurl, "restartDatalog", dtype);
     }
 }
 

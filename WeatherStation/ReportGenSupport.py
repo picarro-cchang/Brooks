@@ -760,6 +760,7 @@ class PlatFetcher(object):
     def getPlat(self,platName,minLng,maxLng,minLat,maxLat,padX=50,padY=50,fetchPlat=True):
         tifFile = os.path.join(PLAT_TIF_ROOT, platName+".tif")
         pngFile = os.path.join(PLAT_PNG_ROOT, platName+".png")
+        print 'Convert "%s" "%s"' % ( tifFile, pngFile)
         if not os.path.exists(tifFile):
             return (None, None) if fetchPlat else None
         if not fetchPlat:
@@ -770,7 +771,8 @@ class PlatFetcher(object):
         else:
             if not os.path.exists(pngFile):
                 # Call ImageMagik to convert the TIF to a PNG
-                os.system('convert "%s" "%s"' % ( tifFile, pngFile))
+                subprocess.call([IMGCONVERT, tifFile, pngFile])
+                # os.system('"%s" "%s" "%s"' % (IMGCONVERT, tifFile, pngFile))
             p = Image.open(pngFile)
             nx,ny = p.size
             q = Image.new('RGBA',(nx+2*padX,ny+2*padY),(255,255,255,255))

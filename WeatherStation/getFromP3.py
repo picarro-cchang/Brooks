@@ -15,13 +15,20 @@ import sys
 import time
 import traceback
 import math
+import os
 import threading
 import Queue
+from Host.Common.configobj import ConfigObj
 
 NOT_A_NUMBER = 1e1000/1e1000
 
 DataTuple = namedtuple("DataTuple",["etm","latestEtm","data"])
 PosTuple  = namedtuple("PosTuple", ["pos","latestPos","data"])
+
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
 
 class P3_Accessor(object):
     """Factories used to make accessors that access AnzLog and AnzLogMeta documents stored in collections 
@@ -46,15 +53,17 @@ class P3_Accessor(object):
     the generator does not terminate, but yields None if there are no documents yet available from the 
     collection"""
     
-    def __init__(self,anz,sys="",identity=""):
-        self.csp = "https://dev.picarro.com/node"
+    def __init__(self,anz):
         self.svc = "gdu"
         self.analyzerName = anz
         #self.discardList = ["EPOCH_TIME", "LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH", "row"]
         #self.discardList = ["LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH"]
         self.discardList = ["FILENAME_nint", "_id", "SERVER_HASH"]
-        self.sys = sys or "APITEST"
-        self.identity = identity or "85490338d7412a6d31e99ef58bce5de6"
+        configFile = os.path.splitext(AppPath)[0] + ".ini"
+        config = ConfigObj(configFile)
+        self.csp = "https://" + config["P3Logs"]["csp"]
+        self.sys = config["P3Logs"]["sys"]
+        self.identity = config["P3Logs"]["identity"]
         self.getTicket()
         
     def getTicket(self):
