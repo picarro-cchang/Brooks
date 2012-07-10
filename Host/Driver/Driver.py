@@ -47,14 +47,10 @@ from Host.Common.ctypesConvert import ctypesToDict, dictToCtypes
 from Host.Common import SchemeProcessor
 
 try:
-    from Host.hostBzrVer import version_info as hostBzrVer
+    from Host.repoBzrVer import version_info as repoBzrVer
 except:
-    hostBzrVer = None
-try:
-    from Host.srcBzrVer import version_info as srcBzrVer
-except:
-    srcBzrVer = None
-    
+    repoBzrVer = None
+
 EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -119,7 +115,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def DAS_GetState(self, stateMachineIndex):
         """Need to be implemented"""
         return 1
-    
+
     def getLockStatus(self):
         """Need to be implemented"""
         hardwarePresent = self.rdDasReg("HARDWARE_PRESENT_REGISTER")
@@ -133,7 +129,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             allLasersTempLocked = allLasersTempLocked and (lockStatus & (1<< interface.DAS_STATUS_Laser3TempCntrlLockedBit))
         if hardwarePresent & (1<< interface.HARDWARE_PRESENT_Laser4Bit):
             allLasersTempLocked = allLasersTempLocked and (lockStatus & (1<< interface.DAS_STATUS_Laser4TempCntrlLockedBit))
-        
+
         laserTempLockStatus = "Locked" if allLasersTempLocked else "Unlocked"
         warmChamberTempLockStatus = "Locked" if (lockStatus & (1<< interface.DAS_STATUS_WarmBoxTempCntrlLockedBit)) else "Unlocked"
         cavityTempLockStatus = "Locked" if (lockStatus & (1<< interface.DAS_STATUS_CavityTempCntrlLockedBit)) else "Unlocked"
@@ -146,7 +142,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
                 if key in result:
                     result[key] = section[key].strip()
         return result
-        
+
     def startTempControl(self):
         """Need to be implemented"""
         return INST_ERROR_OKAY
@@ -154,7 +150,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def startLaserControl(self):
         """Need to be implemented"""
         return INST_ERROR_OKAY
-        
+
     def hostReady(self, ready):
         """Set or clear HOST_READY register"""
         pass
@@ -173,13 +169,13 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Fetches cavity temperature and setpoint
         """
         return self.rdDasReg("CAVITY_TEMPERATURE_REGISTER"),self.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
-    
+
     def getWarmingState(self):
         """Fetches warm box temperature, cavity temperature and cavity pressure with their setpoints"""
         return dict(WarmBoxTemperature=(self.rdDasReg("WARM_BOX_TEMPERATURE_REGISTER"),self.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")),
                CavityTemperature=(self.rdDasReg("CAVITY_TEMPERATURE_REGISTER"),self.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")),
                CavityPressure=(self.rdDasReg("CAVITY_PRESSURE_REGISTER"),self.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")))
-               
+
     def getValveCtrlState(self):
         """Get the current valve control state. Valid values are:
             0: Disabled (=VALVE_CNTRL_DisabledState)
@@ -188,7 +184,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             3: Manual control (=VALVE_CNTRL_ManualControlState)
         """
         return self.rdDasReg("VALVE_CNTRL_STATE_REGISTER")
-   
+
     def startOutletValveControl(self, pressureSetpoint=None, inletValve=None):
         """ Start outlet valve control with the specified pressure setpoint and inlet valve settings, or using values in the configuration registers if the parameters are omitted """
         result = {}
@@ -224,17 +220,16 @@ class DriverRpcHandler(SharedTypes.Singleton):
         result["cavityPressureSetpoint"] = pressureSetpoint
         result["outletValve"] = outletValve
         return result
-        
+
     def allVersions(self):
         versionDict = {}
         versionDict["interface"] = interface.interface_version
         versionDict["host release"] = version.versionString()
-        if hostBzrVer:
-            versionDict["host version id"] = hostBzrVer['revision_id']
-            versionDict["host version no"] = hostBzrVer['revno']
-        if srcBzrVer:
-            versionDict["src version id"] = srcBzrVer['revision_id']
-            versionDict["src version no"] = srcBzrVer['revno']
+        if repoBzrVer:
+            versionDict["host version id"] = repoBzrVer['revision_id']
+            versionDict["host version no"] = repoBzrVer['revno']
+            versionDict["src version id"] = repoBzrVer['revision_id']
+            versionDict["src version no"] = repoBzrVer['revno']
         try:
             versionDict["config - app version no"] = self.ver["appVer"]
             versionDict["config - instr version no"] = self.ver["instrVer"]
@@ -242,11 +237,11 @@ class DriverRpcHandler(SharedTypes.Singleton):
         except Exception, err:
             print err
         return versionDict
-    
+
     def saveRegValues(self,regList):
         # Save the values of the registers specified in regList into a "vault" which can later
         #  be used to restore them with restoreRegValues. The elements of regList can be integers
-        #  representing DSP registers or tuples of integers representing FPGA registers in 
+        #  representing DSP registers or tuples of integers representing FPGA registers in
         #  (block,offset) pairs. These integers may be referred to symbolically by passing strings
         #  which are looked up in the interface file.
         vault = []
@@ -259,7 +254,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             else:
                 vault.append((reg,self.rdDasReg(reg)))
         return vault
-    
+
     def restoreRegValues(self,vault):
         # Restore register values stored in the vault (produced by saveRegValues)
         for reg,value in vault:
@@ -325,7 +320,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def interfaceValue(self,valueOrName):
         """Ask Driver to lookup a symbol in the context of the current interface"""
         return self._value(valueOrName)
-        
+
     def wrDasRegList(self,regList,values):
         for r,value in zip(regList,values):
             self.wrDasReg(r,value)
@@ -364,7 +359,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         paramsAsUint = self.dasInterface.hostToDspSender.rdRingdownMemArray(base,12)
         param = interface.RingdownParamsType.from_address(ctypes.addressof(paramsAsUint))
         return (array(data),array(meta).reshape(512,8).transpose(),ctypesToDict(param))
-        
+
     def rdRingdownBuffer(self,buffNum):
         """Fetches contents of ringdown buffer which is QDMA transferred from the FPGA to DSP memory"""
         RINGDOWN_BUFFER_BASE = interface.SHAREDMEM_ADDRESS + 4*interface.RINGDOWN_BUFFER_OFFSET
@@ -384,7 +379,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         trace = interface.OscilloscopeTraceType.from_address(ctypes.addressof(bufferAsUint))
         sender.doOperation(Operation("ACTION_RELEASE_SCOPE_TRACE"))
         return array([x for x in trace.data])
-            
+
     def rdScheme(self,schemeNum):
         """Reads a scheme from table number schemeNum"""
         return self.dasInterface.hostToDspSender.rdScheme(schemeNum)
@@ -395,15 +390,15 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def setFanState(self, fanState):
         """Controls the state of fan relay"""
-        self.wrDasReg("FAN_CNTRL_STATE_REGISTER", fanState) 
+        self.wrDasReg("FAN_CNTRL_STATE_REGISTER", fanState)
         sender = self.dasInterface.hostToDspSender
         sender.doOperation(Operation("ACTION_ACTIVATE_FAN",["FAN_CNTRL_STATE_REGISTER"]))
-        
+
     def getValveMask(self):
         """Read the valve mask - the lower 6 bits represent the binary code of the solenoid valves.
         """
         return self.rdDasReg("VALVE_CNTRL_SOLENOID_VALVES_REGISTER") & 0x3F
-    
+
     def setValveMask(self, mask):
         self.wrDasReg("VALVE_CNTRL_SOLENOID_VALVES_REGISTER", mask & 0x3F)
 
@@ -411,12 +406,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Read the multi-position valve (MPV) position.
         """
         return self.rdDasReg("VALVE_CNTRL_MPV_POSITION_REGISTER")
-    
+
     def setMPVPosition(self, pos):
         self.wrDasReg("VALVE_CNTRL_MPV_POSITION_REGISTER", pos)
-        
+
     def closeValves(self,valveMask=0x3F):
-        """ Close the valves specified by the valveMask. This is a bitmask with bits 0 through 5 corresponding with solenoid valves 1 through 6. 
+        """ Close the valves specified by the valveMask. This is a bitmask with bits 0 through 5 corresponding with solenoid valves 1 through 6.
         A "1" bit causes the valve to close, a "0" bit leaves the valve state unchanged.
         """
         currValveMask = self.getValveMask()
@@ -424,13 +419,13 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.setValveMask(newValveMask)
 
     def openValves(self,valveMask=0x0):
-        """ Open the valves specified by the valveMask. This is a bitmask with bits 0 through 5 corresponding with solenoid valves 1 through 6. 
+        """ Open the valves specified by the valveMask. This is a bitmask with bits 0 through 5 corresponding with solenoid valves 1 through 6.
         A "1" bit causes the valve to open, a "0" bit leaves the valve state unchanged.
         """
         currValveMask = self.getValveMask()
         newValveMask = currValveMask | valveMask
         self.setValveMask(newValveMask)
-        
+
     def rdValveSequence(self):
         """Reads the valve sequence"""
         return self.dasInterface.hostToDspSender.rdValveSequence()
@@ -440,7 +435,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.dasInterface.hostToDspSender.wrValveSequence(sequenceRows)
 
     def rdVirtualLaserParams(self,vLaserNum):
-        """Returns the virtual laser parameters associated with virtual laser vLaserNum (ONE-based)as 
+        """Returns the virtual laser parameters associated with virtual laser vLaserNum (ONE-based)as
            a dictionary.
            N.B. The "actualLaser" field within the VirtualLaserParams structure is ZERO-based
            for compatibility with the DAS software
@@ -448,7 +443,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         return SharedTypes.ctypesToDict(self.dasInterface.hostToDspSender.rdVirtualLaserParams(vLaserNum))
 
     def wrVirtualLaserParams(self,vLaserNum,laserParams):
-        """Wites the virtual laser parameters (specified as a dictionary) associated with 
+        """Wites the virtual laser parameters (specified as a dictionary) associated with
            virtual laser vLaserNum (ONE-based).
            N.B. The "actualLaser" field within the VirtualLaserParams structure is ZERO-based
            for compatibility with the DAS software
@@ -482,11 +477,11 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def getHistoryByCommand(self, command, args=None):
         """Get historical data associated with given command from the database"""
         return StateDatabase().getHistoryByCommand(command, args)
-        
+
     def saveWlmHist(self,wlmHist):
         """Save WLM history in database"""
         StateDatabase().saveWlmHist(wlmHist)
-        
+
     def getConfigFile(self):
         configFile = os.path.abspath(InstrumentConfig().filename)
         return configFile
@@ -498,7 +493,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
     #def wrAuxiliary(self,data):
     #    """Writes the "data" string to the auxiliary board"""
     #    self.dasInterface.hostToDspSender.wrAuxiliary(ctypes.create_string_buffer(data,len(data)))
-        
+
     #def getDacQueueFreeSlots(self):
     #    return self.dasInterface.hostToDspSender.getDacQueueFreeSlots()
 
@@ -513,7 +508,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     #def serveDacQueues(self):
     #    return self.dasInterface.hostToDspSender.serveDacQueues()
-       
+
     def rdDspTimerRegisters(self):
         return self.dasInterface.hostToDspSender.rdDspTimerRegisters()
 
@@ -525,22 +520,22 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def setDacReloadCount(self,reloadCount):
         return self.dasInterface.hostToDspSender.setDacReloadCount(reloadCount)
-    
+
     def getDacTimestamp(self):
         return self.dasInterface.hostToDspSender.getDacTimestamp()
 
     def getDacReloadCount(self):
         return self.dasInterface.hostToDspSender.getDacReloadCount()
-        
+
     def getDacQueueFree(self):
         return self.dasInterface.hostToDspSender.getDacQueueFree()
 
     def getDacQueueErrors(self):
         return self.dasInterface.hostToDspSender.getDacQueueErrors()
-        
+
     def enqueueDacSamples(self,data):
         return self.dasInterface.hostToDspSender.enqueueDacSamples(ctypes.create_string_buffer(data,len(data)))
-        
+
     #def disableLaserCurrent(self,laserNum):
     #    # Turn off laser current for laserNum (0-index)
     #    if laserNum<0 or laserNum>=interface.MAX_LASERS:
@@ -550,7 +545,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
     #    injControl = self.rdFPGA("FPGA_INJECT","INJECT_CONTROL")
     #    injControl &= ~(enableSource |removeShort)
     #    self.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injControl)
-    
+
     #def enableLaserCurrent(self,laserNum):
     #    # Turn on laser current for laserNum (0-index)
     #    if laserNum<0 or laserNum>=interface.MAX_LASERS:
@@ -560,7 +555,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
     #    injControl = self.rdFPGA("FPGA_INJECT","INJECT_CONTROL")
     #    injControl |= enableSource | removeShort
     #    self.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injControl)
-    
+
     def startEngine(self):
         # Turn on lasers, warm box and cavity thermal control followed by
         #  laser current sources
@@ -573,12 +568,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
         if DasConfigure().heaterCntrlMode in [interface.HEATER_CNTRL_MODE_DELTA_TEMP,interface.HEATER_CNTRL_MODE_TEC_TARGET]:
             self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
         elif DasConfigure().heaterCntrlMode in [interface.HEATER_CNTRL_MODE_HEATER_FIXED]:
-            self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_ManualState)        
+            self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_ManualState)
         self.wrDasReg("TEC_CNTRL_REGISTER",interface.TEC_CNTRL_Enabled)
         for laserNum in range(1,interface.MAX_LASERS+1):
             if DasConfigure().installCheck("LASER%d_PRESENT" % laserNum):
                 self.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum,interface.LASER_CURRENT_CNTRL_ManualState)
-                
+
     def selectActualLaser(self,aLaserNum):
         # Select laserNum, placing it under automatic control and activating the optical switch. The value
         #  of aLaserNum is ONE-based
@@ -589,12 +584,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
         laserMask = (interface.MAX_LASERS-1) << interface.INJECT_CONTROL_LASER_SELECT_B
         injControl = (injControl & (~laserMask)) | laserSel
         self.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injControl)
-    
+
     def dasGetTicks(self):
         sender = self.dasInterface.hostToDspSender
         sender.doOperation(Operation("ACTION_GET_TIMESTAMP",["TIMESTAMP_LSB_REGISTER","TIMESTAMP_MSB_REGISTER"]))
         return self.rdDasReg("TIMESTAMP_MSB_REGISTER")<<32L | self.rdDasReg("TIMESTAMP_LSB_REGISTER")
-        
+
     def hostGetTicks(self):
         return timestamp.getTimestamp()
 
@@ -602,7 +597,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         sender = self.dasInterface.hostToDspSender
         ts = timestamp.getTimestamp()
         sender.doOperation(Operation("ACTION_SET_TIMESTAMP",[ts&0xFFFFFFFF,ts>>32]))
-        
+
     def setSingleScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER,interface.SPECT_CNTRL_SchemeSingleMode)
 
@@ -614,7 +609,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def getSpectCntrlMode(self):
         return self.rdDasReg(interface.SPECT_CNTRL_MODE_REGISTER)
-        
+
     def startScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_StartingState)
 
@@ -623,13 +618,13 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def scanIdle(self):
         return self.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState
-    
+
     def rdEnvToString(self,index,envClass):
         return ObjAsString(self.dasInterface.hostToDspSender.rdEnv(index,envClass))
-        
+
     def wrEnvFromString(self,index,envClass,envAsString):
         return self.dasInterface.hostToDspSender.wrEnv(index,StringAsObject(envAsString,envClass))
-        
+
     def rdBlock(self,offset,numInt):
         # Performs a host read of numInt unsigned integers from
         #  the communications region starting at offset
@@ -638,10 +633,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def doOperation(self,op):
         """Perform an operation"""
         return self.dasInterface.hostToDspSender.doOperation(op)
-        
+
     def rdEeprom(self,whichEeprom,startAddress,nBytes,chunkSize=64):
-        """Read nBytes from whichEeprom starting at startAddress (which must be a multiple 
-        of 4). Memory acccesses are done in multiples of chunkSize (<=64 in bytes) for 
+        """Read nBytes from whichEeprom starting at startAddress (which must be a multiple
+        of 4). Memory acccesses are done in multiples of chunkSize (<=64 in bytes) for
         efficiency. Returns result as a list of bytes."""
         if startAddress % 4:
             raise ValueError("startAddress must be a multiple of 4 in rdEeprom")
@@ -665,8 +660,8 @@ class DriverRpcHandler(SharedTypes.Singleton):
         return ctypesObject[:]
 
     def rdEepromLowLevel(self,chain,mux,i2cAddr,startAddress,nBytes,chunkSize=64):
-        """Read nBytes from I2C EEPROM starting at startAddress (which must be a multiple 
-        of 4). Memory acccesses are done in multiples of chunkSize (<=64 in bytes) for 
+        """Read nBytes from I2C EEPROM starting at startAddress (which must be a multiple
+        of 4). Memory acccesses are done in multiples of chunkSize (<=64 in bytes) for
         efficiency. Returns result as a list of bytes."""
         if startAddress % 4:
             raise ValueError("startAddress must be a multiple of 4 in rdEeprom")
@@ -687,10 +682,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
             objPtr += bytesRead
             nBytes -= bytesRead
         return ctypesObject[:]
-    
+
     def rdEepromBoardTestLowLevel(self,chain,mux,i2cAddr,startAddress,nBytes,chunkSize=64):
-        """Read nBytes from I2C EEPROM starting at startAddress (which must be a multiple 
-        of 4). Memory acccesses are done in multiples of chunkSize (<=64 in bytes) for 
+        """Read nBytes from I2C EEPROM starting at startAddress (which must be a multiple
+        of 4). Memory acccesses are done in multiples of chunkSize (<=64 in bytes) for
         efficiency. Returns result as a list of bytes."""
         if startAddress % 4:
             raise ValueError("startAddress must be a multiple of 4 in rdEeprom")
@@ -711,10 +706,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
             objPtr += bytesRead
             nBytes -= bytesRead
         return ctypesObject[:]
-        
+
     def wrEeprom(self,whichEeprom,startAddress,byteList,pageSize=32):
-        """Writes bytes from byteList into whichEeprom starting at startAddress (which must 
-        be a multiple of 4).  The pageSize (<=64, in bytes) is used to perform the writing 
+        """Writes bytes from byteList into whichEeprom starting at startAddress (which must
+        be a multiple of 4).  The pageSize (<=64, in bytes) is used to perform the writing
         in chunks, being careful not to cross page boundaries."""
         if startAddress % 4:
             raise ValueError("startAddress must be a multiple of 4 in wrEeprom")
@@ -739,10 +734,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
             bytesLeft -= nBytes
             while not self.doOperation(Operation("ACTION_EEPROM_READY",[i2cIndex])):
                 time.sleep(0.1)
-        
+
     def wrEepromLowLevel(self,chain,mux,i2cAddr,startAddress,byteList,pageSize=32):
-        """Writes bytes from byteList into I2c EEPROM starting at startAddress (which must 
-        be a multiple of 4).  The pageSize (<=64, in bytes) is used to perform the writing 
+        """Writes bytes from byteList into I2c EEPROM starting at startAddress (which must
+        be a multiple of 4).  The pageSize (<=64, in bytes) is used to perform the writing
         in chunks, being careful not to cross page boundaries."""
         if startAddress % 4:
             raise ValueError("startAddress must be a multiple of 4 in wrEeprom")
@@ -766,10 +761,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
             bytesLeft -= nBytes
             while not self.doOperation(Operation("ACTION_EEPROM_READY_LOW_LEVEL",[chain,mux,i2cAddr])):
                 time.sleep(0.1)
-                
+
     def wrEepromBoardTestLowLevel(self,chain,mux,i2cAddr,startAddress,byteList,pageSize=32):
-        """Writes bytes from byteList into I2c EEPROM starting at startAddress (which must 
-        be a multiple of 4).  The pageSize (<=64, in bytes) is used to perform the writing 
+        """Writes bytes from byteList into I2c EEPROM starting at startAddress (which must
+        be a multiple of 4).  The pageSize (<=64, in bytes) is used to perform the writing
         in chunks, being careful not to cross page boundaries."""
         if startAddress % 4:
             raise ValueError("startAddress must be a multiple of 4 in wrEeprom")
@@ -793,22 +788,22 @@ class DriverRpcHandler(SharedTypes.Singleton):
             bytesLeft -= nBytes
             while not self.doOperation(Operation("ACTION_EEPROM_READY_LOW_LEVEL",[chain,mux,i2cAddr])):
                 time.sleep(0.1)
-                
+
     def i2cCheckLowLevel(self,chain,mux,i2cAddr):
         """Check for an I2C device on the specified chain, multiplexer channel and I2C address"""
         status = self.doOperation(Operation("ACTION_I2C_CHECK",[chain,mux,i2cAddr]))
         return status >= 0
-    
+
     def fetchObject(self,whichEeprom,startAddress=0):
         """Fetch a pickled object from the specified EEPROM, starting at "startAddress".
-        The first four bytes contains the length of the pickled string. Returns the 
+        The first four bytes contains the length of the pickled string. Returns the
         object and the address of the next object."""
         if not DasConfigure().i2cConfig[whichEeprom]:
             raise ValueError("%s is not available" % whichEeprom)
         nBytes, = struct.unpack("I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
         return (cPickle.loads("".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress+4,nBytes)])),
                 startAddress + 4*((nBytes+3)//4))
-                
+
     def fetchInstrInfo(self, option="all"):
         option = option.lower()
         try:
@@ -831,12 +826,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
             return "%s-%s%s" % (chassis, analyzerType, analyzerNum)
         else:
             return None
-    
+
     def verifyInstallerId(self):
         return (self.driver.validInstallerId, self.driver.analyzerType, self.driver.installerId)
-        
+
     def verifyObject(self,whichEeprom,object,startAddress=0):
-        """Verify that the pickled object was written correctly to specified EEPROM, starting at 
+        """Verify that the pickled object was written correctly to specified EEPROM, starting at
         "startAddress". Returns True iff successful. """
         if not DasConfigure().i2cConfig[whichEeprom]:
             raise ValueError("%s is not available" % whichEeprom)
@@ -845,10 +840,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
         if nBytes != len(s): return False
         r = "".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress+4,nBytes)])
         return r == s
-    
+
     def shelveObject(self,whichEeprom,object,startAddress=0):
         """Store a pickled object from to specified EEPROM, starting at "startAddress".
-        The first four bytes contains the length of the pickled string. Returns the 
+        The first four bytes contains the length of the pickled string. Returns the
         address of the next object."""
         if not DasConfigure().i2cConfig[whichEeprom]:
             raise ValueError("%s is not available" % whichEeprom)
@@ -859,7 +854,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def fetchLogicEEPROM(self):
         """Fetch the instrument information from LOGIC_EEPROM.
-        The first four bytes contains the length of the pickled string. Returns the 
+        The first four bytes contains the length of the pickled string. Returns the
         object and the address of the next object.
         """
         if not DasConfigure().i2cConfig["LOGIC_EEPROM"]:
@@ -870,7 +865,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             raise ValueError("LOGIC_EEPROM returns wrong size (%d bytes)" % nBytes)
         return (cPickle.loads("".join([chr(c) for c in self.rdEeprom("LOGIC_EEPROM",4,nBytes)])),
                4*((nBytes+3)//4))
-                
+
     def fetchWlmCal(self):
         """Fetch the WLM calibration data as a dictionary from WLM_EEPROM"""
         if not DasConfigure().i2cConfig["WLM_EEPROM"]:
@@ -890,7 +885,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             raise ValueError("WLMHeaderType has wrong size (%d bytes)" % ctypes.sizeof(wlmHdr))
         ctypes.memmove(ctypes.addressof(wlmHdr),"".join([chr(c) for c in self.rdEeprom("WLM_EEPROM",0,64)]),64)
         return ctypesToDict(wlmHdr)
-        
+
     def shelveWlmCal(self,wlmCalDict):
         """Save the WLM calibration data as a dictionary to the WLM_EEPROM"""
         if not DasConfigure().i2cConfig["WLM_EEPROM"]:
@@ -900,7 +895,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         if ctypes.sizeof(wlmCal) != 4096:
             raise ValueError("WLMCalibrationType has wrong size (%d bytes)" % ctypes.sizeof(wlmCal))
         self.wrEeprom("WLM_EEPROM",0,[ord(c) for c in buffer(wlmCal)])
-    
+
     def readWlmDarkCurrents(self):
         """Read dark current values from WLM EEPROM (if possible) and update registers"""
         hdrDict = self.fetchWlmHdr()
@@ -908,29 +903,29 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_REF1_OFFSET",int(hdrDict['reference1_offset']+0.5))
         self.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_ETA2_OFFSET",int(hdrDict['etalon2_offset']+0.5))
         self.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_REF2_OFFSET",int(hdrDict['reference2_offset']+0.5))
-    
+
     def resetDas(self):
         Log("Reset DAS called",Level=3)
         return INST_ERROR_OKAY
-        
+
     def stopLaserControl(self):
         Log("Stop laser control called",Level=3)
         return INST_ERROR_OKAY
-        
+
     def sendDacSamples(self,samples):
         """Sends a list of samples of the form [(timestamp,channel,voltage),...]
         to the analog interface card"""
         for timestamp,channel,voltage in samples:
-            self.analogInterface.enqueueSample(timestamp,channel,voltage)        
-            
+            self.analogInterface.enqueueSample(timestamp,channel,voltage)
+
     def writeDacSample(self,channel,voltage):
         """Sends a voltage immediately to the specified DAC channel"""
         self.analogInterface.writeSample(channel,voltage)
-        
+
     def getParameterForms(self):
         """Returns the dictionary of parameter forms for the controller GUI"""
         return DasConfigure().parameter_forms
- 
+
     def shutDown(self):
         '''Place instrument in idle state for shutdown'''
         # Disable spectrum controller
@@ -945,7 +940,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
                 break
             else:
                 time.sleep(0.1)
-        # Close all solenoid valves        
+        # Close all solenoid valves
         self.wrDasReg('VALVE_CNTRL_SOLENOID_VALVES_REGISTER',0)
         # Close proportional valves
         self.wrDasReg('VALVE_CNTRL_STATE_REGISTER','VALVE_CNTRL_DisabledState')
@@ -964,18 +959,18 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.wrDasReg('HEATER_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
         # Disable drive to warm box and hot box TECs
         self.wrDasReg('TEC_CNTRL_REGISTER','TEC_CNTRL_Disabled')
-        # Disable proportional valve PWM 
+        # Disable proportional valve PWM
         self.wrFPGA('FPGA_DYNAMICPWM_INLET','DYNAMICPWM_CS',0)
         self.wrFPGA('FPGA_DYNAMICPWM_OUTLET','DYNAMICPWM_CS',0)
         # Turn off voltage to PZT
         self.wrDasReg('ANALYZER_TUNING_MODE_REGISTER','ANALYZER_TUNING_LaserCurrentTuningMode')
         self.wrFPGA('FPGA_TWGEN','TWGEN_PZT_OFFSET',0)
- 
+
 class StreamTableType(tables.IsDescription):
     time = tables.Int64Col()
     streamNum = tables.Int32Col()
     value = tables.Float32Col()
-    
+
 class StreamSaver(SharedTypes.Singleton):
     initialized = False
     def __init__(self,config=None, basePath="", maxStreamLines=0):
@@ -990,7 +985,7 @@ class StreamSaver(SharedTypes.Singleton):
             self.observerAccess = {}
             self.streamLines = 0
             self.maxStreamLines = maxStreamLines
-            
+
     def registerStreamStatusObserver(self,observerRpcPort,observerToken):
         if not(observerRpcPort in self.observerAccess):
             serverURI = "http://%s:%d" % ("localhost",observerRpcPort)
@@ -1058,7 +1053,7 @@ class StreamSaver(SharedTypes.Singleton):
                 self.closeStreamFile()
                 self.openStreamFile()
 
-                
+
 class Driver(SharedTypes.Singleton):
     def __init__(self,sim,configFile):
         self.config = CustomConfigObj(configFile)
@@ -1089,7 +1084,7 @@ class Driver(SharedTypes.Singleton):
             except Exception, err:
                 print err
                 self.ver[ver] = "N/A"
-        # Get installer ID     
+        # Get installer ID
         try:
             signaturePath = os.path.join(basePath, self.config.get("Files", "SignaturePath", "../../../installerSignature.txt"))
         except:
@@ -1103,7 +1098,7 @@ class Driver(SharedTypes.Singleton):
             self.installerId = None
         self.analyzerType = None # Will be retrieved from EEPROM in run() function
         self.validInstallerId = True
-            
+
         self.rpcHandler = DriverRpcHandler(self)
         InstrumentConfig(self.instrConfigFile)
         self.streamSaver = StreamSaver(self.config, basePath, maxStreamLines)
@@ -1124,7 +1119,7 @@ class Driver(SharedTypes.Singleton):
         sender = self.dasInterface.hostToDspSender
         ts = timestamp.getTimestamp()
         sender.doOperation(Operation("ACTION_NUDGE_TIMESTAMP",[ts&0xFFFFFFFF,ts>>32]))
-        
+
     def run(self):
         def messageProcessor(data):
             ts, msg = data
@@ -1153,11 +1148,11 @@ class Driver(SharedTypes.Singleton):
                 ic.loadPersistentRegistersFromConfig()
                 # self.dasInterface.loadDasState() # Restore DAS state
                 Log("Configuring scheduler",Level=1)
-                DasConfigure(self.dasInterface,ic.config,self.config).run()                
+                DasConfigure(self.dasInterface,ic.config,self.config).run()
                 try:
                     self.rpcHandler.readWlmDarkCurrents()
                 except:
-                    Log("Cannot read dark currents from WLM EEPROM",Level=2)                
+                    Log("Cannot read dark currents from WLM EEPROM",Level=2)
                 daemon = self.rpcHandler.server.daemon
                 Log("DAS firmware uploaded",Level=1)
             except:
@@ -1167,9 +1162,9 @@ class Driver(SharedTypes.Singleton):
             # Initialize the analog interface
             analogInterfacePresent = 0 != (self.dasInterface.hostToDspSender.rdRegUint("HARDWARE_PRESENT_REGISTER") & (1 << interface.HARDWARE_PRESENT_AnalogInterface))
             print "Analog interface present: %s" % analogInterfacePresent
-            if analogInterfacePresent: 
+            if analogInterfacePresent:
                 self.analogInterface.initializeClock()
-            
+
             # Compare Analyzer Type from EEPROM with Software Installer ID
             self.validInstallerId = True
             if self.installerId != None:
@@ -1178,14 +1173,14 @@ class Driver(SharedTypes.Singleton):
                 except Exception, err:
                     print "%r" % err
                     self.analyzerType = None
-                    
+
                 if self.analyzerType != None:
                     if self.installerId != self.analyzerType:
                         Log("EEPROM ID (%s) does not match Software Installer ID (%s) - please correct EEPROM or re-install software" % (self.analyzerType,self.installerId),Level=3)
                         self.validInstallerId = False
                     else:
                         Log("EEPROM ID matches Software Installer ID (%s)" % (self.analyzerType,),Level=1)
-            
+
             # Here follows the main loop.
             Log("Starting main driver loop",Level=1)
             try:
@@ -1202,7 +1197,7 @@ class Driver(SharedTypes.Singleton):
                     #timeSoFar += ringdownHandler.process(max(0.01,0.1-timeSoFar))
                     #daemon.handleRequests(max(0.005,0.1-timeSoFar))
                     # Periodically save the state of the DAS and nudge the DAS timestamp
-                    if analogInterfacePresent: 
+                    if analogInterfacePresent:
                         self.analogInterface.serve()
                     now = time.time()
                     #print "Poll Time", now-startPoll
@@ -1222,8 +1217,8 @@ class Driver(SharedTypes.Singleton):
                 pass
             self.rpcHandler.shutDown()
             self.dasInterface.analyzerUsb.disconnect()
-            self.streamSaver.closeStreamFile()    
-        
+            self.streamSaver.closeStreamFile()
+
 class InstrumentConfig(SharedTypes.Singleton):
     """Configuration of instrument."""
     def __init__(self,filename=None):

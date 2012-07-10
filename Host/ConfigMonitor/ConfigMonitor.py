@@ -34,13 +34,13 @@ def makePath(fn):
             os.makedirs(dir)
         return fn(self, dir, *args)
     return wrapper
-    
+
 def toAbsPath(fn):
     def wrapper(self, dir, *args):
         dir = os.path.abspath(dir)
         return fn(self, dir, *args)
     return wrapper
-            
+
 class BzrHelper(object):
     @makePath
     @toAbsPath
@@ -49,7 +49,7 @@ class BzrHelper(object):
             os.system(r"bzr init-repo --no-trees %s" % repo)
         self.repo = repo
         self.basePath = os.getcwd()
-        
+
     @toAbsPath
     def isBranch(self, dir):
         info = os.popen(r"bzr info %s" % dir, "r").read()
@@ -65,7 +65,7 @@ class BzrHelper(object):
             return False
         else:
             return True
-         
+
     @makePath
     @toAbsPath
     def init(self, dir, ignore=""):
@@ -76,7 +76,7 @@ class BzrHelper(object):
         self._addCommit("Created initial branch")
         os.system(r"bzr push %s" % os.path.join(self.repo, os.path.basename(dir)))
         os.chdir(self.basePath)
-     
+
     @toAbsPath
     def updateIgnore(self, dir, ignore=""):
         # Only keep "ignore" pattern if it is not in .bzrignnore
@@ -89,12 +89,12 @@ class BzrHelper(object):
             self._addCommit("Update .bzrignore file")
             os.system(r"bzr push %s" % os.path.join(self.repo, os.path.basename(dir)))
             os.chdir(self.basePath)
-        
-    @toAbsPath     
+
+    @toAbsPath
     def st(self, dir):
         ret = os.popen(r"bzr st %s" % dir, "r").read()
         return ret
-        
+
     @toAbsPath
     def commit(self, dir, comment=""):
         if not comment:
@@ -103,7 +103,7 @@ class BzrHelper(object):
         self._addCommit(comment)
         os.system(r"bzr push")
         os.chdir(self.basePath)
-        
+
     def _addCommit(self, comment):
         os.system(r"bzr add")
         os.system(r'bzr commit -m "%s" --unchanged' % comment)
@@ -124,7 +124,7 @@ class RpcServerThread(threading.Thread):
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
             print "Exception raised when calling exit function at exit of RPC server."
-            
+
 class ConfigMonitor(object):
     def __init__(self, configFile):
         self.co = CustomConfigObj(configFile)
@@ -145,16 +145,16 @@ class ConfigMonitor(object):
         # Get Host and SrcCode version numbers
         self.releaseVer = version.versionString()
         try:
-            from Host.hostBzrVer import version_info
+            from Host.repoBzrVer import version_info
             self.hostVer = str(version_info['revno'])
         except:
             self.hostVer = ""
         try:
-            from Host.srcBzrVer import version_info
+            from Host.repoBzrVer import version_info
             self.srcVer = str(version_info['revno'])
         except:
             self.srcVer = ""
-        
+
         if self.enabled:
             # Check Host and srcCode versions
             self.checkSoftwareVer()
@@ -166,7 +166,7 @@ class ConfigMonitor(object):
                 if self.bzr.st(dir):
                     self.bzr.commit(dir)
         self.startServer()
-        
+
     def startServer(self):
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_CONFIG_MONITOR),
                                                 ServerName = APP_NAME,
@@ -177,7 +177,7 @@ class ConfigMonitor(object):
         self.rpcServer.register_function(self.enable)
         self.rpcServer.register_function(self.disable)
         self.rpcServer.serve_forever()
-        
+
     def checkSoftwareVer(self):
         swHistCo = CustomConfigObj(self.swHistFile)
         swVerList = swHistCo.list_sections()
@@ -196,7 +196,7 @@ class ConfigMonitor(object):
         swHistCo.set(timeKey, "SrcCode", self.srcVer)
         swHistCo.set(timeKey, "Time", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)))
         swHistCo.write()
-        
+
     def monitor(self, comment=""):
         """
         Track changes in configuration files and host/srcCode versions
@@ -209,7 +209,7 @@ class ConfigMonitor(object):
         for dir, ignore in self.monitoredDirs:
             if self.bzr.st(dir):
                 self.bzr.commit(dir, comment)
-                
+
     def enable(self):
         self.enabled = True
         self.co.set("Main", "Enabled", "True")
@@ -232,7 +232,7 @@ Where the options can be a combination of the following:
 
 def PrintUsage():
     print HELP_STRING
-    
+
 def HandleCommandSwitches():
     import getopt
 
@@ -257,9 +257,9 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-  
+
     return configFile
-    
+
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
     ConfigMonitor(configFile)

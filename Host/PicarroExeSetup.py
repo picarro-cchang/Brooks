@@ -247,8 +247,7 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
                    "Utilities/SupervisorLauncher/alarm.png",
                    "Utilities/Restart/inpout32.dll",
                    "PeriphIntrf/Serial2Socket.exe",
-                   "hostBzrVer.py",
-                   "srcBzrVer.py"]),
+                   "repoBzrVer.py"]),
             (r'mpl-data', glob.glob(r'C:\Python25\Lib\site-packages\matplotlib\mpl-data\*.*')),
             # Because matplotlibrc does not have an extension, glob does not find it (at least I think that's why)
             # So add it manually here:
