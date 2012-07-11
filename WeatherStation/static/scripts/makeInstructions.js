@@ -328,12 +328,15 @@ function statusTimer()
     call_rest(CNSNT.svcurl, "getReportStatus", params, 
         function (data, ts, jqXHR) {
             var done = true;
-            $("#id_status").val('');
+            var allContents = "";
             $.each(data.files,function(fName,contents) {
-                $("#id_status").val($("#id_status").val() + formatStatus(contents) + "\n");
+                allContents += formatStatus(contents)
                 processStatus(contents);
                 if (!("end" in contents)) done = false;
             });
+            if ("" !== allContents) {
+                $("#id_status").val(allContents + "\n");
+            }
             if (!done) {
                 $(".sortable").sortable('disable');
                 TIMER.status = setTimeout(statusTimer, 1000);

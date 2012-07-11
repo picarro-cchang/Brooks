@@ -32,11 +32,20 @@ import urllib
 import urllib2
 import subprocess
 import SurveyorInstStatus as sis
+from Host.Common.configobj import ConfigObj
+
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
 
 # Executable for HTML to PDF conversion
-WKHTMLTOPDF = r"C:\Program Files (x86)\wkhtmltopdf\wkhtmltopdf.exe"
-SVCURL = "http://localhost:5200/rest"
+configFile = os.path.splitext(AppPath)[0] + ".ini"
+config = ConfigObj(configFile)
+WKHTMLTOPDF = config["HelperApps"]["wkhtml_to_pdf"]
+IMGCONVERT  = config["HelperApps"]["image_convert"]
 
+SVCURL = "http://localhost:5200/rest"
 RTD = 180.0/math.pi
 DTR = math.pi/180.0
 EARTH_RADIUS = 6378100
@@ -49,7 +58,7 @@ else:
     appPath = sys.argv[0]
 appDir = os.path.split(appPath)[0]
 PLAT_TIF_ROOT = r"S:\Projects\Picarro Surveyor\Files from PGE including TIFF maps\GEMS\CompTif\Gas\Distribution"
-PLAT_PNG_ROOT = os.path.join(appDir,'static/plats')
+PLAT_PNG_ROOT = os.path.join(appDir,r'static\plats')
 if not os.path.exists(PLAT_PNG_ROOT): os.makedirs(PLAT_PNG_ROOT)
 
 MapParams = namedtuple("MapParams",["minLng","minLat","maxLng","maxLat","nx","ny","padX","padY"])
@@ -763,22 +772,17 @@ class PlatFetcher(object):
         print 'Convert "%s" "%s"' % ( tifFile, pngFile)
         if not os.path.exists(tifFile):
             return (None, None) if fetchPlat else None
-        if not fetchPlat:
-            p = Image.open(tifFile)
-            nx,ny = p.size
-            mp = MapParams(minLng,minLat,maxLng,maxLat,nx,ny,padX,padY)
-            return mp
-        else:
-            if not os.path.exists(pngFile):
-                # Call ImageMagik to convert the TIF to a PNG
-                subprocess.call([IMGCONVERT, tifFile, pngFile])
-                # os.system('"%s" "%s" "%s"' % (IMGCONVERT, tifFile, pngFile))
-            p = Image.open(pngFile)
-            nx,ny = p.size
-            q = Image.new('RGBA',(nx+2*padX,ny+2*padY),(255,255,255,255))
-            q.paste(p,(padX,padY))
-            mp = MapParams(minLng,minLat,maxLng,maxLat,nx,ny,padX,padY)
-            return q,mp
+        if not os.path.exists(pngFile):
+            # Call ImageMagik to convert the TIF to a PNG
+            subprocess.call([IMGCONVERT, tifFile, pngFile])
+            # os.system('"%s" "%s" "%s"' % (IMGCONVERT, tifFile, pngFile))
+        p = Image.open(pngFile)
+        nx,ny = p.size
+        mp = MapParams(minLng,minLat,maxLng,maxLat,nx,ny,padX,padY)
+        if not fetchPlat: return mp
+        q = Image.new('RGBA',(nx+2*padX,ny+2*padY),(255,255,255,255))
+        q.paste(p,(padX,padY))
+        return q,mp
 
 class GoogleMap(object):
     def getMap(self,latCen,lonCen,zoom,nx,ny,scale=1,satellite=True):
