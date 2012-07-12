@@ -1,6 +1,6 @@
 /*
  * FILE:
- *   i2c_dsp.h
+ *   i2c_dsp.c
  *
  * DESCRIPTION:
  *   Routines to communicate with I2C on the DSP
@@ -329,14 +329,14 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
             while (0 == I2C_rrdy(hI2c))
             {
                 loops++;
-                if (loops >= 500*I2C_MAXLOOPS)
+                if (loops >= 1000*I2C_MAXLOOPS)
                 {
                     // Go through here on timeout
-                    /*
-                    sprintf(msg,"RRDY (n-1) timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
-                            hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
-                    message_puts(LOG_LEVEL_CRITICAL,msg);
-                    */
+                    
+                    // sprintf(msg,"RRDY (n-1) timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
+                    //         hI2c,I2C0MuxChan,I2C1MuxChan,i2caddr);
+                    // message_puts(LOG_LEVEL_CRITICAL,msg);
+                    
                     message_puts(LOG_LEVEL_CRITICAL,"RRDY (n-1) timeout in I2C_read_bytes");
                     I2C_FSETSH(hI2c,I2CSTR,ICRRDY,CLR);
                     result = I2C_NRRDY;
@@ -373,7 +373,7 @@ int I2C_read_bytes(I2C_Handle hI2c,int i2caddr,Uint8 *buffer,int nbytes)
         while (0 == I2C_rrdy(hI2c))
         {
             loops++;
-            if (loops >= 500*I2C_MAXLOOPS)
+            if (loops >= 1000*I2C_MAXLOOPS)
             {
                 /*
                 sprintf(msg,"RRDY (1) timeout in I2C_read_bytes, hI2c=%d, I2C0MuxChan=%d, I2C1MuxChan=%d, I2CAddr=%x",
@@ -553,5 +553,21 @@ int ltc2485_read(int ident)
     if (result == I2C_READ_ERROR) return result;
     if (flags == 0) result = -16777216;
     else if (flags == 3) result = 16777215;
+    return result;
+}
+/*----------------------------------------------------------------------------*/
+int read_flow_sensor(int ident)
+// Reads a Honeywell I2C flow sensor associated with "ident". Returns I2C_READ_ERROR on an I2C error.
+{
+    int result, loops;
+    unsigned int i, n=2;
+    Uint8 reply[4] = {0,0,0,0};
+    I2C_device *d = &i2c_devices[ident];
+    if (d->chain) setI2C1Mux(d->mux);
+    else setI2C0Mux(d->mux);
+    result = 0;
+    for (loops=0;loops<1000;loops++);
+    if (I2C_read_bytes(hI2C[d->chain],d->addr,reply,n) != 0) return I2C_READ_ERROR;
+    for (i=0; i<n; i++) result = (result << 8) | (unsigned int)reply[i];
     return result;
 }

@@ -3096,7 +3096,7 @@
             <save/>
             <display format="$%04X">Inactive state valve mask and values</display>
         </register>
-        <register ident="FLOW1_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="FLOW1_REGISTER" type="float" minver="1.0" access="r">
             <description>Flow 1 register</description>
         </register>
         <register ident="CONVERSION_FLOW1_SCALE_REGISTER" type="float" minver="1.0" access="rw">
