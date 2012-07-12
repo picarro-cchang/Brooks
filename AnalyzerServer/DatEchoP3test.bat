@@ -1,0 +1,1 @@
+c:\Picarro\G2000\MobileKit\AnalyzerServer\DatEchoP3.py --file-path="ZZZ1301-20120326-150757Z-WindStats.txt"  --ip-reg-url=http://dev.picarro.com/dev/rest/gdu/analyzerIpRegister/ --push-url=https://dev.picarro.com/node/rest/gdu/abcdefg/1/AnzLog/ --data-type=WindStats

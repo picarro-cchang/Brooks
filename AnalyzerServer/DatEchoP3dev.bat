@@ -1,0 +1,1 @@
+c:\Picarro\G2000\MobileKit\AnalyzerServer\DatEchoP3.py --listen-path=C:\UserData\AnalyzerServer\*_Minimal.dat --ip-reg-url=http://dev.picarro.com/dev/rest/gdu/analyzerIpRegister/ --push-url=https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/
