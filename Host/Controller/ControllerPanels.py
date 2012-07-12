@@ -461,7 +461,7 @@ class PressurePanel(PressurePanelGui):
     def __init__(self,*a,**k):
         PressurePanelGui.__init__(self,*a,**k)
         self.pressureGraph.SetGraphProperties(
-            ylabel='Pressure (torr)',
+            ylabel='Pressure (torr), Flow (sccm)',
             timeAxes=(True,False),
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             grid=True,backgroundColour=wx.SystemSettings_GetColour(
@@ -479,6 +479,10 @@ class PressurePanel(PressurePanelGui):
         self.cavityPressureWfm = Series(wfmPoints)
         self.pressureGraph.AddSeriesAsLine(self.cavityPressureWfm,
             colour='green',width=2)
+        self.flow1Wfm = Series(wfmPoints)
+        # Don't show flow rate at initialization
+        #self.pressureGraph.AddSeriesAsLine(self.flow1Wfm,
+        #    colour='blue',width=2)
         self.inletValveWfm = Series(wfmPoints)
         self.propValveGraph.AddSeriesAsLine(self.inletValveWfm,
             colour='red',width=2)
@@ -512,6 +516,9 @@ class PressurePanel(PressurePanelGui):
         if self.cavityPressureCheckbox.IsChecked():
             self.pressureGraph.AddSeriesAsLine(self.cavityPressureWfm,
                 colour='green',width=2)
+        if self.flowRateCheckbox.IsChecked():
+            self.pressureGraph.AddSeriesAsLine(self.flow1Wfm,
+                colour='blue',width=2)
 
     def onValveWaveformSelectChanged(self, event):
         self.propValveGraph.RemoveAllSeries()
