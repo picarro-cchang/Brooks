@@ -1,10 +1,10 @@
 '''
-DatEchoP3 - Listen to a path of .dat (type) files on the local system, 
+DatEchoP3 - Listen to a path of .dat (type) files on the local system,
 and echo new rows to the P3 archive
 '''
 import sys
 from optparse import OptionParser
-
+import traceback
 import fnmatch
 import os
 import time
@@ -12,6 +12,7 @@ from collections import deque
 import urllib2
 import urllib
 import math
+import pprint
 
 import socket
 import datetime
@@ -50,8 +51,8 @@ class DataEchoP3(object):
             self.debug = kwargs['debug']
         if not self.debug:
             self.debug = None
-        
-        self.listen_path = None    
+
+        self.listen_path = None
         if 'listen_path' in kwargs:
             self.listen_path = kwargs['listen_path']
 
@@ -74,14 +75,14 @@ class DataEchoP3(object):
         if not self.push_url:
             self.push_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
             #self.push_url = 'http://localhost:8080/rest/datalogAdd/'
-        
-        self.ticket_url = None    
+
+        self.ticket_url = None
         if 'ticket_url' in kwargs:
             self.ticket_url = kwargs['ticket_url']
         if not self.ticket_url:
             self.ticket_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
-        
-        self.timeout = None    
+
+        self.timeout = None
         if 'timeout' in kwargs:
             self.timeout = int(kwargs['timeout'])
         if not self.timeout:
@@ -108,7 +109,7 @@ class DataEchoP3(object):
         self.lines = None
         if 'lines' in kwargs:
             self.lines = kwargs['lines']
-        if not self.lines: 
+        if not self.lines:
             self.lines = 1000
 
         self.sleep_seconds = None
@@ -120,17 +121,17 @@ class DataEchoP3(object):
         self._last_fname = None
         self.fname = None
         self.first_pass_complete = None
-        self.ticket = None
+        self.ticket = 'None'
         self.startTime = datetime.datetime.now()
 
     def getTicket(self):
-        self.ticket = None
+        self.ticket = 'None'
         ticket = None
         qry = "issueTicket"
         sys = self.psys
         identity = self.identity
         rprocs = '["AnzMeta:data", "AnzLog:data"]'
-        
+
         params = {"qry": qry, "sys": sys, "identity": identity, "rprocs": rprocs}
         try:
             resp = urllib2.urlopen(self.ticket_url, data=urllib.urlencode(params))
@@ -142,51 +143,51 @@ class DataEchoP3(object):
         except urllib2.HTTPError, e:
             err_str = e.read()
             print '\nissueTicket failed \n%s\n' % err_str
-                
+
         except Exception, e:
             print '\nissueTicket failed \n%s\n' % e
 
         if ticket:
             self.ticket = ticket;
             print "new ticket: ", self.ticket
-        
+
 
     def run(self):
         '''
         '''
-        
+
         if not self.identity:
             print "Cannot proceed. No Identity for authentication"
             sys.exit()
-            
+
         if not self.ticket:
             self.ticket = "abcdefg"
-            
+
         ip_register_good = True
         def pushIP():
             aname = self.getLocalAnalyzerId()
             if self.psys == None:
                 self.psys = aname
-                
+
             if self.ip_url:
                 for addr in self.getIPAddresses():
                     if addr == "0.0.0.0":
                         continue
-                    
-                    
+
+
                     doc_data = []
                     datarow = {}
                     datarow["ANALYZER"] = aname
-                    datarow["PRIVATE_IP"] = "%s:5000" % addr 
+                    datarow["PRIVATE_IP"] = "%s:5000" % addr
                     doc_data.append(datarow)
                     postparms = {'data': json.dumps(doc_data)}
-                    
+
                     continueRequest = True;
                     continueRequestCtr = 0;
                     while continueRequest:
                         continueRequest = None
-                        
-                        try:    
+
+                        try:
                             # NOTE: socket only required to set timeout parameter for the urlopen()
                             # In Python26 and beyond we can use the timeout parameter in the urlopen()
                             analyzerIpRegister = self.ip_url.replace("<TICKET>", self.ticket)
@@ -196,7 +197,7 @@ class DataEchoP3(object):
                             ip_register_good = True
                             print "Registered new ip. postparms: ", postparms
                             break
-                        
+
                         except urllib2.HTTPError, e:
                             err_str = e.read()
                             if "invalid ticket" in err_str:
@@ -205,13 +206,13 @@ class DataEchoP3(object):
                                     continueRequest = True
                                     continueRequestCtr += 1
                                     self.getTicket()
-                                
+
                             else:
                                 ip_register_good = False
                                 print '\nanalyzerIpRegister failed \n%s\n' % err_str
-                                
+
                             break
-                            
+
                         except Exception, e:
                             ip_register_good = False
                             print '\nanalyzerIpRegister failed \n%s\n' % e
@@ -228,7 +229,7 @@ class DataEchoP3(object):
                     break
                 else:
                     self.fname = os.path.join(self.file_path)
-                    
+
             else:
                 try:
                     self.fname = genLatestFiles(*os.path.split(self.listen_path)).next()
@@ -236,7 +237,7 @@ class DataEchoP3(object):
                     ecounter += 1
                     time.sleep(self.sleep_seconds)
                     self.fname = None
-                    
+
                     if ecounter > 200000:
                         print "listen_path: %s" % self.listen_path
                         print "No files to process: Exiting DataEchoP3.run()"
@@ -246,14 +247,14 @@ class DataEchoP3(object):
 
             # if we have a file, make sure we have not previously processed it
             ##  if we have proccessed it, sleep for a wile, and wait for a new file
-            ##  if we have slept too many times, exit.            
-            pushIP()        
+            ##  if we have slept too many times, exit.
+            pushIP()
             if self.fname:
-                if self.fname == self._last_fname: 
+                if self.fname == self._last_fname:
                     wcounter += 1
                     time.sleep(1.0)
-                    
-                    if wcounter > 10: 
+
+                    if wcounter > 10:
                         print "No more files to process: Exiting DataEchoP3.run()"
                         break
                 else:
@@ -271,11 +272,11 @@ class DataEchoP3(object):
                             first_row = None
                             headers = line.split()
                             ##print "line", line
-                            
+
                             ## We no longer push the file line
                             #self.pushToP3(self.fname, None, [(line, 0)], True, None)
                             continue
-                        
+
                         lctr += 1
                         ipctr += 1
                         if headers:
@@ -285,7 +286,7 @@ class DataEchoP3(object):
                                 print line
                                 print
                                 continue
-                            
+
                             doc = {}
                             for col, val in zip(headers, vals):
                                 try:
@@ -299,7 +300,7 @@ class DataEchoP3(object):
                                     except:
                                         #just skip on isnan error
                                         skip = 1
-                                        
+
                                 except:
                                     #JSON does not have NaN as part of the standard
                                     # (even though JavaScrip does)
@@ -308,10 +309,10 @@ class DataEchoP3(object):
 
                             rctr += 1
                             doc['row'] = rctr
-                            
+
                             self._lines.append((line, rctr))
                             self._docs.append(doc)
-                            
+
                             # attempt to smooth the transmission by only
                             # sending to server every .8 seconds OR ever 100 lines
                             tsec = time.time() - nsec
@@ -321,16 +322,16 @@ class DataEchoP3(object):
                                 self._docs = []
                                 self._lines = []
                                 nsec = time.time()
-                                
+
                                 if (ipctr > 5000 or not ip_register_good):
                                     pushIP()
                                     ipctr = 0
-                        
-        
+
+
         self.endTime = datetime.datetime.now()
         print "start: ", self.startTime
         print "end: ", self.endTime
-        
+
         return fcounter
 
     def iterate_file(self):
@@ -350,7 +351,7 @@ class DataEchoP3(object):
                     self.pushToP3(self.fname, self._docs, self._lines, None, None)
                     self._docs = []
                     self._lines = []
-                
+
                 counter += 1
                 if counter == 10:
                     try:    # Stop iteration if we are not the last file
@@ -358,8 +359,8 @@ class DataEchoP3(object):
                             fp.close()
                             print "\r\nClosing source stream %s\r\n" % self.fname
                             return
-                        
-                        if self.fname != genLatestFiles(*os.path.split(self.listen_path)).next(): 
+
+                        if self.fname != genLatestFiles(*os.path.split(self.listen_path)).next():
                             fp.close()
                             print "\r\nClosing source stream %s\r\n" % self.fname
                             return
@@ -368,28 +369,28 @@ class DataEchoP3(object):
                     counter = 0
                 time.sleep(0.1)
                 continue
-            
+
             yield line
 
     def pushToP3(self, path, docs=None, flat_rows=None, replace=None, last_pos=None):
         err_rtn_str = 'ERROR: missing data:'
         rtn = "OK"
-        fname = os.path.basename(path) 
-        if docs: 
-            replace_the_log = None
+        fname = os.path.basename(path)
+        if docs:
+            replace_the_log = 0
             if (not self.first_pass_complete):
                 if (self.replace == True):
                     replace_the_log = 1
-            
+
             params = [{"logname": fname, "replace": replace_the_log, "logtype": self.logtype, "logdata": docs}]
             postparms = {'data': json.dumps(params)}
-        
+
             tctr = 0
             waitForRetryCtr = 0
             waitForRetry = True
             while True:
-                
-                try:    
+
+                try:
                     # NOTE: socket only required to set timeout parameter for the urlopen()
                     # In Python26 and beyond we can use the timeout parameter in the urlopen()
                     socket.setdefaulttimeout(self.timeout)
@@ -408,7 +409,7 @@ class DataEchoP3(object):
                     else:
                         self.first_pass_complete = True
                         break
-                    
+
                 except urllib2.HTTPError, e:
                     err_str = e.read()
                     if "invalid ticket" in err_str:
@@ -417,32 +418,33 @@ class DataEchoP3(object):
                         waitForRetryCtr += 1
                         if waitForRetryCtr < 100:
                             waitForRetry = None
-                        
+
                     else:
                         print 'Ticket EXCEPTION in pushToP3, and could not get valid ticket.\n%s\n' % err_str
                         pass
-                    
+
                 except Exception, e:
                     print 'EXCEPTION in pushToP3\n%s\n' % e
-                    pass
-                    
+                    pprint.pprint(params)
+                    print traceback.format_exc()
+
                 sys.stderr.write('-')
                 tctr += 1
                 if waitForRetry:
                     time.sleep(self.timeout)
-                    
+
                 waitForRetry = True
-                
+
             ## we want to keep trying forever.  This is intentional.
-            '''   
+            '''
             if tctr > 100:
                 print 'r\nError trying to send data from file %s to url: %s\r\n' % (self.fname, self.push_url)
                 rtn = "ERROR"
                 break
             '''
-            
+
         return rtn
-    
+
     def pushMissingRows(self, path, pos, last_pos):
         fp = file(self.fname,'rb')
         fp.seek(pos,0)
@@ -458,11 +460,11 @@ class DataEchoP3(object):
                 return "ERROR"
             if cpos >= last_pos:
                 break
-            
+
         return "OK"
-            
-        
-        
+
+
+
     def getIPAddresses(self):
         MAX_ADAPTER_DESCRIPTION_LENGTH = 128
         MAX_ADAPTER_NAME_LENGTH = 256
@@ -513,7 +515,7 @@ class DataEchoP3(object):
                     adNode = adNode.next
                     if not adNode:
                         break
-        
+
     def getLocalAnalyzerId(self):
         def analyzerNameFromFname(fname):
             '''
@@ -526,14 +528,14 @@ class DataEchoP3(object):
             atime, sep, part = part.partition('-')
             return aname, adate, atime
 
-                    
-            
+
+
         try:    # Stop iteration if we are not the last file
             if self.file_path:
                 fname = os.path.join(self.file_path)
             else:
                 fname = genLatestFiles(*os.path.split(self.listen_path)).next()
-                
+
             aname, adate, atime = analyzerNameFromFname(fname)
             return aname
         except:
@@ -542,7 +544,7 @@ class DataEchoP3(object):
 def main(argv=None):
     if argv is None:
         argv = sys.argv
-        
+
     usage = "usage: %prog [options]"
     parser = OptionParser(usage=usage)
     parser.add_option("-d", "--data-type", dest="data_type",
@@ -569,22 +571,22 @@ def main(argv=None):
                       help="replace this log in the server (Dangerous!!, use with caution. This will delete FIRST!).")
     parser.add_option("-c", "--cmdfifo-port", dest="cport",
                       help="Port for supervisor CmdFIFO ping", metavar="<CmdFIFO_PORT>")
-    
+
     (options, args) = parser.parse_args()
     #if len(args) != 1:
     #    parser.error("incorrect number of arguments")
-        
+
     if options.listen_path and options.file_path:
         parser.error("listen-path and file-path are mutually exclusive")
-        
+
     if options.listen_path and options.replace:
         parser.error("listen-path and replace are mutually exclusive")
-        
+
     if options.listen_path:
         listen_path = options.listen_path
     else:
         listen_path = None
-        
+
     if options.file_path:
         file_path = options.file_path
     else:
@@ -593,7 +595,7 @@ def main(argv=None):
     if not listen_path:
         if not file_path:
             listen_path = 'C:/UserData/AnalyzerServer/*_Minimal.dat'
-            
+
     if options.timeout:
         timeout = options.timeout
         timeout = int(timeout)
@@ -604,7 +606,7 @@ def main(argv=None):
         ip_url = options.ip_url
     else:
         ip_url = None
-        
+
     if options.push_url:
         push_url = options.push_url
     else:
@@ -647,7 +649,7 @@ def main(argv=None):
         cport = RPC_PORT_ECHO_P3_BASE
     if cport<RPC_PORT_ECHO_P3_BASE or cport>RPC_PORT_ECHO_P3_MAX:
         parser.error("CmdFIFO_port outside valid range")
-        
+
     print "listen_path", listen_path
     print "file_path", file_path
     print "ip_url", ip_url
@@ -659,7 +661,7 @@ def main(argv=None):
     print "lines", lines
     print "logtype", logtype
     print "CmdFIFO_port", cport
-    
+
     decho = DataEchoP3(listen_path=listen_path,
                        file_path=file_path,
                        ip_url=ip_url,
@@ -688,6 +690,6 @@ def main(argv=None):
     except:
         print "CmdFIFO stopped"
         return 0
-        
+
 if __name__ == '__main__':
     sys.exit(main())
