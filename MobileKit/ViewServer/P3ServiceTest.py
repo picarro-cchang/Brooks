@@ -16,7 +16,7 @@ def main():
     P3Api.psys = "APITEST"
     P3Api.rprocs = '["AnzLogMeta:byEpoch","AnzLog:byPos","AnzLog:byEpoch","AnzMeta:byAnz"]'
     P3Api.debug = True
-    qnum = 5
+    qnum = 6
     if qnum == 1:
         qryparms = {'alog':'FCDS2006-20120323-020431Z-DataLog_User_Minimal.dat','logtype':'dat',
                           'limit':10,'qry':'byPos','startPos':0,'reverse':True,'doclist':True,'varList':'["CH4"]'}

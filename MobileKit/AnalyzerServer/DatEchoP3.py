@@ -425,7 +425,7 @@ class DataEchoP3(object):
 
                 except Exception, e:
                     print 'EXCEPTION in pushToP3\n%s\n' % e
-                    pprint.pprint(params)
+                    # pprint.pprint(params)
                     print traceback.format_exc()
 
                 sys.stderr.write('-')
@@ -685,7 +685,7 @@ def main(argv=None):
         while True:
             rpcServer.daemon.handleRequests(0.5)
             if not th.isAlive(): break
-        print "Supervised DatEchoP3 died"
+        print "Supervised DatEchoP3 thread stopped"
         return 1
     except:
         print "CmdFIFO stopped"
