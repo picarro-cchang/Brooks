@@ -7,7 +7,7 @@
 # 2011-09-14 Alex Lee  Created
 
 import sys
-sys.path.append(r"C:\Picarro\G2000\ReportGen\ViewServer")
+sys.path.append(r"..\ViewServer")
 import os
 import wx
 import shutil
