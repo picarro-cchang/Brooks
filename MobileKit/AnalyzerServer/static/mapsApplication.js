@@ -321,10 +321,22 @@ var CNSNT = {
         INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED: 0x0200,
         INSTMGR_STATUS_WARMING_UP: 0x2000,
         INSTMGR_STATUS_SYSTEM_ERROR: 0x4000,
-        INSTMGR_STATUS_MASK: 0xFFFF
+        INSTMGR_STATUS_MASK: 0xFFFF,
+        INSTMGR_AUX_STATUS_SHIFT: 16,
+        INSTMGR_AUX_STATUS_WEATHER_MASK: 0x1F,
+        
+        // Number of data points to defer warning about missing weather information
+        weatherMissingDefer : 120,
+        weatherMissingInit  : 10,
+        classByWeather: { 0: "D",  8: "D", 16: "D", // Daytime, Overcast
+                          2: "B", 10: "C", 18: "D", // Daytime, moderate sun
+                          4: "A", 12: "B", 20: "C", // Daytime, strong sun
+                          1: "F",  9: "E", 17: "D", // Nighttime, <50% cloud
+                          3: "E", 11: "D", 19: "D"  // Nighttime, >50% cloud
+                        }
     };
 
-var statusPane = function() {
+var statusPane = function () {
     var pane = '<table style="width: 100%;">'
         + '<tr>'
         + '<td style="width:25%; padding:5px 0px 10px 10px;">'
@@ -342,9 +354,9 @@ var statusPane = function() {
         + '</tr>'
         + '</table>';
     return pane;
-} 
+}; 
 
-var followPane = function() {
+var followPane = function () {
     var pane = '<table style="width: 100%;">'
         + '<tr>'
         + '<td style="width:33.33%;">'
@@ -360,7 +372,7 @@ var followPane = function() {
         + '</table>';
 
     return pane;
-}
+};
 
 var modePane = function() {
     var pane = '';
@@ -502,7 +514,12 @@ var CSTATE = {
         astd_a : 0.15*Math.PI,
         astd_b : 0.25,          // Wind speed in m/s for standard deviation to be astd_a
         astd_c : 0.0,           // Factor multiplying car speed in m/s
-    };
+       
+        // Variable to indicate when weather information is missing
+        weatherMissingCountdown: CNSNT.weatherMissingInit,
+        showingWeatherDialog: false,
+        inferredStabClass: null
+   };
 
 var TIMER = {
         prime: null,
@@ -2706,37 +2723,39 @@ function initialize_btns() {
     }
 }
 
-function restart_datalog() {
-    var init;
-    if (confirm(TXT.restart_datalog_msg)) {
-        /*
-         * Uncomment the following to request weather data from operator on restarting a log
-         *
-        init = getCookie(COOKIE_NAMES.weather);
-        try {
-            init = JSON.parse(init);
-            if (null === init) throw "null";
-        }
-        catch (e) {
-            init = [0,0,0];
-        }
-        makeWeatherForm(function (result) {
-            var code, dtype = "json";
-            if (CNSNT.prime_view === true) {
-                dtype = "jsonp";
-            }
-            setCookie(COOKIE_NAMES.weather, JSON.stringify(result), CNSNT.cookie_duration);
-            // Convert the reported weather into a code for inclusion in the auxiliary instrument status
-            //  Note that 1 is added so that we can tell if there is no weather information in the file
-            code = (8*result[2] + 2*result[1] + result[0]) + 1;
-            call_rest(CNSNT.svcurl, "restartDatalog", dtype, {weatherCode:code});
-            restoreModChangeDiv();
-        },init);
-        */
+function weather_dialog() {
+    CSTATE.showingWeatherDialog = true;
+    init = getCookie(COOKIE_NAMES.weather);
+    try {
+        init = JSON.parse(init);
+        if (null === init) throw "null";
+    }
+    catch (e) {
+        init = [0,0,0];
+    }
+    makeWeatherForm(function (result) {
+        var code, dtype = "json";
         if (CNSNT.prime_view === true) {
             dtype = "jsonp";
         }
-        call_rest(CNSNT.svcurl, "restartDatalog", dtype);
+        setCookie(COOKIE_NAMES.weather, JSON.stringify(result), CNSNT.cookie_duration);
+        // Convert the reported weather into a code for inclusion in the auxiliary instrument status
+        //  Note that 1 is added so that we can tell if there is no weather information in the file
+        code = (8*result[2] + 2*result[1] + result[0]) + 1;
+        CSTATE.inferredStabClass = CNSNT.classByWeather[code-1];
+        // alert('Inferred stability class: ' + inferredStabClass);
+        _changeStabClass(CSTATE.inferredStabClass);
+        call_rest(CNSNT.svcurl, "restartDatalog", dtype, {weatherCode:code});
+        restoreModChangeDiv();
+        CSTATE.weatherMissingCountdown = CNSNT.weatherMissingDefer;
+        CSTATE.showingWeatherDialog = false;
+    },init);
+}
+
+function restart_datalog() {
+    var init;
+    if (confirm(TXT.restart_datalog_msg)) {
+        weather_dialog(); 
     }
 }
 
@@ -3022,16 +3041,19 @@ function stabClassCntl(style) {
     return selcntl;
 }
 
-function changeStabClass() {
-    var value, len, i, aname, mhtml;
-    value = $("#id_stabClassCntl").val()
+function _changeStabClass(value) {
     if (value !== CSTATE.stabClass) {
         CSTATE.stabClass = value;
-        
-        setCookie(COOKIE_NAMES.dspStabClass, CSTATE.stabClass, CNSNT.cookie_duration)
+        setCookie(COOKIE_NAMES.dspStabClass, CSTATE.stabClass, CNSNT.cookie_duration);
         CNSNT.mapControl.changeControlText(TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass);
         clearSwathPolys();
     }
+}
+
+function changeStabClass() {
+    var value;
+    value = $("#id_stabClassCntl").val();
+    _changeStabClass(value);
 }
 
 function exportClassCntl(style) {
@@ -3271,7 +3293,7 @@ function getData() {
                 CSTATE.lastPeakFilename = CSTATE.lastDataFilename.replace(".dat", ".peaks");
                 CSTATE.lastAnalysisFilename = CSTATE.lastDataFilename.replace(".dat", ".analysis");
             } else {
-                alert("data and data.result: ", data.result);
+                // alert("data and data.result: ", JSON.stringify(data.result));
             }
         } else {
             if (data && (data.indexOf("ERROR: invalid ticket") !== -1)) {
@@ -3312,6 +3334,18 @@ function getData() {
                 if (data.result.INST_STATUS) {
                     if (data.result.INST_STATUS.length > 0) {
                         newInst = data.result.INST_STATUS[data.result.INST_STATUS.length - 1];
+                        if (0 == (newInst >> CNSNT.INSTMGR_AUX_STATUS_SHIFT) & CNSNT.INSTMGR_AUX_STATUS_WEATHER_MASK) {
+                            CSTATE.weatherMissingCountdown -= 1;
+                            if (CSTATE.weatherMissingCountdown <= 0 && CNSNT.prime_view === true) {
+                                if (!CSTATE.showingWeatherDialog) {
+                                    CSTATE.showingWeatherDialog = true;
+                                    weather_dialog();
+                                }
+                            }
+                        }
+                        else {
+                            CSTATE.weatherMissingCountdown = CNSNT.weatherMissingDefer;
+                        }
                         if (CSTATE.lastInst !== newInst) {
                             CSTATE.lastInst = newInst;
                         }
