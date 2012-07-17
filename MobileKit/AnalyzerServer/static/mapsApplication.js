@@ -3304,15 +3304,16 @@ function getData() {
             }
         }
         if (resultWasReturned) {
-            if (CNSNT.prime_view) {
-                if (data.result.lastPos) {
-                    CSTATE.startPos = data.result.lastPos;
-                }
-            } else {
-                if (data.result.nextRow) {
-                    CSTATE.startPos = data.result.nextRow;
-                }
-            }
+            CSTATE.startPos = data.result.lastPos;
+            //if (CNSNT.prime_view) {
+            //    if (data.result.lastPos) {
+            //        CSTATE.startPos = data.result.lastPos;
+            //    }
+            //} else {
+            //    if (data.result.nextRow) {
+            //        CSTATE.startPos = data.result.nextRow;
+            //    }
+            //}
             if (data.result.EPOCH_TIME) {
                 if (data.result.EPOCH_TIME.length > 0) {
                     newTimestring = timeStringFromEtm(data.result.EPOCH_TIME[data.result.EPOCH_TIME.length - 1]);

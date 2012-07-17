@@ -12,7 +12,12 @@ Copyright (c) 2012 Picarro, Inc. All rights reserved
 from collections import deque
 from numpy import arange, arcsin, arctan2, asarray, cos, isfinite, isnan
 from numpy import log, pi, sin, sqrt, unwrap
-from Host.Common.namedtuple import namedtuple
+
+try:
+    from collections import namedtuple
+except:
+    from Host.Common.namedtuple import namedtuple
+    
 from scipy.special import erf
 import SurveyorInstStatus as sis
 
