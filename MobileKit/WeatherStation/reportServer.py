@@ -5,7 +5,10 @@ Created on Jun 9, 2012
 
 @author: stan
 '''
-from collections import namedtuple
+try:
+    from collections import namedtuple
+except:
+    from Host.Common.namedtuple import namedtuple
 from flask import Flask, abort
 from flask import make_response, render_template, request
 import hashlib

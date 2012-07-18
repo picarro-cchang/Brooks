@@ -9,7 +9,10 @@ except:
     import json
 
 from collections import deque
-from collections import namedtuple
+try:
+    from collections import namedtuple
+except:
+    from Host.Common.namedtuple import namedtuple
 import calendar
 import sys
 import time

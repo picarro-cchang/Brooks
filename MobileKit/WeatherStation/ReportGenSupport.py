@@ -9,7 +9,10 @@ File History:
 Copyright (c) 2012 Picarro, Inc. All rights reserved
 """
 import calendar
-from collections import namedtuple
+try:
+    from collections import namedtuple
+except:
+    from Host.Common.namedtuple import namedtuple
 import cStringIO
 import getFromP3 as gp3
 import hashlib
