@@ -21,24 +21,22 @@ STATS = {
 }
 
 
-@APP.route('/test/rest/sec/dummy/1.0/Admin/', methods=['GET', 'POST'])
-def ticket():
+@APP.route('/test/rest/sec/dummy/<testId>/Admin/', methods=['GET', 'POST'])
+def ticket(testId):
     STATS['ticketReqs'] += 1
     return json.dumps({ 'ticket' : '123456789' })
 
-@APP.route('/test/rest/gdu/<ticket>/1.0/AnzMeta/', methods=['GET', 'POST'])
-def localIp(ticket):
+@APP.route('/test/rest/gdu/<ticket>/<testId>/AnzMeta/', methods=['GET', 'POST'])
+def localIp(ticket, testId):
     STATS['localIpReqs'] += 1
 
     if ticket == 'None':
         return 'invalid ticket', 403
 
-    print 'As POST:'
-    pprint.pprint(flask.request.form)
     return ''
 
-@APP.route('/test/rest/gdu/<ticket>/1.0/AnzLog/', methods=['GET', 'POST'])
-def pushData(ticket):
+@APP.route('/test/rest/gdu/<ticket>/<testId>/AnzLog/', methods=['GET', 'POST'])
+def pushData(ticket, testId):
     data = flask.request.form
     STATS['pushDataReqs'] += 1
     return 'OK'
@@ -47,7 +45,11 @@ def pushData(ticket):
 def stats():
     with open('stats.json', 'wb') as f:
         json.dump(STATS, f)
+        for s in STATS:
+            STATS[s] = 0
+
     return ''
+
 
 if __name__ == '__main__':
     APP.run()
