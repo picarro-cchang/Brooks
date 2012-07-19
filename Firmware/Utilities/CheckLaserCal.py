@@ -391,12 +391,12 @@ created.)
 """
 
     parser = OptionParser(usage=usage)
-    parser.add_option('-f', '--file', dest='wlmFilename', metavar='WLMFILE',
-                      help='Read WLM calibration from WLMFILE')
-    parser.add_option('-c', '--cal', dest='wbFilename', metavar='WBFILE',
-                      help='Update WBFILE with new W2T/T2W calibration')
     parser.add_option('-a', '--laser', type='int', dest='aLaserNum',
                       help='Actual laser number to scan (starting at 1)')
+    parser.add_option('-c', '--cal', dest='wbFilename', metavar='WBFILE',
+                      help='Update WBFILE with new W2T/T2W calibration')
+    parser.add_option('-f', '--file', dest='wlmFilename', metavar='WLMFILE',
+                      help='Read WLM calibration from WLMFILE')
     parser.add_option('-w', '--wait', dest='waitTime', metavar='TIME',
                       type='float', default=0.0,
                       help='(optional) Time to wait before starting in ' +
