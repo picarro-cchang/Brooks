@@ -47,6 +47,12 @@ configFile = os.path.splitext(AppPath)[0] + ".ini"
 config = ConfigObj(configFile)
 WKHTMLTOPDF = config["HelperApps"]["wkhtml_to_pdf"]
 IMGCONVERT  = config["HelperApps"]["image_convert"]
+if "Plats" in config:
+    PLAT_TIF_ROOT = config["Plats"]["tif_root"]
+    PLAT_PNG_ROOT = config["Plats"]["png_root"]
+else:
+    PLAT_TIF_ROOT = r"S:\Projects\Picarro Surveyor\Files from PGE including TIFF maps\GEMS\CompTif\Gas\Distribution"
+    PLAT_PNG_ROOT = r"static\plats"
 
 SVCURL = "http://localhost:5200/rest"
 RTD = 180.0/math.pi
@@ -60,16 +66,12 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     appPath = sys.argv[0]
 appDir = os.path.split(appPath)[0]
-PLAT_TIF_ROOT = r"S:\Projects\Picarro Surveyor\Files from PGE including TIFF maps\GEMS\CompTif\Gas\Distribution"
-PLAT_PNG_ROOT = os.path.join(appDir,r'static\plats')
-if not os.path.exists(PLAT_PNG_ROOT): os.makedirs(PLAT_PNG_ROOT)
 
+PLAT_TIF_ROOT = os.path.join(appDir,PLAT_TIF_ROOT)
+PLAT_PNG_ROOT = os.path.join(appDir,PLAT_PNG_ROOT)
+if not os.path.exists(PLAT_PNG_ROOT): os.makedirs(PLAT_PNG_ROOT)
 MapParams = namedtuple("MapParams",["minLng","minLat","maxLng","maxLat","nx","ny","padX","padY"])
 
-fname = "platBoundaries.json"
-fp = open(fname,"rb")
-platBoundaries = json.loads(fp.read())
-fp.close()
 statusLocks = {}
 
 def overBackground(a,b,box):
@@ -273,6 +275,7 @@ class ReportPDF(object):
                 finally:
                     if fp: fp.close()
                 # Generate the composite map as an image
+                # pic = '<img id="image" src="%s" alt="" width="95%%" style="-moz-transform:rotate(90deg);-webkit-transform:rotate(90deg);"></img>' % compositeMapUrl
                 pic = '<img id="image" src="%s" alt="" width="95%%"></img>' % compositeMapUrl
                 s = style + heading + peaksHeading + peaksReport + surveyHeading + pathReport + heading + pic
                 proc = subprocess.Popen([WKHTMLTOPDF,"-",self.PdfFname],
@@ -772,13 +775,11 @@ class PlatFetcher(object):
     def getPlat(self,platName,minLng,maxLng,minLat,maxLat,padX=50,padY=50,fetchPlat=True):
         tifFile = os.path.join(PLAT_TIF_ROOT, platName+".tif")
         pngFile = os.path.join(PLAT_PNG_ROOT, platName+".png")
-        print 'Convert "%s" "%s"' % ( tifFile, pngFile)
-        if not os.path.exists(tifFile):
-            return (None, None) if fetchPlat else None
         if not os.path.exists(pngFile):
-            # Call ImageMagik to convert the TIF to a PNG
+            print 'Convert "%s" "%s"' % ( tifFile, pngFile)
+            if not os.path.exists(tifFile):
+                return (None, None) if fetchPlat else None
             subprocess.call([IMGCONVERT, tifFile, pngFile])
-            # os.system('"%s" "%s" "%s"' % (IMGCONVERT, tifFile, pngFile))
         p = Image.open(pngFile)
         nx,ny = p.size
         mp = MapParams(minLng,minLat,maxLng,maxLat,nx,ny,padX,padY)
@@ -1152,4 +1153,52 @@ class SurveyorLayers(object):
                     ov2 = overBackground(b,ov2,(self.padX+x-radius,self.padY+y-radius))
                    
         return ov1, ov2, markersByRank
+
+class BubbleMaker(object):
+    def getMarker1(self,size):
+        def nint(x): return int(round(x))
+        nx = nint(36 * size + 1)
+        ny = nint(65 * size + 1)
+        xoff = (nx - 1) / 2
+        h = ny - 1
+        r = (nx - 1) / 2.0
+        R = h * (0.5 * h / r - 1.0)
+        phi = np.arcsin(R / (R + r))
+        print nx, ny
+        b = Image.new('RGBA',(nx,ny),(255,255,255,255))
+        bdraw = ImageDraw.Draw(b)
+        n1 = 10
+        n2 = 20
+        arc1 = [(nint(xoff - R + R * np.cos(th)), nint(ny - 1 - R*np.sin(th))) for th in np.linspace(0.0,0.5*np.pi-phi,n1,endpoint=False)]
+        arc2 = [(nint(xoff - r * np.sin(th)), nint(r + r * np.cos(th))) for th in np.linspace(phi, 2 * np.pi - phi, n2, endpoint=False)]
+        arc3 = [(nint(xoff + R - R * np.cos(th)), nint(ny - 1 - R*np.sin(th))) for th in np.linspace(0.5*np.pi-phi,0.0,n1,endpoint=False)]
+        bdraw.polygon(arc1 + arc2 + arc3, fill=(255,255,0,255), outline=(0,0,0,255))
+        bdraw.line(arc1 + arc2 + arc3, fill=(0,0,0,255), width=3)
+        return asPNG(b)
+    
+    def getMarker(self,size):
+        def nint(x): return int(round(x))
+        t = 2
+        r = 18*size - t
+        h = 65*size - 2*t
+        nx = nint(36*size + 1)
+        ny = nint(65*size + 1)
+        w = size
+        R = ((h-r)*(h-r) - (r*r - 0.25*w*w))/float(2*r-w)
+        phi = np.arcsin((R + 0.5*w) / (R + r))
+        cen1 = ( -(R+0.5*w), h-r )
+        cen2 = ( 0, 0 )
+        cen3 = ( (R+0.5*w), h-r )
+        xoff = r + t
+        yoff = r + t
+        b = Image.new('RGBA',(nx,ny),(255,255,255,255))
+        bdraw = ImageDraw.Draw(b)
+        n1 = 20
+        n2 = 40
+        arc1 = [(xoff + nint(cen1[0] + R * np.cos(th)), nint(yoff + cen1[1] - R*np.sin(th))) for th in np.linspace(0.0,0.5*np.pi-phi,n1,endpoint=False)]
+        arc2 = [(xoff + nint(cen2[0] - r * np.sin(th)), nint(yoff + cen2[1] + r * np.cos(th))) for th in np.linspace(phi, 2 * np.pi - phi, n2, endpoint=False)]
+        arc3 = [(xoff + nint(cen3[0] - R * np.cos(th)), nint(yoff + cen3[1] - R*np.sin(th))) for th in np.linspace(0.5*np.pi-phi,0.0,n1,endpoint=True)]
+        bdraw.polygon(arc1 + arc2 + arc3, fill=(255,255,0,255), outline=(0,0,0,255))
+        bdraw.line(arc1 + arc2 + arc3 + arc1[0:1], fill=(0,0,0,255), width=t)
+        return asPNG(b)
         

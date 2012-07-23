@@ -25,6 +25,8 @@ import urllib
 from werkzeug import secure_filename
 from ReportGenSupport import ReportGen, ReportStatus
 from ReportGenSupport import LayerFilenamesGetter, pretty_ticket
+from ReportGenSupport import BubbleMaker
+from Host.Common.configobj import ConfigObj
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     appPath = sys.executable
@@ -36,8 +38,14 @@ appDir = os.path.split(appPath)[0]
 #  child thread
 time.strptime("2012-04-01T09:50:00","%Y-%m-%dT%H:%M:%S")
 
-fname = "platBoundaries.json"
-fp = open(fname,"rb")
+configFile = os.path.splitext(appPath)[0] + ".ini"
+config = ConfigObj(configFile)
+if "Plats" in config:
+    PLAT_BOUNDARIES = os.path.join(appDir,config["Plats"]["plat_corners"])
+else:
+    PLAT_BOUNDARIES = "platBoundaries.json"
+    
+fp = open(PLAT_BOUNDARIES,"rb")
 platBoundaries = json.loads(fp.read())
 fp.close()
 
@@ -48,7 +56,7 @@ EARTH_RADIUS = 6378100
 MapParams = namedtuple("MapParams",["minLng","minLat","maxLng","maxLat","nx","ny","padX","padY"])
 
 # configuration
-DEBUG = False
+DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
@@ -236,6 +244,16 @@ def index():
 @app.route('/test')
 def test():
     return render_template('testTable.html');
-    
+
+@app.route('/bubble')
+def bubble():
+    # Bubble of size n is of size 36n+1 x 65n+1 pixels
+    size = float(request.values.get('size',2.0))
+    marker = BubbleMaker().getMarker(size)
+    response = make_response(marker)
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+    return response
+        
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=5200,debug=DEBUG,threaded=True)
