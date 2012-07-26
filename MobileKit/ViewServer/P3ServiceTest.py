@@ -10,8 +10,9 @@ import sys
 P3Api = P3ApiService()
 
 def main():
-    P3Api.csp_url = "https://dev.picarro.com/node"
-    P3Api.ticket_url = "https://dev.picarro.com/node/rest/sec/dummy/1.0/Admin/"
+    P3Api.csp_url = "https://p3.picarro.com/demo"
+    # P3Api.csp_url = "https://dev.picarro.com/node"
+    P3Api.ticket_url = P3Api.csp_url + "/rest/sec/dummy/1.0/Admin/"
     P3Api.identity = "85490338d7412a6d31e99ef58bce5de6"
     P3Api.psys = "APITEST"
     P3Api.rprocs = '["AnzLogMeta:byEpoch","AnzLog:byPos","AnzLog:byEpoch","AnzMeta:byAnz"]'
@@ -34,13 +35,17 @@ def main():
                     'startEtm':0,'limit':10,'doclist':True,'reverse':True}
         print P3Api.get("gdu", "1.0", "AnzLog", qryparms)['return']['result']
     elif qnum == 5:
-        qryparms = {'qry':'byEpoch','anz':'FCDS2010','reverse':True,'limit':10}
+        qryparms = {'qry':'byEpoch','anz':'FCDS2010','reverse':True,'limit':10,'startEtm':0}
         result = P3Api.get("gdu", "1.0", "AnzLogMeta", qryparms)['return']
-        print result
+        print [r['name'] for r in result]
     if qnum == 6:
-        qryparms = {'alog':'FCDS2006-20120323-020431Z-DataLog_User_Minimal.dat','logtype':'dat',
-                          'limit':10,'qry':'byPos','startPos':0,'reverse':True,'doclist':True,'varList':'["INST_STATUS"]'}
-        print P3Api.get("gdu", "1.0", "AnzLog", qryparms)['return']['result']
+        #qryparms = {'alog':'FCDS2006-20120323-020431Z-DataLog_User_Minimal.dat','logtype':'dat',
+        #                  'limit':5,'qry':'byPos','startPos':200,'reverse':False,'doclist':True,
+        #                  'timeStrings':True,"insNextLastPos":True,'varList':'["CH4"]'}
+        qryparms = {'alog':'FDDS2018-20120715-181627Z-DataLog_User_Minimal.dat','logtype':'dat',
+                          'limit':5,'qry':'byPos','startPos':200,'reverse':False,'doclist':True,
+                          'timeStrings':True,"insNextLastPos":True,'varList':'["CH4"]'}
+        print P3Api.get("gdu", "1.0", "AnzLog", qryparms)['return']
         
 if __name__ == '__main__':
     sys.exit(main())
