@@ -516,6 +516,7 @@
             <enum_value ident="PEAK_DETECT_CNTRL_TriggerPendingState" value="2" caption="Trigger Pending" />
             <enum_value ident="PEAK_DETECT_CNTRL_TriggeredState" value="3" caption="Triggered" />
             <enum_value ident="PEAK_DETECT_CNTRL_InactiveState" value="4" caption="Inactive" />
+            <enum_value ident="PEAK_DETECT_CNTRL_CancellingState" value="5" caption="Cancelling" />
         </enum>
         <enum type="VIRTUAL_LASER_Type">
             <description>Virtual laser selection</description> 
@@ -3048,6 +3049,12 @@
             <save/>
             <display format="%d" units="samples">Samples after peak</display>
         </register>
+        <register ident="PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Samples in cancelling state.</description>
+            <initial>25</initial>
+            <save/>
+            <display format="%d" units="samples">Samples in cancelling state</display>
+        </register>
         <register ident="PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Condition for triggering.</description>
             <initial>0xA800</initial>
@@ -3066,6 +3073,10 @@
             <save/>
             <display format="%d" units="samples">Reset delay (after trigger)</display>
         </register>
+        <register ident="PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Number of samples left in triggered mode.</description>
+            <initial>0</initial>
+        </register>        
         <register ident="PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Idle state valve mask and value.</description>
             <initial>0x0000</initial>
@@ -3095,6 +3106,12 @@
             <initial>0x0000</initial>
             <save/>
             <display format="$%04X">Inactive state valve mask and values</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Cancelling state valve mask and value.</description>
+            <initial>0x0000</initial>
+            <save/>
+            <display format="$%04X">Cancelling state valve mask and values</display>
         </register>
         <register ident="FLOW1_REGISTER" type="float" minver="1.0" access="r">
             <description>Flow 1 register</description>

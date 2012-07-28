@@ -14,6 +14,8 @@
  *  PEAK_DETECT_CNTRL_TriggeredState: triggerDelay samples have arrived since peak was found
  *  PEAK_DETECT_CNTRL_InactiveState: Do not process contents of history buffer, used to indicate
  *   non-survey mode for methane leak detection applications
+ *  PEAK_DETECT_CNTRL_CancellingState: Used to return to IdleState if triggered state is cancelled.
+ *   Number of samples in this state is determined by PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER
  *
  * The minimum of the previous "backgroundSamples" points within the history buffer are used 
  *  determine the value of "background". If "backgroundSamples" is zero, the value of 
@@ -53,6 +55,7 @@
  *
  * HISTORY:
  *   11-Nov-2011  sze  Initial version.
+ *   27-Jul-2012  sze  Introduced cancelling state and ability to examine remaining time in triggered state
  *
  *  Copyright (c) 2011 Picarro, Inc. All rights reserved
  */
@@ -76,11 +79,14 @@
 #define triggerCondition    (*(p->triggerCondition_))
 #define triggerDelay        (*(p->triggerDelay_))
 #define resetDelay          (*(p->resetDelay_))
+#define cancellingDelay     (*(p->cancellingDelay_))
+#define triggeredSamplesLeft (*(p->triggeredSamplesLeft_))
 #define idleValveMaskAndValue           (*(p->idleValveMaskAndValue_))
 #define armedValveMaskAndValue          (*(p->armedValveMaskAndValue_))
 #define triggerPendingValveMaskAndValue (*(p->triggerPendingValveMaskAndValue_))
 #define triggeredValveMaskAndValue      (*(p->triggeredValveMaskAndValue_))
 #define inactiveValveMaskAndValue       (*(p->inactiveValveMaskAndValue_))
+#define cancellingValveMaskAndValue     (*(p->cancellingValveMaskAndValue_))
 #define solenoidValves      (*(p->solenoidValves_))
 
 PeakDetectCntrl peakDetectCntrl;
@@ -102,16 +108,19 @@ int peakDetectCntrlInit(unsigned int processedLossRegisterIndex)
     p->triggerCondition_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER);
     p->triggerDelay_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER);
     p->resetDelay_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER);
+    p->cancellingDelay_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER);
+    p->triggeredSamplesLeft_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER);
     p->idleValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER);
     p->armedValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER);
     p->triggerPendingValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER);
     p->triggeredValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER);
     p->inactiveValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER);
+    p->cancellingValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REGISTER);
     p->solenoidValves_ = (unsigned int *)registerAddr(VALVE_CNTRL_SOLENOID_VALVES_REGISTER);
+    p->cancellingWait = 0;
     p->historyTail = 0;
     p->activeLength = 0;
     p->triggerWait = 0;
-    p->resetWait = 0;
     p->lastState = state = PEAK_DETECT_CNTRL_IdleState;
     for (i=0; i<PEAK_DETECT_MAX_HISTORY_LENGTH; i++) p->historyBuffer[i] = 0.0;
     return STATUS_OK;
@@ -199,7 +208,7 @@ int peakDetectCntrlStep()
             // Peak detected! Trigger immediately or after specified delay
             if (triggerDelay == 0) {
                 state = PEAK_DETECT_CNTRL_TriggeredState;
-                p->resetWait = 0;
+                triggeredSamplesLeft = resetDelay;
             }
             else {
                 state = PEAK_DETECT_CNTRL_TriggerPendingState;
@@ -212,18 +221,27 @@ int peakDetectCntrlStep()
         p->triggerWait++;
         if (p->triggerWait >= triggerDelay) {
             state = PEAK_DETECT_CNTRL_TriggeredState;
-            p->resetWait = 0;
+            triggeredSamplesLeft = resetDelay;
         }
     }
     else if (state == PEAK_DETECT_CNTRL_TriggeredState) {
         solenoidValves = modifyValves(solenoidValves,triggeredValveMaskAndValue);
-        p->resetWait++;
-        if (p->resetWait >= resetDelay) {
+        triggeredSamplesLeft = triggeredSamplesLeft - 1;
+        if (triggeredSamplesLeft <= 0) {
             state = PEAK_DETECT_CNTRL_IdleState;
         }
     }
     else if (state == PEAK_DETECT_CNTRL_InactiveState) {
         solenoidValves = modifyValves(solenoidValves,inactiveValveMaskAndValue);
+    }
+    else if (state == PEAK_DETECT_CNTRL_CancellingState) {
+        if (p->lastState != PEAK_DETECT_CNTRL_CancellingState) p->cancellingWait = 0;
+        solenoidValves = modifyValves(solenoidValves,cancellingValveMaskAndValue);
+        p->cancellingWait++;
+        if (p->cancellingWait > cancellingDelay) {
+            p->cancellingWait = 0;
+            state = PEAK_DETECT_CNTRL_IdleState;
+        }        
     }
     // Save state
     p->lastState = state;

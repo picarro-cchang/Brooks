@@ -461,9 +461,10 @@ def driverRpcEx(params):
         Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "AnalyzerServer")
         try:
             return dict(value=getattr(Driver,params['func'])(*eval(params.get('args','()'),{}),**eval(params.get('kwargs','{}'))))
-        except:
-            driverAvailable = False
-            lastDriverCheck = time.clock()
+        except Exception,e:
+            if 'connection failed' in str(e):
+                driverAvailable = False
+                lastDriverCheck = time.clock()
             return dict(error=traceback.format_exc())
     else:
         if time.clock() - lastDriverCheck > 60: driverAvailable = True

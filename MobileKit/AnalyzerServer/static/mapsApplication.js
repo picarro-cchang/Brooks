@@ -29,6 +29,8 @@ var TXT = {
         stop_survey: "Stop Survey",
         complete_survey: "Complete Survey",
         cancl_cptr: 'Cancel Capture',
+        cancl_ana: 'Cancel Analysis',
+        cancl_ana_time: 's left: Cancel',
         calibrate: 'Analyze Reference Gas',
         shutdown: 'Shutdown Surveyor',
         select_log: 'Select Log',
@@ -43,6 +45,7 @@ var TXT = {
         capture_mode: 'Capture Mode',
         analyzing_mode: 'Analyzing Peak',
         inactive_mode: 'Inactive Mode',
+        cancelling_mode: 'Canceling...',
         prime_conf_msg: 'Do you want to switch to Prime View Mode? \n\nWhen the browser is in Prime View Mode, you will have control of the Surveyor.',
         change_min_amp: 'Min Amplitude', //'Minimum Amplitude',
         change_stab_class: 'Stability Class', //'Minimum Amplitude',
@@ -50,6 +53,7 @@ var TXT = {
         shutdown_anz_msg: 'Do you want to shut down the Surveyor? \n\nWhen the analyzer is shutdown it can take 30 to 45 minutes warm up.',
         stop_survey_msg: 'Are you sure you want to stop collecting data?',
         cancel_cap_msg: 'Cancel capture and return to survey mode?',
+        cancel_ana_msg: 'Cancel analysis and return to survey mode?',
         start_inject_msg: 'Inject reference gas now?',
         show_controls: 'Show Controls',
         show_dnote: 'Show route annotations',
@@ -137,6 +141,7 @@ var HBTN = {
         restartBtn: '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn btn-fullwidth">' + TXT.restart_log + '</button></div>',
         captureBtn: '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn btn-fullwidth">' + TXT.switch_to_cptr + '</button></div>',
         cancelCapBtn: '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn btn-fullwidth">' + TXT.cancl_cptr + '</button></div>',
+        cancelAnaBtn: '<div><button id="id_cancelAnaBtn" type="button" onclick="cancelAnaSwitch();" class="btn btn-fullwidth">' + TXT.cancl_ana + '</button></div>',
         calibrateBtn: '<div><button id="id_calibrateBtn" type="button" onclick="injectCal();" class="btn btn-fullwidth">' + TXT.calibrate + '</button></div>',
         shutdownBtn: '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn btn-danger btn-fullwidth">' + TXT.shutdown + '</button></div>',
         downloadBtn: '<div><button id="id_downloadBtn" type="button" onclick="modalPaneExportControls();" class="btn btn-fullwidth">' + TXT.download_files + '</button></div>',
@@ -536,9 +541,9 @@ var TIMER = {
         swath: null, // timer for showing swath
     };
     
-var modeStrings = {0: TXT.survey_mode, 1: TXT.capture_mode, 2: TXT.capture_mode, 3: TXT.analyzing_mode, 4: TXT.inactive_mode};
-var modeBtn = {0: [HBTN.captureBtn],  1: [HBTN.cancelCapBtn], 2: [HBTN.cancelCapBtn], 3: []};
-
+var modeStrings = {0: TXT.survey_mode, 1: TXT.capture_mode, 2: TXT.capture_mode, 3: TXT.analyzing_mode, 4: TXT.inactive_mode, 
+                   5: TXT.cancelling_mode };
+                   
 // Calculate the additional wind direction standard deviation based on the wind speed and the car speed.
 //  This is an empirical model to estimate the performace of the measurement process.
 //  N.B. This must be consistent with that used for calculation of swath width
@@ -3386,13 +3391,14 @@ function getData() {
                             if ('WIND_DIR_SDEV' in data.result) {
                                 var speed = Math.sqrt(data.result.WIND_E[n-1]*data.result.WIND_E[n-1]+
                                     data.result.WIND_N[n-1]*data.result.WIND_N[n-1]);
+                                var speed_mph = speed * 2.236936;
                                 var direction = CNSNT.rtd*Math.atan2(data.result.WIND_E[n-1],data.result.WIND_N[n-1]);
                                 var stddev = data.result.WIND_DIR_SDEV[n-1];
                                 var vCar = 0.0;
                                 if ("CAR_SPEED" in data.result) vCar = data.result.CAR_SPEED[n-1];
                                 stddev = totSdev(speed,stddev,vCar);
                                 if (stddev>90.0) stddev = 90.0;
-                                $("#windData").html("<b style='font-size:12px; color:#404040;'>" + "Wind: " + speed.toFixed(2) + " m/s" + "</b>");
+                                $("#windData").html("<b style='font-size:12px; color:#404040;'>" + "Wind: " + speed_mph.toFixed(2) + " mph" + "</b>");
                                 makeWindRose(70,27,direction,2*stddev,5.0*speed,15.0,60.0);
                             }
                         } else {
@@ -3552,12 +3558,23 @@ function getMode() {
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     } else if (mode==3) {
-                        $("#id_captureBtn").attr("disabled", "disabled");
+                        call_rest(CNSNT.svcurl, "driverRpc", dtype, {"func": "rdDasReg", "args": "['PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER']"},
+                            function (data) { 
+                                if (data.result.hasOwnProperty('value'))
+                                    $("#id_captureBtn").html((0.2*data.result.value).toFixed(0) + TXT.cancl_ana_time).attr("onclick", "cancelAnaSwitch();");
+                                else     
+                                    $("#id_captureBtn").html(TXT.cancl_ana).attr("onclick", "cancelAnaSwitch();");
+                            }
+                        );
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     } else if (mode==4) {
                         $("#id_captureBtn").attr("disabled", "disabled");
                         $("#id_surveyOnOffBtn").html(TXT.start_survey).attr("onclick","startSurvey();");
+                        $("#id_calibrateBtn").attr("disabled", "disabled");
+                    } else if (mode==5) {
+                        $("#id_captureBtn").attr("disabled", "disabled");
+                        $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     }
                 }
@@ -3896,6 +3913,10 @@ function showLeaksAndWind() {
                             if ("CAR_SPEED" in data.result) vCar = data.result.CAR_SPEED[i];
                             windStddev = totSdev(windSpeed,windStddev,vCar);
                             peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
+                            if (isNaN(windStddev)) {
+                                windStddev = 90;
+                                windDirection = 180;
+                            }
                             windMarker = newWindMarker(CSTATE.map, peakCoords, 50, windDirection, windStddev);
                             CSTATE.windMarkers[CSTATE.windMarkers.length] = windMarker;
                         }
@@ -4287,6 +4308,17 @@ function cancelCapSwitch() {
             dtype = "jsonp";
         }
         call_rest(CNSNT.svcurl, "driverRpc", dtype, {"func": "wrDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER', 0]"});
+        restoreModChangeDiv();
+    }
+}
+
+function cancelAnaSwitch() {
+    if (confirm(TXT.cancel_ana_msg)) {
+        var dtype = "json";
+        if (CNSNT.prime_view === true) {
+            dtype = "jsonp";
+        }
+        call_rest(CNSNT.svcurl, "driverRpc", dtype, {"func": "wrDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER', 5]"});
         restoreModChangeDiv();
     }
 }

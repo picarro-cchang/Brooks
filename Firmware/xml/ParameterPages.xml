@@ -358,11 +358,13 @@
             <register>PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Tuner Parameters</title>
