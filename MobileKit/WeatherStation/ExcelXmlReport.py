@@ -71,7 +71,7 @@ class ExcelXmlReport(object):
         self.tableChildren.extend([col("%s" % w) for w in colWidths])
         self.tableChildren.append(row(cell(strData(title),StyleID=self.styleIds["Title"])))
         headCells = [cell(strData(h),StyleID=self.styleIds["Heading"]) for h in colNames]
-        self.tableChildren.append(row(*headCells,Index="3"))
+        self.tableChildren.append(row(Index="3",*headCells))
         
     def makeDataRow(self,rank,des,lat,lng,conc,ampl,zoom):
         row, cell, col = self.row, self.cell, self.col
