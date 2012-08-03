@@ -1198,7 +1198,7 @@ class SurveyorLayers(object):
                 windE = getPossibleNaN(m.data,"WIND_E",0.0)
                 dstd  = DTR*getPossibleNaN(m.data,"WIND_DIR_SDEV",0.0)
                 x,y = self.xform(lng,lat)
-                if (-self.padX<=x<self.nx+self.padX) and (-self.padY<=y<self.ny+self.padY) and \
+                if np.isfinite(dstd) and (-self.padX<=x<self.nx+self.padX) and (-self.padY<=y<self.ny+self.padY) and \
                    (amp>minAmpl) and ((maxAmpl is None) or (amp<=maxAmpl)):
                     wind = math.hypot(windN,windE)
                     radius = 50.0; speedmin = 0.5
