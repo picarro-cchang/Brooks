@@ -17,7 +17,7 @@ def main():
     P3Api.psys = "APITEST"
     P3Api.rprocs = '["AnzLogMeta:byEpoch","AnzLog:byPos","AnzLog:byEpoch","AnzMeta:byAnz"]'
     P3Api.debug = True
-    qnum = 6
+    qnum = 7
     if qnum == 1:
         qryparms = {'alog':'FCDS2006-20120323-020431Z-DataLog_User_Minimal.dat','logtype':'dat',
                           'limit':10,'qry':'byPos','startPos':0,'reverse':True,'doclist':True,'varList':'["CH4"]'}
@@ -46,6 +46,10 @@ def main():
                           'limit':5,'qry':'byPos','startPos':200,'reverse':False,'doclist':True,
                           'timeStrings':True,"insNextLastPos":True,'varList':'["CH4"]'}
         print P3Api.get("gdu", "1.0", "AnzLog", qryparms)['return']
+    elif qnum == 7:
+        qryparms = {'qry':'byEpoch','anz':'FDDS2012','limit':10,'startEtm':0,'logtype':'GPS_Raw','doclist':True}
+        result = P3Api.get("gdu", "1.0", "AnzLog", qryparms)['return']
+        print result
         
 if __name__ == '__main__':
     sys.exit(main())

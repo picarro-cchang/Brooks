@@ -9,6 +9,7 @@ File History:
 Copyright (c) 2012 Picarro, Inc. All rights reserved
 """
 import calendar
+import csv
 try:
     from collections import namedtuple
 except:
@@ -27,6 +28,7 @@ import Image
 import ImageDraw
 import ImageMath
 from SwathProcessor import process
+import socket
 import sys
 import threading
 import time
@@ -35,6 +37,7 @@ import urllib
 import urllib2
 import subprocess
 import SurveyorInstStatus as sis
+from ExcelXmlReport import ExcelXmlReport
 from Host.Common.configobj import ConfigObj
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -72,6 +75,7 @@ PLAT_PNG_ROOT = os.path.join(appDir,PLAT_PNG_ROOT)
 if not os.path.exists(PLAT_PNG_ROOT): os.makedirs(PLAT_PNG_ROOT)
 MapParams = namedtuple("MapParams",["minLng","minLat","maxLng","maxLat","nx","ny","padX","padY"])
 
+statusLock = threading.Lock()
 statusLocks = {}
 
 def overBackground(a,b,box):
@@ -108,8 +112,10 @@ def merge_dictionary(dst, src):
     return dst
 
 def getStatus(fname):
+    statusLock.acquire()
     if fname not in statusLocks:
         statusLocks[fname] = threading.Lock()
+    statusLock.release()
     statusLocks[fname].acquire()
     try:
         stDict = {}
@@ -125,8 +131,10 @@ def getStatus(fname):
         statusLocks[fname].release()
         
 def updateStatus(fname,statusDict,init=False):
+    statusLock.acquire()
     if fname not in statusLocks:
         statusLocks[fname] = threading.Lock()
+    statusLock.release()
     statusLocks[fname].acquire()
     try:
         dst = {}
@@ -319,6 +327,9 @@ class ReportStatus(object):
                         files[key] = {}
         return dict(files=files)
 
+def getTicket(contents):
+    return hashlib.md5(contents).hexdigest()
+
 class ReportGen(object):
     def __init__(self,reportDir,contents):
         self.reportDir = reportDir
@@ -327,7 +338,7 @@ class ReportGen(object):
         self.ticket = None
         
     def run(self):
-        self.ticket = hashlib.md5(self.contents).hexdigest()
+        self.ticket = getTicket(self.contents)
         targetDir = os.path.join(self.reportDir,"%s" % self.ticket)
         if not os.path.exists(targetDir): os.makedirs(targetDir)
         instrFname  = os.path.join(self.reportDir,"%s/json" % self.ticket)
@@ -543,7 +554,7 @@ class ReportPathMap(object):
         minimum amplitudes, etc.) are associated with the various drive-arounds which make up
         the run, so these can be included in the path report. """
         
-    def __init__(self,reportDir,ticket,instructions,mapParams,region,timeout=300):
+    def __init__(self,reportDir,ticket,instructions,mapParams,region,timeout=1800):
         self.reportDir = reportDir
         self.ticket = ticket
         self.region = region
@@ -581,6 +592,7 @@ class ReportPathMap(object):
         logHelper.sort()
         # Iterate through sorted surveys
         for utime,logname in logHelper:
+            if "sensor" in logname.lower(): continue
             params = self.paramsByLogname[logname]
             anz,dt,tm = logname.split('-')[:3]            
             pathTableString.append('<tr>')
@@ -673,6 +685,7 @@ class ReportMarkerMap(object):
         self.instructions = instructions
         self.region = region
         self.peaksHtmlFname = os.path.join(self.reportDir,"%s/peaksMap.%d.html" % (self.ticket,self.region))
+        self.peaksXmlFname = os.path.join(self.reportDir,"%s/peaksMap.%d.xml" % (self.ticket,self.region))
         self.peaksMapFname = os.path.join(self.reportDir,"%s/peaksMap.%d.png" % (self.ticket,self.region))
         self.peaksStatusFname  = os.path.join(self.reportDir,"%s/peaksMap.%d.status" % (self.ticket,self.region))
         self.wedgesMapFname = os.path.join(self.reportDir,"%s/wedgesMap.%d.png" % (self.ticket,self.region))
@@ -717,6 +730,45 @@ class ReportMarkerMap(object):
         peakTableString.append('</table>')
         op.write("\n".join(peakTableString))
         
+    def makePeakCsv(self,op,peakDict):
+        zoom = 18
+        writer = csv.writer(op,dialect='excel')
+        writer.writerow(('Rank','Designation','Latitude','Longitude','Concentration','Amplitude','URL'))
+        for i in range(len(peakDict)):
+            r = i+1
+            tstr = time.strftime("%Y%m%dT%H%M%S",time.gmtime(peakDict[r].etm))
+            anz = peakDict[r].data['ANALYZER']
+            lat = peakDict[r].data['GPS_ABS_LAT']
+            lng = peakDict[r].data['GPS_ABS_LONG']
+            coords = "%s,%s" % (lat,lng)
+            ch4 = peakDict[r].data['CH4']
+            ampl = peakDict[r].data['AMPLITUDE']
+            des = "%s_%s" % (anz,tstr)
+            url = "http://maps.google.com?q=%s+(%s)&z=%d" % (coords,des,zoom)
+            writer.writerow((r,des,lat,lng,ch4,ampl,url))
+        return
+        
+    def makePeakXml(self,op,peakDict):
+        zoom = 18
+        name = self.instructions["regions"][self.region]["name"]
+        excelReport = ExcelXmlReport()
+        heading = "Report %s, Region %d (%s)" % (pretty_ticket(self.ticket),self.region+1,name)
+        excelReport.makeHeader(heading,["Rank","Designation","Latitude","Longitude","Concentration","Amplitude"],[30,150,80,80,80,80])
+        
+        for i in range(len(peakDict)):
+            r = i+1
+            tstr = time.strftime("%Y%m%dT%H%M%S",time.gmtime(peakDict[r].etm))
+            anz = peakDict[r].data['ANALYZER']
+            lat = peakDict[r].data['GPS_ABS_LAT']
+            lng = peakDict[r].data['GPS_ABS_LONG']
+            coords = "%s,%s" % (lat,lng)
+            ch4 = peakDict[r].data['CH4']
+            ampl = peakDict[r].data['AMPLITUDE']
+            des = "%s_%s" % (anz,tstr)
+            excelReport.makeDataRow(r,des,lat,lng,ch4,ampl,zoom)
+        op.write(excelReport.xmlWorkbook("Region %d (%s)" % (self.region+1,name)))
+        return
+        
     def run(self):
         markerTypes = {"None":MT_NONE,"Concentration":MT_CONC,"Rank":MT_RANK}
         if "done" in getStatus(self.peaksStatusFname) and "done" in getStatus(self.wedgesStatusFname):
@@ -734,6 +786,7 @@ class ReportMarkerMap(object):
                     for ir,params in enumerate(self.instructions["runs"]):
                         mType  = MT_RANK
                         mColor = colorStringToRGB(params["marker"])
+                        if not mColor: mType = MT_NONE
                         showPeaks = (mType != MT_NONE)
                         showWedges = colorStringToRGB(params["wedges"])
                         if showPeaks or showWedges:
@@ -755,6 +808,9 @@ class ReportMarkerMap(object):
                         if pkDict:
                             op = open(self.peaksHtmlFname,"wb")
                             self.makePeakReport(op,pkDict)
+                            op.close()
+                            op = open(self.peaksXmlFname,"wb")
+                            self.makePeakXml(op,pkDict)
                             op.close()
                     if showWedges:
                         im2 = backgroundToOverlay(im2)
@@ -795,8 +851,10 @@ class GoogleMap(object):
         if satellite: params["maptype"] = "satellite"
         paramStr = urllib.urlencode(params)
         get_url = url+("?%s" % paramStr)
+        timeout = 5.0
         try:
-            resp = urllib2.urlopen(get_url,timeout=5.0)
+            socket.setdefaulttimeout(timeout)
+            resp = urllib2.urlopen(get_url)
         except urllib2.URLError, e:
             if hasattr(e, 'reason'):
                 print 'We failed to reach a server.'
@@ -804,6 +862,9 @@ class GoogleMap(object):
             elif hasattr(e, 'code'):
                 print 'The server couldn\'t fulfill the request.'
                 print 'Error code: ', e.code
+            raise
+        except:
+            print traceback.format_exc()
             raise
         else:
             return resp.read()
@@ -839,8 +900,10 @@ class GoogleMarkers(object):
         params = dict(chst="d_map_spin",chld="%s|0|%s|%s|b|%s" % (size,color,fontsize,text))
         paramStr = urllib.urlencode(params)
         get_url = url+("?%s" % paramStr)
+        timeout = 5.0
         try:
-            resp = urllib2.urlopen(get_url,timeout=5.0)
+            socket.setdefaulttimeout(timeout)
+            resp = urllib2.urlopen(get_url)
         except urllib2.URLError, e:
             if hasattr(e, 'reason'):
                 print 'We failed to reach a server.'
@@ -848,6 +911,9 @@ class GoogleMarkers(object):
             elif hasattr(e, 'code'):
                 print 'The server couldn\'t fulfill the request.'
                 print 'Error code: ', e.code
+            raise
+        except:
+            print traceback.format_exc()
             raise
         else:
             return resp.read()
@@ -1021,6 +1087,7 @@ class SurveyorLayers(object):
         
         for r,(analyzer,startEtm,endEtm,minAmpl,maxAmpl,mType,mColor,makeWedges,exclRadius) in enumerate(markerParams):
             # markerParams specifies parameters for each region in turn, and r is the region number
+            if not mColor: mType = MT_NONE
             anyPeaks = anyPeaks or (mType != MT_NONE)
             anyWedges = anyWedges or makeWedges
 

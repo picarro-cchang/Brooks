@@ -532,6 +532,7 @@ def getLastPeriphUpdateEx(params):
         return dict(error=traceback.format_exc())
 
 @app.route('/rest/ping')
+@app.route('/rest/pimg')
 def ping():
     return 'ping'
     

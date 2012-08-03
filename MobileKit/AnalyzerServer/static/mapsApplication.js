@@ -192,154 +192,159 @@ function modalNetWarning() {
 }
 
 //Constant Values
-var CNSNT = {
-        // initial "|" is expected with no trailing "|"
-        peak_bbl_clr: "|40FFFF|000000",
-        analysis_bbl_clr: "|FF8080|000000",
-        path_bbl_clr: "|FFFF90|000000",
+if (!CNSNT) {
+    var CNSNT = {};
+    CNSNT.svcurl = "/rest";
+    CNSNT.annotation_url = false;
+    CNSNT.callbacktest_url = "";
+    CNSNT.analyzer_name = "";
+    CNSNT.user_id = "";
+    CNSNT.resturl = "/rest";
+    CNSNT.resource_Admin = "admin";
+    CNSNT.resource_AnzMeta = "";
+    CNSNT.resource_AnzLog = "";
+    CNSNT.resource_AnzLogMeta = "";
+    CNSNT.resource_AnzLogNote = "";
+    CNSNT.sys = "";
+    CNSNT.identity = "";
+}
 
-        // trailing "|" is expected
-        peak_bbl_tail: "bb|", // tail bottom left
-        analysis_bbl_tail: "bb|",  // tail bottom left
-        path_bbl_tail: "bbtl|", // tail top left
 
-        peak_bbl_anchor: newPoint(0, 42), //d_bubble_text_small is 42px high 
-        analysis_bbl_anchor: newPoint(0, 42), //d_bubble_text_small is 42px high
-        path_bbl_anchor: newPoint(0, 0),
+// initial "|" is expected with no trailing "|"
+CNSNT.peak_bbl_clr = "|40FFFF|000000";
+CNSNT.analysis_bbl_clr = "|FF8080|000000";
+CNSNT.path_bbl_clr = "|FFFF90|000000";
 
-        peak_bbl_origin: newPoint(0, 0),
-        analysis_bbl_origin: newPoint(0, 0),
-        path_bbl_origin: newPoint(0, 0),
+// trailing "|" is expected
+CNSNT.peak_bbl_tail = "bb|"; // tail bottom left
+CNSNT.analysis_bbl_tail = "bb|";  // tail bottom left
+CNSNT.path_bbl_tail = "bbtl|"; // tail top left
 
-        normal_path_color: "#0000FF",
-        analyze_path_color: "#000000",
-        //inactive_path_color: "#996633",
-        inactive_path_color: "#FF0000",
-        streamwarning:  (1000 * 10),
-        streamerror:  (1000 * 30),
-        
-        normal_plat_outline_color: "#000000",
-        normal_plat_outline_opacity: 0.4,
-        normal_plat_outline_weight: 0.5,
-        hlite_plat_outline_color: "#000000",
-        hlite_plat_outline_opacity: 0.8,
-        hlite_plat_outline_weight: 2,
-        active_plat_outline_color: "#008000",
-        active_plat_outline_opacity: 0.8,
-        active_plat_outline_weight: 3,
-        
-        histMax: 200,
-        
-        datUpdatePeriod: 500,
-        analysisUpdatePeriod: 1500,
-        peakAndWindUpdatePeriod: 1500,
-        noteUpdatePeriod: 1500,
-        progressUpdatePeriod: 2000,
-        modeUpdatePeriod: 2000,
-        periphUpdatePeriod: 5000,
-        swathUpdatePeriod: 500,
-        
-//        datUpdatePeriod: 5000,
-//        analysisUpdatePeriod: 5000,
-//        peakAndWindUpdatePeriod: 5000,
-//        noteUpdatePeriod: 5000,
-//        progressUpdatePeriod: 5000,
-//        modeUpdatePeriod: 5000,
-//        periphUpdatePeriod: 5000,
-//        swathUpdatePeriod: 5000,
-        
-        hmargin: 30,
-        vmargin: 0,
-        map_topbuffer: 0,
-        map_bottombuffer: 0, 
+CNSNT.peak_bbl_anchor = null; //newPoint(0, 42); //d_bubble_text_small is 42px high 
+CNSNT.analysis_bbl_anchor = null; //newPoint(0, 42); //d_bubble_text_small is 42px high
+CNSNT.path_bbl_anchor = null; //newPoint(0, 0);
 
-        peakNoteList: ['amp', 'ch4', 'sigma', 'lat', 'lon'],
-        analysisNoteList: ['conc', 'delta', 'uncertainty', 'lat', 'lon'],
-        datNoteList: ['ch4', 'lat', 'lon'],
+CNSNT.peak_bbl_origin = null; //newPoint(0, 0);
+CNSNT.analysis_bbl_origin = null; //newPoint(0, 0);
+CNSNT.path_bbl_origin = null; //newPoint(0, 0);
 
-        gmt_offset: get_time_zone_offset(),
+CNSNT.normal_path_color = "#0000FF";
+CNSNT.analyze_path_color = "#000000";
+//CNSNT.inactive_path_color = "#996633";
+CNSNT.inactive_path_color = "#FF0000";
+CNSNT.streamwarning =  (1000 * 10);
+CNSNT.streamerror =  (1000 * 30);
 
-        rest_default_timeout: 60000,
-        
-        stab_control: {
-            "*": TXT.stab_star
-            , A: TXT.stab_a
-            , B: TXT.stab_b
-            , C: TXT.stab_c
-            , D: TXT.stab_d
-            , E: TXT.stab_e
-            , F: TXT.stab_f
-        },
+CNSNT.normal_plat_outline_color = "#000000";
+CNSNT.normal_plat_outline_opacity = 0.4;
+CNSNT.normal_plat_outline_weight = 0.5;
+CNSNT.hlite_plat_outline_color = "#000000";
+CNSNT.hlite_plat_outline_opacity = 0.8;
+CNSNT.hlite_plat_outline_weight = 2;
+CNSNT.active_plat_outline_color = "#008000";
+CNSNT.active_plat_outline_opacity = 0.8;
+CNSNT.active_plat_outline_weight = 3;
 
-        export_control: {
-            "file": TXT.export_as_txt
-          , "csv": TXT.export_as_csv
-        },
+CNSNT.histMax = 200;
 
-        
-        spacer_gif: '/static/images/icons/spacer.gif',
-        svcurl: "/rest",
-        resturl: "/rest",
-        resource_Admin: "admin",
-        resource_AnzMeta: "",
-        resource_AnzLog: "",
-        resource_AnzLogMeta: "",
-        sys: "",
-        identity: "",
-        callbacktest_url: "",
-        callbacktest_timeout: 4000,
-        annotation_url: false,
-        
-        gpsPort: 0,
-        wsPort: 1,
-        gpsUpdateTimeout: 60000,
-        wsUpdateTimeout: 60000,
-        turnOnAudio: false,
+CNSNT.datUpdatePeriod = 500;
+CNSNT.analysisUpdatePeriod = 1500;
+CNSNT.peakAndWindUpdatePeriod = 1500;
+CNSNT.noteUpdatePeriod = 1500;
+CNSNT.progressUpdatePeriod = 2000;
+CNSNT.modeUpdatePeriod = 2000;
+CNSNT.periphUpdatePeriod = 5000;
+CNSNT.swathUpdatePeriod = 500;
 
-        prime_view: true,
-        log_sel_opts: [],
-        analyzer_name: "",
-        user_id: "",
+//        CNSNT.datUpdatePeriod = 5000;
+//        CNSNT.analysisUpdatePeriod = 5000;
+//        CNSNT.peakAndWindUpdatePeriod = 5000;
+//        CNSNT.noteUpdatePeriod = 5000;
+//        CNSNT.progressUpdatePeriod = 5000;
+//        CNSNT.modeUpdatePeriod = 5000;
+//        CNSNT.periphUpdatePeriod = 5000;
+//        CNSNT.swathUpdatePeriod = 5000;
 
-        mapControl: undefined,
-        mapControlDiv: undefined,
+CNSNT.hmargin = 30;
+CNSNT.vmargin = 0;
+CNSNT.map_topbuffer = 0;
+CNSNT.map_bottombuffer = 0; 
 
-        earthRadius: 6378100,
-        swath_color: "#0000CC", 
-        swath_opacity: 0.3,
-        swathWindow: 10,
-        
-        dtr : Math.PI/180.0,    // Degrees to radians
-        rtd : 180.0/Math.PI,    // Radians to degrees
-        
-        cookie_duration: 14,
-        dashboard_app: false,
+CNSNT.peakNoteList = ['amp', 'ch4', 'sigma', 'lat', 'lon'];
+CNSNT.analysisNoteList = ['conc', 'delta', 'uncertainty', 'lat', 'lon'];
+CNSNT.datNoteList = ['ch4', 'lat', 'lon'];
 
-        loader_gif_img: '<img src="/static/images/ajax-loader.gif" alt="processing"/>',
-        
-        INSTMGR_STATUS_READY: 0x0001,
-        INSTMGR_STATUS_MEAS_ACTIVE: 0x0002,
-        INSTMGR_STATUS_ERROR_IN_BUFFER: 0x0004,
-        INSTMGR_STATUS_GAS_FLOWING: 0x0040,
-        INSTMGR_STATUS_PRESSURE_LOCKED: 0x0080,
-        INSTMGR_STATUS_CAVITY_TEMP_LOCKED: 0x0100,
-        INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED: 0x0200,
-        INSTMGR_STATUS_WARMING_UP: 0x2000,
-        INSTMGR_STATUS_SYSTEM_ERROR: 0x4000,
-        INSTMGR_STATUS_MASK: 0xFFFF,
-        INSTMGR_AUX_STATUS_SHIFT: 16,
-        INSTMGR_AUX_STATUS_WEATHER_MASK: 0x1F,
-        
-        // Number of data points to defer warning about missing weather information
-        weatherMissingDefer : 120,
-        weatherMissingInit  : 10,
-        classByWeather: { 0: "D",  8: "D", 16: "D", // Daytime, Overcast
-                          2: "B", 10: "C", 18: "D", // Daytime, moderate sun
-                          4: "A", 12: "B", 20: "C", // Daytime, strong sun
-                          1: "F",  9: "E", 17: "D", // Nighttime, <50% cloud
-                          3: "E", 11: "D", 19: "D"  // Nighttime, >50% cloud
-                        }
-    };
+CNSNT.gmt_offset = get_time_zone_offset();
+
+CNSNT.rest_default_timeout = 60000;
+
+CNSNT.stab_control = {
+    "*": TXT.stab_star
+    , A: TXT.stab_a
+    , B: TXT.stab_b
+    , C: TXT.stab_c
+    , D: TXT.stab_d
+    , E: TXT.stab_e
+    , F: TXT.stab_f
+};
+
+CNSNT.export_control = {
+    "file": TXT.export_as_txt
+  , "csv": TXT.export_as_csv
+};
+
+
+CNSNT.spacer_gif = '/static/images/icons/spacer.gif';
+
+CNSNT.callbacktest_timeout = 4000;
+
+CNSNT.gpsPort = 0;
+CNSNT.wsPort = 1;
+CNSNT.gpsUpdateTimeout = 60000;
+CNSNT.wsUpdateTimeout = 60000;
+CNSNT.turnOnAudio = false;
+
+CNSNT.prime_view = true;
+CNSNT.log_sel_opts = [];
+
+CNSNT.mapControl = undefined;
+CNSNT.mapControlDiv = undefined;
+
+CNSNT.earthRadius = 6378100;
+CNSNT.swath_color = "#0000CC"; 
+CNSNT.swath_opacity = 0.3;
+CNSNT.swathWindow = 10;
+
+CNSNT.dtr  = Math.PI/180.0;    // Degrees to radians
+CNSNT.rtd  = 180.0/Math.PI;    // Radians to degrees
+
+CNSNT.cookie_duration = 14;
+CNSNT.dashboard_app = false;
+
+CNSNT.loader_gif_img = '<img src="/static/images/ajax-loader.gif" alt="processing"/>';
+
+CNSNT.INSTMGR_STATUS_READY = 0x0001;
+CNSNT.INSTMGR_STATUS_MEAS_ACTIVE = 0x0002;
+CNSNT.INSTMGR_STATUS_ERROR_IN_BUFFER = 0x0004;
+CNSNT.INSTMGR_STATUS_GAS_FLOWING = 0x0040;
+CNSNT.INSTMGR_STATUS_PRESSURE_LOCKED = 0x0080;
+CNSNT.INSTMGR_STATUS_CAVITY_TEMP_LOCKED = 0x0100;
+CNSNT.INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED = 0x0200;
+CNSNT.INSTMGR_STATUS_WARMING_UP = 0x2000;
+CNSNT.INSTMGR_STATUS_SYSTEM_ERROR = 0x4000;
+CNSNT.INSTMGR_STATUS_MASK = 0xFFFF;
+CNSNT.INSTMGR_AUX_STATUS_SHIFT = 16;
+CNSNT.INSTMGR_AUX_STATUS_WEATHER_MASK = 0x1F;
+
+// Number of data points to defer warning about missing weather information
+CNSNT.weatherMissingDefer  = 120;
+CNSNT.weatherMissingInit   = 10;
+CNSNT.classByWeather = { 0: "D",  8: "D", 16: "D", // Daytime, Overcast
+                  2: "B", 10: "C", 18: "D", // Daytime, moderate sun
+                  4: "A", 12: "B", 20: "C", // Daytime, strong sun
+                  1: "F",  9: "E", 17: "D", // Nighttime, <50% cloud
+                  3: "E", 11: "D", 19: "D"  // Nighttime, >50% cloud
+                };
 
 var statusPane = function () {
     var pane = '<table style="width: 100%;">'
@@ -392,139 +397,140 @@ var modePane = function() {
 }
 
 // Current State
-var CSTATE = {
-        firstData: true,
-        initialFnIsRun: false,
-        net_abort_count: 0,
-        follow: true,
-        overlay: false,
-        activePlatName: "",
+if (!CSTATE) {
+    var CSTATE = {};
+}
+CSTATE.firstData = true;
+CSTATE.initialFnIsRun = false;
+CSTATE.net_abort_count = 0;
+CSTATE.follow = true;
+CSTATE.overlay = false;
+CSTATE.activePlatName = "";
         
-        prime_available: false,
-        prime_test_count: 0,
-        green_count: 2,
+CSTATE.prime_available = false;
+CSTATE.prime_test_count = 0;
+CSTATE.green_count = 2;
 
-        resize_map_inprocess: false,
-        current_mode: 0,
-        getting_mode: false,
-        getting_periph_time: false,
+CSTATE.resize_map_inprocess = false;
+CSTATE.current_mode = 0;
+CSTATE.getting_mode = false;
+CSTATE.getting_periph_time = false;
 
-        getting_warming_status: false,
-        end_warming_status: false,
+CSTATE.getting_warming_status = false;
+CSTATE.end_warming_status = false;
         
-        current_zoom: undefined,
-        current_mapTypeId: undefined,
+CSTATE.current_zoom = undefined;
+CSTATE.current_mapTypeId = undefined;
 
-        center_lon: -121.98432,
-        center_lat: 37.39604,
+CSTATE.center_lon = -121.98432;
+CSTATE.center_lat = 37.39604;
 
-        alog: "",
-        alog_peaks: "",
-        alog_analysis: "",
+CSTATE.alog = "";
+CSTATE.alog_peaks = "";
+CSTATE.alog_analysis = "";
 
-        showDnote: true,
-        showPnote: true,
-        showAnote: true,
-        showPbubble: true,
-        showAbubble: true,
-        showWbubble: true,
-        showSwath: true,
-        showPlatOutlines: false,
+CSTATE.showDnote = true,
+CSTATE.showPnote = true;
+CSTATE.showAnote = true;
+CSTATE.showPbubble = true;
+CSTATE.showAbubble = true;
+CSTATE.showWbubble = true;
+CSTATE.showSwath = true;
+CSTATE.showPlatOutlines = false;
 
-        lastwhere: '',
-        lastFit: '',
-        lastGpsUpdateStatus: 0, //0: Not installed; 1: Good; 2: Failed
-        lastWsUpdateStatus: 0, //0: Not installed; 1: Good; 2: Failed
-        lastPathColor: CNSNT.normal_path_color,
-        lastInst: '',
-        lastTimestring: '',
-        lastDataFilename: '',
-        lastPeakFilename: '',
-        lastAnalysisFilename: '',
-        laststreamtime: new Date().getTime(),
+CSTATE.lastwhere = '';
+CSTATE.lastFit = '';
+CSTATE.lastGpsUpdateStatus = 0; //0 = Not installed; 1 = Good; 2 = Failed
+CSTATE.lastWsUpdateStatus = 0; //0 = Not installed; 1 = Good; 2 = Failed
+CSTATE.lastPathColor = CNSNT.normal_path_color;
+CSTATE.lastInst = '';
+CSTATE.lastTimestring = '';
+CSTATE.lastDataFilename = '';
+CSTATE.lastPeakFilename = '';
+CSTATE.lastAnalysisFilename = '';
+CSTATE.laststreamtime = new Date().getTime();
 
-        counter: 0,
-        peakLine: 1,
-        clearLeaks: false,
-        clearWind: false,
-        analysisLine: 1,
-        clearAnalyses: false,
-        swathLine: 1,
-        clearSwath: false,
-        startNewPath: true,
-        nextAnalysisEtm: 0.0,
-        nextPeakEtm: 0.0,
-        nextDatEtm: 0.0,
-        nextAnalysisUtm: 0.0,
-        nextPeakUtm: 0.0,
-        nextDatUtm: 0.0,
-        clearDatNote: false,
-        clearPeakNote: false,
-        clearAnalysisNote: false,
+CSTATE.counter = 0;
+CSTATE.peakLine = 1;
+CSTATE.clearLeaks = false;
+CSTATE.clearWind = false;
+CSTATE.analysisLine = 1;
+CSTATE.clearAnalyses = false;
+CSTATE.swathLine = 1;
+CSTATE.clearSwath = false;
+CSTATE.startNewPath = true;
+CSTATE.nextAnalysisEtm = 0.0;
+CSTATE.nextPeakEtm = 0.0;
+CSTATE.nextDatEtm = 0.0;
+CSTATE.nextAnalysisUtm = 0.0;
+CSTATE.nextPeakUtm = 0.0;
+CSTATE.nextDatUtm = 0.0;
+CSTATE.clearDatNote = false;
+CSTATE.clearPeakNote = false;
+CSTATE.clearAnalysisNote = false;
 
-        startPos: null,
+CSTATE.startPos = null;
 
-        ignoreTimer: false,
-        ignoreRequests: false,
+CSTATE.ignoreTimer = false;
+CSTATE.ignoreRequests = false;
 
-        path: null,
-        pathListener: {},
+CSTATE.path = null;
+CSTATE.pathListener = {};
         
-        map: undefined,
-        mapListener: {},
+CSTATE.map = undefined;
+CSTATE.mapListener = {};
         
-        marker: null,
-        gglOptions: null,
-        peakMarkers: {},
-        analysisMarkers: {},
-        windMarkers: {},
-        methaneHistory: [],
+CSTATE.marker = null;
+CSTATE.gglOptions = null;
+CSTATE.peakMarkers = {};
+CSTATE.analysisMarkers = {};
+CSTATE.windMarkers = {};
+CSTATE.methaneHistory = [];
 
         
-        peakNoteMarkers: {},
-        peakNoteDict: {},
-        peakNoteListener: {},
-        peakBblListener: {},
+CSTATE.peakNoteMarkers = {};
+CSTATE.peakNoteDict = {};
+CSTATE.peakNoteListener = {};
+CSTATE.peakBblListener = {};
 
-        analysisNoteMarkers: {},
-        analysisNoteDict: {},
-        analysisNoteListener: {},
-        analysisBblListener: {},
+CSTATE.analysisNoteMarkers = {};
+CSTATE.analysisNoteDict = {};
+CSTATE.analysisNoteListener = {};
+CSTATE.analysisBblListener = {};
 
-        datNoteMarkers: {},
-        datNoteDict: {},
-        datNoteListener: {},
+CSTATE.datNoteMarkers = {};
+CSTATE.datNoteDict = {};
+CSTATE.datNoteListener = {};
 
-        // the following help specify the polygon which represents
-        //  the effective map area associated with the path
-        swathPolys : [],
-        lastMeasPathLoc: null,
-        lastMeasPathDeltaLat: null,
-        lastMeasPathDeltaLon: null,
+// the following help specify the polygon which represents
+//  the effective map area associated with the path
+CSTATE.swathPolys  = [];
+CSTATE.lastMeasPathLoc = null;
+CSTATE.lastMeasPathDeltaLat = null;
+CSTATE.lastMeasPathDeltaLon = null;
         
-        pobj: [],
+CSTATE.pobj = [];
         
-        noteSortSel: undefined,
-        resize_for_conc_data: true,
+CSTATE.noteSortSel = undefined;
+CSTATE.resize_for_conc_data = true;
 
-        getDataLimit: 2000,
-        getSwathLimit: 1000,
+CSTATE.getDataLimit = 2000;
+CSTATE.getSwathLimit = 1000;
         
-        exportClass: 'file',   
-        stabClass: 'D',     // Pasquill-Gifford stability class
-        minLeak:   1.0,     // Minimum leak to consider in cubic feet/hour
-        minAmp: 0.1,
+CSTATE.exportClass = 'file';   
+CSTATE.stabClass = 'D';     // Pasquill-Gifford stability class
+CSTATE.minLeak =   1.0;     // Minimum leak to consider in cubic feet/hour
+CSTATE.minAmp = 0.1;
         
-        // Parameters for estimating addtional standard deviation in wind direction
-        astd_a : 0.15*Math.PI,
-        astd_b : 0.25,          // Wind speed in m/s for standard deviation to be astd_a
-        astd_c : 0.0,           // Factor multiplying car speed in m/s
+// Parameters for estimating addtional standard deviation in wind direction
+CSTATE.astd_a  = 0.15*Math.PI;
+CSTATE.astd_b  = 0.25;          // Wind speed in m/s for standard deviation to be astd_a
+CSTATE.astd_c  = 0.0;           // Factor multiplying car speed in m/s
        
-        // Variable to indicate when weather information is missing
-        weatherMissingCountdown: CNSNT.weatherMissingInit,
-        showingWeatherDialog: false,
-        inferredStabClass: null
-   };
+// Variable to indicate when weather information is missing
+CSTATE.weatherMissingCountdown = CNSNT.weatherMissingInit;
+CSTATE.showingWeatherDialog = false;
+CSTATE.inferredStabClass = null;
 
 var TIMER = {
         prime: null,
@@ -1024,6 +1030,14 @@ function initialize_map() {
 
     CSTATE.map = newMap(document.getElementById("map_canvas"));
 
+    CNSNT.peak_bbl_anchor = newPoint(0, 42); //d_bubble_text_small is 42px high 
+    CNSNT.analysis_bbl_anchor = newPoint(0, 42); //d_bubble_text_small is 42px high
+    CNSNT.path_bbl_anchor = newPoint(0, 0);
+
+    CNSNT.peak_bbl_origin = newPoint(0, 0);
+    CNSNT.analysis_bbl_origin = newPoint(0, 0);
+    CNSNT.path_bbl_origin = newPoint(0, 0);
+    
     CNSNT.mapControlDiv = document.createElement('DIV');
     CNSNT.mapControl = new MapControl(CNSNT.mapControlDiv, CSTATE.map);
     
@@ -1158,7 +1172,9 @@ function resize_map() {
 function resize_page() {
     if (!CSTATE.resize_map_inprocess) {
         CSTATE.resize_map_inprocess = true;
-        TIMER.resize = setTimeout(resize_map, 25);
+        if (TIMER) {
+            TIMER.resize = setTimeout(resize_map, 25);
+        }
     }
 }
 
@@ -4410,18 +4426,22 @@ function removeGoListener(plobj) {
 }
 
 function initialize_plats() {
-    var plname, plobj, rect;
-    if (PLATOBJS) {
-        for (plname in PLATOBJS) {
-            plobj = PLATOBJS[plname];
-            rect = newRectangle(plobj.minlng, plobj.maxlng, plobj.minlat, plobj.maxlat);
-            attachPlatListener(rect, plname);
-            plobj.rect = rect;
-            plobj.hlite = false;
-            plobj.active = false;
-            plobj.go = null;
-            plobj.go_listener = null;
+    try {
+        var plname, plobj, rect;
+        if (PLATOBJS) {
+            for (plname in PLATOBJS) {
+                plobj = PLATOBJS[plname];
+                rect = newRectangle(plobj.minlng, plobj.maxlng, plobj.minlat, plobj.maxlat);
+                attachPlatListener(rect, plname);
+                plobj.rect = rect;
+                plobj.hlite = false;
+                plobj.active = false;
+                plobj.go = null;
+                plobj.go_listener = null;
+            }
         }
+    } catch( ex) {
+        
     }
 }
 
@@ -4454,7 +4474,7 @@ function initialize(winH, winW) {
     }
     
     //secure ping (to assure browsers can see secure site)
-    $("#id_content_spacer").html('<img src="' + CNSNT.resturl + '/ping' + '"/>');
+    $("#id_content_spacer").html('<img src="' + CNSNT.resturl + '/pimg' + '"/>');
     
     //CNSNT.prime_view = true;
     

@@ -287,14 +287,16 @@ function processStatus(statusDict)
         if (statByRegion.hasOwnProperty(region)) {
             s = statByRegion[region].stages;
             e = statByRegion[region].error;
-            url = CNSNT.svcurl + "/getPDF?" + $.param({ticket: CSTATE.ticket, region: region});
+            pdfurl = CNSNT.svcurl + "/getPDF?" + $.param({ticket: CSTATE.ticket, region: region});
+            xmlurl = CNSNT.svcurl + "/getXML?" + $.param({ticket: CSTATE.ticket, region: region});
             taburl = CNSNT.svcurl + "/getReport?" + $.param({ticket: CSTATE.ticket, region: region, name:name});
             if (e) {
                 t = "<b>Error, see detailed status</b>"
                 tableFuncs.setCell(row, "status", t, CNSNT.regions);
             }
             else if (s.indexOf("R") >= 0) {
-                t = '<b>Done <a href="' + url + '"> PDF</a><a href="';
+                t = '<b>Done <a href="' + pdfurl + '"> PDF</a><a href="';
+                t += xmlurl + '"> Excel</a><a href="';
                 t += taburl + '" target="_blank"> View</a> </b>';
                 tableFuncs.setCell(row, "status", t, CNSNT.regions);
             }
