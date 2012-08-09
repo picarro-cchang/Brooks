@@ -254,7 +254,8 @@ CNSNT.noteUpdatePeriod = 1500;
 CNSNT.progressUpdatePeriod = 2000;
 CNSNT.modeUpdatePeriod = 2000;
 CNSNT.periphUpdatePeriod = 5000;
-CNSNT.swathUpdatePeriod = 500;
+CNSNT.swathUpdatePeriod = 1000;
+CNSNT.swathMaxSkip = 10;
 
 //        CNSNT.datUpdatePeriod = 5000;
 //        CNSNT.analysisUpdatePeriod = 5000;
@@ -508,6 +509,10 @@ CSTATE.swathPolys  = [];
 CSTATE.lastMeasPathLoc = null;
 CSTATE.lastMeasPathDeltaLat = null;
 CSTATE.lastMeasPathDeltaLon = null;
+CSTATE.lastSwathParams = {};
+CSTATE.lastSwathOutput = {};
+CSTATE.nextSwathRow = 0;
+CSTATE.swathSkipCount = 0;
         
 CSTATE.pobj = [];
         
@@ -531,6 +536,7 @@ CSTATE.astd_c  = 0.0;           // Factor multiplying car speed in m/s
 CSTATE.weatherMissingCountdown = CNSNT.weatherMissingInit;
 CSTATE.showingWeatherDialog = false;
 CSTATE.inferredStabClass = null;
+CSTATE.prevInferredStabClass = null;
 
 var TIMER = {
         prime: null,
@@ -3063,10 +3069,13 @@ function stabClassCntl(style) {
 }
 
 function _changeStabClass(value) {
-    if (value !== CSTATE.stabClass) {
+    var isc = "";
+    if (value !== CSTATE.stabClass || ((value === "*") && (CSTATE.inferredStabClass != CSTATE.prevInferredStabClass))) {
         CSTATE.stabClass = value;
+        CSTATE.prevInferredStabClass = CSTATE.inferredStabClass;
         setCookie(COOKIE_NAMES.dspStabClass, CSTATE.stabClass, CNSNT.cookie_duration);
-        CNSNT.mapControl.changeControlText(TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass);
+        if (value === "*") isc = CSTATE.inferredStabClass;
+        CNSNT.mapControl.changeControlText(TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass + isc);
         clearSwathPolys();
     }
 }
@@ -3271,7 +3280,7 @@ function statCheck() {
 
 function getData() {
     var successData = function(data) {
-        var resultWasReturned, newTimestring, newFit, newInst, i, clr, pdata;
+        var resultWasReturned, newTimestring, newFit, newInst, i, clr, pdata, weatherCode;
         CSTATE.net_abort_count = 0;
         restoreModalDiv();
         resultWasReturned = false;
@@ -3356,7 +3365,8 @@ function getData() {
                 if (data.result.INST_STATUS) {
                     if (data.result.INST_STATUS.length > 0) {
                         newInst = data.result.INST_STATUS[data.result.INST_STATUS.length - 1];
-                        if (0 == (newInst >> CNSNT.INSTMGR_AUX_STATUS_SHIFT) & CNSNT.INSTMGR_AUX_STATUS_WEATHER_MASK) {
+                        weatherCode = (newInst >> CNSNT.INSTMGR_AUX_STATUS_SHIFT) & CNSNT.INSTMGR_AUX_STATUS_WEATHER_MASK;
+                        if (0 === weatherCode) {
                             CSTATE.weatherMissingCountdown -= 1;
                             if (CSTATE.weatherMissingCountdown <= 0 && CNSNT.prime_view === true) {
                                 if (!CSTATE.showingWeatherDialog) {
@@ -3367,6 +3377,10 @@ function getData() {
                         }
                         else {
                             CSTATE.weatherMissingCountdown = CNSNT.weatherMissingDefer;
+                            //if (!CNSNT.prime_view) {
+                                CSTATE.inferredStabClass = CNSNT.classByWeather[weatherCode-1];
+                                _changeStabClass(CSTATE.stabClass);
+                            //}
                         }
                         if (CSTATE.lastInst !== newInst) {
                             CSTATE.lastInst = newInst;
@@ -3749,11 +3763,35 @@ function showAnalysis() {
     }
 }
 
+function equalProperties(obj1, obj2) {
+    var p;
+    for (p in obj1) {
+        if (obj1.hasOwnProperty(p)) {
+            if (obj2.hasOwnProperty(p)) {
+                if (obj1[p] !== obj2[p]) return false;
+            }
+            else return false;
+        }
+    }
+    for (p in obj2) {
+        if (obj2.hasOwnProperty(p)) {
+            if (obj1.hasOwnProperty(p)) {
+                if (obj1[p] !== obj2[p]) return false;
+            }
+            else return false;
+        }
+    }
+    return true;
+}
+
 function fetchSwath() {
     function successSwath(data) {
         //alert("Im back from swath")
         var resultWasReturned, i;
         resultWasReturned = false;
+        CSTATE.lastSwathOutput = {};
+        $.extend(CSTATE.lastSwathOutput,data);
+        
         if (data.result) {
             if (data.result.filename) {
                 if (CSTATE.lastDataFilename === data.result.filename) {
@@ -3765,6 +3803,7 @@ function fetchSwath() {
         }
         if (resultWasReturned) {
             if (data.result.GPS_ABS_LAT) {
+                CSTATE.nextSwathRow = data.result.nextRow;
                 if (CSTATE.clearSwath) {
                     CSTATE.clearSwath = false;
                 } else {
@@ -3821,12 +3860,36 @@ function fetchSwath() {
                     , 'alog': CSTATE.alog
                     , 'gmtOffset': CNSNT.gmt_offset
                     };
-    
+        
     if (!CSTATE.showSwath) {
          setGduTimer('swath');
          return;
     }
     
+    // Avoid repeatedly calling makeSwath if parameters are unchanged. Even if the parameters
+    //  are identical and we get back empty data sets, we should do the call from time-to-time 
+    //  in case new data arrive. This frequency is controlled by CNSNT.swathMaxSkip.
+    
+    if (equalProperties(CSTATE.lastSwathParams,params)) {
+        if (CSTATE.swathSkipCount >= CNSNT.swathMaxSkip) {
+            // We make the call despite the identical parameters since we
+            //  have got too many empty replies
+            CSTATE.swathSkipCount = 0;
+        }
+        else {
+            if (!CSTATE.lastSwathOutput.result.GPS_ABS_LAT.length) CSTATE.swathSkipCount += 1;
+            // Playback from cache
+            successSwath(CSTATE.lastSwathOutput);
+            return;
+        }
+    }
+    
+    // We actually need to make the call. Clear out the lastSwathOutput cache
+    //  since the parameters have changed
+    CSTATE.lastSwathParams = {};
+    $.extend(CSTATE.lastSwathParams,params);
+    CSTATE.lastSwathOutput = {};
+
     switch(CNSNT.prime_view) {
     case false:
         ruri = CNSNT.resturl; //"https://ubuntuhost64:3000/node/rest"

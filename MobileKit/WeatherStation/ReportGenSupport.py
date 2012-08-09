@@ -50,6 +50,8 @@ configFile = os.path.splitext(AppPath)[0] + ".ini"
 config = ConfigObj(configFile)
 WKHTMLTOPDF = config["HelperApps"]["wkhtml_to_pdf"]
 IMGCONVERT  = config["HelperApps"]["image_convert"]
+APIKEY = config["P3Logs"].get("apikey",None)
+
 if "Plats" in config:
     PLAT_TIF_ROOT = config["Plats"]["tif_root"]
     PLAT_PNG_ROOT = config["Plats"]["png_root"]
@@ -849,8 +851,10 @@ class GoogleMap(object):
         url = 'http://maps.googleapis.com/maps/api/staticmap'
         params = dict(center="%.6f,%.6f"%(latCen,lonCen),zoom="%d"%zoom,size="%dx%d" % (nx,ny),scale="%d"%scale,sensor="false")
         if satellite: params["maptype"] = "satellite"
+        if APIKEY is not None: params["key"] = APIKEY
         paramStr = urllib.urlencode(params)
         get_url = url+("?%s" % paramStr)
+        print get_url
         timeout = 5.0
         try:
             socket.setdefaulttimeout(timeout)

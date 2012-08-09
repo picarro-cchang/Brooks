@@ -24,6 +24,7 @@
 *.M51
 *.lnp
 *.plg
+*.pyc
 CypressUSB/*/*/*.sys
 Host/*/TransientData
 Host/Driver/*.db

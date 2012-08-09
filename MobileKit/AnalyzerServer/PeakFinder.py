@@ -696,8 +696,8 @@ class PeakFinder(object):
             if colp>=npoints: colp -= npoints
             colm = col - 1
             if colm<0: colm += npoints
-            isPeak = (v>ssbuff[level+1,colp]) and (v>ssbuff[level+1,col]) and (v>ssbuff[level+1,colm]) and \
-                     (v>ssbuff[level,colp])   and (v>ssbuff[level,colm])  and \
+            isPeak = ((level+1>=ssbuff.shape[0]) or ((v>ssbuff[level+1,colp]) and (v>ssbuff[level+1,col]) and (v>ssbuff[level+1,colm]))) and \
+                     (v>ssbuff[level,colp]) and (v>ssbuff[level,colm])  and \
                      (level==0 or ((v>ssbuff[level-1,colp]) and (v>ssbuff[level-1,col]) and (v>ssbuff[level-1,colm])))
             return isPeak, col         
         initBuff = True
@@ -734,22 +734,23 @@ class PeakFinder(object):
             # Do the convolution by adding in the current methane concentration
             #  multiplied by the kernel at each level
             peaks = []
-            for i in range(nlevels):
+            for i in range(nlevels+1):
                 # Add the kernel into the space-scale buffer, taking into account wrap-around
                 #  into the buffer
-                if c-hList[i]<0:
-                    ssbuff[i,:c+hList[i]+1] += data.CH4*kernelList[i][hList[i]-c:]
-                    ssbuff[i,npoints-hList[i]+c:] += data.CH4*kernelList[i][:hList[i]-c]
-                elif c+hList[i]>=npoints:
-                    ssbuff[i,c-hList[i]:] += data.CH4*kernelList[i][:npoints-c+hList[i]]
-                    ssbuff[i,:c+hList[i]+1-npoints] += data.CH4*kernelList[i][npoints-c+hList[i]:]
-                else:
-                    ssbuff[i,c-hList[i]:c+hList[i]+1] += data.CH4*kernelList[i]
+                if i<nlevels:
+                    if c-hList[i]<0:
+                        ssbuff[i,:c+hList[i]+1] += data.CH4*kernelList[i][hList[i]-c:]
+                        ssbuff[i,npoints-hList[i]+c:] += data.CH4*kernelList[i][:hList[i]-c]
+                    elif c+hList[i]>=npoints:
+                        ssbuff[i,c-hList[i]:] += data.CH4*kernelList[i][:npoints-c+hList[i]]
+                        ssbuff[i,:c+hList[i]+1-npoints] += data.CH4*kernelList[i][npoints-c+hList[i]:]
+                    else:
+                        ssbuff[i,c-hList[i]:c+hList[i]+1] += data.CH4*kernelList[i]
                 if i>0:
                     # Check if we have found a peak in space-scale representation
                     # If so, add it to a list of peaks which are stored as tuples
                     #  of the form (dist,*dataTuple,amplitude,sigma)
-                    isPeak,col = checkPeak(i-1,c-hList[i]-1,minAmpl=self.minAmpl*2.0*3.0**(-1.5))
+                    isPeak,col = checkPeak(i-1,c-hList[min(i,nlevels-1)]-1,minAmpl=self.minAmpl*2.0*3.0**(-1.5))
                     if isPeak and cache[distIndex,col]>0.0:
                         # A peak is disqualified if the valves in an interval before the 
                         #  peak arrives were in the collecting state. This means that the tape recorder
