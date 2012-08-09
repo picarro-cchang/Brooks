@@ -319,8 +319,11 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def interfaceValue(self,valueOrName):
         """Ask Driver to lookup a symbol in the context of the current interface"""
-        return self._value(valueOrName)
-
+        try:
+            return self._value(valueOrName)
+        except:
+            return "undefined"
+            
     def wrDasRegList(self,regList,values):
         for r,value in zip(regList,values):
             self.wrDasReg(r,value)

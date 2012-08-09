@@ -106,6 +106,23 @@ class Target:
 # test_wx.exe.manifest, and copy it with the data_files option into
 # the dist-dir.
 #
+
+cDep = ""
+if version[0] == 2 and version[1] > 5:
+    cDep = """
+<dependency>
+    <dependentAssembly>
+        <assemblyIdentity
+            type="win32"
+            name="Microsoft.VC90.CRT"
+            version="9.0.21022.8"
+            processorArchitecture="X86"
+            publicKeyToken="1fc8b3b9a1e18e3b"
+            language="*"
+        />
+    </dependentAssembly>
+</dependency>
+    """
 manifest_template = '''
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
@@ -128,8 +145,9 @@ manifest_template = '''
     />
   </dependentAssembly>
 </dependency>
+%s
 </assembly>
-'''
+''' % cDep
 RT_MANIFEST = 24
 Controller = Target(description = "Controller", # used for the versioninfo resource
                     script = "Controller/Controller.py", # what to build
@@ -272,6 +290,86 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
 for d in cypressDriverDirs:
     data_files.append(("Images/%s"%d, glob.glob("../Firmware/CypressUSB/Drivers/" + "%s/*.*" %d)))
 
+consoleList = [
+    "ActiveFileManager/ActiveFileManager.py",
+    "RDFrequencyConverter/RDFrequencyConverter.py",
+    "SpectrumCollector/SpectrumCollector.py",
+    "ValveSequencer/ValveSequencer.py",
+    "AlarmSystem/AlarmSystem.py",
+    "Archiver/Archiver.py",
+    "CommandInterface/CommandInterface.py",
+    "Common/SchemeProcessor.py",
+    "DataLogger/DataLogger.py",
+    "DataManager/DataManager.py",
+    "Driver/Driver.py",
+    "ElectricalInterface/ElectricalInterface.py",
+    "EventManager/EventManager.py",
+    "InstMgr/InstMgr.py",
+    "FileEraser/FileEraser.py",
+    "MeasSystem/MeasSystem.py",
+    "SampleManager/SampleManager.py",
+    "Supervisor/Supervisor.py",
+    "ReadExtSensor/ReadExtSensor.py",
+    "WebServer/server.py",
+    "rdReprocessor/rdReprocessor.py",
+    "Utilities/RemoteAccess/RemoteAccess.py",
+    "Utilities/IntegrationTool/IntegrationTool.py",
+    "Utilities/IntegrationBackup/IntegrationBackup.py",
+    "Utilities/FlowController/FlowController.py",
+    "Utilities/Restart/ResetAnalyzer.py",
+    "Utilities/Restart/RestoreStartup.py",
+    "Utilities/Restart/RtcAlarmOff.py",
+    "Utilities/ReadMemUsage/ReadMemUsage.py",
+    "Utilities/BackpackServer/backpackServer.py",
+    "../Firmware/Utilities/CalibrateSystem.py",
+    "../Firmware/Utilities/CalibrateFsr.py",
+    "../Firmware/Utilities/AdjustWlmOffset.py",
+    "../Firmware/Utilities/ExamineRawRD.py",
+    "../Firmware/Utilities/ExamineRDCount.py",
+    "../Firmware/Utilities/LaserLockPrbs.py",
+    "../Firmware/Utilities/LaserPidPrbs.py",
+    "../Firmware/Utilities/MakeWarmBoxCalFile.py",
+    "../Firmware/Utilities/MakeWarmBoxCal_NoWlm.py",
+    "../Firmware/Utilities/MakeWlmFile1.py",
+    "../Firmware/Utilities/WriteLaserEeprom.py",
+    "../Firmware/Utilities/MakeNoWlmFile.py",
+    "../Firmware/Utilities/WriteWlmEeprom.py",
+    "../Firmware/Utilities/DumpEeproms.py",
+    "../Firmware/Utilities/MakeCalFromEeproms.py",
+    "../Firmware/Utilities/FindWlmOffset.py",
+    "../Firmware/Utilities/SaveData.py",
+    "../Firmware/Utilities/SaveRaw.py",
+    "../Firmware/Utilities/TestClient.py",
+    "../Firmware/Utilities/ThresholdStats.py",
+    "../Firmware/Utilities/CheckLaserCal.py",
+    Fitter,
+    "ConfigMonitor/ConfigMonitor.py",
+    "PeriphIntrf/RunSerial2Socket.py",
+]
+
+windowsList = [
+    QuickGui, Coordinator,Controller,deltaCorrProcessor, dilutionCorrProcessor,
+    "Common/StopSupervisor.py",
+    "IPV/IPV.py",
+    "IPV/IPVLicense.py",
+    "Utilities/DiagDataCollector/DiagDataCollector.py",
+    supervisorLauncher,
+    "Utilities/SupervisorLauncher/HostStartup.py",
+    "Utilities/CoordinatorLauncher/CoordinatorLauncher.py",
+    "Utilities/FluxSwitcher/FluxScheduler.py",
+    "Utilities/FluxSwitcher/FluxSwitcherGui.py",
+    "Utilities/ValveDisplay/ValveDisplay.py",
+    "Utilities/InstrEEPROMAccess/InstrEEPROMAccess.py",
+    "Utilities/DataRecal/DataRecal.py",
+    "Utilities/SetupTool/SetupTool.py",
+    "Utilities/PicarroKML/PicarroKML.py",
+    "Utilities/ReadGPSWS/ReadGPSWS.py",
+    "Utilities/PeriphModeSwitcher/PeriphModeSwitcher.py",
+    "Utilities/RecipeEditor/RecipeEditor.py",
+    "Utilities/ConfigManager/ConfigManager.py",
+    "Utilities/AircraftValveSwitcher/AircraftValveSwitcher.py",
+]
+   
 setup(version = "1.0",
       description = "Silverstone Host Core Software",
       name = "Silverstone CRDS",
@@ -284,84 +382,7 @@ setup(version = "1.0",
                                    packages = packageList)
                      ),
       # targets to build...
-      console = [
-                 "ActiveFileManager/ActiveFileManager.py",
-                 "RDFrequencyConverter/RDFrequencyConverter.py",
-                 "SpectrumCollector/SpectrumCollector.py",
-                 "ValveSequencer/ValveSequencer.py",
-                 "AlarmSystem/AlarmSystem.py",
-                 "Archiver/Archiver.py",
-                 "CommandInterface/CommandInterface.py",
-                 "Common/SchemeProcessor.py",
-                 "DataLogger/DataLogger.py",
-                 "DataManager/DataManager.py",
-                 "Driver/Driver.py",
-                 "ElectricalInterface/ElectricalInterface.py",
-                 "EventManager/EventManager.py",
-                 "InstMgr/InstMgr.py",
-                 "FileEraser/FileEraser.py",
-                 "MeasSystem/MeasSystem.py",
-                 "SampleManager/SampleManager.py",
-                 "Supervisor/Supervisor.py",
-                 "ReadExtSensor/ReadExtSensor.py",
-                 "WebServer/server.py",
-                 "rdReprocessor/rdReprocessor.py",
-                 "Utilities/RemoteAccess/RemoteAccess.py",
-                 "Utilities/IntegrationTool/IntegrationTool.py",
-                 "Utilities/IntegrationBackup/IntegrationBackup.py",
-                 "Utilities/FlowController/FlowController.py",
-                 "Utilities/Restart/ResetAnalyzer.py",
-                 "Utilities/Restart/RestoreStartup.py",
-                 "Utilities/Restart/RtcAlarmOff.py",
-                 "Utilities/ReadMemUsage/ReadMemUsage.py",
-                 "Utilities/BackpackServer/backpackServer.py",
-                 "../Firmware/Utilities/CalibrateSystem.py",
-                 "../Firmware/Utilities/CalibrateFsr.py",
-                 "../Firmware/Utilities/AdjustWlmOffset.py",
-                 "../Firmware/Utilities/ExamineRawRD.py",
-                 "../Firmware/Utilities/ExamineRDCount.py",
-                 "../Firmware/Utilities/LaserLockPrbs.py",
-                 "../Firmware/Utilities/LaserPidPrbs.py",
-                 "../Firmware/Utilities/MakeWarmBoxCalFile.py",
-                 "../Firmware/Utilities/MakeWarmBoxCal_NoWlm.py",
-                 "../Firmware/Utilities/MakeWlmFile1.py",
-                 "../Firmware/Utilities/WriteLaserEeprom.py",
-                 "../Firmware/Utilities/MakeNoWlmFile.py",
-                 "../Firmware/Utilities/WriteWlmEeprom.py",
-                 "../Firmware/Utilities/DumpEeproms.py",
-                 "../Firmware/Utilities/MakeCalFromEeproms.py",
-                 "../Firmware/Utilities/FindWlmOffset.py",
-                 "../Firmware/Utilities/SaveData.py",
-                 "../Firmware/Utilities/SaveRaw.py",
-                 "../Firmware/Utilities/TestClient.py",
-                 "../Firmware/Utilities/ThresholdStats.py",
-                 "../Firmware/Utilities/CheckLaserCal.py",
-                 Fitter,
-                 "ConfigMonitor/ConfigMonitor.py",
-                 "PeriphIntrf/RunSerial2Socket.py",
-                 ],
-
-      windows = [QuickGui, Coordinator,Controller,deltaCorrProcessor, dilutionCorrProcessor,
-                 "Common/StopSupervisor.py",
-                 "IPV/IPV.py",
-                 "IPV/IPVLicense.py",
-                 "Utilities/DiagDataCollector/DiagDataCollector.py",
-                 supervisorLauncher,
-                 "Utilities/SupervisorLauncher/HostStartup.py",
-                 "Utilities/CoordinatorLauncher/CoordinatorLauncher.py",
-                 "Utilities/FluxSwitcher/FluxScheduler.py",
-                 "Utilities/FluxSwitcher/FluxSwitcherGui.py",
-                 "Utilities/ValveDisplay/ValveDisplay.py",
-                 "Utilities/InstrEEPROMAccess/InstrEEPROMAccess.py",
-                 "Utilities/DataRecal/DataRecal.py",
-                 "Utilities/SetupTool/SetupTool.py",
-                 "Utilities/PicarroKML/PicarroKML.py",
-                 "Utilities/ReadGPSWS/ReadGPSWS.py",
-                 "Utilities/PeriphModeSwitcher/PeriphModeSwitcher.py",
-                 "Utilities/RecipeEditor/RecipeEditor.py",
-                 "Utilities/ConfigManager/ConfigManager.py",
-                 "Utilities/AircraftValveSwitcher/AircraftValveSwitcher.py",
-                 ],
-
+      console = consoleList,
+      windows = windowsList,
       data_files = data_files
-    )
+)
