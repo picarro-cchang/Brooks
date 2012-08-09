@@ -17,7 +17,7 @@ import time
 from Queue import Queue, Empty
 from optparse import OptionParser
 
-from numpy import sqrt, linalg, array, dot, unwrap, sin, cos, arctan2
+from numpy import sqrt, linalg, array, dot, unwrap, sin, cos, arctan2, pi, ceil, floor
 
 # Special module with way too many items to worry about importing
 # individually.
@@ -177,7 +177,24 @@ class CheckLaserCal(object):
         print "Measured:  y = %0.3f * x + %0.3f" % (m, c1)
         print "Reference: z = %0.3f * x + %0.3f" % (m, c2)
 
-        deltaT = (c2 - c1) / m
+        # It's possible that we have wrapped around by a multiple of
+        # 2*pi in which case we need to find the correct multiple of
+        # 2*pi which minimizes abs(dTheta) = (c2 - c1) + 2*n*pi.
+        x = (c1 - c2) / (2.0 * pi)
+        print "x = %0.3f" % x
+
+
+        min0 = c2 - c1 + (ceil(x) * 2.0 * pi)
+        min1 = c1 - c2 - (floor(x) * 2.0 * pi)
+
+        if min0 < min1:
+            deltaTheta = min0
+        else:
+            deltaTheta = -min1
+
+        print "deltaTheta = %0.3f" % deltaTheta
+
+        deltaT = deltaTheta / m
         print "Calculated temperature offset: %0.3f C" % deltaT
 
         # Regenerate the W2T/T2W coefficients using the adjusted temperature.
@@ -391,12 +408,12 @@ created.)
 """
 
     parser = OptionParser(usage=usage)
-    parser.add_option('-f', '--file', dest='wlmFilename', metavar='WLMFILE',
-                      help='Read WLM calibration from WLMFILE')
-    parser.add_option('-c', '--cal', dest='wbFilename', metavar='WBFILE',
-                      help='Update WBFILE with new W2T/T2W calibration')
     parser.add_option('-a', '--laser', type='int', dest='aLaserNum',
                       help='Actual laser number to scan (starting at 1)')
+    parser.add_option('-c', '--cal', dest='wbFilename', metavar='WBFILE',
+                      help='Update WBFILE with new W2T/T2W calibration')
+    parser.add_option('-f', '--file', dest='wlmFilename', metavar='WLMFILE',
+                      help='Read WLM calibration from WLMFILE')
     parser.add_option('-w', '--wait', dest='waitTime', metavar='TIME',
                       type='float', default=0.0,
                       help='(optional) Time to wait before starting in ' +
