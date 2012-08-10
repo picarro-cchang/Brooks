@@ -146,7 +146,15 @@ def getReport():
         fp.close()
     else:
         peaksTable = ""
-    return render_template('report.html',peaksTable=peaksTable,pathLogs=pathLogs,mapUrl=mapUrl,
+    markerTableFileName = os.path.join(REPORTROOT,'%s/markerMap.%d.html'%(ticket,region))
+    if os.path.exists(markerTableFileName):
+        fp = file(markerTableFileName,'rb')
+        markerTable = fp.read()
+        fp.close()
+    else:
+        markerTable = ""
+    return render_template('report.html',peaksTable=peaksTable,markerTable=markerTable,
+                           pathLogs=pathLogs,mapUrl=mapUrl,
                            name=name,region=region,prettyTicket=pretty_ticket(ticket))
 
 @app.route('/rest/getComposite')

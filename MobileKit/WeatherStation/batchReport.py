@@ -96,8 +96,9 @@ def main():
     # reportApi.rprocs = '["ReportGen"]'
     reportApi.debug = True
     
-    instructions = r'C:\Picarro\Eclipse\Report Generation\instructions_20120726T002728.json'
-    # instructions = r'C:\Picarro\Eclipse\Report Generation\.pydevproject'
+    # instructions = r'C:\Picarro\Eclipse\Report Generation\instructions_20120726T002728.json'
+    instructions = r'C:\Picarro\Eclipse\Report Generation\mytest.json'
+    
     fp = open(instructions,"rb")
     contents = fp.read().splitlines()
     fp.close()
@@ -112,6 +113,10 @@ def main():
     qryparms = { 'qry': 'download', 'content': contents,  'filename': 'instructions.json'}
     contents = raiseOnError(reportApi.get("gdu", "1.0", "ReportGen", qryparms))
 
+    op = file("validated.json","wb")
+    op.write(contents)
+    op.close()
+    
     qryparms = { 'qry': 'validate', 'contents': contents }
     result = raiseOnError(reportApi.get("gdu", "1.0", "ReportGen", qryparms))
     contents = result['contents']

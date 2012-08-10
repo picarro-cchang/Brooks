@@ -20,6 +20,7 @@ var CNSNT = {
     };
 
 var TXT = {
+        addMarker: 'Specify Marker',
         addRegion: 'Specify Region',
         addRun: 'Specify Parameters of Run',
         cancel: 'Cancel',
@@ -122,7 +123,8 @@ function makeJsonInstructions()
 {
     var result1 = tableFuncs.getTableData(CNSNT.regions);
     var result2 = tableFuncs.getTableData(CNSNT.runs);
-    var result = JSON.stringify({regions: result1, runs: result2}, null, "    ") + '\n'; 
+    var result3 = tableFuncs.getTableData(CNSNT.markers);
+    var result = JSON.stringify({regions: result1, runs: result2, markers: result3}, null, "    ") + '\n'; 
     return result;
 }
 
@@ -141,6 +143,12 @@ function styleRunsTable() {
     $(".sortable").sortable({helper: tableFuncs.sortableHelper});
 }
 
+function styleMarkersTable() {
+    $("#id_markers_table_div table").addClass("table table-condensed table-striped table-fmt1");
+    $("#id_markers_table_div tbody").addClass("sortable");
+    $(".sortable").sortable({helper: tableFuncs.sortableHelper});
+}
+
 function updateTables(contents) {
     var instrDict;
     // $("#id_instructions").val(contents);
@@ -152,6 +160,10 @@ function updateTables(contents) {
     if (instrDict.hasOwnProperty("runs")) {
         $("#" + CNSNT.runs.id).replaceWith(tableFuncs.makeTable(instrDict.runs, CNSNT.runs));
         styleRunsTable();
+    }
+    if (instrDict.hasOwnProperty("markers")) {
+        $("#" + CNSNT.markers.id).replaceWith(tableFuncs.makeTable(instrDict.markers, CNSNT.markers));
+        styleMarkersTable();
     }
 }
 
@@ -544,7 +556,6 @@ function editRunsChrome()
     return header + body + footer;
 }
 
-
 function beforeRunsShow()
 {
     var GMToffset = new Date().getTimezoneOffset()*60;
@@ -575,6 +586,86 @@ function validateRun(eidByKey,template,container,onSuccess) {
     if (numErr == 0) {
         onSuccess();
     }
+}
+
+//=============================================================================
+//Edit Additional Markers
+//=============================================================================
+
+CNSNT.markers = {id: "markersTable", layout: [
+                     {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
+                     {key: "label", width: "10%", th: "Label", tf: String, eid: "id_label", cf: String},
+                     {key: "location", width: "15%", th: "Location", tf: floatsToString, eid: "id_location", cf: parseFloats, 
+                         ef: function (s, b) {
+                             s.val(floatsToString(b));
+                         }},                         
+                     {key: "color", width: "5%", th: "Color", tf: makeColorPatch, eid: "id_color", cf: String},
+                     {key: "comments", width: "66%", th: "Comments", tf: processComments, tfParams: {fieldWidth: 35}, 
+                         eid: "id_comments", cf: String},
+                     {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
+                 ],
+                     vf: function (eidByKey, template, container, onSuccess) {
+                     return validateMarkers(eidByKey, template, container, onSuccess); 
+                 }};
+
+function editMarkersChrome()
+{
+    var header, body, footer;
+    var controlClass = "input-large", optClass = "input-corners";
+    header = '<div class="modal-header"><h3>' + TXT.addMarker + '</h3></div>';
+    body   = '<div class="modal-body">';
+    body += '<form class="form-horizontal"><fieldset>';
+    body += tableFuncs.editControl("Label", tableFuncs.makeInput("id_label", {"class": controlClass, 
+            "placeholder": "Marker label"}));
+    body += tableFuncs.editControl("Location", tableFuncs.makeInput("id_location", 
+            {"class": controlClass + " " + optClass, "placeholder": "Latitude, Longitude"}));
+    body += tableFuncs.editControl("Color", tableFuncs.makeSelect("id_color", {"class": controlClass},
+            {"#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red", 
+             "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
+    body += tableFuncs.editControl("Comments", tableFuncs.makeTextArea("id_comments", {"class": controlClass}));
+    body += '</fieldset></form></div>';
+    footer = '<div class="modal-footer">';
+    footer += '<p class="validate_tips alert alert-error hide"></p>';
+    footer += '<button class="btn btn-primary btn-ok">' + TXT.ok + '</button>';
+    footer += '<button class="btn btn-cancel">' + TXT.cancel + '</button>';
+    footer += '</div>';
+    return header + body + footer;
+}
+
+function beforeMarkersShow()
+{
+}
+
+function  validateMarkers(eidByKey,template,container,onSuccess) {
+    var labelRe = /^(\w|\d){1,4}$/;
+    var locationRe = /^([+\-]?([0-9]+\.?[0-9]*|(\.[0-9]+)))\s*,\s*([+\-]?([0-9]+\.?[0-9]*|(\.[0-9]+)))$/;
+    var numErr = 0;
+    var label = $("#"+eidByKey["label"]).val();
+    var location, locationArray = [], okLocation = 0;
+    
+    location = $("#"+eidByKey["location"]).val();
+    /* Verify that the label is valid */
+    if (!labelRe.test(label)) {
+        tableFuncs.addError(eidByKey["label"], "Invalid label");
+        numErr++;
+    }
+    if (!locationRe.test(location)) {
+        tableFuncs.addError(eidByKey["location"], "Invalid location");
+        numErr++;        
+    }
+    else {
+        locationArray = parseFloats(location);
+        okLocation++;
+    }
+    /* Verify that the location coordinates make sense */
+    if (okLocation) {
+        if (locationArray[0]<-90.0  || locationArray[0]>90.0  ||
+            locationArray[1]<-180.0 || locationArray[1]>180.0 ) {
+            tableFuncs.addTip(container, "Bad location coordinates");
+            numErr++;
+        }
+    }
+    if (numErr == 0) onSuccess();
 }
 
 //=============================================================================
@@ -614,6 +705,21 @@ function initialize(winH,winW)
     });
     $("#id_runs_table_div").on("click", "table a.table-new-row", function (e) {
         tableFuncs.insertRow(e, CNSNT.runs, container, editRunsChrome, beforeRunsShow, initRunRow);
+    });        
+
+    $("#id_markers_table_div").html(tableFuncs.makeTable({}, CNSNT.markers));
+    styleMarkersTable();    
+    $("#id_markers_table_div").on("click", "tbody a.table-delete-row", function (e) {
+        $(e.currentTarget).closest("tr").remove();
+    });
+    $("#id_markers_table_div").on("click", "table a.table-clear", function (e) {
+        $(e.currentTarget).closest("table").find("tbody").empty();
+    });
+    $("#id_markers_table_div").on("click", "tbody a.table-edit-row", function (e) {
+        tableFuncs.editRow($(e.currentTarget).closest("tr"), CNSNT.markers, container, editMarkersChrome, beforeMarkersShow);
+    });
+    $("#id_markers_table_div").on("click", "table a.table-new-row", function (e) {
+        tableFuncs.insertRow(e, CNSNT.markers, container, editMarkersChrome, beforeMarkersShow);
     });        
     
     $("#id_instr_upload_name").val('');
