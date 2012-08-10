@@ -909,10 +909,10 @@ class App(object):
                             else:
                                 raise AppErr("Unexpected Exception when getting handle to existing app '%s' with process id '%s'." % (self, pid))
             if appExists:
-                print "  %-20s has been found!  (pid = %s)" %("'%s'" % self, self._ProcessId)
+                self._Parent.messageQueue.put("  %-20s has been found!  (pid = %s)" %("'%s'" % self, self._ProcessId))
                 Log("Application found and attached to", self._AppName)
             else:
-                print "  %-20s NOT found." % ("'%s'" % self,)
+                self._Parent.messageQueue.put("  %-20s NOT found." % ("'%s'" % self,))
                 Log("Application not found", self._AppName)
         finally:
             self._SearchComplete.set()
@@ -954,6 +954,7 @@ class Supervisor(object):
         self._TcpServerThread = None
         self.powerDownAfterTermination = False
         self.appList = None
+        self.messageQueue = Queue.Queue(100)
 
         # start to use CustomConfigObj
         try:
@@ -1072,6 +1073,8 @@ class Supervisor(object):
         for appName in self.AppNameList[::-1]:
             A = self.AppDict[appName]
             A._SearchComplete.wait()
+        while not self.messageQueue.empty():
+            print self.messageQueue.get()
         #Now build our list of found apps...
         for appName in self.AppNameList[::-1]:
             A = self.AppDict[appName]

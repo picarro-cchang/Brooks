@@ -129,10 +129,10 @@ manifest_template = '''
 <assemblyIdentity
   version="5.0.0.0"
   processorArchitecture="x86"
-  name="%(prog)s"
+  name="%%(prog)s"
   type="win32"
 />
-<description>%(prog)s Program</description>
+<description>%%(prog)s Program</description>
 <dependency>
   <dependentAssembly>
     <assemblyIdentity
@@ -147,7 +147,7 @@ manifest_template = '''
 </dependency>
 %s
 </assembly>
-''' % cDep
+''' % (cDep,)
 RT_MANIFEST = 24
 Controller = Target(description = "Controller", # used for the versioninfo resource
                     script = "Controller/Controller.py", # what to build
