@@ -1078,6 +1078,7 @@ function initialize_map() {
     CSTATE.path = newPolyline(CSTATE.map, CNSNT.normal_path_color);
     clearPathListener();
     
+    CSTATE.prevInferredStabClass = null;
     CSTATE.swathPolys = []
     CSTATE.lastMeasPathLoc = null;
     CSTATE.lastMeasPathDeltaLat = null;
@@ -3075,7 +3076,7 @@ function _changeStabClass(value) {
         CSTATE.prevInferredStabClass = CSTATE.inferredStabClass;
         setCookie(COOKIE_NAMES.dspStabClass, CSTATE.stabClass, CNSNT.cookie_duration);
         if (value === "*") isc = CSTATE.inferredStabClass;
-        CNSNT.mapControl.changeControlText(TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass + isc);
+        CNSNT.mapControl.changeControlText(TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + isc + CSTATE.stabClass);
         clearSwathPolys();
     }
 }
