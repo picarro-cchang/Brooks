@@ -10,9 +10,17 @@ import os
 import sys
 import shutil
 import subprocess
+import pprint
 import os.path
 
 from optparse import OptionParser
+
+#pylint: disable=F0401
+try:
+    import simplejson as json
+except ImportError:
+    import json
+#pylint: enable=F0401
 
 from Host.Common import OS
 
@@ -28,11 +36,7 @@ ISCC = 'c:/program files/Inno Setup 5/ISCC.exe'
 RESOURCE_DIR = ('s:/CRDS/SoftwareReleases/G2000Projects/G2000_PrepareInstaller/'
                 'Resources')
 
-# XXX These can be removed when the configuration file directories are
-# merged into the main repository. ASSUMES v1.4 and beyond.
-CONFIGS = ['4SpeciesFlight_CFKBDS', '4Species_CFKADS', 'AEDS', 'BFADS', 'CFADS',
-           'CFDDS', 'CFEDS', 'CFIDS', 'CFJDS', 'CHADS', 'CKADS', 'FCDS', 'FDDS',
-           'Flux', 'HIDS', 'iCO2', 'iH2O', 'MADS', 'SuperFlux']
+CONFIGS = {}
 CONFIG_BASE = 's:/CrdsRepositoryNew/trunk/G2000/Config'
 COMMON_CONFIG = os.path.join(CONFIG_BASE, 'CommonConfig')
 VERSION_TEMPLATE = ("[Version]\\nrevno = {revno}\\ndate = {date}\\n"
@@ -43,6 +47,19 @@ def makeExe(opts):
     """
     Make a HostExe release from a clean checkout.
     """
+
+    pprint.pprint(opts)
+
+    # Load configuration mapping metadata
+    if not os.path.isfile('products.json'):
+        print 'products.json is missing!'
+        sys.exit(1)
+
+    with open('products.json', 'r') as prods:
+        CONFIGS.update(json.load(prods))
+
+    pprint.pprint(CONFIGS)
+
     _branchFromRepo(REPO)
     _generateRepoVersion(REPO)
     _buildExes(REPO)
@@ -162,6 +179,7 @@ def _makeLocalConfig():
                              stdout=fp).wait()
 
         for c in CONFIGS:
+            print "Getting configs for '%s'" % c
             os.mkdir(c)
             with OS.chdir(c):
                 subprocess.Popen(['bzr.exe', 'branch',
@@ -198,7 +216,8 @@ def _compileInstallers(ver):
                               "/dhostVersion=%s" % ver,
                               "/dresourceDir=%s" % RESOURCE_DIR,
                               "/dsandboxDir=%s" % SANDBOX_DIR,
-                              "setup_%s.iss" % c])
+                              "/dcommonName=%s" % CONFIGS[c],
+                              "setup_%s_%s.iss" % (c, CONFIGS[c])])
         p.wait()
 
         if p.returncode != 0:
