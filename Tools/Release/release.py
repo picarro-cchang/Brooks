@@ -92,6 +92,7 @@ def _branchFromRepo(name):
         shutil.rmtree(SANDBOX_DIR)
 
     os.makedirs(SANDBOX_DIR)
+    os.makedirs(os.path.join(SANDBOX_DIR, 'Installers'))
 
     with OS.chdir(SANDBOX_DIR):
         subprocess.Popen(['bzr.exe', 'branch',
@@ -210,14 +211,21 @@ def _compileInstallers(ver):
     """
 
     for c in CONFIGS:
-        # Preprocess config name string
         print "Compiling '%s'..." % c
-        p = subprocess.Popen([ISCC, "/dinstallerType=%s" % c,
-                              "/dhostVersion=%s" % ver,
-                              "/dresourceDir=%s" % RESOURCE_DIR,
-                              "/dsandboxDir=%s" % SANDBOX_DIR,
-                              "/dcommonName=%s" % CONFIGS[c],
-                              "setup_%s_%s.iss" % (c, CONFIGS[c])])
+
+        args = [ISCC, "/dinstallerType=%s" % c,
+                "/dhostVersion=%s" % ver,
+                "/dresourceDir=%s" % RESOURCE_DIR,
+                "/dsandboxDir=%s" % SANDBOX_DIR,
+                "/dcommonName=%s" % CONFIGS[c],
+                "/v9",
+                "/O%s" % os.path.abspath(os.path.join(SANDBOX_DIR,
+                                                        'Installers')),
+                "InstallerScripts\\setup_%s_%s.iss" % (c, CONFIGS[c])]
+
+        print subprocess.list2cmdline(args)
+
+        p = subprocess.Popen(args)
         p.wait()
 
         if p.returncode != 0:
