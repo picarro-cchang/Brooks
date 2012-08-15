@@ -1,3 +1,4 @@
+import xml.etree.ElementTree
 import xml.etree.cElementTree as ET
 import functools
 

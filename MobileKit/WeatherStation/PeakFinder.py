@@ -6,7 +6,11 @@ from optparse import OptionParser
 import time
 import datetime
 import traceback
-from Host.Common.namedtuple import namedtuple
+
+try:
+    from collections import namedtuple
+except:
+    from Host.Common.namedtuple import namedtuple
 
 import urllib2
 import urllib
@@ -332,14 +336,11 @@ class PeakFinder(object):
             
         if lastlog:
             lastPos = 0
-            rtn_data = None
-            
             waitForRetryCtr = 0
             waitForRetry = True
             while True:
-                #params = {"alog": lastlog, "startPos": lastPos, "limit": 20}
-                #postparms = {'data': json.dumps(params)}
-                #getAnalyzerDatLogUrl = self.url.replace("getData", "getAnalyzerDatLog")
+                rtn_data = None
+                
                 try:
                     qry_with_ticket = '%s?qry=byPos&alog=%s&startPos=%s&limit=20' % (self.anzlog_url.replace("<TICKET>", self.ticket), lastlog, lastPos)
                     if self.debug == True:
@@ -365,9 +366,17 @@ class PeakFinder(object):
                             if self.logname == lastlog:
                                 print "\r\nLog complete. Closing log stream\r\n"
                                 return
+
+                        # We didn't find a log, so wait 5 seconds, and then see if there is a new lastlog
+                        time.sleep(5)
+                        newlastlog = self.getLastLog()
+                        if not lastlog == newlastlog:
+                            print "\r\nClosing log stream\r\n"
+                            return
                         
                         if self.debug == True:
                             print 'EXCEPTION in PeakFinder - followLastUserLogDb().\n%s\n' % err_str
+                            
                         pass
                     
                 except Exception, e:
@@ -389,6 +398,7 @@ class PeakFinder(object):
                                 
                             yield doc
                     else:
+                        # no dbdata, so wait 5 seconds, then check for new last log
                         time.sleep(5)
                         newlastlog = self.getLastLog()
                         if not lastlog == newlastlog:
@@ -773,7 +783,7 @@ class PeakFinder(object):
             for peak in peaks: yield peak
 
     def getTicket(self):
-        self.ticket = None
+        self.ticket = "NONE"
         ticket = None
         qry = "issueTicket"
         sys = self.psys
@@ -1061,3 +1071,4 @@ def main(argv=None):
 
 if __name__ == "__main__":
     sys.exit(main())
+ 

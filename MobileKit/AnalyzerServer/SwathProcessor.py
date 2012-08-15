@@ -192,6 +192,7 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams,debugFp = None
                 dstd = NOT_A_NUMBER
             mask = d["ValveMask"]
             instStatus = int(d["INST_STATUS"])
+            result["INST_STATUS"].append(instStatus)
             auxStatus = instStatus >> sis.INSTMGR_AUX_STATUS_SHIFT
             instStatus = instStatus & sis.INSTMGR_STATUS_MASK
             weatherCode = auxStatus & sis.INSTMGR_AUX_STATUS_WEATHER_MASK
