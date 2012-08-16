@@ -286,6 +286,10 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
             ("templates", glob.glob(r'Utilities\BackpackServer\templates\*.*')),
             ("static", glob.glob(r'..\MobileKit\AnalyzerServer\static\*.*')),
             ("templates", glob.glob(r'..\MobileKit\AnalyzerServer\templates\*.*')),
+            (r"static\images", glob.glob(r'..\MobileKit\AnalyzerServer\static\images\*.*')),
+            (r"static\images\icons", glob.glob(r'..\MobileKit\AnalyzerServer\static\images\icons\*.*')),
+            (r"static\css", glob.glob(r'..\MobileKit\AnalyzerServer\static\css\*.*')),
+            (r"static\sound", glob.glob(r'..\MobileKit\AnalyzerServer\static\sound\*.*')),
             ]
 for d in cypressDriverDirs:
     data_files.append(("Images/%s"%d, glob.glob("../Firmware/CypressUSB/Drivers/" + "%s/*.*" %d)))

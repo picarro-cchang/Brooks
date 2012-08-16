@@ -612,7 +612,7 @@ class PeakAnalyzer(object):
         
         for dtuple in source:
             if dtuple is None: continue
-            if 'HP_Delta_iCH4_Raw' not in dtuple._fields: break # Abort if there are no data
+            if 'HP_Delta_iCH4_Raw' not in dtuple._fields: continue # Swallow data if there is no delta
             collectingNow = collecting(dtuple.ValveMask)
             if not collectingNow:
                 tempStore.append(dtuple)

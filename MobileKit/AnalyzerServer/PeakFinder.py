@@ -870,7 +870,7 @@ class PeakFinder(object):
                     alignedData = self.analyzerData(source)
                     
                 # Filter by spectrumID for isomethane analyzer
-                selectedData = ((data.DISTANCE,data) for data in alignedData if (data is not None) and ('species' not in data._fields or int(data.species)==150))
+                selectedData = ((data.DISTANCE,data) for data in alignedData if (data is not None) and ('species' not in data._fields or int(data.species) in [2,150]))
                     
                 intData = (data for dist,data in interpolator(selectedData,dx))
                 peakData = self.spaceScale(intData,dx,t0,nlevels,factor)
