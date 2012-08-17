@@ -228,7 +228,6 @@ class PeakAnalyzer(object):
     #######################################################################
     # Generators for getting data from files or the database
     #######################################################################
-            
     def sourceFromFile(self,fname):
         # Generate lines from a specified user log file. Raise StopIteration at end of the file
         fp = file(fname,'rb')
@@ -244,14 +243,17 @@ class PeakAnalyzer(object):
         #  the live file.
         fp = file(fname,'rb')
         print "\r\nOpening source stream %s\r\n" % fname
+        line = ""
         counter = 0
         while True:
-            line = fp.readline()
+            line += fp.readline()
+            # Note that if the file ends with an incomplete line, fp.readline() will return a
+            #  string with no terminating newline. We must NOT yield this incomplete line to
+            #  avoid causing problems at the higher levels.
             if not line:
                 counter += 1
                 if counter == 10:
                     try:
-                        # Get last file
                         if fname == os.path.join(self.file_path):
                             fp.close()
                             print "\r\nClosing source stream %s\r\n" % self.fname
@@ -270,7 +272,10 @@ class PeakAnalyzer(object):
                 if self.debug: sys.stderr.write('-')
                 continue
             if self.debug: sys.stderr.write('.')
-            yield line
+            # Only yield complete lines, otherwise loop for more characters
+            if line.endswith("\n"):
+                yield line
+                line = ""
 
     def followLastUserLogDb(self):
         aname = self.analyzerId

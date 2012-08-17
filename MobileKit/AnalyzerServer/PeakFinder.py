@@ -276,7 +276,6 @@ class PeakFinder(object):
         if self.factor == None:
             self.factor = 1.1
 
-        self.noWait = 'nowait' in kwargs
         self.logtype = "peaks"
         self.last_peakname = None
         self.sockettimeout = 10
@@ -300,9 +299,13 @@ class PeakFinder(object):
         #  the live file.
         fp = file(fname,'rb')
         print "\r\nOpening source stream %s\r\n" % fname
+        line = ""
         counter = 0
         while True:
-            line = fp.readline()
+            line += fp.readline()
+            # Note that if the file ends with an incomplete line, fp.readline() will return a
+            #  string with no terminating newline. We must NOT yield this incomplete line to
+            #  avoid causing problems at the higher levels.
             if not line:
                 counter += 1
                 if counter == 10:
@@ -325,7 +328,10 @@ class PeakFinder(object):
                 if self.debug: sys.stderr.write('-')
                 continue
             if self.debug: sys.stderr.write('.')
-            yield line
+            # Only yield complete lines, otherwise loop for more characters
+            if line.endswith("\n"):
+                yield line
+                line = ""
 
     def followLastUserLogDb(self):
         aname = self.analyzerId
@@ -863,7 +869,7 @@ class PeakFinder(object):
                     source = self.followLastUserLogDb()
                     alignedData = self.analyzerDataDb(source)
                 else:
-                    if self.noWait:
+                    if self.file_path:
                         source = self.sourceFromFile(fname)
                     else:
                         source = self.followLastUserFile(fname)
@@ -930,7 +936,7 @@ class PeakFinder(object):
                 if self.logname:
                     break
                 
-                if self.noWait: break
+                if self.file_path: break
 
 def main(argv=None):
     if argv is None:
