@@ -2,693 +2,756 @@
 DatEchoP3 - Listen to a path of .dat (type) files on the local system,
 and echo new rows to the P3 archive
 '''
+from __future__ import with_statement
+
 import sys
-from optparse import OptionParser
+import re
 import traceback
 import fnmatch
 import os
 import time
-from collections import deque
 import urllib2
 import urllib
 import math
 import pprint
-
+import threading
 import socket
 import datetime
+import cPickle
+import optparse
 
+#pylint: disable=F0401
 try:
     import simplejson as json
-except:
+except ImportError:
     import json
-
-from ctypes import Structure, windll, sizeof
-from ctypes import POINTER, byref
-from ctypes import c_ulong, c_uint, c_ubyte, c_char
-import threading
+#pylint: enable=F0401
 
 from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import RPC_PORT_ECHO_P3_BASE, RPC_PORT_ECHO_P3_MAX
+from Host.Common import SharedTypes
+from Host.Common import Win32
 
-NaN = 1e1000/1e1000
 
-def genLatestFiles(baseDir,pattern):
-    # Generate files in baseDir and its subdirectories which match pattern
+SECONDS_IN_DAY = 86400.0
+
+
+def genLatestFiles(baseDir, pattern):
+    """
+    A generator that returns files matching 'pattern' in the root
+    'baseDir' in reverse chronological order (newest to oldest).
+    """
+
     for dirPath, dirNames, fileNames in os.walk(baseDir):
         dirNames.sort(reverse=True)
         fileNames.sort(reverse=True)
         for name in fileNames:
-            if fnmatch.fnmatch(name,pattern):
-                yield os.path.join(dirPath,name)
+            if fnmatch.fnmatch(name, pattern):
+                yield os.path.join(dirPath, name)
+
 
 class DataEchoP3(object):
-    def __init__(self, *args, **kwargs):
-        '''
-        Constructor
-        '''
-        self.debug = None
-        if 'debug' in kwargs:
-            self.debug = kwargs['debug']
-        if not self.debug:
-            self.debug = None
+    DATLOG_RX = re.compile(r'.*-(?P<year>\d{4})(?P<month>\d{2})'
+                           r'(?P<day>\d{2})-(?P<hour>\d{2})'
+                           r'(?P<minute>\d{2})(?P<second>\d{2})Z-.*')
 
-        self.listen_path = None
-        if 'listen_path' in kwargs:
-            self.listen_path = kwargs['listen_path']
+    RANGE_QRY = "%s?qry=byEpoch&anz=%s&startEtm=%s&stopEtm=%s&returnLastRow=1"
 
-        self.file_path = None
-        if 'file_path' in kwargs:
-            self.file_path = kwargs['file_path']
+    # The number of blank lines returned before we check to see if the
+    # current .dat file is still alive or not.
+    DEAD_LINE_MAX = 10
 
-        if not self.listen_path:
-            if not self.file_path:
-                self.listen_path = 'C:/UserData/AnalyzerServer/*_Minimal.dat'
+    def __init__(self, **kwargs):
+        self.listenPath = kwargs['listenPath']
+        self.urls = {
+            'ip': kwargs['ipUrl'],
+            'push': kwargs['pushUrl'],
+            'ticket': kwargs['ticketUrl'],
+            'logMeta': kwargs['logMetaUrl']
+            }
 
-        self.ip_url = None
-        #self.ip_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzMeta/'
-        if 'ip_url' in kwargs:
-            self.ip_url = kwargs['ip_url']
+        self.timeout = kwargs['timeout']
+        self.dataType = kwargs['dataType']
+        self.identity = kwargs['identity']
+        self.authenticationSys = kwargs['authenticationSys']
+        self.lines = kwargs['lines']
+        self.historyRangeDays = kwargs['historyRangeDays']
+        self.driverPort = kwargs['driverPort']
 
-        self.push_url = None
-        if 'push_url' in kwargs:
-            self.push_url = kwargs['push_url']
-        if not self.push_url:
-            self.push_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
-            #self.push_url = 'http://localhost:8080/rest/datalogAdd/'
-
-        self.ticket_url = None
-        if 'ticket_url' in kwargs:
-            self.ticket_url = kwargs['ticket_url']
-        if not self.ticket_url:
-            self.ticket_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
-
-        self.timeout = None
-        if 'timeout' in kwargs:
-            self.timeout = int(kwargs['timeout'])
-        if not self.timeout:
-            self.timeout = 2
-
-        self.replace = None
-        if 'replace' in kwargs:
-            self.replace = kwargs['replace']
-
-        self.logtype = None
-        if 'logtype' in kwargs:
-            self.logtype = kwargs['logtype']
-        if not self.logtype:
-            self.logtype = "dat"
-
-        self.identity = None
-        if 'identity' in kwargs:
-            self.identity = kwargs['identity']
-
-        self.psys = None
-        if 'psys' in kwargs:
-            self.psys = kwargs['psys']
-
-        self.lines = None
-        if 'lines' in kwargs:
-            self.lines = kwargs['lines']
-        if not self.lines:
-            self.lines = 1000
-
-        self.sleep_seconds = None
-        if 'sleep_seconds' in kwargs:
-            self.sleep_seconds = float(kwargs['sleep_seconds'])
-        if not self.sleep_seconds:
-            self.sleep_seconds = 30.0
-
-        self._last_fname = None
-        self.fname = None
-        self.first_pass_complete = None
         self.ticket = 'None'
-        self.startTime = datetime.datetime.now()
+        self.ipRegistered = False
+        self.docs = []
 
-    def getTicket(self):
+    def _getTicket(self):
+        """
+        Request a new ticket from P3.
+        """
+
         self.ticket = 'None'
-        ticket = None
-        qry = "issueTicket"
-        sys = self.psys
-        identity = self.identity
-        rprocs = '["AnzMeta:data", "AnzLog:data"]'
 
-        params = {"qry": qry, "sys": sys, "identity": identity, "rprocs": rprocs}
+        rprocs = ('["AnzMeta:data", "AnzLog:data", "AnzLogMeta:byEpoch"]')
+
+        params = {'qry': 'issueTicket',
+                  'sys': self.authenticationSys,
+                  'identity': self.identity,
+                  'rprocs': rprocs}
+
         try:
-            resp = urllib2.urlopen(self.ticket_url, data=urllib.urlencode(params))
-            rtndata_str = resp.read()
-            rtndata = json.loads(rtndata_str)
-            if "ticket" in rtndata:
-                ticket = rtndata["ticket"]
+            resp = urllib2.urlopen(self.urls['ticket'],
+                                   data=urllib.urlencode(params))
+            data = json.loads(resp.read())
 
-        except urllib2.HTTPError, e:
-            err_str = e.read()
-            print '\nissueTicket failed \n%s\n' % err_str
+            self.ticket = data.get('ticket', 'None')
+            print "New ticket: %s" % self.ticket
 
-        except Exception, e:
-            print '\nissueTicket failed \n%s\n' % e
+        except urllib2.HTTPError, ex:
+            print '\nissueTicket failed \n%s\n' % ex
 
-        if ticket:
-            self.ticket = ticket;
-            print "new ticket: ", self.ticket
-
+        except Exception, ex:
+            print '\nissueTicket failed \n%s\n' % ex
 
     def run(self):
-        '''
-        '''
-
-        if not self.identity:
-            print "Cannot proceed. No Identity for authentication"
-            sys.exit()
+        """
+        Main process to push data to P3.
+        """
 
         if not self.ticket:
-            self.ticket = "abcdefg"
+            self.ticket = 'Invalid'
 
-        ip_register_good = True
-        def pushIP():
-            aname = self.getLocalAnalyzerId()
-            if self.psys == None:
-                self.psys = aname
+        self.ipRegistered = self._registerLocalIp()
 
-            if self.ip_url:
-                for addr in self.getIPAddresses():
-                    if addr == "0.0.0.0":
-                        continue
-
-
-                    doc_data = []
-                    datarow = {}
-                    datarow["ANALYZER"] = aname
-                    datarow["PRIVATE_IP"] = "%s:5000" % addr
-                    doc_data.append(datarow)
-                    postparms = {'data': json.dumps(doc_data)}
-
-                    continueRequest = True;
-                    continueRequestCtr = 0;
-                    while continueRequest:
-                        continueRequest = None
-
-                        try:
-                            # NOTE: socket only required to set timeout parameter for the urlopen()
-                            # In Python26 and beyond we can use the timeout parameter in the urlopen()
-                            analyzerIpRegister = self.ip_url.replace("<TICKET>", self.ticket)
-                            print "analyzerIpRegister: ", analyzerIpRegister
-                            socket.setdefaulttimeout(self.timeout)
-                            resp = urllib2.urlopen(analyzerIpRegister, data=urllib.urlencode(postparms))
-                            ip_register_good = True
-                            print "Registered new ip. postparms: ", postparms
-                            break
-
-                        except urllib2.HTTPError, e:
-                            err_str = e.read()
-                            if "invalid ticket" in err_str:
-                                if continueRequestCtr < 10:
-                                    print "We Have an invalid or expired ticket"
-                                    continueRequest = True
-                                    continueRequestCtr += 1
-                                    self.getTicket()
-
-                            else:
-                                ip_register_good = False
-                                print '\nanalyzerIpRegister failed \n%s\n' % err_str
-
-                            break
-
-                        except Exception, e:
-                            ip_register_good = False
-                            print '\nanalyzerIpRegister failed \n%s\n' % e
-                            pass
-
-        ecounter = 0
-        fcounter = 0
-        wcounter = 0
         while True:
-            # Getting source
-            if self.file_path:
-                if self.fname == os.path.join(self.file_path):
-                    print "processing complete for file_path: %s" % self.fname
+            end = time.time()
+            assert self.historyRangeDays > 0.0
+            begin = end - (self.historyRangeDays * SECONDS_IN_DAY)
+            filesToCheck = self._getFilesInRange(begin, end)
+
+            nextFile, lastRow = self._findIncomplete(filesToCheck)
+
+            while nextFile is not None:
+                print "Pushing partial file (lastRow = %s) '%s'." % (lastRow,
+                                                                     nextFile)
+                path, fname = os.path.split(nextFile)
+                self._processFile(path, fname, lastRow)
+                # Update time limits again?
+                filesToCheck = self._getFilesInRange(begin, end)
+                nextFile, lastRow = self._findIncomplete(filesToCheck)
+
+            print 'Done with partial files...'
+
+            # Don't use the earliest file on the server since it could
+            # still be "later" than the earliest time we are
+            # interested in. If there was a file the server didn't
+            # know about and it came before the earliest file reported
+            # to us, we would miss it.
+            earlyServerTime = datetime.datetime.utcfromtimestamp(begin)
+
+            localPaths = {}
+
+            for fullPath in genLatestFiles(*os.path.split(self.listenPath)):
+                path, fname = os.path.split(fullPath)
+
+                print "Next latest file: %s, %s" % (path, fname)
+
+                group = self.DATLOG_RX.search(fname).groupdict()
+                assert 'year' in group
+                assert 'month' in group
+                assert 'day' in group
+                assert 'hour' in group
+                assert 'minute' in group
+                assert 'second' in group
+
+                group = dict((k, int(group[k])) for k in group)
+
+                fTime = datetime.datetime(group['year'], group['month'],
+                                          group['day'], group['hour'],
+                                          group['minute'], group['second'])
+
+                if fTime < earlyServerTime:
+                    print "File time (%s) < earliest server time (%s)" % (
+                        fTime, earlyServerTime)
                     break
-                else:
-                    self.fname = os.path.join(self.file_path)
+
+                localPaths[fname] = path
+
+            # Compute the set of files we know about locally but that
+            # the server does not.
+            localFiles = set([k for k in localPaths])
+            serverFiles = set([f[0] for f in filesToCheck])
+
+            serverUnknowns = localFiles - serverFiles
+
+            pprint.pprint(serverUnknowns)
+
+            nextFile = None
+
+            if len(serverUnknowns) == 1:
+                print 'Found a single unknown file; could be live.'
+                nextFile = serverUnknowns.pop()
+
+            elif len(serverUnknowns) > 1:
+                print("Found %d files locally that are not known to "
+                      "the server." % len(serverUnknowns))
+                # We must process the oldest file first. In
+                # previous versions we used whatever the next file
+                # was that set.pop() returned. The problem with
+                # this is that once you hit the "listen" file you
+                # don't get a chance to go through the missing
+                # file list again until either DatEchoP3 restarts
+                # or the listen file is completed and a new one
+                # opens.
+                nextFile = sorted(serverUnknowns)[0]
 
             else:
-                try:
-                    self.fname = genLatestFiles(*os.path.split(self.listen_path)).next()
-                except:
-                    ecounter += 1
-                    time.sleep(self.sleep_seconds)
-                    self.fname = None
+                print 'No unknown files.'
 
-                    if ecounter > 200000:
-                        print "listen_path: %s" % self.listen_path
-                        print "No files to process: Exiting DataEchoP3.run()"
-                        break
-                    else:
-                        print "No files to process: sleeping for %s seconds" % self.sleep_seconds
+            if nextFile is not None:
+                self._processFile(localPaths[nextFile], nextFile)
 
-            # if we have a file, make sure we have not previously processed it
-            ##  if we have proccessed it, sleep for a wile, and wait for a new file
-            ##  if we have slept too many times, exit.
-            pushIP()
-            if self.fname:
-                if self.fname == self._last_fname:
-                    wcounter += 1
-                    time.sleep(1.0)
+    def _processFile(self, path, fname, lastRow=None):
+        """
+        Parse the specified file and send its data to P3. If lastRow is set,
+        .dat file playback will resume from that location.
+        """
 
-                    if wcounter > 10:
-                        print "No more files to process: Exiting DataEchoP3.run()"
-                        break
-                else:
-                    self._last_fname = self.fname
-                    first_row = True
-                    headers = None
-                    rctr = 0
-                    lctr = 0
-                    ipctr = 0
-                    nsec = time.time()
-                    self._docs = []
-                    self._lines = []
-                    for line in self.iterate_file():
-                        if first_row:
-                            first_row = None
-                            headers = line.split()
-                            ##print "line", line
+        headers = None
 
-                            ## We no longer push the file line
-                            #self.pushToP3(self.fname, None, [(line, 0)], True, None)
-                            continue
+        assert len(self.docs) is 0
 
-                        lctr += 1
-                        ipctr += 1
-                        if headers:
-                            vals = line.split()
-                            if not len(vals) == len(headers):
-                                print '\nLEN ERROR', len(vals), len(headers)
-                                print line
-                                print
-                                continue
+        self.docs = []
 
-                            doc = {}
-                            for col, val in zip(headers, vals):
-                                try:
-                                    doc[col] = float(val)
-                                    #JSON does not have NaN as part of the standard
-                                    # (even though JavaScrip does)
-                                    # so send a text "NaN" and the server will convert
-                                    try:
-                                        if math.isnan(doc[col]):
-                                            doc[col] = "NaN"
-                                    except:
-                                        #just skip on isnan error
-                                        skip = 1
+        ipPushWaitIdx = 0
+        firstRow = True
 
-                                except:
-                                    #JSON does not have NaN as part of the standard
-                                    # (even though JavaScrip does)
-                                    # so send a text "NaN" and the server will convert
-                                    doc[col] = "NaN"
+        if lastRow is not None:
+            rowIdx = lastRow
+        else:
+            rowIdx = 0
 
-                            rctr += 1
-                            doc['row'] = rctr
+        for line in self._datFile(path, fname, lastRow):
+            vals = line.split()
 
-                            self._lines.append((line, rctr))
-                            self._docs.append(doc)
+            ipPushWaitIdx += 1
 
-                            # attempt to smooth the transmission by only
-                            # sending to server every .8 seconds OR ever 100 lines
-                            tsec = time.time() - nsec
-                            if (lctr > self.lines or tsec >= .7):
-                                lctr = 0
-                                self.pushToP3(self.fname, self._docs, self._lines, None, rctr)
-                                self._docs = []
-                                self._lines = []
-                                nsec = time.time()
-
-                                if (ipctr > 5000 or not ip_register_good):
-                                    pushIP()
-                                    ipctr = 0
-
-
-        self.endTime = datetime.datetime.now()
-        print "start: ", self.startTime
-        print "end: ", self.endTime
-
-        return fcounter
-
-    def iterate_file(self):
-        '''
-        a generator which yields rows (lines) from the
-        '''
-        fp = file(self.fname,'rb')
-        print "\r\nOpening source stream %s\r\n" % self.fname
-        counter = 0
-        while True:
-            line = fp.readline()
-            sys.stderr.write('.')
-            if not line:
-
-                # clear the remaining data
-                if self._docs or self._lines:
-                    self.pushToP3(self.fname, self._docs, self._lines, None, None)
-                    self._docs = []
-                    self._lines = []
-
-                counter += 1
-                if counter == 10:
-                    try:    # Stop iteration if we are not the last file
-                        if self.fname == os.path.join(self.file_path):
-                            fp.close()
-                            print "\r\nClosing source stream %s\r\n" % self.fname
-                            return
-
-                        if self.fname != genLatestFiles(*os.path.split(self.listen_path)).next():
-                            fp.close()
-                            print "\r\nClosing source stream %s\r\n" % self.fname
-                            return
-                    except:
-                        pass
-                    counter = 0
-                time.sleep(0.1)
+            if firstRow:
+                print 'Got headers'
+                firstRow = False
+                headers = vals
                 continue
 
-            yield line
+            assert headers is not None
 
-    def pushToP3(self, path, docs=None, flat_rows=None, replace=None, last_pos=None):
-        err_rtn_str = 'ERROR: missing data:'
-        rtn = "OK"
-        fname = os.path.basename(path)
-        if docs:
-            replace_the_log = 0
-            if (not self.first_pass_complete):
-                if (self.replace == True):
-                    replace_the_log = 1
+            if len(vals) != len(headers):
+                print "Malformed line: # vals = %s, expected = %s" % (
+                    len(vals), len(headers))
+                continue
 
-            params = [{"logname": fname, "replace": replace_the_log, "logtype": self.logtype, "logdata": docs}]
-            postparms = {'data': json.dumps(params)}
+            doc = {}
 
-            tctr = 0
-            waitForRetryCtr = 0
-            waitForRetry = True
-            while True:
-
+            for col, val in zip(headers, vals):
                 try:
-                    # NOTE: socket only required to set timeout parameter for the urlopen()
-                    # In Python26 and beyond we can use the timeout parameter in the urlopen()
-                    socket.setdefaulttimeout(self.timeout)
-                    myDat = urllib.urlencode(postparms)
-                    push_with_ticket = self.push_url.replace("<TICKET>", self.ticket)
-                    resp = urllib2.urlopen(push_with_ticket, data=myDat)
-                    rtn_data = resp.read()
-                    ##print rtn_data
-                    if err_rtn_str in rtn_data:
-                        rslt = json.loads(rtn_data)
-                        expect_ctr = rslt['result'].replace(err_rtn_str, "").strip()
-                        if last_pos:
-                            missing_rtn = self.pushMissingRows(path, int(expect_ctr), last_pos)
-                        else:
-                            break
-                    else:
-                        self.first_pass_complete = True
-                        break
+                    doc[col] = float(val)
 
-                except urllib2.HTTPError, e:
-                    err_str = e.read()
-                    if "invalid ticket" in err_str:
-                        print "We Have an invalid or expired ticket"
-                        self.getTicket()
-                        waitForRetryCtr += 1
-                        if waitForRetryCtr < 100:
-                            waitForRetry = None
+                    # In Python > v2.5 float(x) will understand
+                    # strings of the form returned by the underlying
+                    # Windows CRT: -1.#IND, etc. This means that
+                    # doc[col] will be set to an actual float NaN
+                    # representation, but JS won't understand it. So
+                    # we need to attempt to use the isnan() method if
+                    # it exists. If it doesn't exist, that means we
+                    # are running < v2.5 and the 'NaN' string is
+                    # created by the original ValueError on float().
+                    try:
+                        #pylint: disable=E1101
+                        if math.isnan(doc[col]):
+                            doc[col] = 'NaN'
+                        #pylint: enable=E1101
 
-                    else:
-                        print 'Ticket EXCEPTION in pushToP3, and could not get valid ticket.\n%s\n' % err_str
+                    except Exception:
                         pass
 
-                except Exception, e:
-                    print 'EXCEPTION in pushToP3\n%s\n' % e
-                    # pprint.pprint(params)
-                    print traceback.format_exc()
+                except ValueError:
+                    # Treat these as NaNs. Further, JS is happy to
+                    # convert "NaN" into the appropriate internal
+                    # representation.
+                    doc[col] = 'NaN'
 
-                sys.stderr.write('-')
-                tctr += 1
-                if waitForRetry:
-                    time.sleep(self.timeout)
+            rowIdx += 1
+            doc['row'] = rowIdx
 
-                waitForRetry = True
+            self.docs.append(doc)
 
-            ## we want to keep trying forever.  This is intentional.
-            '''
-            if tctr > 100:
-                print 'r\nError trying to send data from file %s to url: %s\r\n' % (self.fname, self.push_url)
-                rtn = "ERROR"
-                break
-            '''
+            # Throttle how often we push data to P3
+            if len(self.docs) == self.lines:
+                print "# rows = %d, rowIdx = %d, pushing to P3." % (
+                    len(self.docs), rowIdx)
 
-        return rtn
+                self.pushToP3(fname)
 
-    def pushMissingRows(self, path, pos, last_pos):
-        fp = file(self.fname,'rb')
-        fp.seek(pos,0)
-        line = fp.readline()
+                self.docs = []
+
+                if ipPushWaitIdx > 5000 or not self.ipRegistered:
+                    # Re-register in case local IP has changed
+                    # recently.
+                    self.ipRegistered = self._registerLocalIp()
+                    ipPushWaitIdx = 0
+
+    def _registerLocalIp(self):
+        """
+        Identify ourself to P3 and register the Analyzer's local IP address.
+        """
+
+        analyzerId = self._getLocalAnalyzerId()
+        assert analyzerId is not None
+
+        if analyzerId == '':
+            print "No analyzer Id available. Skipping local IP registration."
+            return
+
+        ipRegistered = False
+
+        if self.urls['ip'] is not None:
+            # Only want to push IPs if we are live on the Analyzer
+            assert self.listenPath is not None
+
+            datarow = {'ANALYZER': analyzerId}
+
+            for addr in self._getIPAddresses():
+                if addr != '0.0.0.0':
+                    datarow['PRIVATE_IP'] = "%s:5000" % addr
+                    break
+
+            if 'PRIVATE_IP' not in datarow:
+                print ('Unable to find an IP address for this analyzer. '
+                       'Skipping IP address registration.')
+                return
+
+            postParams = {'data': json.dumps([datarow])}
+
+            # Try to be robust in the face of possible connectivity issues.
+            tryAgain = True
+            ticketAttempts = 0
+
+            while not ipRegistered and tryAgain:
+                tryAgain = False
+
+                try:
+                    # Python 2.5 requires that the timeout be set this
+                    # way. In Python 2.6 and higher we can use an
+                    # argument to urllib2.urlopen().
+                    socket.setdefaulttimeout(self.timeout)
+                    url = self.urls['ip'].replace('<TICKET>', self.ticket)
+                    urllib2.urlopen(url, data=urllib.urlencode(postParams))
+                    ipRegistered = True
+
+                except urllib2.HTTPError, ex:
+                    msg = ex.read()
+
+                    if 'invalid ticket' in msg:
+                        print "Invalid/expired ticket (code = %s)" % ex.code
+                        ticketAttempts += 1
+
+                        if ticketAttempts < 10:
+                            tryAgain = True
+
+                        self._getTicket()
+                    else:
+                        # Otherwise swallow this exception and we just won't
+                        # have the IP pushed.
+                        print "HTTP exception (code = %s): \n%s\n" % (ex.code,
+                                                                      msg)
+
+                except Exception:
+                    print "Unknown error:"
+                    traceback.print_exc()
+
+        return ipRegistered
+
+    def _getFilesInRange(self, begin, end):
+        """
+        Get the files known to P3 in the range (begin, end). Returns a
+        list of (filename, last known row) tuples.
+        """
+
+        analyzerId = self._getLocalAnalyzerId()
+        assert analyzerId is not None
+
+        url = self.RANGE_QRY % (self.urls['logMeta'].replace('<TICKET>',
+                                                        self.ticket),
+                                analyzerId, begin, end)
+
+        recentFiles = None
+        receivedFiles = False
+        tryAgain = True
+        ticketAttempts = 0
+
+        while not receivedFiles and tryAgain:
+            tryAgain = False
+
+            try:
+                resp = urllib2.urlopen(url)
+                recentFiles = json.loads(resp.read())
+
+                receivedFiles = True
+
+            except urllib2.HTTPError, ex:
+                msg = ex.read()
+
+                if 'invalid ticket' in msg:
+                    print "Invalid/expired ticket (errno = %s)" % ex.code
+                    ticketAttempts += 1
+
+                    if ticketAttempts < 10:
+                        tryAgain = True
+
+                    self._getTicket()
+
+                elif ex.code == 404:
+                    print "Unknown analyzer '%s' (errno = %s)" % (analyzerId,
+                                                                  ex.code)
+
+                else:
+                    print "HTTP exception (errno = %s): \n%s\n" % (ex.code,
+                                                                   msg)
+
+            except Exception:
+                # Eat this exception
+                print 'Unknown error:'
+                print traceback.format_exc()
+
+        if recentFiles is None:
+            print ('Unable to retrieve results for time range: '
+                   "'%s' - '%s'" % (time.asctime(time.gmtime(begin)),
+                                    time.asctime(time.gmtime(end))))
+            return []
+
+        recentFileTuples = []
+        for doc in recentFiles:
+            if 'lastRow' not in doc:
+                # Assume no rows unfortunately.
+                print "No 'lastRow' field in '%s'" % doc['LOGNAME']
+                doc.update({'lastRow': '0'})
+
+            assert 'lastRow' in doc
+            recentFileTuples.append((doc['LOGNAME'], doc['lastRow']))
+
+        return recentFileTuples
+
+    def _findIncomplete(self, files):
+        """
+        Search for any incomplete files and return the next one or None if all
+        reported files are caught up.
+        """
+
+        assert self.listenPath is not None
+
+        datRoot, _ = os.path.split(self.listenPath)
+
+        for fname, row in files:
+            print "Checking '%s' for rows beyond %s..." % (fname, row)
+            group = self.DATLOG_RX.search(fname).groupdict()
+            assert 'year' in group
+            assert 'month' in group
+            assert 'day' in group
+
+            group = dict((k, int(group[k])) for k in group)
+
+            path = os.path.join(datRoot, "%d" % group['year'],
+                                "%02d" % group['month'], "%02d" % group['day'],
+                                fname)
+
+            if not os.path.isfile(path):
+                print "Missing local file: %s" % path
+                continue
+
+            rowCache = "%s.row" % path
+
+            lastRow = 0
+
+            if os.path.isfile(rowCache):
+                print '...found row cache. Using it.'
+                with open(rowCache, 'rb') as fp:
+                    lastRow = cPickle.load(fp)
+
+                # If the row cache was generated while the file was
+                # incomplete, we need to recalculate it.
+                if lastRow < int(row):
+                    print '...rescanning file to generate cache.'
+                    lastRow = self._createUpdateRowCache(path, rowCache)
+
+            else:
+                print "...no cache. Scanning file."
+                lastRow = self._createUpdateRowCache(path, rowCache)
+
+            if lastRow != int(row):
+                print ("...detected incomplete file. Server row: %s, "
+                       "local: %s" % (row, lastRow))
+                return path, int(row)
+
+        print 'No incomplete files.'
+        return None, 0
+
+    def _createUpdateRowCache(self, path, rowCache):
+        """
+        Create/update the specified row cache using the supplied .dat
+        file. Returns the number of rows in the .dat file.
+        """
+
+        with open(path, 'rb') as fp:
+            nRows = len(fp.readlines()) - 1
+
+        assert nRows > 0
+
+        with open(rowCache, 'wb') as fp:
+            print "Creating cache '%s' (# rows = %s)" % (rowCache, nRows)
+            cPickle.dump(nRows, fp)
+
+        return nRows
+
+    def _datFile(self, path, fname, lastRow=None):
+        """
+        Yields lines from the specified .dat file. Handles all issues
+        pertaining to listening to an open file.
+        """
+        with open(os.path.join(path, fname), 'rb') as fp:
+            print "\nOpening source stream: %s\n" % fname
+            print "lastRow = %s" % lastRow
+
+            deadLineCount = 0
+            lineCount = 0
+            line = ''
+
+            while True:
+                line += fp.readline()
+                sys.stderr.write('.')
+
+                if line == '':
+                    # Push any data that we already have.
+                    if self.docs:
+                        print "Push %s rows to P3" % len(self.docs)
+                        self.pushToP3(fname)
+                        self.docs = []
+
+                    deadLineCount += 1
+
+                    if deadLineCount == 10:
+                        print 'Checking for latest file...'
+                        latest = genLatestFiles(*os.path.split(
+                                self.listenPath)).next()
+
+                        if fname != os.path.split(latest)[1]:
+                            print "New file available: %s" % latest
+                            return
+
+                        deadLineCount = 0
+
+                    time.sleep(0.1)
+                    continue
+
+                lineCount += 1
+
+                # We always want to return the header even if we are
+                # resuming playback.
+                if (lineCount != 1 and lastRow is not None and
+                    lineCount <= (lastRow + 1) and line.endswith("\n")):
+                    line = ''
+                    continue
+
+                if line.endswith("\n"):
+                    yield line
+                    line = ''
+
+    def pushToP3(self, fname):
+        """
+        Sends existing data to P3.
+        """
+
+        assert len(self.docs) is not 0
+
+        postParams = {'data': json.dumps(
+                [{'logname': fname,
+                  'replace': 0,
+                  'logtype': self.dataType,
+                  'logdata': self.docs}])}
+
+        waitForRetryCtr = 0
+        waitForRetry = True
+
         while True:
-            line = fp.readline()
-            cpos = fp.tell()
-            sys.stderr.write('+')
-            if line:
-                print "trying for missing!"
-                self.pushToP3(self.fname, None, [(line, cpos)], None, None)
-            else:
-                return "ERROR"
-            if cpos >= last_pos:
-                break
+            try:
+                # NOTE: socket only required to set timeout parameter
+                # for the urlopen() In Python26 and beyond we can use
+                # the timeout parameter in the urlopen()
+                socket.setdefaulttimeout(self.timeout)
+                url = self.urls['push'].replace('<TICKET>', self.ticket)
+                resp = urllib2.urlopen(url, data=urllib.urlencode(postParams))
 
-        return "OK"
+                rtnData = resp.read()
+                # An HTTP exception should cause a subsequent
+                # retry. Should only be here on success.
+                if rtnData != '"OK"':
+                    pprint.pprint(rtnData)
+                    assert False
+
+                return
+
+            except urllib2.HTTPError, ex:
+                msg = ex.read()
+
+                if 'invalid ticket' in msg:
+                    print "Invalid/expired ticket (errno = %s)" % ex.code
+                    waitForRetryCtr += 1
+
+                    if waitForRetryCtr < 100:
+                        waitForRetry = False
+
+                    self._getTicket()
+
+                else:
+                    print "HTTP exception (errno = %s): \n%s\n" % (ex.code,
+                                                                   msg)
+
+            except Exception:
+                # Eat this exception
+                print 'Unknown error:'
+                print traceback.format_exc()
+
+            sys.stderr.write('-')
+
+            if waitForRetry:
+                time.sleep(self.timeout)
+
+            waitForRetry = True
+
+    def _getIPAddresses(self):
+        """
+        Generate a sequence of IP addresses using the Win32 API.
+        """
+
+        for adapter in Win32.Iphlpapi.getAdaptersInfo():
+            adNode = adapter.ipAddressList
+            while adNode:
+                ipAddr = adNode.ipAddress
+
+                if ipAddr:
+                    yield ipAddr
+
+                adNode = adNode.next
+
+    def _getLocalAnalyzerId(self):
+        """
+        Retrieve the ID of the Analyzer as required for subsequent
+        calls to P3.  If running as a listener we expect that the
+        program is being run on an actual Analyzer (or sufficient
+        spooing code is in place for testing).  Otherwise for the
+        scenario where individual files are being push to P3 we can
+        simply parse the ID individually from each file.
+        """
+
+        analyzerId = self._getAnalyzerIdFromDriver()
+        print "Found analyzer Id = %s" % analyzerId
+
+        return analyzerId
+
+    def _getAnalyzerIdFromDriver(self):
+        """
+        Retrieve the ID directly from the Analyzer driver. It is an unchecked
+        error to try and get the Id when there is no driver RPC available.
+        """
+
+        driver = CmdFIFO.CmdFIFOServerProxy(
+            "http://localhost:%d" % self.driverPort, ClientName='DatEchoP3')
+        vals = driver.fetchLogicEEPROM()[0]
+        return "%s%s" % (vals['Analyzer'], vals['AnalyzerNum'])
 
 
+def main():
+    usage = """
+%prog [options]
 
-    def getIPAddresses(self):
-        MAX_ADAPTER_DESCRIPTION_LENGTH = 128
-        MAX_ADAPTER_NAME_LENGTH = 256
-        MAX_ADAPTER_ADDRESS_LENGTH = 8
-        class IP_ADDR_STRING(Structure):
-            pass
-        LP_IP_ADDR_STRING = POINTER(IP_ADDR_STRING)
-        IP_ADDR_STRING._fields_ = [
-            ("next", LP_IP_ADDR_STRING),
-            ("ipAddress", c_char * 16),
-            ("ipMask", c_char * 16),
-            ("context", c_ulong)]
-        class IP_ADAPTER_INFO (Structure):
-            pass
-        LP_IP_ADAPTER_INFO = POINTER(IP_ADAPTER_INFO)
-        IP_ADAPTER_INFO._fields_ = [
-            ("next", LP_IP_ADAPTER_INFO),
-            ("comboIndex", c_ulong),
-            ("adapterName", c_char * (MAX_ADAPTER_NAME_LENGTH + 4)),
-            ("description", c_char * (MAX_ADAPTER_DESCRIPTION_LENGTH + 4)),
-            ("addressLength", c_uint),
-            ("address", c_ubyte * MAX_ADAPTER_ADDRESS_LENGTH),
-            ("index", c_ulong),
-            ("type", c_uint),
-            ("dhcpEnabled", c_uint),
-            ("currentIpAddress", LP_IP_ADDR_STRING),
-            ("ipAddressList", IP_ADDR_STRING),
-            ("gatewayList", IP_ADDR_STRING),
-            ("dhcpServer", IP_ADDR_STRING),
-            ("haveWins", c_uint),
-            ("primaryWinsServer", IP_ADDR_STRING),
-            ("secondaryWinsServer", IP_ADDR_STRING),
-            ("leaseObtained", c_ulong),
-            ("leaseExpires", c_ulong)]
-        GetAdaptersInfo = windll.iphlpapi.GetAdaptersInfo
-        GetAdaptersInfo.restype = c_ulong
-        GetAdaptersInfo.argtypes = [LP_IP_ADAPTER_INFO, POINTER(c_ulong)]
-        adapterList = (IP_ADAPTER_INFO * 10)()
-        buflen = c_ulong(sizeof(adapterList))
-        rc = GetAdaptersInfo(byref(adapterList[0]), byref(buflen))
-        if rc == 0:
-            for a in adapterList:
-                adNode = a.ipAddressList
-                while True:
-                    ipAddr = adNode.ipAddress
-                    if ipAddr:
-                        yield ipAddr
-                    adNode = adNode.next
-                    if not adNode:
-                        break
+Runs an echo server that sends data to P3.
+"""
 
-    def getLocalAnalyzerId(self):
-        def analyzerNameFromFname(fname):
-            '''
-            analyzer path from the analyzer file name
-            name is in form of XXXXXXXX-YYYYMMDD-HHMMSSZ-blah-blah-blah
-            '''
-            fbase = os.path.basename(fname)
-            aname, sep, part = fbase.partition('-')
-            adate, sep, part = part.partition('-')
-            atime, sep, part = part.partition('-')
-            return aname, adate, atime
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('-d', '--data-type', dest='dataType', default='dat',
+                      metavar='DATATYPE', help='Log file data type '
+                      '(dat, etc.)')
+    parser.add_option('-l', '--listen-path', dest='listenPath',
+                      metavar='LISTENPATH', default='C:/UserData/'
+                      'AnalyzerServer/*_Minimal.dat', help='Search path for '
+                      'constant updates.')
+    parser.add_option('-t', '--timeout', dest='timeout', metavar='TIMEOUT',
+                      default=10, type='int', help='timeout value for '
+                      'response from server.')
+    parser.add_option('-n', '--nbr-lines', dest='lines', metavar='NBRLINES',
+                      default=1000, type='int', help='Number of lines per '
+                      'push to P3.')
+    parser.add_option('-i', '--ip-req-url', dest='ipUrl', metavar='IPREQURL',
+                      help='REST URL for local IP address registration. Use '
+                      'the string <TICKET> as the place-holder for the '
+                      'authentication ticket.')
+    parser.add_option('-p', '--push-url', dest='pushUrl', metavar='PUSHURL',
+                      help='REST URL for data push to server. Use the string '
+                      '<TICKET> as the place-holder for the authentication '
+                      'ticket.')
+    parser.add_option('-k', '--ticket-url', dest='ticketUrl',
+                      metavar='TICKETURL', help='REST URL for authentication '
+                      'ticket.')
+    parser.add_option('--log-metadata-url', dest='logMetaUrl',
+                      metavar='LOGMETADATAURL', help='REST URL for analysis '
+                      'log metadata. Use the string <TICKET> as the '
+                      'place-holder for the authentication ticket.')
+    parser.add_option('-y', '--identity', dest='identity', metavar='IDENTITY',
+                      help='Authentication identity string.')
+    parser.add_option('-s', '--sys', dest='authenticationSys', metavar='SYS',
+                      help='System to authenticate the identity against.')
+    parser.add_option('-c', '--cmdfifo-port', dest='cport',
+                      metavar='CMDFIFOPORT',
+                      default=SharedTypes.RPC_PORT_ECHO_P3_BASE, type='int',
+                      help='Port for supervisor CmdFIFO ping.')
+    parser.add_option('--history-range', dest='historyRangeDays',
+                      metavar='DAYS', default=5.0, type='float',
+                      help='The number of days to check for missing/'
+                      'incomplete files on P3.')
+    parser.add_option('--driver-port', dest='driverPort',
+                      metavar='DRIVER_PORT', type='int',
+                      default=SharedTypes.RPC_PORT_DRIVER, help='Driver RPC '
+                      'port. Normally used for running tests with a driver '
+                      'emulator.')
 
+    options, _ = parser.parse_args()
 
+    if (options.cport < SharedTypes.RPC_PORT_ECHO_P3_BASE or
+        options.cport > SharedTypes.RPC_PORT_ECHO_P3_MAX):
+        parser.error("CmdFIFO port (%s) outside valid range (%s, %s)" % (
+                options.cport, SharedTypes.RPC_PORT_ECHO_P3_BASE,
+                SharedTypes.RPC_PORT_ECHO_P3_MAX))
 
-        try:    # Stop iteration if we are not the last file
-            if self.file_path:
-                fname = os.path.join(self.file_path)
-            else:
-                fname = genLatestFiles(*os.path.split(self.listen_path)).next()
+    if options.identity is None:
+        parser.error('Identity required for authentication.')
 
-            aname, adate, atime = analyzerNameFromFname(fname)
-            return aname
-        except:
-            return None
+    datEcho = DataEchoP3(**vars(options))
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
+    appThread = threading.Thread(target=datEcho.run)
+    appThread.setDaemon(True)
+    appThread.start()
 
-    usage = "usage: %prog [options]"
-    parser = OptionParser(usage=usage)
-    parser.add_option("-d", "--data-type", dest="data_type",
-                      help="Data type (log type).", metavar="<DATA_TYPE>")
-    parser.add_option("-l", "--listen-path", dest="listen_path",
-                      help="Search path for constant updates.", metavar="<LISTEN_PATH>")
-    parser.add_option("-f", "--file-path", dest="file_path",
-                      help="path to specific file to upload.", metavar="<FILE_PATH>")
-    parser.add_option("-t", "--timeout", dest="timeout",
-                      help="timeout value for response from server.", metavar="<TIMEOUT>")
-    parser.add_option("-n", "--nbr-lines", dest="lines",
-                      help="number of lines per send.", metavar="<NBR_LINES>")
-    parser.add_option("-i", "--ip-req-url", dest="ip_url",
-                      help="rest url for ip registration. Use the string <TICKET> as the place-holder for the authentication ticket.", metavar="<IP_REQ_URL>")
-    parser.add_option("-p", "--push-url", dest="push_url",
-                      help="rest url for data push to server. Use the string <TICKET> as the place-holder for the authentication ticket.", metavar="<PUSH_URL>")
-    parser.add_option("-k", "--ticket-url", dest="ticket_url",
-                      help="rest url for authentication ticket.", metavar="<TICKET_URL>")
-    parser.add_option("-y", "--identity", dest="identity",
-                      help="Authentication identity string.", metavar="<IDENTITY>")
-    parser.add_option("-s", "--sys", dest="psys",
-                      help="Authentication sys.", metavar="<SYS>")
-    parser.add_option("-r", "--replace", dest="replace", action="store_true",
-                      help="replace this log in the server (Dangerous!!, use with caution. This will delete FIRST!).")
-    parser.add_option("-c", "--cmdfifo-port", dest="cport",
-                      help="Port for supervisor CmdFIFO ping", metavar="<CmdFIFO_PORT>")
-
-    (options, args) = parser.parse_args()
-    #if len(args) != 1:
-    #    parser.error("incorrect number of arguments")
-
-    if options.listen_path and options.file_path:
-        parser.error("listen-path and file-path are mutually exclusive")
-
-    if options.listen_path and options.replace:
-        parser.error("listen-path and replace are mutually exclusive")
-
-    if options.listen_path:
-        listen_path = options.listen_path
-    else:
-        listen_path = None
-
-    if options.file_path:
-        file_path = options.file_path
-    else:
-        file_path = None
-
-    if not listen_path:
-        if not file_path:
-            listen_path = 'C:/UserData/AnalyzerServer/*_Minimal.dat'
-
-    if options.timeout:
-        timeout = options.timeout
-        timeout = int(timeout)
-    else:
-        timeout = 10
-
-    if options.ip_url:
-        ip_url = options.ip_url
-    else:
-        ip_url = None
-
-    if options.push_url:
-        push_url = options.push_url
-    else:
-        push_url = 'https://dev.picarro.com/node/gdu/<TICKET>/1/AnzLog/'
-
-    if options.ticket_url:
-        ticket_url = options.ticket_url
-    else:
-        ticket_url = 'https://dev.picarro.com/node/gdu/dummy/1/Admin/'
-
-    if options.psys:
-        psys = options.psys
-    else:
-        psys = None
-
-    if options.identity:
-        identity = options.identity
-    else:
-        identity = None
-
-    if options.lines:
-        lines = options.lines
-        lines = int(lines)
-    else:
-        lines = None
-
-    if options.data_type:
-        logtype = options.data_type
-    else:
-        logtype = "dat"
-
-    if options.replace:
-        replace = options.replace
-    else:
-        replace = None
-
-    if options.cport:
-        cport = int(options.cport)
-    else:
-        cport = RPC_PORT_ECHO_P3_BASE
-    if cport<RPC_PORT_ECHO_P3_BASE or cport>RPC_PORT_ECHO_P3_MAX:
-        parser.error("CmdFIFO_port outside valid range")
-
-    print "listen_path", listen_path
-    print "file_path", file_path
-    print "ip_url", ip_url
-    print "push_url", push_url
-    print "ticket_url", ticket_url
-    print "identity", identity
-    print "psys", psys
-    print "timeout", timeout
-    print "lines", lines
-    print "logtype", logtype
-    print "CmdFIFO_port", cport
-
-    decho = DataEchoP3(listen_path=listen_path,
-                       file_path=file_path,
-                       ip_url=ip_url,
-                       push_url=push_url,
-                       ticket_url=ticket_url,
-                       psys=psys,
-                       identity=identity,
-                       timeout=timeout,
-                       lines=lines,
-                       logtype=logtype,
-                       replace=replace)
-    th = threading.Thread(target=decho.run)
-    th.setDaemon(True)
-    th.start()
-    rpcServer = CmdFIFO.CmdFIFOServer(("",cport),
-                                       ServerName="DatEchoP3",
-                                       ServerDescription="DatEchoP3",
-                                       ServerVersion="1.0",
-                                       threaded=True)
+    rpcServer = CmdFIFO.CmdFIFOServer(('', options.cport),
+                                      ServerName='DatEchoP3',
+                                      ServerDescription='DatEchoP3',
+                                      ServerVersion='1.0',
+                                      threaded=True)
     try:
         while True:
             rpcServer.daemon.handleRequests(0.5)
-            if not th.isAlive(): break
+            if not appThread.isAlive():
+                break
+
         print "Supervised DatEchoP3 thread stopped"
         return 1
-    except:
-        print "CmdFIFO stopped"
+
+    except Exception:
+        print "CmdFIFO stopped:"
+        print traceback.format_exc()
         return 0
 
 if __name__ == '__main__':
