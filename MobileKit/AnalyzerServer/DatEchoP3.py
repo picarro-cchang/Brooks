@@ -233,7 +233,6 @@ class DataEchoP3(object):
             ipPushWaitIdx += 1
 
             if firstRow:
-                print 'Got headers'
                 firstRow = False
                 headers = vals
                 continue
@@ -522,7 +521,6 @@ class DataEchoP3(object):
 
             while True:
                 line += fp.readline()
-                sys.stderr.write('.')
 
                 if line == '':
                     # Push any data that we already have.
@@ -554,9 +552,11 @@ class DataEchoP3(object):
                 if (lineCount != 1 and lastRow is not None and
                     lineCount <= (lastRow + 1) and line.endswith("\n")):
                     line = ''
+                    sys.stdout.write('.')
                     continue
 
                 if line.endswith("\n"):
+                    sys.stdout.write('+')
                     yield line
                     line = ''
 
