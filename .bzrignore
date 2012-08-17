@@ -115,3 +115,10 @@ Utilities/*.png
 Docs/*
 *.tds
 *.dll
+repoBzrVer.py
+MobileKit/Tests/.coverage
+MobileKit/Tests/*.json
+MobileKit/Tests/*.pkl
+MobileKit/Tests/data/test*/
+MobileKit/Tests/htmlcov/
+MobileKit/Tests/htmlcov/
