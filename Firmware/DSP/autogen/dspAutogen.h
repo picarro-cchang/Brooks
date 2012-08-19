@@ -19,7 +19,7 @@ typedef struct i2c_device{ int chain; int mux; int addr; } I2C_device;
 extern I2C_device i2c_devices[34];
 
 void initRegisters(void);
-extern RegTypes regTypes[437];
+extern RegTypes regTypes[440];
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env);
 int writeBlock(unsigned int numInt,void *params,void *env);
 int setTimestamp(unsigned int numInt,void *params,void *env);

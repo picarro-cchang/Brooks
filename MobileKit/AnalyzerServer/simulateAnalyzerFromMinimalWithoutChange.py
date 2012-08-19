@@ -12,8 +12,9 @@ import datetime
 # dataFile = r'R:\crd_G2000\FCDS\1061-FCDS2003\Data_20120113\AnalyzerServer\FCDS2003-20120113-221530Z-DataLog_User_Minimal.dat'
 # dataFile = r'C:\UserData\AnalyzerServer\FCDS2006-20120323-020431Z-DataLog_User_Minimal.dat'
 # dataFile = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120215\DAT\FCDS2003-20120215-235259Z-DataLog_User_Minimal.dat'
+# dataFile = r'C:\Picarro\Eclipse\Sending Files To P3\Example\TEST6543-20120720-204922Z-DataLog_User_Minimal.dat'
 
-dataFile = r'S:\for Sze\temp\FCDS2003-20120119-223719Z-DataLog_User_Minimal.dat'
+dataFile = r'C:\UserData\AnalyzerServer\FDDS2012-20120730-195201Z-DataLog_User_Minimal.dat'
 liveFile = time.strftime('C:/UserData/AnalyzerServer/ZZZ-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
 
 handle = CreateFile(liveFile,GENERIC_WRITE,
@@ -23,11 +24,13 @@ if handle == INVALID_HANDLE_VALUE:
     raise RuntimeError('Cannot open live archive file %s' % liveFile)
 
 ip = open(dataFile,'r')
-for line in ip:
+nlines = 50
+wait = 5
+for i,line in enumerate(ip):
     WriteFile(handle,line.replace("\n","\r\n"))
     sys.stderr.write('.')
     sys.stderr.flush()
-    time.sleep(0.25)
+    if i%nlines == 0: time.sleep(wait)
     
 CloseHandle(handle)
 ip.close()    

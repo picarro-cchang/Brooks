@@ -29,6 +29,8 @@ var TXT = {
         stop_survey: "Stop Survey",
         complete_survey: "Complete Survey",
         cancl_cptr: 'Cancel Capture',
+        cancl_ana: 'Cancel Analysis',
+        cancl_ana_time: 's left: Cancel',
         calibrate: 'Analyze Reference Gas',
         shutdown: 'Shutdown Surveyor',
         select_log: 'Select Log',
@@ -43,6 +45,7 @@ var TXT = {
         capture_mode: 'Capture Mode',
         analyzing_mode: 'Analyzing Peak',
         inactive_mode: 'Inactive Mode',
+        cancelling_mode: 'Canceling...',
         prime_conf_msg: 'Do you want to switch to Prime View Mode? \n\nWhen the browser is in Prime View Mode, you will have control of the Surveyor.',
         change_min_amp: 'Min Amplitude', //'Minimum Amplitude',
         change_stab_class: 'Stability Class', //'Minimum Amplitude',
@@ -50,6 +53,7 @@ var TXT = {
         shutdown_anz_msg: 'Do you want to shut down the Surveyor? \n\nWhen the analyzer is shutdown it can take 30 to 45 minutes warm up.',
         stop_survey_msg: 'Are you sure you want to stop collecting data?',
         cancel_cap_msg: 'Cancel capture and return to survey mode?',
+        cancel_ana_msg: 'Cancel analysis and return to survey mode?',
         start_inject_msg: 'Inject reference gas now?',
         show_controls: 'Show Controls',
         show_dnote: 'Show route annotations',
@@ -137,6 +141,7 @@ var HBTN = {
         restartBtn: '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn btn-fullwidth">' + TXT.restart_log + '</button></div>',
         captureBtn: '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn btn-fullwidth">' + TXT.switch_to_cptr + '</button></div>',
         cancelCapBtn: '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn btn-fullwidth">' + TXT.cancl_cptr + '</button></div>',
+        cancelAnaBtn: '<div><button id="id_cancelAnaBtn" type="button" onclick="cancelAnaSwitch();" class="btn btn-fullwidth">' + TXT.cancl_ana + '</button></div>',
         calibrateBtn: '<div><button id="id_calibrateBtn" type="button" onclick="injectCal();" class="btn btn-fullwidth">' + TXT.calibrate + '</button></div>',
         shutdownBtn: '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn btn-danger btn-fullwidth">' + TXT.shutdown + '</button></div>',
         downloadBtn: '<div><button id="id_downloadBtn" type="button" onclick="modalPaneExportControls();" class="btn btn-fullwidth">' + TXT.download_files + '</button></div>',
@@ -187,144 +192,162 @@ function modalNetWarning() {
 }
 
 //Constant Values
-var CNSNT = {
-        // initial "|" is expected with no trailing "|"
-        peak_bbl_clr: "|40FFFF|000000",
-        analysis_bbl_clr: "|FF8080|000000",
-        path_bbl_clr: "|FFFF90|000000",
+if (!CNSNT) {
+    var CNSNT = {};
+    CNSNT.svcurl = "/rest";
+    CNSNT.annotation_url = false;
+    CNSNT.callbacktest_url = "";
+    CNSNT.analyzer_name = "";
+    CNSNT.user_id = "";
+    CNSNT.resturl = "/rest";
+    CNSNT.resource_Admin = "admin";
+    CNSNT.resource_AnzMeta = "";
+    CNSNT.resource_AnzLog = "";
+    CNSNT.resource_AnzLogMeta = "";
+    CNSNT.resource_AnzLogNote = "";
+    CNSNT.sys = "";
+    CNSNT.identity = "";
+}
 
-        // trailing "|" is expected
-        peak_bbl_tail: "bb|", // tail bottom left
-        analysis_bbl_tail: "bb|",  // tail bottom left
-        path_bbl_tail: "bbtl|", // tail top left
 
-        peak_bbl_anchor: newPoint(0, 42), //d_bubble_text_small is 42px high 
-        analysis_bbl_anchor: newPoint(0, 42), //d_bubble_text_small is 42px high
-        path_bbl_anchor: newPoint(0, 0),
+// initial "|" is expected with no trailing "|"
+CNSNT.peak_bbl_clr = "|40FFFF|000000";
+CNSNT.analysis_bbl_clr = "|FF8080|000000";
+CNSNT.path_bbl_clr = "|FFFF90|000000";
 
-        peak_bbl_origin: newPoint(0, 0),
-        analysis_bbl_origin: newPoint(0, 0),
-        path_bbl_origin: newPoint(0, 0),
+// trailing "|" is expected
+CNSNT.peak_bbl_tail = "bb|"; // tail bottom left
+CNSNT.analysis_bbl_tail = "bb|";  // tail bottom left
+CNSNT.path_bbl_tail = "bbtl|"; // tail top left
 
-        normal_path_color: "#0000FF",
-        analyze_path_color: "#000000",
-        //inactive_path_color: "#996633",
-        inactive_path_color: "#FF0000",
-        streamwarning:  (1000 * 10),
-        streamerror:  (1000 * 30),
-        
-        normal_plat_outline_color: "#000000",
-        normal_plat_outline_opacity: 0.4,
-        normal_plat_outline_weight: 0.5,
-        hlite_plat_outline_color: "#000000",
-        hlite_plat_outline_opacity: 0.8,
-        hlite_plat_outline_weight: 2,
-        active_plat_outline_color: "#008000",
-        active_plat_outline_opacity: 0.8,
-        active_plat_outline_weight: 3,
-        
-        histMax: 200,
-        
-        datUpdatePeriod: 500,
-        analysisUpdatePeriod: 1500,
-        peakAndWindUpdatePeriod: 1500,
-        noteUpdatePeriod: 1500,
-        progressUpdatePeriod: 2000,
-        modeUpdatePeriod: 2000,
-        periphUpdatePeriod: 5000,
-        swathUpdatePeriod: 500,
-        
-//        datUpdatePeriod: 5000,
-//        analysisUpdatePeriod: 5000,
-//        peakAndWindUpdatePeriod: 5000,
-//        noteUpdatePeriod: 5000,
-//        progressUpdatePeriod: 5000,
-//        modeUpdatePeriod: 5000,
-//        periphUpdatePeriod: 5000,
-//        swathUpdatePeriod: 5000,
-        
-        hmargin: 30,
-        vmargin: 0,
-        map_topbuffer: 0,
-        map_bottombuffer: 0, 
+CNSNT.peak_bbl_anchor = null; //newPoint(0, 42); //d_bubble_text_small is 42px high 
+CNSNT.analysis_bbl_anchor = null; //newPoint(0, 42); //d_bubble_text_small is 42px high
+CNSNT.path_bbl_anchor = null; //newPoint(0, 0);
 
-        peakNoteList: ['amp', 'ch4', 'sigma', 'lat', 'lon'],
-        analysisNoteList: ['conc', 'delta', 'uncertainty', 'lat', 'lon'],
-        datNoteList: ['ch4', 'lat', 'lon'],
+CNSNT.peak_bbl_origin = null; //newPoint(0, 0);
+CNSNT.analysis_bbl_origin = null; //newPoint(0, 0);
+CNSNT.path_bbl_origin = null; //newPoint(0, 0);
 
-        gmt_offset: get_time_zone_offset(),
+CNSNT.normal_path_color = "#0000FF";
+CNSNT.analyze_path_color = "#000000";
+//CNSNT.inactive_path_color = "#996633";
+CNSNT.inactive_path_color = "#FF0000";
+CNSNT.streamwarning =  (1000 * 10);
+CNSNT.streamerror =  (1000 * 30);
 
-        rest_default_timeout: 60000,
-        
-        stab_control: {
-            "*": TXT.stab_star
-            , A: TXT.stab_a
-            , B: TXT.stab_b
-            , C: TXT.stab_c
-            , D: TXT.stab_d
-            , E: TXT.stab_e
-            , F: TXT.stab_f
-        },
+CNSNT.normal_plat_outline_color = "#000000";
+CNSNT.normal_plat_outline_opacity = 0.4;
+CNSNT.normal_plat_outline_weight = 0.5;
+CNSNT.hlite_plat_outline_color = "#000000";
+CNSNT.hlite_plat_outline_opacity = 0.8;
+CNSNT.hlite_plat_outline_weight = 2;
+CNSNT.active_plat_outline_color = "#008000";
+CNSNT.active_plat_outline_opacity = 0.8;
+CNSNT.active_plat_outline_weight = 3;
 
-        export_control: {
-            "file": TXT.export_as_txt
-          , "csv": TXT.export_as_csv
-        },
+CNSNT.histMax = 200;
 
-        
-        spacer_gif: '/static/images/icons/spacer.gif',
-        svcurl: "/rest",
-        resturl: "/rest",
-        resource_Admin: "admin",
-        resource_AnzMeta: "",
-        resource_AnzLog: "",
-        resource_AnzLogMeta: "",
-        sys: "",
-        identity: "",
-        callbacktest_url: "",
-        callbacktest_timeout: 4000,
-        annotation_url: false,
-        
-        gpsPort: 0,
-        wsPort: 1,
-        gpsUpdateTimeout: 60000,
-        wsUpdateTimeout: 60000,
-        turnOnAudio: false,
+CNSNT.datUpdatePeriod = 500;
+CNSNT.analysisUpdatePeriod = 1500;
+CNSNT.peakAndWindUpdatePeriod = 1500;
+CNSNT.noteUpdatePeriod = 1500;
+CNSNT.progressUpdatePeriod = 2000;
+CNSNT.modeUpdatePeriod = 2000;
+CNSNT.periphUpdatePeriod = 5000;
+CNSNT.swathUpdatePeriod = 1000;
+CNSNT.swathMaxSkip = 10;
 
-        prime_view: true,
-        log_sel_opts: [],
-        analyzer_name: "",
-        user_id: "",
+//        CNSNT.datUpdatePeriod = 5000;
+//        CNSNT.analysisUpdatePeriod = 5000;
+//        CNSNT.peakAndWindUpdatePeriod = 5000;
+//        CNSNT.noteUpdatePeriod = 5000;
+//        CNSNT.progressUpdatePeriod = 5000;
+//        CNSNT.modeUpdatePeriod = 5000;
+//        CNSNT.periphUpdatePeriod = 5000;
+//        CNSNT.swathUpdatePeriod = 5000;
 
-        mapControl: undefined,
-        mapControlDiv: undefined,
+CNSNT.hmargin = 30;
+CNSNT.vmargin = 0;
+CNSNT.map_topbuffer = 0;
+CNSNT.map_bottombuffer = 0; 
 
-        earthRadius: 6378100,
-        swath_color: "#0000CC", 
-        swath_opacity: 0.3,
-        swathWindow: 10,
-        
-        dtr : Math.PI/180.0,    // Degrees to radians
-        rtd : 180.0/Math.PI,    // Radians to degrees
-        
-        cookie_duration: 14,
-        dashboard_app: false,
+CNSNT.peakNoteList = ['amp', 'ch4', 'sigma', 'lat', 'lon'];
+CNSNT.analysisNoteList = ['conc', 'delta', 'uncertainty', 'lat', 'lon'];
+CNSNT.datNoteList = ['ch4', 'lat', 'lon'];
 
-        loader_gif_img: '<img src="/static/images/ajax-loader.gif" alt="processing"/>',
-        
-        INSTMGR_STATUS_READY: 0x0001,
-        INSTMGR_STATUS_MEAS_ACTIVE: 0x0002,
-        INSTMGR_STATUS_ERROR_IN_BUFFER: 0x0004,
-        INSTMGR_STATUS_GAS_FLOWING: 0x0040,
-        INSTMGR_STATUS_PRESSURE_LOCKED: 0x0080,
-        INSTMGR_STATUS_CAVITY_TEMP_LOCKED: 0x0100,
-        INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED: 0x0200,
-        INSTMGR_STATUS_WARMING_UP: 0x2000,
-        INSTMGR_STATUS_SYSTEM_ERROR: 0x4000,
-        INSTMGR_STATUS_MASK: 0xFFFF
-    };
+CNSNT.gmt_offset = get_time_zone_offset();
 
-var statusPane = function() {
+CNSNT.rest_default_timeout = 60000;
+
+CNSNT.stab_control = {
+    "*": TXT.stab_star
+    , A: TXT.stab_a
+    , B: TXT.stab_b
+    , C: TXT.stab_c
+    , D: TXT.stab_d
+    , E: TXT.stab_e
+    , F: TXT.stab_f
+};
+
+CNSNT.export_control = {
+    "file": TXT.export_as_txt
+  , "csv": TXT.export_as_csv
+};
+
+
+CNSNT.spacer_gif = '/static/images/icons/spacer.gif';
+
+CNSNT.callbacktest_timeout = 4000;
+
+CNSNT.gpsPort = 0;
+CNSNT.wsPort = 1;
+CNSNT.gpsUpdateTimeout = 60000;
+CNSNT.wsUpdateTimeout = 60000;
+CNSNT.turnOnAudio = false;
+
+CNSNT.prime_view = true;
+CNSNT.log_sel_opts = [];
+
+CNSNT.mapControl = undefined;
+CNSNT.mapControlDiv = undefined;
+
+CNSNT.earthRadius = 6378100;
+CNSNT.swath_color = "#0000CC"; 
+CNSNT.swath_opacity = 0.3;
+CNSNT.swathWindow = 10;
+
+CNSNT.dtr  = Math.PI/180.0;    // Degrees to radians
+CNSNT.rtd  = 180.0/Math.PI;    // Radians to degrees
+
+CNSNT.cookie_duration = 14;
+CNSNT.dashboard_app = false;
+
+CNSNT.loader_gif_img = '<img src="/static/images/ajax-loader.gif" alt="processing"/>';
+
+CNSNT.INSTMGR_STATUS_READY = 0x0001;
+CNSNT.INSTMGR_STATUS_MEAS_ACTIVE = 0x0002;
+CNSNT.INSTMGR_STATUS_ERROR_IN_BUFFER = 0x0004;
+CNSNT.INSTMGR_STATUS_GAS_FLOWING = 0x0040;
+CNSNT.INSTMGR_STATUS_PRESSURE_LOCKED = 0x0080;
+CNSNT.INSTMGR_STATUS_CAVITY_TEMP_LOCKED = 0x0100;
+CNSNT.INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED = 0x0200;
+CNSNT.INSTMGR_STATUS_WARMING_UP = 0x2000;
+CNSNT.INSTMGR_STATUS_SYSTEM_ERROR = 0x4000;
+CNSNT.INSTMGR_STATUS_MASK = 0xFFFF;
+CNSNT.INSTMGR_AUX_STATUS_SHIFT = 16;
+CNSNT.INSTMGR_AUX_STATUS_WEATHER_MASK = 0x1F;
+
+// Number of data points to defer warning about missing weather information
+CNSNT.weatherMissingDefer  = 120;
+CNSNT.weatherMissingInit   = 10;
+CNSNT.classByWeather = { 0: "D",  8: "D", 16: "D", // Daytime, Overcast
+                  2: "B", 10: "C", 18: "D", // Daytime, moderate sun
+                  4: "A", 12: "B", 20: "C", // Daytime, strong sun
+                  1: "F",  9: "E", 17: "D", // Nighttime, <50% cloud
+                  3: "E", 11: "D", 19: "D"  // Nighttime, >50% cloud
+                };
+
+var statusPane = function () {
     var pane = '<table style="width: 100%;">'
         + '<tr>'
         + '<td style="width:25%; padding:5px 0px 10px 10px;">'
@@ -342,9 +365,9 @@ var statusPane = function() {
         + '</tr>'
         + '</table>';
     return pane;
-} 
+}; 
 
-var followPane = function() {
+var followPane = function () {
     var pane = '<table style="width: 100%;">'
         + '<tr>'
         + '<td style="width:33.33%;">'
@@ -360,7 +383,7 @@ var followPane = function() {
         + '</table>';
 
     return pane;
-}
+};
 
 var modePane = function() {
     var pane = '';
@@ -375,134 +398,145 @@ var modePane = function() {
 }
 
 // Current State
-var CSTATE = {
-        firstData: true,
-        initialFnIsRun: false,
-        net_abort_count: 0,
-        follow: true,
-        overlay: false,
-        activePlatName: "",
+if (!CSTATE) {
+    var CSTATE = {};
+}
+CSTATE.firstData = true;
+CSTATE.initialFnIsRun = false;
+CSTATE.net_abort_count = 0;
+CSTATE.follow = true;
+CSTATE.overlay = false;
+CSTATE.activePlatName = "";
         
-        prime_available: false,
-        prime_test_count: 0,
-        green_count: 2,
+CSTATE.prime_available = false;
+CSTATE.prime_test_count = 0;
+CSTATE.green_count = 2;
 
-        resize_map_inprocess: false,
-        current_mode: 0,
-        getting_mode: false,
-        getting_periph_time: false,
+CSTATE.resize_map_inprocess = false;
+CSTATE.current_mode = 0;
+CSTATE.getting_mode = false;
+CSTATE.getting_periph_time = false;
 
-        getting_warming_status: false,
-        end_warming_status: false,
+CSTATE.getting_warming_status = false;
+CSTATE.end_warming_status = false;
         
-        current_zoom: undefined,
-        current_mapTypeId: undefined,
+CSTATE.current_zoom = undefined;
+CSTATE.current_mapTypeId = undefined;
 
-        center_lon: -121.98432,
-        center_lat: 37.39604,
+CSTATE.center_lon = -121.98432;
+CSTATE.center_lat = 37.39604;
 
-        alog: "",
-        alog_peaks: "",
-        alog_analysis: "",
+CSTATE.alog = "";
+CSTATE.alog_peaks = "";
+CSTATE.alog_analysis = "";
 
-        showDnote: true,
-        showPnote: true,
-        showAnote: true,
-        showPbubble: true,
-        showAbubble: true,
-        showWbubble: true,
-        showSwath: true,
-        showPlatOutlines: false,
+CSTATE.showDnote = true,
+CSTATE.showPnote = true;
+CSTATE.showAnote = true;
+CSTATE.showPbubble = true;
+CSTATE.showAbubble = true;
+CSTATE.showWbubble = true;
+CSTATE.showSwath = true;
+CSTATE.showPlatOutlines = false;
 
-        lastwhere: '',
-        lastFit: '',
-        lastGpsUpdateStatus: 0, //0: Not installed; 1: Good; 2: Failed
-        lastWsUpdateStatus: 0, //0: Not installed; 1: Good; 2: Failed
-        lastPathColor: CNSNT.normal_path_color,
-        lastInst: '',
-        lastTimestring: '',
-        lastDataFilename: '',
-        lastPeakFilename: '',
-        lastAnalysisFilename: '',
-        laststreamtime: new Date().getTime(),
+CSTATE.lastwhere = '';
+CSTATE.lastFit = '';
+CSTATE.lastGpsUpdateStatus = 0; //0 = Not installed; 1 = Good; 2 = Failed
+CSTATE.lastWsUpdateStatus = 0; //0 = Not installed; 1 = Good; 2 = Failed
+CSTATE.lastPathColor = CNSNT.normal_path_color;
+CSTATE.lastInst = '';
+CSTATE.lastTimestring = '';
+CSTATE.lastDataFilename = '';
+CSTATE.lastPeakFilename = '';
+CSTATE.lastAnalysisFilename = '';
+CSTATE.laststreamtime = new Date().getTime();
 
-        counter: 0,
-        peakLine: 1,
-        clearLeaks: false,
-        clearWind: false,
-        analysisLine: 1,
-        clearAnalyses: false,
-        swathLine: 1,
-        clearSwath: false,
-        startNewPath: true,
-        nextAnalysisEtm: 0.0,
-        nextPeakEtm: 0.0,
-        nextDatEtm: 0.0,
-        nextAnalysisUtm: 0.0,
-        nextPeakUtm: 0.0,
-        nextDatUtm: 0.0,
-        clearDatNote: false,
-        clearPeakNote: false,
-        clearAnalysisNote: false,
+CSTATE.counter = 0;
+CSTATE.peakLine = 1;
+CSTATE.clearLeaks = false;
+CSTATE.clearWind = false;
+CSTATE.analysisLine = 1;
+CSTATE.clearAnalyses = false;
+CSTATE.swathLine = 1;
+CSTATE.clearSwath = false;
+CSTATE.startNewPath = true;
+CSTATE.nextAnalysisEtm = 0.0;
+CSTATE.nextPeakEtm = 0.0;
+CSTATE.nextDatEtm = 0.0;
+CSTATE.nextAnalysisUtm = 0.0;
+CSTATE.nextPeakUtm = 0.0;
+CSTATE.nextDatUtm = 0.0;
+CSTATE.clearDatNote = false;
+CSTATE.clearPeakNote = false;
+CSTATE.clearAnalysisNote = false;
 
-        startPos: null,
+CSTATE.startPos = null;
 
-        ignoreTimer: false,
-        ignoreRequests: false,
+CSTATE.ignoreTimer = false;
+CSTATE.ignoreRequests = false;
 
-        path: null,
-        pathListener: {},
+CSTATE.path = null;
+CSTATE.pathListener = {};
         
-        map: undefined,
-        mapListener: {},
+CSTATE.map = undefined;
+CSTATE.mapListener = {};
         
-        marker: null,
-        gglOptions: null,
-        peakMarkers: {},
-        analysisMarkers: {},
-        windMarkers: {},
-        methaneHistory: [],
+CSTATE.marker = null;
+CSTATE.gglOptions = null;
+CSTATE.peakMarkers = {};
+CSTATE.analysisMarkers = {};
+CSTATE.windMarkers = {};
+CSTATE.methaneHistory = [];
 
         
-        peakNoteMarkers: {},
-        peakNoteDict: {},
-        peakNoteListener: {},
-        peakBblListener: {},
+CSTATE.peakNoteMarkers = {};
+CSTATE.peakNoteDict = {};
+CSTATE.peakNoteListener = {};
+CSTATE.peakBblListener = {};
 
-        analysisNoteMarkers: {},
-        analysisNoteDict: {},
-        analysisNoteListener: {},
-        analysisBblListener: {},
+CSTATE.analysisNoteMarkers = {};
+CSTATE.analysisNoteDict = {};
+CSTATE.analysisNoteListener = {};
+CSTATE.analysisBblListener = {};
 
-        datNoteMarkers: {},
-        datNoteDict: {},
-        datNoteListener: {},
+CSTATE.datNoteMarkers = {};
+CSTATE.datNoteDict = {};
+CSTATE.datNoteListener = {};
 
-        // the following help specify the polygon which represents
-        //  the effective map area associated with the path
-        swathPolys : [],
-        lastMeasPathLoc: null,
-        lastMeasPathDeltaLat: null,
-        lastMeasPathDeltaLon: null,
+// the following help specify the polygon which represents
+//  the effective map area associated with the path
+CSTATE.swathPolys  = [];
+CSTATE.lastMeasPathLoc = null;
+CSTATE.lastMeasPathDeltaLat = null;
+CSTATE.lastMeasPathDeltaLon = null;
+CSTATE.lastSwathParams = {};
+CSTATE.lastSwathOutput = {};
+CSTATE.nextSwathRow = 0;
+CSTATE.swathSkipCount = 0;
         
-        pobj: [],
+CSTATE.pobj = [];
         
-        noteSortSel: undefined,
-        resize_for_conc_data: true,
+CSTATE.noteSortSel = undefined;
+CSTATE.resize_for_conc_data = true;
 
-        getDataLimit: 2000,
-        getSwathLimit: 1000,
+CSTATE.getDataLimit = 2000;
+CSTATE.getSwathLimit = 1000;
         
-        exportClass: 'file',   
-        stabClass: 'D',     // Pasquill-Gifford stability class
-        minLeak:   1.0,     // Minimum leak to consider in cubic feet/hour
-        minAmp: 0.1,
+CSTATE.exportClass = 'file';   
+CSTATE.stabClass = 'D';     // Pasquill-Gifford stability class
+CSTATE.minLeak =   1.0;     // Minimum leak to consider in cubic feet/hour
+CSTATE.minAmp = 0.1;
         
-        // Parameters for estimating addtional standard deviation in wind direction
-        astd_a : 0.15*Math.PI,
-        astd_b : 0.25,          // Wind speed in m/s for standard deviation to be astd_a
-        astd_c : 0.0,           // Factor multiplying car speed in m/s
-    };
+// Parameters for estimating addtional standard deviation in wind direction
+CSTATE.astd_a  = 0.15*Math.PI;
+CSTATE.astd_b  = 0.25;          // Wind speed in m/s for standard deviation to be astd_a
+CSTATE.astd_c  = 0.0;           // Factor multiplying car speed in m/s
+       
+// Variable to indicate when weather information is missing
+CSTATE.weatherMissingCountdown = CNSNT.weatherMissingInit;
+CSTATE.showingWeatherDialog = false;
+CSTATE.inferredStabClass = null;
+CSTATE.prevInferredStabClass = null;
 
 var TIMER = {
         prime: null,
@@ -519,9 +553,9 @@ var TIMER = {
         swath: null, // timer for showing swath
     };
     
-var modeStrings = {0: TXT.survey_mode, 1: TXT.capture_mode, 2: TXT.capture_mode, 3: TXT.analyzing_mode, 4: TXT.inactive_mode};
-var modeBtn = {0: [HBTN.captureBtn],  1: [HBTN.cancelCapBtn], 2: [HBTN.cancelCapBtn], 3: []};
-
+var modeStrings = {0: TXT.survey_mode, 1: TXT.capture_mode, 2: TXT.capture_mode, 3: TXT.analyzing_mode, 4: TXT.inactive_mode, 
+                   5: TXT.cancelling_mode };
+                   
 // Calculate the additional wind direction standard deviation based on the wind speed and the car speed.
 //  This is an empirical model to estimate the performace of the measurement process.
 //  N.B. This must be consistent with that used for calculation of swath width
@@ -1002,6 +1036,14 @@ function initialize_map() {
 
     CSTATE.map = newMap(document.getElementById("map_canvas"));
 
+    CNSNT.peak_bbl_anchor = newPoint(0, 42); //d_bubble_text_small is 42px high 
+    CNSNT.analysis_bbl_anchor = newPoint(0, 42); //d_bubble_text_small is 42px high
+    CNSNT.path_bbl_anchor = newPoint(0, 0);
+
+    CNSNT.peak_bbl_origin = newPoint(0, 0);
+    CNSNT.analysis_bbl_origin = newPoint(0, 0);
+    CNSNT.path_bbl_origin = newPoint(0, 0);
+    
     CNSNT.mapControlDiv = document.createElement('DIV');
     CNSNT.mapControl = new MapControl(CNSNT.mapControlDiv, CSTATE.map);
     
@@ -1036,6 +1078,7 @@ function initialize_map() {
     CSTATE.path = newPolyline(CSTATE.map, CNSNT.normal_path_color);
     clearPathListener();
     
+    CSTATE.prevInferredStabClass = null;
     CSTATE.swathPolys = []
     CSTATE.lastMeasPathLoc = null;
     CSTATE.lastMeasPathDeltaLat = null;
@@ -1136,7 +1179,9 @@ function resize_map() {
 function resize_page() {
     if (!CSTATE.resize_map_inprocess) {
         CSTATE.resize_map_inprocess = true;
-        TIMER.resize = setTimeout(resize_map, 25);
+        if (TIMER) {
+            TIMER.resize = setTimeout(resize_map, 25);
+        }
     }
 }
 
@@ -2706,37 +2751,39 @@ function initialize_btns() {
     }
 }
 
-function restart_datalog() {
-    var init;
-    if (confirm(TXT.restart_datalog_msg)) {
-        /*
-         * Uncomment the following to request weather data from operator on restarting a log
-         *
-        init = getCookie(COOKIE_NAMES.weather);
-        try {
-            init = JSON.parse(init);
-            if (null === init) throw "null";
-        }
-        catch (e) {
-            init = [0,0,0];
-        }
-        makeWeatherForm(function (result) {
-            var code, dtype = "json";
-            if (CNSNT.prime_view === true) {
-                dtype = "jsonp";
-            }
-            setCookie(COOKIE_NAMES.weather, JSON.stringify(result), CNSNT.cookie_duration);
-            // Convert the reported weather into a code for inclusion in the auxiliary instrument status
-            //  Note that 1 is added so that we can tell if there is no weather information in the file
-            code = (8*result[2] + 2*result[1] + result[0]) + 1;
-            call_rest(CNSNT.svcurl, "restartDatalog", dtype, {weatherCode:code});
-            restoreModChangeDiv();
-        },init);
-        */
+function weather_dialog() {
+    CSTATE.showingWeatherDialog = true;
+    init = getCookie(COOKIE_NAMES.weather);
+    try {
+        init = JSON.parse(init);
+        if (null === init) throw "null";
+    }
+    catch (e) {
+        init = [0,0,0];
+    }
+    makeWeatherForm(function (result) {
+        var code, dtype = "json";
         if (CNSNT.prime_view === true) {
             dtype = "jsonp";
         }
-        call_rest(CNSNT.svcurl, "restartDatalog", dtype);
+        setCookie(COOKIE_NAMES.weather, JSON.stringify(result), CNSNT.cookie_duration);
+        // Convert the reported weather into a code for inclusion in the auxiliary instrument status
+        //  Note that 1 is added so that we can tell if there is no weather information in the file
+        code = (8*result[2] + 2*result[1] + result[0]) + 1;
+        CSTATE.inferredStabClass = CNSNT.classByWeather[code-1];
+        // alert('Inferred stability class: ' + inferredStabClass);
+        _changeStabClass(CSTATE.inferredStabClass);
+        call_rest(CNSNT.svcurl, "restartDatalog", dtype, {weatherCode:code});
+        restoreModChangeDiv();
+        CSTATE.weatherMissingCountdown = CNSNT.weatherMissingDefer;
+        CSTATE.showingWeatherDialog = false;
+    },init);
+}
+
+function restart_datalog() {
+    var init;
+    if (confirm(TXT.restart_datalog_msg)) {
+        weather_dialog(); 
     }
 }
 
@@ -3022,16 +3069,22 @@ function stabClassCntl(style) {
     return selcntl;
 }
 
-function changeStabClass() {
-    var value, len, i, aname, mhtml;
-    value = $("#id_stabClassCntl").val()
-    if (value !== CSTATE.stabClass) {
+function _changeStabClass(value) {
+    var isc = "";
+    if (value !== CSTATE.stabClass || ((value === "*") && (CSTATE.inferredStabClass != CSTATE.prevInferredStabClass))) {
         CSTATE.stabClass = value;
-        
-        setCookie(COOKIE_NAMES.dspStabClass, CSTATE.stabClass, CNSNT.cookie_duration)
-        CNSNT.mapControl.changeControlText(TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass);
+        CSTATE.prevInferredStabClass = CSTATE.inferredStabClass;
+        setCookie(COOKIE_NAMES.dspStabClass, CSTATE.stabClass, CNSNT.cookie_duration);
+        if (value === "*") isc = CSTATE.inferredStabClass;
+        CNSNT.mapControl.changeControlText(TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + isc + CSTATE.stabClass);
         clearSwathPolys();
     }
+}
+
+function changeStabClass() {
+    var value;
+    value = $("#id_stabClassCntl").val();
+    _changeStabClass(value);
 }
 
 function exportClassCntl(style) {
@@ -3228,7 +3281,7 @@ function statCheck() {
 
 function getData() {
     var successData = function(data) {
-        var resultWasReturned, newTimestring, newFit, newInst, i, clr, pdata;
+        var resultWasReturned, newTimestring, newFit, newInst, i, clr, pdata, weatherCode;
         CSTATE.net_abort_count = 0;
         restoreModalDiv();
         resultWasReturned = false;
@@ -3271,7 +3324,7 @@ function getData() {
                 CSTATE.lastPeakFilename = CSTATE.lastDataFilename.replace(".dat", ".peaks");
                 CSTATE.lastAnalysisFilename = CSTATE.lastDataFilename.replace(".dat", ".analysis");
             } else {
-                alert("data and data.result: ", data.result);
+                // alert("data and data.result: ", JSON.stringify(data.result));
             }
         } else {
             if (data && (data.indexOf("ERROR: invalid ticket") !== -1)) {
@@ -3282,15 +3335,16 @@ function getData() {
             }
         }
         if (resultWasReturned) {
-            if (CNSNT.prime_view) {
-                if (data.result.lastPos) {
-                    CSTATE.startPos = data.result.lastPos;
-                }
-            } else {
-                if (data.result.nextRow) {
-                    CSTATE.startPos = data.result.nextRow;
-                }
-            }
+            CSTATE.startPos = data.result.lastPos;
+            //if (CNSNT.prime_view) {
+            //    if (data.result.lastPos) {
+            //        CSTATE.startPos = data.result.lastPos;
+            //    }
+            //} else {
+            //    if (data.result.nextRow) {
+            //        CSTATE.startPos = data.result.nextRow;
+            //    }
+            //}
             if (data.result.EPOCH_TIME) {
                 if (data.result.EPOCH_TIME.length > 0) {
                     newTimestring = timeStringFromEtm(data.result.EPOCH_TIME[data.result.EPOCH_TIME.length - 1]);
@@ -3312,6 +3366,23 @@ function getData() {
                 if (data.result.INST_STATUS) {
                     if (data.result.INST_STATUS.length > 0) {
                         newInst = data.result.INST_STATUS[data.result.INST_STATUS.length - 1];
+                        weatherCode = (newInst >> CNSNT.INSTMGR_AUX_STATUS_SHIFT) & CNSNT.INSTMGR_AUX_STATUS_WEATHER_MASK;
+                        if (0 === weatherCode) {
+                            CSTATE.weatherMissingCountdown -= 1;
+                            if (CSTATE.weatherMissingCountdown <= 0 && CNSNT.prime_view === true) {
+                                if (!CSTATE.showingWeatherDialog) {
+                                    CSTATE.showingWeatherDialog = true;
+                                    weather_dialog();
+                                }
+                            }
+                        }
+                        else {
+                            CSTATE.weatherMissingCountdown = CNSNT.weatherMissingDefer;
+                            //if (!CNSNT.prime_view) {
+                                CSTATE.inferredStabClass = CNSNT.classByWeather[weatherCode-1];
+                                _changeStabClass(CSTATE.stabClass);
+                            //}
+                        }
                         if (CSTATE.lastInst !== newInst) {
                             CSTATE.lastInst = newInst;
                         }
@@ -3351,13 +3422,14 @@ function getData() {
                             if ('WIND_DIR_SDEV' in data.result) {
                                 var speed = Math.sqrt(data.result.WIND_E[n-1]*data.result.WIND_E[n-1]+
                                     data.result.WIND_N[n-1]*data.result.WIND_N[n-1]);
+                                var speed_mph = speed * 2.236936;
                                 var direction = CNSNT.rtd*Math.atan2(data.result.WIND_E[n-1],data.result.WIND_N[n-1]);
                                 var stddev = data.result.WIND_DIR_SDEV[n-1];
                                 var vCar = 0.0;
                                 if ("CAR_SPEED" in data.result) vCar = data.result.CAR_SPEED[n-1];
                                 stddev = totSdev(speed,stddev,vCar);
                                 if (stddev>90.0) stddev = 90.0;
-                                $("#windData").html("<b style='font-size:12px; color:#404040;'>" + "Wind: " + speed.toFixed(2) + " m/s" + "</b>");
+                                $("#windData").html("<b style='font-size:12px; color:#404040;'>" + "Wind: " + speed_mph.toFixed(2) + " mph" + "</b>");
                                 makeWindRose(70,27,direction,2*stddev,5.0*speed,15.0,60.0);
                             }
                         } else {
@@ -3517,12 +3589,23 @@ function getMode() {
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     } else if (mode==3) {
-                        $("#id_captureBtn").attr("disabled", "disabled");
+                        call_rest(CNSNT.svcurl, "driverRpc", dtype, {"func": "rdDasReg", "args": "['PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER']"},
+                            function (data) { 
+                                if (data.result.hasOwnProperty('value'))
+                                    $("#id_captureBtn").html((0.2*data.result.value).toFixed(0) + TXT.cancl_ana_time).attr("onclick", "cancelAnaSwitch();");
+                                else     
+                                    $("#id_captureBtn").html(TXT.cancl_ana).attr("onclick", "cancelAnaSwitch();");
+                            }
+                        );
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     } else if (mode==4) {
                         $("#id_captureBtn").attr("disabled", "disabled");
                         $("#id_surveyOnOffBtn").html(TXT.start_survey).attr("onclick","startSurvey();");
+                        $("#id_calibrateBtn").attr("disabled", "disabled");
+                    } else if (mode==5) {
+                        $("#id_captureBtn").attr("disabled", "disabled");
+                        $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     }
                 }
@@ -3681,11 +3764,35 @@ function showAnalysis() {
     }
 }
 
+function equalProperties(obj1, obj2) {
+    var p;
+    for (p in obj1) {
+        if (obj1.hasOwnProperty(p)) {
+            if (obj2.hasOwnProperty(p)) {
+                if (obj1[p] !== obj2[p]) return false;
+            }
+            else return false;
+        }
+    }
+    for (p in obj2) {
+        if (obj2.hasOwnProperty(p)) {
+            if (obj1.hasOwnProperty(p)) {
+                if (obj1[p] !== obj2[p]) return false;
+            }
+            else return false;
+        }
+    }
+    return true;
+}
+
 function fetchSwath() {
     function successSwath(data) {
         //alert("Im back from swath")
         var resultWasReturned, i;
         resultWasReturned = false;
+        CSTATE.lastSwathOutput = {};
+        $.extend(CSTATE.lastSwathOutput,data);
+        
         if (data.result) {
             if (data.result.filename) {
                 if (CSTATE.lastDataFilename === data.result.filename) {
@@ -3697,6 +3804,7 @@ function fetchSwath() {
         }
         if (resultWasReturned) {
             if (data.result.GPS_ABS_LAT) {
+                CSTATE.nextSwathRow = data.result.nextRow;
                 if (CSTATE.clearSwath) {
                     CSTATE.clearSwath = false;
                 } else {
@@ -3753,12 +3861,36 @@ function fetchSwath() {
                     , 'alog': CSTATE.alog
                     , 'gmtOffset': CNSNT.gmt_offset
                     };
-    
+        
     if (!CSTATE.showSwath) {
          setGduTimer('swath');
          return;
     }
     
+    // Avoid repeatedly calling makeSwath if parameters are unchanged. Even if the parameters
+    //  are identical and we get back empty data sets, we should do the call from time-to-time 
+    //  in case new data arrive. This frequency is controlled by CNSNT.swathMaxSkip.
+    
+    if (equalProperties(CSTATE.lastSwathParams,params)) {
+        if (CSTATE.swathSkipCount >= CNSNT.swathMaxSkip) {
+            // We make the call despite the identical parameters since we
+            //  have got too many empty replies
+            CSTATE.swathSkipCount = 0;
+        }
+        else {
+            if (!CSTATE.lastSwathOutput.result.GPS_ABS_LAT.length) CSTATE.swathSkipCount += 1;
+            // Playback from cache
+            successSwath(CSTATE.lastSwathOutput);
+            return;
+        }
+    }
+    
+    // We actually need to make the call. Clear out the lastSwathOutput cache
+    //  since the parameters have changed
+    CSTATE.lastSwathParams = {};
+    $.extend(CSTATE.lastSwathParams,params);
+    CSTATE.lastSwathOutput = {};
+
     switch(CNSNT.prime_view) {
     case false:
         ruri = CNSNT.resturl; //"https://ubuntuhost64:3000/node/rest"
@@ -3861,6 +3993,10 @@ function showLeaksAndWind() {
                             if ("CAR_SPEED" in data.result) vCar = data.result.CAR_SPEED[i];
                             windStddev = totSdev(windSpeed,windStddev,vCar);
                             peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
+                            if (isNaN(windStddev)) {
+                                windStddev = 90;
+                                windDirection = 180;
+                            }
                             windMarker = newWindMarker(CSTATE.map, peakCoords, 50, windDirection, windStddev);
                             CSTATE.windMarkers[CSTATE.windMarkers.length] = windMarker;
                         }
@@ -4256,6 +4392,17 @@ function cancelCapSwitch() {
     }
 }
 
+function cancelAnaSwitch() {
+    if (confirm(TXT.cancel_ana_msg)) {
+        var dtype = "json";
+        if (CNSNT.prime_view === true) {
+            dtype = "jsonp";
+        }
+        call_rest(CNSNT.svcurl, "driverRpc", dtype, {"func": "wrDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER', 5]"});
+        restoreModChangeDiv();
+    }
+}
+
 function injectCal() {
     if (confirm(TXT.start_inject_msg)) {
     captureSwitch();
@@ -4343,18 +4490,22 @@ function removeGoListener(plobj) {
 }
 
 function initialize_plats() {
-    var plname, plobj, rect;
-    if (PLATOBJS) {
-        for (plname in PLATOBJS) {
-            plobj = PLATOBJS[plname];
-            rect = newRectangle(plobj.minlng, plobj.maxlng, plobj.minlat, plobj.maxlat);
-            attachPlatListener(rect, plname);
-            plobj.rect = rect;
-            plobj.hlite = false;
-            plobj.active = false;
-            plobj.go = null;
-            plobj.go_listener = null;
+    try {
+        var plname, plobj, rect;
+        if (PLATOBJS) {
+            for (plname in PLATOBJS) {
+                plobj = PLATOBJS[plname];
+                rect = newRectangle(plobj.minlng, plobj.maxlng, plobj.minlat, plobj.maxlat);
+                attachPlatListener(rect, plname);
+                plobj.rect = rect;
+                plobj.hlite = false;
+                plobj.active = false;
+                plobj.go = null;
+                plobj.go_listener = null;
+            }
         }
+    } catch( ex) {
+        
     }
 }
 
@@ -4387,7 +4538,7 @@ function initialize(winH, winW) {
     }
     
     //secure ping (to assure browsers can see secure site)
-    $("#id_content_spacer").html('<img src="' + CNSNT.resturl + '/ping' + '"/>');
+    $("#id_content_spacer").html('<img src="' + CNSNT.resturl + '/pimg' + '"/>');
     
     //CNSNT.prime_view = true;
     

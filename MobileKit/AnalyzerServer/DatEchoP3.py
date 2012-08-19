@@ -128,7 +128,7 @@ class DataEchoP3(object):
             nextFile, lastRow = self._findIncomplete(filesToCheck)
 
             while nextFile is not None:
-                print "Pushing partial file (lastRow = %s) '%s'." % (lastRow,
+                print "Pushing partial file (lastRow = %s) '%s'" % (lastRow,
                                                                      nextFile)
                 path, fname = os.path.split(nextFile)
                 self._processFile(path, fname, lastRow)
@@ -136,7 +136,7 @@ class DataEchoP3(object):
                 filesToCheck = self._getFilesInRange(begin, end)
                 nextFile, lastRow = self._findIncomplete(filesToCheck)
 
-            print 'Done with partial files...'
+            print 'Partial files complete'
 
             # Don't use the earliest file on the server since it could
             # still be "later" than the earliest time we are
@@ -303,7 +303,7 @@ class DataEchoP3(object):
         assert analyzerId is not None
 
         if analyzerId == '':
-            print "No analyzer Id available. Skipping local IP registration."
+            print "No analyzer Id available. Skipping local IP registration"
             return
 
         ipRegistered = False
@@ -446,7 +446,7 @@ class DataEchoP3(object):
         datRoot, _ = os.path.split(self.listenPath)
 
         for fname, row in files:
-            print "Checking '%s' for rows beyond %s..." % (fname, row)
+            print "Checking '%s' for rows beyond %s" % (fname, row)
             group = self.DATLOG_RX.search(fname).groupdict()
             assert 'year' in group
             assert 'month' in group
@@ -467,26 +467,26 @@ class DataEchoP3(object):
             lastRow = 0
 
             if os.path.isfile(rowCache):
-                print '...found row cache. Using it.'
+                print 'Found row cache'
                 with open(rowCache, 'rb') as fp:
                     lastRow = cPickle.load(fp)
 
                 # If the row cache was generated while the file was
                 # incomplete, we need to recalculate it.
                 if lastRow < int(row):
-                    print '...rescanning file to generate cache.'
+                    print 'Generate cache (rescan)'
                     lastRow = self._createUpdateRowCache(path, rowCache)
 
             else:
-                print "...no cache. Scanning file."
+                print "Generate cache (scan)"
                 lastRow = self._createUpdateRowCache(path, rowCache)
 
             if lastRow != int(row):
-                print ("...detected incomplete file. Server row: %s, "
+                print ("Incomplete file. Server row: %s, "
                        "local: %s" % (row, lastRow))
                 return path, int(row)
 
-        print 'No incomplete files.'
+        print 'No incomplete files'
         return None, 0
 
     def _createUpdateRowCache(self, path, rowCache):
@@ -532,7 +532,7 @@ class DataEchoP3(object):
                     deadLineCount += 1
 
                     if deadLineCount == 10:
-                        print 'Checking for latest file...'
+                        print 'Checking for latest file'
                         latest = genLatestFiles(*os.path.split(
                                 self.listenPath)).next()
 

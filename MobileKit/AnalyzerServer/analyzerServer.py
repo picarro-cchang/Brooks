@@ -19,7 +19,14 @@ from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MAN
 import SwathProcessor as sp
 import math
 
+debugSwath = False
 NaN = 1e1000/1e1000
+
+if debugSwath:
+    dbgSwathFp = file("c:/temp/swathDump.dat","wb")
+else:
+    dbgSwathFp = None
+    
 def pFloat(x):
     try:
         return float(x)
@@ -181,8 +188,9 @@ def _makeSwath(name,startRow,limit,nWindow,stabClass,minLeak,minAmp,astdParams):
         rowDict = {}
         for col,val in zip(header,vals):
             rowDict[col] = pFloat(val)
-        source.append(rowDict)            
-    result = sp.process(source,nWindow,stabClass,minLeak,minAmp,astdParams)
+        source.append(rowDict)
+    result = sp.process(source,nWindow,stabClass,minLeak,minAmp,astdParams,dbgSwathFp)
+    if debugSwath: dbgSwathFp.flush()
     result['nextRow'] = row-nWindow
     return result
     
@@ -461,9 +469,10 @@ def driverRpcEx(params):
         Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "AnalyzerServer")
         try:
             return dict(value=getattr(Driver,params['func'])(*eval(params.get('args','()'),{}),**eval(params.get('kwargs','{}'))))
-        except:
-            driverAvailable = False
-            lastDriverCheck = time.clock()
+        except Exception,e:
+            if 'connection failed' in str(e):
+                driverAvailable = False
+                lastDriverCheck = time.clock()
             return dict(error=traceback.format_exc())
     else:
         if time.clock() - lastDriverCheck > 60: driverAvailable = True
@@ -531,6 +540,7 @@ def getLastPeriphUpdateEx(params):
         return dict(error=traceback.format_exc())
 
 @app.route('/rest/ping')
+@app.route('/rest/pimg')
 def ping():
     return 'ping'
     

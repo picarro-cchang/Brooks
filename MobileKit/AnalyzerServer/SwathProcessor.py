@@ -12,13 +12,21 @@ Copyright (c) 2012 Picarro, Inc. All rights reserved
 from collections import deque
 from numpy import arange, arcsin, arctan2, asarray, cos, isfinite, isnan
 from numpy import log, pi, sin, sqrt, unwrap
-from Host.Common.namedtuple import namedtuple
+import cPickle
+import time
+
+try:
+    from collections import namedtuple
+except:
+    from Host.Common.namedtuple import namedtuple
+    
 from scipy.special import erf
 import SurveyorInstStatus as sis
 
 EARTH_RADIUS = 6378100
 DTR = pi/180.0
 RTD = 180.0/pi
+NOT_A_NUMBER = 1e1000/1e1000
 
 # Calculate maximum width of field of view about the point (x_N,y_N) based on a path of 2N+1 points (x_0,y_0) through (x_{2N},y_{2N})
 #  where the mean wind bearing is (u=WIND_E,v=WIND_N) and there is a standard deviation of the wind direction given by d_sdev
@@ -144,15 +152,28 @@ def astd(wind,vcar,params):
     # c = 0.0
     return min(pi,params["a"]*(params["b"]+params["c"]*vcar)/(wind+0.01))
                 
-def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
+def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams,debugFp = None):
     # The stablility class can "A" through "F" for an explicit class, or "*" if the class is
-    #  to be determined from the auxiliary instrument status
+    #  to be determined from the auxiliary instrument status. 
+    # If debugFp is a file handle, the input and output arguments are pickled and written
+    #  to the file for debugging
+    print "Calling process"
+    if debugFp is not None:
+        inArgs = {}
+        inArgs["maxWindow"] = maxWindow
+        inArgs["stabClass"] = stabClass
+        inArgs["minLeak"] = minLeak
+        inArgs["minAmpl"] = minAmpl
+        inArgs["astdParams"] = astdParams
+        sourceAsList = []
+    
     fields = ["EPOCH_TIME","GPS_ABS_LAT","GPS_ABS_LONG","DELTA_LAT","DELTA_LONG","INST_STATUS"]
     fovBuff = deque()
     N = maxWindow              # Use 2*N+1 samples for calculating FOV
     result = {}
     for f in fields: result[f] = []
     for newdat in source:
+        if debugFp is not None: sourceAsList.append(newdat)
         while len(fovBuff) >= 2*N+1: fovBuff.popleft()
         fovBuff.append(newdat)
         if len(fovBuff) == 2*N+1:
@@ -165,9 +186,13 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
             windN = d["WIND_N"]
             windE = d["WIND_E"]
             vcar = d.get("CAR_SPEED",0.0)
-            dstd = DTR*d["WIND_DIR_SDEV"]
+            try:
+                dstd = DTR*d["WIND_DIR_SDEV"]
+            except:
+                dstd = NOT_A_NUMBER
             mask = d["ValveMask"]
             instStatus = int(d["INST_STATUS"])
+            result["INST_STATUS"].append(instStatus)
             auxStatus = instStatus >> sis.INSTMGR_AUX_STATUS_SHIFT
             instStatus = instStatus & sis.INSTMGR_STATUS_MASK
             weatherCode = auxStatus & sis.INSTMGR_AUX_STATUS_WEATHER_MASK
@@ -175,7 +200,7 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
             #  SUBTRACT ONE before using it to look up the stability class in classByWeather. If we have an
             #  invalid code in the data file and try to fetch it using "*", the swath is suppressed.
             if stabClass == "*": stabClass = sis.classByWeather.get(weatherCode-1,None)
-            if (fit>0) and (mask<1.0e-3) and isfinite(windN) and isfinite(windE) and (instStatus == sis.INSTMGR_STATUS_GOOD) and (stabClass is not None):
+            if (fit>0) and (mask<1.0e-3) and isfinite(dstd) and isfinite(windN) and isfinite(windE) and (instStatus == sis.INSTMGR_STATUS_GOOD) and (stabClass is not None):
                 bearing = arctan2(windE,windN)
                 wind = sqrt(windE*windE + windN*windN)
                 xx = asarray([fovBuff[i]["GPS_ABS_LONG"] for i in range(2*N+1)])
@@ -200,6 +225,11 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
             result["GPS_ABS_LONG"].append(lng)
             result["DELTA_LAT"].append(deltaLat)
             result["DELTA_LONG"].append(deltaLng)
+    if debugFp is not None:
+        inArgs["source"] = sourceAsList
+        outArgs = {"result": result}
+        timestamp = time.time()
+        cPickle.dump(dict(inArgs=inArgs,outArgs=result,timestamp=timestamp),debugFp,-1)
     return result
 
 def ltqnorm( p ):
@@ -229,12 +259,12 @@ def ltqnorm( p ):
         raise ValueError( "Argument to ltqnorm %f must be in open interval (0,1)" % p )
 
     # Coefficients in rational approximations.
-    #a = (-3.969683028665376e+01,  2.209460984245205e+02, \
-    #     -2.759285104469687e+02,  1.383577518672690e+02, \
-    #     -3.066479806614716e+01,  2.506628277459239e+00)
-    #b = (-5.447609879822406e+01,  1.615858368580409e+02, \
-    #     -1.556989798598866e+02,  6.680131188771972e+01, \
-    #     -1.328068155288572e+01 )
+    a = (-3.969683028665376e+01,  2.209460984245205e+02, \
+         -2.759285104469687e+02,  1.383577518672690e+02, \
+         -3.066479806614716e+01,  2.506628277459239e+00)
+    b = (-5.447609879822406e+01,  1.615858368580409e+02, \
+         -1.556989798598866e+02,  6.680131188771972e+01, \
+         -1.328068155288572e+01 )
     c = (-7.784894002430293e-03, -3.223964580411365e-01, \
          -2.400758277161838e+00, -2.549732539343734e+00, \
           4.374664141464968e+00,  2.938163982698783e+00)
@@ -244,7 +274,7 @@ def ltqnorm( p ):
     # Define break-points.
     plow  = 0.02425
     phigh = 1 - plow
-
+    
     # Rational approximation for lower region:
     if p < plow:
         q  = sqrt(-2*log(p))
@@ -253,8 +283,16 @@ def ltqnorm( p ):
 
     # Rational approximation for upper region:
     if phigh < p:
-        q  = sqrt(-2*log(1-p))    
+       q  = sqrt(-2*log(1-p))
+       return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / \
+                ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)
 
+    # Rational approximation for central region:
+    q = p - 0.5
+    r = q*q
+    return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q / \
+           (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1)
+           
 def cnorm(z):
     # Calculate probability that a normal random variable will be 
     #  less than the mean + z standard deviations 

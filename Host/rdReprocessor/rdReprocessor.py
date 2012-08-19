@@ -19,7 +19,6 @@ import sys
 import time
 import os.path
 from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR 
-from Host.Fitter.fitterCoreWithFortran import convHdf5ToDict
 from Host.Common import Broadcaster, Listener, StringPickler
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 
@@ -37,6 +36,18 @@ else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 DEFAULT_CONFIG_NAME = "..\..\AppConfig\Config\rdReprocessor\rdReprocessor.ini"
+
+def convHdf5ToDict(h5Filename):
+    h5File = openFile(h5Filename, "r")
+    retDict = {}
+    for tableName in h5File.root._v_children.keys():
+        table = h5File.root._v_children[tableName]
+        retDict[tableName] = {}
+        r = table.read()
+        for colKey in table.colnames:
+            retDict[tableName][colKey] = r[colKey] # table.read(field=colKey)
+    h5File.close()
+    return retDict
 
 class rdReprocessor(object):
     def __init__(self, configFile):

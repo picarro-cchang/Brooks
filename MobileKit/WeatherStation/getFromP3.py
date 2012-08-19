@@ -9,13 +9,17 @@ except:
     import json
 
 from collections import deque
-from collections import namedtuple
+try:
+    from collections import namedtuple
+except:
+    from Host.Common.namedtuple import namedtuple
 import calendar
 import sys
 import time
 import traceback
 import math
 import os
+import socket
 import threading
 import Queue
 from Host.Common.configobj import ConfigObj
@@ -137,7 +141,8 @@ class P3_Accessor(object):
                     url = '%s/%s/%s/%s/%s' % (self.csp, "rest", self.svc, self.ticket, v_rsc)
                     get_url = url+("?%s" % paramStr if params else "")
                     print "URL: %s" % get_url
-                    resp = urllib2.urlopen(get_url,timeout=5.0)
+                    socket.setdefaulttimeout(5.0)
+                    resp = urllib2.urlopen(get_url)
                     rtndata_str = resp.read()
                     # Only push rows which are of the correct logtype
                     etm = params["startEtm"]
@@ -349,7 +354,8 @@ class P3_Accessor_ByPos(object):
                     url = '%s/%s/%s/%s/%s' % (self.csp, "rest", self.svc, self.ticket, v_rsc)
                     get_url = url+("?%s" % paramStr if params else "")
                     print get_url
-                    resp = urllib2.urlopen(get_url,timeout=5.0)
+                    socket.setdefaulttimeout(5.0)
+                    resp = urllib2.urlopen(get_url)
                     rtndata_str = resp.read()
                     # Only push rows which are of the correct logtype
                     startPos = params["startPos"]

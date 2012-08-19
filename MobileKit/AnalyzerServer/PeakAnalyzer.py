@@ -8,7 +8,11 @@ from optparse import OptionParser
 import time
 import datetime
 import traceback
-from Host.Common.namedtuple import namedtuple
+
+try:
+    from collections import namedtuple
+except:
+    from Host.Common.namedtuple import namedtuple
 
 import urllib2
 import urllib
@@ -224,7 +228,6 @@ class PeakAnalyzer(object):
     #######################################################################
     # Generators for getting data from files or the database
     #######################################################################
-            
     def sourceFromFile(self,fname):
         # Generate lines from a specified user log file. Raise StopIteration at end of the file
         fp = file(fname,'rb')
@@ -240,14 +243,17 @@ class PeakAnalyzer(object):
         #  the live file.
         fp = file(fname,'rb')
         print "\r\nOpening source stream %s\r\n" % fname
+        line = ""
         counter = 0
         while True:
-            line = fp.readline()
+            line += fp.readline()
+            # Note that if the file ends with an incomplete line, fp.readline() will return a
+            #  string with no terminating newline. We must NOT yield this incomplete line to
+            #  avoid causing problems at the higher levels.
             if not line:
                 counter += 1
                 if counter == 10:
                     try:
-                        # Get last file
                         if fname == os.path.join(self.file_path):
                             fp.close()
                             print "\r\nClosing source stream %s\r\n" % self.fname
@@ -266,7 +272,10 @@ class PeakAnalyzer(object):
                 if self.debug: sys.stderr.write('-')
                 continue
             if self.debug: sys.stderr.write('.')
-            yield line
+            # Only yield complete lines, otherwise loop for more characters
+            if line.endswith("\n"):
+                yield line
+                line = ""
 
     def followLastUserLogDb(self):
         aname = self.analyzerId
@@ -311,6 +320,13 @@ class PeakAnalyzer(object):
                                 print "\r\nLog complete. Closing log stream\r\n"
                                 return
                         
+                        # We didn't find a log, so wait 5 seconds, and then see if there is a new lastlog
+                        time.sleep(5)
+                        newlastlog = self.getLastLog()
+                        if not lastlog == newlastlog:
+                            print "\r\nClosing log stream\r\n"
+                            return
+                        
                         if self.debug == True:
                             print 'EXCEPTION in PeakFinder - followLastUserLogDb().\n%s\n' % err_str
                         pass
@@ -334,6 +350,7 @@ class PeakAnalyzer(object):
                                 
                             yield doc
                     else:
+                        # no dbdata, so wait 5 seconds, then check for new last log
                         time.sleep(5)
                         newlastlog = self.getLastLog()
                         if not lastlog == newlastlog:
@@ -600,7 +617,7 @@ class PeakAnalyzer(object):
         
         for dtuple in source:
             if dtuple is None: continue
-            if 'HP_Delta_iCH4_Raw' not in dtuple._fields: break # Abort if there are no data
+            if 'HP_Delta_iCH4_Raw' not in dtuple._fields: continue # Swallow data if there is no delta
             collectingNow = collecting(dtuple.ValveMask)
             if not collectingNow:
                 tempStore.append(dtuple)
@@ -637,7 +654,7 @@ class PeakAnalyzer(object):
             lastCollecting = collectingNow
                         
     def getTicket(self):
-        self.ticket = None
+        self.ticket = "NONE"
         ticket = None
         qry = "issueTicket"
         sys = self.psys

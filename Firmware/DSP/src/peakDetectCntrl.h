@@ -1,12 +1,12 @@
 /*
  * FILE:
- *   peakDetectCntrl.h
+ *   peakDetectCntrl.c
  *
  * DESCRIPTION:
  *   Peak detection controller routines for determining whether an eligible peak
  * in the "processedLoss" has been found. The routine runs periodically (typically every 0.2s)
  * and maintains a history buffer containing the previous processed losses. The controller
- * can be in one of three states:
+ * can be in one of these states:
  *
  *  PEAK_DETECT_CNTRL_IdleState: Do not process contents of history buffer
  *  PEAK_DETECT_CNTRL_ArmedState: Process contents of history buffer
@@ -14,23 +14,32 @@
  *  PEAK_DETECT_CNTRL_TriggeredState: triggerDelay samples have arrived since peak was found
  *  PEAK_DETECT_CNTRL_InactiveState: Do not process contents of history buffer, used to indicate
  *   non-survey mode for methane leak detection applications
+ *  PEAK_DETECT_CNTRL_CancellingState: Used to return to IdleState if triggered state is cancelled.
+ *   Number of samples in this state is determined by PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER
  *
- * Conceptually, the history buffer is cleared when entering the ArmedState. Up to "historySize"
- *  points are kept in the buffer, and on the introduction of each new processedLoss
- *  1) The peak value in the history buffer is found, its location is peakIndex
- *  2) The minimum value in the buffer from the start to peakIndex is found
- *  3) The minimum value in the buffer from the peakIndex to the end of the buffer 
+ * The minimum of the previous "backgroundSamples" points within the history buffer are used 
+ *  determine the value of "background". If "backgroundSamples" is zero, the value of 
+ *  "background" is not updated.
+ * The most recent points in the history buffer are called the active points. The number of
+ *  active points is set to zero when entering the ArmedState. As points are collected, the
+ *  number of active points is incremented, but its value is capped at "activeSize"
+ * When new points arrive:
+ *  1) The peak value in the active region is found, its location is peakIndex
+ *  2) The minimum value in the active region from the start to peakIndex is found
+ *  3) The minimum value in the active region from the peakIndex to the end of the buffer 
  *      (i.e., the current sample) is found
  *
- * The peak value is compared against upperThreshold: Condition 0 is true if it exceeds the threshold.
- * The minimum between start and peakIndex is compared against lowerThreshold1: Condition 1 is true if
+ * The peak value is compared against background + upperThreshold: Condition 0 is true if it exceeds the threshold.
+ * The minimum between start and peakIndex is compared against background + lowerThreshold1: Condition 1 is true if
  *   it is below the threshold
- * The minimum between peakIndex and the current sample is compared against lowerThreshold2: Condition 2 
+ * The minimum between peakIndex and the current sample is compared against background + lowerThreshold2: Condition 2 
  *   is true it is below the threshold
+ * The position of the peak is compared against "postPeakSamples": Condition 3 is true if there are at least this
+ *  number of samples in the active region since the peak
  * 
  * The value of "triggerCondition" specifies the logical function which is to be applied to the results
  *  of the three conditions to determine whether a transition to the triggered state should occur.
- * From the conditions, the "conditionBit" = 4*(Condition 2) + 2*(Condition 1) + (Condition 0) is found.
+ * From the conditions, the "conditionBit" = 8*(Condition 3) + 4*(Condition 2) + 2*(Condition 1) + (Condition 0) is found.
  * When triggerCondition is written out as a binary number, if the conditionBit is 1, the controller
  *  will enter the TriggerPending state
  *
@@ -46,6 +55,7 @@
  *
  * HISTORY:
  *   11-Nov-2011  sze  Initial version.
+ *   27-Jul-2012  sze  Introduced cancelling state and ability to examine remaining time in triggered state
  *
  *  Copyright (c) 2011 Picarro, Inc. All rights reserved
  */
@@ -66,16 +76,19 @@ typedef struct PEAK_DETECT_CNTRL
     unsigned int *triggerCondition_;    // Specifies logical function for triggering
     unsigned int *triggerDelay_;        // Number of samples to delay when trigger conditions are met
     unsigned int *resetDelay_;          // Number of samples after entering triggered state before resetting to idle state
+    unsigned int *cancellingDelay_;     // Number of samples after to remain in cancelling state before resetting to idle state
+    unsigned int *triggeredSamplesLeft_;            // Number of samples left in triggered state
     unsigned int *idleValveMaskAndValue_;           // Valve mask and value for idle state
     unsigned int *armedValveMaskAndValue_;          // Valve mask and value for armed state
     unsigned int *triggerPendingValveMaskAndValue_; // Valve mask and value for trigger pending state
     unsigned int *triggeredValveMaskAndValue_;      // Valve mask and value for triggered state
-    unsigned int *inactiveValveMaskAndValue_;      // Valve mask and value for triggered state
+    unsigned int *inactiveValveMaskAndValue_;       // Valve mask and value for triggered state
+    unsigned int *cancellingValveMaskAndValue_;     // Valve mask and value for cancelling state
     unsigned int *solenoidValves_;      // Solenoid valve mask
     unsigned int historyTail;
     unsigned int activeLength;
+    unsigned int cancellingWait;
     unsigned int triggerWait;
-    unsigned int resetWait;
     PEAK_DETECT_CNTRL_StateType lastState;
     float historyBuffer[PEAK_DETECT_MAX_HISTORY_LENGTH];
 } PeakDetectCntrl;

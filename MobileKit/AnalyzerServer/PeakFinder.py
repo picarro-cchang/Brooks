@@ -6,7 +6,11 @@ from optparse import OptionParser
 import time
 import datetime
 import traceback
-from Host.Common.namedtuple import namedtuple
+
+try:
+    from collections import namedtuple
+except:
+    from Host.Common.namedtuple import namedtuple
 
 import urllib2
 import urllib
@@ -272,7 +276,6 @@ class PeakFinder(object):
         if self.factor == None:
             self.factor = 1.1
 
-        self.noWait = 'nowait' in kwargs
         self.logtype = "peaks"
         self.last_peakname = None
         self.sockettimeout = 10
@@ -296,9 +299,13 @@ class PeakFinder(object):
         #  the live file.
         fp = file(fname,'rb')
         print "\r\nOpening source stream %s\r\n" % fname
+        line = ""
         counter = 0
         while True:
-            line = fp.readline()
+            line += fp.readline()
+            # Note that if the file ends with an incomplete line, fp.readline() will return a
+            #  string with no terminating newline. We must NOT yield this incomplete line to
+            #  avoid causing problems at the higher levels.
             if not line:
                 counter += 1
                 if counter == 10:
@@ -321,7 +328,10 @@ class PeakFinder(object):
                 if self.debug: sys.stderr.write('-')
                 continue
             if self.debug: sys.stderr.write('.')
-            yield line
+            # Only yield complete lines, otherwise loop for more characters
+            if line.endswith("\n"):
+                yield line
+                line = ""
 
     def followLastUserLogDb(self):
         aname = self.analyzerId
@@ -332,14 +342,11 @@ class PeakFinder(object):
             
         if lastlog:
             lastPos = 0
-            rtn_data = None
-            
             waitForRetryCtr = 0
             waitForRetry = True
             while True:
-                #params = {"alog": lastlog, "startPos": lastPos, "limit": 20}
-                #postparms = {'data': json.dumps(params)}
-                #getAnalyzerDatLogUrl = self.url.replace("getData", "getAnalyzerDatLog")
+                rtn_data = None
+                
                 try:
                     qry_with_ticket = '%s?qry=byPos&alog=%s&startPos=%s&limit=20' % (self.anzlog_url.replace("<TICKET>", self.ticket), lastlog, lastPos)
                     if self.debug == True:
@@ -365,9 +372,17 @@ class PeakFinder(object):
                             if self.logname == lastlog:
                                 print "\r\nLog complete. Closing log stream\r\n"
                                 return
+
+                        # We didn't find a log, so wait 5 seconds, and then see if there is a new lastlog
+                        time.sleep(5)
+                        newlastlog = self.getLastLog()
+                        if not lastlog == newlastlog:
+                            print "\r\nClosing log stream\r\n"
+                            return
                         
                         if self.debug == True:
                             print 'EXCEPTION in PeakFinder - followLastUserLogDb().\n%s\n' % err_str
+                            
                         pass
                     
                 except Exception, e:
@@ -389,6 +404,7 @@ class PeakFinder(object):
                                 
                             yield doc
                     else:
+                        # no dbdata, so wait 5 seconds, then check for new last log
                         time.sleep(5)
                         newlastlog = self.getLastLog()
                         if not lastlog == newlastlog:
@@ -773,7 +789,7 @@ class PeakFinder(object):
             for peak in peaks: yield peak
 
     def getTicket(self):
-        self.ticket = None
+        self.ticket = "NONE"
         ticket = None
         qry = "issueTicket"
         sys = self.psys
@@ -853,14 +869,14 @@ class PeakFinder(object):
                     source = self.followLastUserLogDb()
                     alignedData = self.analyzerDataDb(source)
                 else:
-                    if self.noWait:
+                    if self.file_path:
                         source = self.sourceFromFile(fname)
                     else:
                         source = self.followLastUserFile(fname)
                     alignedData = self.analyzerData(source)
                     
                 # Filter by spectrumID for isomethane analyzer
-                selectedData = ((data.DISTANCE,data) for data in alignedData if (data is not None) and ('species' not in data._fields or int(data.species)==150))
+                selectedData = ((data.DISTANCE,data) for data in alignedData if (data is not None) and ('species' not in data._fields or int(data.species) in [2,150]))
                     
                 intData = (data for dist,data in interpolator(selectedData,dx))
                 peakData = self.spaceScale(intData,dx,t0,nlevels,factor)
@@ -920,7 +936,7 @@ class PeakFinder(object):
                 if self.logname:
                     break
                 
-                if self.noWait: break
+                if self.file_path: break
 
 def main(argv=None):
     if argv is None:
@@ -1061,3 +1077,4 @@ def main(argv=None):
 
 if __name__ == "__main__":
     sys.exit(main())
+ 

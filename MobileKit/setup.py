@@ -1,5 +1,7 @@
 from distutils.core import setup
+import os
 import py2exe
+import shutil
 import sys
 import glob
 
@@ -37,5 +39,6 @@ setup(console=['AnalyzerServer/RunPeakFinder.py',
      data_files = data_files,
                    
     )
-
+shutil.copyfile('dist/DatEchoP3.exe','dist/GPSEchoP3.exe')
+shutil.copyfile('dist/DatEchoP3.exe','dist/WSEchoP3.exe')
 

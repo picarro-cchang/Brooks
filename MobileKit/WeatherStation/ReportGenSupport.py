@@ -9,7 +9,11 @@ File History:
 Copyright (c) 2012 Picarro, Inc. All rights reserved
 """
 import calendar
-from collections import namedtuple
+import csv
+try:
+    from collections import namedtuple
+except:
+    from Host.Common.namedtuple import namedtuple
 import cStringIO
 import getFromP3 as gp3
 import hashlib
@@ -24,6 +28,7 @@ import Image
 import ImageDraw
 import ImageMath
 from SwathProcessor import process
+import socket
 import sys
 import threading
 import time
@@ -32,6 +37,7 @@ import urllib
 import urllib2
 import subprocess
 import SurveyorInstStatus as sis
+from ExcelXmlReport import ExcelXmlReport
 from Host.Common.configobj import ConfigObj
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -44,6 +50,14 @@ configFile = os.path.splitext(AppPath)[0] + ".ini"
 config = ConfigObj(configFile)
 WKHTMLTOPDF = config["HelperApps"]["wkhtml_to_pdf"]
 IMGCONVERT  = config["HelperApps"]["image_convert"]
+APIKEY = config["P3Logs"].get("apikey",None)
+
+if "Plats" in config:
+    PLAT_TIF_ROOT = config["Plats"]["tif_root"]
+    PLAT_PNG_ROOT = config["Plats"]["png_root"]
+else:
+    PLAT_TIF_ROOT = r"S:\Projects\Picarro Surveyor\Files from PGE including TIFF maps\GEMS\CompTif\Gas\Distribution"
+    PLAT_PNG_ROOT = r"static\plats"
 
 SVCURL = "http://localhost:5200/rest"
 RTD = 180.0/math.pi
@@ -57,16 +71,13 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     appPath = sys.argv[0]
 appDir = os.path.split(appPath)[0]
-PLAT_TIF_ROOT = r"S:\Projects\Picarro Surveyor\Files from PGE including TIFF maps\GEMS\CompTif\Gas\Distribution"
-PLAT_PNG_ROOT = os.path.join(appDir,r'static\plats')
-if not os.path.exists(PLAT_PNG_ROOT): os.makedirs(PLAT_PNG_ROOT)
 
+PLAT_TIF_ROOT = os.path.join(appDir,PLAT_TIF_ROOT)
+PLAT_PNG_ROOT = os.path.join(appDir,PLAT_PNG_ROOT)
+if not os.path.exists(PLAT_PNG_ROOT): os.makedirs(PLAT_PNG_ROOT)
 MapParams = namedtuple("MapParams",["minLng","minLat","maxLng","maxLat","nx","ny","padX","padY"])
 
-fname = "platBoundaries.json"
-fp = open(fname,"rb")
-platBoundaries = json.loads(fp.read())
-fp.close()
+statusLock = threading.Lock()
 statusLocks = {}
 
 def overBackground(a,b,box):
@@ -103,8 +114,10 @@ def merge_dictionary(dst, src):
     return dst
 
 def getStatus(fname):
+    statusLock.acquire()
     if fname not in statusLocks:
         statusLocks[fname] = threading.Lock()
+    statusLock.release()
     statusLocks[fname].acquire()
     try:
         stDict = {}
@@ -120,8 +133,10 @@ def getStatus(fname):
         statusLocks[fname].release()
         
 def updateStatus(fname,statusDict,init=False):
+    statusLock.acquire()
     if fname not in statusLocks:
         statusLocks[fname] = threading.Lock()
+    statusLock.release()
     statusLocks[fname].acquire()
     try:
         dst = {}
@@ -236,6 +251,7 @@ class ReportPDF(object):
         name = self.instructions["regions"][self.region]["name"]
         heading = "<h2>Report %s, Region %d (%s)</h2>" % (pretty_ticket(self.ticket),self.region+1,name)
         peaksHeading = "<h3>Methane Peaks Detected</h3>"
+        markerHeading = "<h3>Markers</h3>"
         surveyHeading = "<h3>Surveys</h3>"
         if "done" in getStatus(self.statusFname):
             return  # This has already been computed and the output exists
@@ -244,6 +260,7 @@ class ReportPDF(object):
             try:
                 # Find the peaks report file and the path report file
                 peaksReportFname = os.path.join(self.reportDir,"%s/peaksMap.%d.html" % (self.ticket,self.region))
+                markerReportFname = os.path.join(self.reportDir,"%s/markerMap.%d.html" % (self.ticket,self.region))
                 pathReportFname = os.path.join(self.reportDir,"%s/pathMap.%d.html" % (self.ticket,self.region))
                 compositeMapFname = os.path.join(self.reportDir,"%s/compositeMap.%d.png" % (self.ticket,self.region))
                 
@@ -251,27 +268,40 @@ class ReportPDF(object):
                 #compositeMapUrl = "%s/getComposite?%s" % (SVCURL,urllib.urlencode(params))
                 compositeMapUrl = "file:%s" % urllib.pathname2url(compositeMapFname)
                 # Read in the peaks report and path report
-                peaksReport = ""
+                peaksReport = peaksHeading
                 fp = None
                 try:
                     fp = file(peaksReportFname,"rb")
-                    peaksReport = fp.read()
+                    peaksReport += fp.read()
                 except:
-                    updateStatus(self.statusFname,{"peaksWarning":traceback.format_exc()})
+                    peaksReport = ""
                 finally:
                     if fp: fp.close()
-                pathReport = ""
+                    
+                markerReport = markerHeading
+                fp = None
+                try:
+                    fp = file(markerReportFname,"rb")
+                    markerReport += fp.read()
+                except:
+                    markerReport = ""
+                    print traceback.format_exc()
+                finally:
+                    if fp: fp.close()
+                    
+                pathReport = surveyHeading
                 fp = None
                 try:
                     fp = file(pathReportFname,"rb")
-                    pathReport = fp.read()
+                    pathReport += fp.read()
                 except:
-                    updateStatus(self.statusFname,{"pathWarning":traceback.format_exc()})
+                    pathReport = ""
                 finally:
                     if fp: fp.close()
                 # Generate the composite map as an image
+                # pic = '<img id="image" src="%s" alt="" width="95%%" style="-moz-transform:rotate(90deg);-webkit-transform:rotate(90deg);"></img>' % compositeMapUrl
                 pic = '<img id="image" src="%s" alt="" width="95%%"></img>' % compositeMapUrl
-                s = style + heading + peaksHeading + peaksReport + surveyHeading + pathReport + heading + pic
+                s = style + heading + peaksReport + markerReport + pathReport + heading + pic
                 proc = subprocess.Popen([WKHTMLTOPDF,"-",self.PdfFname],
                                         stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
                 stdout = proc.communicate(s)
@@ -313,6 +343,9 @@ class ReportStatus(object):
                         files[key] = {}
         return dict(files=files)
 
+def getTicket(contents):
+    return hashlib.md5(contents).hexdigest()
+
 class ReportGen(object):
     def __init__(self,reportDir,contents):
         self.reportDir = reportDir
@@ -321,7 +354,7 @@ class ReportGen(object):
         self.ticket = None
         
     def run(self):
-        self.ticket = hashlib.md5(self.contents).hexdigest()
+        self.ticket = getTicket(self.contents)
         targetDir = os.path.join(self.reportDir,"%s" % self.ticket)
         if not os.path.exists(targetDir): os.makedirs(targetDir)
         instrFname  = os.path.join(self.reportDir,"%s/json" % self.ticket)
@@ -537,7 +570,7 @@ class ReportPathMap(object):
         minimum amplitudes, etc.) are associated with the various drive-arounds which make up
         the run, so these can be included in the path report. """
         
-    def __init__(self,reportDir,ticket,instructions,mapParams,region,timeout=300):
+    def __init__(self,reportDir,ticket,instructions,mapParams,region,timeout=1800):
         self.reportDir = reportDir
         self.ticket = ticket
         self.region = region
@@ -575,6 +608,7 @@ class ReportPathMap(object):
         logHelper.sort()
         # Iterate through sorted surveys
         for utime,logname in logHelper:
+            if "sensor" in logname.lower(): continue
             params = self.paramsByLogname[logname]
             anz,dt,tm = logname.split('-')[:3]            
             pathTableString.append('<tr>')
@@ -667,6 +701,8 @@ class ReportMarkerMap(object):
         self.instructions = instructions
         self.region = region
         self.peaksHtmlFname = os.path.join(self.reportDir,"%s/peaksMap.%d.html" % (self.ticket,self.region))
+        self.markerHtmlFname = os.path.join(self.reportDir,"%s/markerMap.%d.html" % (self.ticket,self.region))
+        self.peaksXmlFname = os.path.join(self.reportDir,"%s/peaksMap.%d.xml" % (self.ticket,self.region))
         self.peaksMapFname = os.path.join(self.reportDir,"%s/peaksMap.%d.png" % (self.ticket,self.region))
         self.peaksStatusFname  = os.path.join(self.reportDir,"%s/peaksMap.%d.status" % (self.ticket,self.region))
         self.wedgesMapFname = os.path.join(self.reportDir,"%s/wedgesMap.%d.png" % (self.ticket,self.region))
@@ -677,39 +713,101 @@ class ReportMarkerMap(object):
         return getStatus(self.peaksStatusFname),getStatus(self.wedgesStatusFname)
     
     def makePeakReport(self,op,peakDict):
-        peakTableString = []
+        if peakDict:
+            peakTableString = []
+            zoom = 18
+            peakTableString.append('<table class="table table-striped table-condensed table-fmt1 table-datatable">')
+            peakTableString.append('<thead><tr>')
+            peakTableString.append('<th style="width:10%%">%s</th>' % "Rank")
+            peakTableString.append('<th style="width:30%%">%s</th>' % "Designation")
+            peakTableString.append('<th style="width:20%%">%s</th>' % "Latitude")
+            peakTableString.append('<th style="width:20%%">%s</th>' % "Longitude")
+            peakTableString.append('<th style="width:10%%">%s</th>' % "Conc")
+            peakTableString.append('<th style="width:10%%">%s</th>' % "Ampl")
+            peakTableString.append('</tr></thead>')
+            peakTableString.append('<tbody>')
+            for i in range(len(peakDict)):
+                r = i+1
+                tstr = time.strftime("%Y%m%dT%H%M%S",time.gmtime(peakDict[r].etm))
+                anz = peakDict[r].data['ANALYZER']
+                lat = peakDict[r].data['GPS_ABS_LAT']
+                lng = peakDict[r].data['GPS_ABS_LONG']
+                ch4 = peakDict[r].data['CH4']
+                ampl = peakDict[r].data['AMPLITUDE']
+                des = "%s_%s" % (anz,tstr)
+                coords = "%s,%s" % (lat,lng)
+                peakTableString.append('<tr>')
+                peakTableString.append('<td>%d</td>' % r)
+                peakTableString.append('<td><a href="http://maps.google.com?q=%s+(%s)&z=%d" target="_blank">%s</a></td>' % (coords,des,zoom,des))
+                peakTableString.append('<td>%.6f</td>' % lat)
+                peakTableString.append('<td>%.6f</td>' % lng)
+                peakTableString.append('<td>%.1f</td>' % ch4)
+                peakTableString.append('<td>%.2f</td>' % ampl)
+                peakTableString.append('</tr>')
+            peakTableString.append('</tbody>')
+            peakTableString.append('</table>')
+            op.write("\n".join(peakTableString))
+            
+    def makeMarkerReport(self,op,selMarkers):
+        if selMarkers:
+            zoom = 18
+            markerTableString = []
+            markerTableString.append('<table class="table table-striped table-condensed table-fmt1 table-datatable">')
+            markerTableString.append('<thead><tr>')
+            markerTableString.append('<th style="width:30%%">%s</th>' % "Designation")
+            markerTableString.append('<th style="width:20%%">%s</th>' % "Latitude")
+            markerTableString.append('<th style="width:20%%">%s</th>' % "Longitude")
+            markerTableString.append('</tr></thead>')
+            markerTableString.append('<tbody>')
+            for m,(x,y) in selMarkers:
+                coords = "%s,%s" % (m.lat,m.lng)
+                markerTableString.append('<tr>')
+                markerTableString.append('<td><a href="http://maps.google.com?q=%s+(%s)&z=%d" target="_blank">%s</a></td>' % (coords,m.label,zoom,m.label))
+                markerTableString.append('<td>%s</td>' % m.lat)
+                markerTableString.append('<td>%s</td>' % m.lng)
+                markerTableString.append('</tr>')
+            markerTableString.append('</tbody>')
+            markerTableString.append('</table>')
+            op.write("\n".join(markerTableString))
+        
+    def makePeakCsv(self,op,peakDict,selMarkers):
         zoom = 18
-        peakTableString.append('<table class="table table-striped table-condensed table-fmt1 table-datatable">')
-        peakTableString.append('<thead><tr>')
-        peakTableString.append('<th style="width:10%%">%s</th>' % "Rank")
-        peakTableString.append('<th style="width:30%%">%s</th>' % "Designation")
-        peakTableString.append('<th style="width:20%%">%s</th>' % "Latitude")
-        peakTableString.append('<th style="width:20%%">%s</th>' % "Longitude")
-        peakTableString.append('<th style="width:10%%">%s</th>' % "Conc")
-        peakTableString.append('<th style="width:10%%">%s</th>' % "Ampl")
-        peakTableString.append('</tr></thead>')
-        peakTableString.append('<tbody>')
+        writer = csv.writer(op,dialect='excel')
+        if peakDict:
+            writer.writerow(('Rank','Designation','Latitude','Longitude','Concentration','Amplitude','URL'))
+            for i in range(len(peakDict)):
+                r = i+1
+                tstr = time.strftime("%Y%m%dT%H%M%S",time.gmtime(peakDict[r].etm))
+                anz = peakDict[r].data['ANALYZER']
+                lat = peakDict[r].data['GPS_ABS_LAT']
+                lng = peakDict[r].data['GPS_ABS_LONG']
+                coords = "%s,%s" % (lat,lng)
+                ch4 = peakDict[r].data['CH4']
+                ampl = peakDict[r].data['AMPLITUDE']
+                des = "%s_%s" % (anz,tstr)
+                url = "http://maps.google.com?q=%s+(%s)&z=%d" % (coords,des,zoom)
+                writer.writerow((r,des,lat,lng,ch4,ampl,url))
+            return
+        
+    def makePeakXml(self,op,peakDict,selMarkers):
+        zoom = 18
+        name = self.instructions["regions"][self.region]["name"]
+        excelReport = ExcelXmlReport()
+        heading = "Report %s, Region %d (%s)" % (pretty_ticket(self.ticket),self.region+1,name)
+        excelReport.makeHeader(heading,["Rank","Designation","Latitude","Longitude","Concentration","Amplitude"],[30,150,80,80,80,80])
         for i in range(len(peakDict)):
             r = i+1
             tstr = time.strftime("%Y%m%dT%H%M%S",time.gmtime(peakDict[r].etm))
             anz = peakDict[r].data['ANALYZER']
             lat = peakDict[r].data['GPS_ABS_LAT']
             lng = peakDict[r].data['GPS_ABS_LONG']
+            coords = "%s,%s" % (lat,lng)
             ch4 = peakDict[r].data['CH4']
             ampl = peakDict[r].data['AMPLITUDE']
             des = "%s_%s" % (anz,tstr)
-            coords = "%s,%s" % (lat,lng)
-            peakTableString.append('<tr>')
-            peakTableString.append('<td>%d</td>' % r)
-            peakTableString.append('<td><a href="http://maps.google.com?q=%s+(%s)&z=%d" target="_blank">%s</a></td>' % (coords,des,zoom,des))
-            peakTableString.append('<td>%.6f</td>' % lat)
-            peakTableString.append('<td>%.6f</td>' % lng)
-            peakTableString.append('<td>%.1f</td>' % ch4)
-            peakTableString.append('<td>%.2f</td>' % ampl)
-            peakTableString.append('</tr>')
-        peakTableString.append('</tbody>')
-        peakTableString.append('</table>')
-        op.write("\n".join(peakTableString))
+            excelReport.makeDataRow(r,des,lat,lng,ch4,ampl,zoom)
+        op.write(excelReport.xmlWorkbook("Region %d (%s)" % (self.region+1,name)))
+        return
         
     def run(self):
         markerTypes = {"None":MT_NONE,"Concentration":MT_CONC,"Rank":MT_RANK}
@@ -721,13 +819,24 @@ class ReportMarkerMap(object):
             mp = self.mapParams
             sl = SurveyorLayers(mp.minLng,mp.minLat,mp.maxLng,mp.maxLat,mp.nx,mp.ny,mp.padX,mp.padY)
             try:
+                markers = []
+                MarkerParams = namedtuple('MarkerParams',['label','color','lat','lng'])
+                if "markers" in self.instructions:
+                    for m in self.instructions["markers"]:
+                        lat, lng = m.get("location",(0.0,0.0))
+                        mp = MarkerParams(m.get("label","*"), 
+                                          colorStringToRGB(m.get("color","#FFFFFF")),
+                                          lat,
+                                          lng)
+                        markers.append(mp)
+                runParams = []
                 if "runs" in self.instructions:
-                    markerParams = []
-                    MarkerParams = namedtuple('MarkerParams',['analyzer','startEtm','endEtm','minAmpl',
+                    RunParams = namedtuple('RunParams',['analyzer','startEtm','endEtm','minAmpl',
                                               'maxAmpl','mType','mColor','showWedges','exclRadius'])
                     for ir,params in enumerate(self.instructions["runs"]):
                         mType  = MT_RANK
                         mColor = colorStringToRGB(params["marker"])
+                        if not mColor: mType = MT_NONE
                         showPeaks = (mType != MT_NONE)
                         showWedges = colorStringToRGB(params["wedges"])
                         if showPeaks or showWedges:
@@ -737,24 +846,29 @@ class ReportMarkerMap(object):
                             minAmpl  = params["minAmpl"]
                             maxAmpl  = None
                             exclRadius = params["exclRadius"]
-                            markerParams.append(MarkerParams(analyzer,startEtm,endEtm,minAmpl,maxAmpl,
+                            runParams.append(RunParams(analyzer,startEtm,endEtm,minAmpl,maxAmpl,
                                                 mType,mColor,showWedges,exclRadius))
-                    im1,im2,pkDict = sl.makeMarkers(markerParams)
-                    # Now write out the maps
-                    if showPeaks:
-                        im1 = backgroundToOverlay(im1)
-                        op = open(self.peaksMapFname,"wb")
-                        op.write(asPNG(im1))
-                        op.close()
-                        if pkDict:
-                            op = open(self.peaksHtmlFname,"wb")
-                            self.makePeakReport(op,pkDict)
-                            op.close()
-                    if showWedges:
-                        im2 = backgroundToOverlay(im2)
-                        op = open(self.wedgesMapFname,"wb")
-                        op.write(asPNG(im2))
-                        op.close()
+                im1,im2,pkDict,selMarkers = sl.makeMarkers(runParams,markers)
+                # Now write out the maps
+                if im1 is not None:
+                    im1 = backgroundToOverlay(im1)
+                    op = open(self.peaksMapFname,"wb")
+                    op.write(asPNG(im1))
+                    op.close()
+                    op = open(self.peaksHtmlFname,"wb")
+                    self.makePeakReport(op,pkDict)
+                    op.close()
+                    op = open(self.markerHtmlFname,"wb")
+                    self.makeMarkerReport(op,selMarkers)
+                    op.close()
+                    op = open(self.peaksXmlFname,"wb")
+                    self.makePeakXml(op,pkDict,selMarkers)
+                    op.close()
+                if im2 is not None:
+                    im2 = backgroundToOverlay(im2)
+                    op = open(self.wedgesMapFname,"wb")
+                    op.write(asPNG(im2))
+                    op.close()
                 updateStatus(self.peaksStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
                 updateStatus(self.wedgesStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
             except:
@@ -769,13 +883,11 @@ class PlatFetcher(object):
     def getPlat(self,platName,minLng,maxLng,minLat,maxLat,padX=50,padY=50,fetchPlat=True):
         tifFile = os.path.join(PLAT_TIF_ROOT, platName+".tif")
         pngFile = os.path.join(PLAT_PNG_ROOT, platName+".png")
-        print 'Convert "%s" "%s"' % ( tifFile, pngFile)
-        if not os.path.exists(tifFile):
-            return (None, None) if fetchPlat else None
         if not os.path.exists(pngFile):
-            # Call ImageMagik to convert the TIF to a PNG
+            print 'Convert "%s" "%s"' % ( tifFile, pngFile)
+            if not os.path.exists(tifFile):
+                return (None, None) if fetchPlat else None
             subprocess.call([IMGCONVERT, tifFile, pngFile])
-            # os.system('"%s" "%s" "%s"' % (IMGCONVERT, tifFile, pngFile))
         p = Image.open(pngFile)
         nx,ny = p.size
         mp = MapParams(minLng,minLat,maxLng,maxLat,nx,ny,padX,padY)
@@ -789,10 +901,14 @@ class GoogleMap(object):
         url = 'http://maps.googleapis.com/maps/api/staticmap'
         params = dict(center="%.6f,%.6f"%(latCen,lonCen),zoom="%d"%zoom,size="%dx%d" % (nx,ny),scale="%d"%scale,sensor="false")
         if satellite: params["maptype"] = "satellite"
+        if APIKEY is not None: params["key"] = APIKEY
         paramStr = urllib.urlencode(params)
         get_url = url+("?%s" % paramStr)
+        print get_url
+        timeout = 5.0
         try:
-            resp = urllib2.urlopen(get_url,timeout=5.0)
+            socket.setdefaulttimeout(timeout)
+            resp = urllib2.urlopen(get_url)
         except urllib2.URLError, e:
             if hasattr(e, 'reason'):
                 print 'We failed to reach a server.'
@@ -800,6 +916,9 @@ class GoogleMap(object):
             elif hasattr(e, 'code'):
                 print 'The server couldn\'t fulfill the request.'
                 print 'Error code: ', e.code
+            raise
+        except:
+            print traceback.format_exc()
             raise
         else:
             return resp.read()
@@ -835,8 +954,10 @@ class GoogleMarkers(object):
         params = dict(chst="d_map_spin",chld="%s|0|%s|%s|b|%s" % (size,color,fontsize,text))
         paramStr = urllib.urlencode(params)
         get_url = url+("?%s" % paramStr)
+        timeout = 5.0
         try:
-            resp = urllib2.urlopen(get_url,timeout=5.0)
+            socket.setdefaulttimeout(timeout)
+            resp = urllib2.urlopen(get_url)
         except urllib2.URLError, e:
             if hasattr(e, 'reason'):
                 print 'We failed to reach a server.'
@@ -844,6 +965,9 @@ class GoogleMarkers(object):
             elif hasattr(e, 'code'):
                 print 'The server couldn\'t fulfill the request.'
                 print 'Error code: ', e.code
+            raise
+        except:
+            print traceback.format_exc()
             raise
         else:
             return resp.read()
@@ -1009,14 +1133,15 @@ class SurveyorLayers(object):
             if makeSwath and pathColor == colors["normal"]: self.drawSwath(bufferedPath,sv,makeSwath)
         return ov, sv, lognames
             
-    def makeMarkers(self,markerParams):
+    def makeMarkers(self,runParams,markers):
         markersByRank = {}
         peaks = []
         anyPeaks = False
         anyWedges = False
         
-        for r,(analyzer,startEtm,endEtm,minAmpl,maxAmpl,mType,mColor,makeWedges,exclRadius) in enumerate(markerParams):
-            # markerParams specifies parameters for each region in turn, and r is the region number
+        for r,(analyzer,startEtm,endEtm,minAmpl,maxAmpl,mType,mColor,makeWedges,exclRadius) in enumerate(runParams):
+            # runParams specifies parameters for each region in turn, and r is the region number
+            if not mColor: mType = MT_NONE
             anyPeaks = anyPeaks or (mType != MT_NONE)
             anyWedges = anyWedges or makeWedges
 
@@ -1068,24 +1193,28 @@ class SurveyorLayers(object):
                 peaks += pList
             
         ov1, ov2 = None, None
+        # Select the markers that lie within this region
+        selMarkers = []
+        for m in markers:
+            x,y = self.xform(m.lng,m.lat)
+            if (self.minLng<=m.lng<self.maxLng) and (self.minLat<=m.lat<self.maxLat):
+                selMarkers.append((m,(x,y)))
+        
         peaks.sort()
-                
-        if anyPeaks:
+        if anyPeaks or selMarkers:
             ov1 = Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
             # Count ranked markers
             nRanked = 0
             for amp,m,region in peaks:
-                mType = markerParams[region].mType
+                mType = runParams[region].mType
                 if mType == MT_RANK:
                     lat = m.data["GPS_ABS_LAT"]
                     lng = m.data["GPS_ABS_LONG"]
-                    x,y = self.xform(lng,lat)
-                    if (0<=x<self.nx) and (0<=y<self.ny) and (amp>minAmpl) and ((maxAmpl is None) or (amp<=maxAmpl)): nRanked += 1
-            
+                    if (self.minLng<=lng<self.maxLng) and (self.minLat<=lat<self.maxLat) and (amp>minAmpl) and ((maxAmpl is None) or (amp<=maxAmpl)): nRanked += 1
             rank = nRanked
             #
             for amp,m,region in peaks:
-                analyzer,startEtm,endEtm,minAmpl,maxAmpl,mType,mColor,makeWedges,exclRadius = markerParams[region]
+                analyzer,startEtm,endEtm,minAmpl,maxAmpl,mType,mColor,makeWedges,exclRadius = runParams[region]
                 lat = m.data["GPS_ABS_LAT"]
                 lng = m.data["GPS_ABS_LONG"]
                 amp = m.data["AMPLITUDE"]
@@ -1095,15 +1224,15 @@ class SurveyorLayers(object):
                    (amp>minAmpl) and ((maxAmpl is None) or (amp<=maxAmpl)):
                     if mType in [MT_CONC, MT_RANK]:
                         if mType == MT_CONC:
-                            size = (self.ny/1500.0)*amp**0.25    # Make these depend on number of pixels in the image
+                            size = (self.ny/1000.0)*amp**0.25    # Make these depend on number of pixels in the image
                             fontsize = min(100,int(18.0*size))
                             color = "%02x%02x%02x" % tuple(mColor)
                             msg = "%.1f" % ch4
                         elif mType == MT_RANK:
-                            size = (self.ny/1500.0)
-                            fontsize = min(100,int(25.0*size))
+                            size = (self.ny/1000.0)
+                            fontsize = min(100,int(20.0*size))
                             color = "%02x%02x%02x" % tuple(mColor)
-                            if (0<=x<self.nx) and (0<=y<self.ny):
+                            if (self.minLng<=lng<self.maxLng) and (self.minLat<=lat<self.maxLat):
                                 msg = "%d" % rank
                                 markersByRank[rank] = m
                                 rank -= 1
@@ -1114,11 +1243,21 @@ class SurveyorLayers(object):
                         bx,by = b.size
                         box = (self.padX+x-bx//2,self.padY+y-by)
                         ov1 = overBackground(b,ov1,box)
+            for m,(x,y) in selMarkers:
+                size = (self.ny/1000.0)
+                fontsize = min(100,int(14.0*size))
+                color = "%02x%02x%02x" % tuple(m.color)
+                buff = cStringIO.StringIO(GoogleMarkers().getMarker(size,fontsize,m.label,color))
+                b = Image.open(buff)
+                bx,by = b.size
+                box = (self.padX+x-bx//2,self.padY+y-by)
+                ov1 = overBackground(b,ov1,box)
+
         if anyWedges:
             ov2 = Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
             odraw2 = ImageDraw.Draw(ov2)
             for amp,m,region in peaks:
-                analyzer,startEtm,endEtm,minAmpl,maxAmpl,mType,mColor,makeWedges,exclRadius = markerParams[region]
+                analyzer,startEtm,endEtm,minAmpl,maxAmpl,mType,mColor,makeWedges,exclRadius = runParams[region]
                 if not makeWedges: continue
                 lat = m.data["GPS_ABS_LAT"]
                 lng = m.data["GPS_ABS_LONG"]
@@ -1127,7 +1266,7 @@ class SurveyorLayers(object):
                 windE = getPossibleNaN(m.data,"WIND_E",0.0)
                 dstd  = DTR*getPossibleNaN(m.data,"WIND_DIR_SDEV",0.0)
                 x,y = self.xform(lng,lat)
-                if (-self.padX<=x<self.nx+self.padX) and (-self.padY<=y<self.ny+self.padY) and \
+                if np.isfinite(dstd) and (-self.padX<=x<self.nx+self.padX) and (-self.padY<=y<self.ny+self.padY) and \
                    (amp>minAmpl) and ((maxAmpl is None) or (amp<=maxAmpl)):
                     wind = math.hypot(windN,windE)
                     radius = 50.0; speedmin = 0.5
@@ -1148,5 +1287,53 @@ class SurveyorLayers(object):
                                    outline=(0,0,0,255))
                     ov2 = overBackground(b,ov2,(self.padX+x-radius,self.padY+y-radius))
                    
-        return ov1, ov2, markersByRank
+        return ov1, ov2, markersByRank, selMarkers
+
+class BubbleMaker(object):
+    def getMarker1(self,size):
+        def nint(x): return int(round(x))
+        nx = nint(36 * size + 1)
+        ny = nint(65 * size + 1)
+        xoff = (nx - 1) / 2
+        h = ny - 1
+        r = (nx - 1) / 2.0
+        R = h * (0.5 * h / r - 1.0)
+        phi = np.arcsin(R / (R + r))
+        print nx, ny
+        b = Image.new('RGBA',(nx,ny),(255,255,255,255))
+        bdraw = ImageDraw.Draw(b)
+        n1 = 10
+        n2 = 20
+        arc1 = [(nint(xoff - R + R * np.cos(th)), nint(ny - 1 - R*np.sin(th))) for th in np.linspace(0.0,0.5*np.pi-phi,n1,endpoint=False)]
+        arc2 = [(nint(xoff - r * np.sin(th)), nint(r + r * np.cos(th))) for th in np.linspace(phi, 2 * np.pi - phi, n2, endpoint=False)]
+        arc3 = [(nint(xoff + R - R * np.cos(th)), nint(ny - 1 - R*np.sin(th))) for th in np.linspace(0.5*np.pi-phi,0.0,n1,endpoint=False)]
+        bdraw.polygon(arc1 + arc2 + arc3, fill=(255,255,0,255), outline=(0,0,0,255))
+        bdraw.line(arc1 + arc2 + arc3, fill=(0,0,0,255), width=3)
+        return asPNG(b)
+    
+    def getMarker(self,size):
+        def nint(x): return int(round(x))
+        t = 2
+        r = 18*size - t
+        h = 65*size - 2*t
+        nx = nint(36*size + 1)
+        ny = nint(65*size + 1)
+        w = size
+        R = ((h-r)*(h-r) - (r*r - 0.25*w*w))/float(2*r-w)
+        phi = np.arcsin((R + 0.5*w) / (R + r))
+        cen1 = ( -(R+0.5*w), h-r )
+        cen2 = ( 0, 0 )
+        cen3 = ( (R+0.5*w), h-r )
+        xoff = r + t
+        yoff = r + t
+        b = Image.new('RGBA',(nx,ny),(255,255,255,255))
+        bdraw = ImageDraw.Draw(b)
+        n1 = 20
+        n2 = 40
+        arc1 = [(xoff + nint(cen1[0] + R * np.cos(th)), nint(yoff + cen1[1] - R*np.sin(th))) for th in np.linspace(0.0,0.5*np.pi-phi,n1,endpoint=False)]
+        arc2 = [(xoff + nint(cen2[0] - r * np.sin(th)), nint(yoff + cen2[1] + r * np.cos(th))) for th in np.linspace(phi, 2 * np.pi - phi, n2, endpoint=False)]
+        arc3 = [(xoff + nint(cen3[0] - R * np.cos(th)), nint(yoff + cen3[1] - R*np.sin(th))) for th in np.linspace(0.5*np.pi-phi,0.0,n1,endpoint=True)]
+        bdraw.polygon(arc1 + arc2 + arc3, fill=(255,255,0,255), outline=(0,0,0,255))
+        bdraw.line(arc1 + arc2 + arc3 + arc1[0:1], fill=(0,0,0,255), width=t)
+        return asPNG(b)
         

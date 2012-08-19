@@ -179,8 +179,7 @@ class TestDatEchoP3Stress(object):
 
                 assert uniqServerRows == localLines
 
-            print "# files created (local) = %s" % len(self.writtenFiles)
-            print "# files complete (server) = %s" % len(stats)
+            assert len(self.writtenFiles) == len(stats)
 
         else:
             from MobileKit.ViewServer import P3ApiService
@@ -206,16 +205,19 @@ class TestDatEchoP3Stress(object):
                 for field in intFields:
                     row.update({field: int(row[field])})
 
-            serverAddedFields = ['ANALYZER', 'SERVER_HASH', 'FILENAME_nint']
+            serverAddedFields = ['ANALYZER', 'shash', 'FILENAME_nint', 'ltype']
 
             # Test against the real P3.
             for dat in self.writtenFiles:
                 qryParams.update(alog=dat)
-                serverRows = p3.get('gdu', '1.0', 'AnzLog', qryParams)['return']
+                ret = p3.get('gdu', '1.0', 'AnzLog', qryParams)
+                print "ret['error'] = %s" % ret['error']
+                serverRows = ret['return']
                 for i, row in enumerate(serverRows):
                     # Added by the server and not in the local file rows.
                     for field in serverAddedFields:
-                        del row[field]
+                        if field in row:
+                            del row[field]
 
                     if row != localLines[i]:
                         print 'Server:'

@@ -5,7 +5,10 @@ Created on Jun 9, 2012
 
 @author: stan
 '''
-from collections import namedtuple
+try:
+    from collections import namedtuple
+except:
+    from Host.Common.namedtuple import namedtuple
 from flask import Flask, abort
 from flask import make_response, render_template, request
 import hashlib
@@ -15,13 +18,16 @@ except:
     import simplejson as json
 import math
 import os
+import shutil
 import sys
 import time
 import traceback
 import urllib
 from werkzeug import secure_filename
-from ReportGenSupport import ReportGen, ReportStatus
+from ReportGenSupport import ReportGen, ReportStatus, getTicket
 from ReportGenSupport import LayerFilenamesGetter, pretty_ticket
+from ReportGenSupport import BubbleMaker
+from Host.Common.configobj import ConfigObj
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     appPath = sys.executable
@@ -33,8 +39,14 @@ appDir = os.path.split(appPath)[0]
 #  child thread
 time.strptime("2012-04-01T09:50:00","%Y-%m-%dT%H:%M:%S")
 
-fname = "platBoundaries.json"
-fp = open(fname,"rb")
+configFile = os.path.splitext(appPath)[0] + ".ini"
+config = ConfigObj(configFile)
+if "Plats" in config:
+    PLAT_BOUNDARIES = os.path.join(appDir,config["Plats"]["plat_corners"])
+else:
+    PLAT_BOUNDARIES = "platBoundaries.json"
+    
+fp = open(PLAT_BOUNDARIES,"rb")
 platBoundaries = json.loads(fp.read())
 fp.close()
 
@@ -45,7 +57,7 @@ EARTH_RADIUS = 6378100
 MapParams = namedtuple("MapParams",["minLng","minLat","maxLng","maxLat","nx","ny","padX","padY"])
 
 # configuration
-DEBUG = False
+DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
@@ -95,6 +107,14 @@ def getReportStatus():
     response.headers['Content-Type'] = 'application/json'
     return response
 
+@app.route('/rest/getTicket')
+def getReportTicket():
+    contents = request.values.get('contents')
+    data = {'ticket': getTicket(contents)}
+    response = make_response(json.dumps(data))
+    response.headers['Content-Type'] = 'application/json'
+    return response
+
 @app.route('/rest/getLayerUrls')
 def getLayerUrls():
     ticket = request.values.get('ticket')
@@ -126,7 +146,15 @@ def getReport():
         fp.close()
     else:
         peaksTable = ""
-    return render_template('report.html',peaksTable=peaksTable,pathLogs=pathLogs,mapUrl=mapUrl,
+    markerTableFileName = os.path.join(REPORTROOT,'%s/markerMap.%d.html'%(ticket,region))
+    if os.path.exists(markerTableFileName):
+        fp = file(markerTableFileName,'rb')
+        markerTable = fp.read()
+        fp.close()
+    else:
+        markerTable = ""
+    return render_template('report.html',peaksTable=peaksTable,markerTable=markerTable,
+                           pathLogs=pathLogs,mapUrl=mapUrl,
                            name=name,region=region,prettyTicket=pretty_ticket(ticket))
 
 @app.route('/rest/getComposite')
@@ -143,6 +171,40 @@ def getComposite():
     response = make_response(fp.read())
     fp.close()
     response.headers['Content-Type'] = 'image/png'
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(when))
+    return response
+
+@app.route('/rest/getCSV')
+def getCSV():
+    ticket = request.values.get('ticket')
+    region = int(request.values.get('region'))
+    fname = os.path.join(REPORTROOT,'%s/peaksMap.%d.csv'%(ticket,region))
+    if os.path.exists(fname):
+        when = os.path.getmtime(fname)
+    else:
+        abort(404)
+    fp = open(fname,'rb')
+    response = make_response(fp.read())
+    fp.close()
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = 'attachment; filename="%s_region_%d.csv"' % (ticket,region+1)
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(when))
+    return response
+    
+@app.route('/rest/getXML')
+def getXML():
+    ticket = request.values.get('ticket')
+    region = int(request.values.get('region'))
+    fname = os.path.join(REPORTROOT,'%s/peaksMap.%d.xml'%(ticket,region))
+    if os.path.exists(fname):
+        when = os.path.getmtime(fname)
+    else:
+        abort(404)
+    fp = open(fname,'rb')
+    response = make_response(fp.read())
+    fp.close()
+    response.headers['Content-Type'] = 'application/vnd.ms-excel'
+    response.headers['Content-Disposition'] = 'attachment; filename="%s_region_%d.xml"' % (ticket,region+1)
     response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(when))
     return response
 
@@ -212,6 +274,25 @@ def download():
     response.headers['Content-Type'] = 'application/octet-stream'
     response.headers['Content-Disposition'] = 'attachment; filename="' + filename + '"'
     return response
+
+@app.route('/rest/remove',methods=['GET'])
+def remove():
+    """Get rid of all files associated with the specified ticket.
+    TODO: Stop any running processes associated with this ticket first"""
+    ticket = request.values.get('ticket','')
+    dirName = os.path.join(REPORTROOT,"%s" % ticket)
+    result = { 'dirName': dirName }
+    if os.path.exists(dirName):
+        try:
+            shutil.rmtree(dirName)
+            result['result'] =  "Report directory removed"
+        except:
+            result['error'] = traceback.format_exc()
+    else:
+        result['result'] =  "Report directory not found"
+    response = make_response(json.dumps(result))
+    response.headers['Content-Type'] = 'application/json'
+    return response
     
 @app.route('/report')
 def report():
@@ -233,6 +314,16 @@ def index():
 @app.route('/test')
 def test():
     return render_template('testTable.html');
-    
+
+@app.route('/bubble')
+def bubble():
+    # Bubble of size n is of size 36n+1 x 65n+1 pixels
+    size = float(request.values.get('size',2.0))
+    marker = BubbleMaker().getMarker(size)
+    response = make_response(marker)
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+    return response
+        
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=5200,debug=DEBUG,threaded=True)

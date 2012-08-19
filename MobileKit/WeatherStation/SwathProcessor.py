@@ -19,6 +19,7 @@ import SurveyorInstStatus as sis
 EARTH_RADIUS = 6378100
 DTR = pi/180.0
 RTD = 180.0/pi
+NOT_A_NUMBER = 1e1000/1e1000
 
 # Calculate maximum width of field of view about the point (x_N,y_N) based on a path of 2N+1 points (x_0,y_0) through (x_{2N},y_{2N})
 #  where the mean wind bearing is (u=WIND_E,v=WIND_N) and there is a standard deviation of the wind direction given by d_sdev
@@ -165,7 +166,10 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
             windN = d["WIND_N"]
             windE = d["WIND_E"]
             vcar = d.get("CAR_SPEED",0.0)
-            dstd = DTR*d["WIND_DIR_SDEV"]
+            try:
+                dstd = DTR*d["WIND_DIR_SDEV"]
+            except:
+                dstd = NOT_A_NUMBER
             mask = d["ValveMask"]
             instStatus = int(d["INST_STATUS"])
             auxStatus = instStatus >> sis.INSTMGR_AUX_STATUS_SHIFT
@@ -175,7 +179,7 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
             #  SUBTRACT ONE before using it to look up the stability class in classByWeather. If we have an
             #  invalid code in the data file and try to fetch it using "*", the swath is suppressed.
             if stabClass == "*": stabClass = sis.classByWeather.get(weatherCode-1,None)
-            if (fit>0) and (mask<1.0e-3) and isfinite(windN) and isfinite(windE) and (instStatus == sis.INSTMGR_STATUS_GOOD) and (stabClass is not None):
+            if (fit>0) and (mask<1.0e-3) and isfinite(dstd) and isfinite(windN) and isfinite(windE) and (instStatus == sis.INSTMGR_STATUS_GOOD) and (stabClass is not None):
                 bearing = arctan2(windE,windN)
                 wind = sqrt(windE*windE + windN*windN)
                 xx = asarray([fovBuff[i]["GPS_ABS_LONG"] for i in range(2*N+1)])
