@@ -32,10 +32,16 @@
 # 09-10-23 alex Added RDFrequencyConverter and SpectrumCollector; removed CalManager, FrontPanel, and some Utilities modules; renamed ControllerGUI to Controller.
 # 10-03-31 alex Added DiagDataCollector
 
+from __future__ import with_statement
+
 from distutils.core import setup
 import py2exe
 import sys
 import glob
+import subprocess
+import os.path
+
+from Host.Common import OS
 
 version = sys.version_info
 pyDirname = "Python%d%d" % (version[0],version[1])
@@ -373,7 +379,11 @@ windowsList = [
     "Utilities/ConfigManager/ConfigManager.py",
     "Utilities/AircraftValveSwitcher/AircraftValveSwitcher.py",
 ]
-   
+
+print "###### Doing autogeneration"
+with OS.chdir(os.path.join(os.path.dirname(__file__), '..', 'Firmware', 'xml')):
+    subprocess.Popen(['python.exe', 'xmldom1.py']).wait()
+
 setup(version = "1.0",
       description = "Silverstone Host Core Software",
       name = "Silverstone CRDS",
