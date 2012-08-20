@@ -194,7 +194,7 @@ class TestDatEchoP3Stress(object):
             qryParams = {'qry': 'byPos', 'startPos': 0}
 
             intFields = ['INST_STATUS', 'ValveMask', 'ALARM_STATUS', 'species',
-                         'row', 'GPS_FIT']
+                         'row']
 
             # Some fields are correctly cast to integers by P3. Our
             # local file parser treats all numbers as doubles. We need
@@ -218,6 +218,11 @@ class TestDatEchoP3Stress(object):
                     for field in serverAddedFields:
                         if field in row:
                             del row[field]
+
+                    # Convert server None to NaN
+                    for k in row:
+                        if row[k] is None:
+                            row[k] = 'NaN'
 
                     if row != localLines[i]:
                         print 'Server:'
