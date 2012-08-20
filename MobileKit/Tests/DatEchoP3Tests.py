@@ -183,7 +183,7 @@ class TestDatEchoP3(object):
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
                  '-sAPITEST']).pid)
 
-        time.sleep(150.0)
+        time.sleep(100.0)
 
         assert datEcho.is_running()
 
@@ -402,7 +402,7 @@ class TestDatEchoP3(object):
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
                  '-sAPITEST']).pid)
 
-        time.sleep(150.0)
+        time.sleep(100.0)
 
         assert datEcho.is_running()
 
@@ -419,7 +419,7 @@ class TestDatEchoP3(object):
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
 
-        time.sleep(150.0)
+        time.sleep(100.0)
 
         assert datEcho.is_running()
 
@@ -491,9 +491,7 @@ class TestDatEchoP3(object):
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
 
-        print "Inject"
-
-        time.sleep(150.0)
+        time.sleep(100.0)
 
         assert datEcho.is_running()
 
@@ -564,7 +562,8 @@ class TestDatEchoP3(object):
                 ['python.exe', '../AnalyzerServer/DatEchoP3.py',
                  '-ddat',
                  "-l%s/*.dat" % os.path.join(self.datRoot, 'test7'),
-                 '-n200',                 "-i%sgdu/<TICKET>/7.0/AnzMeta/" % self.localUrl,
+                 '-n200',
+                 "-i%sgdu/<TICKET>/7.0/AnzMeta/" % self.localUrl,
                  "-p%sgdu/<TICKET>/7.0/AnzLog/" % self.localUrl,
                  "-k%ssec/dummy/7.0/Admin/" % self.localUrl,
                  "--log-metadata-url=%sgdu/<TICKET>/7.0/AnzLogMeta/" % (
@@ -804,7 +803,7 @@ class TestDatEchoP3(object):
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
                  '-sAPITEST']).pid)
 
-        time.sleep(150.0)
+        time.sleep(100.0)
 
         assert datEcho.is_running()
 
@@ -882,7 +881,7 @@ class TestDatEchoP3(object):
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
                  '-sAPITEST']).pid)
 
-        time.sleep(150.0)
+        time.sleep(100.0)
 
         assert datEcho.is_running()
 

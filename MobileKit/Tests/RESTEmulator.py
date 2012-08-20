@@ -114,7 +114,7 @@ def getMetadata(ticket, testId):
             time.sleep(random.expovariate(1.0 / MEAN_LATENCY_SEC))
 
     start = float(flask.request.args.get('startEtm'))
-    stop = float(flask.request.args.get('stopEtm'))
+    stop = float(flask.request.args.get('endEtm'))
 
     STATS['lastRangeReq'] = (start, stop)
 
@@ -174,7 +174,8 @@ def getMetadata(ticket, testId):
                         'name': f,
                         'ANALYZER': ANALYZER_IDS[0]})
 
-            if random.random() > RTN_LAST_ROW_MISS_PROB:
+            if not (APP.config['isUnreliable'] and
+                    random.random < RTN_LAST_ROW_MISS_PROB):
                 row.update({'lastRow': FILES_ROWS[f]})
 
             rows.append(row)

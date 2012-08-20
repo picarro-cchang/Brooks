@@ -54,7 +54,7 @@ class DataEchoP3(object):
                            r'(?P<day>\d{2})-(?P<hour>\d{2})'
                            r'(?P<minute>\d{2})(?P<second>\d{2})Z-.*')
 
-    RANGE_QRY = "%s?qry=byEpoch&anz=%s&startEtm=%s&stopEtm=%s&returnLastRow=1"
+    RANGE_QRY = "%s?qry=byEpoch&anz=%s&logType=%s&startEtm=%s&endEtm=%s&returnLastRow=1"
 
     # The number of blank lines returned before we check to see if the
     # current .dat file is still alive or not.
@@ -376,7 +376,7 @@ class DataEchoP3(object):
 
         url = self.RANGE_QRY % (self.urls['logMeta'].replace('<TICKET>',
                                                         self.ticket),
-                                analyzerId, begin, end)
+                                analyzerId, self.dataType, begin, end)
 
         recentFiles = None
         receivedFiles = False
