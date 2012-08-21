@@ -47,7 +47,7 @@ from Host.Common.ctypesConvert import ctypesToDict, dictToCtypes
 from Host.Common import SchemeProcessor
 
 try:
-    from Host.repoBzrVer import version_info as repoBzrVer
+    from repoBzrVer import version_info as repoBzrVer
 except:
     repoBzrVer = None
 
@@ -323,7 +323,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             return self._value(valueOrName)
         except:
             return "undefined"
-            
+
     def wrDasRegList(self,regList,values):
         for r,value in zip(regList,values):
             self.wrDasReg(r,value)
