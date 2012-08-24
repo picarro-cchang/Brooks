@@ -90,6 +90,22 @@ def makeExe(opts):
     with open('version.json', 'w') as ver:
         json.dump(VERSION, ver)
 
+    # Commit and push new version number
+    p = subprocess.Popen(['bzr.exe', 'ci', '-m',
+                          '"release.py version update."'])
+    p.wait()
+
+    if p.returncode != 0:
+        print 'Error committing new version metadata to local repo.'
+        sys.exit(1)
+
+    p = subprocess.Popen(['bzr.exe', 'push', os.path.join(REPO_BASE, REPO)])
+    p.wait()
+
+    if p.returncode != 0:
+        print 'Error pushing new version metadata to repo.'
+        sys.exit(1)
+
     _branchFromRepo(REPO)
     _generateReleaseVersion(REPO, VERSION)
     _buildExes(REPO)
