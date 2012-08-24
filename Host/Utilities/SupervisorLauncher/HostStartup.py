@@ -7,7 +7,18 @@ import win32con
 import time
 import getopt
 from configobj import ConfigObj
-from Host.Common import version
+
+try:
+    # Release build
+    from Host.Common import release_version as version
+except ImportError:
+    try:
+        # Internal build
+        from Host.Common import setup_version as version
+    except ImportError:
+        # Internal dev
+        from Host.Common import version
+
 
 translationTable = {
 "supervisor.exe": "Supervisor",
@@ -53,7 +64,7 @@ def getWinProcessListStr():
             #print "Cannot fetch information for %s: %s" % (p,e)
     processListStr = "\n".join(moduleList)
     return processListStr
-    
+
 class HostStartupFrame(wx.Frame):
     def __init__(self, taskList, *args, **kwds):
         self.taskList = taskList
@@ -75,9 +86,9 @@ class HostStartupFrame(wx.Frame):
         self.labelTitle1 = wx.StaticText(self.panel1, -1, "CRDS Software Loading Status", style=wx.ALIGN_CENTRE)
         self.labelTitle1.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.labelFooter = wx.StaticText(self.panel3, -1, "Software Version %s\nCopyright Picarro, Inc. 1999-%d" % (version.versionString(), time.localtime()[0]), style=wx.ALIGN_CENTER)
-        
-        # Current status display 
-        self.curTextList = []        
+
+        # Current status display
+        self.curTextList = []
         self.curCheckboxList = []
         for idx in range(len(self.taskList)):
             try:
@@ -88,16 +99,16 @@ class HostStartupFrame(wx.Frame):
             staticText.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
             self.curTextList.append(staticText)
             self.curCheckboxList.append((20,20))
-        
+
         # Divider line
-        #self.staticLine = wx.StaticLine(self.panel1, -1)      
-        
+        #self.staticLine = wx.StaticLine(self.panel1, -1)
+
         # Image
         logoBmp = wx.Bitmap(os.path.dirname(AppPath)+'/logo.png', wx.BITMAP_TYPE_PNG)
         self.logoImage = wx.StaticBitmap(self.panel1, -1, logoBmp)
-        
+
         self.do_layout()
-        
+
     def do_layout(self, checkList = [], idleList = []):
         logoSizer = wx.BoxSizer(wx.VERTICAL)
         logoSizer.Add(self.logoImage, 0, wx.TOP, 15)
@@ -111,7 +122,7 @@ class HostStartupFrame(wx.Frame):
         sizer_1.Add(self.labelTitle1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
         #sizer_1.Add(self.staticLine, 0, wx.EXPAND, 0)
         self.panel1.SetSizer(sizer_1)
-        
+
         for idx in range(len(self.taskList)):
             grid_sizer_1.Add((50,-1))
             if idx in checkList:
@@ -125,19 +136,19 @@ class HostStartupFrame(wx.Frame):
             else:
                 grid_sizer_1.Add(self.curCheckboxList[idx], 0, wx.ALL, 10)
             grid_sizer_1.Add(self.curTextList[idx], 0, wx.ALL, 10)
-            grid_sizer_1.Add((50,-1))   
+            grid_sizer_1.Add((50,-1))
         sizer_2.Add(grid_sizer_1, 0, wx.EXPAND, wx.RIGHT|wx.LEFT, 20)
         self.panel2.SetSizer(sizer_2)
-        
+
         sizer_3.Add(self.labelFooter, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 10)
         self.panel3.SetSizer(sizer_3)
-        
+
         sizer_all.Add(self.panel1, 0, wx.EXPAND)
         sizer_all.Add(self.panel2, 0, wx.EXPAND)
         sizer_all.Add(self.panel3, 0, wx.EXPAND)
         self.SetSizer(sizer_all)
         sizer_all.Fit(self)
-        #self.SetSize((600, -1))  
+        #self.SetSize((600, -1))
         self.Layout()
 
 class HostStartup(HostStartupFrame):
@@ -161,11 +172,11 @@ class HostStartup(HostStartupFrame):
         self.taskIdx = 0
         self.timer = wx.Timer(self)
         self.timer.Start(100)
-        self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)  
+        self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
         self.startedList = []
         self.idleList = []
         self.startTime = time.time()
-        
+
     def onTimer(self, event):
         if self.taskIdx == len(self.taskList):
             self.Destroy()
@@ -199,7 +210,7 @@ Where the options can be a combination of the following:
 
 def PrintUsage():
     print HELP_STRING
-    
+
 def HandleCommandSwitches():
     import getopt
 
@@ -224,7 +235,7 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return configFile
-    
+
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
     app = wx.PySimpleApp()

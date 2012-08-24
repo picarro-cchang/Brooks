@@ -1,22 +1,26 @@
-#!/usr/bin/python
-#
-# FILE:  
-#   usb.py
-#
-# DESCRIPTION:                                                
-#   Host version informatio
-#                                                             
-# SEE ALSO:                                             
-#   Specify any related information.                   
-#                                                             
-# HISTORY:
-#   07-Jan-2009  sze  Version 0.0.1 Copied from silverstone project
-#
-#  Copyright (c) 2009 Picarro, Inc. All rights reserved 
-#                                                            
-HOST_MAJOR_VERSION = 1
-HOST_MINOR_VERSION = 3
-HOST_INTERNAL_VERSION = "7"
+"""
+Copyright 2012 Picarro Inc.
+
+A non-release version string containing enough information to track
+the work back to the originating revision.
+"""
+
+import subprocess
+import cStringIO
+
 
 def versionString():
-    return "%d.%d.%s" % (HOST_MAJOR_VERSION,HOST_MINOR_VERSION,str(HOST_INTERNAL_VERSION))
+    """
+    We purposely don't cache the non-official version since it could
+    change during active development. This should never be invoked
+    from a compiled (py2exe) app since it won't be in a repository.
+    """
+
+    revisionId = cStringIO.StringIO()
+    subprocess.Popen(['bzr.exe', 'version-info', '--custom',
+                      '--template="{revision_id}"'], stdout=revisionId).wait()
+
+    ver = "Internal (%s)" % revisionId.getvalue()
+    revisionId.close()
+
+    return ver

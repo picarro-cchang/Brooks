@@ -116,3 +116,4 @@ Utilities/*.png
 Docs/*
 *.tds
 *.dll
+repoBzrVer.py

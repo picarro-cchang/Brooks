@@ -15,10 +15,23 @@ import os
 import sys
 import time
 import threading
-from Host.Common import CmdFIFO, version
+from Host.Common import CmdFIFO
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import RPC_PORT_CONFIG_MONITOR
 from Host.Common.EventManagerProxy import *
+
+try:
+    # Release build
+    from Host.Common import release_version as version
+except ImportError:
+    try:
+        # Internal build
+        from Host.Common import setup_version as version
+    except ImportError:
+        # Internal dev
+        from Host.Common import version
+
+
 EventManagerProxy_Init(APP_NAME,DontCareConnection = False)
 
 #Set up a useful AppPath reference...

@@ -32,7 +32,7 @@ from numpy import array, transpose
 from DasConfigure import DasConfigure
 from DriverAnalogInterface import AnalogInterface
 from Host.autogen import interface
-from Host.Common import SharedTypes, version
+from Host.Common import SharedTypes
 from Host.Common import CmdFIFO, StringPickler, timestamp
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, ctypesToDict
 from Host.Common.Broadcaster import Broadcaster
@@ -50,6 +50,17 @@ try:
     from Host.repoBzrVer import version_info as repoBzrVer
 except:
     repoBzrVer = None
+
+try:
+    # Release build
+    from Host.Common import release_version as version
+except ImportError:
+    try:
+        # Internal build
+        from Host.Common import setup_version as version
+    except ImportError:
+        # Internal dev
+        from Host.Common import version
 
 EventManagerProxy_Init(APP_NAME)
 
@@ -323,7 +334,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             return self._value(valueOrName)
         except:
             return "undefined"
-            
+
     def wrDasRegList(self,regList,values):
         for r,value in zip(regList,values):
             self.wrDasReg(r,value)
