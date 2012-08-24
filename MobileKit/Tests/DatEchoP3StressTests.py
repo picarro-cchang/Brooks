@@ -29,6 +29,10 @@ from Host.Common import SharedTypes
 class TestDatEchoP3Stress(object):
 
     def setup_method(self, m):
+        self.logTypeToFile = {'dat': 'User_Minimal',
+                              'GPS_Raw': 'GPS_Raw',
+                              'WS_Raw': 'WS_Raw'}
+
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
                               './Helpers/DriverEmulatorServer.py']).pid)
@@ -99,25 +103,35 @@ class TestDatEchoP3Stress(object):
         return ret
 
     # Test against the unreliable server and the P3 dev environment.
-    @pytest.mark.parametrize(('restUrl', 'identity', 'authSys'), [
+    @pytest.mark.parametrize(('restUrl', 'identity', 'authSys', 'logType'), [
             ('http://localhost:5000/test/rest/',
              'id',
-             'APITEST'),
+             'APITEST',
+             'dat'),
             ('https://dev.picarro.com/dev/rest/',
              'NfC4L47cqVXWnuslGFaOvUljMahHpOmx7JPLVkCkGA8=',
-             'dev')])
-    def testUnreliableServer(self, restUrl, identity, authSys):
+             'dev',
+             'dat'),
+            ('https://dev.picarro.com/dev/rest/',
+             'NfC4L47cqVXWnuslGFaOvUljMahHpOmx7JPLVkCkGA8=',
+             'dev',
+             'WS_Raw'),
+            ('https://dev.picarro.com/dev/rest/',
+             'NfC4L47cqVXWnuslGFaOvUljMahHpOmx7JPLVkCkGA8=',
+             'dev',
+             'GPS_Raw')])
+    def testUnreliableServer(self, restUrl, identity, authSys, logType):
         random.seed(None)
 
         assert self.driverEmulator.is_running()
         assert os.path.isdir(self.testDatDir)
         assert not self.datEcho
 
-        self.datEcho = self._launchDatEcho(restUrl, identity, authSys)
+        self.datEcho = self._launchDatEcho(restUrl, identity, authSys, logType)
         assert self.datEcho
         assert self.datEcho.is_running()
 
-        threading.Thread(target=self._runFileWriter).start()
+        threading.Thread(target=self._runFileWriter, args=(logType,)).start()
 
         start = time.time()
         # Run for 60 minutes
@@ -135,7 +149,8 @@ class TestDatEchoP3Stress(object):
             time.sleep(random.expovariate(1.0 / 5.0))
 
             print "[%s] Launch DatEchoP3" % time.asctime(time.gmtime())
-            self.datEcho = self._launchDatEcho(restUrl, identity, authSys)
+            self.datEcho = self._launchDatEcho(restUrl, identity, authSys,
+                                               logType)
             while not self.datEcho.is_running():
                 time.sleep(0.001)
 
@@ -151,8 +166,9 @@ class TestDatEchoP3Stress(object):
             time.sleep(0.001)
 
         # Only compute this once since we use the same file every time.
-        localLines = self._logLinesToDict(os.path.join(self.datRoot,
-                                                       'file2.dat'))
+        localLines = self._logLinesToDict(
+            os.path.join(self.datRoot,
+                         "file2_%s.dat" % self.logTypeToFile[logType]))
 
         if 'localhost' in restUrl:
             # Test against fake P3 server.
@@ -191,7 +207,9 @@ class TestDatEchoP3Stress(object):
             p3.psys = authSys
             p3.rprocs = '["AnzLog:byPos"]'
 
-            qryParams = {'qry': 'byPos', 'startPos': 0}
+            qryParams = {'qry': 'byPos',
+                         'startPos': 0,
+                         'logtype': "%s" % logType}
 
             intFields = ['INST_STATUS', 'ValveMask', 'ALARM_STATUS', 'species',
                          'row']
@@ -203,7 +221,8 @@ class TestDatEchoP3Stress(object):
             # rows.
             for row in localLines:
                 for field in intFields:
-                    row.update({field: int(row[field])})
+                    if field in row:
+                        row.update({field: int(row[field])})
 
             serverAddedFields = ['ANALYZER', 'shash', 'FILENAME_nint', 'ltype']
 
@@ -231,14 +250,14 @@ class TestDatEchoP3Stress(object):
                         pprint.pprint(localLines[i])
                     assert row == localLines[i]
 
-    def _runFileWriter(self):
+    def _runFileWriter(self, logType):
         with self.lock:
             writeFiles = self.writeFiles
 
         while writeFiles:
             t = datetime.datetime.utcnow()
-            target = t.strftime("TEST23-%Y%m%d-%H%M%SZ-DataLog_User"
-                                "_Minimal.dat")
+            target = t.strftime("TEST25-%Y%m%d-%H%M%SZ-DataLog_$TYPE.dat")
+            target = target.replace('$TYPE', self.logTypeToFile[logType])
             targetDir = os.path.join(self.testDatDir, t.strftime("%Y"),
                                      t.strftime("%m"), t.strftime("%d"))
 
@@ -250,7 +269,8 @@ class TestDatEchoP3Stress(object):
             # Write the file out at ~1 Hz. Use unbuffered so we can
             # simulate unreliable writes to the file.
             with open(os.path.join(targetDir, target), 'w', 0) as newDat:
-                with open(os.path.join(self.datRoot, 'file2.dat'), 'r') as orig:
+                fname = "file2_%s.dat" % self.logTypeToFile[logType]
+                with open(os.path.join(self.datRoot, fname), 'r') as orig:
                     while True:
                         nBytes = int(math.ceil(random.expovariate(1.0/1000.0)))
                         data = orig.read(nBytes)
@@ -265,11 +285,11 @@ class TestDatEchoP3Stress(object):
             with self.lock:
                 writeFiles = self.writeFiles
 
-    def _launchDatEcho(self, restUrl, identity, authSys):
+    def _launchDatEcho(self, restUrl, identity, authSys, logType):
         return psutil.Process(
             subprocess.Popen(
                 ['python.exe', '../AnalyzerServer/DatEchoP3.py',
-                 '-ddat',
+                 "--data-type=%s" % logType,
                  "-l%s/*.dat" % self.testDatDir,
                  '-n200',
                  "-i%sgdu/<TICKET>/1.0/AnzMeta/" % restUrl,

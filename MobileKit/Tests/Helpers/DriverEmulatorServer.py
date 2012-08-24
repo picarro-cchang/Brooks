@@ -28,7 +28,7 @@ class DriverEmulatorServer(object):
         if self.useEmptyId:
             eeprom = { 'Analyzer' : '', 'AnalyzerNum' : '' }
         else:
-            eeprom = { 'Analyzer' : 'TEST', 'AnalyzerNum' : '23' }
+            eeprom = { 'Analyzer' : 'TEST', 'AnalyzerNum' : '25' }
 
         return (eeprom, 0)
 
