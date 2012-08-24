@@ -1,0 +1,22 @@
+{
+    "AEDS": "NH3",
+    "BFADS": "H2S_CH4",
+    "CBDS": "iCO2",
+    "CFADS": "CO2_CH4_H2O",
+    "CFBDS": "Flux",
+    "CFDDS": "CO2_CH4_Flight",
+    "CFEDS": "iCO2_iCH4",
+    "CFFDS": "iCO2_CH4",
+    "CFHADS": "SuperFlux",
+    "CFIDS": "iCO2_iCH4",
+    "CFJDS": "High_Conc_iCH4_DCH3_i13CH4",
+    "CFKADS": "4Species",
+    "CFKBDS": "4Species_Flight",
+    "CHADS": "i13CO2_iHDO",
+    "CKADS": "CO2_CO_H2O",
+    "FCDS": "iCH4",
+    "FDDS": "Surveyor",
+    "HBDS": "iH2O",
+    "HIDS": "iH2O",
+    "MADS": "HF"
+}
