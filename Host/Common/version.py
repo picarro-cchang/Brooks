@@ -6,7 +6,6 @@ the work back to the originating revision.
 """
 
 import subprocess
-import cStringIO
 
 
 def versionString():
@@ -16,11 +15,9 @@ def versionString():
     from a compiled (py2exe) app since it won't be in a repository.
     """
 
-    revisionId = cStringIO.StringIO()
-    subprocess.Popen(['bzr.exe', 'version-info', '--custom',
-                      '--template="{revision_id}"'], stdout=revisionId).wait()
+    p = subprocess.Popen(['bzr.exe', 'version-info', '--custom',
+                          '--template="{revision_id}"'], stdout=subprocess.PIPE)
 
-    ver = "Internal (%s)" % revisionId.getvalue()
-    revisionId.close()
+    ver = "Internal (%s)" % p.communicate()[0]
 
     return ver
