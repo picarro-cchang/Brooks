@@ -1,4 +1,4 @@
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 from collections import deque
 from threading import Lock
 import Queue

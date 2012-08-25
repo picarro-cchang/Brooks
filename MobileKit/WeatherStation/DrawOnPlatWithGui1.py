@@ -10,7 +10,7 @@ import sets
 import wx
 import threading
 import traceback
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 from FindPlats import FindPlats
 from DrawOnPlatFrame import DrawOnPlatFrame
 

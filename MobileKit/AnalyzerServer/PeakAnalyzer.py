@@ -221,7 +221,6 @@ class PeakAnalyzer(object):
         if self.samples_to_skip == None:
             self.samples_to_skip = 8
 
-        self.noWait = 'nowait' in kwargs
         self.logtype = "analysis"
         self.last_peakname = None
         self.sockettimeout = 10
@@ -734,7 +733,7 @@ class PeakAnalyzer(object):
                     source = self.followLastUserLogDb()
                     alignedData = self.analyzerDataDb(source)
                 else:
-                    if self.noWait:
+                    if self.file_path:
                         source = self.sourceFromFile(fname)
                     else:
                         source = self.followLastUserFile(fname)
@@ -773,7 +772,7 @@ class PeakAnalyzer(object):
                 if self.logname:
                     break
                 
-                if self.noWait: break
+                if self.file_path: break
 
 def main(argv=None):
     if argv is None:

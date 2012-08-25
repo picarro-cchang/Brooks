@@ -222,8 +222,7 @@ inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
                  "email.mime.multipart","email.mime.image","email.mime.text",
                  "email.mime.base","scipy.interpolate","scipy.misc",
                  "sip", "matplotlib.backends",  "matplotlib.backends.backend_wxagg", "matplotlib.backends.backend_qt4agg",
-                 "matplotlib.figure","pylab", "numpy", "matplotlib.numerix.fft",
-                 "matplotlib.numerix.linear_algebra", "matplotlib.numerix.random_array", "configobj",
+                 "matplotlib.figure","pylab", "numpy", "configobj",
                  "encodings.*", "tables.*" ]
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.dll", "powrprof.dll" ]
 packageList = ["simplejson", "werkzeug","flask","jinja2","email"]

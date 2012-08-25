@@ -1,6 +1,6 @@
 # Add wind statistics columns to minimal data log
 from scipy.interpolate import interp1d
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 from numpy import *
 import os
 import sys

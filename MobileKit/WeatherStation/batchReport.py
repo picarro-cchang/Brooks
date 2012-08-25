@@ -9,6 +9,7 @@ import socket
 import time
 import urllib
 import urllib2
+import sys
 
 class ReportApiService(object):
     def __init__(self, *args, **kwargs):
@@ -97,7 +98,10 @@ def main():
     reportApi.debug = True
     
     # instructions = r'C:\Picarro\Eclipse\Report Generation\instructions_20120726T002728.json'
-    instructions = r'C:\Picarro\Eclipse\Report Generation\mytest.json'
+    if len(sys.argv) >= 2:
+        instructions = sys.argv[1]
+    else:
+        instructions = raw_input("Name of instructions file? ")
     
     fp = open(instructions,"rb")
     contents = fp.read().splitlines()

@@ -4,7 +4,7 @@
 # We simulate a vehicle moving in a circle. The point over the midpoint of the back
 #  axle is z(t) = R*exp(1j*Omega*t). The orientation of the car is phi = angle(z').
 
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 import numpy as np
 
 def distVincenty(lat1, lon1, lat2, lon2):

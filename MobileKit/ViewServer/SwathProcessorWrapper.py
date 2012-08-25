@@ -1,4 +1,4 @@
-import SwathProcessor as swathp
+import Host.Common.SwathProcessor as swathp
 from P3ApiService import P3ApiService
 from gearman import GearmanWorker
 

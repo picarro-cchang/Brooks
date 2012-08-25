@@ -1,5 +1,5 @@
 import fnmatch
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 from numpy import *
 import os
 import sys

@@ -1,4 +1,4 @@
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 from configobj import ConfigObj
 import numpy as np
 import sys

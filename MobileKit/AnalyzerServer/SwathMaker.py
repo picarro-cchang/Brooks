@@ -17,7 +17,7 @@ import os
 import sys
 import time
 import traceback
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 import ServerUtilities as su
 import findFovWidth as fw
 

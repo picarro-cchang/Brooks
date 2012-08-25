@@ -1,7 +1,7 @@
 # SimGPSWS generates simulated data files for the GPS and weather station for testing of the
 #  wind processing algorithms
 
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 import numpy
 
 def distVincenty(lat1, lon1, lat2, lon2):

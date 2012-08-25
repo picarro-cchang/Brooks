@@ -23,10 +23,10 @@ File History:
  Copyright (c) 2011 Picarro, Inc. All rights reserved
 """
 
-from ordereddict import OrderedDict
+from Host.Common.ordereddict import OrderedDict
 import mmap
 import os
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 
 MAX_CACHED_FILES = 32
 cachedFiles = OrderedDict()

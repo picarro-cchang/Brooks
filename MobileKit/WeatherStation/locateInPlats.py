@@ -2,7 +2,7 @@ import numpy as np
 import os
 import sys
 import sets
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 
 NOT_A_NUMBER = 1e1000/1e1000
 def pFloat(x):

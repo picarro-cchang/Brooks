@@ -27,7 +27,7 @@ import os
 import Image
 import ImageDraw
 import ImageMath
-from SwathProcessor import process
+from Host.Common.SwathProcessor import process
 import socket
 import sys
 import threading
@@ -36,7 +36,7 @@ import traceback
 import urllib
 import urllib2
 import subprocess
-import SurveyorInstStatus as sis
+import Host.Common.SurveyorInstStatus as sis
 from ExcelXmlReport import ExcelXmlReport
 from Host.Common.configobj import ConfigObj
 
@@ -264,9 +264,9 @@ class ReportPDF(object):
                 pathReportFname = os.path.join(self.reportDir,"%s/pathMap.%d.html" % (self.ticket,self.region))
                 compositeMapFname = os.path.join(self.reportDir,"%s/compositeMap.%d.png" % (self.ticket,self.region))
                 
-                #params = {"ticket":self.ticket, "region":self.region}
-                #compositeMapUrl = "%s/getComposite?%s" % (SVCURL,urllib.urlencode(params))
-                compositeMapUrl = "file:%s" % urllib.pathname2url(compositeMapFname)
+                params = {"ticket":self.ticket, "region":self.region}
+                compositeMapUrl = "%s/getComposite?%s" % (SVCURL,urllib.urlencode(params))
+                # compositeMapUrl = "file:%s" % urllib.pathname2url(compositeMapFname)
                 # Read in the peaks report and path report
                 peaksReport = peaksHeading
                 fp = None

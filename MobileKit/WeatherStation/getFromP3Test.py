@@ -1,5 +1,5 @@
 import getFromP3 as gp3
-import SurveyorInstStatus as sis
+import Host.Common.SurveyorInstStatus as sis
 
 def mostCommon(iterable):
     hist = {}

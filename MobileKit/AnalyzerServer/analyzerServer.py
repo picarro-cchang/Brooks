@@ -16,7 +16,7 @@ import traceback
 import CmdFIFO
 from timestamp import getTimestamp
 from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DATA_MANAGER
-import SwathProcessor as sp
+import Host.Common.SwathProcessor as sp
 import math
 
 debugSwath = False

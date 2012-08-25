@@ -12,7 +12,7 @@ import sets
 import threading
 import time
 import traceback
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 from FindPlats import FindPlats
 from configobj import ConfigObj
 

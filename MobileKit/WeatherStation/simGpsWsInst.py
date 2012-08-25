@@ -8,7 +8,7 @@
 #
 # From these, phi(t) = b*(w0-w_f)*log(1+t/b) + w_f*t
 
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 import numpy as np
 
 def distVincenty(lat1, lon1, lat2, lon2):

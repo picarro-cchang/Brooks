@@ -23,7 +23,7 @@ File History:
  Copyright (c) 2011 Picarro, Inc. All rights reserved
 """
 
-from ordereddict import OrderedDict
+from Host.Common.ordereddict import OrderedDict
 import mmap
 import os
 
