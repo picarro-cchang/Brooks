@@ -91,18 +91,19 @@ def makeExe(opts):
         json.dump(VERSION, ver)
 
     # Commit and push new version number
-    p = subprocess.Popen(['bzr.exe', 'ci', '-m',
-                          '"release.py version update."'])
-    p.wait()
+    bzrProc = subprocess.Popen(['bzr.exe', 'ci', '-m',
+                                'release.py version update.'])
+    bzrProc.wait()
 
-    if p.returncode != 0:
+    if bzrProc.returncode != 0:
         print 'Error committing new version metadata to local repo.'
         sys.exit(1)
 
-    p = subprocess.Popen(['bzr.exe', 'push', os.path.join(REPO_BASE, REPO)])
-    p.wait()
+    bzrProc = subprocess.Popen(['bzr.exe', 'push', os.path.join(REPO_BASE,
+                                                                REPO)])
+    bzrProc.wait()
 
-    if p.returncode != 0:
+    if bzrProc.returncode != 0:
         print 'Error pushing new version metadata to repo.'
         sys.exit(1)
 
@@ -300,11 +301,11 @@ def _compileInstallers(ver):
 
         print subprocess.list2cmdline(args)
 
-        p = subprocess.Popen(args)
-        p.wait()
+        isccProc = subprocess.Popen(args)
+        isccProc.wait()
 
-        if p.returncode != 0:
-            sys.exit(p.returncode)
+        if isccProc.returncode != 0:
+            sys.exit(isccProc.returncode)
 
 def _verAsString(ver):
     """
