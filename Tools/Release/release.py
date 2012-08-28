@@ -47,7 +47,10 @@ VERSION = {}
 VERSION_TEMPLATE = ("[Version]\\nrevno = {revno}\\ndate = {date}\\n"
                     "revision_id = {revision_id}")
 
-DISTRIB_BASE = 'r:/G2000_HostSoftwareInstallers'
+# Where Manufacturing looks for installers and
+# HostExe/AnalyzerServerExe upgrades.
+MFG_DISTRIB_BASE = 'r:/G2000_HostSoftwareInstallers'
+DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer'
 
 
 def makeExe(opts):
@@ -136,7 +139,7 @@ def _copyBuildAndInstallers(name, ver):
     """
 
     # HostExe
-    hostExeDir = os.path.join(DISTRIB_BASE, 'HostExe', _verAsString(ver))
+    hostExeDir = os.path.join(MFG_DISTRIB_BASE, 'HostExe', _verAsString(ver))
     assert not os.path.isdir(hostExeDir)
     os.mkdir(hostExeDir)
 
@@ -144,13 +147,25 @@ def _copyBuildAndInstallers(name, ver):
                        hostExeDir)
 
     # AnalyzerServerExe
-    analyzerServerExe = os.path.join(DISTRIB_BASE, 'AnalyzerServerExe',
+    analyzerServerExe = os.path.join(MFG_DISTRIB_BASE, 'AnalyzerServerExe',
                                      _verAsString(ver))
     assert not os.path.isdir(analyzerServerExe)
     os.mkdir(analyzerServerExe)
 
     dir_util.copy_tree(os.path.join(SANDBOX_DIR, name, 'MobileKit', 'dist'),
                        analyzerServerExe)
+
+    # Copy the individual installers and update the shortcuts that are
+    # used by manufacturing.
+    for c in CONFIGS:
+        installer = "setup_%s_%s_%s.exe" % (c, CONFIGS[c], _verAsString(ver))
+        installerCurrent = "setup_%s_%s.exe" % (c, CONFIGS[c])
+        targetDir = os.path.join(DISTRIB_BASE, c)
+
+        shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
+                        os.path.join(targetDir, 'Archive', installer))
+        shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
+                        os.path.join(targetDir, 'Current', installerCurrent))
 
 def _branchFromRepo(name):
     """
