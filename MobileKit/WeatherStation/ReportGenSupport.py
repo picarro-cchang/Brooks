@@ -41,23 +41,28 @@ from ExcelXmlReport import ExcelXmlReport
 from Host.Common.configobj import ConfigObj
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
-    AppPath = sys.executable
+    appPath = sys.executable
 else:
-    AppPath = sys.argv[0]
+    appPath = sys.argv[0]
+appDir = os.path.split(appPath)[0]
 
 # Executable for HTML to PDF conversion
-configFile = os.path.splitext(AppPath)[0] + ".ini"
-config = ConfigObj(configFile)
-WKHTMLTOPDF = config["HelperApps"]["wkhtml_to_pdf"]
-IMGCONVERT  = config["HelperApps"]["image_convert"]
-APIKEY = config["P3Logs"].get("apikey",None)
+configFile = os.path.splitext(appPath)[0] + ".ini"
+WKHTMLTOPDF = None
+IMGCONVERT  = None
+APIKEY = None
+PLAT_TIF_ROOT = r"S:\Projects\Picarro Surveyor\Files from PGE including TIFF maps\GEMS\CompTif\Gas\Distribution"
+PLAT_PNG_ROOT = r"static\plats"
 
-if "Plats" in config:
-    PLAT_TIF_ROOT = config["Plats"]["tif_root"]
-    PLAT_PNG_ROOT = config["Plats"]["png_root"]
-else:
-    PLAT_TIF_ROOT = r"S:\Projects\Picarro Surveyor\Files from PGE including TIFF maps\GEMS\CompTif\Gas\Distribution"
-    PLAT_PNG_ROOT = r"static\plats"
+if os.path.exists(configFile):
+    config = ConfigObj(configFile)
+    WKHTMLTOPDF = config["HelperApps"]["wkhtml_to_pdf"]
+    IMGCONVERT  = config["HelperApps"]["image_convert"]
+    APIKEY = config["P3Logs"].get("apikey",None)
+
+    if "Plats" in config:
+        PLAT_TIF_ROOT = config["Plats"]["tif_root"]
+        PLAT_PNG_ROOT = config["Plats"]["png_root"]
 
 SVCURL = "http://localhost:5200/rest"
 RTD = 180.0/math.pi
@@ -65,12 +70,6 @@ DTR = math.pi/180.0
 EARTH_RADIUS = 6378100
 
 NOT_A_NUMBER = 1e1000/1e1000
-
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
-    appPath = sys.executable
-else:
-    appPath = sys.argv[0]
-appDir = os.path.split(appPath)[0]
 
 PLAT_TIF_ROOT = os.path.join(appDir,PLAT_TIF_ROOT)
 PLAT_PNG_ROOT = os.path.join(appDir,PLAT_PNG_ROOT)
@@ -905,24 +904,29 @@ class GoogleMap(object):
         paramStr = urllib.urlencode(params)
         get_url = url+("?%s" % paramStr)
         print get_url
-        timeout = 5.0
-        try:
-            socket.setdefaulttimeout(timeout)
-            resp = urllib2.urlopen(get_url)
-        except urllib2.URLError, e:
-            if hasattr(e, 'reason'):
-                print 'We failed to reach a server.'
-                print 'Reason: ', e.reason
-            elif hasattr(e, 'code'):
-                print 'The server couldn\'t fulfill the request.'
-                print 'Error code: ', e.code
-            raise
-        except:
-            print traceback.format_exc()
-            raise
-        else:
-            return resp.read()
-            
+        timeout = 15.0
+        nAttempts = 10
+        for i in range(nAttempts):
+            try:
+                socket.setdefaulttimeout(timeout)
+                resp = urllib2.urlopen(get_url)
+            except urllib2.URLError, e:
+                print "Attempt: %d" % (i+1,)
+                if hasattr(e, 'reason'):
+                    print 'We failed to reach a server.'
+                    print 'Reason: ', e.reason
+                elif hasattr(e, 'code'):
+                    print 'The server couldn\'t fulfill the request.'
+                    print 'Error code: ', e.code
+                time.sleep(1.0)
+            except:
+                print "Attempt: %d" % (i+1,)
+                print traceback.format_exc()
+                time.sleep(1.0)
+            else:
+                return resp.read()
+        raise RuntimeError,"Cannot fetch map after %d attempts" % (nAttempts,)
+        
     def getPlatParams(self,minLng,maxLng,minLat,maxLat,satellite=True,padX=50,padY=50):
         return self.getPlat(minLng,maxLng,minLat,maxLat,satellite,padX,padY,fetchPlat=False)
     
