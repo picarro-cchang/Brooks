@@ -129,8 +129,9 @@ def makeExe(opts):
         _tagCommonConfig(VERSION)
         _tagAppInstrConfigs(VERSION)
 
-    # Copy both HostExe and AnalyzerServerExe for non-installer upgrades.
-    _copyBuildAndInstallers(REPO, VERSION)
+    if opts.createInstallers:
+        # Copy both HostExe and AnalyzerServerExe for non-installer upgrades.
+        _copyBuildAndInstallers(REPO, VERSION)
 
 def _copyBuildAndInstallers(name, ver):
     """
