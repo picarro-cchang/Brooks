@@ -134,8 +134,12 @@ class TestDatEchoP3Stress(object):
         threading.Thread(target=self._runFileWriter, args=(logType,)).start()
 
         start = time.time()
-        # Run for 60 minutes
-        while (time.time() - start) < 3600.0:
+
+        # Run until we've generated 105 files.
+        with self.lock:
+            fileCount = len(self.writtenFiles)
+
+        while fileCount < 105:
             # Mean time for failure is 60.0s
             time.sleep(random.expovariate(1.0 / 60.0))
 
@@ -153,6 +157,9 @@ class TestDatEchoP3Stress(object):
                                                logType)
             while not self.datEcho.is_running():
                 time.sleep(0.001)
+
+            with self.lock:
+                fileCount = len(self.writtenFiles)
 
         with self.lock:
             self.writeFiles = False
@@ -264,7 +271,8 @@ class TestDatEchoP3Stress(object):
             if not os.path.isdir(targetDir):
                 os.makedirs(targetDir)
 
-            self.writtenFiles.append(target)
+            with self.lock:
+                self.writtenFiles.append(target)
 
             # Write the file out at ~1 Hz. Use unbuffered so we can
             # simulate unreliable writes to the file.
