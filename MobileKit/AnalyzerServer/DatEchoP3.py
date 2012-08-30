@@ -54,7 +54,8 @@ class DataEchoP3(object):
                            r'(?P<day>\d{2})-(?P<hour>\d{2})'
                            r'(?P<minute>\d{2})(?P<second>\d{2})Z-.*')
 
-    RANGE_QRY = "%s?qry=byEpoch&anz=%s&logtype=%s&startEtm=%s&endEtm=%s&returnLastRow=1"
+    RANGE_QRY = ("%s?qry=byEpoch&limit=all&anz=%s&logtype=%s&startEtm=%s&"
+                 "endEtm=%s&returnLastRow=1")
 
     # The number of blank lines returned before we check to see if the
     # current .dat file is still alive or not.
