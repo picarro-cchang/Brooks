@@ -860,14 +860,14 @@ class ReportMarkerMap(object):
                     op = open(self.markerHtmlFname,"wb")
                     self.makeMarkerReport(op,selMarkers)
                     op.close()
-                    op = open(self.peaksXmlFname,"wb")
-                    self.makePeakXml(op,pkDict,selMarkers)
-                    op.close()
                 if im2 is not None:
                     im2 = backgroundToOverlay(im2)
                     op = open(self.wedgesMapFname,"wb")
                     op.write(asPNG(im2))
                     op.close()
+                op = open(self.peaksXmlFname,"wb")
+                self.makePeakXml(op,pkDict,selMarkers)
+                op.close()
                 updateStatus(self.peaksStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
                 updateStatus(self.wedgesStatusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
             except:
