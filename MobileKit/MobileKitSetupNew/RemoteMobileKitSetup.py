@@ -103,10 +103,10 @@ class RemoteMobileKitSetup(RemoteMobileKitSetupFrame):
         self.setupIniFile = os.path.abspath(configFile)
         self.activeIniFile = self.co.get("Main", "activeIniPath")
         self.inactiveIniFile = self.co.get("Main", "inactiveIniPath")
-        if os.path.isfile(self.activeIniFile):
+        
+        self.targetIniFile = self.inactiveIniFile
+        if not os.path.isfile(self.targetIniFile):
             self.targetIniFile = self.activeIniFile
-        else:
-            self.targetIniFile = self.inactiveIniFile
         if not os.path.isfile(self.targetIniFile):
             d = wx.MessageDialog(None, "Mobile Kit INI file not found", "Error", wx.ICON_ERROR|wx.STAY_ON_TOP)
             d.ShowModal()
