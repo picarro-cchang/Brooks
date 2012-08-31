@@ -285,8 +285,6 @@ class PeakAnalyzer(object):
             
         if lastlog:
             lastPos = 0
-            rtn_data = None
-            
             waitForRetryCtr = 0
             waitForRetry = True
             while True:
@@ -294,7 +292,9 @@ class PeakAnalyzer(object):
                 #postparms = {'data': json.dumps(params)}
                 #getAnalyzerDatLogUrl = self.url.replace("getData", "getAnalyzerDatLog")
                 try:
-                    qry_with_ticket = '%s?qry=byPos&alog=%s&startPos=%s&limit=20' % (self.anzlog_url.replace("<TICKET>", self.ticket), lastlog, lastPos)
+                    rtn_data = None
+            
+                    qry_with_ticket = '%s?qry=byPos&alog=%s&startPos=%s&limit=2000' % (self.anzlog_url.replace("<TICKET>", self.ticket), lastlog, lastPos)
                     if self.debug == True:
                         print "qry_with_ticket", qry_with_ticket
                 

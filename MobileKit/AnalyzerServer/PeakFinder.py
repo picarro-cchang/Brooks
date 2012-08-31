@@ -348,7 +348,7 @@ class PeakFinder(object):
                 rtn_data = None
                 
                 try:
-                    qry_with_ticket = '%s?qry=byPos&alog=%s&startPos=%s&limit=20' % (self.anzlog_url.replace("<TICKET>", self.ticket), lastlog, lastPos)
+                    qry_with_ticket = '%s?qry=byPos&alog=%s&startPos=%s&limit=2000' % (self.anzlog_url.replace("<TICKET>", self.ticket), lastlog, lastPos)
                     if self.debug == True:
                         print "qry_with_ticket", qry_with_ticket
                 
