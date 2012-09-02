@@ -620,7 +620,7 @@ class ReportPathMap(object):
             pathTableString.append('<td>%s</td>' % params['minAmpl'])
             pathTableString.append('<td>%s</td>' % params['exclRadius'])
             if params['stabClass'] == '*':
-                pathTableString.append('<td>%s</td>' % getStabClass(logname))
+                pathTableString.append('<td>%s*</td>' % getStabClass(logname))
             else:
                 pathTableString.append('<td>%s</td>' % params['stabClass'])
             pathTableString.append('</tr>')
@@ -854,17 +854,17 @@ class ReportMarkerMap(object):
                     op = open(self.peaksMapFname,"wb")
                     op.write(asPNG(im1))
                     op.close()
-                    op = open(self.peaksHtmlFname,"wb")
-                    self.makePeakReport(op,pkDict)
-                    op.close()
-                    op = open(self.markerHtmlFname,"wb")
-                    self.makeMarkerReport(op,selMarkers)
-                    op.close()
                 if im2 is not None:
                     im2 = backgroundToOverlay(im2)
                     op = open(self.wedgesMapFname,"wb")
                     op.write(asPNG(im2))
                     op.close()
+                op = open(self.peaksHtmlFname,"wb")
+                self.makePeakReport(op,pkDict)
+                op.close()
+                op = open(self.markerHtmlFname,"wb")
+                self.makeMarkerReport(op,selMarkers)
+                op.close()
                 op = open(self.peaksXmlFname,"wb")
                 self.makePeakXml(op,pkDict,selMarkers)
                 op.close()
@@ -1303,7 +1303,6 @@ class BubbleMaker(object):
         r = (nx - 1) / 2.0
         R = h * (0.5 * h / r - 1.0)
         phi = np.arcsin(R / (R + r))
-        print nx, ny
         b = Image.new('RGBA',(nx,ny),(255,255,255,255))
         bdraw = ImageDraw.Draw(b)
         n1 = 10

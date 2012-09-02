@@ -274,15 +274,17 @@ class P3_Accessor_ByPos(object):
     the generator does not terminate, but yields None if there are no documents yet available from the 
     collection"""
     
-    def __init__(self,alog,sys="",identity=""):
-        self.csp = "https://dev.picarro.com/node"
+    def __init__(self,alogName):
         self.svc = "gdu"
-        self.alogName = alog
+        self.alogName = alogName
         #self.discardList = ["EPOCH_TIME", "LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH", "row"]
         #self.discardList = ["LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH"]
         self.discardList = ["FILENAME_nint", "_id", "SERVER_HASH"]
-        self.sys = sys or "APITEST"
-        self.identity = identity or "85490338d7412a6d31e99ef58bce5de6"
+        configFile = os.path.splitext(AppPath)[0] + ".ini"
+        config = ConfigObj(configFile)
+        self.csp = "https://" + config["P3Logs"]["csp"]
+        self.sys = config["P3Logs"]["sys"]
+        self.identity = config["P3Logs"]["identity"]
         self.getTicket()
         
     def getTicket(self):
