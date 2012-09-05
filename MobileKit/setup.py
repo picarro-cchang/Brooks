@@ -7,6 +7,7 @@ import glob
 
 sys.path.append("AnalyzerServer")
 sys.path.append("MobileKitSetupNew")
+sys.path.append("Utilities")
 sys.path.append("ViewServer")
 sys.path.append("WeatherStation")
 
@@ -85,6 +86,7 @@ setup(console=['AnalyzerServer/RunPeakFinder.py',
                'ViewServer/ViewServer.py',
                'WeatherStation/batchReport.py',
                'WeatherStation/reportServer.py',
+	       'Utilities/createReportBooklet.py'
                ],
      windows=[MobileKitSetup, RemoteMobileKitSetup],
      options = dict(py2exe = dict(compressed = 1,
