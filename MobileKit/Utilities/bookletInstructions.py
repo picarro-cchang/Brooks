@@ -122,19 +122,19 @@ def getAspectRatioAndDistance(mapRect):
     width = distVincenty( mapRect.swCorner.lat, mapRect.neCorner.lng, mapRect.swCorner.lat, mapRect.swCorner.lng )
     height = distVincenty( mapRect.neCorner.lat, mapRect.swCorner.lng, mapRect.swCorner.lat, mapRect.swCorner.lng )
     if (height > 0):
-	aspect = width/height
-	distance = sqrt(width**2 + height**2)
-	return aspect,distance
+    aspect = width/height
+    distance = sqrt(width**2 + height**2)
+    return aspect,distance
     else:
-	print "Warning: getAspectRatioAndDistance: attempt to divide by 0!"
-	return 0.,0.
+    print "Warning: getAspectRatioAndDistance: attempt to divide by 0!"
+    return 0.,0.
   
 def toXY(lat,lng,lat_ref,lng_ref):
     x = distVincenty(lat_ref,lng_ref,lat_ref,lng)
     if lng<lng_ref: x = -x
     y = distVincenty(lat_ref,lng,lat,lng)
     if lat<lat_ref: 
-	y = -y
+    y = -y
     return x,y
     
 # Given a mapRect set of lat/long coordinates defining a bounding box on the Earth's surface 
@@ -160,34 +160,34 @@ def aspectAndDistToXYDivisors( mapRect, minAspectRatio, maxAspectRatio, minDist,
     bestA = 0
     # Do we want to maximize or minimize "A"?
     if ( isPortrait ):
-	bestA = 3.       # In the case we want to be closer to minAspectRatio, make bestA large
+    bestA = 3.       # In the case we want to be closer to minAspectRatio, make bestA large
     for x in range( maxNCol ):
-	ncol = x + 1
-	for y in range( maxNRow ):
-	    nrow = y + 1
-	    upperRightCorner = LatLng( mapRect.swCorner.lat + ( mapRect.neCorner.lat - mapRect.swCorner.lat ) / nrow,
-				       mapRect.swCorner.lng + ( mapRect.neCorner.lng - mapRect.swCorner.lng ) / ncol )
-	    tile = MapRect( mapRect.swCorner, upperRightCorner )
-	    thisA,thisD = getAspectRatioAndDistance( tile )
-	    if ( (thisD <= maxDist) and (thisD >= minDist) ):
-	        if (( thisA >= minAspectRatio ) and ( thisA <= maxAspectRatio )):
-		    # The choice of ncol, nrow satisfies the range criteria. 
-		    # Is it better than what we have already?
-		    if (isPortrait):
-			if (thisA < bestA):
-			    bestNCol = ncol
-			    bestNRow = nrow
-			    bestA = thisA
-			    bestD = thisD
-			    print "New grid params (ncol, nrow, a, d): ", ncol, nrow, thisA, thisD
-		    else:
-			if (thisA > bestA):
-			    bestNCol = ncol
-			    bestNRow = nrow
-			    bestA = thisA
-			    bestD = thisD
-			    print "New grid params (ncol, nrow, a, d): ", ncol, nrow, thisA, thisD
-			    
+    ncol = x + 1
+    for y in range( maxNRow ):
+        nrow = y + 1
+        upperRightCorner = LatLng( mapRect.swCorner.lat + ( mapRect.neCorner.lat - mapRect.swCorner.lat ) / nrow,
+                       mapRect.swCorner.lng + ( mapRect.neCorner.lng - mapRect.swCorner.lng ) / ncol )
+        tile = MapRect( mapRect.swCorner, upperRightCorner )
+        thisA,thisD = getAspectRatioAndDistance( tile )
+        if ( (thisD <= maxDist) and (thisD >= minDist) ):
+            if (( thisA >= minAspectRatio ) and ( thisA <= maxAspectRatio )):
+            # The choice of ncol, nrow satisfies the range criteria. 
+            # Is it better than what we have already?
+            if (isPortrait):
+            if (thisA < bestA):
+                bestNCol = ncol
+                bestNRow = nrow
+                bestA = thisA
+                bestD = thisD
+                print "New grid params (ncol, nrow, a, d): ", ncol, nrow, thisA, thisD
+            else:
+            if (thisA > bestA):
+                bestNCol = ncol
+                bestNRow = nrow
+                bestA = thisA
+                bestD = thisD
+                print "New grid params (ncol, nrow, a, d): ", ncol, nrow, thisA, thisD
+                
     return [bestNCol, bestNRow]
   
 # Partitions a mapRect set of coordinates into ncol colums and nrow rows. 
@@ -286,33 +286,33 @@ def getGridParametersFromCommandLine2():
     isPortrait = True
     inpt = raw_input("Would you like me to help you choose the number of columns and rows for the grid? ")  
     if ("y" in inpt):
-	#swCornerLat = float(getInputNicely( "  SW Corner Latitude  (deg): " ))
-	#swCornerLng = float(getInputNicely( "  SW Corner Longitude (deg): " ))
-	swCornerLat = 32.74839
-	swCornerLng = -96.76693
-	swCorner = LatLng( swCornerLat, swCornerLng )
-	#neCornerLat = float(getInputNicely( "  NE Corner Latitude  (deg): " ))
-	#neCornerLng = float(getInputNicely( "  NE Corner Longitude (deg): " ))  
-	neCornerLat = 32.75676
-	neCornerLng = -96.75592
-	neCorner = LatLng( neCornerLat, neCornerLng )    
-	map = MapRect( swCorner, neCorner )
-	print "The default settings are: "
-	print "   Minimum aspect ratio: ", minAspect
-	print "	  Maximum aspect ratio: ", maxAspect
-	print "   Minimum diagonal distance (meters): ", minDist
-	print "	  Maximum diagonal distance (meters): ", maxDist
-	inpt = raw_input("Would you like to change the default settings? ")
-	if ( "y" in inpt ):
-	    minAspect = getInputNicely("Minimum aspect ratio? ")
-	    maxAspect = getInputNicely("Maximum aspect ratio? ")	
-	    minDist = getInputNicely("Minimum diagonal distance? ")	    
-    	    maxDist = getInputNicely("Minimum diagonal distance? ")
-	ncol, nrow = aspectAndDistToXYDivisors( map, minAspect, maxAspect, minDist, maxDist, isPortrait )
-	gridPars = GridParams( map, ncol, nrow, "", "" )
-	
+    #swCornerLat = float(getInputNicely( "  SW Corner Latitude  (deg): " ))
+    #swCornerLng = float(getInputNicely( "  SW Corner Longitude (deg): " ))
+    swCornerLat = 32.74839
+    swCornerLng = -96.76693
+    swCorner = LatLng( swCornerLat, swCornerLng )
+    #neCornerLat = float(getInputNicely( "  NE Corner Latitude  (deg): " ))
+    #neCornerLng = float(getInputNicely( "  NE Corner Longitude (deg): " ))  
+    neCornerLat = 32.75676
+    neCornerLng = -96.75592
+    neCorner = LatLng( neCornerLat, neCornerLng )    
+    map = MapRect( swCorner, neCorner )
+    print "The default settings are: "
+    print "   Minimum aspect ratio: ", minAspect
+    print "      Maximum aspect ratio: ", maxAspect
+    print "   Minimum diagonal distance (meters): ", minDist
+    print "      Maximum diagonal distance (meters): ", maxDist
+    inpt = raw_input("Would you like to change the default settings? ")
+    if ( "y" in inpt ):
+        minAspect = getInputNicely("Minimum aspect ratio? ")
+        maxAspect = getInputNicely("Maximum aspect ratio? ")    
+        minDist = getInputNicely("Minimum diagonal distance? ")        
+            maxDist = getInputNicely("Minimum diagonal distance? ")
+    ncol, nrow = aspectAndDistToXYDivisors( map, minAspect, maxAspect, minDist, maxDist, isPortrait )
+    gridPars = GridParams( map, ncol, nrow, "", "" )
+    
     else:
-	return getGridParametersFromCommandLine()
+    return getGridParametersFromCommandLine()
     
     
 def getGridParametersTest():

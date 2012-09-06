@@ -50,6 +50,11 @@ function zeroPad(num, places) {
 // ============================================================================
 //  Handlers for special table fields
 // ============================================================================
+function boolToIcon(value) {
+    var name = (value) ? ("icon-ok") : ("icon-remove");
+    return (undefined !== value) ? '<i class="' + name + '"></i>' : '';
+}
+
 
 function makeColorPatch(value) {
     var result;
@@ -150,7 +155,7 @@ function styleMarkersTable() {
 }
 
 function updateTables(contents) {
-    var instrDict;
+    var i, instrDict;
     // $("#id_instructions").val(contents);
     instrDict = JSON.parse(contents);
     if (instrDict.hasOwnProperty("regions")) {
@@ -158,6 +163,12 @@ function updateTables(contents) {
         styleRegionsTable();
     }
     if (instrDict.hasOwnProperty("runs")) {
+        // Fill up default values
+        for (i=0; i<instrDict.runs.length; i++) {
+            if (!instrDict.runs[i].hasOwnProperty("path")) {
+                instrDict.runs[i].path = true;
+            }
+        }
         $("#" + CNSNT.runs.id).replaceWith(tableFuncs.makeTable(instrDict.runs, CNSNT.runs));
         styleRunsTable();
     }
@@ -502,13 +513,15 @@ CNSNT.runs = {id: "runTable", layout: [
     {key: "analyzer", width: "12%", th: "Analyzer", tf: String, eid: "id_analyzer", cf: String},
     {key: "startEtm", width: "12%", th: "Start Epoch", tf: String, eid: "id_start_etm", cf: String},
     {key: "endEtm", width: "12%", th: "End Epoch", tf: String, eid: "id_end_etm", cf: String},
+    {key: "path", width: "5%", th: "Path", tf: boolToIcon, eid: "id_path",
+      ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
     {key: "marker", width: "5%", th: "Markers", tf: makeColorPatch, eid: "id_marker", cf: String},
     {key: "wedges", width: "5%", th: "Wedges", tf: makeColorPatch, eid: "id_wedges", cf: String},
     {key: "swath", width: "5%", th: "Swath", tf: makeColorPatch, eid: "id_swath", cf: String},
     {key: "minAmpl", width: "5%", th: "Min Ampl", tf: parseFloat, eid: "id_min_ampl", cf: parseFloat},
     {key: "exclRadius", width: "5%", th: "Excl Radius", tf: parseFloat, eid: "id_excl_radius", cf: parseFloat},
     {key: "stabClass", width: "5%", th: "Stab Class", tf: String, eid: "id_stab_class", cf: String},
-    {key: "comments", width: "30%", th: "Comments", tf: processComments, tfParams: {fieldWidth: 25}, 
+    {key: "comments", width: "25%", th: "Comments", tf: processComments, tfParams: {fieldWidth: 25}, 
         eid: "id_comments", cf: String},
     {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
 ],
@@ -529,6 +542,7 @@ function editRunsChrome()
             {"class": controlClass + " datetimeRange", "placeholder": "YYYY-MM-DD HH:MM"}));
     body += tableFuncs.editControl("End Epoch Time", tableFuncs.makeInput("id_end_etm", 
             {"class": controlClass + " datetimeRange", "placeholder": "YYYY-MM-DD HH:MM"}));
+    body += tableFuncs.editControl("Path", tableFuncs.makeSelect("id_path", {"class": controlClass}, {"true": "Yes", "false": "No"}));
     body += tableFuncs.editControl("Markers", tableFuncs.makeSelect("id_marker", {"class": controlClass},
             {"None": "None", "#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red", 
              "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
@@ -568,8 +582,8 @@ function beforeRunsShow()
     $('input.datetimeRange').datetimeEntry({beforeShow:datetimeRange});
 }
 
-var initRunRow = {"analyzer": "FCDS2008", "marker": "#FFFF00", "wedges": "#0000FF", "swath": "#00FF00", "minAmpl": 0.1, 
-        "exclRadius": 10, "stabClass": "D"};
+var initRunRow = {"analyzer": "FCDS2008", "path":true, "marker": "#FFFF00", "wedges": "#0000FF", "swath": "#00FF00", "minAmpl": 0.1, 
+        "exclRadius": 10, "stabClass": "*"};
 
 function validateRun(eidByKey,template,container,onSuccess) {
     var numErr = 0;

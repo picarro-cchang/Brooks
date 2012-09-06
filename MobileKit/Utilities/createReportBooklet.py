@@ -46,7 +46,7 @@ appDir = os.path.split(appPath)[0]
 
 
 # Executable for HTML to PDF conversion
-configFile = "..\\reportServer.ini"
+configFile = ".\\reportServer.ini"
 # configFile = os.path.splitext(appPath)[0] + ".ini"
 print "config: ", configFile
 config = ConfigObj(configFile)
@@ -93,9 +93,9 @@ def setupReportDirectories( areaName ):
         userInput = raw_input("   Do you wish to continue anyway? [y/n] ")
         if ("y" in userInput):
             print "   Will overwrite contents of \"instructions\""
-	    filesToDelete = glob.glob( "instructions\*" )
-	    for f in filesToDelete:
-		os.remove(f)           
+        filesToDelete = glob.glob( "instructions\*" )
+        for f in filesToDelete:
+        os.remove(f)           
         else:
             success = False
     else:
@@ -226,7 +226,7 @@ def getReportPlatBooklet( dirList, gridPars, pageList, pageNumbers, areaName, mi
        
 def getAreaNameFromFile( fn ):
     print "Doing nothing for now"
-	
+    
 def getAnalyzerNameFromFile( fn ):
     print "Doing nothing for now"
        
@@ -248,25 +248,25 @@ if __name__ == "__main__":
     inpt = raw_input("   Input report parameters manually? (y/n): ")
     inptFile = ""
     if ("y" in inpt):
-	useFileInput = True
-	inptFileName = raw_input("   Name of report parameters file? ")
-	areaName = getAreaNameFromFile(inptFileName)
+    useFileInput = True
+    inptFileName = raw_input("   Name of report parameters file? ")
+    areaName = getAreaNameFromFile(inptFileName)
     else:
-	areaName = raw_input("   Name of survey area? (example: CompanyArea1 no spaces, please): ")
+    areaName = raw_input("   Name of survey area? (example: CompanyArea1 no spaces, please): ")
  
     if makeMaps:
-	topDir, ready = setupReportDirectories( areaName )
-	if useFileInput:
-	    analyzer = getAnalyzerNameFromFile(inptFileName)
-	    gridPars = getGridParsFromFile(inptFileName)
-	else:
-	    analyzer = raw_input("   Name of analyzer? (example: FCDS2010)")
-	    gridPars = getGridParametersFromCommandLine()
-	    #gridPars = getGridParametersFromCommandLine2()
+    topDir, ready = setupReportDirectories( areaName )
+    if useFileInput:
+        analyzer = getAnalyzerNameFromFile(inptFileName)
+        gridPars = getGridParsFromFile(inptFileName)
+    else:
+        analyzer = raw_input("   Name of analyzer? (example: FCDS2010)")
+        gridPars = getGridParametersFromCommandLine()
+        #gridPars = getGridParametersFromCommandLine2()
             #gridPars = getGridParametersTest()
             minRunParamsList = getMinimalRunParametersListFromCommandLine()
             #minRunParamsList = getMinimalRunParametersTest()
-	    
+        
     else:
         ready = True
         os.chdir("Example")
