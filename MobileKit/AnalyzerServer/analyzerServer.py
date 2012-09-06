@@ -26,7 +26,7 @@ if debugSwath:
     dbgSwathFp = file("c:/temp/swathDump.dat","wb")
 else:
     dbgSwathFp = None
-    
+
 def pFloat(x):
     try:
         return float(x)
@@ -54,7 +54,7 @@ SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
 
-# The following are split into a path and a filename with unix style wildcards. 
+# The following are split into a path and a filename with unix style wildcards.
 #  We search for the filename in the specified path and its subdirectories.
 USERLOGFILES = 'C:/UserData/AnalyzerServer/*.dat'
 PEAKFILES = 'C:/UserData/AnalyzerServer/*.peaks'
@@ -84,7 +84,7 @@ class DataLoggerInterface(object):
         th.setDaemon(True)
         th.start()
         return True
-        
+
     def _startUserLogs(self,userLogList,restart):
         try:
             for i in userLogList:
@@ -92,10 +92,10 @@ class DataLoggerInterface(object):
         except Exception,e:
             self.exception = e
         self.rpcInProgress = False
-    
+
 def _getAnalysis(name,startRow):
     #
-    # Gets data from the analyzer analysis file "name" starting  at the specified 
+    # Gets data from the analyzer analysis file "name" starting  at the specified
     #  "startRow" within the file. The result dictionary has keys:
     #
     header = getSlice(name,0,1)[0].line.split()
@@ -111,11 +111,11 @@ def _getAnalysis(name,startRow):
         startRow += 1
     result['nextRow'] = startRow
     return result
-    
+
 def _getPeaks(name,startRow,minAmp):
     #
-    # Gets data from the analyzer peak parameters file "name" starting  at the specified 
-    #  "startRow" within the file. Only peaks of amplitude no less than "minAmp" are 
+    # Gets data from the analyzer peak parameters file "name" starting  at the specified
+    #  "startRow" within the file. Only peaks of amplitude no less than "minAmp" are
     #  reported. The result dictionary has keys:
     #
     header = getSlice(name,0,1)[0].line.split()
@@ -140,10 +140,10 @@ def _getPeaks(name,startRow,minAmp):
         startRow += 1
     result['nextRow'] = startRow
     return result
-    
+
 def _getSwath(name,startRow,limit):
     #
-    # Gets data from the analyzer peak parameters file "name" starting  at the specified 
+    # Gets data from the analyzer peak parameters file "name" starting  at the specified
     #  "startRow" within the file:
     #
     header = getSlice(name,0,1)[0].line.split()
@@ -168,14 +168,14 @@ def _makeSwath(name,startRow,limit,nWindow,stabClass,minLeak,minAmp,astdParams):
     #  each position, so to produce the swath at startRow, we need
     #  to fetch rows startRow-nWindow through startRow+nWindow.
     # We need to keep track of the rows that will have their swaths
-    #  calculated by this call, so that result['nextRow'] can be 
+    #  calculated by this call, so that result['nextRow'] can be
     #  filled up.
     header = getSlice(name,0,1)[0].line.split()
     result = {}
     source = []     # This is the collection of rows to be processed
     nresults = 0
     firstRow = max(1,startRow-nWindow)
-    row = firstRow  
+    row = firstRow
     for l in getSliceIter(name,firstRow):
         line = l.line
         if not line: break
@@ -193,10 +193,10 @@ def _makeSwath(name,startRow,limit,nWindow,stabClass,minLeak,minAmp,astdParams):
     if debugSwath: dbgSwathFp.flush()
     result['nextRow'] = row-nWindow
     return result
-    
-def _getData(name,startPos=None,varList=None,limit=MAX_DATA_POINTS):    
+
+def _getData(name,startPos=None,varList=None,limit=MAX_DATA_POINTS):
     #
-    # Gets data from the analyzer live archive file "name" starting  at the specified 
+    # Gets data from the analyzer live archive file "name" starting  at the specified
     #  line "startPos" within the file.
     #
     if varList is not None:
@@ -206,7 +206,7 @@ def _getData(name,startPos=None,varList=None,limit=MAX_DATA_POINTS):
         header = getSlice(name,0,1)[0].line.split()
         columns = [[] for i in range(len(header))]
         if (startPos==0 or startPos is None): startPos = 1
-        if startPos<0: 
+        if startPos<0:
             endPos = None
         else:
             endPos = startPos + limit
@@ -246,13 +246,13 @@ def rest_getData():
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
         return make_response(json.dumps({"result":result}))
-    
+
 def getDataEx(params):
     try:
         name = genLatestFiles(*os.path.split(USERLOGFILES)).next()
     except:
         return {'lastPos':"null", 'filename':''}
-        
+
     if 'startPos' in params and (params['startPos'] is not None) and (params['startPos'] != "null"):
         try:
             startPos = int(params['startPos'])
@@ -267,16 +267,16 @@ def getDataEx(params):
         limit = int(params.get('limit',MAX_DATA_POINTS))
     except:
         limit = MAX_DATA_POINTS
-        
+
     try:
         result,lastPos = _getData(name,startPos,varList,limit)
     except:
         return {'lastPos':"null", 'filename':''}
-    
+
     result['filename'] = os.path.basename(name)
     result['lastPos'] = lastPos
     return result
-   
+
 @app.route('/rest/getPos')
 def rest_getPos():
     result = getPosEx()
@@ -284,7 +284,7 @@ def rest_getPos():
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
         return make_response(json.dumps({"result":result}))
-    
+
 def getPosEx():
     result = getDataEx({'startPos':-2,'varList':'["GPS_ABS_LONG","GPS_ABS_LAT"]'})
     long = result['GPS_ABS_LONG'][-1]
@@ -298,7 +298,7 @@ def rest_getPeaks():
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
         return make_response(json.dumps({"result":result}))
-        
+
 def getPeaksEx(params):
     try:
         startRow = int(params.get('startRow',1))
@@ -320,7 +320,7 @@ def rest_getSwath():
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
         return make_response(json.dumps({"result":result}))
-        
+
 def getSwathEx(params):
     try:
         startRow = int(params.get('startRow',1))
@@ -345,7 +345,7 @@ def rest_makeSwath():
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
         return make_response(json.dumps({"result":result}))
-        
+
 def makeSwathEx(params):
     astdParams = dict(a=0.15*math.pi,b=0.25,c=0.0)
     try:
@@ -391,7 +391,7 @@ def makeSwathEx(params):
     result = _makeSwath(name,startRow,limit,nWindow,stabClass,minLeak,minAmp,astdParams)
     result["filename"]=os.path.basename(name)
     return result
-    
+
 @app.route('/rest/getAnalysis')
 def rest_getAnalysis():
     result = getAnalysisEx(request.values)
@@ -399,7 +399,7 @@ def rest_getAnalysis():
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
         return make_response(json.dumps({"result":result}))
-        
+
 def getAnalysisEx(params):
     try:
         startRow = int(params.get('startRow',1))
@@ -420,7 +420,7 @@ def rest_restartDatalog():
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
         return make_response(json.dumps({"result":result}))
-        
+
 def restartDatalogEx(params):
     print "<------------------ Restarting data log ------------------>"
     dataLogger = DataLoggerInterface()
@@ -440,7 +440,7 @@ def rest_shutdownAnalyzer():
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
         return make_response(json.dumps({"result":result}))
-        
+
 def shutdownAnalyzerEx(params):
     print "<------------------ Shut down analyzer in current state ------------------>"
     InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "AnalyzerServer")
@@ -464,7 +464,7 @@ def driverRpcEx(params):
     #  params['args'] = string which evaluates to a list of positional arguments for the RPC function
     #  params['kwargs'] = string which evaluates to a dictionary of keyword arguments for the RPC function
     global driverAvailable, lastDriverCheck
-    
+
     if driverAvailable:
         Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "AnalyzerServer")
         try:
@@ -477,6 +477,81 @@ def driverRpcEx(params):
     else:
         if time.clock() - lastDriverCheck > 60: driverAvailable = True
         return(dict(error="No Driver"))
+
+@app.route('/rest/startRefCalibration')
+def rest_startRefCalibration():
+    """
+    Starts the priming of the reference gas tube. The actual injection
+    will be done by /rest/tryInject if the priming is complete.
+
+    Query arguments:
+        valve (optional): The id of the valve connected to the reference gas.
+
+        injectDuration (optional): Amount of time to toggle the valve
+        for injection.
+
+        flagValve (optional): Physically unused valve used to aid in
+        debugging the displayed valve mask.
+
+        primeDuration (optional): Amount of time to prime tube.
+    """
+
+    valve = int(request.args.get('valve', default=3))
+    injectDuration = int(request.args.get('injectDuration', default=5))
+    flagValve = int(request.args.get('flagValve', default=4))
+    primeDuration = float(request.args.get('primeDuration', default=10.0))
+
+    valveMask = 1 << (valve - 1)
+    flagValveMask = 1 << (flagValve - 1)
+    mask = valveMask | flagValveMask
+
+    # This sequence is for the entire process, but the gasInject phase
+    # won't execute until rest_tryInject() sees that the priming is
+    # done.
+    seq = [
+        # prime
+        [mask, mask, int(primeDuration / 0.2)],
+        [mask, 0x0, 100],
+        # primeDone
+        [0x0, 0x0, 0],
+        # gasInject
+        [mask, mask, injectDuration],
+        [mask, flagValveMask, 10],
+        [mask, 0x0, 1],
+        # gasInjectDone
+        [0x0, 0x0, 0]]
+
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                        ClientName='AnalyzerServer')
+    Driver.wrValveSequence(seq)
+    Driver.wrDasReg('VALVE_CNTRL_SEQUENCE_STEP_REGISTER', 0)
+
+    return make_response(
+        json.dumps({'result': {'value': 'OK'}}))
+
+@app.route('/rest/tryInject')
+def rest_tryInject():
+    """
+    Injects some calibration gas if the valve sequencer has finished
+    priming the tubing. Returns true if injection was completed
+    successfully, false if the injection was not performed.
+    """
+
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                        ClientName='AnalyzerServer')
+    step = Driver.rdDasReg('VALVE_CNTRL_SEQUENCE_STEP_REGISTER')
+
+    if step != 2:
+        # TODO Remove magic # for primeDone step. Perhaps set variable when
+        # sequence is initially created.
+        return make_response(
+            json.dumps({'result': {'injected': 'false'}}))
+
+    Driver.wrDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER', 1)
+    Driver.wrDasReg('VALVE_CNTRL_SEQUENCE_STEP_REGISTER', 3)
+
+    return make_response(
+        json.dumps({'result': {'injected': 'true'}}))
 
 @app.route('/rest/injectCal')
 def rest_injectCal():
@@ -503,7 +578,7 @@ def injectCalEx(params):
         return dict(value='OK')
     except:
         return dict(error=traceback.format_exc())
-    
+
 @app.route('/rest/getDateTime')
 def rest_getDateTime():
     result = getDateTimeEx(request.values)
@@ -543,7 +618,7 @@ def getLastPeriphUpdateEx(params):
 @app.route('/rest/pimg')
 def ping():
     return 'ping'
-    
+
 @app.route('/rest/admin')
 def issueTicket():
     print "Ticket:", request.values
@@ -552,7 +627,7 @@ def issueTicket():
         return make_response(request.values['callback'] + '(' + json.dumps({"ticket":ticket}) + ')')
     else:
         return make_response(json.dumps({"ticket":ticket}))
-        
+
 @app.route('/maps')
 def maps():
     amplitude = float(request.values.get('amplitude',0.1))
@@ -566,7 +641,6 @@ def maps():
 def test():
     return render_template('test.html')
 
-    
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=5000,debug=DEBUG)
-    
