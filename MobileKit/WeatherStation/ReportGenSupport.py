@@ -644,7 +644,7 @@ class ReportPathMap(object):
                     pathMaps = []
                     swathMaps = []
                     for ir,params in enumerate(self.instructions["runs"]):
-                        showPath = True
+                        showPath = params.get("path",True)
                         showSwath = colorStringToRGB(params["swath"])
                         def report(nPoints):
                             if showPath:  updateStatus(self.pathStatusFname,{"run%d" % (ir,): "%d points" % nPoints})
@@ -831,8 +831,10 @@ class ReportMarkerMap(object):
                 runParams = []
                 if "runs" in self.instructions:
                     RunParams = namedtuple('RunParams',['analyzer','startEtm','endEtm','minAmpl',
-                                              'maxAmpl','mType','mColor','showWedges','exclRadius'])
+                                              'maxAmpl','path','mType','mColor','showWedges',
+                                              'exclRadius'])
                     for ir,params in enumerate(self.instructions["runs"]):
+                        path = params.get("path",True)
                         mType  = MT_RANK
                         mColor = colorStringToRGB(params["marker"])
                         if not mColor: mType = MT_NONE
@@ -846,7 +848,7 @@ class ReportMarkerMap(object):
                             maxAmpl  = None
                             exclRadius = params["exclRadius"]
                             runParams.append(RunParams(analyzer,startEtm,endEtm,minAmpl,maxAmpl,
-                                                mType,mColor,showWedges,exclRadius))
+                                                path,mType,mColor,showWedges,exclRadius))
                 im1,im2,pkDict,selMarkers = sl.makeMarkers(runParams,markers)
                 # Now write out the maps
                 if im1 is not None:
@@ -1143,7 +1145,7 @@ class SurveyorLayers(object):
         anyPeaks = False
         anyWedges = False
         
-        for r,(analyzer,startEtm,endEtm,minAmpl,maxAmpl,mType,mColor,makeWedges,exclRadius) in enumerate(runParams):
+        for r,(analyzer,startEtm,endEtm,minAmpl,maxAmpl,path,mType,mColor,makeWedges,exclRadius) in enumerate(runParams):
             # runParams specifies parameters for each region in turn, and r is the region number
             if not mColor: mType = MT_NONE
             anyPeaks = anyPeaks or (mType != MT_NONE)
@@ -1218,7 +1220,7 @@ class SurveyorLayers(object):
             rank = nRanked
             #
             for amp,m,region in peaks:
-                analyzer,startEtm,endEtm,minAmpl,maxAmpl,mType,mColor,makeWedges,exclRadius = runParams[region]
+                analyzer,startEtm,endEtm,minAmpl,maxAmpl,path,mType,mColor,makeWedges,exclRadius = runParams[region]
                 lat = m.data["GPS_ABS_LAT"]
                 lng = m.data["GPS_ABS_LONG"]
                 amp = m.data["AMPLITUDE"]
@@ -1261,7 +1263,7 @@ class SurveyorLayers(object):
             ov2 = Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
             odraw2 = ImageDraw.Draw(ov2)
             for amp,m,region in peaks:
-                analyzer,startEtm,endEtm,minAmpl,maxAmpl,mType,mColor,makeWedges,exclRadius = runParams[region]
+                analyzer,startEtm,endEtm,minAmpl,maxAmpl,path,mType,mColor,makeWedges,exclRadius = runParams[region]
                 if not makeWedges: continue
                 lat = m.data["GPS_ABS_LAT"]
                 lng = m.data["GPS_ABS_LONG"]

@@ -232,12 +232,63 @@ def getZIP():
     if os.path.exists(fname):
         when = os.path.getmtime(fname)
     else:
-        flask.abort(404)
+        abort(404)
     fp = open(fname,'rb')
     response = make_response(fp.read())
     fp.close()
     response.headers['Content-Type'] = 'application/zip'
     response.headers['Content-Disposition'] = 'attachment; filename="%s.zip"' % (ticket,)
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(when))
+    return response
+
+@app.route('/rest/getSurveys')
+def getSurveys():
+    ticket = request.values.get('ticket')
+    region = int(request.values.get('region',0))
+    fname = os.path.join(REPORTROOT,'%s/pathMap.%d.html' % (ticket,region))
+    if os.path.exists(fname):
+        when = os.path.getmtime(fname)
+    else:
+        abort(404)
+    fp = open(fname,'rb')
+    response = make_response(fp.read())
+    fp.close()
+    response.headers['Content-Type'] = 'text/html'
+    response.headers['Content-Disposition'] = 'attachment; filename="%s.pathMap.%d.html"' % (ticket,region,)
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(when))
+    return response
+
+@app.route('/rest/getMarkers')
+def getMarkers():
+    ticket = request.values.get('ticket')
+    region = int(request.values.get('region',0))
+    fname = os.path.join(REPORTROOT,'%s/markerMap.%d.html' % (ticket,region))
+    if os.path.exists(fname):
+        when = os.path.getmtime(fname)
+    else:
+        abort(404)
+    fp = open(fname,'rb')
+    response = make_response(fp.read())
+    fp.close()
+    response.headers['Content-Type'] = 'text/html'
+    response.headers['Content-Disposition'] = 'attachment; filename="%s.markerMap.%d.html"' % (ticket,region,)
+    response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(when))
+    return response
+
+@app.route('/rest/getPeaks')
+def getPeaks():
+    ticket = request.values.get('ticket')
+    region = int(request.values.get('region',0))
+    fname = os.path.join(REPORTROOT,'%s/peaksMap.%d.html' % (ticket,region))
+    if os.path.exists(fname):
+        when = os.path.getmtime(fname)
+    else:
+        abort(404)
+    fp = open(fname,'rb')
+    response = make_response(fp.read())
+    fp.close()
+    response.headers['Content-Type'] = 'text/html'
+    response.headers['Content-Disposition'] = 'attachment; filename="%s.peaksMap.%d.html"' % (ticket,region,)
     response.headers['Last-Modified'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(when))
     return response
 
