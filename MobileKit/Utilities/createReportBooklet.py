@@ -46,12 +46,8 @@ appDir = os.path.split(appPath)[0]
 
 
 # Executable for HTML to PDF conversion
-<<<<<<< TREE
 configFile = "..\\WeatherStation\\reportServer.ini"
 
-=======
-configFile = ".\\reportServer.ini"
->>>>>>> MERGE-SOURCE
 # configFile = os.path.splitext(appPath)[0] + ".ini"
 print "config: ", configFile
 config = ConfigObj(configFile)
@@ -100,11 +96,7 @@ def setupReportDirectories( areaName ):
             print "   Will overwrite contents of \"instructions\""
         filesToDelete = glob.glob( "instructions\*" )
         for f in filesToDelete:
-<<<<<<< TREE
             os.remove(f)           
-=======
-        os.remove(f)           
->>>>>>> MERGE-SOURCE
         else:
             success = False
     else:
@@ -234,13 +226,9 @@ def getReportPlatBooklet( dirList, gridPars, pageList, pageNumbers, areaName, mi
     return booklet
        
 def getAreaNameFromFile( fn ):
-<<<<<<< TREE
     config = ConfigObj(fn)
     areaName = config["ReportParams"]["area_name"]
     return areaName
-=======
-    print "Doing nothing for now"
->>>>>>> MERGE-SOURCE
     
 def getAnalyzerNameFromFile( fn ):
     config = ConfigObj(fn)
@@ -307,28 +295,16 @@ if __name__ == "__main__":
     
     inpt = raw_input("   Input report parameters manually? (y/n): ")
     inptFile = ""
-<<<<<<< TREE
     if ("n" in inpt):
         useFileInput = True
         inptFileNameInpt = raw_input("   Name of report parameters file? ")
         inptFileName = topDir + "\\" + inptFileNameInpt
         print "Input file is ", inptFileName
         areaName = getAreaNameFromFile(inptFileName)
-=======
-    if ("y" in inpt):
-    useFileInput = True
-    inptFileName = raw_input("   Name of report parameters file? ")
-    areaName = getAreaNameFromFile(inptFileName)
->>>>>>> MERGE-SOURCE
     else:
-<<<<<<< TREE
         areaName = raw_input("   Name of survey area? (example: CompanyArea1 no spaces, please): ")
-=======
-    areaName = raw_input("   Name of survey area? (example: CompanyArea1 no spaces, please): ")
->>>>>>> MERGE-SOURCE
  
     if makeMaps:
-<<<<<<< TREE
         topDir, ready = setupReportDirectories( areaName )
         if (useFileInput):
             analyzer = getAnalyzerNameFromFile(inptFileName)
@@ -338,24 +314,9 @@ if __name__ == "__main__":
             analyzer = raw_input("   Name of analyzer? (example: FCDS2010) ")
             gridPars = getGridParametersFromCommandLine()
             #gridPars = getGridParametersFromCommandLine2()
-=======
-    topDir, ready = setupReportDirectories( areaName )
-    if useFileInput:
-        analyzer = getAnalyzerNameFromFile(inptFileName)
-        gridPars = getGridParsFromFile(inptFileName)
-    else:
-        analyzer = raw_input("   Name of analyzer? (example: FCDS2010)")
-        gridPars = getGridParametersFromCommandLine()
-        #gridPars = getGridParametersFromCommandLine2()
->>>>>>> MERGE-SOURCE
             #gridPars = getGridParametersTest()
             minRunParamsList = getMinimalRunParametersListFromCommandLine()
-<<<<<<< TREE
             #minRunParamsList = getMinimalRunParametersTest()            
-=======
-            #minRunParamsList = getMinimalRunParametersTest()
-        
->>>>>>> MERGE-SOURCE
     else:
         print "Doing nothing for now"
         '''
