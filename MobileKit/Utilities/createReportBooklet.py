@@ -46,7 +46,8 @@ appDir = os.path.split(appPath)[0]
 
 
 # Executable for HTML to PDF conversion
-configFile = "..\\reportServer.ini"
+configFile = "..\\WeatherStation\\reportServer.ini"
+
 # configFile = os.path.splitext(appPath)[0] + ".ini"
 print "config: ", configFile
 config = ConfigObj(configFile)
@@ -93,9 +94,9 @@ def setupReportDirectories( areaName ):
         userInput = raw_input("   Do you wish to continue anyway? [y/n] ")
         if ("y" in userInput):
             print "   Will overwrite contents of \"instructions\""
-	    filesToDelete = glob.glob( "instructions\*" )
-	    for f in filesToDelete:
-		os.remove(f)           
+        filesToDelete = glob.glob( "instructions\*" )
+        for f in filesToDelete:
+            os.remove(f)           
         else:
             success = False
     else:
@@ -225,16 +226,61 @@ def getReportPlatBooklet( dirList, gridPars, pageList, pageNumbers, areaName, mi
     return booklet
        
 def getAreaNameFromFile( fn ):
-    print "Doing nothing for now"
-	
+    config = ConfigObj(fn)
+    areaName = config["ReportParams"]["area_name"]
+    return areaName
+    
 def getAnalyzerNameFromFile( fn ):
-    print "Doing nothing for now"
+    config = ConfigObj(fn)
+    analyzerName = config["RunParams1"]["analyzer"]
+    return analyzerName
        
 def getGridParsFromFile( fn ):
-    print "Doing nothing for now"
+    config = ConfigObj(fn)
+    swCornerLat = float(config["ReportParams"]["sw_lattitude_deg"])
+    swCornerLng = float(config["ReportParams"]["sw_longitude_deg"])
+    swCorner = LatLng( swCornerLat, swCornerLng )
+    neCornerLat = float(config["ReportParams"]["ne_lattitude_deg"])
+    neCornerLng = float(config["ReportParams"]["ne_longitude_deg"])
+    neCorner = LatLng( neCornerLat, neCornerLng )    
+    map = MapRect( swCorner, neCorner )
+    nCol = int(config["GridParams"]["n_columns"])
+    nRow = int(config["GridParams"]["n_columns"])
+    auto_grid = int(config["GridParams"]["auto_grid"])
+    if (auto_grid > 0):
+        minAspect = float(config["GridParams"]["min_aspect_ratio"])
+        maxAspect = float(config["GridParams"]["max_aspect_ratio"])
+        minDist = float(config["GridParams"]["min_diagonal_dist_meters"])
+        maxDist = float(config["GridParams"]["max_diagonal_dist_meters"])
+        isPortraitInt = int(config["GridParams"]["is_portrait"])
+        isPortrait = False
+        if (isPortraitInt > 0):
+            isPortrait = True
+        nCol, nRow = aspectAndDistToXYDivisors( mapRect, minAspect, maxAspect, minDist, maxDist, isPortrait )
+    gridPars = GridParams( map, nCol, nRow, "", "" )
+    return gridPars
 
-       
-       
+def getMinRunParamsListFromFile( fn ):
+    runParamsList = []
+    config = ConfigObj(fn) 
+    n_runs = int(config["ReportParams"]["n_runs"])
+    run_key_list = []
+    for i in range(n_runs):
+        run_number = i+1
+        run_key_list.append( "RunParams"+str(run_number) )
+    for run in run_key_list:
+        startDate = str( config[run]["run_start_date_gmt"] )
+        startTime = str( config[run]["run_start_time_gmt"] )
+        startEtm = startDate + " " + startTime
+        endDate = str( config[run]["run_end_date_gmt"] )
+        endTime = str( config[run]["run_end_time_gmt"] )
+        endEtm = endDate + " " + endTime
+        exclRad = config["ReportParams"]["exclusion_radius_meters"] 
+        minAmpl = config["ReportParams"]["min_amplitude_ppm"]         
+        stabClass = str( config[run]["stab_class"] )
+        runParamsList.append( MinimalRunParams( startEtm, endEtm, minAmpl, exclRad, stabClass ) )   
+    return runParamsList
+    
 if __name__ == "__main__":
     
     instruction_file_extentions = [ "_summary_map.json", "_summary_sat.json", "_summary_swath.json", "_grid_map.json", "_grid_sat.json" ]    
@@ -245,34 +291,41 @@ if __name__ == "__main__":
     makeMaps = True
     useFileInput = False
     
+    topDir = os.getcwd()
+    
     inpt = raw_input("   Input report parameters manually? (y/n): ")
     inptFile = ""
-    if ("y" in inpt):
-	useFileInput = True
-	inptFileName = raw_input("   Name of report parameters file? ")
-	areaName = getAreaNameFromFile(inptFileName)
+    if ("n" in inpt):
+        useFileInput = True
+        inptFileNameInpt = raw_input("   Name of report parameters file? ")
+        inptFileName = topDir + "\\" + inptFileNameInpt
+        print "Input file is ", inptFileName
+        areaName = getAreaNameFromFile(inptFileName)
     else:
-	areaName = raw_input("   Name of survey area? (example: CompanyArea1 no spaces, please): ")
+        areaName = raw_input("   Name of survey area? (example: CompanyArea1 no spaces, please): ")
  
     if makeMaps:
-	topDir, ready = setupReportDirectories( areaName )
-	if useFileInput:
-	    analyzer = getAnalyzerNameFromFile(inptFileName)
-	    gridPars = getGridParsFromFile(inptFileName)
-	else:
-	    analyzer = raw_input("   Name of analyzer? (example: FCDS2010)")
-	    gridPars = getGridParametersFromCommandLine()
-	    #gridPars = getGridParametersFromCommandLine2()
+        topDir, ready = setupReportDirectories( areaName )
+        if (useFileInput):
+            analyzer = getAnalyzerNameFromFile(inptFileName)
+            gridPars = getGridParsFromFile(inptFileName)
+            minRunParamsList = getMinRunParamsListFromFile(inptFileName)
+        else:
+            analyzer = raw_input("   Name of analyzer? (example: FCDS2010) ")
+            gridPars = getGridParametersFromCommandLine()
+            #gridPars = getGridParametersFromCommandLine2()
             #gridPars = getGridParametersTest()
             minRunParamsList = getMinimalRunParametersListFromCommandLine()
-            #minRunParamsList = getMinimalRunParametersTest()
-	    
+            #minRunParamsList = getMinimalRunParametersTest()            
     else:
+        print "Doing nothing for now"
+        '''
         ready = True
         os.chdir("Example")
         analyzer = "FDDS2008"
         gridPars = getGridParametersTest()
         minRunParamsList = getMinimalRunParametersTest()
+        '''
 
     if (ready):
         os.chdir("maps")
@@ -280,7 +333,7 @@ if __name__ == "__main__":
         makeGridKeyMap( keyGridParams )
         os.chdir("..\instructions")
         if makeMaps:
-            writeReportInstructionsFiles (areaName, analyzer, gridPars, minRunParamsList)
+            writeReportInstructionsFiles(areaName, analyzer, gridPars, minRunParamsList)
             runInstructions(areaName, instruction_file_extentions)
 
         #Now assemble everything
