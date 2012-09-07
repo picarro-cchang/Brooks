@@ -46,8 +46,8 @@ appDir = os.path.split(appPath)[0]
 
 
 # Executable for HTML to PDF conversion
-configFile = "..\\WeatherStation\\reportServer.ini"
-# configFile = "reportServer.ini"
+# configFile = "..\\WeatherStation\\reportServer.ini"
+configFile = "reportServer.ini"
 
 # configFile = os.path.splitext(appPath)[0] + ".ini"
 print "config: ", configFile
