@@ -47,6 +47,7 @@ appDir = os.path.split(appPath)[0]
 
 # Executable for HTML to PDF conversion
 configFile = "..\\WeatherStation\\reportServer.ini"
+# configFile = "reportServer.ini"
 
 # configFile = os.path.splitext(appPath)[0] + ".ini"
 print "config: ", configFile
@@ -82,8 +83,8 @@ def setupReportDirectories( areaName ):
         userInput = raw_input("   Do you wish to continue anyway? [y/n] ")
         if ("y" in userInput):
             print "   Will overwrite contents of \"maps\""
-            os.remove("maps")
-            os.mkdir("maps")
+            #os.remove("maps")
+            #os.mkdir("maps")
         else:
             success = False
     else:
@@ -96,7 +97,8 @@ def setupReportDirectories( areaName ):
             print "   Will overwrite contents of \"instructions\""
         filesToDelete = glob.glob( "instructions\*" )
         for f in filesToDelete:
-            os.remove(f)           
+            #os.remove(f)
+            print ""
         else:
             success = False
     else:
@@ -213,12 +215,40 @@ def getPageOrderAndNumbers( gridPars ):
         pRow = chr( ord(pRow) - 1 )
 
     return pageOrder, pageNumber
- 
-def getReportPlatBooklet( dirList, gridPars, pageList, pageNumbers, areaName, minRunParamsList ):
+
+def getMarkerListForHeader( markerList ):
+    header = "<p>Indications: "
+    first = True
+    for marker in markerList:
+        if not first:
+            header += ", "
+        header += str(marker.name)
+        first = False
+    header += "</p>"
+    return header
+
+# Return a markerList containing the markers in markList but with the names of the corresponding markers in masterList
+def replaceMarkerNames( markerList, masterList ):
+    newMarkerList = []
+    for marker in markerList:
+        newName = ""
+        for master in masterList:
+            if ( marker.lat == master.lat ) and ( marker.lng == master.lng ):
+                newName = master.name
+                break
+        newMarkerList.append( MarkerInfo( newName, marker.lat, marker.lng ) )
+    return newMarkerList
+    
+def getReportPlatBooklet( dirList, gridPars, pageList, pageNumbers, areaName, minRunParamsList, masterMarkerList ):
     booklet = ""
     for page in pageList: 
         booklet += "<p style=\"page-break-before:always;\">%(a)s &emsp;&emsp; Min Ampl: %(b)s &emsp;&emsp; Excl Rad: %(c)s &emsp;&emsp; <b>Grid: %(d)s</b></p>" % \
             { "a": areaName, "b": str(minRunParamsList[0].minAmpl), "c": str(minRunParamsList[0].exclRadius), "d": pageNumbers[page] }
+        # Include the list of markers on this page
+        fn = "result3\composite.%s.markerTable.html" % str( page )
+        localMarkerList = getMarkerListFromHTML(fn)
+        markerList = replaceMarkerNames( localMarkerList, masterMarkerList )
+        booklet += getMarkerListForHeader(markerList)
         for d in dirList:
             os.chdir(d)
             booklet += picHTML( "composite."+str(page)+".png", 95 )
@@ -280,6 +310,18 @@ def getMinRunParamsListFromFile( fn ):
         stabClass = str( config[run]["stab_class"] )
         runParamsList.append( MinimalRunParams( startEtm, endEtm, minAmpl, exclRad, stabClass ) )   
     return runParamsList
+
+# Assume we are in the instructions directory. Open, read and return the peak table HTML file, edited as appropriate
+def getMarkerTable():
+    fn = "result0\composite.0.markerTable.html"
+    f = file(fn,"rb")
+    lineList = f.readlines()   
+    contents = "<h3>Leak Indications:</h3>\n"
+    for line in lineList:
+        contents += line
+        contents += "\n"
+    f.close()
+    return contents
     
 if __name__ == "__main__":
     
@@ -293,9 +335,9 @@ if __name__ == "__main__":
     
     topDir = os.getcwd()
     
-    inpt = raw_input("   Input report parameters manually? (y/n): ")
+    inpt = raw_input("   Input report parameters via config file? (y/n): ")
     inptFile = ""
-    if ("n" in inpt):
+    if ("y" in inpt):
         useFileInput = True
         inptFileNameInpt = raw_input("   Name of report parameters file? ")
         inptFileName = topDir + "\\" + inptFileNameInpt
@@ -306,6 +348,7 @@ if __name__ == "__main__":
  
     if makeMaps:
         topDir, ready = setupReportDirectories( areaName )
+        ready = True
         if (useFileInput):
             analyzer = getAnalyzerNameFromFile(inptFileName)
             gridPars = getGridParsFromFile(inptFileName)
@@ -332,13 +375,20 @@ if __name__ == "__main__":
         keyGridParams = GridParams( gridPars.mapRect, gridPars.ncol, gridPars.nrow, areaName, "map") 
         makeGridKeyMap( keyGridParams )
         os.chdir("..\instructions")
+        markerList = []
         if makeMaps:
-            writeReportInstructionsFiles(areaName, analyzer, gridPars, minRunParamsList)
-            runInstructions(areaName, instruction_file_extentions)
+            #writeReportInstructionsFiles(areaName, analyzer, gridPars, minRunParamsList)
+            #runInstructions(areaName, instruction_file_extentions)
+            writeAndRunSummaryInstructions( areaName, analyzer, gridPars, minRunParamsList )
+            markerList = getMarkerListFromHTML( "result0\\composite.0.markerTable.html" )
+            print "Marker list: ", markerList
+            print "Now running grid instructions\n"
+            writeAndRunGridInstructions( areaName, analyzer, gridPars, minRunParamsList, markerList )
 
         #Now assemble everything
         os.chdir("..\instructions")
         report = getReportCoverPage( areaName, analyzer, minRunParamsList )
+        report += getMarkerTable()
         summaryDirList = [ "result0", "result1", "result2" ]
         report += getReportSummaryPages( summaryDirList, areaName, minRunParamsList )
         os.chdir("..\maps")
@@ -348,7 +398,7 @@ if __name__ == "__main__":
         pageList, pageNumbers = getPageOrderAndNumbers( gridPars )
         #print pageNumbers
         #print pageList
-        report += getReportPlatBooklet( zoomDirList, gridPars, pageList, pageNumbers, areaName, minRunParamsList )
+        report += getReportPlatBooklet( zoomDirList, gridPars, pageList, pageNumbers, areaName, minRunParamsList, markerList )
         
         #Convert to PDF
         os.chdir("..\\")
@@ -358,7 +408,9 @@ if __name__ == "__main__":
         proc.communicate(report)     
 
         # Copy the Excel and PDF lists
-        #src = "
+        xml_fn = "Report_" + areaName + ".xml"        
+        shutil.copy('instructions/result0/composite.0.xml', xml_fn)
+
         
     else:
         print "Report Generation Aborted"

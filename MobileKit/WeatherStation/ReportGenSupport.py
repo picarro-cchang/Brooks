@@ -712,82 +712,79 @@ class ReportMarkerMap(object):
         return getStatus(self.peaksStatusFname),getStatus(self.wedgesStatusFname)
     
     def makePeakReport(self,op,peakDict):
-        if peakDict:
-            peakTableString = []
-            zoom = 18
-            peakTableString.append('<table class="table table-striped table-condensed table-fmt1 table-datatable">')
-            peakTableString.append('<thead><tr>')
-            peakTableString.append('<th style="width:10%%">%s</th>' % "Rank")
-            peakTableString.append('<th style="width:30%%">%s</th>' % "Designation")
-            peakTableString.append('<th style="width:20%%">%s</th>' % "Latitude")
-            peakTableString.append('<th style="width:20%%">%s</th>' % "Longitude")
-            peakTableString.append('<th style="width:10%%">%s</th>' % "Conc")
-            peakTableString.append('<th style="width:10%%">%s</th>' % "Ampl")
-            peakTableString.append('</tr></thead>')
-            peakTableString.append('<tbody>')
-            for i in range(len(peakDict)):
-                r = i+1
-                tstr = time.strftime("%Y%m%dT%H%M%S",time.gmtime(peakDict[r].etm))
-                anz = peakDict[r].data['ANALYZER']
-                lat = peakDict[r].data['GPS_ABS_LAT']
-                lng = peakDict[r].data['GPS_ABS_LONG']
-                ch4 = peakDict[r].data['CH4']
-                ampl = peakDict[r].data['AMPLITUDE']
-                des = "%s_%s" % (anz,tstr)
-                coords = "%s,%s" % (lat,lng)
-                peakTableString.append('<tr>')
-                peakTableString.append('<td>%d</td>' % r)
-                peakTableString.append('<td><a href="http://maps.google.com?q=%s+(%s)&z=%d" target="_blank">%s</a></td>' % (coords,des,zoom,des))
-                peakTableString.append('<td>%.6f</td>' % lat)
-                peakTableString.append('<td>%.6f</td>' % lng)
-                peakTableString.append('<td>%.1f</td>' % ch4)
-                peakTableString.append('<td>%.2f</td>' % ampl)
-                peakTableString.append('</tr>')
-            peakTableString.append('</tbody>')
-            peakTableString.append('</table>')
-            op.write("\n".join(peakTableString))
+        peakTableString = []
+        zoom = 18
+        peakTableString.append('<table class="table table-striped table-condensed table-fmt1 table-datatable">')
+        peakTableString.append('<thead><tr>')
+        peakTableString.append('<th style="width:10%%">%s</th>' % "Rank")
+        peakTableString.append('<th style="width:30%%">%s</th>' % "Designation")
+        peakTableString.append('<th style="width:20%%">%s</th>' % "Latitude")
+        peakTableString.append('<th style="width:20%%">%s</th>' % "Longitude")
+        peakTableString.append('<th style="width:10%%">%s</th>' % "Conc")
+        peakTableString.append('<th style="width:10%%">%s</th>' % "Ampl")
+        peakTableString.append('</tr></thead>')
+        peakTableString.append('<tbody>')
+        for i in range(len(peakDict)):
+            r = i+1
+            tstr = time.strftime("%Y%m%dT%H%M%S",time.gmtime(peakDict[r].etm))
+            anz = peakDict[r].data['ANALYZER']
+            lat = peakDict[r].data['GPS_ABS_LAT']
+            lng = peakDict[r].data['GPS_ABS_LONG']
+            ch4 = peakDict[r].data['CH4']
+            ampl = peakDict[r].data['AMPLITUDE']
+            des = "%s_%s" % (anz,tstr)
+            coords = "%s,%s" % (lat,lng)
+            peakTableString.append('<tr>')
+            peakTableString.append('<td>%d</td>' % r)
+            peakTableString.append('<td><a href="http://maps.google.com?q=%s+(%s)&z=%d" target="_blank">%s</a></td>' % (coords,des,zoom,des))
+            peakTableString.append('<td>%.6f</td>' % lat)
+            peakTableString.append('<td>%.6f</td>' % lng)
+            peakTableString.append('<td>%.1f</td>' % ch4)
+            peakTableString.append('<td>%.2f</td>' % ampl)
+            peakTableString.append('</tr>')
+        peakTableString.append('</tbody>')
+        peakTableString.append('</table>')
+        op.write("\n".join(peakTableString))
             
     def makeMarkerReport(self,op,selMarkers):
-        if selMarkers:
-            zoom = 18
-            markerTableString = []
-            markerTableString.append('<table class="table table-striped table-condensed table-fmt1 table-datatable">')
-            markerTableString.append('<thead><tr>')
-            markerTableString.append('<th style="width:30%%">%s</th>' % "Designation")
-            markerTableString.append('<th style="width:20%%">%s</th>' % "Latitude")
-            markerTableString.append('<th style="width:20%%">%s</th>' % "Longitude")
-            markerTableString.append('</tr></thead>')
-            markerTableString.append('<tbody>')
-            for m,(x,y) in selMarkers:
-                coords = "%s,%s" % (m.lat,m.lng)
-                markerTableString.append('<tr>')
-                markerTableString.append('<td><a href="http://maps.google.com?q=%s+(%s)&z=%d" target="_blank">%s</a></td>' % (coords,m.label,zoom,m.label))
-                markerTableString.append('<td>%s</td>' % m.lat)
-                markerTableString.append('<td>%s</td>' % m.lng)
-                markerTableString.append('</tr>')
-            markerTableString.append('</tbody>')
-            markerTableString.append('</table>')
-            op.write("\n".join(markerTableString))
+        zoom = 18
+        markerTableString = []
+        markerTableString.append('<table class="table table-striped table-condensed table-fmt1 table-datatable">')
+        markerTableString.append('<thead><tr>')
+        markerTableString.append('<th style="width:30%%">%s</th>' % "Designation")
+        markerTableString.append('<th style="width:20%%">%s</th>' % "Latitude")
+        markerTableString.append('<th style="width:20%%">%s</th>' % "Longitude")
+        markerTableString.append('</tr></thead>')
+        markerTableString.append('<tbody>')
+        for m,(x,y) in selMarkers:
+            coords = "%s,%s" % (m.lat,m.lng)
+            markerTableString.append('<tr>')
+            markerTableString.append('<td><a href="http://maps.google.com?q=%s+(%s)&z=%d" target="_blank">%s</a></td>' % (coords,m.label,zoom,m.label))
+            markerTableString.append('<td>%s</td>' % m.lat)
+            markerTableString.append('<td>%s</td>' % m.lng)
+            markerTableString.append('</tr>')
+        markerTableString.append('</tbody>')
+        markerTableString.append('</table>')
+        op.write("\n".join(markerTableString))
         
     def makePeakCsv(self,op,peakDict,selMarkers):
         zoom = 18
         writer = csv.writer(op,dialect='excel')
-        if peakDict:
-            writer.writerow(('Rank','Designation','Latitude','Longitude','Concentration','Amplitude','URL'))
-            for i in range(len(peakDict)):
-                r = i+1
-                tstr = time.strftime("%Y%m%dT%H%M%S",time.gmtime(peakDict[r].etm))
-                anz = peakDict[r].data['ANALYZER']
-                lat = peakDict[r].data['GPS_ABS_LAT']
-                lng = peakDict[r].data['GPS_ABS_LONG']
-                coords = "%s,%s" % (lat,lng)
-                ch4 = peakDict[r].data['CH4']
-                ampl = peakDict[r].data['AMPLITUDE']
-                des = "%s_%s" % (anz,tstr)
-                url = "http://maps.google.com?q=%s+(%s)&z=%d" % (coords,des,zoom)
-                writer.writerow((r,des,lat,lng,ch4,ampl,url))
-            return
-        
+        writer.writerow(('Rank','Designation','Latitude','Longitude','Concentration','Amplitude','URL'))
+        for i in range(len(peakDict)):
+            r = i+1
+            tstr = time.strftime("%Y%m%dT%H%M%S",time.gmtime(peakDict[r].etm))
+            anz = peakDict[r].data['ANALYZER']
+            lat = peakDict[r].data['GPS_ABS_LAT']
+            lng = peakDict[r].data['GPS_ABS_LONG']
+            coords = "%s,%s" % (lat,lng)
+            ch4 = peakDict[r].data['CH4']
+            ampl = peakDict[r].data['AMPLITUDE']
+            des = "%s_%s" % (anz,tstr)
+            url = "http://maps.google.com?q=%s+(%s)&z=%d" % (coords,des,zoom)
+            writer.writerow((r,des,lat,lng,ch4,ampl,url))
+        return
+    
     def makePeakXml(self,op,peakDict,selMarkers):
         zoom = 18
         name = self.instructions["regions"][self.region]["name"]

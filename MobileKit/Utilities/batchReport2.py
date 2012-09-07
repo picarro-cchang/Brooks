@@ -76,7 +76,7 @@ class ReportApiService(object):
                     rslt = rtn_data
                 break
                 
-            if waitForRetry: time.sleep(self.timeout)
+            if waitForRetry: time.sleep(self.sockettimeout)
             waitForRetry = True
             
         return { "error": err_str, "return": rslt, "info": dict(info.items()) }
@@ -146,6 +146,7 @@ def process(instructions):
         time.sleep(2.0)
         
     # Get the composite maps and reports
+    # Also get the html table of peaks
     if status:
         for f in status:
             if f.startswith('composite'):
@@ -165,6 +166,11 @@ def process(instructions):
                 fp = open(f + ".xml","wb")
                 fp.write(result);
                 fp.close()    
+                qryparms = { 'qry': 'getPeaks', 'ticket': ticket, 'region': region }
+                result = raiseOnError(reportApi.get("gdu", "1.0", "ReportGen", qryparms))
+                fp = open(f + ".markerTable.html","wb")
+                fp.write(result);
+                fp.close()
     
 def main():
     instructions = raw_input("name of instruction file? ")

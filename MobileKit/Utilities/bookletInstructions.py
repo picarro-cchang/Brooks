@@ -16,6 +16,10 @@ except:
 
 from numpy import arange, arcsin, arctan2, arctan, tan, asarray, cos, isfinite, isnan
 from numpy import log, pi, sin, sqrt, unwrap
+import batchReport2
+import os
+import shutil
+import glob
     
 LatLng = namedtuple( 'LatLng', ["lat", "lng"] )
 MapRect = namedtuple( 'MapRect', ["swCorner", "neCorner"] )
@@ -25,6 +29,8 @@ MinimalRunParams = namedtuple( 'MinimalRunParams', [ 'startEtm','endEtm','minAmp
 
 RegionParams = namedtuple( 'RegionParams', ['baseType', 'name', 'swCorner', 'neCorner', 'comments'] )
 GridParams = namedtuple( 'GridParams', ['mapRect', 'ncol', 'nrow', 'baseName', 'baseType'] )
+
+MarkerInfo = namedtuple( 'MarkerInfo', [ 'name', 'lat', 'lng' ] )
 
 def distVincenty(lat1, lng1, lat2, lng2):
     # WGS-84 ellipsiod. lat and lng in DEGREES
@@ -313,7 +319,6 @@ def getGridParametersFromCommandLine2():
         else:
             return getGridParametersFromCommandLine()
     
-    
 def getGridParametersTest():
     swCorner = LatLng( 32.74839, -96.76693 )
     neCorner = LatLng( 32.75676, -96.75592 )
@@ -358,16 +363,40 @@ def getRunBlock(runBlockParams):
     runBlock += blws + blws + "}"
     return runBlock 
 
-# For now, this just returns an empty marker block    
-def getMarkerBlock():
+# If markerList is None, return an empty marker block. 
+# Otherwise convert the markerList into a marker block in json
+# If mapRect is given, only include markers falling inside the mapRect 
+def getMarkerBlock( markerList=None ):
     blws = "    "  
-    markerBlock = blws + "\"markers\": [\n" + blws + "]\n"
+    markerBlock = blws + "\"markers\": [\n" 
+    if ( markerList == None ):
+        markerBlock += blws + "]\n"
+        return markerBlock
+    
+    first = True
+    for marker in markerList:
+        if (not first):
+            newEntry = "},\n"
+        else:
+            newEntry = ""
+        newEntry += blws + blws + "{\n"
+        newEntry += blws + blws + blws + '"label": "' + marker.name + '",\n'
+        newEntry += blws + blws + blws + '"location": [\n'
+        newEntry += blws + blws + blws + blws + marker.lat + ',\n'
+        newEntry += blws + blws + blws + blws + marker.lng + '\n'
+        newEntry += blws + blws + blws + '],\n'
+        newEntry += blws + blws + blws + '"color": "#00FFFF",\n'
+        newEntry += blws + blws + blws + '"comments": ""\n'     
+        first = False
+        markerBlock += newEntry
+    markerBlock += blws + blws + "}\n"
+    markerBlock += blws + "]\n"
     return markerBlock
 
 # Produces instructions to make a grid (ncol by nrow) of maps according to the specified parameters:
 #   gridPars contains a mapRect and ncol, nrow, baseName for the sections, and baseType for the map type (map or satellite)
 #   runBlockParamList is a list of RunBlockParams 
-def getInstructions( gridPars, runBlockParamList ):
+def getInstructions( gridPars, runBlockParamList, markerList=None ):
     blws = "    "
     instructions = "// Instructions file for region " + gridPars.baseName + "\n"
     instructions += "{\n"
@@ -398,22 +427,16 @@ def getInstructions( gridPars, runBlockParamList ):
         else:
             instructions += "\n"
     instructions += blws + "],\n"
-             
-    instructions += getMarkerBlock()
+    
+    if ( markerList is None ):
+        instructions += getMarkerBlock()
+    else:
+        instructions += getMarkerBlock( markerList )
     instructions += "}"
     
     return instructions
     
-# Write a set of instructions files to make a report (booklet type)
-#   basename_summaryMaps.json: Makes the overall summary maps, list of LISAs sorted by amplitude.
-#   basename_tiles_maps.json: Makes the maps for the zoomed-in sections 
-#   basename_tiles_sat.json: Makes the satellite views for the zoomed-in sections
-# This is intended for for use during development only. 
-# If ncol or nrow are zero, try to determine them automatically (not yet available)
-#   RegionParams = nameTuple( 'RegionParams', ['baseType', 'name', 'swCorner', 'neCorner', 'comments'] )
-#   GridParams = namedtuple( 'GridParams', ['mapRect', 'ncol', 'nrow', 'baseName', 'baseType'] )
-def writeReportInstructionsFiles( basename, analyzer, gridPars, minRunParamsList ):   
-
+def writeAndRunSummaryInstructions( basename, analyzer, gridPars, minRunParamsList ):
     # Default Colors
     bubbleColor = "#00FFFF"        # Cyan
     wedgeColor = "#FFFF00"         # Yellow
@@ -438,7 +461,162 @@ def writeReportInstructionsFiles( basename, analyzer, gridPars, minRunParamsList
     # Make the summary/overview map  
     summaryMapGridPars = GridParams( gridPars.mapRect, 1, 1, basename, "map")
     summaryMapInstructions = getInstructions( summaryMapGridPars, runParamsList )
-    #print summaryMapInstructions
+    
+    # Make the satellite/overview map
+    summarySatGridPars = GridParams( gridPars.mapRect, 1, 1, basename, "satellite")
+    summarySatInstructions = getInstructions( summarySatGridPars, runParamsList )    
+    
+    # Make the swath map: Use different colors for day vs. night
+    runParamsSwathList = []
+    for i in range ( len(minRunParamsList) ):
+        swathColor = nightSwathColor
+        if ( minRunParamsList[i].stabClass < "D" ):
+            swathColor = daySwathColor
+        runParamsSwathList.append(  RunBlockParams( analyzer, 
+                                    minRunParamsList[i].startEtm, 
+                                    minRunParamsList[i].endEtm,
+                                    "None", 
+                                    "None", 
+                                    swathColor, 
+                                    minRunParamsList[i].minAmpl, 
+                                    minRunParamsList[i].exclRadius, 
+                                    minRunParamsList[i].stabClass,
+                                    ""
+                                )    
+        )      
+    summarySwathPars = GridParams( gridPars.mapRect, 1, 1, basename, "satellite")
+    summarySwathInstructions = getInstructions( summarySatGridPars, runParamsSwathList )    
+
+    #Write the instructions to files
+    sum_map_fn = basename + "_summary_map.json"
+    sum_sat_fn = basename + "_summary_sat.json"
+    sum_swath_fn = basename + "_summary_swath.json" 
+    fnExtensions = []
+    fnExtensions.append( sum_map_fn )
+    fnExtensions.append( sum_sat_fn )
+    fnExtensions.append( sum_swath_fn )
+    
+    fp_sum_map = file(sum_map_fn,"wb")
+    fp_sum_map.write(summaryMapInstructions) 
+    fp_sum_map.close()
+  
+    fp_sum_sat = file(sum_sat_fn,"wb")
+    fp_sum_sat.write(summarySatInstructions) 
+    fp_sum_sat.close()  
+    
+    fp_sum_swath = file(sum_swath_fn,"wb")
+    fp_sum_swath.write(summarySwathInstructions) 
+    fp_sum_swath.close()      
+
+    # Set up a subdirectory to hold the results of interest for each instructions file
+    subDirBase = "result"
+    for i in range( len(fnExtensions) ):
+        subdir = subDirBase+str(i)
+        os.mkdir(subdir)
+    
+    # Run each instructions file and copy results to appropriate subdir
+    resultsToKeep = ['composite']
+    
+    for i in range( len(fnExtensions) ):
+        batchReport2.process( fnExtensions[i] )
+        for j in range( len(resultsToKeep) ):
+            for data in glob.glob( resultsToKeep[j]+"*" ):
+                shutil.move( data, subDirBase+str(i) )    
+    
+def writeAndRunGridInstructions( basename, analyzer, gridPars, minRunParamsList, markerList ):     
+    # Default Colors
+    bubbleColor = "#00FFFF"        # Cyan
+    wedgeColor = "#FFFF00"         # Yellow
+    nightSwathColor = "#00FF00"    # Green
+    daySwathColor = "#FFFF00"      # Yellow
+
+    runParamsList = []
+    for i in range ( len(minRunParamsList) ):
+        runParamsList.append( RunBlockParams( analyzer, 
+                                minRunParamsList[i].startEtm, 
+                                minRunParamsList[i].endEtm,
+                                bubbleColor, 
+                                wedgeColor, 
+                                "None", 
+                                minRunParamsList[i].minAmpl, 
+                                minRunParamsList[i].exclRadius, 
+                                minRunParamsList[i].stabClass,
+                                ""
+                            )    
+        )  
+       
+    #Make the grid google maps
+    mapGridPars = GridParams( gridPars.mapRect, gridPars.ncol, gridPars.nrow, basename, "map")   
+    mapGridInstructions = getInstructions( mapGridPars, runParamsList, markerList )
+    
+    #Make the grid satellite maps
+    satGridPars = GridParams( gridPars.mapRect, gridPars.ncol, gridPars.nrow, basename, "satellite")   
+    satGridInstructions = getInstructions( satGridPars, runParamsList, markerList )
+
+    #Write the instructions to files
+    grid_map_fn = basename + "_grid_map.json"
+    grid_sat_fn = basename + "_grid_sat.json"    
+    fnExtensions = []
+    fnExtensions.append( grid_map_fn )
+    fnExtensions.append( grid_sat_fn )
+       
+    fp_grid_map = file(grid_map_fn,"wb")
+    fp_grid_map.write(mapGridInstructions) 
+    fp_grid_map.close()      
+
+    fp_grid_sat = file(grid_sat_fn,"wb")
+    fp_grid_sat.write(satGridInstructions) 
+    fp_grid_sat.close()     
+
+    # Set up a subdirectory to hold the results of interest for each instructions file
+    subDirBase = "result"
+    subdir = subDirBase+str(3)
+    os.mkdir(subdir)
+    subdir = subDirBase+str(4)
+    os.mkdir(subdir)    
+    
+    # Run each instructions file and copy results to appropriate subdir
+    resultsToKeep = ['composite']
+    
+    for i in range( len(fnExtensions) ):
+        batchReport2.process( fnExtensions[i] )
+        for j in range( len(resultsToKeep) ):
+            for data in glob.glob( resultsToKeep[j]+"*" ):
+                shutil.move( data, subDirBase+str(i+3) )
+
+# Write a set of instructions files to make a report (booklet type)
+#   basename_summaryMaps.json: Makes the overall summary maps, list of LISAs sorted by amplitude.
+#   basename_tiles_maps.json: Makes the maps for the zoomed-in sections 
+#   basename_tiles_sat.json: Makes the satellite views for the zoomed-in sections
+# This is intended for for use during development only. 
+# If ncol or nrow are zero, try to determine them automatically (not yet available)
+#   RegionParams = nameTuple( 'RegionParams', ['baseType', 'name', 'swCorner', 'neCorner', 'comments'] )
+#   GridParams = namedtuple( 'GridParams', ['mapRect', 'ncol', 'nrow', 'baseName', 'baseType'] )
+def writeReportInstructionsFiles( basename, analyzer, gridPars, minRunParamsList ):   
+    # Default Colors
+    bubbleColor = "#00FFFF"        # Cyan
+    wedgeColor = "#FFFF00"         # Yellow
+    nightSwathColor = "#00FF00"    # Green
+    daySwathColor = "#FFFF00"      # Yellow
+
+    runParamsList = []
+    for i in range ( len(minRunParamsList) ):
+        runParamsList.append( RunBlockParams( analyzer, 
+                                minRunParamsList[i].startEtm, 
+                                minRunParamsList[i].endEtm,
+                                bubbleColor, 
+                                wedgeColor, 
+                                "None", 
+                                minRunParamsList[i].minAmpl, 
+                                minRunParamsList[i].exclRadius, 
+                                minRunParamsList[i].stabClass,
+                                ""
+                            )    
+        )  
+
+    # Make the summary/overview map  
+    summaryMapGridPars = GridParams( gridPars.mapRect, 1, 1, basename, "map")
+    summaryMapInstructions = getInstructions( summaryMapGridPars, runParamsList )
     
     # Make the satellite/overview map
     summarySatGridPars = GridParams( gridPars.mapRect, 1, 1, basename, "satellite")
@@ -501,6 +679,35 @@ def writeReportInstructionsFiles( basename, analyzer, gridPars, minRunParamsList
     fp_grid_sat.write(satGridInstructions) 
     fp_grid_sat.close()     
 
+# check to see if a set of coordinates is inside the boundaries of a mapRect
+def locationIsInMapRect( lat, lng, mapRect ):
+    return ( (lat < mapRect.neCorner.lat) and (lat > mapRect.swCorner.lat) and (lng < mapRect.neCorner.lng) and (lng > mapRect.swCorner.lng) )
+    
+# remove <td> and </td> from a string
+def removeTD( line ):
+    newline = line.replace('<td>',"")    
+    newline = newline.replace('</td>',"")
+    newline = newline.replace("\n","")
+    return newline
+    
+# return a list of MarkerInfo by parsing an html table
+def getMarkerListFromHTML( html_fn ):
+    markerList = []
+    f = file(html_fn,"rb")
+    # Loop thru the lines and look for <tr>. Ignore the first instance, which is accompanied by <thead>
+    line = f.readline()
+    while (line != ""):
+        if (( ('<tr>' in line) and ( not ('thead' in line)) and ( not ('/tr' in line)) )):
+            name = removeTD(f.readline())  # This line contains the name
+            lat = f.readline()
+            lat = removeTD(f.readline())
+            lng = removeTD(f.readline())
+            markerList.append( MarkerInfo( name, lat, lng) )
+        line = f.readline()
+    f.close()
+    print "MarkerList: ", markerList
+    return markerList
+    
 if __name__ == "__main__":    
     print "\nPicarro Surveyor Report Booklet Generation -- Command Line Interface\n"
     print "Copyright (c) 2012 Picarro, Inc., All Rights Reserved.\n\n"
