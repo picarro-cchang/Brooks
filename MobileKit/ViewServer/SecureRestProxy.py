@@ -64,8 +64,8 @@ class SecureRestProxy(object):
             if m:
                 when = datetime.datetime.strptime("%sT%s" % (m.group(1),m.group(2)),"%Y%m%dT%H%M%S")
                 fmtDate = when.strftime("%d %b %Y, %H:%M GMT")
-                duration = r['durr']
-                r['name'] = '%s (%dh,%dm)' % (fmtDate,duration//3600,round((duration%3600)/60.0))
+                duration = r.get('durr',None)
+                r['name'] = fmtDate + ('(%dh,%dm)' % (duration//3600,round((duration%3600)/60.0))) if duration is not None else ''
                 r['alog'] = r['LOGNAME']
                 fList.append(r)
         return {"logList":fList}

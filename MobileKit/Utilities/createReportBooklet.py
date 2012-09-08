@@ -275,7 +275,7 @@ def getGridParsFromFile( fn ):
     neCorner = LatLng( neCornerLat, neCornerLng )    
     map = MapRect( swCorner, neCorner )
     nCol = int(config["GridParams"]["n_columns"])
-    nRow = int(config["GridParams"]["n_columns"])
+    nRow = int(config["GridParams"]["n_rows"])
     auto_grid = int(config["GridParams"]["auto_grid"])
     if (auto_grid > 0):
         minAspect = float(config["GridParams"]["min_aspect_ratio"])

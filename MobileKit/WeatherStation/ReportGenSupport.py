@@ -1233,7 +1233,6 @@ class SurveyorLayers(object):
                             msg = "%.1f" % ch4
                         elif mType == MT_RANK:
                             size = (self.ny/1000.0)
-                            fontsize = min(100,int(20.0*size))
                             color = "%02x%02x%02x" % tuple(mColor)
                             if (self.minLng<=lng<self.maxLng) and (self.minLat<=lat<self.maxLat):
                                 msg = "%d" % rank
@@ -1241,6 +1240,10 @@ class SurveyorLayers(object):
                                 rank -= 1
                             else:
                                 msg = "*"
+                            if len(msg)<=2:
+                                fontsize = min(100,int(20.0*size))
+                            else:
+                                fontsize = min(100,int(14.0*size))
                         buff = cStringIO.StringIO(GoogleMarkers().getMarker(size,fontsize,msg,color))
                         b = Image.open(buff)
                         bx,by = b.size
@@ -1248,7 +1251,10 @@ class SurveyorLayers(object):
                         ov1 = overBackground(b,ov1,box)
             for m,(x,y) in selMarkers:
                 size = (self.ny/1000.0)
-                fontsize = min(100,int(14.0*size))
+                if len(m.label)<=2:
+                    fontsize = min(100,int(20.0*size))
+                else:
+                    fontsize = min(100,int(14.0*size))
                 color = "%02x%02x%02x" % tuple(m.color)
                 buff = cStringIO.StringIO(GoogleMarkers().getMarker(size,fontsize,m.label,color))
                 b = Image.open(buff)
