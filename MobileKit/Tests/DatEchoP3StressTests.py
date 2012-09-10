@@ -11,7 +11,6 @@ import random
 import time
 import subprocess
 import pprint
-import pickle
 import shutil
 import threading
 import datetime
@@ -93,7 +92,7 @@ class TestDatEchoP3Stress(object):
                         except:
                             pass
 
-                    except ValueError, e:
+                    except ValueError:
                         doc[col] = 'NaN'
 
                 rowIdx += 1
@@ -132,8 +131,6 @@ class TestDatEchoP3Stress(object):
         assert self.datEcho.is_running()
 
         threading.Thread(target=self._runFileWriter, args=(logType,)).start()
-
-        start = time.time()
 
         # Run until we've generated 105 files.
         with self.lock:
@@ -270,6 +267,15 @@ class TestDatEchoP3Stress(object):
 
             if not os.path.isdir(targetDir):
                 os.makedirs(targetDir)
+
+            if random.random() <= 0.2:
+                open(os.path.join(targetDir, target), 'w').close()
+                # Our filesnames only have 1 second naming granularity
+                # so you need to pause or else the next non-empty file
+                # will (potentially) reuse that name.
+                time.sleep(1.0)
+                assert os.path.isfile(os.path.join(targetDir, target))
+                continue
 
             with self.lock:
                 self.writtenFiles.append(target)

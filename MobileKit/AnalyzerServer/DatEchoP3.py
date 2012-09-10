@@ -19,6 +19,7 @@ import socket
 import datetime
 import cPickle
 import optparse
+import shutil
 
 #pylint: disable=F0401
 try:
@@ -213,6 +214,19 @@ class DataEchoP3(object):
         Parse the specified file and send its data to P3. If lastRow is set,
         .dat file playback will resume from that location.
         """
+
+        fSize = os.stat(os.path.join(path, fname))[6]
+
+        if fSize == 0:
+            print "Empty file found: %s." % fname
+            try:
+                shutil.move(os.path.join(path, fname),
+                            os.path.join(path, "%s.empty" % fname))
+            except:
+                print "Unable to rename %s. Continuing." % fname
+                traceback.print_exc()
+
+            return
 
         headers = None
 
