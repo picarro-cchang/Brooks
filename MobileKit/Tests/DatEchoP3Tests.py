@@ -39,7 +39,7 @@ class TestDatEchoP3(object):
         self.driverEmulator = None
 
         for d in ['test2', 'test3', 'test4', 'test5', 'test6', 'test7', 'test8',
-                  'test9', 'test10', 'test11', 'test12']:
+                  'test9', 'test10', 'test11', 'test12', 'test13']:
             path = os.path.join(self.datRoot, d)
             if os.path.isdir(path):
                 shutil.rmtree(path)
@@ -183,7 +183,7 @@ class TestDatEchoP3(object):
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
                  '-sAPITEST']).pid)
 
-        time.sleep(100.0)
+        time.sleep(120.0)
 
         assert datEcho.is_running()
 
@@ -402,7 +402,7 @@ class TestDatEchoP3(object):
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
                  '-sAPITEST']).pid)
 
-        time.sleep(100.0)
+        time.sleep(120.0)
 
         assert datEcho.is_running()
 
@@ -419,7 +419,7 @@ class TestDatEchoP3(object):
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
 
-        time.sleep(100.0)
+        time.sleep(120.0)
 
         assert datEcho.is_running()
 
@@ -491,7 +491,7 @@ class TestDatEchoP3(object):
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
 
-        time.sleep(100.0)
+        time.sleep(120.0)
 
         assert datEcho.is_running()
 
@@ -803,7 +803,7 @@ class TestDatEchoP3(object):
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
                  '-sAPITEST']).pid)
 
-        time.sleep(100.0)
+        time.sleep(120.0)
 
         assert datEcho.is_running()
 
@@ -881,7 +881,7 @@ class TestDatEchoP3(object):
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
                  '-sAPITEST']).pid)
 
-        time.sleep(100.0)
+        time.sleep(120.0)
 
         assert datEcho.is_running()
 
@@ -1011,3 +1011,89 @@ class TestDatEchoP3(object):
         assert not os.path.exists(os.path.join(emptyTargetDir, emptyTarget))
         assert os.path.exists(os.path.join(emptyTargetDir,
                                            "%s.empty" % emptyTarget))
+
+    def testIncompleteDat(self):
+        """
+        Tests that we don't get stuck forever on a malformed file.
+        """
+
+        testDatDir = os.path.join(self.datRoot, 'test13')
+        assert not os.path.isdir(testDatDir)
+
+        # Malformed file
+        targetDt = datetime.datetime.utcnow() - datetime.timedelta(days=2.0)
+        badTarget = targetDt.strftime("TEST23-%Y%m%d-%H%M%SZ-DataLog_User"
+                                   "_Minimal.dat")
+        badTargetDir = os.path.join(testDatDir, targetDt.strftime("%Y"),
+                                 targetDt.strftime("%m"),
+                                 targetDt.strftime("%d"))
+        os.makedirs(badTargetDir)
+
+        shutil.copyfile(os.path.join(self.datRoot, 'file3.dat'),
+                        os.path.join(badTargetDir, badTarget))
+
+        # Good file
+        targetDt = datetime.datetime.utcnow() - datetime.timedelta(days=1.0)
+        target = targetDt.strftime("TEST23-%Y%m%d-%H%M%SZ-DataLog_User"
+                                   "_Minimal.dat")
+        targetDir = os.path.join(testDatDir, targetDt.strftime("%Y"),
+                                 targetDt.strftime("%m"),
+                                 targetDt.strftime("%d"))
+        os.makedirs(targetDir)
+
+        shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
+                        os.path.join(targetDir, target))
+
+        assert self.driverEmulator is None
+
+        self.driverEmulator = psutil.Process(
+            subprocess.Popen(['python.exe',
+                              './Helpers/DriverEmulatorServer.py']).pid)
+        time.sleep(1.0)
+        assert self.driverEmulator.is_running()
+
+        datEcho = psutil.Process(
+            subprocess.Popen(
+                ['python.exe', '../AnalyzerServer/DatEchoP3.py',
+                 '-ddat',
+                 "-l%s/*.dat" % os.path.join(self.datRoot, 'test13'),
+                 '-n200',
+                 "-i%sgdu/<TICKET>/13.0/AnzMeta/" % self.localUrl,
+                 "-p%sgdu/<TICKET>/13.0/AnzLog/" % self.localUrl,
+                 "-k%ssec/dummy/13.0/Admin/" % self.localUrl,
+                 "--log-metadata-url=%sgdu/<TICKET>/13.0/AnzLogMeta/" % (
+                        self.localUrl),
+                 '-yid',
+                 "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
+                 '-sAPITEST']).pid)
+
+        time.sleep(120.0)
+
+        assert datEcho.is_running()
+
+        datEcho.kill()
+
+        r = urllib2.urlopen('http://localhost:5000/stats')
+        r.read()
+
+        assert os.path.isfile('stats.json')
+
+        stats = None
+        with open('stats.json', 'rb') as f:
+            stats = json.load(f)
+
+        assert int(stats['ticketReqs']) == 1
+        assert int(stats['localIpReqs']) > 1
+        # Target .dat file has 16207 rows. We push in chunks of 200.
+        assert int(stats['pushDataReqs']) == 82
+
+        assert stats['lastRangeReq'] is not None
+        begin, end = stats['lastRangeReq']
+        beginDt = datetime.datetime.utcfromtimestamp(begin)
+        endDt = datetime.datetime.utcfromtimestamp(end)
+        assert (endDt - beginDt).days == 5.0
+
+        assert stats['pushedFiles'] == 1
+
+        assert os.path.isfile(os.path.join(badTargetDir, "%s.bad" % badTarget))
+        assert not os.path.isfile(os.path.join(badTargetDir, badTarget))

@@ -526,16 +526,37 @@ class DataEchoP3(object):
         Yields lines from the specified .dat file. Handles all issues
         pertaining to listening to an open file.
         """
+        renameAsBad = False
+
         with open(os.path.join(path, fname), 'rb') as fp:
             print "\nOpening source stream: %s\n" % fname
             print "lastRow = %s" % lastRow
 
             deadLineCount = 0
-            lineCount = 0
+            lineCount = 1
             line = ''
 
             while True:
-                line += fp.readline()
+                # Check to see if a new file is available. There is a
+                # scenario where an incomplete dat file will never
+                # have a trailing newline and we will sit here forever
+                # waiting for the incomplete file to be compeleted.
+                #
+                # Instead of waiting forever we check to see if a new
+                # file exists and, if so, is the current file still
+                # missing a trailing newline. If that is the case we
+                # know that the file is bad.
+                latest = genLatestFiles(*os.path.split(self.listenPath)).next()
+                isNewFile = (fname != os.path.split(latest)[1])
+
+                chunk = fp.readline()
+                line += chunk
+
+                if (isNewFile and len(line) != 0 and not line.endswith("\n")
+                    and chunk == ''):
+                    print "Malformed file found: %s." % fname
+                    renameAsBad = True
+                    break
 
                 if line == '':
                     # Push any data that we already have.
@@ -560,20 +581,28 @@ class DataEchoP3(object):
                     time.sleep(0.1)
                     continue
 
-                lineCount += 1
-
                 # We always want to return the header even if we are
                 # resuming playback.
                 if (lineCount != 1 and lastRow is not None and
                     lineCount <= (lastRow + 1) and line.endswith("\n")):
+                    lineCount += 1
                     line = ''
                     sys.stdout.write('.')
                     continue
 
                 if line.endswith("\n"):
+                    lineCount += 1
                     sys.stdout.write('+')
                     yield line
                     line = ''
+
+        if renameAsBad:
+            try:
+                shutil.move(os.path.join(path, fname),
+                            os.path.join(path, "%s.bad" % fname))
+            except:
+                print "Unable to rename %s. Continuing" % fname
+                traceback.print_exc()
 
     def pushToP3(self, fname):
         """

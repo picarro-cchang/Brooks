@@ -283,7 +283,14 @@ class TestDatEchoP3Stress(object):
             # Write the file out at ~1 Hz. Use unbuffered so we can
             # simulate unreliable writes to the file.
             with open(os.path.join(targetDir, target), 'w', 0) as newDat:
-                fname = "file2_%s.dat" % self.logTypeToFile[logType]
+                if logType == 'dat' and random.random() < 0.1:
+                    fname = 'files3.dat'
+                    # Incomplete rows -- i.e. the only row in
+                    # file3.dat -- should not be pushed to the server.
+                    self.writtenFiles.remove(target)
+                else:
+                    fname = "file2_%s.dat" % self.logTypeToFile[logType]
+
                 with open(os.path.join(self.datRoot, fname), 'r') as orig:
                     while True:
                         nBytes = int(math.ceil(random.expovariate(1.0/1000.0)))
