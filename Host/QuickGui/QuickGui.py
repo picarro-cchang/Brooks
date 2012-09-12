@@ -1247,7 +1247,8 @@ class QuickGui(wx.Frame):
         self.syncPeriphDict = {}
         try:
             periphIntrfConfig = os.path.join(basePath, self.config.get("PeriphIntrf", "periphIntrfConfig"))
-            (self.rawPeriphDict, self.syncPeriphDict) = parsePeriphIntrfConfig(periphIntrfConfig)
+            selectAll = self.config.getboolean("PeriphIntrf", "showAll", False)
+            (self.rawPeriphDict, self.syncPeriphDict) = parsePeriphIntrfConfig(periphIntrfConfig,selectAll)
         except Exception, err:
             print "%r" % err
 
