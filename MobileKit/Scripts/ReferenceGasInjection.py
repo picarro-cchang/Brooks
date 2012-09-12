@@ -34,11 +34,11 @@ class AnalyzerServer(object):
             self.process = None
 
 def main():
-    server = AnalyzerServer()
-    print 'Starting analyzerServer'
-    server.start()
+    # server = AnalyzerServer()
+    # print 'Starting analyzerServer'
+    # server.start()
 
-    time.sleep(5.0)
+    # time.sleep(5.0)
 
     try:
         urlBase = 'http://localhost:5000'
@@ -64,7 +64,8 @@ def main():
             print 'Injection complete'
 
     finally:
-        server.stop()
+        pass
+#        server.stop()
 
 if __name__ == '__main__':
     main()

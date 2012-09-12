@@ -494,12 +494,21 @@ def rest_startRefCalibration():
         debugging the displayed valve mask.
 
         primeDuration (optional): Amount of time to prime tube.
+
+        purgeDuration (optional): Amount of time to purge the tube
+        after priming.
+
+        flagAssertDuration (optional): Amount of time to assert the
+        flag valve mask for display purposes.
     """
 
     valve = int(request.args.get('valve', default=3))
     injectDuration = int(request.args.get('injectDuration', default=5))
     flagValve = int(request.args.get('flagValve', default=4))
     primeDuration = float(request.args.get('primeDuration', default=10.0))
+    purgeDuration = float(request.args.get('purgeDuration', default=20.0))
+    flagAssertDuration = float(request.args.get('flagAssertDuration',
+                                                default=2.0))
 
     valveMask = 1 << (valve - 1)
     flagValveMask = 1 << (flagValve - 1)
@@ -511,12 +520,12 @@ def rest_startRefCalibration():
     seq = [
         # prime
         [mask, mask, int(primeDuration / 0.2)],
-        [mask, 0x0, 100],
+        [mask, 0x0, int(purgeDuration / 0.2)],
         # primeDone
         [0x0, 0x0, 0],
         # gasInject
         [mask, mask, injectDuration],
-        [mask, flagValveMask, 10],
+        [mask, flagValveMask, int(flagAssertDuration / 0.2)],
         [mask, 0x0, 1],
         # gasInjectDone
         [0x0, 0x0, 0]]
