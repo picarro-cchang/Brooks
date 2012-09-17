@@ -197,6 +197,21 @@ class CalibrateFsr(object):
             self.spectrumFile = options["-f"]
         elif "SPECTRUM_FILE" in self.config["SETTINGS"]:
             self.spectrumFile = self.config["SETTINGS"]["SPECTRUM_FILE"]
+        self.slope = 1000
+        if "--slope" in options:
+            self.slope = int(options["--slope"])
+        elif "SLOPE" in self.config["SETTINGS"]:
+            self.slope = int(self.config["SETTINGS"]["SLOPE"])
+        self.ampl = 10000
+        if "--ampl" in options:
+            self.ampl = int(options["--ampl"])
+        elif "AMPLITUDE" in self.config["SETTINGS"]:
+            self.ampl = int(self.config["SETTINGS"]["AMPLITUDE"])
+        self.tempRate = 0.2
+        if "--temprate" in options:
+            self.temprate = float(options["--temprate"])
+        elif "TEMPERATURE_RATE" in self.config["SETTINGS"]:
+            self.temprate = float(self.config["SETTINGS"]["TEMPERATURE_RATE"])
             
         self.spectrumFile = os.path.join(self.basePath,self.spectrumFile)
         
@@ -355,7 +370,7 @@ class CalibrateFsr(object):
 
             # Set up laser temperature sweep
             
-            sweepIncr = 0.04 # degrees in 0.2s => 1 degree every 5 s
+            sweepIncr = self.tempRate/5.0
             Driver.wrDasReg("LASER%d_TEMP_CNTRL_SWEEP_MAX_REGISTER" % aLaserNum,maxLaserTemp)
             Driver.wrDasReg("LASER%d_TEMP_CNTRL_SWEEP_MIN_REGISTER" % aLaserNum,minLaserTemp)
             Driver.wrDasReg("LASER%d_TEMP_CNTRL_SWEEP_INCR_REGISTER" % aLaserNum,sweepIncr)
@@ -365,12 +380,14 @@ class CalibrateFsr(object):
             # Set up analyzer for frequency hopping mode acquisition
 
             Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER",ANALYZER_TUNING_FsrHoppingTuningMode)
-            Driver.wrFPGA("FPGA_TWGEN","TWGEN_SLOPE_UP",1000)
-            Driver.wrFPGA("FPGA_TWGEN","TWGEN_SLOPE_DOWN",1000)
-            Driver.wrDasReg("TUNER_SWEEP_RAMP_LOW_REGISTER",14500)
-            Driver.wrDasReg("TUNER_WINDOW_RAMP_LOW_REGISTER",15000)
-            Driver.wrDasReg("TUNER_WINDOW_RAMP_HIGH_REGISTER",50500)
-            Driver.wrDasReg("TUNER_SWEEP_RAMP_HIGH_REGISTER",50000)
+            Driver.wrFPGA("FPGA_TWGEN","TWGEN_SLOPE_UP",self.slope)
+            Driver.wrFPGA("FPGA_TWGEN","TWGEN_SLOPE_DOWN",self.slope)
+            
+            Driver.wrDasReg("TUNER_SWEEP_RAMP_LOW_REGISTER",32768-int(self.ampl))
+            Driver.wrDasReg("TUNER_WINDOW_RAMP_LOW_REGISTER",32768-int(0.95*self.ampl))
+            Driver.wrDasReg("TUNER_WINDOW_RAMP_HIGH_REGISTER",32768+int(0.95*self.ampl))
+            Driver.wrDasReg("TUNER_SWEEP_RAMP_HIGH_REGISTER",32768+int(self.ampl))
+            
             setFPGAbits("FPGA_TWGEN","TWGEN_CS",[("TUNE_PZT",0)])
             Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER","SPECT_CNTRL_ContinuousManualTempMode")
             setFPGAbits("FPGA_RDMAN","RDMAN_OPTIONS",[("LOCK_ENABLE",0),
@@ -434,6 +451,9 @@ settings in the configuration file:
 -v                   specify virtual laser (1-origin) to calibrate
 -w                   center wavenumber about which to calibrate
 -a                   approximate cavity FSR in WLM angle (radians)
+--slope                 current tuning slope (default 1000)
+--ampl                 current tuning amplitude (default 10000, max 32760)
+--temprate             temperature sweep rate (default 0.2 deg/s)
 """
 
 def printUsage():
@@ -441,7 +461,7 @@ def printUsage():
 
 def handleCommandSwitches():
     shortOpts = 'hc:s:v:w:a:f:'
-    longOpts = ["help"]
+    longOpts = ["help","slope=","ampl=","temprate="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
