@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[440];
+RegTypes regTypes[445];
 
 /* I2C devices */
 I2C_device i2c_devices[34] = {
@@ -852,11 +852,11 @@ void initRegisters()
     writeRegister(PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER,d);
     d.asFloat = 1.0;
     writeRegister(PEAK_DETECT_CNTRL_BACKGROUND_REGISTER,d);
-    d.asFloat = 1.0;
+    d.asFloat = 0.3;
     writeRegister(PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER,d);
-    d.asFloat = 0.0;
+    d.asFloat = 0.15;
     writeRegister(PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER,d);
-    d.asFloat = 0.0;
+    d.asFloat = 0.15;
     writeRegister(PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER,d);
     d.asUint = 300;
     writeRegister(PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER,d);
@@ -868,22 +868,32 @@ void initRegisters()
     writeRegister(PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER,d);
     d.asUint = 0;
     writeRegister(PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER,d);
-    d.asUint = 600;
+    d.asUint = 2700;
     writeRegister(PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER,d);
+    d.asUint = 100;
+    writeRegister(PEAK_DETECT_CNTRL_PRIMING_DURATION_REGISTER,d);
+    d.asUint = 100;
+    writeRegister(PEAK_DETECT_CNTRL_PURGING_DURATION_REGISTER,d);
     d.asUint = 0;
     writeRegister(PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER,d);
     d.asUint = 0x0000;
     writeRegister(PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER,d);
-    d.asUint = 0x0000;
+    d.asUint = 0x1300;
     writeRegister(PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER,d);
-    d.asUint = 0x0000;
+    d.asUint = 0x1300;
     writeRegister(PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER,d);
-    d.asUint = 0x0000;
+    d.asUint = 0x1303;
     writeRegister(PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER,d);
-    d.asUint = 0x0000;
+    d.asUint = 0x1310;
     writeRegister(PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER,d);
-    d.asUint = 0x0000;
+    d.asUint = 0x1310;
     writeRegister(PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REGISTER,d);
+    d.asUint = 0x1F14;
+    writeRegister(PEAK_DETECT_CNTRL_PRIMING_VALVE_MASK_AND_VALUE_REGISTER,d);
+    d.asUint = 0x1F10;
+    writeRegister(PEAK_DETECT_CNTRL_PURGING_VALVE_MASK_AND_VALUE_REGISTER,d);
+    d.asUint = 0x1310;
+    writeRegister(PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER,d);
     d.asFloat = 1.0;
     writeRegister(CONVERSION_FLOW1_SCALE_REGISTER,d);
     d.asFloat = 0.0;
@@ -1318,6 +1328,8 @@ void initRegisters()
     regTypes[PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER] = uint_type;
     regTypes[PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER] = uint_type;
     regTypes[PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER] = uint_type;
+    regTypes[PEAK_DETECT_CNTRL_PRIMING_DURATION_REGISTER] = uint_type;
+    regTypes[PEAK_DETECT_CNTRL_PURGING_DURATION_REGISTER] = uint_type;
     regTypes[PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER] = uint_type;
     regTypes[PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER] = uint_type;
     regTypes[PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER] = uint_type;
@@ -1325,6 +1337,9 @@ void initRegisters()
     regTypes[PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER] = uint_type;
     regTypes[PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER] = uint_type;
     regTypes[PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REGISTER] = uint_type;
+    regTypes[PEAK_DETECT_CNTRL_PRIMING_VALVE_MASK_AND_VALUE_REGISTER] = uint_type;
+    regTypes[PEAK_DETECT_CNTRL_PURGING_VALVE_MASK_AND_VALUE_REGISTER] = uint_type;
+    regTypes[PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER] = uint_type;
     regTypes[FLOW1_REGISTER] = float_type;
     regTypes[CONVERSION_FLOW1_SCALE_REGISTER] = float_type;
     regTypes[CONVERSION_FLOW1_OFFSET_REGISTER] = float_type;

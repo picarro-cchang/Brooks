@@ -5,6 +5,6 @@ bzr version-info --python > .\repoBzrVer.py
 cd .\Host
 rmdir /S /Q dist
 rmdir /S /Q build
-PicarroExeSetup.py py2exe
+python.exe PicarroExeSetup.py py2exe
 rem epydoc --html . -o ..\doc
 cd Utilities\MakeUtilities

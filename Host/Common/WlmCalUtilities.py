@@ -163,7 +163,7 @@ def bspInverse(p0,coeffs,y):
         while abs(pp[0])<thresh: pp = pp[1:]
         r = roots(pp)
         rr = r[(r == real(r)) & (r>=0) & (r<=1)]
-        x[i] += rr[0]
+        x[i] += real(rr[0])
         # time.sleep(0)
     return x,True
 
@@ -746,24 +746,29 @@ class AutoCal(object):
 
             res = res/weights
             update = relax*bspUpdate(self.nCoeffs,x,res)
+            updatePeak = argmax(abs(update))
             self.coeffs += update
 
             # Apply regularization, becoming more and more aggressive if the result is non-increasing
-            self.relaxTowardsOriginal(relaxDefault,relaxZero)
+            self.relaxTowardsOriginal(updatePeak,relaxDefault,relaxZero)
             # print "Maximum change from relaxation to default: %s" % (abs(self.coeffs-update).max(),)
 
         finally:
             self.lock.release()
 
-    MAX_ITER = 20
-    def relaxTowardsOriginal(self,relax,relaxZero=0,n=MAX_ITER):
+    def relaxTowardsOriginal(self,updatePeak,relax,relaxZero=0):
         """Relax the new coefficients towards the original, using a Laplacian term for regularization
             for relax and a raw residual for relax."""
-        for i in range(n):
-            dev = self.coeffsOrig - self.coeffs
-            self.coeffs[1:-1] = self.coeffs[1:-1] + relax*(dev[1:-1]-0.5*dev[2:]-0.5*dev[:-2]) + relaxZero*dev[1:-1]
-            if relax<0.5: relax += relax
-            if self.isIncreasing(): break
+        dev = self.coeffsOrig - self.coeffs
+        self.coeffs[1:-1] = self.coeffs[1:-1] + relax*(dev[1:-1]-0.5*dev[2:]-0.5*dev[:-2]) + relaxZero*dev[1:-1]
+        # Fix up any non-monotone issues
+        thresh = -0.75*self.sLinear[0]
+        for k in range(updatePeak,-1,-1):
+            if (self.coeffs[k+1]-self.coeffs[k])< thresh:
+                self.coeffs[k] = self.coeffs[k+1]-thresh
+        for k in range(updatePeak+1,len(self.coeffs)):
+            if (self.coeffs[k]-self.coeffs[k-1])< thresh:
+                self.coeffs[k] = self.coeffs[k-1]+thresh
 
     def isIncreasing(self):
         """Determine if the current coefficients + linear model results in a monotonically increasing angle to

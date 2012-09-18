@@ -1,6 +1,6 @@
 /*
  * FILE:
- *   peakDetectCntrl.c
+ *   peakDetectCntrl.h
  *
  * DESCRIPTION:
  *   Peak detection controller routines for determining whether an eligible peak
@@ -16,7 +16,15 @@
  *   non-survey mode for methane leak detection applications
  *  PEAK_DETECT_CNTRL_CancellingState: Used to return to IdleState if triggered state is cancelled.
  *   Number of samples in this state is determined by PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER
- *
+ *  PEAK_DETECT_CNTRL_PrimingState: Used to fill the reference gas line after the valve to the tank
+ *   is opened. Remains in this state for number of samples in PEAK_DETECT_CNTRL_PRIMING_DURATION_REGISTER
+ *   and then proceeds to the purging state
+ *  PEAK_DETECT_CNTRL_PurgingState: Used to purge the line into the analyzer before actual injection of 
+ *   the reference gas. Remains in this state for number of samples in 
+ *   PEAK_DETECT_CNTRL_PURGING_DURATION_REGISTER and then proceeds to the injection pending state
+ *  PEAK_DETECT_CNTRL_InjectionPendingState: Signals that the analyzer is ready for injection of the 
+ *   reference gas sample. The peak detector should be placed in the Armed state and the reference gas injected.
+ * 
  * The minimum of the previous "backgroundSamples" points within the history buffer are used 
  *  determine the value of "background". If "backgroundSamples" is zero, the value of 
  *  "background" is not updated.
@@ -77,17 +85,21 @@ typedef struct PEAK_DETECT_CNTRL
     unsigned int *triggerDelay_;        // Number of samples to delay when trigger conditions are met
     unsigned int *resetDelay_;          // Number of samples after entering triggered state before resetting to idle state
     unsigned int *cancellingDelay_;     // Number of samples after to remain in cancelling state before resetting to idle state
-    unsigned int *triggeredSamplesLeft_;            // Number of samples left in triggered state
+    unsigned int *primingDuration_;     // Number of samples after to remain in priming state before entering purging state
+    unsigned int *purgingDuration_;     // Number of samples after to remain in purging state before entering injection pending state
+    unsigned int *samplesLeft_;         // Number of samples left for lengthy operations
     unsigned int *idleValveMaskAndValue_;           // Valve mask and value for idle state
     unsigned int *armedValveMaskAndValue_;          // Valve mask and value for armed state
     unsigned int *triggerPendingValveMaskAndValue_; // Valve mask and value for trigger pending state
     unsigned int *triggeredValveMaskAndValue_;      // Valve mask and value for triggered state
     unsigned int *inactiveValveMaskAndValue_;       // Valve mask and value for triggered state
     unsigned int *cancellingValveMaskAndValue_;     // Valve mask and value for cancelling state
+    unsigned int *primingValveMaskAndValue_;        // Valve mask and value for priming state
+    unsigned int *purgingValveMaskAndValue_;        // Valve mask and value for purging state
+    unsigned int *injectionPendingValveMaskAndValue_;  // Valve mask and value for injection pending state
     unsigned int *solenoidValves_;      // Solenoid valve mask
     unsigned int historyTail;
     unsigned int activeLength;
-    unsigned int cancellingWait;
     unsigned int triggerWait;
     PEAK_DETECT_CNTRL_StateType lastState;
     float historyBuffer[PEAK_DETECT_MAX_HISTORY_LENGTH];

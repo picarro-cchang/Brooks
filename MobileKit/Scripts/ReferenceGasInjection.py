@@ -2,7 +2,7 @@
 Copyright 2012 Picarro Inc.
 
 Sample script for evaluating the reference gas injection as
-implemented via AnalyzerServer.
+implemented via Peak Detector in DSP
 """
 
 import urllib2
@@ -34,35 +34,48 @@ class AnalyzerServer(object):
             self.process = None
 
 def main():
+    states = ["Idle", "Armed", "Trigger Pending", "Triggered", "Inactive", "Cancelling", "Priming", "Purging", "Injection Pending"]
     # server = AnalyzerServer()
     # print 'Starting analyzerServer'
     # server.start()
 
     # time.sleep(5.0)
-
     try:
         urlBase = 'http://localhost:5000'
 
-        print 'Priming gas line'
-        r = urllib2.urlopen("%s/rest/startRefCalibration" % urlBase).read()
-        response = json.loads(r)
-
-        pprint.pprint(response)
-        assert response['result']['value'] == 'OK'
-
-        print 'Polling to do calibration injection'
-        r = urllib2.urlopen("%s/rest/tryInject" % urlBase).read()
+        print 'Priming and purging gas line'
+        r = urllib2.urlopen("%s/rest/driverRpc?func=wrDasReg&args=['PEAK_DETECT_CNTRL_STATE_REGISTER','PEAK_DETECT_CNTRL_PrimingState']" % urlBase).read()
         response = json.loads(r)
         pprint.pprint(response)
-
-        while response['result']['injected'] == 'false':
-            time.sleep(0.1)
-            r = urllib2.urlopen("%s/rest/tryInject" % urlBase).read()
+        
+        while True:
+            r = urllib2.urlopen("%s/rest/driverRpc?func=rdDasReg&args=['PEAK_DETECT_CNTRL_STATE_REGISTER']" % urlBase).read()
             response = json.loads(r)
             pprint.pprint(response)
-
-            print 'Injection complete'
-
+            state = response["result"]["value"]
+            print '%s state. Polling to await injection pending' % states[state]
+            if state == 8: break
+            time.sleep(1.0)
+        
+        print "Switching to capture mode"
+        r = urllib2.urlopen("%s/rest/driverRpc?func=wrDasReg&args=['PEAK_DETECT_CNTRL_STATE_REGISTER','PEAK_DETECT_CNTRL_ArmedState']" % urlBase).read()
+        response = json.loads(r)
+        pprint.pprint(response)
+        
+        print "Injecting reference gas"
+        r = urllib2.urlopen("%s/rest/injectCal?valve=3&flagValve=4&samples=2" % urlBase).read()
+        response = json.loads(r)
+        pprint.pprint(response)
+        
+        while True:
+            r = urllib2.urlopen("%s/rest/driverRpc?func=rdDasReg&args=['PEAK_DETECT_CNTRL_STATE_REGISTER']" % urlBase).read()
+            response = json.loads(r)
+            pprint.pprint(response)
+            state = response["result"]["value"]
+            print '%s state. Polling to await idle state' % states[state]
+            if state == 0: break
+            time.sleep(1.0)
+        
     finally:
         pass
 #        server.stop()

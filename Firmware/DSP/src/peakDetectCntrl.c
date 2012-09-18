@@ -16,7 +16,15 @@
  *   non-survey mode for methane leak detection applications
  *  PEAK_DETECT_CNTRL_CancellingState: Used to return to IdleState if triggered state is cancelled.
  *   Number of samples in this state is determined by PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER
- *
+ *  PEAK_DETECT_CNTRL_PrimingState: Used to fill the reference gas line after the valve to the tank
+ *   is opened. Remains in this state for number of samples in PEAK_DETECT_CNTRL_PRIMING_DURATION_REGISTER
+ *   and then proceeds to the purging state
+ *  PEAK_DETECT_CNTRL_PurgingState: Used to purge the line into the analyzer before actual injection of 
+ *   the reference gas. Remains in this state for number of samples in 
+ *   PEAK_DETECT_CNTRL_PURGING_DURATION_REGISTER and then proceeds to the injection pending state
+ *  PEAK_DETECT_CNTRL_InjectionPendingState: Signals that the analyzer is ready for injection of the 
+ *   reference gas sample. The peak detector should be placed in the Armed state and the reference gas injected.
+ * 
  * The minimum of the previous "backgroundSamples" points within the history buffer are used 
  *  determine the value of "background". If "backgroundSamples" is zero, the value of 
  *  "background" is not updated.
@@ -67,26 +75,31 @@
 #include <math.h>
 #include <stdio.h>
 
-#define state               (*(p->state_))
-#define processedLoss       (*(p->processedLoss_))
-#define backgroundSamples   (*(p->backgroundSamples_))
-#define background          (*(p->background_))
-#define upperThreshold      (*(p->upperThreshold_))
-#define lowerThreshold1     (*(p->lowerThreshold1_))
-#define lowerThreshold2     (*(p->lowerThreshold2_))
-#define postPeakSamples     (*(p->postPeakSamples_))
-#define activeSize          (*(p->activeSize_))
-#define triggerCondition    (*(p->triggerCondition_))
-#define triggerDelay        (*(p->triggerDelay_))
-#define resetDelay          (*(p->resetDelay_))
-#define cancellingDelay     (*(p->cancellingDelay_))
-#define triggeredSamplesLeft (*(p->triggeredSamplesLeft_))
+#define state                (*(p->state_))
+#define processedLoss        (*(p->processedLoss_))
+#define backgroundSamples    (*(p->backgroundSamples_))
+#define background           (*(p->background_))
+#define upperThreshold       (*(p->upperThreshold_))
+#define lowerThreshold1      (*(p->lowerThreshold1_))
+#define lowerThreshold2      (*(p->lowerThreshold2_))
+#define postPeakSamples      (*(p->postPeakSamples_))
+#define activeSize           (*(p->activeSize_))
+#define triggerCondition     (*(p->triggerCondition_))
+#define triggerDelay         (*(p->triggerDelay_))
+#define resetDelay           (*(p->resetDelay_))
+#define cancellingDelay      (*(p->cancellingDelay_))
+#define primingDuration      (*(p->primingDuration_))
+#define purgingDuration      (*(p->purgingDuration_))
+#define samplesLeft          (*(p->samplesLeft_))
 #define idleValveMaskAndValue           (*(p->idleValveMaskAndValue_))
 #define armedValveMaskAndValue          (*(p->armedValveMaskAndValue_))
 #define triggerPendingValveMaskAndValue (*(p->triggerPendingValveMaskAndValue_))
 #define triggeredValveMaskAndValue      (*(p->triggeredValveMaskAndValue_))
 #define inactiveValveMaskAndValue       (*(p->inactiveValveMaskAndValue_))
 #define cancellingValveMaskAndValue     (*(p->cancellingValveMaskAndValue_))
+#define primingValveMaskAndValue        (*(p->primingValveMaskAndValue_))
+#define purgingValveMaskAndValue        (*(p->purgingValveMaskAndValue_))
+#define injectionPendingValveMaskAndValue   (*(p->injectionPendingValveMaskAndValue_))
 #define solenoidValves      (*(p->solenoidValves_))
 
 PeakDetectCntrl peakDetectCntrl;
@@ -109,15 +122,19 @@ int peakDetectCntrlInit(unsigned int processedLossRegisterIndex)
     p->triggerDelay_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER);
     p->resetDelay_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER);
     p->cancellingDelay_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER);
-    p->triggeredSamplesLeft_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER);
+    p->primingDuration_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_PRIMING_DURATION_REGISTER);
+    p->purgingDuration_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_PURGING_DURATION_REGISTER);
+    p->samplesLeft_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER);
     p->idleValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER);
     p->armedValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER);
     p->triggerPendingValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER);
     p->triggeredValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER);
     p->inactiveValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER);
     p->cancellingValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REGISTER);
+    p->primingValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_PRIMING_VALVE_MASK_AND_VALUE_REGISTER);
+    p->purgingValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_PURGING_VALVE_MASK_AND_VALUE_REGISTER);
+    p->injectionPendingValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER);
     p->solenoidValves_ = (unsigned int *)registerAddr(VALVE_CNTRL_SOLENOID_VALVES_REGISTER);
-    p->cancellingWait = 0;
     p->historyTail = 0;
     p->activeLength = 0;
     p->triggerWait = 0;
@@ -188,6 +205,7 @@ static unsigned int processHistoryBuffer(PeakDetectCntrl *p, unsigned int tail, 
 int peakDetectCntrlStep()
 {
     PeakDetectCntrl *p = &peakDetectCntrl;
+    PEAK_DETECT_CNTRL_StateType nextState = state;
     if (activeSize > PEAK_DETECT_MAX_HISTORY_LENGTH) activeSize = PEAK_DETECT_MAX_HISTORY_LENGTH;
     
     // Save most recent processed loss to history buffer
@@ -207,11 +225,11 @@ int peakDetectCntrlStep()
         if (processHistoryBuffer(p,p->historyTail,p->activeLength)) {
             // Peak detected! Trigger immediately or after specified delay
             if (triggerDelay == 0) {
-                state = PEAK_DETECT_CNTRL_TriggeredState;
-                triggeredSamplesLeft = resetDelay;
+                nextState = PEAK_DETECT_CNTRL_TriggeredState;
+                samplesLeft = resetDelay;
             }
             else {
-                state = PEAK_DETECT_CNTRL_TriggerPendingState;
+                nextState = PEAK_DETECT_CNTRL_TriggerPendingState;
                 p->triggerWait = 0;
             }
         }
@@ -220,30 +238,50 @@ int peakDetectCntrlStep()
         solenoidValves = modifyValves(solenoidValves,triggerPendingValveMaskAndValue);
         p->triggerWait++;
         if (p->triggerWait >= triggerDelay) {
-            state = PEAK_DETECT_CNTRL_TriggeredState;
-            triggeredSamplesLeft = resetDelay;
+            nextState = PEAK_DETECT_CNTRL_TriggeredState;
+            samplesLeft = resetDelay;
         }
     }
     else if (state == PEAK_DETECT_CNTRL_TriggeredState) {
         solenoidValves = modifyValves(solenoidValves,triggeredValveMaskAndValue);
-        triggeredSamplesLeft = triggeredSamplesLeft - 1;
-        if (triggeredSamplesLeft <= 0) {
-            state = PEAK_DETECT_CNTRL_IdleState;
+        samplesLeft = samplesLeft - 1;
+        if (samplesLeft <= 0) {
+            nextState = PEAK_DETECT_CNTRL_IdleState;
         }
     }
     else if (state == PEAK_DETECT_CNTRL_InactiveState) {
         solenoidValves = modifyValves(solenoidValves,inactiveValveMaskAndValue);
     }
     else if (state == PEAK_DETECT_CNTRL_CancellingState) {
-        if (p->lastState != PEAK_DETECT_CNTRL_CancellingState) p->cancellingWait = 0;
+        if (p->lastState != PEAK_DETECT_CNTRL_CancellingState) samplesLeft = cancellingDelay;
         solenoidValves = modifyValves(solenoidValves,cancellingValveMaskAndValue);
-        p->cancellingWait++;
-        if (p->cancellingWait > cancellingDelay) {
-            p->cancellingWait = 0;
-            state = PEAK_DETECT_CNTRL_IdleState;
+        samplesLeft = samplesLeft - 1;
+        if (samplesLeft <= 0) {
+            nextState = PEAK_DETECT_CNTRL_IdleState;
         }        
     }
+    else if (state == PEAK_DETECT_CNTRL_PrimingState) {
+        if (p->lastState != PEAK_DETECT_CNTRL_PrimingState) samplesLeft = primingDuration;
+        solenoidValves = modifyValves(solenoidValves,primingValveMaskAndValue);
+        samplesLeft = samplesLeft - 1;
+        if (samplesLeft <= 0) {
+            nextState = PEAK_DETECT_CNTRL_PurgingState;
+        }        
+    }
+    else if (state == PEAK_DETECT_CNTRL_PurgingState) {
+        if (p->lastState != PEAK_DETECT_CNTRL_PurgingState) samplesLeft = purgingDuration;
+        solenoidValves = modifyValves(solenoidValves,purgingValveMaskAndValue);
+        samplesLeft = samplesLeft - 1;
+        if (samplesLeft <= 0) {
+            nextState = PEAK_DETECT_CNTRL_InjectionPendingState;
+        }        
+    }
+    else if (state == PEAK_DETECT_CNTRL_InjectionPendingState) {
+        solenoidValves = modifyValves(solenoidValves,injectionPendingValveMaskAndValue);
+    }
+
     // Save state
     p->lastState = state;
+	state = nextState;
     return STATUS_OK;
 }
