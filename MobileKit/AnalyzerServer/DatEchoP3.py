@@ -78,6 +78,7 @@ class DataEchoP3(object):
         self.lines = kwargs['lines']
         self.historyRangeDays = kwargs['historyRangeDays']
         self.driverPort = kwargs['driverPort']
+        self.analyzerName = kwargs['analyzerName']
 
         self.ticket = 'None'
         self.ipRegistered = False
@@ -690,8 +691,10 @@ class DataEchoP3(object):
         scenario where individual files are being push to P3 we can
         simply parse the ID individually from each file.
         """
-
-        analyzerId = self._getAnalyzerIdFromDriver()
+        if self.analyzerName:
+            analyzerId = self.analyzerName
+        else:
+            analyzerId = self._getAnalyzerIdFromDriver()
         print "Found analyzer Id = %s" % analyzerId
 
         return analyzerId
@@ -761,6 +764,10 @@ Runs an echo server that sends data to P3.
                       default=SharedTypes.RPC_PORT_DRIVER, help='Driver RPC '
                       'port. Normally used for running tests with a driver '
                       'emulator.')
+    parser.add_option('--analyzer-name', dest='analyzerName',
+                      metavar='ANALYZER_NAME',
+                      default='', help='Specify analyzer name explicitly '
+                      'so it is not read using the driver from the analyzer EEPROM.')
 
     options, _ = parser.parse_args()
 
