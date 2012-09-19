@@ -28,6 +28,7 @@ var TXT = {
         start_survey: "Start Survey",
         stop_survey: "Stop Survey",
         complete_survey: "Complete Survey",
+        cancl_ref: 'Cancel Reference',
         cancl_cptr: 'Cancel Capture',
         cancl_ana: 'Cancel Analysis',
         cancl_ana_time: 's left: Cancel',
@@ -46,6 +47,9 @@ var TXT = {
         analyzing_mode: 'Analyzing Peak',
         inactive_mode: 'Inactive Mode',
         cancelling_mode: 'Canceling...',
+        priming_mode: 'Priming inlet',
+        purging_mode: 'Purging inlet',
+        injection_pending_mode: 'Injecting Gas',
         prime_conf_msg: 'Do you want to switch to Prime View Mode? \n\nWhen the browser is in Prime View Mode, you will have control of the Surveyor.',
         change_min_amp: 'Min Amplitude', //'Minimum Amplitude',
         change_stab_class: 'Stability Class', //'Minimum Amplitude',
@@ -54,7 +58,8 @@ var TXT = {
         stop_survey_msg: 'Are you sure you want to stop collecting data?',
         cancel_cap_msg: 'Cancel capture and return to survey mode?',
         cancel_ana_msg: 'Cancel analysis and return to survey mode?',
-        start_inject_msg: 'Inject reference gas now?',
+        cancel_ref_msg: 'Cancel reference gas processing?',
+        start_ref_msg: 'Connect reference gas bottle and open valve. Press OK when ready.',
         show_controls: 'Show Controls',
         show_dnote: 'Show route annotations',
         show_pnote: 'Show peak annotations',
@@ -142,7 +147,7 @@ var HBTN = {
         captureBtn: '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn btn-fullwidth">' + TXT.switch_to_cptr + '</button></div>',
         cancelCapBtn: '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn btn-fullwidth">' + TXT.cancl_cptr + '</button></div>',
         cancelAnaBtn: '<div><button id="id_cancelAnaBtn" type="button" onclick="cancelAnaSwitch();" class="btn btn-fullwidth">' + TXT.cancl_ana + '</button></div>',
-        calibrateBtn: '<div><button id="id_calibrateBtn" type="button" onclick="injectCal();" class="btn btn-fullwidth">' + TXT.calibrate + '</button></div>',
+        calibrateBtn: '<div><button id="id_calibrateBtn" type="button" onclick="referenceGas();" class="btn btn-fullwidth">' + TXT.calibrate + '</button></div>',
         shutdownBtn: '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn btn-danger btn-fullwidth">' + TXT.shutdown + '</button></div>',
         downloadBtn: '<div><button id="id_downloadBtn" type="button" onclick="modalPaneExportControls();" class="btn btn-fullwidth">' + TXT.download_files + '</button></div>',
         analyzerCntlBtn: '<div><button id="id_analyzerCntlBtn" type="button" onclick="modalPanePrimeControls();" class="btn btn-fullwidth">' + TXT.anz_cntls + '</button></div>',
@@ -348,22 +353,22 @@ CNSNT.classByWeather = { 0: "D",  8: "D", 16: "D", // Daytime, Overcast
                 };
 
 var statusPane = function () {
-    var pane = '<table style="width: 100%;">'
-        + '<tr>'
-        + '<td style="width:25%; padding:5px 0px 10px 10px;">'
-        + '<img class="stream-ok" src="' + CNSNT.spacer_gif + '" onclick="showStream();" name="stream_stat" id="id_stream_stat" />'
-        + '</td>'
-        + '<td style="width:25%; padding:5px 0px 10px 10px;">'
-        + '<img class="analyzer-ok" src="' + CNSNT.spacer_gif + '" onclick="showAnalyzer();" name="analyzer_stat" id="id_analyzer_stat" />'
-        + '</td>'
-        + '<td style="width:25%; padding:5px 0px 10px 10px;">'
-        + '<img class="gps-uninstalled" src="' + CNSNT.spacer_gif + '" onclick="showGps();" name="gps_stat" id="id_gps_stat" />'
-        + '</td>'
-        + '<td style="width:25%; padding:5px 0px 10px 10px;">'
-        + '<img class="ws-uninstalled" src="' + CNSNT.spacer_gif + '" onclick="showWs();" name="ws_stat" id="id_ws_stat" />'
-        + '</td>'
-        + '</tr>'
-        + '</table>';
+    var pane = '<table style="width: 100%;">';
+    pane += '<tr>';
+    pane += '<td style="width:25%; padding:5px 0px 10px 10px;">';
+    pane += '<img class="stream-ok" src="' + CNSNT.spacer_gif + '" onclick="showStream();" name="stream_stat" id="id_stream_stat" />';
+    pane += '</td>';
+    pane += '<td style="width:25%; padding:5px 0px 10px 10px;">';
+    pane += '<img class="analyzer-ok" src="' + CNSNT.spacer_gif + '" onclick="showAnalyzer();" name="analyzer_stat" id="id_analyzer_stat" />';
+    pane += '</td>';
+    pane += '<td style="width:25%; padding:5px 0px 10px 10px;">'
+    pane += '<img class="gps-uninstalled" src="' + CNSNT.spacer_gif + '" onclick="showGps();" name="gps_stat" id="id_gps_stat" />';
+    pane += '</td>';
+    pane += '<td style="width:25%; padding:5px 0px 10px 10px;">'
+    pane += '<img class="ws-uninstalled" src="' + CNSNT.spacer_gif + '" onclick="showWs();" name="ws_stat" id="id_ws_stat" />';
+    pane += '</td>';
+    pane += '</tr>';
+    pane += '</table>';
     return pane;
 }; 
 
@@ -554,7 +559,7 @@ var TIMER = {
     };
     
 var modeStrings = {0: TXT.survey_mode, 1: TXT.capture_mode, 2: TXT.capture_mode, 3: TXT.analyzing_mode, 4: TXT.inactive_mode, 
-                   5: TXT.cancelling_mode };
+                   5: TXT.cancelling_mode, 6: TXT.priming_mode, 7: TXT.purging_mode, 8: TXT.injection_pending_mode };
                    
 // Calculate the additional wind direction standard deviation based on the wind speed and the car speed.
 //  This is an empirical model to estimate the performace of the measurement process.
@@ -1783,19 +1788,24 @@ function updateNote(cat, logname, etm, note, type) {
     } else {
         datadict = {"note": note, "db": true, "lock": true};
     }
+    var ltype = 'dat';
     if (cat === 'peak') {
         CSTATE.peakNoteDict[etm] = datadict;
+        ltype = 'peaks';
     } else {
         if (cat === 'analysis') {
             CSTATE.analysisNoteDict[etm] = datadict;
+            ltype = 'analysis';
         } else {
             CSTATE.datNoteDict[etm] = datadict;
+            ltype = 'dat';
         }
     }
     //alert("etm: " + etm);
     docrow = {"qry": "dataIns"
             , "LOGNAME": logname
             , "EPOCH_TIME": etm
+            , "LOGTYPE": ltype
             , "NOTE_TXT": note};
 
     if (type === 'add') {
@@ -2810,6 +2820,11 @@ function get_time_zone_offset() {
 
 function call_rest(call_url, method, dtype, params, success_callback, error_callback) {
     var url;
+    if (!params.hasOwnProperty("requestor_uid")) {
+        if (CNSNT.user_id !== "") {
+            params["requestor_uid"] = CNSNT.user_id;
+        }
+    }
     if (dtype === "jsonp") {
         url = call_url + '/' + method + "?callback=?";
         $.jsonp({
@@ -3581,11 +3596,11 @@ function getMode() {
                         $("#id_surveyOnOffBtn").removeAttr("disabled").html(TXT.stop_survey).attr("onclick", "stopSurvey();");
                         $("#id_calibrateBtn").removeAttr("disabled");
                     } else if (mode==1) {
-                        $("#id_captureBtn").html(TXT.cancl_cptr).attr("onclick", "cancelCapSwitch();");
+                        $("#id_captureBtn").html(TXT.cancl_cptr).attr("onclick", "cancelCapSwitch();").removeAttr("disabled");
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").removeAttr("disabled");
                     } else if (mode==2) {
-                        $("#id_captureBtn").html(TXT.cancl_cptr).attr("onclick", "cancelCapSwitch();");
+                        $("#id_captureBtn").html(TXT.cancl_cptr).attr("onclick", "cancelCapSwitch();").removeAttr("disabled");
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     } else if (mode==3) {
@@ -3607,6 +3622,19 @@ function getMode() {
                         $("#id_captureBtn").attr("disabled", "disabled");
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
+                    } else if (mode==6) {
+                        $("#id_captureBtn").html(TXT.cancl_ref).attr("onclick", "cancelRefSwitch();").removeAttr("disabled");
+                        $("#id_surveyOnOffBtn").attr("disabled", "disabled");
+                        $("#id_calibrateBtn").attr("disabled", "disabled");
+                    } else if (mode==7) {
+                        $("#id_captureBtn").html(TXT.cancl_ref).attr("onclick", "cancelRefSwitch();").removeAttr("disabled");
+                        $("#id_surveyOnOffBtn").attr("disabled", "disabled");
+                        $("#id_calibrateBtn").attr("disabled", "disabled");
+                    } else if (mode==8) {
+                        $("#id_captureBtn").attr("disabled", "disabled");
+                        $("#id_surveyOnOffBtn").attr("disabled", "disabled");
+                        $("#id_calibrateBtn").attr("disabled", "disabled");
+                        injectCal();
                     }
                 }
                 CSTATE.getting_mode = false;
@@ -3801,6 +3829,15 @@ function fetchSwath() {
                 }
                 //CSTATE.lastAnalysisFilename = data.result.filename;
             }
+        } else {
+            CSTATE.swathSkipCount = CNSNT.swathMaxSkip; // force call on next pass
+            if (data) {
+                if (typeof(data) === "string" && (data.indexOf("ERROR: invalid ticket") !== -1)) {
+                    get_ticket();
+                }
+                setGduTimer('swath');
+                return;
+            }
         }
         if (resultWasReturned) {
             if (data.result.GPS_ABS_LAT) {
@@ -3840,11 +3877,12 @@ function fetchSwath() {
         }
         setGduTimer('swath');
     }
-    function errorSwath(text) {
+    function errorSwath(xOptions, textStatus) {
         //CSTATE.net_abort_count += 1;
         //if (CSTATE.net_abort_count >= 2) {
         //    $("#id_modal").html(modalNetWarning());
         //}
+        CSTATE.swathSkipCount = CNSNT.swathMaxSkip; // force call on next pass
         $("#errors").html("fetchSwath() error.");
         setGduTimer('swath');
     }
@@ -3860,11 +3898,13 @@ function fetchSwath() {
                     , 'astd_c': CSTATE.astd_c
                     , 'alog': CSTATE.alog
                     , 'gmtOffset': CNSNT.gmt_offset
+                    , "rtnOnTktError": "1"
                     };
         
     if (!CSTATE.showSwath) {
-         setGduTimer('swath');
-         return;
+        CSTATE.swathSkipCount = CNSNT.swathMaxSkip; // force call on next pass
+        setGduTimer('swath');
+        return;
     }
     
     // Avoid repeatedly calling makeSwath if parameters are unchanged. Even if the parameters
@@ -3876,9 +3916,12 @@ function fetchSwath() {
             // We make the call despite the identical parameters since we
             //  have got too many empty replies
             CSTATE.swathSkipCount = 0;
-        }
-        else {
-            if (!CSTATE.lastSwathOutput.result.GPS_ABS_LAT.length) CSTATE.swathSkipCount += 1;
+        } else {
+            if (CSTATE.lastSwathOutput.hasOwnProperty("result")) {
+                if (CSTATE.lastSwathOutput.result.hasOwnProperty("GPS_ABS_LAT")) {
+                    if (!CSTATE.lastSwathOutput.result.GPS_ABS_LAT.length) CSTATE.swathSkipCount += 1;
+                }
+            }
             // Playback from cache
             successSwath(CSTATE.lastSwathOutput);
             return;
@@ -3903,8 +3946,8 @@ function fetchSwath() {
             CSTATE.net_abort_count = 0;
             successSwath(json);
             }, 
-            function (jqXHR, ts, et) {
-                errorSwath(jqXHR.responseText);
+            function (xOptions, textStatus) {
+                errorSwath(xOptions, textStatus);
             }
         );
         break;
@@ -3919,8 +3962,8 @@ function fetchSwath() {
                 CSTATE.net_abort_count = 0;
                 successSwath(json);
             },
-            function (jqXHR, ts, et) {
-                errorSwath(jqXHR.responseText);
+            function (xOptions, textStatus) {
+                errorSwath(xOptions, textStatus);
             }
         );
         break;
@@ -4204,16 +4247,20 @@ function getNotes(cat) {
 
     if (CSTATE.ticket !== "WAITING") {
         if (CNSNT.resource_AnzLogNote) {
+            var ltype = 'dat';
             if (cat === "peak") {
                 fname = CSTATE.lastPeakFilename;
                 etm = CSTATE.nextPeakEtm;
+                ltype = 'peaks';
             } else {
                 if (cat === "analysis") {
                     fname = CSTATE.lastAnalysisFilename;
                     etm = CSTATE.nextAnalysisEtm;
+                    ltype = 'analysis';
                 } else {
                     fname = CSTATE.lastDataFilename;
                     etm = CSTATE.nextDatEtm;
+                    ltype = 'dat';
                 }
             }
             
@@ -4226,6 +4273,7 @@ function getNotes(cat) {
                 , "startEtm": etm
                 , "gmtOffset": CNSNT.gmt_offset
                 , "limit": CSTATE.getDataLimit
+                , "ltype": ltype
                 , "doclist": "true"
                 , "insFilename": "true"
                 , "timeStrings": "true"
@@ -4234,11 +4282,10 @@ function getNotes(cat) {
                 , "excludeStart": "true"
                 , "rtnOnTktError": "1"
             };
-            //alert("ruri: " + ruri + "  resource: " + resource);
             call_rest(ruri, resource, "jsonp", params, function(
                 json, status, jqXHR) {
                 CSTATE.net_abort_count = 0;
-                successData(json);
+                successNotes(json, cat);
                 }, 
                 function (jqXHR, ts, et) {
                     errorDatNotes(jqXHR.responseText);
@@ -4392,6 +4439,17 @@ function cancelCapSwitch() {
     }
 }
 
+function cancelRefSwitch() {
+    if (confirm(TXT.cancel_ref_msg)) {
+        var dtype = "json";
+        if (CNSNT.prime_view === true) {
+            dtype = "jsonp";
+        }
+        call_rest(CNSNT.svcurl, "driverRpc", dtype, {"func": "wrDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER', 5]"});
+        restoreModChangeDiv();
+    }
+}
+
 function cancelAnaSwitch() {
     if (confirm(TXT.cancel_ana_msg)) {
         var dtype = "json";
@@ -4403,11 +4461,40 @@ function cancelAnaSwitch() {
     }
 }
 
+function primingSwitch() {
+    CSTATE.ignoreTimer = true;
+    $("#analysis").html("");
+    var dtype = "json";
+    if (CNSNT.prime_view === true) {
+        dtype = "jsonp";
+    }
+    call_rest(CNSNT.svcurl, "driverRpc", dtype, {"func": "wrDasReg", "args": "['PEAK_DETECT_CNTRL_STATE_REGISTER', 6]"});
+    CSTATE.ignoreTimer = false;
+    restoreModChangeDiv();
+}
+
+function referenceGas() {
+    var dtype = "json";
+    if (CNSNT.prime_view === true) {
+        dtype = "jsonp";
+    }
+    call_rest(CNSNT.svcurl, "driverRpc", dtype, {"func": "interfaceValue", "args": "['PEAK_DETECT_CNTRL_PrimingState']"},
+        function (data) {
+            if (data.result.value == 6) {
+                if (confirm(TXT.start_ref_msg)) {
+                    setTimeout(primingSwitch, 100);
+                }
+            }
+            else {
+                alert("Feature is not available on current analyzer software");
+            }
+        }
+    );
+}
+
 function injectCal() {
-    if (confirm(TXT.start_inject_msg)) {
     captureSwitch();
     setTimeout(callInject, 1000);
-    }
 }
 
 function callInject() {
@@ -4415,8 +4502,7 @@ function callInject() {
     if (CNSNT.prime_view === true) {
         dtype = "jsonp";
     }
-    call_rest(CNSNT.svcurl, "injectCal", dtype, {"valve": 3, "samples": 1});
-    alert("Reference gas injected");
+    call_rest(CNSNT.svcurl, "injectCal", dtype, {"valve": 3, "flagValve": 4, "samples": 1});
     restoreModChangeDiv();
 }
 
