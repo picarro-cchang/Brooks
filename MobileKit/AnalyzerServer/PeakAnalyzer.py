@@ -627,14 +627,28 @@ class PeakAnalyzer(object):
                         conc = asarray([s.CH4 for s in keelingStore])[self.samples_to_skip:]
                         delta = asarray([s.HP_Delta_iCH4_Raw for s in keelingStore])[self.samples_to_skip:]
                         protInvconc = 1/maximum(conc,0.001)
+                        try:
+                            replay_max = max(conc)
+                        except:
+                            replay_max = 0
+                        m = argmax(conc)
+                        try:
+                            replay_lmin = min(conc[:m])
+                        except:
+                            replay_lmin = 0
+                        try:
+                            replay_rmin = min(conc[m:])
+                        except:
+                            replay_rmin = 0
+                        
                         #print "Keeling plot data"
                         #for s in keelingStore:
                         #    print s.sourceData.conc, s.sourceData.delta, s.sourceData.valves
                         #print "-----------------"
                         result = linfit(protInvconc,delta,11.0*protInvconc)
                         if lastPeak:
-                            yield namedtuple('PeakData','time dist lng lat conc delta uncertainty')(delta=result.coeffs[1],
-                                        uncertainty=sqrt(result.cov[1][1]),**lastPeak._asdict())
+                            yield namedtuple('PeakData','time dist lng lat conc delta uncertainty replay_max replay_lmin replay_rmin')(delta=result.coeffs[1],
+                                        uncertainty=sqrt(result.cov[1][1]),replay_max=replay_max,replay_lmin=replay_lmin,replay_rmin=replay_rmin,**lastPeak._asdict())
                     del keelingStore[:]
             else:
                 keelingStore.append(dtuple)
@@ -716,7 +730,7 @@ class PeakAnalyzer(object):
                 # Initialize output structure for writing to database or to analysis file
                 if self.usedb:
                     peakname = fname.replace(".dat", ".%s" % self.logtype)
-                    doc_hdrs = ["EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY"]
+                    doc_hdrs = ["EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY","REPLAY_MAX","REPLAY_LMIN","REPLAY_RMIN"]
                     doc_data = []
                     doc_row = 0
                 else:
@@ -726,7 +740,7 @@ class PeakAnalyzer(object):
                     except:
                         raise RuntimeError('Cannot open analysis output file %s' % analysisFile)
                     # Write file header
-                    handle.write("%-14s%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY"))
+                    handle.write("%-14s%-14s%-14s%-14s%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY","REPLAY_MAX","REPLAY_LMIN","REPLAY_RMIN"))
  
                 # Make alignedData source from database or specified file
                 if self.usedb:
@@ -744,7 +758,7 @@ class PeakAnalyzer(object):
                     if self.usedb:
                         doc = {}
                         #Note: please assure that value list and doc_hdrs are in the same sequence
-                        for col, val in zip(doc_hdrs, [r.time,r.dist,r.lng,r.lat,r.conc,r.delta,r.uncertainty]):
+                        for col, val in zip(doc_hdrs, [r.time,r.dist,r.lng,r.lat,r.conc,r.delta,r.uncertainty,r.replay_max,r.replay_lmin,r.replay_rmin]):
                             doc[col] = float(val)
 
                             # JSON does not support nan, so change to string "NaN"
@@ -764,7 +778,8 @@ class PeakAnalyzer(object):
                         self.pushData(peakname, doc_data)
                         doc_data = []
                     else:
-                        handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.2f%-14.2f\r\n" % (r.time,r.dist,r.lng,r.lat,r.conc,r.delta,r.uncertainty))
+                        handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.2f%-14.2f%-14.3f%-14.3f%-14.3f\r\n" % (r.time,
+                                     r.dist,r.lng,r.lat,r.conc,r.delta,r.uncertainty,r.replay_max,r.replay_lmin,r.replay_rmin))
                     
                 if not self.usedb and handle is not None:
                     handle.close()
