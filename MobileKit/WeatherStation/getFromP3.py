@@ -1,5 +1,6 @@
 # Fetching data from P3
 
+import httplib
 import urllib2
 import urllib
 
@@ -86,16 +87,22 @@ class P3_Accessor(object):
         post_url = '%s/%s/%s/%s/%s' %(self.csp, "rest", svc, ticket, v_rsc)
         # print "POST URL: %s"  % post_url
 
-        while True:
+        retries = 0
+        errors = []
+        while retries<5:
             try:
                 resp = urllib2.urlopen(post_url, data=urllib.urlencode(params))
                 rtndata_str = resp.read()
-                # print "POST Response: %s: %s" % (resp.code, rtndata_str)
+                print "POST Response: %s: %s" % (resp.code, rtndata_str)
                 break
             except urllib2.URLError,e:
                 print "Error: ", e
+                errors.append("%s" % e)
                 time.sleep(1.0)
+                retries += 1
                 print "Retrying..."
+        else:
+            raise RuntimeError("\n".join(errors))
             
         rtndata = json.loads(rtndata_str)
         # print "rtndata", rtndata
@@ -175,9 +182,10 @@ class P3_Accessor(object):
                         print "Permission denied, getting a new ticket"
                         self.getTicket()
                     else:
-                        print e
-                        print traceback.format_exc()
+                        e = RuntimeError("Data not available. Check parameters.")
                         resultQueue.put(e)
+                        raise e
+
                 except Exception,e:
                     print "I/O Error, retrying"
                     time.sleep(1.0)
@@ -302,8 +310,9 @@ class P3_Accessor_ByPos(object):
         params = {"qry": qry, "sys": sys, "identity": identity, "rprocs": rprocs}
         post_url = '%s/%s/%s/%s/%s' %(self.csp, "rest", svc, ticket, v_rsc)
         print "POST URL: %s"  % post_url
-
-        while True:
+        retries = 0
+        errors = []
+        while retries<5:
             try:
                 resp = urllib2.urlopen(post_url, data=urllib.urlencode(params))
                 rtndata_str = resp.read()
@@ -311,9 +320,13 @@ class P3_Accessor_ByPos(object):
                 break
             except urllib2.URLError,e:
                 print "Error: ", e
+                errors.append("%s" % e)
                 time.sleep(1.0)
+                retries += 1
                 print "Retrying..."
-            
+        else:
+            raise RuntimeError("\n".join(errors))
+        
         rtndata = json.loads(rtndata_str)
         print "rtndata", rtndata
 
@@ -385,9 +398,10 @@ class P3_Accessor_ByPos(object):
                         print "Permission denied, getting a new ticket"
                         self.getTicket()
                     else:
-                        print e
-                        print traceback.format_exc()
+                        e = RuntimeError("Data not available. Check parameters.")
                         resultQueue.put(e)
+                        raise e
+
                 except Exception,e:
                     print traceback.format_exc()
                     resultQueue.put(e)

@@ -86,7 +86,7 @@ setup(console=['AnalyzerServer/RunPeakFinder.py',
                'ViewServer/ViewServer.py',
                'WeatherStation/batchReport.py',
                'WeatherStation/reportServer.py',
-	       'Utilities/createReportBooklet.py'
+               'Utilities/createReportBooklet.py'
                ],
      windows=[MobileKitSetup, RemoteMobileKitSetup],
      options = dict(py2exe = dict(compressed = 1,
