@@ -538,6 +538,9 @@ class RDFrequencyConverter(Singleton):
     def RPC_configSchemeManager(self, schemeDict, schemeSeq):
         self.schemeMgr = SchemeManager(schemeDict, schemeSeq)
         self.schemeMgr.startup()
+    
+    def RPC_setSchemeSequence(self, schemeSequence, restart = True):
+        self.schemeMgr.setSchemeSequence(schemeSequence, restart)
         
     def RPC_angleToLaserTemperature(self,vLaserNum,angles):
         self._assertVLaserNum(vLaserNum)

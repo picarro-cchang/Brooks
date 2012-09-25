@@ -1,8 +1,12 @@
 # Class for interfacing to Measurement Computing hardware
 
-from ctypes import byref, c_int, c_long, c_short, c_ulong, c_void_p, POINTER, windll
+from ctypes import c_int, c_long, c_short, c_ulong, c_ushort, c_void_p, c_char_p, POINTER
+from ctypes import byref, create_string_buffer, windll
 import sys
 import time
+
+class MCC_Error(RuntimeError):
+    pass
 
 # Status values
 IDLE          =   0
@@ -115,6 +119,46 @@ BIBOARDTYPE   =       1
 BIADRES       =     291
 BIDACRES      =     292
 
+# Types of digital I/O Ports
+
+DIGITALOUT    =   1
+DIGITALIN     =   2
+
+AUXPORT       =   1
+FIRSTPORTA    =   10
+FIRSTPORTB    =   11
+FIRSTPORTCL   =   12
+FIRSTPORTC    =   12
+FIRSTPORTCH   =   13
+SECONDPORTA   =   14
+SECONDPORTB   =   15
+SECONDPORTCL  =   16
+SECONDPORTCH  =   17
+THIRDPORTA    =   18
+THIRDPORTB    =   19
+THIRDPORTCL   =   20
+THIRDPORTCH   =   21
+FOURTHPORTA   =   22
+FOURTHPORTB   =   23
+FOURTHPORTCL  =   24
+FOURTHPORTCH  =   25
+FIFTHPORTA    =   26
+FIFTHPORTB    =   27
+FIFTHPORTCL   =   28
+FIFTHPORTCH   =   29
+SIXTHPORTA    =   30
+SIXTHPORTB    =   31
+SIXTHPORTCL   =   32
+SIXTHPORTCH   =   33
+SEVENTHPORTA  =   34
+SEVENTHPORTB  =   35
+SEVENTHPORTCL =   36
+SEVENTHPORTCH =   37
+EIGHTHPORTA   =   38
+EIGHTHPORTB   =   39
+EIGHTHPORTCL  =   40
+EIGHTHPORTCH  =   41
+
 class MeasComp(object):
     def __init__(self):
         DLL_Path = ["cbw32.dll"]
@@ -127,41 +171,13 @@ class MeasComp(object):
         else:
             raise ValueError("Cannot load Measurement Computing shared library")
         
-        self.cbAInScan = self.measCompDLL.cbAInScan
-        self.cbAInScan.argtypes = [c_int, c_int, c_int, c_long, POINTER(c_long), 
-                                   c_int, c_void_p, c_int]
-        self.cbAInScan.restype = c_int
-        
-        self.cbALoadQueue = self.measCompDLL.cbALoadQueue
-        self.cbALoadQueue.argtypes = [c_int, POINTER(c_short), POINTER(c_short), c_int]
-        self.cbALoadQueue.restype = c_int
-        
-        self.cbAOut = self.measCompDLL.cbAOut
-        self.cbAOut.argtypes = [c_int, c_int, c_int, c_short]
-        self.cbAOut.restype = c_int
+        # This method is used to provide the error messages for those methods
+        #  that return a status code
+        self.cbGetErrMsg = self.measCompDLL.cbGetErrMsg
+        self.cbGetErrMsg.argtypes = [c_int, c_char_p]
+        self.cbGetErrMsg.restype = c_int
 
-        self.cbAOutScan = self.measCompDLL.cbAOutScan
-        self.cbAOutScan.argtypes = [c_int, c_int, c_int, c_long, POINTER(c_long), 
-                                    c_int, c_void_p, c_int]
-        self.cbAOutScan.restype = c_int
-
-        self.cbErrHandling = self.measCompDLL.cbErrHandling
-        self.cbErrHandling.argtypes = [c_int, c_int]
-        self.cbErrHandling.restype = c_int
-
-        self.cbGetConfig = self.measCompDLL.cbGetConfig
-        self.cbGetConfig.argtypes = [c_int, c_int, c_int, c_int, POINTER(c_int)]
-        self.cbGetConfig.restype = c_int
-        
-        self.cbGetStatus = self.measCompDLL.cbGetIOStatus
-        self.cbGetStatus.argtypes = [c_int, POINTER(c_short), POINTER(c_ulong), 
-                                     POINTER(c_ulong), c_int]
-        self.cbGetStatus.restype = c_int
-        
-        self.cbStopBackground = self.measCompDLL.cbStopIOBackground
-        self.cbStopBackground.argtypes = [c_int, c_int]
-        self.cbStopBackground.restype = c_int
-        
+        # These methods do not return a status code, so they are not wrapped
         self.cbWinBufAlloc = self.measCompDLL.cbWinBufAlloc
         self.cbWinBufAlloc.argtypes = [c_long]
         self.cbWinBufAlloc.restype = c_void_p
@@ -174,6 +190,94 @@ class MeasComp(object):
         self.cbWinBufAlloc64.argtypes = [c_long]
         self.cbWinBufAlloc64.restype = c_void_p
 
-        self.cbWinBufFree = self.measCompDLL.cbWinBufFree
+        # These methods return a status code, so they are wrapped to throw an exception
+        #  with a meaningful message if the status is non-zero
+        self.cbAInScan = self._wrap(self.measCompDLL.cbAInScan)
+        self.cbAInScan.argtypes = [c_int, c_int, c_int, c_long, POINTER(c_long), 
+                                   c_int, c_void_p, c_int]
+        self.cbAInScan.restype = c_int
+        
+        self.cbALoadQueue = self._wrap(self.measCompDLL.cbALoadQueue)
+        self.cbALoadQueue.argtypes = [c_int, POINTER(c_short), POINTER(c_short), c_int]
+        self.cbALoadQueue.restype = c_int
+        
+        self.cbAOut = self._wrap(self.measCompDLL.cbAOut)
+        self.cbAOut.argtypes = [c_int, c_int, c_int, c_short]
+        self.cbAOut.restype = c_int
+
+        self.cbAOutScan = self._wrap(self.measCompDLL.cbAOutScan)
+        self.cbAOutScan.argtypes = [c_int, c_int, c_int, c_long, POINTER(c_long), 
+                                    c_int, c_void_p, c_int]
+        self.cbAOutScan.restype = c_int
+
+        self.cbDBitIn = self._wrap(self.measCompDLL.cbDBitIn)
+        self.cbDBitIn.argtypes = [c_int, c_int, c_int, POINTER(c_ushort)]
+        self.cbDBitIn.restype = c_int
+
+        self.cbDBitOut = self._wrap(self.measCompDLL.cbDBitOut)
+        self.cbDBitOut.argtypes = [c_int, c_int, c_int, c_ushort]
+        self.cbDBitOut.restype = c_int
+
+        self.cbDConfigPort = self._wrap(self.measCompDLL.cbDConfigPort)
+        self.cbDConfigPort.argtypes = [c_int, c_int, c_int]
+        self.cbDConfigPort.restype = c_int
+
+        self.cbDConfigBit = self._wrap(self.measCompDLL.cbDConfigBit)
+        self.cbDConfigBit.argtypes = [c_int, c_int, c_int, c_int]
+        self.cbDConfigBit.restype = c_int
+
+        self.cbDIn = self._wrap(self.measCompDLL.cbDIn)
+        self.cbDIn.argtypes = [c_int, c_int, c_int, POINTER(c_ushort)]
+        self.cbDIn.restype = c_int
+
+        self.cbDInScan = self._wrap(self.measCompDLL.cbDInScan)
+        self.cbDInScan.argtypes = [c_int, c_int, c_long, POINTER(c_long), c_void_p, c_int]
+        self.cbDInScan.restype = c_int
+
+        self.cbDOut = self._wrap(self.measCompDLL.cbDOut)
+        self.cbDOut.argtypes = [c_int, c_int, c_int, c_ushort]
+        self.cbDOut.restype = c_int
+
+        self.cbDOutScan = self._wrap(self.measCompDLL.cbDOutScan)
+        self.cbDOutScan.argtypes = [c_int, c_int, c_long, POINTER(c_long), c_void_p, c_int]
+        self.cbDOutScan.restype = c_int
+
+        self.cbErrHandling = self._wrap(self.measCompDLL.cbErrHandling)
+        self.cbErrHandling.argtypes = [c_int, c_int]
+        self.cbErrHandling.restype = c_int
+
+        self.cbFlashLED = self._wrap(self.measCompDLL.cbFlashLED)
+        self.cbFlashLED.argtypes = [c_int]
+        self.cbFlashLED.restype = c_int
+
+        self.cbGetConfig = self._wrap(self.measCompDLL.cbGetConfig)
+        self.cbGetConfig.argtypes = [c_int, c_int, c_int, c_int, POINTER(c_int)]
+        self.cbGetConfig.restype = c_int
+        
+        self.cbGetStatus = self._wrap(self.measCompDLL.cbGetIOStatus)
+        self.cbGetStatus.argtypes = [c_int, POINTER(c_short), POINTER(c_ulong), 
+                                     POINTER(c_long), c_int]
+        self.cbGetStatus.restype = c_int
+        
+        self.cbStopBackground = self._wrap(self.measCompDLL.cbStopIOBackground)
+        self.cbStopBackground.argtypes = [c_int, c_int]
+        self.cbStopBackground.restype = c_int
+        
+        self.cbWinBufFree = self._wrap(self.measCompDLL.cbWinBufFree)
         self.cbWinBufFree.argtypes = [c_void_p]
         self.cbWinBufFree.restype = c_int
+    
+    def _wrap(self,func):
+        """Wraps a function so that it throws an exception rather
+        than returning an error code. The keyword parameter wrap
+        (True by default) controls whether this wrapping takes place.""" 
+        def _func(*a,**k):
+            wrap = k.get("wrap",True)
+            if "wrap" in k: del k["wrap"]
+            stat = func(*a,**k)
+            if stat != 0 and wrap:
+                msg = create_string_buffer('\000' * 132)
+                self.cbGetErrMsg(stat,msg)
+                raise MCC_Error(msg.value)
+            return stat
+        return _func
