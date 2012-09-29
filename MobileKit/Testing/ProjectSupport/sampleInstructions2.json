@@ -1,0 +1,46 @@
+// 00000000000000000000000000000000
+{
+    "regions": [
+        {
+            "baseType": "satellite",
+            "name": "A01",
+            "swCorner": [
+                32.80443,
+                -96.80054
+            ],
+            "neCorner": [
+                32.80875,
+                -96.79805
+            ],
+            "comments": ""
+        },
+        {
+            "baseType": "satellite",
+            "name": "A02",
+            "swCorner": [
+                32.8044,
+                -96.79773
+            ],
+            "neCorner": [
+                32.80877,
+                -96.79539
+            ],
+            "comments": ""
+        }
+    ],
+    "runs": [
+        {
+            "analyzer": "FDDS2008",
+            "startEtm": "2012-08-30  17:00",
+            "endEtm": "2012-08-30  23:59",
+            "marker": "#FFFF00",
+            "wedges": "#0000FF",
+            "swath": "#00FF00",
+            "minAmpl": 0.1,
+            "exclRadius": 10,
+            "stabClass": "*",
+            "comments": ""
+        }
+    ],
+    "markers": []
+}

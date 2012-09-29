@@ -1,0 +1,10 @@
+9/22/2012
+Working on jobs being sent to workers. TestProjectSupport.testSubmitProject
+ProjectManager deals with commands sent to PROJECT_SUBMISSION port. This includes
+PROJECT(contenrs,reportRoot) submits a project
+ADD_WORKER() adds a new worker
+REMOVE_WORKER() removes a worker
+GET_PROJECT_STATUS(ticket) gives list of jobs for this project and their current states
+DELETE_PROJECT(ticket) clears out the directory for this project
+
+Use jsonpickle (https://github.com/jsonpickle/jsonpickle) to serialize Python object

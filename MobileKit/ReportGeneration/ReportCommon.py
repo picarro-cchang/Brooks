@@ -1,0 +1,12 @@
+import hashlib
+
+PROJECT_SUBMISSION_PORT = 5201
+JOB_DISTRIBUTION_PORT = 5202
+JOB_COMPLETE_PORT = 5203
+PROJECT_MANAGER_CMD_PORT = 5204
+STOP_WORKERS_PORT = 5205
+RESOURCE_MANAGER_PORT = 5221
+
+def getTicket(contents):
+    return hashlib.md5(contents).hexdigest()
+
