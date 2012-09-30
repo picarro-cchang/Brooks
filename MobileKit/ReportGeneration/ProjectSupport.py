@@ -272,6 +272,7 @@ class ProjectManager(object):
         self.poolProcesses = {}
         self.workerStartPending = False
         self.jobs = Counter()
+        self.jobsCrashed = Counter()
         self.jobsDispatched = Counter()
         self.jobsFailed = Counter()
         self.jobsSuccessful = Counter()
@@ -296,6 +297,27 @@ class ProjectManager(object):
             raise ValueError('Worker %d is not in pool' % workerIndex)
 
     def allocateWork(self):
+        # Check that the expected worker processes are alive. If not, we mark the job as having
+        #  failed and count this as a crash
+        deadWorkers = []
+        for workerIndex in self.workers:
+            if workerIndex in self.poolProcesses:
+                if not self.poolProcesses[workerIndex].is_alive():
+                    if workerIndex in self.jobsByWorker:
+                        job = self.jobsByWorker[workerIndex]
+                        del self.jobsByWorker[workerIndex]
+                        # Set all outputs to be completed unsuccessfully
+                        self.jobsCrashed[job.name] += 1
+                        job.jobFailed(workerIndex)
+                        job.updateAndGetStatus()
+                    self.poolProcesses[workerIndex].join()
+                    del self.poolProcesses[workerIndex]
+                    deadWorkers.append(workerIndex)
+        for workerIndex in deadWorkers:            
+            self.workers.remove(workerIndex)
+            if workerIndex in self.workersAvailable:
+                self.workersAvailable.remove(workerIndex)
+                    
         # Start up a new Worker in a process if we do not have enough in the pool
         if (not self.workerStartPending) and (len(self.workers) < self.poolSize):
             self.workerStartPending = True
@@ -330,7 +352,6 @@ class ProjectManager(object):
             del self.jobsByWorker[workerIndex]
             # Set all outputs to be completed unsuccessfully
             self.jobsFailed[job.name] += 1
-            workerIndex = result["workerIndex"]
             job.jobFailed(workerIndex)
             job.updateAndGetStatus()
             if result["available"]: self.workersAvailable.add(workerIndex)
@@ -344,9 +365,11 @@ class ProjectManager(object):
                 #  resubmit the job to another worker
                 self.jobsToRetry.append(self.jobsByWorker[workerIndex])
                 del self.jobsByWorker[workerIndex]
-            self.removeWorker(workerIndex)
+            if workerIndex in self.workers:
+                self.removeWorker(workerIndex)
             if workerIndex in self.poolProcesses:
                 self.poolProcesses[workerIndex].join()
+                del self.poolProcesses[workerIndex]
 
 
     def handleSubmission(self,cmd):
@@ -387,8 +410,11 @@ class ProjectManager(object):
             elif cmd["msg"] == "GET_ROOT":
                 response = ResponseTuple("REPLY",{"root": self.root})
             elif cmd["msg"] == "GET_STATISTICS":
-                response = ResponseTuple("REPLY",{"jobs":dict(self.jobs), "jobsDispatched": dict(self.jobsDispatched),
-                                                  "jobsFailed":dict(self.jobsFailed), "jobsSuccessful": dict(self.jobsSuccessful)})
+                response = ResponseTuple("REPLY",{"jobs":dict(self.jobs),
+                                                  "jobsCrashed": dict(self.jobsCrashed),
+                                                  "jobsDispatched": dict(self.jobsDispatched),
+                                                  "jobsFailed":dict(self.jobsFailed), 
+                                                  "jobsSuccessful": dict(self.jobsSuccessful)})
             elif cmd["msg"] == "GET_WORKER_STATS":
                 response = ResponseTuple("REPLY",{"workers": list(self.workers), "nWorkersFree": len(self.workersAvailable)})
             elif cmd["msg"] == "REMOVE_WORKER":
@@ -487,11 +513,6 @@ class ProjectManager(object):
             self.activeProjects.remove(ticket)
         return None
 
-    def addJobs(self,ticket,jobs):
-        if ticket not in self.jobsByProject:
-            self.jobsByProject[ticket] = []
-        self.jobsByProject[ticket].extend(jobs)
-        
     def setJobs(self,ticket,jobs):
         self.jobsByProject[ticket] = jobs
 class ProjectSubmission(object):
@@ -865,7 +886,6 @@ class Worker(object):
         self.maxJobs = 10
 
     def report(self,name,instructions,ticket,inputs,outputs):
-        print "Job Name:", name
         time.sleep(1.0)
         return
 
