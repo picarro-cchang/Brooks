@@ -20,7 +20,7 @@ import traceback
 from Host.Common.CustomConfigObj import CustomConfigObj
         
 STANDARD_BUTTON_COLOR = wx.Colour(237, 228, 199)
-EXTENSIONS_TO_KEEP = ["ini", "py", "bat", "zip"]
+EXTENSIONS_TO_KEEP = ["ini", "py", "bat", "zip", "wlm"]
 BACKUP_FOLDER = "AutoIntegration"
 DEFAULT_SOURCE = "C:\\Picarro\\G2000\\InstrConfig\\Integration"
 DEFAULT_TARGET = "Z:\\"
