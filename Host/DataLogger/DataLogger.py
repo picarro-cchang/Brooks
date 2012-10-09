@@ -56,8 +56,11 @@ Notes:
     10-10-23 sze  Remove DATE_TIME column (replaced by time) and get ms timestamp info from DataManager
     10-12-08 alex Provide an option to use GMT or local time in log file name (GMT is used by default)
     12-02-07 alex Disable write-back function to INI file
-    
-Copyright (c) 2010 Picarro, Inc. All rights reserved 
+    12-10-08 sze  Allow data manager to report a quantity ALARM_STATUS, which is logical ORed with the alarm status
+                  reported by the alarm system. This allows extra bits to be set by the data manager for conditions such
+                  as excessive acquisition delay, large tuner standard deviation etc.
+
+Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
 ####
@@ -124,11 +127,11 @@ CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCH
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                             APP_NAME,
                                             IsDontCareConnection = False)
-                                            
-# Not used now, but may be useful in the future                                            
+
+# Not used now, but may be useful in the future
 CRDS_InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
                                             APP_NAME,
-                                            IsDontCareConnection = True)                                            
+                                            IsDontCareConnection = True)
 
 def deleteFile(filename):
     """Delete a file, reporting any error, but not causing an exception. Returns True if delete succeeded"""
@@ -197,14 +200,14 @@ class DataLog(object):
                 self._CopyToMailboxAndArchive(*args)
             duration = TimeStamp() - now
             if duration > 10:
-                Log("Datalog: %s action %s takes %.3fs" % (self.LogPath,action,duration))            
+                Log("Datalog: %s action %s takes %.3fs" % (self.LogPath,action,duration))
             if duration > self.maxDuration.get(self.LogPath,0):
                 self.maxDuration[self.LogPath] = duration
                 Log("Datalog: %s action %s takes new max time %.3f" % (self.LogPath,action,duration))
-            
+
     def Write(self, Time, DataDict, alarmStatus, instStatus):
         self.queue.put(("write",[Time,DataDict.copy(),alarmStatus,instStatus]))
-    
+
     def Close(self):
         if self.fp is not None:
             self.fp.close()
@@ -213,9 +216,9 @@ class DataLog(object):
         if self.liveArchive:
             time.sleep(2.0)
             CRDS_Archiver.StopLiveArchive(self.ArchiveGroupName, self.LogPath)
-                
+
     def CopyToMailboxAndArchive(self, srcPath=""):
-        if not srcPath: 
+        if not srcPath:
             self.Close()
             ts = self.CreateLogTimestamp
         else:
@@ -227,7 +230,7 @@ class DataLog(object):
             else:
                 ts = None
         self.queue.put(("copyToMailboxAndArchive",[srcPath,ts]))
-        
+
     def LoadConfig(self, ConfigParser, basePath, LogName):
         self.LogName = LogName
         self.EnabledDataList = [d.strip() for d in ConfigParser.get(self.LogName, "datalist").split(',')]
@@ -239,7 +242,7 @@ class DataLog(object):
         self.backupEnabled = ConfigParser.getboolean(self.LogName, "backupenable", False)
         self.SourceScript = ConfigParser.get(self.LogName, "sourcescript")
         self.UpdateInterval = ConfigParser.getfloat(self.LogName, "updateInterval", 10.0)
-        
+
         # Add peripheral columns if available
         try:
             if self.PeriphDictTuple:
@@ -262,7 +265,7 @@ class DataLog(object):
         self.srcDir = os.path.join(basePath, relDir)
         if self.liveArchive and self.useHdf5:
             raise ValueError('Cannot use live archive with HDF5 files in %s' % LogName)
-        
+
         # Archive all old files
         for root, dirs, files in os.walk(self.srcDir):
             for filename in files:
@@ -270,7 +273,7 @@ class DataLog(object):
                     path = os.path.join(root,filename)
                     # print "Cleaning...", path
                     self.CopyToMailboxAndArchive(path)
-                    
+
 
     def _CopyToMailboxAndArchive(self, srcPath="", ts=None):
         if srcPath == "":
@@ -280,18 +283,18 @@ class DataLog(object):
                 return
         if ts is None:
             ts = timestamp.getTimestamp()
-            
+
         startTime = TimeStamp()
         # If Mailbox option is enabled:
         # Make an additional copy and move 2 separate copies to archive and mailbox locations
         # The problem of copying to mailbox fisrt and then moving to archive location is that
         # the archiving thread may be done before the copying thread finishes
         # Do the same thing to "backup_copy" folder if enabled.
-        if self.Mbox.Enabled and self.MboxEnabled:        
+        if self.Mbox.Enabled and self.MboxEnabled:
             srcPathCopy = os.path.dirname(srcPath) + '/mailbox_copy'
             if not os.path.exists(srcPathCopy):
                 os.makedirs(srcPathCopy)
-            srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
+            srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))
             shutil.copy2(srcPath, srcPathCopy)
             # if mailbox enabled, copy file to mailbox directory first
             CRDS_Archiver.ArchiveFile(self.Mbox.GroupName, srcPathCopy, True, ts)
@@ -299,7 +302,7 @@ class DataLog(object):
             srcPathCopy = os.path.dirname(srcPath) + '/backup_copy'
             if not os.path.exists(srcPathCopy):
                 os.makedirs(srcPathCopy)
-            srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))     
+            srcPathCopy = os.path.join(srcPathCopy, os.path.basename(srcPath))
             shutil.copy2(srcPath, srcPathCopy)
             # if backup enabled, copy file to backup directory first
             CRDS_Archiver.ArchiveFile(self.BackupGroupName, srcPathCopy, True, ts)
@@ -309,8 +312,8 @@ class DataLog(object):
                 CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True, ts)
             else:
                 deleteFile(srcPath)
-        Log("Datalog archive processing %s took %s seconds" % (os.path.basename(srcPath),TimeStamp()-startTime))   
-            
+        Log("Datalog archive processing %s took %s seconds" % (os.path.basename(srcPath),TimeStamp()-startTime))
+
 
     def _Create(self, DataList):
         """Creates a new log file named with a header which contains all the tokens in the DataList."""
@@ -327,17 +330,17 @@ class DataLog(object):
         # check to see if directory exists. If it doesn't create it.
         if( os.access(self.srcDir, os.F_OK) == False ):
             os.makedirs(self.srcDir)
-       
+
         # Create name and path of new file
         self._SetLogPathAndTimestamp()
-        
+
         # If multiple files are to be created in the same second,
         # wait for 2 seconds before creating the new one to avoid
         # the race condition
         if os.access(self.LogPath, os.F_OK):
             time.sleep(2)
             self._SetLogPathAndTimestamp()
-                
+
         if self.useHdf5:
             # Create file and make a new table
             self.fp = openFile(self.LogPath,"w")
@@ -349,13 +352,13 @@ class DataLog(object):
 
         if self.liveArchive:
             CRDS_Archiver.StartLiveArchive(self.ArchiveGroupName, self.LogPath, self.CreateLogTimestamp)
-            
-        Log("A new log file (%s) created at %s" % (self.LogPath, self.timeString))    
-        
+
+        Log("A new log file (%s) created at %s" % (self.LogPath, self.timeString))
+
     def _SetLogPathAndTimestamp(self):
-        self.CreateLogTimestamp = timestamp.getTimestamp()  
+        self.CreateLogTimestamp = timestamp.getTimestamp()
         self.CreateLogTime = timestamp.unixTime(self.CreateLogTimestamp)
-        
+
         if self.TimeStandard == "local":
             self.LogHour = time.localtime(self.CreateLogTime).tm_hour #used to determine when we reached midnight
             self.timeString = time.strftime("%Y%m%d-%H%M%S",time.localtime(self.CreateLogTime))
@@ -364,7 +367,7 @@ class DataLog(object):
             self.LogHour = time.gmtime(self.CreateLogTime).tm_hour #used to determine when we reached midnight
             self.timeString = time.strftime("%Y%m%d-%H%M%SZ",time.gmtime(self.CreateLogTime))
             # Z is for GMT (UTC) according to ISO 8601 format
-            
+
         if self.useHdf5:
             self.Fname = "%s-%s-%s.h5" % (self.EngineName,
                                             self.timeString,
@@ -374,10 +377,10 @@ class DataLog(object):
                                             self.timeString,
                                             self.LogName)
         self.LogPath = os.path.abspath(os.path.join(self.srcDir, self.Fname))
-        
+
     def _WriteEntry(self, string):
         self.fp.write((string[:self.COLUMN_WIDTH-1]).ljust(self.COLUMN_WIDTH))
-        
+
     def _WriteHeader(self,DataList):
         if not self.BareTime:
             self._WriteEntry("DATE")
@@ -386,10 +389,10 @@ class DataLog(object):
             self._WriteEntry("FRAC_HRS_SINCE_JAN1")
             if self.WriteJulianDays:
                 self._WriteEntry("JULIAN_DAYS")
-            
+
         if self.WriteEpochTime:
             self._WriteEntry("EPOCH_TIME")
-        
+
         self._WriteEntry("ALARM_STATUS")
         self._WriteEntry("INST_STATUS")
 
@@ -415,13 +418,13 @@ class DataLog(object):
                 tableDict[dataName] = Float64Col()
             elif dataName in ["timestamp"]:
                 tableDict[dataName] = UInt64Col()
-            else:    
+            else:
                 tableDict[dataName] = Float32Col()
         self.DecimationCount = 0
         if self.table is not None:
             self.table.flush()
         self.table = self.fp.createTable(self.fp.root,"results",tableDict,filters=filters)
-    
+
     def _MakeListFromDict(self, DataDict):
         DataList = []
         dataKeys = sorted(DataDict.keys())
@@ -433,9 +436,16 @@ class DataLog(object):
                 DataList.append(data)
         return DataList
 
-    
+
     def _Write(self, Time, DataDict, alarmStatus, instStatus):
         """Writes a representation of the provided data to disk, either in text or H5 mode"""
+
+        DataDict = DataDict.copy()
+        # Treat ALARM_STATUS specially so that it is reported with the output
+        #  of the alarm system.
+        if "ALARM_STATUS" in DataDict:
+            alarmStatus |= int(DataDict["ALARM_STATUS"])
+            del DataDict["ALARM_STATUS"]
 
         if self.TimeStandard == "local":
             currentTime = time.localtime(Time)
@@ -526,24 +536,24 @@ class DataLog(object):
                     #write JULIAN_DAYS if enabled
                     if self.WriteJulianDays:
                         self._WriteEntry("%.8f" % (days+1))
-                    
+
                 #write EPOCH_TIME if enabled
                 if self.WriteEpochTime:
                     self._WriteEntry("%.3f" % Time)
-                    
+
                 #write ALARM_STATUS and INST_STATUS
                 self._WriteEntry("%d" % alarmStatus)
                 self._WriteEntry("%d" % instStatus)
-    
+
                 for data in DataList:
                     self._WriteEntry("%.10E" % DataDict.get(data,0.0))
-    
+
                 self.fp.write("\n")
                 now = TimeStamp()
                 if now-self.lastFlush >  self.UpdateInterval:
                     self.fp.flush()
                     self.lastFlush = now
-                
+
 
 ####
 ## Classes...
@@ -590,9 +600,9 @@ class DataLogger(object):
         self.maxAlarmListenerRtt = 0
         self.instListenerLastTime = 0
         self.maxInstListenerRtt = 0
-        
+
     def _LoadDefaultConfig(self):
-        cp = CustomConfigObj(self.ConfigPath) 
+        cp = CustomConfigObj(self.ConfigPath)
         self.basePath = os.path.split(self.ConfigPath)[0]
         try:
             try:
@@ -622,7 +632,7 @@ class DataLogger(object):
             self.backupGroupName = None
             self.timeStandard = "gmt"
             self.periphDictTuple = ()
-            
+
         self.mbox = Mbox(mailGroupEnabled, mailGroupName)
 
     def _LoadCustomConfig(self, ConfigParser, LogDict):
@@ -659,14 +669,14 @@ class DataLogger(object):
                 logList.append(logName)
 
             self.PortDict[dl.Port]= logList
-            
+
     def _DataListener(self, dataMgrObject):
         try:
             self.md.ImportPickleDict(dataMgrObject)
         except:
             tbMsg = traceback.format_exc()
             Log("Import Pickle Exception:",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-        
+
         now = TimeStamp()
         if self.DataListenerLastTime != 0:
             rtt = now - self.DataListenerLastTime
@@ -674,7 +684,7 @@ class DataLogger(object):
                 Log("Maximum data listener loop RTT so far: %.3f" % (self.maxDataListenerRtt,))
                 self.maxDataListenerRtt = rtt
         self.DataListenerLastTime = now
-            
+
         #Log("Data Listener: source=%s data=%s" % (self.md.Source,self.md.Data))
         # check to make sure this a broadcast that I'm interested in
         if self.md.Source in self.SrcDict:
@@ -696,10 +706,10 @@ class DataLogger(object):
                     if dataLog.StopPending:
                         dataLog.CopyToMailboxAndArchive()
                         dataLog.StopPending = False
-                        
+
     def _AlarmListener( self, data ):
         """Listener for alarm status"""
-        now = TimeStamp()       
+        now = TimeStamp()
         if self.alarmListenerLastTime != 0:
             rtt = now - self.alarmListenerLastTime
             if rtt > self.maxAlarmListenerRtt:
@@ -714,10 +724,10 @@ class DataLogger(object):
         except:
             tbMsg = traceback.format_exc()
             Log("Listener Exception",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-            
+
     def _InstListener( self, data ):
         """Listener for instrument status"""
-        now = TimeStamp()       
+        now = TimeStamp()
         if self.instListenerLastTime != 0:
             rtt = now - self.instListenerLastTime
             if rtt > self.maxInstListenerRtt:
@@ -732,7 +742,7 @@ class DataLogger(object):
         except:
             tbMsg = traceback.format_exc()
             Log("Listener Exception",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-            
+
     def DATALOGGER_start(self):
         """Called to start the Data Logger."""
         #Log("Data Logger started")
@@ -752,14 +762,14 @@ class DataLogger(object):
             Log("File not found.", Data = dict(Path = self.PrivateConfigPath), Level = 2)
             raise Exception("File '%s' not found." % self.PrivateConfigPath)
 
-        self.UserCp = CustomConfigObj(self.UserConfigPath) 
-        self.PrivateCp = CustomConfigObj(self.PrivateConfigPath) 
-        
+        self.UserCp = CustomConfigObj(self.UserConfigPath)
+        self.PrivateCp = CustomConfigObj(self.PrivateConfigPath)
+
         self._LoadDefaultConfig()
         self._LoadCustomConfig(self.PrivateCp, self.PrivateLogDict)
         self._LoadCustomConfig(self.UserCp, self.UserLogDict)
         Log("Data Logger: source dict=%s; port dict=%s" % (self.SrcDict,self.PortDict))
-                
+
         for port,value in self.PortDict.iteritems():
             self.Listener = Listener.Listener(None, port, StringPickler.ArbitraryObject, self._DataListener, retry = True,
                                               name = "Data Logger data listener",logFunc = Log)
@@ -769,17 +779,17 @@ class DataLogger(object):
 
         self.instStatusListener = Listener.Listener(None, STATUS_PORT_INST_MANAGER, STREAM_Status, self._InstListener, retry = True,
                                               name = "Data Logger instrument status listener",logFunc = Log)
-                                              
+
         self.RpcServer.serve_forever()
         self.DATALOGGER_shutdown()
         if DEBUG: Log("Shutting Down Data Logger.")
-        
+
     def DATALOGGER_shutdown(self):
         for dl in self.UserLogDict:
             dl.Close()
         for dl in self.PrivateLogDict:
             dl.Close()
-            
+
     def DATALOGGER_getDataRpc(self, LogName):
         """Returns a string containing a list of data columns being logged for the specified log."""
         dataListStr=""
