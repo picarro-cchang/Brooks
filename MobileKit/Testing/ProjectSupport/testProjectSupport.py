@@ -233,13 +233,13 @@ class TestProjectSubmission(unittest.TestCase):
         ps.analyzeSubmission()
         jobs = ps.jobList
         ticket = ps.ticket
-        self.pm.addJobs(ticket,jobs)
+        self.pm.setJobs(ticket,jobs)
         self.assert_(ticket in self.pm.jobsByProject)
         for j in self.pm.jobsByProject[ticket]:
             self.assert_(isinstance(j,PP.Job))
             self.assertEqual(j.instructions,json.loads(self.contents))
+        time.sleep(0.2)
         self.pm.deleteProject(ticket)
-        time.sleep(0.1)
     def testCreateJson(self):
         # First find the number of jobs that should be submitted
         ps = PP.ProjectSubmission(TEST_ROOT,self.contents,self.pm.rm)
@@ -295,9 +295,9 @@ class TestProjectSubmission(unittest.TestCase):
         # print "Jobs by project: ", self.pm.jobsByProject
         self.assertEqual(nJobs,len(self.pm.jobsByProject[ticket]))
         self.assertEqual(nJobs,len(self.pm.jobsByProject[ticket2]))
+        time.sleep(0.2)
         self.pm.deleteProject(ticket)
         self.pm.deleteProject(ticket2)
-        time.sleep(0.1)
     def testJobSequence1(self):
         cmd = {"msg":"PROJECT", "reportRoot":TEST_ROOT, "contents":self.contents}
         response = self.pm.handleSubmission(cmd)
@@ -1130,8 +1130,9 @@ class TestReportWorker(unittest.TestCase):
             jobsDispatched = Counter(reply["jobsDispatched"])
             jobsFailed = Counter(reply["jobsFailed"])
             jobsSuccessful = Counter(reply["jobsSuccessful"])
-            jobsLeft = sum((jobs-jobsFailed-jobsSuccessful).values())
-            print jobsLeft, nWorkers, nWorkersFree
+            jobsCrashed = Counter(reply["jobsCrashed"])
+            jobsLeft = sum((jobs-jobsFailed-jobsSuccessful-jobsCrashed).values())
+            print sum(jobs.values()), sum(jobsDispatched.values()), sum(jobsSuccessful.values()), sum(jobsFailed.values()), sum(jobsCrashed.values()), jobsLeft, nWorkers, nWorkersFree
             if jobsLeft == 0 and nWorkers == nWorkersFree: break
             time.sleep(1.0)
         print "Time taken", time.clock()-start
