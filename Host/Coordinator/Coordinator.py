@@ -1,14 +1,14 @@
 """
 File Name: Coordinator.py
 Purpose: Coordinator program for autosampler, evaporator and CRDS analyzer
-                                                            
+
 File History:
     08-06-02  sze  Initial version.
     08-12-04  alex Used CustomConfigObj to replace configobj. Monitored coordinator using Supervisor.
     09-01-30  alex moved the output file to ..\..\Log\PulseAnalyzerResults directory instead of the supervisor directory
 
-Copyright (c) 2010 Picarro, Inc. All rights reserved 
-"""             
+Copyright (c) 2010 Picarro, Inc. All rights reserved
+"""
 
 APP_NAME = "Coordinator"
 APP_DESCRIPTION = "Coordinator program for autosampler, evaporator and CRDS analyzer"
@@ -50,7 +50,7 @@ CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER
 CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
                                             APP_NAME,
                                             IsDontCareConnection = True)
-        
+
 class RpcServerThread(threading.Thread):
     def __init__(self, RpcServer, ExitFunction):
         threading.Thread.__init__(self)
@@ -64,7 +64,7 @@ class RpcServerThread(threading.Thread):
             Log("RpcServer exited and no longer serving.")
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
-        
+
 class ComboBoxDialog(wx.Dialog):
     def __init__(self, parent, msg, title, comboLabel, choices, defaultValue, hasCancel):
         wx.Dialog.__init__(self, parent, -1, title, size=(250, 250))
@@ -76,7 +76,7 @@ class ComboBoxDialog(wx.Dialog):
         if hasCancel:
             self.cancelButton = wx.Button(self, wx.ID_CANCEL)
         self.__do_layout()
-        
+
     def __do_layout(self):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.StdDialogButtonSizer()
@@ -93,10 +93,10 @@ class ComboBoxDialog(wx.Dialog):
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
         self.Layout()
-        
+
     def getSelection(self):
         return self.comboBox.GetSelection()
-        
+
 class FsmThread(threading.Thread):
     def __init__(self,configFile,guiQueue,replyQueue,gui,editParamDict,*a,**k):
         threading.Thread.__init__(self,*a,**k)
@@ -108,19 +108,19 @@ class FsmThread(threading.Thread):
         self.editParamDict = editParamDict
 
     def fileDataFunc(self,dataList):
-        # When sending data to the output file, 
+        # When sending data to the output file,
         self.guiQueue.put((OUTFILE,dataList))
         wx.WakeUpIdle()
-        
+
     def logFunc(self,str):
         self.guiQueue.put((LOG,str))
         wx.WakeUpIdle()
-    
+
     def controlFunc(self,action):
         self.guiQueue.put((CONTROL,action))
         wx.WakeUpIdle()
         return self.replyQueue.get()
-        
+
     def run(self):
         self.logFunc("\nFSM thread starts\n")
         self.fsm = StateMachine(iniFile=file(self.configFile),gui=self.gui,logFunc=self.logFunc,
@@ -144,24 +144,24 @@ class FsmThread(threading.Thread):
 
     def turnOnRunningFlag(self):
         self.fsm.turnOnRunningFlag()
-        
+
 class CoordinatorFrame(CoordinatorFrameGui):
     def __init__(self, hasSampleDescr, hasSampleNum, useSeptum, hasCloseOpt, hasPause, forcedClose, configFile, *a,**k):
-        # The logfile and data file are opened in the main GUI thread. 
-        #  They are written to by the control thread which runs the state machine via 
+        # The logfile and data file are opened in the main GUI thread.
+        #  They are written to by the control thread which runs the state machine via
         #  Queues which buffer the writes. The control thread is reinitialized each
         #  time a new file is selected so that the system may be restarted in a known
         #  state.
         #  The data file contains a header with sample descriptions. This is a text area which
         #   can contain any information, but is typically a list of pairs of the form
         #  sample number, sample description
-        #  Following the header are the actual data themselves. These data are also stored in the 
-        #   list self.outputFileDataList so that we can rewrite the output file whenever the 
+        #  Following the header are the actual data themselves. These data are also stored in the
+        #   list self.outputFileDataList so that we can rewrite the output file whenever the
         #   sample description header changes.
-        
+
         self.configFile = configFile
         self.config = CustomConfigObj(configFile, list_values = True)
-        
+
         # Create editable param tuple llist
         self.paramTupleList = []
         self.numDispParams = 0
@@ -171,7 +171,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 paramInfo = editParamSection[str(id)]
                 paramTuple = (paramInfo[0], paramInfo[1], paramInfo[2])
                 self.paramTupleList.append(paramTuple)
-            self.numDispParams = int(editParamSection["num_disp_params"])   
+            self.numDispParams = int(editParamSection["num_disp_params"])
         except:
             pass
 
@@ -181,7 +181,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.fsmThread = None
         self.saveFileName = ""
         self.logFileName = ""
-        
+
         self.saveFp = None
         self.logFp = None
         self.Bind(wx.EVT_CLOSE, self.onClose)
@@ -214,13 +214,13 @@ class CoordinatorFrame(CoordinatorFrameGui):
         except:
             pass
         self.manualMode = False
-            
+
     def startServer(self):
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_COORDINATOR),
                                                 ServerName = APP_NAME,
                                                 ServerDescription = APP_DESCRIPTION,
                                                 ServerVersion = __version__,
-                                                threaded = True)                                                          
+                                                threaded = True)
         # Start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.shutdown)
         self.rpcThread.start()
@@ -237,7 +237,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
 
     def popPause(self, msg, title=""):
         self._showMessage(msg,title,wx.ICON_WARNING)
-        
+
     def _showMessage(self, msg, title, iconOption):
         d = wx.MessageDialog(None, msg, title, iconOption|wx.STAY_ON_TOP)
         d.ShowModal()
@@ -251,16 +251,16 @@ class CoordinatorFrame(CoordinatorFrameGui):
         else:
             ret = None
         return ret
-        
+
     def shutdown(self):
         self.rpcServer.stop_server()
-        
+
     def enableManualButton(self):
         self.manualButton.Enable()
 
     def disableManualButton(self):
         self.manualButton.Disable()
-    
+
     def getManualButtonState(self):
         return self.manualButton.IsEnabled()
 
@@ -291,15 +291,15 @@ class CoordinatorFrame(CoordinatorFrameGui):
         try:
             self.textCtrlChangeSampleNum.SetValue(text)
         except:
-            pass            
+            pass
     def setStatusText(self,text):
         self.statusbar.SetStatusText(text)
 
     def getManualSampleNumber(self):
         return self.manualSampleNumber
-    
+
     def run(self):
-        self.setStatusText("")        
+        self.setStatusText("")
         self.manual = True
         try:
             if self.config["Mode"]["inject_mode"].lower() != "manual":
@@ -309,11 +309,11 @@ class CoordinatorFrame(CoordinatorFrameGui):
         except Exception,e:
             print "Run exception: %s" % e
             pass
-            
+
         if self.manual and "Trays" in self.config:
             raise ValueError("Cannot use Trays with manual injection")
-        
-        self.saveFileName = self.makeFilename("save") 
+
+        self.saveFileName = self.makeFilename("save")
         self.logFileName = self.makeFilename("log")
         self.saveFp = file(self.saveFileName,"wb")
         if self.logEnable:
@@ -356,9 +356,9 @@ class CoordinatorFrame(CoordinatorFrameGui):
         except:
             pass
 
-    def getSampleDescriptionFile(self,dialogTitle,trayName=None):             
+    def getSampleDescriptionFile(self,dialogTitle,trayName=None):
         dlg = wx.FileDialog(
-            self, message=dialogTitle, defaultDir=os.path.dirname(self.configFile), 
+            self, message=dialogTitle, defaultDir=os.path.dirname(self.configFile),
             wildcard="Comma separated value file (*.csv)|*.csv", style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             self.sampleDescriptionFileName = dlg.GetPath()
@@ -401,7 +401,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 wx.MessageBox("Error in line %d of sample description file:\n\n%s" % (i,fp.readline()),
                               "Error",wx.OK)
         dlg.Destroy()
-        
+
     def updateSampleDescrComboBox(self):
         current = self.sampleDescrComboBox.GetValue()
         self.sampleDescrComboBox.Clear()
@@ -411,10 +411,10 @@ class CoordinatorFrame(CoordinatorFrameGui):
 
     def onPause(self, event):
         self.fsmThread.turnOffRunningFlag()
-            
+
     def onResume(self, event):
         self.fsmThread.turnOnRunningFlag()
-        
+
     def onChangeSeptum(self,event):
         try:
             self.disableChangeSeptumButton()
@@ -427,7 +427,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.sampleNum = int(event.GetString())
         except:
             pass
-            
+
     def onManualButton(self,event):
         self.disableManualButton()
         maxIndex = max([0] + self.sampleDescriptionDict.keys())
@@ -442,13 +442,20 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.rewriteOutputFile = True
         self.manualSampleNumber = self.sampleIndexDict[descr]
         if not self.manualMode:
-            self.enableManualButton() 
-        
+            self.enableManualButton()
+
     def onWriteHeadings(self):
         notOpen = self.saveFp == None
         if notOpen:
             self.saveFp = file(self.saveFileName,"ab")
         try:
+            # Record the user editable parameters
+            userParams = []
+            for param in self.guiParamDict:
+                userParams.append("# %s=%s\n")
+
+            self.saveFp.writelines(userParams)
+
             writer = csv.writer(self.saveFp)
             head = []
             for k in self.config["Output"]:
@@ -465,7 +472,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
             if notOpen:
                 self.saveFp.close()
                 self.saveFp = None
-                
+
     def onNewFile(self,event):
         if self.archiveGroupName:
             CRDS_Archiver.StopLiveArchive(groupName=self.archiveGroupName, sourceFile=self.saveFileName, copier=True)
@@ -482,13 +489,13 @@ class CoordinatorFrame(CoordinatorFrameGui):
 
     def setManualMode(self, manualFlag):
         self.manualMode = manualFlag
-        
+
     def setParamText(self,idx,text):
         try:
             self.paramTextCtrlList[idx].SetValue(text)
         except:
-            pass 
-            
+            pass
+
     def terminateStateMachineThread(self):
         if self.archiveGroupName:
             CRDS_Archiver.StopLiveArchive(groupName=self.archiveGroupName, sourceFile=self.saveFileName, copier=True)
@@ -500,7 +507,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
         # Flush guiQueue and replyQueue
         while not self.guiQueue.empty(): self.guiQueue.get()
         while not self.replyQueue.empty(): self.replyQueue.get()
-        
+
     def startStateMachineThread(self, paramTupleList=[]):
         if len(paramTupleList) > 0:
             dlg = InitialParamDialogGui(paramTupleList, None, -1, "")
@@ -525,10 +532,10 @@ class CoordinatorFrame(CoordinatorFrameGui):
         if self.archiveGroupName:
             CRDS_Archiver.StartLiveArchive(groupName=self.archiveGroupName, sourceFile=self.saveFileName, timestamp=None, copier=True)
             CRDS_Archiver.StartLiveArchive(groupName=self.archiveGroupName, sourceFile=self.logFileName, timestamp=None, copier=True)
-                    
+
     def processData(self,data):
         if "sampleNum" not in data:
-            data["sampleNum"] = self.sampleNum           
+            data["sampleNum"] = self.sampleNum
         try:
             data.update(self.sampleDescriptionDict[(data["trayName"],data["sampleNum"])])
         except:
@@ -546,7 +553,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 data["port"] = "%s-%02d" % (data["trayName"],int(data["sampleNum"]))
             except:
                 pass
-                
+
         h = []
         for k in self.config["Output"]:
             t, f = self.config["Output"][k]
@@ -579,7 +586,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.sampleNum = data["sampleNum"]
             self.sampleNum += 1
             self.setChangeSampleNumText(str(self.sampleNum))
-            
+
     def processLog(self, data):
         notOpen = (self.logFp == None)
         if notOpen:
@@ -630,7 +637,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.logFp.close()
             self.logFp = None
         event.Skip()
-    
+
     def onClose(self,event):
         if self.hasCloseOpt:
             dlg = wx.SingleChoiceDialog(self,"It may take longer to finish current state and run final state before closing.",
@@ -668,7 +675,7 @@ def countProgDialog(dlg, maximum):
         time.sleep(0.1)
         count += 0.15*maximum
         dlg.Update(count)
-                
+
 HELP_STRING = \
 """\
 Coordinator [-h] [-c<FILENAME>]
@@ -679,7 +686,7 @@ Where the options can be a combination of the following:
 --no_septum         Disable and remove "Change Septum" button
 --no_sample_descr   Disable and remove "Load Sample Descriptions" button
 --no_sample_num     Disable and remove "Sample Number" display
---has_close_opt     Provide two options to close Coordinator - immediately close or finish current state and 
+--has_close_opt     Provide two options to close Coordinator - immediately close or finish current state and
                     run final state
 --forced_close      Set the default way to close Coordinator as immediately close. It will be overwritten by "--has_close_opt".
 --has_pause         Add Pause/Start buttons to clear/set internal runningFlag
@@ -721,7 +728,7 @@ def handleCommandSwitches():
     hasPause = "--has_pause" in options
     forcedClose = "--forced_close" in options
     hasCloseOpt = "--has_close_opt" in options
-    
+
     return (hasSampleDescr, hasSampleNum, useSeptum, hasCloseOpt, hasPause, forcedClose, configFile)
 
 class App(wx.App):
@@ -733,7 +740,7 @@ class App(wx.App):
         self.coordinatorFrame.Show()
         self.SetTopWindow(self.coordinatorFrame)
         return True
-        
+
 if __name__ == "__main__":
     app = App(False)
     app.MainLoop()
