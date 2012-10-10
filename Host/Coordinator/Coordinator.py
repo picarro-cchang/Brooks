@@ -450,10 +450,8 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.saveFp = file(self.saveFileName,"ab")
         try:
             # Record the user editable parameters
-            userParams = []
-            for param in self.guiParamDict:
-                userParams.append("# %s=%s\n")
-
+            userParams = ["# %s=%s\n" %
+                          (k, v) for k, v in self.guiParamDict.iteritems()]
             self.saveFp.writelines(userParams)
 
             writer = csv.writer(self.saveFp)
