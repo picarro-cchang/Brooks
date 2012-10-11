@@ -444,15 +444,22 @@ class CoordinatorFrame(CoordinatorFrameGui):
         if not self.manualMode:
             self.enableManualButton()
 
-    def onWriteHeadings(self):
+    def onWriteHeadings(self, paramTupleList=None):
         notOpen = self.saveFp == None
         if notOpen:
             self.saveFp = file(self.saveFileName,"ab")
         try:
-            # Record the user editable parameters
-            userParams = ["# %s=%s\n" %
-                          (k, v) for k, v in self.guiParamDict.iteritems()]
-            self.saveFp.writelines(userParams)
+            if paramTupleList is not None:
+                print "Writing user param headers"
+
+                # Record the user editable parameters
+                userParams = []
+                for i in range(len(self.guiParamDict)):
+                    key = paramTupleList[i][0]
+                    userParams.append(
+                        "# (%s) %s=%s\n" % (paramTupleList[i][1], key,
+                                            self.guiParamDict[key]))
+                self.saveFp.writelines(userParams)
 
             writer = csv.writer(self.saveFp)
             head = []
@@ -519,6 +526,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
                     self.setParamText(idx, self.guiParamDict[dlg.nameList[idx]])
             dlg.Destroy()
             print self.guiParamDict
+            self.onWriteHeadings(paramTupleList)
 
         if self.fsmThread != None:
             self.terminateStateMachineThread()
