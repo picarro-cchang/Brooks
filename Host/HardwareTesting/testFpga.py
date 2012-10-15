@@ -6,8 +6,8 @@ from Host.Common.analyzerUsbIf import AnalyzerUsb
 from ctypes import c_byte, c_uint, c_int, c_ushort, c_short, sizeof
 from time import sleep, clock
 
-usbFile  = "../../CypressUSB/analyzer/analyzerUsb.hex"
-fpgaFile = "../../MyHDL/Spartan3/top_io_map.bit"
+usbFile  = "../../Firmware/CypressUSB/analyzer/analyzerUsb.hex"
+fpgaFile = "../../Firmware/MyHDL/Spartan3/top_io_map.bit"
 
 analyzerUsb = None
 

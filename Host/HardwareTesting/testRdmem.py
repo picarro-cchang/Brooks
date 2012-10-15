@@ -7,9 +7,9 @@ from ctypes import c_byte, c_uint, c_int, c_ushort, c_short, sizeof
 from time import sleep, clock
 from random import randrange
 
-usbFile  = "../../CypressUSB/analyzer/analyzerUsb.hex"
-fpgaFile = "../../MyHDL/Spartan3/top_io_map.bit"
-dspFile  = "../../DSP/checkDsp/Debug/checkDsp.hex"
+usbFile  = "../../Firmware/CypressUSB/analyzer/analyzerUsb.hex"
+fpgaFile = "../../Firmware/MyHDL/Spartan3/top_io_map.bit"
+dspFile  = "../../Firmware/DSP/checkDsp/Debug/checkDsp.hex"
 
 SHAREDMEM_BASE   = interface.SHAREDMEM_ADDRESS
 REG_BASE         = interface.SHAREDMEM_ADDRESS

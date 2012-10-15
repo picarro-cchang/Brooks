@@ -1,5 +1,6 @@
 // 00000000000000000000000000000000
 {
+	"test": true,
     "regions": [
         {
             "baseType": "satellite",

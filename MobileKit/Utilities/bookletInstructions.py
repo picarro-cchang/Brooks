@@ -29,6 +29,7 @@ MinimalRunParams = namedtuple( 'MinimalRunParams', [ 'startEtm','endEtm','minAmp
 
 RegionParams = namedtuple( 'RegionParams', ['baseType', 'name', 'swCorner', 'neCorner', 'comments'] )
 GridParams = namedtuple( 'GridParams', ['mapRect', 'ncol', 'nrow', 'baseName', 'baseType'] )
+KmlParams = namedtuple( 'KmlParams', ['filename', 'linewidth', 'linecolor', 'filter'] )
 
 MarkerInfo = namedtuple( 'MarkerInfo', [ 'name', 'lat', 'lng' ] )
 
@@ -329,7 +330,7 @@ def getGridParametersTest():
     
 # Return a string in block format containing the specified region parameters    
 #def getRegionBlock(mapType, name, mapRect, comments="" ):
-def getRegionBlock(regionParams):
+def getRegionBlock(regionParams, kmlParams=None):
     blws = "    "
     regionBlock = blws + blws + "{\n"
     regionBlock += blws + blws + blws + "\"baseType\": \"" + regionParams.baseType + "\",\n"
@@ -342,7 +343,11 @@ def getRegionBlock(regionParams):
     regionBlock += blws + blws + blws + blws + str( regionParams.neCorner.lat ) + ",\n"
     regionBlock += blws + blws + blws + blws + str( regionParams.neCorner.lng ) + "\n"
     regionBlock += blws + blws + blws + "],\n"
-    regionBlock += blws + blws + blws + "\"comments\": \"" + regionParams.comments + "\"\n"   
+    regionBlock += blws + blws + blws + "\"comments\": \"" + regionParams.comments + "\",\n"
+    #regionBlock += blws + blws + blws + "\"kml\": \": [\n"
+    #regionBlock += blws + blws + blws + blws + "\"" + kml_fn + "\",\n"
+    #regionBlock += blws + blws + blws + blws + "\"" + kml_fn + "\",\n" 
+    regionBlock += getKmlBlock( kmlParams ) + "\n"
     regionBlock += blws + blws + "}"        
     return regionBlock
  
@@ -393,10 +398,36 @@ def getMarkerBlock( markerList=None ):
     markerBlock += blws + "]\n"
     return markerBlock
 
+# If kmlList is None, return an empty kml block. 
+# Otherwise convert the kmlList into a kml block in json    
+def getKmlBlock( kmlList = None ):
+    blws = "    "
+    kmlBlock = blws + blws + blws + "\"kml\": [\n" 
+    if ( kmlList == None ):
+        kmlBlock += blws + blws + blws + "]"
+        return kmlBlock    
+
+    first = True
+    for entry in kmlList:
+        if (not first):
+            newEntry = blws + blws + blws + blws + "},\n"
+        else:
+            newEntry = ""
+        newEntry += blws + blws + blws + blws + "{\n"
+        newEntry += blws + blws + blws + blws + blws + '"filename": "' + entry.filename + '",\n'
+        newEntry += blws + blws + blws + blws + blws + '"linewidth": ' + entry.linewidth + ',\n'
+        newEntry += blws + blws + blws + blws + blws + '"linecolor": "' + entry.linecolor + '",\n'
+        newEntry += blws + blws + blws + blws + blws + '"filter": "' + entry.filter + '"\n'        
+        first = False
+        kmlBlock += newEntry
+    kmlBlock += blws + blws + blws + blws + "}\n"
+    kmlBlock += blws + blws + blws + "]"
+    return kmlBlock  
+    
 # Produces instructions to make a grid (ncol by nrow) of maps according to the specified parameters:
 #   gridPars contains a mapRect and ncol, nrow, baseName for the sections, and baseType for the map type (map or satellite)
 #   runBlockParamList is a list of RunBlockParams 
-def getInstructions( gridPars, runBlockParamList, markerList=None ):
+def getInstructions( gridPars, runBlockParamList, markerList=None, kmlList=None ):
     blws = "    "
     instructions = "// Instructions file for region " + gridPars.baseName + "\n"
     instructions += "{\n"
@@ -409,7 +440,7 @@ def getInstructions( gridPars, runBlockParamList, markerList=None ):
         for x in range( len( regionsList[y] ) ): 
             regName = gridPars.baseName + str( counter )
             curRegionParams = RegionParams( gridPars.baseType, regName, regionsList[y][x].swCorner, regionsList[y][x].neCorner, "" )
-            instructions += getRegionBlock( curRegionParams )
+            instructions += getRegionBlock( curRegionParams, kmlList )
             if ( x < len( regionsList[y] ) - 1 ) or (y < len(regionsList) - 1):
                 instructions += ",\n"
             else:
@@ -432,11 +463,12 @@ def getInstructions( gridPars, runBlockParamList, markerList=None ):
         instructions += getMarkerBlock()
     else:
         instructions += getMarkerBlock( markerList )
+        
     instructions += "}"
     
     return instructions
     
-def writeAndRunSummaryInstructions( basename, analyzer, gridPars, minRunParamsList ):
+def writeAndRunSummaryInstructions( basename, analyzer, gridPars, minRunParamsList, kmlList ):
     # Default Colors
     bubbleColor = "#00FFFF"        # Cyan
     wedgeColor = "#FFFF00"         # Yellow
@@ -460,11 +492,11 @@ def writeAndRunSummaryInstructions( basename, analyzer, gridPars, minRunParamsLi
 
     # Make the summary/overview map  
     summaryMapGridPars = GridParams( gridPars.mapRect, 1, 1, basename, "map")
-    summaryMapInstructions = getInstructions( summaryMapGridPars, runParamsList )
+    summaryMapInstructions = getInstructions( summaryMapGridPars, runParamsList, None, kmlList )
     
     # Make the satellite/overview map
     summarySatGridPars = GridParams( gridPars.mapRect, 1, 1, basename, "satellite")
-    summarySatInstructions = getInstructions( summarySatGridPars, runParamsList )    
+    summarySatInstructions = getInstructions( summarySatGridPars, runParamsList, None, kmlList )    
     
     # Make the swath map: Use different colors for day vs. night
     runParamsSwathList = []
@@ -523,7 +555,7 @@ def writeAndRunSummaryInstructions( basename, analyzer, gridPars, minRunParamsLi
             for data in glob.glob( resultsToKeep[j]+"*" ):
                 shutil.move( data, subDirBase+str(i) )    
     
-def writeAndRunGridInstructions( basename, analyzer, gridPars, minRunParamsList, markerList ):     
+def writeAndRunGridInstructions( basename, analyzer, gridPars, minRunParamsList, markerList, kmlList ):     
     # Default Colors
     bubbleColor = "#00FFFF"        # Cyan
     wedgeColor = "#FFFF00"         # Yellow
@@ -531,6 +563,7 @@ def writeAndRunGridInstructions( basename, analyzer, gridPars, minRunParamsList,
     daySwathColor = "#FFFF00"      # Yellow
 
     runParamsList = []
+    satRunParamsList = []
     for i in range ( len(minRunParamsList) ):
         runParamsList.append( RunBlockParams( analyzer, 
                                 minRunParamsList[i].startEtm, 
@@ -544,14 +577,28 @@ def writeAndRunGridInstructions( basename, analyzer, gridPars, minRunParamsList,
                                 ""
                             )    
         )  
-       
+        satRunParamsList.append( RunBlockParams( analyzer, 
+                                minRunParamsList[i].startEtm, 
+                                minRunParamsList[i].endEtm,
+                                "None", 
+                                "None", 
+                                nightSwathColor, 
+                                minRunParamsList[i].minAmpl, 
+                                minRunParamsList[i].exclRadius, 
+                                minRunParamsList[i].stabClass,
+                                ""
+                            )    
+        )  
+
+        
     #Make the grid google maps
     mapGridPars = GridParams( gridPars.mapRect, gridPars.ncol, gridPars.nrow, basename, "map")   
-    mapGridInstructions = getInstructions( mapGridPars, runParamsList, markerList )
+    mapGridInstructions = getInstructions( mapGridPars, runParamsList, markerList, kmlList )
     
     #Make the grid satellite maps
-    satGridPars = GridParams( gridPars.mapRect, gridPars.ncol, gridPars.nrow, basename, "satellite")   
-    satGridInstructions = getInstructions( satGridPars, runParamsList, markerList )
+    # satGridPars = GridParams( gridPars.mapRect, gridPars.ncol, gridPars.nrow, basename, "satellite")   
+    satGridPars = GridParams( gridPars.mapRect, gridPars.ncol, gridPars.nrow, basename, "map")
+    satGridInstructions = getInstructions( satGridPars, satRunParamsList, markerList, kmlList )
 
     #Write the instructions to files
     grid_map_fn = basename + "_grid_map.json"
@@ -579,6 +626,7 @@ def writeAndRunGridInstructions( basename, analyzer, gridPars, minRunParamsList,
     resultsToKeep = ['composite']
     
     for i in range( len(fnExtensions) ):
+        print "Processing instructions file ", fnExtensions[i]
         batchReport2.process( fnExtensions[i] )
         for j in range( len(resultsToKeep) ):
             for data in glob.glob( resultsToKeep[j]+"*" ):

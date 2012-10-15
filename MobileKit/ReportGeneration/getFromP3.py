@@ -1,5 +1,6 @@
 # Fetching data from P3
 
+import httplib
 import urllib2
 import urllib
 
@@ -41,7 +42,7 @@ class P3_Accessor(object):
     The parameter supplied to the factory is the log type. For example, 
         genAnzLog("WS_Dat") returns an accessor, which is a function that is used to make a generator for 
             getting the weather station data.
-        genAnzLog("WS_Dat")(startEtm,endEtm=None,limit=500) is the generator itself which yields documents
+        genAnzLog("WS_Dat")(startEtm,endEtm=None,limit=2000) is the generator itself which yields documents
             lying between startEtm and endEtm. Note that limit is the maximum number of documents to retrieve
             from the database at one time, and is not the maximum number of documents that the generator 
             will yield. The generator only terminates once there are no more documents in the time range.
@@ -86,16 +87,22 @@ class P3_Accessor(object):
         post_url = '%s/%s/%s/%s/%s' %(self.csp, "rest", svc, ticket, v_rsc)
         # print "POST URL: %s"  % post_url
 
-        while True:
+        retries = 0
+        errors = []
+        while retries<5:
             try:
                 resp = urllib2.urlopen(post_url, data=urllib.urlencode(params))
                 rtndata_str = resp.read()
-                # print "POST Response: %s: %s" % (resp.code, rtndata_str)
+                print "POST Response: %s: %s" % (resp.code, rtndata_str)
                 break
             except urllib2.URLError,e:
                 print "Error: ", e
+                errors.append("%s" % e)
                 time.sleep(1.0)
+                retries += 1
                 print "Retrying..."
+        else:
+            raise RuntimeError("\n".join(errors))
             
         rtndata = json.loads(rtndata_str)
         # print "rtndata", rtndata
@@ -175,9 +182,10 @@ class P3_Accessor(object):
                         print "Permission denied, getting a new ticket"
                         self.getTicket()
                     else:
-                        print e
-                        print traceback.format_exc()
+                        e = RuntimeError("Data not available. Check parameters.")
                         resultQueue.put(e)
+                        raise e
+
                 except Exception,e:
                     print "I/O Error, retrying"
                     time.sleep(1.0)
@@ -235,7 +243,7 @@ class P3_Accessor(object):
                             params["startEtm"] = max(etm,reqEtm - prefetch)
                 
     def genAnzLog(self,logtype):
-        def _genAnzLog(startEtm,endEtm=None,limit=500,**kwds):
+        def _genAnzLog(startEtm,endEtm=None,limit=2000,**kwds):
             get_params = dict(qry="byEpoch",anz=self.analyzerName,limit=limit,startEtm=startEtm,logtype=logtype,resolveLogname=True)
             if kwds: get_params.update(kwds)
             if endEtm is not None: get_params["endEtm"] = endEtm
@@ -243,7 +251,7 @@ class P3_Accessor(object):
         return _genAnzLog
         
     def genAnzLogMeta(self,logtype):
-        def _genAnzLogMeta(startEtm,endEtm=None,limit=500,**kwds):
+        def _genAnzLogMeta(startEtm,endEtm=None,limit=2000,**kwds):
             get_params = dict(qry="byEpoch",anz=self.analyzerName,limit=limit,startEtm=startEtm,logtype=logtype)
             if kwds: get_params.update(kwds)
             if endEtm is not None: get_params["endEtm"] = endEtm
@@ -257,7 +265,7 @@ class P3_Accessor_ByPos(object):
     The parameter supplied to the factory is the log type. For example, 
         genAnzLog("WS_Dat") returns an accessor, which is a function that is used to make a generator for 
             getting the weather station data.
-        genAnzLog("WS_Dat")(startPos,endPos=None,limit=500) is the generator itself which yields documents
+        genAnzLog("WS_Dat")(startPos,endPos=None,limit=2000) is the generator itself which yields documents
             lying between startPos (inclusive) and endPos (exclusive). Note that limit is the maximum number 
             of documents to retrieve from the database at one time, and is not the maximum number of documents 
             that the generator will yield. The generator only terminates once there are no more documents in 
@@ -274,15 +282,17 @@ class P3_Accessor_ByPos(object):
     the generator does not terminate, but yields None if there are no documents yet available from the 
     collection"""
     
-    def __init__(self,alog,sys="",identity=""):
-        self.csp = "https://dev.picarro.com/node"
+    def __init__(self,alogName):
         self.svc = "gdu"
-        self.alogName = alog
+        self.alogName = alogName
         #self.discardList = ["EPOCH_TIME", "LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH", "row"]
         #self.discardList = ["LOGTYPE", "FILENAME_nint", "_id", "SERVER_HASH"]
         self.discardList = ["FILENAME_nint", "_id", "SERVER_HASH"]
-        self.sys = sys or "APITEST"
-        self.identity = identity or "85490338d7412a6d31e99ef58bce5de6"
+        configFile = os.path.splitext(AppPath)[0] + ".ini"
+        config = ConfigObj(configFile)
+        self.csp = "https://" + config["P3Logs"]["csp"]
+        self.sys = config["P3Logs"]["sys"]
+        self.identity = config["P3Logs"]["identity"]
         self.getTicket()
         
     def getTicket(self):
@@ -300,8 +310,9 @@ class P3_Accessor_ByPos(object):
         params = {"qry": qry, "sys": sys, "identity": identity, "rprocs": rprocs}
         post_url = '%s/%s/%s/%s/%s' %(self.csp, "rest", svc, ticket, v_rsc)
         print "POST URL: %s"  % post_url
-
-        while True:
+        retries = 0
+        errors = []
+        while retries<5:
             try:
                 resp = urllib2.urlopen(post_url, data=urllib.urlencode(params))
                 rtndata_str = resp.read()
@@ -309,9 +320,13 @@ class P3_Accessor_ByPos(object):
                 break
             except urllib2.URLError,e:
                 print "Error: ", e
+                errors.append("%s" % e)
                 time.sleep(1.0)
+                retries += 1
                 print "Retrying..."
-            
+        else:
+            raise RuntimeError("\n".join(errors))
+        
         rtndata = json.loads(rtndata_str)
         print "rtndata", rtndata
 
@@ -383,9 +398,10 @@ class P3_Accessor_ByPos(object):
                         print "Permission denied, getting a new ticket"
                         self.getTicket()
                     else:
-                        print e
-                        print traceback.format_exc()
+                        e = RuntimeError("Data not available. Check parameters.")
                         resultQueue.put(e)
+                        raise e
+
                 except Exception,e:
                     print traceback.format_exc()
                     resultQueue.put(e)
@@ -448,7 +464,7 @@ class P3_Accessor_ByPos(object):
                             params["startPos"] = max(row,reqRow)
                 
     def genAnzLog(self,logtype):
-        def _genAnzLog(startPos,endPos=None,limit=500,**kwds):
+        def _genAnzLog(startPos,endPos=None,limit=2000,**kwds):
             get_params = dict(qry="byPos",alog=self.alogName,limit=limit,startPos=startPos,logtype=logtype)
             if kwds: get_params.update(kwds)
             if endPos is not None: get_params["endPos"] = endPos
@@ -496,7 +512,7 @@ class P3_Source(object):
           because the requested time is after its endEtm
     """
         
-    def __init__(self,accessor,name,endEtm=None,maxGap=2.0,maxStore=10,limit=500):
+    def __init__(self,accessor,name,endEtm=None,maxGap=2.0,maxStore=10,limit=2000):
         # The accessor is a generator function which yields documents from
         #  the P3 collection. The maximum difference in epoch times allowed
         #  before there is considered to be a gap in the data is "maxGap"

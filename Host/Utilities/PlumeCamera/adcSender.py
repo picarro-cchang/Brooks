@@ -8,7 +8,7 @@ try:
 except:
     import simplejson as json
 
-import MeasurementComputing.MeasComp as mc 
+import MeasurementComputing.MeasComp as mc
 import sys
 import time
 import traceback
@@ -19,7 +19,7 @@ context = zmq.Context()
 
 ADC_CMD_PORT = 5201
 ADC_BROADCAST_PORT = 5202
-  
+
 class MCC_Board(object):
     def __init__(self, boardNum):
         self.boardNum = boardNum
@@ -53,7 +53,7 @@ class MCC_Board(object):
         self.actualRate = c_int(self.adcRate)
 
     def adcGetBlock(self):
-        self.measComp.cbGetStatus(self.boardNum,byref(self.status), 
+        self.measComp.cbGetStatus(self.boardNum,byref(self.status),
             byref(self.curCount), byref(self.curIndex), mc.AIFUNCTION)
         count = self.adcChan*(self.curCount.value // self.adcChan)
         index = self.adcChan*(self.curIndex.value // self.adcChan) if self.curIndex.value>0 else 0
@@ -95,7 +95,7 @@ class MCC_Board(object):
                 timeout = self.nextAdcRead - getTimestamp()
                 socks = {}
                 if timeout>0: socks = dict(poller.poll(timeout=timeout))
-                # Check for no available sockets, indicating that the timeout occured 
+                # Check for no available sockets, indicating that the timeout occured
                 if not socks:
                     self.adcGetBlock()
                 elif socks.get(self.cmdSock) == zmq.POLLIN:
@@ -127,7 +127,7 @@ class MCC_Board(object):
                 self.bufferLength,byref(self.actualRate), self.adcGain, self.memHandle, self.adcOptions)
             return False
         return (_start, {"name": sys._getframe().f_code.co_name, "result": "OK"})
- 
+
     def stop(self):
         """Stop data acquisition"""
         self.adcGetBlock()
@@ -160,4 +160,3 @@ if __name__ == "__main__":
     a.adcConfigure()
     a.dioConfigure()
     a.run()
-    

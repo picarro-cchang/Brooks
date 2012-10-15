@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>Canvas Layers Test</title>
+</head>
+<body>
+    <div id="canvasesdiv" style="position:relative">
+        <canvas id="layer1" style="z-index:1; position:absolute; left:0px; top:0px;" >
+        </canvas>
+        <canvas id="layer2" style="z-index:2; position:absolute; left:0px; top:0px;" >
+        </canvas>
+        <canvas id="layer3" style="z-index:3; position:absolute; left:0px; top:0px;" >
+        </canvas>
+        <canvas id="layer4" style="z-index:4; position:absolute; left:0px; top:0px;" >
+        </canvas>
+        <canvas id="layer5" style="z-index:5; position:absolute; left:0px; top:0px;" >
+        </canvas>
+        <canvas id="layer6" style="z-index:6; position:absolute; left:0px; top:0px;" >
+        </canvas>
+    </div>
+    <div style="position:relative">
+        <form>
+            <input id="id_cb_layer1" type="checkbox" checked="checked">map</input>
+            <input id="id_cb_layer2" type="checkbox" checked="checked">satellite</input>
+            <input id="id_cb_layer3" type="checkbox" checked="checked">path</input>
+            <input id="id_cb_layer4" type="checkbox" checked="checked">swath</input>
+            <input id="id_cb_layer5" type="checkbox" checked="checked">wedges</input>
+            <input id="id_cb_layer6" type="checkbox" checked="checked">peaks</input>
+        </form>
+    </div>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script type="text/javascript">
+    var map = new Image();
+    var satellite = new Image();
+    var wedges = new Image();
+    var peaks = new Image();
+    var path = new Image();
+    var swath = new Image();
+    var ctx1, ctx2, ctx3, ctx4, ctx5, ctx6;
+
+    function init() {
+        $("#id_cb_layer1").click(function() {
+            var $this = $(this);
+            if ($this.is(":checked")) $("#layer1").show();
+            else $("#layer1").hide();
+        })
+        $("#id_cb_layer2").click(function() {
+            var $this = $(this);
+            if ($this.is(":checked")) $("#layer2").show();
+            else $("#layer2").hide();
+        })
+        $("#id_cb_layer3").click(function() {
+            var $this = $(this);
+            if ($this.is(":checked")) $("#layer3").show();
+            else $("#layer3").hide();
+        })
+        $("#id_cb_layer4").click(function() {
+            var $this = $(this);
+            if ($this.is(":checked")) $("#layer4").show();
+            else $("#layer4").hide();
+        })
+        $("#id_cb_layer5").click(function() {
+            var $this = $(this);
+            if ($this.is(":checked")) $("#layer5").show();
+            else $("#layer5").hide();
+        })
+        $("#id_cb_layer6").click(function() {
+            var $this = $(this);
+            if ($this.is(":checked")) $("#layer6").show();
+            else $("#layer6").hide();
+        })
+        ctx1 = $("#layer1")[0].getContext("2d");
+        ctx2 = $("#layer2")[0].getContext("2d");
+        ctx3 = $("#layer3")[0].getContext("2d");
+        ctx4 = $("#layer4")[0].getContext("2d");
+        ctx5 = $("#layer5")[0].getContext("2d");
+        ctx6 = $("#layer6")[0].getContext("2d");
+        setInterval(drawAll, 20);
+    }
+
+    function drawAll() {
+        map.src = "222064d8db5f0b4e42adbfcde7707e1f/map.0.png";
+        $("#canvasesdiv").width(map.width);
+        $("#canvasesdiv").height(map.height);
+
+        ctx1.clearRect(0,0,map.width,map.height);
+        ctx1.canvas.width = map.width;
+        ctx1.canvas.height = map.height;
+        ctx1.drawImage(map,0,0);
+        satellite.src = "222064d8db5f0b4e42adbfcde7707e1f/satellite.0.png";
+        ctx2.clearRect(0,0,map.width,map.height);
+        ctx2.canvas.width = map.width;
+        ctx2.canvas.height = map.height;
+        ctx2.drawImage(satellite,0,0);
+        path.src = "222064d8db5f0b4e42adbfcde7707e1f/path.0.png";
+        ctx3.clearRect(0,0,map.width,map.height);
+        ctx3.canvas.width = map.width;
+        ctx3.canvas.height = map.height;
+        ctx3.drawImage(path,0,0);
+        swath.src = "222064d8db5f0b4e42adbfcde7707e1f/swath.0.png";
+        ctx4.clearRect(0,0,map.width,map.height);
+        ctx4.canvas.width = map.width;
+        ctx4.canvas.height = map.height;
+        ctx4.drawImage(swath,0,0);
+        wedges.src = "222064d8db5f0b4e42adbfcde7707e1f/wedges.0.png";
+        ctx5.clearRect(0,0,map.width,map.height);
+        ctx5.canvas.width = map.width;
+        ctx5.canvas.height = map.height;
+        ctx5.drawImage(wedges,0,0);
+        peaks.src = "222064d8db5f0b4e42adbfcde7707e1f/peaks.0.png";
+        ctx6.clearRect(0,0,map.width,map.height);
+        ctx6.canvas.width = map.width;
+        ctx6.canvas.height = map.height;
+        ctx6.drawImage(peaks,0,0);
+    }
+
+    $(init);
+
+    </script>
+</body>
+</html>

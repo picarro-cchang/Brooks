@@ -1,8 +1,9 @@
 #!/usr/bin/python
 #
 """
-File Name: ReportGenSupport.py
-Purpose: Support for Surveyor report generation
+File Name: ReportGenSupportNew.py
+Purpose: Support for Surveyor report generation which uses more client-side
+ JavaScript to assemble report maps
 
 File History:
     26-Apr-2012  sze  Initial version.
@@ -171,6 +172,26 @@ def getPossibleNaN(d, k, default):
     except:
         result = NOT_A_NUMBER
     return result
+
+
+def squeezeListOfDict(listOfDict):
+    """Starting with a list of dictionaries all of which have the same keys, convert to a dictionary
+    {keys: list_of_keys, data: list_of_tuples} that can be more compactly JSON encoded"""
+    result = {}
+    if listOfDict:
+        keys = sorted(listOfDict[0].keys())
+        Data = namedtuple("DataTuple", keys)
+        data = [Data(**d) for d in listOfDict]
+        result = dict(keys=keys, data=data)
+    return result
+
+
+def restoreListOfDict(squeezedDict):
+    if squeezedDict:
+        keys = squeezedDict['keys']
+        return [{k:d[i] for i, k in enumerate(keys)} for d in squeezedDict['data']]
+    else:
+        return []
 
 
 class ReportCompositeMap(object):
@@ -432,6 +453,9 @@ class ReportBaseMap(object):
         self.instructions = instructions
         self.region = region
         self.logFunc = logFunc
+        self.baseData = os.path.join(
+            self.reportDir, "%s/baseData.%d.json" % (self.ticket, region))
+
         # region 0 is a special case for the summary map
         if region == SUMMARY_REGION:
             self.name = self.instructions["summary"]["name"]
@@ -455,8 +479,8 @@ class ReportBaseMap(object):
             elif t == "satellite":
                 mp = GoogleMap(self.logFunc).getPlatParams(self.minLng, self.maxLng, self.minLat, self.maxLat, satellite=True)
             elif t == "plat":
-                mp = PlatFetcher().getPlatParams(self.name, self.minLng,
-                                                 self.maxLng, self.minLat, self.maxLat)
+                #mp = PlatFetcher().getPlatParams(self.name, self.minLng,
+                #                                 self.maxLng, self.minLat, self.maxLat)
                 if mp is None:
                     mp = GoogleMap(self.logFunc).getPlatParams(self.minLng, self.maxLng, self.minLat, self.maxLat, satellite=False)
             else:
@@ -465,40 +489,26 @@ class ReportBaseMap(object):
         return mpList
 
     def run(self):
-        fnames = []
+        paramList = []
         for t in self.baseType:
             if t == "map":
-                image, mp = GoogleMap(self.logFunc).getPlat(self.minLng, self.maxLng, self.minLat, self.maxLat, satellite=False)
+                imageParams, mp = GoogleMap(self.logFunc).getPlat(self.minLng, self.maxLng, self.minLat, self.maxLat, satellite=False)
             elif t == "satellite":
-                image, mp = GoogleMap(self.logFunc).getPlat(self.minLng, self.maxLng, self.minLat, self.maxLat, satellite=True)
+                imageParams, mp = GoogleMap(self.logFunc).getPlat(self.minLng, self.maxLng, self.minLat, self.maxLat, satellite=True)
             elif t == "plat":
-                image, mp = PlatFetcher().getPlat(self.name, self.minLng,
+                imageParams, mp = PlatFetcher().getPlat(self.name, self.minLng,
                                                   self.maxLng, self.minLat, self.maxLat)
                 if mp is None:
-                    image, mp = GoogleMap(self.logFunc).getPlat(self.minLng, self.maxLng, self.minLat, self.maxLat, satellite=False)
+                    imageParams, mp = GoogleMap(self.logFunc).getPlat(self.minLng, self.maxLng, self.minLat, self.maxLat, satellite=False)
             else:
                 raise ValueError("Base type %s not yet supported" % t)
-            fname = os.path.join(self.reportDir, "%s/%s.%d.png" %
-                                 (self.ticket, t, self.region))
-            fnames.append(fname)
-            with open(fname, "wb") as op:
-                op.write(asPNG(image))
-            if self.region == SUMMARY_REGION:
-                nx = self.instructions["summary"]["nx"]
-                ny = self.instructions["summary"]["ny"]
-                mapRect = MapRect(LatLng(
-                    mp.minLat, mp.minLng), LatLng(mp.maxLat, mp.maxLng))
-                rectList = partition(mapRect, ny, nx)
-                mg = MapGrid(mp.minLng, mp.minLat, mp.maxLng,
-                             mp.maxLat, mp.nx, mp.ny, mp.padX, mp.padY)
-                q1 = mg.drawPartition(rectList)
-                fname = os.path.join(self.reportDir, "%s/%s.grid.%d.png" %
-                                     (self.ticket, t, self.region))
-                with open(fname, "wb") as op:
-                    op.write(asPNG(q1))
-                fnames.append(fname)
-        self.logFunc({"fileNames": fnames})
-
+            paramList.append((imageParams, mp))
+        regionParams = dict(name=self.name, region=self.region, type=t)
+        if self.region == SUMMARY_REGION:
+            regionParams["nx"] = self.instructions["summary"]["nx"]
+            regionParams["ny"] = self.instructions["summary"]["ny"]
+        with open(self.baseData, "wb") as op:
+            json.dump((regionParams, paramList), op)
 
 def colorStringToRGB(colorString):
     if colorString == "None":
@@ -551,13 +561,9 @@ class ReportPathMap(object):
         self.instructions = instructions
         self.pathHtmlFname = os.path.join(
             self.reportDir, "%s/path.%d.html" % (self.ticket, self.region))
-        self.pathMapFname = os.path.join(
-            self.reportDir, "%s/path.%d.png" % (self.ticket, self.region))
-        self.swathMapFname = os.path.join(
-            self.reportDir, "%s/swath.%d.png" % (self.ticket, self.region))
         if "summary" in instructions:
-            self.pathDataFname = os.path.join(
-                self.reportDir, "%s/pathData.dat" % (self.ticket,))
+            self.pathData = os.path.join(
+                self.reportDir, "%s/pathData.json" % (self.ticket,))
         self.mapParams = mapParams
         self.timeout = timeout
         self.logFunc = logFunc
@@ -625,15 +631,16 @@ class ReportPathMap(object):
         #  a summary map, the path and swath are inherited from those calculated for
         #  the summary.
         if "summary" in self.instructions and self.region != SUMMARY_REGION:
-            with open(self.pathDataFname, "rb") as op:
-                savedData = cPickle.load(op)
-            pathMap, swathMap = sl.makeSubmapPath(savedData)
-            pathMaps = [pathMap]
-            swathMaps = [swathMap]
+            with open(self.pathData, "rb") as op:
+                paramsByLogname, savedData = json.load(op)
+            lognames = sl.makeSubmapPath(savedData)
+            for n in lognames:
+                if n in self.paramsByLogname:
+                    raise ValueError(
+                        "Log %s appears in more than one run" % n)
+                self.paramsByLogname[n] = paramsByLogname[n]
         else:
             if "runs" in self.instructions:
-                pathMaps = []
-                swathMaps = []
                 for ir, params in enumerate(self.instructions["runs"]):
                     showPath = params.get("path", True)
                     showSwath = colorStringToRGB(params["swath"])
@@ -648,39 +655,20 @@ class ReportPathMap(object):
                             minAmpl = params["minAmpl"]
                             stabClass = params["stabClass"]
                             sl.setSwathParams(minAmpl=minAmpl, stabClass=stabClass)
-                        pMap, sMap, lognames, savedPath, savedSwath = \
+                        lognames, savedPath, savedSwath = \
                             sl.makePathAndSwath(analyzer, startEtm, endEtm, showPath,
                                                 showSwath, report, self.timeout, saveData)
-                        savedData.append((savedPath, savedSwath))
                         for n in lognames:
                             if n in self.paramsByLogname:
                                 raise ValueError(
                                     "Log %s appears in more than one run" % n)
                             self.paramsByLogname[n] = dict(params).copy()
-                        if showPath:
-                            pathMaps.append(pMap)
-                        if showSwath:
-                            swathMaps.append(sMap)
-        # Now merge the paths on the run maps together to form the composite path
-        if pathMaps:
-            image = sl.makeEmpty()
-            for m in pathMaps:
-                image = overBackground(m, image, None)
-            image = backgroundToOverlay(image)
-            with open(self.pathMapFname, "wb") as op:
-                op.write(asPNG(image))
-        if swathMaps:
-            image = sl.makeEmpty()
-            for m in swathMaps:
-                image = overBackground(m, image, None)
-            image = backgroundToOverlay(image)
-            with open(self.swathMapFname, "wb") as op:
-                op.write(asPNG(image))
+                        savedData.append((lognames, savedPath, savedSwath))
         with open(self.pathHtmlFname, "wb") as op:
             self.makePathReport(op)
         if saveData:
-            with open(self.pathDataFname, "wb") as op:
-                cPickle.dump(savedData, op, -1)
+            with open(self.pathData, "wb") as op:
+                json.dump([self.paramsByLogname, savedData], op)
 
 MT_NONE, MT_CONC, MT_RANK = 0, 1, 2
 
@@ -691,19 +679,15 @@ class ReportMarkerMap(object):
         self.ticket = ticket
         self.instructions = instructions
         self.region = region
+        if "summary" in instructions:
+            self.markersData = os.path.join(
+                self.reportDir, "%s/markers.json" % (self.ticket,))
         self.peaksHtmlFname = os.path.join(
             self.reportDir, "%s/peaks.%d.html" % (self.ticket, self.region))
         self.markerHtmlFname = os.path.join(
             self.reportDir, "%s/markers.%d.html" % (self.ticket, self.region))
         self.peaksXmlFname = os.path.join(
             self.reportDir, "%s/peaks.%d.xml" % (self.ticket, self.region))
-        self.peaksMapFname = os.path.join(
-            self.reportDir, "%s/peaks.%d.png" % (self.ticket, self.region))
-        self.wedgesMapFname = os.path.join(
-            self.reportDir, "%s/wedges.%d.png" % (self.ticket, self.region))
-        if "summary" in instructions:
-            self.markerDataFname = os.path.join(
-                self.reportDir, "%s/markerData.dat" % (self.ticket,))
         self.mapParams = mapParams
         self.logFunc = logFunc
         self.digits = re.compile("\d+")
@@ -722,7 +706,10 @@ class ReportMarkerMap(object):
         peakTableString.append('<th style="width:10%%">%s</th>' % "Ampl")
         peakTableString.append('</tr></thead>')
         peakTableString.append('<tbody>')
-        for msg, data, pkColor, wedgeColor in peaks:
+        for data in peaks:
+            msg = data['TEXT']
+            pkColor = data['PEAK_COLOR']
+            wedgeColor = data['WEDGE_COLOR']
             if self.digits.match(msg):
                 tstr = time.strftime("%Y%m%dT%H%M%S", time.gmtime(data['EPOCH_TIME']))
                 anz = data['ANALYZER']
@@ -772,7 +759,10 @@ class ReportMarkerMap(object):
         writer = csv.writer(op, dialect='excel')
         writer.writerow(('Rank', 'Designation', 'Latitude',
                         'Longitude', 'Concentration', 'Amplitude', 'URL'))
-        for msg, data, pkColor, wedgeColor in peaks:
+        for data in peaks:
+            msg = data['TEXT']
+            pkColor = data['PEAK_COLOR']
+            wedgeColor = data['WEDGE_COLOR']
             if self.digits.match(msg):
                 tstr = time.strftime("%Y%m%dT%H%M%S", time.gmtime(data['EPOCH_TIME']))
                 anz = peakDict[r].data['ANALYZER']
@@ -798,7 +788,10 @@ class ReportMarkerMap(object):
             heading = "Report %s, Region %d (%s)" % (
                 pretty_ticket(self.ticket), self.region, name)
         excelReport.makeHeader(heading, ["Rank", "Designation", "Latitude", "Longitude", "Concentration", "Amplitude"], [30, 150, 80, 80, 80, 80])
-        for msg, data, pkColor, wedgeColor in peaks:
+        for data in peaks:
+            msg = data['TEXT']
+            pkColor = data['PEAK_COLOR']
+            wedgeColor = data['WEDGE_COLOR']
             if self.digits.match(msg):
                 tstr = time.strftime("%Y%m%dT%H%M%S", time.gmtime(data['EPOCH_TIME']))
                 anz = data['ANALYZER']
@@ -830,14 +823,15 @@ class ReportMarkerMap(object):
                                   lat,
                                   lng)
                 markers.append(mp)
+
         # We either have to treat each regional map on its own, and generate markers
         #  for that region in its own right, or alternatively, if it is part of a set
         #  of submaps with a summary map, the markers and wedges are inherited from those
         #  calculated for the summary map
         if "summary" in self.instructions and self.region != SUMMARY_REGION:
-            with open(self.markerDataFname, "rb") as op:
-                savedMarkers = cPickle.load(op)
-            im1, im2, peaks, selMarkers = sl.makeSubmapMarkers(savedMarkers)
+            with open(self.markersData, "rb") as op:
+                savedMarkers = json.load(op)
+            pColors, peaks, mColors, selMarkers = sl.makeSubmapMarkers(savedMarkers)
         else:
             runParams = []
             if "runs" in self.instructions:
@@ -863,27 +857,20 @@ class ReportMarkerMap(object):
                         runParams.append(
                             RunParams(analyzer, startEtm, endEtm, minAmpl, maxAmpl,
                                       path, mType, mColor, showWedges, exclRadius))
-            im1, im2, peaks, selMarkers = sl.makeMarkers(runParams, markers)
+            pColors, peaks, mColors, selMarkers = sl.makeMarkers(runParams, markers)
             # Write out the peak and marker information from the summary region
             if self.region == SUMMARY_REGION:
-                with open(self.markerDataFname, "wb") as op:
-                    cPickle.dump((peaks, selMarkers), op, -1)
+                with open(self.markersData, "wb") as op:
+                    json.dump([list(pColors), peaks,
+                               list(mColors), selMarkers], op)
 
-        # Now write out the maps
-        if im1 is not None:
-            im1 = backgroundToOverlay(im1)
-            with open(self.peaksMapFname, "wb") as op:
-                op.write(asPNG(im1))
-        if im2 is not None:
-            im2 = backgroundToOverlay(im2)
-            with open(self.wedgesMapFname, "wb") as op:
-                op.write(asPNG(im2))
+        peaksAsList = restoreListOfDict(peaks)
         with open(self.peaksHtmlFname, "wb") as op:
-            self.makePeakReport(op, peaks)
+            self.makePeakReport(op, peaksAsList)
         with open(self.markerHtmlFname, "wb") as op:
             self.makeMarkerReport(op, selMarkers)
         with open(self.peaksXmlFname, "wb") as op:
-            self.makePeakXml(op, peaks, selMarkers)
+            self.makePeakXml(op, peaksAsList, selMarkers)
 
 
 class PlatFetcher(object):
@@ -968,15 +955,11 @@ class GoogleMap(object):
         mp = MapParams(minLng, minLat, maxLng, maxLat, mx * scale,
                        my * scale, padX, padY)
         if fetchPlat:
-            p = Image.open(cStringIO.StringIO(self.getMap(
-                meanLat, meanLng, zoom, mx, my, scale, satellite)))
-            q = Image.new('RGBA', (scale * mx + 2 * padX,
-                          scale * my + 2 * padY), (255, 255, 255, 255))
-            q.paste(p, (padX, padY))
-            return q, mp
+            imageParams = dict(meanLat=meanLat, meanLng=meanLng, zoom=zoom, mx=mx, my=my,
+                    scale=scale, satellite=satellite)
+            return imageParams, mp
         else:
             return mp
-
 
 class MapGrid(object):
     def __init__(self, minLng, minLat, maxLng, maxLat, nx, ny, padX, padY):
@@ -1094,7 +1077,7 @@ class SurveyorLayers(object):
         c = self.astdParams["c"]
         return min(math.pi, a * (b + c * vcar) / (wind + 0.01))
 
-    def drawSwath(self, source, sv, makeSwath):
+    def drawSwath(self, source):
         lastLng, lastLat, lastDeltaLng, lastDeltaLat = None, None, None, None
         for etm, lng, lat, deltaLng, deltaLat in zip(source["EPOCH_TIME"], source["GPS_ABS_LONG"], source["GPS_ABS_LAT"], source["DELTA_LONG"], source["DELTA_LAT"]):
             if lastLng is not None:
@@ -1114,14 +1097,6 @@ class SurveyorLayers(object):
                             xmax = max(x1, x2, x3, x4)
                             ymin = min(y1, y2, y3, y4)
                             ymax = max(y1, y2, y3, y4)
-                            temp = Image.new('RGBA', (xmax - xmin + 1, ymax - ymin + 1), (0, 0, 0, 0))
-                            tdraw = ImageDraw.Draw(temp)
-                            tdraw.polygon(
-                                [(x1 - xmin, y1 - ymin), (x2 - xmin, y2 - ymin), (x3 - xmin, y3 - ymin), (x4 - xmin, y4 - ymin)],
-                                fill=makeSwath + (128,), outline=makeSwath + (200,))
-                            mask = (self.padX + xmin, self.padY + ymin)
-                            sv = overBackground(temp, sv, mask)
-
             lastLng, lastLat, lastDeltaLng, lastDeltaLat = lng, lat, deltaLng, deltaLat
         return extract_dictionary(source, ["EPOCH_TIME", "GPS_ABS_LONG", "GPS_ABS_LAT", "DELTA_LONG", "DELTA_LAT"])
 
@@ -1132,7 +1107,7 @@ class SurveyorLayers(object):
         single run. Return a set of these, together with images of the path and swath. If saveData
         is True, the swath and path are storedso that they may be reused, e.g. for subMaps.
         """
-        lognames = set()
+        lognames = {}
         startTime = time.clock()
         colors = dict(normal=(0, 0, 255, 255), analyze=(0, 0, 0, 255), inactive=(255, 0, 0, 255))
         lastColor = [colors["normal"]]
@@ -1158,15 +1133,6 @@ class SurveyorLayers(object):
                 color = colors["inactive"]
                 lastColor[0] = color
             return color
-        ov, sv = None, None
-        if makePath:
-            ov = Image.new('RGBA', (self.nx + 2 * self.padX,
-                           self.ny + 2 * self.padY), (0, 0, 0, 0))
-            odraw = ImageDraw.Draw(ov)
-        if makeSwath:
-            sv = Image.new('RGBA', (self.nx + 2 * self.padX,
-                           self.ny + 2 * self.padY), (0, 0, 0, 0))
-            sdraw = ImageDraw.Draw(sv)
         lastRow = -1
         penDown = False
         path = []               # Path in (x,y) coordinates
@@ -1196,13 +1162,12 @@ class SurveyorLayers(object):
                 if newPath or color != pathColor:
                     if path:  # Draw out old path
                         if makePath:
-                            odraw.line(path, fill=pathColor, width=2)
                             if saveData:
-                                savedPath.append((pathLatLng, pathColor))
+                                savedPath.append((squeezeListOfDict(pathLatLng), pathColor))
                         if makeSwath and pathColor == colors["normal"]:
                             result = process(bufferedPath, self.nWindow, self.stabClass,
                                              self.minLeak, self.minAmpl, self.astdParams)
-                            s = self.drawSwath(result, sv, makeSwath)
+                            s = self.drawSwath(result)
                             if saveData:
                                 savedSwath.append((s, makeSwath))
                         if newPath:
@@ -1212,13 +1177,18 @@ class SurveyorLayers(object):
                         else:
                             path = [path[-1]]
                             bufferedPath = [bufferedPath[-1]]
-                            pathLatLng = []
+                            pathLatLng = [pathLatLng[-1]]
                     pathColor = color
                 path.append((self.padX + x, self.padY + y))
+                logname = None
                 if (-self.padX <= x < self.nx + self.padX) and (-self.padY <= y < self.ny + self.padY):
-                    lognames.add(m.data.get("LOGNAME", ""))
+                    logname = m.data.get("LOGNAME", "")
+                    if logname not in lognames:
+                        lognames[logname] = len(lognames)
                 bufferedPath.append(m.data)
-                pathLatLng.append(extract_dictionary(m.data,["GPS_ABS_LAT", "GPS_ABS_LONG"]))
+                latlng = extract_dictionary(m.data, ["GPS_ABS_LAT", "GPS_ABS_LONG"])
+                latlng["LOG"] = lognames[logname] if logname else None
+                pathLatLng.append(latlng)
                 newPath = False
             else:
                 newPath = True
@@ -1233,53 +1203,45 @@ class SurveyorLayers(object):
             reportFunc(i)
         if path:
             if makePath:
-                odraw.line(path, fill=pathColor, width=2)
                 if saveData:
-                    savedPath.append((pathLatLng, pathColor))
+                    savedPath.append((squeezeListOfDict(pathLatLng), pathColor))
             if makeSwath and pathColor == colors["normal"]:
                 result = process(bufferedPath, self.nWindow, self.stabClass,
                                  self.minLeak, self.minAmpl, self.astdParams)
-                s = self.drawSwath(result, sv, makeSwath)
+                s = self.drawSwath(result)
                 if saveData:
                     savedSwath.append((s, makeSwath))
-        return ov, sv, lognames, savedPath, savedSwath
+        return lognames, savedPath, savedSwath
 
     def makeSubmapPath(self, savedData):
-        """Draw path and swath on a submap, staring from the path and swath that were
-        computed for the summary map"""
-        ov = Image.new('RGBA', (self.nx + 2 * self.padX,
-                       self.ny + 2 * self.padY), (0, 0, 0, 0))
-        odraw = ImageDraw.Draw(ov)
-        sv = Image.new('RGBA', (self.nx + 2 * self.padX,
-                       self.ny + 2 * self.padY), (0, 0, 0, 0))
-        sdraw = ImageDraw.Draw(sv)
+        """Determine lognames for the path(s) in a submap"""
+        lognames = {}
         for sd in savedData:
-            savedPath, savedSwath = sd
+            logs, savedPath, savedSwath = sd
+            revlogs = {logs[logname]: logname for logname in logs}
             for pathLatLng, pathColor in savedPath:
-                path = []
-                for data in pathLatLng:
-                    lat = data["GPS_ABS_LAT"]
-                    lng = data["GPS_ABS_LONG"]
-                    x, y = self.xform(lng, lat)
-                    if (-self.padX <= x < self.nx + self.padX) and (-self.padY <= y < self.ny + self.padY):
-                        path.append((self.padX + x, self.padY + y))
-                    else:
-                        if path:
-                            odraw.line(path, fill=pathColor, width=2)
-                        path = []
-                if path:
-                    odraw.line(path, fill=pathColor, width=2)
-            for s, makeSwath in savedSwath:
-                self.drawSwath(s, sv, makeSwath)
-        return ov, sv
+                for data in restoreListOfDict(pathLatLng):
+                    log = data["LOG"]
+                    if log is not None:
+                        lat = data["GPS_ABS_LAT"]
+                        lng = data["GPS_ABS_LONG"]
+                        x, y = self.xform(lng, lat)
+                        if (-self.padX <= x < self.nx + self.padX) and (-self.padY <= y < self.ny + self.padY):
+                            logname = revlogs[log]
+                            if logname not in lognames:
+                                lognames[logname] = log
+        return lognames
 
     def makeMarkers(self, runParams, markers):
-        """Draw peaks, wedges and additional markers on a map, using the runParams to
+        """Write out peaks, wedges and additional markers on a map, using the runParams to
         select the appropriate data from the PeakFinder output"""
         peaksByAmpl = []
         peaks = []
         anyPeaks = False
         anyWedges = False
+        # Find set of all peak and marker colors present in this region
+        pColors = set()
+        mColors = set()
 
         for r, (analyzer, startEtm, endEtm, minAmpl, maxAmpl, path, mType, mColor, makeWedges, exclRadius) in enumerate(runParams):
             # runParams specifies parameters for each region in turn, and r is the region number
@@ -1339,18 +1301,9 @@ class SurveyorLayers(object):
             else:
                 peaks += pList
 
-        ov1, ov2 = None, None
-        # Select the markers that lie within this region
-        selMarkers = []
-        for m in markers:
-            x, y = self.xform(m.lng, m.lat)
-            if (self.minLng <= m.lng < self.maxLng) and (self.minLat <= m.lat < self.maxLat):
-                selMarkers.append((m, (x, y)))
         peaks.sort()
         # At this point we have the peaks from all runs in "peaks" sorted by rank
-        if anyPeaks or selMarkers:
-            ov1 = Image.new('RGBA', (self.nx + 2 * self.padX,
-                            self.ny + 2 * self.padY), (0, 0, 0, 0))
+        if anyPeaks:
             # Count ranked markers
             nRanked = 0
             for amp, m, region in peaks:
@@ -1364,176 +1317,73 @@ class SurveyorLayers(object):
             #
             for amp, m, region in peaks:
                 analyzer, startEtm, endEtm, minAmpl, maxAmpl, path, mType, mColor, makeWedges, exclRadius = runParams[region]
+                if mColor: pColors.add(mColor)
                 lat = m.data["GPS_ABS_LAT"]
                 lng = m.data["GPS_ABS_LONG"]
                 amp = m.data["AMPLITUDE"]
                 ch4 = m.data["CH4"]
-                x, y = self.xform(lng, lat)
-                if (-self.padX <= x < self.nx + self.padX) and (-self.padY <= y < self.ny + self.padY) and \
-                   (amp > minAmpl) and ((maxAmpl is None) or (amp <= maxAmpl)):
-                    if mType in [MT_CONC, MT_RANK]:
-                        m = extract_dictionary(m.data, ["ANALYZER", "EPOCH_TIME", "GPS_ABS_LAT", "GPS_ABS_LONG", "AMPLITUDE", "CH4", "CAR_SPEED", "WIND_N", "WIND_E", "WIND_DIR_SDEV"])
-                        if mType == MT_CONC:
-                            size = (self.ny / 1000.0) * amp ** 0.25    # Make these depend on number of pixels in the image
-                            msg = "%.1f" % ch4
-                        elif mType == MT_RANK:
-                            size = (self.ny / 1000.0)
-                            if (self.minLng <= lng < self.maxLng) and (self.minLat <= lat < self.maxLat):
-                                msg = "%d" % rank
-                                rank -= 1
-                            else:
-                                msg = "*"
-                        if len(msg) <= 2:
-                            fontsize = min(100, int(20.0 * size))
-                        else:
-                            fontsize = min(100, int(14.0 * size))
-                        peaksByAmpl.append((msg, m, mColor, makeWedges))
-                        color = "%02x%02x%02x" % tuple(mColor)
-                        buff = cStringIO.StringIO(GoogleMarkers().getMarker(size, fontsize, msg, color))
-                        b = Image.open(buff)
-                        bx, by = b.size
-                        box = (self.padX + x - bx // 2, self.padY + y - by)
-                        ov1 = overBackground(b, ov1, box)
-            peaksByAmpl.reverse()   # So these are  now in decreasing order of amplitude
-
-            for m, (x, y) in selMarkers:
-                size = (self.ny / 1000.0)
-                if len(m.label) <= 2:
-                    fontsize = min(100, int(20.0 * size))
-                else:
-                    fontsize = min(100, int(14.0 * size))
-                color = "%02x%02x%02x" % tuple(m.color)
-                buff = cStringIO.StringIO(
-                    GoogleMarkers().getMarker(size, fontsize, m.label, color))
-                b = Image.open(buff)
-                bx, by = b.size
-                box = (self.padX + x - bx // 2, self.padY + y - by)
-                ov1 = overBackground(b, ov1, box)
-
-        if anyWedges:
-            ov2 = Image.new('RGBA', (self.nx + 2 * self.padX,
-                            self.ny + 2 * self.padY), (0, 0, 0, 0))
-            odraw2 = ImageDraw.Draw(ov2)
-            for amp, m, region in peaks:
-                analyzer, startEtm, endEtm, minAmpl, maxAmpl, path, mType, mColor, makeWedges, exclRadius = runParams[region]
-                if not makeWedges:
-                    continue
-                lat = m.data["GPS_ABS_LAT"]
-                lng = m.data["GPS_ABS_LONG"]
                 vcar = getPossibleNaN(m.data, "CAR_SPEED", 0.0)
                 windN = getPossibleNaN(m.data, "WIND_N", 0.0)
                 windE = getPossibleNaN(m.data, "WIND_E", 0.0)
                 dstd = DTR * getPossibleNaN(m.data, "WIND_DIR_SDEV", 0.0)
                 x, y = self.xform(lng, lat)
-                if np.isfinite(dstd) and (-self.padX <= x < self.nx + self.padX) and (-self.padY <= y < self.ny + self.padY) and \
+                if (-self.padX <= x < self.nx + self.padX) and (-self.padY <= y < self.ny + self.padY) and \
                    (amp > minAmpl) and ((maxAmpl is None) or (amp <= maxAmpl)):
-                    wind = math.hypot(windN, windE)
-                    radius = 50.0
-                    speedmin = 0.5
-                    meanBearing = RTD * math.atan2(windE, windN)
-                    dstd = math.hypot(dstd, self.astd(wind, vcar))
-                    windSdev = RTD * dstd
-                    # Check for NaN
-                    if wind == wind and meanBearing == meanBearing:
-                        minBearing = meanBearing - min(2 * windSdev, 180.0)
-                        maxBearing = meanBearing + min(2 * windSdev, 180.0)
-                    else:
-                        minBearing = 0
-                        maxBearing = 360.0
-                    radius = int(radius / self.mpp)
-                    b = Image.new('RGBA', (
-                        2 * radius + 1, 2 * radius + 1), (0, 0, 0, 0))
-                    bdraw = ImageDraw.Draw(b)
-                    bdraw.pieslice(
-                        (0, 0, 2 * radius, 2 * radius), int(minBearing - 90.0), int(maxBearing - 90.0), fill=makeWedges + (128,),
-                                   outline=(0, 0, 0, 255))
-                    ov2 = overBackground(b, ov2, (
-                        self.padX + x - radius, self.padY + y - radius))
+                    if mType in [MT_CONC, MT_RANK]:
+                        m = extract_dictionary(m.data, ["ANALYZER", "EPOCH_TIME", "GPS_ABS_LAT", "GPS_ABS_LONG", "AMPLITUDE", "CH4"])
+                        if mType == MT_CONC:
+                            size = (self.ny / 1000.0) * amp ** 0.25    # Make these depend on number of pixels in the image
+                            msg = "%.1f" % ch4
+                        elif mType == MT_RANK:
+                            if (self.minLng <= lng < self.maxLng) and (self.minLat <= lat < self.maxLat):
+                                msg = "%d" % rank
+                                rank -= 1
+                            else:
+                                msg = "*"
+                        if np.isfinite(dstd):
+                            radius = 50.0
+                            wind = math.hypot(windE, windN)
+                            meanBearing = RTD * math.atan2(windE, windN)
+                            dstd = math.hypot(dstd, self.astd(wind, vcar))
+                            windSdev = RTD * dstd
+                            m["WIND_DIR_MEAN"] = meanBearing
+                            m["WIND_DIR_SDEV"] = windSdev
+                        m["TEXT"] = msg
+                        m["PEAK_COLOR"] = mColor
+                        m["WEDGE_COLOR"] = makeWedges
+                        peaksByAmpl.append(m)
+            peaksByAmpl.reverse()   # So these are  now in decreasing order of amplitude
 
-        return ov1, ov2, peaksByAmpl, selMarkers
+        # Select the markers that lie within this region
+        selMarkers = []
+        for m in markers:
+            x, y = self.xform(m.lng, m.lat)
+            if (self.minLng <= m.lng < self.maxLng) and (self.minLat <= m.lat < self.maxLat):
+                selMarkers.append(m)
+            if m.color: mColors.add(m.color)
+        return pColors, squeezeListOfDict(peaksByAmpl), mColors, selMarkers
 
     def makeSubmapMarkers(self, savedMarkers):
         """Draw peaks, wedges and additional markers on a submap, staring from the
         markers that were computed for the summary map"""
-        peaks, markers = savedMarkers
-
+        pColors = set()
+        mColors = set()
+        _, peaks, _, markers = savedMarkers
         peaksByAmpl = []
         selMarkers = []
         for m in markers:
             x, y = self.xform(m.lng, m.lat)
             if (self.minLng <= m.lng < self.maxLng) and (self.minLat <= m.lat < self.maxLat):
-                selMarkers.append((m, (x, y)))
-
-        if peaks or selMarkers:
-            ov1 = Image.new('RGBA', (self.nx + 2 * self.padX,
-                                     self.ny + 2 * self.padY), (0, 0, 0, 0))
-            ov2 = Image.new('RGBA', (self.nx + 2 * self.padX,
-                                     self.ny + 2 * self.padY), (0, 0, 0, 0))
-            for msg, data, pkColor, wedgeColor in peaks:
-                lat = data["GPS_ABS_LAT"]
-                lng = data["GPS_ABS_LONG"]
-                x, y = self.xform(lng, lat)
-                if (-self.padX <= x < self.nx + self.padX) and (-self.padY <= y < self.ny + self.padY):
-                    if "." in msg:  # This is a concentration
-                        amp = data["AMPLITUDE"]
-                        size = (self.ny / 1000.0) * amp ** 0.25
-                    else:
-                        size = (self.ny / 1000.0)
-                    if len(msg) <= 2:
-                        fontsize = min(100, int(20.0 * size))
-                    else:
-                        fontsize = min(100, int(14.0 * size))
-                    peaksByAmpl.append((msg, data, pkColor, wedgeColor))
-                    color = "%02x%02x%02x" % tuple(pkColor)
-                    buff = cStringIO.StringIO(GoogleMarkers().getMarker(size, fontsize, msg, color))
-                    b = Image.open(buff)
-                    bx, by = b.size
-                    box = (self.padX + x - bx // 2, self.padY + y - by)
-                    ov1 = overBackground(b, ov1, box)
-                    if wedgeColor:
-                        vcar = getPossibleNaN(data, "CAR_SPEED", 0.0)
-                        windN = getPossibleNaN(data, "WIND_N", 0.0)
-                        windE = getPossibleNaN(data, "WIND_E", 0.0)
-                        dstd = DTR * getPossibleNaN(data, "WIND_DIR_SDEV", 0.0)
-                        if np.isfinite(dstd):
-                            wind = math.hypot(windN, windE)
-                            radius = 50.0
-                            speedmin = 0.5
-                            meanBearing = RTD * math.atan2(windE, windN)
-                            dstd = math.hypot(dstd, self.astd(wind, vcar))
-                            windSdev = RTD * dstd
-                            # Check for NaN
-                            if wind == wind and meanBearing == meanBearing:
-                                minBearing = meanBearing - min(2 * windSdev, 180.0)
-                                maxBearing = meanBearing + min(2 * windSdev, 180.0)
-                            else:
-                                minBearing = 0
-                                maxBearing = 360.0
-                            radius = int(radius / self.mpp)
-                            b = Image.new('RGBA', (
-                                2 * radius + 1, 2 * radius + 1), (0, 0, 0, 0))
-                            bdraw = ImageDraw.Draw(b)
-                            bdraw.pieslice(
-                                (0, 0, 2 * radius, 2 * radius), int(minBearing - 90.0), int(maxBearing - 90.0), fill=wedgeColor + (128,),
-                                           outline=(0, 0, 0, 255))
-                            ov2 = overBackground(b, ov2, (
-                                self.padX + x - radius, self.padY + y - radius))
-
-            for m, (x, y) in selMarkers:
-                size = (self.ny / 1000.0)
-                if len(m.label) <= 2:
-                    fontsize = min(100, int(20.0 * size))
-                else:
-                    fontsize = min(100, int(14.0 * size))
-                color = "%02x%02x%02x" % tuple(m.color)
-                buff = cStringIO.StringIO(
-                    GoogleMarkers().getMarker(size, fontsize, m.label, color))
-                b = Image.open(buff)
-                bx, by = b.size
-                box = (self.padX + x - bx // 2, self.padY + y - by)
-                ov1 = overBackground(b, ov1, box)
-
-        return ov1, ov2, peaksByAmpl, selMarkers
+                selMarkers.append(m)
+            mColors.add(tuple(m.color))
+        for data in restoreListOfDict(peaks):
+            lat = data["GPS_ABS_LAT"]
+            lng = data["GPS_ABS_LONG"]
+            x, y = self.xform(lng, lat)
+            if (-self.padX <= x < self.nx + self.padX) and (-self.padY <= y < self.ny + self.padY):
+                peaksByAmpl.append(data)
+            pColors.add(tuple(data["PEAK_COLOR"]))
+        return pColors, squeezeListOfDict(peaksByAmpl), mColors, selMarkers
 
 
 class BubbleMaker(object):

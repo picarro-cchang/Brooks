@@ -1,1 +1,1 @@
-redgreen -m . -m ..\..\ReportGeneration -d . -t py.test -- -s -v %*
+redgreen -m . -m c:\Picarro\trunk\MobileKit\ReportGeneration -d . -t py.test -- -s -v %*

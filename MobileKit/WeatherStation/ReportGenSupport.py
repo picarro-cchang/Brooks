@@ -24,10 +24,12 @@ except:
 import math
 import numpy as np
 import os
+import re
 import Image
 import ImageDraw
 import ImageMath
 from Host.Common.SwathProcessor import process
+
 import socket
 import sys
 import threading
@@ -36,6 +38,7 @@ import traceback
 import urllib
 import urllib2
 import subprocess
+from xml.etree import cElementTree as ET
 import Host.Common.SurveyorInstStatus as sis
 from ExcelXmlReport import ExcelXmlReport
 from Host.Common.configobj import ConfigObj
@@ -524,14 +527,55 @@ class ReportBaseMap(object):
                         image, mp = GoogleMap().getPlat(self.minLng,self.maxLng,self.minLat,self.maxLat,satellite=False)             
                 else:
                     raise ValueError("Base type %s not yet supported" % self.baseType)
+                # If there is a kml key, import the facilities information into a separate layer
+                region = self.region
+                print "\n***REGIONAL INSTRUCTIONS***", self.instructions["regions"][region]
+                if "kml" in self.instructions["regions"][region]:
+                    kmlFiles = self.instructions["regions"][region]["kml"]
+                    sl = SurveyorLayers(mp.minLng,mp.minLat,mp.maxLng,mp.maxLat,mp.nx,mp.ny,mp.padX,mp.padY)
+                    segList = []
+                    widthList = []
+                    colorList = []
+                    for d in kmlFiles:
+                        fname = d["filename"]
+                        linewidth = d["linewidth"]
+                        linecolor = d["linecolor"]
+                        filter = d["filter"]
+                        segments = getKmlSegments(fname,filter)
+                        segList.append(segments)
+                        widthList.append(linewidth)
+                        colorList.append(linecolor)
+                    f = sl.makeFacilitiesLayer(segList,widthList,colorList)
+                    image = overBackground(backgroundToOverlay(f),image,None)
                 op = open(self.baseMapFname,"wb")
                 op.write(asPNG(image))
                 op.close()
                 updateStatus(self.statusFname,{"done":1, "end":time.strftime("%Y%m%dT%H%M%S")})            
             except:
                 msg = traceback.format_exc()
+                print msg
                 updateStatus(self.statusFname,{"error":msg, "end":time.strftime("%Y%m%dT%H%M%S")})
 
+def getKmlSegments(fname,filter):
+    sep = re.compile("(//?)")
+    pathEl = re.compile("(\w| )+")
+    fp = file(fname,"rb")
+    tree = ET.parse(fp)
+    fp.close()
+    root = tree.getroot()
+    # Extract the namespace from the root element tag
+    ns = re.search('(\{.*\})', root.tag).group(1)
+    # Qualify the specified filter with the namespace
+    filter = pathEl.sub(lambda x:ns+x.group(0),filter)
+    segments = []
+    for i,c in enumerate(tree.findall(filter)):
+        chain = []
+        for s in c.text.split():
+            pt = np.asarray([float(x) for x in s.split(",")])
+            chain.append(pt)
+        segments.append(chain)
+    return segments
+               
 def colorStringToRGB(colorString):
     if colorString == "None": return False
     if colorString[0] != "#": raise ValueError("Invalid color string")
@@ -1011,7 +1055,21 @@ class SurveyorLayers(object):
         
     def makeEmpty(self):
         return Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
-    
+        
+    def makeFacilitiesLayer(self,segmentsList,widthList,colorList):
+        """Use a collection of line segments (from a KML file) to draw facilities on a Google Map"""
+        ov = None
+        ov = Image.new('RGBA',(self.nx+2*self.padX,self.ny+2*self.padY),(0,0,0,0))
+        odraw = ImageDraw.Draw(ov)
+        for segments,width,color in zip(segmentsList,widthList,colorList):
+            for chain in segments:
+                path = []
+                for lng,lat,height in chain:
+                    x,y = self.xform(lng,lat)
+                    path.append((self.padX+x,self.padY+y))
+                    odraw.line(path,fill=colorStringToRGB(color),width=width)
+        return ov
+        
     def setSwathParams(self,minAmpl=0.05,minLeak=1.0,stabClass='D',nWindow=10,astdParams=dict(a=0.15*math.pi,b=0.25,c=0.0)):
         self.minAmpl = minAmpl
         self.minLeak = minLeak

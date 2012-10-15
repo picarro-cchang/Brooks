@@ -1,5 +1,6 @@
 // aa8f4d5937612cca0c6ca99663e5aa96
 {
+	"test": true,
     "regions": [
         {
             "baseType": "map",

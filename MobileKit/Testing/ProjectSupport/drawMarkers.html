@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>Draw Markers Test</title>
+</head>
+<body>
+    <div>
+        <canvas id="id_mycanvas"></canvas>
+    </div>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript">
+
+var CSTATE = {
+    marker1: null,
+    marker2: null
+};
+
+function init() {
+    var size = 1.0;
+    var c = document.getElementById("id_mycanvas");
+    var ctx = c.getContext("2d");
+    var nx = 1024;
+    var ny = 768;
+    ctx.canvas.width = nx;
+    ctx.canvas.height = ny;
+    start = new Date().getTime();
+    var done1 = false;
+    var done2 = false;
+    CSTATE.marker1 = new Marker(size,"rgba(0,255,255,0.8)","black");
+    CSTATE.marker2 = new Marker(size,"rgba(255,255,0,0.8)","black");
+    doAnnotation(nx,ny,ctx);
+}
+
+function doAnnotation(nx,ny,ctx) {
+    var nMarkers = 1000;
+    for (var i=0; i<nMarkers; i++) {
+        var x = nx*Math.random();
+        var y = ny*Math.random();
+        var marker = Math.random() < 0.5 ? CSTATE.marker1 : CSTATE.marker2;
+        var textColor = "black";
+        var font = "bold 18px sans-serif";
+        /*
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, 2*Math.PI);
+        ctx.fill();
+        */
+        marker.annotate(ctx,x,y,i,font,textColor);
+    }
+}
+
+var Marker = function(size,fillColor,strokeColor) {
+    var ctx = $('<canvas/>')[0].getContext("2d");
+    var b = 1.25 * size;
+    var t = 2.0 * size;
+    this.nx = 36 * size + 1;
+    this.ny = 65 * size + 1;
+    this.size = size;
+    var r = 0.5 * (this.nx - 1 - t);
+    var h = this.ny - 1 - t;
+    var phi = Math.PI * 45.0/180.0;
+    var theta = 0.5 * Math.PI - phi;
+    var xoff = r + 0.5 * t;
+    var yoff = r + 0.5 * t;
+    var knot = (r - b * Math.sin(phi)) / Math.cos(phi);
+    ctx.canvas.width = this.nx;
+    ctx.canvas.height = this.ny;
+    ctx.beginPath();
+    ctx.lineWidth = t;
+    ctx.strokeStyle = strokeColor;
+    ctx.fillStyle = fillColor;
+    ctx.translate(xoff, yoff);
+    ctx.moveTo(-b, (h - r));
+    ctx.quadraticCurveTo(-b, knot, -r * Math.sin(phi), r * Math.cos(phi));
+    ctx.arc(0, 0, r, Math.PI - theta, theta, false);
+    ctx.quadraticCurveTo(b, knot, b, (h - r));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    this.canvas = ctx.canvas;
+}
+
+Marker.prototype.annotate = function(ctx, x, y, msg, font, textColor) {
+    ctx.fillStyle = textColor;
+    ctx.font = font;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.drawImage(this.canvas,x-18*this.size,y-65*this.size);
+    ctx.fillText(msg,x,y-44.5*this.size);
+}
+
+$(init);
+
+</script>
+</body>
+</html>

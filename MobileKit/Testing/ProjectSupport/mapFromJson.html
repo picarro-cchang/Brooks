@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>wkhtml2pdf Test</title>
+</head>
+<body>
+    <div id="checkboxdiv" style="position:relative"></div>
+    <div id="canvasesdiv" style="position:relative"></div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript">
+
+    var CSTATE = {
+        baseData: null,
+        contexts: [],
+        markers: null,
+        maxLat: null,
+        maxLng: null,
+        mColors: null,
+        minLat: null,
+        minLng: null,
+        nx: null,
+        ny: null,
+        padX: null,
+        padY: null,
+        pColors: null,
+        peaks: null,
+        xform: null
+    };
+
+    var markers = [[[255, 255, 0]], {"keys": ["AMPLITUDE", "ANALYZER", "CH4", "EPOCH_TIME", "GPS_ABS_LAT", "GPS_ABS_LONG", "PEAK_COLOR", "TEXT", "WEDGE_COLOR", "WIND_DIR_MEAN", "WIND_DIR_SDEV"], "data": [[0.9181973733963021, "DEMO2000", 3.116933855895889, 1339341223.5407183, 36.600233466271376, -121.88975166698498, [255, 255, 0], "1", [0, 0, 255], 17.504198655654232, 24.39464768323227], [0.2255887145007578, "DEMO2000", 2.372940730690341, 1339339947.0569596, 36.59970587769367, -121.8896765941428, [255, 255, 0], "2", [0, 0, 255], -34.19143068256336, 35.282384837222104], [0.13236058319366784, "DEMO2000", 2.270025527145817, 1339339531.017168, 36.59893326135716, -121.88817142892418, [255, 255, 0], "3", [0, 0, 255], 62.03991504756241, 7.724689324716907], [0.11827330412659057, "DEMO2000", 2.133592380859028, 1339341162.3557048, 36.60143883135066, -121.89013741730663, [255, 255, 0], "4", [0, 0, 255], 70.00347959126255, 31.74410289704519], [0.1135819801728361, "DEMO2000", 2.2633996082041525, 1339339361.4744973, 36.5982003198789, -121.8903963040556, [255, 255, 0], "5", [0, 0, 255], 51.33813483283774, 18.481761644312527], [0.10820927531311658, "DEMO2000", 2.320608729997559, 1339339632.5307178, 36.59939702470572, -121.89018589943164, [255, 255, 0], "6", [0, 0, 255], 10.866893016283687, 16.36297244079309], [0.09969233787606532, "DEMO2000", 2.2336179827707996, 1339339607.3210986, 36.59881261842219, -121.89027576983366, [255, 255, 0], "7", [0, 0, 255], 16.483964466225515, 20.93112597705777], [0.09216967934856761, "DEMO2000", 2.1244107868930375, 1339345085.4867644, 36.599372719923636, -121.89091280487207, [255, 255, 0], "8", [0, 0, 255], -39.00218891164973, 57.34806204010948], [0.08827903482579273, "DEMO2000", 2.189005280679062, 1339339549.9458113, 36.59830994966977, -121.88770714313213, [255, 255, 0], "9", [0, 0, 255], 66.23504811101894, 46.153076285793986], [0.08379339624179571, "DEMO2000", 2.1447109166041374, 1339340140.7732782, 36.60006967761484, -121.88873061854405, [255, 255, 0], "10", [0, 0, 255], 66.16474949326577, 11.96224845883659], [0.08279419052419505, "DEMO2000", 2.347621528953117, 1339339422.3750122, 36.59991296627468, -121.88811756004657, [255, 255, 0], "11", [0, 0, 255], 55.5719864611399, 19.30528234627646], [0.08178666711066383, "DEMO2000", 2.118609758779184, 1339339563.8956099, 36.598309289826744, -121.88852777398279, [255, 255, 0], "12", [0, 0, 255], -29.35267562901522, 22.477152832407345], [0.08156763283367867, "DEMO2000", 2.3004658998830725, 1339340021.3591123, 36.60102272796318, -121.88985932872431, [255, 255, 0], "13", [0, 0, 255], 16.03362665288072, 10.792952440429225], [0.07508003601102352, "DEMO2000", 2.1110817985895163, 1339339581.4608254, 36.59848477711566, -121.88961233032067, [255, 255, 0], "14", [0, 0, 255], -5.239252201935735, 20.83350304118299], [0.0737884940504966, "DEMO2000", 2.273854006292083, 1339340015.024205, 36.60071642407563, -121.88992129635365, [255, 255, 0], "15", [0, 0, 255], 12.819378546993766, 13.498101272484769], [0.07069692163058426, "DEMO2000", 2.230696318501189, 1339339479.6432219, 36.59775129092466, -121.88826656845563, [255, 255, 0], "*", [0, 0, 255], -22.840397149111514, 33.290128510103514], [0.0686252045747685, "DEMO2000", 2.223666434170629, 1339339503.295873, 36.59835008437838, -121.88913010466229, [255, 255, 0], "16", [0, 0, 255], 46.267091425024496, 16.285954004081177], [0.06531199017964262, "DEMO2000", 2.347991335123299, 1339339425.2177024, 36.59986921172461, -121.88784377498976, [255, 255, 0], "17", [0, 0, 255], 57.087788624057794, 14.797060070840322], [0.05353684075468206, "DEMO2000", 2.4030786107042488, 1339339394.9275014, 36.59996519563406, -121.89005396084316, [255, 255, 0], "18", [0, 0, 255], 17.492171675940796, 7.742491381500898]]}, [], []];
+
+    function init() {
+        var layer = 0;
+        $.getJSON("baseData.0.json",function(baseData) {
+            CSTATE.baseData = baseData;
+            var regionParams = CSTATE.baseData[0];
+            console.log(regionParams);
+            for (var i=0; i<CSTATE.baseData[1].length; i++) {
+                baseParams = CSTATE.baseData[1][i];
+                var ip = baseParams[0];
+                var mp = baseParams[1];
+                CSTATE.minLng = mp[0];
+                CSTATE.minLat = mp[1];
+                CSTATE.maxLng = mp[2];
+                CSTATE.maxLat = mp[3];
+                CSTATE.nx = mp[4];
+                CSTATE.ny = mp[5];
+                CSTATE.padX = mp[6];
+                CSTATE.padY = mp[7];
+                CSTATE.xform = function (lng, lat) {
+                    var x = Math.round(CSTATE.nx * (lng - CSTATE.minLng) / (CSTATE.maxLng - CSTATE.minLng));
+                    var y = Math.round(CSTATE.ny * (lat - CSTATE.minLat) / (CSTATE.maxLat - CSTATE.minLat));
+                    return [x,y];
+                };
+                var image = new Image();
+                var maptype = ip.satellite ? "satellite" : "map";
+                var params = { center: ip.meanLat.toFixed(6) + "," + ip.meanLng.toFixed(6),
+                               zoom: ip.zoom, size: ip.mx + "x" + ip.my, scale: ip.scale,
+                               maptype: maptype, sensor: false };
+                var url = 'http://maps.googleapis.com/maps/api/staticmap?' + $.param(params);
+                image.src = url;
+                $(image).data("maptype",maptype);
+                $(image).data("layer",++layer);
+                image.onload = function () {
+                    var ctx = document.createElement("canvas").getContext("2d");
+                    ctx.canvas.height = this.height;
+                    ctx.canvas.width = this.width;
+                    ctx.drawImage(this,0,0);
+                    addLayer(ctx.canvas,[CSTATE.padX, CSTATE.padY],$(this).data("layer"),$(this).data("maptype"));
+                };
+            }
+            $.getJSON("markers.json",function(markers) {
+                var pColors = markers[0];
+                var peaks = markers[1];
+                var mColors = markers[2];
+                var markers = markers[3];
+                // Get the peaks in reverse rank order so they overlay correctly
+                var canvas = document.createElement("canvas");
+                canvas.height = CSTATE.ny + 2 * CSTATE.padY;
+                canvas.width  = CSTATE.nx + 2 * CSTATE.padX;
+                var ctx = canvas.getContext("2d");
+
+                // Create the yellow face
+                ctx.strokeStyle = "#000000";
+                ctx.fillStyle = "#FFFF00";
+                ctx.beginPath();
+                ctx.arc(100,100,50,0,Math.PI*2,true);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.fill();
+                addLayer(ctx.canvas,[0,0],++layer,"sun");
+
+                for (var i=peaks.data.length-1; i>=0; i--) {
+                    var peakMsg = peaks.data[i][peaks.keys.indexOf("TEXT")];
+                    var lat = peaks.data[i][peaks.keys.indexOf("GPS_ABS_LAT")];
+                    var lng = peaks.data[i][peaks.keys.indexOf("GPS_ABS_LONG")];
+                    var peakColor = peaks.data[i][peaks.keys.indexOf("PEAK_COLOR")];
+                    var xy = CSTATE.xform(lng, lat);
+                    var x = xy[0], y = xy[1];
+
+                    console.log(peakMsg);
+                    console.log(lat);
+                    console.log(lng);
+                    console.log(peakColor);
+                    console.log("\n");
+                }
+            });
+        })
+    }
+
+    function addLayer(source, padding, layer, caption) {
+        // Add the image as a new layer in the collection of canvases which make up the
+        //  composite map
+        // Create the checkbox and canvas for this image in the DOM
+
+
+        // Make sure the checkboxes are in order of layer number by inserting them appropriately
+        var elem = '<input id="id_check' + layer +'" type="checkbox" checked="checked">' + caption +'</input>';
+        var added = false;
+        $("#checkboxdiv").children().each(function(index) {
+            if (layer < $(this).data("layer")) {
+                $(this).before(elem);
+                added = true;
+                return false;
+            }
+        });
+        if (!added) $("#checkboxdiv").append(elem);
+
+        $("#canvasesdiv").append('<canvas id="id_layer' + layer +
+                                 '" style="z-index:' + layer +
+                                 '; position:absolute; left:0px; top:0px;"></canvas>');
+        $("#id_check" + layer).data("layer", layer);
+        $("#id_layer" + layer).data("layer", layer);
+        // Make checkbox toggle visibility of layer
+        $("#id_check" + layer).click(function() {
+            var $this = $(this);
+            var layer = $this.data("layer");
+            if ($this.is(":checked")) $("#id_layer" + layer).show();
+            else $("#id_layer" + layer).hide();
+        });
+        var ctx = $("#id_layer"+layer)[0].getContext("2d");
+        CSTATE.contexts.push(ctx);
+        ctx.canvas.width = source.width + 2 * padding[0];
+        ctx.canvas.height = source.height + 2 * padding[1];
+        ctx.drawImage(source, padding[0], padding[1]);
+    }
+
+    var Marker = function(size,fillColor,strokeColor) {
+        var ctx = document.createElement("canvas").getContext("2d");
+        var b = 1.25 * size;
+        var t = 2.0 * size;
+        this.nx = 36 * size + 1;
+        this.ny = 65 * size + 1;
+        this.size = size;
+        var r = 0.5 * (this.nx - 1 - t);
+        var h = this.ny - 1 - t;
+        var phi = Math.PI * 45.0/180.0;
+        var theta = 0.5 * Math.PI - phi;
+        var xoff = r + 0.5 * t;
+        var yoff = r + 0.5 * t;
+        var knot = (r - b * Math.sin(phi)) / Math.cos(phi);
+        ctx.canvas.width = this.nx;
+        ctx.canvas.height = this.ny;
+        ctx.beginPath();
+        ctx.lineWidth = t;
+        ctx.strokeStyle = strokeColor;
+        ctx.fillStyle = fillColor;
+        ctx.translate(xoff, yoff);
+        ctx.moveTo(-b, (h - r));
+        ctx.quadraticCurveTo(-b, knot, -r * Math.sin(phi), r * Math.cos(phi));
+        ctx.arc(0, 0, r, Math.PI - theta, theta, false);
+        ctx.quadraticCurveTo(b, knot, b, (h - r));
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        this.canvas = ctx.canvas;
+    }
+
+    Marker.prototype.annotate = function(ctx, x, y, msg, font, textColor) {
+        ctx.fillStyle = textColor;
+        ctx.font = font;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.drawImage(this.canvas,x-18*this.size,y-65*this.size);
+        ctx.fillText(msg,x,y-44.5*this.size);
+    }
+
+    $(init);
+</script>
+</body>
+</html>

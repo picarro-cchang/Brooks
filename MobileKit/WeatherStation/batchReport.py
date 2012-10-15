@@ -27,6 +27,7 @@ class ReportApiService(object):
         print "Not implemented"
         
     def get(self, svc, ver, rsc, qryparms_obj):
+        info = {}
         waitForRetryCtr = 0
         waitForRetry = True
         while True:
@@ -95,9 +96,8 @@ def main():
     # reportApi.identity = "85490338d7412a6d31e99ef58bce5de6"
     # reportApi.psys = "APITEST"
     # reportApi.rprocs = '["ReportGen"]'
-    reportApi.debug = True
+    reportApi.debug = False # True
     
-    # instructions = r'C:\Picarro\Eclipse\Report Generation\instructions_20120726T002728.json'
     if len(sys.argv) >= 2:
         instructions = sys.argv[1]
     else:
@@ -131,7 +131,8 @@ def main():
     
     ###
     qryparms = { 'qry': 'remove', 'ticket': ticket }
-    print raiseOnError(reportApi.get("gdu", "1.0", "ReportGen", qryparms))
+    raiseOnError(reportApi.get("gdu", "1.0", "ReportGen", qryparms))
+    # print raiseOnError(reportApi.get("gdu", "1.0", "ReportGen", qryparms))
 
     qryparms = { 'qry': 'getReportStatus', 'ticket': ticket }
     raiseOnError(reportApi.get("gdu", "1.0", "ReportGen", qryparms))

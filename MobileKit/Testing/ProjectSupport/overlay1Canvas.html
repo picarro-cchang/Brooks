@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>Canvas Layers Test</title>
+</head>
+<div id="canvasesdiv" style="position:relative">
+    <canvas id="layer1" style="position:absolute; left:0px; top:0px;" height="1000px" width="1000px" >
+    </canvas>
+</div>
+<script type="text/javascript">
+var ctx1;
+var base = new Image();
+var wedges = new Image();
+var peaks = new Image();
+var path = new Image();
+var swath = new Image();
+
+function init() {
+    layer1 = document.getElementById("layer1");
+    ctx1 = layer1.getContext("2d");
+    setInterval(drawAll, 20);
+}
+
+function drawAll() {
+    base.src = "222064d8db5f0b4e42adbfcde7707e1f/map.0.png";
+    ctx1.clearRect(0,0,base.width,base.height);
+    ctx1.canvas.width = base.width;
+    ctx1.canvas.height = base.height;
+    ctx1.drawImage(base,0,0);
+    path.src = "222064d8db5f0b4e42adbfcde7707e1f/path.0.png";
+    ctx1.drawImage(path,0,0);
+    swath.src = "222064d8db5f0b4e42adbfcde7707e1f/swath.0.png";
+    ctx1.drawImage(swath,0,0);
+    wedges.src = "222064d8db5f0b4e42adbfcde7707e1f/wedges.0.png";
+    ctx1.drawImage(wedges,0,0);
+    peaks.src = "222064d8db5f0b4e42adbfcde7707e1f/peaks.0.png";
+    ctx1.drawImage(peaks,0,0);
+}
+
+init();
+</script>
+</html>

@@ -1,0 +1,169 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>Draw Markers Test</title>
+</head>
+<body>
+    <div>
+        <canvas id="id_gcanvas"></canvas>
+    </div>
+    <div>
+        <canvas id="id_mycanvas"></canvas>
+    </div>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript">
+
+var CSTATE = {
+    baseData: null,
+    contexts: [],
+    images: [],
+    maxLat: null,
+    maxLng: null,
+    minLat: null,
+    minLng: null,
+    nx: null,
+    ny: null,
+    padX: null,
+    padY: null,
+    peaks: null,
+    selMarkers: null,
+    xform: null
+};
+
+function init() {
+    var size = 2.0;
+    var image = new Image();
+    var params = { chst: "d_map_spin", chld:size + "|0|00FFFF|36|b|75" };
+    var url = 'http://chart.apis.google.com/chart?' + $.param(params);
+    var c = document.getElementById("id_gcanvas");
+    var ctx = c.getContext("2d");
+    image.src = url;
+
+    $(image).data("context", ctx);
+    $(image).load(function () {
+        var $this = $(this)[0];
+        var ctx = $(this).data("context");
+        ctx.canvas.width = $this.width;
+        ctx.canvas.height = $this.height;
+        ctx.drawImage($this, 0, 0);
+        console.log("Width = " + $this.width + " Height = " + $this.height);
+    });
+    var m = document.getElementById("id_mycanvas");
+    image = new Image();
+    image.src = makeMarker(1.0,"rgba(0,0,0,255)","black","88","bold 20px sans-serif","white");
+    c = document.getElementById("id_mycanvas");
+    ctx = c.getContext("2d");
+    $(image).data("context", ctx);
+    $(image).load(function () {
+        var $this = $(this)[0];
+        var ctx = $(this).data("context");
+        ctx.canvas.width = $this.width;
+        ctx.canvas.height = $this.height;
+        ctx.drawImage($this, 0, 0);
+        console.log("Width = " + $this.width + " Height = " + $this.height);
+    });
+}
+
+function makeMarkerCirc(size,c) {
+    var ctx = c.getContext("2d");
+    var b = 1.5;
+    var t = 2;
+    var nx = 36 * size + 1;
+    var ny = 65 * size + 1;
+    var r = 0.5*(nx - 1 - t);
+    var h = ny - 1 - t;
+    var R = 0.5*(b * b + h * h - 2 * r * h) / (r - b);
+    var theta = Math.atan((h - r) / (R + b));
+    var xoff = r + 0.5*t;
+    var yoff = r + 0.5*t;
+    c.width = nx;
+    c.height = ny;
+    ctx.beginPath();
+    ctx.lineWidth = t;
+    ctx.strokeStyle = "black";
+    ctx.fillStyle = "#00FFFF";
+    ctx.translate(xoff, yoff);
+    ctx.arc(-(b + R), (h - r), R, 0, -theta, true);
+    ctx.arc(0, 0, r, Math.PI - theta, theta, false);
+    ctx.arc((b + R), (h - r), R, Math.PI + theta, Math.PI, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+}
+
+function makeMarkerOnCtx(size,c,color,msg,fontSize,textColor) {
+    var ctx = c.getContext("2d");
+    var b = 1.25 * size;
+    var t = 2.0 * size;
+    var nx = 36 * size + 1;
+    var ny = 65 * size + 1;
+    var r = 0.5 * (nx - 1 - t);
+    var h = ny - 1 - t;
+    var phi = Math.PI * 45.0/180.0;
+    var theta = 0.5 * Math.PI - phi;
+    var xoff = r + 0.5 * t;
+    var yoff = r + 0.5 * t;
+    var knot = (r - b * Math.sin(phi)) / Math.cos(phi);
+    c.width = nx;
+    c.height = ny;
+    ctx.beginPath();
+    ctx.lineWidth = t;
+    ctx.strokeStyle = "black";
+    ctx.fillStyle = color;
+    ctx.translate(xoff, yoff);
+    ctx.moveTo(-b, (h - r));
+    ctx.quadraticCurveTo(-b, knot, -r * Math.sin(phi), r * Math.cos(phi));
+    ctx.arc(0, 0, r, Math.PI - theta, theta, false);
+    ctx.quadraticCurveTo(b, knot, b, (h - r));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "black";
+    ctx.font = "bold " + fontSize + "px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(msg,0,2.5*size);
+}
+
+function makeMarker(size,fillColor,strokeColor,msg,font,textColor) {
+    var ctx = $('<canvas/>')[0].getContext("2d");
+    var b = 1.25 * size;
+    var t = 2.0 * size;
+    var nx = 36 * size + 1;
+    var ny = 65 * size + 1;
+    var r = 0.5 * (nx - 1 - t);
+    var h = ny - 1 - t;
+    var phi = Math.PI * 45.0/180.0;
+    var theta = 0.5 * Math.PI - phi;
+    var xoff = r + 0.5 * t;
+    var yoff = r + 0.5 * t;
+    var knot = (r - b * Math.sin(phi)) / Math.cos(phi);
+    ctx.canvas.width = nx;
+    ctx.canvas.height = ny;
+    ctx.beginPath();
+    ctx.lineWidth = t;
+    ctx.strokeStyle = strokeColor;
+    ctx.fillStyle = fillColor;
+    ctx.translate(xoff, yoff);
+    ctx.moveTo(-b, (h - r));
+    ctx.quadraticCurveTo(-b, knot, -r * Math.sin(phi), r * Math.cos(phi));
+    ctx.arc(0, 0, r, Math.PI - theta, theta, false);
+    ctx.quadraticCurveTo(b, knot, b, (h - r));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = textColor;
+    ctx.font = font;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(msg,0,2.5*size);
+    return ctx.canvas.toDataURL("image/png");
+}
+
+$(init);
+
+</script>
+</body>
+</html>

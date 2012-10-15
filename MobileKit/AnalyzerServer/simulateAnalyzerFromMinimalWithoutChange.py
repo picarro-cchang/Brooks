@@ -14,7 +14,8 @@ import datetime
 # dataFile = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120215\DAT\FCDS2003-20120215-235259Z-DataLog_User_Minimal.dat'
 # dataFile = r'C:\Picarro\Eclipse\Sending Files To P3\Example\TEST6543-20120720-204922Z-DataLog_User_Minimal.dat'
 
-dataFile = r'C:\UserData\AnalyzerServer\FDDS2012-20120730-195201Z-DataLog_User_Minimal.dat'
+dataFile = r'C:\UserData\AnalyzerServer\tests\FDDS2008-20120904-143417Z-DataLog_User_Minimal.dat'
+# liveFile = r'C:\UserData\AnalyzerServer\FDDS2008-20120904-143417Z-DataLog_User_Minimal.dat'
 liveFile = time.strftime('C:/UserData/AnalyzerServer/ZZZ-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
 
 handle = CreateFile(liveFile,GENERIC_WRITE,
@@ -24,8 +25,8 @@ if handle == INVALID_HANDLE_VALUE:
     raise RuntimeError('Cannot open live archive file %s' % liveFile)
 
 ip = open(dataFile,'r')
-nlines = 50
-wait = 5
+nlines = 3
+wait = .6
 for i,line in enumerate(ip):
     WriteFile(handle,line.replace("\n","\r\n"))
     sys.stderr.write('.')
