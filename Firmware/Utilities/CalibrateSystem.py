@@ -187,8 +187,8 @@ class CalibrateSystem(object):
             
         if tunerMean < tunerMin + rampAmpl + ditherPeakToPeak//2:
             tunerMean = tunerMin + rampAmpl + ditherPeakToPeak//2
-        if tunerMean > tunerMax + rampAmpl + ditherPeakToPeak//2:
-            tunerMean = tunerMax + rampAmpl + ditherPeakToPeak//2
+        if tunerMean > tunerMax - (rampAmpl + ditherPeakToPeak//2):
+            tunerMean = tunerMax - (rampAmpl + ditherPeakToPeak//2)
         
         msg = "Recentering tuner around %d" % (tunerMean,)
         print msg
