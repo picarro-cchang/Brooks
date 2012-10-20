@@ -1517,7 +1517,7 @@ i2cByIdent['P11_THERMISTOR_ADC'] = (24, 1, 4, 0x15)
 i2cByIdent['P3_THERMISTOR_ADC'] = (25, 1, 4, 0x24)
 i2cByIdent['P12_THERMISTOR_ADC'] = (26, 1, 4, 0x26)
 i2cByIdent['ENGINE_BOX_EEPROM'] = (27, 1, 4, 0x50)
-i2cByIdent['FLOW1_SENSOR'] = (28, 1, 4, 0x49)
+i2cByIdent['FLOW1_SENSOR'] = (28, 0, 7, 0x49)
 i2cByIdent['DAS_TEMP_SENSOR'] = (29, 0, -1, 0x4e)
 i2cByIdent['VALVE_PUMP_TEC_PORT'] = (30, 1, 4, 0x70)
 i2cByIdent['ANALOG_INTERFACE'] = (31, 0, 4, 0x10)
@@ -2729,6 +2729,10 @@ INJECT_LASER1_FINE_CURRENT = 6 # Sets fine current for laser 1
 INJECT_LASER2_FINE_CURRENT = 7 # Sets fine current for laser 2
 INJECT_LASER3_FINE_CURRENT = 8 # Sets fine current for laser 3
 INJECT_LASER4_FINE_CURRENT = 9 # Sets fine current for laser 4
+INJECT_LASER1_FINE_CURRENT_RANGE = 10 # Sets range for laser 1 fine current in automatic mode
+INJECT_LASER2_FINE_CURRENT_RANGE = 11 # Sets range for laser 2 fine current in automatic mode
+INJECT_LASER3_FINE_CURRENT_RANGE = 12 # Sets range for laser 3 fine current in automatic mode
+INJECT_LASER4_FINE_CURRENT_RANGE = 13 # Sets range for laser 4 fine current in automatic mode
 
 # Block WLMSIM Wavelength monitor simulator
 WLMSIM_OPTIONS = 0 # Options
@@ -2781,10 +2785,10 @@ FPGA_LASERLOCKER = 38 # Laser frequency locker registers
 FPGA_RDMAN = 66 # Ringdown manager registers
 FPGA_TWGEN = 91 # Tuner waveform generator
 FPGA_INJECT = 100 # Optical Injection Subsystem
-FPGA_WLMSIM = 110 # WLM Simulator
-FPGA_DYNAMICPWM_INLET = 119 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 124 # Outlet proportional valve dynamic PWM
-FPGA_SCALER = 129 # Scaler for PZT waveform
+FPGA_WLMSIM = 114 # WLM Simulator
+FPGA_DYNAMICPWM_INLET = 123 # Inlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 128 # Outlet proportional valve dynamic PWM
+FPGA_SCALER = 133 # Scaler for PZT waveform
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_CONFIG', u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
@@ -2792,7 +2796,7 @@ persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_OPTIONS', u'RDSIM_PZT_
 persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_OPTIONS', u'LASERLOCKER_ETA1_OFFSET', u'LASERLOCKER_REF1_OFFSET', u'LASERLOCKER_ETA2_OFFSET', u'LASERLOCKER_REF2_OFFSET', u'LASERLOCKER_TUNING_OFFSET', u'LASERLOCKER_WM_LOCK_WINDOW', u'LASERLOCKER_WM_INT_GAIN', u'LASERLOCKER_WM_PROP_GAIN', u'LASERLOCKER_WM_DERIV_GAIN']))
 persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION']))
 persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP']))
-persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL', u'INJECT_CONTROL2']))
+persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL', u'INJECT_CONTROL2', u'INJECT_LASER1_FINE_CURRENT_RANGE', u'INJECT_LASER2_FINE_CURRENT_RANGE', u'INJECT_LASER3_FINE_CURRENT_RANGE', u'INJECT_LASER4_FINE_CURRENT_RANGE']))
 persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_OPTIONS', u'WLMSIM_RFAC', u'WLMSIM_WFAC', u'WLMSIM_ETA1_OFFSET', u'WLMSIM_REF1_OFFSET', u'WLMSIM_ETA2_OFFSET', u'WLMSIM_REF2_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_INLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_SLOPE']))
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_OUTLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_SLOPE']))
@@ -2961,6 +2965,7 @@ __p.append(('dsp','float',LASER1_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','
 __p.append(('dsp','choices',LASER1_CURRENT_CNTRL_STATE_REGISTER,'Current Controller Mode','',[(LASER_CURRENT_CNTRL_DisabledState,"Controller Disabled"),(LASER_CURRENT_CNTRL_AutomaticState,"Automatic Control"),(LASER_CURRENT_CNTRL_SweepingState,"Continuous Sweeping"),(LASER_CURRENT_CNTRL_ManualState,"Manual Control"),],1,1))
 __p.append(('dsp','float',LASER1_MANUAL_COARSE_CURRENT_REGISTER,'Manual Coarse Current Setpoint','digU','%.0f',1,1))
 __p.append(('dsp','float',LASER1_MANUAL_FINE_CURRENT_REGISTER,'Manual Fine Current Setpoint','digU','%.0f',1,1))
+__p.append(('fpga','uint16',FPGA_INJECT+INJECT_LASER1_FINE_CURRENT_RANGE,'Laser 1 fine current range (auto mode)','digU','%d',1,1))
 __p.append(('dsp','float',LASER1_CURRENT_SWEEP_MIN_REGISTER,'Current Sweep Minimum','digU','%.0f',1,1))
 __p.append(('dsp','float',LASER1_CURRENT_SWEEP_MAX_REGISTER,'Current Sweep Maximum','digU','%.0f',1,1))
 __p.append(('dsp','float',LASER1_CURRENT_SWEEP_INCR_REGISTER,'Current Sweep Increment','digU/sample','%.1f',1,1))
@@ -2995,6 +3000,7 @@ __p.append(('dsp','float',LASER2_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','
 __p.append(('dsp','choices',LASER2_CURRENT_CNTRL_STATE_REGISTER,'Current Controller Mode','',[(LASER_CURRENT_CNTRL_DisabledState,"Controller Disabled"),(LASER_CURRENT_CNTRL_AutomaticState,"Automatic Control"),(LASER_CURRENT_CNTRL_SweepingState,"Continuous Sweeping"),(LASER_CURRENT_CNTRL_ManualState,"Manual Control"),],1,1))
 __p.append(('dsp','float',LASER2_MANUAL_COARSE_CURRENT_REGISTER,'Manual Coarse Current Setpoint','digU','%.0f',1,1))
 __p.append(('dsp','float',LASER2_MANUAL_FINE_CURRENT_REGISTER,'Manual Fine Current Setpoint','digU','%.0f',1,1))
+__p.append(('fpga','uint16',FPGA_INJECT+INJECT_LASER2_FINE_CURRENT_RANGE,'Laser 2 fine current range (auto mode)','digU','%d',1,1))
 __p.append(('dsp','float',LASER2_CURRENT_SWEEP_MIN_REGISTER,'Current Sweep Minimum','digU','%.0f',1,1))
 __p.append(('dsp','float',LASER2_CURRENT_SWEEP_MAX_REGISTER,'Current Sweep Maximum','digU','%.0f',1,1))
 __p.append(('dsp','float',LASER2_CURRENT_SWEEP_INCR_REGISTER,'Current Sweep Increment','digU/sample','%.1f',1,1))
@@ -3026,6 +3032,7 @@ __p.append(('dsp','uint32',LASER3_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','',
 __p.append(('dsp','float',LASER3_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1))
 __p.append(('dsp','float',LASER3_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1))
 __p.append(('dsp','float',LASER3_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1))
+__p.append(('fpga','uint16',FPGA_INJECT+INJECT_LASER3_FINE_CURRENT_RANGE,'Laser 3 fine current range (auto mode)','digU','%d',1,1))
 __p.append(('dsp','choices',LASER3_CURRENT_CNTRL_STATE_REGISTER,'Current Controller Mode','',[(LASER_CURRENT_CNTRL_DisabledState,"Controller Disabled"),(LASER_CURRENT_CNTRL_AutomaticState,"Automatic Control"),(LASER_CURRENT_CNTRL_SweepingState,"Continuous Sweeping"),(LASER_CURRENT_CNTRL_ManualState,"Manual Control"),],1,1))
 __p.append(('dsp','float',LASER3_MANUAL_COARSE_CURRENT_REGISTER,'Manual Coarse Current Setpoint','digU','%.0f',1,1))
 __p.append(('dsp','float',LASER3_MANUAL_FINE_CURRENT_REGISTER,'Manual Fine Current Setpoint','digU','%.0f',1,1))
@@ -3060,6 +3067,7 @@ __p.append(('dsp','uint32',LASER4_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','',
 __p.append(('dsp','float',LASER4_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1))
 __p.append(('dsp','float',LASER4_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1))
 __p.append(('dsp','float',LASER4_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1))
+__p.append(('fpga','uint16',FPGA_INJECT+INJECT_LASER4_FINE_CURRENT_RANGE,'Laser 4 fine current range (auto mode)','digU','%d',1,1))
 __p.append(('dsp','choices',LASER4_CURRENT_CNTRL_STATE_REGISTER,'Current Controller Mode','',[(LASER_CURRENT_CNTRL_DisabledState,"Controller Disabled"),(LASER_CURRENT_CNTRL_AutomaticState,"Automatic Control"),(LASER_CURRENT_CNTRL_SweepingState,"Continuous Sweeping"),(LASER_CURRENT_CNTRL_ManualState,"Manual Control"),],1,1))
 __p.append(('dsp','float',LASER4_MANUAL_COARSE_CURRENT_REGISTER,'Manual Coarse Current Setpoint','digU','%.0f',1,1))
 __p.append(('dsp','float',LASER4_MANUAL_FINE_CURRENT_REGISTER,'Manual Fine Current Setpoint','digU','%.0f',1,1))

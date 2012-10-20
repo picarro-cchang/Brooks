@@ -78,6 +78,7 @@
             <register>LASER1_CURRENT_CNTRL_STATE_REGISTER</register>
             <register>LASER1_MANUAL_COARSE_CURRENT_REGISTER</register>
             <register>LASER1_MANUAL_FINE_CURRENT_REGISTER</register>
+            <fpga_register offset="FPGA_INJECT">LASER1_FINE_CURRENT_RANGE</fpga_register>
             <register>LASER1_CURRENT_SWEEP_MIN_REGISTER</register>
             <register>LASER1_CURRENT_SWEEP_MAX_REGISTER</register>
             <register>LASER1_CURRENT_SWEEP_INCR_REGISTER</register>
@@ -109,6 +110,7 @@
             <register>LASER2_CURRENT_CNTRL_STATE_REGISTER</register>
             <register>LASER2_MANUAL_COARSE_CURRENT_REGISTER</register>
             <register>LASER2_MANUAL_FINE_CURRENT_REGISTER</register>
+            <fpga_register offset="FPGA_INJECT">LASER2_FINE_CURRENT_RANGE</fpga_register>
             <register>LASER2_CURRENT_SWEEP_MIN_REGISTER</register>
             <register>LASER2_CURRENT_SWEEP_MAX_REGISTER</register>
             <register>LASER2_CURRENT_SWEEP_INCR_REGISTER</register>
@@ -137,6 +139,7 @@
             <register>LASER3_TEC_PRBS_AMPLITUDE_REGISTER</register>
             <register>LASER3_TEC_PRBS_MEAN_REGISTER</register>
             <register>LASER3_MANUAL_TEC_REGISTER</register>
+            <fpga_register offset="FPGA_INJECT">LASER3_FINE_CURRENT_RANGE</fpga_register>
             <register>LASER3_CURRENT_CNTRL_STATE_REGISTER</register>
             <register>LASER3_MANUAL_COARSE_CURRENT_REGISTER</register>
             <register>LASER3_MANUAL_FINE_CURRENT_REGISTER</register>
@@ -168,6 +171,7 @@
             <register>LASER4_TEC_PRBS_AMPLITUDE_REGISTER</register>
             <register>LASER4_TEC_PRBS_MEAN_REGISTER</register>
             <register>LASER4_MANUAL_TEC_REGISTER</register>
+            <fpga_register offset="FPGA_INJECT">LASER4_FINE_CURRENT_RANGE</fpga_register>
             <register>LASER4_CURRENT_CNTRL_STATE_REGISTER</register>
             <register>LASER4_MANUAL_COARSE_CURRENT_REGISTER</register>
             <register>LASER4_MANUAL_FINE_CURRENT_REGISTER</register>
