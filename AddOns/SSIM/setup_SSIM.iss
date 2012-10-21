@@ -14,7 +14,7 @@ OutputDir=.
 Name: "G2101i_CBDS"; Description: "Isotopic CO2"; Types: g2101i; Flags: fixed
 Name: "G2101i_CFFDS"; Description: "Isotopic CO2 with CH4 correction"; Types: g2101i; Flags: fixed
 Name: "G2132i"; Description: "Isotopic CH4"; Types: g2132i; Flags: fixed
-Name: "G2201i"; Description: "Isotopic CO2 and isotopic CH4"; Types: g2201-i; Flags: fixed
+Name: "G2201i"; Description: "Isotopic CO2 and isotopic CH4"; Types: g2201i; Flags: fixed
 
 [Types]
 Name: "g2101i"; Description: "G2101-i"
