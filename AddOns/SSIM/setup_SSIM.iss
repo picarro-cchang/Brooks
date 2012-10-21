@@ -22,21 +22,21 @@ Name: "g2132i"; Description: "G2132-i"
 Name: "g2201i"; Description: "G2201-i"
 
 [Files]
-Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_CBDS; DestDir: {app}\AddOns\SSIM; Flags: replacessameversion; Components: G2101i_CBDS
-Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_CFFDS; DestDir: {app}\AddOns\SSIM; Flags: replacessameversion; Components: G2101i_CFFDS
-Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_RT_G2101-i.ini; DestDir: {app}\AddOns\SSIM; Flags: replacessameversion; Components: G2101i_CBDS G2101i_CFFDS
-Source: {#sandboxDir}\trunk\AddOns\SSIM\CoordinatorLauncher_SSIM_G2101-i.ini; DestDir: {app}\AddOns\SSIM; Flags: replacessameversion; Components: G2101i_CBDS G2101i_CFFDS
+Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_CBDS; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2101i_CBDS
+Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_CFFDS; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2101i_CFFDS
+Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_RT_G2101-i.ini; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2101i_CBDS G2101i_CFFDS
+Source: {#sandboxDir}\trunk\AddOns\SSIM\CoordinatorLauncher_SSIM_G2101-i.ini; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2101i_CBDS G2101i_CFFDS
 
-Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_FCDS; DestDir: {app}\AddOns\SSIM; Flags: replacessameversion; Components: G2132i
-Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_RT_G2132-i.ini; DestDir: {app}\AddOns\SSIM; Flags: replacessameversion; Components: G2132i
-Source: {#sandboxDir}\trunk\AddOns\SSIM\CoordinatorLauncher_SSIM_G2132-i; DestDir: {app}\AddOns\SSIM; Flags: replacessameversion; Components: G2132i
+Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_FCDS; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2132i
+Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_RT_G2132-i.ini; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2132i
+Source: {#sandboxDir}\trunk\AddOns\SSIM\CoordinatorLauncher_SSIM_G2132-i; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2132i
 
 
-Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_CFIDS; DestDir: {app}\AddOns\SSIM; Flags: replacessameversion; Components: G2201i
-Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_RT_G2201-i.ini; DestDir: {app}\AddOns\SSIM; Flags: replacessameversion; Components: G2201i
-Source: {#sandboxDir}\trunk\AddOns\SSIM\CoordinatorLauncher_SSIM_G2201-i; DestDir: {app}\AddOns\SSIM; Flags: replacessameversion; Components: G2201i
+Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_CFIDS; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2201i
+Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_RT_G2201-i.ini; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2201i
+Source: {#sandboxDir}\trunk\AddOns\SSIM\CoordinatorLauncher_SSIM_G2201-i; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2201i
 
-Source: "{#sandboxDir}\trunk\AddOns\SSIM\Small_Sample_Isotope_Module_Manual Rev 7-30-12_Draft.pdf"; DestDir: {app}\AddOns\SSIM; Flags: replacessameversion
+Source: "{#sandboxDir}\trunk\AddOns\SSIM\Small_Sample_Isotope_Module_Manual Rev 7-30-12_Draft.pdf"; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion
 
 [Icons]
 Name: "{userdesktop}\G2101-i Coordinator Launcher"; Filename: {app}\HostExe\CoordinatorLauncher.exe; Parameters: -c {app}\AddOns\SSIM\CoordinatorLauncher_SSIM_G2101-i.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\Diagnostics_icon.ico; Components: G2101i_CBDS G2101i_CFFDS
