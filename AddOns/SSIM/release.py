@@ -136,6 +136,7 @@ def _compileInstaller(name, ver):
 
     args = [ISCC,
             "/dversion=%s" % _verAsString(ver),
+            "/dsandboxDir=%s" % SANDBOX_DIR,
             '/v9',
             "/O%s" % os.path.abspath(os.path.join(SANDBOX_DIR, 'Installers')),
             'setup_SSIM.iss']
