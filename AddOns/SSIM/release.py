@@ -12,6 +12,7 @@ import pprint
 import optparse
 import subprocess
 import re
+import shutil
 import os.path
 
 import jinja2
