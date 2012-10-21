@@ -1,0 +1,588 @@
+#
+# Auto-generated on:
+
+#
+
+[UserEditableParams]
+# User inputs
+# (0) Actual delta value of the standard
+# (1) The number of samples taken after measurement of each standard.
+num_disp_params = 0
+0 = "standardDelta", "Standard Delta Value", "-40.0"
+1 = "standard12CO2", "Standard 12CO2 Value", "0"
+2 = "sampleMPV", "Multi-Port Valve: 1=Use 16PortDistributionManifold; 2=Don't Use 16PortDistributionManifold", "2"
+3 = "numSamples", "If using Multi-Port Valve: Number of Sample Ports (between 1 and 8)", "1"
+4 = "repeatedMeas", "Number of Repeats per Sample (between 0 and 5)", "1"
+5 = "repeatedStd", "Number of Repeats of Standard (between 0 and 5)", "1"
+6 = "standardMode", "Standard Mode: 1=Between Each Sample Port; 2=Beginning and End", "1"
+7 = "measurementMode", "Measurement Mode: 1=One Time; 2=Continuous Loop", "2"
+8 = "measurementSpeed", "Measurement Speed: 1=Standard; 2=Fast", "1"
+9 = "sampleLoading", "Sample Loading: 1=Manual; 2=Automatic", "2"
+10 = "diluteSample", "Sample Dilution: 1=No Dilution; 2=Dilute Sample with ZA", "1"
+
+[Mode]
+inject_mode=automatic
+
+[Files]
+output = "C:\IsotopicData\SSIM"
+log = "C:\IsotopicData\SSIM"
+
+[Output]
+{% for col in analyzer.columns %}
+{{ col[0] }} = "{{ col[1] }}", {{ col[2] }}
+{% endfor %}
+
+[PostProcessing]
+type = deltaCorr
+output = C:\IsotopicData\Corrected\
+
+[Setup]
+initial = StateInitConfig
+final = StateDone
+error = StateError
+
+[StateInitConfig]
+action = """
+standardDelta = float(editParamDict["standardDelta"])
+standard12CO2 = float(editParamDict["standard12CO2"])
+numSamples = max(1, min(8, int(editParamDict["numSamples"])))
+repeatedMeas = max(0, min(5, int(editParamDict["repeatedMeas"])))
+repeatedStd = max(0, min(5, int(editParamDict["repeatedStd"])))
+standardMode = editParamDict["standardMode"]
+measurementMode = editParamDict["measurementMode"]
+measurementSpeed = editParamDict["measurementSpeed"]
+sampleMPV = editParamDict["sampleMPV"]
+sampleLoading = editParamDict["sampleLoading"]
+diluteSample = editParamDict["diluteSample"]
+
+if standardMode not in ["1", "2"]:
+    standardMode = "1"
+    # in between samples
+if measurementMode not in ["1", "2"]:
+    measurementMode = "2"
+    # continuous loop
+if measurementSpeed not in ["1", "2"]:
+    measurementSpeed = "1"
+    # standard time
+if sampleMPV not in ["1", "2"]:
+    sampleMPV = "1"
+    # use MPV
+if sampleLoading not in ["1", "2"]:
+    sampleLoading = "2"
+    # automatic
+if diluteSample not in ["1", "2"]:
+    diluteSample = "1"
+    # pure sample
+
+currSampleNum = 1
+numMeasCompleted = 0
+numStdCompleted = 0
+
+# Set some initial flags
+sampleBagHooked = False
+sampleValveOpen = False
+t = 0
+# sample -> InjectValveMask = 6
+# standard -> InjectValveMask = 22
+if repeatedStd > 0:
+    InjectValveMask = 22
+else:
+    InjectValveMask = 6
+lastStd = False
+
+evacuateTime = 20
+stepTimeA = 5
+stepTimeB = 20
+stepTimeC = 3
+sampleInjectTime = 8
+if measurementSpeed == "1":
+    stabilizeTime = 180
+    measurementTime = 480
+if measurementSpeed == "2":
+    stabilizeTime = 180
+    measurementTime = 180
+
+# evacuateTime: Evacuation time for each port position
+# stepTimeA: Time delay in the end of state A after reaching flush pressure
+# stepTimeB: Time delay in the end of state B after reaching evacuate pressure (or the lowest cavity pressure)
+# sampleInjectTime: Time to inject sample (or standard) into the sample loop
+# stabilizeTime: Time to stabilize the sample inside the cavity before taking measurement
+# measurementTime: Time to run measurement
+
+timeFormat = "%m/%d/%y %H:%M:%S" # Middle-endian, starting with month (USA standard)
+#timeFormat = "%d/%m/%y %H:%M:%S" # Gregorian little-endian, starting with day
+
+# Define pressure setpoints
+regularPressure = 140
+
+setMeasBuffer("{{ analyzer.measBuffer.analysis }}",
+              [
+               {% for col in analyzer.measBuffer.columns %}
+               "{{ col[1] }}"{% if not loop.last %},{% endif %}
+               {% endfor %}
+              ],
+              50)
+clearMeasBuffer()
+
+GUI.setStatusText("")
+
+if sampleMPV == "1":
+    # COM2 for rotary valve (RS-232)
+    rotValve = None
+    try:
+        # Use COM1 for now
+        #rotValve = SerIntrf(0)
+        rotValve = SerIntrf(1)
+        rotValve.open()
+        errorCodeFailSend = 128
+    except Exception, err:
+        logFunc(err)
+        logFunc("Multi-port valve NOT enabled correctly.\n")
+        if rotValve:
+            try:
+                rotValve.close()
+            except:
+                pass
+            rotValve = None
+        raise Exception, "Multi-port valve NOT enabled correctly.\n"
+
+    def readValvePos():
+        try:
+            rotValve.sendString("CP")
+            cp = rotValve.getLine()
+            currPos = cp.split("= ")[-1].strip()
+            logFunc("Current multi-port valve position is %s\n" % currPos)
+            return currPos
+        except:
+            raise Exception, "Multi-port valve NOT enabled correctly.\n"
+
+    def moveRotValve(targetPos):
+        timeOut = 40
+        startTime = time.time()
+        if rotValve:
+            currPos = readValvePos()
+            while currPos != targetPos:
+                if (time.time() - startTime) < timeOut:
+                    try:
+                        logFunc("Multi-port valve: Go to position: %2s\n" % targetPos)
+                        rotValve.sendString("GO%s" % targetPos)
+                        setRotValveMask(targetPos)
+                        sleep(3)
+                        currPos = readValvePos()
+                    except:
+                        logFunc("Multi-port valve: Failed to send valve position command\n")
+                        setRotValveMask(errorCodeFailSend)
+                        sleep(1)
+                else:
+                    logFunc("Error: Can't drive multi-port valve to desired port\n")
+                    break
+        else:
+            logFunc("Multi-port valve NOT enabled correctly.\n")
+
+    # Try to communicate with rotary valve
+    readValvePos()
+
+
+skipPressureCheck()
+
+disableInstMgrAutoRestartFlow()
+# Definte the pressure and inlet valve characteristics
+setMaxCavityPressureRate(10)
+setInletValveMaxChange(500)
+setInletValveGains(80, 1)
+setValveMinDac("outlet", 0)
+setValveMinDac("inlet", 0)
+# Get inlet and outlet max DAC
+inletValveMaxDac = getValveMinMaxDac("inlet")["max"]
+outletValveMaxDac = getValveMinMaxDac("outlet")["max"]
+
+if sampleMPV == "2" and numSamples > 1:
+    GUI.popWarning("You have indicated you are not using the 16 Port Distribution Manifold. Please restart the coordinator and either choose to activate the 16 Port Distribution Manifold or enter 1 for the number of sample ports. Thank You.", "Invalid Entry")
+    NEXT = "StateDone"
+
+# Close all the solenoid valves at the start-up
+else:
+    setValveMask(0)
+    logFunc("\nState A1 starts...\n")
+    NEXT = "StateA1"
+"""
+
+[StatePauseOrGo]
+action="""
+# Resume the coordinator operation after user follows the instruction and clicks "resume"
+if runningFlag:
+    currTime = time.time()
+    if not sampleBagHooked:
+        sampleBagHooked = True
+        logFunc("\nState A2 starts...\n")
+        NEXT = "StateA2"
+    elif not sampleValveOpen:
+        sampleValveOpen = True
+        logFunc("\nState A4 starts...\n")
+        NEXT = "StateA4"
+else:
+    sleep(1)
+    pauseDur = time.time() - pauseStartTime
+    if pauseDur > 43200:
+        NEXT = "StateDone"
+    else:
+        NEXT = "StatePauseOrGo"
+"""
+
+[StateA1]
+action = """
+# Set valve configuration for initial start-up (only v4 open) and user to hook up sample bags
+# Pump out the SSIM
+setValveMask(8)
+logFunc("PLEASE HOOK UP ALL SAMPLE BAGS WITH VALVE CLOSED AND SELECT \"RESUME\" UNDER \"CONTROL\" TO CONTINUE...\n")
+pauseStartTime = time.time()
+pause()
+NEXT = "StatePauseOrGo"
+"""
+
+[StateA2]
+action = """
+# Evacuate each port (1-16)
+# Pump out the 16PDM
+setValveMask(10)
+if sampleMPV == "1":
+    #for port in range(1,17):
+    numSamples2 = min(17, 2*numSamples + 2)
+    for port in range(1,numSamples2):
+        moveRotValve(str(port))
+        logFunc("Evacuating port position %d\n" % port)
+        sleep(evacuateTime)
+    moveRotValve("1")
+if sampleMPV == "2":
+    sleep(evacuateTime)
+    #evacuate standard pipe
+    setValveMask(26)
+    sleep(10)
+
+logFunc("\nState A3 starts...\n")
+NEXT = "StateA3"
+"""
+
+[StateA3]
+action = """
+# Ask user to open sample bag valves
+setValveMask(8)
+logFunc("PLEASE OPEN ALL THE SAMPLE BAG VALVES AND SELECT \"RESUME\" UNDER \"CONTROL\" TO CONTINUE...\n")
+pauseStartTime = time.time()
+pause()
+NEXT = "StatePauseOrGo"
+"""
+
+[StateA4]
+action = """
+# Alternate flow ZA through cavity & sample loop and pumping down sample loop
+# Total time: 3 mins
+setValveMask(8)
+sleep(stepTimeB)
+setValveMask(5)
+sleep(stepTimeB)
+setValveMask(8)
+sleep(stepTimeB)
+setValveMask(5)
+sleep(3*stepTimeB)
+
+logFunc("\nState B starts...\n")
+NEXT = "StateB"
+"""
+
+[StateB]
+action = """
+# Pump sample loop and sample pipe
+if sampleMPV == "1":
+    setValveMask(10)
+    sleep(2*stepTimeB)
+    # only use with MPV port, since it will occur while on odd valves, otherwise samples will be drained.
+if sampleMPV == "2":
+    setValveMask(8)
+    sleep(2*stepTimeB)
+
+setValveMask(8)
+sleep(3)
+
+logFunc("\nState C starts...\n")
+NEXT = "StateC"
+"""
+
+[StateC]
+action = """
+if sampleMPV == "1":
+    logFunc("Preparing to turn rotary valve. InjectValveMask = %s\n" % InjectValveMask)
+    # Turn the rotary valve if measuring sample
+    if InjectValveMask == 6:
+        moveRotValve(str(2*currSampleNum))
+logFunc("\nState D starts...\n")
+NEXT = "StateD"
+"""
+
+[StateD]
+action = """
+# Inject sample or standard into gas loop
+sleep(2)
+setValveMask(InjectValveMask)
+if InjectValveMask == 6:
+    logFunc("\nInjecting sample into sample loop\n")
+elif InjectValveMask == 22:
+    logFunc("\nInjecting standard into sample loop\n")
+sleep(sampleInjectTime)
+
+logFunc("\nState E starts...\n")
+NEXT = "StateE"
+"""
+
+[StateE]
+action = """
+# Stabilize the gas inside cavity until measurement starts
+# Close I/O valves
+# setValveControlMode(0)
+
+if InjectValveMask == 6 and diluteSample == "2":
+    # Dilute the sample for 3 seconds with ZA
+    logFunc("Diluting sample with Zero Air\n")
+    setValveMask(1)
+    sleep(stepTimeC)
+
+setValveMask(4)
+
+startTime = time.time()
+runTime = time.time()-startTime
+printInterval = stabilizeTime/6.0
+logFunc("%.1f seconds before measurement...\n" % stabilizeTime)
+while runTime < stabilizeTime:
+    sleep(printInterval)
+    runTime = time.time()-startTime
+    if stabilizeTime > runTime:
+        logFunc("%.1f seconds before measurement...\n" % (stabilizeTime - runTime))
+
+timeMark = time.time()
+stopMeasTime = timeMark + measurementTime
+timeCount = 0
+concBuffer = {
+{% for col in analyzer.measBuffer.columns %}
+    "{{ col[0] }}": []{% if not loop.last %},{% endif %}
+{% endfor %}
+}
+concBuffer["Time"] = []
+clearMeasBuffer()
+logFunc("\nRunning measurement...\n")
+NEXT = "StateMeasurement"
+"""
+
+[StateMeasurement]
+action = """
+# Take measurement during measurement period
+currTime = time.time()
+if currTime - timeMark >= 30:
+    timeCount += 1
+    logFunc("Remaining time of measurement = %.1f seconds...\n" % (measurementTime-timeCount*30.0) )
+    timeMark = currTime
+
+if currTime < stopMeasTime:
+    results = measGetBufferFirst()
+    if not results:
+        sleep(1.0)
+        NEXT="StateMeasurement"
+    else:
+        #logFunc("%s\n" % results.keys())
+        {% for col in analyzer.measBuffer.columns %}
+        concBuffer["{{ col[0] }}"].append(results["{{ col[1] }}"])
+        {% endfor %}
+        concBuffer["Time"].append(results["measTime"])
+        NEXT="StateMeasurement"
+else:
+    logFunc("\nFinish measurement...\n")
+    NEXT = "StatePostMeasurement"
+"""
+
+[StatePostMeasurement]
+action = """
+# Report measurement on the coordinator GUI and log file.
+
+# Color the pulse to red
+startTime = concBuffer["Time"][0]
+endTime = concBuffer["Time"][-1]
+setLineMarkerColor("red", startTime)
+setLineMarkerColor(None, endTime)
+
+results = {}
+{% for col in analyzer.columns -%}
+{% if col[3] == 'True' %}
+results["{{ col[0] }}"] = mean(concBuffer["{{
+  analyzer.measBuffer.columns[col[5]][0] }}"])
+{% elif col[4] == 'True' %}
+results["{{ col[0] }}"] = std(concBuffer["{{
+  analyzer.measBuffer.columns[col[5]][0] }}"])
+{% endif %}
+{%- endfor %}
+
+if InjectValveMask == 6:
+    results["sampleBagNum"] = currSampleNum
+
+if InjectValveMask == 22:
+    results["actualDeltaStandard"] = standardDelta
+    results["actual12CO2Standard"] = standard12CO2
+    results["sampleBagNum"] = 0
+
+if sampleMPV == "1":
+    results["valPos"] = readValvePos()
+
+results["resultTime"] = strftime(timeFormat, localtime())
+results["meanTime"] = mean(concBuffer["Time"])
+fileDataFunc(results)
+
+NEXT = "StateSampleOrStandard"
+"""
+
+[StateSampleOrStandard]
+action = """
+# Determine if sample or standard should be taken in the next run,
+# and turn to the correct port to evacuate the cavity.
+# sample -> InjectValveMask = 6
+# standard -> InjectValveMask = 22
+
+logFunc("currSampleNum = %s, numSamples = %s\n" % (currSampleNum, numSamples))
+if InjectValveMask == 6:
+    # just ran a sample measurement
+    logFunc("Sample measurement completed (numMeasCompleted = %s)\n" % numMeasCompleted)
+    numMeasCompleted += 1
+
+    if numMeasCompleted < repeatedMeas:
+        # do next repeat of the sample
+        logFunc("Do next sample repeat\n")
+        NEXT = "StateEvacuateAtTheEnd"
+    else:
+        # current sample completed
+        logFunc("Current sample repeats completed\n")
+        currSampleNum += 1
+        numMeasCompleted = 0
+
+        if standardMode == "1" and repeatedStd > 0:
+            # run standard between samples
+            logFunc("Running standard between samples\n")
+            InjectValveMask = 22
+        else:
+            logFunc("Do next sample measurement\n")
+            InjectValveMask = 6
+
+        NEXT = "StateEvacuateAtTheEnd"
+
+else:
+    # just ran a standard measurement
+    logFunc("Standard measurement completed (numStdCompleted = %s)\n" % numStdCompleted)
+    numStdCompleted += 1
+
+    if numStdCompleted < repeatedStd:
+        # do next repeat of standard
+        logFunc("Do next standard repeat\n")
+        NEXT = "StateEvacuateAtTheEnd"
+    else:
+        logFunc("Standard repeats completed\n")
+        if lastStd:
+            logFunc("Last standard completed (standardMode=2)\n")
+            currSampleNum += 1
+        # If we don't want to run any samples, don't try!
+        if repeatedMeas == 0:
+            InjectValveMask = 22
+        else:
+            InjectValveMask = 6
+        numStdCompleted = 0
+        NEXT = "StateEvacuateAtTheEnd"
+
+if currSampleNum > numSamples:
+    # We have finished all of our samples. If we are in standard mode
+    # 2 then we need to do one more standard run.  Otherwise if
+    # measurement mode is 1 then we are completely done and if
+    # measurement mode is 2 then we need to restart from the
+    # beginning.
+    if standardMode == "2" and not lastStd and repeatedStd > 0:
+        logFunc("Begin last standard repeats (standardMode=2)\n")
+        # We don't want to access illegal ports!
+        currSampleNum -= 1
+        lastStd = True
+        InjectValveMask = 22
+        NEXT = "StateEvacuateAtTheEnd"
+
+    elif measurementMode == "1":
+        logFunc("\nFinished. Please close CRDS Coordinator.\n")
+        NEXT = "StateDone"
+
+    elif measurementMode == "2":
+        logFunc("\nStarting from the first sample again.\n")
+        # Start everything over again
+        lastStd = False
+        numMeasCompleted = 0
+        numStdCompleted = 0
+        currSampleNum = 1
+
+        if standardMode == "1" and repeatedStd > 0:
+            logFunc("(Restart with standard)\n")
+            # We want to restart on the standard
+            InjectValveMask = 22
+        else:
+            logFunc("(Restart with sample)\n")
+            # Already ran the standard, so start with sample
+            InjectValveMask = 6
+
+        NEXT = "StateEvacuateAtTheEnd"
+"""
+
+[StateEvacuateAtTheEnd]
+action = """
+if sampleMPV == "1":
+    logFunc("Preparing to turn rotary valve: currSampleNum = %s" % currSampleNum)
+    # Turn the rotary valve to the position before the the next measured sample
+    moveRotValve(str(2*currSampleNum-1))
+# Evacuate the SSIM chamber
+logFunc("\nEvacuating the SSIM...\n")
+setValveMinDac("inlet", 0) #
+setMaxCavityPressureRate(10) #
+setInletValveMaxChange(500) #
+currOutletDac = getValveDacValues()["outletDacValue"]
+# Manual valve control
+#setValveControlMode(3)
+#outletIncSteps = arange(currOutletDac, outletValveMaxDac, 5000.0)
+#outletIncSteps = concatenate((outletIncSteps, array([outletValveMaxDac-500])))
+#for outletDac in outletIncSteps:
+#    setValveDacValue("outlet", outletDac)
+sleep(5)
+# Set some initial flags (again)
+sampleBagHooked = False
+sampleValveOpen = False
+if sampleLoading == "1" and sampleMPV == "2":
+        logFunc("\nReady for the next measurement...\n")
+        logFunc("\nState A1 starts...\n")
+        NEXT = "StateA1"
+else:
+    logFunc("\nReady for the next measurement...\n")
+    logFunc("\nState A4 starts...\n")
+    NEXT = "StateA4"
+"""
+
+[StateDone]
+action="""
+setValveMask(0)
+if sampleMPV == "1":
+    if rotValve:
+        try:
+            moveRotValve("1")
+            rotValve.close()
+            logFunc("\nMove multi-port valve to position 1 and close connection.\n")
+        except:
+            pass
+        rotValve = None
+setMaxCavityPressureRate(0.5) #
+setInletValveMaxChange(500) #
+resumePressureCheck()
+enableInstMgrAutoRestartFlow()
+logFunc("Done!")
+"""
+
+[StateError]
+action="""
+logFunc("Error %s in state %s\n" % (ERROR_MSG,ERROR_STATE))
+NEXT = "StateDone"
+"""
