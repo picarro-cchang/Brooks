@@ -57,18 +57,18 @@ def makeInstaller(opts):
 
     if opts.version:
         m = re.compile(r'(\d+)\.(\d+)\.(\d+)').search(opts.version)
-        VERSION['major'] = m.group(1)
-        VERSION['minor'] = m.group(2)
-        VERSION['revision'] = m.group(3)
-        VERSION['build'] = '0'
+        version['major'] = m.group(1)
+        version['minor'] = m.group(2)
+        version['revision'] = m.group(3)
+        version['build'] = '0'
     else:
         # Bump the build number if we are continuing with the previous version.
-        VERSION['build'] = "%s" % (int(VERSION['build']) + 1)
+        version['build'] = "%s" % (int(version['build']) + 1)
 
-    pprint.pprint(VERSION)
+    pprint.pprint(version)
 
-    with open(VERSION_METADATA, 'w') as ver:
-        json.dump(VERSION, ver)
+    with open(VERSION_METADATA, 'w') as verFp:
+        json.dump(version, verFp)
 
     # Commit and push new version metadata
     retCode = subprocess.call(['bzr.exe',
