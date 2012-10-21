@@ -91,6 +91,7 @@ def makeInstaller(opts):
 
     _branchFromRepo(REPO)
     _generateCoordinators(REPO, meta)
+    _compileInstaller(REPO, version)
 
 def _branchFromRepo(name):
     """
@@ -122,7 +123,7 @@ def _generateCoordinators(name, meta):
             with open(COORDINATOR_FILE_FORMAT % k, 'w') as coordFp:
                 coordFp.write(t.render(analyzer=meta[k]))
 
-def _compileInstaller(ver):
+def _compileInstaller(name, ver):
     """
     Builds the installer and stores it in the 'Installer' subdirectory.
     """
@@ -137,12 +138,19 @@ def _compileInstaller(ver):
 
     print subprocess.list2cmdline(args)
 
-    retCode = subprocess.call(args)
+    with OS.chdir(os.path.join(SANDBOX_DIR, name, 'AddOns', 'SSIM')):
+        retCode = subprocess.call(args)
 
-    if retCode != 0:
-        print 'Compile failed!'
-        sys.exit(retCode)
+        if retCode != 0:
+            print 'Compile failed!'
+            sys.exit(retCode)
 
+def _verAsString(ver):
+    """
+    Convert a version dict into a human-readable string.
+    """
+
+    return "%(major)s.%(minor)s.%(revision)s-%(build)s" % ver
 
 def main():
     usage = """
