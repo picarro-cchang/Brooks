@@ -26,7 +26,11 @@ SANDBOX_DIR = 'c:/temp/sandbox'
 COORDINATOR_FILE_FORMAT = 'Coordinator_SSIM_%s.ini'
 COORDINATOR_METADATA = 'meta.json'
 
-ISCC = 'c:/program files/Inno Setup 5/ISCC.exe'
+if 'ProgramFiles(x86)' in os.environ:
+    ISCC = os.environ['ProgramFiles(x86)']
+else:
+    ISCC = os.environ['ProgramFiles']
+ISCC = os.path.join(ISCC, 'Inno Setup 5', 'ISCC.exe')
 
 VERSION_METADATA = 'version.json'
 
