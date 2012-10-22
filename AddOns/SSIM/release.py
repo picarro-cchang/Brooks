@@ -185,7 +185,7 @@ def _copyInstaller(ver):
     shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
                     os.path.join(targetDir, 'Archive', installer))
     shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
-                    os.path.join(targetDir, 'Archive', installerCurrent))
+                    os.path.join(targetDir, 'Current', installerCurrent))
 
 
 def main():
