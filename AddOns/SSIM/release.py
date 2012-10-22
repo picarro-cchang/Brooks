@@ -37,6 +37,8 @@ VERSION_METADATA = 'version.json'
 REPO_BASE = 's:/repository/software'
 REPO = 'trunk'
 
+DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer'
+
 
 def makeInstaller(opts):
     """
@@ -96,6 +98,10 @@ def makeInstaller(opts):
     _branchFromRepo(REPO)
     _generateCoordinators(REPO, meta)
     _compileInstaller(REPO, version)
+
+    if opts.createTag:
+        _tagRepository(REPO, version)
+        _copyInstaller(version)
 
 def _branchFromRepo(name):
     """
@@ -157,6 +163,31 @@ def _verAsString(ver):
 
     return "%(major)s.%(minor)s.%(revision)s-%(build)s" % ver
 
+def _tagRepository(name, ver):
+    """
+    Tags the repository
+    """
+
+    subprocess.call(['bzr.exe', 'tag', "--directory=%s" %
+                     os.path.join(REPO_BASE, name), _verAsString(ver)])
+
+def _copyInstaller(ver):
+    """
+    Move the installer to its distribution location where manufacturing can
+    find it.
+    """
+
+    installerCurrent = 'setup_SSIM.exe'
+    installer = "setup_SSIM_%s.exe" % _verAsString(ver)
+
+    targetDir = os.path.join(DISTRIB_BASE, 'AddOns')
+
+    shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
+                    os.path.join(targetDir, 'Archive', installer))
+    shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
+                    os.path.join(targetDir, 'Archive', installerCurrent))
+
+
 def main():
     usage = """
 %prog [options]
@@ -169,6 +200,9 @@ Builds a new release of the SSIM AddOn installer.
                       default=None, help=('Specify a version for this release '
                                           'and tag it as such in the '
                                           'repository.'))
+    parser.add_option('--skip-tag', dest='createTag', action='store_false',
+                      default=True, help=('Skip creating a tag, even if a '
+                                          'version # is specified.'))
 
     options, _ = parser.parse_args()
 
