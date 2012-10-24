@@ -24,6 +24,7 @@ import Queue
 import socket
 import time
 import threading
+import traceback
 from configobj import ConfigObj
 from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
@@ -448,7 +449,8 @@ class CalibrateSystem(object):
             RDFreqConv.setHotBoxCalParam("AUTOCAL","CAVITY_FSR",cavityFSR)
             RDFreqConv.setHotBoxCalParam("AUTOCAL","CAVITY_FSR_VLASER_%d" % self.vLaserNum,cavityFSR)
         except Exception,e:
-            print>>self.op,"ERROR: %s" % e
+            print>>self.op, "ERROR: %s" % e
+            print>>self.op, traceback.format_exc()
             raise
         finally:
             RDFreqConv.updateWarmBoxCal()

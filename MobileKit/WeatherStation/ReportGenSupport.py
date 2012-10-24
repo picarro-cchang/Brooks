@@ -703,8 +703,6 @@ class ReportPathMap(object):
                                 sl.setSwathParams(minAmpl=minAmpl,stabClass=stabClass)
                             pMap,sMap,lognames = sl.makePathAndSwath(analyzer,startEtm,endEtm,showPath,showSwath,report,self.timeout)
                             for n in lognames:
-                                if n in self.paramsByLogname:
-                                    raise ValueError("Log %s appears in more than one run" % n)
                                 self.paramsByLogname[n] = dict(params).copy()
                             if showPath: pathMaps.append(pMap)
                             if showSwath: swathMaps.append(sMap)
@@ -890,7 +888,7 @@ class ReportMarkerMap(object):
                             exclRadius = params["exclRadius"]
                             runParams.append(RunParams(analyzer,startEtm,endEtm,minAmpl,maxAmpl,
                                                 path,mType,mColor,showWedges,exclRadius))
-                im1,im2,pkDict,selMarkers = sl.makeMarkers(runParams,markers)
+                im1,im2,pkDict,selMarkers,lognames = sl.makeMarkers(runParams,markers)
                 # Now write out the maps
                 if im1 is not None:
                     im1 = backgroundToOverlay(im1)
@@ -1199,6 +1197,7 @@ class SurveyorLayers(object):
         peaks = []
         anyPeaks = False
         anyWedges = False
+        lognames = set()
         
         for r,(analyzer,startEtm,endEtm,minAmpl,maxAmpl,path,mType,mColor,makeWedges,exclRadius) in enumerate(runParams):
             # runParams specifies parameters for each region in turn, and r is the region number
@@ -1267,19 +1266,22 @@ class SurveyorLayers(object):
             # Count ranked markers
             nRanked = 0
             for amp,m,region in peaks:
-                mType = runParams[region].mType
+                analyzer,startEtm,endEtm,minAmpl,maxAmpl,path,mType,mColor,makeWedges,exclRadius = runParams[region]
                 if mType == MT_RANK:
                     lat = m.data["GPS_ABS_LAT"]
                     lng = m.data["GPS_ABS_LONG"]
-                    if (self.minLng<=lng<self.maxLng) and (self.minLat<=lat<self.maxLat) and (amp>minAmpl) and ((maxAmpl is None) or (amp<=maxAmpl)): nRanked += 1
+                    amp = m.data["AMPLITUDE"]
+                    if (self.minLng<=lng<self.maxLng) and (self.minLat<=lat<self.maxLat) and (amp>minAmpl) and ((maxAmpl is None) or (amp<=maxAmpl)): 
+                        nRanked += 1
             rank = nRanked
             #
             for amp,m,region in peaks:
                 analyzer,startEtm,endEtm,minAmpl,maxAmpl,path,mType,mColor,makeWedges,exclRadius = runParams[region]
                 lat = m.data["GPS_ABS_LAT"]
                 lng = m.data["GPS_ABS_LONG"]
-                amp = m.data["AMPLITUDE"]
+                assert amp == m.data["AMPLITUDE"]
                 ch4 = m.data["CH4"]
+                lognames.add(m.data.get("LOGNAME",""))
                 x,y = self.xform(lng,lat)
                 if (-self.padX<=x<self.nx+self.padX) and (-self.padY<=y<self.ny+self.padY) and \
                    (amp>minAmpl) and ((maxAmpl is None) or (amp<=maxAmpl)):
@@ -1335,6 +1337,7 @@ class SurveyorLayers(object):
                 x,y = self.xform(lng,lat)
                 if np.isfinite(dstd) and (-self.padX<=x<self.nx+self.padX) and (-self.padY<=y<self.ny+self.padY) and \
                    (amp>minAmpl) and ((maxAmpl is None) or (amp<=maxAmpl)):
+                    lognames.add(m.data.get("LOGNAME",""))
                     wind = math.hypot(windN,windE)
                     radius = 50.0; speedmin = 0.5
                     meanBearing = RTD*math.atan2(windE,windN)
@@ -1354,7 +1357,7 @@ class SurveyorLayers(object):
                                    outline=(0,0,0,255))
                     ov2 = overBackground(b,ov2,(self.padX+x-radius,self.padY+y-radius))
                    
-        return ov1, ov2, markersByRank, selMarkers
+        return ov1, ov2, markersByRank, selMarkers, lognames
 
 class BubbleMaker(object):
     def getMarker1(self,size):

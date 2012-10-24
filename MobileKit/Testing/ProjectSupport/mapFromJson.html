@@ -13,31 +13,32 @@
     var CSTATE = {
         baseData: null,
         contexts: [],
-        markers: null,
         maxLat: null,
         maxLng: null,
-        mColors: null,
         minLat: null,
         minLng: null,
+        mpp: null,
         nx: null,
         ny: null,
         padX: null,
         padY: null,
-        pColors: null,
-        peaks: null,
         xform: null
     };
 
-    var markers = [[[255, 255, 0]], {"keys": ["AMPLITUDE", "ANALYZER", "CH4", "EPOCH_TIME", "GPS_ABS_LAT", "GPS_ABS_LONG", "PEAK_COLOR", "TEXT", "WEDGE_COLOR", "WIND_DIR_MEAN", "WIND_DIR_SDEV"], "data": [[0.9181973733963021, "DEMO2000", 3.116933855895889, 1339341223.5407183, 36.600233466271376, -121.88975166698498, [255, 255, 0], "1", [0, 0, 255], 17.504198655654232, 24.39464768323227], [0.2255887145007578, "DEMO2000", 2.372940730690341, 1339339947.0569596, 36.59970587769367, -121.8896765941428, [255, 255, 0], "2", [0, 0, 255], -34.19143068256336, 35.282384837222104], [0.13236058319366784, "DEMO2000", 2.270025527145817, 1339339531.017168, 36.59893326135716, -121.88817142892418, [255, 255, 0], "3", [0, 0, 255], 62.03991504756241, 7.724689324716907], [0.11827330412659057, "DEMO2000", 2.133592380859028, 1339341162.3557048, 36.60143883135066, -121.89013741730663, [255, 255, 0], "4", [0, 0, 255], 70.00347959126255, 31.74410289704519], [0.1135819801728361, "DEMO2000", 2.2633996082041525, 1339339361.4744973, 36.5982003198789, -121.8903963040556, [255, 255, 0], "5", [0, 0, 255], 51.33813483283774, 18.481761644312527], [0.10820927531311658, "DEMO2000", 2.320608729997559, 1339339632.5307178, 36.59939702470572, -121.89018589943164, [255, 255, 0], "6", [0, 0, 255], 10.866893016283687, 16.36297244079309], [0.09969233787606532, "DEMO2000", 2.2336179827707996, 1339339607.3210986, 36.59881261842219, -121.89027576983366, [255, 255, 0], "7", [0, 0, 255], 16.483964466225515, 20.93112597705777], [0.09216967934856761, "DEMO2000", 2.1244107868930375, 1339345085.4867644, 36.599372719923636, -121.89091280487207, [255, 255, 0], "8", [0, 0, 255], -39.00218891164973, 57.34806204010948], [0.08827903482579273, "DEMO2000", 2.189005280679062, 1339339549.9458113, 36.59830994966977, -121.88770714313213, [255, 255, 0], "9", [0, 0, 255], 66.23504811101894, 46.153076285793986], [0.08379339624179571, "DEMO2000", 2.1447109166041374, 1339340140.7732782, 36.60006967761484, -121.88873061854405, [255, 255, 0], "10", [0, 0, 255], 66.16474949326577, 11.96224845883659], [0.08279419052419505, "DEMO2000", 2.347621528953117, 1339339422.3750122, 36.59991296627468, -121.88811756004657, [255, 255, 0], "11", [0, 0, 255], 55.5719864611399, 19.30528234627646], [0.08178666711066383, "DEMO2000", 2.118609758779184, 1339339563.8956099, 36.598309289826744, -121.88852777398279, [255, 255, 0], "12", [0, 0, 255], -29.35267562901522, 22.477152832407345], [0.08156763283367867, "DEMO2000", 2.3004658998830725, 1339340021.3591123, 36.60102272796318, -121.88985932872431, [255, 255, 0], "13", [0, 0, 255], 16.03362665288072, 10.792952440429225], [0.07508003601102352, "DEMO2000", 2.1110817985895163, 1339339581.4608254, 36.59848477711566, -121.88961233032067, [255, 255, 0], "14", [0, 0, 255], -5.239252201935735, 20.83350304118299], [0.0737884940504966, "DEMO2000", 2.273854006292083, 1339340015.024205, 36.60071642407563, -121.88992129635365, [255, 255, 0], "15", [0, 0, 255], 12.819378546993766, 13.498101272484769], [0.07069692163058426, "DEMO2000", 2.230696318501189, 1339339479.6432219, 36.59775129092466, -121.88826656845563, [255, 255, 0], "*", [0, 0, 255], -22.840397149111514, 33.290128510103514], [0.0686252045747685, "DEMO2000", 2.223666434170629, 1339339503.295873, 36.59835008437838, -121.88913010466229, [255, 255, 0], "16", [0, 0, 255], 46.267091425024496, 16.285954004081177], [0.06531199017964262, "DEMO2000", 2.347991335123299, 1339339425.2177024, 36.59986921172461, -121.88784377498976, [255, 255, 0], "17", [0, 0, 255], 57.087788624057794, 14.797060070840322], [0.05353684075468206, "DEMO2000", 2.4030786107042488, 1339339394.9275014, 36.59996519563406, -121.89005396084316, [255, 255, 0], "18", [0, 0, 255], 17.492171675940796, 7.742491381500898]]}, [], []];
+    var CNSNT = {
+        DTR: Math.PI/180.0,
+        RTD: 180.0/Math.PI,
+        EARTH_RADIUS: 6378100
+    }
 
     function init() {
         var layer = 0;
         $.getJSON("baseData.0.json",function(baseData) {
-            CSTATE.baseData = baseData;
-            var regionParams = CSTATE.baseData[0];
+            var regionParams = baseData[0];
             console.log(regionParams);
-            for (var i=0; i<CSTATE.baseData[1].length; i++) {
-                baseParams = CSTATE.baseData[1][i];
+            for (var i=0; i<baseData[1].length; i++) {
+                baseParams =
+                baseData[1][i];
                 var ip = baseParams[0];
                 var mp = baseParams[1];
                 CSTATE.minLng = mp[0];
@@ -50,9 +51,16 @@
                 CSTATE.padY = mp[7];
                 CSTATE.xform = function (lng, lat) {
                     var x = Math.round(CSTATE.nx * (lng - CSTATE.minLng) / (CSTATE.maxLng - CSTATE.minLng));
-                    var y = Math.round(CSTATE.ny * (lat - CSTATE.minLat) / (CSTATE.maxLat - CSTATE.minLat));
+                    var y = Math.round(CSTATE.ny * (lat - CSTATE.maxLat) / (CSTATE.minLat - CSTATE.maxLat));
                     return [x,y];
                 };
+                // Calculate meters per pixel
+                var deltaLat = CNSNT.RTD / CNSNT.EARTH_RADIUS;
+                var deltaLng = CNSNT.RTD / (CNSNT.EARTH_RADIUS * Math.cos(0.5 * (CSTATE.minLat + CSTATE.maxLat) * CNSNT.DTR));
+                var mppx = (CSTATE.maxLng - CSTATE.minLng) / (deltaLng * CSTATE.nx);
+                var mppy = (CSTATE.maxLat - CSTATE.minLat) / (deltaLat * CSTATE.ny);
+                CSTATE.mpp = 0.5 * (mppx + mppy);
+
                 var image = new Image();
                 var maptype = ip.satellite ? "satellite" : "map";
                 var params = { center: ip.meanLat.toFixed(6) + "," + ip.meanLng.toFixed(6),
@@ -70,26 +78,190 @@
                     addLayer(ctx.canvas,[CSTATE.padX, CSTATE.padY],$(this).data("layer"),$(this).data("maptype"));
                 };
             }
+
+            $.getJSON("pathData.json", function(data) {
+                var paramsByLogname = data[0];
+                var savedData = data[1];
+
+                // Draw the vehicle path
+                var ctx = document.createElement("canvas").getContext("2d");
+                ctx.canvas.height = CSTATE.ny + 2 * CSTATE.padY;
+                ctx.canvas.width  = CSTATE.nx + 2 * CSTATE.padX;
+
+                for (var i=0; i<savedData.length; i++) {
+                    var logs = savedData[i][0];
+                    var savedPath = savedData[i][1];
+                    var savedSwath = savedData[i][2];
+                    for (var j=0; j<savedPath.length; j++) {
+                        var pathLatLng = savedPath[j][0];
+                        var pathColor = savedPath[j][1];
+                        var latIndex = pathLatLng.keys.indexOf("GPS_ABS_LAT");
+                        var lngIndex = pathLatLng.keys.indexOf("GPS_ABS_LONG");
+
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = "rgba(" + pathColor[0] + "," + pathColor[1] + "," +
+                                                    pathColor[2] + "," + pathColor[3] + ")";
+                        var path = [];
+                        for (var k=0; k<pathLatLng.data.length; k++) {
+                            var lng = pathLatLng.data[k][lngIndex];
+                            var lat = pathLatLng.data[k][latIndex];
+                            var xy = CSTATE.xform(lng, lat);
+                            var x = xy[0], y = xy[1];
+                            if ( -CSTATE.padX <= x && x < CSTATE.nx+CSTATE.padX &&
+                                 -CSTATE.padY <= y && y < CSTATE.ny+CSTATE.padY ) {
+                                path.push([x,y]);
+                            }
+                            else {
+                                if (path.length > 0) {
+                                    ctx.beginPath();
+                                    ctx.moveTo(path[0][0] + CSTATE.padX, path[0][1] + CSTATE.padY);
+                                    for (var l=1; l<path.length; l++) {
+                                        ctx.lineTo(path[l][0] + CSTATE.padX, path[l][1] + CSTATE.padY);
+                                    }
+                                    ctx.stroke();
+                                    path = [];
+                                }
+                            }
+                        }
+                        if (path.length > 0) {
+                            ctx.beginPath();
+                            ctx.moveTo(path[0][0] + CSTATE.padX, path[0][1] + CSTATE.padY);
+                            for (var l=1; l<path.length; l++) {
+                                ctx.lineTo(path[l][0] + CSTATE.padX, path[l][1] + CSTATE.padY);
+                            }
+                            ctx.stroke();
+                        }
+                    }
+                }
+                addLayer(ctx.canvas,[0,0],++layer,"path");
+
+                // Draw the swath
+                var ctx = document.createElement("canvas").getContext("2d");
+                ctx.canvas.height = CSTATE.ny + 2 * CSTATE.padY;
+                ctx.canvas.width  = CSTATE.nx + 2 * CSTATE.padX;
+
+                var inMap = function (xy) {
+                    return ( -CSTATE.padX <= xy[0] && xy[0] < CSTATE.nx+CSTATE.padX &&
+                             -CSTATE.padY <= xy[1] && xy[1] < CSTATE.ny+CSTATE.padY );
+                };
+
+                for (var i=0; i<savedData.length; i++) {
+                    var logs = savedData[i][0];
+                    var savedPath = savedData[i][1];
+                    var savedSwath = savedData[i][2];
+                    for (var j=0; j<savedSwath.length; j++) {
+                        swath = savedSwath[j][0];
+                        swathColor = savedSwath[j][1];
+
+                        ctx.fillStyle = "rgba(" + swathColor[0] + "," + swathColor[1] + "," + swathColor[2] + ",0.4)";
+                        ctx.strokeStyle = "rgba(" + swathColor[0] + "," + swathColor[1] + "," + swathColor[2] + ",0.5)";
+                        ctx.lineWidth = 1;
+                        var lastLng = null, lastLat = null;
+                        var lastDeltaLng = null, lastDeltaLat = null;
+                        for (var k=0; k<swath.GPS_ABS_LAT.length; k++) {
+                            var lng = swath.GPS_ABS_LONG[k];
+                            var lat = swath.GPS_ABS_LAT[k];
+                            var deltaLng = swath.DELTA_LONG[k];
+                            var deltaLat = swath.DELTA_LAT[k];
+                            if (lastLng !== null) {
+                                var noLastView = Math.abs(lastDeltaLat) < 1e-6 && Math.abs(lastDeltaLng) < 1e-6;
+                                if (!noLastView) {
+                                    var xy1 = CSTATE.xform(lastLng + lastDeltaLng, lastLat + lastDeltaLat);
+                                    if (inMap(xy1)) {
+                                        var xy2 = CSTATE.xform(lastLng, lastLat);
+                                        if (inMap(xy2)) {
+                                            var xy3 = CSTATE.xform(lng, lat);
+                                            if (inMap(xy3)) {
+                                                var xy4 = CSTATE.xform(lng + deltaLng, lat + deltaLat);
+                                                if (inMap(xy4)) {
+                                                    ctx.beginPath();
+                                                    ctx.moveTo(CSTATE.padX + xy1[0], CSTATE.padY + xy1[1]);
+                                                    ctx.lineTo(CSTATE.padX + xy2[0], CSTATE.padY + xy2[1]);
+                                                    ctx.lineTo(CSTATE.padX + xy3[0], CSTATE.padY + xy3[1]);
+                                                    ctx.lineTo(CSTATE.padX + xy4[0], CSTATE.padY + xy4[1]);
+                                                    ctx.stroke();
+                                                    ctx.fill();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            lastLng = lng;
+                            lastLat = lat;
+                            lastDeltaLng = deltaLng;
+                            lastDeltaLat = deltaLat;
+                        }
+                    }
+                }
+                addLayer(ctx.canvas,[0,0],++layer,"swath");
+            });
+
             $.getJSON("markers.json",function(markers) {
                 var pColors = markers[0];
+                var pColor;
+                var pCanvases = {};
                 var peaks = markers[1];
                 var mColors = markers[2];
                 var markers = markers[3];
-                // Get the peaks in reverse rank order so they overlay correctly
-                var canvas = document.createElement("canvas");
-                canvas.height = CSTATE.ny + 2 * CSTATE.padY;
-                canvas.width  = CSTATE.nx + 2 * CSTATE.padX;
-                var ctx = canvas.getContext("2d");
+                var size = 1.0;
 
-                // Create the yellow face
-                ctx.strokeStyle = "#000000";
-                ctx.fillStyle = "#FFFF00";
-                ctx.beginPath();
-                ctx.arc(100,100,50,0,Math.PI*2,true);
-                ctx.closePath();
-                ctx.stroke();
-                ctx.fill();
-                addLayer(ctx.canvas,[0,0],++layer,"sun");
+                // Draw the wind wedges
+
+                var ctx = document.createElement("canvas").getContext("2d");
+                ctx.canvas.height = CSTATE.ny + 2 * CSTATE.padY;
+                ctx.canvas.width  = CSTATE.nx + 2 * CSTATE.padX;
+
+                var latIndex = peaks.keys.indexOf("GPS_ABS_LAT");
+                var lngIndex = peaks.keys.indexOf("GPS_ABS_LONG");
+                var wedgeColorIndex = peaks.keys.indexOf("WEDGE_COLOR");
+                var windDirMeanIndex = peaks.keys.indexOf("WIND_DIR_MEAN");
+                var windSdevIndex = peaks.keys.indexOf("WIND_DIR_SDEV");
+
+                for (var i=peaks.data.length-1; i>=0; i--) {
+                    var lat = peaks.data[i][latIndex];
+                    var lng = peaks.data[i][lngIndex];
+                    var wedgeColor = peaks.data[i][wedgeColorIndex];
+                    var windMean = peaks.data[i][windDirMeanIndex];
+                    var windSdev = peaks.data[i][windSdevIndex];
+                    var xy = CSTATE.xform(lng, lat);
+                    var x = xy[0], y = xy[1];
+                    if (wedgeColor) {
+                        var radius = 50.0 / CSTATE.mpp;
+                        var minBearing, maxBearing;
+                        var c = colorTuple2Hex(wedgeColor);
+                        if (typeof(windMean) === "number" && typeof(windSdev) === "number") {
+                            if (windSdev < 90.0) {
+                                var minBearing = windMean - Math.min(2*windSdev, 180.0);
+                                var maxBearing = windMean + Math.min(2*windSdev, 180.0);
+                                ctx.beginPath();
+                                ctx.moveTo(x + CSTATE.padX, y + CSTATE.padY);
+                                ctx.lineTo(x + CSTATE.padX + radius * Math.sin(CNSNT.DTR * minBearing),
+                                           y + CSTATE.padY - radius * Math.cos(CNSNT.DTR * minBearing));
+                                ctx.arc(x + CSTATE.padX, y + CSTATE.padY, radius,
+                                        CNSNT.DTR*minBearing-0.5*Math.PI, CNSNT.DTR*maxBearing-0.5*Math.PI, false);
+                                ctx.closePath();
+                                ctx.fillStyle = "rgba(" + wedgeColor[0] + "," + wedgeColor[1] + "," + wedgeColor[2] + ",0.7)";
+                                ctx.fill();
+                                continue;
+                            }
+                        }
+                        ctx.beginPath();
+                        ctx.arc(x + CSTATE.padX, y + CSTATE.padY, radius, 0.0, 2*Math.PI);
+                        ctx.fill();
+                    }
+                }
+                addLayer(ctx.canvas,[0,0],++layer,"wedges");
+
+                ctx = document.createElement("canvas").getContext("2d");
+                ctx.canvas.height = CSTATE.ny + 2 * CSTATE.padY;
+                ctx.canvas.width  = CSTATE.nx + 2 * CSTATE.padX;
+
+                // Get the peaks in reverse rank order so they overlay correctly
+                for (var i=0; i<pColors.length; i++) {
+                    var c = colorTuple2Hex(pColors[i]);
+                    pCanvases[c] = new Marker(size,"#"+c,"black");
+                }
 
                 for (var i=peaks.data.length-1; i>=0; i--) {
                     var peakMsg = peaks.data[i][peaks.keys.indexOf("TEXT")];
@@ -98,15 +270,27 @@
                     var peakColor = peaks.data[i][peaks.keys.indexOf("PEAK_COLOR")];
                     var xy = CSTATE.xform(lng, lat);
                     var x = xy[0], y = xy[1];
-
-                    console.log(peakMsg);
-                    console.log(lat);
-                    console.log(lng);
-                    console.log(peakColor);
-                    console.log("\n");
+                    if (peakColor) {
+                        var c = colorTuple2Hex(peakColor);
+                        pCanvases[c].annotate(ctx, x+CSTATE.padX, y+CSTATE.padY, peakMsg, "bold 18px sans-serif", "black");
+                    }
                 }
+                addLayer(ctx.canvas,[0,0],++layer,"peaks");
             });
         })
+    }
+
+    function dec2hex(i,nibbles) {
+        // Convert unsigned integer to hexadecimal of specified length with zero padding
+        return (i+Math.pow(2,4*nibbles)).toString(16).substr(-nibbles).toUpperCase();
+    }
+
+    function colorTuple2Hex(colors) {
+        var hexStr = [];
+        for (var i=0; i<colors.length; i++) {
+            hexStr.push(dec2hex(colors[i],2));
+        }
+        return hexStr.join("");
     }
 
     function addLayer(source, padding, layer, caption) {

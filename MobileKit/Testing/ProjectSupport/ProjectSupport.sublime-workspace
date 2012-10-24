@@ -4,6 +4,22 @@
 		"selected_items":
 		[
 			[
+				"canvas",
+				"canvases"
+			],
+			[
+				"sq",
+				"squeezeListOfDict"
+			],
+			[
+				"res",
+				"restoreListOfDict"
+			],
+			[
+				"wed",
+				"wedgeColor"
+			],
+			[
 				"ma",
 				"marker2"
 			],
@@ -172,10 +188,18 @@
 	"buffers":
 	[
 		{
-			"file": "mapFromJson.html",
+			"file": "drawMarkers.html",
 			"settings":
 			{
-				"buffer_size": 13223,
+				"buffer_size": 2643,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "drawMarkers1.html",
+			"settings":
+			{
+				"buffer_size": 2393,
 				"line_ending": "Windows"
 			}
 		},
@@ -183,7 +207,15 @@
 			"file": "/C/Picarro/trunk/MobileKit/ReportGeneration/ReportGenSupportNew.py",
 			"settings":
 			{
-				"buffer_size": 64524,
+				"buffer_size": 65284,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "/C/Picarro/trunk/MobileKit/ReportGeneration/ReportGenSupport.py",
+			"settings":
+			{
+				"buffer_size": 73732,
 				"line_ending": "Windows"
 			}
 		}
@@ -244,6 +276,7 @@
 	},
 	"file_history":
 	[
+		"/C/Picarro/trunk/MobileKit/Testing/ProjectSupport/drawMarkers2.html",
 		"/C/Picarro/trunk/MobileKit/ReportGeneration/ReportGenerator.py",
 		"/C/Picarro/trunk/MobileKit/Testing/ProjectSupport/drawMarker.html",
 		"/C/Picarro/trunk/MobileKit/Testing/ProjectSupport/drawMarkers.html",
@@ -291,6 +324,28 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"drawSwath",
+			"makePathAndSwath",
+			"mpp",
+			"xform",
+			"PEAKS:",
+			"squeezeListOfDict",
+			"PEAKS:",
+			"squeezeListOfDict",
+			"PEAKS:",
+			"squeezeListOfDict",
+			"makeMarkers",
+			"makeSubmapPath",
+			"json.load",
+			"makeSubmapMarkers",
+			"wedgeColor",
+			"TEXT",
+			"'TEXT'",
+			"makePeakReport",
+			"makeMarkers",
+			"\\",
+			"makeMarkers",
+			"listOfDict",
 			"drawSwath",
 			"pathLatLng",
 			"savedPath",
@@ -396,19 +451,7 @@
 			"test",
 			"TEST",
 			"test",
-			"Test",
-			"test",
-			"Test",
-			"test",
-			"TEST",
-			"test",
-			"Test",
-			"test",
-			"Test",
-			"TestProjectSubmission",
-			"Test",
-			"TestProjectS",
-			"#"
+			"Test"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -431,18 +474,18 @@
 			[
 				{
 					"buffer": 0,
-					"file": "mapFromJson.html",
+					"file": "drawMarkers.html",
 					"settings":
 					{
-						"buffer_size": 13223,
+						"buffer_size": 2643,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								9019,
-								9019
+								1395,
+								1396
 							]
 						],
 						"settings":
@@ -539,31 +582,25 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 2484.0,
+						"translation.y": 741.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
-				}
-			]
-		},
-		{
-			"selected": 0,
-			"sheets":
-			[
+				},
 				{
 					"buffer": 1,
-					"file": "/C/Picarro/trunk/MobileKit/ReportGeneration/ReportGenSupportNew.py",
+					"file": "drawMarkers1.html",
 					"settings":
 					{
-						"buffer_size": 64524,
+						"buffer_size": 2393,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								46200,
-								46209
+								356,
+								356
 							]
 						],
 						"settings":
@@ -655,12 +692,250 @@
 								"Ruby on Rails": "ruby"
 							},
 							"sublimelinter_wrap_find": true,
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 267.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 1,
+			"sheets":
+			[
+				{
+					"buffer": 2,
+					"file": "/C/Picarro/trunk/MobileKit/ReportGeneration/ReportGenSupportNew.py",
+					"settings":
+					{
+						"buffer_size": 65284,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								27638,
+								27642
+							]
+						],
+						"settings":
+						{
+							"annotations":
+							[
+								"TODO",
+								"README",
+								"FIXME"
+							],
+							"csslint_options":
+							{
+								"adjoining-classes": "warning",
+								"box-model": true,
+								"box-sizing": "warning",
+								"compatible-vendor-prefixes": "warning",
+								"display-property-grouping": true,
+								"duplicate-background-images": "warning",
+								"duplicate-properties": true,
+								"empty-rules": true,
+								"errors": true,
+								"fallback-colors": "warning",
+								"floats": "warning",
+								"font-faces": "warning",
+								"font-sizes": "warning",
+								"gradients": "warning",
+								"ids": "warning",
+								"import": "warning",
+								"important": "warning",
+								"known-properties": true,
+								"outline-none": "warning",
+								"overqualified-elements": "warning",
+								"qualified-headings": "warning",
+								"regex-selectors": "warning",
+								"rules-count": "warning",
+								"shorthand": "warning",
+								"star-property-hack": "warning",
+								"text-indent": "warning",
+								"underscore-property-hack": "warning",
+								"unique-headings": "warning",
+								"universal-selector": "warning",
+								"vendor-prefix": true,
+								"zero-units": "warning"
+							},
+							"gjslint_ignore":
+							[
+								110
+							],
+							"gjslint_options":
+							[
+							],
+							"javascript_linter": "jshint",
+							"jshint_options":
+							{
+								"browser": true,
+								"evil": true,
+								"regexdash": true,
+								"sub": true,
+								"trailing": true,
+								"wsh": true
+							},
+							"pep8": true,
+							"pep8_ignore":
+							[
+								"E501"
+							],
+							"perl_linter": "perlcritic",
+							"pyflakes_ignore":
+							[
+							],
+							"pyflakes_ignore_import_*": true,
+							"sublimelinter": true,
+							"sublimelinter_delay": 2,
+							"sublimelinter_disable":
+							[
+							],
+							"sublimelinter_executable_map":
+							{
+							},
+							"sublimelinter_fill_outlines": false,
+							"sublimelinter_gutter_marks": false,
+							"sublimelinter_mark_style": "outline",
+							"sublimelinter_notes": false,
+							"sublimelinter_objj_check_ascii": false,
+							"sublimelinter_popup_errors_on_save": false,
+							"sublimelinter_syntax_map":
+							{
+								"C++": "c",
+								"Python Django": "python",
+								"Ruby on Rails": "ruby"
+							},
+							"sublimelinter_wrap_find": true,
 							"syntax": "Packages/Python/Python.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
-						"translation.x": 35.0,
-						"translation.y": 22180.0,
+						"translation.x": 0.0,
+						"translation.y": 21294.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "/C/Picarro/trunk/MobileKit/ReportGeneration/ReportGenSupport.py",
+					"settings":
+					{
+						"buffer_size": 73732,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								56000,
+								56001
+							]
+						],
+						"settings":
+						{
+							"annotations":
+							[
+								"TODO",
+								"README",
+								"FIXME"
+							],
+							"csslint_options":
+							{
+								"adjoining-classes": "warning",
+								"box-model": true,
+								"box-sizing": "warning",
+								"compatible-vendor-prefixes": "warning",
+								"display-property-grouping": true,
+								"duplicate-background-images": "warning",
+								"duplicate-properties": true,
+								"empty-rules": true,
+								"errors": true,
+								"fallback-colors": "warning",
+								"floats": "warning",
+								"font-faces": "warning",
+								"font-sizes": "warning",
+								"gradients": "warning",
+								"ids": "warning",
+								"import": "warning",
+								"important": "warning",
+								"known-properties": true,
+								"outline-none": "warning",
+								"overqualified-elements": "warning",
+								"qualified-headings": "warning",
+								"regex-selectors": "warning",
+								"rules-count": "warning",
+								"shorthand": "warning",
+								"star-property-hack": "warning",
+								"text-indent": "warning",
+								"underscore-property-hack": "warning",
+								"unique-headings": "warning",
+								"universal-selector": "warning",
+								"vendor-prefix": true,
+								"zero-units": "warning"
+							},
+							"gjslint_ignore":
+							[
+								110
+							],
+							"gjslint_options":
+							[
+							],
+							"javascript_linter": "jshint",
+							"jshint_options":
+							{
+								"browser": true,
+								"evil": true,
+								"regexdash": true,
+								"sub": true,
+								"trailing": true,
+								"wsh": true
+							},
+							"pep8": true,
+							"pep8_ignore":
+							[
+								"E501"
+							],
+							"perl_linter": "perlcritic",
+							"pyflakes_ignore":
+							[
+							],
+							"pyflakes_ignore_import_*": true,
+							"sublimelinter": true,
+							"sublimelinter_delay": 2,
+							"sublimelinter_disable":
+							[
+							],
+							"sublimelinter_executable_map":
+							{
+							},
+							"sublimelinter_fill_outlines": false,
+							"sublimelinter_gutter_marks": false,
+							"sublimelinter_mark_style": "outline",
+							"sublimelinter_notes": false,
+							"sublimelinter_objj_check_ascii": false,
+							"sublimelinter_popup_errors_on_save": false,
+							"sublimelinter_syntax_map":
+							{
+								"C++": "c",
+								"Python Django": "python",
+								"Ruby on Rails": "ruby"
+							},
+							"sublimelinter_wrap_find": true,
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 59.0,
+						"translation.y": 19706.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -718,7 +993,7 @@
 		"cols":
 		[
 			0.0,
-			0.458491181993,
+			0.347300875507,
 			1.0
 		],
 		"rows":
