@@ -1354,7 +1354,7 @@ class SurveyorLayers(object):
             # Count ranked markers
             nRanked = 0
             for amp, m, region in peaks:
-                mType = runParams[region].mType
+                analyzer, startEtm, endEtm, minAmpl, maxAmpl, path, mType, mColor, makeWedges, exclRadius = runParams[region]
                 if mType == MT_RANK:
                     lat = m.data["GPS_ABS_LAT"]
                     lng = m.data["GPS_ABS_LONG"]
