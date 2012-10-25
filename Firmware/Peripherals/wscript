@@ -52,7 +52,7 @@ def getArduinoSources(ctx, ardPath):
 
 def getConfig(bld):
     cp = ConfigParser.SafeConfigParser()
-    try: cp.read('config_test.ini')
+    try: cp.read('config_c_d_characterization.ini')
     except: bld.env.fatal('config.ini missing')
 
     defaultArdInstPath = '/usr/share/arduino/hardware/arduino/cores/arduino/'
@@ -81,7 +81,7 @@ def getConfig(bld):
     else:
         configs.srcFiles = []
     if configs.srcDir:
-        configs.srcDir = configs.srcDir.split(' ,')
+        configs.srcDir = configs.srcDir.split(',')
         for srcDir in configs.srcDir:
             dirNode = bld.srcnode.find_node(srcDir)
             if not dirNode:
@@ -162,5 +162,6 @@ def build(bld):
         linkflags=['-Os', '-mmcu=%s' % config.mcu, '-lm'],
         includes=[config.ardPath + '/hardware/arduino/cores/arduino',
                   config.ardPath + '/hardware/arduino/variants/standard',
-                  config.ardPath + '/hardware/tools/avr/avr/include'] +
+                  config.ardPath + '/hardware/tools/avr/avr/include',
+                  os.path.abspath('src/common')] +
                   libIncludes)
