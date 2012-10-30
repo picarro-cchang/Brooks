@@ -123,3 +123,4 @@ MobileKit/Tests/*.pkl
 MobileKit/Tests/data/test*/
 MobileKit/Tests/htmlcov/
 MobileKit/Tests/htmlcov/
+CHANGELOG.raw
