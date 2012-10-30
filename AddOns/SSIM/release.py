@@ -169,7 +169,8 @@ def _tagRepository(name, ver):
     """
 
     subprocess.call(['bzr.exe', 'tag', "--directory=%s" %
-                     os.path.join(REPO_BASE, name), _verAsString(ver)])
+                     os.path.join(REPO_BASE, name),
+                     "ssim-%s" % _verAsString(ver)])
 
 def _copyInstaller(ver):
     """
