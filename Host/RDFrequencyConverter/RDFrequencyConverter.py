@@ -213,10 +213,15 @@ class SchemeBasedCalibrator(object):
                     #Calculate number of calibration points at each FSR, so they may be weighted properly
                     weights = self.calcWeights(cumsum(concatenate(([0],m))))
                     #Now do the actual updating of the conversion coefficients...
+                    try:
+                        maxDiff = float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_WAVENUM_DIFF"))
+                    except:
+                        maxDiff = 0.4
                     self.rdFreqConv.RPC_updateWlmCal(vLaserNum,thetaShifted,waveNumberSetpoints,weights,
                                                      float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX")),True,
                                                      float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_DEFAULT")),      
-                                                     float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_ZERO"))) 
+                                                     float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_ZERO")),
+                                                     maxDiff) 
                     self.calibrationDone[vLaserNum-1] = True
                     stdTuner = std(tunerDev)
                     stdPzt = std(pztDev)
@@ -837,12 +842,12 @@ class RDFrequencyConverter(Singleton):
             calStrIO.close()
             if fp is not None: fp.close()
 
-    def RPC_updateWlmCal(self,vLaserNum,thetaCal,waveNumbers,weights,relax=5e-3,relative=True,relaxDefault=5e-3,relaxZero=5e-5):
+    def RPC_updateWlmCal(self,vLaserNum,thetaCal,waveNumbers,weights,relax=5e-3,relative=True,relaxDefault=5e-3,relaxZero=5e-5,maxDiff=0.4):
         """Updates the wavelength monitor calibration using the information that angles specified as "thetaCal"
            map to the specified list of waveNumbers. Also relax the calibration towards the default using
            Laplacian regularization and the specified value of relaxDefault."""
         self._assertVLaserNum(vLaserNum)
-        self.freqConverter[vLaserNum-1].updateWlmCal(thetaCal,waveNumbers,weights,relax,relative,relaxDefault,relaxZero)
+        self.freqConverter[vLaserNum-1].updateWlmCal(thetaCal,waveNumbers,weights,relax,relative,relaxDefault,relaxZero,maxDiff)
         
     def RPC_uploadSchemeToDAS(self, schemeNum):
         # Upload angle scheme to DAS

@@ -723,7 +723,7 @@ class AutoCal(object):
             self.lock.release()
 
     def updateWlmCal(self,thetaCal,waveNumbers,weights=1,relax=5e-3,relative=True,
-                     relaxDefault=5e-3,relaxZero=5e-5):
+                     relaxDefault=5e-3,relaxZero=5e-5,maxDiff=0.4):
         """Update the calibration coefficients
         thetaCal      array of calibrated WLM angles
         waveNumbers   array of waveNumbers to which these angles map
@@ -735,6 +735,8 @@ class AutoCal(object):
                       Relaxation takes place with Laplacian regularization.
         relaxZero     Factor used to relax coefficients towards the original default values.
                       Relaxation is based on unfiltered deviation from the original
+        maxDiff       If any difference between the current wavenumber and the "corrected" wavenumber exceeds maxDiff,
+                       do not update the calibration
         """
         self.lock.acquire()
         try: 
@@ -743,15 +745,15 @@ class AutoCal(object):
             res = waveNumbers - currentWaveNumbers
             if relative:
                 res = res - mean(res)
+            if max(abs(res)) <= maxDiff:
+                res = res/weights
+                update = relax*bspUpdate(self.nCoeffs,x,res)
+                updatePeak = argmax(abs(update))
+                self.coeffs += update
 
-            res = res/weights
-            update = relax*bspUpdate(self.nCoeffs,x,res)
-            updatePeak = argmax(abs(update))
-            self.coeffs += update
-
-            # Apply regularization, becoming more and more aggressive if the result is non-increasing
-            self.relaxTowardsOriginal(updatePeak,relaxDefault,relaxZero)
-            # print "Maximum change from relaxation to default: %s" % (abs(self.coeffs-update).max(),)
+                # Apply regularization, becoming more and more aggressive if the result is non-increasing
+                self.relaxTowardsOriginal(updatePeak,relaxDefault,relaxZero)
+                # print "Maximum change from relaxation to default: %s" % (abs(self.coeffs-update).max(),)
 
         finally:
             self.lock.release()
