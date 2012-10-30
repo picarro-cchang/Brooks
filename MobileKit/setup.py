@@ -4,14 +4,12 @@ import py2exe
 import shutil
 import sys
 import glob
-import zmq
 
 sys.path.append("AnalyzerServer")
 sys.path.append("MobileKitSetupNew")
 sys.path.append("Utilities")
 sys.path.append("ViewServer")
 sys.path.append("WeatherStation")
-os.environ["PATH"] = os.environ["PATH"] + os.path.pathsep + os.path.split(zmq.__file__)[0]
 
 ################################################################
 # Start of a pile of special setup with the sole purpose
@@ -71,7 +69,7 @@ RemoteMobileKitSetup = Target(description = "RemoteMobileKitSetup", # used for t
                     )
 
 exclusionList = ["Tkconstants","Tkinter","tcl"]
-inclusionList = ["zmq.utils", "zmq.utils.jsonapi", "zmq.utils.strtypes"]
+inclusionList = []
 packageList = ["simplejson", "werkzeug", "jinja2", "email"]
 data_files = [(".", ["MobileKitSetupNew/LEDgreen2.ico", "MobileKitSetupNew/LEDred2.ico", "MobileKitSetupNew/MobileKitSetup.ini",
                     "MobileKitSetupNew/MobileKit_inactive.ini", "ViewServer/view.kml", "WeatherStation/platBoundaries.json", "msvcp71.dll"]),

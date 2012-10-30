@@ -1480,6 +1480,10 @@ typedef enum {
 #define INJECT_LASER2_FINE_CURRENT (7) // Sets fine current for laser 2
 #define INJECT_LASER3_FINE_CURRENT (8) // Sets fine current for laser 3
 #define INJECT_LASER4_FINE_CURRENT (9) // Sets fine current for laser 4
+#define INJECT_LASER1_FINE_CURRENT_RANGE (10) // Sets range for laser 1 fine current in automatic mode
+#define INJECT_LASER2_FINE_CURRENT_RANGE (11) // Sets range for laser 2 fine current in automatic mode
+#define INJECT_LASER3_FINE_CURRENT_RANGE (12) // Sets range for laser 3 fine current in automatic mode
+#define INJECT_LASER4_FINE_CURRENT_RANGE (13) // Sets range for laser 4 fine current in automatic mode
 
 /* Block WLMSIM Wavelength monitor simulator */
 #define WLMSIM_OPTIONS (0) // Options
@@ -1533,10 +1537,10 @@ typedef enum {
 #define FPGA_RDMAN (66) // Ringdown manager registers
 #define FPGA_TWGEN (91) // Tuner waveform generator
 #define FPGA_INJECT (100) // Optical Injection Subsystem
-#define FPGA_WLMSIM (110) // WLM Simulator
-#define FPGA_DYNAMICPWM_INLET (119) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (124) // Outlet proportional valve dynamic PWM
-#define FPGA_SCALER (129) // Scaler for PZT waveform
+#define FPGA_WLMSIM (114) // WLM Simulator
+#define FPGA_DYNAMICPWM_INLET (123) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (128) // Outlet proportional valve dynamic PWM
+#define FPGA_SCALER (133) // Scaler for PZT waveform
 
 /* Environment addresses */
 

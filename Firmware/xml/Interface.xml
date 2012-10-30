@@ -3191,7 +3191,7 @@
         <i2c ident="P12_THERMISTOR_ADC" chain="1" mux="4" address="0x26" />
         <i2c ident="ENGINE_BOX_EEPROM"  chain="1" mux="4" address="0x50" />
 
-        <i2c ident="FLOW1_SENSOR" chain="1" mux="4" address="0x49" />
+        <i2c ident="FLOW1_SENSOR" chain="0" mux="7" address="0x49" />
         <i2c ident="DAS_TEMP_SENSOR" chain="0" address="0x4E" />
         <i2c ident="VALVE_PUMP_TEC_PORT" chain="1" mux="4" address="0x70" />
         <i2c ident="ANALOG_INTERFACE" chain="0" mux="4" address="0x10" />
@@ -3883,6 +3883,22 @@
             <reg type="uint16" ident="LASER2_FINE_CURRENT" description="Sets fine current for laser 2"/>
             <reg type="uint16" ident="LASER3_FINE_CURRENT" description="Sets fine current for laser 3"/>
             <reg type="uint16" ident="LASER4_FINE_CURRENT" description="Sets fine current for laser 4"/>
+            <reg type="uint16" ident="LASER1_FINE_CURRENT_RANGE" description="Sets range for laser 1 fine current in automatic mode">
+                <save/>
+                <display format="%d" units="digU">Laser 1 fine current range (auto mode)</display>
+            </reg>
+            <reg type="uint16" ident="LASER2_FINE_CURRENT_RANGE" description="Sets range for laser 2 fine current in automatic mode">
+                <save/>
+                <display format="%d" units="digU">Laser 2 fine current range (auto mode)</display>
+            </reg>
+            <reg type="uint16" ident="LASER3_FINE_CURRENT_RANGE" description="Sets range for laser 3 fine current in automatic mode">
+                <save/>
+                <display format="%d" units="digU">Laser 3 fine current range (auto mode)</display>
+            </reg>
+            <reg type="uint16" ident="LASER4_FINE_CURRENT_RANGE" description="Sets range for laser 4 fine current in automatic mode">
+                <save/>
+                <display format="%d" units="digU">Laser 4 fine current range (auto mode)</display>
+            </reg>
         </fpga_block>
         <fpga_block ident="WLMSIM" description="Wavelength monitor simulator">
             <reg type="mask" ident="OPTIONS" description="Options" access="rw">

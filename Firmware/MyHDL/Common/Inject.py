@@ -38,6 +38,10 @@ from Host.autogen.interface import INJECT_LASER1_FINE_CURRENT
 from Host.autogen.interface import INJECT_LASER2_FINE_CURRENT
 from Host.autogen.interface import INJECT_LASER3_FINE_CURRENT
 from Host.autogen.interface import INJECT_LASER4_FINE_CURRENT
+from Host.autogen.interface import INJECT_LASER1_FINE_CURRENT_RANGE
+from Host.autogen.interface import INJECT_LASER2_FINE_CURRENT_RANGE
+from Host.autogen.interface import INJECT_LASER3_FINE_CURRENT_RANGE
+from Host.autogen.interface import INJECT_LASER4_FINE_CURRENT_RANGE
 
 from Host.autogen.interface import INJECT_CONTROL_MODE_B, INJECT_CONTROL_MODE_W
 from Host.autogen.interface import INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W
@@ -124,6 +128,10 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     LASER2_FINE_CURRENT   -- Laser 2 manual fine current DAC setting
     LASER3_FINE_CURRENT   -- Laser 3 manual fine current DAC setting
     LASER4_FINE_CURRENT   -- Laser 4 manual fine current DAC setting
+    LASER1_FINE_CURRENT_RANGE -- When set to v, limits fine current range of laser 1 from 32768-v to 32768+v
+    LASER2_FINE_CURRENT_RANGE -- When set to v, limits fine current range of laser 2 from 32768-v to 32768+v
+    LASER3_FINE_CURRENT_RANGE -- When set to v, limits fine current range of laser 3 from 32768-v to 32768+v
+    LASER4_FINE_CURRENT_RANGE -- When set to v, limits fine current range of laser 4 from 32768-v to 32768+v
 
     Fields in INJECT_CONTROL:
     INJECT_CONTROL_MODE         -- Selects manual (0) or automatic (1) mode
@@ -155,6 +163,10 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     inject_laser2_fine_current_addr = map_base + INJECT_LASER2_FINE_CURRENT
     inject_laser3_fine_current_addr = map_base + INJECT_LASER3_FINE_CURRENT
     inject_laser4_fine_current_addr = map_base + INJECT_LASER4_FINE_CURRENT
+    inject_laser1_fine_current_range_addr = map_base + INJECT_LASER1_FINE_CURRENT_RANGE
+    inject_laser2_fine_current_range_addr = map_base + INJECT_LASER2_FINE_CURRENT_RANGE
+    inject_laser3_fine_current_range_addr = map_base + INJECT_LASER3_FINE_CURRENT_RANGE
+    inject_laser4_fine_current_range_addr = map_base + INJECT_LASER4_FINE_CURRENT_RANGE
     control = Signal(intbv(0)[FPGA_REG_WIDTH:])
     control2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser1_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -165,6 +177,10 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     laser2_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser3_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser4_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser1_fine_current_range = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser2_fine_current_range = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser3_fine_current_range = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser4_fine_current_range = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     mode = Signal(LOW)
     sel  = Signal(intbv(0)[2:])
@@ -206,6 +222,10 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 laser2_fine_current.next = 0x8000
                 laser3_fine_current.next = 0x8000
                 laser4_fine_current.next = 0x8000
+                laser1_fine_current_range.next = 0x7FFF
+                laser2_fine_current_range.next = 0x7FFF
+                laser3_fine_current_range.next = 0x7FFF
+                laser4_fine_current_range.next = 0x7FFF
                 strobe_prev.next = strobe_in
                 dac_strobe.next = LOW
                 optical_switch_counter.next = 0
@@ -246,6 +266,18 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser4_fine_current_addr: # rw
                         if dsp_wr: laser4_fine_current.next = dsp_data_out
                         dsp_data_in.next = laser4_fine_current
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser1_fine_current_range_addr: # rw
+                        if dsp_wr: laser1_fine_current_range.next = dsp_data_out
+                        dsp_data_in.next = laser1_fine_current_range
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser2_fine_current_range_addr: # rw
+                        if dsp_wr: laser2_fine_current_range.next = dsp_data_out
+                        dsp_data_in.next = laser2_fine_current_range
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser3_fine_current_range_addr: # rw
+                        if dsp_wr: laser3_fine_current_range.next = dsp_data_out
+                        dsp_data_in.next = laser3_fine_current_range
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser4_fine_current_range_addr: # rw
+                        if dsp_wr: laser4_fine_current_range.next = dsp_data_out
+                        dsp_data_in.next = laser4_fine_current_range
                     else:
                         dsp_data_in.next = 0
                 else:
@@ -256,13 +288,38 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 # Store laser_fine_current input to register of selected laser in automatic mode
                 if mode:
                     if sel==0:
-                        laser1_fine_current.next = laser_fine_current_in
+                        if laser_fine_current_in > 32768 + laser1_fine_current_range:
+                            laser1_fine.next = 32768 + laser1_fine_current_range
+                        elif laser_fine_current_in < 32768 - laser1_fine_current_range:
+                            laser1_fine.next = 32768 - laser1_fine_current_range
+                        else:
+                            laser1_fine.next = laser_fine_current_in
                     elif sel==1:
-                        laser2_fine_current.next = laser_fine_current_in
+                        if laser_fine_current_in > 32768 + laser2_fine_current_range:
+                            laser2_fine.next = 32768 + laser2_fine_current_range
+                        elif laser_fine_current_in < 32768 - laser2_fine_current_range:
+                            laser2_fine.next = 32768 - laser2_fine_current_range
+                        else:
+                            laser2_fine.next = laser_fine_current_in
                     elif sel==2:
-                        laser3_fine_current.next = laser_fine_current_in
+                        if laser_fine_current_in > 32768 + laser3_fine_current_range:
+                            laser3_fine.next = 32768 + laser3_fine_current_range
+                        elif laser_fine_current_in < 32768 - laser3_fine_current_range:
+                            laser3_fine.next = 32768 - laser3_fine_current_range
+                        else:
+                            laser3_fine.next = laser_fine_current_in
                     else:
-                        laser4_fine_current.next = laser_fine_current_in
+                        if laser_fine_current_in > 32768 + laser4_fine_current_range:
+                            laser4_fine.next = 32768 + laser4_fine_current_range
+                        elif laser_fine_current_in < 32768 - laser4_fine_current_range:
+                            laser4_fine.next = 32768 - laser4_fine_current_range
+                        else:
+                            laser4_fine.next = laser_fine_current_in
+                else:
+                    laser1_fine.next = laser1_fine_current
+                    laser2_fine.next = laser2_fine_current
+                    laser3_fine.next = laser3_fine_current
+                    laser4_fine.next = laser4_fine_current
                 
                 # State machine for generating 2-way optical switch signals                
                 if optSwitchState == OptSwitchState.IDLE:
@@ -360,25 +417,19 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         
         if s == 0:
             sel_coarse_current_out.next = laser1_coarse_current
-            sel_fine_current_out.next = laser1_fine_current
+            sel_fine_current_out.next = laser1_fine
         elif s == 1:
             sel_coarse_current_out.next = laser2_coarse_current
-            sel_fine_current_out.next = laser2_fine_current
+            sel_fine_current_out.next = laser2_fine
         elif s == 2:
             sel_coarse_current_out.next = laser3_coarse_current
-            sel_fine_current_out.next = laser3_fine_current
+            sel_fine_current_out.next = laser3_fine
         elif s == 3:
             sel_coarse_current_out.next = laser4_coarse_current
-            sel_fine_current_out.next = laser4_fine_current
-        if m:
-            sel_fine_current_out.next = laser_fine_current_in
+            sel_fine_current_out.next = laser4_fine
         
     @always_comb
     def  comb2():
-        laser1_fine.next = laser1_fine_current
-        laser2_fine.next = laser2_fine_current
-        laser3_fine.next = laser3_fine_current
-        laser4_fine.next = laser4_fine_current
         laser1_disable_out.next = not laser_current_en[0]
         laser2_disable_out.next = not laser_current_en[1]
         laser3_disable_out.next = not laser_current_en[2]
@@ -392,16 +443,12 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         if mode:
             soa_shutdown_out.next = soa_shutdown_in and soa_shutdown_en
             if sel==0:
-                laser1_fine.next = laser_fine_current_in
                 laser1_shutdown_out.next = laser_shutdown_in and laser_shutdown_en
             elif sel==1:
-                laser2_fine.next = laser_fine_current_in
                 laser2_shutdown_out.next = laser_shutdown_in and laser_shutdown_en
             elif sel==2:
-                laser3_fine.next = laser_fine_current_in
                 laser3_shutdown_out.next = laser_shutdown_in and laser_shutdown_en
             else:
-                laser4_fine.next = laser_fine_current_in
                 laser4_shutdown_out.next = laser_shutdown_in and laser_shutdown_en
 
         if not soa_present:        

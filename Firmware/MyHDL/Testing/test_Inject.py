@@ -31,6 +31,10 @@ from Host.autogen.interface import INJECT_LASER1_FINE_CURRENT
 from Host.autogen.interface import INJECT_LASER2_FINE_CURRENT
 from Host.autogen.interface import INJECT_LASER3_FINE_CURRENT
 from Host.autogen.interface import INJECT_LASER4_FINE_CURRENT
+from Host.autogen.interface import INJECT_LASER1_FINE_CURRENT_RANGE
+from Host.autogen.interface import INJECT_LASER2_FINE_CURRENT_RANGE
+from Host.autogen.interface import INJECT_LASER3_FINE_CURRENT_RANGE
+from Host.autogen.interface import INJECT_LASER4_FINE_CURRENT_RANGE
 
 from Host.autogen.interface import INJECT_CONTROL_MODE_B, INJECT_CONTROL_MODE_W
 from Host.autogen.interface import INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W
@@ -263,40 +267,50 @@ def bench():
             yield writeFPGA(FPGA_INJECT+INJECT_LASER3_COARSE_CURRENT,laser3_coarse)
             laser4_coarse = randrange(1<<16)
             yield writeFPGA(FPGA_INJECT+INJECT_LASER4_COARSE_CURRENT,laser4_coarse)
-            laser1_fine = randrange(1<<16)
+            laser1_fine = randrange((1<<16)-1)
             yield writeFPGA(FPGA_INJECT+INJECT_LASER1_FINE_CURRENT,laser1_fine)
-            laser2_fine = randrange(1<<16)
+            laser2_fine = randrange((1<<16)-1)
             yield writeFPGA(FPGA_INJECT+INJECT_LASER2_FINE_CURRENT,laser2_fine)
-            laser3_fine = randrange(1<<16)
+            laser3_fine = randrange((1<<16)-1)
             yield writeFPGA(FPGA_INJECT+INJECT_LASER3_FINE_CURRENT,laser3_fine)
-            laser4_fine = randrange(1<<16)
+            laser4_fine = randrange((1<<16)-1)
             yield writeFPGA(FPGA_INJECT+INJECT_LASER4_FINE_CURRENT,laser4_fine)
-            laser_sel_fine = randrange(1<<16)
+            laser_sel_fine = randrange((1<<16)-1)
             laser_fine_current_in.next = laser_sel_fine
             
+            laser1_fine_current_range = randrange(1<<15)
+            yield writeFPGA(FPGA_INJECT+INJECT_LASER1_FINE_CURRENT_RANGE,laser1_fine_current_range)
+            laser2_fine_current_range = randrange(1<<15)
+            yield writeFPGA(FPGA_INJECT+INJECT_LASER2_FINE_CURRENT_RANGE,laser2_fine_current_range)
+            laser3_fine_current_range = randrange(1<<15)
+            yield writeFPGA(FPGA_INJECT+INJECT_LASER3_FINE_CURRENT_RANGE,laser3_fine_current_range)
+            laser4_fine_current_range = randrange(1<<15)
+            yield writeFPGA(FPGA_INJECT+INJECT_LASER4_FINE_CURRENT_RANGE,laser4_fine_current_range)
+            
+            yield delay(10*PERIOD)
             assert sel_laser_out == laser_sel
             if laser_sel == 0:
                 assert sel_coarse_current_out == laser1_coarse
                 if mode:
-                    assert sel_fine_current_out == laser_fine_current_in
+                    assert sel_fine_current_out == min(max(laser_fine_current_in,32768-laser1_fine_current_range),32768+laser1_fine_current_range)
                 else:
                     assert sel_fine_current_out == laser1_fine
             if laser_sel == 1:
                 assert sel_coarse_current_out == laser2_coarse
                 if mode:
-                    assert sel_fine_current_out == laser_fine_current_in
+                    assert sel_fine_current_out == min(max(laser_fine_current_in,32768-laser2_fine_current_range),32768+laser2_fine_current_range)
                 else:
                     assert sel_fine_current_out == laser2_fine
             if laser_sel == 2:
                 assert sel_coarse_current_out == laser3_coarse
                 if mode:
-                    assert sel_fine_current_out == laser_fine_current_in
+                    assert sel_fine_current_out == min(max(laser_fine_current_in,32768-laser3_fine_current_range),32768+laser3_fine_current_range)
                 else:
                     assert sel_fine_current_out == laser3_fine
             if laser_sel == 3:
                 assert sel_coarse_current_out == laser4_coarse
                 if mode:
-                    assert sel_fine_current_out == laser_fine_current_in
+                    assert sel_fine_current_out == min(max(laser_fine_current_in,32768-laser4_fine_current_range),32768+laser4_fine_current_range)
                 else:
                     assert sel_fine_current_out == laser4_fine
             if not soa_present:

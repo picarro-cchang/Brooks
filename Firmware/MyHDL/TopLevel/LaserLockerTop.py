@@ -157,19 +157,19 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     pzt = Signal(intbv(0)[FPGA_REG_WIDTH:])    
     pzt_scaled = Signal(intbv(0)[FPGA_REG_WIDTH:])
     
-    meta0 = ratio1
-    meta1 = ratio2
-    meta2 = pzt
-    meta3 = laser_tuning_offset
-    meta4 = laser_fine_current
-    meta5 = lock_error
-    meta6 = laser_locking_pid
-    meta7 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    
     sel_laser = Signal(intbv(0)[2:])
     sel_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     sel_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
+    meta0 = ratio1
+    meta1 = ratio2
+    meta2 = pzt
+    meta3 = laser_tuning_offset
+    meta4 = sel_fine_current
+    meta5 = lock_error
+    meta6 = laser_locking_pid
+    meta7 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    
     rdsim_value = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rd_trig = Signal(LOW)
 
@@ -497,8 +497,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                 rd_adc_high = rd_adc[14:6]
                 rd_sim_low = concat(rdsim_value[6:0],LOW,LOW)
                 rd_sim_high = rdsim_value[14:6]
-                laser_fine_current_low = laser_fine_current[8:]
-                laser_fine_current_high = laser_fine_current[16:8]
+                sel_fine_current_low = sel_fine_current[8:]
+                sel_fine_current_high = sel_fine_current[16:8]
                 lock_error_low = lock_error[8:]
                 lock_error_high = lock_error[16:8]
                 ratio1_low = ratio1[8:]
@@ -534,9 +534,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                 elif intronix_1 == 5:
                     channel_1.next = rd_sim_high
                 elif intronix_1 == 6:
-                    channel_1.next = laser_fine_current_low
+                    channel_1.next = sel_fine_current_low
                 elif intronix_1 == 7:
-                    channel_1.next = laser_fine_current_high
+                    channel_1.next = sel_fine_current_high
                 elif intronix_1 == 8:
                     channel_1.next = lock_error_low
                 elif intronix_1 == 9:
@@ -591,9 +591,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                 elif intronix_2 == 5:
                     channel_2.next = rd_sim_high
                 elif intronix_2 == 6:
-                    channel_2.next = laser_fine_current_low
+                    channel_2.next = sel_fine_current_low
                 elif intronix_2 == 7:
-                    channel_2.next = laser_fine_current_high
+                    channel_2.next = sel_fine_current_high
                 elif intronix_2 == 8:
                     channel_2.next = lock_error_low
                 elif intronix_2 == 9:
@@ -648,9 +648,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                 elif intronix_3 == 5:
                     channel_3.next = rd_sim_high
                 elif intronix_3 == 6:
-                    channel_3.next = laser_fine_current_low
+                    channel_3.next = sel_fine_current_low
                 elif intronix_3 == 7:
-                    channel_3.next = laser_fine_current_high
+                    channel_3.next = sel_fine_current_high
                 elif intronix_3 == 8:
                     channel_3.next = lock_error_low
                 elif intronix_3 == 9:
