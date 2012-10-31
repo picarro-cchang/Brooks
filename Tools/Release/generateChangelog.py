@@ -57,10 +57,10 @@ Generates a raw changelog for the specified tags.
 
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--start', dest='startTag', metavar='START_TAG',
-                      default=None, help=('The tag to start generating entries '
+                      default='', help=('The tag to start generating entries '
                                           'from.'))
     parser.add_option('--end', dest='endTag', metavar='END_TAG',
-                      default=None, help=('The tag to end entry generation '
+                      default='', help=('The tag to end entry generation '
                                           'with.'))
 
     options, _ = parser.parse_args()
