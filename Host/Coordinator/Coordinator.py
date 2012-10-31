@@ -167,7 +167,16 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.numDispParams = 0
         try:
             editParamSection = self.config["UserEditableParams"]
-            for id in range(len(editParamSection)-1):
+
+            self.writeParamsToHeader = editParamSection.get(
+                'write_params_to_header', 'False')
+            self.writeParamsToHeader = (self.writeParamsToHeader == 'True')
+
+            nNonParams = 1
+            if 'write_params_to_header' in editParamSection:
+                nNonParams += 1
+
+            for id in range(len(editParamSection) - nNonParams):
                 paramInfo = editParamSection[str(id)]
                 paramTuple = (paramInfo[0], paramInfo[1], paramInfo[2])
                 self.paramTupleList.append(paramTuple)
@@ -450,16 +459,17 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.saveFp = file(self.saveFileName,"ab")
         try:
             if paramTupleList is not None:
-                print "Writing user param headers"
+                if self.writeParamsToHeader:
+                    print "Writing user param headers"
 
-                # Record the user editable parameters
-                userParams = []
-                for i in range(len(self.guiParamDict)):
-                    key = paramTupleList[i][0]
-                    userParams.append(
-                        "# (%s) %s=%s\n" % (paramTupleList[i][1], key,
-                                            self.guiParamDict[key]))
-                self.saveFp.writelines(userParams)
+                    # Record the user editable parameters
+                    userParams = []
+                    for i in range(len(self.guiParamDict)):
+                        key = paramTupleList[i][0]
+                        userParams.append(
+                            "# (%s) %s=%s\n" % (paramTupleList[i][1], key,
+                                                self.guiParamDict[key]))
+                    self.saveFp.writelines(userParams)
 
             writer = csv.writer(self.saveFp)
             head = []
