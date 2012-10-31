@@ -40,9 +40,9 @@ def _generateChangelog(repositoryNames, startTag, endTag):
             subprocess.call(['bzr.exe',
                              'log',
                              '-v',
-                             "-r %s..%s" % (startTag, endTag),
+                             "-r%s..%s" % (startTag, endTag),
                              '--include-merges',
-                             repo],
+                             os.path.abspath(repo)],
                             stdout=changelogFp)
             changelogFp.write('\n')
             changelogFp.flush()
