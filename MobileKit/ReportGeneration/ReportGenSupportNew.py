@@ -17,6 +17,7 @@ except:
     from Host.Common.namedtuple import namedtuple
 import cPickle
 import cStringIO
+import geohash
 import getFromP3 as gp3
 import hashlib
 try:
@@ -174,22 +175,21 @@ def getPossibleNaN(d, k, default):
     return result
 
 
-def squeezeListOfDict(listOfDict):
+def lod2dol(listOfDict):
     """Starting with a list of dictionaries all of which have the same keys, convert to a dictionary
-    {keys: list_of_keys, data: list_of_tuples} that can be more compactly JSON encoded"""
+    of lists that can be more compactly JSON encoded"""
     result = {}
     if listOfDict:
-        keys = sorted(listOfDict[0].keys())
-        Data = namedtuple("DataTuple", keys)
-        data = [Data(**d) for d in listOfDict]
-        result = dict(keys=keys, data=data)
+        for k in listOfDict[0].keys():
+            result[k] = [d[k] for d in listOfDict]
     return result
 
 
-def restoreListOfDict(squeezedDict):
-    if squeezedDict:
-        keys = squeezedDict['keys']
-        return [{k:d[i] for i, k in enumerate(keys)} for d in squeezedDict['data']]
+def dol2lod(dictOfList):
+    if dictOfList:
+        v = dictOfList.values()[0]
+        n = len(v)
+        return [{k:dictOfList[k][i] for k in dictOfList} for i in range(n)]
     else:
         return []
 
@@ -510,6 +510,7 @@ class ReportBaseMap(object):
         with open(self.baseData, "wb") as op:
             json.dump((regionParams, paramList), op)
 
+
 def colorStringToRGB(colorString):
     if colorString == "None":
         return False
@@ -713,10 +714,9 @@ class ReportMarkerMap(object):
             if self.digits.match(msg):
                 tstr = time.strftime("%Y%m%dT%H%M%S", time.gmtime(data['EPOCH_TIME']))
                 anz = data['ANALYZER']
-                lat = data['GPS_ABS_LAT']
-                lng = data['GPS_ABS_LONG']
-                ch4 = data['CH4']
+                lat, lng = geohash.decode(data['LOCATION'])
                 ampl = data['AMPLITUDE']
+                ch4 = data['CH4']
                 des = "%s_%s" % (anz, tstr)
                 coords = "%s,%s" % (lat, lng)
                 peakTableString.append('<tr>')
@@ -743,12 +743,13 @@ class ReportMarkerMap(object):
             '<th style="width:20%%">%s</th>' % "Longitude")
         markerTableString.append('</tr></thead>')
         markerTableString.append('<tbody>')
-        for m, (x, y) in selMarkers:
-            coords = "%s,%s" % (m.lat, m.lng)
+        for m in dol2lod(selMarkers):
+            lat, lng = geohash.decode(m["LOCATION"])
+            coords = "%s,%s" % (lat, lng)
             markerTableString.append('<tr>')
-            markerTableString.append('<td><a href="http://maps.google.com?q=%s+(%s)&z=%d" target="_blank">%s</a></td>' % (coords, m.label, zoom, m.label))
-            markerTableString.append('<td>%s</td>' % m.lat)
-            markerTableString.append('<td>%s</td>' % m.lng)
+            markerTableString.append('<td><a href="http://maps.google.com?q=%s+(%s)&z=%d" target="_blank">%s</a></td>' % (coords, m["label"], zoom, m["label"]))
+            markerTableString.append('<td>%s</td>' % lat)
+            markerTableString.append('<td>%s</td>' % lng)
             markerTableString.append('</tr>')
         markerTableString.append('</tbody>')
         markerTableString.append('</table>')
@@ -795,8 +796,7 @@ class ReportMarkerMap(object):
             if self.digits.match(msg):
                 tstr = time.strftime("%Y%m%dT%H%M%S", time.gmtime(data['EPOCH_TIME']))
                 anz = data['ANALYZER']
-                lat = data['GPS_ABS_LAT']
-                lng = data['GPS_ABS_LONG']
+                lat, lng = geohash.decode(data['LOCATION'])
                 coords = "%s,%s" % (lat, lng)
                 ch4 = data['CH4']
                 ampl = data['AMPLITUDE']
@@ -813,15 +813,13 @@ class ReportMarkerMap(object):
         sl = SurveyorLayers(mp.minLng, mp.minLat, mp.maxLng,
                             mp.maxLat, mp.nx, mp.ny, mp.padX, mp.padY)
         markers = []
-        MarkerParams = namedtuple(
-            'MarkerParams', ['label', 'color', 'lat', 'lng'])
         if "markers" in self.instructions:
             for m in self.instructions["markers"]:
                 lat, lng = m.get("location", (0.0, 0.0))
-                mp = MarkerParams(m.get("label", "*"),
-                                  colorStringToRGB(m.get("color", "#FFFFFF")),
-                                  lat,
-                                  lng)
+                mp = dict(label=m.get("label", "*"),
+                          color=colorStringToRGB(m.get("color", "#FFFFFF")),
+                          lat=lat,
+                          lng=lng)
                 markers.append(mp)
 
         # We either have to treat each regional map on its own, and generate markers
@@ -864,7 +862,7 @@ class ReportMarkerMap(object):
                     json.dump([list(pColors), peaks,
                                list(mColors), selMarkers], op)
 
-        peaksAsList = restoreListOfDict(peaks)
+        peaksAsList = dol2lod(peaks)
         with open(self.peaksHtmlFname, "wb") as op:
             self.makePeakReport(op, peaksAsList)
         with open(self.markerHtmlFname, "wb") as op:
@@ -960,6 +958,7 @@ class GoogleMap(object):
             return imageParams, mp
         else:
             return mp
+
 
 class MapGrid(object):
     def __init__(self, minLng, minLat, maxLng, maxLat, nx, ny, padX, padY):
@@ -1128,6 +1127,21 @@ class SurveyorLayers(object):
                 lastColor[0] = color
             return color
 
+        def geohashPath(p):
+            p["PATH"] = [geohash.encode(lat, lng) for lat, lng in zip(p["GPS_ABS_LAT"], p["GPS_ABS_LONG"])]
+            del p["GPS_ABS_LAT"]
+            del p["GPS_ABS_LONG"]
+            return p
+
+        def geohashSwath(s):
+            s["PATH"] = [geohash.encode(lat, lng) for lat, lng in zip(s["GPS_ABS_LAT"], s["GPS_ABS_LONG"])]
+            s["EDGE"] = [geohash.encode(lat + dlat, lng + dlng) for lat, lng, dlat, dlng in zip(s["GPS_ABS_LAT"], s["GPS_ABS_LONG"], s["DELTA_LAT"], s["DELTA_LONG"])]
+            del s["GPS_ABS_LAT"]
+            del s["GPS_ABS_LONG"]
+            del s["DELTA_LAT"]
+            del s["DELTA_LONG"]
+            return s
+
         def colorPathFromInstrumentStatus(instStatus, color):
             if (instStatus & sis.INSTMGR_STATUS_MASK) != sis.INSTMGR_STATUS_GOOD:
                 color = colors["inactive"]
@@ -1163,11 +1177,12 @@ class SurveyorLayers(object):
                     if path:  # Draw out old path
                         if makePath:
                             if saveData:
-                                savedPath.append((squeezeListOfDict(pathLatLng), pathColor))
+                                p = geohashPath(lod2dol(pathLatLng))
+                                savedPath.append((p, pathColor))
                         if makeSwath and pathColor == colors["normal"]:
                             result = process(bufferedPath, self.nWindow, self.stabClass,
                                              self.minLeak, self.minAmpl, self.astdParams)
-                            s = self.drawSwath(result)
+                            s = geohashSwath(self.drawSwath(result))
                             if saveData:
                                 savedSwath.append((s, makeSwath))
                         if newPath:
@@ -1204,11 +1219,12 @@ class SurveyorLayers(object):
         if path:
             if makePath:
                 if saveData:
-                    savedPath.append((squeezeListOfDict(pathLatLng), pathColor))
+                    p = geohashPath(lod2dol(pathLatLng))
+                    savedPath.append((p, pathColor))
             if makeSwath and pathColor == colors["normal"]:
                 result = process(bufferedPath, self.nWindow, self.stabClass,
                                  self.minLeak, self.minAmpl, self.astdParams)
-                s = self.drawSwath(result)
+                s = geohashSwath(self.drawSwath(result))
                 if saveData:
                     savedSwath.append((s, makeSwath))
         return lognames, savedPath, savedSwath
@@ -1220,11 +1236,10 @@ class SurveyorLayers(object):
             logs, savedPath, savedSwath = sd
             revlogs = {logs[logname]: logname for logname in logs}
             for pathLatLng, pathColor in savedPath:
-                for data in restoreListOfDict(pathLatLng):
+                for data in dol2lod(pathLatLng):
                     log = data["LOG"]
                     if log is not None:
-                        lat = data["GPS_ABS_LAT"]
-                        lng = data["GPS_ABS_LONG"]
+                        lat, lng = geohash.decode(data["PATH"])
                         x, y = self.xform(lng, lat)
                         if (-self.padX <= x < self.nx + self.padX) and (-self.padY <= y < self.ny + self.padY):
                             logname = revlogs[log]
@@ -1232,9 +1247,22 @@ class SurveyorLayers(object):
                                 lognames[logname] = log
         return lognames
 
+    def geohashPeaks(self, p):
+        p["LOCATION"] = [geohash.encode(lat, lng) for lat, lng in zip(p["GPS_ABS_LAT"], p["GPS_ABS_LONG"])]
+        del p["GPS_ABS_LAT"]
+        del p["GPS_ABS_LONG"]
+        return p
+
+    def geohashMarkers(self, p):
+        p["LOCATION"] = [geohash.encode(lat, lng) for lat, lng in zip(p["lat"], p["lng"])]
+        del p["lat"]
+        del p["lng"]
+        return p
+
     def makeMarkers(self, runParams, markers):
         """Write out peaks, wedges and additional markers on a map, using the runParams to
         select the appropriate data from the PeakFinder output"""
+
         peaksByAmpl = []
         peaks = []
         anyPeaks = False
@@ -1307,7 +1335,7 @@ class SurveyorLayers(object):
             # Count ranked markers
             nRanked = 0
             for amp, m, region in peaks:
-                mType = runParams[region].mType
+                analyzer, startEtm, endEtm, minAmpl, maxAmpl, path, mType, mColor, makeWedges, exclRadius = runParams[region]
                 if mType == MT_RANK:
                     lat = m.data["GPS_ABS_LAT"]
                     lng = m.data["GPS_ABS_LONG"]
@@ -1317,7 +1345,8 @@ class SurveyorLayers(object):
             #
             for amp, m, region in peaks:
                 analyzer, startEtm, endEtm, minAmpl, maxAmpl, path, mType, mColor, makeWedges, exclRadius = runParams[region]
-                if mColor: pColors.add(mColor)
+                if mColor:
+                    pColors.add(mColor)
                 lat = m.data["GPS_ABS_LAT"]
                 lng = m.data["GPS_ABS_LONG"]
                 amp = m.data["AMPLITUDE"]
@@ -1357,11 +1386,11 @@ class SurveyorLayers(object):
         # Select the markers that lie within this region
         selMarkers = []
         for m in markers:
-            x, y = self.xform(m.lng, m.lat)
-            if (self.minLng <= m.lng < self.maxLng) and (self.minLat <= m.lat < self.maxLat):
+            if (self.minLng <= m["lng"] < self.maxLng) and (self.minLat <= m["lat"] < self.maxLat):
                 selMarkers.append(m)
-            if m.color: mColors.add(m.color)
-        return pColors, squeezeListOfDict(peaksByAmpl), mColors, selMarkers
+            if m["color"]:
+                mColors.add(m["color"])
+        return pColors, self.geohashPeaks(lod2dol(peaksByAmpl)), mColors, self.geohashMarkers(lod2dol(selMarkers))
 
     def makeSubmapMarkers(self, savedMarkers):
         """Draw peaks, wedges and additional markers on a submap, staring from the
@@ -1371,69 +1400,16 @@ class SurveyorLayers(object):
         _, peaks, _, markers = savedMarkers
         peaksByAmpl = []
         selMarkers = []
-        for m in markers:
-            x, y = self.xform(m.lng, m.lat)
-            if (self.minLng <= m.lng < self.maxLng) and (self.minLat <= m.lat < self.maxLat):
+        for m in dol2lod(markers):
+            lat, lng = geohash.decode(m["LOCATION"])
+            x, y = self.xform(lng, lat)
+            if (self.minLng <= lng < self.maxLng) and (self.minLat <= lat < self.maxLat):
                 selMarkers.append(m)
-            mColors.add(tuple(m.color))
-        for data in restoreListOfDict(peaks):
-            lat = data["GPS_ABS_LAT"]
-            lng = data["GPS_ABS_LONG"]
+            mColors.add(tuple(m["color"]))
+        for data in dol2lod(peaks):
+            lat, lng = geohash.decode(data["LOCATION"])
             x, y = self.xform(lng, lat)
             if (-self.padX <= x < self.nx + self.padX) and (-self.padY <= y < self.ny + self.padY):
                 peaksByAmpl.append(data)
             pColors.add(tuple(data["PEAK_COLOR"]))
-        return pColors, squeezeListOfDict(peaksByAmpl), mColors, selMarkers
-
-
-class BubbleMaker(object):
-    def getMarker1(self, size):
-        def nint(x):
-            return int(round(x))
-        nx = nint(36 * size + 1)
-        ny = nint(65 * size + 1)
-        xoff = (nx - 1) / 2
-        h = ny - 1
-        r = (nx - 1) / 2.0
-        R = h * (0.5 * h / r - 1.0)
-        phi = np.arcsin(R / (R + r))
-        b = Image.new('RGBA', (nx, ny), (255, 255, 255, 255))
-        bdraw = ImageDraw.Draw(b)
-        n1 = 10
-        n2 = 20
-        arc1 = [(nint(xoff - R + R * np.cos(th)), nint(ny - 1 - R * np.sin(th))) for th in np.linspace(0.0, 0.5 * np.pi - phi, n1, endpoint=False)]
-        arc2 = [(nint(xoff - r * np.sin(th)), nint(r + r * np.cos(th))) for th in np.linspace(phi, 2 * np.pi - phi, n2, endpoint=False)]
-        arc3 = [(nint(xoff + R - R * np.cos(th)), nint(ny - 1 - R * np.sin(th))) for th in np.linspace(0.5 * np.pi - phi, 0.0, n1, endpoint=False)]
-        bdraw.polygon(arc1 + arc2 + arc3, fill=(255, 255, 0, 255),
-                      outline=(0, 0, 0, 255))
-        bdraw.line(arc1 + arc2 + arc3, fill=(0, 0, 0, 255), width=3)
-        return asPNG(b)
-
-    def getMarker(self, size):
-        def nint(x):
-            return int(round(x))
-        t = 2
-        r = 18 * size - t
-        h = 65 * size - 2 * t
-        nx = nint(36 * size + 1)
-        ny = nint(65 * size + 1)
-        w = size
-        R = ((h - r) * (h - r) - (r * r - 0.25 * w * w)) / float(2 * r - w)
-        phi = np.arcsin((R + 0.5 * w) / (R + r))
-        cen1 = (-(R + 0.5 * w), h - r)
-        cen2 = (0, 0)
-        cen3 = ((R + 0.5 * w), h - r)
-        xoff = r + t
-        yoff = r + t
-        b = Image.new('RGBA', (nx, ny), (255, 255, 255, 255))
-        bdraw = ImageDraw.Draw(b)
-        n1 = 20
-        n2 = 40
-        arc1 = [(xoff + nint(cen1[0] + R * np.cos(th)), nint(yoff + cen1[1] - R * np.sin(th))) for th in np.linspace(0.0, 0.5 * np.pi - phi, n1, endpoint=False)]
-        arc2 = [(xoff + nint(cen2[0] - r * np.sin(th)), nint(yoff + cen2[1] + r * np.cos(th))) for th in np.linspace(phi, 2 * np.pi - phi, n2, endpoint=False)]
-        arc3 = [(xoff + nint(cen3[0] - R * np.cos(th)), nint(yoff + cen3[1] - R * np.sin(th))) for th in np.linspace(0.5 * np.pi - phi, 0.0, n1, endpoint=True)]
-        bdraw.polygon(arc1 + arc2 + arc3, fill=(255, 255, 0, 255),
-                      outline=(0, 0, 0, 255))
-        bdraw.line(
-            arc1 + arc2 + arc3 + arc1[0:1], fill=(0, 0, 0, 255), width=t)
-        return asPNG(b)
+        return pColors, lod2dol(peaksByAmpl), mColors, lod2dol(selMarkers)

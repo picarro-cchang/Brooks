@@ -7,12 +7,15 @@
 <body>
     <div id="checkboxdiv" style="position:relative"></div>
     <div id="canvasesdiv" style="position:relative"></div>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <h2>Methane Peaks</h2>
+    <div id="peakstablediv"></div>
+<script src="./static/jquery-1.7.2.min.js"></script>
+<script src="./static/geohash.js"></script>
 <script type="text/javascript">
 
     var CSTATE = {
-        baseData: null,
         contexts: [],
+        markerTable: [],
         maxLat: null,
         maxLng: null,
         minLat: null,
@@ -22,17 +25,30 @@
         ny: null,
         padX: null,
         padY: null,
+        peakTable: [],
         xform: null
     };
 
     var CNSNT = {
         DTR: Math.PI/180.0,
         RTD: 180.0/Math.PI,
-        EARTH_RADIUS: 6378100
+        EARTH_RADIUS: 6378100,
+        MAX_LAYERS: 16
+    }
+
+    function inMap(lat,lng) {
+        return ( CSTATE.minLat <= lat && lat < CSTATE.maxLat &&
+                 CSTATE.minLng <= lng && lng < CSTATE.maxLng );
+    }
+
+    function inView(xy) {
+        return ( -CSTATE.padX <= xy[0] && xy[0] < CSTATE.nx+CSTATE.padX &&
+                 -CSTATE.padY <= xy[1] && xy[1] < CSTATE.ny+CSTATE.padY );
     }
 
     function init() {
         var layer = 0;
+        initLayers();
         $.getJSON("baseData.0.json",function(baseData) {
             var regionParams = baseData[0];
             console.log(regionParams);
@@ -95,20 +111,18 @@
                     for (var j=0; j<savedPath.length; j++) {
                         var pathLatLng = savedPath[j][0];
                         var pathColor = savedPath[j][1];
-                        var latIndex = pathLatLng.keys.indexOf("GPS_ABS_LAT");
-                        var lngIndex = pathLatLng.keys.indexOf("GPS_ABS_LONG");
 
                         ctx.lineWidth = 2;
                         ctx.strokeStyle = "rgba(" + pathColor[0] + "," + pathColor[1] + "," +
                                                     pathColor[2] + "," + pathColor[3] + ")";
                         var path = [];
-                        for (var k=0; k<pathLatLng.data.length; k++) {
-                            var lng = pathLatLng.data[k][lngIndex];
-                            var lat = pathLatLng.data[k][latIndex];
+                        for (var k=0; k<pathLatLng.PATH.length; k++) {
+                            where = decodeGeoHash(pathLatLng.PATH[k]);
+                            var lng = where.longitude[2];
+                            var lat = where.latitude[2];
                             var xy = CSTATE.xform(lng, lat);
                             var x = xy[0], y = xy[1];
-                            if ( -CSTATE.padX <= x && x < CSTATE.nx+CSTATE.padX &&
-                                 -CSTATE.padY <= y && y < CSTATE.ny+CSTATE.padY ) {
+                            if (inView(xy)) {
                                 path.push([x,y]);
                             }
                             else {
@@ -140,10 +154,6 @@
                 ctx.canvas.height = CSTATE.ny + 2 * CSTATE.padY;
                 ctx.canvas.width  = CSTATE.nx + 2 * CSTATE.padX;
 
-                var inMap = function (xy) {
-                    return ( -CSTATE.padX <= xy[0] && xy[0] < CSTATE.nx+CSTATE.padX &&
-                             -CSTATE.padY <= xy[1] && xy[1] < CSTATE.ny+CSTATE.padY );
-                };
 
                 for (var i=0; i<savedData.length; i++) {
                     var logs = savedData[i][0];
@@ -157,23 +167,25 @@
                         ctx.strokeStyle = "rgba(" + swathColor[0] + "," + swathColor[1] + "," + swathColor[2] + ",0.5)";
                         ctx.lineWidth = 1;
                         var lastLng = null, lastLat = null;
-                        var lastDeltaLng = null, lastDeltaLat = null;
-                        for (var k=0; k<swath.GPS_ABS_LAT.length; k++) {
-                            var lng = swath.GPS_ABS_LONG[k];
-                            var lat = swath.GPS_ABS_LAT[k];
-                            var deltaLng = swath.DELTA_LONG[k];
-                            var deltaLat = swath.DELTA_LAT[k];
+                        var lastEdgeLng = null, lastEdgeLat = null;
+                        for (var k=0; k<swath.PATH.length; k++) {
+                            var where = decodeGeoHash(swath.PATH[k]);
+                            var lng = where.longitude[2];
+                            var lat = where.latitude[2];
+                            var edge = decodeGeoHash(swath.EDGE[k]);
+                            var edgeLng = edge.longitude[2];
+                            var edgeLat = edge.latitude[2];
                             if (lastLng !== null) {
-                                var noLastView = Math.abs(lastDeltaLat) < 1e-6 && Math.abs(lastDeltaLng) < 1e-6;
+                                var noLastView = (where == edge);
                                 if (!noLastView) {
-                                    var xy1 = CSTATE.xform(lastLng + lastDeltaLng, lastLat + lastDeltaLat);
-                                    if (inMap(xy1)) {
+                                    var xy1 = CSTATE.xform(lastEdgeLng, lastEdgeLat);
+                                    if (inView(xy1)) {
                                         var xy2 = CSTATE.xform(lastLng, lastLat);
-                                        if (inMap(xy2)) {
+                                        if (inView(xy2)) {
                                             var xy3 = CSTATE.xform(lng, lat);
-                                            if (inMap(xy3)) {
-                                                var xy4 = CSTATE.xform(lng + deltaLng, lat + deltaLat);
-                                                if (inMap(xy4)) {
+                                            if (inView(xy3)) {
+                                                var xy4 = CSTATE.xform(edgeLng, edgeLat);
+                                                if (inView(xy4)) {
                                                     ctx.beginPath();
                                                     ctx.moveTo(CSTATE.padX + xy1[0], CSTATE.padY + xy1[1]);
                                                     ctx.lineTo(CSTATE.padX + xy2[0], CSTATE.padY + xy2[1]);
@@ -189,8 +201,8 @@
                             }
                             lastLng = lng;
                             lastLat = lat;
-                            lastDeltaLng = deltaLng;
-                            lastDeltaLat = deltaLat;
+                            lastEdgeLng = edgeLng;
+                            lastEdgeLat = edgeLat;
                         }
                     }
                 }
@@ -203,6 +215,7 @@
                 var pCanvases = {};
                 var peaks = markers[1];
                 var mColors = markers[2];
+                var mCanvases = {}
                 var markers = markers[3];
                 var size = 1.0;
 
@@ -212,21 +225,16 @@
                 ctx.canvas.height = CSTATE.ny + 2 * CSTATE.padY;
                 ctx.canvas.width  = CSTATE.nx + 2 * CSTATE.padX;
 
-                var latIndex = peaks.keys.indexOf("GPS_ABS_LAT");
-                var lngIndex = peaks.keys.indexOf("GPS_ABS_LONG");
-                var wedgeColorIndex = peaks.keys.indexOf("WEDGE_COLOR");
-                var windDirMeanIndex = peaks.keys.indexOf("WIND_DIR_MEAN");
-                var windSdevIndex = peaks.keys.indexOf("WIND_DIR_SDEV");
-
-                for (var i=peaks.data.length-1; i>=0; i--) {
-                    var lat = peaks.data[i][latIndex];
-                    var lng = peaks.data[i][lngIndex];
-                    var wedgeColor = peaks.data[i][wedgeColorIndex];
-                    var windMean = peaks.data[i][windDirMeanIndex];
-                    var windSdev = peaks.data[i][windSdevIndex];
+                for (var i=peaks.LOCATION.length-1; i>=0; i--) {
+                    var where = decodeGeoHash(peaks.LOCATION[i]);
+                    var lat = where.latitude[2];
+                    var lng = where.longitude[2];
+                    var wedgeColor = peaks.WEDGE_COLOR[i];
+                    var windMean = peaks.WIND_DIR_MEAN[i];
+                    var windSdev = peaks.WIND_DIR_SDEV[i];
                     var xy = CSTATE.xform(lng, lat);
                     var x = xy[0], y = xy[1];
-                    if (wedgeColor) {
+                    if (inView(xy) && wedgeColor) {
                         var radius = 50.0 / CSTATE.mpp;
                         var minBearing, maxBearing;
                         var c = colorTuple2Hex(wedgeColor);
@@ -263,19 +271,84 @@
                     pCanvases[c] = new Marker(size,"#"+c,"black");
                 }
 
-                for (var i=peaks.data.length-1; i>=0; i--) {
-                    var peakMsg = peaks.data[i][peaks.keys.indexOf("TEXT")];
-                    var lat = peaks.data[i][peaks.keys.indexOf("GPS_ABS_LAT")];
-                    var lng = peaks.data[i][peaks.keys.indexOf("GPS_ABS_LONG")];
-                    var peakColor = peaks.data[i][peaks.keys.indexOf("PEAK_COLOR")];
+                for (var i=peaks.LOCATION.length-1; i>=0; i--) {
+                    var peakMsg = peaks.TEXT[i];
+                    var where = decodeGeoHash(peaks.LOCATION[i]);
+                    var lat = where.latitude[2];
+                    var lng = where.longitude[2];
+                    var peakColor = peaks.PEAK_COLOR[i];
                     var xy = CSTATE.xform(lng, lat);
                     var x = xy[0], y = xy[1];
-                    if (peakColor) {
+                    if (inView(xy) && peakColor) {
                         var c = colorTuple2Hex(peakColor);
                         pCanvases[c].annotate(ctx, x+CSTATE.padX, y+CSTATE.padY, peakMsg, "bold 18px sans-serif", "black");
                     }
                 }
                 addLayer(ctx.canvas,[0,0],++layer,"peaks");
+
+                // Generate the peakTable
+
+                var zoom = 18;
+                CSTATE.peakTable.push('<table class="table table-striped table-condensed table-fmt1 table-datatable">');
+                CSTATE.peakTable.push('<thead><tr>');
+                CSTATE.peakTable.push('<th style="width:10%">Rank</th>');
+                CSTATE.peakTable.push('<th style="width:30%">Designation</th>');
+                CSTATE.peakTable.push('<th style="width:20%">Latitude</th>');
+                CSTATE.peakTable.push('<th style="width:20%">Longitude</th>');
+                CSTATE.peakTable.push('<th style="width:10%">Conc</th>');
+                CSTATE.peakTable.push('<th style="width:10%">Ampl</th>');
+                CSTATE.peakTable.push('</tr></thead>');
+                CSTATE.peakTable.push('<tbody>');
+                for (var i=0; i<peaks.LOCATION.length; i++) {
+                    var etm = peaks.EPOCH_TIME[i];
+                    var anz = peaks.ANALYZER[i];
+                    var where = decodeGeoHash(peaks.LOCATION[i]);
+                    var lat = where.latitude[2];
+                    var lng = where.longitude[2];
+                    var msg = peaks.TEXT[i];
+                    var ch4 = peaks.CH4[i];
+                    var ampl = peaks.AMPLITUDE[i];
+                    if (inMap(lat,lng)) {
+                        var des = anz + '_' + getDateTime(new Date(1000*etm));
+                        var url = "http://maps.google.com?q=(" + lat + "," + lng + ")+(" + des + ")&z=" + zoom;
+                        CSTATE.peakTable.push('<tr>');
+                        CSTATE.peakTable.push('<td>' + msg + '</td>');
+                        CSTATE.peakTable.push('<td><a href="' + url + '" target="_blank">' +  des + '</a></td>');
+                        CSTATE.peakTable.push('<td>' + lat.toFixed(6) + '</td>');
+                        CSTATE.peakTable.push('<td>' + lng.toFixed(6) + '</td>');
+                        CSTATE.peakTable.push('<td>' + ch4.toFixed(1) + '</td>');
+                        CSTATE.peakTable.push('<td>' + ampl.toFixed(2) + '</td>');
+                        CSTATE.peakTable.push('</tr>');
+                    }
+                }
+                CSTATE.peakTable.push('</tbody>');
+                CSTATE.peakTable.push('</table>');
+                $("#peakstablediv").html(CSTATE.peakTable.join("\n"));
+
+                // Draw additional markers
+                ctx = document.createElement("canvas").getContext("2d");
+                ctx.canvas.height = CSTATE.ny + 2 * CSTATE.padY;
+                ctx.canvas.width  = CSTATE.nx + 2 * CSTATE.padX;
+
+                for (var i=0; i<mColors.length; i++) {
+                    var c = colorTuple2Hex(mColors[i]);
+                    mCanvases[c] = new Marker(size,"#"+c,"black");
+                }
+
+                for (var i=0; i<markers.LOCATION.length; i++) {
+                    var msg = markers.label[i];
+                    var where = decodeGeoHash(markers.LOCATION[i]);
+                    var lat = where.latitude[2];
+                    var lng = where.longitude[2];
+                    var color = markers.color[i];
+                    var xy = CSTATE.xform(lng, lat);
+                    var x = xy[0], y = xy[1];
+                    if (inView(xy) && color) {
+                        var c = colorTuple2Hex(color);
+                        mCanvases[c].annotate(ctx, x+CSTATE.padX, y+CSTATE.padY, msg, "bold 18px sans-serif", "black");
+                    }
+                }
+                addLayer(ctx.canvas,[0,0],++layer,"markers");
             });
         })
     }
@@ -293,41 +366,56 @@
         return hexStr.join("");
     }
 
+    function getDateTime(d){
+        // padding function
+        var s = function(a,b){return(1e15+a+"").slice(-b)};
+        return d.getUTCFullYear() +
+            s(d.getUTCMonth()+1,2) +
+            s(d.getUTCDate(),2) + 'T' +
+            s(d.getUTCHours(),2) +
+            s(d.getUTCMinutes(),2) +
+            s(d.getUTCSeconds(),2);
+    }
+
+    function initLayers() {
+        for (var layer = 1; layer <= CNSNT.MAX_LAYERS; layer++) {
+            var id1 = 'id_check' + layer;
+            var id2 = 'id_layer' + layer;
+            var elem = '<input id="' + id1 + '" type="checkbox" checked="checked"></input></label>';
+            var label = '<label for="' + id1 + '">';
+            var canvas = '<canvas id="' + id2 + '" style="z-index:' + layer +
+                         '; position:absolute; left:0px; top:0px;"></canvas>';
+            $("#checkboxdiv").append(elem).append(label);
+            $("#canvasesdiv").append(canvas);
+            $('#' + id1).data("layer", layer);
+            $("label[for='" + id1 + "']").hide();
+            $('#' + id1).hide();
+            $('#' + id2).data("layer", layer).hide();
+            // Make checkbox toggle visibility of layer
+            $('#' + id1).click(function() {
+                var $this = $(this);
+                var layer = $this.data("layer");
+                if ($this.is(":checked")) $('#id_layer' + layer).show();
+                else $('#id_layer' + layer).hide();
+            });
+        }
+    }
+
     function addLayer(source, padding, layer, caption) {
         // Add the image as a new layer in the collection of canvases which make up the
         //  composite map
-        // Create the checkbox and canvas for this image in the DOM
-
-
-        // Make sure the checkboxes are in order of layer number by inserting them appropriately
-        var elem = '<input id="id_check' + layer +'" type="checkbox" checked="checked">' + caption +'</input>';
-        var added = false;
-        $("#checkboxdiv").children().each(function(index) {
-            if (layer < $(this).data("layer")) {
-                $(this).before(elem);
-                added = true;
-                return false;
-            }
-        });
-        if (!added) $("#checkboxdiv").append(elem);
-
-        $("#canvasesdiv").append('<canvas id="id_layer' + layer +
-                                 '" style="z-index:' + layer +
-                                 '; position:absolute; left:0px; top:0px;"></canvas>');
-        $("#id_check" + layer).data("layer", layer);
-        $("#id_layer" + layer).data("layer", layer);
-        // Make checkbox toggle visibility of layer
-        $("#id_check" + layer).click(function() {
-            var $this = $(this);
-            var layer = $this.data("layer");
-            if ($this.is(":checked")) $("#id_layer" + layer).show();
-            else $("#id_layer" + layer).hide();
-        });
-        var ctx = $("#id_layer"+layer)[0].getContext("2d");
-        CSTATE.contexts.push(ctx);
+        var id1 = 'id_check' + layer;
+        var id2 = 'id_layer' + layer;
+        $("label[for='" + id1 + "']").html(caption).show();
+        $('#' + id1).show();
+        var ctx = $('#' + id2)[0].getContext("2d");
+        CSTATE.contexts[layer] = ctx;
         ctx.canvas.width = source.width + 2 * padding[0];
         ctx.canvas.height = source.height + 2 * padding[1];
         ctx.drawImage(source, padding[0], padding[1]);
+        if ($('#' + id1).is(":checked")) $('#' + id2).show();
+        if (ctx.canvas.width > $('#canvasesdiv').width()) $('#canvasesdiv').width(ctx.canvas.width);
+        if (ctx.canvas.height > $('#canvasesdiv').height()) $('#canvasesdiv').height(ctx.canvas.height);
     }
 
     var Marker = function(size,fillColor,strokeColor) {

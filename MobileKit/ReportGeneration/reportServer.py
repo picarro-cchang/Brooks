@@ -20,10 +20,7 @@ import time
 import traceback
 import urllib
 from werkzeug import secure_filename
-import ReportGenSupport as rgs
-from ReportGenSupport import ReportGen, ReportStatus
-from ReportGenSupport import LayerFilenamesGetter, pretty_ticket
-from ReportGenSupport import BubbleMaker
+import ReportGenSupportNew as rgs
 from ReportCommon import getTicket, PROJECT_SUBMISSION_PORT
 import ProjectSupport as PP
 from Host.Common.configobj import ConfigObj
@@ -101,19 +98,6 @@ def validate():
     return response
 
 
-@app.route('/rest/instrUpload')
-def instrUpload():
-    # Services upload of instructions for generating report
-    contents = request.values.get('contents')
-    # Pass directory in which report files are to be placed and the
-    #  contents of the instruction file
-    ticket = ReportGen(REPORTROOT, contents).run()
-    data = {'contents': contents, 'ticket': ticket}
-    response = make_response(json.dumps(data))
-    response.headers['Content-Type'] = 'application/json'
-    return response
-
-
 @app.route('/rest/submitProject')
 def submitProject():
     # Services upload of instructions for generating report
@@ -146,15 +130,6 @@ def submitProject():
     return response
 
 
-@app.route('/rest/getReportStatus')
-def getReportStatus():
-    ticket = request.values.get('ticket')
-    data = ReportStatus(REPORTROOT, ticket).run()
-    response = make_response(json.dumps(data))
-    response.headers['Content-Type'] = 'application/json'
-    return response
-
-
 @app.route('/rest/getTicket')
 def getReportTicket():
     contents = request.values.get('contents')
@@ -162,55 +137,6 @@ def getReportTicket():
     response = make_response(json.dumps(data))
     response.headers['Content-Type'] = 'application/json'
     return response
-
-
-@app.route('/rest/getLayerUrls')
-def getLayerUrls():
-    ticket = request.values.get('ticket')
-    data = LayerFilenamesGetter(REPORTROOT, ticket).run()
-    for d in data:
-        data[d] = LAYERBASEURL + data[d]
-    response = make_response(json.dumps(data))
-    response.headers['Content-Type'] = 'application/json'
-    return response
-
-
-@app.route('/rest/getReport')
-def getReport():
-    ticket = request.values.get('ticket')
-    region = int(request.values.get('region'))
-    name = request.values.get('name')
-    params = urllib.urlencode(request.values)
-    mapUrl = '/rest/getComposite?%s' % params
-    pathFileName = os.path.join(
-        REPORTROOT, '%s/pathMap.%d.html' % (ticket, region))
-    if os.path.exists(pathFileName):
-        fp = file(pathFileName, 'rb')
-        pathLogs = fp.read()
-        fp.close()
-    else:
-        pathLogs = ""
-    peaksTableFileName = os.path.join(
-        REPORTROOT, '%s/peaksMap.%d.html' % (ticket, region))
-    if os.path.exists(peaksTableFileName):
-        fp = file(peaksTableFileName, 'rb')
-        peaksTable = fp.read()
-        fp.close()
-    else:
-        peaksTable = ""
-    markerTableFileName = os.path.join(
-        REPORTROOT, '%s/markerMap.%d.html' % (ticket, region))
-    if os.path.exists(markerTableFileName):
-        fp = file(markerTableFileName, 'rb')
-        markerTable = fp.read()
-        fp.close()
-    else:
-        markerTable = ""
-    return render_template(
-        'report.html', peaksTable=peaksTable, markerTable=markerTable,
-                           pathLogs=pathLogs, mapUrl=mapUrl,
-                           name=name, region=region, prettyTicket=pretty_ticket(ticket))
-
 
 @app.route('/rest/getComposite')
 def getComposite():
@@ -408,18 +334,6 @@ def shutdown():
 @app.route('/test')
 def test():
     return render_template('testTable.html')
-
-
-@app.route('/bubble')
-def bubble():
-    # Bubble of size n is of size 36n+1 x 65n+1 pixels
-    size = float(request.values.get('size', 2.0))
-    marker = BubbleMaker().getMarker(size)
-    response = make_response(marker)
-    response.headers['Content-Type'] = 'image/png'
-    response.headers['Last-Modified'] = time.strftime(
-        "%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-    return response
 
 
 def main():

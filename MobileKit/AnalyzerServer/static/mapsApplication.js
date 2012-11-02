@@ -738,11 +738,11 @@ function newAnzLocationMarker(map) {
 
 function newPeakMarker(map, latLng, amp, sigma, ch4) {
     var size, fontsize, mk;
-    size = Math.pow(amp, 1.0 / 4.0);
-    fontsize = 20.0 * Math.pow(amp, 1.0 / 4.0);
+    size = Math.max(0.75,0.25*Math.round(4.0*Math.pow(amp, 1.0 / 3.0)));
+    fontsize = 20.0 * size;
     mk = new google.maps.Marker({position: latLng,
         title: TXT.amp + ": " + amp.toFixed(2) + " " + TXT.sigma + ": " + sigma.toFixed(1),
-        icon: "http://chart.apis.google.com/chart?chst=d_map_spin&chld=" + size + "|0|40FFFF|" + fontsize + "|b|" + ch4.toFixed(1)
+        icon: makeMarker(size,"rgba(64,255,255,255)","black",ch4.toFixed(1),"bold "+ fontsize +"px sans-serif","black")
         });
     mk.setMap(map);
     return mk;
@@ -2516,6 +2516,43 @@ function makeWindRose(radius,meanBearing,shaftLength,halfWidth) {
     $("#windRose").sparkline([2*halfWidth,360-2*halfWidth],{"type":"pie","height":height+"px","offset":-90+wMin,"sliceColors":["#ffff00","#cccccc"]});
 };
 */
+
+function makeMarker(size,fillColor,strokeColor,msg,font,textColor) {
+    var ctx = document.createElement("canvas").getContext("2d");
+    var b = 1.25 * size;
+    var t = 2.0 * size;
+    var nx = 36 * size + 1;
+    var ny = 65 * size + 1;
+    var r = 0.5 * (nx - 1 - t);
+    var h = ny - 1 - t;
+    var phi = Math.PI * 45.0/180.0;
+    var sinPhi = Math.sin(phi);
+    var cosPhi = Math.cos(phi)
+    var theta = 0.5 * Math.PI - phi;
+    var xoff = r + 0.5 * t;
+    var yoff = r + 0.5 * t;
+    var knot = (r - b * sinPhi) / cosPhi;
+    ctx.canvas.width = nx;
+    ctx.canvas.height = ny;
+    ctx.beginPath();
+    ctx.lineWidth = t;
+    ctx.strokeStyle = strokeColor;
+    ctx.fillStyle = fillColor;
+    ctx.translate(xoff, yoff);
+    ctx.moveTo(-b, (h - r));
+    ctx.quadraticCurveTo(-b, knot, -r * sinPhi, r * cosPhi);
+    ctx.arc(0, 0, r, Math.PI - theta, theta, false);
+    ctx.quadraticCurveTo(b, knot, b, (h - r));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = textColor;
+    ctx.font = font;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(msg,0,1.5*size);
+    return ctx.canvas.toDataURL("image/png");
+}
 
 function makeWindRose(canvasHeight,radius,meanBearing,halfWidth,shaftLength,arrowheadSide,arrowheadAngle) {
     var sph = Math.sin(0.5*arrowheadAngle*CNSNT.dtr), cph = Math.cos(0.5*arrowheadAngle*CNSNT.dtr);
