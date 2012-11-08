@@ -175,12 +175,17 @@ def getPossibleNaN(d,k,default):
     return result
 
 class ReportCompositeMap(object):
-    def __init__(self,reportDir,ticket,region):
+    def __init__(self,reportDir,ticket,instructions,region):
         self.reportDir = reportDir
         self.ticket = ticket
         self.region = region
+        self.instructions = instructions
+        self.mp = None
         self.compositeMapFname = os.path.join(self.reportDir,"%s/compositeMap.%d.png" % (self.ticket,self.region))
         self.statusFname  = os.path.join(self.reportDir,"%s/compositeMap.%d.status" % (self.ticket,self.region))
+
+    def setMapParams(self,mapParams):
+        self.mp = mapParams
 
     def getStatus(self):
         return getStatus(self.statusFname)
@@ -223,6 +228,27 @@ class ReportCompositeMap(object):
                         # Remove the component status and image files
                         os.remove(statusFnames[layer])
                         os.remove(imageFnames[layer])
+                # If there is a kml key, import the facilities information into a separate layer
+                region = self.region
+                print "\n***REGIONAL INSTRUCTIONS***", self.instructions["regions"][region]
+                if "kml" in self.instructions["regions"][region]:
+                    mp = self.mp
+                    kmlFiles = self.instructions["regions"][region]["kml"]
+                    sl = SurveyorLayers(mp.minLng,mp.minLat,mp.maxLng,mp.maxLat,mp.nx,mp.ny,mp.padX,mp.padY)
+                    segList = []
+                    widthList = []
+                    colorList = []
+                    for d in kmlFiles:
+                        fname = d["filename"]
+                        linewidth = d["linewidth"]
+                        linecolor = d["linecolor"]
+                        filter = d["filter"]
+                        segments = getKmlSegments(fname,filter)
+                        segList.append(segments)
+                        widthList.append(linewidth)
+                        colorList.append(linecolor)
+                    f = sl.makeFacilitiesLayer(segList,widthList,colorList)
+                    compositeImage = overBackground(backgroundToOverlay(f),compositeImage,None)
                 op = open(self.compositeMapFname,"wb")
                 op.write(asPNG(compositeImage))
                 op.close()
@@ -411,7 +437,7 @@ class Supervisor(object):
         statusFname = os.path.join(self.reportDir,"%s/json.status" % self.ticket)
         for i,r in enumerate(self.instructions["regions"]):
             # Check if a composite map already exists for this region
-            cm = ReportCompositeMap(self.reportDir,self.ticket,i)
+            cm = ReportCompositeMap(self.reportDir,self.ticket,self.instructions,i)
             if "done" not in cm.getStatus():
                 components = { "baseMap":{}, "pathMap":{}, "markerMap":{} }
                 # Start generating the base map
@@ -451,6 +477,7 @@ class Supervisor(object):
                     if complete: break
                     time.sleep(1.0)
             # All components have been made, it is time to generate the composite map
+            cm.setMapParams(mp)
             cmThread = threading.Thread(target = cm.run)
             cmThread.setDaemon(True)
             cmThread.start()
@@ -531,26 +558,6 @@ class ReportBaseMap(object):
                         image, mp = GoogleMap().getPlat(self.minLng,self.maxLng,self.minLat,self.maxLat,satellite=False)
                 else:
                     raise ValueError("Base type %s not yet supported" % self.baseType)
-                # If there is a kml key, import the facilities information into a separate layer
-                region = self.region
-                print "\n***REGIONAL INSTRUCTIONS***", self.instructions["regions"][region]
-                if "kml" in self.instructions["regions"][region]:
-                    kmlFiles = self.instructions["regions"][region]["kml"]
-                    sl = SurveyorLayers(mp.minLng,mp.minLat,mp.maxLng,mp.maxLat,mp.nx,mp.ny,mp.padX,mp.padY)
-                    segList = []
-                    widthList = []
-                    colorList = []
-                    for d in kmlFiles:
-                        fname = d["filename"]
-                        linewidth = d["linewidth"]
-                        linecolor = d["linecolor"]
-                        filter = d["filter"]
-                        segments = getKmlSegments(fname,filter)
-                        segList.append(segments)
-                        widthList.append(linewidth)
-                        colorList.append(linecolor)
-                    f = sl.makeFacilitiesLayer(segList,widthList,colorList)
-                    image = overBackground(backgroundToOverlay(f),image,None)
                 op = open(self.baseMapFname,"wb")
                 op.write(asPNG(image))
                 op.close()
