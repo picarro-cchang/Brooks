@@ -14,7 +14,7 @@
 # 06-12-21 russ  Script name override; Logging of script exceptions
 # 09-01-21 alex  Added pulse analyzer
 # 11-04-11 sze   Added _GLOBALS_ for information to be shared between all data manager scripts
-# 11-04-13 sze   Add Synchronizer class and _SYNC_OUT_ function to support multiple data-driven 
+# 11-04-13 sze   Add Synchronizer class and _SYNC_OUT_ function to support multiple data-driven
 #                 resynchronization processes
 
 from Host.DataManager import DataSynchronizer
@@ -67,7 +67,7 @@ class Synchronizer(object):
         self.analyzer = analyzer
         self.processInterval = processInterval
         self.lastTimestamp = None
-        
+
     def dispatch(self,timestamp,forwarder):
         if self.lastTimestamp == None or (timestamp - self.lastTimestamp)>self.processInterval:
             forwarder[self.analyzer] = dict(timestamp=timestamp)
@@ -85,7 +85,7 @@ class NewDataDict(dict):
         if key in self._OldData:
             raise Exception("Key already exists in old data!  New data keys must be new.")
         return dict.__setitem__(self, key, value)
-        
+
 def RunAnalysisScript(ScriptCodeObj,
                       ScriptArgs,
                       SourceTime_s,
@@ -141,7 +141,7 @@ def RunAnalysisScript(ScriptCodeObj,
 
     """
     global persistentDict, globals
-    
+
     #need to support inputs (given to the script):
     # - cal data from provided files (INSTR_DATA)
     # - all data from meas system    (DATA)
@@ -155,11 +155,11 @@ def RunAnalysisScript(ScriptCodeObj,
     # - portal for making Driver calls    (_DRIVER_RPC as CmdFIFOServerProxy)
     #Set up the dictionaries for use in the script environment...
     # - providing copies to make sure the script doesn't screw the data up
-    
+
     if ScriptName not in persistentDict:
         persistentDict[ScriptName] = {"init": True}
     dataEnviron = {"_GLOBALS_" : globals, "_PERSISTENT_" : persistentDict[ScriptName], "Synchronizer" : Synchronizer }
-    
+
     dataEnviron[SOURCE_TIME_ID] = SourceTime_s
     dataEnviron[SOURCE_TIMESTAMP_ID] = timestamp.unixTimeToTimestamp(SourceTime_s)
     dataEnviron[DATA_ID] = DataDict.copy()
@@ -186,7 +186,7 @@ def RunAnalysisScript(ScriptCodeObj,
     dataEnviron[SERIAL_INTERFACE_ID] = SerialInterface
     dataEnviron[USER_CAL_ID] = UserCalDict.copy()
     dataEnviron[OPTIONS_ID] = Options
-    
+
     ##Now set up the direct variables (couldn't decide which one was best, so both!)...
     #for k in DataDict.keys():
         #dataEnviron["%s%s" % (DATA_ID, k)] = DataDict[k]
@@ -197,9 +197,9 @@ def RunAnalysisScript(ScriptCodeObj,
 
     def synchronizer(analyzer):
         return DataSynchronizer.resync(analyzer,dataEnviron)
-        
+
     dataEnviron.update({SYNC_OUT_ID : synchronizer})
-    
+
     try:
         exec ScriptCodeObj in dataEnviron
     except Exception, excData:
@@ -208,11 +208,16 @@ def RunAnalysisScript(ScriptCodeObj,
         raise
 
     persistentDict[ScriptName] = dataEnviron["_PERSISTENT_"]
-    
+
     #Now check for magic keywords created by the script...
     reportedData = dataEnviron[REPORT_ID]
     forwardedData = dataEnviron[FORWARD_ID]
     newData = dataEnviron[NEW_DATA_ID]
     measGood = dataEnviron[MEAS_GOOD_ID]
     scriptName = dataEnviron[SCRIPT_NAME_ID]
+    # Calculate the latency from source time to data manager completion time and report
+    #  maximum fitter latency
+    reportedData["dm_latency"] = timestamp.unixTime(timestamp.getTimestamp()) - SourceTime_s
+    if "max_fitter_latency" in DataDict:
+      reportedData["max_fitter_latency"] = DataDict["max_fitter_latency"]
     return (reportedData, forwardedData, newData, measGood, scriptName)

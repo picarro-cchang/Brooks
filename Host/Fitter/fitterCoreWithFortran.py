@@ -1190,6 +1190,7 @@ class RdfData(object):
         """
         rdData = rdfDict["rdData"]
         otherData = rdfDict["sensorData"]
+        latency = 0.0
         if "tagalongData" in rdfDict: 
             otherData.update(rdfDict["tagalongData"])
         try:
@@ -1197,6 +1198,7 @@ class RdfData(object):
             # Experimental pacing algorithm for fitter
             rdChunkSizes = controlData["RDDataSize"]
             qSizes = controlData["SpectrumQueueSize"]
+            latency = controlData.get("Latency",[0.0])[0]
         except:
             rdChunkSizes = [len(rdData["waveNumber"])]
             qSizes = [0]
@@ -1240,6 +1242,7 @@ class RdfData(object):
                 rdfData.avgTimestamp = int(round(mean(rdfData.timestamp)))
                 rdfData.startRow = low
                 rdfData.endRow = high
+                rdfData.spectLatency = latency
                 return rdfData
 
             pace = max(0.1,min(1.0,float(RED_DISCARD_ALL-qSizes[i])/(RED_DISCARD_ALL-RED_THRESHOLD)))

@@ -530,25 +530,24 @@ class PeakAnalyzer(object):
                         entry[h] = NaN
                             
                 lng, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
+                if "GPS_FIT" in entry and entry["GPS_FIT"] < 1: continue
+                if isnan(lng) or isnan(lat): continue
                 if lat_ref == None or lng_ref == None:
-                    lng_ref, lat_ref = lat, lng
+                    lat_ref, lng_ref = lat, lng
                 x,y = toXY(lat,lng,lat_ref,lng_ref)
                 if dist is None:
                     jump = 0.0
                     dist = 0.0
                 else:
                     jump = sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0))
-                    dist += jump
                 x0, y0 = x, y
                 if jump < JUMP_MAX:
+                    dist += jump
                     if self.debug == True:
                         print "\ndist: ", dist
                         print "\nentry: ", entry
-                        
                     yield DataTuple(dist,**entry)
                 else:
-                    yield None      # Indicate that dist are bad, and we must restart
-                    dist = None
                     lat_ref, lng_ref = None, None
             except:
                 print traceback.format_exc()
@@ -578,25 +577,25 @@ class PeakAnalyzer(object):
                         except:
                             entry[h] = NaN
                     lng, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
+                    if "GPS_FIT" in entry and entry["GPS_FIT"] < 1: continue
+                    if isnan(lng) or isnan(lat): continue
                     if lat_ref == None or lng_ref == None:
-                        lng_ref, lat_ref = lat, lng
+                        lat_ref, lng_ref = lat, lng
                     x,y = toXY(lat,lng,lat_ref,lng_ref)
                     if dist is None:
                         jump = 0.0
                         dist = 0.0
                     else:
                         jump = sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0))
-                        dist += jump
                     x0, y0 = x, y
                     if jump < JUMP_MAX:
+                        dist += jump
                         yield DataTuple(dist,**entry)
-                        # yield dist,SourceData(lng,lat,entry['EPOCH_TIME'],entry['ValveMask'],entry['CH4'],entry['HP_Delta_iCH4_Raw'])
                     else:
-                        yield None      # Indicate that dist are bad, and we must restart
-                        dist = None
                         lat_ref, lng_ref = None, None
             except:
                 print traceback.format_exc()
+                raise
                         
     #######################################################################
     # Perform analysis to determine the isotopic ratio
