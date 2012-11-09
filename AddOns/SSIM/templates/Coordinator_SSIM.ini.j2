@@ -113,7 +113,7 @@ timeFormat = "%m/%d/%y %H:%M:%S" # Middle-endian, starting with month (USA stand
 #timeFormat = "%d/%m/%y %H:%M:%S" # Gregorian little-endian, starting with day
 
 # Define pressure setpoints
-regularPressure = 140
+regularPressure = {{ analyzer.pressure }}
 
 setMeasBuffer("{{ analyzer.measBuffer.analysis }}",
               [

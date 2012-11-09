@@ -1,5 +1,6 @@
 {
     "CFIDS": {
+	"pressure": 148,
 	"columns": [
 	    ["sampleNum", "Run Num", "%7s", "False", "False"],
 	    ["sampleBagNum", "Sample Bag", "%10d", "False", "False"],
@@ -49,6 +50,7 @@
     },
 
     "CFFDS": {
+	"pressure": 140,
 	"columns": [
 	    ["sampleNum", "Run Num", "%7s", "False", "False"],
 	    ["sampleBagNum", "Sample Bag", "%10d", "False", "False"],
@@ -83,6 +85,7 @@
     },
 
     "FCDS": {
+	"pressure": 148,
 	"columns": [
 	    ["sampleNum", "Run Num", "%7s", "False", "False"],
 	    ["sampleBagNum", "Sample Bag", "%10d", "False", "False"],
@@ -119,6 +122,7 @@
     },
 
     "CBDS": {
+	"pressure": 140,
 	"columns": [
 	    ["sampleNum", "Run Num", "%7s", "False", "False"],
 	    ["sampleBagNum", "Sample Bag", "%10d", "False", "False"],
