@@ -37,6 +37,7 @@ Source: {#sandboxDir}\trunk\AddOns\SSIM\Coordinator_SSIM_RT_G2201-i.ini; DestDir
 Source: {#sandboxDir}\trunk\AddOns\SSIM\CoordinatorLauncher_SSIM_G2201-i.ini; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2201i
 
 Source: "{#sandboxDir}\trunk\AddOns\SSIM\Small_Sample_Isotope_Module_Manual Rev 7-30-12_Draft.pdf"; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion
+Source: {#sandboxDir}\trunk\AddOns\SSIM\ReadExtSensor.ini; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion
 
 [Icons]
 Name: "{userdesktop}\G2101-i Coordinator Launcher"; Filename: {app}\HostExe\CoordinatorLauncher.exe; Parameters: -c {app}\AddOns\SSIM\CoordinatorLauncher_SSIM_G2101-i.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\Diagnostics_icon.ico; Components: G2101i_CBDS G2101i_CFFDS
