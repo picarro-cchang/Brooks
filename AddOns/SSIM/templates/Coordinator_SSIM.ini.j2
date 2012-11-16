@@ -8,17 +8,15 @@
 # (0) Actual delta value of the standard
 # (1) The number of samples taken after measurement of each standard.
 num_disp_params = 0
-0 = "standardDelta", "Standard Delta Value", "-40.0"
-1 = "standard12CO2", "Standard 12CO2 Value", "0"
-2 = "sampleMPV", "Multi-Port Valve: 1=Use 16PortDistributionManifold; 2=Don't Use 16PortDistributionManifold", "2"
-3 = "numSamples", "If using Multi-Port Valve: Number of Sample Ports (between 1 and 8)", "1"
-4 = "repeatedMeas", "Number of Repeats per Sample (between 0 and 5)", "1"
-5 = "repeatedStd", "Number of Repeats of Standard (between 0 and 5)", "1"
-6 = "standardMode", "Standard Mode: 1=Between Each Sample Port; 2=Beginning and End", "1"
-7 = "measurementMode", "Measurement Mode: 1=One Time; 2=Continuous Loop", "2"
-8 = "measurementSpeed", "Measurement Speed: 1=Standard; 2=Fast", "1"
-9 = "sampleLoading", "Sample Loading: 1=Manual; 2=Automatic", "2"
-10 = "diluteSample", "Sample Dilution: 1=No Dilution; 2=Dilute Sample with ZA", "1"
+0 = "sampleMPV", "Multi-Port Valve: 1=Use 16PortDistributionManifold; 2=Don't Use 16PortDistributionManifold", "2"
+1 = "numSamples", "If using Multi-Port Valve: Number of Sample Ports (between 1 and 8)", "1"
+2 = "repeatedMeas", "Number of Repeats per Sample (between 0 and 5)", "1"
+3 = "repeatedStd", "Number of Repeats of Standard (between 0 and 5)", "1"
+4 = "standardMode", "Standard Mode: 1=Between Each Sample Port; 2=Beginning and End", "1"
+5 = "measurementMode", "Measurement Mode: 1=One Time; 2=Continuous Loop", "2"
+6 = "measurementSpeed", "Measurement Speed: 1=Standard; 2=Fast", "1"
+7 = "sampleLoading", "Sample Loading: 1=Manual; 2=Automatic", "2"
+8 = "diluteSample", "Sample Dilution: 1=No Dilution; 2=Dilute Sample with ZA", "1"
 
 [Mode]
 inject_mode=automatic
@@ -28,23 +26,27 @@ output = "C:\IsotopicData\SSIM"
 log = "C:\IsotopicData\SSIM"
 
 [Output]
-{% for col in analyzer.columns %}
+{%- for col in analyzer.columns %}
 {{ col[0] }} = "{{ col[1] }}", {{ col[2] }}
-{% endfor %}
+{%- endfor %}
 
 [PostProcessing]
 type = deltaCorr
 output = C:\IsotopicData\Corrected\
 
 [Setup]
-initial = StateInitConfig
+initial = StateLoadValidateParams
 final = StateDone
 error = StateError
 
-[StateInitConfig]
-action = """
-standardDelta = float(editParamDict["standardDelta"])
-standard12CO2 = float(editParamDict["standard12CO2"])
+[StateLoadValidateParams]
+action="""
+from __future__ import with_statement
+
+import os.path
+
+SSIM_INSTALL_PATH = r'c:\Picarro\G2000\AddOns\SSIM'
+
 numSamples = max(1, min(8, int(editParamDict["numSamples"])))
 repeatedMeas = max(0, min(5, int(editParamDict["repeatedMeas"])))
 repeatedStd = max(0, min(5, int(editParamDict["repeatedStd"])))
@@ -55,6 +57,35 @@ sampleMPV = editParamDict["sampleMPV"]
 sampleLoading = editParamDict["sampleLoading"]
 diluteSample = editParamDict["diluteSample"]
 
+# Load reference gas information
+with open(os.path.join(SSIM_INSTALL_PATH, 'ReferenceGases.ini'), 'r') as refGasFp:
+    refGases = configObj(refGasFp)
+
+refGas = GUI.popComboBox(msg="Press 'OK' after selecting your reference gas",
+                         title='Select Reference Gas',
+                         comboLabel='Reference Gas',
+                         choices=refGases.list_sections(),
+                         defaultValue=refGases.list_sections()[0])
+
+# Validate that the selected reference gas meets the standards for this type
+# of analyzer.
+stdValidationError = False
+{%- for std in standards %}
+if not refGases.has_option(refGas, "{{ std[0] }}"):
+    stdValidationError = True
+    logFunc("'{{ std[0] }}' missing from selected reference gas.\n")
+else:
+     {{ std[0] }} = refGases.getfloat(refGas, "{{ std[0] }}")
+{%- endfor %}
+
+if stdValidationError:
+    NEXT = "StateDone"
+else:
+    NEXT = "StateInitConfig"
+"""
+
+[StateInitConfig]
+action = """
 if standardMode not in ["1", "2"]:
     standardMode = "1"
     # in between samples
@@ -117,9 +148,9 @@ regularPressure = {{ analyzer.pressure }}
 
 setMeasBuffer("{{ analyzer.measBuffer.analysis }}",
               [
-               {% for col in analyzer.measBuffer.columns %}
+               {%- for col in analyzer.measBuffer.columns %}
                "{{ col[1] }}"{% if not loop.last %},{% endif %}
-               {% endfor %}
+               {%- endfor %}
               ],
               50)
 clearMeasBuffer()
@@ -362,9 +393,9 @@ timeMark = time.time()
 stopMeasTime = timeMark + measurementTime
 timeCount = 0
 concBuffer = {
-{% for col in analyzer.measBuffer.columns %}
+{%- for col in analyzer.measBuffer.columns %}
     "{{ col[0] }}": []{% if not loop.last %},{% endif %}
-{% endfor %}
+{%- endfor %}
 }
 concBuffer["Time"] = []
 clearMeasBuffer()
@@ -388,9 +419,9 @@ if currTime < stopMeasTime:
         NEXT="StateMeasurement"
     else:
         #logFunc("%s\n" % results.keys())
-        {% for col in analyzer.measBuffer.columns %}
+        {%- for col in analyzer.measBuffer.columns %}
         concBuffer["{{ col[0] }}"].append(results["{{ col[1] }}"])
-        {% endfor %}
+        {%- endfor %}
         concBuffer["Time"].append(results["measTime"])
         NEXT="StateMeasurement"
 else:
@@ -409,13 +440,13 @@ setLineMarkerColor("red", startTime)
 setLineMarkerColor(None, endTime)
 
 results = {}
-{% for col in analyzer.columns -%}
+{%- for col in analyzer.columns %}
 {% if col[3] == 'True' %}
 results["{{ col[0] }}"] = mean(concBuffer["{{
-  analyzer.measBuffer.columns[col[5]][0] }}"])
+  analyzer.measBuffer.columns[col[6]][0] }}"])
 {% elif col[4] == 'True' %}
 results["{{ col[0] }}"] = std(concBuffer["{{
-  analyzer.measBuffer.columns[col[5]][0] }}"])
+  analyzer.measBuffer.columns[col[6]][0] }}"])
 {% endif %}
 {%- endfor %}
 
@@ -423,8 +454,9 @@ if InjectValveMask == 6:
     results["sampleBagNum"] = currSampleNum
 
 if InjectValveMask == 22:
-    results["actualDeltaStandard"] = standardDelta
-    results["actual12CO2Standard"] = standard12CO2
+{%- for std in standards %}
+    results["{{ std[0] }}"] = {{ std[0] }}
+{%- endfor %}
     results["sampleBagNum"] = 0
 
 if sampleMPV == "1":
