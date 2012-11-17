@@ -34,6 +34,8 @@
 #include "dspMaincfg.h"
 #endif
 
+#define min(x,y) ((x)<(y)?(x):(y))
+
 RingdownParamsType nextRdParams;
 SpectCntrlParams spectCntrlParams;
 
@@ -318,7 +320,7 @@ void setupNextRdParams(void)
     unsigned int laserNum, laserTempAsInt, lossTag;
     volatile SchemeTableType *schemeTable;
     volatile VirtualLaserParamsType *vLaserParams;
-    float setpoint, dp, theta, ratio1Multiplier, ratio2Multiplier;
+    float setpoint, dp, minScale, ratio1Multiplier, ratio2Multiplier, theta;
 
     s->incrCounter_ = s->incrCounterNext_;
     if (SPECT_CNTRL_ContinuousMode == *(s->mode_))
@@ -423,9 +425,10 @@ void setupNextRdParams(void)
         theta = setpoint - vLaserParams->tempSensitivity*(r->etalonTemperature-vLaserParams->calTemp) -
                 (vLaserParams->pressureC0 + dp*(vLaserParams->pressureC1 + dp*(vLaserParams->pressureC2 + dp*vLaserParams->pressureC3)));
 
-        // Compute the ratio multipliers corresponding to this setpoint
-        ratio1Multiplier = ((-sinsp(theta + vLaserParams->phase))/(vLaserParams->ratio1Scale * cossp(vLaserParams->phase)));
-        ratio2Multiplier = ((cossp(theta))/(vLaserParams->ratio2Scale * cossp(vLaserParams->phase)));
+        // Compute the ratio multipliers corresponding to this setpoint. Both ratios must be no greater than one in absolute value.
+        minScale = min(vLaserParams->ratio1Scale,vLaserParams->ratio2Scale);
+        ratio1Multiplier = -minScale*sinsp(theta + vLaserParams->phase)/vLaserParams->ratio1Scale;
+        ratio2Multiplier = minScale*cossp(theta)/vLaserParams->ratio2Scale;
 
         // Set up the FPGA registers for this ringdown
         changeBitsFPGA(FPGA_INJECT+INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W, laserNum);
