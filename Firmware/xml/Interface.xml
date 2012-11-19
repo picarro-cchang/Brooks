@@ -141,8 +141,8 @@
             <field ident="ringdownThreshold"      type="uint32"/>
             <field ident="status"                 type="uint32"/>
             <field ident="tunerAtRingdown"        type="uint32"/>
-            <field ident="addressAtRingdown"      type="uint32"/>            
-        </struct>        
+            <field ident="addressAtRingdown"      type="uint32"/>
+        </struct>
         <struct type="RingdownBufferType">
             <field ident="ringdownWaveform" type="uint32" size="4096"/>
             <field ident="parameters" type="RingdownParamsType"/>
@@ -371,13 +371,13 @@
         <constant ident="FPGA_MAGIC_CODE" description="Code to confirm FPGA is programmed">0xC0DE0001</constant>
         <constant ident="RDSIM_EXTRA" description="Extra bits in accumulator for ringdown simulator">4</constant>
         <constant ident="WLM_ADC_WIDTH" description="Number of bits for wavelength monitor ADCs">16</constant>
-        <constant ident="I2C_READ_ERROR" description="Bad I2C read value">0x80000000</constant>        
+        <constant ident="I2C_READ_ERROR" description="Bad I2C read value">0x80000000</constant>
         <constant ident="NUDGE_LIMIT" description="Time error (ms) beyond which fast correction takes place">5000</constant>
         <constant ident="NUDGE_WINDOW" description="Do not adjust if timestamps agree within this window (ms)">20</constant>
         <constant ident="DSP_TIMER0_BASE" description="Base address of DSP timer 0 registers">0x01940000</constant>
         <constant ident="DSP_TIMER_DIVISOR" description="Divisor to get 1ms for a 225MHz DSP clock">56250</constant>
         <constant ident="MAX_FITTERS" description="Maximum number of fitter processes">8</constant>
-        <constant ident="PEAK_DETECT_MAX_HISTORY_LENGTH" description="Maximum number of samples in peak detection history buffer">1024</constant> 
+        <constant ident="PEAK_DETECT_MAX_HISTORY_LENGTH" description="Maximum number of samples in peak detection history buffer">1024</constant>
     </constant_list>
     <union_list>
         <union type="DataType">
@@ -475,14 +475,14 @@
             <enum_value ident="SPECT_CNTRL_ErrorState" value="5" caption="Error state"  />
             <enum_value ident="SPECT_CNTRL_DiagnosticState" value="6" caption="Diagnostic state"  />
         </enum>
-        <enum type="SPECT_CNTRL_ModeType"> 
-            <description>Spectrum controller modes</description> 
-            <enum_value ident="SPECT_CNTRL_SchemeSingleMode" value="0" caption="Perform single scheme" /> 
-            <enum_value ident="SPECT_CNTRL_SchemeMultipleMode" value="1" caption="Perform multiple schemes" /> 
-            <enum_value ident="SPECT_CNTRL_SchemeMultipleNoRepeatMode" value="2" caption="Multiple schemes no repeats" /> 
-            <enum_value ident="SPECT_CNTRL_ContinuousMode" value="3" caption="Continuous acquisition" /> 
-            <enum_value ident="SPECT_CNTRL_ContinuousManualTempMode" value="4" caption="Continuous acquisition with manual temperature control" /> 
-        </enum>         
+        <enum type="SPECT_CNTRL_ModeType">
+            <description>Spectrum controller modes</description>
+            <enum_value ident="SPECT_CNTRL_SchemeSingleMode" value="0" caption="Perform single scheme" />
+            <enum_value ident="SPECT_CNTRL_SchemeMultipleMode" value="1" caption="Perform multiple schemes" />
+            <enum_value ident="SPECT_CNTRL_SchemeMultipleNoRepeatMode" value="2" caption="Multiple schemes no repeats" />
+            <enum_value ident="SPECT_CNTRL_ContinuousMode" value="3" caption="Continuous acquisition" />
+            <enum_value ident="SPECT_CNTRL_ContinuousManualTempMode" value="4" caption="Continuous acquisition with manual temperature control" />
+        </enum>
         <enum type="TUNER_ModeType">
             <description>Tuner modes</description>
             <enum_value ident="TUNER_RampMode" value="0" caption="Ramp mode" />
@@ -495,7 +495,7 @@
             <enum_value ident="TUNER_DITHER_MEDIAN_5" value="5" caption="5" />
             <enum_value ident="TUNER_DITHER_MEDIAN_7" value="7" caption="7" />
             <enum_value ident="TUNER_DITHER_MEDIAN_9" value="9" caption="9" />
-        </enum>        
+        </enum>
         <enum type="VALVE_CNTRL_StateType">
             <description>Valve control states</description>
             <enum_value ident="VALVE_CNTRL_DisabledState" value="0" caption="Disabled" />
@@ -522,111 +522,112 @@
             <enum_value ident="PEAK_DETECT_CNTRL_InjectionPendingState" value="8" caption="Injection Pending" />
         </enum>
         <enum type="VIRTUAL_LASER_Type">
-            <description>Virtual laser selection</description> 
-            <enum_value ident="VIRTUAL_LASER_1" value="0" caption="Virtual laser 1" /> 
-            <enum_value ident="VIRTUAL_LASER_2" value="1" caption="Virtual laser 2" /> 
-            <enum_value ident="VIRTUAL_LASER_3" value="2" caption="Virtual laser 3" /> 
-            <enum_value ident="VIRTUAL_LASER_4" value="3" caption="Virtual laser 4" /> 
-            <enum_value ident="VIRTUAL_LASER_5" value="4" caption="Virtual laser 5" /> 
-            <enum_value ident="VIRTUAL_LASER_6" value="5" caption="Virtual laser 6" /> 
-            <enum_value ident="VIRTUAL_LASER_7" value="6" caption="Virtual laser 7" /> 
-            <enum_value ident="VIRTUAL_LASER_8" value="7" caption="Virtual laser 8" /> 
+            <description>Virtual laser selection</description>
+            <enum_value ident="VIRTUAL_LASER_1" value="0" caption="Virtual laser 1" />
+            <enum_value ident="VIRTUAL_LASER_2" value="1" caption="Virtual laser 2" />
+            <enum_value ident="VIRTUAL_LASER_3" value="2" caption="Virtual laser 3" />
+            <enum_value ident="VIRTUAL_LASER_4" value="3" caption="Virtual laser 4" />
+            <enum_value ident="VIRTUAL_LASER_5" value="4" caption="Virtual laser 5" />
+            <enum_value ident="VIRTUAL_LASER_6" value="5" caption="Virtual laser 6" />
+            <enum_value ident="VIRTUAL_LASER_7" value="6" caption="Virtual laser 7" />
+            <enum_value ident="VIRTUAL_LASER_8" value="7" caption="Virtual laser 8" />
         </enum>
         <enum type="ACTUAL_LASER_Type">
-            <description>Actual laser selection</description> 
-            <enum_value ident="ACTUAL_LASER_1" value="0" caption="Actual laser 1" /> 
-            <enum_value ident="ACTUAL_LASER_2" value="1" caption="Actual laser 2" /> 
-            <enum_value ident="ACTUAL_LASER_3" value="2" caption="Actual laser 3" /> 
-            <enum_value ident="ACTUAL_LASER_4" value="3" caption="Actual laser 4" /> 
+            <description>Actual laser selection</description>
+            <enum_value ident="ACTUAL_LASER_1" value="0" caption="Actual laser 1" />
+            <enum_value ident="ACTUAL_LASER_2" value="1" caption="Actual laser 2" />
+            <enum_value ident="ACTUAL_LASER_3" value="2" caption="Actual laser 3" />
+            <enum_value ident="ACTUAL_LASER_4" value="3" caption="Actual laser 4" />
         </enum>
         <enum type="DAS_STATUS_BitType">
-            <description>DAS status bit position</description> 
-            <enum_value ident="DAS_STATUS_Laser1TempCntrlLockedBit" value="0" caption="Laser 1 Temperature Locked" /> 
-            <enum_value ident="DAS_STATUS_Laser1TempCntrlActiveBit" value="1" caption="Laser 1 Temperature Controller On" /> 
-            <enum_value ident="DAS_STATUS_Laser2TempCntrlLockedBit" value="2" caption="Laser 2 Temperature Locked" /> 
-            <enum_value ident="DAS_STATUS_Laser2TempCntrlActiveBit" value="3" caption="Laser 2 Temperature Controller On" /> 
-            <enum_value ident="DAS_STATUS_Laser3TempCntrlLockedBit" value="4" caption="Laser 3 Temperature Locked" /> 
-            <enum_value ident="DAS_STATUS_Laser3TempCntrlActiveBit" value="5" caption="Laser 3 Temperature Controller On" /> 
-            <enum_value ident="DAS_STATUS_Laser4TempCntrlLockedBit" value="6" caption="Laser 4 Temperature Locked" /> 
-            <enum_value ident="DAS_STATUS_Laser4TempCntrlActiveBit" value="7" caption="Laser 4 Temperature Controller On" /> 
-            <enum_value ident="DAS_STATUS_WarmBoxTempCntrlLockedBit" value="8" caption="Warm Box Temperature Locked" /> 
-            <enum_value ident="DAS_STATUS_WarmBoxTempCntrlActiveBit" value="9" caption="Warm Box Temperature Controller On" /> 
-            <enum_value ident="DAS_STATUS_CavityTempCntrlLockedBit" value="10" caption="Cavity Temperature Locked" /> 
-            <enum_value ident="DAS_STATUS_CavityTempCntrlActiveBit" value="11" caption="Cavity Temperature Controller On" /> 
-            <enum_value ident="DAS_STATUS_HeaterTempCntrlLockedBit" value="12" caption="Heater Control Locked" /> 
-            <enum_value ident="DAS_STATUS_HeaterTempCntrlActiveBit" value="13" caption="Heater Controller On" /> 
+            <description>DAS status bit position</description>
+            <enum_value ident="DAS_STATUS_Laser1TempCntrlLockedBit" value="0" caption="Laser 1 Temperature Locked" />
+            <enum_value ident="DAS_STATUS_Laser1TempCntrlActiveBit" value="1" caption="Laser 1 Temperature Controller On" />
+            <enum_value ident="DAS_STATUS_Laser2TempCntrlLockedBit" value="2" caption="Laser 2 Temperature Locked" />
+            <enum_value ident="DAS_STATUS_Laser2TempCntrlActiveBit" value="3" caption="Laser 2 Temperature Controller On" />
+            <enum_value ident="DAS_STATUS_Laser3TempCntrlLockedBit" value="4" caption="Laser 3 Temperature Locked" />
+            <enum_value ident="DAS_STATUS_Laser3TempCntrlActiveBit" value="5" caption="Laser 3 Temperature Controller On" />
+            <enum_value ident="DAS_STATUS_Laser4TempCntrlLockedBit" value="6" caption="Laser 4 Temperature Locked" />
+            <enum_value ident="DAS_STATUS_Laser4TempCntrlActiveBit" value="7" caption="Laser 4 Temperature Controller On" />
+            <enum_value ident="DAS_STATUS_WarmBoxTempCntrlLockedBit" value="8" caption="Warm Box Temperature Locked" />
+            <enum_value ident="DAS_STATUS_WarmBoxTempCntrlActiveBit" value="9" caption="Warm Box Temperature Controller On" />
+            <enum_value ident="DAS_STATUS_CavityTempCntrlLockedBit" value="10" caption="Cavity Temperature Locked" />
+            <enum_value ident="DAS_STATUS_CavityTempCntrlActiveBit" value="11" caption="Cavity Temperature Controller On" />
+            <enum_value ident="DAS_STATUS_HeaterTempCntrlLockedBit" value="12" caption="Heater Control Locked" />
+            <enum_value ident="DAS_STATUS_HeaterTempCntrlActiveBit" value="13" caption="Heater Controller On" />
         </enum>
         <enum type="TEC_CNTRL_Type">
-            <description>Warm box and hot box TEC control</description> 
-            <enum_value ident="TEC_CNTRL_Disabled" value="0" caption="Disabled" /> 
-            <enum_value ident="TEC_CNTRL_Enabled" value="1" caption="Enabled" /> 
+            <description>Warm box and hot box TEC control</description>
+            <enum_value ident="TEC_CNTRL_Disabled" value="0" caption="Disabled" />
+            <enum_value ident="TEC_CNTRL_Enabled" value="1" caption="Enabled" />
         </enum>
         <enum type="OVERLOAD_BitType">
-            <description>Bit positions in FPGA overload register</description> 
-            <enum_value ident="OVERLOAD_WarmBoxTecBit" value="0" caption="Warm box TEC overload" /> 
-            <enum_value ident="OVERLOAD_HotBoxTecBit"  value="1" caption="Hot box TEC overload" /> 
+            <description>Bit positions in FPGA overload register</description>
+            <enum_value ident="OVERLOAD_WarmBoxTecBit" value="0" caption="Warm box TEC overload" />
+            <enum_value ident="OVERLOAD_HotBoxTecBit"  value="1" caption="Hot box TEC overload" />
         </enum>
-        <enum type="ANALYZER_TUNING_ModeType"> 
-            <description>Analyzer tuning modes</description> 
-            <enum_value ident="ANALYZER_TUNING_CavityLengthTuningMode" value="0" caption="Cavity Length Tuning" /> 
+        <enum type="ANALYZER_TUNING_ModeType">
+            <description>Analyzer tuning modes</description>
+            <enum_value ident="ANALYZER_TUNING_CavityLengthTuningMode" value="0" caption="Cavity Length Tuning" />
             <enum_value ident="ANALYZER_TUNING_LaserCurrentTuningMode" value="1" caption="Laser Current Tuning" />
-            <enum_value ident="ANALYZER_TUNING_FsrHoppingTuningMode"   value="2" caption="Fsr Hopping Tuning" /> 
-        </enum>         
+            <enum_value ident="ANALYZER_TUNING_FsrHoppingTuningMode"   value="2" caption="Fsr Hopping Tuning" />
+        </enum>
         <enum type="SENTRY_BitType">
-            <description>Sentry bit position</description> 
-            <enum_value ident="SENTRY_Laser1TemperatureBit" value="0" caption="Laser 1 Temperature" /> 
-            <enum_value ident="SENTRY_Laser2TemperatureBit" value="1" caption="Laser 2 Temperature" /> 
-            <enum_value ident="SENTRY_Laser3TemperatureBit" value="2" caption="Laser 3 Temperature" /> 
-            <enum_value ident="SENTRY_Laser4TemperatureBit" value="3" caption="Laser 4 Temperature" /> 
-            <enum_value ident="SENTRY_EtalonTemperatureBit" value="4" caption="Etalon Temperature" /> 
-            <enum_value ident="SENTRY_WarmBoxTemperatureBit" value="5" caption="Warm Box Temperature" /> 
-            <enum_value ident="SENTRY_WarmBoxHeatsinkTemperatureBit" value="6" caption="Warm Box Heatsink Temperature" /> 
-            <enum_value ident="SENTRY_CavityTemperatureBit" value="7" caption="Cavity Temperature" /> 
-            <enum_value ident="SENTRY_HotBoxHeatsinkTemperatureBit" value="8" caption="Hot Box Heatsink Temperature" /> 
-            <enum_value ident="SENTRY_DasTemperatureBit" value="9" caption="DAS (ambient) Temperature" /> 
-            <enum_value ident="SENTRY_Laser1CurrentBit" value="10" caption="Laser 1 Current" /> 
-            <enum_value ident="SENTRY_Laser2CurrentBit" value="11" caption="Laser 2 Current" /> 
-            <enum_value ident="SENTRY_Laser3CurrentBit" value="12" caption="Laser 3 Current" /> 
-            <enum_value ident="SENTRY_Laser4CurrentBit" value="13" caption="Laser 4 Current" /> 
-            <enum_value ident="SENTRY_CavityPressureBit" value="14" caption="Cavity Pressure" /> 
-            <enum_value ident="SENTRY_AmbientPressureBit" value="15" caption="Ambient Pressure" /> 
+            <description>Sentry bit position</description>
+            <enum_value ident="SENTRY_Laser1TemperatureBit" value="0" caption="Laser 1 Temperature" />
+            <enum_value ident="SENTRY_Laser2TemperatureBit" value="1" caption="Laser 2 Temperature" />
+            <enum_value ident="SENTRY_Laser3TemperatureBit" value="2" caption="Laser 3 Temperature" />
+            <enum_value ident="SENTRY_Laser4TemperatureBit" value="3" caption="Laser 4 Temperature" />
+            <enum_value ident="SENTRY_EtalonTemperatureBit" value="4" caption="Etalon Temperature" />
+            <enum_value ident="SENTRY_WarmBoxTemperatureBit" value="5" caption="Warm Box Temperature" />
+            <enum_value ident="SENTRY_WarmBoxHeatsinkTemperatureBit" value="6" caption="Warm Box Heatsink Temperature" />
+            <enum_value ident="SENTRY_CavityTemperatureBit" value="7" caption="Cavity Temperature" />
+            <enum_value ident="SENTRY_HotBoxHeatsinkTemperatureBit" value="8" caption="Hot Box Heatsink Temperature" />
+            <enum_value ident="SENTRY_DasTemperatureBit" value="9" caption="DAS (ambient) Temperature" />
+            <enum_value ident="SENTRY_Laser1CurrentBit" value="10" caption="Laser 1 Current" />
+            <enum_value ident="SENTRY_Laser2CurrentBit" value="11" caption="Laser 2 Current" />
+            <enum_value ident="SENTRY_Laser3CurrentBit" value="12" caption="Laser 3 Current" />
+            <enum_value ident="SENTRY_Laser4CurrentBit" value="13" caption="Laser 4 Current" />
+            <enum_value ident="SENTRY_CavityPressureBit" value="14" caption="Cavity Pressure" />
+            <enum_value ident="SENTRY_AmbientPressureBit" value="15" caption="Ambient Pressure" />
         </enum>
         <enum type="HARDWARE_PRESENT_BitType">
-            <description>Bit positions indicating hardware configuration</description> 
-            <enum_value ident="HARDWARE_PRESENT_Laser1Bit"         value="0" caption="Laser 1" /> 
-            <enum_value ident="HARDWARE_PRESENT_Laser2Bit"         value="1" caption="Laser 2" /> 
-            <enum_value ident="HARDWARE_PRESENT_Laser3Bit"         value="2" caption="Laser 3" /> 
-            <enum_value ident="HARDWARE_PRESENT_Laser4Bit"         value="3" caption="Laser 4" /> 
-            <enum_value ident="HARDWARE_PRESENT_SoaBit"            value="4" caption="SOA" /> 
-            <enum_value ident="HARDWARE_PRESENT_PowerBoardBit"     value="5" caption="Power Board" /> 
-            <enum_value ident="HARDWARE_PRESENT_WarmBoxBit"        value="6" caption="Warm Box" /> 
-            <enum_value ident="HARDWARE_PRESENT_HotBoxBit"         value="7" caption="Hot Box" />             
-            <enum_value ident="HARDWARE_PRESENT_DasTempMonitorBit" value="8" caption="Das Temp Monitor" />             
-            <enum_value ident="HARDWARE_PRESENT_AnalogInterface"   value="9" caption="Analog Interface" />             
-            <enum_value ident="HARDWARE_PRESENT_FiberAmplifierBit" value="10" caption="Fiber Amplifier" />  
-            <enum_value ident="HARDWARE_PRESENT_FanCntrlDisabledBit"       value="11" caption="Fan Control Disabled" />             
-            <enum_value ident="HARDWARE_PRESENT_FlowSensorBit"     value="12" caption="Flow Sensor" />             
+            <description>Bit positions indicating hardware configuration</description>
+            <enum_value ident="HARDWARE_PRESENT_Laser1Bit"         value="0" caption="Laser 1" />
+            <enum_value ident="HARDWARE_PRESENT_Laser2Bit"         value="1" caption="Laser 2" />
+            <enum_value ident="HARDWARE_PRESENT_Laser3Bit"         value="2" caption="Laser 3" />
+            <enum_value ident="HARDWARE_PRESENT_Laser4Bit"         value="3" caption="Laser 4" />
+            <enum_value ident="HARDWARE_PRESENT_SoaBit"            value="4" caption="SOA" />
+            <enum_value ident="HARDWARE_PRESENT_PowerBoardBit"     value="5" caption="Power Board" />
+            <enum_value ident="HARDWARE_PRESENT_WarmBoxBit"        value="6" caption="Warm Box" />
+            <enum_value ident="HARDWARE_PRESENT_HotBoxBit"         value="7" caption="Hot Box" />
+            <enum_value ident="HARDWARE_PRESENT_DasTempMonitorBit" value="8" caption="Das Temp Monitor" />
+            <enum_value ident="HARDWARE_PRESENT_AnalogInterface"   value="9" caption="Analog Interface" />
+            <enum_value ident="HARDWARE_PRESENT_FiberAmplifierBit" value="10" caption="Fiber Amplifier" />
+            <enum_value ident="HARDWARE_PRESENT_FanCntrlDisabledBit"       value="11" caption="Fan Control Disabled" />
+            <enum_value ident="HARDWARE_PRESENT_FlowSensorBit"     value="12" caption="Flow Sensor" />
+            <enum_value ident="HARDWARE_PRESENT_RddVarGainBit"     value="13" caption="Variable gain ringdown detector" />
         </enum>
         <enum type="FLOAT_ARITHMETIC_OperatorType">
-            <description>Enumeration specifying floating point operation to carry out on regiters</description> 
-            <enum_value ident="FLOAT_ARITHMETIC_Addition"         value="1" /> 
-            <enum_value ident="FLOAT_ARITHMETIC_Subtraction"      value="2" /> 
-            <enum_value ident="FLOAT_ARITHMETIC_Multiplication"   value="3" /> 
-            <enum_value ident="FLOAT_ARITHMETIC_Division"         value="4" /> 
-            <enum_value ident="FLOAT_ARITHMETIC_Average"          value="5" /> 
+            <description>Enumeration specifying floating point operation to carry out on regiters</description>
+            <enum_value ident="FLOAT_ARITHMETIC_Addition"         value="1" />
+            <enum_value ident="FLOAT_ARITHMETIC_Subtraction"      value="2" />
+            <enum_value ident="FLOAT_ARITHMETIC_Multiplication"   value="3" />
+            <enum_value ident="FLOAT_ARITHMETIC_Division"         value="4" />
+            <enum_value ident="FLOAT_ARITHMETIC_Average"          value="5" />
         </enum>
         <enum type="HEATER_CNTRL_ModeType">
-            <description>Enumeration specifying heater control mode</description> 
-            <enum_value ident="HEATER_CNTRL_MODE_DELTA_TEMP"     value="0" /> 
-            <enum_value ident="HEATER_CNTRL_MODE_TEC_TARGET"     value="1" /> 
-            <enum_value ident="HEATER_CNTRL_MODE_HEATER_FIXED"   value="2" /> 
+            <description>Enumeration specifying heater control mode</description>
+            <enum_value ident="HEATER_CNTRL_MODE_DELTA_TEMP"     value="0" />
+            <enum_value ident="HEATER_CNTRL_MODE_TEC_TARGET"     value="1" />
+            <enum_value ident="HEATER_CNTRL_MODE_HEATER_FIXED"   value="2" />
         </enum>
         <enum type="LOG_LEVEL_Type">
-            <description>Enumeration specifying event log level</description> 
-            <enum_value ident="LOG_LEVEL_DEBUG"     value="0" /> 
-            <enum_value ident="LOG_LEVEL_INFO"      value="1" /> 
-            <enum_value ident="LOG_LEVEL_STANDARD"  value="2" /> 
-            <enum_value ident="LOG_LEVEL_CRITICAL"  value="3" /> 
+            <description>Enumeration specifying event log level</description>
+            <enum_value ident="LOG_LEVEL_DEBUG"     value="0" />
+            <enum_value ident="LOG_LEVEL_INFO"      value="1" />
+            <enum_value ident="LOG_LEVEL_STANDARD"  value="2" />
+            <enum_value ident="LOG_LEVEL_CRITICAL"  value="3" />
         </enum>
     </enum_list>
     <bits_list>
@@ -646,15 +647,15 @@
             <mask  ident="RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask">0x20</mask>
             <mask  ident="RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask">0x40</mask>
             <mask  ident="RINGDOWN_STATUS_RingdownTimeout">0x80</mask>
-        </bits> 
+        </bits>
         <bits ident="SUBSCHEME_ID_BITMASK">
             <mask  ident="SUBSCHEME_ID_IdMask">0x7FFF</mask>
             <mask  ident="SUBSCHEME_ID_IncrMask">0x8000</mask>
             <mask  ident="SUBSCHEME_ID_IgnoreMask">0x4000</mask>
             <mask  ident="SUBSCHEME_ID_RecenterMask">0x2000</mask>
             <mask  ident="SUBSCHEME_ID_IsCalMask">0x1000</mask>
-            <mask  ident="SUBSCHEME_ID_SpectrumSubsectionMask">0x0300</mask> 
-            <mask  ident="SUBSCHEME_ID_SpectrumMask">0x00FF</mask> 
+            <mask  ident="SUBSCHEME_ID_SpectrumSubsectionMask">0x0300</mask>
+            <mask  ident="SUBSCHEME_ID_SpectrumMask">0x00FF</mask>
         </bits>
         <bits ident="SCHEME_VERSION_AND_TABLE_BITMASK">
             <mask  ident="SCHEME_VersionMask">0xFFF0</mask>
@@ -2266,7 +2267,7 @@
             <initial>ANALYZER_TUNING_CavityLengthTuningMode</initial>
             <save/>
             <display>Analyzer tuning mode</display>
-        </register>        
+        </register>
         <register ident="TUNER_SWEEP_RAMP_HIGH_REGISTER" type="float" minver="1.0" access="rw">
             <description>Higher limit of tuner sweep in ramp mode.</description>
             <initial>50000.0</initial>
@@ -2592,7 +2593,7 @@
             <initial>50.0</initial>
             <save/>
             <display format="%.3f" units="torr/s">Rate of cavity pressure change to disable controller</display>
-        </register>        
+        </register>
         <register ident="VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER" type="float" minver="1.0" access="rw">
             <description>Gain 1 for inlet valve</description>
             <initial>50.0</initial>
@@ -3090,7 +3091,7 @@
         <register ident="PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Number of samples left in triggered mode.</description>
             <initial>0</initial>
-        </register>        
+        </register>
         <register ident="PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Idle state valve mask and value.</description>
             <initial>0x0000</initial>
@@ -3158,6 +3159,18 @@
             <initial>0.0</initial>
             <save/>
         </register>
+        <register ident="RDD_BALANCE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Ringdown detector balance register</description>
+            <initial>0</initial>
+            <display format="%d">Ringdown detector balance</display>
+            <save/>
+        </register>
+        <register ident="RDD_GAIN_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Ringdown detector gain register</description>
+            <initial>128</initial>
+            <display format="%d">Ringdown detector gain</display>
+            <save/>
+        </register>
     </register_list>
     <i2c_list>
         <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />
@@ -3184,6 +3197,7 @@
         <i2c ident="AMBIENT_PRESSURE_ADC" chain="0" mux="7" address="0x17" />
         <i2c ident="P2_THERMISTOR_ADC" chain="0" mux="7" address="0x14" />
         <i2c ident="P4_THERMISTOR_ADC" chain="0" mux="7" address="0x15" />
+        <i2c ident="RDD_POTENTIOMETERS" chain="0" mux="7" address="0x2C" />
 
         <i2c ident="P9_THERMISTOR_ADC"  chain="1" mux="4" address="0x14" />
         <i2c ident="P11_THERMISTOR_ADC" chain="1" mux="4" address="0x15" />
@@ -3601,7 +3615,7 @@
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Acknowledge</fielddef>
                 </bitfield>
-                <bitfield ident="RAMP_DITHER" description="Tuner waveform mode" lsb="9" width="1"> 
+                <bitfield ident="RAMP_DITHER" description="Tuner waveform mode" lsb="9" width="1">
                     <fielddef value="0">Ramp</fielddef>
                     <fielddef value="1">Dither</fielddef>
                 </bitfield>
@@ -3667,7 +3681,7 @@
                     <fielddef value="0">No</fielddef>
                     <fielddef value="1">Yes</fielddef>
                 </bitfield>
-                <bitfield ident="DITHER_ENABLE" description="Allow transition to dither mode" lsb="3" width="1"> 
+                <bitfield ident="DITHER_ENABLE" description="Allow transition to dither mode" lsb="3" width="1">
                     <fielddef value="0">Disallow</fielddef>
                     <fielddef value="1">Allow</fielddef>
                 </bitfield>
@@ -3865,14 +3879,14 @@
                 </bitfield>
                 <bitfield ident="SOA_PRESENT" description="SOA or fiber amplifier present" lsb="15" width="1">
                     <fielddef value="0">No</fielddef>
-                    <fielddef value="1">Yes</fielddef>                
+                    <fielddef value="1">Yes</fielddef>
                 </bitfield>
             </reg>
             <reg type="mask" ident="CONTROL2" description="Control register 2" access="rw">
                 <save/>
                 <bitfield ident="FIBER_AMP_PRESENT" description="Fiber amplifier present" lsb="0" width="1">
                     <fielddef value="0">No</fielddef>
-                    <fielddef value="1">Yes</fielddef>                
+                    <fielddef value="1">Yes</fielddef>
                 </bitfield>
             </reg>
             <reg type="uint16" ident="LASER1_COARSE_CURRENT" description="Sets coarse current for laser 1"/>
@@ -3975,12 +3989,12 @@
             <reg type="uint16" ident="SLOPE" description="Slope of dither waveform" access="rw">
                 <save/>
                 <display format="%d">Slope of dither waveform</display>
-            </reg>            
+            </reg>
         </fpga_block>
         <fpga_block ident="SCALER" description="">
             <reg type="uint16" ident="SCALE1" description="Scale factor for PZT waveform" access="rw">
                 <save/>
-                <display format="%d" units="digU">Scale factor for PZT waveform</display>                
+                <display format="%d" units="digU">Scale factor for PZT waveform</display>
             </reg>
         </fpga_block>
     </fpga_block_list>
@@ -4015,7 +4029,7 @@
         <fpga_map ident="FPGA_PWM_HEATER" block="PWM">
             <description>Heater pulse width modulator registers</description>
         </fpga_map>
-        
+
         <fpga_map ident="FPGA_RDSIM" block="RDSIM">
             <description>Ringdown simulator registers</description>
         </fpga_map>
@@ -4153,5 +4167,8 @@
         <action ident="ACTION_GET_SCOPE_TRACE">r_get_scope_trace</action>
         <action ident="ACTION_RELEASE_SCOPE_TRACE">r_release_scope_trace</action>
         <action ident="ACTION_READ_FLOW_SENSOR">r_read_flow_sensor</action>
+        <action ident="ACTION_RDD_CNTRL_INIT">r_rdd_cntrl_init</action>
+        <action ident="ACTION_RDD_CNTRL_STEP">r_rdd_cntrl_step</action>
+        <action ident="ACTION_RDD_CNTRL_DO_COMMAND">r_rdd_cntrl_do_command</action>
     </action_list>
 </Das_Interface>

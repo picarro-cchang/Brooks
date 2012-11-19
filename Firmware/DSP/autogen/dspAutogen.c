@@ -16,10 +16,10 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[445];
+RegTypes regTypes[447];
 
 /* I2C devices */
-I2C_device i2c_devices[34] = {
+I2C_device i2c_devices[35] = {
     {0, -1, 0x55},
     {0, 0, 0x26},
     {0, 0, 0x14},
@@ -43,6 +43,7 @@ I2C_device i2c_devices[34] = {
     {0, 7, 0x17},
     {0, 7, 0x14},
     {0, 7, 0x15},
+    {0, 7, 0x2c},
     {1, 4, 0x14},
     {1, 4, 0x15},
     {1, 4, 0x24},
@@ -898,6 +899,10 @@ void initRegisters()
     writeRegister(CONVERSION_FLOW1_SCALE_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(CONVERSION_FLOW1_OFFSET_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(RDD_BALANCE_REGISTER,d);
+    d.asUint = 128;
+    writeRegister(RDD_GAIN_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -1343,6 +1348,8 @@ void initRegisters()
     regTypes[FLOW1_REGISTER] = float_type;
     regTypes[CONVERSION_FLOW1_SCALE_REGISTER] = float_type;
     regTypes[CONVERSION_FLOW1_OFFSET_REGISTER] = float_type;
+    regTypes[RDD_BALANCE_REGISTER] = uint_type;
+    regTypes[RDD_GAIN_REGISTER] = uint_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
@@ -1502,6 +1509,12 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_release_scope_trace(numInt,params,env);
         case ACTION_READ_FLOW_SENSOR:
             return r_read_flow_sensor(numInt,params,env);
+        case ACTION_RDD_CNTRL_INIT:
+            return r_rdd_cntrl_init(numInt,params,env);
+        case ACTION_RDD_CNTRL_STEP:
+            return r_rdd_cntrl_step(numInt,params,env);
+        case ACTION_RDD_CNTRL_DO_COMMAND:
+            return r_rdd_cntrl_do_command(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

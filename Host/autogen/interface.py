@@ -898,6 +898,7 @@ HARDWARE_PRESENT_AnalogInterface = 9 # Analog Interface
 HARDWARE_PRESENT_FiberAmplifierBit = 10 # Fiber Amplifier
 HARDWARE_PRESENT_FanCntrlDisabledBit = 11 # Fan Control Disabled
 HARDWARE_PRESENT_FlowSensorBit = 12 # Flow Sensor
+HARDWARE_PRESENT_RddVarGainBit = 13 # Variable gain ringdown detector
 
 # Dictionary for enumerated constants in HARDWARE_PRESENT_BitType
 HARDWARE_PRESENT_BitTypeDict = {}
@@ -914,6 +915,7 @@ HARDWARE_PRESENT_BitTypeDict[9] = 'HARDWARE_PRESENT_AnalogInterface' # Analog In
 HARDWARE_PRESENT_BitTypeDict[10] = 'HARDWARE_PRESENT_FiberAmplifierBit' # Fiber Amplifier
 HARDWARE_PRESENT_BitTypeDict[11] = 'HARDWARE_PRESENT_FanCntrlDisabledBit' # Fan Control Disabled
 HARDWARE_PRESENT_BitTypeDict[12] = 'HARDWARE_PRESENT_FlowSensorBit' # Flow Sensor
+HARDWARE_PRESENT_BitTypeDict[13] = 'HARDWARE_PRESENT_RddVarGainBit' # Variable gain ringdown detector
 
 # Enumerated definitions for FLOAT_ARITHMETIC_OperatorType
 FLOAT_ARITHMETIC_OperatorType = c_uint
@@ -998,7 +1000,7 @@ INJECTION_SETTINGS_virtualLaserShift = 2
 INJECTION_SETTINGS_lossTagShift = 5
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 445
+INTERFACE_NUMBER_OF_REGISTERS = 447
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1445,6 +1447,8 @@ PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER = 441
 FLOW1_REGISTER = 442
 CONVERSION_FLOW1_SCALE_REGISTER = 443
 CONVERSION_FLOW1_OFFSET_REGISTER = 444
+RDD_BALANCE_REGISTER = 445
+RDD_GAIN_REGISTER = 446
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -1475,17 +1479,18 @@ i2cByIndex[19] = 'CAVITY_PRESSURE_ADC'
 i2cByIndex[20] = 'AMBIENT_PRESSURE_ADC'
 i2cByIndex[21] = 'P2_THERMISTOR_ADC'
 i2cByIndex[22] = 'P4_THERMISTOR_ADC'
-i2cByIndex[23] = 'P9_THERMISTOR_ADC'
-i2cByIndex[24] = 'P11_THERMISTOR_ADC'
-i2cByIndex[25] = 'P3_THERMISTOR_ADC'
-i2cByIndex[26] = 'P12_THERMISTOR_ADC'
-i2cByIndex[27] = 'ENGINE_BOX_EEPROM'
-i2cByIndex[28] = 'FLOW1_SENSOR'
-i2cByIndex[29] = 'DAS_TEMP_SENSOR'
-i2cByIndex[30] = 'VALVE_PUMP_TEC_PORT'
-i2cByIndex[31] = 'ANALOG_INTERFACE'
-i2cByIndex[32] = 'CHAIN0_MUX'
-i2cByIndex[33] = 'CHAIN1_MUX'
+i2cByIndex[23] = 'RDD_POTENTIOMETERS'
+i2cByIndex[24] = 'P9_THERMISTOR_ADC'
+i2cByIndex[25] = 'P11_THERMISTOR_ADC'
+i2cByIndex[26] = 'P3_THERMISTOR_ADC'
+i2cByIndex[27] = 'P12_THERMISTOR_ADC'
+i2cByIndex[28] = 'ENGINE_BOX_EEPROM'
+i2cByIndex[29] = 'FLOW1_SENSOR'
+i2cByIndex[30] = 'DAS_TEMP_SENSOR'
+i2cByIndex[31] = 'VALVE_PUMP_TEC_PORT'
+i2cByIndex[32] = 'ANALOG_INTERFACE'
+i2cByIndex[33] = 'CHAIN0_MUX'
+i2cByIndex[34] = 'CHAIN1_MUX'
 
 #i2cByIdent tuple is (index,chain,mux,address)
 i2cByIdent = {}
@@ -1512,17 +1517,18 @@ i2cByIdent['CAVITY_PRESSURE_ADC'] = (19, 0, 7, 0x24)
 i2cByIdent['AMBIENT_PRESSURE_ADC'] = (20, 0, 7, 0x17)
 i2cByIdent['P2_THERMISTOR_ADC'] = (21, 0, 7, 0x14)
 i2cByIdent['P4_THERMISTOR_ADC'] = (22, 0, 7, 0x15)
-i2cByIdent['P9_THERMISTOR_ADC'] = (23, 1, 4, 0x14)
-i2cByIdent['P11_THERMISTOR_ADC'] = (24, 1, 4, 0x15)
-i2cByIdent['P3_THERMISTOR_ADC'] = (25, 1, 4, 0x24)
-i2cByIdent['P12_THERMISTOR_ADC'] = (26, 1, 4, 0x26)
-i2cByIdent['ENGINE_BOX_EEPROM'] = (27, 1, 4, 0x50)
-i2cByIdent['FLOW1_SENSOR'] = (28, 0, 7, 0x49)
-i2cByIdent['DAS_TEMP_SENSOR'] = (29, 0, -1, 0x4e)
-i2cByIdent['VALVE_PUMP_TEC_PORT'] = (30, 1, 4, 0x70)
-i2cByIdent['ANALOG_INTERFACE'] = (31, 0, 4, 0x10)
-i2cByIdent['CHAIN0_MUX'] = (32, 0, -1, 0x70)
-i2cByIdent['CHAIN1_MUX'] = (33, 1, -1, 0x71)
+i2cByIdent['RDD_POTENTIOMETERS'] = (23, 0, 7, 0x2c)
+i2cByIdent['P9_THERMISTOR_ADC'] = (24, 1, 4, 0x14)
+i2cByIdent['P11_THERMISTOR_ADC'] = (25, 1, 4, 0x15)
+i2cByIdent['P3_THERMISTOR_ADC'] = (26, 1, 4, 0x24)
+i2cByIdent['P12_THERMISTOR_ADC'] = (27, 1, 4, 0x26)
+i2cByIdent['ENGINE_BOX_EEPROM'] = (28, 1, 4, 0x50)
+i2cByIdent['FLOW1_SENSOR'] = (29, 0, 7, 0x49)
+i2cByIdent['DAS_TEMP_SENSOR'] = (30, 0, -1, 0x4e)
+i2cByIdent['VALVE_PUMP_TEC_PORT'] = (31, 1, 4, 0x70)
+i2cByIdent['ANALOG_INTERFACE'] = (32, 0, 4, 0x10)
+i2cByIdent['CHAIN0_MUX'] = (33, 0, -1, 0x70)
+i2cByIdent['CHAIN1_MUX'] = (34, 1, -1, 0x71)
 
 #I2C channel definitions
 I2C_LOGIC_EEPROM = 0
@@ -1548,17 +1554,18 @@ I2C_CAVITY_PRESSURE_ADC = 19
 I2C_AMBIENT_PRESSURE_ADC = 20
 I2C_P2_THERMISTOR_ADC = 21
 I2C_P4_THERMISTOR_ADC = 22
-I2C_P9_THERMISTOR_ADC = 23
-I2C_P11_THERMISTOR_ADC = 24
-I2C_P3_THERMISTOR_ADC = 25
-I2C_P12_THERMISTOR_ADC = 26
-I2C_ENGINE_BOX_EEPROM = 27
-I2C_FLOW1_SENSOR = 28
-I2C_DAS_TEMP_SENSOR = 29
-I2C_VALVE_PUMP_TEC_PORT = 30
-I2C_ANALOG_INTERFACE = 31
-I2C_CHAIN0_MUX = 32
-I2C_CHAIN1_MUX = 33
+I2C_RDD_POTENTIOMETERS = 23
+I2C_P9_THERMISTOR_ADC = 24
+I2C_P11_THERMISTOR_ADC = 25
+I2C_P3_THERMISTOR_ADC = 26
+I2C_P12_THERMISTOR_ADC = 27
+I2C_ENGINE_BOX_EEPROM = 28
+I2C_FLOW1_SENSOR = 29
+I2C_DAS_TEMP_SENSOR = 30
+I2C_VALVE_PUMP_TEC_PORT = 31
+I2C_ANALOG_INTERFACE = 32
+I2C_CHAIN0_MUX = 33
+I2C_CHAIN1_MUX = 34
 
 
 registerByName["NOOP_REGISTER"] = NOOP_REGISTER
@@ -2451,6 +2458,10 @@ registerByName["CONVERSION_FLOW1_SCALE_REGISTER"] = CONVERSION_FLOW1_SCALE_REGIS
 registerInfo.append(RegInfo("CONVERSION_FLOW1_SCALE_REGISTER",c_float,1,1.0,"rw"))
 registerByName["CONVERSION_FLOW1_OFFSET_REGISTER"] = CONVERSION_FLOW1_OFFSET_REGISTER
 registerInfo.append(RegInfo("CONVERSION_FLOW1_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerByName["RDD_BALANCE_REGISTER"] = RDD_BALANCE_REGISTER
+registerInfo.append(RegInfo("RDD_BALANCE_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["RDD_GAIN_REGISTER"] = RDD_GAIN_REGISTER
+registerInfo.append(RegInfo("RDD_GAIN_REGISTER",c_uint,1,1.0,"rw"))
 
 # FPGA block definitions
 
@@ -2905,6 +2916,9 @@ ACTION_FLOAT_ARITHMETIC = 74
 ACTION_GET_SCOPE_TRACE = 75
 ACTION_RELEASE_SCOPE_TRACE = 76
 ACTION_READ_FLOW_SENSOR = 77
+ACTION_RDD_CNTRL_INIT = 78
+ACTION_RDD_CNTRL_STEP = 79
+ACTION_RDD_CNTRL_DO_COMMAND = 80
 
 
 # Parameter form definitions
@@ -3340,6 +3354,8 @@ parameter_forms.append(('Ringdown Simulator Parameters',__p))
 
 __p = []
 
+__p.append(('dsp','uint32',RDD_BALANCE_REGISTER,'Ringdown detector balance','','%d',1,1))
+__p.append(('dsp','uint32',RDD_GAIN_REGISTER,'Ringdown detector gain','','%d',1,1))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Reset ringdown manager', [(0, u'Idle'), (16, u'Reset')]), (32, u'Mark bank 0 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Mark bank 1 available for write', [(0, u'Idle'), (64, u'Mark available')]), (128, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (128, u'Acknowledge')]), (256, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (256, u'Acknowledge')]), (512, u'Tuner waveform mode', [(0, u'Ramp'), (512, u'Dither')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')]), (16, u'Ringdown data source', [(0, u'Simulator'), (16, u'Actual ADC')]), (32, u'Oscilloscope mode', [(0, u'Disabled'), (32, u'Enabled')]), (64, u'Tuner slope to trigger scope', [(0, u'Falling'), (64, u'Rising')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DIVISOR,'Ringdown ADC divisor, Sample freq = 25MHz/(divisor+1)','','%d',1,1))

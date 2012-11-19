@@ -504,6 +504,11 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Writes "value" to the specified analog interface DAC channel. """
         self.dasInterface.hostToDspSender.wrDac(channel,value)
 
+    def rddCommand(self,command):
+        """Issues command for ringdown detector variable gain board"""
+        sender = self.dasInterface.hostToDspSender
+        sender.doOperation(Operation("ACTION_RDD_CNTRL_DO_COMMAND",[int(command) & 0xFF]))
+        
     #def wrAuxiliary(self,data):
     #    """Writes the "data" string to the auxiliary board"""
     #    self.dasInterface.hostToDspSender.wrAuxiliary(ctypes.create_string_buffer(data,len(data)))

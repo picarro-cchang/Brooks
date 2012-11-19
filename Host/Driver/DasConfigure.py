@@ -88,6 +88,7 @@ class DasConfigure(SharedTypes.Singleton):
                    ("ANALOG_INTERFACE",    1<<interface.HARDWARE_PRESENT_AnalogInterface),
                    ("FIBER_AMPLIFIER_PRESENT",    1<<interface.HARDWARE_PRESENT_FiberAmplifierBit),
                    ("FAN_CONTROL_DISABLED", 1<<interface.HARDWARE_PRESENT_FanCntrlDisabledBit),
+                   ("RDD_VAR_GAIN_PRESENT", 1<<interface.HARDWARE_PRESENT_RddVarGainBit),
                    ]
         mask = 0
         for key, bit in mapping:
@@ -510,8 +511,8 @@ class DasConfigure(SharedTypes.Singleton):
         if fanCntrl:
             self.opGroups["SLOW"]["CONTROLLER"].addOperation(Operation("ACTION_FAN_CNTRL_STEP"))
             self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
-                Operation("ACTION_ACTIVATE_FAN",["FAN_CNTRL_STATE_REGISTER"]))
-
+                Operation("ACTION_ACTIVATE_FAN",["FAN_CNTRL_STATE_REGISTER"]))        
+                
         # Valve control
 
         if present:
@@ -584,6 +585,13 @@ class DasConfigure(SharedTypes.Singleton):
             self.opGroups["FAST"]["CONTROLLER"].addOperation(
                 Operation("ACTION_VALVE_CNTRL_STEP"))
         
+        # Ringdown detector variable gain control
+        
+        rddVarGainPresent = self.installCheck("RDD_VAR_GAIN_PRESENT")        
+        if rddVarGainPresent:
+            self.opGroups["FAST"]["CONTROLLER"].addOperation(
+                Operation("ACTION_RDD_CNTRL_STEP"))
+                    
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_SPECTRUM_CNTRL_STEP"))
         
@@ -656,6 +664,8 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_CAVITY_INIT"))
         sender.doOperation(Operation("ACTION_HEATER_CNTRL_INIT"))
         if fanCntrl: sender.doOperation(Operation("ACTION_FAN_CNTRL_INIT"))
+        if rddVarGainPresent: sender.doOperation(Operation("ACTION_RDD_CNTRL_INIT"))
+
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_WARMBOX","PWM_CS"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x8000,"FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))

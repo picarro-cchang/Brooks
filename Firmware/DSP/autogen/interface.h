@@ -654,7 +654,8 @@ typedef enum {
     HARDWARE_PRESENT_AnalogInterface = 9, // Analog Interface
     HARDWARE_PRESENT_FiberAmplifierBit = 10, // Fiber Amplifier
     HARDWARE_PRESENT_FanCntrlDisabledBit = 11, // Fan Control Disabled
-    HARDWARE_PRESENT_FlowSensorBit = 12 // Flow Sensor
+    HARDWARE_PRESENT_FlowSensorBit = 12, // Flow Sensor
+    HARDWARE_PRESENT_RddVarGainBit = 13 // Variable gain ringdown detector
 } HARDWARE_PRESENT_BitType;
 
 typedef enum {
@@ -719,7 +720,7 @@ typedef enum {
 #define INJECTION_SETTINGS_lossTagShift (5)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (445)
+#define INTERFACE_NUMBER_OF_REGISTERS (447)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1166,6 +1167,8 @@ typedef enum {
 #define FLOW1_REGISTER (442)
 #define CONVERSION_FLOW1_SCALE_REGISTER (443)
 #define CONVERSION_FLOW1_OFFSET_REGISTER (444)
+#define RDD_BALANCE_REGISTER (445)
+#define RDD_GAIN_REGISTER (446)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0
@@ -1191,17 +1194,18 @@ typedef enum {
 #define AMBIENT_PRESSURE_ADC 20
 #define P2_THERMISTOR_ADC 21
 #define P4_THERMISTOR_ADC 22
-#define P9_THERMISTOR_ADC 23
-#define P11_THERMISTOR_ADC 24
-#define P3_THERMISTOR_ADC 25
-#define P12_THERMISTOR_ADC 26
-#define ENGINE_BOX_EEPROM 27
-#define FLOW1_SENSOR 28
-#define DAS_TEMP_SENSOR 29
-#define VALVE_PUMP_TEC_PORT 30
-#define ANALOG_INTERFACE 31
-#define CHAIN0_MUX 32
-#define CHAIN1_MUX 33
+#define RDD_POTENTIOMETERS 23
+#define P9_THERMISTOR_ADC 24
+#define P11_THERMISTOR_ADC 25
+#define P3_THERMISTOR_ADC 26
+#define P12_THERMISTOR_ADC 27
+#define ENGINE_BOX_EEPROM 28
+#define FLOW1_SENSOR 29
+#define DAS_TEMP_SENSOR 30
+#define VALVE_PUMP_TEC_PORT 31
+#define ANALOG_INTERFACE 32
+#define CHAIN0_MUX 33
+#define CHAIN1_MUX 34
 
 /* FPGA block definitions */
 
@@ -1633,4 +1637,7 @@ typedef enum {
 #define ACTION_GET_SCOPE_TRACE (75)
 #define ACTION_RELEASE_SCOPE_TRACE (76)
 #define ACTION_READ_FLOW_SENSOR (77)
+#define ACTION_RDD_CNTRL_INIT (78)
+#define ACTION_RDD_CNTRL_STEP (79)
+#define ACTION_RDD_CNTRL_DO_COMMAND (80)
 #endif
