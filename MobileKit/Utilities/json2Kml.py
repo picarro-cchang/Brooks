@@ -11,6 +11,7 @@
 
 import sys
 import numpy as np
+from numpy import log, pi, sin, cos, sqrt, arctan, arctan2, tan
 import geohash
 try:
     from collections import namedtuple
@@ -23,6 +24,59 @@ except:
     
 LatLng = namedtuple( 'LatLng', ["lat", "lng"] )
 
+def distVincenty(lat1, lng1, lat2, lng2):
+    # WGS-84 ellipsiod. lat and lng in DEGREES
+    a = 6378137
+    b = 6356752.3142
+    f = 1/298.257223563;
+    toRad = pi/180.0
+    L = (lng2-lng1)*toRad
+    U1 = arctan((1-f) * tan(lat1*toRad))
+    U2 = arctan((1-f) * tan(lat2*toRad));
+    sinU1 = sin(U1)
+    cosU1 = cos(U1)
+    sinU2 = sin(U2)
+    cosU2 = cos(U2)
+  
+    Lambda = L
+    iterLimit = 100;
+    for iter in range(iterLimit):
+        sinLambda = sin(Lambda)
+        cosLambda = cos(Lambda)
+        sinSigma = sqrt((cosU2*sinLambda) * (cosU2*sinLambda) + 
+                        (cosU1*sinU2-sinU1*cosU2*cosLambda) * (cosU1*sinU2-sinU1*cosU2*cosLambda))
+        if sinSigma==0: 
+            return 0  # co-incident points
+        cosSigma = sinU1*sinU2 + cosU1*cosU2*cosLambda
+        sigma = arctan2(sinSigma, cosSigma)
+        sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma
+        cosSqAlpha = 1 - sinAlpha*sinAlpha
+        if cosSqAlpha == 0:
+            cos2SigmaM = 0
+        else:
+            cos2SigmaM = cosSigma - 2*sinU1*sinU2/cosSqAlpha
+        C = f/16*cosSqAlpha*(4+f*(4-3*cosSqAlpha))
+        lambdaP = Lambda;
+        Lambda = L + (1-C) * f * sinAlpha * \
+          (sigma + C*sinSigma*(cos2SigmaM+C*cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)))
+        if abs(Lambda-lambdaP)<=1.e-12: break
+    else:
+        raise ValueError("Failed to converge")
+
+    uSq = cosSqAlpha * (a*a - b*b) / (b*b)
+    A = 1 + uSq/16384*(4096+uSq*(-768+uSq*(320-175*uSq)))
+    B = uSq/1024 * (256+uSq*(-128+uSq*(74-47*uSq)))
+    deltaSigma = B*sinSigma*(cos2SigmaM+B/4*(cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)-
+                 B/6*cos2SigmaM*(-3+4*sinSigma*sinSigma)*(-3+4*cos2SigmaM*cos2SigmaM)))
+    return b*A*(sigma-deltaSigma)
+
+def pathDistance( path ):
+    '''Calculate the total distance along a path (defined by a list of LatLng)'''
+    d = 0.
+    for i in range( len(path)-1 ): 
+        d += distVincenty( path[i].lat, path[i].lng, path[i+1].lat, path[i+1].lng )
+    return d    
+    
 class Json2Kml(object):
     def __init__(self, vers='1.0', encod='UTF-8', url='http://www.opengis.net/kml/2.2'):
         '''Convert JSON representations of PATHs and SWATHs into KML'''
@@ -162,15 +216,22 @@ class Json2Kml(object):
             edges.append( edgePoly  )
         return paths, edges
         
-    def ExtractPaths( self, jsn ):
-        paths = []  # elements are PolyLine
+    def ExtractPaths( self, jsn, type=0):
+        '''Extract all paths of the specified type. 
+            type:   0 -> active path
+                    1 -> doing isotopic analysis
+                    2 -> inactive
+                    3 -> bad instrument'''
+        paths = []  
         pth = jsn["PATHS"]
         for i in range(len(pth)):
-            pathHash = pth[i]["PATH"]
-            pathPoly = []
-            for j in range(len(pathHash)):
-                pathPoly.append( LatLng( geohash.decode( pathHash[j] )[0], geohash.decode( pathHash[j] )[1] ) )
-            paths.append( pathPoly )
+        #for i in range(3):
+            if ( pth[i]["TYPE"] == type ):
+                pathHash = pth[i]["PATH"]
+                pathPoly = []
+                for j in range(len(pathHash)):
+                    pathPoly.append( LatLng( geohash.decode( pathHash[j] )[0], geohash.decode( pathHash[j] )[1] ) )
+                paths.append( pathPoly )
         return paths
         
     def ConvertFileToKMLString( self, json_fn ):
@@ -180,6 +241,17 @@ class Json2Kml(object):
         polyList = []    # this will also be a list of lists
         for i in range(len(edge1List)):
             polyList.append( self.FOV2ListOfPoly( edge1List[i], edge2List[i] ) )
+        pathList = self.ExtractPaths( jsn, 0 )
+        # Calculate path distances
+        print "Path Distances [km]: "
+        i = 0
+        totalDist = 0.
+        for path in pathList:
+            pathDist = pathDistance(path)
+            print "  Path ", i, pathDist/1000.
+            totalDist += pathDist/1000.
+            i += 1
+        print "  TOTAL: ", totalDist, " km"
         kml = self.GetKMLHeader()
         styleName = "SurveyorStyle"
         kml += self.GetStyleBlock(styleName, "      ")
