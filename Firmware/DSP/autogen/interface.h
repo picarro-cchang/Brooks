@@ -1475,6 +1475,8 @@ typedef enum {
 #define INJECT_CONTROL2 (1) // Control register 2
 #define INJECT_CONTROL2_FIBER_AMP_PRESENT_B (0) // Fiber amplifier present bit position
 #define INJECT_CONTROL2_FIBER_AMP_PRESENT_W (1) // Fiber amplifier present bit width
+#define INJECT_CONTROL2_EXTINGUISH_DESELECTED_B (1) // Turn off deselected lasers bit position
+#define INJECT_CONTROL2_EXTINGUISH_DESELECTED_W (1) // Turn off deselected lasers bit width
 
 #define INJECT_LASER1_COARSE_CURRENT (2) // Sets coarse current for laser 1
 #define INJECT_LASER2_COARSE_CURRENT (3) // Sets coarse current for laser 2

@@ -2731,6 +2731,8 @@ INJECT_CONTROL_SOA_PRESENT_W = 1 # SOA or fiber amplifier present bit width
 INJECT_CONTROL2 = 1 # Control register 2
 INJECT_CONTROL2_FIBER_AMP_PRESENT_B = 0 # Fiber amplifier present bit position
 INJECT_CONTROL2_FIBER_AMP_PRESENT_W = 1 # Fiber amplifier present bit width
+INJECT_CONTROL2_EXTINGUISH_DESELECTED_B = 1 # Turn off deselected lasers bit position
+INJECT_CONTROL2_EXTINGUISH_DESELECTED_W = 1 # Turn off deselected lasers bit width
 
 INJECT_LASER1_COARSE_CURRENT = 2 # Sets coarse current for laser 1
 INJECT_LASER2_COARSE_CURRENT = 3 # Sets coarse current for laser 2
@@ -3317,7 +3319,7 @@ __p = []
 
 __p.append(('dsp','choices',VIRTUAL_LASER_REGISTER,'Virtual laser','',[(VIRTUAL_LASER_1,"Virtual laser 1"),(VIRTUAL_LASER_2,"Virtual laser 2"),(VIRTUAL_LASER_3,"Virtual laser 3"),(VIRTUAL_LASER_4,"Virtual laser 4"),(VIRTUAL_LASER_5,"Virtual laser 5"),(VIRTUAL_LASER_6,"Virtual laser 6"),(VIRTUAL_LASER_7,"Virtual laser 7"),(VIRTUAL_LASER_8,"Virtual laser 8"),],1,1))
 __p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser selected', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', []), (16, u'Laser 2 current source', []), (32, u'Laser 3 current source', []), (64, u'Laser 4 current source', []), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', []), (256, u'Laser 2 current (in manual mode)', []), (512, u'Laser 3 current (in manual mode)', []), (1024, u'Laser 4 current (in manual mode)', []), (2048, u'Enable SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')]), (16384, u'Select optical switch type', [(0, u'2-way'), (16384, u'4-way')]), (32768, u'SOA or fiber amplifier present', [(0, u'No'), (32768, u'Yes')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL2,[(1, u'Fiber amplifier present', [(0, u'No'), (1, u'Yes')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL2,[(1, u'Fiber amplifier present', [(0, u'No'), (1, u'Yes')]), (2, u'Turn off deselected lasers', [(0, u'No'), (2, u'Yes')])],None,None,1,1))
 parameter_forms.append(('Optical Injection Parameters',__p))
 
 # Form: Spectrum Controller Parameters
