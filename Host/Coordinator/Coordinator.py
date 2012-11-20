@@ -327,7 +327,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.saveFp = file(self.saveFileName,"wb")
         if self.logEnable:
             self.logFp = file(self.logFileName,"wb")
-        self.onWriteHeadings()
+#        self.onWriteHeadings(self.paramTupleList)
         self.startStateMachineThread(self.paramTupleList)
 
     def makeFilename(self, fileType = "save"):
@@ -466,9 +466,12 @@ class CoordinatorFrame(CoordinatorFrameGui):
                     userParams = []
                     for i in range(len(self.guiParamDict)):
                         key = paramTupleList[i][0]
+                        # Use os.linesep because the csv files must be treated
+                        # as binary.
                         userParams.append(
-                            "# (%s) %s=%s\n" % (paramTupleList[i][1], key,
-                                                self.guiParamDict[key]))
+                            "# (%s) %s=%s%s" % (paramTupleList[i][1], key,
+                                                self.guiParamDict[key],
+                                                os.linesep))
                     self.saveFp.writelines(userParams)
 
             writer = csv.writer(self.saveFp)
@@ -536,7 +539,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
                     self.setParamText(idx, self.guiParamDict[dlg.nameList[idx]])
             dlg.Destroy()
             print self.guiParamDict
-            self.onWriteHeadings(paramTupleList)
+            self.onWriteHeadings(self.paramTupleList)
 
         if self.fsmThread != None:
             self.terminateStateMachineThread()
@@ -591,6 +594,8 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.saveFp = file(self.saveFileName,"ab")
         try:
             w = csv.writer(self.saveFp)
+
+
             w.writerow(h)
         finally:
             if notOpen:
@@ -623,7 +628,6 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.lineIndex = 0
             self.saveFp = file(self.saveFileName,"wb")
             try:
-                self.onWriteHeadings()
                 for data in self.outputFileDataList:
                     self.processData(data)
             finally:
