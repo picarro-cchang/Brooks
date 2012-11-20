@@ -124,3 +124,7 @@ MobileKit/Tests/data/test*/
 MobileKit/Tests/htmlcov/
 MobileKit/Tests/htmlcov/
 CHANGELOG.raw
+Host/Common/setup_version.py
+Host/build/
+Host/dist/
+Host/Tests/Coordinator/Output/
