@@ -128,3 +128,6 @@ Host/Common/setup_version.py
 Host/build/
 Host/dist/
 Host/Tests/Coordinator/Output/
+.lock-waf_win32_build
+Firmware/Peripherals/build/
+Firmware/Peripherals/waf-*/
