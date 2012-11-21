@@ -123,3 +123,6 @@ MobileKit/Tests/*.pkl
 MobileKit/Tests/data/test*/
 MobileKit/Tests/htmlcov/
 MobileKit/Tests/htmlcov/
+.lock-waf_win32_build
+Firmware/Peripherals/build/
+Firmware/Peripherals/waf-*/

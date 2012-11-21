@@ -52,7 +52,7 @@ def getArduinoSources(ctx, ardPath):
 
 def getConfig(bld):
     cp = ConfigParser.SafeConfigParser()
-    try: cp.read('config_c_d_characterization.ini')
+    try: cp.read('config_c_d.ini')
     except: bld.env.fatal('config.ini missing')
 
     defaultArdInstPath = '/usr/share/arduino/hardware/arduino/cores/arduino/'
