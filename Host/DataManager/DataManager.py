@@ -1225,7 +1225,8 @@ class DataManager(object):
         for name in spectrumNames:
             analyzer = self.CurrentMeasMode.Analyzers[name].ScriptPath
             results = self.resultsByAnalyzer[analyzer]
-            results["max_fitter_latency"] = maxLatency
+            if results:
+                results["max_fitter_latency"] = maxLatency
             # Note: We must use self.lastFitAnalyzed below as this is the common timestamp of
             #  the spectra to be analyzed
             measDataList.append(MeasData(name, timestamp.unixTime(self.lastFitAnalyzed), results))
