@@ -1,3 +1,22 @@
+
+1.3.9-15
+
+[General]
+
+* Fixed a bug where under certain circumstances duplicate header rows would be
+  added to the Coordinator output.
+
+[L2120-i]
+
+* Fixed an issue when using the A0325 autosampler that prevented sample
+  description files from working correctly.
+
+[L2130-i]
+
+* Fixed an issue when using the A0325 autosampler that prevented sample
+  description files from working correctly.  
+  
+  
 1.3.9-14
 
 [General]
