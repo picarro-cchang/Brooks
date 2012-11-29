@@ -177,6 +177,7 @@ def _copyBuildAndInstallers(name, ver):
     for c in CONFIGS:
         installer = "setup_%s_%s_%s.exe" % (c, CONFIGS[c], _verAsString(ver))
         targetDir = os.path.join(STAGING_DISTRIB_BASE, c)
+        os.makedirs(targetDir)
 
         shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
                         os.path.join(targetDir, installer))
