@@ -158,7 +158,7 @@ def _copyBuildAndInstallers(name, ver):
     # HostExe
     hostExeDir = os.path.join(STAGING_MFG_DISTRIB_BASE, 'HostExe')
     assert not os.path.isdir(hostExeDir)
-    os.mkdir(hostExeDir)
+    os.makedirs(hostExeDir)
 
     dir_util.copy_tree(os.path.join(SANDBOX_DIR, name, 'Host', 'dist'),
                        hostExeDir)
@@ -167,7 +167,7 @@ def _copyBuildAndInstallers(name, ver):
     analyzerServerExe = os.path.join(STAGING_MFG_DISTRIB_BASE,
                                      'AnalyzerServerExe')
     assert not os.path.isdir(analyzerServerExe)
-    os.mkdir(analyzerServerExe)
+    os.makedirs(analyzerServerExe)
 
     dir_util.copy_tree(os.path.join(SANDBOX_DIR, name, 'MobileKit', 'dist'),
                        analyzerServerExe)
