@@ -52,6 +52,10 @@ VERSION_TEMPLATE = ("[Version]\\nrevno = {revno}\\ndate = {date}\\n"
 MFG_DISTRIB_BASE = 'r:/G2000_HostSoftwareInstallers'
 DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer'
 
+# Where new releases are put for testing.
+STAGING_MFG_DISTRIB_BASE = 'r:/G2000_HostSoftwareInstallers_Staging'
+STAGING_DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer_Staging'
+
 
 def makeExe(opts):
     """
@@ -59,6 +63,10 @@ def makeExe(opts):
     """
 
     pprint.pprint(opts)
+
+    if opts.makeOfficial:
+        print 'Not supported yet.'
+        sys.exit(1)
 
     # Load configuration mapping metadata
     if not os.path.isfile('products.json'):
@@ -136,11 +144,19 @@ def makeExe(opts):
 def _copyBuildAndInstallers(name, ver):
     """
     Move the installers and the two compiled exe directories to their
-    distribution location so other people can find them.
+    staging location so other people can find them.
     """
 
+    # Clean the previously staged version.
+    try:
+        shutil.rmtree(STAGING_MFG_DISTRIB_BASE)
+        shutil.rmtree(STAGING_DISTRIB_BASE)
+    except:
+        # Okay if these directories doesn't already exist.
+        pass
+
     # HostExe
-    hostExeDir = os.path.join(MFG_DISTRIB_BASE, 'HostExe', _verAsString(ver))
+    hostExeDir = os.path.join(STAGING_MFG_DISTRIB_BASE, 'HostExe')
     assert not os.path.isdir(hostExeDir)
     os.mkdir(hostExeDir)
 
@@ -148,8 +164,8 @@ def _copyBuildAndInstallers(name, ver):
                        hostExeDir)
 
     # AnalyzerServerExe
-    analyzerServerExe = os.path.join(MFG_DISTRIB_BASE, 'AnalyzerServerExe',
-                                     _verAsString(ver))
+    analyzerServerExe = os.path.join(STAGING_MFG_DISTRIB_BASE,
+                                     'AnalyzerServerExe')
     assert not os.path.isdir(analyzerServerExe)
     os.mkdir(analyzerServerExe)
 
@@ -160,13 +176,10 @@ def _copyBuildAndInstallers(name, ver):
     # used by manufacturing.
     for c in CONFIGS:
         installer = "setup_%s_%s_%s.exe" % (c, CONFIGS[c], _verAsString(ver))
-        installerCurrent = "setup_%s_%s.exe" % (c, CONFIGS[c])
-        targetDir = os.path.join(DISTRIB_BASE, c)
+        targetDir = os.path.join(STAGING_DISTRIB_BASE, c)
 
         shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
-                        os.path.join(targetDir, 'Archive', installer))
-        shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
-                        os.path.join(targetDir, 'Current', installerCurrent))
+                        os.path.join(targetDir, installer))
 
 def _branchFromRepo(name):
     """
@@ -348,6 +361,10 @@ Builds a new release of HostExe, AnalyzerServerExe and all installers.
     parser.add_option('--skip-installers', dest='createInstallers',
                       action='store_false', default=True,
                       help=('Skip creating installers.'))
+    parser.add_option('--make-official', dest='makeOfficial',
+                      action='store_true', default=False,
+                      help=('Promote the current release in staging to the '
+                            'official distribution channels.'))
 
     options, _ = parser.parse_args()
 
