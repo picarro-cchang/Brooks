@@ -19,7 +19,7 @@ from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MAN
 import Host.Common.SwathProcessor as sp
 import math
 
-debugSwath = False
+debugSwath = True
 NaN = 1e1000/1e1000
 
 if debugSwath:

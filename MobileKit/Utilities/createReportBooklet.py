@@ -1048,6 +1048,9 @@ if __name__ == "__main__":
     
     print "\nPicarro Surveyor Report Booklet Generation -- Command Line Interface\n(November, 2012 version)"
     print "Copyright (c) 2012 Picarro, Inc., All Rights Reserved.\n"
+    print "  See the example files:"
+    print "     createReportBooklet.ini"
+    print "     serMarkers.dat\n"
     cfg = ReportBookletConfig()
     cfg.DoConfig()
     #print "Cur dir is ", os.getcwd()
