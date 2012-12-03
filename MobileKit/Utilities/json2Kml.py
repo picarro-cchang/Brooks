@@ -204,7 +204,9 @@ class Json2Kml(object):
         paths = []    # elements are lists of LatLng
         edges = []
         swaths = jsn["SWATHS"]
+        # print "There are ", str(len(swaths)), " swaths in the file"
         for i in range(len(swaths)):
+            # print "   Swath ", str(i), " has ", str(len(swaths[i]["PATH"]))," points and is from run ", str(swaths[i]["RUN"]), " and survey ", str(swaths[i]["SURVEY"])
             pathHash = swaths[i]["PATH"]
             edgeHash = swaths[i]["EDGE"]
             pathPoly = []
@@ -229,12 +231,13 @@ class Json2Kml(object):
             if ( pth[i]["TYPE"] == type ):
                 pathHash = pth[i]["PATH"]
                 pathPoly = []
+                print "Path has ", str(len(pathHash)), " points"
                 for j in range(len(pathHash)):
                     pathPoly.append( LatLng( geohash.decode( pathHash[j] )[0], geohash.decode( pathHash[j] )[1] ) )
                 paths.append( pathPoly )
         return paths
         
-    def ConvertFileToKMLString( self, json_fn ):
+    def ConvertFileToKMLString( self, json_fn, dumpPath=True, dumpSwath=True ):
         json_str = open( json_fn ).read()
         jsn = json.loads( json_str )
         edge1List, edge2List = self.ExtractSwaths( jsn ) # returns two lists of lists of LatLng
@@ -255,26 +258,36 @@ class Json2Kml(object):
         kml = self.GetKMLHeader()
         styleName = "SurveyorStyle"
         kml += self.GetStyleBlock(styleName, "      ")
-        kml += self.GetKMLOpenPlacemark( "Survey Path", "", styleName, "      " )
-        kml += '        <MultiGeometry>\n'  
-        for i in range(len(pathList)-1):
-            kml += self.GetKMLLineSegment( pathList[i], "        " )
-        kml += '        </MultiGeometry>\n'  
-        kml += self.GetKMLClosePlacemark("      ")
-        kml += self.GetKMLOpenPlacemark( "Field of View", "", styleName, "      ")  
-        kml += '        <MultiGeometry>\n'        
-        for i in range(len(polyList)-1):
-            kml += self.ListOfPolygons2KMLBlock( polyList[i], "          " ) 
-        kml += '        </MultiGeometry>\n'
-        kml += self.GetKMLClosePlacemark("      ")
+        if (dumpPath):
+            kml += self.GetKMLOpenPlacemark( "Survey Path", "", styleName, "      " )
+            kml += '        <MultiGeometry>\n'  
+            for i in range(len(pathList)):
+                kml += self.GetKMLLineSegment( pathList[i], "        " )
+            kml += '        </MultiGeometry>\n'  
+            kml += self.GetKMLClosePlacemark("      ")    
+        if (dumpSwath):
+            kml += self.GetKMLOpenPlacemark( "Field of View", "", styleName, "      ")     
+            kml += '        <MultiGeometry>\n' 
+            for i in range(len(polyList)):
+                kml += self.ListOfPolygons2KMLBlock( polyList[i], "          " ) 
+            kml += '        </MultiGeometry>\n'
+            kml += self.GetKMLClosePlacemark("      ")
         kml += self.GetKMLFooter()
         return kml
     
     def ConvertJSONFileToKMLFile( self, json_fn, kml_fn ):
-        kml = self.ConvertFileToKMLString( json_fn )
-        outFile = open( kml_fn, "wb" )
-        outFile.write( kml )
-        outFile.close()
+        kml1 = self.ConvertFileToKMLString( json_fn, True, False )
+        kml2 = self.ConvertFileToKMLString( json_fn, False, True )
+        fn1 = kml_fn + "_path.kml"
+        fn2 = kml_fn + "_swath.kml"
+        print "Writing to files ", fn1, " ", fn2
+        outFile1 = open( fn1, "wb" )
+        outFile1.write( kml1 )
+        outFile1.close()
+        outFile2 = open( fn2, "wb" )
+        outFile2.write( kml2 )
+        outFile2.close()       
+        
         
 if __name__ == "__main__":
     print "JSON to KML Conversion Utility"
