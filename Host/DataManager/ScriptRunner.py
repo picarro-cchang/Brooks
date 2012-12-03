@@ -217,7 +217,8 @@ def RunAnalysisScript(ScriptCodeObj,
     scriptName = dataEnviron[SCRIPT_NAME_ID]
     # Calculate the latency from source time to data manager completion time and report
     #  maximum fitter latency
-    reportedData["dm_latency"] = timestamp.unixTime(timestamp.getTimestamp()) - SourceTime_s
-    if "max_fitter_latency" in DataDict:
-      reportedData["max_fitter_latency"] = DataDict["max_fitter_latency"]
+    if reportedData:
+        reportedData["dm_latency"] = timestamp.unixTime(timestamp.getTimestamp()) - SourceTime_s
+        if "max_fitter_latency" in DataDict:
+          reportedData["max_fitter_latency"] = DataDict["max_fitter_latency"]
     return (reportedData, forwardedData, newData, measGood, scriptName)

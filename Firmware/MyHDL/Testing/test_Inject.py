@@ -46,6 +46,7 @@ from Host.autogen.interface import INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B, INJECT_
 from Host.autogen.interface import INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B, INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W
 from Host.autogen.interface import INJECT_CONTROL_SOA_PRESENT_B, INJECT_CONTROL_SOA_PRESENT_W
 from Host.autogen.interface import INJECT_CONTROL2_FIBER_AMP_PRESENT_B, INJECT_CONTROL2_FIBER_AMP_PRESENT_W
+from Host.autogen.interface import INJECT_CONTROL2_EXTINGUISH_DESELECTED_B, INJECT_CONTROL2_EXTINGUISH_DESELECTED_W
 
 from MyHDL.Common.Inject import Inject
 
@@ -155,7 +156,7 @@ def bench():
         reset.next = 0
         yield clk.negedge
 
-    # N.B. If there are several blocks configured, ensure that dsp_data_in is 
+    # N.B. If there are several blocks configured, ensure that dsp_data_in is
     #  derived as the OR of the data buses from the individual blocks.
     inject = Inject( clk=clk, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
@@ -231,7 +232,7 @@ def bench():
             control = (laser_current_enable << INJECT_CONTROL_LASER_CURRENT_ENABLE_B) | \
                       (manual_laser_enable  << INJECT_CONTROL_MANUAL_LASER_ENABLE_B) | \
                       (manual_soa_enable << INJECT_CONTROL_MANUAL_SOA_ENABLE_B) | \
-                      (soa_present << INJECT_CONTROL_SOA_PRESENT_B)                      
+                      (soa_present << INJECT_CONTROL_SOA_PRESENT_B)
             yield writeFPGA(FPGA_INJECT+INJECT_CONTROL,control)
             assert laser1_disable_out == (not (laser_current_enable & 1))
             assert laser2_disable_out == (not ((laser_current_enable>>1) & 1))
@@ -251,13 +252,13 @@ def bench():
             soa_shutdown_in.next = ssin
             soa_shutdown_enable = randrange(2)
             soa_present = randrange(1<<1)
-            
+
             control = (laser_sel << INJECT_CONTROL_LASER_SELECT_B) | \
                       (mode << INJECT_CONTROL_MODE_B) | \
                       (manual_soa_enable << INJECT_CONTROL_MANUAL_SOA_ENABLE_B) |\
                       (soa_shutdown_enable << INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B) |\
                       (soa_present << INJECT_CONTROL_SOA_PRESENT_B)
-                      
+
             yield writeFPGA(FPGA_INJECT+INJECT_CONTROL,control)
             laser1_coarse = randrange(1<<16)
             yield writeFPGA(FPGA_INJECT+INJECT_LASER1_COARSE_CURRENT,laser1_coarse)
@@ -277,7 +278,7 @@ def bench():
             yield writeFPGA(FPGA_INJECT+INJECT_LASER4_FINE_CURRENT,laser4_fine)
             laser_sel_fine = randrange((1<<16)-1)
             laser_fine_current_in.next = laser_sel_fine
-            
+
             laser1_fine_current_range = randrange(1<<15)
             yield writeFPGA(FPGA_INJECT+INJECT_LASER1_FINE_CURRENT_RANGE,laser1_fine_current_range)
             laser2_fine_current_range = randrange(1<<15)
@@ -286,7 +287,7 @@ def bench():
             yield writeFPGA(FPGA_INJECT+INJECT_LASER3_FINE_CURRENT_RANGE,laser3_fine_current_range)
             laser4_fine_current_range = randrange(1<<15)
             yield writeFPGA(FPGA_INJECT+INJECT_LASER4_FINE_CURRENT_RANGE,laser4_fine_current_range)
-            
+
             yield delay(10*PERIOD)
             assert sel_laser_out == laser_sel
             if laser_sel == 0:
@@ -320,7 +321,7 @@ def bench():
                     assert soa_shutdown_out == (not manual_soa_enable)
                 else:
                     assert soa_shutdown_out == (ssin and soa_shutdown_enable)
-        
+
         # Check writing to serial DACs
         yield writeFPGA(FPGA_INJECT+INJECT_CONTROL,0)
         for trials in range(5):

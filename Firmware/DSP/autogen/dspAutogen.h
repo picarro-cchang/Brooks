@@ -16,10 +16,10 @@
 #include "interface.h"
 
 typedef struct i2c_device{ int chain; int mux; int addr; } I2C_device;
-extern I2C_device i2c_devices[34];
+extern I2C_device i2c_devices[35];
 
 void initRegisters(void);
-extern RegTypes regTypes[445];
+extern RegTypes regTypes[447];
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env);
 int writeBlock(unsigned int numInt,void *params,void *env);
 int setTimestamp(unsigned int numInt,void *params,void *env);
@@ -98,4 +98,7 @@ int r_float_arithmetic(unsigned int numInt,void *params,void *env);
 int r_get_scope_trace(unsigned int numInt,void *params,void *env);
 int r_release_scope_trace(unsigned int numInt,void *params,void *env);
 int r_read_flow_sensor(unsigned int numInt,void *params,void *env);
+int r_rdd_cntrl_init(unsigned int numInt,void *params,void *env);
+int r_rdd_cntrl_step(unsigned int numInt,void *params,void *env);
+int r_rdd_cntrl_do_command(unsigned int numInt,void *params,void *env);
 #endif

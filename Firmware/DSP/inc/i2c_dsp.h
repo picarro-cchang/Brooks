@@ -59,5 +59,7 @@ int getI2CMode(I2C_Handle hI2c);
 int getI2CStatus(I2C_Handle hI2c);
 int ltc2485_read(int ident);
 int read_flow_sensor(int ident);
+int rdd_read(int ident);
+void rdd_write(int ident, int data, int nbytes);
 
 #endif

@@ -45,6 +45,7 @@
 #include "ltc2499.h"
 #include "fpga.h"
 #include "i2cEeprom.h"
+#include "rddCntrl.h"
 
 static char message[120];
 
@@ -180,15 +181,15 @@ int setTimestamp(unsigned int numInt,void *params,void *env)
 
 int nudgeTimestamp(unsigned int numInt,void *params,void *env)
 // Uses 64 bit host timestamp to adjust the instrument timestamp.
-// i.e., the timestamps are compared and if they differ by more 
-//  than NUDGE_LIMIT ms, the analyzer timestamp is changed 
-//  by speeding up or slowing down the clock by 1 part in 64. If the 
-//  difference lies within NUDGE_WINDOW ms, reset the timer divisor to 
-//  normal value. Otherwise, the analyzer timestamp is moved towards the 
-//  host timestamp by changing the division ratio of the DSP PRD timer to 
+// i.e., the timestamps are compared and if they differ by more
+//  than NUDGE_LIMIT ms, the analyzer timestamp is changed
+//  by speeding up or slowing down the clock by 1 part in 64. If the
+//  difference lies within NUDGE_WINDOW ms, reset the timer divisor to
+//  normal value. Otherwise, the analyzer timestamp is moved towards the
+//  host timestamp by changing the division ratio of the DSP PRD timer to
 //  speed up or slow down the clock by approximately 1 part in 2**11.
 
-// params[0] is the least significant 32 bits and params[1] is 
+// params[0] is the least significant 32 bits and params[1] is
 //  the most significant 32 bits of the host timestamp.
 {
     unsigned int *paramsAsInt = (unsigned int *) params;
@@ -617,7 +618,7 @@ int r_read_laser_current(unsigned int numInt,void *params,void *env)
 /*
     Reads laser current monitor of specified laser. If an I2C error
     occurs the register is not updated.
-    
+
     Input:
         laserNum (int)  :  Laser number to read (1-origin)
         Register (float): Register containing conversion slope
@@ -656,7 +657,7 @@ int r_sentryInit(unsigned int numInt,void *params,void *env)
 
 int r_modifyValvePumpTec(unsigned int numInt,void *params,void *env)
 /* Modify the valve, pump and TEC states by using the first parameter as a mask
-    and the second as the index of an integer register specifying bits to set 
+    and the second as the index of an integer register specifying bits to set
     within the mask */
 {
     unsigned int *reg = (unsigned int *) params;
@@ -719,7 +720,7 @@ int r_adc_to_pressure(unsigned int numInt,void *params,void *env)
 */
 {
     unsigned int *reg = (unsigned int *) params;
-    int adcVal;    
+    int adcVal;
     float slope, offset, result;
     if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
     READ_REG(reg[0],adcVal);
@@ -732,7 +733,7 @@ int r_adc_to_pressure(unsigned int numInt,void *params,void *env)
 
 int r_set_inlet_valve(unsigned int numInt,void *params,void *env)
 /*
-    Sets up the inlet valve dynamic PWM 
+    Sets up the inlet valve dynamic PWM
     Input:
         Register (float):   Register containing mean inlet valve position
         Register (float):   Register containing peak-to-peak dither
@@ -741,7 +742,7 @@ int r_set_inlet_valve(unsigned int numInt,void *params,void *env)
     unsigned int *reg = (unsigned int *) params;
     float value, dither;
     float minPwm = 0.0, maxPwm = 65535.0;
-    
+
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
     READ_REG(reg[0],value);
     READ_REG(reg[1],dither);
@@ -750,14 +751,14 @@ int r_set_inlet_valve(unsigned int numInt,void *params,void *env)
     if (value >	maxPwm) value = maxPwm;
     if (value - 0.5*dither < minPwm) dither = 2.0*(value-minPwm);
     if (value + 0.5*dither > maxPwm) dither = 2.0*(maxPwm-value);
-    writeFPGA(FPGA_DYNAMICPWM_INLET + DYNAMICPWM_HIGH,value + 0.5*dither);	
-    writeFPGA(FPGA_DYNAMICPWM_INLET + DYNAMICPWM_LOW,value - 0.5*dither);	
+    writeFPGA(FPGA_DYNAMICPWM_INLET + DYNAMICPWM_HIGH,value + 0.5*dither);
+    writeFPGA(FPGA_DYNAMICPWM_INLET + DYNAMICPWM_LOW,value - 0.5*dither);
     return STATUS_OK;
 }
 
 int r_set_outlet_valve(unsigned int numInt,void *params,void *env)
 /*
-    Sets up the outlet valve dynamic PWM 
+    Sets up the outlet valve dynamic PWM
     Input:
         Register (float):   Register containing mean outlet valve position
         Register (float):   Register containing peak-to-peak dither
@@ -766,7 +767,7 @@ int r_set_outlet_valve(unsigned int numInt,void *params,void *env)
     unsigned int *reg = (unsigned int *) params;
     float value, dither;
     float minPwm = 0.0, maxPwm = 65535.0;
-    
+
     if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
     READ_REG(reg[0],value);
     READ_REG(reg[1],dither);
@@ -775,8 +776,8 @@ int r_set_outlet_valve(unsigned int numInt,void *params,void *env)
     if (value >	maxPwm) value = maxPwm;
     if (value - 0.5*dither < minPwm) dither = 2.0*(value-minPwm);
     if (value + 0.5*dither > maxPwm) dither = 2.0*(maxPwm-value);
-    writeFPGA(FPGA_DYNAMICPWM_OUTLET + DYNAMICPWM_HIGH,value + 0.5*dither);	
-    writeFPGA(FPGA_DYNAMICPWM_OUTLET + DYNAMICPWM_LOW,value - 0.5*dither);	
+    writeFPGA(FPGA_DYNAMICPWM_OUTLET + DYNAMICPWM_HIGH,value + 0.5*dither);
+    writeFPGA(FPGA_DYNAMICPWM_OUTLET + DYNAMICPWM_LOW,value - 0.5*dither);
     return STATUS_OK;
 }
 
@@ -798,7 +799,7 @@ int r_interpolator_set_target(unsigned int numInt,void *params,void *env)
 int r_interpolator_step(unsigned int numInt,void *params,void *env)
 /* Performs a single step of the interpolator indicated by *env, and writes the result to the
     FPGA register whose block index and register index are passed as params[0] and params[1].
-    This should be run after the interpolator_set_target action by placing it in a lower 
+    This should be run after the interpolator_set_target action by placing it in a lower
     priority group. */
 {
     unsigned int *reg = (unsigned int *) params;
@@ -837,8 +838,8 @@ static int _eeprom_read(I2C_device *dev,unsigned int addr,unsigned int nbytes,vo
 }
 
 int r_eeprom_read_low_level(unsigned int numInt,void *params,void *env)
-/* Reads from an EEPROM. Arguments are the I2C chain, the multiplexer channel, 
-    the I2C address, the address in the EEPROM and the number of bytes to read. The result is 
+/* Reads from an EEPROM. Arguments are the I2C chain, the multiplexer channel,
+    the I2C address, the address in the EEPROM and the number of bytes to read. The result is
     placed within the environment. */
 {
     unsigned int *reg = (unsigned int *) params;
@@ -884,8 +885,8 @@ static int _eeprom_write(I2C_device *dev,unsigned int addr,unsigned int nbytes,v
 }
 
 int r_eeprom_write_low_level(unsigned int numInt,void *params,void *env)
-/* Writes to an EEPROM. Arguments are the I2C chain, the multiplexer channel, 
-    the I2C address, the address in the EEPROM and the number of bytes to write. 
+/* Writes to an EEPROM. Arguments are the I2C chain, the multiplexer channel,
+    the I2C address, the address in the EEPROM and the number of bytes to write.
     The result is obtained from the environment. */
 {
     unsigned int *reg = (unsigned int *) params;
@@ -929,7 +930,7 @@ static int _eeprom_ready(I2C_device *dev)
 }
 
 int r_eeprom_ready_low_level(unsigned int numInt,void *params,void *env)
-/* Check that the EEPROM in the analyzer is ready for read/write. Arguments are the I2C chain, the 
+/* Check that the EEPROM in the analyzer is ready for read/write. Arguments are the I2C chain, the
     multiplexer channel and the I2C address. The result is placed in the COMM_STATUS_REGISTER. */
 {
     unsigned int *reg = (unsigned int *) params;
@@ -954,16 +955,16 @@ int r_eeprom_ready(unsigned int numInt,void *params,void *env)
 }
 
 int r_i2c_check(unsigned int numInt,void *params,void *env)
-/* Check the I2C device specified by checking if it will acknowlege a read request (for 0 bytes). 
+/* Check the I2C device specified by checking if it will acknowlege a read request (for 0 bytes).
     The arguments are the I2C chain index (0 or 1), the multiplexer setting (0 through 7, or -1 if don't care)
-    and the I2C address. Returned value is the status of the read request.    
+    and the I2C address. Returned value is the status of the read request.
  */
 {
     int *reg = (int *) params, loops;
     int chain, addr;
 
     if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
-    chain = reg[0];    
+    chain = reg[0];
     switch (chain) {
         case 0:
             if (reg[1] >= 0) setI2C0Mux(reg[1]);
@@ -981,7 +982,7 @@ int r_float_arithmetic(unsigned int numInt,void *params,void *env)
 {
     unsigned int op;
     float x,y,result;
-    
+
     unsigned int *reg = (unsigned int *) params;
     if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
     READ_REG(reg[0],x);
@@ -1045,7 +1046,7 @@ int r_activateFan(unsigned int numInt,void *params,void *env)
 }
 
 int r_peakDetectCntrlInit(unsigned int numInt,void *params,void *env)
-/* Initialize the peak detection controller, passing it the index of a 
+/* Initialize the peak detection controller, passing it the index of a
    processed loss register which is to be used to trigger the peak detection */
 {
     unsigned int *reg = (unsigned int *) params;
@@ -1064,11 +1065,32 @@ int r_read_flow_sensor(unsigned int numInt,void *params,void *env)
     unsigned int *reg = (unsigned int *) params;
     float slope, offset, result;
     if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
-    
+
     result = read_flow_sensor(reg[0]);
     READ_REG(reg[1],slope);
     READ_REG(reg[2],offset);
     WRITE_REG(reg[3],slope*result+offset);
 
     return STATUS_OK;
+}
+
+// The following actions are for interacting with the variable gain ring down detector
+
+int r_rdd_cntrl_init(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return rddCntrlInit();
+}
+
+int r_rdd_cntrl_step(unsigned int numInt,void *params,void *env)
+{
+    if (0 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return rddCntrlStep();
+}
+
+int r_rdd_cntrl_do_command(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return rddCntrlDoCommand(reg[0]);
 }

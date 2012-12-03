@@ -356,7 +356,8 @@ class Fitter(object):
             ANALYSES += env["ANALYSIS"]
             RESULTS.update(env["RESULT"])
             try:
-                RESULTS["spect_latency"] = getattr(self.spectrum,"spectLatency")
+                if RESULTS:
+                    RESULTS["spect_latency"] = getattr(self.spectrum,"spectLatency")
             except:
                 pass
         self.fitViewer([DATA,ANALYSES,RESULTS])
