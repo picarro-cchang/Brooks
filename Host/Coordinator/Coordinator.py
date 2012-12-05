@@ -22,6 +22,8 @@ import getopt
 import csv
 import re
 import threading
+import pprint
+
 from Queue import Queue
 
 from CoordinatorFrameGui import CoordinatorFrameGui
@@ -453,14 +455,18 @@ class CoordinatorFrame(CoordinatorFrameGui):
         if not self.manualMode:
             self.enableManualButton()
 
-    def onWriteHeadings(self, paramTupleList=None):
+    def onWriteHeadings(self, paramTupleList=[]):
+        print '[onWriteHeadings]'
         notOpen = self.saveFp == None
         if notOpen:
+            print "\tOpen '%s' for append..." % self.saveFileName
             self.saveFp = file(self.saveFileName,"ab")
         try:
-            if paramTupleList is not None:
+            if len(paramTupleList) > 0:
+                print "\tparamTupleList = "
+                print "\t%s" % pprint.pprint(paramTupleList)
                 if self.writeParamsToHeader:
-                    print "Writing user param headers"
+                    print '\tWriting user param headers'
 
                     # Record the user editable parameters
                     userParams = []
@@ -475,7 +481,9 @@ class CoordinatorFrame(CoordinatorFrameGui):
                     self.saveFp.writelines(userParams)
 
             writer = csv.writer(self.saveFp)
+            print "\twriter = %s" % pprint.pprint(writer)
             head = []
+            print "\tself.Config[\"Output\"] = %s" % pprint.pprint(self.config["Output"])
             for k in self.config["Output"]:
                 t, f = self.config["Output"][k]
                 m = self.widthRe.match(f.strip())
@@ -483,6 +491,8 @@ class CoordinatorFrame(CoordinatorFrameGui):
                     head.append(("%%%ss" % (m.group(1),)) % t)
                 else:
                     raise ValueError("Format %s does not have a valid width specification" % f.strip())
+            print 'Preparing to insert columns, head: '
+            pprint.pprint(head)
             writer.writerow(head)
             for i,h in enumerate(head):
                 self.fileDataListCtrl.InsertColumn(i,h.strip(),width=-1)
@@ -526,7 +536,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
         while not self.guiQueue.empty(): self.guiQueue.get()
         while not self.replyQueue.empty(): self.replyQueue.get()
 
-    def startStateMachineThread(self, paramTupleList=[]):
+    def startStateMachineThread(self, paramTupleList=None):
         if len(paramTupleList) > 0:
             dlg = InitialParamDialogGui(paramTupleList, None, -1, "")
             getParamVals = (dlg.ShowModal() == wx.ID_OK)
@@ -539,7 +549,8 @@ class CoordinatorFrame(CoordinatorFrameGui):
                     self.setParamText(idx, self.guiParamDict[dlg.nameList[idx]])
             dlg.Destroy()
             print self.guiParamDict
-            self.onWriteHeadings(self.paramTupleList)
+
+        self.onWriteHeadings(paramTupleList)
 
         if self.fsmThread != None:
             self.terminateStateMachineThread()
@@ -625,6 +636,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 self.onNewFile(None)
         if self.rewriteOutputFile: # Descriptions have changed, rewrite file
             self.fileDataListCtrl.ClearAll()
+            self.onWriteHeadings()
             self.lineIndex = 0
             self.saveFp = file(self.saveFileName,"wb")
             try:
