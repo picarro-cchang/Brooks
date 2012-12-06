@@ -130,8 +130,10 @@ def _generateCoordinators(name, meta):
 
         for k in meta:
             print "Generating coordinator for '%s'." % k
+            standards = [col for col in meta[k]['columns'] if col[5] == 'True']
             with open(COORDINATOR_FILE_FORMAT % k, 'w') as coordFp:
-                coordFp.write(t.render(analyzer=meta[k]))
+                coordFp.write(t.render(analyzer=meta[k],
+                                       standards=standards))
 
 def _compileInstaller(name, ver):
     """
