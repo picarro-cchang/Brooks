@@ -52,6 +52,10 @@ VERSION_TEMPLATE = ("[Version]\\nrevno = {revno}\\ndate = {date}\\n"
 MFG_DISTRIB_BASE = 'r:/G2000_HostSoftwareInstallers'
 DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer'
 
+# For dry-run testing
+TEST_MFG_DISTRIB_BASE = 'c:/temp/tools/release/mfg_distrib_base'
+TEST_DISTRIB_BASE = 'c:/temp/tools/release/distrib_base'
+
 # Where new releases are put for testing.
 STAGING_MFG_DISTRIB_BASE = 'r:/G2000_HostSoftwareInstallers_Staging'
 STAGING_DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer_Staging'
@@ -64,19 +68,41 @@ def makeExe(opts):
 
     pprint.pprint(opts)
 
-    if opts.makeOfficial:
-        print 'Not supported yet.'
-        sys.exit(1)
+    with open('products.json', 'r') as prods:
+        CONFIGS.update(json.load(prods))
+
+    pprint.pprint(CONFIGS)
+
+    if opts.dryRun:
+        targetMfgDistribBase = TEST_MFG_DISTRIB_BASE
+        targetDistribBase = TEST_DISTRIB_BASE
+
+        if os.path.isdir(targetMfgDistribBase):
+            shutil.rmtree(targetMfgDistribBase)
+
+        if os.path.isdir(targetDistribBase):
+            shutil.rmtree(targetDistribBase)
+
+        os.makedirs(targetMfgDistribBase)
+        os.makedirs(targetDistribBase)
+
+        for c in CONFIGS:
+            os.makedirs(os.path.join(targetDistribBase, c, 'Archive'))
+            os.makedirs(os.path.join(targetDistribBase, c, 'Current'))
+
+    else:
+        targetMfgDistribBase = MFG_DISTRIB_BASE
+        targetDistribBase = DISTRIB_BASE
 
     # Load configuration mapping metadata
     if not os.path.isfile('products.json'):
         print 'products.json is missing!'
         sys.exit(1)
 
-    with open('products.json', 'r') as prods:
-        CONFIGS.update(json.load(prods))
-
-    pprint.pprint(CONFIGS)
+    if opts.makeOfficial:
+        _promoteStagedRelease(opts.officialTypes, targetMfgDistribBase,
+                              targetDistribBase)
+        return
 
     # Load version metadata
     if not os.path.isfile('version.json'):
@@ -141,6 +167,64 @@ def makeExe(opts):
         # Copy both HostExe and AnalyzerServerExe for non-installer upgrades.
         _copyBuildAndInstallers(REPO, VERSION)
 
+def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None):
+    """
+    Move the existing staged release to an official directory.
+    """
+
+    stagingVer = os.path.join(STAGING_DISTRIB_BASE, 'version.json')
+
+    if not os.path.isfile(stagingVer):
+        print 'Staging version.json is missing!'
+        sys.exit(1)
+
+    ver = {}
+    with open(stagingVer, 'r') as version:
+        ver.update(json.load(version))
+
+    # Always move HostExe and AnalyzerServerExe regardless of the specified
+    # types.
+    hostExeDir = os.path.join(mfgDistribBase, 'HostExe', _verAsString(ver))
+    dir_util.copy_tree(os.path.join(STAGING_MFG_DISTRIB_BASE, 'HostExe'),
+                       hostExeDir)
+
+    analyzerServerExeDir = os.path.join(mfgDistribBase, 'AnalyzerServerExe',
+                                        _verAsString(ver))
+    dir_util.copy_tree(os.path.join(STAGING_MFG_DISTRIB_BASE,
+                                    'AnalyzerServerExe'),
+                       analyzerServerExeDir)
+
+    negate = False
+    typesList = None
+
+    if types is not None:
+        if types[0] == '!':
+            negate = True
+            typesList = types[1:].split(',')
+        else:
+            typesList = types.split(',')
+
+    for c in CONFIGS:
+        doCopy = True
+
+        if typesList is not None:
+            if negate:
+                doCopy = c not in typesList
+            else:
+                doCopy = c in typesList
+
+        if not doCopy:
+            continue
+
+        installer = "setup_%s_%s_%s.exe" % (c, CONFIGS[c], _verAsString(ver))
+        installerCurrent = "setup_%s_%s.exe" % (c, CONFIGS[c])
+        targetDir = os.path.join(distribBase, c)
+
+        shutil.copyfile(os.path.join(STAGING_DISTRIB_BASE, c, installer),
+                        os.path.join(targetDir, 'Archive', installer))
+        shutil.copyfile(os.path.join(STAGING_DISTRIB_BASE, c, installer),
+                        os.path.join(targetDir, 'Current', installerCurrent))
+
 def _copyBuildAndInstallers(name, ver):
     """
     Move the installers and the two compiled exe directories to their
@@ -152,7 +236,7 @@ def _copyBuildAndInstallers(name, ver):
         shutil.rmtree(STAGING_MFG_DISTRIB_BASE)
         shutil.rmtree(STAGING_DISTRIB_BASE)
     except:
-        # Okay if these directories doesn't already exist.
+        # Okay if these directories don't already exist.
         pass
 
     # HostExe
@@ -172,6 +256,9 @@ def _copyBuildAndInstallers(name, ver):
     dir_util.copy_tree(os.path.join(SANDBOX_DIR, name, 'MobileKit', 'dist'),
                        analyzerServerExe)
 
+    shtuil.copyfile('version.json',
+                    os.path.join(STAGING_DISTRIB_BASE, 'version.json'))
+
     # Copy the individual installers and update the shortcuts that are
     # used by manufacturing.
     for c in CONFIGS:
@@ -181,6 +268,7 @@ def _copyBuildAndInstallers(name, ver):
 
         shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
                         os.path.join(targetDir, installer))
+
 
 def _branchFromRepo(name):
     """
@@ -366,6 +454,18 @@ Builds a new release of HostExe, AnalyzerServerExe and all installers.
                       action='store_true', default=False,
                       help=('Promote the current release in staging to the '
                             'official distribution channels.'))
+    parser.add_option('--types', dest='officialTypes',
+                      default=None, help=('Comma-delimited list of analyzer '
+                                          'types that should be moved from '
+                                          'staging to the official release '
+                                          'area. If the list starts with a "!" '
+                                          'every type but those in the list '
+                                          'will be moved.'))
+    parser.add_option('--dry-run', dest='dryRun', default=False,
+                      action='store_true',
+                      help=('Only works with --make-official. Tests the move to '
+                            'staging by using a temporary directory as the '
+                            'target.'))
 
     options, _ = parser.parse_args()
 
