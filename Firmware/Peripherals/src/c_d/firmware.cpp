@@ -5,6 +5,10 @@
 #endif /* ARDUINO < 100 */
 
 #include "EEPROM.h"
+
+#include "cm_crds_pins.h"
+
+
 int ledPin =  13;    // LED connected to digital pin 13
 
 const int analogOutPin = 9; // Analog output pin that the htr attached
@@ -138,9 +142,10 @@ void setup() {
     myPID2.SetTi(990.0); // Insert Ti-value as argument
     myPID2.SetTd(990.0); // Insert Td-value as argument
 
-    analogWrite(9, 0); //set heat level on 3rd htr aka interior tube
-    analogWrite(10, 0);//shut down 2nd htr aka buffer htr2
-    analogWrite(11, 0);//shut down 1st htr aka buffer htr1
+    analogWrite(HEATER3_PWM_EXTERNAL_LINE, 0);
+    analogWrite(HEATER2_PWM_BUFFER_VOL, 0);
+    analogWrite(HEATER1_PWM_BUFFER_VOL, 0);
+
     digitalWrite(12, HIGH);  //clear solenoid
     digitalWrite(7, HIGH); //set solenoid
     solenoid_2 = true;
@@ -258,9 +263,9 @@ void loop() {
 
    if (timediff >= 500)
    {
-     analogWrite(9, 0);
-     analogWrite(10, 0);
-     analogWrite(11, 0);
+     analogWrite(HEATER3_PWM_EXTERNAL_LINE, 0);
+     analogWrite(HEATER2_PWM_BUFFER_VOL, 0);
+     analogWrite(HEATER1_PWM_BUFFER_VOL, 0);
      delay(11);
      get_error();  //get input for the PID loop
      get_error2();  //get input for the PID loop
@@ -393,9 +398,9 @@ void get_error()//get error signal
 {
   error_old1 = error1;  //save old error for derivative
 
-  analogVal=analogRead(3);
+  analogVal=analogRead(TEMP_SENSE2_BUFFER_VOL);
   for(int i=0; i<299; i++)
-    analogVal+=analogRead(3);
+    analogVal+=analogRead(TEMP_SENSE2_BUFFER_VOL);
   analogVal/=300.0;
   temp = 5.0 * (analogVal/1024.0);
   if (sendTemp == true) {
@@ -411,9 +416,9 @@ void get_error2()//get error signal
 {
   error_old2 = error2;  //save old error for derivative
 
-  analogVal=analogRead(2);
+  analogVal=analogRead(TEMP_SENSE1_EXTERNAL_LINE);
   for(int i=0; i<299; i++)
-    analogVal+=analogRead(2);
+    analogVal+=analogRead(TEMP_SENSE1_EXTERNAL_LINE);
   analogVal/=300.0;
   temp = 5.0 * (analogVal/1024.0);
   if (sendTemp == true) {
@@ -428,21 +433,21 @@ void get_error2()//get error signal
 void get_temps()  //sample the LM35 sensors
 {
   //try {
-    analogWrite(9, 0);
-    analogWrite(10, 0);
-    analogWrite(11, 0);
+    analogWrite(HEATER3_PWM_EXTERNAL_LINE, 0);
+    analogWrite(HEATER2_PWM_BUFFER_VOL, 0);
+    analogWrite(HEATER1_PWM_BUFFER_VOL, 0);
     delay(10);
-    analogVal=(float)analogRead(3);
+    analogVal=(float)analogRead(TEMP_SENSE1_EXTERNAL_LINE);
     for(int i=0; i<299; i++)
-      analogVal+=(float)analogRead(3);
+      analogVal+=(float)analogRead(TEMP_SENSE1_EXTERNAL_LINE);
     analogVal/=300.0;
     temp = 5.0 * (analogVal/1024.0);
     printFloat(100.0*temp,4);
     Serial.print("\t");
 
-    analogVal=(float)analogRead(2);
+    analogVal=(float)analogRead(TEMP_SENSE2_BUFFER_VOL);
     for(int i=0; i<299; i++)
-      analogVal+=(float)analogRead(2);
+      analogVal+=(float)analogRead(TEMP_SENSE2_BUFFER_VOL);
     analogVal/=300.0;
     temp = 5.0 * (analogVal/1024.0);
     printFloat(100.0*temp,4);
@@ -500,8 +505,8 @@ void set_pid()
   if(yOut > 1023)
     yOut = 1023;
   yOut = map(yOut, 0, 1023, 0, 190);
-  analogWrite(11, yOut); //this is heater 1
-  analogWrite(10, yOut); //this is heater 2
+  analogWrite(HEATER1_PWM_BUFFER_VOL, yOut); //this is heater 1
+  analogWrite(HEATER2_PWM_BUFFER_VOL, yOut); //this is heater 2
   if(pwrLevelNdx==maxPwrLevelNdx) {
     nBuf=nExt=0.0;
     for(long i=0; i<maxPwrLevelNdx; i++){
@@ -545,7 +550,7 @@ void set_pid()
   if(yOut2 > 1023)
     yOut2 = 1023;
   yOut2 = map(yOut2, 0, 1023, 0, 255);
-  analogWrite(9, yOut2); //this is heater 3
+  analogWrite(HEATER3_PWM_EXTERNAL_LINE, yOut2);
   pwrLevelExternal[pwrLevelNdx]=yOut2;
   pwrLevelNdx++;
   totalNumPwrLevelsLogged++;
