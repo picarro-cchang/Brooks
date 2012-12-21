@@ -530,7 +530,8 @@ class PeakAnalyzer(object):
                         entry[h] = NaN
                             
                 lng, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
-                if "GPS_FIT" in entry and entry["GPS_FIT"] < 1: continue
+                if "GPS_FIT" in entry and entry["GPS_FIT"] < 1: 
+                    if (lng != 0.0) or (lat != 0.0): continue
                 if isnan(lng) or isnan(lat): continue
                 if lat_ref == None or lng_ref == None:
                     lat_ref, lng_ref = lat, lng
@@ -577,7 +578,8 @@ class PeakAnalyzer(object):
                         except:
                             entry[h] = NaN
                     lng, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
-                    if "GPS_FIT" in entry and entry["GPS_FIT"] < 1: continue
+                    if "GPS_FIT" in entry and entry["GPS_FIT"] < 1:
+                        if (lng != 0.0) or (lat != 0.0): continue
                     if isnan(lng) or isnan(lat): continue
                     if lat_ref == None or lng_ref == None:
                         lat_ref, lng_ref = lat, lng
