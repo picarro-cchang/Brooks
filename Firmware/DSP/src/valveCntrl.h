@@ -55,6 +55,11 @@ typedef struct VALVE_CNTRL
     float lastLossPpb;                  // Previous loss
     unsigned int dwellCount;            // Count samples to time valve sequence
     int nonDecreasingCount;             // Counts samples during which pressure is nondecreasing
+    
+    FLOW_CNTRL_StateType *flowState_;   // Flow control state
+    float *flow_;                       // Measured flow
+    float *flowSetpoint_;               // Flow setpoint
+    float *flowControlGain_;            // Flow controller gain
 } ValveCntrl;
 
 int valveCntrlInit(void);

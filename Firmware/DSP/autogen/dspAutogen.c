@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[447];
+RegTypes regTypes[450];
 
 /* I2C devices */
 I2C_device i2c_devices[35] = {
@@ -903,6 +903,12 @@ void initRegisters()
     writeRegister(RDD_BALANCE_REGISTER,d);
     d.asUint = 128;
     writeRegister(RDD_GAIN_REGISTER,d);
+    d.asUint = FLOW_CNTRL_DisabledState;
+    writeRegister(FLOW_CNTRL_STATE_REGISTER,d);
+    d.asFloat = 100;
+    writeRegister(FLOW_CNTRL_SETPOINT_REGISTER,d);
+    d.asFloat = 20;
+    writeRegister(FLOW_CNTRL_GAIN_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -1350,6 +1356,9 @@ void initRegisters()
     regTypes[CONVERSION_FLOW1_OFFSET_REGISTER] = float_type;
     regTypes[RDD_BALANCE_REGISTER] = uint_type;
     regTypes[RDD_GAIN_REGISTER] = uint_type;
+    regTypes[FLOW_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[FLOW_CNTRL_SETPOINT_REGISTER] = float_type;
+    regTypes[FLOW_CNTRL_GAIN_REGISTER] = float_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)

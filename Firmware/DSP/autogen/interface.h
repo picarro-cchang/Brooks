@@ -554,6 +554,11 @@ typedef enum {
 } VALVE_CNTRL_StateType;
 
 typedef enum {
+    FLOW_CNTRL_DisabledState = 0, // Disabled
+    FLOW_CNTRL_EnabledState = 1 // Enabled
+} FLOW_CNTRL_StateType;
+
+typedef enum {
     VALVE_CNTRL_THRESHOLD_DisabledState = 0, // Disabled
     VALVE_CNTRL_THRESHOLD_ArmedState = 1, // Armed
     VALVE_CNTRL_THRESHOLD_TriggeredState = 2 // Triggered
@@ -720,7 +725,7 @@ typedef enum {
 #define INJECTION_SETTINGS_lossTagShift (5)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (447)
+#define INTERFACE_NUMBER_OF_REGISTERS (450)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1169,6 +1174,9 @@ typedef enum {
 #define CONVERSION_FLOW1_OFFSET_REGISTER (444)
 #define RDD_BALANCE_REGISTER (445)
 #define RDD_GAIN_REGISTER (446)
+#define FLOW_CNTRL_STATE_REGISTER (447)
+#define FLOW_CNTRL_SETPOINT_REGISTER (448)
+#define FLOW_CNTRL_GAIN_REGISTER (449)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0

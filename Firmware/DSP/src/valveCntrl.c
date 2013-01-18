@@ -61,13 +61,17 @@
 #define solenoidMask    (*(v->solenoidMask_))
 #define solenoidState   (*(v->solenoidState_))
 #define sequenceStep    (*(v->sequenceStep_))
+#define flowState       (*(v->flowState_))
+#define flow            (*(v->flow_))
+#define flowSetpoint    (*(v->flowSetpoint_))
+#define flowControlGain (*(v->flowControlGain_))
 
 ValveCntrl valveCntrl;
 
 void proportionalValveStep()
 {
     ValveCntrl *v = &valveCntrl;
-    float delta, dError, dpdt, dpdtSet, error, valveValue;
+    float delta, dError, dpdt, dpdtSet, error, flowGain, valveValue;
 
     if (v->lastPressure > INVALID_PRESSURE_VALUE) {
         dpdt = (cavityPressure-v->lastPressure)/v->deltaT;
@@ -96,7 +100,19 @@ void proportionalValveStep()
         outlet = userOutlet;
         break;
     case VALVE_CNTRL_OutletControlState:
-        inlet = userInlet;
+        if (flowState == FLOW_CNTRL_DisabledState) inlet = userInlet;
+        else if (flowState == FLOW_CNTRL_EnabledState) {
+            // Use the inlet valve to control the flow
+			flowGain = flowControlGain;
+			if (fabs(flow - flowSetpoint) < 5.0 && fabs(setpoint - cavityPressure) < 1.0) flowGain = 1.0;
+            delta = flowGain * (flowSetpoint - flow);
+            if (delta < -inletMaxChange) delta = -inletMaxChange;
+            else if (delta > inletMaxChange) delta = inletMaxChange;
+            valveValue = inlet + delta;
+            if (valveValue < inletMin) valveValue = inletMin;
+            if (valveValue > inletMax) valveValue = inletMax;
+            inlet = valveValue;
+        }
         // Gain2 sets how the pressure rate setpoint depends on the pressure error
         dpdtSet = outletGain2 * error;
         // Limit rate setpoint to maximum allowed rate of change
@@ -116,7 +132,19 @@ void proportionalValveStep()
         outlet = valveValue;
         break;
     case VALVE_CNTRL_InletControlState:
-        outlet = userOutlet;
+        if (flowState == FLOW_CNTRL_DisabledState) outlet = userOutlet;
+        else if (flowState == FLOW_CNTRL_EnabledState) {
+            // Use the outlet valve to control the flow
+			flowGain = flowControlGain;
+			if (fabs(flow - flowSetpoint) < 5.0 && fabs(setpoint - cavityPressure) < 1.0) flowGain = 1.0;
+            delta = flowGain * (flowSetpoint - flow);
+            if (delta < -outletMaxChange) delta = -outletMaxChange;
+            else if (delta > outletMaxChange) delta = outletMaxChange;
+            valveValue = outlet + delta;
+            if (valveValue < outletMin) valveValue = outletMin;
+            if (valveValue > outletMax) valveValue = outletMax;
+            outlet = valveValue;
+        }
         // Gain2 sets how the pressure rate setpoint depends on the pressure error
         dpdtSet = inletGain2 * error;
         // Limit rate setpoint to maximum allowed rate of change
@@ -281,6 +309,10 @@ int valveCntrlInit(void)
     v->solenoidMask_        = (unsigned int*)registerAddr(VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER);
     v->solenoidState_       = (unsigned int*)registerAddr(VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER);
     v->sequenceStep_        = (int*)registerAddr(VALVE_CNTRL_SEQUENCE_STEP_REGISTER);
+    v->flowState_           = (FLOW_CNTRL_StateType *)registerAddr(FLOW_CNTRL_STATE_REGISTER);
+    v->flow_                = (float *)registerAddr(FLOW1_REGISTER);
+    v->flowSetpoint_        = (float *)registerAddr(FLOW_CNTRL_SETPOINT_REGISTER);
+    v->flowControlGain_     = (float *)registerAddr(FLOW_CNTRL_GAIN_REGISTER);
 
     state = VALVE_CNTRL_DisabledState;
     threshState = VALVE_CNTRL_THRESHOLD_DisabledState;

@@ -503,6 +503,11 @@
             <enum_value ident="VALVE_CNTRL_InletControlState" value="2" caption="Inlet control" />
             <enum_value ident="VALVE_CNTRL_ManualControlState" value="3" caption="Manual control" />
         </enum>
+        <enum type="FLOW_CNTRL_StateType">
+            <description>Flow control states</description>
+            <enum_value ident="FLOW_CNTRL_DisabledState" value="0" caption="Disabled" />
+            <enum_value ident="FLOW_CNTRL_EnabledState" value="1" caption="Enabled" />
+        </enum>
         <enum type="VALVE_CNTRL_THRESHOLD_StateType">
             <description>Loss-based triggering states</description>
             <enum_value ident="VALVE_CNTRL_THRESHOLD_DisabledState" value="0" caption="Disabled" />
@@ -3169,6 +3174,23 @@
             <description>Ringdown detector gain register</description>
             <initial>128</initial>
             <display format="%d">Ringdown detector gain</display>
+            <save/>
+        </register>
+        <register ident="FLOW_CNTRL_STATE_REGISTER" type="FLOW_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Flow control app state register</description>
+            <initial>FLOW_CNTRL_DisabledState</initial>
+            <display>Flow Controller Mode</display>
+        </register>
+        <register ident="FLOW_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Flow control setpoint register</description>
+            <initial>100</initial>
+            <display format="%.1f" units="sccm">Flow setpoint</display>
+            <save/>
+        </register>
+        <register ident="FLOW_CNTRL_GAIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Flow control gain register</description>
+            <initial>20</initial>
+            <display format="%.1f">Flow control gain</display>
             <save/>
         </register>
     </register_list>

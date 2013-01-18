@@ -707,6 +707,16 @@ VALVE_CNTRL_StateTypeDict[1] = 'VALVE_CNTRL_OutletControlState' # Outlet control
 VALVE_CNTRL_StateTypeDict[2] = 'VALVE_CNTRL_InletControlState' # Inlet control
 VALVE_CNTRL_StateTypeDict[3] = 'VALVE_CNTRL_ManualControlState' # Manual control
 
+# Enumerated definitions for FLOW_CNTRL_StateType
+FLOW_CNTRL_StateType = c_uint
+FLOW_CNTRL_DisabledState = 0 # Disabled
+FLOW_CNTRL_EnabledState = 1 # Enabled
+
+# Dictionary for enumerated constants in FLOW_CNTRL_StateType
+FLOW_CNTRL_StateTypeDict = {}
+FLOW_CNTRL_StateTypeDict[0] = 'FLOW_CNTRL_DisabledState' # Disabled
+FLOW_CNTRL_StateTypeDict[1] = 'FLOW_CNTRL_EnabledState' # Enabled
+
 # Enumerated definitions for VALVE_CNTRL_THRESHOLD_StateType
 VALVE_CNTRL_THRESHOLD_StateType = c_uint
 VALVE_CNTRL_THRESHOLD_DisabledState = 0 # Disabled
@@ -1000,7 +1010,7 @@ INJECTION_SETTINGS_virtualLaserShift = 2
 INJECTION_SETTINGS_lossTagShift = 5
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 447
+INTERFACE_NUMBER_OF_REGISTERS = 450
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1449,6 +1459,9 @@ CONVERSION_FLOW1_SCALE_REGISTER = 443
 CONVERSION_FLOW1_OFFSET_REGISTER = 444
 RDD_BALANCE_REGISTER = 445
 RDD_GAIN_REGISTER = 446
+FLOW_CNTRL_STATE_REGISTER = 447
+FLOW_CNTRL_SETPOINT_REGISTER = 448
+FLOW_CNTRL_GAIN_REGISTER = 449
 
 # Dictionary for accessing registers by name and list of register information
 registerByName = {}
@@ -2462,6 +2475,12 @@ registerByName["RDD_BALANCE_REGISTER"] = RDD_BALANCE_REGISTER
 registerInfo.append(RegInfo("RDD_BALANCE_REGISTER",c_uint,1,1.0,"rw"))
 registerByName["RDD_GAIN_REGISTER"] = RDD_GAIN_REGISTER
 registerInfo.append(RegInfo("RDD_GAIN_REGISTER",c_uint,1,1.0,"rw"))
+registerByName["FLOW_CNTRL_STATE_REGISTER"] = FLOW_CNTRL_STATE_REGISTER
+registerInfo.append(RegInfo("FLOW_CNTRL_STATE_REGISTER",FLOW_CNTRL_StateType,0,1.0,"rw"))
+registerByName["FLOW_CNTRL_SETPOINT_REGISTER"] = FLOW_CNTRL_SETPOINT_REGISTER
+registerInfo.append(RegInfo("FLOW_CNTRL_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerByName["FLOW_CNTRL_GAIN_REGISTER"] = FLOW_CNTRL_GAIN_REGISTER
+registerInfo.append(RegInfo("FLOW_CNTRL_GAIN_REGISTER",c_float,1,1.0,"rw"))
 
 # FPGA block definitions
 
@@ -3219,6 +3238,9 @@ __p.append(('dsp','float',VALVE_CNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER,'Out
 __p.append(('dsp','uint32',VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER,'Bit mask to select solenoid valves affected by trigger','','$%X',1,1))
 __p.append(('dsp','uint32',VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER,'Solenoid valve states when triggered','','$%X',1,1))
 __p.append(('dsp','int32',VALVE_CNTRL_SEQUENCE_STEP_REGISTER,'Valve sequence step (-1 to disable)','','%d',1,1))
+__p.append(('dsp','choices',FLOW_CNTRL_STATE_REGISTER,'Flow Controller Mode','',[(FLOW_CNTRL_DisabledState,"Disabled"),(FLOW_CNTRL_EnabledState,"Enabled"),],1,1))
+__p.append(('dsp','float',FLOW_CNTRL_SETPOINT_REGISTER,'Flow setpoint','sccm','%.1f',1,1))
+__p.append(('dsp','float',FLOW_CNTRL_GAIN_REGISTER,'Flow control gain','','%.1f',1,1))
 parameter_forms.append(('Sample Handling Parameters',__p))
 
 # Form: Virtual Laser Parameters

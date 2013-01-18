@@ -312,6 +312,9 @@
             <register>VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER</register>
             <register>VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER</register>
             <register>VALVE_CNTRL_SEQUENCE_STEP_REGISTER</register>
+            <register>FLOW_CNTRL_STATE_REGISTER</register>
+            <register>FLOW_CNTRL_SETPOINT_REGISTER</register>
+            <register>FLOW_CNTRL_GAIN_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Virtual Laser Parameters</title>
