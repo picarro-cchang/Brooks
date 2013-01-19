@@ -162,10 +162,12 @@ void proportionalValveStep()
         if (valveValue < inletMin) valveValue = inletMin;
         if (valveValue > inletMax) valveValue = inletMax;
         inlet = valveValue;
+        /*
         if (inlet <= inletMin && v->nonDecreasingCount>10) {
             message_puts(LOG_LEVEL_STANDARD,"Check vacuum pump connection, valves closed to protect cavity.");
             state = VALVE_CNTRL_DisabledState;
-        }        
+        }
+        */
         break;
     }
     userInlet = inlet;
