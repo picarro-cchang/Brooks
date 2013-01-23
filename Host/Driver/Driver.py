@@ -17,8 +17,6 @@ import ctypes
 import getopt
 import inspect
 
-
-
 import os
 import struct
 import sys
@@ -34,7 +32,7 @@ from DriverAnalogInterface import AnalogInterface
 from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common import CmdFIFO, StringPickler, timestamp
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, ctypesToDict
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, ctypesToDict
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.hostDasInterface import DasInterface, HostToDspSender, StateDatabase
 from Host.Common.SingleInstance import SingleInstance
@@ -508,7 +506,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Issues command for ringdown detector variable gain board"""
         sender = self.dasInterface.hostToDspSender
         sender.doOperation(Operation("ACTION_RDD_CNTRL_DO_COMMAND",[int(command) & 0xFF]))
-        
+
     #def wrAuxiliary(self,data):
     #    """Writes the "data" string to the auxiliary board"""
     #    self.dasInterface.hostToDspSender.wrAuxiliary(ctypes.create_string_buffer(data,len(data)))
@@ -1093,6 +1091,13 @@ class Driver(SharedTypes.Singleton):
         self.dasInterface = DasInterface(self.stateDbFile,self.usbFile,
                                          self.dspFile,self.fpgaFile,sim)
         self.analogInterface = AnalogInterface(self,self.config)
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
+        self.safeModeCount = 0
+        try:
+            self.maxSafeModeCount = int(self.config["Supervisor"]["maxSafeModeWarnings"])
+        except KeyError:
+            self.maxSafeModeCount = None
+
         # Get appConfig and instrConfig version number
         self.ver = {}
         for ver in ["appVer", "instrVer", "commonVer"]:
@@ -1142,6 +1147,14 @@ class Driver(SharedTypes.Singleton):
     def run(self):
         def messageProcessor(data):
             ts, msg = data
+            if "Instrument placed in safe mode" in msg:
+                self.safeModeCount += 1
+                if (self.maxSafeModeCount is not None) and (self.safeModeCount >= self.maxSafeModeCount):
+                    try:
+                        Log("Shutting down supervisor since maxSafeModeWarnings exceeded")
+                        self.supervisor.TerminateApplications(False, True)
+                    except:
+                        Log("Cannot communicate with supervisor")
             if len(msg)>2 and msg[1] == ':':
                 level = int(msg[0])
                 Log("%s" % (msg[2:],),Level=level)
