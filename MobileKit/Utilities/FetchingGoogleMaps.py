@@ -130,7 +130,7 @@ class PartitionedMap(object):
 
     def drawPartition(self,map,rectList):
         assert(map.size == (self.nx+2*self.padX,self.ny+2*self.padY))
-        font = ImageFont.truetype(r"c:\windows\fonts\arial.ttf",60)
+        font = ImageFont.truetype(r"c:\windows\fonts\arial.ttf",40)
         mDraw = ImageDraw.Draw(map)
         for ky,row in enumerate(rectList):
             for kx,mr in enumerate(row):

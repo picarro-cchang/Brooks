@@ -879,12 +879,18 @@ class PeakFinder(object):
                 # Filter by spectrumID for isomethane analyzer
                 selectedData = ((data.DISTANCE,data) for data in alignedData if (data is not None) and ('species' not in data._fields or int(data.species) in [2,150]))
 
+                if self.debug: 
+                    sys.stderr.write('line 881')                         
                 intData = (data for dist,data in interpolator(selectedData,dx))
                 peakData = self.spaceScale(intData,dx,t0,nlevels,factor)
                 filteredPeakData = (pk for pk in peakData if pk.AMPLITUDE>minAmpl)
+                if self.debug: 
+                    sys.stderr.write('line 886')
 
                 # Write results to database or to the analysis file
                 for pk in filteredPeakData:
+                    if self.debug:
+                        sys.stderr.write('line 889')
                     if not headerWritten:
                         # Get the list of variables and formats for the entries
                         #  in the peakData source
@@ -900,6 +906,8 @@ class PeakFinder(object):
                             doc_row = 0
                         else:
                             peakFile = os.path.splitext(fname)[0] + '.peaks'
+                            if self.debug: 
+                                sys.stderr.write('line 906. peakFile: %s', peakFile)
                             try:
                                 handle = open(peakFile, 'wb+', 0) #open file with NO buffering
                             except:
@@ -931,6 +939,9 @@ class PeakFinder(object):
                     else:
                         handle.write(("".join(hfList)+"\r\n") % tuple([getattr(pk,h) for h in hList]))
 
+                if self.debug:
+                    sys.stderr.write('line 939')
+                
                 if not self.usedb and handle is not None:
                     handle.close()
 

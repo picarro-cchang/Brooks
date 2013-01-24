@@ -923,7 +923,6 @@ class InstructionsProcessor(object):
     def RunTileInstructions(self):
         if not cfg.assembleOnly:
             self.RunTileMaps()
-        
 
 class ReportAssembler(object):
     '''Assemble the report from the various elements contained in subdirs'''

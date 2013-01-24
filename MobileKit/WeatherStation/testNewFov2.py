@@ -8,16 +8,22 @@ DTR = np.pi/180.0
 RTD = 180.0/np.pi
 
 # fname = r"R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120401\OUT\FCDS2006-20120401-095924Z-DataLog_User_Minimal.dat"
-fname = r"R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120401\OUT\extract1.dat"
+# fname = r"R:\crd_G2000\FCDS\1102-FCDS2006_v4.0\Survey20120401\OUT\extract1.dat"
+fname = r"C:\Users\dsteele\Documents\Surveyor Reports\extract1.dat"
+'''
 A = np.genfromtxt(fname,names=True)
 t = A['EPOCH_TIME']
 lat = A['GPS_ABS_LAT']
 lng = A['GPS_ABS_LONG']
 
-cosLat = np.cos(lat[0]*DTR)
 windN = A['WIND_N']
 windE = A['WIND_E']
 windSdev = A['WIND_DIR_SDEV']
+'''
+t, lat, lng, windN, windE, windSdev = np.genfromtxt(fname, usecols=[0,12,13,18,19,20], unpack=True)
+
+
+cosLat = np.cos(lat[0]*DTR)
 xx = DTR*(lng-lng[0])*EARTH_RADIUS*cosLat
 yy = DTR*(lat-lat[0])*EARTH_RADIUS
 dstd = DTR*windSdev

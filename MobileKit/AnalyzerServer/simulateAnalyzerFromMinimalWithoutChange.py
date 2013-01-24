@@ -14,8 +14,9 @@ import datetime
 # dataFile = r'R:\crd_G2000\FCDS\1061-FCDS2003\Survey_20120215\DAT\FCDS2003-20120215-235259Z-DataLog_User_Minimal.dat'
 # dataFile = r'C:\Picarro\Eclipse\Sending Files To P3\Example\TEST6543-20120720-204922Z-DataLog_User_Minimal.dat'
 
-dataFile = r'C:\UserData\AnalyzerServer\tests\FDDS2008-20120904-143417Z-DataLog_User_Minimal.dat'
-# liveFile = r'C:\UserData\AnalyzerServer\FDDS2008-20120904-143417Z-DataLog_User_Minimal.dat'
+# dataFile = r'C:\UserData\AnalyzerServer\tests\FDDS2008-20120904-143417Z-DataLog_User_Minimal.dat'
+dataFile = r'C:\Users\dsteele\Documents\Locator\Data\FDDS2018-20121001-211337Z-DataLog_User_Minimal.dat'
+# liveFile = r'C:\UserData\AnalyzerServer\FDDS2018-20121001-210025Z-DataLog_Sensor_Minimal.dat'
 liveFile = time.strftime('C:/UserData/AnalyzerServer/ZZZ-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
 
 handle = CreateFile(liveFile,GENERIC_WRITE,

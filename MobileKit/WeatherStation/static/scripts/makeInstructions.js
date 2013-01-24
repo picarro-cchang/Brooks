@@ -553,7 +553,7 @@ function editRunsChrome()
             {"None": "None", "#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red", 
              "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
     body += tableFuncs.editControl("Min Amplitude", tableFuncs.makeSelect("id_min_ampl", {"class": controlClass},
-            {"0.03": "0.03", "0.05": "0.05", "0.1": "0.1", "0.2": "0.2", 
+            {"0.03": "0.03", "0.05": "0.05", "0.07": "0.07", "0.1": "0.1", "0.12": "0.12", "0.2": "0.2", "0.3": "0.3",
              "0.5": "0.5", "1.0": "1.0" }));
     body += tableFuncs.editControl("Exclusion radius", tableFuncs.makeSelect("id_excl_radius", {"class": controlClass},
             {"0": "0", "10": "10", "20": "20", "30": "30", "50": "50" }));
