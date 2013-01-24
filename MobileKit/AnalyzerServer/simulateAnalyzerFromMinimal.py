@@ -9,7 +9,7 @@ import datetime
 #  and longitude columns
 
 #dataFile = 'data/BFADS03-20110609-1014-Data.dat'
-dataFile = r'S:\for Sze\temp\FCDS2003-20120203-010239Z-DataLog_User_Minimal.dat'
+dataFile = r'C:\Users\dsteele\Documents\Locator\Data\FDDS2018-20121001-211337Z-DataLog_User_Minimal.dat'
 liveFile = time.strftime('c:/UserData/AnalyzerServer/ZZZ-%Y%m%d-%H%M%SZ-DataLog_User_Minimal.dat',time.gmtime())
 UNIXORIGIN = datetime.datetime(1969,12,31,16,0,0,0) # Pacific standard time
 

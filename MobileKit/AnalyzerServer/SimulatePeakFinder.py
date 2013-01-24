@@ -7,7 +7,7 @@ if __name__ == "__main__":
     AppDir = os.path.split(AppPath)[0]
     
     data_dir = 'C:/UserData/AnalyzerServer' # local Analyzer data location
-    debug = False
+    debug = True
         
     ulog = os.path.join(data_dir, '*DataLog_User_Minimal.dat')
     pf = PeakFinder()

@@ -69,6 +69,7 @@ def coverProb(angleRanges,sigma):
        Angles are in radians.
     """
     z = asarray(angleRanges)/sigma
+    z = asarray(angleRanges)/sigma
     if z.size == 0: return 0.0
     p = 0.5*erf(z/sqrt(2))
     return sum(p[:,1]-p[:,0])
@@ -178,6 +179,7 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams,debugFp = None
         fovBuff.append(newdat)
         if len(fovBuff) == 2*N+1:
             d = fovBuff[N]
+            # print "d: ", d
             lng = d["GPS_ABS_LONG"]
             lat = d["GPS_ABS_LAT"]
             cosLat = cos(lat*DTR)
@@ -229,7 +231,10 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams,debugFp = None
         inArgs["source"] = sourceAsList
         outArgs = {"result": result}
         timestamp = time.time()
-        cPickle.dump(dict(inArgs=inArgs,outArgs=result,timestamp=timestamp),debugFp,-1)
+        print "Length of result: (new) ", str(len(outArgs['result']["EPOCH_TIME"]))
+        print "Length of inArgs: ", str(len(inArgs["source"]))
+        cPickle.dump(dict(inArgs=inArgs,outArgs=result,timestamp=timestamp),debugFp)
+        # cPickle.dump(dict(inArgs=inArgs,outArgs=outArgs,timestamp=timestamp),debugFp)
     return result
 
 def ltqnorm( p ):
