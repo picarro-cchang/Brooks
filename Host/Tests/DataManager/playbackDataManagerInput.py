@@ -63,7 +63,7 @@ if __name__ == "__main__":
                     offset = waitUntil(ts,offset)
                     c = interface.SensorEntryType()
                     dictToCtypes(o,c)
-                    ddm.sensorCast.send(StringPickler.ObjAsString(c))
+                    #ddm.sensorCast.send(StringPickler.ObjAsString(c))
                 elif s.startswith("F"):
                     fitterIndex = int(s[1:])
                     ts = o[0]

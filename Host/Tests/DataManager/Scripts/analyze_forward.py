@@ -1,0 +1,10 @@
+xp = _GLOBALS_["xProcessor"]
+xh = xp.xHistory
+
+xs = xh.popleft()
+for i,(c,f,v) in enumerate(xp.crossList):
+    _REPORT_[c + '_xsync'] = xs.valueArray[xs.indexByName[c]]
+_REPORT_["timestamp"] = int(xs.timestamp)
+
+if xh and xh[0].ready:
+    _ANALYZE_[xp.forward_id] = {"new_timestamp":xh[0].timestamp}
