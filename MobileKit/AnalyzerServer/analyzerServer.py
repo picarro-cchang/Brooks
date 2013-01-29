@@ -19,7 +19,7 @@ from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MAN
 import Host.Common.SwathProcessor as sp
 import math
 
-debugSwath = True
+debugSwath = False
 NaN = 1e1000/1e1000
 
 if debugSwath:
@@ -646,6 +646,26 @@ def maps():
     center_latitude = float(request.values.get('center_latitude',37.39604))
     return render_template('maps.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
                                        center_latitude=center_latitude,center_longitude=center_longitude)
+@app.route('/investigator')
+def investigator():
+    amplitude = float(request.values.get('amplitude',0.1))
+    do_not_follow = int('do_not_follow' in request.values)
+    follow = int('follow' in request.values or not do_not_follow)
+    center_longitude = float(request.values.get('center_longitude',-121.98432))
+    center_latitude = float(request.values.get('center_latitude',37.39604))
+    return render_template('investigator.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
+                                       center_latitude=center_latitude,center_longitude=center_longitude)
+
+@app.route('/investigator3')
+def investigator3():
+    amplitude = float(request.values.get('amplitude',0.1))
+    do_not_follow = int('do_not_follow' in request.values)
+    follow = int('follow' in request.values or not do_not_follow)
+    center_longitude = float(request.values.get('center_longitude',-121.98432))
+    center_latitude = float(request.values.get('center_latitude',37.39604))
+    return render_template('investigator3.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
+                                       center_latitude=center_latitude,center_longitude=center_longitude)
+                                       
 @app.route('/test')
 def test():
     return render_template('test.html')
