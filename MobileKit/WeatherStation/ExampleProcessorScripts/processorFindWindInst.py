@@ -16,9 +16,6 @@ NOT_A_NUMBER = 1e1000/1e1000
 SourceTuple = namedtuple('SourceTuple',['ts','valTuple'])
 
 # processorFindWindInst.py is a script for finding the wind statistics.
-#  This version uses a correlation method to align the anemometer axes with
-#  the axis of the vehicle by reducing the correlation of the vehicle speed
-#  and the transverse wind to zero
 
 class RawSource(object):
     """RawSource objects are created from a data queue. They expose a getData method
@@ -86,32 +83,7 @@ class GpsSource(RawSource):
     pass
     
 class WsSource(RawSource):
-    def __init__(self,*a,**k):
-        RawSource.__init__(self,*a,**k)
-        self.ValTuple = None
-        
-    def getData(self,requestTs):
-        """Get data at timestamp "requestTs" using linear interpolation. Returns None if data
-        are not available. For the weather station in instantaneous mode, we need to rotate the 
-        wind direction using the heading to get the rotated wind"""
-        while self.latestTimestamp < requestTs:
-            if not self.getFromQueue(): return None
-        ts, savedTs = None, None
-        valTuple, savedValTuple = None, None
-        for (ts, valTuple) in reversed(self.oldData):
-            if self.ValTuple is None:
-                self.ValTuple = namedtuple('WsSourceEx_tuple',valTuple._fields+('WS_WIND_LON','WS_WIND_LAT'))
-            rwind = valTuple.WS_SPEED*(valTuple.WS_COS_DIR+1j*valTuple.WS_SIN_DIR)*(valTuple.WS_COS_HEADING+1j*valTuple.WS_SIN_HEADING)
-            valTuple = self.ValTuple(WS_WIND_LON=real(rwind),WS_WIND_LAT=imag(rwind),*valTuple)
-            if ts < requestTs:
-                alpha = float(requestTs-ts)/(savedTs-ts)
-                di = tuple([alpha*y+(1-alpha)*y_p for y,y_p in zip(savedValTuple,valTuple)])
-                return SourceTuple(requestTs,self.ValTuple(*di))
-            else:
-                savedTs = ts
-                savedValTuple = valTuple
-        else:
-            return self.oldData[0]
+    pass
 
 def distVincenty(lat1, lon1, lat2, lon2):
     # WGS-84 ellipsiod. lat and lon in DEGREES
@@ -349,7 +321,13 @@ def trueWindSource(derivCdataSource,distFromAxle,speedFactor=1.0):
         phi = angle(r*exp(1j*(theta-p0))-w)
         
         # Rotate the anemometer measured wind to the axes of the vehicle
-        sVel = d.rVel*exp(1j*rot)
+        # In this version we only measure the rotation using correlation between car speed and
+        #  the sonic anemometer components. We do NOT apply the measured rotation to the data to
+        #  correct them, as it is assumed that the anemometer will be rotated to make it point
+        #  in the correct direction
+        # rot = 0.0
+        # sVel = d.rVel*exp(1j*rot)
+        sVel = d.rVel
         # Compute an angular correction based on the curvature of the path
         #  and the distance between anemometer and the rear axle of the car
         axleCorr = d.kappa*distFromAxle
@@ -489,7 +467,7 @@ def runAsScript():
     msOffsets = [0,compassDelay_ms,anemDelay_ms]  # ms offsets for GPS, magnetometer and anemometer
     syncDataSource = syncSources([gpsSource,wsSource,wsSource],msOffsets,1000)
     statsAvg = int(PARAMS.get("STATSAVG",10))
-    for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle),statsAvg)):
+    for i,d in enumerate(windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)),distFromAxle,speedFactor),statsAvg)):
         p0,p1,p2 = d.calParams
         rCorr,iCorr = d.wCorr
         vCar = abs(d.zVel)
