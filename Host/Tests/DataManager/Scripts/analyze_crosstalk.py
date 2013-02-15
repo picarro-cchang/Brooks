@@ -24,15 +24,15 @@ class CrosstalkProcessor(object):
                     if meas_timestamp < xh[-1].timestamp:
                         raise ValueError("Timestamps out of order in Data Manager")
                     elif meas_timestamp > xh[-1].timestamp:
-                        xh.append(XSync(xc, name, self.indexByName))
+                        xh.append(XSync(xc, name, self.indexByName, data.copy(), new_data.copy()))
                 else:
-                    xh.append(XSync(xc, name, self.indexByName))
+                    xh.append(XSync(xc, name, self.indexByName, data.copy(), new_data.copy()))
         if xh and xh[0].ready:
             analyze[self.forward_id] = {"new_timestamp":xh[0].timestamp}
 
 class XSync(object):
     TIMEOUT = 10.0
-    def __init__(self, current, name, indexByName, ignore=None):
+    def __init__(self, current, name, indexByName, data, new_data, ignore=None):
         #
         # Create an object representing a request to compute some values with crosstalk removed. This is done for
         #  a particular timestamp, at which time the measured values of all the quantities are required.
@@ -60,6 +60,8 @@ class XSync(object):
             self.valueOk[i] = (self.valueTimestamps[i] == self.timestamp)
 
         self.ready = self.valueOk[self.valueNeeded].all()
+        self.data = data
+        self.new_data = new_data
 
     def update(self, current, name, ignore=None):
         i = self.indexByName[name]
