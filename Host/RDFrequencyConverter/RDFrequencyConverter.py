@@ -17,6 +17,7 @@ File History:
     20-Sep-2010  sze       Added pCalOffset parameter to RPC_loadWarmBoxCal for flight calibration
     24-Oct-2010  sze       Put scheme version number in high order bits of schemeVersionAndTable in ProcessedRingdownEntry type
     09-Mar-2012  sze       Use 7th (1-origin) column of scheme file to specify laser temperature offset from the nominal temperature
+    15-Feb-2013  sze       Always center tuner about 32768, rather than around value passed in as argument
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -559,7 +560,7 @@ class RDFrequencyConverter(Singleton):
         """ Set the instrument to use cavity length tuning, and load up DAS registers appropriately """
         Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER", interface.ANALYZER_TUNING_CavityLengthTuningMode)
         self.tuningMode = interface.ANALYZER_TUNING_CavityLengthTuningMode
-        self.cavityLengthTunerAdjuster.setTunerRegisters()
+        self.cavityLengthTunerAdjuster.setTunerRegisters(32768)
 
     def RPC_setLaserCurrentTuning(self):
         """ Set the instrument to use laser current tuning, and load up DAS registers appropriately """
@@ -574,7 +575,7 @@ class RDFrequencyConverter(Singleton):
         
     def RPC_centerTuner(self,tunerCenter):
         if self.tuningMode == interface.ANALYZER_TUNING_CavityLengthTuningMode:
-            self.cavityLengthTunerAdjuster.setTunerRegisters(tunerCenter)
+            self.cavityLengthTunerAdjuster.setTunerRegisters(32768)
         elif self.tuningMode == interface.ANALYZER_TUNING_LaserCurrentTuningMode:
             self.laserCurrentTunerAdjuster.setTunerRegisters(32768)
 
