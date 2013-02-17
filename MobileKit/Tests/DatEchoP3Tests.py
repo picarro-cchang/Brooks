@@ -12,7 +12,7 @@ import datetime
 import urllib2
 import datetime
 import shutil
-import pickle
+import cPickle
 import pprint
 
 import simplejson as json
@@ -39,7 +39,7 @@ class TestDatEchoP3(object):
         self.driverEmulator = None
 
         for d in ['test2', 'test3', 'test4', 'test5', 'test6', 'test7', 'test8',
-                  'test9', 'test10', 'test11', 'test12', 'test13']:
+                  'test9', 'test10', 'test11', 'test12', 'test13', 'test14']:
             path = os.path.join(self.datRoot, d)
             if os.path.isdir(path):
                 shutil.rmtree(path)
@@ -279,7 +279,7 @@ class TestDatEchoP3(object):
 
         nRows = 0
         with open(os.path.join(targetDir, "%s.row" % target), 'rb') as fp:
-            nRows = pickle.load(fp)
+            nRows = cPickle.load(fp)
 
         assert nRows == 16207
 
@@ -1097,3 +1097,71 @@ class TestDatEchoP3(object):
 
         assert os.path.isfile(os.path.join(badTargetDir, "%s.bad" % badTarget))
         assert not os.path.isfile(os.path.join(badTargetDir, badTarget))
+
+    def testMalformedRowCache(self):
+        """
+        Test that a mis-pickled row cache is handled correctly.
+        """
+        testDatDir = os.path.join(self.datRoot, 'test14')
+        assert not os.path.isdir(testDatDir)
+
+        # Use date/times close to today so we trigger the 5-day check on
+        # the server.
+        targetDt = datetime.datetime.utcnow() - datetime.timedelta(days=2.0)
+        target = targetDt.strftime("TEST23-%Y%m%d-%H%M%SZ-DataLog_User"
+                                   "_Minimal.dat")
+        targetDir = os.path.join(testDatDir, targetDt.strftime("%Y"),
+                                 targetDt.strftime("%m"),
+                                 targetDt.strftime("%d"))
+        os.makedirs(targetDir)
+
+        shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
+                        os.path.join(targetDir, target))
+
+        with open(os.path.join(targetDir, "%s.row" % target), 'w') as fp:
+            # Write a purposely malformed row cache. If everything
+            # goes right, the pickled file looks like
+            # "I16207\n.". Let's make it go wrong.
+            fp.write("I16207.")
+
+        assert self.driverEmulator is None
+        self.driverEmulator = psutil.Process(
+            subprocess.Popen(['python.exe',
+                              './Helpers/DriverEmulatorServer.py']).pid)
+        time.sleep(1.0)
+        assert self.driverEmulator.is_running()
+
+        r = urllib2.urlopen("http://localhost:5000/setLogDate/%d/%d/%d"
+                            "/%d/%d/%d" % (targetDt.year, targetDt.month,
+                                           targetDt.day, targetDt.hour,
+                                           targetDt.minute, targetDt.second))
+        r.read()
+
+        datEcho = psutil.Process(
+            subprocess.Popen(
+                ['python.exe', '../AnalyzerServer/DatEchoP3.py',
+                 '-ddat',
+                 "-l%s/*.dat" % os.path.join(self.datRoot, 'test14'),
+                 '-n200',
+                 "-i%sgdu/<TICKET>/14.0/AnzMeta/" % self.localUrl,
+                 "-p%sgdu/<TICKET>/14.0/AnzLog/" % self.localUrl,
+                 "-k%ssec/dummy/14.0/Admin/" % self.localUrl,
+                 "--log-metadata-url=%sgdu/<TICKET>/14.0/AnzLogMeta/" % (
+                        self.localUrl),
+                 '-yid',
+                 "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
+                 '-sAPITEST']).pid)
+
+        time.sleep(10.0)
+
+        assert datEcho.is_running()
+
+        datEcho.kill()
+
+        nRows = None
+
+        # Verify that a correct row cache is eventually created
+        with open(os.path.join(targetDir, "%s.row" % target), 'rb') as fp:
+            nRows = cPickle.load(fp)
+
+        assert nRows == 16207

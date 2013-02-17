@@ -1,7 +1,10 @@
-'''
-DatEchoP3 - Listen to a path of .dat (type) files on the local system,
-and echo new rows to the P3 archive
-'''
+"""
+Copyright 2012-2013 Picarro Inc
+
+Listen to a path of .dat (type) files on the local system, and echo
+new rows to the P3 archive
+"""
+
 from __future__ import with_statement
 
 import sys
@@ -485,7 +488,22 @@ class DataEchoP3(object):
             if os.path.isfile(rowCache):
                 print 'Found row cache'
                 with open(rowCache, 'rb') as fp:
-                    lastRow = cPickle.load(fp)
+                    try:
+                        lastRow = cPickle.load(fp)
+                    except:
+                        # There are a wide range of exceptions that
+                        # can be raised here so we have no choice but
+                        # to look for them all. See:
+                        # http://docs.python.org/2/library/
+                        # pickle.html#pickle.UnpicklingError
+                        #
+                        # This handler is meant to deal with the
+                        # scenario where the row cache was corrupted
+                        # when it was written out due to power failure
+                        # or the like. We simply want to regenerate a
+                        # new row cache by saying that the existing
+                        # one has 0 rows in it.
+                        lastRow = 0
 
                 # If the row cache was generated while the file was
                 # incomplete, we need to recalculate it.
