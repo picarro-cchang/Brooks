@@ -118,7 +118,7 @@ def getMetadata(ticket, testId):
 
     STATS['lastRangeReq'] = (start, stop)
 
-    if testId == 3.0:
+    if testId == 3.0 or testId == 14.0:
         assert LAST_TIMESTAMP is not None
         assert len(ANALYZER_IDS) > 0
 
