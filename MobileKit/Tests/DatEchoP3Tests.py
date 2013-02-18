@@ -14,6 +14,7 @@ import datetime
 import shutil
 import cPickle
 import pprint
+import math
 
 import simplejson as json
 import psutil
@@ -921,8 +922,7 @@ class TestDatEchoP3(object):
             nextRowIdx += 1
 
         localLines = self._logLinesToDict(os.path.join(targetDir, target))
-
-        assert serverLines == localLines
+        assert uniqServerRows == localLines
 
     def testHandleEmptyDatFile(self):
         """
