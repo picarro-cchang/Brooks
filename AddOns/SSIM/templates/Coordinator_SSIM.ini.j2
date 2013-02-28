@@ -15,7 +15,7 @@ num_disp_params = 0
 4 = "standardMode", "Standard Mode: 1=Between Each Sample Port; 2=Beginning and End", "1"
 5 = "measurementMode", "Measurement Mode: 1=One Time; 2=Continuous Loop", "2"
 6 = "measurementSpeed", "Measurement Speed: 1=Standard; 2=Fast", "1"
-7 = "sampleLoading", "Sample Loading: 1=Manual; 2=Automatic", "2"
+7 = "sampleLoading", "Sample Loading: 1=Manual; 2=Automatic; 3=Syringe", "2"
 8 = "diluteSample", "Sample Dilution: 1=No Dilution; 2=Dilute Sample with ZA", "1"
 
 [Mode]
@@ -98,7 +98,7 @@ if measurementSpeed not in ["1", "2", "3"]:
 if sampleMPV not in ["1", "2"]:
     sampleMPV = "1"
     # use MPV
-if sampleLoading not in ["1", "2"]:
+if sampleLoading not in ["1", "2", "3"]:
     sampleLoading = "2"
     # automatic
 if diluteSample not in ["1", "2"]:
@@ -112,6 +112,7 @@ numStdCompleted = 0
 # Set some initial flags
 sampleBagHooked = False
 sampleValveOpen = False
+sampleSyringeInjected = False
 t = 0
 # sample -> InjectValveMask = 6
 # standard -> InjectValveMask = 22
@@ -265,12 +266,30 @@ else:
         NEXT = "StatePauseOrGo"
 """
 
+[StateSyringeInject]
+action="""
+# Resume the coordinator operation after user follows the instruction and clicks "resume"
+if runningFlag:
+    currTime = time.time()
+    if not sampleSyringeInjected:
+        sampleSyringeInjected = True
+        logFunc("\nState E starts...\n")
+        NEXT = "StateE"
+else:
+    sleep(1)
+    pauseDur = time.time() - pauseStartTime
+    if pauseDur > 43200:
+        NEXT = "StateDone"
+    else:
+        NEXT = "StateSyringeInject"
+"""
+
 [StateA1]
 action = """
-# Set valve configuration for initial start-up (only v4 open) and user to hook up sample bags
+# Set valve configuration for initial start-up (only v4 open) and user to hook up sample bags or syringes
 # Pump out the SSIM
 setValveMask(8)
-logFunc("PLEASE HOOK UP ALL SAMPLE BAGS WITH VALVE CLOSED AND SELECT \"RESUME\" UNDER \"CONTROL\" TO CONTINUE...\n")
+logFunc("PLEASE HOOK UP ALL SAMPLE BAGS OR SYRINGES WITH VALVE CLOSED AND SELECT \"RESUME\" UNDER \"CONTROL\" TO CONTINUE...\n")
 pauseStartTime = time.time()
 pause()
 NEXT = "StatePauseOrGo"
@@ -303,7 +322,7 @@ NEXT = "StateA3"
 action = """
 # Ask user to open sample bag valves
 setValveMask(8)
-logFunc("PLEASE OPEN ALL THE SAMPLE BAG VALVES AND SELECT \"RESUME\" UNDER \"CONTROL\" TO CONTINUE...\n")
+logFunc("PLEASE OPEN ALL THE SAMPLE BAG OR SYRINGE VALVES AND SELECT \"RESUME\" UNDER \"CONTROL\" TO CONTINUE...\n")
 pauseStartTime = time.time()
 pause()
 NEXT = "StatePauseOrGo"
@@ -351,8 +370,21 @@ if sampleMPV == "1":
     # Turn the rotary valve if measuring sample
     if InjectValveMask == 6:
         moveRotValve(str(2*currSampleNum))
-logFunc("\nState D starts...\n")
-NEXT = "StateD"
+NEXT = "StateBagOrSyringe"
+"""
+
+[StateBagOrSyringe]
+action = """
+if sampleLoading == "3" and InjectValveMask == 6:
+    setValveMask(6)
+    logFunc("PLEASE BEGIN TO INJECT THE CONTENTS OF THE SYRINGE AND SELECT \"RESUME\" UNDER \"CONTROL\" WHEN INJECTION IS COMPLETE...\n")
+    pauseStartTime = time.time()
+    pause()
+    logFunc("\nState Syringe Inject starts...\n")
+    NEXT = "StateSyringeInject"
+else:
+    logFunc("\nState D starts...\n")
+    NEXT = "StateD"
 """
 
 [StateD]
@@ -361,9 +393,9 @@ action = """
 sleep(2)
 setValveMask(InjectValveMask)
 if InjectValveMask == 6:
-    logFunc("\nInjecting sample into sample loop\n")
+    logFunc("\nInjecting sample into sample chamber\n")
 elif InjectValveMask == 22:
-    logFunc("\nInjecting standard into sample loop\n")
+    logFunc("\nInjecting standard into sample chamber\n")
 sleep(sampleInjectTime)
 
 logFunc("\nState E starts...\n")
@@ -589,7 +621,12 @@ sleep(5)
 # Set some initial flags (again)
 sampleBagHooked = False
 sampleValveOpen = False
+sampleSyringeInjected = False
 if sampleLoading == "1" and sampleMPV == "2":
+        logFunc("\nReady for the next measurement...\n")
+        logFunc("\nState A1 starts...\n")
+        NEXT = "StateA1"
+if sampleLoading == "3" and sampleMPV == "2":
         logFunc("\nReady for the next measurement...\n")
         logFunc("\nState A1 starts...\n")
         NEXT = "StateA1"
