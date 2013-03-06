@@ -120,7 +120,7 @@
         else if (req.query.posixTimes) {
             req.query.posixTimes.forEach(function (p) {
                 posixTimes.push(+p);
-                timeStrings.push(tzWorld(+p,"%F %T^z",tz));
+                timeStrings.push(tzWorld(+p,"%F %T%z",tz));
             });
         }
         res.send({"timeStrings": timeStrings, "posixTimes": posixTimes, "tz": tz});

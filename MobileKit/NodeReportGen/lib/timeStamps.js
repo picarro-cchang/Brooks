@@ -4,6 +4,8 @@
 (function() {
 	'use strict';
 	var _ = require('underscore');
+    var tzWorld = require('./tzSupport');
+
     function getMsUnixTime(timeString) {
         if (_.isUndefined(timeString)) {
             return new Date().getTime();
@@ -29,11 +31,19 @@
         return formatNumberLength(getMsUnixTime(ts),13);
     }
 
-    function strToEtm(s) {
+    function strToEtm(s,timezone) {
         // Convert GMT time string to Epoch Time (s)
-        return new Date(s + 'Z').getTime()/1000;
+        s = s.replace(/\s+/," ");
+        if (timezone === undefined) timezone = "GMT";
+        return tzWorld(s,timezone)/1000.0;
     }
 
+    function etmToStr(etm,timezone) {
+        if (timezone === undefined) timezone = "GMT";
+        return tzWorld((+etm)*1000,"%F %T%z (%Z)",timezone);
+    }
+
+    exports.etmToStr = etmToStr;
     exports.getMsUnixTime = getMsUnixTime;
     exports.msUnixTimeToTimeString = msUnixTimeToTimeString;
     exports.strToEtm = strToEtm;
