@@ -1,0 +1,14 @@
+- test for bad Json data fetched by getReport
+- implement RptGen monitor so that tasks that are incomplete and not being monitored are submitted with the force flag
+- use spinning cursor while system is working
+- implement getFovsData using new Fov calculation scheme
+- Make sure runs and surveys are filled out correctly even if there are no paths
+- handle isotopic analyses on report
+- produce correct page elements for summary and submaps
+- include CSS for page breaks
+- include monitoring of pending RptGen lrts to allow detection of zombie lrts which never return done status.
+
++ getReport should take corners in geocode format as optional input parameters
++ Write bisect module and implement exclusion radius while getting peaks
++ Investigate getting metadata for each alog file for writing into survey table
++ Resolve problem of htmltopdf failure due to JavaScript timeout (use --javascript-delay parameter and window.print())

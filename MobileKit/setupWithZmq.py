@@ -10,7 +10,7 @@ sys.path.append("AnalyzerServer")
 sys.path.append("MobileKitSetupNew")
 sys.path.append("Utilities")
 sys.path.append("ViewServer")
-sys.path.append("WeatherStation")
+sys.path.append("ReportGen")
 os.environ["PATH"] = os.environ["PATH"] + os.path.pathsep + os.path.split(zmq.__file__)[0]
 
 ################################################################
@@ -74,20 +74,20 @@ exclusionList = ["Tkconstants","Tkinter","tcl"]
 inclusionList = ["zmq.utils", "zmq.utils.jsonapi", "zmq.utils.strtypes"]
 packageList = ["simplejson", "werkzeug", "jinja2", "email"]
 data_files = [(".", ["MobileKitSetupNew/LEDgreen2.ico", "MobileKitSetupNew/LEDred2.ico", "MobileKitSetupNew/MobileKitSetup.ini",
-                    "MobileKitSetupNew/MobileKit_inactive.ini", "ViewServer/view.kml", "WeatherStation/platBoundaries.json", "msvcp71.dll"]),
-              (r'static\css', glob.glob(r'WeatherStation\static\css\*.*')),
-              (r'static\images', glob.glob(r'WeatherStation\static\images\*.*')),
-              (r'static\img', glob.glob(r'WeatherStation\static\img\*.*')),
-              (r'static\scripts', glob.glob(r'WeatherStation\static\scripts\*.*')),
-              (r'templates', glob.glob(r'WeatherStation\templates\*.*')),
+                    "MobileKitSetupNew/MobileKit_inactive.ini", "ViewServer/view.kml", "ReportGen/platBoundaries.json", "msvcp71.dll"]),
+              (r'static\css', glob.glob(r'ReportGen\static\css\*.*')),
+              (r'static\images', glob.glob(r'ReportGen\static\images\*.*')),
+              (r'static\img', glob.glob(r'ReportGen\static\img\*.*')),
+              (r'static\scripts', glob.glob(r'ReportGen\static\scripts\*.*')),
+              (r'templates', glob.glob(r'ReportGen\templates\*.*')),
              ]
 setup(console=['AnalyzerServer/RunPeakFinder.py', 
                'AnalyzerServer/RunPeakAnalyzer.py', 
                'AnalyzerServer/DatEchoP3.py', 
                'AnalyzerServer/analyzerServer.py',
                'ViewServer/ViewServer.py',
-               'WeatherStation/batchReport.py',
-               'WeatherStation/reportServer.py',
+               'ReportGen/batchReport.py',
+               'ReportGen/reportServer.py',
                'Utilities/createReportBooklet.py',
                'Utilities/createReportBooklet-forChris.py'
                ],

@@ -1,0 +1,40 @@
+extends layout_require
+
+block scripts
+    script(type='text/javascript', data-main='/js/app/getReportMain.js', src='/js/require-jquery.js')
+    script(type='text/javascript')
+        var TEMPLATE_PARAMS = {
+            qry: !{JSON.stringify(qry)},
+            ticket: "#{hash}",
+            ts: #{ts}
+        };
+    style
+        table.table-fmt1 td {text-align:center; vertical-align:middle; }
+        table.table-fmt1 th {text-align:center; border: #000 solid; border-width: 0px 0px 1px 0px; }
+
+block content
+    div#getReportApp
+        h1 Summary page
+            // h2 Contents of #{hash}/#{ts}/key.json
+            // p#keyContents
+            // h2 Report
+            div#canvasControlDiv
+                form.form-inline
+                    fieldset
+                        span.help-block
+                        label Submaps Y&nbsp
+                            input#spinEditRows(type='text')
+                        label Submaps X&nbsp
+                            input#spinEditCols(type='text')
+                        label Min Amp&nbsp
+                            input#spinEditAmp(type='text')
+        h2 MultiCanvas Div
+        div#multiCanvasDiv(style='position:relative;')
+        h2 Peaks Table
+        div#peaksTable1Div(style='position:relative;')
+        h2 Runs Table
+        div#runsTable1Div(style='position:relative;')
+        h2 Surveys Table
+        div#surveysTable1Div(style='position:relative;')
+        h2 Second Figure
+        div#figure2(style='position:relative;')

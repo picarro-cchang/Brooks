@@ -1,0 +1,125 @@
+// Instructions to generate JSON files
+{
+    "region" : {
+        "swCorner": [
+             36.58838,
+              -121.93108
+        ],
+        "neCorner": [
+            36.62807,
+            -121.88112
+        ]
+    },
+    "exclRadius": 10,
+    "reportType": "compliance",
+    "swathMinAmpl": 0.03,
+    "runs": [
+        {
+            "analyzer": "FCDS2008",
+            "startEtm": "2012-06-10  13:13",
+            "endEtm": "2012-06-10  23:59",
+            "stabClass": "*",
+        }
+    ]
+}
+
+// Instructions to generate full report
+{
+    "region" : {
+        "swCorner": [
+             36.58838,
+            -121.93108
+        ],
+        "neCorner": [
+             36.62807,
+            -121.88112
+        ],
+        "comment": "Monterey",
+        "submaps": {
+            "nx": 5,
+            "ny": 6
+        }
+    },
+    "exclRadius": 10,
+    "reportType": "compliance",
+    "reportTemplate": "booklet 2013-01-31 12:17",
+    "swathMinAmpl": 0.03,
+    "peakMinAmpl": 0.1,
+    "runs": [
+        {
+            "analyzer": "FCDS2008",
+            "startEtm": "2012-06-10  13:13",
+            "endEtm": "2012-06-10  18:00",
+            "stabClass": "*",
+            "peaks": "#FFFF00",
+            "wedges": "#0000FF",
+            "swath": "#00FF00",
+            "comment": "First Drive"
+        },
+        {
+            "analyzer": "FCDS2008",
+            "startEtm": "2012-06-10  18:01",
+            "endEtm": "2012-06-10  23:59",
+            "stabClass": "*",
+            "peaks": "#FFFF00",
+            "wedges": "#0000FF",
+            "swath": "#00FF00",
+            "comment": "Later Drives"
+        }
+    ]
+}
+
+// Template for specifying report format
+
+{
+    "summary" : [
+        {
+            "baseType": "map",
+            "path" : false,
+            "peaks" : false,
+            "wedges" : false,
+            "swath" : false,
+            "submapLegend" : true
+        }
+    ],
+    "submaps" : [
+        {
+            "baseType": "map",
+            "path" : true,
+            "peaks" : true,
+            "wedges" : true,
+            "swath" : false,
+            "submapLegend" : false,
+            "peakTable": false,
+            "surveyTable": false,
+            "runTable": false
+        },
+        {
+            "baseType": "satellite",
+            "path" : true,
+            "peaks" : true,
+            "wedges" : true,
+            "swath" : false,
+            "submapLegend" : false,
+            "peakTable": false,
+            "surveyTable": false,
+            "runTable": false
+        },
+        {
+            "baseType": "satellite",
+            "path" : true,
+            "peaks" : false,
+            "wedges" : false,
+            "swath" : true, // Note we draw circles at peak locations whenever the swath is true and peaks is false
+            "submapLegend" : false,
+            "peakTable": false,
+            "surveyTable": false,
+            "runTable": false
+        },
+        {
+            "peakTable": true,
+            "surveyTable": true,
+            "runTable": true
+        }
+    ]
+}

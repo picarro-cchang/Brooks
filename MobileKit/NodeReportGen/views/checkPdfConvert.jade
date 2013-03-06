@@ -1,0 +1,17 @@
+extends layout_require
+
+block scripts
+    script(type='text/javascript', data-main='/js/app/checkPdfConvertMain.js', src='/js/require-jquery.js')
+
+block content
+    div#checkPdfConvertApp
+        h1 HTML to PDF test page
+        // h2 Contents of #{hash}/#{ts}/key.json
+        // p#keyContents
+        // h2 Report
+        h2 Image Loaded in Javascript
+        div#sampleImageDiv
+        //h2 Static Image in Template
+        //div#staticImageDiv
+        //    img(src="http://www.w3schools.com/images/pulpit.jpg",alt="W3Schools.com");
+        p#completion This text should be replaced

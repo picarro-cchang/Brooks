@@ -1,0 +1,34 @@
+// e944dd40731d3e47df61ec0b6a54705c
+{
+    "regions": [
+        {
+            "baseType": "map",
+            "name": "Monterey",
+            "swCorner": [
+                 36.58838,
+                  -121.93108
+            ],
+            "neCorner": [
+                36.62807,
+                -121.88112
+            ],
+            "comments": ""
+        }
+    ],
+    "runs": [
+        {
+            "analyzer": "FCDS2008",
+            "startEtm": "2012-06-10  13:13",
+            "endEtm": "2012-06-10  23:59",
+            "path": true,
+            "marker": "#FFFF00",
+            "wedges": "#0000FF",
+            "swath": "#00FF00",
+            "minAmpl": 0.005,
+            "exclRadius": 0,
+            "stabClass": "D",
+            "comments": ""
+        }
+    ],
+    "markers": []
+}
