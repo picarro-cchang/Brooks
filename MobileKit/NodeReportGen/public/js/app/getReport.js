@@ -34,6 +34,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     "submaps": {"nx": 1, "ny": 2},
                     "peaksMinAmp": 0.1,
                     "timezone": "GMT",
+                    "reportTimezone": "GMT"
                 };
             }
         });
@@ -414,13 +415,23 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             },
             makeRunsTable: function () {
                 var that = this;
-                that.runsTable = makeRunsTable(that);
-                that.trigger("change",{"context": "runsTable"});
+                makeRunsTable(that, function (err, data) {
+                    if (err) that.trigger("error", err);
+                    else {
+                        that.runsTable = data;
+                        that.trigger("change",{"context": "runsTable"});
+                    }
+                });
             },
             makeSurveysTable: function () {
                 var that = this;
-                that.surveysTable = makeSurveysTable(that);
-                that.trigger("change",{"context": "surveysTable"});
+                makeSurveysTable(that, function (err, data) {
+                    if (err) that.trigger("error", err);
+                    else {
+                        that.surveysTable = data;
+                        that.trigger("change",{"context": "surveysTable"});
+                    }
+                });
             }
         });
 
@@ -665,6 +676,10 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             instructionsLoaded = true;
             $.get('/rest/data' + keyFile, function(data) {
                 REPORT.settings.set(_.pick(data.INSTRUCTIONS,settingsKeys));
+                // In future, we may allow the report timezone to differ from the instructions timezone
+                // REPORT.settings.set({"reportTimezone": REPORT.settings.get("timezone")});
+                REPORT.settings.set({"reportTimezone": "America/New_York"});
+
                 // Override the corners from the qry parameters if they exist
                 if ('swCorner' in qry) {
                     REPORT.settings.set({"swCorner": gh.decodeToLatLng(qry.swCorner), "submaps":{"nx":1, "ny":1}});

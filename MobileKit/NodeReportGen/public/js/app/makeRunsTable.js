@@ -1,10 +1,10 @@
 /* makeRunsTable.js renders runs information into an HTML table */
 
-define (['app/utils', 'app/geohash', 'app/reportGlobals'],
-function (utils, gh, REPORT) {
+define (['underscore', 'app/utils', 'app/geohash', 'app/reportGlobals'],
+function (_, utils, gh, REPORT) {
     'use strict';
 
-    function makeRunsTable(report) {
+    function makeRunsTable(report, done) {
         var i, runsTable = [];
         var runs = [], allRuns = {};
         // Merge the runs from peaks and from paths into a single sorted runs array
@@ -27,22 +27,35 @@ function (utils, gh, REPORT) {
             runsTable.push('<th style="width:10%">Stab Class</th>');
             runsTable.push('</tr></thead>');
             runsTable.push('<tbody>');
+            var timeStringsList = [];
             for (i=0; i<runs.length; i++) {
                 var run = REPORT.settings.get("runs").at(runs[i]).attributes;
-                runsTable.push('<tr>');
-                runsTable.push('<td>' + run.analyzer + '</td>');
-                runsTable.push('<td>' + run.startEtm + '</td>');
-                runsTable.push('<td>' + run.endEtm + '</td>');
-                runsTable.push('<td>' + run.peaks + '</td>');
-                runsTable.push('<td>' + run.wedges + '</td>');
-                runsTable.push('<td>' + run.fovs + '</td>');
-                runsTable.push('<td>' + run.stabClass + '</td>');
-                runsTable.push('</tr>');
+                timeStringsList.push(run.startEtm);
+                timeStringsList.push(run.endEtm);
             }
-            runsTable.push('</tbody>');
-            runsTable.push('</table>');
+            var url = '/rest/tz?' + $.param({tz:REPORT.settings.get("timezone"),timeStrings:timeStringsList});
+            $.getJSON(url,function (data) {
+                var url = '/rest/tz?' + $.param({tz:REPORT.settings.get("reportTimezone"),posixTimes:data.posixTimes});
+                $.getJSON(url,function (data) {
+                    for (i=0; i<runs.length; i++) {
+                        var run = REPORT.settings.get("runs").at(runs[i]).attributes;
+                        runsTable.push('<tr>');
+                        runsTable.push('<td>' + run.analyzer + '</td>');
+                        runsTable.push('<td>' + data.timeStrings.shift() + '</td>');
+                        runsTable.push('<td>' + data.timeStrings.shift() + '</td>');
+                        runsTable.push('<td>' + run.peaks + '</td>');
+                        runsTable.push('<td>' + run.wedges + '</td>');
+                        runsTable.push('<td>' + run.fovs + '</td>');
+                        runsTable.push('<td>' + run.stabClass + '</td>');
+                        runsTable.push('</tr>');
+                    }
+                    runsTable.push('</tbody>');
+                    runsTable.push('</table>');
+                    done(null, runsTable);
+                }).error(function () { done(new Error("getJSON error:" + url)); });
+            }).error(function () { done(new Error("getJSON error:" + url)); });
         }
-        return runsTable;
+        else done(null, runsTable);
     }
     return makeRunsTable;
 });

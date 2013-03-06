@@ -109,18 +109,16 @@
         var tz = req.query["tz"] || "GMT";
         var timeStrings = []; // "2012-03-11 09:00:00.000"];
         var posixTimes = [];
-        console.log('timeStrings: ' + req.query.timeStrings);
-        console.log('posixTimes: ' + req.query.posixTimes);
         if (req.query.timeStrings) {
             req.query.timeStrings.forEach(function (t) {
-                posixTimes.push(tzWorld(t,tz));
+                posixTimes.push(tzWorld(t.replace(/\s+/," "),tz));
                 timeStrings.push(t);
             });
         }
         else if (req.query.posixTimes) {
             req.query.posixTimes.forEach(function (p) {
                 posixTimes.push(+p);
-                timeStrings.push(tzWorld(+p,"%F %T%z",tz));
+                timeStrings.push(tzWorld(+p,"%F %T%z (%Z)",tz));
             });
         }
         res.send({"timeStrings": timeStrings, "posixTimes": posixTimes, "tz": tz});

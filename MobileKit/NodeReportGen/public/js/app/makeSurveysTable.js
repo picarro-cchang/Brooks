@@ -4,7 +4,7 @@ define (['app/utils', 'app/geohash', 'app/reportGlobals'],
 function (utils, gh, REPORT) {
     'use strict';
 
-    function makeSurveysTable(report) {
+    function makeSurveysTable(report, done) {
         var i, surveysTable = [];
         var surveys = [], allSurveys = {};
         // Merge the surveys from peaks, paths and analyses into a single sorted surveys array
@@ -29,19 +29,30 @@ function (utils, gh, REPORT) {
             surveysTable.push('<th style="width:25%">Name</th>');
             surveysTable.push('</tr></thead>');
             surveysTable.push('<tbody>');
+            var etmList = [];
+            // Batch convert the epoch times to the current timezone
             for (i=0; i<surveys.length; i++) {
                 var run = REPORT.surveys.where({"id": surveys[i]})[0].attributes;
-                surveysTable.push('<tr>');
-                surveysTable.push('<td>' + run.ANALYZER + '</td>');
-                surveysTable.push('<td>' + new Date(1000*run.minetm).toUTCString() + '</td>');
-                surveysTable.push('<td>' + new Date(1000*run.maxetm).toUTCString() + '</td>');
-                surveysTable.push('<td>' + run.id + '</td>');
-                surveysTable.push('</tr>');
+                etmList.push(1000*run.minetm);
+                etmList.push(1000*run.maxetm);
             }
+            var url = '/rest/tz?' + $.param({tz:REPORT.settings.get("reportTimezone"),posixTimes:etmList});
+            $.getJSON(url,function (data) {
+                for (i=0; i<surveys.length; i++) {
+                    var run = REPORT.surveys.where({"id": surveys[i]})[0].attributes;
+                    surveysTable.push('<tr>');
+                    surveysTable.push('<td>' + run.ANALYZER + '</td>');
+                    surveysTable.push('<td>' + data.timeStrings.shift() + '</td>');
+                    surveysTable.push('<td>' + data.timeStrings.shift() + '</td>');
+                    surveysTable.push('<td>' + run.id + '</td>');
+                    surveysTable.push('</tr>');
+                }
+                surveysTable.push('</tbody>');
+                surveysTable.push('</table>');
+                done(null, surveysTable);
+            }).error(function () { done(new Error("getJSON error:" + url)); });
         }
-        surveysTable.push('</tbody>');
-        surveysTable.push('</table>');
-        return surveysTable;
+        else done(null, surveysTable);
     }
     return makeSurveysTable;
 });
