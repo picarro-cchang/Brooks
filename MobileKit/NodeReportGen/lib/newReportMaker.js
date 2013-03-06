@@ -35,9 +35,8 @@
             var r = {};
             var ir = instructions["runs"][i];
             r["analyzer"] = ir["analyzer"];
-            // TODO: Support timezones in strToEtm
-            r["startEtm"] = ts.strToEtm(ir["startEtm"], ir["timezone"]);
-            r["endEtm"] = ts.strToEtm(ir["endEtm"], ir["timezone"]);
+            r["startEtm"] = ts.strToEtm(ir["startEtm"], instructions["timezone"]);
+            r["endEtm"] = ts.strToEtm(ir["endEtm"], instructions["timezone"]);
             result["runs"].push(r);
         });
         return cjs(result,null,2);
@@ -55,9 +54,8 @@
             var r = {};
             var ir = instructions["runs"][i];
             r["analyzer"] = ir["analyzer"];
-            // TODO: Support timezones in strToEtm
-            r["startEtm"] = ts.strToEtm(ir["startEtm"], ir["timezone"]);
-            r["endEtm"] = ts.strToEtm(ir["endEtm"], ir["timezone"]);
+            r["startEtm"] = ts.strToEtm(ir["startEtm"], instructions["timezone"]);
+            r["endEtm"] = ts.strToEtm(ir["endEtm"], instructions["timezone"]);
             result["runs"].push(r);
         });
         return cjs(result,null,2);
@@ -75,9 +73,8 @@
             var r = {};
             var ir = instructions["runs"][i];
             r["analyzer"] = ir["analyzer"];
-            // TODO: Support timezones in strToEtm
-            r["startEtm"] = ts.strToEtm(ir["startEtm"], ir["timezone"]);
-            r["endEtm"] = ts.strToEtm(ir["endEtm"], ir["timezone"]);
+            r["startEtm"] = ts.strToEtm(ir["startEtm"], instructions["timezone"]);
+            r["endEtm"] = ts.strToEtm(ir["endEtm"], instructions["timezone"]);
             result["runs"].push(r);
         });
         return cjs(result,null,2);
@@ -98,9 +95,8 @@
             var r = {};
             var ir = instructions["runs"][i];
             r["analyzer"] = ir["analyzer"];
-            // TODO: Support timezones in strToEtm
-            r["startEtm"] = ts.strToEtm(ir["startEtm"], ir["timezone"]);
-            r["endEtm"] = ts.strToEtm(ir["endEtm"], ir["timezone"]);
+            r["startEtm"] = ts.strToEtm(ir["startEtm"], instructions["timezone"]);
+            r["endEtm"] = ts.strToEtm(ir["endEtm"], instructions["timezone"]);
             r["stabClass"] = ir["stabClass"].toUpperCase();
             result["runs"].push(r);
         });
@@ -135,7 +131,6 @@
     function runValidator(run) {
         var rpv = newParamsValidator(run,
             [{"name": "analyzer", "required":true, "validator": "string"},
-             {"name": "timezone", "required":false, "validator": "string", "default_value": "GMT"},
              {"name": "startEtm", "required":true,
               "validator": /\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{2}/ },
              {"name": "endEtm", "required":true,
@@ -192,6 +187,7 @@
              {"name": "fovNWindow", "required": false, "validator": "number", "default_value": 10},
              {"name": "peaksMinAmp", "required": false, "validator": "number", "default_value": 0.03},
              {"name": "runs", "required": true, "validator": validateListUsing(runValidator)},
+             {"name": "timezone", "required":false, "validator": "string", "default_value": "GMT"},
              {"name": "template", "required": true, "validator": templateValidator}]);
 
         if (ipv.ok()) {

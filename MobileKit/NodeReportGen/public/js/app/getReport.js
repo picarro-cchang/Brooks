@@ -32,7 +32,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     "swCorner": [ 36.58838, -121.93108 ],
                     "neCorner": [ 36.62807, -121.88112 ],
                     "submaps": {"nx": 1, "ny": 2},
-                    "peaksMinAmp": 0.1
+                    "peaksMinAmp": 0.1,
+                    "timezone": "GMT",
                 };
             }
         });
@@ -58,7 +59,6 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
         REPORT.Run = Backbone.Model.extend({
             defaults: {
                 "analyzer": "",
-                "timezone": "GMT",
                 "startEtm": "1970-01-01  00:00",
                 "endEtm": "1970-01-01  00:00",
                 "stabClass": "*",
