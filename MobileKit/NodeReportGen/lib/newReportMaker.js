@@ -150,7 +150,7 @@
              {"name": "peaks", "required":false, "validator": "boolean", "default_value": false},
              {"name": "wedges", "required":false, "validator": "boolean", "default_value": false},
              {"name": "fovs", "required":false, "validator": "boolean", "default_value": false},
-             {"name": "submapLegend", "required":false, "validator": "boolean", "default_value": false},
+             {"name": "submapGrid", "required":false, "validator": "boolean", "default_value": false},
              {"name": "peaksTable", "required":false, "validator": "boolean", "default_value": false},
              {"name": "surveysTable", "required":false, "validator": "boolean", "default_value": false},
              {"name": "runsTable", "required":false, "validator": "boolean", "default_value": false}

@@ -562,79 +562,6 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             }
         });
 
-        REPORT.CompositeViewWithLinks = Backbone.View.extend({
-            // This is a view consisting of layers from reportViewResources rendered onto a single canvas
-            el: $("#container"),
-            events: {
-                "mousemove canvas": "onMouseMove",
-                "click canvas": "onCanvasClick"
-            },
-            initialize: function () {
-                console.log("Initializing CompositeView");
-                this.canvasId = "id_" + this.options.name;
-                // this.$el.append('<input type="button" value="Click me">');
-                var canvas = '<canvas id="' + this.canvasId + '" style=position:absolute; left:0px; top:0px;"></canvas>';
-                this.$el.append(canvas);
-                this.context = this.$el.find("canvas")[0].getContext("2d");
-                this.hoverLink = null;
-                this.layers = this.options.layers;
-                this.available = {};
-                for (var i=0; i<this.layers.length; i++) this.available[this.layers[i]] = false;
-                this.listenTo(REPORT.reportViewResources,"change",this.repositoryChanged);
-            },
-            render: function(padding) {
-                var init = false;
-                var allLayers = ['map', 'satellite', 'paths', 'fovs', 'wedges', 'peaks', 'submapGrid'];
-                for (var i=0; i<allLayers.length; i++) {
-                    var layerName = allLayers[i], s;
-                    if (layerName in this.available) {
-                        s = REPORT.reportViewResources.contexts[layerName];
-                        if (!init) {
-                            this.context.canvas.width  = s.canvas.width  + 2 * padding[0];
-                            this.context.canvas.height = s.canvas.height + 2 * padding[1];
-                            this.$el.width(this.context.canvas.width);
-                            this.$el.height(this.context.canvas.height);
-                            init = true;
-                        }
-                        this.context.drawImage(s.canvas, padding[0], padding[1]);
-                    }
-                }
-            },
-            onCanvasClick: function(e) {
-                if (this.hoverLink) {
-                    var link = REPORT.reportViewResources.submapLinks[this.hoverLink];
-                    var url = window.location.pathname + '?' + $.param({"swCorner": link.swCorner, "neCorner": link.neCorner });
-                    window.open(url);
-                }
-            },
-            onMouseMove: function(e) {
-                var offset = this.$el.find("canvas").offset();
-                var x = e.pageX - offset.left, y = e.pageY - offset.top;
-                var links = REPORT.reportViewResources.submapLinks;
-                var keys = _.keys(links);
-                for (var i=0; i<keys.length; i++) {
-                    var link = links[keys[i]];
-                    if (x>=link.linkX-link.linkWidth/2 && x<=link.linkX+link.linkWidth/2 &&
-                        y>=link.linkY-link.linkHeight/2 && y<=link.linkY+link.linkHeight/2) {
-                        document.body.style.cursor = "pointer";
-                        this.hoverLink = keys[i];
-                        console.log(keys[i]);
-                        break;
-                    }
-                    else {
-                        document.body.style.cursor = "";
-                        this.hoverLink = null;
-                    }
-                }
-            },
-            repositoryChanged: function(e) {
-                var allAvailable = true;
-                if (e.context in this.available) this.available[e.context] = true;
-                for (var l in this.available) allAvailable = allAvailable && this.available[l];
-                if (allAvailable) this.render([0,0]);
-            }
-        });
-
         REPORT.PeaksTableView = Backbone.View.extend({
             initialize: function () {
                 console.log("Initializing PeaksTableView");
@@ -643,10 +570,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             repositoryChanged: function (e) {
                 if (e.context === "peaksTable") {
                     this.$el.html(REPORT.reportViewResources.peaksTable.join("\n"));
-                    if (this.options.dataTables === null || this.options.dataTables) {
-                        this.$el.find('table').dataTable({
-                         "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"});
-                    }
+                    this.$el.find('table').dataTable({
+                     "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"});
                 }
             }
         });
@@ -659,10 +584,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             repositoryChanged: function (e) {
                 if (e.context === "runsTable") {
                     this.$el.html(REPORT.reportViewResources.runsTable.join("\n"));
-                    if (this.options.dataTables === null || this.options.dataTables) {
-                        this.$el.find('table').dataTable({
-                         "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"});
-                    }
+                    this.$el.find('table').dataTable({
+                     "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"});
                 }
             }
         });
@@ -675,10 +598,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             repositoryChanged: function (e) {
                 if (e.context === "surveysTable") {
                     this.$el.html(REPORT.reportViewResources.surveysTable.join("\n"));
-                    if (this.options.dataTables === null || this.options.dataTables) {
-                        this.$el.find('table').dataTable({
-                         "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"});
-                    }
+                    this.$el.find('table').dataTable({
+                     "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"});
                 }
             }
         });
@@ -824,58 +745,11 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 // TODO: Update settings with local settings, perhaps with some form
                 //  of validation
 
-                // Create a ReportViewResources object to hold the canvases which make the report
 
+                // At this point we can create the appView filling up the initial control
+                //  values with the contents of the model
+                REPORT.appView = new REPORT.AppView();
                 REPORT.reportViewResources = new REPORT.ReportViewResources();
-
-                // Figure out if we are a summary view or a submap view depending on whether the coordinates
-                //  are passed in on the command line
-
-                var summary = !('swCorner' in qry) && !('neCorner' in qry);
-
-                if (summary) makePdfReport(REPORT.settings.get("template").summary);
-                else makePdfReport(REPORT.settings.get("template").submaps);
-            });
-        }
-    }
-
-    function makePdfReport(pageComponents) {
-        var figureComponents = [ "fovs", "paths", "peaks", "wedges", "submapGrid" ];
-        var id;
-        for (var i=0; i<pageComponents.models.length; i++) {
-            var layers = [];
-            var pageComponent = pageComponents.models[i];
-            layers.push(pageComponent.get("baseType"));
-            for (var j=0; j<figureComponents.length; j++) {
-                if (pageComponent.get(figureComponents[j])) {
-                    layers.push(figureComponents[j]);
-                }
-            }
-            var id_fig = 'id_page_' + (i+1) + 'fig';
-            $("#getReportApp").append('<div id="' + id_fig + '" style="position:relative; page-break-after:always"/>');
-            new REPORT.CompositeViewWithLinks({el: $('#' + id_fig), name: id_fig.slice(3), layers:layers.slice(0)});
-            if (pageComponent.get("peaksTable")) {
-                id = 'id_page_' + (i+1) + 'peaksTable';
-                $("#getReportApp").append("<h1>Peaks Table</h1>");
-                $("#getReportApp").append('<div id="' + id + '" style="position:relative;"/>');
-                new REPORT.PeaksTableView({el: $('#' + id), dataTables: false});
-            }
-            if (pageComponent.get("runsTable")) {
-                id = 'id_page_' + (i+1) + 'runsTable';
-                $("#getReportApp").append("<h1>Runs Table</h1>");
-                $("#getReportApp").append('<div id="' + id + '" style="position:relative;"/>');
-                new REPORT.RunsTableView({el: $('#' + id), dataTables: false});
-            }
-            if (pageComponent.get("surveysTable")) {
-                id = 'id_page_' + (i+1) + 'surveysTable';
-                $("#getReportApp").append("<h1>Surveys Table</h1>");
-                $("#getReportApp").append('<div id="' + id + '" style="position:relative;"/>');
-                new REPORT.SurveysTableView({el: $('#' + id), dataTables: false});
-            }
-        }
-        REPORT.reportViewResources.render();
-    }
-                /* 
                 REPORT.multiCanvasView = new REPORT.MultiCanvasView(
                 {   el: $("#multiCanvasDiv"),
                     name: "example1"
@@ -903,7 +777,6 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             });
         }
     }
-    */
     return { "initialize": function() { $(document).ready(init); }};
 
 });

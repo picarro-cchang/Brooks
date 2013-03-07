@@ -348,7 +348,8 @@ class TestMakeReport(unittest.TestCase):
                                          }
                                         ],
                                "template": {
-                               "summary": [{"peaks": True}],
+                               "summary": [{"peaks": True,
+                                            "submapGrid": True}],
                                "submaps": [{"paths": True,
                                             "peaks": True,
                                             "wedges": True},

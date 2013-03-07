@@ -200,6 +200,13 @@
         res.render("getReport", {qry: qry, hash: hash, ts:ts});
     }
 
+    function handleGetReport1(req, res) {
+        var qry = req.query;
+        var hash = req.params.hash;
+        var ts = req.params.ts;
+        res.render("getReport1", {qry: qry, hash: hash, ts:ts});
+    }
+
     app.get("/", function(req, res) {
         res.render("index");
     });
@@ -223,6 +230,8 @@
     app.get("/getReport/:hash/:ts/submaps", handleSubmaps);
 
     app.get("/getReport/:hash/:ts", handleGetReport);
+
+    app.get("/getReport1/:hash/:ts", handleGetReport1);
 
     app.get("/getImage", function (req, res) { res.render("checkPdfConvert"); });
 
