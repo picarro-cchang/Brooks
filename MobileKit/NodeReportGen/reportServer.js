@@ -76,35 +76,6 @@
 
     var rptGenMonitor = new RptGenMonitor();
 
-    function handlePage(req, res) {
-        var result, page = req.params.page;
-        var options = {
-            protocol: 'http:',
-            hostname: 'localhost',
-            port: 5300,
-            pathname: '/page' + page,
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        };
-        getRest(options, function(err, statusCode, output) {
-            if (err) {
-                res.send(err);
-            }
-            else {
-                res.statusCode = statusCode;
-                try {
-                    result = JSON.parse(output);
-                    res.send(result);
-                }
-                catch (e) {
-                    res.send(new Error("getTicket JSON decode error: " + e.message));
-                }
-            }
-        });
-    }
-
     function handleTz(req, res) {
         var tz = req.query["tz"] || "GMT";
         var timeStrings = []; // "2012-03-11 09:00:00.000"];
@@ -179,20 +150,6 @@
         }
     }
 
-    function handleSummary(req, res) {
-        var qry = req.query;
-        var hash = req.params.hash;
-        var ts = req.params.ts;
-        res.render("summary", {qry: qry, hash: hash, ts:ts});
-    }
-
-    function handleSubmaps(req, res) {
-        var qry = req.query;
-        var hash = req.params.hash;
-        var ts = req.params.ts;
-        res.render("submaps", {qry: qry, hash: hash, ts:ts});
-    }
-
     function handleGetReport(req, res) {
         var qry = req.query;
         var hash = req.params.hash;
@@ -211,29 +168,13 @@
         res.render("index");
     });
 
-    app.get("/page1", function(req,res) {
-        res.send({"value": "page1"});
-    });
-
-    app.get("/page2", function(req,res) {
-        res.send({"value": "page2"});
-    });
-
     app.get("/rest/RptGen", handleRptGen);
 
     app.get("/rest/tz", handleTz);
 
-    app.get("/rest/:page", handlePage);
-
-    app.get("/getReport/:hash/:ts/summary", handleSummary);
-
-    app.get("/getReport/:hash/:ts/submaps", handleSubmaps);
-
     app.get("/getReport/:hash/:ts", handleGetReport);
 
     app.get("/getReport1/:hash/:ts", handleGetReport1);
-
-    app.get("/getImage", function (req, res) { res.render("checkPdfConvert"); });
 
     app.use(express.compress());
     app.use("/rest/data", express.static(REPORTROOT));
