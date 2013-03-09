@@ -132,10 +132,10 @@ def _branchFromRepo(name):
         with OS.chdir(os.path.join(SANDBOX_DIR, 'host')):
             retCode = subprocess.call(['git.exe',
                                        'checkout',
-                                       name])
+                                       'master'])
 
             if retCode != 0:
-                print "Error checking out '%s'" % name
+                print 'Error checking out "master".'
                 sys.exit(retCode)
 
 def _generateCoordinators(name, meta):
