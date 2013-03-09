@@ -799,7 +799,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 REPORT.settings.set(_.pick(data.INSTRUCTIONS,settingsKeys));
                 // In future, we may allow the report timezone to differ from the instructions timezone
                 // REPORT.settings.set({"reportTimezone": REPORT.settings.get("timezone")});
-                REPORT.settings.set({"reportTimezone": "America/New_York"});
+                REPORT.settings.set({"reportTimezone": "America/Los_Angeles"});
 
                 // Override the corners from the qry parameters if they exist
                 if ('swCorner' in qry) {

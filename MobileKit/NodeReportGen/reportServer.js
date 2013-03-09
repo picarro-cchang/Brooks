@@ -2,6 +2,7 @@
 (function () {
     'use strict';
     var argv = require('optimist').argv;
+    var cjs = require("./lib/canonical_stringify");
     var express = require('express');
     var path = require('path');
     var fs = require('./lib/fs');
@@ -23,6 +24,7 @@
     app.set('view engine', 'jade');
     app.set('view options', { layout: true });
     app.set('views', path.join(__dirname, 'views'));
+    app.use(express.bodyParser());
 
     var csp_url = "https://dev.picarro.com/dev";
     var ticket_url = csp_url + "/rest/sec/dummy/1.0/Admin";
@@ -98,7 +100,7 @@
     function handleRptGen(req, res) {
         var pv, reportGen, result = {}, statusFile, workDir;
         result = _.extend(result, req.query);
-        console.log("req.query: " + JSON.stringify(req.query));
+        // console.log("req.query: " + JSON.stringify(req.query));
         // Handle submission of instructions file, requests for status, and retrieval of results
         switch (req.query["qry"]) {
         case "submit":
@@ -157,11 +159,13 @@
         res.render("getReport", {qry: qry, hash: hash, ts:ts});
     }
 
-    function handleGetReport1(req, res) {
-        var qry = req.query;
-        var hash = req.params.hash;
-        var ts = req.params.ts;
-        res.render("getReport1", {qry: qry, hash: hash, ts:ts});
+    function handleDownload(req, res) {
+        var filename = req.param("filename");
+        var content = req.param("content");
+        content = cjs(JSON.parse(content),null,2);
+        // content = content.replace(/(\r\n|\r|\n)/g,'\n');
+        res.attachment(filename);
+        res.end(content);
     }
 
     app.get("/", function(req, res) {
@@ -172,9 +176,9 @@
 
     app.get("/rest/tz", handleTz);
 
-    app.get("/getReport/:hash/:ts", handleGetReport);
+    app.post("/rest/download", handleDownload);
 
-    app.get("/getReport1/:hash/:ts", handleGetReport1);
+    app.get("/getReport/:hash/:ts", handleGetReport);
 
     app.use(express.compress());
     app.use("/rest/data", express.static(REPORTROOT));

@@ -349,15 +349,24 @@ class TestMakeReport(unittest.TestCase):
                                         ],
                                "template": {
                                "summary": [{"peaks": True,
-                                            "submapGrid": True}],
+                                            "submapGrid": True,
+                                            "peaksTable": True,
+                                            "surveysTable": True,
+                                            "runsTable": True}],
                                "submaps": [{"paths": True,
                                             "peaks": True,
-                                            "wedges": True},
+                                            "wedges": True,
+                                            "peaksTable": True,
+                                            "surveysTable": True,
+                                            "runsTable": True},
                                            {"baseType": "satellite",
                                             "fovs": True,
                                             "paths": True,
                                             "peaks": True,
-                                            "wedges": True},
+                                            "wedges": True,
+                                            "peaksTable": True,
+                                            "surveysTable": True,
+                                            "runsTable": True}
                                            ]
                                }})
         qryparms = {'qry': 'submit', 'contents': contents}
