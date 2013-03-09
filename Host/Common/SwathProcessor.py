@@ -19,7 +19,7 @@ try:
     from collections import namedtuple
 except:
     from Host.Common.namedtuple import namedtuple
-    
+
 from scipy.special import erf
 import SurveyorInstStatus as sis
 
@@ -32,10 +32,10 @@ NOT_A_NUMBER = 1e1000/1e1000
 #  where the mean wind bearing is (u=WIND_E,v=WIND_N) and there is a standard deviation of the wind direction given by d_sdev
 def angleRange(x,y,N,dist,u,v,dmax=100.0):
     """
-    Consider a segment of path specified by (x[0],y[0]) through (x[2*N],y[2*N]). A line is drawn through (x[N],y[N]) in the 
+    Consider a segment of path specified by (x[0],y[0]) through (x[2*N],y[2*N]). A line is drawn through (x[N],y[N]) in the
     direction of (u,v) and the trial source position is placed at a distance "dist" along this line. This function calculates
     the angle range subtended by the path segment at the trial source position, where zero angle corresponds to the line joining
-    the source to (x[N],y[N]). The angle range is returned as a list containing tuples 
+    the source to (x[N],y[N]). The angle range is returned as a list containing tuples
     [(minAngle_1,maxAngle_1),(minAngle_2,maxAngle_2),...] which together determine the angles covered by the path.
     Angles are in radians.
     """
@@ -69,14 +69,13 @@ def coverProb(angleRanges,sigma):
        Angles are in radians.
     """
     z = asarray(angleRanges)/sigma
-    z = asarray(angleRanges)/sigma
     if z.size == 0: return 0.0
     p = 0.5*erf(z/sqrt(2))
     return sum(p[:,1]-p[:,0])
 
 def maxDist(x,y,N,u,v,sigma,dmax=100,thresh=0.8,tol=1.0):
     """Find the maximum width of the swath (to a tolerance of tol) attached to the point x[N],y[N] in
-    the direction of (u,v) when the standard deviation of the wind direction is sigma. The swath width 
+    the direction of (u,v) when the standard deviation of the wind direction is sigma. The swath width
     is never greater than dmax, and the probability that the path covers the the range of wind directions
     exceeds thresh
     Angles are in Radians.
@@ -87,13 +86,13 @@ def maxDist(x,y,N,u,v,sigma,dmax=100,thresh=0.8,tol=1.0):
     func = lambda d: coverProb(angleRange(x,y,N,d,u,v,dmax),sigma)-thresh
     fdmin = func(dmin)
     fdmax = func(dmax)
-    if fdmax>0: 
+    if fdmax>0:
         return dmax
     elif fdmin<0:
         return 0.0
     else:
         return binSearch(dmin,dmax,fdmin,fdmax,tol,func)
-    
+
 def binSearch(xmin,xmax,fxmin,fxmax,tol,func):
     """
     Use binary search to find a zero of func lying between xmin and xmax to a tolerance tol
@@ -107,7 +106,7 @@ def binSearch(xmin,xmax,fxmin,fxmax,tol,func):
         fxcen = func(xcen)
         if fxmin*fxcen < 0:
             return binSearch(xmin,xcen,fxmin,fxcen,tol,func)
-        else:            
+        else:
             return binSearch(xcen,xmax,fxcen,fxmax,tol,func)
 
 class PasquillGiffordApprox(object):
@@ -121,18 +120,18 @@ class PasquillGiffordApprox(object):
                                 'F':PGTuple(1.72286808749,46.0503577192)}
 
     def getConc(self,stabClass,Q,u,x):
-        """Get concentration in ppm from a point source of Q cu ft/hr at 
+        """Get concentration in ppm from a point source of Q cu ft/hr at
         distance x m downwind when the wind speed is u m/s."""
         pg = self.classConstants[stabClass.upper()]
         return (Q/u)*(x/pg.scale)**(-pg.power)
-        
+
     def getMaxDist(self,stabClass,Q,u,conc,u0=0,a=1,q=2):
         """Get the maximum distance at which a source of rate Q cu ft/hr can
         be located if it is to be found with an instrument capable of measuring
         concentration "conc" above ambient, when the wind speed is u m/s.
-        
+
         Since this would normally diverge at small u, a regularization is applied
-        so that the maximum distance is made to vary as u**a for u<u0. The 
+        so that the maximum distance is made to vary as u**a for u<u0. The
         sharpness of the transition at u0 is controlled by 1<q<infinity
         """
         pg = self.classConstants[stabClass.upper()]
@@ -152,34 +151,16 @@ def astd(wind,vcar,params):
     # b = 0.25
     # c = 0.0
     return min(pi,params["a"]*(params["b"]+params["c"]*vcar)/(wind+0.01))
-                
-def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams,debugFp = None):
-    # The stablility class can "A" through "F" for an explicit class, or "*" if the class is
-    #  to be determined from the auxiliary instrument status. 
-    # If debugFp is a file handle, the input and output arguments are pickled and written
-    #  to the file for debugging
-    print "Calling process"
-    if debugFp is not None:
-        inArgs = {}
-        inArgs["maxWindow"] = maxWindow
-        inArgs["stabClass"] = stabClass
-        inArgs["minLeak"] = minLeak
-        inArgs["minAmpl"] = minAmpl
-        inArgs["astdParams"] = astdParams
-        sourceAsList = []
-    
-    fields = ["EPOCH_TIME","GPS_ABS_LAT","GPS_ABS_LONG","DELTA_LAT","DELTA_LONG","INST_STATUS"]
+
+def processGen(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
     fovBuff = deque()
     N = maxWindow              # Use 2*N+1 samples for calculating FOV
     result = {}
-    for f in fields: result[f] = []
     for newdat in source:
-        if debugFp is not None: sourceAsList.append(newdat)
         while len(fovBuff) >= 2*N+1: fovBuff.popleft()
         fovBuff.append(newdat)
         if len(fovBuff) == 2*N+1:
             d = fovBuff[N]
-            # print "d: ", d
             lng = d["GPS_ABS_LONG"]
             lat = d["GPS_ABS_LAT"]
             cosLat = cos(lat*DTR)
@@ -193,12 +174,12 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams,debugFp = None
             except:
                 dstd = NOT_A_NUMBER
             mask = d["ValveMask"]
-            instStatus = int(d["INST_STATUS"])
-            result["INST_STATUS"].append(instStatus)
-            auxStatus = instStatus >> sis.INSTMGR_AUX_STATUS_SHIFT
-            instStatus = instStatus & sis.INSTMGR_STATUS_MASK
+            instStatus0 = int(d["INST_STATUS"])
+
+            auxStatus = instStatus0 >> sis.INSTMGR_AUX_STATUS_SHIFT
+            instStatus = instStatus0 & sis.INSTMGR_STATUS_MASK
             weatherCode = auxStatus & sis.INSTMGR_AUX_STATUS_WEATHER_MASK
-            # Note that weatherCode is zero if there are no reported weather data in the file. Otherwise, we 
+            # Note that weatherCode is zero if there are no reported weather data in the file. Otherwise, we
             #  SUBTRACT ONE before using it to look up the stability class in classByWeather. If we have an
             #  invalid code in the data file and try to fetch it using "*", the swath is suppressed.
             if stabClass == "*": stabClass = sis.classByWeather.get(weatherCode-1,None)
@@ -222,19 +203,34 @@ def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams,debugFp = None
             if isnan(deltaLat) or isnan(deltaLng):
                 deltaLat = 0.0
                 deltaLng = 0.0
-            result["EPOCH_TIME"].append(t)
-            result["GPS_ABS_LAT"].append(lat)
-            result["GPS_ABS_LONG"].append(lng)
-            result["DELTA_LAT"].append(deltaLat)
-            result["DELTA_LONG"].append(deltaLng)
+            yield {"EPOCH_TIME": t, "GPS_ABS_LAT": lat, "GPS_ABS_LONG": lng,
+                   "DELTA_LAT": deltaLat, "DELTA_LONG": deltaLng, "INST_STATUS": instStatus0}
+
+def process(source,maxWindow,stabClass,minLeak,minAmpl,astdParams,debugFp = None):
+    # The stablility class can "A" through "F" for an explicit class, or "*" if the class is
+    #  to be determined from the auxiliary instrument status.
+    # If debugFp is a file handle, the input and output arguments are pickled and written
+    #  to the file for debugging
+    print "Calling process"
     if debugFp is not None:
-        inArgs["source"] = sourceAsList
+        inArgs = {}
+        inArgs["maxWindow"] = maxWindow
+        inArgs["stabClass"] = stabClass
+        inArgs["minLeak"] = minLeak
+        inArgs["minAmpl"] = minAmpl
+        inArgs["astdParams"] = astdParams
+        sourceAsList = []
+    fields = ["EPOCH_TIME","GPS_ABS_LAT","GPS_ABS_LONG","DELTA_LAT","DELTA_LONG","INST_STATUS"]
+    result = {}
+    for f in fields:
+        result[f] = []
+    for r in processGen(source,maxWindow,stabClass,minLeak,minAmpl,astdParams):
+        for f in r:
+            result[f].append(r[f])
+    if debugFp is not None:
         outArgs = {"result": result}
         timestamp = time.time()
-        print "Length of result: (new) ", str(len(outArgs['result']["EPOCH_TIME"]))
-        print "Length of inArgs: ", str(len(inArgs["source"]))
-        cPickle.dump(dict(inArgs=inArgs,outArgs=result,timestamp=timestamp),debugFp)
-        # cPickle.dump(dict(inArgs=inArgs,outArgs=outArgs,timestamp=timestamp),debugFp)
+        cPickle.dump(dict(inArgs=inArgs,outArgs=result,timestamp=timestamp),debugFp,-1)
     return result
 
 def ltqnorm( p ):
@@ -279,7 +275,7 @@ def ltqnorm( p ):
     # Define break-points.
     plow  = 0.02425
     phigh = 1 - plow
-    
+
     # Rational approximation for lower region:
     if p < plow:
         q  = sqrt(-2*log(p))
@@ -297,20 +293,20 @@ def ltqnorm( p ):
     r = q*q
     return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q / \
            (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1)
-           
+
 def cnorm(z):
-    # Calculate probability that a normal random variable will be 
-    #  less than the mean + z standard deviations 
+    # Calculate probability that a normal random variable will be
+    #  less than the mean + z standard deviations
     p = 0.5*erf(z/sqrt(2))
     return p
-       
+
 if __name__ == "__main__":
     R = 30
     N = 10
     t = arange(-N,N+1)
     x = R*cos(2*pi*t/(2*N))
     y = R*sin(2*pi*t/(2*N))
-    # First test that the angle range makes sense 
+    # First test that the angle range makes sense
     u = 1.0
     v = 0.0
     # Calculate the theoretical subtended angle

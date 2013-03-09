@@ -14,7 +14,7 @@ import threading
 import getopt
 import time
 from KMLConverterFrame import KMLConverterFrame
-from Host.Common.CustomConfigObj import CustomConfigObj
+import CustomConfigObj
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable

@@ -1,0 +1,16 @@
+extends layout_require
+
+block scripts
+    script(type='text/javascript', data-main='/js/app/getReportMain.js', src='/js/require-jquery.js')
+    script(type='text/javascript')
+        var TEMPLATE_PARAMS = {
+            qry: !{JSON.stringify(qry)},
+            ticket: "#{hash}",
+            ts: #{ts}
+        };
+    style
+        table.table-fmt1 td {text-align:center; vertical-align:middle; }
+        table.table-fmt1 th {text-align:center; border: #000 solid; border-width: 0px 0px 1px 0px; }
+
+block content
+    div#getReportApp

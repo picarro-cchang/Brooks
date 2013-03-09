@@ -1,0 +1,4 @@
+/* dashboardGlobals.js */
+
+define ({
+});

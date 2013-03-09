@@ -1,0 +1,77 @@
+{% extends "reportBase.html" %}
+
+{% block head %}
+    <title>Surveyor Report Generation</title>
+    <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/fileinput.css') }}" />
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/jquery-ui-1.8.20.custom.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/jquery.datetimeentry.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/jquery.mousewheel.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/jquery.generateFile.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/bootstrap-modal.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/bootstrap-dropdown.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/bootstrap-transition.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/typeahead.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/tableFuncs.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/makeInstructions.js') }}"></script>
+
+    <style>
+    table.table-fmt1 td {text-align:center; vertical-align:middle; }
+    table.table-fmt1 th {text-align:center; border: #000 solid; border-width: 0px 0px 1px 0px; }
+    .validate_tips {text-align:center; }
+    </style>
+
+
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span6">
+            <h1>Instructions</h1>
+            <div class="custom_file_upload">
+                <input type="text" class="file" id="id_instr_upload_name" name="file_info" readonly>
+                <div class="btn-primary file_upload">
+                    <input type="file" id="id_instr_upload" name="files[]">
+                </div>
+            </div>
+        </div>
+        <div class="span6">
+            <h1>Actions</h1>
+            <div><button type="button" style="float:left;" id="id_make_report" class="btn btn-large btn-primary">Make Report</button></div>
+            <div><button type="button" style="float:right;" id="id_save_instructions" class="btn">Save Instructions</button></div>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="span12">
+        <h1>Regions</h1>
+            <div id="id_regions_table_div"></div>
+        </div>
+    </div>
+
+    <div class="row-fluid">
+        <div class="span12">
+        <h1>Runs</h1>
+            <div id="id_runs_table_div"></div>
+        </div>
+    </div>
+
+    <div class="row-fluid">
+        <div class="span12">
+        <h1>Additional Markers</h1>
+            <div id="id_markers_table_div"></div>
+        </div>
+    </div>
+
+    <div class="row-fluid">
+        <div><textarea id="id_status" class="hide" style="height:20em;width:100%;resize:none;" readonly>
+        </textarea></div>
+        <a id="id_show_hide_status" href="#">Show detailed status</a>
+    </div>
+    <div id="id_hidden_name" style="display:none;">{{ fname }}</div>
+    <div id="id_hidden_contents" style="display:none;">{{ contents }}</div>
+    <div id="id_hidden_ticket" style="display:none;">{{ ticket }}</div>
+    <div class="modal hide fade" data-backdrop="static" id="id_modal">
+    </div>
+</div>
+
+{% endblock %}

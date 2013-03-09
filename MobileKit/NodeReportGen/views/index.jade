@@ -1,0 +1,36 @@
+extends layout_require
+
+block scripts
+    script(type='text/javascript', data-main='/js/app/indexMain.js', src='/js/require-jquery.js')
+
+block content
+    body(style="min-width:1000px")
+        div.container-fluid
+            div.row-fluid
+                div.span12
+                    h1 Picarro Surveyor Report Generation Portal
+                    h2 Dashboard
+                    p This will contain a user's past and pending jobs submitted
+                    h2 Job Preparation
+            div#instructionsfiles.row-fluid
+                div.span6
+                    h2 Instructions
+                    div.custom_file_upload
+                        input#id_instr_upload_name.file(type="text", name="file_info", readonly)
+                        div.btn-primary.file_upload
+                            input#id_instr_upload.fileinput(type="file", name="files[]")
+                    p Browse for an instructions file or drag a file onto here.
+                div.span6
+                    h2 Actions
+                    div
+                        button#id_make_report(type="button", style="float:left", class="btn btn-large btn-primary")
+                            | Make Report
+                    div
+                        button#id_save_instructions(type="button", style="float:left; margin:5px; margin-left:20px", class="btn")
+                            | Save Instructions
+            div.row-fluid
+                div.span12
+                    h2 Sample Report
+                    ul
+                        li: a(href="/getReport/9bf749d4cb7bda829ce53d1d84d5e79a/1362715621576", 
+                            title="Development") Development
