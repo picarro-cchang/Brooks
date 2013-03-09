@@ -34,8 +34,8 @@ ISCC = os.path.join(ISCC, 'Inno Setup 5', 'ISCC.exe')
 
 VERSION_METADATA = 'version.json'
 
-REPO_BASE = 's:/repository/software'
-REPO = 'trunk'
+REPO_BASE = 'https://github.com/picarro/host.git'
+REPO = 'g2000'
 
 DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer'
 
@@ -78,22 +78,27 @@ def makeInstaller(opts):
         json.dump(version, verFp)
 
     # Commit and push new version metadata
-    retCode = subprocess.call(['bzr.exe',
-                               'ci',
+    retCode = subprocess.call(['git.exe',
+                               'add',
+                               'version.json'])
+
+    retCode = subprocess.call(['git.exe',
+                               'commit',
                                '-m',
-                               'release.py version update.'])
+                               'release.py version update (SSIM).'])
 
     if retCode != 0:
         print 'Error committing new version metadata to local repo.'
         sys.exit(retCode)
 
-    retCode = subprocess.call(['bzr.exe',
-                               'push',
-                               os.path.join(REPO_BASE, REPO)])
+    retCode = subprocess.call(['git.exe',
+                               'push'])
 
     if retCode != 0:
         print 'Error pushing new version metadata to repo.'
-        sys.exit(retCode)
+
+    import time
+    time.sleep(1.0)
 
     _branchFromRepo(REPO)
     _generateCoordinators(REPO, meta)
@@ -116,14 +121,29 @@ def _branchFromRepo(name):
     os.makedirs(os.path.join(SANDBOX_DIR, 'Installers'))
 
     with OS.chdir(SANDBOX_DIR):
-        subprocess.call(['bzr.exe', 'branch', os.path.join(REPO_BASE, name)])
+        retCode = subprocess.call(['git.exe',
+                                   'clone',
+                                   REPO_BASE])
+
+        if retCode != 0:
+            print "Error cloning '%s'" % REPO_BASE
+            sys.exit(retCode)
+
+        with OS.chdir(os.path.join(SANDBOX_DIR, 'host')):
+            retCode = subprocess.call(['git.exe',
+                                       'checkout',
+                                       'master'])
+
+            if retCode != 0:
+                print 'Error checking out "master".'
+                sys.exit(retCode)
 
 def _generateCoordinators(name, meta):
     """
     Autogenerate all of the coordinators listed in the metadata package.
     """
 
-    with OS.chdir(os.path.join(SANDBOX_DIR, name, 'AddOns', 'SSIM')):
+    with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'AddOns', 'SSIM')):
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(
                 os.path.join('.', 'templates')))
         t = env.get_template('Coordinator_SSIM.ini.j2')
@@ -151,7 +171,7 @@ def _compileInstaller(name, ver):
 
     print subprocess.list2cmdline(args)
 
-    with OS.chdir(os.path.join(SANDBOX_DIR, name, 'AddOns', 'SSIM')):
+    with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'AddOns', 'SSIM')):
         retCode = subprocess.call(args)
 
         if retCode != 0:
@@ -170,9 +190,25 @@ def _tagRepository(name, ver):
     Tags the repository
     """
 
-    subprocess.call(['bzr.exe', 'tag', "--directory=%s" %
-                     os.path.join(REPO_BASE, name),
-                     "ssim-%s" % _verAsString(ver)])
+    retCode = subprocess.call(['git.exe',
+                               'tag',
+                               '-a',
+                               "ssim-%s" % _verAsString(ver),
+                               '-m',
+                               "'SSIM version %s'" % _verAsString(ver)])
+
+    if retCode != 0:
+        print 'Error tagging repository'
+        sys.exit(retCode)
+
+    retCode = subprocess.call(['git.exe',
+                               'push',
+                               'origin',
+                               "ssim-%s" % _verAsString(ver)])
+
+    if retCode != 0:
+        print 'Error pushing tag to repository'
+        sys.exit(retCode)
 
 def _copyInstaller(ver):
     """
