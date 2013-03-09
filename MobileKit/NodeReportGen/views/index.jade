@@ -10,9 +10,19 @@ block content
                 div.span12
                     h1 Picarro Surveyor Report Generation Portal
                     h2 Dashboard
-                    p This will contain a user's past and pending jobs submitted
-                    h2 Job Preparation
-            div#instructionsfiles.row-fluid
+                    div#id_submittedJobs
+                        div#id_jobTableDiv
+                        br
+                        div(style="float:left")
+                        button#id_testAdd(type="button", style="float:left; margin:20px", class="btn btn-primary")
+                            | Add Row
+                        button#id_testRemove(type="button", style="float:left; margin:20px", class="btn btn-primary")
+                            | Remove Row
+                        button#id_testUpdate(type="button", style="float:left; margin:20px", class="btn btn-primary")
+                            | Update Row
+
+            h2 Job Preparation
+            div#id_instructionsfiles.row-fluid
                 div.span6
                     h2 Instructions
                     div.custom_file_upload
