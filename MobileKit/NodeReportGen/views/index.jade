@@ -9,6 +9,24 @@ block content
             div.row-fluid
                 div.span12
                     h1 Picarro Surveyor Report Generation Portal
+                    div#id_settings
+                        label(for="id_timezone")
+                            | Time zone
+                        input#id_timezone(type="text",readonly="readonly",style="margin-top:10px")
+                        a.btn.btn-inverse(href="#id_timezoneModal",role="button",data-toggle="modal")
+                            | Select
+                        div#id_timezoneModal.modal.hide.fade(tabindex="-1", role="dialog", aria-labelledby="id_timezoneModalLabel",
+                            aria-hidden="true")
+                            div.modal-header
+                                button.close(type="button", data-dismiss="modal", aria-hidden="true") x
+                                h3#id_timezoneModalLabel Click on map to select time zone
+                            div.modal-body
+                                include timezone_picker
+                            div.modal-footer
+                                button#id_save_timezone.btn.btn-primary(data-dismiss="modal", aria-hidden="true")
+                                    | Save changes
+                                button.btn(data-dismiss="modal", aria-hidden="true")
+                                    | Cancel
                     h2 Dashboard
                     div#id_submittedJobs
                         div#id_jobTableDiv
@@ -33,10 +51,10 @@ block content
                 div.span6
                     h2 Actions
                     div
-                        button#id_make_report(type="button", style="float:left", class="btn btn-large btn-primary")
+                        button#id_make_reportbtn.btn-large.btn-primary(type="button", style="float:left")
                             | Make Report
                     div
-                        button#id_save_instructions(type="button", style="float:left; margin:5px; margin-left:20px", class="btn")
+                        button#id_save_instructions.btn.btn-inverse(type="button", style="float:left; margin:5px; margin-left:20px")
                             | Save Instructions
             div.row-fluid
                 div.span12

@@ -1,12 +1,12 @@
 // index.js
 /*global console, requirejs, TEMPLATE_PARAMS */
 
-define(['jquery', 'underscore', 'backbone', 'app/dashboardGlobals',
+define(['jquery', 'underscore', 'backbone', 'app/dashboardGlobals', 'jstz',
         'jquery-migrate', 'bootstrap-modal', 'bootstrap-dropdown', 'bootstrap-spinedit', 'bootstrap-transition',
-        'jquery.dataTables', 'jquery.generateFile'],
+        'jquery.dataTables', 'jquery.generateFile', 'jquery.maphilight', 'jquery.timezone-picker'],
 
 
-function ($, _, Backbone, DASHBOARD) {
+function ($, _, Backbone, DASHBOARD, jstz) {
     'use strict';
 
     function formatNumberLength(num, length) {
@@ -120,8 +120,36 @@ function ($, _, Backbone, DASHBOARD) {
 
         DASHBOARD.DashboardSettings = Backbone.Model.extend({
             defaults: {
-                timezone: "America/Los_Angeles",
+                timezone: null,
                 user: "demo"
+            },
+            initialize: function () {
+                var tz = jstz.determine();  // Get from browser
+                this.set({"timezone": tz.name()});
+            }
+        });
+
+        DASHBOARD.SettingsView = Backbone.View.extend({
+            el: $("#id_settings"),
+            events: {
+                "shown #id_timezoneModal": "onModalShown",
+                "click #id_save_timezone": "onTimezoneSaved"
+            },
+            render: function () {
+                $("#id_timezone").val(DASHBOARD.dashboardSettings.get("timezone"));
+            },
+            onModalShown: function () {
+                $("#edit-date-default-timezone").val(DASHBOARD.dashboardSettings.get("timezone")).change();
+            },
+            onTimezoneSaved: function () {
+                DASHBOARD.dashboardSettings.set({"timezone": $("#edit-date-default-timezone").val()});
+            },
+            initialize: function () {
+                $('#timezone-image').timezonePicker({
+                    target: '#edit-date-default-timezone',
+                    countryTarget: '#edit-site-default-country'
+                });
+                this.listenTo(DASHBOARD.dashboardSettings,"change:timezone",this.render);
             }
         });
 
@@ -131,12 +159,44 @@ function ($, _, Backbone, DASHBOARD) {
                 directory: null,
                 status: 0,
                 user: "demo",
-                startPosixTime: null
+                startPosixTime: 0,
+                startLocalTime: null
+            },
+            set: function(attributes,options) {
+                // Fill up local time when a model is created. This unfortunately involves a synchronous
+                //  AJAX call. Provide an alternative batch processing of all times in a collection. 
+                if (attributes.startPosixTime && !attributes.startLocalTime) {
+                    var tz = DASHBOARD.dashboardSettings.get('timezone');
+                    var url = '/rest/tz?' + $.param({tz:tz, posixTimes:[attributes.startPosixTime]});
+                    var result = JSON.parse($.ajax({type: 'GET', url: url, dataType:'json', async:false}).responseText);
+                    attributes.startLocalTime = result.timeStrings[0];
+                }
+                Backbone.Model.prototype.set.call(this,attributes,options);
             }
         });
 
         DASHBOARD.SubmittedJobs = Backbone.Collection.extend({
-            model: DASHBOARD.SubmittedJob
+            initialize: function ()  {
+                this.listenTo(DASHBOARD.dashboardSettings, "change:timezone", this.resetTimeZone);
+            },
+            model: DASHBOARD.SubmittedJob,
+            resetTimeZone: function() {
+                var that = this;
+                var tz = DASHBOARD.dashboardSettings.get('timezone');
+                // Batch convert all the startPosixTime values to startLocalTime values using the specified timezone
+                //  Triggers a reset when done
+                var etmList = [];
+                for (var i=0; i<this.length; i++) etmList.push(this.at(i).get('startPosixTime'));
+                var url = '/rest/tz?' + $.param({tz:tz, posixTimes:etmList});
+                $.getJSON(url,function (data) {
+                    for (var i=0; i<that.length; i++) {
+                        var model = that.at(i);
+                        model.set({'startLocalTime': data.timeStrings.shift()});
+                        that.update(model,{remove: false, silent: true});
+                    }
+                    that.trigger('reset');
+                });
+            }
         });
 
         DASHBOARD.JobsView = Backbone.View.extend({
@@ -150,9 +210,9 @@ function ($, _, Backbone, DASHBOARD) {
                 this.$el.find("#id_jobTableDiv").html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="id_example"></table>');
                 this.jobTable = $("#id_example").dataTable({
                     "aoColumns": [
-                        { "sTitle": "StartTime", "mData": "startPosixTime", "sClass": "center"},
                         { "sTitle": "Hash", "mData": "hash", "sClass": "center"},
                         { "sTitle": "Directory", "mData": "directory", "sClass": "center"},
+                        { "sTitle": "StartTime", "mData": "startLocalTime", "sClass": "center"},
                         { "sTitle": "Status", "mData": "status", "sClass": "center"},
                         { "sTitle": "User", "mData": "user", "sClass": "center"}
                     ]
@@ -163,6 +223,29 @@ function ($, _, Backbone, DASHBOARD) {
                 this.listenTo(DASHBOARD.submittedJobs, "change", this.changeJob);
                 this.listenTo(DASHBOARD.submittedJobs, "reset", this.resetJobs);
                 this.addIndex = 0;
+            },
+            mDataPosixTime: function (source, type, val) {
+                switch (type) {
+                case 'set':
+                    var url = '/rest/tz?' + $.param({tz:"America/Los_Angeles",posixTimes:[source.startPosixTime]});
+                    var result = JSON.parse($.ajax({type: 'GET', url: url, dataType:'json', async:false}).responseText);
+                    source.timeString = result.timeStrings[0];
+                    break;
+                case 'display':
+                    return source.timeString;
+                default:
+                    return source.startPosixTime;
+                }
+            },
+            handlePosixTime: function (data, type, row) {
+                switch (type) {
+                case 'display':
+                    var url = '/rest/tz?' + $.param({tz:"America/Los_Angeles",posixTimes:[data]});
+                    var result = JSON.parse($.ajax({type: 'GET', url: url, dataType:'json', async:false}).responseText);
+                    return result.timeStrings[0];
+                default:
+                    return data;
+                }
             },
             changeJob: function (model) {
                 this.jobTable.fnUpdate(model.attributes, this.cidToRow[model.cid]);
@@ -215,11 +298,13 @@ function ($, _, Backbone, DASHBOARD) {
                 else alert("No data to update");
             }
         });
-
+        DASHBOARD.dashboardSettings = new DASHBOARD.DashboardSettings();
         DASHBOARD.submittedJobs = new DASHBOARD.SubmittedJobs();
         DASHBOARD.instructionsFileModel = new DASHBOARD.InstructionsFileModel();
+        var settingsView = new DASHBOARD.SettingsView();
         var instrView = new DASHBOARD.InstructionsView();
         var jobsView = new DASHBOARD.JobsView();
+        settingsView.render();
         jobsView.render();
     }
 
