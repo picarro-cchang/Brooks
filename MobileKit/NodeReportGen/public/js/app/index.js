@@ -1,4 +1,4 @@
-// getReport.js
+// index.js
 /*global console, requirejs, TEMPLATE_PARAMS */
 
 define(['jquery', 'underscore', 'backbone', 'app/dashboardGlobals',
@@ -27,7 +27,7 @@ function ($, _, Backbone, DASHBOARD) {
         });
 
         DASHBOARD.InstructionsView = Backbone.View.extend({
-            el: $("#instructionsfiles"),
+            el: $("#id_instructionsfiles"),
             events: {
                 "change .fileinput": "onSelectFile",
                 "dragover .file": "onDragOver",
@@ -118,8 +118,109 @@ function ($, _, Backbone, DASHBOARD) {
 
         });
 
+        DASHBOARD.DashboardSettings = Backbone.Model.extend({
+            defaults: {
+                timezone: "America/Los_Angeles",
+                user: "demo"
+            }
+        });
+
+        DASHBOARD.SubmittedJob = Backbone.Model.extend({
+            defaults: {
+                hash: null,
+                directory: null,
+                status: 0,
+                user: "demo",
+                startPosixTime: null
+            }
+        });
+
+        DASHBOARD.SubmittedJobs = Backbone.Collection.extend({
+            model: DASHBOARD.SubmittedJob
+        });
+
+        DASHBOARD.JobsView = Backbone.View.extend({
+            el: $("#id_submittedJobs"),
+            events: {
+                "click #id_testAdd": "onTestAdd",
+                "click #id_testRemove": "onTestRemove",
+                "click #id_testUpdate": "onTestUpdate"
+            },
+            initialize: function () {
+                this.$el.find("#id_jobTableDiv").html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="id_example"></table>');
+                this.jobTable = $("#id_example").dataTable({
+                    "aoColumns": [
+                        { "sTitle": "StartTime", "mData": "startPosixTime", "sClass": "center"},
+                        { "sTitle": "Hash", "mData": "hash", "sClass": "center"},
+                        { "sTitle": "Directory", "mData": "directory", "sClass": "center"},
+                        { "sTitle": "Status", "mData": "status", "sClass": "center"},
+                        { "sTitle": "User", "mData": "user", "sClass": "center"}
+                    ]
+                });
+                this.cidToRow = {};
+                this.listenTo(DASHBOARD.submittedJobs, "add", this.addJob);
+                this.listenTo(DASHBOARD.submittedJobs, "remove", this.removeJob);
+                this.listenTo(DASHBOARD.submittedJobs, "change", this.changeJob);
+                this.listenTo(DASHBOARD.submittedJobs, "reset", this.resetJobs);
+                this.addIndex = 0;
+            },
+            changeJob: function (model) {
+                this.jobTable.fnUpdate(model.attributes, this.cidToRow[model.cid]);
+            },
+            removeJob: function (model) {
+                this.jobTable.fnDeleteRow(this.cidToRow[model.cid]);
+                delete this.cidToRow[model.cid];
+                console.log(this.cidToRow);
+            },
+            addJob: function (model) {
+                this.cidToRow[model.cid] = this.jobTable.fnGetNodes(this.jobTable.fnAddData(model.attributes)[0]);
+                console.log(this.cidToRow);
+            },
+            resetJobs: function () {
+                this.render();
+            },
+            render: function () {
+                var that = this;
+                this.jobTable.fnClearTable();
+                _.forEach(DASHBOARD.submittedJobs.models, function(model) {
+                    that.cidToRow[model.cid] = that.jobTable.fnGetNodes(that.jobTable.fnAddData(model.attributes)[0]);
+                });
+                console.log(that.cidToRow);
+            },
+            onTestAdd: function () {
+                DASHBOARD.submittedJobs.add({hash:this.addIndex++,
+                                             directory:Math.random().toString(36).substring(2,8),
+                                             startPosixTime:(new Date()).valueOf()});
+            },
+            onTestRemove: function () {
+                var n = DASHBOARD.submittedJobs.length;
+                if (n > 0) {
+                    var which = Math.floor(n * Math.random());
+                    console.log("Removing " + DASHBOARD.submittedJobs.at(which).get("hash"));
+                    DASHBOARD.submittedJobs.remove(DASHBOARD.submittedJobs.at(which));
+                    console.log("Number of rows: " + DASHBOARD.submittedJobs.length);
+                }
+                else alert("No data to remove");
+            },
+            onTestUpdate: function () {
+                var n = DASHBOARD.submittedJobs.length;
+                if (n > 0) {
+                    var which = Math.floor(n * Math.random());
+                    var model = DASHBOARD.submittedJobs.at(which);
+                    console.log("Updating " + model.get("hash"));
+                    model.set({"hash":Math.random().toString(36).substring(2,8), "status":Math.floor(Math.random()*100)});
+                    DASHBOARD.submittedJobs.update(model,{remove:false});
+                    console.log("Number of rows: " + DASHBOARD.submittedJobs.length);
+                }
+                else alert("No data to update");
+            }
+        });
+
+        DASHBOARD.submittedJobs = new DASHBOARD.SubmittedJobs();
         DASHBOARD.instructionsFileModel = new DASHBOARD.InstructionsFileModel();
         var instrView = new DASHBOARD.InstructionsView();
+        var jobsView = new DASHBOARD.JobsView();
+        jobsView.render();
     }
 
     return { "initialize": function() { $(document).ready(init); }};
