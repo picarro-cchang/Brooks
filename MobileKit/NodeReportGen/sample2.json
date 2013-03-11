@@ -1,0 +1,72 @@
+{
+    "fovMinAmp": 0.03, 
+    "exclRadius": 10, 
+    "fovNWindow": 10, 
+    "timezone": "America/Los_Angeles", 
+    "fovMinLeak": 1.0, 
+    "swCorner": [
+        36.58838, 
+        -121.93108
+    ], 
+    "runs": [
+        {
+            "stabClass": "D", 
+            "peaks": "#00FFFF", 
+            "endEtm": "2012-06-10  12:00", 
+            "analyzer": "FCDS2008", 
+            "fovs": "#00FF00", 
+            "startEtm": "2012-06-10  06:13", 
+            "wedges": "#FFFF00"
+        }, 
+        {
+            "stabClass": "D", 
+            "peaks": "#FFFF00", 
+            "endEtm": "2012-06-10  16:59", 
+            "analyzer": "FCDS2008", 
+            "fovs": "#FF0000", 
+            "startEtm": "2012-06-10  12:05", 
+            "wedges": "#0000FF"
+        }
+    ], 
+    "peaksMinAmp": 0.03, 
+    "instructions_type": "makeReport", 
+    "neCorner": [
+        36.62807, 
+        -121.88112
+    ], 
+    "template": {
+        "submaps": [
+            {
+                "paths": true, 
+                "peaks": true, 
+                "surveysTable": false, 
+                "peaksTable": false, 
+                "wedges": true, 
+                "runsTable": false
+            }, 
+            {
+                "paths": true, 
+                "runsTable": true, 
+                "fovs": true, 
+                "peaks": true, 
+                "peaksTable": true, 
+                "baseType": "satellite", 
+                "wedges": true, 
+                "surveysTable": true
+            }
+        ], 
+        "summary": [
+            {
+                "surveysTable": true, 
+                "runsTable": true, 
+                "peaks": true, 
+                "submapGrid": true, 
+                "peaksTable": true
+            }
+        ]
+    }, 
+    "submaps": {
+        "nx": 4, 
+        "ny": 4
+    }
+}

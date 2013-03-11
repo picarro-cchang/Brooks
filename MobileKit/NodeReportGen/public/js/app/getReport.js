@@ -32,6 +32,10 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     "swCorner": [ 36.58838, -121.93108 ],
                     "neCorner": [ 36.62807, -121.88112 ],
                     "submaps": {"nx": 1, "ny": 2},
+                    "exclRadius": 0,
+                    "fovMinAmp": 0.03,
+                    "fovMinLeak": 1.0,
+                    "fovNWindow": 10,
                     "peaksMinAmp": 0.1,
                     "timezone": "GMT",
                     "reportTimezone": "GMT"
@@ -360,7 +364,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 var that = this;
                 REPORT.peaks.once("loaded", function () {
                     that.peaksData = REPORT.peaks.models;
-                    that.minAmp = REPORT.settings.get("peaksMinAmp");
+                    that.peaksMinAmp = REPORT.settings.get("peaksMinAmp");
+                    that.fovMinAmp = REPORT.settings.get("fovMinAmp");
                     var result = makePeaks(that);
                     that.contexts["peaks"] = result.context;
                     that.runsData["peaks"] = result.runs;
@@ -375,7 +380,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 var that = this;
                 REPORT.peaks.once("loaded", function () {
                     that.peaksData = REPORT.peaks.models;
-                    that.minAmp = REPORT.settings.get("peaksMinAmp");
+                    that.peaksMinAmp = REPORT.settings.get("peaksMinAmp");
                     that.contexts["wedges"] = makeWedges(that);
                     that.trigger("change",{"context": "wedges"});
                 });

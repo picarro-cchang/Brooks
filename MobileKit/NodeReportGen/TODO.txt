@@ -7,6 +7,15 @@
 - produce correct page elements for summary and submaps
 - include CSS for page breaks
 - include monitoring of pending RptGen lrts to allow detection of zombie lrts which never return done status.
+- implement progress bar for status
+- Add title to report
+- detect duplicate jobs and provide force option
+- handle PDF generation
+- allow reading of instructions file by clicking on line in dashboard
+- allow jobs to be hidden in table
+- implement fast report generation which excludes paths and swaths
+- look at browserify as an alternative to require.js
+- do not show peaks below the fovMinAmpl level
 
 + getReport should take corners in geocode format as optional input parameters
 + Write bisect module and implement exclusion radius while getting peaks

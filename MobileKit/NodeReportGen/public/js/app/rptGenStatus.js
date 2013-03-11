@@ -1,0 +1,12 @@
+/* rptGenStatus.js defines status codes for report generation */
+/*global exports, module, require */
+
+define({
+    "FAILED": -4,
+    "BAD_PARAMETERS": -2,
+    "TASK_NOT_FOUND": -1,
+    "NOT_STARTED": 0,
+    "IN_PROGRESS": 1,
+    "DUPLICATE": 2,
+    "DONE": 16
+});
