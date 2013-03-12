@@ -15,12 +15,14 @@ function (gh) {
         ctxPath.canvas.width  = report.nx + 2 * report.padX;
 
         function renderPath(path) {
-            var l;
+            var l, lastX, lastY;
             if (path.length > 0) {
                 ctxPath.beginPath();
-                ctxPath.moveTo(path[0][0] + report.padX, path[0][1] + report.padY);
+                ctxPath.moveTo((lastX = path[0][0]) + report.padX, (lastY = path[0][1]) + report.padY);
                 for (l=1; l<path.length; l++) {
-                    ctxPath.lineTo(path[l][0] + report.padX, path[l][1] + report.padY);
+                    if (lastX != path[l][0] || lastY != path[l][1]) {
+                        ctxPath.lineTo((lastX = path[l][0]) + report.padX, (lastY = path[l][1]) + report.padY);
+                    }
                 }
                 ctxPath.stroke();
             }
