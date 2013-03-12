@@ -79,15 +79,14 @@ data_files = [(".", ["MobileKitSetupNew/LEDgreen2.ico", "MobileKitSetupNew/LEDre
               (r'static\scripts', glob.glob(r'ReportGen\static\scripts\*.*')),
               (r'templates', glob.glob(r'ReportGen\templates\*.*')),
              ]
-setup(console=['AnalyzerServer/RunPeakFinder.py', 
-               'AnalyzerServer/RunPeakAnalyzer.py', 
-               'AnalyzerServer/DatEchoP3.py', 
+setup(console=['AnalyzerServer/RunPeakFinder.py',
+               'AnalyzerServer/RunPeakAnalyzer.py',
+               'AnalyzerServer/DatEchoP3.py',
                'AnalyzerServer/analyzerServer.py',
                'ViewServer/ViewServer.py',
                'ReportGen/batchReport.py',
                'ReportGen/reportServer.py',
-               'Utilities/createReportBooklet.py',
-               'Utilities/createReportBooklet-forChris.py'
+               'Utilities/createReportBooklet.py'
                ],
      windows=[MobileKitSetup, RemoteMobileKitSetup],
      options = dict(py2exe = dict(compressed = 1,
@@ -97,8 +96,7 @@ setup(console=['AnalyzerServer/RunPeakFinder.py',
                    includes = inclusionList,
                    packages = packageList)),
      data_files = data_files,
-                   
+
     )
 shutil.copyfile('dist/DatEchoP3.exe','dist/GPSEchoP3.exe')
 shutil.copyfile('dist/DatEchoP3.exe','dist/WSEchoP3.exe')
-
