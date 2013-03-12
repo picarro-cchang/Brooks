@@ -276,7 +276,7 @@ function processStatus(statusDict)
         if (sd.hasOwnProperty("done")) statByRegion[region].stages += stage;
         if (sd.hasOwnProperty("error")) statByRegion[region].error = true;
     }
-    
+
     for (var key in statusDict) {
         if (statusDict.hasOwnProperty(key)) {
             words = key.split('.');

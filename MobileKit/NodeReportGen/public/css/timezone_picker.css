@@ -1,0 +1,56 @@
+.timezone-picker fieldset {
+  width: 600px;
+  margin: 10px auto;
+}
+
+.fieldset-legend {
+  font-size: 70%; 
+}
+
+.timezone-picker label {
+  font-weight: bold;
+}
+
+#id_timezoneModal {
+  width: 650px;
+  margin: -250px 0 0 -325px;
+}
+
+#id_timezoneModal .modal-body {
+  max-height: 800px;
+  overflow: hidden;
+}
+
+#wrapper {
+  overflow: hidden;
+}
+
+#page {
+  text-align: left;
+  max-width: 800px;
+  margin: auto;
+}
+
+#resize-form {
+  text-align: center;
+}
+
+#timezone-picker {
+  text-align: center;
+  margin: 10px -240px;
+}
+
+#timezone-picker div,
+#timezone-picker map {
+  margin: auto;
+}
+
+#content {
+
+}
+
+#footer {
+  font-size: 90%;
+  margin: 20px auto;
+  text-align: center;
+}

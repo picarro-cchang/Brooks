@@ -16,7 +16,10 @@ requirejs.config({
         'underscore': '/js/lib/underscore-min',
         'backbone': '/js/lib/backbone-min',
         'jquery.dataTables': '/js/lib/jquery.dataTables.min',
-        'jquery.generateFile': '/js/lib/jquery.generateFile'
+        'jquery.generateFile': '/js/lib/jquery.generateFile',
+        'jquery.timezone-picker': 'jquery.timezone-picker.min',
+        'jquery.maphilight': 'jquery.maphilight.min',
+        'jstz:': '/js/lib/jstz.min'
     },
     shim: {
         'jquery-migrate': {
@@ -39,6 +42,15 @@ requirejs.config({
         },
         'jquery.generateFile': {
             deps: ['jquery']
+        },
+        'jquery.timezone-picker': {
+            deps: ['jquery']
+        },
+        'jquery.maphilight': {
+            deps: ['jquery']
+        },
+        'jstz': {
+            exports: 'jstz'
         },
         'backbone': {
             deps: ['underscore','jquery'],

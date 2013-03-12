@@ -9,7 +9,7 @@ function (_, gh, newMarker, REPORT) {
 
     function makePeaks(report) {
         var i, j, x, xy, y;
-        var color, colors, ctxPeaks, data, lat, lng, minAmp, pCanvas, peaks, run, survey, where;
+        var color, colors, ctxPeaks, data, fovMinAmp, lat, lng, pCanvas, peaks, peaksMinAmp, run, survey, where;
         var runs = {}, surveys = {};
         var size = 0.7;
         peaks = report.peaksData;
@@ -24,9 +24,10 @@ function (_, gh, newMarker, REPORT) {
         j = 1;
         for (i=0; i<peaks.length; i++) {
             run = peaks[i].attributes.R;
-            // minAmp = data.RUNS[run].minAmp;
-            minAmp = report.minAmp;
-            if (peaks[i].attributes.A >= minAmp) {
+            // peaksMinAmp = data.RUNS[run].peaksMinAmp;
+            peaksMinAmp = report.peaksMinAmp;
+            fovMinAmp = report.fovMinAmp;
+            if (peaks[i].attributes.A >= peaksMinAmp) {
                 report.peakLabels.push("" + (j++));
                 color = peaksColorByRun(run);
                 if (color) {
@@ -61,8 +62,8 @@ function (_, gh, newMarker, REPORT) {
                 if (report.peakLabels[i] && color) {
                     pCanvas[color].annotate(ctxPeaks, x+report.padX, y+report.padY, report.peakLabels[i], "bold 13px sans-serif", "black");
                 }
-                else {
-                    var radius = 4;
+                else if (peaks[i].attributes.A >= fovMinAmp) {
+                    var radius = 3;
                     ctxPeaks.fillStyle = color;
                     ctxPeaks.beginPath();
                     ctxPeaks.arc(x + report.padX, y + report.padY, radius, 0.0, 2*Math.PI);
