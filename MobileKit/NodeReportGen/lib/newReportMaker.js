@@ -3,6 +3,7 @@
 
 (function() {
     'use strict';
+    var cp = require('child_process');
     var fs = require('fs');
     var jf = require('./jsonFiles');
     var newN2i = require('./newNamesToIndices');
@@ -12,6 +13,7 @@
     var rptGenStatus = require('./rptGenStatus');
     var sf = require('./statusFiles');
     var sis = require('./surveyorInstStatus');
+    var url = require('url');
     var _ = require('underscore');
 
     var newParamsValidator = pv.newParamsValidator;
@@ -264,11 +266,109 @@
                     });
                 }
                 else {
-                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE}, function(err) {
+                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.LINKS_AVAILABLE}, function(err) {
                         if (err) callback(err);
-                        else callback(null);
+                        else {
+                            makePdfReports(that.norm_instr);
+                        }
                     });
                 }
+            });
+        }
+
+        function makePdfReports(instructions) {
+            var subx = instructions.submaps.nx;
+            var suby = instructions.submaps.ny;
+            var rptMaxLat = instructions.neCorner[0];
+            var rptMaxLng = instructions.neCorner[1];
+            var rptMinLat = instructions.swCorner[0];
+            var rptMinLng = instructions.swCorner[1];
+            var dx = (rptMaxLng - rptMinLng) / subx;
+            var dy = (rptMaxLat - rptMinLat) / suby;
+
+            var minLat, maxLat = rptMaxLat, minLng, maxLng;
+            var name, neCorner, submaps = [], swCorner;
+            var baseUrl = 'http://localhost:5300/getReport/' + that.submit_key.hash + '/' + that.submit_key.dir_name;
+            submaps.push({"url": baseUrl, "name": "summary.pdf"});
+
+            for (var my=0; my<suby; my++) {
+                minLat = maxLat - dy;
+                minLng = rptMinLng;
+                for (var mx=0; mx<subx; mx++) {
+                    maxLng = minLng + dx;
+                    swCorner = gh.encodeGeoHash(minLat, minLng);
+                    neCorner = gh.encodeGeoHash(maxLat, maxLng);
+                    name = String.fromCharCode(65+my) + (mx + 1);
+                    submaps.push({"url": url.format({"pathname": baseUrl, "query": {"neCorner":neCorner, "swCorner":swCorner}}), "name": (name + ".pdf")});
+                    minLng = maxLng;
+                }
+                maxLat = minLat;
+            }
+            var ss = submaps.slice(0);
+            function next() {
+                var submap;
+                if (ss.length > 0) {
+                    submap = ss.shift();
+                    convertToPdf(submap.url, submap.name, function (err) {
+                        if (err) callback(err);
+                        else {
+                            process.nextTick(next);
+                        }
+                    });
+                }
+                else {
+                    concatenatePdf(submaps.slice(0), function (err) {
+                        if (err) callback(err);
+                        else {
+                            sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE}, function(err) {
+                                if (err) callback(err);
+                                else callback(null);
+                            });
+                        }
+                    });
+                }
+            }
+            next();
+        }
+
+        function concatenatePdf(submapList, done) {
+            var cmd = 'C:\\Program Files (x86)\\PDF Labs\\PDFtk Server\\bin\\pdftk.exe';
+            var pdfFiles = [];
+            submapList.forEach(function (submap) {
+                pdfFiles.push(submap.name);
+            });
+            cmd = '"' + cmd + '" ' + pdfFiles.join(" ") + " cat output report.pdf";
+            console.log(cmd);
+            var concat = cp.exec(cmd, {"cwd": that.workDir}, function (err, stdout, stderr) {
+                if (err) {
+                    console.log(err.stack);
+                    console.log('Error code: ' + err.code);
+                    console.log('Signal received: ' + err.signal);
+                }
+                console.log('Child Process STDOUT: ' + stdout);
+                console.log('Child Process STDERR: ' + stderr);
+            });
+            concat.on('exit', function (code) {
+                console.log('Child process exited with code ' + code);
+                done(null);
+            });
+        }
+
+        function convertToPdf(url, pdfFile, done) {
+            var outFile = path.join(that.workDir, pdfFile);
+            var cmd = '"C:\\Program Files (x86)\\wkhtmltopdf\\wkhtmltopdf.exe" --javascript-delay 10000 "' + url + '" "' + outFile + '"';
+            var convert = cp.exec(cmd, function (err, stdout, stderr) {
+                if (err) {
+                    console.log(err.stack);
+                    console.log('Error code: ' + err.code);
+                    console.log('Signal received: ' + err.signal);
+                }
+                console.log('Child Process STDOUT: ' + stdout);
+                console.log('Child Process STDERR: ' + stderr);
+            });
+            convert.on('exit', function (code) {
+                console.log('Child process exited with code ' + code);
+                done(null);
             });
         }
     };

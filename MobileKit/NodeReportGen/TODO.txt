@@ -15,9 +15,9 @@
 - allow jobs to be hidden in table
 - implement fast report generation which excludes paths and swaths
 - look at browserify as an alternative to require.js
-- do not show peaks below the fovMinAmpl level
 
 + getReport should take corners in geocode format as optional input parameters
 + Write bisect module and implement exclusion radius while getting peaks
 + Investigate getting metadata for each alog file for writing into survey table
 + Resolve problem of htmltopdf failure due to JavaScript timeout (use --javascript-delay parameter and window.print())
++ do not show peaks below the fovMinAmpl level

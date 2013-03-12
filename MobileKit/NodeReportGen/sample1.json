@@ -1,4 +1,5 @@
 {
+    "title": "Monterey data with min amp of 0.1",
     "fovMinAmp": 0.03, 
     "exclRadius": 10, 
     "fovNWindow": 10, 
@@ -59,6 +60,7 @@
             {
                 "surveysTable": true, 
                 "runsTable": true, 
+                "paths": true, 
                 "peaks": true, 
                 "submapGrid": true, 
                 "peaksTable": true
