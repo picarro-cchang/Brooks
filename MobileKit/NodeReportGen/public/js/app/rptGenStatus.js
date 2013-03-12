@@ -8,5 +8,6 @@ define({
     "NOT_STARTED": 0,
     "IN_PROGRESS": 1,
     "DUPLICATE": 2,
+    "LINKS_AVAILABLE": 12,
     "DONE": 16
 });

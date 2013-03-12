@@ -76,17 +76,26 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService, rptGenStatus) {
                     var status = result.status;
                     if (err) job.set({status:'<b>Error</b> ' + err});
                     else if (status < 0) job.set({status:'<b>Error</b> ' + status});
+                    else if (status === rptGenStatus["LINKS_AVAILABLE"]) that.reportLinksAvailable(job.cid);
                     else if (status === rptGenStatus["DONE"]) that.reportDone(job.cid);
                     else setTimeout(function() { that.pollStatus(job.cid); }, 5000);
                 });
             },
-            reportDone: function (cid) {
-                console.log('Completion of job ' + cid);
+            reportLinksAvailable: function (cid) {
+                var that = this;
                 var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: cid});
                 var viewUrl = '/getReport/' + job.get('hash') + '/' + job.get('directory');
-                job.set({status: '<b>Done <a href="' + viewUrl + '" target="_blank"> View</a>'});
+                job.set({status: '<b><a href="' + viewUrl + '" target="_blank"> View</a></b>'});
                 DASHBOARD.submittedJobs.update(job,{remove:false});
-                console.log(job);
+                setTimeout(function() { that.pollStatus(job.cid); }, 5000);
+            },
+            reportDone: function (cid) {
+                var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: cid});
+                var viewUrl = '/getReport/' + job.get('hash') + '/' + job.get('directory');
+                var pdfurl = '/rest/data/' +  job.get('hash') + '/' + job.get('directory') + '/report.pdf';
+                job.set({status: '<b>Done<a href="' + viewUrl + '" target="_blank"> View</a><a href="' + pdfurl 
+                    + '" target="_blank"> PDF</a></b>'});
+                DASHBOARD.submittedJobs.update(job,{remove:false});
             },
             onDragOver: function(e) {
                 e.stopPropagation();
