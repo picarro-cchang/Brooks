@@ -1,5 +1,5 @@
 """
-Copyright 2012 Picarro Inc.
+Copyright 2012-2013 Picarro Inc.
 
 Replacement for makeExe.bat.
 """
@@ -31,8 +31,7 @@ from Host.Common import OS
 # Pull these out into a configuration file.
 SANDBOX_DIR = 'c:/temp/sandbox'
 
-REPO_BASE = 's:/repository/software'
-REPO = 'trunk'
+REPO_BASE = 'https://github.com/picarro/host.git'
 
 ISCC = 'c:/program files/Inno Setup 5/ISCC.exe'
 
@@ -128,25 +127,32 @@ def makeExe(opts):
         json.dump(VERSION, ver)
 
     # Commit and push new version number
-    bzrProc = subprocess.Popen(['bzr.exe', 'ci', '-m',
-                                'release.py version update.'])
-    bzrProc.wait()
+    retCode = subprocess.call(['git.exe',
+                               'add',
+                               'version.json'])
 
-    if bzrProc.returncode != 0:
+    if retCode != 0:
+        print 'Error staging new version metadata in local repo.'
+        sys.exit(1)
+
+    retCode = subprocess.call(['git.exe',
+                               'commit',
+                               '-m',
+                               'release.py version update (Host).'])
+
+    if retCode != 0:
         print 'Error committing new version metadata to local repo.'
         sys.exit(1)
 
-    bzrProc = subprocess.Popen(['bzr.exe', 'push', os.path.join(REPO_BASE,
-                                                                REPO)])
-    bzrProc.wait()
+    retCode = subprocess.call(['git.exe',
+                               'push'])
 
-    if bzrProc.returncode != 0:
+    if retCode != 0:
         print 'Error pushing new version metadata to repo.'
-        sys.exit(1)
 
-    _branchFromRepo(REPO)
-    _generateReleaseVersion(REPO, VERSION)
-    _buildExes(REPO)
+    _branchFromRepo()
+    _generateReleaseVersion(VERSION)
+    _buildExes()
 
     # XXX This is likely superfluous once the configuration files have
     # been merged into the main repository.
@@ -156,7 +162,7 @@ def makeExe(opts):
         _compileInstallers(VERSION)
 
     if opts.createTag:
-        _tagRepository(REPO, VERSION)
+        _tagRepository(VERSION)
 
         # XXX These should be removed when we finish merging the
         # configuration file directories into the repository.
@@ -165,7 +171,7 @@ def makeExe(opts):
 
     if opts.createInstallers:
         # Copy both HostExe and AnalyzerServerExe for non-installer upgrades.
-        _copyBuildAndInstallers(REPO, VERSION)
+        _copyBuildAndInstallers(VERSION)
 
 def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None):
     """
@@ -225,7 +231,7 @@ def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None):
         shutil.copyfile(os.path.join(STAGING_DISTRIB_BASE, c, installer),
                         os.path.join(targetDir, 'Current', installerCurrent))
 
-def _copyBuildAndInstallers(name, ver):
+def _copyBuildAndInstallers(ver):
     """
     Move the installers and the two compiled exe directories to their
     staging location so other people can find them.
@@ -235,7 +241,7 @@ def _copyBuildAndInstallers(name, ver):
     try:
         shutil.rmtree(STAGING_MFG_DISTRIB_BASE)
         shutil.rmtree(STAGING_DISTRIB_BASE)
-    except:
+    except OSError:
         # Okay if these directories don't already exist.
         pass
 
@@ -244,7 +250,7 @@ def _copyBuildAndInstallers(name, ver):
     assert not os.path.isdir(hostExeDir)
     os.makedirs(hostExeDir)
 
-    dir_util.copy_tree(os.path.join(SANDBOX_DIR, name, 'Host', 'dist'),
+    dir_util.copy_tree(os.path.join(SANDBOX_DIR, 'host', 'Host', 'dist'),
                        hostExeDir)
 
     # AnalyzerServerExe
@@ -253,10 +259,10 @@ def _copyBuildAndInstallers(name, ver):
     assert not os.path.isdir(analyzerServerExe)
     os.makedirs(analyzerServerExe)
 
-    dir_util.copy_tree(os.path.join(SANDBOX_DIR, name, 'MobileKit', 'dist'),
+    dir_util.copy_tree(os.path.join(SANDBOX_DIR, 'host', 'MobileKit', 'dist'),
                        analyzerServerExe)
 
-    shtuil.copyfile('version.json',
+    shutil.copyfile('version.json',
                     os.path.join(STAGING_DISTRIB_BASE, 'version.json'))
 
     # Copy the individual installers and update the shortcuts that are
@@ -270,7 +276,7 @@ def _copyBuildAndInstallers(name, ver):
                         os.path.join(targetDir, installer))
 
 
-def _branchFromRepo(name):
+def _branchFromRepo():
     """
     Branch the named repository into the sandbox.
     """
@@ -283,16 +289,30 @@ def _branchFromRepo(name):
     os.makedirs(os.path.join(SANDBOX_DIR, 'Installers'))
 
     with OS.chdir(SANDBOX_DIR):
-        subprocess.Popen(['bzr.exe', 'branch',
-                          os.path.join(REPO_BASE, name)]).wait()
+        retCode = subprocess.call(['git.exe',
+                                   'clone',
+                                   REPO_BASE])
 
-def _generateReleaseVersion(name, ver):
+        if retCode != 0:
+            print "Error cloning '%s'" % REPO_BASE
+            sys.exit(retCode)
+
+        with OS.chdir(os.path.join(SANDBOX_DIR, 'host')):
+            retCode = subprocess.call(['git.exe',
+                                       'checkout',
+                                       'master'])
+
+            if retCode != 0:
+                print "Error checking out 'master'."
+                sys.exit(retCode)
+
+def _generateReleaseVersion(ver):
     """
     Create the version metadata used by the executables and update the
     pretty version string.
     """
 
-    with OS.chdir(os.path.join(SANDBOX_DIR, name)):
+    with OS.chdir(os.path.join(SANDBOX_DIR, 'host')):
         with open(os.path.join('Host', 'Common',
                                'release_version.py'), 'w') as fp:
             fp.writelines(
@@ -301,37 +321,58 @@ def _generateReleaseVersion(name, ver):
                  "def versionString():\n",
                  "    return '%s'\n" % _verAsString(ver)])
 
-def _buildExes(name):
+def _buildExes():
     """
     Build host executables.
     """
 
+    buildEnv = os.environ.update({'PYTHONPATH' : "%s;%s" %
+                                  (os.path.join(SANDBOX_DIR, 'host'),
+                                   os.path.join(SANDBOX_DIR, 'host', 'Firmware')
+                                   )})
+
     # MobileKit must be built first since the HostExe build will copy
-    with OS.chdir(os.path.join(SANDBOX_DIR, name, 'MobileKit')):
-        subprocess.Popen(['python.exe', 'setup.py', 'py2exe'],
-                         env=os.environ.update({'PYTHONPATH' : "%s;%s" %
-                          (os.path.join(SANDBOX_DIR, 'trunk'),
-                           os.path.join(SANDBOX_DIR, 'trunk',
-                                        'Firmware'))})).wait()
+    with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'MobileKit')):
+        retCode = subprocess.call(['python.exe', 'setup.py', 'py2exe'],
+                                  env=buildEnv)
 
-    with OS.chdir(os.path.join(SANDBOX_DIR, name, 'Host')):
-        subprocess.Popen(['python.exe', 'PicarroExeSetup.py', 'py2exe'],
-                         env=os.environ.update({'PYTHONPATH' : "%s;%s" %
-                          (os.path.join(SANDBOX_DIR, 'trunk'),
-                           os.path.join(SANDBOX_DIR, 'trunk',
-                                        'Firmware'))})).wait()
+        if retCode != 0:
+            print 'Error building MobileKit.'
+            sys.exit(retCode)
 
-def _tagRepository(name, ver):
+    with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'Host')):
+        retCode = subprocess.call(['python.exe', 'PicarroExeSetup.py',
+                                   'py2exe'],
+                                   env=buildEnv)
+
+        if retCode != 0:
+            print 'Error building Host.'
+            sys.exit(retCode)
+
+def _tagRepository(ver):
     """
     Tags the repository
     """
 
-    subprocess.Popen(['bzr.exe', 'tag', "--directory=%s" %
-                      os.path.join(REPO_BASE, name), _verAsString(ver)]).wait()
+    retCode = subprocess.call(['git.exe',
+                               'tag',
+                               '-a',
+                               _verAsString(ver),
+                               '-m',
+                               "Host version %s" % _verAsString(ver)])
+
+    if retCode != 0:
+        print 'Error tagging repository'
+        sys.exit(retCode)
+
 
 def _tagCommonConfig(ver):
-    subprocess.Popen(['bzr.exe', 'tag', "--directory=%s" % COMMON_CONFIG,
-                      _verAsString(ver)]).wait()
+    retCode = subprocess.call(['bzr.exe', 'tag', "--directory=%s" %
+                               COMMON_CONFIG, _verAsString(ver)])
+
+    if retCode != 0:
+        print "Error tagging CommonConfig as '%s'." % _verAsString(ver)
+        sys.exit(retCode)
 
 def _tagAppInstrConfigs(ver):
     """
@@ -348,14 +389,25 @@ def _tagAppInstrConfigs(ver):
         for c in CONFIGS:
             configBase = os.path.join(CONFIG_BASE, "%sTemplates" % c)
 
-            subprocess.Popen(['bzr.exe', 'tag',
-                              "--directory=%s" %
-                              os.path.join(configBase, 'AppConfig'),
-                              _verAsString(ver)]).wait()
-            subprocess.Popen(['bzr.exe', 'tag',
-                              "--directory=%s" %
-                              os.path.join(configBase, 'InstrConfig'),
-                              _verAsString(ver)]).wait()
+            retCode = subprocess.call(['bzr.exe', 'tag',
+                                       "--directory=%s" %
+                                       os.path.join(configBase, 'AppConfig'),
+                                       _verAsString(ver)])
+
+            if retCode != 0:
+                print "Error tagging '%s' AppConfig as '%s'." % \
+                    (c, _verAsString(ver))
+                sys.exit(retCode)
+
+            retCode = subprocess.call(['bzr.exe', 'tag',
+                                       "--directory=%s" %
+                                       os.path.join(configBase, 'InstrConfig'),
+                                       _verAsString(ver)])
+
+            if retCode != 0:
+                print "Error tagging '%s' InstrConfig as '%s'." % \
+                    (c, _verAsString(ver))
+                sys.exit(retCode)
 
 def _makeLocalConfig():
     """
@@ -364,38 +416,68 @@ def _makeLocalConfig():
     """
 
     with OS.chdir(SANDBOX_DIR):
-        subprocess.Popen(['bzr.exe', 'branch', COMMON_CONFIG]).wait()
+        retCode = subprocess.call(['bzr.exe', 'branch', COMMON_CONFIG])
+
+        if retCode != 0:
+            print 'Error cloning CommonConfig.'
+            sys.exit(retCode)
 
         with open(os.path.join('CommonConfig', 'version.ini'), 'w') as fp:
-            subprocess.Popen(['bzr.exe', 'version-info', 'CommonConfig',
-                              '--custom',
-                              "--template=%s" % VERSION_TEMPLATE],
-                             stdout=fp).wait()
+            retCode = subprocess.call(['bzr.exe', 'version-info',
+                                       'CommonConfig', '--custom',
+                                       "--template=%s" % VERSION_TEMPLATE],
+                                       stdout=fp)
+
+            if retCode != 0:
+                print 'Error generating version.ini for CommonConfig.'
+                sys.exit(retCode)
 
         for c in CONFIGS:
             print "Getting configs for '%s'" % c
             os.mkdir(c)
             with OS.chdir(c):
-                subprocess.Popen(['bzr.exe', 'branch',
-                                  os.path.join(CONFIG_BASE, "%sTemplates" % c,
-                                               'AppConfig'),
-                                  'AppConfig']).wait()
-                with open(os.path.join('AppConfig', 'version.ini'), 'w') as fp:
-                    subprocess.Popen(['bzr.exe', 'version-info', 'AppConfig',
-                                      '--custom',
-                                      "--template=%s" % VERSION_TEMPLATE],
-                                     stdout=fp)
+                retCode = subprocess.call(['bzr.exe', 'branch',
+                                           os.path.join(CONFIG_BASE,
+                                                        "%sTemplates" % c,
+                                                        'AppConfig'),
+                                                        'AppConfig'])
+                if retCode != 0:
+                    print "Error cloning '%s' AppConfig" % c
+                    sys.exit(retCode)
 
-                subprocess.Popen(['bzr.exe', 'branch',
-                                  os.path.join(CONFIG_BASE, "%sTemplates" % c,
-                                               'InstrConfig'),
-                                  'InstrConfig']).wait()
+                with open(os.path.join('AppConfig', 'version.ini'), 'w') as fp:
+                    retCode = subprocess.call(['bzr.exe', 'version-info',
+                                               'AppConfig', '--custom',
+                                               "--template=%s" %
+                                               VERSION_TEMPLATE],
+                                               stdout=fp)
+
+                    if retCode != 0:
+                        print "Error generating '%s' AppConfig version.ini" % \
+                            c
+                        sys.exit(retCode)
+
+                retCode = subprocess.call(['bzr.exe', 'branch',
+                                           os.path.join(CONFIG_BASE,
+                                                        "%sTemplates" % c,
+                                                        'InstrConfig'),
+                                                        'InstrConfig'])
+                if retCode != 0:
+                    print "Error cloning '%s' InstrConfig" % c
+                    sys.exit(retCode)
+
                 with open(os.path.join('InstrConfig',
                                        'version.ini'), 'w') as fp:
-                    subprocess.Popen(['bzr.exe', 'version-info', 'InstrConfig',
-                                      '--custom',
-                                      "--template=%s" % VERSION_TEMPLATE],
-                                     stdout=fp).wait()
+                    retCode = subprocess.call(['bzr.exe', 'version-info',
+                                               'InstrConfig', '--custom',
+                                               "--template=%s" %
+                                               VERSION_TEMPLATE],
+                                               stdout=fp)
+
+                    if retCode != 0:
+                        print "Error generating '%s' InstrConfig version.ini" % \
+                            c
+                        sys.exit(retCode)
 
 def _compileInstallers(ver):
     """
@@ -419,11 +501,11 @@ def _compileInstallers(ver):
 
         print subprocess.list2cmdline(args)
 
-        isccProc = subprocess.Popen(args)
-        isccProc.wait()
+        retCode = subprocess.call(args)
 
-        if isccProc.returncode != 0:
-            sys.exit(isccProc.returncode)
+        if retCode != 0:
+            print "Error building '%s' installer." % c
+            sys.exit(retCode)
 
 def _verAsString(ver):
     """
@@ -463,8 +545,8 @@ Builds a new release of HostExe, AnalyzerServerExe and all installers.
                                           'will be moved.'))
     parser.add_option('--dry-run', dest='dryRun', default=False,
                       action='store_true',
-                      help=('Only works with --make-official. Tests the move to '
-                            'staging by using a temporary directory as the '
+                      help=('Only works with --make-official. Tests the move '
+                            'to staging by using a temporary directory as the '
                             'target.'))
 
     options, _ = parser.parse_args()
