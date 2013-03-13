@@ -7,7 +7,7 @@
     "fovMinLeak": 1.0, 
     "swCorner": [
         36.58838, 
-        -121.93108
+        -121.9061
     ], 
     "runs": [
         {
@@ -32,7 +32,7 @@
     "peaksMinAmp": 0.1, 
     "instructions_type": "makeReport", 
     "neCorner": [
-        36.62807, 
+        36.608225, 
         -121.88112
     ], 
     "template": {
@@ -44,13 +44,10 @@
             },
             "figures": [
                 {
-                    "paths": true, 
                     "peaks": true, 
                     "wedges": true
                 }, 
                 {
-                    "paths": true, 
-                    "fovs": true, 
                     "peaks": true, 
                     "baseType": "satellite", 
                     "wedges": true 
@@ -65,7 +62,6 @@
             },
             "figures": [
                 {
-                    "paths": true, 
                     "peaks": true, 
                     "wedges": true,
                     "submapGrid": true 

@@ -93,8 +93,8 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService, rptGenStatus) {
                 var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: cid});
                 var viewUrl = '/getReport/' + job.get('hash') + '/' + job.get('directory');
                 var pdfurl = '/rest/data/' +  job.get('hash') + '/' + job.get('directory') + '/report.pdf';
-                job.set({status: '<b>Done<a href="' + viewUrl + '" target="_blank"> View</a><a href="' + pdfurl 
-                    + '" target="_blank"> PDF</a></b>'});
+                job.set({status: '<b>Done<a href="' + viewUrl + '" target="_blank"> View</a><a href="' + pdfurl +
+                    '" target="_blank"> PDF</a></b>'});
                 DASHBOARD.submittedJobs.update(job,{remove:false});
             },
             onDragOver: function(e) {

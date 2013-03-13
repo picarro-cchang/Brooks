@@ -14,6 +14,7 @@ define ({
     Peaks: null,
     peaks: null,
     PeaksTableView: null,
+    ReportTables: null,
     ReportViewResources: null,
     reportViewResources: null,
     Run: null,

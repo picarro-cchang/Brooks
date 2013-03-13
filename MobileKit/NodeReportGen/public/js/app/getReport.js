@@ -43,6 +43,14 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             }
         });
 
+        REPORT.ReportTables = Backbone.Model.extend({
+            defaults: {
+                "peaksTable": false,
+                "surveysTable": false,
+                "runsTable": false
+            }
+        });
+
         REPORT.PageComponent = Backbone.Model.extend({
             defaults: {
                 "baseType": "map",
@@ -50,10 +58,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 "peaks": false,
                 "wedges": false,
                 "fovs": false,
-                "submapLegend": false,
-                "peaksTable": false,
-                "surveysTable": false,
-                "runsTable": false
+                "submapLegend": false
             }
         });
 
@@ -64,8 +69,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
         REPORT.Run = Backbone.Model.extend({
             defaults: {
                 "analyzer": "",
-                "startEtm": "1970-01-01  00:00",
-                "endEtm": "1970-01-01  00:00",
+                "startEtm": 0,
+                "endEtm": 0,
                 "stabClass": "*",
                 "peaks": "#00FFFF",
                 "wedges": "#FFFF00",
@@ -387,6 +392,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 REPORT.peaks.getData();
             },
             makePathsLayers: function () {
+                if (!REPORT.paths) return;
                 var that = this;
                 var pathsMaker = newPathsMaker(that);
                 that.pathsCollection = REPORT.paths;
@@ -398,8 +404,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     var result = pathsMaker.completePaths();
                     that.contexts["paths"] = result.paths;
                     that.contexts["fovs"]  = result.fovs;
-                    that.runsData["paths"] = result.runs; // TODO: Amalgamate with peaks run list
-                    that.surveysData["paths"] = result.surveys; // TODO: Amalgamate with peaks survey list
+                    that.runsData["paths"] = result.runs;
+                    that.surveysData["paths"] = result.surveys;
                     REPORT.paths.off("block",doBlock);
                     that.trigger("change",{"context": "paths"});
                     that.trigger("change",{"context": "fovs"});
@@ -815,8 +821,10 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 }
                 // Construct the runs collection and the templatate
                 REPORT.settings.set({"runs": new REPORT.Runs(data.INSTRUCTIONS.runs)});
-                REPORT.settings.set({"template": {"summary": new REPORT.PageComponents(data.INSTRUCTIONS.template.summary),
-                                                  "submaps": new REPORT.PageComponents(data.INSTRUCTIONS.template.submaps)}});
+                REPORT.settings.set({"template": {"summary": { tables: new REPORT.ReportTables(data.INSTRUCTIONS.template.summary.tables),
+                                                               figures: new REPORT.PageComponents(data.INSTRUCTIONS.template.summary.figures)},
+                                                  "submaps": { tables: new REPORT.ReportTables(data.INSTRUCTIONS.template.submaps.tables),
+                                                               figures: new REPORT.PageComponents(data.INSTRUCTIONS.template.submaps.figures)}}});
                 // Construct the surveys collection
                 REPORT.surveys = new REPORT.Surveys();
                 readSurveys(data);
@@ -824,8 +832,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 console.log(REPORT.settings);
                 // Set up the collections for peaks and paths data (to be read from .json files)
                 REPORT.peaks = new REPORT.Peaks(null, {peaksRef:data.SUBTASKS.getPeaksData});
-                // REPORT.paths = new REPORT.Paths(null, {pathsRef:REPORT.settings.get("SUBTASKS")["getPathsData"]});
-                REPORT.paths = new REPORT.Paths(null, {pathsRef:data.SUBTASKS.getFovsData});
+                if (data.SUBTASKS.hasOwnProperty("getFovsData")) REPORT.paths = new REPORT.Paths(null, {pathsRef:data.SUBTASKS.getFovsData});
+                else REPORT.paths = null;
                 // TODO: Update settings with local settings, perhaps with some form
                 //  of validation
 
@@ -844,12 +852,12 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
         }
     }
 
-    function makePdfReport(pageComponents) {
+    function makePdfReport(subreport) {
         var figureComponents = [ "fovs", "paths", "peaks", "wedges", "submapGrid" ];
         var id;
-        for (var i=0; i<pageComponents.models.length; i++) {
+        for (var i=0; i<subreport.figures.models.length; i++) {
             var layers = [];
-            var pageComponent = pageComponents.models[i];
+            var pageComponent = subreport.figures.models[i];
             layers.push(pageComponent.get("baseType"));
             for (var j=0; j<figureComponents.length; j++) {
                 if (pageComponent.get(figureComponents[j])) {
@@ -859,24 +867,24 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             var id_fig = 'id_page_' + (i+1) + 'fig';
             $("#getReportApp").append('<div id="' + id_fig + '" style="position:relative; page-break-after:always"/>');
             new REPORT.CompositeViewWithLinks({el: $('#' + id_fig), name: id_fig.slice(3), layers:layers.slice(0)});
-            if (pageComponent.get("peaksTable")) {
-                id = 'id_page_' + (i+1) + 'peaksTable';
-                $("#getReportApp").append("<h1>Peaks Table</h1>");
-                $("#getReportApp").append('<div id="' + id + '" style="position:relative;"/>');
-                new REPORT.PeaksTableView({el: $('#' + id), dataTables: false});
-            }
-            if (pageComponent.get("runsTable")) {
-                id = 'id_page_' + (i+1) + 'runsTable';
-                $("#getReportApp").append("<h1>Runs Table</h1>");
-                $("#getReportApp").append('<div id="' + id + '" style="position:relative;"/>');
-                new REPORT.RunsTableView({el: $('#' + id), dataTables: false});
-            }
-            if (pageComponent.get("surveysTable")) {
-                id = 'id_page_' + (i+1) + 'surveysTable';
-                $("#getReportApp").append("<h1>Surveys Table</h1>");
-                $("#getReportApp").append('<div id="' + id + '" style="position:relative;"/>');
-                new REPORT.SurveysTableView({el: $('#' + id), dataTables: false});
-            }
+        }
+        if (subreport.tables.get("peaksTable")) {
+            id = 'id_peaksTable';
+            $("#getReportApp").append("<h1>Peaks Table</h1>");
+            $("#getReportApp").append('<div id="' + id + '" style="position:relative;"/>');
+            new REPORT.PeaksTableView({el: $('#' + id), dataTables: false});
+        }
+        if (subreport.tables.get("runsTable")) {
+            id = 'id_runsTable';
+            $("#getReportApp").append("<h1>Runs Table</h1>");
+            $("#getReportApp").append('<div id="' + id + '" style="position:relative;"/>');
+            new REPORT.RunsTableView({el: $('#' + id), dataTables: false});
+        }
+        if (subreport.tables.get("surveysTable")) {
+            id = 'id_surveysTable';
+            $("#getReportApp").append("<h1>Surveys Table</h1>");
+            $("#getReportApp").append('<div id="' + id + '" style="position:relative;"/>');
+            new REPORT.SurveysTableView({el: $('#' + id), dataTables: false});
         }
         REPORT.reportViewResources.render();
     }

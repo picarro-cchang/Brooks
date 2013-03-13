@@ -37,8 +37,8 @@
             var r = {};
             var ir = instructions["runs"][i];
             r["analyzer"] = ir["analyzer"];
-            r["startEtm"] = ts.strToEtm(ir["startEtm"], instructions["timezone"]);
-            r["endEtm"] = ts.strToEtm(ir["endEtm"], instructions["timezone"]);
+            r["startEtm"] = ir["startEtm"];
+            r["endEtm"] = ir["endEtm"];
             result["runs"].push(r);
         });
         return cjs(result,null,2);
@@ -56,8 +56,8 @@
             var r = {};
             var ir = instructions["runs"][i];
             r["analyzer"] = ir["analyzer"];
-            r["startEtm"] = ts.strToEtm(ir["startEtm"], instructions["timezone"]);
-            r["endEtm"] = ts.strToEtm(ir["endEtm"], instructions["timezone"]);
+            r["startEtm"] = ir["startEtm"];
+            r["endEtm"] = ir["endEtm"];
             result["runs"].push(r);
         });
         return cjs(result,null,2);
@@ -75,8 +75,8 @@
             var r = {};
             var ir = instructions["runs"][i];
             r["analyzer"] = ir["analyzer"];
-            r["startEtm"] = ts.strToEtm(ir["startEtm"], instructions["timezone"]);
-            r["endEtm"] = ts.strToEtm(ir["endEtm"], instructions["timezone"]);
+            r["startEtm"] = ir["startEtm"];
+            r["endEtm"] = ir["endEtm"];
             result["runs"].push(r);
         });
         return cjs(result,null,2);
@@ -97,8 +97,8 @@
             var r = {};
             var ir = instructions["runs"][i];
             r["analyzer"] = ir["analyzer"];
-            r["startEtm"] = ts.strToEtm(ir["startEtm"], instructions["timezone"]);
-            r["endEtm"] = ts.strToEtm(ir["endEtm"], instructions["timezone"]);
+            r["startEtm"] = ir["startEtm"];
+            r["endEtm"] = ir["endEtm"];
             r["stabClass"] = ir["stabClass"].toUpperCase();
             result["runs"].push(r);
         });
@@ -133,10 +133,8 @@
     function runValidator(run) {
         var rpv = newParamsValidator(run,
             [{"name": "analyzer", "required":true, "validator": "string"},
-             {"name": "startEtm", "required":true,
-              "validator": /\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{2}/ },
-             {"name": "endEtm", "required":true,
-              "validator": /\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{2}/ },
+             {"name": "startEtm", "required":true, "validator": "number" },
+             {"name": "endEtm", "required":true, "validator": "number" },
              {"name": "stabClass", "required":false,"validator": /[a-fA-F*]/, "default_value":"*"},
              {"name": "peaks", "required":false, "validator": /#[0-9a-fA-F]{6}/, "default_value":"#FFFF00"},
              {"name": "wedges", "required":false, "validator": /#[0-9a-fA-F]{6}/, "default_value":"#0000FF"},
@@ -152,18 +150,43 @@
              {"name": "peaks", "required":false, "validator": "boolean", "default_value": false},
              {"name": "wedges", "required":false, "validator": "boolean", "default_value": false},
              {"name": "fovs", "required":false, "validator": "boolean", "default_value": false},
-             {"name": "submapGrid", "required":false, "validator": "boolean", "default_value": false},
-             {"name": "peaksTable", "required":false, "validator": "boolean", "default_value": false},
+             {"name": "submapGrid", "required":false, "validator": "boolean", "default_value": false}
+            ]);
+        return rpv.validate();
+    }
+
+    function templateTablesValidator (tables) {
+        var rpv = newParamsValidator(tables,
+            [{"name": "peaksTable", "required":false, "validator": "boolean", "default_value": false},
              {"name": "surveysTable", "required":false, "validator": "boolean", "default_value": false},
              {"name": "runsTable", "required":false, "validator": "boolean", "default_value": false}
             ]);
         return rpv.validate();
     }
 
+    function templateSummaryValidator (summary) {
+        var rpv = newParamsValidator(summary,
+            [{"name": "figures", "required":false, "validator": validateListUsing(componentsValidator), "default_value": []},
+             {"name": "tables", "required":false, "validator": templateTablesValidator, "default_value": templateTablesValidator({}).normValues}
+            ]);
+        return rpv.validate();
+    }
+
+    function templateSubmapsValidator (submaps) {
+        var rpv = newParamsValidator(submaps,
+            [{"name": "figures", "required":false, "validator": validateListUsing(componentsValidator), "default_value": []},
+             {"name": "tables", "required":false, "validator": templateTablesValidator, "default_value": templateTablesValidator({}).normValues}
+            ]);
+        return rpv.validate();
+    }
+
     function templateValidator (template) {
+        console.log(template);
+        var defSummary = templateSummaryValidator({}).normValues;
+        var defSubmaps = templateSubmapsValidator({}).normValues;
         var rpv = newParamsValidator(template,
-            [{"name": "summary", "required":false, "validator": validateListUsing(componentsValidator), "default_value": []},
-             {"name": "submaps", "required":false, "validator": validateListUsing(componentsValidator), "default_value": []}
+            [{"name": "summary", "required":false, "validator": templateSummaryValidator, "default_value": defSummary},
+             {"name": "submaps", "required":false, "validator": templateSubmapsValidator, "default_value": defSubmaps}
             ]);
         return rpv.validate();
     }
@@ -180,7 +203,9 @@
         var that = this;
 
         var ipv = newParamsValidator(that.instructions,
-            [{"name": "swCorner", "required": true, "validator": latlngValidator},
+            [{"name": "title", "required": true, "validator": "string" },
+             {"name": "makePdf", "required": false, "validator": "boolean", "default_value": false},
+             {"name": "swCorner", "required": true, "validator": latlngValidator},
              {"name": "neCorner", "required": true, "validator": latlngValidator},
              {"name": "submaps", "required": false, "validator": submapsValidator, "default_value": {"nx": 1, "ny": 1}},
              {"name": "exclRadius", "required": false, "validator": "number", "default_value": 0},
@@ -195,10 +220,15 @@
         if (ipv.ok()) {
             that.norm_instr = ipv.validate().normValues;
             var subtasks = [{"name": "getPeaksData", "extractor": extractPeaksRequest},
-                            {"name": "getAnalysesData", "extractor": extractAnalysesRequest},
-                            // {"name": "getPathsData", "extractor": extractPathsRequest}//,
-                            {"name": "getFovsData", "extractor": extractFovsRequest}
-                           ];
+                            {"name": "getAnalysesData", "extractor": extractAnalysesRequest}];
+            // Determine if path or field of view is required by looking through the template
+            var template = that.norm_instr.template;
+            var summaryFigs = template.summary.figures, submapFigs = template.submaps.figures;
+            var needFov = false;
+            for (var i=0; i<summaryFigs.length; i++) needFov = needFov || summaryFigs[i].paths || summaryFigs[i].fovs;
+            for (i=0; i<submapFigs.length; i++) needFov = needFov || submapFigs[i].paths || submapFigs[i].fovs;
+            if (needFov) subtasks.push({"name": "getFovsData", "extractor": extractFovsRequest});
+
             that.pending = subtasks.length;
             subtasks.forEach(function (task) {
                 var instr = task.extractor(that.norm_instr);
