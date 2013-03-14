@@ -1,6 +1,6 @@
-/*global console, __dirname, require */
+/*global console, require */
+
 (function () {
-    'use strict';
     var argv = require('optimist').argv;
     var cjs = require("./lib/canonical_stringify");
     var express = require('express');
@@ -196,4 +196,4 @@
     });
 
     console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
-}) ();
+})();

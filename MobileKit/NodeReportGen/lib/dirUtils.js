@@ -1,7 +1,8 @@
 /* dirUtils.js provides functions for finding subdirectories */
 /*global exports, module, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     var fs = require('fs');
     var path = require('path');
@@ -64,4 +65,4 @@
     exports.getSubDirs = getSubDirs;
     exports.getAllSubDirs = getAllSubDirs;
 
-})();
+});

@@ -1,7 +1,8 @@
 /* timeStamps.js supports manipulation of timestamps for report generation */
 /*global exports, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
 	var _ = require('underscore');
     var tzWorld = require('./tzSupport');
@@ -49,4 +50,4 @@
     exports.strToEtm = strToEtm;
     exports.timeStringAsDirName = timeStringAsDirName;
 
-})();
+});

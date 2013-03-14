@@ -1,7 +1,8 @@
 /* newReportMaker.js creates an object to make reports. */
 /*global console, exports, module, process, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
     'use strict';
     var cp = require('child_process');
     var fs = require('fs');
@@ -408,4 +409,4 @@
     }
     module.exports = newReportMaker;
 
-})();
+});

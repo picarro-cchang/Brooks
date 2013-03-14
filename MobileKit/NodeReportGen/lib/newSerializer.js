@@ -1,7 +1,8 @@
 /* newSerializer.js constructs a Serializer object. */
 /*global exports, module, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     var events = require('events');
     var util = require('util');
@@ -59,4 +60,4 @@
 
     module.exports = newSerializer;
 
-})();
+});

@@ -1,8 +1,9 @@
 /* newPeaksDataFetcher.js creates an object to get peaks data from P3 into a
     work directory. */
 /*global console, exports, module, process, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     var bs = require("../lib/bisect");
     var fs = require('fs');
@@ -451,4 +452,4 @@
     }
     module.exports = newPeaksDataFetcher;
 
-})();
+});

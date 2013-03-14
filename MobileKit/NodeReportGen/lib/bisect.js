@@ -1,9 +1,10 @@
 /* bisect.js implements bisection algorithms. From the Python 2.7 library. */
 /*global exports, module, require */
 
-(function() {
-	'use strict';
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
+define(function(require, exports, module) {
+	'use strict';
     function bisect_right(a,x,lo,hi) {
 
     /* Return the index where to insert item x in list a, assuming a is sorted.
@@ -73,5 +74,4 @@
     exports.bisect_right = bisect_right;
     exports.insort_left = insort_left;
     exports.insort_right = insort_right;
-
-})();
+});

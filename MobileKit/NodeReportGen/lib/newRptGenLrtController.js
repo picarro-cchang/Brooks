@@ -6,8 +6,9 @@
 //   request to start a new task with the same hash, we should compare the request_ts
 //   and the start_ts. If they differ by more than a preset amount, the task should be
 //   resubmitted with the force flag
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     var events = require('events');
     var http = require('http');
@@ -99,5 +100,5 @@
 
     module.exports = newRptGenLrtController;
 
-})();
+});
 

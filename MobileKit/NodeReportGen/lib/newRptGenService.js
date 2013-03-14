@@ -1,8 +1,9 @@
 /* newRptGenService.js returns a new RptGenService object to access the rest
    calls of the report generator */
 /*global console, exports, module, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
 	var getRest = require('./getRest');
     var newParamsValidator = require('./paramsValidator').newParamsValidator;
@@ -75,4 +76,4 @@
 
     module.exports = newRptGenService;
 
-})();
+});

@@ -1,7 +1,8 @@
 /* rptGenStatus.js defines status codes for report generation */
 /*global exports, module, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     module.exports = {
         // status register bit definitions
@@ -42,4 +43,4 @@
                            3: "E", 11: "D", 19: "D"  // Nighttime, >50% cloud
         }
     };
-})();
+});

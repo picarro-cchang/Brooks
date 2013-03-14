@@ -1,7 +1,8 @@
 /* paramsValidator.js provides an object to validate values in a ductionary */
 /*global console, module, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
 	var _ = require('underscore');
 
@@ -184,4 +185,4 @@
     exports.stringToBoolean = stringToBoolean;
     exports.validateListUsing = validateListUsing;
 
-})();
+});

@@ -1,7 +1,8 @@
 /* newP3ApiService.js returns a new P3ApiService object for making P3 rest calls */
 /*global console, exports, module, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
 	var getRest = require('./getRest');
     var newParamsValidator = require('./paramsValidator').newParamsValidator;
@@ -151,4 +152,4 @@
 
     module.exports = newP3ApiService;
 
-})();
+});

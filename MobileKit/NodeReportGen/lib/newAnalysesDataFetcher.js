@@ -1,8 +1,9 @@
 /* newAnalysesDataFetcher.js creates an object to get analyses data from P3 into a
     work directory. */
 /*global console, exports, module, process, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     var fs = require('fs');
     var gh = require('./geohash');
@@ -324,4 +325,4 @@
     }
     module.exports = newAnalysesDataFetcher;
 
-})();
+});

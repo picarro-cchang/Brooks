@@ -1,7 +1,8 @@
 /* md5hex.js calculates the MD5 hash of its argument and returns a hex string. */
 /*global exports, module, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     /****************************************************************************/
     /*  Calculation of MD5 hash                                                 */
@@ -15,4 +16,4 @@
 
     module.exports = md5Hex;
 
-})();
+});

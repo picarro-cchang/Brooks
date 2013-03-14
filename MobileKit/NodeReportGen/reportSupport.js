@@ -1,7 +1,8 @@
 // reportSupport.js
-/*global console, __dirname, exports, require */
+/*global console, exports, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function () {
+define(function(require, exports, module) {
     'use strict';
     var events = require('events');
     var fs = require('./lib/fs');
@@ -200,4 +201,4 @@
     }
 
     exports.newReportGen = newReportGen;
-})();
+});

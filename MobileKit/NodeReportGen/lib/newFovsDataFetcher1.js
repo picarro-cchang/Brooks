@@ -1,8 +1,9 @@
 /* newFovsDataFetcher.js creates an object to get path data from P3 into a
     work directory. */
 /*global console, exports, module, process, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     var cjs = require('./canonical_stringify');
     var fs = require('fs');
@@ -450,4 +451,4 @@
     }
     module.exports = newFovsDataFetcher;
 
-})();
+});
