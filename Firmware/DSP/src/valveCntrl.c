@@ -103,8 +103,8 @@ void proportionalValveStep()
         if (flowState == FLOW_CNTRL_DisabledState) inlet = userInlet;
         else if (flowState == FLOW_CNTRL_EnabledState) {
             // Use the inlet valve to control the flow
-			flowGain = flowControlGain;
-			if (fabs(flow - flowSetpoint) < 5.0 && fabs(setpoint - cavityPressure) < 1.0) flowGain = 1.0;
+            flowGain = flowControlGain;
+            if (fabs(flow - flowSetpoint) < 5.0 && fabs(setpoint - cavityPressure) < 1.0) flowGain = 1.0;
             delta = flowGain * (flowSetpoint - flow);
             if (delta < -inletMaxChange) delta = -inletMaxChange;
             else if (delta > inletMaxChange) delta = inletMaxChange;
@@ -135,8 +135,8 @@ void proportionalValveStep()
         if (flowState == FLOW_CNTRL_DisabledState) outlet = userOutlet;
         else if (flowState == FLOW_CNTRL_EnabledState) {
             // Use the outlet valve to control the flow
-			flowGain = flowControlGain;
-			if (fabs(flow - flowSetpoint) < 5.0 && fabs(setpoint - cavityPressure) < 1.0) flowGain = 1.0;
+            flowGain = flowControlGain;
+            if (fabs(flow - flowSetpoint) < 5.0 && fabs(setpoint - cavityPressure) < 1.0) flowGain = 1.0;
             delta = flowGain * (flowSetpoint - flow);
             if (delta < -outletMaxChange) delta = -outletMaxChange;
             else if (delta > outletMaxChange) delta = outletMaxChange;
