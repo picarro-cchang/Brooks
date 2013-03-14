@@ -3324,6 +3324,10 @@ __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REG
 __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_PRIMING_VALVE_MASK_AND_VALUE_REGISTER,'Priming state valve mask and values','','$%04X',1,1))
 __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_PURGING_VALVE_MASK_AND_VALUE_REGISTER,'Purging state valve mask and values','','$%04X',1,1))
 __p.append(('dsp','uint32',PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER,'Injection pending state valve mask and values','','$%04X',1,1))
+__p.append(('dsp','float',FLOW_0_SETPOINT_REGISTER,'Flow setpoint in state 0','sccm','%.1f',1,1))
+__p.append(('dsp','float',FLOW_1_SETPOINT_REGISTER,'Flow setpoint in state 1','sccm','%.1f',1,1))
+__p.append(('dsp','float',FLOW_2_SETPOINT_REGISTER,'Flow setpoint in state 2','sccm','%.1f',1,1))
+__p.append(('dsp','float',FLOW_3_SETPOINT_REGISTER,'Flow setpoint in state 3','sccm','%.1f',1,1))
 parameter_forms.append(('Peak Detector Parameters',__p))
 
 # Form: Tuner Parameters
