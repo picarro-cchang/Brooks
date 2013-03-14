@@ -57,13 +57,18 @@
  * In each state, there is an associated valveMask. This is a sixteen bit integer, the top eight bits
  *  indicate which valves can be affected and the bottom eight bits indicate the value to which the 
  *  affected valves are to be set
- *
+ * Since there are only six solenoid valves, the high order 2 bits of the valve mask and value are used 
+ *  for another purpose. If either of the two mask bits is one, the two value bits select which of four 
+ *  flow rate setpoints the flow controller is placed in when that state is entered. If both mask bits are
+ *  zero, the flow rate is not changed.
+ 
  * SEE ALSO:
  *   Specify any related information.
  *
  * HISTORY:
  *   11-Nov-2011  sze  Initial version.
  *   27-Jul-2012  sze  Introduced cancelling state and ability to examine remaining time in triggered state
+ *   13-Mar-2013  sze  Added flow control setpoint adjustment
  *
  *  Copyright (c) 2011 Picarro, Inc. All rights reserved
  */
@@ -98,6 +103,12 @@ typedef struct PEAK_DETECT_CNTRL
     unsigned int *purgingValveMaskAndValue_;        // Valve mask and value for purging state
     unsigned int *injectionPendingValveMaskAndValue_;  // Valve mask and value for injection pending state
     unsigned int *solenoidValves_;      // Solenoid valve mask
+    float *flow0Setpoint_;              // Flow setpoint in state 0
+    float *flow1Setpoint_;              // Flow setpoint in state 1
+    float *flow2Setpoint_;              // Flow setpoint in state 2
+    float *flow3Setpoint_;              // Flow setpoint in state 3
+    float *flowCntrlSetpoint_;          // Flow control setpoint register
+
     unsigned int historyTail;
     unsigned int activeLength;
     unsigned int triggerWait;

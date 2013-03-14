@@ -3193,6 +3193,30 @@
             <display format="%.1f">Flow control gain</display>
             <save/>
         </register>
+        <register ident="FLOW_0_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Flow 0 setpoint register</description>
+            <initial>400</initial>
+            <display format="%.1f" units="sccm">Flow setpoint in state 0</display>
+            <save/>
+        </register>
+        <register ident="FLOW_1_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Flow 1 setpoint register</description>
+            <initial>400</initial>
+            <display format="%.1f" units="sccm">Flow setpoint in state 1</display>
+            <save/>
+        </register>
+        <register ident="FLOW_2_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Flow 2 setpoint register</description>
+            <initial>400</initial>
+            <display format="%.1f" units="sccm">Flow setpoint in state 2</display>
+            <save/>
+        </register>
+        <register ident="FLOW_3_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Flow 3 setpoint register</description>
+            <initial>400</initial>
+            <display format="%.1f" units="sccm">Flow setpoint in state 3</display>
+            <save/>
+        </register>
     </register_list>
     <i2c_list>
         <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />

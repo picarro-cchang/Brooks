@@ -725,7 +725,7 @@ typedef enum {
 #define INJECTION_SETTINGS_lossTagShift (5)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (450)
+#define INTERFACE_NUMBER_OF_REGISTERS (454)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1177,6 +1177,10 @@ typedef enum {
 #define FLOW_CNTRL_STATE_REGISTER (447)
 #define FLOW_CNTRL_SETPOINT_REGISTER (448)
 #define FLOW_CNTRL_GAIN_REGISTER (449)
+#define FLOW_0_SETPOINT_REGISTER (450)
+#define FLOW_1_SETPOINT_REGISTER (451)
+#define FLOW_2_SETPOINT_REGISTER (452)
+#define FLOW_3_SETPOINT_REGISTER (453)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0

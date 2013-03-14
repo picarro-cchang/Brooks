@@ -57,6 +57,10 @@
  * In each state, there is an associated valveMask. This is a sixteen bit integer, the top eight bits
  *  indicate which valves can be affected and the bottom eight bits indicate the value to which the 
  *  affected valves are to be set
+ * Since there are only six solenoid valves, the high order 2 bits of the valve mask and value are used 
+ *  for another purpose. If either of the two mask bits is one, the two value bits select which of four 
+ *  flow rate setpoints the flow controller is placed in when that state is entered. If both mask bits are
+ *  zero, the flow rate is not changed.
  *
  * SEE ALSO:
  *   Specify any related information.
@@ -64,6 +68,7 @@
  * HISTORY:
  *   11-Nov-2011  sze  Initial version.
  *   27-Jul-2012  sze  Introduced cancelling state and ability to examine remaining time in triggered state
+ *   13-Mar-2013  sze  Added flow control setpoint adjustment
  *
  *  Copyright (c) 2011 Picarro, Inc. All rights reserved
  */
@@ -100,6 +105,11 @@
 #define primingValveMaskAndValue        (*(p->primingValveMaskAndValue_))
 #define purgingValveMaskAndValue        (*(p->purgingValveMaskAndValue_))
 #define injectionPendingValveMaskAndValue   (*(p->injectionPendingValveMaskAndValue_))
+#define flow0Setpoint                   (*(p->flow0Setpoint_))
+#define flow1Setpoint                   (*(p->flow1Setpoint_))
+#define flow2Setpoint                   (*(p->flow2Setpoint_))
+#define flow3Setpoint                   (*(p->flow3Setpoint_))
+#define flowCntrlSetpoint               (*(p->flowCntrlSetpoint_))
 #define solenoidValves      (*(p->solenoidValves_))
 
 PeakDetectCntrl peakDetectCntrl;
@@ -134,6 +144,11 @@ int peakDetectCntrlInit(unsigned int processedLossRegisterIndex)
     p->primingValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_PRIMING_VALVE_MASK_AND_VALUE_REGISTER);
     p->purgingValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_PURGING_VALVE_MASK_AND_VALUE_REGISTER);
     p->injectionPendingValveMaskAndValue_ = (unsigned int *)registerAddr(PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER);
+    p->flow0Setpoint_ = (float *)registerAddr(FLOW_0_SETPOINT_REGISTER);
+    p->flow1Setpoint_ = (float *)registerAddr(FLOW_1_SETPOINT_REGISTER);
+    p->flow2Setpoint_ = (float *)registerAddr(FLOW_2_SETPOINT_REGISTER);
+    p->flow3Setpoint_ = (float *)registerAddr(FLOW_3_SETPOINT_REGISTER);
+    p->flowCntrlSetpoint_ = (float *)registerAddr(FLOW_CNTRL_SETPOINT_REGISTER);
     p->solenoidValves_ = (unsigned int *)registerAddr(VALVE_CNTRL_SOLENOID_VALVES_REGISTER);
     p->historyTail = 0;
     p->activeLength = 0;
@@ -150,6 +165,28 @@ static unsigned int modifyValves(unsigned int current, unsigned int maskAndValue
     unsigned int mask  = (maskAndValue >> 8) & 0xFF;
     unsigned int value = maskAndValue & 0xFF;
     return (current & ~mask) | value;
+}
+
+static void setFlow(unsigned int maskAndValue) {
+    PeakDetectCntrl *p = &peakDetectCntrl;
+    unsigned int mask  = (maskAndValue >> 14) & 0x03;
+    unsigned int value = (maskAndValue >> 6) & 0x03;
+    if (mask) {
+        switch (value) {
+        case 0:
+            flowCntrlSetpoint = flow0Setpoint;
+            break;
+        case 1:
+            flowCntrlSetpoint = flow1Setpoint;
+            break;
+        case 2:
+            flowCntrlSetpoint = flow2Setpoint;
+            break;
+        case 3:
+            flowCntrlSetpoint = flow3Setpoint;
+            break;
+        }
+    }
 }
 
 static unsigned int processHistoryBuffer(PeakDetectCntrl *p, unsigned int tail, unsigned int length)
@@ -216,12 +253,14 @@ int peakDetectCntrlStep()
     
     // State machine transition code
     if (state == PEAK_DETECT_CNTRL_IdleState) {
-        solenoidValves = modifyValves(solenoidValves,idleValveMaskAndValue);
+        setFlow(idleValveMaskAndValue&0xC0C0);
+        solenoidValves = modifyValves(solenoidValves,idleValveMaskAndValue&0x3F3F);
     }
     else if (state == PEAK_DETECT_CNTRL_ArmedState) {
         // If we newly transition to armed state, reset effective length of active buffer
         if (p->lastState != state) p->activeLength = 1;
-        solenoidValves = modifyValves(solenoidValves,armedValveMaskAndValue);
+        setFlow(armedValveMaskAndValue&0xC0C0);
+        solenoidValves = modifyValves(solenoidValves,armedValveMaskAndValue&0x3F3F);
         if (processHistoryBuffer(p,p->historyTail,p->activeLength)) {
             // Peak detected! Trigger immediately or after specified delay
             if (triggerDelay == 0) {
@@ -235,7 +274,8 @@ int peakDetectCntrlStep()
         }
     }
     else if (state == PEAK_DETECT_CNTRL_TriggerPendingState) {
-        solenoidValves = modifyValves(solenoidValves,triggerPendingValveMaskAndValue);
+        setFlow(triggerPendingValveMaskAndValue&0xC0C0);
+        solenoidValves = modifyValves(solenoidValves,triggerPendingValveMaskAndValue&0x3F3F);
         p->triggerWait++;
         if (p->triggerWait >= triggerDelay) {
             nextState = PEAK_DETECT_CNTRL_TriggeredState;
@@ -243,18 +283,21 @@ int peakDetectCntrlStep()
         }
     }
     else if (state == PEAK_DETECT_CNTRL_TriggeredState) {
-        solenoidValves = modifyValves(solenoidValves,triggeredValveMaskAndValue);
+        setFlow(triggeredValveMaskAndValue&0xC0C0);
+        solenoidValves = modifyValves(solenoidValves,triggeredValveMaskAndValue&0x3F3F);
         samplesLeft = samplesLeft - 1;
         if (samplesLeft <= 0) {
             nextState = PEAK_DETECT_CNTRL_IdleState;
         }
     }
     else if (state == PEAK_DETECT_CNTRL_InactiveState) {
-        solenoidValves = modifyValves(solenoidValves,inactiveValveMaskAndValue);
+        setFlow(inactiveValveMaskAndValue&0xC0C0);
+        solenoidValves = modifyValves(solenoidValves,inactiveValveMaskAndValue&0x3F3F);
     }
     else if (state == PEAK_DETECT_CNTRL_CancellingState) {
         if (p->lastState != PEAK_DETECT_CNTRL_CancellingState) samplesLeft = cancellingDelay;
-        solenoidValves = modifyValves(solenoidValves,cancellingValveMaskAndValue);
+        setFlow(cancellingValveMaskAndValue&0xC0C0);
+        solenoidValves = modifyValves(solenoidValves,cancellingValveMaskAndValue&0x3F3F);
         samplesLeft = samplesLeft - 1;
         if (samplesLeft <= 0) {
             nextState = PEAK_DETECT_CNTRL_IdleState;
@@ -262,7 +305,8 @@ int peakDetectCntrlStep()
     }
     else if (state == PEAK_DETECT_CNTRL_PrimingState) {
         if (p->lastState != PEAK_DETECT_CNTRL_PrimingState) samplesLeft = primingDuration;
-        solenoidValves = modifyValves(solenoidValves,primingValveMaskAndValue);
+        setFlow(primingValveMaskAndValue&0xC0C0);
+        solenoidValves = modifyValves(solenoidValves,primingValveMaskAndValue&0x3F3F);
         samplesLeft = samplesLeft - 1;
         if (samplesLeft <= 0) {
             nextState = PEAK_DETECT_CNTRL_PurgingState;
@@ -270,18 +314,20 @@ int peakDetectCntrlStep()
     }
     else if (state == PEAK_DETECT_CNTRL_PurgingState) {
         if (p->lastState != PEAK_DETECT_CNTRL_PurgingState) samplesLeft = purgingDuration;
-        solenoidValves = modifyValves(solenoidValves,purgingValveMaskAndValue);
+        setFlow(purgingValveMaskAndValue&0xC0C0);
+        solenoidValves = modifyValves(solenoidValves,purgingValveMaskAndValue&0x3F3F);
         samplesLeft = samplesLeft - 1;
         if (samplesLeft <= 0) {
             nextState = PEAK_DETECT_CNTRL_InjectionPendingState;
         }        
     }
     else if (state == PEAK_DETECT_CNTRL_InjectionPendingState) {
-        solenoidValves = modifyValves(solenoidValves,injectionPendingValveMaskAndValue);
+        setFlow(injectionPendingValveMaskAndValue&0xC0C0);
+        solenoidValves = modifyValves(solenoidValves,injectionPendingValveMaskAndValue&0x3F3F);
     }
 
     // Save state
     p->lastState = state;
-	state = nextState;
+    state = nextState;
     return STATUS_OK;
 }
