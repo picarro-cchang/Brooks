@@ -4,7 +4,7 @@ block scripts
     script(type='text/javascript', data-main='/js/app/indexMain.js', src='/js/require-jquery.js')
 
 block content
-    body(style="min-width:1000px")
+    body(style="min-width:1100px")
         div.container-fluid
             div.row-fluid
                 div.span12
@@ -56,6 +56,49 @@ block content
                     div
                         button#id_save_instructions.btn.btn-inverse(type="button", style="float:left; margin:5px; margin-left:20px")
                             | Save Instructions
+            div#id_instructions.row-fluid
+                div.span12
+                    div.row-fluid
+                        div.span11
+                            label(for="id_title")
+                                | Title
+                            input#id_title(type="text", placeholder="Title", style="width:100%")
+                        div.span1
+                            label(for="id_make_pdf")
+                                | Make PDF
+                            input#id_make_pdf(type="checkbox")
+                    div.row-fluid
+                        div.span3
+                            label(for="id_seCorner")
+                                | SE Corner
+                            input#id_seCorner(type="text", placeholder="SE Corner", style="width:100%")
+                        div.span3
+                            label(for="id_nwCorner")
+                                | NW Corner
+                            input#id_nwCorner(type="text", placeholder="NW Corner", style="width:100%")
+                        div.span2
+                            label(for="id_peakMinAmp")
+                                | Peaks Min Amp
+                            select#id_peakMinAmp(style="width:100%")
+                        div.span2
+                            label(for="id_exclRadius")
+                                | Exclusion Radius
+                            select#id_exclRadius(style="width:100%")
+                        div.span2
+                            div(style="float:left")
+                                label(for="id_submapsRows")
+                                    | Rows
+                                input#id_submapsRows(type="text")
+                            div(style="float:left; margin-left:15px;")
+                                label(for="id_submapsColumns")
+                                    | Columns
+                                input#id_submapsColumns(type="text")
+                    div.row-fluid
+                        div.span12
+                            h2 Runs
+                            div#id_runs_table_div
+                    div#id_modal.modal.hide.fade(data-backdrop="static")
+
             div.row-fluid
                 div.span12
                     h2 Sample Report

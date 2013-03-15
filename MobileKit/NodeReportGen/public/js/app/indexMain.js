@@ -12,14 +12,18 @@ requirejs.config({
     //the paths config could be for a directory.
     paths: {
         'app': '/js/app',
+        'common': '/js/common',
         'jquery-migrate': '/js/lib/jquery-migrate-1.1.1.min',
         'underscore': '/js/lib/underscore-min',
         'backbone': '/js/lib/backbone-min',
         'jquery.dataTables': '/js/lib/jquery.dataTables.min',
         'jquery.generateFile': '/js/lib/jquery.generateFile',
-        'jquery.timezone-picker': 'jquery.timezone-picker.min',
-        'jquery.maphilight': 'jquery.maphilight.min',
-        'jstz:': '/js/lib/jstz.min'
+        'jquery.timezone-picker': '/js/lib/jquery.timezone-picker.min',
+        'jquery.maphilight': '/js/lib/jquery.maphilight.min',
+        'jstz:': '/js/lib/jstz.min',
+        'jquery-ui': '/js/lib/jquery-ui-1.8.20.custom.min',
+        'jquery.datetimeentry': '/js/lib/jquery.datetimeentry',
+        'jquery.mousewheel': '/js/lib/jquery.mousewheel.min'
     },
     shim: {
         'jquery-migrate': {
@@ -48,6 +52,15 @@ requirejs.config({
         },
         'jquery.maphilight': {
             deps: ['jquery']
+        },
+        'jquery-ui': {
+            deps: ['jquery']
+        },
+        'jquery.datetimeentry': {
+            deps: ['jquery', 'jquery-ui']
+        },
+        'jquery.mousewheel': {
+            deps: ['jquery', 'jquery-ui']
         },
         'jstz': {
             exports: 'jstz'

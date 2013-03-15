@@ -1,4 +1,4 @@
-/* rptGenStatus.js defines status codes for report generation */
+/* surveyorInstStatus.js defines status codes for the surveyor instrument manager */
 /*global exports, module, require */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 

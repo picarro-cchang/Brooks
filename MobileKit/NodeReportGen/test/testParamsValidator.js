@@ -2,7 +2,7 @@
 
 'use strict';
 require("should");
-var pv = require("../lib/paramsValidator");
+var pv = require("../public/js/common/paramsValidator");
 var newParamsValidator = pv.newParamsValidator;
 var latlngValidator = pv.latlngValidator;
 

@@ -12,7 +12,7 @@ define(function(require, exports, module) {
 	'use strict';
     var events = require('events');
     var http = require('http');
-    var rptGenStatus = require('./rptGenStatus');
+    var rptGenStatus = require('../public/js/common/rptGenStatus');
     var ts = require('./timeStamps');
     var util = require('util');
 

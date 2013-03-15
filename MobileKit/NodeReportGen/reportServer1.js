@@ -12,10 +12,10 @@ define(function(require, exports, module) {
         var fs = require('./lib/fs');
         var getRest = require('./lib/getRest');
         var newP3ApiService = require('./lib/newP3ApiService');
-        var pv = require('./lib/paramsValidator');
+        var pv = require('./public/js/common/paramsValidator');
         var REPORTROOT = argv.r ? argv.r : path.join(__dirname, 'ReportGen');
         var reportSupport = require('./reportSupport');
-        var rptGenStatus = require('./lib/rptGenStatus');
+        var rptGenStatus = require('./public/js/common/rptGenStatus');
         var sf = require('./lib/statusFiles');
         var ts = require('./lib/timeStamps');
         var tzWorld = require('./lib/tzSupport');

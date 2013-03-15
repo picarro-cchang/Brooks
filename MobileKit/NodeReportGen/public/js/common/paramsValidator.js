@@ -3,8 +3,8 @@
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
-	'use strict';
-	var _ = require('underscore');
+    'use strict';
+    var _ = require('underscore');
 
     /****************************************************************************/
     /*  Routines for parameter validation                                       */
@@ -120,7 +120,7 @@ define(function(require, exports, module) {
     }
 
     /****************************************************************************/
-    /*  Conversion of string to Boolean. A useful transform.					*/
+    /*  Conversion of string to Boolean. A useful transform.                    */
     /****************************************************************************/
     function stringToBoolean(string){
         switch(string.toLowerCase()){

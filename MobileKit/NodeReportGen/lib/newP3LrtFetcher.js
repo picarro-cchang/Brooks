@@ -11,7 +11,7 @@ if (typeof define !== 'function') { var define = require('amdefine')(module); }
 define(function(require, exports, module) {
 	'use strict';
     var events = require('events');
-    var rptGenStatus = require('./rptGenStatus');
+    var rptGenStatus = require('../public/js/common/rptGenStatus');
     var util = require('util');
 
     function P3LrtFetcher(p3service, svc, ver, rsc, params) {

@@ -8,10 +8,10 @@
     var fs = require('./lib/fs');
     var getRest = require('./lib/getRest');
     var newP3ApiService = require('./lib/newP3ApiService');
-    var pv = require('./lib/paramsValidator');
+    var pv = require('./public/js/common/paramsValidator');
     var REPORTROOT = argv.r ? argv.r : path.join(__dirname, 'ReportGen');
     var reportSupport = require('./reportSupport');
-    var rptGenStatus = require('./lib/rptGenStatus');
+    var rptGenStatus = require('./public/js/common/rptGenStatus');
     var sf = require('./lib/statusFiles');
     var ts = require('./lib/timeStamps');
     var tzWorld = require('./lib/tzSupport');
@@ -84,8 +84,9 @@
         var posixTimes = [];
         if (req.query.timeStrings) {
             req.query.timeStrings.forEach(function (t) {
-                posixTimes.push(tzWorld(t.replace(/\s+/," "),tz));
-                timeStrings.push(t);
+                var p;
+                posixTimes.push(p = tzWorld(t.replace(/\s+/," "),tz));
+                timeStrings.push(tzWorld(+p,"%F %T%z (%Z)",tz));
             });
         }
         else if (req.query.posixTimes) {

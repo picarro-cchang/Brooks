@@ -15,7 +15,7 @@ define(function(require, exports, module) {
     var newRptGenService = require('./lib/newRptGenService');
     var newReportMaker = require('./lib/newReportMaker');
     var path = require('path');
-    var rptGenStatus = require('./lib/rptGenStatus');
+    var rptGenStatus = require('./public/js/common/rptGenStatus');
     var sf = require('./lib/statusFiles');
     var ts = require('./lib/timestamps');
     var util = require('util');

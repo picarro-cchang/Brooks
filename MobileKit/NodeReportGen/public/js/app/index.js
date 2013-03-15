@@ -1,12 +1,15 @@
 // index.js
 /*global console, requirejs, TEMPLATE_PARAMS */
 
-define(['jquery', 'underscore', 'backbone', 'app/dashboardGlobals', 'jstz', 'app/newRptGenService', 'app/rptGenStatus',
+define(['jquery', 'underscore', 'backbone', 'app/dashboardGlobals', 'jstz', 'app/newRptGenService',
+        'common/rptGenStatus', 'common/instructionsValidator', 'app/tableFuncs',
         'jquery-migrate', 'bootstrap-modal', 'bootstrap-dropdown', 'bootstrap-spinedit', 'bootstrap-transition',
-        'jquery.dataTables', 'jquery.generateFile', 'jquery.maphilight', 'jquery.timezone-picker'],
+        'jquery.dataTables', 'jquery.generateFile', 'jquery.maphilight', 'jquery.timezone-picker', 'jquery-ui',
+        'jquery.datetimeentry', 'jquery.mousewheel'],
 
 
-function ($, _, Backbone, DASHBOARD, jstz, newRptGenService, rptGenStatus) {
+function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
+          rptGenStatus, iv, tableFuncs) {
     'use strict';
 
     function formatNumberLength(num, length) {
@@ -18,15 +21,268 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService, rptGenStatus) {
         return r;
     }
 
+
+    // ============================================================================
+    //  Handlers for special table fields
+    // ============================================================================
+    function boolToIcon(value) {
+        var name = (value) ? ("icon-ok") : ("icon-remove");
+        return (undefined !== value) ? '<i class="' + name + '"></i>' : '';
+    }
+
+
+    function makeColorPatch(value) {
+        var result;
+        if (value === "None") {
+            result = "None";
+        }
+        else {
+            result = '<div style="width:15px;height:15px;border:1px solid #000;margin:0 auto;';
+            result += 'background-color:' + value + ';"></div>';
+        }
+        return (undefined !== value) ? result : '';
+    }
+
+    function processComments(value, params) {
+        var fieldWidth = 15;
+        if (undefined !== params && undefined !== params.fieldWidth) {
+            fieldWidth = params.fieldWidth;
+        }
+        if (value.length <= fieldWidth) {
+            return value;
+        }
+        else {
+            return value.substring(0, fieldWidth - 3) + "...";
+        }
+    }
+
+    function parseFloats(value) {
+        var coords = value.split(","), i;
+        for (i = 0; i < coords.length; i++) {
+            coords[i] = parseFloat(coords[i]);
+        }
+        return coords;
+    }
+
+    function floatsToString(floatArray) {
+        var i, result = [];
+        for (i = 0; i < floatArray.length; i++) {
+            result.push(String(floatArray[i]));
+        }
+        return result.join(", ");
+    }
+
+    function editRunsChrome()
+    {
+        var header, body, footer;
+        var controlClass = "input-large";
+        var tz = DASHBOARD.dashboardSettings.get("timezone");
+        header = '<div class="modal-header"><h3>' + "Add new run" + '</h3></div>';
+        body   = '<div class="modal-body">';
+        body += '<form class="form-horizontal">';
+        body += tableFuncs.editControl("Analyzer", tableFuncs.makeInput("id_analyzer", {"class": controlClass,
+                "placeholder": "Name of analyzer"}));
+        body += tableFuncs.editControl("Start Time", '<div class="input-append">' + tableFuncs.makeInput("id_start_etm",
+                {"class": "input-medium datetimeRange", "placeholder": "YYYY-MM-DD HH:MM"}) + '<span class="add-on">' + tz + '</span></div>');
+        body += tableFuncs.editControl("End Time", '<div class="input-append">' + tableFuncs.makeInput("id_end_etm",
+                {"class": "input-medium datetimeRange", "placeholder": "YYYY-MM-DD HH:MM"}) + '<span class="add-on">' + tz + '</span></div>');
+        body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_marker", {"class": controlClass},
+                {"#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
+                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
+        body += tableFuncs.editControl("LISAs", tableFuncs.makeSelect("id_wedges", {"class": controlClass},
+                {"None": "None", "#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
+                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
+        body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_swath", {"class": controlClass},
+                {"#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
+                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
+        body += tableFuncs.editControl("Stability Class", tableFuncs.makeSelect("id_stab_class", {"class": controlClass},
+                {"*": "*: Use reported weather data", "A": "A: Very Unstable", "B": "B: Unstable",
+                 "C": "C: Slightly Unstable", "D": "D: Neutral", "E": "E: Slightly Stable", "F": "F: Stable" }));
+        body += '</form></div>';
+        footer = '<div class="modal-footer">';
+        footer += '<p class="validate_tips alert alert-error hide"></p>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + "OK" + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + "Cancel" + '</button>';
+        footer += '</div>';
+        return header + body + footer;
+    }
+
+    function beforeRunsShow(done)
+    {
+        // Get the current time as the latest allowed end time
+        var now;
+        var posixTime = (new Date()).valueOf();
+        var tz = DASHBOARD.dashboardSettings.get('timezone');
+        function datetimeRange(input) {
+            if ("" === $('#id_end_etm').val()) $('#id_end_etm').datetimeEntry('setDatetime',now);
+            return {minDatetime: (input.id=='id_end_etm'   ? $('#id_start_etm').datetimeEntry('getDatetime'): null),
+                    maxDatetime: (input.id=='id_start_etm' ? $('#id_end_etm').datetimeEntry('getDatetime'): now )};
+        }
+        DASHBOARD.rptGenService.get("tz",{tz:tz, posixTimes:[posixTime]},function(err, result) {
+            if (err) done(err);
+            else {
+                now = result.timeStrings[0];
+                now = now.substring(0,now.lastIndexOf(':'));
+                console.log(now);
+                $.datetimeEntry.setDefaults({spinnerImage: null, datetimeFormat: 'Y-O-D H:M', show24Hours: true });
+                $('input.datetimeRange').datetimeEntry({beforeShow:datetimeRange});
+                done(null);
+            }
+        });
+    }
+
+    var initRunRow = {"analyzer": "FCDS2008", "peaks": "#FFFF00", "wedges": "#0000FF", "fovs": "#00FF00", "stabClass": "*"};
+
+    function validateRun(eidByKey,template,container,onSuccess) {
+        var numErr = 0;
+        var startEtm = $("#"+eidByKey["startEtm"]).val();
+        var endEtm= $("#"+eidByKey["endEtm"]).val();
+        if ("" === startEtm) {
+            tableFuncs.addError(eidByKey["startEtm"], "Invalid start epoch");
+            numErr += 1;
+        }
+        if ("" === endEtm) {
+            tableFuncs.addError(eidByKey["endEtm"], "Invalid end epoch");
+            numErr += 1;
+        }
+        if (numErr === 0) {
+            onSuccess();
+        }
+    }
+
+    function extractLocal(x) {
+        return x.localTime;
+    }
+
+    function insertLocal(v) {
+        return {localTime: v, timezone: DASHBOARD.dashboardSettings.get('timezone')};
+    }
+
+    function editTime(s,b) {
+        // For editing we only want YYYY-MM-DD HH:MM
+        var ts = b.localTime.match(/\d{4}[-]\d{2}[-]\d{2} \d{2}:\d{2}/);
+        $(s).val(ts);
+    }
+
+    // We store start and end times as an objects with keys posixTime, localTime and timezone. We call the functions
+    //  toLocalTime as needed to convert the posixTime data in the entire table to local time in the current timezone. 
+    //  We also convert to Posix time after a row is edited or updated.
+
+    var runsDefinition = {id: "runTable", layout: [
+        {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
+        {key: "analyzer", width: "20%", th: "Analyzer", tf: String, eid: "id_analyzer", cf: String},
+        {key: "startEtm", width: "20%", th: "Start", tf: extractLocal, eid: "id_start_etm", cf: insertLocal, ef: editTime},
+        {key: "endEtm", width: "20%", th: "End", tf: extractLocal, eid: "id_end_etm", cf: insertLocal, ef: editTime},
+        {key: "peaks", width: "9%", th: "Peaks", tf: makeColorPatch, eid: "id_marker", cf: String},
+        {key: "wedges", width: "9%", th: "LISA", tf: makeColorPatch, eid: "id_wedges", cf: String},
+        {key: "fovs", width: "9%", th: "FOV", tf: makeColorPatch, eid: "id_swath", cf: String},
+        {key: "stabClass", width: "9%", th: "Stab Class", tf: String, eid: "id_stab_class", cf: String},
+        {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
+    ],
+    vf: function (eidByKey, template, container, onSuccess) {
+        return validateRun(eidByKey, template, container, onSuccess);
+    },
+    cb: function (type, data, rowData, row) {
+        // Convert the local time to posix time using the server and update the local time string with the time zone
+        if (type === "add" || type === "update") {
+            var tz = DASHBOARD.dashboardSettings.get('timezone');
+            DASHBOARD.rptGenService.get("tz",{tz:tz, timeStrings:[rowData.startEtm.localTime,rowData.endEtm.localTime]},function(err, result) {
+                rowData.startEtm.posixTime = result.posixTimes[0];
+                rowData.endEtm.posixTime = result.posixTimes[1];
+                rowData.startEtm.localTime = result.timeStrings[0];
+                rowData.endEtm.localTime = result.timeStrings[1];
+                tableFuncs.setCell(row,"startEtm",rowData.startEtm,runsDefinition);
+                tableFuncs.setCell(row,"endEtm",rowData.endEtm,runsDefinition);
+            });
+        }
+        console.log(data);
+    }
+    };
+
+
     function init() {
         DASHBOARD.InstructionsFileModel = Backbone.Model.extend({
             defaults: {
                 file: null,
+                contents: null,
                 instructions: null
             }
         });
 
         DASHBOARD.InstructionsView = Backbone.View.extend({
+            el: $("#id_instructions"),
+            events: {
+                "click #id_runs_table_div table button.table-new-row": "newRunsRow",
+                "click #id_runs_table_div table button.table-clear": "clearRuns",
+                "click #id_runs_table_div tbody button.table-delete-row": "deleteRunsRow",
+                "click #id_runs_table_div tbody button.table-edit-row": "editRunsRow"
+            },
+            initialize: function () {
+                var that = this;
+                this.listenTo(DASHBOARD.dashboardSettings, "change:timezone", this.onChangeTimezone);
+                this.modalContainer = $("#id_modal");
+                $('#id_submapsRows').spinedit({
+                    minimum: 1,
+                    maximum: 10,
+                    step: 1,
+                    value: 1,
+                    numberOfDecimals: 0
+                });
+                $('#id_submapsColumns').spinedit({
+                    minimum: 1,
+                    maximum: 10,
+                    step: 1,
+                    value: 1,
+                    numberOfDecimals: 0
+                });
+                $("#id_runs_table_div").html(tableFuncs.makeTable({}, runsDefinition));
+                this.styleRunsTable();
+            },
+            newRunsRow: function (e) {
+                tableFuncs.insertRow(e, runsDefinition, this.modalContainer, editRunsChrome, beforeRunsShow, initRunRow);
+            },
+            clearRuns: function (e) {
+                $(e.currentTarget).closest("table").find("tbody").empty();
+            },
+            deleteRunsRow: function (e) {
+                $(e.currentTarget).closest("tr").remove();
+            },
+            editRunsRow: function (e) {
+                tableFuncs.editRow($(e.currentTarget).closest("tr"), runsDefinition, this.modalContainer, editRunsChrome, beforeRunsShow);
+                console.log(tableFuncs.getTableData(runsDefinition));
+            },
+            styleRunsTable: function () {
+                $("#id_runs_table_div table").addClass("table table-condensed table-striped table-fmt1");
+                $("#id_runs_table_div tbody").addClass("sortable");
+                $(".sortable").sortable({helper: tableFuncs.sortableHelper});
+            },
+            onChangeTimezone: function () {
+                var tableData = tableFuncs.getTableData(runsDefinition);
+                var posixTimes = [];
+                var tz = DASHBOARD.dashboardSettings.get('timezone');
+                for (var i=0; i<tableData.length; i++) {
+                    var rowData = tableData[i];
+                    posixTimes.push(rowData.startEtm.posixTime);
+                    posixTimes.push(rowData.endEtm.posixTime);
+                }
+                DASHBOARD.rptGenService.get("tz", {tz:tz, posixTimes:posixTimes}, function(err, result) {
+                    var localTimes = result.timeStrings;
+                    for (var i=0; i<tableData.length; i++) {
+                        var rowData = tableData[i];
+                        rowData.startEtm.localTime = localTimes.shift();
+                        rowData.startEtm.timezone = tz;
+                        rowData.endEtm.localTime = localTimes.shift();
+                        rowData.endEtm.timezone = tz;
+                        var row = tableFuncs.getRowByIndex(i, runsDefinition);
+                        tableFuncs.setCell(row,"startEtm", rowData.startEtm, runsDefinition);
+                        tableFuncs.setCell(row,"endEtm", rowData.endEtm, runsDefinition);
+                    }
+
+                });
+            }
+        });
+
+        DASHBOARD.InstructionsFileView = Backbone.View.extend({
             el: $("#id_instructionsfiles"),
             events: {
                 "change .fileinput": "onSelectFile",
@@ -43,7 +299,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService, rptGenStatus) {
             },
             onMakeReport: function() {
                 var that = this;
-                var contents = DASHBOARD.instructionsFileModel.get("instructions");
+                var contents = DASHBOARD.instructionsFileModel.get("contents");
                 var qryparms = {'qry': 'submit', 'contents': contents};
                 DASHBOARD.rptGenService.get('RptGen', qryparms, function (err, result) {
                     if (err) alert("Bad instructions: " + err);
@@ -123,12 +379,13 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService, rptGenStatus) {
                            formatNumberLength(d.getUTCSeconds(),2) + '.json';
                 $.generateFile({
                     filename    : name,
-                    content     : JSON.stringify(DASHBOARD.instructionsFileModel.get("instructions")),
+                    content     : DASHBOARD.instructionsFileModel.get("contents"),
                     script      : '/rest/download'
                 });
                 e.preventDefault();
                 this.$el.find(".file").val(name);
-                console.log("onSaveInstructions"); },
+                console.log("onSaveInstructions"); 
+            },
             onSelectFile: function(e) {
                 var files = e.target.files; // FileList object
                 if (files.length > 1) alert('Cannot process more than one file');
@@ -157,8 +414,8 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService, rptGenStatus) {
                     lines = contents.split('\n', 16384);
                     // lines.shift();   TODO: Reimplement security stamp for user instruction files
                     var body = lines.join('\n');
-                    JSON.parse(body);
-                    DASHBOARD.instructionsFileModel.set({"instructions": body});
+                    DASHBOARD.instructionsFileModel.set({"instructions": JSON.parse(body)});
+                    DASHBOARD.instructionsFileModel.set({"contents": body});
                 }
                 catch (err) {
                     alert("Invalid instructions file");
@@ -170,7 +427,8 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService, rptGenStatus) {
                     this.inputFile = this.$el.find('.fileinput');
                     return;
                 }
-                console.log(contents);
+                console.log(DASHBOARD.instructionsFileModel.get("contents"));
+                console.log(iv.instrValidator(DASHBOARD.instructionsFileModel.get("instructions")));
             }
 
         });
@@ -373,12 +631,12 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService, rptGenStatus) {
             }
         });
 
-        console.log(rptGenStatus);
         DASHBOARD.rptGenService = newRptGenService({"rptgen_url": "http://localhost:5300"});
         DASHBOARD.dashboardSettings = new DASHBOARD.DashboardSettings();
         DASHBOARD.submittedJobs = new DASHBOARD.SubmittedJobs();
         DASHBOARD.instructionsFileModel = new DASHBOARD.InstructionsFileModel();
         var settingsView = new DASHBOARD.SettingsView();
+        var instrFileView = new DASHBOARD.InstructionsFileView();
         var instrView = new DASHBOARD.InstructionsView();
         var jobsView = new DASHBOARD.JobsView();
         settingsView.render();
