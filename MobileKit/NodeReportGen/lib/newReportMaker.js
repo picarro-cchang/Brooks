@@ -23,7 +23,7 @@ define(function(require, exports, module) {
     var validateListUsing = pv.validateListUsing;
 
 
-    var cjs = require("./canonical_stringify");
+    var cjs = require("../public/js/common/canonical_stringify");
     var gh = require("./geohash");
     var ts = require("./timeStamps");
 
@@ -161,8 +161,8 @@ define(function(require, exports, module) {
         }
         else {
             sf.writeStatus(that.statusFile,
-                {"status": rptGenStatus.FAILED, "msg": ipv.errors() }, function () {
-                    callback(new Error(ipv.errors()));
+                {"status": rptGenStatus.FAILED, "msg": v.errorList.join("\n") }, function () {
+                    callback(new Error(v.errorList.join("\n")));
             });
         }
 

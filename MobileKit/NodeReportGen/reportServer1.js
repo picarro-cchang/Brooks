@@ -5,7 +5,7 @@ define(function(require, exports, module) {
     'use strict';
     function reportServer() {
         var argv = require('optimist').argv;
-        var cjs = require("./lib/canonical_stringify");
+        var cjs = require("./public/js/common/canonical_stringify");
         var express = require('express');
         var path = require('path');
         var __dirname = path.dirname(module.uri);

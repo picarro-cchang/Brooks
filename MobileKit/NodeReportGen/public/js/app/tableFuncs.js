@@ -386,7 +386,7 @@ define(function(require, exports, module) {
             $(container).find("button.btn-cancel").on("click", function (e) {
                 closeModal($(container));
             });
-            if (undefined !== beforeShow) {
+            if (typeof beforeShow === "function") {
                 beforeShow(function () {
                     $(container).modal("show");
                 });

@@ -78,7 +78,12 @@ define(function(require, exports, module) {
 
     function instrValidator(instr) {
         var rpv = newParamsValidator(instr,
-            [{"name": "title", "required": true, "validator": "string" },
+            [{"name": "title", "required": true, "validator": function(s) {
+                var valid = ((typeof s === "string") && s.trim() !== "" );
+                if (valid) return {valid: true};
+                else return {valid: false, "errorList": ["Title must be a non-empty string"]};
+             }},
+             {"name": "instructions_type", "required": false, "validator": "string", "default_value": "makeReport"},
              {"name": "makePdf", "required": false, "validator": "boolean", "default_value": false},
              {"name": "swCorner", "required": true, "validator": latlngValidator},
              {"name": "neCorner", "required": true, "validator": latlngValidator},

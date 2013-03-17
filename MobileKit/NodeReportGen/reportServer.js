@@ -2,7 +2,7 @@
 
 (function () {
     var argv = require('optimist').argv;
-    var cjs = require("./lib/canonical_stringify");
+    var cjs = require("./public/js/common/canonical_stringify");
     var express = require('express');
     var path = require('path');
     var fs = require('./lib/fs');

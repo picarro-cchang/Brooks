@@ -5,7 +5,7 @@ if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
 	'use strict';
-    var cjs = require('./canonical_stringify');
+    var cjs = require('../public/js/common/canonical_stringify');
     var fs = require('fs');
     var gh = require('./geohash');
     var jf = require('./jsonfiles');

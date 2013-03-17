@@ -21,7 +21,7 @@ requirejs.config({
         'jquery.timezone-picker': '/js/lib/jquery.timezone-picker.min',
         'jquery.maphilight': '/js/lib/jquery.maphilight.min',
         'jstz:': '/js/lib/jstz.min',
-        'jquery-ui': '/js/lib/jquery-ui-1.8.20.custom.min',
+        'jquery-ui': '/js/lib/jquery-ui-1.10.2.custom.min',
         'jquery.datetimeentry': '/js/lib/jquery.datetimeentry',
         'jquery.mousewheel': '/js/lib/jquery.mousewheel.min'
     },

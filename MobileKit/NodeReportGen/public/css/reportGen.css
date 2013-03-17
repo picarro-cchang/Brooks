@@ -12,3 +12,21 @@ table.table-fmt1 th {
 .validate_tips {
   text-align:center; 
 }
+
+#id_editTemplateModal {
+  width: 800px;
+  margin: -250px 0 0 -400px;
+}
+
+#id_editTemplateModal .modal-body {
+  max-height: 800px;
+  overflow: hidden;
+}
+
+#id_settings label  {
+  font-weight: bold;
+}
+
+#id_instructions label {
+  font-weight: bold;
+} 
