@@ -75,7 +75,7 @@ define(function(require, exports, module) {
                 else {
                     that.rpt_status = result["status"];
                     console.log("RptGen status: " + that.rpt_status);
-                    if (that.rpt_status === rptGenStatus.DONE) {
+                    if (that.rpt_status >= rptGenStatus.DONE) {
                         // Get the information from the key file for the request
                         var rsc = "data/" + that.submit_key["hash"] +
                                   "/" + that.submit_key["dir_name"] + "/key.json";

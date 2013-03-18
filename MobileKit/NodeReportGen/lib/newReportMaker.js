@@ -216,12 +216,15 @@ define(function(require, exports, module) {
                     });
                 }
                 else {
-                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.LINKS_AVAILABLE}, function(err) {
-                        if (err) callback(err);
-                        else {
-                            makePdfReports(that.norm_instr);
-                        }
-                    });
+                    if (that.norm_instr.makePdf) {
+                        makePdfReports(that.norm_instr);
+                    }
+                    else {
+                        sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE_NO_PDF}, function(err) {
+                            if (err) callback(err);
+                            else callback(null);
+                        });
+                    }
                 }
             });
         }
@@ -270,7 +273,7 @@ define(function(require, exports, module) {
                     concatenatePdf(submaps.slice(0), function (err) {
                         if (err) callback(err);
                         else {
-                            sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE}, function(err) {
+                            sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE_WITH_PDF}, function(err) {
                                 if (err) callback(err);
                                 else callback(null);
                             });
