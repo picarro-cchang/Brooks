@@ -1,3 +1,4 @@
+*.pyc
 *.bak
 AddOns/SSIM/Coordinator_SSIM_CBDS.ini
 AddOns/SSIM/Coordinator_SSIM_CFFDS.ini
