@@ -53,6 +53,7 @@ define(function(require, exports, module) {
         result["instructions_type"] = "getPeaksData";
         result["swCorner"] = gh.encodeGeoHash.apply(null, instructions["swCorner"]);
         result["neCorner"] = gh.encodeGeoHash.apply(null, instructions["neCorner"]);
+        result["exclRadius"] = instructions["exclRadius"];
         result["runs"] = [];
         instructions["runs"].forEach(function (run, i) {
             var r = {};

@@ -575,6 +575,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                 var that = this;
                 if (this.getCurrentInstructions()) {
                     var contents = DASHBOARD.instructionsFileModel.get("contents");
+                    var instructions = DASHBOARD.instructionsFileModel.get("instructions");
                     var qryparms = {'qry': 'submit', 'contents': contents};
                     DASHBOARD.rptGenService.get('RptGen', qryparms, function (err, result) {
                         if (err) alert("Bad instructions: " + err);
@@ -587,6 +588,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                             var status = result.status;
                             var job = new DASHBOARD.SubmittedJob({hash: hash,
                                                                   directory: dirName,
+                                                                  title: instructions.title,
                                                                   rpt_start_ts: result.rpt_start_ts,
                                                                   startPosixTime: posixTime,
                                                                   status: status});
@@ -686,7 +688,10 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                 else this.$el.find(".file").val("");
             },
             loadFile: function (e) {
-                var contents = e.target.result, lines;
+                this.loadContents(e.target.result);
+            },
+            loadContents: function (contents) {
+                var lines;
                 // Remake input element so that change is triggered if same
                 //  file is selected next time.
                 var old = this.inputFile.parent().html();
@@ -714,7 +719,6 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                 console.log(DASHBOARD.instructionsFileModel.get("contents"));
                 console.log(DASHBOARD.instructionsFileModel.get("instructions"));
             }
-
         });
 
         DASHBOARD.DashboardSettings = Backbone.Model.extend({
@@ -756,6 +760,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
             defaults: {
                 hash: null,
                 directory: null,
+                title:"",
                 status: 0,
                 user: "demo",
                 startPosixTime: 0,
@@ -815,27 +820,43 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
         DASHBOARD.JobsView = Backbone.View.extend({
             el: $("#id_submittedJobs"),
             events: {
-                "click #id_testAdd": "onTestAdd",
-                "click #id_testRemove": "onTestRemove",
-                "click #id_testUpdate": "onTestUpdate"
+                "click #id_jobTableDiv button.btn" : "onRetrieveInstructions"
             },
             initialize: function () {
+                this.instrFileView = new DASHBOARD.InstructionsFileView();
                 this.$el.find("#id_jobTableDiv").html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="id_example"></table>');
                 this.jobTable = $("#id_example").dataTable({
                     "aoColumns": [
-                        { "sTitle": "Hash", "mData": "hash", "sClass": "center"},
-                        { "sTitle": "Directory", "mData": "directory", "sClass": "center"},
                         { "sTitle": "StartTime", "mData": "startLocalTime", "sClass": "center"},
+                        { "sTitle": "Title", "mData": "title", "sClass": "center"},
                         { "sTitle": "Status", "mData": "status", "sClass": "center"},
-                        { "sTitle": "User", "mData": "user", "sClass": "center"}
+                        { "sTitle": "User", "mData": "user", "sClass": "center"},
+                        { "sTitle": "Load", "mData": "link", "sClass": "center"}
                     ]
                 });
                 this.cidToRow = {};
+                this.linkTemplate = _.template('<button type="button" data-cid="{{ data.cid }}" class="btn btn-warning btn-mini"><i class="icon-pencil icon-white"></i></button>');
                 this.listenTo(DASHBOARD.submittedJobs, "add", this.addJob);
                 this.listenTo(DASHBOARD.submittedJobs, "remove", this.removeJob);
                 this.listenTo(DASHBOARD.submittedJobs, "change", this.changeJob);
                 this.listenTo(DASHBOARD.submittedJobs, "reset", this.resetJobs);
                 this.addIndex = 0;
+            },
+            onRetrieveInstructions: function(e) {
+                var that = this;
+                var cid = $(e.currentTarget).data("cid");
+                var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: cid});
+                console.log(job);
+                var url = "/rest/data/" + job.get("hash") + '/instructions.json';
+                $.ajax({
+                    dataType: "text",
+                    url: url,
+                    type: "GET",
+                    success: function (data, textStatus, jqXHR) {
+                        that.instrFileView.loadContents(data);
+                        that.instrFileView.$el.find(".file").val(job.get("startLocalTime"));
+                    }
+                });
             },
             mDataPosixTime: function (source, type, val) {
                 switch (type) {
@@ -861,7 +882,8 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                 }
             },
             changeJob: function (model) {
-                this.jobTable.fnUpdate(model.attributes, this.cidToRow[model.cid]);
+                var link = this.linkTemplate({cid: model.cid});
+                this.jobTable.fnUpdate($.extend({link: link},model.attributes), this.cidToRow[model.cid]);
             },
             removeJob: function (model) {
                 this.jobTable.fnDeleteRow(this.cidToRow[model.cid]);
@@ -869,7 +891,8 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                 console.log(this.cidToRow);
             },
             addJob: function (model) {
-                this.cidToRow[model.cid] = this.jobTable.fnGetNodes(this.jobTable.fnAddData(model.attributes)[0]);
+                var link = this.linkTemplate({cid: model.cid});
+                this.cidToRow[model.cid] = this.jobTable.fnGetNodes(this.jobTable.fnAddData($.extend({link: link},model.attributes))[0]);
                 console.log(this.cidToRow);
             },
             resetJobs: function () {
@@ -879,48 +902,23 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                 var that = this;
                 this.jobTable.fnClearTable();
                 _.forEach(DASHBOARD.submittedJobs.models, function (model) {
-                    that.cidToRow[model.cid] = that.jobTable.fnGetNodes(that.jobTable.fnAddData(model.attributes)[0]);
+                    var link = this.linkTemplate({cid: model.cid});
+                    that.cidToRow[model.cid] = that.jobTable.fnGetNodes(that.jobTable.fnAddData($.extend({link: link},model.attributes))[0]);
                 });
                 console.log(that.cidToRow);
-            },
-            onTestAdd: function () {
-                var job = new DASHBOARD.SubmittedJob({hash:this.addIndex++,
-                                             directory:Math.random().toString(36).substring(2,8),
-                                             startPosixTime:(new Date()).valueOf()});
-                job.addLocalTime(function (err) {
-                    DASHBOARD.submittedJobs.add(job);
-                });
-            },
-            onTestRemove: function () {
-                var n = DASHBOARD.submittedJobs.length;
-                if (n > 0) {
-                    var which = Math.floor(n * Math.random());
-                    console.log("Removing " + DASHBOARD.submittedJobs.at(which).get("hash"));
-                    DASHBOARD.submittedJobs.remove(DASHBOARD.submittedJobs.at(which));
-                    console.log("Number of rows: " + DASHBOARD.submittedJobs.length);
-                }
-                else alert("No data to remove");
-            },
-            onTestUpdate: function () {
-                var n = DASHBOARD.submittedJobs.length;
-                if (n > 0) {
-                    var which = Math.floor(n * Math.random());
-                    var model = DASHBOARD.submittedJobs.at(which);
-                    console.log("Updating " + model.get("hash"));
-                    model.set({"hash":Math.random().toString(36).substring(2,8), "status":Math.floor(Math.random()*100)});
-                    DASHBOARD.submittedJobs.update(model,{remove:false});
-                    console.log("Number of rows: " + DASHBOARD.submittedJobs.length);
-                }
-                else alert("No data to update");
             }
         });
 
+        _.templateSettings = {
+          evaluate : /\{\[([\s\S]+?)\]\}/g,
+          interpolate : /\{\{([\s\S]+?)\}\}/g,
+          variable: "data"
+        };
         DASHBOARD.rptGenService = newRptGenService({"rptgen_url": "http://localhost:5300"});
         DASHBOARD.dashboardSettings = new DASHBOARD.DashboardSettings();
         DASHBOARD.submittedJobs = new DASHBOARD.SubmittedJobs();
         DASHBOARD.instructionsFileModel = new DASHBOARD.InstructionsFileModel();
         var settingsView = new DASHBOARD.SettingsView();
-        var instrFileView = new DASHBOARD.InstructionsFileView();
         var jobsView = new DASHBOARD.JobsView();
         settingsView.render();
         jobsView.render();
