@@ -45,7 +45,7 @@ Source: {#sandboxDir}\host\AddOns\SSIM\Coordinator_SSIM_CFIDS.ini; DestDir: {app
 Source: {#sandboxDir}\host\AddOns\SSIM\Coordinator_SSIM_RT_G2201-i.ini; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2201i
 Source: {#sandboxDir}\host\AddOns\SSIM\CoordinatorLauncher_SSIM_G2201-i.ini; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion; Components: G2201i
 
-Source: "{#sandboxDir}\host\AddOns\SSIM\Small_Sample_Isotope_Module_Manual Rev 7-30-12_Draft.pdf"; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion
+Source: "{#sandboxDir}\host\AddOns\SSIM\Small_Sample_Isotope_Module_Manual Rev 1-22-13.pdf"; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion
 Source: {#sandboxDir}\host\AddOns\SSIM\ReadExtSensor.ini; DestDir: {app}\AddOns\SSIM; Flags: replacesameversion
 Source: {#sandboxDir}\host\AddOns\SSIM\ReferenceGases.ini; DestDir: {app}\AddOns\SSIM; Flags: confirmoverwrite
 
