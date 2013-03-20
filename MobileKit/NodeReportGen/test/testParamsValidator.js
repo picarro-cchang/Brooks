@@ -2,7 +2,7 @@
 
 'use strict';
 require("should");
-var pv = require("../lib/paramsValidator");
+var pv = require("../public/js/common/paramsValidator");
 var newParamsValidator = pv.newParamsValidator;
 var latlngValidator = pv.latlngValidator;
 
@@ -91,6 +91,45 @@ describe('parameterValidation', function () {
             });
         });
 
+    });
+
+    describe('returnDefaults', function () {
+        function componentsValidator (components) {
+            var rpv = newParamsValidator(components,
+                [{"name": "baseType", "required":false, "validator": /satellite|map/, "default_value": "map"},
+                 {"name": "paths", "required":false, "validator": "boolean", "default_value": false},
+                 {"name": "peaks", "required":false, "validator": "boolean", "default_value": false},
+                 {"name": "wedges", "required":false, "validator": "boolean", "default_value": false},
+                 {"name": "fovs", "required":false, "validator": "boolean", "default_value": false},
+                 {"name": "submapGrid", "required":false, "validator": "boolean", "default_value": false}
+                ]);
+            return rpv.validate();
+        }
+
+        function templateTablesValidator (tables) {
+            var rpv = newParamsValidator(tables,
+                [{"name": "peaksTable", "required":false, "validator": "boolean", "default_value": false},
+                 {"name": "surveysTable", "required":false, "validator": "boolean", "default_value": false},
+                 {"name": "runsTable", "required":false, "validator": "boolean", "default_value": false}
+                ]);
+            return rpv.validate();
+        }
+
+        function templateSummaryValidator (summary) {
+            var rpv = newParamsValidator(summary,
+                [{"name": "figures", "required":false, "validator": pv.validateListUsing(componentsValidator), "default_value": []},
+                 {"name": "tables", "required":false, "validator": templateTablesValidator, "default_value": templateTablesValidator({}).normValues}
+                ]);
+            return rpv.validate();
+        }
+        it('should fill up defaults from empty object', function () {
+            var blankInput = templateSummaryValidator({});
+            blankInput.valid.should.be.true;
+            blankInput.normValues.tables.should.have.property("peaksTable", false);
+            blankInput.normValues.tables.should.have.property("surveysTable", false);
+            blankInput.normValues.tables.should.have.property("runsTable", false);
+            blankInput.normValues.figures.should.be.empty;
+        });
     });
 
     describe('predicateValidation', function() {

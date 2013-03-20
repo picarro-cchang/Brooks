@@ -1,5 +1,5 @@
 // Get result of long running task from Pcubed
-/*global console, __dirname, exports, require */
+/*global console, exports, require */
 
 'use strict';
 

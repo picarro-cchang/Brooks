@@ -377,6 +377,10 @@
             <register>PEAK_DETECT_CNTRL_PRIMING_VALVE_MASK_AND_VALUE_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_PURGING_VALVE_MASK_AND_VALUE_REGISTER</register>
             <register>PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>FLOW_0_SETPOINT_REGISTER</register>
+            <register>FLOW_1_SETPOINT_REGISTER</register>
+            <register>FLOW_2_SETPOINT_REGISTER</register>
+            <register>FLOW_3_SETPOINT_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Tuner Parameters</title>

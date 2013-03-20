@@ -1,7 +1,8 @@
 /* jsonFiles.js allows a list of JSON objects to be written out in chunks. */
 /*global exports, module, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     var fs = require('fs');
     var _ = require('underscore');
@@ -39,4 +40,4 @@
     exports.appendJson = appendJson;
     exports.closeJson = closeJson;
     exports.emptyJson = emptyJson;
-})();
+});

@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[450];
+RegTypes regTypes[454];
 
 /* I2C devices */
 I2C_device i2c_devices[35] = {
@@ -909,6 +909,14 @@ void initRegisters()
     writeRegister(FLOW_CNTRL_SETPOINT_REGISTER,d);
     d.asFloat = 20;
     writeRegister(FLOW_CNTRL_GAIN_REGISTER,d);
+    d.asFloat = 400;
+    writeRegister(FLOW_0_SETPOINT_REGISTER,d);
+    d.asFloat = 400;
+    writeRegister(FLOW_1_SETPOINT_REGISTER,d);
+    d.asFloat = 400;
+    writeRegister(FLOW_2_SETPOINT_REGISTER,d);
+    d.asFloat = 400;
+    writeRegister(FLOW_3_SETPOINT_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -1359,6 +1367,10 @@ void initRegisters()
     regTypes[FLOW_CNTRL_STATE_REGISTER] = uint_type;
     regTypes[FLOW_CNTRL_SETPOINT_REGISTER] = float_type;
     regTypes[FLOW_CNTRL_GAIN_REGISTER] = float_type;
+    regTypes[FLOW_0_SETPOINT_REGISTER] = float_type;
+    regTypes[FLOW_1_SETPOINT_REGISTER] = float_type;
+    regTypes[FLOW_2_SETPOINT_REGISTER] = float_type;
+    regTypes[FLOW_3_SETPOINT_REGISTER] = float_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)

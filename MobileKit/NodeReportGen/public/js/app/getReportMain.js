@@ -12,6 +12,7 @@ requirejs.config({
     //the paths config could be for a directory.
     paths: {
         'app': '/js/app',
+        'common': '/js/common',
         'jquery-migrate': '/js/lib/jquery-migrate-1.1.1.min',
         'underscore': '/js/lib/underscore-min',
         'backbone': '/js/lib/backbone-min',

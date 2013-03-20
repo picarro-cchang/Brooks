@@ -6,9 +6,9 @@ https://github.com/douglascrockford/JSON-js/blob/master/json2.js
 
 Mirko Kiefer made some modifications to ensure a canonical output.
 */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
-
+define(function(require, exports, module) {
     function f(n) {
         // Format integers to have at least two digits.
         return n < 10 ? '0' + n : n;
@@ -216,4 +216,4 @@ Mirko Kiefer made some modifications to ensure a canonical output.
 
     module.exports = stringify;
 
-})();
+});

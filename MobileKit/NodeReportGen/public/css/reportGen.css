@@ -1,0 +1,32 @@
+table.table-fmt1 td {
+  text-align:center; 
+  vertical-align:middle; 
+}
+
+table.table-fmt1 th {
+  text-align:center; 
+  border: #000 solid; 
+  border-width: 0px 0px 1px 0px; 
+}
+
+.validate_tips {
+  text-align:center; 
+}
+
+#id_editTemplateModal {
+  width: 800px;
+  margin: -250px 0 0 -400px;
+}
+
+#id_editTemplateModal .modal-body {
+  max-height: 800px;
+  overflow: hidden;
+}
+
+#id_settings label  {
+  font-weight: bold;
+}
+
+#id_instructions label {
+  font-weight: bold;
+} 

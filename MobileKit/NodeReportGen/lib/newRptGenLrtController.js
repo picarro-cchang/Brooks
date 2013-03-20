@@ -6,12 +6,13 @@
 //   request to start a new task with the same hash, we should compare the request_ts
 //   and the start_ts. If they differ by more than a preset amount, the task should be
 //   resubmitted with the force flag
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     var events = require('events');
     var http = require('http');
-    var rptGenStatus = require('./rptGenStatus');
+    var rptGenStatus = require('../public/js/common/rptGenStatus');
     var ts = require('./timeStamps');
     var util = require('util');
 
@@ -74,7 +75,7 @@
                 else {
                     that.rpt_status = result["status"];
                     console.log("RptGen status: " + that.rpt_status);
-                    if (that.rpt_status === rptGenStatus.DONE) {
+                    if (that.rpt_status >= rptGenStatus.DONE) {
                         // Get the information from the key file for the request
                         var rsc = "data/" + that.submit_key["hash"] +
                                   "/" + that.submit_key["dir_name"] + "/key.json";
@@ -99,5 +100,5 @@
 
     module.exports = newRptGenLrtController;
 
-})();
+});
 

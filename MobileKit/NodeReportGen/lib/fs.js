@@ -1,13 +1,14 @@
 /*global process, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function () {
+define(function(require, exports, module) {
   'use strict';
 
   var fs = require('fs'),
       mkdirOrig = fs.mkdir,
       mkdirSyncOrig = fs.mkdirSync,
       osSep = process.platform === 'win32' ? '\\' : '/';
-  
+
   /**
    * Offers functionality similar to mkdir -p
    *
@@ -19,11 +20,11 @@
 
     mode = mode || process.umask();
     position = position || 0;
-  
+
     if (position >= parts.length) {
       return callback();
     }
-  
+
     var directory = parts.slice(0, position + 1).join(osSep) || osSep;
     fs.stat(directory, function(err) {
       if (err === null) {
@@ -39,17 +40,17 @@
       }
     });
   }
-  
+
   function mkdirSync_p(path, mode, position) {
     var parts = require('path').normalize(path).split(osSep);
 
     mode = mode || process.umask();
     position = position || 0;
-  
+
     if (position >= parts.length) {
       return true;
     }
-  
+
     var directory = parts.slice(0, position + 1).join(osSep) || osSep;
     try {
       fs.statSync(directory);
@@ -66,7 +67,7 @@
       }
     }
   }
-  
+
   /**
    * Polymorphic approach to fs.mkdir()
    *
@@ -78,18 +79,18 @@
       callback = recursive;
       recursive = false;
     }
-  
+
     if (typeof callback !== 'function') {
       callback = function () {};
     }
-  
+
     if (!recursive) {
       mkdirOrig(path, mode, callback);
     } else {
       mkdir_p(path, mode, callback);
     }
   };
-  
+
   /**
    * Polymorphic approach to fs.mkdirSync()
    *
@@ -100,7 +101,7 @@
     if (typeof recursive !== 'boolean') {
       recursive = false;
     }
-  
+
     if (!recursive) {
       mkdirSyncOrig(path, mode);
     } else {
@@ -109,4 +110,4 @@
   };
 
   module.exports = fs;
-}());
+});

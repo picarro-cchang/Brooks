@@ -4,7 +4,7 @@ block scripts
     script(type='text/javascript', data-main='/js/app/indexMain.js', src='/js/require-jquery.js')
 
 block content
-    body(style="min-width:1000px")
+    body(style="min-width:1100px")
         div.container-fluid
             div.row-fluid
                 div.span12
@@ -12,8 +12,8 @@ block content
                     div#id_settings
                         label(for="id_timezone")
                             | Time zone
-                        input#id_timezone(type="text",readonly="readonly",style="margin-top:10px")
-                        a.btn.btn-inverse(href="#id_timezoneModal",role="button",data-toggle="modal")
+                        input#id_timezone(type="text",readonly="readonly")
+                        a.btn.btn-inverse(href="#id_timezoneModal",role="button",data-toggle="modal",style="margin-top:-8px")
                             | Select
                         div#id_timezoneModal.modal.hide.fade(tabindex="-1", role="dialog", aria-labelledby="id_timezoneModalLabel",
                             aria-hidden="true")
@@ -30,14 +30,6 @@ block content
                     h2 Dashboard
                     div#id_submittedJobs
                         div#id_jobTableDiv
-                        br
-                        div(style="float:left")
-                        button#id_testAdd(type="button", style="float:left; margin:20px", class="btn btn-primary")
-                            | Add Row
-                        button#id_testRemove(type="button", style="float:left; margin:20px", class="btn btn-primary")
-                            | Remove Row
-                        button#id_testUpdate(type="button", style="float:left; margin:20px", class="btn btn-primary")
-                            | Update Row
 
             h2 Job Preparation
             div#id_instructionsfiles.row-fluid
@@ -56,6 +48,106 @@ block content
                     div
                         button#id_save_instructions.btn.btn-inverse(type="button", style="float:left; margin:5px; margin-left:20px")
                             | Save Instructions
+            div#id_instructions.row-fluid
+                div.span12
+                    div.row-fluid
+                        div.span11
+                            label(for="id_title")
+                                | Title
+                            input#id_title(type="text", placeholder="Title", style="width:100%")
+                        div.span1
+                            label(for="id_make_pdf")
+                                | Make PDF
+                            input#id_make_pdf(type="checkbox")
+                    div.row-fluid
+                        div.span3
+                            label(for="id_swCorner")
+                                | SW Corner
+                            input#id_swCorner(type="text", placeholder="Latitude, Longitude", style="width:100%")
+                        div.span3
+                            label(for="id_neCorner")
+                                | NE Corner
+                            input#id_neCorner(type="text", placeholder="Latitude, Longitude", style="width:100%")
+                        div.span2
+                            label(for="id_peaksMinAmp")
+                                | Peaks Min Amp
+                            input#id_peaksMinAmp(type="text")
+                        div.span2
+                            label(for="id_exclRadius")
+                                | Exclusion Radius
+                            input#id_exclRadius(type="text")
+                        div.span2
+                            div(style="float:left")
+                                label(for="id_submapsRows")
+                                    | Rows
+                                input#id_submapsRows(type="text")
+                            div(style="float:left; margin-left:15px;")
+                                label(for="id_submapsColumns")
+                                    | Columns
+                                input#id_submapsColumns(type="text")
+                    div.row-fluid
+                        div.span12
+                            h2 Runs
+                            div#id_runs_table_div
+                    div.row-fluid
+                        div.span12
+                        button#id_edit_template.btn.btn-inverse(type="button")
+                            | Edit Template
+
+
+                    div#id_editTemplateModal.modal.hide.fade(tabindex="-1", role="dialog", aria-labelledby="id_editTemplateModalLabel",
+                        aria-hidden="true")
+                        div.modal-header
+                            button.close(type="button", data-dismiss="modal", aria-hidden="true") x
+                            h3#id_editTemplateModalLabel Edit Template
+                        div.modal-body
+                            div.row-fluid
+                                div.span12
+                                    div.row-fluid
+                                        div.span6
+                                            h3 Summary Pages
+                                            div.row-fluid
+                                                div.span4
+                                                    label.checkbox
+                                                        input#id_summary_peaksTable(type="checkbox")
+                                                        | Peaks Table
+                                                div.span4
+                                                    label.checkbox
+                                                        input#id_summary_runsTable(type="checkbox")
+                                                        | Runs Table
+                                                div.span4
+                                                    label.checkbox
+                                                        input#id_summary_surveysTable(type="checkbox")
+                                                        | Surveys Table
+                                            div.row-fluid
+                                                div#id_summary_table_div
+
+                                        div.span6
+                                            h3 Submap Pages
+                                            div.row-fluid
+                                                div.span4
+                                                    label.checkbox
+                                                        input#id_submaps_peaksTable(type="checkbox")
+                                                        | Peaks Table
+                                                div.span4
+                                                    label.checkbox
+                                                        input#id_submaps_runsTable(type="checkbox")
+                                                        | Runs Table
+                                                div.span4
+                                                    label.checkbox
+                                                        input#id_submaps_surveysTable(type="checkbox")
+                                                        | Surveys Table
+                                            div.row-fluid
+                                                div#id_submaps_table_div
+
+                        div.modal-footer
+                            button#id_save_template.btn.btn-primary(data-dismiss="modal", aria-hidden="true")
+                                | Save changes
+                            button.btn(data-dismiss="modal", aria-hidden="true")
+                                | Cancel
+
+                    div#id_modal.modal.hide.fade(data-backdrop="static")
+
             div.row-fluid
                 div.span12
                     h2 Sample Report

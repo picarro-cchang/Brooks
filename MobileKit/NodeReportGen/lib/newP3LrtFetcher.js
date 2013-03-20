@@ -6,11 +6,12 @@
 //   request to start a new task with the same hash, we should compare the request_ts
 //   and the start_ts. If they differ by more than a preset amount, the task should be
 //   resubmitted with the force flag
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     var events = require('events');
-    var rptGenStatus = require('./rptGenStatus');
+    var rptGenStatus = require('../public/js/common/rptGenStatus');
     var util = require('util');
 
     function P3LrtFetcher(p3service, svc, ver, rsc, params) {
@@ -133,4 +134,4 @@
 
     module.exports = newP3LrtFetcher;
 
-})();
+});

@@ -564,8 +564,8 @@ function editRunsChrome()
     body += '</fieldset></form></div>';
     footer = '<div class="modal-footer">';
     footer += '<p class="validate_tips alert alert-error hide"></p>';
-    footer += '<button class="btn btn-primary btn-ok">' + TXT.ok + '</button>';
-    footer += '<button class="btn btn-cancel">' + TXT.cancel + '</button>';
+    footer += '<button type="button" class="btn btn-primary btn-ok">' + TXT.ok + '</button>';
+    footer += '<button type="button" class="btn btn-cancel">' + TXT.cancel + '</button>';
     footer += '</div>';
     return header + body + footer;
 }

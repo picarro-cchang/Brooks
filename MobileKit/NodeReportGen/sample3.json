@@ -13,19 +13,19 @@
         {
             "stabClass": "D", 
             "peaks": "#00FFFF", 
-            "endEtm": "2012-06-10  12:00", 
-            "analyzer": "FCDS2008", 
+            "endEtm": 1339354800, 
+            "analyzer": "FCDS2008",
             "fovs": "#00FF00", 
-            "startEtm": "2012-06-10  06:13", 
+            "startEtm": 1339333980, 
             "wedges": "#FFFF00"
         }, 
         {
             "stabClass": "D", 
             "peaks": "#FFFF00", 
-            "endEtm": "2012-06-10  16:59", 
+            "endEtm": 1339372740, 
             "analyzer": "FCDS2008", 
             "fovs": "#FF0000", 
-            "startEtm": "2012-06-10  12:05", 
+            "startEtm": 1339355100, 
             "wedges": "#0000FF"
         }
     ], 
@@ -36,36 +36,42 @@
         -121.88112
     ], 
     "template": {
-        "submaps": [
-            {
-                "paths": true, 
-                "peaks": true, 
-                "surveysTable": false, 
-                "peaksTable": false, 
-                "wedges": true, 
-                "runsTable": false
-            }, 
-            {
-                "paths": true, 
+        "submaps": {
+            "tables": {
                 "runsTable": true, 
-                "fovs": true, 
-                "peaks": true, 
                 "peaksTable": true, 
-                "baseType": "satellite", 
-                "wedges": true, 
                 "surveysTable": true
-            }
-        ], 
-        "summary": [
-            {
-                "surveysTable": true, 
+            },
+            "figures": [
+                {
+                    "paths": true, 
+                    "peaks": true, 
+                    "wedges": true
+                }, 
+                {
+                    "paths": true, 
+                    "fovs": true, 
+                    "peaks": true, 
+                    "baseType": "satellite", 
+                    "wedges": true 
+                }
+            ]
+        }, 
+        "summary": {
+            "tables": {
                 "runsTable": true, 
-                "paths": true, 
-                "peaks": true, 
-                "submapGrid": true, 
-                "peaksTable": true
-            }
-        ]
+                "peaksTable": true, 
+                "surveysTable": true
+            },
+            "figures": [
+                {
+                    "paths": true, 
+                    "peaks": true, 
+                    "wedges": true,
+                    "submapGrid": true 
+                }
+            ]
+        }
     }, 
     "submaps": {
         "nx": 4, 

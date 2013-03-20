@@ -1,7 +1,8 @@
 /* newNamesToIndices.js makes an object which translates names to indices */
 /*global exports, module, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     var _ = require('underscore');
 
@@ -39,4 +40,4 @@
 
     module.exports = newNamesToIndices;
 
-})();
+});

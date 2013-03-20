@@ -27,32 +27,29 @@ function (_, utils, gh, REPORT) {
             runsTable.push('<th style="width:10%">Stab Class</th>');
             runsTable.push('</tr></thead>');
             runsTable.push('<tbody>');
-            var timeStringsList = [];
+            var posixTimes = [];
             for (i=0; i<runs.length; i++) {
                 var run = REPORT.settings.get("runs").at(runs[i]).attributes;
-                timeStringsList.push(run.startEtm);
-                timeStringsList.push(run.endEtm);
+                posixTimes.push(1000*run.startEtm);
+                posixTimes.push(1000*run.endEtm);
             }
-            var url = '/rest/tz?' + $.param({tz:REPORT.settings.get("timezone"),timeStrings:timeStringsList});
+            var url = '/rest/tz?' + $.param({tz:REPORT.settings.get("reportTimezone"),posixTimes:posixTimes});
             $.getJSON(url,function (data) {
-                var url = '/rest/tz?' + $.param({tz:REPORT.settings.get("reportTimezone"),posixTimes:data.posixTimes});
-                $.getJSON(url,function (data) {
-                    for (i=0; i<runs.length; i++) {
-                        var run = REPORT.settings.get("runs").at(runs[i]).attributes;
-                        runsTable.push('<tr>');
-                        runsTable.push('<td>' + run.analyzer + '</td>');
-                        runsTable.push('<td>' + data.timeStrings.shift() + '</td>');
-                        runsTable.push('<td>' + data.timeStrings.shift() + '</td>');
-                        runsTable.push('<td>' + run.peaks + '</td>');
-                        runsTable.push('<td>' + run.wedges + '</td>');
-                        runsTable.push('<td>' + run.fovs + '</td>');
-                        runsTable.push('<td>' + run.stabClass + '</td>');
-                        runsTable.push('</tr>');
-                    }
-                    runsTable.push('</tbody>');
-                    runsTable.push('</table>');
-                    done(null, runsTable);
-                }).error(function () { done(new Error("getJSON error:" + url)); });
+                for (i=0; i<runs.length; i++) {
+                    var run = REPORT.settings.get("runs").at(runs[i]).attributes;
+                    runsTable.push('<tr>');
+                    runsTable.push('<td>' + run.analyzer + '</td>');
+                    runsTable.push('<td>' + data.timeStrings.shift() + '</td>');
+                    runsTable.push('<td>' + data.timeStrings.shift() + '</td>');
+                    runsTable.push('<td>' + run.peaks + '</td>');
+                    runsTable.push('<td>' + run.wedges + '</td>');
+                    runsTable.push('<td>' + run.fovs + '</td>');
+                    runsTable.push('<td>' + run.stabClass + '</td>');
+                    runsTable.push('</tr>');
+                }
+                runsTable.push('</tbody>');
+                runsTable.push('</table>');
+                done(null, runsTable);
             }).error(function () { done(new Error("getJSON error:" + url)); });
         }
         else done(null, runsTable);

@@ -46,11 +46,17 @@
 #define rddGain         (*(r->rddGain_))
 
 RddCntrl rddCntrl;
+int readBack = 1;
 
 int rddCntrlStep(void)
 {
     RddCntrl *r = &rddCntrl;
-    int readBack = 0;
+    if (readBack) {
+        unsigned int gains = rdd_read(RDD_POTENTIOMETERS);
+        rddBalance = r->currentBalance = (gains>>16) & 0xFF;
+        rddGain = r->currentGain = gains & 0xFF;
+        readBack = 0;
+    }
     if (rddBalance != r->currentBalance) {
         rdd_write(RDD_POTENTIOMETERS,(rddBalance & 0xFF)<<8 | 1,2);
         readBack = 1;
@@ -63,11 +69,6 @@ int rddCntrlStep(void)
         rdd_write(RDD_POTENTIOMETERS,(r->pendingCommand & 0xFF),1);
         readBack = 1;
         r->pendingCommand = -1;
-    }
-    if (readBack) {
-        unsigned int gains = rdd_read(RDD_POTENTIOMETERS);
-        rddBalance = r->currentBalance = (gains>>16) & 0xFF;
-        rddGain = r->currentGain = gains & 0xFF;
     }
     return STATUS_OK;
 }

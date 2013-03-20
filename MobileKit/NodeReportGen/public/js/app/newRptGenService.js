@@ -2,7 +2,7 @@
    calls of the report generator */
 /*global console, exports, module, require */
 
-define(['jquery', 'underscore', 'app/paramsValidator'],
+define(['jquery', 'underscore', 'common/paramsValidator'],
 function($, _, paramsValidator) {
 	'use strict';
     var newParamsValidator = paramsValidator.newParamsValidator;

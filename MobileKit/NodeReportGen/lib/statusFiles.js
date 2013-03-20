@@ -4,8 +4,9 @@
 // Status information is stored as a JavaScript object which is made up
 //  by merging dictionaries stored on successive lines in a status file in
 //  compact JSON notation (no newlines for a stringified object)
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
 	var fs = require('fs');
 	var _ = require('underscore');
@@ -33,4 +34,4 @@
 
     exports.readStatus = readStatus;
     exports.writeStatus = writeStatus;
-})();
+});

@@ -73,9 +73,9 @@ sys.path.append("Utilities/RecipeEditor")
 sys.path.append("Utilities/BackpackServer")
 sys.path.append("Utilities/ConfigManager")
 sys.path.append("Utilities/AircraftValveSwitcher")
+sys.path.append("Utilities/ProgramVariableGainRdd")
 sys.path.append("Utilities/RestartSupervisor")
 sys.path.append("../Firmware/Utilities")
-
 ################################################################
 # Start of a pile of special setup with the sole purpose
 # of making the wxPython apps look like Windows-native
@@ -309,6 +309,7 @@ consoleList = [
     "Utilities/ReadMemUsage/ReadMemUsage.py",
     "Utilities/BackpackServer/backpackServer.py",
     "Utilities/RestartSupervisor/RestartSupervisor.py",
+    "Utilities/ProgramVariableGainRdd/programRdd.py",
     "../Firmware/Utilities/CalibrateSystem.py",
     "../Firmware/Utilities/CalibrateFsr.py",
     "../Firmware/Utilities/AdjustWlmOffset.py",

@@ -1,8 +1,9 @@
 /* newFovsDataFetcher.js creates an object to get path data from P3 into a
     work directory. */
 /*global console, exports, module, process, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     var events = require('events');
     var fs = require('fs');
@@ -11,11 +12,11 @@
     var newN2i = require('./newNamesToIndices');
     var newP3LrtFetcher = require('./newP3LrtFetcher');
     var newSerializer = require('./newSerializer');
-    var rptGenStatus = require('./rptGenStatus');
+    var rptGenStatus = require('../public/js/common/rptGenStatus');
     var sf = require('./statusFiles');
     var sis = require('./surveyorInstStatus');
     var path = require('path');
-    var pv = require('./paramsValidator');
+    var pv = require('../public/js/common/paramsValidator');
     var ts = require('./timeStamps');
     var util = require('util');
     var _ = require('underscore');
@@ -521,4 +522,4 @@
     }
     module.exports = newFovsDataFetcher;
 
-})();
+});

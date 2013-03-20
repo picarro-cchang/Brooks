@@ -1,7 +1,8 @@
 /* getRest.js makes a rest call via HTTP or HTTPS */
 /*global console, exports, module, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
+define(function(require, exports, module) {
 	'use strict';
     var http = require("http");
     var https = require("https");
@@ -52,4 +53,4 @@
         req.end();
     }
     module.exports = getRest;
-})();
+});

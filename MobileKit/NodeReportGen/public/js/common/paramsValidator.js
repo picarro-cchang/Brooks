@@ -1,9 +1,10 @@
 /* paramsValidator.js provides an object to validate values in a ductionary */
 /*global console, module, require */
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
-(function() {
-	'use strict';
-	var _ = require('underscore');
+define(function(require, exports, module) {
+    'use strict';
+    var _ = require('underscore');
 
     /****************************************************************************/
     /*  Routines for parameter validation                                       */
@@ -119,7 +120,7 @@
     }
 
     /****************************************************************************/
-    /*  Conversion of string to Boolean. A useful transform.					*/
+    /*  Conversion of string to Boolean. A useful transform.                    */
     /****************************************************************************/
     function stringToBoolean(string){
         switch(string.toLowerCase()){
@@ -184,4 +185,4 @@
     exports.stringToBoolean = stringToBoolean;
     exports.validateListUsing = validateListUsing;
 
-})();
+});
