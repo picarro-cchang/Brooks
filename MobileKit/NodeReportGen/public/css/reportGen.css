@@ -30,3 +30,11 @@ table.table-fmt1 th {
 #id_instructions label {
   font-weight: bold;
 } 
+
+table.display tr.even.row_selected td {
+  background-color:#00FF99;
+}
+
+table.display tr.odd.row_selected td {
+  background-color:#66FF99;
+}

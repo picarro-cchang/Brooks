@@ -4,8 +4,9 @@
 define(['jquery', 'underscore', 'backbone', 'app/dashboardGlobals', 'jstz', 'app/newRptGenService',
         'common/rptGenStatus', 'common/instructionsValidator', 'common/canonical_stringify', 'app/tableFuncs',
         'jquery-migrate', 'bootstrap-modal', 'bootstrap-dropdown', 'bootstrap-spinedit', 'bootstrap-transition',
-        'jquery.dataTables', 'jquery.generateFile', 'jquery.maphilight', 'jquery.timezone-picker', 'jquery-ui',
-        'jquery.datetimeentry', 'jquery.mousewheel'],
+        'jquery.dataTables', 'jquery.generateFile', 'jquery.maphilight',
+        'jquery.timezone-picker', 'jquery-ui', 'jquery.datetimeentry', 'jquery.mousewheel',
+        'localStorage'],
 
 
 function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
@@ -20,7 +21,6 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
         }
         return r;
     }
-
 
     // ============================================================================
     //  Handlers for special table fields
@@ -355,6 +355,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                     styleTable("#id_summary_table_div");
                     styleTable("#id_submaps_table_div");
                 }
+                return this;
             },
             newSummaryRow: function (e) {
                 tableFuncs.insertRow(e, summaryDefinition, this.modalContainer, editSummaryChrome, null, initSummaryRow);
@@ -469,6 +470,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                     $("#id_runs_table_div").html(tableFuncs.makeTable(runsTableData, runsDefinition));
                     styleTable("#id_runs_table_div");
                 });
+                return this;
             },
             getCurrentInstructions: function () {
                 // Get instructions from GUI elements
@@ -581,51 +583,46 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                         if (err) alert("Bad instructions: " + err);
                         else {
                             var request_ts = result.request_ts;
-                            var rpt_start_ts_date = new Date(result.rpt_start_ts);
+                            var start_ts = result.rpt_start_ts;
+                            var rpt_start_ts_date = new Date(start_ts);
                             var posixTime = rpt_start_ts_date.valueOf();
                             var hash = result.rpt_contents_hash;
                             var dirName = formatNumberLength(rpt_start_ts_date.getTime(),13);
                             var status = result.status;
+                            var msg = result.msg;
+
                             var job = new DASHBOARD.SubmittedJob({hash: hash,
-                                                                  directory: dirName,
-                                                                  title: instructions.title,
-                                                                  rpt_start_ts: result.rpt_start_ts,
-                                                                  startPosixTime: posixTime,
-                                                                  status: status});
-                            job.addLocalTime(function (err) {
-                                DASHBOARD.submittedJobs.add(job);
-                                if (status >= rptGenStatus["DONE"]) that.reportDone(job.cid, status);
-                                else setTimeout(function () { that.pollStatus(job.cid); }, 5000);
-                            });
+                                      directory: dirName,
+                                      title: instructions.title,
+                                      rpt_start_ts: result.rpt_start_ts,
+                                      startPosixTime: posixTime,
+                                      status: status,
+                                      msg: msg});
+                            // Check if this has been previously submitted
+                            if (request_ts !== start_ts) {
+                                alert("This is a duplicate of a previously submitted report");
+                                var prev = DASHBOARD.submittedJobs.where({hash: hash, directory: dirName});
+                                if (prev.length > 0) {
+                                    DASHBOARD.jobsView.highLightJob(prev[0]);
+                                }
+                                else {
+                                    job.addLocalTime(function (err) {
+                                        DASHBOARD.submittedJobs.add(job);
+                                        job.save();
+                                        job.analyzeStatus(err, status, msg);
+                                    });
+                                }
+                            }
+                            else {
+                                job.addLocalTime(function (err) {
+                                    DASHBOARD.submittedJobs.add(job);
+                                    job.save();
+                                    job.analyzeStatus(err, status, msg);
+                                });
+                            }
                         }
                     });
                 }
-            },
-            pollStatus: function (cid) {
-                var that = this;
-                var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: cid});
-                var qryparms = {'qry': 'getStatus', 'contents_hash': job.get('hash'),
-                                'start_ts': job.get('rpt_start_ts') };
-                DASHBOARD.rptGenService.get('RptGen', qryparms, function (err, result) {
-                    var status = result.status;
-                    if (err) job.set({status:'<b>Error</b> ' + err});
-                    else if (status < 0) job.set({status:'<b>Error</b> ' + status});
-                    else if (status >= rptGenStatus["DONE"]) that.reportDone(job.cid, status);
-                    else setTimeout(function () { that.pollStatus(job.cid); }, 5000);
-                });
-            },
-            reportDone: function (cid, status) {
-                var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: cid});
-                var viewUrl = '/getReport/' + job.get('hash') + '/' + job.get('directory');
-                var pdfurl = '/rest/data/' +  job.get('hash') + '/' + job.get('directory') + '/report.pdf';
-                if (status === rptGenStatus.DONE_WITH_PDF) {
-                    job.set({status: '<b><a href="' + viewUrl + '" target="_blank"> View</a><a href="' + pdfurl +
-                        '" target="_blank"> PDF</a></b>'});
-                }
-                else if (status === rptGenStatus.DONE_NO_PDF) {
-                    job.set({status: '<b><a href="' + viewUrl + '" target="_blank"> View</a></b>'});
-                }
-                DASHBOARD.submittedJobs.update(job,{remove:false});
             },
             onDragOver: function (e) {
                 e.stopPropagation();
@@ -740,6 +737,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
             },
             render: function () {
                 $("#id_timezone").val(DASHBOARD.dashboardSettings.get("timezone"));
+                return this;
             },
             onModalShown: function () {
                 $("#edit-date-default-timezone").val(DASHBOARD.dashboardSettings.get("timezone")).change();
@@ -762,6 +760,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                 directory: null,
                 title:"",
                 status: 0,
+                msg: "",
                 user: "demo",
                 startPosixTime: 0,
                 startLocalTime: null
@@ -789,6 +788,27 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                         done(null);
                     }
                 });
+            },
+            updateStatus: function () {
+                var that = this;
+                var qryparms = {'qry': 'getStatus', 'contents_hash': this.get('hash'),
+                                'start_ts': this.get('rpt_start_ts') };
+                DASHBOARD.rptGenService.get('RptGen', qryparms, function (err, result) {
+                    that.analyzeStatus(err, result.status, result.msg);
+                });
+            },
+            analyzeStatus: function (err, status, msg)  {
+                var that = this;
+                if (status < 0) {
+                    this.set({'msg': msg, 'status': status});
+                }
+                else if (err) {
+                    this.set({'msg': err, 'status': rptGenStatus.OTHER_ERROR});
+                }
+                else if (status >= rptGenStatus["DONE"]) {
+                    this.set({'status': status});
+                }
+                else setTimeout(function () { that.updateStatus(); }, 5000);
             }
         });
 
@@ -796,6 +816,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
             initialize: function ()  {
                 this.listenTo(DASHBOARD.dashboardSettings, "change:timezone", this.resetTimeZone);
             },
+            localStorage: new Backbone.LocalStorage("JobCollection"),
             model: DASHBOARD.SubmittedJob,
             resetTimeZone: function () {
                 var that = this;
@@ -820,7 +841,9 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
         DASHBOARD.JobsView = Backbone.View.extend({
             el: $("#id_submittedJobs"),
             events: {
-                "click #id_jobTableDiv button.btn" : "onRetrieveInstructions"
+                "click #id_jobTableDiv button.btn" : "onRetrieveInstructions",
+                "click a.pdfLink" : "onPdfLink",
+                "click a.viewLink" : "onViewLink"
             },
             initialize: function () {
                 this.instrFileView = new DASHBOARD.InstructionsFileView();
@@ -829,11 +852,12 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                     "aoColumns": [
                         { "sTitle": "StartTime", "mData": "startLocalTime", "sClass": "center"},
                         { "sTitle": "Title", "mData": "title", "sClass": "center"},
-                        { "sTitle": "Status", "mData": "status", "sClass": "center"},
+                        { "sTitle": "Status", "mData": "statusDisplay", "sClass": "center"},
                         { "sTitle": "User", "mData": "user", "sClass": "center"},
                         { "sTitle": "Load", "mData": "link", "sClass": "center"}
                     ]
                 });
+                this.jobTable.fnSort([[0,'desc']]);
                 this.cidToRow = {};
                 this.linkTemplate = _.template('<button type="button" data-cid="{{ data.cid }}" class="btn btn-warning btn-mini"><i class="icon-pencil icon-white"></i></button>');
                 this.listenTo(DASHBOARD.submittedJobs, "add", this.addJob);
@@ -841,12 +865,18 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                 this.listenTo(DASHBOARD.submittedJobs, "change", this.changeJob);
                 this.listenTo(DASHBOARD.submittedJobs, "reset", this.resetJobs);
                 this.addIndex = 0;
+                this.selectedRow = null;
+            },
+            highLightJob: function (model) {
+                var row = this.cidToRow[model.cid];
+                this.instrFileView.$el.find(".file").val(model.get("startLocalTime"));
+                if (this.selectedRow) $(this.selectedRow).removeClass('row_selected');
+                this.selectedRow = $(row).addClass('row_selected');
             },
             onRetrieveInstructions: function(e) {
                 var that = this;
                 var cid = $(e.currentTarget).data("cid");
                 var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: cid});
-                console.log(job);
                 var url = "/rest/data/" + job.get("hash") + '/instructions.json';
                 $.ajax({
                     dataType: "text",
@@ -854,58 +884,75 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                     type: "GET",
                     success: function (data, textStatus, jqXHR) {
                         that.instrFileView.loadContents(data);
-                        that.instrFileView.$el.find(".file").val(job.get("startLocalTime"));
+                        that.highLightJob(job);
                     }
-                });
+                }).error(function () { alert('Unable to retrieve instructions for this job'); });
             },
-            mDataPosixTime: function (source, type, val) {
-                switch (type) {
-                case 'set':
-                    var url = '/rest/tz?' + $.param({tz:"America/Los_Angeles",posixTimes:[source.startPosixTime]});
-                    var result = JSON.parse($.ajax({type: 'GET', url: url, dataType:'json', async:false}).responseText);
-                    source.timeString = result.timeStrings[0];
-                    break;
-                case 'display':
-                    return source.timeString;
-                default:
-                    return source.startPosixTime;
+            formatSpecials: function(model) {
+                var link = this.linkTemplate({cid: model.cid});
+                var statusDisplay;
+                var status = model.get('status');
+                if (status < 0) {
+                    statusDisplay = '<span>Error: ' + model.get('msg') + '</span>';
                 }
+                else if (status >= rptGenStatus.DONE) {
+                    var viewUrl = '/getReport/' + model.get('hash') + '/' + model.get('directory');
+                    var pdfurl = '/rest/data/' +  model.get('hash') + '/' + model.get('directory') + '/report.pdf';
+                    if (status === rptGenStatus.DONE_WITH_PDF) {
+                        statusDisplay = '<a class="pdfLink btn btn-mini btn-inverse" href="#" data-hash="' + model.get('hash') +
+                                        '" data-directory="' + model.get('directory') + '">Download PDF</a>' +
+                                        '</b>';
+                    }
+                    else if (status === rptGenStatus.DONE_NO_PDF) {
+                        statusDisplay = '<b><a class="viewLink" href="#" data-hash="' + model.get('hash') +
+                                        '" data-directory="' + model.get('directory') + '">View</a></b>';
+                    }
+                }
+                else {
+                    statusDisplay = '<span>Working...</span>';
+                }
+                return $.extend({link: link, statusDisplay: statusDisplay}, model.attributes);
             },
-            handlePosixTime: function (data, type, row) {
-                switch (type) {
-                case 'display':
-                    var url = '/rest/tz?' + $.param({tz:"America/Los_Angeles",posixTimes:[data]});
-                    var result = JSON.parse($.ajax({type: 'GET', url: url, dataType:'json', async:false}).responseText);
-                    return result.timeStrings[0];
-                default:
-                    return data;
-                }
+            onViewLink: function (e) {
+                var viewUrl = '/getReport/' + $(e.currentTarget).data('hash') + '/' + $(e.currentTarget).data('directory');
+                window.open(viewUrl,'_blank');
+            },
+            onPdfLink: function (e) {
+                var pdfUrl = '/rest/data/' + $(e.currentTarget).data('hash') + '/' + $(e.currentTarget).data('directory') + '/report.pdf';
+                window.open(pdfUrl,'_blank');
+                return false;
             },
             changeJob: function (model) {
-                var link = this.linkTemplate({cid: model.cid});
-                this.jobTable.fnUpdate($.extend({link: link},model.attributes), this.cidToRow[model.cid]);
+                this.jobTable.fnUpdate(this.formatSpecials(model), this.cidToRow[model.cid]);
             },
             removeJob: function (model) {
                 this.jobTable.fnDeleteRow(this.cidToRow[model.cid]);
                 delete this.cidToRow[model.cid];
-                console.log(this.cidToRow);
             },
             addJob: function (model) {
-                var link = this.linkTemplate({cid: model.cid});
-                this.cidToRow[model.cid] = this.jobTable.fnGetNodes(this.jobTable.fnAddData($.extend({link: link},model.attributes))[0]);
-                console.log(this.cidToRow);
+                var row = this.cidToRow[model.cid] = this.jobTable.fnGetNodes(this.jobTable.fnAddData(this.formatSpecials(model))[0]);
+                if (this.selectedRow) {
+                    $(this.selectedRow).removeClass('row_selected');
+                    this.selectedRow = null;
+                }
+                this.highLightJob(model);
             },
             resetJobs: function () {
                 this.render();
+                if (this.selectedRow) {
+                    $(this.selectedRow).removeClass('row_selected');
+                    this.selectedRow = null;
+                }
             },
             render: function () {
                 var that = this;
+                this.cidToRow = [];
                 this.jobTable.fnClearTable();
                 _.forEach(DASHBOARD.submittedJobs.models, function (model) {
-                    var link = this.linkTemplate({cid: model.cid});
-                    that.cidToRow[model.cid] = that.jobTable.fnGetNodes(that.jobTable.fnAddData($.extend({link: link},model.attributes))[0]);
+                    var link = that.linkTemplate({cid: model.cid});
+                    that.cidToRow[model.cid] = that.jobTable.fnGetNodes(that.jobTable.fnAddData(that.formatSpecials(model))[0]);
                 });
-                console.log(that.cidToRow);
+                return this;
             }
         });
 
@@ -917,11 +964,13 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
         DASHBOARD.rptGenService = newRptGenService({"rptgen_url": "http://localhost:5300"});
         DASHBOARD.dashboardSettings = new DASHBOARD.DashboardSettings();
         DASHBOARD.submittedJobs = new DASHBOARD.SubmittedJobs();
+        DASHBOARD.submittedJobs.fetch();
+        DASHBOARD.submittedJobs.models.forEach(function (job) { job.updateStatus(); });
         DASHBOARD.instructionsFileModel = new DASHBOARD.InstructionsFileModel();
         var settingsView = new DASHBOARD.SettingsView();
-        var jobsView = new DASHBOARD.JobsView();
+        DASHBOARD.jobsView = new DASHBOARD.JobsView();
         settingsView.render();
-        jobsView.render();
+        DASHBOARD.jobsView.render();
     }
 
     return { "initialize": function () { $(document).ready(init); }};

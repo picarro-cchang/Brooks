@@ -15,6 +15,7 @@
     var sf = require('./lib/statusFiles');
     var ts = require('./lib/timeStamps');
     var tzWorld = require('./lib/tzSupport');
+    var util = require('util');
     var _ = require('underscore');
 
     var stringToBoolean = pv.stringToBoolean;
@@ -142,7 +143,7 @@
                             else res.send(_.extend(result,{"status": rptGenStatus.NOT_STARTED}));
                         });
                     }
-                    else res.send(_.extend(result,{"status": rptGenStatus.TASK_NOT_FOUND}));
+                    else res.send(_.extend(result,{"status": rptGenStatus.TASK_NOT_FOUND, "msg": "getStatus called for unknown task"}));
                 });
             }
             else res.send(_.extend(result,{"error": pv.errors()}));
@@ -181,10 +182,43 @@
 
     app.get("/getReport/:hash/:ts", handleGetReport);
 
+    /*
+    app.get("/rest/data/:hash/:ts/report.pdf", function(req, res) {
+        // Note: should use a stream here, instead of fs.readFile
+        var filename = path.join(REPORTROOT,req.params.hash,req.params.ts,"report.pdf");
+        fs.readFile(filename, function(err, data) {
+            if(err) {
+                res.send("Oops! Couldn't find that file.");
+            } else {
+                // set the content type based on the file
+                res.contentType('application/pdf');
+                res.attachment();
+                res.send(data);
+            }
+            res.end();
+        });
+    });
+    */
+
     app.use(express.compress());
+
+    app.get("/rest/data/:hash/:ts/report.pdf", function(req, res) {
+        var filename = path.join(REPORTROOT,req.params.hash,req.params.ts,"report.pdf");
+        fs.exists(filename, function (exists) {
+            if (exists) {
+                var readStream = fs.createReadStream(filename);
+                res.contentType('application/octet-stream');
+                res.attachment();
+                util.pump(readStream, res);
+            }
+            else {
+                res.send("Oops! Couldn't find that file.");
+            }
+        });
+    });
+
     app.use("/rest/data", express.static(REPORTROOT));
     app.use("/", express.static(__dirname + '/public'));
-
     var port = 5300;
     app.listen(port);
 
