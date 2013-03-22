@@ -3,7 +3,7 @@
 
 'use strict';
 var fs = require('fs');
-var rs = require('./reportSupport');
+var newRptGenService = require('./lib/newRptGenService');
 var events = require('events');
 var newP3ApiService = require('./lib/newP3ApiService');
 var newP3LrtFetcher = require('./lib/newP3LrtFetcher');

@@ -6,12 +6,11 @@ block scripts
 block content
     body(style="min-width:1100px")
         div.container-fluid
-            div.row-fluid
+            div.row-fluid(style="margin-bottom:40px;")
                 div.span12
-                    h1 Picarro Surveyor Report Generation Portal
+                    h1(style="text-align:center") Picarro Surveyor Report Generation Portal
                     div#id_settings
-                        label(for="id_timezone")
-                            | Time zone
+                        h2 Time zone
                         input#id_timezone(type="text",readonly="readonly")
                         a.btn.btn-inverse(href="#id_timezoneModal",role="button",data-toggle="modal",style="margin-top:-8px")
                             | Select
@@ -34,14 +33,14 @@ block content
             h2 Job Preparation
             div#id_instructionsfiles.row-fluid
                 div.span6
-                    h2 Instructions
+                    h3 Instructions
                     div.custom_file_upload
                         input#id_instr_upload_name.file(type="text", name="file_info", readonly)
                         div.btn-primary.file_upload
                             input#id_instr_upload.fileinput(type="file", name="files[]")
-                    p Browse for an instructions file, drag a file onto here or select from dashboard.
+                    p Browse for an instructions file, drag a file onto here or reload from dashboard.
                 div.span6
-                    h2 Actions
+                    h3 Actions
                     div
                         button#id_make_report.btn.btn-large.btn-primary(type="button", style="float:left")
                             | Make Report
@@ -85,7 +84,7 @@ block content
                                 label(for="id_submapsColumns")
                                     | Columns
                                 input#id_submapsColumns(type="text")
-                    div.row-fluid
+                    div.row-fluid(style="margin-top:20px;")
                         div.span12
                             h2 Runs
                             div#id_runs_table_div
@@ -147,10 +146,3 @@ block content
                                 | Cancel
 
                     div#id_modal.modal.hide.fade(data-backdrop="static")
-
-            div.row-fluid
-                div.span12
-                    h2 Sample Report
-                    ul
-                        li: a(href="/getReport/9bf749d4cb7bda829ce53d1d84d5e79a/1362715621576", 
-                            title="Development") Development

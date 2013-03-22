@@ -320,7 +320,8 @@ class TestMakeReport(unittest.TestCase):
         pass
 
     def testMakeReport(self):
-        contents = json.dumps({"instructions_type": "makeReport",
+        contents = json.dumps({"title": "Test Report",
+                               "instructions_type": "makeReport",
                                "swCorner": [36.58838, -121.93108],
                                "neCorner": [36.62807, -121.88112],
                                "submaps": {"nx": 2, "ny": 2},

@@ -1,23 +1,23 @@
-// reportSupport.js
+// newReportGen.js
 /*global console, exports, require */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
     'use strict';
     var events = require('events');
-    var fs = require('./lib/fs');
-    var getSubDirs = require('./lib/dirUtils').getSubDirs;
-    var getTicket = require('./lib/md5hex');
-    var newAnalysesDataFetcher = require('./lib/newAnalysesDataFetcher');
-    var newFovsDataFetcher = require('./lib/newFovsDataFetcher');
-    var newPathsDataFetcher = require('./lib/newPathsDataFetcher');
-    var newPeaksDataFetcher = require('./lib/newPeaksDataFetcher');
-    var newRptGenService = require('./lib/newRptGenService');
-    var newReportMaker = require('./lib/newReportMaker');
+    var fs = require('./fs');
+    var getSubDirs = require('./dirUtils').getSubDirs;
+    var getTicket = require('./md5hex');
+    var newAnalysesDataFetcher = require('./newAnalysesDataFetcher');
+    var newFovsDataFetcher = require('./newFovsDataFetcher');
+    var newPathsDataFetcher = require('./newPathsDataFetcher');
+    var newPeaksDataFetcher = require('./newPeaksDataFetcher');
+    var newRptGenService = require('./newRptGenService');
+    var newReportMaker = require('./newReportMaker');
     var path = require('path');
-    var rptGenStatus = require('./public/js/common/rptGenStatus');
-    var sf = require('./lib/statusFiles');
-    var ts = require('./lib/timestamps');
+    var rptGenStatus = require('../public/js/common/rptGenStatus');
+    var sf = require('./statusFiles');
+    var ts = require('./timestamps');
     var util = require('util');
     var _ = require('underscore');
 
@@ -200,5 +200,5 @@ define(function(require, exports, module) {
         return new ReportGen(reportDir, p3ApiService, contents);
     }
 
-    exports.newReportGen = newReportGen;
+    module.exports = newReportGen;
 });

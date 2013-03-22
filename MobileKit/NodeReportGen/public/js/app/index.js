@@ -850,14 +850,15 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                 this.$el.find("#id_jobTableDiv").html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="id_example"></table>');
                 this.jobTable = $("#id_example").dataTable({
                     "aoColumns": [
+                        { "sTitle": "Reload", "mData": "link", "sClass": "center"},
                         { "sTitle": "StartTime", "mData": "startLocalTime", "sClass": "center"},
                         { "sTitle": "Title", "mData": "title", "sClass": "center"},
                         { "sTitle": "Status", "mData": "statusDisplay", "sClass": "center"},
-                        { "sTitle": "User", "mData": "user", "sClass": "center"},
-                        { "sTitle": "Load", "mData": "link", "sClass": "center"}
-                    ]
+                        { "sTitle": "User", "mData": "user", "sClass": "center"}
+                    ],
+                    "sDom":'<"top"lf>rt<"bottom"ip>'
                 });
-                this.jobTable.fnSort([[0,'desc']]);
+                this.jobTable.fnSort([[1,'desc']]);
                 this.cidToRow = {};
                 this.linkTemplate = _.template('<button type="button" data-cid="{{ data.cid }}" class="btn btn-warning btn-mini"><i class="icon-pencil icon-white"></i></button>');
                 this.listenTo(DASHBOARD.submittedJobs, "add", this.addJob);
@@ -896,7 +897,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                     statusDisplay = '<span>Error: ' + model.get('msg') + '</span>';
                 }
                 else if (status >= rptGenStatus.DONE) {
-                    var viewUrl = '/getReport/' + model.get('hash') + '/' + model.get('directory');
+                    var viewUrl = '/getReport/' + model.get('hash') + '/' + model.get('directory') + '?name=Summary';
                     var pdfurl = '/rest/data/' +  model.get('hash') + '/' + model.get('directory') + '/report.pdf';
                     if (status === rptGenStatus.DONE_WITH_PDF) {
                         statusDisplay = '<a class="pdfLink btn btn-mini btn-inverse" href="#" data-hash="' + model.get('hash') +
@@ -914,7 +915,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                 return $.extend({link: link, statusDisplay: statusDisplay}, model.attributes);
             },
             onViewLink: function (e) {
-                var viewUrl = '/getReport/' + $(e.currentTarget).data('hash') + '/' + $(e.currentTarget).data('directory');
+                var viewUrl = '/getReport/' + $(e.currentTarget).data('hash') + '/' + $(e.currentTarget).data('directory') + '?name=Summary';
                 window.open(viewUrl,'_blank');
             },
             onPdfLink: function (e) {

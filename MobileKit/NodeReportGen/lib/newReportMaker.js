@@ -243,7 +243,7 @@ define(function(require, exports, module) {
             var minLat, maxLat = rptMaxLat, minLng, maxLng;
             var name, neCorner, submaps = [], swCorner;
             var baseUrl = 'http://localhost:5300/getReport/' + that.submit_key.hash + '/' + that.submit_key.dir_name;
-            submaps.push({"url": baseUrl, "name": "summary.pdf"});
+            submaps.push({"url": baseUrl, "query": {"name": "Summary"}, "name": "summary.pdf"});
 
             for (var my=0; my<suby; my++) {
                 minLat = maxLat - dy;
@@ -253,7 +253,9 @@ define(function(require, exports, module) {
                     swCorner = gh.encodeGeoHash(minLat, minLng);
                     neCorner = gh.encodeGeoHash(maxLat, maxLng);
                     name = String.fromCharCode(65+my) + (mx + 1);
-                    submaps.push({"url": url.format({"pathname": baseUrl, "query": {"neCorner":neCorner, "swCorner":swCorner}}), "name": (name + ".pdf")});
+                    submaps.push({"url": url.format({"pathname": baseUrl,
+                        "query": {"neCorner":neCorner, "swCorner":swCorner, "name":name}}),
+                        "name": (name + ".pdf")});
                     minLng = maxLng;
                 }
                 maxLat = minLat;

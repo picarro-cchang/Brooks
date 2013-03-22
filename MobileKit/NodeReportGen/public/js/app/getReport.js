@@ -29,6 +29,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
         REPORT.Settings = Backbone.Model.extend({
             defaults: function () {
                 return {
+                    "title": "<Sample Report>",
                     "swCorner": [ 36.58838, -121.93108 ],
                     "neCorner": [ 36.62807, -121.88112 ],
                     "submaps": {"nx": 1, "ny": 2},
@@ -37,8 +38,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     "fovMinLeak": 1.0,
                     "fovNWindow": 10,
                     "peaksMinAmp": 0.1,
-                    "timezone": "GMT",
-                    "reportTimezone": "GMT"
+                    "timezone": "GMT"
                 };
             }
         });
@@ -479,7 +479,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             onCanvasClick: function(e) {
                 if (this.hoverLink) {
                     var link = REPORT.reportViewResources.submapLinks[this.hoverLink];
-                    var url = window.location.pathname + '?' + $.param({"swCorner": link.swCorner, "neCorner": link.neCorner });
+                    var url = window.location.pathname + '?' + $.param({"swCorner": link.swCorner,
+                                             "neCorner": link.neCorner, "name":this.hoverLink });
                     window.open(url);
                 }
             },
@@ -614,7 +615,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             onCanvasClick: function(e) {
                 if (this.hoverLink) {
                     var link = REPORT.reportViewResources.submapLinks[this.hoverLink];
-                    var url = window.location.pathname + '?' + $.param({"swCorner": link.swCorner, "neCorner": link.neCorner });
+                    var url = window.location.pathname + '?' + $.param({"swCorner": link.swCorner,
+                        "neCorner": link.neCorner, "name": this.hoverLink });
                     window.open(url);
                 }
             },
@@ -808,9 +810,6 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             instructionsLoaded = true;
             $.get('/rest/data' + keyFile, function(data) {
                 REPORT.settings.set(_.pick(data.INSTRUCTIONS,settingsKeys));
-                // In future, we may allow the report timezone to differ from the instructions timezone
-                // REPORT.settings.set({"reportTimezone": REPORT.settings.get("timezone")});
-                REPORT.settings.set({"reportTimezone": "America/Los_Angeles"});
 
                 // Override the corners from the qry parameters if they exist
                 if ('swCorner' in qry) {
@@ -846,15 +845,24 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
 
                 var summary = !('swCorner' in qry) && !('neCorner' in qry);
 
-                if (summary) makePdfReport(REPORT.settings.get("template").summary);
-                else makePdfReport(REPORT.settings.get("template").submaps);
+                if (summary) makePdfReport(REPORT.settings.get("template").summary, qry.name);
+                else makePdfReport(REPORT.settings.get("template").submaps, qry.name);
             });
         }
     }
 
-    function makePdfReport(subreport) {
+    function makePdfReport(subreport, name) {
         var figureComponents = [ "fovs", "paths", "peaks", "wedges", "submapGrid" ];
-        var id;
+        var id, neCorner = REPORT.settings.get("neCorner"), swCorner = REPORT.settings.get("swCorner");
+        var title = REPORT.settings.get("title");
+        $("#getReportApp").append('<h2 style="text-align:center;">' + title + ' - ' + name + '</h2>');
+        $("#getReportApp").append('<div style="container-fluid">');
+        $("#getReportApp").append('<div style="row-fluid">');
+        $("#getReportApp").append('<div style="span12">');
+        $("#getReportApp").append('<p><b>SW Corner: </b>' + swCorner[0].toFixed(5) + ', ' + swCorner[1].toFixed(5) +
+                                  ' <b>NE Corner: </b>' + neCorner[0].toFixed(5) + ', ' + neCorner[1].toFixed(5) + '</p>');
+        $("#getReportApp").append('<p><b>Min peak amplitude: </b>' + REPORT.settings.get("peaksMinAmp").toFixed(2) +
+                                  ' <b>Exclusion radius (m): </b>' + REPORT.settings.get("exclRadius").toFixed(0) + '</p>');
         for (var i=0; i<subreport.figures.models.length; i++) {
             var layers = [];
             var pageComponent = subreport.figures.models[i];
@@ -865,28 +873,29 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 }
             }
             var id_fig = 'id_page_' + (i+1) + 'fig';
-            $("#getReportApp").append('<div id="' + id_fig + '" style="position:relative; page-break-after:always"/>');
+            $("#getReportApp").append('<div id="' + id_fig + '" class="reportFigure"; style="position:relative;"/>');
             new REPORT.CompositeViewWithLinks({el: $('#' + id_fig), name: id_fig.slice(3), layers:layers.slice(0)});
         }
         if (subreport.tables.get("peaksTable")) {
             id = 'id_peaksTable';
-            $("#getReportApp").append("<h1>Peaks Table</h1>");
-            $("#getReportApp").append('<div id="' + id + '" style="position:relative;"/>');
+            $("#getReportApp").append('<h2 class="reportTableHeading">Peaks Table</h2>');
+            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
             new REPORT.PeaksTableView({el: $('#' + id), dataTables: false});
         }
         if (subreport.tables.get("runsTable")) {
             id = 'id_runsTable';
-            $("#getReportApp").append("<h1>Runs Table</h1>");
-            $("#getReportApp").append('<div id="' + id + '" style="position:relative;"/>');
+            $("#getReportApp").append('<h2 class="reportTableHeading">Runs Table</h2>');
+            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
             new REPORT.RunsTableView({el: $('#' + id), dataTables: false});
         }
         if (subreport.tables.get("surveysTable")) {
             id = 'id_surveysTable';
-            $("#getReportApp").append("<h1>Surveys Table</h1>");
-            $("#getReportApp").append('<div id="' + id + '" style="position:relative;"/>');
+            $("#getReportApp").append('<h2 class="reportTableHeading">Surveys Table</h2>');
+            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
             new REPORT.SurveysTableView({el: $('#' + id), dataTables: false});
         }
         REPORT.reportViewResources.render();
+        $("#getReportApp").append('</div></div></div>');
     }
                 /* 
                 REPORT.multiCanvasView = new REPORT.MultiCanvasView(

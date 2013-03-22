@@ -38,3 +38,39 @@ table.display tr.even.row_selected td {
 table.display tr.odd.row_selected td {
   background-color:#66FF99;
 }
+
+div.reportFigure {
+  width: 100% ;
+  margin-left: auto ;
+  margin-right: auto ;
+  margin-top: 50px;  
+  margin-bottom: 50px;  
+  page-break-after:always;
+}
+
+div.reportTable {
+  width: 80% ;
+  margin-left: auto ;
+  margin-right: auto ;
+  margin-top: 50px;  
+  margin-bottom: 50px;  
+}
+
+.reportTableHeading {
+  margin-left: 20px ;
+}
+
+div.dataTables_length select {
+  width:60px;
+  display: inline-block;
+}
+
+div.dataTables_filter input {
+  display: inline-block;
+}
+
+div#id_jobTableDiv {
+  width: 90% ;
+  margin-left: auto ;
+  margin-right: auto ;  
+}

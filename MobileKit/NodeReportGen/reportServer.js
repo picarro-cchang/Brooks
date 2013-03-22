@@ -10,7 +10,7 @@
     var newP3ApiService = require('./lib/newP3ApiService');
     var pv = require('./public/js/common/paramsValidator');
     var REPORTROOT = argv.r ? argv.r : path.join(__dirname, 'ReportGen');
-    var reportSupport = require('./reportSupport');
+    var newReportGen = require('./lib/newReportGen');
     var rptGenStatus = require('./public/js/common/rptGenStatus');
     var sf = require('./lib/statusFiles');
     var ts = require('./lib/timeStamps');
@@ -28,6 +28,7 @@
     app.use(express.bodyParser());
 
     var csp_url = "https://dev.picarro.com/dev";
+    // var csp_url = "https://localhost:8081/node";
     var ticket_url = csp_url + "/rest/sec/dummy/1.0/Admin";
     var identity = "dc1563a216f25ef8a20081668bb6201e";
     var psys = "APITEST2";
@@ -112,7 +113,7 @@
                  {"name": "force", "required": false, "validator": "boolean", "default_value": false,
                   "transform": stringToBoolean }]);
             if (pv.ok()) {
-                reportGen = reportSupport.newReportGen(REPORTROOT, p3ApiService, pv.get("contents"));
+                reportGen = newReportGen(REPORTROOT, p3ApiService, pv.get("contents"));
                 rptGenMonitor.monitor(reportGen);
                 reportGen.run({"force": pv.get("force")}, function (err, r) {
                     if (err) res.send(_.extend(result,{"error": err.message}));
