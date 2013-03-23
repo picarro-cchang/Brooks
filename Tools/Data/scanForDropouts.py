@@ -10,11 +10,13 @@ import optparse
 import re
 import pprint
 import os.path
+import datetime
+import time
 
 from Host.Common import namedtuple
 
 
-DATALOG_RE = re.compile(r'([A-Z]{4,6}\d{4}).*-DataLog_User\.dat')
+DATALOG_RE = re.compile(r'([A-Z]{4,6}\d{4}).*-DataLog_(User|Private)\.dat')
 EXCLUDE_DIRS = ['.bzr', '.git']
 
 DELTA_STATS = []
@@ -22,9 +24,6 @@ DeltaStat = namedtuple.namedtuple('DeltaStat', 't dt hp12CH4 hr12CH4 path')
 
 
 def _parseDatFile(path):
-    global PREV_TIME
-    PREV_TIME = None
-
     print path
 
     first = True
@@ -36,7 +35,14 @@ def _parseDatFile(path):
         for i, name in enumerate(lines[0].split()):
             colNames[name] = i
 
-        epochTimeIdx = colNames['EPOCH_TIME']
+        epochTimeIdx = None
+
+        if 'EPOCH_TIME' in colNames:
+            epochTimeIdx = colNames['EPOCH_TIME']
+        else:
+            dateIdx = colNames['DATE']
+            timeIdx = colNames['TIME']
+
         hp12CH4Idx = colNames['HP_12CH4']
         hr12CH4Idx = colNames['HR_12CH4']
 
@@ -44,11 +50,20 @@ def _parseDatFile(path):
             vals = l.split()
 
             try:
-                s = DeltaStat(t=float(vals[epochTimeIdx]),
-                              hp12CH4=float(vals[hp12CH4Idx]),
-                              hr12CH4=float(vals[hr12CH4Idx]),
-                              path=path,
-                              dt=0.0)
+                if epochTimeIdx:
+                    t = float(vals[epochTimeIdx])
+                else:
+                    dateStr = vals[dateIdx]
+                    timeStr = vals[timeIdx].split('.')[0]
+                    t = datetime.datetime.strptime("%s %s" % (dateStr, timeStr),
+                                                   "%Y-%m-%d %H:%M:%S")
+                    t = time.mktime(t.timetuple())
+
+                s = dict(t=t,
+                         hp12CH4=float(vals[hp12CH4Idx]),
+                         hr12CH4=float(vals[hr12CH4Idx]),
+                         path=path,
+                         dt=0.0)
             except:
                 import traceback
                 traceback.print_exc()
@@ -57,7 +72,7 @@ def _parseDatFile(path):
                 return
 
             if not first:
-                s._replace(dt=s.t - DELTA_STATS[-1].t)
+                s.update(dt=s['t'] - DELTA_STATS[-1]['t'])
 
             first = False
             DELTA_STATS.append(s)
@@ -78,8 +93,8 @@ def main(opts):
         fp.write("Epoch Time (s),Delta Time (s),HP 12CH4 (ppm),"
                  "HR 12CH4 (ppm),File\n")
         for s in DELTA_STATS:
-            fp.write("%s,%s,%s,%s,%s\n" % (s.t, s.dt, s.hp12CH4, s.hr12CH4,
-                                           s.path))
+            fp.write("%s,%s,%s,%s,%s\n" % (s['t'], s['dt'], s['hp12CH4'],
+                                           s['hr12CH4'], s['path']))
 
 if __name__ == '__main__':
     parser = optparse.OptionParser()
