@@ -1,7 +1,7 @@
 /*global console, describe, beforeEach, it, require  */
 
 'use strict';
-var should = require("should");
+var should = require("chai").should();
 var newn2i = require("../lib/newNamesToIndices");
 
 describe('newNamesToIndices', function() {

@@ -18,6 +18,7 @@ define(function(require, exports, module) {
     {
         var err = null;
         var prot;
+        options.agent = false;
         // Merge the query key in the options into the URL string
         console.log("options: " + JSON.stringify(options));
         var restUrl = url.format(options);
@@ -27,6 +28,7 @@ define(function(require, exports, module) {
         }
         else prot = options.port == 443 ? https : http;
         console.log('url: ' + restUrl);
+        options.rejectUnauthorized = false;
         var req = prot.request(options, function(res)
         {
             var output = '';

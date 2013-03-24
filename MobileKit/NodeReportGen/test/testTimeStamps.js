@@ -1,7 +1,7 @@
 /*global console, describe, beforeEach, it, require  */
 
 'use strict';
-require("should");
+var should = require("chai").should();
 var ts = require("../lib/timeStamps");
 
 describe('timeStampFunctions', function() {

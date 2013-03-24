@@ -600,6 +600,8 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                                       msg: msg});
                             // Check if this has been previously submitted
                             if (request_ts !== start_ts) {
+
+
                                 alert("This is a duplicate of a previously submitted report");
                                 var prev = DASHBOARD.submittedJobs.where({hash: hash, directory: dirName});
                                 if (prev.length > 0) {

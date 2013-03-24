@@ -1,7 +1,7 @@
 /*global before, beforeEach, console, describe, it, require  */
 
 'use strict';
-require("should");
+var chai = require("chai"); chai.should();
 var pv = require("../public/js/common/paramsValidator");
 var newParamsValidator = pv.newParamsValidator;
 var latlngValidator = pv.latlngValidator;

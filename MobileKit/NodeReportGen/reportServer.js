@@ -3,14 +3,18 @@
 (function () {
     var argv = require('optimist').argv;
     var cjs = require("./public/js/common/canonical_stringify");
+    var events = require('events');
     var express = require('express');
-    var path = require('path');
-    var fs = require('./lib/fs');
+    var fs = require('fs');
     var getRest = require('./lib/getRest');
+    var GLOBALS = require('./lib/rptGenGlobals');
+    var mkdirp = require('mkdirp');
     var newP3ApiService = require('./lib/newP3ApiService');
+    var newReportGen = require('./lib/newReportGen');
+    var newRunningTasks = require('./lib/newRunningTasks');
+    var path = require('path');
     var pv = require('./public/js/common/paramsValidator');
     var REPORTROOT = argv.r ? argv.r : path.join(__dirname, 'ReportGen');
-    var newReportGen = require('./lib/newReportGen');
     var rptGenStatus = require('./public/js/common/rptGenStatus');
     var sf = require('./lib/statusFiles');
     var ts = require('./lib/timeStamps');
@@ -27,19 +31,20 @@
     app.set('views', path.join(__dirname, 'views'));
     app.use(express.bodyParser());
 
-    var csp_url = "https://dev.picarro.com/dev";
+    GLOBALS.csp_url = "https://dev.picarro.com/dev";
     // var csp_url = "https://localhost:8081/node";
-    var ticket_url = csp_url + "/rest/sec/dummy/1.0/Admin";
-    var identity = "dc1563a216f25ef8a20081668bb6201e";
-    var psys = "APITEST2";
+    GLOBALS.ticket_url = GLOBALS.csp_url + "/rest/sec/dummy/1.0/Admin";
+    GLOBALS.identity = "dc1563a216f25ef8a20081668bb6201e";
+    GLOBALS.psys = "APITEST2";
 
-    var rprocs = '["AnzLogMeta:byEpoch","AnzLog:byPos","AnzLog:byEpoch","AnzLog:makeSwath",' +
-                   '"AnzMeta:byAnz","AnzLrt:getStatus","AnzLrt:byRow","AnzLrt:firstSet",' +
-                   '"AnzLrt:nextSet","AnzLog:byGeo","AnzLog:makeFov"]';
-    var p3ApiService = newP3ApiService({"csp_url": csp_url, "ticket_url": ticket_url,
-            "identity": identity, "psys": psys, "rprocs": rprocs});
+    GLOBALS.rprocs = '["AnzLogMeta:byEpoch","AnzLog:byPos","AnzLog:byEpoch","AnzLog:makeSwath",' +
+                     '"AnzMeta:byAnz","AnzLrt:getStatus","AnzLrt:byRow","AnzLrt:firstSet",' +
+                     '"AnzLrt:nextSet","AnzLog:byGeo","AnzLog:makeFov"]';
+    var p3ApiService = newP3ApiService({"csp_url": GLOBALS.csp_url, "ticket_url": GLOBALS.ticket_url,
+            "identity": GLOBALS.identity, "psys": GLOBALS.psys, "rprocs": GLOBALS.rprocs});
 
     if (p3ApiService instanceof Error) throw p3ApiService;  // Fatal error
+
 
     function RptGenMonitor() {
         var that = this;
@@ -79,6 +84,7 @@
     };
 
     var rptGenMonitor = new RptGenMonitor();
+    GLOBALS.runningTasks  = newRunningTasks(REPORTROOT);
 
     function handleTz(req, res) {
         var tz = req.query["tz"] || "GMT";
@@ -115,6 +121,7 @@
             if (pv.ok()) {
                 reportGen = newReportGen(REPORTROOT, p3ApiService, pv.get("contents"));
                 rptGenMonitor.monitor(reportGen);
+                GLOBALS.runningTasks.monitor(reportGen);
                 reportGen.run({"force": pv.get("force")}, function (err, r) {
                     if (err) res.send(_.extend(result,{"error": err.message}));
                     else res.send(_.extend(result,r));
@@ -218,18 +225,16 @@
         });
     });
 
-    app.use("/rest/data", express.static(REPORTROOT));
     app.use("/", express.static(__dirname + '/public'));
-    var port = 5300;
-    app.listen(port);
 
-    fs.mkdir(REPORTROOT, parseInt('0777',8), true, function (err) {
-        if (err) {
-            console.log(err);
-        } else {
-            console.log('Directory ' + REPORTROOT + ' created.');
-        }
+    mkdirp(REPORTROOT, null, function (err) {
+        if (err) console.log(err);
+        else console.log('Directory ' + REPORTROOT + ' created.');
+        app.use("/rest/data", express.static(REPORTROOT));
+        GLOBALS.runningTasks.handleIncompleteTasksOnStartup( function () {
+            var port = 5300;
+            app.listen(port);
+            console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
+        });
     });
-
-    console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
 })();
