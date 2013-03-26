@@ -1,7 +1,7 @@
 /*global console, describe, beforeEach, it, require  */
 
 'use strict';
-require("should");
+var should = require("chai").should();
 var bs = require("../lib/bisect");
 var bisect_right = bs.bisect_right;
 var bisect_left = bs.bisect_left;
@@ -97,10 +97,10 @@ describe('bisect', function() {
     });
     describe('#test_negative_io', function () {
         it('should throw expected exceptions', function() {
-            bisect_left.should.throwError([1, 2, 3], 5, -1, 3);
-            bisect_right.should.throwError([1, 2, 3], 5, -1, 3);
-            insort_left.should.throwError([1, 2, 3], 5, -1, 3);
-            insort_right.should.throwError([1, 2, 3], 5, -1, 3);
+            should.Throw(bisect_left,[1, 2, 3], 5, -1, 3);
+            should.Throw(bisect_right,[1, 2, 3], 5, -1, 3);
+            should.Throw(insort_left,[1, 2, 3], 5, -1, 3);
+            should.Throw(insort_right,[1, 2, 3], 5, -1, 3);
         });
     });
 });

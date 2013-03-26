@@ -1,7 +1,7 @@
 /*global console, describe, before, it, require  */
 
 'use strict';
-require("should");
+var should = require("chai").should();
 var bs = require("../lib/bisect");
 var gh = require("../lib/geohash");
 var bisect_right = bs.bisect_right;

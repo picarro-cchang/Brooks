@@ -1,6 +1,6 @@
-rs = require('./reportSupport');
+newRptGenService = require('./lib/newRptGenService');
 
-rgApi = rs.newRptGenService({"rptgen_url": "http://localhost:5300"});
+rgApi = newRptGenService({"rptgen_url": "http://localhost:5300"});
 
 if (rgApi instanceof Error) {
     console.log("Error getting RptGenService: " + rgApi);

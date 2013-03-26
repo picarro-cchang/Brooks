@@ -5,6 +5,7 @@ if (typeof define !== 'function') { var define = require('amdefine')(module); }
 define(function(require, exports, module) {
 	'use strict';
     module.exports = {
+        "OTHER_ERROR": -128,
         "FAILED": -4,
         "BAD_PARAMETERS": -2,
         "TASK_NOT_FOUND": -1,

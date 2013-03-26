@@ -16,6 +16,7 @@ requirejs.config({
         'jquery-migrate': '/js/lib/jquery-migrate-1.1.1.min',
         'underscore': '/js/lib/underscore-min',
         'backbone': '/js/lib/backbone-min',
+        'localStorage': '/js/lib/backbone.localStorage-min',
         'jquery.dataTables': '/js/lib/jquery.dataTables.min',
         'jquery.generateFile': '/js/lib/jquery.generateFile',
         'jquery.timezone-picker': '/js/lib/jquery.timezone-picker.min',

@@ -8,7 +8,7 @@ define(function(require, exports, module) {
     var events = require('events');
     var fs = require('fs');
     var gh = require('./geohash');
-    var jf = require('./jsonfiles');
+    var jf = require('./jsonFiles');
     var newN2i = require('./newNamesToIndices');
     var newP3LrtFetcher = require('./newP3LrtFetcher');
     var newSerializer = require('./newSerializer');

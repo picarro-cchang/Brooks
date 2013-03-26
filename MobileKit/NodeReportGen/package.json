@@ -9,8 +9,12 @@
     "jade": ">=0.28.1",
     "optimist": ">=0.3.5",
     "requirejs": ">=2.1.5",
-    "should": ">=1.2.1",
     "timezone": ">=0.0.16",
-    "underscore": ">=1.4.4"
+    "underscore": ">=1.4.4",
+    "mkdirp": ">=0.3.5"
+  },
+  "devDependencies": {
+    "chai": "*",
+    "mocha": "*"
   }
 }

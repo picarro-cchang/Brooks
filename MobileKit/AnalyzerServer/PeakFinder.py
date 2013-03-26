@@ -586,6 +586,7 @@ class PeakFinder(object):
                         entry[h] = NaN
 
                 lng, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
+
                 if "GPS_FIT" in entry and entry["GPS_FIT"] < 1:
                     if (lng != 0.0) or (lat != 0.0): continue
                 if isnan(lng) or isnan(lat): continue
@@ -634,6 +635,7 @@ class PeakFinder(object):
                         except:
                             entry[h] = NaN
                     lng, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
+
                     if "GPS_FIT" in entry and entry["GPS_FIT"] < 1:
                         if (lng != 0.0) or (lat != 0.0): continue
                     if isnan(lng) or isnan(lat): continue
@@ -906,6 +908,7 @@ class PeakFinder(object):
                             doc_row = 0
                         else:
                             peakFile = os.path.splitext(fname)[0] + '.peaks'
+
                             if self.debug:
                                 sys.stderr.write('line 906. peakFile: %s' % peakFile)
                             try:

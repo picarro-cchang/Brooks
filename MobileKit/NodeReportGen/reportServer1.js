@@ -14,7 +14,7 @@ define(function(require, exports, module) {
         var newP3ApiService = require('./lib/newP3ApiService');
         var pv = require('./public/js/common/paramsValidator');
         var REPORTROOT = argv.r ? argv.r : path.join(__dirname, 'ReportGen');
-        var reportSupport = require('./reportSupport');
+        var newReportGen = require('./lib/newReportGen');
         var rptGenStatus = require('./public/js/common/rptGenStatus');
         var sf = require('./lib/statusFiles');
         var ts = require('./lib/timeStamps');
@@ -114,7 +114,7 @@ define(function(require, exports, module) {
                      {"name": "force", "required": false, "validator": "boolean", "default_value": false,
                       "transform": stringToBoolean }]);
                 if (pv.ok()) {
-                    reportGen = reportSupport.newReportGen(REPORTROOT, p3ApiService, pv.get("contents"));
+                    reportGen = newReportGen(REPORTROOT, p3ApiService, pv.get("contents"));
                     rptGenMonitor.monitor(reportGen);
                     reportGen.run({"force": pv.get("force")}, function (err, r) {
                         if (err) res.send(_.extend(result,{"error": err.message}));
