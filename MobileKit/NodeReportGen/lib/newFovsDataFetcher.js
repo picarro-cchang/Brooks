@@ -164,6 +164,7 @@ define(function(require, exports, module) {
         }
 
         function closePathFiles(done) {
+            // console.log('closePathFiles');
             var pending = 0;
             _.keys(that.filenames).forEach(function (fname) {
                 pending += 1;
@@ -175,9 +176,11 @@ define(function(require, exports, module) {
                     }
                 });
             });
+            if (pending === 0) done(null);
         }
 
         function processRuns(done) {
+            // console.log("Calling processRuns");
             // Serially process runs using processRun on each
             var params = that.norm_instr;
             initializePath();
@@ -195,6 +198,7 @@ define(function(require, exports, module) {
         }
 
         function processRun(done) {
+            // console.log("Calling processRun");
             if (that.fovError) done(that.fovError);
             else {
                 // Process the run specified by that.pathParams.runIndex
@@ -207,7 +211,7 @@ define(function(require, exports, module) {
                 var swCorner = gh.decodeToLatLng(params.swCorner);
                 var neCorner = gh.decodeToLatLng(params.neCorner);
                 // Do the LRT
-                console.log("Processing run: " + runIndex);
+                // console.log("Processing run: " + runIndex);
                 var lrtParams = {'anz':analyzer, 'startEtm':startEtm, 'endEtm':endEtm,
                                  'minLng':swCorner[1], 'minLat':swCorner[0],
                                  'maxLng':neCorner[1], 'maxLat':neCorner[0],
@@ -238,6 +242,7 @@ define(function(require, exports, module) {
         }
 
         function postProcess(done) {
+            // console.log("Calling postProcess", that.fovPending);
             // Poll for completion of fov processing then write out key file
             function next() {
                 if (that.fovError) done(that.fovError);
@@ -329,12 +334,14 @@ define(function(require, exports, module) {
         function onRunEnd(runIndex, done) {
             // Write out all the path buffers which are not empty
             var pending = 0;
-            _.keys(that.pathParams.fovProcessors[runIndex]).forEach(function (survey) {
-                var p = that.pathParams.fovProcessors[runIndex][survey];
-                that.fovPending += 1;
-                p.processor.writeoutFov(p.rows);
-                console.log("RUN END: " + runIndex + " Survey: " + survey + " Rows: " + p.rows.length);
-            });
+            if (that.pathParams.fovProcessors.hasOwnProperty(runIndex)) {
+                _.keys(that.pathParams.fovProcessors[runIndex]).forEach(function (survey) {
+                    var p = that.pathParams.fovProcessors[runIndex][survey];
+                    that.fovPending += 1;
+                    p.processor.writeoutFov(p.rows);
+                    // console.log("RUN END: " + runIndex + " Survey: " + survey + " Rows: " + p.rows.length);
+                });
+            }
             _.keys(that.pathParams.pathBuffers).forEach(function (run) {
                 var pathsInRun = that.pathParams.pathBuffers[run];
                 _.keys(pathsInRun).forEach(function (survey) {
@@ -362,6 +369,7 @@ define(function(require, exports, module) {
                     }
                 });
             });
+            if (pending === 0) done(null);
         }
 
         function onRunError(err, done) {

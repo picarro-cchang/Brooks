@@ -97,14 +97,14 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
 
         REPORT.Peak = Backbone.Model.extend({
             defaults: {
-                "A": 0.0,
-                "C": 0.0,
-                "T": 0,
-                "P": "",
-                "R": 0,
-                "S": 0,
-                "W": NaN,
-                "U": NaN
+                "A": 0.0,       // Amplitude of peak
+                "C": 0.0,       // Concentration at peak
+                "T": 0,         // Epoch time
+                "P": "",        // Position (geohashed)
+                "R": 0,         // Run index
+                "S": 0,         // Survey index
+                "W": NaN,       // Wind direction (mean)
+                "U": NaN        // Wind direction (std dev)
             }
         });
 
@@ -114,7 +114,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             initialize: function (models, options) {
                 this.peaksRef = options.peaksRef;
             },
-            getData: function () {
+            getData: function () {  // Get all peaks data from the server which can be in several files
                 var that = this;
                 var names;
                 if (that.loadStage === 'loading') return;
@@ -126,18 +126,18 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     names = that.peaksFiles.slice(0);
                     next();
                 }
-                function next() {
+                function next() {   // Sequentially fetch peaks from list of files in "names"
                     var url;
-                    if (names.length === 0) {
+                    if (names.length === 0) {       // Get here after all files are read in
                         console.log(REPORT.peaks);
                         that.loadStage = 'loaded';
                         that.trigger('loaded');
                     }
                     else {
                         url = that.workDir + '/' + names.shift();
-                        $.getJSON(url, function(data) {
+                        $.getJSON(url, function(data) { // Get peaks data from the server - this must later be protected via a ticket
                             data.forEach(function (d) { // Can filter by lat-lng limits here
-                                that.push(d, {silent:true});
+                                that.push(d, {silent:true});    // All peaks are pushed to the collection
                             });
                             next();
                         });
@@ -148,12 +148,12 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
 
         REPORT.Path = Backbone.Model.extend({
             defaults: {
-                "E": "",
-                "N": 0,
-                "P": "",
-                "R": 0,
-                "S": 0,
-                "T": 0
+                "E": "",    // Position of edge of swath (geohashed)
+                "N": 0,     // Run index
+                "P": "",    // Position of path (geohashed)
+                "R": 0,     // Row index
+                "S": 0,     // Survey index
+                "T": 0      // Epoch time
             }
         });
 
@@ -163,7 +163,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             initialize: function (models, options) {
                 this.pathsRef = options.pathsRef;
             },
-            getData: function () {
+            getData: function () {  // Getting path and fov data is interleaved with rendering, since there can be lots of points
                 var that = this;
                 var names;
                 var neCorner = REPORT.settings.get("neCorner");
@@ -178,25 +178,25 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     that.loadStage = 'loading';
                     that.workDir = '/rest/data/'+that.pathsRef.SUBMIT_KEY.hash+'/'+that.pathsRef.SUBMIT_KEY.dir_name;
                     that.pathsFiles = that.pathsRef.OUTPUTS.FILES;
-                    names = that.pathsFiles.slice(0);
+                    names = that.pathsFiles.slice(0);   // These are all the names of the paths files, by survey and run
                     next();
                 }
                 function next() {
                     var url;
                     if (names.length === 0) {
                         console.log(REPORT.paths);
-                        that.loadStage = 'loaded';
+                        that.loadStage = 'loaded';  // All paths (and FOVs) have been processed
                         that.trigger('loaded');
                     }
-                    else {
+                    else {  // Read contents of one file, and consider that as a "block"
                         var name = names.shift();
-                        var comps = name.split(/[_.]/);
-                        var type = comps[0];
-                        var survey = +comps[1];
-                        var run = +comps[2];
+                        var comps = name.split(/[_.]/); // Filename splits into following components
+                        var type = comps[0];    // "path" or "fov"
+                        var survey = +comps[1]; // survey index
+                        var run = +comps[2];    // run index
                         url = that.workDir + '/' + name;
                         var processPathData = function(data, fovData) {
-                            data.forEach(function (d) {
+                            data.forEach(function (d) { // We render path data, and look if there is FOV information at same location
                                 d["N"] = run;
                                 d["S"] = survey;
                                 var where = gh.decodeGeoHash(d.P);
@@ -204,34 +204,30 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                                 var lng = where.longitude[2];
                                 if (lat >= minLat-padLat && lat <= maxLat+padLat &&
                                     lng >= minLng-padLng && lng <= maxLng+padLng) {
-                                //if (true) {
-                                    //d["id"] = formatNumberLength(survey,5) + "_" +
-                                    //          formatNumberLength(run,5) + "_" +
-                                    //          formatNumberLength(d["R"],6);
-                                    if (d.row in fovData) {
-                                        d["E"] = fovData[d.row]["E"];
-                                        if (d["P"] !== fovData[d.row]["P"]) alert("Bad FOV data");
+                                    if (d["R"] in fovData) { // This is the corresponding location in the FOV data dictionary
+                                        d["E"] = fovData[d["R"]]["E"];   // If an edge is available, grab it
+                                        if (d["P"] !== fovData[d["R"]]["P"]) alert("Bad FOV data");  // Check path segment is consistent
                                     }
-                                    that.push(d,{silent: true});
+                                    that.push(d,{silent: true});    // Add path (and fov) data to the collection
                                 }
                             });
-                            that.trigger('block');
+                            that.trigger('block');  // Signal that this block can be rendered
                             next();
                         };
-                        if (type === 'path') {
-                            $.getJSON(url, function(data) {
+                        if (type === 'path') {  // Get path data from the server - this must later be protected via a ticket
+                            $.getJSON(url, function(pathData) {
                                 var fovData = {};
-                                var urlFov = url.replace("path", "fov");
+                                var urlFov = url.replace("path", "fov");    // Get corresponding FOV (by filename)
                                 if ($.inArray(name.replace("path", "fov"),that.pathsFiles) >= 0) {
-                                    $.getJSON(urlFov, function(data) {
-                                        data.forEach(function (d) {
-                                            fovData[d.R] = d;
+                                    $.getJSON(urlFov, function(fData) {
+                                        fData.forEach(function (d) {
+                                            fovData[d.R] = d;   // Assemble the FOV data indexed by row number
                                         });
-                                        processPathData(data, fovData);
+                                        processPathData(pathData, fovData);
                                     });
                                 }
                                 else {
-                                    processPathData(data, {});
+                                    processPathData(pathData, {});  // If no FOV data are available
                                 }
                             });
                         }

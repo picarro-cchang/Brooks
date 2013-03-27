@@ -31,8 +31,8 @@
     app.set('views', path.join(__dirname, 'views'));
     app.use(express.bodyParser());
 
-    GLOBALS.csp_url = "https://dev.picarro.com/dev";
-    // var csp_url = "https://localhost:8081/node";
+    // GLOBALS.csp_url = "https://dev.picarro.com/dev";
+    GLOBALS.csp_url = "https://localhost:8081/node";
     GLOBALS.ticket_url = GLOBALS.csp_url + "/rest/sec/dummy/1.0/Admin";
     GLOBALS.identity = "dc1563a216f25ef8a20081668bb6201e";
     GLOBALS.psys = "APITEST2";

@@ -61,7 +61,7 @@ function ( _, gh, utils, REPORT) {
                 that.runs[p.run] = true;
                 that.surveys[p.survey] = true;
             }
-            if (p.edge !== undefined) {
+            if (p.edge !== undefined && p.edge !== "") {
                 where = gh.decodeToLatLng(p.edge);
                 lat = where[0];
                 lng = where[1];
