@@ -586,7 +586,8 @@ class PeakFinder(object):
                         entry[h] = NaN
 
                 lng, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
-                if "GPS_FIT" in entry and entry["GPS_FIT"] < 1: 
+
+                if "GPS_FIT" in entry and entry["GPS_FIT"] < 1:
                     if (lng != 0.0) or (lat != 0.0): continue
                 if isnan(lng) or isnan(lat): continue
                 if lat_ref == None or lng_ref == None:
@@ -634,7 +635,8 @@ class PeakFinder(object):
                         except:
                             entry[h] = NaN
                     lng, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
-                    if "GPS_FIT" in entry and entry["GPS_FIT"] < 1: 
+
+                    if "GPS_FIT" in entry and entry["GPS_FIT"] < 1:
                         if (lng != 0.0) or (lat != 0.0): continue
                     if isnan(lng) or isnan(lat): continue
                     if lat_ref == None or lng_ref == None:
@@ -879,12 +881,12 @@ class PeakFinder(object):
                 # Filter by spectrumID for isomethane analyzer
                 selectedData = ((data.DISTANCE,data) for data in alignedData if (data is not None) and ('species' not in data._fields or int(data.species) in [2,150]))
 
-                if self.debug: 
-                    sys.stderr.write('line 881')                         
+                if self.debug:
+                    sys.stderr.write('line 881')
                 intData = (data for dist,data in interpolator(selectedData,dx))
                 peakData = self.spaceScale(intData,dx,t0,nlevels,factor)
                 filteredPeakData = (pk for pk in peakData if pk.AMPLITUDE>minAmpl)
-                if self.debug: 
+                if self.debug:
                     sys.stderr.write('line 886')
 
                 # Write results to database or to the analysis file
@@ -906,8 +908,9 @@ class PeakFinder(object):
                             doc_row = 0
                         else:
                             peakFile = os.path.splitext(fname)[0] + '.peaks'
-                            if self.debug: 
-                                sys.stderr.write('line 906. peakFile: %s', peakFile)
+
+                            if self.debug:
+                                sys.stderr.write('line 906. peakFile: %s' % peakFile)
                             try:
                                 handle = open(peakFile, 'wb+', 0) #open file with NO buffering
                             except:
@@ -941,7 +944,7 @@ class PeakFinder(object):
 
                 if self.debug:
                     sys.stderr.write('line 939')
-                
+
                 if not self.usedb and handle is not None:
                     handle.close()
 
