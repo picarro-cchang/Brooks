@@ -20,8 +20,7 @@ File History:
     10-06-24 sze   Added numGroups key to RdData objects
     10-12-07 sze   Allow scripts to use different spectral and spline libraries instead
                     of making these libraries global 
-    13-01-29 sze   Add per virtual laser offset for use with FSR hopping or laser current tuning
-    
+
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -659,7 +658,6 @@ class Model(object):
         self.dummyParameters = []
         self.parameters = None
         self.xModifier = None
-        self.vlaserOffsets = None
         self.x_center = 0
         self.nParameters = 0
         self.funcList = []
@@ -683,12 +681,7 @@ class Model(object):
         self.funcList.append(f)
         if index is not None:
             self.basisFunctionByIndex[index] = f
-    def registerVlaserOffsets(self,f):
-        f.parent = self
-        nParams = f.numParams()
-        f.setParamIndices(arange(self.nParameters,self.nParameters+nParams))
-        self.nParameters += nParams
-        self.vlaserOffsets = f        
+        
     def registerXmodifier(self,f):
         f.parent = self
         nParams = f.numParams()
@@ -718,12 +711,7 @@ class Model(object):
             if self.xModifier is not None: x = self.xModifier(x)
             for f in self.funcList: y = y + f(x)
         return y
-    def getResidual(self,x,y,v):
-        if v is not None and self.vlaserOffsets is not None:
-            return y - self(x + self.vlaserOffsets(x)[v])
-        else:
-            return y - self(x)
-    
+        
     def __setitem__(self,key,value):
         class1, class2, key1, key2, extra = classifyKeyTuple(key)
         if class1 == 0: # We have a function between 0 and 999
@@ -888,20 +876,7 @@ class Quadratic(BasisFunctions):
     def call(self,a,x):
         xs = x - self.parent.x_center
         return a[0] + a[1]*xs + a[2]*xs**2
-################################################################################
-# VlaserOffsets for per virtual laser frequency offset
-################################################################################
-class VlaserOffsets(BasisFunctions):
-    nParams = 8
-    name = "virtualLaserOffsets"
-    def __init__(self,params=None):
-        BasisFunctions.__init__(self)
-        if params is not None:
-            self.initialParams = params
-        else:
-            self.initialParams = zeros(self.nParams,dtype=float)
-    def call(self,a,x):    
-        return asarray(a) 
+
 ################################################################################
 # FrequencySquish for frequency offset and scale
 ################################################################################
@@ -1322,8 +1297,8 @@ class RdfData(object):
         except Exception, e:
             Log("Exception while processing RdfData.__getitem__")
             return None
-    def defineFitData(self,freq,loss,sdev,vlaser=None):
-        self.fitData = dict(freq=freq,loss=loss,sdev=sdev,vlaser=vlaser)
+    def defineFitData(self,freq,loss,sdev):
+        self.fitData = dict(freq=freq,loss=loss,sdev=sdev)
     def sortBy(self,field):
         # Change the index vector so that the data are now sorted by the specified field
         #  For example data.sortBy("waveNumber") will reorder the currently selected
@@ -1490,69 +1465,7 @@ class RdfData(object):
         nStart = len(self.indexVector)
         nEnd = sum([len(g) for g in self.groups])
         self.filterHistory.append(("sparseFilter",nStart-nEnd,nEnd))
-
-##  14 June 2010  added modified sigma filter named "outlierFilter"
-    def sparseByVlaser(self,maxPoints,width,height,xColumn,yColumn,sigmaThreshold=-1,outlierThreshold=-1):
-        """Sparse the ringdown data by binning the data specified by "xColumn" and
-        "yColumn" into rectangles of maximum dimensions "width" by "height",
-        with no more than "maxPoints" data in each bin. A sigma filter
-        with the specified "sigmaThreshold" or outlier filter with specified
-        "outlierThreshold" is applied to the y values in each bin.
-        Returns a list of bins, each specified by an array of indices of points
-        within the bin.
-        """
-        height = 0.001*height # Convert from ppb/cm to ppm/cm
-
-        def sparseByVlaserAgg(xx,yy,vv):
-            """This is the aggregator function, curried with the input arguments to sparse
-            which needs to be passed to groupBy"""
-            uv = unique(vv)
-            groups = []
-            if len(xx)==0: return groups
-            for vnum in uv:
-                start = True
-                for i in range(len(xx)):
-                    if vv[i] != vnum: continue
-                    x = xx[i]; y = yy[i]
-                    if start:
-                        start = False
-                    else:
-                        # A group consists of points within a rectangle
-                        if nPoints<maxPoints:
-                            ymin = min(ymin,y); ymax = max(ymax,y)
-                            if x-xmin <= width and ymax-ymin <= height:
-                                g.append(i)
-                                nPoints += 1
-                                continue
-                        # We need to start a new group, close off the previous one and apply
-                        #  the sigma filter
-                        g = array(g)
-                        if outlierThreshold < 0:
-                            sel = flatnonzero(sigmaFilter(yy[g],sigmaThreshold)[0])
-                        else:
-                            sel = flatnonzero(outlierFilter(yy[g],outlierThreshold)[0])
-                        if len(sel)>0: groups.append(g[sel])
-                    g = [i]
-                    xmin = x
-                    ymin = ymax = y
-                    nPoints = 1
-                # Finish off the last group, if non-empty
-                if len(g)>0:
-                    g = array(g)
-                    if outlierThreshold < 0:
-                        sel = flatnonzero(sigmaFilter(yy[g],sigmaThreshold)[0])
-                    else:
-                        sel = flatnonzero(outlierFilter(yy[g],outlierThreshold)[0])
-                    if len(sel)>0: groups.append(g[sel])
-            return groups
-        # end of sparseAgg
-        self.sortBy(xColumn)
-        self.groupBy([xColumn,yColumn,"laserUsed"],sparseByVlaserAgg)
-        # Calculate number of points removed by sparse filter
-        nStart = len(self.indexVector)
-        nEnd = sum([len(g) for g in self.groups])
-        self.filterHistory.append(("sparseByVlaserFilter",nStart-nEnd,nEnd))
-        
+    
     def calcGroupStats(self):
         self.evaluateGroups(["waveNumber","uncorrectedAbsorbance","waveNumberSetpoint","pztValue","ratio1","ratio2","wlmAngle","laserTemperature"])
         self.groupStats = {}
@@ -1684,9 +1597,6 @@ class Analysis(object):
         self.centerFrequency = None
         self.regionName = None
         self.fitSequenceParameters = []
-        section = "options"
-        self.useVlaserOffsets = self.config.getboolean(section,"use virtual laser offsets", False)
-        
         section = "Region Fit Definitions"
         for k in range(self.config.getint(section,"number of sections")):
             self.regionStart.append(self.config.getfloat(section,"Start frequency_%d" % k))
@@ -1725,7 +1635,6 @@ class Analysis(object):
         for k in range(fitSeqIndex):
             section = "DS%d" % (k,)
             variables = flatnonzero(array(map(int,self.config.get(section,"vary coefficients").split(","))))
-            print "Variables", variables
             self.fitSequenceParameters[k]["variables"] = variables
             depList = []
             depIndex = 0
@@ -1746,9 +1655,6 @@ class Analysis(object):
         m.addToModel(Quadratic(offset=0.0,slope=0.0,curvature=0.0),index=None)
         m.registerXmodifier(FrequencySquish(offset=0.0,squish=0.0))
         m.addDummyParameter(self.nPeaks)
-        #
-        if self.useVlaserOffsets:
-            m.registerVlaserOffsets(VlaserOffsets())
         # Go through basisArray to assemble the model
         for i in basisArray:
             if i<1000:
@@ -1782,7 +1688,7 @@ class Analysis(object):
         del odict['config']
         return odict
         
-    def setData(self,xx,yy,stdDev,vlaser):
+    def setData(self,xx,yy,stdDev):
         """Specify the data which are to be fitted. Only the points within the fit regions are used"""
         selected = zeros(shape(xx),bool_)
         for s,e in zip(self.regionStart,self.regionEnd):
@@ -1790,11 +1696,6 @@ class Analysis(object):
         self.xData = xx[selected]
         self.yData = yy[selected]
         self.weight = 1/(stdDev[selected])
-        if vlaser is not None:
-            self.vlaser = vlaser[selected]
-        else:
-            self.vlaser = None
-            
     def processDeps(self,seqIndex,deps):
         dlist = []
         slist = []
@@ -1849,18 +1750,12 @@ class Analysis(object):
             # print "Fitfunc parameters: ",p
             m.parameters[v] = p
             if len(s)>0: m.parameters[d] = c1*m.parameters[s]+c2
-            if self.useVlaserOffsets:
-                return self.weight*m.getResidual(self.xData,self.yData,self.vlaser)
-            else:
-                return self.weight*(self.yData-m(self.xData))
+            return self.weight*(self.yData-m(self.xData))
         # Compute residuals between fitted model and data
         def fitres(p):
             m.parameters[v] = p
             if len(s)>0: m.parameters[d] = c1*m.parameters[s]+c2
-            if self.useVlaserOffsets:
-                return m.getResidual(self.xData,self.yData,self.vlaser)
-            else:
-                return self.yData-m(self.xData)
+            return self.yData-m(self.xData)
         try:
             if fine:
                 #params, self.ier = leastsq(fitfunc,p0,xtol=1e-4,epsfcn=1e-11)
@@ -1913,11 +1808,7 @@ class Analysis(object):
         loss = concatenate([d.fitData["loss"] for d in dList])
         sdev = concatenate([d.fitData["sdev"] for d in dList])
         perm = argsort(freq)
-        if d.fitData["vlaser"] is not None:
-            vlaser = concatenate([d.fitData["vlaser"] for d in dList])
-            self.setData(freq[perm],loss[perm],sdev[perm],vlaser[perm])
-        else:
-            self.setData(freq[perm],loss[perm],sdev[perm],None)
+        self.setData(freq[perm],loss[perm],sdev[perm])
         self.model.setAttributes(pressure=pressure, temperature=temperature)
         self.model.createParamVector(self.initVals)
         self.parameters = []
