@@ -1,6 +1,9 @@
 /* reportGlobals.js */
 
 define ({
+    Analysis: null,
+    analyses: null,
+    Analyses: null,
     AppView: null,
     CompositeView: null,
     CompositeViewWithLinks: null,

@@ -36,7 +36,7 @@ function (utils, gh, REPORT) {
                 etmList.push(1000*run.minetm);
                 etmList.push(1000*run.maxetm);
             }
-            var url = '/rest/tz?' + $.param({tz:REPORT.settings.get("reportTimezone"),posixTimes:etmList});
+            var url = '/rest/tz?' + $.param({tz:REPORT.settings.get("timezone"),posixTimes:etmList});
             $.getJSON(url,function (data) {
                 for (i=0; i<surveys.length; i++) {
                     var run = REPORT.surveys.where({"id": surveys[i]})[0].attributes;

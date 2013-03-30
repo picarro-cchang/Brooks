@@ -1,28 +1,20 @@
 // getReport.js
-/*global console, requirejs, TEMPLATE_PARAMS */
+/*global alert, console, define, TEMPLATE_PARAMS */
+/* jshint undef:true, unused:true */
 
 define(['jquery', 'underscore', 'backbone', 'app/geohash', 'app/reportGlobals', 'app/cnsnt',
-        'app/makePeaks', 'app/makeWedges', 'app/newPathsMaker','app/makePeaksTable',
-        'app/makeRunsTable', 'app/makeSurveysTable', 'app/makeSubmapGrid', 'app/newMultiCanvas',
+        'app/makePeaks', 'app/makeWedges', 'app/makeAnalyses', 'app/newPathsMaker','app/makePeaksTable',
+        'app/makeRunsTable', 'app/makeSurveysTable', 'app/makeAnalysesTable', 'app/makeSubmapGrid', 'app/newMultiCanvas',
         'jquery-migrate', 'json2',
         'bootstrap-modal', 'bootstrap-dropdown', 'bootstrap-spinedit', 'bootstrap-transition',
         'jquery.dataTables', 'jquery.ba-bbq'],
 
 function ($, _, Backbone, gh, REPORT, CNSNT,
-          makePeaks, makeWedges, newPathsMaker, makePeaksTable,
-          makeRunsTable, makeSurveysTable, makeSubmapGrid, newMultiCanvas) {
+          makePeaks, makeWedges, makeAnalyses, newPathsMaker, makePeaksTable,
+          makeRunsTable, makeSurveysTable, makeAnalysesTable, makeSubmapGrid, newMultiCanvas) {
     'use strict';
 
     var instructionsLoaded = false;
-
-    function formatNumberLength(num, length) {
-        // Zero pads a number to the specified length
-        var r = "" + num;
-        while (r.length < length) {
-            r = "0" + r;
-        }
-        return r;
-    }
 
     function init() {
 
@@ -45,6 +37,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
 
         REPORT.ReportTables = Backbone.Model.extend({
             defaults: {
+                "analysesTable": false,
                 "peaksTable": false,
                 "surveysTable": false,
                 "runsTable": false
@@ -93,6 +86,56 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
 
         REPORT.Surveys = Backbone.Collection.extend({
             model: REPORT.Survey
+        });
+
+        REPORT.Analysis = Backbone.Model.extend({
+            defaults: {
+                "C": 0.0,       // Concentration at peak
+                "D": 0.0,       // Delta value
+                "P": "",        // Position (geohashed)
+                "R": 0,         // Run index
+                "S": 0,         // Survey index
+                "T": 0,         // Epoch time
+                "U": 0          // Uncertainty in delta
+            }
+        });
+
+        REPORT.Analyses = Backbone.Collection.extend({
+            loadStage: 'init',
+            model: REPORT.Analysis,
+            initialize: function (models, options) {
+                this.analysesRef = options.analysesRef;
+            },
+            getData: function () {  // Get all analyses data from the server which can be in several files
+                var that = this;
+                var names;
+                if (that.loadStage === 'loading') return;
+                else if (that.loadStage === 'loaded') that.trigger('loaded');
+                else {
+                    that.loadStage = 'loading';
+                    that.workDir = '/rest/data/'+that.analysesRef.SUBMIT_KEY.hash+'/'+that.analysesRef.SUBMIT_KEY.dir_name;
+                    that.analysesFiles = that.analysesRef.OUTPUTS.FILES;
+                    names = that.analysesFiles.slice(0);
+                    next();
+                }
+                function next() {   // Sequentially fetch analyses from list of files in "names"
+                    var url;
+                    if (names.length === 0) {       // Get here after all files are read in
+                        console.log(REPORT.analyses);
+                        that.loadStage = 'loaded';
+                        that.trigger('loaded');
+                    }
+                    else {
+                        url = that.workDir + '/' + names.shift();
+                        $.getJSON(url, function(data) { // Get analyses data from the server - this must later be protected via a ticket
+                            data.forEach(function (d) { // Can filter by lat-lng limits here
+                                that.push(d, {silent:true});    // All analyses are pushed to the collection
+                            });
+                            next();
+                        });
+                    }
+                }
+            }
         });
 
         REPORT.Peak = Backbone.Model.extend({
@@ -241,7 +284,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
         REPORT.ReportViewResources = Backbone.View.extend({
             initialize: function () {
                 this.listenTo(REPORT.settings, "change", this.settingsChanged);
-                this.contexts = {'map':null, 'satellite':null, 'peaks': null, 'fovs': null,
+                this.contexts = {'analyses': null, 'map':null, 'satellite':null, 'peaks': null, 'fovs': null,
                                  'paths': null, 'wedges': null, 'submapGrid': null };
                 this.padX = 30;
                 this.padY = 30;
@@ -271,8 +314,10 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 this.makeSubmapGridLayer();
                 this.makePeaksLayer();
                 this.makeWedgesLayer();
+                this.makeAnalysesLayer();
                 this.makePathsLayers();
                 this.makePeaksTable();
+                this.makeAnalysesTable();
             },
             setupReport: function () {
                 var cosLat, deltaLat, deltaLng, fac, mppx, mppy, Xp, Yp;
@@ -387,6 +432,15 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 });
                 REPORT.peaks.getData();
             },
+            makeAnalysesLayer: function() {
+                var that = this;
+                REPORT.analyses.once("loaded", function () {
+                    that.analysesData = REPORT.analyses.models;
+                    that.contexts["analyses"] = makeAnalyses(that)["context"];
+                    that.trigger("change",{"context": "analyses"});
+                });
+                REPORT.analyses.getData();
+            },
             makePathsLayers: function () {
                 if (!REPORT.paths) return;
                 var that = this;
@@ -409,6 +463,15 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     that.makeSurveysTable();
                 });
                 REPORT.paths.getData();
+            },
+            makeAnalysesTable: function () {
+                var that = this;
+                REPORT.analyses.once("loaded", function () {
+                    that.analysesData = REPORT.analyses.models;
+                    that.analysesTable = makeAnalysesTable(that);
+                    that.trigger("change",{"context": "analysesTable"});
+                });
+                REPORT.analyses.getData();
             },
             makePeaksTable: function () {
                 var that = this;
@@ -472,7 +535,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 };
                 image.src = url;
             },
-            onCanvasClick: function(e) {
+            onCanvasClick: function() {
                 if (this.hoverLink) {
                     var link = REPORT.reportViewResources.submapLinks[this.hoverLink];
                     var url = window.location.pathname + '?' + $.param({"swCorner": link.swCorner,
@@ -520,8 +583,11 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     case 'peaks':
                         this.addLayer(REPORT.reportViewResources.contexts['peaks'],[0,0],6,'peaks');
                         break;
+                    case 'analyses':
+                        this.addLayer(REPORT.reportViewResources.contexts['analyses'],[0,0],7,'analyses');
+                        break;
                     case 'submapGrid':
-                        this.addLayer(REPORT.reportViewResources.contexts['submapGrid'],[0,0],7,'submapGrid');
+                        this.addLayer(REPORT.reportViewResources.contexts['submapGrid'],[0,0],8,'submapGrid');
                         break;
                 }
             }
@@ -545,7 +611,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
 
             render: function(padding) {
                 var init = false;
-                var allLayers = ['map', 'satellite', 'paths', 'fovs', 'wedges', 'peaks', 'submapGrid'];
+                var allLayers = ['map', 'satellite', 'paths', 'fovs', 'wedges', 'peaks', 'analyses', 'submapGrid'];
                 for (var i=0; i<allLayers.length; i++) {
                     var layerName = allLayers[i], s;
                     if (layerName in this.available) {
@@ -592,7 +658,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             },
             render: function(padding) {
                 var init = false;
-                var allLayers = ['map', 'satellite', 'paths', 'fovs', 'wedges', 'peaks', 'submapGrid'];
+                var allLayers = ['map', 'satellite', 'paths', 'fovs', 'wedges', 'peaks', 'analyses', 'submapGrid'];
                 for (var i=0; i<allLayers.length; i++) {
                     var layerName = allLayers[i], s;
                     if (layerName in this.available) {
@@ -641,6 +707,22 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 if (e.context in this.available) this.available[e.context] = true;
                 for (var l in this.available) allAvailable = allAvailable && this.available[l];
                 if (allAvailable) this.render([0,0]);
+            }
+        });
+
+        REPORT.AnalysesTableView = Backbone.View.extend({
+            initialize: function () {
+                console.log("Initializing AnalysesTableView");
+                this.listenTo(REPORT.reportViewResources,"change",this.repositoryChanged);
+            },
+            repositoryChanged: function (e) {
+                if (e.context === "analysesTable") {
+                    this.$el.html(REPORT.reportViewResources.analysesTable.join("\n"));
+                    if (this.options.dataTables === null || this.options.dataTables) {
+                        this.$el.find('table').dataTable({
+                         "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"});
+                    }
+                }
             }
         });
 
@@ -825,13 +907,14 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 readSurveys(data);
 
                 console.log(REPORT.settings);
-                // Set up the collections for peaks and paths data (to be read from .json files)
+                // Set up the collections for peaks, analyses and paths data (to be read from .json files)
                 REPORT.peaks = new REPORT.Peaks(null, {peaksRef:data.SUBTASKS.getPeaksData});
+                REPORT.analyses = new REPORT.Analyses(null, {analysesRef:data.SUBTASKS.getAnalysesData});
+
                 if (data.SUBTASKS.hasOwnProperty("getFovsData")) REPORT.paths = new REPORT.Paths(null, {pathsRef:data.SUBTASKS.getFovsData});
                 else REPORT.paths = null;
                 // TODO: Update settings with local settings, perhaps with some form
                 //  of validation
-
                 // Create a ReportViewResources object to hold the canvases which make the report
 
                 REPORT.reportViewResources = new REPORT.ReportViewResources();
@@ -848,7 +931,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
     }
 
     function makePdfReport(subreport, name) {
-        var figureComponents = [ "fovs", "paths", "peaks", "wedges", "submapGrid" ];
+        var figureComponents = [ "fovs", "paths", "peaks", "wedges", "analyses", "submapGrid" ];
         var id, neCorner = REPORT.settings.get("neCorner"), swCorner = REPORT.settings.get("swCorner");
         var title = REPORT.settings.get("title");
         $("#getReportApp").append('<h2 style="text-align:center;">' + title + ' - ' + name + '</h2>');
@@ -871,6 +954,12 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             var id_fig = 'id_page_' + (i+1) + 'fig';
             $("#getReportApp").append('<div id="' + id_fig + '" class="reportFigure"; style="position:relative;"/>');
             new REPORT.CompositeViewWithLinks({el: $('#' + id_fig), name: id_fig.slice(3), layers:layers.slice(0)});
+        }
+        if (subreport.tables.get("analysesTable")) {
+            id = 'id_analysesTable';
+            $("#getReportApp").append('<h2 class="reportTableHeading">Isotopic Analysis Table</h2>');
+            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
+            new REPORT.AnalysesTableView({el: $('#' + id), dataTables: false});
         }
         if (subreport.tables.get("peaksTable")) {
             id = 'id_peaksTable';

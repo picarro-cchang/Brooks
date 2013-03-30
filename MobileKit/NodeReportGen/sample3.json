@@ -1,5 +1,5 @@
 {
-    "title": "Monterey data with min amp of 0.05",
+    "title": "Monterey data with min amp of 0.1",
     "fovMinAmp": 0.03, 
     "exclRadius": 10, 
     "fovNWindow": 10, 
@@ -11,19 +11,21 @@
     ], 
     "runs": [
         {
+            "analyses": "#00009F", 
             "stabClass": "D", 
             "peaks": "#00FFFF", 
             "endEtm": 1339354800, 
-            "analyzer": "FCDS2008",
+            "analyzer": "DEMO2000",
             "fovs": "#00FF00", 
             "startEtm": 1339333980, 
             "wedges": "#FFFF00"
         }, 
         {
+            "analyses": "#00009F", 
             "stabClass": "D", 
             "peaks": "#FFFF00", 
             "endEtm": 1339372740, 
-            "analyzer": "FCDS2008", 
+            "analyzer": "DEMO2000", 
             "fovs": "#FF0000", 
             "startEtm": 1339355100, 
             "wedges": "#0000FF"
@@ -38,6 +40,7 @@
     "template": {
         "submaps": {
             "tables": {
+                "analysesTable": true, 
                 "runsTable": true, 
                 "peaksTable": true, 
                 "surveysTable": true
@@ -46,9 +49,11 @@
                 {
                     "paths": true, 
                     "peaks": true, 
-                    "wedges": true
+                    "wedges": true,
+                    "analyses": true
                 }, 
                 {
+                    "analyses": true,
                     "paths": true, 
                     "fovs": true, 
                     "peaks": true, 
@@ -59,12 +64,14 @@
         }, 
         "summary": {
             "tables": {
+                "analysesTable": true, 
                 "runsTable": true, 
                 "peaksTable": true, 
                 "surveysTable": true
             },
             "figures": [
                 {
+                    "analyses": true,
                     "paths": true, 
                     "peaks": true, 
                     "wedges": true,

@@ -15,6 +15,7 @@ define(function(require, exports, module) {
              {"name": "stabClass", "required":false,"validator": /[a-fA-F*]/, "default_value":"*"},
              {"name": "peaks", "required":false, "validator": /#[0-9a-fA-F]{6}/, "default_value":"#FFFF00"},
              {"name": "wedges", "required":false, "validator": /#[0-9a-fA-F]{6}/, "default_value":"#0000FF"},
+             {"name": "analyses", "required":false, "validator": /#[0-9a-fA-F]{6}/, "default_value":"#FF0000"},
              {"name": "fovs", "required":false, "validator": /#[0-9a-fA-F]{6}/, "default_value":"#00FF00"}
             ]);
         return rpv.validate();
@@ -26,6 +27,7 @@ define(function(require, exports, module) {
              {"name": "paths", "required":false, "validator": "boolean", "default_value": false},
              {"name": "peaks", "required":false, "validator": "boolean", "default_value": false},
              {"name": "wedges", "required":false, "validator": "boolean", "default_value": false},
+             {"name": "analyses", "required":false, "validator": "boolean", "default_value": false},
              {"name": "fovs", "required":false, "validator": "boolean", "default_value": false},
              {"name": "submapGrid", "required":false, "validator": "boolean", "default_value": false}
             ]);
@@ -34,7 +36,8 @@ define(function(require, exports, module) {
 
     function templateTablesValidator (tables) {
         var rpv = newParamsValidator(tables,
-            [{"name": "peaksTable", "required":false, "validator": "boolean", "default_value": false},
+            [{"name": "analysesTable", "required":false, "validator": "boolean", "default_value": false},
+             {"name": "peaksTable", "required":false, "validator": "boolean", "default_value": false},
              {"name": "surveysTable", "required":false, "validator": "boolean", "default_value": false},
              {"name": "runsTable", "required":false, "validator": "boolean", "default_value": false}
             ]);
