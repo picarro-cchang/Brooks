@@ -28,11 +28,11 @@ function ( _, gh, utils, REPORT) {
             this.ctxPaths.beginPath();
             this.ctxPaths.moveTo((lastX = path[0][0]) + this.report.padX, (lastY = path[0][1]) + this.report.padY);
             for (l=1; l<path.length; l++) {
-                if (Math.pow((lastX - path[l][0]), 2) + Math.pow((lastY != path[l][1]), 2) > 4) {
+                //if (Math.pow((lastX - path[l][0]), 2) + Math.pow((lastY != path[l][1]), 2) > 4) {
                     // This works around a problem with wkhtmltopdf which seems to draw "ticks" when asked to join
                     //  neighboring points
                     this.ctxPaths.lineTo((lastX = path[l][0]) + this.report.padX, (lastY = path[l][1]) + this.report.padY);
-                }
+                //}
             }
             this.ctxPaths.stroke();
         }
@@ -61,7 +61,7 @@ function ( _, gh, utils, REPORT) {
                 that.runs[p.run] = true;
                 that.surveys[p.survey] = true;
             }
-            if (p.edge !== undefined) {
+            if (p.edge !== undefined && p.edge !== "") {
                 where = gh.decodeToLatLng(p.edge);
                 lat = where[0];
                 lng = where[1];

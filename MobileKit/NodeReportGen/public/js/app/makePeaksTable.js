@@ -16,16 +16,6 @@ function (utils, gh, REPORT) {
         if (peaks) {
             // Generate the peaksTable
             var zoom = 18;
-            peaksTable.push('<table class="table table-striped table-condensed table-fmt1 table-datatable">');
-            peaksTable.push('<thead><tr>');
-            peaksTable.push('<th style="width:10%">Rank</th>');
-            peaksTable.push('<th style="width:30%">Designation</th>');
-            peaksTable.push('<th style="width:20%">Latitude</th>');
-            peaksTable.push('<th style="width:20%">Longitude</th>');
-            peaksTable.push('<th style="width:10%">Conc</th>');
-            peaksTable.push('<th style="width:10%">Ampl</th>');
-            peaksTable.push('</tr></thead>');
-            peaksTable.push('<tbody>');
 
             for (i=0; i<peaks.length; i++) {
                 amp = peaks[i].attributes.A;
@@ -50,8 +40,22 @@ function (utils, gh, REPORT) {
                     }
                 }
             }
-            peaksTable.push('</tbody>');
-            peaksTable.push('</table>');
+            if (peaksTable.length > 0) {
+                var header = [];
+                header.push('<table class="table table-striped table-condensed table-fmt1 table-datatable">');
+                header.push('<thead><tr>');
+                header.push('<th style="width:10%">Rank</th>');
+                header.push('<th style="width:30%">Designation</th>');
+                header.push('<th style="width:20%">Latitude</th>');
+                header.push('<th style="width:20%">Longitude</th>');
+                header.push('<th style="width:10%">Conc</th>');
+                header.push('<th style="width:10%">Ampl</th>');
+                header.push('</tr></thead>');
+                header.push('<tbody>');
+                peaksTable = header.concat(peaksTable);
+                peaksTable.push('</tbody>');
+                peaksTable.push('</table>');
+            }
         }
         return peaksTable;
     }

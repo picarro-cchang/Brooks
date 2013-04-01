@@ -4,6 +4,18 @@ define (['underscore', 'app/utils', 'app/geohash', 'app/reportGlobals'],
 function (_, utils, gh, REPORT) {
     'use strict';
 
+    function makeColorPatch(value) {
+        var result;
+        if (value === "None") {
+            result = "None";
+        }
+        else {
+            result = '<div style="width:15px;height:15px;border:1px solid #000;margin:0 auto;';
+            result += 'background-color:' + value + ';"></div>';
+        }
+        return (undefined !== value) ? result : '';
+    }
+
     function makeRunsTable(report, done) {
         var i, runsTable = [];
         var runs = [], allRuns = {};
@@ -21,10 +33,11 @@ function (_, utils, gh, REPORT) {
             runsTable.push('<th style="width:20%">Analyzer</th>');
             runsTable.push('<th style="width:20%">Start</th>');
             runsTable.push('<th style="width:20%">End</th>');
-            runsTable.push('<th style="width:10%">Peaks</th>');
-            runsTable.push('<th style="width:10%">Wedges</th>');
-            runsTable.push('<th style="width:10%">Fovs</th>');
-            runsTable.push('<th style="width:10%">Stab Class</th>');
+            runsTable.push('<th style="width:8%">Peaks</th>');
+            runsTable.push('<th style="width:8%">LISA</th>');
+            runsTable.push('<th style="width:8%">Isotopic</th>');
+            runsTable.push('<th style="width:8%">FOV</th>');
+            runsTable.push('<th style="width:8%">Stab Class</th>');
             runsTable.push('</tr></thead>');
             runsTable.push('<tbody>');
             var posixTimes = [];
@@ -33,7 +46,7 @@ function (_, utils, gh, REPORT) {
                 posixTimes.push(1000*run.startEtm);
                 posixTimes.push(1000*run.endEtm);
             }
-            var url = '/rest/tz?' + $.param({tz:REPORT.settings.get("reportTimezone"),posixTimes:posixTimes});
+            var url = '/rest/tz?' + $.param({tz:REPORT.settings.get("timezone"),posixTimes:posixTimes});
             $.getJSON(url,function (data) {
                 for (i=0; i<runs.length; i++) {
                     var run = REPORT.settings.get("runs").at(runs[i]).attributes;
@@ -41,9 +54,10 @@ function (_, utils, gh, REPORT) {
                     runsTable.push('<td>' + run.analyzer + '</td>');
                     runsTable.push('<td>' + data.timeStrings.shift() + '</td>');
                     runsTable.push('<td>' + data.timeStrings.shift() + '</td>');
-                    runsTable.push('<td>' + run.peaks + '</td>');
-                    runsTable.push('<td>' + run.wedges + '</td>');
-                    runsTable.push('<td>' + run.fovs + '</td>');
+                    runsTable.push('<td>' + makeColorPatch(run.peaks) + '</td>');
+                    runsTable.push('<td>' + makeColorPatch(run.wedges) + '</td>');
+                    runsTable.push('<td>' + makeColorPatch(run.analyses) + '</td>');
+                    runsTable.push('<td>' + makeColorPatch(run.fovs) + '</td>');
                     runsTable.push('<td>' + run.stabClass + '</td>');
                     runsTable.push('</tr>');
                 }

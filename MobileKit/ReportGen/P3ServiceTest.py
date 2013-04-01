@@ -11,14 +11,18 @@ import time
 P3Api = P3ApiService()
 
 def main():
-    P3Api.csp_url = "https://dev.picarro.com/dev"
-    # P3Api.csp_url = "https://dev.picarro.com/node"
+    P3Api.csp_url = "https://localhost:8081/node"
+    P3Api.identity = "85490338d7412a6d31e99ef58bce5dPM"
+    P3Api.psys = "SUPERADMIN"
+
+    # P3Api.csp_url = "https://dev.picarro.com/dev"
+    # P3Api.identity = "dc1563a216f25ef8a20081668bb6201e"
+    # P3Api.psys = "APITEST2"
+
     P3Api.ticket_url = P3Api.csp_url + "/rest/sec/dummy/1.0/Admin/"
-    P3Api.identity = "dc1563a216f25ef8a20081668bb6201e"
-    P3Api.psys = "APITEST2"
     P3Api.rprocs = '["AnzLogMeta:byEpoch","AnzLog:byPos","AnzLog:byEpoch","AnzLog:makeSwath","AnzMeta:byAnz","AnzLrt:getStatus","AnzLrt:byRow","AnzLrt:firstSet","AnzLrt:nextSet","AnzLog:byGeo","AnzLog:makeFov"]'
     P3Api.debug = True
-    qnum = 10
+    qnum = 11
     if qnum == 1:
         #qryparms = {'alog':'CFADS2274-20130107-170017Z-DataLog_User_Minimal.dat','logtype':'dat',
         #                  'limit':10,'qry':'byPos','startPos':0,'reverse':True,'doclist':True,'varList':'["CH4"]'}
@@ -427,8 +431,8 @@ def main():
             ret = result['return']
             raw_input("%s" % result)
     elif qnum == 10: # Check how an LRT returns values if we do not set doclist to true
-        qryparms = {'alog':"FCDS2008-20120610-131326Z-DataLog_User_Minimal.dat",
-                    'stabClass':"D", 'forceLrt':"true", 'qry':'makeFov'}
+        qryparms = {'alog':"DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat",
+                    'stabClass':"D", 'forceLrt':True, 'qry':'makeFov'}
         result = P3Api.get("gdu", "1.0", "AnzLog", qryparms)
         if 'error' in result and result['error'] is not None:
             raise RuntimeError("%s" % result)
@@ -455,7 +459,7 @@ def main():
         count = ret["count"]    # Number of result rows
         print "Result rows:", count
 
-        qryparms = {'prmsHash':lrt_parms_hash, 'startTs':lrt_start_ts, 'qry':'firstSet', 'limit': 5 }
+        qryparms = {'prmsHash':lrt_parms_hash, 'startTs':lrt_start_ts, 'qry':'firstSet', 'lrttype':'lrtfov', 'limit': 5 }
         result = P3Api.get("gdu", "1.0", "AnzLrt", qryparms)
         if 'error' in result and result['error'] is not None:
             raise RuntimeError("%s" % result)
@@ -464,13 +468,71 @@ def main():
         raw_input("%s" % result)
 
         while True:
-            qryparms = {'prmsHash':lrt_parms_hash, 'startTs':lrt_start_ts, 'qry':'nextSet','limit':5,
+            qryparms = {'prmsHash':lrt_parms_hash, 'startTs':lrt_start_ts, 'qry':'nextSet', 'lrttype':'lrtfov', 'limit':5,
                         'sortPos': ret[-1]['lrt_sortpos'], 'doclist': False}
             result = P3Api.get("gdu", "1.0", "AnzLrt", qryparms)
             if 'error' in result and result['error'] is not None:
                 raise RuntimeError("%s" % result)
             ret = result['return']
             raw_input("%s" % result)
+
+    elif qnum == 11: # Check long running task on local server
+        qryparms = {'anz':'DEMO2000', 'startEtm':1339333980, 'endEtm':1339372740,
+                    'qry':'byEpoch', 'forceLrt':False,
+                    'resolveLogname':True, 'doclist':False, 
+                    'limit':'all', 'rtnFmt':'lrt' }
+        result = P3Api.get("gdu", "1.0", "AnzLog", qryparms)
+        if 'error' in result and result['error'] is not None:
+            raise RuntimeError("%s" % result)
+        ret = result['return']
+        if ret["lrt_start_ts"] == ret["request_ts"]:
+            print "This is a new request, made at %s" % ret["lrt_start_ts"]
+        else:
+            print "This is a duplicate of a request made at %s" % ret["lrt_start_ts"]
+        print "Request status: %d" % ret["status"]
+        lrt_parms_hash = ret["lrt_parms_hash"]
+        lrt_start_ts  = ret["lrt_start_ts"]
+
+        while ret["status"] != 16:       # Loop until status is successful
+            print "Waiting"
+            time.sleep(5.0)
+            qryparms = {'prmsHash':lrt_parms_hash, 'startTs':lrt_start_ts, 'qry':'getStatus'}
+            result = P3Api.get("gdu", "1.0", "AnzLrt", qryparms)
+            if 'error' in result and result['error'] is not None:
+                raise RuntimeError("%s" % result)
+            ret = result['return']
+            print "Request status: %d" % ret["status"]
+
+        print ret
+        count = ret["count"]    # Number of result rows
+        print "Result rows:", count
+
+        qryparms = {'prmsHash':lrt_parms_hash, 'startTs':lrt_start_ts, 'qry':'firstSet', 'limit': 10 }
+        result = P3Api.get("gdu", "1.0", "AnzLrt", qryparms)
+        if 'error' in result and result['error'] is not None:
+            raise RuntimeError("%s" % result)
+        ret = result['return']
+        print len(ret)
+        raw_input("%s" % result)
+
+        qryparms = {'prmsHash':lrt_parms_hash, 'startTs':lrt_start_ts, 'qry':'nextSet','limit':10,
+                    'sortPos': ret[-1]['lrt_sortpos'], 'doclist': True}
+        result = P3Api.get("gdu", "1.0", "AnzLrt", qryparms)
+        if 'error' in result and result['error'] is not None:
+            raise RuntimeError("%s" % result)
+        ret = result['return']
+        raw_input("%s" % result)
+
+        while True:
+            qryparms = {'prmsHash':lrt_parms_hash, 'startTs':lrt_start_ts, 'qry':'nextSet','limit':10,
+                        'sortPos': ret['lrt_sortpos'][-1], 'doclist': True}
+            result = P3Api.get("gdu", "1.0", "AnzLrt", qryparms)
+            if 'error' in result and result['error'] is not None:
+                raise RuntimeError("%s" % result)
+            ret = result['return']
+            raw_input("%s" % result)
+
+
 
 if __name__ == '__main__':
     sys.exit(main())

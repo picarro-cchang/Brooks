@@ -1,6 +1,9 @@
 /* reportGlobals.js */
 
 define ({
+    Analysis: null,
+    analyses: null,
+    Analyses: null,
     AppView: null,
     CompositeView: null,
     CompositeViewWithLinks: null,
@@ -25,5 +28,6 @@ define ({
     Survey: null,
     Surveys: null,
     surveys: null,
-    SurveysTableView: null
+    SurveysTableView: null,
+    usageTracker: null
 });

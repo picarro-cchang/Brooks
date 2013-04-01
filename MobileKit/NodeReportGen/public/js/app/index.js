@@ -87,13 +87,16 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
         body += tableFuncs.editControl("End Time", '<div class="input-append">' + tableFuncs.makeInput("id_end_etm",
                 {"class": "input-medium datetimeRange", "placeholder": "YYYY-MM-DD HH:MM"}) + '<span class="add-on">' + tz + '</span></div>');
         body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_marker", {"class": controlClass},
-                {"#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
+                {"#FFFFFF": "white", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
                  "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
         body += tableFuncs.editControl("LISAs", tableFuncs.makeSelect("id_wedges", {"class": controlClass},
-                {"None": "None", "#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
+                {"#FFFFFF": "white", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
                  "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
+        body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_analyses", {"class": controlClass},
+                {"#000000": "black", "#00009F": "blue", "#009F00": "green", "#9F0000": "red",
+                 "#009F9F": "cyan",  "#9F009F": "magenta", "#9F9F00": "yellow" }));
         body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_swath", {"class": controlClass},
-                {"#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
+                {"#FFFFFF": "white", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
                  "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
         body += tableFuncs.editControl("Stability Class", tableFuncs.makeSelect("id_stab_class", {"class": controlClass},
                 {"*": "*: Use reported weather data", "A": "A: Very Unstable", "B": "B: Unstable",
@@ -131,7 +134,8 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
         });
     }
 
-    var initRunRow = {"analyzer": "FCDS2008", "peaks": "#FFFF00", "wedges": "#0000FF", "fovs": "#00FF00", "stabClass": "*"};
+    var initRunRow = {"analyzer": "FCDS2008", "peaks": "#FFFF00", "wedges": "#0000FF", "fovs": "#00FF00",
+                      "analyses": "#FF0000", "stabClass": "*"};
 
     function validateRun(eidByKey,template,container,onSuccess) {
         var numErr = 0;
@@ -170,11 +174,12 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
 
     var runsDefinition = {id: "runTable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "analyzer", width: "20%", th: "Analyzer", tf: String, eid: "id_analyzer", cf: String},
-        {key: "startEtm", width: "20%", th: "Start", tf: extractLocal, eid: "id_start_etm", cf: insertLocal, ef: editTime},
-        {key: "endEtm", width: "20%", th: "End", tf: extractLocal, eid: "id_end_etm", cf: insertLocal, ef: editTime},
+        {key: "analyzer", width: "17%", th: "Analyzer", tf: String, eid: "id_analyzer", cf: String},
+        {key: "startEtm", width: "17%", th: "Start", tf: extractLocal, eid: "id_start_etm", cf: insertLocal, ef: editTime},
+        {key: "endEtm", width: "17%", th: "End", tf: extractLocal, eid: "id_end_etm", cf: insertLocal, ef: editTime},
         {key: "peaks", width: "9%", th: "Peaks", tf: makeColorPatch, eid: "id_marker", cf: String},
         {key: "wedges", width: "9%", th: "LISA", tf: makeColorPatch, eid: "id_wedges", cf: String},
+        {key: "analyses", width: "9%", th: "Isotopic", tf: makeColorPatch, eid: "id_analyses", cf: String},
         {key: "fovs", width: "9%", th: "FOV", tf: makeColorPatch, eid: "id_swath", cf: String},
         {key: "stabClass", width: "9%", th: "Stab Class", tf: String, eid: "id_stab_class", cf: String},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
@@ -212,6 +217,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
         body += tableFuncs.editControl("Paths", tableFuncs.makeSelect("id_summary_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_summary_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("LISA", tableFuncs.makeSelect("id_summary_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_summary_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_summary_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Submap Grid", tableFuncs.makeSelect("id_summary_grid", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += '</form></div>';
@@ -236,6 +242,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
         body += tableFuncs.editControl("Paths", tableFuncs.makeSelect("id_submaps_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_submaps_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("LISA", tableFuncs.makeSelect("id_submaps_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_summary_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_submaps_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += '</form></div>';
         footer = '<div class="modal-footer">';
@@ -248,36 +255,40 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
 
     var summaryDefinition = {id: "summarytable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "baseType", width: "21%", th: "Type", tf: String, eid: "id_summary_type", cf: String},
-        {key: "paths", width: "15%", th: "Paths", tf: boolToIcon, eid: "id_summary_paths",
+        {key: "baseType", width: "18%", th: "Type", tf: String, eid: "id_summary_type", cf: String},
+        {key: "paths", width: "13%", th: "Paths", tf: boolToIcon, eid: "id_summary_paths",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "peaks", width: "15%", th: "Peaks", tf: boolToIcon, eid: "id_summary_peaks",
+        {key: "peaks", width: "13%", th: "Peaks", tf: boolToIcon, eid: "id_summary_peaks",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "wedges", width: "15%", th: "LISA", tf: boolToIcon, eid: "id_summary_wedges",
+        {key: "wedges", width: "13%", th: "LISA", tf: boolToIcon, eid: "id_summary_wedges",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "fovs", width: "15%", th: "FOV", tf: boolToIcon, eid: "id_summary_fovs",
+        {key: "analyses", width: "13%", th: "Isotopic", tf: boolToIcon, eid: "id_summary_analyses",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "submapGrid", width: "15%", th: "Grid", tf: boolToIcon, eid: "id_summary_grid",
+        {key: "fovs", width: "13%", th: "FOV", tf: boolToIcon, eid: "id_summary_fovs",
+          ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
+        {key: "submapGrid", width: "13%", th: "Grid", tf: boolToIcon, eid: "id_summary_grid",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
     ]};
 
     var submapsDefinition = {id: "submapstable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "baseType", width: "24%", th: "Type", tf: String, eid: "id_submaps_type", cf: String},
-        {key: "paths", width: "18%", th: "Paths", tf: boolToIcon, eid: "id_submaps_paths",
+        {key: "baseType", width: "21%", th: "Type", tf: String, eid: "id_submaps_type", cf: String},
+        {key: "paths", width: "15%", th: "Paths", tf: boolToIcon, eid: "id_submaps_paths",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "peaks", width: "18%", th: "Peaks", tf: boolToIcon, eid: "id_submaps_peaks",
+        {key: "peaks", width: "15%", th: "Peaks", tf: boolToIcon, eid: "id_submaps_peaks",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "wedges", width: "18%", th: "LISA", tf: boolToIcon, eid: "id_submaps_wedges",
+        {key: "wedges", width: "15%", th: "LISA", tf: boolToIcon, eid: "id_submaps_wedges",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "fovs", width: "18%", th: "FOV", tf: boolToIcon, eid: "id_submaps_fovs",
+        {key: "analyses", width: "15%", th: "Isotopic", tf: boolToIcon, eid: "id_summary_analyses",
+          ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
+        {key: "fovs", width: "15%", th: "FOV", tf: boolToIcon, eid: "id_submaps_fovs",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
     ]};
 
-    var initSummaryRow = {type: 'map', paths: false, peaks: false, wedges: false, fovs: false, submapGrid: true };
-    var initSubmapRow  = {type: 'map', paths: false, peaks: false, wedges: false, fovs: false };
+    var initSummaryRow = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false, submapGrid: true };
+    var initSubmapRow  = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false };
 
     function init() {
         DASHBOARD.InstructionsFileModel = Backbone.Model.extend({
@@ -328,10 +339,12 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                 var submapsData = {figures: tableFuncs.getTableData(submapsDefinition)};
                 // Set submapGrid of all submapsData figures to false since these are not editable
                 submapsData.figures.forEach(function (fig) { fig.submapGrid = false; });
-                summaryData.tables = {peaksTable:$("#id_summary_peaksTable").prop('checked'),
+                summaryData.tables = {analysesTable:$("#id_summary_analysesTable").prop('checked'),
+                                      peaksTable:$("#id_summary_peaksTable").prop('checked'),
                                       surveysTable:$("#id_summary_surveysTable").prop('checked'),
                                       runsTable:$("#id_summary_runsTable").prop('checked')};
-                submapsData.tables = {peaksTable:$("#id_submaps_peaksTable").prop('checked'),
+                submapsData.tables = {analysesTable:$("#id_submaps_analysesTable").prop('checked'),
+                                      peaksTable:$("#id_submaps_peaksTable").prop('checked'),
                                       surveysTable:$("#id_submaps_surveysTable").prop('checked'),
                                       runsTable:$("#id_submaps_runsTable").prop('checked')};
                 this.currentTemplate = {summary: summaryData, submaps: submapsData};
@@ -344,9 +357,11 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                 if (!_.isEmpty(this.currentTemplate)) {
                     var summary = this.currentTemplate.summary;
                     var submaps = this.currentTemplate.submaps;
+                    $("#id_summary_analysesTable").prop('checked',summary.tables.analysesTable);
                     $("#id_summary_peaksTable").prop('checked',summary.tables.peaksTable);
                     $("#id_summary_runsTable").prop('checked',summary.tables.runsTable);
                     $("#id_summary_surveysTable").prop('checked',summary.tables.surveysTable);
+                    $("#id_submaps_analysesTable").prop('checked',submaps.tables.analysesTable);
                     $("#id_submaps_peaksTable").prop('checked',submaps.tables.peaksTable);
                     $("#id_submaps_runsTable").prop('checked',submaps.tables.runsTable);
                     $("#id_submaps_surveysTable").prop('checked',submaps.tables.surveysTable);
@@ -703,7 +718,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                     var body = lines.join('\n');
                     var instructions = JSON.parse(body);
                     var v = iv.instrValidator(instructions);
-                    if (!v.valid) throw new Error('Instructions failed validation');
+                    if (!v.valid) throw new Error('Instructions failed validation' + v.errorList.join("\n"));
                     // Make sure to send change events, in case file is reloaded
                     DASHBOARD.instructionsFileModel.set({"contents": null}, {silent: true});
                     DASHBOARD.instructionsFileModel.set({"contents": body});
@@ -711,7 +726,7 @@ function ($, _, Backbone, DASHBOARD, jstz, newRptGenService,
                     DASHBOARD.instructionsFileModel.set({"instructions": v.normValues});
                 }
                 catch (err) {
-                    alert("Invalid instructions file");
+                    alert("Invalid instructions file: " + err.message);
                     DASHBOARD.instructionsFileModel.set({"file": null});
                     return;
                 }

@@ -32,10 +32,14 @@
     app.use(express.bodyParser());
 
     GLOBALS.csp_url = "https://dev.picarro.com/dev";
-    // var csp_url = "https://localhost:8081/node";
-    GLOBALS.ticket_url = GLOBALS.csp_url + "/rest/sec/dummy/1.0/Admin";
-    GLOBALS.identity = "dc1563a216f25ef8a20081668bb6201e";
     GLOBALS.psys = "APITEST2";
+    GLOBALS.identity = "dc1563a216f25ef8a20081668bb6201e";
+
+    //GLOBALS.csp_url = "https://localhost:8081/node";
+    //GLOBALS.psys = "SUPERADMIN";
+    //GLOBALS.identity = "85490338d7412a6d31e99ef58bce5dPM";
+
+    GLOBALS.ticket_url = GLOBALS.csp_url + "/rest/sec/dummy/1.0/Admin";
 
     GLOBALS.rprocs = '["AnzLogMeta:byEpoch","AnzLog:byPos","AnzLog:byEpoch","AnzLog:makeSwath",' +
                      '"AnzMeta:byAnz","AnzLrt:getStatus","AnzLrt:byRow","AnzLrt:firstSet",' +
@@ -189,6 +193,10 @@
     app.post("/rest/download", handleDownload);
 
     app.get("/getReport/:hash/:ts", handleGetReport);
+
+    app.get("/checkPdfConvert", function(req, res) {
+        res.render("checkPdfConvert");
+    });
 
     /*
     app.get("/rest/data/:hash/:ts/report.pdf", function(req, res) {
