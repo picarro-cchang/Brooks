@@ -145,7 +145,7 @@ class AircraftValveSwitcher(AircraftValveSwitcherFrame):
                     self.seq = os.path.basename(self.landingSeq)
                     self.state = "Landing"
             elif self.state == "Landing":
-                if int(self.valveSequencerRPC.getValveSeqStatus().split(";")[1]) == 0 and not self.shutdownTimestamp:
+                if (int(self.valveSequencerRPC.getValveSeqStatus().split(";")[1]) & 0x1F) == 0 and not self.shutdownTimestamp:
                     self.shutdownTimestamp = time.time()
                 if self.shutdownTimestamp:
                     if time.time() - self.shutdownTimestamp > self.landingTimeout:
