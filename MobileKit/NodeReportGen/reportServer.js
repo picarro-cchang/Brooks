@@ -194,6 +194,10 @@
 
     app.get("/getReport/:hash/:ts", handleGetReport);
 
+    app.get("/checkPdfConvert", function(req, res) {
+        res.render("checkPdfConvert");
+    });
+
     /*
     app.get("/rest/data/:hash/:ts/report.pdf", function(req, res) {
         // Note: should use a stream here, instead of fs.readFile

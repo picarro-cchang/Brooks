@@ -2,21 +2,84 @@
 /*global alert, console, define, TEMPLATE_PARAMS */
 /* jshint undef:true, unused:true */
 
-define(['jquery', 'underscore', 'backbone', 'app/geohash', 'app/reportGlobals', 'app/cnsnt',
+define(['jquery', 'underscore', 'backbone', 'app/geohash', 'app/reportGlobals', 'app/cnsnt', 'app/newIdTracker',
         'app/makePeaks', 'app/makeWedges', 'app/makeAnalyses', 'app/newPathsMaker','app/makePeaksTable',
         'app/makeRunsTable', 'app/makeSurveysTable', 'app/makeAnalysesTable', 'app/makeSubmapGrid', 'app/newMultiCanvas',
         'jquery-migrate', 'json2',
         'bootstrap-modal', 'bootstrap-dropdown', 'bootstrap-spinedit', 'bootstrap-transition',
         'jquery.dataTables', 'jquery.ba-bbq'],
 
-function ($, _, Backbone, gh, REPORT, CNSNT,
+function ($, _, Backbone, gh, REPORT, CNSNT, newIdTracker,
           makePeaks, makeWedges, makeAnalyses, newPathsMaker, makePeaksTable,
           makeRunsTable, makeSurveysTable, makeAnalysesTable, makeSubmapGrid, newMultiCanvas) {
     'use strict';
 
     var instructionsLoaded = false;
 
+    // use and release are used to keep track of whether the page is ready to be printed out. Every time
+    //  a redering process is initiated, use is called and whenever it ends, release is called. The noneLeft
+    //  function is called if there are no entries pending this.waitForFinish milliseconds after everything
+    //  has been released
+
+    function UsageTracker() {
+        this.pending = {};
+        this.idTracker = newIdTracker();
+        this.firstFlag = true;
+        this.timer = null;
+        this.waitForFinish = 200;
+    }
+
+    UsageTracker.prototype.use = function (obj, first) {
+        var id = this.idTracker.objectId(obj);
+        console.log('use: ', id, obj.el);
+        if (id === null) return;
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
+        if (!this.pending.hasOwnProperty(id)) {
+            this.pending[id] = 0;
+        }
+        this.pending[id] += 1;
+        if (_.isFunction(first) && this.firstFlag) {
+            this.firstFlag = false;
+            first();
+        }
+    };
+
+    UsageTracker.prototype.release = function(obj, noneLeft) {
+        var id = this.idTracker.objectId(obj);
+        console.log('release: ', id, obj.el);
+        if (id !== null) {
+            if (!this.pending.hasOwnProperty(id)) alert("Error in usage tracking algorithm");
+            else {
+                this.pending[id] -= 1;
+            }
+            if (this.pending[id] === 0) delete this.pending[id];
+        }
+        if (_.isFunction(noneLeft) && _.isEmpty(this.pending)) {
+            if (this.timer) clearTimeout(this.timer);
+            this.timer = setTimeout(function () {
+                if (_.isEmpty(this.pending)) {
+                    this.firstFlag = true;
+                    this.timer = null;
+                    noneLeft();
+                }
+            }, this.waitForFinish);
+        }
+    };
+
+    function clearStatusLine() {
+        window.status = '';
+    }
+
+    function setDoneStatus() {
+        window.status = 'done';
+        alert("Page is complete!");
+    }
+
     function init() {
+        REPORT.usageTracker = new UsageTracker();
 
         REPORT.Settings = Backbone.Model.extend({
             defaults: function () {
@@ -371,6 +434,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                                maptype: "map", sensor: false };
                 var url = 'http://maps.googleapis.com/maps/api/staticmap?' + $.param(params);
                 image.src = url;
+                that.trigger("init",{"context": "map"});
                 image.onload = function () {
                     var ctx = document.createElement("canvas").getContext("2d");
                     ctx.canvas.height = this.height + that.padY;
@@ -388,6 +452,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                                maptype: "satellite", sensor: false };
                 var url = 'http://maps.googleapis.com/maps/api/staticmap?' + $.param(params);
                 image.src = url;
+                that.trigger("init",{"context": "satellite"});
                 image.onload = function () {
                     var ctx = document.createElement("canvas").getContext("2d");
                     ctx.canvas.height = this.height + that.padY;
@@ -398,6 +463,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 };
             },
             makeSubmapGridLayer: function() {
+                this.trigger("init",{"context": "submapGrid"});
                 var submaps = REPORT.settings.get("submaps");
                 this.subx = submaps.nx;
                 this.suby = submaps.ny;
@@ -408,6 +474,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             },
             makePeaksLayer: function() {
                 var that = this;
+                that.trigger("init",{"context": "peaks"});
                 REPORT.peaks.once("loaded", function () {
                     that.peaksData = REPORT.peaks.models;
                     that.peaksMinAmp = REPORT.settings.get("peaksMinAmp");
@@ -424,6 +491,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             },
             makeWedgesLayer: function() {
                 var that = this;
+                that.trigger("init",{"context": "wedges"});
                 REPORT.peaks.once("loaded", function () {
                     that.peaksData = REPORT.peaks.models;
                     that.peaksMinAmp = REPORT.settings.get("peaksMinAmp");
@@ -434,6 +502,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             },
             makeAnalysesLayer: function() {
                 var that = this;
+                that.trigger("init",{"context": "analyses"});
                 REPORT.analyses.once("loaded", function () {
                     that.analysesData = REPORT.analyses.models;
                     that.contexts["analyses"] = makeAnalyses(that)["context"];
@@ -450,6 +519,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     pathsMaker.makePaths(survey,run);
                 }
                 REPORT.paths.on("block", doBlock);
+                that.trigger("init",{"context": "paths"});
+                that.trigger("init",{"context": "fovs"});
                 REPORT.paths.once("loaded", function () {
                     var result = pathsMaker.completePaths();
                     that.contexts["paths"] = result.paths;
@@ -466,6 +537,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             },
             makeAnalysesTable: function () {
                 var that = this;
+                that.trigger("init",{"context": "analysesTable"});
                 REPORT.analyses.once("loaded", function () {
                     that.analysesData = REPORT.analyses.models;
                     that.analysesTable = makeAnalysesTable(that);
@@ -475,6 +547,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             },
             makePeaksTable: function () {
                 var that = this;
+                that.trigger("init",{"context": "peaksTable"});
                 REPORT.peaks.once("loaded", function () {
                     that.peaksData = REPORT.peaks.models;
                     that.minAmp = REPORT.settings.get("peaksMinAmp");
@@ -485,6 +558,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             },
             makeRunsTable: function () {
                 var that = this;
+                that.trigger("init",{"context": "runsTable"});
                 makeRunsTable(that, function (err, data) {
                     if (err) that.trigger("error", err);
                     else {
@@ -495,6 +569,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             },
             makeSurveysTable: function () {
                 var that = this;
+                that.trigger("init",{"context": "surveysTable"});
                 makeSurveysTable(that, function (err, data) {
                     if (err) that.trigger("error", err);
                     else {
@@ -597,6 +672,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
             // This is a view consisting of layers from reportViewResources rendered onto a single canvas
             el: $("#container"),
             initialize: function () {
+                REPORT.usageTracker.use(this, clearStatusLine);
                 console.log("Initializing CompositeView");
                 this.canvasId = "id_" + this.options.name;
                 // this.$el.append('<input type="button" value="Click me">');
@@ -605,6 +681,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 this.context = this.$el.find("canvas")[0].getContext("2d");
                 this.layers = this.options.layers;
                 this.available = {};
+                this.done = false;
                 for (var i=0; i<this.layers.length; i++) this.available[this.layers[i]] = false;
                 this.listenTo(REPORT.reportViewResources,"change",this.repositoryChanged);
             },
@@ -627,12 +704,16 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     }
                 }
             },
-
             repositoryChanged: function(e) {
+                if (this.done) return;
                 var allAvailable = true;
                 if (e.context in this.available) this.available[e.context] = true;
                 for (var l in this.available) allAvailable = allAvailable && this.available[l];
-                if (allAvailable) this.render([0,0]);
+                if (allAvailable) {
+                    this.render([0,0]);
+                    this.done = true;
+                    REPORT.usageTracker.release(this, setDoneStatus);
+                }
             }
         });
 
@@ -644,7 +725,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 "click canvas": "onCanvasClick"
             },
             initialize: function () {
-                console.log("Initializing CompositeView");
+                REPORT.usageTracker.use(this, clearStatusLine);
+                console.log("Initializing CompositeViewWithLinks");
                 this.canvasId = "id_" + this.options.name;
                 // this.$el.append('<input type="button" value="Click me">');
                 var canvas = '<canvas id="' + this.canvasId + '" style=position:absolute; left:0px; top:0px;"></canvas>';
@@ -653,6 +735,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 this.hoverLink = null;
                 this.layers = this.options.layers;
                 this.available = {};
+                this.done = false;
                 for (var i=0; i<this.layers.length; i++) this.available[this.layers[i]] = false;
                 this.listenTo(REPORT.reportViewResources,"change",this.repositoryChanged);
             },
@@ -674,7 +757,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     }
                 }
             },
-            onCanvasClick: function(e) {
+            onCanvasClick: function() {
                 if (this.hoverLink) {
                     var link = REPORT.reportViewResources.submapLinks[this.hoverLink];
                     var url = window.location.pathname + '?' + $.param({"swCorner": link.swCorner,
@@ -703,17 +786,26 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                 }
             },
             repositoryChanged: function(e) {
+                if (this.done) return;
                 var allAvailable = true;
                 if (e.context in this.available) this.available[e.context] = true;
                 for (var l in this.available) allAvailable = allAvailable && this.available[l];
-                if (allAvailable) this.render([0,0]);
+                if (allAvailable) {
+                    this.render([0,0]);
+                    this.done = true;
+                    REPORT.usageTracker.release(this, setDoneStatus);
+                }
             }
         });
 
         REPORT.AnalysesTableView = Backbone.View.extend({
             initialize: function () {
                 console.log("Initializing AnalysesTableView");
+                this.listenTo(REPORT.reportViewResources,"init",this.repositoryInit);
                 this.listenTo(REPORT.reportViewResources,"change",this.repositoryChanged);
+            },
+            repositoryInit: function(e) {
+                if (e.context === "analysesTable") REPORT.usageTracker.use(this, clearStatusLine);
             },
             repositoryChanged: function (e) {
                 if (e.context === "analysesTable") {
@@ -722,6 +814,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                         this.$el.find('table').dataTable({
                          "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"});
                     }
+                    REPORT.usageTracker.release(this, setDoneStatus);
                 }
             }
         });
@@ -729,7 +822,11 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
         REPORT.PeaksTableView = Backbone.View.extend({
             initialize: function () {
                 console.log("Initializing PeaksTableView");
+                this.listenTo(REPORT.reportViewResources,"init",this.repositoryInit);
                 this.listenTo(REPORT.reportViewResources,"change",this.repositoryChanged);
+            },
+            repositoryInit: function(e) {
+                if (e.context === "peaksTable") REPORT.usageTracker.use(this, clearStatusLine);
             },
             repositoryChanged: function (e) {
                 if (e.context === "peaksTable") {
@@ -738,6 +835,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                         this.$el.find('table').dataTable({
                          "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"});
                     }
+                    REPORT.usageTracker.release(this, setDoneStatus);
                 }
             }
         });
@@ -745,7 +843,11 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
         REPORT.RunsTableView = Backbone.View.extend({
             initialize: function () {
                 console.log("Initializing RunsTableView");
+                this.listenTo(REPORT.reportViewResources,"init",this.repositoryInit);
                 this.listenTo(REPORT.reportViewResources,"change",this.repositoryChanged);
+            },
+            repositoryInit: function(e) {
+                if (e.context === "runsTable") REPORT.usageTracker.use(this, clearStatusLine);
             },
             repositoryChanged: function (e) {
                 if (e.context === "runsTable") {
@@ -754,6 +856,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                         this.$el.find('table').dataTable({
                          "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"});
                     }
+                    REPORT.usageTracker.release(this, setDoneStatus);
                 }
             }
         });
@@ -761,7 +864,11 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
         REPORT.SurveysTableView = Backbone.View.extend({
             initialize: function () {
                 console.log("Initializing SurveysTableView");
+                this.listenTo(REPORT.reportViewResources,"init",this.repositoryInit);
                 this.listenTo(REPORT.reportViewResources,"change",this.repositoryChanged);
+            },
+            repositoryInit: function(e) {
+                if (e.context === "surveysTable") REPORT.usageTracker.use(this, clearStatusLine);
             },
             repositoryChanged: function (e) {
                 if (e.context === "surveysTable") {
@@ -770,6 +877,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                         this.$el.find('table').dataTable({
                          "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"});
                     }
+                    REPORT.usageTracker.release(this, setDoneStatus);
                 }
             }
         });

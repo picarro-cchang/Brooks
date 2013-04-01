@@ -18,17 +18,6 @@ function (utils, gh, REPORT) {
         if (analyses) {
             // Generate the analysesTable
             var zoom = 18;
-            analysesTable.push('<table class="table table-striped table-condensed table-fmt1 table-datatable">');
-            analysesTable.push('<thead><tr>');
-            analysesTable.push('<th style="width:10%">Label</th>');
-            analysesTable.push('<th style="width:20%">Designation</th>');
-            analysesTable.push('<th style="width:20%">Latitude</th>');
-            analysesTable.push('<th style="width:20%">Longitude</th>');
-            analysesTable.push('<th style="width:10%">Conc</th>');
-            analysesTable.push('<th style="width:10%">Isotopic Ratio</th>');
-            analysesTable.push('<th style="width:10%">Uncertainty</th>');
-            analysesTable.push('</tr></thead>');
-            analysesTable.push('<tbody>');
 
             for (i=0; i<analyses.length; i++) {
                 delta = analyses[i].attributes.D;
@@ -53,8 +42,23 @@ function (utils, gh, REPORT) {
                     analysesTable.push('</tr>');
                 }
             }
-            analysesTable.push('</tbody>');
-            analysesTable.push('</table>');
+            if (analysesTable.length > 0) {
+                var header = [];
+                header.push('<table class="table table-striped table-condensed table-fmt1 table-datatable">');
+                header.push('<thead><tr>');
+                header.push('<th style="width:10%">Label</th>');
+                header.push('<th style="width:20%">Designation</th>');
+                header.push('<th style="width:20%">Latitude</th>');
+                header.push('<th style="width:20%">Longitude</th>');
+                header.push('<th style="width:10%">Conc</th>');
+                header.push('<th style="width:10%">Isotopic Ratio</th>');
+                header.push('<th style="width:10%">Uncertainty</th>');
+                header.push('</tr></thead>');
+                header.push('<tbody>');
+                analysesTable = header.concat(analysesTable);
+                analysesTable.push('</tbody>');
+                analysesTable.push('</table>');
+            }
         }
         return analysesTable;
     }
