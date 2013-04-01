@@ -312,8 +312,10 @@ define(function(require, exports, module) {
 
         function convertToPdf(url, pdfFile, done) {
             var outFile = path.join(that.workDir, pdfFile);
-            var cmd = '"C:\\Program Files (x86)\\wkhtmltopdf\\wkhtmltopdf.exe" --javascript-delay 10000 "' + url + '" "' + outFile + '"';
-            var convert = cp.exec(cmd, function (err, stdout, stderr) {
+            var cmd = '"C:\\Program Files (x86)\\phantomjs-1.9.0-windows\\phantomjs.exe" screenDump.js "' +
+                        url + '" "' + outFile + '" Letter';
+            console.log(cmd);
+            var convert = cp.exec(cmd, {"cwd": __dirname}, function (err, stdout, stderr) {
                 if (err) {
                     console.log(err.stack);
                     console.log('Error code: ' + err.code);

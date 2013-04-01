@@ -75,7 +75,7 @@ function ($, _, Backbone, gh, REPORT, CNSNT, newIdTracker,
 
     function setDoneStatus() {
         window.status = 'done';
-        alert("Page is complete!");
+        // alert("Page is complete!");
     }
 
     function init() {
