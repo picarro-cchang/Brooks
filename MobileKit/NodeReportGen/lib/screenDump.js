@@ -12,29 +12,23 @@ if (system.args.length < 3 || system.args.length > 5) {
     page.viewportSize = { width: 600, height: 600 };
     if (system.args.length > 3 && system.args[2].substr(-4) === ".pdf") {
         size = system.args[3].split('*');
-        page.paperSize = size.length === 2 ? { width: size[0], height: size[1], margin: '0px' }
+        paperSize = size.length === 2 ? { width: size[0], height: size[1], margin: '0px' }
                                            : { format: system.args[3], orientation: 'portrait', margin: '1cm' };
 
-        /* default header/footer for pages that don't have custom overwrites (see below)
-        page.paperSize.header = {
+        paperSize.header = {
             height: "1cm",
             contents: phantom.callback(function(pageNum, numPages) {
-                if (pageNum == 1) {
-                    return "";
-                }
                 return "<h1>Header <span style='float:right'>" + pageNum + " / " + numPages + "</span></h1>";
             })
         };
-        page.paperSize.footer = {
+        paperSize.footer = {
             height: "1cm",
             contents: phantom.callback(function(pageNum, numPages) {
-                if (pageNum == numPages) {
-                    return "";
-                }
                 return "<h1>Footer <span style='float:right'>" + pageNum + " / " + numPages + "</span></h1>";
             })
         };
-        */
+        /* N.B. Can only assign to page.paperSize. It is NOT possible to change page.paperSize by assigning to its keys */
+        page.paperSize = paperSize;
     }
     if (system.args.length > 4) {
         page.zoomFactor = system.args[4];
