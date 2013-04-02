@@ -60,5 +60,6 @@ Name: "{userdesktop}\SSIM Coordinator Launcher"; Filename: {app}\HostExe\Coordin
 Name: "{userdesktop}\SSIM Coordinator Launcher"; Filename: {app}\HostExe\CoordinatorLauncher.exe; Parameters: -c {app}\AddOns\SSIM\CoordinatorLauncher_SSIM_G2101-i_CH4.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\Diagnostics_icon.ico; Components: G2101i_CFFDS
 Name: "{userdesktop}\SSIM Coordinator Launcher"; Filename: {app}\HostExe\CoordinatorLauncher.exe; Parameters: -c {app}\AddOns\SSIM\CoordinatorLauncher_SSIM_G2132-i.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\Diagnostics_icon.ico; Components: G2132i
 Name: "{userdesktop}\SSIM Coordinator Launcher"; Filename: {app}\HostExe\CoordinatorLauncher.exe; Parameters: -c {app}\AddOns\SSIM\CoordinatorLauncher_SSIM_G2201-i.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\Diagnostics_icon.ico; Components: G2201i
+Name: "{userdesktop}\SSIM Coordinator Launcher"; Filename: {app}\HostExe\CoordinatorLauncher.exe; Parameters: -c {app}\AddOns\SSIM\CoordinatorLauncher_SSIM_G2131-i.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\Diagnostics_icon.ico; Components: G2131i
 
 Name: {userdesktop}\Read SSIM Pressure; Filename: {app}\HostExe\ReadExtSensor.exe; Parameters: -c {app}\AddOns\SSIM\ReadExtSensor.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\Diagnostics_icon.ico
