@@ -138,7 +138,7 @@ define(function(require, exports, module) {
         var pv = newParamsValidator(options, [
                 {"name": "csp_url",      "required": true,  "validator": "string"},
                 {"name": "ticket_url",   "required": true,  "validator": "string"},
-                {"name": "identity",     "required": true,  "validator": /[0-9a-zA-Z]+/},
+                {"name": "identity",     "required": true,  "validator": /[0-9a-zA-Z]{32}/},
                 {"name": "psys",         "required": true,  "validator": "string"},
                 {"name": "rprocs",       "required": true,  "validator": "string"},
                 {"name": "debug",        "required": false, "validator": "boolean", "default_value": false},
