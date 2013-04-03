@@ -1,0 +1,15 @@
+{
+	"reportProxy": {
+		"host": "localhost",
+		"port": 8300
+	},
+	"reportServer": {
+		"host": "localhost",
+		"port": 5300
+	},
+	"host": "dev.picarro.com",
+	"port": 443,
+	"site": "dev",
+	"identity": "dc1563a216f25ef8a20081668bb6201e",
+	"sys": "APITEST2"
+}

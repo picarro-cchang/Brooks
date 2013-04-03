@@ -1,5 +1,5 @@
 // index.js
-/*global define */
+/*global alert, define, TEMPLATE_PARAMS */
 /* jshint undef:true, unused:true */
 
 define(function(require, exports, module) {
@@ -12,11 +12,14 @@ define(function(require, exports, module) {
     var dashboardSettings = require('app/dashboardSettings');
 
     function init() {
+        alert(JSON.stringify(TEMPLATE_PARAMS));
         dashboardSettings.init();
         dashboardJobs.init();
         dashboardInstructions.init();
+        var proxyUrl = TEMPLATE_PARAMS.host + ':' + TEMPLATE_PARAMS.port;
+        var protocol = (TEMPLATE_PARAMS.port == 443) ? "https" : "http";
 
-        DASHBOARD.rptGenService = newRptGenService({"rptgen_url": "http://localhost:5300"});
+        DASHBOARD.rptGenService = newRptGenService({"rptgen_url": protocol + "://" + proxyUrl});
         DASHBOARD.dashboardSettings = new DASHBOARD.DashboardSettings();
         DASHBOARD.submittedJobs = new DASHBOARD.SubmittedJobs();
         DASHBOARD.submittedJobs.fetch();    // from local storage

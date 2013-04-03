@@ -11,6 +11,7 @@
     var mkdirp = require('mkdirp');
     var newP3ApiService = require('./lib/newP3ApiService');
     var newReportGen = require('./lib/newReportGen');
+    var newRptGenMonitor = require('./lib/newRptGenMonitor');
     var newRunningTasks = require('./lib/newRunningTasks');
     var path = require('path');
     var pv = require('./public/js/common/paramsValidator');
@@ -22,6 +23,59 @@
     var util = require('util');
     var _ = require('underscore');
 
+    var SITECONFIG = {};
+    SITECONFIG.p3host = "dev.picarro.com";
+    SITECONFIG.p3port = 443;
+    SITECONFIG.p3site = "dev";
+    SITECONFIG.reporthost = "localhost";
+    SITECONFIG.reportport = 5300;
+    SITECONFIG.proxyhost = "localhost";
+    SITECONFIG.proxyport = 8300;
+    SITECONFIG.psys = "APITEST2";
+    SITECONFIG.identity = "dc1563a216f25ef8a20081668bb6201e";
+
+    var siteconfig_path = argv.s ? argv.s : path.join(__dirname, "site_config_node");
+    var siteconfig_data = fs.readFileSync(siteconfig_path, 'utf8');
+    var siteconfig_obj = JSON.parse(siteconfig_data);
+    if (siteconfig_obj.hasOwnProperty("host")) {
+        SITECONFIG.p3host = siteconfig_obj.host;
+    }
+    if (siteconfig_obj.hasOwnProperty("port")) {
+        SITECONFIG.p3port = siteconfig_obj.port;
+    }
+    if (siteconfig_obj.hasOwnProperty("site")) {
+        SITECONFIG.p3site = siteconfig_obj.site;
+    }
+    if (siteconfig_obj.hasOwnProperty("reportServer")) {
+        if (siteconfig_obj.reportServer.hasOwnProperty("host")) {
+            SITECONFIG.reporthost = siteconfig_obj.reportServer.host;
+        }
+        if (siteconfig_obj.reportServer.hasOwnProperty("port")) {
+            SITECONFIG.reportport = siteconfig_obj.reportServer.port;
+        }
+    }
+    if (siteconfig_obj.hasOwnProperty("reportProxy")) {
+        if (siteconfig_obj.reportProxy.hasOwnProperty("host")) {
+            SITECONFIG.proxyhost = siteconfig_obj.reportProxy.host;
+        }
+        if (siteconfig_obj.reportProxy.hasOwnProperty("port")) {
+            SITECONFIG.proxyport = siteconfig_obj.reportProxy.port;
+        }
+    }
+    if (siteconfig_obj.hasOwnProperty("sys")) {
+        SITECONFIG.psys = siteconfig_obj.sys;
+    }
+    if (siteconfig_obj.hasOwnProperty("identity")) {
+        SITECONFIG.identity = siteconfig_obj.identity;
+    }
+    var scheme = (SITECONFIG.p3port === 443) ? "https://" : "http://";
+    var p3port = (SITECONFIG.p3port === 80 || SITECONFIG.p3port === 443) ? "" : ":" + SITECONFIG.p3port;
+
+    console.log("");
+    console.log("siteconfig_path: ", siteconfig_path);
+    console.log("siteconfig_obj: ", siteconfig_obj);
+    console.log("");
+
     var stringToBoolean = pv.stringToBoolean;
     var newParamsValidator = pv.newParamsValidator;
 
@@ -31,11 +85,13 @@
     app.set('views', path.join(__dirname, 'views'));
     app.use(express.bodyParser());
 
-    // GLOBALS.csp_url = "https://dev.picarro.com/dev";
-    GLOBALS.csp_url = "https://localhost:8081/node";
-    GLOBALS.ticket_url = GLOBALS.csp_url + "/rest/sec/dummy/1.0/Admin";
-    GLOBALS.identity = "85490338d7412a6d31e99ef58bce5dPM";
-    GLOBALS.psys = "SUPERADMIN";
+    GLOBALS.csp_url = scheme + SITECONFIG.p3host + p3port + '/' + SITECONFIG.p3site; //"https://dev.picarro.com/dev";
+    GLOBALS.psys = SITECONFIG.psys;
+    GLOBALS.identity = SITECONFIG.identity;
+
+    //GLOBALS.csp_url = "https://dev.picarro.com/dev";
+    //GLOBALS.psys = "APITEST2";
+    //GLOBALS.identity = "dc1563a216f25ef8a20081668bb6201e";
 
     //GLOBALS.csp_url = "https://localhost:8081/node";
     //GLOBALS.psys = "SUPERADMIN";
@@ -52,45 +108,7 @@
 
     if (p3ApiService instanceof Error) throw p3ApiService;  // Fatal error
 
-
-    function RptGenMonitor() {
-        var that = this;
-        this.logMessages = [];
-        this.active = {};
-        this.logFile = path.join(__dirname, 'ReportGen.log');
-        fs.appendFile(this.logFile,'/* RESTARTING */\n', function() {
-            setTimeout(function() { that.saveLog(); },5000);
-        });
-    }
-
-    RptGenMonitor.prototype.saveLog = function () {
-        var that = this;
-        if (that.logMessages.length > 0) {
-            fs.appendFile(that.logFile, that.logMessages.join("\n") + "\n", function () {
-                that.logMessages = [];
-                setTimeout(function() { that.saveLog(); },5000);
-            });
-        }
-        else setTimeout(function() { that.saveLog(); },5000);
-    };
-
-    RptGenMonitor.prototype.monitor = function (rptGen) {
-        var that = this;
-        rptGen.on('start', function (d) {
-            that.logMessages.push('start: ' + JSON.stringify(d));
-            that.active[d.workDir] = d.instructions_type;
-        });
-        rptGen.on('success', function (d) {
-            that.logMessages.push('success: ' + JSON.stringify(d));
-            delete that.active[d.workDir];
-        });
-        rptGen.on('fail', function (d) {
-            that.logMessages.push('fail: ' + JSON.stringify(d));
-            delete that.active[d.workDir];
-        });
-    };
-
-    var rptGenMonitor = new RptGenMonitor();
+    var rptGenMonitor = newRptGenMonitor(REPORTROOT);
     GLOBALS.runningTasks  = newRunningTasks(REPORTROOT);
 
     function handleTz(req, res) {
@@ -170,10 +188,7 @@
     }
 
     function handleGetReport(req, res) {
-        var qry = req.query;
-        var hash = req.params.hash;
-        var ts = req.params.ts;
-        res.render("getReport", {qry: qry, hash: hash, ts:ts});
+        res.render("getReport", {qry: req.query, hash: req.params.hash, ts:req.params.ts});
     }
 
     function handleDownload(req, res) {
@@ -186,7 +201,7 @@
     }
 
     app.get("/", function(req, res) {
-        res.render("index");
+        res.render("index", {qry: req.query, host: SITECONFIG.proxyhost, port: SITECONFIG.proxyport});
     });
 
     app.get("/rest/RptGen", handleRptGen);
@@ -197,11 +212,15 @@
 
     app.get("/getReport/:hash/:ts", handleGetReport);
 
-    app.get("/checkPdfConvert", function(req, res) {
-        res.render("checkPdfConvert");
+    app.get("/test/:testName", function(req, res) {
+        res.render(req.params.testName);
     });
 
     /*
+    app.get("/checkPdfConvert", function(req, res) {
+        res.render("checkPdfConvert");
+    });
+    
     app.get("/rest/data/:hash/:ts/report.pdf", function(req, res) {
         // Note: should use a stream here, instead of fs.readFile
         var filename = path.join(REPORTROOT,req.params.hash,req.params.ts,"report.pdf");
@@ -243,9 +262,30 @@
         else console.log('Directory ' + REPORTROOT + ' created.');
         app.use("/rest/data", express.static(REPORTROOT));
         GLOBALS.runningTasks.handleIncompleteTasksOnStartup( function () {
-            var port = 5300;
+            var port = SITECONFIG.reportport;
             app.listen(port);
             console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
         });
     });
+
+    var http = require('http');
+    http.createServer(function(request, response){
+        var request_options = {
+            host: request.headers['host'].split(':')[0],
+            port: SITECONFIG.reportport,
+            path: request.url,
+            method: request.method
+        };
+        console.log('request_options', request_options);
+        var proxy_request = http.request(request_options, function(proxy_response){
+            proxy_response.pipe(response);
+            var responseCache = '';
+            proxy_response.on('data', function (chunk) {
+
+            });
+            response.writeHead(proxy_response.statusCode, proxy_response.headers);
+        });
+        request.pipe(proxy_request);
+    }).listen(SITECONFIG.proxyport);
+
 })();

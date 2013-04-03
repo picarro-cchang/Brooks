@@ -10,7 +10,7 @@ define(function(require, exports, module) {
     'use strict';
     var events = require('events');
     var fs = require('fs');
-    var path = require(path);
+    var path = require('path');
     var util = require('util');
 
     function RptGenMonitor(rootDir) {
@@ -59,7 +59,7 @@ define(function(require, exports, module) {
         this.logMessages.push(msg);
         if (this.writeFlag) {
             this.writeFlag = false;
-            this.next();            
+            this.next();
         }
     };
 

@@ -2,6 +2,12 @@ extends layout_require
 
 block scripts
     script(type='text/javascript', data-main='/js/app/indexMain.js', src='/js/require-jquery.js')
+    script(type='text/javascript')
+        var TEMPLATE_PARAMS = {
+            qry: !{JSON.stringify(qry)},
+            host: "#{host}",
+            port: "#{port}"
+        };
 
 block content
     body(style="min-width:1100px")
