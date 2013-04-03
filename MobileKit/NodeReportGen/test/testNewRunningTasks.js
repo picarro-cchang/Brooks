@@ -1,5 +1,6 @@
-/*global console, describe, after, afterEach, before, beforeEach, it, require  */
+/*global describe, afterEach, beforeEach, it, require  */
 /* jshint -W030, -W024, -W097 */
+/*jshint undef:true, unused:true */
 'use strict';
 var expect = require("chai").expect;
 var fs = require("fs");
@@ -193,6 +194,7 @@ describe('Running Task Support', function() {
                 rt.handleIncompleteTasksOnStartup(function() {
                     sf.readStatus(stat1, function(err, data) {
                         expect(err).not.to.be.null;
+                        expect(data).to.be.undefined;
                         sf.readStatus(stat2, function(err, data) {
                             expect(err).to.be.null;
                             expect(data.status).to.equal(rptGenStatus.FAILED);

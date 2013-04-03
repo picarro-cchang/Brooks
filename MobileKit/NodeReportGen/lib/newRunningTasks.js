@@ -2,7 +2,8 @@
     persist on the disk a collection of running tasks. These are used to handle orphan tasks left
     behind if the server is prematurely stopped */
 
-/*global console, exports, require */
+/*global module, require */
+/*jshint undef:true, unused:true */
 
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
