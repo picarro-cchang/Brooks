@@ -82,7 +82,7 @@ function ($) {
          * @return {null}
          */
         var p3restapi_logger = function() {
-                var i, len, printMe;
+            var i, len, printMe;
             len = arguments.length;
 
             printMe = true;
@@ -214,7 +214,7 @@ function ($) {
         if (initArgs && initArgs["rprocs"]) {
             rprocs = initArgs["rprocs"];
         }
-        if (typeof(rprocs) === 'String') {
+        if (typeof(rprocs) === 'string') {
             rprocs = JSON.parse(rprocs);
         }
         this.rprocs = rprocs;
@@ -392,7 +392,7 @@ function ($) {
                     + my_options.host
                     + my_options.path;
             } else {
-                url = "https://"
+                url = "http://"
                     + my_options.host
                     + ":" + my_options.port
                     + my_options.path;
@@ -406,7 +406,7 @@ function ($) {
                     }
                 }; // errorFn
 
-                successFn = function(rtn_json /*, status_str , xOptions */) {
+                successFn = function(rtn_json, status_str, xOptions) {
                     if (successCbFn) {
                         successCbFn(200, rtn_json); // Fake 200
                     }
@@ -431,12 +431,14 @@ function ($) {
 
             } else {
                 errorFn = function(jqXHR, status, err) {
+                    // N.B. It is important to send jqXHR.responseText since this contains the
+                    // "invalid ticket" string which we test for
                     if (errorCbFn) {
-                        errorCbFn(err);
+                        errorCbFn(jqXHR.status + ' ' + jqXHR.statusText + ' ' + jqXHR.responseText);
                     }
                 }; // errorFn
 
-                successFn = function(rtn_data, status /*, jqXHR */) {
+                successFn = function(rtn_data, status, jqXHR) {
                     var json_error = false;
                     var rtnobj;
                     try {
@@ -458,7 +460,7 @@ function ($) {
                 if (my_options.method === "POST") {
                     $.ajax({contentType: "application/json"
                         , data: $.param(request_obj.data)
-                        , dataType: "json"
+                        , dataType: "text"
                         , url: url
                         , type: "POST"
                         , timeout: request_obj.timeout
@@ -467,7 +469,7 @@ function ($) {
                         });
                 } else {
                     $.ajax({contentType: "application/json"
-                        , dataType: "json"
+                        , dataType: "text"
                         , url: url
                         , type: "GET"
                         , timeout: request_obj.timeout
@@ -514,7 +516,7 @@ function ($) {
             call_parms["sys"] = psys;
             call_parms["identity"] = identity;
 
-            if (typeof(rprocs) === 'String') {
+            if (typeof(rprocs) === 'string') {
                 call_parms["rprocs"] = rprocs;
             } else {
                 call_parms["rprocs"] = JSON.stringify(rprocs);
@@ -635,33 +637,59 @@ function ($) {
 
             var get_cntl = {"fn_list": []};
 
-            var tryWithInitialTicket = function(completeCbFn) {
-                p3restapi_logger("getpost.tryWithInitialTicket:", "debug");
-
+            var buildCallRequest = function(tkt) {
+                var rest_rq = {};
                 var cp = "/" + site + "/rest/" + my_svc
-                + '/' + api_ticket
+                + '/' + tkt
                 + '/' + my_ver
                 + '/' + my_rsc;
 
-                if (jsonp === true) {
-                    cp += "?callback=?&";
-                } else {
-                    cp += "?";
-                }
-
                 switch(type) {
                 case "GET":
-                    cp += $.param(my_qryparms_obj);
+                    if (typeof(my_qryparms_obj) === 'string') {
+                        cp += my_qryparms_obj;
+                        if (jsonp === true) {
+                            if (my_qryparms_obj.indexOf("?") === -1) {
+                                cp += "?callback=?&";
+                            } else {
+                                cp += "&callback=?&";
+                            }
+                        }
+
+                    } else {
+                        if (jsonp === true) {
+                            cp += "?callback=?&";
+                        } else {
+                            cp += "?";
+                        }
+
+                        cp += $.param(my_qryparms_obj);
+                    }
                     rest_rq = {"path": cp, "method": "GET"};
                     break;
+
                 case "POST":
+                    if (jsonp === true) {
+                        cp += "?callback=?&";
+                    }
+
                     rest_rq = {"path": cp, "method": "POST", "data": my_qryparms_obj};
                     break;
                 }
+                return rest_rq;
+            };
+
+            var tryWithInitialTicket = function(completeCbFn) {
+                p3restapi_logger("getpost.tryWithInitialTicket:", "debug");
+
+                rest_rq = buildCallRequest(api_ticket);
+
                 callRest(rest_rq
 
                     // errorFn
                     , function(err) {
+                        p3restapi_logger("getpost.tryWithInitialTicket.callRest errorFn:", "debug");
+
                         var tkt_error = false;
                         if (typeof(err) === 'string') {
                             if (err.indexOf("invalid ticket") >= 0) {
@@ -686,6 +714,8 @@ function ($) {
 
                     // SuccessFn
                     , function(rcode, robj) {
+                        p3restapi_logger("getpost.tryWithInitialTicket.callRest successFn:", "debug");
+
                         get_cntl["request_is_done"] = true;
                         get_cntl["request_rcode"] = rcode;
                         get_cntl["request_robj"] = robj;
@@ -710,36 +740,20 @@ function ($) {
                         , tktObj
                         , "debug");
 
-                    var call_path = "/" + site + "/rest/" + my_svc
-                    + '/' + tktObj.ticket
-                    + '/' + my_ver
-                    + '/' + my_rsc;
+                    rest_rq = buildCallRequest(tktObj.ticket);
 
-                    if (jsonp === true) {
-                        call_path += "?callback=?&";
-                    } else {
-                        call_path += "?";
-                    }
-                    switch(type) {
-                    case "GET":
-                        call_path += $.param(my_qryparms_obj);
-                        rest_rq = {"path": call_path, "method": "GET"};
-                        break;
-                    case "POST":
-                        rest_rq = {"path": call_path, "method": "POST", "data": my_qryparms_obj};
-                        break;
-                    }
                     callRest(rest_rq
                         // errorCb
                         , function(err) {
-
-                            console.log("callRest error err: ", err);
+                            p3restapi_logger("getpost.getNewTicketThenGET.getFn.callRest errorCb:", "debug");
 
                             get_cntl["request_is_done"] = true;
                             get_cntl["request_error"] = err;
                             doneCb();
                         }
                         , function(rcode, robj) {
+                            p3restapi_logger("getpost.getNewTicketThenGET.getFn.callRest successFn:", "debug");
+
                             get_cntl["request_is_done"] = true;
                             get_cntl["request_rcode"] = rcode;
                             get_cntl["request_robj"] = robj;
@@ -801,7 +815,7 @@ function ($) {
 
             var finalRoutine = function() {
                 p3restapi_logger("getpost.finalRoutine:", "debug");
-                p3restapi_logger("getpost.finalRoutine: get_cntl", get_cntl, "debug");
+                // p3restapi_logger("getpost.finalRoutine: get_cntl", get_cntl, "debug");
 
                 if (get_cntl.hasOwnProperty("request_robj")) {
                     if (successCbFn) {
@@ -877,8 +891,25 @@ function ($) {
         // build resource.qry() functions for all rproc values
         var rsc, qry, rqlist;
         var resource_obj = {};
-        for (var rqrystr in rprocs) {
-            rqlist = rprocs[rqrystr].split(":");
+
+        // Assure that the resource query exists in the rpocs list
+        var resource_qry_exists = false;
+        var exrprocs = [];
+
+        for (var rqryidx in rprocs) {
+            rqlist = rprocs[rqryidx].split(":");
+            if (rqlist[1] === "resource") {
+                resource_qry_exists = true;
+            }
+            exrprocs.push(rprocs[rqryidx]);
+        }
+        if (resource_qry_exists !== true) {
+            exrprocs.push(resource + ":resource");
+        }
+
+        // build the qry functions
+        for (rqryidx in exrprocs) {
+            rqlist = exrprocs[rqryidx].split(":");
             rsc = rqlist[0];
             qry = rqlist[1];
             if (!resource_obj.hasOwnProperty(rsc)) {
@@ -887,13 +918,19 @@ function ($) {
             var setup = function(rs,qr) {
                 resource_obj[rs][qr] = function(q,e,s) {
                                             var fn, fn_req;
-                                            q["qry"] = qr;
                                             switch(qr) {
                                             case "data":
                                                 fn_req = {"dataobj": q, "existing_tkt": true};
                                                 fn = post;
                                                 break;
+
+                                            case "resource":
+                                                fn_req = {"qryobj": q, "existing_tkt": true};
+                                                fn = get;
+                                                break;
+
                                             default:
+                                                q["qry"] = qr;
                                                 fn_req = {"qryobj": q, "existing_tkt": true};
                                                 fn = get;
                                                 break;

@@ -26,8 +26,10 @@ define ({
     Settings: null,
     SettingsView: null,
     Survey: null,
+    SurveyorRpt: null,
     Surveys: null,
     surveys: null,
     SurveysTableView: null,
-    usageTracker: null
+    usageTracker: null,
+    Utilities: null
 });

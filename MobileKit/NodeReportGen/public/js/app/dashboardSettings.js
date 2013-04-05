@@ -25,6 +25,7 @@ define(function(require, exports, module) {
         });
 
         DASHBOARD.SettingsView = Backbone.View.extend({
+            /*
             el: $("#id_settings"),
             events: {
                 "shown #id_timezoneModal": "onModalShown",
@@ -46,7 +47,7 @@ define(function(require, exports, module) {
             render: function () {
                 $("#id_timezone").val(DASHBOARD.dashboardSettings.get("timezone"));
                 return this;
-            }
+            }*/
         });
     }
     module.exports.init = dashboardSettingsInit;

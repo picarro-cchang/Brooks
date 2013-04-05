@@ -4,9 +4,12 @@ block scripts
     script(type='text/javascript', data-main='/js/app/indexMain.js', src='/js/require-jquery.js')
     script(type='text/javascript')
         var TEMPLATE_PARAMS = {
+            identity: "#{identity}",
             qry: !{JSON.stringify(qry)},
             host: "#{host}",
-            port: "#{port}"
+            port: "#{port}",
+            psys: "#{psys}",
+            site: "#{site}"
         };
 
 block content
@@ -15,23 +18,6 @@ block content
             div.row-fluid(style="margin-bottom:40px;")
                 div.span12
                     h1(style="text-align:center") Picarro Surveyor Report Generation Portal
-                    div#id_settings
-                        h2 Time zone
-                        input#id_timezone(type="text",readonly="readonly")
-                        a.btn.btn-inverse(href="#id_timezoneModal",role="button",data-toggle="modal",style="margin-top:-8px")
-                            | Select
-                        div#id_timezoneModal.modal.hide.fade(tabindex="-1", role="dialog", aria-labelledby="id_timezoneModalLabel",
-                            aria-hidden="true")
-                            div.modal-header
-                                button.close(type="button", data-dismiss="modal", aria-hidden="true") x
-                                h3#id_timezoneModalLabel Click on map to select time zone
-                            div.modal-body
-                                include timezone_picker
-                            div.modal-footer
-                                button#id_save_timezone.btn.btn-primary(data-dismiss="modal", aria-hidden="true")
-                                    | Save changes
-                                button.btn(data-dismiss="modal", aria-hidden="true")
-                                    | Cancel
                     h2 Dashboard
                     div#id_submittedJobs
                         div#id_jobTableDiv
@@ -65,22 +51,41 @@ block content
                                 | Make PDF
                             input#id_make_pdf(type="checkbox")
                     div.row-fluid
-                        div.span3
+                        div.span2
                             label(for="id_swCorner")
                                 | SW Corner
                             input#id_swCorner(type="text", placeholder="Latitude, Longitude", style="width:100%")
-                        div.span3
+                        div.span2
                             label(for="id_neCorner")
                                 | NE Corner
                             input#id_neCorner(type="text", placeholder="Latitude, Longitude", style="width:100%")
-                        div.span2
-                            label(for="id_peaksMinAmp")
-                                | Peaks Min Amp
-                            input#id_peaksMinAmp(type="text")
-                        div.span2
-                            label(for="id_exclRadius")
-                                | Exclusion Radius
-                            input#id_exclRadius(type="text")
+                        div.span3
+                            label(for="id_reportTimezone")
+                                | Report time zone
+                            input#id_reportTimezone(type="text", style="width:67%", readonly)
+                            a.btn.btn-inverse(href="#id_timezoneModal",role="button",data-toggle="modal",style="margin-top:-9px")
+                                | Change
+                            div#id_timezoneModal.modal.hide.fade(tabindex="-1", role="dialog", aria-labelledby="id_timezoneModalLabel",
+                                aria-hidden="true")
+                                div.modal-header
+                                    button.close(type="button", data-dismiss="modal", aria-hidden="true") x
+                                    h3#id_timezoneModalLabel Click on map to select time zone
+                                div.modal-body
+                                    include timezone_picker
+                                div.modal-footer
+                                    button#id_save_timezone.btn.btn-primary(data-dismiss="modal", aria-hidden="true")
+                                        | Save changes
+                                    button.btn(data-dismiss="modal", aria-hidden="true")
+                                        | Cancel
+                        div.span3
+                            div(style="float:left")
+                                label(for="id_peaksMinAmp")
+                                    | Peaks Min Amp
+                                input#id_peaksMinAmp(type="text")
+                            div(style="float:left; margin-left:15px;")
+                                label(for="id_exclRadius")
+                                    | Exclusion Radius
+                                input#id_exclRadius(type="text")
                         div.span2
                             div(style="float:left")
                                 label(for="id_submapsRows")

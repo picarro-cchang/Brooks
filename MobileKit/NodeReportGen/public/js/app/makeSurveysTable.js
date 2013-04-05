@@ -36,8 +36,15 @@ function (utils, gh, REPORT) {
                 etmList.push(1000*run.minetm);
                 etmList.push(1000*run.maxetm);
             }
-            var url = '/rest/tz?' + $.param({tz:REPORT.settings.get("timezone"),posixTimes:etmList});
-            $.getJSON(url,function (data) {
+
+            REPORT.Utilities.timezone({tz:REPORT.settings.get("timezone"),posixTimes:etmList},
+            function (err) {
+                var msg = 'While processing timezone in makeSurveysTable: ' + err;
+                alert(msg);
+                done(new Error(msg));
+            },
+            function (status, data) {
+                console.log('While processing timezone in makeSurveysTable: ' + status);
                 for (i=0; i<surveys.length; i++) {
                     var run = REPORT.surveys.where({"id": surveys[i]})[0].attributes;
                     surveysTable.push('<tr>');
@@ -50,7 +57,7 @@ function (utils, gh, REPORT) {
                 surveysTable.push('</tbody>');
                 surveysTable.push('</table>');
                 done(null, surveysTable);
-            }).error(function () { done(new Error("getJSON error:" + url)); });
+            });
         }
         else done(null, surveysTable);
     }

@@ -94,7 +94,6 @@ define(function(require, exports, module) {
         fs.readFile(that.tasksFile,'ascii', function (err, data) {
             if (!err) {
                 var next;
-                var incompleteJobs = _.keys(JSON.parse(data));
                 // console.log(incompleteJobs);
                 next = function () {
                     if (incompleteJobs.length > 0) {
@@ -125,7 +124,14 @@ define(function(require, exports, module) {
                     }
                     else refresh();
                 };
-                next();
+                try {
+                    var incompleteJobs = _.keys(JSON.parse(data));
+                    if (incompleteJobs) next();
+                    else throw new Error("empty jobs file");
+                }
+                catch (e) {
+                    refresh();
+                }
             }
             else refresh(); // Ignore errors
         });

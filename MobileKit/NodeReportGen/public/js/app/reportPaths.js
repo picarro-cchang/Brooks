@@ -1,5 +1,5 @@
 // reportPaths.js
-/*global alert, module, require */
+/*global alert, console, module, require */
 /* jshint undef:true, unused:true */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
@@ -42,7 +42,7 @@ define(function(require, exports, module) {
                 else if (that.loadStage === 'loaded') that.trigger('loaded');
                 else {
                     that.loadStage = 'loading';
-                    that.workDir = '/rest/data/'+that.pathsRef.SUBMIT_KEY.hash+'/'+that.pathsRef.SUBMIT_KEY.dir_name;
+                    that.workDir = '/'+that.pathsRef.SUBMIT_KEY.hash+'/'+that.pathsRef.SUBMIT_KEY.dir_name;
                     that.pathsFiles = that.pathsRef.OUTPUTS.FILES;
                     names = that.pathsFiles.slice(0);   // These are all the names of the paths files, by survey and run
                     next();
@@ -80,13 +80,23 @@ define(function(require, exports, module) {
                             next();
                         };
                         if (type === 'path') {  // Get path data from the server - this must later be protected via a ticket
-                            $.getJSON(url, function(pathData) {
+                            REPORT.SurveyorRpt.resource(url,
+                            function (err) {
+                                alert('While getting path data from ' + url + ': ' + err);
+                            },
+                            function (status, pathData) {
+                                console.log('While getting path data from ' + url + ': ' + status);
                                 var fovData = {};
                                 var urlFov = url.replace("path", "fov");    // Get corresponding FOV (by filename)
                                 if ($.inArray(name.replace("path", "fov"),that.pathsFiles) >= 0) {
-                                    $.getJSON(urlFov, function(fData) {
+                                    REPORT.SurveyorRpt.resource(urlFov,
+                                    function (err) {
+                                        alert('While getting FOV data from ' + urlFov + ': ' + err);
+                                    },
+                                    function (status, fData) {
+                                        console.log('While getting FOV data from ' + urlFov + ': ' + status);
                                         fData.forEach(function (d) {
-                                            fovData[d.R] = d;   // Assemble the FOV data indexed by row number
+                                                fovData[d.R] = d;   // Assemble the FOV data indexed by row number
                                         });
                                         processPathData(pathData, fovData);
                                     });

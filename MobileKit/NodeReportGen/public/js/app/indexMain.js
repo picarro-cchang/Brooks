@@ -24,7 +24,8 @@ requirejs.config({
         'jstz:': '/js/lib/jstz.min',
         'jquery-ui': '/js/lib/jquery-ui-1.10.2.custom.min',
         'jquery.datetimeentry': '/js/lib/jquery.datetimeentry',
-        'jquery.mousewheel': '/js/lib/jquery.mousewheel.min'
+        'jquery.mousewheel': '/js/lib/jquery.mousewheel.min',
+        'jquery.jsonp': '/js/lib/jquery.jsonp-2.4.0.min'
     },
     shim: {
         'jquery-migrate': {
@@ -62,6 +63,9 @@ requirejs.config({
         },
         'jquery.mousewheel': {
             deps: ['jquery', 'jquery-ui']
+        },
+        'jquery.jsonp': {
+            deps: ['jquery']
         },
         'jstz': {
             exports: 'jstz'

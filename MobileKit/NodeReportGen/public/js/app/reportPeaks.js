@@ -1,11 +1,10 @@
 // reportPeaks.js
-/*global module, require */
+/*global alert, console, module, require */
 /* jshint undef:true, unused:true */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
     'use strict';
-    var $ = require('jquery');
     var Backbone = require('backbone');
     var CNSNT = require('app/cnsnt');
     var REPORT  = require('app/reportGlobals');
@@ -38,20 +37,24 @@ define(function(require, exports, module) {
                 else if (that.loadStage === 'loaded') that.trigger('loaded');
                 else {
                     that.loadStage = 'loading';
-                    that.workDir = '/rest/data/'+that.peaksRef.SUBMIT_KEY.hash+'/'+that.peaksRef.SUBMIT_KEY.dir_name;
+                    that.workDir = '/'+that.peaksRef.SUBMIT_KEY.hash+'/'+that.peaksRef.SUBMIT_KEY.dir_name;
                     that.peaksFiles = that.peaksRef.OUTPUTS.FILES;
                     names = that.peaksFiles.slice(0);
                     next();
                 }
                 function next() {   // Sequentially fetch peaks from list of files in "names"
-                    var url;
                     if (names.length === 0) {       // Get here after all files are read in
                         that.loadStage = 'loaded';
                         that.trigger('loaded');
                     }
                     else {
-                        url = that.workDir + '/' + names.shift();
-                        $.getJSON(url, function(data) { // Get peaks data from the server - this must later be protected via a ticket
+                        var url = that.workDir + '/' + names.shift();
+                        REPORT.SurveyorRpt.resource(url,
+                        function (err) {
+                            alert('While getting peaks data from ' + url + ': ' + err);
+                        },
+                        function (status, data) {
+                            console.log('While getting peaks data from ' + url + ': ' + status);
                             data.forEach(function (d) { // Can filter by lat-lng limits here
                                 that.push(d, {silent:true});    // All peaks are pushed to the collection
                             });

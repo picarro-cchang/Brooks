@@ -17,7 +17,8 @@ requirejs.config({
         'underscore': '/js/lib/underscore-min',
         'backbone': '/js/lib/backbone-min',
         'jquery.dataTables': '/js/lib/jquery.dataTables.min',
-        'jquery.ba-bbq': '/js/lib/jquery.ba-bbq.min'
+        'jquery.ba-bbq': '/js/lib/jquery.ba-bbq.min',
+        'jquery.jsonp': '/js/lib/jquery.jsonp-2.4.0.min'
     },
     shim: {
         'jquery-migrate': {
@@ -39,6 +40,9 @@ requirejs.config({
             deps: ['jquery']
         },
         'jquery.ba-bbq': {
+            deps: ['jquery']
+        },
+        'jquery.jsonp': {
             deps: ['jquery']
         },
         'backbone': {

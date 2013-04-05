@@ -1,5 +1,5 @@
 // dashboardJobs.js
-/*global alert, module, require, setTimeout, window */
+/*global alert, console, module, require, setTimeout, window */
 /* jshint undef:true, unused:true */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
@@ -8,6 +8,7 @@ define(function(require, exports, module) {
     var $ = require('jquery');
     var _ = require('underscore');
     var Backbone = require('backbone');
+    var cjs = require('common/canonical_stringify');
     var DASHBOARD = require('app/dashboardGlobals');
     var rptGenStatus = require('common/rptGenStatus');
     require('localStorage');
@@ -29,17 +30,22 @@ define(function(require, exports, module) {
                 msg: "",
                 user: "demo",
                 startPosixTime: 0,
-                startLocalTime: null
+                startLocalTime: null,
+                timezone: "UTC"
             },
             addLocalTime: function (done) {
                 var that = this;
-                var tz = DASHBOARD.dashboardSettings.get('timezone');
-                DASHBOARD.rptGenService.get("tz",{tz:tz, posixTimes:[this.get("startPosixTime")]},function (err, result) {
-                    if (err) done(err);
-                    else {
-                        that.set({"startLocalTime": result.timeStrings[0]});
-                        done(null);
-                    }
+                var tz = DASHBOARD.timezone;
+                DASHBOARD.Utilities.timezone({tz:tz, posixTimes:[this.get("startPosixTime")]},
+                function (err) {
+                    var msg = 'While converting timezone: ' + err;
+                    alert(msg);
+                    done(msg);
+                },
+                function (s, result) {
+                    console.log('While converting timezone: ' + s);
+                    that.set({"startLocalTime": result.timeStrings[0]});
+                    done(null);
                 });
             },
             analyzeStatus: function (err, status, msg)  {
@@ -57,38 +63,46 @@ define(function(require, exports, module) {
             },
             updateStatus: function () {
                 var that = this;
-                var qryparms = {'qry': 'getStatus', 'contents_hash': this.get('hash'),
+                var qryparms = {'contents_hash': this.get('hash'),
                                 'start_ts': this.get('rpt_start_ts') };
-                DASHBOARD.rptGenService.get('RptGen', qryparms, function (err, result) {
-                    that.analyzeStatus(err, result.status, result.msg);
+                DASHBOARD.SurveyorRpt.getStatus(qryparms,
+                function (err) {
+                    that.analyzeStatus(err);
+                },
+                function (s, result) {
+                    console.log('While getting status: ' + s);
+                    that.analyzeStatus(null, result.status, result.msg);
                 });
             }
         });
 
         DASHBOARD.SubmittedJobs = Backbone.Collection.extend({
             initialize: function ()  {
-                this.listenTo(DASHBOARD.dashboardSettings, "change:timezone", this.resetTimeZone);
             },
             localStorage: new Backbone.LocalStorage("JobCollection"),
-            model: DASHBOARD.SubmittedJob,
-            resetTimeZone: function () {
+            model: DASHBOARD.SubmittedJob
+            /*resetTimeZone: function () {
                 var that = this;
-                var tz = DASHBOARD.dashboardSettings.get('timezone');
+                var tz = DASHBOARD.timezone;
                 // Batch convert all the startPosixTime values to startLocalTime values using the specified timezone
                 //  Triggers a reset when done
                 var etmList = [];
                 for (var i=0; i<this.length; i++) etmList.push(this.at(i).get('startPosixTime'));
-                DASHBOARD.rptGenService.get("tz", {tz:tz, posixTimes:etmList}, function (err, data) {
-                    if (!err) {
-                        for (var i=0; i<that.length; i++) {
-                            var model = that.at(i);
-                            model.set({'startLocalTime': data.timeStrings.shift()});
-                            that.update(model,{remove: false, silent: true});
-                        }
-                        that.trigger('reset');
+                DASHBOARD.Utilities.timezone({tz:tz, posixTimes:etmList},
+                function (err) {
+                    var msg = 'While converting timezone: ' + err;
+                    alert(msg);
+                },
+                function (s,data) {
+                    console.log('While converting timezone: ' + s);
+                    for (var i=0; i<that.length; i++) {
+                        var model = that.at(i);
+                        model.set({'startLocalTime': data.timeStrings.shift()});
+                        that.update(model,{remove: false, silent: true});
                     }
+                    that.trigger('reset');
                 });
-            }
+            }*/
         });
 
         DASHBOARD.JobsView = Backbone.View.extend({
@@ -99,12 +113,14 @@ define(function(require, exports, module) {
                 "click a.viewLink" : "onViewLink"
             },
             initialize: function () {
+                var that = this;
                 this.instrFileView = new DASHBOARD.InstructionsFileView();
-                this.$el.find("#id_jobTableDiv").html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="id_example"></table>');
-                this.jobTable = $("#id_example").dataTable({
+                this.$el.find("#id_jobTableDiv").html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="id_jobTable"></table>');
+                this.jobTable = $("#id_jobTable").dataTable({
                     "aoColumns": [
                         { "sTitle": "Reload", "mData": "link", "sClass": "center"},
-                        { "sTitle": "StartTime", "mData": "startLocalTime", "sClass": "center"},
+                        { "sTitle": "First submitted at", "mData": "startLocalTime", "sClass": "center"},
+                        { "sTitle": "Time zone", "mData": "timezone", "sClass": "center"},
                         { "sTitle": "Title", "mData": "title", "sClass": "center"},
                         { "sTitle": "Status", "mData": "statusDisplay", "sClass": "center"},
                         { "sTitle": "User", "mData": "user", "sClass": "center"}
@@ -120,6 +136,14 @@ define(function(require, exports, module) {
                 this.listenTo(DASHBOARD.submittedJobs, "reset", this.resetJobs);
                 this.addIndex = 0;
                 this.selectedRow = null;
+                var update_size = function () {
+                    $(that.jobTable).css({width: $(that.jobTable).parent().width()});
+                    that.jobTable.fnAdjustColumnSizing();
+                };
+                $(window).resize(function() {
+                    clearTimeout(window.refresh_size);
+                    window.refresh_size = setTimeout(function () { update_size(); }, 250);
+                });
             },
             addJob: function (model) {
                 this.cidToRow[model.cid] = this.jobTable.fnGetNodes(this.jobTable.fnAddData(this.formatSpecials(model))[0]);
@@ -162,24 +186,33 @@ define(function(require, exports, module) {
                 this.selectedRow = $(row).addClass('row_selected');
             },
             onPdfLink: function (e) {
-                var pdfUrl = '/rest/data/' + $(e.currentTarget).data('hash') + '/' + $(e.currentTarget).data('directory') + '/report.pdf';
-                window.open(pdfUrl,'_blank');
-                return false;
+                var pdfUrl = '/' + $(e.currentTarget).data('hash') + '/' + $(e.currentTarget).data('directory') + '/report.pdf';
+                DASHBOARD.SurveyorRpt.geturl({qryobj: {qry: "resource"}, existing_tkt: true},
+                function (err) {
+                    console.log('error: ', err);
+                },
+                function (status, url) {
+                    // url = window.location.origin + url.substring(0,url.lastIndexOf('?')) + pdfUrl;
+                    // console.log(url);
+                    window.location = url.substring(0,url.lastIndexOf('?')) + pdfUrl;
+                    // window.open(url,'_blank');
+                    return false;
+                });
             },
             onRetrieveInstructions: function(e) {
                 var that = this;
                 var cid = $(e.currentTarget).data("cid");
                 var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: cid});
-                var url = "/rest/data/" + job.get("hash") + '/instructions.json';
-                $.ajax({
-                    dataType: "text",
-                    url: url,
-                    type: "GET",
-                    success: function (data) {
-                        that.instrFileView.loadContents(data);
-                        that.highLightJob(job);
-                    }
-                }).error(function () { alert('Unable to retrieve instructions for this job'); });
+                var url = "/" + job.get("hash") + '/instructions.json';
+                DASHBOARD.SurveyorRpt.resource(url,
+                function (err) {
+                    alert('While retrieving instructions from ' + url + ': ' + err);
+                },
+                function (status, data) {
+                    console.log('While getting peaks data from ' + url + ': ' + status);
+                    that.instrFileView.loadContents(cjs(data));
+                    that.highLightJob(job);
+                });
             },
             onViewLink: function (e) {
                 var viewUrl = '/getReport/' + $(e.currentTarget).data('hash') + '/' + $(e.currentTarget).data('directory') + '?name=Summary';

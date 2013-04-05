@@ -1,5 +1,5 @@
 // getReport.js
-/*global module, require, TEMPLATE_PARAMS */
+/*global alert, console, module, require, TEMPLATE_PARAMS */
 /* jshint undef:true, unused:true */
 
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
@@ -10,6 +10,7 @@ define(function(require, exports, module) {
     var $ = require('jquery');
     var _ = require('underscore');
     var gh = require('app/geohash');
+    var localrestapi = require('app/localrestapi');
     var newUsageTracker = require('app/newUsageTracker');
     var REPORT = require('app/reportGlobals');
     var reportAnalyses = require('app/reportAnalyses');
@@ -20,10 +21,44 @@ define(function(require, exports, module) {
     var reportSettings = require('app/reportSettings');
     var reportSurveys = require('app/reportSurveys');
     var reportViewResources = require('app/reportViewResources');
+    var p3restapi = require('app/p3restapi');
 
     var instructionsLoaded = false;
 
     function init() {
+        var host = TEMPLATE_PARAMS.host;
+        var port = TEMPLATE_PARAMS.port;
+        if (host === '' && port === '') {
+            REPORT.SurveyorRpt = new localrestapi.GetResource();
+            REPORT.Utilities   = new localrestapi.Timezone();
+        }
+        else {
+            var initArgs = {host: host,
+                            port: port,
+                            site: TEMPLATE_PARAMS.site,
+                            identity: TEMPLATE_PARAMS.identity,
+                            psys: TEMPLATE_PARAMS.psys,
+                            rprocs: ["SurveyorRpt:resource"],
+                            svc: "gdu",
+                            version: "1.0",
+                            resource: "SurveyorRpt",
+                            jsonp: false,
+                            debug: false};
+            REPORT.SurveyorRpt = new p3restapi.p3RestApi(initArgs);
+            initArgs = { host: host,
+                         port: port,
+                         site: TEMPLATE_PARAMS.site,
+                         identity: TEMPLATE_PARAMS.identity,
+                         psys: TEMPLATE_PARAMS.psys,
+                         rprocs: ["Utilities:timezone"],
+                         svc: "gdu",
+                         version: "1.0",
+                         resource: "Utilities",
+                         jsonp: false,
+                         debug: false};
+            REPORT.Utilities = new p3restapi.p3RestApi(initArgs);
+        }
+
         reportAnalyses.init();
         reportPaths.init();
         reportPeaks.init();
@@ -69,7 +104,12 @@ define(function(require, exports, module) {
         var settingsKeys = _.keys((new REPORT.Settings()).attributes);
         if (!instructionsLoaded) {
             instructionsLoaded = true;
-            $.get('/rest/data' + keyFile, function(data) {
+            REPORT.SurveyorRpt.resource(keyFile,
+            function (err) {
+                alert('While getting key file data from ' + keyFile + ': ' + err);
+            },
+            function (status, data) {
+                console.log('While getting key file data from ' + keyFile + ': ' + status);
                 REPORT.settings.set(_.pick(data.INSTRUCTIONS,settingsKeys));
 
                 // Override the corners from the qry parameters if they exist

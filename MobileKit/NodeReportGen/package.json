@@ -6,8 +6,11 @@
   "dependencies": {
     "amdefine": ">=0.0.4",
     "express": ">=3.1.0",
+    "http-proxy": ">=0.10.0",
     "jade": ">=0.28.1",
+    "nstore": ">=0.5.2",
     "optimist": ">=0.3.5",
+    "querystring": ">=0.2.0",
     "requirejs": ">=2.1.5",
     "timezone": ">=0.0.16",
     "underscore": ">=1.4.4",

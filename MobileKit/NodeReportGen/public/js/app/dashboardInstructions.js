@@ -12,8 +12,11 @@ define(function(require, exports, module) {
     var DASHBOARD = require('app/dashboardGlobals');
     var iv = require('common/instructionsValidator');
     var tableFuncs = require('app/tableFuncs');
+    var jstz = require('jstz');
     require('jquery-migrate'),
     require('jquery-ui');
+    require('jquery.maphilight');
+    require('jquery.timezone-picker');
     require('jquery.datetimeentry');
     require('jquery.generateFile');
     require('jquery.mousewheel');
@@ -51,7 +54,7 @@ define(function(require, exports, module) {
     }
 
     function insertLocal(v) {
-        return {localTime: v, timezone: DASHBOARD.dashboardSettings.get('timezone')};
+        return {localTime: v, timezone: DASHBOARD.timezone};
     }
 
     function makeColorPatch(value) {
@@ -99,8 +102,14 @@ define(function(require, exports, module) {
     cb: function (type, data, rowData, row) {
         // Convert the local time to posix time using the server and update the local time string with the time zone
         if (type === "add" || type === "update") {
-            var tz = DASHBOARD.dashboardSettings.get('timezone');
-            DASHBOARD.rptGenService.get("tz",{tz:tz, timeStrings:[rowData.startEtm.localTime,rowData.endEtm.localTime]},function (err, result) {
+            var tz = DASHBOARD.timezone;
+            DASHBOARD.Utilities.timezone({tz:tz, timeStrings:[rowData.startEtm.localTime,rowData.endEtm.localTime]},
+            function (err) {
+                var msg = 'While converting timezone: ' + err;
+                alert(msg);
+            },
+            function (s, result) {
+                console.log('While converting timezone: ' + s);
                 rowData.startEtm.posixTime = result.posixTimes[0];
                 rowData.endEtm.posixTime = result.posixTimes[1];
                 rowData.startEtm.localTime = result.timeStrings[0];
@@ -152,7 +161,7 @@ define(function(require, exports, module) {
     {
         var header, body, footer;
         var controlClass = "input-large";
-        var tz = DASHBOARD.dashboardSettings.get("timezone");
+        var tz = DASHBOARD.timezone;
         header = '<div class="modal-header"><h3>' + "Add new run" + '</h3></div>';
         body   = '<div class="modal-body">';
         body += '<form class="form-horizontal">';
@@ -241,22 +250,26 @@ define(function(require, exports, module) {
         // Get the current time as the latest allowed end time
         var now;
         var posixTime = (new Date()).valueOf();
-        var tz = DASHBOARD.dashboardSettings.get('timezone');
+        var tz = DASHBOARD.timezone;
         function datetimeRange(input) {
             if ("" === $('#id_end_etm').val()) $('#id_end_etm').datetimeEntry('setDatetime',now);
             return {minDatetime: (input.id=='id_end_etm'   ? $('#id_start_etm').datetimeEntry('getDatetime'): null),
                     maxDatetime: (input.id=='id_start_etm' ? $('#id_end_etm').datetimeEntry('getDatetime'): now )};
         }
-        DASHBOARD.rptGenService.get("tz",{tz:tz, posixTimes:[posixTime]},function (err, result) {
-            if (err) done(err);
-            else {
-                now = result.timeStrings[0];
-                now = now.substring(0,now.lastIndexOf(':'));
-                console.log(now);
-                $.datetimeEntry.setDefaults({spinnerImage: null, datetimeFormat: 'Y-O-D H:M', show24Hours: true });
-                $('input.datetimeRange').datetimeEntry({beforeShow:datetimeRange});
-                done(null);
-            }
+        DASHBOARD.Utilities.timezone({tz:tz, posixTimes:[posixTime]},
+        function (err) {
+            var msg = 'While converting timezone: ' + err;
+            alert(msg);
+            done(new Error(msg));
+        },
+        function (s, result) {
+            console.log('While converting timezone: ' + s);
+            now = result.timeStrings[0];
+            now = now.substring(0,now.lastIndexOf(':'));
+            console.log(now);
+            $.datetimeEntry.setDefaults({spinnerImage: null, datetimeFormat: 'Y-O-D H:M', show24Hours: true });
+            $('input.datetimeRange').datetimeEntry({beforeShow:datetimeRange});
+            done(null);
         });
     }
 
@@ -410,42 +423,37 @@ define(function(require, exports, module) {
                 if (this.getCurrentInstructions()) {
                     var contents = DASHBOARD.instructionsFileModel.get("contents");
                     var instructions = DASHBOARD.instructionsFileModel.get("instructions");
-                    var qryparms = {'qry': 'submit', 'contents': contents};
-                    DASHBOARD.rptGenService.get('RptGen', qryparms, function (err, result) {
-                        if (err) alert("Bad instructions: " + err);
-                        else {
-                            var request_ts = result.request_ts;
-                            var start_ts = result.rpt_start_ts;
-                            var rpt_start_ts_date = new Date(start_ts);
-                            var posixTime = rpt_start_ts_date.valueOf();
-                            var hash = result.rpt_contents_hash;
-                            var dirName = formatNumberLength(rpt_start_ts_date.getTime(),13);
-                            var status = result.status;
-                            var msg = result.msg;
+                    DASHBOARD.SurveyorRpt.submit({'contents': contents},
+                    function (err) {
+                        var msg = 'While submitting instructions: ' + err;
+                        alert(msg);
+                    },
+                    function (s, result) {
+                        console.log('While submitting instructions: ' + s);
+                        var request_ts = result.request_ts;
+                        var start_ts = result.rpt_start_ts;
+                        var rpt_start_ts_date = new Date(start_ts);
+                        var posixTime = rpt_start_ts_date.valueOf();
+                        var hash = result.rpt_contents_hash;
+                        var dirName = formatNumberLength(rpt_start_ts_date.getTime(),13);
+                        var status = result.status;
+                        var msg = result.msg;
+                        var timezone = instructions.timezone;
 
-                            var job = new DASHBOARD.SubmittedJob({hash: hash,
-                                      directory: dirName,
-                                      title: instructions.title,
-                                      rpt_start_ts: result.rpt_start_ts,
-                                      startPosixTime: posixTime,
-                                      status: status,
-                                      msg: msg});
-                            // Check if this has been previously submitted
-                            if (request_ts !== start_ts) {
-
-
-                                alert("This is a duplicate of a previously submitted report");
-                                var prev = DASHBOARD.submittedJobs.where({hash: hash, directory: dirName});
-                                if (prev.length > 0) {
-                                    DASHBOARD.jobsView.highLightJob(prev[0]);
-                                }
-                                else {
-                                    job.addLocalTime(function (err) {
-                                        DASHBOARD.submittedJobs.add(job);
-                                        job.save();
-                                        job.analyzeStatus(err, status, msg);
-                                    });
-                                }
+                        var job = new DASHBOARD.SubmittedJob({hash: hash,
+                                  directory: dirName,
+                                  title: instructions.title,
+                                  rpt_start_ts: result.rpt_start_ts,
+                                  startPosixTime: posixTime,
+                                  status: status,
+                                  msg: msg,
+                                  timezone: timezone});
+                        // Check if this has been previously submitted
+                        if (request_ts !== start_ts) {
+                            alert("This is a duplicate of a previously submitted report");
+                            var prev = DASHBOARD.submittedJobs.where({hash: hash, directory: dirName});
+                            if (prev.length > 0) {
+                                DASHBOARD.jobsView.highLightJob(prev[0]);
                             }
                             else {
                                 job.addLocalTime(function (err) {
@@ -454,6 +462,13 @@ define(function(require, exports, module) {
                                     job.analyzeStatus(err, status, msg);
                                 });
                             }
+                        }
+                        else {
+                            job.addLocalTime(function (err) {
+                                DASHBOARD.submittedJobs.add(job);
+                                job.save();
+                                job.analyzeStatus(err, status, msg);
+                            });
                         }
                     });
                 }
@@ -500,12 +515,20 @@ define(function(require, exports, module) {
                 "click #id_runs_table_div table button.table-clear": "clearRuns",
                 "click #id_runs_table_div tbody button.table-delete-row": "deleteRunsRow",
                 "click #id_runs_table_div tbody button.table-edit-row": "editRunsRow",
-                "click #id_edit_template": "editTemplate"
+                "click #id_edit_template": "editTemplate",
+                "shown #id_timezoneModal": "onModalShown",
+                "click #id_save_timezone": "onTimezoneSaved"
             },
             initialize: function () {
                 this.templateView = new DASHBOARD.TemplateView();
                 this.listenTo(DASHBOARD.dashboardSettings, "change:timezone", this.onChangeTimezone);
                 this.listenTo(DASHBOARD.instructionsFileModel, "change:instructions", this.render);
+                $('#timezone-image').timezonePicker({
+                    target: '#edit-date-default-timezone',
+                    countryTarget: '#edit-site-default-country'
+                });
+                DASHBOARD.timezone = jstz.determine().name;
+                $("#id_reportTimezone").val(DASHBOARD.timezone);
                 this.modalContainer = $("#id_modal");
                 this.currentInstructions = {};
                 this.currentContent = "";
@@ -564,6 +587,7 @@ define(function(require, exports, module) {
                 current.makePdf = $("#id_make_pdf").prop("checked");
                 current.swCorner = parseFloats($("#id_swCorner").val());
                 current.neCorner = parseFloats($("#id_neCorner").val());
+                current.timezone = $("#id_reportTimezone").val();
                 current.submaps = {nx: +$('#id_submapsColumns').val(), ny: +$('#id_submapsRows').val()};
                 current.exclRadius = +$('#id_exclRadius').val();
                 current.peaksMinAmp = +$('#id_peaksMinAmp').val();
@@ -572,7 +596,6 @@ define(function(require, exports, module) {
                     current.runs[i].startEtm = Math.round(current.runs[i].startEtm.posixTime/1000);
                     current.runs[i].endEtm = Math.round(current.runs[i].endEtm.posixTime/1000);
                 }
-                current.timezone = DASHBOARD.dashboardSettings.get("timezone");
                 current.template = this.templateView.currentTemplate;
                 var v = iv.instrValidator(current);
                 this.currentValid = v.valid;
@@ -593,6 +616,7 @@ define(function(require, exports, module) {
                 $("#id_make_pdf").prop('checked',instructions.makePdf);
                 $("#id_swCorner").val(instructions.swCorner[0] + ', ' + instructions.swCorner[1]);
                 $("#id_neCorner").val(instructions.neCorner[0] + ', ' + instructions.neCorner[1]);
+                $("#id_reportTimezone").val(instructions.timezone);
                 $("#id_peaksMinAmp").spinedit("setValue",instructions.peaksMinAmp);
                 $("#id_exclRadius").spinedit("setValue",instructions.exclRadius);
                 $("#id_submapsRows").spinedit("setValue",instructions.submaps.ny);
@@ -601,17 +625,23 @@ define(function(require, exports, module) {
                 this.templateView.loadTemplate();
                 this.templateView.render();
                 // Set up the runs table. Some translation is needed because of the timezone 
-                var tz = DASHBOARD.dashboardSettings.get('timezone');
+                var tz = DASHBOARD.timezone = instructions.timezone;
                 var posixTimes = [];
                 instructions.runs.forEach(function (run) {
                     posixTimes.push(1000*run.startEtm);
                     posixTimes.push(1000*run.endEtm);
                 });
-                DASHBOARD.rptGenService.get("tz",{tz:tz, posixTimes:posixTimes},function (err, result) {
+                DASHBOARD.Utilities.timezone({tz:tz, posixTimes:posixTimes},
+                function (err) {
+                    var msg = 'While converting timezone: ' + err;
+                    alert(msg);
+                },
+                function (s, result) {
+                    console.log('While converting timezone: ' + s);
                     var runsTableData = [];
                     instructions.runs.forEach(function (run) {
                         var row = $.extend({},run);
-                        // Get the epoch times coverted
+                        // Get the epoch times converted
                         row.startEtm = {posixTime: result.posixTimes.shift(), localTime: result.timeStrings.shift(), timezone: tz};
                         row.endEtm = {posixTime: result.posixTimes.shift(), localTime: result.timeStrings.shift(), timezone: tz};
                         runsTableData.push(row);
@@ -622,16 +652,27 @@ define(function(require, exports, module) {
                 });
                 return this;
             },
-            onChangeTimezone: function () {
+            onModalShown: function () {
+                $("#edit-date-default-timezone").val($("#id_reportTimezone").val()).change();
+            },
+            onTimezoneSaved: function () {
+                // This is the only thing that can change the current time zone
+                var tz = DASHBOARD.timezone = $("#edit-date-default-timezone").val();
+                $("#id_reportTimezone").val(DASHBOARD.timezone);
                 var tableData = tableFuncs.getTableData(runsDefinition);
                 var posixTimes = [];
-                var tz = DASHBOARD.dashboardSettings.get('timezone');
                 for (var i=0; i<tableData.length; i++) {
                     var rowData = tableData[i];
                     posixTimes.push(rowData.startEtm.posixTime);
                     posixTimes.push(rowData.endEtm.posixTime);
                 }
-                DASHBOARD.rptGenService.get("tz", {tz:tz, posixTimes:posixTimes}, function (err, result) {
+                DASHBOARD.Utilities.timezone({tz:tz, posixTimes:posixTimes},
+                function (err) {
+                    var msg = 'While converting timezone: ' + err;
+                    alert(msg);
+                },
+                function (s, result) {
+                    console.log('While converting timezone: ' + s);
                     var localTimes = result.timeStrings;
                     for (var i=0; i<tableData.length; i++) {
                         var rowData = tableData[i];
@@ -643,7 +684,6 @@ define(function(require, exports, module) {
                         tableFuncs.setCell(row,"startEtm", rowData.startEtm, runsDefinition);
                         tableFuncs.setCell(row,"endEtm", rowData.endEtm, runsDefinition);
                     }
-
                 });
             }
         });

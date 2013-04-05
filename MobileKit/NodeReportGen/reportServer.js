@@ -115,15 +115,20 @@
         var tz = req.query["tz"] || "GMT";
         var timeStrings = []; // "2012-03-11 09:00:00.000"];
         var posixTimes = [];
-        if (req.query.timeStrings) {
-            req.query.timeStrings.forEach(function (t) {
+        var qTimeStrings = req.query.timeStrings;
+        var qPosixTimes = req.query.posixTimes;
+        // Convert bare string or time to array of one element
+        if (qTimeStrings && !_.isArray(qTimeStrings)) qTimeStrings = [qTimeStrings];
+        if (qPosixTimes && !_.isArray(qPosixTimes)) qPosixTimes = [qPosixTimes];
+        if (qTimeStrings) {
+            qTimeStrings.forEach(function (t) {
                 var p;
                 posixTimes.push(p = tzWorld(t.replace(/\s+/," "),tz));
                 timeStrings.push(tzWorld(+p,"%F %T%z (%Z)",tz));
             });
         }
-        else if (req.query.posixTimes) {
-            req.query.posixTimes.forEach(function (p) {
+        else if (qPosixTimes) {
+            qPosixTimes.forEach(function (p) {
                 posixTimes.push(+p);
                 timeStrings.push(tzWorld(+p,"%F %T%z (%Z)",tz));
             });
@@ -188,7 +193,40 @@
     }
 
     function handleGetReport(req, res) {
-        res.render("getReport", {qry: req.query, hash: req.params.hash, ts:req.params.ts});
+        res.render("getReport",
+            {hash: req.params.hash,
+             host: SITECONFIG.proxyhost,
+             identity: SITECONFIG.identity,
+             port: SITECONFIG.proxyport,
+             psys: SITECONFIG.psys,
+             qry: req.query,
+             site: SITECONFIG.p3site,
+             ts:req.params.ts
+        });
+    }
+
+    function handleGetReportLocal(req, res) {
+        res.render("getReport",
+            {hash: req.params.hash,
+             host: "",
+             identity: "",
+             port: "",
+             psys: "",
+             qry: req.query,
+             site: "",
+             ts:req.params.ts
+        });
+    }
+
+    function handleIndex(req, res) {
+        res.render("index",
+            {host: SITECONFIG.proxyhost,
+             identity: SITECONFIG.identity,
+             port: SITECONFIG.proxyport,
+             psys: SITECONFIG.psys,
+             qry: req.query,
+             site: SITECONFIG.p3site
+        });
     }
 
     function handleDownload(req, res) {
@@ -200,17 +238,17 @@
         res.end(content);
     }
 
-    app.get("/", function(req, res) {
-        res.render("index", {qry: req.query, host: SITECONFIG.proxyhost, port: SITECONFIG.proxyport});
-    });
+    app.get("/", handleIndex);
+
+    app.get("/getReport/:hash/:ts", handleGetReport);
+
+    app.get("/getReportLocal/:hash/:ts", handleGetReportLocal);
 
     app.get("/rest/RptGen", handleRptGen);
 
     app.get("/rest/tz", handleTz);
 
     app.post("/rest/download", handleDownload);
-
-    app.get("/getReport/:hash/:ts", handleGetReport);
 
     app.get("/test/:testName", function(req, res) {
         res.render(req.params.testName);
@@ -267,7 +305,7 @@
             console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
         });
     });
-
+    /*
     var http = require('http');
     http.createServer(function(request, response){
         var request_options = {
@@ -287,5 +325,5 @@
         });
         request.pipe(proxy_request);
     }).listen(SITECONFIG.proxyport);
-
+    */
 })();
