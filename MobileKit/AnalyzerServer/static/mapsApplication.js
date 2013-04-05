@@ -2,7 +2,7 @@
 //for each language specific labels
 var COOKIE_PREFIX = "p3gdu";
 var COOKIE_NAMES = {};
-
+alert('Do not use this software while operating a vehicle.  Tap ok to agree that you are not driving.');
 var TXT = {
         amp: 'Amp',
         sigma: 'HalfWidth',
