@@ -9,7 +9,6 @@ define(function(require, exports, module) {
     var newRptGenService = require('app/newRptGenService');
     var dashboardInstructions = require('app/dashboardInstructions');
     var dashboardJobs = require('app/dashboardJobs');
-    var dashboardSettings = require('app/dashboardSettings');
     var p3restapi = require('app/p3restapi');
 
     function init() {
@@ -18,7 +17,12 @@ define(function(require, exports, module) {
                         site: TEMPLATE_PARAMS.site,
                         identity: TEMPLATE_PARAMS.identity,
                         psys: TEMPLATE_PARAMS.psys,
-                        rprocs: ["SurveyorRpt:resource","SurveyorRpt:getStatus","SurveyorRpt:submit"],
+                        rprocs: ["SurveyorRpt:resource",
+                                 "SurveyorRpt:getStatus",
+                                 "SurveyorRpt:submit",
+                                 "SurveyorRpt:updateDashboard",
+                                 "SurveyorRpt:getDashboard"
+                                ],
                         svc: "gdu",
                         version: "1.0",
                         resource: "SurveyorRpt",
@@ -38,21 +42,31 @@ define(function(require, exports, module) {
                         debug: false};
         DASHBOARD.Utilities = new p3restapi.p3RestApi(initArgs);
 
-        dashboardSettings.init();
+        DASHBOARD.user = TEMPLATE_PARAMS.user;
         dashboardJobs.init();
         dashboardInstructions.init();
         var proxyUrl = TEMPLATE_PARAMS.host + ':' + TEMPLATE_PARAMS.port;
         var protocol = (TEMPLATE_PARAMS.port == 443) ? "https" : "http";
         DASHBOARD.rptGenService = newRptGenService({"rptgen_url": protocol + "://" + proxyUrl});
-        DASHBOARD.dashboardSettings = new DASHBOARD.DashboardSettings();
         DASHBOARD.submittedJobs = new DASHBOARD.SubmittedJobs();
-        DASHBOARD.submittedJobs.fetch();    // from local storage
-        DASHBOARD.submittedJobs.models.forEach(function (job) { job.updateStatus(); });
-        DASHBOARD.instructionsFileModel = new DASHBOARD.InstructionsFileModel();
-
-        DASHBOARD.jobsView = new DASHBOARD.JobsView();
-        (new DASHBOARD.SettingsView()).render();
-        DASHBOARD.jobsView.render();
+        DASHBOARD.SurveyorRpt.getDashboard({user: DASHBOARD.user},
+        function (err) {
+            alert("Error fetching user's dashboard: " + err);
+        },
+        function (s, result) {
+            if (result.error) alert("Error fetching user's dashboard: " + result.error);
+            else {
+                result.dashboard.forEach(function(row) {
+                    DASHBOARD.submittedJobs.add(row, {silent:true});
+                });
+                DASHBOARD.submittedJobs.models.forEach(function (job) { job.updateStatus(); });
+                DASHBOARD.instructionsFileModel = new DASHBOARD.InstructionsFileModel();
+                DASHBOARD.jobsView = new DASHBOARD.JobsView();
+                DASHBOARD.jobsView.render();
+            }
+        });
+        // DASHBOARD.submittedJobs.fetch();    // from local storage
+        // DASHBOARD.submittedJobs.models.forEach(function (job) { job.updateStatus(); });
     }
 
     module.exports.initialize = function () { $(document).ready(init); };

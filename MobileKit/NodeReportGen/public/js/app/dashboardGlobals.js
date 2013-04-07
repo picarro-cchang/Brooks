@@ -1,8 +1,6 @@
 /* dashboardGlobals.js */
 
 define ({
-	DashboardSettings: null,
-	dashboardSettings: null,
 	InstructionsFileModel: null,
 	instructionsFileModel: null,
 	InstructionsFileView: null,
@@ -17,6 +15,7 @@ define ({
 	SurveyorRpt: null,
 	TemplateView: null,
 	timezone: null,
+	user: null,
 	Utilities: null
 });
 

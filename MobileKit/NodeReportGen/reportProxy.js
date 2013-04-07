@@ -9,7 +9,6 @@
     var md5hex = require("./lib/md5hex");
     var path = require("path");
     var querystring = require("querystring");
-    var url = require("url");
 
     var DEBUG = false;
     var DBG = argv.d ? argv.d : '';
@@ -89,7 +88,7 @@
 
     var currentTicket = '';
     var expires = 0;
-    var duration = 1000;    // Tickets last for this long (ms)
+    var duration = 120000;    // Tickets last for this long (ms)
     function admin(req, res) {
         var query = req.query;
         if (query.qry === 'issueTicket') {
@@ -199,11 +198,7 @@
 
     app.post('/rest/download', forwardTheRequest);
 
-    app.get(/^(\/|\/getReport\/.*|\/css.*|\/js.*|\/images.*)$/, function(req, res) {
-        logger("default", "debug");
-        logger("default req.url", req.url, "debug");
-        forwardTheRequest(req,res);
-    });
+    app.get(/^(\/|\/getReport\/.*|\/css.*|\/js.*|\/images.*)$/, forwardTheRequest);
 
     app.listen(SITECONFIG.proxyport);
     logger("Proxy server listening on port: " + SITECONFIG.proxyport);

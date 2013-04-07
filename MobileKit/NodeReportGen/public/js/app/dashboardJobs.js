@@ -81,28 +81,6 @@ define(function(require, exports, module) {
             },
             localStorage: new Backbone.LocalStorage("JobCollection"),
             model: DASHBOARD.SubmittedJob
-            /*resetTimeZone: function () {
-                var that = this;
-                var tz = DASHBOARD.timezone;
-                // Batch convert all the startPosixTime values to startLocalTime values using the specified timezone
-                //  Triggers a reset when done
-                var etmList = [];
-                for (var i=0; i<this.length; i++) etmList.push(this.at(i).get('startPosixTime'));
-                DASHBOARD.Utilities.timezone({tz:tz, posixTimes:etmList},
-                function (err) {
-                    var msg = 'While converting timezone: ' + err;
-                    alert(msg);
-                },
-                function (s,data) {
-                    console.log('While converting timezone: ' + s);
-                    for (var i=0; i<that.length; i++) {
-                        var model = that.at(i);
-                        model.set({'startLocalTime': data.timeStrings.shift()});
-                        that.update(model,{remove: false, silent: true});
-                    }
-                    that.trigger('reset');
-                });
-            }*/
         });
 
         DASHBOARD.JobsView = Backbone.View.extend({
@@ -146,6 +124,13 @@ define(function(require, exports, module) {
                 });
             },
             addJob: function (model) {
+                DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(model), action:'add'},
+                    function (err) {
+                        alert('While updating dashboard: ' + err);
+                    },
+                    function (s) {
+                        console.log('While updating dashboard: ' + s);
+                    });
                 this.cidToRow[model.cid] = this.jobTable.fnGetNodes(this.jobTable.fnAddData(this.formatSpecials(model))[0]);
                 if (this.selectedRow) {
                     $(this.selectedRow).removeClass('row_selected');
@@ -154,6 +139,13 @@ define(function(require, exports, module) {
                 this.highLightJob(model);
             },
             changeJob: function (model) {
+                DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(model), action:'update'},
+                    function (err) {
+                        alert('While updating dashboard: ' + err);
+                    },
+                    function (s) {
+                        console.log('While updating dashboard: ' + s);
+                    });
                 this.jobTable.fnUpdate(this.formatSpecials(model), this.cidToRow[model.cid]);
             },
             formatSpecials: function(model) {
@@ -209,8 +201,8 @@ define(function(require, exports, module) {
                     alert('While retrieving instructions from ' + url + ': ' + err);
                 },
                 function (status, data) {
-                    console.log('While getting peaks data from ' + url + ': ' + status);
-                    that.instrFileView.loadContents(cjs(data));
+                    console.log('While retrieving instructions from ' + url + ': ' + status);
+                    that.instrFileView.loadContents(cjs(data,null,2));
                     that.highLightJob(job);
                 });
             },
@@ -219,6 +211,13 @@ define(function(require, exports, module) {
                 window.open(viewUrl,'_blank');
             },
             removeJob: function (model) {
+                DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(model), action:'delete'},
+                    function (err) {
+                        alert('While updating dashboard: ' + err);
+                    },
+                    function (s) {
+                        console.log('While updating dashboard: ' + s);
+                    });
                 this.jobTable.fnDeleteRow(this.cidToRow[model.cid]);
                 delete this.cidToRow[model.cid];
             },
@@ -229,9 +228,19 @@ define(function(require, exports, module) {
                 _.forEach(DASHBOARD.submittedJobs.models, function (model) {
                     that.cidToRow[model.cid] = that.jobTable.fnGetNodes(that.jobTable.fnAddData(that.formatSpecials(model))[0]);
                 });
+                $(this.jobTable).css({width: $(this.jobTable).parent().width()});
+                this.jobTable.fnAdjustColumnSizing();
                 return this;
             },
             resetJobs: function () {
+                var models = DASHBOARD.submittedJobs.models;
+                DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(models), action:'reset'},
+                    function (err) {
+                        alert('While updating dashboard: ' + err);
+                    },
+                    function (s) {
+                        console.log('While updating dashboard: ' + s);
+                    });
                 this.render();
                 if (this.selectedRow) {
                     $(this.selectedRow).removeClass('row_selected');

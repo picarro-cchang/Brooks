@@ -440,14 +440,17 @@ define(function(require, exports, module) {
                         var msg = result.msg;
                         var timezone = instructions.timezone;
 
-                        var job = new DASHBOARD.SubmittedJob({hash: hash,
+                        var job = new DASHBOARD.SubmittedJob({
                                   directory: dirName,
-                                  title: instructions.title,
+                                  hash: hash,
+                                  msg: msg,
                                   rpt_start_ts: result.rpt_start_ts,
                                   startPosixTime: posixTime,
                                   status: status,
-                                  msg: msg,
-                                  timezone: timezone});
+                                  timezone: timezone,
+                                  title: instructions.title,
+                                  user: DASHBOARD.user
+                                  });
                         // Check if this has been previously submitted
                         if (request_ts !== start_ts) {
                             alert("This is a duplicate of a previously submitted report");
@@ -521,7 +524,6 @@ define(function(require, exports, module) {
             },
             initialize: function () {
                 this.templateView = new DASHBOARD.TemplateView();
-                this.listenTo(DASHBOARD.dashboardSettings, "change:timezone", this.onChangeTimezone);
                 this.listenTo(DASHBOARD.instructionsFileModel, "change:instructions", this.render);
                 $('#timezone-image').timezonePicker({
                     target: '#edit-date-default-timezone',

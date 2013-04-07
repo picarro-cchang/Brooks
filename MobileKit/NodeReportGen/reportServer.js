@@ -13,6 +13,7 @@
     var newReportGen = require('./lib/newReportGen');
     var newRptGenMonitor = require('./lib/newRptGenMonitor');
     var newRunningTasks = require('./lib/newRunningTasks');
+    var newUserJobDatabase = require('./lib/newUserJobDatabase');
     var path = require('path');
     var pv = require('./public/js/common/paramsValidator');
     var REPORTROOT = argv.r ? argv.r : path.join(__dirname, 'ReportGen');
@@ -110,6 +111,7 @@
 
     var rptGenMonitor = newRptGenMonitor(REPORTROOT);
     GLOBALS.runningTasks  = newRunningTasks(REPORTROOT);
+    GLOBALS.userJobDatabase = newUserJobDatabase(REPORTROOT);
 
     function handleTz(req, res) {
         var tz = req.query["tz"] || "GMT";
@@ -137,7 +139,7 @@
     }
 
     function handleRptGen(req, res) {
-        var pv, reportGen, result = {}, statusFile, workDir;
+        var pv, reportGen, result = {}, statusFile, user, workDir;
         result = _.extend(result, req.query);
         // console.log("req.query: " + JSON.stringify(req.query));
         // Handle submission of instructions file, requests for status, and retrieval of results
@@ -186,8 +188,35 @@
             }
             else res.send(_.extend(result,{"error": pv.errors()}));
             break;
+        case "updateDashboard":
+            // Validate the parameters of the request
+            pv = newParamsValidator(req.query,
+                [{"name": "user", "required": true, "validator": "string"},
+                 {"name": "object", "required": true, "validator": "string"}]);
+            if (pv.ok()) {
+                user = req.query.user;
+                var rec = JSON.parse(req.query.object);
+                var key = rec.hash + "_" + rec.directory;
+                GLOBALS.userJobDatabase.updateDatabase(user,'update',rec, function(err) {
+                    res.send(_.extend(result,{error: err}));
+                });
+            }
+            else res.send(_.extend(result,{"error": pv.errors()}));
+            break;
+        case "getDashboard":
+            // Validate the parameters of the request
+            pv = newParamsValidator(req.query,
+                [{"name": "user", "required": true, "validator": "string"}]);
+            if (pv.ok()) {
+                user = req.query.user;
+                GLOBALS.userJobDatabase.compressDatabaseAndGetAllData(user, function(err,data) {
+                    res.send(_.extend(result, {error:err, dashboard: data}));
+                });
+            }
+            else res.send(_.extend(result,{"error": pv.errors()}));
+            break;
         default:
-            res.send(_.extend(result,{"error": "RptGen: Unknown or missing qry"}));
+            res.send(_.extend(result,{error: "RptGen: Unknown or missing qry"}));
             break;
         }
     }
@@ -201,7 +230,8 @@
              psys: SITECONFIG.psys,
              qry: req.query,
              site: SITECONFIG.p3site,
-             ts:req.params.ts
+             ts:req.params.ts,
+             user: 'demoUser'
         });
     }
 
@@ -214,7 +244,8 @@
              psys: "",
              qry: req.query,
              site: "",
-             ts:req.params.ts
+             ts:req.params.ts,
+             user: 'demoUser'
         });
     }
 
@@ -225,7 +256,8 @@
              port: SITECONFIG.proxyport,
              psys: SITECONFIG.psys,
              qry: req.query,
-             site: SITECONFIG.p3site
+             site: SITECONFIG.p3site,
+             user: 'demoUser'
         });
     }
 

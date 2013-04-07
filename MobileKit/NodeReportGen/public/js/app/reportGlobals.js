@@ -31,5 +31,6 @@ define ({
     surveys: null,
     SurveysTableView: null,
     usageTracker: null,
+    userJobDatabase: null,
     Utilities: null
 });
