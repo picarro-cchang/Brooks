@@ -148,7 +148,7 @@ define(function(require, exports, module) {
     }
 
     function makePdfReport(subreport, name) {
-        var figureComponents = [ "fovs", "paths", "peaks", "wedges", "analyses", "submapGrid" ];
+        var figureComponents = [ "paths", "fovs", "wedges", "tokens", "peaks", "analyses", "submapGrid" ];
         var id, neCorner = REPORT.settings.get("neCorner"), swCorner = REPORT.settings.get("swCorner");
         var title = REPORT.settings.get("title");
         $("#getReportApp").append('<h2 style="text-align:center;">' + title + ' - ' + name + '</h2>');

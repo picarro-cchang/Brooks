@@ -39,11 +39,16 @@ define(function(require, exports, module) {
         REPORT.PageComponent = Backbone.Model.extend({
             defaults: {
                 "baseType": "map",
+                "fovs": false,
                 "paths": false,
                 "peaks": false,
-                "wedges": false,
-                "fovs": false,
-                "submapLegend": false
+                "submapLegend": false,
+                "tokens": false,
+                "wedges": false
+            },
+            set: function(attributes, options) {
+                if (attributes.fovs && !attributes.peaks) attributes.tokens = true;
+                return Backbone.Model.prototype.set.call(this, attributes, options);
             }
         });
 

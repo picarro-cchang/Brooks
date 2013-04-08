@@ -86,14 +86,17 @@ define(function(require, exports, module) {
                     case 'wedges':
                         this.addLayer(REPORT.reportViewResources.contexts['wedges'],[0,0],5,'wedges');
                         break;
+                    case 'tokens':
+                        this.addLayer(REPORT.reportViewResources.contexts['tokens'],[0,0],6,'tokens');
+                        break;
                     case 'peaks':
-                        this.addLayer(REPORT.reportViewResources.contexts['peaks'],[0,0],6,'peaks');
+                        this.addLayer(REPORT.reportViewResources.contexts['peaks'],[0,0],7,'peaks');
                         break;
                     case 'analyses':
-                        this.addLayer(REPORT.reportViewResources.contexts['analyses'],[0,0],7,'analyses');
+                        this.addLayer(REPORT.reportViewResources.contexts['analyses'],[0,0],8,'analyses');
                         break;
                     case 'submapGrid':
-                        this.addLayer(REPORT.reportViewResources.contexts['submapGrid'],[0,0],8,'submapGrid');
+                        this.addLayer(REPORT.reportViewResources.contexts['submapGrid'],[0,0],9,'submapGrid');
                         break;
                 }
             }
@@ -118,7 +121,7 @@ define(function(require, exports, module) {
 
             render: function(padding) {
                 var init = false;
-                var allLayers = ['map', 'satellite', 'paths', 'fovs', 'wedges', 'peaks', 'analyses', 'submapGrid'];
+                var allLayers = ['map', 'satellite', 'paths', 'fovs', 'wedges', 'tokens', 'peaks', 'analyses', 'submapGrid'];
                 for (var i=0; i<allLayers.length; i++) {
                     var layerName = allLayers[i], s;
                     if (layerName in this.available) {
@@ -170,7 +173,7 @@ define(function(require, exports, module) {
             },
             render: function(padding) {
                 var init = false;
-                var allLayers = ['map', 'satellite', 'paths', 'fovs', 'wedges', 'peaks', 'analyses', 'submapGrid'];
+                var allLayers = ['map', 'satellite', 'paths', 'fovs', 'wedges', 'tokens', 'peaks', 'analyses', 'submapGrid'];
                 for (var i=0; i<allLayers.length; i++) {
                     var layerName = allLayers[i], s;
                     if (layerName in this.available) {

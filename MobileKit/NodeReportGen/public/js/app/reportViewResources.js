@@ -25,8 +25,9 @@ define(function(require, exports, module) {
         REPORT.ReportViewResources = Backbone.View.extend({
             initialize: function () {
                 this.listenTo(REPORT.settings, "change", this.settingsChanged);
-                this.contexts = {'analyses': null, 'map':null, 'satellite':null, 'peaks': null, 'fovs': null,
-                                 'paths': null, 'wedges': null, 'submapGrid': null };
+                this.contexts = {'analyses': null, 'map':null, 'satellite':null, 'peaks': null,
+                                 'tokens': null, 'fovs': null, 'paths': null, 'wedges': null,
+                                 'submapGrid': null };
                 this.padX = 30;
                 this.padY = 30;
                 this.submapLinks = {};
@@ -41,7 +42,7 @@ define(function(require, exports, module) {
                         that.makeSubmapGridLayer();
                         break;
                     case "peaksMinAmp":
-                        that.makePeaksLayer();
+                        that.makePeaksLayers();
                         that.makeWedgesLayer();
                         that.makePeaksTable();
                         break;
@@ -53,7 +54,7 @@ define(function(require, exports, module) {
                 this.makeMapLayer();
                 this.makeSatelliteLayer();
                 this.makeSubmapGridLayer();
-                this.makePeaksLayer();
+                this.makePeaksLayers();
                 this.makeWedgesLayer();
                 this.makeAnalysesLayer();
                 this.makePathsLayers();
@@ -150,18 +151,21 @@ define(function(require, exports, module) {
                 this.submapLinks = result.links;
                 this.trigger("change",{"context": "submapGrid"});
             },
-            makePeaksLayer: function() {
+            makePeaksLayers: function() {
                 var that = this;
                 that.trigger("init",{"context": "peaks"});
+                that.trigger("init",{"context": "tokens"});
                 REPORT.peaks.once("loaded", function () {
                     that.peaksData = REPORT.peaks.models;
                     that.peaksMinAmp = REPORT.settings.get("peaksMinAmp");
                     that.fovMinAmp = REPORT.settings.get("fovMinAmp");
                     var result = makePeaks(that);
-                    that.contexts["peaks"] = result.context;
+                    that.contexts["peaks"] = result.peaks;
+                    that.contexts["tokens"] = result.tokens;
                     that.runsData["peaks"] = result.runs;
                     that.surveysData["peaks"] = result.surveys;
                     that.trigger("change",{"context": "peaks"});
+                    that.trigger("change",{"context": "tokens"});
                     that.makeRunsTable();
                     that.makeSurveysTable();
                 });
