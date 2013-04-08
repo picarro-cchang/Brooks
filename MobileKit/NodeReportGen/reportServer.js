@@ -34,6 +34,7 @@
     SITECONFIG.proxyport = 8300;
     SITECONFIG.psys = "APITEST2";
     SITECONFIG.identity = "dc1563a216f25ef8a20081668bb6201e";
+    SITECONFIG.assets = "/dev/SurveyorRpt";
 
     var siteconfig_path = argv.s ? argv.s : path.join(__dirname, "site_config_node");
     var siteconfig_data = fs.readFileSync(siteconfig_path, 'utf8');
@@ -42,7 +43,7 @@
         SITECONFIG.p3host = siteconfig_obj.host;
     }
     if (siteconfig_obj.hasOwnProperty("port")) {
-        SITECONFIG.p3port = siteconfig_obj.port;
+        SITECONFIG.p3port = parseInt(siteconfig_obj.port,10);
     }
     if (siteconfig_obj.hasOwnProperty("site")) {
         SITECONFIG.p3site = siteconfig_obj.site;
@@ -52,7 +53,10 @@
             SITECONFIG.reporthost = siteconfig_obj.reportServer.host;
         }
         if (siteconfig_obj.reportServer.hasOwnProperty("port")) {
-            SITECONFIG.reportport = siteconfig_obj.reportServer.port;
+            SITECONFIG.reportport = parseInt(siteconfig_obj.reportServer.port,10);
+        }
+        if (siteconfig_obj.reportServer.hasOwnProperty("assets")) {
+            SITECONFIG.assets = siteconfig_obj.reportServer.assets;
         }
     }
     if (siteconfig_obj.hasOwnProperty("reportProxy")) {
@@ -60,7 +64,7 @@
             SITECONFIG.proxyhost = siteconfig_obj.reportProxy.host;
         }
         if (siteconfig_obj.reportProxy.hasOwnProperty("port")) {
-            SITECONFIG.proxyport = siteconfig_obj.reportProxy.port;
+            SITECONFIG.proxyport = parseInt(siteconfig_obj.reportProxy.port,10);
         }
     }
     if (siteconfig_obj.hasOwnProperty("sys")) {
@@ -223,7 +227,8 @@
 
     function handleGetReport(req, res) {
         res.render("getReport",
-            {hash: req.params.hash,
+            {assets: SITECONFIG.assets,
+             hash: req.params.hash,
              host: SITECONFIG.proxyhost,
              identity: SITECONFIG.identity,
              port: SITECONFIG.proxyport,
@@ -237,7 +242,8 @@
 
     function handleGetReportLocal(req, res) {
         res.render("getReport",
-            {hash: req.params.hash,
+            {assets: SITECONFIG.assets,
+             hash: req.params.hash,
              host: "",
              identity: "",
              port: "",
@@ -251,7 +257,8 @@
 
     function handleIndex(req, res) {
         res.render("index",
-            {host: SITECONFIG.proxyhost,
+            {assets: SITECONFIG.assets,
+             host: SITECONFIG.proxyhost,
              identity: SITECONFIG.identity,
              port: SITECONFIG.proxyport,
              psys: SITECONFIG.psys,

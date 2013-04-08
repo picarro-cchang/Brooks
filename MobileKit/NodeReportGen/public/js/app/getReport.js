@@ -56,7 +56,8 @@ define(function(require, exports, module) {
                          resource: "Utilities",
                          jsonp: false,
                          debug: false};
-            REPORT.Utilities = new p3restapi.p3RestApi(initArgs);
+            //REPORT.Utilities = new p3restapi.p3RestApi(initArgs);
+            REPORT.Utilities = new localrestapi.TimezoneP3(host, port, TEMPLATE_PARAMS.site);
         }
 
         reportAnalyses.init();

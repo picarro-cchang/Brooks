@@ -3,11 +3,15 @@ html(lang='en')
     head
         title Picarro Surveyor Report Generation
         
-        link(rel='stylesheet', href='/css/picarro_bootstrap.css')
-        link(rel='stylesheet', href='/css/bootstrap-spinedit.css')
-        link(rel='stylesheet', href='/css/fileInput.css')
-        link(rel='stylesheet', href='/css/jquery.dataTables.css')
-        link(rel='stylesheet', href='/css/timezone_picker.css')
-        link(rel='stylesheet', href='/css/reportGen.css')
+        link(rel='stylesheet', href='#{assets}css/picarro_bootstrap.css')
+        link(rel='stylesheet', href='#{assets}css/bootstrap-spinedit.css')
+        link(rel='stylesheet', href='#{assets}css/fileInput.css')
+        link(rel='stylesheet', href='#{assets}css/jquery.dataTables.css')
+        link(rel='stylesheet', href='#{assets}css/timezone_picker.css')
+        link(rel='stylesheet', href='#{assets}css/reportGen.css')
+        
         block scripts
+            script(type='text/javascript')
+                ASSETS = '#{assets}';
+        
     block content

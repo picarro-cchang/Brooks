@@ -1,7 +1,10 @@
 extends layout_require
 
 block scripts
-    script(type='text/javascript', data-main='/js/app/indexMain.js', src='/js/require-jquery.js')
+    script(type='text/javascript')
+        ASSETS = '#{assets}';
+        
+    script(type='text/javascript', data-main='#{assets}js/app/indexMain.js', src='#{assets}js/require-jquery.js')
     script(type='text/javascript')
         var TEMPLATE_PARAMS = {
             identity: "#{identity}",

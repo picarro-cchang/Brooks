@@ -1,7 +1,10 @@
 extends layout
 
 block scripts
-    script(type='text/javascript', src='/js/app/summary.js')
+    script(type='text/javascript')
+        ASSETS = '#{assets}';
+        
+    script(type='text/javascript', src='#{assets}js/app/summary.js')
     script(type='text/javascript')
         var TEMPLATE_PARAMS = {
             ticket: "#{hash}",

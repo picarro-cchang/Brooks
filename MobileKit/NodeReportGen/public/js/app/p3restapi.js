@@ -373,7 +373,7 @@ var p3RestApi = function(initArgs) {
         my_options["host"] = request_obj.host;
         
         if (request_obj.hasOwnProperty("port")) {
-            my_options["port"] = request_obj.port;
+            my_options["port"] = parseInt(request_obj.port,10);
         } else {
             my_options["port"] = 80;
         }

@@ -3,6 +3,7 @@
 /* jshint undef:true, unused:true */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
+var assets = ASSETS ? ASSETS : '/';
 define(function(require, exports, module) {
     'use strict';
     var $ = require('jquery');
@@ -83,6 +84,10 @@ define(function(require, exports, module) {
             model: DASHBOARD.SubmittedJob
         });
 
+        function timeWithOffsetToPosix(x) {
+            return (new Date(x.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}/)[0])).valueOf();
+        }
+
         DASHBOARD.JobsView = Backbone.View.extend({
             el: $("#id_submittedJobs"),
             events: {
@@ -94,10 +99,21 @@ define(function(require, exports, module) {
                 var that = this;
                 this.instrFileView = new DASHBOARD.InstructionsFileView();
                 this.$el.find("#id_jobTableDiv").html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="id_jobTable"></table>');
+                /* Define two custom functions (asc and desc) for string sorting */
+                $.fn.dataTableExt.oSort['time-with-offset-asc']  = function(x,y) {
+                    x = timeWithOffsetToPosix(x);
+                    y = timeWithOffsetToPosix(y);
+                    return ((x < y) ? -1 : ((x > y) ?  1 : 0));
+                };
+                $.fn.dataTableExt.oSort['time-with-offset-desc'] = function(x,y) {
+                    x = timeWithOffsetToPosix(x);
+                    y = timeWithOffsetToPosix(y);
+                    return ((x < y) ?  1 : ((x > y) ? -1 : 0));
+                };
                 this.jobTable = $("#id_jobTable").dataTable({
                     "aoColumns": [
                         { "sTitle": "Reload", "mData": "link", "sClass": "center"},
-                        { "sTitle": "First submitted at", "mData": "startLocalTime", "sClass": "center"},
+                        { "sTitle": "First submitted at", "mData": "startLocalTime", "sClass": "center", "sType":'time-with-offset'},
                         { "sTitle": "Time zone", "mData": "timezone", "sClass": "center"},
                         { "sTitle": "Title", "mData": "title", "sClass": "center"},
                         { "sTitle": "Status", "mData": "statusDisplay", "sClass": "center"},
@@ -207,7 +223,7 @@ define(function(require, exports, module) {
                 });
             },
             onViewLink: function (e) {
-                var viewUrl = '/getReport/' + $(e.currentTarget).data('hash') + '/' + $(e.currentTarget).data('directory') + '?name=Summary';
+                var viewUrl = assets + '' + 'getReport/' + $(e.currentTarget).data('hash') + '/' + $(e.currentTarget).data('directory') + '?name=Summary';
                 window.open(viewUrl,'_blank');
             },
             removeJob: function (model) {

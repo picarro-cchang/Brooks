@@ -10,6 +10,7 @@ define(function(require, exports, module) {
     var dashboardInstructions = require('app/dashboardInstructions');
     var dashboardJobs = require('app/dashboardJobs');
     var p3restapi = require('app/p3restapi');
+    var localrestapi = require('app/localrestapi');
 
     function init() {
         var initArgs = {host: TEMPLATE_PARAMS.host,
@@ -40,7 +41,10 @@ define(function(require, exports, module) {
                         resource: "Utilities",
                         jsonp: false,
                         debug: false};
-        DASHBOARD.Utilities = new p3restapi.p3RestApi(initArgs);
+        //DASHBOARD.Utilities = new p3restapi.p3RestApi(initArgs);
+        DASHBOARD.Utilities = new localrestapi.TimezoneP3(TEMPLATE_PARAMS.host
+            , TEMPLATE_PARAMS.port
+            , TEMPLATE_PARAMS.site);
 
         DASHBOARD.user = TEMPLATE_PARAMS.user;
         dashboardJobs.init();

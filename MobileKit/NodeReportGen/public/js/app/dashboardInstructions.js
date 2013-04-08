@@ -3,6 +3,7 @@
 /* jshint undef:true, unused:true */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
+var assets = ASSETS ? ASSETS : '/';
 define(function(require, exports, module) {
     'use strict';
     var $ = require('jquery');
@@ -487,7 +488,7 @@ define(function(require, exports, module) {
                     $.generateFile({
                         filename    : name,
                         content     : iv.currentContents,
-                        script      : '/rest/download'
+                        script      : assets + 'rest/download'
                     });
                     e.preventDefault();
                     this.$el.find(".file").val(name);

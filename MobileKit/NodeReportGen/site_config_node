@@ -4,6 +4,7 @@
 		"port": 8300
 	},
 	"reportServer": {
+		"assets": "/",
 		"host": "localhost",
 		"port": 5300
 	},

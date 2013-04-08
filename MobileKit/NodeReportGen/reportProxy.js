@@ -130,7 +130,7 @@
                 req.url = new_path;
                 console.log('Original', req.query, 'stringified', querystring.stringify(req.query));
                 forwardTheRequest(req, res);
-                logger("queryGet forward to /rest/timezone succeeded", "debug");
+                logger("queryGet forward to /rest/tz succeeded", "debug");
             }
             else logger("Unknown query" + req.params.resource + ":" + querystring.stringify(req.query), "debug");
         }
@@ -139,6 +139,22 @@
             logger("queryGet invalid ticket", "debug");
         }
     } // queryGet
+
+    function queryGetNoTicket(req, res, next) {
+        logger("queryGetNoTicket", "debug");
+        logger("queryGetNoTicket req.query", req.query, "debug");
+        console.log("queryGetNoTicket req.query", req.params);
+        var new_path;
+        if (req.params.resource === "Utilities" && req.params.qry === "tz") {
+            new_path = "/rest/tz";
+            new_path += "?" + querystring.stringify(req.query);
+            req.url = new_path;
+            forwardTheRequest(req, res);
+            logger("queryGetNoTicket forward to /rest/tz succeeded", "debug");
+        }
+        else logger("Unknown query" + req.params.resource + ":" + querystring.stringify(req.query), "debug");
+    } // queryGetNoTicket
+
 
     function resourceGet(req, res, next) {
         logger("resourceGet", "debug");
@@ -180,9 +196,12 @@
         }
     } // resourceGet
 
+
     app.get('/:site/rest/sec/:ticket/:ver/Admin', admin);
 
     app.get('/:site/rest/:svc/:ticket/:ver/:resource', queryGet);
+
+    app.get('/:site/rest/:resource/:qry', queryGetNoTicket);
 
     app.get('/:site/rest/:svc/:ticket/:ver/:resource/:rident/:rident2/:rident3/:rident4',
             resourceGet);

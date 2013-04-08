@@ -2,30 +2,31 @@
 /*global console, requirejs, TEMPLATE_PARAMS */
 
 // See http://backbonetutorials.com/organizing-backbone-using-modules/
+var assets = ASSETS ? ASSETS : '/';
 requirejs.config({
     //By default load any module IDs from js/lib
-    baseUrl: '/js/lib',
+    baseUrl: assets + 'js/lib',
     //except, if the module ID starts with "app",
     //load it from the js/app directory. paths
     //config is relative to the baseUrl, and
     //never includes a ".js" extension since
     //the paths config could be for a directory.
     paths: {
-        'app': '/js/app',
-        'common': '/js/common',
-        'jquery-migrate': '/js/lib/jquery-migrate-1.1.1.min',
-        'underscore': '/js/lib/underscore-min',
-        'backbone': '/js/lib/backbone-min',
-        'localStorage': '/js/lib/backbone.localStorage-min',
-        'jquery.dataTables': '/js/lib/jquery.dataTables.min',
-        'jquery.generateFile': '/js/lib/jquery.generateFile',
-        'jquery.timezone-picker': '/js/lib/jquery.timezone-picker.min',
-        'jquery.maphilight': '/js/lib/jquery.maphilight.min',
-        'jstz:': '/js/lib/jstz.min',
-        'jquery-ui': '/js/lib/jquery-ui-1.10.2.custom.min',
-        'jquery.datetimeentry': '/js/lib/jquery.datetimeentry',
-        'jquery.mousewheel': '/js/lib/jquery.mousewheel.min',
-        'jquery.jsonp': '/js/lib/jquery.jsonp-2.4.0.min'
+        'app': assets + 'js/app',
+        'common': assets + 'js/common',
+        'jquery-migrate': assets + 'js/lib/jquery-migrate-1.1.1.min',
+        'underscore': assets + 'js/lib/underscore-min',
+        'backbone': assets + 'js/lib/backbone-min',
+        'localStorage': assets + 'js/lib/backbone.localStorage-min',
+        'jquery.dataTables': assets + 'js/lib/jquery.dataTables.min',
+        'jquery.generateFile': assets + 'js/lib/jquery.generateFile',
+        'jquery.timezone-picker': assets + 'js/lib/jquery.timezone-picker.min',
+        'jquery.maphilight': assets + 'js/lib/jquery.maphilight.min',
+        'jstz:': assets + 'js/lib/jstz.min',
+        'jquery-ui': assets + 'js/lib/jquery-ui-1.10.2.custom.min',
+        'jquery.datetimeentry': assets + 'js/lib/jquery.datetimeentry',
+        'jquery.mousewheel': assets + 'js/lib/jquery.mousewheel.min',
+        'jquery.jsonp': assets + 'js/lib/jquery.jsonp-2.4.0.min'
     },
     shim: {
         'jquery-migrate': {
