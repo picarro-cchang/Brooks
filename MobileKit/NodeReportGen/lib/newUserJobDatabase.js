@@ -72,24 +72,32 @@ define(function(require, exports, module) {
     UserJobDatabase.prototype.compressDatabaseAndGetAllData = function(user, done) {
         var that = this;
         that.getDatabase(user, function (err, db) {
+            var documents = [];
             if (err) done(err);
             else {
                 // Make a new database which is derived from the old
                 var oldPath = db.path;
                 var newPath = oldPath.replace(/[0-9]+\.db/,(new Date()).valueOf() + '.db');
-                var dbCompressed = dirty(newPath);
-                var documents = [];
-                db.forEach(function (key, document) {
-                    dbCompressed.set(key, document);
-                    documents.push(document);
-                });
-                that.closeDatabase(user, function () {
-                    that.activeUsers[user] = dbCompressed;
-                    fs.unlink(oldPath, function (err) {
-                        if (err) done(err);
-                        else done(null, documents);
+                if (newPath === oldPath) {
+                    db.forEach(function (key, document) {
+                        documents.push(document);
                     });
-                });
+                    done(null, documents);
+                }
+                else {
+                    var dbCompressed = dirty(newPath);
+                    db.forEach(function (key, document) {
+                        dbCompressed.set(key, document);
+                        documents.push(document);
+                    });
+                    that.closeDatabase(user, function () {
+                        that.activeUsers[user] = dbCompressed;
+                        fs.unlink(oldPath, function (err) {
+                            if (err) done(err);
+                            else done(null, documents);
+                        });
+                    });
+                }
             }
         });
     };

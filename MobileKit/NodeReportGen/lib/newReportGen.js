@@ -8,7 +8,6 @@ define(function(require, exports, module) {
     var fs = require('fs');
     var getSubDirs = require('./dirUtils').getSubDirs;
     var getTicket = require('./md5hex');
-    var GLOBALS = require('./rptGenGlobals');
     var mkdirp = require('mkdirp');
     var newAnalysesDataFetcher = require('./newAnalysesDataFetcher');
     var newFovsDataFetcher = require('./newFovsDataFetcher');
@@ -23,22 +22,22 @@ define(function(require, exports, module) {
     var util = require('util');
     var _ = require('underscore');
 
-    var rptGenService = newRptGenService({"rptgen_url": "http://localhost:5300"});
-
     /****************************************************************************/
     /*  Report Generation                                                       */
     /****************************************************************************/
 
-    function ReportGen(reportDir, p3ApiService, user, contents) {
+    function ReportGen(reportDir, p3ApiService, rptGenService, user, contents, runningTasks) {
         events.EventEmitter.call(this); // Call the constructor of the superclass
         this.contents = contents;
         this.instructions = null;
         this.p3ApiService = p3ApiService;
+        this.rptGenService = rptGenService;
         this.reportDir = reportDir;
         this.request_ts = null;
         this.submit_key = {};
         this.ticket = null;
         this.user = user;
+        this.runningTasks = runningTasks;
     }
 
     util.inherits(ReportGen, events.EventEmitter);
@@ -114,7 +113,7 @@ define(function(require, exports, module) {
                             var bad = result.status < 0;
                             var done = result.status >= rptGenStatus.DONE;
                             var taskKey = that.ticket + '_' + lastSubdir;
-                            var running = GLOBALS.runningTasks.isRunning(taskKey);
+                            var running = that.runningTasks.isRunning(taskKey);
                             if (!done && !running) {
                                 if (bad) startNewRun();
                                 else {
@@ -176,6 +175,7 @@ define(function(require, exports, module) {
         function obeyInstructions(taskKey, workDir, statusFile) {
             var instructions = that.instructions;
             var p3ApiService = that.p3ApiService;
+            var rptGenService = that.rptGenService;
             var type = instructions["instructions_type"];
 
             function logCompletion(err) {
@@ -216,8 +216,8 @@ define(function(require, exports, module) {
         }
     };
 
-    function newReportGen(reportDir, p3ApiService, user, contents) {
-        return new ReportGen(reportDir, p3ApiService, user, contents);
+    function newReportGen(reportDir, p3ApiService, rptGenService, user, contents, runningTasks) {
+        return new ReportGen(reportDir, p3ApiService, rptGenService, user, contents, runningTasks);
     }
 
     module.exports = newReportGen;

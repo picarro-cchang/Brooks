@@ -1,15 +1,14 @@
-/*global console, require */
+/*global console, __dirname, require */
+/* jshint undef:true, unused:true */
 
 (function () {
     var argv = require('optimist').argv;
     var cjs = require("./public/js/common/canonical_stringify");
-    var events = require('events');
     var express = require('express');
     var fs = require('fs');
-    var getRest = require('./lib/getRest');
-    var GLOBALS = require('./lib/rptGenGlobals');
     var mkdirp = require('mkdirp');
     var newP3ApiService = require('./lib/newP3ApiService');
+    var newRptGenService = require('./lib/newRptGenService');
     var newReportGen = require('./lib/newReportGen');
     var newRptGenMonitor = require('./lib/newRptGenMonitor');
     var newRunningTasks = require('./lib/newRunningTasks');
@@ -17,6 +16,7 @@
     var path = require('path');
     var pv = require('./public/js/common/paramsValidator');
     var REPORTROOT = argv.r ? argv.r : path.join(__dirname, 'ReportGen');
+    var SITECONFIG = require('./lib/siteConfig');
     var rptGenStatus = require('./public/js/common/rptGenStatus');
     var sf = require('./lib/statusFiles');
     var ts = require('./lib/timeStamps');
@@ -24,7 +24,6 @@
     var util = require('util');
     var _ = require('underscore');
 
-    var SITECONFIG = {};
     SITECONFIG.p3host = "dev.picarro.com";
     SITECONFIG.p3port = 443;
     SITECONFIG.p3site = "dev";
@@ -35,6 +34,8 @@
     SITECONFIG.psys = "APITEST2";
     SITECONFIG.identity = "dc1563a216f25ef8a20081668bb6201e";
     SITECONFIG.assets = "/dev/SurveyorRpt";
+    SITECONFIG.phantomPath = "";
+    SITECONFIG.pdftkPath = "";
 
     var siteconfig_path = argv.s ? argv.s : path.join(__dirname, "site_config_node");
     var siteconfig_data = fs.readFileSync(siteconfig_path, 'utf8');
@@ -57,6 +58,12 @@
         }
         if (siteconfig_obj.reportServer.hasOwnProperty("assets")) {
             SITECONFIG.assets = siteconfig_obj.reportServer.assets;
+        }
+        if (siteconfig_obj.reportServer.hasOwnProperty("phantomPath")) {
+            SITECONFIG.phantomPath = siteconfig_obj.reportServer.phantomPath;
+        }
+        if (siteconfig_obj.reportServer.hasOwnProperty("pdftkPath")) {
+            SITECONFIG.pdftkPath = siteconfig_obj.reportServer.pdftkPath;
         }
     }
     if (siteconfig_obj.hasOwnProperty("reportProxy")) {
@@ -90,32 +97,35 @@
     app.set('views', path.join(__dirname, 'views'));
     app.use(express.bodyParser());
 
-    GLOBALS.csp_url = scheme + SITECONFIG.p3host + p3port + '/' + SITECONFIG.p3site; //"https://dev.picarro.com/dev";
-    GLOBALS.psys = SITECONFIG.psys;
-    GLOBALS.identity = SITECONFIG.identity;
+    var csp_url = scheme + SITECONFIG.p3host + p3port + '/' + SITECONFIG.p3site; //"https://dev.picarro.com/dev";
+    var psys = SITECONFIG.psys;
+    var identity = SITECONFIG.identity;
 
-    //GLOBALS.csp_url = "https://dev.picarro.com/dev";
-    //GLOBALS.psys = "APITEST2";
-    //GLOBALS.identity = "dc1563a216f25ef8a20081668bb6201e";
+    //csp_url = "https://dev.picarro.com/dev";
+    //psys = "APITEST2";
+    //identity = "dc1563a216f25ef8a20081668bb6201e";
 
-    //GLOBALS.csp_url = "https://localhost:8081/node";
-    //GLOBALS.psys = "SUPERADMIN";
-    //GLOBALS.identity = "85490338d7412a6d31e99ef58bce5dPM";
+    //csp_url = "https://localhost:8081/node";
+    //psys = "SUPERADMIN";
+    //identity = "85490338d7412a6d31e99ef58bce5dPM";
 
-    GLOBALS.ticket_url = GLOBALS.csp_url + "/rest/sec/dummy/1.0/Admin";
+    var ticket_url = csp_url + "/rest/sec/dummy/1.0/Admin";
 
-    GLOBALS.rprocs = '["AnzLogMeta:byEpoch","AnzLog:byPos","AnzLog:byEpoch","AnzLog:makeSwath",' +
+    var rprocs = '["AnzLogMeta:byEpoch","AnzLog:byPos","AnzLog:byEpoch","AnzLog:makeSwath",' +
                      '"AnzMeta:byAnz","AnzLrt:getStatus","AnzLrt:byRow","AnzLrt:firstSet",' +
                      '"AnzLrt:nextSet","AnzLog:byGeo","AnzLog:makeFov"]';
 
-    var p3ApiService = newP3ApiService({"csp_url": GLOBALS.csp_url, "ticket_url": GLOBALS.ticket_url,
-            "identity": GLOBALS.identity, "psys": GLOBALS.psys, "rprocs": GLOBALS.rprocs});
+    var p3ApiService = newP3ApiService({"csp_url": csp_url, "ticket_url": ticket_url,
+            "identity": identity, "psys": psys, "rprocs": rprocs});
 
     if (p3ApiService instanceof Error) throw p3ApiService;  // Fatal error
 
+    var proto = (SITECONFIG.reportport === 443) ? "https" : "http";
+    var rptGenService = newRptGenService({"rptgen_url": proto + '://' + SITECONFIG.reporthost + ':' + SITECONFIG.reportport});
+
     var rptGenMonitor;
-    GLOBALS.runningTasks  = newRunningTasks(REPORTROOT);
-    GLOBALS.userJobDatabase = newUserJobDatabase(REPORTROOT);
+    var runningTasks = newRunningTasks(REPORTROOT);
+    var userJobDatabase = newUserJobDatabase(REPORTROOT);
 
     function handleTz(req, res) {
         var tz = req.query["tz"] || "GMT";
@@ -156,9 +166,10 @@
                   "transform": stringToBoolean },
                  {"name": "user", "required": true, "validator": "string"}]);
             if (pv.ok()) {
-                reportGen = newReportGen(REPORTROOT, p3ApiService, pv.get("user"), pv.get("contents"));
+                reportGen = newReportGen(REPORTROOT, p3ApiService, rptGenService,
+                    pv.get("user"), pv.get("contents"), runningTasks);
                 rptGenMonitor.monitor(reportGen);
-                GLOBALS.runningTasks.monitor(reportGen);
+                runningTasks.monitor(reportGen);
                 reportGen.run({"force": pv.get("force")}, function (err, r) {
                     if (err) res.send(_.extend(result,{"error": err.message}));
                     else res.send(_.extend(result,r));
@@ -201,8 +212,7 @@
             if (pv.ok()) {
                 user = req.query.user;
                 var rec = JSON.parse(req.query.object);
-                var key = rec.hash + "_" + rec.directory;
-                GLOBALS.userJobDatabase.updateDatabase(user,'update',rec, function(err) {
+                userJobDatabase.updateDatabase(user,'update',rec, function(err) {
                     res.send(_.extend(result,{error: err}));
                 });
             }
@@ -214,7 +224,7 @@
                 [{"name": "user", "required": true, "validator": "string"}]);
             if (pv.ok()) {
                 user = req.query.user;
-                GLOBALS.userJobDatabase.compressDatabaseAndGetAllData(user, function(err,data) {
+                userJobDatabase.compressDatabaseAndGetAllData(user, function(err,data) {
                     res.send(_.extend(result, {error:err, dashboard: data}));
                 });
             }
@@ -243,7 +253,7 @@
 
     function handleGetReportLocal(req, res) {
         res.render("getReport",
-            {assets: SITECONFIG.assets,
+            {assets: "/",
              hash: req.params.hash,
              host: "",
              identity: "",
@@ -340,7 +350,7 @@
         else console.log('Directory ' + REPORTROOT + ' created.');
         rptGenMonitor = newRptGenMonitor(REPORTROOT);
         app.use("/rest/data", express.static(REPORTROOT));
-        GLOBALS.runningTasks.handleIncompleteTasksOnStartup( function () {
+        runningTasks.handleIncompleteTasksOnStartup( function () {
             var port = SITECONFIG.reportport;
             app.listen(port);
             console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);

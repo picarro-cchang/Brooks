@@ -6,11 +6,13 @@
 	"reportServer": {
 		"assets": "/",
 		"host": "localhost",
-		"port": 5300
+		"port": 5300,
+		"phantomPath": "C:\\Program Files (x86)\\phantomjs-1.9.0-windows\\phantomjs.exe",
+		"pdftkPath": "C:\\Program Files (x86)\\PDF Labs\\PDFtk Server\\bin\\pdftk.exe" 
 	},
-	"host": "dev.picarro.com",
+	"host": "192.168.33.10",
 	"port": 443,
-	"site": "dev",
-	"identity": "dc1563a216f25ef8a20081668bb6201e",
-	"sys": "APITEST2"
+	"site": "node",
+	"identity": "85490338d7412a6d31e99ef58bce5dPM",
+	"sys": "SUPERADMIN"
 }

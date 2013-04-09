@@ -14,6 +14,7 @@ define(function(require, exports, module) {
     var rptGenStatus = require('../public/js/common/rptGenStatus');
     var sf = require('./statusFiles');
     var sis = require('./surveyorInstStatus');
+    var SITECONFIG = require('./siteConfig');
     var url = require('url');
     var _ = require('underscore');
     var instrValidator = require('../public/js/common/instructionsValidator').instrValidator;
@@ -243,7 +244,9 @@ define(function(require, exports, module) {
 
             var minLat, maxLat = rptMaxLat, minLng, maxLng;
             var name, neCorner, submaps = [], swCorner;
-            var baseUrl = 'http://localhost:5300/getReportLocal/' + that.submit_key.hash + '/' + that.submit_key.dir_name;
+            var proto = (SITECONFIG.reportport === 443) ? "https" : "http";
+            var prefix = proto + '://' + SITECONFIG.reporthost + ':' + SITECONFIG.reportport;
+            var baseUrl = prefix + '/getReportLocal/' + that.submit_key.hash + '/' + that.submit_key.dir_name;
             submaps.push({"url": url.format({"pathname": baseUrl, "query": {"name":"Summary"}}), "name": "summary.pdf"});
 
             for (var my=0; my<suby; my++) {
@@ -289,12 +292,11 @@ define(function(require, exports, module) {
         }
 
         function concatenatePdf(submapList, done) {
-            var cmd = 'C:\\Program Files (x86)\\PDF Labs\\PDFtk Server\\bin\\pdftk.exe';
             var pdfFiles = [];
             submapList.forEach(function (submap) {
                 pdfFiles.push(submap.name);
             });
-            cmd = '"' + cmd + '" ' + pdfFiles.join(" ") + " cat output report.pdf";
+            var cmd = '"' + SITECONFIG.pdftkPath + '" ' + pdfFiles.join(" ") + " cat output report.pdf";
             console.log(cmd);
             var concat = cp.exec(cmd, {"cwd": that.workDir}, function (err, stdout, stderr) {
                 if (err) {
@@ -307,13 +309,20 @@ define(function(require, exports, module) {
             });
             concat.on('exit', function (code) {
                 console.log('Child process exited with code ' + code);
-                done(null);
+                if (code === 0) {
+                    // Delete the component PDF files, do not wait for completion
+                    pdfFiles.forEach(function (fname) {
+                        fs.unlink(path.join(that.workDir, fname));
+                    });
+                    done(null);
+                }
+                else done(new Error("Concatenate Pdf: error code " + code));
             });
         }
 
         function convertToPdf(url, pdfFile, done) {
             var outFile = path.join(that.workDir, pdfFile);
-            var cmd = '"C:\\Program Files (x86)\\phantomjs-1.9.0-windows\\phantomjs.exe" screenDump.js "' +
+            var cmd = '"' + SITECONFIG.phantomPath + '" screenDump.js "' +
                         url + '" "' + outFile + '" Letter';
             console.log(cmd);
             var convert = cp.exec(cmd, {"cwd": __dirname}, function (err, stdout, stderr) {
@@ -327,7 +336,10 @@ define(function(require, exports, module) {
             });
             convert.on('exit', function (code) {
                 console.log('Child process exited with code ' + code);
-                done(null);
+                if (code === 0) {
+                    done(null);
+                }
+                else done(new Error("Convert to Pdf: error code " + code));
             });
         }
     };

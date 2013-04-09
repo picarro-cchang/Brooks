@@ -12,7 +12,8 @@ function (CNSNT,       gh,            utils,       newIsoMarker,       REPORT) {
 
     function makeAnalyses(report) {
         var aCanvas, analyses, color, colors, ctxAnalyses, i, j, lat, lng, run, where, x, xy, y;
-        var size = 0.7;
+        var size = 1.0;
+        var txtSize = size*18;
 
         analyses = report.analysesData;
         // Draw the isotopic analyses results on a canvas
@@ -50,7 +51,8 @@ function (CNSNT,       gh,            utils,       newIsoMarker,       REPORT) {
             xy = report.xform(lng, lat);
             x = xy[0], y = xy[1];
             if (report.inView(xy)) {
-                aCanvas[color].annotate(ctxAnalyses, x+report.padX, y+report.padY, report.analysisLabels[i], "bold 13px sans-serif", "white");
+                aCanvas[color].annotate(ctxAnalyses, x+report.padX, y+report.padY, report.analysisLabels[i],
+                    "bold " + txtSize + "px sans-serif", "white");
             }
         }
 

@@ -11,18 +11,18 @@ import time
 P3Api = P3ApiService()
 
 def main():
-    P3Api.csp_url = "https://localhost:8081/node"
-    P3Api.identity = "85490338d7412a6d31e99ef58bce5dPM"
-    P3Api.psys = "SUPERADMIN"
+    #P3Api.csp_url = "https://localhost:8081/node"
+    #P3Api.identity = "85490338d7412a6d31e99ef58bce5dPM"
+    #P3Api.psys = "SUPERADMIN"
 
-    # P3Api.csp_url = "https://dev.picarro.com/dev"
-    # P3Api.identity = "dc1563a216f25ef8a20081668bb6201e"
-    # P3Api.psys = "APITEST2"
+    P3Api.csp_url = "https://dev.picarro.com/dev"
+    P3Api.identity = "dc1563a216f25ef8a20081668bb6201e"
+    P3Api.psys = "APITEST2"
 
     P3Api.ticket_url = P3Api.csp_url + "/rest/sec/dummy/1.0/Admin/"
     P3Api.rprocs = '["AnzLogMeta:byEpoch","AnzLog:byPos","AnzLog:byEpoch","AnzLog:makeSwath","AnzMeta:byAnz","AnzLrt:getStatus","AnzLrt:byRow","AnzLrt:firstSet","AnzLrt:nextSet","AnzLog:byGeo","AnzLog:makeFov"]'
     P3Api.debug = True
-    qnum = 11
+    qnum = 8
     if qnum == 1:
         #qryparms = {'alog':'CFADS2274-20130107-170017Z-DataLog_User_Minimal.dat','logtype':'dat',
         #                  'limit':10,'qry':'byPos','startPos':0,'reverse':True,'doclist':True,'varList':'["CH4"]'}
@@ -312,14 +312,14 @@ def main():
 
     elif qnum == 8:
         # Sorting by LOGNAME and then by Epoch Time
-        #qryparms = {'anz':'FCDS2008', 'startEtm':1339333980, 'endEtm':1339372740,
-        #            'minLng':-121.93108, 'minLat':36.58838, 'maxLng':-121.88112, 'maxLat':36.62807, 'qry':'byEpoch',
-        #            'forceLrt':False, 'resolveLogname':True, 'doclist':True, 'limit':'all', 'rtnFmt':'lrt',
-        #            'lrtSortList':'["LOGNAME"]' }
         qryparms = {'anz':'FCDS2008', 'startEtm':1339333980, 'endEtm':1339372740,
-                    'box':[-121.93108,36.58838,-121.88112,36.62807], 'qry':'byGeo',
-                    'forceLrt':True, 'resolveLogname':True, 'doclist':True, 'limit':"all",
-                    'rtnFmt':'lrt','lrtSortList':'["LOGNAME", "EPOCH_TIME"]' }
+                    'minLng':-121.93108, 'minLat':36.58838, 'maxLng':-121.88112, 'maxLat':36.62807, 'qry':'byEpoch',
+                    'forceLrt':True, 'resolveLogname':True, 'doclist':True, 'limit':'all', 'rtnFmt':'lrt',
+                    'lrtSortList':'["LOGNAME"]' }
+        #qryparms = {'anz':'FCDS2008', 'startEtm':1339333980, 'endEtm':1339372740,
+        #            'box':[-121.93108,36.58838,-121.88112,36.62807], 'qry':'byGeo',
+        #            'forceLrt':True, 'resolveLogname':True, 'doclist':True, 'limit':'all',
+        #            'rtnFmt':'lrt','lrtSortList':'["LOGNAME", "EPOCH_TIME"]' }
         result = P3Api.get("gdu", "1.0", "AnzLog", qryparms)
         if 'error' in result and result['error'] is not None:
             raise RuntimeError("%s" % result)

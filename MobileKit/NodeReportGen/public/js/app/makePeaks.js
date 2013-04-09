@@ -11,7 +11,9 @@ function (_, gh, newMarker, REPORT) {
         var i, j, x, xy, y;
         var color, colors, ctxPeaks, ctxTokens, data, fovMinAmp, lat, lng, pCanvas, peaks, peaksMinAmp, run, survey, where;
         var runs = {}, surveys = {};
-        var size = 0.7;
+        var size = 1.0;
+        var txtSize = size*18;
+
         peaks = report.peaksData;
         ctxPeaks = document.createElement("canvas").getContext("2d");
         ctxPeaks.canvas.height = report.ny + 2 * report.padY;
@@ -66,7 +68,8 @@ function (_, gh, newMarker, REPORT) {
                 runs[run] = true;
                 surveys[survey] = true;
                 if (report.peakLabels[i] && color) {
-                    pCanvas[color].annotate(ctxPeaks, x+report.padX, y+report.padY, report.peakLabels[i], "bold 13px sans-serif", "black");
+                    pCanvas[color].annotate(ctxPeaks, x+report.padX, y+report.padY, report.peakLabels[i],
+                        "bold " + txtSize + "px sans-serif", "black");
                 }
                 else if (peaks[i].attributes.A >= fovMinAmp) {
                     ctxPeaks.fillStyle = color;
