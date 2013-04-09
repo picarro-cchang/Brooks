@@ -59,6 +59,7 @@ function (utils, gh, REPORT) {
                 analysesTable.push('</tbody>');
                 analysesTable.push('</table>');
             }
+            else analysesTable.push('<p>No data in isotopic analysis table</p>');
         }
         return analysesTable;
     }

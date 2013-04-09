@@ -56,6 +56,7 @@ function (utils, gh, REPORT) {
                 peaksTable.push('</tbody>');
                 peaksTable.push('</table>');
             }
+            else peaksTable.push('<p>No data in peaks table</p>');
         }
         return peaksTable;
     }

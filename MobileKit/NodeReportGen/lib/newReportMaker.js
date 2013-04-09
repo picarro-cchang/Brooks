@@ -153,7 +153,8 @@ define(function(require, exports, module) {
             that.pending = subtasks.length;
             subtasks.forEach(function (task) {
                 var instr = task.extractor(that.norm_instr);
-                var lrtCont = newRptGenLrtController(that.rptGenService, "RptGen", {'qry': 'submit', 'contents': instr});
+                var user = that.submit_key.user;
+                var lrtCont = newRptGenLrtController(that.rptGenService, "RptGen", {'qry': 'submit', 'contents': instr, 'user': user});
                 lrtCont.on('submit', onTaskSubmit(task.name));
                 lrtCont.on('end', onTaskEnd(task.name));
                 lrtCont.on('error', onTaskError(task.name));

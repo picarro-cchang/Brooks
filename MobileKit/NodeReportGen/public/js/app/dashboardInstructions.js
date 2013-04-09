@@ -424,7 +424,7 @@ define(function(require, exports, module) {
                 if (this.getCurrentInstructions()) {
                     var contents = DASHBOARD.instructionsFileModel.get("contents");
                     var instructions = DASHBOARD.instructionsFileModel.get("instructions");
-                    DASHBOARD.SurveyorRpt.submit({'contents': contents},
+                    DASHBOARD.SurveyorRpt.submit({'contents': contents, 'user': DASHBOARD.user},
                     function (err) {
                         var msg = 'While submitting instructions: ' + err;
                         alert(msg);
@@ -460,10 +460,21 @@ define(function(require, exports, module) {
                                 DASHBOARD.jobsView.highLightJob(prev[0]);
                             }
                             else {
-                                job.addLocalTime(function (err) {
-                                    DASHBOARD.submittedJobs.add(job);
-                                    job.save();
-                                    job.analyzeStatus(err, status, msg);
+                                // This is a pre-existing job, but not on the current user's dashboard
+                                //  Find out who originally submitted it 
+                                var keyFile = '/' + hash + '/' + dirName + '/key.json';
+                                DASHBOARD.SurveyorRpt.resource(keyFile,
+                                function (err) {
+                                    alert('While getting key file data from ' + keyFile + ': ' + err);
+                                },
+                                function (status, data) {
+                                    console.log('While getting key file data from ' + keyFile + ': ' + status);
+                                    job.set({user: data.SUBMIT_KEY.user});
+                                    job.addLocalTime(function (err) {
+                                        DASHBOARD.submittedJobs.add(job);
+                                        job.save();
+                                        job.analyzeStatus(err, status, msg);
+                                    }, timezone);
                                 });
                             }
                         }

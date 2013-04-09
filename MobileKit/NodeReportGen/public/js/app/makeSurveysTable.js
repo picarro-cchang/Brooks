@@ -59,7 +59,10 @@ function (utils, gh, REPORT) {
                 done(null, surveysTable);
             });
         }
-        else done(null, surveysTable);
+        else {
+            surveysTable.push('<p>No data in surveys table</p>');
+            done(null, surveysTable);
+        }
     }
     return makeSurveysTable;
 });

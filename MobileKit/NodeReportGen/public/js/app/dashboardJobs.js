@@ -34,9 +34,9 @@ define(function(require, exports, module) {
                 startLocalTime: null,
                 timezone: "UTC"
             },
-            addLocalTime: function (done) {
+            addLocalTime: function (done, tz) {
                 var that = this;
-                var tz = DASHBOARD.timezone;
+                if (!tz) tz = DASHBOARD.timezone;
                 DASHBOARD.Utilities.timezone({tz:tz, posixTimes:[this.get("startPosixTime")]},
                 function (err) {
                     var msg = 'While converting timezone: ' + err;

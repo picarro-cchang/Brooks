@@ -40,24 +40,26 @@ table.display tr.odd.row_selected td {
 }
 
 div.reportFigure {
-  width: 100% ;
+  /* width: 100% ; */
   margin-left: auto ;
   margin-right: auto ;
-  margin-top: 50px;  
-  margin-bottom: 50px;  
+  margin-top: 0px;  
+  margin-bottom: 0px;  
   page-break-after:always;
 }
 
 div.reportTable {
-  width: 80% ;
-  margin-left: auto ;
-  margin-right: auto ;
-  margin-top: 50px;  
-  margin-bottom: 50px;  
+  /* width: 100% ;*/
+  margin-left: 25px;
+  margin-right: 25px;
+  margin-top: 5px;  
+  margin-bottom: 0px;  
 }
 
 .reportTableHeading {
-  margin-left: 20px ;
+  margin-left: 25px ;
+  margin-top: 10px;  
+  margin-bottom: 0px;  
 }
 
 div.dataTables_length select {
@@ -70,7 +72,7 @@ div.dataTables_filter input {
 }
 
 div#id_jobTableDiv {
-  width: 100% ;
-  margin-left: auto ;
-  margin-right: auto ;  
+  /* width: 100% ; */
+  margin-left: 25px ;
+  margin-right: 25px ;  
 }

@@ -111,6 +111,7 @@ define(function(require, exports, module) {
             },
             function (status, data) {
                 console.log('While getting key file data from ' + keyFile + ': ' + status);
+
                 REPORT.settings.set(_.pick(data.INSTRUCTIONS,settingsKeys));
 
                 // Override the corners from the qry parameters if they exist
@@ -137,31 +138,83 @@ define(function(require, exports, module) {
                 // Create a ReportViewResources object to hold the canvases which make the report
                 REPORT.reportViewResources = new REPORT.ReportViewResources();
 
-                // Figure out if we are a summary view or a submap view depending on whether the coordinates
-                //  are passed in on the command line
-
-                var summary = !('swCorner' in qry) && !('neCorner' in qry);
-                if (summary) makePdfReport(REPORT.settings.get("template").summary, qry.name);
-                else makePdfReport(REPORT.settings.get("template").submaps, qry.name);
+                var params = {hash: data.SUBMIT_KEY.hash, user: data.SUBMIT_KEY.user, name: qry.name};
+                var tz = data.INSTRUCTIONS.timezone;
+                var startPosix = (new Date(data.SUBMIT_KEY.time_stamp)).valueOf();
+                // Get first submission time in the correct timezone
+                REPORT.Utilities.timezone({tz:tz,posixTimes:[startPosix]},
+                function () {
+                    params.submitTime = data.SUBMIT_KEY.time_stamp;
+                    doIt();
+                },
+                function (status, data) {
+                    params.submitTime  = data.timeStrings[0];
+                    doIt();
+                });
+                function doIt() {
+                    // Figure out if we are a summary view or a submap view depending on whether the coordinates
+                    //  are passed in on the command line
+                    var summary = !('swCorner' in qry) && !('neCorner' in qry);
+                    if (summary) makePdfReport(REPORT.settings.get("template").summary, params);
+                    else makePdfReport(REPORT.settings.get("template").submaps, params);
+                }
             });
         }
     }
 
-    function makePdfReport(subreport, name) {
+    function boolToIcon(value) {
+        var name = (value) ? ("icon-ok") : ("icon-remove");
+        return (undefined !== value) ? '<i class="' + name + '"></i>' : '';
+    }
+
+    function makePdfReport(subreport, params) {
         var figureComponents = [ "paths", "fovs", "wedges", "tokens", "peaks", "analyses", "submapGrid" ];
         var id, neCorner = REPORT.settings.get("neCorner"), swCorner = REPORT.settings.get("swCorner");
         var title = REPORT.settings.get("title");
-        $("#getReportApp").append('<h2 style="text-align:center;">' + title + ' - ' + name + '</h2>');
+        var name = params.name;
+
+        $("#reportTitle").html(title);
+        $("#rightHead").html(name);
+        $("#leftFoot").html("First submitted by " + params.user + " at " + params.submitTime);
         $("#getReportApp").append('<div style="container-fluid">');
         $("#getReportApp").append('<div style="row-fluid">');
         $("#getReportApp").append('<div style="span12">');
-        $("#getReportApp").append('<p><b>SW Corner: </b>' + swCorner[0].toFixed(5) + ', ' + swCorner[1].toFixed(5) +
-                                  ' <b>NE Corner: </b>' + neCorner[0].toFixed(5) + ', ' + neCorner[1].toFixed(5) + '</p>');
-        $("#getReportApp").append('<p><b>Min peak amplitude: </b>' + REPORT.settings.get("peaksMinAmp").toFixed(2) +
-                                  ' <b>Exclusion radius (m): </b>' + REPORT.settings.get("exclRadius").toFixed(0) + '</p>');
+        $("#getReportApp").append('<h1 style="text-align:center;">' + title + '</h1>');
+
+        var settingsTableTop = [];
+        var settingsTableBottom = [];
+        settingsTableTop.push('<table class="table table-condensed table-fmt1">');
+        settingsTableTop.push('<thead><tr>');
+        settingsTableTop.push('<th>SW Corner (Lat,Lng)</th>');
+        settingsTableTop.push('<th>NE Corner (Lat,Lng)</th>');
+        settingsTableTop.push('<th>Min Peak Ampl (ppm)</th>');
+        settingsTableTop.push('<th>Excl Radius (m)</th>');
+        settingsTableTop.push('<th>Paths</th>');
+        settingsTableTop.push('<th>Peaks</th>');
+        settingsTableTop.push('<th>LISAs</th>');
+        settingsTableTop.push('<th>FOV</th>');
+        settingsTableTop.push('<th>Isotopic</th>');
+        settingsTableTop.push('</tr></thead>');
+        settingsTableTop.push('<tbody>');
+        settingsTableTop.push('<tr>');
+        settingsTableTop.push('<td>' + swCorner[0].toFixed(5) + ', ' + swCorner[1].toFixed(5) + '</td>');
+        settingsTableTop.push('<td>' + neCorner[0].toFixed(5) + ', ' + neCorner[1].toFixed(5) + '</td>');
+        settingsTableTop.push('<td>' + REPORT.settings.get("peaksMinAmp").toFixed(2) + '</td>');
+        settingsTableTop.push('<td>' + REPORT.settings.get("exclRadius").toFixed(0) + '</td>');
+        settingsTableBottom.push('</tr>');
+        settingsTableBottom.push('</tbody></table>');
         for (var i=0; i<subreport.figures.models.length; i++) {
-            var layers = [];
             var pageComponent = subreport.figures.models[i];
+            var layers = [];
+            var settingsTableMid = [];
+            settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("paths")) + '</td>');
+            settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("peaks")) + '</td>');
+            settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("wedges")) + '</td>');
+            settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("fovs")) + '</td>');
+            settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("analyses")) + '</td>');
+            $("#getReportApp").append('<div class="reportTable"; style="position:relative;">' +
+                settingsTableTop.join("") + settingsTableMid.join("") + settingsTableBottom.join("") + '</div>');
+
             layers.push(pageComponent.get("baseType"));
             for (var j=0; j<figureComponents.length; j++) {
                 if (pageComponent.get(figureComponents[j])) {

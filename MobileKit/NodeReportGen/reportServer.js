@@ -113,7 +113,7 @@
 
     if (p3ApiService instanceof Error) throw p3ApiService;  // Fatal error
 
-    var rptGenMonitor = newRptGenMonitor(REPORTROOT);
+    var rptGenMonitor;
     GLOBALS.runningTasks  = newRunningTasks(REPORTROOT);
     GLOBALS.userJobDatabase = newUserJobDatabase(REPORTROOT);
 
@@ -153,9 +153,10 @@
             pv = newParamsValidator(req.query,
                 [{"name": "contents", "required": true, "validator": "string"},
                  {"name": "force", "required": false, "validator": "boolean", "default_value": false,
-                  "transform": stringToBoolean }]);
+                  "transform": stringToBoolean },
+                 {"name": "user", "required": true, "validator": "string"}]);
             if (pv.ok()) {
-                reportGen = newReportGen(REPORTROOT, p3ApiService, pv.get("contents"));
+                reportGen = newReportGen(REPORTROOT, p3ApiService, pv.get("user"), pv.get("contents"));
                 rptGenMonitor.monitor(reportGen);
                 GLOBALS.runningTasks.monitor(reportGen);
                 reportGen.run({"force": pv.get("force")}, function (err, r) {
@@ -337,6 +338,7 @@
     mkdirp(REPORTROOT, null, function (err) {
         if (err) console.log(err);
         else console.log('Directory ' + REPORTROOT + ' created.');
+        rptGenMonitor = newRptGenMonitor(REPORTROOT);
         app.use("/rest/data", express.static(REPORTROOT));
         GLOBALS.runningTasks.handleIncompleteTasksOnStartup( function () {
             var port = SITECONFIG.reportport;

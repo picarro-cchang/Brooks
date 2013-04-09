@@ -22,4 +22,10 @@ block scripts
         table.table-fmt1 th {text-align:center; border: #000 solid; border-width: 0px 0px 1px 0px; }
 
 block content
-    div#getReportApp
+    body(style="min-width:1100px")
+        div#getReportApp
+        div#reportTitle(style="display:none")
+        div#leftHead(style="display:none")
+            | Picarro Surveyor For Natural Gas Leak Detection
+        div#rightHead(style="display:none")
+        div#leftFoot(style="display:none")

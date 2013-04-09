@@ -1,6 +1,7 @@
 var page = require('webpage').create(),
     system = require('system'),
-    address, output, size;
+    address, output, size,
+    paperSize = {};
 
 if (system.args.length < 3 || system.args.length > 5) {
     console.log('Usage: screenDump.js URL filename [paperwidth*paperheight|paperformat] [zoom]');
@@ -9,26 +10,11 @@ if (system.args.length < 3 || system.args.length > 5) {
 } else {
     address = system.args[1];
     output = system.args[2];
-    page.viewportSize = { width: 600, height: 600 };
+    // page.viewportSize = { width: 600, height: 600 };
     if (system.args.length > 3 && system.args[2].substr(-4) === ".pdf") {
         size = system.args[3].split('*');
         paperSize = size.length === 2 ? { width: size[0], height: size[1], margin: '0px' }
-                                           : { format: system.args[3], orientation: 'portrait', margin: '1cm' };
-
-        paperSize.header = {
-            height: "1cm",
-            contents: phantom.callback(function(pageNum, numPages) {
-                return "<h1>Header <span style='float:right'>" + pageNum + " / " + numPages + "</span></h1>";
-            })
-        };
-        paperSize.footer = {
-            height: "1cm",
-            contents: phantom.callback(function(pageNum, numPages) {
-                return "<h1>Footer <span style='float:right'>" + pageNum + " / " + numPages + "</span></h1>";
-            })
-        };
-        /* N.B. Can only assign to page.paperSize. It is NOT possible to change page.paperSize by assigning to its keys */
-        page.paperSize = paperSize;
+                                      : { format: system.args[3], orientation: 'portrait', margin: '1cm' };
     }
     if (system.args.length > 4) {
         page.zoomFactor = system.args[4];
@@ -46,6 +32,47 @@ if (system.args.length < 3 || system.args.length > 5) {
                 });
                 if (getStatus != 'done' && (new Date()).getTime()-start < maxTimeOut) window.setTimeout(next,200);
                 else {
+                    var ua = page.evaluate(function() {
+                        var el;
+                        el = document.getElementById('reportTitle');
+                        var reportTitle = el ? el.innerHTML:null;
+                        el = document.getElementById('leftHead');
+                        var leftHead = el ? el.innerHTML:null;
+                        el = document.getElementById('rightHead');
+                        var rightHead = el ? el.innerHTML:null;
+                        el = document.getElementById('leftFoot');
+                        var leftFoot = el ? el.innerHTML:null;
+                        el = document.getElementById('rightFoot');
+                        var rightFoot = el ? el.innerHTML:null;
+
+                        return {reportTitle: reportTitle, leftHead:leftHead, rightHead:rightHead,
+                                leftFoot:leftFoot, rightFoot:rightFoot};
+                    });
+
+                    paperSize.header = {
+                        height: "2cm",
+                        contents: phantom.callback(function(pageNum, numPages) {
+                            var txt = (pageNum === 1) ? ua.leftHead : ua.reportTitle;
+                            return '<h2 style="font-family:Sans-serif">' + txt + '<span style="float:right">' +
+                            ua.rightHead + '</span></h2>';
+                        })
+                    };
+                    paperSize.footer = {
+                        height: "1cm",
+                        contents: phantom.callback(function(pageNum, numPages) {
+                            return '<p style="font-family:Sans-serif">' + ua.leftFoot + '<span style="float:right">Page  ' +
+                            pageNum + '  of  ' + numPages + "</span></p>";
+                        })
+                    };
+                    /* N.B. Can only assign to page.paperSize. It is NOT possible to change page.paperSize by assigning to its keys */
+                    paperSize.margin = {
+                        left: '1in',
+                        top: '0.5in',
+                        right: '0.75in',
+                        bottom: '0.5in'
+                    };
+                    page.paperSize = paperSize;
+
                     page.render(output);
                     phantom.exit();
                 }

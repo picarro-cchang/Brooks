@@ -29,15 +29,16 @@ define(function(require, exports, module) {
     /*  Report Generation                                                       */
     /****************************************************************************/
 
-    function ReportGen(reportDir, p3ApiService, contents) {
+    function ReportGen(reportDir, p3ApiService, user, contents) {
         events.EventEmitter.call(this); // Call the constructor of the superclass
-        this.reportDir = reportDir;
         this.contents = contents;
         this.instructions = null;
         this.p3ApiService = p3ApiService;
-        this.ticket = null;
+        this.reportDir = reportDir;
         this.request_ts = null;
         this.submit_key = {};
+        this.ticket = null;
+        this.user = user;
     }
 
     util.inherits(ReportGen, events.EventEmitter);
@@ -143,6 +144,7 @@ define(function(require, exports, module) {
             that.submit_key.hash = that.ticket;
             that.submit_key.time_stamp = that.request_ts;
             that.submit_key.dir_name = dirName;
+            that.submit_key.user = that.user;
 
             mkdirp(workDir, null, function (err) {
                 if (err) callback(err);
@@ -214,8 +216,8 @@ define(function(require, exports, module) {
         }
     };
 
-    function newReportGen(reportDir, p3ApiService, contents) {
-        return new ReportGen(reportDir, p3ApiService, contents);
+    function newReportGen(reportDir, p3ApiService, user, contents) {
+        return new ReportGen(reportDir, p3ApiService, user, contents);
     }
 
     module.exports = newReportGen;

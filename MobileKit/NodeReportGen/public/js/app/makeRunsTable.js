@@ -72,7 +72,10 @@ function (_, utils, gh, REPORT) {
                 done(null, runsTable);
             });
         }
-        else done(null, runsTable);
+        else {
+            runsTable.push('<p>No data in runs table</p>');
+            done(null, runsTable);
+        }
     }
     return makeRunsTable;
 });
