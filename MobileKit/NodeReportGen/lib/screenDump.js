@@ -1,10 +1,12 @@
 var page = require('webpage').create(),
     system = require('system'),
     address, output, size,
-    paperSize = {};
+    paperSize = {},
+    headerFontSize = "100%";
+    footerFontSize = "70%";
 
-if (system.args.length < 3 || system.args.length > 5) {
-    console.log('Usage: screenDump.js URL filename [paperwidth*paperheight|paperformat] [zoom]');
+if (system.args.length < 3 || system.args.length > 7) {
+    console.log('Usage: screenDump.js URL filename [paperwidth*paperheight|paperformat] [zoom] [headerFontSize] [footerFontSize]');
     console.log('  paper (pdf output) examples: "5in*7.5in", "10cm*20cm", "A4", "Letter"');
     phantom.exit(1);
 } else {
@@ -17,7 +19,13 @@ if (system.args.length < 3 || system.args.length > 5) {
                                       : { format: system.args[3], orientation: 'portrait', margin: '1cm' };
     }
     if (system.args.length > 4) {
-        page.zoomFactor = system.args[4];
+        page.zoomFactor = +system.args[4];
+    }
+    if (system.args.length > 5) {
+        headerFontSize = system.args[5];
+    }
+    if (system.args.length > 6) {
+        footerFontSize = system.args[6];
     }
     page.open(address, function (status) {
         if (status !== 'success') {
@@ -53,15 +61,17 @@ if (system.args.length < 3 || system.args.length > 5) {
                         height: "2cm",
                         contents: phantom.callback(function(pageNum, numPages) {
                             var txt = (pageNum === 1) ? ua.leftHead : ua.reportTitle;
-                            return '<h2 style="font-family:Sans-serif">' + txt + '<span style="float:right">' +
-                            ua.rightHead + '</span></h2>';
+                            return '<h2 style="font-family:Sans-serif;font-size=' + headerFontSize + '">' +
+                                txt + '<span style="float:right">' +
+                                ua.rightHead + '</span></h2>';
                         })
                     };
                     paperSize.footer = {
                         height: "1cm",
                         contents: phantom.callback(function(pageNum, numPages) {
-                            return '<p style="font-family:Sans-serif">' + ua.leftFoot + '<span style="float:right">Page  ' +
-                            pageNum + '  of  ' + numPages + "</span></p>";
+                            return '<p style="font-family:Sans-serif;font-size=' + footerFontSize + '">' +
+                                ua.leftFoot + '<span style="float:right">Page  ' +
+                                pageNum + '  of  ' + numPages + "</span></p>";
                         })
                     };
                     /* N.B. Can only assign to page.paperSize. It is NOT possible to change page.paperSize by assigning to its keys */

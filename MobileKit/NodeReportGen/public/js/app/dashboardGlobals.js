@@ -1,6 +1,7 @@
 /* dashboardGlobals.js */
 
 define ({
+	AnzMeta: null,
 	InstructionsFileModel: null,
 	instructionsFileModel: null,
 	InstructionsFileView: null,

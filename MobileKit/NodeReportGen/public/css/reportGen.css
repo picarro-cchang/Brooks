@@ -80,4 +80,17 @@ div#id_jobTableDiv {
 @media print {
   table {font-size: 14pt;}
   body {font-size: 14pt;}
+  .head {display:none;}
+  .leftHead {display:none;}
+  .rightHead {display:none;}
+  .foot {display:none;}
+  .leftFoot {display:none;}
+  .rightFoot {display:none;}
+}
+
+@media screen {
+  .leftHead {float:left; font-size:200%; font-weight:bold; margin:25px;}
+  .rightHead {float:right; font-size:200%; font-weight:bold; margin:25px;}
+  .leftFoot {float:left; font-size:120%; margin-left:25px;}
+  .rightFoot {float:right; }
 }

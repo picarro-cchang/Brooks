@@ -323,7 +323,9 @@ define(function(require, exports, module) {
         function convertToPdf(url, pdfFile, done) {
             var outFile = path.join(that.workDir, pdfFile);
             var cmd = '"' + SITECONFIG.phantomPath + '" screenDump.js "' +
-                        url + '" "' + outFile + '" Letter';
+                        url + '" "' + outFile + '" "Letter" "' + SITECONFIG.pdfZoom +
+                        '" "' + SITECONFIG.headerFontSize + '" "' +
+                        SITECONFIG.footerFontSize + '"';
             console.log(cmd);
             var convert = cp.exec(cmd, {"cwd": __dirname}, function (err, stdout, stderr) {
                 if (err) {

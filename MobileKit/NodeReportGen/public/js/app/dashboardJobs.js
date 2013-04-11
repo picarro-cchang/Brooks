@@ -32,7 +32,8 @@ define(function(require, exports, module) {
                 user: "demo",
                 startPosixTime: 0,
                 startLocalTime: null,
-                timezone: "UTC"
+                timezone: "UTC",
+                shown: true
             },
             addLocalTime: function (done, tz) {
                 var that = this;
@@ -85,15 +86,19 @@ define(function(require, exports, module) {
         });
 
         function timeWithOffsetToPosix(x) {
-            return (new Date(x.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}/)[0])).valueOf();
+            var comps = x.match(/(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}[+-]\d{4})/);
+            return (new Date(comps[1]+'T'+comps[2])).valueOf();
         }
 
         DASHBOARD.JobsView = Backbone.View.extend({
             el: $("#id_submittedJobs"),
             events: {
-                "click #id_jobTableDiv button.btn" : "onRetrieveInstructions",
+                "click #id_jobTableDiv button.btn.reload" : "onRetrieveInstructions",
+                "click #id_jobTableDiv button.showAll" : "onShowAll",
+                "click #id_jobTableDiv button.showSelected" : "onShowSelected",
                 "click a.pdfLink" : "onPdfLink",
-                "click a.viewLink" : "onViewLink"
+                "click a.viewLink" : "onViewLink",
+                "click .rowCheck" : "onRowCheck"
             },
             initialize: function () {
                 var that = this;
@@ -110,6 +115,7 @@ define(function(require, exports, module) {
                     y = timeWithOffsetToPosix(y);
                     return ((x < y) ?  1 : ((x > y) ? -1 : 0));
                 };
+                this.showAll = false;
                 this.jobTable = $("#id_jobTable").dataTable({
                     "aoColumns": [
                         { "sTitle": "Reload", "mData": "link", "sClass": "center"},
@@ -117,13 +123,20 @@ define(function(require, exports, module) {
                         { "sTitle": "Time zone", "mData": "timezone", "sClass": "center"},
                         { "sTitle": "Title", "mData": "title", "sClass": "center"},
                         { "sTitle": "Status", "mData": "statusDisplay", "sClass": "center"},
-                        { "sTitle": "User", "mData": "user", "sClass": "center"}
+                        { "sTitle": "User", "mData": "user", "sClass": "center"},
+                        { "sTitle": '<button type="button" class="btn btn-mini btn-inverse showAll">Show All</button>',
+                          "sClass": "center", "mData": "selected", "bSortable": false}
                     ],
                     "sDom":'<"top"lf>rt<"bottom"ip>'
                 });
                 this.jobTable.fnSort([[1,'desc']]);
+                $.fn.dataTableExt.afnFiltering.push(
+                function( oSettings, aData ) {
+                    return that.showAll || $(aData[6]).is(':checked');
+                });
+
                 this.cidToRow = {};
-                this.linkTemplate = _.template('<button type="button" data-cid="{{ data.cid }}" class="btn btn-warning btn-mini"><i class="icon-pencil icon-white"></i></button>');
+                this.linkTemplate = _.template('<button type="button" data-cid="{{ data.cid }}" class="btn btn-warning btn-mini reload"><i class="icon-pencil icon-white"></i></button>');
                 this.listenTo(DASHBOARD.submittedJobs, "add", this.addJob);
                 this.listenTo(DASHBOARD.submittedJobs, "remove", this.removeJob);
                 this.listenTo(DASHBOARD.submittedJobs, "change", this.changeJob);
@@ -138,6 +151,25 @@ define(function(require, exports, module) {
                     clearTimeout(window.refresh_size);
                     window.refresh_size = setTimeout(function () { update_size(); }, 250);
                 });
+            },
+            onShowAll: function (e) {
+                var el = $(e.currentTarget);
+                this.showAll = true;
+                el.html('Show Selected').addClass('showSelected').removeClass('showAll');
+                this.jobTable.fnDraw();
+            },
+            onShowSelected: function (e) {
+                var el = $(e.currentTarget);
+                this.showAll = false;
+                el.html('Show All').addClass('showAll').removeClass('showSelected');
+                this.jobTable.fnDraw();
+            },
+            onRowCheck: function (e) {
+                // Find the model associated with the row
+                var el = $(e.currentTarget);
+                var cid = el.data("cid");
+                var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: cid});
+                job.set({shown: el.is(':checked')});
             },
             addJob: function (model) {
                 DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(model), action:'add'},
@@ -165,6 +197,10 @@ define(function(require, exports, module) {
                 this.jobTable.fnUpdate(this.formatSpecials(model), this.cidToRow[model.cid]);
             },
             formatSpecials: function(model) {
+                // Make special fields for datatables row. "link" is a button which allows us to reload the instructions
+                //  for editing, "status" indicates if processing is in progress. When complete, it turns into links to the
+                //  results and "shown" is a checkbox which allows the user to hide unwanted rows of the table. Since we have
+                //  the model on entry, we can use this to tag the html elements that later need to access the model.
                 var link = this.linkTemplate({cid: model.cid});
                 var statusDisplay;
                 var status = model.get('status');
@@ -185,10 +221,15 @@ define(function(require, exports, module) {
                 else {
                     statusDisplay = '<span>Working...</span>';
                 }
-                return $.extend({link: link, statusDisplay: statusDisplay}, model.attributes);
+                var sel = model.get('shown') ?
+                            '<input class="rowCheck" type="checkbox" data-cid="' + model.cid + '" checked>' :
+                            '<input class="rowCheck" type="checkbox" data-cid="' + model.cid + '">';
+                return $.extend({link: link, statusDisplay: statusDisplay, selected: sel}, model.attributes);
             },
             highLightJob: function (model) {
                 var row = this.cidToRow[model.cid];
+                model.set({"shown": true});
+                this.jobTable.fnDraw();
                 this.instrFileView.$el.find(".file").val(model.get("startLocalTime"));
                 if (this.selectedRow) $(this.selectedRow).removeClass('row_selected');
                 this.selectedRow = $(row).addClass('row_selected');

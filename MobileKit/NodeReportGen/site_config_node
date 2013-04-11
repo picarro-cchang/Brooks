@@ -8,11 +8,14 @@
 		"host": "localhost",
 		"port": 5300,
 		"phantomPath": "C:\\Program Files (x86)\\phantomjs-1.9.0-windows\\phantomjs.exe",
-		"pdftkPath": "C:\\Program Files (x86)\\PDF Labs\\PDFtk Server\\bin\\pdftk.exe" 
+		"pdftkPath": "C:\\Program Files (x86)\\PDF Labs\\PDFtk Server\\bin\\pdftk.exe",
+		"pdfZoom": 1.0,
+		"headerFontSize": "100%",
+		"footerFontSize": "70%"
 	},
-	"host": "192.168.33.10",
+	"host": "dev.picarro.com",
 	"port": 443,
-	"site": "node",
-	"identity": "85490338d7412a6d31e99ef58bce5dPM",
-	"sys": "SUPERADMIN"
+	"site": "dev",
+	"identity": "dc1563a216f25ef8a20081668bb6201e",
+	"sys": "APITEST2"
 }

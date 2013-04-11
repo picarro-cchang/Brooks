@@ -196,8 +196,14 @@
         }
     } // resourceGet
 
+    function getAnalyzers(req, res) {
+        res.send([{ANALYZER: "DEMO2000"}, {ANALYZER: "FCDS2008"},
+                  {ANALYZER: "CFADS2274"}, {ANALYZER: "CFADS2276"}]);
+    }
 
     app.get('/:site/rest/sec/:ticket/:ver/Admin', admin);
+
+    app.get('/:site/rest/:svc/:ticket/:ver/AnzMeta/all', getAnalyzers);
 
     app.get('/:site/rest/:svc/:ticket/:ver/:resource', queryGet);
 

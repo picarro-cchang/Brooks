@@ -1,5 +1,5 @@
 // dashboardInstructions.js
-/*global alert, console, FileReader, module, require */
+/*global alert, ASSETS, console, FileReader, module, require */
 /* jshint undef:true, unused:true */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
@@ -13,7 +13,6 @@ define(function(require, exports, module) {
     var DASHBOARD = require('app/dashboardGlobals');
     var iv = require('common/instructionsValidator');
     var tableFuncs = require('app/tableFuncs');
-    var jstz = require('jstz');
     require('jquery-migrate'),
     require('jquery-ui');
     require('jquery.maphilight');
@@ -166,8 +165,14 @@ define(function(require, exports, module) {
         header = '<div class="modal-header"><h3>' + "Add new run" + '</h3></div>';
         body   = '<div class="modal-body">';
         body += '<form class="form-horizontal">';
-        body += tableFuncs.editControl("Analyzer", tableFuncs.makeInput("id_analyzer", {"class": controlClass,
-                "placeholder": "Name of analyzer"}));
+        if (_.isEmpty(DASHBOARD.analyzers)) {
+            body += tableFuncs.editControl("Analyzer", tableFuncs.makeInput("id_analyzer", {"class": controlClass,
+                    "placeholder": "Name of analyzer"}));
+        }
+        else {
+            body += tableFuncs.editControl("Analyzer", tableFuncs.makeSelect("id_analyzer", {"class": controlClass},
+                    DASHBOARD.analyzersDict));
+        }
         body += tableFuncs.editControl("Start Time", '<div class="input-append">' + tableFuncs.makeInput("id_start_etm",
                 {"class": "input-medium datetimeRange", "placeholder": "YYYY-MM-DD HH:MM"}) + '<span class="add-on">' + tz + '</span></div>');
         body += tableFuncs.editControl("End Time", '<div class="input-append">' + tableFuncs.makeInput("id_end_etm",
@@ -446,6 +451,7 @@ define(function(require, exports, module) {
                                   hash: hash,
                                   msg: msg,
                                   rpt_start_ts: result.rpt_start_ts,
+                                  shown: true,
                                   startPosixTime: posixTime,
                                   status: status,
                                   timezone: timezone,
@@ -541,7 +547,6 @@ define(function(require, exports, module) {
                     target: '#edit-date-default-timezone',
                     countryTarget: '#edit-site-default-country'
                 });
-                DASHBOARD.timezone = jstz.determine().name;
                 $("#id_reportTimezone").val(DASHBOARD.timezone);
                 this.modalContainer = $("#id_modal");
                 this.currentInstructions = {};

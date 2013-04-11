@@ -36,6 +36,9 @@
     SITECONFIG.assets = "/dev/SurveyorRpt";
     SITECONFIG.phantomPath = "";
     SITECONFIG.pdftkPath = "";
+    SITECONFIG.pdfZoom = 1.0;
+    SITECONFIG.headerFontSize = "100%";
+    SITECONFIG.footerFontSize + "70%";
 
     var siteconfig_path = argv.s ? argv.s : path.join(__dirname, "site_config_node");
     var siteconfig_data = fs.readFileSync(siteconfig_path, 'utf8');
@@ -64,6 +67,15 @@
         }
         if (siteconfig_obj.reportServer.hasOwnProperty("pdftkPath")) {
             SITECONFIG.pdftkPath = siteconfig_obj.reportServer.pdftkPath;
+        }
+        if (siteconfig_obj.reportServer.hasOwnProperty("pdfZoom")) {
+            SITECONFIG.pdfZoom = siteconfig_obj.reportServer.pdfZoom;
+        }
+        if (siteconfig_obj.reportServer.hasOwnProperty("headerFontSize")) {
+            SITECONFIG.headerFontSize = siteconfig_obj.reportServer.headerFontSize;
+        }
+        if (siteconfig_obj.reportServer.hasOwnProperty("footerFontSize")) {
+            SITECONFIG.footerFontSize = siteconfig_obj.reportServer.footerFontSize;
         }
     }
     if (siteconfig_obj.hasOwnProperty("reportProxy")) {

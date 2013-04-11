@@ -23,9 +23,11 @@ block scripts
 
 block content
     body(style="min-width:1100px")
-        div#getReportApp
+        div.head(style="height:100px")
+            div#leftHead.leftHead
+                | Picarro Surveyor For Natural Gas Leak Detection
+            div#rightHead.rightHead
         div#reportTitle(style="display:none")
-        div#leftHead(style="display:none")
-            | Picarro Surveyor For Natural Gas Leak Detection
-        div#rightHead(style="display:none")
-        div#leftFoot(style="display:none")
+        div#getReportApp
+        div(style="height:50px")
+            div#leftFoot.leftFoot
