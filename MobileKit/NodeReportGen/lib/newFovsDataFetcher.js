@@ -41,6 +41,7 @@ define(function(require, exports, module) {
         this.maxFovInProgress = 1;
         this.fovProcessorQueue = [];
         this.fovInProgress = 0;
+        this.stabClassHistBySurvey = [];
     }
 
     util.inherits(FovsDataFetcher, events.EventEmitter);
@@ -102,19 +103,33 @@ define(function(require, exports, module) {
         }
 
         function getMetadata(surveys,done) {
-            // Sequentially fetch metadata for all surveys
+            // Sequentially fetch metadata for all surveys and fill out stability class info
             var meta = [];
             var index = [];
             for (var i=0; i<_.keys(surveys).length; i++) index.push(i);
 
             function next() {
                 if (index.length > 0) {
-                    var s = surveys[index.shift()];
-                    console.log('Fetching metadata for ' + s);
+                    var indx;
+                    var s = surveys[indx = index.shift()];
+                    // Compute the most common stability class
+                    var scHist = that.stabClassHistBySurvey[indx];
+                    var stabClass, mostC = 0;
+                    for (var c in scHist) {
+                        if (scHist.hasOwnProperty(c)) {
+                            if (scHist[c] >= mostC) {
+                                stabClass = c;
+                                mostC = scHist[c];
+                            }
+                        }
+                    }
+                    console.log('Computed stability class', indx, s, stabClass);
                     var p3Params = {'alog': s, 'logtype': 'dat', 'qry': 'byEpoch', 'limit':1};
                     that.p3ApiService.get("gdu", "1.0", "AnzLogMeta", p3Params, function (err, result) {
                         if (err) done(err);
                         else {
+                            result[0]['stabClass'] = stabClass;
+                            console.log(JSON.stringify(result[0]));
                             meta.push(_.omit(result[0],'docmap'));
                             process.nextTick(next);
                         }
@@ -322,8 +337,8 @@ define(function(require, exports, module) {
                             //  processor. Each of the fovProcessors has a set of rows for the paths
                             //  that are associated with the swath as well as the FovProcessor itself
 
-                            // We should probably enqueue requests for FOV processors so that only a few
-                            //  run at once
+                            // We enqueue requests for FOV processors so that only a few run at once
+                            that.stabClassHistBySurvey[surveyIndex] = {None:0, A:0, B:0, C:0, D:0, E:0, F:0};
                             that.pathParams.pathBuffers[runIndex][surveyIndex] = [];
                             var p = that.pathParams.fovProcessors[runIndex][surveyIndex] =
                                 { "processor": new FovProcessor(that.p3ApiService,surveyName,surveyIndex,
@@ -341,6 +356,16 @@ define(function(require, exports, module) {
                         }
                         that.pathParams.pathBuffers[runIndex][surveyIndex].push(result);
                         that.pathParams.fovProcessors[runIndex][surveyIndex].rows.push(row);
+                        // Determine the stability class for this data point and accumulate into histogram
+                        var is = m.INST_STATUS;
+                        if (is) {
+                            var weatherCode = (Math.round(is) >> sis.INSTMGR_AUX_STATUS_SHIFT) & sis.INSTMGR_AUX_STATUS_WEATHER_MASK;
+                            if (weatherCode > 0) {
+                                that.stabClassHistBySurvey[surveyIndex][sis.classByWeather[weatherCode-1]] += 1;
+                            }
+                            else that.stabClassHistBySurvey[surveyIndex]['None'] += 1;
+                        }
+                        else that.stabClassHistBySurvey[surveyIndex]['None'] += 1;
                     }
                 }
                 if (data.length === 0) done(null);
@@ -357,6 +382,7 @@ define(function(require, exports, module) {
                     var p = that.pathParams.fovProcessors[runIndex][survey];
                     // We have a fov to run for each survey
                     that.fovPending += 1;
+                    // Try getting the FOV, waiting on the FOV maker if necessary
                     p.processor.writeoutFov(p.rows);
                     // console.log("RUN END: " + runIndex + " Survey: " + survey + " Rows: " + p.rows.length);
                 });

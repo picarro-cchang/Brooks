@@ -16,7 +16,8 @@ define(function(require, exports, module) {
                 "ANALYZER": "",
                 "minetm": 0,
                 "maxetm": 0,
-                "name": ""
+                "name": "",
+                "stabClass":""
             }
         });
 
