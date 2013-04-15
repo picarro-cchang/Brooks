@@ -1,83 +1,94 @@
 {
-    "title": "Monterey data with min amp of 0.1",
-    "fovMinAmp": 0.03, 
-    "exclRadius": 10, 
-    "fovNWindow": 10, 
-    "timezone": "America/Los_Angeles", 
-    "fovMinLeak": 1.0, 
-    "swCorner": [
-        36.58838, 
-        -121.9061
-    ], 
-    "runs": [
-        {
-            "analyses": "#00009F", 
-            "stabClass": "D", 
-            "peaks": "#00FFFF", 
-            "endEtm": 1339354801, 
-            "analyzer": "DEMO2000",
-            "fovs": "#00FF00", 
-            "startEtm": 1339333980, 
-            "wedges": "#FFFF00"
-        }, 
-        {
-            "analyses": "#00009F", 
-            "stabClass": "D", 
-            "peaks": "#FFFF00", 
-            "endEtm": 1339372740, 
-            "analyzer": "DEMO2000", 
-            "fovs": "#FF0000", 
-            "startEtm": 1339355100, 
-            "wedges": "#0000FF"
-        }
-    ], 
-    "peaksMinAmp": 0.1, 
-    "instructions_type": "makeReport", 
-    "neCorner": [
-        36.608225, 
-        -121.88112
-    ], 
-    "template": {
-        "submaps": {
-            "tables": {
-                "analysesTable": true, 
-                "runsTable": true, 
-                "peaksTable": true, 
-                "surveysTable": true
-            },
-            "figures": [
-                {
-                    "peaks": true, 
-                    "wedges": true,
-                    "analyses": true
-                }, 
-                {
-                    "analyses": true,
-                    "peaks": true, 
-                    "baseType": "satellite", 
-                    "wedges": true 
-                }
-            ]
-        }, 
-        "summary": {
-            "tables": {
-                "analysesTable": true, 
-                "runsTable": true, 
-                "peaksTable": true, 
-                "surveysTable": true
-            },
-            "figures": [
-                {
-                    "analyses": true,
-                    "peaks": true, 
-                    "wedges": true,
-                    "submapGrid": true 
-                }
-            ]
-        }
-    }, 
-    "submaps": {
-        "nx": 2, 
-        "ny": 2
+  "exclRadius": 10,
+  "fovMinAmp": 0.03,
+  "fovMinLeak": 1,
+  "fovNWindow": 10,
+  "instructions_type": "makeReport",
+  "makePdf": false,
+  "neCorner": [
+    36.608225,
+    -121.88112
+  ],
+  "peaksMinAmp": 0.1,
+  "runs": [
+    {
+      "analyses": "#00009F",
+      "analyzer": "DEMO2000",
+      "endEtm": 1339354801,
+      "fovs": "#00FF00",
+      "peaks": "#00FFFF",
+      "stabClass": "D",
+      "startEtm": 1339333980,
+      "wedges": "#FFFF00"
+    },
+    {
+      "analyses": "#00009F",
+      "analyzer": "DEMO2000",
+      "endEtm": 1339372740,
+      "fovs": "#FF0000",
+      "peaks": "#FFFF00",
+      "stabClass": "D",
+      "startEtm": 1339355100,
+      "wedges": "#0000FF"
     }
+  ],
+  "submaps": {
+    "nx": 2,
+    "ny": 2
+  },
+  "swCorner": [
+    36.58838,
+    -121.9061
+  ],
+  "template": {
+    "submaps": {
+      "figures": [
+        {
+          "analyses": true,
+          "baseType": "map",
+          "fovs": false,
+          "paths": false,
+          "peaks": true,
+          "submapGrid": false,
+          "wedges": true
+        },
+        {
+          "analyses": true,
+          "baseType": "satellite",
+          "fovs": false,
+          "paths": false,
+          "peaks": true,
+          "submapGrid": false,
+          "wedges": true
+        }
+      ],
+      "tables": {
+        "analysesTable": true,
+        "peaksTable": true,
+        "runsTable": true,
+        "surveysTable": true
+      }
+    },
+    "summary": {
+      "figures": [
+        {
+          "analyses": true,
+          "baseType": "map",
+          "fovs": false,
+          "paths": false,
+          "peaks": true,
+          "submapGrid": true,
+          "wedges": true
+        }
+      ],
+      "tables": {
+        "analysesTable": true,
+        "peaksTable": true,
+        "runsTable": true,
+        "surveysTable": true
+      }
+    }
+  },
+  "timezone": "America/Los_Angeles",
+  "title": "Monterey data with min amp of 0.1"
 }

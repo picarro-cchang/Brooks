@@ -4,41 +4,31 @@
   "fovMinLeak": 1,
   "fovNWindow": 10,
   "instructions_type": "makeReport",
-  "makePdf": false,
+  "makePdf": true,
   "neCorner": [
-    36.62807,
-    -121.88112
+    39.71366,
+    -105.01814
   ],
-  "peaksMinAmp": 0.1,
+  "peaksMinAmp": 0.03,
   "runs": [
     {
       "analyses": "#00009F",
-      "analyzer": "DEMO2000",
-      "endEtm": 1339354800,
+      "analyzer": "CFADS2274",
+      "endEtm": 1354924740,
       "fovs": "#00FF00",
       "peaks": "#00FFFF",
-      "stabClass": "D",
-      "startEtm": 1339333980,
+      "stabClass": "*",
+      "startEtm": 1354838400,
       "wedges": "#FFFF00"
-    },
-    {
-      "analyses": "#00009F",
-      "analyzer": "DEMO2000",
-      "endEtm": 1339372740,
-      "fovs": "#FF0000",
-      "peaks": "#FFFF00",
-      "stabClass": "D",
-      "startEtm": 1339355100,
-      "wedges": "#0000FF"
     }
   ],
   "submaps": {
-    "nx": 1,
-    "ny": 1
+    "nx": 2,
+    "ny": 2
   },
   "swCorner": [
-    36.58838,
-    -121.93108
+    39.67958,
+    -105.04715
   ],
   "template": {
     "submaps": {
@@ -89,6 +79,6 @@
       }
     }
   },
-  "timezone": "America/Los_Angeles",
-  "title": "Monterey data with min amp of 0.1"
+  "timezone": "America/Denver",
+  "title": "Denver data from Dec 7, 2012"
 }

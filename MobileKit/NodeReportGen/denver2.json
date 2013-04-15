@@ -6,39 +6,29 @@
   "instructions_type": "makeReport",
   "makePdf": false,
   "neCorner": [
-    36.62807,
-    -121.88112
+    39.7627,
+    -105.00144
   ],
-  "peaksMinAmp": 0.1,
+  "peaksMinAmp": 0.03,
   "runs": [
     {
       "analyses": "#00009F",
-      "analyzer": "DEMO2000",
-      "endEtm": 1339354800,
+      "analyzer": "CFADS2274",
+      "endEtm": 1354665540,
       "fovs": "#00FF00",
       "peaks": "#00FFFF",
       "stabClass": "D",
-      "startEtm": 1339333980,
+      "startEtm": 1354579200,
       "wedges": "#FFFF00"
-    },
-    {
-      "analyses": "#00009F",
-      "analyzer": "DEMO2000",
-      "endEtm": 1339372740,
-      "fovs": "#FF0000",
-      "peaks": "#FFFF00",
-      "stabClass": "D",
-      "startEtm": 1339355100,
-      "wedges": "#0000FF"
     }
   ],
   "submaps": {
-    "nx": 1,
-    "ny": 1
+    "nx": 2,
+    "ny": 2
   },
   "swCorner": [
-    36.58838,
-    -121.93108
+    39.7262,
+    -105.04337
   ],
   "template": {
     "submaps": {
@@ -89,6 +79,6 @@
       }
     }
   },
-  "timezone": "America/Los_Angeles",
-  "title": "Monterey data with min amp of 0.1"
+  "timezone": "UTC",
+  "title": "Denver data from Dec 4, 2012"
 }

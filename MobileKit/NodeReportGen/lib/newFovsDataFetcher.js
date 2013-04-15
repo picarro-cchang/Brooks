@@ -38,6 +38,9 @@ define(function(require, exports, module) {
         this.filenames = {};
         this.fovError = null;
         this.fovPending = 0;
+        this.maxFovInProgress = 1;
+        this.fovProcessorQueue = [];
+        this.fovInProgress = 0;
     }
 
     util.inherits(FovsDataFetcher, events.EventEmitter);
@@ -188,6 +191,8 @@ define(function(require, exports, module) {
                 processRun(function (err) {
                     if (err) done(err);
                     else {
+                        // Keep count of the number of runs completed. Continue processing
+                        //  next run one-by-one until all are done. Then call postProcess.
                         that.pathParams.runIndex += 1;
                         if (that.pathParams.runIndex<params.runs.length) process.nextTick(next);
                         else postProcess(done);
@@ -210,7 +215,7 @@ define(function(require, exports, module) {
                 var endEtm = run.endEtm;
                 var swCorner = gh.decodeToLatLng(params.swCorner);
                 var neCorner = gh.decodeToLatLng(params.neCorner);
-                // Do the LRT
+                // Do the LRT which fetches the path data using an AnzLog:byEpoch query
                 // console.log("Processing run: " + runIndex);
                 var lrtParams = {'anz':analyzer, 'startEtm':startEtm, 'endEtm':endEtm,
                                  'minLng':swCorner[1], 'minLat':swCorner[0],
@@ -220,6 +225,7 @@ define(function(require, exports, module) {
                                  'limit':'all', 'rtnFmt':'lrt'};
                 var p3LrtFetcher = newP3LrtFetcher(that.p3ApiService, "gdu", "1.0", "AnzLog", lrtParams);
                 var ser = newSerializer(p3LrtFetcher);
+                // The data event is triggered as data show up on the paths
                 ser.on('data', function (data) {
                     onRunData(runIndex, data, function (err) {
                         if (err) done(err);
@@ -312,14 +318,26 @@ define(function(require, exports, module) {
                             that.pathParams.fovProcessors[runIndex] = {};
                         }
                         if (!_.has(that.pathParams.pathBuffers[runIndex],surveyIndex)) {
+                            // Get here if we start on a new survey. This requires firing off a swath
+                            //  processor. Each of the fovProcessors has a set of rows for the paths
+                            //  that are associated with the swath as well as the FovProcessor itself
+
+                            // We should probably enqueue requests for FOV processors so that only a few
+                            //  run at once
                             that.pathParams.pathBuffers[runIndex][surveyIndex] = [];
                             var p = that.pathParams.fovProcessors[runIndex][surveyIndex] =
                                 { "processor": new FovProcessor(that.p3ApiService,surveyName,surveyIndex,
                                     runIndex,params,params.runs[runIndex].stabClass,that.workDir),
                                   "rows":[] };
-                            p.processor.on('error', onFovError);
-                            p.processor.on('end', onFovEnd);
-                            p.processor.start();
+                            that.fovProcessorQueue.push(p.processor);
+                            if (that.fovInProgress < that.maxFovInProgress) {
+                                console.log("Starting FOV processing immediately, length: " + that.fovProcessorQueue.length);
+                                var proc = that.fovProcessorQueue.shift();
+                                that.fovInProgress += 1;
+                                proc.on('error', onFovError);
+                                proc.on('end', onFovEnd);
+                                proc.start();
+                            }
                         }
                         that.pathParams.pathBuffers[runIndex][surveyIndex].push(result);
                         that.pathParams.fovProcessors[runIndex][surveyIndex].rows.push(row);
@@ -337,6 +355,7 @@ define(function(require, exports, module) {
             if (that.pathParams.fovProcessors.hasOwnProperty(runIndex)) {
                 _.keys(that.pathParams.fovProcessors[runIndex]).forEach(function (survey) {
                     var p = that.pathParams.fovProcessors[runIndex][survey];
+                    // We have a fov to run for each survey
                     that.fovPending += 1;
                     p.processor.writeoutFov(p.rows);
                     // console.log("RUN END: " + runIndex + " Survey: " + survey + " Rows: " + p.rows.length);
@@ -378,6 +397,16 @@ define(function(require, exports, module) {
 
         function onFovError(err) {
             that.fovError = err;
+            that.fovPending -= 1;
+            that.fovInProgress -= 1;
+            /*
+            if (that.fovProcessorQueue.length>0 && that.fovInProgress < that.maxFovInProgress) {
+                var proc = that.fovProcessorQueue.shift();
+                that.fovInProgress += 1;
+                proc.start();
+            }
+            */
+            console.log("FOV error, length: " + that.fovProcessorQueue.length + " inProgress: " + that.fovInProgress);
         }
 
         function onFovEnd(fname, records) {
@@ -385,6 +414,15 @@ define(function(require, exports, module) {
                 that.filenames[fname] = records;
             }
             that.fovPending -= 1;
+            that.fovInProgress -= 1;
+            if (that.fovProcessorQueue.length>0 && that.fovInProgress < that.maxFovInProgress) {
+                var proc = that.fovProcessorQueue.shift();
+                that.fovInProgress += 1;
+                console.log("FOV starting on FOV end, length: " + that.fovProcessorQueue.length + " inProgress: " + that.fovInProgress);
+                proc.on('error', onFovError);
+                proc.on('end', onFovEnd);
+                proc.start();
+            }
         }
     };
 
@@ -407,7 +445,8 @@ define(function(require, exports, module) {
         this.lrt_start_ts = null;
         this.lrt_status = null;
         this.lrt_count = null;
-        this.noFov = true;
+        // Sensor logs have no FOV
+        this.hasFov = surveyName.indexOf("DataLog_User_Minimal") >= 0;
         this.workDir = workDir;
     }
 
@@ -415,11 +454,10 @@ define(function(require, exports, module) {
 
     FovProcessor.prototype.start = function () {
         var self = this;
-        if (self.surveyName.indexOf("DataLog_User_Minimal") >= 0) {
+        if (self.hasFov) {
             var lrtParams = {'alog':self.surveyName, 'stabClass':self.stabClass, 'qry':'makeFov',
                              'minAmp':self.fovMinAmp, 'minLeak': self.fovMinLeak,
                              'nWindow':self.fovNWindow};
-            self.noFov = false;
             self.p3Service.get("gdu", "1.0", "AnzLog", lrtParams, function (err, result) {
                 if (err) self.emit("error", err);
                 else {
@@ -443,12 +481,13 @@ define(function(require, exports, module) {
     FovProcessor.prototype.writeoutFov = function (rows) {
         rows = rows.slice(0);
         var self = this;
-        if (self.noFov) self.emit("end");
-        else pollUntilDone();
+        if (self.hasFov) pollUntilDone();
+        else self.emit("end");
 
         // Poll for completion of fov processing task, then fetch the specified rows, taking
         //  into account the nWindow parameter
         function pollUntilDone() {
+            // We may not yet have started the job, so wait around in that case
             if (!self.lrt_parms_hash) setTimeout(pollUntilDone,5000);
             else {
                 // Always make at least one call to getStatus so we know the number of rows in the result
@@ -460,7 +499,10 @@ define(function(require, exports, module) {
                         self.lrt_count = result["count"];
                         console.log("P3Lrt Status: " + self.lrt_status);
                         if (self.lrt_status === rptGenStatus.DONE) fetchData();
-                        else if (self.lrt_status < 0 || self.lrt_status > rptGenStatus.DONE) self.emit("error", new Error("Failure status" + self.lrt_status));
+                        else if (self.lrt_status < 0 || self.lrt_status > rptGenStatus.DONE) {
+                            console.log('FOVPROCESSOR: self.lrt_status', self.lrt_status);
+                            self.emit("error", new Error("Failure status: " + self.lrt_status));
+                        }
                         else setTimeout(pollUntilDone,5000);
                     }
                 });
@@ -488,7 +530,10 @@ define(function(require, exports, module) {
                                 }
                                 process.nextTick(next);
                             }
-                            else self.emit("error", err);
+                            else {
+                                console.log("FOV processor emits: ERROR");
+                                self.emit("error", err);
+                            }
                         }
                         else {
                             while (rows.length > 0 && rows[0] - self.fovNWindow - startRow < batchSize) {
@@ -515,8 +560,14 @@ define(function(require, exports, module) {
                     var fname = 'fov_' + formatNumberLength(self.surveyIndex,5) + "_" +
                                          formatNumberLength(self.runIndex,5) + '.json';
                     jf.appendJson(path.join(self.workDir,fname), results, function (err) {
-                        if (err) self.emit("error",err);
-                        else self.emit("end", fname, results.length);
+                        if (err) {
+                            console.log("FOV processor emits: ERROR");
+                            self.emit("error",err);
+                        }
+                        else {
+                            console.log("FOV processor emits: END");
+                            self.emit("end", fname, results.length);
+                        }
                     });
                 }
             }

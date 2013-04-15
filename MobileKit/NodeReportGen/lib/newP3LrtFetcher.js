@@ -77,7 +77,7 @@ define(function(require, exports, module) {
                     that.lrt_count = result["count"];
                     console.log("P3Lrt Status: " + that.lrt_status);
                     if (that.lrt_status === rptGenStatus.DONE) fetchFirst();
-                    else if (that.lrt_status < 0 || that.lrt_status > rptGenStatus.DONE) that.emit("error", new Error("Failure status" + that.lrt_status));
+                    else if (that.lrt_status < 0 || that.lrt_status > rptGenStatus.DONE) that.emit("error", new Error("Failure status: " + that.lrt_status));
                     else setTimeout(pollUntilDone,5000);
                 }
             });

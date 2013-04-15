@@ -6,39 +6,29 @@
   "instructions_type": "makeReport",
   "makePdf": false,
   "neCorner": [
-    36.62807,
-    -121.88112
+    40.62425,
+    -75.46569
   ],
   "peaksMinAmp": 0.1,
   "runs": [
     {
       "analyses": "#00009F",
-      "analyzer": "DEMO2000",
-      "endEtm": 1339354800,
+      "analyzer": "FDDS2010",
+      "endEtm": 1365825540,
       "fovs": "#00FF00",
       "peaks": "#00FFFF",
-      "stabClass": "D",
-      "startEtm": 1339333980,
+      "stabClass": "*",
+      "startEtm": 1364961600,
       "wedges": "#FFFF00"
-    },
-    {
-      "analyses": "#00009F",
-      "analyzer": "DEMO2000",
-      "endEtm": 1339372740,
-      "fovs": "#FF0000",
-      "peaks": "#FFFF00",
-      "stabClass": "D",
-      "startEtm": 1339355100,
-      "wedges": "#0000FF"
     }
   ],
   "submaps": {
-    "nx": 1,
-    "ny": 1
+    "nx": 10,
+    "ny": 10
   },
   "swCorner": [
-    36.58838,
-    -121.93108
+    40.57615,
+    -75.52929
   ],
   "template": {
     "submaps": {
@@ -89,6 +79,6 @@
       }
     }
   },
-  "timezone": "America/Los_Angeles",
-  "title": "Monterey data with min amp of 0.1"
+  "timezone": "America/New_York",
+  "title": "Allentown 2013-04-03 to 2013-04-12"
 }

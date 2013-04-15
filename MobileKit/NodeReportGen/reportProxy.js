@@ -197,7 +197,7 @@
     } // resourceGet
 
     function getAnalyzers(req, res) {
-        res.send([{ANALYZER: "DEMO2000"}, {ANALYZER: "FCDS2008"},
+        res.send([{ANALYZER: "DEMO2000"}, {ANALYZER: "FCDS2008"}, {ANALYZER: "FDDS2010"},
                   {ANALYZER: "CFADS2274"}, {ANALYZER: "CFADS2276"}]);
     }
 
