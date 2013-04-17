@@ -4,31 +4,31 @@
   "fovMinLeak": 1,
   "fovNWindow": 10,
   "instructions_type": "makeReport",
-  "makePdf": true,
+  "makePdf": false,
   "neCorner": [
-    39.71366,
-    -105.01814
+    40.6263,
+    -75.435
   ],
-  "peaksMinAmp": 0.03,
+  "peaksMinAmp": 1,
   "runs": [
     {
       "analyses": "#00009F",
-      "analyzer": "CFADS2274",
-      "endEtm": 1354924740,
+      "analyzer": "FDDS2010",
+      "endEtm": 1365825540,
       "fovs": "#00FF00",
       "peaks": "#00FFFF",
-      "stabClass": "D",
-      "startEtm": 1354838400,
+      "stabClass": "*",
+      "startEtm": 1364961600,
       "wedges": "#FFFF00"
     }
   ],
   "submaps": {
-    "nx": 2,
-    "ny": 2
+    "nx": 10,
+    "ny": 10
   },
   "swCorner": [
-    39.67958,
-    -105.04715
+    40.5514,
+    -75.56
   ],
   "template": {
     "submaps": {
@@ -79,6 +79,6 @@
       }
     }
   },
-  "timezone": "America/Denver",
-  "title": "Denver data from Dec 7, 2012"
+  "timezone": "America/New_York",
+  "title": "Allentown 2013-04-03 to 2013-04-12 larger area"
 }

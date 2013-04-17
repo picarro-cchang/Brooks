@@ -52,7 +52,10 @@ define(function(require, exports, module) {
             },
             analyzeStatus: function (err, status, msg)  {
                 var that = this;
-                if (status < 0) {
+                if (status === rptGenStatus.TASK_NOT_FOUND) {
+                    this.set({'msg': 'Report not found or expired - resubmit', 'status': status});
+                }
+                else if (status < 0) {
                     this.set({'msg': msg, 'status': status});
                 }
                 else if (err) {

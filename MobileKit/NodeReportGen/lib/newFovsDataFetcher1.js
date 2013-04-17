@@ -386,6 +386,7 @@ define(function(require, exports, module) {
                     var row  = m.row;
                     var instStatus = m.INST_STATUS;
                     var surveyName = _.isUndefined(m.LOGNAME) ? "" : m.LOGNAME;
+                    if (surveyName.indexOf("DataLog_User_Minimal") < 0) continue;
                     var surveyIndex = that.surveys.getIndex(surveyName);
                     var pathType = updatePathType(mask, instStatus);
                     var runIndex = that.pathParams.runIndex;

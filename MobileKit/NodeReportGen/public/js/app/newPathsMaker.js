@@ -1,4 +1,4 @@
-/* newPathsMaker.js returns an object for incrementally rendering paths and fields off view  */
+/* newPathsMaker.js returns an object for incrementally rendering paths and fields of view  */
 
 define (['underscore', 'app/geohash', 'app/utils', 'app/reportGlobals'],
 function ( _, gh, utils, REPORT) {
@@ -79,9 +79,9 @@ function ( _, gh, utils, REPORT) {
             else { // Render a swath polygon
                 var fovColor = utils.hex2RGB(fovsColorByRun(p.run));
                 that.ctxFovs.strokeStyle = "rgba(" + fovColor[0] + "," + fovColor[1] + "," +
-                                                     fovColor[2] + ", 0.4 )";
+                                                     fovColor[2] + ", 0.25 )";
                 that.ctxFovs.fillStyle = "rgba(" + fovColor[0] + "," + fovColor[1] + "," +
-                                                   fovColor[2] + ", 0.5 )";
+                                                   fovColor[2] + ", 0.2 )";
 
                 if (p.pathType === 0 && p.ex !== undefined && that.lastP.ex !== undefined) {
                     that.ctxFovs.beginPath();

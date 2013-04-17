@@ -239,6 +239,7 @@ define(function(require, exports, module) {
                 for (var i=0; i<nLoops; i++) {
                     var m = data.shift().document;
                     var surveyName = _.isUndefined(m.LOGNAME) ? "" : m.LOGNAME;
+                    if (surveyName.indexOf("DataLog_User_Minimal") < 0) continue;
                     var surveyIndex = that.surveys.getIndex(surveyName);
                     var runIndex = that.runIndex;
                     for (var j=0; j<that.dataKeys.length; j++) {

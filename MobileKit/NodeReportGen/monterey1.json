@@ -4,22 +4,32 @@
   "fovMinLeak": 1,
   "fovNWindow": 10,
   "instructions_type": "makeReport",
-  "makePdf": true,
+  "makePdf": false,
   "neCorner": [
-    39.71366,
-    -105.01814
+    36.62807,
+    -121.88112
   ],
-  "peaksMinAmp": 0.03,
+  "peaksMinAmp": 0.1,
   "runs": [
     {
       "analyses": "#00009F",
-      "analyzer": "CFADS2274",
-      "endEtm": 1354924740,
+      "analyzer": "FCDS2008",
+      "endEtm": 1339354800,
       "fovs": "#00FF00",
       "peaks": "#00FFFF",
       "stabClass": "D",
-      "startEtm": 1354838400,
+      "startEtm": 1339333980,
       "wedges": "#FFFF00"
+    },
+    {
+      "analyses": "#00009F",
+      "analyzer": "FCDS2008",
+      "endEtm": 1339372740,
+      "fovs": "#FF0000",
+      "peaks": "#FFFF00",
+      "stabClass": "D",
+      "startEtm": 1339355100,
+      "wedges": "#0000FF"
     }
   ],
   "submaps": {
@@ -27,8 +37,8 @@
     "ny": 2
   },
   "swCorner": [
-    39.67958,
-    -105.04715
+    36.58838,
+    -121.93108
   ],
   "template": {
     "submaps": {
@@ -79,6 +89,6 @@
       }
     }
   },
-  "timezone": "America/Denver",
-  "title": "Denver data from Dec 7, 2012"
+  "timezone": "America/Los_Angeles",
+  "title": "FCDS2008 Monterey data with min amp of 0.1"
 }

@@ -29,7 +29,7 @@ function (CNSNT,       gh,            utils,       REPORT) {
                 var windSdev = peaks[i].attributes.U;
                 xy = report.xform(lng, lat);
                 x = xy[0], y = xy[1];
-                ctxWedges.fillStyle = "rgba(" + wedgeColor[0] + "," + wedgeColor[1] + "," + wedgeColor[2] + ",0.7)";
+                ctxWedges.fillStyle = "rgba(" + wedgeColor[0] + "," + wedgeColor[1] + "," + wedgeColor[2] + ",0.5)";
                 if (report.inView(xy)) {
                     var radius = 50.0 / report.mpp;
                     var minBearing, maxBearing;

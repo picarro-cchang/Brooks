@@ -321,6 +321,7 @@ define(function(require, exports, module) {
                     var row  = m.row;
                     var instStatus = m.INST_STATUS;
                     var surveyName = _.isUndefined(m.LOGNAME) ? "" : m.LOGNAME;
+                    if (surveyName.indexOf("DataLog_User_Minimal") < 0) continue;
 
                     var surveyIndex = that.surveys.getIndex(surveyName);
                     var pathType = updatePathType(mask, instStatus);
@@ -471,8 +472,6 @@ define(function(require, exports, module) {
         this.lrt_start_ts = null;
         this.lrt_status = null;
         this.lrt_count = null;
-        // Sensor logs have no FOV
-        this.hasFov = surveyName.indexOf("DataLog_User_Minimal") >= 0;
         this.workDir = workDir;
     }
 
@@ -480,35 +479,32 @@ define(function(require, exports, module) {
 
     FovProcessor.prototype.start = function () {
         var self = this;
-        if (self.hasFov) {
-            var lrtParams = {'alog':self.surveyName, 'stabClass':self.stabClass, 'qry':'makeFov',
-                             'minAmp':self.fovMinAmp, 'minLeak': self.fovMinLeak,
-                             'nWindow':self.fovNWindow};
-            self.p3Service.get("gdu", "1.0", "AnzLog", lrtParams, function (err, result) {
-                if (err) self.emit("error", err);
-                else {
-                    if (result["lrt_start_ts"] === result["request_ts"]) {
-                        console.log("This is a new request, made at " + result["request_ts"]);
-                    }
-                    else {
-                        console.log("This is a duplicate of a request made at " + result["lrt_start_ts"]);
-                    }
-                    self.lrt_status = result["status"];
-                    self.lrt_parms_hash = result["lrt_parms_hash"];
-                    self.lrt_start_ts = result["lrt_start_ts"];
-                    console.log("MAKEFOV P3Lrt Status: " + self.lrt_status + self.lrt_parms_hash + '/' + self.lrt_start_ts);
+        var lrtParams = {'alog':self.surveyName, 'stabClass':self.stabClass, 'qry':'makeFov',
+                         'minAmp':self.fovMinAmp, 'minLeak': self.fovMinLeak,
+                         'nWindow':self.fovNWindow};
+        self.p3Service.get("gdu", "1.0", "AnzLog", lrtParams, function (err, result) {
+            if (err) self.emit("error", err);
+            else {
+                if (result["lrt_start_ts"] === result["request_ts"]) {
+                    console.log("This is a new request, made at " + result["request_ts"]);
                 }
-            });
-            console.log("NEW FOVPROCESSOR: " + self.surveyName + " " + self.surveyIndex + " " + self.runIndex +
-                " " + self.fovMinAmp + " " + self.stabClass);
-        }
+                else {
+                    console.log("This is a duplicate of a request made at " + result["lrt_start_ts"]);
+                }
+                self.lrt_status = result["status"];
+                self.lrt_parms_hash = result["lrt_parms_hash"];
+                self.lrt_start_ts = result["lrt_start_ts"];
+                console.log("MAKEFOV P3Lrt Status: " + self.lrt_status + self.lrt_parms_hash + '/' + self.lrt_start_ts);
+            }
+        });
+        console.log("NEW FOVPROCESSOR: " + self.surveyName + " " + self.surveyIndex + " " + self.runIndex +
+            " " + self.fovMinAmp + " " + self.stabClass);
     };
 
     FovProcessor.prototype.writeoutFov = function (rows) {
         rows = rows.slice(0);
         var self = this;
-        if (self.hasFov) pollUntilDone();
-        else self.emit("end");
+        pollUntilDone();
 
         // Poll for completion of fov processing task, then fetch the specified rows, taking
         //  into account the nWindow parameter

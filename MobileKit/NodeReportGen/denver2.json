@@ -6,19 +6,19 @@
   "instructions_type": "makeReport",
   "makePdf": false,
   "neCorner": [
-    39.7627,
-    -105.00144
+    39.71366,
+    -105.01814
   ],
   "peaksMinAmp": 0.03,
   "runs": [
     {
       "analyses": "#00009F",
       "analyzer": "CFADS2274",
-      "endEtm": 1354665540,
+      "endEtm": 1354924740,
       "fovs": "#00FF00",
       "peaks": "#00FFFF",
       "stabClass": "D",
-      "startEtm": 1354579200,
+      "startEtm": 1354838400,
       "wedges": "#FFFF00"
     }
   ],
@@ -27,8 +27,8 @@
     "ny": 2
   },
   "swCorner": [
-    39.7262,
-    -105.04337
+    39.67958,
+    -105.04715
   ],
   "template": {
     "submaps": {
@@ -79,6 +79,6 @@
       }
     }
   },
-  "timezone": "UTC",
-  "title": "Denver data from Dec 4, 2012"
+  "timezone": "America/Denver",
+  "title": "Denver data from Dec 7, 2012"
 }
