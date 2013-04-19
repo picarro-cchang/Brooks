@@ -485,16 +485,35 @@ define(function(require, exports, module) {
         self.p3Service.get("gdu", "1.0", "AnzLog", lrtParams, function (err, result) {
             if (err) self.emit("error", err);
             else {
+                self.lrt_status = result["status"];
                 if (result["lrt_start_ts"] === result["request_ts"]) {
                     console.log("This is a new request, made at " + result["request_ts"]);
+                    self.lrt_parms_hash = result["lrt_parms_hash"];
+                    self.lrt_start_ts = result["lrt_start_ts"];
+                    console.log("MAKEFOV P3Lrt Status: " + self.lrt_status + " " + self.lrt_parms_hash + '/' + self.lrt_start_ts);
                 }
                 else {
                     console.log("This is a duplicate of a request made at " + result["lrt_start_ts"]);
+                    if (self.lrt_status < 0 || self.lrt_status > rptGenStatus.DONE) {
+                        lrtParams.forceLrt = true;
+                        self.p3Service.get("gdu", "1.0", "AnzLog", lrtParams, function (err, result) {
+                            if (err) self.emit("error", err);
+                            else {
+                                self.lrt_status = result["status"];
+                                console.log("Since previous request failed, it is being resubmitted at " + result["request_ts"]);
+                                console.log("P3Lrt Status: " + self.lrt_status);
+                                self.lrt_parms_hash = result["lrt_parms_hash"];
+                                self.lrt_start_ts = result["lrt_start_ts"];
+                                console.log("MAKEFOV P3Lrt Status: " + self.lrt_status + " " + self.lrt_parms_hash + '/' + self.lrt_start_ts);
+                            }
+                        });
+                    }
+                    else {
+                        self.lrt_parms_hash = result["lrt_parms_hash"];
+                        self.lrt_start_ts = result["lrt_start_ts"];
+                        console.log("MAKEFOV P3Lrt Status: " + self.lrt_status + " " + self.lrt_parms_hash + '/' + self.lrt_start_ts);
+                    }
                 }
-                self.lrt_status = result["status"];
-                self.lrt_parms_hash = result["lrt_parms_hash"];
-                self.lrt_start_ts = result["lrt_start_ts"];
-                console.log("MAKEFOV P3Lrt Status: " + self.lrt_status + self.lrt_parms_hash + '/' + self.lrt_start_ts);
             }
         });
         console.log("NEW FOVPROCESSOR: " + self.surveyName + " " + self.surveyIndex + " " + self.runIndex +

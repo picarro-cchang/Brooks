@@ -52,17 +52,38 @@ define(function(require, exports, module) {
             that.p3service.get(that.svc, that.ver, that.rsc, that.params, function (err, result) {
                 if (err) that.emit("error", err);
                 else {
+                    that.lrt_status = result["status"];
                     if (result["lrt_start_ts"] === result["request_ts"]) {
                         console.log("This is a new request, made at " + result["request_ts"]);
+                        console.log("P3Lrt Status: " + that.lrt_status);
+                        that.lrt_parms_hash = result["lrt_parms_hash"];
+                        that.lrt_start_ts = result["lrt_start_ts"];
+                        pollUntilDone();
                     }
                     else {
                         console.log("This is a duplicate of a request made at " + result["lrt_start_ts"]);
+                        if (that.lrt_status < 0 || that.lrt_status > rptGenStatus.DONE) {
+                            // Retry with the force flag set
+                            that.params.forceLrt = true;
+                            that.p3service.get(that.svc, that.ver, that.rsc, that.params, function (err, result) {
+                                if (err) that.emit("error", err);
+                                else {
+                                    that.lrt_status = result["status"];
+                                    console.log("Since previous request failed, it is being resubmitted at " + result["request_ts"]);
+                                    console.log("P3Lrt Status: " + that.lrt_status);
+                                    that.lrt_parms_hash = result["lrt_parms_hash"];
+                                    that.lrt_start_ts = result["lrt_start_ts"];
+                                    pollUntilDone();
+                                }
+                            });
+                        }
+                        else {
+                            console.log("P3Lrt Status: " + that.lrt_status);
+                            that.lrt_parms_hash = result["lrt_parms_hash"];
+                            that.lrt_start_ts = result["lrt_start_ts"];
+                            pollUntilDone();
+                        }
                     }
-                    that.lrt_status = result["status"];
-                    console.log("P3Lrt Status: " + that.lrt_status);
-                    that.lrt_parms_hash = result["lrt_parms_hash"];
-                    that.lrt_start_ts = result["lrt_start_ts"];
-                    pollUntilDone();
                 }
             });
         }
