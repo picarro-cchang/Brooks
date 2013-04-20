@@ -42,6 +42,7 @@ define(function(require, exports, module) {
                             svc: "gdu",
                             version: "1.0",
                             resource: "SurveyorRpt",
+                            api_timeout: 30.0,
                             jsonp: false,
                             debug: false};
             REPORT.SurveyorRpt = new p3restapi.p3RestApi(initArgs);
@@ -54,6 +55,7 @@ define(function(require, exports, module) {
                          svc: "gdu",
                          version: "1.0",
                          resource: "Utilities",
+                         api_timeout: 30.0,
                          jsonp: false,
                          debug: false};
             //REPORT.Utilities = new p3restapi.p3RestApi(initArgs);

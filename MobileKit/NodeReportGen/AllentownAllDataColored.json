@@ -1,0 +1,134 @@
+{
+  "exclRadius": 10,
+  "fovMinAmp": 0.03,
+  "fovMinLeak": 1,
+  "fovNWindow": 10,
+  "instructions_type": "makeReport",
+  "makePdf": false,
+  "neCorner": [
+    40.63558,
+    -75.41891
+  ],
+  "peaksMinAmp": 0.1,
+  "runs": [
+    {
+      "analyses": "#000000",
+      "analyzer": "FDDS2010",
+      "endEtm": 1365163200,
+      "fovs": "#FFFF00",
+      "peaks": "#FFFF00",
+      "stabClass": "*",
+      "startEtm": 1365112800,
+      "wedges": "#0000FF"
+    },
+    {
+      "analyses": "#000000",
+      "analyzer": "FDDS2010",
+      "endEtm": 1365508800,
+      "fovs": "#00FF00",
+      "peaks": "#00FF00",
+      "stabClass": "*",
+      "startEtm": 1365458400,
+      "wedges": "#0000FF"
+    },
+    {
+      "analyses": "#000000",
+      "analyzer": "FDDS2010",
+      "endEtm": 1365595200,
+      "fovs": "#00FFFF",
+      "peaks": "#00FFFF",
+      "stabClass": "*",
+      "startEtm": 1365544800,
+      "wedges": "#0000FF"
+    },
+    {
+      "analyses": "#000000",
+      "analyzer": "FDDS2010",
+      "endEtm": 1365681600,
+      "fovs": "#FF00FF",
+      "peaks": "#FF00FF",
+      "stabClass": "*",
+      "startEtm": 1365631200,
+      "wedges": "#0000FF"
+    },
+    {
+      "analyses": "#000000",
+      "analyzer": "FDDS2010",
+      "endEtm": 1365768000,
+      "fovs": "#FFFFFF",
+      "peaks": "#FFFFFF",
+      "stabClass": "*",
+      "startEtm": 1365717600,
+      "wedges": "#0000FF"
+    },
+    {
+      "analyses": "#000000",
+      "analyzer": "FDDS2010",
+      "endEtm": 1366200000,
+      "fovs": "#FF0000",
+      "peaks": "#FF0000",
+      "stabClass": "*",
+      "startEtm": 1366149600,
+      "wedges": "#0000FF"
+    }
+  ],
+  "submaps": {
+    "nx": 5,
+    "ny": 5
+  },
+  "swCorner": [
+    40.5514,
+    -75.56
+  ],
+  "template": {
+    "submaps": {
+      "figures": [
+        {
+          "analyses": true,
+          "baseType": "map",
+          "fovs": false,
+          "paths": true,
+          "peaks": true,
+          "submapGrid": false,
+          "wedges": true
+        },
+        {
+          "analyses": true,
+          "baseType": "satellite",
+          "fovs": true,
+          "paths": true,
+          "peaks": true,
+          "submapGrid": false,
+          "wedges": true
+        }
+      ],
+      "tables": {
+        "analysesTable": true,
+        "peaksTable": true,
+        "runsTable": true,
+        "surveysTable": true
+      }
+    },
+    "summary": {
+      "figures": [
+        {
+          "analyses": true,
+          "baseType": "map",
+          "fovs": false,
+          "paths": true,
+          "peaks": true,
+          "submapGrid": true,
+          "wedges": true
+        }
+      ],
+      "tables": {
+        "analysesTable": true,
+        "peaksTable": true,
+        "runsTable": true,
+        "surveysTable": true
+      }
+    }
+  },
+  "timezone": "America/New_York",
+  "title": "Allentown 2013-04-03 to 2013-04-17 all data, colored"
+}
