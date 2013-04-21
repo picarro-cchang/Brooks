@@ -14,7 +14,6 @@ Copyright (c) 2012 Picarro, Inc. All rights reserved
 """
 import fnmatch
 from numpy import *
-import scipy.stats
 import os
 import sys
 from optparse import OptionParser
@@ -22,11 +21,6 @@ import time
 import datetime
 import traceback
 from Host.Common.SwathProcessor import processGen
-
-try:
-    from collections import namedtuple
-except:
-    from Host.Common.namedtuple import namedtuple
 
 import urllib2
 import urllib
