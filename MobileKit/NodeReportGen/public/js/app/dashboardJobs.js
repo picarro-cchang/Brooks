@@ -15,6 +15,47 @@ define(function(require, exports, module) {
     require('localStorage');
     require('jquery.dataTables');
 
+    $.fn.dataTableExt.oApi.fnDisplayRow = function ( oSettings, nRow )
+    {
+        // Account for the "display" all case - row is already displayed
+        if ( oSettings._iDisplayLength == -1 )
+        {
+            return;
+        }
+        // Find the node in the table
+        var iPos = -1;
+        for( var i=0, iLen=oSettings.aiDisplay.length ; i<iLen ; i++ )
+        {
+            if( oSettings.aoData[ oSettings.aiDisplay[i] ].nTr == nRow )
+            {
+                iPos = i;
+                break;
+            }
+        }
+        // Alter the start point of the paging display
+        if( iPos >= 0 )
+        {
+            oSettings._iDisplayStart = ( Math.floor(i / oSettings._iDisplayLength) ) * oSettings._iDisplayLength;
+            this.oApi._fnCalculateEnd( oSettings );
+        }
+        this.oApi._fnDraw( oSettings );
+    };
+
+    $.fn.dataTableExt.oApi.fnStandingRedraw = function(oSettings, action) {
+        if(oSettings.oFeatures.bServerSide === false){
+            var before = oSettings._iDisplayStart;
+            if (action !== undefined) {
+                action();
+            }
+            oSettings.oApi._fnReDraw(oSettings);
+            // iDisplayStart has been reset to zero - so lets change it back
+            oSettings._iDisplayStart = before;
+            oSettings.oApi._fnCalculateEnd(oSettings);
+        }
+        // draw the 'current' page
+        oSettings.oApi._fnDraw(oSettings);
+    };
+
     function dashboardJobsInit() {
         _.templateSettings = {
           evaluate : /\{\[([\s\S]+?)\]\}/g,
@@ -159,20 +200,23 @@ define(function(require, exports, module) {
                 var el = $(e.currentTarget);
                 this.showAll = true;
                 el.html('Show Selected').addClass('showSelected').removeClass('showAll');
-                this.jobTable.fnDraw();
+                this.jobTable.fnStandingRedraw();
             },
             onShowSelected: function (e) {
                 var el = $(e.currentTarget);
                 this.showAll = false;
                 el.html('Show All').addClass('showAll').removeClass('showSelected');
-                this.jobTable.fnDraw();
+                this.jobTable.fnStandingRedraw();
             },
             onRowCheck: function (e) {
                 // Find the model associated with the row
                 var el = $(e.currentTarget);
                 var cid = el.data("cid");
                 var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: cid});
-                job.set({shown: el.is(':checked')});
+
+                this.jobTable.fnStandingRedraw(function () {
+                    job.set({shown: el.is(':checked')});
+                });
             },
             addJob: function (model) {
                 DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(model), action:'add'},
@@ -232,10 +276,11 @@ define(function(require, exports, module) {
             highLightJob: function (model) {
                 var row = this.cidToRow[model.cid];
                 model.set({"shown": true});
-                this.jobTable.fnDraw();
+                this.jobTable.fnStandingRedraw();
                 this.instrFileView.$el.find(".file").val(model.get("startLocalTime"));
                 if (this.selectedRow) $(this.selectedRow).removeClass('row_selected');
                 this.selectedRow = $(row).addClass('row_selected');
+                this.jobTable.fnDisplayRow(this.selectedRow[0]);
             },
             onPdfLink: function (e) {
                 var pdfUrl = '/' + $(e.currentTarget).data('hash') + '/' + $(e.currentTarget).data('directory') + '/report.pdf';

@@ -624,6 +624,10 @@ var p3RestApi = function(initArgs) {
             break;
         }
         
+        if (jsonp === true) {
+            my_qryparms_obj['rtnOnTktError'] = "1";
+        }
+        
         if (request_obj.hasOwnProperty("existing_tkt")) {
             var my_existing_tkt = request_obj.existing_tkt;
         } else {
@@ -672,7 +676,7 @@ var p3RestApi = function(initArgs) {
                 break;
             }
             return rest_rq;
-        } 
+        }; //buildCallRequest
         
         var tryWithInitialTicket = function(completeCbFn) {
             p3restapi_logger("getpost.tryWithInitialTicket:", "debug");
@@ -683,7 +687,7 @@ var p3RestApi = function(initArgs) {
                 
                 // errorFn
                 , function(err) {
-                    p3restapi_logger("getpost.tryWithInitialTicket.callRest errorFn:", "debug");
+                    p3restapi_logger("getpost.tryWithInitialTicket.callRest errorFn: err", err, "debug");
                 
                     var tkt_error = false;
                     if (typeof(err) === 'string') {
@@ -709,12 +713,39 @@ var p3RestApi = function(initArgs) {
             
                 // SuccessFn
                 , function(rcode, robj) {
-                    p3restapi_logger("getpost.tryWithInitialTicket.callRest successFn:", "debug");
+                    p3restapi_logger("getpost.tryWithInitialTicket.callRest successFn: rcode: ", rcode, "debug");
                     
-                    get_cntl["request_is_done"] = true;
-                    get_cntl["request_rcode"] = rcode;
-                    get_cntl["request_robj"] = robj;
-                    completeCbFn();
+                    // 299 is equivilent to 403 ticket error (for jsonp calls)
+                    if ((rcode === "299") || (rcode === 299)) {
+                        
+                        var tkt_error = false;
+                        if (typeof(err) === 'string') {
+                            if (err.indexOf("invalid ticket") >= 0) {
+                                tkt_error = true
+                            }
+                        } else {
+                            try {
+                                var estr = JSON.stringify(err);
+                                if (estr.indexOf("invalid ticket") >= 0) {
+                                    tkt_error = true
+                                }
+                            } catch(e) {
+                                tkt_error = false;
+                            }
+                        }
+                        if (tkt_error === false) {
+                            get_cntl["request_is_done"] = true;
+                            get_cntl["request_error"] = err;
+                        }
+                        completeCbFn();
+                        
+                    } else {
+                    
+	                    get_cntl["request_is_done"] = true;
+	                    get_cntl["request_rcode"] = rcode;
+	                    get_cntl["request_robj"] = robj;
+	                    completeCbFn();
+	                }
                 }
             );
         };// tryWithInitialTicket
@@ -930,7 +961,7 @@ var p3RestApi = function(initArgs) {
                                         }
                                         fn(fn_req,e,s);
                                     };
-        }
+        }; // setup
         setup(rsc,qry);
     }
     

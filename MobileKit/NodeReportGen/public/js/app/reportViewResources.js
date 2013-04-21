@@ -116,8 +116,8 @@ define(function(require, exports, module) {
                 that.trigger("init",{"context": "map"});
                 image.onload = function () {
                     var ctx = document.createElement("canvas").getContext("2d");
-                    ctx.canvas.height = this.height + that.padY;
-                    ctx.canvas.width = this.width + that.padX;
+                    ctx.canvas.height = this.height + 2*that.padY;
+                    ctx.canvas.width = this.width + 2*that.padX;
                     ctx.drawImage(this, that.padX, that.padY);
                     that.contexts["map"] = ctx;
                     that.trigger("change",{"context": "map"});
@@ -134,8 +134,8 @@ define(function(require, exports, module) {
                 that.trigger("init",{"context": "satellite"});
                 image.onload = function () {
                     var ctx = document.createElement("canvas").getContext("2d");
-                    ctx.canvas.height = this.height + that.padY;
-                    ctx.canvas.width = this.width + that.padX;
+                    ctx.canvas.height = this.height + 2*that.padY;
+                    ctx.canvas.width = this.width + 2*that.padX;
                     ctx.drawImage(this, that.padX, that.padY);
                     that.contexts["satellite"] = ctx;
                     that.trigger("change",{"context": "satellite"});
