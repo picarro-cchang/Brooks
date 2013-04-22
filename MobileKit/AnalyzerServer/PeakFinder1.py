@@ -1,7 +1,6 @@
 import fnmatch
 from numpy import *
 import os
-import peakF
 import sys
 from optparse import OptionParser
 import time
@@ -651,7 +650,7 @@ class PeakFinder(object):
                     x0, y0 = x, y
                     if jump < JUMP_MAX:
                         dist += jump
-                        yield DataTuple(dist, **entry)
+                        yield DataTuple(dist,**entry)
                     else:
                         lat_ref, lng_ref = None, None
             except:
@@ -662,7 +661,7 @@ class PeakFinder(object):
     # Space-scale analysis
     #######################################################################
 
-    def spaceScale(self, source, dx, t_0, nlevels, tfactor):
+    def spaceScale(self,source,dx,t_0,nlevels,tfactor):
         """Analyze source at a variety of scales using the differences of Gaussians of
         different scales. We define
             g(x;t) = exp(-0.5*x**2/t)/sqrt(2*pi*t)
@@ -672,6 +671,11 @@ class PeakFinder(object):
         on a grid with an odd number of points which just covers the interval
         [-5*sqrt(tfactor*t_i),5*sqrt(tfactor*t_i)]
         """
+        # The following is true when the tape recorder is playing back
+        collecting = lambda v: abs(v-round(v))<1e-4 and (int(round(v)) & 1) == 1
+
+        # The following is true when the surveyor is inactive
+        inactive = lambda v: abs(v-round(v))<1 and ((int(round(v)) >> 4) & 1) == 1
 
         hList = []
         kernelList = []
@@ -681,79 +685,111 @@ class PeakFinder(object):
         for i in range(nlevels):
             h = int(ceil(5*sqrt(tb)/dx))
             hList.append(h)
-            x = arange(-h, h+1)*dx
+            x = arange(-h,h+1)*dx
             kernel = amp*(exp(-0.5*x*x/ta)/sqrt(2*pi*ta) - exp(-0.5*x*x/tb)/sqrt(2*pi*tb))*dx
             kernelList.append(kernel)
             scaleList.append(sqrt(ta*tb))
             ta, tb = tb, tfactor*tb
-        hList = asarray(hList)
-        kernelList = asarray(kernelList)
         scaleList = asarray(scaleList)
-        # The size of the kernels get larger with i. We wish to pack them into a 2d rectangular array
-        maxKernel = len(kernelList[-1])
-        kernels = zeros((nlevels, maxKernel), dtype=float)
-        for i in range(nlevels):
-            kernels[i][:2*hList[i]+1] = kernelList[i]
-
         # Define the computation buffer in which the space-scale representation
         #  is generated
         hmax = hList[-1]
         npoints = 2*hmax+4
-
+        def checkPeak(level,pos,minAmpl=0.003):
+            """Checks if the specified location in the ssbuff array is a peak
+            relative to its eight neighbors"""
+            col = pos % npoints
+            v = ssbuff[level,col]
+            if v<minAmpl: return False,0
+            colp = col + 1
+            if colp>=npoints: colp -= npoints
+            colm = col - 1
+            if colm<0: colm += npoints
+            isPeak = (v>ssbuff[level+1,colp]) and (v>ssbuff[level+1,col]) and (v>ssbuff[level+1,colm]) and \
+                     (v>ssbuff[level,colp])   and (v>ssbuff[level,colm])  and \
+                     (level==0 or ((v>ssbuff[level-1,colp]) and (v>ssbuff[level-1,col]) and (v>ssbuff[level-1,colm])))
+            return isPeak, col
         initBuff = True
         PeakTuple = None
         cstart = hmax+3
-        init = True
         for data in source:
-            if init:
-                PeakTuple = namedtuple("PeakTuple", data._fields + ("AMPLITUDE", "SIGMA"))
-                fields = list(data._fields)
-                dataLen = len(fields)
-                concIndex = fields.index('CH4')
-                etmIndex = fields.index('EPOCH_TIME')
-                distIndex = fields.index('DISTANCE')
-                valveIndex = fields.index('ValveMask')
-                init = False
-
-            dist = data[distIndex]
+            dist = data.DISTANCE
             if dist is None:
                 initBuff = True
                 continue
-            # Initialize the buffer
-
+            # Initialize
             if initBuff:
-                ssbuff = zeros((nlevels, npoints), float)
+                ssbuff = zeros((nlevels,npoints),float)
                 # Define a cache for the data so that the
                 #  coordinates and value of peaks can be looked up
-                cache = zeros((len(data), npoints), float)
+                cache = zeros((len(data),npoints),float)
                 # c is the where in ssbuff the center of the kernel is placed
                 c = cstart
                 # z is the column in ssbuff which has to be set to zero before adding
                 #  in the kernels
                 z = 0
                 for i in range(nlevels):
-                    ssbuff[i, c - hList[i]:c + hList[i] + 1] = -data[concIndex]*cumsum(kernels[i][0:2*hList[i]+1])
+                    ssbuff[i,c-hList[i]:c+hList[i]+1] = -data.CH4*cumsum(kernelList[i])
                 initBuff = False
+            if PeakTuple is None:
+                PeakTuple = namedtuple("PeakTuple",data._fields + ("AMPLITUDE","SIGMA"))
 
+            cache[:,c] = data
+            etmIndex  = list(data._fields).index('EPOCH_TIME')
+            distIndex  = list(data._fields).index('DISTANCE')
+            valveIndex = list(data._fields).index('ValveMask')
+            # Zero out the old data
+            ssbuff[:,z] = 0
             # Do the convolution by adding in the current methane concentration
             #  multiplied by the kernel at each level
-            #peaks = self.findPeaks(asarray(data), hList, scaleList, kernels, ssbuff, cache,
-            #                       self.minAmpl * 2.0 * 3.0 ** (-1.5), z, c,
-            #                       concIndex, distIndex, etmIndex, valveIndex, dataLen, nlevels,
-            #                       npoints, maxKernel)
-            minAmpl = self.minAmpl * 2.0 * 3.0 ** (-1.5)
-            p, np = peakF.findPeaks(asarray(data), hList, scaleList, kernels, ssbuff, cache, minAmpl, z, c,
-                                    concIndex, distIndex, etmIndex, valveIndex, dataLen, nlevels,
-                                    npoints, maxKernel)
-            peaks = p[:np[0], :]
+            peaks = []
+            for i in range(nlevels):
+                # Add the kernel into the space-scale buffer, taking into account wrap-around
+                #  into the buffer
+                if c-hList[i]<0:
+                    ssbuff[i,:c+hList[i]+1] += data.CH4*kernelList[i][hList[i]-c:]
+                    ssbuff[i,npoints-hList[i]+c:] += data.CH4*kernelList[i][:hList[i]-c]
+                elif c+hList[i]>=npoints:
+                    ssbuff[i,c-hList[i]:] += data.CH4*kernelList[i][:npoints-c+hList[i]]
+                    ssbuff[i,:c+hList[i]+1-npoints] += data.CH4*kernelList[i][npoints-c+hList[i]:]
+                else:
+                    ssbuff[i,c-hList[i]:c+hList[i]+1] += data.CH4*kernelList[i]
+                if i>0:
+                    # Check if we have found a peak in space-scale representation
+                    # If so, add it to a list of peaks which are stored as tuples
+                    #  of the form (dist,*dataTuple,amplitude,sigma)
+                    isPeak,col = checkPeak(i-1,c-hList[i]-1,minAmpl=self.minAmpl*2.0*3.0**(-1.5))
+                    if isPeak and cache[distIndex,col]>0.0:
+                        # A peak is disqualified if the valves in an interval before the
+                        #  peak arrives were in the collecting state. This means that the tape recorder
+                        #  was on, and the peak was a replay of a previously collected one
+                        reject = False
+                        if valveIndex >= 0:
+                            coll = False
+                            # Determine if the instrument was in analyzing mode at any time
+                            #  during the past 10s or distance 200*dx. If so coll is set True
+                            #  to disable the peak being recorded.
+                            j = col
+                            pkTime = cache[etmIndex,col%npoints]
+                            while j>col-200:
+                                if collecting(cache[valveIndex,j%npoints]):
+                                    coll=True
+                                    break
+                                if pkTime-cache[etmIndex,j%npoints]>10.0:
+                                    break
+                                j -= 1
+                            # print "Time: %10s, Dist: %.2f, col: %d, ampl: %s, scale: %s" % (cache[etmIndex,col],cache[distIndex,col],col,ssbuff[i-1,col],sqrt(0.5*scaleList[i-1]))
+                            inact = inactive(cache[valveIndex,col%npoints])
+                            reject = (coll or inact)
+                        if not reject:
+                            amplitude = 0.5*ssbuff[i-1,col]/(3.0**(-1.5))
+                            sigma = sqrt(0.5*scaleList[i-1])
+                            peaks.append(PeakTuple(*([v for v in cache[:,col]]+[amplitude,sigma])))
             c += 1
-            if c >= npoints:
-                c -= npoints
+            if c>=npoints: c -= npoints
             z += 1
-            if z >= npoints:
-                z -= npoints
-            for peak in peaks:
-                yield PeakTuple(*peak)
+            if z>=npoints: z -= npoints
+            for peak in peaks: yield peak
 
     def getTicket(self):
         self.ticket = "NONE"
@@ -780,7 +816,7 @@ class PeakFinder(object):
             print '\nissueTicket failed \n%s\n' % e
 
         if ticket:
-            self.ticket = ticket
+            self.ticket = ticket;
             print "new ticket: ", self.ticket
 
 
@@ -876,7 +912,7 @@ class PeakFinder(object):
                             if self.debug:
                                 sys.stderr.write('line 906. peakFile: %s' % peakFile)
                             try:
-                                handle = open(peakFile, 'wb', 0) #open file with NO buffering
+                                handle = open(peakFile, 'wb+', 0) #open file with NO buffering
                             except:
                                 raise RuntimeError('Cannot open peak output file %s' % peakFile)
                             handle.write((len(hList)*"%-14s"+"\r\n") % tuple(hList))
