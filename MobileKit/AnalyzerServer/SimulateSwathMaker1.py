@@ -12,7 +12,7 @@ Copyright (c) 2012 Picarro, Inc. All rights reserved
 import os
 import sys
 import time
-from SwathMaker import SwathMaker
+from SwathMaker1 import SwathMaker
 
 if __name__ == "__main__":
     AppPath = sys.argv[0]

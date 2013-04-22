@@ -1,6 +1,7 @@
 import os
 import sys
-from PeakFinder import PeakFinder
+import time
+from PeakFinder2 import PeakFinder
 
 if __name__ == "__main__":
     AppPath = sys.argv[0]
@@ -16,4 +17,6 @@ if __name__ == "__main__":
     else:
         pf.file_path = sys.argv[1]
     pf.debug = debug
+    start = time.time()
     pf.run()
+    print "Time taken: ", time.time() - start
