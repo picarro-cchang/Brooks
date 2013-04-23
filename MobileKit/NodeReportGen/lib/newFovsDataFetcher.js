@@ -25,13 +25,14 @@ define(function(require, exports, module) {
     var latlngValidator = pv.latlngValidator;
     var validateListUsing = pv.validateListUsing;
 
-    function FovsDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key) {
+    function FovsDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key, forceFlag) {
         events.EventEmitter.call(this); // Call the constructor of the superclass
         this.p3ApiService = p3ApiService;
         this.instructions = instructions;
         this.workDir = workDir;
         this.statusFile = statusFile;
         this.submit_key = submit_key;
+        this.forceFlag = forceFlag;
         this.norm_instr = null;
         this.pathParams = {};
         this.surveys = newN2i();
@@ -235,7 +236,7 @@ define(function(require, exports, module) {
                 var lrtParams = {'anz':analyzer, 'startEtm':startEtm, 'endEtm':endEtm,
                                  'minLng':swCorner[1], 'minLat':swCorner[0],
                                  'maxLng':neCorner[1], 'maxLat':neCorner[0],
-                                 'qry': 'byEpoch', 'forceLrt':false,
+                                 'qry': 'byEpoch', 'forceLrt':that.forceFlag,
                                  'resolveLogname':true, 'doclist':false,
                                  'limit':'all', 'rtnFmt':'lrt'};
                 var p3LrtFetcher = newP3LrtFetcher(that.p3ApiService, "gdu", "1.0", "AnzLog", lrtParams);
@@ -343,7 +344,7 @@ define(function(require, exports, module) {
                             that.pathParams.pathBuffers[runIndex][surveyIndex] = [];
                             var p = that.pathParams.fovProcessors[runIndex][surveyIndex] =
                                 { "processor": new FovProcessor(that.p3ApiService,surveyName,surveyIndex,
-                                    runIndex,params,params.runs[runIndex].stabClass,that.workDir),
+                                    runIndex,params,params.runs[runIndex].stabClass,that.workDir,that.forceFlag),
                                   "rows":[] };
                             that.fovProcessorQueue.push(p.processor);
                             if (that.fovInProgress < that.maxFovInProgress) {
@@ -458,7 +459,7 @@ define(function(require, exports, module) {
     the long running task is complete and then fetch the points by row. The results are
     written into fov_survey_run.json files. */
 
-    function FovProcessor(p3Service,surveyName,surveyIndex,runIndex,params,stabClass,workDir) {
+    function FovProcessor(p3Service,surveyName,surveyIndex,runIndex,params,stabClass,workDir,forceFlag) {
         events.EventEmitter.call(this); // Call the constructor of the superclass
         this.p3Service = p3Service;
         this.surveyName = surveyName;
@@ -473,6 +474,7 @@ define(function(require, exports, module) {
         this.lrt_status = null;
         this.lrt_count = null;
         this.workDir = workDir;
+        this.forceFlag = forceFlag;
     }
 
     util.inherits(FovProcessor, events.EventEmitter);
@@ -480,7 +482,7 @@ define(function(require, exports, module) {
     FovProcessor.prototype.start = function () {
         var self = this;
         var lrtParams = {'alog':self.surveyName, 'stabClass':self.stabClass, 'qry':'makeFov',
-                         'minAmp':self.fovMinAmp, 'minLeak': self.fovMinLeak,
+                         'minAmp':self.fovMinAmp, 'minLeak': self.fovMinLeak, 'forceLrt':self.forceFlag,
                          'nWindow':self.fovNWindow};
         self.p3Service.get("gdu", "1.0", "AnzLog", lrtParams, function (err, result) {
             if (err) self.emit("error", err);
@@ -617,8 +619,8 @@ define(function(require, exports, module) {
 
     };
 
-    function newFovsDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key) {
-        return new FovsDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key);
+    function newFovsDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key, forceFlag) {
+        return new FovsDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key, forceFlag);
     }
     module.exports = newFovsDataFetcher;
 

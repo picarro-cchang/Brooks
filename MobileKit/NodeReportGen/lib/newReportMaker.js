@@ -109,12 +109,13 @@ define(function(require, exports, module) {
         return cjs(result,null,2);
     }
 
-    function ReportMaker(rptGenService, instructions, workDir, statusFile, submit_key) {
+    function ReportMaker(rptGenService, instructions, workDir, statusFile, submit_key, forceFlag) {
         this.rptGenService = rptGenService;
         this.instructions = instructions;
         this.workDir = workDir;
         this.statusFile = statusFile;
         this.submit_key = submit_key;
+        this.forceFlag = forceFlag;
         this.norm_instr = null;
         this.keyDataBySubtask = {};
         this.errorOccured = false;
@@ -155,7 +156,8 @@ define(function(require, exports, module) {
             subtasks.forEach(function (task) {
                 var instr = task.extractor(that.norm_instr);
                 var user = that.submit_key.user;
-                var lrtCont = newRptGenLrtController(that.rptGenService, "RptGen", {'qry': 'submit', 'contents': instr, 'user': user});
+                var lrtCont = newRptGenLrtController(that.rptGenService, "RptGen", {'qry': 'submit', 'contents': instr,
+                    'user': user, 'force': that.forceFlag});
                 lrtCont.on('submit', onTaskSubmit(task.name));
                 lrtCont.on('end', onTaskEnd(task.name));
                 lrtCont.on('error', onTaskError(task.name));
@@ -346,8 +348,8 @@ define(function(require, exports, module) {
         }
     };
 
-    function newReportMaker(rptGenService, instructions, workDir, statusFile, submit_key) {
-        return new ReportMaker(rptGenService, instructions, workDir, statusFile, submit_key);
+    function newReportMaker(rptGenService, instructions, workDir, statusFile, submit_key, forceFlag) {
+        return new ReportMaker(rptGenService, instructions, workDir, statusFile, submit_key, forceFlag);
     }
     module.exports = newReportMaker;
 

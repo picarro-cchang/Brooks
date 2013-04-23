@@ -27,12 +27,13 @@ define(function(require, exports, module) {
 
     var DTR = Math.PI/180.0, RTD = 180.0/Math.PI, rEarth = 6371000;
 
-    function PeaksDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key) {
+    function PeaksDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key, forceFlag) {
         this.p3ApiService = p3ApiService;
         this.instructions = instructions;
         this.workDir = workDir;
         this.statusFile = statusFile;
         this.submit_key = submit_key;
+        this.forceFlag = forceFlag;
         this.norm_instr = null;
         this.peaks = {};
         this.dataKeys = ['CH4', 'AMPLITUDE', 'WIND_DIR_SDEV', 'EPOCH_TIME'];
@@ -221,7 +222,7 @@ define(function(require, exports, module) {
             var lrtParams = {'anz':analyzer, 'startEtm':startEtm, 'endEtm':endEtm,
                              'minLng':swCorner[1], 'minLat':swCorner[0],
                              'maxLng':neCorner[1], 'maxLat':neCorner[0],
-                             'qry': 'byEpoch', 'forceLrt':false,
+                             'qry': 'byEpoch', 'forceLrt':that.forceFlag,
                              'resolveLogname':true, 'doclist': false,
                              'limit':'all', 'logtype': 'peaks', 'rtnFmt':'lrt'};
             var p3LrtFetcher = newP3LrtFetcher(that.p3ApiService, "gdu", "1.0", "AnzLog", lrtParams);
@@ -448,8 +449,8 @@ define(function(require, exports, module) {
         }
     };
 
-    function newPeaksDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key) {
-        return new PeaksDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key);
+    function newPeaksDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key, forceFlag) {
+        return new PeaksDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key, forceFlag);
     }
     module.exports = newPeaksDataFetcher;
 

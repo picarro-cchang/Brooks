@@ -429,7 +429,7 @@ define(function(require, exports, module) {
                 if (this.getCurrentInstructions()) {
                     var contents = DASHBOARD.instructionsFileModel.get("contents");
                     var instructions = DASHBOARD.instructionsFileModel.get("instructions");
-                    DASHBOARD.SurveyorRpt.submit({'contents': contents, 'user': DASHBOARD.user},
+                    DASHBOARD.SurveyorRpt.submit({'contents': contents, 'user': DASHBOARD.user, 'force': DASHBOARD.force},
                     function (err) {
                         var msg = 'While submitting instructions: ' + err;
                         alert(msg);

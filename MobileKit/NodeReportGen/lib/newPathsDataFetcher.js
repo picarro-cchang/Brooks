@@ -23,12 +23,13 @@ define(function(require, exports, module) {
     var latlngValidator = pv.latlngValidator;
     var validateListUsing = pv.validateListUsing;
 
-    function PathsDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key) {
+    function PathsDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key, forceFlag) {
         this.p3ApiService = p3ApiService;
         this.instructions = instructions;
         this.workDir = workDir;
         this.statusFile = statusFile;
         this.submit_key = submit_key;
+        this.forceFlag = forceFlag;
         this.norm_instr = null;
         this.pathParams = {};
         this.surveys = newN2i();
@@ -202,7 +203,7 @@ define(function(require, exports, module) {
             var lrtParams = {'anz':analyzer, 'startEtm':startEtm, 'endEtm':endEtm,
                              'minLng':swCorner[1], 'minLat':swCorner[0],
                              'maxLng':neCorner[1], 'maxLat':neCorner[0],
-                             'qry': 'byEpoch', 'forceLrt':false,
+                             'qry': 'byEpoch', 'forceLrt':that.forceFlag,
                              'resolveLogname':true, 'doclist':false,
                              'limit':'all', 'rtnFmt':'lrt'};
             var p3LrtFetcher = newP3LrtFetcher(that.p3ApiService, "gdu", "1.0", "AnzLog", lrtParams);
@@ -325,8 +326,8 @@ define(function(require, exports, module) {
         }
     };
 
-    function newPathsDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key) {
-        return new PathsDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key);
+    function newPathsDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key, forceFlag) {
+        return new PathsDataFetcher(p3ApiService, instructions, workDir, statusFile, submit_key, forceFlag);
     }
     module.exports = newPathsDataFetcher;
 

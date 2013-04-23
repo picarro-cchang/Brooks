@@ -72,7 +72,7 @@ define(function(require, exports, module) {
                         if (err) callback(err);
                         else if (data !== contents) callback(new Error("MD5 hash collision in instructions"));
                         else {
-                            if (params["force"]) startNewRun();
+                            if (params["force"]) startNewRun(true);
                             else checkForPreviousRuns();
                         }
                     });
@@ -84,7 +84,7 @@ define(function(require, exports, module) {
                         else {
                             fs.writeFile(instrFname, contents, "ascii", function (err) {
                                 if (err) callback(err);
-                                else startNewRun();
+                                else startNewRun(false);
                             });
                         }
                     });
@@ -115,12 +115,12 @@ define(function(require, exports, module) {
                             var taskKey = that.ticket + '_' + lastSubdir;
                             var running = that.runningTasks.isRunning(taskKey);
                             if (!done && !running) {
-                                if (bad) startNewRun();
+                                if (bad) startNewRun(false);
                                 else {
                                     sf.writeStatus(statusFile,
                                     {status: rptGenStatus.FAILED, msg:'Server failed during job'}, function (err) {
                                         if (err) callback(err);
-                                        else startNewRun();
+                                        else startNewRun(false);
                                     });
                                 }
                             }
@@ -128,11 +128,11 @@ define(function(require, exports, module) {
                         }
                     });
                 }
-                else startNewRun();
+                else startNewRun(false);
             });
         }
 
-        function startNewRun() {
+        function startNewRun(forceFlag) {
             var dirName = ts.timeStringAsDirName(that.request_ts);
             var workDir = path.join(instrDir, dirName);
             var taskKey = that.ticket + '_' + dirName;
@@ -161,7 +161,7 @@ define(function(require, exports, module) {
                                 else {
                                     // Indicate that run has started
                                     callback(null, result);
-                                    obeyInstructions(taskKey, workDir, statusFile);
+                                    obeyInstructions(taskKey, workDir, statusFile, forceFlag);
                                 }
                             });
                         }
@@ -172,7 +172,7 @@ define(function(require, exports, module) {
         handleInstructions(instrDir, instrFname, this.contents);
 
 
-        function obeyInstructions(taskKey, workDir, statusFile) {
+        function obeyInstructions(taskKey, workDir, statusFile, forceFlag) {
             var instructions = that.instructions;
             var p3ApiService = that.p3ApiService;
             var rptGenService = that.rptGenService;
@@ -187,25 +187,25 @@ define(function(require, exports, module) {
             }
 
             that.emit('start', {"taskKey": taskKey, "workDir": workDir, "instructions_type": type, "start_ts": that.request_ts});
-            console.log("Starting execution of instructions here");
+            console.log("obeyInstructions type: " + type + " force: " + forceFlag);
             switch (type) {
                 case "ignore":
                     sf.writeStatus(statusFile, {"status": rptGenStatus.DONE}, logCompletion);
                     break;
                 case "getAnalysesData":
-                    newAnalysesDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key).run(logCompletion);
+                    newAnalysesDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 case "getPathsData":
-                    newPathsDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key).run(logCompletion);
+                    newPathsDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 case "getFovsData":
-                    newFovsDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key).run(logCompletion);
+                    newFovsDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 case "getPeaksData":
-                    newPeaksDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key).run(logCompletion);
+                    newPeaksDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 case "makeReport":
-                    newReportMaker(rptGenService, instructions, workDir, statusFile, that.submit_key).run(logCompletion);
+                    newReportMaker(rptGenService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 default:
                     sf.writeStatus(statusFile,{"status": rptGenStatus.FAILED, "msg": "Bad instructions_type"},function (err){

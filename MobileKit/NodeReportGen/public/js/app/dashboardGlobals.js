@@ -2,6 +2,7 @@
 
 define ({
 	AnzMeta: null,
+	force: null,
 	InstructionsFileModel: null,
 	instructionsFileModel: null,
 	InstructionsFileView: null,

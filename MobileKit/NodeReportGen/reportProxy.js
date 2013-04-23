@@ -223,7 +223,7 @@
 
     app.post('/rest/download', forwardTheRequest);
 
-    app.get(/^(\/|\/getReport\/.*|\/css.*|\/js.*|\/images.*)$/, forwardTheRequest);
+    app.get(/^(\/|\/force|\/getReport\/.*|\/css.*|\/js.*|\/images.*)$/, forwardTheRequest);
 
     app.listen(SITECONFIG.proxyport);
     logger("Proxy server listening on port: " + SITECONFIG.proxyport);

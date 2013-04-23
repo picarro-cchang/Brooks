@@ -84,6 +84,7 @@ define(function(require, exports, module) {
             console.log('Analyzers', DASHBOARD.analyzers);
             DASHBOARD.timezone = jstz.determine().name();
             DASHBOARD.user = TEMPLATE_PARAMS.user;
+            DASHBOARD.force = TEMPLATE_PARAMS.force;
             dashboardJobs.init();
             dashboardInstructions.init();
             var proxyUrl = TEMPLATE_PARAMS.host + ':' + TEMPLATE_PARAMS.port;

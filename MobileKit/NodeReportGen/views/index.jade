@@ -7,6 +7,7 @@ block scripts
     script(type='text/javascript', data-main='#{assets}js/app/indexMain.js', src='#{assets}js/require-jquery.js')
     script(type='text/javascript')
         var TEMPLATE_PARAMS = {
+            force: !{JSON.stringify(force)},
             identity: "#{identity}",
             qry: !{JSON.stringify(qry)},
             host: "#{host}",

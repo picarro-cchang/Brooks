@@ -281,6 +281,21 @@
     function handleIndex(req, res) {
         res.render("index",
             {assets: SITECONFIG.assets,
+             force: false,
+             host: SITECONFIG.proxyhost,
+             identity: SITECONFIG.identity,
+             port: SITECONFIG.proxyport,
+             psys: SITECONFIG.psys,
+             qry: req.query,
+             site: SITECONFIG.p3site,
+             user: 'demoUser'
+        });
+    }
+
+    function handleForce(req, res) {
+        res.render("index",
+            {assets: SITECONFIG.assets,
+             force: true,
              host: SITECONFIG.proxyhost,
              identity: SITECONFIG.identity,
              port: SITECONFIG.proxyport,
@@ -301,6 +316,8 @@
     }
 
     app.get("/", handleIndex);
+
+    app.get("/force", handleForce);
 
     app.get("/getReport/:hash/:ts", handleGetReport);
 
