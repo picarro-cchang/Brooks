@@ -1,0 +1,53 @@
+#myModal.modal.hide.fade
+  .modal-header.
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">Make public maker</h3>
+  .modal-body.
+    <h4>Set KML Baseline</h4>
+    <div id='modal-chart'></div>
+    <div id='share_url'><input class='share-input'/></div>
+  .modal-footer.
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+    <button class="btn btn-primary" id="btn_modal_share">Share Log</button>
+div.navbar.navbar-static-top
+        div.container
+            div.navbar-inner
+                div.logo-container.
+                    <img height="25px" width="157px" src="/img/picarro_logo_25.png" alt="Picarro">
+                
+                div#live_view.
+                    <a href='/investigator?prime=false&anz=CFADS2290'><button type="button" class='btn btn-primary' id="live_view">Live</button></a>
+
+                 div#profile.
+                    <a href='/home'><button type="button" class='btn btn-primary' id="profile">My profile</button></a>    
+                
+                div.layout-container
+
+
+div.container.main-body.
+        <div id="accordion-container">  
+            <div id="accordion-header" class="layout-header">
+                <span>Select your run:</span>
+                <span id="date-picker"><input type="text" id="datepicker" /></span>
+            </div>      
+            <div class="accordion" id="accordion2"></div>  
+        </div>
+        <div id="map-container">  
+            <div id="map-header" class="layout-header"><span>Location</span></div>      
+             <div id='map_container'></div>
+        </div>
+        <div id="ge-container">  
+            <div id="ge-header" class="layout-header"><span>Plume Map</span></div>      
+            <div id='ge_container'></div>
+        </div>
+
+div.navbar-bottom.
+        <div class="container">
+            <div class='feedback-container'>
+                <img height="52px" width="155px" src="/img/give_feedback.png" alt="Picarro">
+            </div>
+            <div class='powered-container'>
+                <img height="77px" width="167px" src="/img/powered_by_p3.png" alt="Picarro">
+            </div>
+        </div>
+

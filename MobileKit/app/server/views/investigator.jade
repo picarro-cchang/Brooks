@@ -1,0 +1,179 @@
+html
+    head.
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <meta name="viewport" id="meta_viewport" content="initial-scale=1,maximum-scale=1,user-scalable=0"/>
+        <title>Picarro Methane Detector</title>
+        <script type="text/javascript" src="/js/views/investigator/jquery-1.9.0.js"></script>
+        <script type="text/javascript" src="/js/views/investigator/jquery-ui-1.10.0.custom.js"></script>
+        <script type="text/javascript" src="/js/views/bootstrap-dropdown.js"></script>
+        <script type="text/javascript" src="/js/views/bootstrap-button.js"></script>
+        <script type="text/javascript" src="/js/views/bootstrap-modal.js"></script>
+        <script type="text/javascript" src="/js/views/bootstrap-transition.js"></script>
+        <link rel=stylesheet type=text/css href="/js/views/css/picarro_bootstrap.css" />
+        <script type="text/javascript" src="/js/views/jquery.sparkline.min.js"></script>
+        <script type="text/javascript" src="/js/views/jquery.tablesorter.min.js"></script>
+        <script type="text/javascript" src="/js/views/jquery.jsonp-2.3.0.min.js"></script>
+        <script type="text/javascript" src="/js/views/jquery.flot.min.js"></script>
+        <script type="text/javascript" src="/js/views/geohash.js"></script>
+        <script type="text/javascript" src="/js/views/p3apiservice.js"></script> 
+        <script type="text/javascript">
+        var _par = {"center_latitude":37.39604,
+                 "center_longitude":-121.98432 };
+        var init_vars = false;
+        </script>
+        <script>L_PREFER_CANVAS = true;</script>
+        <script type="text/javascript" src="js/views/leaflet.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/investigator.css" />
+        <link rel="stylesheet" type="text/css" href="css/leaflet.css" />
+        <link rel="stylesheet" type="text/css" href="css/ui-darkness/jquery-ui-1.10.2.custom.css" />
+        <link rel="stylesheet" type="text/css" href="css/colorbrewer.css" />
+        <script type="text/javascript" src="js/views/pcookie.js"></script>
+        <script type="text/javascript" src="js/views/plats.js"></script>
+        <script type="text/javascript" src="js/views/investigator/utils.js"></script>
+        <script type="text/javascript" src="js/views/investigator/templates.js"></script>
+        <script type="text/javascript" src="js/views/investigator/d3.v3.js"></script>
+        <script src="js/views/investigator/QuadTree.js"></script>
+        <script src="js/views/investigator/L.TileLayer.MaskCanvas.js"></script>
+        <script type="text/javascript" src="js/views/investigator/jquery.flot.selection.min.js"></script>
+        <script type="text/javascript" src="js/views/investigator/jquery.flot.crosshair.js"></script>
+        <script type="text/javascript" src="js/views/investigator/jquery.flot.threshold.min.js"></script>    <script  type="text/javascript" src="js/views/investigator/jquery.tappable.js"></script>
+        <script type="text/javascript" src="js/views/investigator/mapsApplicationInvestigator_ben.js"></script>
+        <script type="text/javascript" src="js/views/p3apiservice.js"></script>
+        <script type="text/javascript" src="js/views/investigator/controller.js"></script>
+        <script type="text/javascript" language="javascript">
+        $(document).ready(function(){
+                winH = window.innerHeight;
+                winW = window.innerWidth;
+                mapmaster.Controller.initialize(winH, winW);
+               // resize_me();
+        })
+        
+
+        </script>
+      
+      body.
+            <div id="modal_restart_log" class="modal hide fade" tabindex="-1" role="dialog" aria-        labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-header">
+            <button type="button" class="close btn-close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="myModalLabel">Restart Data Logs?</h3>
+            </div>
+            <div class="modal-body">
+              
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-close" data-dismiss="modal" aria-hidden="true">Close</button>
+              <button class="btn btn-primary" id="btn_restart_log">Restart Log</button>
+            </div>
+            </div>
+            <div id="modal_shutdown_analyzer" class="modal hide fade" tabindex="-1" role="dialog" aria-        labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-header">
+              <button type="button" class="close btn-close" data-dismiss="modal" aria-hidden="true">×</button>
+              <h3 id="myModalLabel">Shutdown Analyzer?</h3>
+            </div>
+            <div class="modal-body">
+              
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-close" data-dismiss="modal" aria-hidden="true">Close</button>
+              <button class="btn btn-primary" id="btn_shutdown_analyzer">Shutdown</button>
+            </div>
+            </div>
+            <canvas id="canvas_bubbles" width="138" height="550"></canvas>
+            <canvas id="canvas_wind" width="138" height="550"></canvas>
+            <div id='pageContainer'>
+              <div id='pageContent'>
+                <div id='map_controls'>
+                  <div id="map2_canvas"></div>
+                  <div id="map2_flot"></div>
+                  <div id="map_realtime_flot"></div>
+                  <div id="realtime_display">
+                    <div id='realtime_num'>2.05</div>
+                  </div>
+                  <canvas id="canvas_rose" width="200px" height="200px"></canvas>
+                  <canvas id="canvas_rose_arrow" width="240px" height="240px"></canvas>
+                </div>
+                <div id='car_controls'>
+                  <div class='control-header'>
+                    <h1>Car Controls</h1>
+                    <div class='btn btn-large control-close'><i class="icon-remove"></i></div>
+                  </div>
+                  <div id='car_controls_inner'>
+                    <div class='car-signal' id='car_signal-top'></div>
+                    <div class='car-signal' id='car_signal-front'></div>
+                  </div>
+                </div>
+                <div id='setting_controls'>
+                  <div class='control-header'>
+                    <h1>Settings</h1>
+                    <div class='btn btn-large control-close'><i class="icon-remove"></i></div>
+                    <div class='settings-wrapper'>
+                      <span class='label-text'>Live Google Earth</span>
+                      <div class='settings-switch-wrapper'>
+                        <div class='switch_text left_text'>Off</div>
+                        <div class='switch_groove'><div class='switch_handle'></div></div>
+                        <div class='switch_text right_text selected'>On</div>
+                      </div>
+                    </div>
+                    <br>
+                    <div class='settings-wrapper selected'>
+                      <span class='label-text'>Arm Mode</span>
+                      <div class='settings-switch-wrapper'>
+                        <div class='switch_text left_text'>ARM</div>
+                        <div class='switch_groove'><div class='switch_handle'></div></div>
+                        <div class='switch_text right_text selected'>Manual</div>
+                      </div>
+                    </div>
+                    <br>
+                    <div id='btn_restart' class='settings-wrapper selected'>
+                      <span class='label-text'>Restart Log</span>
+                      <div class='settings-switch-wrapper'>
+                        <div class='switch_text left_text'>Restarting</div>
+                        <div class='switch_groove'><div class='switch_handle'></div></div>
+                        <div class='switch_text right_text selected'>Running</div>
+                      </div>
+                    </div>
+                    <br>
+                    <div id='btn_shutdown' class='settings-wrapper selected'>
+                      <span class='label-text'>Shutdown Analyzer</span>
+                      <div class='settings-switch-wrapper'>
+                        <div class='switch_text left_text'>Off</div>
+                        <div class='switch_groove'><div class='switch_handle'></div></div>
+                        <div class='switch_text right_text selected'>On</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id='legend-controls'>
+                  <div class='legend-controls-inner'>
+          
+                  </div>
+                  <!-- <div id='range_slider'></div>
+                  <div id='time_slider'></div> -->
+                </div>
+              </div>
+              <div id='pageFooter'>
+                <span class='icon icon-car' id='btn_car_controls'></span>
+                <span class='icon-spacer'></span>
+                <span class='icon icon-setting' id='btn_setting_controls'></span>
+                <span class='icon-spacer'></span>
+                <span class='icon icon-map selected' id='btn_map_controls'></span>
+                <span class='icon-spacer'></span>
+                <span class='icon icon-chart selected' id='btn_chart_controls'></span>
+                <span class='icon-spacer'></span>
+                <span class='icon icon-wind' id='btn_wind_controls'></span>
+                <span class='icon-spacer'></span>
+                <span class='icon icon-cursor' id='btn_cursor_controls'></span>
+                <span class='icon-spacer'></span>      
+                <span class='icon icon-pause selected' id='btn_pause_controls'></span>
+                <span class='icon-spacer'></span>
+                <span class='icon icon-legend selected' id='btn_legend_controls'></span>
+                <span class='icon-spacer'></span>
+                <span class='icon icon-iso' id='btn_iso_controls'></span>
+                <span class='icon-spacer'></span>
+                <span class='icon icon-logo' id='btn_logo_controls'></span>
+              </div>
+            </div>
+  
+  

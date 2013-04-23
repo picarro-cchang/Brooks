@@ -19,6 +19,10 @@ from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MAN
 import Host.Common.SwathProcessor as sp
 import math
 
+
+VALVE_INLET_MASK = 0x08
+VALVE_CALIBRATION_MASK = 0x10
+
 debugSwath = False
 NaN = 1e1000/1e1000
 
@@ -56,6 +60,10 @@ PASSWORD = 'default'
 
 # The following are split into a path and a filename with unix style wildcards.
 #  We search for the filename in the specified path and its subdirectories.
+# USERLOGFILES = '/opt/www/picarro/data/*.dat'
+# PEAKFILES = '/opt/www/picarro/data/*.peaks'
+# ANALYSISFILES = '/opt/www/picarro/data/*.analysis'
+# SWATHFILES = '/opt/www/picarro/data/*.swath'
 USERLOGFILES = 'C:/UserData/AnalyzerServer/*.dat'
 PEAKFILES = 'C:/UserData/AnalyzerServer/*.peaks'
 ANALYSISFILES = 'C:/UserData/AnalyzerServer/*.analysis'
@@ -234,6 +242,7 @@ def _getData(name,startPos=None,varList=None,limit=MAX_DATA_POINTS):
                     result[h] = []
             lastPos = startPos
         epochTime = result['EPOCH_TIME']
+        # TODO Handle null epoch time
         result['timeStrings'] = [time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(epochTime[-1]))]
         return result, lastPos
     except:
@@ -242,6 +251,8 @@ def _getData(name,startPos=None,varList=None,limit=MAX_DATA_POINTS):
 @app.route('/rest/getData')
 def rest_getData():
     result = getDataEx(request.values)
+    # self.response.headers['Content-Type'] = "application/json"
+    # self.response.out.write(json.dumps(response))
     if 'callback' in request.values:
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
@@ -478,6 +489,99 @@ def driverRpcEx(params):
         if time.clock() - lastDriverCheck > 60: driverAvailable = True
         return(dict(error="No Driver"))
 
+@app.route('/rest/getCurrentInlet')
+def rest_getCurrentInlet():
+    """
+    Get the current inlet state.
+    """
+
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                        ClientName='AnalyzerServer')
+
+    result = 'Unknown'
+
+    if (Driver.getValveMask() & VALVE_INLET_MASK) > 0:
+        result = 'Mast'
+    else:
+        result = 'Bumper'
+
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' +
+                             json.dumps({'result': result}) + ')')
+    else:
+        return make_response(json.dumps({'result': result}))
+
+@app.route('/rest/setCurrentInlet')
+def rest_setCurrentInlet():
+    """
+    Set the inlet to the 'inlet' param: MAST or BUMPER.
+    """
+
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                        ClientName='AnalyzerServer')
+
+    inlet = request.args.get('inlet')
+
+    if inlet == 'MAST':
+        Driver.openValves(VALVE_INLET_MASK)
+    elif inlet == 'BUMPER':
+        Driver.closeValves(VALVE_INLET_MASK)
+    else:
+        print "Invalid inlet '%s' selected." % inlet
+
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' +
+                             json.dumps({'result': 'OK'}) + ')')
+    else:
+        return make_response(json.dumps({'result': 'OK'}))
+
+@app.route('/rest/getCurrentReference')
+def rest_getCurrentReference():
+    """
+    Get the current position of the reference gas control: ISOTOPIC or
+    CONCENTRATION.
+    """
+
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                        ClientName='AnalyzerServer')
+
+    result = 'UNKNOWN'
+
+    if (Driver.getValveMask() & VALVE_CALIBRATION_MASK) > 0:
+        result = 'CONCENTRATION'
+    else:
+        result = 'ISOTOPIC'
+
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' +
+                             json.dumps({'result': result}) + ')')
+    else:
+        return make_response(json.dumps({'result': result}))
+
+@app.route('/rest/setCurrentReference')
+def rest_setCurrentReference():
+    """
+    Set the reference gas position to either ISOTOPIC or CONCENTRATION.
+    """
+
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                        ClientName='AnalyzerServer')
+
+    reference = request.args.get('reference')
+
+    if reference == 'CONCENTRATION':
+        Driver.openValves(VALVE_CALIBRATION_MASK)
+    elif reference == 'ISOTOPIC':
+        Driver.closeValves(VALVE_CALIBRATION_MASK)
+    else:
+        print "Invalid reference gas position, '%s', selected." % reference
+
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' +
+                             json.dumps({'result': 'OK'}) + ')')
+    else:
+        return make_response(json.dumps({'result': 'OK'}))
+
 @app.route('/rest/startRefCalibration')
 def rest_startRefCalibration():
     """
@@ -646,6 +750,7 @@ def maps():
     center_latitude = float(request.values.get('center_latitude',37.39604))
     return render_template('maps.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
                                        center_latitude=center_latitude,center_longitude=center_longitude)
+
 @app.route('/investigator')
 def investigator():
     amplitude = float(request.values.get('amplitude',0.1))
@@ -653,19 +758,29 @@ def investigator():
     follow = int('follow' in request.values or not do_not_follow)
     center_longitude = float(request.values.get('center_longitude',-121.98432))
     center_latitude = float(request.values.get('center_latitude',37.39604))
-    return render_template('investigator.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
+    return render_template('investigator_ben.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
                                        center_latitude=center_latitude,center_longitude=center_longitude)
 
-@app.route('/investigator3')
-def investigator3():
-    amplitude = float(request.values.get('amplitude',0.1))
-    do_not_follow = int('do_not_follow' in request.values)
-    follow = int('follow' in request.values or not do_not_follow)
-    center_longitude = float(request.values.get('center_longitude',-121.98432))
-    center_latitude = float(request.values.get('center_latitude',37.39604))
-    return render_template('investigator3.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
-                                       center_latitude=center_latitude,center_longitude=center_longitude)
-                                       
+@app.route('/public_url')
+def public_url():
+    return render_template('public_url.html')
+
+@app.route('/prototype')
+def prototype():
+    return render_template('prototype.html')
+
+@app.route('/load')
+def load():
+    return render_template('load.html')
+
+@app.route('/front_page')
+def front_page():
+    return render_template('front_page.html')
+
+@app.route('/plume')
+def plume():
+    return render_template('plume.html')
+
 @app.route('/test')
 def test():
     return render_template('test.html')
