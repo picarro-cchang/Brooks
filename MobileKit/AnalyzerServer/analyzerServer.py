@@ -16,12 +16,15 @@ import traceback
 import CmdFIFO
 from timestamp import getTimestamp
 from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DATA_MANAGER
-import Host.Common.SwathProcessor as sp
 import math
 
+import Host.Common.SwathProcessor as sp
+from Host.autogen import interface
 
-VALVE_INLET_MASK = 0x08
+
+VALVE_INLET_MASK = 0x20
 VALVE_CALIBRATION_MASK = 0x10
+
 
 debugSwath = False
 NaN = 1e1000/1e1000
@@ -691,6 +694,72 @@ def injectCalEx(params):
         return dict(value='OK')
     except:
         return dict(error=traceback.format_exc())
+
+@app.route('/rest/cancelIsotopicCapture')
+def rest_cancelIsotopicCapture():
+    _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_CancellingState)
+
+    result = {'result': 'OK'}
+
+    if 'callback' in request.values:
+        return make_response("%s(%s)" % (request.values['callback'],
+                                         json.dumps(result)))
+    else:
+        return make_response(json.dumps(result))
+
+@app.route('/rest/startTriggeredIsotopicCapture')
+def rest_startTriggeredIsotopicCapture():
+    _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_ArmedState)
+
+    result = {'result': 'OK'}
+
+    if 'callback' in request.values:
+        return make_response("%s(%s)" % (request.values['callback'],
+                                         json.dumps(result)))
+    else:
+        return make_response(json.dumps(result))
+
+@app.route('/rest/startManualIsotopicCapture')
+def rest_startManualIsotopicCapture():
+    _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_TriggeredState)
+
+    result = {'result': 'OK'}
+
+    if 'callback' in request.values:
+        return make_response("%s(%s)" % (request.values['callback'],
+                                         json.dumps(result)))
+    else:
+        return make_response(json.dumps(result))
+
+def _setPeakCntrlState(state):
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                        ClientName='AnalyzerServer')
+    Driver.wrDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER', state)
+
+@app.route('/rest/getIsotopicCaptureState')
+def rest_getIsotopicCaptureState():
+    # These constants need to match Host.autogen.interface.
+    states = {0: 'IDLE',
+              1: 'ARMED',
+              2: 'TRIGGER_PENDING',
+              3: 'TRIGGERED',
+              4: 'INACTIVE',
+              5: 'CANCELLING',
+              6: 'PRIMING',
+              7: 'PURGING',
+              8: 'INJECTION_PENDING'}
+
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                        ClientName='AnalyzerServer')
+    state = Driver.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER')
+
+    result = {'result': states[state]}
+
+    if 'callback' in request.values:
+        return make_response("%s(%s)" % (request.values['callback'],
+                                         json.dumps(result)))
+    else:
+        return make_response(json.dumps(result))
 
 @app.route('/rest/getDateTime')
 def rest_getDateTime():
