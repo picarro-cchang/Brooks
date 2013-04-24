@@ -144,7 +144,12 @@ mapmaster.Controller = function(){
 
 	var min_plot = 0;
 	var max_plot = 0;
+
 	var dtype = "json";
+
+	var captureState = "IDLE";
+	var cancelStates =   ['TRIGGERED','INACTIVE','CANCELLING']
+	var switchStates =   ['ARMED','TRIGGER_PENDING']
 
 	var saveDataPoint = function(name, diff){
 		log("Profile", name, diff);
@@ -223,18 +228,21 @@ mapmaster.Controller = function(){
 			resize_map();
 		});
 
-		$('#btn_car_controls').tappable(toggleCarControls)
+		$('#btn_car_controls').tappable(toggleCarControls);
+		$('#btn_iso_controls').tappable(toggleCaptureControls);
 		$('#btn_wind_controls').tappable(toggleWind);
 		$('#btn_cursor_controls').tappable(toggleCursor);
 		$('#btn_chart_controls').tappable(toggleChart);
 		$('#btn_legend_controls').tappable(toggleLegend);
 		$('#btn_pause_controls').tappable(togglePause);
-		$('#btn_iso_controls').tappable(toggleReference);
+		$('#btn_reference').tappable(toggleReference);
 		$('#btn_map_controls').tappable(function(){togglePane('map', 'setting');});
 		$('#btn_setting_controls, #setting_controls .control-close').tappable(function(){togglePane('setting', 'map');});
 		// showPanel('setting');
 		$('#car_signal-top').tappable(setSignalTop)	;
 		$('#car_signal-front').tappable(setSignalFront);
+		$('#btn_capture_manual').tappable(startCaptureManual);
+		$('#btn_capture_trigger').tappable(startCaptureTrigger);
 
 		$('.settings-wrapper').tappable(toggleSwitch);
 
@@ -295,6 +303,7 @@ mapmaster.Controller = function(){
             dtype = "jsonp";
         }
 
+        setInterval(getCaptureState,2000)
 	};
 
 	var resetMap = function(){
@@ -328,13 +337,33 @@ mapmaster.Controller = function(){
 			return;
 		}
 		if($('#car_controls').hasClass('selected')){
+			$('#pageFooter').removeClass("grayscale")
 			$('#btn_car_controls').removeClass('selected');
 			$('#car_controls').removeClass('selected');
-			$('#car_controls').css({bottom:0}).animate({bottom:-79}, transition_time);
+			$('#car_controls').css({bottom:0}).animate({bottom:-130}, transition_time);
 		}else{
+			$('#pageFooter').addClass("grayscale")
 			$('#btn_car_controls').addClass('selected');
 			$('#car_controls').addClass('selected');
-			$('#car_controls').css({bottom:-79}).animate({bottom:0}, transition_time);
+			$('#car_controls').css({bottom:-130}).animate({bottom:0}, transition_time);
+		}
+	}
+
+	var toggleCaptureControls = function(){
+		$('#capture_controls').show();
+		if($('#capture_controls').hasClass('locked')){
+			return;
+		}
+		if($('#capture_controls').hasClass('selected')){
+			$('#pageFooter').removeClass("grayscale")
+			$('#btn_capture_controls').removeClass('selected');
+			$('#capture_controls').removeClass('selected');
+			$('#capture_controls').css({bottom:0}).animate({bottom:-130}, transition_time);
+		}else{
+			$('#pageFooter').addClass("grayscale")
+			$('#btn_capture_controls').addClass('selected');
+			$('#capture_controls').addClass('selected');
+			$('#capture_controls').css({bottom:-130}).animate({bottom:0}, transition_time);
 		}
 	}
 
@@ -366,7 +395,6 @@ mapmaster.Controller = function(){
 	};
 
 	var togglePause = function(){
-		log("current pause: ", data_pause)
 		if($('.icon-pause').hasClass('selected')){
 			$('.icon-pause').removeClass('selected');
 			data_pause = true;
@@ -375,6 +403,78 @@ mapmaster.Controller = function(){
 			data_pause = false;	
 		}
 	};
+
+	var confirmCancalCapture = function(){
+		if (confirm("Cancel Capture?")==true){
+			$('#btn_capture_manual').removeClass("selected");
+			$('#btn_capture_trigger').removeClass("selected");
+			setTimeout(function(){
+				toggleCaptureControls();
+				$('#btn_iso_controls').removeClass('selected')
+			},700)
+			var err_fn = function(err){
+	        	log("error Cancel")
+	        }
+			var success_fn = function(data){
+	        	log(data)
+	        }
+		  	call_rest(CNSNT.svcurl, "cancelIsotopicCapture", dtype,{},  success_fn, err_fn);
+	  	}
+	}
+
+	var startCaptureManual = function(){
+		if($('#btn_capture_manual').hasClass("selected") || cancelStates.indexOf(captureState) >= 0){
+			confirmCancalCapture();
+		}else{
+			if(switchStates.indexOf(captureState) >= 0){
+				$('#btn_capture_trigger').removeClass("selected");
+			}
+			var err_fn = function(err){
+	        	log("error Capture Manual")
+	        }
+			var success_fn = function(data){
+	        	log(data)
+	        }
+			$('#btn_capture_manual').addClass("selected");
+			setTimeout(function(){
+				toggleCaptureControls();
+				$('#btn_iso_controls').addClass('selected')
+			},1000)
+			call_rest(CNSNT.svcurl, "startManualIsotopicCapture", dtype,{},  success_fn, err_fn);
+		}
+	};
+
+	var startCaptureTrigger = function(){
+        if($('#btn_capture_trigger').hasClass("selected") || $('#btn_capture_manual').hasClass("selected") || cancelStates.indexOf(captureState) >= 0){
+			confirmCancalCapture();
+		}else{
+			var err_fn = function(err){
+	        	log("error Capture Trigger")
+	        }
+			var success_fn = function(data){
+	        	log(data)
+	        }
+			$('#btn_capture_trigger').addClass("selected")
+			setTimeout(function(){
+				toggleCaptureControls();
+				$('#btn_iso_controls').addClass('selected')
+			},1000)
+			call_rest(CNSNT.svcurl, "startTriggeredIsotopicCapture", dtype,{},  success_fn, err_fn);
+		}
+	};
+
+	var getCaptureState = function(){
+		var err_fn = function(err){
+        	log("error Capture Trigger")
+        }
+		var success_fn = function(data){
+        	log(data.result)
+        	captureState = data.result;
+        }
+		call_rest(CNSNT.svcurl, "getIsotopicCaptureState", dtype,{},  success_fn, err_fn);
+
+	}
+
 
 	var setReferenceIso = function(){
         var err_fn = function(err){
@@ -421,8 +521,8 @@ mapmaster.Controller = function(){
 	}
 
 	var setSignalTop = function(){
-		$('#car_signal-front').removeClass('btn-primary');
-		$('#car_signal-top').addClass('btn-primary');
+		$('#car_signal-front').removeClass('selected');
+		$('#car_signal-top').addClass('selected');
 		setTimeout(function(){
 			toggleCarControls();
 		},750)
@@ -438,8 +538,8 @@ mapmaster.Controller = function(){
 	};
 
 	var setSignalFront = function(){
-		$('#car_signal-top').removeClass('btn-primary');
-		$('#car_signal-front').addClass('btn-primary');
+		$('#car_signal-top').removeClass('selected');
+		$('#car_signal-front').addClass('selected');
 		setTimeout(function(){
 			toggleCarControls();
 		},750)
@@ -1389,18 +1489,31 @@ mapmaster.Controller = function(){
 			return;
 		}
 
+		var peakCh4 = 0;
+		var valleyCh4 = 10000;
+
 		for(var i = 0 ; i < firstMax ; i++){
 			sumCh4 += path_data[i].pdata.ch4;
+
+			if(path_data[i].pdata.ch4 > peakCh4) peakCh4 = path_data[i].pdata.ch4;
+			if(path_data[i].pdata.ch4 < valleyCh4) valleyCh4 = path_data[i].pdata.ch4;
+
 			if(path_data[i].pdata.windN) sumWindN += path_data[i].pdata.windN;
 			if(path_data[i].pdata.windE) sumWindE += path_data[i].pdata.windE;
 			if(i%(interval)/2 == 0){
 				meanElement = path_data[i];
 			}
 			if(i%interval == 0 && i > 0){
+				var avgCh4 = sumCh4/interval;
+				if(Math.abs(peakCh4 - avgCh4) > Math.abs(valleyCh4 - avgCh4)){
+					avgCh4 = peakCh4;
+				}else{
+					avgCh4 = valleyCh4;
+				}
 				var temp = {
 					etm:meanElement.etm,
 					pdata:{
-						ch4:sumCh4/interval,
+						ch4:avgCh4,
 						windN:sumWindN/interval,
 						windE:sumWindE/interval,
 						lat:meanElement.pdata.lat,
@@ -1408,6 +1521,8 @@ mapmaster.Controller = function(){
 						ValveMask:meanElement.pdata.ValveMask						
 					}
 				}
+				peakCh4 = 0;
+				valleyCh4 = 10000;
 				di.push(temp);
 				sumCh4 = 0;
 				sumWindN = 0;

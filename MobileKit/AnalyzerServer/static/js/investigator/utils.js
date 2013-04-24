@@ -280,7 +280,7 @@ mapmaster.CNSNT.histMax = 200;
 
 mapmaster.CSTATE.getDataLimit = 2;
 
-mapmaster.CSTATE.seedDataLimit = 5990;
+mapmaster.CSTATE.seedDataLimit = 3000;
 
 mapmaster.CNSNT.fastUpdatePeriod = 1000;
 mapmaster.CNSNT.datUpdatePeriod = 5000;

@@ -76,9 +76,12 @@
         <canvas id="canvas_rose_arrow" width="240px" height="240px"></canvas>
       </div>
       <div id='car_controls'>
-        <div class="btn btn-large btn-primary" id="car_signal-top">MAST</div>
-        <br>
-        <div class="btn btn-large" id="car_signal-front">BUMPER</div>
+        <div class="icon selected" id="car_signal-top"><span>MAST</span></div>
+        <div class="icon" id="car_signal-front"><span>BUMPER</span></div>
+      </div>
+      <div id='capture_controls'>
+        <div class="icon" id="btn_capture_manual"><span>Manual</span></div>
+        <div class="icon" id="btn_capture_trigger"><span>Arm</span></div>
       </div>
       <div id='setting_controls'>
         <div class='control-header'>
@@ -117,6 +120,15 @@
               <div class='switch_text left_text'>Off</div>
               <div class='switch_groove'><div class='switch_handle'></div></div>
               <div class='switch_text right_text selected'>On</div>
+            </div>
+          </div>
+          <br>
+          <div id='btn_reference' class='settings-wrapper selected'>
+            <span class='label-text'>Reference Gas</span>
+            <div class='settings-switch-wrapper'>
+              <div class='switch_text left_text'>Isotopic</div>
+              <div class='switch_groove'><div class='switch_handle'></div></div>
+              <div class='switch_text right_text selected'>Conc.</div>
             </div>
           </div>
         </div>
