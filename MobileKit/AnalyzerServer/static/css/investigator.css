@@ -112,12 +112,22 @@
   opacity: 1;
   background-color: #00ae43;
 }
-/*#pageFooter .icon.selected:hover{
+
+#pageFooter.grayscale .icon.selected{
+  opacity: 1;
+  background-color: #5C5C5C;
+}
+
+#pageFooter.grayscale{
+   background-color: #333;
+}
+
+/*.icon.selected:hover{
   opacity: 1;
   background-color: #00ae43;
 }
 
-#pageFooter .icon:hover{
+.icon:hover{
   opacity: 1;
   background-color: #666;
 }*/
@@ -308,19 +318,40 @@
   background: #e0e0e0;
 }
 
-#car_controls{
+#car_controls, #capture_controls{
   position: absolute;
-  width: 200px;
-  height: 79px;
+  width: 168px;
+  height: 128px;
   left: 0px;
-  bottom: -79px;
+  bottom: -130px;
   z-index: 4999;
 }
 
-#car_controls div{
-  width: 170px;
+#capture_controls{
+  left:674px;
+  height:130px;
 }
 
+#capture_controls .icon{
+  border-bottom: 1px solid white;
+}
+
+#car_controls .icon, #capture_controls .icon{
+  background-color: black;
+  height: 64px;
+  width: 84px;
+  display: inline-block;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  cursor: pointer;
+  line-height:4em
+}
+
+#car_controls .icon.selected, #capture_controls .icon.selected{
+  background-color: #00ae43;
+}
 
 .car-signal{
   cursor: pointer;
@@ -422,8 +453,8 @@
 }
 #isotopic_layer{
   width:100%;
-  height:100px;
-  bottom:8px;
+  height:100%;
+  bottom:0;
   position: absolute;
 }
 
@@ -431,8 +462,9 @@
   position: absolute;
   display: inline-block;
   background-color: black;
-  height:95px;
-  bottom:0px;
+  height:auto;
+  bottom:8px;
+  top:8px;
   opacity:.16;
 }
 
@@ -459,7 +491,7 @@
     background: none repeat scroll 0 0 white;
     border: 1px solid gray;
     bottom: -10%;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: bold;
     height: 20px;
     margin-bottom: -10px;
