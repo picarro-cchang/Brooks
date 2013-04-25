@@ -32,7 +32,7 @@ if (system.args.length < 3 || system.args.length > 7) {
             console.log('Unable to load the address!');
             phantom.exit();
         } else {
-            var maxTimeOut = 30000; // milliseconds
+            var maxTimeOut = 120000; // milliseconds
             var start = (new Date()).getTime();
             var next = function () {
                 var getStatus = page.evaluate(function () {
@@ -61,17 +61,17 @@ if (system.args.length < 3 || system.args.length > 7) {
                         height: "2cm",
                         contents: phantom.callback(function(pageNum, numPages) {
                             var txt = (pageNum === 1) ? ua.leftHead : ua.reportTitle;
-                            return '<h2 style="font-family:Sans-serif;font-size=' + headerFontSize + '">' +
+                            return '<h4 style="font-family:Sans-serif;font-size=' + headerFontSize + '">' +
                                 txt + '<span style="float:right">' +
-                                ua.rightHead + '</span></h2>';
+                                ua.rightHead + '</span></h4>';
                         })
                     };
                     paperSize.footer = {
                         height: "1cm",
                         contents: phantom.callback(function(pageNum, numPages) {
-                            return '<p style="font-family:Sans-serif;font-size=' + footerFontSize + '">' +
+                            return '<p style="font-family:Sans-serif;font-size=' + footerFontSize + '"><small>' +
                                 ua.leftFoot + '<span style="float:right">Page  ' +
-                                pageNum + '  of  ' + numPages + "</span></p>";
+                                pageNum + '  of  ' + numPages + "</span></small></p>";
                         })
                     };
                     /* N.B. Can only assign to page.paperSize. It is NOT possible to change page.paperSize by assigning to its keys */

@@ -26,8 +26,17 @@ define(function(require, exports, module) {
     }
 
     function closeJson(fileName, done) {
-        fs.appendFile(fileName, "]", function (err) {
-            done(err);
+        fs.exists(fileName, function (exists) {
+            if (exists) {
+                fs.appendFile(fileName, "]", function (err) {
+                    done(err);
+                });
+            }
+            else {
+                fs.appendFile(fileName, "[]", function (err) {
+                    done(err);
+                });
+            }
         });
     }
 
