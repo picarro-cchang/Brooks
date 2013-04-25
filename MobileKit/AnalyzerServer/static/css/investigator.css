@@ -211,7 +211,7 @@
 .settings-wrapper{
   display: inline-block;
   width: 100%;
-  height: 80px;
+  height: 72px;
   border-bottom: 1px solid #fff;
   padding:20px;
 }
@@ -335,7 +335,6 @@
 #capture_controls .icon{
   border-bottom: 1px solid white;
 }
-
 #car_controls .icon, #capture_controls .icon{
   background-color: black;
   height: 64px;

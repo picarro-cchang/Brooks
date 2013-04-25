@@ -145,11 +145,11 @@ mapmaster.Controller = function(){
 	var min_plot = 0;
 	var max_plot = 0;
 
-	var dtype = "json";
+	var dtype = "Json";
 
 	var captureState = "IDLE";
-	var cancelStates =   ['TRIGGERED','INACTIVE','CANCELLING']
-	var switchStates =   ['ARMED','TRIGGER_PENDING']
+	var cancelStates =   ['TRIGGERED','INACTIVE','CANCELLING'];
+	var switchStates =   ['ARMED','TRIGGER_PENDING'];
 
 	var saveDataPoint = function(name, diff){
 		log("Profile", name, diff);
@@ -255,7 +255,16 @@ mapmaster.Controller = function(){
 	        if (CNSNT.prime_view === true) {
 	            dtype = "jsonp";
 	        }
-			call_rest(CNSNT.svcurl, "restartDatalog", dtype, {});
+	        var success_fn = function(){
+	        	log('success restarrt')
+	        	$('#modal_restart_log').modal('hide')
+	        	$('#btn_restart').removeClass("locked");
+				$('#btn_restart').trigger("click");
+	        }
+	        var err_fn = function(){
+
+	        }
+			call_rest(CNSNT.svcurl, "restartDatalog", dtype, {}, success_fn, err_fn);
 		 	resetMap();
 	        setTimeout(function(){
 				$('#btn_restart').removeClass("locked");
@@ -265,7 +274,7 @@ mapmaster.Controller = function(){
 			setTimeout(function(){
 				togglePane('map', 'setting')
 			},2000)
-			$('#modal_restart_log').modal('hide')
+			
 		})
 
 		$('#btn_shutdown_analyzer').on("click", function(){
@@ -273,8 +282,13 @@ mapmaster.Controller = function(){
 	        if (CNSNT.prime_view === true) {
 	            dtype = "jsonp";
 	        }
+	        var success_fn = function(){
 
-	        call_rest(CNSNT.svcurl, "shutdownAnalyzer", dtype, {});
+	        }
+	        var err_fn = function(){
+
+	        }
+	        call_rest(CNSNT.svcurl, "shutdownAnalyzer", dtype, {}, success_fn, err_fn);
 
 			$('#modal_shutdown_analyzer').modal('hide')
 		})
@@ -1217,6 +1231,10 @@ mapmaster.Controller = function(){
 
 		var thisQueue = myQueue;
 
+
+		var valve0 = 1;
+
+
 		tile_points = []
 		isotopics = [{start:0,end:0}]
 		for(var i = 0 ; i < thisQueue.length ; i++){
@@ -1227,20 +1245,20 @@ mapmaster.Controller = function(){
 						on_plot = true;
 					}
 				}
-				tile_points.push([thisQueue[i].pdata.lat,thisQueue[i].pdata.lon, thisQueue[i].pdata.ch4, thisQueue[i].pdata.windE,thisQueue[i].pdata.windN, thisQueue[i].etm, on_plot])
+				tile_points.push([thisQueue[i].pdata.lat,thisQueue[i].pdata.lon, thisQueue[i].pdata.ch4, thisQueue[i].pdata.windE,thisQueue[i].pdata.windN, thisQueue[i].etm, on_plot, parseInt(thisQueue[i].pdata.ValveMask) & 0x1])
 
 			}else{
-				tile_points.push([thisQueue[i].pdata.lat,thisQueue[i].pdata.lon, thisQueue[i].pdata.ch4, thisQueue[i].pdata.windE,thisQueue[i].pdata.windN, thisQueue[i].etm, true])
+				tile_points.push([thisQueue[i].pdata.lat,thisQueue[i].pdata.lon, thisQueue[i].pdata.ch4, thisQueue[i].pdata.windE,thisQueue[i].pdata.windN, thisQueue[i].etm, true, parseInt(thisQueue[i].pdata.ValveMask) & 0x1])
 			}		
 			if(thisQueue[i].pdata.ch4 > dataMax) dataMax = thisQueue[i].pdata.ch4;
 			if(thisQueue[i].pdata.ch4 < dataMin) dataMin = thisQueue[i].pdata.ch4;
 
 			if(thisQueue[i].pdata.ValveMask !== valve_mask){
 				valve_mask = thisQueue[i].pdata.ValveMask;
-				if(thisQueue[i].pdata.ValveMask === 3){
+				if((parseInt(thisQueue[i].pdata.ValveMask) & 0x1) > 0){
 					isotopics[0].start = thisQueue[i].etm;			
 				}
-				if(thisQueue[i].pdata.ValveMask === 0 && isotopics.length >= 1){
+				if((parseInt(thisQueue[i].pdata.ValveMask) & 0x1) === 0 && isotopics.length >= 1){
 					isotopics[0].end = thisQueue[i].etm;
 					isotopics.unshift({start:0,end:0})
 				}				
@@ -1308,8 +1326,13 @@ mapmaster.Controller = function(){
 
 		        ctx.beginPath();
 	        	ctx.arc(x, y, sizeScale(tile_points[i][2]), 0, 2 * Math.PI, false);
-	        	if(tile_points[i][2] > map_threshold){        		
-	        		ctx.fillStyle = colorScale(tile_points[i][2]);
+	        	if(tile_points[i][2] > map_threshold){   
+	        		if(tile_points[i][7] > 0){
+	        			ctx.fillStyle = "#0000ff";
+	        		}else{
+						ctx.fillStyle = colorScale(tile_points[i][2]);
+	        		}    		
+	        		
 		        	ctx.globalAlpha = 0.8;
 
 			        if(wind_visible){

@@ -28,7 +28,6 @@ var DataStore = function(){
 	}
 
 	var init = function(){
-
 	}
 
 	var err_fn = function() {
@@ -44,8 +43,28 @@ var DataStore = function(){
 		return max_durr;
 	}
 
+	var getLatestIP = function(){
+		log('get latest')
+		var reqobj = {};
+		reqobj.svc = "gdu";
+		reqobj.version = "1.0";
+		reqobj.resource = "AnzMeta";
+		reqobj.qryobj = {
+			    "qry": "byAnz"
+			, 	"anz": "FDDS2015"
+			,	'varList':'["PRIVATE_IP"]'
+		};
+
+		var rtn_fn = function(json, textStatus) {
+			log('latest ip', json, textStatus)
+		}
+
+
+		log(reqobj)
+		p3anzApi.geturl(reqobj, rtn_fn, err_fn);
+	}
+
 	var getLog = function(log_name){
-		log("getting log", log_name)
 		if(typeof my_logs[log_name] !== undefined){
 			return my_logs[log_name];
 		}else{
@@ -58,7 +77,6 @@ var DataStore = function(){
 	}
 
 	var getDecimatedData = function(log_name){
-		log('decimated', log_name)
 		if(typeof my_logs[log_name] !== undefined){
 			return my_logs[log_name].decimated_data;
 		}else{
@@ -192,6 +210,7 @@ var DataStore = function(){
 
 
 	var getLogMeta = function(callback, callback2){
+		
 		var reqobj = {};
 		reqobj.svc = "gdu";
 		reqobj.version = "1.0";
@@ -199,7 +218,7 @@ var DataStore = function(){
 		reqobj.qryobj = {
 				"qry": "byEpoch"
 			// , 	"anz": "CFADS2290"
-			, 	"anz": "FDDS2010"
+			, 	"anz": "FDDS2015"
 			, 	'startEtm':0
 			,	'varList':'["LOGNAME", "durr"]'
 			, 	'reverse':'true'
@@ -209,6 +228,7 @@ var DataStore = function(){
 		var rtn_fn = function(json, textStatus) {
 		    if(json){
 		    	var lastDate;
+		    	getLatestIP();
 		    	for(var i = 0; i < json.length; i++){
 		    		if(json[i].LOGNAME.search("Sensor") < 0){
 		    			if(json[i].durr > max_durr) max_durr = json[i].durr;
@@ -335,7 +355,7 @@ var DataStore = function(){
 			,   'simplePath': true
 		  you can use these two params above
 		*/
-			var rtn_fn = function(json, textStatus) {
+		var rtn_fn = function(json, textStatus) {
 			setProps(log_name, {raw_data:json} );
 			console.log("my_logs[log_name]" + my_logs[log_name]);
 			callback(json, textStatus);

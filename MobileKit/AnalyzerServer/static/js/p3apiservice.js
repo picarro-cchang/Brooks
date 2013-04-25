@@ -65,6 +65,7 @@ function P3ApiService(initArgs) {
     var api_ticket = "NONE";
 
     var callRest = function(call_url, dtype, params, success_callback, error_callback) {
+        log('call rest', dtype, params)
         var url;
         if (dtype === "jsonp") {
             url = call_url + "?callback=?";
