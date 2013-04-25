@@ -22,7 +22,7 @@ import Host.Common.SwathProcessor as sp
 from Host.autogen import interface
 
 
-VALVE_INLET_MASK = 0x08
+VALVE_INLET_MASK = 0x20
 VALVE_CALIBRATION_MASK = 0x10
 
 
@@ -732,7 +732,7 @@ def rest_startManualIsotopicCapture():
         return make_response(json.dumps(result))
 
 def _setPeakCntrlState(state):
-    Driver = CmdFIFO.CmdFIFOServerProxy("https://localhost:%d" % RPC_PORT_DRIVER,
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                         ClientName='AnalyzerServer')
     Driver.wrDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER', state)
 
@@ -749,7 +749,7 @@ def rest_getIsotopicCaptureState():
               7: 'PURGING',
               8: 'INJECTION_PENDING'}
 
-    Driver = CmdFIFO.CmdFIFOServerProxy("https://localhost:%d" % RPC_PORT_DRIVER,
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                         ClientName='AnalyzerServer')
     state = Driver.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER')
 
