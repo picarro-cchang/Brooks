@@ -26,6 +26,11 @@ if __name__ == "__main__":
         sm.userlogfiles = ulog
     else:
         sm.file_path = sys.argv[1]
+    if len(sys.argv) > 2:
+        sm.stabClass = sys.argv[2]
+    else:
+        sm.stabClass = "*"
+    
     sm.debug = debug
     sm.noWait = True
     start = time.time()

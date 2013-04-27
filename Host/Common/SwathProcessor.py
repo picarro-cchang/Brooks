@@ -14,9 +14,20 @@ from numpy import arctan2, asarray, cos, isfinite, isnan
 from numpy import pi, sin, sqrt
 import cPickle
 import time
-import swathP as sp
-
+import sys
 import SurveyorInstStatus as sis
+
+"""
+if sys.platform == "win32":
+    if sys.version_info[:2] == (2, 5):
+        import swathP_2_5 as sp
+    elif sys.version_info[:2] == (2, 6):
+        import swathP_2_6 as sp
+    elif sys.version_info[:2] == (2, 7):
+        import swathP_2_7 as sp
+else:
+"""
+import swathP as sp
 
 EARTH_RADIUS = 6378100
 DTR = pi/180.0

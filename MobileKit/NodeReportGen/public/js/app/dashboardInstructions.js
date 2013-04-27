@@ -253,14 +253,13 @@ define(function(require, exports, module) {
     // ============================================================================
     function beforeRunsShow(done)
     {
-        // Get the current time as the latest allowed end time
+        // Get the current time as the latest allowed start or end time
         var now;
         var posixTime = (new Date()).valueOf();
         var tz = DASHBOARD.timezone;
-        function datetimeRange(input) {
+        function datetimeRange() {
             if ("" === $('#id_end_etm').val()) $('#id_end_etm').datetimeEntry('setDatetime',now);
-            return {minDatetime: (input.id=='id_end_etm'   ? $('#id_start_etm').datetimeEntry('getDatetime'): null),
-                    maxDatetime: (input.id=='id_start_etm' ? $('#id_end_etm').datetimeEntry('getDatetime'): now )};
+            return {minDatetime: null, maxDatetime: now};
         }
         DASHBOARD.Utilities.timezone({tz:tz, posixTimes:[posixTime]},
         function (err) {
@@ -280,20 +279,40 @@ define(function(require, exports, module) {
     }
 
     function validateRun(eidByKey,template,container,onSuccess) {
+        var regex = /(\d{1,4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{1,2})/;
+
         var numErr = 0;
         var startEtm = $("#"+eidByKey.startEtm).val();
         var endEtm= $("#"+eidByKey.endEtm).val();
-        if ("" === startEtm) {
+        var startMatch = regex.exec(startEtm);
+        var endMatch = regex.exec(endEtm);
+
+        if (!startMatch) {
             tableFuncs.addError(eidByKey.startEtm, "Invalid start time");
             numErr += 1;
         }
-        if ("" === endEtm) {
+        if (!endMatch) {
             tableFuncs.addError(eidByKey.endEtm, "Invalid end time");
             numErr += 1;
         }
-        if (numErr === 0) {
-            onSuccess();
+
+        if (startMatch && endMatch) {
+            for (var i=1; i<=5; i++) {
+                var sVal = +startMatch[i];
+                var eVal = +endMatch[i];
+                if (eVal < sVal) {
+                    tableFuncs.addError(eidByKey.endEtm, "End time must be after start time");
+                    numErr += 1;
+                    break;
+                }
+                else if (eVal > sVal) break;
+            }
+            if (i>5) {
+                tableFuncs.addError(eidByKey.endEtm, "End time must be after start time");
+                numErr += 1;
+            }
         }
+        if (numErr === 0) onSuccess();
     }
 
     // ============================================================================
@@ -391,7 +410,7 @@ define(function(require, exports, module) {
                     var body = lines.join('\n');
                     var instructions = JSON.parse(body);
                     var v = iv.instrValidator(instructions);
-                    if (!v.valid) throw new Error('Instructions failed validation' + v.errorList.join("\n"));
+                    if (!v.valid) throw new Error('Instructions failed validation\n' + v.errorList.join("\n"));
                     // Make sure to send change events, in case file is reloaded
                     DASHBOARD.instructionsFileModel.set({"contents": null}, {silent: true});
                     DASHBOARD.instructionsFileModel.set({"contents": body});
@@ -429,6 +448,11 @@ define(function(require, exports, module) {
                 if (this.getCurrentInstructions()) {
                     var contents = DASHBOARD.instructionsFileModel.get("contents");
                     var instructions = DASHBOARD.instructionsFileModel.get("instructions");
+                    var v = iv.instrValidator(instructions);
+                    if (!v.valid) {
+                        alert('Instructions failed validation\n' + v.errorList.join("\n"));
+                        return;
+                    }
                     DASHBOARD.SurveyorRpt.submit({'contents': contents, 'user': DASHBOARD.user, 'force': DASHBOARD.force},
                     function (err) {
                         var msg = 'While submitting instructions: ' + err;

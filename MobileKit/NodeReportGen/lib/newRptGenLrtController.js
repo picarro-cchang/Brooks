@@ -86,7 +86,8 @@ define(function(require, exports, module) {
                             }
                         });
                     }
-                    else if (that.rpt_status < 0) that.emit("error", new Error("Failure status: " + that.rpt_status));
+                    else if (that.rpt_status < 0) that.emit("error", new Error("Failure status: " +
+                        that.rpt_status + ", " + result["msg"]));
                     else setTimeout(pollUntilDone,5000);
                 }
             });

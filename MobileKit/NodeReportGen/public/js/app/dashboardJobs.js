@@ -162,13 +162,13 @@ define(function(require, exports, module) {
                 this.showAll = false;
                 this.jobTable = $("#id_jobTable").dataTable({
                     "aoColumns": [
-                        { "sTitle": "Reload", "mData": "link", "sClass": "center"},
-                        { "sTitle": "First submitted at", "mData": "startLocalTime", "sClass": "center", "sType":'time-with-offset'},
-                        { "sTitle": "Time zone", "mData": "timezone", "sClass": "center"},
-                        { "sTitle": "Title", "mData": "title", "sClass": "center"},
-                        { "sTitle": "Status", "mData": "statusDisplay", "sClass": "center"},
-                        { "sTitle": "User", "mData": "user", "sClass": "center"},
-                        { "sTitle": '<button type="button" class="btn btn-mini btn-inverse showAll">Show All</button>',
+                        { "sWidth": "5%", "sTitle": "Reload", "mData": "link", "sClass": "center"},
+                        { "sWidth": "15%", "sTitle": "First submitted at", "mData": "startLocalTime", "sClass": "center", "sType":'time-with-offset'},
+                        { "sWidth": "15%", "sTitle": "Time zone", "mData": "timezone", "sClass": "center"},
+                        { "sWidth": "30%", "sTitle": "Title", "mData": "title", "sClass": "center"},
+                        { "sWidth": "20%", "sTitle": "Status", "mData": "statusDisplay", "sClass": "center"},
+                        { "sWidth": "10%", "sTitle": "User", "mData": "user", "sClass": "center"},
+                        { "sWidth": "5%", "sTitle": '<button type="button" class="btn btn-mini btn-inverse showAll">Show All</button>',
                           "sClass": "center", "mData": "selected", "bSortable": false}
                     ],
                     "sDom":'<"top"lf>rt<"bottom"ip>'

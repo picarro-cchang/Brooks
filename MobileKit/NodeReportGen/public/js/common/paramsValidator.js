@@ -9,8 +9,10 @@ define(function(require, exports, module) {
     /****************************************************************************/
     /*  Routines for parameter validation                                       */
     /****************************************************************************/
-    function ParamsValidator(paramsDict, checkList) {
+    function ParamsValidator(paramsDict, checkList, postCheck) {
     //    Fetches parameters from paramsDict and checks if they satisfy checkList.
+    //    After this, the optional function postCheck is called to perform any other
+    //     validation.
     //
     //    The elements of checkList are objects with the following keys:
     //            (name, required, type_or_predicate_or_regex, default_value)
@@ -32,6 +34,11 @@ define(function(require, exports, module) {
     //        used to report if validation passed and retrieve error messages. Parameter values
     //        may be retrieved by calling the ParamsValidator object with the parameter name
     //        as the argument.
+    //
+    //    postCheck(resultDict,errorList) is called with an object with all the normalized validated 
+    //     parameters and with the current list of errors. It should push any further errors it 
+    //     detects onto errorList
+
         var resultDict = {};
         var errorList = [];
 
@@ -95,6 +102,9 @@ define(function(require, exports, module) {
 
             }
         });
+        if (_.isFunction(postCheck)) {
+            postCheck(resultDict, errorList);
+        }
         this.resultDict = resultDict;
         this.errorList = errorList;
     }
@@ -115,8 +125,8 @@ define(function(require, exports, module) {
         return this.resultDict[key];
     };
 
-    function newParamsValidator(paramsDict, checkList) {
-        return new ParamsValidator(paramsDict, checkList);
+    function newParamsValidator(paramsDict, checkList, postCheck) {
+        return new ParamsValidator(paramsDict, checkList, postCheck);
     }
 
     /****************************************************************************/

@@ -45,9 +45,23 @@ from time import strptime, mktime, time, localtime, clock
 from Host.Common.EventManagerProxy import Log
 from tables import *
 from Host.Common.timestamp import unixTime
+import traceback
+
+"""
+if sys.platform == "win32":
+    if sys.version_info[:2] == (2, 5):
+        import fitutils_2_5 as fitutils
+        from cluster_analyzer_2_5 import find_clusters
+    elif sys.version_info[:2] == (2, 6):
+        import fitutils_2_6 as fitutils
+        from cluster_analyzer_2_6 import find_clusters
+    elif sys.version_info[:2] == (2, 7):
+        import fitutils_2_7 as fitutils
+        from cluster_analyzer_2_7 import find_clusters
+else:
+"""
 import fitutils
 from cluster_analyzer import find_clusters
-import traceback
 
 # import wingdbstub
 

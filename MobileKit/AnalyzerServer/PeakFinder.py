@@ -1,7 +1,6 @@
 import fnmatch
 from numpy import *
 import os
-import peakF
 import sys
 from optparse import OptionParser
 import time
@@ -20,6 +19,18 @@ try:
     import simplejson as json
 except:
     import json
+
+"""
+if sys.platform == "win32":
+    if sys.version_info[:2] == (2, 5):
+        import peakF_2_5 as peakF
+    elif sys.version_info[:2] == (2, 6):
+        import peakF_2_6 as peakF
+    elif sys.version_info[:2] == (2, 7):
+        import peakF_2_7 as peakF
+else:
+"""
+import peakF
 
 NaN = 1e1000/1e1000
 

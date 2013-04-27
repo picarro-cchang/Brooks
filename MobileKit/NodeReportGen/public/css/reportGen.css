@@ -77,6 +77,11 @@ div#id_jobTableDiv {
   margin-right: 25px ;  
 }
 
+table#id_jobTable {
+  table-layout: fixed;
+  word-wrap: break-word;
+}
+
 @media print {
   table {font-size: 14pt;}
   body {font-size: 14pt;}

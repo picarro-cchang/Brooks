@@ -8,6 +8,11 @@ define(function(require, exports, module) {
     var latlngValidator = pv.latlngValidator;
 
     function runValidator(run) {
+        function postCheck(resultDict, errorList) {
+            if (resultDict.startEtm >= resultDict.endEtm) {
+                errorList.push("Starting time must come before ending time");
+            }
+        }
         var rpv = newParamsValidator(run,
             [{"name": "analyzer", "required":true, "validator": "string"},
              {"name": "startEtm", "required":true, "validator": "number" },
@@ -17,7 +22,7 @@ define(function(require, exports, module) {
              {"name": "wedges", "required":false, "validator": /#[0-9a-fA-F]{6}/, "default_value":"#0000FF"},
              {"name": "analyses", "required":false, "validator": /#[0-9a-fA-F]{6}/, "default_value":"#FF0000"},
              {"name": "fovs", "required":false, "validator": /#[0-9a-fA-F]{6}/, "default_value":"#00FF00"}
-            ]);
+            ], postCheck);
         return rpv.validate();
     }
 
@@ -80,6 +85,18 @@ define(function(require, exports, module) {
     }
 
     function instrValidator(instr) {
+        function postCheck(resultDict, errorList) {
+            try {
+                if (resultDict.swCorner[0] >= resultDict.neCorner[0]) {
+                    errorList.push("SW corner latitude must be less than NE corner latitude.");
+                }
+                if (resultDict.swCorner[1] >= resultDict.neCorner[1]) {
+                    errorList.push("SW corner longitude must be less than NE corner longitude.");
+                }
+            }
+            catch(e) {
+            }
+        }
         var rpv = newParamsValidator(instr,
             [{"name": "title", "required": true, "validator": function(s) {
                 var valid = ((typeof s === "string") && s.trim() !== "" );
@@ -98,7 +115,7 @@ define(function(require, exports, module) {
              {"name": "peaksMinAmp", "required": false, "validator": "number", "default_value": 0.03},
              {"name": "runs", "required": true, "validator": validateListUsing(runValidator)},
              {"name": "timezone", "required":false, "validator": "string", "default_value": "UTC"},
-             {"name": "template", "required": true, "validator": templateValidator}]);
+             {"name": "template", "required": true, "validator": templateValidator}], postCheck);
         return rpv.validate();
     }
 

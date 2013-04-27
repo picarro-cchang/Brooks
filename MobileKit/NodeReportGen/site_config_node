@@ -10,7 +10,7 @@
 		"phantomPath": "C:\\Program Files (x86)\\phantomjs-1.9.0-windows\\phantomjs.exe",
 		"pdftkPath": "C:\\Program Files (x86)\\PDF Labs\\PDFtk Server\\bin\\pdftk.exe",
 		"pdfZoom": 1.0,
-		"headerFontSize": "100%",
+		"headerFontSize": "150%",
 		"footerFontSize": "70%"
 	},
 	"host": "192.168.33.10",

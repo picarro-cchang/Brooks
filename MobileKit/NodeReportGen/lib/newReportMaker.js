@@ -249,23 +249,34 @@ define(function(require, exports, module) {
             var proto = (SITECONFIG.reportport === 443) ? "https" : "http";
             var prefix = proto + '://' + SITECONFIG.reporthost + ':' + SITECONFIG.reportport;
             var baseUrl = prefix + '/getReportLocal/' + that.submit_key.hash + '/' + that.submit_key.dir_name;
-            submaps.push({"url": url.format({"pathname": baseUrl, "query": {"name":"Summary"}}), "name": "summary.pdf"});
 
-            for (var my=0; my<suby; my++) {
-                minLat = maxLat - dy;
-                minLng = rptMinLng;
-                for (var mx=0; mx<subx; mx++) {
-                    maxLng = minLng + dx;
-                    swCorner = gh.encodeGeoHash(minLat, minLng);
-                    neCorner = gh.encodeGeoHash(maxLat, maxLng);
-                    name = String.fromCharCode(65+my) + (mx + 1);
-                    submaps.push({"url": url.format({"pathname": baseUrl,
-                        "query": {"neCorner":neCorner, "swCorner":swCorner, "name":name}}),
-                        "name": (name + ".pdf")});
-                    minLng = maxLng;
-                }
-                maxLat = minLat;
+            /* Determine if the summary map has any elements enabled. If it has, add it to the list to be rendered */
+            var tables = instructions.template.summary.tables;
+            if (!_.isEmpty(instructions.template.summary.figures) ||
+                tables.analysesTable || tables.peaksTable || tables.surveysTable || tables.runsTable) {
+                submaps.push({"url": url.format({"pathname": baseUrl, "query": {"name":"Summary"}}), "name": "summary.pdf"});
             }
+
+            tables = instructions.template.submaps.tables;
+            if (!_.isEmpty(instructions.template.submaps.figures) ||
+                tables.analysesTable || tables.peaksTable || tables.surveysTable || tables.runsTable) {
+                for (var my=0; my<suby; my++) {
+                    minLat = maxLat - dy;
+                    minLng = rptMinLng;
+                    for (var mx=0; mx<subx; mx++) {
+                        maxLng = minLng + dx;
+                        swCorner = gh.encodeGeoHash(minLat, minLng);
+                        neCorner = gh.encodeGeoHash(maxLat, maxLng);
+                        name = String.fromCharCode(65 + my) + (mx + 1);
+                        submaps.push({"url": url.format({"pathname": baseUrl,
+                            "query": {"neCorner":neCorner, "swCorner":swCorner, "name":name}}),
+                            "name": (name + ".pdf")});
+                        minLng = maxLng;
+                    }
+                    maxLat = minLat;
+                }
+            }
+
             var ss = submaps.slice(0);
             function next() {
                 var submap;
