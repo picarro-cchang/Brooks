@@ -291,7 +291,6 @@ class PeakFinder(object):
         self.logtype = "peaks"
         self.last_peakname = None
         self.sockettimeout = 10
-
     #######################################################################
     # Generators for getting data from files or the database
     #######################################################################
@@ -698,7 +697,6 @@ class PeakFinder(object):
             scaleList.append(sqrt(ta*tb))
             ta, tb = tb, tfactor*tb
         hList = asarray(hList)
-        kernelList = asarray(kernelList)
         scaleList = asarray(scaleList)
         # The size of the kernels get larger with i. We wish to pack them into a 2d rectangular array
         maxKernel = len(kernelList[-1])
