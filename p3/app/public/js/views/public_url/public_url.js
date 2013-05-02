@@ -14,6 +14,16 @@ var PublicUrl = function(){
 		, "rprocs":  '["AnzLog:byEpoch"]'
 	};
 
+// hackety - give me anz fdds2015
+ //  initArgs = {
+	// 	 "csp_url":  "https://dev.picarro.com/investigator" //"https://dev.picarro.com/node"
+	// 	, "ticket_url":  "https://dev.picarro.com/investigator/rest/sec/dummy/1.0/Admin/" //"https://dev.picarro.com/node/rest/sec/dummy/1.0/Admin/"
+	// 	, "identity":  "2999bad153a4ee48da94836ad265764f"
+	// 	, "psys":  "FDDS2015"
+	// 	, "rprocs":  '["AnzLog:byEpoch"]'
+	// };
+
+
 	var fake_data = {
 		scientist:"Ben",
 		anz_log:"CFADS2206-20130221-232538Z-DataLog_User_Minimal.dat",
@@ -166,6 +176,7 @@ var PublicUrl = function(){
 }();
 
 $(document).ready(function(){
-	// publicurl.init();
+	 // console.log("why was public_url.init commented out?");
+	 // PublicUrl.init();
 })
 
