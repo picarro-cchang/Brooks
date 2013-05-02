@@ -12,21 +12,12 @@ var DataStore = function(){
 		, "rprocs":  '["AnzMeta:byAnz", "AnzLogMeta:byEpoch", "AnzLog:byEpoch"]'
 	};
 
-  $(document).ready(function(){
-	 if (document.getElementById('anzIdentity')) {
-	 	initArgs.identity = document.getElementById('anzIdentity').value;	
-	 }
-	 if (document.getElementById('anzName')) {
-	 	initArgs.psys = document.getElementById('anzName').value;	
-	 }
-  })
-  EXPOSED_INIT = initArgs;
 	p3anzApi = new P3ApiService(initArgs);
 
 	var default_obj = {
 		log_name:"default name",
 		short_name:"default_short",
-		durr:0,		
+		durr:0,
 		lat:-1,
 		lon:-1,
 		length:0,
@@ -37,7 +28,6 @@ var DataStore = function(){
 	}
 
 	var init = function(){
-
 	}
 
 	var err_fn = function() {
@@ -53,8 +43,28 @@ var DataStore = function(){
 		return max_durr;
 	}
 
+	var getLatestIP = function(){
+		log('get latest')
+		var reqobj = {};
+		reqobj.svc = "gdu";
+		reqobj.version = "1.0";
+		reqobj.resource = "AnzMeta";
+		reqobj.qryobj = {
+			    "qry": "byAnz"
+			, 	"anz": "FDDS2015"
+			,	'varList':'["PRIVATE_IP"]'
+		};
+
+		var rtn_fn = function(json, textStatus) {
+			log('latest ip', json, textStatus)
+		}
+
+
+		log(reqobj)
+		p3anzApi.geturl(reqobj, rtn_fn, err_fn);
+	}
+
 	var getLog = function(log_name){
-		log("getting log", log_name)
 		if(typeof my_logs[log_name] !== undefined){
 			return my_logs[log_name];
 		}else{
@@ -67,7 +77,6 @@ var DataStore = function(){
 	}
 
 	var getDecimatedData = function(log_name){
-		log('decimated', log_name)
 		if(typeof my_logs[log_name] !== undefined){
 			return my_logs[log_name].decimated_data;
 		}else{
@@ -124,7 +133,7 @@ var DataStore = function(){
 						this_log[el] = default_obj[el];
 					}
 				}
-			}			
+			}
 		}
 		
 		var my_log = my_logs[obj.log_name];
@@ -201,18 +210,15 @@ var DataStore = function(){
 
 
 	var getLogMeta = function(callback, callback2){
+		
 		var reqobj = {};
 		reqobj.svc = "gdu";
 		reqobj.version = "1.0";
 		reqobj.resource = "AnzLogMeta";
-
-		var analyzer = "CFADS2290"		
-		if (document.getElementById('anz')){
-			analyzer = document.getElementById('anz').value
-		}
 		reqobj.qryobj = {
 				"qry": "byEpoch"
-			, 	"anz": analyzer
+			// , 	"anz": "CFADS2290"
+			, 	"anz": "FDDS2015"
 			, 	'startEtm':0
 			,	'varList':'["LOGNAME", "durr"]'
 			, 	'reverse':'true'
@@ -222,6 +228,7 @@ var DataStore = function(){
 		var rtn_fn = function(json, textStatus) {
 		    if(json){
 		    	var lastDate;
+		    	getLatestIP();
 		    	for(var i = 0; i < json.length; i++){
 		    		if(json[i].LOGNAME.search("Sensor") < 0){
 		    			if(json[i].durr > max_durr) max_durr = json[i].durr;
@@ -326,6 +333,61 @@ var DataStore = function(){
 		}
 	}
 
+
+	var getLogFile = function(short_name, callback){
+		log_name = short_name + ".dat";
+
+		var reqobj = {};
+		reqobj.svc = "gdu";
+		reqobj.version = "1.0";
+		reqobj.resource = "AnzLog";
+		reqobj.qryobj = {
+				  "qry": "byEpoch"
+			, 	"alog": log_name 
+			, 	'startEtm': 0
+			, 	'decimated': 8
+			,	  'varList':'["CH4","GPS_ABS_LAT","GPS_ABS_LONG"]'
+			, 	'limit':'25000'
+			,   'rtnFmt':'file'
+		};
+		/*
+      ,   'decimated': 8
+			,   'simplePath': true
+		  you can use these two params above
+		*/
+		var rtn_fn = function(json, textStatus) {
+			setProps(log_name, {raw_data:json} );
+			console.log("my_logs[log_name]" + my_logs[log_name]);
+			callback(json, textStatus);
+		}
+
+		p3anzApi.geturl(reqobj, rtn_fn, err_fn);
+		// if(short_name){
+		// 	console.log "has short name"
+		//   p3anzApi.get(reqobj, rtn_fn, err_fn);
+		// }
+	 //  if(my_logs[log_name].raw_data.length === 0){
+	 //  	p3anzApi.get(reqobj, rtn_fn, err_fn);
+	 //  }else{
+	 //  	callback(my_logs[log_name].raw_data, short_name)
+	 //  }
+	}
+
+	// 	var rtn_fn = function(json, textStatus) {
+	// 		console.log(json);
+	// 		console.log(textStatus);
+	// 		setProps(log_name, {raw_data:json} );
+	// 		callback(console.log("callbak!", short_name);
+	// 	}
+
+	// 	if(0 === 0){
+	// 		p3anzApi.get(reqobj, rtn_fn, err_fn);
+	// 	}else{
+	// 		console.log(my_logs[log_name].raw_data)
+	// 		callback(my_logs[log_name].raw_data, short_name)
+	// 	}
+	// }
+
 	return {
 		init:init,
 		setProps:setProps,
@@ -335,6 +397,7 @@ var DataStore = function(){
 		getDecimatedData:getDecimatedData,
 		getMapData:getMapData,
 		getLog:getLog,
-		getMaxDurr:getMaxDurr
+		getMaxDurr:getMaxDurr,
+		getLogFile:getLogFile
 	}
 }();

@@ -106,7 +106,7 @@ mapmaster.Controller = function(){
 	var highlited_temp;
 
 	var temp_count = 0;
-	var control_panels = ['car', 'setting', 'map'];
+	var control_panels = ['setting', 'map'];
 
 	var transition_time = 300;
 
@@ -144,7 +144,12 @@ mapmaster.Controller = function(){
 
 	var min_plot = 0;
 	var max_plot = 0;
-	var dtype = "json";
+
+	var dtype = "Json";
+
+	var captureState = "IDLE";
+	var cancelStates =   ['TRIGGERED','INACTIVE','CANCELLING'];
+	var switchStates =   ['ARMED','TRIGGER_PENDING'];
 
 	var saveDataPoint = function(name, diff){
 		log("Profile", name, diff);
@@ -223,18 +228,21 @@ mapmaster.Controller = function(){
 			resize_map();
 		});
 
-		$('#btn_car_controls, #car_controls .control-close').tappable(function(){togglePane('car', 'map');});
+		$('#btn_car_controls').tappable(toggleCarControls);
+		$('#btn_iso_controls').tappable(toggleCaptureControls);
 		$('#btn_wind_controls').tappable(toggleWind);
 		$('#btn_cursor_controls').tappable(toggleCursor);
 		$('#btn_chart_controls').tappable(toggleChart);
 		$('#btn_legend_controls').tappable(toggleLegend);
 		$('#btn_pause_controls').tappable(togglePause);
-		$('#btn_iso_controls').tappable(toggleReference);
-		$('#btn_map_controls').tappable(function(){togglePane('map', 'car');});
+		$('#btn_reference').tappable(toggleReference);
+		$('#btn_map_controls').tappable(function(){togglePane('map', 'setting');});
 		$('#btn_setting_controls, #setting_controls .control-close').tappable(function(){togglePane('setting', 'map');});
 		// showPanel('setting');
 		$('#car_signal-top').tappable(setSignalTop)	;
 		$('#car_signal-front').tappable(setSignalFront);
+		$('#btn_capture_manual').tappable(startCaptureManual);
+		$('#btn_capture_trigger').tappable(startCaptureTrigger);
 
 		$('.settings-wrapper').tappable(toggleSwitch);
 
@@ -247,7 +255,16 @@ mapmaster.Controller = function(){
 	        if (CNSNT.prime_view === true) {
 	            dtype = "jsonp";
 	        }
-			call_rest(CNSNT.svcurl, "restartDatalog", dtype, {});
+	        var success_fn = function(){
+	        	log('success restarrt')
+	        	$('#modal_restart_log').modal('hide')
+	        	$('#btn_restart').removeClass("locked");
+				$('#btn_restart').trigger("click");
+	        }
+	        var err_fn = function(){
+
+	        }
+			call_rest(CNSNT.svcurl, "restartDatalog", dtype, {}, success_fn, err_fn);
 		 	resetMap();
 	        setTimeout(function(){
 				$('#btn_restart').removeClass("locked");
@@ -257,7 +274,7 @@ mapmaster.Controller = function(){
 			setTimeout(function(){
 				togglePane('map', 'setting')
 			},2000)
-			$('#modal_restart_log').modal('hide')
+			
 		})
 
 		$('#btn_shutdown_analyzer').on("click", function(){
@@ -265,8 +282,13 @@ mapmaster.Controller = function(){
 	        if (CNSNT.prime_view === true) {
 	            dtype = "jsonp";
 	        }
+	        var success_fn = function(){
 
-	        call_rest(CNSNT.svcurl, "shutdownAnalyzer", dtype, {});
+	        }
+	        var err_fn = function(){
+
+	        }
+	        call_rest(CNSNT.svcurl, "shutdownAnalyzer", dtype, {}, success_fn, err_fn);
 
 			$('#modal_shutdown_analyzer').modal('hide')
 		})
@@ -295,6 +317,7 @@ mapmaster.Controller = function(){
             dtype = "jsonp";
         }
 
+        setInterval(getCaptureState,2000)
 	};
 
 	var resetMap = function(){
@@ -321,6 +344,42 @@ mapmaster.Controller = function(){
 		// dom_parent.append(dom_holder);
 		// dom_parent.append(dom_holder2);
 	};
+
+	var toggleCarControls = function(){
+		$('#car_controls').show();
+		if($('#car_controls').hasClass('locked')){
+			return;
+		}
+		if($('#car_controls').hasClass('selected')){
+			$('#pageFooter').removeClass("grayscale")
+			$('#btn_car_controls').removeClass('selected');
+			$('#car_controls').removeClass('selected');
+			$('#car_controls').css({bottom:0}).animate({bottom:-130}, transition_time);
+		}else{
+			$('#pageFooter').addClass("grayscale")
+			$('#btn_car_controls').addClass('selected');
+			$('#car_controls').addClass('selected');
+			$('#car_controls').css({bottom:-130}).animate({bottom:0}, transition_time);
+		}
+	}
+
+	var toggleCaptureControls = function(){
+		$('#capture_controls').show();
+		if($('#capture_controls').hasClass('locked')){
+			return;
+		}
+		if($('#capture_controls').hasClass('selected')){
+			$('#pageFooter').removeClass("grayscale")
+			$('#btn_capture_controls').removeClass('selected');
+			$('#capture_controls').removeClass('selected');
+			$('#capture_controls').css({bottom:0}).animate({bottom:-130}, transition_time);
+		}else{
+			$('#pageFooter').addClass("grayscale")
+			$('#btn_capture_controls').addClass('selected');
+			$('#capture_controls').addClass('selected');
+			$('#capture_controls').css({bottom:-130}).animate({bottom:0}, transition_time);
+		}
+	}
 
 	var toggleSwitch = function(){
 		if($(this).hasClass('locked')){
@@ -350,7 +409,6 @@ mapmaster.Controller = function(){
 	};
 
 	var togglePause = function(){
-		log("current pause: ", data_pause)
 		if($('.icon-pause').hasClass('selected')){
 			$('.icon-pause').removeClass('selected');
 			data_pause = true;
@@ -359,6 +417,78 @@ mapmaster.Controller = function(){
 			data_pause = false;	
 		}
 	};
+
+	var confirmCancalCapture = function(){
+		if (confirm("Cancel Capture?")==true){
+			$('#btn_capture_manual').removeClass("selected");
+			$('#btn_capture_trigger').removeClass("selected");
+			setTimeout(function(){
+				toggleCaptureControls();
+				$('#btn_iso_controls').removeClass('selected')
+			},700)
+			var err_fn = function(err){
+	        	log("error Cancel")
+	        }
+			var success_fn = function(data){
+	        	log(data)
+	        }
+		  	call_rest(CNSNT.svcurl, "cancelIsotopicCapture", dtype,{},  success_fn, err_fn);
+	  	}
+	}
+
+	var startCaptureManual = function(){
+		if($('#btn_capture_manual').hasClass("selected") || cancelStates.indexOf(captureState) >= 0){
+			confirmCancalCapture();
+		}else{
+			if(switchStates.indexOf(captureState) >= 0){
+				$('#btn_capture_trigger').removeClass("selected");
+			}
+			var err_fn = function(err){
+	        	log("error Capture Manual")
+	        }
+			var success_fn = function(data){
+	        	log(data)
+	        }
+			$('#btn_capture_manual').addClass("selected");
+			setTimeout(function(){
+				toggleCaptureControls();
+				$('#btn_iso_controls').addClass('selected')
+			},1000)
+			call_rest(CNSNT.svcurl, "startManualIsotopicCapture", dtype,{},  success_fn, err_fn);
+		}
+	};
+
+	var startCaptureTrigger = function(){
+        if($('#btn_capture_trigger').hasClass("selected") || $('#btn_capture_manual').hasClass("selected") || cancelStates.indexOf(captureState) >= 0){
+			confirmCancalCapture();
+		}else{
+			var err_fn = function(err){
+	        	log("error Capture Trigger")
+	        }
+			var success_fn = function(data){
+	        	log(data)
+	        }
+			$('#btn_capture_trigger').addClass("selected")
+			setTimeout(function(){
+				toggleCaptureControls();
+				$('#btn_iso_controls').addClass('selected')
+			},1000)
+			call_rest(CNSNT.svcurl, "startTriggeredIsotopicCapture", dtype,{},  success_fn, err_fn);
+		}
+	};
+
+	var getCaptureState = function(){
+		var err_fn = function(err){
+        	log("error Capture Trigger")
+        }
+		var success_fn = function(data){
+        	log(data.result)
+        	captureState = data.result;
+        }
+		call_rest(CNSNT.svcurl, "getIsotopicCaptureState", dtype,{},  success_fn, err_fn);
+
+	}
+
 
 	var setReferenceIso = function(){
         var err_fn = function(err){
@@ -405,9 +535,11 @@ mapmaster.Controller = function(){
 	}
 
 	var setSignalTop = function(){
-		log("setting top")
-		$('#car_signal-front').removeClass('active');
-		$('#car_signal-top').addClass('active');
+		$('#car_signal-front').removeClass('selected');
+		$('#car_signal-top').addClass('selected');
+		setTimeout(function(){
+			toggleCarControls();
+		},750)
 
         var err_fn = function(err){
         	log("error signal top")
@@ -420,8 +552,11 @@ mapmaster.Controller = function(){
 	};
 
 	var setSignalFront = function(){
-		$('#car_signal-top').removeClass('active');
-		$('#car_signal-front').addClass('active');
+		$('#car_signal-top').removeClass('selected');
+		$('#car_signal-front').addClass('selected');
+		setTimeout(function(){
+			toggleCarControls();
+		},750)
 
         var err_fn = function(err){
         	log("error signal front")
@@ -655,8 +790,8 @@ mapmaster.Controller = function(){
  			var circle = $("<div class='legend-wrapper' data-size='" + s + "'><span class='legend-circle' style='height:" + size + "px;width:" + size + "px;' data-size='" + s + "'></span></div>");
  			label.css({top:(offCount++/16)*90 + '%'});
  			circle.css({
- 				top:(offCount++/16)*90 + '%',
- 				left:20,
+ 				top:(offCount++/16)*92 + '%',
+ 				left:23,
  				'margin-left':size/2*-1
  			});
 
@@ -705,6 +840,8 @@ mapmaster.Controller = function(){
 	    placeholder.bind("plotselected", function (event, ranges) {
 	    	selectedMinTime = ranges.xaxis.from;
 	    	selectedMaxTime = ranges.xaxis.to;
+
+	    	log(selectedMinTime, selectedMaxTime)
 			
 			center_map_flag = true;
 			time_filter = true;
@@ -1094,6 +1231,10 @@ mapmaster.Controller = function(){
 
 		var thisQueue = myQueue;
 
+
+		var valve0 = 1;
+
+
 		tile_points = []
 		isotopics = [{start:0,end:0}]
 		for(var i = 0 ; i < thisQueue.length ; i++){
@@ -1104,19 +1245,20 @@ mapmaster.Controller = function(){
 						on_plot = true;
 					}
 				}
-				tile_points.push([thisQueue[i].pdata.lat,thisQueue[i].pdata.lon, thisQueue[i].pdata.ch4, thisQueue[i].pdata.windE,thisQueue[i].pdata.windN, thisQueue[i].etm, on_plot])
+				tile_points.push([thisQueue[i].pdata.lat,thisQueue[i].pdata.lon, thisQueue[i].pdata.ch4, thisQueue[i].pdata.windE,thisQueue[i].pdata.windN, thisQueue[i].etm, on_plot, parseInt(thisQueue[i].pdata.ValveMask) & 0x1])
 
 			}else{
-				tile_points.push([thisQueue[i].pdata.lat,thisQueue[i].pdata.lon, thisQueue[i].pdata.ch4, thisQueue[i].pdata.windE,thisQueue[i].pdata.windN, thisQueue[i].etm, true])
+				tile_points.push([thisQueue[i].pdata.lat,thisQueue[i].pdata.lon, thisQueue[i].pdata.ch4, thisQueue[i].pdata.windE,thisQueue[i].pdata.windN, thisQueue[i].etm, true, parseInt(thisQueue[i].pdata.ValveMask) & 0x1])
 			}		
 			if(thisQueue[i].pdata.ch4 > dataMax) dataMax = thisQueue[i].pdata.ch4;
 			if(thisQueue[i].pdata.ch4 < dataMin) dataMin = thisQueue[i].pdata.ch4;
+
 			if(thisQueue[i].pdata.ValveMask !== valve_mask){
 				valve_mask = thisQueue[i].pdata.ValveMask;
-				if(thisQueue[i].pdata.ValveMask === 3){
+				if((parseInt(thisQueue[i].pdata.ValveMask) & 0x1) > 0){
 					isotopics[0].start = thisQueue[i].etm;			
 				}
-				if(thisQueue[i].pdata.ValveMask === 0 && isotopics.length > 1){
+				if((parseInt(thisQueue[i].pdata.ValveMask) & 0x1) === 0 && isotopics.length >= 1){
 					isotopics[0].end = thisQueue[i].etm;
 					isotopics.unshift({start:0,end:0})
 				}				
@@ -1184,8 +1326,13 @@ mapmaster.Controller = function(){
 
 		        ctx.beginPath();
 	        	ctx.arc(x, y, sizeScale(tile_points[i][2]), 0, 2 * Math.PI, false);
-	        	if(tile_points[i][2] > map_threshold){        		
-	        		ctx.fillStyle = colorScale(tile_points[i][2]);
+	        	if(tile_points[i][2] > map_threshold){   
+	        		if(tile_points[i][7] > 0){
+	        			ctx.fillStyle = "#0000ff";
+	        		}else{
+						ctx.fillStyle = colorScale(tile_points[i][2]);
+	        		}    		
+	        		
 		        	ctx.globalAlpha = 0.8;
 
 			        if(wind_visible){
@@ -1244,7 +1391,7 @@ mapmaster.Controller = function(){
 				$('#isotopic_layer').append(dom)
 				dom.css({
 					left:begin,
-					width:end - begin - 30
+					width:end - begin
 				})
 			}
 		}
@@ -1365,18 +1512,31 @@ mapmaster.Controller = function(){
 			return;
 		}
 
+		var peakCh4 = 0;
+		var valleyCh4 = 10000;
+
 		for(var i = 0 ; i < firstMax ; i++){
 			sumCh4 += path_data[i].pdata.ch4;
+
+			if(path_data[i].pdata.ch4 > peakCh4) peakCh4 = path_data[i].pdata.ch4;
+			if(path_data[i].pdata.ch4 < valleyCh4) valleyCh4 = path_data[i].pdata.ch4;
+
 			if(path_data[i].pdata.windN) sumWindN += path_data[i].pdata.windN;
 			if(path_data[i].pdata.windE) sumWindE += path_data[i].pdata.windE;
 			if(i%(interval)/2 == 0){
 				meanElement = path_data[i];
 			}
 			if(i%interval == 0 && i > 0){
+				var avgCh4 = sumCh4/interval;
+				if(Math.abs(peakCh4 - avgCh4) > Math.abs(valleyCh4 - avgCh4)){
+					avgCh4 = peakCh4;
+				}else{
+					avgCh4 = valleyCh4;
+				}
 				var temp = {
 					etm:meanElement.etm,
 					pdata:{
-						ch4:sumCh4/interval,
+						ch4:avgCh4,
 						windN:sumWindN/interval,
 						windE:sumWindE/interval,
 						lat:meanElement.pdata.lat,
@@ -1384,6 +1544,8 @@ mapmaster.Controller = function(){
 						ValveMask:meanElement.pdata.ValveMask						
 					}
 				}
+				peakCh4 = 0;
+				valleyCh4 = 10000;
 				di.push(temp);
 				sumCh4 = 0;
 				sumWindN = 0;

@@ -115,12 +115,12 @@ var FrontPage = function(){
 		  data: data,
 		  data_type:"JSON"
 		}).done(function(d) {
-			var url = "http://dev.picarro.com/investigator/dataview?s=" + d.short_url.split("/")[2]
+			var url = "http://dev.picarro.com/public_url?s=" + d.short_url.split("/")[2]
 			$('.share-input').val(url)
 			$('#share_url').append("<a href=" + url + " target='_blank'><i class='icon-search'></i></a>")
 		}).error(function(){
 			var shorty = 'dev.picarro.com/short/cubakrwl8fr'
-			var url = "http://dev.picarro.com/dataview?s=" + shorty.split("/")[2];
+			var url = "http://dev.picarro.com/public_url?s=" + shorty.split("/")[2];
 			$('#share_url').append("<a href=" + url + " target='_blank'><i class='icon-search'></i></a>")
 			$('.share-input').val(url)
 		});
@@ -777,3 +777,9 @@ var FrontPage = function(){
 $(document).ready(function(){
 	FrontPage.init()
 })
+
+
+
+
+	
+
