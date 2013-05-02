@@ -721,7 +721,7 @@ def rest_startTriggeredIsotopicCapture():
 
 @app.route('/rest/startManualIsotopicCapture')
 def rest_startManualIsotopicCapture():
-    _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_TriggeredState)
+    _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_TriggeredPendingState)
 
     result = {'result': 'OK'}
 
