@@ -49,7 +49,7 @@
   top: 20px; 
   right: 20px;
   z-index:101;
-  background: url(/static/images/rose.png);
+  background: url(/img/rose.png);
   /*background-color:rgba(255,255,255,.3);*/
 }
 
@@ -59,7 +59,7 @@
   right: 0;
   z-index:100;
 
-  /*background: url(/static/images/arrow.png);*/
+  /*background: url(/img/arrow.png);*/
   /*background-color:rgba(255,255,255,.3);*/
 }
 
@@ -68,7 +68,7 @@
   left: 100px; 
   right: 0;
   z-index:102;
-  background: url(/static/images/arrow.png);
+  background: url(/img/arrow.png);
   /*background-color:rgba(255,255,255,.3);*/
 }
 
@@ -141,33 +141,33 @@
 }*/
 
 #pageFooter .icon-car{
-  background: url(/static/images/icons/toolbar-car.png) no-repeat scroll 10px 5px transparent;
+  background: url(/img/icons/toolbar-car.png) no-repeat scroll 10px 5px transparent;
 }
 
 #pageFooter .icon-map{
-  background: url(/static/images/icons/toolbar-map.png) no-repeat scroll 10px 5px transparent;
+  background: url(/img/icons/toolbar-map.png) no-repeat scroll 10px 5px transparent;
 }
 
 #pageFooter .icon-setting{
-  background: url(/static/images/icons/toolbar-settings.png) no-repeat scroll 10px 5px transparent;
+  background: url(/img/icons/toolbar-settings.png) no-repeat scroll 10px 5px transparent;
 }
 
 #pageFooter .icon-legend{
-  background: url(/static/images/icons/toolbar-legend.png) no-repeat scroll 10px 5px transparent;
+  background: url(/img/icons/toolbar-legend.png) no-repeat scroll 10px 5px transparent;
   opacity: .8;
 }
 
 #pageFooter .icon-chart{
-  background: url(/static/images/icons/toolbar-chart.png) no-repeat scroll 10px 5px transparent;
+  background: url(/img/icons/toolbar-chart.png) no-repeat scroll 10px 5px transparent;
 }
 
 #pageFooter .icon-iso{
-  background: url(/static/images/icons/toolbar-iso.png) no-repeat scroll 10px 5px transparent;
+  background: url(/img/icons/toolbar-iso.png) no-repeat scroll 10px 5px transparent;
 }
 
 
 #pageFooter .icon-logo{
-  background: url(/static/images/public_url/picarro-inverted.png) no-repeat scroll 10px 9px transparent;
+  background: url(/img/public_url/picarro-inverted.png) no-repeat scroll 10px 9px transparent;
   width: 171px;
   padding-right:25px;
   position: fixed;
@@ -177,19 +177,19 @@
 }
 
 #pageFooter .icon-pause{
-  background: url(/static/images/icons/toolbar-pause-on.png) no-repeat scroll 10px 5px transparent;
+  background: url(/img/icons/toolbar-pause-on.png) no-repeat scroll 10px 5px transparent;
 }
 
 #pageFooter .icon-pause.selected{
-  background: url(/static/images/icons/toolbar-pause.png) no-repeat scroll 10px 5px #00ae43;
+  background: url(/img/icons/toolbar-pause.png) no-repeat scroll 10px 5px #00ae43;
 }
 
 #pageFooter .icon-wind{
-  background: url(/static/images/icons/toolbar-wind.png) no-repeat scroll 16px 5px transparent;
+  background: url(/img/icons/toolbar-wind.png) no-repeat scroll 16px 5px transparent;
 }
 
 #pageFooter .icon-cursor{
-  background: url(/static/images/icons/toolbar-cursor.png) no-repeat scroll 10px 5px transparent;
+  background: url(/img/icons/toolbar-cursor.png) no-repeat scroll 10px 5px transparent;
 }
 
 #pageFooter .icon-spacer{
@@ -286,19 +286,19 @@
 }
 
 .setting-icon-restart{
-  background: url("/static/images/glyphicons_081_refresh_white.png") no-repeat scroll 16px 12px transparent;
+  background: url("/img/glyphicons_081_refresh_white.png") no-repeat scroll 16px 12px transparent;
 }
 .setting-icon-power{
-  background: url("/static/images/glyphicons_063_power_white.png") no-repeat scroll 19px 14px transparent;
+  background: url("/img/glyphicons_063_power_white.png") no-repeat scroll 19px 14px transparent;
 }
 .setting-icon-isotope{
-  background: url("/static/images/isotope.png") no-repeat scroll 15px 14px transparent;
+  background: url("/img/isotope.png") no-repeat scroll 15px 14px transparent;
 }
 .setting-icon-cardio{
-  background: url("/static/images/glyphicons_282_cardio_white.png") no-repeat scroll 19px 14px transparent;
+  background: url("/img/glyphicons_282_cardio_white.png") no-repeat scroll 19px 14px transparent;
 }
 .setting-icon-globe{
-  background: url("/static/images/glyphicons_340_globe_white.png") no-repeat scroll 19px 14px transparent;
+  background: url("/img/glyphicons_340_globe_white.png") no-repeat scroll 19px 14px transparent;
 }
 
 /*controls*/
@@ -370,7 +370,7 @@
 }
 
 #car_controls_inner #car_signal-top{
-    background: url("/static/images/signal-top-off.png") no-repeat scroll 0 0 transparent;
+    background: url("/img/signal-top-off.png") no-repeat scroll 0 0 transparent;
     height: 199px;
     left: 283px;
     position: absolute;
@@ -379,12 +379,12 @@
 }
 
 #car_controls_inner #car_signal-top.active{
-  background: url("/static/images/signal-top-on.png") no-repeat scroll 0 0 transparent;
+  background: url("/img/signal-top-on.png") no-repeat scroll 0 0 transparent;
   opacity:1;
 }
 
 #car_controls_inner #car_signal-front{
-    background: url("/static/images/signal-top-off.png") no-repeat scroll 0 0 transparent;
+    background: url("/img/signal-top-off.png") no-repeat scroll 0 0 transparent;
     height: 199px;
     left: -2px;
     position: absolute;
@@ -393,7 +393,7 @@
 }
 
 #car_controls_inner #car_signal-front.active{
-  background: url("/static/images/signal-top-on.png") no-repeat scroll 0 0 transparent;
+  background: url("/img/signal-top-on.png") no-repeat scroll 0 0 transparent;
   opacity:1;
 }
 
