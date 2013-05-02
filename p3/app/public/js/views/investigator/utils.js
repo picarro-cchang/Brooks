@@ -278,9 +278,9 @@ mapmaster.CNSNT.streamerror =  (1000 * 30);
 
 mapmaster.CNSNT.histMax = 200;
 
-mapmaster.CSTATE.getDataLimit = 2000;
+mapmaster.CSTATE.getDataLimit = 2;
 
-mapmaster.CSTATE.seedDataLimit = 4000;
+mapmaster.CSTATE.seedDataLimit = 1000;
 
 mapmaster.CNSNT.fastUpdatePeriod = 1000;
 mapmaster.CNSNT.datUpdatePeriod = 5000;
