@@ -26,6 +26,13 @@ var sharedExperiments = db.collection('investigator');
 
 exports.getScientist = function(shorturl, callback)
 {
-  sharedExperiments.findOne({idHash:shorturl}, function(e, o){ callback(o); });
+  console.log("findOne Short url" + shorturl);
+  sharedExperiments.findOne({idHash:shorturl} ,
+    function(e, res) {
+    if (e) callback(e)
+    else callback(null, res)
+  });
+
+
 }
 

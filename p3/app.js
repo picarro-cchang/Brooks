@@ -4,13 +4,8 @@
 	* More Info : http://bit.ly/LsODY8
 	* Copyright (c) 2013 Stephen Braitsch
 **/
-var cluster = require('cluster')
 
 
-if ( cluster.isMaster ) {
-  for ( var i=0; i<2; ++i )
-    cluster.fork();
-} else {  
   var express = require('express');
   var http = require('http');
   var app = express();
@@ -39,4 +34,3 @@ if ( cluster.isMaster ) {
   http.createServer(app).listen(app.get('port'), function(){
   	console.log("Express server listening on port " + app.get('port'));
   })
-}
