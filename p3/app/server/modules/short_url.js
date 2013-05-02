@@ -22,18 +22,24 @@ var db = new MongoDB(dbName, new Server(dbHost, dbPort, {auto_reconnect: true}),
     console.log('connected to database :: ' + dbName);
   }
 });
+
 var sharedExperiments = db.collection('investigator');
 
 exports.getScientist = function(shorturl, callback)
 {
+  console.log("findOne Short url of before splitting/matching" + shorturl);
   if(shorturl.match(/\?/)) {
     shorturl = shorturl.split('?')[0];
   }
-  console.log("findOne Short url" + shorturl);
-  sharedExperiments.findOne({idHash:shorturl} ,
-    function(e, res) {
-    if (e) callback(e)
-    else callback(null, res)
+  console.log("findOne Short url of " + shorturl);
+  sharedExperiments.findOne({idHash:shorturl} , function(e, o) {
+    if (o){
+      console.log("Success: found the scientsit!");
+      callback(o);
+    } else{
+      console.log("Error: no scientist found... :( ");
+      callback(null);
+    }
   });
 
 
