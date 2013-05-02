@@ -665,14 +665,22 @@ mapmaster.Controller = function(){
 			            dtype = "jsonp";
 			        }
 			        var success_fn = function(){
-
+			        	$('#btn_restart').removeClass("locked");
+						$('#btn_restart').trigger("click");
 			        }
 			        var err_fn = function(){
 
 			        }
-			        call_rest(CNSNT.svcurl, "shutdownAnalyzer", dtype, {}, success_fn, err_fn);
+					call_rest(CNSNT.svcurl, "", dtype, {}, success_fn, err_fn);
+				 	resetMap();
+			        setTimeout(function(){
+						$('#btn_restart').removeClass("locked");
+						$('#btn_restart').trigger("click");
+					},1000)
 
-					$('#modal_shutdown_analyzer').modal('hide')
+					setTimeout(function(){
+						togglePane('map', 'setting')
+					},2000)
 				}else{
 					$('#btn_restart').removeClass('selected');
 					$('#btn_restart').removeClass("locked");
@@ -695,24 +703,12 @@ mapmaster.Controller = function(){
 			            dtype = "jsonp";
 			        }
 			        var success_fn = function(){
-			        	log('success restarrt')
-			        	$('#modal_restart_log').modal('hide')
-			        	$('#btn_restart').removeClass("locked");
-						$('#btn_restart').trigger("click");
+
 			        }
 			        var err_fn = function(){
 
 			        }
-					call_rest(CNSNT.svcurl, "restartDatalog", dtype, {}, success_fn, err_fn);
-				 	resetMap();
-			        setTimeout(function(){
-						$('#btn_restart').removeClass("locked");
-						$('#btn_restart').trigger("click");
-					},1000)
-
-					setTimeout(function(){
-						togglePane('map', 'setting')
-					},2000)
+			        call_rest(CNSNT.svcurl, "shutdownAnalyzer", dtype, {}, success_fn, err_fn);
 				}else{
 					$('#btn_shutdown').removeClass('selected');
 					$('#btn_shutdown').removeClass("locked");
