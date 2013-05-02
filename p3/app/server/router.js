@@ -57,6 +57,22 @@ module.exports = function(app) {
 			}
 		});
 	});
+
+	app.post('/investigator/login', function(req, res){
+		AM.manualLogin(req.param('user'), req.param('pass'), function(e, o){
+			if (!o){
+				res.send(e, 400);
+			}	else{
+			    req.session.user = o;
+				if (req.param('remember-me') == 'true'){
+					res.cookie('user', o.user, { maxAge: 900000 });
+					res.cookie('pass', o.pass, { maxAge: 900000 });
+				}
+				res.send(o, 200);
+			}
+		});
+	});
+	
 	
 // logged-in user homepage //
 	
@@ -88,6 +104,40 @@ module.exports = function(app) {
 
 
 	app.post('/home', function(req, res){
+		if (req.param('user') != undefined) {
+			console.log(req.param('anz-identity'));
+			AM.updateAccount({
+				user 		: req.param('email'),
+				name 		: req.param('name'),
+				email 		: req.param('email'),
+				bio 		: req.param('bio'),
+				experimentInfo 		: req.param('experimentInfo'),
+				country 	: req.param('country'),
+				pass		: req.param('pass'),
+				anz		: req.param('anz'),
+				anzName		: req.param('anz-name'),
+				anzIdentity		: req.param('anz-identity')
+			}, function(e, o){
+				if (e){
+					res.send('error-updating-account', 400);
+				}	else{
+					req.session.user = o;
+			    // update the user's login cookies if they exists //
+					if (req.cookies.user != undefined && req.cookies.pass != undefined){
+						res.cookie('user', o.user, { maxAge: 900000 });
+						res.cookie('pass', o.pass, { maxAge: 900000 });	
+					}
+					res.send('ok', 200);
+				}
+			});
+		}	else if (req.param('logout') == 'true'){
+			res.clearCookie('user');
+			res.clearCookie('pass');
+			req.session.destroy(function(e){ res.send('ok', 200); });
+		}
+	});
+	
+		app.post('/investigator/home', function(req, res){
 		if (req.param('user') != undefined) {
 			console.log(req.param('anz-identity'));
 			AM.updateAccount({
