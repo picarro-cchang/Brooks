@@ -377,6 +377,7 @@ module.exports = function(app) {
 
 // investigator path
 	app.get('/investigator', function(req, res) {
+		console.log('serving /investigator!');
     res.render('investigator', {  title: 'Signup', countries : CT });
 	});
 
@@ -505,7 +506,6 @@ app.get('/investigator/dataviewtest', function(req, res) {
 				      title: 'Investigator'
 		});
 	});
-
 
 // @app.route('/investigator')
 // def investigator():
