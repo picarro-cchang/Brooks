@@ -63,6 +63,7 @@
   </div>
   <canvas id="canvas_bubbles" width="138" height="550"></canvas>
   <canvas id="canvas_wind" width="138" height="550"></canvas>
+  <canvas id="canvas_extras" width="138" height="550"></canvas>
   <div id='pageContainer'>
     <div id='pageContent'>
       <div id='map_controls'>
@@ -86,31 +87,63 @@
       <div id='setting_controls'>
         <div class='control-header'>
           <h1>Settings</h1>
-          <div class='btn btn-large control-close'><i class="icon-remove"></i></div>
-          <div class='settings-wrapper'>
-            <span class='label-text'>Live Google Earth</span>
-            <div class='settings-switch-wrapper'>
-              <div class='switch_text left_text'>Off</div>
-              <div class='switch_groove'><div class='switch_handle'></div></div>
-              <div class='switch_text right_text selected'>On</div>
+          <div class='control-close'>X</div>
+
+          <div class="settings-group">
+            <div class="settings-group-header">Analyzer</div>
+            <div class='settings-wrapper'>
+              <div id='btn_restart' class="settings-btn-wrapper">
+                <div class="setting-icon setting-icon-restart"></div>
+                <div class="setting-label">Restart Log</div>
+              </div>
+              <div id='btn_shutdown' class="settings-btn-wrapper">
+                <div class="setting-icon setting-icon-power"></div>
+                <div class="setting-label">Power Off</div>
+              </div>
             </div>
           </div>
-          <br>
-          <div class='settings-wrapper selected'>
-            <span class='label-text'>Arm Mode</span>
-            <div class='settings-switch-wrapper'>
-              <div class='switch_text left_text'>ARM</div>
-              <div class='switch_groove'><div class='switch_handle'></div></div>
-              <div class='switch_text right_text selected'>Manual</div>
+
+          <div class="settings-group">
+            <div class="settings-group-header">Calibration</div>
+            <div class='settings-wrapper'>
+              <div class="settings-btn-wrapper">
+                <div class="setting-icon setting-icon-isotope"></div>
+                <div class="setting-label">Isotopic</div>
+              </div>
+              <div class="settings-btn-wrapper">
+                <div class="setting-icon setting-icon-cardio"></div>
+                <div class="setting-label">Concentration</div>
+              </div>
             </div>
           </div>
-          <br>
+
+          <div class="settings-group settings-group-small">
+            <div class="settings-group-header">Google Earth</div>
+            <div class='settings-wrapper'>
+              <div class="settings-btn-wrapper">
+                <div class="setting-icon setting-icon-globe"></div>
+                <div class="setting-label">Go Live</div>
+              </div>
+            </div>
+          </div>
+
+          
+         <!--  <br>
           <div id='btn_restart' class='settings-wrapper selected'>
             <span class='label-text'>Restart Log</span>
             <div class='settings-switch-wrapper'>
               <div class='switch_text left_text'>Restarting</div>
               <div class='switch_groove'><div class='switch_handle'></div></div>
               <div class='switch_text right_text selected'>Running</div>
+            </div>
+          </div>
+          <br>
+          <div id='btn_reference_new' class='settings-wrapper selected'>
+            <span class='label-text'>Reference Gas</span>
+            <div class='settings-switch-wrapper'>
+              <div class='switch_text left_text'>Isotopic</div>
+              <div class='switch_groove'><div class='switch_handle'></div></div>
+              <div class='switch_text right_text selected'>Conc.</div>
             </div>
           </div>
           <br>
@@ -121,16 +154,8 @@
               <div class='switch_groove'><div class='switch_handle'></div></div>
               <div class='switch_text right_text selected'>On</div>
             </div>
-          </div>
-          <br>
-          <div id='btn_reference' class='settings-wrapper selected'>
-            <span class='label-text'>Reference Gas</span>
-            <div class='settings-switch-wrapper'>
-              <div class='switch_text left_text'>Isotopic</div>
-              <div class='switch_groove'><div class='switch_handle'></div></div>
-              <div class='switch_text right_text selected'>Conc.</div>
-            </div>
-          </div>
+          </div> -->
+          
         </div>
       </div>
       <div id='legend-controls'>
