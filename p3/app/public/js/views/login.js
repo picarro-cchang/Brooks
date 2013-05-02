@@ -17,7 +17,7 @@ $(document).ready(function(){
 			}
 		},
 		success	: function(responseText, status, xhr, $form){
-			if (status == 'success') window.location.href = '/front_page';
+			if (status == 'success') window.location.href = '/investigator/front_page';
 		},
 		error : function(e){
             lv.showLoginError('Login Failure', 'Please check your username and/or password');
