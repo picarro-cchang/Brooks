@@ -1,0 +1,14 @@
+#canvas0{
+	/*background-color: gray;*/
+	z-index: 0;
+}
+#canvas1{
+	/*background-color: gray;*/
+	z-index: 1;
+}
+
+canvas{
+	position: absolute;
+	top: 0;	
+	left: 0;
+}
