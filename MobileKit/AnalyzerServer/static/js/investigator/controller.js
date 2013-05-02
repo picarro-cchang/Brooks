@@ -763,7 +763,8 @@ mapmaster.Controller = function(){
 			ctx.arc(100,100,num*spacing,minBearing,maxBearing, false); // outer (filled)
 			ctx.arc(100,100,num*spacing+spacing,maxBearing,minBearing, true); // outer (unfills it)
 			// log(path_data[i].pdata.windDirSdev)
-			ctx.fillStyle = colorScale(path_data[i].pdata.windDirSdev);
+			ctx.fillStyle = colorScale(path_data[i].pdata.windDirSdev);			
+
 			ctx.fill();
 			if(i == end - 1){
 			 	var bw = ball.width/2;
@@ -778,6 +779,13 @@ mapmaster.Controller = function(){
 				ctx_arrow.drawImage( ball, -bw, -bh );
 				ctx_arrow.rotate(-myBearing);                      // The shading shouldn't be rotated
 				ctx_arrow.translate(-x,-y);
+				ctx.beginPath();
+				ctx.fillStyle="rgba(255,255,255,.8)";
+				ctx.arc(80,80,20,0,2*Math.PI, true); // outer (unfills it)
+				ctx.fill();
+				ctx.font="18px Verdana";
+				ctx.fillStyle="#000";
+				ctx.fillText(Math.floor(path_data[i].pdata.windDirSdev,1),91,106);
 			}
 		}
 	}
