@@ -1,11 +1,3 @@
-
-#modal_restart_log {
-  tabindex:-1;
-  role:dialog;
-  aria-labelledby:myModalLabel
-  aria-hidden:true
-}
-
 #pageContainer{
   display: inline-block;
   height: 100%;
@@ -15,12 +7,7 @@
   background-color: #ddd;
   z-index:1;
 }
-#mymodal {
-  tabindex:"-1";
-  role:"dialog";
-  aria-labelledby:"myModalLabel";
-  aria-hidden:"true";
-}
+
 #pageContent{
   width:100%;
   top:0px;
@@ -35,25 +22,11 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 50px;
+  height: 60px;
   z-index:5000;
-  background: url(/img/toolbar_back.png);
+  background-color: black;
 }
 
-#pageFooter .icon{
-  display: inline-block;
-  height: 50px;
-  margin-top: -1px;
-  opacity:.65;
-  cursor: pointer;
-  padding-left:10px;
-  padding-right:10px;
-  z-index: 5002;
-}
-
-#pageFooter .icon.selected{
-  opacity: 1;
-}
 
 #canvas_bubbles{
   position: absolute;
@@ -71,7 +44,7 @@
   top: 20px; 
   right: 20px;
   z-index:101;
-  background: url(/img/rose.png);
+  background: url(/static/images/rose.png);
   /*background-color:rgba(255,255,255,.3);*/
 }
 
@@ -81,7 +54,7 @@
   right: 0;
   z-index:100;
 
-  /*background: url(/img/arrow.png);*/
+  /*background: url(/static/images/arrow.png);*/
   /*background-color:rgba(255,255,255,.3);*/
 }
 
@@ -90,7 +63,7 @@
   left: 100px; 
   right: 0;
   z-index:102;
-  background: url(/img/arrow.png);
+  background: url(/static/images/arrow.png);
   /*background-color:rgba(255,255,255,.3);*/
 }
 
@@ -101,7 +74,7 @@
   left: 4px;
   position: absolute;
   top: 91px;
-  width: 42px;
+  width: 48px;
   border: 1px solid #888888;
   border-radius: 5px 5px 5px 5px;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
@@ -125,104 +98,103 @@
   top: 6px;
 }
 
-/*.control-close {
-  position: absolute;
-  right: 10px;
-  top: 5px;
+#pageFooter .icon{
   display: inline-block;
+  height: 60px;
+  width:64px;
+  cursor: pointer;
+  padding-left:10px;
+  padding-right:10px;
+  z-index: 5002;
+}
+
+#pageFooter .icon.selected{
+  opacity: 1;
+  background-color: #00ae43;
+}
+
+#pageFooter.grayscale .icon.selected{
+  opacity: 1;
+  background-color: #5C5C5C;
+}
+
+#pageFooter.grayscale{
+   background-color: #333;
+}
+
+/*.icon.selected:hover{
+  opacity: 1;
+  background-color: #00ae43;
+}
+
+.icon:hover{
+  opacity: 1;
+  background-color: #666;
 }*/
 
 #pageFooter .icon-car{
-  background: url(/img/icons/toolbar-car.png) no-repeat scroll 10px 0 transparent;
-  width: 81px;
+  background: url(/static/images/icons/toolbar-car.png) no-repeat scroll 10px 5px transparent;
 }
 
 #pageFooter .icon-map{
-  background: url(/img/icons/toolbar-map.png) no-repeat scroll 10px 0 transparent;
-  width: 36px;
+  background: url(/static/images/icons/toolbar-map.png) no-repeat scroll 10px 5px transparent;
 }
 
 #pageFooter .icon-setting{
-  background: url(/img/icons/toolbar-settings.png) no-repeat scroll 10px 0 transparent;
-  width: 33px;
+  background: url(/static/images/icons/toolbar-settings.png) no-repeat scroll 10px 5px transparent;
 }
 
 #pageFooter .icon-legend{
-  background: url(/img/icons/toolbar-legend.png) no-repeat scroll 10px 0 transparent;
-  width: 62px;
+  background: url(/static/images/icons/toolbar-legend.png) no-repeat scroll 10px 5px transparent;
   opacity: .8;
 }
 
 #pageFooter .icon-chart{
-  background: url(/img/icons/toolbar-chart.png) no-repeat scroll 10px 0 transparent;
-  width: 26px;
-  padding-right: 13px;
+  background: url(/static/images/icons/toolbar-chart.png) no-repeat scroll 10px 5px transparent;
 }
 
-#pageFooter .icon-chart.selected{
-  background: url(/img/icons/toolbar-chart-on.png) no-repeat scroll 10px 0 transparent;
+#pageFooter .icon-iso{
+  background: url(/static/images/icons/toolbar-iso.png) no-repeat scroll 10px 5px transparent;
 }
+
 
 #pageFooter .icon-logo{
-  background: url(/img/icons/toolbar-logo.png) no-repeat scroll 10px 0 transparent;
-  width: 142px;
+  background: url(/static/images/public_url/picarro-inverted.png) no-repeat scroll 10px 9px transparent;
+  width: 171px;
   padding-right:25px;
   position: fixed;
-  right:12px;
-  bottom: 0;
+  right:0;
+  bottom: -10px;
   z-index: -1;
 }
 
 #pageFooter .icon-pause{
-  background: url(/img/icons/toolbar-pause.png) no-repeat scroll 10px 0 transparent;
-  width: 36px;
-  padding-right: 13px;
+  background: url(/static/images/icons/toolbar-pause-on.png) no-repeat scroll 10px 5px transparent;
 }
 
 #pageFooter .icon-pause.selected{
-  background: url(/img/icons/toolbar-pause-on.png) no-repeat scroll 10px 0 transparent;
-  opacity: 1;
+  background: url(/static/images/icons/toolbar-pause.png) no-repeat scroll 10px 5px #00ae43;
 }
 
 #pageFooter .icon-wind{
-  background: url(/img/icons/toolbar-wind.png) no-repeat scroll 10px 0 transparent;
-  width: 26px;
-  padding-right: 13px;
-}
-
-#pageFooter .icon-wind.selected{
-  background: url(/img/icons/toolbar-wind-on.png) no-repeat scroll 10px 0 transparent;
-  opacity: 1;
+  background: url(/static/images/icons/toolbar-wind.png) no-repeat scroll 16px 5px transparent;
 }
 
 #pageFooter .icon-cursor{
-  background: url(/img/icons/toolbar-cursor.png) no-repeat scroll 10px 0 transparent;
-  width: 39px;
-  padding-right: 13px;
-}
-
-#pageFooter .icon-cursor.selected{
-  background: url(/img/icons/toolbar-cursor-on.png) no-repeat scroll 10px 0 transparent;
-  opacity: 1;
+  background: url(/static/images/icons/toolbar-cursor.png) no-repeat scroll 10px 5px transparent;
 }
 
 #pageFooter .icon-spacer{
-  background: url(/img/icons/toolbar-spacer.png);
+  background-color: white;
   display: inline-block;
-  width: 2px;
-  height: 50px;
-  margin-top: -1px;
+  width: 1px;
+  height: 60px;
+  margin-top: 0px;
+  opacity: 0.5;
+  margin-left:-4px;
+  margin-right:-4px;
 }
 
-#pageFooter .icon-spacer-short{
-  background: url("/img/icons/toolbar-spacer.png") repeat scroll 0 -2px transparent;
-  display: inline-block;
-  height: 30px;
-  margin-top: 10px;
-  opacity: 0.5;
-  top: 10px;
-  width: 2px;
-}
 
 #pageHeader .nav_buttons{
   display: inline-block;
@@ -239,7 +211,7 @@
 .settings-wrapper{
   display: inline-block;
   width: 100%;
-  height: 80px;
+  height: 72px;
   border-bottom: 1px solid #fff;
   padding:20px;
 }
@@ -282,7 +254,7 @@
   height: 40px;
   top:2px;
   left:2px;
-  background: url("/img/switch_marker.png") no-repeat scroll 0 0 transparent;
+  background: url("/static/images/switch_marker.png") no-repeat scroll 0 0 transparent;
 }
 
 .switch_text{
@@ -332,7 +304,7 @@
   position: absolute;
 }
 
-#car_controls, #setting_controls{
+#setting_controls{
   width:100%;
   left:0%;
   height: 100%;
@@ -346,18 +318,38 @@
   background: #e0e0e0;
 }
 
-#car_controls_inner{
-    background:url("/img/prius2.png") no-repeat scroll 55px 21px transparent;
-    display: inline-block;
-    height: 404px;
-    left:50%;
-    margin-left:-350px;
-    margin-right:-350px;
-    margin-top:-202px;
-    position: absolute;
-    width: 700px;
-    top:50%;
+#car_controls, #capture_controls{
+  position: absolute;
+  width: 168px;
+  height: 128px;
+  left: 0px;
+  bottom: -130px;
+  z-index: 4999;
+}
 
+#capture_controls{
+  left:674px;
+  height:130px;
+}
+
+#capture_controls .icon{
+  border-bottom: 1px solid white;
+}
+#car_controls .icon, #capture_controls .icon{
+  background-color: black;
+  height: 64px;
+  width: 84px;
+  display: inline-block;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  cursor: pointer;
+  line-height:4em
+}
+
+#car_controls .icon.selected, #capture_controls .icon.selected{
+  background-color: #00ae43;
 }
 
 .car-signal{
@@ -371,7 +363,7 @@
 }
 
 #car_controls_inner #car_signal-top{
-    background: url("/img/signal-top-off.png") no-repeat scroll 0 0 transparent;
+    background: url("/static/images/signal-top-off.png") no-repeat scroll 0 0 transparent;
     height: 199px;
     left: 283px;
     position: absolute;
@@ -380,12 +372,12 @@
 }
 
 #car_controls_inner #car_signal-top.active{
-  background: url("/img/signal-top-on.png") no-repeat scroll 0 0 transparent;
+  background: url("/static/images/signal-top-on.png") no-repeat scroll 0 0 transparent;
   opacity:1;
 }
 
 #car_controls_inner #car_signal-front{
-    background: url("/img/signal-top-off.png") no-repeat scroll 0 0 transparent;
+    background: url("/static/images/signal-top-off.png") no-repeat scroll 0 0 transparent;
     height: 199px;
     left: -2px;
     position: absolute;
@@ -394,7 +386,7 @@
 }
 
 #car_controls_inner #car_signal-front.active{
-  background: url("/img/signal-top-on.png") no-repeat scroll 0 0 transparent;
+  background: url("/static/images/signal-top-on.png") no-repeat scroll 0 0 transparent;
   opacity:1;
 }
 
@@ -430,10 +422,10 @@
 
 /*
 .generic_slider{
-	width:400px;
-	margin-top:14px;
-	display: inline-block;
-	margin-right: 20px;
+  width:400px;
+  margin-top:14px;
+  display: inline-block;
+  margin-right: 20px;
 }*/
 
 #time_slider{
@@ -460,17 +452,19 @@
 }
 #isotopic_layer{
   width:100%;
-  height:10px;
-  bottom:8px;
+  height:100%;
+  bottom:0;
   position: absolute;
 }
+
 .iso-display{
   position: absolute;
   display: inline-block;
-  background-color: blue;
-  height:10px;
-  bottom:0px;
-  opacity:.6;
+  background-color: black;
+  height:auto;
+  bottom:8px;
+  top:8px;
+  opacity:.16;
 }
 
 #map_realtime_flot{
@@ -496,7 +490,7 @@
     background: none repeat scroll 0 0 white;
     border: 1px solid gray;
     bottom: -10%;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: bold;
     height: 20px;
     margin-bottom: -10px;
@@ -569,6 +563,3 @@
     width: 20px;
     height: 20px;
 }
-
-
-

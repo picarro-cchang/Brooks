@@ -469,7 +469,8 @@ app.get('/investigator/dataview', function(req, res) {
 			  AM.getAccountByAnzLog(anz_log_name,function(o2){
 					if (o2){
 						console.log('has account from anz_log!');
-						res.render('public_url', {
+						console.log(o2);
+						res.render('dataview', {
 				      // user : AM.get.user()
 				      pageData : {
 				    						 scientistName: o2.name,
@@ -488,6 +489,23 @@ app.get('/investigator/dataview', function(req, res) {
 			}
 		});
 	});
+
+//  hackety test to get around not havnig data locally for the pageData 
+// app.get('/investigator/dataviewtest', function(req, res) {
+// 		console.log("dataview requst");
+// 		console.log(req.param('s'));
+	
+// 		res.render('dataview', {
+// 				      // user : AM.get.user()
+// 				      pageData : {
+// 				    						 scientistName: "awesome",
+// 				    	           project: "dude",
+//                          bio: "o2.bio"
+//                        },
+// 				      title: 'Investigator'
+// 		});
+// 	});
+
 
 // @app.route('/investigator')
 // def investigator():
