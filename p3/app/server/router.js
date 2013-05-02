@@ -414,7 +414,7 @@ module.exports = function(app) {
 		console.log("dataview requst");
 		console.log(req.param('s'));
 		SU.getScientist(req.param('s'), function(o){
-			if (o != null) ){
+			if (o != null){
 				console.log('found the scientist!');
 				console.log(o);
 			  // something lke anz_log: 'FDDS2015-20130416-233912Z-DataLog_User_Minimal.dat'
@@ -454,7 +454,7 @@ app.get('/investigator/dataview', function(req, res) {
 		console.log("dataview requst");
 		console.log(req.param('s'));
 		SU.getScientist(req.param('s'), function(o){
-			if (o != null) ){
+			if (o != null){
 				console.log('found the scientist!');
 				console.log(o);
 			  // something lke anz_log: 'FDDS2015-20130416-233912Z-DataLog_User_Minimal.dat'
