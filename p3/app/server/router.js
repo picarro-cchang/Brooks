@@ -171,6 +171,108 @@ module.exports = function(app) {
 		}
 	});
 	
+
+// logged-in user profile //
+	
+	app.get('/profile', function(req, res) {
+	    if (req.session.user == null){
+	// if user is not logged-in redirect back to login page //
+	        res.redirect('/');
+	    }   else{
+			res.render('home', {
+				title : 'Control Panel',
+				countries : CT,
+				udata : req.session.user
+			});
+	    }
+	});
+
+	app.get('/investigator/profile', function(req, res) {
+	    if (req.session.user == null){
+	// if user is not logged-in redirect back to login page //
+	        res.redirect('/');
+	    }   else{
+			res.render('home', {
+				title : 'Control Panel',
+				countries : CT,
+				udata : req.session.user
+			});
+	    }
+	});
+
+
+	app.post('/profile', function(req, res){
+		if (req.param('user') != undefined) {
+			console.log(req.param('anz-identity'));
+			AM.updateAccount({
+				user 		: req.param('email'),
+				name 		: req.param('name'),
+				email 		: req.param('email'),
+				bio 		: req.param('bio'),
+				experimentInfo 		: req.param('experimentInfo'),
+				country 	: req.param('country'),
+				pass		: req.param('pass'),
+				anz		: req.param('anz'),
+				anzName		: req.param('anz-name'),
+				anzIdentity		: req.param('anz-identity')
+			}, function(e, o){
+				if (e){
+					res.send('error-updating-account', 400);
+				}	else{
+					req.session.user = o;
+			    // update the user's login cookies if they exists //
+					if (req.cookies.user != undefined && req.cookies.pass != undefined){
+						res.cookie('user', o.user, { maxAge: 900000 });
+						res.cookie('pass', o.pass, { maxAge: 900000 });	
+					}
+					res.send('ok', 200);
+				}
+			});
+		}	else if (req.param('logout') == 'true'){
+			res.clearCookie('user');
+			res.clearCookie('pass');
+			req.session.destroy(function(e){ res.send('ok', 200); });
+		}
+	});
+	
+		app.post('/investigator/profile', function(req, res){
+		if (req.param('user') != undefined) {
+			console.log(req.param('anz-identity'));
+			AM.updateAccount({
+				user 		: req.param('email'),
+				name 		: req.param('name'),
+				email 		: req.param('email'),
+				bio 		: req.param('bio'),
+				experimentInfo 		: req.param('experimentInfo'),
+				country 	: req.param('country'),
+				pass		: req.param('pass'),
+				anz		: req.param('anz'),
+				anzName		: req.param('anz-name'),
+				anzIdentity		: req.param('anz-identity')
+			}, function(e, o){
+				if (e){
+					res.send('error-updating-account', 400);
+				}	else{
+					req.session.user = o;
+			    // update the user's login cookies if they exists //
+					if (req.cookies.user != undefined && req.cookies.pass != undefined){
+						res.cookie('user', o.user, { maxAge: 900000 });
+						res.cookie('pass', o.pass, { maxAge: 900000 });	
+					}
+					res.send('ok', 200);
+				}
+			});
+		}	else if (req.param('logout') == 'true'){
+			res.clearCookie('user');
+			res.clearCookie('pass');
+			req.session.destroy(function(e){ res.send('ok', 200); });
+		}
+	});
+	
+
+
+
+
 // creating new accounts //
 	
 	app.get('/signup', function(req, res) {
