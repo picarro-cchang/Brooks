@@ -1,7 +1,10 @@
 module.exports = function(){
     switch(process.env.NODE_ENV){
         case 'development':
-            return {"mongo":{"dbport":27017}};
+            return {
+              "mongo":{"dbport":27017},
+              "replSet":false
+          };
 
         case 'local':
             return {
@@ -16,7 +19,10 @@ module.exports = function(){
              };
 
         case 'production':
-            return {"mongo":{"dbport":37018}};
+            return {
+              "mongo":{"dbport":[37017,38018,37019]},
+              "replSet":true
+          };
 
         default:
             return {"mongo":{"dbport":37017}};
