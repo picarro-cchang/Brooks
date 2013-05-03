@@ -4,6 +4,7 @@ var MongoDB   = require('mongodb').Db;
 var Server    = require('mongodb').Server;
 var moment    = require('moment');
 var Config = require(__dirname + '../../config.js'),
+var ReplSet = require('mongo').ReplSetServers;
 conf = new Config();
 
 // var dbPort     = 27017;
