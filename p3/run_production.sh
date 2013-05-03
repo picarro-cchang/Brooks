@@ -1,1 +1,1 @@
-node app.js >> investigator.log 2>&1 &
+sudo node app.js >> investigator.log 2>&1 &

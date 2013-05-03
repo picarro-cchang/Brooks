@@ -454,69 +454,51 @@ module.exports = function(app) {
 app.get('/investigator/dataview', function(req, res) {
 		console.log("dataview requst");
 		console.log(req.param('s'));
-		SU.getScientist(req.param('s'), function(o){
-			if (o != null){
-				console.log('found the scientist!');
-				console.log(o);
-			  // something lke anz_log: 'FDDS2015-20130416-233912Z-DataLog_User_Minimal.dat'
-				// 'FDDS2015-20130416-233912Z-DataLog_User_Minimal.dat'.match(/\w{0,9}/)
-				// ["FDDS2015"]
-				if (o.anz_log) {
-					var anz_log_name = o.anz_log.match(/\w{0,9}/)[0];	
-				} else{
-					res.send('no analyzer found for this experiment', 400);
-				};
-
-			  AM.getAccountByAnzLog(anz_log_name,function(o2){
-					if (o2){
-						console.log('has account from anz_log!');
-						console.log(o2);
-						res.render('dataview', {
-				      // user : AM.get.user()
-				      pageData : {
-				    						 scientistName: o2.name,
-				    	           project: o2.experimentInfo,
-                         bio: o2.bio
-                       },
-				      title: 'Investigator',
-				      countries : CT
-				    });
-				  } else{
-					  res.send('no scientist found for this analyzer', 400);				  
-					}
-				});	
-			}	else {
-				res.send('dataview not found for this short code', 400);
-			}
-		});
+		if (req.param('s') && req.param('s').length > 4) {
+		  SU.getScientist(req.param('s'), function(o){
+		  	if (o != null){
+		  		console.log('found the scientist!');
+		  		console.log(o);
+		  	  // something lke anz_log: 'FDDS2015-20130416-233912Z-DataLog_User_Minimal.dat'
+		  		// 'FDDS2015-20130416-233912Z-DataLog_User_Minimal.dat'.match(/\w{0,9}/)
+		  		// ["FDDS2015"]
+		  		if (o.anz_log) {
+		  			var anz_log_name = o.anz_log.match(/\w{0,9}/)[0];	
+		  		} else{
+		  			res.send('no analyzer found for this experiment', 400);
+		  		};
+  
+		  	  AM.getAccountByAnzLog(anz_log_name,function(o2){
+		  			if (o2){
+		  				console.log('has account from anz_log!');
+		  				console.log(o2);
+		  				res.render('dataview', {
+		  		      // user : AM.get.user()
+		  		      pageData : {
+		  		    						 scientistName: o2.name,
+		  		    	           project: o2.experimentInfo,
+                           bio: o2.bio
+                         },
+		  		      title: 'Investigator',
+		  		      countries : CT
+		  		    });
+		  		  } else{
+		  			  res.send('no scientist found for this analyzer', 400);
+		  			}
+		  		});	
+		  	}	else {
+		  		res.send('dataview not found for this short code', 400);
+		  	}
+		  });
+		 } else {
+		 		if(req.session.user == null) {
+		 		res.send('Resource does not exist', 404);
+		 	} else {
+		 		res.redirect('/investigator/front_page');
+		 	}
+		 }
 	});
-
-//  hackety test to get around not havnig data locally for the pageData 
-app.get('/investigator/dataviewtest', function(req, res) {
-		console.log("dataview requst");
-		console.log(req.param('s'));
-	
-		res.render('dataview', {
-				      // user : AM.get.user()
-				      pageData : {
-				    						 scientistName: "awesome",
-				    	           project: "dude",
-                         bio: "o2.bio"
-                       },
-				      title: 'Investigator'
-		});
-	});
-
-// @app.route('/investigator')
-// def investigator():
-//     amplitude = float(request.values.get('amplitude',0.1))
-//     do_not_follow = int('do_not_follow' in request.values)
-//     follow = int('follow' in request.values or not do_not_follow)
-//     center_longitude = float(request.values.get('center_longitude',-121.98432))
-//     center_latitude = float(request.values.get('center_latitude',37.39604))
-//     return render_template('investigator_ben.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
-//                                        center_latitude=center_latitude,center_longitude=center_longitude)
-	
+		
 	app.get('*', function(req, res) { res.render('404', { title: 'Page Not Found'}); });
 
 
