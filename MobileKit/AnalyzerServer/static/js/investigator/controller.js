@@ -147,6 +147,10 @@ mapmaster.Controller = function(){
 
 	var dtype = "Json";
 
+	var counterValue = 0;
+	var counterDirection = 1;
+	var counterTimer;
+
 	var captureState = "IDLE";
 	var cancelStates =   ['TRIGGERED','INACTIVE','CANCELLING'];
 	var switchStates =   ['ARMED','TRIGGER_PENDING'];
@@ -260,14 +264,6 @@ mapmaster.Controller = function(){
 		$('#btn_capture_trigger').tappable(startCaptureTrigger);
 
 		$('.settings-btn-wrapper').tappable(toggleSwitch);
-		// $('#btn_reference_new').tappable(toggleReference);
-		// $('#btn_restart').tappable(restartLog);
-		// $('#btn_shutdown').tappable(shutdownAnalyzer);
-		// $('#btn_reference_gas').tappable(toggleReference);
-
-		// $('#btn_map_controls').tappable(function(){
-		// 	confirm("yo")
-		// })
 
       	$('#btn_close_weather, #modal_restart_log .btn-close').on("click", function(){
 			$('#btn_restart').removeClass("locked");
@@ -296,16 +292,21 @@ mapmaster.Controller = function(){
         }
 
         // !!!!!! Remove for push
-        // setInterval(getCaptureState,2000)
+        setInterval(getCaptureState,2000)
 
         getAnalysis();
 	};
 
 	var resetMap = function(){
+		log('restarting map')
 		path_data = [];
 		path_queue = [];
+		dataMax = 0;
+		dataMin = 1000;
 		CSTATE.firstData = true;
 		CSTATE.clearConcMarkers = true;
+		$("#map2_flot").html("");
+		$("#map_realtime_flot").html("");
 
 		insertQueue();
 		plotFlot();
@@ -354,11 +355,13 @@ mapmaster.Controller = function(){
 			$('#btn_capture_controls').removeClass('selected');
 			$('#capture_controls').removeClass('selected');
 			$('#capture_controls').css({bottom:0}).animate({bottom:-130}, transition_time);
+			$('#btn_capture_trigger').css({top:64}).animate({top:0}, transition_time);
 		}else{
 			$('#pageFooter').addClass("grayscale")
 			$('#btn_capture_controls').addClass('selected');
 			$('#capture_controls').addClass('selected');
 			$('#capture_controls').css({bottom:-130}).animate({bottom:0}, transition_time);
+			$('#btn_capture_trigger').css({top:0}).animate({top:65}, transition_time);
 		}
 	}
 
@@ -366,8 +369,11 @@ mapmaster.Controller = function(){
 		if($(this).hasClass('locked')){
 			return;
 		}
-		if($(this).attr("ID") === "btn_reference_new"){
-			toggleReference();
+		if($(this).attr("ID") === "btn_start_iso"){
+			toggleReferenceIso();
+		}
+		if($(this).attr("ID") === "btn_start_conc"){
+			toggleReferenceConc();
 		}
 		if($(this).hasClass('selected')){
 			$(this).removeClass('selected');
@@ -413,8 +419,12 @@ mapmaster.Controller = function(){
 		if (confirm("Cancel Capture?")==true){
 			$('#btn_capture_manual').removeClass("selected");
 			$('#btn_capture_trigger').removeClass("selected");
+			$('#capture_controls').css({"z-index":4999})
+			$('#capture_controls').find(".icon").css({"z-index":4999})
 			setTimeout(function(){
-				toggleCaptureControls();
+				if($('#capture_controls').hasClass('selected')){
+					toggleCaptureControls();
+				}
 				$('#btn_iso_controls').removeClass('selected')
 			},700)
 			var err_fn = function(err){
@@ -441,6 +451,8 @@ mapmaster.Controller = function(){
 	        	log(data)
 	        }
 			$('#btn_capture_manual').addClass("selected");
+			$('#capture_controls').css({"z-index":5001})
+			$('#btn_capture_manual').css({"z-index":5001})
 			setTimeout(function(){
 				toggleCaptureControls();
 				$('#btn_iso_controls').addClass('selected')
@@ -464,42 +476,114 @@ mapmaster.Controller = function(){
 				toggleCaptureControls();
 				$('#btn_iso_controls').addClass('selected')
 			},1000)
+			$('#capture_controls').css({"z-index":5001})
+			$('#btn_iso_controls').css({"z-index":5001})
 			call_rest(CNSNT.svcurl, "startTriggeredIsotopicCapture", dtype,{},  success_fn, err_fn);
 		}
 	};
 
+	var formatCounter = function(c){
+		var mins = Math.floor(c/60);
+		var secs = c - (mins*60);
+		if(secs < 10) secs = "0" + secs;
+		return mins + ":" + secs;
+	}
+
+	var startCountupCounter = function(){
+		counterValue = 0;
+		counterDirection = 1;
+		counterTimer = setInterval(counterTimerListener, 1000)
+		$('#countdown_timer').show();
+	}
+
+	var startCountdownTimer = function(){
+		counterValue = 60*9;
+		counterDirection = -1;
+		counterTimer = setInterval(counterTimerListener, 1000)
+		$('#countdown_timer').show();
+	}
+
+	var counterTimerListener = function(){
+		counterValue = counterValue + counterDirection;
+		$('#countdown_timer').html(formatCounter(counterValue))
+		if((counterDirection < 0 && counterValue <= 0)){
+			stopCounter();
+		}
+	}
+
+	var stopCounter = function(){
+		clearInterval(counterTimer);
+		$('#countdown_timer').hide();
+	}
+
 	var getCaptureState = function(){
+		log("get capture state")
 		var err_fn = function(err){
         	log("error Capture Trigger")
         }
 		var success_fn = function(data){
-        	log(data.result)
         	captureState = data.result;
+        	if(captureState == "IDLE"){
+        		stopCounter();
+        	}
         }
 		call_rest(CNSNT.svcurl, "getIsotopicCaptureState", dtype,{},  success_fn, err_fn);
-
 	}
 
-
-	var setReferenceIso = function(){
+	var stopRefCalibration = function(){
+		stopCounter();
         var err_fn = function(err){
         	log("error Reference top")
         }
 		var success_fn = function(data){
         	log(data)
-        }
+        }       
+        setReferenceIso();
+		call_rest(CNSNT.svcurl, "cancelIsotopicCapture", dtype,{},  success_fn, err_fn);	
+	};
 
+	var startRefCalibration = function(){
+		stopCounter();
+        var err_fn = function(err){
+        	log("error Reference top")
+        }
+		var success_fn = function(data){
+        	log(data)
+        	
+        }       
+		call_rest(CNSNT.svcurl, "startRefCalibrationShim", dtype,{},  success_fn, err_fn);	
+	};
+
+	var setReferenceIso = function(callback){
+		stopCounter();
+        var err_fn = function(err){
+        	log("error Reference top")
+        }
+		var success_fn = function(data){
+        	log("set ref successful")
+        	if(data && data.result === "OK"){
+        		if(callback){
+        			callback();
+        		}
+        	}
+        }
 		call_rest(CNSNT.svcurl, "setCurrentReference", dtype,{reference:"ISOTOPIC"},  success_fn, err_fn);	
 	};
 
-	var setReferenceConc = function(){
+	var setReferenceConc = function(callback){
+		stopCounter();
         var err_fn = function(err){
         	log("error Reference front")
         }
 		var success_fn = function(data){
         	log(data)
+        	if(data && data.result === "OK"){
+        		if(callback){
+        			callback();
+        		}
+        	}
         }
-
+        
 		call_rest(CNSNT.svcurl, "setCurrentReference", dtype,{reference:"CONCENTRATION"}, success_fn, err_fn);
 	};
 
@@ -515,11 +599,25 @@ mapmaster.Controller = function(){
 		call_rest(CNSNT.svcurl, "getCurrentReference",dtype, {},  success_fn, err_fn);
 	}
 
-	var toggleReference = function(){
-		if($('#btn_reference').hasClass("selected")){
-			setReferenceConc();
+	var toggleReferenceConc = function(){
+		if($('#btn_start_conc').hasClass("selected")){
+			stopRefCalibration();
 		}else{
-			setReferenceIso();
+			setReferenceConc(function(){
+	        	startRefCalibration();
+				startCountupCounter();					
+			});		
+		}
+	}
+
+	var toggleReferenceIso = function(){
+		if($('#btn_start_iso').hasClass("selected")){
+			stopRefCalibration();
+		}else{
+			setReferenceIso(function(){
+				startRefCalibration();
+				startCountdownTimer();
+			});			
 		}
 	}
 
@@ -660,22 +758,18 @@ mapmaster.Controller = function(){
 
 				var c = window.confirm("Restart Log?")
 				if(c){
-					var dtype = "json";
-			        if (CNSNT.prime_view === true) {
-			            dtype = "jsonp";
-			        }
 			        var success_fn = function(){
 			        	$('#btn_restart').removeClass("locked");
 						$('#btn_restart').trigger("click");
+						resetMap();
 			        }
 			        var err_fn = function(){
-
+			        	log("error, captain")
 			        }
-					call_rest(CNSNT.svcurl, "", dtype, {}, success_fn, err_fn);
-				 	resetMap();
+					call_rest(CNSNT.svcurl, "restartDatalog", dtype, {}, success_fn, err_fn);
+				 	
 			        setTimeout(function(){
 						$('#btn_restart').removeClass("locked");
-						$('#btn_restart').trigger("click");
 					},1000)
 
 					setTimeout(function(){
@@ -698,10 +792,6 @@ mapmaster.Controller = function(){
 				$('#btn_shutdown').addClass("locked");
 				var c = window.confirm("Shutdown Analyzer?")
 				if(c){
-					var dtype = "json";
-			        if (CNSNT.prime_view === true) {
-			            dtype = "jsonp";
-			        }
 			        var success_fn = function(){
 
 			        }
@@ -716,7 +806,6 @@ mapmaster.Controller = function(){
 					$('#btn_shutdown').find('.left_text').animate({opacity:0.5});
 					$('#btn_shutdown').find('.right_text').animate({opacity:1});
 				}
-				// $('#modal_shutdown_analyzer').modal('show')
 			}
 		}
 	}
@@ -773,8 +862,6 @@ mapmaster.Controller = function(){
 				var y = 120;
 
 				var myBearing = Math.atan2(avgE/avgSteps,avgN/avgSteps) + Math.PI*3/2;
-
-				log(speed, colorScale(2))
 
 				ctx_arrow.translate(x,y);
 				ctx_arrow.rotate(myBearing);
@@ -1067,8 +1154,6 @@ mapmaster.Controller = function(){
 	    min_plot = queue[0].etm;
 	    max_plot = queue[queue.length - 1].etm;
 
-	    
-
 	    var options = {
 	        series: {
 	            lines: { show: true },
@@ -1263,9 +1348,9 @@ mapmaster.Controller = function(){
 		minLon = 1000;
 		maxLon = -1000;
 
-		var myQueue = decimated['int' + map_decimation];
+		var this_queue = decimated['int' + map_decimation];
 		
-		if(myQueue.length > 500){
+		if(this_queue.length > 500){
 			view_filter = true;
 			minMapLat = CSTATE.map2.getBounds()._southWest.lat;
 			maxMapLat = CSTATE.map2.getBounds()._northEast.lat;
@@ -1288,43 +1373,43 @@ mapmaster.Controller = function(){
 			initMap();
 		}
 
-		var thisQueue = myQueue;
+		var this_queue = this_queue;
 
 		var valve0 = 1;
 
 		tile_points = []
 		isotopics = [{start:0,end:0}]
-		for(var i = 0 ; i < thisQueue.length ; i++){
+		for(var i = 0 ; i < this_queue.length ; i++){
 			if(view_filter){
 				var on_plot = false;
-				if(thisQueue[i].pdata.lat > minMapLat && thisQueue[i].pdata.lat < maxMapLat){
-					if(thisQueue[i].pdata.lon > minMapLon && thisQueue[i].pdata.lon < maxMapLon){
+				if(this_queue[i].pdata.lat > minMapLat && this_queue[i].pdata.lat < maxMapLat){
+					if(this_queue[i].pdata.lon > minMapLon && this_queue[i].pdata.lon < maxMapLon){
 						on_plot = true;
 					}
 				}
-				tile_points.push([thisQueue[i].pdata.lat,thisQueue[i].pdata.lon, thisQueue[i].pdata.ch4, thisQueue[i].pdata.windE,thisQueue[i].pdata.windN, thisQueue[i].etm, on_plot, parseInt(thisQueue[i].pdata.ValveMask) & 0x1])
+				tile_points.push([this_queue[i].pdata.lat,this_queue[i].pdata.lon, this_queue[i].pdata.ch4, this_queue[i].pdata.windE,this_queue[i].pdata.windN, this_queue[i].etm, on_plot, parseInt(this_queue[i].pdata.ValveMask) & 0x1])
 
 			}else{
-				tile_points.push([thisQueue[i].pdata.lat,thisQueue[i].pdata.lon, thisQueue[i].pdata.ch4, thisQueue[i].pdata.windE,thisQueue[i].pdata.windN, thisQueue[i].etm, true, parseInt(thisQueue[i].pdata.ValveMask) & 0x1])
+				tile_points.push([this_queue[i].pdata.lat,this_queue[i].pdata.lon, this_queue[i].pdata.ch4, this_queue[i].pdata.windE,this_queue[i].pdata.windN, this_queue[i].etm, true, parseInt(this_queue[i].pdata.ValveMask) & 0x1])
 			}		
-			if(thisQueue[i].pdata.ch4 > dataMax) dataMax = thisQueue[i].pdata.ch4;
-			if(thisQueue[i].pdata.ch4 < dataMin) dataMin = thisQueue[i].pdata.ch4;
+			if(this_queue[i].pdata.ch4 > dataMax) dataMax = this_queue[i].pdata.ch4;
+			if(this_queue[i].pdata.ch4 < dataMin) dataMin = this_queue[i].pdata.ch4;
 
-			if(thisQueue[i].pdata.ValveMask !== valve_mask){
-				valve_mask = thisQueue[i].pdata.ValveMask;
-				if((parseInt(thisQueue[i].pdata.ValveMask) & 0x1) > 0){
-					isotopics[0].start = thisQueue[i].etm;			
+			if(this_queue[i].pdata.ValveMask !== valve_mask){
+				valve_mask = this_queue[i].pdata.ValveMask;
+				if((parseInt(this_queue[i].pdata.ValveMask) & 0x1) > 0){
+					isotopics[0].start = this_queue[i].etm;			
 				}
-				if((parseInt(thisQueue[i].pdata.ValveMask) & 0x1) === 0 && isotopics.length >= 1){
-					isotopics[0].end = thisQueue[i].etm;
+				if((parseInt(this_queue[i].pdata.ValveMask) & 0x1) === 0 && isotopics.length >= 1){
+					isotopics[0].end = this_queue[i].etm;
 					isotopics.unshift({start:0,end:0})
 				}				
 			}
 		}
 		if(isotopics[0].end === 0){
-			isotopics[0].end = thisQueue[thisQueue.length - 1].etm;
+			isotopics[0].end = this_queue[this_queue.length - 1].etm;
 		}
-		last_queue = thisQueue.length;
+		last_queue = this_queue.length;
 
 		var width = CSTATE.map2.getPixelBounds().max.x - CSTATE.map2.getPixelOrigin().x - hack_offset_x;
 		var height = CSTATE.map2.getPixelBounds().max.y - CSTATE.map2.getPixelOrigin().y - hack_offset_y;
@@ -1780,6 +1865,9 @@ mapmaster.Controller = function(){
 	            	// log('result')
 
 	                var pos, startPos = CSTATE.startPos == null ? 0 : CSTATE.startPos;
+	                if(data.result.lastPos < CSTATE.startPos){
+	                	resetMap();
+	                }
 	                CSTATE.startPos = data.result.lastPos;
 	                if (data.result.EPOCH_TIME) {
 	                	// log('epoch time')
