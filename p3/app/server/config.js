@@ -30,6 +30,11 @@ module.exports = function(){
           };
 
         default:
-            return {"mongo":{"dbport":37017}};
+            return {
+              "mongo":{
+                "dbport":[37017,38018,37019],
+                "replSet":true
+              }
+          };
     }
 };

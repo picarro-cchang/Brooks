@@ -3,7 +3,7 @@ var crypto 		= require('crypto')
 var MongoDB 	= require('mongodb').Db;
 var Server 		= require('mongodb').Server;
 var moment 		= require('moment');
-var Config =   require(__dirname + '../../config.js'),
+var Config = require(__dirname + '../../config.js'),
 conf = new Config();
 
 // var dbPort 		= 27017;
@@ -14,7 +14,8 @@ var dbName 		= 'node-login';
 
 /* establish the database connection */
 var db; 
-
+console.log(dbport);
+console.log(conf.mongo.replSet);
 if (conf.mongo.replSet) {
 	console.log('using replica set!!')
 	var replOptions = {};
@@ -25,8 +26,7 @@ if (conf.mongo.replSet) {
   ],
     replOptions
   );
-
-  db = new Db('dbName', replSet);
+  db = new MongoDb('dbName', replSet);
 } else {
 	console.log('not using repl set!')
 	db = new MongoDB(dbName, new Server(dbHost, dbPort, {auto_reconnect: true}), {w: 1});
