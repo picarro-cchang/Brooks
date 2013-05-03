@@ -278,7 +278,7 @@ mapmaster.Controller = function(){
 			$('#btn_shutdown').trigger("click");
 		})
 
-      	togglePane('map', 'setting');
+      	// togglePane('map', 'setting');
 
 		initSignal();
 
@@ -738,7 +738,7 @@ mapmaster.Controller = function(){
 		ctx.clearRect(0,0,200,200);
 		ctx_arrow.clearRect(0,0,240,240);
 		var colorScale = d3.scale.log()
-         	.domain([5, 50])
+         	.domain([1, 4])
          	.range(["#fcff00", "#ff0404"]);
 
         var avg = 0;
@@ -746,6 +746,7 @@ mapmaster.Controller = function(){
         var avgN = 0;
 
 		for(var i = begin ; i < end ; i++){
+			var speed = Math.sqrt(path_data[i].pdata.windE*path_data[i].pdata.windE + path_data[i].pdata.windN * path_data[i].pdata.windN);
 			var num = i - begin;
 			var bearingRad = Math.atan2(path_data[i].pdata.windE,path_data[i].pdata.windN) - Math.PI/2;
 			avg = avg + bearingRad + Math.PI *2;
@@ -762,8 +763,7 @@ mapmaster.Controller = function(){
 			ctx.beginPath()
 			ctx.arc(100,100,num*spacing,minBearing,maxBearing, false); // outer (filled)
 			ctx.arc(100,100,num*spacing+spacing,maxBearing,minBearing, true); // outer (unfills it)
-			// log(path_data[i].pdata.windDirSdev)
-			ctx.fillStyle = colorScale(path_data[i].pdata.windDirSdev);			
+			ctx.fillStyle = colorScale(speed + 1);			
 
 			ctx.fill();
 			if(i == end - 1){
@@ -774,6 +774,8 @@ mapmaster.Controller = function(){
 
 				var myBearing = Math.atan2(avgE/avgSteps,avgN/avgSteps) + Math.PI*3/2;
 
+				log(speed, colorScale(2))
+
 				ctx_arrow.translate(x,y);
 				ctx_arrow.rotate(myBearing);
 				ctx_arrow.drawImage( ball, -bw, -bh );
@@ -781,11 +783,17 @@ mapmaster.Controller = function(){
 				ctx_arrow.translate(-x,-y);
 				ctx.beginPath();
 				ctx.fillStyle="rgba(255,255,255,.8)";
-				ctx.arc(80,80,20,0,2*Math.PI, true); // outer (unfills it)
+				ctx.arc(180,20,19,0,2*Math.PI, true); // outer (unfills it)
+				ctx.stroke();
 				ctx.fill();
-				ctx.font="18px Verdana";
+				ctx.font="18px Helvetica Neue";
+				ctx.textAlign = 'center';
 				ctx.fillStyle="#000";
-				ctx.fillText(Math.floor(path_data[i].pdata.windDirSdev,1),91,106);
+				if(!isNaN(speed)){
+					ctx.fillText(Math.floor(speed*10,1)/10,180,23);
+				}			
+				ctx.font="11px Helvetica Neue";	
+				ctx.fillText("m/s",180,33);
 			}
 		}
 	}
