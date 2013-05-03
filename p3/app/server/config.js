@@ -30,6 +30,7 @@ module.exports = function(){
           };
 
         default:
+            console.log('app started in production mode');
             return {
               "mongo":{
                 "dbport":[37017,38018,37019],
