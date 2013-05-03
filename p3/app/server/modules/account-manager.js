@@ -3,7 +3,7 @@ var crypto    = require('crypto')
 var MongoDB   = require('mongodb').Db;
 var Server    = require('mongodb').Server;
 var moment    = require('moment');
-var ReplSet   = require('mongo').ReplSetServers;
+var ReplSet   = require('mongodb').ReplSetServers;
 var Config    = require(__dirname + '../../config.js'),
 conf = new Config();
 
