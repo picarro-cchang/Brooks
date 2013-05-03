@@ -1,9 +1,11 @@
 module.exports = function(){
     switch(process.env.NODE_ENV){
         case 'development':
+        console.log('app started in development mode');
             return {
-              "mongo":{"dbport":27017},
+              "mongo":{"dbport":27017,
               "replSet":false
+            }
           };
 
         case 'local':
@@ -19,9 +21,12 @@ module.exports = function(){
              };
 
         case 'production':
+            console.log('app started in production mode');
             return {
-              "mongo":{"dbport":[37017,38018,37019]},
-              "replSet":true
+              "mongo":{
+                "dbport":[37017,38018,37019],
+                "replSet":true
+              }
           };
 
         default:

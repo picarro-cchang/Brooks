@@ -15,7 +15,7 @@ var dbName 		= 'node-login';
 /* establish the database connection */
 var db; 
 
-if (conf.replSet) {
+if (conf.mongo.replSet) {
 	console.log('using replica set!!')
 	var replOptions = {};
 	var replSet = new ReplSet( [
@@ -28,6 +28,7 @@ if (conf.replSet) {
 
   db = new Db('dbName', replSet);
 } else {
+	console.log('not using repl set!')
 	db = new MongoDB(dbName, new Server(dbHost, dbPort, {auto_reconnect: true}), {w: 1});
 }
 
