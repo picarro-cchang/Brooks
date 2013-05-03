@@ -151,6 +151,8 @@ mapmaster.Controller = function(){
 	var cancelStates =   ['TRIGGERED','INACTIVE','CANCELLING'];
 	var switchStates =   ['ARMED','TRIGGER_PENDING'];
 
+	var analysisInfo = [];
+
 	var saveDataPoint = function(name, diff){
 		log("Profile", name, diff);
 	};
@@ -167,6 +169,19 @@ mapmaster.Controller = function(){
      * @method instrument
      * @static
      */
+
+	CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+	  if (w < 2 * r) r = w / 2;
+	  if (h < 2 * r) r = h / 2;
+	  this.beginPath();
+	  this.moveTo(x+r, y);
+	  this.arcTo(x+w, y,   x+w, y+h, r);
+	  this.arcTo(x+w, y+h, x,   y+h, r);
+	  this.arcTo(x,   y+h, x,   y,   r);
+	  this.arcTo(x,   y,   x+w, y,   r);
+	  this.closePath();
+	  return this;
+	}
 
 	var instrument = function(name, method){
         //create instrumented version of function
@@ -235,7 +250,7 @@ mapmaster.Controller = function(){
 		$('#btn_chart_controls').tappable(toggleChart);
 		$('#btn_legend_controls').tappable(toggleLegend);
 		$('#btn_pause_controls').tappable(togglePause);
-		$('#btn_reference').tappable(toggleReference);
+		
 		$('#btn_map_controls').tappable(function(){togglePane('map', 'setting');});
 		$('#btn_setting_controls, #setting_controls .control-close').tappable(function(){togglePane('setting', 'map');});
 		// showPanel('setting');
@@ -244,54 +259,15 @@ mapmaster.Controller = function(){
 		$('#btn_capture_manual').tappable(startCaptureManual);
 		$('#btn_capture_trigger').tappable(startCaptureTrigger);
 
-		$('.settings-wrapper').tappable(toggleSwitch);
+		$('.settings-btn-wrapper').tappable(toggleSwitch);
+		// $('#btn_reference_new').tappable(toggleReference);
+		// $('#btn_restart').tappable(restartLog);
+		// $('#btn_shutdown').tappable(shutdownAnalyzer);
+		// $('#btn_reference_gas').tappable(toggleReference);
 
-		$('#btn_restart').tappable(restartLog);
-		$('#btn_shutdown').tappable(shutdownAnalyzer);
-		$('#btn_reference_gas').tappable(toggleReference);
-
-		$('#btn_restart_log').on("click", function(){
-			var dtype = "json";
-	        if (CNSNT.prime_view === true) {
-	            dtype = "jsonp";
-	        }
-	        var success_fn = function(){
-	        	log('success restarrt')
-	        	$('#modal_restart_log').modal('hide')
-	        	$('#btn_restart').removeClass("locked");
-				$('#btn_restart').trigger("click");
-	        }
-	        var err_fn = function(){
-
-	        }
-			call_rest(CNSNT.svcurl, "restartDatalog", dtype, {}, success_fn, err_fn);
-		 	resetMap();
-	        setTimeout(function(){
-				$('#btn_restart').removeClass("locked");
-				$('#btn_restart').trigger("click");
-			},1000)
-
-			setTimeout(function(){
-				togglePane('map', 'setting')
-			},2000)
-			
-		})
-
-		$('#btn_shutdown_analyzer').on("click", function(){
-		 	var dtype = "json";
-	        if (CNSNT.prime_view === true) {
-	            dtype = "jsonp";
-	        }
-	        var success_fn = function(){
-
-	        }
-	        var err_fn = function(){
-
-	        }
-	        call_rest(CNSNT.svcurl, "shutdownAnalyzer", dtype, {}, success_fn, err_fn);
-
-			$('#modal_shutdown_analyzer').modal('hide')
-		})
+		// $('#btn_map_controls').tappable(function(){
+		// 	confirm("yo")
+		// })
 
       	$('#btn_close_weather, #modal_restart_log .btn-close').on("click", function(){
 			$('#btn_restart').removeClass("locked");
@@ -301,6 +277,8 @@ mapmaster.Controller = function(){
 			$('#btn_shutdown').removeClass("locked");
 			$('#btn_shutdown').trigger("click");
 		})
+
+      	togglePane('map', 'setting');
 
 		initSignal();
 
@@ -317,7 +295,10 @@ mapmaster.Controller = function(){
             dtype = "jsonp";
         }
 
-        setInterval(getCaptureState,2000)
+        // !!!!!! Remove for push
+        // setInterval(getCaptureState,2000)
+
+        getAnalysis();
 	};
 
 	var resetMap = function(){
@@ -385,16 +366,26 @@ mapmaster.Controller = function(){
 		if($(this).hasClass('locked')){
 			return;
 		}
+		if($(this).attr("ID") === "btn_reference_new"){
+			toggleReference();
+		}
 		if($(this).hasClass('selected')){
 			$(this).removeClass('selected');
 			$(this).find('.switch_handle').css({left:60}).animate({left:2}, transition_time);
 			$(this).find('.left_text').animate({opacity:1});
-			$(this).find('.right_text').animate({opacity:0.5});			
+			$(this).find('.right_text').animate({opacity:0.5});	
+	
 		}else{
 			$(this).addClass('selected');
 			$(this).find('.switch_handle').css({left:2}).animate({left:60}, transition_time);
 			$(this).find('.left_text').animate({opacity:0.5});
 			$(this).find('.right_text').animate({opacity:1});
+			if($(this).attr("ID") === "btn_shutdown"){
+				shutdownAnalyzer();
+			}
+			if($(this).attr("ID") === "btn_restart"){
+				restartLog();
+			}	
 		}
 	};
 
@@ -525,12 +516,10 @@ mapmaster.Controller = function(){
 	}
 
 	var toggleReference = function(){
-		if($('#btn_iso_controls').hasClass("selected")){
+		if($('#btn_reference').hasClass("selected")){
 			setReferenceConc();
-			$('#btn_iso_controls').removeClass('selected')
 		}else{
 			setReferenceIso();
-			$('#btn_iso_controls').addClass('selected')
 		}
 	}
 
@@ -597,7 +586,7 @@ mapmaster.Controller = function(){
 					// pane.animate({opacity:0}, 200, function(){
 					// 	p.hide();
 					// });
-					pane.css({left:'0%'}).animate({left:'-100%'}, transition_time, function(){
+					pane.css({left:'0%'}).css({left:'-100%'}, transition_time, function(){
 						p.hide();
 					});
 				}				
@@ -611,7 +600,7 @@ mapmaster.Controller = function(){
 		hidePanels();
 		if(which !== 'map'){
 			// $('#' + which + "_controls").show().css({opacity:0}).animate({opacity:1}, 500);
-			$('#' + which + "_controls").show().css({left:'100%'}).animate({left:'0'}, transition_time);
+			$('#' + which + "_controls").show().css({left:'100%'}).css({left:'0'}, transition_time);
 		}else{
 			$('#' + which + "_controls").show();
 		}		
@@ -665,19 +654,73 @@ mapmaster.Controller = function(){
 	};
 
 	var restartLog = function(){
-		if(!$('#btn_restart').hasClass("selected")){
+		if($('#btn_restart').hasClass("selected")){
 			if(!$('#btn_restart').hasClass("locked")){
 				$('#btn_restart').addClass("locked");
-				$('#modal_restart_log').modal('show')
+
+				var c = window.confirm("Restart Log?")
+				if(c){
+					var dtype = "json";
+			        if (CNSNT.prime_view === true) {
+			            dtype = "jsonp";
+			        }
+			        var success_fn = function(){
+
+			        }
+			        var err_fn = function(){
+
+			        }
+			        call_rest(CNSNT.svcurl, "shutdownAnalyzer", dtype, {}, success_fn, err_fn);
+
+					$('#modal_shutdown_analyzer').modal('hide')
+				}else{
+					$('#btn_restart').removeClass('selected');
+					$('#btn_restart').removeClass("locked");
+					$('#btn_restart').find('.switch_handle').css({left:2}).animate({left:60}, transition_time);
+					$('#btn_restart').find('.left_text').animate({opacity:0.5});
+					$('#btn_restart').find('.right_text').animate({opacity:1});
+				}
 			}
 		}
 	}
 
 	var shutdownAnalyzer = function(){
-		if(!$('#btn_shutdown').hasClass("selected")){
+		if($('#btn_shutdown').hasClass("selected")){
 			if(!$('#btn_shutdown').hasClass("locked")){
 				$('#btn_shutdown').addClass("locked");
-				$('#modal_shutdown_analyzer').modal('show')
+				var c = window.confirm("Shutdown Analyzer?")
+				if(c){
+					var dtype = "json";
+			        if (CNSNT.prime_view === true) {
+			            dtype = "jsonp";
+			        }
+			        var success_fn = function(){
+			        	log('success restarrt')
+			        	$('#modal_restart_log').modal('hide')
+			        	$('#btn_restart').removeClass("locked");
+						$('#btn_restart').trigger("click");
+			        }
+			        var err_fn = function(){
+
+			        }
+					call_rest(CNSNT.svcurl, "restartDatalog", dtype, {}, success_fn, err_fn);
+				 	resetMap();
+			        setTimeout(function(){
+						$('#btn_restart').removeClass("locked");
+						$('#btn_restart').trigger("click");
+					},1000)
+
+					setTimeout(function(){
+						togglePane('map', 'setting')
+					},2000)
+				}else{
+					$('#btn_shutdown').removeClass('selected');
+					$('#btn_shutdown').removeClass("locked");
+					$('#btn_shutdown').find('.switch_handle').css({left:2}).animate({left:60}, transition_time);
+					$('#btn_shutdown').find('.left_text').animate({opacity:0.5});
+					$('#btn_shutdown').find('.right_text').animate({opacity:1});
+				}
+				// $('#modal_shutdown_analyzer').modal('show')
 			}
 		}
 	}
@@ -1090,6 +1133,7 @@ mapmaster.Controller = function(){
 
     	canvas = document.getElementById('canvas_bubbles');
     	canvas_wind = document.getElementById('canvas_wind');
+    	canvas_extras = document.getElementById('canvas_extras');
 
   //   	var imageUrl = canvas.toDataURL(),
 	 //    	imageBounds = CSTATE.map2.getBounds();
@@ -1115,6 +1159,8 @@ mapmaster.Controller = function(){
 		        map.getPanes().overlayPane.appendChild(this._el);
 		        this._el2 = document.getElementById('canvas_wind');
 		        map.getPanes().overlayPane.appendChild(this._el2);
+		        this._el3 = document.getElementById('canvas_extras');
+		        map.getPanes().overlayPane.appendChild(this._el3);
 
 		        // add a viewreset event listener for updating layer's position, do the latter
 		        map.on('viewreset', this._reset, this);
@@ -1133,6 +1179,7 @@ mapmaster.Controller = function(){
 		    	hack_offset_y = this._map.latLngToLayerPoint(this._map.getBounds()._northEast).y;
 		    	$(this._el).css({top:hack_offset_y,left:hack_offset_x})
 		    	$(this._el2).css({top:hack_offset_y,left:hack_offset_x})
+		    	$(this._el3).css({top:hack_offset_y,left:hack_offset_x})
 		    }
 		});
 
@@ -1231,9 +1278,7 @@ mapmaster.Controller = function(){
 
 		var thisQueue = myQueue;
 
-
 		var valve0 = 1;
-
 
 		tile_points = []
 		isotopics = [{start:0,end:0}]
@@ -1274,9 +1319,11 @@ mapmaster.Controller = function(){
 
 		$(canvas).attr({width:width,height:height})
 		$(canvas_wind).attr({width:width,height:height})
+		$(canvas_extras).attr({width:width,height:height})
 
 	    var ctx = canvas.getContext('2d');
 	    var ctx_wind = canvas_wind.getContext('2d');
+	    var ctx_extras = canvas_extras.getContext('2d');
 
 	    var radius = 12;
 
@@ -1308,9 +1355,8 @@ mapmaster.Controller = function(){
         tile_points.sort(function(a, b) {return a[2] - b[2]})
 
 		for (var i = 0; i < tile_points.length; i++) {
-
 			var plotMe = function(){
-				 var point = new L.LatLng(tile_points[i][0], tile_points[i][1]);
+				// var point = new L.LatLng(tile_points[i][0], tile_points[i][1]);
 
 		        // // actual coordinates to tile pixel
 		        var p = CSTATE.map2.latLngToLayerPoint([tile_points[i][0], tile_points[i][1]]);
@@ -1336,7 +1382,6 @@ mapmaster.Controller = function(){
 		        	ctx.globalAlpha = 0.8;
 
 			        if(wind_visible){
-			        	// log("b2", tile_points[i][3],tile_points[i][4])
 						var bearingRad = Math.atan2(tile_points[i][3],tile_points[i][4]) - Math.PI/2;
 						ctx_wind.beginPath();
 						ctx_wind.moveTo(x, y);
@@ -1372,16 +1417,68 @@ mapmaster.Controller = function(){
 				if(tile_points[i][1] > maxLon) maxLon = tile_points[i][1];
 				if(tile_points[i][1] < minLon) minLon = tile_points[i][1];
 				plotMe();
-			}
-	                    
+			}	                    
 	    }
+
+	    var ctx = canvas.getContext('2d');
+	    var forceDirect = function(){
+    	 	for(var i = 0 ; i < analysisInfo.length ; i++){
+    	 		var p = CSTATE.map2.latLngToLayerPoint([analysisInfo[i].GPS_ABS_LAT, analysisInfo[i].GPS_ABS_LONG]);
+		        analysisInfo[i].x = Math.floor(p.x) - hack_offset_x;
+		        analysisInfo[i].y = Math.floor(p.y) - hack_offset_y;
+		        for(var n = 0 ; n < analysisInfo.length - 1 ; n++){
+		        	var pa = CSTATE.map2.latLngToLayerPoint([analysisInfo[n].GPS_ABS_LAT, analysisInfo[n].GPS_ABS_LONG]);
+			        var xa = Math.floor(pa.x) - hack_offset_x;
+			        var ya = Math.floor(pa.y) - hack_offset_y;
+			        if(Math.abs(analysisInfo[i].y-ya) >= 0 && Math.abs(analysisInfo[i].y-ya) < 20 && i !== n){
+			        	analysisInfo[i].y += 20;
+			        }
+		        }
+	    	}
+	    }
+
+	    forceDirect();
+	   
+		for(var i = 0 ; i < analysisInfo.length ; i++){
+	        var p = CSTATE.map2.latLngToLayerPoint([analysisInfo[i].GPS_ABS_LAT, analysisInfo[i].GPS_ABS_LONG]);
+	        var x = Math.floor(p.x) - hack_offset_x;
+	        var y = Math.floor(p.y) - hack_offset_y;
+
+	 		ctx.beginPath();
+	 		ctx.globalAlpha = 1;
+			ctx.roundRect(analysisInfo[i].x, analysisInfo[i].y, 100, 20, 5).stroke();
+			ctx.fillStyle = "#000000";
+			ctx.fill();
+			ctx.beginPath();
+			ctx.fillStyle = "#ffffff";
+			ctx.font = "bold 16px Arial";
+			ctx.fillText(analysisInfo[i].DELTA + "+/-" + analysisInfo[i].UNCERTAINTY,analysisInfo[i].x + 2, analysisInfo[i].y + 16);
+		}
+
+		if(time_filter){
+			ctx_extras.beginPath();
+			ctx_extras.fillStyle = 'rgba(0, 0, 0,0.25)';
+
+		 	var p = CSTATE.map2.latLngToLayerPoint([minLat,minLon]);
+		 	var p2 = CSTATE.map2.latLngToLayerPoint([maxLat,maxLon]);
+
+	        var x = Math.floor(p.x) - hack_offset_x;
+	        var y = Math.floor(p.y) - hack_offset_y;
+	        var x2 = Math.floor(p2.x) - hack_offset_x;
+	        var y2 = Math.floor(p2.y) - hack_offset_y;
+			ctx_extras.fillRect(x - 1000,y2 - 1000,x2 - x + 2000,y-y2 + 2000 );
+			var pad = 10;
+			ctx_extras.strokeRect(x - pad,y2 - pad,x2 - x + 2*pad,y-y2 + 2*pad);
+			ctx_extras.clearRect(x - pad,y2 - pad,x2 - x + 2*pad,y-y2 + 2*pad);
+		}
+
 	    centerMapOnSelection();
 	}
 
 	var drawIsotopics = function(){
 		if(min_plot == 0) return;
 		var plot_end = time_plot.pointOffset({ x: max_plot, y:2 }).left;
-		$('#isotopic_layer').html("")
+		$('#isotopic_layer').html("");
 		for(var i = 0 ; i < isotopics.length ; i++){
 			var begin = time_plot.pointOffset({ x: isotopics[i].start, y:2 }).left;
 			var end = time_plot.pointOffset({ x: isotopics[i].end, y:2 }).left;
@@ -1585,6 +1682,34 @@ mapmaster.Controller = function(){
 			etm:etm
 		}
 		path_queue.push(pathObj);
+	}
+
+	var getAnalysis = function(){
+		analysisInfo = [];
+		var dtype = "json";
+        if (CNSNT.prime_view === true) {
+            dtype = "jsonp";
+        }
+		params = {name:"",startRow:0,minAmp:0};
+		var errorData = function(a,b){
+			log("error error", a)
+		} 
+		var successData = function(data,b){
+			if(data.result){
+				var r = data.result;
+				for(var i = 0 ; i < r.nextRow; i++){
+					if(!isNaN(r.GPS_ABS_LONG[i])){
+						analysisInfo.push({
+							GPS_ABS_LONG:r.GPS_ABS_LONG[i],
+							GPS_ABS_LAT:r.GPS_ABS_LAT[i],
+							DELTA:r.DELTA[i],
+							UNCERTAINTY:r.UNCERTAINTY[i]
+						})
+					}
+				}
+			}
+		}
+        call_rest(CNSNT.svcurl, "getAnalysis", dtype, params, successData, errorData);
 	}
 
 	var getData = function() {

@@ -22,9 +22,17 @@ import Host.Common.SwathProcessor as sp
 from Host.autogen import interface
 
 
+from ConfigParser import SafeConfigParser
+parser = SafeConfigParser(defaults={
+            'USERLOGFILES':'C:/UserData/AnalyzerServer/*.dat',
+            'PEAKFILES':'C:/UserData/AnalyzerServer/*.peaks',
+            'ANALYSISFILES':'C:/UserData/AnalyzerServer/*.analysis',
+            'SWATHFILES':'C:/UserData/AnalyzerServer/*.swath'
+              })
+parser.read('configAnaylzerServer.ini')
+
 VALVE_INLET_MASK = 0x20
 VALVE_CALIBRATION_MASK = 0x10
-
 
 debugSwath = False
 NaN = 1e1000/1e1000
@@ -63,14 +71,11 @@ PASSWORD = 'default'
 
 # The following are split into a path and a filename with unix style wildcards.
 #  We search for the filename in the specified path and its subdirectories.
-# USERLOGFILES = '/opt/www/picarro/data/*.dat'
-# PEAKFILES = '/opt/www/picarro/data/*.peaks'
-# ANALYSISFILES = '/opt/www/picarro/data/*.analysis'
-# SWATHFILES = '/opt/www/picarro/data/*.swath'
-USERLOGFILES = 'C:/UserData/AnalyzerServer/*.dat'
-PEAKFILES = 'C:/UserData/AnalyzerServer/*.peaks'
-ANALYSISFILES = 'C:/UserData/AnalyzerServer/*.analysis'
-SWATHFILES = 'C:/UserData/AnalyzerServer/*.swath'
+USERLOGFILES = parser.get('data_file', 'USERLOGFILES')
+PEAKFILES = parser.get('data_file', 'PEAKFILES')
+ANALYSISFILES = parser.get('data_file', 'ANALYSISFILES')
+SWATHFILES = parser.get('data_file', 'SWATHFILES')
+
 MAX_DATA_POINTS = 500
 
 STATICROOT = os.path.join(appDir,'static')

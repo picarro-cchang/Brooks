@@ -278,7 +278,7 @@ mapmaster.Controller = function(){
 			$('#btn_shutdown').trigger("click");
 		})
 
-      	togglePane('map', 'setting');
+      	// togglePane('map', 'setting');
 
 		initSignal();
 
@@ -665,14 +665,22 @@ mapmaster.Controller = function(){
 			            dtype = "jsonp";
 			        }
 			        var success_fn = function(){
-
+			        	$('#btn_restart').removeClass("locked");
+						$('#btn_restart').trigger("click");
 			        }
 			        var err_fn = function(){
 
 			        }
-			        call_rest(CNSNT.svcurl, "shutdownAnalyzer", dtype, {}, success_fn, err_fn);
+					call_rest(CNSNT.svcurl, "", dtype, {}, success_fn, err_fn);
+				 	resetMap();
+			        setTimeout(function(){
+						$('#btn_restart').removeClass("locked");
+						$('#btn_restart').trigger("click");
+					},1000)
 
-					$('#modal_shutdown_analyzer').modal('hide')
+					setTimeout(function(){
+						togglePane('map', 'setting')
+					},2000)
 				}else{
 					$('#btn_restart').removeClass('selected');
 					$('#btn_restart').removeClass("locked");
@@ -695,24 +703,12 @@ mapmaster.Controller = function(){
 			            dtype = "jsonp";
 			        }
 			        var success_fn = function(){
-			        	log('success restarrt')
-			        	$('#modal_restart_log').modal('hide')
-			        	$('#btn_restart').removeClass("locked");
-						$('#btn_restart').trigger("click");
+
 			        }
 			        var err_fn = function(){
 
 			        }
-					call_rest(CNSNT.svcurl, "restartDatalog", dtype, {}, success_fn, err_fn);
-				 	resetMap();
-			        setTimeout(function(){
-						$('#btn_restart').removeClass("locked");
-						$('#btn_restart').trigger("click");
-					},1000)
-
-					setTimeout(function(){
-						togglePane('map', 'setting')
-					},2000)
+			        call_rest(CNSNT.svcurl, "shutdownAnalyzer", dtype, {}, success_fn, err_fn);
 				}else{
 					$('#btn_shutdown').removeClass('selected');
 					$('#btn_shutdown').removeClass("locked");
@@ -742,7 +738,7 @@ mapmaster.Controller = function(){
 		ctx.clearRect(0,0,200,200);
 		ctx_arrow.clearRect(0,0,240,240);
 		var colorScale = d3.scale.log()
-         	.domain([5, 50])
+         	.domain([1, 4])
          	.range(["#fcff00", "#ff0404"]);
 
         var avg = 0;
@@ -750,6 +746,7 @@ mapmaster.Controller = function(){
         var avgN = 0;
 
 		for(var i = begin ; i < end ; i++){
+			var speed = Math.sqrt(path_data[i].pdata.windE*path_data[i].pdata.windE + path_data[i].pdata.windN * path_data[i].pdata.windN);
 			var num = i - begin;
 			var bearingRad = Math.atan2(path_data[i].pdata.windE,path_data[i].pdata.windN) - Math.PI/2;
 			avg = avg + bearingRad + Math.PI *2;
@@ -766,8 +763,8 @@ mapmaster.Controller = function(){
 			ctx.beginPath()
 			ctx.arc(100,100,num*spacing,minBearing,maxBearing, false); // outer (filled)
 			ctx.arc(100,100,num*spacing+spacing,maxBearing,minBearing, true); // outer (unfills it)
-			// log(path_data[i].pdata.windDirSdev)
-			ctx.fillStyle = colorScale(path_data[i].pdata.windDirSdev);
+			ctx.fillStyle = colorScale(speed + 1);			
+
 			ctx.fill();
 			if(i == end - 1){
 			 	var bw = ball.width/2;
@@ -777,11 +774,26 @@ mapmaster.Controller = function(){
 
 				var myBearing = Math.atan2(avgE/avgSteps,avgN/avgSteps) + Math.PI*3/2;
 
+				log(speed, colorScale(2))
+
 				ctx_arrow.translate(x,y);
 				ctx_arrow.rotate(myBearing);
 				ctx_arrow.drawImage( ball, -bw, -bh );
 				ctx_arrow.rotate(-myBearing);                      // The shading shouldn't be rotated
 				ctx_arrow.translate(-x,-y);
+				ctx.beginPath();
+				ctx.fillStyle="rgba(255,255,255,.8)";
+				ctx.arc(180,20,19,0,2*Math.PI, true); // outer (unfills it)
+				ctx.stroke();
+				ctx.fill();
+				ctx.font="18px Helvetica Neue";
+				ctx.textAlign = 'center';
+				ctx.fillStyle="#000";
+				if(!isNaN(speed)){
+					ctx.fillText(Math.floor(speed*10,1)/10,180,23);
+				}			
+				ctx.font="11px Helvetica Neue";	
+				ctx.fillText("m/s",180,33);
 			}
 		}
 	}
