@@ -27,7 +27,7 @@ if (conf.mongo.replSet) {
   ],
     replOptions
   );
-  db = new MongoDb('dbName', replSet);
+  db = new MongoDB(dbName, replSet);
 } else {
 	console.log('not using repl set!')
 	db = new MongoDB(dbName, new Server(dbHost, dbPort, {auto_reconnect: true}), {w: 1});
