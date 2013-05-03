@@ -491,36 +491,14 @@ app.get('/investigator/dataview', function(req, res) {
 		  	}
 		  });
 		 } else {
-		 		res.send('You must specify a short code', 400);
+		 		if(req.session.user == null) {
+		 		res.send('Resource does not exist', 404);
+		 	} else {
+		 		res.redirect('/investigator/front_page');
+		 	}
 		 }
 	});
-
-//  hackety test to get around not havnig data locally for the pageData 
-app.get('/investigator/dataviewtest', function(req, res) {
-		console.log("dataview requst");
-		console.log(req.param('s'));
-	
-		res.render('dataview', {
-				      // user : AM.get.user()
-				      pageData : {
-				    						 scientistName: "awesome",
-				    	           project: "dude",
-                         bio: "o2.bio"
-                       },
-				      title: 'Investigator'
-		});
-	});
-
-// @app.route('/investigator')
-// def investigator():
-//     amplitude = float(request.values.get('amplitude',0.1))
-//     do_not_follow = int('do_not_follow' in request.values)
-//     follow = int('follow' in request.values or not do_not_follow)
-//     center_longitude = float(request.values.get('center_longitude',-121.98432))
-//     center_latitude = float(request.values.get('center_latitude',37.39604))
-//     return render_template('investigator_ben.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
-//                                        center_latitude=center_latitude,center_longitude=center_longitude)
-	
+		
 	app.get('*', function(req, res) { res.render('404', { title: 'Page Not Found'}); });
 
 
