@@ -99,9 +99,9 @@ var GoogleEarth = function(){
 		lineStringPlacemark.setStyleSelector(ge.createStyle(''));
 		var lineStyle = lineStringPlacemark.getStyleSelector().getLineStyle();
 		lineStyle.setWidth(3);
-		lineStyle.getColor().set('7fff0000'); 
+		lineStyle.getColor().set('70000fff'); 
 		var polyStyle = lineStringPlacemark.getStyleSelector().getPolyStyle();
-		polyStyle.getColor().set('7fff0000');  // aabbggrr format
+		polyStyle.getColor().set('70000fff');  // aabbggrr format
 
 		// Add the feature to Earth.
 		ge.getFeatures().appendChild(lineStringPlacemark);
