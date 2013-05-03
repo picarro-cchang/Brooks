@@ -16,6 +16,7 @@ var dbName 		= 'node-login';
 var db; 
 
 if (conf.replSet) {
+	console.log('using replica set!!')
 	var replOptions = {};
 	var replSet = new ReplSet( [
     new Server( "127.0.0.1", dbPort[0]),
@@ -25,7 +26,7 @@ if (conf.replSet) {
     replOptions
   );
 
-  db = new Db('integration_test_', replSet);
+  db = new Db('dbName', replSet);
 } else {
 	db = new MongoDB(dbName, new Server(dbHost, dbPort, {auto_reconnect: true}), {w: 1});
 }
