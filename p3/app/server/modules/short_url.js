@@ -14,7 +14,7 @@ var dbName    = 'node-login';
 
 /* establish the database connection */
 var db; 
-console.log(dbport);
+console.log(dbPort);
 console.log(conf.mongo.replSet);
 if (conf.mongo.replSet) {
   console.log('using replica set!!')
