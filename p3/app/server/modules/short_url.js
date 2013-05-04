@@ -11,7 +11,7 @@ conf = new Config();
 // var dbHost     = 'localhost';
 var dbPort    = conf.mongo.dbport;
 var dbHost    = '127.0.0.1';
-var dbName    = 'node-login';
+var dbName    = 'main';
 
 /* establish the database connection */
 var db; 
@@ -38,6 +38,7 @@ var sharedExperiments = db.collection('investigator');
 exports.getScientist = function(shorturl, callback)
 {
   console.log("findOne Short url of before splitting/matching" + shorturl);
+
   if(shorturl.match(/\?/)) {
     shorturl = shorturl.split('?')[0];
   }
@@ -46,7 +47,7 @@ exports.getScientist = function(shorturl, callback)
     if (o){
       console.log("Success: found the scientsit!");
       callback(o);
-    } else{
+    } else {
       console.log("Error: no scientist found... :( ");
       callback(null);
     }
