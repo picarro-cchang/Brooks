@@ -247,9 +247,9 @@
 }
 
 .navbar-inner{
-    background-image: linear-gradient(to bottom, #FFFFFF, #FFFFFF);
-    min-height: 70px;
-    position: relative;
+    background-image: linear-gradient(to bottom, #FFFFFF, #FFFFFF) !important;
+    min-height: 70px !important;
+    position: relative !important;
 }
 
 
@@ -257,6 +257,13 @@
     top:8px;
     right: 40px;
     position: absolute;
+}
+
+#profile{
+    position: absolute;
+    right: 76px;
+    top: 8px;
+    width: 90px;
 }
 
 .p3-icon-minus, .p3-icon-plus{

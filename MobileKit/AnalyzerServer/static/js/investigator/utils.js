@@ -271,16 +271,23 @@ mapmaster.CNSNT.path_bbl_origin = null; //newPoint(0, 0);
 
 mapmaster.CNSNT.normal_path_color = "#0000FF";
 mapmaster.CNSNT.analyze_path_color = "#000000";
-//mapmaster.CNSNT.inactive_path_color = "#996633";
 mapmaster.CNSNT.inactive_path_color = "#FF0000";
 mapmaster.CNSNT.streamwarning =  (1000 * 10);
 mapmaster.CNSNT.streamerror =  (1000 * 30);
 
 mapmaster.CNSNT.histMax = 200;
 
-mapmaster.CSTATE.getDataLimit = 10000;
 
-mapmaster.CSTATE.seedDataLimit = 10000;
+
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!
+
+mapmaster.CSTATE.getDataLimit = 2;
+mapmaster.CSTATE.seedDataLimit = 1000;
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 
 mapmaster.CNSNT.fastUpdatePeriod = 1000;
 mapmaster.CNSNT.datUpdatePeriod = 5000;

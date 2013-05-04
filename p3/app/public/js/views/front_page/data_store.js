@@ -44,7 +44,6 @@ var DataStore = function(){
 	}
 
 	var getLatestIP = function(){
-		log('get latest')
 		var reqobj = {};
 		reqobj.svc = "gdu";
 		reqobj.version = "1.0";
@@ -56,12 +55,10 @@ var DataStore = function(){
 		};
 
 		var rtn_fn = function(json, textStatus) {
-			log('latest ip', json, textStatus)
+			$('div #live_view').find("a").attr("href", "http://" +  json[0]['PRIVATE_IP'] + "/investigator?prime=false&anz=CFADS2290");
 		}
 
-
-		log(reqobj)
-		p3anzApi.geturl(reqobj, rtn_fn, err_fn);
+		p3anzApi.get(reqobj, rtn_fn, err_fn);
 	}
 
 	var getLog = function(log_name){
