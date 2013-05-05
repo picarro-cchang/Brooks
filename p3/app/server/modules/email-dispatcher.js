@@ -49,9 +49,10 @@ EM.dispatchScientistEmail = function(to,name,email,comment, callback)
 
 EM.emailScientist = function(name,email,comment)
 {
-	var link = 'http://node-login.braitsch.io/reset-password?e='+o.email+'&p='+o.pass;
 	var html = "<html><body>";
-		html += o.message
-		html += "</body></html>";
+	  html += "The following message came from someone identifying themselves as " + name; //+ "while viewing the dataview " + dataview;
+    html += "<br /><p>"
+		html += comment
+		html += "</p></body></html>";
 	return  [{data:html, alternative:true}];
 }

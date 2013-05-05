@@ -503,8 +503,10 @@ app.get('/investigator/dataview', function(req, res) {
   	console.log(req.param('name'));
   	console.log(req.param('email'));
   	console.log(req.param('comment'));
-  	if (req.param('name') && req.param('email') && req.param('comment')) {
-  	EM.dispatchScientistEmail(to,req.param('name'),req.param('email'),req.param('comment'), function(e, m){
+  	console.log(req.param('to'))
+  	if (req.param('name') && req.param('email') && req.param('comment') && req.param('to')) {
+
+  	EM.dispatchScientistEmail(req.param('to'),req.param('name'),req.param('email'),req.param('comment'), function(e, m){
 				// this callback takes a moment to return //
 				// should add an ajax loader to give user feedback //
 					if (!e) {
