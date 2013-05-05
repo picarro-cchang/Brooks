@@ -499,7 +499,7 @@ app.get('/investigator/dataview', function(req, res) {
 		 }
 	});
 
-  app.post('/contact', function(req, res) {
+  app.post('/investigator/contact', function(req, res) {
   	console.log(req.param('name'));
   	console.log(req.param('email'));
   	console.log(req.param('comment'));
