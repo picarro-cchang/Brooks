@@ -499,6 +499,13 @@ app.get('/investigator/dataview', function(req, res) {
 		 }
 	});
 
+  app.post('/contact', function(req, res) {
+  	console.log(req.param('email'));
+  	console.log(req.param('message'));
+  	console.log(req.param('from'));
+    res.send('success', 200);
+  });
+
 	var html_dir = 'app/public/html/';
   // routes to serve the static HTML files
   app.get('/investigator', function(req, res) {
