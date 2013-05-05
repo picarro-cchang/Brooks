@@ -376,10 +376,10 @@ module.exports = function(app) {
 	});
 
 // investigator path
-	app.get('/investigator', function(req, res) {
-		console.log('serving /investigator!');
-    res.render('investigator', {  title: 'Signup', countries : CT });
-	});
+	// app.get('/investigator', function(req, res) {
+	// 	console.log('serving /investigator!');
+ //    res.render('investigator', {  title: 'Signup', countries : CT });
+	// });
 
 	app.get('/front_page', function(req, res) {
 		if (req.session.user == null){
@@ -483,7 +483,7 @@ app.get('/investigator/dataview', function(req, res) {
 		  		      countries : CT
 		  		    });
 		  		  } else{
-		  			  res.send('no scientist found for this analyzer', 400);
+		  			  res.send('no scientist found for this analyzer ' + anz_log_name, 400);
 		  			}
 		  		});	
 		  	}	else {
@@ -498,7 +498,13 @@ app.get('/investigator/dataview', function(req, res) {
 		 	}
 		 }
 	});
-		
+
+	var html_dir = 'app/public/html/';
+  // routes to serve the static HTML files
+  app.get('/investigator', function(req, res) {
+    res.sendfile(html_dir + 'investigator.html');
+  });
+
 	app.get('*', function(req, res) { res.render('404', { title: 'Page Not Found'}); });
 
 
