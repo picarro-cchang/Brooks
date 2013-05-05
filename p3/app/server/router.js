@@ -500,10 +500,22 @@ app.get('/investigator/dataview', function(req, res) {
 	});
 
   app.post('/contact', function(req, res) {
+  	console.log(req.param('name'));
   	console.log(req.param('email'));
-  	console.log(req.param('message'));
-  	console.log(req.param('from'));
-    res.send('success', 200);
+  	console.log(req.param('comment'));
+  	EM.dispatchScientistEmail(to,req.param('name'),req.param('email'),req.param('comment'), function(e, m){
+				// this callback takes a moment to return //
+				// should add an ajax loader to give user feedback //
+					if (!e) {
+						res.send('ok', 200);
+					}	else{
+						res.send('email-server-error', 400);
+						for (k in e) console.log('error : ', k, e[k]);
+					}
+				});
+			}	else{
+				res.send('email-not-found', 400);
+			}
   });
 
 	var html_dir = 'app/public/html/';

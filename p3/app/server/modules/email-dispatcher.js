@@ -35,3 +35,23 @@ EM.composeEmail = function(o)
 		html += "</body></html>";
 	return  [{data:html, alternative:true}];
 }
+
+EM.dispatchScientistEmail = function(to,name,email,comment, callback)
+{
+	EM.server.send({
+		from         : email,
+		to           : to,
+		subject      : 'Message from a viewer of your dataview',
+		text         : comment,
+		attachment   : EM.emailScientist(name,email,comment)
+	}, callback );
+}
+
+EM.emailScientist = function(name,email,comment)
+{
+	var link = 'http://node-login.braitsch.io/reset-password?e='+o.email+'&p='+o.pass;
+	var html = "<html><body>";
+		html += o.message
+		html += "</body></html>";
+	return  [{data:html, alternative:true}];
+}
