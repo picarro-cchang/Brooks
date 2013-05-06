@@ -1,8 +1,10 @@
 """
-Copyright 2012 Picarro Inc.
+Copyright 2012-2013 Picarro Inc.
 """
 
 import ctypes
+
+from ctypes.wintypes import BOOL
 
 
 class Iphlpapi(object):
@@ -72,3 +74,16 @@ class Iphlpapi(object):
             return adapterList
         else:
             return None
+
+
+class User32(object):
+    """
+    Wrappers for User32.dll routines/structs/etc.
+    """
+
+    @staticmethod
+    def lockWorkStation():
+        LockWorkstation = ctypes.windll.user32.LockWorkStation
+        LockWorkstation.restype = BOOL
+
+        return LockWorkstation()

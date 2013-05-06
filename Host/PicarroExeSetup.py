@@ -334,6 +334,7 @@ consoleList = [
     Fitter,
     "ConfigMonitor/ConfigMonitor.py",
     "PeriphIntrf/RunSerial2Socket.py",
+    'LockWorkstation/LockWorkstation.py'
 ]
 
 windowsList = [
