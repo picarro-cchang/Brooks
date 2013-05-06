@@ -262,9 +262,6 @@ def _copyBuildAndInstallers(ver):
     dir_util.copy_tree(os.path.join(SANDBOX_DIR, 'host', 'MobileKit', 'dist'),
                        analyzerServerExe)
 
-    shutil.copyfile('version.json',
-                    os.path.join(STAGING_DISTRIB_BASE, 'version.json'))
-
     # Copy the individual installers and update the shortcuts that are
     # used by manufacturing.
     for c in CONFIGS:
@@ -275,6 +272,8 @@ def _copyBuildAndInstallers(ver):
         shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
                         os.path.join(targetDir, installer))
 
+    shutil.copyfile('version.json',
+                    os.path.join(STAGING_DISTRIB_BASE, 'version.json'))
 
 def _branchFromRepo():
     """
