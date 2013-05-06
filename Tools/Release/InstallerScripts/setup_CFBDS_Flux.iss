@@ -59,7 +59,7 @@ Source: {#resourceDir}\IB_WDT.dll; DestDir: {sys}; Flags: replacesameversion
 Source: {#resourceDir}\IBEM_WD.sys; DestDir: {sys}\Drivers; Flags: replacesameversion
 Source: {#sandboxDir}\{#installerType}\*; DestDir: {app}; Flags: recursesubdirs replacesameversion
 Source: {#sandboxDir}\CommonConfig\*; DestDir: {app}\CommonConfig; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\trunk\Host\dist\*; DestDir: {app}\HostExe; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\host\Host\dist\*; DestDir: {app}\HostExe; Flags: recursesubdirs replacesameversion
 Source: {#resourceDir}\*.ico; DestDir: {app}\HostExe; Flags: replacesameversion
 Source: {#resourceDir}\MSVCP71.DLL; DestDir: {sys}; Flags: replacesameversion; AfterInstall: MyAfterInstall
 Source: {#resourceDir}\{#installerType}\installerSignature.txt; DestDir: {app}; Flags: recursesubdirs replacesameversion
