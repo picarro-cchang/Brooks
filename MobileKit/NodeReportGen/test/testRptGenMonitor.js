@@ -13,22 +13,6 @@ var rootDir = "/temp/RptGenMonTest";
 describe('Report Generation Logger', function() {
     var rt;
 
-        beforeEach(function (done) {
-            rmTreeSync(rootDir);
-            mkdirp.sync(rootDir);
-            expect(fs.existsSync(rootDir));
-            var rt0 = nRT(rootDir);
-            taskKey1 = '23456_78901';
-            taskKey2 = '98765_43210';
-            rt0.startTask(taskKey1);
-            rt0.startTask(taskKey2);
-            rt0.waitEmpty(function () {
-                rt = nRT(rootDir);
-                done();
-            });
-        });
-
-
     beforeEach(function () {
         mkdirp.sync(rootDir);
         expect(fs.existsSync(rootDir));

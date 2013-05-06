@@ -330,7 +330,7 @@
     app.post("/rest/download", handleDownload);
 
     app.get("/test/:testName", function(req, res) {
-        res.render(req.params.testName);
+        res.end(req.params.testName);
     });
 
     /*

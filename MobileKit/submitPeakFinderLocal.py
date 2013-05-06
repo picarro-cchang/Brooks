@@ -3,10 +3,10 @@ import time
 from P3ApiService import P3ApiService
 
 P3Api = P3ApiService()
-P3Api.csp_url = "https://p3.picarro.com/stage"
+P3Api.csp_url = "https://localhost:8081/node"
 P3Api.ticket_url = P3Api.csp_url + "/rest/sec/dummy/1.0/Admin/"
-P3Api.identity = "zYa8P106vCc8IfpYGv4qcy2z8YNeVjHJw1zaBDth"
-P3Api.psys = "stage"
+P3Api.identity = "85490338d7412a6d31e99ef58bce5dPM"
+P3Api.psys = "SUPERADMIN"
 P3Api.rprocs = '["AnzLogMeta:byEpoch","AnzLog:byPos","AnzLog:byEpoch","AnzLog:makeSwath",' +\
                '"AnzMeta:byAnz","AnzLrt:getStatus","AnzLrt:byRow","AnzLrt:firstSet",' +\
                '"AnzLrt:nextSet","AnzLog:byGeo","AnzLog:makeFov","GduService:runProcess","GduService:getProcessStatus"]'

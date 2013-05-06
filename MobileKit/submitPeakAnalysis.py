@@ -17,11 +17,11 @@ P3Api.sockettimeout = 15
 anz = raw_input('Analyzer for which to generate isotopic analysis? ')
 qryparms = {'qry':'byEpoch','anz':anz,'startEtm':0, 'logtype':'dat'}
 result = P3Api.get("gdu", "1.0", "AnzLogMeta", qryparms)['return']
-datFiles = [r['name'] for r in result]
+datFiles = [r['name'] for r in result] if result else []
 
 qryparms = {'qry':'byEpoch','anz':anz,'startEtm':0, 'logtype':'analysis'}
 result = P3Api.get("gdu", "1.0", "AnzLogMeta", qryparms)['return']
-analysisFiles = [r['name'] for r in result]
+analysisFiles = [r['name'] for r in result] if result else []
 
 datFiles = set([d[:d.find('.dat')] for d in datFiles])
 analysisFiles = set([d[:d.find('.analysis')] for d in analysisFiles])
