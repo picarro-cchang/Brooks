@@ -490,7 +490,18 @@ app.get('/investigator/dataview', function(req, res) {
     res.sendfile(html_dir + 'investigator.html');
   });
 
+  app.get('/investigator/*', function(req, res){
+				// redirect /investigator to / for static assets ... for local dev without nginx.
+        var myidArr = req.url.split("investigator");
+        if(myidArr[1]) {
+        	res.redirect(myidArr[1]);	
+        } else {
+						res.redirect('/');
+				}
+	});
+
 	app.get('*', function(req, res) { res.render('404', { title: 'Page Not Found'}); });
+
 
 
 
