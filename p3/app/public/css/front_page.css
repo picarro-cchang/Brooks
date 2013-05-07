@@ -120,10 +120,10 @@
 }
 
 .vertical-layout .layout-container{
-    background:url("/img/icon_horizontal.png") repeat scroll 0 0 transparent;
+    background:url("/investigator/img/icon_horizontal.png") repeat scroll 0 0 transparent;
 }
 .horizontal-layout .layout-container{
-    background:url("/img/icon_vertical.png") repeat scroll 0 0 transparent;
+    background:url("/investigator/img/icon_vertical.png") repeat scroll 0 0 transparent;
 }
 
 #date-picker{
@@ -270,12 +270,12 @@
     display: inline-block;
     width: 20px;
     height: 20px;
-    background: url("/img/arrow_right.png") no-repeat scroll 0 3px transparent;
+    background: url("/investigator/img/arrow_right.png") no-repeat scroll 0 3px transparent;
 }
 
 .log-wrapper h5 .p3-icon-minus{
     display:none;
-    background: url("/img/arrow_down.png") no-repeat scroll 0 4px transparent;
+    background: url("/investigator/img/arrow_down.png") no-repeat scroll 0 4px transparent;
 }
 
 .log-wrapper h5.toggle-open .p3-icon-minus{
