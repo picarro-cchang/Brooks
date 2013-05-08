@@ -29,7 +29,7 @@ define(function(require, exports, module) {
                                  'tokens': null, 'fovs': null, 'paths': null, 'wedges': null,
                                  'submapGrid': null };
                 this.padX = 30;
-                this.padY = 30;
+                this.padY = 50;
                 this.submapLinks = {};
                 this.runsData = {};
                 this.surveysData = {};
@@ -110,7 +110,7 @@ define(function(require, exports, module) {
                 var image = new Image();
                 var params = { center: this.meanLat.toFixed(6) + "," + this.meanLng.toFixed(6),
                                zoom: this.zoom, size: this.mx + "x" + this.my, scale: this.scale,
-                               maptype: "map", sensor: false };
+                               maptype: "map", sensor: false, key:"AIzaSyDuKrJI6smrNA1MOuriEmlW9XFZikNahhs" };
                 var url = 'http://maps.googleapis.com/maps/api/staticmap?' + $.param(params);
                 image.src = url;
                 that.trigger("init",{"context": "map"});
@@ -128,7 +128,7 @@ define(function(require, exports, module) {
                 var image = new Image();
                 var params = { center: this.meanLat.toFixed(6) + "," + this.meanLng.toFixed(6),
                                zoom: this.zoom, size: this.mx + "x" + this.my, scale: this.scale,
-                               maptype: "satellite", sensor: false };
+                               maptype: "satellite", sensor: false, key:"AIzaSyDuKrJI6smrNA1MOuriEmlW9XFZikNahhs" };
                 var url = 'http://maps.googleapis.com/maps/api/staticmap?' + $.param(params);
                 image.src = url;
                 that.trigger("init",{"context": "satellite"});

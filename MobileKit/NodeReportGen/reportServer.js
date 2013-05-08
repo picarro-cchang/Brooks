@@ -37,12 +37,21 @@
     SITECONFIG.phantomPath = "";
     SITECONFIG.pdftkPath = "";
     SITECONFIG.pdfZoom = 1.0;
+    SITECONFIG.apiKey = "";
+    SITECONFIG.clientKey = "";
     SITECONFIG.headerFontSize = "100%";
-    SITECONFIG.footerFontSize + "70%";
+    SITECONFIG.footerFontSize = "70%";
 
     var siteconfig_path = argv.s ? argv.s : path.join(__dirname, "site_config_node");
     var siteconfig_data = fs.readFileSync(siteconfig_path, 'utf8');
     var siteconfig_obj = JSON.parse(siteconfig_data);
+    // Google maps API key or client key
+    if (siteconfig_obj.hasOwnProperty("apiKey")) {
+        SITECONFIG.apiKey = siteconfig_obj.apiKey;
+    }
+    if (siteconfig_obj.hasOwnProperty("clientKey")) {
+        SITECONFIG.clientKey = siteconfig_obj.clientKey;
+    }
     if (siteconfig_obj.hasOwnProperty("host")) {
         SITECONFIG.p3host = siteconfig_obj.host;
     }
