@@ -20,7 +20,7 @@ define(function(require, exports, module) {
         var prot;
         options.agent = false;
         // Merge the query key in the options into the URL string
-        console.log("options: " + JSON.stringify(options));
+        // console.log("options: " + JSON.stringify(options));
         var restUrl = url.format(options);
         options = url.parse(restUrl);
         if (_.has(options,'protocol')) {

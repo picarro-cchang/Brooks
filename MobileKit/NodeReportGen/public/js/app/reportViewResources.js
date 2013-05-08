@@ -29,7 +29,7 @@ define(function(require, exports, module) {
                                  'tokens': null, 'fovs': null, 'paths': null, 'wedges': null,
                                  'submapGrid': null };
                 this.padX = 30;
-                this.padY = 30;
+                this.padY = 75;
                 this.submapLinks = {};
                 this.runsData = {};
                 this.surveysData = {};
@@ -111,6 +111,8 @@ define(function(require, exports, module) {
                 var params = { center: this.meanLat.toFixed(6) + "," + this.meanLng.toFixed(6),
                                zoom: this.zoom, size: this.mx + "x" + this.my, scale: this.scale,
                                maptype: "map", sensor: false };
+                if (REPORT.apiKey) params.key = REPORT.apiKey;
+                else if (REPORT.clientKey) params.client = REPORT.clientKey;
                 var url = 'http://maps.googleapis.com/maps/api/staticmap?' + $.param(params);
                 image.src = url;
                 that.trigger("init",{"context": "map"});
@@ -129,6 +131,8 @@ define(function(require, exports, module) {
                 var params = { center: this.meanLat.toFixed(6) + "," + this.meanLng.toFixed(6),
                                zoom: this.zoom, size: this.mx + "x" + this.my, scale: this.scale,
                                maptype: "satellite", sensor: false };
+                if (REPORT.apiKey) params.key = REPORT.apiKey;
+                else if (REPORT.clientKey) params.client = REPORT.clientKey;
                 var url = 'http://maps.googleapis.com/maps/api/staticmap?' + $.param(params);
                 image.src = url;
                 that.trigger("init",{"context": "satellite"});

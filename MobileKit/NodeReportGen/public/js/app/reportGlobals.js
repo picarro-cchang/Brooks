@@ -4,6 +4,8 @@ define ({
     Analysis: null,
     analyses: null,
     Analyses: null,
+    apiKey: "",
+    clientKey: "",
     CompositeView: null,
     CompositeViewWithLinks: null,
     MultiCanvasView: null,

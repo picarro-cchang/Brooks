@@ -62,6 +62,10 @@ define(function(require, exports, module) {
             REPORT.Utilities = new localrestapi.TimezoneP3(host, port, TEMPLATE_PARAMS.site);
         }
 
+        // Authentication information for Google Maps API
+        REPORT.apiKey = TEMPLATE_PARAMS.apiKey;
+        REPORT.clientKey = TEMPLATE_PARAMS.clientKey;
+
         reportAnalyses.init();
         reportPaths.init();
         reportPeaks.init();

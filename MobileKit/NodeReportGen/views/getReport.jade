@@ -7,6 +7,8 @@ block scripts
     script(type='text/javascript', data-main='#{assets}js/app/getReportMain.js', src='#{assets}js/require-jquery.js')
     script(type='text/javascript')
         var TEMPLATE_PARAMS = {
+            apiKey: "#{apiKey}",
+            clientKey: "#{clientKey}",
             identity: "#{identity}",
             qry: !{JSON.stringify(qry)},
             host: "#{host}",
@@ -14,8 +16,7 @@ block scripts
             psys: "#{psys}",
             site: "#{site}",
             ticket: "#{hash}",
-            ts: #{ts},
-            user: "#{user}"
+            ts: #{ts}
         };
     style
         table.table-fmt1 td {text-align:center; vertical-align:middle; }
