@@ -90,7 +90,7 @@
     height: 40px;
     padding: 5px;
     padding-left: 10px;
-    width: 100%;
+    width: 99.1%;
 }
 
 .control-header h1{
@@ -260,9 +260,30 @@
   cursor: pointer;
 }
 
+.btn-close {
+  display: none;
+}
+
 .settings-btn-wrapper.selected{
   background-color: green;
 }
+.settings-closable.selected{
+  width: 65%;
+}
+
+.settings-closable.selected .btn-close{
+  background-color: black;
+  display: inline-block;
+  font-size: 30px;
+  height: 100%;
+  line-height: 180%;
+  position: absolute;
+  right: -23%;
+  text-align: center;
+  width: 22%;
+  background: url("/static/images/glyphicons_207_remove_2_white.png") no-repeat scroll 16px 17px #941215;
+}
+
 
 .setting-icon{
   width:21%;
@@ -278,11 +299,18 @@
   margin-left: 20px;
   text-align: left;
   line-height: 53px;
-  font-size: 25px;
+  font-size: 22px;
   color: white;
   position: absolute;
   top: 0;
-  left: 21%;
+  left: 19%;
+}
+
+.settings-closable.selected .setting-icon{
+  width: 26%;
+}
+.settings-closable.selected .setting-label{
+  left: 23.5%;
 }
 
 .setting-icon-restart{
@@ -342,6 +370,29 @@
 #capture_controls .icon{
   border-bottom: 1px solid white;
 }
+
+#capture_controls .icon .trigger-close{
+  position: absolute;
+  left: 84px;
+  width: 68px;
+  height: 64px;
+  display: inline-block;
+  font-size: 30px;
+  line-height: 64px;
+  position: absolute;
+  text-align: center;
+  background: url("/static/images/glyphicons_207_remove_2_white.png") no-repeat scroll 25px 22px #941215;
+  display: none;
+}
+
+#btn_capture_trigger{
+  top:64px;
+}
+
+#capture_controls .icon.selected .trigger-close{
+  display: inline-block;
+}
+
 #car_controls .icon, #capture_controls .icon{
   background-color: black;
   height: 64px;
@@ -352,7 +403,9 @@
   font-size: 16px;
   text-align: center;
   cursor: pointer;
-  line-height:4em
+  line-height:4em;
+  position: absolute;
+  $('#btn_capture_trigger')
 }
 
 #car_controls .icon.selected, #capture_controls .icon.selected{
@@ -508,6 +561,20 @@
     border-radius: 5px;
     text-align: center;
 }
+
+#countdown_timer{
+  font-size: 25px;
+  font-weight: bold;
+  margin-right: -58px;
+  opacity: 0.7;
+  position: absolute;
+  right: 300%;
+  text-align: center;
+  width: 100px;  
+  top:20px;
+  display: none;
+}
+
 #map2_histo{
     background-color: #eee;
     height: 100px;

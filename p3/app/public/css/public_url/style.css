@@ -1401,7 +1401,7 @@ h4 {
 }
 .well {
 	height:100%;
-	background:#222 url("/static/images/public_url/side.png");
+	background:#222 url("/investigator/img/public_url/side.png");
 	color:#fff;
 	border-right:6px solid #444;
 	padding:19px;
@@ -1498,7 +1498,7 @@ h4 {
 	line-height:1;
 }
 .logo a{
-    background: url("/static/images/public_url/picarro-inverted.png") no-repeat scroll 0 0 transparent;
+    background: url("/investigator/img/public_url/picarro-inverted.png") no-repeat scroll 0 0 transparent;
     display: inline-block;
     height: 25px;
     margin-bottom: -20px;
@@ -1549,7 +1549,7 @@ h4 {
 	height:20px;
 	width:100%;
 	border:0;
-	background:url(/static/images/public_url/separator.png) repeat-x;
+	background:url(/investigator/img/public_url/separator.png) repeat-x;
 }
 .portof {
 	width:31.6239%;
@@ -1759,7 +1759,7 @@ h4 {
 }
 .t3:before {
 	-moz-transform:rotate(30deg) skewX(45deg);
-	background:url(/static/images/public_url/texture.png) repeat;
+	background:url(/investigator/img/public_url/texture.png) repeat;
 	bottom:-4px;
 	box-shadow:4px 5px 5px 0 #777777;
 	height:10px;
@@ -1847,7 +1847,7 @@ h4 {
 	display:block;
 	float:left;
 	overflow:hidden;
-	background:url(/static/images/public_url/plus-sign.png) center center no-repeat;
+	background:url(/investigator/img/public_url/plus-sign.png) center center no-repeat;
 	width:204px;
 	height:148px;
 	margin-left:30px;
@@ -1928,7 +1928,7 @@ h4 {
 	display:block;
 	float:left;
 	overflow:hidden;
-	background:url(/static/images/public_url/plus-sign.png) center center no-repeat;
+	background:url(/investigator/img/public_url/plus-sign.png) center center no-repeat;
 	width:204;
 	height:148px;
 	margin-right:30px;
@@ -1943,7 +1943,7 @@ h4 {
 }
 .theme-default .nivoSlider {
 	position:relative;
-	background:#fff url(/static/images/public_url/loading.gif) no-repeat 50% 50%;
+	background:#fff url(/investigator/img/public_url/loading.gif) no-repeat 50% 50%;
 	margin-bottom:10px;
 }
 .theme-default .nivoSlider img {
@@ -1965,7 +1965,7 @@ h4 {
 	display:inline-block;
 	width:22px;
 	height:22px;
-	background:url(/static/images/public_url/bullets.png) no-repeat;
+	background:url(/investigator/img/public_url/bullets.png) no-repeat;
 	text-indent:-9999px;
 	border:0;
 	margin:0 2px;
@@ -1978,7 +1978,7 @@ h4 {
 	display:block;
 	width:30px;
 	height:30px;
-	background:url(/static/images/public_url/arrows.png) no-repeat;
+	background:url(/investigator/img/public_url/arrows.png) no-repeat;
 	text-indent:-9999px;
 	border:0;
 	opacity:0;
@@ -2226,7 +2226,7 @@ nav.category ul li a:active,nav.category ul li a.selected {
 	margin-right:-20px;
 }
 .hover {
-	background:rgba(0,0,0,.7) url(/static/images/public_url/hover.png) no-repeat center;
+	background:rgba(0,0,0,.7) url(/investigator/img/public_url/hover.png) no-repeat center;
 	position:absolute;
 	top:10px;
 	left:10px;

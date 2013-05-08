@@ -13,6 +13,7 @@ import sys
 from threading import Thread
 import time
 import traceback
+import optparse
 import CmdFIFO
 from timestamp import getTimestamp
 from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DATA_MANAGER
@@ -27,7 +28,7 @@ parser = SafeConfigParser(defaults={
             'USERLOGFILES':'C:/UserData/AnalyzerServer/*.dat',
             'PEAKFILES':'C:/UserData/AnalyzerServer/*.peaks',
             'ANALYSISFILES':'C:/UserData/AnalyzerServer/*.analysis',
-            'SWATHFILES':'C:/UserData/AnalyzerServer/*.swath'
+            'SWATHFILES':'C:/UserData/AnalyzerServer/*.swath',
               })
 parser.read('configAnaylzerServer.ini')
 
@@ -47,6 +48,9 @@ def pFloat(x):
         return float(x)
     except:
         return NaN
+
+def str2bool(v):
+  return v.lower() in ("yes", "true", "t", "1")
 
 def genLatestFiles(baseDir,pattern):
     # Generate files in baseDir and its subdirectories which match pattern
@@ -434,7 +438,11 @@ def getAnalysisEx(params):
 
 @app.route('/rest/restartDatalog')
 def rest_restartDatalog():
-    result = restartDatalogEx(request.values)
+    if not app.config['onAnalyzer']:
+        result = "OK"
+    else:
+        result = restartDatalogEx(request.values)
+
     if 'callback' in request.values:
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
@@ -454,7 +462,11 @@ def restartDatalogEx(params):
 
 @app.route('/rest/shutdownAnalyzer')
 def rest_shutdownAnalyzer():
-    result = shutdownAnalyzerEx(request.values)
+    if not app.config['onAnalyzer']:
+        result = "OK"
+    else:
+        result = shutdownAnalyzerEx(request.values)
+
     if 'callback' in request.values:
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
@@ -503,15 +515,18 @@ def rest_getCurrentInlet():
     Get the current inlet state.
     """
 
-    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                        ClientName='AnalyzerServer')
-
-    result = 'Unknown'
-
-    if (Driver.getValveMask() & VALVE_INLET_MASK) > 0:
-        result = 'Mast'
+    if not app.config['onAnalyzer']:
+        result = "Mast"
     else:
-        result = 'Bumper'
+        Driver = CmdFIFO.CmdFIFOServerProxy(
+             "http://localhost:%d" % RPC_PORT_DRIVER,
+             ClientName='AnalyzerServer')
+        result = 'Unknown'
+
+        if (Driver.getValveMask() & VALVE_INLET_MASK) > 0:
+            result = 'Mast'
+        else:
+            result = 'Bumper'
 
     if 'callback' in request.values:
         return make_response(request.values['callback'] + '(' +
@@ -525,17 +540,19 @@ def rest_setCurrentInlet():
     Set the inlet to the 'inlet' param: MAST or BUMPER.
     """
 
-    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                        ClientName='AnalyzerServer')
+    if app.config['onAnalyzer']:
+        Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" %
+                                            RPC_PORT_DRIVER,
+                                            ClientName='AnalyzerServer')
 
-    inlet = request.args.get('inlet')
+        inlet = request.args.get('inlet')
 
-    if inlet == 'MAST':
-        Driver.openValves(VALVE_INLET_MASK)
-    elif inlet == 'BUMPER':
-        Driver.closeValves(VALVE_INLET_MASK)
-    else:
-        print "Invalid inlet '%s' selected." % inlet
+        if inlet == 'MAST':
+            Driver.openValves(VALVE_INLET_MASK)
+        elif inlet == 'BUMPER':
+            Driver.closeValves(VALVE_INLET_MASK)
+        else:
+            print "Invalid inlet '%s' selected." % inlet
 
     if 'callback' in request.values:
         return make_response(request.values['callback'] + '(' +
@@ -550,15 +567,19 @@ def rest_getCurrentReference():
     CONCENTRATION.
     """
 
-    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                        ClientName='AnalyzerServer')
-
-    result = 'UNKNOWN'
-
-    if (Driver.getValveMask() & VALVE_CALIBRATION_MASK) > 0:
+    if not app.config['onAnalyzer']:
         result = 'CONCENTRATION'
     else:
-        result = 'ISOTOPIC'
+        Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" %
+                                            RPC_PORT_DRIVER,
+                                            ClientName='AnalyzerServer')
+
+        result = 'UNKNOWN'
+
+        if (Driver.getValveMask() & VALVE_CALIBRATION_MASK) > 0:
+            result = 'CONCENTRATION'
+        else:
+            result = 'ISOTOPIC'
 
     if 'callback' in request.values:
         return make_response(request.values['callback'] + '(' +
@@ -572,18 +593,29 @@ def rest_setCurrentReference():
     Set the reference gas position to either ISOTOPIC or CONCENTRATION.
     """
 
-    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                        ClientName='AnalyzerServer')
+    if app.config['onAnalyzer']:
+        Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" %
+                                            RPC_PORT_DRIVER,
+                                            ClientName='AnalyzerServer')
 
-    reference = request.args.get('reference')
+        reference = request.args.get('reference')
 
-    if reference == 'CONCENTRATION':
-        Driver.openValves(VALVE_CALIBRATION_MASK)
-    elif reference == 'ISOTOPIC':
-        Driver.closeValves(VALVE_CALIBRATION_MASK)
+        if reference == 'CONCENTRATION':
+            Driver.openValves(VALVE_CALIBRATION_MASK)
+        elif reference == 'ISOTOPIC':
+            Driver.closeValves(VALVE_CALIBRATION_MASK)
+        else:
+            print "Invalid reference gas position, '%s', selected." % reference
+
+
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' +
+                             json.dumps({'result': 'OK'}) + ')')
     else:
-        print "Invalid reference gas position, '%s', selected." % reference
+        return make_response(json.dumps({'result': 'OK'}))
 
+@app.route('/rest/startRefCalibrationShim')
+def rest_startRefCalibrationShim():
     if 'callback' in request.values:
         return make_response(request.values['callback'] + '(' +
                              json.dumps({'result': 'OK'}) + ')')
@@ -702,7 +734,8 @@ def injectCalEx(params):
 
 @app.route('/rest/cancelIsotopicCapture')
 def rest_cancelIsotopicCapture():
-    _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_CancellingState)
+    if app.config['onAnalyzer']:
+        _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_CancellingState)
 
     result = {'result': 'OK'}
 
@@ -714,7 +747,8 @@ def rest_cancelIsotopicCapture():
 
 @app.route('/rest/startTriggeredIsotopicCapture')
 def rest_startTriggeredIsotopicCapture():
-    _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_ArmedState)
+    if app.config['onAnalyzer']:
+        _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_ArmedState)
 
     result = {'result': 'OK'}
 
@@ -726,7 +760,8 @@ def rest_startTriggeredIsotopicCapture():
 
 @app.route('/rest/startManualIsotopicCapture')
 def rest_startManualIsotopicCapture():
-    _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_TriggeredPendingState)
+    if app.config['onAnalyzer']:
+        _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_TriggeredPendingState)
 
     result = {'result': 'OK'}
 
@@ -754,11 +789,14 @@ def rest_getIsotopicCaptureState():
               7: 'PURGING',
               8: 'INJECTION_PENDING'}
 
-    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                        ClientName='AnalyzerServer')
-    state = Driver.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER')
+    if not app.config['onAnalyzer']:
+        result = {'result': states[0]}
+    else:
+        Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                            ClientName='AnalyzerServer')
+        state = Driver.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER')
 
-    result = {'result': states[state]}
+        result = {'result': states[state]}
 
     if 'callback' in request.values:
         return make_response("%s(%s)" % (request.values['callback'],
@@ -861,4 +899,11 @@ def test():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=5000,debug=DEBUG)
+    parser = optparse.OptionParser()
+    parser.add_option('--no-analyzer', dest='onAnalyzer', action='store_false',
+                      default=True)
+
+    options, _ = parser.parse_args()
+    app.config['onAnalyzer'] = options.onAnalyzer
+
+    app.run(host='0.0.0.0', port=5000, debug=DEBUG)

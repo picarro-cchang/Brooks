@@ -18,6 +18,7 @@
     <script type="text/javascript" src="{{ url_for('static',filename='js/investigator/utils.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static',filename='js/investigator/templates.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static',filename='js/investigator/d3.v3.js') }}"></script>
+    <script type="text/javascript" src="/static/js/DateFormat.js"></script>
 
     <script src="/static/js/investigator/QuadTree.js"></script>
     <script src="/static/js/investigator/L.TileLayer.MaskCanvas.js"></script>
@@ -72,6 +73,7 @@
         <div id="map_realtime_flot"></div>
         <div id="realtime_display">
           <div id='realtime_num'>2.05</div>
+          <div id='countdown_timer'>9:00</div>
         </div>
         <canvas id="canvas_rose" width="200px" height="200px"></canvas>
         <canvas id="canvas_rose_arrow" width="240px" height="240px"></canvas>
@@ -81,8 +83,8 @@
         <div class="icon" id="car_signal-front"><span>BUMPER</span></div>
       </div>
       <div id='capture_controls'>
-        <div class="icon" id="btn_capture_manual"><span>Manual</span></div>
-        <div class="icon" id="btn_capture_trigger"><span>Arm</span></div>
+        <div class="icon" id="btn_capture_manual"><span>Manual</span><span class="trigger-close"></span></div>
+        <div class="icon" id="btn_capture_trigger"><span>Arm</span><span class="trigger-close"></span></div>
       </div>
       <div id='setting_controls'>
         <div class='control-header'>
@@ -106,13 +108,15 @@
           <div class="settings-group">
             <div class="settings-group-header">Calibration</div>
             <div class='settings-wrapper'>
-              <div class="settings-btn-wrapper">
+              <div id='btn_start_iso' class="settings-btn-wrapper settings-closable">
                 <div class="setting-icon setting-icon-isotope"></div>
                 <div class="setting-label">Isotopic</div>
+                <div class="btn-close"></div>
               </div>
-              <div class="settings-btn-wrapper">
+              <div id='btn_start_conc' class="settings-btn-wrapper settings-closable">
                 <div class="setting-icon setting-icon-cardio"></div>
                 <div class="setting-label">Concentration</div>
+                <div class="btn-close"></div>
               </div>
             </div>
           </div>
@@ -126,36 +130,7 @@
               </div>
             </div>
           </div>
-
-          
-         <!--  <br>
-          <div id='btn_restart' class='settings-wrapper selected'>
-            <span class='label-text'>Restart Log</span>
-            <div class='settings-switch-wrapper'>
-              <div class='switch_text left_text'>Restarting</div>
-              <div class='switch_groove'><div class='switch_handle'></div></div>
-              <div class='switch_text right_text selected'>Running</div>
-            </div>
-          </div>
-          <br>
-          <div id='btn_reference_new' class='settings-wrapper selected'>
-            <span class='label-text'>Reference Gas</span>
-            <div class='settings-switch-wrapper'>
-              <div class='switch_text left_text'>Isotopic</div>
-              <div class='switch_groove'><div class='switch_handle'></div></div>
-              <div class='switch_text right_text selected'>Conc.</div>
-            </div>
-          </div>
-          <br>
-          <div id='btn_shutdown' class='settings-wrapper selected'>
-            <span class='label-text'>Shutdown Analyzer</span>
-            <div class='settings-switch-wrapper'>
-              <div class='switch_text left_text'>Off</div>
-              <div class='switch_groove'><div class='switch_handle'></div></div>
-              <div class='switch_text right_text selected'>On</div>
-            </div>
-          </div> -->
-          
+                    
         </div>
       </div>
       <div id='legend-controls'>

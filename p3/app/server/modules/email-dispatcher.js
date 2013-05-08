@@ -35,3 +35,24 @@ EM.composeEmail = function(o)
 		html += "</body></html>";
 	return  [{data:html, alternative:true}];
 }
+
+EM.dispatchScientistEmail = function(to,name,email,comment, callback)
+{
+	EM.server.send({
+		from         : email,
+		to           : to,
+		subject      : 'Message from a viewer of your dataview',
+		text         : comment,
+		attachment   : EM.emailScientist(name,email,comment)
+	}, callback );
+}
+
+EM.emailScientist = function(name,email,comment)
+{
+	var html = "<html><body>";
+	  html += "The following message came from someone identifying themselves as " + name; //+ "while viewing the dataview " + dataview;
+    html += "<br /><p>"
+		html += comment
+		html += "</p></body></html>";
+	return  [{data:html, alternative:true}];
+}

@@ -5,3 +5,4 @@ AddOns/SSIM/Coordinator_SSIM_CFFDS.ini
 AddOns/SSIM/Coordinator_SSIM_CFIDS.ini
 AddOns/SSIM/Coordinator_SSIM_FCDS.ini
 node_modules
+MobileKit/Tests/configAnaylzerServer.ini
