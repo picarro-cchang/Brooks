@@ -259,7 +259,9 @@
 
     function handleGetReport(req, res) {
         res.render("getReport",
-            {assets: SITECONFIG.assets,
+            {apiKey: SITECONFIG.apiKey,
+             assets: SITECONFIG.assets,
+             clientKey: SITECONFIG.clientKey,
              hash: req.params.hash,
              host: SITECONFIG.proxyhost,
              identity: SITECONFIG.identity,
@@ -273,7 +275,9 @@
 
     function handleGetReportLocal(req, res) {
         res.render("getReport",
-            {assets: "/",
+            {apiKey: SITECONFIG.apiKey,
+             assets: "/",
+             clientKey: SITECONFIG.clientKey,
              hash: req.params.hash,
              host: "",
              identity: "",
@@ -295,7 +299,7 @@
              psys: SITECONFIG.psys,
              qry: req.query,
              site: SITECONFIG.p3site,
-             user: req.query.user || 'demoUser'
+             user: req.query.userid || 'demoUser'
         });
     }
 
@@ -309,7 +313,7 @@
              psys: SITECONFIG.psys,
              qry: req.query,
              site: SITECONFIG.p3site,
-             user: req.query.user || 'demoUser'
+             user: req.query.userid || 'demoUser'
         });
     }
 
