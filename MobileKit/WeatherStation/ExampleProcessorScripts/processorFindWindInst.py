@@ -9,7 +9,7 @@ import sys
 import time
 
 from numpy import *
-from scipy.optimize import leastsq
+from scipy.optimize import leastsq, brent
 import itertools
 
 NOT_A_NUMBER = 1e1000/1e1000
@@ -241,31 +241,52 @@ def calCompass(phi,theta,params0=[0.0,0.0,0.0]):
     phi = asarray(phi)
     theta = asarray(theta)
     data = concatenate((cos(theta),sin(theta)))
-    def mock(params,phi):    # Generates mock data
-        p0,p1,p2 = params
-        th = p0 + arctan2(p2+sin(phi),p1+cos(phi))
-        return concatenate((cos(th),sin(th)))
-    def fun(params):    # Function whose sum of squares is to be minimized
-        return mock(params,phi)-data
-    def dfun(params):   # Jacobian of fun
-        N = len(phi)
-        dm = mock(params,phi)
-        cth = dm[:N]
-        sth = dm[N:]
-        p0,p1,p2 = params
-        f1 = p1+cos(phi)
-        f2 = p2+sin(phi)
-        den = f1*f1 + f2*f2
-        c0 = concatenate((-sth,cth))
-        c1 = concatenate((sth*f2/den,-cth*f2/den))
-        c2 = concatenate((-sth*f1/den,cth*f1/den))
-        return column_stack((c0,c1,c2))
-    x0 = asarray(params0)
-    x,ier = leastsq(fun,x0,Dfun=dfun)
-    if ier in [1,2,3,4]:    # Successful return
-        return x
-    else:
-        raise RuntimeError("Calibration failed")
+    # We need to have enough data from at least 3 quadrants before it is safe to use the full model
+    # With less data than that, we only fit p0, forcing p1 and p2 to be zero 
+    hist, bin_edges = histogram(theta,asarray([-pi,-0.5*pi,0,0.5*pi,pi]))
+    useFull = sum(hist > 20)>=3
+    if useFull:
+        def mock(params,phi):    # Generates mock data
+            p0,p1,p2 = params
+            th = p0 + arctan2(p2+sin(phi),p1+cos(phi))
+            return concatenate((cos(th),sin(th)))
+        def fun(params):    # Function whose sum of squares is to be minimized
+            return mock(params,phi)-data
+        def dfun(params):   # Jacobian of fun
+            N = len(phi)
+            dm = mock(params,phi)
+            cth = dm[:N]
+            sth = dm[N:]
+            p0,p1,p2 = params
+            f1 = p1+cos(phi)
+            f2 = p2+sin(phi)
+            den = f1*f1 + f2*f2
+            c0 = concatenate((-sth,cth))
+            c1 = concatenate((sth*f2/den,-cth*f2/den))
+            c2 = concatenate((-sth*f1/den,cth*f1/den))
+            return column_stack((c0,c1,c2))
+        x0 = asarray(params0)
+        x,ier = leastsq(fun,x0,Dfun=dfun)
+        if ier in [1,2,3,4]:    # Successful return
+            return x
+        else:
+            raise RuntimeError("Calibration failed")
+    else: # Just use a one-dimensional model with p1=p2=0
+        def mock(p0,phi):    # Generates mock data
+            th = p0 + phi
+            return concatenate((cos(th),sin(th)))
+        def fun(p0):    # Function to be minimized
+            return sum((mock(p0,phi)-data)**2)
+        x = brent(fun, brack=(-pi,0,pi))
+        pfine = linspace(-pi,pi,501);
+        ctst = mock(x,pfine)
+        n = len(ctst)
+        plot(phi, theta, 'o', pfine, arctan2(ctst[n/2:],ctst[:n/2]))
+        xlabel('Compass reading (radians)')
+        ylabel('GPS bearing (radians)')
+        grid(True)
+        show()
+        return [x, 0, 0]
         
 # First generate a true wind source that does no averaging but simply subtracts the vehicle velocity
 #  from the anemometer velocity. This is done in the frame of the anemometer, which is nominally aligned
@@ -354,7 +375,7 @@ def trueWindSource(derivCdataSource,distFromAxle,speedFactor=1.0):
         if isfinite(d.zVel):      # Reject bad GPS data
             phi0 = angle(d.zVel)
             theta0 = -angle(d.mHead)
-            if abs(d.zVel) > 2.0 and abs(d.zVel)<2.0*(5.0+abs(d.rVel)): # Car is moving fast if speed > 2m/s. 
+            if abs(d.zVel) > 3.0 and abs(d.zVel)<2.0*(5.0+abs(d.rVel)): # Car is moving fast if speed > 3m/s. 
                 # Also reject points where car speed is too great. Use these for calibrating magnetometer against GPS
                 #  and for finding orientation of anemometer. 
                 # Determine which deque to put data onto 
@@ -376,12 +397,13 @@ def trueWindSource(derivCdataSource,distFromAxle,speedFactor=1.0):
             if len(phi0)>=50:
                 print "Samples", i
                 try:
-                    p0,p1,p2 = calCompass(phi0,theta0,[p0,p1,p2])
-                    #print "Compass params: %10.2f %10.2f %10.2f" % (p0, p1, p2)
+                    p0,p1,p2 = calCompass(phi0,theta0)
+                    # print "Compass params: %10.2f %10.2f %10.2f" % (p0, p1, p2)
                     rot = -arctan2(iCorr,rCorr)
                     print "Rotation: %10.2f degrees %10.2f degrees, Scale:%10.4f" % ((180/pi)*rot,(180/pi)*p0,num/den)
                 except:
-                    pass
+                    print traceback.format_exc()
+                    
         yield CalibCdataTuple(*(d+(tVel,[p0,p1,p2],[rCorr,iCorr]))) 
 
 # Calculate the statistics of the wind velocity by averaging the northerly and easterly components of the wind velocity
