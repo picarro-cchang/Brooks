@@ -267,8 +267,7 @@
              psys: SITECONFIG.psys,
              qry: req.query,
              site: SITECONFIG.p3site,
-             ts:req.params.ts,
-             user: 'demoUser'
+             ts:req.params.ts
         });
     }
 
@@ -282,8 +281,7 @@
              psys: "",
              qry: req.query,
              site: "",
-             ts:req.params.ts,
-             user: 'demoUser'
+             ts:req.params.ts
         });
     }
 
@@ -297,7 +295,7 @@
              psys: SITECONFIG.psys,
              qry: req.query,
              site: SITECONFIG.p3site,
-             user: 'demoUser'
+             user: req.query.user || 'demoUser'
         });
     }
 
@@ -311,7 +309,7 @@
              psys: SITECONFIG.psys,
              qry: req.query,
              site: SITECONFIG.p3site,
-             user: 'demoUser'
+             user: req.query.user || 'demoUser'
         });
     }
 
