@@ -11,7 +11,7 @@ conf = new Config();
 // var dbHost 		= 'localhost';
 var dbPort 		= conf.mongo.dbport;
 var dbHost 		= '127.0.0.1';
-var dbName 		= 'node-login';
+var dbName 		= 'login_investigator';
 
 /* establish the database connection */
 var db; 
