@@ -46,7 +46,7 @@ module.exports = function(app) {
 	app.get('/investigator/home', function(req, res) {
 	    if (req.session.user == null){
 	// if user is not logged-in redirect back to login page //
-	        res.redirect('/');
+	        res.redirect('/investigator/login');
 	    }   else{
 			res.render('home', {
 				title : 'Control Panel',
@@ -131,7 +131,7 @@ module.exports = function(app) {
 	app.get('/investigator/profile', function(req, res) {
 	    if (req.session.user == null){
 	// if user is not logged-in redirect back to login page //
-	        res.redirect('/');
+	        res.redirect('/investigator/login');
 	    }   else{
 			res.render('home', {
 				title : 'Control Panel',
@@ -237,7 +237,7 @@ module.exports = function(app) {
 		var passH = req.query["p"];
 		AM.validateResetLink(email, passH, function(e){
 			if (e != 'ok'){
-				res.redirect('/');
+				res.redirect('/investigator/login');
 			} else{
 	// save the user's email in a session instead of sending to the client //
 				req.session.reset = { email:email, passHash:passH };
@@ -289,9 +289,10 @@ module.exports = function(app) {
 	// });
 
 	app.get('/investigator/front_page', function(req, res) {
+		console.log('serving investigator/front_page')
 		if (req.session.user == null){
 	  // if user is not logged-in redirect back to login page //
-	        res.redirect('/');
+	        res.redirect('/investigator/login');
 	    }   else{
 	    console.log("at front page!")
 	    console.log (req.session.user);
@@ -389,7 +390,7 @@ app.get('/investigator/dataview', function(req, res) {
         if(myidArr[1]) {
         	res.redirect(myidArr[1]);	
         } else {
-						res.redirect('/');
+						res.redirect('/investigator/login');
 				}
 	});
 
