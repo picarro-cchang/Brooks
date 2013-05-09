@@ -65,7 +65,7 @@ var FrontPage = function(){
 	// 	, "rprocs":  '["AnzLog:byEpoch","AnzLogMeta:byEpoch", "AnzLog:byEpoch"]'
 	// };
 
-	var shareUrl = "https://dev.picarro.com/short/url"
+	var shareUrl = "https://dev.picarro.com/investigator/short/url"
 
 	p3anzApi = new P3ApiService(initArgs);
 

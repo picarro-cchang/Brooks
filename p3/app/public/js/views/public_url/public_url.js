@@ -83,7 +83,7 @@ var PublicUrl = function(){
 
 		$.ajax({
 		  dataType:"jsonp",
-		  url: "http://dev.picarro.com/short/" + key + "?callback=?",
+		  url: "http://dev.picarro.com/investigator/short/" + key + "?callback=?",
 		  type: "get",
 		  jsonp: 'callback',
 		  success: function(json){
