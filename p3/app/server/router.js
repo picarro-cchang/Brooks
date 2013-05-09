@@ -182,7 +182,7 @@ module.exports = function(app) {
   app.get('/investigator/user/new', function(req, res) {
   	console.log(req.session);
   	console.log(req.session.user);
-  	if (req.session.user) {
+  	if (req.session.user.admin) {
 		  res.render('signup', {  title: 'Signup', countries : CT });
 		} else {
 			res.redirect('/investigator/login');
