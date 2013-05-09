@@ -18,11 +18,14 @@ div.navbar.navbar-static-top
                 div#live_view.
                     <a href='/investigator?prime=false&anz=CFADS2290'><button type="button" class='btn btn-primary' id="live_view">Live</button></a>
 
-                 div#profile.
+                div#profile.
                     <a href='/investigator/profile'><button type="button" class='btn btn-primary' id="profile">My profile</button></a>    
+
+                if (user.admin == true)
+                    div#profile.
+                    <a href='/investigator/user/new'><button type="button" class='btn btn-primary' id="profile">New user</button></a>    
                 
                 div.layout-container
-
 
 div.container.main-body.
         <div id="accordion-container">  

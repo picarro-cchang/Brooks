@@ -25,39 +25,6 @@ module.exports = function(app) {
 		}
 	});
 
-
-	app.get('/', function(req, res){
-	// check if the user's credentials are saved in a cookie //
-		if (req.cookies.user == undefined || req.cookies.pass == undefined){
-			res.render('login', { title: 'Hello - Please Login To Your Account' });
-		}	else{
-	// attempt automatic login //
-			AM.autoLogin(req.cookies.user, req.cookies.pass, function(o){
-				if (o != null){
-				    req.session.user = o;
-					res.redirect('/home');
-				}	else{
-					res.render('login', { title: 'Hello - Please Login To Your Account' });
-				}
-			});
-		}
-	});
-	
-	app.post('/', function(req, res){
-		AM.manualLogin(req.param('user'), req.param('pass'), function(e, o){
-			if (!o){
-				res.send(e, 400);
-			}	else{
-			    req.session.user = o;
-				if (req.param('remember-me') == 'true'){
-					res.cookie('user', o.user, { maxAge: 900000 });
-					res.cookie('pass', o.pass, { maxAge: 900000 });
-				}
-				res.send(o, 200);
-			}
-		});
-	});
-
 	app.post('/investigator/login', function(req, res){
 		AM.manualLogin(req.param('user'), req.param('pass'), function(e, o){
 			if (!o){
@@ -74,20 +41,7 @@ module.exports = function(app) {
 	});
 	
 	
-// logged-in user homepage //
-	
-	app.get('/home', function(req, res) {
-	    if (req.session.user == null){
-	// if user is not logged-in redirect back to login page //
-	        res.redirect('/');
-	    }   else{
-			res.render('home', {
-				title : 'Control Panel',
-				countries : CT,
-				udata : req.session.user
-			});
-	    }
-	});
+  // logged-in user homepage //
 
 	app.get('/investigator/home', function(req, res) {
 	    if (req.session.user == null){
@@ -103,7 +57,7 @@ module.exports = function(app) {
 	});
 
 
-	app.post('/home', function(req, res){
+	app.post('/investigator/home', function(req, res){
 		if (req.param('user') != undefined) {
 			console.log(req.param('anz-identity'));
 			AM.updateAccount({
@@ -173,19 +127,6 @@ module.exports = function(app) {
 	
 
 // logged-in user profile //
-	
-	app.get('/profile', function(req, res) {
-	    if (req.session.user == null){
-	// if user is not logged-in redirect back to login page //
-	        res.redirect('/');
-	    }   else{
-			res.render('home', {
-				title : 'Control Panel',
-				countries : CT,
-				udata : req.session.user
-			});
-	    }
-	});
 
 	app.get('/investigator/profile', function(req, res) {
 	    if (req.session.user == null){
@@ -201,7 +142,7 @@ module.exports = function(app) {
 	});
 
 
-	app.post('/profile', function(req, res){
+	app.post('/investigator/profile', function(req, res){
 		if (req.param('user') != undefined) {
 			console.log(req.param('anz-identity'));
 			AM.updateAccount({
@@ -235,51 +176,22 @@ module.exports = function(app) {
 		}
 	});
 	
-		app.post('/investigator/profile', function(req, res){
-		if (req.param('user') != undefined) {
-			console.log(req.param('anz-identity'));
-			AM.updateAccount({
-				user 		: req.param('email'),
-				name 		: req.param('name'),
-				email 		: req.param('email'),
-				bio 		: req.param('bio'),
-				experimentInfo 		: req.param('experimentInfo'),
-				country 	: req.param('country'),
-				pass		: req.param('pass'),
-				anz		: req.param('anz'),
-				anzName		: req.param('anz-name'),
-				anzIdentity		: req.param('anz-identity')
-			}, function(e, o){
-				if (e){
-					res.send('error-updating-account', 400);
-				}	else{
-					req.session.user = o;
-			    // update the user's login cookies if they exists //
-					if (req.cookies.user != undefined && req.cookies.pass != undefined){
-						res.cookie('user', o.user, { maxAge: 900000 });
-						res.cookie('pass', o.pass, { maxAge: 900000 });	
-					}
-					res.send('ok', 200);
-				}
-			});
-		}	else if (req.param('logout') == 'true'){
-			res.clearCookie('user');
-			res.clearCookie('pass');
-			req.session.destroy(function(e){ res.send('ok', 200); });
-		}
-	});
-	
-
-
-
 
 // creating new accounts //
 	
-	app.get('/signup', function(req, res) {
-		res.render('signup', {  title: 'Signup', countries : CT });
+  app.get('/investigator/user/new', function(req, res) {
+  	console.log(req.session);
+  	console.log(req.session.user);
+  	if (req.session.user) {
+		  res.render('signup', {  title: 'Signup', countries : CT });
+		} else {
+			res.redirect('/investigator/login');
+		}
 	});
 	
-	app.post('/signup', function(req, res){
+
+
+	app.post('/investigator/user/new', function(req, res){
 		AM.addNewAccount({
 			name 	: req.param('name'),
 			email 	: req.param('email'),
@@ -299,7 +211,7 @@ module.exports = function(app) {
 
 // password reset //
 
-	app.post('/lost-password', function(req, res){
+	app.post('/investigator/lost-password', function(req, res){
 	// look up the user's account via their email //
 		AM.getAccountByEmail(req.param('email'), function(o){
 			if (o){
@@ -320,7 +232,7 @@ module.exports = function(app) {
 		});
 	});
 
-	app.get('/reset-password', function(req, res) {
+	app.get('/investigator/reset-password', function(req, res) {
 		var email = req.query["e"];
 		var passH = req.query["p"];
 		AM.validateResetLink(email, passH, function(e){
@@ -334,7 +246,7 @@ module.exports = function(app) {
 		})
 	});
 	
-	app.post('/reset-password', function(req, res) {
+	app.post('/investigator/reset-password', function(req, res) {
 		var nPass = req.param('pass');
 	// retrieve the user's email from the session to lookup their account and reset password //
 		var email = req.session.reset.email;
@@ -351,13 +263,13 @@ module.exports = function(app) {
 	
 // view & delete accounts //
 	
-	app.get('/print', function(req, res) {
+	app.get('/investigator/print', function(req, res) {
 		AM.getAllRecords( function(e, accounts){
 			res.render('print', { title : 'Account List', accts : accounts });
 		})
 	});
 	
-	app.post('/delete', function(req, res){
+	app.post('/investigator/delete', function(req, res){
 		AM.deleteAccount(req.body.id, function(e, obj){
 			if (!e){
 				res.clearCookie('user');
@@ -369,32 +281,12 @@ module.exports = function(app) {
 	    });
 	});
 	
-	app.get('/reset', function(req, res) {
-		AM.delAllRecords(function(){
-			res.redirect('/print');	
-		});
-	});
-
-// investigator path
-	// app.get('/investigator', function(req, res) {
-	// 	console.log('serving /investigator!');
- //    res.render('investigator', {  title: 'Signup', countries : CT });
+	//  we dont really want a delete all accounts....
+	// app.get('/investigator/reset', function(req, res) {
+	// 	AM.delAllRecords(function(){
+	// 		res.redirect('/print');	
+	// 	});
 	// });
-
-	app.get('/front_page', function(req, res) {
-		if (req.session.user == null){
-	  // if user is not logged-in redirect back to login page //
-	        res.redirect('/');
-	    }   else{
-	    console.log("at front page!")
-	    console.log (req.session.user);
-			res.render('front_page', {  
-				title: 'Investigator Front Page', 
-				countries : CT , 
-				user : req.session.user
-			});
-		}
-	});
 
 	app.get('/investigator/front_page', function(req, res) {
 		if (req.session.user == null){
@@ -485,6 +377,7 @@ app.get('/investigator/dataview', function(req, res) {
   });
 
 	var html_dir = 'app/public/html/';
+ 
   // routes to serve the static HTML files
   app.get('/investigator', function(req, res) {
     res.sendfile(html_dir + 'investigator.html');

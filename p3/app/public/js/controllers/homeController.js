@@ -19,7 +19,7 @@ function HomeController()
 		$('.modal-confirm').modal('hide');
 		var that = this;
 		$.ajax({
-			url: '/delete',
+			url: '/investigator/delete',
 			type: 'POST',
 			data: { id: $('#userId').val()},
 			success: function(data){
@@ -35,7 +35,7 @@ function HomeController()
 	{
 		var that = this;
 		$.ajax({
-			url: "/home",
+			url: "/investigator/home",
 			type: "POST",
 			data: {logout : true},
 			success: function(data){

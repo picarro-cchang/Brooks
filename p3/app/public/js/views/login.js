@@ -30,7 +30,7 @@ $(document).ready(function(){
 	var ev = new EmailValidator();
 	
 	$('#get-credentials-form').ajaxForm({
-		url: '/lost-password',
+		url: '/investigator/lost-password',
 		beforeSubmit : function(formData, jqForm, options){
 			if (ev.validateEmail($('#email-tf').val())){
 				ev.hideEmailAlert();
