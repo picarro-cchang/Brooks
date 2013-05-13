@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <title>Picarro Front Page</title>
+        <script type="text/javascript" src="{{ url_for('static',filename='leaflet.js') }}"></script>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/leaflet.css') }}" />
+
+        <script type="text/javascript" src="{{ url_for('static',filename='js/investigator/jquery-1.9.0.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='js/investigator/jquery-ui-1.10.0.custom.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='js/jquery.jsonp-2.4.0.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='js/DateFormat.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='js/store.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='js/investigator/d3.v3.js') }}"></script>        
+
+        <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/picarro_bootstrap.css') }}" />
+        <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/plume/plume.css') }}" />
+        <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
+
+        <script type="text/javascript" src="{{ url_for('static',filename='js/public_url/bootstrap.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='jquery.flot.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='js/investigator/utils.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='js/plume/heatmap.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='js/plume/plume.json.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='js/plume/plume.js') }}"></script>
+
+        <!-- {% block head %}{% endblock %} -->
+
+        <script type="text/javascript" language="javascript">
+        </script>
+    </head>
+    <body>
+
+    <div id="static-map">
+        <img src='/static/images/plume/static_map_plume.png'>
+    </div>
+
+    <div id='plume-wrapper'>
+        <div id='plume-left'>
+            <span style='display:none;'>
+                Flux (L/s)<br><br>
+                1.5 +/- 0.3
+            </span>
+            <!-- <img class='status-icon' src='/static/images/plume/status.png'> -->
+        </div>
+        <div id='plume-right'>
+            <div id='plume-container'></div>
+            <div id='heatmap-container'></div>
+
+        </div>
+    </div>
+
+    <div id='pageFooter'>
+
+        <span class='icon icon-car' id='btn_car_controls'></span>
+          <span class='icon-spacer'></span>
+          <span class='icon icon-setting' id='btn_setting_controls'></span>
+          <span class='icon-spacer'></span>
+          <span class='icon icon-map selected' id='btn_map_controls'></span>
+          <span class='icon-spacer-short'></span>
+          <span class='icon icon-chart' id='btn_chart_controls'></span>
+          <span class='icon-spacer-short'></span>
+          <span class='icon icon-wind' id='btn_wind_controls'></span>
+          <span class='icon-spacer-short'></span>
+          <span class='icon icon-cursor' id='btn_cursor_controls'></span>
+          <span class='icon-spacer-short'></span>      
+          <span class='icon icon-pause' id='btn_pause_controls'></span>
+          <span class='icon-spacer-short'></span>
+          <span class='icon icon-legend' id='btn_legend_controls'></span>
+          <span class='icon-spacer'></span>
+        <span class='icon icon-logo' id='btn_logo_controls'></span>
+    </div>  
+    </body>
+</html>    

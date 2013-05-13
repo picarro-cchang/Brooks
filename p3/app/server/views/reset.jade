@@ -1,0 +1,13 @@
+
+extends layout
+
+block content
+	include modals/reset-password
+
+block scripts
+	script(src='/investigator/vendor/jquery.min.js')
+	script(src='/investigator/vendor/jquery.form.js')
+	script(src='/investigator/vendor/bootstrap-modal.js')
+	script(src='/investigator/vendor/bootstrap-transition.js')
+	script(src='/investigator/js/views/reset.js')
+	script(src='/investigator/js/form-validators/resetValidator.js')
