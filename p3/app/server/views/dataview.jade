@@ -1,0 +1,218 @@
+html.
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <title>Picarro Public Data</title>
+
+        <link rel="stylesheet" type="text/css" href="/investigator/css/picarro_bootstrap.css" />
+        <link rel="stylesheet" type="text/css" href="/investigator/css/public_url/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/investigator/css/public_url/bootstrap-responsive.min.css" />
+        <link rel="stylesheet" type="text/css" href="/investigator/css/public_url/public_url.css" />
+
+        <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
+
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <script type="text/javascript" src="/investigator/js/views/google_analytics.js"></script>
+        <!-- <script type="text/javascript" src="/investigator/js/views/mouseflow.js"></script> -->
+        <script type="text/javascript" src="/investigator/js/views/investigator/jquery-1.9.0.js"></script>
+        <script type="text/javascript" src="/investigator/js/views/jquery.jsonp-2.4.0.min.js"></script>
+        <script type="text/javascript" src="/investigator/js/views/investigator/utils.js"></script>
+        <script type="text/javascript" src="/investigator/js/views/investigator/jquery-ui-1.10.0.custom.js"></script>
+        <script type="text/javascript" src="/investigator/js/views/public_url/bootstrap.min.js"></script>
+        <script type="text/javascript" src="/investigator/js/views/jquery.flot.min.js"></script>
+        <script type="text/javascript" src="/investigator/js/views/investigator/d3.v3.js"></script>
+        <script type="text/javascript" src="/investigator/js/views/p3apiservice.js"></script>
+        <script type="text/javascript" src="/investigator/js/views/investigator/jquery.flot.selection.min.js"></script>
+        <script type="text/javascript" src="/investigator/js/views/investigator/jquery.flot.crosshair.js"></script>
+        <script type="text/javascript" src="/investigator/js/views/investigator/jquery.flot.threshold.min.js"></script>
+        <script type="text/javascript" src="/investigator/js/views/investigator/investigator.js"></script>
+        <script language="javascript" type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
+
+
+        <script type="text/javascript" language="javascript">
+            var gi;
+            var google_map;
+            google.load("earth", "1");
+
+            function init() {
+              google.earth.createInstance('map3d', initCB, failureCB);
+            }
+
+            function initCB(instance) {
+                ge = instance;
+                gi = ge;
+                ge.getWindow().setVisibility(true);
+                console.log('initializing public url...')
+                PublicUrl.init();
+            }
+
+            function failureCB(errorCode) {
+                
+            }
+
+            google.setOnLoadCallback(init);
+
+             function initialize() {
+                var mapOptions = {
+                  center: new google.maps.LatLng(-34.397, 150.644),
+                  zoom: 8,
+                  mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+                google_map = new google.maps.Map(document.getElementById("mini-map"),
+                    mapOptions);
+              }
+              google.maps.event.addDomListener(window, 'load', initialize);
+        </script>
+        <script type="text/javascript" src="/investigator/js/views/public_url/public_url.js"></script>
+    </head>
+    <body>
+        <div class="navbar navbar-static-top">
+            <div class="container">
+                <div class="navbar-inner">            
+                    <div class='logo-container'>
+                        <img height="25px" width="157px" src="/investigator/img/picarro_logo_25.png" alt="Picarro">
+                    </div>
+                    <div class='layout-container'>
+                        <span class="label_invest">PICARRO INVESTIGATOR™</span>
+                    </br>
+                        <span class="label_subhead">for Methane Emission Sources</span>
+                    </div>
+                </div>
+           </div>
+        </div>
+        <div class="container">
+                
+                <!-- MAIN CONTENT
+                ================================================== -->      
+                <div class="span12">     
+                    <!-- HOME div
+                    ================================================== -->
+                    <div id="home">
+                        <div class="slider-wrapper theme-default">
+                            <div id="map3d" style="height: 500px; width: 100%;"></div>               
+                        </div>
+                    </div>
+                    <br/><br/>
+                    <div class="row main-sections">
+                        <div class="span4">
+                            <h4>You're looking at</h1>   
+                            <hr>
+                            <p>
+                                 
+                            #{pageData.project}
+                            </p>     
+                            <span class="green-link">More about the project</span> <i class="p3-icon-plus"></i>               
+                        </div>
+                        <div class="span4">
+                            <h4>Authored by #{pageData.scientistName}</h1>   
+                            <hr>
+                            <p>
+                            #{pageData.bio}  
+                            </p> 
+                            <div class="done" style="display:none;">
+                                <div class="alert alert-success">
+                                    <button type="button" class="close" data-dismiss="alert">x</button>
+                                    <strong>Message sent successfully!</strong><br/>
+                                </div>
+                            </div>
+                            <span class="green-link">Get in touch with the author</span><i class="p3-icon-minus"></i>  
+                            <div class="form">
+                                <form method="post" action="contact" id="contactform">
+                                    <table>
+                                    <tbody>
+                                    <tr class="element">
+                                        <td class="noborder">
+                                        </td>
+                                        <td class="noborder">
+                                             <!-- Name--><input type="text" name="name" class="text input-xlarge" placeholder="Name">
+                                        </td>
+                                    </tr>
+                                    <tr class="element">
+                                        <td class="noborder">
+                                        </td>
+                                        <td class="noborder">
+                                             <!-- Email--><input type="text" name="email" class="text input-xlarge" placeholder="E-mail address">
+                                        </td>
+                                    </tr>
+                                    <tr class="element texttop">
+                                        <td class="noborder">
+                                        </td>
+                                        <td class="noborder">
+                                             <!-- Message--><textarea name="comment" class="text textarea input-xlarge" rows="7" placeholder="Message, comments, feedback"></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr class="element">
+                                        <td class="noborder">
+                                             &nbsp;
+                                        </td>
+                                        <td class="noborder">
+                                             <!-- Submit--><input type="submit" id="submit" class="btn" value="Submit">
+                                            <div class="loading">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                    </table>
+                                </form>
+                            </div>                    
+                        </div>
+                        <div class="span4">
+                            <h4>Location</h1>   
+                            <hr>
+                            <div id='mini-map'>
+
+                            </div>                   
+                        </div>
+
+                    </div>
+                    
+                    <!-- SERVICES
+                    ================================================== -->
+                   <!--  <div id="bio"  class='main-section'>
+                        <div class="separator"></div><br/>
+                        <div class="row">
+                            <div class="span12">
+                                
+                            </div>
+                        </div>
+                        <hr>
+
+
+                        div.row
+                            div.span6
+                                span.servicetitle About the project
+                                p #{pageData.project}
+
+                            div.span6
+                                span.servicetitle.grey About the Scientist
+                                p #{pageData.bio}  
+                                p ~ #{pageData.scientistName}
+                        
+                        <div class="pagebreak">
+                    </div> -->
+                    
+                    
+                
+                <!-- FOOTER
+                    ================================================== -->
+                <div class="row">
+                    <div class="span12 addspace center">
+                        <p>
+                            <small>&copy; 2013 Picarro Inc. </small>
+                        </p>
+                    </div>
+                </div>  
+                
+                <!-- CLOSE ALL DIVS
+                    ================================================== -->      
+            </div><!--/.span9-->
+        </div><!--/.container-->
+        <div class='footer-bar'>
+            <div class='powered-container'>
+                <img height="77px" width="167px" src="/investigator/img/powered_by_p3.png" alt="Picarro">
+            </div>
+        </div>
+    </body>
+</html>   

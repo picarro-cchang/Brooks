@@ -1,0 +1,575 @@
+#pageContainer{
+  display: inline-block;
+  height: 100%;
+  overflow: hidden;
+  position: absolute;
+  width: 100%;
+  background-color: #ddd;
+  z-index:1;
+}
+
+#pageContent{
+  width:100%;
+  top:0px;
+  bottom:40px;
+  height: 100%;
+  background-color: white;
+  position: absolute;
+}
+
+#pageFooter{
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  z-index:5000;
+  background-color: black;
+}
+
+
+#canvas_bubbles{
+  position: absolute;
+  z-index: 10;
+  /*background-color: rgba(255,255,255,.3);*/
+}
+#canvas_wind{
+  position: absolute;
+  z-index: 11;
+  /*background-color: rgba(255,255,255,.3);*/
+}
+#canvas_extras{
+  position: absolute;
+  z-index: 12;
+  /*background-color: rgba(255,255,255,.3);*/
+}
+
+#canvas_rose{
+  position: absolute;
+  top: 20px; 
+  right: 20px;
+  z-index:101;
+  background: url(/investigator/img/rose.png);
+  /*background-color:rgba(255,255,255,.3);*/
+}
+
+#canvas_rose_arrow{
+  position: absolute;
+  top: 0; 
+  right: 0;
+  z-index:100;
+
+  /*background: url(/investigator/img/arrow.png);*/
+  /*background-color:rgba(255,255,255,.3);*/
+}
+
+#canvas_rose_sprite{
+  position: absolute;
+  left: 100px; 
+  right: 0;
+  z-index:102;
+  background: url(/investigator/img/arrow.png);
+  /*background-color:rgba(255,255,255,.3);*/
+}
+
+#legend-controls{
+  background-color: rgba(255,255,255,.9);
+  display: inline-block;
+  height: 100px;
+  left: 4px;
+  position: absolute;
+  top: 91px;
+  width: 48px;
+  border: 1px solid #888888;
+  border-radius: 5px 5px 5px 5px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+}
+
+.control-header{
+    background-color: #000;
+    height: 40px;
+    padding: 5px;
+    padding-left: 10px;
+    width: 100%;
+}
+
+.control-header h1{
+  color: white;
+}
+
+.control-close{
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  color: white;
+  font-size: 29px;
+  cursor: pointer;
+}
+
+#pageFooter .icon{
+  display: inline-block;
+  height: 60px;
+  width:64px;
+  cursor: pointer;
+  padding-left:10px;
+  padding-right:10px;
+  z-index: 5002;
+}
+
+#pageFooter .icon.selected{
+  opacity: 1;
+  background-color: #00ae43;
+}
+
+#pageFooter.grayscale .icon.selected{
+  opacity: 1;
+  background-color: #5C5C5C;
+}
+
+#pageFooter.grayscale{
+   background-color: #333;
+}
+
+/*.icon.selected:hover{
+  opacity: 1;
+  background-color: #00ae43;
+}
+
+.icon:hover{
+  opacity: 1;
+  background-color: #666;
+}*/
+
+#pageFooter .icon-car{
+  background: url(/investigator/img/icons/toolbar-car.png) no-repeat scroll 10px 5px transparent;
+}
+
+#pageFooter .icon-map{
+  background: url(/investigator/img/icons/toolbar-map.png) no-repeat scroll 10px 5px transparent;
+}
+
+#pageFooter .icon-setting{
+  background: url(/investigator/img/icons/toolbar-settings.png) no-repeat scroll 10px 5px transparent;
+}
+
+#pageFooter .icon-legend{
+  background: url(/investigator/img/icons/toolbar-legend.png) no-repeat scroll 10px 5px transparent;
+  opacity: .8;
+}
+
+#pageFooter .icon-chart{
+  background: url(/investigator/img/icons/toolbar-chart.png) no-repeat scroll 10px 5px transparent;
+}
+
+#pageFooter .icon-iso{
+  background: url(/investigator/img/icons/toolbar-iso.png) no-repeat scroll 10px 5px transparent;
+}
+
+
+#pageFooter .icon-logo{
+  background: url(/investigator/img/public_url/picarro-inverted.png) no-repeat scroll 10px 9px transparent;
+  width: 171px;
+  padding-right:25px;
+  position: fixed;
+  right:0;
+  bottom: -10px;
+  z-index: -1;
+}
+
+#pageFooter .icon-pause{
+  background: url(/investigator/img/icons/toolbar-pause-on.png) no-repeat scroll 10px 5px transparent;
+}
+
+#pageFooter .icon-pause.selected{
+  background: url(/investigator/img/icons/toolbar-pause.png) no-repeat scroll 10px 5px #00ae43;
+}
+
+#pageFooter .icon-wind{
+  background: url(/investigator/img/icons/toolbar-wind.png) no-repeat scroll 16px 5px transparent;
+}
+
+#pageFooter .icon-cursor{
+  background: url(/investigator/img/icons/toolbar-cursor.png) no-repeat scroll 10px 5px transparent;
+}
+
+#pageFooter .icon-spacer{
+  background-color: white;
+  display: inline-block;
+  width: 1px;
+  height: 60px;
+  margin-top: 0px;
+  opacity: 0.5;
+  margin-left:-4px;
+  margin-right:-4px;
+}
+
+
+#pageHeader .nav_buttons{
+  display: inline-block;
+}
+
+.nav_buttons_bottom{
+  margin-top:7px;
+  margin-left:7px;
+}
+
+
+/*settings*/
+
+.settings-group{
+  margin-left: 36px;
+  margin-top: 49px;
+  margin-bottom: -45px;
+  min-height: 300px;
+  position: relative;
+  width: 350px;
+  display: inline-block;
+}
+
+
+.settings-wrapper{
+  display: inline-block;
+  width: 100%;
+  border-bottom: 1px solid #fff;
+  position: absolute;
+  background-color: #23408F;
+  margin-top:48px;
+  padding-bottom: 45px;
+}
+
+.settings-group-header{
+  position: absolute;
+  width: 100%;
+  height: 47px;
+  text-align: center;
+  border-bottom:1px solid white;
+  margin-bottom: 10px;
+  font-size: 27px;
+  background-color: #4b4a4a;
+  color:white;
+  line-height:47px
+}
+
+.settings-btn-wrapper{
+  width:80%;
+  height: 52px;
+  background-color: #000;
+  position: relative;
+  margin-left: 10%;
+  margin-top:10%;
+  cursor: pointer;
+}
+
+.settings-btn-wrapper.selected{
+  background-color: green;
+}
+
+.setting-icon{
+  width:21%;
+  border-right: 2px solid #23408F;
+  height: 100%;
+  display: inline-block;
+}
+
+.setting-label{
+  height: 100%;
+  display: inline-block;
+  width: 76%;
+  margin-left: 20px;
+  text-align: left;
+  line-height: 53px;
+  font-size: 25px;
+  color: white;
+  position: absolute;
+  top: 0;
+  left: 21%;
+}
+
+.setting-icon-restart{
+  background: url("/investigator/img/glyphicons_081_refresh_white.png") no-repeat scroll 16px 12px transparent;
+}
+.setting-icon-power{
+  background: url("/investigator/img/glyphicons_063_power_white.png") no-repeat scroll 19px 14px transparent;
+}
+.setting-icon-isotope{
+  background: url("/investigator/img/isotope.png") no-repeat scroll 15px 14px transparent;
+}
+.setting-icon-cardio{
+  background: url("/investigator/img/glyphicons_282_cardio_white.png") no-repeat scroll 19px 14px transparent;
+}
+.setting-icon-globe{
+  background: url("/investigator/img/glyphicons_340_globe_white.png") no-repeat scroll 19px 14px transparent;
+}
+
+/*controls*/
+
+
+#map_controls{
+  width:100%;
+  left:0%;
+  height: 100%;
+  top:0;
+  position: absolute;
+}
+
+#setting_controls{
+  width:100%;
+  left:0%;
+  height: 100%;
+  top:0;
+  position: absolute;
+  display: inline-block;
+  z-index: 4001;
+  display: none;
+  margin: auto;
+  background: #fff;
+}
+
+#car_controls, #capture_controls{
+  position: absolute;
+  width: 168px;
+  height: 128px;
+  left: 0px;
+  bottom: -130px;
+  z-index: 4999;
+}
+
+#capture_controls{
+  left:674px;
+  height:130px;
+}
+
+#capture_controls .icon{
+  border-bottom: 1px solid white;
+}
+#car_controls .icon, #capture_controls .icon{
+  background-color: black;
+  height: 64px;
+  width: 84px;
+  display: inline-block;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  cursor: pointer;
+  line-height:4em
+}
+
+#car_controls .icon.selected, #capture_controls .icon.selected{
+  background-color: #00ae43;
+}
+
+.car-signal{
+  cursor: pointer;
+  opacity:.8;
+}
+
+
+.car-signal:hover{
+  opacity:1;
+}
+
+#car_controls_inner #car_signal-top{
+    background: url("/investigator/img/signal-top-off.png") no-repeat scroll 0 0 transparent;
+    height: 199px;
+    left: 283px;
+    position: absolute;
+    top: -27px;
+    width: 209px;
+}
+
+#car_controls_inner #car_signal-top.active{
+  background: url("/investigator/img/signal-top-on.png") no-repeat scroll 0 0 transparent;
+  opacity:1;
+}
+
+#car_controls_inner #car_signal-front{
+    background: url("/investigator/img/signal-top-off.png") no-repeat scroll 0 0 transparent;
+    height: 199px;
+    left: -2px;
+    position: absolute;
+    top: 240px;
+    width: 104px;
+}
+
+#car_controls_inner #car_signal-front.active{
+  background: url("/investigator/img/signal-top-on.png") no-repeat scroll 0 0 transparent;
+  opacity:1;
+}
+
+
+.time-zone{
+  margin-top:40px;
+  margin-left:20px;
+}
+
+
+#map2_canvas{
+  position: absolute;
+  height:auto;
+  width: 100%;
+  height:80%;
+  top:0;
+  background-color: white;
+}
+
+#concPlot2{
+  display: none;
+}
+
+
+#debugoutput{
+  position: absolute;
+  left: 5px;  
+  top: 100px;
+  height: 400px;
+  width: 200px;
+  overflow: scroll;
+}
+
+/*
+.generic_slider{
+	width:400px;
+	margin-top:14px;
+	display: inline-block;
+	margin-right: 20px;
+}*/
+
+#time_slider{
+    height: 90%;
+    left: 60px;
+    position: absolute;
+    top: 5%;
+}
+#range_slider{
+    height: 90%;
+    left: 107px;
+    position: absolute;
+    top: 5%;
+}
+
+#map2_flot{
+    background-color: #eee;
+    height: 20%;
+    left: 0;
+    position: absolute;
+    bottom: 0;
+    width: 80%;
+    z-index: 3000;
+}
+#isotopic_layer{
+  width:100%;
+  height:100%;
+  bottom:0;
+  position: absolute;
+}
+
+.iso-display{
+  position: absolute;
+  display: inline-block;
+  background-color: black;
+  height:auto;
+  bottom:8px;
+  top:8px;
+  opacity:.16;
+}
+
+#map_realtime_flot{
+    background-color: #eee;
+    height: 20%;
+    right: 4%;
+    position: absolute;
+    bottom: 0;
+    width: 16%;
+    z-index: 3000;
+}
+#realtime_display{
+    background-color: #eeeeee;
+    height: 20%;
+    right: 0;
+    position: absolute;
+    bottom: 0;
+    width: 4%;
+    z-index: 3000;
+
+}
+#realtime_num{
+    background: none repeat scroll 0 0 white;
+    border: 1px solid gray;
+    bottom: -10%;
+    font-size: 14px;
+    font-weight: bold;
+    height: 20px;
+    margin-bottom: -10px;
+    margin-left: -2px;
+    padding: 2px;
+    position: absolute;
+    width: 84%;
+    border-radius: 5px;
+    text-align: center;
+}
+#map2_histo{
+    background-color: #eee;
+    height: 100px;
+    left: 200px;
+    position: absolute;
+    top: 400px;
+    width: 600px;
+}
+
+#legend-controls .legend-wrapper{
+    display:inline-block;
+    width:40px;
+    height:40px;
+    position:absolute;
+    cursor: pointer;
+}
+
+.legend-circle {
+    border-radius: 50%;
+    background-color: red;
+    display: inline-block;
+    position: absolute;
+    bottom: 5px;
+}
+
+.legend-label {
+    bottom: 0;
+    position: absolute;
+    left: 5px;
+}
+
+#id_legend_canvas{
+    position: absolute;
+    width: 1000px;
+    height: 40px;
+}
+
+.blue-circle{
+    z-index:1000;
+}
+
+.red-circle{
+    z-index:2000;
+}
+
+#color-picker{
+    position:absolute;
+    height: 436px;
+    width: 180px;
+    margin-top: 40px;
+}
+
+#color-picker .color-wrapper{
+    display: inline-block;
+    cursor: pointer;
+}
+
+#color-picker .color-inner{
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+}
+
+
+

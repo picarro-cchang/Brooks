@@ -49,6 +49,8 @@ var COOKIE_NAMES = {};
 
 //default (eng) values for dsp.  Override this 
 //for each language specific labels
+var COOKIE_PREFIX = "p3gdu";
+var COOKIE_NAMES = {};
 var TXT = {
         amp: 'Amp',
         sigma: 'HalfWidth',
@@ -57,6 +59,7 @@ var TXT = {
         ch4: 'CH4',
         conc: 'Concentration',
         delta: 'Delta',
+        driver_warning: 'Do not use this software while operating a vehicle.  Tap ok to agree that you are not driving.',
         uncertainty: 'Uncertainty',
         note: 'Annotation',
         cancel: 'Cancel',
@@ -205,7 +208,7 @@ var HBTN = {
         changeMinAmpOkBtn: '<div><button id="id_changeMinAmpOkBtn" onclick="changeMinAmpVal(true);" class="btn btn-fullwidth">' + TXT.ok + '</button></div>',
         changeStabClassCancelBtn: '<div><button id="id_changeStabClassCancelBtn" onclick="changeStabClassVal(false);" class="btn btn-fullwidth">' + TXT.cancel + '</button></div>',
         changeStabClassOkBtn: '<div><button id="id_changeStabClassOkBtn" onclick="changeStabClassVal(true);" class="btn btn-fullwidth">' + TXT.ok + '</button></div>',
-        
+        agreeToDriverWarningBtn: '<div><button id="id_agreeToDriverWarningBtn" onclick="restoreModChangeDiv();" class="btn btn-fullwidth">' + TXT.ok + '</button></div>',
         changeMinAmpOkHidBtn: '<div style="display: hidden;"><button id="id_changeMinAmpOkHidBtn" onclick="changeMinAmpVal(true);"/></div>',
         allHliteCntl: '<div><button id="id_allHliteCntl" type="button" onclick="removeAllHlites();" class="btn btn-fullwidth">' + TXT.remove_all_plat_hlite + '</button></div>',
         surveyOnOffBtn: '<div><button id="id_surveyOnOffBtn" type="button" onclick="stopSurvey();" class="btn btn-fullwidth">' + TXT.stop_survey + '</button></div>',
@@ -1293,6 +1296,49 @@ function setModalChrome(hdr, msg, click) {
 
     return modalChrome;
 }
+
+$(document).ready(function(){
+
+    var capOrCan, i, modalChrome, hdr, body, footer, c1array, c2array;
+
+    c1array = [];
+    c2array = [];
+    
+    c1array.push('style="border-style: none; width: 50%; text-align: center;"');
+    c2array.push('style="border-style: none; width: 50%;"');
+    
+    c2array.push('');
+    
+    body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: center`;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: center;"');
+    c1array.push('<h3>' + TXT.driver_warning + '</h3>');
+    // c2array.push(HBTN.agreeToDriverWarningBtn);
+    c2array.push('<div></div>');
+    hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
+
+
+    c1array = [];
+    c2array = [];
+    c1array.push('style="border-style: none; width: 50%; text-aligh: center;"');
+    c2array.push('style="border-style: none; width: 50%; text-align: center;"');
+    c1array.push(HBTN.agreeToDriverWarningBtn);
+    c2array.push('');
+    footer = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
+    
+    modalChrome = setModalChrome(
+        hdr,
+        body,
+        footer
+        );
+
+    $("#id_mod_change").html(modalChrome);
+    $("#id_restartBtn").focus();
+});
+
 
 function modalPanePrimeControls() {
     var capOrCan, i, modalChrome, hdr, body, footer, c1array, c2array;
