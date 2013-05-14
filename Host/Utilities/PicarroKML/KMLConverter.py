@@ -12,9 +12,10 @@ import sys
 import wx
 import threading
 import getopt
+from math import ceil
 import time
 from KMLConverterFrame import KMLConverterFrame
-import CustomConfigObj
+from CustomConfigObj import CustomConfigObj
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -22,7 +23,7 @@ else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
-DEFAULT_CONFIG_NAME = "PicarroKML.ini"
+DEFAULT_CONFIG_NAME = "KMLConverter.ini"
 
 # kml formatting
 KML_OPEN_TEMPLATE = \
@@ -47,6 +48,21 @@ KML_BODY_TEMPLATE = """
         </PolyStyle>
     </Style>
 
+    <Placemark>
+        <name>Picarro Instrument Trace - %s</name>
+        <styleUrl>lineStyle%d</styleUrl>
+        <LineString>
+            <extrude>1</extrude>
+            <tessellate>1</tessellate>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <coordinates>
+            %s
+            </coordinates>
+        </LineString>
+    </Placemark>
+"""
+
+KML_CONTINUATION_TEMPLATE = """
     <Placemark>
         <name>Picarro Instrument Trace - %s</name>
         <styleUrl>lineStyle%d</styleUrl>
@@ -124,14 +140,24 @@ class ConvertKML(object):
 
         out = open(kmlFilename,'w')
         out.flush()
+        MAXPOLY = 1000
         
         # KML_OPEN_TEMPLATE
         out.write(KML_OPEN_TEMPLATE)
         
         # KML_BODY_TEMPLATE % (index, baseline, multiplier, index, color, color, conc, index, body)
-        for i in range(numConcs):
-            out.write(KML_BODY_TEMPLATE % (i, baselineList[i], multiplierList[i], i, colorList[i], colorList[i], concList[i], i, stackList[i]))
         
+        for i in range(numConcs):
+            # stackList[i] has all the concentration data for the i'th species. We need to break it into chunks not exceeding MAXPOLY
+            #  so as not to overflow Google Earth's rendering abilities
+            kmlBlock = stackList[i].split("\n")
+            nBlocks = int(ceil(len(kmlBlock)/MAXPOLY))
+            for j in range(nBlocks):
+                if j == 0:
+                    out.write(KML_BODY_TEMPLATE % (i, baselineList[i], multiplierList[i], i, colorList[i], colorList[i], 
+                                                   concList[i], i, "\n".join(kmlBlock[j*MAXPOLY:(j+1)*MAXPOLY+1])))
+                else:
+                    out.write(KML_CONTINUATION_TEMPLATE % (concList[i], i, "\n".join(kmlBlock[j*MAXPOLY:(j+1)*MAXPOLY+1])))
         # KML_CLOSE_TEMPLATE
         out.write(KML_CLOSE_TEMPLATE)
         out.close()
