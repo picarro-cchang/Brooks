@@ -146,8 +146,13 @@ var FrontPage = function(){
 	}
 
 	var launchInvestigate = function(){
+		
 		var log_name = $(this).attr("id").split("$")[1] + ".dat";
-		window.location = "/investigator?prime=false&alog=" + log_name + "&anz=" + 'CFADS2290';
+		var anz = "CFADS2290";
+		if ($('#anzName').val()){
+			anz = $('#anzName').val();
+		}
+		window.location = "/investigator?prime=false&alog=" + log_name + "&anz=" + anz;
 	}
 
 	var launchModal = function(){
