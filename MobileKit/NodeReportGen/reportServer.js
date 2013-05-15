@@ -104,10 +104,12 @@
     var scheme = (SITECONFIG.p3port === 443) ? "https://" : "http://";
     var p3port = (SITECONFIG.p3port === 80 || SITECONFIG.p3port === 443) ? "" : ":" + SITECONFIG.p3port;
 
+    /*
     console.log("");
     console.log("siteconfig_path: ", siteconfig_path);
     console.log("siteconfig_obj: ", siteconfig_obj);
     console.log("");
+    */
 
     var stringToBoolean = pv.stringToBoolean;
     var newParamsValidator = pv.newParamsValidator;
@@ -387,7 +389,7 @@
 
     mkdirp(REPORTROOT, null, function (err) {
         if (err) console.log(err);
-        else console.log('Directory ' + REPORTROOT + ' created.');
+        // else console.log('Directory ' + REPORTROOT + ' created.');
         rptGenMonitor = newRptGenMonitor(REPORTROOT);
         app.use("/rest/data", express.static(REPORTROOT));
         runningTasks.handleIncompleteTasksOnStartup( function () {

@@ -10,13 +10,19 @@ var cp = require("child_process");
 var fs = require("fs");
 var getRest = require("../lib/getRest");
 var http = require("http");
+var md5hex = require("../lib/md5hex");
+var mkdirp = require('mkdirp');
 var path = require("path");
+var rptGenStatus = require("../public/js/common/rptGenStatus");
+var sf = require("../lib/statusFiles");
+var ts = require("../lib/timeStamps");
 var url = require("url");
 var rptSrv;
 
 var ROOT_DIR = "/temp/testing";
 
-var rmdir = function(dir) {
+function rmdir(dir) {
+    // Remove all files and directories under dir
     var list = fs.readdirSync(dir);
     for(var i = 0; i < list.length; i++) {
         var filename = path.join(dir, list[i]);
@@ -32,9 +38,76 @@ var rmdir = function(dir) {
         }
     }
     fs.rmdirSync(dir);
-};
+}
 
-describe('reportServer', function() {
+function checkIncluded(dict1, dict2) {
+    // Check that each key of dict1 is in dict2 and that the corresponding
+    //  values match
+    for (var key in dict1) {
+        if (dict1.hasOwnProperty(key)) {
+            expect(dict2).to.include.keys(key);
+            expect(dict2[key]).to.eql(dict1[key]);
+        }
+    }
+}
+
+function formatNumberLength(num, length) {
+    var r = "" + num;
+    while (r.length < length) {
+        r = "0" + r;
+    }
+    return r;
+}
+
+function getJSON(qry_url, params, callback) {
+    var options = url.parse(qry_url);
+    options.query = params;
+    options.method = 'GET';
+    getRest(options, function (err, statusCode, output) {
+        expect(err).to.be.null;
+        expect(statusCode).to.eql(200);
+        callback(JSON.parse(output));
+    });
+}
+
+describe('statusFileHandlers', function () {
+    before( function () {
+        if (fs.existsSync(ROOT_DIR)) rmdir(ROOT_DIR);
+        mkdirp.sync(ROOT_DIR);
+    });
+
+    it('should retrieve a simple dictionary', function (done) {
+        var fname = path.join(ROOT_DIR,"temp1.dat");
+        var myObj = {a:1, b:2, c:3};
+        sf.writeStatus(fname, myObj, function (err) {
+            expect(err).to.be.null;
+            sf.readStatus(fname, function (err, statObj) {
+                expect(err).to.be.null;
+                expect(statObj).to.eql(myObj);
+                done(null);
+            });
+        });
+    });
+
+    it('should allow the dictionary to be updated', function (done) {
+        var fname = path.join(ROOT_DIR,"temp1.dat");
+        var myObj1 = {a:1, b:2, c:3};
+        var myObj2 = {c:4, d:5, e:6};
+        sf.writeStatus(fname, myObj1, function (err) {
+            expect(err).to.be.null;
+            sf.writeStatus(fname, myObj2, function (err) {
+                expect(err).to.be.null;
+                sf.readStatus(fname, function (err, statObj) {
+                    expect(err).to.be.null;
+                    expect(statObj).to.eql({a:1, b:2, c:4, d:5, e:6});
+                    done(null);
+                });
+            });
+        });
+    });
+});
+
+describe('reportServer', function () {
     before( function (done) {
         if (fs.existsSync(ROOT_DIR)) rmdir(ROOT_DIR);
         rptSrv = cp.spawn("node", ["reportServer", "-r", ROOT_DIR],
@@ -84,7 +157,7 @@ describe('reportServer', function() {
 
                 //the whole response has been recieved, so we just print it out here
                 response.on('end', function () {
-                    expect(result).to.equal("testUrl");
+                    expect(result).to.eql("testUrl");
                     done(null);
                 });
 
@@ -113,7 +186,7 @@ describe('reportServer', function() {
                 // the whole response has been recieved, so we can check it is what we
                 //   wrote into the test file
                 response.on('end', function () {
-                    expect(result).to.equal(testContents);
+                    expect(result).to.eql(testContents);
                     fs.unlinkSync(testPath);
                     done(null);
                 });
@@ -140,7 +213,7 @@ describe('reportServer', function() {
                 response.on('end', function () {
                     var fname = path.join(__dirname,"../public",options.path);
                     var buff = fs.readFileSync(fname);
-                    expect(result).to.equal(buff.toString("ascii"));
+                    expect(result).to.eql(buff.toString("ascii"));
                     done(null);
                 });
 
@@ -148,49 +221,43 @@ describe('reportServer', function() {
         });
     });
 
-    function getJSON(qry_url, params, callback) {
-        var options = url.parse(qry_url);
-        options.query = params;
-        options.method = 'GET';
-        getRest(options, function (err, statusCode, output) {
-            expect(err).to.be.null;
-            expect(statusCode).to.equal(200);
-            callback(JSON.parse(output));
-        });
-    }
-
     describe('timezone conversion', function() {
         it('should convert POSIX time to GMT', function (done) {
-            getJSON('http://localhost:5300/rest/tz', {tz:"GMT", posixTimes:[0,1367883839000]}, function(output) {
-                expect(output["timeStrings"][0]).to.equal("1970-01-01 00:00:00+0000 (UTC)");
-                expect(output["timeStrings"][1]).to.equal("2013-05-06 23:43:59+0000 (UTC)");
+            var request = {tz:"GMT", posixTimes:[0,1367883839000]};
+            getJSON('http://localhost:5300/rest/tz', request, function(output) {
+                checkIncluded(request, output);
+                expect(output["timeStrings"][0]).to.eql("1970-01-01 00:00:00+0000 (UTC)");
+                expect(output["timeStrings"][1]).to.eql("2013-05-06 23:43:59+0000 (UTC)");
                 done(null);
             });
         });
 
         it('should convert POSIX time to local time', function (done) {
-            getJSON('http://localhost:5300/rest/tz', {tz:"America/Los_Angeles", posixTimes:[0,1367883839000]}, function(output) {
-                expect(output["timeStrings"][0]).to.equal("1969-12-31 16:00:00-0800 (PST)");
-                expect(output["timeStrings"][1]).to.equal("2013-05-06 16:43:59-0700 (PDT)");
+            var request = {tz:"America/Los_Angeles", posixTimes:[0,1367883839000]};
+            getJSON('http://localhost:5300/rest/tz', request, function(output) {
+                expect(output["timeStrings"][0]).to.eql("1969-12-31 16:00:00-0800 (PST)");
+                expect(output["timeStrings"][1]).to.eql("2013-05-06 16:43:59-0700 (PDT)");
                 done(null);
             });
         });
 
         it('should convert local time to POSIX time', function (done) {
-            getJSON('http://localhost:5300/rest/tz', {tz:"America/Los_Angeles",
-                timeStrings:["1969-12-31 16:00:00","2013-05-06 16:43:59"]}, function(output) {
-                expect(output["timeStrings"][0]).to.equal("1969-12-31 16:00:00-0800 (PST)");
-                expect(output["timeStrings"][1]).to.equal("2013-05-06 16:43:59-0700 (PDT)");
-                expect(output["posixTimes"][0]).to.equal(0);
-                expect(output["posixTimes"][1]).to.equal(1367883839000);
+            var request = {tz:"America/Los_Angeles",
+                           timeStrings:["1969-12-31 16:00:00","2013-05-06 16:43:59"]};
+            getJSON('http://localhost:5300/rest/tz', request, function(output) {
+                expect(output["timeStrings"][0]).to.eql("1969-12-31 16:00:00-0800 (PST)");
+                expect(output["timeStrings"][1]).to.eql("2013-05-06 16:43:59-0700 (PDT)");
+                expect(output["posixTimes"][0]).to.eql(0);
+                expect(output["posixTimes"][1]).to.eql(1367883839000);
                 done(null);
             });
         });
 
         it('should handle a single element (not an array)', function (done) {
-            getJSON('http://localhost:5300/rest/tz', {tz:"GMT", timeStrings:["1970-01-01 00:00:00"]}, function(output) {
-                expect(output["timeStrings"][0]).to.equal("1970-01-01 00:00:00+0000 (UTC)");
-                expect(output["posixTimes"][0]).to.equal(0);
+            var request = {tz:"GMT", timeStrings:["1970-01-01 00:00:00"]};
+            getJSON('http://localhost:5300/rest/tz', request, function(output) {
+                expect(output["timeStrings"][0]).to.eql("1970-01-01 00:00:00+0000 (UTC)");
+                expect(output["posixTimes"][0]).to.eql(0);
                 done(null);
             });
         });
@@ -198,7 +265,9 @@ describe('reportServer', function() {
 
     describe('RptGen rest calls', function () {
         it('should object to a missing command', function (done) {
-            getJSON('http://localhost:5300/rest/RptGen', {}, function(output) {
+            var request = {};
+            getJSON('http://localhost:5300/rest/RptGen', request, function(output) {
+                checkIncluded(request, output);
                 expect(output).to.include.keys('error');
                 expect(output.error).to.include('Unknown or missing qry');
                 done(null);
@@ -206,7 +275,9 @@ describe('reportServer', function() {
         });
 
         it('should object to an invalid command', function (done) {
-            getJSON('http://localhost:5300/rest/RptGen', {qry:"invalid"}, function(output) {
+            var request = {qry:"invalid"};
+            getJSON('http://localhost:5300/rest/RptGen', request, function(output) {
+                checkIncluded(request, output);
                 expect(output).to.include.keys('error');
                 expect(output.error).to.include('Unknown or missing qry');
                 done(null);
@@ -215,7 +286,9 @@ describe('reportServer', function() {
 
         describe('getting status information', function () {
             it('should complain if the parameters of getStatus are missing', function (done) {
-                getJSON('http://localhost:5300/rest/RptGen', {qry:"getStatus"}, function(output) {
+                var request = {qry:"getStatus"};
+                getJSON('http://localhost:5300/rest/RptGen', request, function(output) {
+                    checkIncluded(request, output);
                     expect(output).to.include.keys('error');
                     expect(output.error).to.include('contents_hash missing');
                     expect(output.error).to.include('start_ts missing');
@@ -224,7 +297,9 @@ describe('reportServer', function() {
             });
 
             it('should complain if the contents_hash is not valid', function (done) {
-                getJSON('http://localhost:5300/rest/RptGen', {qry:"getStatus", contents_hash:"BAD"}, function(output) {
+                var request = {qry:"getStatus", contents_hash:"BAD"};
+                getJSON('http://localhost:5300/rest/RptGen', request, function(output) {
+                    checkIncluded(request, output);
                     expect(output).to.include.keys('error');
                     expect(output.error).to.include('contents_hash fails regex');
                     expect(output.error).to.include('start_ts missing');
@@ -233,7 +308,9 @@ describe('reportServer', function() {
             });
 
             it('should complain if the start_ts is not valid', function (done) {
-                getJSON('http://localhost:5300/rest/RptGen', {qry:"getStatus", start_ts:"BAD"}, function(output) {
+                var request = {qry:"getStatus", start_ts:"BAD"};
+                getJSON('http://localhost:5300/rest/RptGen', request, function(output) {
+                    checkIncluded(request, output);
                     expect(output).to.include.keys('error');
                     expect(output.error).to.include('contents_hash missing');
                     expect(output.error).to.include('start_ts fails regex');
@@ -241,6 +318,80 @@ describe('reportServer', function() {
                 });
             });
 
+            it('should complain if task is not present', function (done) {
+                var uTime = 1234567890123;
+                var start_ts = ts.msUnixTimeToTimeString(uTime);
+                var hash = md5hex("sample content");
+                var request = {qry:"getStatus", start_ts:start_ts, contents_hash:hash };
+                getJSON('http://localhost:5300/rest/RptGen', request, function(output) {
+                    checkIncluded(request, output);
+                    expect(output).to.include.keys('status');
+                    expect(output.status).to.eql(rptGenStatus.TASK_NOT_FOUND);
+                    expect(output).to.include.keys('msg');
+                    expect(output.msg).to.include('unknown task');
+                    done(null);
+                });
+            });
+
+            it('should retrieve status from a prescribed file', function (done) {
+                var uTime = 1234567890123;
+                var start_ts = ts.msUnixTimeToTimeString(uTime);
+                var hash = md5hex("sample content");
+                // Generate the directories for the status file. Note the directory name
+                //  for the timestamp is leading zero-padded to a width of 13 characters
+                this.request_ts = ts.msUnixTimeToTimeString(ts.getMsUnixTime());
+                var dirName = formatNumberLength(uTime, 13);
+                var instrDir = path.join(ROOT_DIR, hash, dirName);
+                mkdirp.sync(instrDir, null);
+                var fname = path.join(instrDir, 'status.dat');
+                var statObject = {status:1234, floodle:5678};
+                fs.writeFileSync(fname, JSON.stringify(statObject));
+                var request = {qry:"getStatus", start_ts:start_ts, contents_hash:hash };
+                getJSON('http://localhost:5300/rest/RptGen', request, function(output) {
+                    checkIncluded(request, output);
+                    checkIncluded(statObject, output);
+                    rmdir(instrDir);
+                    done(null);
+                });
+            });
+
+            it('should retrieve status from a large collection of files', function (done) {
+                this.timeout(5000);
+                var uTime, uTimes = [];
+                var hash, hashes = [];
+                var status, statusList = [];
+                var nRequests = 1000;
+                for (var i=0; i<nRequests; i++) {
+                    hash = md5hex("Picarro" + i);
+                    uTime = Math.floor(Math.random() * 2000000000000);
+                    status = Math.floor(Math.random() * 100000);
+                    hashes.push(hash);
+                    uTimes.push(uTime);
+                    statusList.push(status);
+                    var dirName = formatNumberLength(uTime, 13);
+                    var instrDir = path.join(ROOT_DIR, hash, dirName);
+                    mkdirp.sync(instrDir, null);
+                    var fname = path.join(instrDir, 'status.dat');
+                    var statObject = {status:status, index:i};
+                    fs.writeFileSync(fname, JSON.stringify(statObject));
+                }
+                var nPending = nRequests;
+                for (i=0; i<nRequests; i++) {
+                    hash = hashes[i];
+                    uTime = uTimes[i];
+                    var start_ts = ts.msUnixTimeToTimeString(uTime);
+                    var request = {qry:"getStatus", start_ts:start_ts, contents_hash:hash };
+                    getJSON('http://localhost:5300/rest/RptGen', request, function(output) {
+                        expect(output).to.include.keys(["index","status"]);
+                        var index = output["index"];
+                        expect(output.status).to.eql(statusList[index]);
+                        expect(output.contents_hash).to.eql(hashes[index]);
+                        expect(output.start_ts).to.eql(ts.msUnixTimeToTimeString(uTimes[index]));
+                        nPending -= 1;
+                        if (nPending === 0) done(null);
+                    });
+                }
+            });
         });
     });
 });

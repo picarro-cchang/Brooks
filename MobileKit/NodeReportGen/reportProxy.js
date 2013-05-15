@@ -44,11 +44,13 @@
         }
     }
 
+    /*
     console.log("");
     console.log("siteconfig_path: ", siteconfig_path);
     console.log("siteconfig_obj: ", siteconfig_obj);
     console.log("");
-
+    */
+    
     var proxy = new httpProxy.RoutingProxy();
     var app = express();
 

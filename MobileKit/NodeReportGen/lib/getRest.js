@@ -27,12 +27,12 @@ define(function(require, exports, module) {
             prot = options.protocol === 'https:' ? https : http;
         }
         else prot = options.port == 443 ? https : http;
-        console.log('url: ' + restUrl);
+        // console.log('url: ' + restUrl);
         options.rejectUnauthorized = false;
         var req = prot.request(options, function(res)
         {
             var output = '';
-            console.log(options.host + ':' + res.statusCode);
+            // console.log(options.host + ':' + res.statusCode);
             res.setEncoding('ascii');
 
             res.on('data', function (chunk) {
