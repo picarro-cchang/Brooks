@@ -54,6 +54,11 @@ var DataStore = function(){
 			,	'varList':'["PRIVATE_IP"]'
 		};
 
+		if ($('#anzName').val()){
+			reqobj.qryobj.anz = $('#anzName').val();
+		}
+
+
 		var rtn_fn = function(json, textStatus) {
 			$('div #live_view').find("a").attr("href", "http://" +  json[0]['PRIVATE_IP'] + "/investigator?prime=false&anz=CFADS2290");
 		}
@@ -221,6 +226,10 @@ var DataStore = function(){
 			, 	'reverse':'true'
 		};
 
+		if ($('#anzName').val()){
+			reqobj.qryobj.anz = $('#anzName').val();
+		}
+
 		middle_count = 0;
 		var rtn_fn = function(json, textStatus) {
 		    if(json){
@@ -270,7 +279,8 @@ var DataStore = function(){
 			,	'varList':'["CH4","GPS_ABS_LAT","GPS_ABS_LONG"]'
 			, 	'reverse':'true'
 		};
-		
+
+
 		var name = log_name + "_middle";
 
 		var err_fn = function(){
