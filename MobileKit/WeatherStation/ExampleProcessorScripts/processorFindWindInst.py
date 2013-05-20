@@ -7,6 +7,7 @@ import Queue
 import os
 import sys
 import time
+import traceback
 
 from numpy import *
 from scipy.optimize import leastsq, brent
@@ -281,11 +282,6 @@ def calCompass(phi,theta,params0=[0.0,0.0,0.0]):
         pfine = linspace(-pi,pi,501);
         ctst = mock(x,pfine)
         n = len(ctst)
-        plot(phi, theta, 'o', pfine, arctan2(ctst[n/2:],ctst[:n/2]))
-        xlabel('Compass reading (radians)')
-        ylabel('GPS bearing (radians)')
-        grid(True)
-        show()
         return [x, 0, 0]
         
 # First generate a true wind source that does no averaging but simply subtracts the vehicle velocity
