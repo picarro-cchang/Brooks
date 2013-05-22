@@ -74,6 +74,8 @@ SAMPLEMGR_STATUS_PRESSURE_LOW   = 0x0400
 SAMPLEMGR_STATUS_PRESSURE_HIGH  = 0x0800
 SAMPLEMGR_STATUS_VALVE_DAC_LOW  = 0x1000
 SAMPLEMGR_STATUS_VALVE_DAC_HIGH = 0x2000
+SAMPLEMGR_STATUS_FLOW_LOW       = 0x4000
+SAMPLEMGR_STATUS_FLOW_HIGH      = 0x8000
 
 ###############################################################################
 class SampleManagerBaseMode(object):
@@ -99,6 +101,7 @@ class SampleManagerBaseMode(object):
         self._terminateCalls   = False
         self.debug  = True
         self.verbose = False
+        self._flow = 0
         self._pressure = 0
         self._inletDacValue = ''
         self._outletDacValue = ''
@@ -116,6 +119,8 @@ class SampleManagerBaseMode(object):
         self._pressureLockIterations = 10
         self._valveLockCount         = 0
         self._valveLockIterations    = 10
+        self._flowLockCount          = 0
+        self._flowLockIterations     = 10
         self._skipPressureCheck      = False
 
         self._valveCtrl = self._DriverRpc.getValveCtrlState()
@@ -226,6 +231,27 @@ class SampleManagerBaseMode(object):
         elif valve == OUTLETVALVE:
             self._DriverRpc.wrDasReg(interface.VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER, value)
             self._outletDacValue = value
+
+    @LpcWrapper
+    def _LPC_SetFlowControl(self, control ):
+        """ Set Valve Control. Valid control values are:
+            0: Disabled (=FLOW_CNTRL_DisabledState)
+            1: Enabled  (=FLOW_CNTRL_EnabledState)
+        """
+        self._DriverRpc.wrDasReg( interface.FLOW_CNTRL_STATE_REGISTER, control)
+
+    def _RPC_GetFlowControl(self):
+        """Get Valve Control State"""
+        return self._DriverRpc.rdDasReg( interface.FLOW_CNTRL_STATE_REGISTER )
+
+    @LpcWrapper
+    def _LPC_WriteFlowSetpoint(self, flow):
+        """Write flow setpoint"""
+        self._DriverRpc.wrDasReg( interface.FLOW_CNTRL_SETPOINT_REGISTER, flow )
+
+    def _RPC_ReadFlowSetpoint(self):
+        """Read flow setpoint"""
+        return self._DriverRpc.rdDasReg( interface.FLOW_CNTRL_SETPOINT_REGISTER )
 
     def _RPC_GetValve(self, valve ):
         """Get Valve DAC for specified valve """
@@ -406,6 +432,10 @@ class SampleManagerBaseMode(object):
         """Resume the pressure check in _Monitor()"""
         self._skipPressureCheck = False
         self._clearStatus( SAMPLEMGR_STATUS_STABLE )
+
+    def _RPC_ReadHardwarePresent(self):
+        """Read hardware present bit mask"""
+        return self._DriverRpc.rdDasReg("HARDWARE_PRESENT_REGISTER")
         
     def _HandleSolenoidValves(self,config):
         """ Solenoid valve script execution thread """
@@ -442,7 +472,9 @@ class SampleManagerBaseMode(object):
                 self._clearStatus()
                 self._setStatus( SAMPLEMGR_STATUS_STABLE | SAMPLEMGR_STATUS_FLOWING )                    
                 return
+            self._flowCtrl = self._DriverRpc.rdDasReg( interface.FLOW_CNTRL_STATE_REGISTER )
             self._valveCtrl = self._DriverRpc.getValveCtrlState()
+
             self._valveEnabled = (self._valveCtrl not in [interface.VALVE_CNTRL_DisabledState, interface.VALVE_CNTRL_ManualControlState])
             if self._valveEnabled:
                 self._setStatus( SAMPLEMGR_STATUS_FLOWING )
@@ -455,44 +487,59 @@ class SampleManagerBaseMode(object):
 
             if self._status._Status & SAMPLEMGR_STATUS_FLOWING:
 
-                # Check control valve
-                valveInRange = False
-                if self.valve_mode == INLETVALVE:
-                    dacValue    = self._inletDacValue
-                    dacMin      = self.inlet_valve_min
-                    dacMax      = self.inlet_valve_max
-                elif self.valve_mode == OUTLETVALVE:
-                    dacValue    = self._outletDacValue
-                    dacMin      = self.outlet_valve_min
-                    dacMax      = self.outlet_valve_max
-                else:
-                    Log("Invalid mode")
-                    return
-
-                # Check open valve
-                if self.valve_mode == INLETVALVE and self._outletDacValue == self.outlet_valve_target:
-                    valveOpened = True
-                elif self.valve_mode == OUTLETVALVE and self._inletDacValue == self.inlet_valve_target:
-                    valveOpened = True
-                else:
-                    valveOpened = False
-
-                #if self.verbose: print "dacValue %r, %r %r" % (dacValue,dacMin,dacMax)
-
-                if dacValue < dacMin :
-                    self._valveLockCount = 0
-                    self._setStatus( SAMPLEMGR_STATUS_VALVE_DAC_LOW )
-                    self._clearStatus( SAMPLEMGR_STATUS_VALVE_DAC_HIGH )
-                elif dacValue > dacMax:
-                    self._valveLockCount = 0
-                    self._setStatus( SAMPLEMGR_STATUS_VALVE_DAC_HIGH )
-                    self._clearStatus( SAMPLEMGR_STATUS_VALVE_DAC_LOW )
-                else:
-                    if self._valveLockCount > self._valveLockIterations:
-                        self._clearStatus( SAMPLEMGR_STATUS_VALVE_DAC_LOW | SAMPLEMGR_STATUS_VALVE_DAC_HIGH )
-                        valveInRange = True
+                if self._flowCtrl == interface.FLOW_CNTRL_DisabledState:
+                    # Check control valve
+                    valveInRange = False
+                    if self.valve_mode == INLETVALVE:
+                        dacValue    = self._inletDacValue
+                        dacMin      = self.inlet_valve_min
+                        dacMax      = self.inlet_valve_max
+                    elif self.valve_mode == OUTLETVALVE:
+                        dacValue    = self._outletDacValue
+                        dacMin      = self.outlet_valve_min
+                        dacMax      = self.outlet_valve_max
                     else:
-                        self._valveLockCount+=1
+                        Log("Invalid mode")
+                        return
+                    # Check open valve
+                    if self.valve_mode == INLETVALVE and self._outletDacValue == self.outlet_valve_target:
+                        valveOpened = True
+                    elif self.valve_mode == OUTLETVALVE and self._inletDacValue == self.inlet_valve_target:
+                        valveOpened = True
+                    else:
+                        valveOpened = False
+
+                    #if self.verbose: print "dacValue %r, %r %r" % (dacValue,dacMin,dacMax)
+
+                    if dacValue < dacMin :
+                        self._valveLockCount = 0
+                        self._setStatus( SAMPLEMGR_STATUS_VALVE_DAC_LOW )
+                        self._clearStatus( SAMPLEMGR_STATUS_VALVE_DAC_HIGH )
+                    elif dacValue > dacMax:
+                        self._valveLockCount = 0
+                        self._setStatus( SAMPLEMGR_STATUS_VALVE_DAC_HIGH )
+                        self._clearStatus( SAMPLEMGR_STATUS_VALVE_DAC_LOW )
+                    else:
+                        if self._valveLockCount > self._valveLockIterations:
+                            self._clearStatus( SAMPLEMGR_STATUS_VALVE_DAC_LOW | SAMPLEMGR_STATUS_VALVE_DAC_HIGH )
+                            valveInRange = True
+                        else:
+                            self._valveLockCount+=1
+                else:
+                    valveOpened = True
+                    if self._flow < self._RPC_ReadFlowSetpoint() - self.flow_tolerance:
+                        self._setStatus( SAMPLEMGR_STATUS_FLOW_LOW )
+                        self._clearStatus( SAMPLEMGR_STATUS_FLOW_HIGH )
+                        valveInRange = False
+                    elif self._flow > self._RPC_ReadFlowSetpoint() + self.flow_tolerance:
+                        self._setStatus( SAMPLEMGR_STATUS_FLOW_HIGH )
+                        self._clearStatus( SAMPLEMGR_STATUS_FLOW_LOW )
+                        valveInRange = False
+                    else:
+                        self._flowLockCount += 1
+                        if self._flowLockCount > self._flowLockIterations:
+                            valveInRange = True
+                            self._clearStatus( SAMPLEMGR_STATUS_FLOW_LOW | SAMPLEMGR_STATUS_FLOW_HIGH )
 
                 # Check pressure (if not set skipped)   
                 pressureLocked = False
@@ -537,6 +584,9 @@ class SampleManagerBaseMode(object):
             elif sensorName == interface.STREAM_OutletValve:
                 if self._valveEnabled == True:
                     self._outletDacValue = sensorValue
+            elif sensorName == interface.STREAM_Flow1:
+                self._flow = sensorValue
+
             else:
                 return
             if self.verbose: 
@@ -545,7 +595,6 @@ class SampleManagerBaseMode(object):
             msg = "HandleStreamException:  %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
             print (msg)
             Log(msg)
-
 
 ###############################################################################
 class SampleManager(object):

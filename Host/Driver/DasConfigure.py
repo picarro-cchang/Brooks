@@ -88,6 +88,7 @@ class DasConfigure(SharedTypes.Singleton):
                    ("ANALOG_INTERFACE",    1<<interface.HARDWARE_PRESENT_AnalogInterface),
                    ("FIBER_AMPLIFIER_PRESENT",    1<<interface.HARDWARE_PRESENT_FiberAmplifierBit),
                    ("FAN_CONTROL_DISABLED", 1<<interface.HARDWARE_PRESENT_FanCntrlDisabledBit),
+                   ("FLOW_SENSOR_PRESENT",  1<<interface.HARDWARE_PRESENT_FlowSensorBit),
                    ("RDD_VAR_GAIN_PRESENT", 1<<interface.HARDWARE_PRESENT_RddVarGainBit),
                    ]
         mask = 0

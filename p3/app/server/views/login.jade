@@ -1,0 +1,56 @@
+
+extends layout
+
+block content
+	.navbar.navbar-static-top
+		.container
+			.navbar-inner
+				.logo-container
+					img(height='25px', width='157px', src='/investigator/img/picarro_logo_25.png', alt='Picarro')
+				.layout-container
+					span.label_invest PICARRO INVESTIGATOR™
+					br
+					span.label_subhead for Methane Emission Sources
+			.container
+				.span4.offset5
+					br
+					br
+					form( method="post")#login-form.well.span4
+						.login-header Login
+						label Username 
+						input(type="text", name="user", id='user-tf').span4.required
+						label Password
+						input(type="password", name="pass", id='pass-tf').span4.required
+						button(type="submit")#btn-login.btn.btn-primary
+							i.icon-lock.icon-white
+							| Sign in
+						label#remember-me.checkbox Remember Me
+							input(type="checkbox", checked='checked')
+						div.clear-fix
+						hr
+						div.btm-links
+							a(href='#')#forgot-password Forgot Your Password?
+							&nbsp;&nbsp;&nbsp;
+							br
+							br
+							.row.main-sections
+							.row
+								.span5
+									p
+									small © 2013 Picarro Inc. 
+	.footer-bar
+		.powered-container
+			img(height='77px', width='167px', src='/investigator/img/powered_by_p3.png', alt='Picarro')
+
+	include modals/alert
+	include modals/lost-password
+
+block scripts
+	script(src='/investigator/vendor/jquery.min.js')
+	script(src='/investigator/vendor/jquery.form.js')
+	script(src='/investigator/vendor/bootstrap-modal.js')
+	script(src='/investigator/vendor/bootstrap-transition.js')
+	script(src='/investigator/js/views/login.js')
+	script(src='/investigator/js/controllers/loginController.js')
+	script(src='/investigator/js/form-validators/loginValidator.js')
+	script(src='/investigator/js/form-validators/emailValidator.js')

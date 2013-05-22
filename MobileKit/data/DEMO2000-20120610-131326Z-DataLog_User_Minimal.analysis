@@ -1,0 +1,3 @@
+EPOCH_TIME    DISTANCE      GPS_ABS_LONG  GPS_ABS_LAT   CONC          DELTA         UNCERTAINTY   REPLAY_MAX    REPLAY_LMIN   REPLAY_RMIN   
+1339340129.58 17565.602     -121.889874   36.600256     3.010         -33.59        2.02          2.838         2.167         2.142         
+1339341223.17 18039.538     -121.889773   36.600237     3.265         -32.51        1.56          2.921         2.116         2.054         
