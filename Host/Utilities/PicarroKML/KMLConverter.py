@@ -151,7 +151,7 @@ class ConvertKML(object):
             # stackList[i] has all the concentration data for the i'th species. We need to break it into chunks not exceeding MAXPOLY
             #  so as not to overflow Google Earth's rendering abilities
             kmlBlock = stackList[i].split("\n")
-            nBlocks = int(ceil(len(kmlBlock)/MAXPOLY))
+            nBlocks = int(ceil(float(len(kmlBlock))/MAXPOLY))
             for j in range(nBlocks):
                 if j == 0:
                     out.write(KML_BODY_TEMPLATE % (i, baselineList[i], multiplierList[i], i, colorList[i], colorList[i], 
