@@ -483,7 +483,7 @@ define(function(require, exports, module) {
         var self = this;
         var lrtParams = {'alog':self.surveyName, 'stabClass':self.stabClass, 'qry':'makeFov',
                          'minAmp':self.fovMinAmp, 'minLeak': self.fovMinLeak, 'forceLrt':self.forceFlag,
-                         'nWindow':self.fovNWindow};
+                         'nWindow':self.fovNWindow, 'forceClose':true } ;
         self.p3Service.get("gdu", "1.0", "AnzLog", lrtParams, function (err, result) {
             if (err) self.emit("error", err);
             else {

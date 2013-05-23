@@ -13,6 +13,7 @@
     var newRptGenMonitor = require('./lib/newRptGenMonitor');
     var newRunningTasks = require('./lib/newRunningTasks');
     var newUserJobDatabase = require('./lib/newUserJobDatabase');
+    var p3nodeapi = require("./lib/p3nodeapi");
     var path = require('path');
     var pv = require('./public/js/common/paramsValidator');
     var REPORTROOT = argv.r ? argv.r : path.join(__dirname, 'ReportGen');
@@ -147,6 +148,20 @@
     var rptGenMonitor;
     var runningTasks = newRunningTasks(REPORTROOT);
     var userJobDatabase = newUserJobDatabase(REPORTROOT);
+
+    var initArgs = {host: SITECONFIG.p3host,
+                    port: SITECONFIG.p3port,
+                    site: SITECONFIG.p3site,
+                    identity: SITECONFIG.identity,
+                    psys: SITECONFIG.psys,
+                    rprocs: ["Admin:verifyTicket"],
+                    svc: "sec",
+                    version: "1.0",
+                    resource: "Admin",
+                    api_timeout: 30.0,
+                    jsonp: false,
+                    debug: false};
+    var p3Admin = new p3nodeapi.p3NodeApi(initArgs);
 
     function handleTz(req, res) {
         var tz = req.query["tz"] || "GMT";
@@ -290,30 +305,52 @@
     }
 
     function handleIndex(req, res) {
-        res.render("index",
-            {assets: SITECONFIG.assets,
-             force: false,
-             host: SITECONFIG.proxyhost,
-             identity: SITECONFIG.identity,
-             port: SITECONFIG.proxyport,
-             psys: SITECONFIG.psys,
-             qry: req.query,
-             site: SITECONFIG.p3site,
-             user: req.query.userid || 'demoUser'
+        // Verify ticket for validity
+        p3Admin.verifyTicket({tkt: req.query.ticket, uid: req.query.userid, rproc: 'gdurpt'},
+        function (err) {
+            res.send(500, {error: "Error in verify ticket: " + err});
+        },
+        function (s, result) {
+            if (result === "false") res.send(403, {error: "Ticket validation failed"});
+            else {
+                res.render("index",
+                    {assets: SITECONFIG.assets,
+                     force: false,
+                     host: SITECONFIG.proxyhost,
+                     identity: SITECONFIG.identity,
+                     port: SITECONFIG.proxyport,
+                     psys: SITECONFIG.psys,
+                     qry: req.query,
+                     site: SITECONFIG.p3site,
+                     ticket: req.query.ticket,
+                     user: req.query.userid || 'demoUser'
+                });
+            }
         });
     }
 
     function handleForce(req, res) {
-        res.render("index",
-            {assets: SITECONFIG.assets,
-             force: true,
-             host: SITECONFIG.proxyhost,
-             identity: SITECONFIG.identity,
-             port: SITECONFIG.proxyport,
-             psys: SITECONFIG.psys,
-             qry: req.query,
-             site: SITECONFIG.p3site,
-             user: req.query.userid || 'demoUser'
+        // Verify ticket for validity
+        p3Admin.verifyTicket({tkt: req.query.ticket, uid: req.query.userid, rproc: 'gdurpt'},
+        function (err) {
+            res.send(500, {error: "Error in verify ticket: " + err});
+        },
+        function (s, result) {
+            if (result === "false") res.send(403, {error: "Ticket validation failed"});
+            else {
+                res.render("index",
+                    {assets: SITECONFIG.assets,
+                     force: true,
+                     host: SITECONFIG.proxyhost,
+                     identity: SITECONFIG.identity,
+                     port: SITECONFIG.proxyport,
+                     psys: SITECONFIG.psys,
+                     qry: req.query,
+                     site: SITECONFIG.p3site,
+                     ticket: req.query.ticket,
+                     user: req.query.userid || 'demoUser'
+                });
+            }
         });
     }
 
