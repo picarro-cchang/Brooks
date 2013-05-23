@@ -15,19 +15,18 @@ P3Api.timeout = 15
 P3Api.sockettimeout = 15
 
 anz = raw_input('Analyzer for which to generate peaks? ')
-qryparms = {'qry':'byEpoch','anz':anz,'startEtm':0, 'logtype':'dat'}
+qryparms = {'qry':'byEpoch','anz':anz,'startEtm':0, 'logtype':'dat', 'limit':'all'}
 result = P3Api.get("gdu", "1.0", "AnzLogMeta", qryparms)['return']
 datFiles = [r['name'] for r in result] if result else []
 
-qryparms = {'qry':'byEpoch','anz':anz,'startEtm':0, 'logtype':'peaks'}
+qryparms = {'qry':'byEpoch','anz':anz,'startEtm':0, 'logtype':'peaks', 'limit':'all'}
 result = P3Api.get("gdu", "1.0", "AnzLogMeta", qryparms)['return']
 peakFiles = [r['name'] for r in result] if result else []
 
 datFiles = set([d[:d.find('.dat')] for d in datFiles])
 peakFiles = set([d[:d.find('.peaks')] for d in peakFiles])
 toDo = datFiles-peakFiles
-
-for f in toDo:
+for f in sorted(toDo):
     print "Processing", f
     qryparms = {'qry':'runProcess', 'proctype':'PeakFinder', 'logtype':'dat', 'logname':'%s.dat' % f}
     result = P3Api.get("gdu", "1.0", "GduService", qryparms)['return']

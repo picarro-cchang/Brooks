@@ -15,11 +15,11 @@ P3Api.timeout = 15
 P3Api.sockettimeout = 15
 
 anz = raw_input('Analyzer for which to generate isotopic analysis? ')
-qryparms = {'qry':'byEpoch','anz':anz,'startEtm':0, 'logtype':'dat'}
+qryparms = {'qry':'byEpoch','anz':anz,'startEtm':0, 'logtype':'dat', 'limit':'all'}
 result = P3Api.get("gdu", "1.0", "AnzLogMeta", qryparms)['return']
 datFiles = [r['name'] for r in result] if result else []
 
-qryparms = {'qry':'byEpoch','anz':anz,'startEtm':0, 'logtype':'analysis'}
+qryparms = {'qry':'byEpoch','anz':anz,'startEtm':0, 'logtype':'analysis', 'limit':'all'}
 result = P3Api.get("gdu", "1.0", "AnzLogMeta", qryparms)['return']
 analysisFiles = [r['name'] for r in result] if result else []
 
@@ -27,7 +27,7 @@ datFiles = set([d[:d.find('.dat')] for d in datFiles])
 analysisFiles = set([d[:d.find('.analysis')] for d in analysisFiles])
 toDo = datFiles-analysisFiles
 
-for f in toDo:
+for f in sorted(toDo):
     print "Processing", f
     qryparms = {'qry':'runProcess', 'proctype':'PeakAnalyzer', 'logtype':'dat', 'logname':'%s.dat' % f}
     result = P3Api.get("gdu", "1.0", "GduService", qryparms)['return']
