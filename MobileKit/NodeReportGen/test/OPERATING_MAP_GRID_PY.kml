@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+  <name><![CDATA[Operating_Map_Grid_PY]]></name>
+  <open>1</open>
+  <Snippet maxLines="0"><![CDATA[]]></Snippet>
+  <description><![CDATA[Exported from Operating_Map_Grid_PY on 5/13/2013]]></description>
+  <Style id="FEATURES">
+    <LineStyle>
+      <color>FF000000</color>
+      <width>1</width>
+    </LineStyle>
+    <PolyStyle>
+      <outline>1</outline>
+      <fill>1</fill>
+      <color>FF8BC87A</color>
+    </PolyStyle>
+    <BalloonStyle>
+      <text>
+<![CDATA[]]>
+      </text>
+    </BalloonStyle>
+  </Style>
+  <Style id="FEATURES_LABELS">
+    <IconStyle>
+      <color>00000000</color>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href>
+      </Icon>
+    </IconStyle>
+    <LabelStyle>
+      <color>FFFFFFFF</color>
+    </LabelStyle>
+  </Style>
+  <Folder>
+    <name>Features</name>
+    <open>0</open>
+       <Placemark>
+         <name><![CDATA[O32160680]]></name>
+         <Snippet maxLines="0"><![CDATA[]]></Snippet>
+         <styleUrl>#FEATURES</styleUrl>
+         <Polygon>
+           <extrude>0</extrude>
+           <altitudeMode>clampedToGround</altitudeMode>
+           <outerBoundaryIs>
+           <LinearRing>
+             <coordinates>
+               -95.1334062161644,29.6479481791477,0
+               -95.1325734746745,29.6699368173093,0
+               -95.1703414438312,29.6710225922375,0
+               -95.1711660647276,29.6490337263547,0
+               -95.1334062161644,29.6479481791477,0
+             </coordinates>
+           </LinearRing>
+           </outerBoundaryIs>
+         </Polygon>
+       </Placemark>
+  </Folder>
+  <Folder>
+    <name>Feature Labels (<![CDATA[GRID_NAME]]>)</name>
+    <open>0</open>
+      <Placemark>
+        <name><![CDATA[O32160680]]></name>
+        <styleUrl>#FEATURES_LABELS</styleUrl>
+        <Point>
+          <extrude>0</extrude>
+          <altitudeMode>clampedToGround</altitudeMode>
+          <coordinates>
+            -95.1518717841803,29.6594857227591,0
+          </coordinates>
+        </Point>
+      </Placemark>
+  </Folder>
+</Document>
+</kml>
