@@ -72,20 +72,20 @@ function (_, gh, newMarker, REPORT) {
                         "bold " + txtSize + "px sans-serif", "black");
                 }
                 else if (peaks[i].attributes.A >= fovMinAmp) {
-                    ctxPeaks.fillStyle = color;
                     ctxPeaks.beginPath();
                     ctxPeaks.arc(x + report.padX, y + report.padY, tokenRadius, 0.0, 2*Math.PI);
-                    ctxPeaks.fill();
                     ctxPeaks.strokeStyle = 'black';
                     ctxPeaks.stroke();
+                    ctxPeaks.fillStyle = color;
+                    ctxPeaks.fill();
                 }
                 if (peaks[i].attributes.A >= fovMinAmp) {
-                    ctxTokens.fillStyle = color;
                     ctxTokens.beginPath();
                     ctxTokens.arc(x + report.padX, y + report.padY, tokenRadius, 0.0, 2*Math.PI);
-                    ctxTokens.fill();
                     ctxTokens.strokeStyle = 'black';
                     ctxTokens.stroke();
+                    ctxTokens.fillStyle = color;
+                    ctxTokens.fill();
                 }
             }
         }
