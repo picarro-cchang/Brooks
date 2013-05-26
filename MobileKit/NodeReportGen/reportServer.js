@@ -1,6 +1,29 @@
 /*global console, __dirname, require */
 /* jshint undef:true, unused:true */
+/*
+reportServer.js is the node program which:
+1) Serves up HTML, CSS and JS for the web pages associated with report generation. The URLs for these are:
+    a) / and /force: Produces landing page and dashboard from which jobs are prepared and submitted by the user
+    b) /getReport and /getReportLocal: Produce a page with a report. /getReport is
+       used by the browser which accesses the report server via the authenticating proxy server whereas /getReportLocal
+       is used internally by the reportServer to produce a PDF file via a headless browser.
+    
+2) Provides rest calls:
+    a) /rest/RptGen/submit: submit a report generation instructions file
+    b) /rest/RptGen/getStatus: get the status of a report generation job
+    c) /rest/RptGen/getDashboard: fetch the dashboard for the specified user
+    d) /rest/RptGen/updateDashboard: update the dashboard for the specified user
+    e) /rest/tz: provides timezone support
+    f) /rest/download: used to download instructions files
+    g) /rest/data/...: Used to fetch resources (typically JSON) from the file system
 
+Code for reportServer is contained for the most part in MobileKit/NodeReportGen/lib, with some helpers in 
+MobileKit/NodeReportGen/public/js/common.
+
+In order to carry out the jobs, reportServer makes rest requests to PCubed as well as to itself. These are currently done
+using newP3ApiService and newRptGenService. We shall later migrate these to p3nodeapi. Rest calls made to itself do not go through
+the authenticating proxy server.
+*/
 (function () {
     var argv = require('optimist').argv;
     var cjs = require("./public/js/common/canonical_stringify");
@@ -306,54 +329,49 @@
         });
     }
 
-    function handleIndex(req, res) {
-        // Verify ticket for validity
-        p3Admin.verifyTicket({tkt: req.query.ticket, uid: req.query.userid, rproc: 'gdurpt'},
-        function (err) {
-            res.send(500, {error: "Error in verify ticket: " + err});
-        },
-        function (s, result) {
-            if (result === "false") res.send(403, {error: "Ticket validation failed"});
-            else {
-                res.render("index",
-                    {assets: SITECONFIG.assets,
-                     force: false,
-                     host: SITECONFIG.proxyhost,
-                     identity: SITECONFIG.identity,
-                     port: SITECONFIG.proxyport,
-                     psys: SITECONFIG.psys,
-                     qry: req.query,
-                     site: SITECONFIG.p3site,
-                     ticket: req.query.ticket,
-                     user: req.query.userid || 'demoUser'
-                });
-            }
+    function _index(req, res, force) {
+        res.render("index",
+            {assets: SITECONFIG.assets,
+             force: false,
+             host: SITECONFIG.proxyhost,
+             identity: SITECONFIG.identity,
+             port: SITECONFIG.proxyport,
+             psys: SITECONFIG.psys,
+             qry: req.query,
+             site: SITECONFIG.p3site,
+             ticket: req.query.ticket,
+             user: req.query.userid || 'demoUser'
         });
     }
 
+    function handleIndex(req, res) {
+        if (argv.n) _index(req,res,false);
+        else {
+            // Verify ticket for validity
+            p3Admin.verifyTicket({tkt: req.query.ticket, uid: req.query.userid, rproc: 'gdurpt'},
+            function (err) {
+                res.send(500, {error: "Error in verify ticket: " + err});
+            },
+            function (s, result) {
+                if (result === "false") res.send(403, {error: "Ticket validation failed"});
+                else _index(req,res,false);
+            });
+        }
+    }
+
     function handleForce(req, res) {
-        // Verify ticket for validity
-        p3Admin.verifyTicket({tkt: req.query.ticket, uid: req.query.userid, rproc: 'gdurpt'},
-        function (err) {
-            res.send(500, {error: "Error in verify ticket: " + err});
-        },
-        function (s, result) {
-            if (result === "false") res.send(403, {error: "Ticket validation failed"});
-            else {
-                res.render("index",
-                    {assets: SITECONFIG.assets,
-                     force: true,
-                     host: SITECONFIG.proxyhost,
-                     identity: SITECONFIG.identity,
-                     port: SITECONFIG.proxyport,
-                     psys: SITECONFIG.psys,
-                     qry: req.query,
-                     site: SITECONFIG.p3site,
-                     ticket: req.query.ticket,
-                     user: req.query.userid || 'demoUser'
-                });
-            }
-        });
+        if (argv.n) _index(req,res,true);
+        else {
+            // Verify ticket for validity
+            p3Admin.verifyTicket({tkt: req.query.ticket, uid: req.query.userid, rproc: 'gdurpt'},
+            function (err) {
+                res.send(500, {error: "Error in verify ticket: " + err});
+            },
+            function (s, result) {
+                if (result === "false") res.send(403, {error: "Ticket validation failed"});
+                else _index(req,res,true);
+            });
+        }
     }
 
     function handleDownload(req, res) {

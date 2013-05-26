@@ -1,12 +1,20 @@
 /*global console, __dirname, require */
 /* jshint undef:true, unused:true */
+/*
+The client browser accesses a URL on the proxy server to load its HTML and scripts. 
 
+The proxy server provides an authentication layer to protect access to the services of reportServer. In particular, rest 
+calls made to the proxy server must be accompanied with a valid ticket. This ticket may be issued by the proxy server in
+response to an Admin:issueTicket request. If the ticket is valid, the proxy server passes the request through to the report
+server. The proxy server also passes the AnzLogMeta call for finding the list of analyzers to PCubed.
+*/
 (function () {
     var argv = require('optimist').argv;
     var express = require('express');
     var fs = require('fs');
     var httpProxy = require("http-proxy");
     var md5hex = require("./lib/md5hex");
+    var p3nodeapi = require("./lib/p3nodeapi");
     var path = require("path");
     var querystring = require("querystring");
 
@@ -23,6 +31,9 @@
     SITECONFIG.reportport = 5300;
     SITECONFIG.proxyhost = "localhost";
     SITECONFIG.proxyport = 8300;
+    SITECONFIG.p3host = "dev.picarro.com";
+    SITECONFIG.p3port = 443;
+    SITECONFIG.p3site = "dev";
 
     var siteconfig_path = argv.s ? argv.s : path.join(__dirname, "site_config_node");
     var siteconfig_data = fs.readFileSync(siteconfig_path, 'utf8');
@@ -35,6 +46,15 @@
             SITECONFIG.reportport = siteconfig_obj.reportServer.port;
         }
     }
+    if (siteconfig_obj.hasOwnProperty("host")) {
+        SITECONFIG.p3host = siteconfig_obj.host;
+    }
+    if (siteconfig_obj.hasOwnProperty("port")) {
+        SITECONFIG.p3port = parseInt(siteconfig_obj.port,10);
+    }
+    if (siteconfig_obj.hasOwnProperty("site")) {
+        SITECONFIG.p3site = siteconfig_obj.site;
+    }
     if (siteconfig_obj.hasOwnProperty("reportProxy")) {
         if (siteconfig_obj.reportProxy.hasOwnProperty("host")) {
             SITECONFIG.proxyhost = siteconfig_obj.reportProxy.host;
@@ -43,6 +63,12 @@
             SITECONFIG.proxyport = siteconfig_obj.reportProxy.port;
         }
     }
+    if (siteconfig_obj.hasOwnProperty("sys")) {
+        SITECONFIG.psys = siteconfig_obj.sys;
+    }
+    if (siteconfig_obj.hasOwnProperty("identity")) {
+        SITECONFIG.identity = siteconfig_obj.identity;
+    }
 
     /*
     console.log("");
@@ -50,7 +76,21 @@
     console.log("siteconfig_obj: ", siteconfig_obj);
     console.log("");
     */
-    
+
+    var initArgs = {host: SITECONFIG.p3host,
+                    port: SITECONFIG.p3port,
+                    site: SITECONFIG.p3site,
+                    identity: SITECONFIG.identity,
+                    psys: SITECONFIG.psys,
+                    rprocs: ["AnzMeta:resource"],
+                    svc: "gdu",
+                    version: "1.0",
+                    resource: "AnzMeta",
+                    api_timeout: 30.0,
+                    jsonp: false,
+                    debug: false};
+    var p3AnzMeta = new p3nodeapi.p3NodeApi(initArgs);
+
     var proxy = new httpProxy.RoutingProxy();
     var app = express();
 
@@ -199,8 +239,16 @@
     } // resourceGet
 
     function getAnalyzers(req, res) {
-        res.send([{ANALYZER: "DEMO2000"}, {ANALYZER: "FCDS2008"}, {ANALYZER: "FDDS2010"},
-                  {ANALYZER: "CFADS2274"}, {ANALYZER: "CFADS2276"}]);
+        var url = "/all?limit=all";
+        var analyzers = [];
+        p3AnzMeta.resource(url,
+        function (err) {
+            console.log('Error retrieving analyzer list: ' + err);
+            res.send([]);
+        },
+        function (status, data) {
+            res.send(data);
+        });
     }
 
     app.get('/:site/rest/sec/:ticket/:ver/Admin', admin);

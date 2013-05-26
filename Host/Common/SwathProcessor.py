@@ -76,7 +76,7 @@ def processGen(source, maxWindow, stabClass, minLeak, minAmpl, astdParams):
             #  SUBTRACT ONE before using it to look up the stability class in classByWeather. If we have an
             #  invalid code in the data file and try to fetch it using "*", the swath is suppressed.
             if stabClass == "*":
-                stabClass = sis.classByWeather.get(weatherCode-1, None).upper()
+                stabClass = sis.classByWeather.get(weatherCode-1, "None").upper()
             if (fit > 0) and (mask < 1.0e-3) and isfinite(dstd) and isfinite(windN) and isfinite(windE) and (instStatus == sis.INSTMGR_STATUS_GOOD) and (stabClass is not None):
                 bearing = arctan2(windE, windN)
                 wind = sqrt(windE*windE + windN*windN)

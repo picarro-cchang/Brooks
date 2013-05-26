@@ -592,7 +592,7 @@ define(function(require, exports, module) {
                                     results.push(JSON.stringify({"R": row, "P": pos, "E": edge}));
                                 }
                             }
-                            console.log("SWATH: " + JSON.stringify(results[results.length-1]));
+                            // console.log("SWATH: " + JSON.stringify(results[results.length-1]));
                             process.nextTick(next);
                         }
                     });
