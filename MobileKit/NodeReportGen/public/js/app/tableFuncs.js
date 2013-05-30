@@ -283,6 +283,7 @@ define(function(require, exports, module) {
                 $(".validate_tips").fadeOut("fast");
             });
         },
+        makeControl: makeControl,
         makeInput: function (id, attrDict) {
             return makeControl("input", id, attrDict, "");
         },

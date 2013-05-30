@@ -32,7 +32,7 @@ block content
                     h3 Instructions
                     div.custom_file_upload
                         input#id_instr_upload_name.file(type="text", name="file_info", readonly)
-                        div.btn-primary.file_upload
+                        div.btn-inverse.file_upload
                             input#id_instr_upload.fileinput(type="file", name="files[]")
                     p Browse for an instructions file, drag a file onto here or reload from dashboard.
                 div.span6
@@ -103,11 +103,14 @@ block content
                         div.span12
                             h2 Runs
                             div#id_runs_table_div
+                    div.row-fluid(style="margin-top:20px;")
+                        div.span12
+                            h2 Facilities Layer Files
+                            div#id_facilities_table_div
                     div.row-fluid
                         div.span12
                         button#id_edit_template.btn.btn-inverse(type="button")
                             | Edit Template
-
 
                     div#id_editTemplateModal.modal.hide.fade(tabindex="-1", role="dialog", aria-labelledby="id_editTemplateModalLabel",
                         aria-hidden="true")

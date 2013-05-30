@@ -12,7 +12,7 @@ define(function(require, exports, module) {
     var cjs = require('common/canonical_stringify');
     var DASHBOARD = require('app/dashboardGlobals');
     var rptGenStatus = require('common/rptGenStatus');
-    require('localStorage');
+    // require('localStorage');
     require('jquery.dataTables');
 
     $.fn.dataTableExt.oApi.fnDisplayRow = function ( oSettings, nRow )
@@ -125,7 +125,7 @@ define(function(require, exports, module) {
         DASHBOARD.SubmittedJobs = Backbone.Collection.extend({
             initialize: function ()  {
             },
-            localStorage: new Backbone.LocalStorage("JobCollection"),
+            // localStorage: new Backbone.LocalStorage("JobCollection"),
             model: DASHBOARD.SubmittedJob
         });
 

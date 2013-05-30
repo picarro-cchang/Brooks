@@ -29,6 +29,7 @@ the authenticating proxy server.
     var cjs = require("./public/js/common/canonical_stringify");
     var express = require('express');
     var fs = require('fs');
+    var md5hex = require('./lib/md5hex');
     var mkdirp = require('mkdirp');
     var newP3ApiService = require('./lib/newP3ApiService');
     var newRptGenService = require('./lib/newRptGenService');
@@ -214,7 +215,7 @@ the authenticating proxy server.
     }
 
     function handleRptGen(req, res) {
-        var pv, reportGen, result = {}, statusFile, user, workDir;
+        var contents, pv, reportGen, result = {}, statusFile, user, workDir;
         result = _.extend(result, req.query);
         // console.log("req.query: " + JSON.stringify(req.query));
         // Handle submission of instructions file, requests for status, and retrieval of results
@@ -288,6 +289,20 @@ the authenticating proxy server.
                 userJobDatabase.compressDatabaseAndGetAllData(user, function(err,data) {
                     res.send(_.extend(result, {error:err, dashboard: data}));
                 });
+            }
+            else res.send(_.extend(result,{"error": pv.errors()}));
+            break;
+        case "stashKml":
+            // Use elementTree to parse a KML string (which is first normalized to use Unix line endings). 
+            //  If it parses without error, compute the MD5 hash and save the string into a file in a 
+            //  subdirectory generated from the MD5 hash
+            pv = newParamsValidator(req.query,
+                [{"name": "contents", "required": true, "validator": "string"}]);
+            if (pv.ok()) {
+                contents = req.query.contents;
+                contents = contents.replace("\r\n","\n").replace("\r","\n");
+                var hash = md5hex(contents);
+
             }
             else res.send(_.extend(result,{"error": pv.errors()}));
             break;

@@ -154,6 +154,18 @@ define(function(require, exports, module) {
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
     ]};
+
+    var facilitiesDefinition = {id: "facilitiestable", layout: [
+        {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
+        {key: "filename", width: "24%", th: "KML Filename", tf: String, eid: "id_fac_file_upload_name", cf: String},
+        {key: "linewidth", width: "18%", th: "Line Width", tf: Number, eid: "id_fac_linewidth", cf: Number},
+        {key: "linecolor", width: "18%", th: "Line Color", tf: makeColorPatch, eid: "id_fac_linecolor", cf: String},
+        {key: "textcolor", width: "18%", th: "Text Color", tf: makeColorPatch, eid: "id_fac_textcolor", cf: String},
+        {key: "download", width: "18%", th: "Download", omit: true},
+        {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}],
+    vf: function (eidByKey, template, container, onSuccess) {
+        return validateFacilities(eidByKey, template, container, onSuccess);
+    }};
     // ============================================================================
     //  Definitions of forms used to edit a row of a table
     // ============================================================================
@@ -248,6 +260,44 @@ define(function(require, exports, module) {
         return header + body + footer;
     }
 
+    function uploadControl(label) {
+        var result = [];
+        result.push('<div class="control-group">');
+        result.push('<label class="control-label" for="' + 'xxx' + '">' + label + '</label>');
+        result.push('<div class="controls">');
+        result.push('<div class="custom_file_upload-small">');
+        result.push('<input id="id_fac_file_upload_name" class="file-small" type="text" name="file_info" readonly>');
+        result.push('<div class="btn-inverse file_upload-small">');
+        result.push('<input id="id_fac_file_upload" class="fileinput-small" type="file" name="files[]">');
+        result.push('</div></div></div></div>');
+        return result.join('\n');
+    }
+
+    function editFacilitiesChrome()
+    {
+        var header, body, footer;
+        var controlClass = "input-large";
+        header = '<div class="modal-header"><h3>' + "Add new KML file for facilities layer" + '</h3></div>';
+        body   = '<div class="modal-body">';
+        body += '<form class="form-horizontal">';
+        body += uploadControl("KML File");
+        body += tableFuncs.editControl("Line Width", tableFuncs.makeSelect("id_fac_linewidth", {"class": controlClass},
+                {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8}));
+        body += tableFuncs.editControl("Line Color", tableFuncs.makeSelect("id_fac_linecolor", {"class": controlClass},
+                {"#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
+                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow", "#FFFFFF": "white" }));
+        body += tableFuncs.editControl("Text Color", tableFuncs.makeSelect("id_fac_textcolor", {"class": controlClass},
+                {"#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
+                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow", "#FFFFFF": "white" }));
+        body += '</form></div>';
+        footer = '<div class="modal-footer">';
+        footer += '<p class="validate_tips alert alert-error hide"></p>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + "OK" + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + "Cancel" + '</button>';
+        footer += '</div>';
+        return header + body + footer;
+    }
+
     // ============================================================================
     //  Helper functions for editing runs
     // ============================================================================
@@ -316,6 +366,30 @@ define(function(require, exports, module) {
     }
 
     // ============================================================================
+    //  Helper functions for editing facilities files
+    // ============================================================================
+    function beforeFacilitiesShow(done)
+    {
+        DASHBOARD.facFile = null;
+        done(null);
+    }
+
+
+    function validateFacilities(eidByKey,template,container,onSuccess) {
+        var numErr = 0;
+        var kmlFile = $("#"+eidByKey.filename).val();
+        if (DASHBOARD.facFile) {
+            var reader = new FileReader();
+            reader.readAsText(DASHBOARD.facFile);
+            reader.onload = function (e) {
+                console.log(e.target.result);
+                if (numErr === 0) onSuccess();
+            };            
+        }
+        else if (numErr === 0) onSuccess();
+    }
+
+    // ============================================================================
     //  Style the table visually, and so that the rows can be dragged around
     // ============================================================================
     function styleTable(id) {
@@ -331,6 +405,7 @@ define(function(require, exports, module) {
                       "analyses": "#FF0000", "stabClass": "*"};
     var initSubmapRow  = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false };
     var initSummaryRow = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false, submapGrid: true };
+    var initFacilitiesRow = {filename: '', linewidth: 2, linecolor: "#000000", textcolor: "#000000", download: '' };
 
     // ============================================================================
     //  Define models, views and collections for handling instructions
@@ -353,15 +428,15 @@ define(function(require, exports, module) {
         DASHBOARD.InstructionsFileView = Backbone.View.extend({
             el: $("#id_instructionsfiles"),
             events: {
-                "change .fileinput": "onSelectFile",
-                "dragover .file": "onDragOver",
-                "drop .file": "onDrop",
+                "change #id_instr_upload": "onSelectFile",
+                "dragover #id_instr_upload_name": "onDragOver",
+                "drop #id_instr_upload_name": "onDrop",
                 "click #id_make_report": "onMakeReport",
                 "click #id_save_instructions": "onSaveInstructions"
             },
             initialize: function () {
                 this.instrView = new DASHBOARD.InstructionsView();
-                this.inputFile = this.$el.find('.fileinput');
+                this.inputFile = this.$el.find('#id_instr_upload');
                 this.inputFile.wrap('<div />');
                 $.event.fixHooks.drop = {props: ["dataTransfer"]};
                 this.listenTo(DASHBOARD.instructionsFileModel,"change:file",this.instructionsFileChanged);
@@ -375,7 +450,7 @@ define(function(require, exports, module) {
                         DASHBOARD.instructionsFileModel.set({"contents": iv.currentContents});
                         DASHBOARD.instructionsFileModel.set({"instructions": null}, {silent: true});
                         DASHBOARD.instructionsFileModel.set({"instructions": iv.currentInstructions});
-                        this.$el.find(".file").val('** Instructions not saved **');
+                        this.$el.find("#id_instr_upload_name").val('** Instructions not saved **');
                     }
                     return true;
                 }
@@ -385,13 +460,13 @@ define(function(require, exports, module) {
                 var f = e.get("file");
                 var that = this;
                 if (f !== null) {
-                    this.$el.find(".file").val(f.name);
+                    this.$el.find("#id_instr_upload_name").val(f.name);
                     var reader = new FileReader();
                     // Set up the reader to read a text file
                     reader.readAsText(f);
                     reader.onload = function (e) { that.loadFile(e); };
                 }
-                else this.$el.find(".file").val("");
+                else this.$el.find("#id_instr_upload_name").val("");
             },
             loadFile: function (e) {
                 this.loadContents(e.target.result);
@@ -402,7 +477,7 @@ define(function(require, exports, module) {
                 //  file is selected next time.
                 var old = this.inputFile.parent().html();
                 this.inputFile.parent().html(old);
-                this.inputFile = this.$el.find('.fileinput');
+                this.inputFile = this.$el.find('#id_instr_upload');
                 // Do simple validation to reject malformed files quickly
                 try {
                     lines = contents.split('\n', 16384);
@@ -429,7 +504,7 @@ define(function(require, exports, module) {
                 e.stopPropagation();
                 e.preventDefault();
                 // e.dataTransfer.dropEffect = 'copy';
-                console.log("onDragOver");
+                // console.log("onDragOver");
             },
             onDrop: function (e) {
                 e.stopPropagation();
@@ -532,7 +607,7 @@ define(function(require, exports, module) {
                         script      : assets + 'rest/download'
                     });
                     e.preventDefault();
-                    this.$el.find(".file").val(name);
+                    this.$el.find("#id_instr_upload_name").val(name);
                 }
             },
             onSelectFile: function (e) {
@@ -549,17 +624,44 @@ define(function(require, exports, module) {
         });
 
         // ============================================================================
-        //  Instructions - View contains some form elements, the runs table and
+        //  FacilitiesFile(s) - model and collection for KML files associated with 
+        //   pipelines and other facilities
+        // ============================================================================
+
+        DASHBOARD.FacilitiesFile = Backbone.Model.extend({
+            defaults: {
+                file: null,
+                contents: ""
+            }
+        });
+
+        DASHBOARD.FacilitiesFiles = Backbone.Collection.extend({
+            model: DASHBOARD.FacilitiesFile
+        });
+
+        // ============================================================================
+        //  Instructions - View contains some form elements, the runs table, 
+        //   the table of facilities layer files and a button to allow for the
         //   editing of the template
         // ============================================================================
 
         DASHBOARD.InstructionsView = Backbone.View.extend({
             el: $("#id_instructions"),
             events: {
+                // "change .fileinput-small": "onSelectFile",
+                // "dragover .file-small": "onDragOver",
+                // "drop .file-small": "onDrop",
+                "change #id_fac_file_upload": "onSelectFile",
+                "dragover #id_fac_file_upload_name": "onDragOver",
+                "drop #id_fac_file_upload_name": "onDrop",
                 "click #id_runs_table_div table button.table-new-row": "newRunsRow",
                 "click #id_runs_table_div table button.table-clear": "clearRuns",
                 "click #id_runs_table_div tbody button.table-delete-row": "deleteRunsRow",
                 "click #id_runs_table_div tbody button.table-edit-row": "editRunsRow",
+                "click #id_facilities_table_div table button.table-new-row": "newFacilitiesRow",
+                "click #id_facilities_table_div table button.table-clear": "clearFacilities",
+                "click #id_facilities_table_div tbody button.table-delete-row": "deleteFacilitiesRow",
+                "click #id_facilities_table_div tbody button.table-edit-row": "editFacilitiesRow",
                 "click #id_edit_template": "editTemplate",
                 "shown #id_timezoneModal": "onModalShown",
                 "click #id_save_timezone": "onTimezoneSaved"
@@ -586,7 +688,7 @@ define(function(require, exports, module) {
                 });
                 $('#id_exclRadius').spinedit({
                     minimum: 0,
-                    maximum: 30,
+                    maximum: 50,
                     step: 5,
                     value: 5,
                     numberOfDecimals: 0
@@ -607,7 +709,30 @@ define(function(require, exports, module) {
                 });
                 $("#id_runs_table_div").html(tableFuncs.makeTable([], runsDefinition));
                 styleTable("#id_runs_table_div");
+                $("#id_facilities_table_div").html(tableFuncs.makeTable([], facilitiesDefinition));
+                styleTable("#id_facilities_table_div");
 
+                DASHBOARD.facilitiesFiles = new DASHBOARD.FacilitiesFiles();
+                this.facFile = this.$el.find('#id_fac_file_upload');
+                this.facFile.wrap('<div />');
+                $.event.fixHooks.drop = {props: ["dataTransfer"]};
+                // this.listenTo(DASHBOARD.instructionsFileModel,"change:file",this.instructionsFileChanged);
+            },
+            onSelectFile: function (e) {
+                var files = e.target.files; // FileList object
+                if (files.length > 1) alert('Cannot process more than one file');
+                else {
+                    var f = files[0];
+                    if (f !== undefined) {
+                        this.$el.find("#id_fac_file_upload_name").val(f.name);
+                        DASHBOARD.facFile = f;
+                    }
+                }
+            },
+            onDragOver: function() { alert("onDragOver"); },
+            onDrop: function() { alert("onDrop"); },
+            newRunsRow: function (e) {
+                tableFuncs.insertRow(e, runsDefinition, this.modalContainer, editRunsChrome, beforeRunsShow, initRunRow);
             },
             clearRuns: function (e) {
                 $(e.currentTarget).closest("table").find("tbody").empty();
@@ -650,8 +775,18 @@ define(function(require, exports, module) {
                 }
                 return v.valid;
             },
-            newRunsRow: function (e) {
-                tableFuncs.insertRow(e, runsDefinition, this.modalContainer, editRunsChrome, beforeRunsShow, initRunRow);
+            newFacilitiesRow: function (e) {
+                tableFuncs.insertRow(e, facilitiesDefinition, this.modalContainer, editFacilitiesChrome, beforeFacilitiesShow, initFacilitiesRow);
+            },
+            clearFacilities: function (e) {
+                $(e.currentTarget).closest("table").find("tbody").empty();
+            },
+            deleteFacilitiesRow: function (e) {
+                $(e.currentTarget).closest("tr").remove();
+            },
+            editFacilitiesRow: function (e) {
+                tableFuncs.editRow($(e.currentTarget).closest("tr"), facilitiesDefinition, this.modalContainer, editFacilitiesChrome, beforeFacilitiesShow);
+                console.log(tableFuncs.getTableData(facilitiesDefinition));
             },
             render: function () {
                 var instructions = DASHBOARD.instructionsFileModel.get('instructions');
@@ -826,6 +961,13 @@ define(function(require, exports, module) {
                                       runsTable:$("#id_submaps_runsTable").prop('checked')};
                 this.currentTemplate = {summary: summaryData, submaps: submapsData};
             }
+        });
+
+        // ============================================================================
+        //  Facilities - Allow editing of files for specifying facilities 
+        // ============================================================================
+
+        DASHBOARD.FacilitiesView = Backbone.View.extend({
         });
     }
     module.exports.init = dashboardInstructionsInit;

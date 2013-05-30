@@ -4,9 +4,31 @@
     margin-bottom: 19px;
 }
 
+.custom_file_upload-small {
+    width: 280px;
+    height: 15px;
+    margin-bottom: 14px;
+}
+
 .file {
     width: 300px;
     height: 20px;
+    border: 1px solid #BBB;
+    border-right: 0;
+    color: #888;
+    padding: 5px;
+    
+    -webkit-border-top-left-radius: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    -moz-border-radius-topleft: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.file-small {
+    width: 200px;
+    height: 15px;
     border: 1px solid #BBB;
     border-right: 0;
     color: #888;
@@ -53,6 +75,28 @@ div.file_upload {
     padding-top: 8px;
 }
 
+div.file_upload-small {
+    width: 80px;
+    height: 22px;
+    display: inline;
+    position: absolute;
+    overflow: hidden;
+    cursor: pointer;
+    
+    -webkit-border-top-right-radius: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -moz-border-radius-bottomright: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 15px;
+    color: #FFF;
+    text-align: center;
+    padding-top: 5px;
+}
+
 div.file_upload:before {
     content: 'Browse';
     position: absolute;
@@ -61,7 +105,22 @@ div.file_upload:before {
     cursor: pointer;
 }
 
+div.file_upload-small:before {
+    content: 'Browse';
+    position: absolute;
+    left: 0; right: 0;
+    text-align: center;    
+    cursor: pointer;
+}
+
 div.file_upload input {
+    position: relative;
+    display: inline;
+    cursor: pointer;
+    opacity: 0;
+}
+
+div.file_upload-small input {
     position: relative;
     display: inline;
     cursor: pointer;
