@@ -221,7 +221,7 @@ define(function(require, exports, module) {
         body   = '<div class="modal-body">';
         body += '<form class="form-horizontal">';
         body += tableFuncs.editControl("Background Type", tableFuncs.makeSelect("id_submaps_type", {"class": controlClass},
-                {"map": "Google map", "satellite": "Satellite"}));
+                {"map": "Google map", "satellite": "Satellite", "none": "None"}));
         body += tableFuncs.editControl("Paths", tableFuncs.makeSelect("id_submaps_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_submaps_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("LISA", tableFuncs.makeSelect("id_submaps_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));

@@ -25,7 +25,7 @@ define(function(require, exports, module) {
         REPORT.ReportViewResources = Backbone.View.extend({
             initialize: function () {
                 this.listenTo(REPORT.settings, "change", this.settingsChanged);
-                this.contexts = {'analyses': null, 'map':null, 'satellite':null, 'peaks': null,
+                this.contexts = {'analyses': null, 'none': null, 'map': null, 'satellite': null, 'peaks': null,
                                  'tokens': null, 'fovs': null, 'paths': null, 'wedges': null,
                                  'submapGrid': null };
                 this.padX = 30;
@@ -51,6 +51,7 @@ define(function(require, exports, module) {
             },
             render: function () {
                 this.setupReport();
+                this.makeNoneLayer();
                 this.makeMapLayer();
                 this.makeSatelliteLayer();
                 this.makeSubmapGridLayer();
@@ -105,6 +106,21 @@ define(function(require, exports, module) {
                              -this.padY <= xy[1] && xy[1] < this.ny+this.padY );
                 };
             },
+            makeNoneLayer: function () {
+                this.trigger("init",{"context": "none"});
+                var ctx = document.createElement("canvas").getContext("2d");
+                var width = this.mx * this.scale;
+                var height = this.my * this.scale;
+                ctx.canvas.height = height + 2*this.padY;
+                ctx.canvas.width = width + 2*this.padX;
+                ctx.beginPath();
+                ctx.rect(this.padX, this.padY, width, height);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'black';
+                ctx.stroke();
+                this.contexts["none"] = ctx;
+                this.trigger("change",{"context": "none"});
+            },
             makeMapLayer: function () {
                 var that = this;
                 var image = new Image();
@@ -121,6 +137,11 @@ define(function(require, exports, module) {
                     ctx.canvas.height = this.height + 2*that.padY;
                     ctx.canvas.width = this.width + 2*that.padX;
                     ctx.drawImage(this, that.padX, that.padY);
+                    ctx.beginPath();
+                    ctx.rect(that.padX, that.padY, this.width, this.height);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = 'black';
+                    ctx.stroke();
                     that.contexts["map"] = ctx;
                     that.trigger("change",{"context": "map"});
                 };
@@ -141,6 +162,11 @@ define(function(require, exports, module) {
                     ctx.canvas.height = this.height + 2*that.padY;
                     ctx.canvas.width = this.width + 2*that.padX;
                     ctx.drawImage(this, that.padX, that.padY);
+                    ctx.beginPath();
+                    ctx.rect(that.padX, that.padY, this.width, this.height);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = 'black';
+                    ctx.stroke();
                     that.contexts["satellite"] = ctx;
                     that.trigger("change",{"context": "satellite"});
                 };
