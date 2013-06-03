@@ -273,6 +273,8 @@ server. The proxy server also passes the AnzLogMeta call for finding the list of
 
     app.post('/rest/download', forwardTheRequest);
 
+    app.post('/fileUpload', forwardTheRequest);
+
     app.get(/^(\/|\/force|\/getReport\/.*|\/css.*|\/js.*|\/images.*)$/, forwardTheRequest);
 
     app.listen(SITECONFIG.proxyport);

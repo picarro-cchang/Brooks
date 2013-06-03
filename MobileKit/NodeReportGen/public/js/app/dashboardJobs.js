@@ -257,8 +257,7 @@ define(function(require, exports, module) {
                 else if (status >= rptGenStatus.DONE) {
                     if (status === rptGenStatus.DONE_WITH_PDF) {
                         statusDisplay = '<a class="pdfLink btn btn-mini btn-inverse" href="#" data-hash="' + model.get('hash') +
-                                        '" data-directory="' + model.get('directory') + '">Download PDF</a>' +
-                                        '</b>';
+                                        '" data-directory="' + model.get('directory') + '">Download PDF</a>';
                     }
                     else if (status === rptGenStatus.DONE_NO_PDF) {
                         statusDisplay = '<b><a class="viewLink" href="#" data-hash="' + model.get('hash') +

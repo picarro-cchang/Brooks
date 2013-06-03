@@ -13,6 +13,9 @@ define(function(require, exports, module) {
     var DASHBOARD = require('app/dashboardGlobals');
     var iv = require('common/instructionsValidator');
     var tableFuncs = require('app/tableFuncs');
+    var onFacFileUploaded = null;   // This will be the function to call once the facilities file
+                                    //  has been uploaded
+
     require('jquery-migrate'),
     require('jquery-ui');
     require('jquery.maphilight');
@@ -20,6 +23,7 @@ define(function(require, exports, module) {
     require('jquery.datetimeentry');
     require('jquery.generateFile');
     require('jquery.mousewheel');
+    require('jquery.form'),
     require('bootstrap-modal');
     require('bootstrap-dropdown');
     require('bootstrap-spinedit');
@@ -157,11 +161,11 @@ define(function(require, exports, module) {
 
     var facilitiesDefinition = {id: "facilitiestable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "filename", width: "24%", th: "KML Filename", tf: String, eid: "id_fac_file_upload_name", cf: String},
-        {key: "linewidth", width: "18%", th: "Line Width", tf: Number, eid: "id_fac_linewidth", cf: Number},
-        {key: "linecolor", width: "18%", th: "Line Color", tf: makeColorPatch, eid: "id_fac_linecolor", cf: String},
-        {key: "textcolor", width: "18%", th: "Text Color", tf: makeColorPatch, eid: "id_fac_textcolor", cf: String},
-        {key: "download", width: "18%", th: "Download", omit: true},
+        {key: "filename", width: "48%", th: "KML Filename", tf: String, eid: "id_fac_file_upload_name", cf: String},
+        {key: "linewidth", width: "12%", th: "Line Width", tf: Number, eid: "id_fac_linewidth", cf: Number},
+        {key: "linecolor", width: "12%", th: "Line Color", tf: makeColorPatch, eid: "id_fac_linecolor", cf: String},
+        {key: "textcolor", width: "12%", th: "Text Color", tf: makeColorPatch, eid: "id_fac_textcolor", cf: String},
+        {key: "hash", width: "12%", th: "Download", tf: makeFacDownloadButton, eid: "id_fac_hash", cf: String},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}],
     vf: function (eidByKey, template, container, onSuccess) {
         return validateFacilities(eidByKey, template, container, onSuccess);
@@ -265,11 +269,18 @@ define(function(require, exports, module) {
         result.push('<div class="control-group">');
         result.push('<label class="control-label" for="' + 'xxx' + '">' + label + '</label>');
         result.push('<div class="controls">');
-        result.push('<div class="custom_file_upload-small">');
+        result.push('<div id="id_fac_file_upload_div" class="custom_file_upload-small">');
         result.push('<input id="id_fac_file_upload_name" class="file-small" type="text" name="file_info" readonly>');
-        result.push('<div class="btn-inverse file_upload-small">');
-        result.push('<input id="id_fac_file_upload" class="fileinput-small" type="file" name="files[]">');
+        result.push('<div id="id_fac_file_upload_button" class="btn-inverse file_upload-small">');
+        result.push('<input id="id_fac_file_upload" class="fileinput-small" type="file" name="kmlUpload">');
         result.push('</div></div></div></div>');
+        /*
+        result.push('<div class="progress">');
+        result.push('<div class="bar"></div>');
+        result.push('<div class="percent">0%</div>');
+        result.push('</div>');
+        result.push('<div id="status"></div>');
+        */
         return result.join('\n');
     }
 
@@ -279,7 +290,8 @@ define(function(require, exports, module) {
         var controlClass = "input-large";
         header = '<div class="modal-header"><h3>' + "Add new KML file for facilities layer" + '</h3></div>';
         body   = '<div class="modal-body">';
-        body += '<form class="form-horizontal">';
+        // Use post to allow uploading of the facilities file when the form is submitted
+        body += '<form id="id_fac_upload_form" class="form-horizontal" method="post"  enctype="multipart/form-data" action="/fileUpload">';
         body += uploadControl("KML File");
         body += tableFuncs.editControl("Line Width", tableFuncs.makeSelect("id_fac_linewidth", {"class": controlClass},
                 {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8}));
@@ -289,6 +301,7 @@ define(function(require, exports, module) {
         body += tableFuncs.editControl("Text Color", tableFuncs.makeSelect("id_fac_textcolor", {"class": controlClass},
                 {"#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
                  "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow", "#FFFFFF": "white" }));
+        body += tableFuncs.makeInput("id_fac_hash", {"class": controlClass, "type":"hidden"});
         body += '</form></div>';
         footer = '<div class="modal-footer">';
         footer += '<p class="validate_tips alert alert-error hide"></p>';
@@ -368,25 +381,68 @@ define(function(require, exports, module) {
     // ============================================================================
     //  Helper functions for editing facilities files
     // ============================================================================
-    function beforeFacilitiesShow(done)
-    {
-        DASHBOARD.facFile = null;
-        done(null);
+    function makeFacDownloadButton(value) {
+        var result;
+        result = '<a class="kmlLink btn btn-mini btn-inverse" href="#' + value + '" data-hash="' + value + '">Download KML</a>';
+        return result;
     }
 
+    function beforeFacilitiesShow(done)
+    {
+        var bar = $('.bar');
+        var percent = $('.percent');
+        var status = $('#status');
+        DASHBOARD.facFile = null;
+        $("#id_fac_upload_form").ajaxForm({
+            dataType: 'json',
+            beforeSend: function() {
+                status.empty();
+                var percentVal = '0%';
+                bar.width(percentVal);
+                percent.html(percentVal);
+            },
+            uploadProgress: function(event, position, total, percentComplete) {
+                var percentVal = percentComplete + '%';
+                bar.width(percentVal);
+                percent.html(percentVal);
+            },
+            success: function(result) {
+                var percentVal = '100%';
+                bar.width(percentVal);
+                percent.html(percentVal);
+                onFacFileUploaded(result);
+            },
+            complete: function(xhr) {
+                status.html(xhr.responseText);
+            }
+        });
+        done(null);
+    }
 
     function validateFacilities(eidByKey,template,container,onSuccess) {
         var numErr = 0;
         var kmlFile = $("#"+eidByKey.filename).val();
+        onFacFileUploaded = function (result) {
+            if ("error" in result) {
+                tableFuncs.addError("id_fac_file_upload_div", result.error);
+                numErr += 1;
+            }
+            else {
+                $("#"+eidByKey.hash).val(result.hash);
+            }
+            if (numErr === 0) onSuccess();
+        };
         if (DASHBOARD.facFile) {
-            var reader = new FileReader();
-            reader.readAsText(DASHBOARD.facFile);
-            reader.onload = function (e) {
-                console.log(e.target.result);
-                if (numErr === 0) onSuccess();
-            };            
+            $("#id_fac_upload_form").submit();
         }
-        else if (numErr === 0) onSuccess();
+        else {
+            if (!kmlFile) {
+                tableFuncs.addError("id_fac_file_upload_div", "No KML file");
+                numErr += 1;
+            }
+            if (numErr === 0) onSuccess();
+        }
+        return false;
     }
 
     // ============================================================================
@@ -405,7 +461,7 @@ define(function(require, exports, module) {
                       "analyses": "#FF0000", "stabClass": "*"};
     var initSubmapRow  = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false };
     var initSummaryRow = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false, submapGrid: true };
-    var initFacilitiesRow = {filename: '', linewidth: 2, linecolor: "#000000", textcolor: "#000000", download: '' };
+    var initFacilitiesRow = {filename: '', linewidth: 2, linecolor: "#000000", textcolor: "#000000", hash: '', download: '' };
 
     // ============================================================================
     //  Define models, views and collections for handling instructions
@@ -622,23 +678,6 @@ define(function(require, exports, module) {
                 }
             }
         });
-
-        // ============================================================================
-        //  FacilitiesFile(s) - model and collection for KML files associated with 
-        //   pipelines and other facilities
-        // ============================================================================
-
-        DASHBOARD.FacilitiesFile = Backbone.Model.extend({
-            defaults: {
-                file: null,
-                contents: ""
-            }
-        });
-
-        DASHBOARD.FacilitiesFiles = Backbone.Collection.extend({
-            model: DASHBOARD.FacilitiesFile
-        });
-
         // ============================================================================
         //  Instructions - View contains some form elements, the runs table, 
         //   the table of facilities layer files and a button to allow for the
@@ -662,6 +701,7 @@ define(function(require, exports, module) {
                 "click #id_facilities_table_div table button.table-clear": "clearFacilities",
                 "click #id_facilities_table_div tbody button.table-delete-row": "deleteFacilitiesRow",
                 "click #id_facilities_table_div tbody button.table-edit-row": "editFacilitiesRow",
+                "click a.kmlLink" : "onKmlLink",
                 "click #id_edit_template": "editTemplate",
                 "shown #id_timezoneModal": "onModalShown",
                 "click #id_save_timezone": "onTimezoneSaved"
@@ -712,7 +752,6 @@ define(function(require, exports, module) {
                 $("#id_facilities_table_div").html(tableFuncs.makeTable([], facilitiesDefinition));
                 styleTable("#id_facilities_table_div");
 
-                DASHBOARD.facilitiesFiles = new DASHBOARD.FacilitiesFiles();
                 this.facFile = this.$el.find('#id_fac_file_upload');
                 this.facFile.wrap('<div />');
                 $.event.fixHooks.drop = {props: ["dataTransfer"]};
@@ -728,9 +767,16 @@ define(function(require, exports, module) {
                         DASHBOARD.facFile = f;
                     }
                 }
+                $("#id_fac_file_upload_div").next('.help-inline').fadeOut("fast", function () {
+                    $(this).remove();
+                });
+                $("#id_fac_file_upload_div").parents('.control-group').removeClass('error');
             },
             onDragOver: function() { alert("onDragOver"); },
             onDrop: function() { alert("onDrop"); },
+            onKmlLink: function (e) {
+                alert($(e.currentTarget).data('hash'));
+            },
             newRunsRow: function (e) {
                 tableFuncs.insertRow(e, runsDefinition, this.modalContainer, editRunsChrome, beforeRunsShow, initRunRow);
             },
@@ -961,13 +1007,6 @@ define(function(require, exports, module) {
                                       runsTable:$("#id_submaps_runsTable").prop('checked')};
                 this.currentTemplate = {summary: summaryData, submaps: submapsData};
             }
-        });
-
-        // ============================================================================
-        //  Facilities - Allow editing of files for specifying facilities 
-        // ============================================================================
-
-        DASHBOARD.FacilitiesView = Backbone.View.extend({
         });
     }
     module.exports.init = dashboardInstructionsInit;

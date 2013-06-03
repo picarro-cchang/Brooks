@@ -26,7 +26,8 @@ requirejs.config({
         'jquery-ui': assets + 'js/lib/jquery-ui-1.10.2.custom.min',
         'jquery.datetimeentry': assets + 'js/lib/jquery.datetimeentry',
         'jquery.mousewheel': assets + 'js/lib/jquery.mousewheel.min',
-        'jquery.jsonp': assets + 'js/lib/jquery.jsonp-2.4.0.min'
+        'jquery.jsonp': assets + 'js/lib/jquery.jsonp-2.4.0.min',
+        'jquery.form': assets + 'js/lib/jquery.form.min'
     },
     shim: {
         'jquery-migrate': {
@@ -66,6 +67,9 @@ requirejs.config({
             deps: ['jquery', 'jquery-ui']
         },
         'jquery.jsonp': {
+            deps: ['jquery']
+        },
+        'jquery.form': {
             deps: ['jquery']
         },
         'jstz': {

@@ -21,6 +21,7 @@ define(function(require, exports, module) {
                         psys: TEMPLATE_PARAMS.psys,
                         rprocs: ["SurveyorRpt:resource",
                                  "SurveyorRpt:getStatus",
+                                 "SurveyorRpt:stashKml",
                                  "SurveyorRpt:submit",
                                  "SurveyorRpt:updateDashboard",
                                  "SurveyorRpt:getDashboard"

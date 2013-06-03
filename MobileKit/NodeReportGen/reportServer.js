@@ -27,6 +27,7 @@ the authenticating proxy server.
 (function () {
     var argv = require('optimist').argv;
     var cjs = require("./public/js/common/canonical_stringify");
+    var et = require('elementtree');
     var express = require('express');
     var fs = require('fs');
     var md5hex = require('./lib/md5hex');
@@ -140,10 +141,11 @@ the authenticating proxy server.
     var newParamsValidator = pv.newParamsValidator;
 
     var app = express();
+    var uploadDir = path.join(REPORTROOT,"uploads");
     app.set('view engine', 'jade');
     app.set('view options', { layout: true });
     app.set('views', path.join(__dirname, 'views'));
-    app.use(express.bodyParser());
+    app.use(express.bodyParser({uploadDir: uploadDir}));
 
     var csp_url = scheme + SITECONFIG.p3host + p3port + '/' + SITECONFIG.p3site; //"https://dev.picarro.com/dev";
     var psys = SITECONFIG.psys;
@@ -296,15 +298,30 @@ the authenticating proxy server.
             // Use elementTree to parse a KML string (which is first normalized to use Unix line endings). 
             //  If it parses without error, compute the MD5 hash and save the string into a file in a 
             //  subdirectory generated from the MD5 hash
+            var ElementTree = et.ElementTree;
             pv = newParamsValidator(req.query,
                 [{"name": "contents", "required": true, "validator": "string"}]);
             if (pv.ok()) {
                 contents = req.query.contents;
                 contents = contents.replace("\r\n","\n").replace("\r","\n");
-                var hash = md5hex(contents);
-
+                try {
+                    var start = contents.indexOf("<");
+                    if (start > 10 || start < 0) {
+                        throw new Error("Cannot find starting element of XML file");
+                    }
+                    else {
+                        et.parse(contents.substr(start));
+                        var hash = md5hex(contents);
+                        console.log("MD5 Hash: " + hash);
+                        res.send(_.extend(result, {hash:hash}));
+                    }
+                }
+                catch (err) {
+                    console.log("Error in stashKml" + err.message);
+                    res.send(_.extend(result,{error: err.message}));
+                }
             }
-            else res.send(_.extend(result,{"error": pv.errors()}));
+            else res.send(_.extend(result,{error: pv.errors()}));
             break;
         default:
             res.send(_.extend(result,{error: "RptGen: Unknown or missing qry"}));
@@ -416,6 +433,64 @@ the authenticating proxy server.
         res.end(req.params.testName);
     });
 
+    app.post("/fileUpload", function(req, res, next) {
+        console.log(req.body);
+        console.log(req.files);
+        if (!_.isEmpty(req.files)) {
+            if ("kmlUpload" in req.files) {            
+                fs.readFile(req.files.kmlUpload.path,"ascii",function (err,data) {
+                    if (err) res.send({name: req.body.file_info, error: err.message});
+                    else {
+                        fs.unlink(req.files.kmlUpload.path);
+                        data = data.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+                        try {
+                            var start = data.indexOf("<");
+                            if (start > 10 || start < 0) {
+                                throw new Error("Cannot find starting element of KML file");
+                            }
+                            else {
+                                data = data.substr(start);
+                                et.parse(data);
+                                var hash = md5hex(data);
+                                var dirName = path.join(REPORTROOT, "kml", hash.substr(0,2), hash);
+                                var fname = path.join(dirName, hash + ".kml");
+                                console.log("MD5 Hash: " + hash + ", dirName: " + dirName);
+                                // Check to see if the file has already been uploaded
+                                fs.readFile(fname, "ascii", function (err,oldData) {
+                                    if (err) {
+                                        console.log("File does not exist");
+                                        // Copy the file into a directory with the specified hash
+                                        mkdirp(dirName, null, function (err) {
+                                            if (err) res.send({name: req.body.file_info, error: err.message});
+                                            else {
+                                                fs.writeFile(fname, data, "ascii", function (err) {
+                                                    if (err) res.send({name: req.body.file_info, error: err.message});
+                                                    else {
+                                                        res.send({name: req.body.file_info, hash:hash});
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        console.log("File has been found");
+                                        if (data !== oldData) throw new Error("Hash collision - should never occur");
+                                        else res.send({name: req.body.file_info, hash:hash});
+                                    }
+                                });
+                            }
+                        }
+                        catch (err) {
+                            console.log("Error in KML file upload" + err.message);
+                            res.send({name: req.body.file_info, error: err.message});
+                        }
+                    }
+                });
+            }
+        }
+        else res.send({name: req.body.file_info});
+    });
+
     /*
     app.get("/checkPdfConvert", function(req, res) {
         res.render("checkPdfConvert");
@@ -459,14 +534,20 @@ the authenticating proxy server.
 
     mkdirp(REPORTROOT, null, function (err) {
         if (err) console.log(err);
-        // else console.log('Directory ' + REPORTROOT + ' created.');
-        rptGenMonitor = newRptGenMonitor(REPORTROOT);
-        app.use("/rest/data", express.static(REPORTROOT));
-        runningTasks.handleIncompleteTasksOnStartup( function () {
-            var port = SITECONFIG.reportport;
-            app.listen(port);
-            console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
-        });
+        else {
+            mkdirp(uploadDir, null, function (err) {
+                if (err) console.log(err);
+                else {
+                    rptGenMonitor = newRptGenMonitor(REPORTROOT);
+                    app.use("/rest/data", express.static(REPORTROOT));
+                    runningTasks.handleIncompleteTasksOnStartup( function () {
+                        var port = SITECONFIG.reportport;
+                        app.listen(port);
+                        console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
+                    });
+                }
+            });
+        }
     });
     /*
     var http = require('http');
