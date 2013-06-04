@@ -181,28 +181,29 @@ define(function(require, exports, module) {
             });
         }
 
-
         function processRuns(done) {
             initializePeaks();
             // Serially process runs using processRun on each
             var params = that.norm_instr;
             function next() {
-                processRun(function (err) {
-                    if (err) done(err);
-                    else {
-                        that.runIndex += 1;
-                        if (that.runIndex<params.runs.length) process.nextTick(next);
+                if (that.runIndex == params.runs.length) {
+                    postProcessPeaks(function (err) {
+                        if (err) done(err);
+                        else writeKeyFile(function (err) {
+                            if (err) done(err);
+                            else done(null);
+                        });
+                    });
+                }
+                else {
+                    processRun(function (err) {
+                        if (err) done(err);
                         else {
-                            postProcessPeaks(function (err) {
-                                if (err) done(err);
-                                else writeKeyFile(function (err) {
-                                    if (err) done(err);
-                                    else done(null);
-                                });
-                            });
+                            that.runIndex += 1;
+                            process.nextTick(next);
                         }
-                    }
-                });
+                    });
+                }
             }
             next();
         }
