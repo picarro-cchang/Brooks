@@ -1,8 +1,16 @@
 /* makeRunsTable.js renders runs information into an HTML table */
+/*global alert, console, module, require, TEMPLATE_PARAMS */
+/* jshint undef:true, unused:true */
 
-define (['underscore', 'app/utils', 'app/geohash', 'app/reportGlobals'],
-function (_, utils, gh, REPORT) {
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
+
+define(function(require, exports, module) {
     'use strict';
+
+    var _ = require('underscore');
+    var REPORT = require('app/reportGlobals');
+    var utils = require('app/utils');
+    var bufferedTimezone = utils.bufferedTimezone;
 
     function makeColorPatch(value) {
         var result;
@@ -46,7 +54,7 @@ function (_, utils, gh, REPORT) {
                 posixTimes.push(1000*run.startEtm);
                 posixTimes.push(1000*run.endEtm);
             }
-            REPORT.Utilities.timezone({tz:REPORT.settings.get("timezone"),posixTimes:posixTimes},
+            bufferedTimezone(REPORT.Utilities.timezone,{tz:REPORT.settings.get("timezone"),posixTimes:posixTimes},
             function (err) {
                 var msg = 'While processing timezone in makeRunsTable: ' + err;
                 alert(msg);
@@ -77,5 +85,5 @@ function (_, utils, gh, REPORT) {
             done(null, runsTable);
         }
     }
-    return makeRunsTable;
+    module.exports = makeRunsTable;
 });

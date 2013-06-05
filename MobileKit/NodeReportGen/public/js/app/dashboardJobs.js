@@ -9,6 +9,7 @@ define(function(require, exports, module) {
     var $ = require('jquery');
     var _ = require('underscore');
     var Backbone = require('backbone');
+    var bufferedTimezone = require('app/utils').bufferedTimezone;
     var cjs = require('common/canonical_stringify');
     var DASHBOARD = require('app/dashboardGlobals');
     var rptGenStatus = require('common/rptGenStatus');
@@ -79,7 +80,7 @@ define(function(require, exports, module) {
             addLocalTime: function (done, tz) {
                 var that = this;
                 if (!tz) tz = DASHBOARD.timezone;
-                DASHBOARD.Utilities.timezone({tz:tz, posixTimes:[this.get("startPosixTime")]},
+                bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:[this.get("startPosixTime")]},
                 function (err) {
                     var msg = 'While converting timezone: ' + err;
                     alert(msg);

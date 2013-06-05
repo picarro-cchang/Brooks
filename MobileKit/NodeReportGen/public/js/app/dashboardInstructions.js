@@ -9,6 +9,7 @@ define(function(require, exports, module) {
     var $ = require('jquery');
     var _ = require('underscore');
     var Backbone = require('backbone');
+    var bufferedTimezone = require('app/utils').bufferedTimezone;
     var cjs = require('common/canonical_stringify');
     var DASHBOARD = require('app/dashboardGlobals');
     var iv = require('common/instructionsValidator');
@@ -103,7 +104,7 @@ define(function(require, exports, module) {
         // Convert the local time to posix time using the server and update the local time string with the time zone
         if (type === "add" || type === "update") {
             var tz = DASHBOARD.timezone;
-            DASHBOARD.Utilities.timezone({tz:tz, timeStrings:[rowData.startEtm.localTime,rowData.endEtm.localTime]},
+            bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, timeStrings:[rowData.startEtm.localTime,rowData.endEtm.localTime]},
             function (err) {
                 var msg = 'While converting timezone: ' + err;
                 alert(msg);
@@ -261,7 +262,7 @@ define(function(require, exports, module) {
             if ("" === $('#id_end_etm').val()) $('#id_end_etm').datetimeEntry('setDatetime',now);
             return {minDatetime: null, maxDatetime: now};
         }
-        DASHBOARD.Utilities.timezone({tz:tz, posixTimes:[posixTime]},
+        bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:[posixTime]},
         function (err) {
             var msg = 'While converting timezone: ' + err;
             alert(msg);
@@ -674,7 +675,7 @@ define(function(require, exports, module) {
                     posixTimes.push(1000*run.startEtm);
                     posixTimes.push(1000*run.endEtm);
                 });
-                DASHBOARD.Utilities.timezone({tz:tz, posixTimes:posixTimes},
+                bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:posixTimes},
                 function (err) {
                     var msg = 'While converting timezone: ' + err;
                     alert(msg);
@@ -709,7 +710,7 @@ define(function(require, exports, module) {
                     posixTimes.push(rowData.startEtm.posixTime);
                     posixTimes.push(rowData.endEtm.posixTime);
                 }
-                DASHBOARD.Utilities.timezone({tz:tz, posixTimes:posixTimes},
+                bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:posixTimes},
                 function (err) {
                     var msg = 'While converting timezone: ' + err;
                     alert(msg);

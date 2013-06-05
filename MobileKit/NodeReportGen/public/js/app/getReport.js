@@ -9,6 +9,7 @@ define(function(require, exports, module) {
 
     var $ = require('jquery');
     var _ = require('underscore');
+    var bufferedTimezone = require('app/utils').bufferedTimezone;
     var gh = require('app/geohash');
     var localrestapi = require('app/localrestapi');
     var newUsageTracker = require('app/newUsageTracker');
@@ -148,7 +149,7 @@ define(function(require, exports, module) {
                 var tz = data.INSTRUCTIONS.timezone;
                 var startPosix = (new Date(data.SUBMIT_KEY.time_stamp)).valueOf();
                 // Get first submission time in the correct timezone
-                REPORT.Utilities.timezone({tz:tz,posixTimes:[startPosix]},
+                bufferedTimezone(REPORT.Utilities.timezone,{tz:tz,posixTimes:[startPosix]},
                 function () {
                     params.submitTime = data.SUBMIT_KEY.time_stamp;
                     doIt();

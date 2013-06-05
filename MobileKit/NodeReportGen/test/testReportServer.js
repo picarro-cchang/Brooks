@@ -63,6 +63,7 @@ function getJSON(qry_url, params, callback) {
     var options = url.parse(qry_url);
     options.query = params;
     options.method = 'GET';
+    options.timeout = 30;
     getRest(options, function (err, statusCode, output) {
         expect(err).to.be.null;
         expect(statusCode).to.eql(200);

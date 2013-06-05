@@ -1,8 +1,16 @@
 /* makeSurveysTable.js renders runs information into an HTML table */
+/*global alert, console, module, require, TEMPLATE_PARAMS */
+/* jshint undef:true, unused:true */
 
-define (['app/utils', 'app/geohash', 'app/reportGlobals'],
-function (utils, gh, REPORT) {
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
+
+define(function(require, exports, module) {
     'use strict';
+
+    var _ = require('underscore');
+    var REPORT = require('app/reportGlobals');
+    var utils = require('app/utils');
+    var bufferedTimezone = utils.bufferedTimezone;
 
     function makeSurveysTable(report, done) {
         var i, surveysTable = [];
@@ -38,7 +46,7 @@ function (utils, gh, REPORT) {
                 etmList.push(1000*survey.maxetm);
             }
 
-            REPORT.Utilities.timezone({tz:REPORT.settings.get("timezone"),posixTimes:etmList},
+            bufferedTimezone(REPORT.Utilities.timezone,{tz:REPORT.settings.get("timezone"),posixTimes:etmList},
             function (err) {
                 var msg = 'While processing timezone in makeSurveysTable: ' + err;
                 alert(msg);
@@ -66,5 +74,5 @@ function (utils, gh, REPORT) {
             done(null, surveysTable);
         }
     }
-    return makeSurveysTable;
+    module.exports = makeSurveysTable;
 });
