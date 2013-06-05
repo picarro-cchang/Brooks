@@ -114,9 +114,20 @@ define(function(require, exports, module) {
         }
     }
 
+    // Get the leading part of the resource URL associated with the MD5 hash of the instructions
+    // Example: When we want to divide the report generation files in subdirectories according to the
+    //  first byte of the hash to not overfill the top-level directory: 
+    //
+    //  instrResource("0123456789ABCDEF0123456789ABCDEF") => "/01/0123456789ABCDEF0123456789ABCDEF"
+
+    function instrResource(hash) {
+        return "/" + hash.substr(0,2) + "/" + hash;
+    }
+
     module.exports.hex2RGB = hex2RGB;
     module.exports.dec2hex = dec2hex;
     module.exports.colorTuple2Hex = colorTuple2Hex;
     module.exports.getDateTime = getDateTime;
     module.exports.bufferedTimezone = bufferedTimezone;
+    module.exports.instrResource = instrResource;
 });
