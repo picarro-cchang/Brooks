@@ -245,7 +245,8 @@ the authenticating proxy server.
                  {"name": "start_ts", "required": true, "validator": /\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/}]);
             if (pv.ok()) {
                 // Try to get status from the working directory
-                workDir = path.join(REPORTROOT, pv.get("contents_hash"),
+                var hash = pv.get("contents_hash");
+                workDir = path.join(REPORTROOT, hash.substr(0,2), hash,
                     ts.timeStringAsDirName(pv.get("start_ts")));
                 statusFile = path.join(workDir, "status.dat");
                 fs.exists(workDir, function (exists) {
@@ -425,8 +426,8 @@ the authenticating proxy server.
 
     app.use(express.compress());
 
-    app.get("/rest/data/:hash/:ts/report.pdf", function(req, res) {
-        var filename = path.join(REPORTROOT,req.params.hash,req.params.ts,"report.pdf");
+    app.get("/rest/data/:prefix/:hash/:ts/report.pdf", function(req, res) {
+        var filename = path.join(REPORTROOT,req.params.prefix,req.params.hash,req.params.ts,"report.pdf");
         fs.exists(filename, function (exists) {
             if (exists) {
                 var readStream = fs.createReadStream(filename);

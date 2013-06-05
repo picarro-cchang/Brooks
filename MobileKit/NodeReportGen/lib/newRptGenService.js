@@ -1,6 +1,27 @@
 /* newRptGenService.js returns a new RptGenService object to access the rest
    calls of the report generator */
 /*global console, exports, module, require */
+
+/* 
+This function performs a GET rest call on a server, passing the parameters to the call as a query string to the URL
+If the server returns an error or if the status code is in the range [500,600), the call is retried at intervals of
+"sleep_seconds" up to "max_retries" times.
+
+Example Usage: Calling the time zone conversion routine on a server
+
+var rptGenService = newRptGenService({rptgen_url: "http://localhost:8300/stage"});
+var params = {"tz":"America/Los_Angeles","posixTimes":1000000};
+var rsc = "Utilities/tz";
+
+rptGenService.get(rsc, params, function (err,result) {
+    console.log("err: " + err);
+    console.log("result: " + JSON.stringify(result));
+});
+
+The actual rest call consists of rptgen_url + "/rest/" + rsc
+
+*/
+
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
@@ -58,6 +79,7 @@ define(function(require, exports, module) {
             var options = url.parse(qry_url);
             options.query = params;
             options.method = 'GET';
+            options.timeout = 30;
             getRest(options,handleRestResult);
         }
 

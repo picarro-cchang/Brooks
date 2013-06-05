@@ -9,7 +9,9 @@ define(function(require, exports, module) {
 
     var $ = require('jquery');
     var _ = require('underscore');
+    var bufferedTimezone = require('app/utils').bufferedTimezone;
     var gh = require('app/geohash');
+    var instrResource = require('app/utils').instrResource;
     var localrestapi = require('app/localrestapi');
     var newUsageTracker = require('app/newUsageTracker');
     var REPORT = require('app/reportGlobals');
@@ -107,7 +109,7 @@ define(function(require, exports, module) {
     function renderPage() {
         var ticket = TEMPLATE_PARAMS.ticket + '/' + TEMPLATE_PARAMS.ts;
         var qry = TEMPLATE_PARAMS.qry;
-        var keyFile = '/' + ticket + '/key.json';
+        var keyFile = instrResource(ticket) + '/key.json';
         var settingsKeys = _.keys((new REPORT.Settings()).attributes);
         if (!instructionsLoaded) {
             instructionsLoaded = true;
@@ -148,7 +150,7 @@ define(function(require, exports, module) {
                 var tz = data.INSTRUCTIONS.timezone;
                 var startPosix = (new Date(data.SUBMIT_KEY.time_stamp)).valueOf();
                 // Get first submission time in the correct timezone
-                REPORT.Utilities.timezone({tz:tz,posixTimes:[startPosix]},
+                bufferedTimezone(REPORT.Utilities.timezone,{tz:tz,posixTimes:[startPosix]},
                 function () {
                     params.submitTime = data.SUBMIT_KEY.time_stamp;
                     doIt();

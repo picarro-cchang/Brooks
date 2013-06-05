@@ -204,16 +204,18 @@ define(function(require, exports, module) {
             var params = that.norm_instr;
             initializePath();
             function next() {
-                processRun(function (err) {
-                    if (err) done(err);
-                    else {
-                        // Keep count of the number of runs completed. Continue processing
-                        //  next run one-by-one until all are done. Then call postProcess.
-                        that.pathParams.runIndex += 1;
-                        if (that.pathParams.runIndex<params.runs.length) process.nextTick(next);
-                        else postProcess(done);
-                    }
-                });
+                // Keep count of the number of runs completed. Continue processing
+                //  next run one-by-one until all are done. Then call postProcess.
+                if (that.pathParams.runIndex === params.runs.length) postProcess(done);
+                else {
+                    processRun(function (err) {
+                        if (err) done(err);
+                        else {
+                            that.pathParams.runIndex += 1;
+                            process.nextTick(next);
+                        }
+                    });
+                }
             }
             next();
         }

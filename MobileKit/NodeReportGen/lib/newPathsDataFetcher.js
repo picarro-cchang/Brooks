@@ -171,19 +171,21 @@ define(function(require, exports, module) {
             var params = that.norm_instr;
             initializePath();
             function next() {
-                processRun(function (err) {
-                    if (err) done(err);
-                    else {
-                        that.pathParams.runIndex += 1;
-                        if (that.pathParams.runIndex<params.runs.length) process.nextTick(next);
+                if (that.pathParams.runIndex === params.runs.length) {
+                    writeKeyFile(function (err) {
+                        if (err) done(err);
+                        else closePathFiles(done);
+                    });
+                }
+                else {
+                    processRun(function (err) {
+                        if (err) done(err);
                         else {
-                            writeKeyFile(function (err) {
-                                if (err) done(err);
-                                else closePathFiles(done);
-                            });
+                            that.pathParams.runIndex += 1;
+                            process.nextTick(next);
                         }
-                    }
-                });
+                    });
+                }
             }
             next();
         }

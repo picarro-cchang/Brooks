@@ -710,7 +710,7 @@ class ReportPathMap(object):
             anz, dt, tm = logname.split('-')[:3]
             pathTableString.append('<tr>')
             pathTableString.append('<td>%s</td>' % anz)
-            tstr = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(utime))
+            tstr = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(round(utime)))
             pathTableString.append('<td>%s</td>' % tstr)
             pathTableString.append('<td>%s</td>' % makeColorPatch(params['marker']))
             pathTableString.append('<td>%s</td>' % makeColorPatch(params['wedges']))
@@ -828,7 +828,7 @@ class ReportMarkerMap(object):
         peakTableString.append('<tbody>')
         for i in range(len(peakDict)):
             r = i + 1
-            tstr = time.strftime("%Y%m%dT%H%M%S", time.gmtime(peakDict[r].etm))
+            tstr = time.strftime("%Y%m%dT%H%M%S", time.gmtime(round(peakDict[r].etm)))
             anz = peakDict[r].data['ANALYZER']
             lat = peakDict[r].data['GPS_ABS_LAT']
             lng = peakDict[r].data['GPS_ABS_LONG']
@@ -875,7 +875,7 @@ class ReportMarkerMap(object):
         writer.writerow(('Rank', 'Designation', 'Latitude', 'Longitude', 'Concentration', 'Amplitude', 'URL'))
         for i in range(len(peakDict)):
             r = i + 1
-            tstr = time.strftime("%Y%m%dT%H%M%S", time.gmtime(peakDict[r].etm))
+            tstr = time.strftime("%Y%m%dT%H%M%S", time.gmtime(round(peakDict[r].etm)))
             anz = peakDict[r].data['ANALYZER']
             lat = peakDict[r].data['GPS_ABS_LAT']
             lng = peakDict[r].data['GPS_ABS_LONG']
@@ -895,7 +895,7 @@ class ReportMarkerMap(object):
         excelReport.makeHeader(heading, ["Rank", "Designation", "Latitude", "Longitude", "Concentration", "Amplitude"], [30, 150, 80, 80, 80, 80])
         for i in range(len(peakDict)):
             r = i + 1
-            tstr = time.strftime("%Y%m%dT%H%M%S", time.gmtime(peakDict[r].etm))
+            tstr = time.strftime("%Y%m%dT%H%M%S", time.gmtime(round(peakDict[r].etm)))
             anz = peakDict[r].data['ANALYZER']
             lat = peakDict[r].data['GPS_ABS_LAT']
             lng = peakDict[r].data['GPS_ABS_LONG']
@@ -1286,6 +1286,46 @@ class SurveyorLayers(object):
             p3 = gp3.P3_Accessor(analyzer)
             gen = p3.genAnzLog("peaks")(startEtm=startEtm, endEtm=endEtm, minLng=self.padMinLng,
                                         maxLng=self.padMaxLng, minLat=self.padMinLat, maxLat=self.padMaxLat)
+            # Initially set all peaks as being active, we turn these inactive if they are
+            #  disqualified by the exclusion radius criterion
+            pList = [[m.data["AMPLITUDE"],m,r,True] for m in gen]
+            pList.sort()
+            pList.reverse()
+            if exclRadius > 0:
+                result = []
+                ilat, ilng, iampl = [], [], []
+                # We need to remove peaks which are closer to each other than the exclusion radius, keeping
+                #  only the largest in each group
+                for amp,m,region,active in pList:
+                    ilat.append(m.data["GPS_ABS_LAT"])
+                    ilng.append(m.data["GPS_ABS_LONG"])
+                    iampl.append(m.data["AMPLITUDE"])
+                ilat = np.asarray(ilat)
+                ilng = np.asarray(ilng)
+                iampl = np.asarray(iampl)
+                # Get median latitude and longitude for estimating distance scale
+                medLat = np.median(ilat)
+                medLng = np.median(ilng)
+                mpdLat = DTR*EARTH_RADIUS           # Meters per degree of latitude
+                mpdLng = mpdLat*np.cos(DTR*medLat)  # Meters per degree of longitude
+                perm = np.argsort(ilng)
+
+                for i,(lat,lng,ampl) in enumerate(zip(ilat,ilng,iampl)):
+                    if not pList[i][3]: continue
+                    elow = ehigh = 0
+                    dlng = exclRadius/mpdLng
+                    while elow<len(perm)  and ilng[perm[elow]]  <  lng-dlng:  elow += 1
+                    while ehigh<len(perm) and ilng[perm[ehigh]] <= lng+dlng: ehigh += 1
+                    for e in range(elow,ehigh):
+                        j = perm[e]
+                        if j<i: continue
+                        assert lng-dlng <= ilng[j] < lng+dlng
+                        dx = mpdLng*(lng-ilng[j])
+                        dy = mpdLat*(lat-ilat[j])
+                        if 0 < dx*dx+dy*dy <= exclRadius*exclRadius:
+                            pList[j][3] = False
+            peaks += [p[:3] for p in pList if p[3]]
+            """
             pList = [(m.data["AMPLITUDE"], m, r) for m in gen]
             if exclRadius > 0:
                 result = []
@@ -1332,7 +1372,7 @@ class SurveyorLayers(object):
                 peaks += [pList[i] for i in result]
             else:
                 peaks += pList
-
+            """
         ov1, ov2 = None, None
         # Select the markers that lie within this region
         selMarkers = []
@@ -1352,7 +1392,7 @@ class SurveyorLayers(object):
                     lat = m.data["GPS_ABS_LAT"]
                     lng = m.data["GPS_ABS_LONG"]
                     amp = m.data["AMPLITUDE"]
-                    if (self.minLng <= lng < self.maxLng) and (self.minLat <= lat < self.maxLat) and (amp > minAmpl) and ((maxAmpl is None) or (amp <= maxAmpl)):
+                    if (self.minLng <= lng < self.maxLng) and (self.minLat <= lat < self.maxLat) and (round(amp,3) >= minAmpl) and ((maxAmpl is None) or (amp <= maxAmpl)):
                         nRanked += 1
             rank = nRanked
             #
@@ -1365,7 +1405,7 @@ class SurveyorLayers(object):
                 lognames.add(m.data.get("LOGNAME", ""))
                 x, y = self.xform(lng, lat)
                 if (-self.padX <= x < self.nx + self.padX) and (-self.padY <= y < self.ny + self.padY) and \
-                   (amp > minAmpl) and ((maxAmpl is None) or (amp <= maxAmpl)):
+                   (round(amp,3) >= minAmpl) and ((maxAmpl is None) or (amp <= maxAmpl)):
                     if mType in [MT_CONC, MT_RANK]:
                         if mType == MT_CONC:
                             size = (self.ny / 1000.0) * amp ** 0.25    # Make these depend on number of pixels in the image
@@ -1417,7 +1457,7 @@ class SurveyorLayers(object):
                 dstd = DTR * getPossibleNaN(m.data, "WIND_DIR_SDEV", 0.0)
                 x, y = self.xform(lng, lat)
                 if np.isfinite(dstd) and (-self.padX <= x < self.nx + self.padX) and (-self.padY <= y < self.ny + self.padY) and \
-                              (amp > minAmpl) and ((maxAmpl is None) or (amp <= maxAmpl)):
+                              (round(amp,3) >= minAmpl) and ((maxAmpl is None) or (amp <= maxAmpl)):
                     lognames.add(m.data.get("LOGNAME", ""))
                     wind = math.hypot(windN, windE)
                     radius = 50.0

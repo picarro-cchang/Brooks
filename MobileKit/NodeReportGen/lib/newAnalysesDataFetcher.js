@@ -163,22 +163,24 @@ define(function(require, exports, module) {
             // Serially process runs using processRun on each
             var params = that.norm_instr;
             function next() {
-                processRun(function (err) {
-                    if (err) done(err);
-                    else {
-                        that.runIndex += 1;
-                        if (that.runIndex<params.runs.length) process.nextTick(next);
+                if (that.runIndex == params.runs.length) {
+                    postProcessAnalyses(function (err) {
+                        if (err) done(err);
+                        else writeKeyFile(function (err) {
+                            if (err) done(err);
+                            else done(null);
+                        });
+                    });
+                }
+                else {
+                    processRun(function (err) {
+                        if (err) done(err);
                         else {
-                            postProcessAnalyses(function (err) {
-                                if (err) done(err);
-                                else writeKeyFile(function (err) {
-                                    if (err) done(err);
-                                    else done(null);
-                                });
-                            });
+                            that.runIndex += 1;
+                            process.nextTick(next);
                         }
-                    }
-                });
+                    });
+                }
             }
             next();
         }

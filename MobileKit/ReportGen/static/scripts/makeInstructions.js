@@ -553,10 +553,11 @@ function editRunsChrome()
             {"None": "None", "#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red", 
              "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
     body += tableFuncs.editControl("Min Amplitude", tableFuncs.makeSelect("id_min_ampl", {"class": controlClass},
-            {"0.03": "0.03", "0.05": "0.05", "0.1": "0.1", "0.2": "0.2", 
+            {"0.03": "0.03", "0.05": "0.05", "0.07": "0.07", "0.1": "0.1", "0.12": "0.12", "0.2": "0.2", "0.3": "0.3",
              "0.5": "0.5", "1.0": "1.0" }));
     body += tableFuncs.editControl("Exclusion radius", tableFuncs.makeSelect("id_excl_radius", {"class": controlClass},
-            {"0": "0", "10": "10", "20": "20", "30": "30", "50": "50" }));
+            {"0": "0", "5": "5", "10": "10", "15":"15", "20": "20", "25":"25", "30": "30", "35":"35", "40":"40", 
+             "45":"45", "50": "50" }));
     body += tableFuncs.editControl("Stability Class", tableFuncs.makeSelect("id_stab_class", {"class": controlClass},
             {"*": "*: Use reported weather data", "A": "A: Very Unstable", "B": "B: Unstable", 
              "C": "C: Slightly Unstable", "D": "D: Neutral", "E": "E: Slightly Stable", "F": "F: Stable" }));
