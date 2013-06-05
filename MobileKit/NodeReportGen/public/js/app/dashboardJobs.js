@@ -12,6 +12,7 @@ define(function(require, exports, module) {
     var bufferedTimezone = require('app/utils').bufferedTimezone;
     var cjs = require('common/canonical_stringify');
     var DASHBOARD = require('app/dashboardGlobals');
+    var instrResource = require('app/utils').instrResource;
     var rptGenStatus = require('common/rptGenStatus');
     require('localStorage');
     require('jquery.dataTables');
@@ -284,7 +285,7 @@ define(function(require, exports, module) {
                 this.jobTable.fnDisplayRow(this.selectedRow[0]);
             },
             onPdfLink: function (e) {
-                var pdfUrl = '/' + $(e.currentTarget).data('hash') + '/' + $(e.currentTarget).data('directory') + '/report.pdf';
+                var pdfUrl = instrResource($(e.currentTarget).data('hash')) + '/' + $(e.currentTarget).data('directory') + '/report.pdf';
                 DASHBOARD.SurveyorRpt.geturl({qryobj: {qry: "resource"}, existing_tkt: true},
                 function (err) {
                     console.log('error: ', err);
@@ -301,7 +302,7 @@ define(function(require, exports, module) {
                 var that = this;
                 var cid = $(e.currentTarget).data("cid");
                 var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: cid});
-                var url = "/" + job.get("hash") + '/instructions.json';
+                var url = instrResource(job.get("hash")) + '/instructions.json';
                 DASHBOARD.SurveyorRpt.resource(url,
                 function (err) {
                     alert('While retrieving instructions from ' + url + ': ' + err);

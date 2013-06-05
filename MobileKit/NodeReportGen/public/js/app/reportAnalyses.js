@@ -7,6 +7,7 @@ define(function(require, exports, module) {
     'use strict';
     var Backbone = require('backbone');
     var CNSNT = require('app/cnsnt');
+    var instrResource = require('app/utils').instrResource;
     var REPORT  = require('app/reportGlobals');
     require('jquery.dataTables');
 
@@ -36,7 +37,7 @@ define(function(require, exports, module) {
                 else if (that.loadStage === 'loaded') that.trigger('loaded');
                 else {
                     that.loadStage = 'loading';
-                    that.workDir = '/'+that.analysesRef.SUBMIT_KEY.hash+'/'+that.analysesRef.SUBMIT_KEY.dir_name;
+                    that.workDir = instrResource(that.analysesRef.SUBMIT_KEY.hash)+'/'+that.analysesRef.SUBMIT_KEY.dir_name;
                     that.analysesFiles = that.analysesRef.OUTPUTS.FILES;
                     names = that.analysesFiles.slice(0);
                     next();

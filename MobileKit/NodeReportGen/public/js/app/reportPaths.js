@@ -8,6 +8,7 @@ define(function(require, exports, module) {
     var $ = require('jquery');
     var Backbone = require('backbone');
     var gh = require('app/geohash');
+    var instrResource = require('app/utils').instrResource;
     var REPORT  = require('app/reportGlobals');
 
     function reportPathsInit() {
@@ -42,7 +43,7 @@ define(function(require, exports, module) {
                 else if (that.loadStage === 'loaded') that.trigger('loaded');
                 else {
                     that.loadStage = 'loading';
-                    that.workDir = '/'+that.pathsRef.SUBMIT_KEY.hash+'/'+that.pathsRef.SUBMIT_KEY.dir_name;
+                    that.workDir = instrResource(that.pathsRef.SUBMIT_KEY.hash)+'/'+that.pathsRef.SUBMIT_KEY.dir_name;
                     that.pathsFiles = that.pathsRef.OUTPUTS.FILES;
                     names = that.pathsFiles.slice(0);   // These are all the names of the paths files, by survey and run
                     next();

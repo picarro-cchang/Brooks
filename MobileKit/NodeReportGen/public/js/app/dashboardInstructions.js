@@ -12,6 +12,7 @@ define(function(require, exports, module) {
     var bufferedTimezone = require('app/utils').bufferedTimezone;
     var cjs = require('common/canonical_stringify');
     var DASHBOARD = require('app/dashboardGlobals');
+    var instrResource = require('app/utils').instrResource;
     var iv = require('common/instructionsValidator');
     var tableFuncs = require('app/tableFuncs');
     require('jquery-migrate'),
@@ -233,7 +234,7 @@ define(function(require, exports, module) {
         body   = '<div class="modal-body">';
         body += '<form class="form-horizontal">';
         body += tableFuncs.editControl("Background Type", tableFuncs.makeSelect("id_summary_type", {"class": controlClass},
-                {"map": "Google map", "satellite": "Satellite"}));
+                {"map": "Google map", "satellite": "Satellite", "none": "None"}));
         body += tableFuncs.editControl("Paths", tableFuncs.makeSelect("id_summary_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_summary_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("LISA", tableFuncs.makeSelect("id_summary_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
@@ -493,7 +494,7 @@ define(function(require, exports, module) {
                             else {
                                 // This is a pre-existing job, but not on the current user's dashboard
                                 //  Find out who originally submitted it 
-                                var keyFile = '/' + hash + '/' + dirName + '/key.json';
+                                var keyFile = instrResource(hash) + '/' + dirName + '/key.json';
                                 DASHBOARD.SurveyorRpt.resource(keyFile,
                                 function (err) {
                                     alert('While getting key file data from ' + keyFile + ': ' + err);

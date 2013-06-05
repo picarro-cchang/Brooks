@@ -315,6 +315,7 @@ CNSNT.datUpdatePeriodSlow = 5000;
 CNSNT.analysisUpdatePeriodSlow = 10000;
 CNSNT.peakAndWindUpdatePeriodSlow = 10000;
 CNSNT.noteUpdatePeriodSlow = 10000;
+CNSNT.swathUpdatePeriodSlow = 10000;
 
 //        CNSNT.datUpdatePeriod = 5000;
 //        CNSNT.analysisUpdatePeriod = 5000;
@@ -590,9 +591,10 @@ CSTATE.datUpdatePeriod = CNSNT.datUpdatePeriod;
 CSTATE.analysisUpdatePeriod = CNSNT.analysisUpdatePeriod;
 CSTATE.peakAndWindUpdatePeriod = CNSNT.peakAndWindUpdatePeriod;
 CSTATE.noteUpdatePeriod = CNSNT.noteUpdatePeriod;
+CSTATE.swathUpdatePeriod = CNSNT.swathUpdatePeriod;
 
-CSTATE.getDataLimit = 2000;
-CSTATE.getSwathLimit = 1000;
+CSTATE.getDataLimit = 1000; //2000;
+CSTATE.getSwathLimit = 500; //1000;
         
 CSTATE.exportClass = 'file';   
 CSTATE.stabClass = 'D';     // Pasquill-Gifford stability class
@@ -976,6 +978,8 @@ function clearSwathPolys() {
     CSTATE.fov_lrt_start_ts = null; // makeFov Stat Doc
     CSTATE.fov_status = null; // makeFov Stat Doc
     CSTATE.fov_lrtrow = 0; // last lrtRow for the FOV
+    
+    CSTATE.swathUpdatePeriod = CNSNT.swathUpdatePeriod   
 }
 
 function clearWindMarkerArray() {
@@ -1213,7 +1217,7 @@ function initialize_map() {
 
 function resize_map() {
     var pge_wdth, hgth_top, lpge_wdth, new_width, new_height, new_top, cen;
-    pge_wdth = $('#id_topbar').width();
+    pge_wdth = $('#id_topbar').width() - ($('#id_sidebar').width() + 20);
     hgth_top = $('#id_topbar').height() + $('#id_feedback').height() + $('#id_content_title').height();
 
 
@@ -1278,7 +1282,6 @@ function resize_page() {
 
 function setModalChrome(hdr, msg, click) {
     var modalChrome = "";
-
     modalChrome = '<div class="modal" style="position: relative; top: auto; left: auto; margin: 0 auto; z-index: 1">';
 
     modalChrome += '<div class="modal-header">';
@@ -1288,7 +1291,7 @@ function setModalChrome(hdr, msg, click) {
     modalChrome += msg;
     modalChrome += '</div>';
     modalChrome += '<div class="modal-footer">';
-    modalChrome += click;
+    modalChrome += click ? click: "";
     modalChrome += '</div>';
     
     
@@ -1602,7 +1605,7 @@ function modalPaneSelectLog() {
         c2array.push(HBTN.switchToPrimeBtn);
     }
     body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
-
+    
     c1array = [];
     c2array = [];
     c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
@@ -1617,7 +1620,7 @@ function modalPaneSelectLog() {
         body,
         footer
         );
-
+    
     $("#id_mod_change").html(modalChangeMinAmp);
     $("#id_amplitude").focus();
 }
@@ -3019,7 +3022,8 @@ function init_anzlrt_rest() {
     anzlrt_defn_obj.resource = "AnzLrt";
     anzlrt_defn_obj.rprocs = ["AnzLrt:getStatus", "AnzLrt:byRowFov"];
     anzlrt_defn_obj.jsonp = true;
-    
+    anzlrt_defn_obj.api_timeout = 60.0;
+
     anzlrt_defn_obj.debug = GDUDEBUG;
     
     CSTATE.AnzLrt = new p3RestApi(anzlrt_defn_obj);
@@ -3038,7 +3042,8 @@ function init_anzlog_rest() {
     anzlog_defn_obj.resource = "AnzLog";
     anzlog_defn_obj.rprocs = ["AnzLog:makeFov", "AnzLog:byPos", "AnzLog:byEpoch"];
     anzlog_defn_obj.jsonp = true;
-    
+    anzlog_defn_obj.api_timeout = 60.0;
+
     anzlog_defn_obj.debug = GDUDEBUG;
     
     CSTATE.AnzLog = new p3RestApi(anzlog_defn_obj);
@@ -3057,7 +3062,8 @@ function init_anzlognote_rest() {
     anzlognote_defn_obj.resource = "AnzLogNote";
     anzlognote_defn_obj.rprocs = ["AnzLogNote:byEpoch", "AnzLogNote:data"];
     anzlognote_defn_obj.jsonp = true;
-    
+    anzlognote_defn_obj.api_timeout = 60.0;
+
     anzlognote_defn_obj.debug = GDUDEBUG;
     
     CSTATE.AnzLogNote = new p3RestApi(anzlognote_defn_obj);
@@ -3389,7 +3395,9 @@ function changeMinAmp() {
     CNSNT.mapControl.changeControlText(TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass);
     $("#id_amplitude_btn").html(CSTATE.minAmp);
     setCookie("pcubed_minAmp", CSTATE.minAmp, CNSNT.cookie_duration);
-    resetLeakPosition();
+    //resetLeakPosition();
+    clearPeakMarkerArray();
+    clearWindMarkerArray();
 }
 
 function stabClassCntl(style) {
@@ -3497,7 +3505,7 @@ function setGduTimer(tcat) {
         return;
     }
     if (tcat === "swath") {
-        TIMER.swath = setTimeout(swathTimer, CNSNT.swathUpdatePeriod);
+        TIMER.swath = setTimeout(swathTimer, CSTATE.swathUpdatePeriod);
         return;
     }
 }
@@ -3728,15 +3736,25 @@ function getData() {
                 if (n > 0) {
                     var where = newLatLng(data.result.GPS_ABS_LAT[n - 1], data.result.GPS_ABS_LONG[n - 1]);
                     if (data.result.GPS_FIT) {
+//                        if (data.result.GPS_FIT[n - 1] !== 0) {
+//                            CSTATE.lastwhere = where;
+//                            CSTATE.marker.setPosition(where);
+//                            CSTATE.marker.setVisible(true);
+//                            if (CSTATE.follow) {
+//                                CSTATE.map.setCenter(where);
+//                            }
+//                        } else {
+//                            CSTATE.marker.setVisible(false);
+//                        }
                         if (data.result.GPS_FIT[n - 1] !== 0) {
-                            CSTATE.lastwhere = where;
-                            CSTATE.marker.setPosition(where);
                             CSTATE.marker.setVisible(true);
-                            if (CSTATE.follow) {
-                                CSTATE.map.setCenter(where);
-                            }
                         } else {
                             CSTATE.marker.setVisible(false);
+                        }
+                        CSTATE.lastwhere = where;
+                        CSTATE.marker.setPosition(where);
+                        if (CSTATE.follow) {
+                            CSTATE.map.setCenter(where);
                         }
                     } else {
                         CSTATE.lastwhere = where;
@@ -3868,7 +3886,7 @@ function getData() {
             CSTATE.firstData = false;
         }
         var params = {"alog": CSTATE.alog
-                    , "startPos": CSTATE.startPos
+                    , "startPos": CSTATE.startPos ? CSTATE.startPos: "null"
                     , "gmtOffset": CNSNT.gmt_offset
                     , 'varList': '["GPS_ABS_LAT","GPS_ABS_LONG","GPS_FIT","CH4","ValveMask", "INST_STATUS", "WIND_N", "WIND_E", "WIND_DIR_SDEV","CAR_SPEED","row"]'        
                     , "limit": lmt
@@ -4179,7 +4197,8 @@ function refreshFov(errLrtFn, goodLrtFn) {
         if (rtnobj.hasOwnProperty("lrt_parms_hash") 
                         && rtnobj.hasOwnProperty("lrt_start_ts") 
                         && rtnobj.hasOwnProperty("status")) {
-            
+
+            console.log('new swath status ' + rtnobj.status + ' count: ' + rtnobj.count);
             CSTATE.fov_lrt_parms_hash = rtnobj.lrt_parms_hash;
             CSTATE.fov_lrt_start_ts = rtnobj.lrt_start_ts;
             CSTATE.fov_status = rtnobj.status;
@@ -4261,8 +4280,9 @@ function refreshFov(errLrtFn, goodLrtFn) {
                     , 'gmtOffset': CNSNT.gmt_offset
                     , "rtnOnTktError": "1"
                     };
-    
+
     if (!equalProperties(CSTATE.lastSwathParams,params)) {
+
         CSTATE.lastSwathParams = {};
         $.extend(CSTATE.lastSwathParams,params);
         
@@ -4278,11 +4298,13 @@ function refreshFov(errLrtFn, goodLrtFn) {
                 refreshFovLrtStatus(
                     // errFn
                     function(err) {
+                        console.log("errFn from refreshFovLrtStatus");
                         errLrtFn();
                     }
                     
                     // goodFn
                     , function() {
+                        console.log("goodFn from refreshFovLrtStatus");
                         goodLrtFn();
                     });
                 
@@ -4298,11 +4320,13 @@ function refreshFov(errLrtFn, goodLrtFn) {
                 refreshFovLrtStatus(
                     // errFn
                     function(err) {
+                        console.log("EQ errFn from refreshFovLrtStatus");
                         errLrtFn();
                     }
                     
                     // goodFn
                     , function() {
+                        console.log("EQ goodFn from refreshFovLrtStatus");
                         goodLrtFn();
                     });
                 
@@ -4341,10 +4365,10 @@ function fetchSwath() {
             }
         } else {
             CSTATE.swathSkipCount = CNSNT.swathMaxSkip; // force call on next pass
-            if (data) {
+            //if (data) {
                 setGduTimer('swath');
                 return;
-            }
+            //}
         }
         if (resultWasReturned === true) {
             if (data.result.GPS_ABS_LAT) {
@@ -4360,9 +4384,17 @@ function fetchSwath() {
                         if (CNSNT.prime_view !== true) {
                             CSTATE.fov_lrtrow = data.result.lrtrow[i];
                             
-                            var pthidx = CSTATE.fov_lrtrow + (2*CNSNT.swathWindow);
+                            if (CSTATE.fov_lrtrow >= CSTATE.fov_count) {
+                                CSTATE.swathUpdatePeriod = CNSNT.swathUpdatePeriodSlow                                
+                            } else {
+                                CSTATE.swathUpdatePeriod = CNSNT.swathUpdatePeriod                                
+                            }
                             
-                            if (CSTATE.swathPathShowArray[pthidx] !== true) {
+                            var pthidx = CSTATE.fov_lrtrow + (2*CNSNT.swathWindow) - 1;
+                            
+                            if ((CSTATE.swathPathShowArray.length >= pthidx)
+                                && (CSTATE.swathPathShowArray[pthidx] !== true)) {
+
                                 show_the_swath = false;
                             }
                         }
@@ -4412,6 +4444,12 @@ function fetchSwath() {
     function nextFovFromLrt(lmt) {
         gdu_logger("fetchSwath.nextFovFromLrt:", "debug");
         
+        if (CSTATE.fov_lrtrow >= CSTATE.fov_count) {
+            CSTATE.swathUpdatePeriod = CNSNT.swathUpdatePeriodSlow                                
+        } else {
+            CSTATE.swathUpdatePeriod = CNSNT.swathUpdatePeriod                                
+        }
+        
         if ((CSTATE.fov_status >= 16) && (CSTATE.fov_lrtrow >= CSTATE.fov_count)) {
             gdu_logger("fetchSwath.nextFovFromLrt: replay CSTATE.lastSwathOutput", "debug");
             
@@ -4438,11 +4476,13 @@ function fetchSwath() {
         CSTATE.AnzLrt.byRowFov(lrtparams
             // error callback
             , function(err) {
+                console.log('AnzLrt err')
                 errorSwath(null, "nextFovFromLrt AnzLrt.byRowFov error");
             }
             
             // success callback
             , function(stat_code, rtnobj) {
+                console.log('AnzLrt success')
                 successSwath(rtnobj);
                 
         });
@@ -4464,24 +4504,25 @@ function fetchSwath() {
     } else {
         
         // skip the process if fov is ahead of startPos (fov should trail route)
-        if (CSTATE.fov_lrtrow > CSTATE.startPos) {
-            CSTATE.swathSkipCount = CNSNT.swathMaxSkip; // force call on next pass
-            setGduTimer('swath');
-            return;
-        }
+        //if (CSTATE.fov_lrtrow > CSTATE.startPos) {
+        //    CSTATE.swathSkipCount = CNSNT.swathMaxSkip; // force call on next pass
+        //    setGduTimer('swath');
+        //    return;
+        //}
         
         // get the limit (forcing fov to trail the route)
         var lmt = CSTATE.getSwathLimit;
-        var max_lmt = CSTATE.startPos - CSTATE.fov_lrtrow;
-        if (max_lmt < CSTATE.getSwathLimit) {
-            lmt = max_lmt;
-        }
+        //var max_lmt = CSTATE.startPos - CSTATE.fov_lrtrow;
+        //if (max_lmt < CSTATE.getSwathLimit) {
+        //    lmt = max_lmt;
+        //}
     }
     
     switch(CNSNT.prime_view) {
     // normal view (prime_view == false) uses AnzLrt:byRow for the data
     // and it uses AnzLog:makeFov to build the data
     case false:
+
         if (CSTATE.lastDataFilename !== "") {
             refreshFov(
                 // error fn
@@ -4491,6 +4532,7 @@ function fetchSwath() {
                 
                 // good fn
                 , function() {
+                    console.log('calling nextFovFromLrt limit: ' + lmt + ' start: ' + CSTATE.fov_lrtrow + ' status: ' + CSTATE.fov_status);
                     nextFovFromLrt(lmt);
                 });
                 
@@ -4768,16 +4810,19 @@ function getNotes(cat) {
                     }
                 } else {
                     var utm = data.result.UPDATE_TIME;
-                    var lastUtm = utm.pop();
-                    // delete utm;
-                    if (cat === "peak") {
-                        CSTATE.nextPeakEtm = lastUtm;
-                    } else {
-                        if (cat === "analysis") {
-                            CSTATE.nextAnalysisEtm = lastUtm;
+                    if (utm) {
+                        var lastUtm = utm.pop();
+                        // delete utm;
+                        if (cat === "peak") {
+                            CSTATE.nextPeakEtm = lastUtm;
                         } else {
-                            CSTATE.nextDatEtm = lastUtm;
+                            if (cat === "analysis") {
+                                CSTATE.nextAnalysisEtm = lastUtm;
+                            } else {
+                                CSTATE.nextDatEtm = lastUtm;
+                            }
                         }
+
                     }
                 }
             }

@@ -11,6 +11,7 @@ define(function(require, exports, module) {
     var _ = require('underscore');
     var bufferedTimezone = require('app/utils').bufferedTimezone;
     var gh = require('app/geohash');
+    var instrResource = require('app/utils').instrResource;
     var localrestapi = require('app/localrestapi');
     var newUsageTracker = require('app/newUsageTracker');
     var REPORT = require('app/reportGlobals');
@@ -108,7 +109,7 @@ define(function(require, exports, module) {
     function renderPage() {
         var ticket = TEMPLATE_PARAMS.ticket + '/' + TEMPLATE_PARAMS.ts;
         var qry = TEMPLATE_PARAMS.qry;
-        var keyFile = '/' + ticket + '/key.json';
+        var keyFile = instrResource(ticket) + '/key.json';
         var settingsKeys = _.keys((new REPORT.Settings()).attributes);
         if (!instructionsLoaded) {
             instructionsLoaded = true;
