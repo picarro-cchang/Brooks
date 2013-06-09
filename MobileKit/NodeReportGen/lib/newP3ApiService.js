@@ -128,6 +128,7 @@ define(function(require, exports, module) {
             var options = url.parse(qry_url);
             options.query = params;
             options.method = 'GET';
+            options.timeout = 30;
             getRest(options,handleRestResult);
         }
 

@@ -55,7 +55,7 @@ define(function(require, exports, module) {
         }
         this.ticket = getTicket(this.contents);
         this.request_ts = ts.msUnixTimeToTimeString(ts.getMsUnixTime());
-        instrDir = path.join(this.reportDir,this.ticket);
+        instrDir = path.join(this.reportDir, this.ticket.substr(0,2), this.ticket);
         instrFname = path.join(instrDir, "instructions.json");
 
         function handleInstructions(instrDir, instrFname, contents) {
