@@ -488,6 +488,48 @@ the authenticating proxy server.
                     }
                 });
             }
+            else if ("csvUpload" in req.files) {
+                fs.readFile(req.files.csvUpload.path,"ascii",function (err,data) {
+                    if (err) res.send({name: req.body.file_info, error: err.message});
+                    else {
+                        fs.unlink(req.files.csvUpload.path);
+                        data = data.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+                        try {
+                            var hash = md5hex(data);
+                            var dirName = path.join(REPORTROOT, "csv", hash.substr(0,2), hash);
+                            var fname = path.join(dirName, hash + ".csv");
+                            console.log("MD5 Hash: " + hash + ", dirName: " + dirName);
+                            // Check to see if the file has already been uploaded
+                            fs.readFile(fname, "ascii", function (err,oldData) {
+                                if (err) {
+                                    console.log("File does not exist");
+                                    // Copy the file into a directory with the specified hash
+                                    mkdirp(dirName, null, function (err) {
+                                        if (err) res.send({name: req.body.file_info, error: err.message});
+                                        else {
+                                            fs.writeFile(fname, data, "ascii", function (err) {
+                                                if (err) res.send({name: req.body.file_info, error: err.message});
+                                                else {
+                                                    res.send({name: req.body.file_info, hash:hash});
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                                else {
+                                    console.log("File has been found");
+                                    if (data !== oldData) throw new Error("Hash collision - should never occur");
+                                    else res.send({name: req.body.file_info, hash:hash});
+                                }
+                            });
+                        }
+                        catch (err) {
+                            console.log("Error in CSV file upload" + err.message);
+                            res.send({name: req.body.file_info, error: err.message});
+                        }
+                    }
+                });
+            }
         }
         else res.send({name: req.body.file_info});
     });
@@ -529,6 +571,33 @@ the authenticating proxy server.
                 res.send("Oops! Couldn't find that file.");
             }
         });
+    });
+
+    // The following is to retrieve KML and CSV files previously uploaded. Note that the name of the file on
+    //  the filesystem is hash + '.' + type, whereas it is downloaded with the given filename. This allows for the same
+    //  file to be called different names by the user, although only one copy is stored on the filesystem
+    function getUploadedFile(req, res, type) {
+        var hash = req.params.hash;
+        var filename = path.join(REPORTROOT,type,req.params.prefix,hash,hash + '.' + type);
+        fs.exists(filename, function (exists) {
+            if (exists) {
+                var readStream = fs.createReadStream(filename);
+                res.contentType('application/octet-stream');
+                res.attachment(req.params.filename);
+                util.pump(readStream, res);
+            }
+            else {
+                res.send("Oops! Couldn't find that file.");
+            }
+        });
+    }
+
+    app.get("/rest/data/kml/:prefix/:hash/:filename", function(req, res) {
+        getUploadedFile(req,res,"kml");
+    });
+
+    app.get("/rest/data/csv/:prefix/:hash/:filename", function(req, res) {
+        getUploadedFile(req,res,"csv");
     });
 
     app.use("/", express.static(__dirname + '/public'));

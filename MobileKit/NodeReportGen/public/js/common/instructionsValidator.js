@@ -7,6 +7,17 @@ define(function(require, exports, module) {
     var validateListUsing = pv.validateListUsing;
     var latlngValidator = pv.latlngValidator;
 
+    function facValidator(fac) {
+        var  rpv = newParamsValidator(fac,
+            [{"name": "filename", "required": true, "validator": "string"},
+             {"name": "hash", "required": true, "validator": /[0-9a-fA-F]{32}/},
+             {"name": "linewidth", "required": false, "validator": "number", "default_value": 2},
+             {"name": "linecolor", "required": false, "validator": /#[0-9a-fA-F]{6}/, "default_value": "#000000"},
+             {"name": "textcolor", "required": false, "validator": /#[0-9a-fA-F]{6}/, "default_value": "#000000"}
+            ]);
+        return rpv.validate();
+    }
+
     function runValidator(run) {
         function postCheck(resultDict, errorList) {
             if (resultDict.startEtm >= resultDict.endEtm) {
@@ -114,18 +125,11 @@ define(function(require, exports, module) {
              {"name": "fovNWindow", "required": false, "validator": "number", "default_value": 10},
              {"name": "peaksMinAmp", "required": false, "validator": "number", "default_value": 0.03},
              {"name": "runs", "required": true, "validator": validateListUsing(runValidator)},
+             {"name": "facs", "required": false, "validator": validateListUsing(facValidator), "default_value":[]},
              {"name": "timezone", "required":false, "validator": "string", "default_value": "UTC"},
              {"name": "template", "required": true, "validator": templateValidator}], postCheck);
         return rpv.validate();
     }
 
     exports.instrValidator = instrValidator;
-    exports.submapsValidator = submapsValidator;
-    exports.templateValidator = templateValidator;
-    exports.templateSubmapsValidator = templateSubmapsValidator;
-    exports.templateSummaryValidator = templateSummaryValidator;
-    exports.templateTablesValidator = templateTablesValidator;
-    exports.componentsValidator = componentsValidator;
-    exports.runValidator = runValidator;
-
 });

@@ -13,9 +13,11 @@ define(function(require, exports, module) {
     var cjs = require('common/canonical_stringify');
     var DASHBOARD = require('app/dashboardGlobals');
     var instrResource = require('app/utils').instrResource;
-    var iv = require('common/instructionsValidator');
+    var instrValidator = require('common/instructionsValidator').instrValidator;
     var tableFuncs = require('app/tableFuncs');
     var onFacFileUploaded = null;   // This will be the function to call once the facilities file
+                                    //  has been uploaded
+    var onMarkersFileUploaded = null;   // This will be the function to call once the user marker file
                                     //  has been uploaded
 
     require('jquery-migrate'),
@@ -161,13 +163,22 @@ define(function(require, exports, module) {
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
     ]};
 
+    var markersDefinition = {id: "markerstable", layout: [
+        {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
+        {key: "filename", width: "48%", th: "CSV Filename", tf: String, eid: "id_file_upload_name", cf: String},
+        {key: "hashAndName", width: "48%", th: "Download", tf: makeMarkersDownloadButton, eid: "id_markers_hash_and_name", cf: String},
+        {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}],
+    vf: function (eidByKey, template, container, onSuccess) {
+        return validateMarkers(eidByKey, template, container, onSuccess);
+    }};
+
     var facilitiesDefinition = {id: "facilitiestable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "filename", width: "48%", th: "KML Filename", tf: String, eid: "id_fac_file_upload_name", cf: String},
+        {key: "filename", width: "48%", th: "KML Filename", tf: String, eid: "id_file_upload_name", cf: String},
         {key: "linewidth", width: "12%", th: "Line Width", tf: Number, eid: "id_fac_linewidth", cf: Number},
         {key: "linecolor", width: "12%", th: "Line Color", tf: makeColorPatch, eid: "id_fac_linecolor", cf: String},
         {key: "textcolor", width: "12%", th: "Text Color", tf: makeColorPatch, eid: "id_fac_textcolor", cf: String},
-        {key: "hash", width: "12%", th: "Download", tf: makeFacDownloadButton, eid: "id_fac_hash", cf: String},
+        {key: "hashAndName", width: "12%", th: "Download", tf: makeFacDownloadButton, eid: "id_fac_hash_and_name", cf: String},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}],
     vf: function (eidByKey, template, container, onSuccess) {
         return validateFacilities(eidByKey, template, container, onSuccess);
@@ -266,15 +277,15 @@ define(function(require, exports, module) {
         return header + body + footer;
     }
 
-    function uploadControl(label) {
+    function uploadControl(label, name) {
         var result = [];
         result.push('<div class="control-group">');
         result.push('<label class="control-label" for="' + 'xxx' + '">' + label + '</label>');
         result.push('<div class="controls">');
-        result.push('<div id="id_fac_file_upload_div" class="custom_file_upload-small">');
-        result.push('<input id="id_fac_file_upload_name" class="file-small" type="text" name="file_info" readonly>');
-        result.push('<div id="id_fac_file_upload_button" class="btn-inverse file_upload-small">');
-        result.push('<input id="id_fac_file_upload" class="fileinput-small" type="file" name="kmlUpload">');
+        result.push('<div id="id_file_upload_div" class="custom_file_upload-small">');
+        result.push('<input id="id_file_upload_name" class="file-small" type="text" name="file_info" readonly>');
+        result.push('<div id="id_file_upload_button" class="btn-inverse file_upload-small">');
+        result.push('<input id="id_file_upload" class="fileinput-small" type="file" name="' + name + '">');
         result.push('</div></div></div></div>');
         /*
         result.push('<div class="progress">');
@@ -294,7 +305,7 @@ define(function(require, exports, module) {
         body   = '<div class="modal-body">';
         // Use post to allow uploading of the facilities file when the form is submitted
         body += '<form id="id_fac_upload_form" class="form-horizontal" method="post"  enctype="multipart/form-data" action="/fileUpload">';
-        body += uploadControl("KML File");
+        body += uploadControl("KML File", "kmlUpload");
         body += tableFuncs.editControl("Line Width", tableFuncs.makeSelect("id_fac_linewidth", {"class": controlClass},
                 {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8}));
         body += tableFuncs.editControl("Line Color", tableFuncs.makeSelect("id_fac_linecolor", {"class": controlClass},
@@ -303,7 +314,7 @@ define(function(require, exports, module) {
         body += tableFuncs.editControl("Text Color", tableFuncs.makeSelect("id_fac_textcolor", {"class": controlClass},
                 {"#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
                  "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow", "#FFFFFF": "white" }));
-        body += tableFuncs.makeInput("id_fac_hash", {"class": controlClass, "type":"hidden"});
+        body += tableFuncs.makeInput("id_fac_hash_and_name", {"class": controlClass, "type":"hidden"});
         body += '</form></div>';
         footer = '<div class="modal-footer">';
         footer += '<p class="validate_tips alert alert-error hide"></p>';
@@ -313,6 +324,24 @@ define(function(require, exports, module) {
         return header + body + footer;
     }
 
+    function editMarkersChrome()
+    {
+        var header, body, footer;
+        var controlClass = "input-large";
+        header = '<div class="modal-header"><h3>' + "Add new CSV file for user markers" + '</h3></div>';
+        body   = '<div class="modal-body">';
+        // Use post to allow uploading of the markers file when the form is submitted
+        body += '<form id="id_markers_upload_form" class="form-horizontal" method="post"  enctype="multipart/form-data" action="/fileUpload">';
+        body += uploadControl("CSV File", "csvUpload");
+        body += tableFuncs.makeInput("id_markers_hash_and_name", {"class": controlClass, "type":"hidden"});
+        body += '</form></div>';
+        footer = '<div class="modal-footer">';
+        footer += '<p class="validate_tips alert alert-error hide"></p>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + "OK" + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + "Cancel" + '</button>';
+        footer += '</div>';
+        return header + body + footer;
+    }
     // ============================================================================
     //  Helper functions for editing runs
     // ============================================================================
@@ -380,12 +409,60 @@ define(function(require, exports, module) {
         if (numErr === 0) onSuccess();
     }
 
+
+    // ============================================================================
+    //  Helper functions for editing user marker files
+    // ============================================================================
+    function makeMarkersDownloadButton(value) {
+        var result;
+        result = '<a class="csvLink btn btn-mini btn-inverse" href="#' + value + '" data-hash-and-name="' + value + '">Download CSV</a>';
+        return result;
+    }
+
+    function beforeMarkersShow(done)
+    {
+        DASHBOARD.uploadFile = null;
+        $("#id_markers_upload_form").ajaxForm({
+            dataType: 'json',
+            success: function(result) {
+                onMarkersFileUploaded(result);
+            }
+        });
+        done(null);
+    }
+
+    function validateMarkers(eidByKey,template,container,onSuccess) {
+        var numErr = 0;
+        var markersFile = $("#"+eidByKey.filename).val();
+        onMarkersFileUploaded = function (result) {
+            if ("error" in result) {
+                tableFuncs.addError("id_markers_file_upload_div", result.error);
+                numErr += 1;
+            }
+            else {
+                $("#"+eidByKey.hashAndName).val(result.hash + ':' + markersFile);
+            }
+            if (numErr === 0) onSuccess();
+        };
+        if (DASHBOARD.uploadFile) {
+            $("#id_markers_upload_form").submit();
+        }
+        else {
+            if (!markersFile) {
+                tableFuncs.addError("id_markers_file_upload_div", "No markers file");
+                numErr += 1;
+            }
+            if (numErr === 0) onSuccess();
+        }
+        return false;
+    }
+
     // ============================================================================
     //  Helper functions for editing facilities files
     // ============================================================================
     function makeFacDownloadButton(value) {
         var result;
-        result = '<a class="kmlLink btn btn-mini btn-inverse" href="#' + value + '" data-hash="' + value + '">Download KML</a>';
+        result = '<a class="kmlLink btn btn-mini btn-inverse" href="#' + value + '" data-hash-and-name="' + value + '">Download KML</a>';
         return result;
     }
 
@@ -394,7 +471,7 @@ define(function(require, exports, module) {
         var bar = $('.bar');
         var percent = $('.percent');
         var status = $('#status');
-        DASHBOARD.facFile = null;
+        DASHBOARD.uploadFile = null;
         $("#id_fac_upload_form").ajaxForm({
             dataType: 'json',
             beforeSend: function() {
@@ -426,20 +503,20 @@ define(function(require, exports, module) {
         var kmlFile = $("#"+eidByKey.filename).val();
         onFacFileUploaded = function (result) {
             if ("error" in result) {
-                tableFuncs.addError("id_fac_file_upload_div", result.error);
+                tableFuncs.addError("id_file_upload_div", result.error);
                 numErr += 1;
             }
             else {
-                $("#"+eidByKey.hash).val(result.hash);
+                $("#"+eidByKey.hashAndName).val(result.hash + ':' + kmlFile);
             }
             if (numErr === 0) onSuccess();
         };
-        if (DASHBOARD.facFile) {
+        if (DASHBOARD.uploadFile) {
             $("#id_fac_upload_form").submit();
         }
         else {
             if (!kmlFile) {
-                tableFuncs.addError("id_fac_file_upload_div", "No KML file");
+                tableFuncs.addError("id_file_upload_div", "No KML file");
                 numErr += 1;
             }
             if (numErr === 0) onSuccess();
@@ -463,7 +540,8 @@ define(function(require, exports, module) {
                       "analyses": "#FF0000", "stabClass": "*"};
     var initSubmapRow  = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false };
     var initSummaryRow = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false, submapGrid: true };
-    var initFacilitiesRow = {filename: '', linewidth: 2, linecolor: "#000000", textcolor: "#000000", hash: '', download: '' };
+    var initFacilitiesRow = {filename: '', linewidth: 2, linecolor: "#000000", textcolor: "#000000", hashAndName: '' };
+    var initMarkersRow = {filename: '', hashAndName: ''};
 
     // ============================================================================
     //  Define models, views and collections for handling instructions
@@ -542,7 +620,7 @@ define(function(require, exports, module) {
                     // lines.shift();   TODO: Reimplement security stamp for user instruction files
                     var body = lines.join('\n');
                     var instructions = JSON.parse(body);
-                    var v = iv.instrValidator(instructions);
+                    var v = instrValidator(instructions);
                     if (!v.valid) throw new Error('Instructions failed validation\n' + v.errorList.join("\n"));
                     // Make sure to send change events, in case file is reloaded
                     DASHBOARD.instructionsFileModel.set({"contents": null}, {silent: true});
@@ -581,7 +659,7 @@ define(function(require, exports, module) {
                 if (this.getCurrentInstructions()) {
                     var contents = DASHBOARD.instructionsFileModel.get("contents");
                     var instructions = DASHBOARD.instructionsFileModel.get("instructions");
-                    var v = iv.instrValidator(instructions);
+                    var v = instrValidator(instructions);
                     if (!v.valid) {
                         alert('Instructions failed validation\n' + v.errorList.join("\n"));
                         return;
@@ -689,12 +767,9 @@ define(function(require, exports, module) {
         DASHBOARD.InstructionsView = Backbone.View.extend({
             el: $("#id_instructions"),
             events: {
-                // "change .fileinput-small": "onSelectFile",
-                // "dragover .file-small": "onDragOver",
-                // "drop .file-small": "onDrop",
-                "change #id_fac_file_upload": "onSelectFile",
-                "dragover #id_fac_file_upload_name": "onDragOver",
-                "drop #id_fac_file_upload_name": "onDrop",
+                "change #id_file_upload": "onSelectFile",
+                // "dragover #id_file_upload_name": "onDragOver",
+                // "drop #id_file_upload_name": "onDrop",
                 "click #id_runs_table_div table button.table-new-row": "newRunsRow",
                 "click #id_runs_table_div table button.table-clear": "clearRuns",
                 "click #id_runs_table_div tbody button.table-delete-row": "deleteRunsRow",
@@ -703,7 +778,12 @@ define(function(require, exports, module) {
                 "click #id_facilities_table_div table button.table-clear": "clearFacilities",
                 "click #id_facilities_table_div tbody button.table-delete-row": "deleteFacilitiesRow",
                 "click #id_facilities_table_div tbody button.table-edit-row": "editFacilitiesRow",
+                "click #id_markers_table_div table button.table-new-row": "newMarkersRow",
+                "click #id_markers_table_div table button.table-clear": "clearMarkers",
+                "click #id_markers_table_div tbody button.table-delete-row": "deleteMarkersRow",
+                "click #id_markers_table_div tbody button.table-edit-row": "editMarkersRow",
                 "click a.kmlLink" : "onKmlLink",
+                "click a.csvLink" : "onCsvLink",
                 "click #id_edit_template": "editTemplate",
                 "shown #id_timezoneModal": "onModalShown",
                 "click #id_save_timezone": "onTimezoneSaved"
@@ -753,9 +833,11 @@ define(function(require, exports, module) {
                 styleTable("#id_runs_table_div");
                 $("#id_facilities_table_div").html(tableFuncs.makeTable([], facilitiesDefinition));
                 styleTable("#id_facilities_table_div");
+                $("#id_markers_table_div").html(tableFuncs.makeTable([], markersDefinition));
+                styleTable("#id_markers_table_div");
 
-                this.facFile = this.$el.find('#id_fac_file_upload');
-                this.facFile.wrap('<div />');
+                this.uploadFile = this.$el.find('#id_file_upload');
+                this.uploadFile.wrap('<div />');
                 $.event.fixHooks.drop = {props: ["dataTransfer"]};
                 // this.listenTo(DASHBOARD.instructionsFileModel,"change:file",this.instructionsFileChanged);
             },
@@ -765,19 +847,50 @@ define(function(require, exports, module) {
                 else {
                     var f = files[0];
                     if (f !== undefined) {
-                        this.$el.find("#id_fac_file_upload_name").val(f.name);
-                        DASHBOARD.facFile = f;
+                        this.$el.find("#id_file_upload_name").val(f.name);
+                        DASHBOARD.uploadFile = f;
                     }
                 }
-                $("#id_fac_file_upload_div").next('.help-inline').fadeOut("fast", function () {
+                $("#id_file_upload_div").next('.help-inline').fadeOut("fast", function () {
                     $(this).remove();
                 });
-                $("#id_fac_file_upload_div").parents('.control-group').removeClass('error');
+                $("#id_file_upload_div").parents('.control-group').removeClass('error');
             },
-            onDragOver: function() { alert("onDragOver"); },
-            onDrop: function() { alert("onDrop"); },
+            onCsvLink: function (e) {
+                var hashAndName = $(e.currentTarget).data("hash-and-name").split(":");
+                var hash = hashAndName[0];
+                var filename = hashAndName[1];
+                var csvUrl = '/csv' + instrResource(hash) + '/' + filename;
+                DASHBOARD.SurveyorRpt.geturl({qryobj: {qry: "resource"}, existing_tkt: true},
+                function (err) {
+                    console.log('error: ', err);
+                },
+                function (status, url) {
+                    // url = window.location.origin + url.substring(0,url.lastIndexOf('?')) + pdfUrl;
+                    // console.log(url);
+                    window.location = url.substring(0,url.lastIndexOf('?')) + csvUrl;
+                    // window.open(url,'_blank');
+                    return false;
+                });
+            },
+            // onDragOver: function() { alert("onDragOver"); },
+            // onDrop: function() { alert("onDrop"); },
             onKmlLink: function (e) {
-                alert($(e.currentTarget).data('hash'));
+                var hashAndName = $(e.currentTarget).data("hash-and-name").split(":");
+                var hash = hashAndName[0];
+                var filename = hashAndName[1];
+                var kmlUrl = '/kml' + instrResource(hash) + '/' + filename;
+                DASHBOARD.SurveyorRpt.geturl({qryobj: {qry: "resource"}, existing_tkt: true},
+                function (err) {
+                    console.log('error: ', err);
+                },
+                function (status, url) {
+                    // url = window.location.origin + url.substring(0,url.lastIndexOf('?')) + pdfUrl;
+                    // console.log(url);
+                    window.location = url.substring(0,url.lastIndexOf('?')) + kmlUrl;
+                    // window.open(url,'_blank');
+                    return false;
+                });
             },
             newRunsRow: function (e) {
                 tableFuncs.insertRow(e, runsDefinition, this.modalContainer, editRunsChrome, beforeRunsShow, initRunRow);
@@ -797,6 +910,7 @@ define(function(require, exports, module) {
             },
             getCurrentInstructions: function () {
                 // Get instructions from GUI elements
+                var i;
                 var current = $.extend(true,{},DASHBOARD.instructionsFileModel.get('instructions'));
                 var oldContents = cjs(DASHBOARD.instructionsFileModel.get('instructions'),null,2);
                 current.title = $("#id_title").val();
@@ -808,12 +922,21 @@ define(function(require, exports, module) {
                 current.exclRadius = +$('#id_exclRadius').val();
                 current.peaksMinAmp = +$('#id_peaksMinAmp').val();
                 current.runs = tableFuncs.getTableData(runsDefinition);
-                for (var i=0; i<current.runs.length; i++) {
+                for (i=0; i<current.runs.length; i++) {
                     current.runs[i].startEtm = Math.round(current.runs[i].startEtm.posixTime/1000);
                     current.runs[i].endEtm = Math.round(current.runs[i].endEtm.posixTime/1000);
                 }
                 current.template = this.templateView.currentTemplate;
-                var v = iv.instrValidator(current);
+                var facs = tableFuncs.getTableData(facilitiesDefinition);
+                if (facs.length > 0) {
+                    current.facs = facs;
+                    for (i=0; i<facs.length; i++) {
+                        var hashAndName = facs[i].hashAndName.split(':');
+                        current.facs[i].hash = hashAndName[0];
+                        current.facs[i].filename = hashAndName[1];
+                    }
+                }
+                var v = instrValidator(current);
                 this.currentValid = v.valid;
                 if (!v.valid) alert(v.errorList.join("\n"));
                 else {
@@ -836,6 +959,19 @@ define(function(require, exports, module) {
                 tableFuncs.editRow($(e.currentTarget).closest("tr"), facilitiesDefinition, this.modalContainer, editFacilitiesChrome, beforeFacilitiesShow);
                 console.log(tableFuncs.getTableData(facilitiesDefinition));
             },
+            newMarkersRow: function (e) {
+                tableFuncs.insertRow(e, markersDefinition, this.modalContainer, editMarkersChrome, beforeMarkersShow, initMarkersRow);
+            },
+            clearMarkers: function (e) {
+                $(e.currentTarget).closest("table").find("tbody").empty();
+            },
+            deleteMarkersRow: function (e) {
+                $(e.currentTarget).closest("tr").remove();
+            },
+            editMarkersRow: function (e) {
+                tableFuncs.editRow($(e.currentTarget).closest("tr"), markersDefinition, this.modalContainer, editMarkersChrome, beforeMarkersShow);
+                console.log(tableFuncs.getTableData(markersDefinition));
+            },
             render: function () {
                 var instructions = DASHBOARD.instructionsFileModel.get('instructions');
                 $("#id_title").val(instructions.title);
@@ -850,6 +986,19 @@ define(function(require, exports, module) {
                 // Render the template tables
                 this.templateView.loadTemplate();
                 this.templateView.render();
+                // Set up the facilities table if necessary
+                var facsTableData = [];
+                if (instructions.hasOwnProperty("facs")) {
+                    instructions.facs.forEach(function (fac) {
+                        var row = $.extend({},fac);
+                        row.hashAndName = fac.hash + ":" + fac.filename;
+                        facsTableData.push(row);
+                    });
+                }
+                // Display the facilities table
+                $("#id_facilities_table_div").html(tableFuncs.makeTable(facsTableData, facilitiesDefinition));
+                styleTable("#id_facilities_table_div");
+
                 // Set up the runs table. Some translation is needed because of the timezone 
                 var tz = DASHBOARD.timezone = instructions.timezone;
                 var posixTimes = [];
