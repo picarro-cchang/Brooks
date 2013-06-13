@@ -257,6 +257,7 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
                    "Utilities/SupervisorLauncher/Utilities_icon.ico",
                    "Utilities/Restart/inpout32.dll",
                    "PeriphIntrf/Serial2Socket.exe",
+                   "../MobileKit/AnalyzerServer/configAnalyzerServer.ini",
                    "../repoBzrVer.py"]),
             (r'mpl-data', glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\*.*' % pyDirname)),
             # Because matplotlibrc does not have an extension, glob does not find it (at least I think that's why)
