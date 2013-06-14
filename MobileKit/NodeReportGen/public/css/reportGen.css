@@ -14,12 +14,12 @@ table.table-fmt1 th {
 }
 
 #id_editTemplateModal {
-  width: 800px;
-  margin: -250px 0 0 -400px;
+  width: 600px;
+  margin: -250px 0 0 -300px;
 }
 
 #id_editTemplateModal .modal-body {
-  max-height: 800px;
+  max-height: 1000px;
   overflow: hidden;
 }
 
