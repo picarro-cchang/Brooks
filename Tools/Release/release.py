@@ -364,6 +364,14 @@ def _tagRepository(ver):
         print 'Error tagging repository'
         sys.exit(retCode)
 
+    retCode = subprocess.call(['git.exe',
+                               'push',
+                               'origin',
+                               _verAsString(ver)])
+
+    if retCode != 0:
+        print 'Error pushing tag to repository'
+        sys.exit(retCode)
 
 def _tagCommonConfig(ver):
     retCode = subprocess.call(['bzr.exe', 'tag', "--directory=%s" %
