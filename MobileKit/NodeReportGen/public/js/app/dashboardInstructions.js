@@ -163,13 +163,13 @@ define(function(require, exports, module) {
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
     ]};
 
-    var markersDefinition = {id: "markerstable", layout: [
+    var markersFilesDefinition = {id: "markerstable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
         {key: "filename", width: "48%", th: "CSV Filename", tf: String, eid: "id_file_upload_name", cf: String},
-        {key: "hashAndName", width: "48%", th: "Download", tf: makeMarkersDownloadButton, eid: "id_markers_hash_and_name", cf: String},
+        {key: "hashAndName", width: "48%", th: "Download", tf: makeMarkersFileDownloadButton, eid: "id_markers_hash_and_name", cf: String},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}],
     vf: function (eidByKey, template, container, onSuccess) {
-        return validateMarkers(eidByKey, template, container, onSuccess);
+        return validateMarkersFile(eidByKey, template, container, onSuccess);
     }};
 
     var facilitiesDefinition = {id: "facilitiestable", layout: [
@@ -324,7 +324,7 @@ define(function(require, exports, module) {
         return header + body + footer;
     }
 
-    function editMarkersChrome()
+    function editMarkersFileChrome()
     {
         var header, body, footer;
         var controlClass = "input-large";
@@ -413,13 +413,13 @@ define(function(require, exports, module) {
     // ============================================================================
     //  Helper functions for editing user marker files
     // ============================================================================
-    function makeMarkersDownloadButton(value) {
+    function makeMarkersFileDownloadButton(value) {
         var result;
         result = '<a class="csvLink btn btn-mini btn-inverse" href="#' + value + '" data-hash-and-name="' + value + '">Download CSV</a>';
         return result;
     }
 
-    function beforeMarkersShow(done)
+    function beforeMarkersFileShow(done)
     {
         DASHBOARD.uploadFile = null;
         $("#id_markers_upload_form").ajaxForm({
@@ -431,12 +431,12 @@ define(function(require, exports, module) {
         done(null);
     }
 
-    function validateMarkers(eidByKey,template,container,onSuccess) {
+    function validateMarkersFile(eidByKey,template,container,onSuccess) {
         var numErr = 0;
         var markersFile = $("#"+eidByKey.filename).val();
         onMarkersFileUploaded = function (result) {
             if ("error" in result) {
-                tableFuncs.addError("id_markers_file_upload_div", result.error);
+                tableFuncs.addError("id_file_upload_div", result.error);
                 numErr += 1;
             }
             else {
@@ -449,7 +449,7 @@ define(function(require, exports, module) {
         }
         else {
             if (!markersFile) {
-                tableFuncs.addError("id_markers_file_upload_div", "No markers file");
+                tableFuncs.addError("id_file_upload_div", "No markers file");
                 numErr += 1;
             }
             if (numErr === 0) onSuccess();
@@ -541,7 +541,7 @@ define(function(require, exports, module) {
     var initSubmapRow  = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false };
     var initSummaryRow = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false, submapGrid: true };
     var initFacilitiesRow = {filename: '', linewidth: 2, linecolor: "#000000", textcolor: "#000000", hashAndName: '' };
-    var initMarkersRow = {filename: '', hashAndName: ''};
+    var initMarkersFileRow = {filename: '', hashAndName: ''};
 
     // ============================================================================
     //  Define models, views and collections for handling instructions
@@ -633,8 +633,8 @@ define(function(require, exports, module) {
                     DASHBOARD.instructionsFileModel.set({"file": null});
                     return;
                 }
-                console.log(DASHBOARD.instructionsFileModel.get("contents"));
-                console.log(DASHBOARD.instructionsFileModel.get("instructions"));
+                // console.log(DASHBOARD.instructionsFileModel.get("contents"));
+                // console.log(DASHBOARD.instructionsFileModel.get("instructions"));
             },
             onDragOver: function (e) {
                 e.stopPropagation();
@@ -691,7 +691,7 @@ define(function(require, exports, module) {
                                   status: status,
                                   timezone: timezone,
                                   title: instructions.title,
-                                  user: DASHBOARD.user
+                                  user: DASHBOARD.user,
                                   });
                         // Check if this has been previously submitted
                         if (request_ts !== start_ts) {
@@ -713,7 +713,7 @@ define(function(require, exports, module) {
                                     job.set({user: data.SUBMIT_KEY.user});
                                     job.addLocalTime(function (err) {
                                         DASHBOARD.submittedJobs.add(job);
-                                        job.save();
+                                        // job.save();
                                         job.analyzeStatus(err, status, msg);
                                     }, timezone);
                                 });
@@ -722,7 +722,7 @@ define(function(require, exports, module) {
                         else {
                             job.addLocalTime(function (err) {
                                 DASHBOARD.submittedJobs.add(job);
-                                job.save();
+                                // job.save();
                                 job.analyzeStatus(err, status, msg);
                             });
                         }
@@ -778,10 +778,10 @@ define(function(require, exports, module) {
                 "click #id_facilities_table_div table button.table-clear": "clearFacilities",
                 "click #id_facilities_table_div tbody button.table-delete-row": "deleteFacilitiesRow",
                 "click #id_facilities_table_div tbody button.table-edit-row": "editFacilitiesRow",
-                "click #id_markers_table_div table button.table-new-row": "newMarkersRow",
-                "click #id_markers_table_div table button.table-clear": "clearMarkers",
-                "click #id_markers_table_div tbody button.table-delete-row": "deleteMarkersRow",
-                "click #id_markers_table_div tbody button.table-edit-row": "editMarkersRow",
+                "click #id_markers_files_table_div table button.table-new-row": "newMarkersFileRow",
+                "click #id_markers_files_table_div table button.table-clear": "clearMarkersFiles",
+                "click #id_markers_files_table_div tbody button.table-delete-row": "deleteMarkersFileRow",
+                "click #id_markers_files_table_div tbody button.table-edit-row": "editMarkersFileRow",
                 "click a.kmlLink" : "onKmlLink",
                 "click a.csvLink" : "onCsvLink",
                 "click #id_edit_template": "editTemplate",
@@ -833,8 +833,8 @@ define(function(require, exports, module) {
                 styleTable("#id_runs_table_div");
                 $("#id_facilities_table_div").html(tableFuncs.makeTable([], facilitiesDefinition));
                 styleTable("#id_facilities_table_div");
-                $("#id_markers_table_div").html(tableFuncs.makeTable([], markersDefinition));
-                styleTable("#id_markers_table_div");
+                $("#id_markers_files_table_div").html(tableFuncs.makeTable([], markersFilesDefinition));
+                styleTable("#id_markers_files_table_div");
 
                 this.uploadFile = this.$el.find('#id_file_upload');
                 this.uploadFile.wrap('<div />');
@@ -860,7 +860,7 @@ define(function(require, exports, module) {
                 var hashAndName = $(e.currentTarget).data("hash-and-name").split(":");
                 var hash = hashAndName[0];
                 var filename = hashAndName[1];
-                var csvUrl = '/csv' + instrResource(hash) + '/' + filename;
+                var csvUrl = '/csv' + instrResource(hash) + '/' + encodeURI(filename);
                 DASHBOARD.SurveyorRpt.geturl({qryobj: {qry: "resource"}, existing_tkt: true},
                 function (err) {
                     console.log('error: ', err);
@@ -879,7 +879,7 @@ define(function(require, exports, module) {
                 var hashAndName = $(e.currentTarget).data("hash-and-name").split(":");
                 var hash = hashAndName[0];
                 var filename = hashAndName[1];
-                var kmlUrl = '/kml' + instrResource(hash) + '/' + filename;
+                var kmlUrl = '/kml' + instrResource(hash) + '/' + encodeURI(filename);
                 DASHBOARD.SurveyorRpt.geturl({qryobj: {qry: "resource"}, existing_tkt: true},
                 function (err) {
                     console.log('error: ', err);
@@ -910,7 +910,7 @@ define(function(require, exports, module) {
             },
             getCurrentInstructions: function () {
                 // Get instructions from GUI elements
-                var i;
+                var hashAndName, i;
                 var current = $.extend(true,{},DASHBOARD.instructionsFileModel.get('instructions'));
                 var oldContents = cjs(DASHBOARD.instructionsFileModel.get('instructions'),null,2);
                 current.title = $("#id_title").val();
@@ -927,11 +927,20 @@ define(function(require, exports, module) {
                     current.runs[i].endEtm = Math.round(current.runs[i].endEtm.posixTime/1000);
                 }
                 current.template = this.templateView.currentTemplate;
+                var markersFiles = tableFuncs.getTableData(markersFilesDefinition);
+                if (markersFiles.length > 0) {
+                    current.markersFiles = markersFiles;
+                    for (i=0; i<markersFiles.length; i++) {
+                        hashAndName = markersFiles[i].hashAndName.split(':');
+                        current.markersFiles[i].hash = hashAndName[0];
+                        current.markersFiles[i].filename = hashAndName[1];
+                    }
+                }
                 var facs = tableFuncs.getTableData(facilitiesDefinition);
                 if (facs.length > 0) {
                     current.facs = facs;
                     for (i=0; i<facs.length; i++) {
-                        var hashAndName = facs[i].hashAndName.split(':');
+                        hashAndName = facs[i].hashAndName.split(':');
                         current.facs[i].hash = hashAndName[0];
                         current.facs[i].filename = hashAndName[1];
                     }
@@ -959,18 +968,18 @@ define(function(require, exports, module) {
                 tableFuncs.editRow($(e.currentTarget).closest("tr"), facilitiesDefinition, this.modalContainer, editFacilitiesChrome, beforeFacilitiesShow);
                 console.log(tableFuncs.getTableData(facilitiesDefinition));
             },
-            newMarkersRow: function (e) {
-                tableFuncs.insertRow(e, markersDefinition, this.modalContainer, editMarkersChrome, beforeMarkersShow, initMarkersRow);
+            newMarkersFileRow: function (e) {
+                tableFuncs.insertRow(e, markersFilesDefinition, this.modalContainer, editMarkersFileChrome, beforeMarkersFileShow, initMarkersFileRow);
             },
-            clearMarkers: function (e) {
+            clearMarkersFiles: function (e) {
                 $(e.currentTarget).closest("table").find("tbody").empty();
             },
-            deleteMarkersRow: function (e) {
+            deleteMarkersFileRow: function (e) {
                 $(e.currentTarget).closest("tr").remove();
             },
-            editMarkersRow: function (e) {
-                tableFuncs.editRow($(e.currentTarget).closest("tr"), markersDefinition, this.modalContainer, editMarkersChrome, beforeMarkersShow);
-                console.log(tableFuncs.getTableData(markersDefinition));
+            editMarkersFileRow: function (e) {
+                tableFuncs.editRow($(e.currentTarget).closest("tr"), markersFilesDefinition, this.modalContainer, editMarkersFileChrome, beforeMarkersFileShow);
+                console.log(tableFuncs.getTableData(markersFilesDefinition));
             },
             render: function () {
                 var instructions = DASHBOARD.instructionsFileModel.get('instructions');
@@ -986,6 +995,18 @@ define(function(require, exports, module) {
                 // Render the template tables
                 this.templateView.loadTemplate();
                 this.templateView.render();
+                // Set up the markersFiles table if necessary
+                var markersFilesTableData = [];
+                if (instructions.hasOwnProperty("markersFiles")) {
+                    instructions.markersFiles.forEach(function (markerFile) {
+                        var row = $.extend({},markerFile);
+                        row.hashAndName = markerFile.hash + ":" + markerFile.filename;
+                        markersFilesTableData.push(row);
+                    });
+                }
+                // Display the markers files table
+                $("#id_markers_files_table_div").html(tableFuncs.makeTable(markersFilesTableData, markersFilesDefinition));
+                styleTable("#id_markers_files_table_div");
                 // Set up the facilities table if necessary
                 var facsTableData = [];
                 if (instructions.hasOwnProperty("facs")) {
@@ -1162,4 +1183,3 @@ define(function(require, exports, module) {
     }
     module.exports.init = dashboardInstructionsInit;
 });
-

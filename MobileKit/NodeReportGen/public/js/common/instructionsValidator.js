@@ -18,6 +18,14 @@ define(function(require, exports, module) {
         return rpv.validate();
     }
 
+    function markersFileValidator(fac) {
+        var  rpv = newParamsValidator(fac,
+            [{"name": "filename", "required": true, "validator": "string"},
+             {"name": "hash", "required": true, "validator": /[0-9a-fA-F]{32}/}
+            ]);
+        return rpv.validate();
+    }
+
     function runValidator(run) {
         function postCheck(resultDict, errorList) {
             if (resultDict.startEtm >= resultDict.endEtm) {
@@ -125,6 +133,7 @@ define(function(require, exports, module) {
              {"name": "fovNWindow", "required": false, "validator": "number", "default_value": 10},
              {"name": "peaksMinAmp", "required": false, "validator": "number", "default_value": 0.03},
              {"name": "runs", "required": true, "validator": validateListUsing(runValidator)},
+             {"name": "markersFiles", "required": false, "validator": validateListUsing(markersFileValidator), "default_value":[]},
              {"name": "facs", "required": false, "validator": validateListUsing(facValidator), "default_value":[]},
              {"name": "timezone", "required":false, "validator": "string", "default_value": "UTC"},
              {"name": "template", "required": true, "validator": templateValidator}], postCheck);

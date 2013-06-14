@@ -27,6 +27,7 @@ the authenticating proxy server.
 (function () {
     var argv = require('optimist').argv;
     var cjs = require("./public/js/common/canonical_stringify");
+    var csv = require('csv');
     var et = require('elementtree');
     var express = require('express');
     var fs = require('fs');
@@ -451,7 +452,6 @@ the authenticating proxy server.
                             }
                             else {
                                 data = data.substr(start);
-                                et.parse(data);
                                 var hash = md5hex(data);
                                 var dirName = path.join(REPORTROOT, "kml", hash.substr(0,2), hash);
                                 var fname = path.join(dirName, hash + ".kml");
@@ -460,6 +460,8 @@ the authenticating proxy server.
                                 fs.readFile(fname, "ascii", function (err,oldData) {
                                     if (err) {
                                         console.log("File does not exist");
+                                        // Simple check for validity
+                                        et.parse(data);
                                         // Copy the file into a directory with the specified hash
                                         mkdirp(dirName, null, function (err) {
                                             if (err) res.send({name: req.body.file_info, error: err.message});
@@ -501,16 +503,39 @@ the authenticating proxy server.
                             console.log("MD5 Hash: " + hash + ", dirName: " + dirName);
                             // Check to see if the file has already been uploaded
                             fs.readFile(fname, "ascii", function (err,oldData) {
+                                var errorCount = 0;
                                 if (err) {
                                     console.log("File does not exist");
-                                    // Copy the file into a directory with the specified hash
-                                    mkdirp(dirName, null, function (err) {
-                                        if (err) res.send({name: req.body.file_info, error: err.message});
-                                        else {
-                                            fs.writeFile(fname, data, "ascii", function (err) {
+                                    // Validate the CSV
+                                    csv().from.string(data,{columns:['latitude','longitude','text','color']})
+                                    .on('error', function() {
+                                        res.send({name: req.body.file_info, error:"Bad CSV file"});
+                                    })
+                                    .on('record', function(row, index) {
+                                        var lat = Number(row['latitude']);
+                                        if (isNaN(lat) || lat<-90.0 || lat>90.0) errorCount += 1;
+                                        var lng = Number(row['longitude']);
+                                        if (isNaN(lng)  || lat<-180.0 || lat>180.0) errorCount += 1;
+                                        var color = parseInt(row['color'],16);
+                                        if (isNaN(color)) errorCount += 1;
+                                        console.log('#' + index + ' ' + JSON.stringify(row));
+                                        if (errorCount > 0) {
+                                            this.removeAllListeners('record').removeAllListeners('end');
+                                            res.send({name: req.body.file_info, error: "Errors found: invalid CSV file"});
+                                        }
+                                    })
+                                    .on('end', function() {
+                                        if (errorCount === 0) {
+                                            // Copy the file into a directory with the specified hash
+                                            mkdirp(dirName, null, function (err) {
                                                 if (err) res.send({name: req.body.file_info, error: err.message});
                                                 else {
-                                                    res.send({name: req.body.file_info, hash:hash});
+                                                    fs.writeFile(fname, data, "ascii", function (err) {
+                                                        if (err) res.send({name: req.body.file_info, error: err.message});
+                                                        else {
+                                                            res.send({name: req.body.file_info, hash:hash});
+                                                        }
+                                                    });
                                                 }
                                             });
                                         }
