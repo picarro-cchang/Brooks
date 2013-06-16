@@ -126,23 +126,23 @@ define(function(require, exports, module) {
                 tableFuncs.setCell(row,"endEtm",rowData.endEtm,runsDefinition);
             });
         }
-        console.log(data);
+        // console.log(data);
     }};
 
     var submapsDefinition = {id: "submapstable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
         {key: "baseType", width: "19%", th: "Type", tf: String, eid: "id_submaps_type", cf: String},
-        {key: "facs", width: "11%", th: "Facilities", tf: boolToIcon, eid: "id_summary_facs",
+        {key: "facs", width: "11%", th: "Facilities", tf: boolToIcon, eid: "id_submaps_facs",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "paths", width: "11%", th: "Paths", tf: boolToIcon, eid: "id_submaps_paths",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "peaks", width: "11%", th: "Peaks", tf: boolToIcon, eid: "id_submaps_peaks",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "markers", width: "11%", th: "Markers", tf: boolToIcon, eid: "id_summary_markers",
+        {key: "markers", width: "11%", th: "Markers", tf: boolToIcon, eid: "id_submaps_markers",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "wedges", width: "11%", th: "LISA", tf: boolToIcon, eid: "id_submaps_wedges",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "analyses", width: "11%", th: "Isotopic", tf: boolToIcon, eid: "id_summary_analyses",
+        {key: "analyses", width: "11%", th: "Isotopic", tf: boolToIcon, eid: "id_submaps_analyses",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "fovs", width: "11%", th: "FOV", tf: boolToIcon, eid: "id_submaps_fovs",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
@@ -247,8 +247,10 @@ define(function(require, exports, module) {
         body += '<form class="form-horizontal">';
         body += tableFuncs.editControl("Background Type", tableFuncs.makeSelect("id_submaps_type", {"class": controlClass},
                 {"map": "Google map", "satellite": "Satellite", "none": "None"}));
+        body += tableFuncs.editControl("Facilities", tableFuncs.makeSelect("id_submaps_facs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Paths", tableFuncs.makeSelect("id_submaps_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_submaps_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl("Markers", tableFuncs.makeSelect("id_submaps_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("LISA", tableFuncs.makeSelect("id_submaps_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_summary_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_submaps_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
@@ -270,8 +272,10 @@ define(function(require, exports, module) {
         body += '<form class="form-horizontal">';
         body += tableFuncs.editControl("Background Type", tableFuncs.makeSelect("id_summary_type", {"class": controlClass},
                 {"map": "Google map", "satellite": "Satellite", "none": "None"}));
+        body += tableFuncs.editControl("Facilities", tableFuncs.makeSelect("id_summary_facs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Paths", tableFuncs.makeSelect("id_summary_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_summary_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl("Markers", tableFuncs.makeSelect("id_summary_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("LISA", tableFuncs.makeSelect("id_summary_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_summary_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_summary_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
@@ -544,10 +548,10 @@ define(function(require, exports, module) {
     // ============================================================================
     //  Default values for new rows in table
     // ============================================================================
-    var initRunRow = {"analyzer": "FCDS2008", "peaks": "#FFFF00", "wedges": "#0000FF", "fovs": "#00FF00",
+    var initRunRow = {"analyzer": "", "peaks": "#FFFF00", "wedges": "#0000FF", "fovs": "#00FF00",
                       "analyses": "#FF0000", "stabClass": "*"};
-    var initSubmapRow  = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false };
-    var initSummaryRow = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false, submapGrid: true };
+    var initSubmapRow  = {type: 'map', facs: false, paths: false, peaks: false, markers:false, wedges: false, analyses: false, fovs: false };
+    var initSummaryRow = {type: 'map', facs: false, paths: false, peaks: false, markers:false, wedges: false, analyses: false, fovs: false, submapGrid: true };
     var initFacilitiesRow = {filename: '', linewidth: 2, linecolor: "#000000", textcolor: "#000000", hashAndName: '' };
     var initMarkersFileRow = {filename: '', hashAndName: ''};
 
@@ -911,7 +915,7 @@ define(function(require, exports, module) {
             },
             editRunsRow: function (e) {
                 tableFuncs.editRow($(e.currentTarget).closest("tr"), runsDefinition, this.modalContainer, editRunsChrome, beforeRunsShow);
-                console.log(tableFuncs.getTableData(runsDefinition));
+                // console.log(tableFuncs.getTableData(runsDefinition));
             },
             editTemplate: function () {
                 this.templateView.editTemplate();
@@ -974,7 +978,7 @@ define(function(require, exports, module) {
             },
             editFacilitiesRow: function (e) {
                 tableFuncs.editRow($(e.currentTarget).closest("tr"), facilitiesDefinition, this.modalContainer, editFacilitiesChrome, beforeFacilitiesShow);
-                console.log(tableFuncs.getTableData(facilitiesDefinition));
+                // console.log(tableFuncs.getTableData(facilitiesDefinition));
             },
             newMarkersFileRow: function (e) {
                 tableFuncs.insertRow(e, markersFilesDefinition, this.modalContainer, editMarkersFileChrome, beforeMarkersFileShow, initMarkersFileRow);
@@ -987,7 +991,7 @@ define(function(require, exports, module) {
             },
             editMarkersFileRow: function (e) {
                 tableFuncs.editRow($(e.currentTarget).closest("tr"), markersFilesDefinition, this.modalContainer, editMarkersFileChrome, beforeMarkersFileShow);
-                console.log(tableFuncs.getTableData(markersFilesDefinition));
+                // console.log(tableFuncs.getTableData(markersFilesDefinition));
             },
             render: function () {
                 var instructions = DASHBOARD.instructionsFileModel.get('instructions');
@@ -1132,11 +1136,11 @@ define(function(require, exports, module) {
             },
             editSubmapsRow: function (e) {
                 tableFuncs.editRow($(e.currentTarget).closest("tr"), submapsDefinition, this.modalContainer, editSubmapsChrome);
-                console.log(tableFuncs.getTableData(submapsDefinition));
+                // console.log(tableFuncs.getTableData(submapsDefinition));
             },
             editSummaryRow: function (e) {
                 tableFuncs.editRow($(e.currentTarget).closest("tr"), summaryDefinition, this.modalContainer, editSummaryChrome);
-                console.log(tableFuncs.getTableData(summaryDefinition));
+                // console.log(tableFuncs.getTableData(summaryDefinition));
             },
             editTemplate: function () {
                 this.render();

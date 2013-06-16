@@ -1,6 +1,12 @@
 // reportPeaks.js
 /*global alert, console, module, require */
 /* jshint undef:true, unused:true */
+
+// This defines the model (REPORT.Peak), collection (REPORT.Peaks) and view (REPORT.PeaksTableView) 
+//  for representing concentration peaks
+// The code to read peaks from a JSON file is the getData method of REPORT.Peaks which is called 
+//  from reportViewResources
+
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {

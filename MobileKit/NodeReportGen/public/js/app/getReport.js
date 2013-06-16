@@ -17,6 +17,7 @@ define(function(require, exports, module) {
     var REPORT = require('app/reportGlobals');
     var reportAnalyses = require('app/reportAnalyses');
     var reportCanvasViews = require('app/reportCanvasViews');
+    var reportMarkers = require('app/reportMarkers');
     var reportPaths = require('app/reportPaths');
     var reportPeaks = require('app/reportPeaks');
     var reportRuns = require('app/reportRuns');
@@ -69,6 +70,7 @@ define(function(require, exports, module) {
         REPORT.clientKey = TEMPLATE_PARAMS.clientKey;
 
         reportAnalyses.init();
+        reportMarkers.init();
         reportPaths.init();
         reportPeaks.init();
         reportRuns.init();
@@ -138,9 +140,14 @@ define(function(require, exports, module) {
                 // Construct the surveys collection
                 REPORT.surveys = new REPORT.Surveys();
                 readSurveys(data);
-                // Set up the collections for peaks, analyses and paths data (to be read from .json files)
+                // Set up the collections for peaks, markers, analyses and paths data (to be read from .json files)
                 REPORT.peaks = new REPORT.Peaks(null, {peaksRef:data.SUBTASKS.getPeaksData});
+
+                if (data.SUBTASKS.hasOwnProperty("getMarkersData")) REPORT.markers = new REPORT.Markers(null, {markersRef:data.SUBTASKS.getMarkersData});
+                else REPORT.markers = null;
+
                 REPORT.analyses = new REPORT.Analyses(null, {analysesRef:data.SUBTASKS.getAnalysesData});
+
                 if (data.SUBTASKS.hasOwnProperty("getFovsData")) REPORT.paths = new REPORT.Paths(null, {pathsRef:data.SUBTASKS.getFovsData});
                 else REPORT.paths = null;
                 // Create a ReportViewResources object to hold the canvases which make the report
@@ -176,7 +183,7 @@ define(function(require, exports, module) {
     }
 
     function makePdfReport(subreport, params) {
-        var figureComponents = [ "paths", "fovs", "wedges", "tokens", "peaks", "analyses", "submapGrid" ];
+        var figureComponents = [ "facs", "paths", "fovs", "wedges", "tokens", "peaks", "markers", "analyses", "submapGrid" ];
         var id, neCorner = REPORT.settings.get("neCorner"), swCorner = REPORT.settings.get("swCorner");
         var title = REPORT.settings.get("title");
         var name = params.name;
@@ -197,8 +204,10 @@ define(function(require, exports, module) {
         settingsTableTop.push('<th>NE Corner (Lat,Lng)</th>');
         settingsTableTop.push('<th>Min Peak Ampl (ppm)</th>');
         settingsTableTop.push('<th>Excl Radius (m)</th>');
+        settingsTableTop.push('<th>Facilities</th>');
         settingsTableTop.push('<th>Paths</th>');
         settingsTableTop.push('<th>Peaks</th>');
+        settingsTableTop.push('<th>Markers</th>');
         settingsTableTop.push('<th>LISAs</th>');
         settingsTableTop.push('<th>FOV</th>');
         settingsTableTop.push('<th>Isotopic</th>');
@@ -215,8 +224,10 @@ define(function(require, exports, module) {
             var pageComponent = subreport.figures.models[i];
             var layers = [];
             var settingsTableMid = [];
+            settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("facs")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("paths")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("peaks")) + '</td>');
+            settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("markers")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("wedges")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("fovs")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("analyses")) + '</td>');

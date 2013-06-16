@@ -109,6 +109,28 @@ define(function(require, exports, module) {
         return cjs(result,null,2);
     }
 
+    function extractFacilitiesRequest(instructions) {
+        // Extracts the instructions for generating a getFacilitiesData request
+        //  as a canonical JSON string
+        var result = {};
+        result["instructions_type"] = "getFacilitiesData";
+        result["swCorner"] = gh.encodeGeoHash.apply(null, instructions["swCorner"]);
+        result["neCorner"] = gh.encodeGeoHash.apply(null, instructions["neCorner"]);
+        result["facs"] = instructions["facs"].slice(0);
+        return cjs(result,null,2);
+    }
+
+    function extractMarkersRequest(instructions) {
+        // Extracts the instructions for generating a getMarkersData request
+        //  as a canonical JSON string
+        var result = {};
+        result["instructions_type"] = "getMarkersData";
+        result["swCorner"] = gh.encodeGeoHash.apply(null, instructions["swCorner"]);
+        result["neCorner"] = gh.encodeGeoHash.apply(null, instructions["neCorner"]);
+        result["markersFiles"] = instructions["markersFiles"].slice(0);
+        return cjs(result,null,2);
+    }
+
     function ReportMaker(rptGenService, instructions, workDir, statusFile, submit_key, forceFlag) {
         this.rptGenService = rptGenService;
         this.instructions = instructions;
@@ -136,7 +158,7 @@ define(function(require, exports, module) {
     }
 
     ReportMaker.prototype.run = function (callback) {
-        var that = this;
+        var i, that = this;
         console.log(JSON.stringify(that.instructions));
         var v = instrValidator(that.instructions);
         console.log(v.valid);
@@ -148,9 +170,23 @@ define(function(require, exports, module) {
             var template = that.norm_instr.template;
             var summaryFigs = template.summary.figures, submapFigs = template.submaps.figures;
             var needFov = false;
-            for (var i=0; i<summaryFigs.length; i++) needFov = needFov || summaryFigs[i].paths || summaryFigs[i].fovs;
+            for (i=0; i<summaryFigs.length; i++) needFov = needFov || summaryFigs[i].paths || summaryFigs[i].fovs;
             for (i=0; i<submapFigs.length; i++) needFov = needFov || submapFigs[i].paths || submapFigs[i].fovs;
             if (needFov) subtasks.push({"name": "getFovsData", "extractor": extractFovsRequest});
+            // Determine if there are any markers files and if any markers are in the template
+            var needMarkers = false;
+            if (!_.isEmpty(that.norm_instr.markersFiles)) {
+                for (i=0; i<summaryFigs.length; i++) needMarkers = needMarkers || summaryFigs[i].markers;
+                for (i=0; i<submapFigs.length; i++) needMarkers = needMarkers || submapFigs[i].markers;
+                if (needMarkers) subtasks.push({"name": "getMarkersData", "extractor": extractMarkersRequest});
+            }
+            // Determine if there are any facilities files and if any facilities are in the template
+            var needFacilities = false;
+            if (!_.isEmpty(that.norm_instr.facs)) {
+                for (i=0; i<summaryFigs.length; i++) needFacilities = needFacilities || summaryFigs[i].facs;
+                for (i=0; i<submapFigs.length; i++) needFacilities = needFacilities || submapFigs[i].facs;
+                if (needFacilities) subtasks.push({"name": "getFacilitiesData", "extractor": extractFacilitiesRequest});
+            }
 
             that.pending = subtasks.length;
             subtasks.forEach(function (task) {

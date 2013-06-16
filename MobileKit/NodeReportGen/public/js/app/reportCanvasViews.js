@@ -86,20 +86,23 @@ define(function(require, exports, module) {
                     case 'paths':
                         this.addLayer(REPORT.reportViewResources.contexts['paths'],[0,0],5,'paths');
                         break;
+                    case 'markers':
+                        this.addLayer(REPORT.reportViewResources.contexts['markers'],[0,0],6,'markers');
+                        break;
                     case 'fovs':
-                        this.addLayer(REPORT.reportViewResources.contexts['fovs'],[0,0],6,'fovs');
+                        this.addLayer(REPORT.reportViewResources.contexts['fovs'],[0,0],7,'fovs');
                         break;
                     case 'wedges':
-                        this.addLayer(REPORT.reportViewResources.contexts['wedges'],[0,0],7,'wedges');
+                        this.addLayer(REPORT.reportViewResources.contexts['wedges'],[0,0],8,'wedges');
                         break;
                     case 'tokens':
-                        this.addLayer(REPORT.reportViewResources.contexts['tokens'],[0,0],8,'tokens');
+                        this.addLayer(REPORT.reportViewResources.contexts['tokens'],[0,0],9,'tokens');
                         break;
                     case 'analyses':
-                        this.addLayer(REPORT.reportViewResources.contexts['analyses'],[0,0],9,'analyses');
+                        this.addLayer(REPORT.reportViewResources.contexts['analyses'],[0,0],10,'analyses');
                         break;
                     case 'peaks':
-                        this.addLayer(REPORT.reportViewResources.contexts['peaks'],[0,0],10,'peaks');
+                        this.addLayer(REPORT.reportViewResources.contexts['peaks'],[0,0],11,'peaks');
                         break;
                 }
             }
@@ -126,7 +129,7 @@ define(function(require, exports, module) {
             },
             render: function(padding) {
                 var init = false;
-                var allLayers = ['none', 'map', 'satellite', 'submapGrid', 'paths', 'fovs', 'wedges', 'tokens', 'analyses', 'peaks'];
+                var allLayers = ['none', 'map', 'satellite', 'submapGrid', 'paths', 'markers', 'fovs', 'wedges', 'tokens', 'analyses', 'peaks'];
                 for (var i=0; i<allLayers.length; i++) {
                     var layerName = allLayers[i], s;
                     if (layerName in this.available) {
@@ -135,7 +138,7 @@ define(function(require, exports, module) {
                             var aspect = 1.2;
                             var actualWidth = s.canvas.width  + 2 * padding[0];
                             var actualHeight = s.canvas.height + 2 * padding[1];
-                            this.scaleFac = Math.min.apply(null,[0.95*this.docWidth/actualWidth, 
+                            this.scaleFac = Math.min.apply(null,[0.95*this.docWidth/actualWidth,
                                 0.95*aspect*this.docWidth/actualHeight]);
                             this.context.canvas.width  = this.scaleFac * actualWidth;
                             this.context.canvas.height = this.scaleFac * actualHeight;
@@ -186,7 +189,7 @@ define(function(require, exports, module) {
             },
             render: function(padding) {
                 var init = false;
-                var allLayers = ['none', 'map', 'satellite', 'submapGrid', 'paths', 'fovs', 'wedges', 'tokens', 'analyses', 'peaks'];
+                var allLayers = ['none', 'map', 'satellite', 'submapGrid', 'paths', 'markers', 'fovs', 'wedges', 'tokens', 'analyses', 'peaks'];
                 for (var i=0; i<allLayers.length; i++) {
                     var layerName = allLayers[i], s;
                     if (layerName in this.available) {
@@ -249,4 +252,3 @@ define(function(require, exports, module) {
     }
     module.exports.init = reportCanvasViewsInit;
 });
-

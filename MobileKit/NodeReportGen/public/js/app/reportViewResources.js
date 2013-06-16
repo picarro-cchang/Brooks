@@ -1,6 +1,16 @@
 // reportViewResources.js
 /*global module, require */
 /* jshint undef:true, unused:true */
+
+// This file makes the "view resources" which are a set of "layers" and "tables".
+// A "layer" consists of a 2d context with a canvas that is filled with visual 
+//  elements such as wedges, peaks and fields of view
+// A "table" consists of an HTML table representing peaks, surveys, runs etc.
+// 
+// Report pages can be made out of combinations of view resources. Typically a 
+//  report is made out of figures and tables. A figure is made out of one or 
+//  more layers. These are assembled in reportCanvasViews.js
+
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
@@ -11,6 +21,7 @@ define(function(require, exports, module) {
     var CNSNT = require('app/cnsnt');
     var makeAnalyses = require('app/makeAnalyses');
     var makeAnalysesTable = require('app/makeAnalysesTable');
+    var makeMarkers = require('app/makeMarkers');
     var makePeaks = require('app/makePeaks');
     var makePeaksTable = require('app/makePeaksTable');
     var makeRunsTable = require('app/makeRunsTable');
@@ -26,7 +37,7 @@ define(function(require, exports, module) {
             initialize: function () {
                 this.listenTo(REPORT.settings, "change", this.settingsChanged);
                 this.contexts = {'analyses': null, 'none': null, 'map': null, 'satellite': null, 'peaks': null,
-                                 'tokens': null, 'fovs': null, 'paths': null, 'wedges': null,
+                                 'markers': null, 'tokens': null, 'fovs': null, 'paths': null, 'wedges': null,
                                  'submapGrid': null };
                 this.padX = 30;
                 this.padY = 75;
@@ -56,9 +67,10 @@ define(function(require, exports, module) {
                 this.makeSatelliteLayer();
                 this.makeSubmapGridLayer();
                 this.makePeaksLayers();
+                if (REPORT.markers) this.makeMarkersLayer();
                 this.makeWedgesLayer();
                 this.makeAnalysesLayer();
-                this.makePathsLayers();
+                if (REPORT.paths) this.makePathsLayers();
                 this.makePeaksTable();
                 this.makeAnalysesTable();
             },
@@ -201,6 +213,17 @@ define(function(require, exports, module) {
                 });
                 REPORT.peaks.getData();
             },
+            makeMarkersLayer: function() {
+                var that = this;
+                that.trigger("init",{"context": "markers"});
+                REPORT.markers.once("loaded", function () {
+                    that.markersData = REPORT.markers.models;
+                    var result = makeMarkers(that);
+                    that.contexts["markers"] = result.markers;
+                    that.trigger("change",{"context": "markers"});
+                });
+                REPORT.markers.getData();
+            },
             makeWedgesLayer: function() {
                 var that = this;
                 that.trigger("init",{"context": "wedges"});
@@ -223,7 +246,6 @@ define(function(require, exports, module) {
                 REPORT.analyses.getData();
             },
             makePathsLayers: function () {
-                if (!REPORT.paths) return;
                 var that = this;
                 var pathsMaker = newPathsMaker(that);
                 that.pathsCollection = REPORT.paths;

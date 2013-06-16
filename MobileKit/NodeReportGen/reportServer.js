@@ -218,7 +218,7 @@ the authenticating proxy server.
     }
 
     function handleRptGen(req, res) {
-        var contents, pv, reportGen, result = {}, statusFile, user, workDir;
+        var contents, hash, pv, reportGen, result = {}, statusFile, user, workDir;
         result = _.extend(result, req.query);
         // console.log("req.query: " + JSON.stringify(req.query));
         // Handle submission of instructions file, requests for status, and retrieval of results
@@ -249,7 +249,7 @@ the authenticating proxy server.
                  {"name": "start_ts", "required": true, "validator": /\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/}]);
             if (pv.ok()) {
                 // Try to get status from the working directory
-                var hash = pv.get("contents_hash");
+                hash = pv.get("contents_hash");
                 workDir = path.join(REPORTROOT, hash.substr(0,2), hash,
                     ts.timeStringAsDirName(pv.get("start_ts")));
                 statusFile = path.join(workDir, "status.dat");
@@ -300,7 +300,6 @@ the authenticating proxy server.
             // Use elementTree to parse a KML string (which is first normalized to use Unix line endings). 
             //  If it parses without error, compute the MD5 hash and save the string into a file in a 
             //  subdirectory generated from the MD5 hash
-            var ElementTree = et.ElementTree;
             pv = newParamsValidator(req.query,
                 [{"name": "contents", "required": true, "validator": "string"}]);
             if (pv.ok()) {
@@ -313,7 +312,7 @@ the authenticating proxy server.
                     }
                     else {
                         et.parse(contents.substr(start));
-                        var hash = md5hex(contents);
+                        hash = md5hex(contents);
                         console.log("MD5 Hash: " + hash);
                         res.send(_.extend(result, {hash:hash}));
                     }
@@ -436,8 +435,8 @@ the authenticating proxy server.
     });
 
     app.post("/fileUpload", function(req, res, next) {
-        console.log(req.body);
-        console.log(req.files);
+        // console.log(req.body);
+        // console.log(req.files);
         if (!_.isEmpty(req.files)) {
             if ("kmlUpload" in req.files) {            
                 fs.readFile(req.files.kmlUpload.path,"ascii",function (err,data) {
@@ -518,7 +517,7 @@ the authenticating proxy server.
                                         if (isNaN(lng)  || lat<-180.0 || lat>180.0) errorCount += 1;
                                         var color = parseInt(row['color'],16);
                                         if (isNaN(color)) errorCount += 1;
-                                        console.log('#' + index + ' ' + JSON.stringify(row));
+                                        // console.log('#' + index + ' ' + JSON.stringify(row));
                                         if (errorCount > 0) {
                                             this.removeAllListeners('record').removeAllListeners('end');
                                             res.send({name: req.body.file_info, error: "Errors found: invalid CSV file"});

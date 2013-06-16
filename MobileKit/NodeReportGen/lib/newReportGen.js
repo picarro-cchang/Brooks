@@ -10,7 +10,9 @@ define(function(require, exports, module) {
     var getTicket = require('./md5hex');
     var mkdirp = require('mkdirp');
     var newAnalysesDataFetcher = require('./newAnalysesDataFetcher');
+    // var newFacilitiesDataFetcher = require('./newFacilitiesDataFetcher');
     var newFovsDataFetcher = require('./newFovsDataFetcher');
+    var newMarkersDataFetcher = require('./newMarkersDataFetcher');
     var newPathsDataFetcher = require('./newPathsDataFetcher');
     var newPeaksDataFetcher = require('./newPeaksDataFetcher');
     var newRptGenService = require('./newRptGenService');
@@ -195,11 +197,18 @@ define(function(require, exports, module) {
                 case "getAnalysesData":
                     newAnalysesDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
-                case "getPathsData":
-                    newPathsDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
+                case "getFacilitiesData":
+                    sf.writeStatus(statusFile, {"status": rptGenStatus.DONE}, logCompletion);
+                    // newFacilitiesDataFetcher(p3ApiService, instructions, that.reportDir, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 case "getFovsData":
                     newFovsDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
+                    break;
+                case "getMarkersData":
+                    newMarkersDataFetcher(p3ApiService, instructions, that.reportDir, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
+                    break;
+                case "getPathsData":
+                    newPathsDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 case "getPeaksData":
                     newPeaksDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);

@@ -48,8 +48,10 @@ define(function(require, exports, module) {
     function componentsValidator (components) {
         var rpv = newParamsValidator(components,
             [{"name": "baseType", "required":false, "validator": /satellite|map|none/, "default_value": "map"},
+             {"name": "facs", "required":false, "validator": "boolean", "default_value": false},
              {"name": "paths", "required":false, "validator": "boolean", "default_value": false},
              {"name": "peaks", "required":false, "validator": "boolean", "default_value": false},
+             {"name": "markers", "required":false, "validator": "boolean", "default_value": false},
              {"name": "wedges", "required":false, "validator": "boolean", "default_value": false},
              {"name": "analyses", "required":false, "validator": "boolean", "default_value": false},
              {"name": "fovs", "required":false, "validator": "boolean", "default_value": false},

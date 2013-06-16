@@ -1,6 +1,12 @@
 // reportPaths.js
 /*global alert, console, module, require */
 /* jshint undef:true, unused:true */
+
+// This defines the model (REPORT.Path), collection (REPORT.Paths)
+//  for representing the path of a surveyor and the associated fields of view
+// The code to read path and field of view from JSON files is the getData 
+//  method of REPORT.Paths which is called from reportViewResources
+
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
