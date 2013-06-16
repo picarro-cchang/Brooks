@@ -1,4 +1,4 @@
-/* makeMarkers.js renders markers using markers */
+/* makeMarkers.js renders markers */
 /*global console, module, exports, process, require */
 /*jshint undef:true, unused:true */
 

@@ -21,6 +21,7 @@ define(function(require, exports, module) {
     var CNSNT = require('app/cnsnt');
     var makeAnalyses = require('app/makeAnalyses');
     var makeAnalysesTable = require('app/makeAnalysesTable');
+    var makeFacilities = require('app/makeFacilities');
     var makeMarkers = require('app/makeMarkers');
     var makePeaks = require('app/makePeaks');
     var makePeaksTable = require('app/makePeaksTable');
@@ -38,7 +39,7 @@ define(function(require, exports, module) {
                 this.listenTo(REPORT.settings, "change", this.settingsChanged);
                 this.contexts = {'analyses': null, 'none': null, 'map': null, 'satellite': null, 'peaks': null,
                                  'markers': null, 'tokens': null, 'fovs': null, 'paths': null, 'wedges': null,
-                                 'submapGrid': null };
+                                 'submapGrid': null, 'facilities': null };
                 this.padX = 30;
                 this.padY = 75;
                 this.submapLinks = {};
@@ -66,6 +67,7 @@ define(function(require, exports, module) {
                 this.makeMapLayer();
                 this.makeSatelliteLayer();
                 this.makeSubmapGridLayer();
+                if (REPORT.facilities) this.makeFacilitiesLayer();
                 this.makePeaksLayers();
                 if (REPORT.markers) this.makeMarkersLayer();
                 this.makeWedgesLayer();
@@ -192,6 +194,17 @@ define(function(require, exports, module) {
                 this.contexts["submapGrid"] = result.context;
                 this.submapLinks = result.links;
                 this.trigger("change",{"context": "submapGrid"});
+            },
+            makeFacilitiesLayer: function() {
+                var that = this;
+                that.trigger("init",{"context": "facilities"});
+                REPORT.facilities.once("loaded", function () {
+                    that.facilitiesData = REPORT.facilities.models;
+                    var result = makeFacilities(that);
+                    that.contexts["facilities"] = result.facilities;
+                    that.trigger("change",{"context": "facilities"});
+                });
+                REPORT.facilities.getData();
             },
             makePeaksLayers: function() {
                 var that = this;

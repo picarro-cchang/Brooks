@@ -132,7 +132,7 @@ define(function(require, exports, module) {
     var submapsDefinition = {id: "submapstable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
         {key: "baseType", width: "19%", th: "Type", tf: String, eid: "id_submaps_type", cf: String},
-        {key: "facs", width: "11%", th: "Facilities", tf: boolToIcon, eid: "id_submaps_facs",
+        {key: "facilities", width: "11%", th: "Facilities", tf: boolToIcon, eid: "id_submaps_facilities",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "paths", width: "11%", th: "Paths", tf: boolToIcon, eid: "id_submaps_paths",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
@@ -152,7 +152,7 @@ define(function(require, exports, module) {
     var summaryDefinition = {id: "summarytable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
         {key: "baseType", width: "16%", th: "Type", tf: String, eid: "id_summary_type", cf: String},
-        {key: "facs", width: "10%", th: "Facilities", tf: boolToIcon, eid: "id_summary_facs",
+        {key: "facilities", width: "10%", th: "Facilities", tf: boolToIcon, eid: "id_summary_facilities",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "paths", width: "10%", th: "Paths", tf: boolToIcon, eid: "id_summary_paths",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
@@ -185,7 +185,7 @@ define(function(require, exports, module) {
         {key: "filename", width: "48%", th: "KML Filename", tf: String, eid: "id_file_upload_name", cf: String},
         {key: "linewidth", width: "12%", th: "Line Width", tf: Number, eid: "id_fac_linewidth", cf: Number},
         {key: "linecolor", width: "12%", th: "Line Color", tf: makeColorPatch, eid: "id_fac_linecolor", cf: String},
-        {key: "textcolor", width: "12%", th: "Text Color", tf: makeColorPatch, eid: "id_fac_textcolor", cf: String},
+        {key: "xpath", width: "12%", th: "XPath", tf: String, eid: "id_fac_xpath", cf: String},
         {key: "hashAndName", width: "12%", th: "Download", tf: makeFacDownloadButton, eid: "id_fac_hash_and_name", cf: String},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}],
     vf: function (eidByKey, template, container, onSuccess) {
@@ -247,7 +247,7 @@ define(function(require, exports, module) {
         body += '<form class="form-horizontal">';
         body += tableFuncs.editControl("Background Type", tableFuncs.makeSelect("id_submaps_type", {"class": controlClass},
                 {"map": "Google map", "satellite": "Satellite", "none": "None"}));
-        body += tableFuncs.editControl("Facilities", tableFuncs.makeSelect("id_submaps_facs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl("Facilities", tableFuncs.makeSelect("id_submaps_facilities", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Paths", tableFuncs.makeSelect("id_submaps_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_submaps_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Markers", tableFuncs.makeSelect("id_submaps_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
@@ -272,7 +272,7 @@ define(function(require, exports, module) {
         body += '<form class="form-horizontal">';
         body += tableFuncs.editControl("Background Type", tableFuncs.makeSelect("id_summary_type", {"class": controlClass},
                 {"map": "Google map", "satellite": "Satellite", "none": "None"}));
-        body += tableFuncs.editControl("Facilities", tableFuncs.makeSelect("id_summary_facs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl("Facilities", tableFuncs.makeSelect("id_summary_facilities", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Paths", tableFuncs.makeSelect("id_summary_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_summary_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Markers", tableFuncs.makeSelect("id_summary_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
@@ -323,9 +323,8 @@ define(function(require, exports, module) {
         body += tableFuncs.editControl("Line Color", tableFuncs.makeSelect("id_fac_linecolor", {"class": controlClass},
                 {"#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
                  "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow", "#FFFFFF": "white" }));
-        body += tableFuncs.editControl("Text Color", tableFuncs.makeSelect("id_fac_textcolor", {"class": controlClass},
-                {"#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
-                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow", "#FFFFFF": "white" }));
+        body += tableFuncs.editControl("XPath", tableFuncs.makeSelect("id_fac_xpath", {"class": controlClass},
+                {".//coordinates": ".//coordinates", ".//LineString/coordinates": ".//LineString/coordinates" }));
         body += tableFuncs.makeInput("id_fac_hash_and_name", {"class": controlClass, "type":"hidden"});
         body += '</form></div>';
         footer = '<div class="modal-footer">';
@@ -550,9 +549,9 @@ define(function(require, exports, module) {
     // ============================================================================
     var initRunRow = {"analyzer": "", "peaks": "#FFFF00", "wedges": "#0000FF", "fovs": "#00FF00",
                       "analyses": "#FF0000", "stabClass": "*"};
-    var initSubmapRow  = {type: 'map', facs: false, paths: false, peaks: false, markers:false, wedges: false, analyses: false, fovs: false };
-    var initSummaryRow = {type: 'map', facs: false, paths: false, peaks: false, markers:false, wedges: false, analyses: false, fovs: false, submapGrid: true };
-    var initFacilitiesRow = {filename: '', linewidth: 2, linecolor: "#000000", textcolor: "#000000", hashAndName: '' };
+    var initSubmapRow  = {type: 'map', facilities: false, paths: false, peaks: false, markers:false, wedges: false, analyses: false, fovs: false };
+    var initSummaryRow = {type: 'map', facilities: false, paths: false, peaks: false, markers:false, wedges: false, analyses: false, fovs: false, submapGrid: true };
+    var initFacilitiesRow = {filename: '', linewidth: 2, linecolor: "#000000", xpath: ".//coordinates", hashAndName: '' };
     var initMarkersFileRow = {filename: '', hashAndName: ''};
 
     // ============================================================================
@@ -948,13 +947,13 @@ define(function(require, exports, module) {
                         current.markersFiles[i].filename = hashAndName[1];
                     }
                 }
-                var facs = tableFuncs.getTableData(facilitiesDefinition);
-                if (facs.length > 0) {
-                    current.facs = facs;
-                    for (i=0; i<facs.length; i++) {
-                        hashAndName = facs[i].hashAndName.split(':');
-                        current.facs[i].hash = hashAndName[0];
-                        current.facs[i].filename = hashAndName[1];
+                var facilities = tableFuncs.getTableData(facilitiesDefinition);
+                if (facilities.length > 0) {
+                    current.facilities = facilities;
+                    for (i=0; i<facilities.length; i++) {
+                        hashAndName = facilities[i].hashAndName.split(':');
+                        current.facilities[i].hash = hashAndName[0];
+                        current.facilities[i].filename = hashAndName[1];
                     }
                 }
                 var v = instrValidator(current);
@@ -1020,16 +1019,16 @@ define(function(require, exports, module) {
                 $("#id_markers_files_table_div").html(tableFuncs.makeTable(markersFilesTableData, markersFilesDefinition));
                 styleTable("#id_markers_files_table_div");
                 // Set up the facilities table if necessary
-                var facsTableData = [];
-                if (instructions.hasOwnProperty("facs")) {
-                    instructions.facs.forEach(function (fac) {
+                var facilitiesTableData = [];
+                if (instructions.hasOwnProperty("facilities")) {
+                    instructions.facilities.forEach(function (fac) {
                         var row = $.extend({},fac);
                         row.hashAndName = fac.hash + ":" + fac.filename;
-                        facsTableData.push(row);
+                        facilitiesTableData.push(row);
                     });
                 }
                 // Display the facilities table
-                $("#id_facilities_table_div").html(tableFuncs.makeTable(facsTableData, facilitiesDefinition));
+                $("#id_facilities_table_div").html(tableFuncs.makeTable(facilitiesTableData, facilitiesDefinition));
                 styleTable("#id_facilities_table_div");
 
                 // Set up the runs table. Some translation is needed because of the timezone 

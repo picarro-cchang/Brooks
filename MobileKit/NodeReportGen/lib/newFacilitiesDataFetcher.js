@@ -1,17 +1,19 @@
-/* newMarkersDataFetcher.js creates an object to get markers data from P3 into a
+/* newFacilitiesDataFetcher.js creates an object to get facilities data from P3 into a
     work directory. */
-/*global console, module, process, require */
+/*global console, exports, module, process, require */
 /*jshint undef:true, unused:true */
 
-// We process a list of files and compile a list of markers which lie within the required region.
-// Each marker is represented by a geohashed position, a text string and a hexadecimal color string.
+// We process a list of files and compile a list of facilities which lie within the required region.
+// Each facility is represented by a list of geohashed positions, a line width and line color.
+// The positions are obtained by appplying XPath filters to the KML files, one per file.
+// A list of positions is placed in the output JSON file if at least one of the coordinates is in the region.
 // After processing all the files we write out a key file describing the JSON output.
 
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
 	'use strict';
-    var csv = require('csv');
+    var et = require('elementtree');
     var fs = require('fs');
     var gh = require('./geohash');
     var jf = require('./jsonFiles');
@@ -24,7 +26,7 @@ define(function(require, exports, module) {
     var newParamsValidator = pv.newParamsValidator;
     var validateListUsing = pv.validateListUsing;
 
-    function MarkersDataFetcher(p3ApiService, instructions, reportDir, workDir, statusFile, submit_key, forceFlag) {
+    function FacilitiesDataFetcher(p3ApiService, instructions, reportDir, workDir, statusFile, submit_key, forceFlag) {
         this.p3ApiService = p3ApiService;
         this.instructions = instructions;
         this.reportDir = reportDir;
@@ -33,39 +35,29 @@ define(function(require, exports, module) {
         this.submit_key = submit_key;
         this.forceFlag = forceFlag;
         this.norm_instr = null;
-        this.markers = {};
+        this.facilities = {};
         this.fileIndex = 0;
         this.filenames = {};
     }
 
-    function formatNumberLength(num, length) {
-        // Zero pads a number to the specified length
-        var r = "" + num;
-        while (r.length < length) {
-            r = "0" + r;
-        }
-        return r;
-    }
-
-    function n2nan(x) {
-        return (x === null) ? NaN : x;
-    }
-
-    function markersFileValidator(run) {
+    function facilitiesFileValidator(run) {
         var rpv = newParamsValidator(run,
             [{"name": "filename", "required":true, "validator": "string"},
-             {"name": "hash", "required":true, "validator": /[0-9a-f]{32}/ }
+             {"name": "hash", "required":true, "validator": /[0-9a-f]{32}/ },
+             {"name": "linecolor", "required":true, "validator": "string" },
+             {"name": "linewidth", "required":true, "validator": "number" },
+             {"name": "xpath", "required":true, "validator": "string"}
             ]);
         return rpv.validate();
     }
 
-    MarkersDataFetcher.prototype.run = function (callback) {
+    FacilitiesDataFetcher.prototype.run = function (callback) {
         var that = this;
 
         var ipv = newParamsValidator(that.instructions,
             [{"name": "swCorner", "required":true, "validator": /[0-9b-hjkmnp-z]{6,12}/},
              {"name": "neCorner", "required":true, "validator": /[0-9b-hjkmnp-z]{6,12}/},
-             {"name": "markersFiles", "required":true, "validator": validateListUsing(markersFileValidator)}]);
+             {"name": "facilities", "required":true, "validator": validateListUsing(facilitiesFileValidator)}]);
 
         if (ipv.ok()) {
             that.norm_instr = ipv.validate().normValues;
@@ -95,66 +87,74 @@ define(function(require, exports, module) {
             });
         }
 
-        // processFile takes a CSV file specified by that.norm_instr.markersFiles[that.fileIndex]
-        //  and fills up that.markers with objects representing the markers within the region 
-        //  rectangle
+        // processFile takes a KML file specified by that.norm_instr.facilities[that.fileIndex]
+        //  and fills up that.facilities with objects representing the facilities 
+        //  within the region rectangle (i.e. when anyInside is true)
         function processFile(done) {
-            var markersFile = that.norm_instr.markersFiles[that.fileIndex];
-            var hash = markersFile.hash;
-            var filename = path.join(that.reportDir, "csv", hash.substr(0,2), hash, hash + '.csv');
-            var errorCount = 0;
+            var facilitiesFile = that.norm_instr.facilities[that.fileIndex];
+            var hash = facilitiesFile.hash;
+            var filter = facilitiesFile.xpath;
+            var linecolor = facilitiesFile.linecolor;
+            var linewidth = facilitiesFile.linewidth;
+            var filename = path.join(that.reportDir, "kml", hash.substr(0,2), hash, hash + '.kml');
+            var maxLoops = 100;
             fs.readFile(filename, "ascii", function (err, data) {
                 if (err) done(err);
                 else {
                     data = data.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
-                    csv().from.string(data,{columns:['latitude','longitude','text','color']})
-                    .on('error', function() {
-                        this.removeAllListeners('record').removeAllListeners('end');
-                        done(new Error("Bad CSV file"));
-                    })
-                    .on('record', function(row, index) {
-                        var lat = Number(row['latitude']);
-                        if (isNaN(lat) || lat<-90.0 || lat>90.0) errorCount += 1;
-                        var lng = Number(row['longitude']);
-                        if (isNaN(lng)  || lat<-180.0 || lat>180.0) errorCount += 1;
-                        var color = parseInt(row['color'],16);
-                        if (isNaN(color)) errorCount += 1;
-                        var text = row['text'];
-                        // console.log('#' + index + ' ' + JSON.stringify(row));
-                        if (errorCount > 0) {
-                            console.log("Error count", errorCount);
-                            this.removeAllListeners('record').removeAllListeners('end');
-                            done(new Error("Errors found in CSV file"));
-                        }
-                        else {
-                            // console.log(lat, lng, text, color);
-                            if (that.minLat <= lat && lat <= that.maxLat &&
-                                that.minLng <= lng && lng <= that.maxLng) {
-                                var position = gh.encodeGeoHash(lat,lng);
-                                var cs = '#' + formatNumberLength(color.toString(16),6);
-                                that.markers.push({P:position, T:text, C:cs});
+                    var start = data.indexOf("<");
+                    if (start > 10) {
+                        done(new Error("Cannot find starting element of XML file"));
+                    }
+                    var tree = et.parse(data.substr(start));
+                    var results = tree.findall(filter);
+                    var next = function () {
+                        var segment;
+                        var anyInside;
+                        function getSegment(p) {
+                            if (p) {
+                                var coords = [];
+                                p.split(',').forEach(function (c) {
+                                    coords.push(+c);
+                                });
+                                var lat = coords[1];
+                                var lng = coords[0];
+                                if (that.minLat <= lat && lat <= that.maxLat &&
+                                    that.minLng <= lng && lng <= that.maxLng) anyInside = true;
+                                segment.push(gh.encodeGeoHash(lat,lng));
                             }
                         }
-                    })
-                    .on('end', function() {
-                        this.removeAllListeners('record').removeAllListeners('end');
-                        if (errorCount === 0) done(null);
-                        else done(new Error("Errors found in CSV file"));
-                    });
+                        var nLoops = (results.length > maxLoops) ? maxLoops : results.length;
+                        for (var i=0; i<nLoops; i++) {
+                            var e = results.shift();
+                            var points = e.text.split(/\s+/);
+                            segment = [];
+                            anyInside = false;
+                            points.forEach(getSegment);
+                            if (anyInside && segment.length>1) {
+                                that.facilities.push({P:segment, W:linewidth, C:linecolor});
+                            }
+                        }
+                        if (results.length === 0) {
+                            done(null);
+                        }
+                        else process.nextTick(next);
+                    };
+                    next();
                 }
             });
         }
 
-        // processFiles iterates through the provided markers files, calling processFile for each.
+        // processFiles iterates through the provided facilities files, calling processFile for each.
         //  that.fileIndex indicates which file is to be processed.
         //  When all files are done it calls writeOutData and writeKeyFile
         function processFiles(done) {
             that.fileIndex = 0;
-            that.markers = [];
+            that.facilities = [];
             var params = that.norm_instr;
             function next() {
-                if (that.fileIndex == params.markersFiles.length) {
-                    // console.log(JSON.stringify(that.markers));
+                if (that.fileIndex == params.facilities.length) {
+                    // console.log(JSON.stringify(that.facilities));
                     writeOutData(function (err) {
                         if (err) done(err);
                         else writeKeyFile(function (err) {
@@ -168,7 +168,7 @@ define(function(require, exports, module) {
                         if (err) done(err);
                         else {
                             that.fileIndex += 1;
-                            console.log("MARKERS: ", that.markers.length);
+                            console.log("FACILITIES: ", that.facilities.length);
                             process.nextTick(next);
                         }
                     });
@@ -186,14 +186,14 @@ define(function(require, exports, module) {
             names.forEach(function (file) {
                 records.push(that.filenames[file]);
             });
-            var result = JSON.stringify({"INSTRUCTIONS_TYPE": "getMarkersData",
+            var result = JSON.stringify({"INSTRUCTIONS_TYPE": "getFacilitiesData",
                                          "SUBMIT_KEY": that.submit_key,
                                          "INSTRUCTIONS": that.norm_instr,
                                          "OUTPUTS": {
                                              "FILES": names,
                                              "FILE_RECORDS": records,
-                                             "HEADINGS": {"P": "POSITION",
-                                                          "T": "TEXT",
+                                             "HEADINGS": {"P": "POSITIONS",
+                                                          "W": "WIDTH",
                                                           "C": "COLOR"}
                                          }},null,2);
             fs.writeFile(path.join(that.workDir,"key.json"),result,function (err) {
@@ -203,14 +203,14 @@ define(function(require, exports, module) {
         }
 
         function writeOutData(done) {
-            var fname = 'markers.json';
+            var fname = 'facilities.json';
             var result = [];
             var maxLoops = 500;
             var empty = true;
             function next() {
-                var nLoops = (that.markers.length > maxLoops) ? maxLoops : that.markers.length;
+                var nLoops = (that.facilities.length > maxLoops) ? maxLoops : that.facilities.length;
                 for (var i=0; i<nLoops; i++) {
-                    var p = that.markers.shift();
+                    var p = that.facilities.shift();
                     var row = JSON.stringify(p);
                     result.push(row);
                 }
@@ -226,7 +226,7 @@ define(function(require, exports, module) {
                         result = [];
                         if (err) done(err);
                         else {
-                            if (that.markers.length === 0) {
+                            if (that.facilities.length === 0) {
                                 jf.closeJson(path.join(that.workDir,fname), done);
                             }
                             else process.nextTick(next);
@@ -234,7 +234,7 @@ define(function(require, exports, module) {
                     });
                 }
                 else {
-                    if (that.markers.length === 0) {
+                    if (that.facilities.length === 0) {
                         if (!(fname in that.filenames)) that.filenames[fname] = 0;
                         if (empty) jf.emptyJson(path.join(that.workDir,fname), done);
                         else jf.closeJson(path.join(that.workDir,fname), done);
@@ -245,9 +245,9 @@ define(function(require, exports, module) {
         }
     };
 
-    function newMarkersDataFetcher(p3ApiService, instructions, reportDir, workDir, statusFile, submit_key, forceFlag) {
-        return new MarkersDataFetcher(p3ApiService, instructions, reportDir, workDir, statusFile, submit_key, forceFlag);
+    function newFacilitiesDataFetcher(p3ApiService, instructions, reportDir, workDir, statusFile, submit_key, forceFlag) {
+        return new FacilitiesDataFetcher(p3ApiService, instructions, reportDir, workDir, statusFile, submit_key, forceFlag);
     }
-    module.exports = newMarkersDataFetcher;
+    module.exports = newFacilitiesDataFetcher;
 
 });

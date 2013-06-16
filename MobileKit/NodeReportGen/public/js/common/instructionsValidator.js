@@ -13,7 +13,7 @@ define(function(require, exports, module) {
              {"name": "hash", "required": true, "validator": /[0-9a-fA-F]{32}/},
              {"name": "linewidth", "required": false, "validator": "number", "default_value": 2},
              {"name": "linecolor", "required": false, "validator": /#[0-9a-fA-F]{6}/, "default_value": "#000000"},
-             {"name": "textcolor", "required": false, "validator": /#[0-9a-fA-F]{6}/, "default_value": "#000000"}
+             {"name": "xpath", "required": false, "validator": "string", "default_value": ".//coordinates"}
             ]);
         return rpv.validate();
     }
@@ -48,7 +48,7 @@ define(function(require, exports, module) {
     function componentsValidator (components) {
         var rpv = newParamsValidator(components,
             [{"name": "baseType", "required":false, "validator": /satellite|map|none/, "default_value": "map"},
-             {"name": "facs", "required":false, "validator": "boolean", "default_value": false},
+             {"name": "facilities", "required":false, "validator": "boolean", "default_value": false},
              {"name": "paths", "required":false, "validator": "boolean", "default_value": false},
              {"name": "peaks", "required":false, "validator": "boolean", "default_value": false},
              {"name": "markers", "required":false, "validator": "boolean", "default_value": false},
@@ -136,7 +136,7 @@ define(function(require, exports, module) {
              {"name": "peaksMinAmp", "required": false, "validator": "number", "default_value": 0.03},
              {"name": "runs", "required": true, "validator": validateListUsing(runValidator)},
              {"name": "markersFiles", "required": false, "validator": validateListUsing(markersFileValidator), "default_value":[]},
-             {"name": "facs", "required": false, "validator": validateListUsing(facValidator), "default_value":[]},
+             {"name": "facilities", "required": false, "validator": validateListUsing(facValidator), "default_value":[]},
              {"name": "timezone", "required":false, "validator": "string", "default_value": "UTC"},
              {"name": "template", "required": true, "validator": templateValidator}], postCheck);
         return rpv.validate();

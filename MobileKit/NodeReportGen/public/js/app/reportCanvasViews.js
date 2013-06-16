@@ -83,26 +83,29 @@ define(function(require, exports, module) {
                     case 'submapGrid':
                         this.addLayer(REPORT.reportViewResources.contexts['submapGrid'],[0,0],4,'submapGrid');
                         break;
+                    case 'facilities':
+                        this.addLayer(REPORT.reportViewResources.contexts['facilities'],[0,0],5,'facilities');
+                        break;
                     case 'paths':
-                        this.addLayer(REPORT.reportViewResources.contexts['paths'],[0,0],5,'paths');
+                        this.addLayer(REPORT.reportViewResources.contexts['paths'],[0,0],6,'paths');
                         break;
                     case 'markers':
-                        this.addLayer(REPORT.reportViewResources.contexts['markers'],[0,0],6,'markers');
+                        this.addLayer(REPORT.reportViewResources.contexts['markers'],[0,0],7,'markers');
                         break;
                     case 'fovs':
-                        this.addLayer(REPORT.reportViewResources.contexts['fovs'],[0,0],7,'fovs');
+                        this.addLayer(REPORT.reportViewResources.contexts['fovs'],[0,0],8,'fovs');
                         break;
                     case 'wedges':
-                        this.addLayer(REPORT.reportViewResources.contexts['wedges'],[0,0],8,'wedges');
+                        this.addLayer(REPORT.reportViewResources.contexts['wedges'],[0,0],9,'wedges');
                         break;
                     case 'tokens':
-                        this.addLayer(REPORT.reportViewResources.contexts['tokens'],[0,0],9,'tokens');
+                        this.addLayer(REPORT.reportViewResources.contexts['tokens'],[0,0],10,'tokens');
                         break;
                     case 'analyses':
-                        this.addLayer(REPORT.reportViewResources.contexts['analyses'],[0,0],10,'analyses');
+                        this.addLayer(REPORT.reportViewResources.contexts['analyses'],[0,0],11,'analyses');
                         break;
                     case 'peaks':
-                        this.addLayer(REPORT.reportViewResources.contexts['peaks'],[0,0],11,'peaks');
+                        this.addLayer(REPORT.reportViewResources.contexts['peaks'],[0,0],12,'peaks');
                         break;
                 }
             }
@@ -129,7 +132,7 @@ define(function(require, exports, module) {
             },
             render: function(padding) {
                 var init = false;
-                var allLayers = ['none', 'map', 'satellite', 'submapGrid', 'paths', 'markers', 'fovs', 'wedges', 'tokens', 'analyses', 'peaks'];
+                var allLayers = ['none', 'map', 'satellite', 'submapGrid', 'facilities', 'paths', 'markers', 'fovs', 'wedges', 'tokens', 'analyses', 'peaks'];
                 for (var i=0; i<allLayers.length; i++) {
                     var layerName = allLayers[i], s;
                     if (layerName in this.available) {
@@ -189,7 +192,7 @@ define(function(require, exports, module) {
             },
             render: function(padding) {
                 var init = false;
-                var allLayers = ['none', 'map', 'satellite', 'submapGrid', 'paths', 'markers', 'fovs', 'wedges', 'tokens', 'analyses', 'peaks'];
+                var allLayers = ['none', 'map', 'satellite', 'submapGrid', 'facilities', 'paths', 'markers', 'fovs', 'wedges', 'tokens', 'analyses', 'peaks'];
                 for (var i=0; i<allLayers.length; i++) {
                     var layerName = allLayers[i], s;
                     if (layerName in this.available) {

@@ -116,7 +116,7 @@ define(function(require, exports, module) {
         result["instructions_type"] = "getFacilitiesData";
         result["swCorner"] = gh.encodeGeoHash.apply(null, instructions["swCorner"]);
         result["neCorner"] = gh.encodeGeoHash.apply(null, instructions["neCorner"]);
-        result["facs"] = instructions["facs"].slice(0);
+        result["facilities"] = instructions["facilities"].slice(0);
         return cjs(result,null,2);
     }
 
@@ -182,9 +182,9 @@ define(function(require, exports, module) {
             }
             // Determine if there are any facilities files and if any facilities are in the template
             var needFacilities = false;
-            if (!_.isEmpty(that.norm_instr.facs)) {
-                for (i=0; i<summaryFigs.length; i++) needFacilities = needFacilities || summaryFigs[i].facs;
-                for (i=0; i<submapFigs.length; i++) needFacilities = needFacilities || submapFigs[i].facs;
+            if (!_.isEmpty(that.norm_instr.facilities)) {
+                for (i=0; i<summaryFigs.length; i++) needFacilities = needFacilities || summaryFigs[i].facilities;
+                for (i=0; i<submapFigs.length; i++) needFacilities = needFacilities || submapFigs[i].facilities;
                 if (needFacilities) subtasks.push({"name": "getFacilitiesData", "extractor": extractFacilitiesRequest});
             }
 

@@ -10,7 +10,7 @@ define(function(require, exports, module) {
     var getTicket = require('./md5hex');
     var mkdirp = require('mkdirp');
     var newAnalysesDataFetcher = require('./newAnalysesDataFetcher');
-    // var newFacilitiesDataFetcher = require('./newFacilitiesDataFetcher');
+    var newFacilitiesDataFetcher = require('./newFacilitiesDataFetcher');
     var newFovsDataFetcher = require('./newFovsDataFetcher');
     var newMarkersDataFetcher = require('./newMarkersDataFetcher');
     var newPathsDataFetcher = require('./newPathsDataFetcher');
@@ -198,8 +198,7 @@ define(function(require, exports, module) {
                     newAnalysesDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 case "getFacilitiesData":
-                    sf.writeStatus(statusFile, {"status": rptGenStatus.DONE}, logCompletion);
-                    // newFacilitiesDataFetcher(p3ApiService, instructions, that.reportDir, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
+                    newFacilitiesDataFetcher(p3ApiService, instructions, that.reportDir, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 case "getFovsData":
                     newFovsDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
