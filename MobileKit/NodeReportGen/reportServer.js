@@ -520,7 +520,7 @@ the authenticating proxy server.
                                         // console.log('#' + index + ' ' + JSON.stringify(row));
                                         if (errorCount > 0) {
                                             this.removeAllListeners('record').removeAllListeners('end');
-                                            res.send({name: req.body.file_info, error: "Errors found: invalid CSV file"});
+                                            res.send({name: req.body.file_info, error: "Bad CSV at line " + (index+1)});
                                         }
                                     })
                                     .on('end', function() {

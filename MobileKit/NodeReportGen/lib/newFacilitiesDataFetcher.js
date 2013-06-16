@@ -26,11 +26,15 @@ define(function(require, exports, module) {
     var newParamsValidator = pv.newParamsValidator;
     var validateListUsing = pv.validateListUsing;
 
+    var MAX_OFFSETS = 0.01;
+
     function FacilitiesDataFetcher(p3ApiService, instructions, reportDir, workDir, statusFile, submit_key, forceFlag) {
         this.p3ApiService = p3ApiService;
         this.instructions = instructions;
         this.reportDir = reportDir;
         this.workDir = workDir;
+        this.kmlFilenames = [];
+        this.kmlHashes = [];
         this.statusFile = statusFile;
         this.submit_key = submit_key;
         this.forceFlag = forceFlag;
@@ -89,7 +93,9 @@ define(function(require, exports, module) {
 
         // processFile takes a KML file specified by that.norm_instr.facilities[that.fileIndex]
         //  and fills up that.facilities with objects representing the facilities 
-        //  within the region rectangle (i.e. when anyInside is true)
+        //  within the region rectangle (i.e. when anyInside is true). Note that the facilities
+        //  lats and longs may be offset by up to MAX_OFFSETS degree, so we need to fetch more than
+        //  just what would be in the rectangle.
         function processFile(done) {
             var facilitiesFile = that.norm_instr.facilities[that.fileIndex];
             var hash = facilitiesFile.hash;
@@ -98,6 +104,9 @@ define(function(require, exports, module) {
             var linewidth = facilitiesFile.linewidth;
             var filename = path.join(that.reportDir, "kml", hash.substr(0,2), hash, hash + '.kml');
             var maxLoops = 100;
+            that.kmlHashes[that.fileIndex] = hash;
+            that.kmlFilenames[that.fileIndex] = facilitiesFile.filename;
+
             fs.readFile(filename, "ascii", function (err, data) {
                 if (err) done(err);
                 else {
@@ -119,8 +128,8 @@ define(function(require, exports, module) {
                                 });
                                 var lat = coords[1];
                                 var lng = coords[0];
-                                if (that.minLat <= lat && lat <= that.maxLat &&
-                                    that.minLng <= lng && lng <= that.maxLng) anyInside = true;
+                                if (that.minLat-MAX_OFFSETS <= lat && lat <= that.maxLat+MAX_OFFSETS &&
+                                    that.minLng-MAX_OFFSETS <= lng && lng <= that.maxLng+MAX_OFFSETS) anyInside = true;
                                 segment.push(gh.encodeGeoHash(lat,lng));
                             }
                         }
@@ -132,7 +141,7 @@ define(function(require, exports, module) {
                             anyInside = false;
                             points.forEach(getSegment);
                             if (anyInside && segment.length>1) {
-                                that.facilities.push({P:segment, W:linewidth, C:linecolor});
+                                that.facilities.push({P:segment, W:linewidth, C:linecolor, F:that.fileIndex});
                             }
                         }
                         if (results.length === 0) {
@@ -190,11 +199,14 @@ define(function(require, exports, module) {
                                          "SUBMIT_KEY": that.submit_key,
                                          "INSTRUCTIONS": that.norm_instr,
                                          "OUTPUTS": {
+                                             "KML_FILENAMES": that.kmlFilenames,
+                                             "KML_HASHES": that.kmlHashes,
                                              "FILES": names,
                                              "FILE_RECORDS": records,
                                              "HEADINGS": {"P": "POSITIONS",
                                                           "W": "WIDTH",
-                                                          "C": "COLOR"}
+                                                          "C": "COLOR",
+                                                          "F": "FILE_INDEX"}
                                          }},null,2);
             fs.writeFile(path.join(that.workDir,"key.json"),result,function (err) {
                 if (err) done(err);

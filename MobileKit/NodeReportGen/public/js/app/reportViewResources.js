@@ -200,7 +200,7 @@ define(function(require, exports, module) {
                 that.trigger("init",{"context": "facilities"});
                 REPORT.facilities.once("loaded", function () {
                     that.facilitiesData = REPORT.facilities.models;
-                    var result = makeFacilities(that);
+                    var result = makeFacilities(that, REPORT.settings.get("facilities"));
                     that.contexts["facilities"] = result.facilities;
                     that.trigger("change",{"context": "facilities"});
                 });

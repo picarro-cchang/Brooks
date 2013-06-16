@@ -146,9 +146,11 @@ define(function(require, exports, module) {
                 if (data.SUBTASKS.hasOwnProperty("getPeaksData")) REPORT.peaks = new REPORT.Peaks(null, {peaksRef:data.SUBTASKS.getPeaksData});
                 else REPORT.peaks = null;
 
+                REPORT.settings.set({"markersFiles": data.INSTRUCTIONS.markersFiles});
                 if (data.SUBTASKS.hasOwnProperty("getMarkersData")) REPORT.markers = new REPORT.Markers(null, {markersRef:data.SUBTASKS.getMarkersData});
                 else REPORT.markers = null;
 
+                REPORT.settings.set({"facilities": data.INSTRUCTIONS.facilities});
                 if (data.SUBTASKS.hasOwnProperty("getFacilitiesData")) REPORT.facilities = new REPORT.Facilities(null, {facilitiesRef:data.SUBTASKS.getFacilitiesData});
                 else REPORT.facilities = null;
 

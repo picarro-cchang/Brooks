@@ -10,6 +10,7 @@ define(function(require, exports, module) {
     var _ = require('underscore');
     var Backbone = require('backbone');
     var bufferedTimezone = require('app/utils').bufferedTimezone;
+    var CNSNT = require('app/cnsnt');
     var cjs = require('common/canonical_stringify');
     var DASHBOARD = require('app/dashboardGlobals');
     var instrResource = require('app/utils').instrResource;
@@ -85,6 +86,13 @@ define(function(require, exports, module) {
         return coords;
     }
 
+    function floatsToString(floatArray) {
+        var i, result = [];
+        for (i = 0; i < floatArray.length; i++) {
+            result.push(String(floatArray[i]));
+        }
+        return result.join(", ");
+    }
     // ============================================================================
     //  Definitions of tables which can be edited by the user
     // ============================================================================
@@ -182,7 +190,9 @@ define(function(require, exports, module) {
 
     var facilitiesDefinition = {id: "facilitiestable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "filename", width: "48%", th: "KML Filename", tf: String, eid: "id_file_upload_name", cf: String},
+        {key: "filename", width: "36%", th: "KML Filename", tf: String, eid: "id_file_upload_name", cf: String},
+        {key: "offsets", width: "12%", th: "Offsets", tf: floatsToString, eid: "id_fac_offsets", cf: parseFloats,
+            ef: function (s, b) { s.val(floatsToString(b)); }},
         {key: "linewidth", width: "12%", th: "Line Width", tf: Number, eid: "id_fac_linewidth", cf: Number},
         {key: "linecolor", width: "12%", th: "Line Color", tf: makeColorPatch, eid: "id_fac_linecolor", cf: String},
         {key: "xpath", width: "12%", th: "XPath", tf: String, eid: "id_fac_xpath", cf: String},
@@ -318,6 +328,8 @@ define(function(require, exports, module) {
         // Use post to allow uploading of the facilities file when the form is submitted
         body += '<form id="id_fac_upload_form" class="form-horizontal" method="post"  enctype="multipart/form-data" action="/fileUpload">';
         body += uploadControl("KML File", "kmlUpload");
+        body += tableFuncs.editControl("Offsets", tableFuncs.makeInput("id_fac_offsets",
+                {"class": controlClass, "placeholder": "LatOffset, LongOffset"}));
         body += tableFuncs.editControl("Line Width", tableFuncs.makeSelect("id_fac_linewidth", {"class": controlClass},
                 {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8}));
         body += tableFuncs.editControl("Line Color", tableFuncs.makeSelect("id_fac_linecolor", {"class": controlClass},
@@ -522,6 +534,17 @@ define(function(require, exports, module) {
             }
             if (numErr === 0) onSuccess();
         };
+        var offsets = parseFloats($("#"+eidByKey.offsets).val());
+        if (offsets.length !== 2) {
+            tableFuncs.addError("id_fac_offsets", "Bad offset pair");
+            numErr += 1;
+        }
+        else if (offsets[0] < -CNSNT.MAX_OFFSETS || offsets[0] > CNSNT.MAX_OFFSETS ||
+                 offsets[1] < -CNSNT.MAX_OFFSETS || offsets[1] > CNSNT.MAX_OFFSETS) {
+            tableFuncs.addError("id_fac_offsets", "Maximum absolute offset is " + CNSNT.MAX_OFFSETS + " degrees");
+            numErr += 1;
+        }
+
         if (DASHBOARD.uploadFile) {
             $("#id_fac_upload_form").submit();
         }

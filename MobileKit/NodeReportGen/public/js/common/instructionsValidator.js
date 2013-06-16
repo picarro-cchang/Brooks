@@ -7,10 +7,26 @@ define(function(require, exports, module) {
     var validateListUsing = pv.validateListUsing;
     var latlngValidator = pv.latlngValidator;
 
+    function offsetsValidator(data) {
+        try {
+            if (data.length == 2 &&
+                typeof data[0] === "number" && typeof data[1] === "number" &&
+                data[0] >= -0.01 && data[0] <= 0.01 &&
+                data[1] >= -0.01 && data[1] <= 0.01) {
+                return {"valid": true};
+            }
+            else return {"valid": false, "errorList": ["Invalid latitude, longitude offsets"]};
+        }
+        catch (e) {
+            return {"valid": false, "errorList": ["Invalid latitude, longitude offsets"]};
+        }
+    }
+
     function facValidator(fac) {
         var  rpv = newParamsValidator(fac,
             [{"name": "filename", "required": true, "validator": "string"},
              {"name": "hash", "required": true, "validator": /[0-9a-fA-F]{32}/},
+             {"name": "offsets", "required": false, "validator": offsetsValidator, "default_value":[0.0,0.0]},
              {"name": "linewidth", "required": false, "validator": "number", "default_value": 2},
              {"name": "linecolor", "required": false, "validator": /#[0-9a-fA-F]{6}/, "default_value": "#000000"},
              {"name": "xpath", "required": false, "validator": "string", "default_value": ".//coordinates"}
