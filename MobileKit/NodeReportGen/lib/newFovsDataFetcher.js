@@ -592,9 +592,9 @@ define(function(require, exports, module) {
                                     var pos = gh.encodeGeoHash(m.GPS_ABS_LAT, m.GPS_ABS_LONG);
                                     var edge = gh.encodeGeoHash(m.GPS_ABS_LAT+m.DELTA_LAT, m.GPS_ABS_LONG+m.DELTA_LONG);
                                     results.push(JSON.stringify({"R": row, "P": pos, "E": edge}));
-                                    console.log("Processed SWATH rows: " + results.length);
                                 }
                             }
+                            console.log("Processed SWATH rows: " + results.length);
                             // console.log("SWATH: " + JSON.stringify(results[results.length-1]));
                             process.nextTick(next);
                         }

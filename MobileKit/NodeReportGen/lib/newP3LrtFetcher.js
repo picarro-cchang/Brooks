@@ -116,7 +116,7 @@ define(function(require, exports, module) {
                     else that.emit("error", err);
                 }
                 else {
-                    console.log("Fetching " + that.start + " to " + (that.start + result.length - 1) +
+                    console.log("P3LRT " + that.rsc + ": Fetching " + that.start + " to " + (that.start + result.length - 1) +
                                 " of " + that.lrt_count + " results");
                     that.start += result.length;
                     that.sortPos = result[result.length-1]["lrt_sortpos"];
@@ -137,7 +137,7 @@ define(function(require, exports, module) {
                     else that.emit("error", err);
                 }
                 else {
-                    console.log("Fetching " + that.start + " to " + (that.start + result.length - 1) +
+                    console.log("P3LRT " + that.rsc + ": Fetching " + that.start + " to " + (that.start + result.length - 1) +
                                 " of " + that.lrt_count + " results");
                     that.start += result.length;
                     that.sortPos = result[result.length-1]["lrt_sortpos"];

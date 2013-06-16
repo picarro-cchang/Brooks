@@ -1,8 +1,13 @@
 /* layers.js provides functions for manipulating, showing and hiding layers */
+/*global module, require */
+/* jshint undef:true, unused:true */
 
-define (['jquery', 'app/cnsnt'],
-function ($,        CNSNT) {
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
+
+define(function(require, exports, module) {
     'use strict';
+    var $ = require('jquery');
+    var CNSNT = require('common/cnsnt');
 
     function MultiCanvas(name, container) {
         this.name = name;
@@ -105,5 +110,5 @@ function ($,        CNSNT) {
         return new MultiCanvas(name, container);
     }
 
-    return newMultiCanvas;
+    module.exports = newMultiCanvas;
 });

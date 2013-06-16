@@ -6,7 +6,7 @@ if (typeof define !== 'function') { var define = require('amdefine')(module); }
 define(function(require, exports, module) {
     'use strict';
     var Backbone = require('backbone');
-    var CNSNT = require('app/cnsnt');
+    var CNSNT = require('common/cnsnt');
     var instrResource = require('app/utils').instrResource;
     var REPORT  = require('app/reportGlobals');
     require('jquery.dataTables');

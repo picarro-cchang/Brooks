@@ -10,7 +10,7 @@ define(function(require, exports, module) {
     var _ = require('underscore');
     var Backbone = require('backbone');
     var bufferedTimezone = require('app/utils').bufferedTimezone;
-    var CNSNT = require('app/cnsnt');
+    var CNSNT = require('common/cnsnt');
     var cjs = require('common/canonical_stringify');
     var DASHBOARD = require('app/dashboardGlobals');
     var instrResource = require('app/utils').instrResource;
@@ -534,7 +534,13 @@ define(function(require, exports, module) {
             }
             if (numErr === 0) onSuccess();
         };
-        var offsets = parseFloats($("#"+eidByKey.offsets).val());
+        var offsets = $("#"+eidByKey.offsets).val();
+        if (offsets === "") {   // Replace blank entry with 0, 0
+            offsets = "0, 0";
+            $("#"+eidByKey.offsets).val(offsets);
+        }
+        offsets = parseFloats(offsets);
+
         if (offsets.length !== 2) {
             tableFuncs.addError("id_fac_offsets", "Bad offset pair");
             numErr += 1;

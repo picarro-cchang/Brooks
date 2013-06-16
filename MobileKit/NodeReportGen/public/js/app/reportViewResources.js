@@ -18,7 +18,7 @@ define(function(require, exports, module) {
     var $ = require('jquery');
     var _ = require('underscore');
     var Backbone = require('backbone');
-    var CNSNT = require('app/cnsnt');
+    var CNSNT = require('common/cnsnt');
     var makeAnalyses = require('app/makeAnalyses');
     var makeAnalysesTable = require('app/makeAnalysesTable');
     var makeFacilities = require('app/makeFacilities');

@@ -8,7 +8,7 @@ define(function(require, exports, module) {
     var $ = require('jquery');
     var _ = require('underscore');
     var Backbone = require('backbone');
-    var CNSNT = require('app/cnsnt');
+    var CNSNT = require('common/cnsnt');
     var newMultiCanvas = require('app/newMultiCanvas');
     var REPORT  = require('app/reportGlobals');
 

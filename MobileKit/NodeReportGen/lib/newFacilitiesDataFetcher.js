@@ -13,6 +13,7 @@ if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
 	'use strict';
+    var CNSNT = require('../public/js/common/cnsnt');
     var et = require('elementtree');
     var fs = require('fs');
     var gh = require('./geohash');
@@ -25,8 +26,6 @@ define(function(require, exports, module) {
 
     var newParamsValidator = pv.newParamsValidator;
     var validateListUsing = pv.validateListUsing;
-
-    var MAX_OFFSETS = 0.01;
 
     function FacilitiesDataFetcher(p3ApiService, instructions, reportDir, workDir, statusFile, submit_key, forceFlag) {
         this.p3ApiService = p3ApiService;
@@ -94,7 +93,7 @@ define(function(require, exports, module) {
         // processFile takes a KML file specified by that.norm_instr.facilities[that.fileIndex]
         //  and fills up that.facilities with objects representing the facilities 
         //  within the region rectangle (i.e. when anyInside is true). Note that the facilities
-        //  lats and longs may be offset by up to MAX_OFFSETS degree, so we need to fetch more than
+        //  lats and longs may be offset by up to CNSNT.MAX_OFFSETS degree, so we need to fetch more than
         //  just what would be in the rectangle.
         function processFile(done) {
             var facilitiesFile = that.norm_instr.facilities[that.fileIndex];
@@ -128,8 +127,8 @@ define(function(require, exports, module) {
                                 });
                                 var lat = coords[1];
                                 var lng = coords[0];
-                                if (that.minLat-MAX_OFFSETS <= lat && lat <= that.maxLat+MAX_OFFSETS &&
-                                    that.minLng-MAX_OFFSETS <= lng && lng <= that.maxLng+MAX_OFFSETS) anyInside = true;
+                                if (that.minLat-CNSNT.MAX_OFFSETS <= lat && lat <= that.maxLat+CNSNT.MAX_OFFSETS &&
+                                    that.minLng-CNSNT.MAX_OFFSETS <= lng && lng <= that.maxLng+CNSNT.MAX_OFFSETS) anyInside = true;
                                 segment.push(gh.encodeGeoHash(lat,lng));
                             }
                         }
