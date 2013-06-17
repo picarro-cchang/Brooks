@@ -1,13 +1,11 @@
 /* inKml.js reads a KML file into a JSON object  */
-/*global console, module, require */
+/*global console, module, process, require */
 /*jshint undef:true, unused:true */
 
 'use strict';
 var et = require('elementtree');
 var fs = require('fs');
 var gh = require('../lib/geohash');
-
-var ElementTree = et.ElementTree;
 
 var data = fs.readFileSync("PlasticMain_After1983_LN.kml","utf8");
 // Search for the start of the file, which should be "<"
@@ -30,25 +28,26 @@ var start = (new Date()).valueOf();
 //  these coordinates and place the segments into the "segments" array.   
 var segments = [];
 function next() {
+    var segment;
+    function getSegment(p) {
+        if (p) {
+            var coords = [];
+            p.split(',').forEach(function (c) {
+                coords.push(+c);
+            });
+            segment.push(gh.encodeGeoHash(coords[1], coords[0]));
+        }
+    }
     var nLoops = (results.length > maxLoops) ? maxLoops : results.length;
     for (var i=0; i<nLoops; i++) {
-        var segment = [];
         var e = results.shift();
         var points = e.text.split(/\s+/);
-        points.forEach(function (p){
-            if (p) {
-                var coords = [];
-                p.split(',').forEach(function (c) {
-                    coords.push(+c);
-                });
-                segment.push(gh.encodeGeoHash(coords[1], coords[0]));
-                // segment.push(coords);
-            }
-        });
-        segments.push(segment);
+        segment = [];
+        points.forEach(getSegment);
+        segments.push({P:segment});
     }
     if (results.length === 0) {
-        console.log(JSON.stringify(segments));
+        console.log(JSON.stringify(segments,null,2));
         console.log("Done: " + ((new Date()).valueOf() - start));
     }
     else process.nextTick(next);
