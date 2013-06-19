@@ -326,7 +326,7 @@ define(function(require, exports, module) {
         header = '<div class="modal-header"><h3>' + "Add new KML file for facilities layer" + '</h3></div>';
         body   = '<div class="modal-body">';
         // Use post to allow uploading of the facilities file when the form is submitted
-        body += '<form id="id_fac_upload_form" class="form-horizontal" method="post"  enctype="multipart/form-data" action="/fileUpload">';
+        body += '<form id="id_fac_upload_form" class="form-horizontal" method="post"  enctype="multipart/form-data" action="' + assets + 'fileUpload">';
         body += uploadControl("KML File", "kmlUpload");
         body += tableFuncs.editControl("Offsets", tableFuncs.makeInput("id_fac_offsets",
                 {"class": controlClass, "placeholder": "LatOffset, LongOffset"}));
@@ -354,7 +354,7 @@ define(function(require, exports, module) {
         header = '<div class="modal-header"><h3>' + "Add new CSV file for user markers" + '</h3></div>';
         body   = '<div class="modal-body">';
         // Use post to allow uploading of the markers file when the form is submitted
-        body += '<form id="id_markers_upload_form" class="form-horizontal" method="post"  enctype="multipart/form-data" action="/fileUpload">';
+        body += '<form id="id_markers_upload_form" class="form-horizontal" method="post"  enctype="multipart/form-data" action="' + assets + 'fileUpload">';
         body += uploadControl("CSV File", "csvUpload");
         body += tableFuncs.makeInput("id_markers_hash_and_name", {"class": controlClass, "type":"hidden"});
         body += '</form></div>';

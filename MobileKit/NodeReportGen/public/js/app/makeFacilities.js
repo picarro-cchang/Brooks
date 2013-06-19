@@ -34,7 +34,7 @@ define(function(require, exports, module) {
                 else ctxFacilities.lineTo(x + report.padX, y + report.padY);
             }
             ctxFacilities.lineWidth = +width;
-            ctxFacilities.strikeStyle = color;
+            ctxFacilities.strokeStyle = color;
             ctxFacilities.stroke();
         }
 

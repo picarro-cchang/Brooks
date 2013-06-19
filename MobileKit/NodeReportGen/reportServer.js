@@ -218,7 +218,7 @@ the authenticating proxy server.
     }
 
     function handleRptGen(req, res) {
-        var contents, hash, pv, reportGen, result = {}, statusFile, user, workDir;
+        var hash, pv, reportGen, result = {}, statusFile, user, workDir;
         result = _.extend(result, req.query);
         // console.log("req.query: " + JSON.stringify(req.query));
         // Handle submission of instructions file, requests for status, and retrieval of results
@@ -296,34 +296,6 @@ the authenticating proxy server.
             }
             else res.send(_.extend(result,{"error": pv.errors()}));
             break;
-        case "stashKml":
-            // Use elementTree to parse a KML string (which is first normalized to use Unix line endings). 
-            //  If it parses without error, compute the MD5 hash and save the string into a file in a 
-            //  subdirectory generated from the MD5 hash
-            pv = newParamsValidator(req.query,
-                [{"name": "contents", "required": true, "validator": "string"}]);
-            if (pv.ok()) {
-                contents = req.query.contents;
-                contents = contents.replace("\r\n","\n").replace("\r","\n");
-                try {
-                    var start = contents.indexOf("<");
-                    if (start > 10 || start < 0) {
-                        throw new Error("Cannot find starting element of XML file");
-                    }
-                    else {
-                        et.parse(contents.substr(start));
-                        hash = md5hex(contents);
-                        console.log("MD5 Hash: " + hash);
-                        res.send(_.extend(result, {hash:hash}));
-                    }
-                }
-                catch (err) {
-                    console.log("Error in stashKml" + err.message);
-                    res.send(_.extend(result,{error: err.message}));
-                }
-            }
-            else res.send(_.extend(result,{error: pv.errors()}));
-            break;
         default:
             res.send(_.extend(result,{error: "RptGen: Unknown or missing qry"}));
             break;
@@ -365,7 +337,7 @@ the authenticating proxy server.
     function _index(req, res, force) {
         res.render("index",
             {assets: SITECONFIG.assets,
-             force: false,
+             force: force,
              host: SITECONFIG.proxyhost,
              identity: SITECONFIG.identity,
              port: SITECONFIG.proxyport,
