@@ -785,6 +785,20 @@ class RDFrequencyConverter(Singleton):
         """
         self._assertVLaserNum(vLaserNum)
         self.freqConverter[vLaserNum-1].setOffset(offset)
+        
+    def RPC_getLaserTempOffset(self, vLaserNum):
+        """Fetches the temp offset for the virtual laser. vLaserNum is 1-based.
+        Returns offset in degrees.
+        """
+        self._assertVLaserNum(vLaserNum)
+        return self.freqConverter[vLaserNum-1].getTempOffset()
+
+    def RPC_setLaserTempOffset(self, vLaserNum, offset):
+        """Updates the Temp offset for the virtual laser.
+        vLaserNum is 1-based. offset is in degrees.
+        """
+        self._assertVLaserNum(vLaserNum)
+        self.freqConverter[vLaserNum-1].setTempOffset(offset)
 
     def RPC_shutdown(self):
         self._shutdownRequested = True
