@@ -23,17 +23,11 @@ import Queue
 import time
 from configobj import ConfigObj
 from Host.autogen.interface import *
-from Host.Common import CmdFIFO, SharedTypes
-from Host.Common.timestamp import unixTime
-from Host.Common.Listener import Listener
-from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-
-EventManagerProxy_Init("SaveData")
 
 ctype2coltype = { c_byte:Int8Col, c_uint:UInt32Col, c_int:Int32Col, 
                   c_short:Int16Col, c_ushort:UInt16Col, c_longlong:Int64Col, 
@@ -44,8 +38,16 @@ class SaveData(object):
         filters = Filters(complevel=1,fletcher32=True)
         if len(argList)>=1: 
             infileName = argList[0]
+        else:
+            infileName = raw_input("Name of input sensor file: ")
+        outDef = os.path.join(os.path.split(os.path.abspath(infileName))[0],"sensors.h5")
+        
         if len(argList)>=2: 
             outfileName = argList[1]        
+        else:
+            outfileName = raw_input("Output file for DatViewer [%s]: " % outDef)
+        if not outfileName: outfileName = outDef
+        
         self.h5f = openFile(outfileName,"w") 
         self.colDict = { "timestamp" : Int64Col() }
         for name in STREAM_MemberTypeDict.values():
