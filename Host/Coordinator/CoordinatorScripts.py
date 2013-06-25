@@ -1,31 +1,32 @@
 #
-# FILE:  
+# FILE:
 #   CoordinatorScripts.py
 #
-# DESCRIPTION:                                                
+# DESCRIPTION:
 #   Support routines for isotopic water coordinator INI file
-#                                                             
-# SEE ALSO:                                             
-#   Specify any related information.                   
-#                                                             
+#
+# SEE ALSO:
+#   Specify any related information.
+#
 # HISTORY:
 #   15-Sep-2008  sze  Incorporated into compiled code
 #   12-Dec-2008  alex Added batch mode functionality
 #   20-Sep-2010  sze  Add tag along data functions and add pCalOffset parameter
 #                     to loadWarmBoxCal
 #   18-Aug-2011  alex Added socket interface functions to add tagalong data
-#  Copyright (c) 2009 Picarro, Inc. All rights reserved 
+#  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
 
 # Routines to support state machine handler for autosampler
 
-# Note that the module variables DRIVER, MEASSYS, SAMPLEMGR, SPECTCOLLECTOR, DATAMGR, 
+# Note that the module variables DRIVER, MEASSYS, SAMPLEMGR, SPECTCOLLECTOR, DATAMGR,
 #   FREQCONV and LOGFUNC are set from outside
 
 from time import sleep, mktime, localtime, strptime, strftime, time, clock, ctime
 from datetime import datetime, timedelta, MINYEAR
 from numpy import *
 from configobj import ConfigObj
+import traceback
 import socket
 import sys
 import os
@@ -62,7 +63,7 @@ def moveWildToDir(src,dest):
     srcFiles = glob(src)
     for f in srcFiles:
         move(abspath(f),join(dest,split(f)[1]))
-        
+
 ##############
 # General DRIVER functions
 ##############
@@ -74,7 +75,7 @@ def getAnalyzerId():
         print err
         analyzerId = "UNKNOWN"
     return analyzerId
-    
+
 def getAnalyzerType():
     try:
         instInfo = DRIVER.fetchLogicEEPROM()[0]
@@ -83,10 +84,10 @@ def getAnalyzerType():
         print err
         analyzerType = "UNKNOWN"
     return analyzerType
-             
+
 def setFanState(fanState):
     DRIVER.setFanState(fanState)
-    
+
 ##############
 # Numerical calculations
 ##############
@@ -95,34 +96,34 @@ def cubicSpline(xList, yList, numPoints):
     newXList = arange(xList[0], xList[-1], (xList[-1]-xList[0])/numPoints)
     newYList = list(cs(newXList))
     return list(newXList), newYList
-    
+
 #############
 # DAS Register
 #############
 def wrDasReg(regName, regValue):
     DRIVER.wrDasReg(regName, regValue)
-    
+
 def rdDasReg(regName):
     return DRIVER.rdDasReg(regName)
-    
+
 #############
 # Config File accces
 #############
 def getConfig(fileName):
     return ConfigObj(fileName)
-    
+
 #############
 # Warm Box Accessor
 #############
 def loadWarmBoxCal(fileName='',pCalOffset=None):
     FREQCONV.loadWarmBoxCal(fileName,pCalOffset)
-    
+
 #############
 # Hot Box Accessor
 #############
 def loadHotBoxCal(fileName=''):
     FREQCONV.loadHotBoxCal(fileName)
-    
+
 #############
 # UTC & Time
 #############
@@ -146,17 +147,17 @@ def getSpecUTC(specTime = "00:00:00", option="float"):
         return mktime(newTime)
     elif option.lower() == "string":
         return ctime(mktime(newTime))
-   
+
 ##############
 # Plotting and Images
-##############   
+##############
 def unixTimeArray2MatplotTimeArray(timeArray):
     dt = datetime.fromtimestamp(timeArray[0])
     mTime0 = dates.date2num(dt)
     mTimeArray = (timeArray-timeArray[0])/(3600.0*24.0) + mTime0
     formatter = dates.DateFormatter('%H:%M:%S\n%Y/%m/%d')
     return mTimeArray, formatter
-    
+
 def plotWithMatplotTime(plotObj, matplotTimeArray, dataArray, xLabel, yLabel, formatter, numLocator):
     plotObj.plot(matplotTimeArray, dataArray)
     plotObj.set_xlabel(xLabel)
@@ -168,14 +169,14 @@ def plotWithMatplotTime(plotObj, matplotTimeArray, dataArray, xLabel, yLabel, fo
 def grabScreenshot(filename):
     im = ImageGrab.grab()
     im.save(filename)
-    
+
 ##########################
 # Get barometric pressure with Yahoo weather
 ##########################
 def getBarometricPressure(zipCode):
     url = 'http://xml.weather.yahoo.com/forecastrss?p=%s&u=f' % zipCode
     handler = urllib2.urlopen(url)
-    dom = minidom.parse(handler)    
+    dom = minidom.parse(handler)
     element = dom.getElementsByTagNameNS('http://xml.weather.yahoo.com/ns/rss/1.0', 'atmosphere')[0]
     handler.close()
     return 25.4*float(element.getAttribute('pressure'))
@@ -186,46 +187,46 @@ def getBarometricPressure(zipCode):
 class FitterRPC(object):
     def __init__(self, rpcPort):
         self.fitter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % rpcPort, ClientName = "Coordinator")
-    
+
     def setH5Files(self, h5FileList):
         self.fitter.FITTER_makeHdf5RepositoryRpc(h5FileList)
-    
+
     def fitSpectrum(self):
         self.fitter.FITTER_fitSpectrumRpc()
         sleep(2)
         self.fitter.FITTER_updateViewer(True)
         sleep(2)
         self.fitter.FITTER_setProcModeRpc(False)
-        
+
     def maximizeViewer(self):
         self.fitter.FITTER_maximizeViewer(True)
-        
+
     def restoreViewer(self):
         self.fitter.FITTER_maximizeViewer(False)
-        
+
     def getProcessID(self):
         return self.fitter.CmdFIFO.GetProcessID()
-        
+
     def stopServer(self):
         return self.fitter.CmdFIFO.StopServer()
-       
+
 ####################
 # External valve sequencer control
 ####################
 def startExtValveSequencer():
     try:
         VALSEQ.startValveSeq()
-        LOGFUNC("Started external valve sequencer\n") 
+        LOGFUNC("Started external valve sequencer\n")
     except Exception, err:
-        LOGFUNC("External valve sequencer: %r\n" % err) 
-        
+        LOGFUNC("External valve sequencer: %r\n" % err)
+
 def stopExtValveSequencer():
     try:
         VALSEQ.stopValveSeq()
-        LOGFUNC("Stopped external valve sequencer\n") 
+        LOGFUNC("Stopped external valve sequencer\n")
     except Exception, err:
-        LOGFUNC("External valve sequencer: %r\n" % err) 
-        
+        LOGFUNC("External valve sequencer: %r\n" % err)
+
 def isExtValveSequencerOn():
     try:
         status = VALSEQ.getValveSeqStatus()
@@ -233,94 +234,98 @@ def isExtValveSequencerOn():
     except Exception, err:
         LOGFUNC("External valve sequencer: %r\n" % err)
         return False
-       
+
 ##########################
 # Pulse analyzer functions
 ##########################
-def pulseAnalyzerSet(source, concNameList, targetConc = None, thres1Pair = [0.0, 0.0], 
-                     thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0, 
-                     validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0, 
+def pulseAnalyzerSet(source, concNameList, targetConc = None, thres1Pair = [0.0, 0.0],
+                     thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0,
+                     validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0,
                      bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1, armCond = None):
     DATAMGR.PulseAnalyzer_Set(source, concNameList, targetConc, thres1Pair, thres2Pair,
                              triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
                              timeout, bufSize, numPointsToTrigger, numPointsToRelease, armCond)
-    LOGFUNC("Pulse analyzer set\n") 
+    LOGFUNC("Pulse analyzer set\n")
 
 def pulseAnalyzerStartRunning():
     DATAMGR.PulseAnalyzer_StartRunning()
-    LOGFUNC("Pulse analyzer started\n") 
-        
+    LOGFUNC("Pulse analyzer started\n")
+
 def pulseAnalyzerStopRunning():
     DATAMGR.PulseAnalyzer_StopRunning()
-    LOGFUNC("Pulse analyzer stopped\n") 
+    LOGFUNC("Pulse analyzer stopped\n")
 
 def pulseAnalyzerStartAddingData():
     DATAMGR.PulseAnalyzer_StartAddingData()
-    LOGFUNC("Started adding data to pulse analyzer\n") 
+    LOGFUNC("Started adding data to pulse analyzer\n")
 
 def pulseAnalyzerStopAddingData():
     DATAMGR.PulseAnalyzer_StopAddingData()
-    LOGFUNC("Stopped adding data to pulse analyzer\n") 
-    
-def pulseAnalyzerGetDataReady(): 
+    LOGFUNC("Stopped adding data to pulse analyzer\n")
+
+def pulseAnalyzerGetDataReady():
     return DATAMGR.PulseAnalyzer_GetDataReady()
 
-def pulseAnalyzerIsTriggeredStatus(): 
+def pulseAnalyzerIsTriggeredStatus():
     return DATAMGR.PulseAnalyzer_IsTriggeredStatus()
-    
-def pulseAnalyzerGetOutput(): 
+
+def pulseAnalyzerGetOutput():
     return DATAMGR.PulseAnalyzer_GetOutput()
 
 def pulseAnalyzerGetTimestamp():
     return DATAMGR.PulseAnalyzer_GetTimestamp()
 
-def pulseAnalyzerReset(): 
+def pulseAnalyzerReset():
     return DATAMGR.PulseAnalyzer_Reset()
-    LOGFUNC("Pulse analyzer reset\n") 
+    LOGFUNC("Pulse analyzer reset\n")
 
-def pulseAnalyzerGetStatistics(): 
+def pulseAnalyzerGetStatistics():
     return DATAMGR.PulseAnalyzer_GetStatistics()
-    
+
 def pulseAnalyzerGetPulseStartEndTime():
     return DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
-    
+
 ##########################
 # Data manager functions
 ##########################
 def setMeasBuffer(source, colList, bufSize):
     DATAMGR.MeasBuffer_Set(source, colList, bufSize)
-    LOGFUNC("Meas buffer set\n") 
-    
+    LOGFUNC("Meas buffer set\n")
+
 def clearMeasBuffer():
     DATAMGR.MeasBuffer_Clear()
-    LOGFUNC("Meas buffer cleared\n") 
-            
+    LOGFUNC("Meas buffer cleared\n")
+
 def measGetBuffer():
     return DATAMGR.MeasBuffer_Get()
 
 def measGetBufferFirst():
-    return DATAMGR.MeasBuffer_GetFirst()
-    
+    # If the DataManager is dead, we should give it some time to recover.
+    try:
+        return DATAMGR.MeasBuffer_GetFirst()
+    except Exception:
+        traceback.print_exc()
+
 def enableCalScript():
-    LOGFUNC("Calibration script from Data Manager is enabled\n") 
+    LOGFUNC("Calibration script from Data Manager is enabled\n")
     DATAMGR.Cal_Enable()
-    
+
 def disableCalScript():
-    LOGFUNC("Calibration script from Data Manager is disabled\n") 
-    DATAMGR.Cal_Disable()  
+    LOGFUNC("Calibration script from Data Manager is disabled\n")
+    DATAMGR.Cal_Disable()
 
 def getUserCalibrations():
     return DATAMGR.Cal_GetUserCalibrations()
-    
+
 def getInstrCalibrations():
     return DATAMGR.Cal_GetInstrCalibrations()
-    
+
 ##########################
 # Other Driver functions
 ##########################
 def getDasTemperature():
     return DRIVER.rdDasReg("DAS_TEMPERATURE_REGISTER")
-    
+
 ##########################
 # Quick GUI functions
 ##########################
@@ -329,13 +334,13 @@ def setLineMarkerColor(color=None, colorTime=None):
         QUICKGUI.setLineMarkerColor(color, colorTime)
     except:
         pass
-        
+
 def getLineMarkerColor():
     try:
         return QUICKGUI.getLineMarkerColor()
     except:
         pass
-        
+
 ##########################
 # Data logger functions
 ##########################
@@ -345,20 +350,20 @@ def startDataLog(userLogName):
         LOGFUNC("Data log started\n")
     except:
         LOGFUNC("Failed to start data log\n")
-    
+
 def stopDataLog(userLogName):
     try:
         DATALOGGER.DATALOGGER_stopLogRpc(userLogName)
         LOGFUNC("Data log stopped\n")
     except:
         LOGFUNC("Failed to stop data log\n")
-    
+
 #########################
-# Batch mode / rising loss trigger functions    
+# Batch mode / rising loss trigger functions
 #########################
 def configBatchModeToDasReg(configDict):
     DRIVER.wrDasReg("VLVCNTRL_RISING_LOSS_THRESHOLD_REGISTER", float(configDict["risingLossThreshold"]))
-    DRIVER.wrDasReg("VLVCNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER", float(configDict["risingLossRateThreshold"]))    
+    DRIVER.wrDasReg("VLVCNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER", float(configDict["risingLossRateThreshold"]))
     DRIVER.wrDasReg("VLVCNTRL_TRIGGERED_SOLENOID_STATE_REGISTER", int(configDict["triggeredSolenoidValveStates"]))
     DRIVER.wrDasReg("VLVCNTRL_TRIGGERED_SOLENOID_MASK_REGISTER", int(configDict["triggeredSolenoidValveMask"]))
     DRIVER.wrDasReg("VLVCNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER", float(configDict["triggeredOutletValve"]))
@@ -366,19 +371,19 @@ def configBatchModeToDasReg(configDict):
 
 def getThresholdMode():
     return DRIVER.rdDasReg("VLVCNTRL_THRESHOLD_MODE_REGISTER")
-    
+
 def setThresholdMode(mode):
-    """ 
+    """
     mode -- an integer in the range of [0,1,2]:
       0 -> Disabled
       1 -> Rising Loss
       2 -> Triggered
-    """            
+    """
     DRIVER.wrDasReg("VLVCNTRL_THRESHOLD_MODE_REGISTER", mode)
 
 #####################
 #   Solenoid valve control functions
-##################### 
+#####################
 def setValveMask(mask):
     """Set the valve mask to the specified value, where the lowest 6 bits are for the solenoid valves.
     mask = 0 -> all closed
@@ -387,7 +392,7 @@ def setValveMask(mask):
            4 -> open valve 3
            ...
     """
-    LOGFUNC("Set solenoid valve mask to %d\n" % mask)  
+    LOGFUNC("Set solenoid valve mask to %d\n" % mask)
     DRIVER.setValveMask(mask)
 
 def getValveMask():
@@ -397,42 +402,42 @@ def getValveMask():
            2 -> open valve 2
            4 -> open valve 3
            ...
-    """ 
+    """
     return DRIVER.getValveMask()
 
 #####################
 #   Rotary valve control functions
-#####################     
+#####################
 def setRotValveMask(rotPos):
     """Set the MPV valve mask (position)
     """
     DRIVER.setMPVPosition(int(rotPos))
-    
+
 def getRotValveMask(rotPos):
     """Get the MPV valve mask (position)
     """
     DRIVER.getMPVPosition()
-    
-######################    
+
+######################
 # Inlet/outlet valve control functions
-######################     
+######################
 def setInletValveMaxChange(value):
     """Set maximum inlet valve DAC change"""
     try:
         DRIVER.wrDasReg("VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER", value)
-        LOGFUNC("Maximum inlet valve change: %.2f\n" % value) 
+        LOGFUNC("Maximum inlet valve change: %.2f\n" % value)
     except:
         LOGFUNC("setInletValveMaxChange() failed!\n")
 
 def setInletValveGains(g1, g2):
     try:
         DRIVER.wrDasReg("VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER", g1)
-        DRIVER.wrDasReg("VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER", g2)        
-        LOGFUNC("Inlet valve gain1 = %.2f, gain2 = %.2f\n" % (g1, g2)) 
+        DRIVER.wrDasReg("VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER", g2)
+        LOGFUNC("Inlet valve gain1 = %.2f, gain2 = %.2f\n" % (g1, g2))
     except:
         LOGFUNC("setInletValveGains() failed!\n")
-        
-        
+
+
 def setValveMinDac(valveSelect, value):
     valveSelect = valveSelect.lower()
     try:
@@ -441,7 +446,7 @@ def setValveMinDac(valveSelect, value):
         elif valveSelect == "outlet":
             return DRIVER.wrDasReg("VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER", value)
         else:
-            raise Exception, "Choose either 'inlet' or 'outlet'!"  
+            raise Exception, "Choose either 'inlet' or 'outlet'!"
     except:
         LOGFUNC("setValveMinDac() failed!\n")
 
@@ -453,7 +458,7 @@ def setValveMaxDac(valveSelect, value):
         elif valveSelect == "outlet":
             return DRIVER.wrDasReg("VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER", value)
         else:
-            raise Exception, "Choose either 'inlet' or 'outlet'!"  
+            raise Exception, "Choose either 'inlet' or 'outlet'!"
     except:
         LOGFUNC("setValveMaxDac() failed!\n")
 
@@ -468,10 +473,10 @@ def getValveMinMaxDac(valveSelect):
             max = DRIVER.rdDasReg("VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER")
         else:
             raise Exception, "Choose either 'inlet' or 'outlet'!"
-        return {"min": min, "max": max}    
+        return {"min": min, "max": max}
     except:
         LOGFUNC("getValveMinMaxDac() failed!\n")
-    
+
 def startInletValveControl(pressureSetpoint=None, outletValveDac=None):
     result = DRIVER.startInletValveControl(pressureSetpoint, outletValveDac)
     LOGFUNC("Inlet valve control started, pressure setpoint = %.2f, outlet valve DAC = %.2f\n" %
@@ -480,8 +485,8 @@ def startInletValveControl(pressureSetpoint=None, outletValveDac=None):
 def startOutletValveControl(pressureSetpoint=None, inletValveDac=None):
     result = DRIVER.startOutletValveControl(pressureSetpoint, inletValveDac)
     LOGFUNC("Outlet valve control started, pressure setpoint = %.2f, inlet valve DAC = %.2f\n" %
-            (result["cavityPressureSetpoint"], result["inletValve"]))            
-    
+            (result["cavityPressureSetpoint"], result["inletValve"]))
+
 def setValveControlMode(mode):
     """
     mode -- an integer in the range of [0,1,2,3]:
@@ -490,17 +495,17 @@ def setValveControlMode(mode):
       2 -> Inlet Control
       3 -> Manual Control
     """
-    DRIVER.wrDasReg("VALVE_CNTRL_STATE_REGISTER", mode)    
+    DRIVER.wrDasReg("VALVE_CNTRL_STATE_REGISTER", mode)
     LOGFUNC("Current valve control mode: %s\n" % VALVE_CTRL_MODE_DICT[mode])
-            
+
 def getValveDacValues():
     """Get Valve DAC value for both valves """
     inletDacValue = DRIVER.rdDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER")
     outletDacValue = DRIVER.rdDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER")
     return {"inletDacValue": inletDacValue, "outletDacValue": outletDacValue}
-    
+
 def setValveDacValue(valveSelect, dacValue1, dacValue2 = None):
-    """Set Valve DAC value for inlet, outlet, or both valves 
+    """Set Valve DAC value for inlet, outlet, or both valves
     valveSelect -- a string that indicates the target valve to be changed. Valid values are ["both", "inlet", and "outlet"].
     """
     valveSelect = valveSelect.lower()
@@ -509,20 +514,20 @@ def setValveDacValue(valveSelect, dacValue1, dacValue2 = None):
             if dacValue2 == None:
                 raise Exception, "Two valid valve DAC values are required!"
             DRIVER.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", dacValue1)
-            DRIVER.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER", dacValue2)            
-            # LOGFUNC("New inlet valve DAC: %.2f; new outlet valve DAC: %.2f\n" % (dacValue1, dacValue2))            
-        elif valveSelect == "inlet":            
+            DRIVER.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER", dacValue2)
+            # LOGFUNC("New inlet valve DAC: %.2f; new outlet valve DAC: %.2f\n" % (dacValue1, dacValue2))
+        elif valveSelect == "inlet":
             DRIVER.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", dacValue1)
-            # LOGFUNC("New inlet valve DAC: %.2f\n" % dacValue1)     
-        elif valveSelect == "outlet":            
+            # LOGFUNC("New inlet valve DAC: %.2f\n" % dacValue1)
+        elif valveSelect == "outlet":
             DRIVER.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER", dacValue1)
-            # LOGFUNC("New outlet valve DAC: %.2f\n" % dacValue1)              
+            # LOGFUNC("New outlet valve DAC: %.2f\n" % dacValue1)
     except:
         LOGFUNC("setValveDacValues() failed!\n")
 
 #####################
-# Cavity pressure control functions  
-#####################      
+# Cavity pressure control functions
+#####################
 def getCavityPressure():
     """Read the current cavity pressure"""
     return DRIVER.rdDasReg("CAVITY_PRESSURE_REGISTER")
@@ -535,10 +540,10 @@ def setCavityPressureSetPoint(setpoint):
     """Set cavity pressure set point in torr """
     try:
         DRIVER.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER", setpoint)
-        # LOGFUNC("New cavity pressure set point: %.2f torr\n" % setpoint) 
+        # LOGFUNC("New cavity pressure set point: %.2f torr\n" % setpoint)
     except:
         LOGFUNC("setCavityPressureSetPoint() failed!\n")
-        
+
 def getMaxCavityPressureRate():
     """Get maximum cavity pressure change rate in torr/s """
     return DRIVER.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER")
@@ -547,12 +552,12 @@ def setMaxCavityPressureRate(rate):
     """Set maximum cavity pressure change rate in torr/s """
     try:
         DRIVER.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER", rate)
-        # LOGFUNC("Maximum cavity pressure change rate: %.2f torr/s\n" % rate) 
+        # LOGFUNC("Maximum cavity pressure change rate: %.2f torr/s\n" % rate)
     except:
         LOGFUNC("setMaxCavityPressureRate() failed!\n")
 
 ##############
-# Stabilizing functions  
+# Stabilizing functions
 ##############
 def waitPressureStabilize(setpoint, tolerance, timeout, checkInterval, lockCount=1):
     """ Wait for pressure to stabilize """
@@ -575,62 +580,62 @@ def waitPressureStabilize(setpoint, tolerance, timeout, checkInterval, lockCount
             isStable = True
             break
     return isStable
-    
+
 ####################
-# Measurement System functions  
-####################      
+# Measurement System functions
+####################
 def setMeasSysMode(mode, timeout=3):
     """
     mode -- a string representing the desired measurement mode
     """
     measSysStates = MEASSYS.GetStates()
     if measSysStates['State_MeasSystem'] == 'ERROR':
-        MEASSYS.Error_Clear()    
-        
+        MEASSYS.Error_Clear()
+
     MEASSYS.Disable()
-    startTime = TimeStamp()    
+    startTime = TimeStamp()
     measSysStates = MEASSYS.GetStates()
     while not (measSysStates['State_MeasSystem'] == 'READY' and measSysStates['State_SpectrumManager'] == 'READY'):
         if measSysStates['State_MeasSystem'] == 'ERROR':
-            MEASSYS.Error_Clear() 
-            
+            MEASSYS.Error_Clear()
+
         if TimeStamp() - startTime < timeout:
             sleep(0.1)
             measSysStates = MEASSYS.GetStates()
         else:
             LOGFUNC("MeasSystem wasn't disabled properly within timeout limit - setMeasSysMode() failed\n")
             MEASSYS.Enable()
-            return    
+            return
     MEASSYS.Mode_Set(mode)
-    MEASSYS.Enable()  
+    MEASSYS.Enable()
 
-def getMeasSysMode():    
+def getMeasSysMode():
     return MEASSYS.Mode_Get()
 
 #################
 # Sample Manager functions
-#################    
+#################
 def skipPressureCheck():
     SAMPLEMGR.SkipPressureCheck()
 
 def resumePressureCheck():
     SAMPLEMGR.ResumePressureCheck()
-    
+
 def setSampleMgrMode(mode):
-    SAMPLEMGR._SetMode(mode)    
+    SAMPLEMGR._SetMode(mode)
 
 #################
 # Instrument Manager functions
 #################
 def enableInstMgrAutoRestartFlow():
     INSTMGR.INSTMGR_EnableAutoRestartFlow()
-    
+
 def disableInstMgrAutoRestartFlow():
     INSTMGR.INSTMGR_DisableAutoRestartFlow()
-    
+
 ################
-# Output format functions  
-################  
+# Output format functions
+################
 def calcInjectDateTime(logDate,logTime,injTime):
     fmt = "%Y/%m/%d %H:%M:%S"
     fmtd = "%Y/%m/%d"
@@ -657,16 +662,16 @@ def formatOutput(results,config):
 
 #################
 # Valve sequence functions
-#################            
+#################
 def getValveStep():
     return DRIVER.rdDasReg("VALVE_CNTRL_SEQUENCE_STEP_REGISTER")
-    
+
 def atValveStep(step):
     global _valveSequenceLabels
     if isinstance(step,str):
         step = _valveSequenceLabels[step]
     return DRIVER.rdDasReg("VALVE_CNTRL_SEQUENCE_STEP_REGISTER") == step
-        
+
 def sendValveSequence(configDict):
     global _valveSequenceLabels
     _valveSequenceLabels = {"none":-1}
@@ -701,7 +706,7 @@ def sendValveSequence(configDict):
                 good = False
                 LOGFUNC("Invalid valve definition command: %s" % line)
             if not good:
-                break    
+                break
     except:
         while good:
             optName = 'step%d' % step
@@ -750,7 +755,7 @@ def parseAutosamplerLog(logText):
     trayName = "Unknown"
     jobNum = -1
     methodName = "Unknown"
-    
+
     sampleLineNum = -1
     try:
         while True:
@@ -777,12 +782,12 @@ def parseAutosamplerLog(logText):
                     break
             sampleLineNum -= 1
     except:
-        pass            
+        pass
     return logDate, logTime, injTime, trayName, sampleNum, jobNum, methodName
 
 #################
 # Temp Cycle functions
-#################           
+#################
 def setTempCycleRegisters(sweepMax, sweepMin, sweepIncr):
     origMax = None
     origMin = None
@@ -839,7 +844,7 @@ def restoreTempCycleRegisters(sweepMax, sweepMin, sweepIncr, cntlState):
 
 #################
 # Tag-along data functions
-#################           
+#################
 def setTagalongData(name,value):
     SPECTCOLLECTOR.setTagalongData(name, value)
 
@@ -848,7 +853,7 @@ def getTagalongData(name):
 
 def deleteTagalongData(name):
     SPECTCOLLECTOR.deleteTagalongData(name)
-        
+
 ANALYSIS_FNAME = "/PicarroSeq.txt"
 
 def incrAnalysisNumber():
@@ -866,7 +871,7 @@ def incrAnalysisNumber():
     fp = file(fname,"w")
     print >>fp, "%d" % seq
     fp.close()
-    
+
 def getAnalysisNumber():
     try:
         fname = CONFIG["Files"]["sequence"]
@@ -886,7 +891,7 @@ def getPrefix():
 
 #################
 # Setting and getting pressure calibration constants
-#################            
+#################
 def getCavityPressureCalibration():
     return (DRIVER.rdDasReg('CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER'),
             DRIVER.rdDasReg('CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER'))
@@ -897,13 +902,13 @@ def setCavityPressureCalibration(scale,offset):
 
 #################
 # Loading and saving Master.ini file
-#################            
+#################
 def loadMaster():
     DRIVER.loadIniFile()
 
 def writeMaster(fileName=None):
     DRIVER.writeIniFile(fileName)
-            
+
 def dummyGetLog():
     return """   Print Date: 2008/08/13   10:04:35
    Site Name: CTC, System Name: PAL, System SNo: 142218
@@ -938,7 +943,7 @@ class SocketInterface(object):
         self.s = None
         self.host = host
         self.port = port
-    
+
     def sendAndGet(self,str):
         # Send str and get data back. If a communications error
         #  occurs, wait 30s, then try again (in case GUI restarts)
@@ -957,29 +962,29 @@ class SocketInterface(object):
                 sleep(30)
         self.close()
         return data
-        
+
     def connect(self):
         self.s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.s.connect((self.host,self.port))
         self.s.settimeout(1.0)
-        
+
     def close(self):
         self.s.close()
         self.s = None
-            
+
     def setTagalongData(self, label, value):
         return self.sendAndGet("_MEAS_SET_TAGALONG_DATA '%s' %f" % (label, value))
-        
+
     def getTagalongData(self, label):
         return self.sendAndGet("_MEAS_GET_TAGALONG_DATA '%s'" % (label))
-        
+
 class Comms(object):
     def __init__(self,host,port):
         self.s = None
         self.host = host
         self.port = port
         self.cols = None
-    
+
     def sendAndGet(self,str):
         # Send str and get data back. If a communications error
         #  occurs, wait 30s, then try again (in case GUI restarts)
@@ -1003,11 +1008,11 @@ class Comms(object):
         self.s.close()
         self.s = None
         return data
-    
+
     def connect(self):
         self.s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.s.connect((self.host,self.port))
-        
+
     def getColumns(self):
         reply = self.sendAndGet("_PULSE_GETSTATUS")
         replyList = reply.split("\n")
@@ -1022,7 +1027,7 @@ class Comms(object):
 
     def clearMeasBuffer(self):
         reply = self.sendAndGet("_MEAS_CLEARBUFFER")
-                
+
     def getBufferFirst(self):
         reply = self.sendAndGet("_PULSE_GETBUFFERFIRST")
         dataCols = reply.split(";")[:-1]
@@ -1032,7 +1037,7 @@ class Comms(object):
             self.getColumns()
             for i,c in enumerate(self.cols):
                 self.results[c] = dataCols[2*i+1]
-            self.results["time"] = dataCols[0]    
+            self.results["time"] = dataCols[0]
 
     def measGetBufferFirst(self, setFloat=False, instrType="H2O"):
         if instrType == "H2O":
@@ -1059,7 +1064,7 @@ class Comms(object):
                         self.results[concKeys[idx]]  = float(dataCols[2*idx+1])
                     except:
                         self.results[concKeys[idx]]  = dataCols[2*idx+1]
-            
+
 class DummyAutosampler(object):
     def __init__(self,startVial=1,endVial=54,count=20,incr=1,jobNum=1,method="5ulMethd",tray="MT1-Frnt"):
         self.startVial = startVial
@@ -1076,7 +1081,7 @@ class DummyAutosampler(object):
         nowStr = strftime("%Y/%m/%d  %H:%M:%S",localtime())
         self.logLines.append("   %s Job %02d started: Method %s\n                        Tray %s, Vial %d-%d, Count = %d, Increment = %d" \
         % (nowStr,jobNum,method,tray,startVial,endVial,count,incr))
-        
+
     def getLog(self):
         nowStr = strftime("%Y/%m/%d   %H:%M:%S",localtime())
         header = "   Print Date: %s\n   Site Name: CTC, System Name: PAL, System SNo: 142218\n" % (nowStr,)
@@ -1106,4 +1111,3 @@ class DummyAutosampler(object):
         pass
     def getInjected(self):
         return True
-        
