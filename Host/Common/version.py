@@ -15,8 +15,8 @@ def versionString():
     from a compiled (py2exe) app since it won't be in a repository.
     """
 
-    p = subprocess.Popen(['bzr.exe', 'version-info', '--custom',
-                          '--template="{revision_id}"'], stdout=subprocess.PIPE)
+    p = subprocess.Popen(['git.exe', 'log', '-1',
+                          '--pretty=format:%H'], stdout=subprocess.PIPE)
 
     ver = "Internal (%s)" % p.communicate()[0]
 
