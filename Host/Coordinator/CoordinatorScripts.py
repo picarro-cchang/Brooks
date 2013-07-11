@@ -42,6 +42,8 @@ from shutil import move
 from glob import glob
 #import pytz
 
+import Pyro.errors
+
 from Host.Common.CubicSpline import CubicSpline
 from Host.Common import CmdFIFO
 
@@ -56,6 +58,37 @@ VALVE_CTRL_MODE_DICT = {0: "Disabled", 1: "Outlet Control", 2: "Inlet Control", 
 ORIGIN = datetime(MINYEAR,1,1,0,0,0,0)
 UNIXORIGIN = datetime(1970,1,1,0,0,0,0)
 
+class MeasBufferStatus(object):
+
+    def __init__(self):
+        self.cols = None
+        self.dataMgr = None
+        self.bufferSize = None
+        self.active = False
+        self.nextDataBad = False
+        
+    def isActive(self):
+        return self.active
+        
+    def setConfiguration(self, dataMgr, columns, bufferSize):
+        self.dataMgr = dataMgr
+        self.cols = columns
+        self.bufferSize = bufferSize
+        
+    def configuration(self):
+        return (self.dataMgr, self.cols, self.bufferSize)
+        
+    def setNextDataBad(self):
+        self.nextDataBad = True
+    
+    def isNextDataBad(self):
+        return self.nextDataBad
+        
+    def clearNextDataBad(self):
+        self.nextDataBad = False
+        pass
+    
+MEAS_BUFFER = MeasBufferStatus()
 ##############
 # General file utilities
 ##############
@@ -290,6 +323,8 @@ def pulseAnalyzerGetPulseStartEndTime():
 ##########################
 def setMeasBuffer(source, colList, bufSize):
     DATAMGR.MeasBuffer_Set(source, colList, bufSize)
+    MEAS_BUFFER.active = True
+    MEAS_BUFFER.setConfiguration(source, colList, bufSize)
     LOGFUNC("Meas buffer set\n")
 
 def clearMeasBuffer():
@@ -300,12 +335,31 @@ def measGetBuffer():
     return DATAMGR.MeasBuffer_Get()
 
 def measGetBufferFirst():
-    # If the DataManager is dead, we should give it some time to recover.
     try:
+        if not MEAS_BUFFER.isActive():
+            DATAMGR.MeasBuffer_Set(*MEAS_BUFFER.configuration())
+            DATAMGR.MeasBuffer_Clear()
+            MEAS_BUFFER.active = True
+   
         return DATAMGR.MeasBuffer_GetFirst()
-    except Exception:
-        traceback.print_exc()
+    
+    except CmdFIFO.ShutdownInProgress:
+        MEAS_BUFFER.active = False
+        MEAS_BUFFER.setNextDataBad()
+        LOGFUNC("DataManager shutdown in progress\n")
+        return None
+    
+    except Pyro.errors.ProtocolError:
+        MEAS_BUFFER.active = False
+        MEAS_BUFFER.setNextDataBad()
+        LOGFUNC("DataManager not running\n")
+        return None
 
+def measIsDataBad():
+    isBad = MEAS_BUFFER.isNextDataBad()
+    MEAS_BUFFER.clearNextDataBad()
+    return isBad
+        
 def enableCalScript():
     LOGFUNC("Calibration script from Data Manager is enabled\n")
     DATAMGR.Cal_Enable()
