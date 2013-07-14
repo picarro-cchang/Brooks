@@ -259,11 +259,13 @@ define(function(require, exports, module) {
                 REPORT.analyses.getData();
             },
             makePathsLayers: function () {
+                if (!REPORT.paths) return;
                 var that = this;
                 var pathsMaker = newPathsMaker(that);
                 that.pathsCollection = REPORT.paths;
-                function doBlock(survey,run) {
-                    pathsMaker.makePaths(survey,run);
+                function doBlock() {
+                    pathsMaker.makePaths();
+                    that.trigger("doneBlock");
                 }
                 REPORT.paths.on("block", doBlock);
                 that.trigger("init",{"context": "paths"});

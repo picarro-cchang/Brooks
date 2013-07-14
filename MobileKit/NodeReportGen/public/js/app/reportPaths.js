@@ -49,14 +49,18 @@ define(function(require, exports, module) {
                 else if (that.loadStage === 'loaded') that.trigger('loaded');
                 else {
                     that.loadStage = 'loading';
+                    // We listen to the doneBlock event to know when it is safe to proceed to the next block
+                    that.listenTo(REPORT.reportViewResources, "doneBlock", next);
                     that.workDir = instrResource(that.pathsRef.SUBMIT_KEY.hash)+'/'+that.pathsRef.SUBMIT_KEY.dir_name;
                     that.pathsFiles = that.pathsRef.OUTPUTS.FILES;
                     names = that.pathsFiles.slice(0);   // These are all the names of the paths files, by survey and run
                     next();
                 }
+
                 function next() {
                     var url;
                     if (names.length === 0) {
+                        that.stopListening(REPORT.reportViewResources, "doneBlock");
                         that.loadStage = 'loaded';  // All paths (and FOVs) have been processed
                         that.trigger('loaded');
                     }
@@ -84,7 +88,7 @@ define(function(require, exports, module) {
                                 }
                             });
                             that.trigger('block');  // Signal that this block can be rendered
-                            next();
+                            // next gets called when the "doneBlock" event is signalled
                         };
                         if (type === 'path') {  // Get path data from the server - this must later be protected via a ticket
                             REPORT.SurveyorRpt.resource(url,
