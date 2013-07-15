@@ -70,7 +70,7 @@ for streamNum in interface.STREAM_MemberTypeDict:
 UNIXORIGIN = datetime(1970,1,1,0,0,0,0)
 
 INTERNAL_VERSION_RX = re.compile(
-    r'(Internal)\s\("(\w+)@picarro\.com-(\d+)-(.*)"\)')
+    r'(Internal)\s\("git-v1:(.*)"\)')
 
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -401,10 +401,7 @@ class IPV(IPVFrame):
             match = INTERNAL_VERSION_RX.match(self.softwareVersion)
             assert match is not None
 
-            self.softwareVersion = "%s-%s-%s-%s" % (match.group(1),
-                                                    match.group(2),
-                                                    match.group(3),
-                                                    match.group(4))
+            self.softwareVersion = "Internal-%s-0-0" % match.group(1)
 
         self.useUTC = self.baseCo.getboolean("Main", "useUTC", True)
         self.requiredDataHrs = self.baseCo.getfloat("Main", "requiredDataHrs", 12.0)
