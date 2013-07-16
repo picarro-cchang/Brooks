@@ -219,12 +219,28 @@ supervisorLauncher = Target(description = "SupervisorLauncher", # used for the v
 # And now to the main setup routine...
 exclusionList = ["Tkconstants","Tkinter","tcl", '_gtkagg', '_tkagg', '_agg2', '_cairo', '_cocoaagg',
                 '_fltkagg', '_gtk', '_gtkcairo', ]
-inclusionList = ["email","email.iterators","email.generator","email.mime.audio",
-                 "email.mime.multipart","email.mime.image","email.mime.text",
-                 "email.mime.base","scipy.interpolate","scipy.misc",
-                 "sip", "matplotlib.backends",  "matplotlib.backends.backend_wxagg", "matplotlib.backends.backend_qt4agg",
-                 "matplotlib.figure","pylab", "numpy", "configobj",
-                 "encodings.*", "tables.*" ]
+inclusionList = ["email",
+                 "email.iterators",
+                 "email.generator",
+                 "email.mime.audio",
+                 "email.mime.multipart",
+                 "email.mime.image",
+                 "email.mime.text",
+                 "email.mime.base",
+                 "scipy.interpolate",
+                 "scipy.misc",
+                 "sip",
+                 "matplotlib.backends",
+                 "matplotlib.backends.backend_wxagg",
+                 "matplotlib.backends.backend_qt4agg",
+                 "matplotlib.figure",
+                 "pylab",
+                 "numpy",
+                 "configobj",
+                 "encodings.*",
+                 "tables.*",
+                 "Host.Common.setup_version",
+                 "Host.Common.release_version"]
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.dll", "powrprof.dll" ]
 packageList = ["simplejson", "werkzeug","flask","jinja2","email"]
 
