@@ -238,9 +238,7 @@ inclusionList = ["email",
                  "numpy",
                  "configobj",
                  "encodings.*",
-                 "tables.*",
-                 "Host.Common.setup_version",
-                 "Host.Common.release_version"]
+                 "tables.*"]
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.dll", "powrprof.dll" ]
 packageList = ["simplejson", "werkzeug","flask","jinja2","email"]
 
