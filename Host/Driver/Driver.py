@@ -233,6 +233,8 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def allVersions(self):
         versionDict = {}
         versionDict["interface"] = interface.interface_version
+        import pprint
+        Log("version = %s" % pprint.pformat(version))
         versionDict["host release"] = version.versionString()
         if repoBzrVer:
             versionDict["host version id"] = repoBzrVer['revision_id']
