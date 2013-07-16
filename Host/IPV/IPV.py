@@ -70,7 +70,7 @@ for streamNum in interface.STREAM_MemberTypeDict:
 UNIXORIGIN = datetime(1970,1,1,0,0,0,0)
 
 INTERNAL_VERSION_RX = re.compile(
-    r'(Internal)\s\("git-v1:(.*)"\)')
+    r'Internal\s\("git-v1:(.*)"\)')
 
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -398,6 +398,7 @@ class IPV(IPVFrame):
         self.softwareVersion = CRDS_Driver.allVersions()["host release"]
 
         if 'Internal' in self.softwareVersion:
+            Log("self.softwareVersion = '%s'" % self.softwareVersion)
             match = INTERNAL_VERSION_RX.match(self.softwareVersion)
             assert match is not None
 
