@@ -67,12 +67,12 @@ define(function(require, exports, module) {
                 this.makeMapLayer();
                 this.makeSatelliteLayer();
                 this.makeSubmapGridLayer();
-                if (REPORT.facilities) this.makeFacilitiesLayer();
+                this.makeFacilitiesLayer();
                 this.makePeaksLayers();
-                if (REPORT.markers) this.makeMarkersLayer();
+                this.makeMarkersLayer();
                 this.makeWedgesLayer();
                 this.makeAnalysesLayer();
-                if (REPORT.paths) this.makePathsLayers();
+                this.makePathsLayers();
                 this.makePeaksTable();
                 this.makeAnalysesTable();
             },
@@ -197,6 +197,11 @@ define(function(require, exports, module) {
             },
             makeFacilitiesLayer: function() {
                 var that = this;
+                if (!REPORT.facilities) {
+                    that.trigger("init",{"context": "facilities"});
+                    that.trigger("change",{"context": "facilities"});
+                    return;
+                }
                 that.trigger("init",{"context": "facilities"});
                 REPORT.facilities.once("loaded", function () {
                     that.facilitiesData = REPORT.facilities.models;
@@ -228,6 +233,11 @@ define(function(require, exports, module) {
             },
             makeMarkersLayer: function() {
                 var that = this;
+                if (!REPORT.markers) {
+                    that.trigger("init",{"context": "markers"});
+                    that.trigger("change",{"context": "markers"});
+                    return;
+                }
                 that.trigger("init",{"context": "markers"});
                 REPORT.markers.once("loaded", function () {
                     that.markersData = REPORT.markers.models;

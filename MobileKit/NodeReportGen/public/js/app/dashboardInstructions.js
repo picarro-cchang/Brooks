@@ -262,7 +262,7 @@ define(function(require, exports, module) {
         body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_submaps_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Markers", tableFuncs.makeSelect("id_submaps_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("LISA", tableFuncs.makeSelect("id_submaps_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_summary_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_submaps_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_submaps_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += '</form></div>';
         footer = '<div class="modal-footer">';

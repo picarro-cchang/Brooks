@@ -197,19 +197,21 @@ define(function(require, exports, module) {
                     var layerName = allLayers[i], s;
                     if (layerName in this.available) {
                         s = REPORT.reportViewResources.contexts[layerName];
-                        if (!init) {
-                            var aspect = 1.2;
-                            var actualWidth = s.canvas.width  + 2 * padding[0];
-                            var actualHeight = s.canvas.height + 2 * padding[1];
-                            this.scaleFac = Math.min.apply(null,[0.95*this.docWidth/actualWidth, 
-                                0.95*aspect*this.docWidth/actualHeight]);
-                            this.context.canvas.width  = this.scaleFac * actualWidth;
-                            this.context.canvas.height = this.scaleFac * actualHeight;
-                            init = true;
-                            this.$el.width(this.context.canvas.width);
-                            this.$el.height(this.context.canvas.height);
+                        if (s) {
+                            if (!init) {
+                                var aspect = 1.2;
+                                var actualWidth = s.canvas.width  + 2 * padding[0];
+                                var actualHeight = s.canvas.height + 2 * padding[1];
+                                this.scaleFac = Math.min.apply(null,[0.95*this.docWidth/actualWidth,
+                                    0.95*aspect*this.docWidth/actualHeight]);
+                                this.context.canvas.width  = this.scaleFac * actualWidth;
+                                this.context.canvas.height = this.scaleFac * actualHeight;
+                                init = true;
+                                this.$el.width(this.context.canvas.width);
+                                this.$el.height(this.context.canvas.height);
+                            }
+                            this.context.drawImage(s.canvas, padding[0], padding[1], this.context.canvas.width, this.context.canvas.height);
                         }
-                        this.context.drawImage(s.canvas, padding[0], padding[1], this.context.canvas.width, this.context.canvas.height);
                     }
                 }
             },
