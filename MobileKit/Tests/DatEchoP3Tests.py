@@ -4,6 +4,7 @@ Copyright 2012 Picarro Inc.
 
 from __future__ import with_statement
 
+import os
 import sys
 import subprocess
 import os.path
@@ -25,14 +26,17 @@ from Host.Common import SharedTypes
 class TestDatEchoP3(object):
 
     def setup_method(self, m):
-        self.datRoot = os.path.join(os.path.abspath(
-                os.path.dirname(__file__)), 'data')
-        self.emptyDatDir = os.path.join(os.path.abspath(
-                os.path.dirname(__file__)), 'data', 'empty')
+        baseDir = os.path.abspath(os.path.dirname(__file__))
+
+        self.datRoot = os.path.join(baseDir, 'data')
+        self.emptyDatDir = os.path.join(baseDir, 'data', 'empty')
 
         self.localUrl = 'http://localhost:5000/test/rest/'
 
-        p = subprocess.Popen(['python.exe', 'RESTEmulator.py'])
+        self.testEnv = os.environ.update({'PYTHONPATH' :
+                                          os.path.join(baseDir, '..', '..')})
+
+        p = subprocess.Popen(['python.exe', 'RESTEmulator.py'], env=self.testEnv)
         time.sleep(3.0)
         self.server = psutil.Process(p.pid)
 
@@ -100,7 +104,8 @@ class TestDatEchoP3(object):
 
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -117,8 +122,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                     '-yid',
                     '-sAPITEST',
-                    "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR]
-                             ).pid)
+                    "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR],
+                    env=self.testEnv).pid)
 
         time.sleep(10.0)
 
@@ -165,7 +170,8 @@ class TestDatEchoP3(object):
 
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -182,7 +188,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(120.0)
 
@@ -233,7 +240,8 @@ class TestDatEchoP3(object):
 
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -256,7 +264,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(10.0)
 
@@ -307,7 +316,8 @@ class TestDatEchoP3(object):
 
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -330,7 +340,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(60.0)
 
@@ -384,7 +395,8 @@ class TestDatEchoP3(object):
 
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -401,7 +413,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(120.0)
 
@@ -456,7 +469,8 @@ class TestDatEchoP3(object):
 
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -473,7 +487,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(10.0)
 
@@ -554,7 +569,8 @@ class TestDatEchoP3(object):
 
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -571,7 +587,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(15.0)
 
@@ -639,7 +656,8 @@ class TestDatEchoP3(object):
 
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -656,7 +674,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(15.0)
 
@@ -700,7 +719,8 @@ class TestDatEchoP3(object):
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
                               './Helpers/DriverEmulatorServer.py',
-                              '--empty-id']).pid)
+                              '--empty-id'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -717,7 +737,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(5.0)
 
@@ -785,7 +806,8 @@ class TestDatEchoP3(object):
 
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -802,7 +824,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(120.0)
 
@@ -863,7 +886,8 @@ class TestDatEchoP3(object):
 
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -880,7 +904,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(120.0)
 
@@ -962,7 +987,8 @@ class TestDatEchoP3(object):
 
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -979,7 +1005,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(120.0)
 
@@ -1048,7 +1075,8 @@ class TestDatEchoP3(object):
 
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -1065,7 +1093,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(120.0)
 
@@ -1127,7 +1156,8 @@ class TestDatEchoP3(object):
         assert self.driverEmulator is None
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
-                              './Helpers/DriverEmulatorServer.py']).pid)
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
         time.sleep(1.0)
         assert self.driverEmulator.is_running()
 
@@ -1150,7 +1180,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST']).pid)
+                 '-sAPITEST'],
+                 env=self.testEnv).pid)
 
         time.sleep(10.0)
 

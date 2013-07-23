@@ -5,3 +5,7 @@ AddOns/SSIM/Coordinator_SSIM_CFFDS.ini
 AddOns/SSIM/Coordinator_SSIM_CFIDS.ini
 AddOns/SSIM/Coordinator_SSIM_FCDS.ini
 MobileKit/NodeReportGen/node_modules/
+MobileKit/Tests/analyzerIds.json
+MobileKit/Tests/filesRowsStats.json
+MobileKit/Tests/stats.json
+MobileKit/Tests/data/test*
