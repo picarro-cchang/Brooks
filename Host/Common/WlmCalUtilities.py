@@ -433,6 +433,7 @@ class AutoCal(object):
         self.thetaMeasured = None
         self.waveNumberMeasured = None
         self.ignoreSpline = False
+        self.tempOffset = 0.0
         
     def loadFromWlmFile(self,wlmFile,dTheta = 0.05,wMin = None,wMax = None):
         # Construct an Autocal object from a WlmFile object based on measured data which lie within the 
@@ -460,8 +461,8 @@ class AutoCal(object):
               self.ratio1Scale * Y - self.ratio2Scale * X * sin(self.wlmPhase),
               self.ratio2Scale * X * cos(self.wlmPhase)))
             # Extract parameters of angle vs laser temperature
-            self.laserTemp2WaveNumber = wlmFile.TtoW
-            self.waveNumber2LaserTemp = wlmFile.WtoT
+            self.laserTemp2WaveNumber = lambda T: wlmFile.TtoW(T-self.tempOffset)
+            self.waveNumber2LaserTemp = lambda W: wlmFile.WtoT(W) + self.tempOffset
             # Extract parameters of wavenumber against angle
             thetaCal2WaveNumber = bestFit(thetaCalMeasured,wlmFile.WaveNumber[window],1)
             # Include Burleigh data in object for plotting and debug
@@ -574,12 +575,20 @@ class AutoCal(object):
             cen = float(ini[aLaserSec]["WAVENUM_CEN"])
             scale = float(ini[aLaserSec]["WAVENUM_SCALE"])
             coeffs = array(fetchCoeffs(ini[aLaserSec],"W2T_"))
-            self.waveNumber2LaserTemp = polyFitEvaluator(coeffs,cen,scale)
+            # Function w2t is defined here so that changes in coeffs, cen and scale before self.waveNumber2LaserTemp
+            #  is called do not affect its value. However, we do want self.tempOffset to be evaluated when 
+            #  self.waveNumber2LaserTemp is invoked.
+            w2t = polyFitEvaluator(coeffs,cen,scale)
+            self.waveNumber2LaserTemp = lambda W: w2t(W) + self.tempOffset
 
             cen = float(ini[aLaserSec]["TEMP_CEN"])
             scale = float(ini[aLaserSec]["TEMP_SCALE"])
             coeffs = array(fetchCoeffs(ini[aLaserSec],"T2W_"))
-            self.laserTemp2WaveNumber = polyFitEvaluator(coeffs,cen,scale)
+            # Function t2w is defined here so that changes in coeffs, cen and scale before self.laserTemp2WaveNumber
+            #  is called do not affect its value. However, we do want self.tempOffset to be evaluated when 
+            #  self.laserTemp2WaveNumber is invoked.            
+            t2w = polyFitEvaluator(coeffs,cen,scale)
+            self.laserTemp2WaveNumber = lambda T: t2w(T - self.tempOffset)
 
             self.ratio1Center = float(ini[paramSec]["RATIO1_CENTER"])
             self.ratio2Center = float(ini[paramSec]["RATIO2_CENTER"])
@@ -594,6 +603,7 @@ class AutoCal(object):
                                        float(ini[paramSec]["LINEAR_MODEL_OFFSET"])])
             self.offset       = float(ini[paramSec]["WLM_OFFSET"])
             self.sLinear      = self.sLinear0 + array([0.0,self.offset])
+            self.tempOffset   = float(ini[paramSec].get("TEMP_OFFSET",0.0))
             self.nCoeffs      = int(ini[paramSec]["NCOEFFS"])
 
             self.coeffs = []
@@ -639,6 +649,7 @@ class AutoCal(object):
             ini[paramSec]["LINEAR_MODEL_SLOPE"] = self.sLinear0[0]
             ini[paramSec]["NCOEFFS"] = self.nCoeffs
             ini[paramSec]["WLM_OFFSET"] = self.offset
+            ini[paramSec]["TEMP_OFFSET"] = self.tempOffset
             ini[paramSec]["CAL_TEMP"] = self.tEtalonCal
             ini[paramSec]["RATIO1_CENTER"] = self.ratio1Center
             ini[paramSec]["RATIO1_SCALE"] = self.ratio1Scale
@@ -800,6 +811,22 @@ class AutoCal(object):
         self.lock.acquire()
         try: 
             return self.offset
+        finally:
+            self.lock.release()
+            
+    def setTempOffset(self,offset):
+        """Apply a spectroscopically determined laser temp offset."""
+        self.lock.acquire()
+        try: 
+            self.tempOffset = offset
+        finally:
+            self.lock.release()
+
+    def getTempOffset(self):
+        """Returns the current value of the temp offset."""
+        self.lock.acquire()
+        try: 
+            return self.tempOffset
         finally:
             self.lock.release()
 

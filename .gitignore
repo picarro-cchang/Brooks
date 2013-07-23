@@ -9,3 +9,5 @@ MobileKit/Tests/analyzerIds.json
 MobileKit/Tests/filesRowsStats.json
 MobileKit/Tests/stats.json
 MobileKit/Tests/data/test*
+Host/Tests/Coordinator/Output/
+
