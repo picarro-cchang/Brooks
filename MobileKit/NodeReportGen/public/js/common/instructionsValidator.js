@@ -1,8 +1,12 @@
+/* instructionsValidator.js is used to validate instructions for making reports */
+/*global console, module, P3TXT, require */
+
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
     'use strict';
     var pv = require('./paramsValidator');
+    require('./P3TXT');
     var newParamsValidator = pv.newParamsValidator;
     var validateListUsing = pv.validateListUsing;
     var latlngValidator = pv.latlngValidator;
@@ -15,10 +19,10 @@ define(function(require, exports, module) {
                 data[1] >= -0.01 && data[1] <= 0.01) {
                 return {"valid": true};
             }
-            else return {"valid": false, "errorList": ["Invalid latitude, longitude offsets"]};
+            else return {"valid": false, "errorList": [P3TXT.dashboard.validator_bad_offset]};
         }
         catch (e) {
-            return {"valid": false, "errorList": ["Invalid latitude, longitude offsets"]};
+            return {"valid": false, "errorList": [P3TXT.dashboard.validator_bad_offset]};
         }
     }
 
@@ -45,7 +49,7 @@ define(function(require, exports, module) {
     function runValidator(run) {
         function postCheck(resultDict, errorList) {
             if (resultDict.startEtm >= resultDict.endEtm) {
-                errorList.push("Starting time must come before ending time");
+                errorList.push(P3TXT.dashboard.validator_invalid_times);
             }
         }
         var rpv = newParamsValidator(run,
@@ -125,10 +129,10 @@ define(function(require, exports, module) {
         function postCheck(resultDict, errorList) {
             try {
                 if (resultDict.swCorner[0] >= resultDict.neCorner[0]) {
-                    errorList.push("SW corner latitude must be less than NE corner latitude.");
+                    errorList.push(P3TXT.dashboard.validator_invalid_corner_latitudes);
                 }
                 if (resultDict.swCorner[1] >= resultDict.neCorner[1]) {
-                    errorList.push("SW corner longitude must be less than NE corner longitude.");
+                    errorList.push(P3TXT.dashboard.validator_invalid_corner_longitudes);
                 }
             }
             catch(e) {
@@ -138,7 +142,7 @@ define(function(require, exports, module) {
             [{"name": "title", "required": true, "validator": function(s) {
                 var valid = ((typeof s === "string") && s.trim() !== "" );
                 if (valid) return {valid: true};
-                else return {valid: false, "errorList": ["Title must be a non-empty string"]};
+                else return {valid: false, "errorList": [P3TXT.dashboard.validator_empty_title]};
              }},
              {"name": "instructions_type", "required": false, "validator": "string", "default_value": "makeReport"},
              {"name": "makePdf", "required": false, "validator": "boolean", "default_value": false},

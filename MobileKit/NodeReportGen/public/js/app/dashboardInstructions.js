@@ -1,5 +1,5 @@
 // dashboardInstructions.js
-/*global alert, ASSETS, console, FileReader, module, require */
+/*global alert, ASSETS, console, FileReader, module, P3TXT, require */
 /* jshint undef:true, unused:true */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
@@ -20,8 +20,8 @@ define(function(require, exports, module) {
                                     //  has been uploaded
     var onMarkersFileUploaded = null;   // This will be the function to call once the user marker file
                                     //  has been uploaded
-
-    require('jquery-migrate'),
+    require('common/P3TXT');
+    require('jquery-migrate');
     require('jquery-ui');
     require('jquery.maphilight');
     require('jquery.timezone-picker');
@@ -102,14 +102,14 @@ define(function(require, exports, module) {
 
     var runsDefinition = {id: "runTable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "analyzer", width: "17%", th: "Analyzer", tf: String, eid: "id_analyzer", cf: String},
-        {key: "startEtm", width: "17%", th: "Start", tf: extractLocal, eid: "id_start_etm", cf: insertLocal, ef: editTime},
-        {key: "endEtm", width: "17%", th: "End", tf: extractLocal, eid: "id_end_etm", cf: insertLocal, ef: editTime},
-        {key: "peaks", width: "9%", th: "Peaks", tf: makeColorPatch, eid: "id_marker", cf: String},
-        {key: "wedges", width: "9%", th: "LISA", tf: makeColorPatch, eid: "id_wedges", cf: String},
-        {key: "analyses", width: "9%", th: "Isotopic", tf: makeColorPatch, eid: "id_analyses", cf: String},
-        {key: "fovs", width: "9%", th: "FOV", tf: makeColorPatch, eid: "id_swath", cf: String},
-        {key: "stabClass", width: "9%", th: "Stab Class", tf: String, eid: "id_stab_class", cf: String},
+        {key: "analyzer", width: "17%", th: P3TXT.dashboard.th_analyzer, tf: String, eid: "id_analyzer", cf: String},
+        {key: "startEtm", width: "17%", th: P3TXT.dashboard.th_startEtm, tf: extractLocal, eid: "id_start_etm", cf: insertLocal, ef: editTime},
+        {key: "endEtm", width: "17%", th: P3TXT.dashboard.th_endEtm, tf: extractLocal, eid: "id_end_etm", cf: insertLocal, ef: editTime},
+        {key: "peaks", width: "9%", th: P3TXT.dashboard.th_peaks, tf: makeColorPatch, eid: "id_marker", cf: String},
+        {key: "wedges", width: "9%", th: P3TXT.dashboard.th_wedges, tf: makeColorPatch, eid: "id_wedges", cf: String},
+        {key: "analyses", width: "9%", th: P3TXT.dashboard.th_analyses, tf: makeColorPatch, eid: "id_analyses", cf: String},
+        {key: "fovs", width: "9%", th: P3TXT.dashboard.th_fovs, tf: makeColorPatch, eid: "id_swath", cf: String},
+        {key: "stabClass", width: "9%", th: P3TXT.dashboard.th_stabClass, tf: String, eid: "id_stab_class", cf: String},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
     ],
     vf: function (eidByKey, template, container, onSuccess) {
@@ -121,7 +121,7 @@ define(function(require, exports, module) {
             var tz = DASHBOARD.timezone;
             bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, timeStrings:[rowData.startEtm.localTime,rowData.endEtm.localTime]},
             function (err) {
-                var msg = 'While converting timezone: ' + err;
+                var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
                 alert(msg);
             },
             function (s, result) {
@@ -134,55 +134,55 @@ define(function(require, exports, module) {
                 tableFuncs.setCell(row,"endEtm",rowData.endEtm,runsDefinition);
             });
         }
-        // console.log(data);
+        // console.log`(data);
     }};
 
     var submapsDefinition = {id: "submapstable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "baseType", width: "19%", th: "Type", tf: String, eid: "id_submaps_type", cf: String},
-        {key: "facilities", width: "11%", th: "Facilities", tf: boolToIcon, eid: "id_submaps_facilities",
+        {key: "baseType", width: "19%", th: P3TXT.dashboard.th_baseType, tf: String, eid: "id_submaps_type", cf: String},
+        {key: "facilities", width: "11%", th: P3TXT.dashboard.th_facilities, tf: boolToIcon, eid: "id_submaps_facilities",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "paths", width: "11%", th: "Paths", tf: boolToIcon, eid: "id_submaps_paths",
+        {key: "paths", width: "11%", th: P3TXT.dashboard.th_paths, tf: boolToIcon, eid: "id_submaps_paths",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "peaks", width: "11%", th: "Peaks", tf: boolToIcon, eid: "id_submaps_peaks",
+        {key: "peaks", width: "11%", th: P3TXT.dashboard.th_peaks, tf: boolToIcon, eid: "id_submaps_peaks",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "markers", width: "11%", th: "Markers", tf: boolToIcon, eid: "id_submaps_markers",
+        {key: "markers", width: "11%", th: P3TXT.dashboard.th_markers, tf: boolToIcon, eid: "id_submaps_markers",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "wedges", width: "11%", th: "LISA", tf: boolToIcon, eid: "id_submaps_wedges",
+        {key: "wedges", width: "11%", th: P3TXT.dashboard.th_wedges, tf: boolToIcon, eid: "id_submaps_wedges",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "analyses", width: "11%", th: "Isotopic", tf: boolToIcon, eid: "id_submaps_analyses",
+        {key: "analyses", width: "11%", th: P3TXT.dashboard.th_analyses, tf: boolToIcon, eid: "id_submaps_analyses",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "fovs", width: "11%", th: "FOV", tf: boolToIcon, eid: "id_submaps_fovs",
+        {key: "fovs", width: "11%", th: P3TXT.dashboard.th_fovs, tf: boolToIcon, eid: "id_submaps_fovs",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
     ]};
 
     var summaryDefinition = {id: "summarytable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "baseType", width: "16%", th: "Type", tf: String, eid: "id_summary_type", cf: String},
-        {key: "facilities", width: "10%", th: "Facilities", tf: boolToIcon, eid: "id_summary_facilities",
+        {key: "baseType", width: "16%", th: P3TXT.dashboard.th_baseType, tf: String, eid: "id_summary_type", cf: String},
+        {key: "facilities", width: "10%", th: P3TXT.dashboard.th_facilities, tf: boolToIcon, eid: "id_summary_facilities",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "paths", width: "10%", th: "Paths", tf: boolToIcon, eid: "id_summary_paths",
+        {key: "paths", width: "10%", th: P3TXT.dashboard.th_paths, tf: boolToIcon, eid: "id_summary_paths",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "peaks", width: "10%", th: "Peaks", tf: boolToIcon, eid: "id_summary_peaks",
+        {key: "peaks", width: "10%", th: P3TXT.dashboard.th_peaks, tf: boolToIcon, eid: "id_summary_peaks",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "markers", width: "10%", th: "Markers", tf: boolToIcon, eid: "id_summary_markers",
+        {key: "markers", width: "10%", th: P3TXT.dashboard.th_markers, tf: boolToIcon, eid: "id_summary_markers",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "wedges", width: "10%", th: "LISA", tf: boolToIcon, eid: "id_summary_wedges",
+        {key: "wedges", width: "10%", th: P3TXT.dashboard.th_wedges, tf: boolToIcon, eid: "id_summary_wedges",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "analyses", width: "10%", th: "Isotopic", tf: boolToIcon, eid: "id_summary_analyses",
+        {key: "analyses", width: "10%", th: P3TXT.dashboard.th_analyses, tf: boolToIcon, eid: "id_summary_analyses",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "fovs", width: "10%", th: "FOV", tf: boolToIcon, eid: "id_summary_fovs",
+        {key: "fovs", width: "10%", th: P3TXT.dashboard.th_fovs, tf: boolToIcon, eid: "id_summary_fovs",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "submapGrid", width: "10%", th: "Grid", tf: boolToIcon, eid: "id_summary_grid",
+        {key: "submapGrid", width: "10%", th: P3TXT.dashboard.th_submapGrid, tf: boolToIcon, eid: "id_summary_grid",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
     ]};
 
     var markersFilesDefinition = {id: "markerstable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "filename", width: "48%", th: "CSV Filename", tf: String, eid: "id_file_upload_name", cf: String},
-        {key: "hashAndName", width: "48%", th: "Download", tf: makeMarkersFileDownloadButton, eid: "id_markers_hash_and_name", cf: String},
+        {key: "filename", width: "48%", th: P3TXT.dashboard.th_csv_filename, tf: String, eid: "id_file_upload_name", cf: String},
+        {key: "hashAndName", width: "48%", th: P3TXT.dashboard.th_csv_hashAndName, tf: makeMarkersFileDownloadButton, eid: "id_markers_hash_and_name", cf: String},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}],
     vf: function (eidByKey, template, container, onSuccess) {
         return validateMarkersFile(eidByKey, template, container, onSuccess);
@@ -190,13 +190,13 @@ define(function(require, exports, module) {
 
     var facilitiesDefinition = {id: "facilitiestable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "filename", width: "36%", th: "KML Filename", tf: String, eid: "id_file_upload_name", cf: String},
-        {key: "offsets", width: "12%", th: "Offsets", tf: floatsToString, eid: "id_fac_offsets", cf: parseFloats,
+        {key: "filename", width: "36%", th: P3TXT.dashboard.th_kml_filename, tf: String, eid: "id_file_upload_name", cf: String},
+        {key: "offsets", width: "12%", th: P3TXT.dashboard.th_offsets, tf: floatsToString, eid: "id_fac_offsets", cf: parseFloats,
             ef: function (s, b) { s.val(floatsToString(b)); }},
-        {key: "linewidth", width: "12%", th: "Line Width", tf: Number, eid: "id_fac_linewidth", cf: Number},
-        {key: "linecolor", width: "12%", th: "Line Color", tf: makeColorPatch, eid: "id_fac_linecolor", cf: String},
-        {key: "xpath", width: "12%", th: "XPath", tf: String, eid: "id_fac_xpath", cf: String},
-        {key: "hashAndName", width: "12%", th: "Download", tf: makeFacDownloadButton, eid: "id_fac_hash_and_name", cf: String},
+        {key: "linewidth", width: "12%", th: P3TXT.dashboard.th_linewidth, tf: Number, eid: "id_fac_linewidth", cf: Number},
+        {key: "linecolor", width: "12%", th: P3TXT.dashboard.th_linecolor, tf: makeColorPatch, eid: "id_fac_linecolor", cf: String},
+        {key: "xpath", width: "12%", th: P3TXT.dashboard.th_xpath, tf: String, eid: "id_fac_xpath", cf: String},
+        {key: "hashAndName", width: "12%", th: P3TXT.dashboard.th_kml_hashAndName, tf: makeFacDownloadButton, eid: "id_fac_hash_and_name", cf: String},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}],
     vf: function (eidByKey, template, container, onSuccess) {
         return validateFacilities(eidByKey, template, container, onSuccess);
@@ -209,41 +209,47 @@ define(function(require, exports, module) {
         var header, body, footer;
         var controlClass = "input-large";
         var tz = DASHBOARD.timezone;
-        header = '<div class="modal-header"><h3>' + "Add new run" + '</h3></div>';
+        header = '<div class="modal-header"><h3>' + P3TXT.dashboard.runs_dlg_add_new_run + '</h3></div>';
         body   = '<div class="modal-body">';
         body += '<form class="form-horizontal">';
         if (_.isEmpty(DASHBOARD.analyzers)) {
-            body += tableFuncs.editControl("Analyzer", tableFuncs.makeInput("id_analyzer", {"class": controlClass,
-                    "placeholder": "Name of analyzer"}));
+            body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_analyzer, tableFuncs.makeInput("id_analyzer", {"class": controlClass,
+                    "placeholder": P3TXT.dashboard.runs_ph_analyzer}));
         }
         else {
-            body += tableFuncs.editControl("Analyzer", tableFuncs.makeSelect("id_analyzer", {"class": controlClass},
+            body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_analyzer, tableFuncs.makeSelect("id_analyzer", {"class": controlClass},
                     DASHBOARD.analyzersDict));
         }
-        body += tableFuncs.editControl("Start Time", '<div class="input-append">' + tableFuncs.makeInput("id_start_etm",
+
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_start_time, '<div class="input-append">' + tableFuncs.makeInput("id_start_etm",
                 {"class": "input-medium datetimeRange", "placeholder": "YYYY-MM-DD HH:MM"}) + '<span class="add-on">' + tz + '</span></div>');
-        body += tableFuncs.editControl("End Time", '<div class="input-append">' + tableFuncs.makeInput("id_end_etm",
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_end_time, '<div class="input-append">' + tableFuncs.makeInput("id_end_etm",
                 {"class": "input-medium datetimeRange", "placeholder": "YYYY-MM-DD HH:MM"}) + '<span class="add-on">' + tz + '</span></div>');
-        body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_marker", {"class": controlClass},
-                {"#FFFFFF": "white", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
-                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
-        body += tableFuncs.editControl("LISAs", tableFuncs.makeSelect("id_wedges", {"class": controlClass},
-                {"#FFFFFF": "white", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
-                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
-        body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_analyses", {"class": controlClass},
-                {"#000000": "black", "#00009F": "blue", "#009F00": "green", "#9F0000": "red",
-                 "#009F9F": "cyan",  "#9F009F": "magenta", "#9F9F00": "yellow" }));
-        body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_swath", {"class": controlClass},
-                {"#FFFFFF": "white", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
-                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
-        body += tableFuncs.editControl("Stability Class", tableFuncs.makeSelect("id_stab_class", {"class": controlClass},
-                {"*": "*: Use reported weather data", "A": "A: Very Unstable", "B": "B: Unstable",
-                 "C": "C: Slightly Unstable", "D": "D: Neutral", "E": "E: Slightly Stable", "F": "F: Stable" }));
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_peaks, tableFuncs.makeSelect("id_marker", {"class": controlClass},
+                {"#FFFFFF": P3TXT.colors.white, "#0000FF": P3TXT.colors.blue, "#00FF00": P3TXT.colors.green, "#FF0000": P3TXT.colors.red,
+                 "#00FFFF": P3TXT.colors.cyan,  "#FF00FF": P3TXT.colors.magenta, "#FFFF00": P3TXT.colors.yelow }));
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_wedges, tableFuncs.makeSelect("id_wedges", {"class": controlClass},
+                {"#FFFFFF": P3TXT.colors.white, "#0000FF": P3TXT.colors.blue, "#00FF00": P3TXT.colors.green, "#FF0000": P3TXT.colors.red,
+                 "#00FFFF": P3TXT.colors.cyan,  "#FF00FF": P3TXT.colors.magenta, "#FFFF00": P3TXT.colors.yelow }));
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_analyses, tableFuncs.makeSelect("id_analyses", {"class": controlClass},
+                {"#000000": P3TXT.colors.black, "#00009F": P3TXT.colors.blue, "#009F00": P3TXT.colors.green, "#9F0000": P3TXT.colors.red,
+                 "#009F9F": P3TXT.colors.cyan,  "#9F009F": P3TXT.colors.magenta, "#9F9F00": P3TXT.colors.yelow }));
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_swath, tableFuncs.makeSelect("id_swath", {"class": controlClass},
+                {"#FFFFFF": P3TXT.colors.white, "#0000FF": P3TXT.colors.blue, "#00FF00": P3TXT.colors.green, "#FF0000": P3TXT.colors.red,
+                 "#00FFFF": P3TXT.colors.cyan,  "#FF00FF": P3TXT.colors.magenta, "#FFFF00": P3TXT.colors.yelow }));
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_stab_class, tableFuncs.makeSelect("id_stab_class", {"class": controlClass},
+                {"*": P3TXT.dashboard.runs_dlg_stab_class_star,
+                 "A": P3TXT.dashboard.runs_dlg_stab_class_a,
+                 "B": P3TXT.dashboard.runs_dlg_stab_class_b,
+                 "C": P3TXT.dashboard.runs_dlg_stab_class_c,
+                 "D": P3TXT.dashboard.runs_dlg_stab_class_d,
+                 "E": P3TXT.dashboard.runs_dlg_stab_class_e,
+                 "F": P3TXT.dashboard.runs_dlg_stab_class_f }));
         body += '</form></div>';
         footer = '<div class="modal-footer">';
         footer += '<p class="validate_tips alert alert-error hide"></p>';
-        footer += '<button type="button" class="btn btn-primary btn-ok">' + "OK" + '</button>';
-        footer += '<button type="button" class="btn btn-cancel">' + "Cancel" + '</button>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + P3TXT.ok + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + P3TXT.cancel + '</button>';
         footer += '</div>';
         return header + body + footer;
     }
@@ -252,23 +258,23 @@ define(function(require, exports, module) {
     {
         var header, body, footer;
         var controlClass = "input-large";
-        header = '<div class="modal-header"><h3>' + "Add new figure for each submap" + '</h3></div>';
+        header = '<div class="modal-header"><h3>' + P3TXT.dashboard.submap_dlg_add_new_figure + '</h3></div>';
         body   = '<div class="modal-body">';
         body += '<form class="form-horizontal">';
-        body += tableFuncs.editControl("Background Type", tableFuncs.makeSelect("id_submaps_type", {"class": controlClass},
-                {"map": "Google map", "satellite": "Satellite", "none": "None"}));
-        body += tableFuncs.editControl("Facilities", tableFuncs.makeSelect("id_submaps_facilities", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Paths", tableFuncs.makeSelect("id_submaps_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_submaps_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Markers", tableFuncs.makeSelect("id_submaps_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("LISA", tableFuncs.makeSelect("id_submaps_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_submaps_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_submaps_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_background, tableFuncs.makeSelect("id_submaps_type", {"class": controlClass},
+                {"map": P3TXT.dashboard.fig_dlg_background_map, "satellite": P3TXT.dashboard.fig_dlg_background_satellite, "none": P3TXT.dashboard.fig_dlg_background_none}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_facilities, tableFuncs.makeSelect("id_submaps_facilities", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_paths, tableFuncs.makeSelect("id_submaps_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_peaks, tableFuncs.makeSelect("id_submaps_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_markers, tableFuncs.makeSelect("id_submaps_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_wedges, tableFuncs.makeSelect("id_submaps_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_analyses, tableFuncs.makeSelect("id_submaps_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_fovs, tableFuncs.makeSelect("id_submaps_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += '</form></div>';
         footer = '<div class="modal-footer">';
         footer += '<p class="validate_tips alert alert-error hide"></p>';
-        footer += '<button type="button" class="btn btn-primary btn-ok">' + "OK" + '</button>';
-        footer += '<button type="button" class="btn btn-cancel">' + "Cancel" + '</button>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + P3TXT.ok + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + P3TXT.cancel + '</button>';
         footer += '</div>';
         return header + body + footer;
     }
@@ -277,24 +283,24 @@ define(function(require, exports, module) {
     {
         var header, body, footer;
         var controlClass = "input-large";
-        header = '<div class="modal-header"><h3>' + "Add new figure for summary" + '</h3></div>';
+        header = '<div class="modal-header"><h3>' + P3TXT.dashboard.summary_dlg_add_new_figure + '</h3></div>';
         body   = '<div class="modal-body">';
         body += '<form class="form-horizontal">';
-        body += tableFuncs.editControl("Background Type", tableFuncs.makeSelect("id_summary_type", {"class": controlClass},
-                {"map": "Google map", "satellite": "Satellite", "none": "None"}));
-        body += tableFuncs.editControl("Facilities", tableFuncs.makeSelect("id_summary_facilities", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Paths", tableFuncs.makeSelect("id_summary_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_summary_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Markers", tableFuncs.makeSelect("id_summary_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("LISA", tableFuncs.makeSelect("id_summary_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_summary_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_summary_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Submap Grid", tableFuncs.makeSelect("id_summary_grid", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_background, tableFuncs.makeSelect("id_summary_type", {"class": controlClass},
+                {"map": P3TXT.dashboard.fig_dlg_background_map, "satellite": P3TXT.dashboard.fig_dlg_background_satellite, "none": P3TXT.dashboard.fig_dlg_background_none}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_facilities, tableFuncs.makeSelect("id_summary_facilities", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_paths, tableFuncs.makeSelect("id_summary_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_peaks, tableFuncs.makeSelect("id_summary_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_markers, tableFuncs.makeSelect("id_summary_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_wedges, tableFuncs.makeSelect("id_summary_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_analyses, tableFuncs.makeSelect("id_summary_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_fovs, tableFuncs.makeSelect("id_summary_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_grid, tableFuncs.makeSelect("id_summary_grid", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += '</form></div>';
         footer = '<div class="modal-footer">';
         footer += '<p class="validate_tips alert alert-error hide"></p>';
-        footer += '<button type="button" class="btn btn-primary btn-ok">' + "OK" + '</button>';
-        footer += '<button type="button" class="btn btn-cancel">' + "Cancel" + '</button>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + P3TXT.ok + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + P3TXT.cancel + '</button>';
         footer += '</div>';
         return header + body + footer;
     }
@@ -323,26 +329,27 @@ define(function(require, exports, module) {
     {
         var header, body, footer;
         var controlClass = "input-large";
-        header = '<div class="modal-header"><h3>' + "Add new KML file for facilities layer" + '</h3></div>';
+        header = '<div class="modal-header"><h3>' + P3TXT.dashboard.facs_dlg_add_new_file + '</h3></div>';
         body   = '<div class="modal-body">';
         // Use post to allow uploading of the facilities file when the form is submitted
         body += '<form id="id_fac_upload_form" class="form-horizontal" method="post"  enctype="multipart/form-data" action="' + assets + 'fileUpload">';
-        body += uploadControl("KML File", "kmlUpload");
-        body += tableFuncs.editControl("Offsets", tableFuncs.makeInput("id_fac_offsets",
-                {"class": controlClass, "placeholder": "LatOffset, LongOffset"}));
-        body += tableFuncs.editControl("Line Width", tableFuncs.makeSelect("id_fac_linewidth", {"class": controlClass},
+        body += uploadControl(P3TXT.dashboard.facs_dlg_kml_file, "kmlUpload");
+        body += tableFuncs.editControl(P3TXT.dashboard.facs_dlg_offsets, tableFuncs.makeInput("id_fac_offsets",
+                {"class": controlClass, "placeholder": P3TXT.dashboard.facs_ph_offsets}));
+        body += tableFuncs.editControl(P3TXT.dashboard.facs_dlg_linewidth, tableFuncs.makeSelect("id_fac_linewidth", {"class": controlClass},
                 {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8}));
-        body += tableFuncs.editControl("Line Color", tableFuncs.makeSelect("id_fac_linecolor", {"class": controlClass},
-                {"#000000": "black", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
-                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow", "#FFFFFF": "white" }));
-        body += tableFuncs.editControl("XPath", tableFuncs.makeSelect("id_fac_xpath", {"class": controlClass},
+        body += tableFuncs.editControl(P3TXT.dashboard.facs_dlg_linecolor, tableFuncs.makeSelect("id_fac_linecolor", {"class": controlClass},
+                {"#000000": P3TXT.colors.black, "#0000FF": P3TXT.colors.blue, "#00FF00": P3TXT.colors.green,
+                 "#FF0000": P3TXT.colors.red, "#00FFFF": P3TXT.colors.cyan,  "#FF00FF": P3TXT.colors.magenta,
+                 "#FFFF00": P3TXT.colors.yelloww, "#FFFFFF": P3TXT.colors.white }));
+        body += tableFuncs.editControl(P3TXT.dashboard.facs_dlg_xpath, tableFuncs.makeSelect("id_fac_xpath", {"class": controlClass},
                 {".//coordinates": ".//coordinates", ".//LineString/coordinates": ".//LineString/coordinates" }));
         body += tableFuncs.makeInput("id_fac_hash_and_name", {"class": controlClass, "type":"hidden"});
         body += '</form></div>';
         footer = '<div class="modal-footer">';
         footer += '<p class="validate_tips alert alert-error hide"></p>';
-        footer += '<button type="button" class="btn btn-primary btn-ok">' + "OK" + '</button>';
-        footer += '<button type="button" class="btn btn-cancel">' + "Cancel" + '</button>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + P3TXT.ok + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + P3TXT.cancel + '</button>';
         footer += '</div>';
         return header + body + footer;
     }
@@ -351,17 +358,17 @@ define(function(require, exports, module) {
     {
         var header, body, footer;
         var controlClass = "input-large";
-        header = '<div class="modal-header"><h3>' + "Add new CSV file for user markers" + '</h3></div>';
+        header = '<div class="modal-header"><h3>' + P3TXT.dashboard.markers_dlg_add_new_file + '</h3></div>';
         body   = '<div class="modal-body">';
         // Use post to allow uploading of the markers file when the form is submitted
         body += '<form id="id_markers_upload_form" class="form-horizontal" method="post"  enctype="multipart/form-data" action="' + assets + 'fileUpload">';
-        body += uploadControl("CSV File", "csvUpload");
+        body += uploadControl(P3TXT.dashboard.markers_dlg_csv_file, "csvUpload");
         body += tableFuncs.makeInput("id_markers_hash_and_name", {"class": controlClass, "type":"hidden"});
         body += '</form></div>';
         footer = '<div class="modal-footer">';
         footer += '<p class="validate_tips alert alert-error hide"></p>';
-        footer += '<button type="button" class="btn btn-primary btn-ok">' + "OK" + '</button>';
-        footer += '<button type="button" class="btn btn-cancel">' + "Cancel" + '</button>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + P3TXT.ok + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + P3TXT.cancel + '</button>';
         footer += '</div>';
         return header + body + footer;
     }
@@ -380,7 +387,7 @@ define(function(require, exports, module) {
         }
         bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:[posixTime]},
         function (err) {
-            var msg = 'While converting timezone: ' + err;
+            var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
             alert(msg);
             done(new Error(msg));
         },
@@ -405,11 +412,11 @@ define(function(require, exports, module) {
         var endMatch = regex.exec(endEtm);
 
         if (!startMatch) {
-            tableFuncs.addError(eidByKey.startEtm, "Invalid start time");
+            tableFuncs.addError(eidByKey.startEtm, P3TXT.dashboard.validator_invalid_start_time);
             numErr += 1;
         }
         if (!endMatch) {
-            tableFuncs.addError(eidByKey.endEtm, "Invalid end time");
+            tableFuncs.addError(eidByKey.endEtm, P3TXT.dashboard.validator_invalid_end_time);
             numErr += 1;
         }
 
@@ -418,14 +425,14 @@ define(function(require, exports, module) {
                 var sVal = +startMatch[i];
                 var eVal = +endMatch[i];
                 if (eVal < sVal) {
-                    tableFuncs.addError(eidByKey.endEtm, "End time must be after start time");
+                    tableFuncs.addError(eidByKey.endEtm, P3TXT.dashboard.validator_invalid_times);
                     numErr += 1;
                     break;
                 }
                 else if (eVal > sVal) break;
             }
             if (i>5) {
-                tableFuncs.addError(eidByKey.endEtm, "End time must be after start time");
+                tableFuncs.addError(eidByKey.endEtm, P3TXT.dashboard.validator_invalid_times);
                 numErr += 1;
             }
         }
@@ -472,7 +479,7 @@ define(function(require, exports, module) {
         }
         else {
             if (!markersFile) {
-                tableFuncs.addError("id_file_upload_div", "No markers file");
+                tableFuncs.addError("id_file_upload_div", P3TXT.dashboard.validator_no_markers_file);
                 numErr += 1;
             }
             if (numErr === 0) onSuccess();
@@ -542,12 +549,12 @@ define(function(require, exports, module) {
         offsets = parseFloats(offsets);
 
         if (offsets.length !== 2) {
-            tableFuncs.addError("id_fac_offsets", "Bad offset pair");
+            tableFuncs.addError("id_fac_offsets", P3TXT.dashboard.validator_bad_offset);
             numErr += 1;
         }
         else if (offsets[0] < -CNSNT.MAX_OFFSETS || offsets[0] > CNSNT.MAX_OFFSETS ||
                  offsets[1] < -CNSNT.MAX_OFFSETS || offsets[1] > CNSNT.MAX_OFFSETS) {
-            tableFuncs.addError("id_fac_offsets", "Maximum absolute offset is " + CNSNT.MAX_OFFSETS + " degrees");
+            tableFuncs.addError("id_fac_offsets", P3TXT.dashboard.validator_offset_too_large + CNSNT.MAX_OFFSETS);
             numErr += 1;
         }
 
@@ -556,7 +563,7 @@ define(function(require, exports, module) {
         }
         else {
             if (!kmlFile) {
-                tableFuncs.addError("id_file_upload_div", "No KML file");
+                tableFuncs.addError("id_file_upload_div", P3TXT.dashboard.validator_no_facilities_file);
                 numErr += 1;
             }
             if (numErr === 0) onSuccess();
@@ -661,7 +668,7 @@ define(function(require, exports, module) {
                     var body = lines.join('\n');
                     var instructions = JSON.parse(body);
                     var v = instrValidator(instructions);
-                    if (!v.valid) throw new Error('Instructions failed validation\n' + v.errorList.join("\n"));
+                    if (!v.valid) throw new Error(P3TXT.dashboard.validator_instructions_failed_validation + '\n' + v.errorList.join("\n"));
                     // Make sure to send change events, in case file is reloaded
                     DASHBOARD.instructionsFileModel.set({"contents": null}, {silent: true});
                     DASHBOARD.instructionsFileModel.set({"contents": body});
@@ -669,7 +676,7 @@ define(function(require, exports, module) {
                     DASHBOARD.instructionsFileModel.set({"instructions": v.normValues});
                 }
                 catch (err) {
-                    alert("Invalid instructions file: " + err.message);
+                    alert(P3TXT.dashboard.alert_invalid_instructions_file + err.message);
                     DASHBOARD.instructionsFileModel.set({"file": null});
                     return;
                 }
@@ -686,7 +693,7 @@ define(function(require, exports, module) {
                 e.stopPropagation();
                 e.preventDefault();
                 var files = e.dataTransfer.files;
-                if (files.length > 1) alert('Cannot process more than one file');
+                if (files.length > 1) alert(P3TXT.dashboard.alert_multiple_files);
                 else {
                     for (var i = 0, f; undefined !== (f = files[i]); i++) {
                         // Make sure we trigger a change to reload files, if necessary
@@ -701,12 +708,12 @@ define(function(require, exports, module) {
                     var instructions = DASHBOARD.instructionsFileModel.get("instructions");
                     var v = instrValidator(instructions);
                     if (!v.valid) {
-                        alert('Instructions failed validation\n' + v.errorList.join("\n"));
+                        alert(P3TXT.dashboard.validator_instructions_failed_validation + '\n' + v.errorList.join("\n"));
                         return;
                     }
                     DASHBOARD.SurveyorRpt.submit({'contents': contents, 'user': DASHBOARD.user, 'force': DASHBOARD.force},
                     function (err) {
-                        var msg = 'While submitting instructions: ' + err;
+                        var msg = P3TXT.dashboard.alert_while_submitting_instructions + err;
                         alert(msg);
                     },
                     function (s, result) {
@@ -731,11 +738,11 @@ define(function(require, exports, module) {
                                   status: status,
                                   timezone: timezone,
                                   title: instructions.title,
-                                  user: DASHBOARD.user,
+                                  user: DASHBOARD.user
                                   });
                         // Check if this has been previously submitted
                         if (request_ts !== start_ts) {
-                            alert("This is a duplicate of a previously submitted report");
+                            alert(P3TXT.dashboard.alert_duplicate_instructions);
                             var prev = DASHBOARD.submittedJobs.where({hash: hash, directory: dirName});
                             if (prev.length > 0) {
                                 DASHBOARD.jobsView.highLightJob(prev[0]);
@@ -746,7 +753,7 @@ define(function(require, exports, module) {
                                 var keyFile = instrResource(hash) + '/' + dirName + '/key.json';
                                 DASHBOARD.SurveyorRpt.resource(keyFile,
                                 function (err) {
-                                    alert('While getting key file data from ' + keyFile + ': ' + err);
+                                    alert(P3TXT.dashboard.alert_while_getting_key_file_data + keyFile + ': ' + err);
                                 },
                                 function (status, data) {
                                     console.log('While getting key file data from ' + keyFile + ': ' + status);
@@ -788,7 +795,7 @@ define(function(require, exports, module) {
             },
             onSelectFile: function (e) {
                 var files = e.target.files; // FileList object
-                if (files.length > 1) alert('Cannot process more than one file');
+                if (files.length > 1) alert(P3TXT.dashboard.alert_multiple_files);
                 else {
                     for (var i = 0, f; undefined !== (f = files[i]); i++) {
                         // Make sure we trigger a change to reload files, if necessary
@@ -883,7 +890,7 @@ define(function(require, exports, module) {
             },
             onSelectFile: function (e) {
                 var files = e.target.files; // FileList object
-                if (files.length > 1) alert('Cannot process more than one file');
+                if (files.length > 1) alert(P3TXT.dashboard.alert_multiple_files);
                 else {
                     var f = files[0];
                     if (f !== undefined) {
@@ -1069,7 +1076,7 @@ define(function(require, exports, module) {
                 });
                 bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:posixTimes},
                 function (err) {
-                    var msg = 'While converting timezone: ' + err;
+                    var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
                     alert(msg);
                 },
                 function (s, result) {
@@ -1104,7 +1111,7 @@ define(function(require, exports, module) {
                 }
                 bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:posixTimes},
                 function (err) {
-                    var msg = 'While converting timezone: ' + err;
+                    var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
                     alert(msg);
                 },
                 function (s, result) {

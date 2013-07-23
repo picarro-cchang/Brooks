@@ -1,4 +1,4 @@
-/*global console, __dirname, require */
+/*global console, __dirname, P3TXT, require */
 /* jshint undef:true, unused:true */
 /*
 reportServer.js is the node program which:
@@ -40,6 +40,7 @@ the authenticating proxy server.
     var newRunningTasks = require('./lib/newRunningTasks');
     var newUserJobDatabase = require('./lib/newUserJobDatabase');
     var p3nodeapi = require("./lib/p3nodeapi");
+    require("./public/js/common/P3TXT");
     var path = require('path');
     var pv = require('./public/js/common/paramsValidator');
     var REPORTROOT = argv.r ? argv.r : path.join(__dirname, 'ReportGen');
@@ -310,6 +311,7 @@ the authenticating proxy server.
              hash: req.params.hash,
              host: SITECONFIG.proxyhost,
              identity: SITECONFIG.identity,
+             P3TXT: P3TXT,
              port: SITECONFIG.proxyport,
              psys: SITECONFIG.psys,
              qry: req.query,
@@ -326,6 +328,7 @@ the authenticating proxy server.
              hash: req.params.hash,
              host: "",
              identity: "",
+             P3TXT: P3TXT,
              port: "",
              psys: "",
              qry: req.query,
@@ -340,6 +343,7 @@ the authenticating proxy server.
              force: force,
              host: SITECONFIG.proxyhost,
              identity: SITECONFIG.identity,
+             P3TXT: P3TXT,
              port: SITECONFIG.proxyport,
              psys: SITECONFIG.psys,
              qry: req.query,

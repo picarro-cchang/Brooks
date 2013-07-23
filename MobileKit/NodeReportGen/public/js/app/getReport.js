@@ -1,5 +1,5 @@
 // getReport.js
-/*global alert, console, module, require, TEMPLATE_PARAMS */
+/*global alert, console, module, P3TXT, require, TEMPLATE_PARAMS */
 /* jshint undef:true, unused:true */
 
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
@@ -26,6 +26,7 @@ define(function(require, exports, module) {
     var reportSurveys = require('app/reportSurveys');
     var reportViewResources = require('app/reportViewResources');
     var p3restapi = require('app/p3restapi');
+    require('common/P3TXT');
 
     var instructionsLoaded = false;
 
@@ -199,7 +200,8 @@ define(function(require, exports, module) {
 
         $("#reportTitle").html(title);
         $("#rightHead").html(name);
-        $("#leftFoot").html("First submitted by " + params.user + " at " + params.submitTime);
+        $("#leftFoot").html(P3TXT.getReport.firstSubmittedBy + " " + params.user + " " +
+            P3TXT.getReport.firstSubmittedAt + " " + params.submitTime);
         $("#getReportApp").append('<div style="container-fluid">');
         $("#getReportApp").append('<div style="row-fluid">');
         $("#getReportApp").append('<div style="span12">');
@@ -209,17 +211,17 @@ define(function(require, exports, module) {
         var settingsTableBottom = [];
         settingsTableTop.push('<table class="table table-condensed table-fmt1">');
         settingsTableTop.push('<thead><tr>');
-        settingsTableTop.push('<th>SW Corner (Lat,Lng)</th>');
-        settingsTableTop.push('<th>NE Corner (Lat,Lng)</th>');
-        settingsTableTop.push('<th>Min Peak Ampl (ppm)</th>');
-        settingsTableTop.push('<th>Excl Radius (m)</th>');
-        settingsTableTop.push('<th>Facilities</th>');
-        settingsTableTop.push('<th>Paths</th>');
-        settingsTableTop.push('<th>Peaks</th>');
-        settingsTableTop.push('<th>Markers</th>');
-        settingsTableTop.push('<th>LISAs</th>');
-        settingsTableTop.push('<th>FOV</th>');
-        settingsTableTop.push('<th>Isotopic</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.swCorner + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.neCorner + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.minPeakAmpl + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.exclusionRadius + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.facilities + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.paths + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.peaks + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.markers + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.wedges + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.swaths + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.analyses + '</th>');
         settingsTableTop.push('</tr></thead>');
         settingsTableTop.push('<tbody>');
         settingsTableTop.push('<tr>');
@@ -253,27 +255,28 @@ define(function(require, exports, module) {
             $("#getReportApp").append('<div id="' + id_fig + '" class="reportFigure"; style="position:relative;"/>');
             new REPORT.CompositeViewWithLinks({el: $('#' + id_fig), name: id_fig.slice(3), layers:layers.slice(0)});
         }
+
         if (subreport.tables.get("analysesTable")) {
             id = 'id_analysesTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">Isotopic Analysis Table</h2>');
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_analyses_table + '</h2>');
             $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
             new REPORT.AnalysesTableView({el: $('#' + id), dataTables: false});
         }
         if (subreport.tables.get("peaksTable")) {
             id = 'id_peaksTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">Peaks Table</h2>');
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_peaks_table + '</h2>');
             $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
             new REPORT.PeaksTableView({el: $('#' + id), dataTables: false});
         }
         if (subreport.tables.get("runsTable")) {
             id = 'id_runsTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">Runs Table</h2>');
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_runs_table + '</h2>');
             $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
             new REPORT.RunsTableView({el: $('#' + id), dataTables: false});
         }
         if (subreport.tables.get("surveysTable")) {
             id = 'id_surveysTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">Surveys Table</h2>');
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_surveys_table + '</h2>');
             $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
             new REPORT.SurveysTableView({el: $('#' + id), dataTables: false});
         }
