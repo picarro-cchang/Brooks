@@ -129,6 +129,8 @@ class TestDatEchoP3(object):
 
         time.sleep(10.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         datEcho.kill()
@@ -197,6 +199,8 @@ class TestDatEchoP3(object):
 
         time.sleep(120.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         datEcho.kill()
@@ -275,6 +279,8 @@ class TestDatEchoP3(object):
 
         time.sleep(10.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         datEcho.kill()
@@ -353,6 +359,8 @@ class TestDatEchoP3(object):
 
         time.sleep(60.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         datEcho.kill()
@@ -428,6 +436,8 @@ class TestDatEchoP3(object):
 
         time.sleep(120.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         # Inject a new live file
@@ -445,6 +455,8 @@ class TestDatEchoP3(object):
 
         time.sleep(120.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         datEcho.kill()
@@ -504,6 +516,8 @@ class TestDatEchoP3(object):
 
         time.sleep(10.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         # Inject a new live file
@@ -643,7 +657,10 @@ class TestDatEchoP3(object):
         # Give DatEchoP3 a chance to send back everything
         time.sleep(300.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
+
         datEcho.kill()
 
         r = urllib2.urlopen('http://localhost:5000/filesRowsStats')
@@ -695,6 +712,8 @@ class TestDatEchoP3(object):
 
         time.sleep(15.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         datEcho.kill()
@@ -760,6 +779,8 @@ class TestDatEchoP3(object):
 
         time.sleep(5.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         datEcho.kill()
@@ -849,6 +870,8 @@ class TestDatEchoP3(object):
 
         time.sleep(120.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         datEcho.kill()
@@ -931,6 +954,8 @@ class TestDatEchoP3(object):
 
         time.sleep(120.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         datEcho.kill()
@@ -1034,6 +1059,8 @@ class TestDatEchoP3(object):
 
         time.sleep(120.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         datEcho.kill()
@@ -1124,6 +1151,8 @@ class TestDatEchoP3(object):
 
         time.sleep(120.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         datEcho.kill()
@@ -1213,6 +1242,8 @@ class TestDatEchoP3(object):
 
         time.sleep(10.0)
 
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
         assert datEcho.is_running()
 
         datEcho.kill()
