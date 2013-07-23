@@ -107,7 +107,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         datEcho = psutil.Process(
             subprocess.Popen([
@@ -173,7 +175,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         datEcho = psutil.Process(
             subprocess.Popen(
@@ -243,7 +247,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         r = urllib2.urlopen("http://localhost:5000/setLogDate/%d/%d/%d"
                             "/%d/%d/%d" % (targetDt.year, targetDt.month,
@@ -319,7 +325,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         r = urllib2.urlopen("http://localhost:5000/setLogDate/%d/%d/%d"
                             "/%d/%d/%d" % (targetDt.year, targetDt.month,
@@ -398,7 +406,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         datEcho = psutil.Process(
             subprocess.Popen(
@@ -472,7 +482,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         datEcho = psutil.Process(
             subprocess.Popen(
@@ -572,7 +584,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         datEcho = psutil.Process(
             subprocess.Popen(
@@ -659,7 +673,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         datEcho = psutil.Process(
             subprocess.Popen(
@@ -722,7 +738,9 @@ class TestDatEchoP3(object):
                               '--empty-id'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         datEcho = psutil.Process(
             subprocess.Popen(
@@ -809,7 +827,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         datEcho = psutil.Process(
             subprocess.Popen(
@@ -889,7 +909,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         datEcho = psutil.Process(
             subprocess.Popen(
@@ -990,7 +1012,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         datEcho = psutil.Process(
             subprocess.Popen(
@@ -1078,7 +1102,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         datEcho = psutil.Process(
             subprocess.Popen(
@@ -1159,7 +1185,9 @@ class TestDatEchoP3(object):
                               './Helpers/DriverEmulatorServer.py'],
                               env=self.testEnv).pid)
         time.sleep(1.0)
+
         assert self.driverEmulator.is_running()
+        assert self.server.is_running()
 
         r = urllib2.urlopen("http://localhost:5000/setLogDate/%d/%d/%d"
                             "/%d/%d/%d" % (targetDt.year, targetDt.month,
