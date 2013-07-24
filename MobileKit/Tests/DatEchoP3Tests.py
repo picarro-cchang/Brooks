@@ -39,6 +39,7 @@ class TestDatEchoP3(object):
         p = subprocess.Popen(['python.exe', 'RESTEmulator.py'], env=self.testEnv)
         time.sleep(3.0)
         self.server = psutil.Process(p.pid)
+        assert self.server.is_running()
 
         # Other things we may need to cleanup later
         self.driverEmulator = None
@@ -52,9 +53,12 @@ class TestDatEchoP3(object):
     def teardown_method(self, m):
         self.server.kill()
         time.sleep(5.0)
+        assert not self.server.is_running()
 
         if self.driverEmulator is not None:
             self.driverEmulator.kill()
+            time.sleep(5.0)
+            assert not self.driverEmulator.is_running()
             self.driverEmulator = None
 
     def _logLinesToDict(self, logPath):
