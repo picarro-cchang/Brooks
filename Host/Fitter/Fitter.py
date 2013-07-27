@@ -63,7 +63,7 @@ if sys.platform == 'win32':
     TimeStamp = time.clock
 else:
     TimeStamp = time.time
-    
+
 class SequenceManager(object):
     """Manage a collection of sequences of equal lengths in a LIFO structure to minimize
     allocation of new objects"""
@@ -637,7 +637,7 @@ class VariableViewFrame(wx.Frame):
 class FitViewer(wx.Frame):
     def __init__(self,configFile,useViewer,options):
         wx.Frame.__init__(self,parent=None,id=-1,title='Fit Viewer',size=(1000,700))
-        self.config = CustomConfigObj(configFile) 
+        self.config = CustomConfigObj(configFile)
         self.shutDown = False
         self.step = True
         self.colorDatabase = ColorDatabase(self.config,'Colors')
@@ -821,7 +821,14 @@ class FitViewer(wx.Frame):
             # If this is the first time the analysis has been seen, check all boxes
             self.funcsByAnalysisSerial[ser] = [ True for i in range(nItems) ]
         self.checkList = self.funcsByAnalysisSerial[ser]
-        for i in range(nItems): self.modelList.Check(i,self.checkList[i])
+
+        for i in range(nItems):
+            self.modelList.Check(i,self.checkList[i])
+
+        if len(analysis.xData) == 0:
+            Log('No xData; skipping rest of model analysis', Level=0)
+            return
+
         analysis.computeResiduals(self.anStage)
         self.calculateBasicSeries()
         self.calculateDetailedSeries()
@@ -1166,9 +1173,9 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-        
+
     return (configFile, useViewer, options)
-    
+
 def main():
     app = wx.PySimpleApp()
     configFile, useViewer, options = HandleCommandSwitches()
