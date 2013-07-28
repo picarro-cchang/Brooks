@@ -118,6 +118,7 @@ define(function(require, exports, module) {
                 this.docWidth = $(document).width();
                 this.docHeight = $(document).height();
                 this.scaleFac = 1.0;
+                this.name = "reportCompositeView";
                 REPORT.usageTracker.use(this, CNSNT.clearStatusLine);
                 this.canvasId = "id_" + this.options.name;
                 // this.$el.append('<input type="button" value="Click me">');
@@ -177,6 +178,7 @@ define(function(require, exports, module) {
                 this.docWidth = $(document).width();
                 this.docHeight = $(document).height();
                 this.scaleFac = 1.0;
+                this.name = "reportCompositeViewWithLinks";
                 REPORT.usageTracker.use(this, CNSNT.clearStatusLine);
                 this.canvasId = "id_" + this.options.name;
                 // this.$el.append('<input type="button" value="Click me">');

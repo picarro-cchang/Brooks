@@ -1,5 +1,5 @@
 /* newUsageTracker.js */
-/*global alert, module, require */
+/*global alert, console, module, require */
 /* jshint undef:true, unused:true */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
@@ -23,6 +23,7 @@ define(function(require, exports, module) {
 
     UsageTracker.prototype.use = function (obj, first) {
         var id = this.idTracker.objectId(obj);
+        console.log("UsageTracker (use): name=" + obj.name + " id=" + id + " existing timer=" + (this.timer !== null) + " firstFlag=" + this.firstFlag);
         if (id === null) return;
         if (this.timer) {
             clearTimeout(this.timer);
@@ -40,6 +41,7 @@ define(function(require, exports, module) {
 
     UsageTracker.prototype.release = function(obj, noneLeft) {
         var id = this.idTracker.objectId(obj);
+        console.log("UsageTracker (release): id=" + id + " pending=" + JSON.stringify(this.pending));
         if (id !== null) {
             if (!this.pending.hasOwnProperty(id)) alert("Error in usage tracking algorithm");
             else {
@@ -50,6 +52,7 @@ define(function(require, exports, module) {
         if (_.isFunction(noneLeft) && _.isEmpty(this.pending)) {
             if (this.timer) clearTimeout(this.timer);
             this.timer = setTimeout(function () {
+                console.log("OK to call noneLeft: " + _.isEmpty(this.pending));
                 if (_.isEmpty(this.pending)) {
                     this.firstFlag = true;
                     this.timer = null;

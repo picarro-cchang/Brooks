@@ -83,6 +83,7 @@ define(function(require, exports, module) {
         reportCanvasViews.init();
         REPORT.usageTracker = newUsageTracker();
         REPORT.settings = new REPORT.Settings();
+        console.log("REPORT at " + new Date() + ": " + JSON.stringify(TEMPLATE_PARAMS.qry));
         renderPage();
     }
 

@@ -1,9 +1,15 @@
+// screenDump.js is used by phantom.js to produce a PDF file from HTML via a screen dump from the headless browser
+//  The window.status must be set to 'done' to trigger the conversion after all the page elements have been rendered
 var page = require('webpage').create(),
     system = require('system'),
     address, output, size,
     paperSize = {},
     headerFontSize = "100%";
     footerFontSize = "70%";
+
+page.onConsoleMessage = function (msg) {
+    console.log('phantomjs: ' + msg);
+};
 
 if (system.args.length < 3 || system.args.length > 7) {
     console.log('Usage: screenDump.js URL filename [paperwidth*paperheight|paperformat] [zoom] [headerFontSize] [footerFontSize]');

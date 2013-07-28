@@ -27,6 +27,7 @@ define(function(require, exports, module) {
 
         REPORT.SurveysTableView = Backbone.View.extend({
             initialize: function () {
+                this.name = "reportSurveys";
                 this.listenTo(REPORT.reportViewResources,"init",this.repositoryInit);
                 this.listenTo(REPORT.reportViewResources,"change",this.repositoryChanged);
             },
