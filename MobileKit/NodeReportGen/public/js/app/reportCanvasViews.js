@@ -1,5 +1,5 @@
 // reportCanvasViews.js
-/*global module, require */
+/*global console, module, require */
 /* jshint undef:true, unused:true */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
@@ -9,6 +9,7 @@ define(function(require, exports, module) {
     var _ = require('underscore');
     var Backbone = require('backbone');
     var CNSNT = require('common/cnsnt');
+    var newIdTracker = require('app/newIdTracker');
     var newMultiCanvas = require('app/newMultiCanvas');
     var REPORT  = require('app/reportGlobals');
 
@@ -247,8 +248,10 @@ define(function(require, exports, module) {
             repositoryChanged: function(e) {
                 if (this.done) return;
                 var allAvailable = true;
+                var id = newIdTracker().objectId(this);
                 if (e.context in this.available) this.available[e.context] = true;
                 for (var l in this.available) allAvailable = allAvailable && this.available[l];
+                console.log("id: " + id + " " + JSON.stringify(this.available));
                 if (allAvailable) {
                     this.render([0,0]);
                     this.done = true;
